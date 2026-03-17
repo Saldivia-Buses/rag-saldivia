@@ -878,11 +878,15 @@ FROM python:3.11-slim
 RUN apt-get update && apt-get install -y docker.io && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
 
-# saldivia package is installed via pip from local, not COPY
-# Build with: docker build -f services/mode-manager/Dockerfile .
+# Install saldivia package
+COPY pyproject.toml .
+COPY saldivia/ ./saldivia/
+RUN pip install --no-cache-dir -e .
+
+# Install service-specific deps and copy manager
+COPY services/mode-manager/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 COPY services/mode-manager/manager.py .
 
 CMD ["python", "manager.py"]
@@ -912,7 +916,8 @@ services:
 
   mode-manager:
     build:
-      context: ../services/mode-manager
+      context: ..
+      dockerfile: services/mode-manager/Dockerfile
     environment:
       - REDIS_URL=redis://redis:6379
       - GPU_MEMORY_GB=${GPU_MEMORY_GB:-98}
@@ -2987,10 +2992,13 @@ if __name__ == "__main__":
 # services/auth-gateway/Dockerfile
 FROM python:3.11-slim
 WORKDIR /app
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
-COPY . /app/saldivia
-ENV PYTHONPATH=/app
+
+# Install saldivia package
+COPY pyproject.toml .
+COPY saldivia/ ./saldivia/
+RUN pip install --no-cache-dir -e .
+
+# Service runs as module
 CMD ["python", "-m", "saldivia.gateway"]
 ```
 
