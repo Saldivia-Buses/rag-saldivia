@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED: Use superpowers:subagent-driven-development (if subagents available) or superpowers:executing-plans to implement this plan. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build a production-ready RAG platform with 1-GPU optimization, multi-provider routing, collection management, MCP integration, and commercial-ready features.
+**Goal:** Build a production-ready RAG platform for 300 enterprise users across 20 departments, with 1-GPU optimization, multi-provider routing, authentication, RBAC, and audit logging.
 
 **Architecture:**
 ```
@@ -10,6 +10,12 @@
 │                      RAG Saldivia Platform                       │
 ├─────────────────────────────────────────────────────────────────┤
 │  CLI (rag-saldivia)  │  MCP Server  │  Watch Folder  │  API    │
+├─────────────────────────────────────────────────────────────────┤
+│              Auth Gateway (API Keys, RBAC, Audit)                │
+│         ┌─────────────────────────────────────────┐             │
+│         │  Users → Areas → Collections (perms)    │             │
+│         │  Roles: admin | area_manager | user     │             │
+│         └─────────────────────────────────────────┘             │
 ├─────────────────────────────────────────────────────────────────┤
 │                     Mode Manager (1-GPU)                         │
 │         ┌─────────────┐              ┌─────────────┐            │
@@ -48,13 +54,22 @@ saldivia/                              # SDK package
 ├── ingestion_queue.py                 # Redis-backed job queue
 ├── cache.py                           # Query result caching
 ├── mcp_server.py                      # MCP server implementation
+├── auth/                              # Auth module
+│   ├── __init__.py
+│   ├── models.py                      # User, Area, Role, Permission models
+│   ├── database.py                    # SQLite/PostgreSQL connection
+│   ├── api_keys.py                    # API key generation, validation
+│   ├── permissions.py                 # RBAC permission checks
+│   └── audit.py                       # Audit logging
+├── gateway.py                         # Auth Gateway (FastAPI middleware)
 └── tests/
     ├── __init__.py
     ├── test_providers.py
     ├── test_config.py
     ├── test_collections.py
     ├── test_mode_manager.py
-    └── test_cache.py
+    ├── test_cache.py
+    └── test_auth.py                   # Auth tests
 
 config/
 ├── models.yaml                        # Service definitions
@@ -86,7 +101,10 @@ cli/
 ├── collections.py                     # rag-saldivia collections ...
 ├── ingest.py                          # rag-saldivia ingest ...
 ├── query.py                           # rag-saldivia query ...
-└── status.py                          # rag-saldivia status
+├── status.py                          # rag-saldivia status
+├── users.py                           # rag-saldivia users ...
+├── areas.py                           # rag-saldivia areas ...
+└── audit.py                           # rag-saldivia audit ...
 
 watch/                                 # Watch folder for auto-ingestion
 └── .gitkeep
@@ -136,6 +154,11 @@ dependencies = [
     "pymilvus>=2.4.0",
     "watchdog>=4.0.0",
     "mcp>=1.0.0",
+    "fastapi>=0.109.0",
+    "uvicorn>=0.27.0",
+    "passlib[bcrypt]>=1.7.4",
+    "python-jose[cryptography]>=3.3.0",
+    "aiosqlite>=0.19.0",
 ]
 
 [project.optional-dependencies]
@@ -2369,6 +2392,940 @@ EOF
 
 ---
 
+## Phase 10: Enterprise Auth (Tasks 15-17)
+
+### Task 15: Auth Database and Models
+
+**Files:**
+- Create: `saldivia/auth/__init__.py`
+- Create: `saldivia/auth/models.py`
+- Create: `saldivia/auth/database.py`
+
+- [ ] **Step 1: Create auth module structure**
+```bash
+mkdir -p saldivia/auth
+touch saldivia/auth/__init__.py
+```
+
+- [ ] **Step 2: Create database models**
+```python
+# saldivia/auth/models.py
+"""Auth models for RAG Saldivia."""
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+from typing import Optional
+import secrets
+import hashlib
+
+
+class Role(str, Enum):
+    ADMIN = "admin"           # Full access to all areas and collections
+    AREA_MANAGER = "area_manager"  # Manage users and collections in their area
+    USER = "user"             # Query collections assigned to their area
+
+
+class Permission(str, Enum):
+    READ = "read"             # Can query collection
+    WRITE = "write"           # Can ingest to collection
+    ADMIN = "admin"           # Can delete from collection
+
+
+@dataclass
+class Area:
+    id: int
+    name: str                 # e.g., "Mantenimiento", "Producción"
+    description: str = ""
+    created_at: datetime = field(default_factory=datetime.now)
+
+
+@dataclass
+class User:
+    id: int
+    email: str
+    name: str
+    area_id: int
+    role: Role
+    api_key_hash: str
+    created_at: datetime = field(default_factory=datetime.now)
+    last_login: Optional[datetime] = None
+    active: bool = True
+
+
+@dataclass
+class AreaCollection:
+    """Permission for an area to access a collection."""
+    area_id: int
+    collection_name: str
+    permission: Permission
+
+
+@dataclass
+class AuditEntry:
+    id: int
+    user_id: int
+    action: str               # query, ingest, create_collection, delete, etc.
+    collection: Optional[str]
+    query_preview: Optional[str]  # First 100 chars of query
+    ip_address: str
+    timestamp: datetime = field(default_factory=datetime.now)
+
+
+def generate_api_key() -> tuple[str, str]:
+    """Generate API key and its hash. Returns (key, hash)."""
+    key = f"rsk_{secrets.token_urlsafe(32)}"
+    hash_val = hashlib.sha256(key.encode()).hexdigest()
+    return key, hash_val
+
+
+def verify_api_key(key: str, hash_val: str) -> bool:
+    """Verify an API key against its hash."""
+    return hashlib.sha256(key.encode()).hexdigest() == hash_val
+```
+
+- [ ] **Step 3: Create database layer**
+```python
+# saldivia/auth/database.py
+"""SQLite database for auth."""
+import sqlite3
+import aiosqlite
+from pathlib import Path
+from typing import Optional
+from saldivia.auth.models import User, Area, AreaCollection, AuditEntry, Role, Permission
+
+DB_PATH = Path("data/auth.db")
+
+
+def init_db():
+    """Initialize database schema."""
+    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+
+    conn = sqlite3.connect(DB_PATH)
+    conn.executescript("""
+        CREATE TABLE IF NOT EXISTS areas (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT UNIQUE NOT NULL,
+            description TEXT DEFAULT '',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            email TEXT UNIQUE NOT NULL,
+            name TEXT NOT NULL,
+            area_id INTEGER NOT NULL REFERENCES areas(id),
+            role TEXT NOT NULL DEFAULT 'user',
+            api_key_hash TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            last_login TIMESTAMP,
+            active BOOLEAN DEFAULT 1
+        );
+
+        CREATE TABLE IF NOT EXISTS area_collections (
+            area_id INTEGER NOT NULL REFERENCES areas(id),
+            collection_name TEXT NOT NULL,
+            permission TEXT NOT NULL DEFAULT 'read',
+            PRIMARY KEY (area_id, collection_name)
+        );
+
+        CREATE TABLE IF NOT EXISTS audit_log (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL REFERENCES users(id),
+            action TEXT NOT NULL,
+            collection TEXT,
+            query_preview TEXT,
+            ip_address TEXT,
+            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE INDEX IF NOT EXISTS idx_audit_user ON audit_log(user_id);
+        CREATE INDEX IF NOT EXISTS idx_audit_timestamp ON audit_log(timestamp);
+        CREATE INDEX IF NOT EXISTS idx_users_api_key ON users(api_key_hash);
+    """)
+    conn.close()
+
+
+class AuthDB:
+    """Synchronous auth database operations."""
+
+    def __init__(self, db_path: Path = DB_PATH):
+        self.db_path = db_path
+        init_db()
+
+    def _conn(self):
+        return sqlite3.connect(self.db_path, detect_types=sqlite3.PARSE_DECLTYPES)
+
+    # Areas
+    def create_area(self, name: str, description: str = "") -> Area:
+        with self._conn() as conn:
+            cur = conn.execute(
+                "INSERT INTO areas (name, description) VALUES (?, ?)",
+                (name, description)
+            )
+            return Area(id=cur.lastrowid, name=name, description=description)
+
+    def get_area(self, area_id: int) -> Optional[Area]:
+        with self._conn() as conn:
+            row = conn.execute(
+                "SELECT id, name, description, created_at FROM areas WHERE id = ?",
+                (area_id,)
+            ).fetchone()
+            if row:
+                return Area(id=row[0], name=row[1], description=row[2], created_at=row[3])
+            return None
+
+    def list_areas(self) -> list[Area]:
+        with self._conn() as conn:
+            rows = conn.execute("SELECT id, name, description, created_at FROM areas").fetchall()
+            return [Area(id=r[0], name=r[1], description=r[2], created_at=r[3]) for r in rows]
+
+    # Users
+    def create_user(self, email: str, name: str, area_id: int, role: Role, api_key_hash: str) -> User:
+        with self._conn() as conn:
+            cur = conn.execute(
+                "INSERT INTO users (email, name, area_id, role, api_key_hash) VALUES (?, ?, ?, ?, ?)",
+                (email, name, area_id, role.value, api_key_hash)
+            )
+            return User(
+                id=cur.lastrowid, email=email, name=name,
+                area_id=area_id, role=role, api_key_hash=api_key_hash
+            )
+
+    def get_user_by_api_key_hash(self, api_key_hash: str) -> Optional[User]:
+        with self._conn() as conn:
+            row = conn.execute(
+                "SELECT id, email, name, area_id, role, api_key_hash, created_at, last_login, active "
+                "FROM users WHERE api_key_hash = ? AND active = 1",
+                (api_key_hash,)
+            ).fetchone()
+            if row:
+                return User(
+                    id=row[0], email=row[1], name=row[2], area_id=row[3],
+                    role=Role(row[4]), api_key_hash=row[5], created_at=row[6],
+                    last_login=row[7], active=row[8]
+                )
+            return None
+
+    def list_users(self, area_id: int = None) -> list[User]:
+        with self._conn() as conn:
+            if area_id:
+                rows = conn.execute(
+                    "SELECT id, email, name, area_id, role, api_key_hash, created_at, last_login, active "
+                    "FROM users WHERE area_id = ?", (area_id,)
+                ).fetchall()
+            else:
+                rows = conn.execute(
+                    "SELECT id, email, name, area_id, role, api_key_hash, created_at, last_login, active "
+                    "FROM users"
+                ).fetchall()
+            return [User(
+                id=r[0], email=r[1], name=r[2], area_id=r[3],
+                role=Role(r[4]), api_key_hash=r[5], created_at=r[6],
+                last_login=r[7], active=r[8]
+            ) for r in rows]
+
+    def deactivate_user(self, user_id: int):
+        with self._conn() as conn:
+            conn.execute("UPDATE users SET active = 0 WHERE id = ?", (user_id,))
+
+    # Permissions
+    def grant_collection_access(self, area_id: int, collection: str, permission: Permission):
+        with self._conn() as conn:
+            conn.execute(
+                "INSERT OR REPLACE INTO area_collections (area_id, collection_name, permission) "
+                "VALUES (?, ?, ?)",
+                (area_id, collection, permission.value)
+            )
+
+    def revoke_collection_access(self, area_id: int, collection: str):
+        with self._conn() as conn:
+            conn.execute(
+                "DELETE FROM area_collections WHERE area_id = ? AND collection_name = ?",
+                (area_id, collection)
+            )
+
+    def get_area_collections(self, area_id: int) -> list[AreaCollection]:
+        with self._conn() as conn:
+            rows = conn.execute(
+                "SELECT area_id, collection_name, permission FROM area_collections WHERE area_id = ?",
+                (area_id,)
+            ).fetchall()
+            return [AreaCollection(area_id=r[0], collection_name=r[1], permission=Permission(r[2])) for r in rows]
+
+    def get_user_collections(self, user: User) -> list[str]:
+        """Get list of collections a user can access."""
+        if user.role == Role.ADMIN:
+            # Admin can access all collections
+            from saldivia.collections import CollectionManager
+            return CollectionManager().list()
+
+        return [ac.collection_name for ac in self.get_area_collections(user.area_id)]
+
+    def can_access(self, user: User, collection: str, required: Permission) -> bool:
+        """Check if user can perform action on collection."""
+        if user.role == Role.ADMIN:
+            return True
+
+        for ac in self.get_area_collections(user.area_id):
+            if ac.collection_name == collection:
+                # admin > write > read
+                if ac.permission == Permission.ADMIN:
+                    return True
+                if ac.permission == Permission.WRITE and required in (Permission.WRITE, Permission.READ):
+                    return True
+                if ac.permission == Permission.READ and required == Permission.READ:
+                    return True
+        return False
+
+    # Audit
+    def log_action(self, user_id: int, action: str, collection: str = None,
+                   query_preview: str = None, ip_address: str = ""):
+        with self._conn() as conn:
+            conn.execute(
+                "INSERT INTO audit_log (user_id, action, collection, query_preview, ip_address) "
+                "VALUES (?, ?, ?, ?, ?)",
+                (user_id, action, collection, query_preview[:100] if query_preview else None, ip_address)
+            )
+
+    def get_audit_log(self, user_id: int = None, limit: int = 100) -> list[AuditEntry]:
+        with self._conn() as conn:
+            if user_id:
+                rows = conn.execute(
+                    "SELECT id, user_id, action, collection, query_preview, ip_address, timestamp "
+                    "FROM audit_log WHERE user_id = ? ORDER BY timestamp DESC LIMIT ?",
+                    (user_id, limit)
+                ).fetchall()
+            else:
+                rows = conn.execute(
+                    "SELECT id, user_id, action, collection, query_preview, ip_address, timestamp "
+                    "FROM audit_log ORDER BY timestamp DESC LIMIT ?",
+                    (limit,)
+                ).fetchall()
+            return [AuditEntry(
+                id=r[0], user_id=r[1], action=r[2], collection=r[3],
+                query_preview=r[4], ip_address=r[5], timestamp=r[6]
+            ) for r in rows]
+```
+
+- [ ] **Step 4: Create auth __init__.py**
+```python
+# saldivia/auth/__init__.py
+"""Authentication and authorization for RAG Saldivia."""
+from saldivia.auth.models import User, Area, Role, Permission, generate_api_key, verify_api_key
+from saldivia.auth.database import AuthDB
+
+__all__ = ["User", "Area", "Role", "Permission", "AuthDB", "generate_api_key", "verify_api_key"]
+```
+
+- [ ] **Step 5: Write tests**
+```python
+# saldivia/tests/test_auth.py
+import pytest
+from saldivia.auth import AuthDB, Role, Permission, generate_api_key, verify_api_key
+
+@pytest.fixture
+def db(tmp_path):
+    from saldivia.auth.database import DB_PATH
+    import saldivia.auth.database as db_module
+    db_module.DB_PATH = tmp_path / "test_auth.db"
+    return AuthDB(db_module.DB_PATH)
+
+def test_generate_api_key():
+    key, hash_val = generate_api_key()
+    assert key.startswith("rsk_")
+    assert len(key) > 40
+    assert verify_api_key(key, hash_val)
+
+def test_create_area(db):
+    area = db.create_area("Mantenimiento", "Equipo de mantenimiento")
+    assert area.id == 1
+    assert area.name == "Mantenimiento"
+
+def test_create_user(db):
+    area = db.create_area("IT")
+    key, hash_val = generate_api_key()
+    user = db.create_user("admin@empresa.com", "Admin", area.id, Role.ADMIN, hash_val)
+    assert user.id == 1
+    assert user.role == Role.ADMIN
+
+def test_collection_permissions(db):
+    area = db.create_area("Producción")
+    key, hash_val = generate_api_key()
+    user = db.create_user("juan@empresa.com", "Juan", area.id, Role.USER, hash_val)
+
+    # No access initially
+    assert not db.can_access(user, "tecpia", Permission.READ)
+
+    # Grant read access
+    db.grant_collection_access(area.id, "tecpia", Permission.READ)
+    assert db.can_access(user, "tecpia", Permission.READ)
+    assert not db.can_access(user, "tecpia", Permission.WRITE)
+
+    # Upgrade to write
+    db.grant_collection_access(area.id, "tecpia", Permission.WRITE)
+    assert db.can_access(user, "tecpia", Permission.WRITE)
+```
+
+- [ ] **Step 6: Run tests**
+```bash
+python -m pytest saldivia/tests/test_auth.py -v
+```
+
+- [ ] **Step 7: Commit**
+```bash
+git add saldivia/auth/
+git commit -m "feat(auth): add auth database models and RBAC"
+```
+
+---
+
+### Task 16: Auth Gateway
+
+**Files:**
+- Create: `saldivia/gateway.py`
+- Modify: `config/compose-platform-services.yaml`
+
+- [ ] **Step 1: Create auth gateway**
+```python
+# saldivia/gateway.py
+"""Auth Gateway - FastAPI middleware for RAG API."""
+import os
+import hashlib
+import logging
+from typing import Optional
+from fastapi import FastAPI, Request, HTTPException, Depends
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import StreamingResponse
+import httpx
+
+from saldivia.auth import AuthDB, User, Role, Permission, verify_api_key
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+app = FastAPI(title="RAG Saldivia Gateway")
+
+# Configuration
+RAG_SERVER_URL = os.getenv("RAG_SERVER_URL", "http://localhost:8081")
+INGESTOR_URL = os.getenv("INGESTOR_URL", "http://localhost:8082")
+BYPASS_AUTH = os.getenv("BYPASS_AUTH", "false").lower() == "true"
+
+security = HTTPBearer(auto_error=False)
+db = AuthDB()
+
+
+def get_user_from_token(credentials: HTTPAuthorizationCredentials = Depends(security)) -> Optional[User]:
+    """Extract and validate user from Bearer token."""
+    if BYPASS_AUTH:
+        return None  # Allow all requests in dev mode
+
+    if not credentials:
+        raise HTTPException(status_code=401, detail="Missing API key")
+
+    api_key = credentials.credentials
+    api_key_hash = hashlib.sha256(api_key.encode()).hexdigest()
+
+    user = db.get_user_by_api_key_hash(api_key_hash)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid API key")
+
+    return user
+
+
+def filter_collections(user: User, requested: list[str]) -> list[str]:
+    """Filter collections to only those the user can access."""
+    if user is None or user.role == Role.ADMIN:
+        return requested
+
+    allowed = set(db.get_user_collections(user))
+    filtered = [c for c in requested if c in allowed]
+
+    if not filtered:
+        raise HTTPException(
+            status_code=403,
+            detail=f"No access to requested collections. You have access to: {list(allowed)}"
+        )
+
+    return filtered
+
+
+@app.post("/v1/generate")
+async def generate(request: Request, user: User = Depends(get_user_from_token)):
+    """Proxy to RAG generate endpoint with auth filtering."""
+    body = await request.json()
+
+    # Filter collections
+    if "collection_names" in body:
+        body["collection_names"] = filter_collections(user, body["collection_names"])
+
+    # Log query
+    if user:
+        query_preview = ""
+        if "messages" in body and body["messages"]:
+            last_msg = body["messages"][-1].get("content", "")
+            query_preview = last_msg[:100] if isinstance(last_msg, str) else str(last_msg)[:100]
+
+        db.log_action(
+            user_id=user.id,
+            action="query",
+            collection=",".join(body.get("collection_names", [])),
+            query_preview=query_preview,
+            ip_address=request.client.host if request.client else ""
+        )
+
+    # Proxy request
+    async with httpx.AsyncClient(timeout=120) as client:
+        resp = await client.post(
+            f"{RAG_SERVER_URL}/v1/generate",
+            json=body,
+            headers={"Content-Type": "application/json"}
+        )
+        return resp.json()
+
+
+@app.post("/v1/search")
+async def search(request: Request, user: User = Depends(get_user_from_token)):
+    """Proxy to RAG search endpoint with auth filtering."""
+    body = await request.json()
+
+    if "collection_names" in body:
+        body["collection_names"] = filter_collections(user, body["collection_names"])
+
+    if user:
+        db.log_action(
+            user_id=user.id,
+            action="search",
+            collection=",".join(body.get("collection_names", [])),
+            query_preview=body.get("query", "")[:100],
+            ip_address=request.client.host if request.client else ""
+        )
+
+    async with httpx.AsyncClient(timeout=60) as client:
+        resp = await client.post(
+            f"{RAG_SERVER_URL}/v1/search",
+            json=body,
+            headers={"Content-Type": "application/json"}
+        )
+        return resp.json()
+
+
+@app.post("/v1/documents")
+async def ingest(request: Request, user: User = Depends(get_user_from_token)):
+    """Proxy to ingestor with write permission check."""
+    if user and user.role == Role.USER:
+        raise HTTPException(status_code=403, detail="Users cannot ingest documents directly")
+
+    # Forward multipart request as-is
+    body = await request.body()
+    headers = dict(request.headers)
+    headers.pop("host", None)
+
+    async with httpx.AsyncClient(timeout=600) as client:
+        resp = await client.post(
+            f"{INGESTOR_URL}/v1/documents",
+            content=body,
+            headers=headers
+        )
+
+        if user:
+            db.log_action(
+                user_id=user.id,
+                action="ingest",
+                ip_address=request.client.host if request.client else ""
+            )
+
+        return resp.json()
+
+
+@app.get("/health")
+async def health():
+    return {"status": "ok", "auth_enabled": not BYPASS_AUTH}
+
+
+@app.get("/v1/collections")
+async def list_collections(user: User = Depends(get_user_from_token)):
+    """List collections user can access."""
+    if user is None:
+        from saldivia.collections import CollectionManager
+        return {"collections": CollectionManager().list()}
+
+    return {"collections": db.get_user_collections(user)}
+
+
+# Admin endpoints
+@app.get("/admin/audit")
+async def get_audit(limit: int = 100, user: User = Depends(get_user_from_token)):
+    """Get audit log (admin only)."""
+    if user and user.role != Role.ADMIN:
+        raise HTTPException(status_code=403, detail="Admin only")
+
+    entries = db.get_audit_log(limit=limit)
+    return {"entries": [
+        {
+            "id": e.id,
+            "user_id": e.user_id,
+            "action": e.action,
+            "collection": e.collection,
+            "timestamp": e.timestamp.isoformat() if e.timestamp else None
+        }
+        for e in entries
+    ]}
+
+
+def main():
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8090)
+
+
+if __name__ == "__main__":
+    main()
+```
+
+- [ ] **Step 2: Create Dockerfile**
+```dockerfile
+# services/auth-gateway/Dockerfile
+FROM python:3.11-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY . /app/saldivia
+ENV PYTHONPATH=/app
+CMD ["python", "-m", "saldivia.gateway"]
+```
+
+- [ ] **Step 3: Update compose**
+```yaml
+# Add to config/compose-platform-services.yaml under services:
+  auth-gateway:
+    build:
+      context: ..
+      dockerfile: services/auth-gateway/Dockerfile
+    environment:
+      - RAG_SERVER_URL=http://rag-server:8081
+      - INGESTOR_URL=http://ingestor-server:8082
+      - BYPASS_AUTH=${BYPASS_AUTH:-false}
+    ports:
+      - "8090:8090"
+    volumes:
+      - ./data:/app/data  # SQLite database
+    depends_on:
+      - redis
+    networks:
+      - default
+
+networks:
+  default:
+    name: nvidia-rag
+    external: true
+```
+
+- [ ] **Step 4: Commit**
+```bash
+git add saldivia/gateway.py services/auth-gateway/
+git commit -m "feat(auth): add auth gateway with RBAC filtering"
+```
+
+---
+
+### Task 17: User Management CLI
+
+**Files:**
+- Create: `cli/users.py`
+- Create: `cli/areas.py`
+- Create: `cli/audit.py`
+- Modify: `cli/main.py`
+
+- [ ] **Step 1: Create users CLI**
+```python
+# cli/users.py
+"""CLI commands for user management."""
+import click
+from saldivia.auth import AuthDB, Role, generate_api_key
+
+
+@click.group()
+def users():
+    """Manage users."""
+    pass
+
+
+@users.command("list")
+@click.option("--area", type=int, help="Filter by area ID")
+def list_users(area: int):
+    """List all users."""
+    db = AuthDB()
+    users_list = db.list_users(area_id=area)
+
+    if not users_list:
+        click.echo("No users found")
+        return
+
+    click.echo(f"{'ID':<4} {'Email':<30} {'Name':<20} {'Area':<6} {'Role':<12} {'Active'}")
+    click.echo("-" * 80)
+    for u in users_list:
+        status = "✓" if u.active else "✗"
+        click.echo(f"{u.id:<4} {u.email:<30} {u.name:<20} {u.area_id:<6} {u.role.value:<12} {status}")
+
+
+@users.command("create")
+@click.argument("email")
+@click.argument("name")
+@click.argument("area_id", type=int)
+@click.option("--role", type=click.Choice(["admin", "area_manager", "user"]), default="user")
+def create_user(email: str, name: str, area_id: int, role: str):
+    """Create a new user. Returns the API key (shown only once)."""
+    db = AuthDB()
+
+    # Verify area exists
+    area = db.get_area(area_id)
+    if not area:
+        click.echo(f"Area {area_id} not found", err=True)
+        return
+
+    # Generate API key
+    api_key, api_key_hash = generate_api_key()
+
+    user = db.create_user(
+        email=email,
+        name=name,
+        area_id=area_id,
+        role=Role(role),
+        api_key_hash=api_key_hash
+    )
+
+    click.echo(f"Created user: {user.email} (ID: {user.id})")
+    click.echo(f"Area: {area.name}")
+    click.echo(f"Role: {user.role.value}")
+    click.echo("")
+    click.echo("⚠️  API Key (save this, it won't be shown again):")
+    click.echo(f"   {api_key}")
+
+
+@users.command("deactivate")
+@click.argument("user_id", type=int)
+@click.option("--confirm", is_flag=True, help="Confirm deactivation")
+def deactivate_user(user_id: int, confirm: bool):
+    """Deactivate a user."""
+    if not confirm:
+        click.echo("Add --confirm to deactivate")
+        return
+
+    db = AuthDB()
+    db.deactivate_user(user_id)
+    click.echo(f"Deactivated user {user_id}")
+
+
+@users.command("reset-key")
+@click.argument("user_id", type=int)
+def reset_key(user_id: int):
+    """Generate new API key for user."""
+    db = AuthDB()
+    api_key, api_key_hash = generate_api_key()
+
+    with db._conn() as conn:
+        conn.execute("UPDATE users SET api_key_hash = ? WHERE id = ?", (api_key_hash, user_id))
+
+    click.echo(f"New API key for user {user_id}:")
+    click.echo(f"   {api_key}")
+```
+
+- [ ] **Step 2: Create areas CLI**
+```python
+# cli/areas.py
+"""CLI commands for area management."""
+import click
+from saldivia.auth import AuthDB, Permission
+
+
+@click.group()
+def areas():
+    """Manage areas (departments)."""
+    pass
+
+
+@areas.command("list")
+def list_areas():
+    """List all areas."""
+    db = AuthDB()
+    areas_list = db.list_areas()
+
+    if not areas_list:
+        click.echo("No areas found")
+        return
+
+    click.echo(f"{'ID':<4} {'Name':<25} {'Description'}")
+    click.echo("-" * 60)
+    for a in areas_list:
+        click.echo(f"{a.id:<4} {a.name:<25} {a.description}")
+
+
+@areas.command("create")
+@click.argument("name")
+@click.option("--description", "-d", default="", help="Area description")
+def create_area(name: str, description: str):
+    """Create a new area."""
+    db = AuthDB()
+    area = db.create_area(name, description)
+    click.echo(f"Created area: {area.name} (ID: {area.id})")
+
+
+@areas.command("grant")
+@click.argument("area_id", type=int)
+@click.argument("collection")
+@click.option("--permission", "-p", type=click.Choice(["read", "write", "admin"]), default="read")
+def grant_access(area_id: int, collection: str, permission: str):
+    """Grant area access to a collection."""
+    db = AuthDB()
+    db.grant_collection_access(area_id, collection, Permission(permission))
+    click.echo(f"Granted {permission} access to '{collection}' for area {area_id}")
+
+
+@areas.command("revoke")
+@click.argument("area_id", type=int)
+@click.argument("collection")
+def revoke_access(area_id: int, collection: str):
+    """Revoke area access to a collection."""
+    db = AuthDB()
+    db.revoke_collection_access(area_id, collection)
+    click.echo(f"Revoked access to '{collection}' for area {area_id}")
+
+
+@areas.command("permissions")
+@click.argument("area_id", type=int)
+def show_permissions(area_id: int):
+    """Show collections an area can access."""
+    db = AuthDB()
+    area = db.get_area(area_id)
+
+    if not area:
+        click.echo(f"Area {area_id} not found", err=True)
+        return
+
+    click.echo(f"Area: {area.name}")
+    click.echo(f"Collections:")
+
+    perms = db.get_area_collections(area_id)
+    if not perms:
+        click.echo("  (none)")
+        return
+
+    for p in perms:
+        click.echo(f"  - {p.collection_name}: {p.permission.value}")
+```
+
+- [ ] **Step 3: Create audit CLI**
+```python
+# cli/audit.py
+"""CLI commands for audit log."""
+import click
+from saldivia.auth import AuthDB
+
+
+@click.group()
+def audit():
+    """View audit logs."""
+    pass
+
+
+@audit.command("show")
+@click.option("--user", type=int, help="Filter by user ID")
+@click.option("--limit", "-n", default=50, help="Number of entries")
+def show_audit(user: int, limit: int):
+    """Show recent audit log entries."""
+    db = AuthDB()
+    entries = db.get_audit_log(user_id=user, limit=limit)
+
+    if not entries:
+        click.echo("No audit entries found")
+        return
+
+    click.echo(f"{'Time':<20} {'User':<6} {'Action':<10} {'Collection':<15} {'Preview'}")
+    click.echo("-" * 80)
+
+    for e in entries:
+        time_str = e.timestamp.strftime("%Y-%m-%d %H:%M") if e.timestamp else "?"
+        preview = (e.query_preview or "")[:30]
+        click.echo(f"{time_str:<20} {e.user_id:<6} {e.action:<10} {e.collection or '-':<15} {preview}")
+
+
+@audit.command("export")
+@click.argument("output", type=click.Path())
+@click.option("--format", "-f", type=click.Choice(["csv", "json"]), default="csv")
+def export_audit(output: str, format: str):
+    """Export audit log to file."""
+    import json as json_lib
+    import csv
+
+    db = AuthDB()
+    entries = db.get_audit_log(limit=10000)
+
+    if format == "json":
+        with open(output, "w") as f:
+            json_lib.dump([{
+                "id": e.id,
+                "user_id": e.user_id,
+                "action": e.action,
+                "collection": e.collection,
+                "query_preview": e.query_preview,
+                "ip_address": e.ip_address,
+                "timestamp": e.timestamp.isoformat() if e.timestamp else None
+            } for e in entries], f, indent=2)
+    else:
+        with open(output, "w", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow(["id", "user_id", "action", "collection", "query_preview", "ip_address", "timestamp"])
+            for e in entries:
+                writer.writerow([
+                    e.id, e.user_id, e.action, e.collection,
+                    e.query_preview, e.ip_address,
+                    e.timestamp.isoformat() if e.timestamp else ""
+                ])
+
+    click.echo(f"Exported {len(entries)} entries to {output}")
+```
+
+- [ ] **Step 4: Update cli/main.py**
+```python
+# Add imports to cli/main.py
+from cli.users import users
+from cli.areas import areas
+from cli.audit import audit
+
+# Add commands
+cli.add_command(users)
+cli.add_command(areas)
+cli.add_command(audit)
+```
+
+- [ ] **Step 5: Test CLI**
+```bash
+# Create areas
+python -m cli.main areas create "Mantenimiento" -d "Equipo de mantenimiento industrial"
+python -m cli.main areas create "Producción" -d "Línea de producción"
+python -m cli.main areas list
+
+# Create users
+python -m cli.main users create admin@empresa.com "Admin Principal" 1 --role admin
+python -m cli.main users create juan@empresa.com "Juan Pérez" 1 --role user
+python -m cli.main users list
+
+# Grant permissions
+python -m cli.main areas grant 1 tecpia_test --permission read
+python -m cli.main areas permissions 1
+
+# View audit
+python -m cli.main audit show --limit 10
+```
+
+- [ ] **Step 6: Commit**
+```bash
+git add cli/users.py cli/areas.py cli/audit.py
+git commit -m "feat(cli): add user, area, and audit management"
+```
+
+---
+
 ## Summary
 
 | Phase | Tasks | Description |
@@ -2382,5 +3339,8 @@ EOF
 | 7 | 9-10 | Services + Deploy |
 | 8 | 11-12 | Cache + Crossdoc |
 | 9 | 13-14 | Test + PR |
+| 10 | 15-17 | Enterprise Auth (Users, RBAC, Audit) |
 
-**Total: 14 tasks, ~4-5 hours**
+**Target: 300 users, 20 areas**
+
+**Total: 17 tasks, ~6-7 hours**
