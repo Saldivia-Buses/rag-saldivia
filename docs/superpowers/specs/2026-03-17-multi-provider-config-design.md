@@ -19,6 +19,84 @@ Extend RAG Saldivia to support granular, per-service model routing with multiple
 - Local guardrails deployment (requires 2 additional GPUs)
 - Custom provider implementations beyond OpenAI-compatible APIs
 
+## Constraints
+
+### Blueprint LLM Provider Limitation
+
+The Blueprint's RAG server only supports local NIMs and NVIDIA API for the core LLM service. It does NOT support arbitrary OpenAI-compatible providers (like OpenRouter or OpenAI directly) because:
+
+1. The Blueprint uses `ChatNVIDIA` from `langchain_nvidia_ai_endpoints` for all LLM calls
+2. `ChatNVIDIA` doesn't support custom headers required by OpenRouter (`HTTP-Referer`, `X-Title`)
+3. The `_is_nvidia_endpoint()` function only controls NVIDIA-specific parameters (like `min_tokens`), not client selection
+
+**Workaround:** For the `llm` service specifically, use NVIDIA API when local NIM isn't available. OpenRouter and OpenAI can still be used for:
+- Crossdoc decomposition/synthesis (via our SDK, not Blueprint)
+- Any other custom scripts
+
+This limitation does NOT apply to services we control directly (crossdoc_client.py).
+
+### Solution: OpenRouter Proxy
+
+To enable ANY OpenAI-compatible provider for the Blueprint's LLM service, we add an optional lightweight proxy:
+
+```
+┌─────────────┐     ┌──────────────────┐     ┌─────────────────┐
+│  Blueprint  │────▶│ openrouter-proxy │────▶│   OpenRouter    │
+│  RAG Server │     │   (adds headers) │     │   (any model)   │
+└─────────────┘     └──────────────────┘     └─────────────────┘
+```
+
+**Proxy implementation** (`services/openrouter-proxy/`):
+
+```python
+# proxy.py (~40 lines, FastAPI)
+from fastapi import FastAPI, Request, Response
+import httpx
+
+app = FastAPI()
+OPENROUTER_URL = "https://openrouter.ai/api/v1"
+HEADERS = {
+    "HTTP-Referer": "https://rag-saldivia.local",
+    "X-Title": "RAG Saldivia"
+}
+
+@app.api_route("/{path:path}", methods=["GET", "POST"])
+async def proxy(path: str, request: Request):
+    async with httpx.AsyncClient() as client:
+        resp = await client.request(
+            method=request.method,
+            url=f"{OPENROUTER_URL}/{path}",
+            headers={**dict(request.headers), **HEADERS},
+            content=await request.body(),
+        )
+        return Response(content=resp.content, status_code=resp.status_code)
+```
+
+**Configuration when using proxy:**
+
+```yaml
+# models.yaml
+services:
+  llm:
+    provider: openrouter-proxy  # Uses local proxy
+    endpoint: openrouter-proxy:8080/v1
+    model: anthropic/claude-sonnet-4  # Any OpenRouter model
+```
+
+**Compose file** (`compose-openrouter-proxy.yaml`):
+
+```yaml
+services:
+  openrouter-proxy:
+    build: ./services/openrouter-proxy
+    environment:
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+    ports:
+      - "8080:8080"
+```
+
+The proxy is optional — only included when `services.llm.provider: openrouter-proxy` is set.
+
 ## Architecture
 
 ### Approach: Overlay + SDK
@@ -119,7 +197,13 @@ services:
       provider: local
       model: nvidia/nemotron-3-super-120b-a12b
     synthesis:
-      use_rag_server: true
+      use_rag_server: true  # Uses RAG server's LLM for final answer
+      # Alternative: call provider directly (bypasses RAG server for synthesis)
+      # use_rag_server: false
+      # provider: openrouter
+      # model: anthropic/claude-sonnet-4
+      # parameters:
+      #   max_tokens: 4096
 ```
 
 ### Profile Override Example
@@ -130,12 +214,17 @@ services:
 
 services:
   llm:
-    provider: openrouter
-    model: anthropic/claude-sonnet-4
+    # Option A: NVIDIA API (direct, no proxy needed)
+    provider: nvidia-api
+    model: nvidia/llama-3.3-nemotron-super-49b-v1.5
+    # Option B: OpenRouter via proxy (any model)
+    # provider: openrouter-proxy
+    # model: anthropic/claude-sonnet-4
     parameters:
       max_tokens: 4096
 
   crossdoc:
+    # Crossdoc can use OpenRouter directly (we control the client)
     decomposition:
       provider: openrouter
       model: anthropic/claude-sonnet-4
@@ -145,20 +234,13 @@ services:
 
 ```yaml
 enabled: true
-provider: nvidia-api  # Always cloud
+provider: nvidia-api  # Always cloud (NVIDIA API key required)
 
-content_safety:
-  enabled: true
-  model: llama-3.1-nemoguard-8b-content-safety
-
-topic_control:
-  enabled: true
-  model: llama-3.1-nemoguard-8b-topic-control
-  allowed_topics:
-    - technical documentation
-    - industrial equipment
-    - engineering calculations
+# Config bundle selection (maps to DEFAULT_CONFIG env var)
+config_id: nemoguard_cloud  # Options: nemoguard, nemoguard_cloud
 ```
+
+**Note:** Guardrails behavior (content safety, topic control, etc.) is configured via NeMo Guardrails config bundles in `deploy/compose/nemo-guardrails/config-store/`. The `config_id` selects which bundle to use. Our config loader only controls on/off and bundle selection — fine-grained guardrail tuning requires modifying the Blueprint's config files directly.
 
 ### observability.yaml
 
@@ -181,6 +263,19 @@ grafana:
   enabled: true
   port: 3000
 ```
+
+**Generated env vars:**
+
+| YAML Field | Env Var | Description |
+|------------|---------|-------------|
+| `enabled: false` | `OTEL_SDK_DISABLED=true` | Disables all OpenTelemetry instrumentation |
+| `opentelemetry.endpoint` | `OTEL_EXPORTER_OTLP_ENDPOINT` | OTLP collector endpoint |
+| `zipkin.enabled` | Controls whether Zipkin container is included in compose |
+| `prometheus.enabled` | Controls whether Prometheus container is included |
+| `prometheus.retention` | `--storage.tsdb.retention.time` flag in Prometheus |
+| `grafana.enabled` | Controls whether Grafana container is included |
+
+When `enabled: true`, the config loader includes `compose-observability.yaml` in the compose command.
 
 ## Provider SDK
 
@@ -303,6 +398,10 @@ class CrossdocClient:
 - `config/profiles/full-cloud.yaml`
 - `config/compose-guardrails-cloud.yaml`
 - `config/compose-observability.yaml`
+- `config/compose-openrouter-proxy.yaml`
+- `services/openrouter-proxy/proxy.py`
+- `services/openrouter-proxy/Dockerfile`
+- `services/openrouter-proxy/requirements.txt`
 - `saldivia/__init__.py`
 - `saldivia/providers.py`
 - `saldivia/config.py`
@@ -314,8 +413,8 @@ class CrossdocClient:
 - `.gitignore` — Ensure .env.local is ignored
 
 ### Deleted Files
-- `config/profiles/brev-2gpu.env` — Replaced by YAML
-- `config/profiles/workstation-1gpu.env` — Replaced by YAML
+- `config/profiles/brev-2gpu.env` — Replaced by `brev-2gpu.yaml`
+- `config/profiles/workstation-1gpu.env` — Replaced by `workstation-hybrid.yaml` (renamed: the profile now uses hybrid local+API approach, not just "1 GPU")
 
 ## Environment Variables
 
@@ -331,7 +430,36 @@ NGC_API_KEY=...  # For guardrails
 
 ### Generated in .env.merged (by config_loader)
 
-All the `APP_*` variables the Blueprint expects, derived from models.yaml + profile.
+The config loader translates YAML fields to Blueprint env vars:
+
+| YAML Path | Blueprint Env Var |
+|-----------|-------------------|
+| `services.llm.endpoint` | `APP_LLM_SERVERURL` |
+| `services.llm.model` | `APP_LLM_MODELNAME` |
+| `services.llm.parameters.temperature` | `LLM_TEMPERATURE` |
+| `services.llm.parameters.max_tokens` | `LLM_MAX_TOKENS` |
+| `services.embeddings.endpoint` | `APP_EMBEDDINGS_SERVERURL` |
+| `services.embeddings.model` | `APP_EMBEDDINGS_MODELNAME` |
+| `services.reranker.endpoint` | `APP_RANKING_SERVERURL` |
+| `services.reranker.model` | `APP_RANKING_MODELNAME` |
+| `services.query_rewriter.enabled` | `ENABLE_QUERYREWRITER` |
+| `services.query_rewriter.endpoint` | `APP_QUERYREWRITER_SERVERURL` |
+| `services.filter_generator.enabled` | `ENABLE_FILTER_GENERATOR` |
+| `services.filter_generator.endpoint` | `APP_FILTEREXPRESSIONGENERATOR_SERVERURL` |
+| `services.filter_generator.model` | `APP_FILTEREXPRESSIONGENERATOR_MODELNAME` |
+| `services.summarizer.endpoint` | `SUMMARY_LLM_SERVERURL` |
+| `services.summarizer.model` | `SUMMARY_LLM` |
+| `services.vlm.endpoint` (RAG) | `APP_VLM_SERVERURL` |
+| `services.vlm.endpoint` (ingestion) | `APP_NVINGEST_CAPTIONENDPOINTURL` |
+| `services.vlm.model` | `APP_VLM_MODELNAME` / `APP_NVINGEST_CAPTIONMODELNAME` |
+| `observability.enabled` | `OTEL_SDK_DISABLED` (inverted) |
+| `observability.opentelemetry.endpoint` | `OTEL_EXPORTER_OTLP_ENDPOINT` |
+| `guardrails.enabled` | `ENABLE_GUARDRAILS` |
+
+**Note:** Guardrails configuration beyond on/off is controlled via NeMo Guardrails config files, not env vars. The config loader sets `DEFAULT_CONFIG_ID` to select the appropriate config bundle.
+
+For API providers, the loader also sets:
+- `APP_LLM_APIKEY` from `NVIDIA_API_KEY` env var (when provider is `nvidia-api`)
 
 ## Testing Strategy
 
@@ -354,9 +482,13 @@ None — all decisions made during brainstorming.
 
 ## Appendix: Provider Compatibility
 
-| Provider | Chat Completions | Streaming | Tool Use | Notes |
-|----------|-----------------|-----------|----------|-------|
-| Local NIM | Yes | Yes | No | OpenAI-compatible |
-| NVIDIA API | Yes | Yes | No | Requires NVIDIA_API_KEY |
-| OpenRouter | Yes | Yes | Yes | Requires extra headers |
-| OpenAI | Yes | Yes | Yes | Standard API |
+| Provider | Chat Completions | Streaming | Tool Use | Blueprint LLM | Notes |
+|----------|-----------------|-----------|----------|---------------|-------|
+| Local NIM | Yes | Yes | No | ✅ Direct | OpenAI-compatible |
+| NVIDIA API | Yes | Yes | No | ✅ Direct | Requires NVIDIA_API_KEY |
+| OpenRouter | Yes | Yes | Yes | ⚠️ Via proxy | Requires extra headers |
+| OpenAI | Yes | Yes | Yes | ⚠️ Via proxy | Could work direct, proxy recommended for consistency |
+
+**Blueprint LLM column:** Whether the provider can be used for the `services.llm` (RAG server's main LLM).
+- ✅ Direct — Works out of the box
+- ⚠️ Via proxy — Requires `openrouter-proxy` container
