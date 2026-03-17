@@ -41,6 +41,19 @@ DEFAULT_MAX_TOKENS = 2048
 REPETITION_WINDOW = 60          # chars to check for repetition
 REPETITION_THRESHOLD = 3        # how many repeats before cutting
 MAX_RESPONSE_CHARS = 15000      # hard cap on response length
+MAX_CONCURRENT_REQUESTS = 8     # limit concurrent RAG API calls
+MAX_CONTEXT_CHARS = 50000       # limit context size for synthesis
+MAX_QUESTION_CHARS = 2000       # truncate very long questions
+
+# Semaphore for rate limiting (created lazily)
+_request_semaphore = None
+
+def _get_semaphore():
+    global _request_semaphore
+    if _request_semaphore is None:
+        import threading
+        _request_semaphore = threading.Semaphore(MAX_CONCURRENT_REQUESTS)
+    return _request_semaphore
 
 
 # ---------------------------------------------------------------------------
@@ -75,39 +88,74 @@ def _extract_token(data_str):
         return None
 
 
-def _stream_rag(payload, timeout=60):
-    """Unified SSE streaming client with repetition detection."""
-    full = ""
-    try:
-        resp = requests.post(RAG_URL, json=payload, stream=True, timeout=timeout)
-        resp.raise_for_status()
-        for line in resp.iter_lines():
-            if not line:
-                continue
-            text = line.decode("utf-8", errors="replace")
-            if not text.startswith("data: "):
-                continue
-            data_str = text[6:]
-            if data_str.strip() == "[DONE]":
-                break
-            token = _extract_token(data_str)
-            if token:
-                full += token
-            # --- repetition guard ---
-            cut = _detect_repetition(full)
-            if cut > 0:
-                full = full[:cut]
-                break
-            # --- hard cap ---
-            if len(full) > MAX_RESPONSE_CHARS:
-                break
-    except requests.exceptions.Timeout:
-        if full:
+def _stream_rag(payload, timeout=60, retries=2):
+    """Unified SSE streaming client with repetition detection and rate limiting."""
+    sem = _get_semaphore()
+
+    for attempt in range(retries + 1):
+        full = ""
+        try:
+            # Rate limit concurrent requests
+            sem.acquire()
+            try:
+                resp = requests.post(RAG_URL, json=payload, stream=True, timeout=timeout)
+                resp.raise_for_status()
+                for line in resp.iter_lines():
+                    if not line:
+                        continue
+                    text = line.decode("utf-8", errors="replace")
+                    if not text.startswith("data: "):
+                        continue
+                    data_str = text[6:]
+                    if data_str.strip() == "[DONE]":
+                        break
+                    token = _extract_token(data_str)
+                    if token:
+                        full += token
+                    # --- repetition guard ---
+                    cut = _detect_repetition(full)
+                    if cut > 0:
+                        full = full[:cut]
+                        break
+                    # --- hard cap ---
+                    if len(full) > MAX_RESPONSE_CHARS:
+                        break
+            finally:
+                sem.release()
             return full.strip()
-        return "ERROR: timeout"
+
+        except requests.exceptions.Timeout:
+            if full:
+                return full.strip()
+            if attempt < retries:
+                time.sleep(1 * (attempt + 1))  # backoff
+                continue
+            return "ERROR: timeout"
+        except requests.exceptions.ConnectionError as e:
+            if attempt < retries:
+                time.sleep(2 * (attempt + 1))  # longer backoff for connection errors
+                continue
+            return f"ERROR: connection failed - {e}"
+        except Exception as e:
+            return f"ERROR: {e}"
+
+    return full.strip() if full else "ERROR: max retries"
+
+
+def check_rag_health():
+    """Check if RAG server is healthy. Returns (ok, error_msg)."""
+    health_url = RAG_URL.replace("/v1/generate", "/health")
+    try:
+        resp = requests.get(health_url, timeout=5)
+        if resp.status_code == 200:
+            return True, None
+        return False, f"HTTP {resp.status_code}"
+    except requests.exceptions.ConnectionError:
+        return False, "Connection refused - is RAG server running?"
+    except requests.exceptions.Timeout:
+        return False, "Health check timed out"
     except Exception as e:
-        return f"ERROR: {e}"
-    return full.strip()
+        return False, str(e)
 
 
 def query_rag(question, cfg):
@@ -219,6 +267,10 @@ def _deduplicate(queries, threshold=0.65):
 
 def decompose_query(question, cfg):
     """Decompose a complex question into independent sub-queries, deduplicated."""
+    # Truncate very long questions to prevent prompt overflow
+    if len(question) > MAX_QUESTION_CHARS:
+        question = question[:MAX_QUESTION_CHARS] + "..."
+
     result = llm_call(DECOMP_PROMPT.format(question=question), cfg, timeout=30)
     subqs = _parse_numbered_lines(result)
     return _deduplicate(subqs) if subqs else [question]
@@ -276,13 +328,29 @@ RESPUESTA:"""
 
 
 def synthesize(question, sub_results, cfg):
-    """Combine sub-query results into a final answer."""
+    """Combine sub-query results into a final answer. Handles context overflow."""
     parts = []
+    total_chars = 0
+
     for sq, result, success in sub_results:
         if success:
-            parts.append(f"[{sq}]\n{result}")
+            part = f"[{sq}]\n{result}"
         else:
-            parts.append(f"[{sq}]\nSin información disponible.")
+            part = f"[{sq}]\nSin información disponible."
+
+        # Check if adding this part would exceed context limit
+        if total_chars + len(part) > MAX_CONTEXT_CHARS:
+            # Truncate the result to fit
+            remaining = MAX_CONTEXT_CHARS - total_chars - len(sq) - 10
+            if remaining > 200:
+                truncated_result = result[:remaining] + "... [truncado]"
+                part = f"[{sq}]\n{truncated_result}"
+            else:
+                # Not enough room, skip this result
+                continue
+
+        parts.append(part)
+        total_chars += len(part)
 
     context = "\n\n---\n\n".join(parts)
     prompt = SYNTH_PROMPT.format(context=context, question=question)
@@ -470,6 +538,13 @@ def parse_args():
 def main():
     cfg = parse_args()
 
+    # Health check before running
+    ok, err = check_rag_health()
+    if not ok:
+        print(f"ERROR: RAG server not available - {err}", file=sys.stderr)
+        print(f"  Check: curl {RAG_URL.replace('/v1/generate', '/health')}", file=sys.stderr)
+        sys.exit(1)
+
     if cfg.test:
         results = run_tests(cfg)
         if cfg.output_json:
@@ -481,8 +556,8 @@ def main():
         return
 
     if not cfg.question:
-        print("Uso: python rag_crossdoc_v4.py \"pregunta\"")
-        print("     python rag_crossdoc_v4.py --test")
+        print("Uso: python crossdoc_client.py \"pregunta\"")
+        print("     python crossdoc_client.py --test")
         sys.exit(1)
 
     res = crossdoc_query(cfg.question, cfg)

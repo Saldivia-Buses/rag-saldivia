@@ -133,17 +133,34 @@ class MilvusClient:
                     return -1
 
     def get_indexed_documents(self, collection):
+        """Get indexed document names with pagination for 10K+ scale."""
         from pymilvus import Collection
         for attempt in range(2):
             try:
                 self._ensure_connected()
                 doc_info = Collection("document_info")
                 doc_info.load()
-                results = doc_info.query(
-                    expr=f'collection_name == "{collection}" and info_type == "document"',
-                    output_fields=["document_name"]
-                )
-                return set(r["document_name"] for r in results)
+
+                # Paginate to handle >16384 documents (Milvus limit)
+                all_docs = set()
+                batch_size = 10000
+                offset = 0
+
+                while True:
+                    results = doc_info.query(
+                        expr=f'collection_name == "{collection}" and info_type == "document"',
+                        output_fields=["document_name"],
+                        limit=batch_size,
+                        offset=offset
+                    )
+                    if not results:
+                        break
+                    all_docs.update(r["document_name"] for r in results)
+                    if len(results) < batch_size:
+                        break
+                    offset += batch_size
+
+                return all_docs
             except Exception as e:
                 if attempt == 0:
                     self._reconnect()
@@ -261,15 +278,75 @@ def smart_restart_wait(max_wait=90):
 # === PDF HANDLING ===
 
 def get_page_count(filepath):
+    """Get page count from PDF. Returns -1 if unreadable (corrupted/encrypted/invalid)."""
     try:
         import fitz
         doc = fitz.open(filepath)
+
+        # Check for encryption
+        if doc.is_encrypted:
+            log(f"  SKIP (encrypted): {os.path.basename(filepath)}", "WARN")
+            doc.close()
+            return -1
+
         pages = len(doc)
         doc.close()
         return pages
     except Exception as e:
-        log(f"  Cannot read {filepath}: {e}", "WARN")
+        error_msg = str(e).lower()
+        if "password" in error_msg or "encrypt" in error_msg:
+            log(f"  SKIP (password-protected): {os.path.basename(filepath)}", "WARN")
+        elif "corrupt" in error_msg or "invalid" in error_msg or "damage" in error_msg:
+            log(f"  SKIP (corrupted): {os.path.basename(filepath)} - {e}", "WARN")
+        else:
+            log(f"  SKIP (unreadable): {os.path.basename(filepath)} - {e}", "WARN")
         return -1
+
+
+def check_docker_running():
+    """Check if Docker is running. Returns (ok, error_msg)."""
+    try:
+        result = subprocess.run(
+            ["docker", "info"],
+            capture_output=True,
+            timeout=10
+        )
+        if result.returncode == 0:
+            return True, None
+        return False, "Docker not responding"
+    except FileNotFoundError:
+        return False, "Docker CLI not found"
+    except subprocess.TimeoutExpired:
+        return False, "Docker info timed out"
+    except Exception as e:
+        return False, str(e)
+
+
+def check_containers_exist():
+    """Check if required containers exist. Returns (ok, missing_list)."""
+    required = ["compose-nv-ingest-ms-runtime-1", "ingestor-server", "redis"]
+    try:
+        result = subprocess.run(
+            ["docker", "ps", "-a", "--format", "{{.Names}}"],
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        existing = set(result.stdout.strip().split("\n"))
+        missing = [c for c in required if c not in existing]
+        return len(missing) == 0, missing
+    except:
+        return False, required  # Assume all missing if can't check
+
+def check_disk_space(path, required_mb=500):
+    """Check if there's enough disk space. Returns (ok, available_mb)."""
+    try:
+        stat = os.statvfs(path)
+        available_mb = (stat.f_bavail * stat.f_frsize) / (1024 * 1024)
+        return available_mb >= required_mb, available_mb
+    except:
+        return True, -1  # Can't check, assume OK
+
 
 def split_pdf(filepath, max_pages, split_dir):
     import fitz
@@ -280,6 +357,13 @@ def split_pdf(filepath, max_pages, split_dir):
     if total <= max_pages:
         doc.close()
         return [filepath]
+
+    # Check disk space before splitting (estimate: 2x original file size)
+    file_size_mb = os.path.getsize(filepath) / (1024 * 1024)
+    required_mb = file_size_mb * 2 + 100  # 2x file + 100MB buffer
+    ok, available = check_disk_space(os.path.dirname(split_dir), required_mb)
+    if not ok:
+        log(f"  WARNING: Low disk space ({available:.0f}MB available, {required_mb:.0f}MB needed)", "WARN")
 
     n_chunks = (total + max_pages - 1) // max_pages
     chunk_size = (total + n_chunks - 1) // n_chunks
@@ -292,12 +376,17 @@ def split_pdf(filepath, max_pages, split_dir):
         end = min((i + 1) * chunk_size, total)
         chunk_path = os.path.join(split_dir, f"{base}_part{i+1}of{n_chunks}.pdf")
 
-        new_doc = fitz.open()
-        new_doc.insert_pdf(doc, from_page=start, to_page=end - 1)
-        new_doc.save(chunk_path)
-        new_doc.close()
-        chunks.append(chunk_path)
-        log(f"    Part {i+1}/{n_chunks}: pages {start+1}-{end} -> {os.path.basename(chunk_path)}")
+        try:
+            new_doc = fitz.open()
+            new_doc.insert_pdf(doc, from_page=start, to_page=end - 1)
+            new_doc.save(chunk_path)
+            new_doc.close()
+            chunks.append(chunk_path)
+            log(f"    Part {i+1}/{n_chunks}: pages {start+1}-{end} -> {os.path.basename(chunk_path)}")
+        except Exception as e:
+            log(f"    SPLIT ERROR part {i+1}: {e}", "ERROR")
+            doc.close()
+            return chunks  # Return what we have so far
 
     doc.close()
     return chunks
@@ -364,7 +453,7 @@ def state_file_path(collection):
     return f"/tmp/ingest_state_{collection}.json"
 
 def save_state(collection, completed_files, failed_files):
-    """Save progress after each successful PDF."""
+    """Save progress after each successful PDF. Uses atomic write to prevent corruption."""
     state = {
         "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
         "collection": collection,
@@ -372,8 +461,20 @@ def save_state(collection, completed_files, failed_files):
         "failed": list(failed_files),
     }
     path = state_file_path(collection)
-    with open(path, "w") as fp:
-        json.dump(state, fp, indent=2)
+    tmp_path = path + ".tmp"
+
+    # Atomic write: write to temp file, then rename
+    try:
+        with open(tmp_path, "w") as fp:
+            json.dump(state, fp, indent=2)
+        os.replace(tmp_path, path)  # atomic on POSIX
+    except Exception as e:
+        log(f"Warning: failed to save state: {e}", "WARN")
+        # Try to remove tmp file if it exists
+        try:
+            os.remove(tmp_path)
+        except:
+            pass
 
 def load_state(collection):
     """Load previous state. Returns (completed_set, failed_set) or (set(), set())."""
@@ -900,6 +1001,38 @@ def ensure_collection(collection, milvus):
         time.sleep(5)
         milvus.verify_sparse_field(collection)
 
+def preflight_checks(dry_run=False):
+    """Run pre-flight checks before ingestion. Returns (ok, errors)."""
+    errors = []
+
+    # Check pymilvus
+    try:
+        import pymilvus
+    except ImportError:
+        errors.append("pymilvus not installed: pip install pymilvus")
+
+    # Check fitz (pymupdf)
+    try:
+        import fitz
+    except ImportError:
+        errors.append("pymupdf not installed: pip install pymupdf")
+
+    if dry_run:
+        return len(errors) == 0, errors
+
+    # Check Docker
+    ok, msg = check_docker_running()
+    if not ok:
+        errors.append(f"Docker: {msg}")
+    else:
+        # Check containers
+        ok, missing = check_containers_exist()
+        if not ok:
+            errors.append(f"Missing containers: {missing}")
+
+    return len(errors) == 0, errors
+
+
 def main():
     parser = argparse.ArgumentParser(description="Smart PDF ingestion v5 — Adaptive")
     parser.add_argument("collection", help="Milvus collection name")
@@ -913,9 +1046,20 @@ def main():
                         help="Scan and classify PDFs but don't ingest")
     parser.add_argument("--resume", action="store_true",
                         help="Resume from last saved state")
+    parser.add_argument("--skip-preflight", action="store_true",
+                        help="Skip pre-flight checks (use if you know what you're doing)")
     args = parser.parse_args()
 
     signal.signal(signal.SIGINT, _handle_sigint)
+
+    # Pre-flight checks
+    if not args.skip_preflight:
+        ok, errors = preflight_checks(dry_run=args.dry_run)
+        if not ok:
+            log("PRE-FLIGHT CHECK FAILED:", "FATAL")
+            for e in errors:
+                log(f"  - {e}", "ERROR")
+            return 1
 
     collection = args.collection
     milvus = MilvusClient()

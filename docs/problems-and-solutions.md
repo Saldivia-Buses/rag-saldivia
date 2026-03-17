@@ -53,3 +53,34 @@
 | Pre-load Milvus collections | Unloaded collections cause silent ingestion failures |
 | NV-Ingest vlm.py max_tokens=512 hardcoded | `deploy.sh` patches to 1024 via `docker exec` + `sed` |
 | `APP_NVINGEST_CAPTIONMODELNAME` must match `--served-model-name` | NOT the HuggingFace model ID |
+
+## 7. Scalability for 10K+ Documents
+
+**Problem:** Default implementations have bottlenecks at scale: Milvus queries without pagination hit 16384 limit, no rate limiting on RAG API, state files can corrupt on crashes.
+
+**Solution (v5.1):**
+- `get_indexed_documents()` now paginates in batches of 10K
+- Atomic state file writes (write to .tmp, then rename)
+- Pre-flight checks: Docker running, containers exist, pymilvus/pymupdf installed
+- Disk space check before PDF splitting
+- Better PDF error detection: encrypted, corrupted, password-protected
+- RAG client: semaphore limits to 8 concurrent requests
+- RAG client: automatic retries with exponential backoff
+- Context truncation to prevent LLM overflow (50K char limit)
+- Question truncation for very long inputs (2K char limit)
+- Health checks before ingestion and queries
+
+## 8. Edge Cases Covered
+
+| Edge Case | smart_ingest.py | crossdoc_client.py |
+|-----------|-----------------|-------------------|
+| Network timeout | Multi-level retry + restart | Retry with backoff |
+| Service down | Pre-flight check | Health check at start |
+| Disk full | Space check before split | N/A |
+| Corrupted PDF | Detailed error logging, skip | N/A |
+| Encrypted PDF | Detect and skip | N/A |
+| Very large input | Auto-split at 200 pages | Question truncation |
+| State corruption | Atomic writes | N/A |
+| Rate limits | Sequential ingestion | Semaphore (8 max) |
+| Context overflow | N/A | 50K char limit, truncation |
+| Docker not running | Pre-flight check | N/A |
