@@ -1,0 +1,57 @@
+--- a/frontend/src/hooks/useMessageSubmit.ts
++++ b/frontend/src/hooks/useMessageSubmit.ts
+@@ -26,6 +26,7 @@ import { useCollections } from "../api/useCollectionsApi";
+ import { useUUID } from "./useUUID";
+ import type { GenerateRequest } from "../types/requests";
+ import type { ChatMessage, Filter, MessageContent, TextContent, ImageContent } from "../types/chat";
++import { useCrossdocStream } from "./useCrossdocStream";
+ import type { Collection } from "../types/collections";
+
+ /**
+@@ -82,6 +83,7 @@ export const useMessageSubmit = () => {
+   const settings = useSettingsStore();
+   const { generateUUID } = useUUID();
+   const { shouldDisableHealthFeatures, isHealthLoading } = useHealthDependentFeatures();
++  const { execute: executeCrossdoc } = useCrossdocStream();
+
+   const createRequest = useCallback((currentMessages: ChatMessage[]) => {
+     const rawRequest = {
+@@ -187,7 +189,36 @@ export const useMessageSubmit = () => {
+     resetStream();
+
+     const request = createRequest(currentMessages);
+-    await sendMessage({ request, assistantId: assistantMessage.id });
++
++    // Route to crossdoc if enabled
++    if (settings.crossdocQueryMode === 'crossdoc' && typeof content === 'string') {
++      const { updateMessage } = useChatStore.getState();
++      await executeCrossdoc(content, (progress) => {
++        let displayText = '';
++        switch (progress.phase) {
++          case 'decomposing':
++            displayText = 'Decomposing query...';
++            break;
++          case 'querying':
++            displayText = `Querying ${progress.completed ?? 0}/${progress.total ?? 0} sub-queries...`;
++            break;
++          case 'following-up':
++            displayText = 'Retrying failed queries with alternatives...';
++            break;
++          case 'synthesizing':
++            displayText = 'Synthesizing answer...';
++            break;
++          case 'done':
++            displayText = progress.synthesis ?? '';
++            break;
++          case 'error':
++            displayText = `Error: ${progress.error}`;
++            break;
++        }
++        updateMessage(assistantMessage.id, { content: displayText });
++      });
++    } else {
++      await sendMessage({ request, assistantId: assistantMessage.id });
++    }
+   }, [input, attachedImages, messages, addMessage, setInput, clearAllImages, resetStream, createRequest, sendMessage, generateUUID, shouldDisableHealthFeatures, isStreaming]);
+
+   return {

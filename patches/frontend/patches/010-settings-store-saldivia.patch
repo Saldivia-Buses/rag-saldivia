@@ -1,0 +1,30 @@
+--- a/frontend/src/store/useSettingsStore.ts
++++ b/frontend/src/store/useSettingsStore.ts
+@@ -28,6 +28,13 @@ interface SettingsState {
+   vdbTopK?: number;
+   rerankerTopK?: number;
+   confidenceScoreThreshold?: number;
++
++  // Saldivia — Crossdoc settings
++  crossdocQueryMode?: 'standard' | 'crossdoc';
++  crossdocMaxSubQueries?: number;
++  crossdocFollowUpRetries?: boolean;
++  crossdocShowDecomposition?: boolean;
++  crossdocSynthesisModel?: string;
+
+   // Feature Toggles - Only enableReranker and includeCitations default to true
+   enableQueryRewriting?: boolean;
+@@ -78,6 +85,13 @@ export const useSettingsStore = create<SettingsState>()(
+       vdbTopK: undefined,
+       rerankerTopK: undefined,
+       confidenceScoreThreshold: undefined,
++
++      // Saldivia — Crossdoc defaults
++      crossdocQueryMode: undefined,
++      crossdocMaxSubQueries: undefined,
++      crossdocFollowUpRetries: undefined,
++      crossdocShowDecomposition: undefined,
++      crossdocSynthesisModel: undefined,
+
+       // Feature Toggles - Only enableReranker and includeCitations default to true
+       enableQueryRewriting: undefined,
