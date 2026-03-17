@@ -1,0 +1,16 @@
+# RAG Saldivia — Docker Compose overrides
+# Applied on top of blueprint compose files via:
+#   docker compose -f <blueprint-compose> -f <this-file> up -d
+
+services:
+  rag-server:
+    volumes:
+      - ${SALDIVIA_ROOT}/config/prompt.yaml:/opt/rag-saldivia/prompt.yaml:ro
+    environment:
+      - PROMPT_CONFIG_FILE=/opt/rag-saldivia/prompt.yaml
+
+  milvus-standalone:
+    volumes:
+      - ${SALDIVIA_ROOT}/config/milvus.yaml:/milvus/configs/milvus.yaml:ro
+    environment:
+      - KNOWHERE_GPU_MEM_POOL_SIZE=0;0

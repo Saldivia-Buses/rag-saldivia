@@ -1,0 +1,7 @@
+# RAG Saldivia — Milvus config override
+# Disables GPU memory pool (saves ~3.7 GB VRAM).
+# HNSW runs on CPU — GPU pool is unnecessary.
+
+gpu:
+  initMemSize: 0
+  maxMemSize: 0

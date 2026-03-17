@@ -1,0 +1,7 @@
+# RAG Saldivia — Additional overrides for workstation-1gpu profile
+# Removes GPU device reservation from Milvus (frees GPU slot on single-GPU systems)
+
+services:
+  milvus-standalone:
+    deploy:
+      resources: {}
