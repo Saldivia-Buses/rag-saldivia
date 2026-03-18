@@ -1,13 +1,14 @@
 # RAG Saldivia — Docker Compose overrides
-# Applied on top of blueprint compose files via:
-#   docker compose -f <blueprint-compose> -f <this-file> up -d
+# Applied on top of blueprint docker-compose-rag-server.yaml.
 #
-# NOTE: Only overrides services in docker-compose-rag-server.yaml (rag-server, rag-frontend).
-# Milvus, ingestor, and NIMs are managed by separate stacks.
+# The blueprint handles prompt.yaml mounting via:
+#   volumes: - ${PROMPT_CONFIG_FILE}:${PROMPT_CONFIG_FILE}
+#   environment: PROMPT_CONFIG_FILE: ${PROMPT_CONFIG_FILE:-/prompt.yaml}
+#
+# deploy.sh writes PROMPT_CONFIG_FILE=${SALDIVIA_ROOT}/config/prompt.yaml
+# into .env.merged so the blueprint picks up our custom prompt automatically.
+#
+# NOTE: Only override services present in docker-compose-rag-server.yaml
+# (rag-server, rag-frontend). Milvus, ingestor, and NIMs are separate stacks.
 
-services:
-  rag-server:
-    volumes:
-      - ${SALDIVIA_ROOT}/config/prompt.yaml:/opt/saldivia/prompt.yaml:ro
-    environment:
-      - PROMPT_CONFIG_FILE=/opt/saldivia/prompt.yaml
+services: {}

@@ -57,12 +57,13 @@ if [ -f "${SALDIVIA_ROOT}/.env.local" ]; then
     cat "${SALDIVIA_ROOT}/.env.local" >> "$ENV_FILE"
 fi
 
-# Set SALDIVIA_ROOT for compose-overrides.yaml volume mounts
+# Set SALDIVIA_ROOT and PROMPT_CONFIG_FILE for compose volume mounts.
+# The blueprint mounts ${PROMPT_CONFIG_FILE}:${PROMPT_CONFIG_FILE}, so it must be a valid abs path.
 echo "SALDIVIA_ROOT=${SALDIVIA_ROOT}" >> "$ENV_FILE"
+echo "PROMPT_CONFIG_FILE=${SALDIVIA_ROOT}/config/prompt.yaml" >> "$ENV_FILE"
 
 # --- Step 2: Build compose files ---
 COMPOSE_FILES="-f ${COMPOSE_DIR}/docker-compose-rag-server.yaml"
-COMPOSE_FILES="$COMPOSE_FILES -f ${SALDIVIA_ROOT}/config/compose-overrides.yaml"
 COMPOSE_FILES="$COMPOSE_FILES -f ${SALDIVIA_ROOT}/config/compose-platform-services.yaml"
 
 # Add optional services based on profile config
