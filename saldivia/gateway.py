@@ -117,6 +117,25 @@ def get_user_from_token(credentials: HTTPAuthorizationCredentials = Depends(secu
     return user
 
 
+
+
+def admin_required(user: User = Depends(get_user_from_token)) -> User:
+    """Require ADMIN role."""
+    if user is None and not BYPASS_AUTH:
+        raise HTTPException(status_code=401, detail="Auth required")
+    if user and user.role != Role.ADMIN:
+        raise HTTPException(status_code=403, detail="Admin only")
+    return user
+
+
+def admin_or_manager_required(user: User = Depends(get_user_from_token)) -> User:
+    """Require ADMIN or AREA_MANAGER role."""
+    if user is None and not BYPASS_AUTH:
+        raise HTTPException(status_code=401, detail="Auth required")
+    if user and user.role == Role.USER:
+        raise HTTPException(status_code=403, detail="Insufficient permissions")
+    return user
+
 def filter_collections(user: User, requested: list[str]) -> list[str]:
     """Filter collections to only those the user can access."""
     if user is None or user.role == Role.ADMIN:
@@ -327,6 +346,81 @@ async def refresh_my_key(user_id: int, user: User = Depends(get_user_from_token)
     db.update_api_key(user_id, new_hash)
     return {"api_key": new_key}
 
+
+
+
+class CreateUserRequest(BaseModel):
+    email: str
+    name: str
+    area_id: int
+    role: str = "user"
+    password: Optional[str] = None
+
+
+class UpdateUserRequest(BaseModel):
+    name: Optional[str] = None
+    area_id: Optional[int] = None
+    role: Optional[str] = None
+    active: Optional[bool] = None
+
+
+@app.get("/admin/users")
+async def list_users_endpoint(user: User = Depends(admin_required)):
+    users = db.list_users()
+    return {"users": [{"id": u.id, "email": u.email, "name": u.name,
+                        "area_id": u.area_id, "role": u.role.value,
+                        "active": u.active,
+                        "last_login": u.last_login.isoformat() if u.last_login else None}
+                       for u in users]}
+
+
+@app.post("/admin/users", status_code=201)
+async def create_user_endpoint(body: CreateUserRequest, user: User = Depends(admin_required)):
+    from saldivia.auth.models import generate_api_key, hash_password as hp, Role as RoleEnum
+    new_key, new_hash = generate_api_key()
+    pw_hash = hp(body.password) if body.password else None
+    try:
+        new_user = db.create_user(
+            email=body.email, name=body.name, area_id=body.area_id,
+            role=RoleEnum(body.role), api_key_hash=new_hash, password_hash=pw_hash
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return {"id": new_user.id, "email": new_user.email, "api_key": new_key}
+
+
+@app.put("/admin/users/{user_id}")
+async def update_user_endpoint(user_id: int, body: UpdateUserRequest,
+                                user: User = Depends(admin_required)):
+    target = db.get_user_by_id(user_id)
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found")
+    updates = {k: v for k, v in body.model_dump().items() if v is not None}
+    if "role" in updates:
+        from saldivia.auth.models import Role as RoleEnum
+        updates["role"] = RoleEnum(updates["role"])
+    db.update_user(user_id, **updates)
+    return {"ok": True}
+
+
+@app.delete("/admin/users/{user_id}")
+async def delete_user_endpoint(user_id: int, user: User = Depends(admin_required)):
+    target = db.get_user_by_id(user_id)
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found")
+    db.update_user(user_id, active=False)
+    return {"ok": True}
+
+
+@app.post("/admin/users/{user_id}/reset-key")
+async def reset_user_key(user_id: int, user: User = Depends(admin_required)):
+    from saldivia.auth.models import generate_api_key
+    target = db.get_user_by_id(user_id)
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found")
+    new_key, new_hash = generate_api_key()
+    db.update_api_key(user_id, new_hash)
+    return {"api_key": new_key}
 
 # Admin endpoints
 @app.get("/admin/audit")
