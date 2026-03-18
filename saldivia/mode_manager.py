@@ -103,6 +103,7 @@ class ModeManager:
             return True
         except Exception as e:
             logger.error(f"Failed to switch to query mode: {e}")
+            self.current_mode = Mode.INGEST
             return False
 
     def _start_vlm(self):
