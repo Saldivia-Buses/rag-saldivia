@@ -1,0 +1,152 @@
+// src/lib/server/gateway.ts
+// Typed wrapper for all gateway API calls. Uses SYSTEM_API_KEY Bearer auth.
+const GATEWAY_URL = process.env.GATEWAY_URL ?? 'http://localhost:9000';
+const SYSTEM_API_KEY = process.env.SYSTEM_API_KEY ?? '';
+
+const headers = () => ({
+    'Authorization': `Bearer ${SYSTEM_API_KEY}`,
+    'Content-Type': 'application/json',
+});
+
+async function gw<T>(path: string, init?: RequestInit): Promise<T> {
+    const res = await fetch(`${GATEWAY_URL}${path}`, {
+        ...init,
+        headers: { ...headers(), ...(init?.headers ?? {}) },
+    });
+    if (!res.ok) {
+        const detail = await res.text();
+        throw { status: res.status, detail };
+    }
+    return res.json() as Promise<T>;
+}
+
+// Auth
+export async function gatewayLogin(email: string, password: string) {
+    return gw<{ token: string; user: SessionUser }>(
+        '/auth/session',
+        { method: 'POST', body: JSON.stringify({ email, password }) }
+    );
+}
+
+export async function gatewayGetMe(userId: number) {
+    return gw<SessionUser>(`/auth/me?user_id=${userId}`);
+}
+
+export async function gatewayRefreshKey(userId: number) {
+    return gw<{ api_key: string }>(`/auth/refresh-key?user_id=${userId}`, { method: 'POST' });
+}
+
+// Collections
+export async function gatewayListCollections() {
+    return gw<{ collections: string[] }>('/v1/collections');
+}
+
+export async function gatewayCollectionStats(name: string) {
+    return gw<CollectionStats>(`/v1/collections/${name}/stats`);
+}
+
+// Chat sessions
+export async function gatewayListSessions(userId: number) {
+    return gw<{ sessions: ChatSessionSummary[] }>(`/chat/sessions?user_id=${userId}`);
+}
+
+export async function gatewayCreateSession(userId: number, collection: string, crossdoc = false) {
+    return gw<{ id: string; title: string; collection: string }>(
+        `/chat/sessions?user_id=${userId}`,
+        { method: 'POST', body: JSON.stringify({ collection, crossdoc }) }
+    );
+}
+
+export async function gatewayGetSession(sessionId: string, userId: number) {
+    return gw<ChatSessionDetail>(`/chat/sessions/${sessionId}?user_id=${userId}`);
+}
+
+export async function gatewayDeleteSession(sessionId: string, userId: number) {
+    return gw<{ ok: boolean }>(`/chat/sessions/${sessionId}?user_id=${userId}`, { method: 'DELETE' });
+}
+
+// Admin
+export async function gatewayListUsers() {
+    return gw<{ users: AdminUser[] }>('/admin/users');
+}
+
+export async function gatewayCreateUser(data: CreateUserData) {
+    return gw<{ id: number; email: string; api_key: string }>(
+        '/admin/users', { method: 'POST', body: JSON.stringify(data) }
+    );
+}
+
+export async function gatewayUpdateUser(id: number, data: Partial<AdminUser>) {
+    return gw<{ ok: boolean }>(`/admin/users/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+}
+
+export async function gatewayDeleteUser(id: number) {
+    return gw<{ ok: boolean }>(`/admin/users/${id}`, { method: 'DELETE' });
+}
+
+export async function gatewayListAreas() {
+    return gw<{ areas: AreaSummary[] }>('/admin/areas');
+}
+
+export async function gatewayGetAreaCollections(areaId: number) {
+    return gw<{ collections: AreaCollection[] }>(`/admin/areas/${areaId}/collections`);
+}
+
+export async function gatewayGrantCollection(areaId: number, collectionName: string, permission = 'read') {
+    return gw<{ ok: boolean }>(
+        `/admin/areas/${areaId}/collections`,
+        { method: 'POST', body: JSON.stringify({ collection_name: collectionName, permission }) }
+    );
+}
+
+export async function gatewayRevokeCollection(areaId: number, collectionName: string) {
+    return gw<{ ok: boolean }>(`/admin/areas/${areaId}/collections/${collectionName}`, { method: 'DELETE' });
+}
+
+export async function gatewayGetAudit(params: AuditParams) {
+    const qs = new URLSearchParams(
+        Object.entries(params).filter(([, v]) => v != null).map(([k, v]) => [k, String(v)])
+    ).toString();
+    return gw<{ entries: AuditEntry[] }>(`/admin/audit${qs ? '?' + qs : ''}`);
+}
+
+// Types
+export interface SessionUser {
+    id: number; email: string; name: string; role: string; area_id: number;
+}
+export interface CollectionStats {
+    collection: string; entity_count: number; document_count?: number;
+}
+export interface ChatSessionSummary {
+    id: string; title: string; collection: string; crossdoc: boolean; updated_at: string;
+}
+export interface ChatSessionDetail extends ChatSessionSummary {
+    messages: ChatMessage[];
+}
+export interface ChatMessage {
+    role: 'user' | 'assistant'; content: string; sources?: Source[]; timestamp: string;
+}
+export interface Source {
+    document: string; page?: number; excerpt: string;
+}
+export interface AdminUser {
+    id: number; email: string; name: string; area_id: number; role: string;
+    active: boolean; last_login: string | null;
+}
+export interface CreateUserData {
+    email: string; name: string; area_id: number; role: string; password?: string;
+}
+export interface AreaSummary {
+    id: number; name: string; description: string;
+}
+export interface AreaCollection {
+    name: string; permission: string;
+}
+export interface AuditEntry {
+    id: number; user_id: number; action: string; collection: string | null;
+    query_preview: string | null; ip_address: string; timestamp: string;
+}
+export interface AuditParams {
+    user_id?: number; action?: string; collection?: string;
+    from?: string; to?: string; limit?: number;
+}
