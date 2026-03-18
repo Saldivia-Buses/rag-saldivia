@@ -1,16 +1,13 @@
 # RAG Saldivia — Docker Compose overrides
 # Applied on top of blueprint compose files via:
 #   docker compose -f <blueprint-compose> -f <this-file> up -d
+#
+# NOTE: Only overrides services in docker-compose-rag-server.yaml (rag-server, rag-frontend).
+# Milvus, ingestor, and NIMs are managed by separate stacks.
 
 services:
   rag-server:
     volumes:
-      - ${SALDIVIA_ROOT}/config/prompt.yaml:/opt/rag-saldivia/prompt.yaml:ro
+      - ${SALDIVIA_ROOT}/config/prompt.yaml:/opt/saldivia/prompt.yaml:ro
     environment:
-      - PROMPT_CONFIG_FILE=/opt/rag-saldivia/prompt.yaml
-
-  milvus-standalone:
-    volumes:
-      - ${SALDIVIA_ROOT}/config/milvus.yaml:/milvus/configs/milvus.yaml:ro
-    environment:
-      - KNOWHERE_GPU_MEM_POOL_SIZE=0;0
+      - PROMPT_CONFIG_FILE=/opt/saldivia/prompt.yaml
