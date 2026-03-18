@@ -427,8 +427,11 @@ class AuthDB:
             )
 
     def delete_chat_session(self, session_id: str, user_id: int):
-        # Both DELETEs run in the same transaction (context manager ensures atomicity)
+        # Verify ownership first, then delete messages (atomic transaction)
         with self._conn() as conn:
-            conn.execute("DELETE FROM chat_messages WHERE session_id = ?", (session_id,))
-            conn.execute("DELETE FROM chat_sessions WHERE id = ? AND user_id = ?",
-                         (session_id, user_id))
+            result = conn.execute(
+                "DELETE FROM chat_sessions WHERE id = ? AND user_id = ?",
+                (session_id, user_id)
+            )
+            if result.rowcount > 0:
+                conn.execute("DELETE FROM chat_messages WHERE session_id = ?", (session_id,))

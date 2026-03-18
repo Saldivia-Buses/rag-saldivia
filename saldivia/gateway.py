@@ -62,6 +62,17 @@ async def on_startup():
     if missing:
         logger.warning(f"⚠️  Missing env vars: {missing} — using defaults")
 
+    # Sync SYSTEM_API_KEY → admin user's api_key_hash so the BFF can always auth.
+    # This ensures the key in .env.local always matches the DB, regardless of
+    # how the DB was initialized.
+    system_key = os.getenv("SYSTEM_API_KEY")
+    if system_key and not BYPASS_AUTH:
+        key_hash = hashlib.sha256(system_key.encode()).hexdigest()
+        admin = db.get_user_by_email("admin@saldivia.com")
+        if admin:
+            db.update_api_key(admin.id, key_hash)
+            logger.info("✓ SYSTEM_API_KEY synced to admin user")
+
     logger.info(
         f"Gateway starting: RAG={RAG_SERVER_URL}, Ingestor={INGESTOR_URL}, "
         f"auth={'bypassed' if BYPASS_AUTH else 'enabled'}"
@@ -91,11 +102,21 @@ def create_jwt(user: User) -> str:
     payload = {
         "user_id": user.id,
         "email": user.email,
+        "name": user.name,
         "role": user.role.value,
         "area_id": user.area_id,
         "exp": datetime.now(timezone.utc) + timedelta(hours=JWT_EXPIRE_HOURS),
     }
     return pyjwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+
+
+def _ts(value) -> Optional[str]:
+    """Safe timestamp serializer — handles datetime objects and plain strings."""
+    if value is None:
+        return None
+    if hasattr(value, 'isoformat'):
+        return value.isoformat()
+    return str(value)
 
 
 security = HTTPBearer(auto_error=False)
@@ -339,25 +360,27 @@ async def logout(user: User = Depends(get_user_from_token)):
 @app.get("/auth/me")
 async def me(user_id: int, user: User = Depends(get_user_from_token)):
     """Get profile for a user_id (BFF passes user_id from JWT).
-    Note: user_id is supplied by the BFF from the JWT payload — the gateway trusts it
-    because the BFF is the only caller (SYSTEM_API_KEY gating)."""
-    if user is None or user.role != Role.ADMIN:
-        raise HTTPException(status_code=403, detail="Admin role required")
+    Any authenticated user can view their own profile; admins can view any."""
+    if user is None:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    if user.role != Role.ADMIN and user.id != user_id:
+        raise HTTPException(status_code=403, detail="Can only view your own profile")
     target = db.get_user_by_id(user_id)
     if not target:
         raise HTTPException(status_code=404, detail="User not found")
     return {"id": target.id, "email": target.email, "name": target.name,
             "role": target.role.value, "area_id": target.area_id,
-            "last_login": target.last_login.isoformat() if target.last_login else None}
+            "last_login": _ts(target.last_login)}
 
 
 @app.post("/auth/refresh-key")
 async def refresh_my_key(user_id: int, user: User = Depends(get_user_from_token)):
-    """Regenerate API key for a user (admin only).
-    Note: user_id from JWT payload supplied by BFF."""
+    """Regenerate API key for a user. Any user can refresh their own; admins can refresh any."""
     from saldivia.auth.models import generate_api_key
-    if user is None or user.role != Role.ADMIN:
-        raise HTTPException(status_code=403, detail="Admin role required")
+    if user is None:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    if user.role != Role.ADMIN and user.id != user_id:
+        raise HTTPException(status_code=403, detail="Can only refresh your own key")
     target = db.get_user_by_id(user_id)
     if not target:
         raise HTTPException(status_code=404, detail="User not found")
@@ -410,7 +433,7 @@ async def list_users_endpoint(user: User = Depends(admin_required)):
     return {"users": [{"id": u.id, "email": u.email, "name": u.name,
                         "area_id": u.area_id, "role": u.role.value,
                         "active": u.active,
-                        "last_login": u.last_login.isoformat() if u.last_login else None}
+                        "last_login": _ts(u.last_login)}
                        for u in users]}
 
 
@@ -471,6 +494,22 @@ async def list_areas_endpoint(user: User = Depends(admin_or_manager_required)):
 async def create_area_endpoint(body: CreateAreaRequest, user: User = Depends(admin_required)):
     area = db.create_area(body.name, body.description)
     return {"id": area.id, "name": area.name}
+
+
+@app.get("/admin/areas/{area_id}")
+async def get_area_endpoint(area_id: int, user: User = Depends(admin_or_manager_required)):
+    """Get area details including its collections."""
+    if user and user.role == Role.AREA_MANAGER and user.area_id != area_id:
+        raise HTTPException(status_code=403, detail="Can only view your own area")
+    area = db.get_area(area_id)
+    if area is None:
+        raise HTTPException(status_code=404, detail="Area not found")
+    collections = db.get_area_collections(area_id)
+    return {
+        "id": area.id, "name": area.name, "description": area.description,
+        "collections": [{"name": c.collection_name, "permission": c.permission.value}
+                        for c in collections]
+    }
 
 
 @app.put("/admin/areas/{area_id}")
@@ -559,7 +598,11 @@ async def get_audit(
 async def list_sessions(user_id: int, limit: int = 50,
                          user: User = Depends(get_user_from_token)):
     """List chat sessions for a user (BFF passes user_id from JWT)."""
-    sessions = db.list_chat_sessions(user_id=user_id, limit=limit)
+    if user is None:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    if user.role != Role.ADMIN and user.id != user_id:
+        raise HTTPException(status_code=403, detail="Can only access your own sessions")
+    sessions = db.list_chat_sessions(user_id=user_id, limit=min(limit, 200))
     return {"sessions": [{"id": s.id, "title": s.title, "collection": s.collection,
                            "crossdoc": s.crossdoc,
                            "updated_at": s.updated_at.isoformat() if hasattr(s.updated_at, 'isoformat') else str(s.updated_at)}
@@ -570,6 +613,10 @@ async def list_sessions(user_id: int, limit: int = 50,
 async def create_session(body: CreateSessionRequest, user_id: int,
                           user: User = Depends(get_user_from_token)):
     """Create a new chat session."""
+    if user is None:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    if user.role != Role.ADMIN and user.id != user_id:
+        raise HTTPException(status_code=403, detail="Can only create sessions for yourself")
     session = db.create_chat_session(user_id=user_id, collection=body.collection,
                                      crossdoc=body.crossdoc)
     return {"id": session.id, "title": session.title, "collection": session.collection}
@@ -579,6 +626,10 @@ async def create_session(body: CreateSessionRequest, user_id: int,
 async def get_session(session_id: str, user_id: int,
                        user: User = Depends(get_user_from_token)):
     """Get a specific chat session with messages."""
+    if user is None:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    if user.role != Role.ADMIN and user.id != user_id:
+        raise HTTPException(status_code=403, detail="Can only access your own sessions")
     session = db.get_chat_session(session_id=session_id, user_id=user_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
@@ -593,7 +644,32 @@ async def get_session(session_id: str, user_id: int,
 async def delete_session(session_id: str, user_id: int,
                           user: User = Depends(get_user_from_token)):
     """Delete a chat session and its messages."""
+    if user is None:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    if user.role != Role.ADMIN and user.id != user_id:
+        raise HTTPException(status_code=403, detail="Can only access your own sessions")
     db.delete_chat_session(session_id=session_id, user_id=user_id)
+    return {"ok": True}
+
+
+class AddMessageRequest(BaseModel):
+    role: str
+    content: str
+    sources: Optional[list] = None
+
+
+@app.post("/chat/sessions/{session_id}/messages", status_code=201)
+async def add_message(session_id: str, body: AddMessageRequest, user_id: int,
+                      user: User = Depends(get_user_from_token)):
+    """Persist a message to a chat session. BFF calls this to save each turn."""
+    if user is None:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    if user.role != Role.ADMIN and user.id != user_id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    session = db.get_chat_session(session_id, user_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    db.add_chat_message(session_id, body.role, body.content, body.sources)
     return {"ok": True}
 
 

@@ -1,9 +1,12 @@
 import type { PageServerLoad, Actions } from './$types';
-import { fail } from '@sveltejs/kit';
+import { fail, redirect } from '@sveltejs/kit';
 import { gatewayListUsers, gatewayCreateUser, gatewayDeleteUser,
          gatewayListAreas } from '$lib/server/gateway';
 
-export const load: PageServerLoad = async () => {
+export const load: PageServerLoad = async ({ locals }) => {
+    if (locals.user?.role !== 'admin') {
+        throw redirect(302, '/chat');
+    }
     const [usersData, areasData] = await Promise.all([
         gatewayListUsers(),
         gatewayListAreas(),
@@ -12,7 +15,8 @@ export const load: PageServerLoad = async () => {
 };
 
 export const actions: Actions = {
-    create: async ({ request }) => {
+    create: async ({ request, locals }) => {
+        if (locals.user?.role !== 'admin') return fail(403, { error: 'Admin only' });
         const data = await request.formData();
         try {
             const result = await gatewayCreateUser({
@@ -27,7 +31,8 @@ export const actions: Actions = {
             return fail(400, { error: e.detail ?? 'Error creating user' });
         }
     },
-    delete: async ({ request }) => {
+    delete: async ({ request, locals }) => {
+        if (locals.user?.role !== 'admin') return fail(403, { error: 'Admin only' });
         const data = await request.formData();
         await gatewayDeleteUser(Number(data.get('id')));
         return { success: true };
