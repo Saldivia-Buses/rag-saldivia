@@ -97,12 +97,13 @@
         <div class="text-[9px] text-[#475569] font-semibold uppercase tracking-wide mb-1">
             Historial
         </div>
-        <a href="/chat" class="flex items-center gap-1.5 text-[#6366f1] text-[9px] mb-2 hover:underline">
+        <a href="/chat" data-sveltekit-preload-data="false" class="flex items-center gap-1.5 text-[#6366f1] text-[9px] mb-2 hover:underline">
             <MessageSquare size={10} /> Nueva consulta
         </a>
         {#each data.history as session}
             <a
                 href="/chat/{session.id}"
+                data-sveltekit-preload-data="false"
                 class="bg-[#1e293b] rounded p-1.5 block hover:bg-[#334155] transition-colors
                        {session.id === data.session.id ? 'border-l-2 border-[#6366f1]' : ''}"
             >
