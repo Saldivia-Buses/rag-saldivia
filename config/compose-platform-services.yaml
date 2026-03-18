@@ -1,0 +1,30 @@
+# config/compose-platform-services.yaml
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+
+  mode-manager:
+    build:
+      context: ..
+      dockerfile: services/mode-manager/Dockerfile
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - GPU_MEMORY_GB=${GPU_MEMORY_GB:-98}
+      - IDLE_TIMEOUT=${MODE_IDLE_TIMEOUT:-300}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - redis
+
+volumes:
+  redis-data:
+
+networks:
+  default:
+    name: nvidia-rag
+    external: true
