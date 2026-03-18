@@ -1,6 +1,24 @@
 <script lang="ts">
     import { enhance } from '$app/forms';
+    import { goto } from '$app/navigation';
+
     let { data, form } = $props();
+
+    let loggingOut = $state(false);
+
+    async function handleLogout() {
+        loggingOut = true;
+        try {
+            const response = await fetch('/api/auth/session', { method: 'DELETE' });
+            if (response.ok) {
+                window.location.href = '/login';
+            }
+        } catch (error) {
+            console.error('Logout failed:', error);
+        } finally {
+            loggingOut = false;
+        }
+    }
 </script>
 
 <div class="p-6 max-w-lg">
@@ -26,5 +44,15 @@
                 Regenerar API key
             </button>
         </form>
+    </div>
+
+    <!-- Logout section -->
+    <div class="mt-6 pt-6 border-t border-[#1e293b]">
+        <button onclick={handleLogout}
+                disabled={loggingOut}
+                class="bg-[#1e293b] hover:bg-[#334155] text-[#94a3b8] text-xs px-3 py-1.5 rounded
+                       disabled:opacity-50 disabled:cursor-not-allowed">
+            {loggingOut ? 'Cerrando sesión...' : 'Cerrar sesión'}
+        </button>
     </div>
 </div>

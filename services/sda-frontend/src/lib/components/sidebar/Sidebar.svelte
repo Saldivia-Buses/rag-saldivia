@@ -26,10 +26,6 @@
     <SidebarItem href="/collections" label="Colecciones" icon={BookOpen} />
 
     {#if isManager}
-        <SidebarItem href="/collections" label="Ingestión" icon={Upload} />
-    {/if}
-
-    {#if isManager}
         <SidebarItem href="/admin/users" label={isAdmin ? 'Admin global' : 'Admin área'} icon={Users} />
     {/if}
 
