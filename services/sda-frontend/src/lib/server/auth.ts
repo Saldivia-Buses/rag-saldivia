@@ -4,7 +4,10 @@ import { jwtVerify } from 'jose';
 import type { SessionUser } from './gateway.js';
 import type { Cookies } from '@sveltejs/kit';
 
-const JWT_SECRET_RAW = process.env.JWT_SECRET ?? '';
+const JWT_SECRET_RAW = process.env.JWT_SECRET;
+if (!JWT_SECRET_RAW) {
+    throw new Error('JWT_SECRET environment variable is required');
+}
 const secret = new TextEncoder().encode(JWT_SECRET_RAW);
 const COOKIE_NAME = 'sda_session';
 

@@ -1,7 +1,10 @@
 // src/lib/server/gateway.ts
 // Typed wrapper for all gateway API calls. Uses SYSTEM_API_KEY Bearer auth.
 const GATEWAY_URL = process.env.GATEWAY_URL ?? 'http://localhost:9000';
-const SYSTEM_API_KEY = process.env.SYSTEM_API_KEY ?? '';
+const SYSTEM_API_KEY = process.env.SYSTEM_API_KEY;
+if (!SYSTEM_API_KEY) {
+    throw new Error('SYSTEM_API_KEY environment variable is required');
+}
 
 const headers = () => ({
     'Authorization': `Bearer ${SYSTEM_API_KEY}`,
@@ -15,7 +18,10 @@ async function gw<T>(path: string, init?: RequestInit): Promise<T> {
     });
     if (!res.ok) {
         const detail = await res.text();
-        throw { status: res.status, detail };
+        const err = new Error(`Gateway error (${res.status}): ${detail}`);
+        (err as any).status = res.status;
+        (err as any).detail = detail;
+        throw err;
     }
     return res.json() as Promise<T>;
 }
