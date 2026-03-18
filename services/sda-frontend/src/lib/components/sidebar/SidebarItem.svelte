@@ -20,7 +20,7 @@
                : 'hover:bg-[#1e293b]'}"
     title={label}
 >
-    <Icon size={14} class="text-{active ? '[#a5b4fc]' : '[#64748b]'}" />
+    <Icon size={14} class={active ? 'text-[#a5b4fc]' : 'text-[#64748b]'} />
     <!-- Tooltip -->
     <span class="absolute left-full ml-2 px-2 py-1 bg-[#1e293b] text-[#e2e8f0] text-xs
                  rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap z-50">
