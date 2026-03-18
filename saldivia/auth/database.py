@@ -61,6 +61,31 @@ def init_db(db_path: Path = DB_PATH):
     except Exception:
         pass  # Column already exists
 
+    # Migration: add chat tables if not present (idempotent)
+    chat_ddl = """
+        CREATE TABLE IF NOT EXISTS chat_sessions (
+            id TEXT PRIMARY KEY,
+            user_id INTEGER NOT NULL REFERENCES users(id),
+            title TEXT NOT NULL,
+            collection TEXT NOT NULL,
+            crossdoc INTEGER DEFAULT 0,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE TABLE IF NOT EXISTS chat_messages (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id TEXT NOT NULL REFERENCES chat_sessions(id),
+            role TEXT NOT NULL,
+            content TEXT NOT NULL,
+            sources TEXT,
+            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE INDEX IF NOT EXISTS idx_chat_sessions_user ON chat_sessions(user_id);
+        CREATE INDEX IF NOT EXISTS idx_chat_messages_session ON chat_messages(session_id);
+    """
+    conn.executescript(chat_ddl)
+
+
     conn.close()
 
 
@@ -332,3 +357,73 @@ class AuthDB:
             id=r[0], user_id=r[1], action=r[2], collection=r[3],
             query_preview=r[4], ip_address=r[5], timestamp=r[6]
         ) for r in rows]
+
+    def list_chat_sessions(self, user_id: int, limit: int = 50) -> list:
+        with self._conn() as conn:
+            rows = conn.execute(
+                "SELECT id, user_id, title, collection, crossdoc, created_at, updated_at "
+                "FROM chat_sessions WHERE user_id = ? ORDER BY updated_at DESC LIMIT ?",
+                (user_id, limit)
+            ).fetchall()
+        from saldivia.auth.models import ChatSession
+        return [ChatSession(id=r[0], user_id=r[1], title=r[2], collection=r[3],
+                            crossdoc=bool(r[4]), created_at=r[5], updated_at=r[6])
+                for r in rows]
+
+    def get_chat_session(self, session_id: str, user_id: int):
+        import json
+        from saldivia.auth.models import ChatSession, ChatMessage
+        with self._conn() as conn:
+            row = conn.execute(
+                "SELECT id, user_id, title, collection, crossdoc, created_at, updated_at "
+                "FROM chat_sessions WHERE id = ? AND user_id = ?",
+                (session_id, user_id)
+            ).fetchone()
+            if not row:
+                return None
+            msg_rows = conn.execute(
+                "SELECT role, content, sources, timestamp FROM chat_messages "
+                "WHERE session_id = ? ORDER BY timestamp",
+                (session_id,)
+            ).fetchall()
+        messages = [ChatMessage(role=m[0], content=m[1],
+                                 sources=json.loads(m[2]) if m[2] else None, timestamp=m[3])
+                    for m in msg_rows]
+        return ChatSession(id=row[0], user_id=row[1], title=row[2], collection=row[3],
+                           crossdoc=bool(row[4]), created_at=row[5], updated_at=row[6],
+                           messages=messages)
+
+    def create_chat_session(self, user_id: int, collection: str, crossdoc: bool = False):
+        import uuid
+        from saldivia.auth.models import ChatSession
+        session_id = str(uuid.uuid4())
+        with self._conn() as conn:
+            conn.execute(
+                "INSERT INTO chat_sessions (id, user_id, title, collection, crossdoc) "
+                "VALUES (?, ?, ?, ?, ?)",
+                (session_id, user_id, "Nueva consulta", collection, int(crossdoc))
+            )
+        return ChatSession(id=session_id, user_id=user_id, title="Nueva consulta",
+                           collection=collection, crossdoc=crossdoc)
+
+    def add_chat_message(self, session_id: str, role: str, content: str, sources=None):
+        import json
+        from datetime import datetime
+        sources_json = json.dumps(sources) if sources else None
+        with self._conn() as conn:
+            conn.execute(
+                "INSERT INTO chat_messages (session_id, role, content, sources) VALUES (?, ?, ?, ?)",
+                (session_id, role, content, sources_json)
+            )
+            conn.execute(
+                "UPDATE chat_sessions SET updated_at = ?, title = CASE "
+                "WHEN title = 'Nueva consulta' AND ? = 'user' THEN SUBSTR(?, 1, 60) "
+                "ELSE title END WHERE id = ?",
+                (datetime.now().isoformat(), role, content, session_id)
+            )
+
+    def delete_chat_session(self, session_id: str, user_id: int):
+        with self._conn() as conn:
+            conn.execute("DELETE FROM chat_messages WHERE session_id = ?", (session_id,))
+            conn.execute("DELETE FROM chat_sessions WHERE id = ? AND user_id = ?",
+                         (session_id, user_id))

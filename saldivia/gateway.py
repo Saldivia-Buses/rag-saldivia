@@ -399,6 +399,11 @@ class GrantCollectionRequest(BaseModel):
     permission: str = "read"
 
 @app.get("/admin/users")
+
+class CreateSessionRequest(BaseModel):
+    collection: str
+    crossdoc: bool = False
+
 async def list_users_endpoint(user: User = Depends(admin_required)):
     users = db.list_users()
     return {"users": [{"id": u.id, "email": u.email, "name": u.name,
@@ -546,6 +551,49 @@ async def get_audit(
         for e in entries
     ]}
 
+
+
+
+@app.get("/chat/sessions")
+async def list_sessions(user_id: int, limit: int = 50,
+                         user: User = Depends(get_user_from_token)):
+    """List chat sessions for a user (BFF passes user_id from JWT)."""
+    sessions = db.list_chat_sessions(user_id=user_id, limit=limit)
+    return {"sessions": [{"id": s.id, "title": s.title, "collection": s.collection,
+                           "crossdoc": s.crossdoc,
+                           "updated_at": s.updated_at.isoformat() if hasattr(s.updated_at, 'isoformat') else str(s.updated_at)}
+                          for s in sessions]}
+
+
+@app.post("/chat/sessions", status_code=201)
+async def create_session(body: CreateSessionRequest, user_id: int,
+                          user: User = Depends(get_user_from_token)):
+    """Create a new chat session."""
+    session = db.create_chat_session(user_id=user_id, collection=body.collection,
+                                     crossdoc=body.crossdoc)
+    return {"id": session.id, "title": session.title, "collection": session.collection}
+
+
+@app.get("/chat/sessions/{session_id}")
+async def get_session(session_id: str, user_id: int,
+                       user: User = Depends(get_user_from_token)):
+    """Get a specific chat session with messages."""
+    session = db.get_chat_session(session_id=session_id, user_id=user_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    return {"id": session.id, "title": session.title, "collection": session.collection,
+            "crossdoc": session.crossdoc,
+            "messages": [{"role": m.role, "content": m.content, "sources": m.sources,
+                           "timestamp": m.timestamp.isoformat() if hasattr(m.timestamp, 'isoformat') else str(m.timestamp)}
+                          for m in session.messages]}
+
+
+@app.delete("/chat/sessions/{session_id}")
+async def delete_session(session_id: str, user_id: int,
+                          user: User = Depends(get_user_from_token)):
+    """Delete a chat session and its messages."""
+    db.delete_chat_session(session_id=session_id, user_id=user_id)
+    return {"ok": True}
 
 
 

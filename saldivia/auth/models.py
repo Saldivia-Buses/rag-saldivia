@@ -83,3 +83,23 @@ def verify_password(password: str, password_hash: str) -> bool:
     """Verify a password against its bcrypt hash."""
     import bcrypt
     return bcrypt.checkpw(password.encode(), password_hash.encode())
+
+
+@dataclass
+class ChatMessage:
+    role: str        # "user" | "assistant"
+    content: str
+    sources: Optional[list] = None   # list of source dicts from RAG
+    timestamp: datetime = field(default_factory=datetime.now)
+
+
+@dataclass
+class ChatSession:
+    id: str          # UUID
+    user_id: int
+    title: str       # First 60 chars of first user message
+    collection: str
+    crossdoc: bool = False
+    messages: list = field(default_factory=list)
+    created_at: datetime = field(default_factory=datetime.now)
+    updated_at: datetime = field(default_factory=datetime.now)

@@ -173,3 +173,36 @@ def test_audit_filters(client, admin_user):
         user_id=None, action="query", collection=None,
         from_ts=None, to_ts=None, limit=10
     )
+
+
+def test_create_session(client, admin_user):
+    with patch("saldivia.gateway.db") as mock_db:
+        from saldivia.auth.models import ChatSession
+        mock_db.get_user_by_api_key_hash.return_value = admin_user
+        mock_db.create_chat_session.return_value = ChatSession(
+            id="abc-123", user_id=1, title="Nueva consulta", collection="tecpia_test"
+        )
+        resp = client.post("/chat/sessions?user_id=1",
+                           json={"collection": "tecpia_test"},
+                           headers={"Authorization": "Bearer rsk_dummy"})
+    assert resp.status_code == 201
+    assert resp.json()["collection"] == "tecpia_test"
+
+
+def test_get_session_not_found(client, admin_user):
+    with patch("saldivia.gateway.db") as mock_db:
+        mock_db.get_user_by_api_key_hash.return_value = admin_user
+        mock_db.get_chat_session.return_value = None
+        resp = client.get("/chat/sessions/nonexistent?user_id=1",
+                          headers={"Authorization": "Bearer rsk_dummy"})
+    assert resp.status_code == 404
+
+
+def test_delete_session(client, admin_user):
+    with patch("saldivia.gateway.db") as mock_db:
+        mock_db.get_user_by_api_key_hash.return_value = admin_user
+        mock_db.delete_chat_session.return_value = None
+        resp = client.delete("/chat/sessions/abc-123?user_id=1",
+                             headers={"Authorization": "Bearer rsk_dummy"})
+    assert resp.status_code == 200
+    assert resp.json()["ok"] is True
