@@ -2,7 +2,7 @@
 FROM node:22-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
-RUN npm install
+RUN npm ci
 COPY . .
 RUN SYSTEM_API_KEY=build-placeholder JWT_SECRET=build-placeholder npm run build
 
