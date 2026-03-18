@@ -4,9 +4,14 @@ import os
 import json
 import hashlib
 import logging
+from datetime import datetime, timedelta, timezone
 from typing import Optional
+
+import jwt as pyjwt
 from fastapi import FastAPI, Request, HTTPException, Depends
+from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from pydantic import BaseModel
 from starlette.responses import StreamingResponse
 import httpx
 
@@ -23,12 +28,17 @@ INGESTOR_URL = os.getenv("INGESTOR_URL", "http://localhost:8082")
 BYPASS_AUTH = os.getenv("BYPASS_AUTH", "false").lower() == "true"
 
 # JWT Configuration
-import jwt as pyjwt
-from datetime import timedelta
-
 JWT_SECRET = os.getenv("JWT_SECRET", "")
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRE_HOURS = 8
+
+if not JWT_SECRET and os.getenv("BYPASS_AUTH", "").lower() != "true":
+    raise RuntimeError("JWT_SECRET environment variable must be set and non-empty")
+
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
 
 
 @app.on_event("startup")
@@ -60,7 +70,6 @@ async def auth_failure_handler(request: Request, exc: HTTPException):
     """M10: Log authentication/authorization failures for security monitoring.
     Returns a JSONResponse so FastAPI properly converts the exception to HTTP response.
     """
-    from fastapi.responses import JSONResponse
     if exc.status_code in (401, 403):
         ip = request.client.host if request.client else "unknown"
         logger.warning(
@@ -76,13 +85,12 @@ async def auth_failure_handler(request: Request, exc: HTTPException):
 
 def create_jwt(user: User) -> str:
     """Create JWT token for a user."""
-    from datetime import datetime
     payload = {
         "user_id": user.id,
         "email": user.email,
         "role": user.role.value,
         "area_id": user.area_id,
-        "exp": datetime.utcnow() + timedelta(hours=JWT_EXPIRE_HOURS),
+        "exp": datetime.now(timezone.utc) + timedelta(hours=JWT_EXPIRE_HOURS),
     }
     return pyjwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
@@ -266,14 +274,6 @@ async def list_collections(user: User = Depends(get_user_from_token)):
 
 
 # Auth endpoints
-from pydantic import BaseModel
-
-
-class LoginRequest(BaseModel):
-    email: str
-    password: str
-
-
 @app.post("/auth/session")
 async def login(body: LoginRequest, user: User = Depends(get_user_from_token)):
     """Issue JWT for a valid email+password. Caller must be authenticated (BFF uses SYSTEM_API_KEY)."""
@@ -303,6 +303,8 @@ async def me(user_id: int, user: User = Depends(get_user_from_token)):
     """Get profile for a user_id (BFF passes user_id from JWT).
     Note: user_id is supplied by the BFF from the JWT payload — the gateway trusts it
     because the BFF is the only caller (SYSTEM_API_KEY gating)."""
+    if user.role != Role.ADMIN:
+        raise HTTPException(status_code=403, detail="Admin role required")
     target = db.get_user_by_id(user_id)
     if not target:
         raise HTTPException(status_code=404, detail="User not found")
@@ -313,15 +315,14 @@ async def me(user_id: int, user: User = Depends(get_user_from_token)):
 
 @app.post("/auth/refresh-key")
 async def refresh_my_key(user_id: int, user: User = Depends(get_user_from_token)):
-    """Regenerate API key for a user (user regenerates their own, or admin for any).
+    """Regenerate API key for a user (admin only).
     Note: user_id from JWT payload supplied by BFF."""
     from saldivia.auth.models import generate_api_key
+    if user.role != Role.ADMIN:
+        raise HTTPException(status_code=403, detail="Admin role required")
     target = db.get_user_by_id(user_id)
     if not target:
         raise HTTPException(status_code=404, detail="User not found")
-    # Only the user themselves or an admin can refresh
-    if user and user.id != user_id and user.role != Role.ADMIN:
-        raise HTTPException(status_code=403, detail="Not allowed")
     new_key, new_hash = generate_api_key()
     db.update_api_key(user_id, new_hash)
     return {"api_key": new_key}
