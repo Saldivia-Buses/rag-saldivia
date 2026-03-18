@@ -37,6 +37,8 @@ services:
     build:
       context: ${SALDIVIA_ROOT}
       dockerfile: services/auth-gateway/Dockerfile
+    command: ["python", "-m", "uvicorn", "saldivia.gateway:app",
+              "--host", "0.0.0.0", "--port", "8090", "--workers", "2"]
     environment:
       - RAG_SERVER_URL=http://rag-server:8081
       - INGESTOR_URL=http://ingestor-server:8082
@@ -53,6 +55,7 @@ services:
       - redis
     networks:
       - default
+    restart: unless-stopped
 
   sda-frontend:
     build:
