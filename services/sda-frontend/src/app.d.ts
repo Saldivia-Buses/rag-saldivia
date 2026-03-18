@@ -1,5 +1,10 @@
-// See https://svelte.dev/docs/kit/types#app.d.ts
+// src/app.d.ts
+import type { SessionUser } from '$lib/server/gateway';
 declare global {
-    namespace App {}
+    namespace App {
+        interface Locals {
+            user: SessionUser | null;
+        }
+    }
 }
 export {};
