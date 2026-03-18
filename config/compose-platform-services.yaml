@@ -52,6 +52,25 @@ services:
     networks:
       - default
 
+  sda-frontend:
+    build:
+      context: ${SALDIVIA_ROOT}
+      dockerfile: services/sda-frontend/Dockerfile
+    environment:
+      - GATEWAY_URL=http://auth-gateway:8090
+      - JWT_SECRET=${JWT_SECRET}
+      - SYSTEM_API_KEY=${SYSTEM_API_KEY}
+      - ORIGIN=${SDA_ORIGIN:-http://localhost:3000}
+      - PUBLIC_APP_NAME=SDA
+      - NODE_ENV=production
+    ports:
+      - "3000:3000"
+    depends_on:
+      - auth-gateway
+    networks:
+      - default
+    restart: unless-stopped
+
 volumes:
   redis-data:
 
