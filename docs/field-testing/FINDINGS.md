@@ -30,6 +30,14 @@ Cuando hay suficientes hallazgos, se arma un batch de implementación.
 - **Síntoma:** No hay forma visible de cerrar sesión o volver al login desde la app.
 - **Fix pendiente:** Implementar botón de logout en sidebar.
 
+#### B5 — Hover en historial genera storm de requests al gateway ✅ RESUELTO
+- **Síntoma:** Al pasar el mouse por el panel de historial, SvelteKit prefetchea cada link disparando 3 requests al gateway por cada hover.
+- **Fix aplicado:** `data-sveltekit-preload-data="false"` en links de historial.
+
+#### B6 — `settings?/refresh_key` da 500 cuando el gateway está caído ✅ RESUELTO
+- **Síntoma:** El botón de regenerar API key da 500, luego SvelteKit lanza 20+ requests de invalidación que toman 30-50s cada uno.
+- **Fix aplicado:** Try/catch en action → devuelve `fail(503, {...})` en lugar de explotar.
+
 ### Ideas / Mejoras
 
 <!-- Se irán agregando acá -->
