@@ -9,7 +9,7 @@
 
 ## 1. Contexto y objetivo
 
-**SDA** (nombre de la plataforma, TBD el significado final) es la interfaz web empresarial para el sistema RAG de Tecpia. Permite a los usuarios de la empresa consultar documentos técnicos industriales (catálogos, manuales, specs) usando lenguaje natural, con respuestas citadas y verificables.
+**SDA** es el nombre definitivo de la plataforma. Es la interfaz web empresarial para el sistema RAG de Tecpia. Permite a los usuarios de la empresa consultar documentos técnicos industriales (catálogos, manuales, specs) usando lenguaje natural, con respuestas citadas y verificables.
 
 ### Principios de diseño
 - **Plataforma extensible**, no solo un frontend de RAG. Nuevos módulos se suman como rutas + layout, sin reescribir.
@@ -60,12 +60,22 @@ FastAPI Gateway (extendido)
 ```
 
 ### Flujo de autenticación
+
+**Capas de auth separadas:**
+- **Browser ↔ SvelteKit:** JWT en cookie httpOnly (identifica al usuario)
+- **SvelteKit ↔ Gateway:** Bearer API key del sistema (variable de entorno `SYSTEM_API_KEY` en el container SvelteKit)
+
+El gateway **no cambia su mecanismo de auth** para los endpoints RAG existentes. Todos los endpoints (existentes y nuevos) reciben el Bearer API key del sistema. El JWT del usuario sirve para que SvelteKit sepa *quién* hace la consulta y aplique RBAC en el BFF antes de forwarding.
+
+**Pasos:**
 1. Usuario ingresa email + password en `/login`
-2. SvelteKit hace `POST /auth/session` al gateway con las credenciales
-3. Gateway valida, devuelve JWT (payload: `user_id · email · role · area_id · exp`)
+2. SvelteKit hace `POST /auth/session` al gateway (con el Bearer `SYSTEM_API_KEY`)
+3. Gateway valida credenciales en SQLite AuthDB, devuelve JWT (payload: `user_id · email · role · area_id · exp`)
 4. SvelteKit setea cookie `httpOnly; Secure; SameSite=Strict` con el JWT — expira en 8h
 5. Todas las páginas protegidas leen la cookie en el `hooks.server.ts`; redirigen a `/login` si ausente o expirada
-6. Las `api/` routes del BFF leen la cookie, validan JWT, y hacen las llamadas al gateway con el Bearer API key del sistema
+6. Las `api/` routes del BFF leen la cookie, verifican el JWT localmente (con `JWT_SECRET`), aplican RBAC, y hacen las llamadas al gateway usando `SYSTEM_API_KEY` como Bearer token
+
+**Variable de entorno adicional:** `SYSTEM_API_KEY` — API key del sistema con permisos completos, usada por el BFF para todas las llamadas al gateway. Solo vive en el container SvelteKit.
 
 ### ERP integration (futuro)
 El gateway implementa una interfaz `AuthProvider`. En v1 usa `LocalAuthProvider` (SQLite). Cuando el ERP de la empresa tenga su API REST disponible, se swapea por `ERPAuthProvider` sin tocar nada del frontend.
@@ -130,7 +140,11 @@ src/routes/
       session/+server.ts      ← POST/DELETE → proxy al gateway
       me/+server.ts           ← GET /auth/me
     chat/
-      [id]/+server.ts         ← SSE streaming de /v1/generate
+      sessions/+server.ts     ← GET (lista), POST (crear sesión)
+      sessions/
+        [id]/+server.ts       ← GET (con mensajes), DELETE
+      stream/
+        [id]/+server.ts       ← SSE streaming de /v1/generate + guarda en sesión
     admin/
       users/+server.ts
       areas/+server.ts
@@ -177,13 +191,15 @@ El módulo de chat es la pantalla principal. Layout de 3 paneles:
 - **Citas inline** — `[Fuente p.XX]` son links que scrollean al panel de fuentes
 - **Copiar respuesta** — botón de copy en cada mensaje del RAG
 - **Compartir conversación** — link permanente a `/chat/[id]`
-- **Historial persistente** — guardado en SQLite vía gateway (audit log)
+- **Historial persistente** — guardado en SQLite vía `GET/POST /chat/sessions`. El BFF crea la sesión al primer mensaje y persiste cada par pregunta/respuesta+fuentes. Default crossdoc: OFF.
 
 ---
 
 ## 6. Backend extensions (gateway FastAPI)
 
-Los endpoints RAG existentes (`/v1/generate`, `/v1/search`, `/v1/collections`, `/v1/ingest`, `/admin/audit`) no se modifican. Se agregan/extienden:
+Los endpoints RAG existentes (`/v1/generate`, `/v1/search`, `/v1/collections`, `/v1/ingest`, `/admin/audit`) no se modifican. Todos los endpoints (existentes y nuevos) siguen autenticando con Bearer API key — el BFF provee siempre el `SYSTEM_API_KEY`. El RBAC por rol se aplica en el BFF antes del forwarding.
+
+Se agregan/extienden:
 
 ### Auth (nuevos)
 | Método | Endpoint | Descripción |
@@ -221,6 +237,19 @@ JWT payload: `user_id · email · role · area_id · exp`. Firmado con `SECRET_K
 | GET | `/v1/collections` | Ya existe |
 | GET | `/v1/collections/{name}/stats` | Entidades, docs, última ingesta (nuevo) |
 
+### Chat — Historial de conversaciones (nuevos)
+
+El historial persiste en SQLite (tabla `chat_sessions` + `chat_messages`). El BFF agrega cada intercambio pregunta/respuesta al crear la sesión.
+
+| Método | Endpoint | Descripción |
+|--------|----------|-------------|
+| GET | `/chat/sessions` | Listar sesiones del usuario actual (paginado) |
+| POST | `/chat/sessions` | Crear nueva sesión (devuelve `session_id`) |
+| GET | `/chat/sessions/{id}` | Sesión con todos sus mensajes (pregunta + respuesta + fuentes) |
+| DELETE | `/chat/sessions/{id}` | Borrar sesión propia |
+
+El BFF crea la sesión al primer mensaje, luego guarda cada par pregunta/respuesta con fuentes. El `session_id` mapea al `[id]` en la ruta `/chat/[id]`.
+
 ### Auditoría (extendido)
 | Método | Endpoint | Descripción |
 |--------|----------|-------------|
@@ -228,7 +257,27 @@ JWT payload: `user_id · email · role · area_id · exp`. Firmado con `SECRET_K
 
 Nuevos query params: `user_id · action · from · to · collection · limit`
 
-**Total: 16 endpoints nuevos + 2 extendidos. El gateway crece de ~6 a ~24 endpoints.**
+### RBAC por endpoint
+
+| Endpoint | USER | AREA_MANAGER | ADMIN |
+|----------|------|-------------|-------|
+| `/auth/session` (POST/DELETE) | ✓ | ✓ | ✓ |
+| `/auth/me` | ✓ | ✓ | ✓ |
+| `/auth/refresh-key` | ✓ (propia) | ✓ (propia) | ✓ (propia) |
+| `/chat/sessions` (GET/POST/DELETE) | ✓ (propias) | ✓ (propias) | ✓ (propias) |
+| `/v1/generate`, `/v1/search` | ✓ (colecciones del área) | ✓ (colecciones del área) | ✓ (todas) |
+| `/v1/collections` | ✓ (filtradas por área) | ✓ (filtradas por área) | ✓ (todas) |
+| `/v1/collections/{name}/stats` | ✓ (si tiene acceso) | ✓ (si tiene acceso) | ✓ |
+| `/v1/ingest` | ✗ | ✓ (colecciones del área) | ✓ (todas) |
+| `/admin/areas` | ✗ | ✓ (solo su área) | ✓ (todas) |
+| `/admin/areas/{id}/collections` | ✗ | ✓ (solo su área) | ✓ |
+| `/admin/users` | ✗ | ✗ | ✓ |
+| `/admin/users/{id}/reset-key` | ✗ | ✗ | ✓ |
+| `/admin/audit` | ✗ | ✗ | ✓ |
+
+**AREA_MANAGER y su área propia:** El JWT contiene `area_id`. El BFF extrae ese valor y lo usa como parámetro en las llamadas. No hay endpoint separado para "mi área" — SvelteKit simplemente usa `/admin/areas/{area_id_from_jwt}/collections`. El gateway verifica que el `area_id` del Bearer token coincida o que el rol sea ADMIN.
+
+**Total: 20 endpoints nuevos + 2 extendidos. El gateway crece de ~6 a ~28 endpoints.**
 
 ---
 
@@ -265,6 +314,7 @@ sda-frontend:
   environment:
     - GATEWAY_URL=http://auth-gateway:8090
     - JWT_SECRET=${JWT_SECRET}
+    - SYSTEM_API_KEY=${SYSTEM_API_KEY}
     - ORIGIN=https://sda.tecpia.local
     - PUBLIC_APP_NAME=SDA
   ports:
@@ -281,6 +331,7 @@ sda-frontend:
 |----------|-------------|
 | `GATEWAY_URL` | URL interna del gateway (default: `http://auth-gateway:8090`) |
 | `JWT_SECRET` | Clave compartida con el gateway para firmar/verificar JWT |
+| `SYSTEM_API_KEY` | API key del sistema para llamadas BFF→gateway (mismo que el admin API key existente) |
 | `ORIGIN` | URL pública de SDA para protección CSRF de SvelteKit |
 | `PUBLIC_APP_NAME` | Nombre mostrado en la UI (default: `SDA`) |
 
