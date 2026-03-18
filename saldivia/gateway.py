@@ -6,6 +6,7 @@ import hashlib
 import logging
 from datetime import datetime, timedelta, timezone
 from typing import Optional
+from dataclasses import asdict
 
 import jwt as pyjwt
 from fastapi import FastAPI, Request, HTTPException, Depends
@@ -17,6 +18,7 @@ import httpx
 
 from saldivia.auth import AuthDB, User, Role, Permission
 from saldivia.auth.models import generate_api_key, hash_password, verify_password
+from saldivia.collections import CollectionManager
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -290,18 +292,20 @@ async def collection_stats(collection_name: str, user: User = Depends(get_user_f
         if not db.can_access(user, collection_name, Permission.READ):
             raise HTTPException(status_code=403, detail="No access to collection")
     try:
-        from saldivia.collections import CollectionManager
         stats = CollectionManager().stats(collection_name)
-        return stats
+        if stats is None:
+            raise HTTPException(status_code=404, detail="Collection not found")
+        return asdict(stats)
+    except HTTPException:
+        raise  # Re-raise HTTP exceptions as-is
     except Exception as e:
-        raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=500, detail=f"Error getting stats: {str(e)}")
 
 
 @app.get("/v1/collections")
 async def list_collections(user: User = Depends(get_user_from_token)):
     """List collections user can access."""
     if user is None:
-        from saldivia.collections import CollectionManager
         return {"collections": CollectionManager().list()}
 
     return {"collections": db.get_user_collections(user)}
@@ -466,12 +470,18 @@ async def create_area_endpoint(body: CreateAreaRequest, user: User = Depends(adm
 @app.put("/admin/areas/{area_id}")
 async def update_area_endpoint(area_id: int, body: UpdateAreaRequest,
                                 user: User = Depends(admin_required)):
+    area = db.get_area(area_id)
+    if area is None:
+        raise HTTPException(status_code=404, detail="Area not found")
     db.update_area(area_id, name=body.name, description=body.description)
     return {"ok": True}
 
 
 @app.delete("/admin/areas/{area_id}")
 async def delete_area_endpoint(area_id: int, user: User = Depends(admin_required)):
+    area = db.get_area(area_id)
+    if area is None:
+        raise HTTPException(status_code=404, detail="Area not found")
     try:
         db.delete_area(area_id)
     except ValueError as e:
