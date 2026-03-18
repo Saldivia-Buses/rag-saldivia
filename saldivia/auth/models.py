@@ -36,6 +36,7 @@ class User:
     area_id: int
     role: Role
     api_key_hash: str
+    password_hash: Optional[str] = None
     created_at: datetime = field(default_factory=datetime.now)
     last_login: Optional[datetime] = None
     active: bool = True
@@ -70,3 +71,15 @@ def generate_api_key() -> tuple[str, str]:
 def verify_api_key(key: str, hash_val: str) -> bool:
     """Verify an API key against its hash."""
     return hashlib.sha256(key.encode()).hexdigest() == hash_val
+
+
+def hash_password(password: str) -> str:
+    """Hash a password with bcrypt."""
+    import bcrypt
+    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+
+
+def verify_password(password: str, password_hash: str) -> bool:
+    """Verify a password against its bcrypt hash."""
+    import bcrypt
+    return bcrypt.checkpw(password.encode(), password_hash.encode())

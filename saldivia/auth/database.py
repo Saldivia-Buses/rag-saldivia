@@ -54,6 +54,13 @@ def init_db(db_path: Path = DB_PATH):
         CREATE INDEX IF NOT EXISTS idx_audit_timestamp ON audit_log(timestamp);
         CREATE INDEX IF NOT EXISTS idx_users_api_key ON users(api_key_hash);
     """)
+
+    # Migrate: add password_hash column if it doesn't exist
+    try:
+        conn.execute("ALTER TABLE users ADD COLUMN password_hash TEXT")
+    except Exception:
+        pass  # Column already exists
+
     conn.close()
 
 
@@ -92,49 +99,99 @@ class AuthDB:
             return [Area(id=r[0], name=r[1], description=r[2], created_at=r[3]) for r in rows]
 
     # Users
-    def create_user(self, email: str, name: str, area_id: int, role: Role, api_key_hash: str) -> User:
+    def create_user(self, email: str, name: str, area_id: int, role: Role,
+                    api_key_hash: str, password_hash: Optional[str] = None) -> User:
         with self._conn() as conn:
             cur = conn.execute(
-                "INSERT INTO users (email, name, area_id, role, api_key_hash) VALUES (?, ?, ?, ?, ?)",
-                (email, name, area_id, role.value, api_key_hash)
+                "INSERT INTO users (email, name, area_id, role, api_key_hash, password_hash) "
+                "VALUES (?, ?, ?, ?, ?, ?)",
+                (email, name, area_id, role.value, api_key_hash, password_hash)
             )
-            return User(
-                id=cur.lastrowid, email=email, name=name,
-                area_id=area_id, role=role, api_key_hash=api_key_hash
-            )
+            return User(id=cur.lastrowid, email=email, name=name, area_id=area_id,
+                        role=role, api_key_hash=api_key_hash, password_hash=password_hash)
 
     def get_user_by_api_key_hash(self, api_key_hash: str) -> Optional[User]:
         with self._conn() as conn:
             row = conn.execute(
-                "SELECT id, email, name, area_id, role, api_key_hash, created_at, last_login, active "
-                "FROM users WHERE api_key_hash = ? AND active = 1",
+                "SELECT id, email, name, area_id, role, api_key_hash, password_hash, "
+                "created_at, last_login, active FROM users WHERE api_key_hash = ? AND active = 1",
                 (api_key_hash,)
             ).fetchone()
+        if not row:
+            return None
+        return User(id=row[0], email=row[1], name=row[2], area_id=row[3], role=Role(row[4]),
+                    api_key_hash=row[5], password_hash=row[6],
+                    created_at=row[7], last_login=row[8], active=bool(row[9]))
+
+    def list_users(self, area_id: int = None, active_only: bool = True) -> list[User]:
+        query = ("SELECT id, email, name, area_id, role, api_key_hash, password_hash, "
+                 "created_at, last_login, active FROM users WHERE 1=1")
+        params = []
+        if area_id is not None:
+            query += " AND area_id = ?"
+            params.append(area_id)
+        if active_only:
+            query += " AND active = 1"
+        with self._conn() as conn:
+            rows = conn.execute(query, params).fetchall()
+        return [User(id=r[0], email=r[1], name=r[2], area_id=r[3], role=Role(r[4]),
+                     api_key_hash=r[5], password_hash=r[6],
+                     created_at=r[7], last_login=r[8], active=bool(r[9]))
+                for r in rows]
+
+    def get_user_by_id(self, user_id: int) -> Optional[User]:
+        with self._conn() as conn:
+            row = conn.execute(
+                "SELECT id, email, name, area_id, role, api_key_hash, password_hash, "
+                "created_at, last_login, active FROM users WHERE id = ? AND active = 1",
+                (user_id,)
+            ).fetchone()
             if row:
-                return User(
-                    id=row[0], email=row[1], name=row[2], area_id=row[3],
-                    role=Role(row[4]), api_key_hash=row[5], created_at=row[6],
-                    last_login=row[7], active=row[8]
-                )
+                return User(id=row[0], email=row[1], name=row[2], area_id=row[3],
+                            role=Role(row[4]), api_key_hash=row[5], password_hash=row[6],
+                            created_at=row[7], last_login=row[8], active=row[9])
             return None
 
-    def list_users(self, area_id: int = None) -> list[User]:
+    def get_user_by_email(self, email: str) -> Optional[User]:
         with self._conn() as conn:
-            if area_id is not None:
-                rows = conn.execute(
-                    "SELECT id, email, name, area_id, role, api_key_hash, created_at, last_login, active "
-                    "FROM users WHERE area_id = ?", (area_id,)
-                ).fetchall()
-            else:
-                rows = conn.execute(
-                    "SELECT id, email, name, area_id, role, api_key_hash, created_at, last_login, active "
-                    "FROM users"
-                ).fetchall()
-            return [User(
-                id=r[0], email=r[1], name=r[2], area_id=r[3],
-                role=Role(r[4]), api_key_hash=r[5], created_at=r[6],
-                last_login=r[7], active=r[8]
-            ) for r in rows]
+            row = conn.execute(
+                "SELECT id, email, name, area_id, role, api_key_hash, password_hash, "
+                "created_at, last_login, active FROM users WHERE email = ? AND active = 1",
+                (email,)
+            ).fetchone()
+            if row:
+                return User(id=row[0], email=row[1], name=row[2], area_id=row[3],
+                            role=Role(row[4]), api_key_hash=row[5], password_hash=row[6],
+                            created_at=row[7], last_login=row[8], active=row[9])
+            return None
+
+    def update_user(self, user_id: int, **fields):
+        """Update user fields. Allowed: name, area_id, role, active."""
+        allowed = {"name", "area_id", "role", "active"}
+        updates = {k: v for k, v in fields.items() if k in allowed}
+        if not updates:
+            return
+        # Convert Role enum to value if needed
+        if "role" in updates and isinstance(updates["role"], Role):
+            updates["role"] = updates["role"].value
+        set_clause = ", ".join(f"{k} = ?" for k in updates)
+        values = list(updates.values()) + [user_id]
+        with self._conn() as conn:
+            conn.execute(f"UPDATE users SET {set_clause} WHERE id = ?", values)
+
+    def update_api_key(self, user_id: int, api_key_hash: str):
+        with self._conn() as conn:
+            conn.execute("UPDATE users SET api_key_hash = ? WHERE id = ?", (api_key_hash, user_id))
+
+    def set_password(self, user_id: int, password_hash: str):
+        with self._conn() as conn:
+            conn.execute("UPDATE users SET password_hash = ? WHERE id = ?", (password_hash, user_id))
+
+    def update_last_login(self, user_id: int):
+        from datetime import datetime
+        with self._conn() as conn:
+            conn.execute("UPDATE users SET last_login = ? WHERE id = ?",
+                         (datetime.now().isoformat(), user_id))
 
     def deactivate_user(self, user_id: int):
         with self._conn() as conn:
