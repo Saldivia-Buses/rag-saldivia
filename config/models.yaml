@@ -22,7 +22,7 @@ services:
   llm:
     provider: local
     endpoint: nim-llm:8000
-    model: nvidia/nemotron-3-super-120b-a12b
+    model: nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4
     parameters:
       temperature: 0.1
       max_tokens: 2048
@@ -30,17 +30,17 @@ services:
   embeddings:
     provider: local
     endpoint: nemotron-embedding-ms:8000/v1
-    model: nvidia/nv-embedqa-e5-v5
+    model: nvidia/llama-nemotron-embed-1b-v2
 
   reranker:
     provider: local
     endpoint: nemotron-ranking-ms:8000
-    model: nvidia/nv-rerankqa-mistral-4b-v3
+    model: nvidia/llama-nemotron-rerank-1b-v2
 
   query_rewriter:
     provider: local
     endpoint: nim-llm:8000
-    model: nvidia/nemotron-3-super-120b-a12b
+    model: nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4
     enabled: false
 
   vlm:
@@ -51,6 +51,6 @@ services:
   crossdoc:
     decomposition:
       provider: local
-      model: nvidia/nemotron-3-super-120b-a12b
+      model: nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4
     synthesis:
       use_rag_server: true
