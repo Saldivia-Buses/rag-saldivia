@@ -12,7 +12,7 @@ BLUEPRINT_VERSION ?= 2.5.0
 
 export SALDIVIA_ROOT
 
-.PHONY: help setup deploy stop status ingest query test patch-check patch-create clean
+.PHONY: help setup deploy stop status ingest query test patch-check patch-create clean validate show-env mcp watch cli
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -63,6 +63,26 @@ patch-create: ## Generate patches from current blueprint changes
 	@cd $(BLUEPRINT_DIR) && \
 	git diff --cached > /tmp/saldivia-patches.patch && \
 	echo "Patch saved to /tmp/saldivia-patches.patch"
+
+validate: ## Validate config for PROFILE (PROFILE=brev-2gpu|workstation-1gpu|full-cloud)
+	@python3 -c "from saldivia.config import ConfigLoader, validate_config; \
+		c = ConfigLoader('config').load('$(PROFILE)'); \
+		errors = validate_config(c); \
+		print('OK' if not errors else '\n'.join(errors))"
+
+show-env: ## Show generated env vars for PROFILE
+	@python3 -c "from saldivia.config import ConfigLoader; \
+		env = ConfigLoader('config').generate_env('$(PROFILE)'); \
+		print('\n'.join(f'{k}={v}' for k,v in sorted(env.items())))"
+
+mcp: ## Start MCP server (stdio)
+	python -m saldivia.mcp_server
+
+watch: ## Watch folder for auto-ingest (COLLECTION=name)
+	python -m saldivia.watch ./watch $(COLLECTION)
+
+cli: ## Run CLI command (ARGS="command [options]")
+	python -m cli.main $(ARGS)
 
 clean: ## Remove blueprint clone and build artifacts
 	@echo "This will delete the blueprint/ directory. Are you sure? (Ctrl+C to cancel)"

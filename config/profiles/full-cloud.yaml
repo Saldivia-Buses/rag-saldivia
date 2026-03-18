@@ -1,0 +1,29 @@
+# config/profiles/full-cloud.yaml
+# No GPU: everything via API
+mode:
+  gpu_memory_gb: 0
+  idle_timeout: 0
+
+services:
+  llm:
+    provider: nvidia-api
+    model: nvidia/llama-3.3-nemotron-super-49b-v1.5
+
+  embeddings:
+    provider: nvidia-api
+    endpoint: https://integrate.api.nvidia.com/v1
+    model: nvidia/nv-embedqa-e5-v5
+
+  reranker:
+    provider: nvidia-api
+    endpoint: https://integrate.api.nvidia.com/v1
+    model: nvidia/nv-rerankqa-mistral-4b-v3
+
+  crossdoc:
+    decomposition:
+      provider: openrouter
+      model: anthropic/claude-sonnet-4
+    synthesis:
+      use_rag_server: false
+      provider: openrouter
+      model: anthropic/claude-sonnet-4

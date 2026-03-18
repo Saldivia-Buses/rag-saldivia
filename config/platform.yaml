@@ -1,0 +1,19 @@
+# config/platform.yaml
+mode:
+  # GPU configuration
+  gpu_memory_gb: 98
+  # Auto-switch to query mode after idle (seconds)
+  idle_timeout: 300
+
+queue:
+  redis_url: redis://localhost:6379
+
+cache:
+  enabled: true
+  ttl_seconds: 3600
+  max_entries: 1000
+
+watch:
+  enabled: false
+  directory: ./watch
+  default_collection: default

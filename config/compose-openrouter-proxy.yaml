@@ -1,0 +1,14 @@
+# config/compose-openrouter-proxy.yaml
+services:
+  openrouter-proxy:
+    build:
+      context: ../services/openrouter-proxy
+    environment:
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+    ports:
+      - "8080:8080"
+
+networks:
+  default:
+    name: nvidia-rag
+    external: true

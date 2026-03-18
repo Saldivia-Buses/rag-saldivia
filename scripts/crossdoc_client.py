@@ -28,6 +28,25 @@ import time
 
 import requests
 
+# SDK integration (optional — graceful fallback if not installed)
+try:
+    from saldivia import ConfigLoader, ProviderClient, ModelConfig
+    from saldivia.cache import QueryCache, CacheConfig
+    SDK_AVAILABLE = True
+except ImportError:
+    SDK_AVAILABLE = False
+
+# Initialize cache if available
+_cache = None
+
+
+def get_cache():
+    global _cache
+    if _cache is None and SDK_AVAILABLE:
+        _cache = QueryCache()
+    return _cache
+
+
 # ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
@@ -518,6 +537,42 @@ def run_tests(cfg):
 
 
 # ---------------------------------------------------------------------------
+# Profile-based config
+# ---------------------------------------------------------------------------
+
+
+class CrossdocConfig:
+    """Profile-based configuration for crossdoc. Falls back to defaults if SDK not available."""
+
+    def __init__(self, profile: str = None):
+        self.profile = profile
+        self.decomp_client = None
+        self.synth_client = None
+
+        if SDK_AVAILABLE and profile:
+            loader = ConfigLoader("config")
+            config = loader.load(profile)
+            crossdoc = config.get("services", {}).get("crossdoc", {})
+
+            # Setup decomposition client
+            decomp = crossdoc.get("decomposition", {})
+            if decomp.get("provider") and decomp.get("provider") != "local":
+                self.decomp_client = ProviderClient(ModelConfig(
+                    provider=decomp["provider"],
+                    model=decomp.get("model", ""),
+                ))
+
+            # Setup synthesis client
+            synth = crossdoc.get("synthesis", {})
+            if not synth.get("use_rag_server", True):
+                self.synth_client = ProviderClient(ModelConfig(
+                    provider=synth["provider"],
+                    model=synth.get("model", ""),
+                    max_tokens=synth.get("parameters", {}).get("max_tokens", 4096),
+                ))
+
+
+# ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
 
@@ -532,6 +587,8 @@ def parse_args():
     p.add_argument("--json", action="store_true", dest="output_json")
     p.add_argument("--test", action="store_true")
     p.add_argument("--verbose", action="store_true")
+    p.add_argument("--profile", type=str, help="Config profile (e.g. brev-2gpu, workstation-1gpu)")
+    p.add_argument("--no-cache", action="store_true", dest="no_cache", help="Disable query caching")
     return p.parse_args()
 
 

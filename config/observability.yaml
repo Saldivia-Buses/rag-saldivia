@@ -1,0 +1,18 @@
+# config/observability.yaml
+observability:
+  enabled: false
+
+  opentelemetry:
+    endpoint: otel-collector:4317
+
+  zipkin:
+    enabled: true
+    port: 9411
+
+  prometheus:
+    enabled: true
+    port: 9090
+
+  grafana:
+    enabled: true
+    port: 3000
