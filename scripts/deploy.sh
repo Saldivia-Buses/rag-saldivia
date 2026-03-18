@@ -37,6 +37,20 @@ loader.write_env_file('${ENV_FILE}', profile='${PROFILE}')
 print('Generated ${ENV_FILE}')
 "
 
+# Validate configuration before proceeding
+log "Validating configuration..."
+python3 -c "
+from saldivia.config import ConfigLoader, validate_config
+loader = ConfigLoader('${SALDIVIA_ROOT}/config')
+config = loader.load('${PROFILE}')
+errors = validate_config(config)
+if errors:
+    print('Config validation errors:')
+    for e in errors: print(f'  - {e}')
+    exit(1)
+print('  Config OK')
+" || err "Config validation failed for profile: ${PROFILE}"
+
 # Local secrets override everything
 if [ -f "${SALDIVIA_ROOT}/.env.local" ]; then
     echo "" >> "$ENV_FILE"

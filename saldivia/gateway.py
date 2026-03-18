@@ -9,7 +9,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from starlette.responses import StreamingResponse
 import httpx
 
-from saldivia.auth import AuthDB, User, Role, Permission, verify_api_key
+from saldivia.auth import AuthDB, User, Role, Permission
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -125,6 +125,12 @@ async def ingest(request: Request, user: User = Depends(get_user_from_token)):
     """Proxy to ingestor with write permission check."""
     if user and user.role == Role.USER:
         raise HTTPException(status_code=403, detail="Users cannot ingest documents directly")
+
+    # AREA_MANAGER must have write access to at least one collection in their area
+    if user and user.role == Role.AREA_MANAGER:
+        area_collections = db.get_area_collections(user.area_id)
+        if not any(ac.permission in (Permission.WRITE, Permission.ADMIN) for ac in area_collections):
+            raise HTTPException(status_code=403, detail="No write access to any collection")
 
     # Forward multipart request as-is
     body = await request.body()

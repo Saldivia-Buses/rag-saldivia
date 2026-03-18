@@ -1,4 +1,5 @@
 # config/guardrails.yaml
-enabled: false
-provider: nvidia-api
-config_id: nemoguard_cloud
+guardrails:
+  enabled: false
+  provider: nvidia-api
+  config_id: nemoguard_cloud

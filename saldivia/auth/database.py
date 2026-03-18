@@ -1,7 +1,6 @@
 # saldivia/auth/database.py
 """SQLite database for auth."""
 import sqlite3
-import aiosqlite
 from pathlib import Path
 from typing import Optional
 from saldivia.auth.models import User, Area, AreaCollection, AuditEntry, Role, Permission
@@ -9,11 +8,11 @@ from saldivia.auth.models import User, Area, AreaCollection, AuditEntry, Role, P
 DB_PATH = Path("data/auth.db")
 
 
-def init_db():
+def init_db(db_path: Path = DB_PATH):
     """Initialize database schema."""
-    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+    db_path.parent.mkdir(parents=True, exist_ok=True)
 
-    conn = sqlite3.connect(DB_PATH)
+    conn = sqlite3.connect(db_path)
     conn.executescript("""
         CREATE TABLE IF NOT EXISTS areas (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -63,7 +62,7 @@ class AuthDB:
 
     def __init__(self, db_path: Path = DB_PATH):
         self.db_path = db_path
-        init_db()
+        init_db(db_path)
 
     def _conn(self):
         return sqlite3.connect(self.db_path, detect_types=sqlite3.PARSE_DECLTYPES)
@@ -121,7 +120,7 @@ class AuthDB:
 
     def list_users(self, area_id: int = None) -> list[User]:
         with self._conn() as conn:
-            if area_id:
+            if area_id is not None:
                 rows = conn.execute(
                     "SELECT id, email, name, area_id, role, api_key_hash, created_at, last_login, active "
                     "FROM users WHERE area_id = ?", (area_id,)

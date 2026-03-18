@@ -27,7 +27,7 @@ class QueryCache:
         """Generate cache key."""
         content = f"{query}:{collection}"
         hash_val = hashlib.md5(content.encode()).hexdigest()[:16]
-        return f"{self.PREFIX}{hash_val}"
+        return f"{self.PREFIX}{collection}:{hash_val}"
 
     def get(self, query: str, collection: str) -> Optional[str]:
         """Get cached result."""
@@ -45,8 +45,11 @@ class QueryCache:
         self.redis.setex(key, self.config.ttl_seconds, result)
 
     def invalidate(self, collection: str = None):
-        """Invalidate cache entries."""
-        pattern = f"{self.PREFIX}*"
+        """Invalidate cache entries, optionally scoped to a collection."""
+        if collection:
+            pattern = f"{self.PREFIX}{collection}:*"
+        else:
+            pattern = f"{self.PREFIX}*"
         for key in self.redis.scan_iter(pattern):
             self.redis.delete(key)
 

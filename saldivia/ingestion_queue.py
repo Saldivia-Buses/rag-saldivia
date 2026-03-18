@@ -1,11 +1,14 @@
 # saldivia/ingestion_queue.py
 """Redis-backed ingestion job queue."""
 import json
+import logging
 import redis
 import uuid
 from dataclasses import dataclass, asdict
 from typing import Optional
 from datetime import datetime
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -50,6 +53,7 @@ class IngestionQueue:
             return None
         job_data = self.redis.hget(self.JOBS_KEY, job_id)
         if not job_data:
+            logger.warning(f"Job {job_id!r} found in queue but no data in jobs hash — discarding")
             return None
         return IngestionJob(**json.loads(job_data))
 

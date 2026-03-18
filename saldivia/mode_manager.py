@@ -131,7 +131,7 @@ class ModeManager:
                 resp = httpx.get("http://localhost:8000/health", timeout=5)
                 if resp.status_code == 200:
                     return
-            except:
+            except Exception:
                 pass
             time.sleep(3)
         raise TimeoutError("VLM failed to become healthy")
@@ -155,10 +155,16 @@ class ModeManager:
                 capture_output=True, text=True, check=True
             )
             return float(result.stdout.strip()) / 1024
-        except:
+        except Exception:
             return 0.0
 
     def _get_pending_jobs(self) -> int:
         """Get number of pending ingestion jobs from queue."""
-        # Will be implemented with Redis queue
-        return 0
+        try:
+            import os
+            from saldivia.ingestion_queue import IngestionQueue
+            redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
+            queue = IngestionQueue(redis_url)
+            return queue.pending_count()
+        except Exception:
+            return 0
