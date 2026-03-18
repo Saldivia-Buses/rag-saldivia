@@ -22,5 +22,8 @@ __pycache__/
 # Node
 node_modules/
 
+# Git worktrees
+.worktrees/
+
 # OS
 .DS_Store
