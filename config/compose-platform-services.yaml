@@ -33,6 +33,23 @@ services:
       - redis
     restart: unless-stopped
 
+  auth-gateway:
+    build:
+      context: ..
+      dockerfile: services/auth-gateway/Dockerfile
+    environment:
+      - RAG_SERVER_URL=http://rag-server:8081
+      - INGESTOR_URL=http://ingestor-server:8082
+      - BYPASS_AUTH=${BYPASS_AUTH:-false}
+    ports:
+      - "8090:8090"
+    volumes:
+      - ./data:/app/data
+    depends_on:
+      - redis
+    networks:
+      - default
+
 volumes:
   redis-data:
 
