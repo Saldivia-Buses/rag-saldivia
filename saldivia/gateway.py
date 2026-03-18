@@ -303,7 +303,7 @@ async def me(user_id: int, user: User = Depends(get_user_from_token)):
     """Get profile for a user_id (BFF passes user_id from JWT).
     Note: user_id is supplied by the BFF from the JWT payload — the gateway trusts it
     because the BFF is the only caller (SYSTEM_API_KEY gating)."""
-    if user.role != Role.ADMIN:
+    if user is None or user.role != Role.ADMIN:
         raise HTTPException(status_code=403, detail="Admin role required")
     target = db.get_user_by_id(user_id)
     if not target:
@@ -318,7 +318,7 @@ async def refresh_my_key(user_id: int, user: User = Depends(get_user_from_token)
     """Regenerate API key for a user (admin only).
     Note: user_id from JWT payload supplied by BFF."""
     from saldivia.auth.models import generate_api_key
-    if user.role != Role.ADMIN:
+    if user is None or user.role != Role.ADMIN:
         raise HTTPException(status_code=403, detail="Admin role required")
     target = db.get_user_by_id(user_id)
     if not target:
