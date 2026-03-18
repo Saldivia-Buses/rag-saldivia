@@ -94,7 +94,10 @@ fi
 # Build platform service images first (mode-manager, ingestion-worker, auth-gateway).
 # Done separately so Docker BuildKit does not try to resolve blueprint build contexts.
 log "Building platform service images..."
+# --project-name must match the CWD-derived name used by 'docker compose up' below
+# (which runs from $COMPOSE_DIR whose basename is 'compose')
 SALDIVIA_ROOT="$SALDIVIA_ROOT" docker compose \
+    --project-name compose \
     --env-file "$ENV_FILE" \
     -f "${SALDIVIA_ROOT}/config/compose-platform-services.yaml" \
     build 2>&1 | tail -5
