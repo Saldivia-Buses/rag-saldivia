@@ -1,0 +1,56 @@
+# config/models.yaml
+providers:
+  nvidia-api:
+    base_url: https://integrate.api.nvidia.com/v1
+    api_key_env: NVIDIA_API_KEY
+
+  openrouter:
+    base_url: https://openrouter.ai/api/v1
+    api_key_env: OPENROUTER_API_KEY
+    headers:
+      HTTP-Referer: https://rag-saldivia.local
+      X-Title: RAG Saldivia
+
+  openai:
+    base_url: https://api.openai.com/v1
+    api_key_env: OPENAI_API_KEY
+
+  local:
+    # Endpoints defined per-service
+
+services:
+  llm:
+    provider: local
+    endpoint: nim-llm:8000
+    model: nvidia/nemotron-3-super-120b-a12b
+    parameters:
+      temperature: 0.1
+      max_tokens: 2048
+
+  embeddings:
+    provider: local
+    endpoint: nemotron-embedding-ms:8000/v1
+    model: nvidia/nv-embedqa-e5-v5
+
+  reranker:
+    provider: local
+    endpoint: nemotron-ranking-ms:8000
+    model: nvidia/nv-rerankqa-mistral-4b-v3
+
+  query_rewriter:
+    provider: local
+    endpoint: nim-llm:8000
+    model: nvidia/nemotron-3-super-120b-a12b
+    enabled: false
+
+  vlm:
+    provider: local
+    endpoint: qwen3-vl-8b:8000
+    model: qwen3-vl-8b
+
+  crossdoc:
+    decomposition:
+      provider: local
+      model: nvidia/nemotron-3-super-120b-a12b
+    synthesis:
+      use_rag_server: true

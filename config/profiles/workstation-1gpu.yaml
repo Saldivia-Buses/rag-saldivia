@@ -1,0 +1,17 @@
+# config/profiles/workstation-1gpu.yaml
+# 1-GPU setup: LLM via API, dynamic VLM loading
+mode:
+  gpu_memory_gb: 98
+  idle_timeout: 300
+
+services:
+  llm:
+    provider: nvidia-api
+    model: nvidia/llama-3.3-nemotron-super-49b-v1.5
+    parameters:
+      max_tokens: 4096
+
+  crossdoc:
+    decomposition:
+      provider: openrouter
+      model: anthropic/claude-sonnet-4
