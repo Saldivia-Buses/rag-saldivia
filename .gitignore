@@ -11,6 +11,9 @@ blueprint/
 # Docker volumes
 volumes/
 
+# Runtime data (auth database, etc.)
+data/
+
 # Python
 __pycache__/
 *.pyc
