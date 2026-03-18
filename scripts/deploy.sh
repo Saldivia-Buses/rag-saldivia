@@ -20,51 +20,65 @@ err() { echo "[$(date +%H:%M:%S)] ERROR: $*" >&2; exit 1; }
 warn() { echo "[$(date +%H:%M:%S)] WARN: $*" >&2; }
 
 [ -d "$BLUEPRINT_DIR" ] || err "Blueprint not found. Run: make setup"
-[ -f "${SALDIVIA_ROOT}/config/profiles/${PROFILE}.env" ] || err "Unknown profile: ${PROFILE}"
+[ -f "${SALDIVIA_ROOT}/config/profiles/${PROFILE}.yaml" ] || err "Unknown profile: ${PROFILE}"
 
-# --- Step 1: Merge env files ---
-# Order matters: blueprint defaults < saldivia overrides < profile < local secrets
-# Writes to .env.merged (never overwrites blueprint's .env.blueprint)
+# --- Step 1: Generate env from YAML config ---
+export PYTHONPATH="${PYTHONPATH}:${SALDIVIA_ROOT}"
+
+GPU_COUNT=$(nvidia-smi -L 2>/dev/null | wc -l || echo "0")
+log "Detected ${GPU_COUNT} GPU(s)"
+
 ENV_FILE="${COMPOSE_DIR}/.env.merged"
-log "Merging env files for profile: ${PROFILE}"
-
-# Start with blueprint defaults (saved by setup.sh)
-if [ -f "${COMPOSE_DIR}/.env.blueprint" ]; then
-    cp "${COMPOSE_DIR}/.env.blueprint" "$ENV_FILE"
-else
-    warn "No .env.blueprint found. Run 'make setup' first."
-    : > "$ENV_FILE"
-fi
-
-echo "" >> "$ENV_FILE"
-cat "${SALDIVIA_ROOT}/config/.env.saldivia" >> "$ENV_FILE"
-echo "" >> "$ENV_FILE"
-cat "${SALDIVIA_ROOT}/config/profiles/${PROFILE}.env" >> "$ENV_FILE"
-echo "" >> "$ENV_FILE"
+log "Generating environment from config (profile: ${PROFILE})..."
+python3 -c "
+from saldivia.config import ConfigLoader
+loader = ConfigLoader('${SALDIVIA_ROOT}/config')
+loader.write_env_file('${ENV_FILE}', profile='${PROFILE}')
+print('Generated ${ENV_FILE}')
+"
 
 # Local secrets override everything
 if [ -f "${SALDIVIA_ROOT}/.env.local" ]; then
-    cat "${SALDIVIA_ROOT}/.env.local" >> "$ENV_FILE"
     echo "" >> "$ENV_FILE"
+    cat "${SALDIVIA_ROOT}/.env.local" >> "$ENV_FILE"
 fi
 
 # Set SALDIVIA_ROOT for compose-overrides.yaml volume mounts
 echo "SALDIVIA_ROOT=${SALDIVIA_ROOT}" >> "$ENV_FILE"
 
-# --- Step 2: Determine compose args ---
-COMPOSE_ARGS="--env-file .env.merged -f docker-compose-rag-server.yaml -f ${SALDIVIA_ROOT}/config/compose-overrides.yaml"
+# --- Step 2: Build compose files ---
+COMPOSE_FILES="-f ${COMPOSE_DIR}/docker-compose-rag-server.yaml"
+COMPOSE_FILES="$COMPOSE_FILES -f ${SALDIVIA_ROOT}/config/compose-overrides.yaml"
+COMPOSE_FILES="$COMPOSE_FILES -f ${SALDIVIA_ROOT}/config/compose-platform-services.yaml"
+
+# Add optional services based on profile config
+if python3 -c "from saldivia.config import ConfigLoader; c = ConfigLoader('${SALDIVIA_ROOT}/config').load('${PROFILE}'); exit(0 if c.get('services',{}).get('llm',{}).get('provider') == 'openrouter-proxy' else 1)" 2>/dev/null; then
+    COMPOSE_FILES="$COMPOSE_FILES -f ${SALDIVIA_ROOT}/config/compose-openrouter-proxy.yaml"
+    log "  OpenRouter proxy enabled"
+fi
+
+if python3 -c "from saldivia.config import ConfigLoader; c = ConfigLoader('${SALDIVIA_ROOT}/config').load('${PROFILE}'); exit(0 if c.get('guardrails',{}).get('enabled') else 1)" 2>/dev/null; then
+    COMPOSE_FILES="$COMPOSE_FILES -f ${SALDIVIA_ROOT}/config/compose-guardrails-cloud.yaml"
+    log "  Guardrails enabled"
+fi
+
+if python3 -c "from saldivia.config import ConfigLoader; c = ConfigLoader('${SALDIVIA_ROOT}/config').load('${PROFILE}'); exit(0 if c.get('observability',{}).get('enabled') else 1)" 2>/dev/null; then
+    COMPOSE_FILES="$COMPOSE_FILES -f ${COMPOSE_DIR}/observability.yaml"
+    log "  Observability enabled"
+fi
+
+log "Compose files: $COMPOSE_FILES"
 SCALE_ARGS=""
 
 if [ "$PROFILE" = "workstation-1gpu" ]; then
-    COMPOSE_ARGS="$COMPOSE_ARGS -f ${SALDIVIA_ROOT}/config/compose-overrides-workstation.yaml"
     SCALE_ARGS="--scale nemotron3-super=0"
-    log "Workstation profile: LLM container disabled, Milvus GPU reservation removed"
+    log "Workstation profile: nemotron3-super disabled"
 fi
 
 # --- Step 3: Start services ---
 cd "$COMPOSE_DIR"
 log "Starting services..."
-docker compose $COMPOSE_ARGS up -d --force-recreate $SCALE_ARGS 2>&1 | tail -10
+docker compose --env-file "$ENV_FILE" $COMPOSE_FILES up -d --force-recreate $SCALE_ARGS 2>&1 | tail -10
 
 # --- Step 4: Flush Redis (clear orphaned NV-Ingest tasks) ---
 log "Flushing Redis..."
