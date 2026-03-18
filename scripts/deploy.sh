@@ -90,6 +90,14 @@ if [ "$PROFILE" = "workstation-1gpu" ]; then
 fi
 
 # --- Step 3: Start services ---
+# Build platform service images first (mode-manager, ingestion-worker, auth-gateway).
+# Done separately so Docker BuildKit does not try to resolve blueprint build contexts.
+log "Building platform service images..."
+SALDIVIA_ROOT="$SALDIVIA_ROOT" docker compose \
+    --env-file "$ENV_FILE" \
+    -f "${SALDIVIA_ROOT}/config/compose-platform-services.yaml" \
+    build 2>&1 | tail -5
+
 cd "$COMPOSE_DIR"
 log "Starting services..."
 docker compose --env-file "$ENV_FILE" $COMPOSE_FILES up -d --force-recreate $SCALE_ARGS 2>&1 | tail -10
