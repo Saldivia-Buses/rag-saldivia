@@ -37,21 +37,26 @@
             });
 
             if (!resp.ok) {
-                chat.finalizeStream();
+                chat.appendToken('\n[Error: no se pudo conectar con el servidor]');
                 return;
             }
 
             const reader = resp.body!.getReader();
             const decoder = new TextDecoder();
+            let buffer = '';
 
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
-                const text = decoder.decode(value);
+                // stream: true preserves multi-byte sequences across chunks
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                // Keep last (potentially incomplete) line in buffer
+                buffer = lines.pop() ?? '';
                 // Parse SSE events
-                for (const line of text.split('\n')) {
+                for (const line of lines) {
                     if (line.startsWith('data: ')) {
-                        const dataStr = line.slice(6);
+                        const dataStr = line.slice(6).trim();
                         if (dataStr === '[DONE]') continue;
                         try {
                             const event = JSON.parse(dataStr);
@@ -65,10 +70,13 @@
                                     excerpt: c.content ?? c.excerpt ?? '',
                                 })));
                             }
-                        } catch { /* ignore parse errors */ }
+                        } catch { /* ignore parse errors on partial chunks */ }
                     }
                 }
             }
+        } catch (err) {
+            console.error('Stream error:', err);
+            chat.appendToken('\n[Error: conexión interrumpida]');
         } finally {
             chat.finalizeStream();
         }
