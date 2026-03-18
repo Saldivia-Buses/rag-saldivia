@@ -10,7 +10,7 @@ services:
 
   mode-manager:
     build:
-      context: ..
+      context: ${SALDIVIA_ROOT}
       dockerfile: services/mode-manager/Dockerfile
     environment:
       - REDIS_URL=redis://redis:6379
@@ -23,7 +23,7 @@ services:
 
   ingestion-worker:
     build:
-      context: ..
+      context: ${SALDIVIA_ROOT}
       dockerfile: services/mode-manager/Dockerfile
     command: ["python", "-m", "saldivia.ingestion_worker"]
     environment:
@@ -35,7 +35,7 @@ services:
 
   auth-gateway:
     build:
-      context: ..
+      context: ${SALDIVIA_ROOT}
       dockerfile: services/auth-gateway/Dockerfile
     environment:
       - RAG_SERVER_URL=http://rag-server:8081
@@ -44,7 +44,7 @@ services:
     ports:
       - "8090:8090"
     volumes:
-      - ./data:/app/data
+      - ${SALDIVIA_ROOT}/data:/app/data
     depends_on:
       - redis
     networks:
