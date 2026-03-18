@@ -2,6 +2,7 @@
 """RAG Saldivia CLI."""
 import click
 from cli.collections import collections
+from cli.ingest import ingest
 
 
 @click.group()
@@ -12,6 +13,7 @@ def cli():
 
 
 cli.add_command(collections)
+cli.add_command(ingest)
 
 
 @cli.command()
