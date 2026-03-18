@@ -23,7 +23,7 @@ warn() { echo "[$(date +%H:%M:%S)] WARN: $*" >&2; }
 [ -f "${SALDIVIA_ROOT}/config/profiles/${PROFILE}.yaml" ] || err "Unknown profile: ${PROFILE}"
 
 # --- Step 1: Generate env from YAML config ---
-export PYTHONPATH="${PYTHONPATH}:${SALDIVIA_ROOT}"
+export PYTHONPATH="${PYTHONPATH:-}:${SALDIVIA_ROOT}"
 
 GPU_COUNT=$(nvidia-smi -L 2>/dev/null | wc -l || echo "0")
 log "Detected ${GPU_COUNT} GPU(s)"
