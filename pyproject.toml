@@ -1,0 +1,30 @@
+# pyproject.toml
+[project]
+name = "rag-saldivia"
+version = "0.1.0"
+description = "RAG platform overlay for NVIDIA Blueprint"
+requires-python = ">=3.11"
+dependencies = [
+    "pyyaml>=6.0",
+    "httpx>=0.26.0",
+    "click>=8.1.0",
+    "redis>=5.0.0",
+    "pymilvus>=2.4.0",
+    "watchdog>=4.0.0",
+    "mcp>=1.0.0",
+    "fastapi>=0.109.0",
+    "uvicorn>=0.27.0",
+    "passlib[bcrypt]>=1.7.4",
+    "python-jose[cryptography]>=3.3.0",
+    "aiosqlite>=0.19.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0.0", "pytest-asyncio>=0.23.0"]
+
+[project.scripts]
+rag-saldivia = "cli.main:cli"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
