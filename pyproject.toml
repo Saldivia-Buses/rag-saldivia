@@ -3,7 +3,7 @@
 name = "rag-saldivia"
 version = "0.1.0"
 description = "RAG platform overlay for NVIDIA Blueprint"
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 dependencies = [
     "pyyaml>=6.0",
     "httpx>=0.26.0",

@@ -62,7 +62,7 @@ def filter_collections(user: User, requested: list[str]) -> list[str]:
 
 @app.post("/v1/generate")
 async def generate(request: Request, user: User = Depends(get_user_from_token)):
-    """Proxy to RAG generate endpoint with auth filtering."""
+    """Proxy to RAG generate endpoint with auth filtering. Streams SSE response."""
     body = await request.json()
 
     # Filter collections
@@ -84,14 +84,23 @@ async def generate(request: Request, user: User = Depends(get_user_from_token)):
             ip_address=request.client.host if request.client else ""
         )
 
-    # Proxy request
-    async with httpx.AsyncClient(timeout=120) as client:
-        resp = await client.post(
-            f"{RAG_SERVER_URL}/v1/generate",
-            json=body,
-            headers={"Content-Type": "application/json"}
-        )
-        return resp.json()
+    # Proxy request, streaming SSE response
+    client = httpx.AsyncClient(timeout=120)
+
+    async def _stream():
+        try:
+            async with client.stream(
+                "POST",
+                f"{RAG_SERVER_URL}/v1/generate",
+                json=body,
+                headers={"Content-Type": "application/json"}
+            ) as resp:
+                async for chunk in resp.aiter_bytes():
+                    yield chunk
+        finally:
+            await client.aclose()
+
+    return StreamingResponse(_stream(), media_type="text/event-stream")
 
 
 @app.post("/v1/search")

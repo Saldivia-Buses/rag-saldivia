@@ -1,5 +1,6 @@
 # saldivia/collections.py
 """Collection management for RAG Saldivia."""
+import os
 import httpx
 from dataclasses import dataclass
 from typing import Optional
@@ -19,12 +20,12 @@ class CollectionManager:
 
     def __init__(
         self,
-        ingestor_url: str = "http://localhost:8082",
-        milvus_host: str = "localhost",
+        ingestor_url: str = None,
+        milvus_host: str = None,
         milvus_port: int = 19530,
     ):
-        self.ingestor_url = ingestor_url
-        self.milvus_host = milvus_host
+        self.ingestor_url = ingestor_url or os.getenv("INGESTOR_URL", "http://localhost:8082")
+        self.milvus_host = milvus_host or os.getenv("MILVUS_HOST", "localhost")
         self.milvus_port = milvus_port
         self._connected = False
 

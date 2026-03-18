@@ -40,6 +40,7 @@ services:
     environment:
       - RAG_SERVER_URL=http://rag-server:8081
       - INGESTOR_URL=http://ingestor-server:8082
+      - MILVUS_HOST=milvus-standalone
       - BYPASS_AUTH=${BYPASS_AUTH:-false}
     ports:
       - "9000:8090"

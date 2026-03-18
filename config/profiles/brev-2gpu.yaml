@@ -8,4 +8,4 @@ services:
   llm:
     provider: local
     endpoint: nim-llm:8000
-    model: nvidia/nemotron-3-super-120b-a12b
+    model: nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4
