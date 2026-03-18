@@ -274,3 +274,61 @@ class AuthDB:
                 id=r[0], user_id=r[1], action=r[2], collection=r[3],
                 query_preview=r[4], ip_address=r[5], timestamp=r[6]
             ) for r in rows]
+
+    def update_area(self, area_id: int, name: str = None, description: str = None):
+        """Update area name and/or description."""
+        updates = {}
+        if name is not None:
+            updates["name"] = name
+        if description is not None:
+            updates["description"] = description
+        if not updates:
+            return
+        set_clause = ", ".join(f"{k} = ?" for k in updates)
+        with self._conn() as conn:
+            conn.execute(f"UPDATE areas SET {set_clause} WHERE id = ?",
+                         list(updates.values()) + [area_id])
+
+    def delete_area(self, area_id: int):
+        """Delete area. Raises ValueError if area has active users."""
+        with self._conn() as conn:
+            count = conn.execute(
+                "SELECT COUNT(*) FROM users WHERE area_id = ? AND active = 1", (area_id,)
+            ).fetchone()[0]
+            if count > 0:
+                raise ValueError(f"Area has {count} active users")
+            conn.execute("DELETE FROM area_collections WHERE area_id = ?", (area_id,))
+            conn.execute("DELETE FROM areas WHERE id = ?", (area_id,))
+
+    def get_audit_log_filtered(self, user_id: int = None, action: str = None,
+                                collection: str = None, from_ts: str = None,
+                                to_ts: str = None, limit: int = 100) -> list[AuditEntry]:
+        """Audit log with optional filters."""
+        conditions = []
+        params = []
+        if user_id:
+            conditions.append("user_id = ?")
+            params.append(user_id)
+        if action:
+            conditions.append("action = ?")
+            params.append(action)
+        if collection:
+            conditions.append("collection = ?")
+            params.append(collection)
+        if from_ts:
+            conditions.append("timestamp >= ?")
+            params.append(from_ts)
+        if to_ts:
+            conditions.append("timestamp <= ?")
+            params.append(to_ts)
+        where = f"WHERE {' AND '.join(conditions)}" if conditions else ""
+        params.append(limit)
+        with self._conn() as conn:
+            rows = conn.execute(
+                f"SELECT id, user_id, action, collection, query_preview, ip_address, timestamp "
+                f"FROM audit_log {where} ORDER BY timestamp DESC LIMIT ?", params
+            ).fetchall()
+        return [AuditEntry(
+            id=r[0], user_id=r[1], action=r[2], collection=r[3],
+            query_preview=r[4], ip_address=r[5], timestamp=r[6]
+        ) for r in rows]

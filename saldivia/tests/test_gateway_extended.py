@@ -136,3 +136,40 @@ def test_non_admin_forbidden(client):
             resp = client.get("/admin/users",
                               headers={"Authorization": "Bearer rsk_dummy"})
     assert resp.status_code == 403
+
+
+def test_list_areas(client, admin_user):
+    with patch("saldivia.gateway.db") as mock_db:
+        from saldivia.auth.models import Area
+        mock_db.get_user_by_api_key_hash.return_value = admin_user
+        mock_db.list_areas.return_value = [Area(id=1, name="Mantenimiento", description="Area de mantenimiento")]
+        resp = client.get("/admin/areas", headers={"Authorization": "Bearer rsk_dummy"})
+    assert resp.status_code == 200
+    assert resp.json()["areas"][0]["name"] == "Mantenimiento"
+
+
+def test_area_manager_cannot_see_other_area(client):
+    from saldivia.auth.models import generate_api_key, User as UserModel, Role as RoleModel
+    key, hash_val = generate_api_key()
+    manager = UserModel(id=2, email="mgr@test.com", name="Mgr", area_id=1,
+                        role=RoleModel.AREA_MANAGER, api_key_hash=hash_val)
+    with patch("saldivia.gateway.db") as mock_db:
+        with patch("saldivia.gateway.BYPASS_AUTH", False):
+            mock_db.get_user_by_api_key_hash.return_value = manager
+            resp = client.get("/admin/areas/99/collections",
+                              headers={"Authorization": "Bearer rsk_dummy"})
+    assert resp.status_code == 403
+
+
+def test_audit_filters(client, admin_user):
+    with patch("saldivia.gateway.db") as mock_db:
+        with patch("saldivia.gateway.BYPASS_AUTH", False):
+            mock_db.get_user_by_api_key_hash.return_value = admin_user
+            mock_db.get_audit_log_filtered.return_value = []
+            resp = client.get("/admin/audit?action=query&limit=10",
+                              headers={"Authorization": "Bearer rsk_dummy"})
+    assert resp.status_code == 200
+    mock_db.get_audit_log_filtered.assert_called_once_with(
+        user_id=None, action="query", collection=None,
+        from_ts=None, to_ts=None, limit=10
+    )

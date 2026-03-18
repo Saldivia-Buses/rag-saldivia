@@ -283,6 +283,20 @@ async def health():
     return {"status": "ok", "auth_enabled": not BYPASS_AUTH}
 
 
+@app.get("/v1/collections/{collection_name}/stats")
+async def collection_stats(collection_name: str, user: User = Depends(get_user_from_token)):
+    """Stats for a specific collection."""
+    if user and user.role != Role.ADMIN:
+        if not db.can_access(user, collection_name, Permission.READ):
+            raise HTTPException(status_code=403, detail="No access to collection")
+    try:
+        from saldivia.collections import CollectionManager
+        stats = CollectionManager().stats(collection_name)
+        return stats
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
 @app.get("/v1/collections")
 async def list_collections(user: User = Depends(get_user_from_token)):
     """List collections user can access."""
@@ -365,6 +379,21 @@ class UpdateUserRequest(BaseModel):
     active: Optional[bool] = None
 
 
+
+class CreateAreaRequest(BaseModel):
+    name: str
+    description: str = ""
+
+
+class UpdateAreaRequest(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+
+
+class GrantCollectionRequest(BaseModel):
+    collection_name: str
+    permission: str = "read"
+
 @app.get("/admin/users")
 async def list_users_endpoint(user: User = Depends(admin_required)):
     users = db.list_users()
@@ -420,24 +449,94 @@ async def reset_user_key(user_id: int, user: User = Depends(admin_required)):
     db.update_api_key(user_id, new_hash)
     return {"api_key": new_key}
 
+
+# Area management endpoints
+@app.get("/admin/areas")
+async def list_areas_endpoint(user: User = Depends(admin_or_manager_required)):
+    areas = db.list_areas()
+    return {"areas": [{"id": a.id, "name": a.name, "description": a.description} for a in areas]}
+
+
+@app.post("/admin/areas", status_code=201)
+async def create_area_endpoint(body: CreateAreaRequest, user: User = Depends(admin_required)):
+    area = db.create_area(body.name, body.description)
+    return {"id": area.id, "name": area.name}
+
+
+@app.put("/admin/areas/{area_id}")
+async def update_area_endpoint(area_id: int, body: UpdateAreaRequest,
+                                user: User = Depends(admin_required)):
+    db.update_area(area_id, name=body.name, description=body.description)
+    return {"ok": True}
+
+
+@app.delete("/admin/areas/{area_id}")
+async def delete_area_endpoint(area_id: int, user: User = Depends(admin_required)):
+    try:
+        db.delete_area(area_id)
+    except ValueError as e:
+        raise HTTPException(status_code=409, detail=str(e))
+    return {"ok": True}
+
+
+@app.get("/admin/areas/{area_id}/collections")
+async def get_area_collections_endpoint(area_id: int, user: User = Depends(admin_or_manager_required)):
+    if user and user.role == Role.AREA_MANAGER and user.area_id != area_id:
+        raise HTTPException(status_code=403, detail="Can only view your own area")
+    collections = db.get_area_collections(area_id)
+    return {"collections": [{"name": c.collection_name, "permission": c.permission.value}
+                              for c in collections]}
+
+
+@app.post("/admin/areas/{area_id}/collections")
+async def grant_collection_endpoint(area_id: int, body: GrantCollectionRequest,
+                                     user: User = Depends(admin_or_manager_required)):
+    if user and user.role == Role.AREA_MANAGER and user.area_id != area_id:
+        raise HTTPException(status_code=403, detail="Can only modify your own area")
+    db.grant_collection_access(area_id, body.collection_name, Permission(body.permission))
+    return {"ok": True}
+
+
+@app.delete("/admin/areas/{area_id}/collections/{collection_name}")
+async def revoke_collection_endpoint(area_id: int, collection_name: str,
+                                      user: User = Depends(admin_or_manager_required)):
+    if user and user.role == Role.AREA_MANAGER and user.area_id != area_id:
+        raise HTTPException(status_code=403, detail="Can only modify your own area")
+    db.revoke_collection_access(area_id, collection_name)
+    return {"ok": True}
+
 # Admin endpoints
 @app.get("/admin/audit")
-async def get_audit(limit: int = 100, user: User = Depends(get_user_from_token)):
-    """Get audit log (admin only)."""
-    if user and user.role != Role.ADMIN:
+async def get_audit(
+    user_id: Optional[int] = None,
+    action: Optional[str] = None,
+    collection: Optional[str] = None,
+    from_ts: Optional[str] = None,
+    to_ts: Optional[str] = None,
+    limit: int = 100,
+    user: User = Depends(get_user_from_token)
+):
+    """Get audit log with optional filters (admin only)."""
+    if user is None or user.role != Role.ADMIN:
         raise HTTPException(status_code=403, detail="Admin only")
-
-    entries = db.get_audit_log(limit=limit)
+    entries = db.get_audit_log_filtered(
+        user_id=user_id, action=action, collection=collection,
+        from_ts=from_ts, to_ts=to_ts, limit=limit
+    )
     return {"entries": [
         {
             "id": e.id,
             "user_id": e.user_id,
             "action": e.action,
             "collection": e.collection,
-            "timestamp": e.timestamp.isoformat() if e.timestamp else None
+            "query_preview": e.query_preview,
+            "ip_address": e.ip_address,
+            "timestamp": e.timestamp.isoformat() if hasattr(e.timestamp, 'isoformat') else str(e.timestamp)
         }
         for e in entries
     ]}
+
+
 
 
 def main():
