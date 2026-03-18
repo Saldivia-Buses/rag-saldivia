@@ -307,7 +307,7 @@ async def health():
 
 
 @app.get("/v1/collections/{collection_name}/stats")
-async def collection_stats(collection_name: str, user: User = Depends(get_user_from_token)):
+def collection_stats(collection_name: str, user: User = Depends(get_user_from_token)):
     """Stats for a specific collection."""
     if user and user.role != Role.ADMIN:
         if not db.can_access(user, collection_name, Permission.READ):
@@ -324,7 +324,7 @@ async def collection_stats(collection_name: str, user: User = Depends(get_user_f
 
 
 @app.get("/v1/collections")
-async def list_collections(user: User = Depends(get_user_from_token)):
+def list_collections(user: User = Depends(get_user_from_token)):
     """List collections user can access."""
     if user is None:
         return {"collections": CollectionManager().list()}
@@ -334,7 +334,7 @@ async def list_collections(user: User = Depends(get_user_from_token)):
 
 # Auth endpoints
 @app.post("/auth/session")
-async def login(body: LoginRequest, user: User = Depends(get_user_from_token)):
+def login(body: LoginRequest, user: User = Depends(get_user_from_token)):
     """Issue JWT for a valid email+password. Caller must be authenticated (BFF uses SYSTEM_API_KEY)."""
     from saldivia.auth.models import verify_password
     target = db.get_user_by_email(body.email)
@@ -352,13 +352,13 @@ async def login(body: LoginRequest, user: User = Depends(get_user_from_token)):
 
 
 @app.delete("/auth/session")
-async def logout(user: User = Depends(get_user_from_token)):
+def logout(user: User = Depends(get_user_from_token)):
     """Logout endpoint (stateless — BFF clears the cookie)."""
     return {"ok": True}
 
 
 @app.get("/auth/me")
-async def me(user_id: int, user: User = Depends(get_user_from_token)):
+def me(user_id: int, user: User = Depends(get_user_from_token)):
     """Get profile for a user_id (BFF passes user_id from JWT).
     Any authenticated user can view their own profile; admins can view any."""
     if user is None:
@@ -374,7 +374,7 @@ async def me(user_id: int, user: User = Depends(get_user_from_token)):
 
 
 @app.post("/auth/refresh-key")
-async def refresh_my_key(user_id: int, user: User = Depends(get_user_from_token)):
+def refresh_my_key(user_id: int, user: User = Depends(get_user_from_token)):
     """Regenerate API key for a user. Any user can refresh their own; admins can refresh any."""
     from saldivia.auth.models import generate_api_key
     if user is None:
@@ -428,7 +428,7 @@ class CreateSessionRequest(BaseModel):
 
 
 @app.get("/admin/users")
-async def list_users_endpoint(user: User = Depends(admin_required)):
+def list_users_endpoint(user: User = Depends(admin_required)):
     users = db.list_users()
     return {"users": [{"id": u.id, "email": u.email, "name": u.name,
                         "area_id": u.area_id, "role": u.role.value,
@@ -438,7 +438,7 @@ async def list_users_endpoint(user: User = Depends(admin_required)):
 
 
 @app.post("/admin/users", status_code=201)
-async def create_user_endpoint(body: CreateUserRequest, user: User = Depends(admin_required)):
+def create_user_endpoint(body: CreateUserRequest, user: User = Depends(admin_required)):
     new_key, new_hash = generate_api_key()
     pw_hash = hash_password(body.password) if body.password else None
     try:
@@ -452,8 +452,8 @@ async def create_user_endpoint(body: CreateUserRequest, user: User = Depends(adm
 
 
 @app.put("/admin/users/{user_id}")
-async def update_user_endpoint(user_id: int, body: UpdateUserRequest,
-                                user: User = Depends(admin_required)):
+def update_user_endpoint(user_id: int, body: UpdateUserRequest,
+                          user: User = Depends(admin_required)):
     target = db.get_user_by_id(user_id)
     if not target:
         raise HTTPException(status_code=404, detail="User not found")
@@ -465,7 +465,7 @@ async def update_user_endpoint(user_id: int, body: UpdateUserRequest,
 
 
 @app.delete("/admin/users/{user_id}")
-async def delete_user_endpoint(user_id: int, user: User = Depends(admin_required)):
+def delete_user_endpoint(user_id: int, user: User = Depends(admin_required)):
     target = db.get_user_by_id(user_id)
     if not target:
         raise HTTPException(status_code=404, detail="User not found")
@@ -474,7 +474,7 @@ async def delete_user_endpoint(user_id: int, user: User = Depends(admin_required
 
 
 @app.post("/admin/users/{user_id}/reset-key")
-async def reset_user_key(user_id: int, user: User = Depends(admin_required)):
+def reset_user_key(user_id: int, user: User = Depends(admin_required)):
     target = db.get_user_by_id(user_id)
     if not target:
         raise HTTPException(status_code=404, detail="User not found")
@@ -485,19 +485,19 @@ async def reset_user_key(user_id: int, user: User = Depends(admin_required)):
 
 # Area management endpoints
 @app.get("/admin/areas")
-async def list_areas_endpoint(user: User = Depends(admin_or_manager_required)):
+def list_areas_endpoint(user: User = Depends(admin_or_manager_required)):
     areas = db.list_areas()
     return {"areas": [{"id": a.id, "name": a.name, "description": a.description} for a in areas]}
 
 
 @app.post("/admin/areas", status_code=201)
-async def create_area_endpoint(body: CreateAreaRequest, user: User = Depends(admin_required)):
+def create_area_endpoint(body: CreateAreaRequest, user: User = Depends(admin_required)):
     area = db.create_area(body.name, body.description)
     return {"id": area.id, "name": area.name}
 
 
 @app.get("/admin/areas/{area_id}")
-async def get_area_endpoint(area_id: int, user: User = Depends(admin_or_manager_required)):
+def get_area_endpoint(area_id: int, user: User = Depends(admin_or_manager_required)):
     """Get area details including its collections."""
     if user and user.role == Role.AREA_MANAGER and user.area_id != area_id:
         raise HTTPException(status_code=403, detail="Can only view your own area")
@@ -513,8 +513,8 @@ async def get_area_endpoint(area_id: int, user: User = Depends(admin_or_manager_
 
 
 @app.put("/admin/areas/{area_id}")
-async def update_area_endpoint(area_id: int, body: UpdateAreaRequest,
-                                user: User = Depends(admin_required)):
+def update_area_endpoint(area_id: int, body: UpdateAreaRequest,
+                          user: User = Depends(admin_required)):
     area = db.get_area(area_id)
     if area is None:
         raise HTTPException(status_code=404, detail="Area not found")
@@ -523,7 +523,7 @@ async def update_area_endpoint(area_id: int, body: UpdateAreaRequest,
 
 
 @app.delete("/admin/areas/{area_id}")
-async def delete_area_endpoint(area_id: int, user: User = Depends(admin_required)):
+def delete_area_endpoint(area_id: int, user: User = Depends(admin_required)):
     area = db.get_area(area_id)
     if area is None:
         raise HTTPException(status_code=404, detail="Area not found")
@@ -535,7 +535,7 @@ async def delete_area_endpoint(area_id: int, user: User = Depends(admin_required
 
 
 @app.get("/admin/areas/{area_id}/collections")
-async def get_area_collections_endpoint(area_id: int, user: User = Depends(admin_or_manager_required)):
+def get_area_collections_endpoint(area_id: int, user: User = Depends(admin_or_manager_required)):
     if user and user.role == Role.AREA_MANAGER and user.area_id != area_id:
         raise HTTPException(status_code=403, detail="Can only view your own area")
     collections = db.get_area_collections(area_id)
@@ -544,8 +544,8 @@ async def get_area_collections_endpoint(area_id: int, user: User = Depends(admin
 
 
 @app.post("/admin/areas/{area_id}/collections")
-async def grant_collection_endpoint(area_id: int, body: GrantCollectionRequest,
-                                     user: User = Depends(admin_or_manager_required)):
+def grant_collection_endpoint(area_id: int, body: GrantCollectionRequest,
+                               user: User = Depends(admin_or_manager_required)):
     if user and user.role == Role.AREA_MANAGER and user.area_id != area_id:
         raise HTTPException(status_code=403, detail="Can only modify your own area")
     db.grant_collection_access(area_id, body.collection_name, Permission(body.permission))
@@ -553,8 +553,8 @@ async def grant_collection_endpoint(area_id: int, body: GrantCollectionRequest,
 
 
 @app.delete("/admin/areas/{area_id}/collections/{collection_name}")
-async def revoke_collection_endpoint(area_id: int, collection_name: str,
-                                      user: User = Depends(admin_or_manager_required)):
+def revoke_collection_endpoint(area_id: int, collection_name: str,
+                                user: User = Depends(admin_or_manager_required)):
     if user and user.role == Role.AREA_MANAGER and user.area_id != area_id:
         raise HTTPException(status_code=403, detail="Can only modify your own area")
     db.revoke_collection_access(area_id, collection_name)
@@ -562,7 +562,7 @@ async def revoke_collection_endpoint(area_id: int, collection_name: str,
 
 # Admin endpoints
 @app.get("/admin/audit")
-async def get_audit(
+def get_audit(
     user_id: Optional[int] = None,
     action: Optional[str] = None,
     collection: Optional[str] = None,
@@ -595,8 +595,8 @@ async def get_audit(
 
 
 @app.get("/chat/sessions")
-async def list_sessions(user_id: int, limit: int = 50,
-                         user: User = Depends(get_user_from_token)):
+def list_sessions(user_id: int, limit: int = 50,
+                  user: User = Depends(get_user_from_token)):
     """List chat sessions for a user (BFF passes user_id from JWT)."""
     if user is None:
         raise HTTPException(status_code=401, detail="Not authenticated")
@@ -610,8 +610,8 @@ async def list_sessions(user_id: int, limit: int = 50,
 
 
 @app.post("/chat/sessions", status_code=201)
-async def create_session(body: CreateSessionRequest, user_id: int,
-                          user: User = Depends(get_user_from_token)):
+def create_session(body: CreateSessionRequest, user_id: int,
+                   user: User = Depends(get_user_from_token)):
     """Create a new chat session."""
     if user is None:
         raise HTTPException(status_code=401, detail="Not authenticated")
@@ -623,8 +623,8 @@ async def create_session(body: CreateSessionRequest, user_id: int,
 
 
 @app.get("/chat/sessions/{session_id}")
-async def get_session(session_id: str, user_id: int,
-                       user: User = Depends(get_user_from_token)):
+def get_session(session_id: str, user_id: int,
+                user: User = Depends(get_user_from_token)):
     """Get a specific chat session with messages."""
     if user is None:
         raise HTTPException(status_code=401, detail="Not authenticated")
@@ -641,8 +641,8 @@ async def get_session(session_id: str, user_id: int,
 
 
 @app.delete("/chat/sessions/{session_id}")
-async def delete_session(session_id: str, user_id: int,
-                          user: User = Depends(get_user_from_token)):
+def delete_session(session_id: str, user_id: int,
+                   user: User = Depends(get_user_from_token)):
     """Delete a chat session and its messages."""
     if user is None:
         raise HTTPException(status_code=401, detail="Not authenticated")
@@ -659,8 +659,8 @@ class AddMessageRequest(BaseModel):
 
 
 @app.post("/chat/sessions/{session_id}/messages", status_code=201)
-async def add_message(session_id: str, body: AddMessageRequest, user_id: int,
-                      user: User = Depends(get_user_from_token)):
+def add_message(session_id: str, body: AddMessageRequest, user_id: int,
+                user: User = Depends(get_user_from_token)):
     """Persist a message to a chat session. BFF calls this to save each turn."""
     if user is None:
         raise HTTPException(status_code=401, detail="Not authenticated")
