@@ -163,7 +163,40 @@ def create_user(self, email: str, name: str, area_id: int, role: Role,
                     role=role, api_key_hash=api_key_hash, password_hash=password_hash)
 ```
 
-Also update `list_users()` and `get_user_by_api_key_hash()` to SELECT `password_hash` (add column in SELECT and map to `password_hash=row[6]`, shifting the remaining indices).
+Also update `list_users()` and `get_user_by_api_key_hash()` to SELECT `password_hash`. Here are the updated methods:
+
+```python
+def list_users(self, area_id: int = None, active_only: bool = True) -> list[User]:
+    query = ("SELECT id, email, name, area_id, role, api_key_hash, password_hash, "
+             "created_at, last_login, active FROM users WHERE 1=1")
+    params = []
+    if area_id is not None:
+        query += " AND area_id = ?"
+        params.append(area_id)
+    if active_only:
+        query += " AND active = 1"
+    with self._conn() as conn:
+        rows = conn.execute(query, params).fetchall()
+    return [User(id=r[0], email=r[1], name=r[2], area_id=r[3], role=Role(r[4]),
+                 api_key_hash=r[5], password_hash=r[6],
+                 created_at=r[7], last_login=r[8], active=bool(r[9]))
+            for r in rows]
+
+def get_user_by_api_key_hash(self, api_key_hash: str) -> Optional[User]:
+    with self._conn() as conn:
+        row = conn.execute(
+            "SELECT id, email, name, area_id, role, api_key_hash, password_hash, "
+            "created_at, last_login, active FROM users WHERE api_key_hash = ? AND active = 1",
+            (api_key_hash,)
+        ).fetchone()
+    if not row:
+        return None
+    return User(id=row[0], email=row[1], name=row[2], area_id=row[3], role=Role(row[4]),
+                api_key_hash=row[5], password_hash=row[6],
+                created_at=row[7], last_login=row[8], active=bool(row[9]))
+```
+
+**Important:** These replace (not add alongside) the existing `list_users()` and `get_user_by_api_key_hash()` methods in `database.py`. The indices now include `password_hash` at position `row[6]`, shifting `created_at`, `last_login`, `active` to `row[7]`, `row[8]`, `row[9]`.
 
 - [ ] **Write failing test**
 

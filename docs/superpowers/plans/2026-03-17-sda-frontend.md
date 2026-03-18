@@ -825,6 +825,7 @@ git commit -m "feat: add app layout with icon-only sidebar (role-based)"
 - Create: `services/sda-frontend/src/routes/(app)/chat/+page.server.ts`
 - Create: `services/sda-frontend/src/routes/api/chat/stream/[id]/+server.ts`
 - Create: `services/sda-frontend/src/routes/api/chat/sessions/+server.ts`
+- Create: `services/sda-frontend/src/routes/api/chat/sessions/[id]/+server.ts`
 - Create: `services/sda-frontend/src/lib/stores/chat.svelte.ts`
 
 - [ ] **Create chat store**
@@ -957,6 +958,29 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     const { collection, crossdoc } = await request.json();
     const session = await gatewayCreateSession(locals.user.id, collection, crossdoc);
     return json(session, { status: 201 });
+};
+```
+
+- [ ] **Create per-session API route (GET + DELETE)**
+
+`src/routes/api/chat/sessions/[id]/+server.ts`:
+
+```typescript
+import type { RequestHandler } from './$types';
+import { gatewayGetSession, gatewayDeleteSession } from '$lib/server/gateway';
+import { json, error } from '@sveltejs/kit';
+
+export const GET: RequestHandler = async ({ params, locals }) => {
+    if (!locals.user) throw error(401);
+    const session = await gatewayGetSession(params.id, locals.user.id);
+    if (!session) throw error(404, 'Session not found');
+    return json(session);
+};
+
+export const DELETE: RequestHandler = async ({ params, locals }) => {
+    if (!locals.user) throw error(401);
+    await gatewayDeleteSession(params.id, locals.user.id);
+    return json({ ok: true });
 };
 ```
 
