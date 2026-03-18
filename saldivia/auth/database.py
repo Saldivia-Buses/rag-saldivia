@@ -149,7 +149,7 @@ class AuthDB:
             if row:
                 return User(id=row[0], email=row[1], name=row[2], area_id=row[3],
                             role=Role(row[4]), api_key_hash=row[5], password_hash=row[6],
-                            created_at=row[7], last_login=row[8], active=row[9])
+                            created_at=row[7], last_login=row[8], active=bool(row[9]))
             return None
 
     def get_user_by_email(self, email: str) -> Optional[User]:
@@ -162,7 +162,7 @@ class AuthDB:
             if row:
                 return User(id=row[0], email=row[1], name=row[2], area_id=row[3],
                             role=Role(row[4]), api_key_hash=row[5], password_hash=row[6],
-                            created_at=row[7], last_login=row[8], active=row[9])
+                            created_at=row[7], last_login=row[8], active=bool(row[9]))
             return None
 
     def update_user(self, user_id: int, **fields):
