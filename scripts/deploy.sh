@@ -175,6 +175,7 @@ if [ $ELAPSED -ge $MAX_WAIT ]; then
 fi
 
 log "Deploy complete. Profile: ${PROFILE}"
-log "  RAG Server: http://localhost:8081"
-log "  Ingestor:   http://localhost:8082"
-log "  Frontend:   http://localhost:8090"
+log "  RAG Server:   http://localhost:8081"
+log "  Ingestor:     http://localhost:8082"
+log "  Frontend:     http://localhost:8090"
+log "  Auth Gateway: http://localhost:9000  (API entry point with RBAC)"

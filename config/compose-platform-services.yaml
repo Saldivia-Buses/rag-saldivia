@@ -42,7 +42,7 @@ services:
       - INGESTOR_URL=http://ingestor-server:8082
       - BYPASS_AUTH=${BYPASS_AUTH:-false}
     ports:
-      - "8090:8090"
+      - "9000:8090"
     volumes:
       - ${SALDIVIA_ROOT}/data:/app/data
     depends_on:
