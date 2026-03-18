@@ -81,6 +81,7 @@ def init_db(db_path: Path = DB_PATH):
             timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
         CREATE INDEX IF NOT EXISTS idx_chat_sessions_user ON chat_sessions(user_id);
+        CREATE INDEX IF NOT EXISTS idx_chat_sessions_user_updated ON chat_sessions(user_id, updated_at);
         CREATE INDEX IF NOT EXISTS idx_chat_messages_session ON chat_messages(session_id);
     """
     conn.executescript(chat_ddl)
@@ -382,9 +383,12 @@ class AuthDB:
             if not row:
                 return None
             msg_rows = conn.execute(
-                "SELECT role, content, sources, timestamp FROM chat_messages "
-                "WHERE session_id = ? ORDER BY timestamp",
-                (session_id,)
+                "SELECT m.role, m.content, m.sources, m.timestamp "
+                "FROM chat_messages m "
+                "JOIN chat_sessions s ON m.session_id = s.id "
+                "WHERE m.session_id = ? AND s.user_id = ? "
+                "ORDER BY m.timestamp",
+                (session_id, user_id)
             ).fetchall()
         messages = [ChatMessage(role=m[0], content=m[1],
                                  sources=json.loads(m[2]) if m[2] else None, timestamp=m[3])
@@ -423,6 +427,7 @@ class AuthDB:
             )
 
     def delete_chat_session(self, session_id: str, user_id: int):
+        # Both DELETEs run in the same transaction (context manager ensures atomicity)
         with self._conn() as conn:
             conn.execute("DELETE FROM chat_messages WHERE session_id = ?", (session_id,))
             conn.execute("DELETE FROM chat_sessions WHERE id = ? AND user_id = ?",
