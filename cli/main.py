@@ -43,5 +43,13 @@ def status():
         click.echo("Mode: unknown (redis not available)")
 
 
+@cli.command()
+def mcp():
+    """Run MCP server for AI assistant integration."""
+    from saldivia.mcp_server import main
+    main()
+
+
+
 if __name__ == "__main__":
     cli()
