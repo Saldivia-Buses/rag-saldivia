@@ -22,6 +22,14 @@ RAG_SERVER_URL = os.getenv("RAG_SERVER_URL", "http://localhost:8081")
 INGESTOR_URL = os.getenv("INGESTOR_URL", "http://localhost:8082")
 BYPASS_AUTH = os.getenv("BYPASS_AUTH", "false").lower() == "true"
 
+# JWT Configuration
+import jwt as pyjwt
+from datetime import timedelta
+
+JWT_SECRET = os.getenv("JWT_SECRET", "")
+JWT_ALGORITHM = "HS256"
+JWT_EXPIRE_HOURS = 8
+
 
 @app.on_event("startup")
 async def on_startup():
@@ -50,16 +58,34 @@ async def on_startup():
 @app.exception_handler(HTTPException)
 async def auth_failure_handler(request: Request, exc: HTTPException):
     """M10: Log authentication/authorization failures for security monitoring.
-    Re-raises so FastAPI's default handler still returns the proper response.
+    Returns a JSONResponse so FastAPI properly converts the exception to HTTP response.
     """
+    from fastapi.responses import JSONResponse
     if exc.status_code in (401, 403):
         ip = request.client.host if request.client else "unknown"
         logger.warning(
             f"Auth failure {exc.status_code} [{request.method} {request.url.path}] "
             f"from {ip}: {exc.detail}"
         )
-    # Re-raise to let FastAPI return the standard JSON error response
-    raise exc
+    # Return JSONResponse with the exception's status code and detail
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail}
+    )
+
+
+def create_jwt(user: User) -> str:
+    """Create JWT token for a user."""
+    from datetime import datetime
+    payload = {
+        "user_id": user.id,
+        "email": user.email,
+        "role": user.role.value,
+        "area_id": user.area_id,
+        "exp": datetime.utcnow() + timedelta(hours=JWT_EXPIRE_HOURS),
+    }
+    return pyjwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
+
 
 security = HTTPBearer(auto_error=False)
 db = AuthDB()
@@ -237,6 +263,68 @@ async def list_collections(user: User = Depends(get_user_from_token)):
         return {"collections": CollectionManager().list()}
 
     return {"collections": db.get_user_collections(user)}
+
+
+# Auth endpoints
+from pydantic import BaseModel
+
+
+class LoginRequest(BaseModel):
+    email: str
+    password: str
+
+
+@app.post("/auth/session")
+async def login(body: LoginRequest, user: User = Depends(get_user_from_token)):
+    """Issue JWT for a valid email+password. Caller must be authenticated (BFF uses SYSTEM_API_KEY)."""
+    from saldivia.auth.models import verify_password
+    target = db.get_user_by_email(body.email)
+    if not target or not target.password_hash:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    if not verify_password(body.password, target.password_hash):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    if not target.active:
+        raise HTTPException(status_code=403, detail="Account disabled")
+    db.update_last_login(target.id)
+    token = create_jwt(target)
+    return {"token": token, "user": {"id": target.id, "email": target.email,
+                                      "name": target.name, "role": target.role.value,
+                                      "area_id": target.area_id}}
+
+
+@app.delete("/auth/session")
+async def logout(user: User = Depends(get_user_from_token)):
+    """Logout endpoint (stateless — BFF clears the cookie)."""
+    return {"ok": True}
+
+
+@app.get("/auth/me")
+async def me(user_id: int, user: User = Depends(get_user_from_token)):
+    """Get profile for a user_id (BFF passes user_id from JWT).
+    Note: user_id is supplied by the BFF from the JWT payload — the gateway trusts it
+    because the BFF is the only caller (SYSTEM_API_KEY gating)."""
+    target = db.get_user_by_id(user_id)
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {"id": target.id, "email": target.email, "name": target.name,
+            "role": target.role.value, "area_id": target.area_id,
+            "last_login": target.last_login.isoformat() if target.last_login else None}
+
+
+@app.post("/auth/refresh-key")
+async def refresh_my_key(user_id: int, user: User = Depends(get_user_from_token)):
+    """Regenerate API key for a user (user regenerates their own, or admin for any).
+    Note: user_id from JWT payload supplied by BFF."""
+    from saldivia.auth.models import generate_api_key
+    target = db.get_user_by_id(user_id)
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found")
+    # Only the user themselves or an admin can refresh
+    if user and user.id != user_id and user.role != Role.ADMIN:
+        raise HTTPException(status_code=403, detail="Not allowed")
+    new_key, new_hash = generate_api_key()
+    db.update_api_key(user_id, new_hash)
+    return {"api_key": new_key}
 
 
 # Admin endpoints
