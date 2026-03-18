@@ -33,6 +33,10 @@ class IngestionQueue:
     def __init__(self, redis_url: str = "redis://localhost:6379"):
         self.redis = redis.from_url(redis_url)
 
+    def close(self):
+        """Close the Redis connection pool. Call on worker shutdown."""
+        self.redis.close()
+
     def enqueue(self, file_path: str, collection: str) -> IngestionJob:
         """Add a file to the ingestion queue."""
         job = IngestionJob(

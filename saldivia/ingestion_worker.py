@@ -78,20 +78,24 @@ def run_worker(redis_url: str = None):
     queue = IngestionQueue(redis_url)
     logger.info(f"Ingestion worker started (redis: {redis_url})")
 
-    while not _shutdown:
-        job = queue.dequeue()
+    try:
+        while not _shutdown:
+            job = queue.dequeue()
 
-        if job is None:
-            time.sleep(5)
-            continue
+            if job is None:
+                time.sleep(5)
+                continue
 
-        queue.update_status(job.id, "processing")
-        success = process_job_with_retry(job)
-        queue.update_status(
-            job.id,
-            "completed" if success else "failed",
-            error=None if success else "Max retries exceeded"
-        )
+            queue.update_status(job.id, "processing")
+            success = process_job_with_retry(job)
+            queue.update_status(
+                job.id,
+                "completed" if success else "failed",
+                error=None if success else "Max retries exceeded"
+            )
+    finally:
+        queue.close()
+        logger.info("Ingestion worker stopped")
 
 
 if __name__ == "__main__":

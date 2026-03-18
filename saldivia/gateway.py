@@ -35,6 +35,32 @@ async def on_startup():
     if BYPASS_AUTH:
         logger.warning("⚠️  BYPASS_AUTH is enabled — authentication bypassed (dev mode only)")
 
+    # M9: Validate critical env vars so misconfiguration is caught at startup,
+    # not on the first request. The deploy.sh sets these from YAML config.
+    missing = [var for var in ("RAG_SERVER_URL", "INGESTOR_URL") if not os.getenv(var)]
+    if missing:
+        logger.warning(f"⚠️  Missing env vars: {missing} — using defaults")
+
+    logger.info(
+        f"Gateway starting: RAG={RAG_SERVER_URL}, Ingestor={INGESTOR_URL}, "
+        f"auth={'bypassed' if BYPASS_AUTH else 'enabled'}"
+    )
+
+
+@app.exception_handler(HTTPException)
+async def auth_failure_handler(request: Request, exc: HTTPException):
+    """M10: Log authentication/authorization failures for security monitoring.
+    Re-raises so FastAPI's default handler still returns the proper response.
+    """
+    if exc.status_code in (401, 403):
+        ip = request.client.host if request.client else "unknown"
+        logger.warning(
+            f"Auth failure {exc.status_code} [{request.method} {request.url.path}] "
+            f"from {ip}: {exc.detail}"
+        )
+    # Re-raise to let FastAPI return the standard JSON error response
+    raise exc
+
 security = HTTPBearer(auto_error=False)
 db = AuthDB()
 

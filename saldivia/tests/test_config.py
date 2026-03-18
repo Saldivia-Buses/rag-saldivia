@@ -23,11 +23,11 @@ services:
   embeddings:
     provider: local
     endpoint: nemotron-embedding-ms:8000/v1
-    model: nvidia/nv-embedqa-e5-v5
+    model: nvidia/llama-nemotron-embed-1b-v2
   reranker:
     provider: local
     endpoint: nemotron-ranking-ms:8000
-    model: nvidia/nv-rerankqa-mistral-4b-v3
+    model: nvidia/llama-nemotron-rerank-1b-v2
 """)
 
     profiles = tmp_path / "profiles"
@@ -53,3 +53,44 @@ def test_config_loader_load_with_profile(config_dir):
     loader = ConfigLoader(str(config_dir))
     config = loader.load(profile="workstation-1gpu")
     assert config["services"]["llm"]["provider"] == "nvidia-api"
+
+def test_generate_env(config_dir):
+    """Test that generate_env() returns expected ENV_MAPPING keys."""
+    from saldivia.config import ConfigLoader
+    loader = ConfigLoader(str(config_dir))
+    env = loader.generate_env()
+
+    # At least these keys should be present
+    assert "APP_LLM_MODELNAME" in env
+    assert "APP_EMBEDDINGS_MODELNAME" in env
+    assert env["APP_LLM_MODELNAME"] == "nvidia/nemotron"
+    assert env["APP_EMBEDDINGS_MODELNAME"] == "nvidia/llama-nemotron-embed-1b-v2"
+
+def test_validate_config_ok(config_dir):
+    """Test that a valid config returns no errors."""
+    from saldivia.config import ConfigLoader, validate_config
+    loader = ConfigLoader(str(config_dir))
+    config = loader.load()
+    errors = validate_config(config)
+    assert errors == []
+
+def test_validate_config_missing_service(config_dir):
+    """Test that missing required service returns errors."""
+    from saldivia.config import validate_config
+    config = {"services": {"embeddings": {"model": "x"}, "reranker": {"model": "y"}}}
+    errors = validate_config(config)
+    assert len(errors) > 0
+    assert any("llm" in err.lower() for err in errors)
+
+def test_env_merged_includes_saldivia_vars(config_dir):
+    """Test that .env.saldivia vars are not in ENV_MAPPING output.
+
+    This documents that .env.saldivia should be the base before generated vars.
+    APP_VECTORSTORE_SEARCHTYPE is a saldivia-specific var, not in ENV_MAPPING.
+    """
+    from saldivia.config import ConfigLoader
+    loader = ConfigLoader(str(config_dir))
+    env = loader.generate_env()
+
+    # APP_VECTORSTORE_SEARCHTYPE is not in ENV_MAPPING
+    assert "APP_VECTORSTORE_SEARCHTYPE" not in env
