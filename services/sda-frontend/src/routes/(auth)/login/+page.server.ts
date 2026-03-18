@@ -9,7 +9,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 };
 
 export const actions: Actions = {
-    default: async ({ request, cookies }) => {
+    default: async ({ request, cookies, url }) => {
         const data = await request.formData();
         const email = data.get('email') as string;
         const password = data.get('password') as string;
@@ -25,6 +25,9 @@ export const actions: Actions = {
             return fail(401, { error: 'Email o contraseña incorrectos' });
         }
 
-        throw redirect(302, '/chat');
+        // Validate next is a relative path to prevent open redirects
+        const next = url.searchParams.get('next');
+        const redirectTo = next?.startsWith('/') ? next : '/chat';
+        throw redirect(302, redirectTo);
     }
 };

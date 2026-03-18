@@ -9,8 +9,8 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
         const result = await gatewayLogin(email, password);
         setSessionCookie(cookies, result.token);
         return json({ user: result.user });
-    } catch (e: any) {
-        throw error(401, e.detail ?? 'Invalid credentials');
+    } catch {
+        throw error(401, 'Invalid credentials');
     }
 };
 
