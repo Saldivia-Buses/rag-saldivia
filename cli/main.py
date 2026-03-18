@@ -3,6 +3,9 @@
 import click
 from cli.collections import collections
 from cli.ingest import ingest
+from cli.users import users
+from cli.areas import areas
+from cli.audit import audit
 
 
 @click.group()
@@ -14,6 +17,9 @@ def cli():
 
 cli.add_command(collections)
 cli.add_command(ingest)
+cli.add_command(users)
+cli.add_command(areas)
+cli.add_command(audit)
 
 
 @cli.command()
