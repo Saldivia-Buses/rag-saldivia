@@ -16,6 +16,7 @@ from starlette.responses import StreamingResponse
 import httpx
 
 from saldivia.auth import AuthDB, User, Role, Permission
+from saldivia.auth.models import generate_api_key, hash_password, verify_password
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -376,13 +377,12 @@ async def list_users_endpoint(user: User = Depends(admin_required)):
 
 @app.post("/admin/users", status_code=201)
 async def create_user_endpoint(body: CreateUserRequest, user: User = Depends(admin_required)):
-    from saldivia.auth.models import generate_api_key, hash_password as hp, Role as RoleEnum
     new_key, new_hash = generate_api_key()
-    pw_hash = hp(body.password) if body.password else None
+    pw_hash = hash_password(body.password) if body.password else None
     try:
         new_user = db.create_user(
             email=body.email, name=body.name, area_id=body.area_id,
-            role=RoleEnum(body.role), api_key_hash=new_hash, password_hash=pw_hash
+            role=Role(body.role), api_key_hash=new_hash, password_hash=pw_hash
         )
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -397,8 +397,7 @@ async def update_user_endpoint(user_id: int, body: UpdateUserRequest,
         raise HTTPException(status_code=404, detail="User not found")
     updates = {k: v for k, v in body.model_dump().items() if v is not None}
     if "role" in updates:
-        from saldivia.auth.models import Role as RoleEnum
-        updates["role"] = RoleEnum(updates["role"])
+        updates["role"] = Role(updates["role"])
     db.update_user(user_id, **updates)
     return {"ok": True}
 
@@ -414,7 +413,6 @@ async def delete_user_endpoint(user_id: int, user: User = Depends(admin_required
 
 @app.post("/admin/users/{user_id}/reset-key")
 async def reset_user_key(user_id: int, user: User = Depends(admin_required)):
-    from saldivia.auth.models import generate_api_key
     target = db.get_user_by_id(user_id)
     if not target:
         raise HTTPException(status_code=404, detail="User not found")

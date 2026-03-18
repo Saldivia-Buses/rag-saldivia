@@ -88,3 +88,51 @@ def test_create_user(client, admin_user):
                            headers={"Authorization": "Bearer rsk_dummy"})
     assert resp.status_code == 201
     assert "api_key" in resp.json()
+
+
+def test_update_user(client, admin_user):
+    with patch("saldivia.gateway.db") as mock_db:
+        mock_db.get_user_by_api_key_hash.return_value = admin_user
+        mock_db.get_user_by_id.return_value = admin_user
+        mock_db.update_user.return_value = None
+        resp = client.put("/admin/users/1",
+                          json={"name": "Updated Name"},
+                          headers={"Authorization": "Bearer rsk_dummy"})
+    assert resp.status_code == 200
+    assert resp.json()["ok"] is True
+
+
+def test_delete_user(client, admin_user):
+    with patch("saldivia.gateway.db") as mock_db:
+        mock_db.get_user_by_api_key_hash.return_value = admin_user
+        mock_db.get_user_by_id.return_value = admin_user
+        mock_db.update_user.return_value = None
+        resp = client.delete("/admin/users/1",
+                             headers={"Authorization": "Bearer rsk_dummy"})
+    assert resp.status_code == 200
+    assert resp.json()["ok"] is True
+
+
+def test_reset_user_key(client, admin_user):
+    with patch("saldivia.gateway.db") as mock_db:
+        mock_db.get_user_by_api_key_hash.return_value = admin_user
+        mock_db.get_user_by_id.return_value = admin_user
+        mock_db.update_api_key.return_value = None
+        resp = client.post("/admin/users/1/reset-key",
+                           headers={"Authorization": "Bearer rsk_dummy"})
+    assert resp.status_code == 200
+    assert "api_key" in resp.json()
+
+
+def test_non_admin_forbidden(client):
+    from saldivia.auth.models import User as UserModel, Role as RoleEnum
+    from saldivia.auth.models import generate_api_key
+    k, h = generate_api_key()
+    regular_user = UserModel(id=2, email="user@test.com", name="User", area_id=1,
+                              role=RoleEnum.USER, api_key_hash=h)
+    with patch("saldivia.gateway.db") as mock_db:
+        with patch("saldivia.gateway.BYPASS_AUTH", False):
+            mock_db.get_user_by_api_key_hash.return_value = regular_user
+            resp = client.get("/admin/users",
+                              headers={"Authorization": "Bearer rsk_dummy"})
+    assert resp.status_code == 403
