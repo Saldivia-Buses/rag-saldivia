@@ -43,6 +43,8 @@ services:
       - MILVUS_HOST=milvus-standalone
       - BYPASS_AUTH=${BYPASS_AUTH:-false}
       - ENVIRONMENT=${ENVIRONMENT:-production}
+      - JWT_SECRET=${JWT_SECRET}
+      - SYSTEM_API_KEY=${SYSTEM_API_KEY}
     ports:
       - "9000:8090"
     volumes:
