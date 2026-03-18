@@ -98,7 +98,7 @@ class AuthDB:
         init_db(db_path)
 
     def _conn(self):
-        return sqlite3.connect(self.db_path, detect_types=sqlite3.PARSE_DECLTYPES)
+        return sqlite3.connect(self.db_path)
 
     # Areas
     def create_area(self, name: str, description: str = "") -> Area:
