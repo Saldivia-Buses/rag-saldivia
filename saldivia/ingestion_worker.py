@@ -2,6 +2,7 @@
 """Ingestion worker - processes jobs from queue."""
 import os
 import time
+import signal
 import logging
 import httpx
 from pathlib import Path
@@ -10,6 +11,18 @@ from saldivia.ingestion_queue import IngestionQueue
 logger = logging.getLogger(__name__)
 
 INGESTOR_URL = os.getenv("INGESTOR_URL", "http://localhost:8082")
+
+MAX_RETRIES = 3
+RETRY_DELAYS = [10, 30, 60]  # seconds between retries
+
+_shutdown = False
+
+
+def handle_sigterm(sig, frame):
+    """Graceful shutdown on SIGTERM (docker stop)."""
+    global _shutdown
+    logger.info("SIGTERM received, finishing current job then stopping...")
+    _shutdown = True
 
 
 def process_job(job) -> bool:
@@ -42,12 +55,30 @@ def process_job(job) -> bool:
         return False
 
 
-def run_worker(redis_url: str = "redis://localhost:6379"):
-    """Run the ingestion worker loop."""
-    queue = IngestionQueue(redis_url)
-    logger.info("Ingestion worker started")
+def process_job_with_retry(job) -> bool:
+    """Process a job with exponential backoff retries."""
+    for attempt in range(MAX_RETRIES):
+        if process_job(job):
+            return True
+        if attempt < MAX_RETRIES - 1:
+            delay = RETRY_DELAYS[attempt]
+            logger.info(f"Job {job.id} failed, retry {attempt + 1}/{MAX_RETRIES - 1} in {delay}s")
+            time.sleep(delay)
+    logger.error(f"Job {job.id} failed after {MAX_RETRIES} attempts")
+    return False
 
-    while True:
+
+def run_worker(redis_url: str = None):
+    """Run the ingestion worker loop."""
+    global _shutdown
+    _shutdown = False
+    signal.signal(signal.SIGTERM, handle_sigterm)
+
+    redis_url = redis_url or os.getenv("REDIS_URL", "redis://localhost:6379")
+    queue = IngestionQueue(redis_url)
+    logger.info(f"Ingestion worker started (redis: {redis_url})")
+
+    while not _shutdown:
         job = queue.dequeue()
 
         if job is None:
@@ -55,13 +86,12 @@ def run_worker(redis_url: str = "redis://localhost:6379"):
             continue
 
         queue.update_status(job.id, "processing")
-
-        success = process_job(job)
-
-        if success:
-            queue.update_status(job.id, "completed")
-        else:
-            queue.update_status(job.id, "failed", error="See logs for details")
+        success = process_job_with_retry(job)
+        queue.update_status(
+            job.id,
+            "completed" if success else "failed",
+            error=None if success else "Max retries exceeded"
+        )
 
 
 if __name__ == "__main__":

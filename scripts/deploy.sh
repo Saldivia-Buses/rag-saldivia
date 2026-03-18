@@ -22,20 +22,30 @@ warn() { echo "[$(date +%H:%M:%S)] WARN: $*" >&2; }
 [ -d "$BLUEPRINT_DIR" ] || err "Blueprint not found. Run: make setup"
 [ -f "${SALDIVIA_ROOT}/config/profiles/${PROFILE}.yaml" ] || err "Unknown profile: ${PROFILE}"
 
-# --- Step 1: Generate env from YAML config ---
+# --- Step 1: Generate .env.merged = .env.saldivia + Python-config + .env.local + runtime ---
 export PYTHONPATH="${PYTHONPATH:-}:${SALDIVIA_ROOT}"
 
 GPU_COUNT=$(nvidia-smi -L 2>/dev/null | wc -l || echo "0")
 log "Detected ${GPU_COUNT} GPU(s)"
 
 ENV_FILE="${COMPOSE_DIR}/.env.merged"
-log "Generating environment from config (profile: ${PROFILE})..."
+log "Generating .env.merged (profile: ${PROFILE})..."
+
+# Base: Saldivia env overrides (HNSW, hybrid search, VLM config, NV-Ingest, features).
+# These are the 23+ vars that Blueprint doesn't know about.
+cp "${SALDIVIA_ROOT}/config/.env.saldivia" "$ENV_FILE"
+echo "" >> "$ENV_FILE"
+
+# Override: model names and endpoints from YAML config (profile-aware).
+# generate_env() outputs ~15 vars (APP_LLM_MODELNAME, APP_EMBEDDINGS_*, etc.)
+# that override any matching vars from .env.saldivia above.
 python3 -c "
 from saldivia.config import ConfigLoader
 loader = ConfigLoader('${SALDIVIA_ROOT}/config')
-loader.write_env_file('${ENV_FILE}', profile='${PROFILE}')
-print('Generated ${ENV_FILE}')
-"
+env = loader.generate_env(profile='${PROFILE}')
+for k, v in sorted(env.items()):
+    print(f'{k}={v}')
+" >> "$ENV_FILE" || err "Failed to generate env from config"
 
 # Validate configuration before proceeding
 log "Validating configuration..."
@@ -51,14 +61,15 @@ if errors:
 print('  Config OK')
 " || err "Config validation failed for profile: ${PROFILE}"
 
-# Local secrets override everything
+# Override: local secrets (API keys, passwords) — last wins.
 if [ -f "${SALDIVIA_ROOT}/.env.local" ]; then
     echo "" >> "$ENV_FILE"
     cat "${SALDIVIA_ROOT}/.env.local" >> "$ENV_FILE"
 fi
 
-# Set SALDIVIA_ROOT and PROMPT_CONFIG_FILE for compose volume mounts.
-# The blueprint mounts ${PROMPT_CONFIG_FILE}:${PROMPT_CONFIG_FILE}, so it must be a valid abs path.
+# Runtime paths — must be absolute (${PWD}-based paths break inside Docker containers).
+# These override the placeholder PROMPT_CONFIG_FILE from .env.saldivia.
+echo "" >> "$ENV_FILE"
 echo "SALDIVIA_ROOT=${SALDIVIA_ROOT}" >> "$ENV_FILE"
 echo "PROMPT_CONFIG_FILE=${SALDIVIA_ROOT}/config/prompt.yaml" >> "$ENV_FILE"
 
@@ -131,14 +142,76 @@ else
     warn "NV-Ingest container not found. vlm.py patch skipped."
 fi
 
+# --- Step 5b: Patch langchain_milvus for Milvus 2.6+ compatibility ---
+# Milvus 2.6+ rejects output_fields containing "sparse" (BM25 field) even in DENSE search mode.
+# Root cause: _remove_forbidden_fields() only strips BM25 fields when builtin_func is set,
+# but in DENSE mode builtin_func=None → "sparse" stays in output_fields → Milvus rejects it.
+# Fix: patch 4 search methods to exclude "sparse" from output_fields.
+# NOTE: This patches the 'else' branch (enable_dynamic_field=False path), NOT the 'if' branch
+# that was incorrectly patched before.
+log "Patching langchain_milvus for Milvus 2.6+ compatibility..."
+RAG_CONTAINER=$(docker ps --filter "name=rag-server" --filter "status=running" --format '{{.Names}}' | head -1)
+if [ -n "$RAG_CONTAINER" ]; then
+    # Write patch script locally and docker cp it in — avoids shell escaping hell.
+    cat > /tmp/patch_langchain_milvus.py << 'PYEOF'
+import shutil, os, sys
+
+path = "/workspace/.venv/lib/python3.13/site-packages/langchain_milvus/vectorstores/milvus.py"
+
+if not os.path.exists(path):
+    print(f"File not found: {path}")
+    sys.exit(1)
+
+with open(path) as f:
+    content = f.read()
+
+old = "output_fields = self._remove_forbidden_fields(self.fields[:])"
+new = "output_fields = [f for f in self._remove_forbidden_fields(self.fields[:]) if f != 'sparse']"
+
+count = content.count(old)
+if count == 0:
+    print("Pattern not found — already patched or different langchain_milvus version")
+    sys.exit(0)
+
+content = content.replace(old, new)
+with open(path, "w") as f:
+    f.write(content)
+
+# Clear __pycache__ to force Python to recompile
+cache_dir = os.path.dirname(path) + "/__pycache__"
+if os.path.exists(cache_dir):
+    shutil.rmtree(cache_dir)
+
+print(f"Patched {count} occurrence(s) in milvus.py. __pycache__ cleared.")
+PYEOF
+
+    docker cp /tmp/patch_langchain_milvus.py "${RAG_CONTAINER}:/tmp/patch_langchain_milvus.py" 2>/dev/null \
+        && docker exec "$RAG_CONTAINER" python3 /tmp/patch_langchain_milvus.py \
+        && log "  langchain_milvus patched (sparse excluded from output_fields)" \
+        || warn "  langchain_milvus patch failed — RAG queries may fail on hybrid collections"
+
+    # Restart rag-server so it reloads the patched Python code
+    log "  Restarting rag-server to reload patched langchain_milvus..."
+    docker restart "$RAG_CONTAINER" > /dev/null
+    sleep 10
+else
+    warn "rag-server container not found. langchain_milvus patch skipped."
+fi
+
 # --- Step 6: Connect Nemotron network alias (brev-2gpu only) ---
+# docker network connect --alias fails silently if the container is already on the network
+# (even without the alias). Must disconnect first to force re-attach with alias.
 if [ "$PROFILE" = "brev-2gpu" ]; then
     log "Connecting Nemotron-3-Super network alias..."
     NETWORK=$(docker network ls --filter "name=nvidia-rag" --format '{{.Name}}' | head -1)
     if [ -n "$NETWORK" ]; then
-        docker network connect --alias nim-llm "$NETWORK" nemotron3-super 2>/dev/null \
+        docker network disconnect "$NETWORK" nemotron3-super 2>/dev/null || true
+        sleep 1
+        docker network connect --alias nim-llm "$NETWORK" nemotron3-super \
             && log "  nim-llm alias connected" \
-            || warn "  Network alias already exists or container not found"
+            || warn "  Network alias failed — LLM may not be reachable as nim-llm"
+    else
+        warn "nvidia-rag network not found — is the Blueprint running?"
     fi
 fi
 
@@ -174,7 +247,7 @@ while [ $ELAPSED -lt $MAX_WAIT ]; do
 done
 
 if [ $ELAPSED -ge $MAX_WAIT ]; then
-    warn "Some services may not be ready yet. Check: docker ps"
+    err "Services did not become healthy within ${MAX_WAIT}s. Check: docker ps && docker logs rag-server"
 fi
 
 log "Deploy complete. Profile: ${PROFILE}"

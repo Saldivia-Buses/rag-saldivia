@@ -36,7 +36,7 @@ class IngestionQueue:
     def enqueue(self, file_path: str, collection: str) -> IngestionJob:
         """Add a file to the ingestion queue."""
         job = IngestionJob(
-            id=str(uuid.uuid4())[:8],
+            id=str(uuid.uuid4()),
             file_path=file_path,
             collection=collection,
             status="pending",

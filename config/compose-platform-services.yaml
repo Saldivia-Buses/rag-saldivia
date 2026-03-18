@@ -42,6 +42,7 @@ services:
       - INGESTOR_URL=http://ingestor-server:8082
       - MILVUS_HOST=milvus-standalone
       - BYPASS_AUTH=${BYPASS_AUTH:-false}
+      - ENVIRONMENT=${ENVIRONMENT:-production}
     ports:
       - "9000:8090"
     volumes:

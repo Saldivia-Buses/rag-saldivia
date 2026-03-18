@@ -12,12 +12,12 @@ services:
   embeddings:
     provider: nvidia-api
     endpoint: https://integrate.api.nvidia.com/v1
-    model: nvidia/nv-embedqa-e5-v5
+    model: nvidia/llama-nemotron-embed-1b-v2
 
   reranker:
     provider: nvidia-api
     endpoint: https://integrate.api.nvidia.com/v1
-    model: nvidia/nv-rerankqa-mistral-4b-v3
+    model: nvidia/llama-nemotron-rerank-1b-v2
 
   crossdoc:
     decomposition:

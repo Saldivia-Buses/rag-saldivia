@@ -1,6 +1,7 @@
 # saldivia/mcp_server.py
 """MCP Server for RAG Saldivia."""
 import asyncio
+import os
 from mcp.server import Server
 from mcp.types import Tool, TextContent
 from saldivia.collections import CollectionManager
@@ -8,6 +9,8 @@ from saldivia.ingestion_queue import IngestionQueue
 import httpx
 
 server = Server("rag-saldivia")
+
+RAG_SERVER_URL = os.getenv("RAG_SERVER_URL", "http://localhost:8081")
 
 
 @server.list_tools()
@@ -96,28 +99,36 @@ async def search_documents(query: str, collection: str, top_k: int = 10):
     """Search documents via RAG API."""
     async with httpx.AsyncClient(timeout=60) as client:
         resp = await client.post(
-            "http://localhost:8081/v1/search",
+            f"{RAG_SERVER_URL}/v1/search",
             json={
                 "query": query,
                 "collection_names": [collection],
                 "top_k": top_k,
             }
         )
+        if resp.status_code != 200:
+            return [TextContent(type="text", text=f"Error {resp.status_code}: {resp.text[:200]}")]
         results = resp.json()
-        return [TextContent(type="text", text=str(results))]
+        docs = results.get("chunks", [])
+        formatted = "\n\n".join(
+            f"[{i+1}] {d.get('content', '')[:500]}" for i, d in enumerate(docs)
+        )
+        return [TextContent(type="text", text=formatted or "No results found")]
 
 
 async def ask_question(question: str, collection: str):
-    """Answer question via RAG API with streaming."""
+    """Answer question via RAG API."""
     async with httpx.AsyncClient(timeout=120) as client:
         resp = await client.post(
-            "http://localhost:8081/v1/generate",
+            f"{RAG_SERVER_URL}/v1/generate",
             json={
                 "messages": [{"role": "user", "content": question}],
                 "collection_names": [collection],
                 "use_knowledge_base": True,
             }
         )
+        if resp.status_code != 200:
+            return [TextContent(type="text", text=f"Error {resp.status_code}: {resp.text[:200]}")]
         return [TextContent(type="text", text=resp.text)]
 
 

@@ -123,18 +123,23 @@ class ModeManager:
         )
 
     def _wait_for_vlm_healthy(self, timeout: int = 120):
-        """Wait for VLM to be healthy."""
+        """Wait for VLM to be healthy.
+
+        Uses the Docker container hostname (VLM_CONTAINER), not localhost,
+        since mode-manager runs in a separate container on the same Docker network.
+        """
         import httpx
+        url = f"http://{VLM_CONTAINER}:8000/health"
         start = time.time()
         while time.time() - start < timeout:
             try:
-                resp = httpx.get("http://localhost:8000/health", timeout=5)
+                resp = httpx.get(url, timeout=5)
                 if resp.status_code == 200:
                     return
             except Exception:
                 pass
             time.sleep(3)
-        raise TimeoutError("VLM failed to become healthy")
+        raise TimeoutError(f"VLM ({url}) failed to become healthy within {timeout}s")
 
     def _check_nims_running(self) -> bool:
         """Check if NIM containers are running."""

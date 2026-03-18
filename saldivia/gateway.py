@@ -1,6 +1,7 @@
 # saldivia/gateway.py
 """Auth Gateway - FastAPI middleware for RAG API."""
 import os
+import json
 import hashlib
 import logging
 from typing import Optional
@@ -20,6 +21,19 @@ app = FastAPI(title="RAG Saldivia Gateway")
 RAG_SERVER_URL = os.getenv("RAG_SERVER_URL", "http://localhost:8081")
 INGESTOR_URL = os.getenv("INGESTOR_URL", "http://localhost:8082")
 BYPASS_AUTH = os.getenv("BYPASS_AUTH", "false").lower() == "true"
+
+
+@app.on_event("startup")
+async def on_startup():
+    """Validate configuration at startup."""
+    env = os.getenv("ENVIRONMENT", "production")
+    if BYPASS_AUTH and env == "production":
+        raise RuntimeError(
+            "BYPASS_AUTH cannot be true in production. "
+            "Set ENVIRONMENT=development to allow bypass (dev/test only)."
+        )
+    if BYPASS_AUTH:
+        logger.warning("⚠️  BYPASS_AUTH is enabled — authentication bypassed (dev mode only)")
 
 security = HTTPBearer(auto_error=False)
 db = AuthDB()
@@ -84,20 +98,29 @@ async def generate(request: Request, user: User = Depends(get_user_from_token)):
             ip_address=request.client.host if request.client else ""
         )
 
-    # Proxy request, streaming SSE response
+    # Proxy request, streaming SSE response.
+    # Use send(stream=True) to check the upstream status code before committing
+    # to StreamingResponse (which always sends HTTP 200 to the client once started).
     client = httpx.AsyncClient(timeout=120)
+    req = client.build_request(
+        "POST", f"{RAG_SERVER_URL}/v1/generate",
+        json=body,
+        headers={"Content-Type": "application/json"}
+    )
+    resp = await client.send(req, stream=True)
+
+    if resp.status_code >= 400:
+        error_body = await resp.aread()
+        await resp.aclose()
+        await client.aclose()
+        raise HTTPException(status_code=resp.status_code, detail=error_body.decode())
 
     async def _stream():
         try:
-            async with client.stream(
-                "POST",
-                f"{RAG_SERVER_URL}/v1/generate",
-                json=body,
-                headers={"Content-Type": "application/json"}
-            ) as resp:
-                async for chunk in resp.aiter_bytes():
-                    yield chunk
+            async for chunk in resp.aiter_bytes():
+                yield chunk
         finally:
+            await resp.aclose()
             await client.aclose()
 
     return StreamingResponse(_stream(), media_type="text/event-stream")
@@ -135,13 +158,25 @@ async def ingest(request: Request, user: User = Depends(get_user_from_token)):
     if user and user.role == Role.USER:
         raise HTTPException(status_code=403, detail="Users cannot ingest documents directly")
 
-    # AREA_MANAGER must have write access to at least one collection in their area
     if user and user.role == Role.AREA_MANAGER:
-        area_collections = db.get_area_collections(user.area_id)
-        if not any(ac.permission in (Permission.WRITE, Permission.ADMIN) for ac in area_collections):
-            raise HTTPException(status_code=403, detail="No write access to any collection")
+        # Parse the target collection from the multipart 'data' JSON field.
+        # Check that the user has write access to THAT specific collection,
+        # not just any collection in their area.
+        form = await request.form()
+        data_str = form.get("data", "{}")
+        try:
+            data = json.loads(data_str)
+            collection_name = data.get("collection_name", "")
+            if collection_name and not db.can_access(user, collection_name, Permission.WRITE):
+                raise HTTPException(
+                    status_code=403,
+                    detail=f"No write access to collection: {collection_name}"
+                )
+        except (json.JSONDecodeError, KeyError):
+            pass  # If we can't parse, let the ingestor handle it
 
-    # Forward multipart request as-is
+    # Forward multipart request as-is.
+    # Note: request.form() above caches the body; request.body() returns the same bytes.
     body = await request.body()
     headers = dict(request.headers)
     headers.pop("host", None)

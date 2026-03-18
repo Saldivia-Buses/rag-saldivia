@@ -65,16 +65,16 @@ class CollectionManager:
 
         col = Collection(name)
         col.load()
-
-        # Check for sparse field
-        has_sparse = any(f.name == "sparse" for f in col.schema.fields)
-
-        return CollectionStats(
-            name=name,
-            entity_count=col.num_entities,
-            index_type=col.indexes[0].params.get("index_type", "unknown") if col.indexes else "none",
-            has_sparse=has_sparse,
-        )
+        try:
+            has_sparse = any(f.name == "sparse" for f in col.schema.fields)
+            return CollectionStats(
+                name=name,
+                entity_count=col.num_entities,
+                index_type=col.indexes[0].params.get("index_type", "unknown") if col.indexes else "none",
+                has_sparse=has_sparse,
+            )
+        finally:
+            col.release()
 
     def health(self) -> dict:
         """Check Milvus health."""
