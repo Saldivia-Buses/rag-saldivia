@@ -54,8 +54,8 @@ services:
 
   sda-frontend:
     build:
-      context: ${SALDIVIA_ROOT}
-      dockerfile: services/sda-frontend/Dockerfile
+      context: ${SALDIVIA_ROOT}/services/sda-frontend
+      dockerfile: Dockerfile
     environment:
       - GATEWAY_URL=http://auth-gateway:8090
       - JWT_SECRET=${JWT_SECRET}
