@@ -398,12 +398,13 @@ class GrantCollectionRequest(BaseModel):
     collection_name: str
     permission: str = "read"
 
-@app.get("/admin/users")
 
 class CreateSessionRequest(BaseModel):
     collection: str
     crossdoc: bool = False
 
+
+@app.get("/admin/users")
 async def list_users_endpoint(user: User = Depends(admin_required)):
     users = db.list_users()
     return {"users": [{"id": u.id, "email": u.email, "name": u.name,
