@@ -80,6 +80,17 @@ export async function gatewayCollectionStats(name: string) {
     return gw<CollectionStats>(`/v1/collections/${name}/stats`);
 }
 
+export async function gatewayCreateCollection(name: string, schema = 'default') {
+    return gw<{ name: string }>(
+        '/v1/collections',
+        { method: 'POST', body: JSON.stringify({ name, schema }) }
+    );
+}
+
+export async function gatewayDeleteCollection(name: string) {
+    return gw<{ ok: boolean }>(`/v1/collections/${name}`, { method: 'DELETE' });
+}
+
 // Chat sessions
 export async function gatewayListSessions(userId: number) {
     return gw<{ sessions: ChatSessionSummary[] }>(`/chat/sessions?user_id=${userId}`);
@@ -151,6 +162,7 @@ export interface SessionUser {
 }
 export interface CollectionStats {
     collection: string; entity_count: number; document_count?: number;
+    index_type?: string; has_sparse?: boolean;
 }
 export interface ChatSessionSummary {
     id: string; title: string; collection: string; crossdoc: boolean; updated_at: string;
