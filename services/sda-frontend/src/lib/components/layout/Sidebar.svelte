@@ -33,7 +33,7 @@
     const mainNav: NavItem[] = [
         { href: '/chat',        label: 'Chat',        icon: MessageSquare },
         { href: '/collections', label: 'Colecciones', icon: BookOpen },
-        { href: '/collections', label: 'Documentos',  icon: Upload },
+        { href: '/collections', label: 'Documentos',  icon: Upload }, // Phase 3: will point to /upload
     ];
 
     const adminNav: NavItem[] = [

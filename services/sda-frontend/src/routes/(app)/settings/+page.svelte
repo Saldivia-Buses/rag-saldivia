@@ -31,12 +31,12 @@
     <div class="bg-[var(--bg-base)] border border-[var(--border)] rounded-lg p-4">
         <div class="text-xs text-[var(--text-faint)] mb-3">API Key personal</div>
         {#if form?.api_key}
-            <div class="bg-[#065f46] text-[#6ee7b7] p-2 rounded text-xs font-mono mb-3 break-all">
+            <div class="bg-[var(--success-bg)] text-[var(--success)] p-2 rounded text-xs font-mono mb-3 break-all">
                 {form.api_key}
             </div>
         {/if}
         {#if form?.error}
-            <div class="bg-[#7f1d1d] text-[#fca5a5] p-2 rounded text-xs mb-3">
+            <div class="bg-[var(--danger-bg)] text-[var(--danger)] p-2 rounded text-xs mb-3">
                 {form.error}
             </div>
         {/if}
