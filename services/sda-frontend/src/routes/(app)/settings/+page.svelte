@@ -1,22 +1,19 @@
 <script lang="ts">
     import { enhance } from '$app/forms';
-    import { goto } from '$app/navigation';
 
     let { data, form } = $props();
 
+    let refreshing = $state(false);
     let loggingOut = $state(false);
 
     async function handleLogout() {
         loggingOut = true;
         try {
-            const response = await fetch('/api/auth/session', { method: 'DELETE' });
-            if (response.ok) {
-                window.location.href = '/login';
-            }
-        } catch (error) {
-            console.error('Logout failed:', error);
-        } finally {
-            loggingOut = false;
+            await fetch('/api/auth/session', { method: 'DELETE' });
+            window.location.href = '/login';
+        } catch {
+            // Even on error, force redirect to clear state
+            window.location.href = '/login';
         }
     }
 </script>
@@ -38,10 +35,23 @@
                 {form.api_key}
             </div>
         {/if}
-        <form method="POST" action="?/refresh_key" use:enhance>
+        {#if form?.error}
+            <div class="bg-[#7f1d1d] text-[#fca5a5] p-2 rounded text-xs mb-3">
+                {form.error}
+            </div>
+        {/if}
+        <form method="POST" action="?/refresh_key" use:enhance={() => {
+            refreshing = true;
+            return async ({ update }) => {
+                refreshing = false;
+                await update();
+            };
+        }}>
             <button type="submit"
-                    class="bg-[#1e293b] hover:bg-[#334155] text-[#94a3b8] text-xs px-3 py-1.5 rounded">
-                Regenerar API key
+                    disabled={refreshing}
+                    class="bg-[#1e293b] hover:bg-[#334155] text-[#94a3b8] text-xs px-3 py-1.5 rounded
+                           disabled:opacity-50 disabled:cursor-not-allowed">
+                {refreshing ? 'Regenerando...' : 'Regenerar API key'}
             </button>
         </form>
     </div>

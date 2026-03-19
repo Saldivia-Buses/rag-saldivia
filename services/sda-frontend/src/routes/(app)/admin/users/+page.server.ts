@@ -1,17 +1,22 @@
 import type { PageServerLoad, Actions } from './$types';
-import { fail, redirect } from '@sveltejs/kit';
+import { error, fail, redirect } from '@sveltejs/kit';
 import { gatewayListUsers, gatewayCreateUser, gatewayDeleteUser,
-         gatewayListAreas } from '$lib/server/gateway';
+         gatewayListAreas, GatewayError } from '$lib/server/gateway';
 
 export const load: PageServerLoad = async ({ locals }) => {
     if (locals.user?.role !== 'admin') {
         throw redirect(302, '/chat');
     }
-    const [usersData, areasData] = await Promise.all([
-        gatewayListUsers(),
-        gatewayListAreas(),
-    ]);
-    return { users: usersData.users, areas: areasData.areas };
+    try {
+        const [usersData, areasData] = await Promise.all([
+            gatewayListUsers(),
+            gatewayListAreas(),
+        ]);
+        return { users: usersData.users, areas: areasData.areas };
+    } catch (err) {
+        if (err instanceof GatewayError) throw err;
+        throw error(503, 'No se pudo cargar la lista de usuarios.');
+    }
 };
 
 export const actions: Actions = {
@@ -28,13 +33,18 @@ export const actions: Actions = {
             });
             return { success: true, api_key: result.api_key };
         } catch (e: any) {
-            return fail(400, { error: e.detail ?? 'Error creating user' });
+            const msg = e?.detail ?? e?.message ?? 'Error al crear el usuario';
+            return fail(400, { error: msg });
         }
     },
     delete: async ({ request, locals }) => {
         if (locals.user?.role !== 'admin') return fail(403, { error: 'Admin only' });
         const data = await request.formData();
-        await gatewayDeleteUser(Number(data.get('id')));
-        return { success: true };
+        try {
+            await gatewayDeleteUser(Number(data.get('id')));
+            return { success: true };
+        } catch (e: any) {
+            return fail(503, { error: 'No se pudo desactivar el usuario. Intentá de nuevo.' });
+        }
     }
 };

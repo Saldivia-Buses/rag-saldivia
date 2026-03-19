@@ -1,5 +1,5 @@
 import type { RequestHandler } from './$types';
-import { gatewayLogin } from '$lib/server/gateway';
+import { gatewayLogin, GatewayError } from '$lib/server/gateway';
 import { setSessionCookie, clearSessionCookie } from '$lib/server/auth';
 import { json, error } from '@sveltejs/kit';
 
@@ -9,8 +9,11 @@ export const POST: RequestHandler = async ({ request, cookies }) => {
         const result = await gatewayLogin(email, password);
         setSessionCookie(cookies, result.token);
         return json({ user: result.user });
-    } catch {
-        throw error(401, 'Invalid credentials');
+    } catch (err) {
+        if (err instanceof GatewayError && (err.status === 401 || err.status === 403)) {
+            throw error(401, 'Email o contrasena incorrectos');
+        }
+        throw error(503, 'No se pudo conectar con el servidor de autenticacion.');
     }
 };
 

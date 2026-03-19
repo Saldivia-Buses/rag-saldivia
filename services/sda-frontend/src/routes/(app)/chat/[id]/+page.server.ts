@@ -1,6 +1,6 @@
 import type { PageServerLoad } from './$types';
-import { redirect } from '@sveltejs/kit';
-import { gatewayGetSession, gatewayListSessions, gatewayListCollections } from '$lib/server/gateway';
+import { error, redirect } from '@sveltejs/kit';
+import { gatewayGetSession, gatewayListSessions, gatewayListCollections, GatewayError } from '$lib/server/gateway';
 
 export const load: PageServerLoad = async ({ params, locals }) => {
     let sessionData;
@@ -10,19 +10,30 @@ export const load: PageServerLoad = async ({ params, locals }) => {
         if (err.status === 404 || err.status === 403) {
             throw redirect(302, '/chat');
         }
-        throw err;
+        if (err instanceof GatewayError) throw err;
+        throw error(503, 'No se pudo cargar la sesión. El servidor no responde.');
     }
 
     if (!sessionData) throw redirect(302, '/chat');
 
-    const [historyData, collectionsData] = await Promise.all([
-        gatewayListSessions(locals.user!.id),
-        gatewayListCollections(),
-    ]);
+    // Fetch history and collections in parallel. If these fail, still show the
+    // session but with empty sidebar/collection data so the page isn't broken.
+    let history: any[] = [];
+    let collections: string[] = [];
+    try {
+        const [historyData, collectionsData] = await Promise.all([
+            gatewayListSessions(locals.user!.id),
+            gatewayListCollections(),
+        ]);
+        history = historyData.sessions;
+        collections = collectionsData.collections;
+    } catch {
+        // Non-critical: page renders with empty sidebar/collections
+    }
 
     return {
         session: sessionData,
-        history: historyData.sessions,
-        collections: collectionsData.collections,
+        history,
+        collections,
     };
 };

@@ -6,24 +6,51 @@ if (!SYSTEM_API_KEY) {
     throw new Error('SYSTEM_API_KEY environment variable is required');
 }
 
+/** Default timeout for normal API calls (ms) */
+const DEFAULT_TIMEOUT_MS = 10_000;
+
 const headers = () => ({
     'Authorization': `Bearer ${SYSTEM_API_KEY}`,
     'Content-Type': 'application/json',
 });
 
-async function gw<T>(path: string, init?: RequestInit): Promise<T> {
-    const res = await fetch(`${GATEWAY_URL}${path}`, {
-        ...init,
-        headers: { ...headers(), ...(init?.headers ?? {}) },
-    });
-    if (!res.ok) {
-        const detail = await res.text();
-        const err = new Error(`Gateway error (${res.status}): ${detail}`);
-        (err as any).status = res.status;
-        (err as any).detail = detail;
-        throw err;
+export class GatewayError extends Error {
+    status: number;
+    detail: string;
+    constructor(status: number, detail: string) {
+        super(`Gateway error (${status}): ${detail}`);
+        this.name = 'GatewayError';
+        this.status = status;
+        this.detail = detail;
     }
-    return res.json() as Promise<T>;
+}
+
+async function gw<T>(path: string, init?: RequestInit & { timeoutMs?: number }): Promise<T> {
+    const { timeoutMs, ...fetchInit } = init ?? {};
+    const timeout = timeoutMs ?? DEFAULT_TIMEOUT_MS;
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeout);
+
+    try {
+        const res = await fetch(`${GATEWAY_URL}${path}`, {
+            ...fetchInit,
+            headers: { ...headers(), ...(fetchInit?.headers ?? {}) },
+            signal: controller.signal,
+        });
+        if (!res.ok) {
+            const detail = await res.text();
+            throw new GatewayError(res.status, detail);
+        }
+        return res.json() as Promise<T>;
+    } catch (err) {
+        if (err instanceof GatewayError) throw err;
+        if ((err as any)?.name === 'AbortError') {
+            throw new GatewayError(504, `Gateway timeout after ${timeout}ms on ${path}`);
+        }
+        throw new GatewayError(502, `Gateway unreachable: ${(err as Error).message}`);
+    } finally {
+        clearTimeout(timer);
+    }
 }
 
 // Auth

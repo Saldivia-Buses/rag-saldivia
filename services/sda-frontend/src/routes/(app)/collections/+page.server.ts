@@ -1,8 +1,16 @@
 import type { PageServerLoad } from './$types';
-import { gatewayListCollections, gatewayCollectionStats } from '$lib/server/gateway';
+import { error } from '@sveltejs/kit';
+import { gatewayListCollections, gatewayCollectionStats, GatewayError } from '$lib/server/gateway';
 
 export const load: PageServerLoad = async () => {
-    const { collections } = await gatewayListCollections();
+    let collections: string[];
+    try {
+        ({ collections } = await gatewayListCollections());
+    } catch (err) {
+        if (err instanceof GatewayError) throw err;
+        throw error(503, 'No se pudo cargar la lista de colecciones.');
+    }
+
     const statsResults = await Promise.allSettled(
         collections.map(name => gatewayCollectionStats(name))
     );
