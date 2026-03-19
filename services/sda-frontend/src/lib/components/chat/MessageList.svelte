@@ -2,20 +2,26 @@
     import { ChevronDown } from 'lucide-svelte';
     import { isNearBottom } from '$lib/utils/scroll';
     import MarkdownRenderer from './MarkdownRenderer.svelte';
+    import CrossdocProgress from './CrossdocProgress.svelte';
+    import DecompositionView from './DecompositionView.svelte';
+    import { crossdoc } from '$lib/stores/crossdoc.svelte';
+    import type { SubResult } from '$lib/crossdoc/types';
 
     interface Message {
         role: 'user' | 'assistant';
         content: string;
         timestamp: string;
+        crossdocResults?: SubResult[];
     }
 
     interface Props {
         messages: Message[];
         streaming: boolean;
         streamingContent: string;
+        crossdoc: boolean;
     }
 
-    let { messages, streaming, streamingContent }: Props = $props();
+    let { messages, streaming, streamingContent, crossdoc: crossdocActive }: Props = $props();
 
     let scrollEl = $state<HTMLDivElement | null>(null);
     let showScrollButton = $state(false);
@@ -63,6 +69,9 @@
                     <div class="bg-[var(--bg-surface)] border border-[var(--border)]
                                 rounded-lg rounded-tl-sm px-3 py-2 max-w-[80%] min-w-0">
                         <MarkdownRenderer content={msg.content} />
+                        {#if msg.role === 'assistant' && msg.crossdocResults && crossdoc.options.showDecomposition}
+                            <DecompositionView results={msg.crossdocResults} />
+                        {/if}
                     </div>
                 </div>
             {/if}
@@ -74,8 +83,13 @@
                 <div class="w-5 h-5 bg-[var(--accent)] rounded-full animate-pulse flex-shrink-0 mt-0.5"></div>
                 <div class="bg-[var(--bg-surface)] border border-[var(--border)]
                             rounded-lg rounded-tl-sm px-3 py-2 max-w-[80%] min-w-0">
+                    {#if crossdocActive && !streamingContent}
+                        <CrossdocProgress />
+                    {/if}
                     <MarkdownRenderer content={streamingContent} />
-                    <span class="text-[var(--text-faint)] animate-pulse">▋</span>
+                    {#if streamingContent}
+                        <span class="text-[var(--text-faint)] animate-pulse">▋</span>
+                    {/if}
                 </div>
             </div>
         {/if}

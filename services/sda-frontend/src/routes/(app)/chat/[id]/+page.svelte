@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import { ChatStore } from '$lib/stores/chat.svelte';
+    import { crossdoc } from '$lib/stores/crossdoc.svelte';
     import HistoryPanel from '$lib/components/chat/HistoryPanel.svelte';
     import MessageList from '$lib/components/chat/MessageList.svelte';
     import SourcesPanel from '$lib/components/chat/SourcesPanel.svelte';
@@ -20,10 +21,8 @@
         }
     });
 
-    async function sendMessage(query: string) {
-        chat.addUserMessage(query);
+    async function streamNormal(query: string) {
         chat.startStream();
-
         try {
             const resp = await fetch(`/api/chat/stream/${data.session.id}`, {
                 method: 'POST',
@@ -31,7 +30,6 @@
                 body: JSON.stringify({
                     query,
                     collection_names: [selectedCollection],
-                    crossdoc: chat.crossdoc,
                 }),
                 signal: chat.abortController!.signal,
             });
@@ -67,7 +65,7 @@
                                     excerpt: c.content ?? c.excerpt ?? '',
                                 })));
                             }
-                        } catch { /* ignorar errores de parse en chunks parciales */ }
+                        } catch { /* ignorar errores de parse */ }
                     }
                 }
             }
@@ -77,6 +75,15 @@
             }
         } finally {
             chat.finalizeStream();
+        }
+    }
+
+    async function sendMessage(query: string) {
+        chat.addUserMessage(query);
+        if (chat.crossdoc) {
+            await crossdoc.run(query, chat);
+        } else {
+            await streamNormal(query);
         }
     }
 </script>
@@ -126,13 +133,16 @@
             messages={chat.messages}
             streaming={chat.streaming}
             streamingContent={chat.streamingContent}
+            crossdoc={chat.crossdoc}
         />
 
         <!-- Input con stop button -->
         <ChatInput
             streaming={chat.streaming}
+            crossdoc={chat.crossdoc}
             onsubmit={sendMessage}
-            onstop={() => chat.stopStream()}
+            onstop={() => { chat.stopStream(); crossdoc.stop(); }}
+            oncrossdoctoggle={() => { chat.crossdoc = !chat.crossdoc; }}
         />
     </div>
 

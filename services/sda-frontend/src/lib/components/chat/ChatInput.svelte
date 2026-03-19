@@ -1,13 +1,16 @@
 <script lang="ts">
     import { Send, Square } from 'lucide-svelte';
+    import CrossdocSettingsPopover from './CrossdocSettingsPopover.svelte';
 
     interface Props {
         streaming: boolean;
+        crossdoc: boolean;
         onsubmit: (query: string) => void;
         onstop: () => void;
+        oncrossdoctoggle: () => void;
     }
 
-    let { streaming, onsubmit, onstop }: Props = $props();
+    let { streaming, crossdoc, onsubmit, onstop, oncrossdoctoggle }: Props = $props();
 
     let input = $state('');
 
@@ -42,24 +45,28 @@
             style="max-height: 120px; overflow-y: auto;"
         ></textarea>
 
-        {#if streaming}
-            <button
-                onclick={onstop}
-                title="Detener generación"
-                class="flex-shrink-0 text-[var(--danger)] hover:opacity-80 transition-opacity"
-            >
-                <Square size={14} fill="currentColor" />
-            </button>
-        {:else}
-            <button
-                onclick={handleSubmit}
-                disabled={!input.trim()}
-                title="Enviar (Enter)"
-                class="flex-shrink-0 text-[var(--accent)] hover:text-[var(--accent-hover)]
-                       disabled:opacity-40 transition-colors"
-            >
-                <Send size={16} />
-            </button>
-        {/if}
+        <div class="flex items-center gap-2 flex-shrink-0">
+            <CrossdocSettingsPopover active={crossdoc} ontoggle={oncrossdoctoggle} />
+
+            {#if streaming}
+                <button
+                    onclick={onstop}
+                    title="Detener generación"
+                    class="text-[var(--danger)] hover:opacity-80 transition-opacity"
+                >
+                    <Square size={14} fill="currentColor" />
+                </button>
+            {:else}
+                <button
+                    onclick={handleSubmit}
+                    disabled={!input.trim()}
+                    title="Enviar (Enter)"
+                    class="text-[var(--accent)] hover:text-[var(--accent-hover)]
+                           disabled:opacity-40 transition-colors"
+                >
+                    <Send size={16} />
+                </button>
+            {/if}
+        </div>
     </div>
 </div>
