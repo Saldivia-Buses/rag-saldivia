@@ -21,14 +21,26 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     gw.append('file', file);
     gw.append('collection_name', collection.trim());
 
-    const resp = await fetch(`${gatewayUrl}/v1/documents`, {
-        method: 'POST',
-        headers: {
-            'Authorization': `Bearer ${apiKey}`,
-            'X-User-Id': String(locals.user.id),
-        },
-        body: gw,
-    });
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 60_000);
+
+    let resp: Response;
+    try {
+        resp = await fetch(`${gatewayUrl}/v1/documents`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'X-User-Id': String(locals.user.id),
+            },
+            body: gw,
+            signal: controller.signal,
+        });
+    } catch (err) {
+        if ((err as any)?.name === 'AbortError') throw error(504, 'Gateway timeout al subir el documento.');
+        throw error(502, 'Gateway inalcanzable.');
+    } finally {
+        clearTimeout(timer);
+    }
 
     const body = await resp.json().catch(() => ({}));
     return json(body, { status: resp.status });
