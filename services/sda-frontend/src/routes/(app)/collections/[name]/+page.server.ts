@@ -10,7 +10,7 @@ export const load: PageServerLoad = async ({ params }) => {
         if (err instanceof GatewayError && err.status === 404) {
             throw error(404, `Colección "${params.name}" no encontrada.`);
         }
-        if (err instanceof GatewayError) throw err;
-        throw error(503, 'No se pudo cargar las estadísticas de la colección.');
+        console.error('[collection detail loader]', err);
+        return { name: params.name, stats: null, error: 'No se pudo cargar las estadísticas de la colección' };
     }
 };
