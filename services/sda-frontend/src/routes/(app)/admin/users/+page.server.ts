@@ -1,7 +1,7 @@
 import type { PageServerLoad, Actions } from './$types';
-import { error, fail, redirect } from '@sveltejs/kit';
+import { fail, redirect } from '@sveltejs/kit';
 import { gatewayListUsers, gatewayCreateUser, gatewayDeleteUser,
-         gatewayListAreas, GatewayError } from '$lib/server/gateway';
+         gatewayListAreas } from '$lib/server/gateway';
 
 export const load: PageServerLoad = async ({ locals }) => {
     if (locals.user?.role !== 'admin') {
@@ -14,8 +14,8 @@ export const load: PageServerLoad = async ({ locals }) => {
         ]);
         return { users: usersData.users, areas: areasData.areas };
     } catch (err) {
-        if (err instanceof GatewayError) throw err;
-        throw error(503, 'No se pudo cargar la lista de usuarios.');
+        console.error('[admin/users loader]', err);
+        return { users: [], areas: [], error: 'No se pudo cargar la lista de usuarios' };
     }
 };
 

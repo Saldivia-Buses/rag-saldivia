@@ -1,6 +1,6 @@
 import type { PageServerLoad } from './$types';
-import { error, redirect } from '@sveltejs/kit';
-import { gatewayGetAudit, GatewayError } from '$lib/server/gateway';
+import { redirect } from '@sveltejs/kit';
+import { gatewayGetAudit } from '$lib/server/gateway';
 
 export const load: PageServerLoad = async ({ locals, url }) => {
     if (locals.user?.role !== 'admin') throw redirect(302, '/chat');
@@ -14,7 +14,7 @@ export const load: PageServerLoad = async ({ locals, url }) => {
         const data = await gatewayGetAudit(params);
         return { entries: data.entries };
     } catch (err) {
-        if (err instanceof GatewayError) throw err;
-        throw error(503, 'No se pudo cargar el log de auditoría.');
+        console.error('[audit loader]', err);
+        return { entries: [], error: 'No se pudo cargar el log de auditoría' };
     }
 };
