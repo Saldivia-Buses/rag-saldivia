@@ -1,16 +1,18 @@
 // src/lib/server/gateway.ts
 // Typed wrapper for all gateway API calls. Uses SYSTEM_API_KEY Bearer auth.
 const GATEWAY_URL = process.env.GATEWAY_URL ?? 'http://localhost:9000';
-const SYSTEM_API_KEY = process.env.SYSTEM_API_KEY;
-if (!SYSTEM_API_KEY) {
-    throw new Error('SYSTEM_API_KEY environment variable is required');
-}
 
 /** Default timeout for normal API calls (ms) */
 const DEFAULT_TIMEOUT_MS = 10_000;
 
+function getSystemApiKey(): string {
+    const key = process.env.SYSTEM_API_KEY;
+    if (!key) throw new Error('SYSTEM_API_KEY environment variable is required');
+    return key;
+}
+
 const headers = () => ({
-    'Authorization': `Bearer ${SYSTEM_API_KEY}`,
+    'Authorization': `Bearer ${getSystemApiKey()}`,
     'Content-Type': 'application/json',
 });
 

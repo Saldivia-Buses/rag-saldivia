@@ -4,18 +4,19 @@ import { jwtVerify } from 'jose';
 import type { SessionUser } from './gateway.js';
 import type { Cookies } from '@sveltejs/kit';
 
-const JWT_SECRET_RAW = process.env.JWT_SECRET;
-if (!JWT_SECRET_RAW) {
-    throw new Error('JWT_SECRET environment variable is required');
-}
-const secret = new TextEncoder().encode(JWT_SECRET_RAW);
 const COOKIE_NAME = 'sda_session';
+
+function getJwtSecret(): Uint8Array {
+    const raw = process.env.JWT_SECRET;
+    if (!raw) throw new Error('JWT_SECRET environment variable is required');
+    return new TextEncoder().encode(raw);
+}
 
 export async function verifySession(cookies: Cookies): Promise<SessionUser | null> {
     const token = cookies.get(COOKIE_NAME);
     if (!token) return null;
     try {
-        const { payload } = await jwtVerify(token, secret);
+        const { payload } = await jwtVerify(token, getJwtSecret());
         return {
             id: payload['user_id'] as number,
             email: payload['email'] as string,
