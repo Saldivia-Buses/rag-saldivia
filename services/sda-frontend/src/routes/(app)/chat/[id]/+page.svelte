@@ -1,27 +1,26 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import { ChatStore } from '$lib/stores/chat.svelte';
-    import { MessageSquare, Send, RefreshCw } from 'lucide-svelte';
+    import HistoryPanel from '$lib/components/chat/HistoryPanel.svelte';
+    import MessageList from '$lib/components/chat/MessageList.svelte';
+    import SourcesPanel from '$lib/components/chat/SourcesPanel.svelte';
+    import ChatInput from '$lib/components/chat/ChatInput.svelte';
 
     let { data } = $props();
     const chat = new ChatStore();
 
-    let input = $state('');
-    let selectedCollection = $state(data.session.collection);
+    let selectedCollection = $state(data.session.collection ?? '');
+    let sourcesOpen = $state(false);
 
     onMount(() => {
-        chat.collection = data.session.collection;
-        chat.crossdoc = data.session.crossdoc;
+        chat.collection = data.session.collection ?? '';
+        chat.crossdoc = data.session.crossdoc ?? false;
         if (data.session.messages?.length) {
             chat.loadMessages(data.session.messages);
         }
     });
 
-    async function sendMessage() {
-        if (!input.trim() || chat.streaming) return;
-        const query = input;
-        input = '';
-
+    async function sendMessage(query: string) {
         chat.addUserMessage(query);
         chat.startStream();
 
@@ -34,6 +33,7 @@
                     collection_names: [selectedCollection],
                     crossdoc: chat.crossdoc,
                 }),
+                signal: chat.abortController!.signal,
             });
 
             if (!resp.ok) {
@@ -48,12 +48,9 @@
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
-                // stream: true preserves multi-byte sequences across chunks
                 buffer += decoder.decode(value, { stream: true });
                 const lines = buffer.split('\n');
-                // Keep last (potentially incomplete) line in buffer
                 buffer = lines.pop() ?? '';
-                // Parse SSE events
                 for (const line of lines) {
                     if (line.startsWith('data: ')) {
                         const dataStr = line.slice(6).trim();
@@ -70,142 +67,78 @@
                                     excerpt: c.content ?? c.excerpt ?? '',
                                 })));
                             }
-                        } catch { /* ignore parse errors on partial chunks */ }
+                        } catch { /* ignorar errores de parse en chunks parciales */ }
                     }
                 }
             }
-        } catch (err) {
-            console.error('Stream error:', err);
-            chat.appendToken('\n[Error: conexión interrumpida]');
+        } catch (err: any) {
+            if (err?.name !== 'AbortError') {
+                chat.appendToken('\n[Error: conexión interrumpida]');
+            }
         } finally {
             chat.finalizeStream();
-        }
-    }
-
-    function handleKeydown(e: KeyboardEvent) {
-        if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            sendMessage();
         }
     }
 </script>
 
 <div class="flex h-screen overflow-hidden">
+    <!-- Panel izquierdo: historial con búsqueda -->
+    <HistoryPanel
+        sessions={data.history}
+        currentId={data.session.id}
+    />
 
-    <!-- Panel izquierdo: historial -->
-    <div class="w-40 bg-[var(--bg-surface)] border-r border-[var(--border)] flex flex-col p-2 gap-1 overflow-y-auto">
-        <div class="text-xs text-[var(--text-faint)] font-semibold uppercase tracking-wide mb-1">
-            Historial
-        </div>
-        <a href="/chat" data-sveltekit-preload-data="false" class="flex items-center gap-1.5 text-[var(--accent)] text-xs mb-2 hover:underline">
-            <MessageSquare size={10} /> Nueva consulta
-        </a>
-        {#each data.history as session}
-            <a
-                href="/chat/{session.id}"
-                data-sveltekit-preload-data="false"
-                class="bg-[var(--bg-surface)] rounded p-1.5 block hover:bg-[var(--border)] transition-colors
-                       {session.id === data.session.id ? 'border-l-2 border-[var(--accent)]' : ''}"
-            >
-                <div class="text-xs text-[var(--text-muted)] font-medium truncate">{session.title}</div>
-                <div class="text-xs text-[var(--text-faint)] mt-0.5">{session.updated_at.slice(0,10)}</div>
-            </a>
-        {/each}
-    </div>
-
-    <!-- Panel central: conversación -->
+    <!-- Centro: header + mensajes + input -->
     <div class="flex-1 flex flex-col border-r border-[var(--border)] min-w-0">
-        <!-- Header -->
-        <div class="flex items-center gap-2 px-3 py-2 border-b border-[var(--border)] text-xs">
+
+        <!-- Header: colección + crossdoc + toggle fuentes -->
+        <div class="flex items-center gap-2 px-3 py-2 border-b border-[var(--border)] text-xs flex-shrink-0">
             <select
                 bind:value={selectedCollection}
-                class="bg-[var(--bg-surface)] border border-[var(--border)] rounded px-2 py-0.5 text-[var(--text)]"
+                class="bg-[var(--bg-surface)] border border-[var(--border)] rounded-[var(--radius-sm)]
+                       px-2 py-0.5 text-[var(--text)] outline-none focus:border-[var(--accent)]"
             >
                 {#each data.collections as col}
                     <option value={col}>{col}</option>
                 {/each}
             </select>
-            <label class="flex items-center gap-1 text-[var(--text-muted)] cursor-pointer">
+
+            <label class="flex items-center gap-1 text-[var(--text-muted)] cursor-pointer select-none">
                 <input type="checkbox" bind:checked={chat.crossdoc} class="accent-[var(--accent)]" />
                 Crossdoc
             </label>
+
+            <button
+                onclick={() => sourcesOpen = !sourcesOpen}
+                disabled={chat.sources.length === 0}
+                class="ml-auto px-2 py-1 rounded-[var(--radius-sm)] text-xs transition-colors
+                       disabled:opacity-40
+                       {sourcesOpen && chat.sources.length > 0
+                           ? 'bg-[var(--accent)] text-white'
+                           : 'bg-[var(--bg-surface)] border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text)]'}"
+            >
+                Fuentes ({chat.sources.length})
+            </button>
         </div>
 
-        <!-- Messages -->
-        <div class="flex-1 overflow-y-auto p-3 flex flex-col gap-3">
-            {#each chat.messages as msg}
-                {#if msg.role === 'user'}
-                    <div class="flex justify-end">
-                        <div class="bg-[var(--accent)] rounded-lg rounded-tr-sm px-3 py-2 max-w-[70%]">
-                            <p class="text-xs text-white">{msg.content}</p>
-                        </div>
-                    </div>
-                {:else}
-                    <div class="flex gap-2">
-                        <div class="w-5 h-5 bg-[var(--accent)] rounded-full flex-shrink-0 mt-0.5"></div>
-                        <div class="bg-[var(--bg-surface)] border border-[var(--border)] rounded-lg rounded-tl-sm px-3 py-2 max-w-[80%]">
-                            <p class="text-xs text-[var(--text)] leading-relaxed whitespace-pre-wrap">
-                                {msg.content}
-                            </p>
-                        </div>
-                    </div>
-                {/if}
-            {/each}
+        <!-- Lista de mensajes con auto-scroll -->
+        <MessageList
+            messages={chat.messages}
+            streaming={chat.streaming}
+            streamingContent={chat.streamingContent}
+        />
 
-            <!-- Streaming -->
-            {#if chat.streaming}
-                <div class="flex gap-2">
-                    <div class="w-5 h-5 bg-[var(--accent)] rounded-full flex-shrink-0 mt-0.5 animate-pulse"></div>
-                    <div class="bg-[var(--bg-surface)] border border-[var(--border)] rounded-lg rounded-tl-sm px-3 py-2 max-w-[80%]">
-                        <p class="text-xs text-[var(--text)] leading-relaxed whitespace-pre-wrap">
-                            {chat.streamingContent}<span class="animate-pulse">▋</span>
-                        </p>
-                    </div>
-                </div>
-            {/if}
-        </div>
-
-        <!-- Input -->
-        <div class="p-3 border-t border-[var(--border)]">
-            <div class="flex gap-2 bg-[var(--bg-surface)] border border-[var(--border)] rounded-lg px-3 py-2">
-                <textarea
-                    bind:value={input}
-                    onkeydown={handleKeydown}
-                    rows={1}
-                    placeholder="Escribí tu consulta..."
-                    class="flex-1 bg-transparent text-xs text-[var(--text)] placeholder-[var(--text-faint)]
-                           resize-none outline-none"
-                ></textarea>
-                <button
-                    onclick={sendMessage}
-                    disabled={chat.streaming || !input.trim()}
-                    class="text-[var(--accent)] hover:text-[var(--accent-hover)] disabled:opacity-40 transition-colors"
-                >
-                    {#if chat.streaming}
-                        <RefreshCw size={16} class="animate-spin" />
-                    {:else}
-                        <Send size={16} />
-                    {/if}
-                </button>
-            </div>
-        </div>
+        <!-- Input con stop button -->
+        <ChatInput
+            streaming={chat.streaming}
+            onsubmit={sendMessage}
+            onstop={() => chat.stopStream()}
+        />
     </div>
 
-    <!-- Panel derecho: fuentes -->
-    <div class="w-48 bg-[var(--bg-surface)] p-3 overflow-y-auto">
-        <div class="text-xs text-[var(--text-faint)] font-semibold uppercase tracking-wide mb-2">
-            Fuentes ({chat.sources.length})
-        </div>
-        {#each chat.sources as source, i}
-            <div class="bg-[var(--bg-surface)] rounded p-2 mb-2 border-l-2
-                        {i === 0 ? 'border-[var(--accent)]' : i === 1 ? 'border-[var(--accent-hover)]' : 'border-[var(--border)]'}">
-                <div class="text-xs text-[var(--accent)] font-semibold truncate">{source.document}</div>
-                {#if source.page}
-                    <div class="text-xs text-[var(--text-faint)]">p. {source.page}</div>
-                {/if}
-                <div class="text-xs text-[var(--text-muted)] mt-1 line-clamp-3">{source.excerpt}</div>
-            </div>
-        {/each}
-    </div>
-
+    <!-- Panel derecho: fuentes (toggleable) -->
+    <SourcesPanel
+        sources={chat.sources}
+        open={sourcesOpen}
+    />
 </div>
