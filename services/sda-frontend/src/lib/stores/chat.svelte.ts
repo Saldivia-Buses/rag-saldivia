@@ -20,12 +20,14 @@ export class ChatStore {
     streamingContent = $state('');
     collection = $state('');
     crossdoc = $state(false);
+    abortController = $state<AbortController | null>(null);
 
     addUserMessage(content: string) {
         this.messages.push({ role: 'user', content, timestamp: new Date().toISOString() });
     }
 
     startStream() {
+        this.abortController = new AbortController();
         this.streaming = true;
         this.streamingContent = '';
         this.sources = [];
@@ -37,6 +39,11 @@ export class ChatStore {
 
     setSources(sources: Source[]) {
         this.sources = sources;
+    }
+
+    stopStream() {
+        this.abortController?.abort();
+        this.finalizeStream();
     }
 
     finalizeStream() {
