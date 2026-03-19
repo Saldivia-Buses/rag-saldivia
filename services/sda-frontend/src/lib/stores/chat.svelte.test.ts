@@ -37,4 +37,24 @@ describe('ChatStore', () => {
         const chat = new ChatStore();
         expect(() => chat.stopStream()).not.toThrow();
     });
+
+    it('finalizeStream guarda crossdocResults en el mensaje', () => {
+        const chat = new ChatStore();
+        chat.startStream();
+        chat.appendToken('respuesta de síntesis');
+        const results = [
+            { query: 'presión bomba', content: 'La presión es 12 bar', success: true },
+        ];
+        chat.finalizeStream({ crossdocResults: results });
+        expect(chat.messages[0].crossdocResults).toEqual(results);
+    });
+
+    it('finalizeStream sin opts funciona igual que antes (backwards compat)', () => {
+        const chat = new ChatStore();
+        chat.startStream();
+        chat.appendToken('respuesta normal');
+        chat.finalizeStream();
+        expect(chat.messages[0].crossdocResults).toBeUndefined();
+        expect(chat.messages[0].content).toBe('respuesta normal');
+    });
 });

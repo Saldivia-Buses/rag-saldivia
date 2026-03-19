@@ -5,6 +5,7 @@ export interface Message {
     content: string;
     sources?: Source[];
     timestamp: string;
+    crossdocResults?: import('$lib/crossdoc/types').SubResult[];
 }
 
 export interface Source {
@@ -46,13 +47,14 @@ export class ChatStore {
         this.finalizeStream();
     }
 
-    finalizeStream() {
+    finalizeStream(opts?: { crossdocResults?: import('$lib/crossdoc/types').SubResult[] }) {
         if (this.streamingContent) {
             this.messages.push({
                 role: 'assistant',
                 content: this.streamingContent,
                 sources: [...this.sources],
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
+                crossdocResults: opts?.crossdocResults,
             });
         }
         this.streaming = false;
