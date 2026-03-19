@@ -156,6 +156,71 @@ export async function gatewayGetAudit(params: AuditParams) {
     return gw<{ entries: AuditEntry[] }>(`/admin/audit${qs ? '?' + qs : ''}`);
 }
 
+// Generate — text (para decompose y sub-queries, sin SSE al browser)
+export async function gatewayGenerateText(
+    opts: {
+        messages: { role: string; content: string }[];
+        use_knowledge_base?: boolean;
+        collection_names?: string[];
+        vdb_top_k?: number;
+        reranker_top_k?: number;
+        enable_reranker?: boolean;
+        max_tokens?: number;
+    },
+    signal?: AbortSignal
+): Promise<string> {
+    const resp = await fetch(`${GATEWAY_URL}/v1/generate`, {
+        method: 'POST',
+        headers: headers(),
+        body: JSON.stringify(opts),
+        signal,
+    });
+    if (!resp.ok) throw new GatewayError(resp.status, await resp.text());
+    if (!resp.body) return '';
+
+    let text = '';
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    try {
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            const chunk = decoder.decode(value, { stream: true });
+            for (const line of chunk.split('\n')) {
+                if (!line.startsWith('data: ')) continue;
+                const data = line.slice(6).trim();
+                if (data === '[DONE]') continue;
+                try {
+                    const obj = JSON.parse(data);
+                    text += obj?.choices?.[0]?.delta?.content ?? '';
+                } catch { /* skip malformed */ }
+            }
+        }
+    } finally {
+        reader.releaseLock();
+    }
+    return text;
+}
+
+// Generate — stream (para synthesis, proxy SSE directo al browser)
+export async function gatewayGenerateStream(
+    opts: {
+        messages: { role: string; content: string }[];
+        use_knowledge_base?: boolean;
+        max_tokens?: number;
+    },
+    signal?: AbortSignal
+): Promise<Response> {
+    const resp = await fetch(`${GATEWAY_URL}/v1/generate`, {
+        method: 'POST',
+        headers: headers(),
+        body: JSON.stringify(opts),
+        signal,
+    });
+    if (!resp.ok) throw new GatewayError(resp.status, await resp.text());
+    return resp;
+}
+
 // Types
 export interface SessionUser {
     id: number; email: string; name: string; role: string; area_id: number;
