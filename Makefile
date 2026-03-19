@@ -12,7 +12,7 @@ BLUEPRINT_VERSION ?= 2.5.0
 
 export SALDIVIA_ROOT
 
-.PHONY: help setup deploy stop status ingest query test patch-check patch-create clean validate show-env mcp watch cli
+.PHONY: help setup deploy stop status health ingest query test patch-check patch-create clean validate show-env mcp watch cli
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -36,6 +36,9 @@ status: ## Show GPU, Docker, and Milvus status
 	@echo ""
 	@echo "=== RAG Health ===" && curl -sf http://localhost:8081/health 2>/dev/null | python3 -m json.tool 2>/dev/null || echo "RAG server not responding"
 
+
+health: ## Run health check on all services
+	@bash $(SALDIVIA_ROOT)/scripts/health_check.sh
 ingest: ## Smart ingest PDFs (DOCS=path COLLECTION=name)
 	@python3 $(SALDIVIA_ROOT)/scripts/smart_ingest.py \
 		$(or $(COLLECTION),tecpia) \
