@@ -19,6 +19,8 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			max_tokens: 4096,
 		});
 
+		if (!resp.body) throw error(502, 'No response body from gateway');
+
 		return new Response(resp.body, {
 			status: resp.status,
 			headers: {
