@@ -21,8 +21,10 @@ export const load: PageServerLoad = async ({ locals }) => {
     } catch (err) {
         // Re-throw redirects — they're not errors
         if (err instanceof Response || (err as any)?.status === 302 || (err as any)?.location) throw err;
-        // Re-throw GatewayErrors so hooks.server.ts can handle 401
-        if (err instanceof GatewayError) throw err;
-        throw error(503, 'No se pudo conectar con el servidor. Intentá de nuevo en unos segundos.');
+        // Re-throw 401 so hooks.server.ts can clear the stale cookie
+        if (err instanceof GatewayError && err.status === 401) throw err;
+        // Gateway unreachable — show empty state instead of crashing
+        console.error('[chat loader]', err);
+        return { gatewayDown: true };
     }
 };

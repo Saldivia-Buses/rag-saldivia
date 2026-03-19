@@ -33,7 +33,7 @@
     const mainNav: NavItem[] = [
         { href: '/chat',        label: 'Chat',        icon: MessageSquare },
         { href: '/collections', label: 'Colecciones', icon: BookOpen },
-        { href: '/collections', label: 'Documentos',  icon: Upload }, // Phase 3: will point to /upload
+        { href: '/upload',      label: 'Documentos',  icon: Upload },
     ];
 
     const adminNav: NavItem[] = [
@@ -63,35 +63,42 @@
     style="width: {collapsed ? 'var(--sidebar-collapsed)' : 'var(--sidebar-width)'}"
     class="
         flex-shrink-0 h-screen
-        bg-[#120f0c] border-r border-[var(--border)]
+        bg-[var(--sidebar-bg)] border-r border-[var(--border)]
         flex flex-col
         transition-[width] duration-200 ease-in-out
         overflow-hidden
     "
 >
     <!-- Header -->
-    <div class="flex items-center gap-2.5 px-3 py-3.5 border-b border-[var(--border)] min-h-[var(--topbar-height)]">
-        <div class="w-7 h-7 bg-[var(--accent)] rounded-lg flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
-            S
+    {#if collapsed}
+        <div class="flex flex-col items-center py-2 border-b border-[var(--border)] min-h-[var(--topbar-height)]">
+            <button
+                onclick={() => collapsed = !collapsed}
+                class="w-8 h-8 flex items-center justify-center rounded-[var(--radius-md)]
+                       text-[var(--text-faint)] hover:text-[var(--text)] hover:bg-[var(--bg-hover)] transition-colors"
+                title="Expandir"
+            >
+                <ChevronRight size={16} />
+            </button>
         </div>
-        {#if !collapsed}
-            <div class="overflow-hidden">
+    {:else}
+        <div class="flex items-center gap-2.5 px-3 py-3.5 border-b border-[var(--border)] min-h-[var(--topbar-height)]">
+            <div class="w-7 h-7 bg-[var(--accent)] rounded-lg flex items-center justify-center text-white font-bold text-xs flex-shrink-0">
+                S
+            </div>
+            <div class="overflow-hidden flex-1">
                 <div class="text-sm font-bold text-[var(--text)] whitespace-nowrap">SDA</div>
                 <div class="text-[10px] text-[var(--text-faint)] whitespace-nowrap">Saldivia Buses</div>
             </div>
-        {/if}
-        <button
-            onclick={() => collapsed = !collapsed}
-            class="ml-auto text-[var(--text-faint)] hover:text-[var(--text)] transition-colors flex-shrink-0 p-0.5"
-            title={collapsed ? 'Expandir' : 'Colapsar'}
-        >
-            {#if collapsed}
-                <ChevronRight size={14} />
-            {:else}
-                <ChevronLeft size={14} />
-            {/if}
-        </button>
-    </div>
+            <button
+                onclick={() => collapsed = !collapsed}
+                class="text-[var(--text-faint)] hover:text-[var(--text)] hover:bg-[var(--bg-hover)] transition-colors flex-shrink-0 p-2 rounded-[var(--radius-sm)]"
+                title="Colapsar"
+            >
+                <ChevronLeft size={16} />
+            </button>
+        </div>
+    {/if}
 
     <!-- Nav -->
     <div class="flex-1 overflow-y-auto py-2 px-2 flex flex-col gap-0.5">

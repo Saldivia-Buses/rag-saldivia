@@ -176,7 +176,7 @@ def test_audit_filters(client, admin_user):
 
 
 def test_create_session(client, admin_user):
-    with patch("saldivia.gateway.db") as mock_db:
+    with patch("saldivia.gateway.BYPASS_AUTH", False), patch("saldivia.gateway.db") as mock_db:
         from saldivia.auth.models import ChatSession
         mock_db.get_user_by_api_key_hash.return_value = admin_user
         mock_db.create_chat_session.return_value = ChatSession(
@@ -190,7 +190,7 @@ def test_create_session(client, admin_user):
 
 
 def test_get_session_not_found(client, admin_user):
-    with patch("saldivia.gateway.db") as mock_db:
+    with patch("saldivia.gateway.BYPASS_AUTH", False), patch("saldivia.gateway.db") as mock_db:
         mock_db.get_user_by_api_key_hash.return_value = admin_user
         mock_db.get_chat_session.return_value = None
         resp = client.get("/chat/sessions/nonexistent?user_id=1",
@@ -199,7 +199,7 @@ def test_get_session_not_found(client, admin_user):
 
 
 def test_delete_session(client, admin_user):
-    with patch("saldivia.gateway.db") as mock_db:
+    with patch("saldivia.gateway.BYPASS_AUTH", False), patch("saldivia.gateway.db") as mock_db:
         mock_db.get_user_by_api_key_hash.return_value = admin_user
         mock_db.delete_chat_session.return_value = None
         resp = client.delete("/chat/sessions/abc-123?user_id=1",

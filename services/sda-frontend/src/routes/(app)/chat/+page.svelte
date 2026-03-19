@@ -1,4 +1,6 @@
 <script lang="ts">
+    let { data } = $props();
+
     const suggestions = [
         '¿Cuáles son las especificaciones del Aries 365?',
         'Normativas de homologación vigentes',
@@ -19,20 +21,26 @@
             Consultá sobre los documentos de Saldivia Buses
         </p>
 
-        <div class="flex flex-wrap gap-2 justify-center">
-            {#each suggestions as suggestion}
-                <a
-                    href="/chat/new"
-                    class="
-                        px-3.5 py-2 rounded-full text-sm
-                        bg-[var(--bg-surface)] border border-[var(--border)]
-                        text-[var(--text-muted)] hover:text-[var(--text)] hover:border-[var(--accent)]
-                        transition-colors
-                    "
-                >
-                    {suggestion}
-                </a>
-            {/each}
-        </div>
+        {#if data?.gatewayDown}
+            <div class="bg-[var(--warning-bg)] border border-[var(--warning)] rounded-[var(--radius-md)] px-4 py-3 text-sm text-[var(--warning)]">
+                El servidor RAG no está disponible. El diseño del sistema funciona correctamente.
+            </div>
+        {:else}
+            <div class="flex flex-wrap gap-2 justify-center">
+                {#each suggestions as suggestion}
+                    <a
+                        href="/chat/new"
+                        class="
+                            px-3.5 py-2 rounded-full text-sm
+                            bg-[var(--bg-surface)] border border-[var(--border)]
+                            text-[var(--text-muted)] hover:text-[var(--text)] hover:border-[var(--accent)]
+                            transition-colors
+                        "
+                    >
+                        {suggestion}
+                    </a>
+                {/each}
+            </div>
+        {/if}
     </div>
 </div>
