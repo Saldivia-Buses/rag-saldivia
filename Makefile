@@ -12,7 +12,7 @@ BLUEPRINT_VERSION ?= 2.5.0
 
 export SALDIVIA_ROOT
 
-.PHONY: help setup deploy stop status health ingest query test patch-check patch-create clean validate show-env mcp watch cli
+.PHONY: help setup deploy stop status health ingest query test test-unit test-coverage test-e2e test-e2e-brev test-backend test-stress patch-check patch-create clean validate show-env mcp watch cli
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -48,7 +48,28 @@ query: ## Crossdoc query (Q="question")
 	@python3 $(SALDIVIA_ROOT)/scripts/crossdoc_client.py \
 		$(or $(Q),$(error Q is required. Usage: make query Q="your question here"))
 
-test: ## Run stress test
+## ── Testing ──────────────────────────────────────────────────────────────────
+test: test-unit test-backend ## Run unit + component + backend tests (no E2E — E2E requires app running)
+
+test-unit: ## Run Vitest unit + component tests (frontend)
+	cd services/sda-frontend && npm run test
+
+test-coverage: ## Run Vitest con reporte de coverage (falla si <80%)
+	cd services/sda-frontend && npm run test:coverage
+	@echo "Coverage report: services/sda-frontend/coverage/index.html"
+
+test-e2e: ## Run Playwright E2E tests (build + preview + tests)
+	cd services/sda-frontend && npm run build && npm run preview & \
+	sleep 5 && npx playwright test; \
+	kill %1
+
+test-e2e-brev: ## Run E2E tests against Brev instance (BREV_URL=https://...)
+	cd services/sda-frontend && PLAYWRIGHT_BASE_URL=$(BREV_URL) npx playwright test
+
+test-backend: ## Run Python pytest tests (saldivia SDK)
+	uv run pytest saldivia/tests/ -v
+
+test-stress: ## Run HTTP stress test against running gateway
 	@python3 $(SALDIVIA_ROOT)/scripts/stress_test.py
 
 patch-check: ## Validate patches without applying (dry-run)

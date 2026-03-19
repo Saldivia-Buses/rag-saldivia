@@ -29,6 +29,21 @@ describe('GET /api/collections', () => {
         const event = { locals: { user: null } } as any;
         await expect(GET(event)).rejects.toMatchObject({ status: 401 });
     });
+
+    it('propagates GatewayError status on GET failure', async () => {
+        const err = new mockGateway.GatewayError(503, 'Milvus unavailable');
+        mockGateway.gatewayListCollections.mockRejectedValue(err);
+        const { GET } = await import('./+server.js');
+        const event = { locals: { user: { id: 1 } } } as any;
+        await expect(GET(event)).rejects.toMatchObject({ status: 503 });
+    });
+
+    it('returns 503 on generic GET error', async () => {
+        mockGateway.gatewayListCollections.mockRejectedValue(new Error('Network timeout'));
+        const { GET } = await import('./+server.js');
+        const event = { locals: { user: { id: 1 } } } as any;
+        await expect(GET(event)).rejects.toMatchObject({ status: 503 });
+    });
 });
 
 describe('POST /api/collections', () => {
@@ -63,6 +78,48 @@ describe('POST /api/collections', () => {
         } as any;
         await expect(POST(event)).rejects.toMatchObject({ status: 400 });
     });
+
+    it('returns 401 when not authenticated', async () => {
+        const { POST } = await import('./+server.js');
+        const event = {
+            request: new Request('http://localhost/api/collections', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: 'nueva-col' }),
+            }),
+            locals: { user: null },
+        } as any;
+        await expect(POST(event)).rejects.toMatchObject({ status: 401 });
+    });
+
+    it('propagates GatewayError status on POST failure', async () => {
+        const err = new mockGateway.GatewayError(409, 'Collection already exists');
+        mockGateway.gatewayCreateCollection.mockRejectedValue(err);
+        const { POST } = await import('./+server.js');
+        const event = {
+            request: new Request('http://localhost/api/collections', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: 'existing-col' }),
+            }),
+            locals: { user: { id: 1 } },
+        } as any;
+        await expect(POST(event)).rejects.toMatchObject({ status: 409 });
+    });
+
+    it('returns 503 on generic POST error', async () => {
+        mockGateway.gatewayCreateCollection.mockRejectedValue(new Error('DB timeout'));
+        const { POST } = await import('./+server.js');
+        const event = {
+            request: new Request('http://localhost/api/collections', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: 'test-col' }),
+            }),
+            locals: { user: { id: 1 } },
+        } as any;
+        await expect(POST(event)).rejects.toMatchObject({ status: 503 });
+    });
 });
 
 describe('DELETE /api/collections/[name]', () => {
@@ -83,5 +140,20 @@ describe('DELETE /api/collections/[name]', () => {
         const { DELETE } = await import('./[name]/+server.js');
         const event = { params: { name: 'col-a' }, locals: { user: null } } as any;
         await expect(DELETE(event)).rejects.toMatchObject({ status: 401 });
+    });
+
+    it('propagates GatewayError status on DELETE failure', async () => {
+        const err = new mockGateway.GatewayError(404, 'Collection not found');
+        mockGateway.gatewayDeleteCollection.mockRejectedValue(err);
+        const { DELETE } = await import('./[name]/+server.js');
+        const event = { params: { name: 'nonexistent' }, locals: { user: { id: 1 } } } as any;
+        await expect(DELETE(event)).rejects.toMatchObject({ status: 404 });
+    });
+
+    it('returns 503 on generic DELETE error', async () => {
+        mockGateway.gatewayDeleteCollection.mockRejectedValue(new Error('Internal error'));
+        const { DELETE } = await import('./[name]/+server.js');
+        const event = { params: { name: 'col-a' }, locals: { user: { id: 1 } } } as any;
+        await expect(DELETE(event)).rejects.toMatchObject({ status: 503 });
     });
 });

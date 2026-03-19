@@ -30,6 +30,19 @@ describe('POST /api/crossdoc/subquery', () => {
 		await expect(POST(event)).rejects.toMatchObject({ status: 401 });
 	});
 
+	it('retorna 400 cuando query está vacía o falta', async () => {
+		const { POST } = await import('./+server.js');
+		const event = {
+			request: new Request('http://localhost', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({}), // query missing
+			}),
+			locals: { user: { id: 1 } },
+		} as any;
+		await expect(POST(event)).rejects.toMatchObject({ status: 400 });
+	});
+
 	it('success: true cuando gateway devuelve contenido útil', async () => {
 		mockGateway.gatewayGenerateText.mockResolvedValue(
 			'La presión máxima es 12 bar según la ficha técnica.'
@@ -63,5 +76,34 @@ describe('POST /api/crossdoc/subquery', () => {
 		const res = await POST(event);
 		const body = await res.json();
 		expect(body.success).toBe(false);
+	});
+
+	it('propaga el status de GatewayError', async () => {
+		const err = new mockGateway.GatewayError(503, 'Gateway unavailable');
+		mockGateway.gatewayGenerateText.mockRejectedValue(err);
+		const { POST } = await import('./+server.js');
+		const event = {
+			request: new Request('http://localhost', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ query: 'presión bomba' }),
+			}),
+			locals: { user: { id: 1 } },
+		} as any;
+		await expect(POST(event)).rejects.toMatchObject({ status: 503 });
+	});
+
+	it('retorna 502 en errores genéricos (no GatewayError)', async () => {
+		mockGateway.gatewayGenerateText.mockRejectedValue(new Error('Unexpected failure'));
+		const { POST } = await import('./+server.js');
+		const event = {
+			request: new Request('http://localhost', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ query: 'presión bomba' }),
+			}),
+			locals: { user: { id: 1 } },
+		} as any;
+		await expect(POST(event)).rejects.toMatchObject({ status: 502 });
 	});
 });
