@@ -28,7 +28,7 @@
 			class="opacity-50 text-[10px]"
 			role="button"
 			tabindex="0"
-			onclick|stopPropagation={() => (open = !open)}
+			onclick={(e) => { e.stopPropagation(); open = !open; }}
 			onkeydown={(e) => e.key === 'Enter' && (open = !open)}
 		>▾</span>
 	</button>
