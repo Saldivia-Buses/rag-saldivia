@@ -9,10 +9,8 @@
 </script>
 
 <div
-    style="width:{width}; height:{height}; border-radius:{rounded}"
-    class="bg-[var(--bg-hover)] animate-pulse {cls}"
-    style:background="linear-gradient(90deg, var(--bg-hover) 25%, var(--border-focus) 50%, var(--bg-hover) 75%)"
-    style:background-size="200% 100%"
+    style="width:{width}; height:{height}; border-radius:{rounded}; background: linear-gradient(90deg, var(--bg-hover) 25%, var(--border-focus) 50%, var(--bg-hover) 75%); background-size: 200% 100%;"
+    class="{cls}"
 ></div>
 
 <style>
