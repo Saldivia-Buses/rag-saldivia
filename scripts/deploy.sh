@@ -105,17 +105,32 @@ fi
 # Build platform service images first (mode-manager, ingestion-worker, auth-gateway).
 # Done separately so Docker BuildKit does not try to resolve blueprint build contexts.
 log "Building platform service images..."
+# CACHE_BUST = git hash to invalidate Docker layer cache when code changes.
+# Forces Docker to re-run COPY . . even if npm ci layer is cached.
+CACHE_BUST=$(git -C "$SALDIVIA_ROOT" rev-parse --short HEAD 2>/dev/null || date +%s)
+log "  Cache bust: ${CACHE_BUST}"
 # --project-name must match the CWD-derived name used by 'docker compose up' below
 # (which runs from $COMPOSE_DIR whose basename is 'compose')
 SALDIVIA_ROOT="$SALDIVIA_ROOT" docker compose \
     --project-name compose \
     --env-file "$ENV_FILE" \
     -f "${SALDIVIA_ROOT}/config/compose-platform-services.yaml" \
-    build 2>&1 | tail -5
+    build --build-arg CACHE_BUST="${CACHE_BUST}" 2>&1 | tail -5
 
 cd "$COMPOSE_DIR"
 log "Starting services..."
 docker compose --env-file "$ENV_FILE" $COMPOSE_FILES up -d --force-recreate $SCALE_ARGS 2>&1 | tail -10
+
+# --- Step 3b: Ensure Milvus stack has restart policy ---
+# Milvus is managed by the blueprint's vectordb.yaml (separate compose project).
+# That file lacks restart policies, so we apply them after every deploy.
+for container in milvus-standalone milvus-etcd milvus-minio; do
+    if docker ps -q --filter "name=^${container}$" | grep -q .; then
+        docker update --restart unless-stopped "$container" > /dev/null \
+            && log "  restart policy: ${container}" \
+            || warn "  failed to set restart on ${container}"
+    fi
+done
 
 # --- Step 4: Flush Redis (clear orphaned NV-Ingest tasks) ---
 log "Flushing Redis..."
