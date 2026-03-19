@@ -172,12 +172,12 @@ chore(deploy): upgrade to NVIDIA RAG Blueprint v2.5.0
 3. Update sections: new files, new functions, new behavior, examples
 
 **Zone READMEs:**
-- `/Users/enzo/rag-saldivia/README.md` — global README
-- `/Users/enzo/rag-saldivia/saldivia/README.md` — Python SDK
-- `/Users/enzo/rag-saldivia/cli/README.md` — CLI
-- `/Users/enzo/rag-saldivia/services/sda-frontend/README.md` — Frontend
-- `/Users/enzo/rag-saldivia/scripts/README.md` — Scripts
-- `/Users/enzo/rag-saldivia/config/README.md` — Config and profiles
+- `README.md` — global README
+- `saldivia/README.md` — Python SDK
+- `cli/README.md` — CLI
+- `services/sda-frontend/README.md` — Frontend
+- `scripts/README.md` — Scripts
+- `config/README.md` — Config and profiles
 
 **Example:**
 
@@ -298,7 +298,7 @@ Brief description of what this PR does.
 
 Use this checklist for self-review before requesting PR review:
 
-- [ ] All tests pass (`make test`)
+- [ ] All tests pass (`uv run pytest saldivia/tests/ -v` for backend; frontend tests per docs/testing.md)
 - [ ] No type errors (`npm run check` in frontend)
 - [ ] No lint warnings (`npm run lint` in frontend)
 - [ ] READMEs updated in affected zones

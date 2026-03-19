@@ -24,39 +24,44 @@ RAG Saldivia uses a three-layer test pyramid for the SDA Frontend (SvelteKit 5):
 
 ## Running Tests
 
-From the root directory (`/Users/enzo/rag-saldivia/`):
+### Backend Tests (Python)
+
+The backend test suite is already installed and working. From the repo root:
 
 ```bash
-# Full pyramid (unit + component + E2E)
-make test
+# All backend tests
+uv run pytest saldivia/tests/ -v
 
-# Unit tests only (Vitest, <5 seconds)
-make test-unit
+# Specific test file
+uv run pytest saldivia/tests/test_gateway.py -v
 
-# E2E tests only (Playwright, requires app running)
-make test-e2e
-
-# Coverage report (HTML output)
-make test-coverage
+# With coverage
+uv run pytest saldivia/tests/ --cov=saldivia -v
 ```
 
-From the frontend directory (`/Users/enzo/rag-saldivia/services/sda-frontend/`):
+**22 tests** covering: gateway, auth, config, mode manager, providers, collections.
+
+### Frontend Tests (Vitest + Playwright)
+
+> **Status:** Planned — not yet installed. See Phase 5.2 implementation.
+
+Once implemented, the commands will be:
 
 ```bash
-# Unit + component tests (Vitest)
-npm test
+# From repo root
+make test           # Full pyramid (unit + component + E2E)
+make test-unit      # Vitest only (<5s)
+make test-e2e       # Playwright only (requires app running)
+make test-coverage  # Vitest with coverage
 
-# E2E tests (Playwright, requires preview server)
-npm run test:e2e
-
-# Coverage report
-npm run test:coverage
-
-# Watch mode (re-run on file change)
-npm run test:watch
+# From services/sda-frontend/
+npm run test:unit      # Vitest unit + component tests
+npm run test:e2e       # Playwright E2E tests
+npm run test:coverage  # Coverage report
+npm run test:watch     # Watch mode
 ```
 
-**Note:** E2E tests require the app to be running. Start the preview server first:
+**Note:** E2E tests require a running preview server:
 
 ```bash
 cd services/sda-frontend
@@ -67,6 +72,8 @@ npm run build && npm run preview
 ## Vitest Unit Tests
 
 **Location:** `services/sda-frontend/src/**/*.test.ts`
+
+> **Status:** Vitest is already installed. `environmentMatchGlobs` and coverage thresholds are planned (Phase 5.2, not yet configured).
 
 **Environment:**
 - Default: `node` (for pure logic, stores, utilities)
@@ -103,6 +110,8 @@ describe('formatBytes', () => {
 ## Component Tests
 
 **Location:** `services/sda-frontend/src/**/*.component.test.ts`
+
+> **Status:** Planned — `@testing-library/svelte` is not yet installed (Phase 5.2).
 
 **Tools:**
 - `@testing-library/svelte` — render components, query by role, fire events
@@ -142,6 +151,8 @@ describe('MyComponent', () => {
 ## Playwright E2E Tests
 
 **Location:** `services/sda-frontend/tests/e2e/`
+
+> **Status:** Planned — Playwright is not yet installed (Phase 5.2).
 
 **Tools:**
 - Playwright (Chromium, Firefox, WebKit)
@@ -226,6 +237,8 @@ npm run test:e2e
 
 **Target:** 80% coverage on .ts and .svelte.ts files in `src/lib/` and `src/routes/api/`
 
+> **Status:** Planned — `@vitest/coverage-v8` is not yet installed (Phase 5.2).
+
 **Exclusions:**
 - `src/routes/` (Svelte files) — covered by E2E tests
 - `src/lib/components/` (Svelte files) — covered by component + E2E tests
@@ -235,8 +248,11 @@ npm run test:e2e
 **Generate report:**
 
 ```bash
-cd services/sda-frontend
-npm run test:coverage
+# Frontend coverage (Phase 5.2, not yet available)
+# cd services/sda-frontend && npm run test:coverage
+
+# Backend coverage (available now)
+uv run pytest saldivia/tests/ --cov=saldivia -v
 # HTML report at coverage/index.html
 ```
 

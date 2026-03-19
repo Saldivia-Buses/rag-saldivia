@@ -30,3 +30,10 @@ node_modules/
 
 # Brainstorming sessions
 .superpowers/
+
+# Claude Code session files
+.claude/
+.firecrawl/
+
+# Screenshots (peekaboo / manual)
+*.png

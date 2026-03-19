@@ -37,4 +37,16 @@ describe('isNearBottom', () => {
         const el = { scrollHeight: 80, scrollTop: 0, clientHeight: 100 };
         expect(isNearBottom(el)).toBe(true);
     });
+
+    it('maneja caso de scrollTop negativo gracefully', () => {
+        // Algunos navegadores pueden tener scrollTop negativo en edge cases
+        const el = { scrollHeight: 1000, scrollTop: -10, clientHeight: 100 };
+        // No debería lanzar error
+        expect(() => isNearBottom(el)).not.toThrow();
+    });
+
+    it('maneja zero scrollHeight', () => {
+        const el = { scrollHeight: 0, scrollTop: 0, clientHeight: 0 };
+        expect(() => isNearBottom(el)).not.toThrow();
+    });
 });

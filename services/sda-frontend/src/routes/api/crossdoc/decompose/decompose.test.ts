@@ -62,4 +62,47 @@ describe('POST /api/crossdoc/decompose', () => {
 		const body = await res.json();
 		expect(body.subQueries.length).toBeLessThanOrEqual(2);
 	});
+
+	it('returns 400 for empty question', async () => {
+		const { POST } = await import('./+server.js');
+		const event = {
+			request: new Request('http://localhost', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ question: '' }),
+			}),
+			locals: { user: { id: 1 } },
+		} as any;
+		await expect(POST(event)).rejects.toMatchObject({ status: 400 });
+	});
+
+	it('propagates GatewayError with correct status', async () => {
+		mockGateway.gatewayGenerateText.mockRejectedValue(
+			new mockGateway.GatewayError(503, 'Service temporarily unavailable')
+		);
+		const { POST } = await import('./+server.js');
+		const event = {
+			request: new Request('http://localhost', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ question: 'test question' }),
+			}),
+			locals: { user: { id: 1 } },
+		} as any;
+		await expect(POST(event)).rejects.toMatchObject({ status: 503 });
+	});
+
+	it('returns 502 for non-GatewayError failures', async () => {
+		mockGateway.gatewayGenerateText.mockRejectedValue(new Error('Unknown error'));
+		const { POST } = await import('./+server.js');
+		const event = {
+			request: new Request('http://localhost', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ question: 'test question' }),
+			}),
+			locals: { user: { id: 1 } },
+		} as any;
+		await expect(POST(event)).rejects.toMatchObject({ status: 502 });
+	});
 });

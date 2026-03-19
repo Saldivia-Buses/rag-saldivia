@@ -38,4 +38,53 @@ describe('parseMarkdown', () => {
     it('maneja string vacío sin error', () => {
         expect(() => parseMarkdown('')).not.toThrow();
     });
+
+    it('convierte tabla markdown a elemento table', () => {
+        const markdown = `| Col1 | Col2 |
+|------|------|
+| A    | B    |`;
+        const result = parseMarkdown(markdown);
+        expect(result).toContain('<table');
+        expect(result).toContain('<th>');
+        expect(result).toContain('<td>');
+    });
+
+    it('aplica syntax highlighting a código Python', () => {
+        const result = parseMarkdown('```python\ndef test():\n    pass\n```');
+        expect(result).toContain('hljs');
+        expect(result).toContain('language-python');
+    });
+
+    it('aplica syntax highlighting a código JavaScript', () => {
+        const result = parseMarkdown('```javascript\nconst x = 42;\n```');
+        expect(result).toContain('hljs');
+        expect(result).toContain('language-javascript');
+    });
+
+    it('convierte links', () => {
+        const result = parseMarkdown('[enlace](https://example.com)');
+        expect(result).toContain('<a href="https://example.com">');
+        expect(result).toContain('enlace</a>');
+    });
+
+    it('NO sanitiza HTML por defecto (esto se hace en componente)', () => {
+        // La función parseMarkdown NO hace sanitización — eso ocurre en el componente browser
+        const result = parseMarkdown('<script>alert("xss")</script>');
+        // marked.parse preserva el script (sanitización se aplica en MarkdownRenderer)
+        expect(result).toContain('script');
+    });
+
+    // BUG CONOCIDO: hljs.getLanguage('unknownlang') → false → usa 'plaintext' como fallback
+    // pero 'plaintext' no está registrado en hljs/core → hljs.highlight() lanza error.
+    // it.fails() marca la falla como esperada; cuando el bug se corrija el test empezará
+    // a fallar (porque ya no lanza), recordando quitar el .fails()
+    it.fails('código con lenguaje desconocido no debe lanzar error', () => {
+        expect(() => parseMarkdown('```unknownlang\nconst x = 1;\n```')).not.toThrow();
+    });
+
+    // BUG CONOCIDO: mismo fallback a 'plaintext' cuando no hay lang
+    it.fails('bloque de código sin lenguaje especificado no lanza error', () => {
+        expect(() => parseMarkdown('```\ncontenido sin lenguaje\n```')).not.toThrow();
+    });
+
 });

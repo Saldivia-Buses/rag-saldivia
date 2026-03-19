@@ -21,6 +21,40 @@ describe('ToastStore', () => {
         expect(last.type).toBe('error');
     });
 
+    it('adds an info toast', async () => {
+        const { toastStore } = await import('./toast.svelte.js');
+        toastStore.info('Información disponible');
+        const last = toastStore.toasts.at(-1)!;
+        expect(last.type).toBe('info');
+        expect(last.message).toBe('Información disponible');
+        expect(last.duration).toBe(4000);
+    });
+
+    it('adds a warning toast', async () => {
+        const { toastStore } = await import('./toast.svelte.js');
+        toastStore.warning('Advertencia importante');
+        const last = toastStore.toasts.at(-1)!;
+        expect(last.type).toBe('warning');
+        expect(last.message).toBe('Advertencia importante');
+        expect(last.duration).toBe(5000);
+    });
+
+    it('con duration=0 no registra auto-dismiss (timeout no se llama)', async () => {
+        // Cubre la rama `if (duration > 0)` → false cuando duration es 0
+        vi.useFakeTimers();
+        const setTimeoutSpy = vi.spyOn(global, 'setTimeout');
+
+        const { toastStore } = await import('./toast.svelte.js');
+        toastStore.success('permanente', 0); // duration=0 → no auto-dismiss
+
+        const last = toastStore.toasts.at(-1)!;
+        expect(last.duration).toBe(0);
+        // setTimeout no debe haber sido llamado para el dismiss de este toast
+        expect(setTimeoutSpy).not.toHaveBeenCalled();
+
+        vi.useRealTimers();
+    });
+
     it('removes a toast by id', async () => {
         const { toastStore } = await import('./toast.svelte.js');
         toastStore.success('test');

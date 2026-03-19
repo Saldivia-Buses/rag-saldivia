@@ -37,6 +37,54 @@ describe('POST /api/crossdoc/synthesize', () => {
 		await expect(POST(event)).rejects.toMatchObject({ status: 401 });
 	});
 
+	it('retorna 400 cuando question está vacía o falta', async () => {
+		const { POST } = await import('./+server.js');
+		const event = {
+			request: new Request('http://localhost', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ results: [] }), // question missing
+			}),
+			locals: { user: { id: 1 } },
+		} as any;
+		await expect(POST(event)).rejects.toMatchObject({ status: 400 });
+	});
+
+	it('usa [] cuando results es null (results ?? [])', async () => {
+		mockGateway.gatewayGenerateStream.mockResolvedValue(
+			new Response(mockStream, { headers: { 'Content-Type': 'text/event-stream' } })
+		);
+		const { POST } = await import('./+server.js');
+		const event = {
+			request: new Request('http://localhost', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ question: '¿test?', results: null }),
+			}),
+			locals: { user: { id: 1 } },
+		} as any;
+		// Should not throw — null results fallback to []
+		const res = await POST(event);
+		expect(res.status).toBe(200);
+	});
+
+	it('retorna 502 cuando gatewayGenerateStream devuelve respuesta sin body', async () => {
+		// Response with no body → !resp.body → throws error(502)
+		mockGateway.gatewayGenerateStream.mockResolvedValue(
+			new Response(null, { status: 200 })
+		);
+		const { POST } = await import('./+server.js');
+		const event = {
+			request: new Request('http://localhost', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ question: '¿test?', results: [] }),
+			}),
+			locals: { user: { id: 1 } },
+		} as any;
+		await expect(POST(event)).rejects.toMatchObject({ status: 502 });
+	});
+
 	it('retorna SSE stream con Content-Type text/event-stream', async () => {
 		mockGateway.gatewayGenerateStream.mockResolvedValue(
 			new Response(mockStream, { headers: { 'Content-Type': 'text/event-stream' } })
@@ -79,5 +127,34 @@ describe('POST /api/crossdoc/synthesize', () => {
 		const callOpts = mockGateway.gatewayGenerateStream.mock.calls[0][0];
 		expect(callOpts.messages[0].content).toContain('¿Cuál es la presión?');
 		expect(callOpts.messages[0].content).toContain('La presión es 12 bar');
+	});
+
+	it('propaga el status de GatewayError', async () => {
+		const err = new mockGateway.GatewayError(502, 'Gateway unavailable');
+		mockGateway.gatewayGenerateStream.mockRejectedValue(err);
+		const { POST } = await import('./+server.js');
+		const event = {
+			request: new Request('http://localhost', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ question: '¿test?', results: [] }),
+			}),
+			locals: { user: { id: 1 } },
+		} as any;
+		await expect(POST(event)).rejects.toMatchObject({ status: 502 });
+	});
+
+	it('retorna 502 en errores genéricos (no GatewayError)', async () => {
+		mockGateway.gatewayGenerateStream.mockRejectedValue(new Error('Unexpected error'));
+		const { POST } = await import('./+server.js');
+		const event = {
+			request: new Request('http://localhost', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ question: '¿test?', results: [] }),
+			}),
+			locals: { user: { id: 1 } },
+		} as any;
+		await expect(POST(event)).rejects.toMatchObject({ status: 502 });
 	});
 });

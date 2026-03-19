@@ -194,12 +194,12 @@ When starting a new feature:
 **Rationale:** READMEs are the primary documentation for developers. Stale READMEs lead to confusion, wasted time, and incorrect assumptions.
 
 **Zones:**
-- `saldivia/` → `/Users/enzo/rag-saldivia/saldivia/README.md`
-- `cli/` → `/Users/enzo/rag-saldivia/cli/README.md`
-- `services/sda-frontend/` → `/Users/enzo/rag-saldivia/services/sda-frontend/README.md`
-- `scripts/` → `/Users/enzo/rag-saldivia/scripts/README.md`
-- `config/` → `/Users/enzo/rag-saldivia/config/README.md`
-- Root → `/Users/enzo/rag-saldivia/README.md`
+- `saldivia/` → `saldivia/README.md`
+- `cli/` → `cli/README.md`
+- `services/sda-frontend/` → `services/sda-frontend/README.md`
+- `scripts/` → `scripts/README.md`
+- `config/` → `config/README.md`
+- Root → `README.md`
 
 **Process:**
 1. Identify the zone affected by your changes

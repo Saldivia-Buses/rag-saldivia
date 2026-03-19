@@ -34,7 +34,7 @@ Milvus (vector DB) + NIMs (embed, rerank, OCR) + LLM (Nemotron-3 or external API
 
 ```bash
 # 1. Clone and setup
-git clone git@github.com:enzosaldivia/rag-saldivia.git && cd rag-saldivia
+git clone git@github.com:Camionerou/rag-saldivia.git && cd rag-saldivia
 cp .env.example .env.local  # Add your NGC_API_KEY, JWT_SECRET, etc.
 
 # 2. Deploy with profile
