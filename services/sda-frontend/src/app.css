@@ -32,8 +32,8 @@
 }
 
 /* ===== LIGHT MODE ===== */
-:root[data-theme="light"],
-.light {
+:root.light,
+html.light {
     --bg-base:       #faf8f4;
     --bg-surface:    #f2ede3;
     --bg-hover:      #e6dfd4;
@@ -41,7 +41,7 @@
     --border:        #ddd5c7;
     --border-focus:  #c8bfb3;
     --text:          #1a2030;
-    --text-muted:    #8c7b6a;
+    --text-muted:    #6b5d50;
     --text-faint:    #b0a090;
     --accent:        #2093d3;
     --accent-light:  #1a7ab5;
