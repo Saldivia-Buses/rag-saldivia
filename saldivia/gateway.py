@@ -90,10 +90,11 @@ async def auth_failure_handler(request: Request, exc: HTTPException):
             f"Auth failure {exc.status_code} [{request.method} {request.url.path}] "
             f"from {ip}: {exc.detail}"
         )
-    # Return JSONResponse with the exception's status code and detail
+    # Sanitize 500+ errors — don't expose upstream internals
+    detail = "Internal server error" if exc.status_code >= 500 else exc.detail
     return JSONResponse(
         status_code=exc.status_code,
-        content={"detail": exc.detail}
+        content={"detail": detail}
     )
 
 
@@ -678,7 +679,7 @@ def add_message(session_id: str, body: AddMessageRequest, user_id: int,
 
 def main():
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8090)
+    uvicorn.run(app, host="0.0.0.0", port=9000)
 
 
 if __name__ == "__main__":
