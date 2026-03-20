@@ -193,6 +193,39 @@ describe('POST /api/upload', () => {
         }
     });
 
+    it('envía collection_name dentro del campo data JSON (no como field directo)', async () => {
+        process.env.GATEWAY_URL = 'http://gateway:9000';
+        process.env.SYSTEM_API_KEY = 'test-key';
+
+        let capturedBody: FormData | null = null;
+        const mockFetch = vi.fn().mockImplementation(async (_url: string, init: RequestInit) => {
+            capturedBody = init.body as FormData;
+            return { ok: true, status: 202, json: () => Promise.resolve({ job_id: 'x' }) };
+        });
+        vi.stubGlobal('fetch', mockFetch);
+
+        const { POST } = await import('./+server.js');
+
+        const formData = new FormData();
+        formData.append('file', new File(['pdf'], 'doc.pdf', { type: 'application/pdf' }));
+        formData.append('collection', 'coleccion-test');
+
+        const event = {
+            request: new Request('http://localhost/api/upload', { method: 'POST', body: formData }),
+            locals: { user: { id: 1, email: 'a@b.com', role: 'user', area_id: 1, name: 'U' } },
+        } as any;
+
+        await POST(event);
+
+        expect(capturedBody).not.toBeNull();
+        // Debe tener 'data' con JSON, no 'collection_name' directo
+        expect(capturedBody!.get('collection_name')).toBeNull();
+        const dataField = capturedBody!.get('data');
+        expect(typeof dataField).toBe('string');
+        const parsed = JSON.parse(dataField as string);
+        expect(parsed.collection_name).toBe('coleccion-test');
+    });
+
     it('usa localhost:9000 como URL por defecto cuando GATEWAY_URL no está configurado', async () => {
         // Cubre línea 16: const gatewayUrl = process.env.GATEWAY_URL ?? 'http://localhost:9000'
         const savedUrl = process.env.GATEWAY_URL;
