@@ -138,27 +138,25 @@ describe('CrossdocStore', () => {
         expect(store.progress?.phase).toBe('done');
     });
 
-    // BUG CONOCIDO (línea 49): cuando un subquery retorna HTTP no-ok, el store debería
-    // continuar a phase='done' con result { success: false }. Actualmente entra al catch()
-    // y setea phase='error' en vez de tratar la falla como un resultado graceful.
-    // it.fails() documenta la falla esperada; cuando el bug se corrija, quitar .fails()
-    it.fails('run() trata como fallido un subquery con respuesta HTTP no-ok (linha 49)', async () => {
-        // Cubre línea 49: if (!resp.ok) return { query, content: '', success: false }
-        // El fetch de subquery responde pero con status de error (503, 404, etc.)
+    it('run() trata como fallido un subquery con respuesta HTTP no-ok (linha 49)', async () => {
         const store = new CrossdocStore();
         const chat = new ChatStore();
 
         mockFetch
+            // decompose principal → 1 query
             .mockResolvedValueOnce(new Response(JSON.stringify({ subQueries: ['query que da error http'] }), { status: 200 }))
-            // subquery → HTTP 503 → resp.ok es false → línea 49 retorna temprano
+            // subquery → HTTP 503 → resp.ok es false → línea 49 retorna { success: false }
             .mockResolvedValueOnce(new Response('Service unavailable', { status: 503 }))
+            // retry decompose (el subquery falló, followUpRetries=true → llama decompose de nuevo)
+            .mockResolvedValueOnce(new Response(JSON.stringify({ subQueries: ['query alternativa'] }), { status: 200 }))
+            // retry subquery → éxito
+            .mockResolvedValueOnce(new Response(JSON.stringify({ content: 'recuperado', success: true }), { status: 200 }))
             // synthesize
             .mockResolvedValueOnce(makeSSEResponse('síntesis sin datos útiles'));
 
         await store.run('¿test non-ok?', chat);
 
         expect(store.progress?.phase).toBe('done');
-        // El resultado de la subquery no-ok debe ser { success: false, content: '' }
         expect(store.progress?.results).toContainEqual(
             expect.objectContaining({ success: false, content: '' })
         );
@@ -259,6 +257,58 @@ describe('CrossdocStore', () => {
 
         expect(store.progress?.phase).toBe('error');
         expect(store.progress?.error).toContain('Decompose failed: 503');
+    });
+
+    it('run() envía collection_names en subqueries cuando se especifica', async () => {
+        const store = new CrossdocStore();
+        const chat = new ChatStore();
+
+        const subqueryCalls: string[] = [];
+        mockFetch.mockImplementation(async (url: string, init?: RequestInit) => {
+            if (url.includes('/api/crossdoc/decompose')) {
+                return new Response(JSON.stringify({ subQueries: ['sub-q test col'] }), { status: 200 });
+            }
+            if (url.includes('/api/crossdoc/subquery')) {
+                subqueryCalls.push(init?.body as string);
+                return new Response(JSON.stringify({ content: 'resultado', success: true }), { status: 200 });
+            }
+            if (url.includes('/api/crossdoc/synthesize')) {
+                return makeSSEResponse('síntesis');
+            }
+            return new Response('{}', { status: 200 });
+        });
+
+        await store.run('¿test?', chat, ['coleccion-privada']);
+
+        expect(subqueryCalls.length).toBeGreaterThan(0);
+        const body = JSON.parse(subqueryCalls[0]);
+        expect(body.collection_names).toEqual(['coleccion-privada']);
+    });
+
+    it('run() NO envía collection_names cuando collectionNames es undefined', async () => {
+        const store = new CrossdocStore();
+        const chat = new ChatStore();
+
+        const subqueryCalls: string[] = [];
+        mockFetch.mockImplementation(async (url: string, init?: RequestInit) => {
+            if (url.includes('/api/crossdoc/decompose')) {
+                return new Response(JSON.stringify({ subQueries: ['sub-q sin col'] }), { status: 200 });
+            }
+            if (url.includes('/api/crossdoc/subquery')) {
+                subqueryCalls.push(init?.body as string);
+                return new Response(JSON.stringify({ content: 'resultado', success: true }), { status: 200 });
+            }
+            if (url.includes('/api/crossdoc/synthesize')) {
+                return makeSSEResponse('síntesis');
+            }
+            return new Response('{}', { status: 200 });
+        });
+
+        await store.run('¿test?', chat, undefined);
+
+        expect(subqueryCalls.length).toBeGreaterThan(0);
+        const body = JSON.parse(subqueryCalls[0]);
+        expect(body.collection_names).toBeUndefined();
     });
 
     it('run() break inmediato en batch loop cuando signal ya está abortado (línea 35)', async () => {

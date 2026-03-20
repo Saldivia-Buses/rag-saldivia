@@ -81,7 +81,7 @@
     async function sendMessage(query: string) {
         chat.addUserMessage(query);
         if (chat.crossdoc) {
-            await crossdoc.run(query, chat);
+            await crossdoc.run(query, chat, selectedCollection ? [selectedCollection] : undefined);
         } else {
             await streamNormal(query);
         }

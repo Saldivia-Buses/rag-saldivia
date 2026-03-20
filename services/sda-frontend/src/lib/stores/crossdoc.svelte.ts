@@ -10,7 +10,7 @@ export class CrossdocStore {
 
     private abortCtrl: AbortController | null = null;
 
-    async run(question: string, chat: ChatStore): Promise<void> {
+    async run(question: string, chat: ChatStore, collectionNames?: string[]): Promise<void> {
         this.abortCtrl = new AbortController();
         const signal = this.abortCtrl.signal;
         chat.startStream();
@@ -43,6 +43,7 @@ export class CrossdocStore {
                                 query,
                                 vdbTopK: this.options.vdbTopK,
                                 rerankerTopK: this.options.rerankerTopK,
+                                ...(collectionNames && collectionNames.length > 0 && { collection_names: collectionNames }),
                             }),
                             signal,
                         });
@@ -78,7 +79,12 @@ export class CrossdocStore {
                             const resp = await fetch('/api/crossdoc/subquery', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ query: alt }),
+                                body: JSON.stringify({
+                                    query: alt,
+                                    vdbTopK: this.options.vdbTopK,
+                                    rerankerTopK: this.options.rerankerTopK,
+                                    ...(collectionNames && collectionNames.length > 0 && { collection_names: collectionNames }),
+                                }),
                                 signal,
                             });
                             if (resp.ok) {
