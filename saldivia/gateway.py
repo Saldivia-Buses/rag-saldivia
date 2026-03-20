@@ -430,8 +430,8 @@ class CreateSessionRequest(BaseModel):
 
 
 @app.get("/admin/users")
-def list_users_endpoint(user: User = Depends(admin_required)):
-    users = db.list_users()
+def list_users_endpoint(include_inactive: bool = False, user: User = Depends(admin_required)):
+    users = db.list_users(active_only=not include_inactive)
     return {"users": [{"id": u.id, "email": u.email, "name": u.name,
                         "area_id": u.area_id, "role": u.role.value,
                         "active": u.active,
