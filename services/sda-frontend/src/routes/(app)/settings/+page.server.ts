@@ -9,7 +9,7 @@ export const load: PageServerLoad = async ({ locals }) => {
 export const actions: Actions = {
     refresh_key: async ({ locals }) => {
         try {
-            const result = await gatewayRefreshKey(locals.user!.id);
+            const result = await gatewayRefreshKey();
             return { api_key: result.api_key };
         } catch {
             return fail(503, { error: 'No se pudo regenerar la clave. Intentá de nuevo.' });

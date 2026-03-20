@@ -96,10 +96,10 @@ describe('gateway.ts', () => {
             const mockResponse = { api_key: 'new-api-key-xyz' };
             mockFetch.mockResolvedValueOnce({ ok: true, json: async () => mockResponse });
 
-            const result = await gatewayRefreshKey(7);
+            const result = await gatewayRefreshKey();
 
             expect(mockFetch).toHaveBeenCalledWith(
-                'http://localhost:9000/auth/refresh-key?user_id=7',
+                'http://localhost:9000/auth/refresh-key',
                 expect.objectContaining({ method: 'POST' })
             );
             expect(result).toEqual(mockResponse);

@@ -374,18 +374,20 @@ def me(user_id: int, user: User = Depends(get_user_from_token)):
 
 
 @app.post("/auth/refresh-key")
-def refresh_my_key(user_id: int, user: User = Depends(get_user_from_token)):
-    """Regenerate API key for a user. Any user can refresh their own; admins can refresh any."""
+def refresh_my_key(user: User = Depends(get_user_from_token), user_id: Optional[int] = None):
+    """Regenerate API key. By default refreshes the authenticated user's key.
+    Admins may pass ?user_id=X to refresh another user's key."""
     from saldivia.auth.models import generate_api_key
     if user is None:
         raise HTTPException(status_code=401, detail="Not authenticated")
-    if user.role != Role.ADMIN and user.id != user_id:
+    target_id = user_id if user_id is not None else user.id
+    if user.role != Role.ADMIN and user.id != target_id:
         raise HTTPException(status_code=403, detail="Can only refresh your own key")
-    target = db.get_user_by_id(user_id)
+    target = db.get_user_by_id(target_id)
     if not target:
         raise HTTPException(status_code=404, detail="User not found")
     new_key, new_hash = generate_api_key()
-    db.update_api_key(user_id, new_hash)
+    db.update_api_key(target_id, new_hash)
     return {"api_key": new_key}
 
 

@@ -67,8 +67,8 @@ export async function gatewayGetMe(userId: number) {
     return gw<SessionUser>(`/auth/me?user_id=${userId}`);
 }
 
-export async function gatewayRefreshKey(userId: number) {
-    return gw<{ api_key: string }>(`/auth/refresh-key?user_id=${userId}`, { method: 'POST' });
+export async function gatewayRefreshKey() {
+    return gw<{ api_key: string }>('/auth/refresh-key', { method: 'POST' });
 }
 
 // Collections
