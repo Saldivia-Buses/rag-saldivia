@@ -22,8 +22,16 @@ hljs.registerLanguage('sql', sql);
 marked.use(markedHighlight({
     langPrefix: 'hljs language-',
     highlight(code, lang) {
-        const language = hljs.getLanguage(lang) ? lang : 'plaintext';
-        return hljs.highlight(code, { language }).value;
+        if (lang && hljs.getLanguage(lang)) {
+            try {
+                return hljs.highlight(code, { language: lang }).value;
+            } catch {
+                // lenguaje registrado pero highlight falló — fallback sin color
+            }
+        }
+        // Lenguaje desconocido o sin lenguaje: devolver code sin modificar.
+        // marked-highlight detecta que no cambió y escapa el HTML por defecto.
+        return code;
     }
 }));
 

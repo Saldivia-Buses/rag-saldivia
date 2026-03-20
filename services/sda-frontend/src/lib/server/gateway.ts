@@ -263,5 +263,5 @@ export interface AuditEntry {
 }
 export interface AuditParams {
     user_id?: number; action?: string; collection?: string;
-    from?: string; to?: string; limit?: number;
+    from_ts?: string; to_ts?: string; limit?: number;
 }
