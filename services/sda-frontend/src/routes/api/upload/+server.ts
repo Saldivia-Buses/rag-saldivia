@@ -22,7 +22,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
     gw.append('data', JSON.stringify({ collection_name: collection.trim() }));
 
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 60_000);
+    const timer = setTimeout(() => controller.abort(), 30_000); // 30s (non-blocking)
 
     let resp: Response;
     try {
