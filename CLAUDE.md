@@ -4,7 +4,7 @@
 
 Overlay sobre **NVIDIA RAG Blueprint v2.5.0** que agrega autenticación, RBAC, multi-colección, frontend SvelteKit 5, CLI, SDK Python, y perfiles de deployment.
 
-- **No es un fork** — usa el blueprint como dependencia via symlink (`~/rag → ~/rag-blueprint/`)
+- **No es un fork** — incluye el blueprint como git submodule en `vendor/rag-blueprint/` (commit a67a48c, post-v2.3.0)
 - **Repo local:** `~/rag-saldivia/` — branch `main`
 - **Repo remoto:** https://github.com/Camionerou/rag-saldivia
 - **Deploy activo:** instancia Brev `nvidia-enterprise-rag-deb106` (2x RTX PRO 6000 Blackwell)
@@ -65,19 +65,34 @@ make cli ARGS="audit log"
 | `mode_manager.py` | VLM/LLM mode switching para 1-GPU |
 | `collections.py` | CollectionManager: CRUD de colecciones |
 | `ingestion_queue.py` | Cola de ingesta con Redis |
+| `ingestion_worker.py` | Worker de la cola Redis de ingesta con retry logic y graceful shutdown |
+| `cache.py` | Caché HTTP para respuestas frecuentes |
+| `watch.py` | File watcher para auto-ingest de directorios |
 | `mcp_server.py` | MCP server (no usar por ahora — RAG debe estar running) |
 
 ## Estructura del Frontend (`services/sda-frontend/`)
 
 SvelteKit 5 BFF. Rutas principales:
 - `/` → redirect a `/chat` si autenticado
-- `/login` → auth form
+- `/(auth)/login` → auth form (grupo de rutas SvelteKit)
 - `/(app)/chat` → chat principal con SSE streaming
+- `/(app)/chat/[id]` → sesión de chat específica
 - `/(app)/collections` → gestión de colecciones
-- `/(app)/admin/users` → admin panel (solo admins)
+- `/(app)/collections/[name]` → detalle de colección
+- `/(app)/upload` → upload de documentos
+- `/(app)/settings` → configuración del usuario
+- `/(app)/admin/users` → gestión de usuarios (solo admins)
+- `/(app)/admin/areas` → gestión de áreas (solo admins)
+- `/(app)/admin/permissions` → permisos (solo admins)
+- `/(app)/admin/rag-config` → configuración RAG (solo admins)
+- `/(app)/admin/system` → estado del sistema (solo admins)
 - `/(app)/audit` → audit log
-- `/api/auth/*` → BFF endpoints de auth
-- `/api/chat/*` → BFF proxy al gateway
+- `/api/auth/*` → BFF endpoints de auth (session POST/DELETE)
+- `/api/chat/*` → BFF proxy al gateway (sessions, stream)
+- `/api/crossdoc/*` → BFF endpoints de crossdoc (decompose, subquery, synthesize)
+- `/api/upload` → BFF endpoint de upload de documentos
+- `/api/collections/*` → BFF endpoints de colecciones (GET, POST, DELETE)
+- `/api/dev-login` → Login rápido para desarrollo (solo en dev mode)
 
 ## Skills obligatorias en este proyecto
 
@@ -113,7 +128,7 @@ uv run pytest saldivia/tests/test_gateway.py -v
 uv run pytest saldivia/tests/ --cov=saldivia -v
 ```
 
-Tests activos: `test_gateway.py`, `test_auth.py`, `test_config.py`, `test_mode_manager.py`, `test_providers.py`, `test_collections.py`, `test_gateway_extended.py` (22 tests pasan)
+Tests activos: `test_gateway.py`, `test_auth.py`, `test_config.py`, `test_mode_manager.py`, `test_providers.py`, `test_collections.py`, `test_gateway_extended.py` (39 tests pasan)
 
 ## Ports (en Brev)
 

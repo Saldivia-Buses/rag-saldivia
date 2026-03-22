@@ -61,7 +61,7 @@ Expected output:
 NAMES                       STATUS              PORTS
 sda-frontend                Up 2 minutes        0.0.0.0:3000->3000/tcp
 auth-gateway                Up 2 minutes        0.0.0.0:9000->9000/tcp
-rag-playground              Up 2 minutes        0.0.0.0:8081->8081/tcp
+rag-server                  Up 2 minutes        0.0.0.0:8081->8081/tcp
 milvus-standalone           Up 2 minutes        0.0.0.0:19530->19530/tcp
 ...
 
@@ -145,13 +145,18 @@ make show-env PROFILE=brev-2gpu | grep JWT_SECRET
 | `make setup` | Clone blueprint, apply patches, build images | `make setup` |
 | `make deploy` | Start services with profile | `make deploy PROFILE=brev-2gpu` |
 | `make stop` | Stop all services | `make stop` |
-| `make status` | Show GPU, Docker, health status | `make status` |
+| `make status` | Show GPU, Docker, and RAG server health | `make status` |
 | `make health` | Run health check on all services | `make health` |
 | `make validate` | Validate config for profile | `make validate PROFILE=brev-2gpu` |
 | `make show-env` | Show merged env vars for profile | `make show-env PROFILE=brev-2gpu` |
 | `make ingest` | Smart ingest PDFs | `make ingest DOCS=~/docs/pdfs/ COLLECTION=tecpia` |
 | `make query` | Cross-document query | `make query Q="What is RAG?"` |
-| `make test` | Run stress test | `make test` |
+| `make test` | Run unit + backend tests (pytest + Vitest) | `make test` |
+| `make test-stress` | Run HTTP stress test against running gateway | `make test-stress` |
+| `make test-unit` | Run unit tests (pytest) | `make test-unit` |
+| `make test-backend` | Run backend tests (pytest) | `make test-backend` |
+| `make test-coverage` | Run tests with coverage report | `make test-coverage` |
+| `make test-e2e` | Run E2E tests (Playwright) | `make test-e2e` |
 | `make mcp` | Start MCP server | `make mcp` |
 | `make watch` | Watch folder for auto-ingest | `make watch COLLECTION=tecpia` |
 | `make cli` | Run CLI command | `make cli ARGS="collections list"` |
@@ -165,7 +170,7 @@ make show-env PROFILE=brev-2gpu | grep JWT_SECRET
 |------|---------|----------|--------|
 | 3000 | SDA Frontend | HTTP | Yes (Caddy reverse proxy) |
 | 8081 | RAG Server | HTTP | No (internal only, via gateway) |
-| 8082 | NV-Ingest | HTTP | No (internal only) |
+| 8082 | Ingestor Server | HTTP | No (internal only) |
 | 9000 | Auth Gateway | HTTP | No (internal only, accessed by frontend BFF) |
 | 19530 | Milvus | gRPC | No (internal only) |
 
@@ -231,6 +236,34 @@ done
 
 **Context:** Added to `scripts/deploy.sh` in commit bdd2af4.
 
+### 4. Compose files no están en la raíz del repo
+
+**Contexto:** Los compose files de Saldivia están en `config/compose-*.yaml` (no en la raíz). Los del blueprint están en `blueprint/deploy/compose/` y solo existen después de ejecutar `make setup`.
+
+### 5. Puerto 3000 en conflicto con stack de observabilidad (Grafana)
+
+**Contexto:** El stack de observabilidad del blueprint (`vendor/rag-blueprint/deploy/compose/observability.yaml`)
+expone Grafana en `3000:3000`. Esto entra en conflicto con `sda-frontend` que también usa el puerto 3000.
+
+**Síntoma:** Si se levanta el stack de observabilidad junto con los servicios de Saldivia,
+uno de los dos containers falla al bindear el puerto 3000.
+
+**Workaround:** No levantar `observability.yaml` mientras `sda-frontend` esté corriendo.
+Si se necesita Grafana en paralelo, cambiar el port mapping en el compose local a otro puerto
+(ej. `"3001:3000"` para acceder Grafana en `http://localhost:3001`).
+
+### 6. `make stop`, `make clean`, `make patch-*` requieren `make setup` previo
+
+**Contexto:** Los targets `make stop`, `make clean`, `make patch-check` y `make patch-create`
+dependen de `$(BLUEPRINT_DIR)` = `blueprint/deploy/compose/`. Este directorio solo existe
+después de ejecutar `make setup` (que clona el blueprint a `blueprint/`).
+
+**Síntoma:** En un checkout fresh (sin haber ejecutado `make setup`),
+estos comandos fallan porque `blueprint/` no existe.
+
+**Workaround:** Siempre ejecutar `make setup` antes de cualquier otro target de gestión del sistema.
+El directorio `vendor/rag-blueprint/` (submodule) NO reemplaza a `blueprint/` para este propósito.
+
 ## 1-GPU Mode Switching
 
 The `workstation-1gpu` profile uses a mode manager to switch between QUERY and INGEST modes.
@@ -239,12 +272,12 @@ The `workstation-1gpu` profile uses a mode manager to switch between QUERY and I
 
 1. **Monitor:** Check Redis ingestion queue every 10 seconds
 2. **Switch to INGEST:** If queue has documents and mode is QUERY
-   - Unload embed NIM (frees ~4 GB VRAM)
-   - Load VLM (Qwen3-VL-8B, consumes ~44 GB VRAM)
+   - Load VLM (Qwen3-VL-8B, consumes ~44 GB additional VRAM)
+   - Note: both NIMs remain loaded (no unload step)
    - Process documents serially (no parallel to avoid deadlock)
 3. **Switch to QUERY:** If queue empty for 5 minutes
    - Unload VLM (frees ~44 GB VRAM)
-   - Load embed NIM (consumes ~4 GB VRAM)
+   - NIMs remain loaded
    - Ready for user queries
 
 ### VRAM Usage Table
@@ -252,9 +285,9 @@ The `workstation-1gpu` profile uses a mode manager to switch between QUERY and I
 | Mode | NIMs (embed + rerank) | VLM (Qwen3-VL-8B) | Total VRAM |
 |------|-----------------------|-------------------|------------|
 | QUERY | ~46 GB | — | ~46 GB |
-| INGEST | ~46 GB (embed only) | ~44 GB | ~90 GB |
+| INGEST | ~46 GB (embed + rerank) | ~44 GB | ~90 GB |
 
-**Note:** Reranker stays loaded in both modes (consumes ~42 GB VRAM).
+**Note:** Reranker NIM (~42 GB) and embed NIM (~4 GB) both stay loaded in both modes. Total NIMs footprint: ~46 GB.
 
 ### Manual Mode Control
 

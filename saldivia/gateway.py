@@ -90,10 +90,11 @@ async def auth_failure_handler(request: Request, exc: HTTPException):
             f"Auth failure {exc.status_code} [{request.method} {request.url.path}] "
             f"from {ip}: {exc.detail}"
         )
-    # Return JSONResponse with the exception's status code and detail
+    # Sanitize 500+ errors — don't expose upstream internals
+    detail = "Internal server error" if exc.status_code >= 500 else exc.detail
     return JSONResponse(
         status_code=exc.status_code,
-        content={"detail": exc.detail}
+        content={"detail": detail}
     )
 
 
@@ -374,18 +375,20 @@ def me(user_id: int, user: User = Depends(get_user_from_token)):
 
 
 @app.post("/auth/refresh-key")
-def refresh_my_key(user_id: int, user: User = Depends(get_user_from_token)):
-    """Regenerate API key for a user. Any user can refresh their own; admins can refresh any."""
+def refresh_my_key(user: User = Depends(get_user_from_token), user_id: Optional[int] = None):
+    """Regenerate API key. By default refreshes the authenticated user's key.
+    Admins may pass ?user_id=X to refresh another user's key."""
     from saldivia.auth.models import generate_api_key
     if user is None:
         raise HTTPException(status_code=401, detail="Not authenticated")
-    if user.role != Role.ADMIN and user.id != user_id:
+    target_id = user_id if user_id is not None else user.id
+    if user.role != Role.ADMIN and user.id != target_id:
         raise HTTPException(status_code=403, detail="Can only refresh your own key")
-    target = db.get_user_by_id(user_id)
+    target = db.get_user_by_id(target_id)
     if not target:
         raise HTTPException(status_code=404, detail="User not found")
     new_key, new_hash = generate_api_key()
-    db.update_api_key(user_id, new_hash)
+    db.update_api_key(target_id, new_hash)
     return {"api_key": new_key}
 
 
@@ -428,8 +431,8 @@ class CreateSessionRequest(BaseModel):
 
 
 @app.get("/admin/users")
-def list_users_endpoint(user: User = Depends(admin_required)):
-    users = db.list_users()
+def list_users_endpoint(include_inactive: bool = False, user: User = Depends(admin_required)):
+    users = db.list_users(active_only=not include_inactive)
     return {"users": [{"id": u.id, "email": u.email, "name": u.name,
                         "area_id": u.area_id, "role": u.role.value,
                         "active": u.active,
@@ -676,7 +679,7 @@ def add_message(session_id: str, body: AddMessageRequest, user_id: int,
 
 def main():
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8090)
+    uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("GATEWAY_PORT", "8090")))
 
 
 if __name__ == "__main__":

@@ -19,7 +19,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
     const gw = new FormData();
     gw.append('file', file);
-    gw.append('collection_name', collection.trim());
+    gw.append('data', JSON.stringify({ collection_name: collection.trim() }));
 
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 60_000);

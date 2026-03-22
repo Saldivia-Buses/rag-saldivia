@@ -282,25 +282,6 @@ class AuthDB:
                 (user_id, action, collection, query_preview[:100] if query_preview else None, ip_address)
             )
 
-    def get_audit_log(self, user_id: int = None, limit: int = 100) -> list[AuditEntry]:
-        with self._conn() as conn:
-            if user_id:
-                rows = conn.execute(
-                    "SELECT id, user_id, action, collection, query_preview, ip_address, timestamp "
-                    "FROM audit_log WHERE user_id = ? ORDER BY timestamp DESC LIMIT ?",
-                    (user_id, limit)
-                ).fetchall()
-            else:
-                rows = conn.execute(
-                    "SELECT id, user_id, action, collection, query_preview, ip_address, timestamp "
-                    "FROM audit_log ORDER BY timestamp DESC LIMIT ?",
-                    (limit,)
-                ).fetchall()
-            return [AuditEntry(
-                id=r[0], user_id=r[1], action=r[2], collection=r[3],
-                query_preview=r[4], ip_address=r[5], timestamp=r[6]
-            ) for r in rows]
-
     def update_area(self, area_id: int, name: str = None, description: str = None):
         """Update area name and/or description."""
         updates = {}

@@ -74,16 +74,11 @@ describe('parseMarkdown', () => {
         expect(result).toContain('script');
     });
 
-    // BUG CONOCIDO: hljs.getLanguage('unknownlang') → false → usa 'plaintext' como fallback
-    // pero 'plaintext' no está registrado en hljs/core → hljs.highlight() lanza error.
-    // it.fails() marca la falla como esperada; cuando el bug se corrija el test empezará
-    // a fallar (porque ya no lanza), recordando quitar el .fails()
-    it.fails('código con lenguaje desconocido no debe lanzar error', () => {
+    it('código con lenguaje desconocido no debe lanzar error', () => {
         expect(() => parseMarkdown('```unknownlang\nconst x = 1;\n```')).not.toThrow();
     });
 
-    // BUG CONOCIDO: mismo fallback a 'plaintext' cuando no hay lang
-    it.fails('bloque de código sin lenguaje especificado no lanza error', () => {
+    it('bloque de código sin lenguaje especificado no lanza error', () => {
         expect(() => parseMarkdown('```\ncontenido sin lenguaje\n```')).not.toThrow();
     });
 

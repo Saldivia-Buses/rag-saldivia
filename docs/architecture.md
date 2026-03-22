@@ -4,26 +4,32 @@
 
 RAG Saldivia is a production-ready overlay on top of NVIDIA RAG Blueprint v2.5.0. It extends the blueprint with:
 
-- **Authentication and RBAC**: JWT-based authentication, role-based access control (admin, user, guest), API key management
+- **Authentication and RBAC**: JWT-based authentication, role-based access control (admin, area_manager, user), API key management
 - **Multi-collection support**: Isolated vector collections per use case, with per-collection CRUD and stats
 - **SvelteKit 5 BFF Frontend**: Modern, type-safe frontend with server-side rendering, SSE streaming, and Svelte 5 runes
 - **Python CLI and SDK**: Command-line interface and programmatic access to all platform features
 - **Multiple deployment profiles**: Support for 2-GPU, 1-GPU (with dynamic mode switching), and cloud-only deployments
 
-The overlay is designed as a symlink-based wrapper that does not fork the blueprint. It applies patches, adds services, and orchestrates the existing blueprint components.
+The overlay does not fork the blueprint. The blueprint is included as a git submodule
+in `vendor/rag-blueprint/` for reference. The deploy workflow clones the blueprint into
+`blueprint/` via `make setup` and applies patches from `patches/`.
 
 ## Service Map
 
 | Port | Service | Role |
 |------|---------|------|
 | 3000 | SDA Frontend | SvelteKit 5 BFF, handles auth cookies, SSE streaming, file uploads |
-| 8081 | RAG Server | NVIDIA Blueprint core: /generate, /search, /documents endpoints |
-| 8082 | NV-Ingest | Document ingestion pipeline (PDF, DOCX, images) with VLM captioning |
+| 8081 | RAG Server | NVIDIA Blueprint core: /health, /generate (SSE), /search, /chat/completions, /configuration, /summary |
+| 8082 | Ingestor Server | Document ingestion pipeline (PDF, DOCX, images) with VLM captioning: /documents (POST/GET/PATCH/DELETE), /status, /collections |
 | 9000 | Auth Gateway | FastAPI gateway: JWT validation, RBAC, proxy to RAG Server |
-| (internal) | Milvus | Vector database with hybrid search (HNSW on CPU) |
-| (internal) | NIMs | Embed (nv-embedqa-e5-v5), rerank (nv-rerankqa-mistral-4b-v3), OCR |
-| (internal) | LLM | Nemotron-3-Super-120B-A12B (2-GPU) or external API (1-GPU, full-cloud) |
+| 19530 | Milvus | Vector database with hybrid search (HNSW on CPU) |
+| (internal) | NIMs | Embed (nvidia/llama-nemotron-embed-1b-v2, port 9080), rerank (nvidia/llama-nemotron-rerank-1b-v2, port 1976), OCR |
+| (internal) | LLM | nvidia/llama-3.3-nemotron-super-49b-v1.5 (2-GPU) or external API (1-GPU, full-cloud) |
 | (internal) | Redis | Ingestion queue for mode manager coordination |
+
+> **Nota de red interna:** El container `auth-gateway` escucha en el puerto interno 8090 (`GATEWAY_PORT`).
+> El host expone el puerto 9000 (mapping `9000:8090`). Dentro de la red Docker,
+> el frontend BFF se conecta a `http://auth-gateway:8090`.
 
 ## Request Flow
 
@@ -34,11 +40,12 @@ User
   v
 SDA Frontend (port 3000)
   |
-  | HTTP Bearer token (extracted from JWT)
+  | HTTP API Key (Bearer, extracted from JWT by BFF)
   v
 Auth Gateway (port 9000)
   |
-  | Validate JWT + check RBAC
+  | Validate API key hash + check RBAC
+  | Note: JWT is internal to the BFF; the gateway only sees the API key
   | Proxy request with user context
   v
 RAG Server (port 8081)
@@ -53,7 +60,7 @@ NIMs (embed, rerank)
   |
   | Embed query, rerank results
   v
-LLM (Nemotron-3 or external API)
+LLM (nvidia/llama-3.3-nemotron-super-49b-v1.5 or external API)
   |
   | Generate answer with citations
   v
@@ -68,8 +75,8 @@ User
 
 | Profile | Hardware | LLM | Use Case |
 |---------|----------|-----|----------|
-| `brev-2gpu` | 2x RTX PRO 6000 Blackwell (196 GB total VRAM) | Nemotron-3-Super-120B-A12B (local) | Production on Brev cloud |
-| `workstation-1gpu` | 1x GPU (≥98 GB VRAM) | External (NVIDIA API or OpenRouter) | Development workstation with mode switching |
+| `brev-2gpu` | 2x RTX PRO 6000 Blackwell (196 GB total VRAM) | nvidia/llama-3.3-nemotron-super-49b-v1.5 (local) | Production on Brev cloud |
+| `workstation-1gpu` | 1x GPU (≥98 GB VRAM) | External (NVIDIA API via nvidia-api provider; OpenRouter used for crossdoc decomposition only) | Development workstation with mode switching |
 | `full-cloud` | No GPU | External (NVIDIA API or OpenRouter) | Cloud-only, all services via API |
 
 ## 1-GPU Mode

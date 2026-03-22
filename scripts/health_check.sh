@@ -26,7 +26,7 @@ fi
 echo "[health_check] ✓ RAG server OK"
 
 echo "[health_check] Checking frontend (port 3000)..."
-if ! curl -sf --max-time 5 http://localhost:3000/ > /dev/null 2>&1; then
+if ! curl -sfL --max-time 10 http://localhost:3000/ > /dev/null 2>&1; then
   echo "[health_check] ✗ Frontend not responding"
   exit 1
 fi
