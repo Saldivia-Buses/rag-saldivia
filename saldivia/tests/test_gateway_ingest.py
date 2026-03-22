@@ -112,3 +112,126 @@ def test_ingest_non_pdf_uses_size_tier(admin_user):
 
     assert resp.json()["tier"] == "tiny"
     assert resp.json()["page_count"] is None
+
+
+def test_list_jobs_returns_active_only(admin_user):
+    from saldivia.gateway import get_user_from_token
+
+    app.dependency_overrides[get_user_from_token] = lambda: admin_user
+    client = TestClient(app)
+
+    try:
+        with patch("saldivia.gateway.db") as mock_db:
+            mock_db.get_active_ingestion_jobs.return_value = [
+                {"id": "j1", "filename": "a.pdf", "tier": "tiny", "state": "pending", "progress": 0}
+            ]
+            resp = client.get("/v1/jobs", headers={"Authorization": "Bearer test-key"})
+    finally:
+        app.dependency_overrides.pop(get_user_from_token, None)
+
+    assert resp.status_code == 200
+    assert len(resp.json()["jobs"]) == 1
+
+
+def test_job_status_calculates_progress(admin_user):
+    from saldivia.gateway import get_user_from_token
+
+    app.dependency_overrides[get_user_from_token] = lambda: admin_user
+    client = TestClient(app)
+
+    try:
+        with patch("saldivia.gateway.db") as mock_db, \
+             patch("saldivia.gateway.httpx.AsyncClient") as mock_httpx:
+
+            mock_db.get_ingestion_job.return_value = {
+                "id": "j1", "user_id": 1, "task_id": "t1",
+                "filename": "doc.pdf", "collection": "col",
+                "tier": "medium", "page_count": 100,
+                "state": "pending", "progress": 0,
+                "created_at": "2026-03-22T10:00:00", "completed_at": None,
+            }
+            mock_db.update_ingestion_job = MagicMock()
+
+            mock_ingestor = MagicMock()
+            mock_ingestor.json.return_value = {
+                "state": "PENDING",
+                "nv_ingest_status": {"extraction_completed": 1},
+                "result": {"total_documents": 2, "documents_completed": 0},
+            }
+            mock_client = AsyncMock()
+            mock_client.get.return_value = mock_ingestor
+            mock_httpx.return_value.__aenter__.return_value = mock_client
+
+            resp = client.get("/v1/jobs/j1/status", headers={"Authorization": "Bearer test-key"})
+    finally:
+        app.dependency_overrides.pop(get_user_from_token, None)
+
+    assert resp.status_code == 200
+    body = resp.json()
+    # extraction_completed=1, total=2 → 1/2 * 60 = 30. documents_completed=0 → 0. Total = 30
+    assert body["progress"] == 30
+    assert body["state"] == "running"
+
+
+def test_job_status_finished_is_100(admin_user):
+    from saldivia.gateway import get_user_from_token
+
+    app.dependency_overrides[get_user_from_token] = lambda: admin_user
+    client = TestClient(app)
+
+    try:
+        with patch("saldivia.gateway.db") as mock_db, \
+             patch("saldivia.gateway.httpx.AsyncClient") as mock_httpx:
+
+            mock_db.get_ingestion_job.return_value = {
+                "id": "j2", "user_id": 1, "task_id": "t2",
+                "filename": "big.pdf", "collection": "col",
+                "tier": "large", "page_count": 300,
+                "state": "running", "progress": 60,
+                "created_at": "2026-03-22T10:00:00", "completed_at": None,
+            }
+            mock_db.update_ingestion_job = MagicMock()
+
+            mock_ingestor = MagicMock()
+            mock_ingestor.json.return_value = {
+                "state": "FINISHED",
+                "nv_ingest_status": {"extraction_completed": 1},
+                "result": {"total_documents": 1, "documents_completed": 1},
+            }
+            mock_client = AsyncMock()
+            mock_client.get.return_value = mock_ingestor
+            mock_httpx.return_value.__aenter__.return_value = mock_client
+
+            resp = client.get("/v1/jobs/j2/status", headers={"Authorization": "Bearer test-key"})
+    finally:
+        app.dependency_overrides.pop(get_user_from_token, None)
+
+    assert resp.json()["progress"] == 100
+    assert resp.json()["state"] == "completed"
+
+
+def test_job_status_403_for_other_user(admin_user):
+    from saldivia.gateway import get_user_from_token
+    from saldivia.auth.models import User, Role
+
+    other_user = User(id=99, email="other@test.com", name="Other",
+                      area_id=2, role=Role.USER, api_key_hash="h")
+
+    app.dependency_overrides[get_user_from_token] = lambda: other_user
+    client = TestClient(app)
+
+    try:
+        with patch("saldivia.gateway.db") as mock_db:
+            # Job pertenece a user_id=1, el requester es user_id=99
+            mock_db.get_ingestion_job.return_value = {
+                "id": "j3", "user_id": 1, "task_id": "t3",
+                "filename": "secret.pdf", "collection": "col",
+                "tier": "tiny", "page_count": 5,
+                "state": "pending", "progress": 0,
+                "created_at": "2026-03-22T10:00:00", "completed_at": None,
+            }
+            resp = client.get("/v1/jobs/j3/status", headers={"Authorization": "Bearer test-key"})
+    finally:
+        app.dependency_overrides.pop(get_user_from_token, None)
+
+    assert resp.status_code == 403

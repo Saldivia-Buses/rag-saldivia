@@ -734,6 +734,80 @@ def add_message(session_id: str, body: AddMessageRequest, user_id: int,
 
 
 
+@app.get("/v1/jobs")
+async def list_jobs(request: Request, user: User = Depends(get_user_from_token)):
+    """Lista jobs de ingesta activos del usuario autenticado."""
+    if not user:
+        raise HTTPException(status_code=401, detail="Auth required")
+    jobs = db.get_active_ingestion_jobs(user.id)
+    return {"jobs": jobs}
+
+
+@app.get("/v1/jobs/{job_id}/status")
+async def job_status(job_id: str, request: Request, user: User = Depends(get_user_from_token)):
+    """Devuelve progreso real de un job de ingesta."""
+    if not user:
+        raise HTTPException(status_code=401, detail="Auth required")
+
+    job = db.get_ingestion_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    if job["user_id"] != user.id:
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    async with httpx.AsyncClient(timeout=10) as client:
+        try:
+            resp = await client.get(f"{INGESTOR_URL}/v1/status?task_id={job['task_id']}")
+            result = resp.json()
+        except Exception:
+            # Si el ingestor no responde, devolvemos el estado guardado en SQLite
+            return {
+                "job_id": job_id,
+                "state": job["state"],
+                "progress": job["progress"],
+                "tier": job["tier"],
+                "page_count": job["page_count"],
+                "filename": job["filename"],
+                "collection": job["collection"],
+                "created_at": job["created_at"],
+            }
+
+    ingestor_state = result.get("state", "UNKNOWN")
+    nv = result.get("nv_ingest_status", {})
+    res = result.get("result", {})
+    total = max(res.get("total_documents", 1), 1)
+    extracted = nv.get("extraction_completed", 0)
+    completed = res.get("documents_completed", 0)
+
+    if ingestor_state == "FINISHED":
+        progress = 100
+        new_state = "completed"
+    elif ingestor_state == "FAILED":
+        progress = job["progress"]
+        new_state = "failed"
+    else:
+        progress = int((extracted / total * 60) + (completed / total * 40))
+        new_state = "running" if progress > 0 else "pending"
+
+    completed_at = None
+    if new_state in ("completed", "failed"):
+        from datetime import datetime
+        completed_at = datetime.now().isoformat()
+
+    db.update_ingestion_job(job_id, new_state, progress, completed_at)
+
+    return {
+        "job_id": job_id,
+        "state": new_state,
+        "progress": progress,
+        "tier": job["tier"],
+        "page_count": job["page_count"],
+        "filename": job["filename"],
+        "collection": job["collection"],
+        "created_at": job["created_at"],
+    }
+
+
 def main():
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("GATEWAY_PORT", "8090")))
