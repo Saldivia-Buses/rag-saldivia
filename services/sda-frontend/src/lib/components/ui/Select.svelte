@@ -22,6 +22,8 @@
         onchange,
     }: Props = $props();
 
+    const selectId = `select-${Math.random().toString(36).slice(2, 9)}`;
+
     function handleChange(e: Event) {
         const target = e.target as HTMLSelectElement;
         value = target.value;
@@ -31,9 +33,10 @@
 
 <div class="flex flex-col gap-1 {className}">
     {#if label}
-        <label class="text-xs font-medium text-[var(--text-muted)]">{label}</label>
+        <label for={selectId} class="text-xs font-medium text-[var(--text-muted)]">{label}</label>
     {/if}
     <select
+        id={selectId}
         bind:value
         {disabled}
         onchange={handleChange}

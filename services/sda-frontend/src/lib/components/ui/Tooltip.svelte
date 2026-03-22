@@ -23,7 +23,7 @@
                z-50 px-2 py-1 text-xs rounded-[var(--radius-sm)]
                bg-[var(--bg-surface)] border border-[var(--border)]
                text-[var(--text-muted)] whitespace-nowrap shadow-sm
-               opacity-0 group-hover:opacity-100 transition-opacity duration-150"
+               opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-150"
     >
         {text}
     </div>
