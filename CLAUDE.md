@@ -4,7 +4,7 @@
 
 Overlay sobre **NVIDIA RAG Blueprint v2.5.0** que agrega autenticación, RBAC, multi-colección, frontend SvelteKit 5, CLI, SDK Python, y perfiles de deployment.
 
-- **No es un fork** — usa el blueprint como dependencia via symlink (`~/rag → ~/rag-blueprint/`)
+- **No es un fork** — incluye el blueprint como git submodule en `vendor/rag-blueprint/` (commit a67a48c, post-v2.3.0)
 - **Repo local:** `~/rag-saldivia/` — branch `main`
 - **Repo remoto:** https://github.com/Camionerou/rag-saldivia
 - **Deploy activo:** instancia Brev `nvidia-enterprise-rag-deb106` (2x RTX PRO 6000 Blackwell)
