@@ -268,5 +268,5 @@ fi
 log "Deploy complete. Profile: ${PROFILE}"
 log "  RAG Server:   http://localhost:8081"
 log "  Ingestor:     http://localhost:8082"
-log "  Frontend:     http://localhost:8090"
+log "  Frontend:     http://localhost:3000"
 log "  Auth Gateway: http://localhost:9000  (API entry point with RBAC)"
