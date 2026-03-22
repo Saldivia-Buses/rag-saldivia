@@ -236,6 +236,34 @@ done
 
 **Context:** Added to `scripts/deploy.sh` in commit bdd2af4.
 
+### 4. Compose files no están en la raíz del repo
+
+**Contexto:** Los compose files de Saldivia están en `config/compose-*.yaml` (no en la raíz). Los del blueprint están en `blueprint/deploy/compose/` y solo existen después de ejecutar `make setup`.
+
+### 5. Puerto 3000 en conflicto con stack de observabilidad (Grafana)
+
+**Contexto:** El stack de observabilidad del blueprint (`vendor/rag-blueprint/deploy/compose/observability.yaml`)
+expone Grafana en `3000:3000`. Esto entra en conflicto con `sda-frontend` que también usa el puerto 3000.
+
+**Síntoma:** Si se levanta el stack de observabilidad junto con los servicios de Saldivia,
+uno de los dos containers falla al bindear el puerto 3000.
+
+**Workaround:** No levantar `observability.yaml` mientras `sda-frontend` esté corriendo.
+Si se necesita Grafana en paralelo, cambiar el port mapping en el compose local a otro puerto
+(ej. `"3001:3000"` para acceder Grafana en `http://localhost:3001`).
+
+### 6. `make stop`, `make clean`, `make patch-*` requieren `make setup` previo
+
+**Contexto:** Los targets `make stop`, `make clean`, `make patch-check` y `make patch-create`
+dependen de `$(BLUEPRINT_DIR)` = `blueprint/deploy/compose/`. Este directorio solo existe
+después de ejecutar `make setup` (que clona el blueprint a `blueprint/`).
+
+**Síntoma:** En un checkout fresh (sin haber ejecutado `make setup`),
+estos comandos fallan porque `blueprint/` no existe.
+
+**Workaround:** Siempre ejecutar `make setup` antes de cualquier otro target de gestión del sistema.
+El directorio `vendor/rag-blueprint/` (submodule) NO reemplaza a `blueprint/` para este propósito.
+
 ## 1-GPU Mode Switching
 
 The `workstation-1gpu` profile uses a mode manager to switch between QUERY and INGEST modes.
