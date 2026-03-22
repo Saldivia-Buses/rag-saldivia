@@ -39,6 +39,32 @@ if not JWT_SECRET and os.getenv("BYPASS_AUTH", "").lower() != "true":
     raise RuntimeError("JWT_SECRET environment variable must be set and non-empty")
 
 
+def extract_page_count(file_bytes: bytes, filename: str) -> int | None:
+    """Extrae page count de un PDF. Devuelve None para no-PDFs o PDFs inválidos."""
+    if not filename.lower().endswith('.pdf'):
+        return None
+    try:
+        from pypdf import PdfReader
+        import io
+        reader = PdfReader(io.BytesIO(file_bytes))
+        return len(reader.pages)
+    except Exception:
+        return None
+
+
+def classify_tier(page_count: int | None, file_size: int) -> str:
+    """Clasifica el tier por páginas (PDF) o tamaño de archivo (otros formatos)."""
+    if page_count is not None:
+        if page_count <= 20:  return "tiny"
+        if page_count <= 80:  return "small"
+        if page_count <= 250: return "medium"
+        return "large"
+    if file_size < 100_000:   return "tiny"
+    if file_size < 500_000:   return "small"
+    if file_size < 5_000_000: return "medium"
+    return "large"
+
+
 class LoginRequest(BaseModel):
     email: str
     password: str
@@ -258,48 +284,79 @@ async def search(request: Request, user: User = Depends(get_user_from_token)):
 
 @app.post("/v1/documents")
 async def ingest(request: Request, user: User = Depends(get_user_from_token)):
-    """Proxy to ingestor with write permission check."""
+    """Upload de documento: non-blocking, devuelve job_id + tier."""
     if user and user.role == Role.USER:
         raise HTTPException(status_code=403, detail="Users cannot ingest documents directly")
 
-    if user and user.role == Role.AREA_MANAGER:
-        # Parse the target collection from the multipart 'data' JSON field.
-        # Check that the user has write access to THAT specific collection,
-        # not just any collection in their area.
-        form = await request.form()
-        data_str = form.get("data", "{}")
-        try:
-            data = json.loads(data_str)
-            collection_name = data.get("collection_name", "")
-            if collection_name and not db.can_access(user, collection_name, Permission.WRITE):
-                raise HTTPException(
-                    status_code=403,
-                    detail=f"No write access to collection: {collection_name}"
-                )
-        except (json.JSONDecodeError, KeyError):
-            pass  # If we can't parse, let the ingestor handle it
+    form = await request.form()
+    file = form.get("file")
+    data_str = form.get("data", "{}")
 
-    # Forward multipart request as-is.
-    # Note: request.form() above caches the body; request.body() returns the same bytes.
-    body = await request.body()
-    headers = dict(request.headers)
-    headers.pop("host", None)
+    if not file:
+        raise HTTPException(status_code=400, detail="Se requiere un archivo.")
 
-    async with httpx.AsyncClient(timeout=600) as client:
-        resp = await client.post(
-            f"{INGESTOR_URL}/v1/documents",
-            content=body,
-            headers=headers
-        )
+    try:
+        data = json.loads(data_str)
+    except json.JSONDecodeError:
+        data = {}
 
-        if user:
-            db.log_action(
-                user_id=user.id,
-                action="ingest",
-                ip_address=request.client.host if request.client else ""
+    collection_name = data.get("collection_name", "")
+
+    if user and user.role == Role.AREA_MANAGER and collection_name:
+        if not db.can_access(user, collection_name, Permission.WRITE):
+            raise HTTPException(
+                status_code=403,
+                detail=f"No write access to collection: {collection_name}"
             )
 
-        return resp.json()
+    file_bytes = await file.read()
+    page_count = extract_page_count(file_bytes, file.filename)
+    tier = classify_tier(page_count, len(file_bytes))
+
+    # Payload al ingestor con blocking=False
+    ingestor_data = {**data, "blocking": False}
+
+    headers = dict(request.headers)
+    headers.pop("host", None)
+    headers.pop("content-length", None)
+    headers.pop("content-type", None)
+
+    async with httpx.AsyncClient(timeout=30) as client:
+        resp = await client.post(
+            f"{INGESTOR_URL}/v1/documents",
+            files={"file": (file.filename, file_bytes, file.content_type or "application/octet-stream")},
+            data={"data": json.dumps(ingestor_data)},
+            headers={k: v for k, v in headers.items() if k.lower() not in ("content-type", "content-length")},
+        )
+
+    if resp.status_code >= 400:
+        raise HTTPException(status_code=resp.status_code, detail=resp.text)
+
+    ingestor_body = resp.json()
+    task_id = ingestor_body.get("task_id", "")
+
+    job_id = db.create_ingestion_job(
+        user_id=user.id if user else 0,
+        task_id=task_id,
+        filename=file.filename,
+        collection=collection_name,
+        tier=tier,
+        page_count=page_count,
+    )
+
+    if user:
+        db.log_action(
+            user_id=user.id,
+            action="ingest",
+            ip_address=request.client.host if request.client else ""
+        )
+
+    return {
+        "job_id": job_id,
+        "tier": tier,
+        "page_count": page_count,
+        "filename": file.filename,
+    }
 
 
 @app.get("/health")
@@ -675,6 +732,80 @@ def add_message(session_id: str, body: AddMessageRequest, user_id: int,
     db.add_chat_message(session_id, body.role, body.content, body.sources)
     return {"ok": True}
 
+
+
+@app.get("/v1/jobs")
+async def list_jobs(request: Request, user: User = Depends(get_user_from_token)):
+    """Lista jobs de ingesta activos del usuario autenticado."""
+    if not user:
+        raise HTTPException(status_code=401, detail="Auth required")
+    jobs = db.get_active_ingestion_jobs(user.id)
+    return {"jobs": jobs}
+
+
+@app.get("/v1/jobs/{job_id}/status")
+async def job_status(job_id: str, request: Request, user: User = Depends(get_user_from_token)):
+    """Devuelve progreso real de un job de ingesta."""
+    if not user:
+        raise HTTPException(status_code=401, detail="Auth required")
+
+    job = db.get_ingestion_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    if job["user_id"] != user.id:
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    async with httpx.AsyncClient(timeout=10) as client:
+        try:
+            resp = await client.get(f"{INGESTOR_URL}/v1/status?task_id={job['task_id']}")
+            result = resp.json()
+        except Exception:
+            # Si el ingestor no responde, devolvemos el estado guardado en SQLite
+            return {
+                "job_id": job_id,
+                "state": job["state"],
+                "progress": job["progress"],
+                "tier": job["tier"],
+                "page_count": job["page_count"],
+                "filename": job["filename"],
+                "collection": job["collection"],
+                "created_at": job["created_at"],
+            }
+
+    ingestor_state = result.get("state", "UNKNOWN")
+    nv = result.get("nv_ingest_status", {})
+    res = result.get("result", {})
+    total = max(res.get("total_documents", 1), 1)
+    extracted = nv.get("extraction_completed", 0)
+    completed = res.get("documents_completed", 0)
+
+    if ingestor_state == "FINISHED":
+        progress = 100
+        new_state = "completed"
+    elif ingestor_state == "FAILED":
+        progress = job["progress"]
+        new_state = "failed"
+    else:
+        progress = int((extracted / total * 60) + (completed / total * 40))
+        new_state = "running" if progress > 0 else "pending"
+
+    completed_at = None
+    if new_state in ("completed", "failed"):
+        from datetime import datetime
+        completed_at = datetime.now().isoformat()
+
+    db.update_ingestion_job(job_id, new_state, progress, completed_at)
+
+    return {
+        "job_id": job_id,
+        "state": new_state,
+        "progress": progress,
+        "tier": job["tier"],
+        "page_count": job["page_count"],
+        "filename": job["filename"],
+        "collection": job["collection"],
+        "created_at": job["created_at"],
+    }
 
 
 def main():

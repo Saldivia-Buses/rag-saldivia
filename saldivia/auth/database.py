@@ -86,6 +86,25 @@ def init_db(db_path: Path = DB_PATH):
     """
     conn.executescript(chat_ddl)
 
+    # Migration: add ingestion_jobs table if not present (idempotent)
+    conn.executescript("""
+        CREATE TABLE IF NOT EXISTS ingestion_jobs (
+            id           TEXT PRIMARY KEY,
+            user_id      INTEGER NOT NULL,
+            task_id      TEXT NOT NULL,
+            filename     TEXT NOT NULL,
+            collection   TEXT NOT NULL,
+            tier         TEXT NOT NULL,
+            page_count   INTEGER,
+            state        TEXT DEFAULT 'pending',
+            progress     INTEGER DEFAULT 0,
+            created_at   TEXT NOT NULL,
+            completed_at TEXT,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        );
+        CREATE INDEX IF NOT EXISTS idx_ingestion_jobs_user ON ingestion_jobs(user_id);
+        CREATE INDEX IF NOT EXISTS idx_ingestion_jobs_state ON ingestion_jobs(state);
+    """)
 
     conn.close()
 
@@ -416,3 +435,64 @@ class AuthDB:
             )
             if result.rowcount > 0:
                 conn.execute("DELETE FROM chat_messages WHERE session_id = ?", (session_id,))
+
+    # Ingestion jobs
+    def create_ingestion_job(
+        self,
+        user_id: int,
+        task_id: str,
+        filename: str,
+        collection: str,
+        tier: str,
+        page_count: int | None,
+    ) -> str:
+        import uuid
+        from datetime import datetime
+        job_id = str(uuid.uuid4())
+        with self._conn() as conn:
+            conn.execute(
+                """INSERT INTO ingestion_jobs
+                   (id, user_id, task_id, filename, collection, tier, page_count, created_at)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                (job_id, user_id, task_id, filename, collection, tier, page_count,
+                 datetime.now().isoformat()),
+            )
+        return job_id
+
+    def get_ingestion_job(self, job_id: str) -> dict | None:
+        with self._conn() as conn:
+            cur = conn.execute(
+                "SELECT * FROM ingestion_jobs WHERE id = ?", (job_id,)
+            )
+            row = cur.fetchone()
+            if row is None:
+                return None
+            columns = [col[0] for col in cur.description]
+            return dict(zip(columns, row))
+
+    def get_active_ingestion_jobs(self, user_id: int) -> list[dict]:
+        with self._conn() as conn:
+            cur = conn.execute(
+                """SELECT * FROM ingestion_jobs
+                   WHERE user_id = ? AND state IN ('pending','running','stalled')
+                   ORDER BY created_at DESC""",
+                (user_id,),
+            )
+            rows = cur.fetchall()
+            columns = [col[0] for col in cur.description]
+        return [dict(zip(columns, r)) for r in rows]
+
+    def update_ingestion_job(
+        self,
+        job_id: str,
+        state: str,
+        progress: int,
+        completed_at: str | None = None,
+    ) -> None:
+        with self._conn() as conn:
+            conn.execute(
+                """UPDATE ingestion_jobs
+                   SET state = ?, progress = ?, completed_at = ?
+                   WHERE id = ?""",
+                (state, progress, completed_at, job_id),
+            )

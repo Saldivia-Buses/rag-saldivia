@@ -226,6 +226,42 @@ describe('POST /api/upload', () => {
         expect(parsed.collection_name).toBe('coleccion-test');
     });
 
+    it('devuelve job_id, tier y page_count del gateway', async () => {
+        process.env.GATEWAY_URL = 'http://gateway:9000';
+        process.env.SYSTEM_API_KEY = 'test-key';
+
+        const mockFetch = vi.fn().mockResolvedValue({
+            ok: true,
+            status: 200,
+            json: () => Promise.resolve({
+                job_id: 'abc-123',
+                tier: 'medium',
+                page_count: 180,
+                filename: 'contrato.pdf'
+            }),
+        });
+        vi.stubGlobal('fetch', mockFetch);
+
+        const { POST } = await import('./+server.js');
+
+        const formData = new FormData();
+        formData.append('file', new File(['pdf content'], 'contrato.pdf', { type: 'application/pdf' }));
+        formData.append('collection', 'legal');
+
+        const event = {
+            request: new Request('http://localhost/api/upload', { method: 'POST', body: formData }),
+            locals: { user: { id: 42, email: 'test@test.com', role: 'admin', area_id: 1, name: 'Test' } },
+        } as any;
+
+        const res = await POST(event);
+        const body = await res.json();
+
+        expect(res.status).toBe(200);
+        expect(body.job_id).toBe('abc-123');
+        expect(body.tier).toBe('medium');
+        expect(body.page_count).toBe(180);
+    });
+
     it('usa localhost:9000 como URL por defecto cuando GATEWAY_URL no está configurado', async () => {
         // Cubre línea 16: const gatewayUrl = process.env.GATEWAY_URL ?? 'http://localhost:9000'
         const savedUrl = process.env.GATEWAY_URL;

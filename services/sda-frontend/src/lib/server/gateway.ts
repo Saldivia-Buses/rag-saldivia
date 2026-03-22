@@ -224,6 +224,29 @@ export async function gatewayGenerateStream(
     return resp;
 }
 
+// Jobs
+export async function gatewayListActiveJobs(token: string): Promise<ActiveJobResponse[]> {
+    const res = await gw<{ jobs: ActiveJobResponse[] }>('/v1/jobs', {
+        headers: { 'Authorization': `Bearer ${token}` },
+    });
+    return res.jobs ?? [];
+}
+
+export async function gatewayJobStatus(token: string, jobId: string) {
+    return gw<{
+        job_id: string;
+        state: string;
+        progress: number;
+        tier: string;
+        page_count: number | null;
+        filename: string;
+        collection: string;
+        created_at: string;
+    }>(`/v1/jobs/${jobId}/status`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+    });
+}
+
 // Types
 export interface SessionUser {
     id: number; email: string; name: string; role: string; area_id: number;
@@ -264,4 +287,14 @@ export interface AuditEntry {
 export interface AuditParams {
     user_id?: number; action?: string; collection?: string;
     from_ts?: string; to_ts?: string; limit?: number;
+}
+export interface ActiveJobResponse {
+    id: string;
+    filename: string;
+    collection: string;
+    tier: string;
+    page_count: number | null;
+    state: string;
+    progress: number;
+    created_at: string;
 }
