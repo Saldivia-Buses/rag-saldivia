@@ -284,48 +284,79 @@ async def search(request: Request, user: User = Depends(get_user_from_token)):
 
 @app.post("/v1/documents")
 async def ingest(request: Request, user: User = Depends(get_user_from_token)):
-    """Proxy to ingestor with write permission check."""
+    """Upload de documento: non-blocking, devuelve job_id + tier."""
     if user and user.role == Role.USER:
         raise HTTPException(status_code=403, detail="Users cannot ingest documents directly")
 
-    if user and user.role == Role.AREA_MANAGER:
-        # Parse the target collection from the multipart 'data' JSON field.
-        # Check that the user has write access to THAT specific collection,
-        # not just any collection in their area.
-        form = await request.form()
-        data_str = form.get("data", "{}")
-        try:
-            data = json.loads(data_str)
-            collection_name = data.get("collection_name", "")
-            if collection_name and not db.can_access(user, collection_name, Permission.WRITE):
-                raise HTTPException(
-                    status_code=403,
-                    detail=f"No write access to collection: {collection_name}"
-                )
-        except (json.JSONDecodeError, KeyError):
-            pass  # If we can't parse, let the ingestor handle it
+    form = await request.form()
+    file = form.get("file")
+    data_str = form.get("data", "{}")
 
-    # Forward multipart request as-is.
-    # Note: request.form() above caches the body; request.body() returns the same bytes.
-    body = await request.body()
-    headers = dict(request.headers)
-    headers.pop("host", None)
+    if not file:
+        raise HTTPException(status_code=400, detail="Se requiere un archivo.")
 
-    async with httpx.AsyncClient(timeout=600) as client:
-        resp = await client.post(
-            f"{INGESTOR_URL}/v1/documents",
-            content=body,
-            headers=headers
-        )
+    try:
+        data = json.loads(data_str)
+    except json.JSONDecodeError:
+        data = {}
 
-        if user:
-            db.log_action(
-                user_id=user.id,
-                action="ingest",
-                ip_address=request.client.host if request.client else ""
+    collection_name = data.get("collection_name", "")
+
+    if user and user.role == Role.AREA_MANAGER and collection_name:
+        if not db.can_access(user, collection_name, Permission.WRITE):
+            raise HTTPException(
+                status_code=403,
+                detail=f"No write access to collection: {collection_name}"
             )
 
-        return resp.json()
+    file_bytes = await file.read()
+    page_count = extract_page_count(file_bytes, file.filename)
+    tier = classify_tier(page_count, len(file_bytes))
+
+    # Payload al ingestor con blocking=False
+    ingestor_data = {**data, "blocking": False}
+
+    headers = dict(request.headers)
+    headers.pop("host", None)
+    headers.pop("content-length", None)
+    headers.pop("content-type", None)
+
+    async with httpx.AsyncClient(timeout=30) as client:
+        resp = await client.post(
+            f"{INGESTOR_URL}/v1/documents",
+            files={"file": (file.filename, file_bytes, file.content_type or "application/octet-stream")},
+            data={"data": json.dumps(ingestor_data)},
+            headers={k: v for k, v in headers.items() if k.lower() not in ("content-type", "content-length")},
+        )
+
+    if resp.status_code >= 400:
+        raise HTTPException(status_code=resp.status_code, detail=resp.text)
+
+    ingestor_body = resp.json()
+    task_id = ingestor_body.get("task_id", "")
+
+    job_id = db.create_ingestion_job(
+        user_id=user.id if user else 0,
+        task_id=task_id,
+        filename=file.filename,
+        collection=collection_name,
+        tier=tier,
+        page_count=page_count,
+    )
+
+    if user:
+        db.log_action(
+            user_id=user.id,
+            action="ingest",
+            ip_address=request.client.host if request.client else ""
+        )
+
+    return {
+        "job_id": job_id,
+        "tier": tier,
+        "page_count": page_count,
+        "filename": file.filename,
+    }
 
 
 @app.get("/health")
