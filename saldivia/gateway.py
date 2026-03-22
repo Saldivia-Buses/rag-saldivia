@@ -679,7 +679,7 @@ def add_message(session_id: str, body: AddMessageRequest, user_id: int,
 
 def main():
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=9000)
+    uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("GATEWAY_PORT", "8090")))
 
 
 if __name__ == "__main__":

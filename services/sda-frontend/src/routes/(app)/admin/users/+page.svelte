@@ -24,13 +24,13 @@
     </div>
 
     {#if form?.success && form?.api_key}
-        <div class="bg-[#065f46] text-[#6ee7b7] p-3 rounded mb-4 text-sm">
+        <div class="bg-[var(--success-bg)] text-[var(--success)] p-3 rounded mb-4 text-sm">
             Usuario creado. API key: <code class="font-mono">{form.api_key}</code>
         </div>
     {/if}
 
     {#if form?.error}
-        <div class="bg-[#7f1d1d] text-[#fca5a5] p-3 rounded mb-4 text-sm">
+        <div class="bg-[var(--danger-bg)] text-[var(--danger)] p-3 rounded mb-4 text-sm">
             {form.error}
         </div>
     {/if}
@@ -54,7 +54,7 @@
                     <td class="py-2">{data.areas.find(a => a.id === user.area_id)?.name ?? user.area_id}</td>
                     <td class="py-2">{user.role}</td>
                     <td class="py-2">
-                        <span class="text-xs {user.active ? 'text-[#4ade80]' : 'text-[#f87171]'}">
+                        <span class="text-xs {user.active ? 'text-[var(--success)]' : 'text-[var(--danger)]'}">
                             {user.active ? 'Activo' : 'Inactivo'}
                         </span>
                     </td>
@@ -69,7 +69,7 @@
                             <input type="hidden" name="id" value={user.id} />
                             <button type="submit"
                                     disabled={deletingId === user.id}
-                                    class="text-xs text-[#f87171] hover:underline
+                                    class="text-xs text-[var(--danger)] hover:underline
                                            disabled:opacity-50 disabled:cursor-not-allowed">
                                 {deletingId === user.id ? 'Desactivando...' : 'Desactivar'}
                             </button>
