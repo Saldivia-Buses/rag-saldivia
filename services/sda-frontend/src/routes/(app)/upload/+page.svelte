@@ -6,6 +6,7 @@
 	import DropZone from '$lib/components/upload/DropZone.svelte';
 	import IngestionQueue from '$lib/components/upload/IngestionQueue.svelte';
 	import type { Tier } from '$lib/ingestion/types.js';
+	import type { JobState } from '$lib/stores/ingestion.svelte.js';
 
 	let { data } = $props();
 
@@ -28,7 +29,7 @@
 		const poller = new IngestPoller(jobId, tier);
 		poller.poll(({ state, progress, eta }) => {
 			ingestionStore.updateJob(jobId, {
-				state: state as any,
+				state: state as JobState,
 				progress,
 				eta,
 			});
