@@ -39,6 +39,32 @@ if not JWT_SECRET and os.getenv("BYPASS_AUTH", "").lower() != "true":
     raise RuntimeError("JWT_SECRET environment variable must be set and non-empty")
 
 
+def extract_page_count(file_bytes: bytes, filename: str) -> int | None:
+    """Extrae page count de un PDF. Devuelve None para no-PDFs o PDFs inválidos."""
+    if not filename.lower().endswith('.pdf'):
+        return None
+    try:
+        from pypdf import PdfReader
+        import io
+        reader = PdfReader(io.BytesIO(file_bytes))
+        return len(reader.pages)
+    except Exception:
+        return None
+
+
+def classify_tier(page_count: int | None, file_size: int) -> str:
+    """Clasifica el tier por páginas (PDF) o tamaño de archivo (otros formatos)."""
+    if page_count is not None:
+        if page_count <= 20:  return "tiny"
+        if page_count <= 80:  return "small"
+        if page_count <= 250: return "medium"
+        return "large"
+    if file_size < 100_000:   return "tiny"
+    if file_size < 500_000:   return "small"
+    if file_size < 5_000_000: return "medium"
+    return "large"
+
+
 class LoginRequest(BaseModel):
     email: str
     password: str
