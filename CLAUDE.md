@@ -7,7 +7,7 @@ Overlay sobre **NVIDIA RAG Blueprint v2.5.0** que agrega autenticación, RBAC, m
 - **No es un fork** — incluye el blueprint como git submodule en `vendor/rag-blueprint/` (commit a67a48c, post-v2.3.0)
 - **Repo local:** `~/rag-saldivia/` — branch `main`
 - **Repo remoto:** https://github.com/Camionerou/rag-saldivia
-- **Deploy activo:** instancia Brev `nvidia-enterprise-rag-deb106` (2x RTX PRO 6000 Blackwell)
+- **Deploy activo:** instancia RunPod `runpod-rag` (1x RTX PRO 6000 Blackwell, 96GB VRAM)
 
 ## Arquitectura de servicios
 
@@ -24,16 +24,16 @@ Usuario → SDA Frontend (puerto 3000, SvelteKit 5 BFF)
 ```
 
 **Perfiles de deployment:**
-- `brev-2gpu` — producción actual (2 GPUs, Brev)
-- `workstation-1gpu` — desarrollo local con mode switching
+- `workstation-1gpu` — producción actual (1 GPU, RunPod)
+- `brev-2gpu` — legacy (2 GPUs, Brev — instancia eliminada)
 - `full-cloud` — sin GPU, todo via API
 
 ## Comandos clave
 
 ```bash
-# Deploy a Brev
-ssh nvidia-enterprise-rag-deb106
-cd ~/rag-saldivia && make deploy PROFILE=brev-2gpu
+# Deploy a RunPod
+ssh runpod-rag
+cd ~/rag-saldivia && make deploy PROFILE=workstation-1gpu
 
 # Estado del sistema
 make status
@@ -144,7 +144,7 @@ Tests activos: `test_gateway.py`, `test_auth.py`, `test_config.py`, `test_mode_m
 - `saldivia/gateway.py` — 25KB, el corazón del sistema de auth
 - `saldivia/auth/database.py` — SQLite AuthDB con helpers `_ts()`
 - `config/.env.saldivia` — variables de entorno del overlay
-- `config/profiles/brev-2gpu.yaml` — perfil de producción
+- `config/profiles/workstation-1gpu.yaml` — perfil de producción (RunPod)
 - `services/sda-frontend/src/lib/server/gateway.ts` — BFF client al gateway
 
 ## Patrones importantes (aprendidos en producción)

@@ -33,14 +33,17 @@ Milvus (vector DB) + NIMs (embed, rerank, OCR) + LLM (Nemotron-3 or external API
 ## Quick Start
 
 ```bash
-# 1. Clone and setup
+# 1. Clone
 git clone git@github.com:Camionerou/rag-saldivia.git && cd rag-saldivia
 cp .env.example .env.local  # Add your NGC_API_KEY, JWT_SECRET, etc.
 
-# 2. Deploy with profile
-make deploy PROFILE=brev-2gpu       # 2-GPU Brev instance
+# 2. Bootstrap (instala Docker, NVIDIA Container Toolkit, Node.js, pnpm si faltan)
+sudo ./scripts/bootstrap.sh
+
+# 3. Deploy
+make deploy PROFILE=workstation-1gpu # 1-GPU (RunPod / workstation local)
 # OR
-make deploy PROFILE=workstation-1gpu # 1-GPU workstation (LLM via API)
+make deploy PROFILE=full-cloud       # sin GPU, todo via API
 
 # 3. Verify
 make status

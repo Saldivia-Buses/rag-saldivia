@@ -57,7 +57,7 @@ Containers Docker:
   [pegar las últimas líneas relevantes de logs si hay errores]
 
 Para reiniciar el RAG Server:
-  ssh nvidia-enterprise-rag-deb106 "cd ~/rag-saldivia && make restart-rag PROFILE=brev-2gpu"
+  ssh runpod-rag "cd ~/rag-saldivia && make restart-rag PROFILE=workstation-1gpu"
 ```
 
 ## Leyenda de estados

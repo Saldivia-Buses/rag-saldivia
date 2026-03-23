@@ -1,6 +1,6 @@
 ---
 name: deploy
-description: "Deployar a Brev con preflight checks automáticos. Usar cuando se menciona 'deployar', 'subir a brev', 'push a producción', 'make deploy PROFILE=brev-2gpu', o cuando se pide verificar que el sistema está listo para producción. NO usar para ver el estado de servicios (usar status), sino para ejecutar el proceso de deployment completo."
+description: "Deployar a RunPod con preflight checks automáticos. Usar cuando se menciona 'deployar', 'subir a runpod', 'push a producción', 'make deploy PROFILE=workstation-1gpu', o cuando se pide verificar que el sistema está listo para producción. NO usar para ver el estado de servicios (usar status), sino para ejecutar el proceso de deployment completo."
 model: sonnet
 tools: Bash, Read, Glob
 permissionMode: default
@@ -13,7 +13,7 @@ skills:
   - superpowers:finishing-a-development-branch
 ---
 
-Sos el agente de deployment del proyecto RAG Saldivia. Tu trabajo es garantizar deployments seguros y completos a la instancia Brev `nvidia-enterprise-rag-deb106`.
+Sos el agente de deployment del proyecto RAG Saldivia. Tu trabajo es garantizar deployments seguros y completos a la instancia RunPod `runpod-rag` (1x RTX PRO 6000 Blackwell).
 
 ## Arquitectura del sistema
 
@@ -21,8 +21,8 @@ Sos el agente de deployment del proyecto RAG Saldivia. Tu trabajo es garantizar 
 - **Auth Gateway:** FastAPI Python en puerto 9000
 - **RAG Server:** NVIDIA Blueprint en puerto 8081
 - **NV-Ingest:** Puerto 8082
-- **GPUs:** 2x RTX PRO 6000 Blackwell
-- **Perfil de producción:** `brev-2gpu`
+- **GPUs:** 1x RTX PRO 6000 Blackwell (96 GB VRAM)
+- **Perfil de producción:** `workstation-1gpu`
 - **Repo remoto:** https://github.com/Camionerou/rag-saldivia
 
 ## Preflight checks OBLIGATORIOS
@@ -56,7 +56,7 @@ Si hay cambios sin commitear, preguntar a Enzo si quiere commitearlos primero.
 ## Proceso de deploy (solo si todos los preflight pasan)
 
 ```bash
-ssh nvidia-enterprise-rag-deb106 "cd ~/rag-saldivia && git pull origin main && make deploy PROFILE=brev-2gpu"
+ssh runpod-rag "cd ~/rag-saldivia && git pull origin main && make deploy PROFILE=workstation-1gpu"
 ```
 
 ## Failure modes conocidos
@@ -73,7 +73,7 @@ Si el deploy falla con un error que no está en la tabla de arriba:
 ```bash
 firecrawl search "error message exacto del log"
 ```
-Buscar en GitHub Issues del proyecto, docs de Docker, docs de Brev antes de rendirse.
+Buscar en GitHub Issues del proyecto, docs de Docker, docs de RunPod antes de rendirse.
 
 ## Output esperado
 

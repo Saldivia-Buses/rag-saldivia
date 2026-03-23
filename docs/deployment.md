@@ -6,21 +6,21 @@ RAG Saldivia supports three deployment profiles, each optimized for different ha
 
 | Profile | Hardware | LLM | NIMs | VLM | Use Case |
 |---------|----------|-----|------|-----|----------|
-| `brev-2gpu` | 2x RTX PRO 6000 Blackwell (196 GB total VRAM) | Nemotron-3-Super-120B-A12B (local, GPU 1) | Local (GPU 0) | Qwen3-VL-8B (local, GPU 1) | Production on Brev cloud |
-| `workstation-1gpu` | 1x GPU (≥98 GB VRAM) | External (NVIDIA API or OpenRouter) | Local (GPU 0) | Qwen3-VL-8B (local, GPU 0, INGEST mode only) | Development workstation with mode switching |
+| `workstation-1gpu` | 1x GPU (≥96 GB VRAM) | External (NVIDIA API or OpenRouter) | Local (GPU 0) | Qwen3-VL-8B (local, GPU 0, INGEST mode only) | Production on RunPod / local workstation |
+| `brev-2gpu` | 2x RTX PRO 6000 Blackwell (196 GB total VRAM) | Nemotron-3-Super-120B-A12B (local, GPU 1) | Local (GPU 0) | Qwen3-VL-8B (local, GPU 1) | Legacy (Brev cloud — instancia eliminada) |
 | `full-cloud` | No GPU (CPU only) | External (NVIDIA API or OpenRouter) | External (NVIDIA API) | External (NVIDIA API) | Cloud-only, minimal infra |
 
 **Profile selection:**
-- Brev instance with 2 GPUs → `brev-2gpu`
+- RunPod instance with 1 GPU → `workstation-1gpu`
 - Local workstation with 1 GPU → `workstation-1gpu`
 - Cloud VM with no GPU → `full-cloud`
 
-## Deploying to Brev
+## Deploying to RunPod
 
-### 1. SSH into Brev instance
+### 1. SSH into RunPod instance
 
 ```bash
-ssh nvidia-enterprise-rag-deb106
+ssh runpod-rag
 ```
 
 ### 2. Pull latest changes
@@ -33,11 +33,11 @@ git pull origin main
 ### 3. Deploy with profile
 
 ```bash
-make deploy PROFILE=brev-2gpu
+make deploy PROFILE=workstation-1gpu
 ```
 
 This will:
-1. Load profile from `config/profiles/brev-2gpu.yaml`
+1. Load profile from `config/profiles/workstation-1gpu.yaml`
 2. Merge with `.env.saldivia` and `.env.local`
 3. Generate `.env.merged` for docker-compose
 4. Apply patches to blueprint frontend
@@ -143,7 +143,7 @@ make show-env PROFILE=brev-2gpu | grep JWT_SECRET
 | Target | Description | Example |
 |--------|-------------|---------|
 | `make setup` | Clone blueprint, apply patches, build images | `make setup` |
-| `make deploy` | Start services with profile | `make deploy PROFILE=brev-2gpu` |
+| `make deploy` | Start services with profile | `make deploy PROFILE=workstation-1gpu` |
 | `make stop` | Stop all services | `make stop` |
 | `make status` | Show GPU, Docker, and RAG server health | `make status` |
 | `make health` | Run health check on all services | `make health` |

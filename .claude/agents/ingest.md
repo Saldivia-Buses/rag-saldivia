@@ -38,7 +38,7 @@ cd /Users/enzo/rag-saldivia && make ingest DOCS=/path/to/docs COLLECTION=nombre_
 cd /Users/enzo/rag-saldivia && uv run python scripts/smart_ingest.py \
   --docs /path/to/docs \
   --collection nombre_coleccion \
-  --profile brev-2gpu
+  --profile workstation-1gpu
 ```
 
 ## Tier system de smart_ingest.py
