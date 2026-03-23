@@ -13,9 +13,7 @@ Python SDK for RAG Saldivia — provides auth gateway, config loader, provider c
 | `collections.py` | CollectionManager: CRUD operations for Milvus collections via ingestor API | httpx, pymilvus |
 | `ingestion_queue.py` | Redis-backed ingestion job queue with status tracking | redis |
 | `ingestion_worker.py` | Background worker that processes jobs from ingestion queue | ingestion_queue.py |
-| `cache.py` | QueryCache: Redis-backed query result caching with TTL | redis |
 | `watch.py` | File watcher for auto-ingestion of new documents in watched directories | watchdog |
-| `mcp_server.py` | MCP server for RAG Saldivia (experimental, requires running RAG instance) | mcp SDK |
 
 ## Design Notes
 

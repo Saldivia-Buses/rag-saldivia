@@ -26,7 +26,7 @@ jobs:
           submodules: recursive
 
       - name: Deploy
-        run: make deploy PROFILE=${{ github.event.inputs.profile || 'workstation-1gpu' }}
+        run: make deploy PROFILE="${{ github.event.inputs.profile || 'workstation-1gpu' }}"
 
       - name: Health check
         run: make status

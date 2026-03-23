@@ -43,6 +43,8 @@ class Tier:
 
 TIERS: dict[str, Tier] = {
     # Valores canónicos centralizados en saldivia/tier.py
+    # Note: restart_after values from saldivia.tier (seconds before job restart monitoring)
+    # Original smart_ingest values were smaller; tier.py values are more conservative and intentional
     k: Tier(name=k, poll_interval=v.poll_interval, restart_after=v.restart_after)
     for k, v in _TIERS.items()
 }

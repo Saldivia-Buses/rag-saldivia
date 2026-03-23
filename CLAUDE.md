@@ -63,9 +63,7 @@ make cli ARGS="audit log"
 | `collections.py` | CollectionManager: CRUD de colecciones |
 | `ingestion_queue.py` | Cola de ingesta con Redis |
 | `ingestion_worker.py` | Worker de la cola Redis de ingesta con retry logic y graceful shutdown |
-| `cache.py` | Caché HTTP para respuestas frecuentes |
 | `watch.py` | File watcher para auto-ingest de directorios |
-| `mcp_server.py` | MCP server (no usar por ahora — RAG debe estar running) |
 
 ## Estructura del Frontend (`services/sda-frontend/`)
 

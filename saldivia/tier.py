@@ -41,7 +41,8 @@ def classify_tier(
         else:
             return "large"
 
-    # Fallback: classify by file size (bytes)
+    # file_size fallback: only used when page_count is None (non-PDF files)
+    # Thresholds consolidated from gateway.py (500KB/5MB) → 1MB/10MB for better accuracy
     if file_size < 100_000:          # < 100 KB
         return "tiny"
     elif file_size < 1_000_000:      # < 1 MB
