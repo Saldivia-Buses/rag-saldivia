@@ -12,7 +12,7 @@ BLUEPRINT_VERSION ?= 2.5.0
 
 export SALDIVIA_ROOT
 
-.PHONY: help setup deploy stop status health ingest query test test-unit test-coverage test-e2e test-e2e-brev test-backend test-stress patch-check patch-create clean validate show-env watch cli
+.PHONY: help setup deploy stop restart status health ingest query test test-unit test-coverage test-e2e test-e2e-brev test-backend test-stress patch-check patch-create clean validate show-env watch cli
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -28,6 +28,9 @@ stop: ## Stop all services
 	@cd $(COMPOSE_DIR) && docker compose --env-file .env.merged \
 		-f docker-compose-rag-server.yaml \
 		-f $(SALDIVIA_ROOT)/config/compose-overrides.yaml down
+
+restart: ## Stop and redeploy (PROFILE=workstation-1gpu)
+	$(MAKE) stop && $(MAKE) deploy PROFILE=$(PROFILE)
 
 status: ## Show GPU, Docker, and Milvus status
 	@echo "=== GPU ===" && nvidia-smi --query-gpu=index,memory.used,memory.total --format=csv,noheader 2>/dev/null || echo "No GPU"
