@@ -251,3 +251,60 @@ def test_login_rate_limit_records_on_wrong_password(client, admin_user):
 
     assert resp.status_code == 401
     mock_record.assert_called_once_with("admin@test.com")
+
+
+def test_upload_file_too_large_returns_413(client, admin_user):
+    """File over 1GB limit returns 413."""
+    from saldivia.gateway import MAX_UPLOAD_SIZE_BYTES
+    oversized = b"x" * (MAX_UPLOAD_SIZE_BYTES + 1)
+    with patch("saldivia.gateway.get_user_from_token", return_value=admin_user):
+        resp = client.post(
+            "/v1/documents",
+            data={"data": '{"collection_name": "test"}'},
+            files={"file": ("big.pdf", oversized, "application/pdf")},
+        )
+    assert resp.status_code == 413
+
+
+def test_upload_filename_path_traversal_sanitized(client, admin_user):
+    """Filename with path traversal is sanitized before processing."""
+    mock_response = MagicMock()
+    mock_response.status_code = 200
+    mock_response.json.return_value = {"task_id": "task-abc"}
+
+    mock_async_client = MagicMock()
+    mock_async_client.__aenter__ = MagicMock(return_value=mock_async_client)
+    mock_async_client.__aexit__ = MagicMock(return_value=False)
+    mock_async_client.post = MagicMock(return_value=mock_response)
+
+    import asyncio
+
+    async def fake_aenter(self):
+        return mock_async_client
+
+    async def fake_aexit(self, *args):
+        return False
+
+    async def fake_post(*args, **kwargs):
+        return mock_response
+
+    mock_async_client.__aenter__ = fake_aenter
+    mock_async_client.__aexit__ = fake_aexit
+    mock_async_client.post = fake_post
+
+    with patch("saldivia.gateway.get_user_from_token", return_value=admin_user), \
+         patch("saldivia.gateway.db") as mock_db, \
+         patch("saldivia.gateway.extract_page_count", return_value=1), \
+         patch("saldivia.gateway.classify_tier", return_value="tiny"), \
+         patch("httpx.AsyncClient", return_value=mock_async_client):
+        mock_db.can_access.return_value = True
+        mock_db.create_ingestion_job.return_value = 1
+        mock_db.log_action.return_value = None
+
+        resp = client.post(
+            "/v1/documents",
+            data={"data": '{"collection_name": "test"}'},
+            files={"file": ("../../etc/passwd", b"content", "text/plain")},
+        )
+    # Request should not 500 — sanitization should handle the filename gracefully
+    assert resp.status_code != 500

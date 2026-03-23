@@ -1,6 +1,7 @@
 # saldivia/gateway.py
 """Auth Gateway - FastAPI middleware for RAG API."""
 import os
+import re
 import json
 import hashlib
 import logging
@@ -35,6 +36,10 @@ BYPASS_AUTH = os.getenv("BYPASS_AUTH", "false").lower() == "true"
 # Rate limiting
 LOGIN_MAX_ATTEMPTS = 5
 LOGIN_LOCKOUT_SECONDS = 60
+
+# Upload limits
+MAX_UPLOAD_SIZE_MB = 1024  # 1 GB
+MAX_UPLOAD_SIZE_BYTES = MAX_UPLOAD_SIZE_MB * 1024 * 1024
 
 # JWT Configuration
 JWT_SECRET = os.getenv("JWT_SECRET", "")
@@ -289,6 +294,13 @@ async def ingest(request: Request, user: User = Depends(get_user_from_token)):
     if not file:
         raise HTTPException(status_code=400, detail="Se requiere un archivo.")
 
+    # Validate size before reading (when available)
+    if hasattr(file, 'size') and file.size and file.size > MAX_UPLOAD_SIZE_BYTES:
+        raise HTTPException(
+            status_code=413,
+            detail=f"File too large. Maximum size: {MAX_UPLOAD_SIZE_MB}MB"
+        )
+
     try:
         data = json.loads(data_str)
     except json.JSONDecodeError:
@@ -304,7 +316,19 @@ async def ingest(request: Request, user: User = Depends(get_user_from_token)):
             )
 
     file_bytes = await file.read()
-    page_count = extract_page_count(file_bytes, file.filename)
+
+    # Validate size after reading (always)
+    if len(file_bytes) > MAX_UPLOAD_SIZE_BYTES:
+        raise HTTPException(
+            status_code=413,
+            detail=f"File too large. Maximum size: {MAX_UPLOAD_SIZE_MB}MB"
+        )
+
+    # Sanitize filename to prevent path traversal
+    safe_filename = re.sub(r'[^\w\s\-.]', '', file.filename or "upload").strip()
+    safe_filename = safe_filename[:255] or "upload"
+
+    page_count = extract_page_count(file_bytes, safe_filename)
     tier = classify_tier(page_count, len(file_bytes))
 
     # Payload al ingestor con blocking=False
@@ -318,7 +342,7 @@ async def ingest(request: Request, user: User = Depends(get_user_from_token)):
     async with httpx.AsyncClient(timeout=30) as client:
         resp = await client.post(
             f"{INGESTOR_URL}/v1/documents",
-            files={"file": (file.filename, file_bytes, file.content_type or "application/octet-stream")},
+            files={"file": (safe_filename, file_bytes, file.content_type or "application/octet-stream")},
             data={"data": json.dumps(ingestor_data)},
             headers={k: v for k, v in headers.items() if k.lower() not in ("content-type", "content-length")},
         )
@@ -332,7 +356,7 @@ async def ingest(request: Request, user: User = Depends(get_user_from_token)):
     job_id = db.create_ingestion_job(
         user_id=user.id if user else 0,
         task_id=task_id,
-        filename=file.filename,
+        filename=safe_filename,
         collection=collection_name,
         tier=tier,
         page_count=page_count,
@@ -349,7 +373,7 @@ async def ingest(request: Request, user: User = Depends(get_user_from_token)):
         "job_id": job_id,
         "tier": tier,
         "page_count": page_count,
-        "filename": file.filename,
+        "filename": safe_filename,
     }
 
 
@@ -395,7 +419,7 @@ def _check_login_rate_limit(email: str):
                 status_code=429,
                 detail=f"Too many failed login attempts. Try again in {LOGIN_LOCKOUT_SECONDS} seconds."
             )
-    except redis.exceptions.ConnectionError:
+    except redis.exceptions.RedisError:
         logger.warning("Redis unavailable for rate limiting — skipping")
 
 
@@ -408,8 +432,8 @@ def _record_failed_login(email: str):
         pipe.incr(key)
         pipe.expire(key, LOGIN_LOCKOUT_SECONDS)
         pipe.execute()
-    except redis.exceptions.ConnectionError:
-        pass
+    except redis.exceptions.RedisError:
+        logger.warning("Redis unavailable for rate limiting — skipping record")
 
 
 def _reset_login_rate_limit(email: str):
@@ -417,7 +441,7 @@ def _reset_login_rate_limit(email: str):
     try:
         r = redis.from_url(os.getenv("REDIS_URL", "redis://localhost:6379"))
         r.delete(f"rate_limit:login:{email}")
-    except redis.exceptions.ConnectionError:
+    except redis.exceptions.RedisError:
         pass
 
 
