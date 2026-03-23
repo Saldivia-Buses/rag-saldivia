@@ -311,3 +311,12 @@ def test_upload_filename_path_traversal_sanitized(client, admin_user):
     body = resp.json()
     assert ".." not in body.get("filename", "")
     assert "/" not in body.get("filename", "")
+
+
+def test_cors_headers_present(client):
+    """CORS headers are present in responses when Origin is provided."""
+    resp = client.options(
+        "/health",
+        headers={"Origin": "http://localhost:3000", "Access-Control-Request-Method": "GET"}
+    )
+    assert "access-control-allow-origin" in resp.headers
