@@ -1,6 +1,7 @@
 # saldivia/gateway.py
 """Auth Gateway - FastAPI middleware for RAG API."""
 import os
+import re
 import json
 import hashlib
 import logging
@@ -9,7 +10,9 @@ from typing import Optional
 from dataclasses import asdict
 
 import jwt as pyjwt
+import redis
 from fastapi import FastAPI, Request, HTTPException, Depends
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel
@@ -26,10 +29,28 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="RAG Saldivia Gateway")
 
+CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "DELETE", "PUT"],
+    allow_headers=["Authorization", "Content-Type"],
+)
+
 # Configuration
 RAG_SERVER_URL = os.getenv("RAG_SERVER_URL", "http://localhost:8081")
 INGESTOR_URL = os.getenv("INGESTOR_URL", "http://localhost:8082")
 BYPASS_AUTH = os.getenv("BYPASS_AUTH", "false").lower() == "true"
+
+# Rate limiting
+LOGIN_MAX_ATTEMPTS = 5
+LOGIN_LOCKOUT_SECONDS = 60
+
+# Upload limits
+MAX_UPLOAD_SIZE_MB = 1024  # 1 GB
+MAX_UPLOAD_SIZE_BYTES = MAX_UPLOAD_SIZE_MB * 1024 * 1024
 
 # JWT Configuration
 JWT_SECRET = os.getenv("JWT_SECRET", "")
@@ -284,6 +305,13 @@ async def ingest(request: Request, user: User = Depends(get_user_from_token)):
     if not file:
         raise HTTPException(status_code=400, detail="Se requiere un archivo.")
 
+    # Validate size before reading (when available)
+    if hasattr(file, 'size') and file.size and file.size > MAX_UPLOAD_SIZE_BYTES:
+        raise HTTPException(
+            status_code=413,
+            detail=f"File too large. Maximum size: {MAX_UPLOAD_SIZE_MB}MB"
+        )
+
     try:
         data = json.loads(data_str)
     except json.JSONDecodeError:
@@ -299,7 +327,20 @@ async def ingest(request: Request, user: User = Depends(get_user_from_token)):
             )
 
     file_bytes = await file.read()
-    page_count = extract_page_count(file_bytes, file.filename)
+
+    # Validate size after reading (always)
+    if len(file_bytes) > MAX_UPLOAD_SIZE_BYTES:
+        raise HTTPException(
+            status_code=413,
+            detail=f"File too large. Maximum size: {MAX_UPLOAD_SIZE_MB}MB"
+        )
+
+    # Sanitize filename to prevent path traversal
+    raw_filename = os.path.basename((file.filename or "upload").replace("\\", "/"))
+    safe_filename = re.sub(r'[^\w\s\-.]', '', raw_filename).strip()
+    safe_filename = safe_filename[:255] or "upload"
+
+    page_count = extract_page_count(file_bytes, safe_filename)
     tier = classify_tier(page_count, len(file_bytes))
 
     # Payload al ingestor con blocking=False
@@ -313,7 +354,7 @@ async def ingest(request: Request, user: User = Depends(get_user_from_token)):
     async with httpx.AsyncClient(timeout=30) as client:
         resp = await client.post(
             f"{INGESTOR_URL}/v1/documents",
-            files={"file": (file.filename, file_bytes, file.content_type or "application/octet-stream")},
+            files={"file": (safe_filename, file_bytes, file.content_type or "application/octet-stream")},
             data={"data": json.dumps(ingestor_data)},
             headers={k: v for k, v in headers.items() if k.lower() not in ("content-type", "content-length")},
         )
@@ -327,7 +368,7 @@ async def ingest(request: Request, user: User = Depends(get_user_from_token)):
     job_id = db.create_ingestion_job(
         user_id=user.id if user else 0,
         task_id=task_id,
-        filename=file.filename,
+        filename=safe_filename,
         collection=collection_name,
         tier=tier,
         page_count=page_count,
@@ -344,7 +385,7 @@ async def ingest(request: Request, user: User = Depends(get_user_from_token)):
         "job_id": job_id,
         "tier": tier,
         "page_count": page_count,
-        "filename": file.filename,
+        "filename": safe_filename,
     }
 
 
@@ -379,17 +420,58 @@ def list_collections(user: User = Depends(get_user_from_token)):
     return {"collections": db.get_user_collections(user)}
 
 
+def _check_login_rate_limit(email: str):
+    """Raise 429 if too many failed login attempts for this email."""
+    try:
+        r = redis.from_url(os.getenv("REDIS_URL", "redis://localhost:6379"))
+        key = f"rate_limit:login:{email}"
+        attempts = r.get(key)
+        if attempts and int(attempts) >= LOGIN_MAX_ATTEMPTS:
+            raise HTTPException(
+                status_code=429,
+                detail=f"Too many failed login attempts. Try again in {LOGIN_LOCKOUT_SECONDS} seconds."
+            )
+    except redis.exceptions.RedisError:
+        logger.warning("Redis unavailable for rate limiting — skipping")
+
+
+def _record_failed_login(email: str):
+    """Increment failed login counter in Redis with TTL."""
+    try:
+        r = redis.from_url(os.getenv("REDIS_URL", "redis://localhost:6379"))
+        key = f"rate_limit:login:{email}"
+        pipe = r.pipeline()
+        pipe.incr(key)
+        pipe.expire(key, LOGIN_LOCKOUT_SECONDS)
+        pipe.execute()
+    except redis.exceptions.RedisError:
+        logger.warning("Redis unavailable for rate limiting — skipping record")
+
+
+def _reset_login_rate_limit(email: str):
+    """Clear failed login counter on successful login."""
+    try:
+        r = redis.from_url(os.getenv("REDIS_URL", "redis://localhost:6379"))
+        r.delete(f"rate_limit:login:{email}")
+    except redis.exceptions.RedisError:
+        pass
+
+
 # Auth endpoints
 @app.post("/auth/session")
 def login(body: LoginRequest, user: User = Depends(get_user_from_token)):
     """Issue JWT for a valid email+password. Caller must be authenticated (BFF uses SYSTEM_API_KEY)."""
+    _check_login_rate_limit(body.email)
     target = db.get_user_by_email(body.email)
     if not target or not target.password_hash:
+        _record_failed_login(body.email)
         raise HTTPException(status_code=401, detail="Invalid credentials")
     if not verify_password(body.password, target.password_hash):
+        _record_failed_login(body.email)
         raise HTTPException(status_code=401, detail="Invalid credentials")
     if not target.active:
         raise HTTPException(status_code=403, detail="Account disabled")
+    _reset_login_rate_limit(body.email)
     db.update_last_login(target.id)
     token = create_jwt(target)
     return {"token": token, "user": {"id": target.id, "email": target.email,
