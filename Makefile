@@ -12,7 +12,7 @@ BLUEPRINT_VERSION ?= 2.5.0
 
 export SALDIVIA_ROOT
 
-.PHONY: help setup deploy stop status health ingest query test test-unit test-coverage test-e2e test-e2e-brev test-backend test-stress patch-check patch-create clean validate show-env mcp watch cli
+.PHONY: help setup deploy stop status health ingest query test test-unit test-coverage test-e2e test-e2e-brev test-backend test-stress patch-check patch-create clean validate show-env watch cli
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
@@ -98,9 +98,6 @@ show-env: ## Show generated env vars for PROFILE
 	@python3 -c "from saldivia.config import ConfigLoader; \
 		env = ConfigLoader('config').generate_env('$(PROFILE)'); \
 		print('\n'.join(f'{k}={v}' for k,v in sorted(env.items())))"
-
-mcp: ## Start MCP server (stdio)
-	python -m saldivia.mcp_server
 
 watch: ## Watch folder for auto-ingest (COLLECTION=name)
 	python -m saldivia.watch ./watch $(COLLECTION)
