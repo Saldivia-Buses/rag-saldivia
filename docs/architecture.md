@@ -24,7 +24,7 @@ in `vendor/rag-blueprint/` for reference. The deploy workflow clones the bluepri
 | 9000 | Auth Gateway | FastAPI gateway: JWT validation, RBAC, proxy to RAG Server |
 | 19530 | Milvus | Vector database with hybrid search (HNSW on CPU) |
 | (internal) | NIMs | Embed (nvidia/llama-nemotron-embed-1b-v2, port 9080), rerank (nvidia/llama-nemotron-rerank-1b-v2, port 1976), OCR |
-| (internal) | LLM | nvidia/llama-3.3-nemotron-super-49b-v1.5 (2-GPU) or external API (1-GPU, full-cloud) |
+| (internal) | LLM | External API (NVIDIA API via nvidia-api provider) |
 | (internal) | Redis | Ingestion queue for mode manager coordination |
 
 > **Nota de red interna:** El container `auth-gateway` escucha en el puerto interno 8090 (`GATEWAY_PORT`).
@@ -75,9 +75,7 @@ User
 
 | Profile | Hardware | LLM | Use Case |
 |---------|----------|-----|----------|
-| `brev-2gpu` | 2x RTX PRO 6000 Blackwell (196 GB total VRAM) | nvidia/llama-3.3-nemotron-super-49b-v1.5 (local) | Production on Brev cloud |
-| `workstation-1gpu` | 1x GPU (≥98 GB VRAM) | External (NVIDIA API via nvidia-api provider; OpenRouter used for crossdoc decomposition only) | Development workstation with mode switching |
-| `full-cloud` | No GPU | External (NVIDIA API or OpenRouter) | Cloud-only, all services via API |
+| `workstation-1gpu` | 1x RTX PRO 6000 Blackwell (96 GB VRAM) | External (NVIDIA API via nvidia-api provider; OpenRouter for crossdoc) | Production — physical workstation Ubuntu 24.04 |
 
 ## 1-GPU Mode
 

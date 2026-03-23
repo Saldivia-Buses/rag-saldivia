@@ -54,7 +54,7 @@ docker ps --format "{{.Names}}" | xargs -I{} sh -c 'echo "=== {} ===" && docker 
 cat /Users/enzo/rag-saldivia/config/.env.saldivia
 
 # Profile activo
-cat /Users/enzo/rag-saldivia/config/profiles/brev-2gpu.yaml
+cat /Users/enzo/rag-saldivia/config/profiles/workstation-1gpu.yaml
 
 # Puertos en uso
 ss -tlnp | grep -E '3000|9000|8081|8082' 2>/dev/null || netstat -tlnp 2>/dev/null | grep -E '3000|9000|8081|8082'
