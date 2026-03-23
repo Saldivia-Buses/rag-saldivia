@@ -101,7 +101,7 @@ else
 fi
 
 docker compose --env-file .env.build -f docker-compose-rag-server.yaml build \
-    rag-server rag-frontend 2>&1 | tail -5
+    rag-server 2>&1 | tail -5
 docker compose --env-file .env.build -f docker-compose-ingestor-server.yaml build \
     2>&1 | tail -5
 
