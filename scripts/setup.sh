@@ -106,4 +106,19 @@ docker compose --env-file .env.build -f docker-compose-ingestor-server.yaml buil
     2>&1 | tail -5
 
 rm -f .env.build
+
+# --- Step 7: Install Python dependencies ---
+cd "$SALDIVIA_ROOT"
+UV_BIN="${HOME}/.local/bin/uv"
+if command -v uv &>/dev/null; then
+    UV_BIN="uv"
+fi
+if command -v "$UV_BIN" &>/dev/null 2>&1; then
+    log "Installing Python dependencies (uv sync)..."
+    "$UV_BIN" sync --quiet
+    log "  Python deps ready (.venv)"
+else
+    warn "uv not found — run bootstrap.sh first, or install deps manually."
+fi
+
 log "Setup complete. Run: make deploy PROFILE=workstation-1gpu"
