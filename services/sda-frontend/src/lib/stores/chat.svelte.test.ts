@@ -119,4 +119,20 @@ describe('ChatStore', () => {
         expect(chat.messages[0].content).toBe('cargado 1');
         expect(chat.messages[1].content).toBe('cargado 2');
     });
+
+    it('finalizeStream guarda mensaje con id opcional', () => {
+        const store = new ChatStore();
+        store.startStream();
+        store.appendToken('Respuesta');
+        store.finalizeStream({ messageId: 42 });
+        expect(store.messages[0].id).toBe(42);
+    });
+
+    it('finalizeStream sin messageId deja id como undefined', () => {
+        const store = new ChatStore();
+        store.startStream();
+        store.appendToken('Respuesta');
+        store.finalizeStream();
+        expect(store.messages[0].id).toBeUndefined();
+    });
 });

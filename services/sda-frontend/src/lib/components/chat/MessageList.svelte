@@ -4,27 +4,34 @@
     import MarkdownRenderer from './MarkdownRenderer.svelte';
     import CrossdocProgress from './CrossdocProgress.svelte';
     import DecompositionView from './DecompositionView.svelte';
+    import FeedbackButtons from './FeedbackButtons.svelte';
+    import FollowUpChips from './FollowUpChips.svelte';
     import { crossdoc } from '$lib/stores/crossdoc.svelte';
+    import { generateFollowUps } from '$lib/chat/followups';
     import type { SubResult } from '$lib/crossdoc/types';
-
-    interface Message {
-        role: 'user' | 'assistant';
-        content: string;
-        timestamp: string;
-        crossdocResults?: SubResult[];
-    }
+    import type { Message } from '$lib/stores/chat.svelte';
 
     interface Props {
         messages: Message[];
         streaming: boolean;
         streamingContent: string;
         crossdoc: boolean;
+        sessionId?: string;
+        onFollowUp?: (q: string) => void;
     }
 
-    let { messages, streaming, streamingContent, crossdoc: crossdocActive }: Props = $props();
+    let {
+        messages,
+        streaming,
+        streamingContent,
+        crossdoc: crossdocActive,
+        sessionId = '',
+        onFollowUp,
+    }: Props = $props();
 
     let scrollEl = $state<HTMLDivElement | null>(null);
     let showScrollButton = $state(false);
+    let followUps = $state<string[]>([]);
 
     function handleScroll() {
         if (!scrollEl) return;
@@ -48,6 +55,32 @@
             scrollEl.scrollTo({ top: scrollEl.scrollHeight, behavior: 'smooth' });
         }
     });
+
+    let wasStreaming = $state(false);
+
+    // Generar follow-ups cuando termina el streaming
+    $effect(() => {
+        if (streaming) {
+            wasStreaming = true;
+            followUps = [];
+            return;
+        }
+        // Solo generar follow-ups si hubo un streaming real (no en el load inicial)
+        if (!wasStreaming) return;
+        wasStreaming = false;
+
+        const lastAssistant = [...messages].reverse().find(m => m.role === 'assistant');
+        if (lastAssistant) {
+            const userMsgs = messages.filter(m => m.role === 'user');
+            const lastQuery = userMsgs[userMsgs.length - 1]?.content ?? '';
+            followUps = generateFollowUps(lastAssistant.content, lastQuery);
+        }
+    });
+
+    // Índice del último mensaje assistant
+    let lastAssistantIdx = $derived(
+        messages.reduce((acc, m, i) => (m.role === 'assistant' ? i : acc), -1)
+    );
 </script>
 
 <div class="relative flex-1 overflow-hidden">
@@ -56,7 +89,7 @@
         onscroll={handleScroll}
         class="h-full overflow-y-auto p-3 flex flex-col gap-3"
     >
-        {#each messages as msg (msg.timestamp)}
+        {#each messages as msg, i (msg.timestamp)}
             {#if msg.role === 'user'}
                 <div class="flex justify-end">
                     <div class="bg-[var(--accent)] rounded-lg rounded-tr-sm px-3 py-2 max-w-[70%]">
@@ -71,6 +104,18 @@
                         <MarkdownRenderer content={msg.content} />
                         {#if msg.role === 'assistant' && msg.crossdocResults && crossdoc.options.showDecomposition}
                             <DecompositionView results={msg.crossdocResults} />
+                        {/if}
+                        {#if msg.id !== undefined}
+                            <FeedbackButtons
+                                messageId={msg.id}
+                                {sessionId}
+                            />
+                        {/if}
+                        {#if i === lastAssistantIdx && !streaming && followUps.length > 0}
+                            <FollowUpChips
+                                suggestions={followUps}
+                                onselect={(q) => onFollowUp?.(q)}
+                            />
                         {/if}
                     </div>
                 </div>

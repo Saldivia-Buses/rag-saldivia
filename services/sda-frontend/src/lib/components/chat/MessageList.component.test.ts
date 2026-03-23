@@ -69,4 +69,60 @@ describe('MessageList', () => {
         });
         expect(screen.queryByText('▋')).toBeNull();
     });
+
+    it('renderiza FeedbackButtons para mensajes assistant', async () => {
+        const msgs = [
+            { id: 1, role: 'assistant' as const, content: 'Respuesta', timestamp: '2026-01-01T00:00:00Z' },
+        ];
+        const { container } = render(MessageList, {
+            props: {
+                messages: msgs,
+                streaming: false,
+                streamingContent: '',
+                crossdoc: false,
+                sessionId: 'ses-1',
+            }
+        });
+        // FeedbackButtons renderiza 2 botones (👍 👎)
+        const buttons = container.querySelectorAll('button');
+        expect(buttons.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('no renderiza FeedbackButtons para mensajes sin id', () => {
+        const msgs = [
+            { role: 'assistant' as const, content: 'Respuesta sin id', timestamp: '2026-01-01T00:00:00Z' },
+            // sin campo id
+        ];
+        const { container } = render(MessageList, {
+            props: {
+                messages: msgs,
+                streaming: false,
+                streamingContent: '',
+                crossdoc: false,
+                sessionId: 'ses-1',
+            }
+        });
+        // Si no hay id, no debe haber botones de feedback (👍/👎)
+        const feedbackButtons = container.querySelectorAll('button[title="Útil"], button[title="No útil"]');
+        expect(feedbackButtons).toHaveLength(0);
+    });
+
+    it('no muestra follow-ups al cargar historial inicial (sin streaming)', () => {
+        const msgs = [
+            { id: 1, role: 'user' as const, content: '¿Qué dice el doc?', timestamp: '2026-01-01T00:00:00Z' },
+            { id: 2, role: 'assistant' as const, content: 'El documento dice algo. También dice otra cosa. Y una tercera cosa importante aquí.', timestamp: '2026-01-01T00:00:01Z' },
+        ];
+        const { container } = render(MessageList, {
+            props: {
+                messages: msgs,
+                streaming: false,
+                streamingContent: '',
+                crossdoc: false,
+                sessionId: 'ses-1',
+            }
+        });
+        // En carga inicial (streaming nunca fue true), no debe haber chips de follow-up
+        const chips = container.querySelectorAll('button.rounded-full');
+        expect(chips).toHaveLength(0);
+    });
 });

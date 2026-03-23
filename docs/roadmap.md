@@ -1,7 +1,7 @@
 # RAG Saldivia — Roadmap
 
 > Fuente de verdad del estado del proyecto. Se actualiza solo cuando Enzo lo pide.
-> Última actualización: 2026-03-23
+> Última actualización: 2026-03-23 (Fase 7 completada)
 
 ---
 
@@ -19,6 +19,8 @@
 | 5.3 | Bugfix — fixtures conftest, type errors, test isolation | 2026-03-19 |
 | 5.5 | Workstation — perfil 1-GPU, workstation física Ubuntu 24.04 | 2026-03-23 |
 | 5.6 | Hardening — rate limiting, upload limit, CORS, sanitización | 2026-03-23 |
+| 6 | Upload inteligente — tier system, deadlock detection, resume | 2026-03-23 |
+| 7 | Chat Sesiones Pro — rename, feedback, follow-ups, export | 2026-03-23 |
 
 ---
 
@@ -32,11 +34,10 @@ _Nada en progreso actualmente._
 
 | Prioridad | Fase | Descripción | Depende de |
 |-----------|------|-------------|-----------|
-| 1 | 6 | Upload inteligente — tier system, deadlock detection, resume | 5.6 |
-| 2 | 7 | Settings Pro — configuración de usuario + preferencias RAG | 6 |
-| 3 | 8 | Admin Pro — gestión avanzada de users, areas, permisos | 6 |
-| 4 | 9 | Audit Log Pro — filtros, export, visualización | 8 |
-| 5 | 10 | RAG Config Pro — tuning de parámetros desde UI | 8 |
+| 1 | 8 | Settings Pro — configuración de usuario + preferencias RAG | 7 |
+| 2 | 9 | Admin Pro — gestión avanzada de users, areas, permisos | 7 |
+| 3 | 10 | Audit Log Pro — filtros, export, visualización | 9 |
+| 4 | 11 | RAG Config Pro — tuning de parámetros desde UI | 9 |
 
 ---
 
@@ -64,8 +65,9 @@ _Nada en progreso actualmente._
 
 ```
 Fase 6 (Upload inteligente)
-  └── Fase 7 (Settings Pro)
-  └── Fase 8 (Admin Pro)
-        └── Fase 9 (Audit Log Pro)
-        └── Fase 10 (RAG Config Pro)
+  └── Fase 7 (Chat Sesiones Pro)
+        └── Fase 8 (Settings Pro)
+        └── Fase 9 (Admin Pro)
+              └── Fase 10 (Audit Log Pro)
+              └── Fase 11 (RAG Config Pro)
 ```
