@@ -101,7 +101,9 @@ else
 fi
 
 docker compose --env-file .env.build -f docker-compose-rag-server.yaml build \
-    ingestor-server rag-server rag-frontend 2>&1 | tail -5
+    rag-server rag-frontend 2>&1 | tail -5
+docker compose --env-file .env.build -f docker-compose-ingestor-server.yaml build \
+    2>&1 | tail -5
 
 rm -f .env.build
 log "Setup complete. Run: make deploy PROFILE=workstation-1gpu"
