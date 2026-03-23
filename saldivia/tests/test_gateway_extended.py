@@ -16,19 +16,6 @@ def test_password_hashing():
     assert hashed != pw
 
 
-@pytest.fixture
-def client():
-    return TestClient(app, raise_server_exceptions=False)
-
-
-@pytest.fixture
-def admin_user():
-    key, hash_val = generate_api_key()
-    return User(id=1, email="admin@test.com", name="Admin", area_id=1,
-                role=Role.ADMIN, api_key_hash=hash_val,
-                password_hash=hash_password("admin123"))
-
-
 def test_login_success(client, admin_user):
     with patch("saldivia.gateway.db") as mock_db:
         mock_db.get_user_by_email.return_value = admin_user
@@ -491,7 +478,7 @@ def test_generate_happy_path(client, admin_user):
 
     assert resp.status_code == 200
     content = resp.content
-    assert b"hello" in content or len(content) >= 0  # stream consumed
+    assert b"hello" in content
 
 
 def test_generate_rag_server_500(client, admin_user):
