@@ -192,13 +192,6 @@ class _MemConnContext:
             self._conn.rollback()
         return False  # don't suppress exceptions
 
-    # Proxy attribute access so callers can use the context object directly
-    def execute(self, *args, **kwargs):
-        return self._conn.execute(*args, **kwargs)
-
-    def executescript(self, *args, **kwargs):
-        return self._conn.executescript(*args, **kwargs)
-
 
 class AuthDB:
     """Synchronous auth database operations."""
@@ -208,7 +201,6 @@ class AuthDB:
         if str(db_path) == ":memory:":
             # Maintain a single persistent connection for in-memory databases
             self._mem_conn = sqlite3.connect(":memory:", check_same_thread=False)
-            self._mem_conn.isolation_level = None  # autocommit off; managed by context manager
             init_db_conn(self._mem_conn)
         else:
             self._mem_conn = None

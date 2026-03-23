@@ -81,7 +81,6 @@ describe('MessageList', () => {
                 streamingContent: '',
                 crossdoc: false,
                 sessionId: 'ses-1',
-                userId: 7,
             }
         });
         // FeedbackButtons renderiza 2 botones (👍 👎)
@@ -101,7 +100,6 @@ describe('MessageList', () => {
                 streamingContent: '',
                 crossdoc: false,
                 sessionId: 'ses-1',
-                userId: 7,
             }
         });
         // Si no hay id, no debe haber botones de feedback (👍/👎)
@@ -121,7 +119,6 @@ describe('MessageList', () => {
                 streamingContent: '',
                 crossdoc: false,
                 sessionId: 'ses-1',
-                userId: 7,
             }
         });
         // En carga inicial (streaming nunca fue true), no debe haber chips de follow-up
