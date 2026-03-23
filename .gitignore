@@ -35,5 +35,8 @@ node_modules/
 .claude/
 .firecrawl/
 
-# Screenshots (peekaboo / manual)
+# Capturas de pantalla y artefactos locales
+screen*.png
+screen*.jpg
+*.screenshot.png
 *.png

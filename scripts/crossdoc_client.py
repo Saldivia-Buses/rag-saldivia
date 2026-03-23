@@ -31,20 +31,9 @@ import requests
 # SDK integration (optional — graceful fallback if not installed)
 try:
     from saldivia import ConfigLoader, ProviderClient, ModelConfig
-    from saldivia.cache import QueryCache, CacheConfig
     SDK_AVAILABLE = True
 except ImportError:
     SDK_AVAILABLE = False
-
-# Initialize cache if available
-_cache = None
-
-
-def get_cache():
-    global _cache
-    if _cache is None and SDK_AVAILABLE:
-        _cache = QueryCache()
-    return _cache
 
 
 # ---------------------------------------------------------------------------
@@ -588,7 +577,6 @@ def parse_args():
     p.add_argument("--test", action="store_true")
     p.add_argument("--verbose", action="store_true")
     p.add_argument("--profile", type=str, help="Config profile (e.g. workstation-1gpu)")
-    p.add_argument("--no-cache", action="store_true", dest="no_cache", help="Disable query caching")
     return p.parse_args()
 
 
