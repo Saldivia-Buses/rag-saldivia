@@ -5,6 +5,7 @@ import time
 import signal
 import logging
 import httpx
+import redis.exceptions
 from pathlib import Path
 from saldivia.ingestion_queue import IngestionQueue
 
@@ -14,6 +15,9 @@ INGESTOR_URL = os.getenv("INGESTOR_URL", "http://localhost:8082")
 
 MAX_RETRIES = 3
 RETRY_DELAYS = [10, 30, 60]  # seconds between retries
+
+REDIS_RETRY_DELAY = 5   # seconds base delay on Redis unavailable
+REDIS_MAX_DELAY = 60    # max backoff cap
 
 _shutdown = False
 
@@ -78,21 +82,28 @@ def run_worker(redis_url: str = None):
     queue = IngestionQueue(redis_url)
     logger.info(f"Ingestion worker started (redis: {redis_url})")
 
+    redis_delay = REDIS_RETRY_DELAY
     try:
         while not _shutdown:
-            job = queue.dequeue()
+            try:
+                job = queue.dequeue()
+                redis_delay = REDIS_RETRY_DELAY  # reset backoff on successful contact
 
-            if job is None:
-                time.sleep(5)
-                continue
+                if job is None:
+                    time.sleep(5)
+                    continue
 
-            queue.update_status(job.id, "processing")
-            success = process_job_with_retry(job)
-            queue.update_status(
-                job.id,
-                "completed" if success else "failed",
-                error=None if success else "Max retries exceeded"
-            )
+                queue.update_status(job.id, "processing")
+                success = process_job_with_retry(job)
+                queue.update_status(
+                    job.id,
+                    "completed" if success else "failed",
+                    error=None if success else "Max retries exceeded"
+                )
+            except redis.exceptions.ConnectionError as e:
+                logger.warning(f"Redis unavailable: {e}. Retrying in {redis_delay}s...")
+                time.sleep(redis_delay)
+                redis_delay = min(redis_delay * 2, REDIS_MAX_DELAY)
     finally:
         queue.close()
         logger.info("Ingestion worker stopped")
