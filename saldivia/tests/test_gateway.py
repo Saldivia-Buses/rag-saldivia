@@ -9,18 +9,6 @@ from saldivia.auth import User, Role, Permission
 from saldivia.gateway import app, filter_collections
 
 
-# Test fixtures
-@pytest.fixture
-def admin_user():
-    return User(
-        id=1,
-        email="admin@test.com",
-        name="Admin",
-        area_id=1,
-        role=Role.ADMIN,
-        api_key_hash="admin_hash"
-    )
-
 @pytest.fixture
 def regular_user():
     return User(

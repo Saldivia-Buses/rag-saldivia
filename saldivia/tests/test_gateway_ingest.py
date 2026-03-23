@@ -44,12 +44,6 @@ from saldivia.gateway import app
 from saldivia.auth.models import User, Role
 
 
-@pytest.fixture
-def admin_user():
-    return User(id=1, email="admin@test.com", name="Admin",
-                area_id=1, role=Role.ADMIN, api_key_hash="hash")
-
-
 def test_ingest_returns_job_id_and_tier(admin_user):
     """POST /v1/documents devuelve job_id, tier, page_count."""
     client = TestClient(app)
