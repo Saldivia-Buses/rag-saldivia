@@ -15,3 +15,39 @@ services:
     decomposition:
       provider: openrouter
       model: anthropic/claude-sonnet-4
+
+ingestion:
+  # Paralelismo por tier group
+  parallel_slots_small: 2        # simultáneos para tiny + small
+  parallel_slots_large: 1        # simultáneos para medium + large
+
+  # Reintentos
+  client_max_retries: 3
+  server_max_retries: 3
+  retry_backoff_base: 30         # segundos base, se dobla cada intento
+
+  # Stall detection
+  stall_check_interval: 60       # segundos entre runs del background task
+
+  # Tiers — todos los valores de timeout/poll/deadlock configurables acá
+  tiers:
+    tiny:
+      max_pages: 20
+      poll_interval: 5
+      deadlock_threshold: 30
+      timeout: 300
+    small:
+      max_pages: 80
+      poll_interval: 10
+      deadlock_threshold: 60
+      timeout: 900
+    medium:
+      max_pages: 250
+      poll_interval: 20
+      deadlock_threshold: 90
+      timeout: 2700
+    large:
+      max_pages: null             # sin límite
+      poll_interval: 30
+      deadlock_threshold: 120
+      timeout: 7200               # ajustar según hardware
