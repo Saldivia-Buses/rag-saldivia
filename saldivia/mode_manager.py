@@ -1,6 +1,7 @@
 # saldivia/mode_manager.py
 """1-GPU Mode Manager for dynamic model loading."""
 import enum
+import os
 import subprocess
 import time
 import logging
@@ -47,6 +48,16 @@ class ModeManager:
         self.gpu_memory_gb = gpu_memory_gb
         self.current_mode = Mode.QUERY
         self._vlm_loaded = False
+        self._ingestion_queue = self._init_ingestion_queue()
+
+    def _init_ingestion_queue(self):
+        """Initialize IngestionQueue once at startup. Returns None if unavailable."""
+        try:
+            from saldivia.ingestion_queue import IngestionQueue
+            redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
+            return IngestionQueue(redis_url)
+        except Exception:
+            return None
 
     def can_switch_to(self, target: Mode) -> bool:
         """Check if we have enough VRAM for target mode."""
@@ -166,10 +177,8 @@ class ModeManager:
     def _get_pending_jobs(self) -> int:
         """Get number of pending ingestion jobs from queue."""
         try:
-            import os
-            from saldivia.ingestion_queue import IngestionQueue
-            redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
-            queue = IngestionQueue(redis_url)
-            return queue.pending_count()
+            if self._ingestion_queue is None:
+                return 0
+            return self._ingestion_queue.pending_count()
         except Exception:
             return 0
