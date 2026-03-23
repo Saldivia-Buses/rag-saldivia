@@ -325,7 +325,8 @@ async def ingest(request: Request, user: User = Depends(get_user_from_token)):
         )
 
     # Sanitize filename to prevent path traversal
-    safe_filename = re.sub(r'[^\w\s\-.]', '', file.filename or "upload").strip()
+    raw_filename = os.path.basename((file.filename or "upload").replace("\\", "/"))
+    safe_filename = re.sub(r'[^\w\s\-.]', '', raw_filename).strip()
     safe_filename = safe_filename[:255] or "upload"
 
     page_count = extract_page_count(file_bytes, safe_filename)

@@ -254,10 +254,11 @@ def test_login_rate_limit_records_on_wrong_password(client, admin_user):
 
 
 def test_upload_file_too_large_returns_413(client, admin_user):
-    """File over 1GB limit returns 413."""
-    from saldivia.gateway import MAX_UPLOAD_SIZE_BYTES
-    oversized = b"x" * (MAX_UPLOAD_SIZE_BYTES + 1)
-    with patch("saldivia.gateway.get_user_from_token", return_value=admin_user):
+    """File over upload limit returns 413."""
+    small_limit = 10  # bytes, for test only
+    with patch("saldivia.gateway.get_user_from_token", return_value=admin_user), \
+         patch("saldivia.gateway.MAX_UPLOAD_SIZE_BYTES", small_limit):
+        oversized = b"x" * (small_limit + 1)
         resp = client.post(
             "/v1/documents",
             data={"data": '{"collection_name": "test"}'},
@@ -306,5 +307,7 @@ def test_upload_filename_path_traversal_sanitized(client, admin_user):
             data={"data": '{"collection_name": "test"}'},
             files={"file": ("../../etc/passwd", b"content", "text/plain")},
         )
-    # Request should not 500 — sanitization should handle the filename gracefully
-    assert resp.status_code != 500
+    assert resp.status_code == 200
+    body = resp.json()
+    assert ".." not in body.get("filename", "")
+    assert "/" not in body.get("filename", "")
