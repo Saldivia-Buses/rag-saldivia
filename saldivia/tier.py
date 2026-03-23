@@ -36,7 +36,7 @@ def classify_tier(
             return "tiny"
         elif page_count <= 80:
             return "small"
-        elif page_count <= 300:
+        elif page_count <= 250:
             return "medium"
         else:
             return "large"

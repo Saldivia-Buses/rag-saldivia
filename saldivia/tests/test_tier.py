@@ -24,8 +24,8 @@ def test_classify_tier_boundary_small_medium():
     assert classify_tier(page_count=81) == "medium"
 
 def test_classify_tier_boundary_medium_large():
-    assert classify_tier(page_count=300) == "medium"
-    assert classify_tier(page_count=301) == "large"
+    assert classify_tier(page_count=250) == "medium"
+    assert classify_tier(page_count=251) == "large"
 
 def test_classify_tier_by_file_size_when_no_pages():
     assert classify_tier(page_count=None, file_size=50_000) == "tiny"
