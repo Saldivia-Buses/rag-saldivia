@@ -106,6 +106,40 @@ def init_db(db_path: Path = DB_PATH):
         CREATE INDEX IF NOT EXISTS idx_ingestion_jobs_state ON ingestion_jobs(state);
     """)
 
+    # Migration: add Fase 6 columns to ingestion_jobs if missing
+    for col, definition in [
+        ("file_hash",    "TEXT"),
+        ("retry_count",  "INTEGER DEFAULT 0"),
+        ("last_checked", "TEXT"),
+    ]:
+        try:
+            conn.execute(f"ALTER TABLE ingestion_jobs ADD COLUMN {col} {definition}")
+        except Exception:
+            pass  # columna ya existe
+
+    # Migration: add ingestion_alerts table (Fase 6)
+    conn.executescript("""
+        CREATE TABLE IF NOT EXISTS ingestion_alerts (
+            id                   TEXT PRIMARY KEY,
+            job_id               TEXT NOT NULL,
+            user_id              INTEGER NOT NULL,
+            filename             TEXT NOT NULL,
+            collection           TEXT NOT NULL,
+            tier                 TEXT NOT NULL,
+            page_count           INTEGER,
+            file_hash            TEXT,
+            error                TEXT,
+            retry_count          INTEGER,
+            progress_at_failure  INTEGER,
+            gateway_version      TEXT,
+            created_at           TEXT NOT NULL,
+            resolved_at          TEXT,
+            resolved_by          TEXT,
+            notes                TEXT
+        );
+        CREATE INDEX IF NOT EXISTS idx_alerts_resolved ON ingestion_alerts(resolved_at);
+    """)
+
     conn.close()
 
 
@@ -441,6 +475,7 @@ class AuthDB:
         collection: str,
         tier: str,
         page_count: int | None,
+        file_hash: str | None = None,
     ) -> str:
         import uuid
         from datetime import datetime
@@ -448,10 +483,10 @@ class AuthDB:
         with self._conn() as conn:
             conn.execute(
                 """INSERT INTO ingestion_jobs
-                   (id, user_id, task_id, filename, collection, tier, page_count, created_at)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                   (id, user_id, task_id, filename, collection, tier, page_count, created_at, file_hash)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (job_id, user_id, task_id, filename, collection, tier, page_count,
-                 datetime.now().isoformat()),
+                 datetime.now().isoformat(), file_hash),
             )
         return job_id
 
@@ -491,4 +526,107 @@ class AuthDB:
                    SET state = ?, progress = ?, completed_at = ?
                    WHERE id = ?""",
                 (state, progress, completed_at, job_id),
+            )
+
+    def check_file_hash(self, file_hash: str, collection: str) -> dict | None:
+        """Busca el job más reciente con ese hash en esa colección."""
+        with self._conn() as conn:
+            cur = conn.execute(
+                """SELECT id, filename, collection, tier, page_count, state,
+                          created_at, completed_at
+                   FROM ingestion_jobs
+                   WHERE file_hash = ? AND collection = ?
+                   ORDER BY created_at DESC LIMIT 1""",
+                (file_hash, collection),
+            )
+            row = cur.fetchone()
+            if row is None:
+                return None
+            cols = [c[0] for c in cur.description]
+            return dict(zip(cols, row))
+
+    def get_all_active_ingestion_jobs(self) -> list[dict]:
+        """Lista todos los jobs activos (todos los usuarios) para el stall checker."""
+        with self._conn() as conn:
+            cur = conn.execute(
+                """SELECT * FROM ingestion_jobs
+                   WHERE state IN ('pending', 'running')
+                   ORDER BY created_at ASC"""
+            )
+            cols = [c[0] for c in cur.description]
+            return [dict(zip(cols, r)) for r in cur.fetchall()]
+
+    def increment_ingestion_retry(self, job_id: str) -> None:
+        """Incrementa retry_count y actualiza last_checked."""
+        from datetime import datetime
+        with self._conn() as conn:
+            conn.execute(
+                """UPDATE ingestion_jobs
+                   SET retry_count = retry_count + 1, last_checked = ?
+                   WHERE id = ?""",
+                (datetime.now().isoformat(), job_id),
+            )
+
+    # Ingestion alerts
+    def create_ingestion_alert(
+        self,
+        job_id: str,
+        user_id: int,
+        filename: str,
+        collection: str,
+        tier: str,
+        page_count: int | None,
+        file_hash: str | None,
+        error: str | None,
+        retry_count: int,
+        progress_at_failure: int,
+    ) -> str:
+        import uuid
+        from datetime import datetime
+        try:
+            import importlib.metadata
+            gw_version = importlib.metadata.version("saldivia")
+        except Exception:
+            gw_version = "unknown"
+        alert_id = str(uuid.uuid4())
+        with self._conn() as conn:
+            conn.execute(
+                """INSERT INTO ingestion_alerts
+                   (id, job_id, user_id, filename, collection, tier, page_count,
+                    file_hash, error, retry_count, progress_at_failure,
+                    gateway_version, created_at)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                (alert_id, job_id, user_id, filename, collection, tier,
+                 page_count, file_hash, error, retry_count, progress_at_failure,
+                 gw_version, datetime.now().isoformat()),
+            )
+        return alert_id
+
+    def list_ingestion_alerts(self, resolved: bool | None = None) -> list[dict]:
+        with self._conn() as conn:
+            if resolved is None:
+                cur = conn.execute(
+                    "SELECT * FROM ingestion_alerts ORDER BY created_at DESC"
+                )
+            elif resolved:
+                cur = conn.execute(
+                    "SELECT * FROM ingestion_alerts WHERE resolved_at IS NOT NULL ORDER BY created_at DESC"
+                )
+            else:
+                cur = conn.execute(
+                    "SELECT * FROM ingestion_alerts WHERE resolved_at IS NULL ORDER BY created_at DESC"
+                )
+            cols = [c[0] for c in cur.description]
+            return [dict(zip(cols, r)) for r in cur.fetchall()]
+
+    def resolve_ingestion_alert(
+        self, alert_id: str, resolved_by: str, notes: str | None = None
+    ) -> None:
+        from datetime import datetime
+        with self._conn() as conn:
+            conn.execute(
+                """UPDATE ingestion_alerts
+                   SET resolved_at = ?, resolved_by = ?, notes = ?
+                   WHERE id = ?""",
+                (datetime.now().isoformat(), resolved_by, notes, alert_id),
             )
