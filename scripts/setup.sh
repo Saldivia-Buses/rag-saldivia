@@ -31,22 +31,29 @@ cd "$BLUEPRINT_DIR"
 # --- Step 2: Validate frontend patches (dry-run) ---
 PATCH_DIR="${SALDIVIA_ROOT}/patches/frontend/patches"
 if [ -d "$PATCH_DIR" ]; then
-    log "Validating frontend patches..."
+    log "Validating frontend patches (blueprint React UI — optional)..."
+    PATCHES_OK=true
     for patch in "$PATCH_DIR"/*.patch; do
         [ -f "$patch" ] || continue
         if ! git apply --check "$patch" 2>/dev/null; then
-            err "Patch failed dry-run: $(basename "$patch"). Blueprint version mismatch?"
+            warn "Patch no aplica: $(basename "$patch") (blueprint version mismatch — skipping)"
+            PATCHES_OK=false
+        else
+            log "  OK: $(basename "$patch")"
         fi
-        log "  OK: $(basename "$patch")"
     done
 
     # --- Step 3: Apply frontend patches ---
-    log "Applying frontend patches..."
-    for patch in "$PATCH_DIR"/*.patch; do
-        [ -f "$patch" ] || continue
-        git apply "$patch"
-        log "  Applied: $(basename "$patch")"
-    done
+    if [ "$PATCHES_OK" = true ]; then
+        log "Applying frontend patches..."
+        for patch in "$PATCH_DIR"/*.patch; do
+            [ -f "$patch" ] || continue
+            git apply "$patch"
+            log "  Applied: $(basename "$patch")"
+        done
+    else
+        warn "Skipping patch application (SDA SvelteKit frontend no las necesita)"
+    fi
 else
     log "No frontend patches found. Skipping."
 fi
