@@ -41,6 +41,7 @@ class ConfigLoader:
 
     def __init__(self, config_dir: str = "config"):
         self.config_dir = Path(config_dir)
+        self._config: dict = {}
 
     def load(self, profile: str = None) -> dict:
         """Load configuration with optional profile overrides."""
@@ -60,6 +61,7 @@ class ConfigLoader:
                     override = yaml.safe_load(f) or {}
                     config = deep_merge(config, override)
 
+        self._config = config
         return config
 
     def _get_nested(self, data: dict, keys: tuple):
@@ -91,6 +93,28 @@ class ConfigLoader:
                 env["APP_LLM_APIKEY"] = os.environ["NVIDIA_API_KEY"]
 
         return env
+
+    def ingestion_config(self) -> dict:
+        """Return ingestion configuration merged with defaults from loaded profile."""
+        profile_ingestion = self._config.get("ingestion", {})
+        return deep_merge(_INGESTION_DEFAULTS, profile_ingestion)
+
+
+_INGESTION_DEFAULTS: dict = {
+    "parallel_slots_small": 2,
+    "parallel_slots_large": 1,
+    "client_max_retries": 3,
+    "server_max_retries": 3,
+    "retry_backoff_base": 30,
+    "stall_check_interval": 60,
+    "tiers": {
+        "tiny":   {"max_pages": 20,  "poll_interval": 5,  "deadlock_threshold": 30,  "timeout": 300},
+        "small":  {"max_pages": 80,  "poll_interval": 10, "deadlock_threshold": 60,  "timeout": 900},
+        "medium": {"max_pages": 250, "poll_interval": 20, "deadlock_threshold": 90,  "timeout": 2700},
+        "large":  {"max_pages": None,"poll_interval": 30, "deadlock_threshold": 120, "timeout": 7200},
+    },
+}
+
 
 def validate_config(config: dict) -> list[str]:
     """Validate configuration, return errors."""
