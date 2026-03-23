@@ -16,7 +16,7 @@ Configuration files for the RAG Saldivia overlay on NVIDIA RAG Blueprint v2.5.0.
 | `observability.yaml` | Observability configuration: logging, metrics, tracing (NVIDIA Blueprint feature) | None |
 | `platform.yaml` | Base platform configuration: RAG server, ingestor, LLM service settings | None |
 | `prompt.yaml` | System and RAG prompts for the LLM | None |
-| `profiles/` | Deployment profiles: YAML + env files for brev-2gpu, workstation-1gpu, full-cloud | See profiles/README.md |
+| `profiles/` | Deployment profiles: YAML + env files for workstation-1gpu | See profiles/README.md |
 
 ## Design Notes
 
