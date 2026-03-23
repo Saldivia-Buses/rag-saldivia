@@ -587,7 +587,7 @@ def parse_args():
     p.add_argument("--json", action="store_true", dest="output_json")
     p.add_argument("--test", action="store_true")
     p.add_argument("--verbose", action="store_true")
-    p.add_argument("--profile", type=str, help="Config profile (e.g. brev-2gpu, workstation-1gpu)")
+    p.add_argument("--profile", type=str, help="Config profile (e.g. workstation-1gpu)")
     p.add_argument("--no-cache", action="store_true", dest="no_cache", help="Disable query caching")
     return p.parse_args()
 

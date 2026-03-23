@@ -21,7 +21,7 @@ help: ## Show this help
 setup: ## Clone blueprint, apply patches, build images
 	@./scripts/setup.sh $(BLUEPRINT_VERSION)
 
-deploy: ## Start services (PROFILE=brev-2gpu|workstation-1gpu)
+deploy: ## Start services (PROFILE=workstation-1gpu)
 	@./scripts/deploy.sh $(PROFILE)
 
 stop: ## Stop all services
@@ -88,7 +88,7 @@ patch-create: ## Generate patches from current blueprint changes
 	git diff --cached > /tmp/saldivia-patches.patch && \
 	echo "Patch saved to /tmp/saldivia-patches.patch"
 
-validate: ## Validate config for PROFILE (PROFILE=brev-2gpu|workstation-1gpu|full-cloud)
+validate: ## Validate config for PROFILE (PROFILE=workstation-1gpu)
 	@python3 -c "from saldivia.config import ConfigLoader, validate_config; \
 		c = ConfigLoader('config').load('$(PROFILE)'); \
 		errors = validate_config(c); \
