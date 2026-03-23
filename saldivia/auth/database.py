@@ -1,11 +1,25 @@
 # saldivia/auth/database.py
 """SQLite database for auth."""
 import sqlite3
+import uuid
+from datetime import datetime
 from pathlib import Path
 from typing import Optional
 from saldivia.auth.models import User, Area, AreaCollection, AuditEntry, Role, Permission
 
 DB_PATH = Path("data/auth.db")
+
+# Cacheado al importar el módulo — la versión no cambia en runtime
+try:
+    from importlib.metadata import version as _pkg_version
+    _SALDIVIA_VERSION = _pkg_version("saldivia")
+except Exception:
+    _SALDIVIA_VERSION = "unknown"
+
+# Estados de jobs para el stall checker (solo activos, sin stalled)
+_STALL_CHECK_STATES = ("pending", "running")
+# Estados visibles como "activos" en la UI del usuario (incluye stalled)
+_ACTIVE_UI_STATES = ("pending", "running", "stalled")
 
 
 def init_db(db_path: Path = DB_PATH):
@@ -104,6 +118,40 @@ def init_db(db_path: Path = DB_PATH):
         );
         CREATE INDEX IF NOT EXISTS idx_ingestion_jobs_user ON ingestion_jobs(user_id);
         CREATE INDEX IF NOT EXISTS idx_ingestion_jobs_state ON ingestion_jobs(state);
+    """)
+
+    # Migration: add Fase 6 columns to ingestion_jobs if missing
+    for col, definition in [
+        ("file_hash",    "TEXT"),
+        ("retry_count",  "INTEGER DEFAULT 0"),
+        ("last_checked", "TEXT"),
+    ]:
+        try:
+            conn.execute(f"ALTER TABLE ingestion_jobs ADD COLUMN {col} {definition}")
+        except Exception:
+            pass  # columna ya existe
+
+    # Migration: add ingestion_alerts table (Fase 6)
+    conn.executescript("""
+        CREATE TABLE IF NOT EXISTS ingestion_alerts (
+            id                   TEXT PRIMARY KEY,
+            job_id               TEXT NOT NULL,
+            user_id              INTEGER NOT NULL,
+            filename             TEXT NOT NULL,
+            collection           TEXT NOT NULL,
+            tier                 TEXT NOT NULL,
+            page_count           INTEGER,
+            file_hash            TEXT,
+            error                TEXT,
+            retry_count          INTEGER,
+            progress_at_failure  INTEGER,
+            gateway_version      TEXT,
+            created_at           TEXT NOT NULL,
+            resolved_at          TEXT,
+            resolved_by          TEXT,
+            notes                TEXT
+        );
+        CREATE INDEX IF NOT EXISTS idx_alerts_resolved ON ingestion_alerts(resolved_at);
     """)
 
     conn.close()
@@ -229,7 +277,6 @@ class AuthDB:
             conn.execute("UPDATE users SET api_key_hash = ? WHERE id = ?", (api_key_hash, user_id))
 
     def update_last_login(self, user_id: int):
-        from datetime import datetime
         with self._conn() as conn:
             conn.execute("UPDATE users SET last_login = ? WHERE id = ?",
                          (datetime.now().isoformat(), user_id))
@@ -394,7 +441,6 @@ class AuthDB:
                            messages=messages)
 
     def create_chat_session(self, user_id: int, collection: str, crossdoc: bool = False):
-        import uuid
         from saldivia.auth.models import ChatSession
         session_id = str(uuid.uuid4())
         with self._conn() as conn:
@@ -408,7 +454,6 @@ class AuthDB:
 
     def add_chat_message(self, session_id: str, role: str, content: str, sources=None):
         import json
-        from datetime import datetime
         sources_json = json.dumps(sources) if sources else None
         with self._conn() as conn:
             conn.execute(
@@ -441,17 +486,16 @@ class AuthDB:
         collection: str,
         tier: str,
         page_count: int | None,
+        file_hash: str | None = None,
     ) -> str:
-        import uuid
-        from datetime import datetime
         job_id = str(uuid.uuid4())
         with self._conn() as conn:
             conn.execute(
                 """INSERT INTO ingestion_jobs
-                   (id, user_id, task_id, filename, collection, tier, page_count, created_at)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                   (id, user_id, task_id, filename, collection, tier, page_count, created_at, file_hash)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (job_id, user_id, task_id, filename, collection, tier, page_count,
-                 datetime.now().isoformat()),
+                 datetime.now().isoformat(), file_hash),
             )
         return job_id
 
@@ -467,12 +511,11 @@ class AuthDB:
             return dict(zip(columns, row))
 
     def get_active_ingestion_jobs(self, user_id: int) -> list[dict]:
+        placeholders = ",".join("?" * len(_ACTIVE_UI_STATES))
         with self._conn() as conn:
             cur = conn.execute(
-                """SELECT * FROM ingestion_jobs
-                   WHERE user_id = ? AND state IN ('pending','running','stalled')
-                   ORDER BY created_at DESC""",
-                (user_id,),
+                f"SELECT * FROM ingestion_jobs WHERE user_id = ? AND state IN ({placeholders}) ORDER BY created_at DESC",
+                (user_id, *_ACTIVE_UI_STATES),
             )
             rows = cur.fetchall()
             columns = [col[0] for col in cur.description]
@@ -491,4 +534,93 @@ class AuthDB:
                    SET state = ?, progress = ?, completed_at = ?
                    WHERE id = ?""",
                 (state, progress, completed_at, job_id),
+            )
+
+    def check_file_hash(self, file_hash: str, collection: str) -> dict | None:
+        """Busca el job más reciente con ese hash en esa colección."""
+        with self._conn() as conn:
+            cur = conn.execute(
+                """SELECT id, filename, collection, tier, page_count, state,
+                          created_at, completed_at
+                   FROM ingestion_jobs
+                   WHERE file_hash = ? AND collection = ?
+                   ORDER BY created_at DESC LIMIT 1""",
+                (file_hash, collection),
+            )
+            row = cur.fetchone()
+            if row is None:
+                return None
+            cols = [c[0] for c in cur.description]
+            return dict(zip(cols, row))
+
+    def get_all_active_ingestion_jobs(self) -> list[dict]:
+        """Lista todos los jobs activos (todos los usuarios) para el stall checker."""
+        placeholders = ",".join("?" * len(_STALL_CHECK_STATES))
+        with self._conn() as conn:
+            cur = conn.execute(
+                f"SELECT * FROM ingestion_jobs WHERE state IN ({placeholders}) ORDER BY created_at ASC",
+                _STALL_CHECK_STATES,
+            )
+            cols = [c[0] for c in cur.description]
+            return [dict(zip(cols, r)) for r in cur.fetchall()]
+
+    def increment_ingestion_retry(self, job_id: str) -> None:
+        """Incrementa retry_count y actualiza last_checked."""
+        with self._conn() as conn:
+            conn.execute(
+                """UPDATE ingestion_jobs
+                   SET retry_count = retry_count + 1, last_checked = ?
+                   WHERE id = ?""",
+                (datetime.now().isoformat(), job_id),
+            )
+
+    # Ingestion alerts
+    def create_ingestion_alert(
+        self,
+        *,
+        job_id: str,
+        user_id: int,
+        filename: str,
+        collection: str,
+        tier: str,
+        page_count: int | None,
+        file_hash: str | None,
+        error: str | None,
+        retry_count: int,
+        progress_at_failure: int,
+    ) -> str:
+        alert_id = str(uuid.uuid4())
+        with self._conn() as conn:
+            conn.execute(
+                """INSERT INTO ingestion_alerts
+                   (id, job_id, user_id, filename, collection, tier, page_count,
+                    file_hash, error, retry_count, progress_at_failure,
+                    gateway_version, created_at)
+                   VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                (alert_id, job_id, user_id, filename, collection, tier,
+                 page_count, file_hash, error, retry_count, progress_at_failure,
+                 _SALDIVIA_VERSION, datetime.now().isoformat()),
+            )
+        return alert_id
+
+    def list_ingestion_alerts(self, resolved: bool | None = None) -> list[dict]:
+        where = "" if resolved is None else (
+            "WHERE resolved_at IS NOT NULL" if resolved else "WHERE resolved_at IS NULL"
+        )
+        with self._conn() as conn:
+            cur = conn.execute(
+                f"SELECT * FROM ingestion_alerts {where} ORDER BY created_at DESC"
+            )
+            cols = [c[0] for c in cur.description]
+            return [dict(zip(cols, r)) for r in cur.fetchall()]
+
+    def resolve_ingestion_alert(
+        self, alert_id: str, resolved_by: str, notes: str | None = None
+    ) -> None:
+        with self._conn() as conn:
+            conn.execute(
+                """UPDATE ingestion_alerts
+                   SET resolved_at = ?, resolved_by = ?, notes = ?
+                   WHERE id = ?""",
+                (datetime.now().isoformat(), resolved_by, notes, alert_id),
             )

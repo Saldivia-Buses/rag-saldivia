@@ -81,6 +81,37 @@ def test_validate_config_missing_service(config_dir):
     assert len(errors) > 0
     assert any("llm" in err.lower() for err in errors)
 
+def test_ingestion_config_defaults():
+    """ingestion_config() devuelve defaults cuando no hay YAML cargado."""
+    from saldivia.config import ConfigLoader
+    loader = ConfigLoader()
+    cfg = loader.ingestion_config()
+    assert cfg["parallel_slots_small"] == 2
+    assert cfg["parallel_slots_large"] == 1
+    assert cfg["client_max_retries"] == 3
+    assert cfg["server_max_retries"] == 3
+    assert cfg["stall_check_interval"] == 60
+    assert set(cfg["tiers"].keys()) == {"tiny", "small", "medium", "large"}
+    assert cfg["tiers"]["tiny"]["timeout"] == 300
+    assert cfg["tiers"]["large"]["timeout"] == 7200
+
+
+def test_ingestion_config_profile_override(tmp_path):
+    """Valores del profile YAML overridean los defaults."""
+    profiles = tmp_path / "profiles"
+    profiles.mkdir()
+    (profiles / "test.yaml").write_text(
+        "ingestion:\n  stall_check_interval: 120\n  server_max_retries: 5\n"
+    )
+    from saldivia.config import ConfigLoader
+    loader = ConfigLoader(str(tmp_path))
+    loader.load(profile="test")
+    cfg = loader.ingestion_config()
+    assert cfg["stall_check_interval"] == 120
+    assert cfg["server_max_retries"] == 5
+    assert cfg["parallel_slots_small"] == 2  # default mantenido
+
+
 def test_env_merged_includes_saldivia_vars(config_dir):
     """Test that .env.saldivia vars are not in ENV_MAPPING output.
 

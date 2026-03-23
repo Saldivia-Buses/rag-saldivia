@@ -55,9 +55,9 @@ make cli ARGS="audit log"
 | Archivo | Responsabilidad |
 |---------|----------------|
 | `gateway.py` | FastAPI: auth, RBAC, proxy al RAG, SSE streaming |
-| `auth/database.py` | SQLite AuthDB: users, areas, api_keys, sessions |
+| `auth/database.py` | SQLite AuthDB: users, areas, api_keys, sessions, ingestion_jobs, ingestion_alerts |
 | `auth/models.py` | User, Area, Role dataclasses |
-| `config.py` | ConfigLoader: YAML profiles + env merge |
+| `config.py` | ConfigLoader: YAML profiles + env merge + `ingestion_config()` con deep-merge de defaults |
 | `providers.py` | Clientes HTTP para RAG Server, Milvus |
 | `mode_manager.py` | VLM/LLM mode switching para 1-GPU |
 | `collections.py` | CollectionManager: CRUD de colecciones |
@@ -116,7 +116,7 @@ OBSERVE → ORIENT → DECIDE → ACT (Implement → Simplify → Review → Doc
 | OBSERVE | `firecrawl` + `mcp__CodeGraphContext` + `mcp__repomix` + subagente `Explore` |
 | ORIENT | skill `superpowers:brainstorming` + subagente `Plan` |
 | DECIDE | skill `superpowers:writing-plans` + subagente `plan-writer` |
-| IMPLEMENT | skill `subagent-driven-development` + `TDD` + `parallel-agents` + subagente `debugger` |
+| IMPLEMENT | TDD directo en sesión + skill `superpowers:test-driven-development` + subagente `debugger` |
 | SIMPLIFY | skill `simplify` + `mcp__CodeGraphContext__find_dead_code` + complexity tools |
 | REVIEW | skill `requesting-code-review` + subagentes `gateway-reviewer` / `frontend-reviewer` / `security-auditor` |
 | DOCS | subagente `doc-writer` + skill `revise-claude-md` + skill `changelog-generator` |

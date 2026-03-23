@@ -1,16 +1,20 @@
 # saldivia/gateway.py
 """Auth Gateway - FastAPI middleware for RAG API."""
+import asyncio
 import os
 import re
 import json
 import hashlib
 import logging
+import shutil
 from datetime import datetime, timedelta, timezone
+from pathlib import Path
 from typing import Optional
 from dataclasses import asdict
 
 import jwt as pyjwt
 import redis
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -27,7 +31,39 @@ from saldivia.tier import classify_tier
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-app = FastAPI(title="RAG Saldivia Gateway")
+@asynccontextmanager
+async def _lifespan(app: FastAPI):
+    """Application lifespan — startup validation and background tasks."""
+    env = os.getenv("ENVIRONMENT", "production")
+    if BYPASS_AUTH and env == "production":
+        raise RuntimeError(
+            "BYPASS_AUTH cannot be true in production. "
+            "Set ENVIRONMENT=development to allow bypass (dev/test only)."
+        )
+    if BYPASS_AUTH:
+        logger.warning("⚠️  BYPASS_AUTH is enabled — authentication bypassed (dev mode only)")
+
+    missing = [var for var in ("RAG_SERVER_URL", "INGESTOR_URL") if not os.getenv(var)]
+    if missing:
+        logger.warning(f"⚠️  Missing env vars: {missing} — using defaults")
+
+    system_key = os.getenv("SYSTEM_API_KEY")
+    if system_key and not BYPASS_AUTH:
+        key_hash = hashlib.sha256(system_key.encode()).hexdigest()
+        admin = db.get_user_by_email("admin@saldivia.com")
+        if admin:
+            db.update_api_key(admin.id, key_hash)
+            logger.info("✓ SYSTEM_API_KEY synced to admin user")
+
+    logger.info(
+        f"Gateway starting: RAG={RAG_SERVER_URL}, Ingestor={INGESTOR_URL}, "
+        f"auth={'bypassed' if BYPASS_AUTH else 'enabled'}"
+    )
+    asyncio.create_task(_stall_checker_loop())
+    yield
+
+
+app = FastAPI(title="RAG Saldivia Gateway", lifespan=_lifespan)
 
 CORS_ORIGINS = os.getenv("CORS_ORIGINS", "http://localhost:3000").split(",")
 
@@ -51,6 +87,14 @@ LOGIN_LOCKOUT_SECONDS = 60
 # Upload limits
 MAX_UPLOAD_SIZE_MB = 1024  # 1 GB
 MAX_UPLOAD_SIZE_BYTES = MAX_UPLOAD_SIZE_MB * 1024 * 1024
+
+# File cache for server-side retry
+INGEST_CACHE_DIR = Path(os.environ.get("INGEST_CACHE_DIR", "/tmp/saldivia-ingest"))
+
+
+def _cleanup_ingest_cache(job_id: str) -> None:
+    """Remove cached file for a job after it completes or permanently fails."""
+    shutil.rmtree(INGEST_CACHE_DIR / job_id, ignore_errors=True)
 
 # JWT Configuration
 JWT_SECRET = os.getenv("JWT_SECRET", "")
@@ -79,40 +123,6 @@ class LoginRequest(BaseModel):
     email: str
     password: str
 
-
-@app.on_event("startup")
-async def on_startup():
-    """Validate configuration at startup."""
-    env = os.getenv("ENVIRONMENT", "production")
-    if BYPASS_AUTH and env == "production":
-        raise RuntimeError(
-            "BYPASS_AUTH cannot be true in production. "
-            "Set ENVIRONMENT=development to allow bypass (dev/test only)."
-        )
-    if BYPASS_AUTH:
-        logger.warning("⚠️  BYPASS_AUTH is enabled — authentication bypassed (dev mode only)")
-
-    # M9: Validate critical env vars so misconfiguration is caught at startup,
-    # not on the first request. The deploy.sh sets these from YAML config.
-    missing = [var for var in ("RAG_SERVER_URL", "INGESTOR_URL") if not os.getenv(var)]
-    if missing:
-        logger.warning(f"⚠️  Missing env vars: {missing} — using defaults")
-
-    # Sync SYSTEM_API_KEY → admin user's api_key_hash so the BFF can always auth.
-    # This ensures the key in .env.local always matches the DB, regardless of
-    # how the DB was initialized.
-    system_key = os.getenv("SYSTEM_API_KEY")
-    if system_key and not BYPASS_AUTH:
-        key_hash = hashlib.sha256(system_key.encode()).hexdigest()
-        admin = db.get_user_by_email("admin@saldivia.com")
-        if admin:
-            db.update_api_key(admin.id, key_hash)
-            logger.info("✓ SYSTEM_API_KEY synced to admin user")
-
-    logger.info(
-        f"Gateway starting: RAG={RAG_SERVER_URL}, Ingestor={INGESTOR_URL}, "
-        f"auth={'bypassed' if BYPASS_AUTH else 'enabled'}"
-    )
 
 
 @app.exception_handler(HTTPException)
@@ -195,6 +205,13 @@ def admin_or_manager_required(user: User = Depends(get_user_from_token)) -> User
         raise HTTPException(status_code=401, detail="Auth required")
     if user and user.role == Role.USER:
         raise HTTPException(status_code=403, detail="Insufficient permissions")
+    return user
+
+
+def require_user(user: User = Depends(get_user_from_token)) -> User:
+    """Require any authenticated user (non-anonymous)."""
+    if user is None and not BYPASS_AUTH:
+        raise HTTPException(status_code=401, detail="Auth required")
     return user
 
 def filter_collections(user: User, requested: list[str]) -> list[str]:
@@ -342,6 +359,7 @@ async def ingest(request: Request, user: User = Depends(get_user_from_token)):
 
     page_count = extract_page_count(file_bytes, safe_filename)
     tier = classify_tier(page_count, len(file_bytes))
+    file_hash = hashlib.sha256(file_bytes).hexdigest()
 
     # Payload al ingestor con blocking=False
     ingestor_data = {**data, "blocking": False}
@@ -372,7 +390,13 @@ async def ingest(request: Request, user: User = Depends(get_user_from_token)):
         collection=collection_name,
         tier=tier,
         page_count=page_count,
+        file_hash=file_hash,
     )
+
+    # Cache file for server-side retry
+    cache_dir = INGEST_CACHE_DIR / str(job_id)
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    (cache_dir / safe_filename).write_bytes(file_bytes)
 
     if user:
         db.log_action(
@@ -387,6 +411,144 @@ async def ingest(request: Request, user: User = Depends(get_user_from_token)):
         "page_count": page_count,
         "filename": safe_filename,
     }
+
+
+@app.get("/v1/documents/check")
+async def check_document(
+    hash: str,
+    collection: str,
+    user: User = Depends(require_user),
+):
+    """Verifica si un archivo (por SHA-256) ya fue indexado en una colección."""
+    job = db.check_file_hash(hash, collection)
+    if not job:
+        return {"exists": False}
+    return {
+        "exists": True,
+        "state": job["state"],
+        "filename": job["filename"],
+        "pages": job["page_count"],
+        "indexed_at": job.get("completed_at"),
+        "job_id": job["id"],
+    }
+
+
+@app.get("/v1/admin/alerts")
+async def list_alerts(
+    resolved: Optional[bool] = None,
+    user: User = Depends(admin_required),
+):
+    """Lista alertas de ingesta. Solo admins."""
+    alerts = db.list_ingestion_alerts(resolved=resolved)
+    return {"alerts": alerts}
+
+
+@app.patch("/v1/admin/alerts/{alert_id}/resolve")
+async def resolve_alert(
+    alert_id: str,
+    body: dict,
+    user: User = Depends(admin_required),
+):
+    """Marca una alerta como resuelta."""
+    resolved_by = user.email if user else "admin"
+    db.resolve_ingestion_alert(alert_id, resolved_by=resolved_by, notes=body.get("notes"))
+    return {"ok": True}
+
+
+@app.post("/v1/jobs/{job_id}/alert")
+async def create_job_alert(job_id: str, user: User = Depends(require_user)):
+    """Crea alerta cuando el cliente agota los reintentos."""
+    job = db.get_ingestion_job(job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Job not found")
+    if user and job["user_id"] != user.id and user.role != Role.ADMIN:
+        raise HTTPException(status_code=403, detail="Access denied")
+    db.create_ingestion_alert(
+        job_id=job_id, user_id=job["user_id"],
+        filename=job["filename"], collection=job["collection"],
+        tier=job["tier"], page_count=job["page_count"],
+        file_hash=job.get("file_hash"),
+        error="Client-side: max retries exhausted after stall detection",
+        retry_count=job.get("retry_count", 0),
+        progress_at_failure=job.get("progress", 0),
+    )
+    db.update_ingestion_job(job_id, "failed", job.get("progress", 0), _ts(datetime.now()))
+    return {"ok": True}
+
+
+async def _run_stall_check(ingestion_cfg: dict) -> None:
+    """Check all active jobs for stalls and retry or alert as needed."""
+    jobs = db.get_all_active_ingestion_jobs()
+    if not jobs:
+        return
+
+    server_max_retries = ingestion_cfg.get("server_max_retries", 3)
+    tier_configs = ingestion_cfg.get("tiers", {})
+
+    async with httpx.AsyncClient(timeout=10) as client:
+        for job in jobs:
+            tier_cfg = tier_configs.get(job["tier"], {})
+            if not tier_cfg:
+                logger.warning(f"Stall checker: unknown tier '{job['tier']}' for job {job['id']}, using defaults")
+            deadlock_threshold = tier_cfg.get("deadlock_threshold", 60)
+
+            last_checked = job.get("last_checked") or job.get("created_at")
+            try:
+                last_checked_dt = datetime.fromisoformat(last_checked)
+            except Exception:
+                continue
+
+            elapsed = (datetime.now() - last_checked_dt).total_seconds()
+            if elapsed < deadlock_threshold:
+                continue
+
+            try:
+                resp = await client.get(
+                    f"{INGESTOR_URL}/v1/status?task_id={job['task_id']}"
+                )
+                ingestor_state = resp.json().get("state", "UNKNOWN")
+            except Exception:
+                ingestor_state = "UNKNOWN"
+
+            if ingestor_state == "FINISHED":
+                db.update_ingestion_job(job["id"], "completed", 100, _ts(datetime.now()))
+                _cleanup_ingest_cache(job["id"])
+                continue
+
+            # Job is still actively processing — don't burn retry_count, check again next interval
+            if ingestor_state not in ("FAILED", "UNKNOWN", "PENDING"):
+                continue
+
+            if job["retry_count"] >= server_max_retries:
+                db.create_ingestion_alert(
+                    job_id=job["id"], user_id=job["user_id"],
+                    filename=job["filename"], collection=job["collection"],
+                    tier=job["tier"], page_count=job["page_count"],
+                    file_hash=job.get("file_hash"),
+                    error=f"Stalled after {job['retry_count']} server retries. Last ingestor state: {ingestor_state}",
+                    retry_count=job["retry_count"],
+                    progress_at_failure=job["progress"],
+                )
+                db.update_ingestion_job(job["id"], "failed", job["progress"], _ts(datetime.now()))
+                _cleanup_ingest_cache(job["id"])
+            else:
+                db.increment_ingestion_retry(job["id"])
+
+
+async def _stall_checker_loop() -> None:
+    """Background loop that periodically checks for stalled ingestion jobs.
+
+    Config is intentionally loaded once at startup — threshold changes require restart.
+    """
+    from saldivia.config import ConfigLoader  # deferred to avoid circular import
+    cfg = ConfigLoader().ingestion_config()
+    interval = cfg.get("stall_check_interval", 60)
+    while True:
+        await asyncio.sleep(interval)
+        try:
+            await _run_stall_check(cfg)
+        except Exception as e:
+            logger.error(f"Stall checker error: {e}")
 
 
 @app.get("/health")
