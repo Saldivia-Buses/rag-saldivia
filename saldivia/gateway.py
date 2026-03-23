@@ -634,7 +634,7 @@ def get_audit(
             "collection": e.collection,
             "query_preview": e.query_preview,
             "ip_address": e.ip_address,
-            "timestamp": e.timestamp.isoformat() if hasattr(e.timestamp, 'isoformat') else str(e.timestamp)
+            "timestamp": _ts(e.timestamp)
         }
         for e in entries
     ]}
@@ -653,7 +653,7 @@ def list_sessions(user_id: int, limit: int = 50,
     sessions = db.list_chat_sessions(user_id=user_id, limit=min(limit, 200))
     return {"sessions": [{"id": s.id, "title": s.title, "collection": s.collection,
                            "crossdoc": s.crossdoc,
-                           "updated_at": s.updated_at.isoformat() if hasattr(s.updated_at, 'isoformat') else str(s.updated_at)}
+                           "updated_at": _ts(s.updated_at)}
                           for s in sessions]}
 
 
@@ -684,7 +684,7 @@ def get_session(session_id: str, user_id: int,
     return {"id": session.id, "title": session.title, "collection": session.collection,
             "crossdoc": session.crossdoc,
             "messages": [{"role": m.role, "content": m.content, "sources": m.sources,
-                           "timestamp": m.timestamp.isoformat() if hasattr(m.timestamp, 'isoformat') else str(m.timestamp)}
+                           "timestamp": _ts(m.timestamp)}
                           for m in session.messages]}
 
 
@@ -779,8 +779,7 @@ async def job_status(job_id: str, request: Request, user: User = Depends(get_use
 
     completed_at = None
     if new_state in ("completed", "failed"):
-        from datetime import datetime
-        completed_at = datetime.now().isoformat()
+        completed_at = _ts(datetime.now())
 
     db.update_ingestion_job(job_id, new_state, progress, completed_at)
 
