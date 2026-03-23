@@ -1,0 +1,5 @@
+# config/compose-guardrails-cloud.yaml
+# Guardrails cloud services (NeMo Guardrails via API — sin GPU local)
+# Activar: añadir -f config/compose-guardrails-cloud.yaml a docker compose up
+version: "3.8"
+services: {}
