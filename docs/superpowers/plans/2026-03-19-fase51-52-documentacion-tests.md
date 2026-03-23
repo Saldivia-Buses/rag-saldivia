@@ -373,7 +373,7 @@ Read each folder's files before writing its README.
 - [ ] **Step 1: Write `saldivia/README.md`**
 
 Files to document (read each briefly before writing):
-`gateway.py`, `auth/`, `cache.py`, `collections.py`, `config.py`, `ingestion_queue.py`, `ingestion_worker.py`, `mcp_server.py`, `mode_manager.py`, `providers.py`, `watch.py`
+`gateway.py`, `auth/`, `collections.py`, `config.py`, `ingestion_queue.py`, `ingestion_worker.py`, `mode_manager.py`, `providers.py`, `tier.py`, `watch.py`
 
 Include a design note about the `_ts()` helper pattern (SQLite timestamp workaround).
 

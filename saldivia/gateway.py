@@ -19,6 +19,7 @@ import httpx
 from saldivia.auth import AuthDB, User, Role, Permission
 from saldivia.auth.models import generate_api_key, hash_password, verify_password
 from saldivia.collections import CollectionManager
+from saldivia.tier import classify_tier
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -51,18 +52,6 @@ def extract_page_count(file_bytes: bytes, filename: str) -> int | None:
     except Exception:
         return None
 
-
-def classify_tier(page_count: int | None, file_size: int) -> str:
-    """Clasifica el tier por páginas (PDF) o tamaño de archivo (otros formatos)."""
-    if page_count is not None:
-        if page_count <= 20:  return "tiny"
-        if page_count <= 80:  return "small"
-        if page_count <= 250: return "medium"
-        return "large"
-    if file_size < 100_000:   return "tiny"
-    if file_size < 500_000:   return "small"
-    if file_size < 5_000_000: return "medium"
-    return "large"
 
 
 class LoginRequest(BaseModel):
@@ -394,7 +383,6 @@ def list_collections(user: User = Depends(get_user_from_token)):
 @app.post("/auth/session")
 def login(body: LoginRequest, user: User = Depends(get_user_from_token)):
     """Issue JWT for a valid email+password. Caller must be authenticated (BFF uses SYSTEM_API_KEY)."""
-    from saldivia.auth.models import verify_password
     target = db.get_user_by_email(body.email)
     if not target or not target.password_hash:
         raise HTTPException(status_code=401, detail="Invalid credentials")
@@ -646,7 +634,7 @@ def get_audit(
             "collection": e.collection,
             "query_preview": e.query_preview,
             "ip_address": e.ip_address,
-            "timestamp": e.timestamp.isoformat() if hasattr(e.timestamp, 'isoformat') else str(e.timestamp)
+            "timestamp": _ts(e.timestamp)
         }
         for e in entries
     ]}
@@ -665,7 +653,7 @@ def list_sessions(user_id: int, limit: int = 50,
     sessions = db.list_chat_sessions(user_id=user_id, limit=min(limit, 200))
     return {"sessions": [{"id": s.id, "title": s.title, "collection": s.collection,
                            "crossdoc": s.crossdoc,
-                           "updated_at": s.updated_at.isoformat() if hasattr(s.updated_at, 'isoformat') else str(s.updated_at)}
+                           "updated_at": _ts(s.updated_at)}
                           for s in sessions]}
 
 
@@ -696,7 +684,7 @@ def get_session(session_id: str, user_id: int,
     return {"id": session.id, "title": session.title, "collection": session.collection,
             "crossdoc": session.crossdoc,
             "messages": [{"role": m.role, "content": m.content, "sources": m.sources,
-                           "timestamp": m.timestamp.isoformat() if hasattr(m.timestamp, 'isoformat') else str(m.timestamp)}
+                           "timestamp": _ts(m.timestamp)}
                           for m in session.messages]}
 
 
@@ -791,8 +779,7 @@ async def job_status(job_id: str, request: Request, user: User = Depends(get_use
 
     completed_at = None
     if new_state in ("completed", "failed"):
-        from datetime import datetime
-        completed_at = datetime.now().isoformat()
+        completed_at = _ts(datetime.now())
 
     db.update_ingestion_job(job_id, new_state, progress, completed_at)
 

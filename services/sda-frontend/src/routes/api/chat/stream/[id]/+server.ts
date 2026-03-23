@@ -1,7 +1,7 @@
 import type { RequestHandler } from './$types';
 import { error } from '@sveltejs/kit';
+import { GATEWAY_URL } from '$lib/server/gateway';
 
-const GATEWAY_URL = process.env.GATEWAY_URL ?? 'http://localhost:9000';
 const SYSTEM_API_KEY = process.env.SYSTEM_API_KEY;
 
 /** Timeout for the initial connection to the RAG streaming endpoint (ms). */

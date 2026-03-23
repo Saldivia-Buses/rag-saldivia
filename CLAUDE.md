@@ -7,7 +7,7 @@ Overlay sobre **NVIDIA RAG Blueprint v2.5.0** que agrega autenticación, RBAC, m
 - **No es un fork** — incluye el blueprint como git submodule en `vendor/rag-blueprint/` (commit a67a48c, post-v2.3.0)
 - **Repo local:** `~/rag-saldivia/` — branch `main`
 - **Repo remoto:** https://github.com/Camionerou/rag-saldivia
-- **Deploy activo:** instancia RunPod `runpod-rag` (1x RTX PRO 6000 Blackwell, 96GB VRAM)
+- **Deploy activo:** workstation física Ubuntu 24.04 (1x RTX PRO 6000 Blackwell, 96GB VRAM)
 
 ## Arquitectura de servicios
 
@@ -23,16 +23,13 @@ Usuario → SDA Frontend (puerto 3000, SvelteKit 5 BFF)
            Nemotron-3-Super-120B-A12B (LLM, GPU 1)
 ```
 
-**Perfiles de deployment:**
-- `workstation-1gpu` — producción actual (1 GPU, RunPod)
-- `brev-2gpu` — legacy (2 GPUs, Brev — instancia eliminada)
-- `full-cloud` — sin GPU, todo via API
+**Perfil de deployment activo:**
+- `workstation-1gpu` — producción (1 GPU, workstation física Ubuntu 24.04)
 
 ## Comandos clave
 
 ```bash
-# Deploy a RunPod
-ssh runpod-rag
+# Deploy en workstation física
 cd ~/rag-saldivia && make deploy PROFILE=workstation-1gpu
 
 # Estado del sistema
@@ -66,9 +63,7 @@ make cli ARGS="audit log"
 | `collections.py` | CollectionManager: CRUD de colecciones |
 | `ingestion_queue.py` | Cola de ingesta con Redis |
 | `ingestion_worker.py` | Worker de la cola Redis de ingesta con retry logic y graceful shutdown |
-| `cache.py` | Caché HTTP para respuestas frecuentes |
 | `watch.py` | File watcher para auto-ingest de directorios |
-| `mcp_server.py` | MCP server (no usar por ahora — RAG debe estar running) |
 
 ## Estructura del Frontend (`services/sda-frontend/`)
 
@@ -99,9 +94,8 @@ SvelteKit 5 BFF. Rutas principales:
 - **Features/bugs no triviales** → invocar `superpowers:brainstorming` PRIMERO, siempre, sin excepción
 - **Explorar codebase** → `CodeGraphContext` MCP + `repomix` MCP
 - **Web / docs externos** → skill `firecrawl` (NUNCA WebSearch/WebFetch)
-- **Deploy a Brev** → skill `rag-saldivia:deploy`
+- **Deploy a workstation** → skill `rag-saldivia:deploy`
 - **Ver estado de servicios** → skill `rag-saldivia:status`
-- **Operaciones Brev generales** → skill `brev-cli`
 - **Commits** → SOLO cuando Enzo los pide explícitamente
 
 ## Workflow para cambios NO triviales
@@ -130,7 +124,7 @@ uv run pytest saldivia/tests/ --cov=saldivia -v
 
 Tests activos: `test_gateway.py`, `test_auth.py`, `test_config.py`, `test_mode_manager.py`, `test_providers.py`, `test_collections.py`, `test_gateway_extended.py` (39 tests pasan)
 
-## Ports (en Brev)
+## Ports (en workstation)
 
 | Puerto | Servicio |
 |--------|----------|
@@ -144,7 +138,7 @@ Tests activos: `test_gateway.py`, `test_auth.py`, `test_config.py`, `test_mode_m
 - `saldivia/gateway.py` — 25KB, el corazón del sistema de auth
 - `saldivia/auth/database.py` — SQLite AuthDB con helpers `_ts()`
 - `config/.env.saldivia` — variables de entorno del overlay
-- `config/profiles/workstation-1gpu.yaml` — perfil de producción (RunPod)
+- `config/profiles/workstation-1gpu.yaml` — perfil de producción (workstation física)
 - `services/sda-frontend/src/lib/server/gateway.ts` — BFF client al gateway
 
 ## Patrones importantes (aprendidos en producción)

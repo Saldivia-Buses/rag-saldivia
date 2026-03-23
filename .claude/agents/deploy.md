@@ -1,6 +1,6 @@
 ---
 name: deploy
-description: "Deployar a RunPod con preflight checks automáticos. Usar cuando se menciona 'deployar', 'subir a runpod', 'push a producción', 'make deploy PROFILE=workstation-1gpu', o cuando se pide verificar que el sistema está listo para producción. NO usar para ver el estado de servicios (usar status), sino para ejecutar el proceso de deployment completo."
+description: "Deployar a la workstation física con preflight checks automáticos. Usar cuando se menciona 'deployar', 'subir a producción', 'make deploy PROFILE=workstation-1gpu', o cuando se pide verificar que el sistema está listo para producción. NO usar para ver el estado de servicios (usar status), sino para ejecutar el proceso de deployment completo."
 model: sonnet
 tools: Bash, Read, Glob
 permissionMode: default
@@ -13,7 +13,7 @@ skills:
   - superpowers:finishing-a-development-branch
 ---
 
-Sos el agente de deployment del proyecto RAG Saldivia. Tu trabajo es garantizar deployments seguros y completos a la instancia RunPod `runpod-rag` (1x RTX PRO 6000 Blackwell).
+Sos el agente de deployment del proyecto RAG Saldivia. Tu trabajo es garantizar deployments seguros y completos a la workstation física (Ubuntu 24.04, 1x RTX PRO 6000 Blackwell).
 
 ## Arquitectura del sistema
 
@@ -56,7 +56,7 @@ Si hay cambios sin commitear, preguntar a Enzo si quiere commitearlos primero.
 ## Proceso de deploy (solo si todos los preflight pasan)
 
 ```bash
-ssh runpod-rag "cd ~/rag-saldivia && git pull origin main && make deploy PROFILE=workstation-1gpu"
+cd ~/rag-saldivia && git pull origin main && make deploy PROFILE=workstation-1gpu
 ```
 
 ## Failure modes conocidos

@@ -6,31 +6,46 @@ RAG Saldivia supports three deployment profiles, each optimized for different ha
 
 | Profile | Hardware | LLM | NIMs | VLM | Use Case |
 |---------|----------|-----|------|-----|----------|
-| `workstation-1gpu` | 1x GPU (≥96 GB VRAM) | External (NVIDIA API or OpenRouter) | Local (GPU 0) | Qwen3-VL-8B (local, GPU 0, INGEST mode only) | Production on RunPod / local workstation |
-| `brev-2gpu` | 2x RTX PRO 6000 Blackwell (196 GB total VRAM) | Nemotron-3-Super-120B-A12B (local, GPU 1) | Local (GPU 0) | Qwen3-VL-8B (local, GPU 1) | Legacy (Brev cloud — instancia eliminada) |
-| `full-cloud` | No GPU (CPU only) | External (NVIDIA API or OpenRouter) | External (NVIDIA API) | External (NVIDIA API) | Cloud-only, minimal infra |
+| `workstation-1gpu` | 1x GPU (≥96 GB VRAM) | External (NVIDIA API or OpenRouter) | Local (GPU 0) | Qwen3-VL-8B (local, GPU 0, INGEST mode only) | Production on physical workstation (Ubuntu 24.04) |
 
 **Profile selection:**
-- RunPod instance with 1 GPU → `workstation-1gpu`
-- Local workstation with 1 GPU → `workstation-1gpu`
-- Cloud VM with no GPU → `full-cloud`
+- Physical workstation with 1 GPU → `workstation-1gpu`
 
-## Deploying to RunPod
+## Deploying to Workstation
 
-### 1. SSH into RunPod instance
+### Prerequisites
+
+- Ubuntu 24.04
+- NVIDIA GPU with ≥96 GB VRAM (e.g. RTX PRO 6000 Blackwell)
+- Docker + NVIDIA Container Toolkit
+- `uv` (Python package manager)
+
+### 1. Initial setup (first time only)
+
+Run the bootstrap script to install all system dependencies:
 
 ```bash
-ssh runpod-rag
+bash scripts/bootstrap.sh
 ```
 
-### 2. Pull latest changes
+This installs Docker, NVIDIA Container Toolkit, `uv`, and other required packages.
+
+### 2. Clone the repo and configure
 
 ```bash
+git clone https://github.com/Camionerou/rag-saldivia.git ~/rag-saldivia
 cd ~/rag-saldivia
-git pull origin main
+cp .env.example .env.local
+nano .env.local  # Set JWT_SECRET, NGC_API_KEY, OPENROUTER_API_KEY, etc.
 ```
 
-### 3. Deploy with profile
+### 3. Setup blueprint and build images
+
+```bash
+make setup
+```
+
+### 4. Deploy with profile
 
 ```bash
 make deploy PROFILE=workstation-1gpu
@@ -44,7 +59,17 @@ This will:
 5. Start all services (RAG Server, Milvus, NIMs, Auth Gateway, SDA Frontend)
 6. Wait for health checks (30s timeout)
 
-### 4. Verify deployment
+### 5. CI/CD: self-hosted runner (optional)
+
+To enable GitHub Actions deployments from this workstation:
+
+```bash
+bash scripts/setup-runner.sh
+```
+
+This registers the machine as a self-hosted runner and installs the systemd service.
+
+### 6. Verify deployment
 
 ```bash
 make status
@@ -134,7 +159,7 @@ nano .env.local  # Edit with your secrets
 **Verify:**
 
 ```bash
-make show-env PROFILE=brev-2gpu | grep JWT_SECRET
+make show-env PROFILE=workstation-1gpu | grep JWT_SECRET
 # Should show your secret (not empty)
 ```
 
@@ -147,8 +172,8 @@ make show-env PROFILE=brev-2gpu | grep JWT_SECRET
 | `make stop` | Stop all services | `make stop` |
 | `make status` | Show GPU, Docker, and RAG server health | `make status` |
 | `make health` | Run health check on all services | `make health` |
-| `make validate` | Validate config for profile | `make validate PROFILE=brev-2gpu` |
-| `make show-env` | Show merged env vars for profile | `make show-env PROFILE=brev-2gpu` |
+| `make validate` | Validate config for profile | `make validate PROFILE=workstation-1gpu` |
+| `make show-env` | Show merged env vars for profile | `make show-env PROFILE=workstation-1gpu` |
 | `make ingest` | Smart ingest PDFs | `make ingest DOCS=~/docs/pdfs/ COLLECTION=tecpia` |
 | `make query` | Cross-document query | `make query Q="What is RAG?"` |
 | `make test` | Run unit + backend tests (pytest + Vitest) | `make test` |
@@ -217,7 +242,7 @@ docker network connect --alias my-alias rag-net my-container
 export PYTHONPATH="${PYTHONPATH:-}:$(pwd)/saldivia"
 ```
 
-**Context:** Happens in `scripts/deploy.sh` on fresh Brev instances.
+**Context:** Happens in `scripts/deploy.sh` on fresh workstation installs.
 
 ### 3. Milvus downtime on redeploy
 

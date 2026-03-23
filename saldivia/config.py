@@ -62,19 +62,6 @@ class ConfigLoader:
 
         return config
 
-    def get_service(self, name: str, profile: str = None) -> ModelConfig:
-        """Get ModelConfig for a service."""
-        config = self.load(profile)
-        service = config.get("services", {}).get(name, {})
-
-        return ModelConfig(
-            provider=service.get("provider", "local"),
-            model=service.get("model", ""),
-            endpoint=service.get("endpoint"),
-            temperature=service.get("parameters", {}).get("temperature", 0.1),
-            max_tokens=service.get("parameters", {}).get("max_tokens", 2048),
-        )
-
     def _get_nested(self, data: dict, keys: tuple):
         """Get nested value."""
         for key in keys:
@@ -104,14 +91,6 @@ class ConfigLoader:
                 env["APP_LLM_APIKEY"] = os.environ["NVIDIA_API_KEY"]
 
         return env
-
-    def write_env_file(self, path: str, profile: str = None):
-        """Write .env file."""
-        env = self.generate_env(profile)
-        with open(path, "w") as f:
-            for key, value in sorted(env.items()):
-                f.write(f"{key}={value}\n")
-
 
 def validate_config(config: dict) -> list[str]:
     """Validate configuration, return errors."""

@@ -58,8 +58,8 @@ firecrawl scrape "https://docs.nvidia.com/..." -o /tmp/nvidia-docs.md
 # Para Milvus
 firecrawl search "milvus [feature] documentation"
 
-# Para Brev
-firecrawl scrape "https://brev.dev/docs/..." -o /tmp/brev-docs.md
+# Para NVIDIA Container Toolkit
+firecrawl search "nvidia container toolkit ubuntu documentation"
 ```
 
 ## Estilo de documentación del proyecto

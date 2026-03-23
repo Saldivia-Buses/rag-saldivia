@@ -32,7 +32,6 @@ services:
 
     profiles = tmp_path / "profiles"
     profiles.mkdir()
-    (profiles / "brev-2gpu.yaml").write_text("{}")
     (profiles / "workstation-1gpu.yaml").write_text("""
 services:
   llm:

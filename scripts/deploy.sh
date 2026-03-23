@@ -6,7 +6,6 @@ set -euo pipefail
 #
 # Usage:
 #   ./scripts/deploy.sh [PROFILE]
-#   ./scripts/deploy.sh brev-2gpu       # default
 #   ./scripts/deploy.sh workstation-1gpu
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -226,22 +225,6 @@ else
     warn "rag-server container not found. langchain_milvus patch skipped."
 fi
 
-# --- Step 6: Connect Nemotron network alias (brev-2gpu only) ---
-# docker network connect --alias fails silently if the container is already on the network
-# (even without the alias). Must disconnect first to force re-attach with alias.
-if [ "$PROFILE" = "brev-2gpu" ]; then
-    log "Connecting Nemotron-3-Super network alias..."
-    NETWORK=$(docker network ls --filter "name=nvidia-rag" --format '{{.Name}}' | head -1)
-    if [ -n "$NETWORK" ]; then
-        docker network disconnect "$NETWORK" nemotron3-super 2>/dev/null || true
-        sleep 1
-        docker network connect --alias nim-llm "$NETWORK" nemotron3-super \
-            && log "  nim-llm alias connected" \
-            || warn "  Network alias failed — LLM may not be reachable as nim-llm"
-    else
-        warn "nvidia-rag network not found — is the Blueprint running?"
-    fi
-fi
 
 # --- Step 7: Health checks ---
 log "Waiting for services..."

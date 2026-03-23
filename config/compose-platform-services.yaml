@@ -24,8 +24,7 @@ services:
   ingestion-worker:
     build:
       context: ${SALDIVIA_ROOT}
-      dockerfile: services/mode-manager/Dockerfile
-    command: ["python", "-m", "saldivia.ingestion_worker"]
+      dockerfile: services/ingestion-worker/Dockerfile
     environment:
       - REDIS_URL=redis://redis:6379
       - INGESTOR_URL=http://ingestor-server:8082

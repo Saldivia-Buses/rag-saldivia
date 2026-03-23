@@ -57,7 +57,7 @@ Containers Docker:
   [pegar las últimas líneas relevantes de logs si hay errores]
 
 Para reiniciar el RAG Server:
-  ssh runpod-rag "cd ~/rag-saldivia && make restart-rag PROFILE=workstation-1gpu"
+  cd ~/rag-saldivia && make restart PROFILE=workstation-1gpu
 ```
 
 ## Leyenda de estados

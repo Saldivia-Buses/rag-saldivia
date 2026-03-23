@@ -1,59 +1,35 @@
-name: Deploy to Brev
+name: Deploy RAG Saldivia
 
 on:
   push:
     branches: [main]
-  workflow_dispatch:           # permite deploy manual desde GitHub UI
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: 'Deployment profile'
+        required: false
+        default: 'workstation-1gpu'
+      workstation:
+        description: 'Target workstation label'
+        required: false
+        default: 'workstation-1'
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, "${{ github.event.inputs.workstation || 'workstation-1' }}"]
     timeout-minutes: 15
 
     steps:
-      - name: Setup SSH
-        uses: webfactory/ssh-agent@v0.9.0
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          ssh-private-key: ${{ secrets.BREV_DEPLOY_KEY }}
-
-      - name: Add Brev to known_hosts
-        run: |
-          ssh-keyscan -H ${{ secrets.BREV_HOST }} >> ~/.ssh/known_hosts
+          submodules: recursive
 
       - name: Deploy
-        env:
-          BREV_HOST: ${{ secrets.BREV_HOST }}
-          BREV_USER: ${{ secrets.BREV_USER }}
-        run: |
-          ssh $BREV_USER@$BREV_HOST "
-            set -e
-            cd ~/rag-saldivia
-            git fetch origin main
-            git checkout main
-            git pull origin main
-            export VITE_GIT_SHA=\$(git rev-parse --short HEAD)
-            make deploy PROFILE=workstation-1gpu
-          "
+        run: make deploy PROFILE="${{ github.event.inputs.profile || 'workstation-1gpu' }}"
 
       - name: Health check
-        env:
-          BREV_HOST: ${{ secrets.BREV_HOST }}
-          BREV_USER: ${{ secrets.BREV_USER }}
-        run: |
-          ssh $BREV_USER@$BREV_HOST "bash ~/rag-saldivia/scripts/health_check.sh"
-
-      - name: Rollback on failure
-        if: failure()
-        env:
-          BREV_HOST: ${{ secrets.BREV_HOST }}
-          BREV_USER: ${{ secrets.BREV_USER }}
-        run: |
-          ssh $BREV_USER@$BREV_HOST "
-            cd ~/rag-saldivia
-            git revert HEAD --no-edit
-            make deploy PROFILE=workstation-1gpu
-          "
-          # NOTA: NO pusheamos el revert — queda local en Brev.
+        run: make status
 
       - name: Notify result
         if: always()

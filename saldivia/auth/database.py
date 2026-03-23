@@ -228,10 +228,6 @@ class AuthDB:
         with self._conn() as conn:
             conn.execute("UPDATE users SET api_key_hash = ? WHERE id = ?", (api_key_hash, user_id))
 
-    def set_password(self, user_id: int, password_hash: str):
-        with self._conn() as conn:
-            conn.execute("UPDATE users SET password_hash = ? WHERE id = ?", (password_hash, user_id))
-
     def update_last_login(self, user_id: int):
         from datetime import datetime
         with self._conn() as conn:
