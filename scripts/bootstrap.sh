@@ -2,155 +2,240 @@
 set -euo pipefail
 
 # RAG Saldivia — Bootstrap Script
-# Verifica e instala todas las dependencias necesarias, luego corre setup.sh
+# Instala todas las dependencias del sistema desde cero en Ubuntu 24.04.
+# Idempotente: puede correrse múltiples veces sin romper nada.
 #
 # Uso:
-#   ./scripts/bootstrap.sh [BLUEPRINT_VERSION]
+#   ./scripts/bootstrap.sh
+#   NVIDIA_DRIVER_VERSION=560 ./scripts/bootstrap.sh
 #
-# Requiere: git, curl, apt (Ubuntu 22.04+)
+# Requiere: curl, Ubuntu 24.04 (bare-metal o VM con GPU física)
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-SALDIVIA_ROOT="$(dirname "$SCRIPT_DIR")"
-BLUEPRINT_VERSION="${1:-2.5.0}"
+# ---------------------------------------------------------------------------
+# Configuración
+# ---------------------------------------------------------------------------
+NVIDIA_DRIVER_VERSION="${NVIDIA_DRIVER_VERSION:-570}"
 
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-RED='\033[0;31m'
-NC='\033[0m'
+# ---------------------------------------------------------------------------
+# Helpers de logging
+# ---------------------------------------------------------------------------
+log() { echo "[$(date +%H:%M:%S)] $*"; }
+err() { echo "[$(date +%H:%M:%S)] ERROR: $*" >&2; exit 1; }
+ok()  { echo "[$(date +%H:%M:%S)] OK: $*"; }
+skip(){ echo "[$(date +%H:%M:%S)] SKIP: $* (ya instalado)"; }
 
-log()  { echo -e "${GREEN}[bootstrap]${NC} $*"; }
-warn() { echo -e "${YELLOW}[bootstrap] WARN:${NC} $*"; }
-err()  { echo -e "${RED}[bootstrap] ERROR:${NC} $*" >&2; exit 1; }
-ok()   { echo -e "${GREEN}[bootstrap]${NC} ✅ $*"; }
-miss() { echo -e "${YELLOW}[bootstrap]${NC} ⬇️  Instalando: $*"; }
+# ---------------------------------------------------------------------------
+# Verificar Ubuntu 24.04
+# ---------------------------------------------------------------------------
+log "=== RAG Saldivia Bootstrap — Ubuntu 24.04 ==="
 
-[ "$(id -u)" = "0" ] || err "Correr como root (o con sudo)"
-
-# --- Chequear Ubuntu ---
-. /etc/os-release 2>/dev/null || true
-if [[ "${ID:-}" != "ubuntu" ]]; then
-    warn "Este script está optimizado para Ubuntu. Continuando de todas formas..."
-fi
-
-log "=== RAG Saldivia Bootstrap ==="
-log "Verificando dependencias..."
-
-# -------------------------------------------------------
-# 1. Git
-# -------------------------------------------------------
-if command -v git &>/dev/null; then
-    ok "git $(git --version | awk '{print $3}')"
-else
-    miss "git"
-    apt-get update -qq && apt-get install -y -qq git
-    ok "git instalado"
-fi
-
-# -------------------------------------------------------
-# 2. curl (necesario para installs siguientes)
-# -------------------------------------------------------
-if command -v curl &>/dev/null; then
-    ok "curl"
-else
-    miss "curl"
-    apt-get update -qq && apt-get install -y -qq curl ca-certificates gnupg
-fi
-
-# -------------------------------------------------------
-# 3. Docker CLI
-# -------------------------------------------------------
-if command -v docker &>/dev/null && docker info &>/dev/null 2>&1; then
-    ok "docker $(docker --version | awk '{print $3}' | tr -d ',')"
-else
-    # En RunPod, el daemon corre en el host y se expone via socket
-    # Solo necesitamos instalar el CLI + compose plugin
-    if [ -S /var/run/docker.sock ]; then
-        log "Socket Docker del host detectado (/var/run/docker.sock)"
-        if ! command -v docker &>/dev/null; then
-            miss "Docker CLI"
-            apt-get update -qq
-            apt-get install -y -qq ca-certificates curl gnupg
-            install -m 0755 -d /etc/apt/keyrings
-            curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
-                | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-            chmod a+r /etc/apt/keyrings/docker.gpg
-            echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
-https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
-                > /etc/apt/sources.list.d/docker.list
-            apt-get update -qq
-            apt-get install -y -qq docker-ce-cli docker-buildx-plugin docker-compose-plugin
-        fi
-        ok "docker $(docker --version | awk '{print $3}' | tr -d ',') (via host socket)"
-    else
-        err "No hay socket Docker ni daemon disponible. Este entorno no soporta Docker."
+if [[ -f /etc/os-release ]]; then
+    . /etc/os-release
+    if [[ "${ID:-}" != "ubuntu" ]]; then
+        err "Este script requiere Ubuntu. Sistema detectado: ${ID:-desconocido}"
     fi
-fi
-
-# -------------------------------------------------------
-# 4. GPU accesible en Docker
-# -------------------------------------------------------
-if docker run --rm --gpus all ubuntu:22.04 nvidia-smi &>/dev/null 2>&1; then
-    ok "GPU accesible en Docker"
+    if [[ "${VERSION_ID:-}" != "24.04" ]]; then
+        log "ADVERTENCIA: Script optimizado para Ubuntu 24.04. Versión detectada: ${VERSION_ID:-desconocida}"
+    fi
 else
-    warn "GPU no accesible directamente en Docker (puede funcionar igual si el host tiene NVIDIA runtime)"
+    err "No se puede detectar el sistema operativo (/etc/os-release no existe)"
 fi
 
-# -------------------------------------------------------
-# 6. Node.js 20+
-# -------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Verificar que NO corre como root (usa sudo internamente)
+# ---------------------------------------------------------------------------
+if [[ "$(id -u)" = "0" ]]; then
+    err "No correr como root. El script usa sudo internamente donde necesario."
+fi
+
+# Verificar que sudo está disponible
+command -v sudo &>/dev/null || err "sudo no encontrado. Instalarlo primero."
+
+log "Usuario: $(whoami)"
+log "NVIDIA_DRIVER_VERSION: ${NVIDIA_DRIVER_VERSION}"
+
+# ---------------------------------------------------------------------------
+# 1. Actualizar índice de paquetes y dependencias base
+# ---------------------------------------------------------------------------
+log "--- Actualizando índice de paquetes ---"
+sudo apt-get update -qq
+sudo apt-get install -y -qq \
+    ca-certificates \
+    curl \
+    gnupg \
+    lsb-release \
+    software-properties-common \
+    apt-transport-https
+ok "Dependencias base instaladas"
+
+# ---------------------------------------------------------------------------
+# 2. NVIDIA Driver
+# ---------------------------------------------------------------------------
+log "--- Verificando NVIDIA Driver ${NVIDIA_DRIVER_VERSION} ---"
+
+if dpkg -l 2>/dev/null | grep -q "nvidia-driver-${NVIDIA_DRIVER_VERSION}"; then
+    skip "nvidia-driver-${NVIDIA_DRIVER_VERSION}"
+else
+    log "Instalando nvidia-driver-${NVIDIA_DRIVER_VERSION}..."
+    # Agregar el repositorio de drivers NVIDIA (ubuntu-drivers-common)
+    sudo add-apt-repository -y ppa:graphics-drivers/ppa 2>/dev/null || true
+    sudo apt-get update -qq
+    sudo apt-get install -y -qq "nvidia-driver-${NVIDIA_DRIVER_VERSION}"
+    ok "nvidia-driver-${NVIDIA_DRIVER_VERSION} instalado (requiere reboot para activarse)"
+fi
+
+# ---------------------------------------------------------------------------
+# 3. NVIDIA CUDA Toolkit
+# ---------------------------------------------------------------------------
+log "--- Verificando NVIDIA CUDA Toolkit ---"
+
+if dpkg -l 2>/dev/null | grep -q "nvidia-cuda-toolkit"; then
+    skip "nvidia-cuda-toolkit"
+else
+    log "Instalando nvidia-cuda-toolkit..."
+    sudo apt-get install -y -qq nvidia-cuda-toolkit
+    ok "nvidia-cuda-toolkit instalado"
+fi
+
+# ---------------------------------------------------------------------------
+# 4. NVIDIA Container Toolkit (GPU access en Docker)
+# ---------------------------------------------------------------------------
+log "--- Verificando NVIDIA Container Toolkit ---"
+
+if dpkg -l 2>/dev/null | grep -q "nvidia-container-toolkit"; then
+    skip "nvidia-container-toolkit"
+else
+    log "Configurando repositorio NVIDIA Container Toolkit..."
+    # Repositorio oficial de NVIDIA
+    curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey \
+        | sudo gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
+    curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list \
+        | sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' \
+        | sudo tee /etc/apt/sources.list.d/nvidia-container-toolkit.list > /dev/null
+    sudo apt-get update -qq
+    log "Instalando nvidia-container-toolkit..."
+    sudo apt-get install -y -qq nvidia-container-toolkit
+    ok "nvidia-container-toolkit instalado"
+fi
+
+# ---------------------------------------------------------------------------
+# 5. Docker Engine completo
+# ---------------------------------------------------------------------------
+log "--- Verificando Docker Engine ---"
+
+if command -v docker &>/dev/null; then
+    DOCKER_VER=$(docker --version | awk '{print $3}' | tr -d ',')
+    skip "docker ${DOCKER_VER}"
+else
+    log "Instalando Docker Engine desde repositorio oficial..."
+    # Agregar GPG key oficial de Docker
+    sudo install -m 0755 -d /etc/apt/keyrings
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
+        | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+    sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+    # Agregar repositorio
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "${VERSION_CODENAME}") stable" \
+        | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+    sudo apt-get update -qq
+    sudo apt-get install -y -qq \
+        docker-ce \
+        docker-ce-cli \
+        containerd.io \
+        docker-buildx-plugin \
+        docker-compose-plugin
+
+    # Iniciar y habilitar el daemon
+    sudo systemctl enable docker
+    sudo systemctl start docker
+
+    ok "docker $(docker --version | awk '{print $3}' | tr -d ',') instalado"
+fi
+
+# Configurar Docker runtime para NVIDIA (si el toolkit está presente)
+if command -v nvidia-ctk &>/dev/null; then
+    log "Configurando NVIDIA runtime en Docker..."
+    sudo nvidia-ctk runtime configure --runtime=docker
+    sudo systemctl restart docker
+    ok "NVIDIA runtime configurado en Docker"
+fi
+
+# ---------------------------------------------------------------------------
+# 6. Configurar Docker para usuario no-root
+# ---------------------------------------------------------------------------
+log "--- Configurando Docker para usuario no-root ---"
+
+CURRENT_USER="$(whoami)"
+if groups "${CURRENT_USER}" | grep -q "\bdocker\b"; then
+    skip "usuario ${CURRENT_USER} ya está en el grupo docker"
+else
+    log "Agregando ${CURRENT_USER} al grupo docker..."
+    sudo usermod -aG docker "${CURRENT_USER}"
+    ok "Usuario ${CURRENT_USER} agregado al grupo docker (efectivo al reabrir sesión)"
+fi
+
+# ---------------------------------------------------------------------------
+# 7. Node.js 20 LTS
+# ---------------------------------------------------------------------------
+log "--- Verificando Node.js 20 LTS ---"
+
 NODE_OK=false
 if command -v node &>/dev/null; then
-    NODE_VER=$(node --version | tr -d 'v' | cut -d. -f1)
-    if [ "$NODE_VER" -ge 20 ]; then
-        ok "node $(node --version)"
+    NODE_VER=$(node --version 2>/dev/null | tr -d 'v' | cut -d. -f1)
+    if [[ "${NODE_VER}" -ge 20 ]]; then
+        skip "node $(node --version)"
         NODE_OK=true
     else
-        warn "Node.js $(node --version) es muy viejo (necesita 20+). Actualizando..."
+        log "Node.js $(node --version) es muy viejo (necesita 20+). Actualizando..."
     fi
 fi
 
-if [ "$NODE_OK" = false ]; then
-    miss "Node.js 20"
-    curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-    apt-get install -y -qq nodejs
-    ok "node $(node --version)"
+if [[ "${NODE_OK}" = false ]]; then
+    log "Instalando Node.js 20 LTS via NodeSource..."
+    curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+    sudo apt-get install -y -qq nodejs
+    ok "node $(node --version) instalado"
 fi
 
-# -------------------------------------------------------
-# 7. pnpm
-# -------------------------------------------------------
+# ---------------------------------------------------------------------------
+# 8. pnpm
+# ---------------------------------------------------------------------------
+log "--- Verificando pnpm ---"
+
 if command -v pnpm &>/dev/null; then
-    ok "pnpm $(pnpm --version)"
+    skip "pnpm $(pnpm --version)"
 else
-    miss "pnpm"
-    npm install -g pnpm --quiet
-    ok "pnpm $(pnpm --version)"
+    log "Instalando pnpm via npm..."
+    sudo npm install -g pnpm --quiet
+    ok "pnpm $(pnpm --version) instalado"
 fi
 
-# -------------------------------------------------------
-# 8. uv (Python package manager)
-# -------------------------------------------------------
+# ---------------------------------------------------------------------------
+# 9. uv (Python package manager)
+# ---------------------------------------------------------------------------
+log "--- Verificando uv ---"
+
 if command -v uv &>/dev/null; then
-    ok "uv $(uv --version)"
+    skip "uv $(uv --version)"
 else
-    miss "uv"
+    log "Instalando uv via astral.sh..."
     curl -LsSf https://astral.sh/uv/install.sh | sh
-    export PATH="$HOME/.cargo/bin:$PATH"
-    ok "uv instalado"
+    # uv instala en ~/.local/bin
+    export PATH="${HOME}/.local/bin:${PATH}"
+    if command -v uv &>/dev/null; then
+        ok "uv $(uv --version) instalado"
+    else
+        ok "uv instalado en ~/.local/bin (agregar al PATH para usar en esta sesión)"
+    fi
 fi
 
-# -------------------------------------------------------
-# 9. Verificar GPU visible
-# -------------------------------------------------------
-if nvidia-smi &>/dev/null 2>&1; then
-    GPU=$(nvidia-smi --query-gpu=name,memory.total --format=csv,noheader | head -1)
-    ok "GPU: $GPU"
-else
-    err "nvidia-smi falló — ¿los drivers están instalados?"
-fi
-
+# ---------------------------------------------------------------------------
+# Resumen final
+# ---------------------------------------------------------------------------
 echo ""
-log "=== Todas las dependencias OK. Corriendo setup.sh... ==="
-echo ""
-
-exec "$SCRIPT_DIR/setup.sh" "$BLUEPRINT_VERSION"
+log "=== Bootstrap completo ==="
+log "Cerrar sesión y volver a abrir para aplicar cambios de grupo Docker."
+log ""
+log "Próximo paso: ./scripts/setup.sh"
