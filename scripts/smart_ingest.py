@@ -30,7 +30,7 @@ REPORT_EVERY = 5
 DEADLOCK_THRESHOLD = 45  # seconds without extraction progress -> deadlock
 
 # === TIER SYSTEM ===
-from saldivia.tier import classify_tier as _classify_tier, TierConfig, TIERS as _TIERS
+from saldivia.tier import classify_tier as _classify_tier, TIERS as _TIERS
 
 
 @dataclass
@@ -42,6 +42,7 @@ class Tier:
 
 
 TIERS: dict[str, Tier] = {
+    # Valores canónicos centralizados en saldivia/tier.py
     k: Tier(name=k, poll_interval=v.poll_interval, restart_after=v.restart_after)
     for k, v in _TIERS.items()
 }
