@@ -1,5 +1,6 @@
 import pytest
-from saldivia.gateway import extract_page_count, classify_tier
+from saldivia.gateway import extract_page_count
+from saldivia.tier import classify_tier
 
 
 def test_classify_tier_by_pages():
@@ -18,9 +19,11 @@ def test_classify_tier_by_size_when_no_pages():
     assert classify_tier(None, 99_999) == "tiny"
     assert classify_tier(None, 100_000) == "small"
     assert classify_tier(None, 499_999) == "small"
-    assert classify_tier(None, 500_000) == "medium"
-    assert classify_tier(None, 4_999_999) == "medium"
-    assert classify_tier(None, 5_000_000) == "large"
+    assert classify_tier(None, 500_000) == "small"
+    assert classify_tier(None, 999_999) == "small"
+    assert classify_tier(None, 1_000_000) == "medium"
+    assert classify_tier(None, 9_999_999) == "medium"
+    assert classify_tier(None, 10_000_000) == "large"
 
 
 def test_extract_page_count_non_pdf():
