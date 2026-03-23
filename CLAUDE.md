@@ -89,25 +89,45 @@ SvelteKit 5 BFF. Rutas principales:
 - `/api/collections/*` → BFF endpoints de colecciones (GET, POST, DELETE)
 - `/api/dev-login` → Login rápido para desarrollo (solo en dev mode)
 
-## Skills obligatorias en este proyecto
+## Planificación General
 
-- **Features/bugs no triviales** → invocar `superpowers:brainstorming` PRIMERO, siempre, sin excepción
-- **Explorar codebase** → `CodeGraphContext` MCP + `repomix` MCP
+### Mission Brief (inicio de cada sesión)
+Antes de tocar código: INTEL (firecrawl) + SITUATION (tests/bugs/deuda) + MISSION (prioridades) + EXECUTION (tasks).
+Output: `docs/sessions/YYYY-MM-DD-brief.md`
+Ver formato completo en `docs/development-workflow.md`.
+
+### Roadmap Macro
+`docs/roadmap.md` — fuente de verdad de fases. Se actualiza **solo cuando Enzo lo pide**.
+
+---
+
+## Workflow — OODA-SQ (ver `docs/development-workflow.md`)
+
+El método estándar del proyecto. Cada iteración no trivial sigue:
+
+```
+OBSERVE → ORIENT → DECIDE → ACT (Implement → Simplify → Review → Docs)
+```
+
+### Tools por fase
+
+| Fase | Tools principales |
+|------|------------------|
+| OBSERVE | `firecrawl` + `mcp__CodeGraphContext` + `mcp__repomix` + subagente `Explore` |
+| ORIENT | skill `superpowers:brainstorming` + subagente `Plan` |
+| DECIDE | skill `superpowers:writing-plans` + subagente `plan-writer` |
+| IMPLEMENT | skill `subagent-driven-development` + `TDD` + `parallel-agents` + subagente `debugger` |
+| SIMPLIFY | skill `simplify` + `mcp__CodeGraphContext__find_dead_code` + complexity tools |
+| REVIEW | skill `requesting-code-review` + subagentes `gateway-reviewer` / `frontend-reviewer` / `security-auditor` |
+| DOCS | subagente `doc-writer` + skill `revise-claude-md` + skill `changelog-generator` |
+
+### Reglas fijas
+- **State of the Art check** → `firecrawl search` al arrancar la sesión + antes de cada feature nueva
 - **Web / docs externos** → skill `firecrawl` (NUNCA WebSearch/WebFetch)
 - **Deploy a workstation** → skill `rag-saldivia:deploy`
 - **Ver estado de servicios** → skill `rag-saldivia:status`
 - **Commits** → SOLO cuando Enzo los pide explícitamente
-
-## Workflow para cambios NO triviales
-
-```
-Research (CGC + Repomix + firecrawl)
-  → Spec (superpowers:brainstorming)
-    → Plan (superpowers:writing-plans)
-      → Implementación (superpowers:subagent-driven-development)
-        → Review + Tests (superpowers:requesting-code-review)
-          → Commit (solo si Enzo lo pide)
-```
+- **Trivial (≤3 líneas)** → solo GATE 3 + 4 + 6
 
 ## Tests
 

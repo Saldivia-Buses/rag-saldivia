@@ -1,216 +1,368 @@
-# Development Workflow
+# Development Workflow — OODA-SQ + Mission Brief
 
-## The Fundamental Rule
+## Flujo completo de una sesión
 
-No non-trivial change is implemented without following this five-phase workflow:
+```
+[INICIO DE SESIÓN]
+      ↓
+Mission Brief ──► INTEL + SITUATION + MISSION + EXECUTION
+      ↓
+OODA-SQ por cada feature/task
+      ↓
+[CUANDO ENZO LO PIDE]
+      ↓
+Actualizar Roadmap (docs/roadmap.md)
+```
 
-1. **Research** — Understand the codebase and gather context
-2. **Brainstorm** — Explore the problem space and design space
-3. **Plan** — Create a step-by-step implementation plan
-4. **Implement** — Execute the plan with subagent-driven development
-5. **Review** — Self-review and test before commit
+Ver también:
+- `docs/roadmap.md` — visión macro del proyecto
+- `docs/sessions/` — briefs históricos por sesión
 
-This is not optional. Skipping phases leads to poorly designed features, broken tests, and technical debt.
+---
 
-## Trivial vs Non-trivial
+## Mission Brief (inicio de sesión)
 
-### Trivial Changes (immediate implementation)
+Ejecutar **antes de tocar código**, al arrancar cada sesión.
 
-- Fixing a typo in code or documentation
-- Updating a README with new information (1-2 sections)
-- Changing a default value in a config file
-- Adding a log statement for debugging
-- Renaming a variable for clarity (1-3 occurrences)
-- Formatting code (no logic change)
+### Estructura
 
-**Rule:** If the change touches ≤3 lines and the fix is obvious, implement immediately.
+```
+🔭 INTEL     → firecrawl search sobre tecnologías relevantes a lo que haremos
+📊 SITUATION → tests + bugs + deuda técnica + servicios + últimos commits
+🎯 MISSION   → qué hacer hoy y por qué (priorizado, basado en roadmap)
+⚡ EXECUTION → tasks que entran directo al OODA-SQ
+```
 
-### Non-trivial Changes (mandatory workflow)
+### Tools
 
-- New feature (new API endpoint, new UI component, new CLI command)
-- Bug fix that touches >3 files or changes logic in >1 function
-- Refactoring (extracting a function, splitting a file, changing data structures)
-- Adding a new dependency (npm package, Python library, Docker service)
-- Performance optimization (caching, batching, parallelization)
-- Changing behavior of existing features (even if 1 line)
+| Sección | Tool |
+|---------|------|
+| INTEL | `firecrawl search "[tech] best practices 2026"` |
+| SITUATION — tests | `uv run pytest saldivia/tests/ -v` |
+| SITUATION — bugs | `mcp__github__list_issues` |
+| SITUATION — deuda | `mcp__CodeGraphContext__find_dead_code` + `find_most_complex_functions` |
+| SITUATION — servicios | subagente `status` |
+| SITUATION — historial | `git log --oneline -10` |
+| MISSION | análisis de SITUATION + `docs/roadmap.md` + memoria del proyecto |
 
-**Rule:** If you need to think about how to implement it, use the workflow.
+### Output
 
-## Tool Stack per Phase
+`docs/sessions/YYYY-MM-DD-brief.md`
 
-### Phase 1: Research
+```markdown
+# Session Brief — YYYY-MM-DD
 
-**Objective:** Understand the existing codebase and gather external context.
+## 🔭 INTEL
+[Estado del arte relevante para lo que vamos a hacer hoy]
 
-**Tools:**
+## 📊 SITUATION
+- **Tests:** X/Y pasan
+- **Bugs abiertos:** N issues
+- **Deuda técnica:** [funciones complejas, dead code]
+- **Servicios:** [estado]
+- **Últimos cambios:** [resumen git log]
 
-- **CodeGraphContext MCP** (mcp__CodeGraphContext__*)
-  - `find_code`: Search for symbols, functions, classes by name or pattern
-  - `analyze_code_relationships`: Find callers, callees, imports, exports
-  - Use case: "Where is `gatewayGenerateStream` called?" → analyze_code_relationships
-  - Use case: "Find all components that use `$state` runes" → find_code
+## 🎯 MISSION
+1. [Prioridad 1] — porque [razón]
+2. [Prioridad 2] — porque [razón]
 
-- **repomix MCP** (mcp__repomix__pack_codebase)
-  - Pack entire codebase or subdirectory into a single file for AI analysis
-  - Use case: "Understand the structure of services/sda-frontend/src/lib/stores/"
+## ⚡ EXECUTION
+- [ ] Task 1 — success criteria
+- [ ] Task 2 — success criteria
+```
 
-- **firecrawl CLI** (never use WebSearch or WebFetch directly)
-  - `firecrawl search "query"` — Search the web for documentation or solutions
-  - `firecrawl scrape "https://url.com"` — Scrape a specific page (docs, blog, GitHub issue)
-  - Use case: "How does Svelte 5's $effect handle cleanup?" → firecrawl search
+**Nota:** El INTEL del Brief **es** el OBSERVE del primer OODA-SQ. No repetir el firecrawl.
 
-**Output:** A clear understanding of:
-- What code already exists and how it works
-- What external libraries or patterns are relevant
-- What constraints or gotchas exist (from docs/problems-and-solutions.md, CLAUDE.md)
+---
 
-### Phase 2: Brainstorm
+## La Regla Fundamental
 
-**Objective:** Explore the problem space and design space before committing to a solution.
+Todo cambio no trivial sigue el **OODA-SQ loop**:
 
-**Tools:**
+```
+OBSERVE ──► ORIENT ──► DECIDE ──► ACT
+   ▲                              │
+   └──────── siguiente iteración ─┘
+```
 
-- **superpowers:brainstorming skill** (MANDATORY for all non-trivial changes)
-  - Generates a spec in markdown format
-  - Saved to `docs/superpowers/specs/YYYY-MM-DD-feature-design.md`
-  - Template includes: Problem, Goals, Non-goals, Exploration (3+ options), Decision, Risks
+**ACT** tiene 4 sub-fases en orden obligatorio:
+```
+Implement ──► Simplify ──► Review ──► Docs Sync
+```
 
-**Process:**
-1. Invoke the skill with a clear problem statement
-2. Review the generated spec
-3. Iterate if needed (add more options, refine constraints)
-4. Approve the spec before moving to planning
+Este proceso no es opcional. Saltear fases produce features mal diseñadas, bugs en producción y deuda técnica.
 
-**DO NOT skip this step.** Implementing without a spec leads to:
-- Solving the wrong problem
-- Overengineering or underengineering
-- Conflicts with existing architecture
+---
 
-### Phase 3: Plan
+## Trivial vs No-trivial
 
-**Objective:** Create a step-by-step implementation plan.
+### Trivial (implementar directo)
 
-**Tools:**
+- Typo en código o documentación
+- Cambiar un valor de config
+- Agregar un log statement
+- Renombrar una variable (1-3 ocurrencias)
+- Formateo sin cambio de lógica
 
-- **superpowers:writing-plans skill**
-  - Generates a detailed plan in markdown format
-  - Saved to `docs/superpowers/plans/YYYY-MM-DD-feature-implementation.md`
-  - Template includes: Tasks (numbered, with file paths), Dependencies, Testing strategy, Rollout
+**Regla:** Si el cambio toca ≤3 líneas y el fix es obvio → GATE 3 + 4 + 6 solamente.
 
-**Process:**
-1. Pass the approved spec to the planning skill
-2. Review the generated plan for completeness
-3. Check that all dependencies are handled (new libraries, config changes, database migrations)
-4. Verify the testing strategy covers unit, component, and E2E tests
+### No-trivial (OODA-SQ completo)
 
-**Output:** A plan with 5-20 numbered tasks, each with:
-- Clear description of what to do
-- File paths to modify or create
-- Success criteria
+- Feature nueva (endpoint, componente UI, comando CLI)
+- Bug que toca >3 archivos o cambia lógica en >1 función
+- Refactor (extraer función, partir archivo, cambiar estructuras de datos)
+- Nueva dependencia (paquete npm, librería Python, servicio Docker)
+- Optimización de rendimiento (cache, batch, paralelización)
+- Cambio de comportamiento en features existentes (aunque sea 1 línea)
 
-### Phase 4: Implement
+**Regla:** Si necesitás pensar cómo implementarlo → OODA-SQ completo.
 
-**Objective:** Execute the plan with minimal deviation.
+---
 
-**Tools:**
+## FASE 0 — OBSERVE [GATE 0]
 
-- **superpowers:subagent-driven-development skill**
-  - Executes the plan task-by-task
-  - Handles file creation, modification, testing
-  - Stops if tests fail or unexpected errors occur
+**Cuándo:** Al arrancar la sesión + antes de cada feature nueva.
 
-**Process:**
-1. Invoke the skill with the plan
-2. Monitor progress (task 1/N, 2/N, ...)
-3. If blocked → investigate, update plan, resume
-4. If tests fail → fix tests or implementation, do not skip
+**Objetivo:** Estado del arte externo + contexto interno del codebase.
 
-**Rules:**
-- Do NOT deviate from the plan without updating the plan file first
-- Do NOT skip tests to "make it work"
-- Do NOT commit until Phase 5 (review) is complete
+### Tools
 
-### Phase 5: Review
+| Tool | Cuándo usarlo |
+|------|--------------|
+| `firecrawl search "tema 2026"` | Estado del arte, mejores prácticas actuales |
+| `firecrawl scrape "url"` | Documentación específica de una librería |
+| `mcp__CodeGraphContext__find_code` | Buscar símbolos, funciones, clases por nombre |
+| `mcp__CodeGraphContext__analyze_code_relationships` | Callers, callees, imports, exports |
+| `mcp__repomix__pack_codebase` | Empaquetar módulo completo para análisis AI |
+| Subagente `Explore` | Exploración profunda cuando Glob/Grep no alcanzan |
 
-**Objective:** Self-review and test before commit.
+### Pregunta clave
+> *¿Qué está haciendo el mundo con esto? ¿Estamos alineados?*
 
-**Tools:**
+### Gate 0
+- [ ] `firecrawl search` ejecutado sobre el tema
+- [ ] Resultado documentado: "¿qué hace el mundo?"
+- [ ] Codebase relevante mapeado (CGC / Repomix)
 
-- **superpowers:requesting-code-review skill**
-  - Generates a review checklist
-  - Runs all tests (unit, component, E2E)
-  - Checks for common issues (type errors, missing tests, README not updated)
+---
 
-**Process:**
-1. Invoke the skill with the list of changed files
-2. Review the generated checklist
-3. Run tests: `make test` (full pyramid) or `make test-unit` (fast feedback)
-4. Fix any issues found
-5. Update README files in affected zones (see README Maintenance Rule below)
-6. Only after all checks pass → commit
+## FASE 1 — ORIENT [GATE 1]
 
-**DO NOT commit until:**
-- All tests pass
-- README files in affected zones are updated
-- No type errors or lint warnings
-- You have manually tested the happy path
+**Objetivo:** Spec con diseño comparativo. Sección "Nosotros vs Estado del Arte" obligatoria.
 
-## Phase Lifecycle
+### Tools
 
-### Specs and Plans Storage
+| Tool | Cuándo usarlo |
+|------|--------------|
+| Skill `superpowers:brainstorming` | Toda feature no trivial — genera spec con opciones |
+| Subagente `Plan` | Decisiones de arquitectura complejas |
 
-- **Specs** (from brainstorming) → `docs/superpowers/specs/`
-- **Plans** (from writing-plans) → `docs/superpowers/plans/`
-- **Naming convention:** `YYYY-MM-DD-feature-description.md`
-  - Example: `2026-03-19-crossdoc-pipeline-design.md`
-  - Example: `2026-03-19-crossdoc-pipeline-implementation.md`
+### Sección obligatoria en el spec
 
-### Commits
+```markdown
+## Estado del Arte
+- **Práctica actual:** [qué hace el mundo]
+- **Nuestra solución:** [qué vamos a hacer]
+- **Veredicto:** ✅ Alineados / ⚠️ Divergimos porque [razón válida]
+```
 
-**Rule:** Commits are ONLY created when explicitly requested by the user.
+### Gate 1
+- [ ] Spec aprobada por Enzo
+- [ ] Sección "Estado del Arte" completa con veredicto
+- [ ] Decisión técnica justificada
+- [ ] Guardada en `docs/superpowers/specs/YYYY-MM-DD-feature-design.md`
 
-**DO NOT:**
-- Create commits proactively after completing a task
-- Assume "done" means "commit"
-- Commit without user approval
+---
 
-**Reason:** The user may want to test, review, or modify the implementation before committing.
+## FASE 2 — DECIDE [GATE 2]
 
-### How to Read docs/superpowers/
+**Objetivo:** Plan con tasks verificables, uno por uno.
 
-- **specs/** — "What to build" — problem, goals, options explored, final decision
-- **plans/** — "How to build it" — step-by-step tasks with file paths and success criteria
-- **Naming** — YYYY-MM-DD prefix for chronological sorting, kebab-case description
+### Tools
 
-When starting a new feature:
-1. Read relevant specs to understand past decisions
-2. Read relevant plans to see how similar features were implemented
-3. Follow the same structure for new specs and plans
+| Tool | Cuándo usarlo |
+|------|--------------|
+| Skill `superpowers:writing-plans` | Generar plan desde la spec aprobada |
+| Subagente `plan-writer` | Features complejas multi-módulo |
 
-## README Maintenance Rule
+### Estructura de cada task
 
-**Rule:** When modifying code in a zone (directory or feature), updating that zone's README is MANDATORY, not optional.
+```markdown
+### Task N — [Nombre imperativo]
+- **Archivos:** path/to/file.py
+- **Qué hacer:** descripción concreta
+- **Success criteria:** cómo verifico que está bien
+```
 
-**Rationale:** READMEs are the primary documentation for developers. Stale READMEs lead to confusion, wasted time, and incorrect assumptions.
+### Gate 2
+- [ ] Plan aprobado por Enzo
+- [ ] Cada task tiene success criteria verificable
+- [ ] Dependencias identificadas (librerías, config, migraciones)
+- [ ] Guardado en `docs/superpowers/plans/YYYY-MM-DD-feature.md`
 
-**Zones:**
-- `saldivia/` → `saldivia/README.md`
-- `cli/` → `cli/README.md`
-- `services/sda-frontend/` → `services/sda-frontend/README.md`
-- `scripts/` → `scripts/README.md`
-- `config/` → `config/README.md`
-- Root → `README.md`
+---
 
-**Process:**
-1. Identify the zone affected by your changes
-2. Update the zone's README in the same commit
-3. Update sections: new files, new functions, new behavior, examples
-4. If the change affects multiple zones, update all relevant READMEs
+## FASE 3 — IMPLEMENT [GATE 3]
 
-**Example:**
-- Adding a new API endpoint in `saldivia/gateway.py` → update `saldivia/README.md` with endpoint description
-- Adding a new CLI command in `cli/main.py` → update `cli/README.md` with command usage
-- Adding a new route in `services/sda-frontend/src/routes/` → update `services/sda-frontend/README.md` with route description
+**Objetivo:** Ejecutar el plan. TDD cuando aplica.
 
-**DO NOT commit without updating READMEs.**
+### Tools
 
+| Tool | Cuándo usarlo |
+|------|--------------|
+| Skill `superpowers:subagent-driven-development` | Ejecución del plan task por task |
+| Skill `superpowers:test-driven-development` | Features con cobertura de tests |
+| Skill `superpowers:dispatching-parallel-agents` | Tasks independientes en paralelo |
+| Skill `superpowers:using-git-worktrees` | Aislamiento para features grandes |
+| Subagente `debugger` | Cuando algo falla y hay que diagnosticar |
+
+### Reglas
+- No desviar del plan sin actualizarlo primero
+- No saltear tests para "hacerlo funcionar"
+- No commitear hasta pasar GATE 5
+
+### Gate 3
+- [ ] Todos los tests nuevos pasan
+- [ ] Sin errores de tipo ni warnings
+- [ ] Happy path verificado manualmente
+
+---
+
+## FASE 4 — SIMPLIFY [GATE 4]
+
+**Objetivo:** Misma funcionalidad, menos código. DRY + comentado.
+
+### Tools
+
+| Tool | Cuándo usarlo |
+|------|--------------|
+| Skill `simplify` | Pass automático de simplificación post-implementación |
+| `mcp__CodeGraphContext__find_dead_code` | Detectar código sin uso |
+| `mcp__CodeGraphContext__calculate_cyclomatic_complexity` | Detectar funciones muy complejas |
+| `mcp__CodeGraphContext__find_most_complex_functions` | Top N funciones a simplificar |
+
+### Checklist de simplificación
+
+1. **Duplicación** — bloques iguales en >1 lugar → extraer helper/función/constante
+2. **Longitud** — funciones >30 líneas → dividir con nombre descriptivo
+3. **Comentarios** — lógica no obvia → comentar el *por qué*, no el *qué*
+   - ❌ `# incrementa i`
+   - ✅ `# offset +1 porque el índice es 1-based en la API de Milvus`
+4. **Naming** — nombres que no se explican solos → renombrar
+5. **Dead code** — imports/funciones/vars sin uso → eliminar
+
+### Gate 4
+- [ ] Sin duplicación (DRY)
+- [ ] Lógica no obvia tiene comentario de "por qué"
+- [ ] Sin dead code
+- [ ] Skill `simplify` ejecutado
+
+---
+
+## FASE 5 — REVIEW [GATE 5]
+
+**Objetivo:** Cero errores, cero regresiones.
+
+### Tools
+
+| Tool | Cuándo usarlo |
+|------|--------------|
+| Skill `superpowers:requesting-code-review` | Review completo del trabajo |
+| Skill `superpowers:verification-before-completion` | Verificar antes de declarar "listo" |
+| Subagente `superpowers:code-reviewer` | Cuando se completa un step major |
+| Subagente `gateway-reviewer` | Si se tocó `saldivia/gateway.py` o auth/RBAC |
+| Subagente `frontend-reviewer` | Si se tocó `services/sda-frontend/` |
+| Subagente `security-auditor` | Antes de releases o si se tocó auth/permisos |
+
+### Comando de tests
+```bash
+cd ~/rag-saldivia && uv run pytest saldivia/tests/ -v
+```
+
+### Gate 5
+- [ ] Todos los tests pasan (unit + integration)
+- [ ] 0 regresiones en tests existentes
+- [ ] Review especializado ejecutado (gateway / frontend según corresponda)
+- [ ] Sin vulnerabilidades obvias
+
+---
+
+## FASE 6 — DOCS SYNC [GATE 6]
+
+**Objetivo:** Documentación 100% en sync con el código. Siempre.
+
+### Tools
+
+| Tool | Cuándo usarlo |
+|------|--------------|
+| Subagente `doc-writer` | Sync completo de docs al cierre de la iteración |
+| Skill `claude-md-management:revise-claude-md` | Actualizar CLAUDE.md si cambió arquitectura |
+| Skill `changelog-generator` | Generar entrada de changelog desde commits |
+
+### Qué actualizar
+
+1. **READMEs** de zonas afectadas:
+   - `saldivia/` → `saldivia/README.md`
+   - `services/sda-frontend/` → `services/sda-frontend/README.md`
+   - `cli/` → `cli/README.md`
+   - `scripts/` → `scripts/README.md`
+   - `config/` → `config/README.md`
+   - Root → `README.md`
+
+2. **Docstrings** en funciones nuevas o modificadas:
+   - Python: `"""Qué hace. Args: ... Returns: ... Raises: ..."""`
+   - TypeScript/Svelte: JSDoc `/** ... */`
+
+3. **CHANGELOG.md** — entrada bajo `[Unreleased]`:
+   ```markdown
+   ## [Unreleased]
+   ### Added
+   - Rate limiting por usuario en /auth/session
+   ### Fixed
+   - Upload limit no se aplicaba en rutas alternativas
+   ```
+
+4. **CLAUDE.md del proyecto** — solo si cambió arquitectura, patrones clave, puertos o servicios.
+
+### Gate 6
+- [ ] READMEs de zonas afectadas actualizados
+- [ ] Docstrings en funciones nuevas/modificadas
+- [ ] CHANGELOG.md con nueva entrada
+- [ ] CLAUDE.md actualizado si aplica
+
+---
+
+## Resumen de Tools por Fase
+
+```
+OBSERVE   → firecrawl + mcp__CodeGraphContext + mcp__repomix + Explore (subagente)
+ORIENT    → superpowers:brainstorming + Plan (subagente)
+DECIDE    → superpowers:writing-plans + plan-writer (subagente)
+IMPLEMENT → subagent-driven-development + TDD + dispatching-parallel-agents + worktrees + debugger
+SIMPLIFY  → simplify + CGC (dead_code, complexity)
+REVIEW    → requesting-code-review + code-reviewer + gateway/frontend-reviewer + security-auditor
+DOCS      → doc-writer + revise-claude-md + changelog-generator
+```
+
+---
+
+## Commits
+
+**Regla:** Commits SOLO cuando Enzo los pide explícitamente. Nunca proactivos.
+
+**NO hacer:**
+- Commitear después de completar una tarea sin que Enzo lo pida
+- Asumir que "listo" significa "commitear"
+
+---
+
+## Storage de Specs y Plans
+
+- **Specs** (ORIENT) → `docs/superpowers/specs/YYYY-MM-DD-feature-design.md`
+- **Plans** (DECIDE) → `docs/superpowers/plans/YYYY-MM-DD-feature.md`
+- **Naming:** fecha ISO + descripción en kebab-case
+
+Cuando arrancás una feature nueva:
+1. Leer specs relevantes para entender decisiones pasadas
+2. Leer plans similares para ver cómo se implementó algo parecido
+3. Seguir la misma estructura
