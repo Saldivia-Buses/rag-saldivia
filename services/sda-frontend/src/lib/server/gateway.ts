@@ -1,6 +1,6 @@
 // src/lib/server/gateway.ts
 // Typed wrapper for all gateway API calls. Uses SYSTEM_API_KEY Bearer auth.
-const GATEWAY_URL = process.env.GATEWAY_URL ?? 'http://localhost:9000';
+export const GATEWAY_URL = process.env.GATEWAY_URL ?? 'http://localhost:9000';
 
 /** Default timeout for normal API calls (ms) */
 const DEFAULT_TIMEOUT_MS = 10_000;
