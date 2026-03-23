@@ -2,7 +2,7 @@
 services:
   openrouter-proxy:
     build:
-      context: ../services/openrouter-proxy
+      context: ${SALDIVIA_ROOT}/services/openrouter-proxy
     environment:
       - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
     ports:
