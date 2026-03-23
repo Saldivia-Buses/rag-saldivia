@@ -1,6 +1,5 @@
 import type { RequestHandler } from './$types';
 import { json, error } from '@sveltejs/kit';
-import { GATEWAY_URL } from '$lib/server/gateway';
 
 export const POST: RequestHandler = async ({ request, locals }) => {
     if (!locals.user) throw error(401);
@@ -14,6 +13,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
         throw error(400, 'Se requiere seleccionar una colección.');
     }
 
+    const gatewayUrl = process.env.GATEWAY_URL ?? 'http://localhost:9000';
     const apiKey = process.env.SYSTEM_API_KEY;
     if (!apiKey) throw error(503, 'SYSTEM_API_KEY no configurado.');
 
@@ -26,7 +26,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 
     let resp: Response;
     try {
-        resp = await fetch(`${GATEWAY_URL}/v1/documents`, {
+        resp = await fetch(`${gatewayUrl}/v1/documents`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${apiKey}`,

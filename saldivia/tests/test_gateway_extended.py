@@ -508,3 +508,125 @@ def test_generate_rag_server_500(client, admin_user):
         )
 
     assert resp.status_code >= 400
+
+
+# ── Task 4: File cache durante upload ─────────────────────────────────────────
+
+def test_upload_creates_file_cache(client, admin_user, tmp_path, monkeypatch):
+    """POST /v1/documents guarda el archivo en disco para retry server-side."""
+    import saldivia.gateway as gw_module
+    monkeypatch.setattr(gw_module, "INGEST_CACHE_DIR", tmp_path)
+
+    mock_http = AsyncMock()
+    mock_http.__aenter__ = AsyncMock(return_value=mock_http)
+    mock_http.__aexit__ = AsyncMock(return_value=None)
+    mock_http.post.return_value = MagicMock(status_code=200, json=lambda: {"task_id": "t1"})
+
+    with patch("saldivia.gateway.get_user_from_token", return_value=admin_user), \
+         patch("saldivia.gateway.db") as mock_db, \
+         patch("saldivia.gateway.httpx.AsyncClient", return_value=mock_http):
+        mock_db.create_ingestion_job.return_value = "job-123"
+        mock_db.log_action.return_value = None
+        resp = client.post(
+            "/v1/documents",
+            files={"file": ("test.pdf", b"%PDF-1.4 test content", "application/pdf")},
+            data={"data": '{"collection_name": "col"}'},
+        )
+
+    assert resp.status_code == 200
+    cached = list(tmp_path.glob("**/*.pdf"))
+    assert len(cached) == 1
+
+
+def test_cleanup_ingest_cache(tmp_path):
+    """_cleanup_ingest_cache elimina el directorio del job."""
+    from saldivia.gateway import _cleanup_ingest_cache
+    import saldivia.gateway as gw_module
+    original = gw_module.INGEST_CACHE_DIR
+    gw_module.INGEST_CACHE_DIR = tmp_path
+
+    job_dir = tmp_path / "job-abc"
+    job_dir.mkdir()
+    (job_dir / "file.pdf").write_bytes(b"content")
+
+    _cleanup_ingest_cache("job-abc")
+    assert not job_dir.exists()
+
+    gw_module.INGEST_CACHE_DIR = original
+
+
+# ── Task 5: GET /v1/documents/check ───────────────────────────────────────────
+
+def test_check_file_hash_not_found(client):
+    """GET /v1/documents/check devuelve exists=false si no hay match."""
+    with patch("saldivia.gateway.db") as mock_db:
+        mock_db.check_file_hash.return_value = None
+        resp = client.get("/v1/documents/check?hash=abc123&collection=col")
+    assert resp.status_code == 200
+    assert resp.json() == {"exists": False}
+
+
+def test_check_file_hash_completed(client):
+    """GET /v1/documents/check devuelve exists=true con metadata si ya está indexado."""
+    job = {
+        "id": "job-1", "filename": "doc.pdf", "collection": "col",
+        "tier": "small", "page_count": 42, "state": "completed",
+        "created_at": "2026-03-20T10:00:00", "completed_at": "2026-03-20T10:05:00",
+    }
+    with patch("saldivia.gateway.db") as mock_db:
+        mock_db.check_file_hash.return_value = job
+        resp = client.get("/v1/documents/check?hash=abc123&collection=col")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["exists"] is True
+    assert data["state"] == "completed"
+    assert data["filename"] == "doc.pdf"
+    assert data["pages"] == 42
+
+
+def test_check_file_hash_requires_auth(client):
+    """GET /v1/documents/check requiere autenticación con BYPASS_AUTH=False."""
+    with patch("saldivia.gateway.BYPASS_AUTH", False):
+        resp = client.get("/v1/documents/check?hash=abc&collection=col")
+    assert resp.status_code == 401
+
+
+# ── Task 6: Endpoints de alertas ──────────────────────────────────────────────
+
+def test_list_alerts_admin_only(client):
+    """GET /v1/admin/alerts accesible con BYPASS_AUTH=True (dev mode)."""
+    with patch("saldivia.gateway.db") as mock_db:
+        mock_db.list_ingestion_alerts.return_value = []
+        resp = client.get("/v1/admin/alerts")
+    assert resp.status_code == 200
+    assert resp.json() == {"alerts": []}
+
+
+def test_list_alerts_forbidden_for_non_admin(client):
+    """GET /v1/admin/alerts devuelve 403 para usuarios no-admin."""
+    from saldivia.auth.models import User as UModel, Role as RModel
+    _, h = generate_api_key()
+    area_manager = UModel(id=2, email="m@t.com", name="M", area_id=1,
+                          role=RModel.AREA_MANAGER, api_key_hash=h)
+    with patch("saldivia.gateway.BYPASS_AUTH", False), \
+         patch("saldivia.gateway.db") as mock_db:
+        mock_db.get_user_by_api_key_hash.return_value = area_manager
+        resp = client.get("/v1/admin/alerts",
+                          headers={"Authorization": "Bearer rsk_dummy"})
+    assert resp.status_code == 403
+
+
+def test_resolve_alert(client, admin_user):
+    """PATCH /v1/admin/alerts/{id}/resolve marca la alerta como resuelta."""
+    with patch("saldivia.gateway.BYPASS_AUTH", False), \
+         patch("saldivia.gateway.db") as mock_db:
+        mock_db.get_user_by_api_key_hash.return_value = admin_user
+        resp = client.patch(
+            "/v1/admin/alerts/alert-1/resolve",
+            json={"notes": "fixed by restarting ingestor"},
+            headers={"Authorization": "Bearer rsk_dummy"},
+        )
+    assert resp.status_code == 200
+    mock_db.resolve_ingestion_alert.assert_called_once_with(
+        "alert-1", resolved_by=admin_user.email, notes="fixed by restarting ingestor"
+    )

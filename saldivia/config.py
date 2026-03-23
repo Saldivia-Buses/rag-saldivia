@@ -19,6 +19,22 @@ def deep_merge(base: dict, override: dict) -> dict:
     return result
 
 
+_INGESTION_DEFAULTS: dict = {
+    "parallel_slots_small": 2,
+    "parallel_slots_large": 1,
+    "client_max_retries": 3,
+    "server_max_retries": 3,
+    "retry_backoff_base": 30,
+    "stall_check_interval": 60,
+    "tiers": {
+        "tiny":   {"max_pages": 20,  "poll_interval": 5,  "deadlock_threshold": 30,  "timeout": 300},
+        "small":  {"max_pages": 80,  "poll_interval": 10, "deadlock_threshold": 60,  "timeout": 900},
+        "medium": {"max_pages": 250, "poll_interval": 20, "deadlock_threshold": 90,  "timeout": 2700},
+        "large":  {"max_pages": None,"poll_interval": 30, "deadlock_threshold": 120, "timeout": 7200},
+    },
+}
+
+
 class ConfigLoader:
     """Loads and merges configuration from YAMLs."""
 
@@ -95,25 +111,13 @@ class ConfigLoader:
         return env
 
     def ingestion_config(self) -> dict:
-        """Return ingestion configuration merged with defaults from loaded profile."""
+        """Return ingestion configuration merged with defaults from loaded profile.
+
+        Requiere haber llamado load() o load(profile=...) antes; si no,
+        retorna solo los _INGESTION_DEFAULTS sin overrides de perfil.
+        """
         profile_ingestion = self._config.get("ingestion", {})
         return deep_merge(_INGESTION_DEFAULTS, profile_ingestion)
-
-
-_INGESTION_DEFAULTS: dict = {
-    "parallel_slots_small": 2,
-    "parallel_slots_large": 1,
-    "client_max_retries": 3,
-    "server_max_retries": 3,
-    "retry_backoff_base": 30,
-    "stall_check_interval": 60,
-    "tiers": {
-        "tiny":   {"max_pages": 20,  "poll_interval": 5,  "deadlock_threshold": 30,  "timeout": 300},
-        "small":  {"max_pages": 80,  "poll_interval": 10, "deadlock_threshold": 60,  "timeout": 900},
-        "medium": {"max_pages": 250, "poll_interval": 20, "deadlock_threshold": 90,  "timeout": 2700},
-        "large":  {"max_pages": None,"poll_interval": 30, "deadlock_threshold": 120, "timeout": 7200},
-    },
-}
 
 
 def validate_config(config: dict) -> list[str]:

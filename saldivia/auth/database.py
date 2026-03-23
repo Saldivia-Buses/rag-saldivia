@@ -1,11 +1,25 @@
 # saldivia/auth/database.py
 """SQLite database for auth."""
 import sqlite3
+import uuid
+from datetime import datetime
 from pathlib import Path
 from typing import Optional
 from saldivia.auth.models import User, Area, AreaCollection, AuditEntry, Role, Permission
 
 DB_PATH = Path("data/auth.db")
+
+# Cacheado al importar el módulo — la versión no cambia en runtime
+try:
+    from importlib.metadata import version as _pkg_version
+    _SALDIVIA_VERSION = _pkg_version("saldivia")
+except Exception:
+    _SALDIVIA_VERSION = "unknown"
+
+# Estados de jobs para el stall checker (solo activos, sin stalled)
+_STALL_CHECK_STATES = ("pending", "running")
+# Estados visibles como "activos" en la UI del usuario (incluye stalled)
+_ACTIVE_UI_STATES = ("pending", "running", "stalled")
 
 
 def init_db(db_path: Path = DB_PATH):
@@ -263,7 +277,6 @@ class AuthDB:
             conn.execute("UPDATE users SET api_key_hash = ? WHERE id = ?", (api_key_hash, user_id))
 
     def update_last_login(self, user_id: int):
-        from datetime import datetime
         with self._conn() as conn:
             conn.execute("UPDATE users SET last_login = ? WHERE id = ?",
                          (datetime.now().isoformat(), user_id))
@@ -428,7 +441,6 @@ class AuthDB:
                            messages=messages)
 
     def create_chat_session(self, user_id: int, collection: str, crossdoc: bool = False):
-        import uuid
         from saldivia.auth.models import ChatSession
         session_id = str(uuid.uuid4())
         with self._conn() as conn:
@@ -442,7 +454,6 @@ class AuthDB:
 
     def add_chat_message(self, session_id: str, role: str, content: str, sources=None):
         import json
-        from datetime import datetime
         sources_json = json.dumps(sources) if sources else None
         with self._conn() as conn:
             conn.execute(
@@ -477,8 +488,6 @@ class AuthDB:
         page_count: int | None,
         file_hash: str | None = None,
     ) -> str:
-        import uuid
-        from datetime import datetime
         job_id = str(uuid.uuid4())
         with self._conn() as conn:
             conn.execute(
@@ -502,12 +511,11 @@ class AuthDB:
             return dict(zip(columns, row))
 
     def get_active_ingestion_jobs(self, user_id: int) -> list[dict]:
+        placeholders = ",".join("?" * len(_ACTIVE_UI_STATES))
         with self._conn() as conn:
             cur = conn.execute(
-                """SELECT * FROM ingestion_jobs
-                   WHERE user_id = ? AND state IN ('pending','running','stalled')
-                   ORDER BY created_at DESC""",
-                (user_id,),
+                f"SELECT * FROM ingestion_jobs WHERE user_id = ? AND state IN ({placeholders}) ORDER BY created_at DESC",
+                (user_id, *_ACTIVE_UI_STATES),
             )
             rows = cur.fetchall()
             columns = [col[0] for col in cur.description]
@@ -547,18 +555,17 @@ class AuthDB:
 
     def get_all_active_ingestion_jobs(self) -> list[dict]:
         """Lista todos los jobs activos (todos los usuarios) para el stall checker."""
+        placeholders = ",".join("?" * len(_STALL_CHECK_STATES))
         with self._conn() as conn:
             cur = conn.execute(
-                """SELECT * FROM ingestion_jobs
-                   WHERE state IN ('pending', 'running')
-                   ORDER BY created_at ASC"""
+                f"SELECT * FROM ingestion_jobs WHERE state IN ({placeholders}) ORDER BY created_at ASC",
+                _STALL_CHECK_STATES,
             )
             cols = [c[0] for c in cur.description]
             return [dict(zip(cols, r)) for r in cur.fetchall()]
 
     def increment_ingestion_retry(self, job_id: str) -> None:
         """Incrementa retry_count y actualiza last_checked."""
-        from datetime import datetime
         with self._conn() as conn:
             conn.execute(
                 """UPDATE ingestion_jobs
@@ -570,6 +577,7 @@ class AuthDB:
     # Ingestion alerts
     def create_ingestion_alert(
         self,
+        *,
         job_id: str,
         user_id: int,
         filename: str,
@@ -581,13 +589,6 @@ class AuthDB:
         retry_count: int,
         progress_at_failure: int,
     ) -> str:
-        import uuid
-        from datetime import datetime
-        try:
-            import importlib.metadata
-            gw_version = importlib.metadata.version("saldivia")
-        except Exception:
-            gw_version = "unknown"
         alert_id = str(uuid.uuid4())
         with self._conn() as conn:
             conn.execute(
@@ -598,31 +599,24 @@ class AuthDB:
                    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                 (alert_id, job_id, user_id, filename, collection, tier,
                  page_count, file_hash, error, retry_count, progress_at_failure,
-                 gw_version, datetime.now().isoformat()),
+                 _SALDIVIA_VERSION, datetime.now().isoformat()),
             )
         return alert_id
 
     def list_ingestion_alerts(self, resolved: bool | None = None) -> list[dict]:
+        where = "" if resolved is None else (
+            "WHERE resolved_at IS NOT NULL" if resolved else "WHERE resolved_at IS NULL"
+        )
         with self._conn() as conn:
-            if resolved is None:
-                cur = conn.execute(
-                    "SELECT * FROM ingestion_alerts ORDER BY created_at DESC"
-                )
-            elif resolved:
-                cur = conn.execute(
-                    "SELECT * FROM ingestion_alerts WHERE resolved_at IS NOT NULL ORDER BY created_at DESC"
-                )
-            else:
-                cur = conn.execute(
-                    "SELECT * FROM ingestion_alerts WHERE resolved_at IS NULL ORDER BY created_at DESC"
-                )
+            cur = conn.execute(
+                f"SELECT * FROM ingestion_alerts {where} ORDER BY created_at DESC"
+            )
             cols = [c[0] for c in cur.description]
             return [dict(zip(cols, r)) for r in cur.fetchall()]
 
     def resolve_ingestion_alert(
         self, alert_id: str, resolved_by: str, notes: str | None = None
     ) -> None:
-        from datetime import datetime
         with self._conn() as conn:
             conn.execute(
                 """UPDATE ingestion_alerts

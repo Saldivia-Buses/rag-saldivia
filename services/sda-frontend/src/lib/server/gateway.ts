@@ -156,6 +156,19 @@ export async function gatewayGetAudit(params: AuditParams) {
     return gw<{ entries: AuditEntry[] }>(`/admin/audit${qs ? '?' + qs : ''}`);
 }
 
+// Alerts
+export async function gatewayListAlerts(resolved?: boolean) {
+    const qs = resolved !== undefined ? `?resolved=${resolved}` : '';
+    return gw<{ alerts: IngestionAlert[] }>(`/v1/admin/alerts${qs}`);
+}
+
+export async function gatewayResolveAlert(alertId: string, notes?: string) {
+    return gw<{ ok: boolean }>(`/v1/admin/alerts/${alertId}/resolve`, {
+        method: 'PATCH',
+        body: JSON.stringify({ notes }),
+    });
+}
+
 // Generate — text (para decompose y sub-queries, sin SSE al browser)
 export async function gatewayGenerateText(
     opts: {
@@ -297,4 +310,21 @@ export interface ActiveJobResponse {
     state: string;
     progress: number;
     created_at: string;
+}
+export interface IngestionAlert {
+    id: string;
+    job_id: string;
+    user_id: number;
+    filename: string;
+    collection: string;
+    tier: string;
+    page_count: number | null;
+    file_hash: string | null;
+    error: string | null;
+    retry_count: number;
+    progress_at_failure: number;
+    created_at: string;
+    resolved_at: string | null;
+    resolved_by: string | null;
+    notes: string | null;
 }

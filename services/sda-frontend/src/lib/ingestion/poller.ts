@@ -7,18 +7,29 @@ function sleep(ms: number): Promise<void> {
 export class IngestPoller {
     private jobId: string;
     private tier: Tier;
+    private maxRetries: number;
+    private backoffBase: number; // seconds
+    private retryCount = 0;
     private lastProgress: number = -1;
     private lastProgressAt: number = Date.now();
     private startedAt: number = Date.now();
     private stopped = false;
 
-    constructor(jobId: string, tier: Tier) {
+    constructor(jobId: string, tier: Tier, maxRetries = 3, backoffBase = 30) {
         this.jobId = jobId;
         this.tier = tier;
+        this.maxRetries = maxRetries;
+        this.backoffBase = backoffBase;
     }
 
     stop(): void {
         this.stopped = true;
+    }
+
+    private async _reportAlert(): Promise<void> {
+        try {
+            await fetch(`/api/ingestion/${this.jobId}/alert`, { method: 'POST' });
+        } catch { /* best effort */ }
     }
 
     async poll(onUpdate: (update: {
@@ -52,8 +63,22 @@ export class IngestPoller {
             // Deadlock detection
             if (data.progress === this.lastProgress) {
                 if (elapsedSinceProgress > config.deadlockThreshold) {
-                    onUpdate({ state: 'stalled', progress: data.progress, eta: null });
-                    break;
+                    if (this.retryCount < this.maxRetries) {
+                        // Exponential backoff retry
+                        this.retryCount++;
+                        const backoffMs = this.backoffBase * Math.pow(2, this.retryCount - 1) * 1000;
+                        onUpdate({ state: 'stalled', progress: data.progress, eta: null });
+                        await sleep(backoffMs);
+                        // Reset deadlock timer for the retry
+                        this.lastProgress = -1;
+                        this.lastProgressAt = Date.now();
+                        continue;
+                    } else {
+                        // All retries exhausted — report alert and fail
+                        await this._reportAlert();
+                        onUpdate({ state: 'failed', progress: data.progress, eta: null });
+                        break;
+                    }
                 }
             } else {
                 this.lastProgress = data.progress;
