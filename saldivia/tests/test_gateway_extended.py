@@ -1,5 +1,6 @@
 """Tests for SDA gateway extensions."""
 import pytest
+from fastapi import HTTPException
 from fastapi.testclient import TestClient
 from unittest.mock import patch, MagicMock
 from saldivia.gateway import app
@@ -206,3 +207,47 @@ def test_delete_session(client, admin_user):
                              headers={"Authorization": "Bearer rsk_dummy"})
     assert resp.status_code == 200
     assert resp.json()["ok"] is True
+
+
+def test_login_rate_limit_blocks_after_5_failures(client, admin_user):
+    """When _check_login_rate_limit raises 429, login returns 429."""
+    with patch("saldivia.gateway.db") as mock_db, \
+         patch("saldivia.gateway.BYPASS_AUTH", True), \
+         patch("saldivia.gateway._check_login_rate_limit",
+               side_effect=HTTPException(status_code=429,
+                                         detail="Too many failed login attempts. Try again in 60 seconds.")), \
+         patch("saldivia.gateway._record_failed_login"), \
+         patch("saldivia.gateway._reset_login_rate_limit"):
+        mock_db.get_user_by_email.return_value = admin_user
+        resp = client.post("/auth/session", json={"email": "admin@test.com", "password": "wrong"})
+
+    assert resp.status_code == 429
+
+
+def test_login_rate_limit_resets_on_success(client, admin_user):
+    """Successful login calls _reset_login_rate_limit."""
+    with patch("saldivia.gateway.db") as mock_db, \
+         patch("saldivia.gateway.BYPASS_AUTH", True), \
+         patch("saldivia.gateway._check_login_rate_limit"), \
+         patch("saldivia.gateway._record_failed_login"), \
+         patch("saldivia.gateway._reset_login_rate_limit") as mock_reset:
+        mock_db.get_user_by_email.return_value = admin_user
+        mock_db.update_last_login.return_value = None
+        resp = client.post("/auth/session", json={"email": "admin@test.com", "password": "admin123"})
+
+    assert resp.status_code == 200
+    mock_reset.assert_called_once_with("admin@test.com")
+
+
+def test_login_rate_limit_records_on_wrong_password(client, admin_user):
+    """Failed login calls _record_failed_login."""
+    with patch("saldivia.gateway.db") as mock_db, \
+         patch("saldivia.gateway.BYPASS_AUTH", True), \
+         patch("saldivia.gateway._check_login_rate_limit"), \
+         patch("saldivia.gateway._record_failed_login") as mock_record, \
+         patch("saldivia.gateway._reset_login_rate_limit"):
+        mock_db.get_user_by_email.return_value = admin_user
+        resp = client.post("/auth/session", json={"email": "admin@test.com", "password": "wrongpw"})
+
+    assert resp.status_code == 401
+    mock_record.assert_called_once_with("admin@test.com")

@@ -9,6 +9,7 @@ from typing import Optional
 from dataclasses import asdict
 
 import jwt as pyjwt
+import redis
 from fastapi import FastAPI, Request, HTTPException, Depends
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -30,6 +31,10 @@ app = FastAPI(title="RAG Saldivia Gateway")
 RAG_SERVER_URL = os.getenv("RAG_SERVER_URL", "http://localhost:8081")
 INGESTOR_URL = os.getenv("INGESTOR_URL", "http://localhost:8082")
 BYPASS_AUTH = os.getenv("BYPASS_AUTH", "false").lower() == "true"
+
+# Rate limiting
+LOGIN_MAX_ATTEMPTS = 5
+LOGIN_LOCKOUT_SECONDS = 60
 
 # JWT Configuration
 JWT_SECRET = os.getenv("JWT_SECRET", "")
@@ -379,17 +384,58 @@ def list_collections(user: User = Depends(get_user_from_token)):
     return {"collections": db.get_user_collections(user)}
 
 
+def _check_login_rate_limit(email: str):
+    """Raise 429 if too many failed login attempts for this email."""
+    try:
+        r = redis.from_url(os.getenv("REDIS_URL", "redis://localhost:6379"))
+        key = f"rate_limit:login:{email}"
+        attempts = r.get(key)
+        if attempts and int(attempts) >= LOGIN_MAX_ATTEMPTS:
+            raise HTTPException(
+                status_code=429,
+                detail=f"Too many failed login attempts. Try again in {LOGIN_LOCKOUT_SECONDS} seconds."
+            )
+    except redis.exceptions.ConnectionError:
+        logger.warning("Redis unavailable for rate limiting — skipping")
+
+
+def _record_failed_login(email: str):
+    """Increment failed login counter in Redis with TTL."""
+    try:
+        r = redis.from_url(os.getenv("REDIS_URL", "redis://localhost:6379"))
+        key = f"rate_limit:login:{email}"
+        pipe = r.pipeline()
+        pipe.incr(key)
+        pipe.expire(key, LOGIN_LOCKOUT_SECONDS)
+        pipe.execute()
+    except redis.exceptions.ConnectionError:
+        pass
+
+
+def _reset_login_rate_limit(email: str):
+    """Clear failed login counter on successful login."""
+    try:
+        r = redis.from_url(os.getenv("REDIS_URL", "redis://localhost:6379"))
+        r.delete(f"rate_limit:login:{email}")
+    except redis.exceptions.ConnectionError:
+        pass
+
+
 # Auth endpoints
 @app.post("/auth/session")
 def login(body: LoginRequest, user: User = Depends(get_user_from_token)):
     """Issue JWT for a valid email+password. Caller must be authenticated (BFF uses SYSTEM_API_KEY)."""
+    _check_login_rate_limit(body.email)
     target = db.get_user_by_email(body.email)
     if not target or not target.password_hash:
+        _record_failed_login(body.email)
         raise HTTPException(status_code=401, detail="Invalid credentials")
     if not verify_password(body.password, target.password_hash):
+        _record_failed_login(body.email)
         raise HTTPException(status_code=401, detail="Invalid credentials")
     if not target.active:
         raise HTTPException(status_code=403, detail="Account disabled")
+    _reset_login_rate_limit(body.email)
     db.update_last_login(target.id)
     token = create_jwt(target)
     return {"token": token, "user": {"id": target.id, "email": target.email,
