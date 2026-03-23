@@ -28,8 +28,9 @@ node_modules/
 # OS
 .DS_Store
 
-# Brainstorming sessions
+# Brainstorming sessions y planes locales
 .superpowers/
+docs/superpowers/
 
 # Claude Code session files
 .claude/
