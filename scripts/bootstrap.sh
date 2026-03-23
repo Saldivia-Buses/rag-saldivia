@@ -57,72 +57,42 @@ else
 fi
 
 # -------------------------------------------------------
-# 3. Docker
+# 3. Docker CLI
 # -------------------------------------------------------
-if command -v docker &>/dev/null; then
+if command -v docker &>/dev/null && docker info &>/dev/null 2>&1; then
     ok "docker $(docker --version | awk '{print $3}' | tr -d ',')"
 else
-    miss "Docker CE"
-    apt-get update -qq
-    apt-get install -y -qq ca-certificates curl gnupg
-    install -m 0755 -d /etc/apt/keyrings
-    curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
-        | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-    chmod a+r /etc/apt/keyrings/docker.gpg
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
+    # En RunPod, el daemon corre en el host y se expone via socket
+    # Solo necesitamos instalar el CLI + compose plugin
+    if [ -S /var/run/docker.sock ]; then
+        log "Socket Docker del host detectado (/var/run/docker.sock)"
+        if ! command -v docker &>/dev/null; then
+            miss "Docker CLI"
+            apt-get update -qq
+            apt-get install -y -qq ca-certificates curl gnupg
+            install -m 0755 -d /etc/apt/keyrings
+            curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
+                | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+            chmod a+r /etc/apt/keyrings/docker.gpg
+            echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] \
 https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
-        > /etc/apt/sources.list.d/docker.list
-    apt-get update -qq
-    apt-get install -y -qq \
-        docker-ce docker-ce-cli containerd.io \
-        docker-buildx-plugin docker-compose-plugin
-    ok "Docker instalado"
-fi
-
-# -------------------------------------------------------
-# 4. Docker daemon corriendo
-# -------------------------------------------------------
-if docker info &>/dev/null 2>&1; then
-    ok "Docker daemon corriendo"
-else
-    log "Iniciando Docker daemon..."
-    # En RunPod no hay systemd — usar dockerd directo en background
-    if command -v systemctl &>/dev/null && systemctl is-active docker &>/dev/null; then
-        ok "Docker ya activo via systemd"
+                > /etc/apt/sources.list.d/docker.list
+            apt-get update -qq
+            apt-get install -y -qq docker-ce-cli docker-buildx-plugin docker-compose-plugin
+        fi
+        ok "docker $(docker --version | awk '{print $3}' | tr -d ',') (via host socket)"
     else
-        dockerd &>/var/log/dockerd.log &
-        DOCKERD_PID=$!
-        log "Docker daemon iniciado (PID $DOCKERD_PID), esperando..."
-        for i in $(seq 1 30); do
-            sleep 1
-            docker info &>/dev/null 2>&1 && break
-            [ $i -eq 30 ] && err "Docker daemon no arrancó en 30s. Ver /var/log/dockerd.log"
-        done
-        ok "Docker daemon listo"
+        err "No hay socket Docker ni daemon disponible. Este entorno no soporta Docker."
     fi
 fi
 
 # -------------------------------------------------------
-# 5. NVIDIA Container Toolkit
+# 4. GPU accesible en Docker
 # -------------------------------------------------------
-if docker run --rm --gpus all nvidia/cuda:12.0.0-base-ubuntu22.04 nvidia-smi &>/dev/null 2>&1; then
-    ok "NVIDIA Container Toolkit (GPU accesible en Docker)"
+if docker run --rm --gpus all ubuntu:22.04 nvidia-smi &>/dev/null 2>&1; then
+    ok "GPU accesible en Docker"
 else
-    miss "NVIDIA Container Toolkit"
-    curl -fsSL https://nvidia.github.io/libnvidia-container/gpgkey \
-        | gpg --dearmor -o /usr/share/keyrings/nvidia-container-toolkit-keyring.gpg
-    curl -s -L https://nvidia.github.io/libnvidia-container/stable/deb/nvidia-container-toolkit.list \
-        | sed 's#deb https://#deb [signed-by=/usr/share/keyrings/nvidia-container-toolkit-keyring.gpg] https://#g' \
-        > /etc/apt/sources.list.d/nvidia-container-toolkit.list
-    apt-get update -qq
-    apt-get install -y -qq nvidia-container-toolkit
-    nvidia-ctk runtime configure --runtime=docker
-    # Reiniciar dockerd para que tome la config de nvidia
-    pkill dockerd 2>/dev/null || true
-    sleep 2
-    dockerd &>/var/log/dockerd.log &
-    sleep 5
-    ok "NVIDIA Container Toolkit instalado"
+    warn "GPU no accesible directamente en Docker (puede funcionar igual si el host tiene NVIDIA runtime)"
 fi
 
 # -------------------------------------------------------
