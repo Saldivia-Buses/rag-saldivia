@@ -7,7 +7,7 @@ Production-ready overlay on NVIDIA RAG Blueprint v2.5.0 with authentication, RBA
 
 ## What it is
 
-RAG Saldivia extends the NVIDIA RAG Blueprint v2.5.0 with authentication (JWT + RBAC), multi-collection vector storage, a modern SvelteKit 5 frontend, Python CLI/SDK, and support for 2-GPU, 1-GPU (with dynamic mode switching), and cloud-only deployments.
+RAG Saldivia extends the NVIDIA RAG Blueprint v2.5.0 with authentication (JWT + RBAC), multi-collection vector storage, a modern SvelteKit 5 frontend, Python CLI/SDK, and 1-GPU deployment with dynamic mode switching.
 
 ## Architecture
 
@@ -41,9 +41,7 @@ cp .env.example .env.local  # Add your NGC_API_KEY, JWT_SECRET, etc.
 sudo ./scripts/bootstrap.sh
 
 # 3. Deploy
-make deploy PROFILE=workstation-1gpu # 1-GPU (RunPod / workstation local)
-# OR
-make deploy PROFILE=full-cloud       # sin GPU, todo via API
+make deploy PROFILE=workstation-1gpu
 
 # 3. Verify
 make status
@@ -62,7 +60,7 @@ make query Q="What is the main topic of the documents?"
 | [Architecture](docs/architecture.md) | Service map, request flow, design decisions |
 | [Development Workflow](docs/development-workflow.md) | How to contribute and build features |
 | [Testing](docs/testing.md) | How to run and write tests |
-| [Deployment](docs/deployment.md) | Profiles, Brev, environment variables |
+| [Deployment](docs/deployment.md) | Profiles, environment variables, self-hosted runner |
 | [Contributing](docs/contributing.md) | Code conventions, commits, PRs |
 
 ## Roadmap
@@ -94,9 +92,7 @@ make query Q="What is the main topic of the documents?"
 
 | Profile | Hardware | LLM | Use Case |
 |---------|----------|-----|----------|
-| `brev-2gpu` | 2x RTX PRO 6000 Blackwell | Nemotron-3 (local) | Production on Brev |
-| `workstation-1gpu` | 1x GPU (≥98 GB VRAM) | External API | Development workstation |
-| `full-cloud` | No GPU | External API | Cloud-only |
+| `workstation-1gpu` | 1x GPU (≥98 GB VRAM) | External API | Physical workstation (Ubuntu 24.04) |
 
 ## 1-GPU Mode
 
@@ -131,7 +127,7 @@ rag-saldivia status
 ```
 saldivia/        — Python SDK (ConfigLoader, ProviderClient, ModeManager, etc.)
 cli/             — Click CLI (collections, ingest, status, mcp)
-config/          — YAML config files + profiles (brev-2gpu, workstation-1gpu, full-cloud)
+config/          — YAML config files + profiles (workstation-1gpu)
 services/        — Additional docker services (mode-manager, openrouter-proxy)
 patches/         — Frontend patches and new files
 scripts/         — deploy.sh, smart_ingest.py, crossdoc_client.py, stress_test.py
