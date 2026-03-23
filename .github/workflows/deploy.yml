@@ -32,7 +32,7 @@ jobs:
             git checkout main
             git pull origin main
             export VITE_GIT_SHA=\$(git rev-parse --short HEAD)
-            make deploy PROFILE=brev-2gpu
+            make deploy PROFILE=workstation-1gpu
           "
 
       - name: Health check
@@ -51,7 +51,7 @@ jobs:
           ssh $BREV_USER@$BREV_HOST "
             cd ~/rag-saldivia
             git revert HEAD --no-edit
-            make deploy PROFILE=brev-2gpu
+            make deploy PROFILE=workstation-1gpu
           "
           # NOTA: NO pusheamos el revert — queda local en Brev.
 

@@ -5,7 +5,7 @@ SHELL := /bin/bash
 .DEFAULT_GOAL := help
 
 SALDIVIA_ROOT := $(shell pwd)
-BLUEPRINT_DIR := $(SALDIVIA_ROOT)/blueprint
+BLUEPRINT_DIR := $(SALDIVIA_ROOT)/vendor/rag-blueprint
 COMPOSE_DIR := $(BLUEPRINT_DIR)/deploy/compose
 PROFILE ?= workstation-1gpu
 BLUEPRINT_VERSION ?= 2.5.0

@@ -11,4 +11,17 @@
 # NOTE: Only override services present in docker-compose-rag-server.yaml
 # (rag-server, rag-frontend). Milvus, ingestor, and NIMs are separate stacks.
 
-services: {}
+services:
+  # rag-frontend is the blueprint's React UI — replaced by our SDA SvelteKit frontend.
+  # Override image to nginx:alpine (available locally) so Docker does not attempt to pull
+  # nvcr.io/nvstaging/blueprint/rag-frontend:2.5.0 from NGC.
+  # --no-build in docker compose up prevents build; the image override prevents pull from NGC.
+  rag-frontend:
+    image: nginx:alpine
+
+networks:
+  # Override default network to external: true so compose uses the manually-created
+  # nvidia-rag network instead of failing with "incorrect label" error.
+  default:
+    name: nvidia-rag
+    external: true

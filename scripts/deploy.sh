@@ -11,8 +11,13 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SALDIVIA_ROOT="$(dirname "$SCRIPT_DIR")"
-BLUEPRINT_DIR="${SALDIVIA_ROOT}/blueprint"
-PROFILE="${1:-brev-2gpu}"
+BLUEPRINT_DIR="${SALDIVIA_ROOT}/vendor/rag-blueprint"
+
+# Activate uv venv if present (contains httpx, pyyaml, etc.)
+if [ -f "${SALDIVIA_ROOT}/.venv/bin/activate" ]; then
+    source "${SALDIVIA_ROOT}/.venv/bin/activate"
+fi
+PROFILE="${1:-workstation-1gpu}"
 COMPOSE_DIR="${BLUEPRINT_DIR}/deploy/compose"
 
 log() { echo "[$(date +%H:%M:%S)] $*"; }
@@ -94,12 +99,20 @@ if python3 -c "from saldivia.config import ConfigLoader; c = ConfigLoader('${SAL
 fi
 
 log "Compose files: $COMPOSE_FILES"
+# compose-overrides.yaml: overrides rag-frontend image to nginx:alpine (available locally)
+# to prevent Docker from pulling nvcr.io/nvstaging/blueprint/rag-frontend:2.5.0 from NGC.
+# rag-frontend runs harmlessly on port 8090; our SDA frontend is on port 3000.
+COMPOSE_FILES="$COMPOSE_FILES -f ${SALDIVIA_ROOT}/config/compose-overrides.yaml"
 SCALE_ARGS=""
 
-if [ "$PROFILE" = "workstation-1gpu" ]; then
-    SCALE_ARGS="--scale nemotron3-super=0"
-    log "Workstation profile: nemotron3-super disabled"
-fi
+# --- Step 2b: Ensure nvidia-rag network exists ---
+# compose-platform-services.yaml and docker-compose-rag-server.yaml both declare
+# the default network as name: nvidia-rag. Create it upfront to avoid "external network not found"
+# errors when the two compose files are merged and Docker sees conflicting declarations.
+log "Ensuring nvidia-rag network exists..."
+docker network inspect nvidia-rag > /dev/null 2>&1 \
+    || docker network create nvidia-rag \
+    && log "  nvidia-rag network ready"
 
 # --- Step 3: Start services ---
 # Build platform service images first (mode-manager, ingestion-worker, auth-gateway).
@@ -119,7 +132,7 @@ SALDIVIA_ROOT="$SALDIVIA_ROOT" docker compose \
 
 cd "$COMPOSE_DIR"
 log "Starting services..."
-docker compose --env-file "$ENV_FILE" $COMPOSE_FILES up -d --force-recreate $SCALE_ARGS 2>&1 | tail -10
+docker compose --env-file "$ENV_FILE" $COMPOSE_FILES up -d --force-recreate --no-build $SCALE_ARGS 2>&1 | tail -10
 
 # --- Step 3b: Ensure Milvus stack has restart policy ---
 # Milvus is managed by the blueprint's vectordb.yaml (separate compose project).
@@ -251,8 +264,13 @@ while [ $ELAPSED -lt $MAX_WAIT ]; do
     check_service "RAG Server" "http://localhost:8081/health" && RAG_OK=true
     check_service "Ingestor" "http://localhost:8082/health" && INGEST_OK=true
 
-    if $RAG_OK && $INGEST_OK; then
-        log "All services healthy."
+    if $RAG_OK; then
+        log "Core services healthy (RAG Server up)."
+        if $INGEST_OK; then
+            log "  Ingestor also up."
+        else
+            warn "  Ingestor (8082) not up — ingestion unavailable. Start separately if needed."
+        fi
         break
     fi
 
@@ -262,7 +280,7 @@ while [ $ELAPSED -lt $MAX_WAIT ]; do
 done
 
 if [ $ELAPSED -ge $MAX_WAIT ]; then
-    err "Services did not become healthy within ${MAX_WAIT}s. Check: docker ps && docker logs rag-server"
+    err "RAG Server did not become healthy within ${MAX_WAIT}s. Check: docker ps && docker logs rag-server"
 fi
 
 log "Deploy complete. Profile: ${PROFILE}"
