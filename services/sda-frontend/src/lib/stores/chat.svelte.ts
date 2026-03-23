@@ -1,6 +1,7 @@
 // Svelte 5 runes-based reactive store for chat state
 
 export interface Message {
+    id?: number;        // DB id del mensaje — para feedback
     role: 'user' | 'assistant';
     content: string;
     sources?: Source[];
@@ -47,9 +48,10 @@ export class ChatStore {
         this.finalizeStream();
     }
 
-    finalizeStream(opts?: { crossdocResults?: import('$lib/crossdoc/types').SubResult[] }) {
+    finalizeStream(opts?: { crossdocResults?: import('$lib/crossdoc/types').SubResult[]; messageId?: number }) {
         if (this.streamingContent) {
             this.messages.push({
+                id: opts?.messageId,
                 role: 'assistant',
                 content: this.streamingContent,
                 sources: [...this.sources],

@@ -134,6 +134,8 @@
             streaming={chat.streaming}
             streamingContent={chat.streamingContent}
             crossdoc={chat.crossdoc}
+            sessionId={data.session.id}
+            onFollowUp={sendMessage}
         />
 
         <!-- Input con stop button -->

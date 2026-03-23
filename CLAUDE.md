@@ -84,6 +84,12 @@ SvelteKit 5 BFF. Rutas principales:
 - `/(app)/audit` → audit log
 - `/api/auth/*` → BFF endpoints de auth (session POST/DELETE)
 - `/api/chat/*` → BFF proxy al gateway (sessions, stream)
+  - `GET /api/chat/sessions` — lista sesiones del usuario
+  - `POST /api/chat/sessions` — crea sesión nueva
+  - `GET /api/chat/sessions/[id]` — detalle de sesión con mensajes
+  - `DELETE /api/chat/sessions/[id]` — elimina sesión
+  - `PATCH /api/chat/sessions/[id]` — renombra sesión (body: `{ title }`)
+  - `POST /api/chat/sessions/[id]/messages/[msgId]/feedback` — feedback por mensaje (body: `{ rating: 'up' | 'down' }`)
 - `/api/crossdoc/*` → BFF endpoints de crossdoc (decompose, subquery, synthesize)
 - `/api/upload` → BFF endpoint de upload de documentos
 - `/api/collections/*` → BFF endpoints de colecciones (GET, POST, DELETE)

@@ -156,4 +156,49 @@ describe('GET/DELETE /api/chat/sessions/[id]', () => {
 
 		await expect(GET(event)).rejects.toMatchObject({ status: 404 });
 	});
+
+});
+
+describe('PATCH /api/chat/sessions/[id]', () => {
+	beforeEach(() => {
+		vi.unmock('$lib/server/gateway');
+		vi.resetModules();
+		vi.stubEnv('GATEWAY_URL', 'http://gateway:9000');
+		vi.stubEnv('SYSTEM_API_KEY', 'test-key');
+	});
+	afterEach(() => {
+		vi.unstubAllEnvs();
+		vi.unstubAllGlobals();
+	});
+
+	it('PATCH retorna 401 cuando no hay usuario', async () => {
+		vi.stubGlobal('fetch', vi.fn());
+		const { PATCH } = await import('./+server.js');
+		const event = {
+			params: { id: 'session-abc' },
+			locals: { user: null },
+			request: { json: async () => ({ title: 'X' }) },
+		} as any;
+		await expect(PATCH(event)).rejects.toMatchObject({ status: 401 });
+	});
+
+	it('PATCH renombra la sesión y retorna ok', async () => {
+		vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+			ok: true,
+			json: async () => ({ ok: true }),
+		}));
+		vi.doMock('$lib/server/gateway', async () => {
+			return await vi.importActual('$lib/server/gateway');
+		});
+		const { PATCH } = await import('./+server.js');
+		const event = {
+			params: { id: 'session-abc' },
+			locals: { user: { id: 7, name: 'Test', email: 't@test.com', role: 'user', area_id: 1 } },
+			request: { json: async () => ({ title: 'Nuevo nombre' }) },
+		} as any;
+		const response = await PATCH(event);
+		const body = await response.json();
+		expect(response.status).toBe(200);
+		expect(body.ok).toBe(true);
+	});
 });

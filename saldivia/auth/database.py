@@ -22,11 +22,8 @@ _STALL_CHECK_STATES = ("pending", "running")
 _ACTIVE_UI_STATES = ("pending", "running", "stalled")
 
 
-def init_db(db_path: Path = DB_PATH):
-    """Initialize database schema."""
-    db_path.parent.mkdir(parents=True, exist_ok=True)
-
-    conn = sqlite3.connect(db_path)
+def init_db_conn(conn: sqlite3.Connection):
+    """Run all DDL migrations on an existing connection (supports :memory: and file DBs)."""
     conn.executescript("""
         CREATE TABLE IF NOT EXISTS areas (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -76,7 +73,7 @@ def init_db(db_path: Path = DB_PATH):
         pass  # Column already exists
 
     # Migration: add chat tables if not present (idempotent)
-    chat_ddl = """
+    conn.executescript("""
         CREATE TABLE IF NOT EXISTS chat_sessions (
             id TEXT PRIMARY KEY,
             user_id INTEGER NOT NULL REFERENCES users(id),
@@ -94,11 +91,19 @@ def init_db(db_path: Path = DB_PATH):
             sources TEXT,
             timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );
+        CREATE TABLE IF NOT EXISTS message_feedback (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            message_id  INTEGER NOT NULL,
+            user_id     INTEGER NOT NULL,
+            rating      TEXT    NOT NULL CHECK(rating IN ('up', 'down')),
+            created_at  TEXT    NOT NULL DEFAULT (datetime('now')),
+            UNIQUE(message_id, user_id)
+        );
         CREATE INDEX IF NOT EXISTS idx_chat_sessions_user ON chat_sessions(user_id);
         CREATE INDEX IF NOT EXISTS idx_chat_sessions_user_updated ON chat_sessions(user_id, updated_at);
         CREATE INDEX IF NOT EXISTS idx_chat_messages_session ON chat_messages(session_id);
-    """
-    conn.executescript(chat_ddl)
+        CREATE INDEX IF NOT EXISTS idx_message_feedback_message ON message_feedback(message_id);
+    """)
 
     # Migration: add ingestion_jobs table if not present (idempotent)
     conn.executescript("""
@@ -154,7 +159,45 @@ def init_db(db_path: Path = DB_PATH):
         CREATE INDEX IF NOT EXISTS idx_alerts_resolved ON ingestion_alerts(resolved_at);
     """)
 
+
+def init_db(db_path: Path = DB_PATH):
+    """Initialize database schema."""
+    if str(db_path) != ":memory:":
+        Path(db_path).parent.mkdir(parents=True, exist_ok=True)
+
+    conn = sqlite3.connect(db_path)
+    init_db_conn(conn)
     conn.close()
+
+
+class _MemConnContext:
+    """Context manager wrapping a persistent in-memory sqlite3 connection.
+
+    Behaves like the context manager returned by ``sqlite3.connect()``:
+    commits on __exit__ without error, rolls back on exception, but never
+    closes the underlying connection so that the in-memory database persists
+    for the lifetime of the ``AuthDB`` instance.
+    """
+
+    def __init__(self, conn: sqlite3.Connection):
+        self._conn = conn
+
+    def __enter__(self) -> sqlite3.Connection:
+        return self._conn
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if exc_type is None:
+            self._conn.commit()
+        else:
+            self._conn.rollback()
+        return False  # don't suppress exceptions
+
+    # Proxy attribute access so callers can use the context object directly
+    def execute(self, *args, **kwargs):
+        return self._conn.execute(*args, **kwargs)
+
+    def executescript(self, *args, **kwargs):
+        return self._conn.executescript(*args, **kwargs)
 
 
 class AuthDB:
@@ -162,9 +205,18 @@ class AuthDB:
 
     def __init__(self, db_path: Path = DB_PATH):
         self.db_path = db_path
-        init_db(db_path)
+        if str(db_path) == ":memory:":
+            # Maintain a single persistent connection for in-memory databases
+            self._mem_conn = sqlite3.connect(":memory:", check_same_thread=False)
+            self._mem_conn.isolation_level = None  # autocommit off; managed by context manager
+            init_db_conn(self._mem_conn)
+        else:
+            self._mem_conn = None
+            init_db(db_path)
 
     def _conn(self):
+        if self._mem_conn is not None:
+            return _MemConnContext(self._mem_conn)
         return sqlite3.connect(self.db_path)
 
     # Areas
@@ -426,15 +478,15 @@ class AuthDB:
             if not row:
                 return None
             msg_rows = conn.execute(
-                "SELECT m.role, m.content, m.sources, m.timestamp "
+                "SELECT m.id, m.role, m.content, m.sources, m.timestamp "
                 "FROM chat_messages m "
                 "JOIN chat_sessions s ON m.session_id = s.id "
                 "WHERE m.session_id = ? AND s.user_id = ? "
                 "ORDER BY m.timestamp",
                 (session_id, user_id)
             ).fetchall()
-        messages = [ChatMessage(role=m[0], content=m[1],
-                                 sources=json.loads(m[2]) if m[2] else None, timestamp=m[3])
+        messages = [ChatMessage(id=m[0], role=m[1], content=m[2],
+                                 sources=json.loads(m[3]) if m[3] else None, timestamp=m[4])
                     for m in msg_rows]
         return ChatSession(id=row[0], user_id=row[1], title=row[2], collection=row[3],
                            crossdoc=bool(row[4]), created_at=row[5], updated_at=row[6],
@@ -468,14 +520,38 @@ class AuthDB:
             )
 
     def delete_chat_session(self, session_id: str, user_id: int):
-        # Verify ownership first, then delete messages (atomic transaction)
         with self._conn() as conn:
-            result = conn.execute(
-                "DELETE FROM chat_sessions WHERE id = ? AND user_id = ?",
+            # Verificar ownership antes de borrar hijos
+            row = conn.execute(
+                "SELECT 1 FROM chat_sessions WHERE id = ? AND user_id = ?",
                 (session_id, user_id)
+            ).fetchone()
+            if not row:
+                return  # No existe o no es del usuario — no hacer nada
+            # Borrar hijos en orden correcto (feedback → messages → sesión)
+            conn.execute(
+                "DELETE FROM message_feedback WHERE message_id IN "
+                "(SELECT id FROM chat_messages WHERE session_id = ?)",
+                (session_id,)
             )
-            if result.rowcount > 0:
-                conn.execute("DELETE FROM chat_messages WHERE session_id = ?", (session_id,))
+            conn.execute("DELETE FROM chat_messages WHERE session_id = ?", (session_id,))
+            conn.execute("DELETE FROM chat_sessions WHERE id = ?", (session_id,))
+
+    def rename_chat_session(self, session_id: str, user_id: int, title: str):
+        with self._conn() as conn:
+            conn.execute(
+                "UPDATE chat_sessions SET title = ?, updated_at = ? "
+                "WHERE id = ? AND user_id = ?",
+                (title[:80], datetime.now().isoformat(), session_id, user_id)
+            )
+
+    def upsert_message_feedback(self, message_id: int, user_id: int, rating: str):
+        with self._conn() as conn:
+            conn.execute(
+                "INSERT OR REPLACE INTO message_feedback (message_id, user_id, rating) "
+                "VALUES (?, ?, ?)",
+                (message_id, user_id, rating)
+            )
 
     # Ingestion jobs
     def create_ingestion_job(

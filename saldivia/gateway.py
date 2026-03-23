@@ -9,7 +9,7 @@ import logging
 import shutil
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Literal
 from dataclasses import asdict
 
 import jwt as pyjwt
@@ -71,7 +71,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=CORS_ORIGINS,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "DELETE", "PUT"],
+    allow_methods=["GET", "POST", "DELETE", "PUT", "PATCH"],
     allow_headers=["Authorization", "Content-Type"],
 )
 
@@ -927,7 +927,7 @@ def get_session(session_id: str, user_id: int,
         raise HTTPException(status_code=404, detail="Session not found")
     return {"id": session.id, "title": session.title, "collection": session.collection,
             "crossdoc": session.crossdoc,
-            "messages": [{"role": m.role, "content": m.content, "sources": m.sources,
+            "messages": [{"id": m.id, "role": m.role, "content": m.content, "sources": m.sources,
                            "timestamp": _ts(m.timestamp)}
                           for m in session.messages]}
 
@@ -941,6 +941,44 @@ def delete_session(session_id: str, user_id: int,
     if user.role != Role.ADMIN and user.id != user_id:
         raise HTTPException(status_code=403, detail="Can only access your own sessions")
     db.delete_chat_session(session_id=session_id, user_id=user_id)
+    return {"ok": True}
+
+
+class RenameSessionRequest(BaseModel):
+    title: str
+
+
+@app.patch("/chat/sessions/{session_id}")
+def rename_session(session_id: str, body: RenameSessionRequest, user_id: int,
+                   user: User = Depends(get_user_from_token)):
+    """Rename a chat session title."""
+    if user is None:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    if user.role != Role.ADMIN and user.id != user_id:
+        raise HTTPException(status_code=403, detail="Can only access your own sessions")
+    db.rename_chat_session(session_id, user_id=user_id, title=body.title)
+    return {"ok": True}
+
+
+class MessageFeedbackRequest(BaseModel):
+    rating: Literal["up", "down"]
+
+
+@app.post("/chat/sessions/{session_id}/messages/{message_id}/feedback")
+def message_feedback(session_id: str, message_id: int,
+                     body: MessageFeedbackRequest, user_id: int,
+                     user: User = Depends(get_user_from_token)):
+    """Store thumbs up/down feedback for a message."""
+    if user is None:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    if user.role != Role.ADMIN and user.id != user_id:
+        raise HTTPException(status_code=403, detail="Can only rate your own messages")
+    session = db.get_chat_session(session_id, user_id)
+    if not session:
+        raise HTTPException(status_code=404, detail="Session not found")
+    if not any(m.id == message_id for m in session.messages):
+        raise HTTPException(status_code=404, detail="Message not found in session")
+    db.upsert_message_feedback(message_id, user_id=user_id, rating=body.rating)
     return {"ok": True}
 
 

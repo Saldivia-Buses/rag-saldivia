@@ -111,6 +111,24 @@ export async function gatewayDeleteSession(sessionId: string, userId: number) {
     return gw<{ ok: boolean }>(`/chat/sessions/${sessionId}?user_id=${userId}`, { method: 'DELETE' });
 }
 
+export async function gatewayRenameSession(
+    sessionId: string, userId: number, title: string
+): Promise<void> {
+    await gw<{ ok: boolean }>(
+        `/chat/sessions/${sessionId}?user_id=${userId}`,
+        { method: 'PATCH', body: JSON.stringify({ title }) }
+    );
+}
+
+export async function gatewayMessageFeedback(
+    sessionId: string, messageId: number, userId: number, rating: 'up' | 'down'
+): Promise<void> {
+    await gw<{ ok: boolean }>(
+        `/chat/sessions/${sessionId}/messages/${messageId}/feedback?user_id=${userId}`,
+        { method: 'POST', body: JSON.stringify({ rating }) }
+    );
+}
+
 // Admin
 export async function gatewayListUsers() {
     return gw<{ users: AdminUser[] }>('/admin/users');

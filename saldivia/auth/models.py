@@ -87,8 +87,9 @@ def verify_password(password: str, password_hash: str) -> bool:
 
 @dataclass
 class ChatMessage:
-    role: str        # "user" | "assistant"
-    content: str
+    id: Optional[int] = None         # DB primary key
+    role: str = ''
+    content: str = ''
     sources: Optional[list] = None   # list of source dicts from RAG
     timestamp: datetime = field(default_factory=datetime.now)
 

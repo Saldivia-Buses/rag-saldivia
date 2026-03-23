@@ -7,6 +7,24 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- **Fase 7 — Chat Sesiones Pro**
+- `src/lib/chat/followups.ts` — función pura `generateFollowUps(content, originalQuery): string[]`; extrae topics de las primeras oraciones de la respuesta y genera hasta 3 preguntas sugeridas con plantillas en español
+- `src/lib/chat/export.ts` — `buildMarkdown`, `buildJSON`, `downloadFile`; exporta sesiones de chat a archivo `.md` o `.json` via Blob + anchor click
+- `src/lib/components/chat/FeedbackButtons.svelte` — thumbs up/down por mensaje; llama a BFF POST `/api/chat/sessions/{id}/messages/{msgId}/feedback`
+- `src/lib/components/chat/FollowUpChips.svelte` — chips de sugerencias post-stream; se muestran cuando termina el streaming y se ocultan al hacer click
+- Rutas BFF nuevas: PATCH `/api/chat/sessions/[id]` (rename), POST `/api/chat/sessions/[id]/messages/[msgId]/feedback` (thumbs)
+- `gatewayRenameSession()` y `gatewayMessageFeedback()` en `src/lib/server/gateway.ts`
+- Tabla `message_feedback` en SQLite — `(message_id, user_id, rating)` con constraint UNIQUE para upsert
+- `AuthDB.rename_chat_session(session_id, user_id, title)` — actualiza título (truncado a 80 chars) y `updated_at`
+- `AuthDB.upsert_message_feedback(message_id, user_id, rating)` — INSERT OR REPLACE para idempotencia
+- Fix en `AuthDB.delete_chat_session`: ahora borra en orden correcto `message_feedback → chat_messages → chat_sessions` para respetar FK
+- `ChatMessage.id: Optional[int] = None` como primer campo del dataclass (DB primary key para feedback)
+- `Message.id?: number` en interface TypeScript del store de chat
+- Inline rename en `HistoryPanel.svelte`: dblclick activa input, Enter confirma, Escape cancela; delete con confirm; pin en localStorage
+- `FeedbackButtons` y `FollowUpChips` integrados en `MessageList.svelte`
+- PATCH agregado a `allow_methods` en CORS middleware del gateway
+
+### Added
 - **Fase 6 — Upload Inteligente (Tasks 8-13)**
 - `src/lib/ingestion/hash.ts` — `computeSHA256(file)` via Web Crypto API (sin dependencias externas)
 - `src/routes/api/documents/check/+server.ts` — BFF GET proxy a `GET /v1/documents/check`

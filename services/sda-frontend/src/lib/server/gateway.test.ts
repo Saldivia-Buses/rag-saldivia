@@ -704,3 +704,47 @@ describe('gateway.ts', () => {
         });
     });
 });
+
+describe('gatewayRenameSession', () => {
+    it('llama a PATCH /chat/sessions/{id} con user_id y título', async () => {
+        vi.resetModules();
+        vi.stubEnv('GATEWAY_URL', 'http://gateway:9000');
+        vi.stubEnv('SYSTEM_API_KEY', 'test-key');
+        vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+            ok: true,
+            json: async () => ({ ok: true }),
+        }));
+        const { gatewayRenameSession } = await import('./gateway.js');
+        await gatewayRenameSession('ses-1', 7, 'Nuevo título');
+        const call = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0];
+        expect(call[0]).toContain('/chat/sessions/ses-1');
+        expect(call[0]).toContain('user_id=7');
+        expect(call[1].method).toBe('PATCH');
+        const body = JSON.parse(call[1].body);
+        expect(body.title).toBe('Nuevo título');
+        vi.unstubAllEnvs();
+        vi.unstubAllGlobals();
+    });
+});
+
+describe('gatewayMessageFeedback', () => {
+    it('llama a POST /chat/sessions/{sid}/messages/{msgId}/feedback', async () => {
+        vi.resetModules();
+        vi.stubEnv('GATEWAY_URL', 'http://gateway:9000');
+        vi.stubEnv('SYSTEM_API_KEY', 'test-key');
+        vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+            ok: true,
+            json: async () => ({ ok: true }),
+        }));
+        const { gatewayMessageFeedback } = await import('./gateway.js');
+        await gatewayMessageFeedback('ses-1', 42, 7, 'up');
+        const call = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0];
+        expect(call[0]).toContain('/chat/sessions/ses-1/messages/42/feedback');
+        expect(call[0]).toContain('user_id=7');
+        expect(call[1].method).toBe('POST');
+        const body = JSON.parse(call[1].body);
+        expect(body.rating).toBe('up');
+        vi.unstubAllEnvs();
+        vi.unstubAllGlobals();
+    });
+});
