@@ -83,8 +83,7 @@ def reset_key(user_id: int):
     db = AuthDB()
     api_key, api_key_hash = generate_api_key()
 
-    with db._conn() as conn:
-        conn.execute("UPDATE users SET api_key_hash = ? WHERE id = ?", (api_key_hash, user_id))
+    db.update_api_key(user_id, api_key_hash)
 
     click.echo(f"New API key for user {user_id}:")
     click.echo(f"   {api_key}")
