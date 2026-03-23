@@ -30,29 +30,26 @@ REPORT_EVERY = 5
 DEADLOCK_THRESHOLD = 45  # seconds without extraction progress -> deadlock
 
 # === TIER SYSTEM ===
+from saldivia.tier import classify_tier as _classify_tier, TierConfig, TIERS as _TIERS
+
 
 @dataclass
 class Tier:
+    """Local wrapper that adds a display name to saldivia.tier.TierConfig."""
     name: str
     poll_interval: float
     restart_after: int
 
-TIERS = {
-    "tiny":   Tier("tiny",   poll_interval=2,  restart_after=30),
-    "small":  Tier("small",  poll_interval=3,  restart_after=15),
-    "medium": Tier("medium", poll_interval=5,  restart_after=5),
-    "large":  Tier("large",  poll_interval=10, restart_after=3),
+
+TIERS: dict[str, Tier] = {
+    k: Tier(name=k, poll_interval=v.poll_interval, restart_after=v.restart_after)
+    for k, v in _TIERS.items()
 }
 
-def classify_tier(pages):
-    if pages <= 20:
-        return TIERS["tiny"]
-    elif pages <= 80:
-        return TIERS["small"]
-    elif pages <= 250:
-        return TIERS["medium"]
-    else:
-        return TIERS["large"]
+
+def classify_tier(pages: int) -> Tier:
+    """Classify a document by page count into a processing tier."""
+    return TIERS[_classify_tier(page_count=pages)]
 
 def calc_timeout(pages):
     """Adaptive timeout: ~2x expected time + overhead. Min 20s."""
