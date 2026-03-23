@@ -2,36 +2,28 @@
 set -euo pipefail
 
 # RAG Saldivia — Setup Script
-# Clones the NVIDIA RAG Blueprint, applies patches, copies config.
+# Inicializa el submodule del blueprint, aplica patches, y construye imágenes Docker.
 #
-# Usage:
-#   ./scripts/setup.sh [BLUEPRINT_VERSION]
-#   ./scripts/setup.sh 2.5.0
+# Uso:
+#   ./scripts/setup.sh
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SALDIVIA_ROOT="$(dirname "$SCRIPT_DIR")"
-BLUEPRINT_DIR="${SALDIVIA_ROOT}/blueprint"
-BLUEPRINT_VERSION="${1:-2.5.0}"
-BLUEPRINT_REPO="https://github.com/NVIDIA/rag-blueprint.git"
-BLUEPRINT_BRANCH="release-v${BLUEPRINT_VERSION}"
+BLUEPRINT_DIR="${SALDIVIA_ROOT}/vendor/rag-blueprint"
 
 log() { echo "[$(date +%H:%M:%S)] $*"; }
 err() { echo "[$(date +%H:%M:%S)] ERROR: $*" >&2; exit 1; }
 warn() { echo "[$(date +%H:%M:%S)] WARN: $*" >&2; }
 
-# --- Step 1: Clone blueprint ---
-if [ -d "$BLUEPRINT_DIR" ]; then
-    log "Blueprint directory exists. Checking version..."
-    cd "$BLUEPRINT_DIR"
-    CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
-    if [ "$CURRENT_BRANCH" != "$BLUEPRINT_BRANCH" ]; then
-        err "Blueprint is on branch '$CURRENT_BRANCH', expected '$BLUEPRINT_BRANCH'. Delete blueprint/ and re-run."
-    fi
-    log "Blueprint already cloned at correct version."
+# --- Step 1: Inicializar submodule del blueprint ---
+if [ -f "${BLUEPRINT_DIR}/README.md" ]; then
+    log "Blueprint submodule ya inicializado (vendor/rag-blueprint)."
 else
-    log "Cloning NVIDIA RAG Blueprint ${BLUEPRINT_VERSION}..."
-    git clone --branch "$BLUEPRINT_BRANCH" --depth 1 "$BLUEPRINT_REPO" "$BLUEPRINT_DIR" \
-        || err "Failed to clone blueprint. Check version and network."
+    log "Inicializando submodule vendor/rag-blueprint..."
+    cd "$SALDIVIA_ROOT"
+    GIT_TERMINAL_PROMPT=0 git submodule update --init --recursive \
+        || err "Falló la inicialización del submodule. Verificar conexión a GitHub."
+    log "Submodule inicializado."
 fi
 
 cd "$BLUEPRINT_DIR"
