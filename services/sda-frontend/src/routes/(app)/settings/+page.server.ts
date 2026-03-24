@@ -78,10 +78,10 @@ export const actions: Actions = {
         try {
             await gatewayUpdatePreferences(locals.user.id, {
                 default_collection: data.get('default_collection') as string ?? '',
-                default_query_mode: (data.get('default_query_mode') as 'standard' | 'crossdoc') ?? 'standard',
-                vdb_top_k: Number(data.get('vdb_top_k') ?? 10),
-                reranker_top_k: Number(data.get('reranker_top_k') ?? 5),
-                max_sub_queries: Number(data.get('max_sub_queries') ?? 4),
+                default_query_mode: data.get('default_query_mode') === 'crossdoc' ? 'crossdoc' : 'standard',
+                vdb_top_k: Math.max(1, parseInt(data.get('vdb_top_k') as string, 10) || 10),
+                reranker_top_k: Math.max(1, parseInt(data.get('reranker_top_k') as string, 10) || 5),
+                max_sub_queries: Math.max(1, parseInt(data.get('max_sub_queries') as string, 10) || 4),
                 follow_up_retries: data.get('follow_up_retries') === 'on',
                 show_decomposition: data.get('show_decomposition') === 'on',
             });

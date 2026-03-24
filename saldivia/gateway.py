@@ -19,7 +19,7 @@ from fastapi import FastAPI, Request, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from starlette.responses import StreamingResponse
 import httpx
 
@@ -684,6 +684,13 @@ class UpdatePreferencesRequest(BaseModel):
     show_decomposition: Optional[bool] = None
     avatar_color: Optional[str] = None
     ui_language: Optional[Literal["es", "en"]] = None
+
+    @field_validator("avatar_color")
+    @classmethod
+    def validate_avatar_color(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None and not re.match(r"^#[0-9a-fA-F]{6}$", v):
+            raise ValueError("avatar_color debe ser un color hex válido (#rrggbb)")
+        return v
     notify_ingestion_done: Optional[bool] = None
     notify_system_alerts: Optional[bool] = None
 

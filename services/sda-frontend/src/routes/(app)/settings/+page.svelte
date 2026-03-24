@@ -225,7 +225,7 @@
                 <div class="grid grid-cols-2 gap-3 mb-3">
                     <div>
                         <label class="block text-xs text-[var(--text-muted)] mb-1" for="vdb_top_k">VDB Top-K</label>
-                        <input id="vdb_top_k" name="vdb_top_k" type="number" min="1" max="50"
+                        <input id="vdb_top_k" name="vdb_top_k" type="number" min="1" max="100"
                             value={data.preferences?.vdb_top_k ?? 10}
                             class="w-full text-sm bg-[var(--bg-base)] border border-[var(--border)] rounded-[var(--radius-md)] px-3 py-1.5 text-[var(--text)] focus:outline-none focus:border-[var(--accent)]" />
                     </div>
@@ -239,7 +239,7 @@
 
                 <div class="mb-3">
                     <label class="block text-xs text-[var(--text-muted)] mb-1" for="max_sub_queries">Max sub-queries (CrossDoc)</label>
-                    <input id="max_sub_queries" name="max_sub_queries" type="number" min="1" max="10"
+                    <input id="max_sub_queries" name="max_sub_queries" type="number" min="1" max="20"
                         value={data.preferences?.max_sub_queries ?? 4}
                         class="w-full text-sm bg-[var(--bg-base)] border border-[var(--border)] rounded-[var(--radius-md)] px-3 py-1.5 text-[var(--text)] focus:outline-none focus:border-[var(--accent)]" />
                 </div>
