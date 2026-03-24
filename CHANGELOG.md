@@ -7,6 +7,25 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- **Fase 9 — Admin Pro**
+- Tabla `user_areas` (many-to-many) en SQLite — migración automática idempotente; copia `area_id` existentes; `PRIMARY KEY (user_id, area_id)` con `ON DELETE CASCADE`
+- `AuthDB.get_user_area_ids(user_id)` — lista IDs de áreas asignadas al usuario
+- `AuthDB.get_user_areas(user_id)` — lista objetos `Area` completos vía JOIN
+- `AuthDB.add_user_area(user_id, area_id)` — asignación idempotente (`INSERT OR IGNORE`)
+- `AuthDB.remove_user_area(user_id, area_id)` — desasignación
+- `AuthDB.count_users_in_area(area_id)` — conteo de usuarios activos en un área
+- `AuthDB.get_user_collections` y `AuthDB.can_access` actualizados para operar sobre la unión de todas las áreas del usuario (multi-área)
+- `POST /admin/users/{user_id}/areas` — asigna área a usuario; solo admins; 404 si usuario o área no existe
+- `DELETE /admin/users/{user_id}/areas/{area_id}` — desasigna área de usuario; solo admins
+- `GET /admin/users` ahora retorna campo `areas: [{id, name}]` por usuario (multi-área)
+- Areas admin page (`/(app)/admin/areas`): CRUD completo — tabla con conteo de usuarios, modal crear, modal editar, modal eliminar con lista de usuarios bloqueantes cuando hay activos en el área
+- Permissions admin page (`/(app)/admin/permissions`): accesible también para `area_manager`; chips de colecciones con badge read/write; selector de permiso por colección
+- System admin page (`/(app)/admin/system`): stats cards (usuarios activos, áreas, colecciones con documentos); tabla de jobs activos con progress bar; tabla de alertas de ingesta; botón actualizar recarga datos
+- Users admin page (`/(app)/admin/users`): columna "Área" muestra área principal + badge con cantidad extra si multi-área; modal crear usuario incluye multi-select de áreas iniciales
+
+---
+
+### Added
 - **Fase 8 — Settings Pro**
 - `src/lib/types/preferences.ts` — `UserPreferences` interface con 11 campos (colección, modo de búsqueda, VDB/reranker top-k, crossdoc, avatar, idioma, notificaciones) + `DEFAULT_PREFERENCES`
 - `src/lib/stores/preferences.svelte.ts` — `PreferencesStore` reactivo (Svelte 5 runes); `init()` hidrata desde el server; getters `avatarColor` y `language`
