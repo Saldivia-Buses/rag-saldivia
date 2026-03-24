@@ -38,7 +38,7 @@ def init_db_conn(conn: sqlite3.Connection):
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             email TEXT UNIQUE NOT NULL,
             name TEXT NOT NULL,
-            area_id INTEGER NOT NULL REFERENCES areas(id),
+            area_id INTEGER REFERENCES areas(id),
             role TEXT NOT NULL DEFAULT 'user',
             api_key_hash TEXT NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -73,6 +73,33 @@ def init_db_conn(conn: sqlite3.Connection):
         conn.execute("ALTER TABLE users ADD COLUMN password_hash TEXT")
     except Exception:
         pass  # Column already exists
+
+    # Migración Fase 9: hacer area_id nullable en users para soporte multi-área
+    # SQLite no soporta ALTER COLUMN, recreamos la tabla si area_id tiene NOT NULL constraint
+    try:
+        conn.executescript("""
+            CREATE TABLE IF NOT EXISTS users_new (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                email TEXT UNIQUE NOT NULL,
+                name TEXT NOT NULL,
+                area_id INTEGER REFERENCES areas(id),
+                role TEXT NOT NULL DEFAULT 'user',
+                api_key_hash TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                last_login TIMESTAMP,
+                active BOOLEAN DEFAULT 1,
+                password_hash TEXT
+            );
+            INSERT OR IGNORE INTO users_new
+                SELECT id, email, name, area_id, role, api_key_hash,
+                       created_at, last_login, active, password_hash
+                FROM users;
+            DROP TABLE users;
+            ALTER TABLE users_new RENAME TO users;
+            CREATE INDEX IF NOT EXISTS idx_users_api_key ON users(api_key_hash);
+        """)
+    except Exception:
+        pass  # Si falla, la tabla ya era correcta (area_id nullable)
 
     # Migration: add chat tables if not present (idempotent)
     conn.executescript("""

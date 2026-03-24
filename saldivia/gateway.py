@@ -798,6 +798,10 @@ class GrantCollectionRequest(BaseModel):
     permission: str = "read"
 
 
+class AddUserAreaRequest(BaseModel):
+    area_id: int
+
+
 class CreateSessionRequest(BaseModel):
     collection: str
     crossdoc: bool = False
@@ -857,17 +861,14 @@ def delete_user_endpoint(user_id: int, user: User = Depends(admin_required)):
 
 
 @app.post("/admin/users/{user_id}/areas")
-def add_user_area_endpoint(user_id: int, body: dict, user: User = Depends(admin_required)):
-    area_id = body.get("area_id")
-    if not area_id:
-        raise HTTPException(status_code=400, detail="area_id required")
+def add_user_area_endpoint(user_id: int, body: AddUserAreaRequest, user: User = Depends(admin_required)):
     target = db.get_user_by_id(user_id)
     if not target:
         raise HTTPException(status_code=404, detail="User not found")
-    area = db.get_area(area_id)
+    area = db.get_area(body.area_id)
     if not area:
         raise HTTPException(status_code=404, detail="Area not found")
-    db.add_user_area(user_id, area_id)
+    db.add_user_area(user_id, body.area_id)
     return {"ok": True}
 
 
@@ -876,6 +877,9 @@ def remove_user_area_endpoint(user_id: int, area_id: int, user: User = Depends(a
     target = db.get_user_by_id(user_id)
     if not target:
         raise HTTPException(status_code=404, detail="User not found")
+    area = db.get_area(area_id)
+    if not area:
+        raise HTTPException(status_code=404, detail="Area not found")
     db.remove_user_area(user_id, area_id)
     return {"ok": True}
 
