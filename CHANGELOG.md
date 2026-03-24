@@ -83,6 +83,8 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 - `packages/logger/src/rotation.ts`: rotación de archivos de log (10MB, 5 backups) — 2026-03-24
 - `CLAUDE.md`: actualizado con el nuevo stack TypeScript — 2026-03-24
 - `legacy/`: código del stack original (Python + SvelteKit) movido a carpeta `legacy/` — 2026-03-24
+- `legacy/scripts/`: scripts bash y Python del stack original movidos a `legacy/` — 2026-03-24
+- `legacy/pyproject.toml` + `legacy/uv.lock`: archivos Python movidos a `legacy/` — 2026-03-24
 - `scripts/health-check.ts`: reemplaza health_check.sh — verifica servicios con latencias — 2026-03-24
 
 ---

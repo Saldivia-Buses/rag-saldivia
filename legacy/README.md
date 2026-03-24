@@ -10,6 +10,8 @@ Fue reemplazado por la reescritura completa en TypeScript en la branch `experime
 - `cli/` → CLI Python original (424 líneas)
 - `auth-gateway/` → Dockerfile del gateway Python
 - `ingestion-worker/` → Dockerfile del worker Python
+- `scripts/` → Scripts bash y Python del stack original (setup.sh, deploy.sh, bootstrap.sh, smart_ingest.py, etc.)
+- `pyproject.toml` + `uv.lock` → Definición del paquete Python y lockfile
 
 ## Por qué está en legacy y no eliminado
 
