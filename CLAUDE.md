@@ -54,8 +54,8 @@ make cli ARGS="audit log"
 
 | Archivo | Responsabilidad |
 |---------|----------------|
-| `gateway.py` | FastAPI: auth, RBAC, proxy al RAG, SSE streaming, endpoints de preferences/profile/password |
-| `auth/database.py` | SQLite AuthDB: users, areas, api_keys, sessions, ingestion_jobs, ingestion_alerts, preferences |
+| `gateway.py` | FastAPI: auth, RBAC, proxy al RAG, SSE streaming, endpoints de preferences/profile/password, `POST/DELETE /admin/users/{id}/areas` |
+| `auth/database.py` | SQLite AuthDB: users, areas, api_keys, sessions, ingestion_jobs, ingestion_alerts, preferences, `user_areas` (many-to-many); métodos `get_user_area_ids`, `get_user_areas`, `add_user_area`, `remove_user_area`, `count_users_in_area`; `can_access` y `get_user_collections` operan sobre unión de todas las áreas del usuario |
 | `auth/models.py` | User, Area, Role dataclasses |
 | `config.py` | ConfigLoader: YAML profiles + env merge + `ingestion_config()` con deep-merge de defaults |
 | `providers.py` | Clientes HTTP para RAG Server, Milvus |
@@ -76,11 +76,11 @@ SvelteKit 5 BFF. Rutas principales:
 - `/(app)/collections/[name]` → detalle de colección
 - `/(app)/upload` → upload de documentos
 - `/(app)/settings` → configuración del usuario (5 secciones: Perfil, Contraseña, Preferencias RAG, Notificaciones, Apariencia+APIKey; form actions: `update_profile`, `update_password`, `update_preferences`, `update_notifications`)
-- `/(app)/admin/users` → gestión de usuarios (solo admins)
-- `/(app)/admin/areas` → gestión de áreas (solo admins)
-- `/(app)/admin/permissions` → permisos (solo admins)
+- `/(app)/admin/users` → gestión de usuarios (solo admins): lista con columna Área+N (multi-área), modal crear usuario con multi-select de áreas
+- `/(app)/admin/areas` → gestión de áreas (solo admins): CRUD completo — crear, editar nombre/descripción, eliminar con modal de usuarios bloqueantes si hay usuarios activos
+- `/(app)/admin/permissions` → permisos (solo admins y `area_manager`): asignación de colecciones a áreas con selector read/write, chips de colecciones con permiso
 - `/(app)/admin/rag-config` → configuración RAG (solo admins)
-- `/(app)/admin/system` → estado del sistema (solo admins)
+- `/(app)/admin/system` → estado del sistema (solo admins): stats cards (usuarios activos, áreas, colecciones con docs), jobs activos con progress bar, alertas de ingesta, botón actualizar
 - `/(app)/audit` → audit log
 - `/api/auth/*` → BFF endpoints de auth (session POST/DELETE)
 - `/api/chat/*` → BFF proxy al gateway (sessions, stream)

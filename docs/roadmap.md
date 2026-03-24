@@ -1,7 +1,7 @@
 # RAG Saldivia — Roadmap
 
 > Fuente de verdad del estado del proyecto. Se actualiza solo cuando Enzo lo pide.
-> Última actualización: 2026-03-23 (Fase 7 completada)
+> Última actualización: 2026-03-24 (Fase 9 completada)
 
 ---
 
@@ -21,6 +21,8 @@
 | 5.6 | Hardening — rate limiting, upload limit, CORS, sanitización | 2026-03-23 |
 | 6 | Upload inteligente — tier system, deadlock detection, resume | 2026-03-23 |
 | 7 | Chat Sesiones Pro — rename, feedback, follow-ups, export | 2026-03-23 |
+| 8 | Settings Pro — preferencias persistidas, perfil, contraseña, notificaciones | 2026-03-23 |
+| 9 | Admin Pro — CRUD areas, permissions multi-área, system stats | 2026-03-24 |
 
 ---
 
@@ -34,10 +36,8 @@ _Nada en progreso actualmente._
 
 | Prioridad | Fase | Descripción | Depende de |
 |-----------|------|-------------|-----------|
-| 1 | 8 | Settings Pro — configuración de usuario + preferencias RAG | 7 |
-| 2 | 9 | Admin Pro — gestión avanzada de users, areas, permisos | 7 |
-| 3 | 10 | Audit Log Pro — filtros, export, visualización | 9 |
-| 4 | 11 | RAG Config Pro — tuning de parámetros desde UI | 9 |
+| 1 | 10 | Audit Log Pro — filtros, export, visualización | 9 |
+| 2 | 11 | RAG Config Pro — tuning de parámetros desde UI | 9 |
 
 ---
 

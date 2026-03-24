@@ -184,6 +184,35 @@ export async function gatewayListAreas() {
     return gw<{ areas: AreaSummary[] }>('/admin/areas');
 }
 
+export async function gatewayCreateArea(name: string, description?: string) {
+    return gw<{ id: number; name: string }>(
+        '/admin/areas',
+        { method: 'POST', body: JSON.stringify({ name, description: description ?? '' }) }
+    );
+}
+
+export async function gatewayUpdateArea(id: number, name?: string, description?: string) {
+    return gw<{ ok: boolean }>(
+        `/admin/areas/${id}`,
+        { method: 'PUT', body: JSON.stringify({ name, description }) }
+    );
+}
+
+export async function gatewayDeleteArea(id: number) {
+    return gw<{ ok: boolean }>(`/admin/areas/${id}`, { method: 'DELETE' });
+}
+
+export async function gatewayAddUserArea(userId: number, areaId: number) {
+    return gw<{ ok: boolean }>(
+        `/admin/users/${userId}/areas`,
+        { method: 'POST', body: JSON.stringify({ area_id: areaId }) }
+    );
+}
+
+export async function gatewayRemoveUserArea(userId: number, areaId: number) {
+    return gw<{ ok: boolean }>(`/admin/users/${userId}/areas/${areaId}`, { method: 'DELETE' });
+}
+
 export async function gatewayGetAreaCollections(areaId: number) {
     return gw<{ collections: AreaCollection[] }>(`/admin/areas/${areaId}/collections`);
 }
@@ -331,11 +360,12 @@ export interface Source {
     document: string; page?: number; excerpt: string;
 }
 export interface AdminUser {
-    id: number; email: string; name: string; area_id: number; role: string;
-    active: boolean; last_login: string | null;
+    id: number; email: string; name: string;
+    areas: { id: number; name: string }[];
+    role: string; active: boolean; last_login: string | null;
 }
 export interface CreateUserData {
-    email: string; name: string; area_id: number; role: string; password?: string;
+    email: string; name: string; area_ids?: number[]; role: string; password?: string;
 }
 export interface AreaSummary {
     id: number; name: string; description: string;

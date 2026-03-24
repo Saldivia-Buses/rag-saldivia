@@ -38,7 +38,7 @@ def init_db_conn(conn: sqlite3.Connection):
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             email TEXT UNIQUE NOT NULL,
             name TEXT NOT NULL,
-            area_id INTEGER NOT NULL REFERENCES areas(id),
+            area_id INTEGER REFERENCES areas(id),
             role TEXT NOT NULL DEFAULT 'user',
             api_key_hash TEXT NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -73,6 +73,33 @@ def init_db_conn(conn: sqlite3.Connection):
         conn.execute("ALTER TABLE users ADD COLUMN password_hash TEXT")
     except Exception:
         pass  # Column already exists
+
+    # Migración Fase 9: hacer area_id nullable en users para soporte multi-área
+    # SQLite no soporta ALTER COLUMN, recreamos la tabla si area_id tiene NOT NULL constraint
+    try:
+        conn.executescript("""
+            CREATE TABLE IF NOT EXISTS users_new (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                email TEXT UNIQUE NOT NULL,
+                name TEXT NOT NULL,
+                area_id INTEGER REFERENCES areas(id),
+                role TEXT NOT NULL DEFAULT 'user',
+                api_key_hash TEXT NOT NULL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                last_login TIMESTAMP,
+                active BOOLEAN DEFAULT 1,
+                password_hash TEXT
+            );
+            INSERT OR IGNORE INTO users_new
+                SELECT id, email, name, area_id, role, api_key_hash,
+                       created_at, last_login, active, password_hash
+                FROM users;
+            DROP TABLE users;
+            ALTER TABLE users_new RENAME TO users;
+            CREATE INDEX IF NOT EXISTS idx_users_api_key ON users(api_key_hash);
+        """)
+    except Exception:
+        pass  # Si falla, la tabla ya era correcta (area_id nullable)
 
     # Migration: add chat tables if not present (idempotent)
     conn.executescript("""
@@ -167,6 +194,20 @@ def init_db_conn(conn: sqlite3.Connection):
     except Exception:
         pass  # Column already exists
 
+    # Migration: add user_areas table (Fase 9 — many-to-many)
+    conn.executescript("""
+        CREATE TABLE IF NOT EXISTS user_areas (
+            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            area_id INTEGER NOT NULL REFERENCES areas(id) ON DELETE CASCADE,
+            PRIMARY KEY (user_id, area_id)
+        );
+    """)
+    # Migración: copiar area_id existentes a user_areas
+    conn.execute("""
+        INSERT OR IGNORE INTO user_areas (user_id, area_id)
+        SELECT id, area_id FROM users WHERE area_id IS NOT NULL
+    """)
+
 
 def init_db(db_path: Path = DB_PATH):
     """Initialize database schema."""
@@ -209,6 +250,7 @@ class AuthDB:
         if str(db_path) == ":memory:":
             # Maintain a single persistent connection for in-memory databases
             self._mem_conn = sqlite3.connect(":memory:", check_same_thread=False)
+            self._mem_conn.execute("PRAGMA foreign_keys = ON")
             init_db_conn(self._mem_conn)
         else:
             self._mem_conn = None
@@ -217,7 +259,9 @@ class AuthDB:
     def _conn(self):
         if self._mem_conn is not None:
             return _MemConnContext(self._mem_conn)
-        return sqlite3.connect(self.db_path)
+        conn = sqlite3.connect(self.db_path)
+        conn.execute("PRAGMA foreign_keys = ON")
+        return conn
 
     # Areas
     def create_area(self, name: str, description: str = "") -> Area:
@@ -244,7 +288,7 @@ class AuthDB:
             return [Area(id=r[0], name=r[1], description=r[2], created_at=r[3]) for r in rows]
 
     # Users
-    def create_user(self, email: str, name: str, area_id: int, role: Role,
+    def create_user(self, email: str, name: str, area_id: Optional[int], role: Role,
                     api_key_hash: str, password_hash: Optional[str] = None) -> User:
         with self._conn() as conn:
             cur = conn.execute(
@@ -252,7 +296,13 @@ class AuthDB:
                 "VALUES (?, ?, ?, ?, ?, ?)",
                 (email, name, area_id, role.value, api_key_hash, password_hash)
             )
-            return User(id=cur.lastrowid, email=email, name=name, area_id=area_id,
+            user_id = cur.lastrowid
+            if area_id is not None:
+                conn.execute(
+                    "INSERT OR IGNORE INTO user_areas (user_id, area_id) VALUES (?, ?)",
+                    (user_id, area_id)
+                )
+            return User(id=user_id, email=email, name=name, area_id=area_id,
                         role=role, api_key_hash=api_key_hash, password_hash=password_hash)
 
     def get_user_by_api_key_hash(self, api_key_hash: str) -> Optional[User]:
@@ -408,29 +458,106 @@ class AuthDB:
             ).fetchall()
             return [AreaCollection(area_id=r[0], collection_name=r[1], permission=Permission(r[2])) for r in rows]
 
-    def get_user_collections(self, user: User) -> list[str]:
-        """Get list of collections a user can access."""
-        if user.role == Role.ADMIN:
-            # Admin can access all collections
-            from saldivia.collections import CollectionManager
-            return CollectionManager().list()
+    def get_user_area_ids(self, user_id: int) -> list[int]:
+        """Retorna IDs de todas las áreas asignadas al usuario."""
+        with self._conn() as conn:
+            rows = conn.execute(
+                "SELECT area_id FROM user_areas WHERE user_id = ?", (user_id,)
+            ).fetchall()
+        return [r[0] for r in rows]
 
-        return [ac.collection_name for ac in self.get_area_collections(user.area_id)]
+    def get_user_areas(self, user_id: int) -> list[Area]:
+        """Retorna áreas completas del usuario."""
+        with self._conn() as conn:
+            rows = conn.execute(
+                """SELECT a.id, a.name, a.description
+                   FROM areas a
+                   JOIN user_areas ua ON ua.area_id = a.id
+                   WHERE ua.user_id = ?""",
+                (user_id,)
+            ).fetchall()
+        return [Area(id=r[0], name=r[1], description=r[2]) for r in rows]
+
+    def get_all_user_areas_map(self) -> dict[int, list[Area]]:
+        """Retorna un mapa user_id → list[Area] para todos los usuarios. Una sola query."""
+        with self._conn() as conn:
+            rows = conn.execute(
+                """SELECT ua.user_id, a.id, a.name, a.description
+                   FROM user_areas ua
+                   JOIN areas a ON a.id = ua.area_id"""
+            ).fetchall()
+        result: dict[int, list[Area]] = {}
+        for user_id, area_id, name, desc in rows:
+            result.setdefault(user_id, []).append(Area(id=area_id, name=name, description=desc))
+        return result
+
+    def add_user_area(self, user_id: int, area_id: int) -> None:
+        """Asigna un área al usuario. Idempotente."""
+        with self._conn() as conn:
+            conn.execute(
+                "INSERT OR IGNORE INTO user_areas (user_id, area_id) VALUES (?, ?)",
+                (user_id, area_id)
+            )
+
+    def remove_user_area(self, user_id: int, area_id: int) -> None:
+        """Desasigna un área del usuario."""
+        with self._conn() as conn:
+            conn.execute(
+                "DELETE FROM user_areas WHERE user_id = ? AND area_id = ?",
+                (user_id, area_id)
+            )
+
+    def count_users_in_area(self, area_id: int) -> int:
+        """Retorna cantidad de usuarios activos en el área."""
+        with self._conn() as conn:
+            row = conn.execute(
+                """SELECT COUNT(*) FROM user_areas ua
+                   JOIN users u ON u.id = ua.user_id
+                   WHERE ua.area_id = ? AND u.active = 1""",
+                (area_id,)
+            ).fetchone()
+        return row[0] if row else 0
+
+    def get_user_collections(self, user: User) -> list[str]:
+        """Retorna nombres de colecciones accesibles por el usuario (unión de todas sus áreas)."""
+        if user.role == Role.ADMIN:
+            # Admins ven todas las colecciones
+            with self._conn() as conn:
+                rows = conn.execute("SELECT DISTINCT collection_name FROM area_collections").fetchall()
+            return [r[0] for r in rows]
+        area_ids = self.get_user_area_ids(user.id)
+        if not area_ids:
+            return []
+        with self._conn() as conn:
+            placeholders = ",".join("?" * len(area_ids))
+            rows = conn.execute(
+                f"SELECT DISTINCT collection_name FROM area_collections WHERE area_id IN ({placeholders})",
+                tuple(area_ids)
+            ).fetchall()
+        return [r[0] for r in rows]
 
     def can_access(self, user: User, collection: str, required: Permission) -> bool:
-        """Check if user can perform action on collection."""
+        """Verifica acceso a colección. Admins: global. Otros: unión de todas sus áreas."""
         if user.role == Role.ADMIN:
             return True
-
-        for ac in self.get_area_collections(user.area_id):
-            if ac.collection_name == collection:
-                # admin > write > read
-                if ac.permission == Permission.ADMIN:
-                    return True
-                if ac.permission == Permission.WRITE and required in (Permission.WRITE, Permission.READ):
-                    return True
-                if ac.permission == Permission.READ and required == Permission.READ:
-                    return True
+        area_ids = self.get_user_area_ids(user.id)
+        if not area_ids:
+            return False
+        with self._conn() as conn:
+            placeholders = ",".join("?" * len(area_ids))
+            rows = conn.execute(
+                f"""SELECT permission FROM area_collections
+                    WHERE area_id IN ({placeholders}) AND collection_name = ?""",
+                (*area_ids, collection)
+            ).fetchall()
+        for row in rows:
+            perm = Permission(row[0])
+            if perm == Permission.ADMIN:
+                return True
+            if perm == Permission.WRITE and required in (Permission.WRITE, Permission.READ):
+                return True
+            if perm == Permission.READ and required == Permission.READ:
+                return True
         return False
 
     # Audit
@@ -459,12 +586,11 @@ class AuthDB:
 
     def delete_area(self, area_id: int):
         """Delete area. Raises ValueError if area has active users."""
+        count = self.count_users_in_area(area_id)
+        if count > 0:
+            raise ValueError(f"Cannot delete area {area_id}: has {count} active users")
         with self._conn() as conn:
-            count = conn.execute(
-                "SELECT COUNT(*) FROM users WHERE area_id = ? AND active = 1", (area_id,)
-            ).fetchone()[0]
-            if count > 0:
-                raise ValueError(f"Area has {count} active users")
+            # area_collections no tiene ON DELETE CASCADE — eliminar explícitamente
             conn.execute("DELETE FROM area_collections WHERE area_id = ?", (area_id,))
             conn.execute("DELETE FROM areas WHERE id = ?", (area_id,))
 
