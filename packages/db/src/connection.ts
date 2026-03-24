@@ -10,7 +10,7 @@ import { createClient } from "@libsql/client"
 import { drizzle } from "drizzle-orm/libsql"
 import { mkdirSync } from "fs"
 import { join, dirname, resolve } from "path"
-import * as schema from "./schema.js"
+import * as schema from "./schema"
 
 const DEFAULT_DB_PATH = join(process.cwd(), "data", "app.db")
 

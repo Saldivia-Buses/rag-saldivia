@@ -9,8 +9,8 @@
  * IMPORTANTE: Solo para desarrollo. No correr en producción.
  */
 
-import { getDb } from "./connection.js"
-import { areas, users, userAreas, areaCollections } from "./schema.js"
+import { getDb } from "./connection"
+import { areas, users, userAreas, areaCollections } from "./schema"
 import { hashSync } from "bcrypt-ts"
 
 const db = getDb()

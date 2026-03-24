@@ -12,8 +12,8 @@
  */
 
 import type { EventType, LogLevel, EventSource } from "@rag-saldivia/shared"
-import { shouldLog, LEVEL_COLORS, RESET, DIM, BOLD } from "./levels.js"
-import { getSuggestion } from "./suggestions.js"
+import { shouldLog, LEVEL_COLORS, RESET, DIM, BOLD } from "./levels"
+import { getSuggestion } from "./suggestions"
 
 export type LogContext = {
   userId?: number | null

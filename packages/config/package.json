@@ -2,8 +2,7 @@
   "name": "@rag-saldivia/config",
   "version": "0.1.0",
   "private": true,
-  "type": "module",
-  "exports": {
+    "exports": {
     ".": "./src/index.ts"
   },
   "scripts": {

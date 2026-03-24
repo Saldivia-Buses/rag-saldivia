@@ -17,15 +17,6 @@ const nextConfig: NextConfig = {
     "drizzle-orm",
   ],
 
-  // Resolver .js imports → .ts para paquetes workspace transpilados
-  webpack: (config) => {
-    config.resolve.extensionAlias = {
-      ...config.resolve.extensionAlias,
-      ".js": [".ts", ".tsx", ".js", ".jsx"],
-    }
-    return config
-  },
-
   // Forzar el root del proyecto para evitar que Next.js confunda el workspace root
   outputFileTracingRoot: __dirname,
 

@@ -2,8 +2,7 @@
   "name": "@rag-saldivia/logger",
   "version": "0.1.0",
   "private": true,
-  "type": "module",
-  "exports": {
+    "exports": {
     ".": "./src/index.ts",
     "./backend": "./src/backend.ts",
     "./frontend": "./src/frontend.ts",
