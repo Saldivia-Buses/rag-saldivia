@@ -1,0 +1,10 @@
+#!/bin/sh
+# Valida que el mensaje de commit siga Conventional Commits.
+# Formato: type(scope): description
+# Ejemplos válidos:
+#   feat(web): add JWT refresh endpoint
+#   fix(db): resolve timestamp serialization
+#   chore(deps): upgrade to TypeScript 6.0
+#   docs(changelog): add v1.0.0 release notes
+
+npx --no -- commitlint --edit "$1"

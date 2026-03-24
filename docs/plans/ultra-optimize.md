@@ -97,12 +97,12 @@ Objetivo: cualquier persona clona el repo y con un solo comando tiene el sistema
 
 Objetivo: establecer las reglas del juego antes de tocar código. El CHANGELOG arranca con el primer commit de la branch.
 
-- [ ] Commitlint + Husky: hook `commit-msg` rechaza commits que no sigan Conventional Commits, hook `pre-push` corre type-check — *30 min*
-- [ ] `.github/workflows/ci.yml`: lint + type-check + tests en cada PR usando Bun y Turborepo — *1 hs*
-- [ ] `.github/workflows/deploy.yml`: reemplaza el actual, deploy solo al hacer tag `v*` — *30 min*
-- [ ] `.github/workflows/release.yml`: al publicar un release en GitHub mueve `[Unreleased]` a `[vX.Y.Z]` automáticamente — *30 min*
-- [ ] PR template con sección obligatoria de entrada al CHANGELOG. El CI bloquea PRs sin ella — *30 min*
-- [ ] Changesets configurado para versionado semántico — *30 min*
+- [x] Commitlint + Husky: hook `commit-msg` rechaza commits que no sigan Conventional Commits, hook `pre-push` corre type-check — completado 2026-03-24
+- [x] `.github/workflows/ci.yml`: lint + type-check + tests en cada PR usando Bun y Turborepo — completado 2026-03-24
+- [x] `.github/workflows/deploy.yml`: reemplaza el actual, deploy solo al hacer tag `v*` — completado 2026-03-24
+- [x] `.github/workflows/release.yml`: al publicar un release en GitHub mueve `[Unreleased]` a `[vX.Y.Z]` automáticamente — completado 2026-03-24
+- [x] PR template con sección obligatoria de entrada al CHANGELOG. El CI bloquea PRs sin ella — completado 2026-03-24
+- [x] Changesets configurado para versionado semántico — completado 2026-03-24
 
 ---
 

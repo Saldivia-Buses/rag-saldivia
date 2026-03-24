@@ -1,0 +1,23 @@
+{
+  "extends": ["@commitlint/config-conventional"],
+  "rules": {
+    "type-enum": [
+      2,
+      "always",
+      ["feat", "fix", "refactor", "chore", "docs", "test", "ci", "perf", "revert"]
+    ],
+    "scope-enum": [
+      1,
+      "always",
+      [
+        "setup", "web", "cli", "db", "config", "logger", "shared",
+        "auth", "rag", "chat", "admin", "collections", "ingestion",
+        "blackbox", "deps", "ci", "docs", "changelog", "plans"
+      ]
+    ],
+    "subject-case": [2, "always", "lower-case"],
+    "subject-max-length": [2, "always", 100],
+    "body-max-line-length": [2, "always", 150],
+    "header-max-length": [2, "always", 120]
+  }
+}

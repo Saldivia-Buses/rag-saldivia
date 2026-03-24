@@ -8,6 +8,13 @@
     "setup:check": "bun scripts/setup.ts --check",
     "setup:reset": "bun scripts/setup.ts --reset",
     "dev": "echo 'Fase 2 en progreso: apps/web aún no existe. Por ahora: cd services/sda-frontend && bun run dev'",
-    "test": "echo 'Fase 2 en progreso: tests del monorepo aún no configurados. Por ahora: uv run pytest saldivia/tests/ -v'"
+    "test": "echo 'Fase 2 en progreso: tests del monorepo aún no configurados. Por ahora: uv run pytest saldivia/tests/ -v'",
+    "lint:commits": "commitlint --from HEAD~1 --to HEAD",
+    "prepare": "husky || true"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.0.0",
+    "@commitlint/config-conventional": "^19.0.0",
+    "husky": "^9.0.0"
   }
 }

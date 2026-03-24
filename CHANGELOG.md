@@ -17,6 +17,13 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 - `.env.example` completamente documentado con todas las variables del nuevo stack — 2026-03-24
 - `package.json` raíz mínimo para Bun workspaces con script `bun run setup` — 2026-03-24
 - `Makefile`: nuevos targets `setup`, `setup-check`, `reset`, `dev` para el nuevo stack — 2026-03-24
+- `.commitlintrc.json`: Conventional Commits enforced con scopes definidos para el proyecto — 2026-03-24
+- `.husky/commit-msg` y `.husky/pre-push`: hooks de Git para validar commits y type-check — 2026-03-24
+- `.github/workflows/ci.yml`: CI completo (commitlint, changelog check, type-check, tests, lint) en cada PR — 2026-03-24
+- `.github/workflows/deploy.yml`: deploy solo en tag `v*` o workflow_dispatch — 2026-03-24
+- `.github/workflows/release.yml`: mueve `[Unreleased]` a `[vX.Y.Z]` al publicar release — 2026-03-24
+- `.github/pull_request_template.md`: PR template con sección obligatoria de CHANGELOG — 2026-03-24
+- `.changeset/config.json`: Changesets para versionado semántico — 2026-03-24
 
 ---
 

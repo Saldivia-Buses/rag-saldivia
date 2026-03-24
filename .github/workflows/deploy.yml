@@ -1,8 +1,11 @@
 name: Deploy RAG Saldivia
 
 on:
+  # Deploy al hacer tag vX.Y.Z (releases)
   push:
-    branches: [main]
+    tags:
+      - 'v*'
+  # Deploy manual desde GitHub Actions UI
   workflow_dispatch:
     inputs:
       profile:
@@ -16,8 +19,9 @@ on:
 
 jobs:
   deploy:
+    name: Deploy to workstation
     runs-on: [self-hosted, "${{ github.event.inputs.workstation || 'workstation-1' }}"]
-    timeout-minutes: 15
+    timeout-minutes: 30
 
     steps:
       - name: Checkout
@@ -34,7 +38,7 @@ jobs:
       - name: Notify result
         if: always()
         run: |
-          STATUS=${{ job.status }}
-          SHA=$(echo ${{ github.sha }} | cut -c1-8)
-          echo "Deploy $STATUS — commit $SHA"
-          # Conectar con webhook en Fase 13 cuando esté disponible
+          STATUS="${{ job.status }}"
+          SHA=$(echo "${{ github.sha }}" | cut -c1-8)
+          REF="${{ github.ref_name }}"
+          echo "Deploy $STATUS — ref=$REF sha=$SHA"
