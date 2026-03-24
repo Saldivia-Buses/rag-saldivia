@@ -5,7 +5,7 @@
  *      bun packages/db/src/migrate.ts
  */
 
-import { migrate } from "drizzle-orm/better-sqlite3/migrator"
+import { migrate } from "drizzle-orm/bun-sqlite/migrator"
 import { getDb } from "./connection.js"
 import { join } from "path"
 

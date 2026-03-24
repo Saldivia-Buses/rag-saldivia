@@ -1,14 +1,15 @@
 /**
  * Conexión singleton a la base de datos SQLite.
  *
- * Usa better-sqlite3 (síncrono) que es significativamente más rápido que
- * el módulo sqlite3 async para el patrón de acceso de este sistema.
+ * Usa bun:sqlite (nativo de Bun) — sin compilación nativa, funciona en todos
+ * los sistemas donde corra Bun. Más rápido que better-sqlite3.
  * SQLite serializa writes internamente — no hay race conditions entre workers.
  */
 
-import Database from "better-sqlite3"
-import { drizzle } from "drizzle-orm/better-sqlite3"
-import { join } from "path"
+import { Database } from "bun:sqlite"
+import { drizzle } from "drizzle-orm/bun-sqlite"
+import { join, dirname } from "path"
+import { mkdirSync } from "fs"
 import * as schema from "./schema.js"
 
 const DEFAULT_DB_PATH = join(process.cwd(), "data", "app.db")
@@ -21,29 +22,26 @@ function createConnection() {
   const dbPath = getDbPath()
 
   // Crear directorio si no existe
-  const dir = dbPath.split("/").slice(0, -1).join("/")
-  if (dir && dir !== "." && dbPath !== ":memory:") {
+  if (dbPath !== ":memory:") {
     try {
-      const { mkdirSync } = require("fs")
-      mkdirSync(dir, { recursive: true })
+      mkdirSync(dirname(dbPath), { recursive: true })
     } catch {
-      // En Bun, usar Bun.spawnSync o asumir que el dir existe
+      // Ignorar si ya existe
     }
   }
 
   const sqlite = new Database(dbPath)
 
-  // Performance pragmas (seguras — no comprometen durabilidad para este caso de uso)
-  sqlite.pragma("journal_mode = WAL")      // Write-Ahead Logging: mejor concurrencia
-  sqlite.pragma("synchronous = NORMAL")    // Más rápido, durabilidad suficiente con WAL
-  sqlite.pragma("foreign_keys = ON")       // Enforce FK constraints
-  sqlite.pragma("cache_size = -32768")     // 32MB de cache
-  sqlite.pragma("temp_store = MEMORY")     // Tablas temporales en memoria
+  // Performance pragmas
+  sqlite.exec("PRAGMA journal_mode = WAL")     // Write-Ahead Logging: mejor concurrencia
+  sqlite.exec("PRAGMA synchronous = NORMAL")   // Más rápido, durabilidad suficiente con WAL
+  sqlite.exec("PRAGMA foreign_keys = ON")      // Enforce FK constraints
+  sqlite.exec("PRAGMA cache_size = -32768")    // 32MB de cache
+  sqlite.exec("PRAGMA temp_store = MEMORY")    // Tablas temporales en memoria
 
   return drizzle(sqlite, { schema })
 }
 
-// Singleton: reutiliza la misma conexión en toda la aplicación
 let _db: ReturnType<typeof createConnection> | null = null
 
 export function getDb() {
