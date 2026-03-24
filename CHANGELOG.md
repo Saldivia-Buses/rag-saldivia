@@ -85,6 +85,7 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 - `legacy/`: código del stack original (Python + SvelteKit) movido a carpeta `legacy/` — 2026-03-24
 - `legacy/scripts/`: scripts bash y Python del stack original movidos a `legacy/` — 2026-03-24
 - `legacy/pyproject.toml` + `legacy/uv.lock`: archivos Python movidos a `legacy/` — 2026-03-24
+- `legacy/docs/`: docs del stack viejo movidos a `legacy/` (analysis, contributing, deployment, development-workflow, field-testing, plans-fase8, problems-and-solutions, roadmap, sessions, testing) — 2026-03-24
 - `scripts/health-check.ts`: reemplaza health_check.sh — verifica servicios con latencias — 2026-03-24
 
 ---
