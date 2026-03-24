@@ -82,7 +82,7 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 - `apps/web/src/app/(app)/admin/system/page.tsx`: estado del sistema con stats cards y jobs activos — 2026-03-24
 - `packages/logger/src/rotation.ts`: rotación de archivos de log (10MB, 5 backups) — 2026-03-24
 - `CLAUDE.md`: actualizado con el nuevo stack TypeScript — 2026-03-24
-- `_archive/README.md`: documentación del código archivado (stack Python + SvelteKit) — 2026-03-24
+- `legacy/`: código del stack original (Python + SvelteKit) movido a carpeta `legacy/` — 2026-03-24
 - `scripts/health-check.ts`: reemplaza health_check.sh — verifica servicios con latencias — 2026-03-24
 
 ---
