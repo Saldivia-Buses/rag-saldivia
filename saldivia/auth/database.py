@@ -250,6 +250,7 @@ class AuthDB:
         if str(db_path) == ":memory:":
             # Maintain a single persistent connection for in-memory databases
             self._mem_conn = sqlite3.connect(":memory:", check_same_thread=False)
+            self._mem_conn.execute("PRAGMA foreign_keys = ON")
             init_db_conn(self._mem_conn)
         else:
             self._mem_conn = None
@@ -287,7 +288,7 @@ class AuthDB:
             return [Area(id=r[0], name=r[1], description=r[2], created_at=r[3]) for r in rows]
 
     # Users
-    def create_user(self, email: str, name: str, area_id: int, role: Role,
+    def create_user(self, email: str, name: str, area_id: Optional[int], role: Role,
                     api_key_hash: str, password_hash: Optional[str] = None) -> User:
         with self._conn() as conn:
             cur = conn.execute(
@@ -296,11 +297,11 @@ class AuthDB:
                 (email, name, area_id, role.value, api_key_hash, password_hash)
             )
             user_id = cur.lastrowid
-            # Sincronizar user_areas con el area_id inicial
-            conn.execute(
-                "INSERT OR IGNORE INTO user_areas (user_id, area_id) VALUES (?, ?)",
-                (user_id, area_id)
-            )
+            if area_id is not None:
+                conn.execute(
+                    "INSERT OR IGNORE INTO user_areas (user_id, area_id) VALUES (?, ?)",
+                    (user_id, area_id)
+                )
             return User(id=user_id, email=email, name=name, area_id=area_id,
                         role=role, api_key_hash=api_key_hash, password_hash=password_hash)
 
@@ -477,6 +478,19 @@ class AuthDB:
             ).fetchall()
         return [Area(id=r[0], name=r[1], description=r[2]) for r in rows]
 
+    def get_all_user_areas_map(self) -> dict[int, list[Area]]:
+        """Retorna un mapa user_id → list[Area] para todos los usuarios. Una sola query."""
+        with self._conn() as conn:
+            rows = conn.execute(
+                """SELECT ua.user_id, a.id, a.name, a.description
+                   FROM user_areas ua
+                   JOIN areas a ON a.id = ua.area_id"""
+            ).fetchall()
+        result: dict[int, list[Area]] = {}
+        for user_id, area_id, name, desc in rows:
+            result.setdefault(user_id, []).append(Area(id=area_id, name=name, description=desc))
+        return result
+
     def add_user_area(self, user_id: int, area_id: int) -> None:
         """Asigna un área al usuario. Idempotente."""
         with self._conn() as conn:
@@ -576,6 +590,8 @@ class AuthDB:
         if count > 0:
             raise ValueError(f"Cannot delete area {area_id}: has {count} active users")
         with self._conn() as conn:
+            # area_collections no tiene ON DELETE CASCADE — eliminar explícitamente
+            conn.execute("DELETE FROM area_collections WHERE area_id = ?", (area_id,))
             conn.execute("DELETE FROM areas WHERE id = ?", (area_id,))
 
     def get_audit_log_filtered(self, user_id: int = None, action: str = None,

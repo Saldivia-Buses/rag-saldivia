@@ -62,6 +62,16 @@ def test_delete_area_empty(client):
     assert r.status_code == 200
 
 
+def test_delete_area_with_collections_cleans_up(client):
+    """Área sin usuarios pero con colecciones asignadas puede eliminarse — limpia area_collections."""
+    r = client.post("/admin/areas", json={"name": "ConColecciones"}, headers=AUTH)
+    area_id = r.json()["id"]
+    client.post(f"/admin/areas/{area_id}/collections",
+                json={"collection_name": "docs", "permission": "read"}, headers=AUTH)
+    r = client.delete(f"/admin/areas/{area_id}", headers=AUTH)
+    assert r.status_code == 200
+
+
 def test_delete_area_with_users_fails(client):
     """Área con usuarios activos no se puede eliminar — retorna 409."""
     r = client.delete("/admin/areas/1", headers=AUTH)

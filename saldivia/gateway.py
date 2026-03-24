@@ -810,16 +810,16 @@ class CreateSessionRequest(BaseModel):
 @app.get("/admin/users")
 def list_users_endpoint(include_inactive: bool = False, user: User = Depends(admin_required)):
     users = db.list_users(active_only=not include_inactive)
-    result = []
-    for u in users:
-        areas = db.get_user_areas(u.id)
-        result.append({
+    areas_map = db.get_all_user_areas_map()
+    return {"users": [
+        {
             "id": u.id, "email": u.email, "name": u.name,
-            "areas": [{"id": a.id, "name": a.name} for a in areas],
+            "areas": [{"id": a.id, "name": a.name} for a in areas_map.get(u.id, [])],
             "role": u.role.value, "active": u.active,
             "last_login": _ts(u.last_login)
-        })
-    return {"users": result}
+        }
+        for u in users
+    ]}
 
 
 @app.post("/admin/users", status_code=201)
