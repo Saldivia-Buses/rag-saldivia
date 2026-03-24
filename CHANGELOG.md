@@ -122,7 +122,8 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 - Next.js: `@libsql/client` no era accesible en runtime de Node.js (los paquetes de Bun se guardan en `.bun/`, no en `node_modules/` estándar). Resuelto creando symlinks en `apps/web/node_modules/@libsql/` — 2026-03-24
 - Next.js: conflicto de instancias de `drizzle-orm` (TypeError `referencedTable` undefined) al excluirlo del bundling. Resuelto manteniéndolo en el bundle de webpack — 2026-03-24
 - Next.js: `.env.local` debe vivir en `apps/web/` (el directorio del proyecto), no solo en la raíz del monorepo — 2026-03-24
-- Bun workspaces en WSL2: `bun install` en filesystem Windows (`/mnt/c/`) no crea symlinks en `node_modules/.bin/`. Resuelto clonando el repo en el filesystem nativo de Linux (`~/rag-saldivia/`) — 2026-03-24
+- Bun workspaces en WSL2: `bun install` en filesystem Windows (`/mnt/c/`) no crea symlinks en `node_modules/.bin/`. Resuelto clonando el repo en el filesystem nativo de Linux (`~/rag-saldivia/`). **En Ubuntu nativo (deployment target) este problema no existe** — 2026-03-24
+- `scripts/link-libsql.sh`: workaround específico de WSL2 para crear symlinks de `@libsql` manualmente. **No necesario en Ubuntu nativo ni en producción (workstation Ubuntu 24.04)** — 2026-03-24
 
 ---
 

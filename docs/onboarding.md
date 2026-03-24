@@ -6,13 +6,42 @@
 - [Docker](https://docs.docker.com/get-docker/) con Docker Compose v2
 - Git
 
-## Setup
+## Setup — Ubuntu nativo (producción / workstation)
+
+El caso más simple. Todo funciona out-of-the-box:
 
 ```bash
 git clone https://github.com/Camionerou/rag-saldivia
 cd rag-saldivia
 git checkout experimental/ultra-optimize
 bun run setup
+bun run dev
+```
+
+## Setup — WSL2 (desarrollo en Windows)
+
+WSL2 tiene una particularidad: `bun install` en el filesystem Windows (`/mnt/c/`) no crea symlinks correctamente. La solución es clonar el repo en el filesystem **nativo de Linux**:
+
+```bash
+# En la terminal WSL2 — clonar en HOME de Linux, NO en /mnt/c/
+cd ~
+git clone https://github.com/Camionerou/rag-saldivia
+cd rag-saldivia
+git checkout experimental/ultra-optimize
+bun install
+
+# Crear symlinks de @libsql (solo necesario en WSL2)
+bash scripts/link-libsql.sh
+
+# Setup del .env y la DB
+cp .env.example apps/web/.env.local
+# Editar apps/web/.env.local: cambiar JWT_SECRET, SYSTEM_API_KEY, DATABASE_PATH a ruta absoluta
+
+bun packages/db/src/migrate.ts
+bun packages/db/src/seed.ts
+
+# Levantar el servidor
+node_modules/.bin/next dev /path/to/rag-saldivia/apps/web --port 3000
 ```
 
 El script de setup hace todo:
