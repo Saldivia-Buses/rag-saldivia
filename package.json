@@ -3,18 +3,30 @@
   "version": "0.1.0",
   "private": true,
   "description": "Overlay de autenticación y frontend sobre el NVIDIA RAG Blueprint",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "setup": "bun scripts/setup.ts",
     "setup:check": "bun scripts/setup.ts --check",
     "setup:reset": "bun scripts/setup.ts --reset",
-    "dev": "echo 'Fase 2 en progreso: apps/web aún no existe. Por ahora: cd services/sda-frontend && bun run dev'",
-    "test": "echo 'Fase 2 en progreso: tests del monorepo aún no configurados. Por ahora: uv run pytest saldivia/tests/ -v'",
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "test": "turbo test",
+    "lint": "turbo lint",
+    "type-check": "turbo type-check",
+    "db:migrate": "bun run --filter=./packages/db migrate",
+    "db:seed": "bun run --filter=./packages/db seed",
+    "db:generate": "bun run --filter=./packages/db generate",
     "lint:commits": "commitlint --from HEAD~1 --to HEAD",
     "prepare": "husky || true"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.0.0",
     "@commitlint/config-conventional": "^19.0.0",
-    "husky": "^9.0.0"
+    "husky": "^9.0.0",
+    "turbo": "^2.0.0",
+    "typescript": "^6.0.0"
   }
 }

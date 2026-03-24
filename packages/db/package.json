@@ -1,0 +1,25 @@
+{
+  "name": "@rag-saldivia/db",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "generate": "drizzle-kit generate",
+    "migrate": "bun src/migrate.ts",
+    "seed": "bun src/seed.ts",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@rag-saldivia/shared": "workspace:*",
+    "better-sqlite3": "^9.0.0",
+    "drizzle-orm": "^0.38.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.0",
+    "drizzle-kit": "^0.30.0",
+    "typescript": "^6.0.0"
+  }
+}

@@ -110,12 +110,12 @@ Objetivo: establecer las reglas del juego antes de tocar código. El CHANGELOG a
 
 Objetivo: crear la infraestructura compartida que usan todos los demás paquetes. Esta fase no tiene UI visible pero es la base de todo.
 
-- [ ] `turbo.json` con pipeline build → test → lint. Cache de Turborepo configurado para no repetir trabajo — *1 hs*
-- [ ] `packages/shared`: schemas Zod de User, Area, Collection, Session, Message, IngestionJob. Exporta tipos TypeScript derivados. Elimina la duplicación entre Pydantic (Python) e interfaces TypeScript actuales — *2 hs*
-- [ ] `packages/db`: schema Drizzle completo con las tablas users, areas, user_areas, sessions, messages, collections, ingestion_jobs, ingestion_queue, y events (black box). Migraciones generadas. Conexión singleton. Queries nombradas por dominio — *3 hs*
-- [ ] `packages/db`: tabla `ingestion_queue` reemplaza Redis. Locking por columna `locked_at` evita race conditions sin necesidad de Redis — *1 hs*
-- [ ] `packages/config`: config loader TypeScript que lee los YAMLs existentes en `config/`, valida con Zod, y exporta config tipada. Reemplaza `saldivia/config.py` — *1 hs*
-- [ ] `packages/logger`: estructura de archivos y contratos de la API del logger definidos (implementación completa en Fase 5) — *30 min*
+- [x] `turbo.json` con pipeline build → test → lint. Cache de Turborepo configurado para no repetir trabajo — completado 2026-03-24
+- [x] `packages/shared`: schemas Zod de User, Area, Collection, Session, Message, IngestionJob. Exporta tipos TypeScript derivados. Elimina la duplicación entre Pydantic (Python) e interfaces TypeScript actuales — completado 2026-03-24
+- [x] `packages/db`: schema Drizzle completo con las tablas users, areas, user_areas, sessions, messages, collections, ingestion_jobs, ingestion_queue, y events (black box). Migraciones generadas. Conexión singleton. Queries nombradas por dominio — completado 2026-03-24
+- [x] `packages/db`: tabla `ingestion_queue` reemplaza Redis. Locking por columna `locked_at` evita race conditions sin necesidad de Redis — completado 2026-03-24
+- [x] `packages/config`: config loader TypeScript que lee los YAMLs existentes en `config/`, valida con Zod, y exporta config tipada. Reemplaza `saldivia/config.py` — completado 2026-03-24
+- [x] `packages/logger`: estructura de archivos y contratos de la API del logger definidos con implementación base (backend, frontend, blackbox, suggestions) — completado 2026-03-24
 
 ---
 
