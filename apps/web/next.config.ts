@@ -1,6 +1,15 @@
 import type { NextConfig } from "next"
 
 const nextConfig: NextConfig = {
+  // No bundear los paquetes internos — Next.js los resuelve en runtime con Bun
+  // Necesario para que bun:sqlite funcione (módulo nativo de Bun, no de Node.js/webpack)
+  serverExternalPackages: [
+    "@rag-saldivia/db",
+    "@rag-saldivia/config",
+    "@rag-saldivia/logger",
+    "@rag-saldivia/shared",
+    "bun:sqlite",
+  ],
   // Forzar el root del proyecto para evitar que Next.js confunda el workspace root
   outputFileTracingRoot: __dirname,
   // Transpile workspace packages
