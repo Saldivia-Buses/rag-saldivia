@@ -7,6 +7,23 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- **Fase 8 — Settings Pro**
+- `src/lib/types/preferences.ts` — `UserPreferences` interface con 11 campos (colección, modo de búsqueda, VDB/reranker top-k, crossdoc, avatar, idioma, notificaciones) + `DEFAULT_PREFERENCES`
+- `src/lib/stores/preferences.svelte.ts` — `PreferencesStore` reactivo (Svelte 5 runes); `init()` hidrata desde el server; getters `avatarColor` y `language`
+- `gatewayGetPreferences()`, `gatewayUpdatePreferences()`, `gatewayUpdateProfile()`, `gatewayUpdatePassword()` en `src/lib/server/gateway.ts`
+- Settings page reescrita con 5 secciones: **Perfil** (nombre, color de avatar, idioma), **Contraseña** (verificación de actual + validación), **Preferencias RAG** (colección, modo, top-k, toggles CrossDoc), **Notificaciones** (ingesta y alertas), **Apariencia + API Key**
+- Form actions en `settings/+page.server.ts`: `update_profile` (paralelo via `Promise.all`), `update_password`, `update_preferences`, `update_notifications` — todas con manejo de error `fail(503)`
+- `+layout.server.ts` carga `preferences` + alertas de admin en cada navegación via `Promise.all`; genera `notifications[]` para toasts in-app
+- `+layout.svelte` hidrata `PreferencesStore` y `CrossdocStore` con prefs del usuario; toasts de alertas con guard de re-disparo (`Set` por sesión de componente)
+- Columna `preferences TEXT` en tabla `users` — migration idempotente `ALTER TABLE ... ADD COLUMN`
+- `AuthDB.get_user_preferences(user_id)` — merge `{**defaults, **stored}` garantiza compatibilidad con nuevos campos
+- `AuthDB.update_user_preferences(user_id, prefs)` — merge parcial (preserva campos no incluidos)
+- `AuthDB.update_user_password(user_id, current_pw, new_pw)` — verifica bcrypt en transacción única; retorna `False` si pw incorrecta o usuario sin password
+- Gateway: `GET /auth/me/preferences`, `PATCH /auth/me/preferences`, `PATCH /auth/me/profile`, `PATCH /auth/me/password` — auth self-service con guard owner-or-admin
+- `UpdatePreferencesRequest` Pydantic con validación de rangos (`vdb_top_k: ge=1, le=100`; `reranker_top_k: ge=1, le=50`; `max_sub_queries: ge=1, le=20`), `Literal` para enums de modo e idioma, `extra="ignore"`, `model_dump(exclude_none=True)` para merge parcial seguro
+- Test de cross-user authorization: verifica 403 en los 4 endpoints para token de otro usuario
+
+### Added
 - **Fase 7 — Chat Sesiones Pro**
 - `src/lib/chat/followups.ts` — función pura `generateFollowUps(content, originalQuery): string[]`; extrae topics de las primeras oraciones de la respuesta y genera hasta 3 preguntas sugeridas con plantillas en español
 - `src/lib/chat/export.ts` — `buildMarkdown`, `buildJSON`, `downloadFile`; exporta sesiones de chat a archivo `.md` o `.json` via Blob + anchor click

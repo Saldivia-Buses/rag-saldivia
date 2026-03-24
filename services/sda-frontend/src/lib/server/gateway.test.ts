@@ -748,3 +748,42 @@ describe('gatewayMessageFeedback', () => {
         vi.unstubAllGlobals();
     });
 });
+
+describe('gatewayGetPreferences', () => {
+    it('llama a GET /auth/me/preferences con user_id', async () => {
+        vi.resetModules();
+        vi.stubEnv('GATEWAY_URL', 'http://gateway:9000');
+        vi.stubEnv('SYSTEM_API_KEY', 'test-key');
+        vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+            ok: true,
+            json: async () => ({ vdb_top_k: 15, ui_language: 'en' }),
+        }));
+        const { gatewayGetPreferences } = await import('./gateway.js');
+        const prefs = await gatewayGetPreferences(7);
+        const call = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0];
+        expect(call[0]).toContain('/auth/me/preferences');
+        expect(call[0]).toContain('user_id=7');
+        expect(prefs.vdb_top_k).toBe(15);
+        vi.unstubAllEnvs();
+        vi.unstubAllGlobals();
+    });
+});
+
+describe('gatewayUpdatePreferences', () => {
+    it('llama a PATCH /auth/me/preferences con body parcial', async () => {
+        vi.resetModules();
+        vi.stubEnv('GATEWAY_URL', 'http://gateway:9000');
+        vi.stubEnv('SYSTEM_API_KEY', 'test-key');
+        vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+            ok: true,
+            json: async () => ({ ok: true }),
+        }));
+        const { gatewayUpdatePreferences } = await import('./gateway.js');
+        await gatewayUpdatePreferences(7, { vdb_top_k: 20 });
+        const call = (globalThis.fetch as ReturnType<typeof vi.fn>).mock.calls[0];
+        expect(call[1].method).toBe('PATCH');
+        expect(JSON.parse(call[1].body).vdb_top_k).toBe(20);
+        vi.unstubAllEnvs();
+        vi.unstubAllGlobals();
+    });
+});

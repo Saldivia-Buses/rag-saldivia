@@ -54,8 +54,8 @@ make cli ARGS="audit log"
 
 | Archivo | Responsabilidad |
 |---------|----------------|
-| `gateway.py` | FastAPI: auth, RBAC, proxy al RAG, SSE streaming |
-| `auth/database.py` | SQLite AuthDB: users, areas, api_keys, sessions, ingestion_jobs, ingestion_alerts |
+| `gateway.py` | FastAPI: auth, RBAC, proxy al RAG, SSE streaming, endpoints de preferences/profile/password |
+| `auth/database.py` | SQLite AuthDB: users, areas, api_keys, sessions, ingestion_jobs, ingestion_alerts, preferences |
 | `auth/models.py` | User, Area, Role dataclasses |
 | `config.py` | ConfigLoader: YAML profiles + env merge + `ingestion_config()` con deep-merge de defaults |
 | `providers.py` | Clientes HTTP para RAG Server, Milvus |
@@ -75,7 +75,7 @@ SvelteKit 5 BFF. Rutas principales:
 - `/(app)/collections` → gestión de colecciones
 - `/(app)/collections/[name]` → detalle de colección
 - `/(app)/upload` → upload de documentos
-- `/(app)/settings` → configuración del usuario
+- `/(app)/settings` → configuración del usuario (5 secciones: Perfil, Contraseña, Preferencias RAG, Notificaciones, Apariencia+APIKey; form actions: `update_profile`, `update_password`, `update_preferences`, `update_notifications`)
 - `/(app)/admin/users` → gestión de usuarios (solo admins)
 - `/(app)/admin/areas` → gestión de áreas (solo admins)
 - `/(app)/admin/permissions` → permisos (solo admins)
@@ -166,6 +166,8 @@ Tests activos: `test_gateway.py`, `test_auth.py`, `test_config.py`, `test_mode_m
 - `config/.env.saldivia` — variables de entorno del overlay
 - `config/profiles/workstation-1gpu.yaml` — perfil de producción (workstation física)
 - `services/sda-frontend/src/lib/server/gateway.ts` — BFF client al gateway
+- `services/sda-frontend/src/lib/types/preferences.ts` — `UserPreferences` interface + `DEFAULT_PREFERENCES`
+- `services/sda-frontend/src/lib/stores/preferences.svelte.ts` — `PreferencesStore` reactivo (Svelte 5 runes)
 
 ## Patrones importantes (aprendidos en producción)
 

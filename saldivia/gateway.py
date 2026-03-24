@@ -19,7 +19,7 @@ from fastapi import FastAPI, Request, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 from starlette.responses import StreamingResponse
 import httpx
 
@@ -661,6 +661,90 @@ def me(user_id: int, user: User = Depends(get_user_from_token)):
     return {"id": target.id, "email": target.email, "name": target.name,
             "role": target.role.value, "area_id": target.area_id,
             "last_login": _ts(target.last_login)}
+
+
+@app.get("/auth/me/preferences")
+def get_preferences(user_id: int, user: User = Depends(get_user_from_token)):
+    """Get user preferences."""
+    if user is None:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    if user.role != Role.ADMIN and user.id != user_id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    return db.get_user_preferences(user_id)
+
+
+class UpdatePreferencesRequest(BaseModel):
+    model_config = {"extra": "ignore"}
+    default_collection: Optional[str] = None
+    default_query_mode: Optional[Literal["standard", "crossdoc"]] = None
+    vdb_top_k: Optional[int] = Field(None, ge=1, le=100)
+    reranker_top_k: Optional[int] = Field(None, ge=1, le=50)
+    max_sub_queries: Optional[int] = Field(None, ge=1, le=20)
+    follow_up_retries: Optional[bool] = None
+    show_decomposition: Optional[bool] = None
+    avatar_color: Optional[str] = None
+    ui_language: Optional[Literal["es", "en"]] = None
+
+    @field_validator("avatar_color")
+    @classmethod
+    def validate_avatar_color(cls, v: Optional[str]) -> Optional[str]:
+        if v is not None and not re.match(r"^#[0-9a-fA-F]{6}$", v):
+            raise ValueError("avatar_color debe ser un color hex válido (#rrggbb)")
+        return v
+    notify_ingestion_done: Optional[bool] = None
+    notify_system_alerts: Optional[bool] = None
+
+
+class UpdateProfileRequest(BaseModel):
+    name: str
+
+
+class UpdatePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+
+
+@app.patch("/auth/me/preferences")
+def update_preferences(body: UpdatePreferencesRequest, user_id: int,
+                       user: User = Depends(get_user_from_token)):
+    """Update user preferences (partial merge)."""
+    if user is None:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    if user.role != Role.ADMIN and user.id != user_id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    db.update_user_preferences(user_id, body.model_dump(exclude_none=True))
+    return {"ok": True}
+
+
+@app.patch("/auth/me/profile")
+def update_profile(body: UpdateProfileRequest, user_id: int,
+                   user: User = Depends(get_user_from_token)):
+    """Update user display name."""
+    if user is None:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    if user.role != Role.ADMIN and user.id != user_id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    name = body.name.strip()
+    if not name:
+        raise HTTPException(status_code=400, detail="El nombre no puede estar vacío")
+    db.update_user(user_id, name=name)
+    return {"ok": True}
+
+
+@app.patch("/auth/me/password")
+def update_password(body: UpdatePasswordRequest, user_id: int,
+                    user: User = Depends(get_user_from_token)):
+    """Change user password. Returns 400 if current password is wrong."""
+    if user is None:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    if user.role != Role.ADMIN and user.id != user_id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    if len(body.new_password) < 8:
+        raise HTTPException(status_code=400, detail="La contraseña debe tener al menos 8 caracteres")
+    ok = db.update_user_password(user_id, body.current_password, body.new_password)
+    if not ok:
+        raise HTTPException(status_code=400, detail="Contraseña actual incorrecta")
+    return {"ok": True}
 
 
 @app.post("/auth/refresh-key")
