@@ -1,7 +1,9 @@
 # saldivia/auth/database.py
 """SQLite database for auth."""
+import json
 import sqlite3
 import uuid
+import bcrypt
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
@@ -158,6 +160,12 @@ def init_db_conn(conn: sqlite3.Connection):
         );
         CREATE INDEX IF NOT EXISTS idx_alerts_resolved ON ingestion_alerts(resolved_at);
     """)
+
+    # Migration: add preferences column to users (Fase 8)
+    try:
+        conn.execute("ALTER TABLE users ADD COLUMN preferences TEXT NOT NULL DEFAULT '{}'")
+    except Exception:
+        pass  # Column already exists
 
 
 def init_db(db_path: Path = DB_PATH):
@@ -319,6 +327,53 @@ class AuthDB:
     def update_api_key(self, user_id: int, api_key_hash: str):
         with self._conn() as conn:
             conn.execute("UPDATE users SET api_key_hash = ? WHERE id = ?", (api_key_hash, user_id))
+
+    # Valores por defecto para columna preferences (JSON). Espejado en frontend DEFAULT_PREFERENCES.
+    _DEFAULT_PREFERENCES = {
+        "default_collection": "",
+        "default_query_mode": "standard",
+        "vdb_top_k": 10,
+        "reranker_top_k": 5,
+        "max_sub_queries": 4,
+        "follow_up_retries": True,
+        "show_decomposition": False,
+        "avatar_color": "#6366f1",
+        "ui_language": "es",
+        "notify_ingestion_done": True,
+        "notify_system_alerts": True,
+    }
+
+    def get_user_preferences(self, user_id: int) -> dict:
+        with self._conn() as conn:
+            row = conn.execute(
+                "SELECT preferences FROM users WHERE id = ?", (user_id,)
+            ).fetchone()
+        if not row:
+            return dict(self._DEFAULT_PREFERENCES)
+        stored = json.loads(row[0] or "{}")
+        return {**self._DEFAULT_PREFERENCES, **stored}
+
+    def update_user_preferences(self, user_id: int, prefs: dict):
+        current = self.get_user_preferences(user_id)
+        merged = {**current, **prefs}
+        with self._conn() as conn:
+            conn.execute(
+                "UPDATE users SET preferences = ? WHERE id = ?",
+                (json.dumps(merged), user_id)
+            )
+
+    def update_user_password(self, user_id: int, current_pw: str, new_pw: str) -> bool:
+        with self._conn() as conn:
+            row = conn.execute(
+                "SELECT password_hash FROM users WHERE id = ?", (user_id,)
+            ).fetchone()
+            if not row or not row[0] or not bcrypt.checkpw(current_pw.encode(), row[0].encode()):
+                return False
+            new_hash = bcrypt.hashpw(new_pw.encode(), bcrypt.gensalt()).decode()
+            conn.execute(
+                "UPDATE users SET password_hash = ? WHERE id = ?", (new_hash, user_id)
+            )
+        return True
 
     def update_last_login(self, user_id: int):
         with self._conn() as conn:
