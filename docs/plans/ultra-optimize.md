@@ -131,10 +131,10 @@ Principios que aplican a toda la fase:
 
 ### Fase 3a — Auth core *(4-6 hs)*
 
-- [ ] Middleware Next.js: verifica JWT en cada request, aplica RBAC por ruta — *2 hs*
-- [ ] Endpoints de login, logout y refresh: login emite JWT en cookie HttpOnly, logout invalida sesión en DB — *1.5 hs*
-- [ ] Librería interna de auth: createJwt, verifyJwt, extractClaims, hasRole, canAccessCollection, getUserAreas — *1 hs*
-- [ ] Tests del flujo de auth completo — *30 min*
+- [x] Middleware Next.js: verifica JWT en cada request, aplica RBAC por ruta — completado 2026-03-24
+- [x] Endpoints de login, logout y refresh: login emite JWT en cookie HttpOnly, logout invalida sesión en DB — completado 2026-03-24
+- [x] Librería interna de auth: createJwt, verifyJwt, extractClaims, hasRole, canAccessRoute, getCurrentUser, requireUser, requireAdmin — completado 2026-03-24
+- [ ] Tests del flujo de auth completo — pendiente
 
 Criterio de done: login funciona, cookie se setea, middleware bloquea rutas protegidas.
 

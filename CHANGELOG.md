@@ -31,6 +31,14 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 - `packages/db`: tabla `ingestion_queue` reemplaza Redis — locking por columna `locked_at` — 2026-03-24
 - `packages/config`: config loader TypeScript con Zod, deep-merge de YAMLs, overrides de env vars, admin-overrides persistentes — reemplaza `saldivia/config.py` — 2026-03-24
 - `packages/logger`: logger estructurado (backend + frontend + blackbox + suggestions) con niveles TRACE/DEBUG/INFO/WARN/ERROR/FATAL — 2026-03-24
+- `apps/web`: app Next.js 15 iniciada (package.json, tsconfig, next.config.ts) — 2026-03-24
+- `apps/web/src/middleware.ts`: middleware de auth + RBAC en el edge — verifica JWT, redirecciona a login, bloquea por rol — 2026-03-24
+- `apps/web/src/lib/auth/jwt.ts`: createJwt, verifyJwt, extractClaims, makeAuthCookie (cookie HttpOnly) — 2026-03-24
+- `apps/web/src/lib/auth/rbac.ts`: hasRole, canAccessRoute, isAdmin, isAreaManager — 2026-03-24
+- `apps/web/src/lib/auth/current-user.ts`: getCurrentUser, requireUser, requireAdmin para Server Components — 2026-03-24
+- `apps/web`: endpoints auth (POST /api/auth/login, DELETE /api/auth/logout, POST /api/auth/refresh) — 2026-03-24
+- `apps/web`: endpoint POST /api/log para recibir eventos del browser — 2026-03-24
+- `apps/web`: página de login con form de email/password — 2026-03-24
 
 ---
 
