@@ -17,6 +17,7 @@ import {
   uniqueIndex,
   index,
 } from "drizzle-orm/sqlite-core"
+import { relations } from "drizzle-orm"
 
 // ── Areas ──────────────────────────────────────────────────────────────────
 
@@ -292,6 +293,42 @@ export const events = sqliteTable(
     sequenceIdx: index("idx_events_sequence").on(t.sequence),
   })
 )
+
+// ── Relations (necesarias para .query con `with`) ─────────────────────────
+
+export const usersRelations = relations(users, ({ many }) => ({
+  userAreas: many(userAreas),
+  chatSessions: many(chatSessions),
+}))
+
+export const areasRelations = relations(areas, ({ many }) => ({
+  userAreas: many(userAreas),
+  areaCollections: many(areaCollections),
+}))
+
+export const userAreasRelations = relations(userAreas, ({ one }) => ({
+  user: one(users, { fields: [userAreas.userId], references: [users.id] }),
+  area: one(areas, { fields: [userAreas.areaId], references: [areas.id] }),
+}))
+
+export const areaCollectionsRelations = relations(areaCollections, ({ one }) => ({
+  area: one(areas, { fields: [areaCollections.areaId], references: [areas.id] }),
+}))
+
+export const chatSessionsRelations = relations(chatSessions, ({ one, many }) => ({
+  user: one(users, { fields: [chatSessions.userId], references: [users.id] }),
+  messages: many(chatMessages),
+}))
+
+export const chatMessagesRelations = relations(chatMessages, ({ one, many }) => ({
+  session: one(chatSessions, { fields: [chatMessages.sessionId], references: [chatSessions.id] }),
+  feedback: many(messageFeedback),
+}))
+
+export const messageFeedbackRelations = relations(messageFeedback, ({ one }) => ({
+  message: one(chatMessages, { fields: [messageFeedback.messageId], references: [chatMessages.id] }),
+  user: one(users, { fields: [messageFeedback.userId], references: [users.id] }),
+}))
 
 // ── Type exports (Drizzle inferred) ───────────────────────────────────────
 
