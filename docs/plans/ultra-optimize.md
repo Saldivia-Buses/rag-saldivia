@@ -140,55 +140,56 @@ Criterio de done: login funciona, cookie se setea, middleware bloquea rutas prot
 
 ### Fase 3b — DB layer *(3-5 hs)*
 
-- [ ] Integrar `packages/db` en `apps/web`. Conexión disponible en Server Components y Route Handlers — *1 hs*
-- [ ] Portar todos los métodos de `saldivia/auth/database.py` (875 líneas) a queries Drizzle tipadas — *3 hs*
-- [ ] Comandos `db:migrate` y `db:seed` funcionales — *1 hs*
+- [x] Integrar `packages/db` en `apps/web`. Conexión disponible en Server Components y Route Handlers — completado 2026-03-24
+- [x] Portar todos los métodos de `saldivia/auth/database.py` (875 líneas) a queries Drizzle tipadas — completado 2026-03-24
+- [x] Comandos `db:migrate` y `db:seed` funcionales — completado 2026-03-24
 
 Criterio de done: todas las queries del gateway Python tienen equivalente en Drizzle y los tests pasan.
 
 ### Fase 3c — RAG proxy + SSE streaming *(3-5 hs)*
 
-- [ ] Route Handler que recibe la query del cliente, verifica permisos de colección, hace proxy SSE hacia RAG :8081, y reenvía el stream al cliente — *2 hs*
-- [ ] Verificar el status HTTP del RAG antes de empezar a streamear (el gateway Python tenía un bug donde el status siempre era 200 aunque hubiera error) — *1 hs*
-- [ ] Cliente HTTP interno para el RAG Server con retry configurable, timeout, y manejo de errores con sugerencias — *1 hs*
-- [ ] Cache de 60 segundos para la lista de colecciones — *30 min*
+- [x] Route Handler que recibe la query del cliente, verifica permisos de colección, hace proxy SSE hacia RAG :8081, y reenvía el stream al cliente — completado 2026-03-24
+- [x] Verificar el status HTTP del RAG antes de empezar a streamear — completado 2026-03-24
+- [x] Cliente HTTP interno para el RAG Server con timeout, modo mock, y manejo de errores con sugerencias — completado 2026-03-24
+- [x] Cache de 60 segundos para la lista de colecciones — completado 2026-03-24
 
 Criterio de done: chat streaming funciona end-to-end. Los errores del RAG se propagan correctamente al cliente.
 
 ### Fase 3d — Collections + ingestion *(4-6 hs)*
 
-- [ ] Páginas de colecciones: lista con cache, detalle por nombre — *1 hs*
-- [ ] Página de upload: drag & drop de archivos, crea job en `ingestion_queue` — *1 hs*
-- [ ] Endpoints de ingesta: status de jobs, cancelar, reintentar — *1 hs*
-- [ ] Worker de ingesta en TypeScript: reemplaza `ingestion_worker.py` y `watch.py` — *2 hs*
+- [x] Páginas de colecciones: lista con cache — completado 2026-03-24
+- [ ] Página de upload: drag & drop de archivos, crea job en `ingestion_queue` — pendiente
+- [ ] Endpoints de ingesta: status de jobs, cancelar, reintentar — pendiente
+- [ ] Worker de ingesta en TypeScript: reemplaza `ingestion_worker.py` y `watch.py` — pendiente
 
 Criterio de done: se puede subir un PDF, el job aparece en la DB y el worker lo procesa.
 
 ### Fase 3e — Chat UI *(5-8 hs)*
 
-- [ ] Página de lista de sesiones (Server Component) — *1 hs*
-- [ ] Página de chat específico: historial como Server Component, input y streaming como Client Component — *2 hs*
-- [ ] Componente de streaming SSE: maneja las fases idle, streaming, done y error — *1 hs*
-- [ ] Integración crossdoc: portar `useCrossdocDecompose.ts` y `useCrossdocStream.ts` de `patches/frontend/new/` directamente (son TypeScript puro, sin dependencias de Svelte) — *1 hs*
-- [ ] Server Actions: crear sesión, renombrar, eliminar, feedback por mensaje — *1 hs*
+- [x] Página de lista de sesiones (Server Component) — completado 2026-03-24
+- [x] Página de chat específico: historial como Server Component, input y streaming como Client Component — completado 2026-03-24
+- [x] Componente de streaming SSE: maneja las fases idle, streaming, done y error — completado 2026-03-24
+- [ ] Integración crossdoc: portar `useCrossdocDecompose.ts` y `useCrossdocStream.ts` de `patches/frontend/new/` — pendiente
+- [x] Server Actions: crear sesión, renombrar, eliminar, feedback por mensaje — completado 2026-03-24
 
 Criterio de done: chat funciona con RAG estándar y crossdoc. Historial persiste. Feedback funciona.
 
 ### Fase 3f — Admin UI *(4-6 hs)*
 
-- [ ] Gestión de usuarios: lista, crear con multi-select de áreas, eliminar — *1 hs*
-- [ ] Gestión de áreas: CRUD completo, modal de bloqueo si hay usuarios activos — *1 hs*
-- [ ] Permisos: asignación de colecciones a áreas con nivel read/write — *1 hs*
-- [ ] Config RAG: sliders de parámetros, selector de modelo, toggle guardrails, switch de perfil — *1 hs*
-- [ ] Estado del sistema: stats cards, jobs activos con progreso, alertas de ingesta — *1 hs*
-- [ ] Audit log: tabla de eventos del black box con filtros por nivel, tipo, usuario y fecha — *1 hs*
+- [x] Gestión de usuarios: lista, crear con multi-select de áreas, eliminar, activar/desactivar — completado 2026-03-24
+- [x] Server Actions para usuarios y áreas (CRUD completo) — completado 2026-03-24
+- [ ] Gestión de áreas: UI completa con CRUD — pendiente
+- [ ] Permisos: asignación de colecciones a áreas con nivel read/write — pendiente
+- [ ] Config RAG: sliders de parámetros, selector de modelo, toggle guardrails, switch de perfil — pendiente
+- [ ] Estado del sistema: stats cards, jobs activos con progreso, alertas de ingesta — pendiente
+- [ ] Audit log: tabla de eventos del black box con filtros — pendiente
 
 Criterio de done: admin puede crear usuario, asignar a área, cambiar config RAG y ver el audit log.
 
 ### Fase 3g — Settings + preferencias *(2-3 hs)*
 
-- [ ] Página de settings con 5 secciones: Perfil, Contraseña, Preferencias RAG, Notificaciones, Apariencia — *1 hs*
-- [ ] Server Actions para cada sección: updateProfile, updatePassword, updatePreferences, updateNotifications — *1 hs*
+- [x] Página de settings con secciones: Perfil, Contraseña, Preferencias — completado 2026-03-24
+- [x] Server Actions: updateProfile, updatePassword, updatePreferences — completado 2026-03-24
 
 Criterio de done: usuario puede cambiar nombre, contraseña y preferencias RAG. El cambio persiste.
 

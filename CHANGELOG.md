@@ -39,6 +39,17 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 - `apps/web`: endpoints auth (POST /api/auth/login, DELETE /api/auth/logout, POST /api/auth/refresh) — 2026-03-24
 - `apps/web`: endpoint POST /api/log para recibir eventos del browser — 2026-03-24
 - `apps/web`: página de login con form de email/password — 2026-03-24
+- `apps/web`: Server Actions para usuarios (crear, eliminar, activar, asignar área) — 2026-03-24
+- `apps/web`: Server Actions para áreas (crear, editar, eliminar con protección si hay usuarios) — 2026-03-24
+- `apps/web`: Server Actions para chat (sesiones y mensajes) — 2026-03-24
+- `apps/web`: Server Actions para settings (perfil, contraseña, preferencias) — 2026-03-24
+- `apps/web/src/lib/rag/client.ts`: cliente RAG con modo mock, timeout, manejo de errores accionables — 2026-03-24
+- `apps/web`: POST /api/rag/generate — proxy SSE al RAG Server con verificación de permisos — 2026-03-24
+- `apps/web`: GET /api/rag/collections — lista colecciones con cache 60s filtrada por permisos — 2026-03-24
+- `apps/web`: AppShell (layout con sidebar de navegación) — 2026-03-24
+- `apps/web`: páginas de chat (lista de sesiones + interfaz de chat con streaming SSE + feedback) — 2026-03-24
+- `apps/web`: página de admin/users con tabla y formulario de creación — 2026-03-24
+- `apps/web`: página de settings con Perfil, Contraseña y Preferencias — 2026-03-24
 
 ---
 
