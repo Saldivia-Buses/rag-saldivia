@@ -80,7 +80,8 @@ export type UserPublic = z.infer<typeof UserPublicSchema>
 // ── Auth ───────────────────────────────────────────────────────────────────
 
 export const LoginRequestSchema = z.object({
-  email: z.string().email(),
+  // Acepta emails con y sin TLD (admin@localhost es válido en desarrollo)
+  email: z.string().min(1).toLowerCase(),
   password: z.string().min(1),
 })
 export type LoginRequest = z.infer<typeof LoginRequestSchema>
