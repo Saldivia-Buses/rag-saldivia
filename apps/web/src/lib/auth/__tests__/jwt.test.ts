@@ -13,6 +13,7 @@ process.env["NODE_ENV"] = "test"
 // Import after env setup
 const { createJwt, verifyJwt, extractClaims, makeAuthCookie, makeClearAuthCookie } =
   await import("../jwt.js")
+const { hasRole, canAccessRoute, getRequiredRole } = await import("../rbac.js")
 
 describe("JWT utilities", () => {
   const validClaims = {
@@ -92,8 +93,6 @@ describe("JWT utilities", () => {
 })
 
 describe("RBAC utilities", () => {
-  const { hasRole, canAccessRoute } = await import("../rbac.js")
-
   test("admin tiene acceso a todo", () => {
     const adminClaims = { sub: "1", email: "a@b.com", name: "Admin", role: "admin" as const, iat: 0, exp: 9999999999 }
     expect(hasRole(adminClaims, "admin")).toBe(true)
@@ -116,5 +115,42 @@ describe("RBAC utilities", () => {
     expect(canAccessRoute(userClaims, "/admin/users")).toBe(false)
     expect(canAccessRoute(userClaims, "/audit")).toBe(false)
     expect(canAccessRoute(userClaims, "/chat")).toBe(true)
+  })
+
+  test("getRequiredRole retorna 'admin' para /api/admin/users", () => {
+    expect(getRequiredRole("/api/admin/users")).toBe("admin")
+  })
+
+  test("getRequiredRole retorna null para /chat", () => {
+    expect(getRequiredRole("/chat")).toBeNull()
+  })
+
+  test("canAccessRoute con area_manager en /audit retorna true", () => {
+    const managerClaims = { sub: "2", email: "m@b.com", name: "Manager", role: "area_manager" as const, iat: 0, exp: 9999999999 }
+    expect(canAccessRoute(managerClaims, "/audit")).toBe(true)
+  })
+
+  test("verifyJwt retorna null para token expirado", async () => {
+    // Crear un token que ya expiró usando exp en el pasado
+    const { SignJWT } = await import("jose")
+    const secret = new TextEncoder().encode(process.env["JWT_SECRET"]!)
+    const expiredToken = await new SignJWT({ sub: "1", email: "x@x.com", name: "X", role: "user" })
+      .setProtectedHeader({ alg: "HS256" })
+      .setIssuedAt()
+      .setExpirationTime("1s")
+      .sign(secret)
+    // Esperar a que expire
+    await new Promise((r) => setTimeout(r, 1500))
+    const result = await verifyJwt(expiredToken)
+    expect(result).toBeNull()
+  })
+
+  test("makeAuthCookie incluye Secure en NODE_ENV=production", async () => {
+    const originalEnv = process.env["NODE_ENV"]
+    process.env["NODE_ENV"] = "production"
+    const token = await createJwt({ sub: "1", email: "t@t.com", name: "T", role: "user" })
+    const cookie = makeAuthCookie(token)
+    expect(cookie).toContain("Secure")
+    process.env["NODE_ENV"] = originalEnv
   })
 })

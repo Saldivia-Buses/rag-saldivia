@@ -91,6 +91,9 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 - `bun.lock`: lockfile de Bun commiteado para reproducibilidad de dependencias — 2026-03-24
 - `scripts/link-libsql.sh`: script que crea symlinks de @libsql en apps/web/node_modules para WSL2 — 2026-03-24
 - `scripts/test-login-final.sh`: script de test de los endpoints de auth — 2026-03-24
+- `apps/web/src/lib/auth/__tests__/jwt.test.ts`: Fase 1a/1b completadas — 17 tests: JWT (createJwt, verifyJwt, extractClaims, makeAuthCookie, token expirado, Secure en producción) + RBAC (getRequiredRole, canAccessRoute con area_manager) — 2026-03-24
+- `packages/db/src/__tests__/users.test.ts`: Fase 1c completada — 16 tests contra SQLite en memoria: createUser (email dup lanza error), verifyPassword (password incorrecta/usuario inactivo retorna null), listUsers, updateUser, deleteUser + CASCADE en user_areas — 2026-03-24
+- `packages/logger/src/__tests__/logger.test.ts`: Fase 1e completada — 24 tests: shouldLog por nivel, log.info/warn/error/debug/fatal/request no lanzan, output contiene tipo de evento, reconstructFromEvents (vacío/orden/stats/usuarios/queries/errores), formatTimeline — 2026-03-24
 
 ### Changed
 

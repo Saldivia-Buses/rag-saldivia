@@ -44,10 +44,10 @@ Cada fase completada genera una entrada en `CHANGELOG.md` antes de hacer commit.
 
 Objetivo: confirmar que el entorno está en el estado correcto antes de ejecutar cualquier test. Si algo falla aquí, no tiene sentido avanzar.
 
-- [ ] Servidor arranca sin errores en puerto 3000 y `GET http://localhost:3000/api/health` retorna 200
-- [ ] DB tiene seed aplicado: `admin@localhost` existe en la tabla `users` con `role = admin`
-- [ ] `rag --version` responde desde cualquier directorio (bun link aplicado en `apps/cli`)
-- [ ] `.env.local` tiene `MOCK_RAG=true` y `JWT_SECRET` definido
+- [x] Servidor arranca sin errores en puerto 3000 y `GET http://localhost:3000/api/health` retorna 200 — completado 2026-03-24
+- [x] DB tiene seed aplicado: `admin@localhost` existe en la tabla `users` con `role = admin` — completado 2026-03-24
+- [x] `rag --version` responde desde cualquier directorio (bun link aplicado en `apps/cli`) — completado 2026-03-24
+- [x] `.env.local` tiene `MOCK_RAG=true` y `JWT_SECRET` definido — completado 2026-03-24
 
 Criterio de done: los 4 checks pasan. El servidor está corriendo y la CLI responde.
 
@@ -59,23 +59,23 @@ Objetivo: verificar la lógica pura del sistema sin depender del servidor ni del
 
 ### Fase 1a — Auth *(10 min)*
 
-- [ ] `bun test apps/web/src/lib/auth/__tests__/jwt.test.ts` pasa sin errores (8 tests existentes)
-- [ ] Verificar que el test de `makeAuthCookie` incluye `Secure` cuando `NODE_ENV=production`
-- [ ] Verificar que `verifyJwt` retorna null para token con `exp` en el pasado
+- [x] `bun test apps/web/src/lib/auth/__tests__/jwt.test.ts` pasa sin errores — completado 2026-03-24 (fix: await import movido al nivel del módulo)
+- [x] Verificar que el test de `makeAuthCookie` incluye `Secure` cuando `NODE_ENV=production` — completado 2026-03-24
+- [x] Verificar que `verifyJwt` retorna null para token con `exp` en el pasado — completado 2026-03-24
 
 ### Fase 1b — RBAC *(10 min)*
 
-- [ ] Tests de RBAC en el mismo archivo: admin, area_manager y user — los 3 pasan
-- [ ] Agregar test: `getRequiredRole("/api/admin/users")` retorna `"admin"`
-- [ ] Agregar test: `getRequiredRole("/chat")` retorna `null`
-- [ ] Agregar test: `canAccessRoute` con `area_manager` en ruta `/audit` retorna `true`
+- [x] Tests de RBAC en el mismo archivo: admin, area_manager y user — los 3 pasan — completado 2026-03-24
+- [x] Agregar test: `getRequiredRole("/api/admin/users")` retorna `"admin"` — completado 2026-03-24
+- [x] Agregar test: `getRequiredRole("/chat")` retorna `null` — completado 2026-03-24
+- [x] Agregar test: `canAccessRoute` con `area_manager` en ruta `/audit` retorna `true` — completado 2026-03-24
 
 ### Fase 1c — DB queries *(15 min)*
 
-- [ ] Crear `packages/db/src/__tests__/users.test.ts`: `createUser`, `verifyPassword`, `listUsers`, `updateUser`, `deleteUser`
-- [ ] Verificar que `verifyPassword` retorna `null` para password incorrecta
-- [ ] Verificar que `createUser` con email duplicado lanza error con mensaje descriptivo
-- [ ] Verificar que `deleteUser` elimina también las filas en `user_areas`
+- [x] Crear `packages/db/src/__tests__/users.test.ts`: `createUser`, `verifyPassword`, `listUsers`, `updateUser`, `deleteUser` — completado 2026-03-24
+- [x] Verificar que `verifyPassword` retorna `null` para password incorrecta — completado 2026-03-24
+- [x] Verificar que `createUser` con email duplicado lanza error con mensaje descriptivo — completado 2026-03-24
+- [x] Verificar que `deleteUser` elimina también las filas en `user_areas` — completado 2026-03-24
 
 ### Fase 1d — Config loader *(5 min)*
 
@@ -84,13 +84,14 @@ Objetivo: verificar la lógica pura del sistema sin depender del servidor ni del
 
 ### Fase 1e — Logger + Black box *(15 min)*
 
-- [ ] `packages/logger/backend.ts`: `log.info`, `log.warn`, `log.error` no lanzan excepciones
-- [ ] En `NODE_ENV=production` el output es JSON válido con campos `level`, `event`, `ts`
-- [ ] `packages/logger/blackbox.ts`: `reconstructFromEvents([])` retorna array vacío sin error
-- [ ] `reconstructFromEvents` con 5 eventos los ordena por timestamp correctamente
-- [ ] `formatTimeline` produce un string no vacío con los eventos
+- [x] `packages/logger/backend.ts`: `log.info`, `log.warn`, `log.error` no lanzan excepciones — completado 2026-03-24
+- [x] En `NODE_ENV=production` el output es JSON válido con campos `level`, `event`, `ts` — completado 2026-03-24 (testeado via formatJson directo; logger captura isDev al import)
+- [x] `packages/logger/blackbox.ts`: `reconstructFromEvents([])` retorna array vacío sin error — completado 2026-03-24
+- [x] `reconstructFromEvents` con 5 eventos los ordena por timestamp correctamente — completado 2026-03-24
+- [x] `formatTimeline` produce un string no vacío con los eventos — completado 2026-03-24
 
 Criterio de done: `bun test` corre todas las suites sin fallos. 0 errores, 0 tests skipped no intencionalmente.
+**Estado: 57/57 tests pasan — Fase 1 completada 2026-03-24 (salvo Fase 1d pendiente)**
 
 ---
 
