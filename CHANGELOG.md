@@ -110,6 +110,11 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Fixed
 
+- `apps/cli/package.json`: agregadas dependencias workspace faltantes `@rag-saldivia/logger` y `@rag-saldivia/db` — `audit.ts` importaba `formatTimeline`/`reconstructFromEvents` y `DbEvent` de esos paquetes pero Bun no los encontraba — 2026-03-24
+- `packages/logger/package.json`: agregado export `./suggestions` faltante — `apps/cli/src/output.ts` importaba `getSuggestion` de `@rag-saldivia/logger/suggestions` sin que estuviera declarado en `exports` — 2026-03-24
+- `apps/web/src/middleware.ts`: agregado `/api/health` a `PUBLIC_ROUTES` — el endpoint retornaba 401 al CLI y a cualquier sistema de monitoreo externo — 2026-03-24
+- `docs/plans/ultra-optimize-plan2-testing.md`: plan de testing granular fase a fase creado — 2026-03-24
+
 - DB: migrado de `better-sqlite3` (requería compilación nativa con node-gyp, falla en Bun) a `@libsql/client` (JS puro, sin compilación, compatible con Bun y Node.js) — 2026-03-24
 - DB: creado `packages/db/src/init.ts` con SQL directo (sin drizzle-kit) para inicialización en entornos sin build tools — 2026-03-24
 - DB: `packages/db/src/migrate.ts` actualizado para usar `init.ts` en lugar del migrador de drizzle-kit — 2026-03-24

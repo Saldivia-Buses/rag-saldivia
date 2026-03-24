@@ -13,6 +13,7 @@ const PUBLIC_ROUTES = [
   "/login",
   "/api/auth/login",
   "/api/auth/refresh",
+  "/api/health",        // Health check público para CLI y monitoreo
   "/api/log",           // Frontend puede logear sin auth
   "/_next",
   "/favicon.ico",

@@ -6,7 +6,8 @@
     ".": "./src/index.ts",
     "./backend": "./src/backend.ts",
     "./frontend": "./src/frontend.ts",
-    "./blackbox": "./src/blackbox.ts"
+    "./blackbox": "./src/blackbox.ts",
+    "./suggestions": "./src/suggestions.ts"
   },
   "scripts": {
     "type-check": "tsc --noEmit"
