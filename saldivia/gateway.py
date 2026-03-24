@@ -770,7 +770,7 @@ def refresh_my_key(user: User = Depends(get_user_from_token), user_id: Optional[
 class CreateUserRequest(BaseModel):
     email: str
     name: str
-    area_id: int
+    area_ids: list[int] = []
     role: str = "user"
     password: Optional[str] = None
 
@@ -806,11 +806,16 @@ class CreateSessionRequest(BaseModel):
 @app.get("/admin/users")
 def list_users_endpoint(include_inactive: bool = False, user: User = Depends(admin_required)):
     users = db.list_users(active_only=not include_inactive)
-    return {"users": [{"id": u.id, "email": u.email, "name": u.name,
-                        "area_id": u.area_id, "role": u.role.value,
-                        "active": u.active,
-                        "last_login": _ts(u.last_login)}
-                       for u in users]}
+    result = []
+    for u in users:
+        areas = db.get_user_areas(u.id)
+        result.append({
+            "id": u.id, "email": u.email, "name": u.name,
+            "areas": [{"id": a.id, "name": a.name} for a in areas],
+            "role": u.role.value, "active": u.active,
+            "last_login": _ts(u.last_login)
+        })
+    return {"users": result}
 
 
 @app.post("/admin/users", status_code=201)
@@ -819,9 +824,11 @@ def create_user_endpoint(body: CreateUserRequest, user: User = Depends(admin_req
     pw_hash = hash_password(body.password) if body.password else None
     try:
         new_user = db.create_user(
-            email=body.email, name=body.name, area_id=body.area_id,
+            email=body.email, name=body.name, area_id=None,
             role=Role(body.role), api_key_hash=new_hash, password_hash=pw_hash
         )
+        for area_id in body.area_ids:
+            db.add_user_area(new_user.id, area_id)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
     return {"id": new_user.id, "email": new_user.email, "api_key": new_key}
@@ -846,6 +853,30 @@ def delete_user_endpoint(user_id: int, user: User = Depends(admin_required)):
     if not target:
         raise HTTPException(status_code=404, detail="User not found")
     db.update_user(user_id, active=False)
+    return {"ok": True}
+
+
+@app.post("/admin/users/{user_id}/areas")
+def add_user_area_endpoint(user_id: int, body: dict, user: User = Depends(admin_required)):
+    area_id = body.get("area_id")
+    if not area_id:
+        raise HTTPException(status_code=400, detail="area_id required")
+    target = db.get_user_by_id(user_id)
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found")
+    area = db.get_area(area_id)
+    if not area:
+        raise HTTPException(status_code=404, detail="Area not found")
+    db.add_user_area(user_id, area_id)
+    return {"ok": True}
+
+
+@app.delete("/admin/users/{user_id}/areas/{area_id}")
+def remove_user_area_endpoint(user_id: int, area_id: int, user: User = Depends(admin_required)):
+    target = db.get_user_by_id(user_id)
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found")
+    db.remove_user_area(user_id, area_id)
     return {"ok": True}
 
 

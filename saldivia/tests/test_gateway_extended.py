@@ -56,10 +56,12 @@ def test_list_users_as_admin(client, admin_user):
     with patch("saldivia.gateway.db") as mock_db:
         mock_db.get_user_by_api_key_hash.return_value = admin_user
         mock_db.list_users.return_value = [admin_user]
+        mock_db.get_user_areas.return_value = []
         resp = client.get("/admin/users",
                           headers={"Authorization": "Bearer rsk_dummy"})
     assert resp.status_code == 200
     assert len(resp.json()["users"]) == 1
+    assert "areas" in resp.json()["users"][0]
 
 
 def test_create_user(client, admin_user):
@@ -71,9 +73,10 @@ def test_create_user(client, admin_user):
         new_u = UserModel(id=99, email="new@test.com", name="New", area_id=1,
                           role=RoleEnum.USER, api_key_hash=h)
         mock_db.create_user.return_value = new_u
+        mock_db.add_user_area.return_value = None
         resp = client.post("/admin/users",
                            json={"email": "new@test.com", "name": "New",
-                                 "area_id": 1, "role": "user", "password": "pass123"},
+                                 "area_ids": [1], "role": "user", "password": "pass123"},
                            headers={"Authorization": "Bearer rsk_dummy"})
     assert resp.status_code == 201
     assert "api_key" in resp.json()
