@@ -9,14 +9,14 @@ const nextConfig: NextConfig = {
     "@rag-saldivia/logger",
   ],
 
-  // Excluir del bundling todos los paquetes de la cadena SQLite
+  // Excluir del bundling todos los paquetes de la cadena SQLite nativa
+  // drizzle-orm NO va acá — debe bundlearse con el schema para evitar conflictos de instancias
   serverExternalPackages: [
     "@libsql/client",
     "@libsql/isomorphic-fetch",
     "@libsql/isomorphic-ws",
     "@libsql/hrana-client",
     "libsql",
-    "drizzle-orm",
   ],
 
   webpack: (config, { isServer }) => {
@@ -35,7 +35,6 @@ const nextConfig: NextConfig = {
             request &&
             (request.startsWith("libsql") ||
               request.startsWith("@libsql/") ||
-              request.startsWith("drizzle-orm") ||
               request.endsWith(".node"))
           ) {
             callback(undefined, `commonjs ${request}`)
