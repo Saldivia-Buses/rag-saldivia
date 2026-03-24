@@ -12,13 +12,6 @@ const nextConfig: NextConfig = {
   ],
   // Forzar el root del proyecto para evitar que Next.js confunda el workspace root
   outputFileTracingRoot: __dirname,
-  // Transpile workspace packages
-  transpilePackages: [
-    "@rag-saldivia/shared",
-    "@rag-saldivia/db",
-    "@rag-saldivia/config",
-    "@rag-saldivia/logger",
-  ],
 
   // Logging detallado en dev
   logging: {
