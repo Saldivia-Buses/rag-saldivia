@@ -23,15 +23,22 @@ export const actions: Actions = {
     create: async ({ request, locals }) => {
         if (locals.user?.role !== 'admin') return fail(403, { error: 'Admin only' });
         const data = await request.formData();
+        const email = data.get('email') as string;
+        const name = data.get('name') as string;
+        const password = data.get('password') as string;
+        const role = data.get('role') as string;
+        if (!email || !name || !password || !role) {
+            return fail(400, { error: 'Todos los campos requeridos deben completarse' });
+        }
         const areaIdsRaw = data.getAll('area_ids') as string[];
         const area_ids = areaIdsRaw.map(Number).filter(n => !isNaN(n) && n > 0);
         try {
             const result = await gatewayCreateUser({
-                email: data.get('email') as string,
-                name: data.get('name') as string,
+                email,
+                name,
                 area_ids,
-                role: data.get('role') as string,
-                password: data.get('password') as string,
+                role,
+                password,
             });
             return { success: true, api_key: result.api_key };
         } catch (e: any) {

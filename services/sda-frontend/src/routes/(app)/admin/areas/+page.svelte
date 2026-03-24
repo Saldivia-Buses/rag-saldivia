@@ -102,15 +102,15 @@
                 };
             }} class="flex flex-col gap-3">
                 <div>
-                    <label class="text-xs text-[var(--text-faint)]">Nombre *</label>
-                    <input name="name" type="text" required disabled={saving}
+                    <label for="create-name" class="text-xs text-[var(--text-faint)]">Nombre *</label>
+                    <input id="create-name" name="name" type="text" required disabled={saving}
                            class="w-full mt-0.5 bg-[var(--bg-surface)] border border-[var(--border)]
                                   rounded px-2 py-1 text-sm text-[var(--text)]
                                   focus:outline-none focus:border-[var(--accent)] disabled:opacity-50" />
                 </div>
                 <div>
-                    <label class="text-xs text-[var(--text-faint)]">Descripción</label>
-                    <input name="description" type="text" disabled={saving}
+                    <label for="create-description" class="text-xs text-[var(--text-faint)]">Descripción</label>
+                    <input id="create-description" name="description" type="text" disabled={saving}
                            class="w-full mt-0.5 bg-[var(--bg-surface)] border border-[var(--border)]
                                   rounded px-2 py-1 text-sm text-[var(--text)]
                                   focus:outline-none focus:border-[var(--accent)] disabled:opacity-50" />
@@ -145,15 +145,15 @@
             }} class="flex flex-col gap-3">
                 <input type="hidden" name="id" value={editingArea.id} />
                 <div>
-                    <label class="text-xs text-[var(--text-faint)]">Nombre *</label>
-                    <input name="name" type="text" required value={editingArea.name} disabled={saving}
+                    <label for="edit-name" class="text-xs text-[var(--text-faint)]">Nombre *</label>
+                    <input id="edit-name" name="name" type="text" required value={editingArea.name} disabled={saving}
                            class="w-full mt-0.5 bg-[var(--bg-surface)] border border-[var(--border)]
                                   rounded px-2 py-1 text-sm text-[var(--text)]
                                   focus:outline-none focus:border-[var(--accent)] disabled:opacity-50" />
                 </div>
                 <div>
-                    <label class="text-xs text-[var(--text-faint)]">Descripción</label>
-                    <input name="description" type="text" value={editingArea.description} disabled={saving}
+                    <label for="edit-description" class="text-xs text-[var(--text-faint)]">Descripción</label>
+                    <input id="edit-description" name="description" type="text" value={editingArea.description} disabled={saving}
                            class="w-full mt-0.5 bg-[var(--bg-surface)] border border-[var(--border)]
                                   rounded px-2 py-1 text-sm text-[var(--text)]
                                   focus:outline-none focus:border-[var(--accent)] disabled:opacity-50" />

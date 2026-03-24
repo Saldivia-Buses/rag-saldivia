@@ -102,16 +102,16 @@
                 }} class="flex flex-col gap-3">
                     {#each [['email','Email','email'],['name','Nombre','text'],['password','Contraseña','password']] as [fname, label, ftype]}
                         <div>
-                            <label class="text-xs text-[var(--text-faint)]">{label}</label>
-                            <input name={fname} type={ftype} required disabled={creating}
+                            <label for="new-{fname}" class="text-xs text-[var(--text-faint)]">{label}</label>
+                            <input id="new-{fname}" name={fname} type={ftype} required disabled={creating}
                                    class="w-full mt-0.5 bg-[var(--bg-surface)] border border-[var(--border)]
                                           rounded px-2 py-1 text-sm text-[var(--text)]
                                           focus:outline-none focus:border-[var(--accent)] disabled:opacity-50" />
                         </div>
                     {/each}
                     <div>
-                        <label class="text-xs text-[var(--text-faint)]">Áreas (opcional, multi-select)</label>
-                        <select name="area_ids" multiple disabled={creating}
+                        <label for="new-area_ids" class="text-xs text-[var(--text-faint)]">Áreas (opcional, multi-select)</label>
+                        <select id="new-area_ids" name="area_ids" multiple disabled={creating}
                                 class="w-full mt-0.5 bg-[var(--bg-surface)] border border-[var(--border)]
                                        rounded px-2 py-1 text-sm text-[var(--text)] h-24 disabled:opacity-50">
                             {#each data.areas as area}
@@ -121,8 +121,8 @@
                         <p class="text-xs text-[var(--text-faint)] mt-0.5">Ctrl+click para seleccionar múltiples</p>
                     </div>
                     <div>
-                        <label class="text-xs text-[var(--text-faint)]">Rol</label>
-                        <select name="role" disabled={creating}
+                        <label for="new-role" class="text-xs text-[var(--text-faint)]">Rol</label>
+                        <select id="new-role" name="role" disabled={creating}
                                 class="w-full mt-0.5 bg-[var(--bg-surface)] border border-[var(--border)]
                                        rounded px-2 py-1 text-sm text-[var(--text)] disabled:opacity-50">
                             <option value="user">Usuario</option>

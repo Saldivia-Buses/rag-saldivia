@@ -75,9 +75,10 @@ export const actions: Actions = {
             return { success: true };
         } catch (e: any) {
             const status = e?.status === 409 ? 409 : 503;
-            return fail(status, {
-                error: e?.detail ?? 'No se puede eliminar el área. Tiene usuarios asignados.'
-            });
+            const error = e?.status === 409
+                ? (e?.detail ?? 'No se puede eliminar el área. Tiene usuarios asignados.')
+                : 'Error al eliminar el área. Intentá de nuevo.';
+            return fail(status, { error });
         }
     }
 };
