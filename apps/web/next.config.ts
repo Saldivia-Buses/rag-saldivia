@@ -9,6 +9,14 @@ const nextConfig: NextConfig = {
     "@rag-saldivia/logger",
   ],
 
+  // Excluir del bundling: dejar que Node.js los resuelva en runtime
+  serverExternalPackages: [
+    "@libsql/client",
+    "@libsql/isomorphic-fetch",
+    "@libsql/isomorphic-ws",
+    "drizzle-orm",
+  ],
+
   // Resolver .js imports → .ts para paquetes workspace transpilados
   webpack: (config) => {
     config.resolve.extensionAlias = {
