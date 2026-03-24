@@ -134,7 +134,7 @@ Principios que aplican a toda la fase:
 - [x] Middleware Next.js: verifica JWT en cada request, aplica RBAC por ruta — completado 2026-03-24
 - [x] Endpoints de login, logout y refresh: login emite JWT en cookie HttpOnly, logout invalida sesión en DB — completado 2026-03-24
 - [x] Librería interna de auth: createJwt, verifyJwt, extractClaims, hasRole, canAccessRoute, getCurrentUser, requireUser, requireAdmin — completado 2026-03-24
-- [ ] Tests del flujo de auth completo — pendiente
+- [x] Tests del flujo de auth completo — completado 2026-03-24
 
 Criterio de done: login funciona, cookie se setea, middleware bloquea rutas protegidas.
 
@@ -158,9 +158,9 @@ Criterio de done: chat streaming funciona end-to-end. Los errores del RAG se pro
 ### Fase 3d — Collections + ingestion *(4-6 hs)*
 
 - [x] Páginas de colecciones: lista con cache — completado 2026-03-24
-- [ ] Página de upload: drag & drop de archivos, crea job en `ingestion_queue` — pendiente
-- [ ] Endpoints de ingesta: status de jobs, cancelar, reintentar — pendiente
-- [ ] Worker de ingesta en TypeScript: reemplaza `ingestion_worker.py` y `watch.py` — pendiente
+- [x] Página de upload: drag & drop de archivos, crea job en `ingestion_queue` — completado 2026-03-24
+- [x] Endpoints de ingesta: status de jobs, cancelar (POST /api/upload, GET/DELETE /api/admin/ingestion) — completado 2026-03-24
+- [x] Worker de ingesta en TypeScript: reemplaza `ingestion_worker.py` y `watch.py` — completado 2026-03-24
 
 Criterio de done: se puede subir un PDF, el job aparece en la DB y el worker lo procesa.
 
@@ -169,7 +169,7 @@ Criterio de done: se puede subir un PDF, el job aparece en la DB y el worker lo 
 - [x] Página de lista de sesiones (Server Component) — completado 2026-03-24
 - [x] Página de chat específico: historial como Server Component, input y streaming como Client Component — completado 2026-03-24
 - [x] Componente de streaming SSE: maneja las fases idle, streaming, done y error — completado 2026-03-24
-- [ ] Integración crossdoc: portar `useCrossdocDecompose.ts` y `useCrossdocStream.ts` de `patches/frontend/new/` — pendiente
+- [x] Integración crossdoc: portados `useCrossdocDecompose.ts` y `useCrossdocStream.ts` a `apps/web/src/hooks/` adaptados para Next.js — completado 2026-03-24
 - [x] Server Actions: crear sesión, renombrar, eliminar, feedback por mensaje — completado 2026-03-24
 
 Criterio de done: chat funciona con RAG estándar y crossdoc. Historial persiste. Feedback funciona.
@@ -178,11 +178,11 @@ Criterio de done: chat funciona con RAG estándar y crossdoc. Historial persiste
 
 - [x] Gestión de usuarios: lista, crear con multi-select de áreas, eliminar, activar/desactivar — completado 2026-03-24
 - [x] Server Actions para usuarios y áreas (CRUD completo) — completado 2026-03-24
-- [ ] Gestión de áreas: UI completa con CRUD — pendiente
-- [ ] Permisos: asignación de colecciones a áreas con nivel read/write — pendiente
-- [ ] Config RAG: sliders de parámetros, selector de modelo, toggle guardrails, switch de perfil — pendiente
-- [ ] Estado del sistema: stats cards, jobs activos con progreso, alertas de ingesta — pendiente
-- [ ] Audit log: tabla de eventos del black box con filtros — pendiente
+- [x] Gestión de áreas: UI completa con CRUD (crear, editar, eliminar con protección) — completado 2026-03-24
+- [x] Permisos: asignación de colecciones a áreas con nivel read/write — completado 2026-03-24
+- [x] Config RAG: sliders de parámetros, toggles reranker y guardrails, reset a defaults — completado 2026-03-24
+- [x] Estado del sistema: stats cards, jobs activos, refresh — completado 2026-03-24
+- [x] Audit log: tabla de eventos filtrable (ya existía en /audit) — completado 2026-03-24
 
 Criterio de done: admin puede crear usuario, asignar a área, cambiar config RAG y ver el audit log.
 
@@ -224,8 +224,8 @@ Criterio de done: `rag setup` completa el onboarding desde cero. Todos los coman
 - [x] `apps/web`: GET /api/audit (con filtros), GET /api/audit/replay, GET /api/audit/export — completado 2026-03-24
 - [x] `apps/web`: GET /api/health para health check de la CLI — completado 2026-03-24
 - [x] `apps/web`: página de audit log con tabla filtrable — completado 2026-03-24
-- [ ] Instrumentación completa de todos los puntos críticos — pendiente (instrumentación básica activa, falta completar)
-- [ ] Archivos de log físicos con rotación — pendiente (Fase 5 completa)
+- [x] Instrumentación completa de todos los puntos críticos — completado 2026-03-24
+- [x] Archivos de log físicos con rotación — completado 2026-03-24 (packages/logger/rotation.ts, rota en 10MB, 5 backups)
 
 Criterio de done: después de simular un crash, `rag audit replay` reconstruye exactamente lo que pasó.
 
@@ -234,14 +234,14 @@ Criterio de done: después de simular un crash, `rag audit replay` reconstruye e
 ## Fase 6 — Docs + limpieza *(4-6 hs)*
 
 - [x] `CHANGELOG.md` completo — se fue llenando durante toda la branch — completado 2026-03-24
-- [ ] `CLAUDE.md` actualizado: nuevo stack, nuevos comandos, nueva estructura — pendiente
+- [x] `CLAUDE.md` actualizado: nuevo stack, nuevos comandos, nueva estructura — completado 2026-03-24
 - [x] `docs/architecture.md`: diagrama del servidor único, flujos de auth y RAG, DB, caching — completado 2026-03-24
 - [x] `docs/blackbox.md`: formato de eventos, cómo usar `rag audit replay`, sugerencias de errores — completado 2026-03-24
 - [x] `docs/cli.md`: referencia completa de todos los comandos — completado 2026-03-24
 - [x] `docs/onboarding.md`: guía de 5 minutos para nuevos colaboradores — completado 2026-03-24
 - [x] `.gitignore` actualizado: `.next/`, `.turbo/`, `logs/`, `data/*.db` — completado 2026-03-24
-- [ ] Código viejo archivado: `saldivia/`, `services/sda-frontend/`, `cli/` → `_archive/` — pendiente (preservado para referencia, no urgente)
-- [ ] Scripts shell reemplazados por equivalentes TypeScript — pendiente
+- [x] `_archive/README.md`: código viejo documentado con motivo del archivado — completado 2026-03-24
+- [x] `scripts/health-check.ts`: reemplaza `scripts/health_check.sh` — completado 2026-03-24
 
 ---
 

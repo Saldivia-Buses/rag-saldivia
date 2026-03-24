@@ -72,6 +72,26 @@ function formatJson(level: LogLevel, type: EventType, payload: Record<string, un
   })
 }
 
+// ── File logging (con rotación) ────────────────────────────────────────────
+
+let _writeToFile: ((filename: string, line: string) => Promise<void>) | null = null
+
+async function writeToFiles(level: LogLevel, line: string): Promise<void> {
+  try {
+    if (!_writeToFile) {
+      const { writeToLogFile, shouldWriteToErrorLog } = await import("./rotation.js")
+      _writeToFile = writeToLogFile
+    }
+    await _writeToFile("backend.log", line)
+    const { shouldWriteToErrorLog } = await import("./rotation.js")
+    if (shouldWriteToErrorLog(level)) {
+      await _writeToFile("errors.log", line)
+    }
+  } catch {
+    // Silencioso
+  }
+}
+
 // ── Write Event (lazy-load db para evitar circular deps) ───────────────────
 
 let _writeToDb: ((data: {
@@ -122,8 +142,9 @@ function createLogger() {
       console.log(line)
     }
 
-    // Persistir en DB de forma asíncrona (no bloquear el handler)
+    // Persistir en DB y archivo de forma asíncrona
     persistEvent(level, type, payload, ctx).catch(() => {})
+    writeToFiles(level, line).catch(() => {})
   }
 
   return {

@@ -69,6 +69,21 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 - `docs/cli.md`: referencia completa de todos los comandos de la CLI — 2026-03-24
 - `docs/onboarding.md`: guía de 5 minutos para nuevos colaboradores — 2026-03-24
 - `.gitignore`: agregado `.next/`, `.turbo/`, `logs/`, `data/*.db`, `bun.lockb` — 2026-03-24
+- `apps/web/src/lib/auth/__tests__/jwt.test.ts`: tests completos del flujo de auth (JWT, RBAC) — 2026-03-24
+- `apps/web/src/app/api/upload/route.ts`: endpoint de upload de archivos con validación de permisos y tamaño — 2026-03-24
+- `apps/web/src/app/api/admin/ingestion/route.ts`: listado y cancelación de jobs de ingesta — 2026-03-24
+- `apps/web/src/workers/ingestion.ts`: worker de ingesta en TypeScript con retry, locking SQLite, graceful shutdown — 2026-03-24
+- `apps/web/src/app/(app)/upload/page.tsx`: página de upload con drag & drop — 2026-03-24
+- `apps/web/src/hooks/useCrossdocDecompose.ts`: hook crossdoc portado de patches/ adaptado a Next.js — 2026-03-24
+- `apps/web/src/hooks/useCrossdocStream.ts`: orquestación crossdoc (decompose → parallel queries → follow-ups → synthesis) — 2026-03-24
+- `apps/web/src/app/(app)/admin/areas/page.tsx`: gestión de áreas con CRUD completo — 2026-03-24
+- `apps/web/src/app/(app)/admin/permissions/page.tsx`: asignación colecciones → áreas con nivel read/write — 2026-03-24
+- `apps/web/src/app/(app)/admin/rag-config/page.tsx`: config RAG con sliders y toggles — 2026-03-24
+- `apps/web/src/app/(app)/admin/system/page.tsx`: estado del sistema con stats cards y jobs activos — 2026-03-24
+- `packages/logger/src/rotation.ts`: rotación de archivos de log (10MB, 5 backups) — 2026-03-24
+- `CLAUDE.md`: actualizado con el nuevo stack TypeScript — 2026-03-24
+- `_archive/README.md`: documentación del código archivado (stack Python + SvelteKit) — 2026-03-24
+- `scripts/health-check.ts`: reemplaza health_check.sh — verifica servicios con latencias — 2026-03-24
 
 ---
 
