@@ -87,6 +87,42 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 - `legacy/pyproject.toml` + `legacy/uv.lock`: archivos Python movidos a `legacy/` — 2026-03-24
 - `legacy/docs/`: docs del stack viejo movidos a `legacy/` (analysis, contributing, deployment, development-workflow, field-testing, plans-fase8, problems-and-solutions, roadmap, sessions, testing) — 2026-03-24
 - `scripts/health-check.ts`: reemplaza health_check.sh — verifica servicios con latencias — 2026-03-24
+- `README.md` y `scripts/README.md`: reescritos para el nuevo stack TypeScript — 2026-03-24
+- `bun.lock`: lockfile de Bun commiteado para reproducibilidad de dependencias — 2026-03-24
+- `scripts/link-libsql.sh`: script que crea symlinks de @libsql en apps/web/node_modules para WSL2 — 2026-03-24
+- `scripts/test-login-final.sh`: script de test de los endpoints de auth — 2026-03-24
+
+### Changed
+
+- `package.json`: agregado campo `packageManager: bun@1.3.11` requerido por Turborepo 2.x — 2026-03-24
+- `packages/db/package.json`: eliminado `type: module` para compatibilidad con webpack CJS — 2026-03-24
+- `packages/shared/package.json`: eliminado `type: module` para compatibilidad con webpack CJS — 2026-03-24
+- `packages/config/package.json`: eliminado `type: module` para compatibilidad con webpack CJS — 2026-03-24
+- `packages/logger/package.json`: eliminado `type: module` para compatibilidad con webpack CJS — 2026-03-24
+- `packages/*/src/*.ts`: eliminadas extensiones `.js` de todos los imports relativos (incompatibles con webpack) — 2026-03-24
+- `packages/db/src/schema.ts`: agregadas relaciones Drizzle (`usersRelations`, `areasRelations`, `userAreasRelations`, etc.) necesarias para queries con `with` — 2026-03-24
+- `packages/shared/src/schemas.ts`: campo `email` del `LoginRequestSchema` acepta `admin@localhost` (sin TLD) — 2026-03-24
+- `apps/web/next.config.ts`: configuración completa para compatibilidad con WSL2 y monorepo Bun:
+  - `outputFileTracingRoot: __dirname` para evitar detección incorrecta del workspace root
+  - `transpilePackages` para paquetes workspace TypeScript
+  - `serverExternalPackages` para excluir `@libsql/client` y la cadena nativa del bundling webpack
+  - `webpack.externals` con función que excluye `libsql`, `@libsql/*` y archivos `.node` — 2026-03-24
+
+### Fixed
+
+- DB: migrado de `better-sqlite3` (requería compilación nativa con node-gyp, falla en Bun) a `@libsql/client` (JS puro, sin compilación, compatible con Bun y Node.js) — 2026-03-24
+- DB: creado `packages/db/src/init.ts` con SQL directo (sin drizzle-kit) para inicialización en entornos sin build tools — 2026-03-24
+- DB: `packages/db/src/migrate.ts` actualizado para usar `init.ts` en lugar del migrador de drizzle-kit — 2026-03-24
+- DB: agregado `bcrypt-ts` como dependencia explícita de `packages/db` — 2026-03-24
+- DB: agregado `@libsql/client` como dependencia de `packages/db` reemplazando `better-sqlite3` — 2026-03-24
+- DB: conexión singleton migrada a `drizzle-orm/libsql` con `createClient({ url: "file:..." })` — 2026-03-24
+- Next.js: Next.js 15.5 detectaba `/mnt/c/Users/enzo/package-lock.json` (filesystem Windows montado en WSL2) como workspace root, ignorando `src/app/`. Resuelto renombrando ese `package-lock.json` abandonado a `.bak` — 2026-03-24
+- Next.js: resuelta incompatibilidad entre `transpilePackages` y `serverExternalPackages` al usar los mismos paquetes en ambas listas — 2026-03-24
+- Next.js: webpack intentaba bundear `@libsql/client` → `libsql` (addon nativo) → cargaba `README.md` como módulo JS. Resuelto con `webpack.externals` personalizado — 2026-03-24
+- Next.js: `@libsql/client` no era accesible en runtime de Node.js (los paquetes de Bun se guardan en `.bun/`, no en `node_modules/` estándar). Resuelto creando symlinks en `apps/web/node_modules/@libsql/` — 2026-03-24
+- Next.js: conflicto de instancias de `drizzle-orm` (TypeError `referencedTable` undefined) al excluirlo del bundling. Resuelto manteniéndolo en el bundle de webpack — 2026-03-24
+- Next.js: `.env.local` debe vivir en `apps/web/` (el directorio del proyecto), no solo en la raíz del monorepo — 2026-03-24
+- Bun workspaces en WSL2: `bun install` en filesystem Windows (`/mnt/c/`) no crea symlinks en `node_modules/.bin/`. Resuelto clonando el repo en el filesystem nativo de Linux (`~/rag-saldivia/`) — 2026-03-24
 
 ---
 
