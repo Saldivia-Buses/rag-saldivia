@@ -1,13 +1,8 @@
 import type { NextConfig } from "next"
-import { join } from "path"
 
 const nextConfig: NextConfig = {
   // Forzar el root del proyecto para evitar que Next.js confunda el workspace root
-  // con un package-lock.json externo (problema en WSL2 con filesystem montado)
-  outputFileTracingRoot: join(__dirname, "../../"),
-  turbopack: {
-    root: __dirname,
-  },
+  outputFileTracingRoot: __dirname,
   // Transpile workspace packages
   transpilePackages: [
     "@rag-saldivia/shared",
