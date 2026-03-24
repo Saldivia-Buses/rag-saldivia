@@ -4,8 +4,8 @@
  */
 
 import { eq, gte, lte, and, desc, asc } from "drizzle-orm"
-import { getDb } from "../connection.js"
-import { events } from "../schema.js"
+import { getDb } from "../connection"
+import { events } from "../schema"
 import type { EventSource, LogLevel, EventType } from "@rag-saldivia/shared"
 
 const db = getDb()

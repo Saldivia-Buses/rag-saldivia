@@ -79,11 +79,11 @@ let _writeToFile: ((filename: string, line: string) => Promise<void>) | null = n
 async function writeToFiles(level: LogLevel, line: string): Promise<void> {
   try {
     if (!_writeToFile) {
-      const { writeToLogFile, shouldWriteToErrorLog } = await import("./rotation.js")
+      const { writeToLogFile, shouldWriteToErrorLog } = await import("./rotation")
       _writeToFile = writeToLogFile
     }
     await _writeToFile("backend.log", line)
-    const { shouldWriteToErrorLog } = await import("./rotation.js")
+    const { shouldWriteToErrorLog } = await import("./rotation")
     if (shouldWriteToErrorLog(level)) {
       await _writeToFile("errors.log", line)
     }

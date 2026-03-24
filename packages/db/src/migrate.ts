@@ -4,4 +4,4 @@
  * Uso: bun run db:migrate
  */
 
-import "./init.js"
+import "./init"

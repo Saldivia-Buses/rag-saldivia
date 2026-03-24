@@ -3,8 +3,8 @@
  */
 
 import { eq } from "drizzle-orm"
-import { getDb } from "../connection.js"
-import { areas, areaCollections, userAreas } from "../schema.js"
+import { getDb } from "../connection"
+import { areas, areaCollections, userAreas } from "../schema"
 
 const db = getDb()
 

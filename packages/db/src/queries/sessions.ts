@@ -3,8 +3,8 @@
  */
 
 import { eq, desc, and } from "drizzle-orm"
-import { getDb } from "../connection.js"
-import { chatSessions, chatMessages, messageFeedback } from "../schema.js"
+import { getDb } from "../connection"
+import { chatSessions, chatMessages, messageFeedback } from "../schema"
 
 const db = getDb()
 

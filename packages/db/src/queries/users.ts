@@ -4,8 +4,8 @@
  */
 
 import { eq, and, inArray } from "drizzle-orm"
-import { getDb } from "../connection.js"
-import { users, userAreas, areas } from "../schema.js"
+import { getDb } from "../connection"
+import { users, userAreas, areas } from "../schema"
 import { compareSync, hashSync } from "bcrypt-ts"
 
 const db = getDb()
