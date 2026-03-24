@@ -1,0 +1,63 @@
+# Dependencias
+node_modules/
+.pnp/
+
+# Build outputs
+.next/
+dist/
+.turbo/
+out/
+build/
+
+# Git submodule NVIDIA Blueprint
+vendor/
+
+# Base de datos y datos en runtime
+data/
+*.db
+*.db-shm
+*.db-wal
+
+# Logs
+logs/
+*.log
+
+# Código archivado / legacy
+_archive/
+legacy/
+
+# Archivos de entorno
+.env*
+*.pem
+*.key
+
+# Cache y temporales
+.cache/
+*.cache
+.changeset/
+
+# Patches binarios
+patches/
+
+# Config
+.github/
+.husky/
+.factory/
+.claude/
+
+# Assets
+public/
+*.svg
+*.png
+*.jpg
+*.jpeg
+*.ico
+*.woff
+*.woff2
+*.ttf
+
+# Lock files
+bun.lock
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
