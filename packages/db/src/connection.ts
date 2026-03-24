@@ -1,15 +1,14 @@
 /**
  * Conexión singleton a la base de datos SQLite.
  *
- * Usa bun:sqlite (nativo de Bun) — sin compilación nativa, funciona en todos
- * los sistemas donde corra Bun. Más rápido que better-sqlite3.
- * SQLite serializa writes internamente — no hay race conditions entre workers.
+ * Usa better-sqlite3 (Node.js compatible) para Next.js.
+ * En scripts puros de Bun (migrate.ts, seed.ts, worker) se usa bun:sqlite via init.ts.
  */
 
-import { Database } from "bun:sqlite"
-import { drizzle } from "drizzle-orm/bun-sqlite"
-import { join, dirname } from "path"
+import Database from "better-sqlite3"
+import { drizzle } from "drizzle-orm/better-sqlite3"
 import { mkdirSync } from "fs"
+import { join, dirname } from "path"
 import * as schema from "./schema.js"
 
 const DEFAULT_DB_PATH = join(process.cwd(), "data", "app.db")
@@ -21,7 +20,6 @@ function getDbPath(): string {
 function createConnection() {
   const dbPath = getDbPath()
 
-  // Crear directorio si no existe
   if (dbPath !== ":memory:") {
     try {
       mkdirSync(dirname(dbPath), { recursive: true })
@@ -32,12 +30,11 @@ function createConnection() {
 
   const sqlite = new Database(dbPath)
 
-  // Performance pragmas
-  sqlite.exec("PRAGMA journal_mode = WAL")     // Write-Ahead Logging: mejor concurrencia
-  sqlite.exec("PRAGMA synchronous = NORMAL")   // Más rápido, durabilidad suficiente con WAL
-  sqlite.exec("PRAGMA foreign_keys = ON")      // Enforce FK constraints
-  sqlite.exec("PRAGMA cache_size = -32768")    // 32MB de cache
-  sqlite.exec("PRAGMA temp_store = MEMORY")    // Tablas temporales en memoria
+  sqlite.pragma("journal_mode = WAL")
+  sqlite.pragma("synchronous = NORMAL")
+  sqlite.pragma("foreign_keys = ON")
+  sqlite.pragma("cache_size = -32768")
+  sqlite.pragma("temp_store = MEMORY")
 
   return drizzle(sqlite, { schema })
 }
