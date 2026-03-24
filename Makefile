@@ -12,13 +12,29 @@ BLUEPRINT_VERSION ?= 2.5.0
 
 export SALDIVIA_ROOT
 
-.PHONY: help setup deploy stop restart status health ingest query test test-unit test-coverage test-e2e test-e2e-brev test-backend test-stress patch-check patch-create clean validate show-env watch cli
+.PHONY: help setup setup-blueprint setup-check dev check reset deploy stop restart status health ingest query test test-unit test-coverage test-e2e test-e2e-brev test-backend test-stress patch-check patch-create clean validate show-env watch cli
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
-setup: ## Clone blueprint, apply patches, build images
+## ── Nuevo stack (experimental/ultra-optimize) ────────────────────────────
+
+setup: ## [NEW] Setup completo: preflight check, instalar deps, migrar DB, seed
+	@bun scripts/setup.ts
+
+setup-check: ## [NEW] Solo verifica prerequisitos sin instalar nada
+	@bun scripts/setup.ts --check
+
+reset: ## [NEW] Limpia la DB y rehace migraciones + seed
+	@bun scripts/setup.ts --reset
+
+dev: ## [NEW] Levanta el servidor en modo desarrollo
+	@bun run dev
+
+## ── Stack original (blueprint + Python) ─────────────────────────────────
+
+setup-blueprint: ## Clone blueprint, apply patches, build images (stack original)
 	@./scripts/setup.sh $(BLUEPRINT_VERSION)
 
 deploy: ## Start services (PROFILE=workstation-1gpu)

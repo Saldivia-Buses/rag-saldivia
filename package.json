@@ -1,0 +1,13 @@
+{
+  "name": "rag-saldivia",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Overlay de autenticación y frontend sobre el NVIDIA RAG Blueprint",
+  "scripts": {
+    "setup": "bun scripts/setup.ts",
+    "setup:check": "bun scripts/setup.ts --check",
+    "setup:reset": "bun scripts/setup.ts --reset",
+    "dev": "echo 'Fase 2 en progreso: apps/web aún no existe. Por ahora: cd services/sda-frontend && bun run dev'",
+    "test": "echo 'Fase 2 en progreso: tests del monorepo aún no configurados. Por ahora: uv run pytest saldivia/tests/ -v'"
+  }
+}

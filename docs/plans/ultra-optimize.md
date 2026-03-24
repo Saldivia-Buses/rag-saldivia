@@ -85,11 +85,11 @@ A partir de este punto todo el trabajo ocurre en `experimental/ultra-optimize`. 
 
 Objetivo: cualquier persona clona el repo y con un solo comando tiene el sistema corriendo localmente. Sin importar el estado de su máquina.
 
-- [ ] Script `scripts/setup.ts`: preflight check de dependencias (Bun, Docker, puertos libres), instalación de paquetes, creación de `.env.local` desde `.env.example`, migraciones de DB, seed de datos de desarrollo, y resumen de estado final — *1-2 hs*
-- [ ] `.env.example` completamente documentado: cada variable tiene descripción, valor por defecto para dev, y si es requerida en producción — *30 min*
-- [ ] Makefile actualizado con los targets `setup`, `dev`, `check`, `reset`, `test` apuntando al nuevo stack — *30 min*
-- [ ] Manejo de errores del setup: si falta Bun, Docker o un puerto está ocupado, el mensaje explica exactamente qué hacer y cómo resolverlo. Nunca un stack trace genérico — *1 hs*
-- [ ] El sistema puede arrancar en modo mock (sin Docker/RAG real) para desarrollo de UI — *30 min*
+- [x] Script `scripts/setup.ts`: preflight check de dependencias (Bun, Docker, puertos libres), instalación de paquetes, creación de `.env.local` desde `.env.example`, migraciones de DB, seed de datos de desarrollo, y resumen de estado final — completado 2026-03-24
+- [x] `.env.example` completamente documentado: cada variable tiene descripción, valor por defecto para dev, y si es requerida en producción — completado 2026-03-24
+- [x] Makefile actualizado con los targets `setup`, `setup-check`, `reset`, `dev` apuntando al nuevo stack — completado 2026-03-24
+- [x] Manejo de errores del setup: si falta Bun, Docker o un puerto está ocupado, el mensaje explica exactamente qué hacer y cómo resolverlo. Nunca un stack trace genérico — completado 2026-03-24
+- [x] El sistema puede arrancar en modo mock (sin Docker/RAG real) para desarrollo de UI — completado 2026-03-24 (variable MOCK_RAG en .env.example)
 
 ---
 

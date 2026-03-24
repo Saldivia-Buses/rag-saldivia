@@ -13,6 +13,10 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 - Branch `experimental/ultra-optimize` iniciada — 2026-03-24
 - Plan de trabajo `docs/plans/ultra-optimize.md` con seguimiento de tareas por fase — 2026-03-24
+- `scripts/setup.ts`: script de onboarding cero-fricción con preflight check, instalación, migraciones, seed y resumen visual — 2026-03-24
+- `.env.example` completamente documentado con todas las variables del nuevo stack — 2026-03-24
+- `package.json` raíz mínimo para Bun workspaces con script `bun run setup` — 2026-03-24
+- `Makefile`: nuevos targets `setup`, `setup-check`, `reset`, `dev` para el nuevo stack — 2026-03-24
 
 ---
 
