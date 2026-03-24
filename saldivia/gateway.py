@@ -26,6 +26,7 @@ import httpx
 from saldivia.auth import AuthDB, User, Role, Permission
 from saldivia.auth.models import generate_api_key, hash_password, verify_password
 from saldivia.collections import CollectionManager
+from saldivia.config import ConfigLoader
 from saldivia.tier import classify_tier
 
 logging.basicConfig(level=logging.INFO)
@@ -90,6 +91,8 @@ MAX_UPLOAD_SIZE_BYTES = MAX_UPLOAD_SIZE_MB * 1024 * 1024
 
 # File cache for server-side retry
 INGEST_CACHE_DIR = Path(os.environ.get("INGEST_CACHE_DIR", "/tmp/saldivia-ingest"))
+
+rag_config = ConfigLoader()
 
 
 def _cleanup_ingest_cache(job_id: str) -> None:
@@ -540,8 +543,7 @@ async def _stall_checker_loop() -> None:
 
     Config is intentionally loaded once at startup — threshold changes require restart.
     """
-    from saldivia.config import ConfigLoader  # deferred to avoid circular import
-    cfg = ConfigLoader().ingestion_config()
+    cfg = rag_config.ingestion_config()
     interval = cfg.get("stall_check_interval", 60)
     while True:
         await asyncio.sleep(interval)
@@ -1003,6 +1005,37 @@ def get_audit(
     ]}
 
 
+@app.get("/admin/config")
+def get_rag_config(user: User = Depends(admin_required)):
+    """Return all configurable RAG parameters with current values."""
+    return rag_config.get_rag_params()
+
+
+@app.patch("/admin/config")
+def update_rag_config(params: dict, user: User = Depends(admin_required)):
+    """Persist RAG parameter overrides to admin-overrides.yaml."""
+    rag_config.update_rag_params(params)
+    return {"ok": True}
+
+
+@app.post("/admin/config/reset")
+def reset_rag_config(user: User = Depends(admin_required)):
+    """Delete admin-overrides.yaml — restores base defaults."""
+    rag_config.reset_rag_params()
+    return {"ok": True}
+
+
+@app.post("/admin/profile")
+def switch_rag_profile(body: dict, user: User = Depends(admin_required)):
+    """Switch active profile in memory (no disk write, requires service restart)."""
+    name = body.get("profile")
+    if not name:
+        raise HTTPException(status_code=422, detail="profile field required")
+    try:
+        rag_config.switch_profile(name)
+    except ValueError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+    return {"ok": True, "profile": name}
 
 
 @app.get("/chat/sessions")

@@ -112,6 +112,28 @@ Formato basado en [Keep a Changelog](https://keepachangelog.com/es/1.1.0/).
 
 ---
 
+## [0.10.0] — 2026-03-24
+
+### Added
+- **Fase 10 — Admin RAG Config**
+- `ConfigLoader.get_rag_params()` — retorna los 10 parámetros RAG configurables con sus valores actuales (priority: base YAML → perfil activo → admin-overrides.yaml)
+- `ConfigLoader.update_rag_params(params)` — persiste overrides en `config/admin-overrides.yaml` (gitignored); merge incremental, no reemplaza
+- `ConfigLoader.reset_rag_params()` — borra `admin-overrides.yaml` y recarga config en memoria; próximo `get_rag_params()` retorna defaults
+- `ConfigLoader.switch_profile(name)` — carga nuevo perfil en memoria (sin restart); valida contra path traversal
+- 4 nuevos params en `ENV_MAPPING`: `LLM_TOP_P`, `LLM_TOP_K`, `VDB_TOP_K`, `RERANKER_TOP_K`
+- `GET /admin/config` — retorna params RAG actuales; solo admins
+- `PATCH /admin/config` — actualiza parámetros RAG; solo admins
+- `POST /admin/config/reset` — restaura defaults; solo admins
+- `POST /admin/profile` — switch de perfil en memoria; solo admins
+- BFF routes `/api/admin/config` (GET/PATCH/POST) y `/api/admin/profile` (POST) con guard admin + manejo de `GatewayError`
+- Componente `ConfigSlider.svelte` — slider + input numérico sincronizados (`$bindable()`)
+- Componente `ModelSelector.svelte` — select con lista de modelos (`$bindable()`)
+- Componente `GuardrailsToggle.svelte` — toggle accesible con `role="switch"` y `aria-checked`
+- Componente `ProfileSwitcher.svelte` — selector de perfil con modal de confirmación y warning de restart
+- Página `/(app)/admin/rag-config` — 5 secciones colapsables: Generación (temperature, max_tokens, top_p, top_k), Vector DB (vdb_top_k, reranker_top_k), Modelos (llm/embedding/reranker), Guardrails, Perfil activo
+- 11 tests nuevos: 5 en `test_config.py` (get/update/merge/reset/switch) y 6 en `test_gateway_extended.py` (auth guard, CRUD endpoints, path traversal)
+- Total tests: 180 (desde 169)
+
 ## [0.5.6] — 2026-03-23
 
 ### Added

@@ -43,6 +43,10 @@ class ConfigLoader:
         ("services", "llm", "model"): "APP_LLM_MODELNAME",
         ("services", "llm", "parameters", "temperature"): "LLM_TEMPERATURE",
         ("services", "llm", "parameters", "max_tokens"): "LLM_MAX_TOKENS",
+        ("services", "llm", "parameters", "top_p"): "LLM_TOP_P",
+        ("services", "llm", "parameters", "top_k"): "LLM_TOP_K",
+        ("services", "retrieval", "vdb_top_k"): "VDB_TOP_K",
+        ("services", "retrieval", "reranker_top_k"): "RERANKER_TOP_K",
         ("services", "embeddings", "endpoint"): "APP_EMBEDDINGS_SERVERURL",
         ("services", "embeddings", "model"): "APP_EMBEDDINGS_MODELNAME",
         ("services", "reranker", "endpoint"): "APP_RANKING_SERVERURL",
@@ -55,9 +59,23 @@ class ConfigLoader:
         ("observability", "opentelemetry", "endpoint"): "OTEL_EXPORTER_OTLP_ENDPOINT",
     }
 
+    RAG_PARAMS: dict[str, tuple] = {
+        "temperature":        ("services", "llm", "parameters", "temperature"),
+        "max_tokens":         ("services", "llm", "parameters", "max_tokens"),
+        "top_p":              ("services", "llm", "parameters", "top_p"),
+        "top_k":              ("services", "llm", "parameters", "top_k"),
+        "vdb_top_k":          ("services", "retrieval", "vdb_top_k"),
+        "reranker_top_k":     ("services", "retrieval", "reranker_top_k"),
+        "llm_model":          ("services", "llm", "model"),
+        "embedding_model":    ("services", "embeddings", "model"),
+        "reranker_model":     ("services", "reranker", "model"),
+        "guardrails_enabled": ("guardrails", "enabled"),
+    }
+
     def __init__(self, config_dir: str = "config"):
         self.config_dir = Path(config_dir)
         self._config: dict = {}
+        self._active_profile: Optional[str] = None
 
     def load(self, profile: str = None) -> dict:
         """Load configuration with optional profile overrides."""
@@ -89,6 +107,21 @@ class ConfigLoader:
                 return None
         return data
 
+    def _set_nested(self, data: dict, keys: tuple, value) -> None:
+        """Set a nested value in a dict, creating intermediate dicts as needed."""
+        for key in keys[:-1]:
+            data = data.setdefault(key, {})
+        data[keys[-1]] = value
+
+    def _load_overrides(self) -> dict:
+        """Load admin-overrides.yaml if it exists, return {} otherwise."""
+        overrides_path = self.config_dir / "admin-overrides.yaml"
+        try:
+            with open(overrides_path) as f:
+                return yaml.safe_load(f) or {}
+        except FileNotFoundError:
+            return {}
+
     def generate_env(self, profile: str = None) -> dict:
         """Generate environment variables dict."""
         config = self.load(profile)
@@ -118,6 +151,54 @@ class ConfigLoader:
         """
         profile_ingestion = self._config.get("ingestion", {})
         return deep_merge(_INGESTION_DEFAULTS, profile_ingestion)
+
+
+    def get_rag_params(self) -> dict:
+        """Return all configurable RAG params with current values.
+
+        Priority: base YAMLs → active profile → admin-overrides.yaml
+        """
+        if not self._config:
+            self.load()
+        overrides = self._load_overrides()
+        config = deep_merge(self._config, overrides) if overrides else self._config
+        result = {}
+        for param_name, yaml_path in self.RAG_PARAMS.items():
+            value = self._get_nested(config, yaml_path)
+            if value is not None:
+                result[param_name] = value
+        return result
+
+    def update_rag_params(self, params: dict) -> None:
+        """Persist overrides to config/admin-overrides.yaml (merges on existing)."""
+        overrides_path = self.config_dir / "admin-overrides.yaml"
+        existing = self._load_overrides()
+        for key, value in params.items():
+            if key not in self.RAG_PARAMS:
+                continue
+            self._set_nested(existing, self.RAG_PARAMS[key], value)
+        try:
+            with open(overrides_path, "w") as f:
+                yaml.dump(existing, f, default_flow_style=False)
+        except OSError as e:
+            raise RuntimeError(f"Failed to write admin overrides: {e}") from e
+        self._config = deep_merge(self._config, existing)
+
+    def reset_rag_params(self) -> None:
+        """Delete admin-overrides.yaml and reload base config."""
+        overrides_path = self.config_dir / "admin-overrides.yaml"
+        try:
+            overrides_path.unlink()
+        except FileNotFoundError:
+            pass
+        self.load(profile=self._active_profile)
+
+    def switch_profile(self, name: str) -> None:
+        """Load new profile in memory only. Does NOT write to disk."""
+        if not name or "/" in name or "\\" in name or name.startswith("."):
+            raise ValueError(f"Invalid profile name: {name!r}")
+        self.load(profile=name)
+        self._active_profile = name
 
 
 def validate_config(config: dict) -> list[str]:

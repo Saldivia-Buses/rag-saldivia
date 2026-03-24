@@ -1,7 +1,7 @@
 # RAG Saldivia — Roadmap
 
 > Fuente de verdad del estado del proyecto. Se actualiza solo cuando Enzo lo pide.
-> Última actualización: 2026-03-24 (Fase 9 completada)
+> Última actualización: 2026-03-24 (Fase 10 completada)
 
 ---
 
@@ -23,6 +23,7 @@
 | 7 | Chat Sesiones Pro — rename, feedback, follow-ups, export | 2026-03-23 |
 | 8 | Settings Pro — preferencias persistidas, perfil, contraseña, notificaciones | 2026-03-23 |
 | 9 | Admin Pro — CRUD areas, permissions multi-área, system stats | 2026-03-24 |
+| 10 | Admin RAG Config — configuración runtime de parámetros RAG, persistencia vía admin-overrides.yaml | 2026-03-24 |
 
 ---
 
@@ -36,8 +37,7 @@ _Nada en progreso actualmente._
 
 | Prioridad | Fase | Descripción | Depende de |
 |-----------|------|-------------|-----------|
-| 1 | 10 | Audit Log Pro — filtros, export, visualización | 9 |
-| 2 | 11 | RAG Config Pro — tuning de parámetros desde UI | 9 |
+| 1 | 11 | Audit Log Pro — filtros, export, visualización | 9 |
 
 ---
 
@@ -68,6 +68,6 @@ Fase 6 (Upload inteligente)
   └── Fase 7 (Chat Sesiones Pro)
         └── Fase 8 (Settings Pro)
         └── Fase 9 (Admin Pro)
-              └── Fase 10 (Audit Log Pro)
-              └── Fase 11 (RAG Config Pro)
+              └── Fase 10 (Admin RAG Config) ✅
+              └── Fase 11 (Audit Log Pro)
 ```

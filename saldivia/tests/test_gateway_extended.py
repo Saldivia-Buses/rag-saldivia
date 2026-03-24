@@ -633,3 +633,60 @@ def test_resolve_alert(client, admin_user):
     mock_db.resolve_ingestion_alert.assert_called_once_with(
         "alert-1", resolved_by=admin_user.email, notes="fixed by restarting ingestor"
     )
+
+
+# --- Admin RAG Config endpoints ---
+
+def test_get_admin_config_requires_auth(client):
+    """GET /admin/config devuelve 401 sin credentials."""
+    with patch("saldivia.gateway.BYPASS_AUTH", False):
+        resp = client.get("/admin/config")
+    assert resp.status_code == 401
+
+
+def test_get_admin_config(client):
+    """GET /admin/config retorna los params del rag_config."""
+    with patch("saldivia.gateway.rag_config") as mock_cfg:
+        mock_cfg.get_rag_params.return_value = {"temperature": 0.7, "max_tokens": 2048}
+        resp = client.get("/admin/config")
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["temperature"] == 0.7
+    assert data["max_tokens"] == 2048
+
+
+def test_patch_admin_config(client):
+    """PATCH /admin/config llama update_rag_params y retorna ok."""
+    with patch("saldivia.gateway.rag_config") as mock_cfg:
+        resp = client.patch("/admin/config", json={"temperature": 0.9})
+    assert resp.status_code == 200
+    assert resp.json()["ok"] is True
+    mock_cfg.update_rag_params.assert_called_once_with({"temperature": 0.9})
+
+
+def test_post_admin_config_reset(client):
+    """POST /admin/config/reset llama reset_rag_params y retorna ok."""
+    with patch("saldivia.gateway.rag_config") as mock_cfg:
+        resp = client.post("/admin/config/reset")
+    assert resp.status_code == 200
+    assert resp.json()["ok"] is True
+    mock_cfg.reset_rag_params.assert_called_once()
+
+
+def test_post_admin_profile(client):
+    """POST /admin/profile cambia perfil y retorna ok + profile name."""
+    with patch("saldivia.gateway.rag_config") as mock_cfg:
+        resp = client.post("/admin/profile", json={"profile": "workstation-1gpu"})
+    assert resp.status_code == 200
+    data = resp.json()
+    assert data["ok"] is True
+    assert data["profile"] == "workstation-1gpu"
+    mock_cfg.switch_profile.assert_called_once_with("workstation-1gpu")
+
+
+def test_switch_profile_rejects_path_traversal(client):
+    """POST /admin/profile rechaza nombres con path traversal."""
+    with patch("saldivia.gateway.rag_config") as mock_cfg:
+        mock_cfg.switch_profile.side_effect = ValueError("Invalid profile name: '../etc/passwd'")
+        resp = client.post("/admin/profile", json={"profile": "../etc/passwd"})
+    assert resp.status_code == 422
