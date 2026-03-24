@@ -231,7 +231,9 @@ class AuthDB:
     def _conn(self):
         if self._mem_conn is not None:
             return _MemConnContext(self._mem_conn)
-        return sqlite3.connect(self.db_path)
+        conn = sqlite3.connect(self.db_path)
+        conn.execute("PRAGMA foreign_keys = ON")
+        return conn
 
     # Areas
     def create_area(self, name: str, description: str = "") -> Area:
@@ -476,13 +478,22 @@ class AuthDB:
         return row[0] if row else 0
 
     def get_user_collections(self, user: User) -> list[str]:
-        """Get list of collections a user can access."""
+        """Retorna nombres de colecciones accesibles por el usuario (unión de todas sus áreas)."""
         if user.role == Role.ADMIN:
-            # Admin can access all collections
-            from saldivia.collections import CollectionManager
-            return CollectionManager().list()
-
-        return [ac.collection_name for ac in self.get_area_collections(user.area_id)]
+            # Admins ven todas las colecciones
+            with self._conn() as conn:
+                rows = conn.execute("SELECT DISTINCT collection_name FROM area_collections").fetchall()
+            return [r[0] for r in rows]
+        area_ids = self.get_user_area_ids(user.id)
+        if not area_ids:
+            return []
+        with self._conn() as conn:
+            placeholders = ",".join("?" * len(area_ids))
+            rows = conn.execute(
+                f"SELECT DISTINCT collection_name FROM area_collections WHERE area_id IN ({placeholders})",
+                tuple(area_ids)
+            ).fetchall()
+        return [r[0] for r in rows]
 
     def can_access(self, user: User, collection: str, required: Permission) -> bool:
         """Verifica acceso a colección. Admins: global. Otros: unión de todas sus áreas."""
@@ -534,13 +545,10 @@ class AuthDB:
 
     def delete_area(self, area_id: int):
         """Delete area. Raises ValueError if area has active users."""
+        count = self.count_users_in_area(area_id)
+        if count > 0:
+            raise ValueError(f"Cannot delete area {area_id}: has {count} active users")
         with self._conn() as conn:
-            count = conn.execute(
-                "SELECT COUNT(*) FROM users WHERE area_id = ? AND active = 1", (area_id,)
-            ).fetchone()[0]
-            if count > 0:
-                raise ValueError(f"Area has {count} active users")
-            conn.execute("DELETE FROM area_collections WHERE area_id = ?", (area_id,))
             conn.execute("DELETE FROM areas WHERE id = ?", (area_id,))
 
     def get_audit_log_filtered(self, user_id: int = None, action: str = None,
