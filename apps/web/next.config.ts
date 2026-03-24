@@ -9,13 +9,44 @@ const nextConfig: NextConfig = {
     "@rag-saldivia/logger",
   ],
 
-  // Excluir del bundling: dejar que Node.js los resuelva en runtime
+  // Excluir del bundling todos los paquetes de la cadena SQLite
   serverExternalPackages: [
     "@libsql/client",
     "@libsql/isomorphic-fetch",
     "@libsql/isomorphic-ws",
+    "@libsql/hrana-client",
+    "libsql",
     "drizzle-orm",
   ],
+
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      // Asegurar que libsql y su cadena de dependencias nativas no se bundleen
+      const existingExternals = Array.isArray(config.externals)
+        ? config.externals
+        : config.externals
+          ? [config.externals]
+          : []
+
+      config.externals = [
+        ...existingExternals,
+        ({ request }: { request?: string }, callback: (err?: Error, result?: string) => void) => {
+          if (
+            request &&
+            (request.startsWith("libsql") ||
+              request.startsWith("@libsql/") ||
+              request.startsWith("drizzle-orm") ||
+              request.endsWith(".node"))
+          ) {
+            callback(undefined, `commonjs ${request}`)
+          } else {
+            callback()
+          }
+        },
+      ]
+    }
+    return config
+  },
 
   // Forzar el root del proyecto para evitar que Next.js confunda el workspace root
   outputFileTracingRoot: __dirname,
