@@ -1,138 +1,88 @@
 # RAG Saldivia
 
-Production-ready overlay on NVIDIA RAG Blueprint v2.5.0 with authentication, RBAC, multi-collection support, SvelteKit 5 frontend, and multiple deployment profiles.
+Overlay sobre el **NVIDIA RAG Blueprint v2.5.0** con autenticación JWT, RBAC, multi-colección, frontend Next.js 15 y CLI TypeScript.
 
-[![CI](https://img.shields.io/badge/CI-passing-brightgreen)](https://github.com/Camionerou/rag-saldivia)
-[![Coverage](https://img.shields.io/badge/coverage-80%25-green)](https://github.com/Camionerou/rag-saldivia)
+> **Branch activa:** `experimental/ultra-optimize` — reescritura completa en TypeScript.
+> La branch `main` contiene el stack Python + SvelteKit original.
 
-## What it is
-
-RAG Saldivia extends the NVIDIA RAG Blueprint v2.5.0 with authentication (JWT + RBAC), multi-collection vector storage, a modern SvelteKit 5 frontend, Python CLI/SDK, and 1-GPU deployment with dynamic mode switching.
-
-## Architecture
+## Arquitectura
 
 ```
-User
-  |
-  | HTTPS (JWT cookie)
-  v
-SDA Frontend (port 3000, SvelteKit 5 BFF)
-  |
-  | HTTP Bearer token
-  v
-Auth Gateway (port 9000, FastAPI)
-  |
-  | Proxy with RBAC
-  v
-RAG Server (port 8081, NVIDIA Blueprint)
-  |
-  v
-Milvus (vector DB) + NIMs (embed, rerank, OCR) + LLM (Nemotron-3 or external API)
+Usuario → Next.js :3000 ——————————————————→ RAG Server :8081
+           (UI + auth + proxy)                      ↓
+                                           Milvus + NIMs
+                                                    ↓
+                                       Nemotron-Super-49B
 ```
+
+Un único proceso reemplaza el gateway Python (9000) y el frontend SvelteKit (3000) del stack original.
 
 ## Quick Start
 
 ```bash
-# 1. Clone
-git clone git@github.com:Camionerou/rag-saldivia.git && cd rag-saldivia
-cp .env.example .env.local  # Add your NGC_API_KEY, JWT_SECRET, etc.
-
-# 2. Bootstrap (instala Docker, NVIDIA Container Toolkit, Node.js, pnpm si faltan)
-sudo ./scripts/bootstrap.sh
-
-# 3. Deploy
-make deploy PROFILE=workstation-1gpu
-
-# 3. Verify
-make status
-
-# 4. Ingest documents
-make ingest DOCS=~/docs/pdfs/ COLLECTION=my-collection
-
-# 5. Query
-make query Q="What is the main topic of the documents?"
+git clone https://github.com/Camionerou/rag-saldivia
+cd rag-saldivia
+git checkout experimental/ultra-optimize
+bun run setup
+bun run dev
 ```
 
-## Documentation
+Abrí http://localhost:3000 — credenciales de desarrollo: `admin@localhost` / `changeme`
 
-| Doc | Description |
-|-----|-------------|
-| [Architecture](docs/architecture.md) | Service map, request flow, design decisions |
-| [Development Workflow](docs/development-workflow.md) | How to contribute and build features |
-| [Testing](docs/testing.md) | How to run and write tests |
-| [Deployment](docs/deployment.md) | Profiles, environment variables, self-hosted runner |
-| [Contributing](docs/contributing.md) | Code conventions, commits, PRs |
+Sin Docker (solo UI): agregá `MOCK_RAG=true` en `.env.local`
 
-## Roadmap
+## Stack
 
-| Phase | Status | Description |
-|-------|--------|-------------|
-| 1 | ✅ Done | Foundation: Auth Gateway, JWT, RBAC, SQLite AuthDB, SvelteKit 5 BFF |
-| 2 | ✅ Done | Chat Pro: SSE streaming, chat history, basic UI |
-| 3 | ✅ Done | Collections: CRUD, detail view, CollectionCard grid, delete modal |
-| 4 | ✅ Done | Upload: Drag-and-drop, multipart upload, BFF → gateway proxy |
-| 5 | ✅ Done | Crossdoc: Client-side decomposition, 4-phase pipeline, progress UI |
-| 6 | 🚧 In Progress | Testing: Vitest unit tests, component tests, Playwright E2E |
-| 7 | 📋 Planned | Admin Panel: User management, API keys, audit log |
-| 8 | 📋 Planned | MCP Integration: Claude Desktop integration, 6 tools |
-| 9 | 📋 Planned | Smart Ingest: Tier system, deadlock detection, auto-resume |
-| 10+ | 📋 Planned | See docs/superpowers/specs/ for upcoming phases |
+| Componente | Tecnología |
+|---|---|
+| Servidor | Next.js 15 App Router (TypeScript 6.0) |
+| Base de datos | SQLite — Drizzle ORM + better-sqlite3 |
+| Auth | JWT (jose) en cookie HttpOnly |
+| Validación | Zod compartido entre frontend y backend |
+| Build | Turborepo + Bun workspaces |
+| CLI | Commander + @clack/prompts + chalk |
 
-## What It Solves
-
-| Problem | Solution |
-|---------|----------|
-| Reranker kills cross-doc diversity | Client-side crossdoc decomposition |
-| NV-Ingest deadlocks | Smart ingest with serial batching and auto-split |
-| Generic prompts | Custom Envie persona with strict instructions |
-| GPU_CAGRA causes VRAM pressure | HNSW on CPU + hybrid search |
-| Milvus wastes 3.7 GB VRAM | GPU memory pool disabled |
-
-## Deployment Profiles
-
-| Profile | Hardware | LLM | Use Case |
-|---------|----------|-----|----------|
-| `workstation-1gpu` | 1x GPU (≥98 GB VRAM) | External API | Physical workstation (Ubuntu 24.04) |
-
-## 1-GPU Mode
-
-The `workstation-1gpu` profile uses a mode manager to switch between QUERY and INGEST modes:
-
-| Mode | VRAM | Active |
-|------|------|--------|
-| QUERY | ~46 GB | NIMs (embed + rerank) only |
-| INGEST | ~90 GB | NIMs + VLM (Qwen3-VL-8B) |
-
-The mode manager monitors the Redis ingestion queue and automatically loads/unloads the VLM to free memory. When idle for 5 minutes, it switches back to QUERY mode.
-
-## CLI Usage
+## CLI
 
 ```bash
-# Collections
-rag-saldivia collections list
-rag-saldivia collections create my-collection
-rag-saldivia collections stats my-collection
+# Instalar globalmente
+cd apps/cli && bun link
 
-# Ingestion queue
-rag-saldivia ingest add /path/to/docs/ --collection my-collection
-rag-saldivia ingest queue
-rag-saldivia ingest watch /watch/dir/ --collection my-collection
-
-# Platform status
-rag-saldivia status
+rag status                    # estado de todos los servicios
+rag users list                # gestión de usuarios
+rag collections list          # colecciones disponibles
+rag ingest start              # subir documentos
+rag audit log                 # eventos del sistema
+rag audit replay 2026-03-24   # reconstruir estado desde fecha
 ```
 
-## Structure
+## Estructura
 
 ```
-saldivia/        — Python SDK (ConfigLoader, ProviderClient, ModeManager, etc.)
-cli/             — Click CLI (collections, ingest, status, mcp)
-config/          — YAML config files + profiles (workstation-1gpu)
-services/        — Additional docker services (mode-manager, openrouter-proxy)
-patches/         — Frontend patches and new files
-scripts/         — deploy.sh, smart_ingest.py, crossdoc_client.py, stress_test.py
-docs/            — Documentation (architecture, workflow, testing, deployment)
+apps/
+  web/          → servidor único (Next.js 15): UI + auth + proxy RAG + admin
+  cli/          → CLI TypeScript
+packages/
+  shared/       → Zod schemas + tipos compartidos
+  db/           → Drizzle ORM (14 tablas, reemplaza SQLite auth + Redis)
+  config/       → config loader (reemplaza config.py)
+  logger/       → logging estructurado + black box replay
+config/         → YAMLs de configuración (sin cambios)
+patches/        → patches del blueprint NVIDIA (sin cambios)
+legacy/         → stack original Python + SvelteKit (referencia)
+docs/           → arquitectura, CLI, blackbox, onboarding
+scripts/        → setup.ts, health-check.ts
 ```
+
+## Documentación
+
+| Doc | Descripción |
+|---|---|
+| [Architecture](docs/architecture.md) | Arquitectura del nuevo stack, flujos de auth y RAG |
+| [Onboarding](docs/onboarding.md) | Guía de 5 minutos para arrancar |
+| [CLI](docs/cli.md) | Referencia completa de comandos |
+| [Black Box](docs/blackbox.md) | Sistema de logging y replay de eventos |
+| [Plan](docs/plans/ultra-optimize.md) | Seguimiento diario del plan de trabajo |
 
 ## License
 
