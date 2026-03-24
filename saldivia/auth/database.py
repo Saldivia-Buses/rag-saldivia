@@ -167,6 +167,20 @@ def init_db_conn(conn: sqlite3.Connection):
     except Exception:
         pass  # Column already exists
 
+    # Migration: add user_areas table (Fase 9 — many-to-many)
+    conn.executescript("""
+        CREATE TABLE IF NOT EXISTS user_areas (
+            user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            area_id INTEGER NOT NULL REFERENCES areas(id) ON DELETE CASCADE,
+            PRIMARY KEY (user_id, area_id)
+        );
+    """)
+    # Migración: copiar area_id existentes a user_areas
+    conn.execute("""
+        INSERT OR IGNORE INTO user_areas (user_id, area_id)
+        SELECT id, area_id FROM users WHERE area_id IS NOT NULL
+    """)
+
 
 def init_db(db_path: Path = DB_PATH):
     """Initialize database schema."""
@@ -252,7 +266,13 @@ class AuthDB:
                 "VALUES (?, ?, ?, ?, ?, ?)",
                 (email, name, area_id, role.value, api_key_hash, password_hash)
             )
-            return User(id=cur.lastrowid, email=email, name=name, area_id=area_id,
+            user_id = cur.lastrowid
+            # Sincronizar user_areas con el area_id inicial
+            conn.execute(
+                "INSERT OR IGNORE INTO user_areas (user_id, area_id) VALUES (?, ?)",
+                (user_id, area_id)
+            )
+            return User(id=user_id, email=email, name=name, area_id=area_id,
                         role=role, api_key_hash=api_key_hash, password_hash=password_hash)
 
     def get_user_by_api_key_hash(self, api_key_hash: str) -> Optional[User]:
@@ -408,6 +428,53 @@ class AuthDB:
             ).fetchall()
             return [AreaCollection(area_id=r[0], collection_name=r[1], permission=Permission(r[2])) for r in rows]
 
+    def get_user_area_ids(self, user_id: int) -> list[int]:
+        """Retorna IDs de todas las áreas asignadas al usuario."""
+        with self._conn() as conn:
+            rows = conn.execute(
+                "SELECT area_id FROM user_areas WHERE user_id = ?", (user_id,)
+            ).fetchall()
+        return [r[0] for r in rows]
+
+    def get_user_areas(self, user_id: int) -> list[Area]:
+        """Retorna áreas completas del usuario."""
+        with self._conn() as conn:
+            rows = conn.execute(
+                """SELECT a.id, a.name, a.description
+                   FROM areas a
+                   JOIN user_areas ua ON ua.area_id = a.id
+                   WHERE ua.user_id = ?""",
+                (user_id,)
+            ).fetchall()
+        return [Area(id=r[0], name=r[1], description=r[2]) for r in rows]
+
+    def add_user_area(self, user_id: int, area_id: int) -> None:
+        """Asigna un área al usuario. Idempotente."""
+        with self._conn() as conn:
+            conn.execute(
+                "INSERT OR IGNORE INTO user_areas (user_id, area_id) VALUES (?, ?)",
+                (user_id, area_id)
+            )
+
+    def remove_user_area(self, user_id: int, area_id: int) -> None:
+        """Desasigna un área del usuario."""
+        with self._conn() as conn:
+            conn.execute(
+                "DELETE FROM user_areas WHERE user_id = ? AND area_id = ?",
+                (user_id, area_id)
+            )
+
+    def count_users_in_area(self, area_id: int) -> int:
+        """Retorna cantidad de usuarios activos en el área."""
+        with self._conn() as conn:
+            row = conn.execute(
+                """SELECT COUNT(*) FROM user_areas ua
+                   JOIN users u ON u.id = ua.user_id
+                   WHERE ua.area_id = ? AND u.active = 1""",
+                (area_id,)
+            ).fetchone()
+        return row[0] if row else 0
+
     def get_user_collections(self, user: User) -> list[str]:
         """Get list of collections a user can access."""
         if user.role == Role.ADMIN:
@@ -418,19 +485,27 @@ class AuthDB:
         return [ac.collection_name for ac in self.get_area_collections(user.area_id)]
 
     def can_access(self, user: User, collection: str, required: Permission) -> bool:
-        """Check if user can perform action on collection."""
+        """Verifica acceso a colección. Admins: global. Otros: unión de todas sus áreas."""
         if user.role == Role.ADMIN:
             return True
-
-        for ac in self.get_area_collections(user.area_id):
-            if ac.collection_name == collection:
-                # admin > write > read
-                if ac.permission == Permission.ADMIN:
-                    return True
-                if ac.permission == Permission.WRITE and required in (Permission.WRITE, Permission.READ):
-                    return True
-                if ac.permission == Permission.READ and required == Permission.READ:
-                    return True
+        area_ids = self.get_user_area_ids(user.id)
+        if not area_ids:
+            return False
+        with self._conn() as conn:
+            placeholders = ",".join("?" * len(area_ids))
+            rows = conn.execute(
+                f"""SELECT permission FROM area_collections
+                    WHERE area_id IN ({placeholders}) AND collection_name = ?""",
+                (*area_ids, collection)
+            ).fetchall()
+        for row in rows:
+            perm = Permission(row[0])
+            if perm == Permission.ADMIN:
+                return True
+            if perm == Permission.WRITE and required in (Permission.WRITE, Permission.READ):
+                return True
+            if perm == Permission.READ and required == Permission.READ:
+                return True
         return False
 
     # Audit
