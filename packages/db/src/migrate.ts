@@ -1,17 +1,10 @@
 #!/usr/bin/env bun
 /**
- * Ejecuta las migraciones de la base de datos.
+ * Corre las migraciones de la base de datos.
+ * Para desarrollo local: usa init.ts (SQL puro, sin drizzle-kit).
+ * Para producción con migraciones incrementales: usar drizzle-kit migrate.
+ *
  * Uso: bun run db:migrate
- *      bun packages/db/src/migrate.ts
  */
 
-import { migrate } from "drizzle-orm/bun-sqlite/migrator"
-import { getDb } from "./connection.js"
-import { join } from "path"
-
-const db = getDb()
-const migrationsFolder = join(import.meta.dir, "..", "drizzle")
-
-console.log("Corriendo migraciones...")
-migrate(db, { migrationsFolder })
-console.log("Migraciones completadas.")
+import "./init.js"
