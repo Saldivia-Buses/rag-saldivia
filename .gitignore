@@ -42,3 +42,6 @@ screen*.png
 screen*.jpg
 *.screenshot.png
 *.png
+
+# Admin runtime overrides (generated at runtime, not tracked)
+config/admin-overrides.yaml

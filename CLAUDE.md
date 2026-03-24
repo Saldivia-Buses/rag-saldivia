@@ -54,10 +54,10 @@ make cli ARGS="audit log"
 
 | Archivo | Responsabilidad |
 |---------|----------------|
-| `gateway.py` | FastAPI: auth, RBAC, proxy al RAG, SSE streaming, endpoints de preferences/profile/password, `POST/DELETE /admin/users/{id}/areas` |
+| `gateway.py` | FastAPI: auth, RBAC, proxy al RAG, SSE streaming, endpoints de preferences/profile/password, `POST/DELETE /admin/users/{id}/areas`; `GET/PATCH /admin/config`, `POST /admin/config/reset`, `POST /admin/profile`; instancia de módulo `rag_config = ConfigLoader()` |
 | `auth/database.py` | SQLite AuthDB: users, areas, api_keys, sessions, ingestion_jobs, ingestion_alerts, preferences, `user_areas` (many-to-many); métodos `get_user_area_ids`, `get_user_areas`, `add_user_area`, `remove_user_area`, `count_users_in_area`; `can_access` y `get_user_collections` operan sobre unión de todas las áreas del usuario |
 | `auth/models.py` | User, Area, Role dataclasses |
-| `config.py` | ConfigLoader: YAML profiles + env merge + `ingestion_config()` con deep-merge de defaults |
+| `config.py` | ConfigLoader: YAML profiles + env merge + `ingestion_config()` con deep-merge de defaults; `RAG_PARAMS` (10 parámetros configurables); `get_rag_params()`, `update_rag_params()`, `reset_rag_params()`, `switch_profile()`; persistencia en `config/admin-overrides.yaml` |
 | `providers.py` | Clientes HTTP para RAG Server, Milvus |
 | `mode_manager.py` | VLM/LLM mode switching para 1-GPU |
 | `collections.py` | CollectionManager: CRUD de colecciones |
@@ -79,7 +79,7 @@ SvelteKit 5 BFF. Rutas principales:
 - `/(app)/admin/users` → gestión de usuarios (solo admins): lista con columna Área+N (multi-área), modal crear usuario con multi-select de áreas
 - `/(app)/admin/areas` → gestión de áreas (solo admins): CRUD completo — crear, editar nombre/descripción, eliminar con modal de usuarios bloqueantes si hay usuarios activos
 - `/(app)/admin/permissions` → permisos (solo admins y `area_manager`): asignación de colecciones a áreas con selector read/write, chips de colecciones con permiso
-- `/(app)/admin/rag-config` → configuración RAG (solo admins)
+- `/(app)/admin/rag-config` → configuración RAG (solo admins): sliders de parámetros LLM/retrieval, selector de modelo, toggle guardrails, switch de perfil; componentes `ConfigSlider`, `ModelSelector`, `GuardrailsToggle`, `ProfileSwitcher`
 - `/(app)/admin/system` → estado del sistema (solo admins): stats cards (usuarios activos, áreas, colecciones con docs), jobs activos con progress bar, alertas de ingesta, botón actualizar
 - `/(app)/audit` → audit log
 - `/api/auth/*` → BFF endpoints de auth (session POST/DELETE)
@@ -93,6 +93,8 @@ SvelteKit 5 BFF. Rutas principales:
 - `/api/crossdoc/*` → BFF endpoints de crossdoc (decompose, subquery, synthesize)
 - `/api/upload` → BFF endpoint de upload de documentos
 - `/api/collections/*` → BFF endpoints de colecciones (GET, POST, DELETE)
+- `/api/admin/config` → BFF endpoints de RAG config (GET / PATCH / POST reset)
+- `/api/admin/profile` → BFF endpoint de switch de perfil (POST)
 - `/api/dev-login` → Login rápido para desarrollo (solo en dev mode)
 
 ## Planificación General

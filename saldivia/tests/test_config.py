@@ -124,3 +124,60 @@ def test_env_merged_includes_saldivia_vars(config_dir):
 
     # APP_VECTORSTORE_SEARCHTYPE is not in ENV_MAPPING
     assert "APP_VECTORSTORE_SEARCHTYPE" not in env
+
+
+def test_get_rag_params_returns_expected_keys(config_dir):
+    from saldivia.config import ConfigLoader
+    loader = ConfigLoader(str(config_dir))
+    loader.load()
+    params = loader.get_rag_params()
+    assert "temperature" in params
+    assert "max_tokens" in params
+    assert "llm_model" in params
+    assert params["temperature"] == 0.1
+    assert params["llm_model"] == "nvidia/nemotron"
+
+
+def test_update_rag_params_creates_overrides(config_dir):
+    from saldivia.config import ConfigLoader
+    import yaml
+    loader = ConfigLoader(str(config_dir))
+    loader.load()
+    loader.update_rag_params({"temperature": 0.9})
+    overrides_path = config_dir / "admin-overrides.yaml"
+    assert overrides_path.exists()
+    data = yaml.safe_load(overrides_path.read_text())
+    assert data["services"]["llm"]["parameters"]["temperature"] == 0.9
+
+
+def test_update_rag_params_merges(config_dir):
+    from saldivia.config import ConfigLoader
+    import yaml
+    loader = ConfigLoader(str(config_dir))
+    loader.load()
+    loader.update_rag_params({"temperature": 0.9})
+    loader.update_rag_params({"max_tokens": 4096})
+    overrides_path = config_dir / "admin-overrides.yaml"
+    data = yaml.safe_load(overrides_path.read_text())
+    assert data["services"]["llm"]["parameters"]["temperature"] == 0.9
+    assert data["services"]["llm"]["parameters"]["max_tokens"] == 4096
+
+
+def test_reset_rag_params(config_dir):
+    from saldivia.config import ConfigLoader
+    loader = ConfigLoader(str(config_dir))
+    loader.load()
+    loader.update_rag_params({"temperature": 0.9})
+    loader.reset_rag_params()
+    assert not (config_dir / "admin-overrides.yaml").exists()
+
+
+def test_switch_profile_inmemory(config_dir):
+    from saldivia.config import ConfigLoader
+    loader = ConfigLoader(str(config_dir))
+    loader.load()
+    assert loader._config["services"]["llm"]["provider"] == "local"
+    loader.switch_profile("workstation-1gpu")
+    assert loader._config["services"]["llm"]["provider"] == "nvidia-api"
+    assert loader._active_profile == "workstation-1gpu"
+    assert not (config_dir / "admin-overrides.yaml").exists()

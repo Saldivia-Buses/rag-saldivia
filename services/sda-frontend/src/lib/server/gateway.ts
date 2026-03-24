@@ -408,3 +408,26 @@ export interface IngestionAlert {
     resolved_by: string | null;
     notes: string | null;
 }
+
+// RAG Config
+export async function gatewayGetRagConfig(): Promise<Record<string, unknown>> {
+    return gw('/admin/config');
+}
+
+export async function gatewayUpdateRagConfig(params: Record<string, unknown>): Promise<void> {
+    await gw('/admin/config', {
+        method: 'PATCH',
+        body: JSON.stringify(params),
+    });
+}
+
+export async function gatewayResetRagConfig(): Promise<void> {
+    await gw('/admin/config/reset', { method: 'POST' });
+}
+
+export async function gatewaySwitchProfile(profile: string): Promise<void> {
+    await gw('/admin/profile', {
+        method: 'POST',
+        body: JSON.stringify({ profile }),
+    });
+}
