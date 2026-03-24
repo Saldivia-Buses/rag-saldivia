@@ -217,12 +217,15 @@ Criterio de done: `rag setup` completa el onboarding desde cero. Todos los coman
 
 ## Fase 5 — Black box: logging + error reporting *(6-10 hs)*
 
-- [ ] `packages/logger/backend.ts`: niveles TRACE/DEBUG/INFO/WARN/ERROR/FATAL, escribe a tabla `events` en SQLite y a archivo rotado. Formato legible en dev, JSON en producción — *2 hs*
-- [ ] `packages/logger/frontend.ts`: captura acciones del usuario y errores en el browser con batching. Envía al endpoint `/api/log` del servidor — *1-2 hs*
-- [ ] `packages/logger/suggestions.ts`: mapeo de errores conocidos a mensajes accionables. Al menos: ECONNREFUSED en RAG/Milvus, JWT expired, SQLite BUSY, colección no encontrada, puerto ocupado — *1 hs*
-- [ ] `packages/logger/blackbox.ts`: función `reconstruct(fromTs, toTs)` que lee eventos en orden de secuencia y reconstruye el estado del sistema. Output: timeline + estado final + diff con la DB actual — *2-3 hs*
-- [ ] Instrumentar todos los puntos críticos de `apps/web` con el logger — *1 hs*
-- [ ] Tres archivos de log con rotación: `backend.log` (todo), `errors.log` (solo ERROR y FATAL), `frontend.log` (eventos del browser) — *30 min*
+- [x] `packages/logger/backend.ts`: niveles TRACE/DEBUG/INFO/WARN/ERROR/FATAL, escribe a tabla `events` + consola. Formato legible en dev, JSON en producción — completado 2026-03-24
+- [x] `packages/logger/frontend.ts`: captura acciones del usuario y errores en el browser con batching hacia `/api/log` — completado 2026-03-24
+- [x] `packages/logger/suggestions.ts`: mapeo de errores conocidos a mensajes accionables — completado 2026-03-24
+- [x] `packages/logger/blackbox.ts`: `reconstructFromEvents()` + `formatTimeline()` para reconstruir estado del sistema — completado 2026-03-24
+- [x] `apps/web`: GET /api/audit (con filtros), GET /api/audit/replay, GET /api/audit/export — completado 2026-03-24
+- [x] `apps/web`: GET /api/health para health check de la CLI — completado 2026-03-24
+- [x] `apps/web`: página de audit log con tabla filtrable — completado 2026-03-24
+- [ ] Instrumentación completa de todos los puntos críticos — pendiente (instrumentación básica activa, falta completar)
+- [ ] Archivos de log físicos con rotación — pendiente (Fase 5 completa)
 
 Criterio de done: después de simular un crash, `rag audit replay` reconstruye exactamente lo que pasó.
 
