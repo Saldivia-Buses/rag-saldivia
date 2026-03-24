@@ -1,5 +1,7 @@
 // src/lib/server/gateway.ts
 // Typed wrapper for all gateway API calls. Uses SYSTEM_API_KEY Bearer auth.
+import type { UserPreferences } from '$lib/types/preferences';
+
 export const GATEWAY_URL = process.env.GATEWAY_URL ?? 'http://localhost:9000';
 
 /** Default timeout for normal API calls (ms) */
@@ -126,6 +128,36 @@ export async function gatewayMessageFeedback(
     await gw<{ ok: boolean }>(
         `/chat/sessions/${sessionId}/messages/${messageId}/feedback?user_id=${userId}`,
         { method: 'POST', body: JSON.stringify({ rating }) }
+    );
+}
+
+// Preferences
+export async function gatewayGetPreferences(userId: number): Promise<UserPreferences> {
+    return gw<UserPreferences>(`/auth/me/preferences?user_id=${userId}`);
+}
+
+export async function gatewayUpdatePreferences(
+    userId: number, prefs: Partial<UserPreferences>
+): Promise<void> {
+    await gw<{ ok: boolean }>(
+        `/auth/me/preferences?user_id=${userId}`,
+        { method: 'PATCH', body: JSON.stringify(prefs) }
+    );
+}
+
+export async function gatewayUpdateProfile(userId: number, name: string): Promise<void> {
+    await gw<{ ok: boolean }>(
+        `/auth/me/profile?user_id=${userId}`,
+        { method: 'PATCH', body: JSON.stringify({ name }) }
+    );
+}
+
+export async function gatewayUpdatePassword(
+    userId: number, currentPw: string, newPw: string
+): Promise<void> {
+    await gw<{ ok: boolean }>(
+        `/auth/me/password?user_id=${userId}`,
+        { method: 'PATCH', body: JSON.stringify({ current_password: currentPw, new_password: newPw }) }
     );
 }
 
