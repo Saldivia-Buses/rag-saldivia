@@ -50,6 +50,15 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 - `apps/web`: páginas de chat (lista de sesiones + interfaz de chat con streaming SSE + feedback) — 2026-03-24
 - `apps/web`: página de admin/users con tabla y formulario de creación — 2026-03-24
 - `apps/web`: página de settings con Perfil, Contraseña y Preferencias — 2026-03-24
+- `apps/cli`: CLI completa con Commander + @clack/prompts + chalk + cli-table3 — 2026-03-24
+- `apps/cli`: `rag status` — semáforo de servicios con latencias — 2026-03-24
+- `apps/cli`: `rag users list/create/delete` — gestión de usuarios con wizard interactivo — 2026-03-24
+- `apps/cli`: `rag collections list/create/delete` — gestión de colecciones — 2026-03-24
+- `apps/cli`: `rag ingest start/status/cancel` — ingesta con barra de progreso — 2026-03-24
+- `apps/cli`: `rag config get/set/reset` — configuración RAG — 2026-03-24
+- `apps/cli`: `rag audit log/replay/export` — audit log y black box replay — 2026-03-24
+- `apps/cli`: `rag db migrate/seed/reset`, `rag setup` — administración de DB — 2026-03-24
+- `apps/cli`: modo REPL interactivo (sin argumentos) con selector de comandos — 2026-03-24
 
 ---
 

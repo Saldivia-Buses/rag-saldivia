@@ -201,15 +201,15 @@ Reemplaza y supera el CLI Python actual (424 líneas). La CLI es la única inter
 
 Stack: Bun + Commander (comandos y flags) + @clack/prompts (wizards interactivos) + chalk (colores) + cli-table3 (tablas).
 
-- [ ] Estructura base: entrypoint, configuración de Commander, manejo global de errores con sugerencias, cliente HTTP al servidor — *1 hs*
-- [ ] Comandos de usuarios: listar (tabla), crear (wizard interactivo), eliminar (con confirmación), asignar área — *1-2 hs*
-- [ ] Comandos de colecciones: listar (tabla con stats), crear, eliminar (con confirmación si tiene docs) — *1 hs*
-- [ ] Comandos de ingesta: iniciar, ver status (tabla con barra de progreso), cancelar, modo watch — *2 hs*
-- [ ] Comandos de sistema: `rag status` (semáforo de servicios con latencias), `rag config get/set/reset` — *1 hs*
-- [ ] Comandos de audit y black box: `rag audit log` con filtros, `rag audit replay` desde fecha, `rag audit export` — *1 hs*
-- [ ] Comandos de DB y admin: `rag db migrate/seed/reset`, `rag setup`, `rag sessions list/delete` — *1 hs*
-- [ ] Modo REPL interactivo: `rag` sin argumentos abre prompt con autocompletado — *1 hs*
-- [ ] Instalación global via `bun link` para tener `rag` como comando del sistema — *15 min*
+- [x] Estructura base: entrypoint, Commander, manejo global de errores con sugerencias, cliente HTTP — completado 2026-03-24
+- [x] Comandos de usuarios: listar (tabla), crear (wizard interactivo), eliminar (con confirmación) — completado 2026-03-24
+- [x] Comandos de colecciones: listar, crear, eliminar — completado 2026-03-24
+- [x] Comandos de ingesta: iniciar, ver status (tabla con barra de progreso), cancelar — completado 2026-03-24
+- [x] Comandos de sistema: `rag status` (semáforo con latencias), `rag config get/set/reset` — completado 2026-03-24
+- [x] Comandos de audit y black box: `rag audit log` con filtros, `rag audit replay`, `rag audit export` — completado 2026-03-24
+- [x] Comandos de DB: `rag db migrate/seed/reset`, `rag setup` — completado 2026-03-24
+- [x] Modo REPL interactivo: `rag` sin argumentos abre prompt con selector — completado 2026-03-24
+- [x] Instalable globalmente via `bun link` (bin en package.json) — completado 2026-03-24
 
 Criterio de done: `rag setup` completa el onboarding desde cero. Todos los comandos tienen output prolijo con colores y tablas.
 
