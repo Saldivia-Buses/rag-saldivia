@@ -1,42 +1,38 @@
 /**
  * Conexión singleton a la base de datos SQLite.
  *
- * Usa better-sqlite3 (Node.js compatible) para Next.js.
- * En scripts puros de Bun (migrate.ts, seed.ts, worker) se usa bun:sqlite via init.ts.
+ * Usa @libsql/client (JavaScript puro, sin compilación nativa).
+ * Compatible con Bun Y Node.js — sin problemas de plataforma.
+ * Soportado oficialmente por Drizzle ORM.
  */
 
-import Database from "better-sqlite3"
-import { drizzle } from "drizzle-orm/better-sqlite3"
+import { createClient } from "@libsql/client"
+import { drizzle } from "drizzle-orm/libsql"
 import { mkdirSync } from "fs"
-import { join, dirname } from "path"
+import { join, dirname, resolve } from "path"
 import * as schema from "./schema.js"
 
 const DEFAULT_DB_PATH = join(process.cwd(), "data", "app.db")
 
-function getDbPath(): string {
-  return process.env["DATABASE_PATH"] ?? DEFAULT_DB_PATH
+function getDbUrl(): string {
+  const path = process.env["DATABASE_PATH"] ?? DEFAULT_DB_PATH
+  if (path === ":memory:") return ":memory:"
+
+  // Asegurar que el directorio existe
+  try {
+    mkdirSync(dirname(resolve(path)), { recursive: true })
+  } catch {
+    // Ignorar si ya existe
+  }
+
+  // @libsql/client usa URLs tipo file:/absolute/path
+  return `file:${resolve(path)}`
 }
 
 function createConnection() {
-  const dbPath = getDbPath()
-
-  if (dbPath !== ":memory:") {
-    try {
-      mkdirSync(dirname(dbPath), { recursive: true })
-    } catch {
-      // Ignorar si ya existe
-    }
-  }
-
-  const sqlite = new Database(dbPath)
-
-  sqlite.pragma("journal_mode = WAL")
-  sqlite.pragma("synchronous = NORMAL")
-  sqlite.pragma("foreign_keys = ON")
-  sqlite.pragma("cache_size = -32768")
-  sqlite.pragma("temp_store = MEMORY")
-
-  return drizzle(sqlite, { schema })
+  const url = getDbUrl()
+  const client = createClient({ url })
+  return drizzle(client, { schema })
 }
 
 let _db: ReturnType<typeof createConnection> | null = null

@@ -9,8 +9,8 @@ const nextConfig: NextConfig = {
     "@rag-saldivia/logger",
   ],
 
-  // better-sqlite3 y bcrypt son addons nativos — webpack los deja como require() en runtime
-  serverExternalPackages: ["better-sqlite3", "bcrypt-ts"],
+  // bcrypt-ts es puro TS/JS, no necesita ser externo
+  // @libsql/client funciona en Node.js sin compilación nativa
 
   // Forzar el root del proyecto para evitar que Next.js confunda el workspace root
   outputFileTracingRoot: __dirname,

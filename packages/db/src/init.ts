@@ -7,25 +7,29 @@
  *      bun run db:migrate
  */
 
-import { Database } from "bun:sqlite"
+import { createClient } from "@libsql/client"
 import { mkdirSync } from "fs"
-import { join, dirname } from "path"
+import { join, dirname, resolve } from "path"
 
 const dbPath = process.env["DATABASE_PATH"] ?? join(process.cwd(), "data", "app.db")
+const dbUrl = dbPath === ":memory:" ? ":memory:" : `file:${resolve(dbPath)}`
 
-// Crear directorio si no existe
 if (dbPath !== ":memory:") {
-  try { mkdirSync(dirname(dbPath), { recursive: true }) } catch { /* ya existe */ }
+  try { mkdirSync(dirname(resolve(dbPath)), { recursive: true }) } catch { /* ya existe */ }
 }
 
-const db = new Database(dbPath)
+const client = createClient({ url: dbUrl })
 
-db.exec("PRAGMA journal_mode = WAL")
-db.exec("PRAGMA foreign_keys = ON")
+// Helper para ejecutar SQL de setup
+async function exec(sql: string) {
+  await client.executeMultiple(sql)
+}
 
 console.log(`Inicializando base de datos: ${dbPath}`)
 
-db.exec(`
+console.log(`Inicializando base de datos: ${dbPath}`)
+
+await exec(`
   -- Áreas
   CREATE TABLE IF NOT EXISTS areas (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -186,7 +190,7 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_events_sequence ON events(sequence);
 `)
 
-console.log("Base de datos inicializada correctamente.")
+console.log("Base de datos inicializada correctamente (libsql)")
 console.log("Tablas creadas: areas, users, user_areas, area_collections,")
 console.log("  audit_log, chat_sessions, chat_messages, message_feedback,")
 console.log("  ingestion_jobs, ingestion_alerts, ingestion_queue, events")

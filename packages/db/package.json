@@ -13,13 +13,12 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@libsql/client": "^0.14.0",
     "@rag-saldivia/shared": "workspace:*",
     "bcrypt-ts": "^5.0.0",
-    "better-sqlite3": "^9.0.0",
     "drizzle-orm": "^0.38.0"
   },
   "devDependencies": {
-    "@types/better-sqlite3": "^7.6.0",
     "drizzle-kit": "^0.30.0",
     "typescript": "^6.0.0"
   }
