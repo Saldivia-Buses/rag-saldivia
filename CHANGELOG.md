@@ -64,6 +64,11 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 - `apps/web`: GET /api/audit/export — exportar todos los eventos como JSON — 2026-03-24
 - `apps/web`: GET /api/health — health check público para la CLI y monitoring — 2026-03-24
 - `apps/web`: página /audit con tabla de eventos filtrable por nivel y tipo — 2026-03-24
+- `docs/architecture.md`: arquitectura completa del nuevo stack (servidor único, DB, auth, caching) — 2026-03-24
+- `docs/blackbox.md`: guía del sistema de black box logging y replay — 2026-03-24
+- `docs/cli.md`: referencia completa de todos los comandos de la CLI — 2026-03-24
+- `docs/onboarding.md`: guía de 5 minutos para nuevos colaboradores — 2026-03-24
+- `.gitignore`: agregado `.next/`, `.turbo/`, `logs/`, `data/*.db`, `bun.lockb` — 2026-03-24
 
 ---
 

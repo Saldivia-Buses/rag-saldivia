@@ -44,3 +44,18 @@ screen*.jpg
 
 # Admin runtime overrides (generated at runtime, not tracked)
 config/admin-overrides.yaml
+
+# Next.js
+.next/
+out/
+
+# Turborepo
+.turbo/
+
+# Data (DB + logs)
+data/*.db
+logs/*.log
+logs/
+
+# Bun
+bun.lockb

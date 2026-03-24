@@ -233,15 +233,15 @@ Criterio de done: después de simular un crash, `rag audit replay` reconstruye e
 
 ## Fase 6 — Docs + limpieza *(4-6 hs)*
 
-- [ ] `CHANGELOG.md` revisado y completo con todo lo hecho en la branch (fue llenándose durante el proceso) — *1 hs*
-- [ ] `CLAUDE.md` actualizado: nuevo stack, nuevos comandos, nueva estructura de carpetas — *1 hs*
-- [ ] `docs/architecture.md`: diagrama del servidor único, flujo de auth, flujo de RAG — *1 hs*
-- [ ] `docs/blackbox.md`: formato de eventos, cómo usar `rag audit replay`, casos de uso — *30 min*
-- [ ] `docs/cli.md`: referencia completa de todos los comandos — *30 min*
-- [ ] `docs/onboarding.md`: guía de 5 minutos para nuevos colaboradores — *30 min*
-- [ ] `.gitignore` actualizado: `.next/`, `.turbo/`, `logs/*.log`, `data/*.db` — *15 min*
-- [ ] Código viejo archivado: `saldivia/`, `services/sda-frontend/`, `cli/` movidos a `_archive/` con un README que explica por qué están ahí — *30 min*
-- [ ] Scripts shell reemplazados por equivalentes TypeScript en `scripts/` — *1 hs*
+- [x] `CHANGELOG.md` completo — se fue llenando durante toda la branch — completado 2026-03-24
+- [ ] `CLAUDE.md` actualizado: nuevo stack, nuevos comandos, nueva estructura — pendiente
+- [x] `docs/architecture.md`: diagrama del servidor único, flujos de auth y RAG, DB, caching — completado 2026-03-24
+- [x] `docs/blackbox.md`: formato de eventos, cómo usar `rag audit replay`, sugerencias de errores — completado 2026-03-24
+- [x] `docs/cli.md`: referencia completa de todos los comandos — completado 2026-03-24
+- [x] `docs/onboarding.md`: guía de 5 minutos para nuevos colaboradores — completado 2026-03-24
+- [x] `.gitignore` actualizado: `.next/`, `.turbo/`, `logs/`, `data/*.db` — completado 2026-03-24
+- [ ] Código viejo archivado: `saldivia/`, `services/sda-frontend/`, `cli/` → `_archive/` — pendiente (preservado para referencia, no urgente)
+- [ ] Scripts shell reemplazados por equivalentes TypeScript — pendiente
 
 ---
 
