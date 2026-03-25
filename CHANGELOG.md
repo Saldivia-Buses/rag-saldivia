@@ -21,6 +21,8 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Added
 
+- `apps/web/src/app/api/admin/permissions/route.ts`: endpoint POST/DELETE para asignar/quitar colecciones a áreas (necesario para flujos E2E) — 2026-03-25
+- `apps/web/src/app/api/admin/users/[id]/areas/route.ts`: endpoint POST/DELETE para asignar/quitar áreas a usuarios (necesario para flujos E2E) — 2026-03-25
 - `apps/web/src/app/api/admin/users/route.ts` y `[id]/route.ts`: endpoints GET/POST/DELETE/PATCH para gestión de usuarios desde la CLI — 2026-03-25
 - `apps/web/src/app/api/admin/areas/route.ts` y `[id]/route.ts`: endpoints GET/POST/DELETE para gestión de áreas desde la CLI — 2026-03-25
 - `apps/web/src/app/api/admin/config/route.ts` y `reset/route.ts`: endpoints GET/PATCH/POST para config RAG desde la CLI — 2026-03-25
