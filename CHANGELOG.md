@@ -91,9 +91,10 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 - `bun.lock`: lockfile de Bun commiteado para reproducibilidad de dependencias — 2026-03-24
 - `scripts/link-libsql.sh`: script que crea symlinks de @libsql en apps/web/node_modules para WSL2 — 2026-03-24
 - `scripts/test-login-final.sh`: script de test de los endpoints de auth — 2026-03-24
-- `apps/web/src/lib/auth/__tests__/jwt.test.ts`: Fase 1a/1b completadas — 17 tests: JWT (createJwt, verifyJwt, extractClaims, makeAuthCookie, token expirado, Secure en producción) + RBAC (getRequiredRole, canAccessRoute con area_manager) — 2026-03-24
-- `packages/db/src/__tests__/users.test.ts`: Fase 1c completada — 16 tests contra SQLite en memoria: createUser (email dup lanza error), verifyPassword (password incorrecta/usuario inactivo retorna null), listUsers, updateUser, deleteUser + CASCADE en user_areas — 2026-03-24
-- `packages/logger/src/__tests__/logger.test.ts`: Fase 1e completada — 24 tests: shouldLog por nivel, log.info/warn/error/debug/fatal/request no lanzan, output contiene tipo de evento, reconstructFromEvents (vacío/orden/stats/usuarios/queries/errores), formatTimeline — 2026-03-24
+- `docs/plans/ultra-optimize-plan2-testing.md`: plan de testing granular en 7 fases creado — 2026-03-24
+- `apps/web/src/lib/auth/__tests__/jwt.test.ts`: Fase 1a/1b — 17 tests: createJwt, verifyJwt (token inválido/firmado mal/expirado), extractClaims (cookie/header/sin token), makeAuthCookie (HttpOnly/Secure en prod), RBAC (getRequiredRole, canAccessRoute) — 2026-03-24
+- `packages/db/src/__tests__/users.test.ts`: Fase 1c — 16 tests contra SQLite en memoria: createUser (email normalizado/rol/dup lanza error), verifyPassword (correcta/incorrecta/inexistente/inactivo), listUsers (vacío/múltiples/campos), updateUser (nombre/rol/desactivar), deleteUser (elimina usuario + CASCADE en user_areas) — 2026-03-24
+- `packages/logger/src/__tests__/logger.test.ts`: Fase 1e — 24 tests: shouldLog por nivel (5), log.info/warn/error/debug/fatal/request no lanzan (7), output contiene tipo de evento (3), reconstructFromEvents vacío/orden/stats/usuarios/queries/errores (6), formatTimeline (3) — 2026-03-24
 
 ### Changed
 
@@ -115,8 +116,11 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 - `apps/cli/package.json`: agregadas dependencias workspace faltantes `@rag-saldivia/logger` y `@rag-saldivia/db` — `audit.ts` importaba `formatTimeline`/`reconstructFromEvents` y `DbEvent` de esos paquetes pero Bun no los encontraba — 2026-03-24
 - `packages/logger/package.json`: agregado export `./suggestions` faltante — `apps/cli/src/output.ts` importaba `getSuggestion` de `@rag-saldivia/logger/suggestions` sin que estuviera declarado en `exports` — 2026-03-24
-- `apps/web/src/middleware.ts`: agregado `/api/health` a `PUBLIC_ROUTES` — el endpoint retornaba 401 al CLI y a cualquier sistema de monitoreo externo — 2026-03-24
-- `docs/plans/ultra-optimize-plan2-testing.md`: plan de testing granular fase a fase creado — 2026-03-24
+- `apps/web/src/middleware.ts`: agregado `/api/health` a `PUBLIC_ROUTES` — el endpoint retornaba 401 al CLI y a cualquier sistema de monitoreo externo — 2026-03-24 *(encontrado en Fase 0)*
+- `apps/web/src/lib/auth/__tests__/jwt.test.ts`: `await import("../rbac.js")` dentro del callback de `describe` lanzaba `"await" can only be used inside an "async" function` — movido al nivel del módulo junto con los demás imports — 2026-03-24 *(encontrado en Fase 1a)*
+- `apps/web/src/lib/auth/__tests__/jwt.test.ts`: test `makeAuthCookie incluye Secure en producción` referenciaba `validClaims` definido en otro bloque `describe` — reemplazado por claims inline en el test — 2026-03-24 *(encontrado en Fase 1b)*
+- `packages/logger/src/__tests__/logger.test.ts`: mismo patrón `await import` dentro de callbacks `describe` (×3 bloques) — todos los imports movidos al nivel del módulo — 2026-03-24 *(encontrado en Fase 1e)*
+- `packages/logger/src/__tests__/logger.test.ts`: tests de formato JSON en producción asumían que cambiar `NODE_ENV` post-import afectaría el logger, pero `isDev` se captura en `createLogger()` al momento del import — tests rediseñados para verificar el output directamente y testear `formatJson` con datos conocidos — 2026-03-24 *(encontrado en Fase 1e)*
 
 - DB: migrado de `better-sqlite3` (requería compilación nativa con node-gyp, falla en Bun) a `@libsql/client` (JS puro, sin compilación, compatible con Bun y Node.js) — 2026-03-24
 - DB: creado `packages/db/src/init.ts` con SQL directo (sin drizzle-kit) para inicialización en entornos sin build tools — 2026-03-24

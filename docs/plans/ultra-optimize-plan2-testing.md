@@ -49,7 +49,14 @@ Objetivo: confirmar que el entorno está en el estado correcto antes de ejecutar
 - [x] `rag --version` responde desde cualquier directorio (bun link aplicado en `apps/cli`) — completado 2026-03-24
 - [x] `.env.local` tiene `MOCK_RAG=true` y `JWT_SECRET` definido — completado 2026-03-24
 
+> **Bug 1 encontrado:** `apps/cli/package.json` no declaraba `@rag-saldivia/logger` ni `@rag-saldivia/db` como dependencias workspace. `rag status` fallaba con módulo no encontrado. Fix: agregar ambos al `dependencies`.
+>
+> **Bug 2 encontrado:** `packages/logger/package.json` no exportaba `./suggestions`. `apps/cli/src/output.ts` importaba `getSuggestion` desde `@rag-saldivia/logger/suggestions` y Bun no lo resolvía. Fix: agregar el export al campo `exports`.
+>
+> **Bug 3 encontrado:** `apps/web/src/middleware.ts` no incluía `/api/health` en `PUBLIC_ROUTES`. El endpoint retornaba 401 en lugar de 200. Fix: agregar `/api/health` al array de rutas públicas.
+
 Criterio de done: los 4 checks pasan. El servidor está corriendo y la CLI responde.
+**Estado: completado 2026-03-24 — 3 bugs encontrados y corregidos**
 
 ---
 
@@ -59,23 +66,37 @@ Objetivo: verificar la lógica pura del sistema sin depender del servidor ni del
 
 ### Fase 1a — Auth *(10 min)*
 
-- [x] `bun test apps/web/src/lib/auth/__tests__/jwt.test.ts` pasa sin errores — completado 2026-03-24 (fix: await import movido al nivel del módulo)
+- [x] `bun test apps/web/src/lib/auth/__tests__/jwt.test.ts` pasa sin errores — completado 2026-03-24
 - [x] Verificar que el test de `makeAuthCookie` incluye `Secure` cuando `NODE_ENV=production` — completado 2026-03-24
 - [x] Verificar que `verifyJwt` retorna null para token con `exp` en el pasado — completado 2026-03-24
 
+> **Bug encontrado:** `await import("../rbac.js")` estaba dentro del callback de `describe` (no es un contexto `async`). Bun lanzaba `"await" can only be used inside an "async" function`. Fix: importar al nivel del módulo junto con los demás `await import`. — 2026-03-24
+
+**Resultado: 9/9 tests de auth pasando**
+
 ### Fase 1b — RBAC *(10 min)*
 
-- [x] Tests de RBAC en el mismo archivo: admin, area_manager y user — los 3 pasan — completado 2026-03-24
+- [x] Tests de RBAC: admin, area_manager y user — los 3 pasan — completado 2026-03-24
 - [x] Agregar test: `getRequiredRole("/api/admin/users")` retorna `"admin"` — completado 2026-03-24
 - [x] Agregar test: `getRequiredRole("/chat")` retorna `null` — completado 2026-03-24
 - [x] Agregar test: `canAccessRoute` con `area_manager` en ruta `/audit` retorna `true` — completado 2026-03-24
 
+> **Bug encontrado:** el test `makeAuthCookie incluye Secure en producción` referenciaba `validClaims` definido en el bloque `JWT utilities`, pero estaba en el bloque `RBAC utilities` — scope incorrecto. Fix: usar claims inline en el test. — 2026-03-24
+
+**Resultado: 17/17 tests de auth + RBAC pasando**
+
 ### Fase 1c — DB queries *(15 min)*
 
-- [x] Crear `packages/db/src/__tests__/users.test.ts`: `createUser`, `verifyPassword`, `listUsers`, `updateUser`, `deleteUser` — completado 2026-03-24
-- [x] Verificar que `verifyPassword` retorna `null` para password incorrecta — completado 2026-03-24
-- [x] Verificar que `createUser` con email duplicado lanza error con mensaje descriptivo — completado 2026-03-24
-- [x] Verificar que `deleteUser` elimina también las filas en `user_areas` — completado 2026-03-24
+- [x] Crear `packages/db/src/__tests__/users.test.ts` — completado 2026-03-24
+- [x] `createUser`: email normalizado a minúsculas, rol por defecto `user`, email duplicado lanza error — completado 2026-03-24
+- [x] `verifyPassword` retorna `null` para password incorrecta, usuario inexistente, usuario inactivo — completado 2026-03-24
+- [x] `listUsers` retorna todos los usuarios con sus campos — completado 2026-03-24
+- [x] `updateUser` actualiza nombre, rol, estado activo — completado 2026-03-24
+- [x] `deleteUser` elimina el usuario y sus filas en `user_areas` (CASCADE) — completado 2026-03-24
+
+> **Decisión de diseño:** se usa una instancia `testDb` separada apuntando a `:memory:` en lugar del singleton de `connection.ts`, y se inicializa el schema con SQL puro (igual que `init.ts`). Esto evita contaminación entre tests y no requiere archivos en disco.
+
+**Resultado: 16/16 tests de DB queries pasando**
 
 ### Fase 1d — Config loader *(5 min)*
 
@@ -84,14 +105,22 @@ Objetivo: verificar la lógica pura del sistema sin depender del servidor ni del
 
 ### Fase 1e — Logger + Black box *(15 min)*
 
-- [x] `packages/logger/backend.ts`: `log.info`, `log.warn`, `log.error` no lanzan excepciones — completado 2026-03-24
-- [x] En `NODE_ENV=production` el output es JSON válido con campos `level`, `event`, `ts` — completado 2026-03-24 (testeado via formatJson directo; logger captura isDev al import)
-- [x] `packages/logger/blackbox.ts`: `reconstructFromEvents([])` retorna array vacío sin error — completado 2026-03-24
-- [x] `reconstructFromEvents` con 5 eventos los ordena por timestamp correctamente — completado 2026-03-24
-- [x] `formatTimeline` produce un string no vacío con los eventos — completado 2026-03-24
+- [x] `log.info`, `log.warn`, `log.error`, `log.debug`, `log.fatal`, `log.request` no lanzan excepciones — completado 2026-03-24
+- [x] Output de `log.info` contiene el tipo de evento — completado 2026-03-24
+- [x] `formatJson` produce JSON válido con campos `ts`, `level`, `type` — completado 2026-03-24
+- [x] `reconstructFromEvents([])` retorna estado vacío sin error — completado 2026-03-24
+- [x] `reconstructFromEvents` ordena timeline por timestamp descendente — completado 2026-03-24
+- [x] `reconstructFromEvents` cuenta errores/warnings/usuarios únicos/queries RAG correctamente — completado 2026-03-24
+- [x] `formatTimeline` produce un string no vacío con header de stats, timeline y sección de errores — completado 2026-03-24
+
+> **Bug encontrado (×3):** `await import(...)` dentro de callbacks `describe` — mismo patrón que Fase 1a. Fix: todos los imports movidos al nivel del módulo.
+>
+> **Bug encontrado:** tests de formato JSON en producción asumían que cambiar `process.env["NODE_ENV"]` post-import afectaría el formato del logger. El valor `isDev` se captura en `createLogger()` al momento del import (cuando `NODE_ENV="test"`), por lo que siempre formatea en modo pretty durante tests. Fix: testear `log.*` verificando que el output contiene el tipo de evento (sin asumir JSON), y testear el formato JSON construyendo el objeto directamente.
+
+**Resultado: 24/24 tests de logger + blackbox pasando**
 
 Criterio de done: `bun test` corre todas las suites sin fallos. 0 errores, 0 tests skipped no intencionalmente.
-**Estado: 57/57 tests pasan — Fase 1 completada 2026-03-24 (salvo Fase 1d pendiente)**
+**Estado: 57/57 tests pasan — Fase 1 completada 2026-03-24 (Fase 1d pendiente)**
 
 ---
 
