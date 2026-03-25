@@ -9,6 +9,12 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Fixed
+
+- `packages/logger/src/backend.ts`: reemplazar lazy-load dinámico `import("@rag-saldivia/db" as any)` por import estático — en webpack/Next.js el dynamic import fallaba silenciosamente y ningún evento backend se persistía — 2026-03-25 *(encontrado en Fase 5)*
+- `packages/logger/src/backend.ts`: `persistEvent` pasaba `userId=0` (SYSTEM_API_KEY) a la tabla events que tiene FK constraint a users.id — fix: escribir null cuando userId ≤ 0 — 2026-03-25 *(encontrado en Fase 5)*
+- `packages/logger/package.json`: agregar `@rag-saldivia/db` como dependencia explícita del paquete logger — 2026-03-25
+
 ### Added
 
 - `apps/web/src/app/api/admin/users/route.ts` y `[id]/route.ts`: endpoints GET/POST/DELETE/PATCH para gestión de usuarios desde la CLI — 2026-03-25
