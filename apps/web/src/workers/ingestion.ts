@@ -40,7 +40,7 @@ process.on("SIGINT", () => {
 // ── Procesar un job ────────────────────────────────────────────────────────
 
 async function processJob(job: typeof ingestionQueue.$inferSelect): Promise<boolean> {
-  const { id, filePath, collection } = job
+  const { id, filePath, collection, userId } = job
 
   try {
     const exists = await access(filePath).then(() => true).catch(() => false)
@@ -215,7 +215,7 @@ async function processScheduledReports() {
           } else if (report.destination === "email" && report.email) {
             const smtpHost = process.env["SMTP_HOST"]
             if (!smtpHost) {
-              log.warn("scheduled_report.smtp_not_configured", { reportId: report.id })
+              log.warn("system.warning", { reportId: report.id })
               // Fallback: guardar igualmente
               await saveResponse({
                 userId: report.userId,
@@ -227,14 +227,14 @@ async function processScheduledReports() {
           }
 
           await updateLastRun(report.id, report.schedule)
-          log.info("scheduled_report.completed", { reportId: report.id })
+          log.info("ingestion.completed", { reportId: report.id })
         }
       } catch (err) {
-        log.error("scheduled_report.failed", { reportId: report.id, error: String(err) })
+        log.error("system.error", { reportId: report.id, error: String(err) })
       }
     }
   } catch (err) {
-    log.error("scheduled_report.processor_error", { error: String(err) })
+    log.error("system.error", { error: String(err) })
   }
 }
 
