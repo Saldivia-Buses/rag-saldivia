@@ -11,6 +11,10 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Fixed
 
+- `apps/web/src/app/api/auth/login/route.ts`: login con cuenta desactivada retornaba 401 en lugar de 403 — `verifyPassword` devuelve null para inactivos sin distinguir de contraseña incorrecta; agregado `getUserByEmail` check previo para detectar cuenta inactiva — 2026-03-25 *(encontrado en Fase 6e)*
+- `apps/web/src/app/api/admin/db/reset/route.ts` y `seed/route.ts`: corregir errores de type-check (initDb inexistente, bcrypt-ts no disponible, null check en insert) — 2026-03-25
+- `apps/web/src/lib/auth/jwt.ts`: agregar `iat` y `exp` al objeto retornado desde headers del middleware — 2026-03-25
+
 - `packages/logger/src/backend.ts`: reemplazar lazy-load dinámico `import("@rag-saldivia/db" as any)` por import estático — en webpack/Next.js el dynamic import fallaba silenciosamente y ningún evento backend se persistía — 2026-03-25 *(encontrado en Fase 5)*
 - `packages/logger/src/backend.ts`: `persistEvent` pasaba `userId=0` (SYSTEM_API_KEY) a la tabla events que tiene FK constraint a users.id — fix: escribir null cuando userId ≤ 0 — 2026-03-25 *(encontrado en Fase 5)*
 - `packages/logger/package.json`: agregar `@rag-saldivia/db` como dependencia explícita del paquete logger — 2026-03-25
