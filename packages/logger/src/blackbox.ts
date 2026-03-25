@@ -10,7 +10,18 @@
  * algoritmo de reconstrucción base.
  */
 
-import type { DbEvent } from "@rag-saldivia/db"
+// Tipo inline para evitar dependencia circular logger → db
+export type DbEvent = {
+  id: string
+  ts: number
+  source: string
+  level: string
+  type: string
+  userId: number | null
+  sessionId: string | null
+  payload: unknown
+  sequence: number
+}
 
 export type ReconstructedState = {
   // Estado de usuarios en ese momento

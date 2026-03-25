@@ -3,7 +3,8 @@
  * con usuarios: verify_user, get_user, create_user, update_user, delete_user, etc.
  */
 
-import { eq, and, inArray } from "drizzle-orm"
+import { eq, and } from "drizzle-orm"
+import { createHash } from "crypto"
 import { getDb } from "../connection"
 import { users, userAreas, areas } from "../schema"
 import { compareSync, hashSync } from "bcrypt-ts"
@@ -70,7 +71,7 @@ export async function createUser(data: {
   areaIds?: number[]
 }) {
   const passwordHash = hashSync(data.password, 10)
-  const apiKeyHash = Bun.hash(`rsk_${crypto.randomUUID()}`).toString()
+  const apiKeyHash = createHash("sha256").update(`rsk_${crypto.randomUUID()}`).digest("hex").slice(0, 32)
 
   const [user] = await db
     .insert(users)

@@ -74,18 +74,24 @@ function formatJson(level: LogLevel, type: EventType, payload: Record<string, un
 
 // ── File logging (con rotación) ────────────────────────────────────────────
 
-let _writeToFile: ((filename: string, line: string) => Promise<void>) | null = null
+type LogFilename = "backend.log" | "errors.log" | "frontend.log"
+let _writeToFile: ((filename: LogFilename, line: string) => Promise<void>) | null = null
+let _shouldWriteToErrorLog: ((level: LogLevel) => boolean) | null = null
 
 async function writeToFiles(level: LogLevel, line: string): Promise<void> {
   try {
     if (!_writeToFile) {
-      const { writeToLogFile, shouldWriteToErrorLog } = await import("./rotation")
-      _writeToFile = writeToLogFile
+      const rotation = await import("./rotation")
+      _writeToFile = rotation.writeToLogFile
+      _shouldWriteToErrorLog = rotation.shouldWriteToErrorLog
     }
-    await _writeToFile("backend.log", line)
-    const { shouldWriteToErrorLog } = await import("./rotation")
-    if (shouldWriteToErrorLog(level)) {
-      await _writeToFile("errors.log", line)
+    const writeFn = _writeToFile
+    const shouldError = _shouldWriteToErrorLog
+    if (writeFn) {
+      await writeFn("backend.log", line)
+      if (shouldError?.(level)) {
+        await writeFn("errors.log", line)
+      }
     }
   } catch {
     // Silencioso
@@ -107,10 +113,12 @@ async function persistEvent(level: LogLevel, type: EventType, payload: Record<st
   try {
     if (!_writeToDb) {
       // Lazy-load para evitar dependencias circulares
-      const { writeEvent } = await import("@rag-saldivia/db")
-      _writeToDb = writeEvent as typeof _writeToDb
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const db = await import("@rag-saldivia/db" as any)
+      _writeToDb = db.writeEvent as typeof _writeToDb
     }
-    await _writeToDb?.({
+    const writeFn = _writeToDb
+    await writeFn?.({
       source: "backend",
       level,
       type,

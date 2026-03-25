@@ -13,6 +13,7 @@
  */
 
 import { eq, and, isNull } from "drizzle-orm"
+import { readFile, access } from "fs/promises"
 import { getDb, ingestionQueue } from "@rag-saldivia/db"
 import { log } from "@rag-saldivia/logger/backend"
 
@@ -41,14 +42,14 @@ async function processJob(job: typeof ingestionQueue.$inferSelect): Promise<bool
   const { id, filePath, collection } = job
 
   try {
-    const file = Bun.file(filePath)
-    const exists = await file.exists()
+    const exists = await access(filePath).then(() => true).catch(() => false)
     if (!exists) {
       log.error("ingestion.failed", { jobId: id, reason: "file_not_found", filePath })
       return false
     }
 
-    const blob = await file.arrayBuffer()
+    const buffer = await readFile(filePath)
+    const blob = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength)
     const filename = filePath.split("/").pop() ?? filePath.split("\\").pop() ?? "document.pdf"
 
     const formData = new FormData()

@@ -2,9 +2,11 @@
 # Corre type-check antes de hacer push.
 # Solo aplica si el monorepo (apps/web) ya existe (Fase 2+).
 
+BUN="${BUN_PATH:-$(which bun 2>/dev/null || echo /home/enzo/.bun/bin/bun)}"
+
 if [ -f "apps/web/package.json" ]; then
   echo "Corriendo type-check antes del push..."
-  bun run --filter=./apps/web type-check || {
+  "$BUN" run --filter=./apps/web type-check || {
     echo "Type-check falló. Corregí los errores antes de hacer push."
     exit 1
   }

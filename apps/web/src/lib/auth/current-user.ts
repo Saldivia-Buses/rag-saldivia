@@ -4,8 +4,9 @@
  */
 
 import { headers } from "next/headers"
+import { redirect } from "next/navigation"
 import { cache } from "react"
-import type { JwtClaims, Role } from "@rag-saldivia/shared"
+import type { Role } from "@rag-saldivia/shared"
 
 export type CurrentUser = {
   id: number
@@ -41,10 +42,7 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
  */
 export async function requireUser(): Promise<CurrentUser> {
   const user = await getCurrentUser()
-  if (!user) {
-    const { redirect } = await import("next/navigation")
-    redirect("/login")
-  }
+  if (!user) redirect("/login")
   return user
 }
 
@@ -53,9 +51,6 @@ export async function requireUser(): Promise<CurrentUser> {
  */
 export async function requireAdmin(): Promise<CurrentUser> {
   const user = await requireUser()
-  if (user.role !== "admin") {
-    const { redirect } = await import("next/navigation")
-    redirect("/")
-  }
+  if (user.role !== "admin") redirect("/")
   return user
 }

@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import type { DbEvent } from "@rag-saldivia/db"
-import chalk from "chalk"
 
 const LEVEL_STYLES: Record<string, { bg: string; color: string }> = {
   ERROR: { bg: "#fef2f2", color: "#991b1b" },
