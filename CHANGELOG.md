@@ -13,6 +13,10 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 - `apps/web/src/components/layout/AppShell.tsx`: reescrito como Server Component puro — delega toda la UI a `AppShellChrome` — 2026-03-25 *(Plan 4 Fase 0d)*
 
+### Fixed
+
+- `apps/web/src/components/ui/theme-toggle.tsx`: hydration mismatch — el server renderizaba el `title` del botón con el tema default mientras el cliente ya conocía el tema guardado en localStorage; fix: `mounted` state con `useEffect` para evitar renderizar contenido dependiente del tema hasta después de la hidratación — 2026-03-25
+
 ### Changed
 
 - `apps/web/src/app/globals.css`: design tokens reemplazados con paleta crema-índigo — tokens canónicos `--bg #FAFAF9`, `--sidebar-bg #F2F0F0`, `--nav-bg #18181B`, `--accent #7C6AF5`/`#9D8FF8` (dark), `--fg #18181B`/`#FAFAF9` (dark); aliases de compatibilidad apuntan a los canónicos vía `var()` para que los componentes existentes no requieran cambios; dark mode migrado de `@media prefers-color-scheme` a clase `.dark` en `<html>` (prerequisito de next-themes); directiva `@theme` agrega utilidades Tailwind para los nuevos tokens; agregado `@media print` para export de sesión (Fase 1) — 2026-03-25 *(Plan 4 Fase 0a)*
