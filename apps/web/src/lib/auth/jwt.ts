@@ -35,7 +35,20 @@ export async function verifyJwt(token: string): Promise<JwtClaims | null> {
 }
 
 export async function extractClaims(request: Request): Promise<JwtClaims | null> {
-  // Intentar desde cookie primero, luego Authorization header
+  // Si el middleware ya autenticó la request (JWT o SYSTEM_API_KEY),
+  // los claims están en los headers x-user-* — usarlos directamente.
+  const userId = request.headers.get("x-user-id")
+  const userRole = request.headers.get("x-user-role")
+  if (userId && userRole) {
+    return {
+      sub: userId,
+      email: request.headers.get("x-user-email") ?? "",
+      name: request.headers.get("x-user-name") ?? "",
+      role: userRole as JwtClaims["role"],
+    }
+  }
+
+  // Fallback: verificar JWT desde cookie o Authorization header
   const cookieHeader = request.headers.get("cookie")
   if (cookieHeader) {
     const match = cookieHeader.match(/(?:^|;\s*)auth_token=([^;]+)/)

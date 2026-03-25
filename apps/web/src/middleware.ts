@@ -31,6 +31,11 @@ function getSecret(): Uint8Array {
   return new TextEncoder().encode(secret)
 }
 
+function isSystemApiKey(token: string): boolean {
+  const key = process.env["SYSTEM_API_KEY"]
+  return !!key && token === key
+}
+
 async function verifyClaims(token: string): Promise<JwtClaims | null> {
   try {
     const { payload } = await jwtVerify(token, getSecret())
@@ -66,6 +71,16 @@ export async function middleware(request: NextRequest) {
     url.pathname = "/login"
     url.searchParams.set("from", pathname)
     return NextResponse.redirect(url)
+  }
+
+  // SYSTEM_API_KEY: acceso de servicio a servicio con rol admin
+  if (isSystemApiKey(token)) {
+    const headers = new Headers(request.headers)
+    headers.set("x-user-id", "0")
+    headers.set("x-user-email", "system@internal")
+    headers.set("x-user-name", "System")
+    headers.set("x-user-role", "admin")
+    return NextResponse.next({ request: { headers } })
   }
 
   const claims = await verifyClaims(token)
