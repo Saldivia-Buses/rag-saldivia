@@ -63,3 +63,12 @@ logs/
 # Bun
 bun.lockb
 *.tsbuildinfo
+
+# Cursor IDE
+.cursor/
+
+# Playwright MCP
+.playwright-mcp/
+
+# Next.js generated
+apps/web/next-env.d.ts
