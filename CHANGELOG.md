@@ -11,6 +11,9 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Added
 
+- `apps/web/src/components/layout/CommandPalette.tsx`: command palette con `cmdk` — grupos Navegar (chat, colecciones, upload, saved, audit, settings, admin), Apariencia (tema, zen), Sesiones recientes filtradas por texto — 2026-03-25 *(Plan 4 F2.23)*
+- `apps/web/src/app/api/chat/sessions/route.ts`: endpoint GET que lista sesiones del usuario para la palette — 2026-03-25 *(Plan 4 F2.23)*
+- `apps/web/src/hooks/useGlobalHotkeys.ts`: agregado `Cmd+K` para abrir command palette — 2026-03-25 *(Plan 4 F2.23)*
 - `packages/db/src/schema.ts`: tabla `annotations` (selectedText, note, FK a session y message) — 2026-03-25 *(Plan 4 F2.22)*
 - `packages/db/src/queries/annotations.ts`: `saveAnnotation`, `listAnnotationsBySession`, `deleteAnnotation` — 2026-03-25 *(Plan 4 F2.22)*
 - `apps/web/src/components/chat/AnnotationPopover.tsx`: popover flotante al seleccionar texto en respuestas asistente — opciones Guardar, Preguntar sobre esto, Comentar con nota libre — 2026-03-25 *(Plan 4 F2.22)*

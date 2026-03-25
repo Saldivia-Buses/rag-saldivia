@@ -1,7 +1,9 @@
 "use client"
 
+import { useState } from "react"
 import { NavRail } from "./NavRail"
 import { SecondaryPanel } from "./SecondaryPanel"
+import { CommandPalette } from "./CommandPalette"
 import { useZenMode } from "@/hooks/useZenMode"
 import { useNotifications } from "@/hooks/useNotifications"
 import { useGlobalHotkeys } from "@/hooks/useGlobalHotkeys"
@@ -19,15 +21,22 @@ export function AppShellChrome({
   user: CurrentUser
   children: React.ReactNode
 }) {
-  const { isZen } = useZenMode()
+  const { isZen, toggleZen } = useZenMode()
   const { unreadCount } = useNotifications()
-  useGlobalHotkeys()
+  const [paletteOpen, setPaletteOpen] = useState(false)
+  useGlobalHotkeys({ onOpenPalette: () => setPaletteOpen(true) })
 
   return (
     <div className="flex h-screen overflow-hidden">
       <NavRail user={user} hidden={isZen} unreadCount={unreadCount} />
       <SecondaryPanel hidden={isZen} />
       <main className="flex-1 overflow-y-auto">{children}</main>
+      <CommandPalette
+        open={paletteOpen}
+        onClose={() => setPaletteOpen(false)}
+        user={user}
+        onToggleZen={toggleZen}
+      />
       {isZen && (
         <div
           className="fixed bottom-4 right-4 px-3 py-1.5 rounded-full text-xs font-medium shadow-lg pointer-events-none"

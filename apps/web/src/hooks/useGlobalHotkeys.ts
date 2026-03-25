@@ -3,18 +3,16 @@
 import { useHotkeys } from "react-hotkeys-hook"
 import { useRouter } from "next/navigation"
 
+type Options = {
+  onOpenPalette?: () => void
+}
+
 /**
  * Atajos de teclado globales del sistema.
- * Registrados en AppShellChrome para que estén disponibles en toda la app.
- *
- * Atajos:
- * - Cmd+N / Ctrl+N: navegar a /chat (nueva sesión)
- * - Esc: cierra modales/drawers (manejado por los componentes individuales via useZenMode)
- *
- * Nota: j/k para navegar sesiones requiere estado de la lista de sesiones —
- * se implementa en Fase 2 cuando el panel de sesiones tenga estado centralizado.
+ * - Cmd+N: nueva sesión
+ * - Cmd+K: abrir command palette (F2.23)
  */
-export function useGlobalHotkeys() {
+export function useGlobalHotkeys({ onOpenPalette }: Options = {}) {
   const router = useRouter()
 
   useHotkeys(
@@ -22,6 +20,15 @@ export function useGlobalHotkeys() {
     (e) => {
       e.preventDefault()
       router.push("/chat")
+    },
+    { enableOnFormTags: false }
+  )
+
+  useHotkeys(
+    "mod+k",
+    (e) => {
+      e.preventDefault()
+      onOpenPalette?.()
     },
     { enableOnFormTags: false }
   )
