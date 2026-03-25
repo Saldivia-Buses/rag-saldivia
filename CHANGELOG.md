@@ -11,6 +11,9 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Added
 
+- `apps/web/src/app/api/admin/knowledge-gaps/route.ts`: detecta respuestas del asistente con baja confianza (< 80 palabras + keywords de incertidumbre), retorna hasta 100 gaps — 2026-03-25 *(Plan 4 F2.31)*
+- `apps/web/src/components/admin/KnowledgeGapsClient.tsx`: tabla de brechas con link a sesión, exportar CSV, botón "Ingestar documentos" — 2026-03-25 *(Plan 4 F2.31)*
+- `apps/web/src/app/(app)/admin/knowledge-gaps/page.tsx`: página `/admin/knowledge-gaps` — 2026-03-25 *(Plan 4 F2.31)*
 - `apps/web/src/app/api/admin/analytics/route.ts`: queries de agregación — queries/día, top colecciones, distribución feedback, top usuarios — 2026-03-25 *(Plan 4 F2.30)*
 - `apps/web/src/components/admin/AnalyticsDashboard.tsx`: dashboard con recharts — LineChart queries/día, BarChart colecciones, PieChart feedback, tabla top usuarios; stats cards con totales — 2026-03-25 *(Plan 4 F2.30)*
 - `apps/web/src/app/(app)/admin/analytics/page.tsx`: página `/admin/analytics` — 2026-03-25 *(Plan 4 F2.30)*
