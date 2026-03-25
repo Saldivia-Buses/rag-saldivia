@@ -25,6 +25,7 @@ const ADMIN_SECTIONS: Array<{ label: string; items: NavItem[] }> = [
       { href: "/admin/analytics", label: "Analytics", icon: <Activity size={14} /> },
       { href: "/admin/knowledge-gaps", label: "Brechas", icon: <Activity size={14} /> },
       { href: "/admin/reports", label: "Informes", icon: <Activity size={14} /> },
+      { href: "/admin/webhooks", label: "Webhooks", icon: <Activity size={14} /> },
     ],
   },
 ]

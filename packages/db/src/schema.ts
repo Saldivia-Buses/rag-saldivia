@@ -172,6 +172,29 @@ export const messageFeedback = sqliteTable(
   })
 )
 
+// ── Webhooks ───────────────────────────────────────────────────────────────
+
+export const webhooks = sqliteTable(
+  "webhooks",
+  {
+    id: text("id").primaryKey(), // UUID
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    url: text("url").notNull(),
+    events: text("events", { mode: "json" })
+      .$type<string[]>()
+      .notNull()
+      .default([]),
+    secret: text("secret").notNull(),
+    active: integer("active", { mode: "boolean" }).notNull().default(true),
+    createdAt: integer("created_at").notNull(),
+  },
+  (t) => ({
+    activeIdx: index("idx_webhooks_active").on(t.active),
+  })
+)
+
 // ── Rate Limits ────────────────────────────────────────────────────────────
 
 export const rateLimits = sqliteTable(
@@ -505,6 +528,8 @@ export type DbChatSession = typeof chatSessions.$inferSelect
 export type NewChatSession = typeof chatSessions.$inferInsert
 export type DbChatMessage = typeof chatMessages.$inferSelect
 export type NewChatMessage = typeof chatMessages.$inferInsert
+export type DbWebhook = typeof webhooks.$inferSelect
+export type NewWebhook = typeof webhooks.$inferInsert
 export type DbRateLimit = typeof rateLimits.$inferSelect
 export type NewRateLimit = typeof rateLimits.$inferInsert
 export type DbScheduledReport = typeof scheduledReports.$inferSelect

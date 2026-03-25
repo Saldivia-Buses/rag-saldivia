@@ -114,6 +114,18 @@ await exec(`
     UNIQUE(message_id, user_id)
   );
 
+  -- Webhooks (F2.38)
+  CREATE TABLE IF NOT EXISTS webhooks (
+    id TEXT PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    url TEXT NOT NULL,
+    events TEXT NOT NULL DEFAULT '[]',
+    secret TEXT NOT NULL,
+    active INTEGER NOT NULL DEFAULT 1,
+    created_at INTEGER NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS idx_webhooks_active ON webhooks(active);
+
   -- Rate limits (F2.36)
   CREATE TABLE IF NOT EXISTS rate_limits (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

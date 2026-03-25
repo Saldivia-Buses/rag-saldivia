@@ -16,6 +16,7 @@ import { log } from "@rag-saldivia/logger/backend"
 import { FOCUS_MODES, type FocusModeId } from "@rag-saldivia/shared"
 import { detectLanguageHint } from "@/lib/rag/client"
 import { getRateLimit, countQueriesLastHour } from "@rag-saldivia/db"
+import { dispatchEvent } from "@/lib/webhook"
 
 export const runtime = "nodejs" // SSE requiere Node runtime, no Edge
 
@@ -134,6 +135,10 @@ export async function POST(request: Request) {
       collection: collectionName,
       duration: Date.now() - start,
     }, { userId })
+
+    // Dispatch webhook de baja confianza si no hay fuentes — F2.38
+    // (la detección real ocurre en el cliente; aquí delegamos al hook de post-stream)
+    dispatchEvent("query.completed", { userId, collection: collectionName }).catch(() => {})
 
     return new Response(result.stream, {
       headers: {

@@ -15,6 +15,7 @@
 import { eq, and, isNull } from "drizzle-orm"
 import { readFile, access } from "fs/promises"
 import { getDb, ingestionQueue, recordIngestionEvent, listActiveReports, updateLastRun, saveResponse } from "@rag-saldivia/db"
+import { dispatchEvent } from "@/lib/webhook"
 import { log } from "@rag-saldivia/logger/backend"
 
 const INGESTOR_URL = process.env["INGESTOR_URL"] ?? "http://localhost:8082"
@@ -73,6 +74,9 @@ async function processJob(job: typeof ingestionQueue.$inferSelect): Promise<bool
     }
 
     log.info("ingestion.completed", { jobId: id, collection, filename })
+
+    // Dispatch webhook — F2.38
+    dispatchEvent("ingestion.completed", { jobId: id, collection, filename }).catch(() => {})
 
     // Registrar en historial de colecciones — F2.32
     try {

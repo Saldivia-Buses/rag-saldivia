@@ -11,6 +11,14 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Added
 
+- `packages/db/src/schema.ts`: tabla `webhooks` (url, events JSON, secret HMAC, active) — 2026-03-25 *(Plan 4 F2.38)*
+- `packages/db/src/queries/webhooks.ts`: `createWebhook` (genera secret aleatorio), `listWebhooksByEvent`, `listAllWebhooks`, `deleteWebhook` — 2026-03-25 *(Plan 4 F2.38)*
+- `apps/web/src/lib/webhook.ts`: `dispatchWebhook` con firma HMAC-SHA256 en header `X-Signature`; timeout 5s; no interrumpe el flujo principal si falla; `dispatchEvent` busca webhooks activos para el tipo de evento — 2026-03-25 *(Plan 4 F2.38)*
+- `apps/web/src/workers/ingestion.ts`: dispatch de `ingestion.completed` al terminar un job — 2026-03-25 *(Plan 4 F2.38)*
+- `apps/web/src/app/api/rag/generate/route.ts`: dispatch de `query.completed` al finalizar un stream — 2026-03-25 *(Plan 4 F2.38)*
+- `apps/web/src/app/api/admin/webhooks/route.ts`: GET/POST/DELETE para gestión de webhooks — 2026-03-25 *(Plan 4 F2.38)*
+- `apps/web/src/components/admin/WebhooksAdmin.tsx`: UI para crear/listar/eliminar webhooks con selector de eventos y copia del secret — 2026-03-25 *(Plan 4 F2.38)*
+- `apps/web/src/app/(app)/admin/webhooks/page.tsx`: página `/admin/webhooks` — 2026-03-25 *(Plan 4 F2.38)*
 - `packages/db/src/schema.ts`: campo `onboarding_completed` en tabla `users` (default false) — 2026-03-25 *(Plan 4 F2.37)*
 - `apps/web/src/components/onboarding/OnboardingTour.tsx`: tour driver.js de 5 pasos (nav, chat, modos de foco, colecciones, settings); se activa al primer login; saltable; llama a `actionCompleteOnboarding` al terminar — 2026-03-25 *(Plan 4 F2.37)*
 - `apps/web/src/app/actions/settings.ts`: Server Actions `actionCompleteOnboarding` y `actionResetOnboarding` — 2026-03-25 *(Plan 4 F2.37)*
