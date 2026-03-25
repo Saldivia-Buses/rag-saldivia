@@ -114,6 +114,22 @@ await exec(`
     UNIQUE(message_id, user_id)
   );
 
+  -- Informes programados (F2.33)
+  CREATE TABLE IF NOT EXISTS scheduled_reports (
+    id TEXT PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    query TEXT NOT NULL,
+    collection TEXT NOT NULL,
+    schedule TEXT NOT NULL,
+    destination TEXT NOT NULL,
+    email TEXT,
+    active INTEGER NOT NULL DEFAULT 1,
+    last_run INTEGER,
+    next_run INTEGER NOT NULL,
+    created_at INTEGER NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS idx_reports_active_next_run ON scheduled_reports(active, next_run);
+
   -- Historial de colecciones (F2.32)
   CREATE TABLE IF NOT EXISTS collection_history (
     id TEXT PRIMARY KEY,

@@ -171,6 +171,30 @@ export const messageFeedback = sqliteTable(
   })
 )
 
+// ── Scheduled Reports ──────────────────────────────────────────────────────
+
+export const scheduledReports = sqliteTable(
+  "scheduled_reports",
+  {
+    id: text("id").primaryKey(), // UUID
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    query: text("query").notNull(),
+    collection: text("collection").notNull(),
+    schedule: text("schedule", { enum: ["daily", "weekly", "monthly"] }).notNull(),
+    destination: text("destination", { enum: ["saved", "email"] }).notNull(),
+    email: text("email"),
+    active: integer("active", { mode: "boolean" }).notNull().default(true),
+    lastRun: integer("last_run"),
+    nextRun: integer("next_run").notNull(),
+    createdAt: integer("created_at").notNull(),
+  },
+  (t) => ({
+    activeNextRunIdx: index("idx_reports_active_next_run").on(t.active, t.nextRun),
+  })
+)
+
 // ── Collection History ─────────────────────────────────────────────────────
 
 export const collectionHistory = sqliteTable(
@@ -463,6 +487,8 @@ export type DbChatSession = typeof chatSessions.$inferSelect
 export type NewChatSession = typeof chatSessions.$inferInsert
 export type DbChatMessage = typeof chatMessages.$inferSelect
 export type NewChatMessage = typeof chatMessages.$inferInsert
+export type DbScheduledReport = typeof scheduledReports.$inferSelect
+export type NewScheduledReport = typeof scheduledReports.$inferInsert
 export type DbCollectionHistory = typeof collectionHistory.$inferSelect
 export type NewCollectionHistory = typeof collectionHistory.$inferInsert
 export type DbPromptTemplate = typeof promptTemplates.$inferSelect

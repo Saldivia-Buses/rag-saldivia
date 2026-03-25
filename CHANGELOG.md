@@ -11,6 +11,12 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Added
 
+- `packages/db/src/schema.ts`: tabla `scheduled_reports` (query, collection, schedule, destination, email, nextRun) — 2026-03-25 *(Plan 4 F2.33)*
+- `packages/db/src/queries/reports.ts`: `createReport`, `listActiveReports`, `listReportsByUser`, `updateLastRun`, `deleteReport` — 2026-03-25 *(Plan 4 F2.33)*
+- `apps/web/src/workers/ingestion.ts`: procesador de informes programados — corre cada 5 min, ejecuta query via RAG, guarda en Guardados o env\u00eda por email (si SMTP configurado) — 2026-03-25 *(Plan 4 F2.33)*
+- `apps/web/src/app/api/admin/reports/route.ts`: GET/POST/DELETE para informes programados — 2026-03-25 *(Plan 4 F2.33)*
+- `apps/web/src/components/admin/ReportsAdmin.tsx`: formulario + lista de informes — 2026-03-25 *(Plan 4 F2.33)*
+- `apps/web/src/app/(app)/admin/reports/page.tsx`: p\u00e1gina `/admin/reports` — 2026-03-25 *(Plan 4 F2.33)*
 - `packages/db/src/schema.ts`: tabla `collection_history` (collection, userId, action, filename, docCount) — 2026-03-25 *(Plan 4 F2.32)*
 - `packages/db/src/queries/collection-history.ts`: `recordIngestionEvent`, `listHistoryByCollection` — 2026-03-25 *(Plan 4 F2.32)*
 - `apps/web/src/workers/ingestion.ts`: registrar en `collection_history` al completar job exitosamente — 2026-03-25 *(Plan 4 F2.32)*

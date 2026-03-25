@@ -14,7 +14,7 @@
 
 import { eq, and, isNull } from "drizzle-orm"
 import { readFile, access } from "fs/promises"
-import { getDb, ingestionQueue, recordIngestionEvent } from "@rag-saldivia/db"
+import { getDb, ingestionQueue, recordIngestionEvent, listActiveReports, updateLastRun, saveResponse } from "@rag-saldivia/db"
 import { log } from "@rag-saldivia/logger/backend"
 
 const INGESTOR_URL = process.env["INGESTOR_URL"] ?? "http://localhost:8082"
@@ -180,7 +180,64 @@ async function workerLoop() {
   log.info("system.warning", { message: `Worker ${WORKER_ID} apagado limpiamente` })
 }
 
+// ── Scheduled reports processor ─────────────────────────────────────────────
+async function processScheduledReports() {
+  try {
+    const reports = await listActiveReports()
+    for (const report of reports) {
+      try {
+        const ragUrl = process.env["RAG_SERVER_URL"] ?? "http://localhost:8081"
+        const res = await fetch(`${ragUrl}/v1/chat/completions`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            messages: [{ role: "user", content: report.query }],
+            collection_name: report.collection,
+            use_knowledge_base: true,
+          }),
+          signal: AbortSignal.timeout(60000),
+        })
+
+        if (res.ok) {
+          const data = await res.json() as { choices?: Array<{ message?: { content?: string } }> }
+          const content = data.choices?.[0]?.message?.content ?? "(sin respuesta)"
+
+          if (report.destination === "saved") {
+            await saveResponse({
+              userId: report.userId,
+              content: `**Informe programado: ${report.query}**\n\n${content}`,
+              sessionTitle: `Informe ${new Date().toLocaleDateString("es-AR")}`,
+            })
+          } else if (report.destination === "email" && report.email) {
+            const smtpHost = process.env["SMTP_HOST"]
+            if (!smtpHost) {
+              log.warn("scheduled_report.smtp_not_configured", { reportId: report.id })
+              // Fallback: guardar igualmente
+              await saveResponse({
+                userId: report.userId,
+                content: `**Informe (SMTP no configurado): ${report.query}**\n\n${content}`,
+                sessionTitle: `Informe ${new Date().toLocaleDateString("es-AR")}`,
+              })
+            }
+            // Si SMTP configurado: implementar envío de email con nodemailer en el futuro
+          }
+
+          await updateLastRun(report.id, report.schedule)
+          log.info("scheduled_report.completed", { reportId: report.id })
+        }
+      } catch (err) {
+        log.error("scheduled_report.failed", { reportId: report.id, error: String(err) })
+      }
+    }
+  } catch (err) {
+    log.error("scheduled_report.processor_error", { error: String(err) })
+  }
+}
+
 // ── Main ───────────────────────────────────────────────────────────────────
+// Procesar informes programados cada 5 minutos
+setInterval(() => { processScheduledReports().catch(() => {}) }, 5 * 60 * 1000)
+
 workerLoop().catch((err) => {
   log.fatal("system.error", { error: String(err), context: "ingestion_worker" })
   process.exit(1)
