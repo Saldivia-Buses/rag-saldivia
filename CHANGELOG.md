@@ -16,6 +16,7 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 ### Added
 
 - `apps/web/src/components/chat/ThinkingSteps.tsx`: steps colapsables del proceso de razonamiento visibles durante streaming — simulación UI-side con timing (paso 1 inmediato, paso 2 a 700ms, paso 3 a 1500ms); se auto-colapsa 1.8s después de que el stream termina; cuando el RAG server exponga eventos SSE de tipo `thinking`, se conectan en `useRagStream` — 2026-03-25 *(Plan 4 F1.5)*
+- `apps/web/src/lib/changelog.ts`: `parseChangelog(raw, limit)` extraída a utilidad testeable — 2026-03-25 *(tests Fase 1)*
 - `apps/web/src/app/api/changelog/route.ts`: endpoint GET que parsea CHANGELOG.md y retorna las últimas 5 entradas + versión actual del package.json — 2026-03-25 *(Plan 4 F1.18)*
 - `apps/web/src/components/layout/WhatsNewPanel.tsx`: Sheet lateral con entradas del CHANGELOG renderizadas con `marked`; `useHasNewVersion()` hook que compara versión actual con `localStorage["last_seen_version"]` — 2026-03-25 *(Plan 4 F1.18)*
 - `apps/web/src/components/layout/NavRail.tsx`: logo "R" abre el panel "¿Qué hay de nuevo?" al clic; badge rojo unificado para `unreadCount > 0` o versión nueva no vista — 2026-03-25 *(Plan 4 F1.18)*
@@ -26,6 +27,12 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 - `apps/web/src/app/api/notifications/route.ts`: endpoint GET que retorna eventos recientes de tipos `ingestion.completed`, `ingestion.error`, `user.created` (este último solo para admins) — 2026-03-25 *(Plan 4 F1.12)*
 - `apps/web/src/hooks/useNotifications.ts`: polling cada 30s, emite toasts con sonner para notificaciones no vistas (gestionado en localStorage), retorna `unreadCount` — 2026-03-25 *(Plan 4 F1.12)*
 - `apps/web/src/components/layout/NavRail.tsx`: badge rojo sobre el ícono "R" cuando `unreadCount > 0` — 2026-03-25 *(Plan 4 F1.12)*
+- `packages/db/src/__tests__/saved.test.ts`: 13 tests de queries `saved_responses` (saveResponse, listSavedResponses, unsaveResponse, unsaveByMessageId, isSaved) contra SQLite en memoria — 2026-03-25 *(tests Fase 1)*
+- `packages/shared/src/__tests__/focus-modes.test.ts`: 6 tests de estructura FOCUS_MODES (cantidad, IDs únicos, labels, systemPrompts, modo ejecutivo) — 2026-03-25 *(tests Fase 1)*
+- `packages/shared/package.json`: agregado script `"test": "bun test src/__tests__"` para Turborepo — 2026-03-25 *(tests Fase 1)*
+- `apps/web/src/lib/__tests__/export.test.ts`: 8 tests de `exportToMarkdown()` (título, colección, mensajes, fuentes, orden, vacío) — 2026-03-25 *(tests Fase 1)*
+- `apps/web/src/lib/__tests__/changelog.test.ts`: 6 tests de `parseChangelog()` (Unreleased, versiones, contenido, límite, vacío, orden) — 2026-03-25 *(tests Fase 1)*
+- `apps/web/src/lib/rag/__tests__/detect-language.test.ts`: 13 tests de `detectLanguageHint()` (español no inyecta, inglés inyecta, CJK/cirílico/árabe inyectan) — 2026-03-25 *(tests Fase 1)*
 - `apps/web/src/hooks/useZenMode.ts`: hook `useZenMode()` — toggle con `Cmd+Shift+Z`, cierre con `Esc` — 2026-03-25 *(Plan 4 F1.11)*
 - `apps/web/src/components/layout/AppShellChrome.tsx`: modo Zen oculta NavRail y SecondaryPanel; badge "ESC para salir" en `fixed bottom-4 right-4` — 2026-03-25 *(Plan 4 F1.11)*
 - `packages/db/src/schema.ts`: tabla `saved_responses` (id, userId, messageId nullable, content, sessionTitle, createdAt) — 2026-03-25 *(Plan 4 F1.10)*

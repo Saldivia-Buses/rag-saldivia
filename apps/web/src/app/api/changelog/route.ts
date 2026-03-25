@@ -9,27 +9,7 @@
 import { NextResponse } from "next/server"
 import { readFileSync } from "fs"
 import { join } from "path"
-
-type ChangelogEntry = {
-  version: string
-  content: string
-}
-
-function parseChangelog(raw: string): ChangelogEntry[] {
-  const entries: ChangelogEntry[] = []
-  // Matches: ## [Unreleased] or ## [v1.2.3] or ## [1.2.3] - 2024-01-01
-  const sections = raw.split(/^## /m).slice(1)
-
-  for (const section of sections.slice(0, 5)) {
-    const firstLine = section.split("\n")[0] ?? ""
-    const versionMatch = firstLine.match(/\[([^\]]+)\]/)
-    const version = versionMatch?.[1] ?? firstLine.trim()
-    const content = section.split("\n").slice(1).join("\n").trim()
-    if (version) entries.push({ version, content })
-  }
-
-  return entries
-}
+import { parseChangelog } from "@/lib/changelog"
 
 function getVersion(): string {
   try {
