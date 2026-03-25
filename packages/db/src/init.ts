@@ -114,6 +114,17 @@ await exec(`
     UNIQUE(message_id, user_id)
   );
 
+  -- Rate limits (F2.36)
+  CREATE TABLE IF NOT EXISTS rate_limits (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    target_type TEXT NOT NULL,
+    target_id INTEGER NOT NULL,
+    max_queries_per_hour INTEGER NOT NULL,
+    active INTEGER NOT NULL DEFAULT 1,
+    created_at INTEGER NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS idx_rate_limits_target ON rate_limits(target_type, target_id);
+
   -- Informes programados (F2.33)
   CREATE TABLE IF NOT EXISTS scheduled_reports (
     id TEXT PRIMARY KEY,

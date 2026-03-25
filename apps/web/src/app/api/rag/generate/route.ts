@@ -15,6 +15,7 @@ import { canAccessCollection } from "@rag-saldivia/db"
 import { log } from "@rag-saldivia/logger/backend"
 import { FOCUS_MODES, type FocusModeId } from "@rag-saldivia/shared"
 import { detectLanguageHint } from "@/lib/rag/client"
+import { getRateLimit, countQueriesLastHour } from "@rag-saldivia/db"
 
 export const runtime = "nodejs" // SSE requiere Node runtime, no Edge
 
@@ -36,6 +37,18 @@ export async function POST(request: Request) {
         { ok: false, error: "El campo 'messages' es requerido y no puede estar vacío" },
         { status: 400 }
       )
+    }
+
+    // Rate limiting — F2.36
+    const maxQph = await getRateLimit(userId)
+    if (maxQph !== null) {
+      const count = await countQueriesLastHour(userId)
+      if (count >= maxQph) {
+        return NextResponse.json(
+          { ok: false, error: `Límite de ${maxQph} queries/hora alcanzado. Intentá más tarde.` },
+          { status: 429 }
+        )
+      }
     }
 
     const collectionName = body.collection_name as string | undefined

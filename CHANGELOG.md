@@ -11,6 +11,9 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Added
 
+- `packages/db/src/schema.ts`: tabla `rate_limits` (targetType user/area, targetId, maxQueriesPerHour) — 2026-03-25 *(Plan 4 F2.36)*
+- `packages/db/src/queries/rate-limits.ts`: `getRateLimit` (user-level primero, luego área), `countQueriesLastHour`, `createRateLimit`, `listRateLimits`, `deleteRateLimit` — 2026-03-25 *(Plan 4 F2.36)*
+- `apps/web/src/app/api/rag/generate/route.ts`: check de rate limit antes de procesar — retorna 429 si el usuario superó su límite/hora — 2026-03-25 *(Plan 4 F2.36)*
 - `apps/web/src/components/chat/ChatDropZone.tsx`: drop zone sobre el área del chat — overlay al arrastrar, sube el archivo via `/api/upload` y confirma con toast; colecciones efímeras descartadas por viabilidad (Blueprint v2.5.0 no las soporta en Milvus) — 2026-03-25 *(Plan 4 F2.35)*
 - `apps/web/src/components/chat/SplitView.tsx`: wrapper de vista dividida — botón Columns2 abre segundo panel con sesión independiente, botón X cierra; cada panel tiene su propio ChatInterface — 2026-03-25 *(Plan 4 F2.34)*
 - `packages/db/src/schema.ts`: tabla `scheduled_reports` (query, collection, schedule, destination, email, nextRun) — 2026-03-25 *(Plan 4 F2.33)*

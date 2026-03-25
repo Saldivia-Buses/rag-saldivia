@@ -171,6 +171,23 @@ export const messageFeedback = sqliteTable(
   })
 )
 
+// ── Rate Limits ────────────────────────────────────────────────────────────
+
+export const rateLimits = sqliteTable(
+  "rate_limits",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    targetType: text("target_type", { enum: ["user", "area"] }).notNull(),
+    targetId: integer("target_id").notNull(),
+    maxQueriesPerHour: integer("max_queries_per_hour").notNull(),
+    active: integer("active", { mode: "boolean" }).notNull().default(true),
+    createdAt: integer("created_at").notNull(),
+  },
+  (t) => ({
+    targetIdx: index("idx_rate_limits_target").on(t.targetType, t.targetId),
+  })
+)
+
 // ── Scheduled Reports ──────────────────────────────────────────────────────
 
 export const scheduledReports = sqliteTable(
@@ -487,6 +504,8 @@ export type DbChatSession = typeof chatSessions.$inferSelect
 export type NewChatSession = typeof chatSessions.$inferInsert
 export type DbChatMessage = typeof chatMessages.$inferSelect
 export type NewChatMessage = typeof chatMessages.$inferInsert
+export type DbRateLimit = typeof rateLimits.$inferSelect
+export type NewRateLimit = typeof rateLimits.$inferInsert
 export type DbScheduledReport = typeof scheduledReports.$inferSelect
 export type NewScheduledReport = typeof scheduledReports.$inferInsert
 export type DbCollectionHistory = typeof collectionHistory.$inferSelect
