@@ -241,6 +241,10 @@ export const EventTypeSchema = z.enum([
   "ingestion.failed",
   "ingestion.cancelled",
   "ingestion.stalled",
+  // Areas
+  "area.created",
+  "area.updated",
+  "area.deleted",
   // Collections
   "collection.created",
   "collection.deleted",
