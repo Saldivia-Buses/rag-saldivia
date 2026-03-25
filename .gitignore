@@ -64,8 +64,8 @@ logs/
 bun.lockb
 *.tsbuildinfo
 
-# Cursor IDE
-.cursor/
+# Cursor IDE — solo ignorar archivos de sesión/caché, no las skills del proyecto
+# .cursor/ — NO ignorar: las skills viven aquí y deben estar en el repo
 
 # Playwright MCP
 .playwright-mcp/
