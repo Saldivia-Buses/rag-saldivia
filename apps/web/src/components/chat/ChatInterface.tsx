@@ -11,6 +11,7 @@ import { ThinkingSteps } from "@/components/chat/ThinkingSteps"
 import { FocusModeSelector, useFocusMode } from "@/components/chat/FocusModeSelector"
 import { VoiceInput } from "@/components/chat/VoiceInput"
 import { ExportSession } from "@/components/chat/ExportSession"
+import { ShareDialog } from "@/components/chat/ShareDialog"
 import { SourcesPanel } from "@/components/chat/SourcesPanel"
 import { RelatedQuestions } from "@/components/chat/RelatedQuestions"
 import { CollectionSelector } from "@/components/chat/CollectionSelector"
@@ -181,7 +182,10 @@ export function ChatInterface({
         <span className="text-sm font-medium truncate" style={{ color: "var(--muted-foreground)" }}>
           {session.collection}
         </span>
-        <ExportSession session={session} />
+        <div className="flex items-center gap-1">
+          <ShareDialog sessionId={session.id} />
+          <ExportSession session={session} />
+        </div>
       </div>
 
       {/* Messages */}

@@ -11,6 +11,12 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Added
 
+- `packages/db/src/schema.ts`: tabla `session_shares` (token UUID 64-char hex, expiresAt) — 2026-03-25 *(Plan 4 F2.25)*
+- `packages/db/src/queries/shares.ts`: `createShare`, `getShareByToken`, `getShareWithSession`, `revokeShare` — 2026-03-25 *(Plan 4 F2.25)*
+- `apps/web/src/app/api/share/route.ts`: POST crea token, DELETE revoca — 2026-03-25 *(Plan 4 F2.25)*
+- `apps/web/src/app/(public)/share/[token]/page.tsx`: página pública read-only sin auth; muestra sesión + aviso de privacidad; 404 si token inválido/expirado — 2026-03-25 *(Plan 4 F2.25)*
+- `apps/web/src/middleware.ts`: `/share/` agregado a PUBLIC_ROUTES — 2026-03-25 *(Plan 4 F2.25)*
+- `apps/web/src/components/chat/ShareDialog.tsx`: Dialog para generar/copiar/revocar el link de compartir, con aviso de privacidad — 2026-03-25 *(Plan 4 F2.25)*
 - `packages/db/src/schema.ts`: tabla `session_tags` (sessionId, tag, PK compuesta) — 2026-03-25 *(Plan 4 F2.24)*
 - `packages/db/src/queries/tags.ts`: `addTag`, `removeTag`, `listTagsBySession`, `listTagsByUser` — 2026-03-25 *(Plan 4 F2.24)*
 - `apps/web/src/components/chat/SessionList.tsx`: badges de etiquetas por sesión, input inline para agregar tags, filtro por tag en el header, bulk selection con toolbar (exportar/eliminar seleccionadas) — 2026-03-25 *(Plan 4 F2.24)*

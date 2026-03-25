@@ -171,6 +171,27 @@ export const messageFeedback = sqliteTable(
   })
 )
 
+// ── Session Shares ─────────────────────────────────────────────────────────
+
+export const sessionShares = sqliteTable(
+  "session_shares",
+  {
+    id: text("id").primaryKey(), // UUID
+    sessionId: text("session_id")
+      .notNull()
+      .references(() => chatSessions.id, { onDelete: "cascade" }),
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    token: text("token").notNull().unique(), // 64-char hex
+    expiresAt: integer("expires_at").notNull(), // epoch ms
+    createdAt: integer("created_at").notNull(),
+  },
+  (t) => ({
+    tokenIdx: uniqueIndex("idx_session_shares_token").on(t.token),
+  })
+)
+
 // ── Session Tags ───────────────────────────────────────────────────────────
 
 export const sessionTags = sqliteTable(
@@ -402,6 +423,7 @@ export type DbChatSession = typeof chatSessions.$inferSelect
 export type NewChatSession = typeof chatSessions.$inferInsert
 export type DbChatMessage = typeof chatMessages.$inferSelect
 export type NewChatMessage = typeof chatMessages.$inferInsert
+export type DbSessionShare = typeof sessionShares.$inferSelect
 export type DbSessionTag = typeof sessionTags.$inferSelect
 export type DbAnnotation = typeof annotations.$inferSelect
 export type NewAnnotation = typeof annotations.$inferInsert

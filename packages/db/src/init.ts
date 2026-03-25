@@ -114,6 +114,17 @@ await exec(`
     UNIQUE(message_id, user_id)
   );
 
+  -- Compartir sesiones (F2.25)
+  CREATE TABLE IF NOT EXISTS session_shares (
+    id TEXT PRIMARY KEY,
+    session_id TEXT NOT NULL REFERENCES chat_sessions(id) ON DELETE CASCADE,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    token TEXT NOT NULL UNIQUE,
+    expires_at INTEGER NOT NULL,
+    created_at INTEGER NOT NULL
+  );
+  CREATE UNIQUE INDEX IF NOT EXISTS idx_session_shares_token ON session_shares(token);
+
   -- Etiquetas de sesiones (F2.24)
   CREATE TABLE IF NOT EXISTS session_tags (
     session_id TEXT NOT NULL REFERENCES chat_sessions(id) ON DELETE CASCADE,
