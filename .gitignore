@@ -1,6 +1,9 @@
 # Blueprint clone (not tracked — cloned by setup.sh)
 blueprint/
 
+# Stack anterior (Python + SvelteKit) — preservado localmente, fuera del repo
+legacy/
+
 # Secrets & generated env files
 .env.local
 .env.merged
