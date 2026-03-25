@@ -11,6 +11,19 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Added
 
+- `apps/web/src/app/api/admin/users/route.ts` y `[id]/route.ts`: endpoints GET/POST/DELETE/PATCH para gestión de usuarios desde la CLI — 2026-03-25
+- `apps/web/src/app/api/admin/areas/route.ts` y `[id]/route.ts`: endpoints GET/POST/DELETE para gestión de áreas desde la CLI — 2026-03-25
+- `apps/web/src/app/api/admin/config/route.ts` y `reset/route.ts`: endpoints GET/PATCH/POST para config RAG desde la CLI — 2026-03-25
+- `apps/web/src/app/api/admin/db/migrate/route.ts`, `seed/route.ts`, `reset/route.ts`: endpoints de administración de DB desde la CLI — 2026-03-25
+
+### Fixed
+
+- `apps/web/src/middleware.ts`: agregar soporte para `SYSTEM_API_KEY` como auth de servicio — el CLI recibía 401 en todos los endpoints admin porque el middleware solo verificaba JWTs — 2026-03-25 *(encontrado en Fase 4b)*
+- `apps/web/src/lib/auth/jwt.ts`: `extractClaims` leía Authorization header e intentaba verificarlo como JWT incluso cuando el middleware ya había autenticado via SYSTEM_API_KEY; ahora lee `x-user-*` headers del middleware si están presentes — 2026-03-25 *(encontrado en Fase 4b)*
+- `apps/cli/src/client.ts`: corregir rutas de ingestion (`/api/ingestion/status` → `/api/admin/ingestion`) — 2026-03-25 *(encontrado en Fase 4d)*
+- `apps/cli/src/commands/ingest.ts`: adaptador para respuesta `{ queue, jobs }` del API en lugar de array plano — 2026-03-25 *(encontrado en Fase 4d)*
+- `apps/cli/src/commands/config.ts` + `apps/cli/src/index.ts`: agregar parámetro opcional `[key]` a `config get` para mostrar un parámetro específico — 2026-03-25 *(encontrado en Fase 4e)*
+
 - `packages/config/src/__tests__/config.test.ts`: Fase 1d — 14 tests: loadConfig (env mínima, defaults, precedencia de env vars, MOCK_RAG como boolean, perfil YAML, perfil inexistente, error en producción), loadRagParams (defaults correctos, sin undefined), AppConfigSchema (validación: objeto mínimo, jwtSecret corto, logLevel inválido, URL inválida) — 2026-03-25
 
 ### Fixed
