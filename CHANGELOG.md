@@ -11,6 +11,13 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Added
 
+- `packages/config/src/__tests__/config.test.ts`: Fase 1d — 14 tests: loadConfig (env mínima, defaults, precedencia de env vars, MOCK_RAG como boolean, perfil YAML, perfil inexistente, error en producción), loadRagParams (defaults correctos, sin undefined), AppConfigSchema (validación: objeto mínimo, jwtSecret corto, logLevel inválido, URL inválida) — 2026-03-25
+
+### Fixed
+
+- `apps/web/src/app/api/rag/generate/route.ts`: validación de `messages` faltante — body vacío `{}` retornaba 200 en lugar de 400; agregado guard que verifica que `messages` sea array no vacío antes de procesar — 2026-03-25 *(encontrado en Fase 2b)*
+- `apps/web/src/app/api/admin/ingestion/[id]/route.ts`: DELETE con ID inexistente retornaba 200 en lugar de 404; agregado SELECT previo para verificar existencia antes del UPDATE — 2026-03-25 *(encontrado en Fase 2c)*
+
 - Branch `experimental/ultra-optimize` iniciada — 2026-03-24
 - Plan de trabajo `docs/plans/ultra-optimize.md` con seguimiento de tareas por fase — 2026-03-24
 - `scripts/setup.ts`: script de onboarding cero-fricción con preflight check, instalación, migraciones, seed y resumen visual — 2026-03-24

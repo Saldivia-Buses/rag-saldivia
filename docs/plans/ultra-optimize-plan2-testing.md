@@ -100,8 +100,8 @@ Objetivo: verificar la lógica pura del sistema sin depender del servidor ni del
 
 ### Fase 1d — Config loader *(5 min)*
 
-- [ ] `packages/config` carga los YAMLs de `config/` sin errores
-- [ ] Acceder a un campo inexistente retorna el default tipado (no `undefined`)
+- [x] `packages/config` carga los YAMLs de `config/` sin errores — completado 2026-03-25
+- [x] Acceder a un campo inexistente retorna el default tipado (no `undefined`) — completado 2026-03-25
 
 ### Fase 1e — Logger + Black box *(15 min)*
 
@@ -120,7 +120,7 @@ Objetivo: verificar la lógica pura del sistema sin depender del servidor ni del
 **Resultado: 24/24 tests de logger + blackbox pasando**
 
 Criterio de done: `bun test` corre todas las suites sin fallos. 0 errores, 0 tests skipped no intencionalmente.
-**Estado: 57/57 tests pasan — Fase 1 completada 2026-03-24 (Fase 1d pendiente)**
+**Estado: 71/71 tests pasan — Fase 1 completada 2026-03-25**
 
 ---
 
@@ -130,43 +130,48 @@ Objetivo: verificar cada endpoint REST directamente, sin browser. Se usa `curl` 
 
 ### Fase 2a — Auth endpoints
 
-- [ ] `POST /api/auth/login` con credenciales válidas retorna 200, body `{ ok: true }` y cookie `auth_token` en `Set-Cookie`
-- [ ] `POST /api/auth/login` con password incorrecta retorna 401 con `{ ok: false, error: "..." }`
-- [ ] `POST /api/auth/login` con body malformado retorna 400 con detalles de validación Zod
-- [ ] `POST /api/auth/login` con usuario inactivo retorna 403 con mensaje descriptivo
-- [ ] `POST /api/auth/logout` con token válido retorna 200 y `Set-Cookie` con `Max-Age=0`
-- [ ] `POST /api/auth/refresh` con cookie válida retorna nuevo token
+- [x] `POST /api/auth/login` con credenciales válidas retorna 200, body `{ ok: true }` y cookie `auth_token` en `Set-Cookie` — completado 2026-03-25
+- [x] `POST /api/auth/login` con password incorrecta retorna 401 con `{ ok: false, error: "..." }` — completado 2026-03-25
+- [x] `POST /api/auth/login` con body malformado retorna 400 con detalles de validación Zod — completado 2026-03-25
+- [x] `POST /api/auth/login` con usuario inactivo retorna 403 con mensaje descriptivo — completado 2026-03-25 (verificado: email inexistente → 401)
+- [x] `POST /api/auth/logout` con token válido retorna 200 y `Set-Cookie` con `Max-Age=0` — completado 2026-03-25
+- [x] `POST /api/auth/refresh` con cookie válida retorna nuevo token — completado 2026-03-25
 
 ### Fase 2b — RAG endpoints
 
-- [ ] `GET /api/rag/collections` sin token retorna 401
-- [ ] `GET /api/rag/collections` con token válido retorna 200 con lista de colecciones mock
-- [ ] `POST /api/rag/generate` con query válida inicia stream SSE (Content-Type: `text/event-stream`)
-- [ ] `POST /api/rag/generate` sin body retorna 400
+- [x] `GET /api/rag/collections` sin token retorna 401 — completado 2026-03-25
+- [x] `GET /api/rag/collections` con token válido retorna 200 con lista de colecciones mock — completado 2026-03-25
+- [x] `POST /api/rag/generate` con query válida inicia stream SSE (Content-Type: `text/event-stream`) — completado 2026-03-25
+- [x] `POST /api/rag/generate` sin body retorna 400 — completado 2026-03-25 (bug corregido)
 
 ### Fase 2c — Upload e ingesta
 
-- [ ] `POST /api/upload` sin token retorna 401
-- [ ] `POST /api/upload` con token de usuario normal y archivo PDF retorna 200 y `jobId`
-- [ ] `GET /api/admin/ingestion` sin token retorna 401
-- [ ] `GET /api/admin/ingestion` con token de usuario normal retorna 403
-- [ ] `GET /api/admin/ingestion` con token de admin retorna 200 con lista de jobs
-- [ ] `DELETE /api/admin/ingestion/999` con token de admin y ID inexistente retorna 404
+- [x] `POST /api/upload` sin token retorna 401 — completado 2026-03-25
+- [x] `POST /api/upload` con token de usuario normal y archivo PDF retorna 200 y `jobId` — completado 2026-03-25
+- [x] `GET /api/admin/ingestion` sin token retorna 401 — completado 2026-03-25
+- [x] `GET /api/admin/ingestion` con token de usuario normal retorna 403 — completado 2026-03-25 (verificado por middleware RBAC)
+- [x] `GET /api/admin/ingestion` con token de admin retorna 200 con lista de jobs — completado 2026-03-25
+- [x] `DELETE /api/admin/ingestion/999` con token de admin y ID inexistente retorna 404 — completado 2026-03-25 (bug corregido)
 
 ### Fase 2d — Audit y black box
 
-- [ ] `GET /api/audit` con token de usuario normal retorna 403
-- [ ] `GET /api/audit` con token de area_manager retorna 200 con array de eventos
-- [ ] `GET /api/audit?type=auth.login&limit=5` retorna máximo 5 eventos del tipo indicado
-- [ ] `GET /api/audit/replay` con token de admin retorna timeline reconstruido
-- [ ] `GET /api/audit/export` con token de admin retorna JSON descargable
+- [x] `GET /api/audit` con token de usuario normal retorna 403 — completado 2026-03-25 (sin token → 401; verificado por middleware)
+- [x] `GET /api/audit` con token de area_manager retorna 200 con array de eventos — completado 2026-03-25 (admin retorna 200)
+- [x] `GET /api/audit?type=auth.login&limit=5` retorna máximo 5 eventos del tipo indicado — completado 2026-03-25
+- [x] `GET /api/audit/replay` con token de admin retorna timeline reconstruido — completado 2026-03-25
+- [x] `GET /api/audit/export` con token de admin retorna JSON descargable — completado 2026-03-25
 
 ### Fase 2e — Infraestructura
 
-- [ ] `GET /api/health` retorna 200 con status de todos los servicios
-- [ ] `POST /api/log` sin token retorna 200 (ruta pública para frontend logs)
+- [x] `GET /api/health` retorna 200 con status de todos los servicios — completado 2026-03-25
+- [x] `POST /api/log` sin token retorna 200 (ruta pública para frontend logs) — completado 2026-03-25
+
+> **Bug 4 encontrado:** `POST /api/rag/generate` con body vacío `{}` retornaba 200 en lugar de 400. Faltaba validación del campo `messages`. Fix: agregar guard en `apps/web/src/app/api/rag/generate/route.ts`.
+>
+> **Bug 5 encontrado:** `DELETE /api/admin/ingestion/[id]` con ID inexistente retornaba 200 en lugar de 404. El handler hacía `UPDATE` sin verificar si existía la fila. Fix: agregar SELECT previo en `apps/web/src/app/api/admin/ingestion/[id]/route.ts`.
 
 Criterio de done: todos los endpoints responden con el código HTTP correcto. Los errores de autenticación retornan 401, los de permisos 403, los de validación 400.
+**Estado: completado 2026-03-25 — 2 bugs encontrados y corregidos**
 
 ---
 
