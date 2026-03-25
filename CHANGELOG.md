@@ -11,6 +11,7 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Added
 
+- `apps/web/src/components/chat/SplitView.tsx`: wrapper de vista dividida — botón Columns2 abre segundo panel con sesión independiente, botón X cierra; cada panel tiene su propio ChatInterface — 2026-03-25 *(Plan 4 F2.34)*
 - `packages/db/src/schema.ts`: tabla `scheduled_reports` (query, collection, schedule, destination, email, nextRun) — 2026-03-25 *(Plan 4 F2.33)*
 - `packages/db/src/queries/reports.ts`: `createReport`, `listActiveReports`, `listReportsByUser`, `updateLastRun`, `deleteReport` — 2026-03-25 *(Plan 4 F2.33)*
 - `apps/web/src/workers/ingestion.ts`: procesador de informes programados — corre cada 5 min, ejecuta query via RAG, guarda en Guardados o env\u00eda por email (si SMTP configurado) — 2026-03-25 *(Plan 4 F2.33)*
