@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect, useTransition } from "react"
-import { Send, ThumbsUp, ThumbsDown, Loader2, Bookmark } from "lucide-react"
+import { Send, ThumbsUp, ThumbsDown, Loader2, Bookmark, RefreshCw, Copy, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { DbChatSession, DbChatMessage } from "@rag-saldivia/db"
 import { actionAddMessage, actionAddFeedback, actionToggleSaved } from "@/app/actions/chat"
@@ -51,6 +51,9 @@ export function ChatInterface({
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
   const [savedIds, setSavedIds] = useState<Set<number>>(new Set())
+  const [copiedId, setCopiedId] = useState<number | null>(null)
+  const [queryStats, setQueryStats] = useState<{ ms: number; sources: number } | null>(null)
+  const streamStartRef = useRef<number>(0)
   const bottomRef = useRef<HTMLDivElement>(null)
   const pendingSourcesRef = useRef<unknown[]>([])
   const { focusMode, setFocusMode } = useFocusMode()
@@ -78,7 +81,9 @@ export function ChatInterface({
 
     setInput("")
     setError(null)
+    setQueryStats(null)
     pendingSourcesRef.current = []
+    streamStartRef.current = Date.now()
 
     const userMsg: Message = { role: "user", content: query }
     const assistantMsg: Message = { role: "assistant", content: "" }
@@ -90,6 +95,8 @@ export function ChatInterface({
 
     const result = await stream([...messages, userMsg])
     if (!result) return
+
+    setQueryStats({ ms: Date.now() - streamStartRef.current, sources: result.sources.length })
 
     clientLog.action("rag.query", { collection: session.collection, sessionId: session.id })
 
@@ -111,6 +118,19 @@ export function ChatInterface({
         })
       }
     })
+  }
+
+  function handleRegenerate() {
+    const lastUser = [...messages].reverse().find((m) => m.role === "user")
+    if (lastUser) {
+      setInput(lastUser.content)
+    }
+  }
+
+  async function handleCopy(messageId: number, content: string) {
+    await navigator.clipboard.writeText(content)
+    setCopiedId(messageId)
+    setTimeout(() => setCopiedId(null), 2000)
   }
 
   async function handleToggleSaved(messageId: number, content: string) {
@@ -158,7 +178,7 @@ export function ChatInterface({
         {messages.map((msg, i) => (
           <div
             key={i}
-            className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+            className={`flex group ${msg.role === "user" ? "justify-end" : "justify-start"}`}
           >
             <div
               className={`max-w-2xl rounded-xl px-4 py-3 text-sm space-y-1 ${
@@ -171,8 +191,29 @@ export function ChatInterface({
             >
               <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
 
-              {msg.role === "assistant" && msg.id && msg.content && phase !== "streaming" && (
-                <div className="flex gap-1 pt-1 opacity-40 hover:opacity-100 transition-opacity">
+              {msg.role === "assistant" && msg.content && phase !== "streaming" && (
+                <div className="flex gap-1 pt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {/* Regenerar — F1.15 */}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={handleRegenerate}
+                    title="Regenerar respuesta"
+                  >
+                    <RefreshCw size={13} />
+                  </Button>
+                  {/* Copy — F1.16 */}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={() => msg.id ? handleCopy(msg.id, msg.content) : navigator.clipboard.writeText(msg.content)}
+                    title="Copiar respuesta"
+                    style={msg.id && copiedId === msg.id ? { color: "var(--accent)" } : {}}
+                  >
+                    {msg.id && copiedId === msg.id ? <Check size={13} /> : <Copy size={13} />}
+                  </Button>
                   <Button
                     variant="ghost"
                     size="icon"
@@ -208,6 +249,20 @@ export function ChatInterface({
             </div>
           </div>
         ))}
+
+        {/* Stats del último query — F1.17 */}
+        {queryStats && phase === "done" && (
+          <div
+            className="flex justify-start px-1"
+          >
+            <span
+              className="text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+              style={{ color: "var(--muted-foreground)" }}
+            >
+              {queryStats.ms}ms · {queryStats.sources} doc{queryStats.sources !== 1 ? "s" : ""}
+            </span>
+          </div>
+        )}
 
         <ThinkingSteps phase={phase} />
 
