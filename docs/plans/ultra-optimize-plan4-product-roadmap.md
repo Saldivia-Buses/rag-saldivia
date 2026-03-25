@@ -219,35 +219,372 @@ Criterio global Fase 1: las 14 features accesibles. `bun run test` pasa (126 tes
 
 ## Fase 2 — Esfuerzo medio *(60-80 hs total)*
 
-Objetivo: 20 features con diseño de componente no trivial o cambios en el backend. Cada una tiene su propio sub-plan en `docs/superpowers/plans/` antes de empezar a codear.
+Objetivo: 20 features con diseño de componente no trivial o cambios en el backend.
 
-Criterio global: las 20 features completas. Analytics muestra datos reales.
+Criterio global: las 20 features completas. Analytics muestra datos reales. `bun run test` pasa.
 
-### Índice de features
+**Tablas DB nuevas en esta fase:** `annotations`, `session_tags`, `session_shares`, `prompt_templates`, `collection_history`, `scheduled_reports`, `rate_limits`, `webhooks`. Campo nuevo: `onboarding_completed` en `users`.
 
-| # | Feature | Archivos clave | Prerequisito |
-|---|---|---|---|
-| 19 | **Panel de fuentes / citas** | `SourcesPanel.tsx`, extender `useRagStream.ts` | Fase 1 |
-| 20 | **Preguntas relacionadas** | `RelatedQuestions.tsx`, `POST /api/rag/suggest` | #19 |
-| 21 | **Multi-colección en query** | `CollectionSelector.tsx`, extender `/api/rag/generate` | — |
-| 22 | **Anotar fragmentos** | `AnnotationPopover.tsx`, tabla `annotations` | #19 |
-| 23 | **Command palette Cmd+K** | `CommandPalette.tsx`, `cmdk` (ya en shadcn) | F1.14 |
-| 24 | **Etiquetas + bulk** | `SessionTags.tsx`, tabla `session_tags`, bulk actions | — |
-| 25 | **Compartir sesión** | `ShareDialog.tsx`, tabla `session_shares`, ruta `/share/[token]` | — |
-| 26 | **Colecciones desde UI** | reescribir `/collections/page.tsx`, extender `/api/rag/collections` | — |
-| 27 | **Chat con doc específico** | botón en UI de colección, sesión con doc pre-seleccionado | #26 |
-| 28 | **Templates de query** | `PromptTemplates.tsx`, tabla `prompt_templates`, admin CRUD | — |
-| 29 | **Ingestion monitoring mejorado** | `IngestionKanban.tsx`, SSE endpoint para jobs en tiempo real | — |
-| 30 | **Analytics dashboard** | `/admin/analytics/page.tsx`, `recharts`, queries de agregación DB | F1.6 |
-| 31 | **Brechas de conocimiento** | `/admin/knowledge-gaps/page.tsx`, heurística de baja confianza, TF-IDF simple | #30 |
-| 32 | **Historial de colecciones** | `CollectionHistory.tsx`, tabla `collection_history` | #26 |
-| 33 | **Informes programados** | tabla `scheduled_reports`, extender worker. Email requiere SMTP externo vía env. | — |
-| 34 | **Vista dividida (split view)** | `SplitView.tsx`, estado de dos sesiones paralelas | — |
-| 35 | **Drag & drop al chat** | `ChatDropZone.tsx`, colección temporal `@temp-[sessionId]`. **Validar viabilidad primero:** ¿el blueprint soporta colecciones efímeras? ¿worker < 30s para < 100MB? Si no, redefinir como upload normal pre-seleccionado. | — |
-| 36 | **Rate limiting por área** | tabla `rate_limits`, check en `/api/rag/generate` | — |
-| 37 | **Onboarding interactivo** | `OnboardingTour.tsx`, `driver.js`, flag `onboarding_completed` en tabla `users` | — |
-| 38 | **Webhooks salientes** | tabla `webhooks`, extender worker, admin UI | — |
+---
 
+### F2.19 — Panel de fuentes / citas *(2-3 hs)*
+
+**Archivos:**
+- Create: `apps/web/src/components/chat/SourcesPanel.tsx`
+- Modify: `apps/web/src/hooks/useRagStream.ts` (ya captura sources, exponer al componente)
+- Modify: `apps/web/src/components/chat/ChatInterface.tsx`
+
+El stream del RAG Blueprint incluye fuentes en el campo `choices[0].delta.sources` — ya se parsea en `useRagStream.ts`. Esta feature las muestra en un panel colapsable debajo de cada respuesta asistente.
+
+- [ ] Crear `SourcesPanel.tsx`: acepta `sources: Array<{ document_name?: string; content?: string; score?: number }>`. Colapsado por default si hay 0 fuentes. Expandido si hay ≥ 1. Muestra: nombre del doc, fragmento relevante (truncado a 150 chars), score como badge si existe.
+- [ ] En `ChatInterface.tsx`: pasar `result.sources` al mensaje asistente después del stream y renderizar `<SourcesPanel sources={msg.sources} />` debajo del contenido.
+- [ ] Test: `SourcesPanel` con 0 fuentes no renderiza nada (o renderiza estado vacío). Con 2 fuentes muestra 2 items.
+- [ ] Commit: `feat(chat): panel de fuentes y citas debajo de respuestas — f2.19`
+
+---
+
+### F2.20 — Preguntas relacionadas *(2-3 hs)*
+
+**Archivos:**
+- Create: `apps/web/src/app/api/rag/suggest/route.ts`
+- Create: `apps/web/src/components/chat/RelatedQuestions.tsx`
+- Modify: `apps/web/src/components/chat/ChatInterface.tsx`
+
+- [ ] Crear `POST /api/rag/suggest`: recibe `{ query, collection, lastResponse }`. En modo MOCK_RAG retorna 3 sugerencias hardcodeadas. En modo real: hace query al RAG con prompt `"Given this Q&A, suggest 3 follow-up questions in the same language:"`. Retorna `{ questions: string[] }`.
+- [ ] Crear `RelatedQuestions.tsx`: muestra 3-4 chips con las sugerencias. Al hacer clic en uno llama al callback `onSelect(question)` que lo pone en el input del chat.
+- [ ] En `ChatInterface.tsx`: después de cada respuesta completada (phase === "done"), llamar al endpoint `/api/rag/suggest` y renderizar `<RelatedQuestions>` debajo del SourcesPanel.
+- [ ] Test unitario: el endpoint retorna array de strings, no vacío en modo mock.
+- [ ] Commit: `feat(chat): preguntas relacionadas despues de cada respuesta — f2.20`
+
+---
+
+### F2.21 — Multi-colección en query *(2-3 hs)*
+
+**Archivos:**
+- Create: `apps/web/src/components/chat/CollectionSelector.tsx`
+- Modify: `apps/web/src/hooks/useRagStream.ts`
+- Modify: `apps/web/src/app/api/rag/generate/route.ts`
+
+- [ ] Crear `CollectionSelector.tsx`: multi-checkbox dropdown (Popover + shadcn) que lista las colecciones disponibles del usuario. Estado persiste en `localStorage["selected_collections"]`. Mostrar debajo del input, junto a FocusModeSelector.
+- [ ] Extender `useRagStream.ts`: aceptar `collections: string[]` en options y enviarlo en el body del fetch como `collection_names`.
+- [ ] En `/api/rag/generate`: si `body.collection_names` es array, verificar acceso a cada colección y pasarlas al RAG server. El Blueprint acepta múltiples colecciones via `collection_name` con coma o array según versión.
+- [ ] Test: con `collection_names: ["col-a", "col-b"]` el route verifica acceso a ambas.
+- [ ] Commit: `feat(chat): selector multi-coleccion en query — f2.21`
+
+---
+
+### F2.22 — Anotar fragmentos de respuesta *(2-3 hs)*
+
+**Archivos:**
+- Create: `apps/web/src/components/chat/AnnotationPopover.tsx`
+- Create: `packages/db/src/schema.ts` — tabla `annotations`
+- Create: `packages/db/src/queries/annotations.ts`
+- Create: `apps/web/src/app/actions/chat.ts` — action `actionSaveAnnotation`
+
+- [ ] Agregar tabla al schema: `annotations` (id, userId, sessionId, messageId, selectedText, note, createdAt).
+- [ ] Agregar a `init.ts` el `CREATE TABLE IF NOT EXISTS annotations`.
+- [ ] Crear `packages/db/src/queries/annotations.ts`: `saveAnnotation`, `listAnnotationsBySession`.
+- [ ] Crear `AnnotationPopover.tsx`: al seleccionar texto en un mensaje asistente (`onMouseUp`/`onSelectionChange`), mostrar un popover flotante con opciones: "💾 Guardar fragmento", "❓ Preguntar sobre esto" (pone el texto en el input), "💬 Comentar" (abre input para nota libre).
+- [ ] Test unitario: `saveAnnotation` persiste correctamente en memoria.
+- [ ] Commit: `feat(chat): anotar fragmentos de respuesta — f2.22`
+
+---
+
+### F2.23 — Command palette Cmd+K *(3-4 hs)*
+
+**Archivos:**
+- Create: `apps/web/src/components/layout/CommandPalette.tsx`
+- Modify: `apps/web/src/components/layout/AppShellChrome.tsx`
+- Modify: `apps/web/src/hooks/useGlobalHotkeys.ts`
+
+`cmdk` ya instalado vía shadcn (componente `Command`).
+
+- [ ] Crear `CommandPalette.tsx`: Dialog con `Command` de shadcn. Grupos de comandos:
+  - **Navegar:** Nueva sesión, /chat, /collections, /upload, /saved, /admin
+  - **Sesiones:** buscar en historial de sesiones del usuario (llamada a `listSessionsByUser` filtrada por texto)
+  - **Modo de foco:** cambiar entre Detallado / Ejecutivo / Técnico / Comparativo
+  - **Sistema:** Tema claro/oscuro, Modo Zen
+- [ ] En `useGlobalHotkeys.ts`: agregar `Cmd+K` para abrir/cerrar la paleta.
+- [ ] En `AppShellChrome.tsx`: controlar estado `paletteOpen` + renderizar `<CommandPalette>`.
+- [ ] Test: el componente renderiza sin errores. Los grupos de comandos tienen al menos un item.
+- [ ] Commit: `feat(web): command palette cmd+k con grupos de acciones — f2.23`
+
+---
+
+### F2.24 — Etiquetas en sesiones + bulk actions *(3-4 hs)*
+
+**Archivos:**
+- Create: `packages/db/src/schema.ts` — tabla `session_tags`
+- Create: `packages/db/src/queries/tags.ts`
+- Modify: `apps/web/src/components/chat/SessionList.tsx`
+- Create: `apps/web/src/app/actions/chat.ts` — actions de tags y bulk
+
+- [ ] Tabla `session_tags` en schema + `init.ts`: (sessionId FK chat_sessions, tag TEXT, PRIMARY KEY (sessionId, tag)).
+- [ ] `packages/db/src/queries/tags.ts`: `addTag(sessionId, tag)`, `removeTag(sessionId, tag)`, `listTagsByUser(userId)`.
+- [ ] En `SessionList.tsx`: input inline para agregar tags a cada sesión (click en "+" junto a la sesión). Filtro por tag en el header de la lista.
+- [ ] Checkbox en cada sesión para selección múltiple. Toolbar de bulk actions cuando hay ≥ 1 seleccionada: "Exportar todo", "Eliminar todo".
+- [ ] Test unitario: `addTag` y `removeTag` en memoria.
+- [ ] Commit: `feat(chat): etiquetas en sesiones + bulk actions — f2.24`
+
+---
+
+### F2.25 — Compartir sesión *(2-3 hs)*
+
+**Archivos:**
+- Create: `packages/db/src/schema.ts` — tabla `session_shares`
+- Create: `packages/db/src/queries/shares.ts`
+- Create: `apps/web/src/components/chat/ShareDialog.tsx`
+- Create: `apps/web/src/app/(public)/share/[token]/page.tsx`
+- Create: `apps/web/src/app/api/share/route.ts`
+
+- [ ] Tabla `session_shares`: (id UUID PK, sessionId FK, userId FK, token TEXT UNIQUE, expiresAt INTEGER, createdAt INTEGER).
+- [ ] `packages/db/src/queries/shares.ts`: `createShare(sessionId, userId, ttlDays?)`, `getShareByToken(token)`, `revokeShare(id, userId)`.
+- [ ] `GET /api/share?token=X`: valida token, verifica expiración, retorna session + messages. Ruta pública (en middleware `PUBLIC_ROUTES`).
+- [ ] `POST /api/share`: crear token (32 bytes hex con `crypto.randomBytes`). Auth requerida.
+- [ ] `ShareDialog.tsx`: muestra el link generado, botón copiar, fecha de expiración, aviso de privacidad ("No compartir sesiones con información sensible"). Admin puede configurar si la feature está habilitada.
+- [ ] Página `/share/[token]` (route group `(public)` sin auth): muestra la sesión en modo read-only. Sin AppShell. Si token expirado/inválido → 404.
+- [ ] Test unitario: `createShare` genera token de 64 chars hex. `getShareByToken` retorna null para token inválido.
+- [ ] Commit: `feat(web): compartir sesion con token publico — f2.25`
+
+---
+
+### F2.26 — Colecciones desde UI *(2-3 hs)*
+
+**Archivos:**
+- Rewrite: `apps/web/src/app/(app)/collections/page.tsx` (actualmente es page básica)
+- Create: `apps/web/src/components/collections/CollectionsList.tsx`
+- Create: `apps/web/src/app/api/rag/collections/[name]/route.ts`
+- Modify: `apps/web/src/app/api/rag/collections/route.ts`
+
+- [ ] Extender `GET /api/rag/collections`: incluir lista de documentos y estado de ingesta por colección (llamar al RAG server para obtener metadata).
+- [ ] Agregar `POST /api/rag/collections` (solo admin): crear colección via RAG server API. `DELETE /api/rag/collections/[name]`: eliminar con confirmación.
+- [ ] Reescribir `/collections/page.tsx` como Server Component que fetcha la lista de colecciones con metadata.
+- [ ] Crear `CollectionsList.tsx`: tabla con nombre, descripción, cantidad de docs, estado de ingesta, acciones (ver docs, chat, eliminar).
+- [ ] Test: `POST /api/rag/collections` sin auth retorna 401. Con auth de user retorna 403.
+- [ ] Commit: `feat(collections): pagina de colecciones con CRUD desde UI — f2.26`
+
+---
+
+### F2.27 — Chat con documento específico *(1-2 hs)*
+
+**Archivos:**
+- Modify: `apps/web/src/components/collections/CollectionsList.tsx`
+- Modify: `apps/web/src/app/actions/chat.ts`
+
+Prerequisito: F2.26 completada.
+
+- [ ] En la lista de documentos de cada colección, agregar botón "Preguntar sobre este doc".
+- [ ] Al hacer clic: `actionCreateSession({ collection, title: "Chat: ${docName}", initialContext: docName })` y navegar a la nueva sesión.
+- [ ] El system prompt de la sesión incluye `"Only use information from document: ${docName}"`.
+- [ ] Commit: `feat(collections): chat con documento especifico — f2.27`
+
+---
+
+### F2.28 — Templates de query *(2-3 hs)*
+
+**Archivos:**
+- Create: `packages/db/src/schema.ts` — tabla `prompt_templates`
+- Create: `packages/db/src/queries/templates.ts`
+- Create: `apps/web/src/components/chat/PromptTemplates.tsx`
+- Create: `apps/web/src/app/(app)/admin/templates/page.tsx`
+
+- [ ] Tabla `prompt_templates`: (id INTEGER PK, title TEXT, prompt TEXT, focusMode TEXT, createdBy FK users, active BOOLEAN, createdAt).
+- [ ] `packages/db/src/queries/templates.ts`: `listActiveTemplates()`, `createTemplate(data)`, `deleteTemplate(id)`.
+- [ ] `PromptTemplates.tsx`: dropdown tipo "Seleccionar template" sobre el input del chat. Al elegir uno, pone el prompt en el input y setea el focusMode recomendado.
+- [ ] Página `/admin/templates`: tabla de templates activos con acciones crear/eliminar. Solo admins.
+- [ ] Test unitario: `listActiveTemplates` retorna solo templates con `active = true`.
+- [ ] Commit: `feat(chat): templates de query con admin CRUD — f2.28`
+
+---
+
+### F2.29 — Ingestion monitoring mejorado *(3-4 hs)*
+
+**Archivos:**
+- Create: `apps/web/src/components/admin/IngestionKanban.tsx`
+- Create: `apps/web/src/app/api/admin/ingestion/stream/route.ts`
+- Modify: `apps/web/src/app/(app)/admin/ingestion/page.tsx` (crear si no existe)
+
+- [ ] Crear `GET /api/admin/ingestion/stream`: SSE endpoint que hace polling cada 3s a la DB y emite los jobs actualizados. Solo admin. Usar `ReadableStream` + `TransformStream` como en `/api/rag/generate`.
+- [ ] Crear `IngestionKanban.tsx`: columnas Pendiente / En progreso / Completado / Error. Cards con filename, colección, progreso (barra), tier, tiempo transcurrido. Botón "Retry" en cards de Error (llama a `PATCH /api/admin/ingestion/[id]` con `{ action: "retry" }`). Detalle de error expandible en un `Dialog`.
+- [ ] Conectar el SSE al kanban para actualización en tiempo real (reemplaza la tabla estática actual).
+- [ ] Agregar `PATCH /api/admin/ingestion/[id]` para action retry: cambia status a `pending`, reset `retryCount++`.
+- [ ] Commit: `feat(admin): ingestion kanban con progreso en tiempo real — f2.29`
+
+---
+
+### F2.30 — Analytics dashboard *(4-5 hs)*
+
+**Archivos:**
+- Create: `apps/web/src/app/(app)/admin/analytics/page.tsx`
+- Create: `apps/web/src/components/admin/AnalyticsDashboard.tsx`
+- Create: `apps/web/src/app/api/admin/analytics/route.ts`
+
+Prerequisito: F1.6 (tabla `message_feedback` con datos). `bun add recharts`.
+
+- [ ] Crear `GET /api/admin/analytics`: queries de agregación sobre `events`, `chat_sessions`, `message_feedback`. Retorna:
+  - `queriesByDay`: `SELECT DATE(ts/1000,'unixepoch') as day, COUNT(*) FROM events WHERE type='rag.stream_started' GROUP BY day ORDER BY day DESC LIMIT 30`
+  - `topCollections`: `SELECT collection_name, COUNT(*) FROM events WHERE type='rag.stream_started' GROUP BY collection_name ORDER BY COUNT(*) DESC LIMIT 10`
+  - `feedbackDistribution`: `SELECT rating, COUNT(*) FROM message_feedback GROUP BY rating`
+  - `topUsers`: `SELECT user_id, COUNT(*) as queries FROM events WHERE type='rag.stream_started' GROUP BY user_id ORDER BY queries DESC LIMIT 10`
+- [ ] `bun add recharts` en `apps/web`.
+- [ ] Crear `AnalyticsDashboard.tsx` Client Component: LineChart (queries/día), BarChart (top colecciones), PieChart (feedback +/-), tabla (top usuarios).
+- [ ] Página `/admin/analytics`: Server Component que fetcha datos y pasa al dashboard.
+- [ ] Agregar link "Analytics" en `AdminPanel.tsx` sección Observabilidad.
+- [ ] Test: el endpoint retorna las 4 claves esperadas con arrays.
+- [ ] Commit: `feat(admin): analytics dashboard con recharts — f2.30`
+
+---
+
+### F2.31 — Brechas de conocimiento *(2-3 hs)*
+
+**Archivos:**
+- Create: `apps/web/src/app/(app)/admin/knowledge-gaps/page.tsx`
+- Create: `apps/web/src/app/api/admin/knowledge-gaps/route.ts`
+
+Prerequisito: F2.30.
+
+Definición operativa (del spec): un query es "brecha" si la respuesta del asistente:
+- No tiene fuentes (`sources` vacío o null), O
+- Es < 80 tokens Y contiene patterns de incertidumbre ("no encuentro", "no tengo información", "no sé", "no encontré", "I don't know", "I couldn't find").
+
+- [ ] Crear `GET /api/admin/knowledge-gaps`: busca en `chat_messages` con `role='assistant'` mensajes cortos (< 80 words) con keywords de incertidumbre, LEFT JOIN con `events` para obtener el query original. Retorna los últimos 100, agrupados por colección.
+- [ ] Página `/admin/knowledge-gaps`: tabla con columnas: Query original, Respuesta (truncada), Colección, Fecha, Acción ("Ingestar más docs sobre esto" → lleva a /upload).
+- [ ] Botón "Exportar CSV" que descarga los gaps como CSV.
+- [ ] Agregar link "Brechas" en `AdminPanel.tsx` sección Observabilidad.
+- [ ] Commit: `feat(admin): brechas de conocimiento detectadas por heuristica — f2.31`
+
+---
+
+### F2.32 — Historial de colecciones *(2-3 hs)*
+
+**Archivos:**
+- Create: `packages/db/src/schema.ts` — tabla `collection_history`
+- Create: `packages/db/src/queries/collection-history.ts`
+- Create: `apps/web/src/components/collections/CollectionHistory.tsx`
+- Modify: `apps/web/src/workers/ingestion.ts`
+
+- [ ] Tabla `collection_history`: (id TEXT PK, collection TEXT, userId FK, action TEXT enum('added','removed'), docCount INTEGER, sizeBytes INTEGER, createdAt INTEGER).
+- [ ] En `ingestion.ts` worker: al completar un job exitosamente, insertar un registro en `collection_history`.
+- [ ] `collection-history.ts`: `listHistoryByCollection(collection)`, `recordIngestionEvent(data)`.
+- [ ] `CollectionHistory.tsx`: timeline vertical de commits de ingesta por colección. Cada entrada muestra fecha, usuario, docs agregados, tamaño.
+- [ ] Integrar en la página de detalle de colección (`/collections/[name]`).
+- [ ] Test unitario: `recordIngestionEvent` persiste con los campos correctos.
+- [ ] Commit: `feat(collections): historial de ingestas como commits de coleccion — f2.32`
+
+---
+
+### F2.33 — Informes programados *(3-4 hs)*
+
+**Archivos:**
+- Create: `packages/db/src/schema.ts` — tabla `scheduled_reports`
+- Create: `packages/db/src/queries/reports.ts`
+- Create: `apps/web/src/app/(app)/admin/reports/page.tsx`
+- Modify: `apps/web/src/workers/ingestion.ts`
+
+- [ ] Tabla `scheduled_reports`: (id TEXT PK, userId FK, query TEXT, collection TEXT, schedule TEXT, destination enum('saved','email'), email TEXT nullable, active BOOLEAN, lastRun INTEGER, nextRun INTEGER, createdAt INTEGER).
+- [ ] `packages/db/src/queries/reports.ts`: `listActiveReports()`, `createReport(data)`, `updateLastRun(id, nextRun)`.
+- [ ] Extender el worker `ingestion.ts`: cada 5 minutos, buscar `scheduled_reports` cuyo `nextRun <= now`. Para cada uno: ejecutar el query via el cliente RAG interno, guardar resultado en `saved_responses` (destino=saved) o enviar email (destino=email, requiere `SMTP_HOST` configurado). Si SMTP no configurado: log de warning, no falla.
+- [ ] Página `/admin/reports`: crear/listar/eliminar informes. Formulario: query, colección, schedule (select: diario/semanal/mensual), destino.
+- [ ] Agregar link "Informes" en `AdminPanel.tsx`.
+- [ ] Test unitario: `listActiveReports` retorna solo reports con `active = true` y `nextRun <= Date.now()`.
+- [ ] Commit: `feat(admin): informes programados con destino saved o email — f2.33`
+
+---
+
+### F2.34 — Vista dividida (split view) *(2-3 hs)*
+
+**Archivos:**
+- Create: `apps/web/src/components/chat/SplitView.tsx`
+- Modify: `apps/web/src/app/(app)/chat/[id]/page.tsx`
+- Modify: `apps/web/src/components/chat/ChatInterface.tsx`
+
+- [ ] Crear `SplitView.tsx`: wrapper que acepta dos `<ChatInterface>` side by side. Botón "Split" en el header del chat que activa el modo dividido. En modo dividido: los dos paneles tienen `width: 50%`, cada uno con su propia sesión independiente.
+- [ ] En la página `/chat/[id]`: si `searchParams.split=true`, cargar dos sesiones (la actual + la última del usuario) y renderizar `<SplitView>`.
+- [ ] Botón "Cerrar split" vuelve al modo single.
+- [ ] Commit: `feat(chat): vista dividida con dos sesiones paralelas — f2.34`
+
+---
+
+### F2.35 — Drag & drop al chat *(2-3 hs)*
+
+**Pre-validación de viabilidad requerida antes de implementar.**
+
+> Antes de codear: verificar que el NVIDIA RAG Blueprint v2.5.0 soporta crear colecciones efímeras (sin TTL fijo en Milvus). Si no es viable, esta feature se redefine como "upload normal con pre-selección de sesión".
+
+**Archivos:**
+- Create: `apps/web/src/components/chat/ChatDropZone.tsx`
+- Modify: `apps/web/src/components/chat/ChatInterface.tsx`
+- Modify: `apps/web/src/app/api/upload/route.ts`
+
+- [ ] **Paso previo:** revisar docs del Blueprint v2.5.0 para confirmar viabilidad de colecciones efímeras en Milvus. Si no: implementar como upload normal.
+- [ ] Crear `ChatDropZone.tsx`: overlay de drag & drop sobre el área del chat. `onDrop`: sube el archivo a `POST /api/upload?collection=@temp-${sessionId}&temp=true`. Muestra progreso inline.
+- [ ] Extender `POST /api/upload`: si `?temp=true`, usar `@temp-${sessionId}` como nombre de colección. Crear la colección si no existe.
+- [ ] Al completar la ingesta, auto-seleccionar la colección temporal en el selector del chat.
+- [ ] Commit: `feat(chat): drag and drop de pdf al chat con coleccion temporal — f2.35`
+
+---
+
+### F2.36 — Rate limiting por área/usuario *(2-3 hs)*
+
+**Archivos:**
+- Create: `packages/db/src/schema.ts` — tabla `rate_limits`
+- Create: `packages/db/src/queries/rate-limits.ts`
+- Modify: `apps/web/src/app/api/rag/generate/route.ts`
+- Create: `apps/web/src/app/(app)/admin/settings/rate-limits/page.tsx`
+
+- [ ] Tabla `rate_limits`: (id INTEGER PK, targetType enum('user','area'), targetId INTEGER, maxQueriesPerHour INTEGER, active BOOLEAN, createdAt INTEGER).
+- [ ] `rate-limits.ts`: `getRateLimit(userId, areaIds)` retorna el límite aplicable (user-level tiene precedencia sobre area-level). `countQueriesLastHour(userId)` cuenta eventos `rag.stream_started` de las últimas 3600s.
+- [ ] En `/api/rag/generate`: antes de procesar, verificar si el usuario tiene rate limit activo. Si `countQueriesLastHour >= maxQueriesPerHour` → retornar 429 con mensaje descriptivo.
+- [ ] Página `/admin/settings/rate-limits`: tabla de límites configurados. Formulario para agregar (tipo, ID, max/hora). Solo admins.
+- [ ] Test unitario: `getRateLimit` retorna null cuando no hay límite configurado.
+- [ ] Commit: `feat(admin): rate limiting por area/usuario — f2.36`
+
+---
+
+### F2.37 — Onboarding interactivo *(2-3 hs)*
+
+**Archivos:**
+- Create: `apps/web/src/components/onboarding/OnboardingTour.tsx`
+- Modify: `packages/db/src/schema.ts` — campo `onboardingCompleted` en `users`
+- Modify: `apps/web/src/app/(app)/layout.tsx`
+
+- [ ] Agregar campo `onboarding_completed INTEGER NOT NULL DEFAULT 0` a `users` en schema + `init.ts`.
+- [ ] `bun add driver.js` en `apps/web`.
+- [ ] Crear `OnboardingTour.tsx`: al montar, si `user.onboardingCompleted === false`, inicializar driver.js con 5 pasos:
+  1. NavRail: "Esta es la barra de navegación"
+  2. Chat: "Aquí hacés tus preguntas"
+  3. FocusModeSelector: "Elegí el modo de respuesta"
+  4. Colecciones: "Tus documentos organizados en colecciones"
+  5. Settings: "Configurá tu perfil"
+  Al terminar o saltar: llamar a Server Action `actionCompleteOnboarding()`.
+- [ ] Server Action `actionCompleteOnboarding`: `UPDATE users SET onboarding_completed = 1 WHERE id = userId`.
+- [ ] En `/settings`: botón "Reiniciar tour de onboarding" que llama a `actionResetOnboarding()`.
+- [ ] En `(app)/layout.tsx`: pasar `user.onboardingCompleted` al componente. Renderizar `<OnboardingTour>` si false.
+- [ ] Commit: `feat(web): onboarding interactivo con driver.js — f2.37`
+
+---
+
+### F2.38 — Webhooks salientes *(3-4 hs)*
+
+**Archivos:**
+- Create: `packages/db/src/schema.ts` — tabla `webhooks`
+- Create: `packages/db/src/queries/webhooks.ts`
+- Create: `apps/web/src/app/(app)/admin/webhooks/page.tsx`
+- Modify: `apps/web/src/workers/ingestion.ts`
+- Create: `apps/web/src/lib/webhook.ts`
+
+- [ ] Tabla `webhooks`: (id TEXT PK, userId FK, url TEXT, events TEXT (JSON array de event types), secret TEXT (para HMAC), active BOOLEAN, createdAt INTEGER).
+- [ ] `packages/db/src/queries/webhooks.ts`: `listActiveWebhooks()`, `listWebhooksByEvent(eventType)`, `createWebhook(data)`, `deleteWebhook(id, userId)`.
+- [ ] `apps/web/src/lib/webhook.ts`: función `dispatchWebhook(webhook, payload)` que hace `POST` al URL con header `X-Signature: HMAC-SHA256(secret, JSON.stringify(payload))` y timeout de 5s. No relanza errores — logea si falla.
+- [ ] En `ingestion.ts` worker: al cambiar estado a `done` o `error`, llamar `listWebhooksByEvent("ingestion.completed"/"ingestion.error")` y dispatch para cada uno.
+- [ ] En `/api/rag/generate` route: si la respuesta tiene baja confianza (sin fuentes), dispatch a webhooks de tipo `query.low_confidence`.
+- [ ] Página `/admin/webhooks`: tabla + formulario crear (URL, eventos a escuchar, secret). Solo admins.
+- [ ] Test unitario: `dispatchWebhook` no lanza excepciones si el URL no responde.
+- [ ] Commit: `feat(admin): webhooks salientes con HMAC — f2.38`
+
+---
+
+Criterio global Fase 2: las 20 features completas. Analytics muestra datos reales. `bun run test` pasa.
 **Estado: pendiente**
 
 ---
