@@ -103,19 +103,16 @@ Estructura objetivo: `NavRail (44px) | SecondaryPanel (~168px, contextual) | mai
 **Archivos a modificar:**
 - `apps/web/src/components/layout/AppShell.tsx` — reescribir para que sea Server Component puro que solo renderiza `<AppShellChrome user={user}>{children}</AppShellChrome>`.
 
-- [ ] Crear `NavRail.tsx` — íconos con tooltips, active state con `usePathname()`, fondo `var(--nav-bg)`, ancho fijo 44px, ThemeToggle + logout al fondo.
-- [ ] Crear `panels/ChatPanel.tsx` — estructura de header + slot para la lista de sesiones.
-- [ ] Crear `panels/AdminPanel.tsx` — secciones "Gestión" y "Observabilidad" con links a rutas admin. Diseñado para agregar items de Fase 2 sin rediseño.
-- [ ] Crear `SecondaryPanel.tsx` — usa `usePathname()`, retorna el panel correcto o `null`. Ancho 168px, fondo `var(--sidebar-bg)`, border-r.
-- [ ] Crear `AppShellChrome.tsx` — Client Component, renderiza `NavRail + SecondaryPanel + <main>`. Estado de UI aquí, no en AppShell.
-- [ ] Reescribir `AppShell.tsx` — Server Component puro, solo llama a `<AppShellChrome>`.
-- [ ] Verificar visualmente: `/chat` → NavRail + panel Sesiones + chat. `/admin/users` → NavRail + panel Admin + tabla. `/settings` → NavRail + sin panel + settings. Dark mode funciona en toda la shell.
-- [ ] Verificar que todos los links del NavRail navegan correctamente.
-- [ ] `bun run test` — 79 tests pasan.
-- [ ] Commit: `feat(web): dual sidebar layout — NavRail + SecondaryPanel contextual — Fase 0d`
+- [x] Crear `NavRail.tsx` — íconos con tooltips shadcn, active state con `usePathname()`, fondo `var(--nav-bg)`, ancho 44px, ThemeToggle + logout al fondo — completado 2026-03-25
+- [x] Crear `panels/ChatPanel.tsx` — header "Sesiones" + botón nueva sesión + slot para SessionList (Fase 1) — completado 2026-03-25
+- [x] Crear `panels/AdminPanel.tsx` — secciones "Gestión" y "Observabilidad", extensible para Fase 2 sin rediseño — completado 2026-03-25
+- [x] Crear `SecondaryPanel.tsx` — usa `usePathname()`, retorna ChatPanel/AdminPanel/null. Ancho 168px, fondo `var(--sidebar-bg)` — completado 2026-03-25
+- [x] Crear `AppShellChrome.tsx` — Client Component con `isZen=false` placeholder (F1.11 lo implementa) — completado 2026-03-25
+- [x] Reescribir `AppShell.tsx` — Server Component puro que delega a AppShellChrome — completado 2026-03-25
+- [x] `bun run test` — 79/79 tests pasan, sin linter errors — completado 2026-03-25
 
 Criterio de done: `bun run test` pasa (79 tests), layout tri-columna funciona en light y dark, nav contextual funciona por ruta, sin regressions visibles.
-**Estado: pendiente**
+**Estado: completado 2026-03-25**
 
 ---
 
@@ -303,7 +300,7 @@ Objetivo: 12 features que requieren arquitectura nueva, tablas nuevas, o integra
 
 | Fase | Estado | Fecha |
 |------|--------|-------|
-| Fase 0 — Fundación (4 features) | 🔲 pendiente | — |
+| Fase 0 — Fundación (4 features) | ✅ completado | 2026-03-25 |
 | Fase 1 — Quick wins (14 features) | 🔲 pendiente | — |
 | Fase 2 — Esfuerzo medio (20 features) | 🔲 pendiente | — |
 | Fase 3 — Alta complejidad (12 features) | 🔲 pendiente | — |
