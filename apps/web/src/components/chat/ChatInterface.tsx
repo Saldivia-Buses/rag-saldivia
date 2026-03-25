@@ -1,10 +1,10 @@
 "use client"
 
 import { useState, useRef, useEffect, useTransition } from "react"
-import { Send, ThumbsUp, ThumbsDown, Loader2 } from "lucide-react"
+import { Send, ThumbsUp, ThumbsDown, Loader2, Bookmark } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { DbChatSession, DbChatMessage } from "@rag-saldivia/db"
-import { actionAddMessage, actionAddFeedback } from "@/app/actions/chat"
+import { actionAddMessage, actionAddFeedback, actionToggleSaved } from "@/app/actions/chat"
 import { clientLog } from "@rag-saldivia/logger/frontend"
 import { useRagStream } from "@/hooks/useRagStream"
 import { ThinkingSteps } from "@/components/chat/ThinkingSteps"
@@ -50,6 +50,7 @@ export function ChatInterface({
   const [input, setInput] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
+  const [savedIds, setSavedIds] = useState<Set<number>>(new Set())
   const bottomRef = useRef<HTMLDivElement>(null)
   const pendingSourcesRef = useRef<unknown[]>([])
   const { focusMode, setFocusMode } = useFocusMode()
@@ -110,6 +111,17 @@ export function ChatInterface({
         })
       }
     })
+  }
+
+  async function handleToggleSaved(messageId: number, content: string) {
+    const isSaved = savedIds.has(messageId)
+    setSavedIds((prev) => {
+      const next = new Set(prev)
+      if (isSaved) next.delete(messageId)
+      else next.add(messageId)
+      return next
+    })
+    await actionToggleSaved(messageId, content, session.title, isSaved)
   }
 
   async function handleFeedback(messageId: number, rating: "up" | "down") {
@@ -180,6 +192,16 @@ export function ChatInterface({
                     title="No útil"
                   >
                     <ThumbsDown size={13} />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
+                    onClick={() => handleToggleSaved(msg.id!, msg.content)}
+                    style={savedIds.has(msg.id!) ? { color: "var(--accent)", opacity: 1 } : {}}
+                    title={savedIds.has(msg.id!) ? "Quitar de guardados" : "Guardar respuesta"}
+                  >
+                    <Bookmark size={13} />
                   </Button>
                 </div>
               )}

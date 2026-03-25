@@ -114,6 +114,17 @@ await exec(`
     UNIQUE(message_id, user_id)
   );
 
+  -- Respuestas guardadas (F1.10)
+  CREATE TABLE IF NOT EXISTS saved_responses (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    message_id INTEGER REFERENCES chat_messages(id) ON DELETE SET NULL,
+    content TEXT NOT NULL,
+    session_title TEXT,
+    created_at INTEGER NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS idx_saved_responses_user ON saved_responses(user_id);
+
   -- Jobs de ingesta
   CREATE TABLE IF NOT EXISTS ingestion_jobs (
     id TEXT PRIMARY KEY,

@@ -171,6 +171,26 @@ export const messageFeedback = sqliteTable(
   })
 )
 
+// ── Saved Responses ────────────────────────────────────────────────────────
+
+export const savedResponses = sqliteTable(
+  "saved_responses",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    messageId: integer("message_id")
+      .references(() => chatMessages.id, { onDelete: "set null" }),
+    content: text("content").notNull(),
+    sessionTitle: text("session_title"),
+    createdAt: integer("created_at").notNull(), // epoch ms
+  },
+  (t) => ({
+    userIdx: index("idx_saved_responses_user").on(t.userId),
+  })
+)
+
 // ── Ingestion Jobs ─────────────────────────────────────────────────────────
 
 export const ingestionJobs = sqliteTable(
@@ -342,6 +362,8 @@ export type DbChatSession = typeof chatSessions.$inferSelect
 export type NewChatSession = typeof chatSessions.$inferInsert
 export type DbChatMessage = typeof chatMessages.$inferSelect
 export type NewChatMessage = typeof chatMessages.$inferInsert
+export type DbSavedResponse = typeof savedResponses.$inferSelect
+export type NewSavedResponse = typeof savedResponses.$inferInsert
 export type DbIngestionJob = typeof ingestionJobs.$inferSelect
 export type NewIngestionJob = typeof ingestionJobs.$inferInsert
 export type DbIngestionQueueItem = typeof ingestionQueue.$inferSelect

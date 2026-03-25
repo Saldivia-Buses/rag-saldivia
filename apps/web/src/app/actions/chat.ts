@@ -13,6 +13,8 @@ import {
   deleteSession,
   addMessage,
   addFeedback,
+  saveResponse,
+  unsaveByMessageId,
 } from "@rag-saldivia/db"
 import { log } from "@rag-saldivia/logger/backend"
 
@@ -78,4 +80,20 @@ export async function actionAddFeedback(
 ) {
   const user = await requireUser()
   await addFeedback(messageId, user.id, rating)
+}
+
+export async function actionToggleSaved(
+  messageId: number,
+  content: string,
+  sessionTitle: string,
+  currentlySaved: boolean
+) {
+  const user = await requireUser()
+
+  if (currentlySaved) {
+    await unsaveByMessageId(messageId, user.id)
+  } else {
+    await saveResponse({ userId: user.id, messageId, content, sessionTitle })
+  }
+  revalidatePath("/saved")
 }
