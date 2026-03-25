@@ -16,6 +16,8 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 ### Added
 
 - `apps/web/src/components/chat/ThinkingSteps.tsx`: steps colapsables del proceso de razonamiento visibles durante streaming — simulación UI-side con timing (paso 1 inmediato, paso 2 a 700ms, paso 3 a 1500ms); se auto-colapsa 1.8s después de que el stream termina; cuando el RAG server exponga eventos SSE de tipo `thinking`, se conectan en `useRagStream` — 2026-03-25 *(Plan 4 F1.5)*
+- `apps/web/src/lib/export.ts`: `exportToMarkdown()` (serializa sesión a MD con fuentes), `exportToPDF()` (window.print()), `downloadFile()` — 2026-03-25 *(Plan 4 F1.9)*
+- `apps/web/src/components/chat/ExportSession.tsx`: Popover con opciones "Markdown" y "PDF (imprimir)" en el header del chat — 2026-03-25 *(Plan 4 F1.9)*
 - `apps/web/src/components/chat/VoiceInput.tsx`: botón micrófono con Web Speech API — transcripción en tiempo real a `lang="es-AR"`, botón MicOff en rojo al grabar, fallback graceful si el browser no soporta SpeechRecognition (no renderiza nada) — 2026-03-25 *(Plan 4 F1.8)*
 - `packages/shared/src/schemas.ts`: `FOCUS_MODES` + `FocusModeId` — 4 modos (detallado, ejecutivo, técnico, comparativo) con system prompt para cada uno — 2026-03-25 *(Plan 4 F1.7)*
 - `apps/web/src/components/chat/FocusModeSelector.tsx`: selector de modos como pills, persistido en localStorage, `useFocusMode()` hook — 2026-03-25 *(Plan 4 F1.7)*

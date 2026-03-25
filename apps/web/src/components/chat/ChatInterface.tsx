@@ -10,6 +10,7 @@ import { useRagStream } from "@/hooks/useRagStream"
 import { ThinkingSteps } from "@/components/chat/ThinkingSteps"
 import { FocusModeSelector, useFocusMode } from "@/components/chat/FocusModeSelector"
 import { VoiceInput } from "@/components/chat/VoiceInput"
+import { ExportSession } from "@/components/chat/ExportSession"
 
 type Message = {
   id?: number
@@ -120,6 +121,17 @@ export function ChatInterface({
 
   return (
     <div className="flex-1 flex flex-col min-h-0">
+      {/* Header */}
+      <div
+        className="flex items-center justify-between px-6 py-3 border-b shrink-0 no-print"
+        style={{ borderColor: "var(--border)" }}
+      >
+        <span className="text-sm font-medium truncate" style={{ color: "var(--muted-foreground)" }}>
+          {session.collection}
+        </span>
+        <ExportSession session={session} />
+      </div>
+
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
         {messages.length === 0 && (
