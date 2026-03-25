@@ -10,6 +10,7 @@ export async function actionUpdateProfile(data: { name: string }) {
   await updateUser(user.id, { name: data.name })
   log.info("user.updated", { changes: { name: data.name } }, { userId: user.id })
   revalidatePath("/settings")
+  revalidatePath("/", "layout") // actualiza el sidebar con el nombre nuevo
 }
 
 export async function actionUpdatePassword(currentPassword: string, newPassword: string) {
