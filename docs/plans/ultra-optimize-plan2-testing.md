@@ -193,7 +193,7 @@ Objetivo: verificar cada flujo de usuario en `http://localhost:3000`. Se testea 
 - [x] Enviar un mensaje de texto — respuesta mock aparece completa — completado 2026-03-25
 - [x] El historial de mensajes persiste al recargar la página — completado 2026-03-25
 - [x] Crear una segunda sesión — las dos aparecen en la lista — completado 2026-03-25
-- [ ] Renombrar una sesión — **NO IMPLEMENTADO** (no hay botón ni código de rename en el codebase)
+- [x] Renombrar una sesión — botón lápiz en hover → input inline → Enter/Confirmar guarda, Escape cancela, actualiza en lista inmediatamente — completado 2026-03-25
 - [x] Eliminar una sesión — desaparece de la lista con confirmación — completado 2026-03-25
 - [x] Dar feedback positivo a un mensaje (like) — botón cambia a `active` — completado 2026-03-25
 - [x] Dar feedback negativo a un mensaje — botón cambia a `active`, like vuelve a inactivo — completado 2026-03-25
