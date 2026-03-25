@@ -13,6 +13,11 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 - `apps/web/src/components/layout/AppShell.tsx`: reescrito como Server Component puro — delega toda la UI a `AppShellChrome` — 2026-03-25 *(Plan 4 Fase 0d)*
 
+### Added
+
+- `apps/web/src/components/chat/ThinkingSteps.tsx`: steps colapsables del proceso de razonamiento visibles durante streaming — simulación UI-side con timing (paso 1 inmediato, paso 2 a 700ms, paso 3 a 1500ms); se auto-colapsa 1.8s después de que el stream termina; cuando el RAG server exponga eventos SSE de tipo `thinking`, se conectan en `useRagStream` — 2026-03-25 *(Plan 4 F1.5)*
+- `apps/web/src/components/chat/ChatInterface.tsx`: integración de `ThinkingSteps` antes del spinner de loading — 2026-03-25 *(Plan 4 F1.5)*
+
 ### Fixed
 
 - `apps/web/src/components/ui/theme-toggle.tsx`: hydration mismatch — el server renderizaba el `title` del botón con el tema default mientras el cliente ya conocía el tema guardado en localStorage; fix: `mounted` state con `useEffect` para evitar renderizar contenido dependiente del tema hasta después de la hidratación — 2026-03-25

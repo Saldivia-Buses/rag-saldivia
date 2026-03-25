@@ -6,6 +6,7 @@ import type { DbChatSession, DbChatMessage } from "@rag-saldivia/db"
 import { actionAddMessage, actionAddFeedback } from "@/app/actions/chat"
 import { clientLog } from "@rag-saldivia/logger/frontend"
 import { useRagStream } from "@/hooks/useRagStream"
+import { ThinkingSteps } from "@/components/chat/ThinkingSteps"
 
 type Message = {
   id?: number
@@ -160,6 +161,8 @@ export function ChatInterface({
             </div>
           </div>
         ))}
+
+        <ThinkingSteps phase={phase} />
 
         {phase === "streaming" && messages[messages.length - 1]?.content === "" && (
           <div className="flex justify-start">
