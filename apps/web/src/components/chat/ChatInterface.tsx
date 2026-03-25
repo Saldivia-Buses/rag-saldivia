@@ -14,6 +14,7 @@ import { ExportSession } from "@/components/chat/ExportSession"
 import { SourcesPanel } from "@/components/chat/SourcesPanel"
 import { RelatedQuestions } from "@/components/chat/RelatedQuestions"
 import { CollectionSelector } from "@/components/chat/CollectionSelector"
+import { AnnotationPopover } from "@/components/chat/AnnotationPopover"
 
 type Message = {
   id?: number
@@ -208,7 +209,17 @@ export function ChatInterface({
                 color: msg.role === "user" ? "var(--primary-foreground)" : "var(--foreground)",
               }}
             >
-              <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+              {msg.role === "assistant" && msg.id ? (
+                <AnnotationPopover
+                  sessionId={session.id}
+                  messageId={msg.id}
+                  onAskAbout={(text) => setInput(`Sobre esto: "${text.slice(0, 80)}..."\n`)}
+                >
+                  <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+                </AnnotationPopover>
+              ) : (
+                <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+              )}
 
               {/* Panel de fuentes — F2.19 */}
               {msg.role === "assistant" && msg.sources && msg.sources.length > 0 && (

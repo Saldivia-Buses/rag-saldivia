@@ -15,6 +15,7 @@ import {
   addFeedback,
   saveResponse,
   unsaveByMessageId,
+  saveAnnotation,
 } from "@rag-saldivia/db"
 import { log } from "@rag-saldivia/logger/backend"
 
@@ -96,4 +97,20 @@ export async function actionToggleSaved(
     await saveResponse({ userId: user.id, messageId, content, sessionTitle })
   }
   revalidatePath("/saved")
+}
+
+export async function actionSaveAnnotation(data: {
+  sessionId: string
+  messageId?: number
+  selectedText: string
+  note?: string
+}) {
+  const user = await requireUser()
+  await saveAnnotation({
+    userId: user.id,
+    sessionId: data.sessionId,
+    messageId: data.messageId,
+    selectedText: data.selectedText,
+    note: data.note ?? null,
+  })
 }

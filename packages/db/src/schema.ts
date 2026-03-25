@@ -171,6 +171,30 @@ export const messageFeedback = sqliteTable(
   })
 )
 
+// ── Annotations ────────────────────────────────────────────────────────────
+
+export const annotations = sqliteTable(
+  "annotations",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    sessionId: text("session_id")
+      .notNull()
+      .references(() => chatSessions.id, { onDelete: "cascade" }),
+    messageId: integer("message_id")
+      .references(() => chatMessages.id, { onDelete: "set null" }),
+    selectedText: text("selected_text").notNull(),
+    note: text("note"),
+    createdAt: integer("created_at").notNull(),
+  },
+  (t) => ({
+    userIdx: index("idx_annotations_user").on(t.userId),
+    sessionIdx: index("idx_annotations_session").on(t.sessionId),
+  })
+)
+
 // ── Saved Responses ────────────────────────────────────────────────────────
 
 export const savedResponses = sqliteTable(
@@ -362,6 +386,8 @@ export type DbChatSession = typeof chatSessions.$inferSelect
 export type NewChatSession = typeof chatSessions.$inferInsert
 export type DbChatMessage = typeof chatMessages.$inferSelect
 export type NewChatMessage = typeof chatMessages.$inferInsert
+export type DbAnnotation = typeof annotations.$inferSelect
+export type NewAnnotation = typeof annotations.$inferInsert
 export type DbSavedResponse = typeof savedResponses.$inferSelect
 export type NewSavedResponse = typeof savedResponses.$inferInsert
 export type DbIngestionJob = typeof ingestionJobs.$inferSelect

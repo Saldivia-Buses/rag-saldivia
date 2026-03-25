@@ -114,6 +114,19 @@ await exec(`
     UNIQUE(message_id, user_id)
   );
 
+  -- Anotaciones de fragmentos (F2.22)
+  CREATE TABLE IF NOT EXISTS annotations (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    session_id TEXT NOT NULL REFERENCES chat_sessions(id) ON DELETE CASCADE,
+    message_id INTEGER REFERENCES chat_messages(id) ON DELETE SET NULL,
+    selected_text TEXT NOT NULL,
+    note TEXT,
+    created_at INTEGER NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS idx_annotations_user ON annotations(user_id);
+  CREATE INDEX IF NOT EXISTS idx_annotations_session ON annotations(session_id);
+
   -- Respuestas guardadas (F1.10)
   CREATE TABLE IF NOT EXISTS saved_responses (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

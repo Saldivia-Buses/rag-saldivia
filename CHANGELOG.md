@@ -11,6 +11,10 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Added
 
+- `packages/db/src/schema.ts`: tabla `annotations` (selectedText, note, FK a session y message) — 2026-03-25 *(Plan 4 F2.22)*
+- `packages/db/src/queries/annotations.ts`: `saveAnnotation`, `listAnnotationsBySession`, `deleteAnnotation` — 2026-03-25 *(Plan 4 F2.22)*
+- `apps/web/src/components/chat/AnnotationPopover.tsx`: popover flotante al seleccionar texto en respuestas asistente — opciones Guardar, Preguntar sobre esto, Comentar con nota libre — 2026-03-25 *(Plan 4 F2.22)*
+- `apps/web/src/app/actions/chat.ts`: Server Action `actionSaveAnnotation` — 2026-03-25 *(Plan 4 F2.22)*
 - `apps/web/src/components/chat/CollectionSelector.tsx`: selector multi-checkbox de colecciones disponibles del usuario, persistido en localStorage; muestra las colecciones activas como Popover junto al input — 2026-03-25 *(Plan 4 F2.21)*
 - `apps/web/src/hooks/useRagStream.ts`: acepta `collections?: string[]` para multi-colección; lo incluye como `collection_names` en el body del fetch — 2026-03-25 *(Plan 4 F2.21)*
 - `apps/web/src/app/api/rag/generate/route.ts`: verificación de acceso a cada colección en `collection_names`; si alguna está denegada retorna 403 — 2026-03-25 *(Plan 4 F2.21)*
