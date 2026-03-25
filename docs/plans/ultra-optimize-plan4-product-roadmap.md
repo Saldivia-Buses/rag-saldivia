@@ -301,7 +301,7 @@ Objetivo: 12 features que requieren arquitectura nueva, tablas nuevas, o integra
 | Fase | Estado | Fecha |
 |------|--------|-------|
 | Fase 0 — Fundación (4 features) | ✅ completado | 2026-03-25 |
-| Fase 1 — Quick wins (14 features) | 🔲 pendiente | — |
+| Fase 1 — Quick wins (14 features) | ✅ completado | 2026-03-25 |
 | Fase 2 — Esfuerzo medio (20 features) | 🔲 pendiente | — |
 | Fase 3 — Alta complejidad (12 features) | 🔲 pendiente | — |
 
