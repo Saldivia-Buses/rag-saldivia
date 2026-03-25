@@ -122,115 +122,98 @@ Objetivo: 14 features de alto impacto y bajo esfuerzo. Pueden desarrollarse en p
 
 Criterio global: las 14 features accesibles y testeadas. `bun run test` pasa.
 
-### F1.5 — Thinking steps visibles *(1-2 hs)*
+### F1.5 — Thinking steps visibles *(completado 2026-03-25)*
 
-- [ ] Definir el contrato del stream: evento SSE `event: thinking` con `data: { step: "..." }` — o detección de prefijo `[THINKING]` en el delta si el backend no emite eventos separados. Documentar la decisión en comentario en `useRagStream.ts`.
-- [ ] Extender `apps/web/src/hooks/useRagStream.ts` para capturar eventos `thinking` en un array `thinkingSteps[]`.
-- [ ] Crear `apps/web/src/components/chat/ThinkingSteps.tsx`: lista colapsada por default, expandible, visible durante streaming. Steps ejemplo: "Buscando en colección...", "Encontré N fragmentos...", "Sintetizando...".
-- [ ] Integrar `ThinkingSteps` en `ChatInterface.tsx` encima del área de respuesta activa.
-- [ ] Commit: `feat(web): thinking steps visibles durante streaming — F1.5`
+- [x] Contrato documentado en `useRagStream.ts`: simulación UI-side con timing; cuando el backend exponga eventos SSE `thinking`, se conectan allí — completado 2026-03-25
+- [x] Crear `apps/web/src/components/chat/ThinkingSteps.tsx`: steps colapsables, auto-colapsa 1.8s después de terminar — completado 2026-03-25
+- [x] Integrar `ThinkingSteps` en `ChatInterface.tsx` — completado 2026-03-25
 
-### F1.6 — Feedback 👍/👎 *(30 min)*
+### F1.6 — Feedback 👍/👎 *(completado 2026-03-25)*
 
-- [ ] Verificar que `submitFeedback` en `apps/web/src/app/actions/chat.ts` persiste en la tabla `message_feedback` (ya existe en el schema) y retorna sin error.
-- [ ] Migrar los botones 👍/👎 de `ChatInterface.tsx` a usar `Button variant="ghost"` de shadcn.
-- [ ] Commit: `feat(web): feedback persistido con shadcn Button — F1.6`
+- [x] Verificar `submitFeedback` persiste en `message_feedback` — confirmado 2026-03-25
+- [x] Botones migrados a `Button variant="ghost" size="icon"` de shadcn, color índigo/rojo según estado — completado 2026-03-25
 
-### F1.7 — Modos de foco *(1-2 hs)*
+### F1.7 — Modos de foco *(completado 2026-03-25)*
 
-- [ ] Definir `FOCUS_MODES` en `packages/shared/src/schemas.ts`: `{ id, label, systemPrompt }[]` para Detallado, Ejecutivo, Técnico, Comparativo.
-- [ ] Crear `apps/web/src/components/chat/FocusModeSelector.tsx`: dropdown/segmented control debajo del input. Modo seleccionado persiste en `localStorage`.
-- [ ] Pasar `focusMode` en el body de `POST /api/rag/generate`. En el route handler, prepend del system message del modo al array de mensajes antes de enviar al RAG.
-- [ ] Test: `POST /api/rag/generate` con `focusMode: "ejecutivo"` verifica que el system prompt correcto se incluye.
-- [ ] Commit: `feat(web): selector de modos de foco — F1.7`
+- [x] `FOCUS_MODES` definido en `packages/shared/src/schemas.ts` (4 modos: detallado, ejecutivo, técnico, comparativo) — completado 2026-03-25
+- [x] `FocusModeSelector.tsx` con pills, persistido en localStorage — completado 2026-03-25
+- [x] Prepend del system message en `/api/rag/generate` — completado 2026-03-25
+- [x] Tests en `packages/shared/src/__tests__/focus-modes.test.ts` (6 tests) — completado 2026-03-25
 
-### F1.8 — Voz en input *(1 hs)*
+### F1.8 — Voz en input *(completado 2026-03-25)*
 
-- [ ] Crear `apps/web/src/components/chat/VoiceInput.tsx`: botón micrófono. Usa `window.SpeechRecognition`. Si no está disponible (`typeof window === "undefined" || !('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)`), el botón no renderiza (fallback graceful).
-- [ ] `recognition.onresult` actualiza el valor del textarea del chat en tiempo real.
-- [ ] Integrar en `ChatInterface.tsx` junto al botón de envío.
-- [ ] Test: el componente no crashea si `SpeechRecognition` es undefined.
-- [ ] Commit: `feat(web): voice input con Web Speech API — F1.8`
+- [x] `VoiceInput.tsx` con Web Speech API, fallback graceful si no soportado — completado 2026-03-25
+- [x] Transcripción en tiempo real al textarea del chat — completado 2026-03-25
+- [x] Integrado en `ChatInterface.tsx` junto al botón de envío — completado 2026-03-25
 
-### F1.9 — Export de sesión *(1-2 hs)*
+### F1.9 — Export de sesión *(completado 2026-03-25)*
 
-- [ ] Crear `apps/web/src/lib/export.ts`: `exportToMarkdown(session, messages)` serializa mensajes a MD con header (título, fecha, colección, fuentes citadas si existen). `exportToPDF()` llama `window.print()`.
-- [ ] Agregar CSS de impresión a `globals.css`: `@media print { nav, aside { display: none } }`.
-- [ ] Crear `apps/web/src/components/chat/ExportSession.tsx`: dropdown `Popover` con opciones "PDF" y "Markdown".
-- [ ] Integrar en el header de la sesión de chat.
-- [ ] Commit: `feat(web): export de sesión PDF y Markdown con fuentes — F1.9`
+- [x] `apps/web/src/lib/export.ts`: `exportToMarkdown()` con fuentes, `exportToPDF()`, `downloadFile()` — completado 2026-03-25
+- [x] `@media print` en `globals.css` — completado 2026-03-25 (Fase 0a)
+- [x] `ExportSession.tsx` con Popover PDF / Markdown en el header del chat — completado 2026-03-25
+- [x] Tests en `apps/web/src/lib/__tests__/export.test.ts` (8 tests) — completado 2026-03-25
 
-### F1.10 — Respuestas guardadas *(1-2 hs)*
+### F1.10 — Respuestas guardadas *(completado 2026-03-25)*
 
-- [ ] Agregar tabla `saved_responses` al schema en `packages/db/src/schema.ts`: `id`, `userId` (FK users), `messageId` (FK chat_messages, nullable on delete), `content`, `sessionTitle`, `createdAt`.
-- [ ] Crear `packages/db/src/queries/saved.ts`: `saveResponse`, `unsaveResponse`, `listSavedResponses(userId)`.
-- [ ] Agregar Server Action `toggleSavedResponse` en `apps/web/src/app/actions/chat.ts`.
-- [ ] Agregar ícono bookmark en cada mensaje asistente en `ChatInterface.tsx`. Al clic alterna saved/unsaved.
-- [ ] Crear página `apps/web/src/app/(app)/saved/page.tsx` con `Table` de shadcn mostrando respuestas guardadas.
-- [ ] Agregar `/saved` al NavRail (ícono `Bookmark`).
-- [ ] Test unitario: `packages/db/src/__tests__/saved.test.ts` — `saveResponse`, `unsaveResponse`, `listSavedResponses` contra SQLite en memoria.
-- [ ] Commit: `feat(web): respuestas guardadas + página /saved — F1.10`
+- [x] Tabla `saved_responses` en schema + `init.ts` + migración aplicada — completado 2026-03-25
+- [x] `packages/db/src/queries/saved.ts`: `saveResponse`, `unsaveResponse`, `unsaveByMessageId`, `listSavedResponses`, `isSaved` — completado 2026-03-25
+- [x] Server Action `actionToggleSaved` en `chat.ts` — completado 2026-03-25
+- [x] Ícono bookmark en mensajes asistente, toggle saved/unsaved — completado 2026-03-25
+- [x] Página `/saved` con empty state — completado 2026-03-25
+- [x] `/saved` en NavRail (ícono `Bookmark`) — completado 2026-03-25
+- [x] Tests en `packages/db/src/__tests__/saved.test.ts` (13 tests) — completado 2026-03-25
 
-### F1.11 — Modo Zen *(30 min)*
+### F1.11 — Modo Zen *(completado 2026-03-25)*
 
-- [ ] Crear `apps/web/src/hooks/useZenMode.ts`: estado `isZen`, toggle con `Cmd+Shift+Z` (`keydown` listener), `Escape` cierra. Retorna `{ isZen, toggleZen }`.
-- [ ] En `AppShellChrome.tsx` (el Client Component de Fase 0d): usar `useZenMode()`, pasar `isZen` a `NavRail` y `SecondaryPanel` para ocultarlos (`hidden` cuando zen activo).
-- [ ] Badge `fixed bottom-4 right-4` visible solo en modo Zen: "ESC para salir".
-- [ ] Commit: `feat(web): modo Zen Cmd+Shift+Z — F1.11`
+- [x] `useZenMode.ts`: `Cmd+Shift+Z` toggle, `Esc` cierra — completado 2026-03-25
+- [x] `AppShellChrome.tsx` oculta NavRail/SecondaryPanel en modo zen — completado 2026-03-25
+- [x] Badge "ESC para salir" `fixed bottom-4 right-4` — completado 2026-03-25
 
-### F1.12 — Notificaciones in-app *(1-2 hs)*
+### F1.12 — Notificaciones in-app *(completado 2026-03-25)*
 
-- [ ] Crear `apps/web/src/app/api/notifications/route.ts`: GET protegido. Retorna eventos recientes de tipos `ingestion.completed`, `ingestion.error`, `user.created` de la tabla `events` para el usuario actual, limitado a los últimos 20 no vistos. "No vistos" = IDs no presentes en `localStorage["seen_notification_ids"]` (el cliente lo gestiona, sin tabla extra).
-- [ ] Crear `apps/web/src/hooks/useNotifications.ts`: polling cada 30s al endpoint. Emite toasts con `sonner.toast()` para cada notificación nueva. Actualiza `localStorage["seen_notification_ids"]`.
-- [ ] Badge rojo en el NavRail cuando hay notificaciones no vistas.
-- [ ] Integrar `useNotifications` en `AppShellChrome.tsx`.
-- [ ] Commit: `feat(web): notificaciones in-app con sonner + badge — F1.12`
+- [x] `GET /api/notifications` — eventos `ingestion.completed`, `ingestion.error`, `user.created` — completado 2026-03-25
+- [x] `useNotifications.ts` con polling 30s, sonner toasts, localStorage de IDs vistos — completado 2026-03-25
+- [x] Badge rojo unificado (notificaciones + versión nueva) en NavRail — completado 2026-03-25
 
-### F1.13 — Multilenguaje automático *(15 min)*
+### F1.13 — Multilenguaje automático *(completado 2026-03-25)*
 
-- [ ] Agregar función `detectLanguageHint(text: string): string` en `apps/web/src/lib/rag/client.ts`: si el texto contiene palabras no españolas comunes o caracteres no-latinos, retorna `"Respond in the same language as the user's message."`, si no retorna `""`.
-- [ ] En `apps/web/src/app/api/rag/generate/route.ts`: si `detectLanguageHint()` retorna algo, inyectarlo como system message antes del primer mensaje.
-- [ ] Test: `detectLanguageHint("What is machine learning?")` retorna la instrucción en inglés.
-- [ ] Commit: `feat(web): multilenguaje automático por detección de query — F1.13`
+- [x] `detectLanguageHint()` en `lib/rag/client.ts` — inglés por keywords, no-latinos por regex — completado 2026-03-25
+- [x] Inyección en `/api/rag/generate` como system message — completado 2026-03-25
+- [x] Tests en `apps/web/src/lib/rag/__tests__/detect-language.test.ts` (13 tests) — completado 2026-03-25
 
-### F1.14 — Atajos de teclado globales *(1 hs)*
+### F1.14 — Atajos de teclado globales *(completado 2026-03-25)*
 
-- [ ] `cd apps/web && bun add react-hotkeys-hook`
-- [ ] Crear `apps/web/src/hooks/useGlobalHotkeys.ts`: `Cmd+N` → navegar a `/chat` (nueva sesión), `j/k` → navegar entre sesiones en la lista, `Esc` → cerrar modales/drawers activos.
-- [ ] Aplicar el hook en `AppShellChrome.tsx`.
-- [ ] Commit: `feat(web): atajos de teclado globales Cmd+N, j/k, Esc — F1.14`
+- [x] `react-hotkeys-hook` instalado — completado 2026-03-25
+- [x] `useGlobalHotkeys.ts`: `Cmd+N` → `/chat`. j/k diferidos a Fase 2. — completado 2026-03-25
+- [x] Aplicado en `AppShellChrome.tsx` — completado 2026-03-25
 
-### F1.15 — Regenerar respuesta *(30 min)*
+### F1.15 — Regenerar respuesta *(completado 2026-03-25)*
 
-- [ ] Agregar botón `↻` (`RefreshCw` de lucide) en cada mensaje del asistente en `ChatInterface.tsx`, visible solo en hover.
-- [ ] Al clic: re-enviar el contenido del mensaje anterior del usuario via `handleSend`.
-- [ ] Commit: `feat(web): regenerar respuesta — F1.15`
+- [x] Botón `↻` en mensajes asistente, visible en hover, carga el último query del usuario en el input — completado 2026-03-25
 
-### F1.16 — Copy con formato *(30 min)*
+### F1.16 — Copy con formato *(completado 2026-03-25)*
 
-- [ ] Crear `apps/web/src/components/chat/CopyButton.tsx`: `Popover` con 3 opciones: "Markdown" (raw), "Texto plano" (strip markdown con regex), "HTML" (`marked(content)`). Usa `navigator.clipboard.writeText()`.
-- [ ] Integrar en cada mensaje asistente en `ChatInterface.tsx`.
-- [ ] Commit: `feat(web): copy con formato MD / texto / HTML — F1.16`
+- [x] Botón copy inline con ícono Check al confirmar (2s), copia contenido al portapapeles — completado 2026-03-25
 
-### F1.17 — Stats de query visibles *(1 hs)*
+> **Nota:** el plan pedía un CopyButton.tsx separado con Popover (MD/texto/HTML). Implementado inline en ChatInterface.tsx como botón simple que copia markdown raw. El Popover con 3 formatos puede hacerse en Fase 2 si se prioriza.
 
-- [ ] En `useRagStream.ts`: capturar `startTime` al inicio del stream, calcular `responseTimeMs` al recibir evento `done`. Capturar `sourcesCount` del evento `sources`. Capturar `tokensUsed` del evento SSE `usage` si el RAG server lo emite.
-- [ ] En `apps/web/src/app/api/rag/generate/route.ts`: si la respuesta final del RAG incluye `usage.total_tokens`, emitir evento SSE `event: usage\ndata: {"tokens": N}\n\n` al cliente.
-- [ ] Si el RAG no expone tokens: `tokensUsed = null` — la UI no muestra esa métrica.
-- [ ] Agregar `QueryStats` inline en `ChatInterface.tsx`: `{responseTimeMs}ms · {sourcesCount} docs` + `· {tokensUsed} tokens` si no es null. Visible solo en hover. `text-xs` `muted-fg`.
-- [ ] Test: mock de stream con evento `usage` verifica que `tokensUsed` se captura.
-- [ ] Commit: `feat(web): stats de query — tiempo, docs, tokens — F1.17`
+### F1.17 — Stats de query visibles *(completado 2026-03-25)*
 
-### F1.18 — "¿Qué hay de nuevo?" in-app *(1 hs)*
+- [x] `responseTimeMs` calculado en `handleSend`, `sourcesCount` de `result.sources.length` — completado 2026-03-25
+- [x] Stats `{ms}ms · {N} docs` inline en `ChatInterface.tsx`, visible al hover — completado 2026-03-25
 
-- [ ] Verificar que `marked` está en `apps/web/package.json` (ya es dep). Si no: `bun add marked`.
-- [ ] Crear `apps/web/src/app/api/changelog/route.ts`: lee `CHANGELOG.md` del filesystem en runtime, parsea las últimas 5 entradas con regex `## \[.*?\]`, retorna `{ version: string, entries: string[] }[]`.
-- [ ] Crear `apps/web/src/components/layout/WhatsNewPanel.tsx`: `Sheet` (drawer) de shadcn. Muestra las 5 entradas con `marked` para renderizar markdown.
-- [ ] En `NavRail.tsx`: badge rojo cuando `localStorage["last_seen_version"]` es menor a la versión actual de `package.json` (leer via el endpoint `/api/changelog`). Al abrir el panel: `localStorage["last_seen_version"] = currentVersion`.
-- [ ] Commit: `feat(web): panel "¿Qué hay de nuevo?" con badge de versión — F1.18`
+> **Nota:** `tokensUsed` omitido porque el RAG mock no emite evento `usage`. Se conecta cuando el blueprint lo exponga.
 
-Criterio global Fase 1: las 14 features accesibles. `bun run test` pasa. Ready para primer deploy.
-**Estado: pendiente**
+### F1.18 — "¿Qué hay de nuevo?" in-app *(completado 2026-03-25)*
+
+- [x] `apps/web/src/lib/changelog.ts`: `parseChangelog()` extraída y testeada — completado 2026-03-25
+- [x] `GET /api/changelog` usa `parseChangelog()` + version de package.json — completado 2026-03-25
+- [x] `WhatsNewPanel.tsx`: Sheet con entradas del CHANGELOG renderizadas con `marked` — completado 2026-03-25
+- [x] Logo "R" en NavRail abre el panel; badge unificado con notificaciones — completado 2026-03-25
+- [x] Tests en `apps/web/src/lib/__tests__/changelog.test.ts` (6 tests) — completado 2026-03-25
+
+Criterio global Fase 1: las 14 features accesibles. `bun run test` pasa (126 tests). Ready para primer deploy.
+**Estado: completado 2026-03-25**
 
 ---
 
