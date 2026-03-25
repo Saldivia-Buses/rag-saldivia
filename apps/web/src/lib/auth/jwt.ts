@@ -45,6 +45,8 @@ export async function extractClaims(request: Request): Promise<JwtClaims | null>
       email: request.headers.get("x-user-email") ?? "",
       name: request.headers.get("x-user-name") ?? "",
       role: userRole as JwtClaims["role"],
+      iat: 0,
+      exp: 0,
     }
   }
 

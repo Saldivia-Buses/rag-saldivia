@@ -5,8 +5,6 @@
 import { NextResponse } from "next/server"
 import { extractClaims } from "@/lib/auth/jwt"
 import { getDb, users, areas, userAreas, areaCollections, createUser } from "@rag-saldivia/db"
-import { randomUUID } from "crypto"
-import { hashSync } from "bcrypt-ts"
 
 export async function POST(request: Request) {
   const claims = await extractClaims(request)
@@ -20,11 +18,13 @@ export async function POST(request: Request) {
   const existingAreas = await db.select().from(areas).limit(1)
   let areaId = existingAreas[0]?.id
   if (!areaId) {
-    const [area] = await db.insert(areas).values({
+    const inserted = await db.insert(areas).values({
       name: "General",
       description: "Área general de acceso",
       createdAt: now,
     }).returning()
+    const area = inserted[0]
+    if (!area) throw new Error("No se pudo crear el área General")
     areaId = area.id
 
     await db.insert(areaCollections).values({

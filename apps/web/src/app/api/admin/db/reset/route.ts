@@ -4,6 +4,11 @@
 
 import { NextResponse } from "next/server"
 import { extractClaims } from "@/lib/auth/jwt"
+import {
+  getDb, users, areas, userAreas, areaCollections,
+  chatSessions, chatMessages, messageFeedback,
+  ingestionJobs, ingestionAlerts, ingestionQueue, events,
+} from "@rag-saldivia/db"
 
 export async function POST(request: Request) {
   const claims = await extractClaims(request)
@@ -15,10 +20,6 @@ export async function POST(request: Request) {
   }
 
   try {
-    const { getDb, users, areas, userAreas, areaCollections,
-            chatSessions, chatMessages, messageFeedback,
-            ingestionJobs, ingestionAlerts, ingestionQueue, events } = await import("@rag-saldivia/db")
-    const { initDb } = await import("@rag-saldivia/db")
     const db = getDb()
 
     // Truncar todas las tablas en orden seguro
