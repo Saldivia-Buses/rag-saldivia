@@ -11,6 +11,8 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Added
 
+- `apps/web/src/app/api/rag/suggest/route.ts`: endpoint POST que genera 3-4 preguntas de follow-up; modo mock retorna sugerencias hardcodeadas, modo real usa el RAG server con prompt de generación + fallback al mock si falla — 2026-03-25 *(Plan 4 F2.20)*
+- `apps/web/src/components/chat/RelatedQuestions.tsx`: chips de preguntas sugeridas debajo de la última respuesta; al clicar pone la pregunta en el input — 2026-03-25 *(Plan 4 F2.20)*
 - `apps/web/src/components/chat/SourcesPanel.tsx`: panel colapsable de fuentes bajo cada respuesta asistente — muestra nombre del doc, fragmento (truncado a 2 líneas), relevance score como badge; visible solo cuando `sources.length > 0` — 2026-03-25 *(Plan 4 F2.19)*
 - `apps/web/src/components/chat/ChatInterface.tsx`: integración de `SourcesPanel` bajo el contenido de cada mensaje asistente — 2026-03-25 *(Plan 4 F2.19)*
 

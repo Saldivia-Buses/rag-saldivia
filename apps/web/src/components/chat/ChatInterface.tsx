@@ -12,6 +12,7 @@ import { FocusModeSelector, useFocusMode } from "@/components/chat/FocusModeSele
 import { VoiceInput } from "@/components/chat/VoiceInput"
 import { ExportSession } from "@/components/chat/ExportSession"
 import { SourcesPanel } from "@/components/chat/SourcesPanel"
+import { RelatedQuestions } from "@/components/chat/RelatedQuestions"
 
 type Message = {
   id?: number
@@ -54,6 +55,7 @@ export function ChatInterface({
   const [savedIds, setSavedIds] = useState<Set<number>>(new Set())
   const [copiedId, setCopiedId] = useState<number | null>(null)
   const [queryStats, setQueryStats] = useState<{ ms: number; sources: number } | null>(null)
+  const [relatedQuestions, setRelatedQuestions] = useState<string[]>([])
   const streamStartRef = useRef<number>(0)
   const bottomRef = useRef<HTMLDivElement>(null)
   const pendingSourcesRef = useRef<unknown[]>([])
@@ -83,6 +85,7 @@ export function ChatInterface({
     setInput("")
     setError(null)
     setQueryStats(null)
+    setRelatedQuestions([])
     pendingSourcesRef.current = []
     streamStartRef.current = Date.now()
 
@@ -98,6 +101,18 @@ export function ChatInterface({
     if (!result) return
 
     setQueryStats({ ms: Date.now() - streamStartRef.current, sources: result.sources.length })
+
+    // Generar preguntas relacionadas en background — F2.20
+    fetch("/api/rag/suggest", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query, lastResponse: result.fullContent }),
+    })
+      .then((r) => r.json())
+      .then((data: { ok: boolean; questions?: string[] }) => {
+        if (data.ok && data.questions) setRelatedQuestions(data.questions)
+      })
+      .catch(() => {})
 
     clientLog.action("rag.query", { collection: session.collection, sessionId: session.id })
 
@@ -267,6 +282,18 @@ export function ChatInterface({
             >
               {queryStats.ms}ms · {queryStats.sources} doc{queryStats.sources !== 1 ? "s" : ""}
             </span>
+          </div>
+        )}
+
+        {/* Preguntas relacionadas tras la última respuesta — F2.20 */}
+        {phase === "done" && relatedQuestions.length > 0 && (
+          <div className="flex justify-start px-1">
+            <div className="max-w-2xl w-full">
+              <RelatedQuestions
+                questions={relatedQuestions}
+                onSelect={(q) => setInput(q)}
+              />
+            </div>
           </div>
         )}
 
