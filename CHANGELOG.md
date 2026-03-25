@@ -15,6 +15,7 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Fixed
 
+- `apps/web/src/app/actions/settings.ts`: agregar `revalidatePath("/", "layout")` para invalidar el layout al cambiar el nombre de perfil — 2026-03-25 *(encontrado en Fase 3h)*
 - `apps/web/src/app/api/rag/generate/route.ts`: validación de `messages` faltante — body vacío `{}` retornaba 200 en lugar de 400; agregado guard que verifica que `messages` sea array no vacío antes de procesar — 2026-03-25 *(encontrado en Fase 2b)*
 - `apps/web/src/app/api/admin/ingestion/[id]/route.ts`: DELETE con ID inexistente retornaba 200 en lugar de 404; agregado SELECT previo para verificar existencia antes del UPDATE — 2026-03-25 *(encontrado en Fase 2c)*
 
