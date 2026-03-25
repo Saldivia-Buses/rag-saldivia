@@ -9,6 +9,10 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Changed
+
+- `apps/web/src/app/globals.css`: design tokens reemplazados con paleta crema-índigo — tokens canónicos `--bg #FAFAF9`, `--sidebar-bg #F2F0F0`, `--nav-bg #18181B`, `--accent #7C6AF5`/`#9D8FF8` (dark), `--fg #18181B`/`#FAFAF9` (dark); aliases de compatibilidad apuntan a los canónicos vía `var()` para que los componentes existentes no requieran cambios; dark mode migrado de `@media prefers-color-scheme` a clase `.dark` en `<html>` (prerequisito de next-themes); directiva `@theme` agrega utilidades Tailwind para los nuevos tokens; agregado `@media print` para export de sesión (Fase 1) — 2026-03-25 *(Plan 4 Fase 0a)*
+
 ### Added
 
 - `docs/workflows.md`: nuevo documento que centraliza los 7 flujos de trabajo del proyecto (desarrollo local, testing, git/commits, planificación, features nuevas, deploy, debugging con black box) — 2026-03-25
