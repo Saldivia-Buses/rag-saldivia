@@ -16,7 +16,7 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 ### Added
 
 - `apps/web/src/components/chat/ThinkingSteps.tsx`: steps colapsables del proceso de razonamiento visibles durante streaming — simulación UI-side con timing (paso 1 inmediato, paso 2 a 700ms, paso 3 a 1500ms); se auto-colapsa 1.8s después de que el stream termina; cuando el RAG server exponga eventos SSE de tipo `thinking`, se conectan en `useRagStream` — 2026-03-25 *(Plan 4 F1.5)*
-- `apps/web/src/components/chat/ChatInterface.tsx`: integración de `ThinkingSteps` antes del spinner de loading — 2026-03-25 *(Plan 4 F1.5)*
+- `apps/web/src/components/chat/ChatInterface.tsx`: integración de `ThinkingSteps` antes del spinner de loading — 2026-03-25 *(Plan 4 F1.5)*; botones 👍/👎 migrados a `Button variant="ghost" size="icon"` de shadcn, color índigo en up y destructive en down al estar activos — 2026-03-25 *(Plan 4 F1.6)*
 
 ### Fixed
 

@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useTransition } from "react"
 import { Send, ThumbsUp, ThumbsDown, Loader2 } from "lucide-react"
+import { Button } from "@/components/ui/button"
 import type { DbChatSession, DbChatMessage } from "@rag-saldivia/db"
 import { actionAddMessage, actionAddFeedback } from "@/app/actions/chat"
 import { clientLog } from "@rag-saldivia/logger/frontend"
@@ -143,19 +144,27 @@ export function ChatInterface({
               <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
 
               {msg.role === "assistant" && msg.id && msg.content && phase !== "streaming" && (
-                <div className="flex gap-2 pt-1 opacity-50 hover:opacity-100 transition-opacity">
-                  <button
+                <div className="flex gap-1 pt-1 opacity-40 hover:opacity-100 transition-opacity">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
                     onClick={() => handleFeedback(msg.id!, "up")}
-                    className={msg.feedback === "up" ? "opacity-100" : ""}
+                    style={msg.feedback === "up" ? { color: "var(--accent)", opacity: 1 } : {}}
+                    title="Útil"
                   >
                     <ThumbsUp size={13} />
-                  </button>
-                  <button
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-6 w-6"
                     onClick={() => handleFeedback(msg.id!, "down")}
-                    className={msg.feedback === "down" ? "opacity-100" : ""}
+                    style={msg.feedback === "down" ? { color: "var(--destructive)", opacity: 1 } : {}}
+                    title="No útil"
                   >
                     <ThumbsDown size={13} />
-                  </button>
+                  </Button>
                 </div>
               )}
             </div>
