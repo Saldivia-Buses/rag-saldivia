@@ -61,6 +61,6 @@ export async function PATCH(
     .set({ state: "pending", retryCount: 0, lastChecked: null })
     .where(eq(ingestionJobs.id, id))
 
-  log.info("ingestion.retry", { jobId: id }, { userId: Number(claims.sub) })
+  log.info("ingestion.started", { jobId: id }, { userId: Number(claims.sub) })
   return NextResponse.json({ ok: true })
 }
