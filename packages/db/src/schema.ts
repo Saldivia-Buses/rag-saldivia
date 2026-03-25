@@ -171,6 +171,22 @@ export const messageFeedback = sqliteTable(
   })
 )
 
+// ── Session Tags ───────────────────────────────────────────────────────────
+
+export const sessionTags = sqliteTable(
+  "session_tags",
+  {
+    sessionId: text("session_id")
+      .notNull()
+      .references(() => chatSessions.id, { onDelete: "cascade" }),
+    tag: text("tag").notNull(),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.sessionId, t.tag] }),
+    tagIdx: index("idx_session_tags_tag").on(t.tag),
+  })
+)
+
 // ── Annotations ────────────────────────────────────────────────────────────
 
 export const annotations = sqliteTable(
@@ -386,6 +402,7 @@ export type DbChatSession = typeof chatSessions.$inferSelect
 export type NewChatSession = typeof chatSessions.$inferInsert
 export type DbChatMessage = typeof chatMessages.$inferSelect
 export type NewChatMessage = typeof chatMessages.$inferInsert
+export type DbSessionTag = typeof sessionTags.$inferSelect
 export type DbAnnotation = typeof annotations.$inferSelect
 export type NewAnnotation = typeof annotations.$inferInsert
 export type DbSavedResponse = typeof savedResponses.$inferSelect

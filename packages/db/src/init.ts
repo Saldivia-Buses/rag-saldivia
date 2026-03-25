@@ -114,6 +114,14 @@ await exec(`
     UNIQUE(message_id, user_id)
   );
 
+  -- Etiquetas de sesiones (F2.24)
+  CREATE TABLE IF NOT EXISTS session_tags (
+    session_id TEXT NOT NULL REFERENCES chat_sessions(id) ON DELETE CASCADE,
+    tag TEXT NOT NULL,
+    PRIMARY KEY (session_id, tag)
+  );
+  CREATE INDEX IF NOT EXISTS idx_session_tags_tag ON session_tags(tag);
+
   -- Anotaciones de fragmentos (F2.22)
   CREATE TABLE IF NOT EXISTS annotations (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

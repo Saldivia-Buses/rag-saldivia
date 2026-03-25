@@ -11,6 +11,10 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Added
 
+- `packages/db/src/schema.ts`: tabla `session_tags` (sessionId, tag, PK compuesta) — 2026-03-25 *(Plan 4 F2.24)*
+- `packages/db/src/queries/tags.ts`: `addTag`, `removeTag`, `listTagsBySession`, `listTagsByUser` — 2026-03-25 *(Plan 4 F2.24)*
+- `apps/web/src/components/chat/SessionList.tsx`: badges de etiquetas por sesión, input inline para agregar tags, filtro por tag en el header, bulk selection con toolbar (exportar/eliminar seleccionadas) — 2026-03-25 *(Plan 4 F2.24)*
+- `apps/web/src/app/actions/chat.ts`: Server Actions `actionAddTag`, `actionRemoveTag` — 2026-03-25 *(Plan 4 F2.24)*
 - `apps/web/src/components/layout/CommandPalette.tsx`: command palette con `cmdk` — grupos Navegar (chat, colecciones, upload, saved, audit, settings, admin), Apariencia (tema, zen), Sesiones recientes filtradas por texto — 2026-03-25 *(Plan 4 F2.23)*
 - `apps/web/src/app/api/chat/sessions/route.ts`: endpoint GET que lista sesiones del usuario para la palette — 2026-03-25 *(Plan 4 F2.23)*
 - `apps/web/src/hooks/useGlobalHotkeys.ts`: agregado `Cmd+K` para abrir command palette — 2026-03-25 *(Plan 4 F2.23)*

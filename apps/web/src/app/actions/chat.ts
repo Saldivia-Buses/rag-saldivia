@@ -16,6 +16,9 @@ import {
   saveResponse,
   unsaveByMessageId,
   saveAnnotation,
+  addTag,
+  removeTag,
+  listTagsBySession,
 } from "@rag-saldivia/db"
 import { log } from "@rag-saldivia/logger/backend"
 
@@ -113,4 +116,16 @@ export async function actionSaveAnnotation(data: {
     selectedText: data.selectedText,
     note: data.note ?? null,
   })
+}
+
+export async function actionAddTag(sessionId: string, tag: string) {
+  await requireUser()
+  await addTag(sessionId, tag)
+  revalidatePath("/chat")
+}
+
+export async function actionRemoveTag(sessionId: string, tag: string) {
+  await requireUser()
+  await removeTag(sessionId, tag)
+  revalidatePath("/chat")
 }
