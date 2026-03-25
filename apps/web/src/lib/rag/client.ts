@@ -166,3 +166,29 @@ function mockRagStream(
 
   return { stream, contentType: "text/event-stream" }
 }
+
+/**
+ * Detecta si el texto no está en español y retorna una instrucción de idioma.
+ * Heurística simple: palabras comunes en inglés, o caracteres no-latinos.
+ * Zero config — el modelo responde en el idioma del usuario automáticamente.
+ */
+export function detectLanguageHint(text: string): string {
+  if (!text || text.length < 4) return ""
+
+  // Caracteres no-latinos (CJK, árabe, cirílico, etc.)
+  const nonLatin = /[\u0400-\u04FF\u0600-\u06FF\u4E00-\u9FFF\u3040-\u30FF\uAC00-\uD7AF]/
+  if (nonLatin.test(text)) {
+    return "Respond in the same language as the user's message."
+  }
+
+  // Palabras clave en inglés que sugieren que el usuario escribe en inglés
+  const englishWords = /\b(what|how|why|when|where|who|which|is|are|was|were|can|could|would|should|will|the|and|or|for|with|about|from|tell|me|please|show|list|find|does|do|have|has|had|get|give|make|need|want|know|think|help)\b/i
+  const words = text.toLowerCase().split(/\s+/)
+  const englishCount = words.filter((w) => englishWords.test(w)).length
+
+  if (englishCount >= 2 || (words.length <= 3 && englishCount >= 1)) {
+    return "Respond in the same language as the user's message."
+  }
+
+  return ""
+}
