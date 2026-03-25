@@ -15,6 +15,7 @@ import { ShareDialog } from "@/components/chat/ShareDialog"
 import { SourcesPanel } from "@/components/chat/SourcesPanel"
 import { RelatedQuestions } from "@/components/chat/RelatedQuestions"
 import { CollectionSelector } from "@/components/chat/CollectionSelector"
+import { PromptTemplates } from "@/components/chat/PromptTemplates"
 import { AnnotationPopover } from "@/components/chat/AnnotationPopover"
 
 type Message = {
@@ -339,6 +340,10 @@ export function ChatInterface({
           <FocusModeSelector
             value={focusMode}
             onChange={setFocusMode}
+            disabled={phase === "streaming"}
+          />
+          <PromptTemplates
+            onSelect={(prompt, fm) => { setInput(prompt); setFocusMode(fm as Parameters<typeof setFocusMode>[0]) }}
             disabled={phase === "streaming"}
           />
         </div>

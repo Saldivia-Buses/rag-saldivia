@@ -171,6 +171,26 @@ export const messageFeedback = sqliteTable(
   })
 )
 
+// ── Prompt Templates ───────────────────────────────────────────────────────
+
+export const promptTemplates = sqliteTable(
+  "prompt_templates",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    title: text("title").notNull(),
+    prompt: text("prompt").notNull(),
+    focusMode: text("focus_mode").notNull().default("detallado"),
+    createdBy: integer("created_by")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    active: integer("active", { mode: "boolean" }).notNull().default(true),
+    createdAt: integer("created_at").notNull(),
+  },
+  (t) => ({
+    activeIdx: index("idx_prompt_templates_active").on(t.active),
+  })
+)
+
 // ── Session Shares ─────────────────────────────────────────────────────────
 
 export const sessionShares = sqliteTable(
@@ -423,6 +443,8 @@ export type DbChatSession = typeof chatSessions.$inferSelect
 export type NewChatSession = typeof chatSessions.$inferInsert
 export type DbChatMessage = typeof chatMessages.$inferSelect
 export type NewChatMessage = typeof chatMessages.$inferInsert
+export type DbPromptTemplate = typeof promptTemplates.$inferSelect
+export type NewPromptTemplate = typeof promptTemplates.$inferInsert
 export type DbSessionShare = typeof sessionShares.$inferSelect
 export type DbSessionTag = typeof sessionTags.$inferSelect
 export type DbAnnotation = typeof annotations.$inferSelect

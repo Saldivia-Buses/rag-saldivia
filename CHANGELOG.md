@@ -11,6 +11,10 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Added
 
+- `packages/db/src/schema.ts`: tabla `prompt_templates` (title, prompt, focusMode, createdBy, active) — 2026-03-25 *(Plan 4 F2.28)*
+- `packages/db/src/queries/templates.ts`: `listActiveTemplates`, `createTemplate`, `deleteTemplate` — 2026-03-25 *(Plan 4 F2.28)*
+- `apps/web/src/app/api/admin/templates/route.ts`: GET lista templates activos, POST crea (admin), DELETE elimina (admin) — 2026-03-25 *(Plan 4 F2.28)*
+- `apps/web/src/components/chat/PromptTemplates.tsx`: selector de templates como Popover con título y preview del prompt; al elegir setea input + focusMode — 2026-03-25 *(Plan 4 F2.28)*
 - `apps/web/src/app/actions/chat.ts`: Server Action `actionCreateSessionForDoc` — crea sesión con system message que restringe el contexto al documento específico — 2026-03-25 *(Plan 4 F2.27)*
 - `apps/web/src/components/collections/CollectionsList.tsx`: botón "Chat" por colección + helper `handleChatWithDoc` para crear sesión anclada a un doc — 2026-03-25 *(Plan 4 F2.27)*
 - `apps/web/src/app/(app)/collections/page.tsx`: página de colecciones Server Component con lista + metadata — 2026-03-25 *(Plan 4 F2.26)*

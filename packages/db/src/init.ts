@@ -114,6 +114,18 @@ await exec(`
     UNIQUE(message_id, user_id)
   );
 
+  -- Templates de query (F2.28)
+  CREATE TABLE IF NOT EXISTS prompt_templates (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    prompt TEXT NOT NULL,
+    focus_mode TEXT NOT NULL DEFAULT 'detallado',
+    created_by INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    active INTEGER NOT NULL DEFAULT 1,
+    created_at INTEGER NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS idx_prompt_templates_active ON prompt_templates(active);
+
   -- Compartir sesiones (F2.25)
   CREATE TABLE IF NOT EXISTS session_shares (
     id TEXT PRIMARY KEY,
