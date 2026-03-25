@@ -118,6 +118,24 @@ export async function actionSaveAnnotation(data: {
   })
 }
 
+export async function actionCreateSessionForDoc(collection: string, docName: string) {
+  const user = await requireUser()
+  const session = await createSession({
+    userId: user.id,
+    title: `Chat: ${docName}`,
+    collection,
+    crossdoc: false,
+  })
+  // Agregar system message con contexto del documento
+  await addMessage({
+    sessionId: session!.id,
+    role: "system",
+    content: `Only use information from document: ${docName}. Ignore other documents in the collection.`,
+  })
+  revalidatePath("/chat")
+  return session
+}
+
 export async function actionAddTag(sessionId: string, tag: string) {
   await requireUser()
   await addTag(sessionId, tag)

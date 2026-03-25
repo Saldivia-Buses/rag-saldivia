@@ -13,6 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { CurrentUser } from "@/lib/auth/current-user"
+import { actionCreateSessionForDoc } from "@/app/actions/chat"
 
 type Props = {
   collections: string[]
@@ -62,6 +63,11 @@ export function CollectionsList({ collections: initial, user }: Props) {
 
   function handleChat(name: string) {
     router.push(`/chat?collection=${encodeURIComponent(name)}`)
+  }
+
+  async function handleChatWithDoc(collection: string, docName: string) {
+    const session = await actionCreateSessionForDoc(collection, docName)
+    if (session) router.push(`/chat/${session.id}`)
   }
 
   return (
