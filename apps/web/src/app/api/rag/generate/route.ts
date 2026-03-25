@@ -28,7 +28,14 @@ export async function POST(request: Request) {
   const userId = Number(claims.sub)
 
   try {
-    const body = await request.json()
+    const body = await request.json().catch(() => null)
+    if (!body || !Array.isArray(body.messages) || body.messages.length === 0) {
+      return NextResponse.json(
+        { ok: false, error: "El campo 'messages' es requerido y no puede estar vacío" },
+        { status: 400 }
+      )
+    }
+
     const collectionName = body.collection_name as string | undefined
 
     // Verificar acceso a la colección si se especificó
