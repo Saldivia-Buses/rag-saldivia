@@ -13,6 +13,7 @@ import { ragGenerateStream } from "@/lib/rag/client"
 import { extractClaims } from "@/lib/auth/jwt"
 import { canAccessCollection } from "@rag-saldivia/db"
 import { log } from "@rag-saldivia/logger/backend"
+import { FOCUS_MODES, type FocusModeId } from "@rag-saldivia/shared"
 
 export const runtime = "nodejs" // SSE requiere Node runtime, no Edge
 
@@ -37,6 +38,16 @@ export async function POST(request: Request) {
     }
 
     const collectionName = body.collection_name as string | undefined
+
+    // Prepend system message para el modo de foco seleccionado
+    const focusModeId = body.focus_mode as FocusModeId | undefined
+    const focusMode = FOCUS_MODES.find((m) => m.id === focusModeId)
+    if (focusMode) {
+      body.messages = [
+        { role: "system", content: focusMode.systemPrompt },
+        ...body.messages,
+      ]
+    }
 
     // Verificar acceso a la colección si se especificó
     if (collectionName) {

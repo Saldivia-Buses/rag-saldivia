@@ -352,3 +352,37 @@ export const AuditEntrySchema = z.object({
   timestamp: z.number().int(),
 })
 export type AuditEntry = z.infer<typeof AuditEntrySchema>
+
+// ── Focus modes ─────────────────────────────────────────────────────────────
+
+export const FOCUS_MODE_IDS = ["detallado", "ejecutivo", "tecnico", "comparativo"] as const
+export type FocusModeId = typeof FOCUS_MODE_IDS[number]
+
+export type FocusMode = {
+  id: FocusModeId
+  label: string
+  systemPrompt: string
+}
+
+export const FOCUS_MODES: FocusMode[] = [
+  {
+    id: "detallado",
+    label: "Detallado",
+    systemPrompt: "Respond with a thorough, comprehensive answer. Include context, examples, and detailed explanations.",
+  },
+  {
+    id: "ejecutivo",
+    label: "Ejecutivo",
+    systemPrompt: "Respond concisely with an executive summary. Lead with the key insight in 1-2 sentences, then bullet points if needed. Avoid jargon.",
+  },
+  {
+    id: "tecnico",
+    label: "Técnico",
+    systemPrompt: "Respond with precise technical detail. Include specifications, data types, code examples, and exact values where relevant.",
+  },
+  {
+    id: "comparativo",
+    label: "Comparativo",
+    systemPrompt: "Respond by comparing and contrasting the relevant options or perspectives. Use a structured comparison format.",
+  },
+]

@@ -14,6 +14,7 @@ type StreamResult = {
 type UseRagStreamOptions = {
   sessionId: string
   collection: string
+  focusMode?: string
   onDelta: (fullContent: string) => void
   onSources: (sources: unknown[]) => void
   onError: (message: string) => void
@@ -26,6 +27,7 @@ type UseRagStreamOptions = {
 export function useRagStream({
   sessionId,
   collection,
+  focusMode,
   onDelta,
   onSources,
   onError,
@@ -53,6 +55,7 @@ export function useRagStream({
           collection_name: collection,
           session_id: sessionId,
           use_knowledge_base: true,
+          focus_mode: focusMode ?? "detallado",
         }),
         signal: abortRef.current.signal,
       })

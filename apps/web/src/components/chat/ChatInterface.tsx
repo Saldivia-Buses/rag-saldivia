@@ -8,6 +8,7 @@ import { actionAddMessage, actionAddFeedback } from "@/app/actions/chat"
 import { clientLog } from "@rag-saldivia/logger/frontend"
 import { useRagStream } from "@/hooks/useRagStream"
 import { ThinkingSteps } from "@/components/chat/ThinkingSteps"
+import { FocusModeSelector, useFocusMode } from "@/components/chat/FocusModeSelector"
 
 type Message = {
   id?: number
@@ -49,10 +50,12 @@ export function ChatInterface({
   const [isPending, startTransition] = useTransition()
   const bottomRef = useRef<HTMLDivElement>(null)
   const pendingSourcesRef = useRef<unknown[]>([])
+  const { focusMode, setFocusMode } = useFocusMode()
 
   const { phase, stream, abort } = useRagStream({
     sessionId: session.id,
     collection: session.collection,
+    focusMode,
     onDelta: (fullContent) => setMessages((prev) => updateLastAssistantMessage(prev, fullContent)),
     onSources: (sources) => { pendingSourcesRef.current = sources },
     onError: (message) => {
@@ -186,6 +189,11 @@ export function ChatInterface({
 
       {/* Input */}
       <div className="p-4 border-t" style={{ borderColor: "var(--border)" }}>
+        <FocusModeSelector
+          value={focusMode}
+          onChange={setFocusMode}
+          disabled={phase === "streaming"}
+        />
         {error && (
           <div
             className="mb-3 px-3 py-2 rounded-md text-xs"
