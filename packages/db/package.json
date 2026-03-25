@@ -9,6 +9,7 @@
     "generate": "drizzle-kit generate",
     "migrate": "bun src/migrate.ts",
     "seed": "bun src/seed.ts",
+    "test": "bun test src/__tests__",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {

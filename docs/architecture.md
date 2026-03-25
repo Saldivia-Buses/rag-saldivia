@@ -1,28 +1,28 @@
 # Arquitectura — RAG Saldivia (experimental/ultra-optimize)
 
 > Branch: `experimental/ultra-optimize`
-> Última actualización: 2026-03-24
+> Última actualización: 2026-03-25
 
 ---
 
-## Stack actual (main branch)
+## Stack anterior (branch main)
 
 ```
 Usuario → SvelteKit :3000 → gateway.py :9000 → RAG :8081
                                                       ↓
                                               Milvus + NIMs
                                                       ↓
-                                         Nemotron-3-Super-120B
+                                         Nemotron-Super-49B
 ```
 
-## Stack objetivo (esta branch)
+## Stack actual (esta branch)
 
 ```
 Usuario → Next.js :3000 ——————————————————→ RAG :8081
            (UI + auth + proxy)                    ↓
                                           Milvus + NIMs
                                                   ↓
-                                     Nemotron-3-Super-120B
+                                     Nemotron-Super-49B
 ```
 
 ### Beneficios del servidor único
@@ -54,9 +54,11 @@ rag-saldivia/
 │   │   │   │   └── api/health/
 │   │   │   ├── actions/      → Server Actions (chat, users, areas, settings)
 │   │   │   ├── components/   → React components
+│   │   │   ├── hooks/        → useRagStream, useCrossdocStream, useCrossdocDecompose
 │   │   │   ├── lib/
 │   │   │   │   ├── auth/     → jwt.ts, rbac.ts, current-user.ts
-│   │   │   │   └── rag/      → client.ts (proxy + mock)
+│   │   │   │   └── rag/      → client.ts (proxy + mock), collections-cache.ts
+│   │   │   ├── workers/      → ingestion.ts (worker de ingesta)
 │   │   │   └── middleware.ts → JWT + RBAC en el edge
 │   └── cli/                  → CLI TypeScript (rag users/collections/ingest/...)
 │       └── src/
@@ -66,9 +68,9 @@ rag-saldivia/
 │           └── commands/     → status, users, collections, ingest, audit, config
 ├── packages/
 │   ├── shared/               → Zod schemas + TypeScript types
-│   ├── db/                   → Drizzle ORM + better-sqlite3
-│   │   ├── src/schema.ts     → 14 tablas SQLite
-│   │   ├── src/connection.ts → singleton + WAL + pragmas
+│   ├── db/                   → Drizzle ORM + @libsql/client
+│   │   ├── src/schema.ts     → 12 tablas SQLite
+│   │   ├── src/connection.ts → singleton WAL
 │   │   └── src/queries/      → users, areas, sessions, events
 │   ├── config/               → YAML loader + Zod validation
 │   └── logger/               → backend log + frontend log + black box
@@ -76,8 +78,12 @@ rag-saldivia/
 ├── patches/                  → Patches del blueprint NVIDIA (sin cambios)
 ├── vendor/                   → Submódulo NVIDIA (sin cambios)
 ├── docs/
-│   ├── plans/ultra-optimize.md
+│   ├── plans/
+│   │   ├── ultra-optimize-plan1-birth.md   → Plan 1: monorepo TS (completado 2026-03-24)
+│   │   ├── ultra-optimize-plan2-testing.md → Plan 2: testing 7 fases (completado 2026-03-25)
+│   │   └── ultra-optimize-plan3-bugfix.md  → Plan 3: bugfix + code quality (completado 2026-03-25)
 │   ├── architecture.md       → este archivo
+│   ├── workflows.md          → flujos de trabajo del proyecto
 │   ├── cli.md
 │   ├── blackbox.md
 │   └── onboarding.md
@@ -94,19 +100,27 @@ rag-saldivia/
 
 ```
 1. Usuario → POST /api/auth/login (email + password)
-2. Server verifica contra packages/db (bcrypt)
-3. Server crea JWT firmado con JWT_SECRET
+2. Server verifica contra packages/db (bcrypt-ts)
+3. Server crea JWT firmado con JWT_SECRET (jose)
 4. Server setea cookie HttpOnly auth_token
 5. Todas las requests → middleware.ts verifica el JWT
 6. JWT claims (sub, role) se pasan como headers x-user-*
 7. Server Components leen getCurrentUser() vía React.cache()
 ```
 
+### Service-to-service (CLI → API)
+
+```
+CLI → Authorization: Bearer <SYSTEM_API_KEY>
+   → middleware inyecta headers x-user-id=0, x-user-role=admin
+   → extractClaims() lee x-user-* headers (no intenta verificar JWT)
+```
+
 ## Flujo de RAG query
 
 ```
 1. Usuario escribe en ChatInterface (Client Component)
-2. fetch POST /api/rag/generate con el historial + collection_name
+2. useRagStream hook: fetch POST /api/rag/generate con historial + collection_name
 3. Server verifica permisos de colección (packages/db canAccessCollection)
 4. Server hace proxy SSE → RAG Server :8081
 5. Server verifica status HTTP ANTES de streamear (fix del bug de gateway.py)
@@ -124,15 +138,18 @@ Todos los datos de la aplicación en un solo archivo SQLite (`data/app.db`).
 | `users` | Usuarios con roles y preferencias |
 | `areas` | Áreas de la organización |
 | `user_areas` | Many-to-many usuarios ↔ áreas |
-| `area_collections` | Permisos área ↔ colección |
+| `area_collections` | Permisos área ↔ colección (nivel read/write) |
 | `chat_sessions` | Sesiones de chat |
 | `chat_messages` | Mensajes de cada sesión |
 | `message_feedback` | Feedback thumbs up/down |
 | `ingestion_jobs` | Jobs de ingesta con estado |
 | `ingestion_alerts` | Alertas de jobs fallidos |
 | `ingestion_queue` | Cola de ingesta (reemplaza Redis) |
-| `audit_log` | Acciones de usuarios (legacy) |
+| `audit_log` | Acciones de usuarios (legacy, mantenida por compatibilidad) |
 | `events` | **Black Box** — todos los eventos del sistema |
+
+**Nota:** La DB usa `@libsql/client` (JS puro, sin compilación nativa), no `better-sqlite3`.
+Conexión singleton con WAL mode habilitado. Timestamps en epoch ms via Temporal API.
 
 ### Reemplazo de Redis
 
@@ -170,7 +187,7 @@ Todos los eventos del sistema (frontend + backend) se almacenan en la tabla `eve
 
 Para reconstruir el estado después de un crash:
 ```bash
-rag audit replay --from 2026-03-24
+rag audit replay --from 2026-03-25
 ```
 
 Internamente usa `packages/logger/blackbox.ts:reconstructFromEvents()`.

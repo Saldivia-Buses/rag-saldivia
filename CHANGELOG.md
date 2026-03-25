@@ -9,6 +9,24 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Added
+
+- `docs/workflows.md`: nuevo documento que centraliza los 7 flujos de trabajo del proyecto (desarrollo local, testing, git/commits, planificación, features nuevas, deploy, debugging con black box) — 2026-03-25
+
+### Changed
+
+- `CLAUDE.md`: corregido `better-sqlite3` → `@libsql/client`, "14 tablas" → "12 tablas", sección de tests expandida con todos los comandos, planes renombrados correctamente, nota sobre import estático del logger — 2026-03-25
+- `docs/architecture.md`: corregido `better-sqlite3` → `@libsql/client`, referencia `ultra-optimize.md` → `ultra-optimize-plan1-birth.md`, documentada auth service-to-service, tabla de tablas actualizada a 12 — 2026-03-25
+- `docs/onboarding.md`: comandos de test completos con conteo de tests por suite, nota sobre ubicación de `apps/web/.env.local`, referencia a `docs/workflows.md` — 2026-03-25
+- `packages/db/package.json`: agregado script `"test": "bun test src/__tests__"` — Turborepo ahora corre esta suite en `bun run test` — 2026-03-25
+- `packages/logger/package.json`: agregado script `"test": "bun test src/__tests__"` — 2026-03-25
+- `packages/config/package.json`: agregado script `"test": "bun test src/__tests__"` — 2026-03-25
+- `apps/web/package.json`: agregado script `"test": "bun test src/lib"` — 2026-03-25
+
+### Fixed
+
+- Pipeline de tests: `bun run test` desde la raíz ahora ejecuta los 79 tests unitarios via Turborepo — antes los workspaces no tenían script `"test"` y el pipeline completaba silenciosamente sin correr nada — 2026-03-25
+
 ### Changed
 
 - `apps/web/src/components/chat/ChatInterface.tsx`: refactor — complejidad reducida de 48 a 22; lógica de fetch + SSE + abort extraída al hook `useRagStream`; `updateLastAssistantMessage` extraída como helper puro

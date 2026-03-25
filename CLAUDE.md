@@ -37,8 +37,12 @@ rag status               # Health check de todos los servicios
 # Deploy en workstation física (stack Python, branch main)
 cd ~/rag-saldivia && make deploy PROFILE=workstation-1gpu
 
-# Tests
-bun test apps/web/src/lib/auth/__tests__/
+# Tests — opciones disponibles
+bun run test                                        # todos los tests via Turborepo
+bun test apps/web/src/lib/auth/__tests__/           # solo auth/RBAC (17 tests)
+bun test packages/db/src/__tests__/                 # solo DB queries (24 tests)
+bun test packages/logger/src/__tests__/             # solo logger/blackbox (24 tests)
+bun test packages/config/src/__tests__/             # solo config loader (14 tests)
 
 # CLI (instalar global: cd apps/cli && bun link)
 rag users list
@@ -56,7 +60,7 @@ apps/
   cli/              → CLI TypeScript (rag users/collections/ingest/audit/config/db)
 packages/
   shared/           → Zod schemas + tipos compartidos (User, Area, Session, etc.)
-  db/               → Drizzle ORM + better-sqlite3 (14 tablas, reemplaza auth.db + Redis)
+  db/               → Drizzle ORM + @libsql/client (12 tablas, reemplaza auth.db + Redis)
   config/           → config loader TypeScript (reemplaza config.py)
   logger/           → logger estructurado + black box replay + rotación de archivos
 scripts/
@@ -66,8 +70,11 @@ docs/
   blackbox.md       → sistema de logging y replay
   cli.md            → referencia completa de la CLI
   onboarding.md     → guía de 5 minutos
+  workflows.md      → flujos de trabajo del proyecto (git, tests, features, deploy)
   plans/
-    ultra-optimize.md → plan de trabajo con seguimiento diario
+    ultra-optimize-plan1-birth.md   → construcción del monorepo TS (completado 2026-03-24)
+    ultra-optimize-plan2-testing.md → testing sistemático 7 fases (completado 2026-03-25)
+    ultra-optimize-plan3-bugfix.md  → bugfix CodeGraphContext (completado 2026-03-25)
 config/             → YAMLs sin cambios
 patches/            → patches del blueprint NVIDIA sin cambios
 vendor/             → submódulo NVIDIA sin cambios
@@ -80,7 +87,7 @@ vendor/             → submódulo NVIDIA sin cambios
 | Lenguaje | TypeScript 6.0 |
 | Runtime | Bun |
 | Framework web | Next.js 15 App Router |
-| Base de datos | SQLite vía Drizzle ORM + better-sqlite3 |
+| Base de datos | SQLite vía Drizzle ORM + @libsql/client |
 | Auth | JWT (jose) en cookie HttpOnly |
 | Validación | Zod (compartido entre todos los paquetes) |
 | Build | Turborepo + Bun workspaces |
@@ -90,7 +97,7 @@ vendor/             → submódulo NVIDIA sin cambios
 
 - `apps/web/src/middleware.ts` — JWT + RBAC en cada request
 - `apps/web/src/lib/auth/jwt.ts` — createJwt, verifyJwt, cookies
-- `packages/db/src/schema.ts` — schema completo de 14 tablas SQLite
+- `packages/db/src/schema.ts` — schema completo de 12 tablas SQLite
 - `packages/db/src/queries/users.ts` — CRUD de usuarios + permisos
 - `packages/logger/src/backend.ts` — logger con rotación de archivos
 - `apps/web/src/lib/rag/client.ts` — proxy RAG con modo mock
@@ -115,4 +122,5 @@ LOG_LEVEL=INFO
 - **Cache con `unstable_cache`** → cachear llamadas al RAG con `tags: ['collections']`
 - **SSE**: verificar status HTTP ANTES de streamear (gateway.py tenía bug que siempre retornaba 200)
 - **SQLite locking**: `ingestion_queue` usa `locked_at` para locking optimista sin Redis
-- **Logger lazy-load**: `@rag-saldivia/db` se carga lazy en `packages/logger` para evitar deps circulares
+- **Logger + DB**: `@rag-saldivia/db` importado estáticamente en `packages/logger` — import dinámico fallaba silenciosamente en webpack/Next.js
+- **CJS sobre ESM**: paquetes `packages/*` sin `"type": "module"` para compatibilidad con webpack
