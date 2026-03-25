@@ -11,6 +11,9 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Added
 
+- `apps/web/src/components/chat/CollectionSelector.tsx`: selector multi-checkbox de colecciones disponibles del usuario, persistido en localStorage; muestra las colecciones activas como Popover junto al input — 2026-03-25 *(Plan 4 F2.21)*
+- `apps/web/src/hooks/useRagStream.ts`: acepta `collections?: string[]` para multi-colección; lo incluye como `collection_names` en el body del fetch — 2026-03-25 *(Plan 4 F2.21)*
+- `apps/web/src/app/api/rag/generate/route.ts`: verificación de acceso a cada colección en `collection_names`; si alguna está denegada retorna 403 — 2026-03-25 *(Plan 4 F2.21)*
 - `apps/web/src/app/api/rag/suggest/route.ts`: endpoint POST que genera 3-4 preguntas de follow-up; modo mock retorna sugerencias hardcodeadas, modo real usa el RAG server con prompt de generación + fallback al mock si falla — 2026-03-25 *(Plan 4 F2.20)*
 - `apps/web/src/components/chat/RelatedQuestions.tsx`: chips de preguntas sugeridas debajo de la última respuesta; al clicar pone la pregunta en el input — 2026-03-25 *(Plan 4 F2.20)*
 - `apps/web/src/components/chat/SourcesPanel.tsx`: panel colapsable de fuentes bajo cada respuesta asistente — muestra nombre del doc, fragmento (truncado a 2 líneas), relevance score como badge; visible solo cuando `sources.length > 0` — 2026-03-25 *(Plan 4 F2.19)*

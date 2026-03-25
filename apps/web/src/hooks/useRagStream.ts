@@ -14,6 +14,7 @@ type StreamResult = {
 type UseRagStreamOptions = {
   sessionId: string
   collection: string
+  collections?: string[]   // multi-colección — si se provee, reemplaza `collection`
   focusMode?: string
   onDelta: (fullContent: string) => void
   onSources: (sources: unknown[]) => void
@@ -27,6 +28,7 @@ type UseRagStreamOptions = {
 export function useRagStream({
   sessionId,
   collection,
+  collections,
   focusMode,
   onDelta,
   onSources,
@@ -53,6 +55,7 @@ export function useRagStream({
         body: JSON.stringify({
           messages: messages.map((m) => ({ role: m.role, content: m.content })),
           collection_name: collection,
+          collection_names: collections && collections.length > 0 ? collections : undefined,
           session_id: sessionId,
           use_knowledge_base: true,
           focus_mode: focusMode ?? "detallado",

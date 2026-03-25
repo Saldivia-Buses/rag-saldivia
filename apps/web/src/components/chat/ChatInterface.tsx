@@ -13,6 +13,7 @@ import { VoiceInput } from "@/components/chat/VoiceInput"
 import { ExportSession } from "@/components/chat/ExportSession"
 import { SourcesPanel } from "@/components/chat/SourcesPanel"
 import { RelatedQuestions } from "@/components/chat/RelatedQuestions"
+import { CollectionSelector } from "@/components/chat/CollectionSelector"
 
 type Message = {
   id?: number
@@ -60,10 +61,12 @@ export function ChatInterface({
   const bottomRef = useRef<HTMLDivElement>(null)
   const pendingSourcesRef = useRef<unknown[]>([])
   const { focusMode, setFocusMode } = useFocusMode()
+  const [activeCollections, setActiveCollections] = useState<string[]>([session.collection])
 
   const { phase, stream, abort } = useRagStream({
     sessionId: session.id,
     collection: session.collection,
+    collections: activeCollections,
     focusMode,
     onDelta: (fullContent) => setMessages((prev) => updateLastAssistantMessage(prev, fullContent)),
     onSources: (sources) => { pendingSourcesRef.current = sources },
@@ -312,11 +315,18 @@ export function ChatInterface({
 
       {/* Input */}
       <div className="p-4 border-t" style={{ borderColor: "var(--border)" }}>
-        <FocusModeSelector
-          value={focusMode}
-          onChange={setFocusMode}
-          disabled={phase === "streaming"}
-        />
+        <div className="flex items-center gap-2 mb-2 flex-wrap">
+          <CollectionSelector
+            defaultCollection={session.collection}
+            onCollectionsChange={setActiveCollections}
+            disabled={phase === "streaming"}
+          />
+          <FocusModeSelector
+            value={focusMode}
+            onChange={setFocusMode}
+            disabled={phase === "streaming"}
+          />
+        </div>
         {error && (
           <div
             className="mb-3 px-3 py-2 rounded-md text-xs"

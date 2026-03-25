@@ -39,6 +39,22 @@ export async function POST(request: Request) {
     }
 
     const collectionName = body.collection_name as string | undefined
+    const collectionNames = body.collection_names as string[] | undefined
+
+    // Multi-colección: verificar acceso a todas las colecciones solicitadas
+    if (collectionNames && collectionNames.length > 0) {
+      for (const col of collectionNames) {
+        const hasAccess = await canAccessCollection(userId, col, "read")
+        if (!hasAccess) {
+          return NextResponse.json(
+            { ok: false, error: `Sin acceso a la colección '${col}'` },
+            { status: 403 }
+          )
+        }
+      }
+      // El Blueprint acepta colecciones múltiples como array
+      body.collection_names = collectionNames
+    }
 
     // Prepend system message para el modo de foco seleccionado
     const focusModeId = body.focus_mode as FocusModeId | undefined
