@@ -15,9 +15,20 @@ export async function DELETE(
   const userId = Number(claims.sub)
   const db = getDb()
 
+  // Verificar que el job existe y el usuario tiene acceso
   const condition = claims.role === "admin"
     ? eq(ingestionQueue.id, id)
     : and(eq(ingestionQueue.id, id), eq(ingestionQueue.userId, userId))
+
+  const existing = await db
+    .select({ id: ingestionQueue.id })
+    .from(ingestionQueue)
+    .where(condition)
+    .limit(1)
+
+  if (existing.length === 0) {
+    return NextResponse.json({ ok: false, error: "Job no encontrado" }, { status: 404 })
+  }
 
   await db
     .update(ingestionQueue)
