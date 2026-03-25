@@ -1,4 +1,5 @@
 import type { Metadata } from "next"
+import { Providers } from "@/components/providers"
 import { Toaster } from "@/components/ui/sonner"
 import "./globals.css"
 
@@ -15,8 +16,10 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning>
       <body className="min-h-screen antialiased" style={{ background: "var(--background)", color: "var(--foreground)" }}>
-        {children}
-        <Toaster />
+        <Providers>
+          {children}
+          <Toaster />
+        </Providers>
       </body>
     </html>
   )
