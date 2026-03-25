@@ -11,6 +11,10 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Added
 
+- `apps/web/src/app/(app)/collections/page.tsx`: página de colecciones Server Component con lista + metadata — 2026-03-25 *(Plan 4 F2.26)*
+- `apps/web/src/components/collections/CollectionsList.tsx`: tabla de colecciones con acciones Chat y Eliminar (solo admin); formulario inline para crear nueva colección — 2026-03-25 *(Plan 4 F2.26)*
+- `apps/web/src/app/api/rag/collections/route.ts`: POST para crear colección (solo admin) — 2026-03-25 *(Plan 4 F2.26)*
+- `apps/web/src/app/api/rag/collections/[name]/route.ts`: DELETE para eliminar colección (solo admin) — 2026-03-25 *(Plan 4 F2.26)*
 - `packages/db/src/schema.ts`: tabla `session_shares` (token UUID 64-char hex, expiresAt) — 2026-03-25 *(Plan 4 F2.25)*
 - `packages/db/src/queries/shares.ts`: `createShare`, `getShareByToken`, `getShareWithSession`, `revokeShare` — 2026-03-25 *(Plan 4 F2.25)*
 - `apps/web/src/app/api/share/route.ts`: POST crea token, DELETE revoca — 2026-03-25 *(Plan 4 F2.25)*

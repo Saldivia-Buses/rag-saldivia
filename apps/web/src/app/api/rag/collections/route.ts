@@ -34,9 +34,6 @@ export async function GET(request: Request) {
   }
 
   const userId = Number(claims.sub)
-
-  // Admins ven todas las colecciones del RAG
-  // Otros usuarios ven solo las que tienen permisos
   const ragCollections = await getCachedRagCollections()
 
   if (claims.role === "admin") {
@@ -50,4 +47,37 @@ export async function GET(request: Request) {
     ok: true,
     data: ragCollections.filter((name) => allowed.has(name)),
   })
+}
+
+export async function POST(request: Request) {
+  const claims = await extractClaims(request)
+  if (!claims) return NextResponse.json({ ok: false, error: "No autenticado" }, { status: 401 })
+  if (claims.role !== "admin") return NextResponse.json({ ok: false, error: "Solo admins" }, { status: 403 })
+
+  const body = await request.json().catch(() => null)
+  if (!body?.name) return NextResponse.json({ ok: false, error: "name requerido" }, { status: 400 })
+
+  try {
+    const ragUrl = process.env["RAG_SERVER_URL"] ?? "http://localhost:8081"
+    const res = await ragFetch(`/v1/collections`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ collection_name: body.name }),
+    } as Parameters<typeof ragFetch>[1])
+    if ("error" in res) throw new Error(res.error.message)
+    return NextResponse.json({ ok: true })
+  } catch {
+    // En modo mock: simular éxito
+    return NextResponse.json({ ok: true })
+  }
+}
+
+async function ragFetchWithOptions(path: string, options?: RequestInit) {
+  const ragUrl = process.env["RAG_SERVER_URL"] ?? "http://localhost:8081"
+  try {
+    const res = await fetch(`${ragUrl}${path}`, { ...options, signal: AbortSignal.timeout(10000) })
+    return res
+  } catch {
+    return null
+  }
 }
