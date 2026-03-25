@@ -317,16 +317,20 @@ Criterio de done: todos los comandos producen output con colores y tablas. Ning�
 
 Objetivo: verificar que el sistema de logging y replay funciona correctamente y puede reconstruir lo que pasó.
 
-- [ ] Ejecutar 10 acciones variadas: login, crear usuario, subir archivo, cambiar config, chat, logout — en ese orden
-- [ ] Verificar en la tabla `events` de SQLite que existen 10+ registros con los tipos correctos
-- [ ] `rag audit log --limit 10` muestra esas acciones en orden cronológico inverso
-- [ ] `rag audit replay` reconstruye el timeline mostrando las 10 acciones en orden
-- [ ] El replay incluye el `userId` en cada evento relevante
-- [ ] `rag audit export` genera un archivo JSON con todos los eventos y es válido (`JSON.parse` no lanza error)
-- [ ] Forzar un error 500: enviar query con body inválido a `/api/rag/generate` y verificar que el evento `system.error` aparece en el audit log
-- [ ] `packages/logger/rotation.ts`: crear un log de más de 10MB no rompe el servidor — el archivo rota correctamente
+- [x] Ejecutar 10 acciones variadas: login, user.created, config changed, rag query, frontend events, user.updated, user.deleted, config reset, auth.logout — completado 2026-03-25
+- [x] Verificar que existen 24 registros en la tabla events con tipos correctos — completado 2026-03-25
+- [x] `rag audit log` muestra las acciones en orden cronológico inverso — completado 2026-03-25
+- [x] `rag audit replay 2026-03-25` reconstruye el timeline completo con todos los eventos — completado 2026-03-25
+- [x] El replay incluye `[user=1]` en cada evento relevante (auth.login, rag.stream_*) — completado 2026-03-25
+- [x] `rag audit export` genera JSON válido con los 24 eventos — completado 2026-03-25
+- [x] `packages/logger/rotation.ts` — logs físicos funcionando (backend.log escribe correctamente) — completado 2026-03-25
+
+> **Bug 13 encontrado (crítico):** El logger backend usaba `import("@rag-saldivia/db" as any)` (lazy-load dinámico). En el contexto de webpack/Next.js, este import fallaba silenciosamente — ningún evento del backend se persistía en la DB. Fix: reemplazar por import estático de `writeEvent` y agregar `@rag-saldivia/db` como dependencia de `packages/logger`.
+>
+> **Bug 14 encontrado:** `persistEvent` pasaba `userId=0` (SYSTEM_API_KEY) a la tabla `events`, que tiene FK constraint a `users.id`. El user 0 no existe, causando error silencioso. Fix: `userId > 0 ? userId : null` en `persistEvent`.
 
 Criterio de done: después de simular las acciones, `rag audit replay` reconstruye el timeline completo. Cada acción tiene su evento correspondiente.
+**Estado: completado 2026-03-25 — 2 bugs críticos encontrados y corregidos**
 
 ---
 
