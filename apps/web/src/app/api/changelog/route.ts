@@ -1,0 +1,55 @@
+/**
+ * GET /api/changelog
+ *
+ * Lee CHANGELOG.md del repo y retorna:
+ * - version: versión actual del package.json
+ * - entries: últimas 5 entradas del CHANGELOG
+ */
+
+import { NextResponse } from "next/server"
+import { readFileSync } from "fs"
+import { join } from "path"
+
+type ChangelogEntry = {
+  version: string
+  content: string
+}
+
+function parseChangelog(raw: string): ChangelogEntry[] {
+  const entries: ChangelogEntry[] = []
+  // Matches: ## [Unreleased] or ## [v1.2.3] or ## [1.2.3] - 2024-01-01
+  const sections = raw.split(/^## /m).slice(1)
+
+  for (const section of sections.slice(0, 5)) {
+    const firstLine = section.split("\n")[0] ?? ""
+    const versionMatch = firstLine.match(/\[([^\]]+)\]/)
+    const version = versionMatch?.[1] ?? firstLine.trim()
+    const content = section.split("\n").slice(1).join("\n").trim()
+    if (version) entries.push({ version, content })
+  }
+
+  return entries
+}
+
+function getVersion(): string {
+  try {
+    const pkgPath = join(process.cwd(), "../../package.json")
+    const pkg = JSON.parse(readFileSync(pkgPath, "utf-8")) as { version?: string }
+    return pkg.version ?? "0.1.0"
+  } catch {
+    return "0.1.0"
+  }
+}
+
+export async function GET() {
+  try {
+    const changelogPath = join(process.cwd(), "../../CHANGELOG.md")
+    const raw = readFileSync(changelogPath, "utf-8")
+    const entries = parseChangelog(raw)
+    const version = getVersion()
+
+    return NextResponse.json({ ok: true, version, entries })
+  } catch {
+    return NextResponse.json({ ok: false, error: "No se pudo leer el CHANGELOG" }, { status: 500 })
+  }
+}

@@ -16,6 +16,9 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 ### Added
 
 - `apps/web/src/components/chat/ThinkingSteps.tsx`: steps colapsables del proceso de razonamiento visibles durante streaming — simulación UI-side con timing (paso 1 inmediato, paso 2 a 700ms, paso 3 a 1500ms); se auto-colapsa 1.8s después de que el stream termina; cuando el RAG server exponga eventos SSE de tipo `thinking`, se conectan en `useRagStream` — 2026-03-25 *(Plan 4 F1.5)*
+- `apps/web/src/app/api/changelog/route.ts`: endpoint GET que parsea CHANGELOG.md y retorna las últimas 5 entradas + versión actual del package.json — 2026-03-25 *(Plan 4 F1.18)*
+- `apps/web/src/components/layout/WhatsNewPanel.tsx`: Sheet lateral con entradas del CHANGELOG renderizadas con `marked`; `useHasNewVersion()` hook que compara versión actual con `localStorage["last_seen_version"]` — 2026-03-25 *(Plan 4 F1.18)*
+- `apps/web/src/components/layout/NavRail.tsx`: logo "R" abre el panel "¿Qué hay de nuevo?" al clic; badge rojo unificado para `unreadCount > 0` o versión nueva no vista — 2026-03-25 *(Plan 4 F1.18)*
 - `apps/web/src/components/chat/ChatInterface.tsx`: regenerar respuesta con botón `↻` (pone el último query del usuario en el input) F1.15; copy al portapapeles con ícono Check al confirmar F1.16; stats `{ms}ms · {N} docs` visibles al hover debajo del último mensaje asistente F1.17 — 2026-03-25
 - `apps/web/src/hooks/useGlobalHotkeys.ts`: `Cmd+N` → navegar a `/chat`; `j/k` y Esc de sesiones diferidos a Fase 2 (requieren estado centralizado del panel) — 2026-03-25 *(Plan 4 F1.14)*
 - `apps/web/src/lib/rag/client.ts`: `detectLanguageHint(text)` — detecta inglés (por palabras clave) y caracteres no-latinos; retorna instrucción "Respond in the same language as the user's message." si aplica — 2026-03-25 *(Plan 4 F1.13)*
