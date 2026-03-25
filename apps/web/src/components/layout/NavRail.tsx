@@ -75,9 +75,11 @@ function NavIcon({
 export function NavRail({
   user,
   hidden,
+  unreadCount = 0,
 }: {
   user: CurrentUser
   hidden?: boolean
+  unreadCount?: number
 }) {
   const pathname = usePathname()
   const visible = NAV_ITEMS.filter(
@@ -92,12 +94,22 @@ export function NavRail({
         className="flex flex-col items-center py-3 gap-1 h-screen flex-shrink-0"
         style={{ width: 44, background: "var(--nav-bg)" }}
       >
-        {/* Brand */}
-        <div
-          className="w-7 h-7 rounded-md flex items-center justify-center mb-2 flex-shrink-0"
-          style={{ background: "var(--accent)" }}
-        >
-          <span className="text-xs font-bold text-white select-none">R</span>
+        {/* Brand con badge de notificaciones */}
+        <div className="relative mb-2">
+          <div
+            className="w-7 h-7 rounded-md flex items-center justify-center"
+            style={{ background: "var(--accent)" }}
+          >
+            <span className="text-xs font-bold text-white select-none">R</span>
+          </div>
+          {unreadCount > 0 && (
+            <div
+              className="absolute -top-1 -right-1 w-4 h-4 rounded-full flex items-center justify-center text-white"
+              style={{ background: "var(--destructive)", fontSize: 9 }}
+            >
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </div>
+          )}
         </div>
 
         {/* Nav items */}

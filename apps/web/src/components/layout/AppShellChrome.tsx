@@ -3,6 +3,7 @@
 import { NavRail } from "./NavRail"
 import { SecondaryPanel } from "./SecondaryPanel"
 import { useZenMode } from "@/hooks/useZenMode"
+import { useNotifications } from "@/hooks/useNotifications"
 import type { CurrentUser } from "@/lib/auth/current-user"
 
 /**
@@ -18,10 +19,11 @@ export function AppShellChrome({
   children: React.ReactNode
 }) {
   const { isZen } = useZenMode()
+  const { unreadCount } = useNotifications()
 
   return (
     <div className="flex h-screen overflow-hidden">
-      <NavRail user={user} hidden={isZen} />
+      <NavRail user={user} hidden={isZen} unreadCount={unreadCount} />
       <SecondaryPanel hidden={isZen} />
       <main className="flex-1 overflow-y-auto">{children}</main>
       {isZen && (
