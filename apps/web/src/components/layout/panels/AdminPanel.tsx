@@ -21,7 +21,7 @@ const ADMIN_SECTIONS: Array<{ label: string; items: NavItem[] }> = [
     label: "Observabilidad",
     items: [
       { href: "/admin/system", label: "Sistema", icon: <Activity size={14} /> },
-      // Fase 2: /admin/analytics, /admin/ingestion-monitor, /admin/knowledge-gaps, /admin/collection-history
+      { href: "/admin/ingestion", label: "Monitoring ingesta", icon: <Activity size={14} /> },
     ],
   },
 ]

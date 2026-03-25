@@ -11,6 +11,10 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Added
 
+- `apps/web/src/app/api/admin/ingestion/stream/route.ts`: SSE endpoint que emite estado de jobs cada 3s — 2026-03-25 *(Plan 4 F2.29)*
+- `apps/web/src/app/api/admin/ingestion/[id]/route.ts`: PATCH con `action: "retry"` para reintentar jobs fallidos — 2026-03-25 *(Plan 4 F2.29)*
+- `apps/web/src/components/admin/IngestionKanban.tsx`: kanban de 4 columnas (Pendiente/En progreso/Completado/Error) con barra de progreso, detalle de error expandible, botón retry, indicador SSE en tiempo real — 2026-03-25 *(Plan 4 F2.29)*
+- `apps/web/src/app/(app)/admin/ingestion/page.tsx`: página de monitoring de ingesta — 2026-03-25 *(Plan 4 F2.29)*
 - `packages/db/src/schema.ts`: tabla `prompt_templates` (title, prompt, focusMode, createdBy, active) — 2026-03-25 *(Plan 4 F2.28)*
 - `packages/db/src/queries/templates.ts`: `listActiveTemplates`, `createTemplate`, `deleteTemplate` — 2026-03-25 *(Plan 4 F2.28)*
 - `apps/web/src/app/api/admin/templates/route.ts`: GET lista templates activos, POST crea (admin), DELETE elimina (admin) — 2026-03-25 *(Plan 4 F2.28)*

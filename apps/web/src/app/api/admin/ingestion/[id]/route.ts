@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { extractClaims } from "@/lib/auth/jwt"
-import { getDb, ingestionQueue } from "@rag-saldivia/db"
+import { getDb, ingestionQueue, ingestionJobs } from "@rag-saldivia/db"
 import { eq, and } from "drizzle-orm"
 import { log } from "@rag-saldivia/logger/backend"
 
@@ -37,5 +37,30 @@ export async function DELETE(
 
   log.info("ingestion.cancelled", { jobId: id }, { userId })
 
+  return NextResponse.json({ ok: true })
+}
+
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const claims = await extractClaims(request)
+  if (!claims || claims.role !== "admin") {
+    return NextResponse.json({ ok: false, error: "Solo admins" }, { status: 403 })
+  }
+
+  const { id } = await params
+  const body = await request.json().catch(() => ({})) as { action?: string }
+  if (body.action !== "retry") {
+    return NextResponse.json({ ok: false, error: "action inválida" }, { status: 400 })
+  }
+
+  const db = getDb()
+  await db
+    .update(ingestionJobs)
+    .set({ state: "pending", retryCount: 0, lastChecked: null })
+    .where(eq(ingestionJobs.id, id))
+
+  log.info("ingestion.retry", { jobId: id }, { userId: Number(claims.sub) })
   return NextResponse.json({ ok: true })
 }
