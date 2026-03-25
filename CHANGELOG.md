@@ -15,6 +15,11 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Added
 
+- `apps/web/components.json`: configuración shadcn/ui (style default, base color stone, Tailwind v4, paths `@/components/ui` y `@/lib/utils`) — 2026-03-25 *(Plan 4 Fase 0b)*
+- `apps/web/src/lib/utils.ts`: función `cn()` de `clsx + tailwind-merge` — 2026-03-25 *(Plan 4 Fase 0b)*
+- `apps/web/src/components/ui/`: 13 componentes shadcn instalados — button, input, textarea, dialog, popover, table, badge, avatar, separator, tooltip, sheet, sonner, command (cmdk) — 2026-03-25 *(Plan 4 Fase 0b)*
+- `apps/web/src/app/layout.tsx`: `<Toaster />` de sonner agregado al layout raíz — 2026-03-25 *(Plan 4 Fase 0b)*
+
 - `docs/workflows.md`: nuevo documento que centraliza los 7 flujos de trabajo del proyecto (desarrollo local, testing, git/commits, planificación, features nuevas, deploy, debugging con black box) — 2026-03-25
 
 ### Changed
