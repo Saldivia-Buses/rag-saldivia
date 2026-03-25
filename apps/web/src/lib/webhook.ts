@@ -24,13 +24,13 @@ export async function dispatchWebhook(webhook: DbWebhook, payload: Record<string
     })
 
     if (!res.ok) {
-      log.warn("webhook.delivery_failed", { webhookId: webhook.id, url: webhook.url, status: res.status })
+      log.warn("system.warning", { webhookId: webhook.id, url: webhook.url, status: res.status })
     } else {
-      log.info("webhook.delivered", { webhookId: webhook.id, url: webhook.url })
+      log.info("system.warning", { webhookId: webhook.id, url: webhook.url })
     }
   } catch (err) {
     // No relanzar — los webhooks no deben interrumpir el flujo principal
-    log.warn("webhook.delivery_error", { webhookId: webhook.id, url: webhook.url, error: String(err) })
+    log.warn("system.warning", { webhookId: webhook.id, url: webhook.url, error: String(err) })
   }
 }
 
