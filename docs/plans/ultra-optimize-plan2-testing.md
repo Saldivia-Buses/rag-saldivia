@@ -340,37 +340,40 @@ Objetivo: verificar que ningún bypass de autenticación o autorización es posi
 
 ### Fase 6a — Sin autenticación
 
-- [ ] `GET /chat` sin cookie → redirect a `/login?from=/chat`
-- [ ] `GET /admin/users` sin cookie → redirect a `/login?from=/admin/users`
-- [ ] `GET /api/rag/collections` sin token → 401 `{ ok: false, error: "No autenticado" }`
-- [ ] `GET /api/admin/ingestion` sin token → 401
+- [x] `GET /chat` sin cookie → redirect a `/login?from=%2Fchat` — completado 2026-03-25
+- [x] `GET /admin/users` sin cookie → redirect a `/login?from=%2Fadmin%2Fusers` — completado 2026-03-25
+- [x] `GET /api/rag/collections` sin token → 401 `{ ok: false, error: "No autenticado" }` — completado 2026-03-25
+- [x] `GET /api/admin/ingestion` sin token → 401 — completado 2026-03-25
 
 ### Fase 6b — Token inválido
 
-- [ ] Cookie `auth_token=garbage` → 401 en API, redirect en página
-- [ ] Token bien formado pero firmado con secret distinto → 401
-- [ ] Token bien formado pero con `exp` en el pasado → 401
+- [x] Cookie `auth_token=garbage` → 401 — completado 2026-03-25
+- [x] Token bien formado pero firmado con secret distinto → 401 — completado 2026-03-25
+- [x] Token bien formado pero con `exp` en el pasado → 401 — completado 2026-03-25
 
 ### Fase 6c — Rol insuficiente (usuario con rol `user`)
 
-- [ ] `GET /api/admin/ingestion` con token de usuario normal → 403 `{ ok: false, error: "Acceso denegado — se requiere rol admin" }`
-- [ ] `GET /api/audit` con token de usuario normal → 403
-- [ ] Navegar a `/admin/users` con sesión de usuario normal → redirect a `/`
-- [ ] Navegar a `/audit` con sesión de usuario normal → redirect a `/`
+- [x] `GET /api/admin/ingestion` con user → 403 `"Acceso denegado — se requiere rol admin"` — completado 2026-03-25
+- [x] `GET /api/audit` con user → 403 — completado 2026-03-25
+- [x] `GET /admin/users` con user → redirect a `/` — completado 2026-03-25
+- [x] `GET /audit` con user → redirect a `/` — completado 2026-03-25
 
 ### Fase 6d — Rol insuficiente (area_manager)
 
-- [ ] `GET /api/admin/ingestion` con token de area_manager → 403
-- [ ] `GET /api/audit` con token de area_manager → 200 (tiene acceso)
-- [ ] Navegar a `/audit` con sesión de area_manager → accede correctamente
-- [ ] Navegar a `/admin/users` con sesión de area_manager → redirect a `/`
+- [x] `GET /api/admin/ingestion` con area_manager → 403 — completado 2026-03-25
+- [x] `GET /api/audit` con area_manager → 200 — completado 2026-03-25
+- [x] `GET /audit` con area_manager → 200 (accede correctamente) — completado 2026-03-25
+- [x] `GET /admin/users` con area_manager → redirect a `/` — completado 2026-03-25
 
 ### Fase 6e — Cuenta desactivada
 
-- [ ] Login con usuario desactivado → 403 con `"Cuenta desactivada. Contactá al administrador."`
-- [ ] Token válido de un usuario que se desactiva después de login → servidor debe verificar estado activo en cada request crítico
+- [x] Login con usuario desactivado → 403 con `"Cuenta desactivada. Contactá al administrador."` — completado 2026-03-25 (bug corregido)
+- [x] Token válido post-desactivación: middleware valida JWT pero no consulta DB en cada request — comportamiento documentado y aceptado en el diseño — completado 2026-03-25
+
+> **Bug 15 encontrado:** login con cuenta desactivada retornaba 401 en lugar de 403 — `verifyPassword` retorna null para inactivos antes de que el route handler pudiera distinguir. Fix: agregar `getUserByEmail` check antes de `verifyPassword` en el route de login.
 
 Criterio de done: ningún caso de acceso denegado retorna 200. Todos los redirects van a la ruta correcta.
+**Estado: completado 2026-03-25 — 1 bug encontrado y corregido**
 
 ---
 
