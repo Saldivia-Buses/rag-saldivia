@@ -3,6 +3,7 @@ import { requireUser } from "@/lib/auth/current-user"
 import { getSessionById, listSessionsByUser } from "@rag-saldivia/db"
 import { SessionList } from "@/components/chat/SessionList"
 import { ChatInterface } from "@/components/chat/ChatInterface"
+import { ChatDropZone } from "@/components/chat/ChatDropZone"
 
 export default async function ChatSessionPage({
   params,
@@ -22,7 +23,9 @@ export default async function ChatSessionPage({
   return (
     <div className="flex h-full">
       <SessionList sessions={sessions} />
-      <ChatInterface session={session} userId={user.id} />
+      <ChatDropZone sessionId={session.id}>
+        <ChatInterface session={session} userId={user.id} />
+      </ChatDropZone>
     </div>
   )
 }

@@ -11,6 +11,7 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Added
 
+- `apps/web/src/components/chat/ChatDropZone.tsx`: drop zone sobre el área del chat — overlay al arrastrar, sube el archivo via `/api/upload` y confirma con toast; colecciones efímeras descartadas por viabilidad (Blueprint v2.5.0 no las soporta en Milvus) — 2026-03-25 *(Plan 4 F2.35)*
 - `apps/web/src/components/chat/SplitView.tsx`: wrapper de vista dividida — botón Columns2 abre segundo panel con sesión independiente, botón X cierra; cada panel tiene su propio ChatInterface — 2026-03-25 *(Plan 4 F2.34)*
 - `packages/db/src/schema.ts`: tabla `scheduled_reports` (query, collection, schedule, destination, email, nextRun) — 2026-03-25 *(Plan 4 F2.33)*
 - `packages/db/src/queries/reports.ts`: `createReport`, `listActiveReports`, `listReportsByUser`, `updateLastRun`, `deleteReport` — 2026-03-25 *(Plan 4 F2.33)*
