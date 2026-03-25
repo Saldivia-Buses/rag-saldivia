@@ -33,6 +33,7 @@ beforeAll(async () => {
       password_hash TEXT,
       preferences TEXT NOT NULL DEFAULT '{}',
       active INTEGER NOT NULL DEFAULT 1,
+      onboarding_completed INTEGER NOT NULL DEFAULT 0,
       created_at INTEGER NOT NULL,
       last_login INTEGER
     );

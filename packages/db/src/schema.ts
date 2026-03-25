@@ -46,6 +46,7 @@ export const users = sqliteTable(
       .notNull()
       .default({}),
     active: integer("active", { mode: "boolean" }).notNull().default(true),
+    onboardingCompleted: integer("onboarding_completed", { mode: "boolean" }).notNull().default(false),
     createdAt: integer("created_at").notNull(), // epoch ms
     lastLogin: integer("last_login"), // epoch ms, nullable
   },

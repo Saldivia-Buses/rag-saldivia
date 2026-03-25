@@ -11,6 +11,11 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Added
 
+- `packages/db/src/schema.ts`: campo `onboarding_completed` en tabla `users` (default false) — 2026-03-25 *(Plan 4 F2.37)*
+- `apps/web/src/components/onboarding/OnboardingTour.tsx`: tour driver.js de 5 pasos (nav, chat, modos de foco, colecciones, settings); se activa al primer login; saltable; llama a `actionCompleteOnboarding` al terminar — 2026-03-25 *(Plan 4 F2.37)*
+- `apps/web/src/app/actions/settings.ts`: Server Actions `actionCompleteOnboarding` y `actionResetOnboarding` — 2026-03-25 *(Plan 4 F2.37)*
+- `apps/web/src/app/(app)/layout.tsx`: renderiza `OnboardingTour` condicionalmente si `onboardingCompleted === false` — 2026-03-25 *(Plan 4 F2.37)*
+- `packages/db/src/__tests__/users.test.ts` y `saved.test.ts`: columna `onboarding_completed` agregada al SQL de test — 2026-03-25 *(bugfix)*
 - `packages/db/src/schema.ts`: tabla `rate_limits` (targetType user/area, targetId, maxQueriesPerHour) — 2026-03-25 *(Plan 4 F2.36)*
 - `packages/db/src/queries/rate-limits.ts`: `getRateLimit` (user-level primero, luego área), `countQueriesLastHour`, `createRateLimit`, `listRateLimits`, `deleteRateLimit` — 2026-03-25 *(Plan 4 F2.36)*
 - `apps/web/src/app/api/rag/generate/route.ts`: check de rate limit antes de procesar — retorna 429 si el usuario superó su límite/hora — 2026-03-25 *(Plan 4 F2.36)*

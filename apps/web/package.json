@@ -30,6 +30,7 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "dompurify": "^3.3.3",
+    "driver.js": "^1.4.0",
     "drizzle-orm": "^0.38.4",
     "jose": "^5.0.0",
     "lucide-react": "^0.475.0",

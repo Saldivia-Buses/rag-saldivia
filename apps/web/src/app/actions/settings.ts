@@ -1,7 +1,8 @@
 "use server"
 
 import { requireUser } from "@/lib/auth/current-user"
-import { updateUser, updatePassword, getUserById } from "@rag-saldivia/db"
+import { updateUser, updatePassword, getUserById, getDb, users } from "@rag-saldivia/db"
+import { eq } from "drizzle-orm"
 import { log } from "@rag-saldivia/logger/backend"
 import { revalidatePath } from "next/cache"
 
@@ -28,4 +29,18 @@ export async function actionUpdatePreferences(preferences: Record<string, unknow
   const merged = { ...(current?.preferences ?? {}), ...preferences }
   await updateUser(user.id, { preferences: merged })
   revalidatePath("/settings")
+}
+
+export async function actionCompleteOnboarding() {
+  const user = await requireUser()
+  const db = getDb()
+  await db.update(users).set({ onboardingCompleted: true }).where(eq(users.id, user.id))
+  revalidatePath("/")
+}
+
+export async function actionResetOnboarding() {
+  const user = await requireUser()
+  const db = getDb()
+  await db.update(users).set({ onboardingCompleted: false }).where(eq(users.id, user.id))
+  revalidatePath("/")
 }
