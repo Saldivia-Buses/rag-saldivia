@@ -5,7 +5,7 @@
 
 import { NextResponse } from "next/server"
 import { LoginRequestSchema } from "@rag-saldivia/shared"
-import { verifyPassword } from "@rag-saldivia/db"
+import { verifyPassword, getUserByEmail } from "@rag-saldivia/db"
 import { createJwt, makeAuthCookie } from "@/lib/auth/jwt"
 import { log } from "@rag-saldivia/logger/backend"
 
@@ -24,6 +24,17 @@ export async function POST(request: Request) {
     }
 
     const { email, password } = parsed.data
+
+    // Verificar si el usuario existe y está activo antes de comprobar password
+    const existing = await getUserByEmail(email)
+    if (existing && !existing.active) {
+      log.warn("auth.failed", { email, reason: "account_inactive", userId: existing.id })
+      return NextResponse.json(
+        { ok: false, error: "Cuenta desactivada. Contactá al administrador." },
+        { status: 403 }
+      )
+    }
+
     const user = await verifyPassword(email, password)
 
     if (!user) {
@@ -33,14 +44,6 @@ export async function POST(request: Request) {
       return NextResponse.json(
         { ok: false, error: "Email o contraseña incorrectos" },
         { status: 401 }
-      )
-    }
-
-    if (!user.active) {
-      log.warn("auth.failed", { email, reason: "account_inactive", userId: user.id })
-      return NextResponse.json(
-        { ok: false, error: "Cuenta desactivada. Contactá al administrador." },
-        { status: 403 }
       )
     }
 
