@@ -16,6 +16,7 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 ### Added
 
 - `apps/web/src/components/chat/ThinkingSteps.tsx`: steps colapsables del proceso de razonamiento visibles durante streaming — simulación UI-side con timing (paso 1 inmediato, paso 2 a 700ms, paso 3 a 1500ms); se auto-colapsa 1.8s después de que el stream termina; cuando el RAG server exponga eventos SSE de tipo `thinking`, se conectan en `useRagStream` — 2026-03-25 *(Plan 4 F1.5)*
+- `apps/web/src/hooks/useGlobalHotkeys.ts`: `Cmd+N` → navegar a `/chat`; `j/k` y Esc de sesiones diferidos a Fase 2 (requieren estado centralizado del panel) — 2026-03-25 *(Plan 4 F1.14)*
 - `apps/web/src/lib/rag/client.ts`: `detectLanguageHint(text)` — detecta inglés (por palabras clave) y caracteres no-latinos; retorna instrucción "Respond in the same language as the user's message." si aplica — 2026-03-25 *(Plan 4 F1.13)*
 - `apps/web/src/app/api/rag/generate/route.ts`: inyección de `detectLanguageHint` como system message cuando el último mensaje del usuario no está en español — 2026-03-25 *(Plan 4 F1.13)*
 - `apps/web/src/app/api/notifications/route.ts`: endpoint GET que retorna eventos recientes de tipos `ingestion.completed`, `ingestion.error`, `user.created` (este último solo para admins) — 2026-03-25 *(Plan 4 F1.12)*

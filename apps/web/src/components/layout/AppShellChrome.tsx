@@ -4,6 +4,7 @@ import { NavRail } from "./NavRail"
 import { SecondaryPanel } from "./SecondaryPanel"
 import { useZenMode } from "@/hooks/useZenMode"
 import { useNotifications } from "@/hooks/useNotifications"
+import { useGlobalHotkeys } from "@/hooks/useGlobalHotkeys"
 import type { CurrentUser } from "@/lib/auth/current-user"
 
 /**
@@ -20,6 +21,7 @@ export function AppShellChrome({
 }) {
   const { isZen } = useZenMode()
   const { unreadCount } = useNotifications()
+  useGlobalHotkeys()
 
   return (
     <div className="flex h-screen overflow-hidden">
