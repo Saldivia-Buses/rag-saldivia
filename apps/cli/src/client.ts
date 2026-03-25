@@ -97,13 +97,13 @@ export const api = {
   // Ingestion
   ingestion: {
     start: (collection: string, filePath: string) =>
-      apiFetch<unknown>("/api/ingestion", {
+      apiFetch<unknown>("/api/upload", {
         method: "POST",
         body: JSON.stringify({ collection, file_path: filePath }),
       }),
-    status: () => apiFetch<unknown[]>("/api/ingestion/status"),
+    status: () => apiFetch<{ queue: unknown[]; jobs: unknown[] }>("/api/admin/ingestion"),
     cancel: (jobId: string) =>
-      apiFetch<void>(`/api/ingestion/${jobId}`, { method: "DELETE" }),
+      apiFetch<void>(`/api/admin/ingestion/${jobId}`, { method: "DELETE" }),
   },
 
   // Config

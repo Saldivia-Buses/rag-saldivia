@@ -3,7 +3,7 @@ import chalk from "chalk"
 import { api } from "../client.js"
 import { out, makeTable, handleApiError } from "../output.js"
 
-export async function configGetCommand() {
+export async function configGetCommand(key?: string) {
   out.section("Configuración RAG")
 
   const result = await api.config.get()
@@ -11,11 +11,17 @@ export async function configGetCommand() {
 
   const config = result.data as Record<string, unknown>
 
-  const rows = Object.entries(config).map(([k, v]) => [
-    chalk.bold(k),
-    String(v),
-  ])
+  // Si se pasa una clave específica, mostrar solo ese parámetro
+  const entries = key
+    ? Object.entries(config).filter(([k]) => k === key)
+    : Object.entries(config)
 
+  if (key && entries.length === 0) {
+    out.warn(`Parámetro '${key}' no encontrado`)
+    return
+  }
+
+  const rows = entries.map(([k, v]) => [chalk.bold(k), String(v)])
   console.log(makeTable(["Parámetro", "Valor"], rows))
 }
 

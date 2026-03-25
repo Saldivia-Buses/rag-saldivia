@@ -113,8 +113,8 @@ ingest
 const config = program.command("config").description("Configuración del RAG")
 
 config
-  .command("get")
-  .description("Mostrar configuración actual")
+  .command("get [key]")
+  .description("Mostrar configuración actual (o un parámetro específico)")
   .action(configGetCommand)
 
 config

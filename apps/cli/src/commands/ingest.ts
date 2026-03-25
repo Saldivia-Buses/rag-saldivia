@@ -39,33 +39,37 @@ export async function ingestStatusCommand() {
   const result = await api.ingestion.status()
   if (!result.ok) return handleApiError(result)
 
-  const jobs = result.data as Array<{
-    id: string
-    filename: string
-    collection: string
-    state: string
-    progress: number
-    tier: string
-    createdAt: number
-  }>
+  // La API retorna { queue: [...], jobs: [...] } — combinamos ambas listas
+  const data = result.data as { queue?: unknown[]; jobs?: unknown[] } | unknown[]
+  const items: Array<{
+    id: string; filePath?: string; filename?: string
+    collection?: string; status?: string; state?: string
+    retryCount?: number; progress?: number; createdAt: number
+  }> = Array.isArray(data) ? data : [
+    ...((data as { queue?: unknown[] }).queue ?? []),
+    ...((data as { jobs?: unknown[] }).jobs ?? []),
+  ] as never
 
-  if (jobs.length === 0) {
+  if (items.length === 0) {
     out.info("No hay jobs activos")
     return
   }
 
-  const rows = jobs.map((job) => {
-    const stateColor = job.state === "done" ? chalk.green
-      : job.state === "error" ? chalk.red
-      : job.state === "running" ? chalk.cyan
+  const rows = items.map((item) => {
+    const state = item.status ?? item.state ?? "unknown"
+    const stateColor = state === "done" || state === "completed" ? chalk.green
+      : state === "error" ? chalk.red
+      : state === "locked" || state === "running" ? chalk.cyan
       : chalk.dim
 
+    const filename = item.filename ?? item.filePath?.split("/").pop() ?? item.id.slice(0, 8)
+
     return [
-      chalk.dim(job.id.slice(0, 8)),
-      chalk.bold(job.filename.slice(0, 30)),
-      job.collection,
-      progressBar(job.progress),
-      stateColor(job.state),
+      chalk.dim(item.id.slice(0, 8)),
+      chalk.bold(filename.slice(0, 30)),
+      item.collection ?? "—",
+      progressBar(item.progress ?? 0),
+      stateColor(state),
     ]
   })
 
