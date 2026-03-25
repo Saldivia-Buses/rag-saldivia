@@ -22,6 +22,7 @@ const ADMIN_SECTIONS: Array<{ label: string; items: NavItem[] }> = [
     items: [
       { href: "/admin/system", label: "Sistema", icon: <Activity size={14} /> },
       { href: "/admin/ingestion", label: "Monitoring ingesta", icon: <Activity size={14} /> },
+      { href: "/admin/analytics", label: "Analytics", icon: <Activity size={14} /> },
     ],
   },
 ]
