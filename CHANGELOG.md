@@ -9,6 +9,12 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Changed
+
+- `apps/web/src/components/chat/ChatInterface.tsx`: refactor — complejidad reducida de 48 a 22; lógica de fetch + SSE + abort extraída al hook `useRagStream`; `updateLastAssistantMessage` extraída como helper puro
+- `apps/web/src/hooks/useRagStream.ts`: nuevo hook que encapsula fetch SSE, lectura del stream, abort controller y callbacks `onDelta`/`onSources`/`onError` — complejidad 19 (autónomo y testeable)
+- `packages/logger/src/blackbox.ts`: refactor `reconstructFromEvents` — complejidad reducida de 34 a ~5; cada tipo de evento tiene handler nombrado (`handleAuthLogin`, `handleRagQuery`, `handleError`, `handleUserCreatedOrUpdated`, `handleUserDeleted`, `handleDefault`); despacho via `EVENT_HANDLERS` map
+
 ### Fixed
 
 - `packages/db/src/queries/areas.ts`: `removeAreaCollection` ignoraba el parámetro `collectionName` en el WHERE — borraba todas las colecciones del área en lugar de solo la especificada; agregado `and(eq(areaId), eq(collectionName))` y actualizado import de `drizzle-orm` — 2026-03-25 *(encontrado con CodeGraphContext MCP, Plan 3 Fase 1a)*

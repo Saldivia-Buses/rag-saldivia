@@ -42,6 +42,103 @@ export type ReconstructedState = {
   }
 }
 
+// ── Handlers por tipo de evento ────────────────────────────────────────────
+
+function handleAuthLogin(event: DbEvent, payload: Record<string, unknown>, state: ReconstructedState) {
+  if (event.userId) {
+    state.users.set(event.userId, {
+      email: String(payload["email"] ?? ""),
+      role: String(payload["role"] ?? "user"),
+      active: true,
+      lastAction: `Login a las ${new Date(event.ts).toISOString()}`,
+    })
+  }
+  state.timeline.push({
+    ts: event.ts,
+    type: event.type,
+    userId: event.userId ?? undefined,
+    summary: `Login: ${payload["email"] ?? "unknown"}`,
+  })
+}
+
+function handleRagQuery(event: DbEvent, payload: Record<string, unknown>, state: ReconstructedState) {
+  state.stats.ragQueryCount++
+  if (event.userId) {
+    state.ragQueries.push({
+      ts: event.ts,
+      userId: event.userId,
+      query: String(payload["query"] ?? "").slice(0, 100),
+      collection: String(payload["collection"] ?? ""),
+      success: !payload["error"],
+    })
+  }
+  state.timeline.push({
+    ts: event.ts,
+    type: event.type,
+    userId: event.userId ?? undefined,
+    summary: `Query: "${String(payload["query"] ?? "").slice(0, 60)}"`,
+  })
+}
+
+function handleError(event: DbEvent, payload: Record<string, unknown>, state: ReconstructedState) {
+  state.errors.push({
+    ts: event.ts,
+    type: event.type,
+    message: String(payload["error"] ?? payload["message"] ?? ""),
+    suggestion: String(payload["suggestion"] ?? ""),
+  })
+  state.timeline.push({
+    ts: event.ts,
+    type: event.type,
+    userId: event.userId ?? undefined,
+    summary: `Error: ${String(payload["error"] ?? payload["message"] ?? "").slice(0, 80)}`,
+  })
+}
+
+function handleUserCreatedOrUpdated(event: DbEvent, payload: Record<string, unknown>, state: ReconstructedState) {
+  if (payload["userId"]) {
+    const uid = Number(payload["userId"])
+    state.users.set(uid, {
+      email: String(payload["email"] ?? ""),
+      role: String(payload["role"] ?? "user"),
+      active: payload["active"] !== false,
+    })
+  }
+}
+
+function handleUserDeleted(event: DbEvent, payload: Record<string, unknown>, state: ReconstructedState) {
+  if (payload["userId"]) {
+    const uid = Number(payload["userId"])
+    const u = state.users.get(uid)
+    if (u) state.users.set(uid, { ...u, active: false })
+  }
+}
+
+function handleDefault(event: DbEvent, payload: Record<string, unknown>, state: ReconstructedState) {
+  state.timeline.push({
+    ts: event.ts,
+    type: event.type,
+    userId: event.userId ?? undefined,
+    summary: JSON.stringify(payload).slice(0, 80),
+  })
+}
+
+type EventHandler = (event: DbEvent, payload: Record<string, unknown>, state: ReconstructedState) => void
+
+const EVENT_HANDLERS: Record<string, EventHandler> = {
+  "auth.login": handleAuthLogin,
+  "rag.query": handleRagQuery,
+  "rag.query_crossdoc": handleRagQuery,
+  "rag.error": handleError,
+  "system.error": handleError,
+  "client.error": handleError,
+  "user.created": handleUserCreatedOrUpdated,
+  "user.updated": handleUserCreatedOrUpdated,
+  "user.deleted": handleUserDeleted,
+}
+
+// ── Función principal ───────────────────────────────────────────────────────
+
 export function reconstructFromEvents(events: DbEvent[]): ReconstructedState {
   const state: ReconstructedState = {
     users: new Map(),
@@ -60,100 +157,14 @@ export function reconstructFromEvents(events: DbEvent[]): ReconstructedState {
   for (const event of events) {
     const payload = event.payload as Record<string, unknown>
 
-    // Actualizar stats
     if (event.level === "ERROR" || event.level === "FATAL") state.stats.errorCount++
     if (event.level === "WARN") state.stats.warnCount++
-    if (event.userId) {
-      if (!state.users.has(event.userId)) state.stats.uniqueUsers++
-    }
+    if (event.userId && !state.users.has(event.userId)) state.stats.uniqueUsers++
 
-    // Procesar por tipo de evento
-    switch (event.type) {
-      case "auth.login":
-        if (event.userId) {
-          state.users.set(event.userId, {
-            email: String(payload["email"] ?? ""),
-            role: String(payload["role"] ?? "user"),
-            active: true,
-            lastAction: `Login a las ${new Date(event.ts).toISOString()}`,
-          })
-        }
-        state.timeline.push({
-          ts: event.ts,
-          type: event.type,
-          userId: event.userId ?? undefined,
-          summary: `Login: ${payload["email"] ?? "unknown"}`,
-        })
-        break
-
-      case "rag.query":
-      case "rag.query_crossdoc":
-        state.stats.ragQueryCount++
-        if (event.userId) {
-          state.ragQueries.push({
-            ts: event.ts,
-            userId: event.userId,
-            query: String(payload["query"] ?? "").slice(0, 100),
-            collection: String(payload["collection"] ?? ""),
-            success: !payload["error"],
-          })
-        }
-        state.timeline.push({
-          ts: event.ts,
-          type: event.type,
-          userId: event.userId ?? undefined,
-          summary: `Query: "${String(payload["query"] ?? "").slice(0, 60)}"`,
-        })
-        break
-
-      case "rag.error":
-      case "system.error":
-      case "client.error":
-        state.errors.push({
-          ts: event.ts,
-          type: event.type,
-          message: String(payload["error"] ?? payload["message"] ?? ""),
-          suggestion: String(payload["suggestion"] ?? ""),
-        })
-        state.timeline.push({
-          ts: event.ts,
-          type: event.type,
-          userId: event.userId ?? undefined,
-          summary: `Error: ${String(payload["error"] ?? payload["message"] ?? "").slice(0, 80)}`,
-        })
-        break
-
-      case "user.created":
-      case "user.updated":
-        if (payload["userId"]) {
-          const uid = Number(payload["userId"])
-          state.users.set(uid, {
-            email: String(payload["email"] ?? ""),
-            role: String(payload["role"] ?? "user"),
-            active: payload["active"] !== false,
-          })
-        }
-        break
-
-      case "user.deleted":
-        if (payload["userId"]) {
-          const uid = Number(payload["userId"])
-          const u = state.users.get(uid)
-          if (u) state.users.set(uid, { ...u, active: false })
-        }
-        break
-
-      default:
-        state.timeline.push({
-          ts: event.ts,
-          type: event.type,
-          userId: event.userId ?? undefined,
-          summary: JSON.stringify(payload).slice(0, 80),
-        })
-    }
+    const handler = EVENT_HANDLERS[event.type] ?? handleDefault
+    handler(event, payload, state)
   }
 
-  // Ordenar timeline por ts descendente (más reciente primero)
   state.timeline.sort((a, b) => b.ts - a.ts)
 
   return state

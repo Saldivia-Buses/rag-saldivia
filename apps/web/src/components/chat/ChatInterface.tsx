@@ -5,8 +5,7 @@ import { Send, ThumbsUp, ThumbsDown, Loader2 } from "lucide-react"
 import type { DbChatSession, DbChatMessage } from "@rag-saldivia/db"
 import { actionAddMessage, actionAddFeedback } from "@/app/actions/chat"
 import { clientLog } from "@rag-saldivia/logger/frontend"
-
-type ChatPhase = "idle" | "streaming" | "done" | "error"
+import { useRagStream } from "@/hooks/useRagStream"
 
 type Message = {
   id?: number
@@ -26,6 +25,15 @@ function parseSessionMessages(session: DbChatSession & { messages?: DbChatMessag
   }))
 }
 
+function updateLastAssistantMessage(messages: Message[], content: string): Message[] {
+  const updated = [...messages]
+  const last = updated[updated.length - 1]
+  if (last?.role === "assistant") {
+    updated[updated.length - 1] = { ...last, content }
+  }
+  return updated
+}
+
 export function ChatInterface({
   session,
   userId,
@@ -35,11 +43,22 @@ export function ChatInterface({
 }) {
   const [messages, setMessages] = useState<Message[]>(() => parseSessionMessages(session))
   const [input, setInput] = useState("")
-  const [phase, setPhase] = useState<ChatPhase>("idle")
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
   const bottomRef = useRef<HTMLDivElement>(null)
-  const abortRef = useRef<AbortController | null>(null)
+  const pendingSourcesRef = useRef<unknown[]>([])
+
+  const { phase, stream, abort } = useRagStream({
+    sessionId: session.id,
+    collection: session.collection,
+    onDelta: (fullContent) => setMessages((prev) => updateLastAssistantMessage(prev, fullContent)),
+    onSources: (sources) => { pendingSourcesRef.current = sources },
+    onError: (message) => {
+      setError(message)
+      setMessages((prev) => updateLastAssistantMessage(prev, `Error: ${message}`))
+      clientLog.error(new Error(message))
+    },
+  })
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -51,134 +70,39 @@ export function ChatInterface({
 
     setInput("")
     setError(null)
-    setPhase("streaming")
-
-    // Guardar mensaje del usuario
-    startTransition(async () => {
-      await actionAddMessage({
-        sessionId: session.id,
-        role: "user",
-        content: query,
-      })
-    })
+    pendingSourcesRef.current = []
 
     const userMsg: Message = { role: "user", content: query }
-    setMessages((prev) => [...prev, userMsg])
-
-    // Placeholder del asistente
     const assistantMsg: Message = { role: "assistant", content: "" }
-    setMessages((prev) => [...prev, assistantMsg])
+    setMessages((prev) => [...prev, userMsg, assistantMsg])
 
-    // Stream
-    abortRef.current = new AbortController()
-    let fullContent = ""
-    let sources: unknown[] = []
+    startTransition(async () => {
+      await actionAddMessage({ sessionId: session.id, role: "user", content: query })
+    })
 
-    try {
-      const res = await fetch("/api/rag/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          messages: [...messages, userMsg].map((m) => ({
-            role: m.role,
-            content: m.content,
-          })),
-          collection_name: session.collection,
-          session_id: session.id,
-          use_knowledge_base: true,
-        }),
-        signal: abortRef.current.signal,
+    const result = await stream([...messages, userMsg])
+    if (!result) return
+
+    clientLog.action("rag.query", { collection: session.collection, sessionId: session.id })
+
+    startTransition(async () => {
+      const saved = await actionAddMessage({
+        sessionId: session.id,
+        role: "assistant",
+        content: result.fullContent,
+        sources: result.sources,
       })
-
-      if (!res.ok) {
-        const data = await res.json().catch(() => ({ error: "Error desconocido" }))
-        throw new Error(data.error ?? `Error ${res.status}`)
-      }
-
-      if (!res.body) throw new Error("No stream")
-
-      const reader = res.body.getReader()
-      const decoder = new TextDecoder()
-
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-
-        const chunk = decoder.decode(value, { stream: true })
-        const lines = chunk.split("\n")
-
-        for (const line of lines) {
-          if (!line.startsWith("data: ")) continue
-          const data = line.slice(6).trim()
-          if (data === "[DONE]") continue
-
-          try {
-            const parsed = JSON.parse(data)
-            const delta = parsed.choices?.[0]?.delta?.content ?? ""
-            if (delta) {
-              fullContent += delta
-              setMessages((prev) => {
-                const updated = [...prev]
-                const last = updated[updated.length - 1]
-                if (last?.role === "assistant") {
-                  updated[updated.length - 1] = { ...last, content: fullContent }
-                }
-                return updated
-              })
-            }
-
-            // Capturar sources si vienen
-            const srcData = parsed.choices?.[0]?.delta?.sources
-            if (srcData) sources = srcData
-          } catch {
-            // Ignorar líneas malformadas
+      if (saved) {
+        setMessages((prev) => {
+          const updated = [...prev]
+          const last = updated[updated.length - 1]
+          if (last?.role === "assistant") {
+            updated[updated.length - 1] = { ...last, id: saved.id, sources: result.sources }
           }
-        }
-      }
-
-      // Guardar respuesta del asistente
-      startTransition(async () => {
-        const saved = await actionAddMessage({
-          sessionId: session.id,
-          role: "assistant",
-          content: fullContent,
-          sources,
+          return updated
         })
-        if (saved) {
-          setMessages((prev) => {
-            const updated = [...prev]
-            const last = updated[updated.length - 1]
-            if (last?.role === "assistant") {
-              updated[updated.length - 1] = { ...last, id: saved.id, sources }
-            }
-            return updated
-          })
-        }
-      })
-
-      setPhase("done")
-      clientLog.action("rag.query", { collection: session.collection, sessionId: session.id })
-    } catch (err) {
-      if (err instanceof Error && err.name === "AbortError") {
-        setPhase("idle")
-        return
       }
-
-      const message = err instanceof Error ? err.message : String(err)
-      setError(message)
-      setPhase("error")
-      clientLog.error(err instanceof Error ? err : new Error(message))
-
-      // Actualizar mensaje del asistente con el error
-      setMessages((prev) => {
-        const updated = [...prev]
-        const last = updated[updated.length - 1]
-        if (last?.role === "assistant") {
-          updated[updated.length - 1] = { ...last, content: `Error: ${message}` }
-        }
-        return updated
-      })
-    }
+    })
   }
 
   async function handleFeedback(messageId: number, rating: "up" | "down") {
@@ -217,7 +141,6 @@ export function ChatInterface({
             >
               <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
 
-              {/* Feedback para mensajes del asistente */}
               {msg.role === "assistant" && msg.id && msg.content && phase !== "streaming" && (
                 <div className="flex gap-2 pt-1 opacity-50 hover:opacity-100 transition-opacity">
                   <button
@@ -281,7 +204,10 @@ export function ChatInterface({
             className="px-4 py-2.5 rounded-xl text-sm font-medium transition-opacity disabled:opacity-40"
             style={{ background: "var(--primary)", color: "var(--primary-foreground)" }}
           >
-            {phase === "streaming" ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+            {phase === "streaming"
+              ? <Loader2 size={16} className="animate-spin" />
+              : <Send size={16} />
+            }
           </button>
         </form>
       </div>
