@@ -114,6 +114,18 @@ await exec(`
     UNIQUE(message_id, user_id)
   );
 
+  -- Historial de colecciones (F2.32)
+  CREATE TABLE IF NOT EXISTS collection_history (
+    id TEXT PRIMARY KEY,
+    collection TEXT NOT NULL,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    action TEXT NOT NULL,
+    filename TEXT,
+    doc_count INTEGER,
+    created_at INTEGER NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS idx_collection_history_collection ON collection_history(collection);
+
   -- Templates de query (F2.28)
   CREATE TABLE IF NOT EXISTS prompt_templates (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

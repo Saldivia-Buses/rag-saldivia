@@ -11,6 +11,11 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Added
 
+- `packages/db/src/schema.ts`: tabla `collection_history` (collection, userId, action, filename, docCount) — 2026-03-25 *(Plan 4 F2.32)*
+- `packages/db/src/queries/collection-history.ts`: `recordIngestionEvent`, `listHistoryByCollection` — 2026-03-25 *(Plan 4 F2.32)*
+- `apps/web/src/workers/ingestion.ts`: registrar en `collection_history` al completar job exitosamente — 2026-03-25 *(Plan 4 F2.32)*
+- `apps/web/src/components/collections/CollectionHistory.tsx`: timeline de ingestas por colección — 2026-03-25 *(Plan 4 F2.32)*
+- `apps/web/src/app/api/collections/[name]/history/route.ts`: endpoint GET para historial de una colección — 2026-03-25 *(Plan 4 F2.32)*
 - `apps/web/src/app/api/admin/knowledge-gaps/route.ts`: detecta respuestas del asistente con baja confianza (< 80 palabras + keywords de incertidumbre), retorna hasta 100 gaps — 2026-03-25 *(Plan 4 F2.31)*
 - `apps/web/src/components/admin/KnowledgeGapsClient.tsx`: tabla de brechas con link a sesión, exportar CSV, botón "Ingestar documentos" — 2026-03-25 *(Plan 4 F2.31)*
 - `apps/web/src/app/(app)/admin/knowledge-gaps/page.tsx`: página `/admin/knowledge-gaps` — 2026-03-25 *(Plan 4 F2.31)*

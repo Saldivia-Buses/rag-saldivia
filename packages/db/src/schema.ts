@@ -171,6 +171,26 @@ export const messageFeedback = sqliteTable(
   })
 )
 
+// ── Collection History ─────────────────────────────────────────────────────
+
+export const collectionHistory = sqliteTable(
+  "collection_history",
+  {
+    id: text("id").primaryKey(), // UUID
+    collection: text("collection").notNull(),
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    action: text("action", { enum: ["added", "removed"] }).notNull(),
+    filename: text("filename"),
+    docCount: integer("doc_count"),
+    createdAt: integer("created_at").notNull(),
+  },
+  (t) => ({
+    collectionIdx: index("idx_collection_history_collection").on(t.collection),
+  })
+)
+
 // ── Prompt Templates ───────────────────────────────────────────────────────
 
 export const promptTemplates = sqliteTable(
@@ -443,6 +463,8 @@ export type DbChatSession = typeof chatSessions.$inferSelect
 export type NewChatSession = typeof chatSessions.$inferInsert
 export type DbChatMessage = typeof chatMessages.$inferSelect
 export type NewChatMessage = typeof chatMessages.$inferInsert
+export type DbCollectionHistory = typeof collectionHistory.$inferSelect
+export type NewCollectionHistory = typeof collectionHistory.$inferInsert
 export type DbPromptTemplate = typeof promptTemplates.$inferSelect
 export type NewPromptTemplate = typeof promptTemplates.$inferInsert
 export type DbSessionShare = typeof sessionShares.$inferSelect
