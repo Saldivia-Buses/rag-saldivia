@@ -9,6 +9,7 @@ import { clientLog } from "@rag-saldivia/logger/frontend"
 import { useRagStream } from "@/hooks/useRagStream"
 import { ThinkingSteps } from "@/components/chat/ThinkingSteps"
 import { FocusModeSelector, useFocusMode } from "@/components/chat/FocusModeSelector"
+import { VoiceInput } from "@/components/chat/VoiceInput"
 
 type Message = {
   id?: number
@@ -217,6 +218,10 @@ export function ChatInterface({
               background: "var(--background)",
               "--tw-ring-color": "var(--ring)",
             } as React.CSSProperties}
+          />
+          <VoiceInput
+            onTranscript={(text) => setInput(text)}
+            disabled={phase === "streaming"}
           />
           <button
             type="submit"
