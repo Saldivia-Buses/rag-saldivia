@@ -12,6 +12,7 @@
  */
 
 import type { EventType, LogLevel, EventSource } from "@rag-saldivia/shared"
+import { writeEvent } from "@rag-saldivia/db"
 import { shouldLog, LEVEL_COLORS, RESET, DIM, BOLD } from "./levels"
 import { getSuggestion } from "./suggestions"
 
@@ -98,31 +99,17 @@ async function writeToFiles(level: LogLevel, line: string): Promise<void> {
   }
 }
 
-// ── Write Event (lazy-load db para evitar circular deps) ───────────────────
-
-let _writeToDb: ((data: {
-  source: EventSource
-  level: LogLevel
-  type: EventType
-  userId?: number | null
-  sessionId?: string | null
-  payload?: Record<string, unknown>
-}) => Promise<void>) | null = null
+// ── Write Event ────────────────────────────────────────────────────────────
 
 async function persistEvent(level: LogLevel, type: EventType, payload: Record<string, unknown>, ctx?: LogContext) {
   try {
-    if (!_writeToDb) {
-      // Lazy-load para evitar dependencias circulares
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const db = await import("@rag-saldivia/db" as any)
-      _writeToDb = db.writeEvent as typeof _writeToDb
-    }
-    const writeFn = _writeToDb
-    await writeFn?.({
+    // userId=0 es el sistema (SYSTEM_API_KEY) — no tiene FK en la tabla users
+    const userId = ctx?.userId != null && ctx.userId > 0 ? ctx.userId : null
+    await writeEvent({
       source: "backend",
       level,
       type,
-      userId: ctx?.userId ?? null,
+      userId,
       sessionId: ctx?.sessionId ?? null,
       payload,
     })

@@ -13,7 +13,8 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@rag-saldivia/shared": "workspace:*"
+    "@rag-saldivia/shared": "workspace:*",
+    "@rag-saldivia/db": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^6.0.0"

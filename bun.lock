@@ -90,6 +90,7 @@
       "name": "@rag-saldivia/logger",
       "version": "0.1.0",
       "dependencies": {
+        "@rag-saldivia/db": "workspace:*",
         "@rag-saldivia/shared": "workspace:*",
       },
       "devDependencies": {
