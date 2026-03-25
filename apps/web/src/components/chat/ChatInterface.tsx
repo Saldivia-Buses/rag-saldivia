@@ -11,6 +11,7 @@ import { ThinkingSteps } from "@/components/chat/ThinkingSteps"
 import { FocusModeSelector, useFocusMode } from "@/components/chat/FocusModeSelector"
 import { VoiceInput } from "@/components/chat/VoiceInput"
 import { ExportSession } from "@/components/chat/ExportSession"
+import { SourcesPanel } from "@/components/chat/SourcesPanel"
 
 type Message = {
   id?: number
@@ -190,6 +191,11 @@ export function ChatInterface({
               }}
             >
               <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+
+              {/* Panel de fuentes — F2.19 */}
+              {msg.role === "assistant" && msg.sources && msg.sources.length > 0 && (
+                <SourcesPanel sources={msg.sources} />
+              )}
 
               {msg.role === "assistant" && msg.content && phase !== "streaming" && (
                 <div className="flex gap-1 pt-1 opacity-0 group-hover:opacity-100 transition-opacity">

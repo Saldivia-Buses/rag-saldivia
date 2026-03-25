@@ -9,6 +9,11 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Added
+
+- `apps/web/src/components/chat/SourcesPanel.tsx`: panel colapsable de fuentes bajo cada respuesta asistente — muestra nombre del doc, fragmento (truncado a 2 líneas), relevance score como badge; visible solo cuando `sources.length > 0` — 2026-03-25 *(Plan 4 F2.19)*
+- `apps/web/src/components/chat/ChatInterface.tsx`: integración de `SourcesPanel` bajo el contenido de cada mensaje asistente — 2026-03-25 *(Plan 4 F2.19)*
+
 ### Changed
 
 - `apps/web/src/components/layout/AppShell.tsx`: reescrito como Server Component puro — delega toda la UI a `AppShellChrome` — 2026-03-25 *(Plan 4 Fase 0d)*
