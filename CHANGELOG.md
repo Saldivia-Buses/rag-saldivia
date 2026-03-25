@@ -11,6 +11,15 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Fixed
 
+- `packages/db/src/queries/areas.ts`: `removeAreaCollection` ignoraba el parámetro `collectionName` en el WHERE — borraba todas las colecciones del área en lugar de solo la especificada; agregado `and(eq(areaId), eq(collectionName))` y actualizado import de `drizzle-orm` — 2026-03-25 *(encontrado con CodeGraphContext MCP, Plan 3 Fase 1a)*
+- `apps/web/src/app/actions/areas.ts`: event types incorrectos en audit log — `actionCreateArea` emitía `"collection.created"`, `actionUpdateArea` emitía `"user.updated"`, `actionDeleteArea` emitía `"collection.deleted"`; corregidos a `"area.created"`, `"area.updated"`, `"area.deleted"` respectivamente — 2026-03-25 *(Plan 3 Fase 2a)*
+
+### Added
+
+- `packages/db/src/__tests__/areas.test.ts`: 8 tests de queries de áreas contra SQLite en memoria — `removeAreaCollection` (selectiva, cross-área, inexistente, última), `setAreaCollections` (reemplaza, vacía), `addAreaCollection` (default read, upsert) — 2026-03-25 *(Plan 3 Fase 1a)*
+
+### Fixed
+
 - `apps/web/src/app/api/auth/login/route.ts`: login con cuenta desactivada retornaba 401 en lugar de 403 — `verifyPassword` devuelve null para inactivos sin distinguir de contraseña incorrecta; agregado `getUserByEmail` check previo para detectar cuenta inactiva — 2026-03-25 *(encontrado en Fase 6e)*
 - `apps/web/src/app/api/admin/db/reset/route.ts` y `seed/route.ts`: corregir errores de type-check (initDb inexistente, bcrypt-ts no disponible, null check en insert) — 2026-03-25
 - `apps/web/src/lib/auth/jwt.ts`: agregar `iat` y `exp` al objeto retornado desde headers del middleware — 2026-03-25

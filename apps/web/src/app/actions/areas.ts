@@ -25,7 +25,7 @@ export async function actionListAreas() {
 export async function actionCreateArea(name: string, description?: string) {
   const admin = await requireAdmin()
   const area = await createArea(name, description)
-  log.info("collection.created", { name, description }, { userId: admin.id })
+  log.info("area.created", { name, description }, { userId: admin.id })
   revalidatePath("/admin/areas")
   revalidatePath("/admin/permissions")
   return area
@@ -34,7 +34,7 @@ export async function actionCreateArea(name: string, description?: string) {
 export async function actionUpdateArea(id: number, data: { name?: string; description?: string }) {
   const admin = await requireAdmin()
   const updated = await updateArea(id, data)
-  log.info("user.updated", { areaId: id, changes: data }, { userId: admin.id })
+  log.info("area.updated", { areaId: id, changes: data }, { userId: admin.id })
   revalidatePath("/admin/areas")
   return updated
 }
@@ -49,7 +49,7 @@ export async function actionDeleteArea(id: number) {
   }
 
   await deleteArea(id)
-  log.info("collection.deleted", { areaId: id }, { userId: admin.id })
+  log.info("area.deleted", { areaId: id }, { userId: admin.id })
   revalidatePath("/admin/areas")
   revalidatePath("/admin/permissions")
 }

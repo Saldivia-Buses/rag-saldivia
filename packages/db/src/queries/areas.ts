@@ -2,7 +2,7 @@
  * Queries de áreas.
  */
 
-import { eq } from "drizzle-orm"
+import { and, eq } from "drizzle-orm"
 import { getDb } from "../connection"
 import { areas, areaCollections, userAreas } from "../schema"
 
@@ -86,6 +86,9 @@ export async function removeAreaCollection(areaId: number, collectionName: strin
   await db
     .delete(areaCollections)
     .where(
-      eq(areaCollections.areaId, areaId)
+      and(
+        eq(areaCollections.areaId, areaId),
+        eq(areaCollections.collectionName, collectionName)
+      )
     )
 }
