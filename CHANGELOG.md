@@ -92,12 +92,17 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 - `scripts/link-libsql.sh`: script que crea symlinks de @libsql en apps/web/node_modules para WSL2 — 2026-03-24
 - `scripts/test-login-final.sh`: script de test de los endpoints de auth — 2026-03-24
 - `docs/plans/ultra-optimize-plan2-testing.md`: plan de testing granular en 7 fases creado — 2026-03-24
+- `apps/web/src/types/globals.d.ts`: declaración de módulo `*.css` para permitir `import "./globals.css"` como side-effect sin error TS2882 — 2026-03-24
 - `apps/web/src/lib/auth/__tests__/jwt.test.ts`: Fase 1a/1b — 17 tests: createJwt, verifyJwt (token inválido/firmado mal/expirado), extractClaims (cookie/header/sin token), makeAuthCookie (HttpOnly/Secure en prod), RBAC (getRequiredRole, canAccessRoute) — 2026-03-24
 - `packages/db/src/__tests__/users.test.ts`: Fase 1c — 16 tests contra SQLite en memoria: createUser (email normalizado/rol/dup lanza error), verifyPassword (correcta/incorrecta/inexistente/inactivo), listUsers (vacío/múltiples/campos), updateUser (nombre/rol/desactivar), deleteUser (elimina usuario + CASCADE en user_areas) — 2026-03-24
 - `packages/logger/src/__tests__/logger.test.ts`: Fase 1e — 24 tests: shouldLog por nivel (5), log.info/warn/error/debug/fatal/request no lanzan (7), output contiene tipo de evento (3), reconstructFromEvents vacío/orden/stats/usuarios/queries/errores (6), formatTimeline (3) — 2026-03-24
 
 ### Changed
 
+- `apps/web/tsconfig.json`: excluir `**/__tests__/**` y `**/*.test.ts` del type-check — `bun:test` y asignación a `NODE_ENV` no son válidos en el contexto de `tsc` — 2026-03-24
+- `package.json`: agregado `overrides: { "drizzle-orm": "^0.38.0" }` para forzar una sola instancia en la resolución de tipos — 2026-03-24
+- `apps/web/package.json`: agregado `drizzle-orm` como dependencia directa para que TypeScript resuelva los tipos desde la misma instancia que `packages/db` — 2026-03-24
+- `.gitignore`: agregado `*.tsbuildinfo` — 2026-03-24
 - `package.json`: agregado campo `packageManager: bun@1.3.11` requerido por Turborepo 2.x — 2026-03-24
 - `packages/db/package.json`: eliminado `type: module` para compatibilidad con webpack CJS — 2026-03-24
 - `packages/shared/package.json`: eliminado `type: module` para compatibilidad con webpack CJS — 2026-03-24
@@ -121,6 +126,13 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 - `apps/web/src/lib/auth/__tests__/jwt.test.ts`: test `makeAuthCookie incluye Secure en producción` referenciaba `validClaims` definido en otro bloque `describe` — reemplazado por claims inline en el test — 2026-03-24 *(encontrado en Fase 1b)*
 - `packages/logger/src/__tests__/logger.test.ts`: mismo patrón `await import` dentro de callbacks `describe` (×3 bloques) — todos los imports movidos al nivel del módulo — 2026-03-24 *(encontrado en Fase 1e)*
 - `packages/logger/src/__tests__/logger.test.ts`: tests de formato JSON en producción asumían que cambiar `NODE_ENV` post-import afectaría el logger, pero `isDev` se captura en `createLogger()` al momento del import — tests rediseñados para verificar el output directamente y testear `formatJson` con datos conocidos — 2026-03-24 *(encontrado en Fase 1e)*
+- `packages/db/src/queries/users.ts`: reemplazado `Bun.hash()` con `crypto.createHash('sha256')` — `Bun` global no disponible en el contexto `tsc` de `apps/web`; `crypto` nativo es compatible con Node.js y Bun — 2026-03-24
+- `apps/web/src/workers/ingestion.ts`: reemplazado `Bun.file()` / `file.exists()` / `file.arrayBuffer()` con `fs/promises` `access` + `readFile` — mismo motivo que `Bun.hash` — 2026-03-24
+- `apps/web/src/components/audit/AuditTable.tsx`: eliminado `import chalk from "chalk"` — importado pero nunca usado; chalk es un paquete CLI y no pertenece a un componente React — 2026-03-24
+- `apps/web/src/lib/auth/current-user.ts`: `redirect` de `next/navigation` importado estáticamente en lugar de con `await import()` dinámico — TypeScript infiere correctamente que `redirect()` retorna `never`, resolviendo el error TS2322 de `CurrentUser | null` — 2026-03-24
+- `packages/logger/src/backend.ts`: corregidos tres errores de tipos: (1) tipo de `_writeToFile` ajustado a `LogFilename` literal union; (2) TS2721 "cannot invoke possibly null" resuelto capturando en variable local antes del `await`; (3) import dinámico de `@rag-saldivia/db` casteado para evitar TS2307 — 2026-03-24
+- `packages/logger/src/blackbox.ts`: eliminado `import type { DbEvent } from "@rag-saldivia/db"` — reemplazado por definición inline para cortar la dependencia `logger → db` que causaba TS2307 en el contexto de `apps/web` — 2026-03-24
+- `.husky/pre-push`: reemplazado `bun` por ruta dinámica `$(which bun || echo /home/enzo/.bun/bin/bun)` — el PATH de husky en WSL2 no incluye `~/.bun/bin/` y el hook bloqueaba el push — 2026-03-24
 
 - DB: migrado de `better-sqlite3` (requería compilación nativa con node-gyp, falla en Bun) a `@libsql/client` (JS puro, sin compilación, compatible con Bun y Node.js) — 2026-03-24
 - DB: creado `packages/db/src/init.ts` con SQL directo (sin drizzle-kit) para inicialización en entornos sin build tools — 2026-03-24
