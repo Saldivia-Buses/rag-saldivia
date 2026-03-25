@@ -4,6 +4,27 @@ import { useEffect, useRef, useState } from "react"
 import { Mic, MicOff } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
+// Web Speech API no tiene tipos en el DOM estándar de TypeScript
+// Se declaran localmente para evitar errores de type-check
+type SpeechRecognitionResult = { transcript: string }
+type SpeechRecognitionResultList = SpeechRecognitionResult[][]
+type SpeechRecognitionEventLocal = { results: SpeechRecognitionResultList }
+type SpeechRecognitionInstance = {
+  lang: string
+  interimResults: boolean
+  continuous: boolean
+  start: () => void
+  stop: () => void
+  onresult: ((event: SpeechRecognitionEventLocal) => void) | null
+  onend: (() => void) | null
+  onerror: (() => void) | null
+}
+type SpeechRecognitionConstructor = new () => SpeechRecognitionInstance
+type WindowWithSpeech = Window & {
+  SpeechRecognition?: SpeechRecognitionConstructor
+  webkitSpeechRecognition?: SpeechRecognitionConstructor
+}
+
 type Props = {
   onTranscript: (text: string) => void
   disabled?: boolean
@@ -18,7 +39,7 @@ function isSpeechSupported(): boolean {
 export function VoiceInput({ onTranscript, disabled }: Props) {
   const [supported, setSupported] = useState(false)
   const [listening, setListening] = useState(false)
-  const recognitionRef = useRef<SpeechRecognition | null>(null)
+  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null)
 
   useEffect(() => {
     setSupported(isSpeechSupported())
@@ -33,12 +54,8 @@ export function VoiceInput({ onTranscript, disabled }: Props) {
       return
     }
 
-    const SpeechRecognitionAPI =
-      (window as Window & { SpeechRecognition?: typeof SpeechRecognition; webkitSpeechRecognition?: typeof SpeechRecognition })
-        .SpeechRecognition ??
-      (window as Window & { SpeechRecognition?: typeof SpeechRecognition; webkitSpeechRecognition?: typeof SpeechRecognition })
-        .webkitSpeechRecognition
-
+    const w = window as WindowWithSpeech
+    const SpeechRecognitionAPI = w.SpeechRecognition ?? w.webkitSpeechRecognition
     if (!SpeechRecognitionAPI) return
 
     const recognition = new SpeechRecognitionAPI()
@@ -46,9 +63,10 @@ export function VoiceInput({ onTranscript, disabled }: Props) {
     recognition.interimResults = true
     recognition.continuous = false
 
-    recognition.onresult = (event: SpeechRecognitionEvent) => {
-      const transcript = Array.from(event.results)
-        .map((r) => r[0]?.transcript ?? "")
+    recognition.onresult = (event: SpeechRecognitionEventLocal) => {
+      const transcript = event.results
+        .flat()
+        .map((r) => r.transcript)
         .join("")
       onTranscript(transcript)
     }
