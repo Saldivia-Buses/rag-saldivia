@@ -16,6 +16,8 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 ### Added
 
 - `apps/web/src/components/chat/ThinkingSteps.tsx`: steps colapsables del proceso de razonamiento visibles durante streaming — simulación UI-side con timing (paso 1 inmediato, paso 2 a 700ms, paso 3 a 1500ms); se auto-colapsa 1.8s después de que el stream termina; cuando el RAG server exponga eventos SSE de tipo `thinking`, se conectan en `useRagStream` — 2026-03-25 *(Plan 4 F1.5)*
+- `apps/web/src/hooks/useZenMode.ts`: hook `useZenMode()` — toggle con `Cmd+Shift+Z`, cierre con `Esc` — 2026-03-25 *(Plan 4 F1.11)*
+- `apps/web/src/components/layout/AppShellChrome.tsx`: modo Zen oculta NavRail y SecondaryPanel; badge "ESC para salir" en `fixed bottom-4 right-4` — 2026-03-25 *(Plan 4 F1.11)*
 - `packages/db/src/schema.ts`: tabla `saved_responses` (id, userId, messageId nullable, content, sessionTitle, createdAt) — 2026-03-25 *(Plan 4 F1.10)*
 - `packages/db/src/queries/saved.ts`: `saveResponse`, `unsaveResponse`, `unsaveByMessageId`, `listSavedResponses`, `isSaved` — 2026-03-25 *(Plan 4 F1.10)*
 - `packages/db/src/init.ts`: SQL de creación de tabla `saved_responses` con índice — 2026-03-25 *(Plan 4 F1.10)*
