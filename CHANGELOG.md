@@ -11,16 +11,25 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Changed
 
+- `apps/web/src/components/layout/AppShell.tsx`: reescrito como Server Component puro — delega toda la UI a `AppShellChrome` — 2026-03-25 *(Plan 4 Fase 0d)*
+
+### Changed
+
 - `apps/web/src/app/globals.css`: design tokens reemplazados con paleta crema-índigo — tokens canónicos `--bg #FAFAF9`, `--sidebar-bg #F2F0F0`, `--nav-bg #18181B`, `--accent #7C6AF5`/`#9D8FF8` (dark), `--fg #18181B`/`#FAFAF9` (dark); aliases de compatibilidad apuntan a los canónicos vía `var()` para que los componentes existentes no requieran cambios; dark mode migrado de `@media prefers-color-scheme` a clase `.dark` en `<html>` (prerequisito de next-themes); directiva `@theme` agrega utilidades Tailwind para los nuevos tokens; agregado `@media print` para export de sesión (Fase 1) — 2026-03-25 *(Plan 4 Fase 0a)*
 
 ### Added
 
+- `apps/web/src/components/layout/NavRail.tsx`: barra de íconos 44px, fondo `var(--nav-bg)` siempre oscuro, items con `Tooltip` de shadcn, ThemeToggle + logout al fondo, active state via `usePathname()` — 2026-03-25 *(Plan 4 Fase 0d)*
+- `apps/web/src/components/layout/AppShellChrome.tsx`: Client Component wrapper de la shell — concentra estado de UI (zen mode, notificaciones, hotkeys en fases siguientes) — 2026-03-25 *(Plan 4 Fase 0d)*
+- `apps/web/src/components/layout/SecondaryPanel.tsx`: panel contextual 168px — renderiza ChatPanel en `/chat`, AdminPanel en `/admin`, nada en otras rutas — 2026-03-25 *(Plan 4 Fase 0d)*
+- `apps/web/src/components/layout/panels/ChatPanel.tsx`: panel de sesiones para rutas `/chat` con slot para SessionList (Fase 1) — 2026-03-25 *(Plan 4 Fase 0d)*
+- `apps/web/src/components/layout/panels/AdminPanel.tsx`: nav admin con secciones "Gestión" y "Observabilidad" (extensible para Fase 2 sin rediseño) — 2026-03-25 *(Plan 4 Fase 0d)*
 - `apps/web/src/components/providers.tsx`: ThemeProvider de next-themes (`attribute="class"`, `defaultTheme="light"`, `storageKey="rag-theme"`) — dark mode via clase `.dark` en `<html>` con script anti-FOUC automático — 2026-03-25 *(Plan 4 Fase 0c)*
 - `apps/web/src/components/ui/theme-toggle.tsx`: botón Sun/Moon que alterna light/dark usando `useTheme()` de next-themes — 2026-03-25 *(Plan 4 Fase 0c)*
 - `apps/web/components.json`: configuración shadcn/ui (style default, base color stone, Tailwind v4, paths `@/components/ui` y `@/lib/utils`) — 2026-03-25 *(Plan 4 Fase 0b)*
 - `apps/web/src/lib/utils.ts`: función `cn()` de `clsx + tailwind-merge` — 2026-03-25 *(Plan 4 Fase 0b)*
 - `apps/web/src/components/ui/`: 13 componentes shadcn instalados — button, input, textarea, dialog, popover, table, badge, avatar, separator, tooltip, sheet, sonner, command (cmdk) — 2026-03-25 *(Plan 4 Fase 0b)*
-- `apps/web/src/app/layout.tsx`: `<Toaster />` de sonner agregado al layout raíz — 2026-03-25 *(Plan 4 Fase 0b)*; `<Providers>` de next-themes agregado + `suppressHydrationWarning` en `<html>` — 2026-03-25 *(Plan 4 Fase 0c)*
+- `apps/web/src/app/layout.tsx`: `<Toaster />` de sonner + `<Providers>` de next-themes + `suppressHydrationWarning` en `<html>` — 2026-03-25 *(Plan 4 Fase 0b/0c)*
 
 - `docs/workflows.md`: nuevo documento que centraliza los 7 flujos de trabajo del proyecto (desarrollo local, testing, git/commits, planificación, features nuevas, deploy, debugging con black box) — 2026-03-25
 
