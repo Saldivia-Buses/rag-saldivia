@@ -23,7 +23,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     MicrosoftEntraID({
       clientId: process.env["AZURE_AD_CLIENT_ID"] ?? "",
       clientSecret: process.env["AZURE_AD_CLIENT_SECRET"] ?? "",
-      tenantId: process.env["AZURE_AD_TENANT_ID"] ?? "common",
+      issuer: `https://login.microsoftonline.com/${process.env["AZURE_AD_TENANT_ID"] ?? "common"}/v2.0`,
     }),
   ],
   callbacks: {
@@ -91,8 +91,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
 
     async session({ session, token }) {
-      ;(session as Record<string, unknown>).systemUserId = token.systemUserId
-      ;(session as Record<string, unknown>).systemRole = token.systemRole
+      const s = session as unknown as Record<string, unknown>
+      s.systemUserId = token.systemUserId
+      s.systemRole = token.systemRole
       return session
     },
   },

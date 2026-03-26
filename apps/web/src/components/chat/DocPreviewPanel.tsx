@@ -25,21 +25,18 @@ export function DocPreviewPanel({ documentName, highlightText, onClose }: Props)
   const [pdfAvailable, setPdfAvailable] = useState<boolean | null>(null)
   const [numPages, setNumPages] = useState<number>(0)
   const [currentPage, setCurrentPage] = useState(1)
-  const [PdfComponents, setPdfComponents] = useState<{
-    Document: React.ComponentType<{ file: string; onLoadSuccess: (p: { numPages: number }) => void; onLoadError: () => void }>
-    Page: React.ComponentType<{ pageNumber: number; width: number }>
-  } | null>(null)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [PdfComponents, setPdfComponents] = useState<{ Document: any; Page: any } | null>(null)
 
   const open = !!documentName
 
   // Carga dinámica de react-pdf solo en el browser
   if (open && pdfAvailable === null && typeof window !== "undefined") {
-    import("react-pdf").then(({ Document, Page }) => {
-      // Configurar worker de PDF.js
-      import("react-pdf").then((mod) => {
+    import("react-pdf").then((mod) => {
+      try {
         mod.pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${mod.pdfjs.version}/build/pdf.worker.min.mjs`
-      }).catch(() => {})
-      setPdfComponents({ Document, Page })
+      } catch { /* ignorar */ }
+      setPdfComponents({ Document: mod.Document, Page: mod.Page })
     }).catch(() => {
       setPdfAvailable(false)
     })
@@ -88,7 +85,7 @@ export function DocPreviewPanel({ documentName, highlightText, onClose }: Props)
             <div className="flex flex-col items-center py-4 px-2 gap-4">
               <PdfComponents.Document
                 file={pdfUrl}
-                onLoadSuccess={({ numPages: n }) => { setNumPages(n); setPdfAvailable(true) }}
+                onLoadSuccess={({ numPages: n }: { numPages: number }) => { setNumPages(n); setPdfAvailable(true) }}
                 onLoadError={() => setPdfAvailable(false)}
               >
                 <PdfComponents.Page

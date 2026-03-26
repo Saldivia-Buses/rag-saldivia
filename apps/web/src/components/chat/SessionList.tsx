@@ -255,7 +255,7 @@ export function SessionList({ sessions }: { sessions: DbChatSession[] }) {
                       <MessageSquare size={14} className="shrink-0 opacity-60" />
                       <span className="flex-1 truncate">{session.title}</span>
                       {(session as DbChatSession & { forkedFrom?: string | null }).forkedFrom && (
-                        <GitBranch size={11} className="shrink-0 opacity-40" title="Sesión bifurcada" />
+                        <span title="Sesión bifurcada"><GitBranch size={11} className="shrink-0 opacity-40" /></span>
                       )}
                       <button
                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowTagInput(showTagInput === session.id ? null : session.id) }}
