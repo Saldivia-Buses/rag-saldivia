@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "test": "bun test src/lib",
+    "test:coverage": "bun test src/lib --coverage",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {

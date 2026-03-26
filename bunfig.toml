@@ -1,0 +1,9 @@
+[test]
+# Activar cobertura con: bun test --coverage
+# El threshold se verifica solo cuando --coverage está presente.
+#
+# 0.80 durante Fase 2 (estado actual no alcanza 0.95 todavía).
+# Sube a 0.90 al completar Plan 5 Fase 3 (packages/db).
+# Sube a 0.95 al completar Plan 5 Fase 4 (lib/ y hooks/).
+coverageThreshold = 0.80
+coverageSkipTestFiles = true

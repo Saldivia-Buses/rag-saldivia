@@ -7,7 +7,8 @@
   },
   "scripts": {
     "type-check": "tsc --noEmit",
-    "test": "bun test src/__tests__"
+    "test": "bun test src/__tests__",
+    "test:coverage": "bun test src/__tests__ --coverage"
   },
   "dependencies": {
     "zod": "^3.25.0"

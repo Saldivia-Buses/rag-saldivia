@@ -14,6 +14,13 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 #### Added
 - `docs/plans/ultra-optimize-plan5-testing-foundation.md`: plan de 5 fases para llevar cobertura a 95% en `packages/*` y `apps/web/src/lib/`, con enforcement en CI — 2026-03-26
 - `docs/decisions/006-testing-strategy.md`: ADR que codifica metas de cobertura por capa, matriz "tipo de código → test requerido", y enforcement en CI — 2026-03-26 *(Plan 5 F1)*
+- `bunfig.toml`: configuración de coverage con `coverageThreshold = 0.80` (sube a 0.95 al completar F3/F4) — 2026-03-26 *(Plan 5 F2)*
+
+#### Changed
+- `package.json` raíz: script `test:coverage` vía Turborepo — 2026-03-26 *(Plan 5 F2)*
+- `packages/*/package.json` + `apps/web/package.json`: script `test:coverage` con `--coverage` — 2026-03-26 *(Plan 5 F2)*
+- `turbo.json`: task `test:coverage` con outputs `coverage/**` — 2026-03-26 *(Plan 5 F2)*
+- `.github/workflows/ci.yml`: nuevo job `coverage` que corre `bun run test:coverage` en PRs; job `test` separado para pushes rápidos — 2026-03-26 *(Plan 5 F2)*
 
 #### Changed
 - `.cursor/skills/rag-testing/SKILL.md`: reescrito con la regla de oro, matriz completa de tests requeridos, metas por capa, tabla de estado de cobertura — 2026-03-26 *(Plan 5 F1)*
