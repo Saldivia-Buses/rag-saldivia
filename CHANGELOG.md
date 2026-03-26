@@ -11,6 +11,10 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Added
 
+- `packages/db/src/schema.ts`: tabla `user_memory` (key, value, source explicit/inferred, UNIQUE per user+key) — 2026-03-25 *(Plan 4 F3.44)*
+- `packages/db/src/queries/memory.ts`: `setMemory` (upsert), `getMemory`, `deleteMemory`, `getMemoryAsContext` — 2026-03-25 *(Plan 4 F3.44)*
+- `apps/web/src/app/api/rag/generate/route.ts`: inyección de memoria del usuario como system message — 2026-03-25 *(Plan 4 F3.44)*
+- `apps/web/src/app/(app)/settings/memory/page.tsx`: UI para ver/agregar/eliminar preferencias de memoria — 2026-03-25 *(Plan 4 F3.44)*
 - `packages/db/src/schema.ts`: campo `forked_from` en `chat_sessions` (TEXT nullable, sin FK circular en Drizzle) — 2026-03-25 *(Plan 4 F3.43)*
 - `apps/web/src/app/actions/chat.ts`: Server Action `actionForkSession` — copia sesión y mensajes hasta el punto indicado, setea `forked_from` — 2026-03-25 *(Plan 4 F3.43)*
 - `apps/web/src/components/chat/ChatInterface.tsx`: botón `GitBranch` en mensajes del asistente para bifurcar desde ese punto — 2026-03-25 *(Plan 4 F3.43)*

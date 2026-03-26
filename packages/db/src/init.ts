@@ -114,6 +114,18 @@ await exec(`
     UNIQUE(message_id, user_id)
   );
 
+  -- Memoria de usuario (F3.44)
+  CREATE TABLE IF NOT EXISTS user_memory (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    key TEXT NOT NULL,
+    value TEXT NOT NULL,
+    source TEXT NOT NULL DEFAULT 'explicit',
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
+    UNIQUE(user_id, key)
+  );
+
   -- Proyectos (F3.41)
   CREATE TABLE IF NOT EXISTS projects (
     id TEXT PRIMARY KEY,

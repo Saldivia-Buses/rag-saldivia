@@ -196,6 +196,26 @@ export const webhooks = sqliteTable(
   })
 )
 
+// ── User Memory ────────────────────────────────────────────────────────────
+
+export const userMemory = sqliteTable(
+  "user_memory",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    key: text("key").notNull(),
+    value: text("value").notNull(),
+    source: text("source", { enum: ["explicit", "inferred"] }).notNull().default("explicit"),
+    createdAt: integer("created_at").notNull(),
+    updatedAt: integer("updated_at").notNull(),
+  },
+  (t) => ({
+    uniqueKey: uniqueIndex("idx_user_memory_unique").on(t.userId, t.key),
+  })
+)
+
 // ── Projects ───────────────────────────────────────────────────────────────
 
 export const projects = sqliteTable(
@@ -579,6 +599,7 @@ export type DbChatMessage = typeof chatMessages.$inferSelect
 export type NewChatMessage = typeof chatMessages.$inferInsert
 export type DbWebhook = typeof webhooks.$inferSelect
 export type NewWebhook = typeof webhooks.$inferInsert
+export type DbUserMemory = typeof userMemory.$inferSelect
 export type DbProject = typeof projects.$inferSelect
 export type NewProject = typeof projects.$inferInsert
 export type DbProjectSession = typeof projectSessions.$inferSelect
