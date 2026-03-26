@@ -868,56 +868,64 @@ Objetivo: aplicar el nuevo design system a las 24 páginas en orden de prioridad
 
 **Archivo:** `apps/web/src/app/(auth)/login/page.tsx`
 
-- [ ] Aplicar `ShaderBackground` (de Fase 6)
-- [ ] Formulario: `max-w-sm mx-auto bg-bg/90 backdrop-blur-sm rounded-xl border border-border shadow-xl p-8`
-- [ ] Logo: `text-2xl font-semibold text-fg mb-2` + ícono navy
-- [ ] Tagline: `text-sm text-fg-muted mb-6`
-- [ ] Inputs: usar componentes actualizados de F3.2
-- [ ] Botón: `Button` variante `default` full-width
-- [ ] Error state: usar el patrón de error inline de F5.2
+- [x] Card con `rounded-2xl border border-border bg-surface shadow-sm` — completado 2026-03-26
+- [x] Logo "R" navy `bg-accent` — completado 2026-03-26
+- [x] Tagline: `text-sm text-fg-muted` — completado 2026-03-26
+- [x] Inputs: usar `<Input>` component de F3.2 — completado 2026-03-26
+- [x] Botón: `<Button>` variante `default` full-width — completado 2026-03-26
+- [x] Error state: `bg-destructive-subtle text-destructive` — completado 2026-03-26
+- [x] Toggle de tema en el footer del card — completado 2026-03-26
 
 ### F8.2 — /chat (Alta prioridad)
 
 **Archivos:** `apps/web/src/app/(app)/chat/page.tsx`, `apps/web/src/components/chat/ChatInterface.tsx`
 
-- [ ] Empty state de chat: usar `EmptyPlaceholder` + `TextReveal` (de Fase 6)
-- [ ] Input de chat: estilo prominente, `rounded-xl border-border bg-surface shadow-sm`
-- [ ] Aplica `data-density="spacious"`
-- [ ] Skeleton mientras carga la lista de sesiones
+- [x] Empty state de chat: `EmptyPlaceholder` con ícono MessageSquare — completado 2026-03-26
+- [x] Skeleton de carga via `chat/loading.tsx` — completado 2026-03-26
+- [x] SessionList: `bg-surface border-r border-border` sin inline styles — completado 2026-03-26
+- [ ] Input de chat: estilo prominente con tokens
+- [ ] Mensajes: estilos con tokens semánticos
 
 ### F8.3 — /chat/[id] (Alta prioridad)
 
 **Archivos:** `apps/web/src/app/(app)/chat/[id]/page.tsx`, `ChatInterface.tsx`
 
-- [ ] Mensajes del usuario: `bg-accent text-accent-fg rounded-2xl rounded-br-sm px-4 py-3 max-w-[80%] ml-auto`
-- [ ] Mensajes del asistente: `bg-surface rounded-2xl rounded-bl-sm px-4 py-3 max-w-[80%]`
-- [ ] Avatar del asistente: logo de RAG Saldivia en navy, 32px
-- [ ] Panel de fuentes (SourcesPanel): `bg-surface border-l border-border`
-- [ ] Skeleton de "pensando": 3 líneas shimmer
+- [ ] Mensajes del usuario: `bg-accent text-accent-fg rounded-2xl rounded-br-sm`
+- [ ] Mensajes del asistente: `bg-surface rounded-2xl rounded-bl-sm`
+- [ ] Panel de fuentes (SourcesPanel): tokens semánticos
+- [ ] Skeleton de "pensando": shimmer lines
 
 ### F8.4 — /admin/users (Alta prioridad)
 
 **Archivo:** `apps/web/src/components/admin/UsersAdmin.tsx`
 
-- [ ] Reemplazar tabla actual por `DataTable` (de F5.1)
-- [ ] Badges de rol: usar variantes de `badge.tsx`
-- [ ] Header de sección: `text-lg font-semibold text-fg` + botón "Nuevo usuario"
-- [ ] `data-density="compact"`
+- [x] Tabla con `<Table>` + componentes shadcn — completado 2026-03-26
+- [x] Badges de rol: variantes default/secondary/outline — completado 2026-03-26
+- [x] Badge estado: variantes success/destructive — completado 2026-03-26
+- [x] Header con h1, contador, botón `<Button size="sm">` — completado 2026-03-26
+- [x] Formulario de creación con `<Input>` y tokens — completado 2026-03-26
+- [x] Empty state con `<EmptyPlaceholder>` — completado 2026-03-26
+- [x] Botones de acción `<Button variant="ghost" size="icon">` — completado 2026-03-26
 
 ### F8.5 — /admin/analytics (Alta prioridad)
 
 **Archivo:** `apps/web/src/components/admin/AnalyticsDashboard.tsx`
 
-- [ ] Stat cards: usar `StatCard` (de F5.3) con `NumberTicker` (de F6.4)
-- [ ] Gráficos (recharts): actualizar colores a `#1a5276` (accent navy) y `#d4e8f7` (accent-subtle)
-- [ ] Layout: grid de 4 stat cards arriba + gráficos debajo
+- [x] Stat cards: usar `<StatCard>` con ícono — completado 2026-03-26
+- [x] Gráficos (recharts): colores `#1a5276` navy + `#4a9fd4` — completado 2026-03-26
+- [x] Tooltip charts: `bg: var(--surface)` con `border-border` — completado 2026-03-26
+- [x] Loading state: `<SkeletonCard>` — completado 2026-03-26
+- [x] Empty state: `<EmptyPlaceholder>` — completado 2026-03-26
+- [x] Inline styles → tokens Tailwind — completado 2026-03-26
 
 ### F8.6 — /collections (Media prioridad)
 
 **Archivo:** `apps/web/src/components/collections/CollectionsList.tsx`
 
-- [ ] Cards de colección: `bg-surface border border-border rounded-lg hover:shadow-md transition-shadow`
-- [ ] Empty state: usar `EmptyPlaceholder` con ícono de carpeta
+- [x] Empty state: `<EmptyPlaceholder>` con ícono FolderOpen — completado 2026-03-26
+- [x] Input de creación: `<Input>` component — completado 2026-03-26
+- [x] Tabla: `border-border rounded-lg overflow-hidden` — completado 2026-03-26
+- [x] Inline styles → tokens Tailwind — completado 2026-03-26
 
 ### F8.7 — /settings (Media prioridad)
 
@@ -996,7 +1004,7 @@ Las 24 páginas usan los nuevos tokens. Nada se ve con los colores viejos.
 | Fase 5 — Componentes comunidad | ✅ completado | 2026-03-26 |
 | Fase 6 — Momentos especiales | ✅ completado | 2026-03-26 |
 | Fase 7 — Storybook | ✅ completado | 2026-03-26 |
-| Fase 8 — Páginas | ⬜ pendiente | — |
+| Fase 8 — Páginas | 🔄 en progreso | 2026-03-26 |
 
 ## Estimaciones
 

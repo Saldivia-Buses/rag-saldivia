@@ -9,6 +9,15 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Plan 7 — Design System (F8 en progreso)
+
+#### Changed (F8 — Páginas)
+- `apps/web/src/components/admin/UsersAdmin.tsx`: rediseño completo — `<Table>` shadcn, badges success/destructive/secondary, formulario con `<Input>`, empty state, botones `<Button variant="ghost">`, tokens Tailwind, sin inline styles — 2026-03-26 *(Plan 7 F8.4)*
+- `apps/web/src/components/admin/AnalyticsDashboard.tsx`: `<StatCard>`, gráficos con colores navy, tooltips con tokens CSS, loading skeleton, empty state, inline styles eliminados — 2026-03-26 *(Plan 7 F8.5)*
+- `apps/web/package.json`: react 19.2.4, react-dom 19.2.4, tailwindcss 4.2.2, typescript 6.0.2, @tailwindcss/postcss 4.2.2 — 2026-03-26 *(chore deps)*
+
+---
+
 ### Plan 7 — Design System (en progreso)
 
 #### Added
