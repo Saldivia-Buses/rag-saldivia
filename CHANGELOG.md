@@ -11,6 +11,10 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Added
 
+- `apps/web/src/app/api/extract/route.ts`: extracción estructurada — itera docs de la colección, envía prompt al RAG para extraer campos, retorna JSON — modo mock disponible — 2026-03-25 *(Plan 4 F3.50)*
+- `apps/web/src/components/extract/ExtractionWizard.tsx`: wizard 3 pasos (colección → campos → resultados), tabla exportable como CSV — 2026-03-25 *(Plan 4 F3.50)*
+- `apps/web/src/app/(app)/extract/page.tsx`: página `/extract` accesible para todos los usuarios — 2026-03-25 *(Plan 4 F3.50)*
+- `apps/web/src/components/layout/NavRail.tsx`: ícono `Table2` para `/extract` — 2026-03-25 *(Plan 4 F3.50)*
 - `packages/db/src/schema.ts`: tabla `bot_user_mappings` (platform, externalUserId, systemUserId) — 2026-03-25 *(Plan 4 F3.49)*
 - `apps/web/src/app/api/slack/route.ts`: handler de slash commands Slack — verifica firma HMAC, resuelve userId via mapping, consulta RAG y responde via response_url — 2026-03-25 *(Plan 4 F3.49)*
 - `apps/web/src/app/api/teams/route.ts`: handler de mensajes Teams — respeta RBAC via mapping de usuarios — 2026-03-25 *(Plan 4 F3.49)*

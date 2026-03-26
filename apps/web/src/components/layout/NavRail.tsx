@@ -21,6 +21,7 @@ import {
   LogOut,
   Bookmark,
   FolderKanban,
+  Table2,
 } from "lucide-react"
 import type { CurrentUser } from "@/lib/auth/current-user"
 
@@ -37,6 +38,7 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/upload", label: "Subir docs", icon: <Upload size={18} /> },
   { href: "/saved", label: "Guardados", icon: <Bookmark size={18} /> },
   { href: "/projects", label: "Proyectos", icon: <FolderKanban size={18} /> },
+  { href: "/extract", label: "Extraer datos", icon: <Table2 size={18} /> },
   { href: "/audit", label: "Audit", icon: <FileText size={18} />, roles: ["admin", "area_manager"] },
   { href: "/admin", label: "Admin", icon: <Users size={18} />, roles: ["admin"] },
   { href: "/settings", label: "Configuración", icon: <Settings size={18} /> },
