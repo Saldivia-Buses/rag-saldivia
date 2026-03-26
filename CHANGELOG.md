@@ -11,6 +11,13 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Added
 
+- `packages/db/src/queries/search.ts`: `universalSearch(query, userId, limit)` — busca con FTS5 (sesiones + mensajes) con fallback a LIKE; también busca en templates y saved_responses — 2026-03-25 *(Plan 4 F3.39)*
+- `packages/db/src/init.ts`: tablas FTS5 virtuales `sessions_fts` y `messages_fts` con triggers de sincronización automática — 2026-03-25 *(Plan 4 F3.39)*
+- `apps/web/src/app/api/search/route.ts`: endpoint `GET /api/search?q=...` con debounce 300ms — 2026-03-25 *(Plan 4 F3.39)*
+- `apps/web/src/components/layout/CommandPalette.tsx`: integración de búsqueda universal — grupo "Resultados para X" con tipo (session/message/saved/template) y snippet; aparece cuando query ≥ 2 chars — 2026-03-25 *(Plan 4 F3.39)*
+
+### Added
+
 - `packages/db/src/schema.ts`: tabla `webhooks` (url, events JSON, secret HMAC, active) — 2026-03-25 *(Plan 4 F2.38)*
 - `packages/db/src/queries/webhooks.ts`: `createWebhook` (genera secret aleatorio), `listWebhooksByEvent`, `listAllWebhooks`, `deleteWebhook` — 2026-03-25 *(Plan 4 F2.38)*
 - `apps/web/src/lib/webhook.ts`: `dispatchWebhook` con firma HMAC-SHA256 en header `X-Signature`; timeout 5s; no interrumpe el flujo principal si falla; `dispatchEvent` busca webhooks activos para el tipo de evento — 2026-03-25 *(Plan 4 F2.38)*

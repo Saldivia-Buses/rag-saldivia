@@ -296,6 +296,59 @@ await exec(`
   CREATE INDEX IF NOT EXISTS idx_events_sequence ON events(sequence);
 `)
 
+// FTS5 virtual tables for universal search (F3.39)
+// Nota: executeMultiple no soporta múltiples statements que incluyen FTS — ejecutar por separado
+try {
+  await client.executeMultiple(`
+    CREATE VIRTUAL TABLE IF NOT EXISTS sessions_fts USING fts5(
+      session_id UNINDEXED,
+      user_id UNINDEXED,
+      title,
+      collection UNINDEXED,
+      content=chat_sessions,
+      content_rowid=rowid
+    );
+
+    CREATE VIRTUAL TABLE IF NOT EXISTS messages_fts USING fts5(
+      message_id UNINDEXED,
+      session_id UNINDEXED,
+      body,
+      content=chat_messages,
+      content_rowid=rowid
+    );
+  `)
+
+  // Triggers para mantener FTS sincronizado con chat_sessions
+  await client.executeMultiple(`
+    CREATE TRIGGER IF NOT EXISTS sessions_fts_insert AFTER INSERT ON chat_sessions BEGIN
+      INSERT INTO sessions_fts(rowid, session_id, user_id, title, collection) VALUES (new.rowid, new.id, new.user_id, new.title, new.collection);
+    END;
+
+    CREATE TRIGGER IF NOT EXISTS sessions_fts_delete AFTER DELETE ON chat_sessions BEGIN
+      INSERT INTO sessions_fts(sessions_fts, rowid, session_id, user_id, title, collection) VALUES ('delete', old.rowid, old.id, old.user_id, old.title, old.collection);
+    END;
+
+    CREATE TRIGGER IF NOT EXISTS sessions_fts_update AFTER UPDATE ON chat_sessions BEGIN
+      INSERT INTO sessions_fts(sessions_fts, rowid, session_id, user_id, title, collection) VALUES ('delete', old.rowid, old.id, old.user_id, old.title, old.collection);
+      INSERT INTO sessions_fts(rowid, session_id, user_id, title, collection) VALUES (new.rowid, new.id, new.user_id, new.title, new.collection);
+    END;
+  `)
+
+  // Triggers para chat_messages
+  await client.executeMultiple(`
+    CREATE TRIGGER IF NOT EXISTS messages_fts_insert AFTER INSERT ON chat_messages BEGIN
+      INSERT INTO messages_fts(rowid, message_id, session_id, body) VALUES (new.rowid, new.id, new.session_id, new.content);
+    END;
+
+    CREATE TRIGGER IF NOT EXISTS messages_fts_delete AFTER DELETE ON chat_messages BEGIN
+      INSERT INTO messages_fts(messages_fts, rowid, message_id, session_id, body) VALUES ('delete', old.rowid, old.id, old.session_id, old.content);
+    END;
+  `)
+} catch (err) {
+  // FTS5 puede no estar disponible en todas las compilaciones de SQLite
+  console.warn("FTS5 no disponible — búsqueda universal desactivada:", String(err).slice(0, 100))
+}
+
 console.log("Base de datos inicializada correctamente (libsql)")
 console.log("Tablas creadas: areas, users, user_areas, area_collections,")
 console.log("  audit_log, chat_sessions, chat_messages, message_feedback,")

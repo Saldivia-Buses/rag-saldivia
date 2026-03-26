@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useTheme } from "next-themes"
 import {
@@ -23,10 +23,20 @@ import {
   Bookmark,
   FileText,
   Users,
+  Search,
+  LayoutTemplate,
 } from "lucide-react"
 import type { CurrentUser } from "@/lib/auth/current-user"
+import type { SearchResult } from "@rag-saldivia/db"
 
 type Session = { id: string; title: string; collection: string }
+
+const RESULT_ICONS: Record<string, React.ReactNode> = {
+  session: <MessageSquare size={13} className="mr-2 opacity-60" />,
+  message: <FileText size={13} className="mr-2 opacity-60" />,
+  saved: <Bookmark size={13} className="mr-2 opacity-60" />,
+  template: <LayoutTemplate size={13} className="mr-2 opacity-60" />,
+}
 
 type Props = {
   open: boolean
@@ -40,16 +50,44 @@ export function CommandPalette({ open, onClose, user, onToggleZen }: Props) {
   const { theme, setTheme } = useTheme()
   const [sessions, setSessions] = useState<Session[]>([])
   const [query, setQuery] = useState("")
+  const [searchResults, setSearchResults] = useState<SearchResult[]>([])
+  const [searching, setSearching] = useState(false)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
-    if (!open) return
+    if (!open) { setQuery(""); setSearchResults([]); return }
     fetch("/api/chat/sessions")
       .then((r) => r.json())
       .then((d: { ok: boolean; data?: Session[] }) => {
-        if (d.ok && d.data) setSessions(d.data.slice(0, 10))
+        if (d.ok && d.data) setSessions(d.data.slice(0, 8))
       })
       .catch(() => {})
   }, [open])
+
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+
+    if (query.trim().length < 2) {
+      setSearchResults([])
+      setSearching(false)
+      return
+    }
+
+    setSearching(true)
+    debounceRef.current = setTimeout(() => {
+      fetch(`/api/search?q=${encodeURIComponent(query)}`)
+        .then((r) => r.json())
+        .then((d: { ok: boolean; results?: SearchResult[] }) => {
+          if (d.ok) setSearchResults(d.results ?? [])
+        })
+        .catch(() => {})
+        .finally(() => setSearching(false))
+    }, 300)
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+    }
+  }, [query])
 
   function go(path: string) {
     router.push(path)
@@ -60,15 +98,40 @@ export function CommandPalette({ open, onClose, user, onToggleZen }: Props) {
     ? sessions.filter((s) => s.title.toLowerCase().includes(query.toLowerCase()))
     : sessions
 
+  const showSearch = query.trim().length >= 2
+
   return (
     <CommandDialog open={open} onOpenChange={(o) => !o && onClose()}>
       <CommandInput
-        placeholder="Buscar acciones, sesiones..."
+        placeholder="Buscar sesiones, docs, templates, guardados..."
         value={query}
         onValueChange={setQuery}
       />
       <CommandList>
-        <CommandEmpty>Sin resultados.</CommandEmpty>
+        <CommandEmpty>
+          {searching ? "Buscando..." : "Sin resultados."}
+        </CommandEmpty>
+
+        {/* Resultados de búsqueda universal */}
+        {showSearch && searchResults.length > 0 && (
+          <>
+            <CommandGroup heading={`Resultados para "${query}"`}>
+              {searchResults.map((r) => (
+                <CommandItem key={`${r.type}-${r.id}`} onSelect={() => go(r.href)}>
+                  {RESULT_ICONS[r.type]}
+                  <div className="flex flex-col min-w-0">
+                    <span className="truncate text-sm">{r.title}</span>
+                    {r.snippet && (
+                      <span className="truncate text-xs opacity-50">{r.snippet.replace(/<[^>]+>/g, "")}</span>
+                    )}
+                  </div>
+                  <span className="ml-auto text-xs opacity-40 shrink-0 capitalize">{r.type}</span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+            <CommandSeparator />
+          </>
+        )}
 
         <CommandGroup heading="Navegar">
           <CommandItem onSelect={() => go("/chat")}>
@@ -86,10 +149,6 @@ export function CommandPalette({ open, onClose, user, onToggleZen }: Props) {
           <CommandItem onSelect={() => go("/saved")}>
             <Bookmark size={14} className="mr-2" />
             Respuestas guardadas
-          </CommandItem>
-          <CommandItem onSelect={() => go("/audit")}>
-            <FileText size={14} className="mr-2" />
-            Audit log
           </CommandItem>
           <CommandItem onSelect={() => go("/settings")}>
             <Settings size={14} className="mr-2" />
@@ -118,7 +177,7 @@ export function CommandPalette({ open, onClose, user, onToggleZen }: Props) {
           )}
         </CommandGroup>
 
-        {filteredSessions.length > 0 && (
+        {!showSearch && filteredSessions.length > 0 && (
           <>
             <CommandSeparator />
             <CommandGroup heading="Sesiones recientes">
