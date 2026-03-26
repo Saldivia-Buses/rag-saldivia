@@ -11,6 +11,14 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Added
 
+- `packages/db/src/schema.ts`: tablas `projects`, `project_sessions`, `project_collections` — 2026-03-25 *(Plan 4 F3.41)*
+- `packages/db/src/queries/projects.ts`: `createProject`, `listProjects`, `getProject`, `updateProject`, `deleteProject`, `addSessionToProject`, `addCollectionToProject`, `getProjectBySession` — 2026-03-25 *(Plan 4 F3.41)*
+- `apps/web/src/app/api/projects/route.ts`: GET/POST/DELETE para proyectos — 2026-03-25 *(Plan 4 F3.41)*
+- `apps/web/src/app/(app)/projects/page.tsx` y `[id]/page.tsx`: páginas de proyectos — 2026-03-25 *(Plan 4 F3.41)*
+- `apps/web/src/components/projects/ProjectsClient.tsx`: grid de proyectos con crear/eliminar — 2026-03-25 *(Plan 4 F3.41)*
+- `apps/web/src/components/layout/panels/ProjectsPanel.tsx`: panel secundario para rutas `/projects` — 2026-03-25 *(Plan 4 F3.41)*
+- `apps/web/src/components/layout/NavRail.tsx`: ícono `FolderKanban` para `/projects` — 2026-03-25 *(Plan 4 F3.41)*
+- `apps/web/src/app/api/rag/generate/route.ts`: inyección del contexto del proyecto como system message — 2026-03-25 *(Plan 4 F3.41)*
 - `apps/web/src/components/chat/DocPreviewPanel.tsx`: panel Sheet lateral para preview de PDF con react-pdf (carga dinámica SSR-safe), paginación, fallback a texto cuando el Blueprint no expone el documento — 2026-03-25 *(Plan 4 F3.40)*
 - `apps/web/src/app/api/rag/document/[name]/route.ts`: proxy al RAG server para obtener PDF; retorna 404 con nota si el endpoint no está disponible — 2026-03-25 *(Plan 4 F3.40)*
 - `apps/web/src/components/chat/SourcesPanel.tsx`: nombre de cada fuente ahora es botón clic que abre `DocPreviewPanel` con el fragmento resaltado — 2026-03-25 *(Plan 4 F3.40)*

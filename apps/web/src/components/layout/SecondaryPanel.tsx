@@ -3,6 +3,7 @@
 import { usePathname } from "next/navigation"
 import { ChatPanel } from "./panels/ChatPanel"
 import { AdminPanel } from "./panels/AdminPanel"
+import { ProjectsPanel } from "./panels/ProjectsPanel"
 
 const PANEL_WIDTH = 168
 
@@ -15,6 +16,8 @@ export function SecondaryPanel({ hidden }: { hidden?: boolean }) {
     ? <ChatPanel />
     : pathname.startsWith("/admin")
     ? <AdminPanel />
+    : pathname.startsWith("/projects")
+    ? <ProjectsPanel />
     : null
 
   if (!panel) return null

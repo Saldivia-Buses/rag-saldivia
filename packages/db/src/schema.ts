@@ -195,6 +195,54 @@ export const webhooks = sqliteTable(
   })
 )
 
+// ── Projects ───────────────────────────────────────────────────────────────
+
+export const projects = sqliteTable(
+  "projects",
+  {
+    id: text("id").primaryKey(), // UUID
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    description: text("description").notNull().default(""),
+    instructions: text("instructions").notNull().default(""), // system prompt adicional
+    createdAt: integer("created_at").notNull(),
+    updatedAt: integer("updated_at").notNull(),
+  },
+  (t) => ({
+    userIdx: index("idx_projects_user").on(t.userId),
+  })
+)
+
+export const projectSessions = sqliteTable(
+  "project_sessions",
+  {
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    sessionId: text("session_id")
+      .notNull()
+      .references(() => chatSessions.id, { onDelete: "cascade" }),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.projectId, t.sessionId] }),
+  })
+)
+
+export const projectCollections = sqliteTable(
+  "project_collections",
+  {
+    projectId: text("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    collectionName: text("collection_name").notNull(),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.projectId, t.collectionName] }),
+  })
+)
+
 // ── Rate Limits ────────────────────────────────────────────────────────────
 
 export const rateLimits = sqliteTable(
@@ -530,6 +578,10 @@ export type DbChatMessage = typeof chatMessages.$inferSelect
 export type NewChatMessage = typeof chatMessages.$inferInsert
 export type DbWebhook = typeof webhooks.$inferSelect
 export type NewWebhook = typeof webhooks.$inferInsert
+export type DbProject = typeof projects.$inferSelect
+export type NewProject = typeof projects.$inferInsert
+export type DbProjectSession = typeof projectSessions.$inferSelect
+export type DbProjectCollection = typeof projectCollections.$inferSelect
 export type DbRateLimit = typeof rateLimits.$inferSelect
 export type NewRateLimit = typeof rateLimits.$inferInsert
 export type DbScheduledReport = typeof scheduledReports.$inferSelect

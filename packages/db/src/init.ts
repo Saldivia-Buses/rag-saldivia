@@ -114,6 +114,30 @@ await exec(`
     UNIQUE(message_id, user_id)
   );
 
+  -- Proyectos (F3.41)
+  CREATE TABLE IF NOT EXISTS projects (
+    id TEXT PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    name TEXT NOT NULL,
+    description TEXT NOT NULL DEFAULT '',
+    instructions TEXT NOT NULL DEFAULT '',
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS idx_projects_user ON projects(user_id);
+
+  CREATE TABLE IF NOT EXISTS project_sessions (
+    project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    session_id TEXT NOT NULL REFERENCES chat_sessions(id) ON DELETE CASCADE,
+    PRIMARY KEY (project_id, session_id)
+  );
+
+  CREATE TABLE IF NOT EXISTS project_collections (
+    project_id TEXT NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    collection_name TEXT NOT NULL,
+    PRIMARY KEY (project_id, collection_name)
+  );
+
   -- Webhooks (F2.38)
   CREATE TABLE IF NOT EXISTS webhooks (
     id TEXT PRIMARY KEY,

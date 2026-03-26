@@ -15,7 +15,7 @@ import { canAccessCollection } from "@rag-saldivia/db"
 import { log } from "@rag-saldivia/logger/backend"
 import { FOCUS_MODES, type FocusModeId } from "@rag-saldivia/shared"
 import { detectLanguageHint } from "@/lib/rag/client"
-import { getRateLimit, countQueriesLastHour } from "@rag-saldivia/db"
+import { getRateLimit, countQueriesLastHour, getProjectBySession } from "@rag-saldivia/db"
 import { dispatchEvent } from "@/lib/webhook"
 
 export const runtime = "nodejs" // SSE requiere Node runtime, no Edge
@@ -99,6 +99,20 @@ export async function POST(request: Request) {
       collection: collectionName,
       crossdoc: body.crossdoc ?? false,
     }, { userId, sessionId: body.session_id })
+
+    // Inyectar instrucciones del proyecto si la sesión pertenece a uno — F3.41
+    const sessionId = body.session_id as string | undefined
+    if (sessionId) {
+      try {
+        const project = await getProjectBySession(sessionId)
+        if (project?.instructions) {
+          body.messages = [
+            { role: "system", content: `Project context: ${project.instructions}` },
+            ...body.messages,
+          ]
+        }
+      } catch { /* no bloquear si falla */ }
+    }
 
     // Inyectar instrucción de idioma si el query no está en español
     const lastUserMessage = [...body.messages].reverse().find((m: { role: string }) => m.role === "user")
