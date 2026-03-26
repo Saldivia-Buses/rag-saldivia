@@ -391,3 +391,51 @@ Falta `postcss.config.js` en `apps/web/`. Debe tener:
 ```js
 module.exports = { plugins: { "@tailwindcss/postcss": {} } }
 ```
+
+---
+
+## Componentes sin tests (gap conocido)
+
+Los siguientes componentes no tienen tests de componente aún. Son complejos y se cubren mejor con E2E de Maestro:
+
+### Chat (complejidad alta — usar Maestro E2E)
+- `ChatInterface` — el más complejo (complejidad ciclomática 22). Maneja SSE streaming, artifacts, feedback, fork, rename, export.
+- `AnnotationPopover` — anotaciones sobre texto del asistente
+- `ArtifactsPanel` — panel de artifacts detectados (código, tablas, documentos)
+- `ChatDropZone` — drag & drop de archivos en el chat
+- `CollectionSelector` — selector de colección activa con auto-detección
+- `DocPreviewPanel` — preview de documentos referenciados
+- `ExportSession` — exportar sesión a Markdown
+- `FocusModeSelector` — detallado/ejecutivo/técnico/comparativo
+- `PromptTemplates` — templates de prompts predefinidos
+- `RelatedQuestions` — preguntas relacionadas post-respuesta
+- `ShareDialog` — compartir sesión con URL pública
+- `SourcesPanel` — fuentes de la respuesta
+- `SplitView` — vista dividida con el documento
+- `ThinkingSteps` — animación de "pensando..."
+- `VoiceInput` — entrada de voz
+
+### Layout (mejor testeado via visual regression)
+- `AppShell`, `AppShellChrome` — wrapper del layout
+- `CommandPalette` — paleta de comandos (Cmd+K)
+- `NavRail` — barra lateral de navegación
+- `SecondaryPanel` — panel secundario (chat/admin/projects)
+- `WhatsNewPanel` — panel de novedades
+- `panels/AdminPanel`, `panels/ChatPanel`, `panels/ProjectsPanel`
+
+### Collections
+- `CollectionHistory` — historial de ingestas por colección
+- `DocumentGraph` — grafo de documentos (D3.js)
+
+### Onboarding
+- `OnboardingTour` — tour guiado usando driver.js
+
+### Admin (complejos por SSE/fetch)
+- `AnalyticsDashboard` — gráficos Recharts (fetch en mount)
+- `IngestionKanban` — SSE en tiempo real
+- `KnowledgeGapsClient`, `ReportsAdmin`, `WebhooksAdmin`, `IntegrationsAdmin`, `ExternalSourcesAdmin`
+
+### Hooks complejos (sin tests de unit)
+- `useRagStream` (complejidad 19) — streaming SSE del RAG
+- `useCrossdocStream` (complejidad 22) — crossdoc streaming
+- `useCrossdocDecompose`, `useGlobalHotkeys`, `useNotifications`, `useZenMode`

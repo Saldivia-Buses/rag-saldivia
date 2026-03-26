@@ -312,6 +312,152 @@ TEST_ADMIN_PASSWORD=changeme
 
 ---
 
+## Architecture Decision Records (ADRs)
+
+En `docs/decisions/` hay 8 decisiones de arquitectura documentadas. **Leerlas antes de modificar las áreas que cubren:**
+
+| ADR | Decisión | Área afectada |
+|---|---|---|
+| 001 | libsql sobre better-sqlite3 | `packages/db/` |
+| 002 | CJS sobre ESM en packages | `packages/*/tsconfig.json` |
+| 003 | Next.js como proceso único | arquitectura general |
+| 004 | Temporal API para timestamps | toda query con fechas |
+| 005 | Import estático de db en logger | `packages/logger/src/backend.ts` |
+| 006 | Estrategia de testing | toda la suite de tests |
+| 007 | Funciones reales sobre helpers locales en tests | `packages/db/src/__tests__/` |
+
+---
+
+## Workers de background
+
+En `apps/web/src/workers/` — se ejecutan como edge functions o serverless functions:
+
+| Worker | Descripción |
+|---|---|
+| `ingestion.ts` | Procesa la cola de ingesta de documentos — desbloquea jobs, llama al blueprint NVIDIA |
+| `external-sync.ts` | Sincroniza fuentes externas (Google Drive, SharePoint, Confluence) según schedule |
+
+**Importante:** Los workers usan SQLite con locking optimista (`locked_at`). Si un worker muere con un job locked, el job queda bloqueado hasta que expire el TTL.
+
+---
+
+## Hooks de React
+
+En `apps/web/src/hooks/` — todos Client Components:
+
+| Hook | Complejidad | Descripción |
+|---|---|---|
+| `useRagStream` | Alta (19) | Streaming SSE del RAG — maneja fases: idle → streaming → done. Detecta artifacts automáticamente |
+| `useCrossdocStream` | Alta (22) | Variante crossdoc del stream — consulta múltiples colecciones simultáneamente |
+| `useCrossdocDecompose` | Media | Descompone una query en sub-queries por colección |
+| `useGlobalHotkeys` | Media | Hotkeys globales (Cmd+K para CommandPalette, etc.) |
+| `useNotifications` | Baja | Poll de notificaciones via `/api/notifications` |
+| `useZenMode` | Baja | Toggle del modo zen (oculta NavRail y SecondaryPanel) |
+
+**Patrón crítico de useRagStream:** verifica el status HTTP **antes** de leer el stream. Si la respuesta no es 200, el stream devuelve un error — no asumir que siempre es exitoso.
+
+---
+
+## Server Actions
+
+En `apps/web/src/app/actions/` — se ejecutan en el servidor, llamadas desde Client Components:
+
+| Archivo | Actions principales |
+|---|---|
+| `chat.ts` | `actionCreateSession`, `actionDeleteSession`, `actionRenameSession`, `actionAddMessage`, `actionAddFeedback`, `actionToggleSaved`, `actionForkSession`, `actionAddTag`, `actionRemoveTag`, `actionCreateSessionForDoc` |
+| `users.ts` | `actionCreateUser`, `actionUpdateUser`, `actionDeleteUser`, `actionListUsers`, `actionAssignArea`, `actionRemoveArea` |
+| `areas.ts` | `actionCreateArea`, `actionUpdateArea`, `actionDeleteArea`, `actionListAreas`, `actionSetAreaCollections` |
+| `settings.ts` | `actionUpdateProfile`, `actionUpdatePassword`, `actionUpdatePreferences` |
+| `config.ts` | `actionGetRagParams`, `actionUpdateRagParams`, `actionResetRagParams` |
+
+**Patrón:** las Server Actions en este proyecto usan `revalidatePath()` implícitamente o actualizan el estado local del componente. Siempre verificar si necesitan `revalidatePath` después de mutaciones.
+
+---
+
+## API Routes
+
+En `apps/web/src/app/api/` — más de 30 routes. Las más críticas:
+
+| Ruta | Método | Descripción |
+|---|---|---|
+| `/api/auth/login` | POST | Autenticación JWT — devuelve cookie HttpOnly |
+| `/api/auth/logout` | DELETE | Invalida la sesión |
+| `/api/auth/refresh` | POST | Renueva el JWT |
+| `/api/rag/generate` | POST | Proxy al RAG server — maneja SSE streaming (complejidad 17) |
+| `/api/rag/collections` | GET/POST | CRUD de colecciones en Milvus |
+| `/api/upload` | POST | Sube archivos y los encola para ingesta |
+| `/api/admin/ingestion/stream` | GET | SSE en tiempo real del estado de jobs |
+| `/api/admin/analytics` | GET | Estadísticas del sistema |
+| `/api/admin/users` | GET/POST | CRUD de usuarios |
+| `/api/memory` | GET/POST/DELETE | Memoria personalizada del usuario |
+| `/api/notifications` | GET | Poll de notificaciones (polling, no SSE) |
+| `/api/health` | GET | Health check del sistema |
+| `/api/slack` | POST | Bot endpoint de Slack |
+| `/api/teams` | POST | Bot endpoint de Microsoft Teams |
+
+---
+
+## Packages compartidos
+
+### `packages/shared`
+
+Zod schemas y tipos compartidos entre `apps/web` y `apps/cli`.
+
+Archivo crítico: `packages/shared/src/schemas.ts`
+- `RagParamsSchema` — parámetros del LLM (temperature, top_p, etc.)
+- Tipos de roles: `"admin" | "area_manager" | "user"`
+- Focus modes: `"detailed" | "executive" | "technical" | "comparative"`
+
+**Regla:** si necesitás un tipo que existe en web Y en cli, va en `packages/shared`.
+
+### `packages/db`
+
+17 archivos de queries en `packages/db/src/queries/`. Cada uno tiene su test en `__tests__/`.
+
+Archivo más complejo: `users.ts` — incluye verificación de password (bcrypt), manejo de áreas, permisos.
+
+### `packages/logger`
+
+La función `formatPretty` tiene complejidad ciclomática 29 — la función más compleja del proyecto. Formatear logs con colores, timestamps, y niveles.
+
+---
+
+## CI/CD — GitHub Actions
+
+En `.github/workflows/`:
+
+| Workflow | Trigger | Descripción |
+|---|---|---|
+| `ci.yml` | PRs + push a dev | Tests, type-check, lint, coverage, component tests, visual regression, a11y |
+| `deploy.yml` | Push a main | Deploy a workstation física (stack Python) |
+| `release.yml` | Tags semver | Release automation |
+
+---
+
+## Componentes sin tests de componente
+
+Los siguientes componentes NO tienen tests de componente aún (pendiente para iteraciones futuras):
+
+**Chat** (complejos — usar E2E de Maestro):
+- `ChatInterface` (complejidad 22 — el más complejo de la UI)
+- `AnnotationPopover`, `ArtifactsPanel`, `ChatDropZone`
+- `CollectionSelector`, `DocPreviewPanel`, `ExportSession`
+- `FocusModeSelector`, `PromptTemplates`, `RelatedQuestions`
+- `ShareDialog`, `SourcesPanel`, `SplitView`, `ThinkingSteps`, `VoiceInput`
+
+**Layout**:
+- `AppShell`, `AppShellChrome`, `CommandPalette`, `NavRail`
+- `SecondaryPanel`, `WhatsNewPanel`
+- `panels/AdminPanel`, `panels/ChatPanel`, `panels/ProjectsPanel`
+
+**Collections**: `CollectionHistory`, `DocumentGraph`
+
+**Onboarding**: `OnboardingTour`
+
+**Admin restantes**: `AnalyticsDashboard`, `IngestionKanban`, `KnowledgeGapsClient`, `ReportsAdmin`, `WebhooksAdmin`, `IntegrationsAdmin`, `ExternalSourcesAdmin`
+
+---
+
 ## Planes de implementación
 
 | Plan | Tema | Estado |

@@ -206,3 +206,59 @@ Next.js 15 tiene 4 capas de caché, todas en uso:
 | Router Cache | navegación del cliente | session |
 
 Invalidación: `revalidateTag('collections')` al crear/eliminar colecciones.
+
+---
+
+## Design System (agregado en Plan 7)
+
+El proyecto tiene un design system completo "Warm Intelligence" aplicado a las 24 páginas:
+
+- **Tokens CSS** en `apps/web/src/app/globals.css` — crema cálido + navy profundo + dark mode cálido
+- **Tailwind v4** con `@tailwindcss/postcss` — requiere `postcss.config.js` explícito
+- **Storybook 8** en `apps/web/stories/` — catálogo de componentes con addon-a11y
+- **Densidad adaptiva** — `data-density="compact|spacious"` en los layouts
+
+Ver `docs/design-system.md` para la documentación completa.
+
+---
+
+## Suite de testing (Plan 5 + Plan 6)
+
+| Capa | Herramienta | Archivos |
+|---|---|---|
+| Lógica pura | bun:test | `packages/*/src/__tests__/`, `apps/web/src/lib/__tests__/` |
+| Componentes React | @testing-library/react + happy-dom | `apps/web/src/components/**/__tests__/` |
+| Visual regression | Playwright screenshots | `apps/web/tests/visual/` |
+| A11y WCAG AA | axe-playwright | `apps/web/tests/a11y/` |
+| E2E flujos | Maestro YAML | `apps/web/tests/e2e/` |
+| Performance | react-scan | activo en dev, overlay visual |
+
+Ver `docs/testing.md` para la guía completa.
+
+---
+
+## Workers de background
+
+```
+apps/web/src/workers/
+  ingestion.ts       → procesa cola de ingesta (polling SQLite, locking optimista)
+  external-sync.ts   → sincroniza fuentes externas según schedule
+```
+
+Los workers se invocan como endpoints serverless o via cron jobs. Usan el mismo `packages/db` que el servidor Next.js.
+
+---
+
+## Architecture Decision Records
+
+Decisiones de arquitectura documentadas en `docs/decisions/`:
+
+| ADR | Impacto |
+|---|---|
+| 001 — libsql | Por qué usamos libsql en lugar de better-sqlite3 |
+| 002 — CJS | Por qué packages/* no tienen "type": "module" |
+| 003 — proceso único | Por qué Next.js unifica gateway + frontend |
+| 004 — Temporal API | Por qué usamos Date.now() y no utilidades de SQLite |
+| 005 — import estático logger | Por qué logger importa db estáticamente |
+| 006 — testing strategy | Metas de cobertura y qué testear por tipo de código |
+| 007 — funciones reales en tests | Por qué los tests usan las funciones reales de queries |
