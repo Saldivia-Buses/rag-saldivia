@@ -40,6 +40,7 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 #### Changed
 - `apps/web/src/hooks/useRagStream.ts`: `detectArtifact` y `ArtifactData` importados desde `@/lib/rag/detect-artifact` — 2026-03-26 *(Plan 5 F4)*
 - `bunfig.toml`: threshold final `line = 0.95` — meta Plan 5 alcanzada — 2026-03-26 *(Plan 5 F4)*
+- `.cursor/skills/rag-testing/SKILL.md`: tabla de cobertura actualizada a ~237 tests, limitación de local helpers documentada — 2026-03-26 *(Plan 5 F5)*
 
 #### Changed
 - `package.json` raíz: script `test:coverage` vía Turborepo — 2026-03-26 *(Plan 5 F2)*

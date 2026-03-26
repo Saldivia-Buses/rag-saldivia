@@ -136,15 +136,40 @@ const mockFetch = spyOn(globalThis, "fetch").mockResolvedValue(
 )
 ```
 
-## Estado de cobertura
+## Estado de cobertura actual
 
 | Paquete / módulo | Tests | Estado |
 |------------------|-------|--------|
-| `packages/db` — users, areas, saved | ✅ ~37 tests | cubierto |
+| `packages/db` — users, areas, saved | ✅ 37 tests | cubierto |
+| `packages/db` — sessions | ✅ 11 tests | cubierto |
+| `packages/db` — events | ✅ 10 tests | cubierto |
+| `packages/db` — memory | ✅ 10 tests | cubierto |
+| `packages/db` — annotations | ✅ 7 tests | cubierto |
+| `packages/db` — tags | ✅ 9 tests | cubierto |
+| `packages/db` — shares | ✅ 9 tests | cubierto |
+| `packages/db` — templates | ✅ 7 tests | cubierto |
+| `packages/db` — webhooks | ✅ 8 tests | cubierto |
+| `packages/db` — reports | ✅ 8 tests | cubierto |
+| `packages/db` — collection-history | ✅ 7 tests | cubierto |
+| `packages/db` — rate-limits | ✅ 10 tests | cubierto |
+| `packages/db` — projects | ✅ 13 tests | cubierto |
+| `packages/db` — search | ✅ 9 tests | cubierto |
+| `packages/db` — external-sources | ✅ 9 tests | cubierto |
 | `packages/logger` | ✅ 24 tests | cubierto |
 | `packages/config` | ✅ 14 tests | cubierto |
 | `packages/shared` | ✅ 6 tests | cubierto |
 | `apps/web` auth + RBAC | ✅ 17 tests | cubierto |
-| `apps/web` lib/export, lib/changelog, lib/rag/detect-language | ✅ 27 tests | cubierto |
-| `packages/db` — sessions, events, memory, annotations, tags, shares, templates, rate-limits, webhooks, reports, collection-history, projects, search, external-sources | ⏳ Plan 5 F3 | en progreso |
-| `apps/web` lib/webhook, lib/rag/detect-artifact | ⏳ Plan 5 F4 | en progreso |
+| `apps/web` lib/export | ✅ 8 tests | cubierto |
+| `apps/web` lib/changelog | ✅ 6 tests | cubierto |
+| `apps/web` lib/rag/detect-language | ✅ 13 tests | cubierto |
+| `apps/web` lib/rag/detect-artifact | ✅ 15 tests | cubierto |
+| `apps/web` lib/webhook | ✅ 8 tests | cubierto |
+| **TOTAL** | **~237 tests** | |
+
+## Limitación conocida
+
+Los tests de `packages/db/src/__tests__/` usan **local helpers** que replican la lógica con
+`testDb` directamente (no importan los query files). Esto significa que los query files no
+aparecen en el reporte de coverage. Para coverage real de los query files, usar
+`_injectDbForTesting(testDb)` de `packages/db/src/connection.ts` e importar las query
+functions directamente. Trackeado como deuda técnica.
