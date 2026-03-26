@@ -936,7 +936,11 @@ Objetivo: aplicar el nuevo design system a las 24 páginas en orden de prioridad
 
 **Archivo:** `apps/web/src/components/settings/SettingsClient.tsx`
 
-- [ ] Layout: sidebar de secciones + área de contenido
+- [x] Tabs con `cn()` condicional sin inline styles — completado 2026-03-26
+- [x] `<Input>` en todos los campos — completado 2026-03-26
+- [x] `<Button>` en submit — completado 2026-03-26
+- [x] Mensajes ok/error con `text-success` / `text-destructive` — completado 2026-03-26
+- [x] `PreferenceToggle`: select con tokens Tailwind — completado 2026-03-26
 - [ ] Secciones con `border-b border-border pb-6 mb-6`
 - [ ] Labels: `text-sm font-medium text-fg`
 
@@ -944,9 +948,10 @@ Objetivo: aplicar el nuevo design system a las 24 páginas en orden de prioridad
 
 **Archivo:** `apps/web/src/components/upload/UploadClient.tsx`
 
-- [ ] Drop zone: `border-2 border-dashed border-border rounded-xl hover:border-accent transition-colors`
-- [ ] Estado de upload: progress bar en `bg-accent`
-- [ ] Lista de archivos: `bg-surface rounded-lg`
+- [x] Drop zone: `border-dashed border-border hover:border-accent hover:bg-surface` — completado 2026-03-26
+- [x] Estado drag: `border-accent bg-accent-subtle` — completado 2026-03-26
+- [x] Lista de archivos: `bg-surface border-border rounded-lg` — completado 2026-03-26
+- [x] Success: `text-success`, error: `text-destructive` — completado 2026-03-26
 
 ### F8.9 — /admin/ingestion (Media prioridad)
 
@@ -959,14 +964,19 @@ Objetivo: aplicar el nuevo design system a las 24 páginas en orden de prioridad
 
 **Archivo:** `apps/web/src/components/admin/SystemStatus.tsx`
 
-- [ ] Status indicators: punto verde/amarillo/rojo con `bg-success`/`bg-warning`/`bg-destructive`
-- [ ] Cards de servicio: `bg-surface border border-border rounded-lg`
+- [x] `<StatCard>` con íconos para las métricas — completado 2026-03-26
+- [x] Tabla `<Table>` shadcn para jobs activos — completado 2026-03-26
+- [x] Badge de estado: `default` / `secondary` — completado 2026-03-26
+- [x] `<Button>` refresh — completado 2026-03-26
 
 ### F8.11 — /projects (Media prioridad)
 
 **Archivo:** `apps/web/src/components/projects/ProjectsClient.tsx`
 
-- [ ] Cards de proyecto con `EmptyPlaceholder` si no hay proyectos
+- [x] `<EmptyPlaceholder>` con ícono FolderKanban — completado 2026-03-26
+- [x] Cards: `bg-surface border-border hover:shadow-sm` — completado 2026-03-26
+- [x] `<Input>` y `<Textarea>` en formulario — completado 2026-03-26
+- [x] Tokens Tailwind sin inline styles — completado 2026-03-26
 
 ### F8.12-F8.24 — Páginas restantes (Baja prioridad)
 

@@ -1,8 +1,14 @@
 "use client"
 
 import { useRouter } from "next/navigation"
-import { Users, Database, FolderOpen, Loader2, AlertTriangle, RefreshCw } from "lucide-react"
+import { Users, Database, FolderOpen, AlertTriangle, RefreshCw, Loader2 } from "lucide-react"
 import type { DbIngestionQueueItem } from "@rag-saldivia/db"
+import { StatCard } from "@/components/ui/stat-card"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import {
+  Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
+} from "@/components/ui/table"
 
 type Stats = {
   activeUsers: number
@@ -10,23 +16,6 @@ type Stats = {
   collections: number
   activeJobs: number
   recentErrors: number
-}
-
-function StatCard({ icon, label, value, color }: {
-  icon: React.ReactNode
-  label: string
-  value: number
-  color?: string
-}) {
-  return (
-    <div className="p-5 rounded-xl border space-y-3" style={{ borderColor: "var(--border)" }}>
-      <div className="flex items-center justify-between">
-        <span className="text-sm" style={{ color: "var(--muted-foreground)" }}>{label}</span>
-        <span style={{ color: color ?? "var(--muted-foreground)" }}>{icon}</span>
-      </div>
-      <p className="text-3xl font-bold">{value}</p>
-    </div>
-  )
 }
 
 export function SystemStatus({
@@ -39,68 +28,63 @@ export function SystemStatus({
   const router = useRouter()
 
   return (
-    <div className="space-y-6">
-      {/* Stats cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard icon={<Users size={18} />} label="Usuarios activos" value={stats.activeUsers} />
-        <StatCard icon={<Database size={18} />} label="Áreas" value={stats.areas} />
-        <StatCard icon={<FolderOpen size={18} />} label="Colecciones" value={stats.collections} />
-        <StatCard
-          icon={<AlertTriangle size={18} />}
-          label="Errores (24hs)"
-          value={stats.recentErrors}
-          color={stats.recentErrors > 0 ? "var(--destructive)" : undefined}
-        />
+    <div className="p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-lg font-semibold text-fg">Estado del sistema</h1>
+          <p className="text-sm text-fg-muted mt-0.5">Métricas y jobs activos</p>
+        </div>
+        <Button size="sm" variant="outline" onClick={() => router.refresh()}>
+          <RefreshCw className="h-3.5 w-3.5" />
+          Actualizar
+        </Button>
       </div>
 
-      {/* Refresh */}
-      <div className="flex justify-end">
-        <button
-          onClick={() => router.refresh()}
-          className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm border"
-          style={{ borderColor: "var(--border)" }}
-        >
-          <RefreshCw size={14} />
-          Actualizar
-        </button>
+      {/* Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <StatCard label="Usuarios activos" value={stats.activeUsers} icon={Users} />
+        <StatCard label="Áreas" value={stats.areas} icon={Database} />
+        <StatCard label="Colecciones" value={stats.collections} icon={FolderOpen} />
+        <StatCard
+          label="Errores (24hs)"
+          value={stats.recentErrors}
+          icon={AlertTriangle}
+          delta={stats.recentErrors > 0 ? -1 : 0}
+        />
       </div>
 
       {/* Jobs activos */}
       <div>
-        <h3 className="font-medium text-sm mb-3">Jobs de ingesta activos</h3>
+        <h2 className="text-sm font-semibold text-fg mb-3">Jobs de ingesta activos</h2>
         {activeJobs.length === 0 ? (
-          <p className="text-sm" style={{ color: "var(--muted-foreground)" }}>Sin jobs activos</p>
+          <p className="text-sm text-fg-muted">Sin jobs activos</p>
         ) : (
-          <div className="rounded-lg border overflow-hidden" style={{ borderColor: "var(--border)" }}>
-            <table className="w-full text-sm">
-              <thead>
-                <tr style={{ background: "var(--muted)" }}>
-                  <th className="text-left px-4 py-3 font-medium">ID</th>
-                  <th className="text-left px-4 py-3 font-medium">Colección</th>
-                  <th className="text-left px-4 py-3 font-medium">Estado</th>
-                  <th className="text-left px-4 py-3 font-medium">Reintentos</th>
-                </tr>
-              </thead>
-              <tbody>
-                {activeJobs.map((job, i) => (
-                  <tr key={job.id} style={{ borderTop: i > 0 ? "1px solid var(--border)" : undefined }}>
-                    <td className="px-4 py-3 font-mono text-xs">{job.id.slice(0, 8)}</td>
-                    <td className="px-4 py-3">{job.collection}</td>
-                    <td className="px-4 py-3">
-                      <span className="flex items-center gap-1.5">
-                        {job.status === "locked" && <Loader2 size={12} className="animate-spin" />}
-                        <span className={job.status === "locked" ? "text-blue-600" : ""}>
-                          {job.status}
-                        </span>
-                      </span>
-                    </td>
-                    <td className="px-4 py-3" style={{ color: "var(--muted-foreground)" }}>
-                      {job.retryCount}
-                    </td>
-                  </tr>
+          <div className="rounded-xl border border-border overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>ID</TableHead>
+                  <TableHead>Colección</TableHead>
+                  <TableHead>Estado</TableHead>
+                  <TableHead>Reintentos</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {activeJobs.map((job) => (
+                  <TableRow key={job.id}>
+                    <TableCell className="font-mono text-xs text-fg-muted">{job.id.slice(0, 8)}</TableCell>
+                    <TableCell className="text-fg">{job.collection}</TableCell>
+                    <TableCell>
+                      <Badge variant={job.status === "locked" ? "default" : "secondary"}>
+                        {job.status === "locked" && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
+                        {job.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-fg-muted">{job.retryCount}</TableCell>
+                  </TableRow>
                 ))}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         )}
       </div>

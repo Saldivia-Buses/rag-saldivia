@@ -7,6 +7,8 @@ import {
   actionUpdatePassword,
   actionUpdatePreferences,
 } from "@/app/actions/settings"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 
 type Tab = "perfil" | "contrasena" | "preferencias"
 
@@ -14,11 +16,9 @@ export function SettingsClient({ user }: { user: DbUser }) {
   const [tab, setTab] = useState<Tab>("perfil")
   const [isPending, startTransition] = useTransition()
 
-  // Perfil
   const [name, setName] = useState(user.name)
   const [profileMsg, setProfileMsg] = useState<{ type: "ok" | "error"; text: string } | null>(null)
 
-  // Contraseña
   const [currentPwd, setCurrentPwd] = useState("")
   const [newPwd, setNewPwd] = useState("")
   const [pwdMsg, setPwdMsg] = useState<{ type: "ok" | "error"; text: string } | null>(null)
@@ -63,18 +63,23 @@ export function SettingsClient({ user }: { user: DbUser }) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="p-6 max-w-xl space-y-6">
+      <div>
+        <h1 className="text-lg font-semibold text-fg">Configuración</h1>
+        <p className="text-sm text-fg-muted mt-0.5">Gestioná tu perfil y preferencias</p>
+      </div>
+
       {/* Tabs */}
-      <div className="flex gap-1 border-b" style={{ borderColor: "var(--border)" }}>
+      <div className="flex gap-0 border-b border-border">
         {TABS.map((t) => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
-            className="px-4 py-2 text-sm font-medium border-b-2 transition-colors"
-            style={{
-              borderColor: tab === t.key ? "var(--primary)" : "transparent",
-              color: tab === t.key ? "var(--foreground)" : "var(--muted-foreground)",
-            }}
+            className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${
+              tab === t.key
+                ? "border-accent text-fg"
+                : "border-transparent text-fg-muted hover:text-fg"
+            }`}
           >
             {t.label}
           </button>
@@ -84,88 +89,51 @@ export function SettingsClient({ user }: { user: DbUser }) {
       {/* Perfil */}
       {tab === "perfil" && (
         <form onSubmit={handleProfileSave} className="space-y-4">
-          <div className="space-y-1">
-            <label className="text-sm font-medium">Nombre</label>
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="w-full px-3 py-2 rounded-md border text-sm"
-              style={{ borderColor: "var(--border)" }}
-            />
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-fg">Nombre</label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} />
           </div>
-          <div className="space-y-1">
-            <label className="text-sm font-medium">Email</label>
-            <input
-              value={user.email}
-              disabled
-              className="w-full px-3 py-2 rounded-md border text-sm opacity-60"
-              style={{ borderColor: "var(--border)" }}
-            />
-            <p className="text-xs" style={{ color: "var(--muted-foreground)" }}>
-              El email no se puede cambiar. Contactá al administrador.
-            </p>
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-fg">Email</label>
+            <Input value={user.email} disabled />
+            <p className="text-xs text-fg-subtle">El email no se puede cambiar. Contactá al administrador.</p>
           </div>
           {profileMsg && (
-            <p className="text-sm" style={{ color: profileMsg.type === "ok" ? "#16a34a" : "var(--destructive)" }}>
+            <p className={`text-sm ${profileMsg.type === "ok" ? "text-success" : "text-destructive"}`}>
               {profileMsg.text}
             </p>
           )}
-          <button
-            type="submit"
-            disabled={isPending}
-            className="px-4 py-2 rounded-md text-sm font-medium disabled:opacity-50"
-            style={{ background: "var(--primary)", color: "var(--primary-foreground)" }}
-          >
+          <Button type="submit" disabled={isPending} size="sm">
             {isPending ? "Guardando..." : "Guardar cambios"}
-          </button>
+          </Button>
         </form>
       )}
 
       {/* Contraseña */}
       {tab === "contrasena" && (
         <form onSubmit={handlePasswordSave} className="space-y-4">
-          <div className="space-y-1">
-            <label className="text-sm font-medium">Contraseña actual</label>
-            <input
-              type="password"
-              value={currentPwd}
-              onChange={(e) => setCurrentPwd(e.target.value)}
-              required
-              className="w-full px-3 py-2 rounded-md border text-sm"
-              style={{ borderColor: "var(--border)" }}
-            />
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-fg">Contraseña actual</label>
+            <Input type="password" value={currentPwd} onChange={(e) => setCurrentPwd(e.target.value)} required />
           </div>
-          <div className="space-y-1">
-            <label className="text-sm font-medium">Nueva contraseña</label>
-            <input
-              type="password"
-              value={newPwd}
-              onChange={(e) => setNewPwd(e.target.value)}
-              required
-              minLength={8}
-              className="w-full px-3 py-2 rounded-md border text-sm"
-              style={{ borderColor: "var(--border)" }}
-            />
+          <div className="space-y-1.5">
+            <label className="text-sm font-medium text-fg">Nueva contraseña</label>
+            <Input type="password" value={newPwd} onChange={(e) => setNewPwd(e.target.value)} required minLength={8} />
           </div>
           {pwdMsg && (
-            <p className="text-sm" style={{ color: pwdMsg.type === "ok" ? "#16a34a" : "var(--destructive)" }}>
+            <p className={`text-sm ${pwdMsg.type === "ok" ? "text-success" : "text-destructive"}`}>
               {pwdMsg.text}
             </p>
           )}
-          <button
-            type="submit"
-            disabled={isPending || !currentPwd || !newPwd}
-            className="px-4 py-2 rounded-md text-sm font-medium disabled:opacity-50"
-            style={{ background: "var(--primary)", color: "var(--primary-foreground)" }}
-          >
+          <Button type="submit" disabled={isPending || !currentPwd || !newPwd} size="sm">
             {isPending ? "Actualizando..." : "Actualizar contraseña"}
-          </button>
+          </Button>
         </form>
       )}
 
       {/* Preferencias */}
       {tab === "preferencias" && (
-        <div className="space-y-4">
+        <div className="space-y-1">
           <PreferenceToggle
             label="Tema"
             description="Preferencia de tema visual"
@@ -194,11 +162,7 @@ export function SettingsClient({ user }: { user: DbUser }) {
 }
 
 function PreferenceToggle({
-  label,
-  description,
-  value,
-  options,
-  onChange,
+  label, description, value, options, onChange,
 }: {
   label: string
   description: string
@@ -207,16 +171,15 @@ function PreferenceToggle({
   onChange: (value: string) => void
 }) {
   return (
-    <div className="flex items-center justify-between py-3 border-b" style={{ borderColor: "var(--border)" }}>
+    <div className="flex items-center justify-between py-4 border-b border-border">
       <div>
-        <p className="text-sm font-medium">{label}</p>
-        <p className="text-xs" style={{ color: "var(--muted-foreground)" }}>{description}</p>
+        <p className="text-sm font-medium text-fg">{label}</p>
+        <p className="text-xs text-fg-muted">{description}</p>
       </div>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="px-3 py-1.5 rounded-md border text-sm"
-        style={{ borderColor: "var(--border)", background: "var(--background)" }}
+        className="h-8 rounded-md border border-border bg-bg px-2 text-sm text-fg focus:outline-none focus:ring-1 focus:ring-ring"
       >
         {options.map((opt) => (
           <option key={opt.value} value={opt.value}>{opt.label}</option>

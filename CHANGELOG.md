@@ -12,6 +12,10 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 ### Plan 7 — Design System (F8 en progreso)
 
 #### Changed (F8 — Páginas)
+- `apps/web/src/components/settings/SettingsClient.tsx`: tabs con cn(), Input/Button, text-success/text-destructive, PreferenceToggle con tokens — 2026-03-26 *(Plan 7 F8.7)*
+- `apps/web/src/components/upload/UploadClient.tsx`: drop zone border-dashed con hover tokens, jobs list bg-surface, text-success/text-destructive — 2026-03-26 *(Plan 7 F8.8)*
+- `apps/web/src/components/admin/SystemStatus.tsx`: StatCard + Table shadcn + Badge + Button refresh — 2026-03-26 *(Plan 7 F8.10)*
+- `apps/web/src/components/projects/ProjectsClient.tsx`: EmptyPlaceholder, Input/Textarea, cards bg-surface, tokens sin inline styles — 2026-03-26 *(Plan 7 F8.11)*
 - `apps/web/src/components/chat/ChatInterface.tsx`: mensajes usuario `bg-accent`, asistente `bg-surface border-border`, input con tokens, `<Button>` send, error `bg-destructive-subtle`, feedback con `cn()` — 2026-03-26 *(Plan 7 F8.3)*
 - `apps/web/src/components/chat/SessionList.tsx`: eliminar todos los inline styles — `cn()` para estado activo, tokens Tailwind para destructive/muted/border — 2026-03-26 *(Plan 7 F8.2)*
 - `apps/web/src/components/admin/UsersAdmin.tsx`: rediseño completo — `<Table>` shadcn, badges success/destructive/secondary, formulario con `<Input>`, empty state, botones `<Button variant="ghost">`, tokens Tailwind, sin inline styles — 2026-03-26 *(Plan 7 F8.4)*
