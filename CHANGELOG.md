@@ -11,6 +11,10 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Added
 
+- `apps/web/src/app/api/collections/[name]/embeddings/route.ts`: retorna grafo de similitud — intenta obtener docs del RAG server, simula similitud para MVP — 2026-03-25 *(Plan 4 F3.46)*
+- `apps/web/src/components/collections/DocumentGraph.tsx`: visualización SVG force-directed sin dependencia de d3-force (simulación propia ligera); zoom, colores por cluster, click en nodo — 2026-03-25 *(Plan 4 F3.46)*
+- `apps/web/src/app/(app)/collections/[name]/graph/page.tsx`: página del grafo por colección — 2026-03-25 *(Plan 4 F3.46)*
+- `apps/web/src/components/collections/CollectionsList.tsx`: botón "Grafo" por colección — 2026-03-25 *(Plan 4 F3.46)*
 - `apps/web/src/workers/ingestion.ts`: `checkProactiveSurface` — cruza keywords del doc nuevo con queries recientes del usuario; si hay match genera evento `proactive.docs_available` — 2026-03-25 *(Plan 4 F3.45)*
 - `apps/web/src/app/api/notifications/route.ts`: `proactive.docs_available` agregado a los tipos de notificación — 2026-03-25 *(Plan 4 F3.45)*
 - `packages/db/src/schema.ts`: tabla `user_memory` (key, value, source explicit/inferred, UNIQUE per user+key) — 2026-03-25 *(Plan 4 F3.44)*

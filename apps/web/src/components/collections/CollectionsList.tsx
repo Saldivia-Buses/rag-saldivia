@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { FolderOpen, Trash2, MessageSquare, Plus } from "lucide-react"
+import { FolderOpen, Trash2, MessageSquare, Plus, Network } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   Table,
@@ -133,6 +133,15 @@ export function CollectionsList({ collections: initial, user }: Props) {
                         onClick={() => handleChat(name)}
                       >
                         <MessageSquare size={12} /> Chat
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 gap-1 text-xs"
+                        onClick={() => router.push(`/collections/${encodeURIComponent(name)}/graph`)}
+                        title="Ver grafo de documentos"
+                      >
+                        <Network size={12} /> Grafo
                       </Button>
                       {user.role === "admin" && (
                         <Button
