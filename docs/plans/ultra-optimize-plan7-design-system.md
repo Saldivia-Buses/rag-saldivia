@@ -995,7 +995,7 @@ Las 24 páginas usan los nuevos tokens. Nada se ve con los colores viejos.
 | Fase 4 — Layout system | ✅ completado | 2026-03-26 |
 | Fase 5 — Componentes comunidad | ✅ completado | 2026-03-26 |
 | Fase 6 — Momentos especiales | ✅ completado | 2026-03-26 |
-| Fase 7 — Storybook | ⬜ pendiente | — |
+| Fase 7 — Storybook | ✅ completado | 2026-03-26 |
 | Fase 8 — Páginas | ⬜ pendiente | — |
 
 ## Estimaciones

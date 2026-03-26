@@ -12,6 +12,18 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 ### Plan 7 — Design System (en progreso)
 
 #### Added
+- `apps/web/.storybook/main.ts` + `preview.ts`: Storybook 8 configurado con @storybook/react-vite, addon-essentials, addon-a11y, addon-themes — 2026-03-26 *(Plan 7 F7)*
+- `apps/web/stories/design-system/tokens.stories.tsx`: paleta completa de colores y escala tipográfica — 2026-03-26 *(Plan 7 F7)*
+- `apps/web/stories/primitives/button.stories.tsx`: todas las variantes y tamaños — 2026-03-26 *(Plan 7 F7)*
+- `apps/web/stories/primitives/badge.stories.tsx`: 6 variantes incluyendo success/warning — 2026-03-26 *(Plan 7 F7)*
+- `apps/web/stories/primitives/input.stories.tsx`: estados default, con valor, disabled — 2026-03-26 *(Plan 7 F7)*
+- `apps/web/stories/primitives/avatar.stories.tsx`: fallback con iniciales navy — 2026-03-26 *(Plan 7 F7)*
+- `apps/web/stories/primitives/table.stories.tsx`: tabla completa con datos mock — 2026-03-26 *(Plan 7 F7)*
+- `apps/web/stories/primitives/skeleton.stories.tsx`: SkeletonText, Avatar, Card, Table — 2026-03-26 *(Plan 7 F7)*
+- `apps/web/stories/features/stat-card.stories.tsx`: 4 stat cards con deltas — 2026-03-26 *(Plan 7 F7)*
+- `apps/web/stories/features/empty-placeholder.stories.tsx`: chat, collections, all variants — 2026-03-26 *(Plan 7 F7)*
+
+#### Added
 - `apps/web/src/components/auth/AnimatedBackground.tsx`: fondo animado con orbes CSS (gradiente mesh, sin WebGL) — 2026-03-26 *(Plan 7 F6)*
 - `apps/web/src/app/(app)/chat/loading.tsx`: skeleton de carga para /chat — 2026-03-26 *(Plan 7 F6)*
 - `apps/web/src/app/(app)/collections/loading.tsx`: skeleton de carga para /collections — 2026-03-26 *(Plan 7 F6)*
