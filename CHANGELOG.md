@@ -12,6 +12,17 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 ### Plan 7 — Design System (en progreso)
 
 #### Added
+- `apps/web/src/components/ui/empty-placeholder.tsx`: componente compuesto para estados vacíos con ícono, título y descripción — 2026-03-26 *(Plan 7 F5)*
+- `apps/web/src/components/ui/skeleton.tsx`: shimmer components — Skeleton, SkeletonText, SkeletonAvatar, SkeletonCard, SkeletonTable — 2026-03-26 *(Plan 7 F5)*
+- `apps/web/src/components/ui/stat-card.tsx`: tarjeta de estadísticas con valor, delta y ícono — 2026-03-26 *(Plan 7 F5)*
+- `apps/web/src/components/ui/data-table.tsx`: tabla avanzada con sorting, filtro y paginación via @tanstack/react-table — 2026-03-26 *(Plan 7 F5)*
+- `@tanstack/react-table@8.21.3`: instalado en apps/web — 2026-03-26 *(Plan 7 F5)*
+
+#### Changed
+- `apps/web/src/app/(app)/chat/page.tsx`: empty state con EmptyPlaceholder — 2026-03-26 *(Plan 7 F5)*
+- `apps/web/src/components/collections/CollectionsList.tsx`: empty state con EmptyPlaceholder, Input component, tokens Tailwind — 2026-03-26 *(Plan 7 F5)*
+
+#### Added
 - `apps/web/src/app/(app)/admin/layout.tsx`: layout de admin con `data-density="compact"` aplicado a todas las rutas /admin — 2026-03-26 *(Plan 7 F4)*
 
 #### Changed

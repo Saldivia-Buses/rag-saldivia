@@ -4,6 +4,8 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { FolderOpen, Trash2, MessageSquare, Plus, Network } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { EmptyPlaceholder } from "@/components/ui/empty-placeholder"
 import {
   Table,
   TableBody,
@@ -80,13 +82,12 @@ export function CollectionsList({ collections: initial, user }: Props) {
             </Button>
           ) : (
             <form onSubmit={handleCreate} className="flex items-center gap-2">
-              <input
+              <Input
                 autoFocus
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
                 placeholder="nombre-de-coleccion"
-                className="px-3 py-1.5 rounded-md border text-sm outline-none"
-                style={{ borderColor: "var(--border)", background: "var(--background)", color: "var(--foreground)" }}
+                className="w-48"
               />
               <Button size="sm" type="submit" disabled={creating}>
                 {creating ? "Creando..." : "Crear"}
@@ -96,31 +97,36 @@ export function CollectionsList({ collections: initial, user }: Props) {
               </Button>
             </form>
           )}
-          {error && <p className="text-sm mt-1" style={{ color: "var(--destructive)" }}>{error}</p>}
+          {error && <p className="text-sm mt-1 text-destructive">{error}</p>}
         </div>
       )}
 
-      <div className="rounded-lg border overflow-hidden" style={{ borderColor: "var(--border)" }}>
+      {collections.length === 0 ? (
+        <EmptyPlaceholder>
+          <EmptyPlaceholder.Icon icon={FolderOpen} />
+          <EmptyPlaceholder.Title>Sin colecciones disponibles</EmptyPlaceholder.Title>
+          <EmptyPlaceholder.Description>
+            {user.role === "admin"
+              ? "Creá una colección para empezar a ingestar documentos."
+              : "No tenés acceso a ninguna colección todavía."}
+          </EmptyPlaceholder.Description>
+        </EmptyPlaceholder>
+      ) : (
+      <div className="rounded-lg border border-border overflow-hidden">
         <Table>
           <TableHeader>
-            <TableRow style={{ background: "var(--muted)" }}>
+            <TableRow>
               <TableHead>Colección</TableHead>
               <TableHead className="text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {collections.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={2} className="text-center py-8" style={{ color: "var(--muted-foreground)" }}>
-                  No hay colecciones disponibles
-                </TableCell>
-              </TableRow>
-            ) : (
+            {(
               collections.map((name) => (
                 <TableRow key={name}>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <FolderOpen size={15} style={{ color: "var(--accent)" }} />
+                      <FolderOpen size={15} className="text-accent" />
                       <span className="font-medium">{name}</span>
                     </div>
                   </TableCell>
@@ -147,9 +153,8 @@ export function CollectionsList({ collections: initial, user }: Props) {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-7 w-7"
+                          className="h-7 w-7 text-destructive hover:text-destructive"
                           onClick={() => handleDelete(name)}
-                          style={{ color: "var(--destructive)" }}
                           title="Eliminar colección"
                         >
                           <Trash2 size={13} />
@@ -163,6 +168,7 @@ export function CollectionsList({ collections: initial, user }: Props) {
           </TableBody>
         </Table>
       </div>
+      )}
     </div>
   )
 }
