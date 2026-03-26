@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef } from "react"
-import { detectArtifact } from "@/lib/rag/detect-artifact"
+import { detectArtifact, type ArtifactData } from "@/lib/rag/detect-artifact"
 
 export type ChatPhase = "idle" | "streaming" | "done" | "error"
 
