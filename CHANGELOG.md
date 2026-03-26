@@ -9,6 +9,20 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Plan 6 — UI Testing (F2 en progreso)
+
+#### Added
+- `apps/web/src/lib/test-setup.ts`: preload global para todos los tests — mocks de next/navigation, next/font, next-themes, next/dynamic — 2026-03-26 *(Plan 6 F2)*
+- `apps/web/src/lib/component-test-setup.ts`: preload específico para component tests — GlobalRegistrator (happy-dom) + todos los mocks — 2026-03-26 *(Plan 6 F2)*
+- `apps/web/bunfig.toml`: preload de test-setup.ts para tests de lib — 2026-03-26 *(Plan 6 F2)*
+- `apps/web/src/components/ui/__tests__/setup-smoke.test.tsx`: smoke test que verifica que @testing-library + happy-dom funcionan — 2026-03-26 *(Plan 6 F2)*
+- `@testing-library/react@16.3.2`, `@testing-library/user-event@14.6.1`, `@testing-library/jest-dom@6.9.1`, `happy-dom@20.8.8`, `@happy-dom/global-registrator@20.8.8` — 2026-03-26 *(Plan 6 F2)*
+
+#### Changed
+- `apps/web/package.json`: agregar scripts `test:components` y `test:components:watch` con `--preload component-test-setup.ts` — 2026-03-26 *(Plan 6 F2)*
+
+---
+
 ### Plan 7 — Design System (F8 en progreso)
 
 #### Changed (F8 — Páginas)
