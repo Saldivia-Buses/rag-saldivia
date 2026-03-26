@@ -13,6 +13,12 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 #### Added
 - `docs/plans/ultra-optimize-plan5-testing-foundation.md`: plan de 5 fases para llevar cobertura a 95% en `packages/*` y `apps/web/src/lib/`, con enforcement en CI — 2026-03-26
+- `docs/decisions/006-testing-strategy.md`: ADR que codifica metas de cobertura por capa, matriz "tipo de código → test requerido", y enforcement en CI — 2026-03-26 *(Plan 5 F1)*
+
+#### Changed
+- `.cursor/skills/rag-testing/SKILL.md`: reescrito con la regla de oro, matriz completa de tests requeridos, metas por capa, tabla de estado de cobertura — 2026-03-26 *(Plan 5 F1)*
+- `docs/workflows.md`: sección 2 (testing) reescrita — regla de oro, metas por capa, matriz tipo→test, comandos de coverage, patrón actualizado con `process.env` antes de imports — 2026-03-26 *(Plan 5 F1)*
+- `docs/workflows.md`: ADR-006 agregado a la tabla de ADRs en sección 7 — 2026-03-26 *(Plan 5 F1)*
 
 ### Mejoras de metodología (2026-03-26)
 

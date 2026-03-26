@@ -45,79 +45,112 @@ cd apps/cli && bun link
 
 ## 2. Workflow de testing
 
+### Regla de oro
+
+> **Si el código no tiene test, no está terminado.**
+
+Esta regla aplica desde el Plan 5 (2026-03-26). El CI la enforcea con `coverageThreshold = 0.95`.
+Ver: `docs/decisions/006-testing-strategy.md`.
+
+### Metas de cobertura por capa
+
+| Capa | Target | Enforced en CI |
+|------|--------|----------------|
+| `packages/*` | **95%** | ✅ en cada PR |
+| `apps/web/src/lib/` | **95%** | ✅ en cada PR |
+| `apps/web/src/hooks/` | **80%** | ✅ en cada PR |
+| API routes | cobertura funcional (test manual) | revisión humana |
+| React components | no requerido ahora | — |
+
+### Matriz "tipo de código → test requerido"
+
+| Tipo de código | Test requerido | Dónde | En qué PR |
+|----------------|----------------|-------|-----------|
+| Query nueva en `packages/db/src/queries/` | Test unitario SQLite en memoria | `packages/db/src/__tests__/[dominio].test.ts` | **mismo PR** |
+| Función pura en `apps/web/src/lib/` | Test unitario | `apps/web/src/lib/__tests__/[nombre].test.ts` | **mismo PR** |
+| Lógica pura de un hook | Extraer a `lib/` → test allí | `apps/web/src/lib/[dominio]/__tests__/` | **mismo PR** |
+| Schema Zod nuevo | Test validación | `packages/shared/src/__tests__/` | **mismo PR** |
+| Server Action nueva | Test de la query subyacente | `packages/db/src/__tests__/` | **mismo PR** |
+| API route nueva | Test manual documentado en el PR | comentario en PR | **mismo PR** |
+
 ### Cuándo correr tests
 
-- **Antes de hacer commit**: tests del área que modificaste
-- **Antes de hacer push**: `bun run test` completo (también lo corre el hook pre-push vía type-check)
-- **Al agregar funcionalidad nueva**: crear el test primero (o inmediatamente después)
+- **Antes de hacer commit**: `bun test <ruta-del-paquete>` del área modificada
+- **Antes de hacer push**: `bun run test` completo (el hook pre-push también corre type-check)
+- **En CI (PRs)**: `bun run test:coverage` — falla si coverage baja del threshold
 
 ### Comandos
 
 ```bash
-# Suite completa — todos los workspaces con Turborepo
+# Suite completa
 bun run test
 
-# Por paquete — más rápido durante desarrollo
-bun test apps/web/src/lib/auth/__tests__/      # auth + RBAC (17 tests)
-bun test packages/db/src/__tests__/            # DB queries (24 tests)
-bun test packages/logger/src/__tests__/        # logger + blackbox (24 tests)
-bun test packages/config/src/__tests__/        # config loader (14 tests)
+# Suite completa con cobertura (lo que corre en CI en PRs)
+bun run test:coverage
 
-# Total: 79 tests unitarios
+# Por paquete — más rápido durante desarrollo
+bun test apps/web/src/lib/auth/__tests__/      # auth + RBAC
+bun test packages/db/src/__tests__/            # queries de DB
+bun test packages/logger/src/__tests__/        # logger + blackbox
+bun test packages/config/src/__tests__/        # config loader
+bun test packages/shared/src/__tests__/        # schemas Zod
+bun test apps/web/src/lib/__tests__/           # utilidades web
+bun test apps/web/src/lib/rag/__tests__/       # cliente RAG
+
+# Con cobertura por paquete
+bun test packages/db/src/__tests__/ --coverage
 ```
 
 ### Dónde agregar tests nuevos
 
-| Qué testear | Dónde poner el archivo |
-|-------------|------------------------|
-| Queries de DB nuevas | `packages/db/src/__tests__/` |
+| Qué testear | Directorio |
+|-------------|-----------|
+| Queries de DB | `packages/db/src/__tests__/` |
 | Lógica de auth / RBAC | `apps/web/src/lib/auth/__tests__/` |
 | Config loader | `packages/config/src/__tests__/` |
 | Logger / blackbox | `packages/logger/src/__tests__/` |
-| Hooks React | `apps/web/src/hooks/__tests__/` (crear si no existe) |
+| Schemas Zod | `packages/shared/src/__tests__/` |
+| Utilidades web (`lib/`) | `apps/web/src/lib/__tests__/` |
+| Lógica pura extraída de hooks | `apps/web/src/lib/[dominio]/__tests__/` |
 
 ### Cómo escribir tests (patrón del proyecto)
 
 ```typescript
-import { describe, test, expect, beforeEach } from "bun:test";
+import { describe, test, expect, beforeAll, afterEach } from "bun:test"
 
-// Para tests de DB: usar instancia en memoria
-import { createClient } from "@libsql/client";
-import { drizzle } from "drizzle-orm/libsql";
-import * as schema from "../schema";
+// CRÍTICO: setear ANTES de imports que usen getDb()
+process.env["DATABASE_PATH"] = ":memory:"
 
-let db: ReturnType<typeof drizzle>;
+import { createClient } from "@libsql/client"
+import { drizzle } from "drizzle-orm/libsql"
+import * as schema from "../schema"
 
-beforeEach(async () => {
-  const client = createClient({ url: ":memory:" });
-  db = drizzle(client, { schema });
-  // inicializar schema con SQL directo...
-});
+const client = createClient({ url: ":memory:" })
+const testDb = drizzle(client, { schema })
 
-describe("nombre del módulo", () => {
-  test("describe qué debería pasar", async () => {
+beforeAll(async () => {
+  await client.executeMultiple(`
+    CREATE TABLE IF NOT EXISTS ...;  -- solo las tablas que usa este test
+  `)
+})
+
+afterEach(async () => {
+  await client.executeMultiple(`DELETE FROM tabla;`)  // estado limpio entre tests
+})
+
+describe("nombreDelMódulo", () => {
+  test("describe el comportamiento esperado", async () => {
     // arrange → act → assert
-  });
-});
+  })
+})
 ```
 
 **Reglas:**
-- Siempre usar DB en memoria (`:memory:`), nunca el archivo real
-- Todos los `await import(...)` al nivel del módulo, no dentro de callbacks
-- Los tests de logger: verificar que el output contiene el tipo de evento, no asumir formato JSON/pretty
-
-### Cobertura actual y huecos
-
-| Área | Tests | Huecos conocidos |
-|------|-------|------------------|
-| Auth + RBAC | ✅ 17 tests | — |
-| DB queries (users, areas) | ✅ 24 tests | sessions, events (sin tests) |
-| Logger + blackbox | ✅ 24 tests | — |
-| Config loader | ✅ 14 tests | — |
-| API routes | ❌ sin tests unitarios | verificadas manualmente en Plan 2 |
-| Middleware | ❌ sin tests unitarios | edge runtime, difícil testear |
-| Hooks React | ❌ sin tests | `useRagStream` candidato prioritario |
-| Worker de ingesta | ❌ sin tests | lógica de locking SQLite |
+- `process.env["DATABASE_PATH"] = ":memory:"` ANTES de cualquier import que use `getDb()`
+- DB en memoria (`:memory:`) siempre, nunca el archivo real
+- Todos los imports al nivel del módulo, no dentro de callbacks
+- Tests del logger: verificar que el output *contiene* el tipo de evento
+- Una assertion de comportamiento por test; `beforeEach`/`afterEach` para estado limpio
 
 ---
 
@@ -384,6 +417,7 @@ El número es secuencial. Nunca reusar un número aunque se deprece el ADR.
 | [003](./decisions/003-nextjs-single-process.md) | Next.js como proceso único (reemplaza Python gateway + SvelteKit) | Aceptado |
 | [004](./decisions/004-temporal-api-timestamps.md) | Temporal API para timestamps | Aceptado |
 | [005](./decisions/005-static-import-logger-db.md) | Import estático de @rag-saldivia/db en el logger | Aceptado |
+| [006](./decisions/006-testing-strategy.md) | Estrategia de testing — cobertura por capas y enforcement en CI | Aceptado |
 
 ---
 
