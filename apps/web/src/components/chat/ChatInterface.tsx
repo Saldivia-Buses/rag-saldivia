@@ -16,6 +16,8 @@ import { SourcesPanel } from "@/components/chat/SourcesPanel"
 import { RelatedQuestions } from "@/components/chat/RelatedQuestions"
 import { CollectionSelector } from "@/components/chat/CollectionSelector"
 import { PromptTemplates } from "@/components/chat/PromptTemplates"
+import { ArtifactsPanel } from "@/components/chat/ArtifactsPanel"
+import type { ArtifactData } from "@/hooks/useRagStream"
 import { AnnotationPopover } from "@/components/chat/AnnotationPopover"
 
 type Message = {
@@ -57,6 +59,7 @@ export function ChatInterface({
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
   const [savedIds, setSavedIds] = useState<Set<number>>(new Set())
+  const [currentArtifact, setCurrentArtifact] = useState<ArtifactData | null>(null)
   const [copiedId, setCopiedId] = useState<number | null>(null)
   const [queryStats, setQueryStats] = useState<{ ms: number; sources: number } | null>(null)
   const [relatedQuestions, setRelatedQuestions] = useState<string[]>([])
@@ -71,6 +74,7 @@ export function ChatInterface({
     collection: session.collection,
     collections: activeCollections,
     focusMode,
+    onArtifact: (artifact) => setCurrentArtifact(artifact),
     onDelta: (fullContent) => setMessages((prev) => updateLastAssistantMessage(prev, fullContent)),
     onSources: (sources) => { pendingSourcesRef.current = sources },
     onError: (message) => {
@@ -184,6 +188,16 @@ export function ChatInterface({
           {session.collection}
         </span>
         <div className="flex items-center gap-1">
+          {currentArtifact && (
+            <button
+              onClick={() => setCurrentArtifact(currentArtifact)}
+              className="px-2 py-0.5 rounded-full text-xs font-medium animate-pulse"
+              style={{ background: "var(--accent)", color: "white" }}
+              title="Ver artifact detectado"
+            >
+              Artifact
+            </button>
+          )}
           <ShareDialog sessionId={session.id} />
           <ExportSession session={session} />
         </div>
@@ -317,6 +331,15 @@ export function ChatInterface({
         )}
 
         <ThinkingSteps phase={phase} />
+
+        {/* Artifacts panel — F3.42 */}
+        <ArtifactsPanel
+          artifact={currentArtifact}
+          onClose={() => setCurrentArtifact(null)}
+          onSave={(content) => {
+            if (session.id) actionToggleSaved(-1, content, session.title, false).catch(() => {})
+          }}
+        />
 
         {phase === "streaming" && messages[messages.length - 1]?.content === "" && (
           <div className="flex justify-start">

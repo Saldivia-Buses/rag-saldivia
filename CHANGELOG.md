@@ -11,6 +11,8 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Added
 
+- `apps/web/src/hooks/useRagStream.ts`: detección de artifacts al finalizar stream — marcador `:::artifact` explícito o heurística (código ≥ 40 líneas, tabla ≥ 5 cols); callback `onArtifact` — 2026-03-25 *(Plan 4 F3.42)*
+- `apps/web/src/components/chat/ArtifactsPanel.tsx`: Sheet lateral para código/tabla/documento — botones guardar y exportar; resaltado de código en `<pre>` — 2026-03-25 *(Plan 4 F3.42)*
 - `packages/db/src/schema.ts`: tablas `projects`, `project_sessions`, `project_collections` — 2026-03-25 *(Plan 4 F3.41)*
 - `packages/db/src/queries/projects.ts`: `createProject`, `listProjects`, `getProject`, `updateProject`, `deleteProject`, `addSessionToProject`, `addCollectionToProject`, `getProjectBySession` — 2026-03-25 *(Plan 4 F3.41)*
 - `apps/web/src/app/api/projects/route.ts`: GET/POST/DELETE para proyectos — 2026-03-25 *(Plan 4 F3.41)*

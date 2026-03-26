@@ -11,6 +11,12 @@ type StreamResult = {
   sources: unknown[]
 }
 
+export type ArtifactData = {
+  type: "document" | "table" | "code"
+  content: string
+  language?: string
+}
+
 type UseRagStreamOptions = {
   sessionId: string
   collection: string
@@ -18,6 +24,7 @@ type UseRagStreamOptions = {
   focusMode?: string
   onDelta: (fullContent: string) => void
   onSources: (sources: unknown[]) => void
+  onArtifact?: (artifact: ArtifactData) => void  // F3.42
   onError: (message: string) => void
 }
 
@@ -25,6 +32,41 @@ type UseRagStreamOptions = {
  * Encapsula fetch + lectura del stream SSE + abort controller.
  * ChatInterface solo maneja estado de mensajes; este hook maneja el transporte.
  */
+/** Detecta bloques :::artifact o heurística en el contenido acumulado */
+function detectArtifact(content: string): ArtifactData | null {
+  // Marcador explícito del servidor
+  const artifactMatch = content.match(/:::artifact\{type="(\w+)"(?:\s+lang="(\w+)")?\}([\s\S]*?):::/)
+  if (artifactMatch) {
+    return {
+      type: (artifactMatch[1] as ArtifactData["type"]) ?? "document",
+      content: (artifactMatch[3] ?? "").trim(),
+      language: artifactMatch[2],
+    }
+  }
+
+  // Heurística: bloque de código >= 40 líneas
+  const codeMatch = content.match(/```(\w*)\n([\s\S]{500,})```/)
+  if (codeMatch) {
+    const lines = (codeMatch[2] ?? "").split("\n").length
+    if (lines >= 40) {
+      return { type: "code", content: (codeMatch[2] ?? "").trim(), language: codeMatch[1] || undefined }
+    }
+  }
+
+  // Heurística: tabla markdown con >= 5 columnas
+  const tableMatch = content.match(/\|([^|\n]+\|){4,}/)
+  if (tableMatch) {
+    const cols = (tableMatch[0].match(/\|/g) ?? []).length - 1
+    if (cols >= 5) {
+      const tableStart = content.indexOf(tableMatch[0])
+      const tableEnd = content.lastIndexOf("\n\n", tableStart + 200)
+      return { type: "table", content: content.slice(tableStart, tableEnd > 0 ? tableEnd : undefined).trim() }
+    }
+  }
+
+  return null
+}
+
 export function useRagStream({
   sessionId,
   collection,
@@ -32,6 +74,7 @@ export function useRagStream({
   focusMode,
   onDelta,
   onSources,
+  onArtifact,
   onError,
 }: UseRagStreamOptions) {
   const [phase, setPhase] = useState<ChatPhase>("idle")
@@ -99,6 +142,12 @@ export function useRagStream({
             // ignorar líneas malformadas del stream
           }
         }
+      }
+
+      // Detectar artifacts al terminar el stream — F3.42
+      if (onArtifact) {
+        const artifact = detectArtifact(fullContent)
+        if (artifact) onArtifact(artifact)
       }
 
       setPhase("done")
