@@ -591,27 +591,265 @@ Criterio global Fase 2: las 20 features completas. Analytics muestra datos reale
 
 ## Fase 3 — Alta complejidad *(80-120 hs total)*
 
-Objetivo: 12 features que requieren arquitectura nueva, tablas nuevas, o integración con sistemas externos. Cada una tiene su propio sub-plan detallado.
+Objetivo: 12 features que requieren arquitectura nueva, tablas nuevas, o integración con sistemas externos.
 
-**Hito mínimo de deploy** (criterio para mergear Fase 3): features 39, 40, 41, 47 completas. SSO funciona en staging. El resto (42–46, 48–50) son incrementales post-hito.
+Criterio global: hito mínimo (features 39, 40, 41, 47) listas para deploy. El resto (42–46, 48–50) son incrementales post-hito.
 
-### Índice de features
+**Tablas DB nuevas en esta fase:** `projects`, `project_sessions`, `project_collections`, `user_memory`, `external_sources`. Campos nuevos: `sso_provider`/`sso_subject` en `users`, `forked_from` en `chat_sessions`. Tablas FTS5 virtuales: `sessions_fts`, `messages_fts`.
 
-| # | Feature | Descripción técnica | Dependencias |
-|---|---|---|---|
-| 39 | **Búsqueda universal** | FTS5 de SQLite sobre sesiones + fragmentos + templates. Resultados en Command Palette en tiempo real. | F2.23 (Cmd+K) |
-| 40 | **Preview de doc inline** | `react-pdf` (PDF.js). Panel lateral con el PDF y el fragmento exacto resaltado. Requiere que el RAG server exponga el path o bytes del documento. | #19 (panel fuentes) |
-| 41 | **Proyectos con contexto** | Entidad `Project`: agrupa sesiones, asigna colecciones, tiene instrucciones custom. Todas las sesiones del proyecto heredan el contexto. Panel en sidebar. | — |
-| 42 | **Artifacts panel** | Detectar `:::artifact` en stream o heurística (tabla > 5 cols, bloque markdown > 40 líneas). Panel lateral activable. Guardable, exportable, versionable. | F3.41 |
-| 43 | **Bifurcación de conversaciones** | Botón "Bifurcar desde aquí" en mensaje. Nueva sesión con historial hasta ese punto. Indicador de vinculación entre sesiones. | — |
-| 44 | **Memoria de usuario** | Tabla `user_memory`. Preferencias inferidas y explícitas. UI para ver/editar. Inyectado en cada query como contexto adicional. | — |
-| 45 | **Superficie proactiva** | Job periódico: cruza docs nuevos en colecciones con historial de queries del usuario. Notificaciones "X docs nuevos podrían interesarte". | F1.12, F2.30 |
-| 46 | **Grafo de documentos** | Página `/collections/[name]/graph`. D3 o `@visx/network`. Similitud semántica entre docs via embeddings de Milvus. Nodos clicables que abren el doc. | — |
-| 47 | **SSO (Google / Azure AD)** | `next-auth` v5 + OIDC/SAML 2.0. Modo mixto: usuarios SSO con `sso_provider`/`sso_subject` nuevos campos en tabla `users`, `password_hash` null. Usuarios con password existentes siguen funcionando. Middleware RBAC y cookies HttpOnly no cambian. | — |
-| 48 | **Auto-ingesta externa** | Google Drive, SharePoint, Confluence. OAuth + colección destino + schedule. Worker gestiona sync. | F2.38 (webhooks) |
-| 49 | **Bot Slack / Teams** | App Slack/Teams. Llama al API interno con `SYSTEM_API_KEY` + `userId`. Respeta RBAC. | — |
-| 50 | **Extracción estructurada** | Usuario define campos (Nombre, Fecha, Monto). Sistema procesa todos los docs de la colección extrayendo esos campos. Resultado exportable como CSV/Excel. | — |
+---
 
+### F3.39 — Búsqueda universal *(3-4 hs)* 🔑 hito mínimo
+
+**Archivos:**
+- Modify: `packages/db/src/init.ts` — tablas FTS5 virtuales
+- Create: `packages/db/src/queries/search.ts`
+- Create: `apps/web/src/app/api/search/route.ts`
+- Modify: `apps/web/src/components/layout/CommandPalette.tsx`
+
+SQLite FTS5 soporta búsqueda full-text nativa. Se indexan `chat_sessions.title`, `chat_messages.content`, `prompt_templates.title + prompt`, `saved_responses.content`.
+
+- [ ] Agregar a `init.ts` las tablas FTS5 virtuales:
+  ```sql
+  CREATE VIRTUAL TABLE IF NOT EXISTS sessions_fts USING fts5(id, title, content=chat_sessions, content_rowid=rowid);
+  CREATE VIRTUAL TABLE IF NOT EXISTS messages_fts USING fts5(id, content, content=chat_messages, content_rowid=rowid);
+  ```
+- [ ] Agregar triggers en `init.ts` para mantener FTS sincronizado con inserts/updates/deletes en `chat_sessions` y `chat_messages`.
+- [ ] Crear `packages/db/src/queries/search.ts`: función `universalSearch(query, userId, limit)` que consulta las tablas FTS5 y retorna resultados unificados con tipo (`session` | `message` | `template` | `saved`) y snippet resaltado.
+- [ ] Crear `GET /api/search?q=...`: llama a `universalSearch` con el userId del token. Retorna máximo 20 resultados.
+- [ ] En `CommandPalette.tsx`: agregar grupo "Resultados" que llama al endpoint en tiempo real mientras el usuario escribe (debounce 300ms). Cada resultado muestra tipo, título y snippet.
+- [ ] Test unitario: `universalSearch("")` retorna array vacío. `universalSearch("test")` con datos en DB retorna resultados.
+- [ ] Commit: `feat(web): busqueda universal fts5 en command palette — f3.39`
+
+---
+
+### F3.40 — Preview de doc inline *(3-4 hs)* 🔑 hito mínimo
+
+**Archivos:**
+- Create: `apps/web/src/components/chat/DocPreviewPanel.tsx`
+- Modify: `apps/web/src/components/chat/SourcesPanel.tsx`
+- Create: `apps/web/src/app/api/rag/document/[name]/route.ts`
+
+Prerequisito: F2.19 (SourcesPanel). El RAG Blueprint expone documentos en `/v1/documents/{name}` — si no, usar fallback de descarga del blob.
+
+- [ ] `bun add react-pdf` en `apps/web`. Agregar `react-pdf` a `transpilePackages` en `next.config.ts`.
+- [ ] Crear `GET /api/rag/document/[name]`: hace proxy al RAG server para obtener el PDF como stream. Solo usuarios con acceso a la colección. Retorna el blob con `Content-Type: application/pdf`.
+- [ ] Crear `DocPreviewPanel.tsx`: Sheet lateral (shadcn) que renderiza el PDF con `react-pdf`. Acepta props `documentName` y `highlightText`. El fragmento destacado se resalta con CSS sobre el canvas de PDF.js.
+- [ ] En `SourcesPanel.tsx`: al hacer clic en el nombre de un documento, abrir `DocPreviewPanel` con el nombre y fragmento correspondiente.
+- [ ] Test: `DocPreviewPanel` con `documentName=""` no crashea. Renderiza un estado de loading.
+
+> **Nota de viabilidad:** Si el Blueprint no expone `/v1/documents/{name}`, el panel muestra el fragmento de texto del source sin renderizado PDF. Documentar en comentario.
+
+- [ ] Commit: `feat(chat): preview de doc inline con react-pdf — f3.40`
+
+---
+
+### F3.41 — Proyectos con contexto *(5-7 hs)* 🔑 hito mínimo
+
+**Archivos:**
+- Modify: `packages/db/src/schema.ts` — tablas `projects`, `project_sessions`, `project_collections`
+- Create: `packages/db/src/queries/projects.ts`
+- Create: `apps/web/src/app/(app)/projects/` — páginas
+- Create: `apps/web/src/components/layout/panels/ProjectsPanel.tsx`
+- Modify: `apps/web/src/components/layout/SecondaryPanel.tsx`
+- Modify: `apps/web/src/app/api/rag/generate/route.ts`
+
+- [ ] Agregar al schema:
+  - `projects`: (id UUID PK, userId FK, name TEXT, description TEXT, instructions TEXT — system prompt adicional, createdAt INTEGER)
+  - `project_sessions`: (projectId FK, sessionId FK, PRIMARY KEY compuesto)
+  - `project_collections`: (projectId FK, collectionName TEXT, PRIMARY KEY compuesto)
+- [ ] Migrar tabla en la DB real con `bun -e` inline.
+- [ ] Crear `packages/db/src/queries/projects.ts`: `createProject`, `listProjects(userId)`, `getProject(id)`, `addSessionToProject`, `addCollectionToProject`, `deleteProject`.
+- [ ] Crear páginas:
+  - `/projects` — lista de proyectos del usuario
+  - `/projects/[id]` — detalle: sesiones asignadas, colecciones, instrucciones, botón nueva sesión en contexto
+- [ ] Crear `ProjectsPanel.tsx`: panel secundario para rutas `/projects`. Lista de proyectos con íconos, botón crear.
+- [ ] En `SecondaryPanel.tsx`: agregar `/projects` → `ProjectsPanel`.
+- [ ] Agregar `/projects` al NavRail (ícono `FolderKanban`).
+- [ ] En `/api/rag/generate`: si la sesión pertenece a un proyecto, prepend las `instructions` del proyecto como system message adicional.
+- [ ] Test unitario: `createProject` y `listProjects` contra SQLite en memoria.
+- [ ] Commit: `feat(web): proyectos con contexto — tablas, paginas, panel sidebar — f3.41`
+
+---
+
+### F3.42 — Artifacts panel *(3-4 hs)*
+
+**Archivos:**
+- Create: `apps/web/src/components/chat/ArtifactsPanel.tsx`
+- Modify: `apps/web/src/hooks/useRagStream.ts`
+- Modify: `apps/web/src/components/chat/ChatInterface.tsx`
+
+Prerequisito: F3.41.
+
+El stream puede incluir bloques `:::artifact{type="document|table|code"}` o heurística: bloque markdown de >40 líneas, o tabla con >5 columnas.
+
+- [ ] En `useRagStream.ts`: detectar `:::artifact` en el delta acumulado. Si se detecta, extraer el bloque y emitirlo via callback `onArtifact`. Si no hay marcador, aplicar heurística: bloque de código >40 líneas o tabla >5 columnas.
+- [ ] Agregar `onArtifact?: (artifact: { type: string; content: string }) => void` a `UseRagStreamOptions`.
+- [ ] Crear `ArtifactsPanel.tsx`: Sheet lateral que muestra el artifact. Para `code`: resaltado de sintaxis con `<pre>`. Para `table`: renderiza el markdown como tabla. Para `document`: texto enriquecido. Botones: Guardar (a `saved_responses`), Exportar (Markdown/CSV según tipo).
+- [ ] En `ChatInterface.tsx`: estado `currentArtifact` alimentado por `onArtifact`. Badge "Artifact" en el header que abre el panel.
+- [ ] Commit: `feat(chat): artifacts panel — deteccion en stream y panel lateral — f3.42`
+
+---
+
+### F3.43 — Bifurcación de conversaciones *(2-3 hs)*
+
+**Archivos:**
+- Modify: `packages/db/src/schema.ts` — campo `forked_from` en `chat_sessions`
+- Modify: `packages/db/src/init.ts`
+- Modify: `apps/web/src/app/actions/chat.ts`
+- Modify: `apps/web/src/components/chat/ChatInterface.tsx`
+- Modify: `apps/web/src/components/chat/SessionList.tsx`
+
+- [ ] Agregar campo `forked_from TEXT REFERENCES chat_sessions(id) ON DELETE SET NULL` a `chat_sessions` en schema + `init.ts`. Migrar con `ALTER TABLE`.
+- [ ] Server Action `actionForkSession(sessionId, upToMessageId)`: copia la sesión y los mensajes hasta `upToMessageId`. Setea `forked_from = sessionId` en la nueva sesión. Retorna el id de la nueva sesión.
+- [ ] En `ChatInterface.tsx`: botón "Bifurcar desde aquí" (ícono `GitBranch`) en cada mensaje del asistente, visible en hover. Al clic llama a `actionForkSession` y navega a la nueva sesión.
+- [ ] En `SessionList.tsx`: mostrar badge visual (ícono `GitBranch` pequeño) en sesiones con `forked_from` no null. Al hover, tooltip "Bifurcada de: [título original]".
+- [ ] Test unitario: `actionForkSession` crea sesión con `forked_from` y copia solo los mensajes hasta el punto indicado.
+- [ ] Commit: `feat(chat): bifurcacion de conversaciones — f3.43`
+
+---
+
+### F3.44 — Memoria de usuario *(3-4 hs)*
+
+**Archivos:**
+- Modify: `packages/db/src/schema.ts` — tabla `user_memory`
+- Create: `packages/db/src/queries/memory.ts`
+- Create: `apps/web/src/app/(app)/settings/memory/page.tsx`
+- Modify: `apps/web/src/app/api/rag/generate/route.ts`
+- Modify: `apps/web/src/components/settings/SettingsClient.tsx`
+
+- [ ] Tabla `user_memory`: (id INTEGER PK, userId FK, key TEXT, value TEXT, source enum('explicit','inferred'), createdAt, updatedAt. UNIQUE(userId, key)).
+- [ ] `packages/db/src/queries/memory.ts`: `setMemory(userId, key, value, source)`, `getMemory(userId)`, `deleteMemory(userId, key)`.
+- [ ] Migrar tabla.
+- [ ] En `/api/rag/generate`: llamar `getMemory(userId)`, si hay entradas construir un system message con el contexto: `"User preferences: [key1: value1, key2: value2]"`. Prepend antes del array de mensajes.
+- [ ] Crear `/settings/memory`: tabla de preferencias con columnas clave/valor/fuente. Botón eliminar por fila. Formulario para agregar preferencia explícita.
+- [ ] Agregar tab "Memoria" en `SettingsClient.tsx` que navega a `/settings/memory`.
+- [ ] Test unitario: `setMemory` + `getMemory` con datos correctos en memoria.
+- [ ] Commit: `feat(web): memoria de usuario inyectada en queries — f3.44`
+
+---
+
+### F3.45 — Superficie proactiva *(2-3 hs)*
+
+**Archivos:**
+- Modify: `apps/web/src/workers/ingestion.ts`
+- Modify: `apps/web/src/app/api/notifications/route.ts`
+
+Prerequisito: F1.12 (notificaciones), F2.30 (analytics).
+
+Cuando se completa una ingesta de docs nuevos, el worker cruza los términos del documento con los queries recientes del usuario (tabla `events` tipo `rag.stream_started`) y, si hay coincidencia semántica simple (keywords en común), genera una notificación del tipo `proactive.docs_available`.
+
+- [ ] En `ingestion.ts` worker al completar job: llamar `checkProactiveSurface(collection, userId)`.
+- [ ] Implementar `checkProactiveSurface`: obtener queries recientes del usuario en esa colección (últimos 30 días, eventos `rag.stream_started`). Extraer keywords del filename/collection. Si hay solapamiento → insertar evento `proactive.docs_available` en tabla `events` con payload `{ collection, filename, matchedQueries: N }`.
+- [ ] En `/api/notifications/route.ts`: agregar `"proactive.docs_available"` a los tipos de notificación retornados.
+- [ ] Commit: `feat(web): superficie proactiva — notificaciones de docs nuevos relevantes — f3.45`
+
+---
+
+### F3.46 — Grafo de documentos *(4-5 hs)*
+
+**Archivos:**
+- Create: `apps/web/src/app/(app)/collections/[name]/graph/page.tsx`
+- Create: `apps/web/src/components/collections/DocumentGraph.tsx`
+- Create: `apps/web/src/app/api/collections/[name]/embeddings/route.ts`
+
+- [ ] `bun add d3` en `apps/web`. Agregar a `transpilePackages`.
+- [ ] Crear `GET /api/collections/[name]/embeddings`: llama al RAG server para obtener embeddings de los documentos de la colección. Si el Blueprint no los expone directamente, retorna una estructura simulada con similitud aleatoria para MVP. Retorna `{ nodes: [{id, name}], edges: [{source, target, weight}] }`.
+- [ ] Crear `DocumentGraph.tsx` (Client Component): visualización D3 force-directed. Nodos = documentos, aristas = similitud semántica (peso). Nodos clicables que navegan a la URL del documento o abren el `DocPreviewPanel` (F3.40). Zoom + drag. Colores por cluster (calculado con simple thresholding del weight).
+- [ ] Crear página `/collections/[name]/graph`: Server Component que fetcha la colección y renderiza `<DocumentGraph />`.
+- [ ] Agregar botón "Ver grafo" en `CollectionsList.tsx` (F2.26).
+- [ ] Commit: `feat(collections): grafo de documentos con d3 — f3.46`
+
+---
+
+### F3.47 — SSO (Google / Azure AD) *(6-8 hs)* 🔑 hito mínimo
+
+**Archivos:**
+- Modify: `packages/db/src/schema.ts` — campos `sso_provider`, `sso_subject` en `users`
+- Modify: `packages/db/src/init.ts`
+- Create: `apps/web/src/app/api/auth/[...nextauth]/route.ts`
+- Create: `apps/web/src/components/auth/SSOButton.tsx`
+- Modify: `apps/web/src/app/(auth)/login/page.tsx`
+- Modify: `apps/web/src/middleware.ts`
+
+Coexistencia: usuarios SSO usan NextAuth session; usuarios con password usan el JWT propio. El middleware maneja ambos.
+
+- [ ] `bun add next-auth@beta @auth/core` en `apps/web`.
+- [ ] Agregar campos al schema: `sso_provider TEXT` y `sso_subject TEXT` en tabla `users`. UNIQUE(sso_provider, sso_subject). `password_hash` queda null para usuarios SSO. Migrar con `ALTER TABLE`.
+- [ ] Crear `apps/web/src/app/api/auth/[...nextauth]/route.ts` con NextAuth v5:
+  - Provider Google (`GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`)
+  - Provider Azure AD (`AZURE_AD_CLIENT_ID`, `AZURE_AD_CLIENT_SECRET`, `AZURE_AD_TENANT_ID`)
+  - En `authorize` callback: buscar usuario por `sso_provider + sso_subject`. Si no existe, crear con `role: "user"`, `active: true`. Si existe pero `active: false` → denegar.
+  - Emitir JWT propio (jose) con los mismos claims que el flujo de password, para compatibilidad con el middleware RBAC existente.
+- [ ] Crear `SSOButton.tsx`: botón "Continuar con Google / Microsoft" usando `signIn()` de NextAuth.
+- [ ] En `login/page.tsx`: agregar `<SSOButton>` debajo del formulario de email/password, separado por un "o".
+- [ ] En `middleware.ts`: verificar también la cookie de sesión de NextAuth (`next-auth.session-token`) como alternativa al JWT propio. Si el token NextAuth es válido, extraer claims del mismo y continuar el flujo RBAC.
+- [ ] Agregar al `.env.example`: `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `AZURE_AD_CLIENT_ID`, `AZURE_AD_CLIENT_SECRET`, `AZURE_AD_TENANT_ID`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL`.
+- [ ] Test: login con credenciales de password sigue funcionando. Usuario SSO creado en DB al primer login.
+- [ ] Commit: `feat(auth): sso google y azure ad con nextauth v5 — f3.47`
+
+---
+
+### F3.48 — Auto-ingesta externa *(6-8 hs)*
+
+**Archivos:**
+- Modify: `packages/db/src/schema.ts` — tabla `external_sources`
+- Create: `packages/db/src/queries/external-sources.ts`
+- Create: `apps/web/src/app/(app)/admin/external-sources/page.tsx`
+- Create: `apps/web/src/workers/external-sync.ts`
+- Modify: `apps/web/src/workers/ingestion.ts`
+
+Prerequisito: F2.38 (webhooks).
+
+- [ ] Tabla `external_sources`: (id UUID PK, userId FK, provider enum('google_drive','sharepoint','confluence'), name TEXT, credentials TEXT (JSON cifrado), collectionDest TEXT, schedule TEXT, active BOOLEAN, lastSync INTEGER, createdAt INTEGER).
+- [ ] `external-sources.ts`: `createSource`, `listSources(userId)`, `listActiveSources()`, `updateLastSync(id)`.
+- [ ] Crear `apps/web/src/workers/external-sync.ts`: worker separado. Cada 5 minutos fetcha `listActiveSources()`. Para cada source:
+  - Google Drive: usa `googleapis` SDK — listar archivos modificados desde `lastSync`, descargar y subir a `/api/upload`.
+  - SharePoint: usa `@microsoft/microsoft-graph-client` — mismo patrón.
+  - Confluence: usa Confluence REST API — exportar como PDF y subir.
+  - `bun add googleapis @microsoft/microsoft-graph-client`
+- [ ] Página `/admin/external-sources`: formulario para configurar fuentes (provider, credenciales OAuth, colección destino, schedule). Lista de fuentes activas con estado y último sync.
+- [ ] Agregar link "Fuentes externas" en `AdminPanel.tsx`.
+- [ ] Commit: `feat(admin): auto-ingesta desde google drive sharepoint confluence — f3.48`
+
+---
+
+### F3.49 — Bot Slack / Teams *(4-6 hs)*
+
+**Archivos:**
+- Create: `apps/web/src/app/api/slack/route.ts`
+- Create: `apps/web/src/app/api/teams/route.ts`
+- Create: `apps/web/src/app/(app)/admin/integrations/page.tsx`
+
+- [ ] Crear `POST /api/slack`: handler de eventos Slack (slash command o bot mention). Extrae el `userId` de un mapping Slack→sistema almacenado en DB (tabla `bot_user_mappings`) o permite autenticación via token de API. Llama al endpoint interno `/api/rag/generate` con `SYSTEM_API_KEY` y el userId resuelto. Retorna la respuesta al canal de Slack via `response_url` o `chat.postMessage`. Respeta RBAC (si el usuario no tiene acceso, retorna mensaje de error al canal).
+- [ ] Crear `POST /api/teams`: mismo patrón para Microsoft Teams via Adaptive Cards.
+- [ ] Agregar tabla `bot_user_mappings` (slack_user_id/teams_user_id → system userId) al schema + `init.ts`.
+- [ ] Página `/admin/integrations`: configuración de tokens de Slack/Teams, mapeo de usuarios. Solo admins.
+- [ ] Agregar al `.env.example`: `SLACK_BOT_TOKEN`, `SLACK_SIGNING_SECRET`, `TEAMS_BOT_ID`, `TEAMS_BOT_PASSWORD`.
+- [ ] Commit: `feat(web): bot slack y teams respetando rbac — f3.49`
+
+---
+
+### F3.50 — Extracción estructurada *(4-5 hs)*
+
+**Archivos:**
+- Create: `apps/web/src/app/(app)/extract/page.tsx`
+- Create: `apps/web/src/app/api/extract/route.ts`
+- Create: `apps/web/src/components/extract/ExtractionWizard.tsx`
+
+- [ ] Crear `POST /api/extract`: recibe `{ collection, fields: [{name, description}] }`. Para cada documento de la colección, hace un query al RAG server con el prompt: `"Extract the following fields from this document: [fields]. Return JSON only."`. Agrega los resultados a una tabla en memoria.
+- [ ] Crear `ExtractionWizard.tsx` (Client Component): wizard de 3 pasos:
+  1. Seleccionar colección
+  2. Definir campos (nombre + descripción, dinámico con `+`)
+  3. Ejecutar y ver resultados en tabla
+  Botón "Exportar CSV" al final.
+- [ ] Crear página `/extract` accesible para todos los usuarios autenticados.
+- [ ] Agregar `/extract` al NavRail (ícono `Table2`).
+- [ ] Commit: `feat(web): extraccion estructurada a tabla exportable como csv — f3.50`
+
+---
+
+Criterio global Fase 3: features 39, 40, 41, 47 completas y testeadas. SSO funciona en staging. `bun run test` pasa. Las demás (42–46, 48–50) se completan en sub-sprints post-hito.
 **Estado: pendiente**
 
 ---
