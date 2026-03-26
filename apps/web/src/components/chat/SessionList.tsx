@@ -175,7 +175,7 @@ export function SessionList({ sessions }: { sessions: DbChatSession[] }) {
           <button onClick={bulkExport} title="Exportar" className="p-1 hover:opacity-80">
             <Download size={13} />
           </button>
-          <button onClick={bulkDelete} title="Eliminar" className="p-1 hover:opacity-80" style={{ color: "var(--destructive)" }}>
+          <button onClick={bulkDelete} title="Eliminar" className="p-1 hover:opacity-80 text-destructive">
             <Trash2 size={13} />
           </button>
           <button onClick={() => setSelected(new Set())} className="p-1 hover:opacity-80">
@@ -187,7 +187,7 @@ export function SessionList({ sessions }: { sessions: DbChatSession[] }) {
       {/* Sessions */}
       <div className="flex-1 overflow-y-auto p-2 space-y-0.5">
         {filteredSessions.length === 0 && (
-          <p className="px-3 py-4 text-sm text-center" style={{ color: "var(--muted-foreground)" }}>
+          <p className="px-3 py-4 text-sm text-center text-fg-muted">
             {filterTag ? `Sin sesiones con #${filterTag}` : "Sin sesiones. Creá una nueva."}
           </p>
         )}
@@ -200,19 +200,15 @@ export function SessionList({ sessions }: { sessions: DbChatSession[] }) {
             <div key={session.id}>
               {isRenaming ? (
                 // Modo edición inline
-                <div
-                  className="flex items-center gap-1 px-2 py-1.5 rounded-md"
-                  style={{ background: "var(--accent)" }}
-                >
-                  <MessageSquare size={14} className="shrink-0 opacity-60" />
+                <div className="flex items-center gap-1 px-2 py-1.5 rounded-md bg-accent-subtle">
+                  <MessageSquare size={14} className="shrink-0 opacity-60 text-accent" />
                   <input
                     ref={inputRef}
                     value={renameValue}
                     onChange={(e) => setRenameValue(e.target.value)}
                     onKeyDown={(e) => handleRenameKeyDown(e, session.id)}
                     onBlur={() => commitRename(session.id)}
-                    className="flex-1 min-w-0 text-sm bg-transparent outline-none border-b"
-                    style={{ borderColor: "var(--border)", color: "var(--foreground)" }}
+                    className="flex-1 min-w-0 text-sm bg-transparent outline-none border-b border-border text-fg"
                     maxLength={80}
                   />
                   <button
@@ -242,11 +238,9 @@ export function SessionList({ sessions }: { sessions: DbChatSession[] }) {
                     />
                     <Link
                       href={`/chat/${session.id}`}
-                      className="flex items-center gap-2 flex-1 px-2 py-1.5 rounded-md text-sm group transition-colors"
-                      style={{
-                        background: active ? "var(--accent)" : "transparent",
-                        color: active ? "var(--foreground)" : "var(--muted-foreground)",
-                      }}
+                      className={`flex items-center gap-2 flex-1 px-2 py-1.5 rounded-md text-sm group transition-colors ${
+                        active ? "bg-accent-subtle text-accent font-medium" : "text-fg-muted hover:bg-surface-2 hover:text-fg"
+                      }`}
                     >
                       <MessageSquare size={14} className="shrink-0 opacity-60" />
                       <span className="flex-1 truncate">{session.title}</span>
@@ -301,8 +295,7 @@ export function SessionList({ sessions }: { sessions: DbChatSession[] }) {
                         onChange={(e) => setTagInput((p) => ({ ...p, [session.id]: e.target.value }))}
                         onKeyDown={(e) => { if (e.key === "Enter") handleAddTag(session.id); if (e.key === "Escape") setShowTagInput(null) }}
                         placeholder="nueva-etiqueta"
-                        className="flex-1 text-xs px-2 py-0.5 rounded border outline-none"
-                        style={{ borderColor: "var(--border)", background: "var(--muted)", color: "var(--foreground)" }}
+                        className="flex-1 text-xs px-2 py-0.5 rounded border border-border bg-surface text-fg outline-none"
                       />
                       <button onClick={() => handleAddTag(session.id)} className="p-0.5 hover:opacity-80"><Check size={11} /></button>
                       <button onClick={() => setShowTagInput(null)} className="p-0.5 hover:opacity-80"><X size={11} /></button>

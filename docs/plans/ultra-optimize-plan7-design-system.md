@@ -882,7 +882,8 @@ Objetivo: aplicar el nuevo design system a las 24 páginas en orden de prioridad
 
 - [x] Empty state de chat: `EmptyPlaceholder` con ícono MessageSquare — completado 2026-03-26
 - [x] Skeleton de carga via `chat/loading.tsx` — completado 2026-03-26
-- [x] SessionList: `bg-surface border-r border-border` sin inline styles — completado 2026-03-26
+- [x] SessionList: `bg-surface border-r border-border` — completado 2026-03-26
+- [x] SessionList: eliminar todos los inline styles — completado 2026-03-26
 - [ ] Input de chat: estilo prominente con tokens
 - [ ] Mensajes: estilos con tokens semánticos
 
