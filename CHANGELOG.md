@@ -12,6 +12,7 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 ### Plan 7 — Design System (F8 en progreso)
 
 #### Changed (F8 — Páginas)
+- `apps/web/src/components/chat/ChatInterface.tsx`: mensajes usuario `bg-accent`, asistente `bg-surface border-border`, input con tokens, `<Button>` send, error `bg-destructive-subtle`, feedback con `cn()` — 2026-03-26 *(Plan 7 F8.3)*
 - `apps/web/src/components/chat/SessionList.tsx`: eliminar todos los inline styles — `cn()` para estado activo, tokens Tailwind para destructive/muted/border — 2026-03-26 *(Plan 7 F8.2)*
 - `apps/web/src/components/admin/UsersAdmin.tsx`: rediseño completo — `<Table>` shadcn, badges success/destructive/secondary, formulario con `<Input>`, empty state, botones `<Button variant="ghost">`, tokens Tailwind, sin inline styles — 2026-03-26 *(Plan 7 F8.4)*
 - `apps/web/src/components/admin/AnalyticsDashboard.tsx`: `<StatCard>`, gráficos con colores navy, tooltips con tokens CSS, loading skeleton, empty state, inline styles eliminados — 2026-03-26 *(Plan 7 F8.5)*

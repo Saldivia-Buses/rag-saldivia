@@ -180,19 +180,15 @@ export function ChatInterface({
   return (
     <div className="flex-1 flex flex-col min-h-0">
       {/* Header */}
-      <div
-        className="flex items-center justify-between px-6 py-3 border-b shrink-0 no-print"
-        style={{ borderColor: "var(--border)" }}
-      >
-        <span className="text-sm font-medium truncate" style={{ color: "var(--muted-foreground)" }}>
+      <div className="flex items-center justify-between px-6 py-3 border-b border-border shrink-0 no-print">
+        <span className="text-sm font-medium text-fg-muted truncate">
           {session.collection}
         </span>
         <div className="flex items-center gap-1">
           {currentArtifact && (
             <button
               onClick={() => setCurrentArtifact(currentArtifact)}
-              className="px-2 py-0.5 rounded-full text-xs font-medium animate-pulse"
-              style={{ background: "var(--accent)", color: "white" }}
+              className="px-2 py-0.5 rounded-full text-xs font-medium animate-pulse bg-accent text-accent-fg"
               title="Ver artifact detectado"
             >
               Artifact
@@ -206,9 +202,9 @@ export function ChatInterface({
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
         {messages.length === 0 && (
-          <div className="h-full flex items-center justify-center" style={{ color: "var(--muted-foreground)" }}>
-            <div className="text-center space-y-1">
-              <p className="font-medium">Colección: {session.collection}</p>
+          <div className="h-full flex items-center justify-center">
+            <div className="text-center space-y-1 text-fg-muted">
+              <p className="font-medium text-fg">Colección: {session.collection}</p>
               <p className="text-sm">Hacé tu primera pregunta</p>
             </div>
           </div>
@@ -220,13 +216,11 @@ export function ChatInterface({
             className={`flex group ${msg.role === "user" ? "justify-end" : "justify-start"}`}
           >
             <div
-              className={`max-w-2xl rounded-xl px-4 py-3 text-sm space-y-1 ${
-                msg.role === "user" ? "rounded-br-sm" : "rounded-bl-sm"
+              className={`max-w-2xl rounded-2xl px-4 py-3 text-sm space-y-1 ${
+                msg.role === "user"
+                  ? "rounded-br-sm bg-accent text-accent-fg"
+                  : "rounded-bl-sm bg-surface text-fg border border-border"
               }`}
-              style={{
-                background: msg.role === "user" ? "var(--primary)" : "var(--muted)",
-                color: msg.role === "user" ? "var(--primary-foreground)" : "var(--foreground)",
-              }}
             >
               {msg.role === "assistant" && msg.id ? (
                 <AnnotationPopover
@@ -279,16 +273,14 @@ export function ChatInterface({
                     className="h-6 w-6"
                     onClick={() => msg.id ? handleCopy(msg.id, msg.content) : navigator.clipboard.writeText(msg.content)}
                     title="Copiar respuesta"
-                    style={msg.id && copiedId === msg.id ? { color: "var(--accent)" } : {}}
                   >
                     {msg.id && copiedId === msg.id ? <Check size={13} /> : <Copy size={13} />}
                   </Button>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-6 w-6"
+                    className={`h-6 w-6 ${msg.feedback === "up" ? "text-accent opacity-100" : ""}`}
                     onClick={() => handleFeedback(msg.id!, "up")}
-                    style={msg.feedback === "up" ? { color: "var(--accent)", opacity: 1 } : {}}
                     title="Útil"
                   >
                     <ThumbsUp size={13} />
@@ -296,9 +288,8 @@ export function ChatInterface({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-6 w-6"
+                    className={`h-6 w-6 ${msg.feedback === "down" ? "text-destructive opacity-100" : ""}`}
                     onClick={() => handleFeedback(msg.id!, "down")}
-                    style={msg.feedback === "down" ? { color: "var(--destructive)", opacity: 1 } : {}}
                     title="No útil"
                   >
                     <ThumbsDown size={13} />
@@ -306,9 +297,8 @@ export function ChatInterface({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-6 w-6"
+                    className={`h-6 w-6 ${savedIds.has(msg.id!) ? "text-accent opacity-100" : ""}`}
                     onClick={() => handleToggleSaved(msg.id!, msg.content)}
-                    style={savedIds.has(msg.id!) ? { color: "var(--accent)", opacity: 1 } : {}}
                     title={savedIds.has(msg.id!) ? "Quitar de guardados" : "Guardar respuesta"}
                   >
                     <Bookmark size={13} />
@@ -324,10 +314,7 @@ export function ChatInterface({
           <div
             className="flex justify-start px-1"
           >
-            <span
-              className="text-xs opacity-0 group-hover:opacity-100 transition-opacity"
-              style={{ color: "var(--muted-foreground)" }}
-            >
+            <span className="text-xs opacity-0 group-hover:opacity-100 transition-opacity text-fg-subtle">
               {queryStats.ms}ms · {queryStats.sources} doc{queryStats.sources !== 1 ? "s" : ""}
             </span>
           </div>
@@ -358,8 +345,8 @@ export function ChatInterface({
 
         {phase === "streaming" && messages[messages.length - 1]?.content === "" && (
           <div className="flex justify-start">
-            <div className="px-4 py-3 rounded-xl rounded-bl-sm" style={{ background: "var(--muted)" }}>
-              <Loader2 size={16} className="animate-spin" />
+            <div className="px-4 py-3 rounded-2xl rounded-bl-sm bg-surface border border-border">
+              <Loader2 size={16} className="animate-spin text-fg-muted" />
             </div>
           </div>
         )}
@@ -368,7 +355,7 @@ export function ChatInterface({
       </div>
 
       {/* Input */}
-      <div className="p-4 border-t" style={{ borderColor: "var(--border)" }}>
+      <div className="p-4 border-t border-border bg-bg">
         <div className="flex items-center gap-2 mb-2 flex-wrap">
           <CollectionSelector
             defaultCollection={session.collection}
@@ -386,10 +373,7 @@ export function ChatInterface({
           />
         </div>
         {error && (
-          <div
-            className="mb-3 px-3 py-2 rounded-md text-xs"
-            style={{ background: "#fef2f2", color: "var(--destructive)" }}
-          >
+          <div className="mb-3 px-3 py-2 rounded-lg bg-destructive-subtle text-destructive text-xs border border-destructive/20">
             {error}
           </div>
         )}
@@ -402,28 +386,23 @@ export function ChatInterface({
             onChange={(e) => setInput(e.target.value)}
             placeholder={`Preguntá sobre ${session.collection}...`}
             disabled={phase === "streaming"}
-            className="flex-1 px-4 py-2.5 rounded-xl border text-sm outline-none transition-all focus:ring-2 disabled:opacity-50"
-            style={{
-              borderColor: "var(--border)",
-              background: "var(--background)",
-              "--tw-ring-color": "var(--ring)",
-            } as React.CSSProperties}
+            className="flex-1 px-4 py-2.5 rounded-xl border border-border bg-bg text-fg text-sm placeholder:text-fg-subtle outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:border-accent disabled:opacity-50 transition-colors"
           />
           <VoiceInput
             onTranscript={(text) => setInput(text)}
             disabled={phase === "streaming"}
           />
-          <button
+          <Button
             type="submit"
+            size="icon"
+            className="h-10 w-10 rounded-xl shrink-0"
             disabled={!input.trim() || phase === "streaming"}
-            className="px-4 py-2.5 rounded-xl text-sm font-medium transition-opacity disabled:opacity-40"
-            style={{ background: "var(--primary)", color: "var(--primary-foreground)" }}
           >
             {phase === "streaming"
               ? <Loader2 size={16} className="animate-spin" />
               : <Send size={16} />
             }
-          </button>
+          </Button>
         </form>
       </div>
     </div>

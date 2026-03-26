@@ -885,16 +885,20 @@ Objetivo: aplicar el nuevo design system a las 24 páginas en orden de prioridad
 - [x] SessionList: `bg-surface border-r border-border` — completado 2026-03-26
 - [x] SessionList: eliminar todos los inline styles — completado 2026-03-26
 - [ ] Input de chat: estilo prominente con tokens
-- [ ] Mensajes: estilos con tokens semánticos
+- [x] Mensajes: tokens semánticos — completado 2026-03-26
 
 ### F8.3 — /chat/[id] (Alta prioridad)
 
 **Archivos:** `apps/web/src/app/(app)/chat/[id]/page.tsx`, `ChatInterface.tsx`
 
-- [ ] Mensajes del usuario: `bg-accent text-accent-fg rounded-2xl rounded-br-sm`
-- [ ] Mensajes del asistente: `bg-surface rounded-2xl rounded-bl-sm`
+- [x] Mensajes del usuario: `bg-accent text-accent-fg rounded-2xl rounded-br-sm` — completado 2026-03-26
+- [x] Mensajes del asistente: `bg-surface border-border rounded-2xl rounded-bl-sm` — completado 2026-03-26
+- [x] Input de chat: tokens Tailwind + `<Button>` send — completado 2026-03-26
+- [x] Error state: `bg-destructive-subtle text-destructive` — completado 2026-03-26
+- [x] Feedback buttons: `cn()` condicional sin inline styles — completado 2026-03-26
+- [x] Loading spinner: `bg-surface border-border` — completado 2026-03-26
 - [ ] Panel de fuentes (SourcesPanel): tokens semánticos
-- [ ] Skeleton de "pensando": shimmer lines
+- [ ] Avatar del asistente
 
 ### F8.4 — /admin/users (Alta prioridad)
 
