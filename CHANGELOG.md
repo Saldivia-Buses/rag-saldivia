@@ -22,7 +22,26 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 - `src/components/ui/__tests__/empty-placeholder.test.tsx`: 5 tests — título, ícono, children, className, border-dashed — 2026-03-26 *(Plan 6 F3)*
 - `src/lib/component-test-setup.ts`: actualizar con afterEach(cleanup) implícito via patrón por archivo — 2026-03-26 *(Plan 6 F3)*
 
-**Total acumulado: 124 tests (68 lib + 56 componentes) — 0 fallos**
+**Total acumulado F3: 215 tests (68 lib + 147 componentes) — 0 fallos**
+
+#### Added (F3 — Component tests, lote 2)
+- `src/components/ui/__tests__/textarea.test.tsx`: 6 tests
+- `src/components/ui/__tests__/separator.test.tsx`: 5 tests
+- `src/components/ui/__tests__/theme-toggle.test.tsx`: 3 tests
+- `src/components/ui/__tests__/data-table.test.tsx`: 6 tests (sorting, filtro, paginación, vacío)
+- `src/components/admin/__tests__/UsersAdmin.test.tsx`: 8 tests
+- `src/components/admin/__tests__/AreasAdmin.test.tsx`: 6 tests
+- `src/components/admin/__tests__/PermissionsAdmin.test.tsx`: 5 tests
+- `src/components/admin/__tests__/RagConfigAdmin.test.tsx`: 6 tests
+- `src/components/admin/__tests__/SystemStatus.test.tsx`: 4 tests
+- `src/components/chat/__tests__/SessionList.test.tsx`: 5 tests
+- `src/components/collections/__tests__/CollectionsList.test.tsx`: 5 tests
+- `src/components/upload/__tests__/UploadClient.test.tsx`: 5 tests
+- `src/components/settings/__tests__/SettingsClient.test.tsx`: 6 tests
+- `src/components/audit/__tests__/AuditTable.test.tsx`: 8 tests
+- `src/components/projects/__tests__/ProjectsClient.test.tsx`: 6 tests
+- `src/components/extract/__tests__/ExtractionWizard.test.tsx`: 6 tests
+- `src/components/auth/__tests__/SSOButton.test.tsx`: 1 test
 
 ---
 

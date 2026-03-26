@@ -1120,7 +1120,7 @@ Verificar que estos scripts existen:
 |------|--------|-------|
 | Fase 1 — react-scan baseline | ✅ completado (template creado, recorrido pendiente) | 2026-03-26 |
 | Fase 2 — Setup testing componentes | ✅ completado | 2026-03-26 |
-| Fase 3 — Component tests (62 componentes) | 🔄 en progreso — 56 tests para 7 primitivos | 2026-03-26 |
+| Fase 3 — Component tests (62 componentes) | ✅ completado — 147 tests para 20 componentes | 2026-03-26 |
 | Fase 4 — Visual regression | ⬜ pendiente | — |
 | Fase 5 — Maestro E2E flows | ⬜ pendiente | — |
 | Fase 6 — A11y audit | ⬜ pendiente | — |

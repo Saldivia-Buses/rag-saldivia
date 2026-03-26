@@ -20,6 +20,11 @@ mock.module("next/navigation", () => ({
   usePathname: () => "/",
   useSearchParams: () => new URLSearchParams(),
   useParams: () => ({}),
+  redirect: mock((_url: string) => { throw new Error(`NEXT_REDIRECT: ${_url}`) }),
+  permanentRedirect: mock((_url: string) => { throw new Error(`NEXT_REDIRECT: ${_url}`) }),
+  notFound: mock(() => { throw new Error("NEXT_NOT_FOUND") }),
+  headers: mock(() => new Headers()),
+  cookies: mock(() => ({ get: () => null, set: () => {}, delete: () => {} })),
 }))
 
 // Mock next/font/google
