@@ -1,141 +1,186 @@
-# Onboarding — 5 minutos para arrancar
+# Onboarding — Arrancar el proyecto en 5 minutos
+
+> Última actualización: 2026-03-26
+
+---
 
 ## Prerrequisitos
 
-- [Bun](https://bun.sh) >= 1.0 (`curl -fsSL https://bun.sh/install | bash`)
-- [Docker](https://docs.docker.com/get-docker/) con Docker Compose v2
+- [Bun](https://bun.sh) ≥ 1.3 — `curl -fsSL https://bun.sh/install | bash`
+- [Docker](https://docs.docker.com/get-docker/) con Docker Compose v2 (opcional, solo para RAG real)
 - Git
+- Node.js ≥ 18 (para algunas herramientas del monorepo)
 
-## Setup — Ubuntu nativo (producción / workstation)
+---
 
-El caso más simple. Todo funciona out-of-the-box:
-
-```bash
-git clone https://github.com/Camionerou/rag-saldivia
-cd rag-saldivia
-git checkout experimental/ultra-optimize
-bun run setup
-bun run dev
-```
-
-## Setup — WSL2 (desarrollo en Windows)
-
-WSL2 tiene una particularidad: `bun install` en el filesystem Windows (`/mnt/c/`) no crea symlinks correctamente. La solución es clonar el repo en el filesystem **nativo de Linux**:
+## Setup rápido (Ubuntu / WSL2)
 
 ```bash
-# En la terminal WSL2 — clonar en HOME de Linux, NO en /mnt/c/
+# 1. Clonar en el filesystem Linux nativo (en WSL2: ~/rag-saldivia, NO en /mnt/c/)
 cd ~
 git clone https://github.com/Camionerou/rag-saldivia
 cd rag-saldivia
 git checkout experimental/ultra-optimize
-bun install
 
-# Crear symlinks de @libsql (solo necesario en WSL2)
-bash scripts/link-libsql.sh
+# 2. Setup completo (instala deps, configura .env, migra DB, seed)
+bun run setup
 
-# Setup del .env y la DB
-cp .env.example apps/web/.env.local
-# Editar apps/web/.env.local: cambiar JWT_SECRET, SYSTEM_API_KEY, DATABASE_PATH a ruta absoluta
-
-bun packages/db/src/migrate.ts
-bun packages/db/src/seed.ts
-
-# Levantar el servidor
-node_modules/.bin/next dev /path/to/rag-saldivia/apps/web --port 3000
-```
-
-El script de setup hace todo:
-
-1. Verifica que Bun, Docker y los puertos estén disponibles
-2. Crea `.env.local` desde `.env.example`
-3. Instala todas las dependencias con Bun workspaces
-4. Crea la base de datos SQLite y aplica migraciones
-5. Crea datos de desarrollo (usuario `admin@localhost`)
-6. Muestra un resumen del estado
-
-## Arrancar el servidor
-
-```bash
+# 3. Arrancar
 bun run dev
+# → http://localhost:3000
+# → admin@localhost / changeme
 ```
 
-Abrí http://localhost:3000
+> **WSL2:** Si `bun install` falla con errores de symlinks, asegurate de estar en `~/` (filesystem Linux) y no en `/mnt/c/`.
 
-Credenciales de desarrollo:
-- Email: `admin@localhost`
-- Contraseña: `changeme`
+---
 
-## Sin Docker (modo mock)
+## Sin Docker — modo mock (desarrollo de UI)
 
-Si no tenés Docker, podés desarrollar la UI sin el RAG real:
+Para trabajar en el frontend sin levantar Docker ni el stack NVIDIA:
 
 ```bash
 echo "MOCK_RAG=true" >> apps/web/.env.local
 bun run dev
 ```
 
-El servidor simula respuestas del RAG con streaming. Útil para trabajo en el frontend.
+El servidor simula respuestas del RAG con streaming real. Ideal para:
+- Desarrollo de componentes UI
+- Tests de integración
+- Visual regression con Storybook
 
-## Variables de entorno importantes
+---
 
-El archivo `.env.local` vive en `apps/web/.env.local` (no en la raíz del monorepo).
-Ver `.env.example` para la lista completa documentada.
+## Variables de entorno
+
+El `.env.local` vive en `apps/web/.env.local`. Ver `.env.example` para la lista completa.
 
 Las más importantes:
 
 ```env
-JWT_SECRET=...          # Generar: openssl rand -base64 32
-SYSTEM_API_KEY=...      # Generar: openssl rand -hex 32
-RAG_SERVER_URL=...      # Default: http://localhost:8081
-MOCK_RAG=false          # true para desarrollo sin Docker
-DATABASE_PATH=...       # En WSL2: usar ruta absoluta (/home/enzo/rag-saldivia/data/app.db)
+JWT_SECRET=...          # openssl rand -base64 32
+SYSTEM_API_KEY=...      # openssl rand -hex 32
+RAG_SERVER_URL=http://localhost:8081
+DATABASE_PATH=./data/app.db   # en WSL2: usar ruta absoluta
+MOCK_RAG=false          # true = desarrollo sin Docker
+LOG_LEVEL=INFO
 ```
 
-## Comandos útiles
+---
+
+## Credenciales de desarrollo
+
+El `bun run setup` crea estos usuarios automáticamente:
+
+| Email | Contraseña | Rol |
+|---|---|---|
+| `admin@localhost` | `changeme` | admin — acceso completo |
+| `user@localhost` | `test1234` | user — acceso básico |
+
+---
+
+## Comandos esenciales
+
+### Desarrollo
 
 ```bash
-# Setup y desarrollo
-bun run setup            # Onboarding completo (primera vez)
-bun run dev              # Servidor de desarrollo en :3000
-bun run build            # Build de producción
+bun run dev              # Next.js en :3000 (con hot reload y react-scan activo)
+bun run storybook        # Catálogo de componentes en :6006
+```
 
-# Tests
-bun run test             # Todos los tests via Turborepo (79 tests total)
-bun test apps/web/src/lib/auth/__tests__/      # Solo auth/RBAC (17 tests)
-bun test packages/db/src/__tests__/            # Solo DB queries (24 tests)
-bun test packages/logger/src/__tests__/        # Solo logger/blackbox (24 tests)
-bun test packages/config/src/__tests__/        # Solo config loader (14 tests)
+### Tests
 
-# Type-check
-bun run type-check       # Verifica tipos en todos los paquetes
+```bash
+# Suite completa de lógica (270+ tests)
+bun run test
 
-# Base de datos
+# Tests de componentes React (147 tests con happy-dom)
+bun run test:components
+
+# Visual regression — comparar componentes contra baseline
+bun run test:visual
+
+# Regenerar baseline de visual regression (primera vez o cambio intencional)
+bun run visual:update
+
+# Auditoría a11y WCAG AA en páginas críticas
+bun run test:a11y
+
+# Todo en un comando
+bun run test:ui          # test:components + test:visual
+```
+
+### Base de datos
+
+```bash
 bun packages/db/src/migrate.ts   # Aplicar migraciones
 bun packages/db/src/seed.ts      # Crear datos de prueba
 # o via CLI:
 rag db migrate
 rag db seed
-rag db reset             # Limpiar DB y rehacer seed
-
-# CLI (instalar globalmente: cd apps/cli && bun link)
-rag status              # Estado del sistema
-rag users list          # Lista usuarios
-rag audit log           # Últimos eventos del sistema
+rag db reset
 ```
 
-## Estructura del proyecto
-
-Ver [docs/architecture.md](./architecture.md) para el diagrama completo y los flujos de auth, RAG y datos.
-Ver [docs/workflows.md](./workflows.md) para los flujos de trabajo del proyecto (git, tests, features).
-
-## Deployar a producción
-
-La branch `experimental/ultra-optimize` es el nuevo stack en desarrollo.
-El deploy de producción activo usa el stack estable de la branch `main`:
+### CLI (instalar: `cd apps/cli && bun link`)
 
 ```bash
-git checkout main
-make deploy PROFILE=workstation-1gpu
+rag status              # Estado del sistema + health check
+rag users list          # Lista usuarios
+rag collections list    # Lista colecciones
+rag ingest status       # Estado de la cola de ingesta
+rag audit log           # Últimos eventos
 ```
 
-Cuando el nuevo stack esté listo para producción, se mergeará a main.
+---
+
+## Lo que vas a ver en el browser
+
+Al abrir `http://localhost:3000`:
+
+1. **`/login`** — formulario crema cálido con logo "R" navy. Credenciales arriba.
+2. **`/chat`** — sidebar crema con lista de sesiones, área central con EmptyPlaceholder
+3. **`/admin/users`** — tabla de usuarios con badges de rol (navy/verde/rojo)
+4. El NavRail izquierda tiene íconos en crema — toggle ☀️/🌙 abajo para cambiar tema
+
+> **Sistema dark mode:** next-themes usa class-based (`.dark` en `<html>`). El toggle lo cambia. La preferencia del sistema se respeta automáticamente.
+
+---
+
+## Flujo de trabajo típico
+
+```bash
+# 1. Arrancar
+bun run dev                    # dev server
+bun run storybook              # (opcional) para trabajo en componentes
+
+# 2. Desarrollar
+# ... editar componentes, páginas, queries ...
+
+# 3. Testear
+bun run test                   # lógica pura
+bun run test:components        # componentes React
+
+# 4. Antes de commitear
+bun run type-check             # tipos TypeScript
+# El pre-push hook también corre type-check automáticamente
+
+# 5. Commitear con el formato del proyecto
+git commit -m "feat(web): descripción del cambio"
+# Tipos válidos: feat fix refactor chore docs test ci perf revert
+# Scopes válidos: web cli db config logger shared auth rag chat admin...
+```
+
+---
+
+## Referencias
+
+| Doc | Descripción |
+|---|---|
+| `docs/architecture.md` | Diagrama de arquitectura, flujos de auth y RAG |
+| `docs/design-system.md` | Tokens CSS, componentes UI, Storybook |
+| `docs/testing.md` | Guía completa de testing por capa |
+| `docs/workflows.md` | Git, commits, CI/CD, features |
+| `docs/cli.md` | Referencia completa de la CLI |
+| `docs/blackbox.md` | Sistema de logging y replay |
+| `docs/decisions/` | ADRs — por qué tomamos las decisiones de arquitectura |
+| `CLAUDE.md` | Contexto rápido para agentes de IA |

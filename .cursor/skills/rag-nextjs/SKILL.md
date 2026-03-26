@@ -28,8 +28,8 @@ Agregar `"use client"` solo donde sea imprescindible: chat SSE, modales con esta
 **`Bun.*` está prohibido en Next.js**  
 El runtime de Next.js es Node.js. Usar `fs/promises`, `crypto` de Node. `Bun.file`, `Bun.write`, etc. rompen el build.
 
-**Timestamps siempre con Temporal**  
-`Temporal.Now.instant().epochMilliseconds` — no `Date.now()` ni `new Date()`.
+**Timestamps con `Date.now()`**  
+Usar `Date.now()` para timestamps. El proyecto migró de Temporal API a `Date.now()` por compatibilidad.
 
 **Validar inputs con Zod**  
 Usar los schemas de `@rag-saldivia/shared`. No validar manualmente.
@@ -54,15 +54,48 @@ Si el status no es 200, no intentar hacer `getReader()` — leer el body como JS
 
 Invalidar colecciones: `revalidateTag('collections')` al crear o eliminar colecciones.
 
+## Design System — tokens CSS
+
+Al crear nuevos componentes o páginas, usar siempre tokens del design system:
+
+```tsx
+// ✅ CORRECTO — tokens semánticos
+<div className="bg-surface border border-border rounded-xl p-4">
+  <h2 className="text-fg font-semibold">Título</h2>
+  <p className="text-fg-muted">Descripción</p>
+  <button className="bg-accent text-accent-fg">Acción</button>
+</div>
+
+// ❌ INCORRECTO — colores hardcodeados
+<div style={{ background: "#f0ebe0", border: "1px solid #ede9e0" }}>
+```
+
+Tokens disponibles: `bg-bg`, `bg-surface`, `bg-surface-2`, `text-fg`, `text-fg-muted`, `text-fg-subtle`, `bg-accent`, `text-accent`, `bg-accent-subtle`, `text-destructive`, `bg-destructive-subtle`, `text-success`, `text-warning`.
+
+Ver `docs/design-system.md` para la referencia completa.
+
+## `next/dynamic` con `ssr: false` — solo en Client Components
+
+```tsx
+// ✅ CORRECTO — dentro de un "use client" component
+"use client"
+import dynamic from "next/dynamic"
+const MiComponente = dynamic(() => import("./MiComponente"), { ssr: false })
+
+// ❌ INCORRECTO — en un Server Component (layout.tsx, page.tsx sin "use client")
+```
+
 ## Feature workflow
 
 ```
 1. Leer archivos críticos relevantes
 2. Server Component por defecto → agregar "use client" solo si es necesario
 3. Datos → Server Action o Route Handler, nunca fetch desde Client Component directo
-4. Validar con Zod (shared schemas)
-5. Loggear con backend logger
-6. Tests unitarios
-7. Actualizar CHANGELOG.md
-8. Commit convencional
+4. Tokens CSS del design system — nunca hardcodear colores
+5. Validar con Zod (shared schemas)
+6. Loggear con backend logger
+7. Tests: unitario si es lógica pura, component test si es React
+8. Verificar a11y en Storybook si es un componente nuevo
+9. Actualizar CHANGELOG.md
+10. Commit convencional
 ```
