@@ -161,20 +161,33 @@ El hook `commit-msg` de Husky rechaza automáticamente commits que no sigan este
 
 **Regla:** cada tarea completada genera una entrada en `CHANGELOG.md` **antes** de hacer commit.
 
+Las entradas se organizan en secciones por plan dentro de `[Unreleased]`. Esto hace navegable el historial durante el desarrollo sin cambiar la estructura de release (cuando se publica, todo `[Unreleased]` se mueve a `[vX.Y.Z]`).
+
 ```markdown
 ## [Unreleased]
 
-### Added
-- `apps/web/src/components/...`: descripción concisa de qué se agregó — YYYY-MM-DD
+### Plan 4 — Product Roadmap (2026-03-25)
 
-### Fixed
+#### Added
+- `apps/web/src/components/...`: descripción concisa de qué se agregó — YYYY-MM-DD *(Plan 4 F1.7)*
+
+#### Fixed
 - `paquete/archivo.ts`: descripción del bug y cómo se corrigió — YYYY-MM-DD
 
-### Changed
+#### Changed
 - `paquete/archivo.ts`: qué cambió y por qué — YYYY-MM-DD
+
+### Plan 3 — Bugfix (2026-03-25)
+
+#### Fixed
+- ...
 ```
 
-**Categorías:** `Added` | `Changed` | `Deprecated` | `Removed` | `Fixed` | `Security`
+**Reglas:**
+- Cada plan nuevo abre su propia sección `### Plan N — Nombre (YYYY-MM-DD)` al tope de `[Unreleased]`
+- Las categorías dentro de cada sección son `#### Added` | `#### Changed` | `#### Fixed` | `#### Security` | `#### Deprecated` | `#### Removed`
+- El ID de tarea del plan va al final de la línea: `*(Plan 4 F1.7)*`
+- Las entradas del mismo plan se agrupan, nunca se intercalan con las de otro plan
 
 ### Crear un PR
 
@@ -222,7 +235,13 @@ Objetivo: una oración sobre qué debe quedar funcionando al terminar esta fase.
 - [ ] Tarea B — 1 hs
 
 Criterio de done: condición objetiva y verificable.
-Estado: pendiente
+
+### Checklist de cierre
+- [ ] `bun run test` — todos pasan
+- [ ] CHANGELOG.md actualizado bajo `[Unreleased] > ### Plan N — Nombre`
+- [ ] `git commit -m "feat(scope): ..."` hecho
+
+**Estado: pendiente**
 
 ---
 
@@ -320,7 +339,55 @@ curl http://localhost:3000/api/health  # verificación directa
 
 ---
 
-## 7. Workflow de debugging con Black Box
+## 7. Decisiones de arquitectura (ADRs)
+
+Las decisiones técnicas importantes se documentan en `docs/decisions/` como Architecture Decision Records.
+
+### Cuándo crear un ADR
+
+Crear un ADR cuando:
+- Se elige una tecnología sobre otra con trade-offs no obvios (ej. `@libsql` vs `better-sqlite3`)
+- Se establece una convención que se desvía del default del ecosistema (ej. CJS sobre ESM)
+- Se toma una decisión de arquitectura que afecta múltiples partes del sistema
+- Se resuelve un bug que revela un patrón a seguir o evitar en el futuro
+
+**No** crear un ADR para: decisiones triviales, preferencias de estilo, cosas que ya documenta el CHANGELOG.
+
+### Formato
+
+Usar el template en `docs/decisions/000-template.md`:
+
+```
+# ADR-NNN: [Título]
+Fecha, Estado (Propuesto | Aceptado | Deprecado | Reemplazado por ADR-XXX)
+## Contexto — el problema y las restricciones
+## Opciones consideradas — con pros/cons
+## Decisión — cuál y por qué
+## Consecuencias — positivas y trade-offs
+## Referencias — archivos o entradas de CHANGELOG relevantes
+```
+
+### Convención de nombres
+
+```
+docs/decisions/NNN-kebab-case-titulo.md
+```
+
+El número es secuencial. Nunca reusar un número aunque se deprece el ADR.
+
+### ADRs existentes
+
+| ADR | Título | Estado |
+|-----|--------|--------|
+| [001](./decisions/001-libsql-over-better-sqlite3.md) | @libsql/client en lugar de better-sqlite3 | Aceptado |
+| [002](./decisions/002-cjs-over-esm.md) | CJS sobre ESM en paquetes del monorepo | Aceptado |
+| [003](./decisions/003-nextjs-single-process.md) | Next.js como proceso único (reemplaza Python gateway + SvelteKit) | Aceptado |
+| [004](./decisions/004-temporal-api-timestamps.md) | Temporal API para timestamps | Aceptado |
+| [005](./decisions/005-static-import-logger-db.md) | Import estático de @rag-saldivia/db en el logger | Aceptado |
+
+---
+
+## 8. Workflow de debugging con Black Box
 
 Cuando algo falla en producción:
 
@@ -340,3 +407,4 @@ rag audit export > events-$(date +%Y%m%d).json
 ```
 
 Ver [docs/blackbox.md](./blackbox.md) para el formato completo de eventos y guía de replay.
+

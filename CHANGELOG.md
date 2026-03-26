@@ -9,7 +9,25 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
-### Added
+### Mejoras de metodología (2026-03-26)
+
+#### Added
+- `docs/decisions/` — nueva carpeta para Architecture Decision Records (ADRs): documenta decisiones arquitectónicas con contexto, opciones consideradas, decisión tomada y consecuencias — 2026-03-26
+- `docs/decisions/000-template.md` — template base para nuevos ADRs — 2026-03-26
+- `docs/decisions/001-libsql-over-better-sqlite3.md` — por qué `@libsql/client` sobre `better-sqlite3` (compilación nativa, WSL2, Bun) — 2026-03-26
+- `docs/decisions/002-cjs-over-esm.md` — por qué CJS sobre ESM en `packages/*` (compatibilidad webpack/Next.js) — 2026-03-26
+- `docs/decisions/003-nextjs-single-process.md` — por qué Next.js como proceso único reemplaza Python gateway + SvelteKit — 2026-03-26
+- `docs/decisions/004-temporal-api-timestamps.md` — por qué Temporal API sobre `Date.now()` para timestamps — 2026-03-26
+- `docs/decisions/005-static-import-logger-db.md` — por qué import estático de `@rag-saldivia/db` en el logger (bug de import dinámico silencioso en webpack) — 2026-03-26
+
+#### Changed
+- `docs/workflows.md`: sección 4 (planificación) — agregado checklist de cierre al template de fases: `bun run test`, CHANGELOG actualizado, commit hecho — 2026-03-26
+- `docs/workflows.md`: sección 3 (git) — nueva convención de secciones por plan dentro de `[Unreleased]` para hacer navegable el CHANGELOG durante el desarrollo — 2026-03-26
+- `docs/workflows.md`: nueva sección 7 — Decisiones de arquitectura (ADRs) con cuándo crear un ADR, formato, convención de nombres y tabla de ADRs existentes — 2026-03-26
+
+### Plan 4 — Product Roadmap (2026-03-25)
+
+#### Added
 
 - `apps/web/src/app/api/extract/route.ts`: extracción estructurada — itera docs de la colección, envía prompt al RAG para extraer campos, retorna JSON — modo mock disponible — 2026-03-25 *(Plan 4 F3.50)*
 - `apps/web/src/components/extract/ExtractionWizard.tsx`: wizard 3 pasos (colección → campos → resultados), tabla exportable como CSV — 2026-03-25 *(Plan 4 F3.50)*
