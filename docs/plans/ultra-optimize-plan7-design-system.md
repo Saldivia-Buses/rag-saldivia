@@ -990,10 +990,10 @@ Objetivo: aplicar el nuevo design system a las 24 páginas en orden de prioridad
 - [x] `/admin/external-sources` — `ExternalSourcesAdmin.tsx`: Input/Button, EmptyPlaceholder, tokens — completado 2026-03-26
 - [x] `/admin/ingestion` — `IngestionKanban.tsx`: JobCard bg-bg border-border, progress bar bg-accent, error bg-destructive-subtle — completado 2026-03-26
 - [x] `/audit` — `AuditTable.tsx`: Input, Table shadcn, Badge para niveles — completado 2026-03-26
-- [ ] `/extract` — `ExtractionWizard.tsx`
-- [ ] `/saved` — skeleton + empty placeholder
-- [ ] `/settings/memory`
-- [ ] `/share/[token]`
+- [x] `/extract` — `ExtractionWizard.tsx`: steps con StepDot navy, Input, EmptyPlaceholder, tokens — completado 2026-03-26
+- [x] `/saved` — `EmptyPlaceholder` Bookmark, cards `bg-surface border-border` — completado 2026-03-26
+- [x] `/settings/memory` — `Input`, `bg-surface border-border` cards, `text-accent` Brain icon — completado 2026-03-26
+- [x] `/share/[token]` — mensajes con mismo estilo que ChatInterface (bg-accent/bg-surface), `bg-warning-subtle` alert — completado 2026-03-26
 
 ### Criterio de done
 Las 24 páginas usan los nuevos tokens. Nada se ve con los colores viejos.
@@ -1018,7 +1018,7 @@ Las 24 páginas usan los nuevos tokens. Nada se ve con los colores viejos.
 | Fase 5 — Componentes comunidad | ✅ completado | 2026-03-26 |
 | Fase 6 — Momentos especiales | ✅ completado | 2026-03-26 |
 | Fase 7 — Storybook | ✅ completado | 2026-03-26 |
-| Fase 8 — Páginas | 🔄 en progreso | 2026-03-26 |
+| Fase 8 — Páginas | ✅ completado | 2026-03-26 |
 
 ## Estimaciones
 

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { Plus, Trash2, Brain } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import type { DbUserMemory } from "@rag-saldivia/db"
 
@@ -14,8 +15,7 @@ export default function MemoryPage() {
   const [adding, setAdding] = useState(false)
 
   useEffect(() => {
-    fetch("/api/memory")
-      .then((r) => r.json())
+    fetch("/api/memory").then((r) => r.json())
       .then((d: { ok: boolean; data?: DbUserMemory[] }) => { if (d.ok) setEntries(d.data ?? []) })
   }, [])
 
@@ -35,42 +35,45 @@ export default function MemoryPage() {
     setEntries((p) => p.filter((e) => e.key !== key))
   }
 
-  const inputClass = "px-3 py-1.5 rounded-md border text-sm outline-none"
-  const inputStyle = { borderColor: "var(--border)", background: "var(--background)", color: "var(--foreground)" }
-
   return (
-    <div className="max-w-2xl mx-auto space-y-6">
+    <div className="p-6 max-w-2xl space-y-6">
       <div>
-        <h2 className="text-lg font-semibold flex items-center gap-2">
-          <Brain size={18} style={{ color: "var(--accent)" }} />
+        <h1 className="text-lg font-semibold text-fg flex items-center gap-2">
+          <Brain size={18} className="text-accent" />
           Memoria del sistema
-        </h2>
-        <p className="text-sm mt-1" style={{ color: "var(--muted-foreground)" }}>
+        </h1>
+        <p className="text-sm text-fg-muted mt-0.5">
           El sistema inyecta estas preferencias en cada consulta para personalizar las respuestas.
         </p>
       </div>
+
       <Separator />
 
       <form onSubmit={handleAdd} className="flex gap-2 flex-wrap">
-        <input value={newKey} onChange={(e) => setNewKey(e.target.value)} placeholder="Clave (ej: idioma)" className={`${inputClass} flex-1 min-w-[120px]`} style={inputStyle} />
-        <input value={newValue} onChange={(e) => setNewValue(e.target.value)} placeholder="Valor (ej: siempre en español)" className={`${inputClass} flex-1 min-w-[200px]`} style={inputStyle} />
-        <Button size="sm" type="submit" disabled={adding} className="gap-1.5"><Plus size={13} /> Agregar</Button>
+        <Input value={newKey} onChange={(e) => setNewKey(e.target.value)}
+          placeholder="Clave (ej: idioma)" className="flex-1 min-w-[120px]" />
+        <Input value={newValue} onChange={(e) => setNewValue(e.target.value)}
+          placeholder="Valor (ej: siempre en español)" className="flex-[2] min-w-[200px]" />
+        <Button size="sm" type="submit" disabled={adding}>
+          <Plus size={13} className="mr-1" /> Agregar
+        </Button>
       </form>
 
       {entries.length === 0 ? (
-        <p className="text-sm" style={{ color: "var(--muted-foreground)" }}>Sin preferencias guardadas.</p>
+        <p className="text-sm text-fg-muted">Sin preferencias guardadas.</p>
       ) : (
         <div className="space-y-2">
           {entries.map((e) => (
-            <div key={e.key} className="flex items-center gap-3 p-3 rounded-lg border" style={{ borderColor: "var(--border)" }}>
+            <div key={e.key} className="flex items-center gap-3 p-3 rounded-xl border border-border bg-surface">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium">{e.key}</span>
+                  <span className="text-sm font-medium text-fg">{e.key}</span>
                   <Badge variant="outline" className="text-xs">{e.source}</Badge>
                 </div>
-                <p className="text-sm mt-0.5" style={{ color: "var(--muted-foreground)" }}>{e.value}</p>
+                <p className="text-sm text-fg-muted mt-0.5">{e.value}</p>
               </div>
-              <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => handleDelete(e.key)} style={{ color: "var(--destructive)" }}>
+              <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0 text-destructive hover:text-destructive"
+                onClick={() => handleDelete(e.key)}>
                 <Trash2 size={13} />
               </Button>
             </div>

@@ -12,6 +12,10 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 ### Plan 7 — Design System (F8 en progreso)
 
 #### Changed (F8 — Páginas)
+- `apps/web/src/components/extract/ExtractionWizard.tsx`: StepDot navy, Input, EmptyPlaceholder Table2, tokens sin inline styles — 2026-03-26 *(Plan 7 F8.24)*
+- `apps/web/src/app/(app)/saved/page.tsx`: EmptyPlaceholder Bookmark, cards bg-surface border-border, tokens — 2026-03-26 *(Plan 7 F8.24)*
+- `apps/web/src/app/(app)/settings/memory/page.tsx`: Input, cards bg-surface, Brain icon text-accent, tokens — 2026-03-26 *(Plan 7 F8.24)*
+- `apps/web/src/app/(public)/share/[token]/page.tsx`: mensajes bg-accent/bg-surface como ChatInterface, bg-warning-subtle alert, tokens — 2026-03-26 *(Plan 7 F8.24)*
 - `apps/web/src/components/admin/IngestionKanban.tsx`: JobCard bg-bg border-border, progress bar bg-accent, error bg-destructive-subtle, bg-success indicator, header con h1 — 2026-03-26 *(Plan 7 F8.9)*
 - `apps/web/src/components/admin/AreasAdmin.tsx`: Table shadcn, Input/Button, EmptyPlaceholder, h1 header — 2026-03-26 *(Plan 7 F8.12)*
 - `apps/web/src/components/admin/PermissionsAdmin.tsx`: cn() para área activa (bg-accent-subtle), bg-success-subtle/bg-accent-subtle para permisos, Table shadcn — 2026-03-26 *(Plan 7 F8.12)*
