@@ -4,16 +4,16 @@ import { useState, useTransition } from "react"
 import { Check, X } from "lucide-react"
 import type { DbArea } from "@rag-saldivia/db"
 import { actionSetAreaCollections } from "@/app/actions/areas"
+import { Button } from "@/components/ui/button"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
 type AreaWithCollections = DbArea & {
   areaCollections?: Array<{ collectionName: string; permission: string }>
 }
-
 type Permission = "none" | "read" | "write"
 
 export function PermissionsAdmin({
-  areas,
-  collections,
+  areas, collections,
 }: {
   areas: AreaWithCollections[]
   collections: string[]
@@ -68,95 +68,101 @@ export function PermissionsAdmin({
   const currentArea = areas.find((a) => a.id === selectedArea)
 
   return (
-    <div className="grid grid-cols-[200px_1fr] gap-6">
-      {/* Sidebar áreas */}
-      <div className="space-y-1">
-        <p className="text-xs font-medium uppercase tracking-wider mb-2" style={{ color: "var(--muted-foreground)" }}>Áreas</p>
-        {areas.map((area) => (
-          <button
-            key={area.id}
-            onClick={() => selectArea(area.id)}
-            className="w-full text-left px-3 py-2 rounded-md text-sm transition-colors"
-            style={{
-              background: selectedArea === area.id ? "var(--accent)" : "transparent",
-              color: selectedArea === area.id ? "var(--foreground)" : "var(--muted-foreground)",
-            }}
-          >
-            {area.name}
-          </button>
-        ))}
+    <div className="p-6">
+      <div className="mb-5">
+        <h1 className="text-lg font-semibold text-fg">Permisos</h1>
+        <p className="text-sm text-fg-muted mt-0.5">Asigná colecciones a cada área</p>
       </div>
 
-      {/* Permissions matrix */}
-      <div className="space-y-4">
-        {currentArea && (
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="font-medium">{currentArea.name}</h3>
-              {currentArea.description && (
-                <p className="text-xs" style={{ color: "var(--muted-foreground)" }}>{currentArea.description}</p>
-              )}
-            </div>
+      <div className="grid grid-cols-[180px_1fr] gap-6">
+        {/* Sidebar áreas */}
+        <div className="space-y-0.5">
+          <p className="text-xs font-semibold uppercase tracking-wider text-fg-subtle mb-2">Áreas</p>
+          {areas.map((area) => (
             <button
-              onClick={handleSave}
-              disabled={isPending}
-              className="px-4 py-2 rounded-md text-sm font-medium disabled:opacity-50"
-              style={{ background: saved ? "#dcfce7" : "var(--primary)", color: saved ? "#166534" : "var(--primary-foreground)" }}
+              key={area.id}
+              onClick={() => selectArea(area.id)}
+              className={`w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
+                selectedArea === area.id
+                  ? "bg-accent-subtle text-accent font-medium"
+                  : "text-fg-muted hover:bg-surface-2 hover:text-fg"
+              }`}
             >
-              {isPending ? "Guardando..." : saved ? "✓ Guardado" : "Guardar cambios"}
+              {area.name}
             </button>
-          </div>
-        )}
+          ))}
+        </div>
 
-        {collections.length === 0 ? (
-          <p className="text-sm" style={{ color: "var(--muted-foreground)" }}>No hay colecciones disponibles</p>
-        ) : (
-          <div className="rounded-lg border overflow-hidden" style={{ borderColor: "var(--border)" }}>
-            <table className="w-full text-sm">
-              <thead>
-                <tr style={{ background: "var(--muted)" }}>
-                  <th className="text-left px-4 py-3 font-medium">Colección</th>
-                  <th className="text-center px-4 py-3 font-medium w-24">Leer</th>
-                  <th className="text-center px-4 py-3 font-medium w-24">Escribir</th>
-                </tr>
-              </thead>
-              <tbody>
-                {collections.map((col, i) => {
-                  const perm = permissions[col] ?? "none"
-                  return (
-                    <tr key={col} style={{ borderTop: i > 0 ? "1px solid var(--border)" : undefined }}>
-                      <td className="px-4 py-3 font-medium">{col}</td>
-                      <td className="px-4 py-3 text-center">
-                        <button
-                          onClick={() => togglePermission(col, "read")}
-                          className="w-8 h-8 rounded-md flex items-center justify-center mx-auto transition-colors"
-                          style={{
-                            background: (perm === "read" || perm === "write") ? "#dcfce7" : "var(--accent)",
-                            color: (perm === "read" || perm === "write") ? "#166534" : "var(--muted-foreground)",
-                          }}
-                        >
-                          {(perm === "read" || perm === "write") ? <Check size={14} /> : <X size={14} />}
-                        </button>
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <button
-                          onClick={() => togglePermission(col, "write")}
-                          className="w-8 h-8 rounded-md flex items-center justify-center mx-auto transition-colors"
-                          style={{
-                            background: perm === "write" ? "#dbeafe" : "var(--accent)",
-                            color: perm === "write" ? "#1d4ed8" : "var(--muted-foreground)",
-                          }}
-                        >
-                          {perm === "write" ? <Check size={14} /> : <X size={14} />}
-                        </button>
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        )}
+        {/* Matrix */}
+        <div className="space-y-4">
+          {currentArea && (
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="font-semibold text-fg">{currentArea.name}</h3>
+                {currentArea.description && (
+                  <p className="text-xs text-fg-muted">{currentArea.description}</p>
+                )}
+              </div>
+              <Button
+                size="sm"
+                variant={saved ? "outline" : "default"}
+                onClick={handleSave}
+                disabled={isPending}
+                className={saved ? "text-success border-success" : ""}
+              >
+                {isPending ? "Guardando..." : saved ? "✓ Guardado" : "Guardar cambios"}
+              </Button>
+            </div>
+          )}
+
+          {collections.length === 0 ? (
+            <p className="text-sm text-fg-muted">No hay colecciones disponibles</p>
+          ) : (
+            <div className="rounded-xl border border-border overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Colección</TableHead>
+                    <TableHead className="text-center w-28">Leer</TableHead>
+                    <TableHead className="text-center w-28">Escribir</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {collections.map((col) => {
+                    const perm = permissions[col] ?? "none"
+                    const hasRead  = perm === "read"  || perm === "write"
+                    const hasWrite = perm === "write"
+                    return (
+                      <TableRow key={col}>
+                        <TableCell className="font-medium text-fg">{col}</TableCell>
+                        <TableCell className="text-center">
+                          <button
+                            onClick={() => togglePermission(col, "read")}
+                            className={`w-8 h-8 rounded-md flex items-center justify-center mx-auto transition-colors ${
+                              hasRead ? "bg-success-subtle text-success" : "bg-surface-2 text-fg-subtle hover:bg-surface"
+                            }`}
+                          >
+                            {hasRead ? <Check size={14} /> : <X size={14} />}
+                          </button>
+                        </TableCell>
+                        <TableCell className="text-center">
+                          <button
+                            onClick={() => togglePermission(col, "write")}
+                            className={`w-8 h-8 rounded-md flex items-center justify-center mx-auto transition-colors ${
+                              hasWrite ? "bg-accent-subtle text-accent" : "bg-surface-2 text-fg-subtle hover:bg-surface"
+                            }`}
+                          >
+                            {hasWrite ? <Check size={14} /> : <X size={14} />}
+                          </button>
+                        </TableCell>
+                      </TableRow>
+                    )
+                  })}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

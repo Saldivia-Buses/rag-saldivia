@@ -12,6 +12,16 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 ### Plan 7 — Design System (F8 en progreso)
 
 #### Changed (F8 — Páginas)
+- `apps/web/src/components/admin/IngestionKanban.tsx`: JobCard bg-bg border-border, progress bar bg-accent, error bg-destructive-subtle, bg-success indicator, header con h1 — 2026-03-26 *(Plan 7 F8.9)*
+- `apps/web/src/components/admin/AreasAdmin.tsx`: Table shadcn, Input/Button, EmptyPlaceholder, h1 header — 2026-03-26 *(Plan 7 F8.12)*
+- `apps/web/src/components/admin/PermissionsAdmin.tsx`: cn() para área activa (bg-accent-subtle), bg-success-subtle/bg-accent-subtle para permisos, Table shadcn — 2026-03-26 *(Plan 7 F8.12)*
+- `apps/web/src/components/admin/RagConfigAdmin.tsx`: Button, toggle bg-success, tokens Tailwind, h1 header — 2026-03-26 *(Plan 7 F8.12)*
+- `apps/web/src/components/admin/KnowledgeGapsClient.tsx`: EmptyPlaceholder SearchX, Table shadcn, skeleton loading, tokens — 2026-03-26 *(Plan 7 F8.12)*
+- `apps/web/src/components/admin/ReportsAdmin.tsx`: Input/Textarea/Button, EmptyPlaceholder FileText, tokens — 2026-03-26 *(Plan 7 F8.12)*
+- `apps/web/src/components/admin/WebhooksAdmin.tsx`: Input, EmptyPlaceholder Webhook, event pills cn(), tokens — 2026-03-26 *(Plan 7 F8.12)*
+- `apps/web/src/components/admin/IntegrationsAdmin.tsx`: bg-surface-2 code blocks, tokens Tailwind, links text-accent — 2026-03-26 *(Plan 7 F8.12)*
+- `apps/web/src/components/admin/ExternalSourcesAdmin.tsx`: Input/Button, EmptyPlaceholder Cloud, tokens — 2026-03-26 *(Plan 7 F8.12)*
+- `apps/web/src/components/audit/AuditTable.tsx`: Input, Table shadcn, Badge por nivel, tokens — 2026-03-26 *(Plan 7 F8.12)*
 - `apps/web/src/components/settings/SettingsClient.tsx`: tabs con cn(), Input/Button, text-success/text-destructive, PreferenceToggle con tokens — 2026-03-26 *(Plan 7 F8.7)*
 - `apps/web/src/components/upload/UploadClient.tsx`: drop zone border-dashed con hover tokens, jobs list bg-surface, text-success/text-destructive — 2026-03-26 *(Plan 7 F8.8)*
 - `apps/web/src/components/admin/SystemStatus.tsx`: StatCard + Table shadcn + Badge + Button refresh — 2026-03-26 *(Plan 7 F8.10)*

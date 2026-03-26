@@ -5,8 +5,6 @@ import { MessageSquare, Copy, Check } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 
-const BASE_URL = typeof window !== "undefined" ? window.location.origin : ""
-
 export function IntegrationsAdmin() {
   const [slackUrl, setSlackUrl] = useState("")
   const [teamsUrl, setTeamsUrl] = useState("")
@@ -19,64 +17,68 @@ export function IntegrationsAdmin() {
 
   async function copy(text: string, key: string) {
     await navigator.clipboard.writeText(text)
-    setCopied(key)
-    setTimeout(() => setCopied(null), 2000)
+    setCopied(key); setTimeout(() => setCopied(null), 2000)
   }
 
-  const urlRowClass = "flex items-center gap-2 p-2 rounded-md text-sm font-mono"
-  const urlStyle = { background: "var(--muted)", color: "var(--foreground)", wordBreak: "break-all" as const }
-
   return (
-    <div className="space-y-8">
+    <div className="p-6 space-y-6">
+      <div>
+        <h1 className="text-lg font-semibold text-fg">Integraciones</h1>
+        <p className="text-sm text-fg-muted mt-0.5">Conectá RAG Saldivia con tu stack de comunicación</p>
+      </div>
+
       {/* Slack */}
-      <div className="p-4 rounded-xl border space-y-3" style={{ borderColor: "var(--border)" }}>
+      <div className="rounded-xl border border-border bg-surface p-5 space-y-4">
         <div className="flex items-center gap-2">
-          <MessageSquare size={18} style={{ color: "#4A154B" }} />
-          <h2 className="font-semibold">Slack</h2>
-          <Badge variant="outline" className="text-xs">Bot</Badge>
+          <MessageSquare size={18} className="text-fg-muted" />
+          <h2 className="font-semibold text-fg">Slack</h2>
+          <Badge variant="outline">Bot</Badge>
         </div>
-        <ol className="text-sm space-y-2" style={{ color: "var(--muted-foreground)" }}>
-          <li>1. Crear una Slack App en <a href="https://api.slack.com/apps" target="_blank" rel="noreferrer" className="underline" style={{ color: "var(--accent)" }}>api.slack.com/apps</a></li>
-          <li>2. Habilitar "Slash Commands" y usar la URL:</li>
+        <ol className="text-sm text-fg-muted space-y-2 list-decimal list-inside">
+          <li>Crear una Slack App en <a href="https://api.slack.com/apps" target="_blank" rel="noreferrer" className="text-accent underline underline-offset-2">api.slack.com/apps</a></li>
+          <li>Habilitar "Slash Commands" y usar la URL:</li>
         </ol>
-        <div className={urlRowClass} style={urlStyle}>
-          <span className="flex-1 break-all">{slackUrl}</span>
-          <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => copy(slackUrl, "slack")}>
+        <div className="flex items-center gap-2 p-2.5 rounded-lg bg-surface-2 border border-border">
+          <span className="flex-1 text-sm font-mono text-fg break-all">{slackUrl}</span>
+          <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => copy(slackUrl, "slack")}>
             {copied === "slack" ? <Check size={12} /> : <Copy size={12} />}
           </Button>
         </div>
-        <ol className="text-sm space-y-1" style={{ color: "var(--muted-foreground)" }} start={3}>
-          <li>3. Configurar env vars: <code className="text-xs px-1 rounded" style={{ background: "var(--muted)" }}>SLACK_BOT_TOKEN</code>, <code className="text-xs px-1 rounded" style={{ background: "var(--muted)" }}>SLACK_SIGNING_SECRET</code></li>
-          <li>4. Mapear usuarios en "Mapeo de usuarios" abajo</li>
+        <ol className="text-sm text-fg-muted space-y-1 list-decimal list-inside" start={3}>
+          <li>Configurar: <code className="text-xs px-1 py-0.5 rounded bg-surface-2 font-mono">SLACK_BOT_TOKEN</code>, <code className="text-xs px-1 py-0.5 rounded bg-surface-2 font-mono">SLACK_SIGNING_SECRET</code></li>
+          <li>Mapear usuarios con <code className="text-xs px-1 py-0.5 rounded bg-surface-2 font-mono">rag users list</code></li>
         </ol>
       </div>
 
       {/* Teams */}
-      <div className="p-4 rounded-xl border space-y-3" style={{ borderColor: "var(--border)" }}>
+      <div className="rounded-xl border border-border bg-surface p-5 space-y-4">
         <div className="flex items-center gap-2">
-          <MessageSquare size={18} style={{ color: "#464EB8" }} />
-          <h2 className="font-semibold">Microsoft Teams</h2>
-          <Badge variant="outline" className="text-xs">Bot Framework</Badge>
+          <MessageSquare size={18} className="text-fg-muted" />
+          <h2 className="font-semibold text-fg">Microsoft Teams</h2>
+          <Badge variant="outline">Bot Framework</Badge>
         </div>
-        <ol className="text-sm space-y-2" style={{ color: "var(--muted-foreground)" }}>
-          <li>1. Registrar un bot en <a href="https://dev.botframework.com" target="_blank" rel="noreferrer" className="underline" style={{ color: "var(--accent)" }}>dev.botframework.com</a></li>
-          <li>2. Usar el Messaging Endpoint:</li>
+        <ol className="text-sm text-fg-muted space-y-2 list-decimal list-inside">
+          <li>Registrar un bot en <a href="https://dev.botframework.com" target="_blank" rel="noreferrer" className="text-accent underline underline-offset-2">dev.botframework.com</a></li>
+          <li>Usar el Messaging Endpoint:</li>
         </ol>
-        <div className={urlRowClass} style={urlStyle}>
-          <span className="flex-1 break-all">{teamsUrl}</span>
-          <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={() => copy(teamsUrl, "teams")}>
+        <div className="flex items-center gap-2 p-2.5 rounded-lg bg-surface-2 border border-border">
+          <span className="flex-1 text-sm font-mono text-fg break-all">{teamsUrl}</span>
+          <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => copy(teamsUrl, "teams")}>
             {copied === "teams" ? <Check size={12} /> : <Copy size={12} />}
           </Button>
         </div>
-        <ol className="text-sm space-y-1" style={{ color: "var(--muted-foreground)" }} start={3}>
-          <li>3. Configurar env vars: <code className="text-xs px-1 rounded" style={{ background: "var(--muted)" }}>TEAMS_BOT_ID</code>, <code className="text-xs px-1 rounded" style={{ background: "var(--muted)" }}>TEAMS_BOT_PASSWORD</code></li>
+        <ol className="text-sm text-fg-muted space-y-1 list-decimal list-inside" start={3}>
+          <li>Configurar: <code className="text-xs px-1 py-0.5 rounded bg-surface-2 font-mono">TEAMS_BOT_ID</code>, <code className="text-xs px-1 py-0.5 rounded bg-surface-2 font-mono">TEAMS_BOT_PASSWORD</code></li>
         </ol>
       </div>
 
-      <div className="p-4 rounded-xl border text-sm" style={{ borderColor: "var(--border)" }}>
-        <p className="font-medium mb-2">Mapeo de usuarios</p>
-        <p style={{ color: "var(--muted-foreground)" }}>
-          El mapeo entre IDs de Slack/Teams y usuarios del sistema se configura via la tabla <code className="text-xs px-1 rounded" style={{ background: "var(--muted)" }}>bot_user_mappings</code> en la DB, o via CLI: <code className="text-xs px-1 rounded" style={{ background: "var(--muted)" }}>rag users list</code> para obtener los IDs del sistema.
+      {/* Mapeo */}
+      <div className="rounded-xl border border-border bg-surface p-5">
+        <p className="font-semibold text-fg mb-2">Mapeo de usuarios</p>
+        <p className="text-sm text-fg-muted">
+          Configurá el mapeo entre IDs de Slack/Teams y usuarios del sistema via la tabla{" "}
+          <code className="text-xs px-1 py-0.5 rounded bg-surface-2 font-mono">bot_user_mappings</code> en la DB, o via CLI:{" "}
+          <code className="text-xs px-1 py-0.5 rounded bg-surface-2 font-mono">rag users list</code>
         </p>
       </div>
     </div>

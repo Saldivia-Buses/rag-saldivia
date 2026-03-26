@@ -980,21 +980,20 @@ Objetivo: aplicar el nuevo design system a las 24 páginas en orden de prioridad
 
 ### F8.12-F8.24 — Páginas restantes (Baja prioridad)
 
-Aplicar el mismo patrón (tokens + componentes actualizados) a:
-
-- [ ] `/extract` — `ExtractionWizard.tsx`: steps con navy active
-- [ ] `/admin/areas` — `AreasAdmin.tsx`: `DataTable`
-- [ ] `/admin/permissions` — `PermissionsAdmin.tsx`
-- [ ] `/admin/rag-config` — `RagConfigAdmin.tsx`
-- [ ] `/admin/knowledge-gaps` — `KnowledgeGapsClient.tsx`
-- [ ] `/admin/reports` — `ReportsAdmin.tsx`
-- [ ] `/admin/webhooks` — `WebhooksAdmin.tsx`
-- [ ] `/admin/integrations` — `IntegrationsAdmin.tsx`
-- [ ] `/admin/external-sources` — `ExternalSourcesAdmin.tsx`
-- [ ] `/audit` — `AuditTable.tsx`: `DataTable`
+- [x] `/admin/areas` — `AreasAdmin.tsx`: Table shadcn, Input/Button, EmptyPlaceholder — completado 2026-03-26
+- [x] `/admin/permissions` — `PermissionsAdmin.tsx`: cn() para área activa, Table shadcn, bg-success-subtle/bg-accent-subtle para permisos — completado 2026-03-26
+- [x] `/admin/rag-config` — `RagConfigAdmin.tsx`: Button, toggle con bg-success, tokens — completado 2026-03-26
+- [x] `/admin/knowledge-gaps` — `KnowledgeGapsClient.tsx`: EmptyPlaceholder, Table shadcn, tokens — completado 2026-03-26
+- [x] `/admin/reports` — `ReportsAdmin.tsx`: Input/Textarea/Button, EmptyPlaceholder, tokens — completado 2026-03-26
+- [x] `/admin/webhooks` — `WebhooksAdmin.tsx`: Input, EmptyPlaceholder, event pills con cn(), tokens — completado 2026-03-26
+- [x] `/admin/integrations` — `IntegrationsAdmin.tsx`: bg-surface-2 para code blocks, tokens Tailwind — completado 2026-03-26
+- [x] `/admin/external-sources` — `ExternalSourcesAdmin.tsx`: Input/Button, EmptyPlaceholder, tokens — completado 2026-03-26
+- [x] `/admin/ingestion` — `IngestionKanban.tsx`: JobCard bg-bg border-border, progress bar bg-accent, error bg-destructive-subtle — completado 2026-03-26
+- [x] `/audit` — `AuditTable.tsx`: Input, Table shadcn, Badge para niveles — completado 2026-03-26
+- [ ] `/extract` — `ExtractionWizard.tsx`
 - [ ] `/saved` — skeleton + empty placeholder
-- [ ] `/settings/memory` — mismo patrón que /settings
-- [ ] `/share/[token]` — página pública, layout simple sin NavRail
+- [ ] `/settings/memory`
+- [ ] `/share/[token]`
 
 ### Criterio de done
 Las 24 páginas usan los nuevos tokens. Nada se ve con los colores viejos.

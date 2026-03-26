@@ -1,9 +1,11 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Plus, Trash2, RefreshCw, Cloud } from "lucide-react"
+import { Plus, Trash2, Cloud } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { EmptyPlaceholder } from "@/components/ui/empty-placeholder"
 import type { DbExternalSource } from "@rag-saldivia/db"
 
 const PROVIDER_LABELS: Record<string, string> = {
@@ -12,6 +14,8 @@ const PROVIDER_LABELS: Record<string, string> = {
   confluence: "Confluence",
 }
 
+const SELECT_CLASS = "h-9 w-full rounded-md border border-border bg-bg px-3 text-sm text-fg focus:outline-none focus:ring-1 focus:ring-ring"
+
 export function ExternalSourcesAdmin() {
   const [sources, setSources] = useState<DbExternalSource[]>([])
   const [showCreate, setShowCreate] = useState(false)
@@ -19,7 +23,8 @@ export function ExternalSourcesAdmin() {
   const [creating, setCreating] = useState(false)
 
   useEffect(() => {
-    fetch("/api/admin/external-sources").then((r) => r.json()).then((d: { ok: boolean; data?: DbExternalSource[] }) => { if (d.ok) setSources(d.data ?? []) })
+    fetch("/api/admin/external-sources").then((r) => r.json())
+      .then((d: { ok: boolean; data?: DbExternalSource[] }) => { if (d.ok) setSources(d.data ?? []) })
   }, [])
 
   async function handleCreate(e: React.FormEvent) {
@@ -37,59 +42,79 @@ export function ExternalSourcesAdmin() {
     setSources((p) => p.filter((s) => s.id !== id))
   }
 
-  const inputClass = "w-full px-3 py-1.5 rounded-md border text-sm outline-none"
-  const inputStyle = { borderColor: "var(--border)", background: "var(--background)", color: "var(--foreground)" }
-
   return (
-    <div className="space-y-4">
-      <div className="p-3 rounded-lg text-sm" style={{ background: "var(--muted)", color: "var(--muted-foreground)" }}>
-        ℹ️ La integración OAuth completa requiere configurar las credenciales de cada provider en las variables de entorno. El worker intentará sincronizar automáticamente según el schedule.
+    <div className="p-6 space-y-5">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-lg font-semibold text-fg">Fuentes externas</h1>
+          <p className="text-sm text-fg-muted mt-0.5">Sincronización automática desde servicios cloud</p>
+        </div>
+        <Button size="sm" onClick={() => setShowCreate(!showCreate)}>
+          <Plus className="h-3.5 w-3.5" /> Nueva fuente
+        </Button>
       </div>
 
-      <Button size="sm" onClick={() => setShowCreate(!showCreate)} className="gap-1.5"><Plus size={13} /> Nueva fuente</Button>
+      <div className="rounded-lg bg-surface border border-border p-3 text-sm text-fg-muted">
+        ℹ️ La integración OAuth requiere configurar las credenciales de cada provider en las variables de entorno.
+      </div>
 
       {showCreate && (
-        <form onSubmit={handleCreate} className="p-4 rounded-xl border space-y-3" style={{ borderColor: "var(--border)" }}>
-          <div>
-            <label className="text-xs font-medium">Provider</label>
-            <select value={form.provider} onChange={(e) => setForm((p) => ({ ...p, provider: e.target.value }))} className={`${inputClass} mt-1`} style={inputStyle}>
+        <form onSubmit={handleCreate} className="rounded-xl border border-border bg-surface p-5 space-y-3">
+          <h3 className="text-sm font-semibold text-fg">Nueva fuente externa</h3>
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-fg-muted">Provider</label>
+            <select value={form.provider} onChange={(e) => setForm((p) => ({ ...p, provider: e.target.value }))} className={SELECT_CLASS}>
               <option value="google_drive">Google Drive</option>
               <option value="sharepoint">SharePoint</option>
               <option value="confluence">Confluence</option>
             </select>
           </div>
-          <div><label className="text-xs font-medium">Nombre</label><input value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} className={`${inputClass} mt-1`} style={inputStyle} required /></div>
-          <div><label className="text-xs font-medium">Colección destino</label><input value={form.collectionDest} onChange={(e) => setForm((p) => ({ ...p, collectionDest: e.target.value }))} className={`${inputClass} mt-1`} style={inputStyle} required /></div>
-          <div>
-            <label className="text-xs font-medium">Schedule</label>
-            <select value={form.schedule} onChange={(e) => setForm((p) => ({ ...p, schedule: e.target.value }))} className={`${inputClass} mt-1`} style={inputStyle}>
-              <option value="hourly">Cada hora</option><option value="daily">Diario</option><option value="weekly">Semanal</option>
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-fg-muted">Nombre</label>
+            <Input value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} required />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-fg-muted">Colección destino</label>
+            <Input value={form.collectionDest} onChange={(e) => setForm((p) => ({ ...p, collectionDest: e.target.value }))} required />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-fg-muted">Schedule</label>
+            <select value={form.schedule} onChange={(e) => setForm((p) => ({ ...p, schedule: e.target.value }))} className={SELECT_CLASS}>
+              <option value="hourly">Cada hora</option>
+              <option value="daily">Diario</option>
+              <option value="weekly">Semanal</option>
             </select>
           </div>
-          <div className="flex gap-2"><Button size="sm" type="submit" disabled={creating}>{creating ? "Creando..." : "Agregar"}</Button><Button size="sm" variant="ghost" type="button" onClick={() => setShowCreate(false)}>Cancelar</Button></div>
+          <div className="flex gap-2">
+            <Button size="sm" type="submit" disabled={creating}>{creating ? "Creando..." : "Agregar"}</Button>
+            <Button size="sm" variant="outline" type="button" onClick={() => setShowCreate(false)}>Cancelar</Button>
+          </div>
         </form>
       )}
 
       {sources.length === 0 ? (
-        <div className="rounded-xl border p-10 text-center" style={{ borderColor: "var(--border)", color: "var(--muted-foreground)" }}>
-          <Cloud size={28} className="mx-auto mb-2 opacity-40" />
-          <p className="text-sm">Sin fuentes externas configuradas.</p>
-        </div>
+        <EmptyPlaceholder>
+          <EmptyPlaceholder.Icon icon={Cloud} />
+          <EmptyPlaceholder.Title>Sin fuentes externas</EmptyPlaceholder.Title>
+          <EmptyPlaceholder.Description>Conectá Google Drive, SharePoint o Confluence para sincronizar documentos.</EmptyPlaceholder.Description>
+        </EmptyPlaceholder>
       ) : (
         <div className="space-y-2">
           {sources.map((s) => (
-            <div key={s.id} className="flex items-center justify-between p-3 rounded-lg border gap-3" style={{ borderColor: "var(--border)" }}>
+            <div key={s.id} className="flex items-center justify-between p-4 rounded-xl border border-border bg-surface gap-3">
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="font-medium text-sm">{s.name}</span>
-                  <Badge variant="outline" className="text-xs">{PROVIDER_LABELS[s.provider] ?? s.provider}</Badge>
-                  <Badge variant="outline" className="text-xs">{s.schedule}</Badge>
+                  <span className="font-medium text-sm text-fg">{s.name}</span>
+                  <Badge variant="secondary">{PROVIDER_LABELS[s.provider] ?? s.provider}</Badge>
+                  <Badge variant="outline">{s.schedule}</Badge>
                 </div>
-                <p className="text-xs mt-0.5" style={{ color: "var(--muted-foreground)" }}>
+                <p className="text-xs text-fg-muted mt-0.5">
                   → {s.collectionDest} {s.lastSync ? `· Último sync: ${new Date(s.lastSync).toLocaleDateString("es-AR")}` : "· Sin sync aún"}
                 </p>
               </div>
-              <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0" onClick={() => handleDelete(s.id)} style={{ color: "var(--destructive)" }}><Trash2 size={13} /></Button>
+              <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0 text-destructive hover:text-destructive" onClick={() => handleDelete(s.id)}>
+                <Trash2 size={13} />
+              </Button>
             </div>
           ))}
         </div>
