@@ -4,7 +4,7 @@ import { useState, useTransition } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { AnimatedBackground } from "@/components/auth/AnimatedBackground"
+import { ThemeToggle } from "@/components/ui/theme-toggle"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -44,14 +44,11 @@ export default function LoginPage() {
   }
 
   return (
-    <>
-      <AnimatedBackground />
-
-      <div className="min-h-screen flex items-center justify-center p-4">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-bg">
         <div className="w-full max-w-sm">
 
-          {/* Card con efecto glass */}
-          <div className="rounded-2xl border border-border bg-bg/80 backdrop-blur-md shadow-xl px-8 py-10 space-y-8">
+          {/* Card */}
+          <div className="rounded-2xl border border-border bg-surface shadow-sm px-8 py-10 space-y-8">
 
             {/* Header */}
             <div className="text-center space-y-1.5">
@@ -129,12 +126,14 @@ export default function LoginPage() {
           </div>
 
           {/* Footer */}
-          <p className="text-center text-xs text-fg-subtle mt-6">
-            ¿Problemas para acceder? Contactá al administrador.
-          </p>
+          <div className="flex items-center justify-between mt-6">
+            <p className="text-xs text-fg-subtle">
+              ¿Problemas para acceder? Contactá al administrador.
+            </p>
+            <ThemeToggle />
+          </div>
         </div>
-      </div>
-    </>
+    </div>
   )
 }
 
