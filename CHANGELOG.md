@@ -11,6 +11,15 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Plan 7 — Design System (en progreso)
 
+#### Added
+- `apps/web/src/app/(app)/admin/layout.tsx`: layout de admin con `data-density="compact"` aplicado a todas las rutas /admin — 2026-03-26 *(Plan 7 F4)*
+
+#### Changed
+- `apps/web/src/components/layout/NavRail.tsx`: rediseño completo — fondo `bg-surface`, iconos con tokens semánticos (`text-fg-muted`, `bg-accent-subtle`), sin colores hardcodeados — 2026-03-26 *(Plan 7 F4)*
+- `apps/web/src/components/layout/AppShellChrome.tsx`: `bg-bg` en el contenedor y main, zen indicator con tokens semánticos — 2026-03-26 *(Plan 7 F4)*
+- `apps/web/src/components/layout/SecondaryPanel.tsx`: `bg-surface border-border` via clases Tailwind — 2026-03-26 *(Plan 7 F4)*
+- `apps/web/src/app/(app)/layout.tsx`: `data-density="spacious"` como default en el contenido de la app — 2026-03-26 *(Plan 7 F4)*
+
 #### Changed
 - `apps/web/src/components/ui/button.tsx`: tamaños refinados (h-9/h-8/h-10), `ring-1`, hover states con tokens semánticos — 2026-03-26 *(Plan 7 F3)*
 - `apps/web/src/components/ui/badge.tsx`: variantes `success` y `warning` agregadas, forma `rounded-md` más cuadrada — 2026-03-26 *(Plan 7 F3)*

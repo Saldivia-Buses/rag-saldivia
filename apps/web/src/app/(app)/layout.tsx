@@ -15,7 +15,10 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   return (
     <AppShell user={user}>
       <OnboardingTour completed={onboardingCompleted} />
-      {children}
+      {/* Densidad spacious por defecto — los layouts de admin sobrescriben con compact */}
+      <div data-density="spacious" className="h-full">
+        {children}
+      </div>
     </AppShell>
   )
 }

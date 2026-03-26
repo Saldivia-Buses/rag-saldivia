@@ -24,8 +24,8 @@ export function SecondaryPanel({ hidden }: { hidden?: boolean }) {
 
   return (
     <div
-      className="flex-shrink-0 border-r h-screen overflow-hidden"
-      style={{ width: PANEL_WIDTH, borderColor: "var(--border)" }}
+      className="flex-shrink-0 border-r border-border h-screen overflow-hidden bg-surface"
+      style={{ width: PANEL_WIDTH }}
     >
       {panel}
     </div>

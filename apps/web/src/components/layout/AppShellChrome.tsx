@@ -27,10 +27,10 @@ export function AppShellChrome({
   useGlobalHotkeys({ onOpenPalette: () => setPaletteOpen(true) })
 
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-screen overflow-hidden bg-bg">
       <NavRail user={user} hidden={isZen} unreadCount={unreadCount} />
       <SecondaryPanel hidden={isZen} />
-      <main className="flex-1 overflow-y-auto">{children}</main>
+      <main className="flex-1 overflow-y-auto bg-bg">{children}</main>
       <CommandPalette
         open={paletteOpen}
         onClose={() => setPaletteOpen(false)}
@@ -38,10 +38,7 @@ export function AppShellChrome({
         onToggleZen={toggleZen}
       />
       {isZen && (
-        <div
-          className="fixed bottom-4 right-4 px-3 py-1.5 rounded-full text-xs font-medium shadow-lg pointer-events-none"
-          style={{ background: "var(--nav-bg)", color: "rgba(255,255,255,0.7)" }}
-        >
+        <div className="fixed bottom-4 right-4 px-3 py-1.5 rounded-full text-xs font-medium shadow-lg pointer-events-none bg-fg text-bg">
           ESC para salir del modo Zen
         </div>
       )}
