@@ -35,6 +35,7 @@ beforeAll(async () => {
       title TEXT NOT NULL,
       collection TEXT NOT NULL,
       crossdoc INTEGER NOT NULL DEFAULT 0,
+      forked_from TEXT,
       created_at INTEGER NOT NULL,
       updated_at INTEGER NOT NULL
     );

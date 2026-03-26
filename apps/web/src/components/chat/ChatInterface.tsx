@@ -1,10 +1,10 @@
 "use client"
 
 import { useState, useRef, useEffect, useTransition } from "react"
-import { Send, ThumbsUp, ThumbsDown, Loader2, Bookmark, RefreshCw, Copy, Check } from "lucide-react"
+import { Send, ThumbsUp, ThumbsDown, Loader2, Bookmark, RefreshCw, Copy, Check, GitBranch } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { DbChatSession, DbChatMessage } from "@rag-saldivia/db"
-import { actionAddMessage, actionAddFeedback, actionToggleSaved } from "@/app/actions/chat"
+import { actionAddMessage, actionAddFeedback, actionToggleSaved, actionForkSession } from "@/app/actions/chat"
 import { clientLog } from "@rag-saldivia/logger/frontend"
 import { useRagStream } from "@/hooks/useRagStream"
 import { ThinkingSteps } from "@/components/chat/ThinkingSteps"
@@ -247,6 +247,21 @@ export function ChatInterface({
 
               {msg.role === "assistant" && msg.content && phase !== "streaming" && (
                 <div className="flex gap-1 pt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  {/* Bifurcar — F3.43 */}
+                  {msg.id && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6"
+                      title="Bifurcar desde aquí"
+                      onClick={async () => {
+                        const newId = await actionForkSession(session.id, msg.id!)
+                        if (newId) window.location.href = `/chat/${newId}`
+                      }}
+                    >
+                      <GitBranch size={13} />
+                    </Button>
+                  )}
                   {/* Regenerar — F1.15 */}
                   <Button
                     variant="ghost"

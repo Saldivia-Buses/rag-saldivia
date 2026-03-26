@@ -123,6 +123,7 @@ export const chatSessions = sqliteTable(
     title: text("title").notNull(),
     collection: text("collection").notNull(),
     crossdoc: integer("crossdoc", { mode: "boolean" }).notNull().default(false),
+    forkedFrom: text("forked_from"),  // FK a chat_sessions(id) — sin constraint Drizzle para evitar self-reference circular
     createdAt: integer("created_at").notNull(), // epoch ms
     updatedAt: integer("updated_at").notNull(), // epoch ms
   },

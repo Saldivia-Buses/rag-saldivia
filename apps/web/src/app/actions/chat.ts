@@ -19,7 +19,12 @@ import {
   addTag,
   removeTag,
   listTagsBySession,
+  getDb,
+  chatMessages,
+  chatSessions,
 } from "@rag-saldivia/db"
+import { eq as eqDrizzle, lte as lteDrizzle } from "drizzle-orm"
+import { randomUUID } from "crypto"
 import { log } from "@rag-saldivia/logger/backend"
 
 export async function actionListSessions() {
@@ -146,4 +151,44 @@ export async function actionRemoveTag(sessionId: string, tag: string) {
   await requireUser()
   await removeTag(sessionId, tag)
   revalidatePath("/chat")
+}
+
+export async function actionForkSession(sessionId: string, upToMessageId: number) {
+  const user = await requireUser()
+  const origSession = await getSessionById(sessionId, user.id)
+  if (!origSession) return null
+
+  const db = getDb()
+  const messages = await db
+    .select()
+    .from(chatMessages)
+    .where(eqDrizzle(chatMessages.sessionId, sessionId))
+
+  const upToIdx = messages.findIndex((m) => m.id === upToMessageId)
+  const messagesToCopy = upToIdx >= 0 ? messages.slice(0, upToIdx + 1) : messages
+
+  const newId = randomUUID()
+  await db.insert(chatSessions).values({
+    id: newId,
+    userId: user.id,
+    title: `${origSession.title} (bifurcación)`,
+    collection: origSession.collection,
+    crossdoc: origSession.crossdoc,
+    forkedFrom: sessionId,
+    createdAt: Date.now(),
+    updatedAt: Date.now(),
+  })
+
+  for (const msg of messagesToCopy) {
+    await db.insert(chatMessages).values({
+      sessionId: newId,
+      role: msg.role,
+      content: msg.content,
+      sources: msg.sources,
+      timestamp: msg.timestamp,
+    })
+  }
+
+  revalidatePath("/chat")
+  return newId
 }

@@ -11,6 +11,10 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Added
 
+- `packages/db/src/schema.ts`: campo `forked_from` en `chat_sessions` (TEXT nullable, sin FK circular en Drizzle) — 2026-03-25 *(Plan 4 F3.43)*
+- `apps/web/src/app/actions/chat.ts`: Server Action `actionForkSession` — copia sesión y mensajes hasta el punto indicado, setea `forked_from` — 2026-03-25 *(Plan 4 F3.43)*
+- `apps/web/src/components/chat/ChatInterface.tsx`: botón `GitBranch` en mensajes del asistente para bifurcar desde ese punto — 2026-03-25 *(Plan 4 F3.43)*
+- `apps/web/src/components/chat/SessionList.tsx`: badge `GitBranch` en sesiones con `forked_from` no null — 2026-03-25 *(Plan 4 F3.43)*
 - `apps/web/src/hooks/useRagStream.ts`: detección de artifacts al finalizar stream — marcador `:::artifact` explícito o heurística (código ≥ 40 líneas, tabla ≥ 5 cols); callback `onArtifact` — 2026-03-25 *(Plan 4 F3.42)*
 - `apps/web/src/components/chat/ArtifactsPanel.tsx`: Sheet lateral para código/tabla/documento — botones guardar y exportar; resaltado de código en `<pre>` — 2026-03-25 *(Plan 4 F3.42)*
 - `packages/db/src/schema.ts`: tablas `projects`, `project_sessions`, `project_collections` — 2026-03-25 *(Plan 4 F3.41)*

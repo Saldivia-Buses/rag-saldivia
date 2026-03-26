@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useState, useRef, useEffect } from "react"
-import { Plus, MessageSquare, Trash2, Pencil, Check, X, Tag, Download } from "lucide-react"
+import { Plus, MessageSquare, Trash2, Pencil, Check, X, Tag, Download, GitBranch } from "lucide-react"
 import type { DbChatSession } from "@rag-saldivia/db"
 import { actionDeleteSession, actionCreateSession, actionRenameSession, actionAddTag, actionRemoveTag } from "@/app/actions/chat"
 import { Badge } from "@/components/ui/badge"
@@ -254,6 +254,9 @@ export function SessionList({ sessions }: { sessions: DbChatSession[] }) {
                     >
                       <MessageSquare size={14} className="shrink-0 opacity-60" />
                       <span className="flex-1 truncate">{session.title}</span>
+                      {(session as DbChatSession & { forkedFrom?: string | null }).forkedFrom && (
+                        <GitBranch size={11} className="shrink-0 opacity-40" title="Sesión bifurcada" />
+                      )}
                       <button
                         onClick={(e) => { e.preventDefault(); e.stopPropagation(); setShowTagInput(showTagInput === session.id ? null : session.id) }}
                         className="opacity-0 group-hover:opacity-60 hover:opacity-100! transition-opacity p-0.5"
