@@ -9,6 +9,23 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Plan 6 — UI Testing (F3 en progreso)
+
+#### Added (F3 — Component tests)
+- `src/components/ui/__tests__/button.test.tsx`: 11 tests — render, variantes (6), disabled, onClick, asChild — 2026-03-26 *(Plan 6 F3)*
+- `src/components/ui/__tests__/badge.test.tsx`: 7 tests — variantes default/destructive/success/warning/outline/secondary — 2026-03-26 *(Plan 6 F3)*
+- `src/components/ui/__tests__/input.test.tsx`: 7 tests — placeholder, onChange, disabled, type, value, border-border, label — 2026-03-26 *(Plan 6 F3)*
+- `src/components/ui/__tests__/avatar.test.tsx`: 4 tests — fallback con iniciales, clases accent, rounded-full — 2026-03-26 *(Plan 6 F3)*
+- `src/components/ui/__tests__/table.test.tsx`: 5 tests — datos, bg-surface header, hover row, caption, uppercase head — 2026-03-26 *(Plan 6 F3)*
+- `src/components/ui/__tests__/skeleton.test.tsx`: 9 tests — Skeleton, SkeletonText, SkeletonAvatar, SkeletonCard, SkeletonTable — 2026-03-26 *(Plan 6 F3)*
+- `src/components/ui/__tests__/stat-card.test.tsx`: 7 tests — label, delta+/-, sin delta, deltaLabel, ícono, value string — 2026-03-26 *(Plan 6 F3)*
+- `src/components/ui/__tests__/empty-placeholder.test.tsx`: 5 tests — título, ícono, children, className, border-dashed — 2026-03-26 *(Plan 6 F3)*
+- `src/lib/component-test-setup.ts`: actualizar con afterEach(cleanup) implícito via patrón por archivo — 2026-03-26 *(Plan 6 F3)*
+
+**Total acumulado: 124 tests (68 lib + 56 componentes) — 0 fallos**
+
+---
+
 ### Plan 6 — UI Testing (F2 en progreso)
 
 #### Added
