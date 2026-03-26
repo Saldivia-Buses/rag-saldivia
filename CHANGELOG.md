@@ -9,6 +9,22 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Plan 6 — UI Testing (en progreso)
+
+#### Added
+- `docs/plans/ultra-optimize-plan6-ui-testing.md`: plan de 7 fases para UI testing completo — component tests, visual regression, Maestro E2E, a11y, CI — 2026-03-26
+- `docs/plans/ultra-optimize-plan7-design-system.md`: plan de 8 fases para design system "Warm Intelligence" — tokens crema-navy, Instrument Sans, Storybook, 24 páginas — 2026-03-26
+- `docs/superpowers/specs/2026-03-26-design-system-design.md`: spec aprobado del design system — 2026-03-26
+- `docs/superpowers/specs/2026-03-26-ui-testing-design.md`: spec aprobado del UI testing — 2026-03-26
+- `react-scan@0.5.3`: instalado como devDependency en `apps/web` para baseline de performance — 2026-03-26 *(Plan 6 F1)*
+- `apps/web/src/components/dev/ReactScan.tsx`: Client Component que inicializa react-scan solo en `NODE_ENV=development` — 2026-03-26 *(Plan 6 F1)*
+- `docs/superpowers/react-scan-baseline.md`: template del reporte baseline de re-renders — completar tras recorrer la app — 2026-03-26 *(Plan 6 F1)*
+
+#### Modified
+- `apps/web/src/app/layout.tsx`: agregar `<ReactScanInit />` con dynamic import condicional (solo dev, ssr:false) — 2026-03-26 *(Plan 6 F1)*
+
+---
+
 ### Plan 5 — Testing Foundation (2026-03-26)
 
 #### Added
