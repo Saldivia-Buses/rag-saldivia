@@ -11,6 +11,8 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Added
 
+- `apps/web/src/workers/ingestion.ts`: `checkProactiveSurface` — cruza keywords del doc nuevo con queries recientes del usuario; si hay match genera evento `proactive.docs_available` — 2026-03-25 *(Plan 4 F3.45)*
+- `apps/web/src/app/api/notifications/route.ts`: `proactive.docs_available` agregado a los tipos de notificación — 2026-03-25 *(Plan 4 F3.45)*
 - `packages/db/src/schema.ts`: tabla `user_memory` (key, value, source explicit/inferred, UNIQUE per user+key) — 2026-03-25 *(Plan 4 F3.44)*
 - `packages/db/src/queries/memory.ts`: `setMemory` (upsert), `getMemory`, `deleteMemory`, `getMemoryAsContext` — 2026-03-25 *(Plan 4 F3.44)*
 - `apps/web/src/app/api/rag/generate/route.ts`: inyección de memoria del usuario como system message — 2026-03-25 *(Plan 4 F3.44)*

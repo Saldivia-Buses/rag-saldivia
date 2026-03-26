@@ -15,7 +15,12 @@ import { getDb } from "@rag-saldivia/db"
 import { events } from "@rag-saldivia/db"
 import { inArray, desc } from "drizzle-orm"
 
-const NOTIFICATION_TYPES = ["ingestion.completed", "ingestion.error", "user.created"]
+const NOTIFICATION_TYPES = [
+  "ingestion.completed",
+  "ingestion.error",
+  "user.created",
+  "proactive.docs_available", // F3.45
+]
 
 export async function GET(request: Request) {
   const claims = await extractClaims(request)

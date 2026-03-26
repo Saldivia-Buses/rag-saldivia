@@ -14,7 +14,9 @@
 
 import { eq, and, isNull } from "drizzle-orm"
 import { readFile, access } from "fs/promises"
-import { getDb, ingestionQueue, recordIngestionEvent, listActiveReports, updateLastRun, saveResponse } from "@rag-saldivia/db"
+import { getDb, ingestionQueue, recordIngestionEvent, listActiveReports, updateLastRun, saveResponse, events } from "@rag-saldivia/db"
+import { eq, and, gte, desc } from "drizzle-orm"
+import { randomUUID } from "crypto"
 import { dispatchEvent } from "@/lib/webhook"
 import { log } from "@rag-saldivia/logger/backend"
 
@@ -77,6 +79,9 @@ async function processJob(job: typeof ingestionQueue.$inferSelect): Promise<bool
 
     // Dispatch webhook — F2.38
     dispatchEvent("ingestion.completed", { jobId: id, collection, filename }).catch(() => {})
+
+    // Superficie proactiva — F3.45
+    checkProactiveSurface(collection, userId, filename ?? "").catch(() => {})
 
     // Registrar en historial de colecciones — F2.32
     try {
@@ -182,6 +187,69 @@ async function workerLoop() {
   }
 
   log.info("system.warning", { message: `Worker ${WORKER_ID} apagado limpiamente` })
+}
+
+// ── Superficie proactiva (F3.45) ────────────────────────────────────────────
+/**
+ * Cruza el nuevo documento con queries recientes del usuario.
+ * Si hay solapamiento de keywords, genera una notificación proactiva.
+ */
+async function checkProactiveSurface(collection: string, userId: number, filename: string) {
+  try {
+    const db = getDb()
+    const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000
+
+    // Obtener queries recientes del usuario en esta colección
+    const recentQueries = await db
+      .select({ payload: events.payload })
+      .from(events)
+      .where(
+        and(
+          eq(events.type, "rag.stream_started"),
+          eq(events.userId, userId),
+          gte(events.ts, thirtyDaysAgo)
+        )
+      )
+      .orderBy(desc(events.ts))
+      .limit(20)
+
+    if (recentQueries.length === 0) return
+
+    // Extraer keywords del filename (simple: palabras de > 3 chars sin extensión)
+    const docKeywords = filename
+      .replace(/\.[^.]+$/, "")
+      .toLowerCase()
+      .split(/[\s\-_]+/)
+      .filter((w) => w.length > 3)
+
+    if (docKeywords.length === 0) return
+
+    // Verificar solapamiento con alguno de los queries recientes
+    const hasMatch = recentQueries.some((q) => {
+      const payload = q.payload as Record<string, unknown>
+      const queryText = String(payload.query ?? "").toLowerCase()
+      return docKeywords.some((kw) => queryText.includes(kw))
+    })
+
+    if (!hasMatch) return
+
+    // Insertar evento proactivo
+    await db.insert(events).values({
+      id: randomUUID(),
+      ts: Date.now(),
+      source: "backend",
+      level: "INFO",
+      type: "proactive.docs_available",
+      userId,
+      payload: { collection, filename, matchedQueries: recentQueries.length },
+      sequence: Date.now(),
+    })
+
+    log.info("system.warning", { message: `Proactive surface triggered for user ${userId}: ${filename}` })
+  } catch (err) {
+    // No interrumpir el flujo de ingesta
+    log.info("system.warning", { message: `Proactive surface check failed: ${String(err).slice(0, 100)}` })
+  }
 }
 
 // ── Scheduled reports processor ─────────────────────────────────────────────
