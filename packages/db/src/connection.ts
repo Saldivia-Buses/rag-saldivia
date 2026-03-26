@@ -44,6 +44,19 @@ export function getDb() {
   return _db
 }
 
+/**
+ * Reemplaza el singleton de DB con una instancia externa.
+ * Solo para uso en tests — permite inyectar una DB en memoria.
+ */
+export function _injectDbForTesting(db: ReturnType<typeof createConnection>) {
+  _db = db
+}
+
+/** Resetea el singleton. Usar en afterAll de tests para aislar suites. */
+export function _resetDbForTesting() {
+  _db = null
+}
+
 export const db = new Proxy({} as ReturnType<typeof createConnection>, {
   get(_, prop) {
     return getDb()[prop as keyof ReturnType<typeof createConnection>]

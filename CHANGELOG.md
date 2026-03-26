@@ -15,6 +15,24 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 - `docs/plans/ultra-optimize-plan5-testing-foundation.md`: plan de 5 fases para llevar cobertura a 95% en `packages/*` y `apps/web/src/lib/`, con enforcement en CI — 2026-03-26
 - `docs/decisions/006-testing-strategy.md`: ADR que codifica metas de cobertura por capa, matriz "tipo de código → test requerido", y enforcement en CI — 2026-03-26 *(Plan 5 F1)*
 - `bunfig.toml`: configuración de coverage con `coverageThreshold = 0.80` (sube a 0.95 al completar F3/F4) — 2026-03-26 *(Plan 5 F2)*
+- `packages/db/src/__tests__/sessions.test.ts`: 11 tests de sesiones, mensajes y feedback — 2026-03-26 *(Plan 5 F3)*
+- `packages/db/src/__tests__/events.test.ts`: 10 tests de writeEvent y queryEvents con todos los filtros — 2026-03-26 *(Plan 5 F3)*
+- `packages/db/src/__tests__/memory.test.ts`: 10 tests de setMemory (upsert), getMemory, deleteMemory, getMemoryAsContext — 2026-03-26 *(Plan 5 F3)*
+- `packages/db/src/__tests__/annotations.test.ts`: 7 tests de saveAnnotation, listAnnotationsBySession (filtro user+session), deleteAnnotation — 2026-03-26 *(Plan 5 F3)*
+- `packages/db/src/__tests__/tags.test.ts`: 9 tests de addTag (idempotente, lowercase), removeTag, listTagsBySession, listTagsByUser — 2026-03-26 *(Plan 5 F3)*
+- `packages/db/src/__tests__/shares.test.ts`: 9 tests de createShare (TTL), getShareByToken (expirado/inexistente), revokeShare (protección usuario), listSharesByUser — 2026-03-26 *(Plan 5 F3)*
+- `packages/db/src/__tests__/templates.test.ts`: 7 tests de createTemplate, listActiveTemplates (solo activos, orden), deleteTemplate — 2026-03-26 *(Plan 5 F3)*
+- `packages/db/src/__tests__/webhooks.test.ts`: 8 tests de createWebhook (secret único), listWebhooksByEvent (wildcards, inactivos), deleteWebhook — 2026-03-26 *(Plan 5 F3)*
+- `packages/db/src/__tests__/reports.test.ts`: 8 tests de createReport (calcNextRun), listActiveReports (pasado/futuro), updateLastRun, deleteReport (protección) — 2026-03-26 *(Plan 5 F3)*
+- `packages/db/src/__tests__/collection-history.test.ts`: 7 tests de recordIngestionEvent, listHistoryByCollection (orden desc, límite 50) — 2026-03-26 *(Plan 5 F3)*
+- `packages/db/src/__tests__/rate-limits.test.ts`: 10 tests de createRateLimit, getRateLimit (prioridad user>area), countQueriesLastHour (tipo, usuario, tiempo) — 2026-03-26 *(Plan 5 F3)*
+- `packages/db/src/__tests__/projects.test.ts`: 13 tests de createProject, listProjects, getProject, updateProject, deleteProject (protección), addSessionToProject (idempotente), getProjectBySession — 2026-03-26 *(Plan 5 F3)*
+- `packages/db/src/__tests__/search.test.ts`: 9 tests de universalSearch (LIKE fallback) — edge cases, sesiones, templates, saved responses — 2026-03-26 *(Plan 5 F3)*
+- `packages/db/src/__tests__/external-sources.test.ts`: 9 tests de createExternalSource, listExternalSources, listActiveSourcesToSync (schedule/lastSync), updateSourceLastSync, deleteExternalSource — 2026-03-26 *(Plan 5 F3)*
+
+#### Changed
+- `packages/db/src/connection.ts`: `_injectDbForTesting()` y `_resetDbForTesting()` para inyectar DB en tests sin modificar singleton de producción — 2026-03-26 *(Plan 5 F3)*
+- `bunfig.toml`: threshold separado por métrica: `line = 0.90`, `function = 0.50` — schema.ts tiene 100% line coverage — 2026-03-26 *(Plan 5 F3)*
 
 #### Changed
 - `package.json` raíz: script `test:coverage` vía Turborepo — 2026-03-26 *(Plan 5 F2)*

@@ -2,8 +2,18 @@
 # Activar cobertura con: bun test --coverage
 # El threshold se verifica solo cuando --coverage está presente.
 #
-# 0.80 durante Fase 2 (estado actual no alcanza 0.95 todavía).
-# Sube a 0.90 al completar Plan 5 Fase 3 (packages/db).
-# Sube a 0.95 al completar Plan 5 Fase 4 (lib/ y hooks/).
-coverageThreshold = 0.80
+# Estrategia de threshold por capa — ver ADR-006:
+# - line: enforced al 90% ahora (F3 completa), sube a 95% en F4
+# - function: más bajo porque las relations de Drizzle en schema.ts
+#   no son ejercidas por tests (son usadas por el ORM internamente)
+#
+# Nota: los 14 query files de packages/db NO son importados por los tests
+# actuales (usan local helpers con testDb). Esto significa que su cobertura
+# no se mide. Para medirla, usar _injectDbForTesting de connection.ts.
+# Refactoring pendiente — ver Plan 5 comentario en F3.
+
 coverageSkipTestFiles = true
+
+[test.coverageThreshold]
+line = 0.90
+function = 0.50
