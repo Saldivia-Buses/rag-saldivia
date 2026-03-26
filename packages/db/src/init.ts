@@ -114,6 +114,16 @@ await exec(`
     UNIQUE(message_id, user_id)
   );
 
+  -- Bot user mappings (F3.49)
+  CREATE TABLE IF NOT EXISTS bot_user_mappings (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    platform TEXT NOT NULL,
+    external_user_id TEXT NOT NULL,
+    system_user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    created_at INTEGER NOT NULL,
+    UNIQUE(platform, external_user_id)
+  );
+
   -- Fuentes externas (F3.48)
   CREATE TABLE IF NOT EXISTS external_sources (
     id TEXT PRIMARY KEY,

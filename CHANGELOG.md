@@ -11,6 +11,10 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Added
 
+- `packages/db/src/schema.ts`: tabla `bot_user_mappings` (platform, externalUserId, systemUserId) — 2026-03-25 *(Plan 4 F3.49)*
+- `apps/web/src/app/api/slack/route.ts`: handler de slash commands Slack — verifica firma HMAC, resuelve userId via mapping, consulta RAG y responde via response_url — 2026-03-25 *(Plan 4 F3.49)*
+- `apps/web/src/app/api/teams/route.ts`: handler de mensajes Teams — respeta RBAC via mapping de usuarios — 2026-03-25 *(Plan 4 F3.49)*
+- `apps/web/src/app/(app)/admin/integrations/page.tsx` y `IntegrationsAdmin.tsx`: UI de configuración con URLs y guía de setup — 2026-03-25 *(Plan 4 F3.49)*
 - `packages/db/src/schema.ts`: tabla `external_sources` (provider, credentials, collectionDest, schedule, lastSync) — 2026-03-25 *(Plan 4 F3.48)*
 - `packages/db/src/queries/external-sources.ts`: `createExternalSource`, `listExternalSources`, `listActiveSourcesToSync`, `updateSourceLastSync`, `deleteExternalSource` — 2026-03-25 *(Plan 4 F3.48)*
 - `apps/web/src/workers/external-sync.ts`: worker MVP que detecta fuentes listas para sync y registra logs; implementación OAuth completa pendiente de credenciales reales — 2026-03-25 *(Plan 4 F3.48)*

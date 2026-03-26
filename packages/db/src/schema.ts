@@ -198,6 +198,24 @@ export const webhooks = sqliteTable(
   })
 )
 
+// ── Bot User Mappings ──────────────────────────────────────────────────────
+
+export const botUserMappings = sqliteTable(
+  "bot_user_mappings",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    platform: text("platform", { enum: ["slack", "teams"] }).notNull(),
+    externalUserId: text("external_user_id").notNull(), // Slack/Teams user ID
+    systemUserId: integer("system_user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    createdAt: integer("created_at").notNull(),
+  },
+  (t) => ({
+    uniqueMapping: uniqueIndex("idx_bot_user_mapping_unique").on(t.platform, t.externalUserId),
+  })
+)
+
 // ── External Sources ───────────────────────────────────────────────────────
 
 export const externalSources = sqliteTable(
@@ -624,6 +642,7 @@ export type DbChatMessage = typeof chatMessages.$inferSelect
 export type NewChatMessage = typeof chatMessages.$inferInsert
 export type DbWebhook = typeof webhooks.$inferSelect
 export type NewWebhook = typeof webhooks.$inferInsert
+export type DbBotUserMapping = typeof botUserMappings.$inferSelect
 export type DbExternalSource = typeof externalSources.$inferSelect
 export type NewExternalSource = typeof externalSources.$inferInsert
 export type DbUserMemory = typeof userMemory.$inferSelect
