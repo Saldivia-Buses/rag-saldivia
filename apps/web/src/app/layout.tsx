@@ -1,8 +1,8 @@
 import type { Metadata } from "next"
-import dynamic from "next/dynamic"
 import { Instrument_Sans } from "next/font/google"
 import { Providers } from "@/components/providers"
 import { Toaster } from "@/components/ui/sonner"
+import { ReactScanProvider } from "@/components/dev/ReactScanProvider"
 import "./globals.css"
 
 const instrumentSans = Instrument_Sans({
@@ -12,11 +12,6 @@ const instrumentSans = Instrument_Sans({
   variable: "--font-instrument-sans",
   display: "swap",
 })
-
-const ReactScanInit =
-  process.env.NODE_ENV === "development"
-    ? dynamic(() => import("@/components/dev/ReactScan"), { ssr: false })
-    : null
 
 export const metadata: Metadata = {
   title: "RAG Saldivia",
@@ -31,7 +26,7 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning className={instrumentSans.variable}>
       <body className="min-h-screen antialiased" style={{ background: "var(--background)", color: "var(--foreground)" }}>
-        {process.env.NODE_ENV === "development" && ReactScanInit && <ReactScanInit />}
+        <ReactScanProvider />
         <Providers>
           {children}
           <Toaster />
