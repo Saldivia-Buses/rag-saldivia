@@ -31,7 +31,7 @@ El Plan 2 estableció 79 tests unitarios. El Plan 4 agregó features sin tests (
 
 ## Seguimiento
 
-Formato: `- [ ] Descripción — estimación`
+Formato: `- [x] Descripción — estimación`
 Al completar: `- [x] Descripción — completado YYYY-MM-DD`
 Cada fase completada → entrada en CHANGELOG.md → commit.
 
@@ -48,13 +48,13 @@ Objetivo: las reglas de testing están escritas, son precisas, y el agente las l
 
 ### Checklist de tareas
 
-- [ ] Crear ADR-006: testing strategy — codifica las metas por capa, la matriz "tipo de código → tipo de test requerido", y el principio "si no tiene test no está terminado"
-- [ ] Actualizar `.cursor/skills/rag-testing/SKILL.md`:
+- [x] Crear ADR-006: testing strategy — codifica las metas por capa, la matriz "tipo de código → tipo de test requerido", y el principio "si no tiene test no está terminado"
+- [x] Actualizar `.cursor/skills/rag-testing/SKILL.md`:
   - Agregar tabla "tipo de código → test requerido"
   - Agregar comandos de cobertura (`bun test --coverage`)
   - Actualizar "Huecos conocidos" para que diga "cubiertos en Plan 5"
   - Agregar regla: "al implementar una query nueva → test en el mismo PR"
-- [ ] Actualizar `docs/workflows.md` sección 2 (testing):
+- [x] Actualizar `docs/workflows.md` sección 2 (testing):
   - Agregar la tabla de metas por capa
   - Agregar la regla explícita: "features sin tests no se commitean"
   - Agregar los comandos de coverage
@@ -63,11 +63,11 @@ Objetivo: las reglas de testing están escritas, son precisas, y el agente las l
 ADR-006 existe. El skill dice explícitamente qué testear para cada tipo de código.
 
 ### Checklist de cierre
-- [ ] `bun run test` — todos pasan
-- [ ] CHANGELOG.md actualizado bajo `### Plan 5 — Testing Foundation`
-- [ ] `git commit -m "docs(plans): plan 5 testing foundation + adr-006 estrategia de tests"`
+- [x] `bun run test` — todos pasan
+- [x] CHANGELOG.md actualizado bajo `### Plan 5 — Testing Foundation`
+- [x] `git commit -m "docs(plans): plan 5 testing foundation + adr-006 estrategia de tests"`
 
-**Estado: pendiente**
+**Estado: completado 2026-03-26**
 
 ---
 
@@ -83,7 +83,7 @@ Objetivo: `bun test --coverage` mide cobertura, hay un threshold configurado, y 
 
 ### F2.1 — bunfig.toml con threshold
 
-- [ ] Crear `bunfig.toml` en la raíz:
+- [x] Crear `bunfig.toml` en la raíz:
 
 ```toml
 [test]
@@ -97,23 +97,23 @@ coverageSkipTestFiles = true
 > y sube a 0.95 al completar las Fases 3 y 4. El número es intencional — no queremos
 > que la infra falle antes de tener los tests.
 
-- [ ] Verificar: `cd packages/db && bun test --coverage` muestra reporte de cobertura sin error
+- [x] Verificar: `cd packages/db && bun test --coverage` muestra reporte de cobertura sin error
 
 ### F2.2 — Script de coverage en package.json
 
-- [ ] Agregar a `package.json` raíz:
+- [x] Agregar a `package.json` raíz:
 ```json
 "test:coverage": "turbo test:coverage"
 ```
-- [ ] Agregar a cada `packages/*/package.json`:
+- [x] Agregar a cada `packages/*/package.json`:
 ```json
 "test:coverage": "bun test src/__tests__ --coverage"
 ```
-- [ ] Agregar a `apps/web/package.json`:
+- [x] Agregar a `apps/web/package.json`:
 ```json
 "test:coverage": "bun test src/lib --coverage"
 ```
-- [ ] Agregar task en `turbo.json`:
+- [x] Agregar task en `turbo.json`:
 ```json
 "test:coverage": {
   "dependsOn": ["^build"],
@@ -123,7 +123,7 @@ coverageSkipTestFiles = true
 
 ### F2.3 — CI actualizado
 
-- [ ] Modificar job `test` en `.github/workflows/ci.yml`:
+- [x] Modificar job `test` en `.github/workflows/ci.yml`:
   - En PRs: `bun run test:coverage` (con threshold enforcement)
   - En pushes a `dev`: `bun run test` (rápido, sin coverage)
   
@@ -139,18 +139,18 @@ coverageSkipTestFiles = true
 > **Decisión:** PRs requieren coverage passing; pushes directos a `dev` solo requieren tests passing.
 > Esto evita penalizar el workflow de desarrollo rápido manteniendo el contrato en PR.
 
-- [ ] Verificar que el job de CI pasa con el estado actual (threshold 0.80)
+- [x] Verificar que el job de CI pasa con el estado actual (threshold 0.80)
 
 ### Criterio de done
 `bun run test:coverage` corre, muestra reporte, y el CI lo ejecuta en PRs.
 
 ### Checklist de cierre
-- [ ] `bun run test` — todos pasan
-- [ ] `bun run test:coverage` — pasa con threshold 0.80
-- [ ] CHANGELOG.md actualizado
-- [ ] `git commit -m "ci: agregar coverage con threshold enforcement en ci y bunfig.toml"`
+- [x] `bun run test` — todos pasan
+- [x] `bun run test:coverage` — pasa con threshold 0.80
+- [x] CHANGELOG.md actualizado
+- [x] `git commit -m "ci: agregar coverage con threshold enforcement en ci y bunfig.toml"`
 
-**Estado: pendiente**
+**Estado: completado 2026-03-26**
 
 ---
 
@@ -211,8 +211,8 @@ CREATE TABLE chat_messages (id INT PK AUTOINCREMENT, session_id TEXT, role TEXT,
 CREATE TABLE message_feedback (id INT PK AUTOINCREMENT, message_id INT, user_id INT, rating TEXT, created_at INT, UNIQUE(message_id, user_id));
 ```
 
-- [ ] Crear `packages/db/src/__tests__/sessions.test.ts` con ≥ 10 tests
-- [ ] `bun test packages/db/src/__tests__/sessions.test.ts` — pasan
+- [x] Crear `packages/db/src/__tests__/sessions.test.ts` con ≥ 10 tests
+- [x] `bun test packages/db/src/__tests__/sessions.test.ts` — pasan
 
 ---
 
@@ -220,9 +220,9 @@ CREATE TABLE message_feedback (id INT PK AUTOINCREMENT, message_id INT, user_id 
 
 **Archivo:** `packages/db/src/__tests__/events.test.ts`
 
-- [ ] Leer `packages/db/src/queries/events.ts` para mapear todas las funciones
-- [ ] Crear test con ≥ 6 tests (logEvent, listEvents con filtros)
-- [ ] `bun test packages/db/src/__tests__/events.test.ts` — pasan
+- [x] Leer `packages/db/src/queries/events.ts` para mapear todas las funciones
+- [x] Crear test con ≥ 6 tests (logEvent, listEvents con filtros)
+- [x] `bun test packages/db/src/__tests__/events.test.ts` — pasan
 
 ---
 
@@ -243,8 +243,8 @@ CREATE TABLE users (...);
 CREATE TABLE user_memory (id INT PK AUTOINCREMENT, user_id INT, key TEXT, value TEXT, source TEXT, created_at INT, updated_at INT, UNIQUE(user_id, key));
 ```
 
-- [ ] Crear `packages/db/src/__tests__/memory.test.ts` con ≥ 8 tests
-- [ ] `bun test packages/db/src/__tests__/memory.test.ts` — pasan
+- [x] Crear `packages/db/src/__tests__/memory.test.ts` con ≥ 8 tests
+- [x] `bun test packages/db/src/__tests__/memory.test.ts` — pasan
 
 ---
 
@@ -259,8 +259,8 @@ Funciones:
 
 **SQL mínimo:** users + sessions + messages + annotations
 
-- [ ] Crear `packages/db/src/__tests__/annotations.test.ts` con ≥ 6 tests
-- [ ] `bun test packages/db/src/__tests__/annotations.test.ts` — pasan
+- [x] Crear `packages/db/src/__tests__/annotations.test.ts` con ≥ 6 tests
+- [x] `bun test packages/db/src/__tests__/annotations.test.ts` — pasan
 
 ---
 
@@ -277,8 +277,8 @@ Funciones:
 
 **SQL mínimo:** users + sessions + session_tags (id TEXT PK AUTOINCREMENT - verificar schema)
 
-- [ ] Crear `packages/db/src/__tests__/tags.test.ts` con ≥ 8 tests
-- [ ] `bun test packages/db/src/__tests__/tags.test.ts` — pasan
+- [x] Crear `packages/db/src/__tests__/tags.test.ts` con ≥ 8 tests
+- [x] `bun test packages/db/src/__tests__/tags.test.ts` — pasan
 
 ---
 
@@ -294,8 +294,8 @@ Funciones:
 
 **SQL mínimo:** users + sessions + session_shares
 
-- [ ] Crear `packages/db/src/__tests__/shares.test.ts` con ≥ 7 tests
-- [ ] `bun test packages/db/src/__tests__/shares.test.ts` — pasan
+- [x] Crear `packages/db/src/__tests__/shares.test.ts` con ≥ 7 tests
+- [x] `bun test packages/db/src/__tests__/shares.test.ts` — pasan
 
 ---
 
@@ -310,8 +310,8 @@ Funciones:
 
 **SQL mínimo:** users + prompt_templates
 
-- [ ] Crear `packages/db/src/__tests__/templates.test.ts` con ≥ 6 tests
-- [ ] `bun test packages/db/src/__tests__/templates.test.ts` — pasan
+- [x] Crear `packages/db/src/__tests__/templates.test.ts` con ≥ 6 tests
+- [x] `bun test packages/db/src/__tests__/templates.test.ts` — pasan
 
 ---
 
@@ -328,8 +328,8 @@ Funciones:
 
 **SQL mínimo:** users + chat_sessions + chat_messages + rate_limits
 
-- [ ] Crear `packages/db/src/__tests__/rate-limits.test.ts` con ≥ 8 tests
-- [ ] `bun test packages/db/src/__tests__/rate-limits.test.ts` — pasan
+- [x] Crear `packages/db/src/__tests__/rate-limits.test.ts` con ≥ 8 tests
+- [x] `bun test packages/db/src/__tests__/rate-limits.test.ts` — pasan
 
 ---
 
@@ -347,8 +347,8 @@ Funciones:
 
 **SQL mínimo:** users + webhooks
 
-- [ ] Crear `packages/db/src/__tests__/webhooks.test.ts` con ≥ 8 tests
-- [ ] `bun test packages/db/src/__tests__/webhooks.test.ts` — pasan
+- [x] Crear `packages/db/src/__tests__/webhooks.test.ts` con ≥ 8 tests
+- [x] `bun test packages/db/src/__tests__/webhooks.test.ts` — pasan
 
 ---
 
@@ -365,8 +365,8 @@ Funciones:
 
 **SQL mínimo:** users + scheduled_reports
 
-- [ ] Crear `packages/db/src/__tests__/reports.test.ts` con ≥ 6 tests
-- [ ] `bun test packages/db/src/__tests__/reports.test.ts` — pasan
+- [x] Crear `packages/db/src/__tests__/reports.test.ts` con ≥ 6 tests
+- [x] `bun test packages/db/src/__tests__/reports.test.ts` — pasan
 
 ---
 
@@ -380,8 +380,8 @@ Funciones:
 
 **SQL mínimo:** users + collection_history
 
-- [ ] Crear `packages/db/src/__tests__/collection-history.test.ts` con ≥ 5 tests
-- [ ] `bun test packages/db/src/__tests__/collection-history.test.ts` — pasan
+- [x] Crear `packages/db/src/__tests__/collection-history.test.ts` con ≥ 5 tests
+- [x] `bun test packages/db/src/__tests__/collection-history.test.ts` — pasan
 
 ---
 
@@ -401,8 +401,8 @@ Funciones:
 
 **SQL mínimo:** users + sessions + projects + project_sessions + project_collections
 
-- [ ] Crear `packages/db/src/__tests__/projects.test.ts` con ≥ 10 tests
-- [ ] `bun test packages/db/src/__tests__/projects.test.ts` — pasan
+- [x] Crear `packages/db/src/__tests__/projects.test.ts` con ≥ 10 tests
+- [x] `bun test packages/db/src/__tests__/projects.test.ts` — pasan
 
 ---
 
@@ -423,8 +423,8 @@ Funciones:
 
 **SQL mínimo:** users + sessions + messages + saved_responses + prompt_templates
 
-- [ ] Crear `packages/db/src/__tests__/search.test.ts` con ≥ 8 tests
-- [ ] `bun test packages/db/src/__tests__/search.test.ts` — pasan
+- [x] Crear `packages/db/src/__tests__/search.test.ts` con ≥ 8 tests
+- [x] `bun test packages/db/src/__tests__/search.test.ts` — pasan
 
 ---
 
@@ -441,8 +441,8 @@ Funciones:
 
 **SQL mínimo:** users + external_sources
 
-- [ ] Crear `packages/db/src/__tests__/external-sources.test.ts` con ≥ 6 tests
-- [ ] `bun test packages/db/src/__tests__/external-sources.test.ts` — pasan
+- [x] Crear `packages/db/src/__tests__/external-sources.test.ts` con ≥ 6 tests
+- [x] `bun test packages/db/src/__tests__/external-sources.test.ts` — pasan
 
 ---
 
@@ -468,12 +468,12 @@ threshold es `0.50` temporalmente (las relations de Drizzle no son ejercidas por
 - [x] CHANGELOG.md actualizado
 
 ### Checklist de cierre
-- [ ] `bun run test` — todos pasan
-- [ ] `bun run test:coverage` — pasa con nuevo threshold
-- [ ] CHANGELOG.md actualizado
-- [ ] `git commit -m "test(db): cobertura completa de queries — 14 nuevos archivos de test"`
+- [x] `bun run test` — todos pasan
+- [x] `bun run test:coverage` — pasa con nuevo threshold
+- [x] CHANGELOG.md actualizado
+- [x] `git commit -m "test(db): cobertura completa de queries — 14 nuevos archivos de test"`
 
-**Estado: pendiente**
+**Estado: completado 2026-03-26**
 
 ---
 
@@ -489,9 +489,9 @@ La función `detectArtifact` en `useRagStream.ts` es lógica pura (sin React, si
 - Create: `apps/web/src/lib/rag/detect-artifact.ts`
 - Modify: `apps/web/src/hooks/useRagStream.ts` — importar desde `detect-artifact.ts`
 
-- [ ] Crear `apps/web/src/lib/rag/detect-artifact.ts` con la función `detectArtifact` exportada
-- [ ] En `useRagStream.ts`: `import { detectArtifact } from "@/lib/rag/detect-artifact"`
-- [ ] `bun run type-check` — sin errores
+- [x] Crear `apps/web/src/lib/rag/detect-artifact.ts` con la función `detectArtifact` exportada
+- [x] En `useRagStream.ts`: `import { detectArtifact } from "@/lib/rag/detect-artifact"`
+- [x] `bun run type-check` — sin errores
 
 ### F4.2 — Tests de detect-artifact.ts *(45 min)*
 
@@ -507,8 +507,8 @@ Casos:
 - Contenido sin artifact — retorna null
 - String vacío — retorna null
 
-- [ ] Crear test con ≥ 8 tests
-- [ ] `bun test apps/web/src/lib/rag/__tests__/detect-artifact.test.ts` — pasan
+- [x] Crear test con ≥ 8 tests
+- [x] `bun test apps/web/src/lib/rag/__tests__/detect-artifact.test.ts` — pasan
 
 ### F4.3 — Tests de lib/webhook.ts *(1.5 hs)*
 
@@ -535,24 +535,24 @@ const mockFetch = spyOn(globalThis, "fetch").mockResolvedValue(
 )
 ```
 
-- [ ] Crear `apps/web/src/lib/__tests__/webhook.test.ts` con ≥ 7 tests
-- [ ] `bun test apps/web/src/lib/__tests__/webhook.test.ts` — pasan
+- [x] Crear `apps/web/src/lib/__tests__/webhook.test.ts` con ≥ 7 tests
+- [x] `bun test apps/web/src/lib/__tests__/webhook.test.ts` — pasan
 
 ### F4.4 — Subir threshold final *(10 min)*
 
-- [ ] `bun run test:coverage` — apps/web/src/lib ≥ 95%, packages/* ≥ 95%
-- [ ] Subir `coverageThreshold` en `bunfig.toml` de 0.90 a 0.95
+- [x] `bun run test:coverage` — apps/web/src/lib ≥ 95%, packages/* ≥ 95%
+- [x] Subir `coverageThreshold` en `bunfig.toml` de 0.90 a 0.95
 
 ### Criterio de done
 `bun run test:coverage` pasa con threshold 0.95. Todas las funciones puras de `lib/` tienen tests.
 
 ### Checklist de cierre
-- [ ] `bun run test` — todos pasan
-- [ ] `bun run test:coverage` — pasa con threshold 0.95
-- [ ] CHANGELOG.md actualizado
-- [ ] `git commit -m "test(web): cobertura detect-artifact y webhook — lib al 95%"`
+- [x] `bun run test` — todos pasan
+- [x] `bun run test:coverage` — pasa con threshold 0.95
+- [x] CHANGELOG.md actualizado
+- [x] `git commit -m "test(web): cobertura detect-artifact y webhook — lib al 95%"`
 
-**Estado: pendiente**
+**Estado: completado 2026-03-26**
 
 ---
 
@@ -562,8 +562,8 @@ Objetivo: el skill refleja el estado actual y las nuevas reglas. Es la referenci
 
 **Archivo:** `.cursor/skills/rag-testing/SKILL.md`
 
-- [ ] Actualizar comandos — agregar `bun run test:coverage`
-- [ ] Agregar tabla "tipo de código → test requerido":
+- [x] Actualizar comandos — agregar `bun run test:coverage`
+- [x] Agregar tabla "tipo de código → test requerido":
 
 | Tipo de código | Test requerido | Dónde |
 |----------------|----------------|-------|
@@ -574,16 +574,16 @@ Objetivo: el skill refleja el estado actual y las nuevas reglas. Es la referenci
 | React component | No requerido ahora — Playwright futuro | — |
 | Server Action | Test de la query subyacente + test manual del Action | mismo PR |
 
-- [ ] Actualizar "Huecos de cobertura conocidos" — ya no son huecos, son cubiertos
-- [ ] Agregar sección "Regla de oro": *si el código no tiene test, no está terminado*
-- [ ] Agregar referencia a ADR-006
+- [x] Actualizar "Huecos de cobertura conocidos" — ya no son huecos, son cubiertos
+- [x] Agregar sección "Regla de oro": *si el código no tiene test, no está terminado*
+- [x] Agregar referencia a ADR-006
 
 ### Checklist de cierre
-- [ ] `bun run test` — todos pasan
-- [ ] CHANGELOG.md actualizado
-- [ ] `git commit -m "docs: actualizar rag-testing skill con reglas de cobertura post-plan5"`
+- [x] `bun run test` — todos pasan
+- [x] CHANGELOG.md actualizado
+- [x] `git commit -m "docs: actualizar rag-testing skill con reglas de cobertura post-plan5"`
 
-**Estado: pendiente**
+**Estado: completado 2026-03-26**
 
 ---
 
@@ -591,8 +591,8 @@ Objetivo: el skill refleja el estado actual y las nuevas reglas. Es la referenci
 
 | Fase | Estado | Fecha |
 |------|--------|-------|
-| Fase 1 — Estrategia y reglas | ⏳ pendiente | — |
-| Fase 2 — Infrastructure de cobertura | ⏳ pendiente | — |
+| Fase 1 — Estrategia y reglas | ✅ completado | 2026-03-26 |
+| Fase 2 — Infrastructure de cobertura | ✅ completado | 2026-03-26 |
 | Fase 3 — Cobertura packages/db (14 query files) | ✅ completado | 2026-03-26 |
 | Fase 4 — Cobertura lib/ y hooks/ | ✅ completado | 2026-03-26 |
 | Fase 5 — Actualizar rag-testing skill | ✅ completado | 2026-03-26 |
