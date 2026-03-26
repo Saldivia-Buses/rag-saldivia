@@ -1,64 +1,187 @@
 @import "tailwindcss";
 
-/* ── Tailwind v4: exponer CSS vars como utilidades ── */
-@theme {
-  --color-bg: var(--bg);
-  --color-sidebar: var(--sidebar-bg);
-  --color-nav: var(--nav-bg);
-  --color-accent: var(--accent);
-  --color-fg: var(--fg);
-  --color-border: var(--border);
-  --color-muted: var(--muted);
-  --color-muted-fg: var(--muted-foreground);
+/* ── Tailwind v4: exponer CSS vars como utilidades en runtime ──
+   El modificador `inline` es crítico — sin él var() se resuelve en
+   build time y el dark mode class-based no funciona.             */
+@theme inline {
+  /* Fondos */
+  --color-bg:            var(--bg);
+  --color-surface:       var(--surface);
+  --color-surface-2:     var(--surface-2);
+
+  /* Bordes */
+  --color-border:        var(--border);
+  --color-border-strong: var(--border-strong);
+
+  /* Texto */
+  --color-fg:            var(--fg);
+  --color-fg-muted:      var(--fg-muted);
+  --color-fg-subtle:     var(--fg-subtle);
+
+  /* Acento navy */
+  --color-accent:        var(--accent);
+  --color-accent-hover:  var(--accent-hover);
+  --color-accent-subtle: var(--accent-subtle);
+  --color-accent-fg:     var(--accent-fg);
+
+  /* Estados */
+  --color-destructive:        var(--destructive);
+  --color-destructive-subtle: var(--destructive-subtle);
+  --color-success:            var(--success);
+  --color-success-subtle:     var(--success-subtle);
+  --color-warning:            var(--warning);
+  --color-warning-subtle:     var(--warning-subtle);
 }
 
-/* ── Light mode (default) ── */
+/* ── Light mode — "Warm Intelligence" ── */
 :root {
-  /* Tokens canónicos — usados por nuevos componentes de layout */
-  --bg: #FAFAF9;
-  --sidebar-bg: #F2F0F0;
-  --nav-bg: #18181B;
-  --fg: #18181B;
-  --muted-bg: #F5F3F0;
-  --muted-fg: #78716C;
+  /* ── Fondos ── */
+  --bg:          #faf8f4;
+  --surface:     #f0ebe0;
+  --surface-2:   #e8e1d4;
 
-  /* Acento principal: índigo suave */
-  --accent: #7C6AF5;
-  --accent-foreground: #FFFFFF;
+  /* ── Bordes ── */
+  --border:        #ede9e0;
+  --border-strong: #d5cfc4;
 
-  /* Aliases de compatibilidad — apuntan a los canónicos */
-  /* Los componentes existentes los usan sin cambios */
-  --background: var(--bg);
-  --foreground: var(--fg);
-  --muted: var(--muted-bg);
-  --muted-foreground: var(--muted-fg);
-  --primary: var(--accent);
-  --primary-foreground: var(--accent-foreground);
-  --ring: var(--accent);
+  /* ── Texto ── */
+  --fg:         #1a1a1a;
+  --fg-muted:   #5a5048;
+  --fg-subtle:  #9a9088;
 
-  /* Semánticos */
-  --border: #E3E1E0;
-  --destructive: #EF4444;
-  --radius: 0.5rem;
+  /* ── Acento: navy profundo ── */
+  --accent:        #1a5276;
+  --accent-hover:  #154360;
+  --accent-dark:   #0d3349;
+  --accent-subtle: #d4e8f7;
+  --accent-fg:     #ffffff;
+
+  /* ── Estados semánticos ── */
+  --destructive:        #c0392b;
+  --destructive-subtle: #fde8e8;
+  --success:            #2d6a4f;
+  --success-subtle:     #d4f1e4;
+  --warning:            #d68910;
+  --warning-subtle:     #fef9e7;
+
+  /* ── Aliases shadcn — compatibilidad con componentes existentes ── */
+  --background:           var(--bg);
+  --foreground:           var(--fg);
+  --card:                 var(--surface);
+  --card-foreground:      var(--fg);
+  --popover:              var(--surface);
+  --popover-foreground:   var(--fg);
+  --primary:              var(--accent);
+  --primary-foreground:   var(--accent-fg);
+  --secondary:            var(--surface-2);
+  --secondary-foreground: var(--fg-muted);
+  --muted:                var(--surface);
+  --muted-foreground:     var(--fg-muted);
+  --accent-foreground:    var(--fg);
+  --destructive-foreground: #ffffff;
+  --input:                var(--border);
+  --ring:                 var(--accent);
+  --radius:               0.5rem;
+
+  /* ── Legado — apuntan a nuevos tokens para no romper nada ── */
+  --sidebar-bg: var(--surface);
+  --nav-bg:     var(--surface);
+  --muted-bg:   var(--surface);
+  --muted-fg:   var(--fg-muted);
+  --accent-foreground-old: var(--accent-fg);
+
   color-scheme: light;
 }
 
-/* ── Dark mode — clase .dark en <html> vía next-themes ── */
+/* ── Dark mode — warm dark, nunca negro frío ── */
 .dark {
-  --bg: #1C1917;
-  --sidebar-bg: #292524;
-  --nav-bg: #0C0A09;
-  --fg: #FAFAF9;
-  --muted-bg: #292524;
-  --muted-fg: #A8A29E;
-  --accent: #9D8FF8;
-  --accent-foreground: #0C0A09;
-  --border: #3F3B38;
-  --destructive: #F87171;
+  /* ── Fondos ── */
+  --bg:        #1a1812;
+  --surface:   #24221a;
+  --surface-2: #2e2b21;
+
+  /* ── Bordes ── */
+  --border:        #35312a;
+  --border-strong: #46423a;
+
+  /* ── Texto ── */
+  --fg:        #f0ebe0;
+  --fg-muted:  #b0a898;
+  --fg-subtle: #7a7268;
+
+  /* ── Acento: navy más claro para contraste en dark ── */
+  --accent:        #4a9fd4;
+  --accent-hover:  #5aafde;
+  --accent-dark:   #6bbfe8;
+  --accent-subtle: #1a3a52;
+  --accent-fg:     #0d1a24;
+
+  /* ── Estados semánticos dark ── */
+  --destructive:        #e57373;
+  --destructive-subtle: #2a1515;
+  --success:            #66bb6a;
+  --success-subtle:     #0d2a14;
+  --warning:            #ffa726;
+  --warning-subtle:     #2a1e00;
+
+  /* ── Aliases shadcn dark ── */
+  --sidebar-bg: var(--surface);
+  --nav-bg:     var(--surface);
+  --muted-bg:   var(--surface);
+  --muted-fg:   var(--fg-muted);
+
   color-scheme: dark;
 }
 
-* {
+/* ── Densidad adaptiva ──
+   Aplicar data-density="compact"  en wrappers de admin/tablas
+   Aplicar data-density="spacious" en chat, collections, pages   */
+[data-density="compact"] {
+  --row-height:   2rem;
+  --cell-px:      0.5rem;
+  --cell-py:      0.375rem;
+  --avatar-size:  1.5rem;
+  --icon-size:    0.875rem;
+  --input-height: 2rem;
+  --gap-items:    0.25rem;
+}
+
+[data-density="spacious"] {
+  --row-height:   3rem;
+  --cell-px:      0.75rem;
+  --cell-py:      0.75rem;
+  --avatar-size:  2.25rem;
+  --icon-size:    1.125rem;
+  --input-height: 2.5rem;
+  --gap-items:    0.5rem;
+}
+
+/* ── Escala tipográfica ── */
+:root {
+  --font-sans: var(--font-instrument-sans, 'Instrument Sans', system-ui, sans-serif);
+
+  --text-xs:   0.75rem;
+  --text-sm:   0.875rem;
+  --text-base: 1rem;
+  --text-lg:   1.125rem;
+  --text-xl:   1.25rem;
+  --text-2xl:  1.5rem;
+  --text-3xl:  1.875rem;
+  --text-4xl:  2.25rem;
+
+  --leading-tight:   1.25;
+  --leading-snug:    1.375;
+  --leading-normal:  1.5;
+  --leading-relaxed: 1.625;
+
+  /* Instrument Sans se lee mejor con tracking ligeramente ajustado */
+  --tracking-tight:  -0.025em;
+  --tracking-normal: -0.01em;
+  --tracking-wide:    0.025em;
+}
+
+/* ── Reset base ── */
+*, *::before, *::after {
   box-sizing: border-box;
   padding: 0;
   margin: 0;
@@ -67,7 +190,11 @@
 body {
   background-color: var(--background);
   color: var(--foreground);
-  font-feature-settings: "rlig" 1, "calt" 1;
+  font-family: var(--font-sans);
+  letter-spacing: var(--tracking-normal);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "rlig" 1, "calt" 1, "cv01" 1, "cv02" 1;
 }
 
 @media print {

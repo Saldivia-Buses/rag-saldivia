@@ -9,6 +9,16 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Plan 7 — Design System (en progreso)
+
+#### Added
+- `apps/web/src/app/globals.css`: reescritura completa con tokens crema-navy, dark mode cálido (#1a1812), densidad adaptiva, escala tipográfica, aliases shadcn, y `@theme inline` para Tailwind v4 — 2026-03-26 *(Plan 7 F1)*
+
+#### Changed
+- `apps/web/src/app/layout.tsx`: agregar Instrument Sans via `next/font/google` con variable CSS `--font-instrument-sans` — 2026-03-26 *(Plan 7 F2)*
+
+---
+
 ### Plan 6 — UI Testing (en progreso)
 
 #### Added
