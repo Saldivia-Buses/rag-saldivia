@@ -1,0 +1,202 @@
+$ bun test src/__tests__
+bun test v1.3.11 (af24e281)
+
+src/__tests__/tags.test.ts:
+(pass) addTag > agrega tag normalizado a minúsculas [12.08ms]
+(pass) addTag > es idempotente — no duplica [2.55ms]
+(pass) addTag > agrega múltiples tags distintos [1.95ms]
+(pass) removeTag > elimina solo el tag especificado — no borra los demás [1.63ms]
+(pass) listTagsByUser > retorna tags únicos de todas las sesiones del usuario [2.09ms]
+(pass) listTagsByUser > no retorna tags de otro usuario [3.17ms]
+
+src/__tests__/templates.test.ts:
+(pass) createTemplate > crea template con active=true por defecto [0.99ms]
+(pass) createTemplate > acepta focusMode personalizado [0.86ms]
+(pass) listActiveTemplates > retorna vacío si no hay templates [0.83ms]
+(pass) listActiveTemplates > retorna solo los templates activos [2.46ms]
+(pass) deleteTemplate > elimina el template y no aparece en la lista [1.33ms]
+
+src/__tests__/collection-history.test.ts:
+(pass) recordIngestionEvent > crea registro con todos los campos [1.05ms]
+(pass) recordIngestionEvent > acepta action 'removed' y campos opcionales null [0.58ms]
+(pass) listHistoryByCollection > retorna vacío para colección sin historial [0.40ms]
+(pass) listHistoryByCollection > retorna solo registros de la colección especificada [0.77ms]
+(pass) listHistoryByCollection > retorna ordenado por createdAt descendente [0.74ms]
+
+src/__tests__/users.test.ts:
+(pass) createUser > crea usuario con email normalizado a minúsculas [49.73ms]
+(pass) createUser > crea usuario con rol correcto [44.99ms]
+(pass) createUser > lanza error si el email ya existe [86.67ms]
+(pass) createUser > asigna áreas si se pasan areaIds [46.78ms]
+(pass) getUserByEmail > retorna usuario existente [45.40ms]
+(pass) getUserByEmail > retorna undefined para email inexistente [0.91ms]
+(pass) listUsers > retorna vacío si no hay usuarios [0.95ms]
+(pass) listUsers > retorna todos los usuarios ordenados por nombre [90.15ms]
+(pass) verifyPassword > retorna usuario para credenciales correctas [87.01ms]
+(pass) verifyPassword > retorna null para contraseña incorrecta [87.06ms]
+(pass) verifyPassword > retorna null para email inexistente [1.21ms]
+(pass) verifyPassword > retorna null para usuario inactivo [45.93ms]
+(pass) updateUser > actualiza nombre y rol [43.50ms]
+(pass) updateUser > desactiva usuario [44.64ms]
+(pass) getUserByApiKey > retorna usuario activo por apiKeyHash [43.24ms]
+(pass) updatePassword > actualiza la contraseña y el nuevo hash funciona en verifyPassword [170.35ms]
+(pass) deleteUser > elimina el usuario y sus relaciones en cascade [43.21ms]
+(pass) getUserCollections / canAccessCollection > retorna colecciones del usuario a través de sus áreas [44.09ms]
+(pass) getUserCollections / canAccessCollection > canAccessCollection retorna true si tiene permiso [44.51ms]
+(pass) getUserCollections / canAccessCollection > canAccessCollection retorna false para colección no asignada [42.90ms]
+
+src/__tests__/sessions.test.ts:
+(pass) createSession > crea sesión con defaults correctos [0.96ms]
+(pass) createSession > acepta título personalizado [0.68ms]
+(pass) listSessionsByUser > retorna vacío si el usuario no tiene sesiones [0.77ms]
+(pass) listSessionsByUser > retorna solo sesiones del usuario, ordenadas por updatedAt desc [1.26ms]
+(pass) getSessionById > retorna sesión con mensajes incluidos [1.44ms]
+(pass) getSessionById > retorna undefined si el userId no coincide [1.02ms]
+(pass) updateSessionTitle > actualiza el título [0.87ms]
+(pass) updateSessionTitle > no actualiza sesiones de otro usuario [0.89ms]
+(pass) deleteSession > elimina sesión y mensajes en cascade [1.07ms]
+(pass) addMessage > crea mensaje y actualiza updatedAt de la sesión [0.76ms]
+(pass) addFeedback > agrega y actualiza feedback (upsert) [1.35ms]
+
+src/__tests__/external-sources.test.ts:
+(pass) createExternalSource > crea fuente con active=true y lastSync null [0.79ms]
+(pass) createExternalSource > acepta los tres providers [1.35ms]
+(pass) listExternalSources > retorna solo fuentes del usuario especificado [1.50ms]
+(pass) listActiveSourcesToSync > retorna fuentes activas nunca sincronizadas [0.95ms]
+(pass) listActiveSourcesToSync > no retorna fuentes recientemente sincronizadas [0.84ms]
+(pass) listActiveSourcesToSync > no retorna fuentes inactivas [0.69ms]
+(pass) updateSourceLastSync / deleteExternalSource > updateSourceLastSync actualiza lastSync [0.88ms]
+(pass) updateSourceLastSync / deleteExternalSource > deleteExternalSource no elimina fuentes de otro usuario [0.96ms]
+(pass) updateSourceLastSync / deleteExternalSource > deleteExternalSource elimina la fuente del usuario correcto [0.60ms]
+
+src/__tests__/areas.test.ts:
+(pass) createArea > crea un área con nombre y descripción [0.40ms]
+(pass) createArea > crea área con descripción vacía por defecto [0.27ms]
+(pass) listAreas > retorna vacío si no hay áreas [0.46ms]
+(pass) listAreas > retorna áreas ordenadas por nombre [0.59ms]
+(pass) setAreaCollections > reemplaza todas las colecciones del área [0.78ms]
+(pass) setAreaCollections > acepta array vacío — borra todas las colecciones [0.62ms]
+(pass) addAreaCollection > agrega colección con permiso read por defecto [0.59ms]
+(pass) addAreaCollection > actualiza permiso si la colección ya existe (upsert) [0.73ms]
+(pass) removeAreaCollection > elimina solo la colección especificada, no las demás del área [0.87ms]
+(pass) removeAreaCollection > no afecta colecciones con el mismo nombre en otras áreas [1.00ms]
+(pass) updateArea / deleteArea > actualiza nombre y descripción [0.59ms]
+(pass) updateArea / deleteArea > elimina el área [0.52ms]
+
+src/__tests__/rate-limits.test.ts:
+(pass) createRateLimit > crea límite a nivel usuario [0.66ms]
+(pass) getRateLimit > retorna null si no hay límite [0.75ms]
+(pass) getRateLimit > retorna límite a nivel usuario [0.55ms]
+(pass) getRateLimit > prioriza límite de usuario sobre área [0.88ms]
+(pass) getRateLimit > retorna límite de área si no hay de usuario [1.10ms]
+(pass) countQueriesLastHour > retorna 0 sin queries [0.57ms]
+(pass) countQueriesLastHour > cuenta solo eventos rag.stream_started del usuario [1.27ms]
+(pass) countQueriesLastHour > no cuenta eventos de hace más de 1 hora [0.50ms]
+(pass) listRateLimits / deleteRateLimit > lista todos los rate limits [0.52ms]
+(pass) listRateLimits / deleteRateLimit > deleteRateLimit elimina el límite [0.71ms]
+
+src/__tests__/webhooks.test.ts:
+(pass) createWebhook > crea webhook con secret aleatorio y active=true [0.77ms]
+(pass) createWebhook > dos webhooks tienen secrets distintos [0.52ms]
+(pass) listWebhooksByUser > retorna solo los webhooks del usuario especificado [1.34ms]
+(pass) listWebhooksByEvent > retorna webhooks que escuchan el evento específico [0.85ms]
+(pass) listWebhooksByEvent > incluye webhooks con wildcard '*' [0.77ms]
+(pass) listWebhooksByEvent > excluye webhooks inactivos [0.66ms]
+(pass) deleteWebhook > elimina el webhook de la lista [0.68ms]
+
+src/__tests__/projects.test.ts:
+(pass) createProject > crea proyecto con campos correctos [0.61ms]
+(pass) listProjects > retorna solo proyectos del usuario especificado [0.89ms]
+(pass) getProject > retorna proyecto por id [0.64ms]
+(pass) getProject > retorna null si no existe [0.27ms]
+(pass) updateProject > actualiza nombre y descripción [0.75ms]
+(pass) deleteProject > no elimina proyectos de otro usuario [0.83ms]
+(pass) deleteProject > elimina el proyecto del usuario correcto [0.66ms]
+(pass) addSessionToProject / addCollectionToProject / getProjectBySession > asocia sesión y es idempotente [0.98ms]
+(pass) addSessionToProject / addCollectionToProject / getProjectBySession > asocia colección [0.81ms]
+(pass) addSessionToProject / addCollectionToProject / getProjectBySession > getProjectBySession retorna null para sesión sin proyecto [0.55ms]
+
+src/__tests__/events.test.ts:
+(pass) writeEvent > persiste un evento con todos los campos [0.44ms]
+(pass) writeEvent > asigna sequence monotónicamente creciente [0.40ms]
+(pass) writeEvent > permite userId null [0.28ms]
+(pass) writeEvent > asocia userId cuando se provee [0.44ms]
+(pass) queryEvents > retorna todos los eventos sin filtros [0.71ms]
+(pass) queryEvents > filtra por type [0.62ms]
+(pass) queryEvents > filtra por level [0.65ms]
+(pass) queryEvents > filtra por source [0.68ms]
+(pass) queryEvents > filtra por userId [0.88ms]
+(pass) queryEvents > respeta el límite de resultados [0.96ms]
+(pass) getEventsForReplay > retorna eventos desde el timestamp indicado [0.55ms]
+
+src/__tests__/memory.test.ts:
+(pass) setMemory > inserta nueva entrada [0.86ms]
+(pass) setMemory > upsert — actualiza el valor si la key ya existe [0.75ms]
+(pass) setMemory > guarda source 'inferred' [0.56ms]
+(pass) setMemory > permite múltiples keys por usuario [0.62ms]
+(pass) getMemory > retorna vacío si no hay memoria [0.41ms]
+(pass) getMemory > no retorna entradas de otros usuarios [0.90ms]
+(pass) deleteMemory > elimina la key especificada sin afectar otras [0.67ms]
+(pass) deleteMemory > no elimina keys de otros usuarios [0.73ms]
+(pass) getMemoryAsContext > retorna string vacío sin entradas [0.54ms]
+(pass) getMemoryAsContext > retorna formato 'User context and preferences: key: value' [0.59ms]
+(pass) getMemoryAsContext > incluye múltiples entradas separadas [0.57ms]
+
+src/__tests__/reports.test.ts:
+(pass) createReport > crea informe con active=true y nextRun en el futuro [0.76ms]
+(pass) createReport > weekly nextRun > daily nextRun [0.59ms]
+(pass) listActiveReports > no retorna informes con nextRun en el futuro [0.66ms]
+(pass) listActiveReports > retorna informes activos con nextRun en el pasado [0.65ms]
+(pass) listReportsByUser > retorna solo los informes del usuario [0.87ms]
+(pass) updateLastRun / deleteReport > updateLastRun actualiza lastRun y recalcula nextRun [0.83ms]
+(pass) updateLastRun / deleteReport > deleteReport elimina solo el informe del usuario correcto [1.10ms]
+
+src/__tests__/saved.test.ts:
+(pass) saveResponse > guarda una respuesta con todos los campos [0.72ms]
+(pass) saveResponse > guarda sin messageId (null) [0.51ms]
+(pass) saveResponse > guarda con messageId FK válido [0.93ms]
+(pass) listSavedResponses > retorna vacío si no hay guardados [0.53ms]
+(pass) listSavedResponses > retorna solo las respuestas del usuario especificado [0.86ms]
+(pass) listSavedResponses > retorna ordenado por createdAt descendente [0.58ms]
+(pass) unsaveResponse > elimina la respuesta del usuario correcto [0.65ms]
+(pass) unsaveResponse > no elimina respuestas de otro usuario [0.81ms]
+(pass) unsaveByMessageId > elimina por messageId del usuario correcto [0.84ms]
+(pass) isSaved > retorna true si el mensaje está guardado por el usuario [0.88ms]
+(pass) isSaved > retorna false si no está guardado [0.48ms]
+(pass) isSaved > retorna false si otro usuario guardó el mismo mensaje [0.91ms]
+
+src/__tests__/annotations.test.ts:
+(pass) saveAnnotation > crea anotación con texto seleccionado [0.78ms]
+(pass) saveAnnotation > guarda nota cuando se provee [0.67ms]
+(pass) listAnnotationsBySession > retorna vacío si no hay anotaciones [0.75ms]
+(pass) listAnnotationsBySession > filtra por sessionId Y userId simultáneamente [0.99ms]
+(pass) listAnnotationsBySession > no retorna anotaciones de otro usuario en la misma sesión [0.85ms]
+(pass) deleteAnnotation > elimina la anotación del usuario correcto [0.79ms]
+(pass) deleteAnnotation > no elimina anotaciones de otro usuario [0.95ms]
+
+src/__tests__/shares.test.ts:
+(pass) createShare > crea share con token único y expiresAt en el futuro [0.92ms]
+(pass) createShare > tokens de shares distintos son únicos [0.63ms]
+(pass) getShareByToken > retorna share válido [0.79ms]
+(pass) getShareByToken > retorna null para token inexistente [0.29ms]
+(pass) getShareByToken > retorna null para token expirado [0.63ms]
+(pass) getShareWithSession > retorna share con sesión y mensajes incluidos [1.05ms]
+(pass) revokeShare > revoca el share y el token deja de ser válido [0.78ms]
+(pass) revokeShare > no revoca shares de otro usuario [0.81ms]
+(pass) listSharesByUser > retorna solo los shares del usuario especificado [1.11ms]
+
+src/__tests__/search.test.ts:
+(pass) universalSearch — casos edge > retorna vacío para query vacío [0.86ms]
+(pass) universalSearch — casos edge > retorna vacío para query de 1 caracter [0.54ms]
+(pass) universalSearch — casos edge > retorna vacío para query de solo espacios [0.60ms]
+(pass) universalSearch — sesiones > encuentra sesión por título (LIKE path) [1.40ms]
+(pass) universalSearch — sesiones > no retorna sesiones de otro usuario [1.18ms]
+(pass) universalSearch — templates > encuentra templates por título [0.72ms]
+(pass) universalSearch — templates > encuentra templates por contenido del prompt [1.57ms]
+(pass) universalSearch — respuestas guardadas > encuentra respuestas guardadas por contenido [1.26ms]
+(pass) universalSearch — respuestas guardadas > no retorna guardados de otro usuario [1.45ms]
+
+ 161 pass
+ 0 fail
+ 232 expect() calls
+Ran 161 tests across 17 files. [1478.00ms]

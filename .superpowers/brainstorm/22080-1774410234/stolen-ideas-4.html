@@ -1,0 +1,105 @@
+<h2>Ronda 4 — territorio experimental</h2>
+<p class="subtitle">Voz · Visualización · Privacidad · Branching · Personalización profunda</p>
+
+<div class="options" data-multiselect>
+
+  <div class="option" data-choice="voice_input" onclick="toggleSelect(this)">
+    <div class="letter">31</div>
+    <div class="content">
+      <h3>Entrada por voz — de Whisper / iOS dictado</h3>
+      <p>Botón de micrófono en el input. Dictás tu pregunta, se transcribe en tiempo real, se envía. No requiere instalar nada — Web Speech API nativa en Chrome. Esencial para mobile y para usuarios que escriben poco.</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="branching" onclick="toggleSelect(this)">
+    <div class="letter">32</div>
+    <div class="content">
+      <h3>Bifurcación de conversaciones — de git branches</h3>
+      <p>En cualquier punto de la sesión, podés "bifurcar" y explorar una dirección distinta sin perder el camino anterior. Como hacer git branch desde un commit. Ideal para explorar hipótesis sin ensuciar el hilo principal.</p>
+      <div style="margin-top:8px;display:flex;gap:4px;align-items:center;font-size:8px;color:#57534e">
+        <div style="padding:3px 6px;background:#f2f0f0;border-radius:3px;border:1px solid #e3e1e0">Pregunta inicial</div>
+        <div style="color:#aaa">→</div>
+        <div style="display:flex;flex-direction:column;gap:2px">
+          <div style="padding:3px 6px;background:#ede9fe;border-radius:3px;border:1px solid #c4b5fd;font-size:7px">Rama A: análisis legal</div>
+          <div style="padding:3px 6px;background:#f2f0f0;border-radius:3px;border:1px solid #e3e1e0;font-size:7px">Rama B: impacto financiero</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="inline_preview" onclick="toggleSelect(this)">
+    <div class="letter">33</div>
+    <div class="content">
+      <h3>Preview de documentos inline — de Google Drive viewer</h3>
+      <p>Cuando el RAG cita un documento, hacés click y se abre un panel lateral con el PDF renderizado, con el fragmento citado resaltado en amarillo. Nunca abandonás el chat para verificar la fuente.</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="generated_charts" onclick="toggleSelect(this)">
+    <div class="letter">34</div>
+    <div class="content">
+      <h3>Visualizaciones generadas — de Code Interpreter / Julius AI</h3>
+      <p>Cuando la respuesta contiene datos (fechas, montos, porcentajes, rankings), el sistema auto-renderiza un gráfico de barras, línea o tabla visual. El usuario puede cambiar el tipo de chart. Exportable como imagen.</p>
+      <div style="margin-top:8px;display:flex;gap:1px;align-items:flex-end;height:28px;padding:0 8px">
+        <div style="flex:1;background:#7c6af5;opacity:.4;border-radius:2px 2px 0 0" style="height:60%"></div>
+        <div style="flex:1;background:#7c6af5;opacity:.6;border-radius:2px 2px 0 0;height:80%"></div>
+        <div style="flex:1;background:#7c6af5;opacity:.8;border-radius:2px 2px 0 0;height:50%"></div>
+        <div style="flex:1;background:#7c6af5;border-radius:2px 2px 0 0;height:100%"></div>
+        <div style="flex:1;background:#7c6af5;opacity:.7;border-radius:2px 2px 0 0;height:70%"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="pii_detection" onclick="toggleSelect(this)">
+    <div class="letter">35</div>
+    <div class="content">
+      <h3>Detección y redacción de PII — de AWS Comprehend / presidio</h3>
+      <p>Antes de enviar un query al modelo, el sistema detecta información sensible (DNI, emails, teléfonos, nombres propios) y la reemplaza con tokens. El resultado se des-tokeniza antes de mostrar al usuario. Compliance sin fricción.</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="ai_memory" onclick="toggleSelect(this)">
+    <div class="letter">36</div>
+    <div class="content">
+      <h3>Memoria de usuario — de ChatGPT Memory</h3>
+      <p>El sistema aprende y recuerda: tu rol, preferencias de formato, términos frecuentes, áreas de interés. "Recordar que prefiero respuestas en bullets" o "Siempre que menciones normativas, incluir la fecha". La UI muestra qué recuerda y te deja editarlo.</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="knowledge_gaps" onclick="toggleSelect(this)">
+    <div class="letter">37</div>
+    <div class="content">
+      <h3>Detección de brechas de conocimiento — idea propia</h3>
+      <p>Cuando el RAG no puede responder bien una pregunta, lo registra como "gap". El admin ve un dashboard de las preguntas sin respuesta agrupadas por tema — guía directa sobre qué documentos hay que ingestar para cubrir esas brechas.</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="white_label" onclick="toggleSelect(this)">
+    <div class="letter">38</div>
+    <div class="content">
+      <h3>White-labeling por organización — de HubSpot / Notion teams</h3>
+      <p>Cada organización configura: logo propio, nombre del producto, paleta de colores, dominio personalizado (<em>rag.miempresa.com</em>). Los usuarios ven la herramienta como algo de la empresa, no como "RAG Saldivia". B2B game changer.</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="compare_docs" onclick="toggleSelect(this)">
+    <div class="letter">39</div>
+    <div class="content">
+      <h3>Modo comparación de documentos — de Diffchecker / contratos legales</h3>
+      <p>Seleccionás dos documentos de una colección y abrís un modo comparación. El RAG responde preguntas sobre <em>ambos</em> en paralelo, mostrando diferencias y similitudes. Killer feature para análisis legal o de políticas.</p>
+    </div>
+  </div>
+
+  <div class="option" data-choice="pwa_offline" onclick="toggleSelect(this)">
+    <div class="letter">40</div>
+    <div class="content">
+      <h3>PWA + borradores offline — de Notion / Bear mobile</h3>
+      <p>La app se instala como PWA en el celular o laptop. Los queries se pueden escribir offline y se envían cuando hay conexión. Las sesiones pasadas están disponibles sin internet. El historial sobrevive sin servidor.</p>
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top:16px;padding:12px;background:rgba(124,106,245,.07);border:1px solid rgba(124,106,245,.2);border-radius:8px">
+  <p style="font-size:12px;color:#57534e">Llevamos <strong>40 features</strong> exploradas. Cuando confirmes esta ronda, armamos el <strong>roadmap completo</strong> con todo lo que seleccionaste — organizado por fases, con estimación de esfuerzo y dependencias entre features.</p>
+</div>

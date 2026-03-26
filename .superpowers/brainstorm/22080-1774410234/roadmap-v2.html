@@ -1,0 +1,117 @@
+<h2>Roadmap v2 — menor a mayor dificultad</h2>
+<p class="subtitle">Cada fase empieza con las victorias rápidas. Las features ●●● siempre van al final de su fase o a la siguiente.</p>
+
+<style>
+.phase { margin-bottom: 22px; }
+.phase-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+.phase-badge { padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; letter-spacing: .5px; }
+.feature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
+.feat { background: #fafaf9; border: 1px solid #e3e1e0; border-radius: 6px; padding: 8px 10px; display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+.feat-name { font-size: 12px; color: #18181b; font-weight: 500; }
+.feat-sub { font-size: 10px; color: #78716c; margin-top: 1px; }
+.dep { font-size: 9px; color: #7c6af5; margin-top: 2px; }
+.effort { font-size: 11px; white-space: nowrap; font-weight: 700; }
+.e1 { color: #22c55e; }
+.e2 { color: #f59e0b; }
+.e3 { color: #ef4444; }
+.divider { grid-column: 1/-1; height: 1px; background: #e3e1e0; margin: 2px 0; }
+.divider-label { grid-column: 1/-1; font-size: 9px; color: #a8a29e; text-transform: uppercase; letter-spacing: .8px; margin: 2px 0 0; }
+</style>
+
+<!-- FASE 0 -->
+<div class="phase">
+  <div class="phase-header">
+    <span class="phase-badge" style="background:#18181b;color:#fff">FASE 0</span>
+    <span style="font-size:13px;font-weight:600">Fundación</span>
+    <span style="font-size:11px;color:#78716c">Prerequisito — sin esto nada se ve bien</span>
+  </div>
+  <div class="feature-grid">
+    <div class="feat"><div><div class="feat-name">Design tokens light/dark</div><div class="feat-sub">Paleta crema-índigo, variables CSS + Tailwind config</div></div><span class="effort e1">●</span></div>
+    <div class="feat"><div><div class="feat-name">shadcn/ui setup</div><div class="feat-sub">Instalar componentes base: Button, Input, Dialog, Table, Badge</div></div><span class="effort e1">●</span></div>
+    <div class="feat"><div><div class="feat-name">Dark mode toggle</div><div class="feat-sub">next-themes, clase &lt;html&gt;, persistido en cookie</div></div><span class="effort e1">●</span></div>
+    <div class="feat"><div><div class="feat-name">Dual sidebar layout</div><div class="feat-sub">Nav íconos + panel contextual (sesiones/admin) + contenido</div></div><span class="effort e2">●●</span></div>
+  </div>
+</div>
+
+<!-- FASE 1 -->
+<div class="phase">
+  <div class="phase-header">
+    <span class="phase-badge" style="background:#22c55e;color:#fff">FASE 1</span>
+    <span style="font-size:13px;font-weight:600">Quick wins — todo ●</span>
+    <span style="font-size:11px;color:#78716c">Impacto alto, esfuerzo bajo</span>
+  </div>
+  <div class="feature-grid">
+    <div class="feat"><div><div class="feat-name">Thinking steps visibles</div><div class="feat-sub">"Buscando... Encontré 4 fragmentos..." colapsable en el chat</div></div><span class="effort e1">●</span></div>
+    <div class="feat"><div><div class="feat-name">Feedback 👍 / 👎</div><div class="feat-sub">Por respuesta, persiste en DB</div></div><span class="effort e1">●</span></div>
+    <div class="feat"><div><div class="feat-name">Modos de foco</div><div class="feat-sub">Detallado / Ejecutivo / Técnico — modifica system prompt</div></div><span class="effort e1">●</span></div>
+    <div class="feat"><div><div class="feat-name">Voz en input</div><div class="feat-sub">Web Speech API, transcripción en tiempo real</div></div><span class="effort e1">●</span></div>
+    <div class="feat"><div><div class="feat-name">Export sesión</div><div class="feat-sub">PDF y Markdown con fuentes citadas</div></div><span class="effort e1">●</span></div>
+    <div class="feat"><div><div class="feat-name">Respuestas guardadas / pinned</div><div class="feat-sub">Marcar, vista dedicada de guardados</div></div><span class="effort e1">●</span></div>
+    <div class="feat"><div><div class="feat-name">Modo Zen</div><div class="feat-sub">Atajo oculta todo excepto el chat. Esc para salir.</div></div><span class="effort e1">●</span></div>
+    <div class="feat"><div><div class="feat-name">Notificaciones</div><div class="feat-sub">Alert de ingestion completada, errores críticos</div></div><span class="effort e1">●</span></div>
+    <div class="feat"><div><div class="feat-name">Multilenguaje automático</div><div class="feat-sub">Detecta idioma del query, responde en el mismo</div></div><span class="effort e1">●</span></div>
+    <div class="feat"><div><div class="feat-name">Atajos de teclado globales</div><div class="feat-sub">Cmd+N nueva sesión, j/k navegar, / buscar</div></div><span class="effort e1">●</span></div>
+  </div>
+</div>
+
+<!-- FASE 2 -->
+<div class="phase">
+  <div class="phase-header">
+    <span class="phase-badge" style="background:#f59e0b;color:#fff">FASE 2</span>
+    <span style="font-size:13px;font-weight:600">Esfuerzo medio — todo ●●</span>
+    <span style="font-size:11px;color:#78716c">Features que requieren trabajo real pero acotado</span>
+  </div>
+  <div class="feature-grid">
+    <div class="divider-label">— Chat —</div>
+    <div class="feat"><div><div class="feat-name">Panel de fuentes / citas</div><div class="feat-sub">Perplexity-style: docs fuente con relevance score y fragmento</div></div><span class="effort e2">●●</span></div>
+    <div class="feat"><div><div class="feat-name">Preguntas relacionadas</div><div class="feat-sub">3-4 sugerencias después de cada respuesta</div></div><span class="effort e2">●●</span></div>
+    <div class="feat"><div><div class="feat-name">Multi-colección en query</div><div class="feat-sub">Selector de múltiples colecciones antes de enviar</div></div><span class="effort e2">●●</span></div>
+    <div class="feat"><div><div class="feat-name">Anotar fragmentos</div><div class="feat-sub">Seleccionás texto de respuesta → comentario o follow-up</div></div><span class="effort e2">●●</span></div>
+    <div class="divider-label">— Navegación —</div>
+    <div class="feat"><div><div class="feat-name">Command palette Cmd+K</div><div class="feat-sub">Nueva sesión, cambiar colección, navegar — keyboard-first</div></div><span class="effort e2">●●</span></div>
+    <div class="feat"><div><div class="feat-name">Etiquetas + bulk en sesiones</div><div class="feat-sub">#legal #urgente, filtrar, exportar múltiples, archivar</div></div><span class="effort e2">●●</span></div>
+    <div class="feat"><div><div class="feat-name">Compartir sesión</div><div class="feat-sub">Link read-only, dentro o fuera de la org</div></div><span class="effort e2">●●</span></div>
+    <div class="divider-label">— Conocimiento —</div>
+    <div class="feat"><div><div class="feat-name">Colecciones desde UI</div><div class="feat-sub">Crear, eliminar, ver documentos, estado de ingesta</div></div><span class="effort e2">●●</span></div>
+    <div class="feat"><div><div class="feat-name">Chat con documento específico</div><div class="feat-sub">Click en doc → sesión anclada a ese documento</div></div><span class="effort e2">●●</span></div>
+    <div class="feat"><div><div class="feat-name">Templates de query</div><div class="feat-sub">Admin crea, usuarios usan como punto de partida</div></div><span class="effort e2">●●</span></div>
+    <div class="divider-label">— Admin —</div>
+    <div class="feat"><div><div class="feat-name">Ingestion monitoring mejorado</div><div class="feat-sub">Progreso en tiempo real, retry, errores, kanban de jobs</div></div><span class="effort e2">●●</span></div>
+    <div class="feat"><div><div class="feat-name">Analytics dashboard</div><div class="feat-sub">Colecciones consultadas, feedback scores, queries/hora</div></div><span class="effort e2">●●</span></div>
+    <div class="feat"><div><div class="feat-name">Brechas de conocimiento</div><div class="feat-sub">Dashboard de queries sin respuesta → guía de qué ingestar</div></div><span class="effort e2">●●</span></div>
+    <div class="feat"><div><div class="feat-name">Historial de colecciones</div><div class="feat-sub">Git-like: quién ingested qué y cuándo</div></div><span class="effort e2">●●</span></div>
+    <div class="feat"><div><div class="feat-name">Informes programados</div><div class="feat-sub">Query recurrente, resultado por email o en Guardados</div></div><span class="effort e2">●●</span></div>
+    <div class="divider-label">— Power user —</div>
+    <div class="feat"><div><div class="feat-name">Vista dividida (split view)</div><div class="feat-sub">Dos chats en paralelo, comparar colecciones</div></div><span class="effort e2">●●</span></div>
+  </div>
+</div>
+
+<!-- FASE 3 -->
+<div class="phase">
+  <div class="phase-header">
+    <span class="phase-badge" style="background:#ef4444;color:#fff">FASE 3</span>
+    <span style="font-size:13px;font-weight:600">Alta complejidad — todo ●●●</span>
+    <span style="font-size:11px;color:#78716c">Features sistémicas que requieren arquitectura nueva</span>
+  </div>
+  <div class="feature-grid">
+    <div class="feat"><div><div class="feat-name">Búsqueda universal</div><div class="feat-sub">Indexa sesiones + docs + guardados en tiempo real</div><div class="dep">↳ depende de: Cmd+K (Fase 2)</div></div><span class="effort e3">●●●</span></div>
+    <div class="feat"><div><div class="feat-name">Preview de doc inline</div><div class="feat-sub">Click en cita → PDF con fragmento resaltado en panel lateral</div><div class="dep">↳ depende de: panel de fuentes (Fase 2)</div></div><span class="effort e3">●●●</span></div>
+    <div class="feat"><div><div class="feat-name">Proyectos con contexto</div><div class="feat-sub">Agrupa sesiones, colecciones, instrucciones custom heredadas</div></div><span class="effort e3">●●●</span></div>
+    <div class="feat"><div><div class="feat-name">Artifacts panel</div><div class="feat-sub">Docs generados en panel separado, guardables</div><div class="dep">↳ depende de: proyectos</div></div><span class="effort e3">●●●</span></div>
+    <div class="feat"><div><div class="feat-name">Bifurcación de conversaciones</div><div class="feat-sub">Fork en cualquier mensaje, explorar hipótesis en paralelo</div></div><span class="effort e3">●●●</span></div>
+    <div class="feat"><div><div class="feat-name">Memoria de usuario</div><div class="feat-sub">Aprende preferencias, UI para editar qué recuerda</div></div><span class="effort e3">●●●</span></div>
+    <div class="feat"><div><div class="feat-name">Superficie proactiva</div><div class="feat-sub">"3 docs nuevos en Legal matchean tu historial"</div><div class="dep">↳ depende de: analytics + notificaciones</div></div><span class="effort e3">●●●</span></div>
+    <div class="feat"><div><div class="feat-name">Grafo de documentos</div><div class="feat-sub">Visualización de relaciones semánticas entre docs (Obsidian-style)</div></div><span class="effort e3">●●●</span></div>
+    <div class="feat"><div><div class="feat-name">SSO (Google / Azure AD)</div><div class="feat-sub">SAML 2.0, provisioning automático al primer login</div></div><span class="effort e3">●●●</span></div>
+    <div class="feat"><div><div class="feat-name">Auto-ingesta externa</div><div class="feat-sub">Google Drive, SharePoint, Confluence → colección automática</div></div><span class="effort e3">●●●</span></div>
+    <div class="feat"><div><div class="feat-name">Bot Slack / Teams</div><div class="feat-sub">RAG desde el canal, respeta RBAC, cita fuentes</div></div><span class="effort e3">●●●</span></div>
+    <div class="feat"><div><div class="feat-name">Extracción estructurada a tabla</div><div class="feat-sub">Definís campos → tabla exportable de toda la colección</div></div><span class="effort e3">●●●</span></div>
+  </div>
+</div>
+
+<div style="margin-top:20px;padding:14px;background:rgba(124,106,245,.07);border:1px solid rgba(124,106,245,.2);border-radius:8px">
+  <p style="font-size:12px;color:#57534e">
+    <strong>Fase 0</strong> (4 features) → <strong>Fase 1</strong> (10 features, todas ●) → <strong>Fase 2</strong> (16 features, todas ●●) → <strong>Fase 3</strong> (12 features, todas ●●●)<br><br>
+    ¿Este orden te convence? Si es así, escribimos el doc de diseño y arrancamos con el plan de implementación.
+  </p>
+</div>

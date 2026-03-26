@@ -1,0 +1,11 @@
+rag_params:
+  temperature: 0.2
+  top_p: 0.7
+  max_tokens: 1024
+  vdb_top_k: 10
+  reranker_top_k: 5
+  use_guardrails: false
+  use_reranker: true
+  chunk_size: 512
+  chunk_overlap: 50
+  embedding_model: nvidia/nv-embedqa-e5-v5

@@ -4,71 +4,22 @@ blueprint/
 # Stack anterior (Python + SvelteKit) — preservado localmente, fuera del repo
 legacy/
 
-# Secrets & generated env files
+# Secrets — nunca al repo
 .env.local
 .env.merged
 .env.blueprint
 .env.build
 *.key
 
-# Docker volumes
-volumes/
-
-# Runtime data (auth database, etc.)
-data/
-
-# Python
-__pycache__/
-*.pyc
-.venv/
-
 # Node
 node_modules/
 
-# Git worktrees
-.worktrees/
-
-# OS
-.DS_Store
-
-# Brainstorming sessions y planes locales (solo locales)
-.superpowers/
-docs/superpowers/
-
-# Claude Code session files
-.claude/
-.firecrawl/
-
-# Capturas de pantalla y artefactos locales
-screen*.png
-screen*.jpg
-*.screenshot.png
-*.png
-
-# Admin runtime overrides (generated at runtime, not tracked)
-config/admin-overrides.yaml
-
-# Next.js
+# Next.js build
 .next/
 out/
 
-# Turborepo
-.turbo/
-
-# Data (DB + logs)
-data/*.db
-logs/*.log
-logs/
-
 # Bun
-bun.lockb
 *.tsbuildinfo
 
-# Cursor IDE — solo ignorar archivos de sesión/caché, no las skills del proyecto
-# .cursor/ — NO ignorar: las skills viven aquí y deben estar en el repo
-
-# Playwright MCP
-.playwright-mcp/
-
-# Next.js generated
-apps/web/next-env.d.ts
+# OS
+.DS_Store

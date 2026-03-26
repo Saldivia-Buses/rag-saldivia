@@ -1,0 +1,116 @@
+<h2>Variaciones de paleta — base crema cálida</h2>
+<p class="subtitle">Todas parten del mismo fondo (cream off-white como Claude). La diferencia está en el <strong>color de acento</strong> y el tono del sidebar.</p>
+
+<div class="cards">
+
+  <!-- OPCIÓN A: Claude-inspired, acento naranja-terracota -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#faf9f7;border-radius:8px;overflow:hidden;border:1px solid #e8e6e1">
+      <!-- App shell mock -->
+      <div style="display:flex;height:130px">
+        <!-- Sidebar -->
+        <div style="width:110px;background:#f0ede8;border-right:1px solid #e2ddd8;padding:8px;display:flex;flex-direction:column;gap:4px">
+          <div style="display:flex;align-items:center;gap:4px;margin-bottom:6px">
+            <div style="width:16px;height:16px;border-radius:4px;background:#cc785c"></div>
+            <span style="font-size:9px;font-weight:600;color:#1a1814">Saldivia</span>
+          </div>
+          <div style="height:5px;background:#cc785c;border-radius:3px;width:85%;opacity:.9"></div>
+          <div style="height:5px;background:#d9d5cf;border-radius:3px;width:70%"></div>
+          <div style="height:5px;background:#d9d5cf;border-radius:3px;width:80%"></div>
+          <div style="height:5px;background:#d9d5cf;border-radius:3px;width:60%"></div>
+          <div style="margin-top:auto;height:5px;background:#d9d5cf;border-radius:3px;width:55%"></div>
+        </div>
+        <!-- Chat area -->
+        <div style="flex:1;background:#faf9f7;padding:10px;display:flex;flex-direction:column;justify-content:flex-end;gap:6px">
+          <!-- mensaje usuario -->
+          <div style="display:flex;justify-content:flex-end">
+            <div style="background:#cc785c;color:#fff;padding:5px 8px;border-radius:10px 10px 2px 10px;font-size:9px;max-width:70%">¿Cuáles son los contratos activos?</div>
+          </div>
+          <!-- respuesta -->
+          <div style="display:flex;gap:4px;align-items:flex-start">
+            <div style="width:14px;height:14px;border-radius:50%;background:#f0ede8;border:1px solid #e2ddd8;flex-shrink:0"></div>
+            <div style="background:#f0ede8;padding:5px 8px;border-radius:2px 10px 10px 10px;font-size:9px;color:#44403c;max-width:80%">Encontré 12 contratos activos en el sistema...</div>
+          </div>
+          <!-- input -->
+          <div style="background:#fff;border:1px solid #e2ddd8;border-radius:8px;height:16px;margin-top:2px"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Terracota (Claude-inspired)</h3>
+      <p>Crema <code>#FAF9F7</code> · sidebar stone <code>#F0EDE8</code> · acento terracota <code>#CC785C</code> · el más cercano a Claude.</p>
+    </div>
+  </div>
+
+  <!-- OPCIÓN B: Crema con acento índigo/violeta suave -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#fafaf9;border-radius:8px;overflow:hidden;border:1px solid #e7e5e4">
+      <div style="display:flex;height:130px">
+        <div style="width:110px;background:#f2f0f0;border-right:1px solid #e3e1e0;padding:8px;display:flex;flex-direction:column;gap:4px">
+          <div style="display:flex;align-items:center;gap:4px;margin-bottom:6px">
+            <div style="width:16px;height:16px;border-radius:4px;background:#7c6af5"></div>
+            <span style="font-size:9px;font-weight:600;color:#18181b">Saldivia</span>
+          </div>
+          <div style="height:5px;background:#7c6af5;border-radius:3px;width:85%;opacity:.9"></div>
+          <div style="height:5px;background:#d4d4d4;border-radius:3px;width:70%"></div>
+          <div style="height:5px;background:#d4d4d4;border-radius:3px;width:80%"></div>
+          <div style="height:5px;background:#d4d4d4;border-radius:3px;width:60%"></div>
+          <div style="margin-top:auto;height:5px;background:#d4d4d4;border-radius:3px;width:55%"></div>
+        </div>
+        <div style="flex:1;background:#fafaf9;padding:10px;display:flex;flex-direction:column;justify-content:flex-end;gap:6px">
+          <div style="display:flex;justify-content:flex-end">
+            <div style="background:#7c6af5;color:#fff;padding:5px 8px;border-radius:10px 10px 2px 10px;font-size:9px;max-width:70%">¿Cuáles son los contratos activos?</div>
+          </div>
+          <div style="display:flex;gap:4px;align-items:flex-start">
+            <div style="width:14px;height:14px;border-radius:50%;background:#f2f0f0;border:1px solid #e3e1e0;flex-shrink:0"></div>
+            <div style="background:#f2f0f0;padding:5px 8px;border-radius:2px 10px 10px 10px;font-size:9px;color:#3f3f46;max-width:80%">Encontré 12 contratos activos en el sistema...</div>
+          </div>
+          <div style="background:#fff;border:1px solid #e3e1e0;border-radius:8px;height:16px;margin-top:2px"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Índigo Suave</h3>
+      <p>Crema fría <code>#FAFAF9</code> · sidebar gris perlado · acento violeta <code>#7C6AF5</code> · más "tech" pero sin frío.</p>
+    </div>
+  </div>
+
+  <!-- OPCIÓN C: Crema con acento verde musgo / sage -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#faf9f6;border-radius:8px;overflow:hidden;border:1px solid #e6e3dc">
+      <div style="display:flex;height:130px">
+        <div style="width:110px;background:#eeeae3;border-right:1px solid #ddd9d0;padding:8px;display:flex;flex-direction:column;gap:4px">
+          <div style="display:flex;align-items:center;gap:4px;margin-bottom:6px">
+            <div style="width:16px;height:16px;border-radius:4px;background:#4f7a5c"></div>
+            <span style="font-size:9px;font-weight:600;color:#1c1a16">Saldivia</span>
+          </div>
+          <div style="height:5px;background:#4f7a5c;border-radius:3px;width:85%;opacity:.9"></div>
+          <div style="height:5px;background:#ccc8be;border-radius:3px;width:70%"></div>
+          <div style="height:5px;background:#ccc8be;border-radius:3px;width:80%"></div>
+          <div style="height:5px;background:#ccc8be;border-radius:3px;width:60%"></div>
+          <div style="margin-top:auto;height:5px;background:#ccc8be;border-radius:3px;width:55%"></div>
+        </div>
+        <div style="flex:1;background:#faf9f6;padding:10px;display:flex;flex-direction:column;justify-content:flex-end;gap:6px">
+          <div style="display:flex;justify-content:flex-end">
+            <div style="background:#4f7a5c;color:#fff;padding:5px 8px;border-radius:10px 10px 2px 10px;font-size:9px;max-width:70%">¿Cuáles son los contratos activos?</div>
+          </div>
+          <div style="display:flex;gap:4px;align-items:flex-start">
+            <div style="width:14px;height:14px;border-radius:50%;background:#eeeae3;border:1px solid #ddd9d0;flex-shrink:0"></div>
+            <div style="background:#eeeae3;padding:5px 8px;border-radius:2px 10px 10px 10px;font-size:9px;color:#3a3830;max-width:80%">Encontré 12 contratos activos en el sistema...</div>
+          </div>
+          <div style="background:#fff;border:1px solid #ddd9d0;border-radius:8px;height:16px;margin-top:2px"></div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Sage Green</h3>
+      <p>Crema amarilla <code>#FAF9F6</code> · sidebar pergamino · acento verde musgo <code>#4F7A5C</code> · orgánico, calmado, warm.</p>
+    </div>
+  </div>
+
+</div>
+
+<div style="margin-top:20px;padding:14px;background:rgba(0,0,0,.04);border-radius:8px">
+  <p class="label">Nota</p>
+  <p style="font-size:13px;margin-top:4px">El dark mode de cualquiera de estas opciones sería el equivalente cálido — el <strong>stone/warm gray oscuro</strong> de la opción B de antes, con el mismo acento. No un negro frío.</p>
+</div>

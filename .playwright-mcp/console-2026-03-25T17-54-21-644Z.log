@@ -1,0 +1,44 @@
+[    1035ms] [ERROR] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <InnerLayoutRouter url="/settings" tree={[...]} cacheNode={{lazyData:null, ...}} segmentPath={[...]}>
+      <SegmentViewNode type="layout" pagePath="(app)/layo...">
+        <SegmentTrieNode>
+        <AppLayout>
+          <AppShell>
+            <AppShellChrome user={{id:1,email:"ad...", ...}}>
+              <div className="flex h-scr...">
+                <NavRail user={{id:1,email:"ad...", ...}} hidden={false}>
+                  <TooltipProvider delayDuration={100}>
+                    <TooltipProviderProvider scope={undefined} isOpenDelayedRef={{current:true}} delayDuration={100} ...>
+                      <nav className="flex flex-..." style={{width:44, ...}}>
+                        <div>
+                        <div>
+                        <div className="flex flex-...">
+                          <div style={{color:"rgb..."}}>
+                            <ThemeToggle>
+                              <_c variant="ghost" size="icon" onClick={function onClick} title="Cambiar a ..." ...>
+                                <button
+                                  className={"inline-flex items-center justify-center gap-2 whitespace-nowrap rounded..."}
+                                  ref={null}
+                                  onClick={function onClick}
++                                 title="Cambiar a light mode"
+-                                 title="Cambiar a dark mode"
+                                >
+                          ...
+                ...
+ @ webpack-internal:///(app-pages-browser)/../../node_modules/.bun/next@15.5.14+bf16f8eded5e12ee/node_modules/next/dist/next-devtools/userspace/app/errors/intercept-console-error.js:56
+[   52945ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3000/saved?_rsc=1hui0:0
+[   53025ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3000/saved:0
+[   60084ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3000/collections?_rsc=1hui0:0
+[   60160ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3000/collections:0

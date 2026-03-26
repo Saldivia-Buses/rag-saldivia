@@ -1,0 +1,55 @@
+<h2>¿Cómo se comporta el panel Admin?</h2>
+<p class="subtitle">Cuando el admin hace click en el ícono Admin en la barra izquierda, ¿qué pasa con el panel secundario?</p>
+
+<div class="options">
+
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Panel secundario se convierte en nav admin</h3>
+      <p>El panel de sesiones se reemplaza con el menú admin (Usuarios, Áreas, Permisos, Config RAG, Sistema). La jerarquía es clara: ícono izquierda elige la <em>sección</em>, panel central elige el <em>sub-ítem</em>. El contenido principal cambia según lo que selecciones en el panel.</p>
+      <div style="margin-top:10px;display:flex;height:50px;border-radius:6px;overflow:hidden;border:1px solid #e3e1e0;font-size:8px">
+        <div style="width:30px;background:#18181b;display:flex;flex-direction:column;align-items:center;padding:6px 0;gap:4px">
+          <div style="width:16px;height:16px;background:#333;border-radius:3px"></div>
+          <div style="width:16px;height:16px;background:#7c6af5;border-radius:3px"></div>
+        </div>
+        <div style="width:90px;background:#f2f0f0;border-right:1px solid #e3e1e0;padding:5px">
+          <div style="font-size:7px;color:#9ca3af;text-transform:uppercase;margin-bottom:3px">Admin</div>
+          <div style="background:#7c6af5;color:#fff;padding:2px 5px;border-radius:3px;margin-bottom:1px;font-size:7px">Usuarios</div>
+          <div style="padding:2px 5px;color:#57534e;font-size:7px">Áreas</div>
+          <div style="padding:2px 5px;color:#57534e;font-size:7px">Permisos</div>
+        </div>
+        <div style="flex:1;background:#fafaf9;padding:5px">
+          <div style="height:6px;background:#e3e1e0;border-radius:3px;margin-bottom:3px;width:80%"></div>
+          <div style="height:6px;background:#e3e1e0;border-radius:3px;margin-bottom:3px;width:60%"></div>
+          <div style="height:6px;background:#e3e1e0;border-radius:3px;width:70%"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Admin ocupa el espacio completo (sin panel secundario)</h3>
+      <p>Al entrar a Admin, el panel secundario desaparece. La sección admin usa todo el ancho. El contenido tiene más espacio — mejor para tablas de usuarios, listas, formularios. La nav admin va dentro del propio contenido como tabs o breadcrumbs.</p>
+      <div style="margin-top:10px;display:flex;height:50px;border-radius:6px;overflow:hidden;border:1px solid #e3e1e0;font-size:8px">
+        <div style="width:30px;background:#18181b;display:flex;flex-direction:column;align-items:center;padding:6px 0;gap:4px">
+          <div style="width:16px;height:16px;background:#333;border-radius:3px"></div>
+          <div style="width:16px;height:16px;background:#7c6af5;border-radius:3px"></div>
+        </div>
+        <div style="flex:1;background:#fafaf9;padding:6px">
+          <div style="display:flex;gap:6px;margin-bottom:5px">
+            <div style="background:#7c6af5;color:#fff;padding:2px 6px;border-radius:3px;font-size:7px">Usuarios</div>
+            <div style="padding:2px 6px;color:#57534e;font-size:7px;border:1px solid #e3e1e0;border-radius:3px">Áreas</div>
+            <div style="padding:2px 6px;color:#57534e;font-size:7px;border:1px solid #e3e1e0;border-radius:3px">Permisos</div>
+            <div style="padding:2px 6px;color:#57534e;font-size:7px;border:1px solid #e3e1e0;border-radius:3px">Config</div>
+          </div>
+          <div style="height:5px;background:#e3e1e0;border-radius:3px;margin-bottom:2px;width:90%"></div>
+          <div style="height:5px;background:#e3e1e0;border-radius:3px;width:75%"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

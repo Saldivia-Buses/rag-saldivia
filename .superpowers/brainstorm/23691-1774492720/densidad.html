@@ -1,0 +1,180 @@
+<h2>¿Cómo manejamos la densidad de la interfaz?</h2>
+<p class="subtitle">El proyecto tiene páginas muy distintas — ¿un sistema o varios niveles?</p>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&display=swap');
+* { font-family: 'Instrument Sans', sans-serif; }
+
+.demo-wrap {
+  background: #faf8f4;
+  border-radius: 8px;
+  overflow: hidden;
+  height: 200px;
+  border: 1px solid #ede9e0;
+}
+.demo-nav {
+  background: #f4f0e8;
+  border-bottom: 1px solid #ede9e0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.demo-nav-item {
+  color: #5a5048;
+  font-size: 0.72rem;
+  font-weight: 500;
+  cursor: default;
+}
+.demo-nav-item.active { color: #1a5276; font-weight: 600; }
+.demo-content { overflow: hidden; }
+.demo-table-row {
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #ede9e0;
+  gap: 8px;
+}
+.demo-table-cell { color: #3a3028; font-size: 0.72rem; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.demo-table-cell.muted { color: #9a9088; }
+.demo-badge {
+  border-radius: 3px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+</style>
+
+<div class="cards">
+
+  <!-- A: Una densidad adaptiva por contexto -->
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding: 0.75rem; background: #f5f2ec;">
+      <div style="font-size:0.65rem;font-weight:700;color:#1a5276;text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Páginas admin — compact</div>
+      <div class="demo-wrap" style="height:88px">
+        <div class="demo-nav" style="padding: 0 8px; height: 24px;">
+          <span class="demo-nav-item active">Usuarios</span>
+          <span class="demo-nav-item">Áreas</span>
+          <span class="demo-nav-item">Permisos</span>
+        </div>
+        <div class="demo-content" style="padding: 0 8px;">
+          <div class="demo-table-row" style="height:22px">
+            <div style="width:20px;height:20px;border-radius:50%;background:#1a5276;flex-shrink:0;display:flex;align-items:center;justify-content:center">
+              <div style="width:10px;height:2px;background:#d4e8f7;border-radius:1px"></div>
+            </div>
+            <span class="demo-table-cell" style="flex:1">admin@saldivia.com</span>
+            <span class="demo-badge" style="background:#d4e8f7;color:#1a5276;padding:1px 5px">Admin</span>
+          </div>
+          <div class="demo-table-row" style="height:22px">
+            <div style="width:20px;height:20px;border-radius:50%;background:#e8e0d4;flex-shrink:0"></div>
+            <span class="demo-table-cell" style="flex:1">usuario@saldivia.com</span>
+            <span class="demo-badge" style="background:#f0ebe0;color:#7a6a58;padding:1px 5px">User</span>
+          </div>
+        </div>
+      </div>
+      <div style="font-size:0.65rem;font-weight:700;color:#1a5276;text-transform:uppercase;letter-spacing:.08em;margin:6px 0">Chat — spacious</div>
+      <div class="demo-wrap" style="height:72px;display:flex;flex-direction:column;justify-content:flex-end">
+        <div style="padding:8px 12px;display:flex;flex-direction:column;gap:6px">
+          <div style="background:#1a5276;border-radius:12px 12px 2px 12px;padding:6px 10px;max-width:70%;margin-left:auto">
+            <div style="height:2px;background:#d4e8f799;border-radius:1px;width:80%"></div>
+          </div>
+          <div style="display:flex;align-items:flex-end;gap:6px">
+            <div style="width:22px;height:22px;border-radius:50%;background:#e8e0d4;flex-shrink:0"></div>
+            <div style="background:#f0ebe0;border-radius:2px 12px 12px 12px;padding:6px 10px;max-width:70%">
+              <div style="height:2px;background:#c0b8a8;border-radius:1px;width:90%;margin-bottom:3px"></div>
+              <div style="height:2px;background:#c0b8a8;border-radius:1px;width:65%"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A — Densidad adaptiva por contexto</h3>
+      <p>Admin/tablas usan compact (más info visible). Chat/collections usan spacious (más respiro). Un sistema de tokens con dos "niveles" que cada layout elige.</p>
+    </div>
+  </div>
+
+  <!-- B: Siempre spacious -->
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding: 0.75rem; background: #f5f2ec;">
+      <div class="demo-wrap" style="display:flex;flex-direction:column">
+        <div class="demo-nav" style="padding: 0 16px; height: 36px;">
+          <span class="demo-nav-item active">Usuarios</span>
+          <span class="demo-nav-item">Áreas</span>
+          <span class="demo-nav-item">Permisos</span>
+        </div>
+        <div class="demo-content" style="padding: 0 16px; flex:1">
+          <div class="demo-table-row" style="height:44px">
+            <div style="width:32px;height:32px;border-radius:50%;background:#1a5276;flex-shrink:0;display:flex;align-items:center;justify-content:center">
+              <div style="width:14px;height:2px;background:#d4e8f7;border-radius:1px"></div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:3px">
+              <span class="demo-table-cell" style="font-weight:500">admin@saldivia.com</span>
+              <span class="demo-table-cell muted" style="font-size:0.65rem">Administrador del sistema</span>
+            </div>
+            <span class="demo-badge" style="background:#d4e8f7;color:#1a5276;padding:3px 8px">Admin</span>
+          </div>
+          <div class="demo-table-row" style="height:44px">
+            <div style="width:32px;height:32px;border-radius:50%;background:#e8e0d4;flex-shrink:0"></div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:3px">
+              <span class="demo-table-cell" style="font-weight:500">usuario@saldivia.com</span>
+              <span class="demo-table-cell muted" style="font-size:0.65rem">Área Legal · Activo</span>
+            </div>
+            <span class="demo-badge" style="background:#f0ebe0;color:#7a6a58;padding:3px 8px">User</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B — Siempre spacious</h3>
+      <p>Toda la app respira igual. Coherente y relajada. Se ve menos información a la vez en tablas densas, pero la experiencia es consistente y nunca agobia.</p>
+    </div>
+  </div>
+
+  <!-- C: Siempre compact -->
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="padding: 0.75rem; background: #f5f2ec;">
+      <div class="demo-wrap">
+        <div class="demo-nav" style="padding: 0 8px; height: 20px;">
+          <span class="demo-nav-item active" style="font-size:0.65rem">Usuarios</span>
+          <span class="demo-nav-item" style="font-size:0.65rem">Áreas</span>
+          <span class="demo-nav-item" style="font-size:0.65rem">Permisos</span>
+          <span class="demo-nav-item" style="font-size:0.65rem">Config</span>
+          <span class="demo-nav-item" style="font-size:0.65rem">Ingesta</span>
+          <span class="demo-nav-item" style="font-size:0.65rem">Analytics</span>
+        </div>
+        <div class="demo-content" style="padding: 0 8px;">
+          <div class="demo-table-row" style="height:18px">
+            <span class="demo-table-cell" style="flex:1;font-size:0.65rem">admin@saldivia.com</span>
+            <span class="demo-table-cell" style="flex:1;font-size:0.65rem">Legal</span>
+            <span class="demo-badge" style="background:#d4e8f7;color:#1a5276;padding:0px 4px;font-size:0.6rem">Admin</span>
+          </div>
+          <div class="demo-table-row" style="height:18px">
+            <span class="demo-table-cell" style="flex:1;font-size:0.65rem">juan.perez@saldivia.com</span>
+            <span class="demo-table-cell" style="flex:1;font-size:0.65rem">RRHH</span>
+            <span class="demo-badge" style="background:#f0ebe0;color:#7a6a58;padding:0px 4px;font-size:0.6rem">User</span>
+          </div>
+          <div class="demo-table-row" style="height:18px">
+            <span class="demo-table-cell" style="flex:1;font-size:0.65rem">maria.g@saldivia.com</span>
+            <span class="demo-table-cell" style="flex:1;font-size:0.65rem">Sistemas</span>
+            <span class="demo-badge" style="background:#f0ebe0;color:#7a6a58;padding:0px 4px;font-size:0.6rem">Editor</span>
+          </div>
+          <div class="demo-table-row" style="height:18px">
+            <span class="demo-table-cell" style="flex:1;font-size:0.65rem">carlos.m@saldivia.com</span>
+            <span class="demo-table-cell" style="flex:1;font-size:0.65rem">Finanzas</span>
+            <span class="demo-badge" style="background:#f0ebe0;color:#7a6a58;padding:0px 4px;font-size:0.6rem">User</span>
+          </div>
+          <div class="demo-table-row" style="height:18px">
+            <span class="demo-table-cell" style="flex:1;font-size:0.65rem">laura.v@saldivia.com</span>
+            <span class="demo-table-cell" style="flex:1;font-size:0.65rem">Legal</span>
+            <span class="demo-badge" style="background:#e8f5e8;color:#2d6a4f;padding:0px 4px;font-size:0.6rem">Editor</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C — Siempre compact</h3>
+      <p>Máxima información visible. Bueno para power users que conocen la herramienta. Puede sentirse denso en el chat o en páginas que no son tablas.</p>
+    </div>
+  </div>
+
+</div>
+<p style="margin-top:0.5rem;font-size:0.8rem;opacity:0.5;text-align:center">Todos usan Instrument Sans + crema + navy</p>

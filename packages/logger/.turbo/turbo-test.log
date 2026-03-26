@@ -1,0 +1,40 @@
+$ bun test src/__tests__
+bun test v1.3.11 (af24e281)
+
+src/__tests__/logger.test.ts:
+(pass) shouldLog (levels) > INFO loguea cuando el nivel configurado es INFO [0.04ms]
+(pass) shouldLog (levels) > DEBUG no loguea cuando el nivel configurado es INFO [0.02ms]
+(pass) shouldLog (levels) > ERROR siempre loguea [0.01ms]
+(pass) shouldLog (levels) > FATAL solo se loguea cuando el nivel es FATAL o menor
+(pass) shouldLog (levels) > TRACE solo loguea cuando el nivel configurado es TRACE
+[2m03:52:56.932[0m  [32mINFO [0m  [1msystem.warning[0m  [2mmessage="test info"[0m
+(pass) log (backend) > log.info no lanza excepción [13.23ms]
+[2m03:52:56.945[0m  [33mWARN [0m  [1msystem.warning[0m  [2mmessage="test warn"[0m
+(pass) log (backend) > log.warn no lanza excepción [0.91ms]
+[2m03:52:56.946[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="test error"[0m
+(pass) log (backend) > log.error no lanza excepción [1.16ms]
+[2m03:52:56.947[0m  [36mDEBUG[0m  [1msystem.warning[0m  [2mdetail="debug info"[0m
+(pass) log (backend) > log.debug no lanza excepción [0.98ms]
+[2m03:52:56.948[0m  [35mFATAL[0m  [1msystem.error[0m  [2merror="fatal error"[0m
+(pass) log (backend) > log.fatal no lanza excepción [0.43ms]
+[2m03:52:56.949[0m  [32mINFO [0m  [1msystem.warning[0m  [2mmethod="GET"  path="/api/health"  status=200[0m
+(pass) log (backend) > log.request no lanza excepción para request 200 [0.34ms]
+[2m03:52:56.949[0m  [31mERROR[0m  [1msystem.warning[0m  [2mmethod="POST"  path="/api/rag/generate"  status=500[0m
+(pass) log (backend) > log.request no lanza excepción para request 500 [0.38ms]
+(pass) log (backend) > output contiene la información del evento > output de log.info contiene el tipo de evento [0.52ms]
+(pass) log (backend) > output contiene la información del evento > output de log.error contiene el tipo de evento [0.35ms]
+(pass) log (backend) > output contiene la información del evento > formatJson produce JSON válido con campos ts, level, type [0.51ms]
+(pass) reconstructFromEvents (blackbox) > retorna estado vacío para array vacío [0.15ms]
+(pass) reconstructFromEvents (blackbox) > ordena timeline por timestamp descendente [0.19ms]
+(pass) reconstructFromEvents (blackbox) > cuenta errores y warnings correctamente [0.15ms]
+(pass) reconstructFromEvents (blackbox) > registra usuarios únicos desde auth.login [0.05ms]
+(pass) reconstructFromEvents (blackbox) > registra queries RAG correctamente [0.03ms]
+(pass) reconstructFromEvents (blackbox) > registra errores del sistema en state.errors [0.05ms]
+(pass) formatTimeline (blackbox) > retorna string no vacío con eventos [0.13ms]
+(pass) formatTimeline (blackbox) > muestra estadísticas en el header del timeline [0.04ms]
+(pass) formatTimeline (blackbox) > muestra sección de errores cuando hay errores [0.10ms]
+
+ 24 pass
+ 0 fail
+ 55 expect() calls
+Ran 24 tests across 1 file. [201.00ms]

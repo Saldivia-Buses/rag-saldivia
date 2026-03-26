@@ -1,0 +1,247 @@
+[  392366ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3000/admin?_rsc=111x3:0
+[  392454ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3000/admin:0
+[ 1270982ms] [WARNING] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. @ webpack-internal:///(app-pages-browser)/../../node_modules/.bun/@radix-ui+react-dialog@1.1.15+243b16c7711ca280/node_modules/@radix-ui/react-dialog/dist/index.mjs:476
+[ 1270983ms] [WARNING] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. @ webpack-internal:///(app-pages-browser)/../../node_modules/.bun/@radix-ui+react-dialog@1.1.15+243b16c7711ca280/node_modules/@radix-ui/react-dialog/dist/index.mjs:476
+[ 1293703ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3000/admin?_rsc=111x3:0
+[ 1293799ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3000/admin:0
+[ 1299566ms] [WARNING] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. @ webpack-internal:///(app-pages-browser)/../../node_modules/.bun/@radix-ui+react-dialog@1.1.15+243b16c7711ca280/node_modules/@radix-ui/react-dialog/dist/index.mjs:476
+[ 1299567ms] [WARNING] Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}. @ webpack-internal:///(app-pages-browser)/../../node_modules/.bun/@radix-ui+react-dialog@1.1.15+243b16c7711ca280/node_modules/@radix-ui/react-dialog/dist/index.mjs:476
+[ 1829167ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3000/admin?_rsc=111x3:0
+[ 1829247ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3000/admin:0
+[ 1832202ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3000/admin?_rsc=111x3:0
+[ 1832237ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3000/admin:0
+[18262319ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3000/collections?_rsc=m7ryt:0
+[18262496ms] [ERROR] Failed to load resource: the server responded with a status of 404 (Not Found) @ http://localhost:3000/collections:0
+[19538165ms] [ERROR] React has detected a change in the order of Hooks called by %s. This will lead to bugs and errors if not fixed. For more information, read the Rules of Hooks: https://react.dev/link/rules-of-hooks
+
+   Previous render            Next render
+   ------------------------------------------------------
+%s   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ AppShellChrome 1. useState                   useState
+2. useEffect                  useEffect
+3. useState                   useState
+4. useRef                     useRef
+5. useEffect                  useEffect
+6. useState                   useState
+7. useContext                 useContext
+8. useRef                     useRef
+9. useRef                     useRef
+10. useCallback               useCallback
+11. useRef                    useRef
+12. useRef                    useRef
+13. useContext                useContext
+14. useContext                useContext
+15. useLayoutEffect           useLayoutEffect
+16. undefined                 useRef
+ @ webpack-internal:///(app-pages-browser)/../../node_modules/.bun/next@15.5.14+bf16f8eded5e12ee/node_modules/next/dist/next-devtools/userspace/app/errors/intercept-console-error.js:56
+[19538171ms] Error: Rendered more hooks than during the previous render.
+    at updateWorkInProgressHook (webpack-internal:///(app-pages-browser)/../../node_modules/.bun/next@15.5.14+bf16f8eded5e12ee/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:6979:17)
+    at Object.useRef (webpack-internal:///(app-pages-browser)/../../node_modules/.bun/next@15.5.14+bf16f8eded5e12ee/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:24172:16)
+    at exports.useRef (webpack-internal:///(app-pages-browser)/../../node_modules/.bun/next@15.5.14+bf16f8eded5e12ee/node_modules/next/dist/compiled/react/cjs/react.development.js:1249:34)
+    at fe (webpack-internal:///(app-pages-browser)/../../node_modules/.bun/react-hotkeys-hook@5.2.4+bf16f8eded5e12ee/node_modules/react-hotkeys-hook/dist/index.js:188:58)
+    at useGlobalHotkeys (webpack-internal:///(app-pages-browser)/./src/hooks/useGlobalHotkeys.ts:24:67)
+    at AppShellChrome (webpack-internal:///(app-pages-browser)/./src/components/layout/AppShellChrome.tsx:33:78)
+    at Object.react_stack_bottom_frame (webpack-internal:///(app-pages-browser)/../../node_modules/.bun/next@15.5.14+bf16f8eded5e12ee/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:23584:20)
+    at renderWithHooks (webpack-internal:///(app-pages-browser)/../../node_modules/.bun/next@15.5.14+bf16f8eded5e12ee/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:6793:22)
+    at updateFunctionComponent (webpack-internal:///(app-pages-browser)/../../node_modules/.bun/next@15.5.14+bf16f8eded5e12ee/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:9247:19)
+    at beginWork (webpack-internal:///(app-pages-browser)/../../node_modules/.bun/next@15.5.14+bf16f8eded5e12ee/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:10858:18)
+    at runWithFiberInDEV (webpack-internal:///(app-pages-browser)/../../node_modules/.bun/next@15.5.14+bf16f8eded5e12ee/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:872:30)
+    at performUnitOfWork (webpack-internal:///(app-pages-browser)/../../node_modules/.bun/next@15.5.14+bf16f8eded5e12ee/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:15727:22)
+    at workLoopSync (webpack-internal:///(app-pages-browser)/../../node_modules/.bun/next@15.5.14+bf16f8eded5e12ee/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:15547:41)
+    at renderRootSync (webpack-internal:///(app-pages-browser)/../../node_modules/.bun/next@15.5.14+bf16f8eded5e12ee/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:15527:11)
+    at performWorkOnRoot (webpack-internal:///(app-pages-browser)/../../node_modules/.bun/next@15.5.14+bf16f8eded5e12ee/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:15034:44)
+    at performSyncWorkOnRoot (webpack-internal:///(app-pages-browser)/../../node_modules/.bun/next@15.5.14+bf16f8eded5e12ee/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:16831:7)
+    at flushSyncWorkAcrossRoots_impl (webpack-internal:///(app-pages-browser)/../../node_modules/.bun/next@15.5.14+bf16f8eded5e12ee/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:16677:21)
+    at flushSyncWork$1 (webpack-internal:///(app-pages-browser)/../../node_modules/.bun/next@15.5.14+bf16f8eded5e12ee/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:15297:12)
+    at Object.scheduleRefresh (webpack-internal:///(app-pages-browser)/../../node_modules/.bun/next@15.5.14+bf16f8eded5e12ee/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.development.js:114:9)
+    at eval (webpack-internal:///(app-pages-browser)/../../node_modules/.bun/next@15.5.14+bf16f8eded5e12ee/node_modules/next/dist/compiled/react-refresh/cjs/react-refresh-runtime.development.js:265:17)
+    at Set.forEach (<anonymous>)
+    at Object.performReactRefresh (webpack-internal:///(app-pages-browser)/../../node_modules/.bun/next@15.5.14+bf16f8eded5e12ee/node_modules/next/dist/compiled/react-refresh/cjs/react-refresh-runtime.development.js:254:26)
+    at applyUpdate (webpack-internal:///(app-pages-browser)/../../node_modules/.bun/next@15.5.14+bf16f8eded5e12ee/node_modules/next/dist/compiled/@next/react-refresh-utils/dist/internal/helpers.js:139:31)
+    at statusHandler (webpack-internal:///(app-pages-browser)/../../node_modules/.bun/next@15.5.14+bf16f8eded5e12ee/node_modules/next/dist/compiled/@next/react-refresh-utils/dist/internal/helpers.js:156:13)
+    at setStatus (http://localhost:3000/_next/static/chunks/webpack.js?v=1774479586535:498:55)
+    at http://localhost:3000/_next/static/chunks/webpack.js?v=1774479586535:667:21
+[19538171ms] [WARNING] [Fast Refresh] performing full reload because your application had an unrecoverable error @ webpack-internal:///(app-pages-browser)/../../node_modules/.bun/next@15.5.14+bf16f8eded5e12ee/node_modules/next/dist/client/dev/hot-reloader/app/hot-reloader-app.js:113
+[22971511ms] LibsqlError: SQLITE_ERROR: no such column: forked_from
+    at resolveErrorDev (webpack-internal:///(app-pages-browser)/../../node_modules/.bun/next@15.5.14+bf16f8eded5e12ee/node_modules/next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-client.browser.development.js:2396:46)
+    at processFullStringRow (webpack-internal:///(app-pages-browser)/../../node_modules/.bun/next@15.5.14+bf16f8eded5e12ee/node_modules/next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-client.browser.development.js:2882:23)
+    at processFullBinaryRow (webpack-internal:///(app-pages-browser)/../../node_modules/.bun/next@15.5.14+bf16f8eded5e12ee/node_modules/next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-client.browser.development.js:2825:7)
+    at processBinaryChunk (webpack-internal:///(app-pages-browser)/../../node_modules/.bun/next@15.5.14+bf16f8eded5e12ee/node_modules/next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-client.browser.development.js:3028:15)
+    at progress (webpack-internal:///(app-pages-browser)/../../node_modules/.bun/next@15.5.14+bf16f8eded5e12ee/node_modules/next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-client.browser.development.js:3294:13)
+[22974534ms] [WARNING] The resource http://localhost:3000/_next/static/css/app/layout.css?v=1774484294188 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3000/chat:0
+[22981709ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/chat:0
+[22982073ms] LibsqlError: SQLITE_ERROR: no such column: forked_from
+    at resolveErrorDev (webpack-internal:///(app-pages-browser)/../../node_modules/.bun/next@15.5.14+bf16f8eded5e12ee/node_modules/next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-client.browser.development.js:2396:46)
+    at processFullStringRow (webpack-internal:///(app-pages-browser)/../../node_modules/.bun/next@15.5.14+bf16f8eded5e12ee/node_modules/next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-client.browser.development.js:2882:23)
+    at processFullBinaryRow (webpack-internal:///(app-pages-browser)/../../node_modules/.bun/next@15.5.14+bf16f8eded5e12ee/node_modules/next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-client.browser.development.js:2825:7)
+    at processBinaryChunk (webpack-internal:///(app-pages-browser)/../../node_modules/.bun/next@15.5.14+bf16f8eded5e12ee/node_modules/next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-client.browser.development.js:3028:15)
+    at progress (webpack-internal:///(app-pages-browser)/../../node_modules/.bun/next@15.5.14+bf16f8eded5e12ee/node_modules/next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-client.browser.development.js:3294:13)
+[22985102ms] [WARNING] The resource http://localhost:3000/_next/static/css/app/layout.css?v=1774484304296 was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally. @ http://localhost:3000/chat:0
+[23006232ms] [WARNING] [Fast Refresh] performing full reload because your application had an unrecoverable error @ webpack-internal:///(app-pages-browser)/../../node_modules/.bun/next@15.5.14+bf16f8eded5e12ee/node_modules/next/dist/client/dev/hot-reloader/app/hot-reloader-app.js:113
+[35774587ms] [ERROR] ./src/app/layout.tsx:8:14
+Module not found: Can't resolve '@/components/dev/ReactScan'
+   6 | const ReactScan =
+   7 |   process.env.NODE_ENV === "development"
+>  8 |     ? (await import("@/components/dev/ReactScan")).default
+     |              ^
+   9 |     : null
+  10 |
+  11 | export const metadata: Metadata = {
+
+https://nextjs.org/docs/messages/module-not-found @ webpack-internal:///(app-pages-browser)/../../node_modules/.bun/next@15.5.14+bf16f8eded5e12ee/node_modules/next/dist/next-devtools/userspace/app/errors/intercept-console-error.js:56
+[35778991ms] [ERROR] ./src/app/layout.tsx:8:14
+Module not found: Can't resolve '@/components/dev/ReactScan'
+   6 | const ReactScan =
+   7 |   process.env.NODE_ENV === "development"
+>  8 |     ? (await import("@/components/dev/ReactScan")).default
+     |              ^
+   9 |     : null
+  10 |
+  11 | export const metadata: Metadata = {
+
+https://nextjs.org/docs/messages/module-not-found @ webpack-internal:///(app-pages-browser)/../../node_modules/.bun/next@15.5.14+bf16f8eded5e12ee/node_modules/next/dist/next-devtools/userspace/app/errors/intercept-console-error.js:56
+[35786989ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/notifications:0
+[35810242ms] ReferenceError: ReactScan is not defined
+    at RootLayout (about://React/Server/webpack-internal:///(rsc)/./src/app/layout.tsx?30:30:17)
+    at resolveErrorDev (webpack-internal:///(app-pages-browser)/../../node_modules/.bun/next@15.5.14+bf16f8eded5e12ee/node_modules/next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-client.browser.development.js:2396:46)
+    at processFullStringRow (webpack-internal:///(app-pages-browser)/../../node_modules/.bun/next@15.5.14+bf16f8eded5e12ee/node_modules/next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-client.browser.development.js:2882:23)
+    at processFullBinaryRow (webpack-internal:///(app-pages-browser)/../../node_modules/.bun/next@15.5.14+bf16f8eded5e12ee/node_modules/next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-client.browser.development.js:2825:7)
+    at processBinaryChunk (webpack-internal:///(app-pages-browser)/../../node_modules/.bun/next@15.5.14+bf16f8eded5e12ee/node_modules/next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-client.browser.development.js:3028:15)
+    at progress (webpack-internal:///(app-pages-browser)/../../node_modules/.bun/next@15.5.14+bf16f8eded5e12ee/node_modules/next/dist/compiled/react-server-dom-webpack/cjs/react-server-dom-webpack-client.browser.development.js:3294:13)
+[35904988ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/notifications:0
+[35931399ms] [ERROR] ./src/app/layout.tsx
+Error:   x `ssr: false` is not allowed with `next/dynamic` in Server Components. Please move it into a Client Component.
+    ,-[/home/enzo/rag-saldivia/apps/web/src/app/layout.tsx:9:1]
+  6 | 
+  7 | const ReactScanInit =
+  8 |   process.env.NODE_ENV === "development"
+  9 |     ? dynamic(() => import("@/components/dev/ReactScan"), { ssr: false })
+    :       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 10 |     : null
+ 11 | 
+ 12 | export const metadata: Metadata = {
+    `----
+
+Import trace for requested module:
+./src/app/layout.tsx @ webpack-internal:///(app-pages-browser)/../../node_modules/.bun/next@15.5.14+bf16f8eded5e12ee/node_modules/next/dist/next-devtools/userspace/app/errors/intercept-console-error.js:56
+[35934807ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/notifications:0
+[35940084ms] [ERROR] ./src/app/layout.tsx
+Error:   x `ssr: false` is not allowed with `next/dynamic` in Server Components. Please move it into a Client Component.
+    ,-[/home/enzo/rag-saldivia/apps/web/src/app/layout.tsx:9:1]
+  6 | 
+  7 | const ReactScanInit =
+  8 |   process.env.NODE_ENV === "development"
+  9 |     ? dynamic(() => import("@/components/dev/ReactScan"), { ssr: false })
+    :       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 10 |     : null
+ 11 | 
+ 12 | export const metadata: Metadata = {
+    `----
+
+Import trace for requested module:
+./src/app/layout.tsx @ webpack-internal:///(app-pages-browser)/../../node_modules/.bun/next@15.5.14+bf16f8eded5e12ee/node_modules/next/dist/next-devtools/userspace/app/errors/intercept-console-error.js:56
+[35964837ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/notifications:0
+[35994867ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/notifications:0
+[36024810ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/notifications:0
+[36054810ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/notifications:0
+[36084806ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/notifications:0
+[36114830ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/notifications:0
+[36144857ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/notifications:0
+[36174844ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/notifications:0
+[36204825ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/notifications:0
+[36208673ms] [ERROR] ./src/app/layout.tsx
+Error:   x `ssr: false` is not allowed with `next/dynamic` in Server Components. Please move it into a Client Component.
+    ,-[/home/enzo/rag-saldivia/apps/web/src/app/layout.tsx:18:1]
+ 15 | 
+ 16 | const ReactScanInit =
+ 17 |   process.env.NODE_ENV === "development"
+ 18 |     ? dynamic(() => import("@/components/dev/ReactScan"), { ssr: false })
+    :       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 19 |     : null
+ 20 | 
+ 21 | export const metadata: Metadata = {
+    `----
+
+Import trace for requested module:
+./src/app/layout.tsx @ webpack-internal:///(app-pages-browser)/../../node_modules/.bun/next@15.5.14+bf16f8eded5e12ee/node_modules/next/dist/next-devtools/userspace/app/errors/intercept-console-error.js:56
+[36211690ms] [ERROR] ./src/app/layout.tsx
+Error:   x `ssr: false` is not allowed with `next/dynamic` in Server Components. Please move it into a Client Component.
+    ,-[/home/enzo/rag-saldivia/apps/web/src/app/layout.tsx:18:1]
+ 15 | 
+ 16 | const ReactScanInit =
+ 17 |   process.env.NODE_ENV === "development"
+ 18 |     ? dynamic(() => import("@/components/dev/ReactScan"), { ssr: false })
+    :       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 19 |     : null
+ 20 | 
+ 21 | export const metadata: Metadata = {
+    `----
+
+Import trace for requested module:
+./src/app/layout.tsx @ webpack-internal:///(app-pages-browser)/../../node_modules/.bun/next@15.5.14+bf16f8eded5e12ee/node_modules/next/dist/next-devtools/userspace/app/errors/intercept-console-error.js:56
+[36234795ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/notifications:0
+[36264802ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/notifications:0
+[36282057ms] [ERROR] ./src/app/layout.tsx
+Error:   x `ssr: false` is not allowed with `next/dynamic` in Server Components. Please move it into a Client Component.
+    ,-[/home/enzo/rag-saldivia/apps/web/src/app/layout.tsx:18:1]
+ 15 | 
+ 16 | const ReactScanInit =
+ 17 |   process.env.NODE_ENV === "development"
+ 18 |     ? dynamic(() => import("@/components/dev/ReactScan"), { ssr: false })
+    :       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 19 |     : null
+ 20 | 
+ 21 | export const metadata: Metadata = {
+    `----
+
+Import trace for requested module:
+./src/app/layout.tsx @ webpack-internal:///(app-pages-browser)/../../node_modules/.bun/next@15.5.14+bf16f8eded5e12ee/node_modules/next/dist/next-devtools/userspace/app/errors/intercept-console-error.js:56
+[36286915ms] [ERROR] ./src/app/layout.tsx
+Error:   x `ssr: false` is not allowed with `next/dynamic` in Server Components. Please move it into a Client Component.
+    ,-[/home/enzo/rag-saldivia/apps/web/src/app/layout.tsx:18:1]
+ 15 | 
+ 16 | const ReactScanInit =
+ 17 |   process.env.NODE_ENV === "development"
+ 18 |     ? dynamic(() => import("@/components/dev/ReactScan"), { ssr: false })
+    :       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 19 |     : null
+ 20 | 
+ 21 | export const metadata: Metadata = {
+    `----
+
+Import trace for requested module:
+./src/app/layout.tsx @ webpack-internal:///(app-pages-browser)/../../node_modules/.bun/next@15.5.14+bf16f8eded5e12ee/node_modules/next/dist/next-devtools/userspace/app/errors/intercept-console-error.js:56
+[36290613ms] [ERROR] ./src/app/layout.tsx
+Error:   x `ssr: false` is not allowed with `next/dynamic` in Server Components. Please move it into a Client Component.
+    ,-[/home/enzo/rag-saldivia/apps/web/src/app/layout.tsx:18:1]
+ 15 | 
+ 16 | const ReactScanInit =
+ 17 |   process.env.NODE_ENV === "development"
+ 18 |     ? dynamic(() => import("@/components/dev/ReactScan"), { ssr: false })
+    :       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ 19 |     : null
+ 20 | 
+ 21 | export const metadata: Metadata = {
+    `----
+
+Import trace for requested module:
+./src/app/layout.tsx @ webpack-internal:///(app-pages-browser)/../../node_modules/.bun/next@15.5.14+bf16f8eded5e12ee/node_modules/next/dist/next-devtools/userspace/app/errors/intercept-console-error.js:56
+[36294795ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/notifications:0
+[36324797ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/notifications:0
+[36355184ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/notifications:0
+[36384801ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/notifications:0
+[36414792ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/notifications:0
+[36444806ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/notifications:0
+[36474803ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/notifications:0
+[36504825ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/notifications:0
+[36534808ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/notifications:0
+[36564819ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/notifications:0
+[36594809ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/notifications:0
+[36624852ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/notifications:0
+[36654876ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/notifications:0
+[36684808ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/notifications:0
+[36714810ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/notifications:0
+[36744819ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/api/notifications:0
+[36757756ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/chat:0
+[36917488ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/chat:0
+[36918202ms] [ERROR] Failed to load resource: the server responded with a status of 500 (Internal Server Error) @ http://localhost:3000/chat:0

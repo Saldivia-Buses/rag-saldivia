@@ -1,0 +1,165 @@
+[2m18:21:55.627[0m  [31mERROR[0m  [1msystem.warning[0m  [2mmethod="POST"  path="/api/rag/generate"  status=500[0m
+[2m18:21:55.623[0m  [33mWARN [0m  [1msystem.warning[0m  [2mmessage="test warn"[0m
+[2m18:21:55.626[0m  [35mFATAL[0m  [1msystem.error[0m  [2merror="fatal error"[0m
+[2m18:21:55.619[0m  [32mINFO [0m  [1msystem.warning[0m  [2mmessage="test info"[0m
+[2m18:21:55.628[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="Something went wrong"[0m
+[2m18:21:55.628[0m  [32mINFO [0m  [1mauth.login[0m  [2memail="test@example.com"[0m
+[2m18:21:55.625[0m  [36mDEBUG[0m  [1msystem.warning[0m  [2mdetail="debug info"[0m
+[2m18:21:55.624[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="test error"[0m
+[2m18:21:55.627[0m  [32mINFO [0m  [1msystem.warning[0m  [2mmethod="GET"  path="/api/health"  status=200[0m
+[2m23:19:24.875[0m  [33mWARN [0m  [1msystem.warning[0m  [2mmessage="test warn"[0m
+[2m23:24:20.696[0m  [33mWARN [0m  [1msystem.warning[0m  [2mmessage="test warn"[0m
+[2m23:24:20.701[0m  [31mERROR[0m  [1msystem.warning[0m  [2mmethod="POST"  path="/api/rag/generate"  status=500[0m
+[2m23:24:20.700[0m  [32mINFO [0m  [1msystem.warning[0m  [2mmethod="GET"  path="/api/health"  status=200[0m
+[2m23:24:20.700[0m  [35mFATAL[0m  [1msystem.error[0m  [2merror="fatal error"[0m
+[2m23:24:20.702[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="Something went wrong"[0m
+[2m23:24:20.699[0m  [36mDEBUG[0m  [1msystem.warning[0m  [2mdetail="debug info"[0m
+[2m23:24:20.701[0m  [32mINFO [0m  [1mauth.login[0m  [2memail="test@example.com"[0m
+[2m23:24:20.698[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="test error"[0m
+[2m23:24:20.692[0m  [32mINFO [0m  [1msystem.warning[0m  [2mmessage="test info"[0m
+[2m23:27:29.003[0m  [33mWARN [0m  [1msystem.warning[0m  [2mmessage="test warn"[0m
+[2m23:27:29.006[0m  [31mERROR[0m  [1msystem.warning[0m  [2mmethod="POST"  path="/api/rag/generate"  status=500[0m
+[2m23:27:28.999[0m  [32mINFO [0m  [1msystem.warning[0m  [2mmessage="test info"[0m
+[2m23:27:29.007[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="Something went wrong"[0m
+[2m23:27:29.007[0m  [32mINFO [0m  [1mauth.login[0m  [2memail="test@example.com"[0m
+[2m23:27:29.006[0m  [32mINFO [0m  [1msystem.warning[0m  [2mmethod="GET"  path="/api/health"  status=200[0m
+[2m23:27:29.004[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="test error"[0m
+[2m23:27:29.005[0m  [36mDEBUG[0m  [1msystem.warning[0m  [2mdetail="debug info"[0m
+[2m23:27:29.005[0m  [35mFATAL[0m  [1msystem.error[0m  [2merror="fatal error"[0m
+[2m23:32:35.368[0m  [33mWARN [0m  [1msystem.warning[0m  [2mmessage="test warn"[0m
+[2m23:32:35.371[0m  [31mERROR[0m  [1msystem.warning[0m  [2mmethod="POST"  path="/api/rag/generate"  status=500[0m
+[2m23:32:35.364[0m  [32mINFO [0m  [1msystem.warning[0m  [2mmessage="test info"[0m
+[2m23:32:35.372[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="Something went wrong"[0m
+[2m23:32:35.372[0m  [32mINFO [0m  [1mauth.login[0m  [2memail="test@example.com"[0m
+[2m23:32:35.371[0m  [32mINFO [0m  [1msystem.warning[0m  [2mmethod="GET"  path="/api/health"  status=200[0m
+[2m23:32:35.369[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="test error"[0m
+[2m23:32:35.370[0m  [36mDEBUG[0m  [1msystem.warning[0m  [2mdetail="debug info"[0m
+[2m23:32:35.370[0m  [35mFATAL[0m  [1msystem.error[0m  [2merror="fatal error"[0m
+[2m23:40:44.899[0m  [33mWARN [0m  [1msystem.warning[0m  [2mmessage="test warn"[0m
+[2m23:40:44.903[0m  [31mERROR[0m  [1msystem.warning[0m  [2mmethod="POST"  path="/api/rag/generate"  status=500[0m
+[2m23:40:44.904[0m  [32mINFO [0m  [1mauth.login[0m  [2memail="test@example.com"[0m
+[2m23:40:44.895[0m  [32mINFO [0m  [1msystem.warning[0m  [2mmessage="test info"[0m
+[2m23:40:44.902[0m  [35mFATAL[0m  [1msystem.error[0m  [2merror="fatal error"[0m
+[2m23:40:44.903[0m  [32mINFO [0m  [1msystem.warning[0m  [2mmethod="GET"  path="/api/health"  status=200[0m
+[2m23:40:44.901[0m  [36mDEBUG[0m  [1msystem.warning[0m  [2mdetail="debug info"[0m
+[2m23:40:44.900[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="test error"[0m
+[2m23:40:44.904[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="Something went wrong"[0m
+[2m23:43:45.884[0m  [33mWARN [0m  [1msystem.warning[0m  [2mmessage="test warn"[0m
+[2m23:43:45.888[0m  [31mERROR[0m  [1msystem.warning[0m  [2mmethod="POST"  path="/api/rag/generate"  status=500[0m
+[2m23:43:45.881[0m  [32mINFO [0m  [1msystem.warning[0m  [2mmessage="test info"[0m
+[2m23:43:45.890[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="Something went wrong"[0m
+[2m23:43:45.889[0m  [32mINFO [0m  [1mauth.login[0m  [2memail="test@example.com"[0m
+[2m23:43:45.888[0m  [32mINFO [0m  [1msystem.warning[0m  [2mmethod="GET"  path="/api/health"  status=200[0m
+[2m23:43:45.885[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="test error"[0m
+[2m23:43:45.887[0m  [36mDEBUG[0m  [1msystem.warning[0m  [2mdetail="debug info"[0m
+[2m23:43:45.888[0m  [35mFATAL[0m  [1msystem.error[0m  [2merror="fatal error"[0m
+[2m23:47:46.330[0m  [33mWARN [0m  [1msystem.warning[0m  [2mmessage="test warn"[0m
+[2m23:47:46.333[0m  [31mERROR[0m  [1msystem.warning[0m  [2mmethod="POST"  path="/api/rag/generate"  status=500[0m
+[2m23:47:46.326[0m  [32mINFO [0m  [1msystem.warning[0m  [2mmessage="test info"[0m
+[2m23:47:46.334[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="Something went wrong"[0m
+[2m23:47:46.334[0m  [32mINFO [0m  [1mauth.login[0m  [2memail="test@example.com"[0m
+[2m23:47:46.333[0m  [32mINFO [0m  [1msystem.warning[0m  [2mmethod="GET"  path="/api/health"  status=200[0m
+[2m23:47:46.331[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="test error"[0m
+[2m23:47:46.332[0m  [36mDEBUG[0m  [1msystem.warning[0m  [2mdetail="debug info"[0m
+[2m23:47:46.332[0m  [35mFATAL[0m  [1msystem.error[0m  [2merror="fatal error"[0m
+[2m23:50:08.496[0m  [33mWARN [0m  [1msystem.warning[0m  [2mmessage="test warn"[0m
+[2m23:50:08.500[0m  [31mERROR[0m  [1msystem.warning[0m  [2mmethod="POST"  path="/api/rag/generate"  status=500[0m
+[2m23:50:08.500[0m  [32mINFO [0m  [1msystem.warning[0m  [2mmethod="GET"  path="/api/health"  status=200[0m
+[2m23:50:08.499[0m  [35mFATAL[0m  [1msystem.error[0m  [2merror="fatal error"[0m
+[2m23:50:08.498[0m  [36mDEBUG[0m  [1msystem.warning[0m  [2mdetail="debug info"[0m
+[2m23:50:08.501[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="Something went wrong"[0m
+[2m23:50:08.497[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="test error"[0m
+[2m23:50:08.501[0m  [32mINFO [0m  [1mauth.login[0m  [2memail="test@example.com"[0m
+[2m23:50:08.493[0m  [32mINFO [0m  [1msystem.warning[0m  [2mmessage="test info"[0m
+[2m23:50:50.100[0m  [33mWARN [0m  [1msystem.warning[0m  [2mmessage="test warn"[0m
+[2m23:50:50.103[0m  [31mERROR[0m  [1msystem.warning[0m  [2mmethod="POST"  path="/api/rag/generate"  status=500[0m
+[2m23:50:50.096[0m  [32mINFO [0m  [1msystem.warning[0m  [2mmessage="test info"[0m
+[2m23:50:50.104[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="Something went wrong"[0m
+[2m23:50:50.104[0m  [32mINFO [0m  [1mauth.login[0m  [2memail="test@example.com"[0m
+[2m23:50:50.103[0m  [32mINFO [0m  [1msystem.warning[0m  [2mmethod="GET"  path="/api/health"  status=200[0m
+[2m23:50:50.102[0m  [36mDEBUG[0m  [1msystem.warning[0m  [2mdetail="debug info"[0m
+[2m23:50:50.101[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="test error"[0m
+[2m23:50:50.102[0m  [35mFATAL[0m  [1msystem.error[0m  [2merror="fatal error"[0m
+[2m23:54:15.075[0m  [33mWARN [0m  [1msystem.warning[0m  [2mmessage="test warn"[0m
+[2m23:54:15.080[0m  [32mINFO [0m  [1mauth.login[0m  [2memail="test@example.com"[0m
+[2m23:54:15.081[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="Something went wrong"[0m
+[2m23:54:15.078[0m  [35mFATAL[0m  [1msystem.error[0m  [2merror="fatal error"[0m
+[2m23:54:15.079[0m  [32mINFO [0m  [1msystem.warning[0m  [2mmethod="GET"  path="/api/health"  status=200[0m
+[2m23:54:15.080[0m  [31mERROR[0m  [1msystem.warning[0m  [2mmethod="POST"  path="/api/rag/generate"  status=500[0m
+[2m23:54:15.077[0m  [36mDEBUG[0m  [1msystem.warning[0m  [2mdetail="debug info"[0m
+[2m23:54:15.076[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="test error"[0m
+[2m23:54:15.070[0m  [32mINFO [0m  [1msystem.warning[0m  [2mmessage="test info"[0m
+[2m00:08:33.119[0m  [33mWARN [0m  [1msystem.warning[0m  [2mmessage="test warn"[0m
+[2m00:08:33.122[0m  [31mERROR[0m  [1msystem.warning[0m  [2mmethod="POST"  path="/api/rag/generate"  status=500[0m
+[2m00:08:33.122[0m  [32mINFO [0m  [1msystem.warning[0m  [2mmethod="GET"  path="/api/health"  status=200[0m
+[2m00:08:33.121[0m  [35mFATAL[0m  [1msystem.error[0m  [2merror="fatal error"[0m
+[2m00:08:33.114[0m  [32mINFO [0m  [1msystem.warning[0m  [2mmessage="test info"[0m
+[2m00:08:33.120[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="test error"[0m
+[2m00:08:33.121[0m  [36mDEBUG[0m  [1msystem.warning[0m  [2mdetail="debug info"[0m
+[2m00:08:33.123[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="Something went wrong"[0m
+[2m00:08:33.123[0m  [32mINFO [0m  [1mauth.login[0m  [2memail="test@example.com"[0m
+[2m00:15:03.395[0m  [33mWARN [0m  [1msystem.warning[0m  [2mmessage="test warn"[0m
+[2m00:20:51.486[0m  [33mWARN [0m  [1msystem.warning[0m  [2mmessage="test warn"[0m
+[2m00:20:51.490[0m  [32mINFO [0m  [1mauth.login[0m  [2memail="test@example.com"[0m
+[2m00:20:51.491[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="Something went wrong"[0m
+[2m00:20:51.489[0m  [35mFATAL[0m  [1msystem.error[0m  [2merror="fatal error"[0m
+[2m00:20:51.490[0m  [31mERROR[0m  [1msystem.warning[0m  [2mmethod="POST"  path="/api/rag/generate"  status=500[0m
+[2m00:20:51.490[0m  [32mINFO [0m  [1msystem.warning[0m  [2mmethod="GET"  path="/api/health"  status=200[0m
+[2m00:20:51.488[0m  [36mDEBUG[0m  [1msystem.warning[0m  [2mdetail="debug info"[0m
+[2m00:20:51.487[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="test error"[0m
+[2m00:20:51.483[0m  [32mINFO [0m  [1msystem.warning[0m  [2mmessage="test info"[0m
+[2m00:21:37.076[0m  [33mWARN [0m  [1msystem.warning[0m  [2mmessage="test warn"[0m
+[2m00:21:37.079[0m  [31mERROR[0m  [1msystem.warning[0m  [2mmethod="POST"  path="/api/rag/generate"  status=500[0m
+[2m00:21:37.073[0m  [32mINFO [0m  [1msystem.warning[0m  [2mmessage="test info"[0m
+[2m00:21:37.080[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="Something went wrong"[0m
+[2m00:21:37.079[0m  [32mINFO [0m  [1mauth.login[0m  [2memail="test@example.com"[0m
+[2m00:21:37.078[0m  [35mFATAL[0m  [1msystem.error[0m  [2merror="fatal error"[0m
+[2m00:21:37.079[0m  [32mINFO [0m  [1msystem.warning[0m  [2mmethod="GET"  path="/api/health"  status=200[0m
+[2m00:21:37.077[0m  [36mDEBUG[0m  [1msystem.warning[0m  [2mdetail="debug info"[0m
+[2m00:21:37.077[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="test error"[0m
+[2m00:24:22.471[0m  [31mERROR[0m  [1msystem.warning[0m  [2mmethod="POST"  path="/api/rag/generate"  status=500[0m
+[2m00:24:22.467[0m  [33mWARN [0m  [1msystem.warning[0m  [2mmessage="test warn"[0m
+[2m00:24:22.472[0m  [32mINFO [0m  [1mauth.login[0m  [2memail="test@example.com"[0m
+[2m00:24:22.472[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="Something went wrong"[0m
+[2m00:24:22.469[0m  [36mDEBUG[0m  [1msystem.warning[0m  [2mdetail="debug info"[0m
+[2m00:24:22.463[0m  [32mINFO [0m  [1msystem.warning[0m  [2mmessage="test info"[0m
+[2m00:24:22.468[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="test error"[0m
+[2m00:24:22.471[0m  [32mINFO [0m  [1msystem.warning[0m  [2mmethod="GET"  path="/api/health"  status=200[0m
+[2m00:24:22.470[0m  [35mFATAL[0m  [1msystem.error[0m  [2merror="fatal error"[0m
+[2m00:31:31.703[0m  [33mWARN [0m  [1msystem.warning[0m  [2mmessage="test warn"[0m
+[2m00:31:31.706[0m  [35mFATAL[0m  [1msystem.error[0m  [2merror="fatal error"[0m
+[2m00:31:31.707[0m  [31mERROR[0m  [1msystem.warning[0m  [2mmethod="POST"  path="/api/rag/generate"  status=500[0m
+[2m00:31:31.707[0m  [32mINFO [0m  [1msystem.warning[0m  [2mmethod="GET"  path="/api/health"  status=200[0m
+[2m00:31:31.705[0m  [36mDEBUG[0m  [1msystem.warning[0m  [2mdetail="debug info"[0m
+[2m00:31:31.699[0m  [32mINFO [0m  [1msystem.warning[0m  [2mmessage="test info"[0m
+[2m00:31:31.704[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="test error"[0m
+[2m00:31:31.708[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="Something went wrong"[0m
+[2m00:31:31.707[0m  [32mINFO [0m  [1mauth.login[0m  [2memail="test@example.com"[0m
+[2m00:32:10.407[0m  [33mWARN [0m  [1msystem.warning[0m  [2mmessage="test warn"[0m
+[2m00:32:10.403[0m  [32mINFO [0m  [1msystem.warning[0m  [2mmessage="test info"[0m
+[2m00:32:10.409[0m  [36mDEBUG[0m  [1msystem.warning[0m  [2mdetail="debug info"[0m
+[2m00:32:10.410[0m  [35mFATAL[0m  [1msystem.error[0m  [2merror="fatal error"[0m
+[2m00:32:10.412[0m  [32mINFO [0m  [1mauth.login[0m  [2memail="test@example.com"[0m
+[2m00:32:10.408[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="test error"[0m
+[2m00:32:10.411[0m  [32mINFO [0m  [1msystem.warning[0m  [2mmethod="GET"  path="/api/health"  status=200[0m
+[2m00:32:10.412[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="Something went wrong"[0m
+[2m00:32:10.411[0m  [31mERROR[0m  [1msystem.warning[0m  [2mmethod="POST"  path="/api/rag/generate"  status=500[0m
+[2m00:35:46.848[0m  [33mWARN [0m  [1msystem.warning[0m  [2mmessage="test warn"[0m
+[2m00:35:46.852[0m  [31mERROR[0m  [1msystem.warning[0m  [2mmethod="POST"  path="/api/rag/generate"  status=500[0m
+[2m00:35:46.853[0m  [32mINFO [0m  [1mauth.login[0m  [2memail="test@example.com"[0m
+[2m00:35:46.844[0m  [32mINFO [0m  [1msystem.warning[0m  [2mmessage="test info"[0m
+[2m00:35:46.851[0m  [35mFATAL[0m  [1msystem.error[0m  [2merror="fatal error"[0m
+[2m00:35:46.852[0m  [32mINFO [0m  [1msystem.warning[0m  [2mmethod="GET"  path="/api/health"  status=200[0m
+[2m00:35:46.850[0m  [36mDEBUG[0m  [1msystem.warning[0m  [2mdetail="debug info"[0m
+[2m00:35:46.849[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="test error"[0m
+[2m00:35:46.853[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="Something went wrong"[0m
+[2m00:38:51.054[0m  [33mWARN [0m  [1msystem.warning[0m  [2mmessage="test warn"[0m
+[2m00:38:51.058[0m  [31mERROR[0m  [1msystem.warning[0m  [2mmethod="POST"  path="/api/rag/generate"  status=500[0m
+[2m00:38:51.050[0m  [32mINFO [0m  [1msystem.warning[0m  [2mmessage="test info"[0m
+[2m00:38:51.058[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="Something went wrong"[0m
+[2m00:38:51.058[0m  [32mINFO [0m  [1mauth.login[0m  [2memail="test@example.com"[0m
+[2m00:38:51.057[0m  [32mINFO [0m  [1msystem.warning[0m  [2mmethod="GET"  path="/api/health"  status=200[0m
+[2m00:38:51.056[0m  [36mDEBUG[0m  [1msystem.warning[0m  [2mdetail="debug info"[0m
+[2m00:38:51.055[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="test error"[0m
+[2m00:38:51.057[0m  [35mFATAL[0m  [1msystem.error[0m  [2merror="fatal error"[0m
+[2m03:52:56.948[0m  [35mFATAL[0m  [1msystem.error[0m  [2merror="fatal error"[0m

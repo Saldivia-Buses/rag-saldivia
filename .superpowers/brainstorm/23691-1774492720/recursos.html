@@ -1,0 +1,167 @@
+<h2>Arsenal de recursos — Plan 7</h2>
+<p class="subtitle">Organizados por cómo los usamos, no por dónde los encontramos</p>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap');
+* { font-family: 'Instrument Sans', sans-serif; }
+
+.resource-section { margin-bottom: 1.25rem; }
+.resource-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.resource-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+.resource-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.5rem;
+}
+.resource-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.75rem;
+}
+.resource-name {
+  font-weight: 600;
+  font-size: 0.88rem;
+  margin-bottom: 2px;
+}
+.resource-desc {
+  font-size: 0.75rem;
+  opacity: 0.6;
+  line-height: 1.4;
+}
+.resource-tag {
+  display: inline-block;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 1px 6px;
+  border-radius: 3px;
+  margin-top: 4px;
+}
+</style>
+
+<!-- Capa 1: Efectos visuales especiales -->
+<div class="resource-section">
+  <div class="resource-label" style="color:#7c5cbf">✨ Momentos especiales — efectos y shaders</div>
+  <div class="resource-grid">
+    <div class="resource-card" style="border-color:#ede0ff">
+      <div class="resource-name">Radiant (shaders)</div>
+      <div class="resource-desc">Shaders GLSL open source para web. Para el fondo del login y pantallas de bienvenida.</div>
+      <span class="resource-tag" style="background:#ede0ff;color:#7c5cbf">★ Plan 7 fase 6</span>
+    </div>
+    <div class="resource-card" style="border-color:#ede0ff">
+      <div class="resource-name">Aceternity UI</div>
+      <div class="resource-desc">Componentes animados (beam, spotlight, cards 3D). Para onboarding y estados vacíos.</div>
+      <span class="resource-tag" style="background:#ede0ff;color:#7c5cbf">★ Plan 7 fase 6</span>
+    </div>
+    <div class="resource-card" style="border-color:#ede0ff">
+      <div class="resource-name">Magic UI</div>
+      <div class="resource-desc">Animaciones suaves tipo "número que cuenta", "texto que aparece". Detalles de pulido.</div>
+      <span class="resource-tag" style="background:#ede0ff;color:#7c5cbf">★ Plan 7 fase 6</span>
+    </div>
+  </div>
+</div>
+
+<!-- Capa 2: Código copiable -->
+<div class="resource-section">
+  <div class="resource-label" style="color:#1a5276">🧩 Componentes copiables — código listo para adaptar</div>
+  <div class="resource-grid">
+    <div class="resource-card" style="border-color:#d4e8f7">
+      <div class="resource-name">shadcnblocks.com</div>
+      <div class="resource-desc">Miles de bloques sobre shadcn. Secciones completas: hero, pricing, features, tablas.</div>
+      <span class="resource-tag" style="background:#d4e8f7;color:#1a5276">★ Plan 7 fases 3-5</span>
+    </div>
+    <div class="resource-card" style="border-color:#d4e8f7">
+      <div class="resource-name">21st.dev</div>
+      <div class="resource-desc">Templates modernos de componentes. Muy buena calidad de animaciones y microinteracciones.</div>
+      <span class="resource-tag" style="background:#d4e8f7;color:#1a5276">★ Plan 7 fase 5</span>
+    </div>
+    <div class="resource-card" style="border-color:#d4e8f7">
+      <div class="resource-name">origin-ui</div>
+      <div class="resource-desc">Ya en el plan. Componentes shadcn polished para formularios, tablas, inputs complejos.</div>
+      <span class="resource-tag" style="background:#d4e8f7;color:#1a5276">★ Plan 7 fase 5</span>
+    </div>
+    <div class="resource-card" style="border-color:#d4e8f7">
+      <div class="resource-name">Hyper UI</div>
+      <div class="resource-desc">Componentes Tailwind CSS gratuitos. Buenos para UI de marketing y páginas públicas.</div>
+      <span class="resource-tag" style="background:#d4e8f7;color:#1a5276">Plan 7 fase 5</span>
+    </div>
+    <div class="resource-card" style="border-color:#d4e8f7">
+      <div class="resource-name">Flowbite</div>
+      <div class="resource-desc">Librería Tailwind grande y documentada. Útil para componentes de admin que no están en shadcn.</div>
+      <span class="resource-tag" style="background:#d4e8f7;color:#1a5276">Plan 7 fase 4</span>
+    </div>
+  </div>
+</div>
+
+<!-- Capa 3: Herramientas -->
+<div class="resource-section">
+  <div class="resource-label" style="color:#2d6a4f">🛠 Herramientas de diseño</div>
+  <div class="resource-grid">
+    <div class="resource-card" style="border-color:#d4f1e4">
+      <div class="resource-name">uicolors.app</div>
+      <div class="resource-desc">Generador de paletas Tailwind. Lo usamos en fase 1 para generar la escala completa del navy.</div>
+      <span class="resource-tag" style="background:#d4f1e4;color:#2d6a4f">★ Plan 7 fase 1</span>
+    </div>
+    <div class="resource-card" style="border-color:#d4f1e4">
+      <div class="resource-name">HTMLrev / 2000+ templates</div>
+      <div class="resource-desc">Catálogo enorme de templates Next.js y Shadcn para tomar estructura de páginas completas.</div>
+      <span class="resource-tag" style="background:#d4f1e4;color:#2d6a4f">Plan 7 fase 8</span>
+    </div>
+  </div>
+</div>
+
+<!-- Capa 4: Inspiración visual -->
+<div class="resource-section">
+  <div class="resource-label" style="color:#7a6a58">👁 Inspiración visual — referencia, no código</div>
+  <div class="resource-grid">
+    <div class="resource-card">
+      <div class="resource-name">Godly / Land-Book</div>
+      <div class="resource-desc">Los mejores sitios del mundo curados. Para antes de diseñar cada página importante.</div>
+      <span class="resource-tag" style="background:#f0ebe0;color:#7a6a58">Referencia</span>
+    </div>
+    <div class="resource-card">
+      <div class="resource-name">Mobbin</div>
+      <div class="resource-desc">Screenshots de apps reales en producción. Ideal para patrones de chat, admin, onboarding.</div>
+      <span class="resource-tag" style="background:#f0ebe0;color:#7a6a58">Referencia</span>
+    </div>
+    <div class="resource-card">
+      <div class="resource-name">Bento Grids</div>
+      <div class="resource-desc">Layouts de grids estilo Apple/Vercel. Para el dashboard de analytics y knowledge gaps.</div>
+      <span class="resource-tag" style="background:#f0ebe0;color:#7a6a58">Referencia</span>
+    </div>
+    <div class="resource-card">
+      <div class="resource-name">Framer Marketplace / Lapa Ninja</div>
+      <div class="resource-desc">Landing pages con alta producción. Referencia para el login y páginas públicas.</div>
+      <span class="resource-tag" style="background:#f0ebe0;color:#7a6a58">Referencia</span>
+    </div>
+    <div class="resource-card">
+      <div class="resource-name">Refero / 21st.dev / Landingfolio</div>
+      <div class="resource-desc">Diseños de producto SaaS. Para tomar patrones de navegación y jerarquía visual.</div>
+      <span class="resource-tag" style="background:#f0ebe0;color:#7a6a58">Referencia</span>
+    </div>
+  </div>
+</div>
+
+<div style="background:#1a5276;border-radius:10px;padding:1rem 1.25rem;color:#fff;margin-top:0.5rem;display:flex;align-items:center;gap:1rem">
+  <div style="font-size:1.5rem">✅</div>
+  <div>
+    <div style="font-weight:600;font-size:0.9rem">Plan completo con recursos integrados</div>
+    <div style="font-size:0.8rem;opacity:0.8;margin-top:2px">Si aprobás esto + el resumen anterior, escribo los specs y arrancamos.</div>
+  </div>
+</div>

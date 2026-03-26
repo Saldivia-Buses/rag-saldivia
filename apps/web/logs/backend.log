@@ -1,0 +1,18 @@
+[2m17:53:14.863[0m  [32mINFO [0m  [1mauth.login[0m  [2muser=1[0m  [2memail="admin@localhost"  role="admin"  duration=80[0m
+[2m18:01:38.561[0m  [32mINFO [0m  [1mauth.login[0m  [2muser=1[0m  [2maction="session_created"  collection="tecpia"[0m
+[2m04:15:53.452[0m  [33mWARN [0m  [1mauth.failed[0m  [2memail="a@gmail.com"  reason="invalid_credentials"[0m
+[2m04:20:26.810[0m  [33mWARN [0m  [1mauth.failed[0m  [2memail="admin@localhost"  reason="invalid_credentials"[0m
+[2m04:20:33.949[0m  [32mINFO [0m  [1mauth.login[0m  [2muser=1[0m  [2memail="admin@localhost"  role="admin"  duration=70[0m
+[2m04:27:57.481[0m  [32mINFO [0m  [1mauth.login[0m  [2muser=1[0m  [2memail="admin@localhost"  role="admin"  duration=72[0m
+[2m04:33:11.273[0m  [32mINFO [0m  [1mauth.logout[0m  [2muser=1[0m  [2memail="admin@localhost"[0m
+[2m04:33:33.453[0m  [32mINFO [0m  [1mauth.login[0m  [2muser=1[0m  [2memail="admin@localhost"  role="admin"  duration=65[0m
+[2m04:34:55.887[0m  [32mINFO [0m  [1mauth.login[0m  [2muser=1[0m  [2memail="admin@localhost"  role="admin"  duration=68[0m
+[2m04:39:08.602[0m  [32mINFO [0m  [1mauth.login[0m  [2muser=1[0m  [2memail="admin@localhost"  role="admin"  duration=76[0m
+[2m04:46:05.358[0m  [32mINFO [0m  [1mauth.login[0m  [2muser=1[0m  [2memail="admin@localhost"  role="admin"  duration=77[0m
+[2m15:20:07.883[0m  [32mINFO [0m  [1mrag.stream_started[0m  [2muser=1[0m  [2mcollection="tecpia"  crossdoc=false[0m
+[2m15:20:07.905[0m  [32mINFO [0m  [1mrag.stream_completed[0m  [2muser=1[0m  [2mcollection="tecpia"  duration=32[0m
+[2m15:20:08.093[0m  [32mINFO [0m  [1mrag.query[0m  [2muser=1[0m  [2mquery="hola"  sessionId="50e46e11-9533-44e3-8030-89fb27ac8c08"[0m
+[2m15:20:15.761[0m  [32mINFO [0m  [1mrag.stream_started[0m  [2muser=1[0m  [2mcollection="tecpia"  crossdoc=false[0m
+[2m15:20:15.782[0m  [32mINFO [0m  [1mrag.stream_completed[0m  [2muser=1[0m  [2mcollection="tecpia"  duration=24[0m
+[2m15:20:15.968[0m  [32mINFO [0m  [1mrag.query[0m  [2muser=1[0m  [2mquery="¿Cómo se compara esto con alternativas?"  sessionId="50e46e11-9533-44e3-8030-89fb27ac8c08"[0m
+[2m15:21:16.113[0m  [32mINFO [0m  [1mauth.login[0m  [2muser=1[0m  [2memail="admin@localhost"  role="admin"  duration=82[0m

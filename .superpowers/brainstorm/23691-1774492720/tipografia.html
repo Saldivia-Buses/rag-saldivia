@@ -1,0 +1,106 @@
+<h2>¿Qué tipografía define RAG Saldivia?</h2>
+<p class="subtitle">Crema + navy como base — la tipografía termina de definir la voz visual</p>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Serif+Display:ital@0;1&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;1,300&family=IBM+Plex+Serif:ital,wght@0,400;1,400&display=swap');
+
+.typo-card {
+  background: #faf8f4;
+  border: 1px solid #ede9e0;
+  border-radius: 10px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 0.75rem;
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.typo-card:hover { border-color: #1a5276; }
+.typo-card.selected { border-color: #1a5276; border-width: 2px; box-shadow: 0 0 0 3px #d4e8f7; }
+
+.typo-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #1a5276;
+  margin-bottom: 0.75rem;
+  font-family: system-ui;
+}
+
+.typo-heading { color: #1a1a1a; margin: 0 0 0.35rem; line-height: 1.2; }
+.typo-body { color: #5a5048; line-height: 1.65; margin: 0 0 0.5rem; font-size: 0.9rem; }
+.typo-meta { font-size: 0.75rem; color: #1a5276; font-family: system-ui; }
+</style>
+
+<div style="max-width: 680px; margin: 0 auto;">
+
+  <!-- A: DM Sans + DM Serif Display -->
+  <div class="typo-card option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="typo-label">A — DM Sans + DM Serif Display · "Claude-adjacent cálido"</div>
+    <div style="font-family:'DM Serif Display',serif; font-size:1.6rem;" class="typo-heading">
+      Conocimiento accesible para todos
+    </div>
+    <p class="typo-body" style="font-family:'DM Sans',sans-serif;">
+      RAG Saldivia organiza el conocimiento institucional y lo hace conversacional. 
+      Hacé una pregunta, obtené una respuesta fundamentada en tus documentos.
+    </p>
+    <div style="display:flex;gap:1rem">
+      <span class="typo-meta" style="font-family:'DM Sans',sans-serif;font-weight:500">Botón primario</span>
+      <span class="typo-meta" style="font-family:'DM Sans',sans-serif;opacity:0.6">Etiqueta secundaria</span>
+      <span class="typo-meta" style="font-family:'DM Serif Display',serif;font-style:italic;font-size:0.85rem">Cita en serif</span>
+    </div>
+  </div>
+
+  <!-- B: IBM Plex Sans + IBM Plex Serif -->
+  <div class="typo-card option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="typo-label">B — IBM Plex Sans + IBM Plex Serif · "Rigor técnico cálido"</div>
+    <div style="font-family:'IBM Plex Serif',serif; font-size:1.6rem;" class="typo-heading">
+      Conocimiento accesible para todos
+    </div>
+    <p class="typo-body" style="font-family:'IBM Plex Sans',sans-serif;font-weight:300;font-size:0.92rem;">
+      RAG Saldivia organiza el conocimiento institucional y lo hace conversacional. 
+      Hacé una pregunta, obtené una respuesta fundamentada en tus documentos.
+    </p>
+    <div style="display:flex;gap:1rem">
+      <span class="typo-meta" style="font-family:'IBM Plex Sans',sans-serif;font-weight:500">Botón primario</span>
+      <span class="typo-meta" style="font-family:'IBM Plex Sans',sans-serif;opacity:0.6">Etiqueta secundaria</span>
+      <span class="typo-meta" style="font-family:'IBM Plex Serif',serif;font-style:italic;font-size:0.85rem">Cita en serif</span>
+    </div>
+  </div>
+
+  <!-- C: Instrument Sans (solo sans) -->
+  <div class="typo-card option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="typo-label">C — Instrument Sans · "Limpieza absoluta"</div>
+    <div style="font-family:'Instrument Sans',sans-serif; font-size:1.6rem; font-weight:600;" class="typo-heading">
+      Conocimiento accesible para todos
+    </div>
+    <p class="typo-body" style="font-family:'Instrument Sans',sans-serif;">
+      RAG Saldivia organiza el conocimiento institucional y lo hace conversacional. 
+      Hacé una pregunta, obtené una respuesta fundamentada en tus documentos.
+    </p>
+    <div style="display:flex;gap:1rem">
+      <span class="typo-meta" style="font-family:'Instrument Sans',sans-serif;font-weight:600">Botón primario</span>
+      <span class="typo-meta" style="font-family:'Instrument Sans',sans-serif;opacity:0.6">Etiqueta secundaria</span>
+      <span class="typo-meta" style="font-family:'Instrument Sans',sans-serif;font-style:italic;font-size:0.85rem">Énfasis en italic</span>
+    </div>
+  </div>
+
+  <!-- D: Lora + DM Sans -->
+  <div class="typo-card option" data-choice="d" onclick="toggleSelect(this)">
+    <div class="typo-label">D — Lora (serif) + DM Sans · "Editorial inteligente"</div>
+    <div style="font-family:'Lora',serif; font-size:1.6rem; font-weight:500;" class="typo-heading">
+      Conocimiento accesible para todos
+    </div>
+    <p class="typo-body" style="font-family:'DM Sans',sans-serif;">
+      RAG Saldivia organiza el conocimiento institucional y lo hace conversacional. 
+      Hacé una pregunta, obtené una respuesta fundamentada en tus documentos.
+    </p>
+    <div style="display:flex;gap:1rem">
+      <span class="typo-meta" style="font-family:'DM Sans',sans-serif;font-weight:500">Botón primario</span>
+      <span class="typo-meta" style="font-family:'DM Sans',sans-serif;opacity:0.6">Etiqueta secundaria</span>
+      <span class="typo-meta" style="font-family:'Lora',serif;font-style:italic;font-size:0.85rem">Cita en serif</span>
+    </div>
+  </div>
+
+</div>
+
+<p style="margin-top:0.5rem;font-size:0.8rem;opacity:0.5;text-align:center">Las fuentes se cargan de Google Fonts — puede tardar 1-2 seg en aparecer</p>

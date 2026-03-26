@@ -1,0 +1,243 @@
+<h2>Diseño completo — Planes 6 y 7</h2>
+<p class="subtitle">Revisá cada sección y confirmá antes de escribir los specs</p>
+
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap');
+* { font-family: 'Instrument Sans', sans-serif; }
+
+.plan-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1rem;
+}
+.plan-badge {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-bottom: 0.75rem;
+}
+.plan7-badge { background: #d4e8f7; color: #1a5276; }
+.plan6-badge { background: #f0ebe0; color: #7a6a58; }
+
+.decision-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+.decision-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.decision-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  opacity: 0.5;
+}
+.decision-value {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--fg);
+}
+
+.phase-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.75rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.phase-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+.phase-num {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #d4e8f7;
+  color: #1a5276;
+  font-size: 0.65rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+}
+.phase-num.plan6 { background: #f0ebe0; color: #7a6a58; }
+
+.token-preview {
+  display: flex;
+  gap: 6px;
+  margin-top: 0.75rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.token-swatch {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: 1px solid #ede9e0;
+  position: relative;
+}
+.token-swatch-label {
+  font-size: 0.6rem;
+  color: #9a9088;
+  text-align: center;
+  margin-top: 2px;
+}
+
+.tool-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin: 2px;
+}
+</style>
+
+<!-- PLAN 7 -->
+<div class="plan-section">
+  <div class="plan-badge plan7-badge">Plan 7 — Design System (primero)</div>
+  <h3 style="margin:0 0 0.25rem;font-size:1.1rem">Sistema de diseño "Warm Intelligence"</h3>
+  <p style="margin:0 0 0.75rem;font-size:0.85rem;opacity:0.7">Crema cálido + navy profundo + Instrument Sans. El toque propio de RAG Saldivia.</p>
+
+  <div class="decision-grid">
+    <div class="decision-item">
+      <span class="decision-label">Estética</span>
+      <span class="decision-value">Warm Intelligence (Claude-adjacent)</span>
+    </div>
+    <div class="decision-item">
+      <span class="decision-label">Acento</span>
+      <span class="decision-value">Navy / Azul profundo</span>
+    </div>
+    <div class="decision-item">
+      <span class="decision-label">Tipografía</span>
+      <span class="decision-value">Instrument Sans</span>
+    </div>
+    <div class="decision-item">
+      <span class="decision-label">Dark mode</span>
+      <span class="decision-value">Sí — warm dark (#1a1812)</span>
+    </div>
+    <div class="decision-item">
+      <span class="decision-label">Densidad</span>
+      <span class="decision-value">Adaptiva (compact admin / spacious chat)</span>
+    </div>
+    <div class="decision-item">
+      <span class="decision-label">Código comunidad</span>
+      <span class="decision-value">Shadcn + origin-ui + Aceternity/MagicUI</span>
+    </div>
+  </div>
+
+  <div style="margin-top:1rem">
+    <div class="decision-label" style="margin-bottom:6px">Paleta de tokens</div>
+    <div class="token-preview">
+      <div>
+        <div class="token-swatch" style="background:#faf8f4"></div>
+        <div class="token-swatch-label">--bg</div>
+      </div>
+      <div>
+        <div class="token-swatch" style="background:#f0ebe0"></div>
+        <div class="token-swatch-label">--surface</div>
+      </div>
+      <div>
+        <div class="token-swatch" style="background:#ede9e0"></div>
+        <div class="token-swatch-label">--border</div>
+      </div>
+      <div>
+        <div class="token-swatch" style="background:#5a5048"></div>
+        <div class="token-swatch-label">--muted</div>
+      </div>
+      <div>
+        <div class="token-swatch" style="background:#1a1a1a"></div>
+        <div class="token-swatch-label">--fg</div>
+      </div>
+      <div style="width:1px;background:#ede9e0;height:32px;align-self:center"></div>
+      <div>
+        <div class="token-swatch" style="background:#1a5276"></div>
+        <div class="token-swatch-label">--accent</div>
+      </div>
+      <div>
+        <div class="token-swatch" style="background:#0d3349"></div>
+        <div class="token-swatch-label">--accent-dark</div>
+      </div>
+      <div>
+        <div class="token-swatch" style="background:#d4e8f7"></div>
+        <div class="token-swatch-label">--accent-subtle</div>
+      </div>
+      <div style="width:1px;background:#ede9e0;height:32px;align-self:center"></div>
+      <div>
+        <div class="token-swatch" style="background:#1a1812"></div>
+        <div class="token-swatch-label">dark --bg</div>
+      </div>
+      <div>
+        <div class="token-swatch" style="background:#24221a"></div>
+        <div class="token-swatch-label">dark --surface</div>
+      </div>
+    </div>
+  </div>
+
+  <ul class="phase-list" style="margin-top:1rem">
+    <li class="phase-item"><span class="phase-num">1</span><span><strong>Tokens</strong> — reescribir globals.css completo con la nueva paleta light + dark</span></li>
+    <li class="phase-item"><span class="phase-num">2</span><span><strong>Tipografía</strong> — instalar Instrument Sans (Google Fonts o self-hosted), escala tipográfica completa</span></li>
+    <li class="phase-item"><span class="phase-num">3</span><span><strong>Primitivos</strong> — reestilizar todos los componentes shadcn existentes con los nuevos tokens</span></li>
+    <li class="phase-item"><span class="phase-num">4</span><span><strong>Layout system</strong> — AppShell, NavRail, densidad adaptiva (compact/spacious como variantes CSS)</span></li>
+    <li class="phase-item"><span class="phase-num">5</span><span><strong>Componentes comunidad</strong> — agregar los mejores de origin-ui + shadcn/blocks (curados, copiados como código propio)</span></li>
+    <li class="phase-item"><span class="phase-num">6</span><span><strong>Momentos especiales</strong> — Aceternity/MagicUI para login, onboarding, estados vacíos</span></li>
+    <li class="phase-item"><span class="phase-num">7</span><span><strong>Storybook</strong> — setup + stories para los 62 componentes (con preguntas visuales para cada decisión)</span></li>
+    <li class="phase-item"><span class="phase-num">8</span><span><strong>Aplicar a páginas</strong> — rediseño de cada una de las 24 páginas</span></li>
+  </ul>
+</div>
+
+<!-- PLAN 6 -->
+<div class="plan-section">
+  <div class="plan-badge plan6-badge">Plan 6 — Testing UI (después del Plan 7)</div>
+  <h3 style="margin:0 0 0.25rem;font-size:1.1rem">Suite de testing UI — pirámide completa</h3>
+  <p style="margin:0 0 0.75rem;font-size:0.85rem;opacity:0.7">Detectar fallas de pies a cabeza. Sólida, expandible, integrada al CI existente.</p>
+
+  <div style="margin-bottom:0.75rem">
+    <div class="decision-label" style="margin-bottom:6px">Stack de herramientas</div>
+    <div>
+      <span class="tool-chip">🔍 react-scan</span>
+      <span class="tool-chip">🎭 Playwright E2E</span>
+      <span class="tool-chip">🧪 @testing-library/react</span>
+      <span class="tool-chip">📸 Visual regression (Playwright)</span>
+      <span class="tool-chip">📖 Storybook stories</span>
+      <span class="tool-chip">♿ @storybook/addon-a11y</span>
+      <span class="tool-chip">🤖 Maestro flows</span>
+    </div>
+  </div>
+
+  <ul class="phase-list">
+    <li class="phase-item"><span class="phase-num plan6">1</span><span><strong>react-scan baseline</strong> — instalar en dev, documentar todos los re-renders innecesarios actuales</span></li>
+    <li class="phase-item"><span class="phase-num plan6">2</span><span><strong>Component tests</strong> — @testing-library/react para los 62 componentes en Storybook (render, props, estados)</span></li>
+    <li class="phase-item"><span class="phase-num plan6">3</span><span><strong>Visual regression</strong> — Playwright screenshots de cada story del design system. Baseline al terminar Plan 7.</span></li>
+    <li class="phase-item"><span class="phase-num plan6">4</span><span><strong>Maestro E2E flows</strong> — YAML flows para flujos críticos: login, chat completo, upload, admin CRUD</span></li>
+    <li class="phase-item"><span class="phase-num plan6">5</span><span><strong>A11y audit</strong> — storybook/addon-a11y en cada componente + Playwright axe en páginas completas</span></li>
+    <li class="phase-item"><span class="phase-num plan6">6</span><span><strong>CI integration</strong> — todo integrado al pipeline existente (bun run test). Visual regression en PRs.</span></li>
+  </ul>
+</div>
+
+<div style="background:#1a5276;border-radius:10px;padding:1.25rem 1.5rem;color:#fff;margin-top:0.5rem">
+  <div style="font-size:0.7rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;opacity:0.7;margin-bottom:0.5rem">¿Este diseño te parece correcto?</div>
+  <p style="margin:0;font-size:0.9rem;opacity:0.9;line-height:1.6">Si aprobás, escribo los specs completos en <code style="background:#ffffff20;padding:1px 5px;border-radius:3px">docs/plans/</code> y arrancamos con los planes de implementación.</p>
+</div>
