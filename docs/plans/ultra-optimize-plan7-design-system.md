@@ -994,7 +994,7 @@ Las 24 páginas usan los nuevos tokens. Nada se ve con los colores viejos.
 | Fase 3 — Primitivos shadcn | ✅ completado | 2026-03-26 |
 | Fase 4 — Layout system | ✅ completado | 2026-03-26 |
 | Fase 5 — Componentes comunidad | ✅ completado | 2026-03-26 |
-| Fase 6 — Momentos especiales | ⬜ pendiente | — |
+| Fase 6 — Momentos especiales | ✅ completado | 2026-03-26 |
 | Fase 7 — Storybook | ⬜ pendiente | — |
 | Fase 8 — Páginas | ⬜ pendiente | — |
 

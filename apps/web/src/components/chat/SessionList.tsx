@@ -133,12 +133,9 @@ export function SessionList({ sessions }: { sessions: DbChatSession[] }) {
   }
 
   return (
-    <div
-      className="w-64 shrink-0 border-r flex flex-col"
-      style={{ borderColor: "var(--border)" }}
-    >
+    <div className="w-64 shrink-0 border-r border-border bg-surface flex flex-col">
       {/* Header */}
-      <div className="p-3 border-b flex items-center justify-between" style={{ borderColor: "var(--border)" }}>
+      <div className="p-3 border-b border-border flex items-center justify-between">
         <span className="text-sm font-medium">Sesiones</span>
         <button
           onClick={handleNew}
@@ -152,17 +149,16 @@ export function SessionList({ sessions }: { sessions: DbChatSession[] }) {
 
       {/* Filtro por tag */}
       {allTags.length > 0 && (
-        <div className="px-3 py-2 border-b flex flex-wrap gap-1" style={{ borderColor: "var(--border)" }}>
+        <div className="px-3 py-2 border-b border-border flex flex-wrap gap-1">
           {allTags.map((t) => (
             <button
               key={t}
               onClick={() => setFilterTag(filterTag === t ? null : t)}
-              className="text-xs px-2 py-0.5 rounded-full border transition-colors"
-              style={{
-                background: filterTag === t ? "var(--accent)" : "transparent",
-                color: filterTag === t ? "white" : "var(--muted-foreground)",
-                borderColor: "var(--border)",
-              }}
+              className={`text-xs px-2 py-0.5 rounded-full border transition-colors ${
+                filterTag === t
+                  ? "bg-accent text-accent-fg border-accent"
+                  : "bg-transparent text-fg-muted border-border"
+              }`}
             >
               #{t}
             </button>
@@ -172,8 +168,8 @@ export function SessionList({ sessions }: { sessions: DbChatSession[] }) {
 
       {/* Bulk toolbar */}
       {selected.size > 0 && (
-        <div className="px-3 py-2 border-b flex items-center gap-2" style={{ borderColor: "var(--border)" }}>
-          <span className="text-xs flex-1" style={{ color: "var(--muted-foreground)" }}>
+        <div className="px-3 py-2 border-b border-border flex items-center gap-2">
+          <span className="text-xs flex-1 text-fg-muted">
             {selected.size} seleccionadas
           </span>
           <button onClick={bulkExport} title="Exportar" className="p-1 hover:opacity-80">

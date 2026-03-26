@@ -12,6 +12,16 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 ### Plan 7 — Design System (en progreso)
 
 #### Added
+- `apps/web/src/components/auth/AnimatedBackground.tsx`: fondo animado con orbes CSS (gradiente mesh, sin WebGL) — 2026-03-26 *(Plan 7 F6)*
+- `apps/web/src/app/(app)/chat/loading.tsx`: skeleton de carga para /chat — 2026-03-26 *(Plan 7 F6)*
+- `apps/web/src/app/(app)/collections/loading.tsx`: skeleton de carga para /collections — 2026-03-26 *(Plan 7 F6)*
+- `apps/web/src/app/(app)/admin/users/loading.tsx`: skeleton de carga para /admin/users — 2026-03-26 *(Plan 7 F6)*
+
+#### Changed
+- `apps/web/src/app/(auth)/login/page.tsx`: rediseño completo — card glassmorphism, AnimatedBackground, Input/Button components, tokens semánticos — 2026-03-26 *(Plan 7 F6)*
+- `apps/web/src/components/chat/SessionList.tsx`: inline styles → tokens Tailwind, bg-surface, border-border — 2026-03-26 *(Plan 7 F6)*
+
+#### Added
 - `apps/web/src/components/ui/empty-placeholder.tsx`: componente compuesto para estados vacíos con ícono, título y descripción — 2026-03-26 *(Plan 7 F5)*
 - `apps/web/src/components/ui/skeleton.tsx`: shimmer components — Skeleton, SkeletonText, SkeletonAvatar, SkeletonCard, SkeletonTable — 2026-03-26 *(Plan 7 F5)*
 - `apps/web/src/components/ui/stat-card.tsx`: tarjeta de estadísticas con valor, delta y ícono — 2026-03-26 *(Plan 7 F5)*
