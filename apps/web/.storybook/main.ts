@@ -16,6 +16,10 @@ const config: StorybookConfig = {
   docs: {
     autodocs: "tag",
   },
+  typescript: {
+    check: false,
+    reactDocgen: "react-docgen-typescript",
+  },
   async viteFinal(config: UserConfig) {
     const { default: tailwindcss } = await import("@tailwindcss/vite")
     config.plugins = [...(config.plugins ?? []), tailwindcss()]
@@ -25,6 +29,10 @@ const config: StorybookConfig = {
         ...((config.resolve as any)?.alias ?? {}),
         "@": resolve(__dirname, "../src"),
       },
+    }
+    config.esbuild = {
+      ...config.esbuild,
+      jsx: "automatic",
     }
     return config
   },
