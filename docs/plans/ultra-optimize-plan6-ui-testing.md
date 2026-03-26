@@ -1121,10 +1121,10 @@ Verificar que estos scripts existen:
 | Fase 1 — react-scan baseline | ✅ completado (template creado, recorrido pendiente) | 2026-03-26 |
 | Fase 2 — Setup testing componentes | ✅ completado | 2026-03-26 |
 | Fase 3 — Component tests (62 componentes) | ✅ completado — 147 tests para 20 componentes | 2026-03-26 |
-| Fase 4 — Visual regression | ⬜ pendiente | — |
-| Fase 5 — Maestro E2E flows | ⬜ pendiente | — |
-| Fase 6 — A11y audit | ⬜ pendiente | — |
-| Fase 7 — CI integration | ⬜ pendiente | — |
+| Fase 4 — Visual regression | ✅ completado (Playwright config + 20 tests light/dark) | 2026-03-26 |
+| Fase 5 — Maestro E2E flows | ✅ completado (flows creados, Maestro pendiente de Java) | 2026-03-26 |
+| Fase 6 — A11y audit | ✅ completado (axe-playwright config + 5 páginas) | 2026-03-26 |
+| Fase 7 — CI integration | ✅ completado (3 jobs nuevos en ci.yml) | 2026-03-26 |
 
 ## Estimaciones
 

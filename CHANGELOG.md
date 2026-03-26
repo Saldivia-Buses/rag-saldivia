@@ -9,6 +9,26 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Plan 6 — UI Testing (completado)
+
+#### Added (F4-F7)
+- `apps/web/playwright.config.ts`: config Playwright para visual regression sobre Storybook (6006) — 2026-03-26 *(Plan 6 F4)*
+- `apps/web/tests/visual/helpers.ts`: helpers enableDarkMode/enableLightMode + SNAPSHOT_OPTIONS — 2026-03-26 *(Plan 6 F4)*
+- `apps/web/tests/visual/design-system.spec.ts`: 20 tests visuales (10 stories × light+dark) — 2026-03-26 *(Plan 6 F4)*
+- `apps/web/tests/e2e/` (7 flows Maestro): login-success, login-invalid, logout, new-session, send-message, list-users, collections-list — 2026-03-26 *(Plan 6 F5)*
+- `apps/web/playwright.a11y.config.ts`: config Playwright para auditoría a11y en dev server — 2026-03-26 *(Plan 6 F6)*
+- `apps/web/tests/a11y/pages.spec.ts`: auditoría WCAG AA en login, chat, collections, admin/users, settings — 2026-03-26 *(Plan 6 F6)*
+- `.github/workflows/ci.yml`: jobs component-tests, visual-regression, accessibility — 2026-03-26 *(Plan 6 F7)*
+- `axe-playwright@2.2.2`, `@playwright/test@1.58.2` instalados en apps/web — 2026-03-26
+
+#### Changed
+- `apps/web/package.json`: scripts test:visual, visual:update, visual:show, test:a11y, test:ui — 2026-03-26 *(Plan 6 F4/F6)*
+
+**Plan 6 — UI Testing Suite: COMPLETO**
+**Total tests: 215 (68 lib + 147 componentes) + 20 visuales (baseline pendiente) + 7 E2E flows + 5 a11y auditorías**
+
+---
+
 ### Plan 6 — UI Testing (F3 en progreso)
 
 #### Added (F3 — Component tests)

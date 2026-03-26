@@ -145,3 +145,76 @@ jobs:
       - name: Skip (monorepo en construcción)
         if: hashFiles('apps/web/package.json') == ''
         run: echo "apps/web no existe aún — lint pendiente (Fase 2)"
+
+  # ── Component tests (Plan 6 F3) ───────────────────────────────────────────
+  component-tests:
+    name: Component Tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - name: Run component tests
+        run: bun test --preload ./apps/web/src/lib/component-test-setup.ts apps/web/src/components
+        working-directory: .
+
+  # ── Visual regression (Plan 6 F4) ─────────────────────────────────────────
+  visual-regression:
+    name: Visual Regression
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - name: Install Playwright Chromium
+        run: bunx playwright install --with-deps chromium
+        working-directory: apps/web
+      - name: Build Storybook
+        run: bun run build:storybook
+        working-directory: apps/web
+      - name: Serve Storybook y esperar
+        run: |
+          bunx serve apps/web/storybook-static -p 6006 &
+          bunx wait-on http://localhost:6006 --timeout 60000
+      - name: Run visual regression
+        run: bun run test:visual
+        working-directory: apps/web
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: visual-diff-${{ github.run_id }}
+          path: apps/web/tests/visual/snapshots/
+          retention-days: 7
+
+  # ── A11y audit (Plan 6 F6) ────────────────────────────────────────────────
+  accessibility:
+    name: Accessibility Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - name: Install Playwright Chromium
+        run: bunx playwright install --with-deps chromium
+        working-directory: apps/web
+      - name: Levantar dev server y esperar
+        run: |
+          MOCK_RAG=true bun run dev &
+          bunx wait-on http://localhost:3000 --timeout 60000
+        working-directory: apps/web
+        env:
+          DATABASE_PATH: ./data/test.db
+          JWT_SECRET: test-secret-ci
+          SYSTEM_API_KEY: test-api-key-ci
+      - name: Run a11y audit
+        run: bun run test:a11y
+        working-directory: apps/web

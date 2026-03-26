@@ -1,0 +1,9 @@
+# Configuración global de Maestro E2E
+# Requiere Java 17+ y Maestro CLI: curl -fsSL "https://get.maestro.mobile.dev" | bash
+
+env:
+  BASE_URL: http://localhost:3000
+  ADMIN_EMAIL: admin@localhost
+  ADMIN_PASSWORD: changeme
+  TEST_EMAIL: user@localhost
+  TEST_PASSWORD: test1234

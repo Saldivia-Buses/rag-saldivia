@@ -1,0 +1,5 @@
+---
+# Flow: Navegar a colecciones
+- runFlow: auth/login-success.yaml
+- openLink: ${BASE_URL}/collections
+- assertVisible: "Colecciones"

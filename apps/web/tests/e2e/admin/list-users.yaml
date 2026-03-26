@@ -1,0 +1,7 @@
+---
+# Flow: Navegar a admin/users y ver la tabla
+- runFlow: auth/login-success.yaml
+- openLink: ${BASE_URL}/admin/users
+- assertVisible: "Usuarios"
+- assertVisible: "Nuevo usuario"
+- assertVisible: "admin@localhost"

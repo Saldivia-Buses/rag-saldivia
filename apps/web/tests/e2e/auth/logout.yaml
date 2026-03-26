@@ -1,0 +1,5 @@
+---
+# Flow: Logout correcto
+- runFlow: auth/login-success.yaml
+- tapOn: "Cerrar sesión"
+- assertVisible: "Iniciá sesión para continuar"
