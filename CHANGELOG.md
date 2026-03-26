@@ -11,6 +11,9 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Added
 
+- `apps/web/src/components/chat/DocPreviewPanel.tsx`: panel Sheet lateral para preview de PDF con react-pdf (carga dinámica SSR-safe), paginación, fallback a texto cuando el Blueprint no expone el documento — 2026-03-25 *(Plan 4 F3.40)*
+- `apps/web/src/app/api/rag/document/[name]/route.ts`: proxy al RAG server para obtener PDF; retorna 404 con nota si el endpoint no está disponible — 2026-03-25 *(Plan 4 F3.40)*
+- `apps/web/src/components/chat/SourcesPanel.tsx`: nombre de cada fuente ahora es botón clic que abre `DocPreviewPanel` con el fragmento resaltado — 2026-03-25 *(Plan 4 F3.40)*
 - `packages/db/src/queries/search.ts`: `universalSearch(query, userId, limit)` — busca con FTS5 (sesiones + mensajes) con fallback a LIKE; también busca en templates y saved_responses — 2026-03-25 *(Plan 4 F3.39)*
 - `packages/db/src/init.ts`: tablas FTS5 virtuales `sessions_fts` y `messages_fts` con triggers de sincronización automática — 2026-03-25 *(Plan 4 F3.39)*
 - `apps/web/src/app/api/search/route.ts`: endpoint `GET /api/search?q=...` con debounce 300ms — 2026-03-25 *(Plan 4 F3.39)*
