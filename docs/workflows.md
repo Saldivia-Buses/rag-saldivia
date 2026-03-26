@@ -1,7 +1,7 @@
 # Workflows — RAG Saldivia
 
 > Branch: `experimental/ultra-optimize`
-> Última actualización: 2026-03-25
+> Última actualización: 2026-03-26
 
 Este documento describe los flujos de trabajo que usamos en el proyecto. Es la referencia para cómo desarrollar, testear, hacer commits, planificar features y deployar.
 
@@ -443,3 +443,62 @@ rag audit export > events-$(date +%Y%m%d).json
 
 Ver [docs/blackbox.md](./blackbox.md) para el formato completo de eventos y guía de replay.
 
+
+---
+
+## 7. Workflow de UI Testing (Plan 6)
+
+### Tests de componentes React
+
+```bash
+# Correr todos los component tests
+bun run test:components
+
+# Correr tests de un componente específico
+bun test --preload ./src/lib/component-test-setup.ts src/components/ui/__tests__/button.test.tsx
+```
+
+**Reglas obligatorias para component tests:**
+1. `afterEach(cleanup)` al inicio de cada archivo de test
+2. Usar queries escopadas: `const { getByRole } = render(...)` — nunca `screen.getByRole`
+3. `fireEvent` en lugar de `userEvent` (happy-dom incompatibilidad)
+4. Mockear server actions con `mock.module("@/app/actions/...", () => ({...}))`
+
+Ver `docs/testing.md` para la guía completa.
+
+### Visual regression
+
+```bash
+# Primera vez o después de cambio intencional de diseño:
+bun run visual:update    # genera snapshots de referencia
+
+# En desarrollo normal (verifica contra baseline):
+bun run test:visual
+
+# Ver diffs cuando falla:
+bun run visual:show
+```
+
+**Flujo cuando hay un cambio de diseño:**
+1. Modificás el componente
+2. `bun run test:visual` → falla (diff detectado)
+3. Revisás el diff (`visual:show`)
+4. Si es correcto: `bun run visual:update` → commitear los nuevos PNGs
+
+### Design system
+
+```bash
+# Ver catálogo de componentes:
+bun run storybook    # http://localhost:6006
+
+# Verificar a11y al agregar un componente:
+# → Abrir la story → panel "Accessibility" → 0 violations
+```
+
+**Al agregar un nuevo componente:**
+1. Crear en `src/components/ui/<nombre>.tsx` con tokens CSS (`bg-surface`, `text-fg-muted`, etc.)
+2. Story en `stories/primitivos/<nombre>.stories.tsx`
+3. Test en `src/components/ui/__tests__/<nombre>.test.tsx` (con `afterEach(cleanup)`)
+4. Verificar `bun run test:components` pasa
+5. Verificar a11y en Storybook (0 violations)
+6. Si cambia visualmente: regenerar baseline con `visual:update`
