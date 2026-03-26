@@ -11,6 +11,11 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Added
 
+- `packages/db/src/schema.ts`: campos `sso_provider` y `sso_subject` en tabla `users` — 2026-03-25 *(Plan 4 F3.47)*
+- `apps/web/src/lib/auth/next-auth.ts`: configuración NextAuth v5 con providers Google y Microsoft Entra ID; modo mixto (SSO + password); al primer login SSO crea usuario o vincula cuenta existente; emite JWT propio para compatibilidad RBAC — 2026-03-25 *(Plan 4 F3.47)*
+- `apps/web/src/app/api/auth/[...nextauth]/route.ts`: handler de NextAuth — 2026-03-25 *(Plan 4 F3.47)*
+- `apps/web/src/components/auth/SSOButton.tsx`: botones Google y Microsoft en página de login (solo visibles si los env vars están configurados) — 2026-03-25 *(Plan 4 F3.47)*
+- `.env.example`: variables SSO y NextAuth documentadas — 2026-03-25 *(Plan 4 F3.47)*
 - `apps/web/src/app/api/collections/[name]/embeddings/route.ts`: retorna grafo de similitud — intenta obtener docs del RAG server, simula similitud para MVP — 2026-03-25 *(Plan 4 F3.46)*
 - `apps/web/src/components/collections/DocumentGraph.tsx`: visualización SVG force-directed sin dependencia de d3-force (simulación propia ligera); zoom, colores por cluster, click en nodo — 2026-03-25 *(Plan 4 F3.46)*
 - `apps/web/src/app/(app)/collections/[name]/graph/page.tsx`: página del grafo por colección — 2026-03-25 *(Plan 4 F3.46)*

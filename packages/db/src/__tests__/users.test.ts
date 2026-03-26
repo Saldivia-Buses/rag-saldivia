@@ -34,6 +34,8 @@ beforeAll(async () => {
       preferences TEXT NOT NULL DEFAULT '{}',
       active INTEGER NOT NULL DEFAULT 1,
       onboarding_completed INTEGER NOT NULL DEFAULT 0,
+      sso_provider TEXT,
+      sso_subject TEXT,
       created_at INTEGER NOT NULL,
       last_login INTEGER
     );

@@ -117,11 +117,34 @@ export default function LoginPage() {
           </button>
         </form>
 
+        {/* SSO — F3.47 */}
+        {(process.env["NEXT_PUBLIC_GOOGLE_CLIENT_ID"] || process.env["NEXT_PUBLIC_AZURE_AD_CLIENT_ID"]) && (
+          <>
+            <div className="flex items-center gap-2">
+              <div className="flex-1 h-px" style={{ background: "var(--border)" }} />
+              <span className="text-xs" style={{ color: "var(--muted-foreground)" }}>o</span>
+              <div className="flex-1 h-px" style={{ background: "var(--border)" }} />
+            </div>
+            <SSOButtons />
+          </>
+        )}
+
         {/* Footer */}
         <p className="text-center text-xs" style={{ color: "var(--muted-foreground)" }}>
           ¿Problemas para acceder? Contactá al administrador del sistema.
         </p>
       </div>
+    </div>
+  )
+}
+
+function SSOButtons() {
+  // Import dinámico para evitar error si next-auth no está configurado
+  const { SSOButton } = require("@/components/auth/SSOButton") as { SSOButton: (p: { provider: "google" | "azure-ad" }) => React.ReactNode }
+  return (
+    <div className="space-y-2">
+      <SSOButton provider="google" />
+      <SSOButton provider="azure-ad" />
     </div>
   )
 }

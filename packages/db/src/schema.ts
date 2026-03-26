@@ -47,6 +47,8 @@ export const users = sqliteTable(
       .default({}),
     active: integer("active", { mode: "boolean" }).notNull().default(true),
     onboardingCompleted: integer("onboarding_completed", { mode: "boolean" }).notNull().default(false),
+    ssoProvider: text("sso_provider"),  // "google" | "azure" | null
+    ssoSubject: text("sso_subject"),    // external user ID from provider
     createdAt: integer("created_at").notNull(), // epoch ms
     lastLogin: integer("last_login"), // epoch ms, nullable
   },
