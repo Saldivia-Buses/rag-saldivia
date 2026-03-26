@@ -1,0 +1,16 @@
+{
+  "plugins": {
+    "linear": {
+      "enabled": true
+    },
+    "figma": {
+      "enabled": true
+    },
+    "context7-plugin": {
+      "enabled": true
+    },
+    "prisma": {
+      "enabled": true
+    }
+  }
+}

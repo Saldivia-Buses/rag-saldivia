@@ -6,28 +6,26 @@ import { and, eq } from "drizzle-orm"
 import { getDb } from "../connection"
 import { areas, areaCollections, userAreas } from "../schema"
 
-const db = getDb()
-
 function now() {
   return Date.now()
 }
 
 export async function listAreas() {
-  return db.query.areas.findMany({
+  return getDb().query.areas.findMany({
     with: { areaCollections: true },
     orderBy: (a, { asc }) => [asc(a.name)],
   })
 }
 
 export async function getAreaById(id: number) {
-  return db.query.areas.findFirst({
+  return getDb().query.areas.findFirst({
     where: (a, { eq }) => eq(a.id, id),
     with: { areaCollections: true },
   })
 }
 
 export async function createArea(name: string, description = "") {
-  const [area] = await db
+  const [area] = await getDb()
     .insert(areas)
     .values({ name, description, createdAt: now() })
     .returning()
@@ -35,16 +33,16 @@ export async function createArea(name: string, description = "") {
 }
 
 export async function updateArea(id: number, data: { name?: string; description?: string }) {
-  const [updated] = await db.update(areas).set(data).where(eq(areas.id, id)).returning()
+  const [updated] = await getDb().update(areas).set(data).where(eq(areas.id, id)).returning()
   return updated
 }
 
 export async function deleteArea(id: number) {
-  await db.delete(areas).where(eq(areas.id, id))
+  await getDb().delete(areas).where(eq(areas.id, id))
 }
 
 export async function countUsersInArea(areaId: number): Promise<number> {
-  const rows = await db.query.userAreas.findMany({
+  const rows = await getDb().query.userAreas.findMany({
     where: (ua, { eq }) => eq(ua.areaId, areaId),
   })
   return rows.length
@@ -54,16 +52,11 @@ export async function setAreaCollections(
   areaId: number,
   collections: Array<{ name: string; permission: "read" | "write" | "admin" }>
 ) {
-  // Borrar todas las existentes y reemplazar
+  const db = getDb()
   await db.delete(areaCollections).where(eq(areaCollections.areaId, areaId))
-
   if (collections.length > 0) {
     await db.insert(areaCollections).values(
-      collections.map((c) => ({
-        areaId,
-        collectionName: c.name,
-        permission: c.permission,
-      }))
+      collections.map((c) => ({ areaId, collectionName: c.name, permission: c.permission }))
     )
   }
 }
@@ -73,7 +66,7 @@ export async function addAreaCollection(
   collectionName: string,
   permission: "read" | "write" | "admin" = "read"
 ) {
-  await db
+  await getDb()
     .insert(areaCollections)
     .values({ areaId, collectionName, permission })
     .onConflictDoUpdate({
@@ -83,12 +76,7 @@ export async function addAreaCollection(
 }
 
 export async function removeAreaCollection(areaId: number, collectionName: string) {
-  await db
+  await getDb()
     .delete(areaCollections)
-    .where(
-      and(
-        eq(areaCollections.areaId, areaId),
-        eq(areaCollections.collectionName, collectionName)
-      )
-    )
+    .where(and(eq(areaCollections.areaId, areaId), eq(areaCollections.collectionName, collectionName)))
 }

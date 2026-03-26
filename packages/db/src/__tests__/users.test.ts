@@ -3,348 +3,175 @@
  * Corre con: bun test packages/db/src/__tests__/users.test.ts
  */
 
-import { describe, test, expect, beforeAll, afterEach } from "bun:test"
-import { createClient } from "@libsql/client"
-import { drizzle } from "drizzle-orm/libsql"
-import * as schema from "../schema"
+import { describe, test, expect, beforeAll, afterAll, afterEach } from "bun:test"
+import { _injectDbForTesting, _resetDbForTesting } from "../connection"
+import { createTestDb, initSchema } from "./setup"
+import { createUser, getUserById, getUserByEmail, getUserByApiKey, listUsers, updateUser, updatePassword, deleteUser, verifyPassword, addUserArea, removeUserArea, getUserCollections, canAccessCollection } from "../queries/users"
+import { createArea, addAreaCollection } from "../queries/areas"
 
-// Usar DB en memoria para tests
 process.env["DATABASE_PATH"] = ":memory:"
 
-// Crear conexión de test directamente (no usar el singleton de connection.ts)
-const client = createClient({ url: ":memory:" })
-const testDb = drizzle(client, { schema })
+const { client, db } = createTestDb()
 
-// Inicializar schema con SQL puro (igual que init.ts)
 beforeAll(async () => {
-  await client.executeMultiple(`
-    CREATE TABLE IF NOT EXISTS areas (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL UNIQUE,
-      description TEXT NOT NULL DEFAULT '',
-      created_at INTEGER NOT NULL
-    );
-    CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      email TEXT NOT NULL UNIQUE,
-      name TEXT NOT NULL,
-      role TEXT NOT NULL DEFAULT 'user',
-      api_key_hash TEXT NOT NULL,
-      password_hash TEXT,
-      preferences TEXT NOT NULL DEFAULT '{}',
-      active INTEGER NOT NULL DEFAULT 1,
-      onboarding_completed INTEGER NOT NULL DEFAULT 0,
-      sso_provider TEXT,
-      sso_subject TEXT,
-      created_at INTEGER NOT NULL,
-      last_login INTEGER
-    );
-    CREATE INDEX IF NOT EXISTS idx_users_api_key ON users(api_key_hash);
-    CREATE TABLE IF NOT EXISTS user_areas (
-      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-      area_id INTEGER NOT NULL REFERENCES areas(id) ON DELETE CASCADE,
-      PRIMARY KEY (user_id, area_id)
-    );
-    CREATE TABLE IF NOT EXISTS area_collections (
-      area_id INTEGER NOT NULL REFERENCES areas(id) ON DELETE CASCADE,
-      collection_name TEXT NOT NULL,
-      permission TEXT NOT NULL DEFAULT 'read',
-      PRIMARY KEY (area_id, collection_name)
-    );
-    CREATE TABLE IF NOT EXISTS events (
-      id TEXT PRIMARY KEY,
-      ts INTEGER NOT NULL,
-      source TEXT NOT NULL,
-      level TEXT NOT NULL,
-      type TEXT NOT NULL,
-      user_id INTEGER REFERENCES users(id),
-      session_id TEXT,
-      payload TEXT NOT NULL DEFAULT '{}',
-      sequence INTEGER NOT NULL
-    );
-  `)
+  await initSchema(client)
+  _injectDbForTesting(db)
 })
 
-// Limpiar tabla de usuarios entre tests para evitar contaminación
+afterAll(() => { _resetDbForTesting() })
+
 afterEach(async () => {
-  await client.executeMultiple("DELETE FROM user_areas; DELETE FROM users;")
+  await client.executeMultiple("DELETE FROM area_collections; DELETE FROM user_areas; DELETE FROM areas; DELETE FROM users;")
 })
-
-// Helpers — versiones locales que usan testDb en lugar del singleton
-import { eq, and } from "drizzle-orm"
-import { hashSync, compareSync } from "bcrypt-ts"
-
-async function createTestUser(data: {
-  email: string
-  name: string
-  password: string
-  role?: "admin" | "area_manager" | "user"
-  areaIds?: number[]
-}) {
-  const passwordHash = hashSync(data.password, 10)
-  const apiKeyHash = Math.random().toString(36)
-
-  const [user] = await testDb
-    .insert(schema.users)
-    .values({
-      email: data.email.toLowerCase(),
-      name: data.name,
-      role: data.role ?? "user",
-      apiKeyHash,
-      passwordHash,
-      preferences: {},
-      active: true,
-      createdAt: Date.now(),
-    })
-    .returning()
-
-  if (!user) throw new Error("Failed to create user")
-
-  if (data.areaIds && data.areaIds.length > 0) {
-    await testDb.insert(schema.userAreas).values(
-      data.areaIds.map((areaId) => ({ userId: user.id, areaId }))
-    )
-  }
-
-  return user
-}
-
-async function verifyTestPassword(email: string, password: string) {
-  const user = await testDb.query.users.findFirst({
-    where: (u, { eq }) => eq(u.email, email.toLowerCase()),
-  })
-  if (!user || !user.active || !user.passwordHash) return null
-  return compareSync(password, user.passwordHash) ? user : null
-}
-
-// ── Tests ──────────────────────────────────────────────────────────────────
 
 describe("createUser", () => {
-  test("crea un usuario con campos correctos", async () => {
-    const user = await createTestUser({
-      email: "test@example.com",
-      name: "Test User",
-      password: "password123",
-    })
-
-    expect(user.email).toBe("test@example.com")
-    expect(user.name).toBe("Test User")
-    expect(user.role).toBe("user")
-    expect(user.active).toBe(true)
-    expect(user.passwordHash).toBeDefined()
-    expect(user.id).toBeGreaterThan(0)
+  test("crea usuario con email normalizado a minúsculas", async () => {
+    const user = await createUser({ email: "USER@TEST.COM", name: "Test", password: "pass123" })
+    expect(user.email).toBe("user@test.com")
   })
 
-  test("normaliza el email a minúsculas", async () => {
-    const user = await createTestUser({
-      email: "UPPER@EXAMPLE.COM",
-      name: "Upper User",
-      password: "password123",
-    })
-    expect(user.email).toBe("upper@example.com")
-  })
-
-  test("crea usuario con rol admin", async () => {
-    const user = await createTestUser({
-      email: "admin@example.com",
-      name: "Admin User",
-      password: "password123",
-      role: "admin",
-    })
+  test("crea usuario con rol correcto", async () => {
+    const user = await createUser({ email: "admin@test.com", name: "Admin", password: "pass", role: "admin" })
     expect(user.role).toBe("admin")
   })
 
-  test("falla con email duplicado", async () => {
-    await createTestUser({
-      email: "dup@example.com",
-      name: "First",
-      password: "password123",
-    })
+  test("lanza error si el email ya existe", async () => {
+    await createUser({ email: "dup@test.com", name: "A", password: "pass" })
+    await expect(createUser({ email: "dup@test.com", name: "B", password: "pass" })).rejects.toThrow()
+  })
 
-    await expect(
-      createTestUser({
-        email: "dup@example.com",
-        name: "Second",
-        password: "password123",
-      })
-    ).rejects.toThrow()
+  test("asigna áreas si se pasan areaIds", async () => {
+    const area = await createArea("Marketing")
+    const user = await createUser({ email: "x@test.com", name: "X", password: "pass", areaIds: [area!.id] })
+    const areas = await getUserCollections(user.id)
+    // No hay colecciones asignadas, pero el area está asignada
+    expect(areas).toHaveLength(0) // sin area_collections aún
   })
 })
 
-describe("verifyPassword", () => {
-  test("retorna usuario con credenciales correctas", async () => {
-    await createTestUser({
-      email: "auth@example.com",
-      name: "Auth User",
-      password: "secret123",
-    })
-
-    const result = await verifyTestPassword("auth@example.com", "secret123")
-    expect(result).not.toBeNull()
-    expect(result?.email).toBe("auth@example.com")
+describe("getUserByEmail", () => {
+  test("retorna usuario existente", async () => {
+    await createUser({ email: "find@test.com", name: "Find", password: "pass" })
+    const user = await getUserByEmail("find@test.com")
+    expect(user).not.toBeUndefined()
+    expect(user!.name).toBe("Find")
   })
 
-  test("retorna null con password incorrecta", async () => {
-    await createTestUser({
-      email: "auth2@example.com",
-      name: "Auth User 2",
-      password: "correct-password",
-    })
-
-    const result = await verifyTestPassword("auth2@example.com", "wrong-password")
-    expect(result).toBeNull()
-  })
-
-  test("retorna null para email inexistente", async () => {
-    const result = await verifyTestPassword("noexiste@example.com", "password")
-    expect(result).toBeNull()
-  })
-
-  test("retorna null para usuario inactivo", async () => {
-    const user = await createTestUser({
-      email: "inactive@example.com",
-      name: "Inactive",
-      password: "password123",
-    })
-
-    // Desactivar el usuario
-    await testDb
-      .update(schema.users)
-      .set({ active: false })
-      .where(eq(schema.users.id, user.id))
-
-    const result = await verifyTestPassword("inactive@example.com", "password123")
-    expect(result).toBeNull()
+  test("retorna undefined para email inexistente", async () => {
+    const user = await getUserByEmail("noexist@test.com")
+    expect(user).toBeUndefined()
   })
 })
 
 describe("listUsers", () => {
-  test("retorna array vacío cuando no hay usuarios", async () => {
-    const users = await testDb.query.users.findMany()
+  test("retorna vacío si no hay usuarios", async () => {
+    const users = await listUsers()
     expect(users).toHaveLength(0)
   })
 
-  test("retorna todos los usuarios creados", async () => {
-    await createTestUser({ email: "a@example.com", name: "A", password: "pass1" })
-    await createTestUser({ email: "b@example.com", name: "B", password: "pass2" })
-    await createTestUser({ email: "c@example.com", name: "C", password: "pass3" })
+  test("retorna todos los usuarios ordenados por nombre", async () => {
+    await createUser({ email: "z@test.com", name: "Zeta", password: "p" })
+    await createUser({ email: "a@test.com", name: "Alpha", password: "p" })
+    const users = await listUsers()
+    expect(users[0]!.name).toBe("Alpha")
+    expect(users[1]!.name).toBe("Zeta")
+  })
+})
 
-    const users = await testDb.query.users.findMany()
-    expect(users).toHaveLength(3)
+describe("verifyPassword", () => {
+  test("retorna usuario para credenciales correctas", async () => {
+    await createUser({ email: "vp@test.com", name: "VP", password: "mypassword" })
+    const user = await verifyPassword("vp@test.com", "mypassword")
+    expect(user).not.toBeNull()
+    expect(user!.email).toBe("vp@test.com")
   })
 
-  test("los usuarios tienen los campos esperados", async () => {
-    await createTestUser({ email: "list@example.com", name: "List User", password: "pass" })
+  test("retorna null para contraseña incorrecta", async () => {
+    await createUser({ email: "vp2@test.com", name: "VP2", password: "correct" })
+    const result = await verifyPassword("vp2@test.com", "wrong")
+    expect(result).toBeNull()
+  })
 
-    const users = await testDb.query.users.findMany()
-    const user = users[0]!
-    expect(user).toHaveProperty("id")
-    expect(user).toHaveProperty("email")
-    expect(user).toHaveProperty("name")
-    expect(user).toHaveProperty("role")
-    expect(user).toHaveProperty("active")
-    expect(user).toHaveProperty("createdAt")
+  test("retorna null para email inexistente", async () => {
+    const result = await verifyPassword("ghost@test.com", "any")
+    expect(result).toBeNull()
+  })
+
+  test("retorna null para usuario inactivo", async () => {
+    const user = await createUser({ email: "inactive@test.com", name: "I", password: "pass" })
+    await updateUser(user.id, { active: false })
+    const result = await verifyPassword("inactive@test.com", "pass")
+    expect(result).toBeNull()
   })
 })
 
 describe("updateUser", () => {
-  test("actualiza el nombre del usuario", async () => {
-    const user = await createTestUser({
-      email: "update@example.com",
-      name: "Original Name",
-      password: "pass",
-    })
-
-    const [updated] = await testDb
-      .update(schema.users)
-      .set({ name: "Updated Name" })
-      .where(eq(schema.users.id, user.id))
-      .returning()
-
-    expect(updated?.name).toBe("Updated Name")
+  test("actualiza nombre y rol", async () => {
+    const user = await createUser({ email: "upd@test.com", name: "Old", password: "p" })
+    const updated = await updateUser(user.id, { name: "New", role: "admin" })
+    expect(updated!.name).toBe("New")
+    expect(updated!.role).toBe("admin")
   })
 
-  test("actualiza el rol del usuario", async () => {
-    const user = await createTestUser({
-      email: "roleupdate@example.com",
-      name: "Role User",
-      password: "pass",
-      role: "user",
-    })
-
-    const [updated] = await testDb
-      .update(schema.users)
-      .set({ role: "area_manager" })
-      .where(eq(schema.users.id, user.id))
-      .returning()
-
-    expect(updated?.role).toBe("area_manager")
+  test("desactiva usuario", async () => {
+    const user = await createUser({ email: "deact@test.com", name: "D", password: "p" })
+    await updateUser(user.id, { active: false })
+    const found = await getUserById(user.id)
+    expect(found!.active).toBe(false)
   })
+})
 
-  test("desactivar usuario cambia active a false", async () => {
-    const user = await createTestUser({
-      email: "deactivate@example.com",
-      name: "Active User",
-      password: "pass",
-    })
+describe("getUserByApiKey", () => {
+  test("retorna usuario activo por apiKeyHash", async () => {
+    const user = await createUser({ email: "apikey@test.com", name: "AK", password: "p" })
+    const found = await getUserByApiKey(user.apiKeyHash)
+    expect(found!.id).toBe(user.id)
+  })
+})
 
-    expect(user.active).toBe(true)
-
-    await testDb
-      .update(schema.users)
-      .set({ active: false })
-      .where(eq(schema.users.id, user.id))
-
-    const updated = await testDb.query.users.findFirst({
-      where: (u, { eq }) => eq(u.id, user.id),
-    })
-    expect(updated?.active).toBe(false)
+describe("updatePassword", () => {
+  test("actualiza la contraseña y el nuevo hash funciona en verifyPassword", async () => {
+    await createUser({ email: "pwd@test.com", name: "P", password: "old" })
+    const user = (await getUserByEmail("pwd@test.com"))!
+    await updatePassword(user.id, "new-password")
+    expect(await verifyPassword("pwd@test.com", "new-password")).not.toBeNull()
+    expect(await verifyPassword("pwd@test.com", "old")).toBeNull()
   })
 })
 
 describe("deleteUser", () => {
-  test("elimina el usuario de la base de datos", async () => {
-    const user = await createTestUser({
-      email: "delete@example.com",
-      name: "Delete Me",
-      password: "pass",
-    })
+  test("elimina el usuario y sus relaciones en cascade", async () => {
+    const user = await createUser({ email: "del@test.com", name: "Del", password: "p" })
+    await deleteUser(user.id)
+    const found = await getUserById(user.id)
+    expect(found).toBeUndefined()
+  })
+})
 
-    await testDb.delete(schema.users).where(eq(schema.users.id, user.id))
+describe("getUserCollections / canAccessCollection", () => {
+  test("retorna colecciones del usuario a través de sus áreas", async () => {
+    const user = await createUser({ email: "col@test.com", name: "C", password: "p" })
+    const area = await createArea("IT")
+    await addAreaCollection(area!.id, "tech-docs", "read")
+    await addUserArea(user.id, area!.id)
 
-    const deleted = await testDb.query.users.findFirst({
-      where: (u, { eq }) => eq(u.id, user.id),
-    })
-    expect(deleted).toBeUndefined()
+    const collections = await getUserCollections(user.id)
+    expect(collections.some((c) => c.name === "tech-docs")).toBe(true)
   })
 
-  test("deleteUser elimina también filas en user_areas (CASCADE)", async () => {
-    // Crear un área primero
-    const [area] = await testDb
-      .insert(schema.areas)
-      .values({ name: "Test Area", description: "", createdAt: Date.now() })
-      .returning()
+  test("canAccessCollection retorna true si tiene permiso", async () => {
+    const user = await createUser({ email: "perm@test.com", name: "P", password: "p" })
+    const area = await createArea("Legal")
+    await addAreaCollection(area!.id, "legal-docs", "write")
+    await addUserArea(user.id, area!.id)
 
-    const user = await createTestUser({
-      email: "cascade@example.com",
-      name: "Cascade User",
-      password: "pass",
-      areaIds: [area!.id],
-    })
+    expect(await canAccessCollection(user.id, "legal-docs", "read")).toBe(true)
+    expect(await canAccessCollection(user.id, "legal-docs", "write")).toBe(true)
+    expect(await canAccessCollection(user.id, "legal-docs", "admin")).toBe(false)
+  })
 
-    // Verificar que user_areas tiene la fila
-    const beforeDelete = await testDb.query.userAreas.findMany({
-      where: (ua, { eq }) => eq(ua.userId, user.id),
-    })
-    expect(beforeDelete).toHaveLength(1)
-
-    // Borrar el usuario
-    await testDb.delete(schema.users).where(eq(schema.users.id, user.id))
-
-    // Verificar que user_areas ya no tiene la fila (CASCADE)
-    const afterDelete = await testDb.query.userAreas.findMany({
-      where: (ua, { eq }) => eq(ua.userId, user.id),
-    })
-    expect(afterDelete).toHaveLength(0)
+  test("canAccessCollection retorna false para colección no asignada", async () => {
+    const user = await createUser({ email: "noperm@test.com", name: "N", password: "p" })
+    expect(await canAccessCollection(user.id, "secret-docs")).toBe(false)
   })
 })

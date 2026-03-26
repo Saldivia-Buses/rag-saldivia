@@ -418,6 +418,7 @@ El número es secuencial. Nunca reusar un número aunque se deprece el ADR.
 | [004](./decisions/004-temporal-api-timestamps.md) | Temporal API para timestamps | Aceptado |
 | [005](./decisions/005-static-import-logger-db.md) | Import estático de @rag-saldivia/db en el logger | Aceptado |
 | [006](./decisions/006-testing-strategy.md) | Estrategia de testing — cobertura por capas y enforcement en CI | Aceptado |
+| [007](./decisions/007-real-functions-over-local-helpers-in-tests.md) | Llamar funciones reales en tests de DB (no helpers locales) | Aceptado |
 
 ---
 

@@ -1,4 +1,4 @@
-import { eq, inArray } from "drizzle-orm"
+import { eq, and, inArray } from "drizzle-orm"
 import { getDb } from "../connection"
 import { sessionTags, chatSessions } from "../schema"
 
@@ -14,9 +14,7 @@ export async function removeTag(sessionId: string, tag: string) {
   const db = getDb()
   await db
     .delete(sessionTags)
-    .where(
-      eq(sessionTags.sessionId, sessionId)
-    )
+    .where(and(eq(sessionTags.sessionId, sessionId), eq(sessionTags.tag, tag.toLowerCase().trim())))
 }
 
 export async function listTagsBySession(sessionId: string) {

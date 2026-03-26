@@ -42,6 +42,23 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 - `bunfig.toml`: threshold final `line = 0.95` — meta Plan 5 alcanzada — 2026-03-26 *(Plan 5 F4)*
 - `.cursor/skills/rag-testing/SKILL.md`: tabla de cobertura actualizada a ~237 tests, limitación de local helpers documentada — 2026-03-26 *(Plan 5 F5)*
 
+### Refactoring: tests de DB con funciones reales (2026-03-26)
+
+#### Added
+- `docs/decisions/007-real-functions-over-local-helpers-in-tests.md`: ADR que codifica el patrón de tests con funciones reales + `_injectDbForTesting` — 2026-03-26
+- `packages/db/src/__tests__/setup.ts`: SQL completo del schema + helpers `insertUser`, `insertSession`, `insertMessage` compartidos entre todos los test files — 2026-03-26
+
+#### Changed
+- `packages/db/src/queries/areas.ts`: `getDb()` movido dentro de cada función (era nivel módulo) — 2026-03-26
+- `packages/db/src/queries/users.ts`: `getDb()` movido dentro de cada función — 2026-03-26
+- `packages/db/src/queries/sessions.ts`: `getDb()` movido dentro de cada función — 2026-03-26
+- `packages/db/src/queries/events.ts`: `getDb()` movido dentro de cada función — 2026-03-26
+- `packages/db/src/__tests__/*.test.ts` (17 archivos): reescritos para importar y llamar funciones reales de producción usando `_injectDbForTesting` — cobertura de query files: 0% → 95.20% líneas — 2026-03-26
+- `docs/workflows.md`: ADR-007 agregado a la tabla de decisiones — 2026-03-26
+
+#### Fixed
+- `packages/db/src/queries/tags.ts`: `removeTag` eliminaba TODOS los tags de la sesión en lugar de solo el especificado — faltaba `and(eq(sessionTags.tag, tag))` en el WHERE — bug expuesto al llamar la función real en tests — 2026-03-26
+
 #### Changed
 - `package.json` raíz: script `test:coverage` vía Turborepo — 2026-03-26 *(Plan 5 F2)*
 - `packages/*/package.json` + `apps/web/package.json`: script `test:coverage` con `--coverage` — 2026-03-26 *(Plan 5 F2)*

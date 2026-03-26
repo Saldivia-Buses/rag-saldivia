@@ -2,11 +2,9 @@
  * Queries de sesiones de chat y mensajes.
  */
 
-import { eq, desc, and } from "drizzle-orm"
+import { eq, and } from "drizzle-orm"
 import { getDb } from "../connection"
 import { chatSessions, chatMessages, messageFeedback } from "../schema"
-
-const db = getDb()
 
 function now() {
   return Date.now()
@@ -15,14 +13,14 @@ function now() {
 // ── Sessions ───────────────────────────────────────────────────────────────
 
 export async function listSessionsByUser(userId: number) {
-  return db.query.chatSessions.findMany({
+  return getDb().query.chatSessions.findMany({
     where: (s, { eq }) => eq(s.userId, userId),
     orderBy: (s, { desc }) => [desc(s.updatedAt)],
   })
 }
 
 export async function getSessionById(id: string, userId?: number) {
-  return db.query.chatSessions.findFirst({
+  return getDb().query.chatSessions.findFirst({
     where: (s, { and, eq }) =>
       userId ? and(eq(s.id, id), eq(s.userId, userId)) : eq(s.id, id),
     with: {
@@ -41,7 +39,7 @@ export async function createSession(data: {
 }) {
   const id = crypto.randomUUID()
   const ts = now()
-  const [session] = await db
+  const [session] = await getDb()
     .insert(chatSessions)
     .values({
       id,
@@ -57,7 +55,7 @@ export async function createSession(data: {
 }
 
 export async function updateSessionTitle(id: string, userId: number, title: string) {
-  const [updated] = await db
+  const [updated] = await getDb()
     .update(chatSessions)
     .set({ title, updatedAt: now() })
     .where(and(eq(chatSessions.id, id), eq(chatSessions.userId, userId)))
@@ -66,7 +64,7 @@ export async function updateSessionTitle(id: string, userId: number, title: stri
 }
 
 export async function deleteSession(id: string, userId: number) {
-  await db
+  await getDb()
     .delete(chatSessions)
     .where(and(eq(chatSessions.id, id), eq(chatSessions.userId, userId)))
 }
@@ -79,6 +77,7 @@ export async function addMessage(data: {
   content: string
   sources?: unknown[]
 }) {
+  const db = getDb()
   const [message] = await db
     .insert(chatMessages)
     .values({
@@ -90,7 +89,6 @@ export async function addMessage(data: {
     })
     .returning()
 
-  // Actualizar updated_at de la sesión
   await db
     .update(chatSessions)
     .set({ updatedAt: now() })
@@ -104,7 +102,7 @@ export async function addFeedback(
   userId: number,
   rating: "up" | "down"
 ) {
-  await db
+  await getDb()
     .insert(messageFeedback)
     .values({ messageId, userId, rating, createdAt: now() })
     .onConflictDoUpdate({

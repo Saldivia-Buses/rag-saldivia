@@ -8,15 +8,13 @@ import { getDb } from "../connection"
 import { events } from "../schema"
 import type { EventSource, LogLevel, EventType } from "@rag-saldivia/shared"
 
-const db = getDb()
-
 // Secuencia monotónica en memoria para esta instancia del proceso.
 // Si el proceso reinicia, continúa desde el máximo en DB.
 let _seq: number | null = null
 
 async function nextSequence(): Promise<number> {
   if (_seq === null) {
-    const last = await db.query.events.findFirst({
+    const last = await getDb().query.events.findFirst({
       orderBy: (e, { desc }) => [desc(e.sequence)],
     })
     _seq = (last?.sequence ?? 0) + 1
@@ -37,7 +35,7 @@ export async function writeEvent(data: {
   payload?: Record<string, unknown>
 }) {
   const sequence = await nextSequence()
-  const [event] = await db
+  const [event] = await getDb()
     .insert(events)
     .values({
       id: crypto.randomUUID(),
@@ -76,7 +74,7 @@ export async function queryEvents(filters: {
   if (filters.type) conditions.push(eq(events.type, filters.type))
   if (filters.userId) conditions.push(eq(events.userId, filters.userId))
 
-  return db.query.events.findMany({
+  return getDb().query.events.findMany({
     where: conditions.length > 0 ? and(...conditions) : undefined,
     orderBy: filters.order === "asc"
       ? (e, { asc }) => [asc(e.sequence)]
@@ -92,7 +90,7 @@ export async function getEventsForReplay(fromTs: number, toTs?: number) {
   const conditions = [gte(events.ts, fromTs)]
   if (toTs) conditions.push(lte(events.ts, toTs))
 
-  return db.query.events.findMany({
+  return getDb().query.events.findMany({
     where: and(...conditions),
     orderBy: (e, { asc }) => [asc(e.sequence)],
   })

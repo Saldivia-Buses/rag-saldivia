@@ -9,8 +9,6 @@ import { getDb } from "../connection"
 import { users, userAreas, areas } from "../schema"
 import { compareSync, hashSync } from "bcrypt-ts"
 
-const db = getDb()
-
 function now() {
   return Date.now()
 }
@@ -18,27 +16,27 @@ function now() {
 // ── Lectura ────────────────────────────────────────────────────────────────
 
 export async function getUserById(id: number) {
-  return db.query.users.findFirst({
+  return getDb().query.users.findFirst({
     where: (u, { eq }) => eq(u.id, id),
     with: { userAreas: { with: { area: true } } },
   })
 }
 
 export async function getUserByEmail(email: string) {
-  return db.query.users.findFirst({
+  return getDb().query.users.findFirst({
     where: (u, { eq }) => eq(u.email, email.toLowerCase()),
     with: { userAreas: { with: { area: true } } },
   })
 }
 
 export async function getUserByApiKey(apiKeyHash: string) {
-  return db.query.users.findFirst({
+  return getDb().query.users.findFirst({
     where: (u, { and, eq }) => and(eq(u.apiKeyHash, apiKeyHash), eq(u.active, true)),
   })
 }
 
 export async function listUsers() {
-  return db.query.users.findMany({
+  return getDb().query.users.findMany({
     with: { userAreas: { with: { area: true } } },
     orderBy: (u, { asc }) => [asc(u.name)],
   })
@@ -52,8 +50,7 @@ export async function verifyPassword(email: string, password: string) {
   const valid = compareSync(password, user.passwordHash)
   if (!valid) return null
 
-  // Actualizar last_login
-  await db
+  await getDb()
     .update(users)
     .set({ lastLogin: now() })
     .where(eq(users.id, user.id))
@@ -70,6 +67,7 @@ export async function createUser(data: {
   role?: "admin" | "area_manager" | "user"
   areaIds?: number[]
 }) {
+  const db = getDb()
   const passwordHash = hashSync(data.password, 10)
   const apiKeyHash = createHash("sha256").update(`rsk_${crypto.randomUUID()}`).digest("hex").slice(0, 32)
 
@@ -89,7 +87,6 @@ export async function createUser(data: {
 
   if (!user) throw new Error("Failed to create user")
 
-  // Asignar áreas si se especificaron
   if (data.areaIds && data.areaIds.length > 0) {
     await db.insert(userAreas).values(
       data.areaIds.map((areaId) => ({ userId: user.id, areaId }))
@@ -108,7 +105,7 @@ export async function updateUser(
     preferences: Record<string, unknown>
   }>
 ) {
-  const [updated] = await db
+  const [updated] = await getDb()
     .update(users)
     .set(data)
     .where(eq(users.id, id))
@@ -119,15 +116,15 @@ export async function updateUser(
 
 export async function updatePassword(id: number, newPassword: string) {
   const passwordHash = hashSync(newPassword, 10)
-  await db.update(users).set({ passwordHash }).where(eq(users.id, id))
+  await getDb().update(users).set({ passwordHash }).where(eq(users.id, id))
 }
 
 export async function deleteUser(id: number) {
-  await db.delete(users).where(eq(users.id, id))
+  await getDb().delete(users).where(eq(users.id, id))
 }
 
 export async function getUserAreas(userId: number) {
-  const rows = await db.query.userAreas.findMany({
+  const rows = await getDb().query.userAreas.findMany({
     where: (ua, { eq }) => eq(ua.userId, userId),
     with: { area: true },
   })
@@ -135,21 +132,20 @@ export async function getUserAreas(userId: number) {
 }
 
 export async function addUserArea(userId: number, areaId: number) {
-  await db
+  await getDb()
     .insert(userAreas)
     .values({ userId, areaId })
     .onConflictDoNothing()
 }
 
 export async function removeUserArea(userId: number, areaId: number) {
-  await db
+  await getDb()
     .delete(userAreas)
     .where(and(eq(userAreas.userId, userId), eq(userAreas.areaId, areaId)))
 }
 
 export async function getUserCollections(userId: number): Promise<Array<{ name: string; permission: string }>> {
-  // Obtener todas las áreas del usuario
-  const userAreaRows = await db.query.userAreas.findMany({
+  const userAreaRows = await getDb().query.userAreas.findMany({
     where: (ua, { eq }) => eq(ua.userId, userId),
     with: { area: { with: { areaCollections: true } } },
   })
@@ -157,7 +153,6 @@ export async function getUserCollections(userId: number): Promise<Array<{ name: 
   const seen = new Map<string, string>()
   for (const ua of userAreaRows) {
     for (const ac of ua.area.areaCollections) {
-      // Si ya está con permiso mayor, no sobreescribir
       const existing = seen.get(ac.collectionName)
       if (!existing || ac.permission === "admin" || (ac.permission === "write" && existing === "read")) {
         seen.set(ac.collectionName, ac.permission)
