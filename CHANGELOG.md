@@ -11,6 +11,14 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Plan 7 — Design System (en progreso)
 
+#### Changed
+- `apps/web/src/components/ui/button.tsx`: tamaños refinados (h-9/h-8/h-10), `ring-1`, hover states con tokens semánticos — 2026-03-26 *(Plan 7 F3)*
+- `apps/web/src/components/ui/badge.tsx`: variantes `success` y `warning` agregadas, forma `rounded-md` más cuadrada — 2026-03-26 *(Plan 7 F3)*
+- `apps/web/src/components/ui/input.tsx`: `h-9`, `ring-1`, `border-accent` en focus, `transition-colors` — 2026-03-26 *(Plan 7 F3)*
+- `apps/web/src/components/ui/textarea.tsx`: idem input + `resize-y` — 2026-03-26 *(Plan 7 F3)*
+- `apps/web/src/components/ui/avatar.tsx`: `AvatarFallback` con `bg-accent-subtle text-accent` — 2026-03-26 *(Plan 7 F3)*
+- `apps/web/src/components/ui/table.tsx`: header con `bg-surface`, `TableHead` compact con `h-10 px-3 text-xs uppercase`, `TableRow` con `hover:bg-surface border-border` — 2026-03-26 *(Plan 7 F3)*
+
 #### Added
 - `apps/web/src/app/globals.css`: reescritura completa con tokens crema-navy, dark mode cálido (#1a1812), densidad adaptiva, escala tipográfica, aliases shadcn, y `@theme inline` para Tailwind v4 — 2026-03-26 *(Plan 7 F1)*
 

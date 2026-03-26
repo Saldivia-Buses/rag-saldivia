@@ -991,7 +991,7 @@ Las 24 páginas usan los nuevos tokens. Nada se ve con los colores viejos.
 |------|--------|-------|
 | Fase 1 — Tokens CSS | ✅ completado | 2026-03-26 |
 | Fase 2 — Tipografía | ✅ completado | 2026-03-26 |
-| Fase 3 — Primitivos shadcn | ⬜ pendiente | — |
+| Fase 3 — Primitivos shadcn | ✅ completado | 2026-03-26 |
 | Fase 4 — Layout system | ⬜ pendiente | — |
 | Fase 5 — Componentes comunidad | ⬜ pendiente | — |
 | Fase 6 — Momentos especiales | ⬜ pendiente | — |
