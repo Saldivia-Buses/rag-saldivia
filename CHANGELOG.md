@@ -9,6 +9,11 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Plan 5 — Testing Foundation (2026-03-26)
+
+#### Added
+- `docs/plans/ultra-optimize-plan5-testing-foundation.md`: plan de 5 fases para llevar cobertura a 95% en `packages/*` y `apps/web/src/lib/`, con enforcement en CI — 2026-03-26
+
 ### Mejoras de metodología (2026-03-26)
 
 #### Added
