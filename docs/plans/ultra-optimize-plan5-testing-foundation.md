@@ -597,6 +597,8 @@ Objetivo: el skill refleja el estado actual y las nuevas reglas. Es la referenci
 | Fase 4 — Cobertura lib/ y hooks/ | ✅ completado | 2026-03-26 |
 | Fase 5 — Actualizar rag-testing skill | ✅ completado | 2026-03-26 |
 
+**Plan 5 completado — 2026-03-26**
+
 ## Estimaciones
 
 | Fase | Estimación |
@@ -608,10 +610,13 @@ Objetivo: el skill refleja el estado actual y las nuevas reglas. Es la referenci
 | Fase 5 | 30 min |
 | **Total** | **14-21 hs** |
 
-## Tests esperados al completar
+## Resultado final
 
-| Estado actual | Al completar Plan 5 |
-|---------------|---------------------|
-| ~126 tests | **≥ 250 tests** |
-| Cobertura: no medida | **packages/* ≥ 95%, lib/ ≥ 95%** |
-| Enforcement: ninguno | **CI falla en PR si baja del threshold** |
+| Métrica | Inicio | Cierre |
+|---------|--------|--------|
+| Tests totales | ~126 | **273** |
+| Cobertura query files (líneas) | 0% (no medida) | **95.20%** |
+| Cobertura query files (funciones) | 0% | **93.68%** |
+| Enforcement CI | ninguno | **threshold line=0.95 en cada PR** |
+| Bugs detectados por tests | 0 | **1** (`removeTag` — borraba todos los tags) |
+| ADRs añadidos | 0 | **2** (ADR-006, ADR-007) |
