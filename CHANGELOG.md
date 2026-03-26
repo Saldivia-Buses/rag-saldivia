@@ -11,6 +11,10 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ### Added
 
+- `packages/db/src/schema.ts`: tabla `external_sources` (provider, credentials, collectionDest, schedule, lastSync) — 2026-03-25 *(Plan 4 F3.48)*
+- `packages/db/src/queries/external-sources.ts`: `createExternalSource`, `listExternalSources`, `listActiveSourcesToSync`, `updateSourceLastSync`, `deleteExternalSource` — 2026-03-25 *(Plan 4 F3.48)*
+- `apps/web/src/workers/external-sync.ts`: worker MVP que detecta fuentes listas para sync y registra logs; implementación OAuth completa pendiente de credenciales reales — 2026-03-25 *(Plan 4 F3.48)*
+- `apps/web/src/app/(app)/admin/external-sources/page.tsx` y `ExternalSourcesAdmin.tsx`: UI para configurar fuentes externas — 2026-03-25 *(Plan 4 F3.48)*
 - `packages/db/src/schema.ts`: campos `sso_provider` y `sso_subject` en tabla `users` — 2026-03-25 *(Plan 4 F3.47)*
 - `apps/web/src/lib/auth/next-auth.ts`: configuración NextAuth v5 con providers Google y Microsoft Entra ID; modo mixto (SSO + password); al primer login SSO crea usuario o vincula cuenta existente; emite JWT propio para compatibilidad RBAC — 2026-03-25 *(Plan 4 F3.47)*
 - `apps/web/src/app/api/auth/[...nextauth]/route.ts`: handler de NextAuth — 2026-03-25 *(Plan 4 F3.47)*

@@ -114,6 +114,21 @@ await exec(`
     UNIQUE(message_id, user_id)
   );
 
+  -- Fuentes externas (F3.48)
+  CREATE TABLE IF NOT EXISTS external_sources (
+    id TEXT PRIMARY KEY,
+    user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    provider TEXT NOT NULL,
+    name TEXT NOT NULL,
+    credentials TEXT NOT NULL DEFAULT '{}',
+    collection_dest TEXT NOT NULL,
+    schedule TEXT NOT NULL DEFAULT 'daily',
+    active INTEGER NOT NULL DEFAULT 1,
+    last_sync INTEGER,
+    created_at INTEGER NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS idx_external_sources_user ON external_sources(user_id);
+
   -- Memoria de usuario (F3.44)
   CREATE TABLE IF NOT EXISTS user_memory (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

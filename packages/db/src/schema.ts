@@ -198,6 +198,29 @@ export const webhooks = sqliteTable(
   })
 )
 
+// ── External Sources ───────────────────────────────────────────────────────
+
+export const externalSources = sqliteTable(
+  "external_sources",
+  {
+    id: text("id").primaryKey(), // UUID
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    provider: text("provider", { enum: ["google_drive", "sharepoint", "confluence"] }).notNull(),
+    name: text("name").notNull(),
+    credentials: text("credentials").notNull().default("{}"), // JSON cifrado (en prod: cifrar con SYSTEM_API_KEY)
+    collectionDest: text("collection_dest").notNull(),
+    schedule: text("schedule", { enum: ["hourly", "daily", "weekly"] }).notNull().default("daily"),
+    active: integer("active", { mode: "boolean" }).notNull().default(true),
+    lastSync: integer("last_sync"),
+    createdAt: integer("created_at").notNull(),
+  },
+  (t) => ({
+    userIdx: index("idx_external_sources_user").on(t.userId),
+  })
+)
+
 // ── User Memory ────────────────────────────────────────────────────────────
 
 export const userMemory = sqliteTable(
@@ -601,6 +624,8 @@ export type DbChatMessage = typeof chatMessages.$inferSelect
 export type NewChatMessage = typeof chatMessages.$inferInsert
 export type DbWebhook = typeof webhooks.$inferSelect
 export type NewWebhook = typeof webhooks.$inferInsert
+export type DbExternalSource = typeof externalSources.$inferSelect
+export type NewExternalSource = typeof externalSources.$inferInsert
 export type DbUserMemory = typeof userMemory.$inferSelect
 export type DbProject = typeof projects.$inferSelect
 export type NewProject = typeof projects.$inferInsert
