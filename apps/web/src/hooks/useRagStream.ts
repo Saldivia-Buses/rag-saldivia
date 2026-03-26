@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useRef } from "react"
+import { detectArtifact } from "@/lib/rag/detect-artifact"
 
 export type ChatPhase = "idle" | "streaming" | "done" | "error"
 
@@ -11,11 +12,7 @@ type StreamResult = {
   sources: unknown[]
 }
 
-export type ArtifactData = {
-  type: "document" | "table" | "code"
-  content: string
-  language?: string
-}
+export type { ArtifactData } from "@/lib/rag/detect-artifact"
 
 type UseRagStreamOptions = {
   sessionId: string
@@ -31,41 +28,8 @@ type UseRagStreamOptions = {
 /**
  * Encapsula fetch + lectura del stream SSE + abort controller.
  * ChatInterface solo maneja estado de mensajes; este hook maneja el transporte.
+ * detectArtifact extraído a @/lib/rag/detect-artifact para permitir tests unitarios.
  */
-/** Detecta bloques :::artifact o heurística en el contenido acumulado */
-function detectArtifact(content: string): ArtifactData | null {
-  // Marcador explícito del servidor
-  const artifactMatch = content.match(/:::artifact\{type="(\w+)"(?:\s+lang="(\w+)")?\}([\s\S]*?):::/)
-  if (artifactMatch) {
-    return {
-      type: (artifactMatch[1] as ArtifactData["type"]) ?? "document",
-      content: (artifactMatch[3] ?? "").trim(),
-      language: artifactMatch[2],
-    }
-  }
-
-  // Heurística: bloque de código >= 40 líneas
-  const codeMatch = content.match(/```(\w*)\n([\s\S]{500,})```/)
-  if (codeMatch) {
-    const lines = (codeMatch[2] ?? "").split("\n").length
-    if (lines >= 40) {
-      return { type: "code", content: (codeMatch[2] ?? "").trim(), language: codeMatch[1] || undefined }
-    }
-  }
-
-  // Heurística: tabla markdown con >= 5 columnas
-  const tableMatch = content.match(/\|([^|\n]+\|){4,}/)
-  if (tableMatch) {
-    const cols = (tableMatch[0].match(/\|/g) ?? []).length - 1
-    if (cols >= 5) {
-      const tableStart = content.indexOf(tableMatch[0])
-      const tableEnd = content.lastIndexOf("\n\n", tableStart + 200)
-      return { type: "table", content: content.slice(tableStart, tableEnd > 0 ? tableEnd : undefined).trim() }
-    }
-  }
-
-  return null
-}
 
 export function useRagStream({
   sessionId,

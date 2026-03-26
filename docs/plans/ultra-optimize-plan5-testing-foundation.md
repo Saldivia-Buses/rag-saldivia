@@ -594,7 +594,7 @@ Objetivo: el skill refleja el estado actual y las nuevas reglas. Es la referenci
 | Fase 1 — Estrategia y reglas | ⏳ pendiente | — |
 | Fase 2 — Infrastructure de cobertura | ⏳ pendiente | — |
 | Fase 3 — Cobertura packages/db (14 query files) | ✅ completado | 2026-03-26 |
-| Fase 4 — Cobertura lib/ y hooks/ | ⏳ pendiente | — |
+| Fase 4 — Cobertura lib/ y hooks/ | ✅ completado | 2026-03-26 |
 | Fase 5 — Actualizar rag-testing skill | ⏳ pendiente | — |
 
 ## Estimaciones

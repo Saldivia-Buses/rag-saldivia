@@ -33,6 +33,13 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 #### Changed
 - `packages/db/src/connection.ts`: `_injectDbForTesting()` y `_resetDbForTesting()` para inyectar DB en tests sin modificar singleton de producción — 2026-03-26 *(Plan 5 F3)*
 - `bunfig.toml`: threshold separado por métrica: `line = 0.90`, `function = 0.50` — schema.ts tiene 100% line coverage — 2026-03-26 *(Plan 5 F3)*
+- `apps/web/src/lib/rag/detect-artifact.ts`: función `detectArtifact` extraída de `useRagStream.ts` — lógica pura testeable (marcador explícito + heurísticas código/tabla) — 2026-03-26 *(Plan 5 F4)*
+- `apps/web/src/lib/rag/__tests__/detect-artifact.test.ts`: 15 tests de detectArtifact — marcador explícito, heurísticas, casos sin artifact, prioridad del marcador — 2026-03-26 *(Plan 5 F4)*
+- `apps/web/src/lib/__tests__/webhook.test.ts`: 8 tests de dispatchWebhook — firma HMAC verificable, headers correctos, manejo silencioso de errores (4xx, 500, timeout, AbortError) — 2026-03-26 *(Plan 5 F4)*
+
+#### Changed
+- `apps/web/src/hooks/useRagStream.ts`: `detectArtifact` y `ArtifactData` importados desde `@/lib/rag/detect-artifact` — 2026-03-26 *(Plan 5 F4)*
+- `bunfig.toml`: threshold final `line = 0.95` — meta Plan 5 alcanzada — 2026-03-26 *(Plan 5 F4)*
 
 #### Changed
 - `package.json` raíz: script `test:coverage` vía Turborepo — 2026-03-26 *(Plan 5 F2)*
