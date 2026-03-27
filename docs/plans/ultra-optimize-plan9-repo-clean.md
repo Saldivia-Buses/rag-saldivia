@@ -48,7 +48,7 @@ Cada fase completada → entrada en CHANGELOG.md → commit.
 
 Objetivo: que `git ls-files | grep -E "(\.log|superpowers|playwright-mcp|docs/superpowers|config/\.env)"` devuelva exactamente cero líneas.
 
-**Lista completa de archivos a destrackear (46 archivos — confirmados con `git ls-files`):**
+**Lista completa de archivos a destrackear (47 archivos — confirmados con `git ls-files`):**
 
 ```
 .playwright-mcp/console-2026-03-25T00-51-49-379Z.log
@@ -109,6 +109,8 @@ git rm --cached apps/web/logs/backend.log
 git rm --cached config/.env.saldivia
 git rm --cached -r docs/superpowers/
 ```
+
+> **Nota:** `.turbo/cache/` también estaba trackeado (408 archivos) pero fue purgado antes de que Composer ejecute este plan. Si `git ls-files | grep "\.turbo/"` devuelve algo, agregar `git rm --cached -r .turbo/` a esta lista.
 
 **Entradas exactas a agregar al `.gitignore`** (agregar al final del archivo, antes de `# OS`):
 
@@ -225,11 +227,13 @@ cd ../../packages/db && bunx tsc --noEmit
 - [x] En `packages/logger/src/blackbox.ts`: aplicar spread condicional en `handleIngestionStalled` (línea ~170) — completado 2026-03-27
 - [ ] Crear `packages/db/src/ioredis-mock.d.ts` con `declare module "ioredis-mock"`
 - [x] `cd apps/web && bunx tsc --noEmit` → salida vacía, exit 0 — confirmado 2026-03-27
-- [ ] `cd packages/db && bunx tsc --noEmit` → salida vacía, exit 0 (pendiente — ioredis-mock.d.ts falta)
+- [x] `cd packages/db && bunx tsc --noEmit` → salida vacía, exit 0 — confirmado 2026-03-27
+- [x] Crear `packages/db/src/ioredis-mock.d.ts` con `declare module "ioredis-mock"` — completado 2026-03-27
+- [x] Excluir `src/test-setup.ts` de `packages/db/tsconfig.json` (error `bun:test` types) — completado 2026-03-27
 - [x] `export PATH="$HOME/.bun/bin:$PATH" && cd /home/enzo/rag-saldivia && bun run test` → 259 tests pasan — confirmado 2026-03-27
-- [x] Commits: `fix(blackbox)` + `fix(collections)` — 2026-03-27
+- [x] Commits: `fix(blackbox)` + `fix(collections)` + `fix(db)` — 2026-03-27
 
-**Estado: parcialmente completado — falta crear `packages/db/src/ioredis-mock.d.ts` para que packages/db pase tsc**
+**Estado: completado 2026-03-27**
 
 ---
 
