@@ -1,0 +1,7 @@
+# Default owner
+* @Camionerou
+
+# Rutas críticas — revisión explícita
+/packages/db/ @Camionerou
+/apps/web/src/proxy.ts @Camionerou
+/apps/web/src/lib/auth/ @Camionerou
