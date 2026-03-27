@@ -2,7 +2,7 @@
   "name": "@rag-saldivia/shared",
   "version": "0.1.0",
   "private": true,
-    "exports": {
+  "exports": {
     ".": "./src/index.ts"
   },
   "scripts": {
@@ -12,7 +12,7 @@
     "test:coverage": "bun test src/__tests__ --coverage"
   },
   "dependencies": {
-    "zod": "^3.25.0"
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "typescript": "^6.0.0"

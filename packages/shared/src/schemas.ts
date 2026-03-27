@@ -64,7 +64,7 @@ export const UserSchema = z.object({
   name: z.string().min(1).max(200),
   role: RoleSchema,
   active: z.boolean().default(true),
-  preferences: z.record(z.unknown()).default({}),
+  preferences: z.record(z.string(), z.unknown()).default({}),
   createdAt: z.number().int(),
   lastLogin: z.number().int().nullable().default(null),
   areas: z.array(AreaSchema).optional(), // populated on request
@@ -109,7 +109,7 @@ export const CitationSchema = z.object({
   document: z.string().optional(),
   content: z.string().optional(),
   score: z.number().optional(),
-  metadata: z.record(z.unknown()).optional(),
+  metadata: z.record(z.string(), z.unknown()).optional(),
 })
 export type Citation = z.infer<typeof CitationSchema>
 
@@ -270,7 +270,7 @@ export const LogEventSchema = z.object({
   type: EventTypeSchema,
   userId: z.number().int().nullable().default(null),
   sessionId: z.string().nullable().default(null),
-  payload: z.record(z.unknown()).default({}),
+  payload: z.record(z.string(), z.unknown()).default({}),
   sequence: z.number().int(), // monotónico, para replay ordenado
 })
 export type LogEvent = z.infer<typeof LogEventSchema>
