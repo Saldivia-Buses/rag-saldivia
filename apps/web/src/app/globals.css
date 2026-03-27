@@ -47,7 +47,8 @@
   /* ── Texto ── */
   --fg:         #1a1a1a;
   --fg-muted:   #5a5048;
-  --fg-subtle:  #9a9088;
+  /* ≥4.5:1 sobre --bg (WCAG AA texto normal) */
+  --fg-subtle:  #6b6258;
 
   /* ── Acento: navy profundo ── */
   --accent:        #1a5276;

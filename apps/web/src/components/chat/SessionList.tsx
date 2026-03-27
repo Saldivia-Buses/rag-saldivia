@@ -138,12 +138,14 @@ export function SessionList({ sessions }: { sessions: DbChatSession[] }) {
       <div className="p-3 border-b border-border flex items-center justify-between">
         <span className="text-sm font-medium">Sesiones</span>
         <button
+          type="button"
           onClick={handleNew}
           disabled={creating}
           className="p-1.5 rounded-md hover:opacity-80 transition-opacity disabled:opacity-40"
           title="Nueva sesión"
+          aria-label="Nueva sesión"
         >
-          <Plus size={16} />
+          <Plus size={16} aria-hidden />
         </button>
       </div>
 

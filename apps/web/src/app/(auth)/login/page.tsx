@@ -64,7 +64,8 @@ function LoginContent() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-bg">
-        <div className="w-full max-w-sm">
+      <main className="w-full max-w-sm">
+        <div className="w-full">
 
           {/* Card */}
           <div className="rounded-2xl border border-border bg-surface shadow-sm px-8 py-10 space-y-8">
@@ -142,6 +143,7 @@ function LoginContent() {
             <ThemeToggle />
           </div>
         </div>
+      </main>
     </div>
   )
 }

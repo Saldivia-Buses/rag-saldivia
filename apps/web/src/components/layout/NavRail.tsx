@@ -140,10 +140,12 @@ export function NavRail({
           <Tooltip>
             <TooltipTrigger asChild>
               <button
+                type="button"
+                aria-label="Cerrar sesión"
                 onClick={() => actionLogout()}
                 className="w-9 h-9 flex items-center justify-center rounded-md text-fg-subtle hover:text-fg hover:bg-surface-2 transition-colors"
               >
-                <LogOut size={15} />
+                <LogOut size={15} aria-hidden />
               </button>
             </TooltipTrigger>
             <TooltipContent side="right" sideOffset={8}>
