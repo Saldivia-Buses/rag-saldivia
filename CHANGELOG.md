@@ -9,6 +9,57 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Plan 8 — Optimización (Fases 0–8 completadas)
+
+#### Fase 8 — Redis como dependencia requerida + BullMQ (2026-03-27)
+
+##### Added
+- `docs/decisions/010-redis-required.md`: ADR-010 — Redis como dependencia del sistema, motivo, primitivas usadas — *(Plan 8 F8.22)*
+- `docker-compose.yml`: servicio Redis (`redis:alpine`) con healthcheck — *(Plan 8 F8.22)*
+- `packages/db/src/redis.ts`: cliente Redis singleton `getRedisClient()` con fail-fast si `REDIS_URL` no configurado + `_resetRedisForTesting()` — *(Plan 8 F8.23)*
+- `packages/db/src/test-setup.ts`: preload de bun:test que activa ioredis-mock para tests unitarios — *(Plan 8 F8.23)*
+- `packages/db/bunfig.toml`: preload del test-setup para todos los tests de `packages/db` — *(Plan 8 F8.23)*
+- `packages/db/src/__tests__/redis.test.ts`: 4 tests del cliente Redis singleton — *(Plan 8 F8.23)*
+- `apps/web/src/app/api/notifications/stream/route.ts`: endpoint SSE via Redis Pub/Sub — elimina polling cada 30s — *(Plan 8 F8.28)*
+- `apps/web/src/lib/queue.ts`: BullMQ — definición de `ingestionQueue` (Queue), `createQueueEvents()`, `startIngestionWorker()`, `scheduleToPattern()` — *(Plan 8 F8.30)*
+- `.github/workflows/ci.yml`: `services: redis` + `REDIS_URL` en el job `test-logic` — *(Plan 8 F8 cierre)*
+
+##### Changed
+- `.env.example`: `REDIS_URL` marcado como `[REQUIRED-DEV]` — *(Plan 8 F8.22)*
+- `apps/web/src/app/api/health/route.ts`: verifica Redis via `getRedisClient().ping()` — retorna 503 si está caído — *(Plan 8 F8.22)*
+- `packages/db/src/queries/events.ts`: `nextSequence()` usa Redis `INCR events:seq` — elimina variable `_seq` en memoria — *(Plan 8 F8.24)*
+- `packages/shared/src/schemas.ts`: `jti: z.string().optional()` en `JwtClaimsSchema` — *(Plan 8 F8.25)*
+- `apps/web/src/lib/auth/jwt.ts`: `createJwt` agrega `.setJti(crypto.randomUUID())`; `extractClaims` verifica blacklist Redis antes de retornar claims — *(Plan 8 F8.25)*
+- `apps/web/src/proxy.ts`: propaga header `x-user-jti` para que route handlers verifiquen revocación — *(Plan 8 F8.25)*
+- `apps/web/src/app/api/auth/logout/route.ts`: escribe `SET revoked:{jti} 1 EX {ttl}` en Redis al hacer logout — *(Plan 8 F8.25)*
+- `apps/web/src/workers/external-sync.ts`: master election via Redis `SET NX EX` — evita duplicar sync en múltiples instancias — *(Plan 8 F8.26)*
+- `apps/web/src/lib/rag/collections-cache.ts`: `getCachedRagCollections()` via Redis `GET/SET EX` — elimina `unstable_cache`; `invalidateCollectionsCache()` via `DEL` — *(Plan 8 F8.27)*
+- `apps/web/src/app/api/rag/collections/route.ts`: llama `invalidateCollectionsCache()` después de POST — *(Plan 8 F8.27)*
+- `apps/web/src/hooks/useNotifications.ts`: usa SSE via `EventSource("/api/notifications/stream")` — elimina localStorage y polling — *(Plan 8 F8.28)*
+- `packages/logger/src/rotation.ts`: `getLogFileSize/setLogFileSize` via Redis `HSET/HGET log:sizes` — elimina `_sizeCache Map` en memoria — *(Plan 8 F8.29)*
+- `apps/web/src/workers/ingestion.ts`: solo contiene lógica de negocio pura (`processJob`, `processScheduledReport`) + arranca BullMQ worker — elimina `workerLoop`, `processWithRetry`, `tryLockJob`, `setInterval`, signal handlers — *(Plan 8 F8.30)*
+- `apps/web/src/app/api/upload/route.ts`: usa `ingestionQueue.add()` (BullMQ) en lugar de INSERT en `ingestion_queue` SQLite — *(Plan 8 F8.30)*
+- `apps/web/src/app/api/admin/ingestion/stream/route.ts`: usa BullMQ `QueueEvents` en lugar de polling SQLite cada 3s — *(Plan 8 F8.30)*
+- `apps/web/src/app/api/admin/ingestion/route.ts`: lee jobs desde BullMQ en lugar de `ingestion_queue` SQLite — *(Plan 8 F8.30)*
+- `apps/web/src/app/api/admin/ingestion/[id]/route.ts`: cancela jobs via `job.remove()` de BullMQ — *(Plan 8 F8.30)*
+- `apps/web/src/app/(app)/admin/system/page.tsx`: lee jobs activos desde BullMQ — *(Plan 8 F8.30)*
+- `apps/web/src/components/admin/SystemStatus.tsx`: usa tipo `ActiveJob` en lugar de `DbIngestionQueueItem` — *(Plan 8 F8.30)*
+- `apps/web/src/lib/test-setup.ts`: agrega mock de ioredis con ioredis-mock para tests de web — *(Plan 8 F8.23)*
+- `apps/web/src/lib/auth/__tests__/jwt.test.ts`: test `"createJwt incluye jti único por token"` — *(Plan 8 F8.25)*
+
+##### Removed
+- `packages/db/src/schema.ts`: tabla `ingestion_queue` eliminada — BullMQ reemplaza toda la funcionalidad — *(Plan 8 F8.30)*
+- `packages/db/src/schema.ts`: tipos `DbIngestionQueueItem` y `NewIngestionQueueItem` eliminados — *(Plan 8 F8.30)*
+
+##### Infrastructure
+- `ioredis@5.10.1` agregado como dependencia de `packages/db` y `apps/web` — *(Plan 8 F8.23)*
+- `ioredis-mock@8.13.1` agregado como devDependency de `packages/db` y `apps/web` — *(Plan 8 F8.23)*
+- `bullmq@5.71.1` agregado como dependencia de `apps/web` — *(Plan 8 F8.30)*
+
+**Código eliminado en Fase 8:** ~350 líneas (workarounds in-memory + tabla `ingestion_queue` + `workerLoop` manual)
+
+---
+
 ### Plan 8 — Optimización (Fases 1, 2, 3, 4, 5, 6 y 7 completadas)
 
 #### Fase 7 — Mejoras al sistema de logging y Black Box (2026-03-27)

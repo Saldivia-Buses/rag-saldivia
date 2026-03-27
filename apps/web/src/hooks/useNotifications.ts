@@ -1,10 +1,16 @@
 "use client"
 
-import { useEffect, useRef, useState } from "react"
-import { toast } from "sonner"
+/**
+ * Hook de notificaciones via SSE (Server-Sent Events).
+ * F8.28 — Elimina localStorage y polling cada 30s.
+ *
+ * El servidor publica notificaciones via Redis Pub/Sub.
+ * Este hook se suscribe al stream SSE y muestra toasts en tiempo real.
+ * Los IDs vistos se persisten en Redis Sorted Set (server-side).
+ */
 
-const STORAGE_KEY = "seen_notification_ids"
-const POLL_INTERVAL_MS = 30_000
+import { useEffect, useState } from "react"
+import { toast } from "sonner"
 
 type Notification = {
   id: string
@@ -13,32 +19,12 @@ type Notification = {
   payload: Record<string, unknown>
 }
 
-function getSeenIds(): Set<string> {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    return new Set(raw ? JSON.parse(raw) : [])
-  } catch {
-    return new Set()
-  }
-}
-
-function markSeen(ids: string[]) {
-  try {
-    const existing = getSeenIds()
-    for (const id of ids) existing.add(id)
-    // Mantener solo los últimos 200 IDs vistos para no crecer indefinidamente
-    const trimmed = Array.from(existing).slice(-200)
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed))
-  } catch {
-    // ignorar errores de localStorage
-  }
-}
-
 function toastForNotification(n: Notification) {
   const labels: Record<string, string> = {
     "ingestion.completed": "✅ Ingesta completada",
     "ingestion.error": "❌ Error en ingesta",
     "user.created": "👤 Nuevo usuario registrado",
+    "proactive.docs_available": "📄 Documentos relevantes disponibles",
   }
   const label = labels[n.type] ?? n.type
   const detail = (n.payload as { filename?: string; name?: string }).filename
@@ -54,36 +40,28 @@ function toastForNotification(n: Notification) {
 
 export function useNotifications() {
   const [unreadCount, setUnreadCount] = useState(0)
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
-
-  async function poll() {
-    try {
-      const res = await fetch("/api/notifications")
-      if (!res.ok) return
-      const data = await res.json() as { notifications: Notification[] }
-      const seen = getSeenIds()
-      const unseen = data.notifications.filter((n) => !seen.has(n.id))
-
-      setUnreadCount(unseen.length)
-
-      for (const n of unseen) {
-        toastForNotification(n)
-      }
-
-      if (unseen.length > 0) {
-        markSeen(unseen.map((n) => n.id))
-        setUnreadCount(0)
-      }
-    } catch {
-      // silencioso — no interrumpir la UI por errores de polling
-    }
-  }
 
   useEffect(() => {
-    poll()
-    timerRef.current = setInterval(poll, POLL_INTERVAL_MS)
+    const es = new EventSource("/api/notifications/stream")
+
+    es.onmessage = (e) => {
+      try {
+        const notif = JSON.parse(e.data as string) as Notification
+        toastForNotification(notif)
+        setUnreadCount((c) => c + 1)
+        // Resetear contador después de mostrar el toast
+        setTimeout(() => setUnreadCount((c) => Math.max(0, c - 1)), 5000)
+      } catch {
+        // Ignorar mensajes malformados
+      }
+    }
+
+    es.onerror = () => {
+      // EventSource reconecta automáticamente — no hacer nada
+    }
+
     return () => {
-      if (timerRef.current) clearInterval(timerRef.current)
+      es.close()
     }
   }, [])
 

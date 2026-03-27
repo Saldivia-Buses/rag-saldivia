@@ -2,8 +2,14 @@
 
 import { useRouter } from "next/navigation"
 import { Users, Database, FolderOpen, AlertTriangle, RefreshCw, Loader2 } from "lucide-react"
-import type { DbIngestionQueueItem } from "@rag-saldivia/db"
 import { StatCard } from "@/components/ui/stat-card"
+
+type ActiveJob = {
+  id: string
+  collection: string
+  filename?: string
+  status: "pending" | "done" | "error" | "locked"
+}
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -23,7 +29,7 @@ export function SystemStatus({
   activeJobs,
 }: {
   stats: Stats
-  activeJobs: DbIngestionQueueItem[]
+  activeJobs: ActiveJob[]
 }) {
   const router = useRouter()
 
@@ -66,7 +72,7 @@ export function SystemStatus({
                   <TableHead>ID</TableHead>
                   <TableHead>Colección</TableHead>
                   <TableHead>Estado</TableHead>
-                  <TableHead>Reintentos</TableHead>
+                  <TableHead>Archivo</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -75,12 +81,12 @@ export function SystemStatus({
                     <TableCell className="font-mono text-xs text-fg-muted">{job.id.slice(0, 8)}</TableCell>
                     <TableCell className="text-fg">{job.collection}</TableCell>
                     <TableCell>
-                      <Badge variant={job.status === "locked" ? "default" : "secondary"}>
-                        {job.status === "locked" && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
+                      <Badge variant={job.status === "pending" ? "default" : "secondary"}>
+                        {job.status === "pending" && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
                         {job.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-fg-muted">{job.retryCount}</TableCell>
+                    <TableCell className="text-fg-muted">{job.filename ?? "—"}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

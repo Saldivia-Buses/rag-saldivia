@@ -1,15 +1,30 @@
 /**
  * GET /api/admin/ingestion/stream
  *
- * SSE endpoint que emite el estado de los jobs de ingesta cada 3 segundos.
+ * SSE endpoint que emite eventos de ingesta en tiempo real via BullMQ QueueEvents.
+ * F8.30 — Reemplaza el polling SQLite cada 3s por eventos de BullMQ sobre Redis.
+ *
  * Solo accesible por admins.
  */
 
 import { extractClaims } from "@/lib/auth/jwt"
-import { getDb, ingestionJobs } from "@rag-saldivia/db"
-import { desc } from "drizzle-orm"
+import { ingestionQueue, createQueueEvents, type IngestionJobData } from "@/lib/queue"
+import { Job } from "bullmq"
 
 export const runtime = "nodejs"
+
+function jobToDto(job: Job<IngestionJobData>) {
+  return {
+    id: job.id,
+    name: job.name,
+    data: job.data,
+    state: job.returnvalue !== undefined ? "completed" : "waiting",
+    progress: job.progress,
+    failedReason: job.failedReason,
+    timestamp: job.timestamp,
+    finishedOn: job.finishedOn,
+  }
+}
 
 export async function GET(request: Request) {
   const claims = await extractClaims(request)
@@ -20,6 +35,7 @@ export async function GET(request: Request) {
   const stream = new ReadableStream({
     async start(controller) {
       const encoder = new TextEncoder()
+      const queueEvents = createQueueEvents()
 
       function emit(data: unknown) {
         try {
@@ -29,33 +45,42 @@ export async function GET(request: Request) {
         }
       }
 
-      async function fetchJobs() {
-        const db = getDb()
-        return db
-          .select()
-          .from(ingestionJobs)
-          .orderBy(desc(ingestionJobs.createdAt))
-          .limit(50)
+      // Estado inicial — jobs activos, esperando y recientes
+      try {
+        const jobs = await ingestionQueue.getJobs(["active", "waiting", "completed", "failed"])
+        emit({ type: "init", jobs: jobs.map(jobToDto) })
+      } catch {
+        emit({ type: "init", jobs: [] })
       }
 
-      // Emitir estado inicial
-      const initialJobs = await fetchJobs()
-      emit({ jobs: initialJobs })
+      // Suscribirse a eventos BullMQ en tiempo real
+      queueEvents.on("completed", async ({ jobId }) => {
+        const job = await Job.fromId(ingestionQueue, jobId)
+        if (job) emit({ type: "completed", job: jobToDto(job) })
+      })
 
-      // Polling cada 3s
-      const interval = setInterval(async () => {
-        try {
-          const jobs = await fetchJobs()
-          emit({ jobs })
-        } catch {
-          clearInterval(interval)
-          controller.close()
-        }
-      }, 3000)
+      queueEvents.on("failed", async ({ jobId, failedReason }) => {
+        const job = await Job.fromId(ingestionQueue, jobId)
+        emit({ type: "failed", job: job ? jobToDto(job) : { id: jobId }, error: failedReason })
+      })
+
+      queueEvents.on("progress", async ({ jobId, data }) => {
+        const job = await Job.fromId(ingestionQueue, jobId)
+        if (job) emit({ type: "progress", job: jobToDto(job), progress: data })
+      })
+
+      queueEvents.on("active", async ({ jobId }) => {
+        const job = await Job.fromId(ingestionQueue, jobId)
+        if (job) emit({ type: "active", job: jobToDto(job) })
+      })
+
+      queueEvents.on("waiting", async ({ jobId }) => {
+        emit({ type: "waiting", jobId })
+      })
 
       // Limpiar cuando el cliente desconecta
       request.signal.addEventListener("abort", () => {
-        clearInterval(interval)
+        queueEvents.close().catch(() => {})
         try { controller.close() } catch { /* ya cerrado */ }
       })
     },

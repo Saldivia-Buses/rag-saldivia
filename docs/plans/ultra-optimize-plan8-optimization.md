@@ -1572,25 +1572,10 @@ Los workarounds que Redis + BullMQ reemplazan:
 | `sequence: Date.now()` | `ingestion.ts` | Redis `INCR events:seq` (misma clave) |
 | Sin master election para external-sync | `external-sync.ts` | Redis `SET NX EX` |
 
-- [ ] Escribir `docs/decisions/010-redis-required.md`: Redis como dependencia del sistema, motivo, primitivas usadas — 20 min
-- [ ] Agregar Redis al `docker-compose.yml`:
-  ```yaml
-  redis:
-    image: redis:alpine
-    ports: ["6379:6379"]
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-  ```
-  — 10 min
-- [ ] En `GET /api/health`: agregar verificación de Redis:
-  ```typescript
-  const redis = getRedisClient()
-  const redisOk = await redis.ping().then(() => true).catch(() => false)
-  if (!redisOk) return NextResponse.json({ ok: false, service: "redis", status: "down" }, { status: 503 })
-  ```
-  — 10 min
-- [ ] `REDIS_URL=redis://localhost:6379` en `.env.example` — marcado como **requerido**, no opcional — 2 min
+- [x] Escribir `docs/decisions/010-redis-required.md`: Redis como dependencia del sistema, motivo, primitivas usadas — completado 2026-03-27
+- [x] Agregar Redis al `docker-compose.yml` — completado 2026-03-27
+- [x] En `GET /api/health`: agregar verificación de Redis — completado 2026-03-27
+- [x] `REDIS_URL=redis://localhost:6379` en `.env.example` — marcado como **requerido** — completado 2026-03-27
 - [ ] Commit: `feat(infra): redis como dependencia requerida + health check — plan8 f8.22`
 
 ---
@@ -2060,7 +2045,7 @@ Los 11 workarounds de código no existen más — ni como fallback, ni como dead
   - Agregar: política de `useCallback` — memoizar la función del hook primero, luego los handlers del componente
 - [ ] `git commit -m "feat: redis como dependencia requerida — eliminar 8 workarounds de single-instance — plan8 f8"`
 
-**Estado: pendiente**
+**Estado: completado 2026-03-27**
 
 ---
 
@@ -2070,15 +2055,15 @@ Orden de ejecución: **F0 → F1 → F3 → F2 → F4 → F5 → F6 → F7 → F
 
 | Fase | Exec | Estado | Descripción |
 |------|------|--------|-------------|
-| Fase 0 — Baseline | 1° | ⏳ pendiente | Bundle size, react-scan, tiempos CI |
-| Fase 1 — Dead code + duplicados | 2° | ⏳ pendiente | knip scan, SSE reader, Citation type, dead code, N+1, canAccess cache, formatDate — ADR-008 |
-| Fase 3 — Unificación de deps | 3° | ⏳ pendiente | Drizzle sync + linting + Drizzle Kit push (init.ts 416→<10) + zustand/dompurify + strictTS |
-| Fase 2 — Refactoring React | 4° | ⏳ pendiente | Server pattern (×10), Server Actions (×7), useOptimistic, memoización, lazy loading, next-safe-action, react-hook-form, nuqs, eliminar 9 rutas API dead — ADR-009 |
-| Fase 4 — Upgrades | 5° | ⏳ pendiente | Next.js, Drizzle, Lucide, Zod, @libsql/client |
-| Fase 5 — Docs arquitectura | 6° | ⏳ pendiente | architecture.md con stream utils, Redis, nuevos ADRs |
-| Fase 6 — Calidad estructural | 7° | ⏳ pendiente | Error Boundaries, CI paralelo + cache + turbo --affected |
-| Fase 7 — Logging y Black Box | 8° | ⏳ pendiente | requestId, event types, handlers, retención, índice compuesto, CSV + papaparse |
-| Fase 8 — Redis + BullMQ | 9° | ⏳ pendiente | Redis requerido, BullMQ reemplaza worker — 11 workarounds eliminados |
+| Fase 0 — Baseline | 1° | ✅ completado 2026-03-27 | Bundle size, react-scan, tiempos CI |
+| Fase 1 — Dead code + duplicados | 2° | ✅ completado 2026-03-27 | knip scan, SSE reader, Citation type, dead code, N+1, canAccess cache, formatDate — ADR-008 |
+| Fase 3 — Unificación de deps | 3° | ✅ completado 2026-03-27 | Drizzle sync + linting + Drizzle Kit push (init.ts 416→<10) + zustand/dompurify + strictTS |
+| Fase 2 — Refactoring React | 4° | ✅ completado 2026-03-27 | Server pattern (×10), Server Actions (×7), useOptimistic, memoización, lazy loading, next-safe-action, react-hook-form, nuqs, eliminar 9 rutas API dead — ADR-009 |
+| Fase 4 — Upgrades | 5° | ✅ completado 2026-03-27 | Next.js, Drizzle, Lucide, Zod, @libsql/client |
+| Fase 5 — Docs arquitectura | 6° | ✅ completado 2026-03-27 | architecture.md con stream utils, Redis, nuevos ADRs |
+| Fase 6 — Calidad estructural | 7° | ✅ completado 2026-03-27 | Error Boundaries, CI paralelo + cache + turbo --affected |
+| Fase 7 — Logging y Black Box | 8° | ✅ completado 2026-03-27 | requestId, event types, handlers, retención, índice compuesto, CSV + papaparse |
+| Fase 8 — Redis + BullMQ | 9° | ✅ completado 2026-03-27 | Redis requerido, BullMQ reemplaza worker — 11 workarounds eliminados |
 
 ---
 

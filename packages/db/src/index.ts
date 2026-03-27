@@ -1,4 +1,5 @@
 export { db, getDb } from "./connection"
+export { getRedisClient, _resetRedisForTesting } from "./redis"
 export * from "./schema"
 export * from "./queries/users"
 export * from "./queries/areas"

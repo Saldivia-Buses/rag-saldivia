@@ -7,19 +7,38 @@
  *
  * Rota automáticamente al superar MAX_SIZE_BYTES (default 10MB).
  * Mantiene MAX_ROTATIONS archivos históricos (.1, .2, .3...)
+ *
+ * F8.29 — Elimina _sizeCache Map in-memory.
+ * Los tamaños se persisten en Redis HSET `log:sizes` para sobrevivir
+ * reinicios del proceso y compartirse entre instancias.
  */
 
 import { appendFile, rename, stat, mkdir } from "fs/promises"
 import { existsSync } from "fs"
 import { join } from "path"
 import type { LogLevel } from "@rag-saldivia/shared"
+import { getRedisClient } from "@rag-saldivia/db"
 
 const MAX_SIZE_BYTES = 10 * 1024 * 1024 // 10MB
 const MAX_ROTATIONS = 5
 const LOG_DIR = join(process.cwd(), "logs")
+const SIZES_HASH_KEY = "log:sizes"
 
-// Caché de tamaños para no hacer stat en cada write
-const _sizeCache = new Map<string, number>()
+async function getLogFileSize(filePath: string): Promise<number> {
+  try {
+    return Number(await getRedisClient().hget(SIZES_HASH_KEY, filePath) ?? "0")
+  } catch {
+    return 0
+  }
+}
+
+async function setLogFileSize(filePath: string, size: number): Promise<void> {
+  try {
+    await getRedisClient().hset(SIZES_HASH_KEY, filePath, size)
+  } catch {
+    // Silencioso — no romper el logger si Redis no está disponible
+  }
+}
 
 async function ensureLogDir(): Promise<void> {
   if (!existsSync(LOG_DIR)) {
@@ -28,13 +47,13 @@ async function ensureLogDir(): Promise<void> {
 }
 
 async function rotateIfNeeded(filePath: string): Promise<void> {
-  const cached = _sizeCache.get(filePath) ?? 0
+  const cached = await getLogFileSize(filePath)
   if (cached < MAX_SIZE_BYTES) return
 
   try {
     const s = await stat(filePath)
     if (s.size < MAX_SIZE_BYTES) {
-      _sizeCache.set(filePath, s.size)
+      await setLogFileSize(filePath, s.size)
       return
     }
 
@@ -47,7 +66,7 @@ async function rotateIfNeeded(filePath: string): Promise<void> {
       }
     }
     await rename(filePath, `${filePath}.1`).catch(() => {})
-    _sizeCache.set(filePath, 0)
+    await setLogFileSize(filePath, 0)
   } catch {
     // Ignorar errores de rotación — no romper el servidor
   }
@@ -63,7 +82,8 @@ export async function writeToLogFile(
     await rotateIfNeeded(filePath)
     const entry = line.endsWith("\n") ? line : line + "\n"
     await appendFile(filePath, entry, "utf-8")
-    _sizeCache.set(filePath, (_sizeCache.get(filePath) ?? 0) + entry.length)
+    const currentSize = await getLogFileSize(filePath)
+    await setLogFileSize(filePath, currentSize + entry.length)
   } catch {
     // Silencioso — el logger no debe crashear el servidor
   }

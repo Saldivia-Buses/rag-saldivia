@@ -1,14 +1,16 @@
 /**
  * POST /api/upload
- * Recibe un archivo multipart, lo guarda en disco y crea un job en ingestion_queue.
+ * Recibe un archivo multipart, lo guarda en disco y encola en BullMQ para ingesta.
+ *
+ * F8.30 — Reemplaza INSERT en ingestion_queue (SQLite) por ingestionQueue.add() (BullMQ/Redis).
  */
 
 import { NextResponse } from "next/server"
 import { writeFile, mkdir } from "fs/promises"
 import { join } from "path"
 import { extractClaims } from "@/lib/auth/jwt"
-import { getDb, ingestionQueue } from "@rag-saldivia/db"
 import { canAccessCollection } from "@rag-saldivia/db"
+import { ingestionQueue } from "@/lib/queue"
 import { log } from "@rag-saldivia/logger/backend"
 
 const UPLOAD_DIR = join(process.cwd(), "data", "uploads")
@@ -55,27 +57,22 @@ export async function POST(request: Request) {
     // Sanitizar nombre de archivo
     const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_")
 
-    // Guardar archivo
+    // Guardar archivo en disco
     await mkdir(UPLOAD_DIR, { recursive: true })
     const filePath = join(UPLOAD_DIR, `${Date.now()}_${safeName}`)
     const buffer = await file.arrayBuffer()
     await writeFile(filePath, Buffer.from(buffer))
 
-    // Crear job en la cola
-    const jobId = crypto.randomUUID()
-    const db = getDb()
-    await db.insert(ingestionQueue).values({
-      id: jobId,
-      collection,
+    // Encolar en BullMQ — reemplaza INSERT en ingestion_queue
+    const job = await ingestionQueue.add("ingest", {
       filePath,
+      collection,
       userId,
-      priority: 0,
-      status: "pending",
-      createdAt: Date.now(),
+      filename: safeName,
     })
 
     log.info("ingestion.started", {
-      jobId,
+      jobId: job.id,
       filename: safeName,
       collection,
       sizeMB: sizeMB.toFixed(2),
@@ -83,7 +80,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({
       ok: true,
-      data: { jobId, filename: safeName, collection },
+      data: { jobId: job.id, filename: safeName, collection },
     })
   } catch (error) {
     log.error("system.error", { error: String(error), endpoint: "POST /api/upload" }, { userId })

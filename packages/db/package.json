@@ -20,11 +20,13 @@
     "@libsql/client": "^0.17.2",
     "@rag-saldivia/shared": "workspace:*",
     "bcrypt-ts": "^5.0.0",
-    "drizzle-orm": "0.45.1"
+    "drizzle-orm": "0.45.1",
+    "ioredis": "^5.10.1"
   },
   "devDependencies": {
     "@types/node": "^25.5.0",
     "drizzle-kit": "^0.31.10",
+    "ioredis-mock": "^8.13.1",
     "typescript": "^6.0.0"
   }
 }

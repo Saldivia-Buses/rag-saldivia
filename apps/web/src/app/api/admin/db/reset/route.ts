@@ -7,7 +7,7 @@ import { extractClaims } from "@/lib/auth/jwt"
 import {
   getDb, users, areas, userAreas, areaCollections,
   chatSessions, chatMessages, messageFeedback,
-  ingestionJobs, ingestionAlerts, ingestionQueue, events,
+  ingestionJobs, ingestionAlerts, events,
 } from "@rag-saldivia/db"
 
 export async function POST(request: Request) {
@@ -28,7 +28,6 @@ export async function POST(request: Request) {
     await db.delete(chatMessages)
     await db.delete(chatSessions)
     await db.delete(ingestionAlerts)
-    await db.delete(ingestionQueue)
     await db.delete(ingestionJobs)
     await db.delete(areaCollections)
     await db.delete(userAreas)

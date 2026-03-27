@@ -90,6 +90,16 @@ describe("JWT utilities", () => {
     expect(cookie).toContain("Max-Age=0")
     expect(cookie).toContain("HttpOnly")
   })
+
+  test("createJwt incluye jti único por token", async () => {
+    const t1 = await createJwt(validClaims)
+    const t2 = await createJwt(validClaims)
+    const c1 = await verifyJwt(t1)
+    const c2 = await verifyJwt(t2)
+    expect(c1?.jti).toBeDefined()
+    expect(c2?.jti).toBeDefined()
+    expect(c1?.jti).not.toBe(c2?.jti)
+  })
 })
 
 describe("RBAC utilities", () => {

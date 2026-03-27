@@ -5,23 +5,12 @@
 
 import { eq, gte, lte, and, desc, asc } from "drizzle-orm"
 import { getDb } from "../connection"
+import { getRedisClient } from "../redis"
 import { events } from "../schema"
 import type { EventSource, LogLevel, EventType } from "@rag-saldivia/shared"
 
-// Secuencia monotónica en memoria para esta instancia del proceso.
-// Si el proceso reinicia, continúa desde el máximo en DB.
-let _seq: number | null = null
-
 async function nextSequence(): Promise<number> {
-  if (_seq === null) {
-    const last = await getDb().query.events.findFirst({
-      orderBy: (e, { desc }) => [desc(e.sequence)],
-    })
-    _seq = (last?.sequence ?? 0) + 1
-  } else {
-    _seq++
-  }
-  return _seq
+  return getRedisClient().incr("events:seq")
 }
 
 // ── Escritura ──────────────────────────────────────────────────────────────

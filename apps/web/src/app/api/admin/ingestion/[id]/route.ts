@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server"
 import { extractClaims } from "@/lib/auth/jwt"
-import { getDb, ingestionQueue, ingestionJobs } from "@rag-saldivia/db"
-import { eq, and } from "drizzle-orm"
+import { getDb, ingestionJobs } from "@rag-saldivia/db"
+import { ingestionQueue } from "@/lib/queue"
+import { eq } from "drizzle-orm"
 import { log } from "@rag-saldivia/logger/backend"
 
 export async function DELETE(
@@ -13,31 +14,25 @@ export async function DELETE(
 
   const { id } = await params
   const userId = Number(claims.sub)
-  const db = getDb()
 
-  // Verificar que el job existe y el usuario tiene acceso
-  const condition = claims.role === "admin"
-    ? eq(ingestionQueue.id, id)
-    : and(eq(ingestionQueue.id, id), eq(ingestionQueue.userId, userId))
+  // Cancelar job en BullMQ
+  try {
+    const job = await ingestionQueue.getJob(id)
+    if (!job) {
+      return NextResponse.json({ ok: false, error: "Job no encontrado" }, { status: 404 })
+    }
 
-  const existing = await db
-    .select({ id: ingestionQueue.id })
-    .from(ingestionQueue)
-    .where(condition)
-    .limit(1)
+    // Verificar que el usuario tiene acceso al job
+    if (claims.role !== "admin" && job.data.userId !== userId) {
+      return NextResponse.json({ ok: false, error: "Acceso denegado" }, { status: 403 })
+    }
 
-  if (existing.length === 0) {
-    return NextResponse.json({ ok: false, error: "Job no encontrado" }, { status: 404 })
+    await job.remove()
+    log.info("ingestion.cancelled", { jobId: id }, { userId })
+    return NextResponse.json({ ok: true })
+  } catch {
+    return NextResponse.json({ ok: false, error: "No se pudo cancelar el job" }, { status: 500 })
   }
-
-  await db
-    .update(ingestionQueue)
-    .set({ status: "error", error: "Cancelado manualmente", completedAt: Date.now() })
-    .where(condition)
-
-  log.info("ingestion.cancelled", { jobId: id }, { userId })
-
-  return NextResponse.json({ ok: true })
 }
 
 export async function PATCH(
@@ -55,6 +50,7 @@ export async function PATCH(
     return NextResponse.json({ ok: false, error: "action inválida" }, { status: 400 })
   }
 
+  // El retry de NV-Ingest jobs sigue en SQLite (ingestionJobs del blueprint)
   const db = getDb()
   await db
     .update(ingestionJobs)

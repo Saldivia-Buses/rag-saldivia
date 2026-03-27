@@ -8,7 +8,7 @@ import { NextResponse } from "next/server"
 import { ragFetch } from "@/lib/rag/client"
 import { extractClaims } from "@/lib/auth/jwt"
 import { getUserCollections } from "@rag-saldivia/db"
-import { getCachedRagCollections } from "@/lib/rag/collections-cache"
+import { getCachedRagCollections, invalidateCollectionsCache } from "@/lib/rag/collections-cache"
 
 export async function GET(request: Request) {
   const claims = await extractClaims(request)
@@ -47,9 +47,11 @@ export async function POST(request: Request) {
       body: JSON.stringify({ collection_name: body.name }),
     } as Parameters<typeof ragFetch>[1])
     if ("error" in res) throw new Error(res.error.message)
+    await invalidateCollectionsCache()
     return NextResponse.json({ ok: true })
   } catch {
-    // En modo mock: simular éxito
+    // En modo mock: simular éxito e invalidar cache de todas formas
+    await invalidateCollectionsCache().catch(() => {})
     return NextResponse.json({ ok: true })
   }
 }

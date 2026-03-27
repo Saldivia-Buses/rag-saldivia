@@ -288,16 +288,25 @@ TEST_ADMIN_PASSWORD=changeme
 - **`fireEvent` sobre `userEvent`** — en happy-dom, userEvent tiene problemas de compatibilidad
 - **`bun run test:components`** — usa `--preload component-test-setup.ts` que activa happy-dom
 
+### Redis (ADR-010)
+- **Redis es dependencia requerida** — `getRedisClient()` en `packages/db/src/redis.ts` retorna `Redis` directo, nunca null. Lanza error claro si `REDIS_URL` no configurado
+- **NO importar logger en redis.ts** — crearía dependencia circular `db → logger → db` (ADR-005). Usar `console.error` para errores de conexión en redis.ts
+- **BullMQ usa conexiones propias** — pasar `{ maxRetriesPerRequest: null }` y crear instancias separadas via `getBullMQConnection()`, no reutilizar el singleton de `getRedisClient()`
+- **JWT revocación** — verificada en `extractClaims()` (Node.js runtime), NO en `middleware.ts` (Edge runtime sin soporte de ioredis). El jti se propaga via header `x-user-jti`
+- **Notificaciones** — publisher: `getRedisClient().publish("notifications:{userId}", ...)` en el worker BullMQ. Subscriber: endpoint SSE `/api/notifications/stream` crea conexión dedicada con `.duplicate()`
+- **Cache de colecciones** — `getCachedRagCollections()` en `lib/rag/collections-cache.ts`. Llamar `invalidateCollectionsCache()` después de POST/DELETE en `/api/rag/collections`
+- **Para tests** — ioredis-mock activo via preload (`packages/db/bunfig.toml` y `apps/web/bunfig.toml`). Tests unitarios no requieren Redis real
+
 ### Next.js y React
 - **Server Components por defecto** — cero JS al browser salvo donde sea necesario
 - **`"use client"`** solo en componentes que necesitan estado, efectos, o APIs de browser
 - **`next/font/google`** para Instrument Sans — hace self-hosting automático y optimiza preload
 - **`next/dynamic` con `ssr: false`** solo puede usarse en Client Components, no Server Components
-- **Cache con `unstable_cache`** — cachear llamadas al RAG con `tags: ['collections']`
+- **`lib/rag/stream.ts`** es la utilidad canónica de SSE — nunca duplicar la lógica de lectura de stream
 
 ### Base de datos
 - **Temporal API** para todos los timestamps — `Date.now()` en lugar del bug `_ts()` de SQLite
-- **SQLite locking** — `ingestion_queue` usa `locked_at` para locking optimista sin Redis
+- **Ingesta via BullMQ** — `ingestionQueue.add("ingest", { filePath, collection, userId })` en `upload/route.ts`. La tabla `ingestion_queue` SQLite fue eliminada en Plan 8 F8.30
 - **CJS sobre ESM** — paquetes `packages/*` sin `"type": "module"` para compatibilidad con webpack
 
 ### Logger
@@ -314,7 +323,7 @@ TEST_ADMIN_PASSWORD=changeme
 
 ## Architecture Decision Records (ADRs)
 
-En `docs/decisions/` hay 8 decisiones de arquitectura documentadas. **Leerlas antes de modificar las áreas que cubren:**
+En `docs/decisions/` hay 9 decisiones de arquitectura documentadas. **Leerlas antes de modificar las áreas que cubren:**
 
 | ADR | Decisión | Área afectada |
 |---|---|---|
@@ -324,6 +333,7 @@ En `docs/decisions/` hay 8 decisiones de arquitectura documentadas. **Leerlas an
 | 004 | Temporal API para timestamps | toda query con fechas |
 | 005 | Import estático de db en logger | `packages/logger/src/backend.ts` |
 | 006 | Estrategia de testing | toda la suite de tests |
+| 010 | Redis como dependencia requerida | `packages/db/src/redis.ts`, BullMQ, JWT revocación, cache |
 | 007 | Funciones reales sobre helpers locales en tests | `packages/db/src/__tests__/` |
 
 ---

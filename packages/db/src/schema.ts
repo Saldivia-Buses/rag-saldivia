@@ -530,37 +530,6 @@ export const ingestionAlerts = sqliteTable(
   })
 )
 
-// ── Ingestion Queue (reemplaza Redis) ─────────────────────────────────────
-// Worker hace SELECT + UPDATE locked_at en una transacción.
-// SQLite serializa writes → no hay race condition.
-
-export const ingestionQueue = sqliteTable(
-  "ingestion_queue",
-  {
-    id: text("id").primaryKey(), // UUID
-    collection: text("collection").notNull(),
-    filePath: text("file_path").notNull(),
-    userId: integer("user_id")
-      .notNull()
-      .references(() => users.id),
-    priority: integer("priority").notNull().default(0),
-    status: text("status", { enum: ["pending", "locked", "done", "error"] })
-      .notNull()
-      .default("pending"),
-    lockedAt: integer("locked_at"), // epoch ms — null si no está bloqueado
-    lockedBy: text("locked_by"), // worker instance id
-    createdAt: integer("created_at").notNull(), // epoch ms
-    startedAt: integer("started_at"), // epoch ms
-    completedAt: integer("completed_at"), // epoch ms
-    error: text("error"),
-    retryCount: integer("retry_count").notNull().default(0),
-  },
-  (t) => ({
-    statusIdx: index("idx_queue_status").on(t.status, t.priority),
-    pendingIdx: index("idx_queue_pending").on(t.status, t.lockedAt),
-  })
-)
-
 // ── Events (Black Box) ─────────────────────────────────────────────────────
 // Registro inmutable de todos los eventos del sistema.
 // Permite reconstruir el estado con packages/logger/blackbox.ts.
@@ -668,7 +637,5 @@ export type DbSavedResponse = typeof savedResponses.$inferSelect
 export type NewSavedResponse = typeof savedResponses.$inferInsert
 export type DbIngestionJob = typeof ingestionJobs.$inferSelect
 export type NewIngestionJob = typeof ingestionJobs.$inferInsert
-export type DbIngestionQueueItem = typeof ingestionQueue.$inferSelect
-export type NewIngestionQueueItem = typeof ingestionQueue.$inferInsert
 export type DbEvent = typeof events.$inferSelect
 export type NewEvent = typeof events.$inferInsert

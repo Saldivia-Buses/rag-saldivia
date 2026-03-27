@@ -136,6 +136,8 @@ export async function proxy(request: NextRequest) {
   headers.set("x-user-name", claims.name)
   headers.set("x-user-role", claims.role)
   headers.set("x-request-id", requestId)
+  // Propagar jti para que extractClaims() verifique revocación en route handlers
+  if (claims.jti) headers.set("x-user-jti", claims.jti)
 
   return NextResponse.next({ request: { headers } })
 }

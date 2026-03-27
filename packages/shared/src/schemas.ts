@@ -99,6 +99,7 @@ export const JwtClaimsSchema = z.object({
   role: RoleSchema,
   iat: z.number().int(),
   exp: z.number().int(),
+  jti: z.string().optional(), // JWT ID único — usado para revocación en Redis
 })
 export type JwtClaims = z.infer<typeof JwtClaimsSchema>
 
