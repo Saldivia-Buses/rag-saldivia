@@ -21,5 +21,13 @@ out/
 # Bun
 *.tsbuildinfo
 
+# Turbo
+.turbo/
+**/.turbo/
+
+# Runtime logs
+logs/
+**/logs/
+
 # OS
 .DS_Store
