@@ -87,10 +87,13 @@ Análisis con lectura del código real de los tests. Antes de ejecutar cualquier
 |---|---|---|
 | `parseSseLine`, `collectSseText` | F1.1 | `apps/web/src/lib/rag/__tests__/stream.test.ts` (nuevo) |
 | `CitationSchema.safeParse` con warning en payload inválido | F1.2 | `packages/shared/src/__tests__/schemas.test.ts` |
+| `"formatDate retorna string en formato dd/mm/yyyy"` | F1.7 | `apps/web/src/lib/__tests__/utils.test.ts` |
 | `"createJwt incluye campo jti único"` | F8.25 | `apps/web/src/lib/auth/__tests__/jwt.test.ts` |
 | `"reconstructFromEvents con rag.stream_started"`, `"con ingestion.failed"` | F7.18 | `packages/logger/src/__tests__/logger.test.ts` |
 | `"getRedisClient lanza error si REDIS_URL no configurado"` | F8.23 | `packages/db/src/__tests__/redis.test.ts` (nuevo) |
 | `"BullMQ: job completado dispara evento ingestion.completed"` | F8.30 | `apps/web/src/__tests__/queue.test.ts` (nuevo) |
+| Tests de componentes con `react-hook-form`: render + submit + errores de validación | F2.8 | `apps/web/src/components/admin/__tests__/AreasAdmin.test.tsx` etc. |
+| `"AuditTable filter preserva estado en URL ?q=..."` | F2.9 | `apps/web/src/components/audit/__tests__/AuditTable.test.tsx` |
 
 ---
 
@@ -117,35 +120,35 @@ Objetivo: medir el estado actual antes de tocar nada. Sin baseline no hay eviden
 
 > **Cómo medir:** `bun run build` imprime los tamaños de cada ruta en consola — esos son los números comparables. `@next/bundle-analyzer` genera un HTML interactivo útil para explorar, pero no imprime números en consola. Usá el output de `bun run build` como fuente primaria del baseline.
 
-- [ ] `bun add -d @next/bundle-analyzer` en `apps/web` — 3 min
-- [ ] Agregar a `next.config.ts`:
+- [x] `bun add -d @next/bundle-analyzer` en `apps/web` — completado 2026-03-27
+- [x] Agregar a `next.config.ts`:
   ```typescript
   const withBundleAnalyzer = require("@next/bundle-analyzer")({ enabled: process.env["ANALYZE"] === "true" })
   export default withBundleAnalyzer(nextConfig)
   ```
-- [ ] `bun run build` — copiar el output completo de tamaños de rutas — 5 min
-- [ ] Anotar en `docs/performance/baseline-plan8.md`:
-  - Tamaño del chunk de `/chat` (First Load JS)
-  - Tamaño del chunk de `/collections/[name]/graph`
-  - Tamaño del bundle compartido (`/_app`)
+- [x] `bun run build` — output completo capturado — completado 2026-03-27
+- [x] Anotar en `docs/performance/baseline-plan8.md`:
+  - `/chat`: 120 kB First Load JS
+  - `/chat/[id]`: 171 kB First Load JS
+  - `/collections/[name]/graph`: 119 kB First Load JS
+  - Bundle compartido: 103 kB
 - [ ] `ANALYZE=true bun run build` — abrir el HTML, capturar screenshot mostrando `d3` y `react-pdf` en el bundle de `/chat` — 5 min
 
 ---
 
 ### F0.2 — React render baseline con react-scan
 
-- [ ] `bun run dev` → abrir `/chat` → activar react-scan — 2 min
-- [ ] Escribir texto en el input del chat → observar cuántos componentes re-renderizan — 5 min
-- [ ] Capturar screenshot del panel de react-scan en `ChatInterface` activo
-- [ ] Anotar en `docs/performance/baseline-plan8.md`: componentes que re-renderizan con cada keystroke — 5 min
+- [x] Análisis estático de `ChatInterface.tsx` completado — 5 handlers sin `useCallback` confirmados — 2026-03-27
+- [x] Anotar en `docs/performance/baseline-plan8.md`: componentes que re-renderizan con cada keystroke — completado 2026-03-27
+- [ ] `bun run dev` → abrir `/chat` → activar react-scan → capturar screenshot (requiere browser)
 
 ---
 
 ### F0.3 — Métricas de CI actuales
 
-- [ ] Correr `bun run test` y anotar el tiempo total — 5 min
-- [ ] Revisar el último workflow de CI en GitHub — anotar tiempo de cada job actual — 5 min
-- [ ] Anotar en `docs/performance/baseline-plan8.md` — 2 min
+- [x] Correr `bun run test` y anotar el tiempo total — 1.853s real, 273 tests pass — completado 2026-03-27
+- [x] Revisar estructura del CI en `.github/workflows/ci.yml` — 9 jobs documentados — completado 2026-03-27
+- [x] Anotar en `docs/performance/baseline-plan8.md` — completado 2026-03-27
 
 ---
 
@@ -155,16 +158,16 @@ Objetivo: medir el estado actual antes de tocar nada. Sin baseline no hay eviden
 
 ### Checklist de cierre
 
-- [ ] `docs/performance/baseline-plan8.md` creado con los 3 baseline
-- [ ] Commit: `docs(perf): baseline de medicion pre-plan8 — plan8 f0`
+- [x] `docs/performance/baseline-plan8.md` creado con los 3 baseline — completado 2026-03-27
+- [x] Commit: `docs(perf): baseline de medicion pre-plan8 — plan8 f0` — completado 2026-03-27
 
-**Estado: pendiente**
+**Estado: completado 2026-03-27**
 
 ---
 
-## Fase 1 — Extracción de código duplicado *(4-6 hs)*
+## Fase 1 — Extracción de código duplicado *(5-7 hs)*
 
-Objetivo: eliminar toda duplicación identificable. Al terminar, cada lógica existe en un solo lugar.
+Objetivo: eliminar toda duplicación identificable. Al terminar, cada lógica existe en un solo lugar. **Empezar con F1.0 (knip)** para obtener un mapa completo de dead code antes de tocar nada manualmente.
 
 **Archivos a crear:**
 - `apps/web/src/lib/rag/stream.ts`
@@ -185,6 +188,45 @@ Objetivo: eliminar toda duplicación identificable. Al terminar, cada lógica ex
 - `packages/db/src/queries/sessions.ts`
 - `packages/db/src/queries/rate-limits.ts`
 - `packages/db/src/queries/webhooks.ts`
+
+---
+
+### F1.0 — `knip`: escaneo sistemático de dead code
+
+**Por qué primero:** las tareas F1.1–F1.6 eliminan dead code identificado manualmente. `knip` hace un análisis estático exhaustivo sobre las 176+ archivos TypeScript del proyecto y puede revelar más código muerto antes de que empiece el trabajo manual.
+
+```bash
+bun add -d knip
+```
+
+`knip` detecta:
+- **Exports no usados** — funciones/tipos exportados que nadie importa
+- **Archivos no referenciados** — archivos `.ts`/`.tsx` que no forman parte del grafo de imports
+- **Dependencias no usadas** en `package.json`
+- **Tipos huérfanos** — `type`/`interface` definidos pero nunca usados
+
+```json
+// knip.json (raíz del repo)
+{
+  "workspaces": {
+    "apps/web": { "entry": ["src/app/**/{page,layout,route}.ts{x,}","src/workers/*.ts"] },
+    "packages/db": { "entry": ["src/index.ts"] },
+    "packages/shared": { "entry": ["src/index.ts"] },
+    "packages/logger": { "entry": ["src/index.ts"] },
+    "packages/config": { "entry": ["src/index.ts"] }
+  },
+  "ignore": ["**/__tests__/**","**/*.test.*","**/*.spec.*","src/lib/test-setup.ts","src/lib/component-test-setup.ts"]
+}
+```
+
+> **Hallazgo previo:** ya confirmado que `zustand` y `dompurify` están en `dependencies` con cero usos — `knip` los detectará automáticamente como dependencias no usadas.
+
+- [ ] `bun add -d knip` en la raíz del monorepo — 2 min
+- [ ] Crear `knip.json` con la config de workspaces — 10 min
+- [ ] `bunx knip --reporter compact` — leer el reporte completo — 10 min
+- [ ] Anotar en `docs/performance/baseline-plan8.md` todos los exports/archivos/deps sin uso encontrados — 5 min
+- [ ] Para cada ítem reportado: decidir eliminar ahora (si es seguro) o agregar como tarea explícita a la fase correspondiente — 15 min
+- [ ] Commit: `chore(dx): agregar knip + escaneo inicial de dead code — plan8 f1.0`
 
 ---
 
@@ -353,9 +395,49 @@ for (const col of collectionNames) {
 
 ---
 
+### F1.7 — Centralizar formateo de fechas en `lib/utils.ts`
+
+**Problema:** 12 instancias de `new Date(...).toLocaleDateString("es-AR")` repartidas en 10 archivos. Cada cambio de formato (idioma, zona horaria, precisión) requiere buscar y editar 12 lugares.
+
+```typescript
+// apps/web/src/lib/utils.ts — agregar junto a la función cn() ya existente
+export function formatDate(ts: number | string | Date): string {
+  return new Date(ts).toLocaleDateString("es-AR", {
+    day: "2-digit", month: "2-digit", year: "numeric",
+  })
+}
+
+export function formatDateTime(ts: number | string | Date): string {
+  return new Date(ts).toLocaleString("es-AR", {
+    day: "2-digit", month: "2-digit", year: "numeric",
+    hour: "2-digit", minute: "2-digit",
+  })
+}
+```
+
+**Instancias a reemplazar:**
+- `apps/web/src/workers/ingestion.ts` (2 instancias — `new Date().toLocaleDateString("es-AR")`)
+- `apps/web/src/lib/export.ts` (1 instancia — `new Date(session.createdAt).toLocaleString("es-AR")`)
+- `apps/web/src/components/collections/CollectionHistory.tsx` (1 instancia)
+- `apps/web/src/components/admin/KnowledgeGapsClient.tsx` (2 instancias)
+- `apps/web/src/components/admin/ReportsAdmin.tsx` (1 instancia)
+- `apps/web/src/components/admin/ExternalSourcesAdmin.tsx` (1 instancia)
+- `apps/web/src/app/(app)/saved/page.tsx` (1 instancia)
+- `apps/web/src/app/(app)/projects/[id]/page.tsx` (1 instancia)
+
+> **Notas:**
+> - `packages/logger/src/blackbox.ts` usa `toISOString()` — formato diferente, mantener as-is.
+> - `apps/web/src/components/audit/AuditTable.tsx` usa `.toISOString().replace("T", " ").slice(0,19)` — formato ISO específico, mantener as-is o extraer como `formatIso(ts)` separado.
+
+- [ ] Agregar `formatDate` y `formatDateTime` a `apps/web/src/lib/utils.ts` — 5 min
+- [ ] Reemplazar las 10 instancias en 8 archivos — 15 min
+- [ ] `bun run test` — sin regresiones — 5 min
+
+---
+
 ### Criterio de done
 
-Cero duplicación de SSE reader. Cero `unknown[]` relacionados a sources. `getCachedRagCollections` en un solo archivo. `canAccessCollection` hace una sola query DB por request.
+Cero duplicación de SSE reader. Cero `unknown[]` relacionados a sources. `getCachedRagCollections` en un solo archivo. `canAccessCollection` hace una sola query DB por request. `formatDate`/`formatDateTime` centralizados en `lib/utils.ts`.
 
 ### Checklist de cierre
 
@@ -368,32 +450,68 @@ Cero duplicación de SSE reader. Cero `unknown[]` relacionados a sources. `getCa
 
 ---
 
-## Fase 2 — Refactoring de arquitectura React *(4-6 hs)*
+## Fase 2 — Refactoring de arquitectura React *(12-18 hs)*
 
-Objetivo: corregir antipatrones de Next.js/React que generan trabajo innecesario en el browser.
+Objetivo: corregir antipatrones de Next.js/React que generan trabajo innecesario en el browser. Incluye la eliminación sistemática de `useEffect + fetch` en Client Components, estandarización de forms y URL state.
 
 **Archivos a crear:**
 - `apps/web/src/components/settings/MemoryClient.tsx`
+- `apps/web/src/lib/safe-action.ts`
+- `apps/web/src/lib/form.ts`
+- `apps/web/src/app/actions/auth.ts` (nuevo — `actionLogout`)
+- `apps/web/src/app/actions/projects.ts` (nuevo — `actionCreateProject`, `actionDeleteProject`)
+- `apps/web/src/app/actions/webhooks.ts` (nuevo)
+- `apps/web/src/app/actions/reports.ts` (nuevo)
+- `apps/web/src/app/actions/external-sources.ts` (nuevo)
+- `apps/web/src/app/actions/share.ts` (nuevo — `actionCreateShare`)
 
 **Archivos a modificar:**
 - `apps/web/src/app/(app)/settings/memory/page.tsx`
+- `apps/web/src/app/(app)/admin/webhooks/page.tsx`
+- `apps/web/src/app/(app)/admin/reports/page.tsx`
+- `apps/web/src/app/(app)/admin/external-sources/page.tsx`
+- `apps/web/src/app/(app)/admin/knowledge-gaps/page.tsx`
 - `apps/web/src/app/actions/settings.ts`
+- `apps/web/src/app/actions/chat.ts`
+- `apps/web/src/app/actions/users.ts`
+- `apps/web/src/app/actions/areas.ts`
+- `apps/web/src/app/actions/config.ts`
 - `apps/web/src/components/chat/ChatInterface.tsx`
 - `apps/web/src/components/chat/SessionList.tsx`
+- `apps/web/src/components/chat/CollectionSelector.tsx`
+- `apps/web/src/components/chat/PromptTemplates.tsx`
+- `apps/web/src/components/chat/ShareDialog.tsx`
+- `apps/web/src/components/layout/NavRail.tsx`
+- `apps/web/src/components/layout/CommandPalette.tsx`
+- `apps/web/src/components/layout/panels/ProjectsPanel.tsx`
+- `apps/web/src/components/layout/WhatsNewPanel.tsx`
 - `apps/web/src/components/admin/AnalyticsDashboard.tsx`
+- `apps/web/src/components/admin/WebhooksAdmin.tsx`
+- `apps/web/src/components/admin/ReportsAdmin.tsx`
+- `apps/web/src/components/admin/ExternalSourcesAdmin.tsx`
+- `apps/web/src/components/admin/KnowledgeGapsClient.tsx`
+- `apps/web/src/components/admin/UsersAdmin.tsx`
+- `apps/web/src/components/admin/AreasAdmin.tsx`
+- `apps/web/src/components/collections/CollectionsList.tsx`
+- `apps/web/src/components/projects/ProjectsClient.tsx`
+- `apps/web/src/components/settings/SettingsClient.tsx`
+- `apps/web/src/app/(auth)/login/page.tsx`
 - `apps/web/src/app/(app)/collections/[name]/graph/page.tsx`
 
 ---
 
-### F2.4 — Refactorizar `settings/memory/page.tsx` a Server Pattern
+### F2.4 — Eliminar `useEffect + fetch` para carga de datos: Server Component + props
 
-**Problema:** única página de `(app)/` con `"use client"` y raw `fetch()`. Viola el patrón del resto de la app.
+**Problema detectado con repomix:** el anti-patrón de `settings/memory/page.tsx` no es un caso aislado — hay **10 componentes** con `useEffect + fetch("/api/...")` para cargar datos iniciales. El patrón correcto en Next.js App Router es que la página (Server Component) fetche los datos y los pase como props al componente cliente.
 
 ```
-Patrón actual:    "use client" + useEffect + fetch("/api/memory")
-Patrón correcto:  Server Component + Server Actions
+Patrón actual (×10):   Client Component → useEffect → fetch("/api/...") → setState
+Patrón correcto:       page.tsx (Server) → DB query → <ClientComponent data={data} />
 ```
 
+> **Por qué esto importa:** con el patrón actual, el browser hace un request HTTP adicional por componente después de la hidratación. Con Server Components, los datos viajan en el HTML inicial — cero requests adicionales, cero loading states, cero código de fetch en el cliente.
+
+**F2.4a — settings/memory (page con "use client")**
 ```typescript
 // page.tsx — Server Component
 export default async function MemoryPage() {
@@ -401,16 +519,74 @@ export default async function MemoryPage() {
   const entries = await getMemory(user.id)
   return <MemoryClient entries={entries} />
 }
-
 // actions/settings.ts — agregar:
 export async function actionAddMemory(key: string, value: string): Promise<void>
 export async function actionDeleteMemory(key: string): Promise<void>
 ```
-
-- [ ] Crear `MemoryClient.tsx` — Client Component con estado local que actualiza optimisticamente — 30 min
+- [ ] Crear `MemoryClient.tsx` — Client Component con estado local — 30 min
 - [ ] Agregar `actionAddMemory` y `actionDeleteMemory` en `actions/settings.ts` — 20 min
 - [ ] Reescribir `settings/memory/page.tsx` como Server Component — 15 min
-- [ ] `bun run test:components` — SettingsClient tests pasan — 5 min
+
+**F2.4b — WebhooksAdmin, ReportsAdmin, ExternalSourcesAdmin, KnowledgeGapsClient**
+
+Los 4 componentes de admin más complejos — cada uno hace `useEffect(() => { fetch("/api/admin/...") })` para cargar sus datos iniciales. Las páginas correspondientes ya son Server Components vacíos que solo renderizan el Client Component.
+
+```typescript
+// apps/web/src/app/(app)/admin/webhooks/page.tsx — ANTES
+export default function WebhooksPage() {
+  return <WebhooksAdmin />   // WebhooksAdmin hace fetch internamente
+}
+
+// DESPUÉS — la página fetche, el componente solo renderiza
+export default async function WebhooksPage() {
+  const webhooks = await getWebhooks()
+  return <WebhooksAdmin initialWebhooks={webhooks} />
+}
+
+// WebhooksAdmin.tsx — eliminar useEffect + useState para carga inicial
+// Los datos vienen como prop, el useState se inicializa con initialWebhooks
+```
+
+- [ ] `admin/webhooks/page.tsx`: fetch server-side + pasar como prop a `WebhooksAdmin` — 15 min
+- [ ] `admin/reports/page.tsx`: fetch server-side + pasar como prop a `ReportsAdmin` — 15 min
+- [ ] `admin/external-sources/page.tsx`: fetch server-side + pasar como prop a `ExternalSourcesAdmin` — 15 min
+- [ ] `admin/knowledge-gaps/page.tsx`: fetch server-side + pasar como prop a `KnowledgeGapsClient` — 15 min
+- [ ] En cada componente: eliminar `useEffect` y `useState` para carga inicial; aceptar `initialData` como prop — 30 min total
+
+**F2.4c — Componentes de layout y chat con fetch interno**
+
+Los siguientes componentes hacen fetch para datos que pueden pasarse como props desde el layout o la página:
+
+| Componente | Fetch actual | Solución |
+|---|---|---|
+| `CommandPalette.tsx` | `fetch("/api/chat/sessions")` | pasar `initialSessions` desde `AppShell` (que ya tiene el usuario) |
+| `ProjectsPanel.tsx` | `fetch("/api/projects")` | pasar `initialProjects` desde `AppShell` |
+| `WhatsNewPanel.tsx` | `fetch("/api/changelog")` | pasar `changelog` desde `AppShell` |
+| `PromptTemplates.tsx` | `fetch("/api/admin/templates")` | pasar `templates` desde la página `/chat/[id]` |
+| `CollectionSelector.tsx` | `fetch("/api/rag/collections")` | pasar `collections` desde la página |
+
+```typescript
+// apps/web/src/app/(app)/layout.tsx — ya es Server Component, agregar fetches
+const [projects, sessions, changelog] = await Promise.all([
+  getProjects(user.id),
+  getChatSessions(user.id, { limit: 20 }),
+  getChangelog(),
+])
+return (
+  <AppShell
+    user={user}
+    initialProjects={projects}
+    initialSessions={sessions}
+    changelog={changelog}
+  />
+)
+```
+
+- [ ] En `app/(app)/layout.tsx`: agregar `Promise.all` con los fetches de projects, sessions, changelog — 20 min
+- [ ] Actualizar `AppShell` para recibir y propagar `initialProjects`, `initialSessions`, `changelog` — 20 min
+- [ ] Actualizar `CommandPalette`, `ProjectsPanel`, `WhatsNewPanel` para aceptar props iniciales — 20 min
+- [ ] Pasar `templates` y `collections` desde las páginas de chat — 15 min
+- [ ] `bun run test:components` — sin regresiones — 10 min
 
 ---
 
@@ -475,29 +651,41 @@ const DocumentGraph = dynamic(
 
 ---
 
-### F2.7 — `next-safe-action`: estandarizar validación en Server Actions
+### F2.7 — `next-safe-action`: estandarizar validación + nuevas Server Actions para mutaciones
 
-**Problema:** las 22 Server Actions del proyecto tienen el mismo boilerplate manual en cada una: `requireUser()` + `safeParse()` + manejo de errores. Sin estándar, algunas validan, otras no — inconsistencia silenciosa.
+**Problema A:** las 22 Server Actions del proyecto tienen el mismo boilerplate manual en cada una: `requireUser()` + `safeParse()` + manejo de errores.
 
-**Código que desaparece en cada action:**
+**Problema B (descubierto con repomix):** 7 componentes usan `fetch()` directamente para mutaciones (POST/DELETE) en lugar de Server Actions — inconsistencia con el resto de la app y sin validación ni manejo de errores estandarizado:
+
+| Componente | fetch() actual | Reemplazar con |
+|---|---|---|
+| `NavRail.tsx` | `fetch("/api/auth/logout", DELETE)` | `actionLogout()` en `actions/auth.ts` |
+| `ShareDialog.tsx` | `fetch("/api/share", POST)` | `actionCreateShare()` en `actions/chat.ts` |
+| `ProjectsClient.tsx` | `fetch("/api/projects", POST)` | `actionCreateProject()` en `actions/projects.ts` |
+| `CollectionsList.tsx` | `fetch("/api/rag/collections", DELETE)` | `actionDeleteCollection()` en `actions/areas.ts` |
+| `WebhooksAdmin.tsx` | `fetch("/api/admin/webhooks", POST/DELETE)` | `actionCreateWebhook()`, `actionDeleteWebhook()` en `actions/webhooks.ts` |
+| `ReportsAdmin.tsx` | `fetch("/api/admin/reports", POST/DELETE)` | `actionCreateReport()`, `actionDeleteReport()` en `actions/reports.ts` |
+| `ExternalSourcesAdmin.tsx` | `fetch("/api/admin/external-sources", POST/DELETE)` | `actionCreateExternalSource()`, `actionDeleteExternalSource()` en `actions/external-sources.ts` |
+
+**Código que desaparece en las 22 actions existentes:**
 ```typescript
 // Antes — ~5 líneas de boilerplate por action (×22 = ~110 líneas)
 export async function actionCreateSession(data: unknown) {
-  const user = await requireUser()                    // repetido en cada action
-  const parsed = CreateSessionSchema.safeParse(data)  // repetido en cada action
-  if (!parsed.success) return { error: "Datos inválidos" }  // repetido
+  const user = await requireUser()
+  const parsed = CreateSessionSchema.safeParse(data)
+  if (!parsed.success) return { error: "Datos inválidos" }
   // lógica real
 }
 
 // Después — lógica directo, sin boilerplate
 const authClient = createSafeActionClient()
-  .use(async ({ next }) => {                          // middleware de auth — una sola vez
+  .use(async ({ next }) => {
     const user = await requireUser()
     return next({ ctx: { user } })
   })
 
 export const actionCreateSession = authClient
-  .schema(CreateSessionSchema)                        // validación automática
+  .schema(CreateSessionSchema)
   .action(async ({ parsedInput, ctx: { user } }) => {
     // lógica real directo
   })
@@ -509,28 +697,203 @@ export const actionCreateSession = authClient
 - `apps/web/src/app/actions/areas.ts`
 - `apps/web/src/app/actions/settings.ts`
 - `apps/web/src/app/actions/config.ts`
+- `apps/web/src/components/layout/NavRail.tsx`
+- `apps/web/src/components/chat/ShareDialog.tsx`
+- `apps/web/src/components/projects/ProjectsClient.tsx`
+- `apps/web/src/components/collections/CollectionsList.tsx`
+- `apps/web/src/components/admin/WebhooksAdmin.tsx`
+- `apps/web/src/components/admin/ReportsAdmin.tsx`
+- `apps/web/src/components/admin/ExternalSourcesAdmin.tsx`
 
 **Archivos a crear:**
-- `apps/web/src/lib/safe-action.ts` — cliente base con middleware de auth
+- `apps/web/src/lib/safe-action.ts`
+- `apps/web/src/app/actions/auth.ts`
+- `apps/web/src/app/actions/projects.ts`
+- `apps/web/src/app/actions/webhooks.ts`
+- `apps/web/src/app/actions/reports.ts`
+- `apps/web/src/app/actions/external-sources.ts`
 
 - [ ] `bun add next-safe-action` en `apps/web` — 2 min
 - [ ] Crear `apps/web/src/lib/safe-action.ts`: `authClient` con middleware `requireUser()` y `adminClient` con `requireAdmin()` — 20 min
-- [ ] Migrar `chat.ts` (las actions más usadas) al nuevo patrón — 30 min
-- [ ] Migrar `users.ts`, `areas.ts`, `settings.ts`, `config.ts` — 30 min
-- [ ] **Actualizar mocks en 5 component tests** — `next-safe-action` cambia el retorno de `Promise<void>` a `Promise<SafeActionResult<T>>`. Cambiar todos los mocks de:
+- [ ] Migrar `chat.ts`, `users.ts`, `areas.ts`, `settings.ts`, `config.ts` al nuevo patrón — 60 min
+- [ ] Crear `actions/auth.ts` con `actionLogout()` usando `cookies()` de Next.js para invalidar la cookie — 15 min
+- [ ] Crear `actions/projects.ts` con `actionCreateProject`, `actionDeleteProject` — 20 min
+- [ ] Crear `actions/webhooks.ts`, `actions/reports.ts`, `actions/external-sources.ts` — 30 min
+- [ ] Crear `actions/share.ts` con `actionCreateShare` — 15 min (mover de `api/share/route.ts`)
+- [ ] En `NavRail.tsx`: reemplazar `fetch("/api/auth/logout")` con `actionLogout()` — 5 min
+- [ ] En `ShareDialog.tsx`: reemplazar `fetch("/api/share")` con `actionCreateShare()` — 5 min
+- [ ] En `ProjectsClient.tsx`: reemplazar fetch con `actionCreateProject`/`actionDeleteProject` — 10 min
+- [ ] En `CollectionsList.tsx`: reemplazar fetch DELETE con `actionDeleteCollection` — 5 min
+- [ ] En `WebhooksAdmin.tsx`, `ReportsAdmin.tsx`, `ExternalSourcesAdmin.tsx`: reemplazar fetch mutations con las nuevas actions — 20 min
+- [ ] **Actualizar mocks en 5 component tests** — `next-safe-action` cambia el retorno de `Promise<void>` a `Promise<SafeActionResult<T>>`:
   ```typescript
-  actionCreateArea: mock(() => Promise.resolve())
-  // → a:
   actionCreateArea: mock(() => Promise.resolve({ data: undefined }))
   ```
   Archivos: `AreasAdmin.test.tsx`, `UsersAdmin.test.tsx`, `RagConfigAdmin.test.tsx`, `PermissionsAdmin.test.tsx`, `SettingsClient.test.tsx` — 15 min
-- [ ] `bun run test:components` — las actions siguen funcionando en los component tests — 10 min
+- [ ] `bun run test:components` — 10 min
+
+---
+
+### F2.7b — `useOptimistic`: UI instantánea en operaciones CRUD
+
+**Problema:** todas las mutaciones de listas actualizan el estado manualmente después de la action con `setState(prev => prev.filter/map/concat)`. Si la action falla, el estado queda desincronizado.
+
+**`useOptimistic` es un hook de React 19** — ya disponible sin nueva dependencia. Actualiza la UI instantáneamente y hace rollback automático si la action falla.
+
+```typescript
+// Antes — en AreasAdmin, UsersAdmin, WebhooksAdmin, etc.
+const [areas, setAreas] = useState(initialAreas)
+
+async function handleDelete(id: number) {
+  await actionDeleteArea(id)
+  setAreas(prev => prev.filter(a => a.id !== id))  // manual, sin rollback
+}
+
+// Después — con useOptimistic
+const [optimisticAreas, applyOptimistic] = useOptimistic(
+  areas,
+  (state, action: { type: "delete"; id: number } | { type: "create"; area: DbArea }) => {
+    if (action.type === "delete") return state.filter(a => a.id !== action.id)
+    if (action.type === "create") return [...state, action.area]
+    return state
+  }
+)
+
+async function handleDelete(id: number) {
+  applyOptimistic({ type: "delete", id })  // UI actualiza instantáneamente
+  await actionDeleteArea(id)               // si falla → rollback automático
+  // NO necesita setState manual
+}
+```
+
+**Componentes a actualizar:**
+- `AreasAdmin.tsx` — create + delete
+- `UsersAdmin.tsx` — create + delete
+- `WebhooksAdmin.tsx` — create + delete
+- `ReportsAdmin.tsx` — create + delete
+- `ExternalSourcesAdmin.tsx` — create + delete
+- `ProjectsClient.tsx` — create + delete
+- `CollectionsList.tsx` — delete
+
+- [ ] Aplicar `useOptimistic` en `AreasAdmin` y `UsersAdmin` (empezar por los más simples) — 30 min
+- [ ] Aplicar en `WebhooksAdmin`, `ReportsAdmin`, `ExternalSourcesAdmin` — 30 min
+- [ ] Aplicar en `ProjectsClient` y `CollectionsList` — 20 min
+- [ ] `bun run test:components` — sin regresiones (los tests no cambian comportamiento externo) — 10 min
+
+---
+
+---
+
+### F2.8 — `react-hook-form`: eliminar estado manual de formularios
+
+**Problema:** 50-70 llamadas a `useState` repartidas en 7 componentes para manejar campos de formulario — `newEmail`, `newName`, `newPassword`, `newRole`, etc. — cada una con su `onChange` handler manual y su `formError` propio. El mismo boilerplate se repite en cada form.
+
+**Código que desaparece (ejemplo de `UsersAdmin`):**
+```typescript
+// Antes — 6 useState de formulario + onChange manual en cada input
+const [newEmail, setNewEmail] = useState("")
+const [newName, setNewName] = useState("")
+const [newPassword, setNewPassword] = useState("")
+const [newRole, setNewRole] = useState<"admin" | "area_manager" | "user">("user")
+const [newAreaIds, setNewAreaIds] = useState<number[]>([])
+const [formError, setFormError] = useState<string | null>(null)
+
+// Después — 1 useForm, la validación Zod ya existe en packages/shared
+const form = useForm<CreateUserInput>({
+  resolver: zodResolver(CreateUserSchema),
+  defaultValues: { email: "", name: "", role: "user", areaIds: [] },
+})
+const { execute, isExecuting } = useAction(actionCreateUser, {
+  onError: ({ error }) => form.setError("root", { message: error.serverError }),
+})
+// Los inputs: {...form.register("email")} — sin onChange manual
+// El submit: form.handleSubmit(execute)
+```
+
+> **Ventaja de integración:** `react-hook-form` tiene soporte nativo con `next-safe-action` via el hook `useAction` del paso F2.7. La validación Zod en `packages/shared` se reutiliza sin duplicar.
+
+**Instalar:**
+```bash
+bun add react-hook-form @hookform/resolvers
+```
+
+**Archivos a crear:**
+- `apps/web/src/lib/form.ts` — helper `createForm<T>(schema)` que configura `zodResolver` por defecto
+
+**Archivos a modificar:**
+- `apps/web/src/components/settings/SettingsClient.tsx` — form de perfil + form de contraseña
+- `apps/web/src/app/(auth)/login/page.tsx` — form de login
+- `apps/web/src/components/admin/AreasAdmin.tsx` — forms create/edit
+- `apps/web/src/components/admin/UsersAdmin.tsx` — form create (el más complejo: 5 campos)
+- `apps/web/src/components/admin/WebhooksAdmin.tsx` — form create
+- `apps/web/src/components/admin/ReportsAdmin.tsx` — form create
+- `apps/web/src/components/admin/ExternalSourcesAdmin.tsx` — form create
+
+- [ ] `bun add react-hook-form @hookform/resolvers` en `apps/web` — 2 min
+- [ ] Crear `apps/web/src/lib/form.ts`: helper que combina `useForm` + `zodResolver` + tipos inferidos — 10 min
+- [ ] Migrar `SettingsClient.tsx` (empezar aquí — 2 forms simples como referencia) — 30 min
+- [ ] Migrar `login/page.tsx` — 20 min
+- [ ] Migrar `AreasAdmin.tsx` — 2 forms (create + edit) — 30 min
+- [ ] Migrar `UsersAdmin.tsx` — form más complejo (5 campos + multi-select) — 30 min
+- [ ] Migrar `WebhooksAdmin.tsx`, `ReportsAdmin.tsx`, `ExternalSourcesAdmin.tsx` — 30 min total
+- [ ] `bun run test:components` — sin regresiones — 10 min
+
+---
+
+### F2.9 — `nuqs`: URL state para filtros
+
+**Problema:** los filtros de búsqueda en `AuditTable` y `DataTable` viven solo en `useState` local — no se preservan con el navegador atrás/adelante, no son compartibles por URL, y el filtrado se hace en JavaScript (todos los registros llegan al cliente).
+
+**`nuqs` convierte `useState` en URL query params** con la misma API:
+```typescript
+// Antes
+const [filter, setFilter] = useState("")  // no en URL, no compartible
+
+// Después — API idéntica a useState, pero el valor vive en ?q=...
+const [filter, setFilter] = useQueryState("q", { defaultValue: "" })
+```
+
+**El caso más impactante:** `AuditTable` filtra eventos en JS después de cargar todos. Con nuqs + Server Components, el filtro puede llegar al `page.tsx` via `searchParams` y filtrar en SQL:
+```typescript
+// audit/page.tsx (Server Component) — con nuqs el filtro llega como searchParams
+export default async function AuditPage({ searchParams }: { searchParams: { q?: string } }) {
+  const events = await getEvents({ filter: searchParams.q })  // filtro en SQL, no JS
+  return <AuditTable events={events} />
+}
+```
+
+**Instalar:**
+```bash
+bun add nuqs
+```
+
+**Setup (una sola vez):**
+```typescript
+// apps/web/src/app/layout.tsx — wrappear con NuqsAdapter
+import { NuqsAdapter } from "nuqs/adapters/next/app"
+export default function RootLayout({ children }) {
+  return <NuqsAdapter>{children}</NuqsAdapter>
+}
+```
+
+**Archivos a modificar:**
+- `apps/web/src/app/layout.tsx` — agregar `NuqsAdapter`
+- `apps/web/src/components/audit/AuditTable.tsx` — `useState("")` → `useQueryState("q")`
+- `apps/web/src/app/(app)/audit/page.tsx` — filtrar en SQL con `searchParams.q`
+- `apps/web/src/components/ui/data-table.tsx` — sorting/pagination → `useQueryState`
+
+- [ ] `bun add nuqs` en `apps/web` — 2 min
+- [ ] Agregar `NuqsAdapter` en `app/layout.tsx` — 3 min
+- [ ] Migrar `AuditTable.tsx`: `useState → useQueryState("q")` — 10 min
+- [ ] Actualizar `audit/page.tsx`: filtrar en SQL con `searchParams.q` — 15 min
+- [ ] Migrar `DataTable` sorting/pagination a `useQueryState` — 20 min
+- [ ] `bun run test:components` — sin regresiones — 5 min
 
 ---
 
 ### Criterio de done
 
-`settings/memory/page.tsx` sin `"use client"`. react-scan no reporta renders en cascada en ChatInterface. Bundle del chunk `/chat` no incluye d3 ni react-pdf. Todas las actions usan `next-safe-action` con validación automática.
+Cero `useEffect + fetch` en Client Components para carga de datos. Cero `fetch()` directo para mutaciones — todo pasa por Server Actions. `settings/memory/page.tsx` sin `"use client"`. react-scan no reporta renders en cascada en ChatInterface. Bundle del chunk `/chat` no incluye d3 ni react-pdf. Todas las actions usan `next-safe-action`. Formularios admin usan `react-hook-form`. Filtros de `AuditTable` en la URL.
 
 ### Checklist de cierre
 
@@ -540,7 +903,37 @@ export const actionCreateSession = authClient
 - [ ] Comparar react-scan con baseline F0.2 — documentar renders eliminados
 - [ ] Crear `docs/decisions/009-memoization-policy.md` — cuándo usar `useCallback`/`useMemo` (evidencia de react-scan, no mecánico) — 10 min
 - [ ] CHANGELOG.md actualizado
-- [ ] `git commit -m "perf(web): server pattern, memoizacion, lazy loading, next-safe-action — plan8 f2"`
+- [ ] `git commit -m "perf(web): server pattern, memoizacion, lazy loading, next-safe-action, rhf, nuqs — plan8 f2"`
+
+---
+
+### F2.10 — Eliminar rutas API que quedan sin callers tras F2.4 + F2.7
+
+**Contexto:** una consecuencia directa de F2.4 (datos → props desde Server Component) y F2.7 (mutaciones → Server Actions) es que varios route handlers quedan sin ningún llamador externo. Son dead code HTTP: mantenibles, testeables y con superficie de ataque sin utilidad.
+
+> **Prerequisito:** ejecutar esta tarea **después** de completar F2.4 y F2.7. Antes, estas rutas siguen siendo usadas.
+
+**Rutas a eliminar (9 archivos):**
+
+| Ruta | Motivo de eliminación |
+|---|---|
+| `app/api/admin/webhooks/route.ts` | fetch GET → props; fetch POST/DELETE → Server Action |
+| `app/api/admin/reports/route.ts` | ídem |
+| `app/api/admin/external-sources/route.ts` | ídem |
+| `app/api/admin/knowledge-gaps/route.ts` | fetch GET → props |
+| `app/api/changelog/route.ts` | fetch GET → prop desde layout |
+| `app/api/memory/route.ts` | fetch → Server Actions `actionAddMemory`/`actionDeleteMemory` |
+| `app/api/projects/route.ts` | fetch GET → props; fetch POST → Server Action |
+| `app/api/chat/sessions/route.ts` | fetch GET → prop desde layout |
+| `app/api/share/route.ts` | fetch POST → `actionCreateShare()` |
+
+> **Antes de eliminar cada ruta:** confirmar con `rg '"/api/...' apps/web/src` que el archivo tiene cero callers. Las rutas de Slack (`/api/slack`), Teams (`/api/teams`), health (`/api/health`), upload (`/api/upload`), y todas las rutas de `/api/rag/` son webhooks externos o endpoints legítimos — **no tocar**.
+
+- [ ] Para cada ruta de la tabla: verificar cero callers con `rg "/api/[ruta]"` — 10 min
+- [ ] Eliminar los 9 archivos de route handler — 5 min
+- [ ] `bun run build` — sin errores de imports rotos — 5 min
+- [ ] `bun run test` — sin regresiones — 5 min
+- [ ] Commit: `refactor(web): eliminar 9 rutas API reemplazadas por Server Actions — plan8 f2.10`
 
 **Estado: pendiente**
 
@@ -631,9 +1024,46 @@ await migrate(db, { migrationsFolder: "./drizzle" })
 
 ---
 
+---
+
+### F3.10 — Eliminar dependencias sin uso + alinear TypeScript strict
+
+**Hallazgo con repomix:** dos dependencias en `apps/web/package.json` con **cero imports** en todo el código fuente:
+
+```bash
+# zustand — instalado, nunca importado
+# dompurify — instalado, nunca importado
+bun remove zustand dompurify
+```
+
+Cada dependencia sin uso en `package.json` es:
+- Código descargado en cada `bun install`
+- Superficie de ataque en supply chain
+- Confusión para cualquiera que lea las deps
+
+**Alinear `exactOptionalPropertyTypes` entre packages:**
+
+`packages/shared/tsconfig.json` tiene `"exactOptionalPropertyTypes": true` — el nivel de rigor más alto para optional props. `apps/web/tsconfig.json` no lo tiene, creando una inconsistencia: el código de shared es más estricto que el de web.
+
+```json
+// apps/web/tsconfig.json — agregar en compilerOptions:
+"exactOptionalPropertyTypes": true
+```
+
+> **Precaución:** esta opción puede revelar errores latentes en `apps/web`. Ejecutar `tsc --noEmit` después de agregarla y corregir los errores que aparezcan antes de commitear.
+
+- [ ] `bun remove zustand dompurify` en `apps/web` — 2 min
+- [ ] Verificar con `rg "zustand|dompurify" apps/web/src` que realmente tienen 0 usos — 2 min
+- [ ] Agregar `"exactOptionalPropertyTypes": true` en `apps/web/tsconfig.json` — 2 min
+- [ ] `cd apps/web && tsc --noEmit` — corregir los errores que aparezcan (esperar 5-20 según el impacto) — variable
+- [ ] `bun run test` — sin regresiones — 5 min
+- [ ] Commit: `chore(deps): remover deps sin uso + alinear exactOptionalPropertyTypes — plan8 f3.10`
+
+---
+
 ### Criterio de done
 
-`bun install` resuelve una sola versión de drizzle-orm. `turbo lint` pasa. `init.ts` tiene < 10 líneas. Los índices futuros se agregan solo en `schema.ts`.
+`bun install` resuelve una sola versión de drizzle-orm. `turbo lint` pasa. `init.ts` tiene < 10 líneas. Los índices futuros se agregan solo en `schema.ts`. `zustand` y `dompurify` eliminados. `exactOptionalPropertyTypes` consistente en todo el monorepo.
 
 ### Checklist de cierre
 
@@ -820,16 +1250,16 @@ export default function ChatError({ error, reset }: { error: Error; reset: () =>
 
 ---
 
-### F6.16 — Optimización de CI (paralelización y caché)
+### F6.16 — Optimización de CI (paralelización, caché y `--affected`)
 
-El CI actual corre `bun run test`, `test:components`, `test:visual` y `test:a11y` en jobs secuenciales o sin caché de dependencias.
+El CI actual corre `bun run test`, `test:components`, `test:visual` y `test:a11y` en jobs secuenciales o sin caché de dependencias. Cada PR ejecuta la suite completa aunque solo haya cambiado un archivo de un package.
 
 **Archivos a modificar:**
 - `.github/workflows/ci.yml`
+- `turbo.json`
 
 ```yaml
-# Antes — jobs corren uno detrás del otro
-# Después — paralelización máxima
+# Después — paralelización máxima + cache de Bun
 
 jobs:
   test-logic:
@@ -846,15 +1276,27 @@ jobs:
     steps: [...]
 
   test-visual:
-    needs: [test-logic]  # depende de que el build pase
+    needs: [test-logic]
     runs-on: ubuntu-latest
     steps: [...]
 ```
 
-- [ ] Agregar `actions/cache` para el cache de Bun (`~/.bun/install/cache`) — ahorra 30-60s por job — 15 min
+**`turbo run --affected` — solo testear lo que cambió:**
+
+Turborepo puede determinar qué packages fueron afectados por un PR comparando contra la base branch. En un PR que solo cambia `packages/logger`, solo corren los tests de logger — no los 270 de db, no los 147 de components.
+
+```yaml
+# En ci.yml para PRs (no para push a main)
+- run: bunx turbo run test --affected --filter="...[HEAD^1]"
+```
+
+> **Para push a main:** siempre correr la suite completa (`bun run test` sin `--affected`). El `--affected` solo aplica a PRs donde el contexto de base branch está disponible.
+
+- [ ] Agregar `actions/cache` para `~/.bun/install/cache` — ahorra 30-60s por job — 15 min
 - [ ] Separar `test-logic`, `test-components`, `type-check` y `lint` en jobs paralelos — 20 min
-- [ ] Verificar que `test:visual` y `test:a11y` siguen corriendo después de que pase `test-logic` (son las más lentas) — 10 min
-- [ ] Commit: `ci: paralelizar jobs y agregar cache de Bun — plan8 f6.16`
+- [ ] Agregar `bunx turbo run test --affected` para jobs de PR — 10 min
+- [ ] Verificar que `test:visual` y `test:a11y` corren solo después de que pase `test-logic` — 10 min
+- [ ] Commit: `ci: paralelizar jobs, cache de Bun, turbo --affected — plan8 f6.16`
 
 ---
 
@@ -1015,20 +1457,45 @@ export const eventsTsIdx = index("events_ts_idx").on(events.ts)
 
 ---
 
-### F7.20 — Export CSV en `/api/audit/export`
+### F7.20 — Export CSV en `/api/audit/export` + `papaparse` para CSV seguro
 
-**Problema:** el export de audit solo soporta JSON. Para análisis en Excel/Sheets se necesita CSV.
+**Problema A:** el export de audit solo soporta JSON. Para análisis en Excel/Sheets se necesita CSV.
+
+**Problema B (descubierto con repomix):** `KnowledgeGapsClient.tsx` ya tiene un export CSV manual con escaping propenso a bugs:
+```typescript
+// KnowledgeGapsClient.tsx — CSV manual, frágil
+`"${g.content.replace(/"/g, '""')}"` // escaping incompleto: no maneja newlines, comas en content
+```
+Si el contenido tiene `\n` o caracteres especiales, el CSV queda corrupto. Esta tarea consolida todos los CSVs del proyecto con `papaparse`.
 
 ```
 GET /api/audit/export?format=json   → descarga audit-export-1234.json
 GET /api/audit/export?format=csv    → descarga audit-export-1234.csv
 ```
 
+**Usar `papaparse` para CSV correcto:**
+```typescript
+// Antes — manual, propenso a CSV injection y corruption
+const csv = [header, ...rows.map(r => r.join(","))].join("\n")
+
+// Después — 1 línea, RFC 4180 compliant, maneja comillas/newlines/caracteres especiales
+import Papa from "papaparse"
+const csv = Papa.unparse({ fields: ["ts", "level", "type", "userId", "sessionId", "payload"], data: rows })
+```
+
+**Instalar:**
+```bash
+bun add papaparse
+bun add -d @types/papaparse
+```
+
+- [ ] `bun add papaparse && bun add -d @types/papaparse` en `apps/web` — 2 min
 - [ ] Agregar query param `?format=json|csv` al endpoint — 5 min
-- [ ] Implementar serialización CSV con campos: `ts,level,type,userId,sessionId,payload` — 20 min
+- [ ] Implementar serialización CSV con `Papa.unparse()` — campos: `ts,level,type,userId,sessionId,payload` — 10 min
 - [ ] Encabezados correctos: `Content-Disposition: attachment; filename="audit-export-*.csv"` — 5 min
 - [ ] Agregar botón "Exportar CSV" en `AuditTable.tsx` — 10 min
-- [ ] Commit: `feat(audit): export CSV en /api/audit/export — plan8 f7.20`
+- [ ] En `KnowledgeGapsClient.tsx`: reemplazar el CSV manual con `Papa.unparse()` — 10 min
+- [ ] Commit: `feat(audit): export CSV con papaparse — plan8 f7.20`
 
 ---
 
@@ -1620,26 +2087,56 @@ Orden de ejecución: **F0 → F1 → F3 → F2 → F4 → F5 → F6 → F7 → F
 | Fase | Exec | Estado | Descripción |
 |------|------|--------|-------------|
 | Fase 0 — Baseline | 1° | ⏳ pendiente | Bundle size, react-scan, tiempos CI |
-| Fase 1 — Extracción de duplicados | 2° | ⏳ pendiente | SSE reader, Citation type, dead code, N+1, canAccess cache — ADR-008 |
-| Fase 3 — Unificación de deps | 3° | ⏳ pendiente | Drizzle sync + linting + Drizzle Kit push (elimina init.ts) |
-| Fase 2 — Refactoring React | 4° | ⏳ pendiente | Server pattern, memoización, lazy loading, next-safe-action — ADR-009 |
+| Fase 1 — Dead code + duplicados | 2° | ⏳ pendiente | knip scan, SSE reader, Citation type, dead code, N+1, canAccess cache, formatDate — ADR-008 |
+| Fase 3 — Unificación de deps | 3° | ⏳ pendiente | Drizzle sync + linting + Drizzle Kit push (init.ts 416→<10) + zustand/dompurify + strictTS |
+| Fase 2 — Refactoring React | 4° | ⏳ pendiente | Server pattern (×10), Server Actions (×7), useOptimistic, memoización, lazy loading, next-safe-action, react-hook-form, nuqs, eliminar 9 rutas API dead — ADR-009 |
 | Fase 4 — Upgrades | 5° | ⏳ pendiente | Next.js, Drizzle, Lucide, Zod, @libsql/client |
 | Fase 5 — Docs arquitectura | 6° | ⏳ pendiente | architecture.md con stream utils, Redis, nuevos ADRs |
-| Fase 6 — Calidad estructural | 7° | ⏳ pendiente | Error Boundaries, CI paralelo |
-| Fase 7 — Logging y Black Box | 8° | ⏳ pendiente | requestId, event types, handlers, retención, índice compuesto, CSV |
+| Fase 6 — Calidad estructural | 7° | ⏳ pendiente | Error Boundaries, CI paralelo + cache + turbo --affected |
+| Fase 7 — Logging y Black Box | 8° | ⏳ pendiente | requestId, event types, handlers, retención, índice compuesto, CSV + papaparse |
 | Fase 8 — Redis + BullMQ | 9° | ⏳ pendiente | Redis requerido, BullMQ reemplaza worker — 11 workarounds eliminados |
+
+---
+
+## Mapa de código eliminado (todas las fases)
+
+| Tecnología / Patrón | Fase | Impacto |
+|---|---|---|
+| `knip` — dead code sistemático (baseline) | F1.0 | variable (informa otras fases) |
+| `formatDate`/`formatDateTime` utility centralizada | F1.7 | ~36 líneas |
+| SSE reader duplicado + Citation type + dead code + N+1 | F1.1–F1.6 | ~200 líneas |
+| Drizzle Kit reemplaza `init.ts` (416 líneas → <10) | F3.9 | ~410 líneas |
+| `zustand` + `dompurify` eliminados (0 usos) | F3.10 | 2 deps del bundle |
+| `exactOptionalPropertyTypes` — rigor TS consistente | F3.10 | 0 líneas, + type safety |
+| Server Component lift para datos (×10 componentes) | F2.4 | ~400 líneas |
+| Server Actions para mutaciones (×7 componentes) | F2.7 | ~250 líneas |
+| `next-safe-action` — boilerplate en 22+ actions | F2.7 | ~110 líneas |
+| `useOptimistic` — setState manual post-action | F2.7b | ~80 líneas |
+| `react-hook-form` — useState de formularios (50-70 instancias) | F2.8 | ~350 líneas |
+| `nuqs` — URL state para filtros + filtrado SQL | F2.9 | ~60 líneas |
+| 9 rutas API eliminadas (dead tras F2.4+F2.7) | F2.10 | ~200 líneas + 9 archivos |
+| Memoización + lazy loading | F2.5–F2.6 | ~40 líneas |
+| `papaparse` — CSV manual reemplazado | F7.20 | ~30 líneas |
+| Redis elimina 11 fallbacks in-memory | F8 | ~200 líneas |
+| BullMQ reemplaza worker custom + tabla `ingestion_queue` | F8.30 | ~150 líneas |
+| `turbo --affected` — CI solo testea lo afectado | F6.16 | 0 líneas, -50% tiempo CI en PRs |
+| **TOTAL líneas eliminadas** | — | **~2,516 líneas** |
+| **TOTAL archivos eliminados** | — | **9 route handlers** |
+| **TOTAL deps eliminadas** | — | **2 (zustand, dompurify)** |
+
+---
 
 ## Tiempo total estimado
 
 | Fase | Estimación |
 |------|------------|
 | Fase 0 — Baseline | 30-45 min |
-| Fase 1 — Extracción de duplicados | 5-7 hs |
-| Fase 3 — Unificación + Drizzle Kit | 2-3 hs |
-| Fase 2 — Refactoring React + next-safe-action | 4-6 hs |
+| Fase 1 — knip + duplicados + formatDate | 5-7 hs |
+| Fase 3 — Unificación + Drizzle Kit + deps + TS | 2-4 hs |
+| Fase 2 — Server pattern + actions + useOptimistic + lazy + next-safe-action + react-hook-form + nuqs + 9 rutas dead | 12-18 hs |
 | Fase 4 — Upgrades | 4-6 hs |
 | Fase 5 — Docs arquitectura | 15 min |
-| Fase 6 — Calidad estructural | 3-5 hs |
-| Fase 7 — Logging y Black Box | 4-6 hs |
-| Fase 8 — Redis + BullMQ (sin fallbacks) | 7-10 hs |
-| **Total** | **32-49 hs** |
+| Fase 6 — Error Boundaries + CI paralelo + turbo | 3-5 hs |
+| Fase 7 — Logging + papaparse | 4-6 hs |
+| Fase 8 — Redis + BullMQ | 7-10 hs |
+| **Total** | **38-57 hs** |

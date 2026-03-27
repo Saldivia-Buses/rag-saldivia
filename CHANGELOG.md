@@ -9,6 +9,21 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Plan 8 — Optimización (Fase 0 completada)
+
+#### Added
+- `docs/performance/baseline-plan8.md`: snapshot de métricas pre-optimización — bundle sizes, render analysis, tiempos de CI — 2026-03-27 *(Plan 8 F0)*
+- `apps/web`: `@next/bundle-analyzer@16.2.1` como devDependency — 2026-03-27 *(Plan 8 F0.1)*
+
+#### Changed
+- `apps/web/next.config.ts`: integración de `withBundleAnalyzer` (activable con `ANALYZE=true`) — 2026-03-27 *(Plan 8 F0.1)*
+- `apps/web/src/app/(auth)/login/page.tsx`: `useSearchParams()` envuelto en `<Suspense>` (bug de build Next.js 15) — 2026-03-27
+
+**Plan 8 Fase 0 — Baseline: COMPLETO**
+**Métricas capturadas: `/chat` 120 kB, `/chat/[id]` 171 kB, 273 tests en 1.853s, 5 handlers sin memo en ChatInterface**
+
+---
+
 ### Plan 6 — UI Testing (completado)
 
 #### Added (F4-F7)
