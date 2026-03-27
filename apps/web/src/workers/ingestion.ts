@@ -18,6 +18,7 @@ import { getDb, ingestionQueue, recordIngestionEvent, listActiveReports, updateL
 import { randomUUID } from "crypto"
 import { dispatchEvent } from "@/lib/webhook"
 import { log } from "@rag-saldivia/logger/backend"
+import { formatDate } from "@/lib/utils"
 
 const INGESTOR_URL = process.env["INGESTOR_URL"] ?? "http://localhost:8082"
 const POLL_INTERVAL_MS = 2000
@@ -277,7 +278,7 @@ async function processScheduledReports() {
             await saveResponse({
               userId: report.userId,
               content: `**Informe programado: ${report.query}**\n\n${content}`,
-              sessionTitle: `Informe ${new Date().toLocaleDateString("es-AR")}`,
+              sessionTitle: `Informe ${formatDate(new Date())}`,
             })
           } else if (report.destination === "email" && report.email) {
             const smtpHost = process.env["SMTP_HOST"]
@@ -287,7 +288,7 @@ async function processScheduledReports() {
               await saveResponse({
                 userId: report.userId,
                 content: `**Informe (SMTP no configurado): ${report.query}**\n\n${content}`,
-                sessionTitle: `Informe ${new Date().toLocaleDateString("es-AR")}`,
+                sessionTitle: `Informe ${formatDate(new Date())}`,
               })
             }
             // Si SMTP configurado: implementar envío de email con nodemailer en el futuro

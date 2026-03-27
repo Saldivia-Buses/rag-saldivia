@@ -1,0 +1,27 @@
+{
+  "workspaces": {
+    "apps/web": {
+      "entry": [
+        "src/app/**/{page,layout,route}.ts{x,}",
+        "src/workers/*.ts",
+        "src/middleware.ts"
+      ]
+    },
+    "apps/cli": {
+      "entry": ["src/index.ts", "src/commands/*.ts"]
+    },
+    "packages/db": { "entry": ["src/index.ts"] },
+    "packages/shared": { "entry": ["src/index.ts"] },
+    "packages/logger": { "entry": ["src/index.ts"] },
+    "packages/config": { "entry": ["src/index.ts"] }
+  },
+  "ignore": [
+    "**/__tests__/**",
+    "**/*.test.*",
+    "**/*.spec.*",
+    "apps/web/src/lib/test-setup.ts",
+    "apps/web/src/lib/component-test-setup.ts",
+    "apps/web/stories/**",
+    "apps/web/.storybook/**"
+  ]
+}

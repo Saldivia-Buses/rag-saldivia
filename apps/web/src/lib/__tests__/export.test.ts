@@ -5,12 +5,13 @@
 
 import { describe, test, expect } from "bun:test"
 import { exportToMarkdown } from "../export"
+import type { Citation } from "@rag-saldivia/shared"
 
 const BASE_SESSION = {
   title: "Análisis Legal",
   collection: "legal-docs",
   createdAt: new Date("2026-03-25T10:00:00Z").getTime(),
-  messages: [] as Array<{ role: "user" | "assistant"; content: string; sources?: unknown[] }>,
+  messages: [] as Array<{ role: "user" | "assistant"; content: string; sources?: Citation[] }>,
 }
 
 describe("exportToMarkdown", () => {
@@ -49,7 +50,7 @@ describe("exportToMarkdown", () => {
         {
           role: "assistant" as const,
           content: "Según el artículo 3...",
-          sources: [{ document_name: "contrato-2024.pdf" }],
+          sources: [{ document: "contrato-2024.pdf" }],
         },
       ],
     }

@@ -10,10 +10,9 @@
 
 import { useCallback, useRef } from "react"
 import { useCrossdocDecompose } from "./useCrossdocDecompose.js"
+import { collectSseText } from "@/lib/rag/stream"
 
 const MAX_PARALLEL = 6
-const REPETITION_WINDOW = 60
-const REPETITION_THRESHOLD = 3
 const MAX_RESPONSE_CHARS = 15000
 const RAG_URL = "/api/rag/generate"
 
@@ -42,48 +41,6 @@ export type CrossdocSettings = {
   rerankerTopK?: number
 }
 
-function detectRepetition(text: string): number {
-  if (text.length <= REPETITION_WINDOW * REPETITION_THRESHOLD) return -1
-  const tail = text.slice(-REPETITION_WINDOW)
-  const preceding = text.slice(-(REPETITION_WINDOW * (REPETITION_THRESHOLD + 1)), -REPETITION_WINDOW)
-  if (preceding.split(tail).length - 1 >= REPETITION_THRESHOLD - 1) {
-    const firstIdx = text.indexOf(tail)
-    if (firstIdx > 0 && firstIdx < text.length - REPETITION_WINDOW) {
-      return firstIdx + REPETITION_WINDOW
-    }
-  }
-  return -1
-}
-
-async function collectStream(response: Response): Promise<string> {
-  let text = ""
-  if (response.headers.get("content-type")?.includes("text/event-stream")) {
-    const reader = response.body?.getReader()
-    const decoder = new TextDecoder()
-    if (reader) {
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        const chunk = decoder.decode(value, { stream: true })
-        for (const line of chunk.split("\n")) {
-          if (!line.startsWith("data: ")) continue
-          try {
-            const data = JSON.parse(line.slice(6))
-            const token = data?.choices?.[0]?.delta?.content
-            if (token && token.length < 500) text += token
-          } catch { /* skip */ }
-        }
-        const truncIdx = detectRepetition(text)
-        if (truncIdx > 0) { text = text.slice(0, truncIdx); break }
-        if (text.length > MAX_RESPONSE_CHARS) break
-      }
-    }
-  } else {
-    const json = await response.json()
-    text = json?.choices?.[0]?.message?.content ?? ""
-  }
-  return text
-}
 
 function hasUsefulData(text: string): boolean {
   const trimmed = text.trim()
@@ -145,7 +102,7 @@ export function useCrossdocStream() {
                   max_tokens: 2048,
                 }),
               })
-              const text = await collectStream(resp)
+              const text = await collectSseText(resp, { maxChars: MAX_RESPONSE_CHARS, detectRepetition: true })
               return { query, response: text, success: hasUsefulData(text) }
             })
           )
@@ -178,7 +135,7 @@ export function useCrossdocStream() {
                     max_tokens: 2048,
                   }),
                 })
-                const text = await collectStream(resp)
+                const text = await collectSseText(resp, { maxChars: MAX_RESPONSE_CHARS, detectRepetition: true })
                 if (hasUsefulData(text)) {
                   results.push({ query: alt, response: text, success: true })
                 }
@@ -219,7 +176,7 @@ ${context}`
           }),
         })
 
-        const synthesis = await collectStream(synthResp)
+        const synthesis = await collectSseText(synthResp)
         onProgress({ phase: "done", synthesis })
         return synthesis
       } catch (error) {

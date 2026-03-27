@@ -28,7 +28,9 @@ export async function listWebhooksByUser(userId: number) {
 
 export async function listWebhooksByEvent(eventType: string) {
   const db = getDb()
-  // Filtrar webhooks activos que escuchan este tipo de evento
+  // Carga webhooks activos y filtra en JS porque SQLite no tiene array-contains nativo.
+  // El índice idx_webhooks_active (schema.ts) minimiza el scan.
+  // Si el volumen de webhooks crece, migrar events a una tabla de junction y filtrar en SQL.
   const all = await db.select().from(webhooks).where(eq(webhooks.active, true))
   return all.filter((w) => {
     const evts = w.events as string[]

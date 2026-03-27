@@ -9,6 +9,36 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Plan 8 — Optimización (Fase 1 completada)
+
+#### Added
+- `apps/web/src/lib/rag/stream.ts`: utilidades SSE compartidas — `parseSseLine`, `readSseTokens`, `collectSseText` con buffering de líneas parciales y detección de repetición — 2026-03-27 *(Plan 8 F1.1)*
+- `apps/web/src/lib/rag/__tests__/stream.test.ts`: 18 tests para las utilidades SSE — 2026-03-27 *(Plan 8 F1.1)*
+- `apps/web/src/lib/__tests__/utils.test.ts`: tests de `formatDate`/`formatDateTime` — 2026-03-27 *(Plan 8 F1.7)*
+- `docs/decisions/008-sse-reader-extraction.md`: ADR explicando la extracción y por qué vive en `lib/rag/` — 2026-03-27 *(Plan 8 F1)*
+- `knip.json`: configuración de workspaces para análisis de dead code — 2026-03-27 *(Plan 8 F1.0)*
+- `knip@6.0.6` como devDependency en raíz del monorepo — 2026-03-27 *(Plan 8 F1.0)*
+
+#### Changed
+- `hooks/useCrossdocStream.ts`: reemplaza `collectStream` local por `collectSseText` compartido — 2026-03-27 *(Plan 8 F1.1)*
+- `hooks/useCrossdocDecompose.ts`: reemplaza `collectSseText` local por la versión compartida — 2026-03-27 *(Plan 8 F1.1)*
+- `hooks/useRagStream.ts`: usa `parseSseLine` para extracción de tokens; `sources: Citation[]` en lugar de `unknown[]`; validación Zod con `console.warn` en fallo — 2026-03-27 *(Plan 8 F1.1 + F1.2)*
+- `app/api/slack/route.ts`: reemplaza loop SSE inline por `collectSseText` — 2026-03-27 *(Plan 8 F1.1)*
+- `app/api/teams/route.ts`: reemplaza loop SSE inline por `collectSseText` — 2026-03-27 *(Plan 8 F1.1)*
+- `packages/db/src/queries/sessions.ts`: `addMessage` acepta `sources?: Citation[]` en lugar de `unknown[]` — 2026-03-27 *(Plan 8 F1.2)*
+- `lib/export.ts`: `ExportMessage.sources` es `Citation[]`; usa `formatDateTime` centralizado — 2026-03-27 *(Plan 8 F1.2 + F1.7)*
+- `app/api/rag/collections/route.ts`: elimina `getCachedRagCollections` duplicada (importa de `collections-cache.ts`) y elimina función dead `ragFetchWithOptions` — 2026-03-27 *(Plan 8 F1.3)*
+- `packages/db/src/queries/rate-limits.ts`: `getRateLimit` usa `inArray` en lugar de loop N+1 — 2026-03-27 *(Plan 8 F1.4)*
+- `packages/db/src/queries/webhooks.ts`: `listWebhooksByEvent` documenta límite de escala con comentario explícito — 2026-03-27 *(Plan 8 F1.5)*
+- `app/api/rag/generate/route.ts`: verificación multi-colección usa `getUserCollections` una sola vez + Set local en lugar de N calls a `canAccessCollection` — 2026-03-27 *(Plan 8 F1.6)*
+- `lib/utils.ts`: agrega `formatDate` y `formatDateTime` centralizados — 2026-03-27 *(Plan 8 F1.7)*
+- `workers/ingestion.ts`, `components/collections/CollectionHistory.tsx`, `components/admin/KnowledgeGapsClient.tsx`, `components/admin/ReportsAdmin.tsx`, `components/admin/ExternalSourcesAdmin.tsx`, `app/(app)/saved/page.tsx`, `app/(app)/projects/[id]/page.tsx`: reemplazan `toLocaleDateString`/`toLocaleString` inline por `formatDate`/`formatDateTime` — 2026-03-27 *(Plan 8 F1.7)*
+
+**Plan 8 Fase 1 — Extracción de código duplicado: COMPLETO**  
+**Duplicaciones eliminadas: SSE reader (×5), getCachedRagCollections (×2), ragFetchWithOptions (dead code), formatDate (×9 instancias). N+1 en getRateLimit corregido. canAccessCollection: N queries → 1.**
+
+---
+
 ### Plan 8 — Optimización (Fase 0 completada)
 
 #### Added

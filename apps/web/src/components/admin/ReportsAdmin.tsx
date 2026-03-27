@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { EmptyPlaceholder } from "@/components/ui/empty-placeholder"
 import type { DbScheduledReport } from "@rag-saldivia/db"
+import { formatDate } from "@/lib/utils"
 
 const SCHEDULE_LABELS: Record<string, string> = { daily: "Diario", weekly: "Semanal", monthly: "Mensual" }
 
@@ -104,7 +105,7 @@ export function ReportsAdmin() {
                 <p className="text-xs text-fg-muted mt-0.5">
                   {r.collection} · {SCHEDULE_LABELS[r.schedule]} · {r.destination === "email" ? r.email : "Guardados"}
                 </p>
-                {r.lastRun && <p className="text-xs text-fg-subtle mt-0.5">Último: {new Date(r.lastRun).toLocaleDateString("es-AR")}</p>}
+                {r.lastRun && <p className="text-xs text-fg-subtle mt-0.5">Último: {formatDate(r.lastRun)}</p>}
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <Badge variant="outline">{SCHEDULE_LABELS[r.schedule]}</Badge>

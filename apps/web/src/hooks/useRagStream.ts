@@ -2,6 +2,8 @@
 
 import { useState, useRef } from "react"
 import { detectArtifact, type ArtifactData } from "@/lib/rag/detect-artifact"
+import { parseSseLine } from "@/lib/rag/stream"
+import { CitationSchema, type Citation } from "@rag-saldivia/shared"
 
 export type ChatPhase = "idle" | "streaming" | "done" | "error"
 
@@ -9,7 +11,7 @@ type StreamMessage = { role: "user" | "assistant"; content: string }
 
 type StreamResult = {
   fullContent: string
-  sources: unknown[]
+  sources: Citation[]
 }
 
 export type { ArtifactData } from "@/lib/rag/detect-artifact"
@@ -20,7 +22,7 @@ type UseRagStreamOptions = {
   collections?: string[]   // multi-colección — si se provee, reemplaza `collection`
   focusMode?: string
   onDelta: (fullContent: string) => void
-  onSources: (sources: unknown[]) => void
+  onSources: (sources: Citation[]) => void
   onArtifact?: (artifact: ArtifactData) => void  // F3.42
   onError: (message: string) => void
 }
@@ -53,7 +55,7 @@ export function useRagStream({
     abortRef.current = new AbortController()
 
     let fullContent = ""
-    let sources: unknown[] = []
+    let sources: Citation[] = []
 
     try {
       const res = await fetch("/api/rag/generate", {
@@ -86,24 +88,35 @@ export function useRagStream({
 
         const chunk = decoder.decode(value, { stream: true })
         for (const line of chunk.split("\n")) {
-          if (!line.startsWith("data: ")) continue
-          const data = line.slice(6).trim()
-          if (data === "[DONE]") continue
+          const token = parseSseLine(line)
+          if (token) {
+            fullContent += token
+            onDelta(fullContent)
+          }
 
-          try {
-            const parsed = JSON.parse(data)
-            const delta = parsed.choices?.[0]?.delta?.content ?? ""
-            if (delta) {
-              fullContent += delta
-              onDelta(fullContent)
+          // Sources vienen en delta.sources — parsear por separado del token de texto
+          if (line.startsWith("data: ")) {
+            const rawData = line.slice(6).trim()
+            if (rawData && rawData !== "[DONE]") {
+              try {
+                const parsed = JSON.parse(rawData) as {
+                  choices?: Array<{ delta?: { sources?: unknown } }>
+                }
+                const srcData = parsed.choices?.[0]?.delta?.sources
+                if (srcData) {
+                  const result = CitationSchema.array().safeParse(srcData)
+                  if (!result.success) {
+                    console.warn("[useRagStream] sources_parse_failed", JSON.stringify(srcData).slice(0, 200))
+                    sources = []
+                  } else {
+                    sources = result.data
+                  }
+                  onSources(sources)
+                }
+              } catch {
+                // ignorar líneas malformadas del stream
+              }
             }
-            const srcData = parsed.choices?.[0]?.delta?.sources
-            if (srcData) {
-              sources = srcData
-              onSources(sources)
-            }
-          } catch {
-            // ignorar líneas malformadas del stream
           }
         }
       }

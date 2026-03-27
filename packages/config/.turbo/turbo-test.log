@@ -2,22 +2,22 @@ $ bun test src/__tests__
 bun test v1.3.11 (af24e281)
 
 src/__tests__/config.test.ts:
-(pass) loadConfig > carga sin errores con env mínima válida [6.59ms]
-(pass) loadConfig > defaults correctos cuando no se pasan env vars opcionales [0.42ms]
-(pass) loadConfig > no retorna undefined en campos con default definido [0.19ms]
-(pass) loadConfig > env vars tienen precedencia sobre los defaults [0.23ms]
+(pass) loadConfig > carga sin errores con env mínima válida [3.44ms]
+(pass) loadConfig > defaults correctos cuando no se pasan env vars opcionales [0.38ms]
+(pass) loadConfig > no retorna undefined en campos con default definido [0.15ms]
+(pass) loadConfig > env vars tienen precedencia sobre los defaults [0.20ms]
 (pass) loadConfig > MOCK_RAG=false se parsea correctamente como boolean false [0.17ms]
 (pass) loadConfig > carga el perfil workstation-1gpu del YAML sin errores [0.16ms]
-(pass) loadConfig > perfil inexistente no lanza error — usa config vacía [0.51ms]
-(pass) loadConfig > en producción lanza error con JWT_SECRET faltante [1.70ms]
-(pass) loadRagParams > retorna defaults correctos sin overrides [0.29ms]
-(pass) loadRagParams > ningún campo de RagParams es undefined [0.79ms]
-(pass) AppConfigSchema > valida objeto mínimo correctamente [0.45ms]
-(pass) AppConfigSchema > falla con jwtSecret demasiado corto [0.16ms]
-(pass) AppConfigSchema > falla con logLevel inválido [0.16ms]
-(pass) AppConfigSchema > falla con ragServerUrl que no es URL válida [0.34ms]
+(pass) loadConfig > perfil inexistente no lanza error — usa config vacía [0.11ms]
+(pass) loadConfig > en producción lanza error con JWT_SECRET faltante [0.62ms]
+(pass) loadRagParams > retorna defaults correctos sin overrides [0.25ms]
+(pass) loadRagParams > ningún campo de RagParams es undefined [0.33ms]
+(pass) AppConfigSchema > valida objeto mínimo correctamente [0.15ms]
+(pass) AppConfigSchema > falla con jwtSecret demasiado corto [0.13ms]
+(pass) AppConfigSchema > falla con logLevel inválido [0.15ms]
+(pass) AppConfigSchema > falla con ragServerUrl que no es URL válida [0.31ms]
 
  14 pass
  0 fail
  47 expect() calls
-Ran 14 tests across 1 file. [169.00ms]
+Ran 14 tests across 1 file. [91.00ms]

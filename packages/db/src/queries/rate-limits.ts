@@ -1,4 +1,4 @@
-import { eq, and, gte, sql } from "drizzle-orm"
+import { eq, and, gte, sql, inArray, asc } from "drizzle-orm"
 import { getDb } from "../connection"
 import { rateLimits, events, userAreas } from "../schema"
 import type { NewRateLimit } from "../schema"
@@ -14,7 +14,7 @@ export async function getRateLimit(userId: number): Promise<number | null> {
     .limit(1)
   if (userLimit[0]) return userLimit[0].max
 
-  // Luego verificar límite de área (toma el mínimo entre todas las áreas del usuario)
+  // Luego verificar límite de área — una sola query con inArray en lugar de N queries en loop
   const areas = await db
     .select({ areaId: userAreas.areaId })
     .from(userAreas)
@@ -22,16 +22,18 @@ export async function getRateLimit(userId: number): Promise<number | null> {
   if (areas.length === 0) return null
 
   const areaIds = areas.map((a) => a.areaId)
-  for (const areaId of areaIds) {
-    const areaLimit = await db
-      .select({ max: rateLimits.maxQueriesPerHour })
-      .from(rateLimits)
-      .where(and(eq(rateLimits.targetType, "area"), eq(rateLimits.targetId, areaId), eq(rateLimits.active, true)))
-      .limit(1)
-    if (areaLimit[0]) return areaLimit[0].max
-  }
+  const areaLimits = await db
+    .select({ max: rateLimits.maxQueriesPerHour })
+    .from(rateLimits)
+    .where(and(
+      eq(rateLimits.targetType, "area"),
+      inArray(rateLimits.targetId, areaIds),
+      eq(rateLimits.active, true)
+    ))
+    .orderBy(asc(rateLimits.maxQueriesPerHour)) // el mínimo primero
+    .limit(1)
 
-  return null
+  return areaLimits[0]?.max ?? null
 }
 
 export async function countQueriesLastHour(userId: number): Promise<number> {

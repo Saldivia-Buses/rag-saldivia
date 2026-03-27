@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { EmptyPlaceholder } from "@/components/ui/empty-placeholder"
 import type { DbExternalSource } from "@rag-saldivia/db"
+import { formatDate } from "@/lib/utils"
 
 const PROVIDER_LABELS: Record<string, string> = {
   google_drive: "Google Drive",
@@ -109,7 +110,7 @@ export function ExternalSourcesAdmin() {
                   <Badge variant="outline">{s.schedule}</Badge>
                 </div>
                 <p className="text-xs text-fg-muted mt-0.5">
-                  → {s.collectionDest} {s.lastSync ? `· Último sync: ${new Date(s.lastSync).toLocaleDateString("es-AR")}` : "· Sin sync aún"}
+                  → {s.collectionDest} {s.lastSync ? `· Último sync: ${formatDate(s.lastSync)}` : "· Sin sync aún"}
                 </p>
               </div>
               <Button variant="ghost" size="icon" className="h-7 w-7 shrink-0 text-destructive hover:text-destructive" onClick={() => handleDelete(s.id)}>

@@ -2,86 +2,113 @@ $ bun test src/lib
 bun test v1.3.11 (af24e281)
 
 src/lib/__tests__/export.test.ts:
-(pass) exportToMarkdown > incluye el título de la sesión como heading [17.08ms]
-(pass) exportToMarkdown > incluye el nombre de la colección [0.17ms]
-(pass) exportToMarkdown > serializa mensajes del usuario con prefijo 'Usuario:' [0.16ms]
+(pass) exportToMarkdown > incluye el título de la sesión como heading [6.10ms]
+(pass) exportToMarkdown > incluye el nombre de la colección [0.12ms]
+(pass) exportToMarkdown > serializa mensajes del usuario con prefijo 'Usuario:' [0.17ms]
 (pass) exportToMarkdown > serializa mensajes del asistente con prefijo 'Asistente:' [0.10ms]
-(pass) exportToMarkdown > incluye fuentes cuando existen [0.14ms]
-(pass) exportToMarkdown > no incluye sección de fuentes cuando el array está vacío [0.58ms]
-(pass) exportToMarkdown > maneja sesión con mensajes vacíos sin error [0.14ms]
-(pass) exportToMarkdown > serializa múltiples mensajes en orden [0.60ms]
-(pass) exportToMarkdown > retorna string no vacío en todos los casos [0.41ms]
+(pass) exportToMarkdown > incluye fuentes cuando existen [0.11ms]
+(pass) exportToMarkdown > no incluye sección de fuentes cuando el array está vacío [0.10ms]
+(pass) exportToMarkdown > maneja sesión con mensajes vacíos sin error [0.13ms]
+(pass) exportToMarkdown > serializa múltiples mensajes en orden [0.12ms]
+(pass) exportToMarkdown > retorna string no vacío en todos los casos [0.10ms]
 
 src/lib/__tests__/webhook.test.ts:
-(pass) dispatchWebhook — headers > envía header X-Signature con firma HMAC-SHA256 correcta [6.28ms]
-(pass) dispatchWebhook — headers > la firma HMAC-SHA256 puede verificarse con el secret [0.23ms]
-(pass) dispatchWebhook — headers > el body incluye el payload original más 'timestamp' [0.15ms]
-(pass) dispatchWebhook — manejo de errores > no lanza si fetch retorna status no-ok (4xx) [0.10ms]
-(pass) dispatchWebhook — manejo de errores > no lanza si fetch retorna 500 [0.09ms]
-(pass) dispatchWebhook — manejo de errores > no lanza si fetch lanza una excepción (timeout, red) [0.81ms]
-(pass) dispatchWebhook — manejo de errores > no lanza si fetch lanza AbortError (timeout de 5s) [0.11ms]
-(pass) dispatchWebhook — método HTTP > usa método POST [0.16ms]
+(pass) dispatchWebhook — headers > envía header X-Signature con firma HMAC-SHA256 correcta [0.71ms]
+(pass) dispatchWebhook — headers > la firma HMAC-SHA256 puede verificarse con el secret [0.16ms]
+(pass) dispatchWebhook — headers > el body incluye el payload original más 'timestamp' [0.16ms]
+(pass) dispatchWebhook — manejo de errores > no lanza si fetch retorna status no-ok (4xx) [0.12ms]
+(pass) dispatchWebhook — manejo de errores > no lanza si fetch retorna 500 [0.37ms]
+(pass) dispatchWebhook — manejo de errores > no lanza si fetch lanza una excepción (timeout, red) [0.13ms]
+(pass) dispatchWebhook — manejo de errores > no lanza si fetch lanza AbortError (timeout de 5s) [0.10ms]
+(pass) dispatchWebhook — método HTTP > usa método POST [0.13ms]
+
+src/lib/__tests__/utils.test.ts:
+(pass) formatDate > retorna string en formato dd/mm/yyyy [5.22ms]
+(pass) formatDate > acepta Date, number y string como entrada [0.20ms]
+(pass) formatDate > retorna string no vacío para timestamp válido [0.09ms]
+(pass) formatDateTime > retorna string que incluye fecha y hora [0.11ms]
+(pass) formatDateTime > acepta Date, number y string como entrada [0.13ms]
 
 src/lib/__tests__/changelog.test.ts:
-(pass) parseChangelog > parsea la sección [Unreleased] correctamente [0.97ms]
-(pass) parseChangelog > parsea versiones con formato [vX.Y.Z] [0.06ms]
-(pass) parseChangelog > incluye el contenido de cada sección [0.24ms]
+(pass) parseChangelog > parsea la sección [Unreleased] correctamente [0.54ms]
+(pass) parseChangelog > parsea versiones con formato [vX.Y.Z] [0.10ms]
+(pass) parseChangelog > incluye el contenido de cada sección [0.12ms]
 (pass) parseChangelog > respeta el límite de entradas [0.04ms]
-(pass) parseChangelog > retorna array vacío para changelog vacío [0.04ms]
-(pass) parseChangelog > mantiene el orden original del changelog [0.09ms]
+(pass) parseChangelog > retorna array vacío para changelog vacío [0.03ms]
+(pass) parseChangelog > mantiene el orden original del changelog [0.07ms]
+
+src/lib/rag/__tests__/stream.test.ts:
+(pass) parseSseLine > extrae token de línea SSE válida [0.05ms]
+(pass) parseSseLine > retorna null para [DONE] [0.03ms]
+(pass) parseSseLine > retorna null para línea sin prefijo data: [0.01ms]
+(pass) parseSseLine > retorna null para JSON malformado [0.03ms]
+(pass) parseSseLine > retorna null para delta sin content [0.02ms]
+(pass) parseSseLine > retorna null para content vacío [0.02ms]
+(pass) parseSseLine > retorna null para choices vacíos
+(pass) parseSseLine > extrae token con caracteres especiales
+(pass) readSseTokens > yields tokens de un stream simple [1.13ms]
+(pass) readSseTokens > ignora líneas sin contenido de texto [0.18ms]
+(pass) readSseTokens > maneja chunks que cortan líneas a la mitad [0.14ms]
+(pass) readSseTokens > stream vacío no yields nada [0.12ms]
+(pass) collectSseText > acumula todos los tokens del stream [0.70ms]
+(pass) collectSseText > retorna string vacío para stream vacío [0.26ms]
+(pass) collectSseText > trunca al alcanzar maxChars [0.26ms]
+(pass) collectSseText > parse JSON para respuesta no-SSE [0.09ms]
+(pass) collectSseText > retorna vacío para JSON sin choices [0.06ms]
+(pass) collectSseText > detecta repetición cuando la opción está activa [0.26ms]
 
 src/lib/rag/__tests__/detect-artifact.test.ts:
-(pass) detectArtifact — marcador explícito > detecta marcador :::artifact con type='code' y lang [0.23ms]
+(pass) detectArtifact — marcador explícito > detecta marcador :::artifact con type='code' y lang [0.14ms]
 (pass) detectArtifact — marcador explícito > detecta marcador :::artifact con type='document' sin lang [0.03ms]
-(pass) detectArtifact — marcador explícito > detecta marcador :::artifact con type='table' [0.01ms]
+(pass) detectArtifact — marcador explícito > detecta marcador :::artifact con type='table'
 (pass) detectArtifact — marcador explícito > trimea el contenido del artifact
-(pass) detectArtifact — heurística: bloque de código > detecta bloque de código con exactamente 40 líneas [0.10ms]
+(pass) detectArtifact — heurística: bloque de código > detecta bloque de código con exactamente 40 líneas [0.13ms]
 (pass) detectArtifact — heurística: bloque de código > detecta bloque de código con más de 40 líneas [0.05ms]
-(pass) detectArtifact — heurística: bloque de código > NO detecta bloque de código con menos de 40 líneas [0.08ms]
+(pass) detectArtifact — heurística: bloque de código > NO detecta bloque de código con menos de 40 líneas [0.09ms]
 (pass) detectArtifact — heurística: bloque de código > retorna language undefined para bloque sin lenguaje [0.04ms]
-(pass) detectArtifact — heurística: tabla markdown > detecta tabla con exactamente 5 columnas [0.09ms]
-(pass) detectArtifact — heurística: tabla markdown > detecta tabla con más de 5 columnas [0.24ms]
-(pass) detectArtifact — heurística: tabla markdown > NO detecta tabla con menos de 5 columnas [0.09ms]
+(pass) detectArtifact — heurística: tabla markdown > detecta tabla con exactamente 5 columnas [0.10ms]
+(pass) detectArtifact — heurística: tabla markdown > detecta tabla con más de 5 columnas [0.11ms]
+(pass) detectArtifact — heurística: tabla markdown > NO detecta tabla con menos de 5 columnas [0.05ms]
 (pass) detectArtifact — casos sin artifact > retorna null para string vacío [0.02ms]
-(pass) detectArtifact — casos sin artifact > retorna null para texto sin artifact [0.03ms]
-(pass) detectArtifact — casos sin artifact > retorna null para bloque de código corto con texto normal [0.03ms]
-(pass) detectArtifact — casos sin artifact > el marcador explícito tiene prioridad sobre las heurísticas [0.05ms]
+(pass) detectArtifact — casos sin artifact > retorna null para texto sin artifact
+(pass) detectArtifact — casos sin artifact > retorna null para bloque de código corto con texto normal
+(pass) detectArtifact — casos sin artifact > el marcador explícito tiene prioridad sobre las heurísticas [0.02ms]
 
 src/lib/rag/__tests__/detect-language.test.ts:
-(pass) detectLanguageHint — textos en español (no debe inyectar instrucción) > texto puramente en español retorna string vacío [0.32ms]
+(pass) detectLanguageHint — textos en español (no debe inyectar instrucción) > texto puramente en español retorna string vacío [0.14ms]
 (pass) detectLanguageHint — textos en español (no debe inyectar instrucción) > pregunta técnica en español retorna string vacío [0.04ms]
-(pass) detectLanguageHint — textos en español (no debe inyectar instrucción) > texto muy corto retorna string vacío [0.03ms]
-(pass) detectLanguageHint — textos en español (no debe inyectar instrucción) > string vacío retorna string vacío
+(pass) detectLanguageHint — textos en español (no debe inyectar instrucción) > texto muy corto retorna string vacío [0.01ms]
+(pass) detectLanguageHint — textos en español (no debe inyectar instrucción) > string vacío retorna string vacío [0.02ms]
 (pass) detectLanguageHint — textos en español (no debe inyectar instrucción) > string undefined-like (muy corto) retorna string vacío
-(pass) detectLanguageHint — textos en inglés (debe inyectar instrucción) > pregunta en inglés con múltiples palabras clave retorna instrucción [0.06ms]
+(pass) detectLanguageHint — textos en inglés (debe inyectar instrucción) > pregunta en inglés con múltiples palabras clave retorna instrucción [0.02ms]
 (pass) detectLanguageHint — textos en inglés (debe inyectar instrucción) > pregunta corta en inglés con una keyword retorna instrucción [0.03ms]
 (pass) detectLanguageHint — textos en inglés (debe inyectar instrucción) > instrucción en inglés retorna instrucción de idioma [0.01ms]
-(pass) detectLanguageHint — textos en inglés (debe inyectar instrucción) > pregunta técnica en inglés retorna instrucción [0.06ms]
+(pass) detectLanguageHint — textos en inglés (debe inyectar instrucción) > pregunta técnica en inglés retorna instrucción [0.03ms]
 (pass) detectLanguageHint — caracteres no-latinos (CJK, cirílico, árabe) > texto en chino retorna instrucción [0.03ms]
 (pass) detectLanguageHint — caracteres no-latinos (CJK, cirílico, árabe) > texto en japonés retorna instrucción
 (pass) detectLanguageHint — caracteres no-latinos (CJK, cirílico, árabe) > texto en árabe retorna instrucción
 (pass) detectLanguageHint — caracteres no-latinos (CJK, cirílico, árabe) > texto en cirílico retorna instrucción
 
 src/lib/auth/__tests__/jwt.test.ts:
-(pass) JWT utilities > createJwt retorna un string JWT válido [3.70ms]
-(pass) JWT utilities > verifyJwt verifica un token válido [1.46ms]
-(pass) JWT utilities > verifyJwt retorna null para token inválido [0.27ms]
-(pass) JWT utilities > verifyJwt retorna null para token con firma incorrecta [0.45ms]
-(pass) JWT utilities > extractClaims lee JWT desde cookie header [0.82ms]
-(pass) JWT utilities > extractClaims lee JWT desde Authorization header [0.48ms]
+(pass) JWT utilities > createJwt retorna un string JWT válido [1.35ms]
+(pass) JWT utilities > verifyJwt verifica un token válido [1.18ms]
+(pass) JWT utilities > verifyJwt retorna null para token inválido [0.23ms]
+(pass) JWT utilities > verifyJwt retorna null para token con firma incorrecta [0.43ms]
+(pass) JWT utilities > extractClaims lee JWT desde cookie header [0.56ms]
+(pass) JWT utilities > extractClaims lee JWT desde Authorization header [0.47ms]
 (pass) JWT utilities > extractClaims retorna null cuando no hay token [0.06ms]
-(pass) JWT utilities > makeAuthCookie genera cookie HttpOnly correcta [0.24ms]
-(pass) JWT utilities > makeClearAuthCookie genera cookie con Max-Age=0 [0.03ms]
-(pass) RBAC utilities > admin tiene acceso a todo [0.05ms]
-(pass) RBAC utilities > area_manager no tiene acceso a rutas de admin [0.13ms]
-(pass) RBAC utilities > user no tiene acceso a rutas protegidas [0.05ms]
+(pass) JWT utilities > makeAuthCookie genera cookie HttpOnly correcta [0.25ms]
+(pass) JWT utilities > makeClearAuthCookie genera cookie con Max-Age=0 [0.04ms]
+(pass) RBAC utilities > admin tiene acceso a todo [0.04ms]
+(pass) RBAC utilities > area_manager no tiene acceso a rutas de admin [0.09ms]
+(pass) RBAC utilities > user no tiene acceso a rutas protegidas [0.06ms]
 (pass) RBAC utilities > getRequiredRole retorna 'admin' para /api/admin/users [0.02ms]
 (pass) RBAC utilities > getRequiredRole retorna null para /chat
-(pass) RBAC utilities > canAccessRoute con area_manager en /audit retorna true [0.02ms]
-(pass) RBAC utilities > verifyJwt retorna null para token expirado [1505.59ms]
-(pass) RBAC utilities > makeAuthCookie incluye Secure en NODE_ENV=production [0.42ms]
+(pass) RBAC utilities > canAccessRoute con area_manager en /audit retorna true [0.01ms]
+(pass) RBAC utilities > verifyJwt retorna null para token expirado [1503.44ms]
+(pass) RBAC utilities > makeAuthCookie incluye Secure en NODE_ENV=production [0.38ms]
 
- 68 pass
+ 91 pass
  0 fail
- 108 expect() calls
-Ran 68 tests across 6 files. [1.78s]
+ 137 expect() calls
+Ran 91 tests across 8 files. [1.73s]

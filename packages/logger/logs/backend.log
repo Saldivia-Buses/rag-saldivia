@@ -163,3 +163,48 @@
 [2m00:38:51.055[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="test error"[0m
 [2m00:38:51.057[0m  [35mFATAL[0m  [1msystem.error[0m  [2merror="fatal error"[0m
 [2m03:52:56.948[0m  [35mFATAL[0m  [1msystem.error[0m  [2merror="fatal error"[0m
+[2m02:14:49.894[0m  [33mWARN [0m  [1msystem.warning[0m  [2mmessage="test warn"[0m
+[2m02:14:49.898[0m  [35mFATAL[0m  [1msystem.error[0m  [2merror="fatal error"[0m
+[2m02:14:49.895[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="test error"[0m
+[2m02:14:49.900[0m  [32mINFO [0m  [1mauth.login[0m  [2memail="test@example.com"[0m
+[2m02:14:49.878[0m  [32mINFO [0m  [1msystem.warning[0m  [2mmessage="test info"[0m
+[2m02:14:49.897[0m  [36mDEBUG[0m  [1msystem.warning[0m  [2mdetail="debug info"[0m
+[2m02:14:49.899[0m  [31mERROR[0m  [1msystem.warning[0m  [2mmethod="POST"  path="/api/rag/generate"  status=500[0m
+[2m02:14:49.900[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="Something went wrong"[0m
+[2m02:14:49.898[0m  [32mINFO [0m  [1msystem.warning[0m  [2mmethod="GET"  path="/api/health"  status=200[0m
+[2m02:16:55.460[0m  [33mWARN [0m  [1msystem.warning[0m  [2mmessage="test warn"[0m
+[2m02:16:55.464[0m  [31mERROR[0m  [1msystem.warning[0m  [2mmethod="POST"  path="/api/rag/generate"  status=500[0m
+[2m02:16:55.465[0m  [32mINFO [0m  [1mauth.login[0m  [2memail="test@example.com"[0m
+[2m02:16:55.450[0m  [32mINFO [0m  [1msystem.warning[0m  [2mmessage="test info"[0m
+[2m02:16:55.463[0m  [35mFATAL[0m  [1msystem.error[0m  [2merror="fatal error"[0m
+[2m02:16:55.464[0m  [32mINFO [0m  [1msystem.warning[0m  [2mmethod="GET"  path="/api/health"  status=200[0m
+[2m02:16:55.462[0m  [36mDEBUG[0m  [1msystem.warning[0m  [2mdetail="debug info"[0m
+[2m02:16:55.461[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="test error"[0m
+[2m02:16:55.465[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="Something went wrong"[0m
+[2m02:32:33.435[0m  [31mERROR[0m  [1msystem.warning[0m  [2mmethod="POST"  path="/api/rag/generate"  status=500[0m
+[2m02:32:33.435[0m  [32mINFO [0m  [1mauth.login[0m  [2memail="test@example.com"[0m
+[2m02:32:33.435[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="Something went wrong"[0m
+[2m02:32:33.434[0m  [32mINFO [0m  [1msystem.warning[0m  [2mmethod="GET"  path="/api/health"  status=200[0m
+[2m02:32:33.432[0m  [36mDEBUG[0m  [1msystem.warning[0m  [2mdetail="debug info"[0m
+[2m02:32:33.431[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="test error"[0m
+[2m02:32:33.431[0m  [33mWARN [0m  [1msystem.warning[0m  [2mmessage="test warn"[0m
+[2m02:32:33.434[0m  [35mFATAL[0m  [1msystem.error[0m  [2merror="fatal error"[0m
+[2m02:32:33.415[0m  [32mINFO [0m  [1msystem.warning[0m  [2mmessage="test info"[0m
+[2m02:33:05.149[0m  [33mWARN [0m  [1msystem.warning[0m  [2mmessage="test warn"[0m
+[2m02:33:05.152[0m  [31mERROR[0m  [1msystem.warning[0m  [2mmethod="POST"  path="/api/rag/generate"  status=500[0m
+[2m02:33:05.134[0m  [32mINFO [0m  [1msystem.warning[0m  [2mmessage="test info"[0m
+[2m02:33:05.153[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="Something went wrong"[0m
+[2m02:33:05.153[0m  [32mINFO [0m  [1mauth.login[0m  [2memail="test@example.com"[0m
+[2m02:33:05.152[0m  [32mINFO [0m  [1msystem.warning[0m  [2mmethod="GET"  path="/api/health"  status=200[0m
+[2m02:33:05.150[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="test error"[0m
+[2m02:33:05.151[0m  [36mDEBUG[0m  [1msystem.warning[0m  [2mdetail="debug info"[0m
+[2m02:33:05.151[0m  [35mFATAL[0m  [1msystem.error[0m  [2merror="fatal error"[0m
+[2m02:35:47.067[0m  [31mERROR[0m  [1msystem.warning[0m  [2mmethod="POST"  path="/api/rag/generate"  status=500[0m
+[2m02:35:47.067[0m  [32mINFO [0m  [1mauth.login[0m  [2memail="test@example.com"[0m
+[2m02:35:47.066[0m  [32mINFO [0m  [1msystem.warning[0m  [2mmethod="GET"  path="/api/health"  status=200[0m
+[2m02:35:47.068[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="Something went wrong"[0m
+[2m02:35:47.049[0m  [32mINFO [0m  [1msystem.warning[0m  [2mmessage="test info"[0m
+[2m02:35:47.064[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="test error"[0m
+[2m02:35:47.066[0m  [35mFATAL[0m  [1msystem.error[0m  [2merror="fatal error"[0m
+[2m02:35:47.063[0m  [33mWARN [0m  [1msystem.warning[0m  [2mmessage="test warn"[0m
+[2m02:35:47.065[0m  [36mDEBUG[0m  [1msystem.warning[0m  [2mdetail="debug info"[0m

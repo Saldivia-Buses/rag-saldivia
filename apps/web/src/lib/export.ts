@@ -3,10 +3,13 @@
  * Usado por ExportSession.tsx (F1.9).
  */
 
+import { formatDateTime } from "@/lib/utils"
+import type { Citation } from "@rag-saldivia/shared"
+
 type ExportMessage = {
   role: "user" | "assistant"
   content: string
-  sources?: unknown[]
+  sources?: Citation[]
 }
 
 type ExportSession = {
@@ -18,7 +21,7 @@ type ExportSession = {
 
 /** Serializa la sesión a Markdown con fuentes citadas si existen */
 export function exportToMarkdown(session: ExportSession): string {
-  const date = new Date(session.createdAt).toLocaleString("es-AR")
+  const date = formatDateTime(session.createdAt)
   const lines: string[] = [
     `# ${session.title}`,
     ``,
@@ -34,11 +37,11 @@ export function exportToMarkdown(session: ExportSession): string {
       lines.push(`**Usuario:** ${msg.content}`, ``)
     } else {
       lines.push(`**Asistente:** ${msg.content}`, ``)
-      const sources = msg.sources as Array<{ document_name?: string; content?: string }> | undefined
+      const sources = msg.sources
       if (sources && sources.length > 0) {
         lines.push(`*Fuentes:*`)
         for (const src of sources) {
-          const name = src.document_name ?? "Documento"
+          const name = src.document ?? "Documento"
           lines.push(`- ${name}`)
         }
         lines.push(``)

@@ -11,7 +11,7 @@
 import { NextResponse } from "next/server"
 import { ragGenerateStream } from "@/lib/rag/client"
 import { extractClaims } from "@/lib/auth/jwt"
-import { canAccessCollection } from "@rag-saldivia/db"
+import { canAccessCollection, getUserCollections } from "@rag-saldivia/db"
 import { log } from "@rag-saldivia/logger/backend"
 import { FOCUS_MODES, type FocusModeId } from "@rag-saldivia/shared"
 import { detectLanguageHint } from "@/lib/rag/client"
@@ -55,11 +55,16 @@ export async function POST(request: Request) {
     const collectionName = body.collection_name as string | undefined
     const collectionNames = body.collection_names as string[] | undefined
 
-    // Multi-colección: verificar acceso a todas las colecciones solicitadas
+    // Multi-colección: verificar acceso con una sola query + Set local (evita N queries)
     if (collectionNames && collectionNames.length > 0) {
+      const userCollections = await getUserCollections(userId)
+      const accessSet = new Set(
+        userCollections
+          .filter((c) => ["read", "write", "admin"].includes(c.permission))
+          .map((c) => c.name)
+      )
       for (const col of collectionNames) {
-        const hasAccess = await canAccessCollection(userId, col, "read")
-        if (!hasAccess) {
+        if (!accessSet.has(col)) {
           return NextResponse.json(
             { ok: false, error: `Sin acceso a la colección '${col}'` },
             { status: 403 }

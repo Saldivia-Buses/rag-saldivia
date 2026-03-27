@@ -5,6 +5,7 @@
 import { eq, and } from "drizzle-orm"
 import { getDb } from "../connection"
 import { chatSessions, chatMessages, messageFeedback } from "../schema"
+import type { Citation } from "@rag-saldivia/shared"
 
 function now() {
   return Date.now()
@@ -75,7 +76,7 @@ export async function addMessage(data: {
   sessionId: string
   role: "user" | "assistant" | "system"
   content: string
-  sources?: unknown[]
+  sources?: Citation[]
 }) {
   const db = getDb()
   const [message] = await db

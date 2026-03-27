@@ -8,6 +8,7 @@
  */
 
 import { useCallback } from "react"
+import { collectSseText } from "@/lib/rag/stream"
 
 const JACCARD_THRESHOLD = 0.65
 const RAG_URL = "/api/rag/generate"
@@ -30,32 +31,6 @@ function dedup(queries: string[]): string[] {
   return result
 }
 
-async function collectSseText(response: Response): Promise<string> {
-  let text = ""
-  if (response.headers.get("content-type")?.includes("text/event-stream")) {
-    const reader = response.body?.getReader()
-    const decoder = new TextDecoder()
-    if (reader) {
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-        const chunk = decoder.decode(value, { stream: true })
-        for (const line of chunk.split("\n")) {
-          if (!line.startsWith("data: ")) continue
-          try {
-            const data = JSON.parse(line.slice(6))
-            const token = data?.choices?.[0]?.delta?.content
-            if (token) text += token
-          } catch { /* skip */ }
-        }
-      }
-    }
-  } else {
-    const json = await response.json()
-    text = json?.choices?.[0]?.message?.content ?? ""
-  }
-  return text
-}
 
 export type CrossdocDecomposeOptions = {
   maxSubQueries?: number

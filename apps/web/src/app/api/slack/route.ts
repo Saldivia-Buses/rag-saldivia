@@ -13,6 +13,7 @@ import { NextResponse } from "next/server"
 import { getDb, botUserMappings, users } from "@rag-saldivia/db"
 import { eq, and } from "drizzle-orm"
 import { createHmac, timingSafeEqual } from "crypto"
+import { collectSseText } from "@/lib/rag/stream"
 
 const SLACK_BOT_TOKEN = process.env["SLACK_BOT_TOKEN"] ?? ""
 const SLACK_SIGNING_SECRET = process.env["SLACK_SIGNING_SECRET"] ?? ""
@@ -93,26 +94,8 @@ export async function POST(request: Request) {
 
         let answer = "Sin respuesta del sistema RAG."
         if (ragRes.ok) {
-          const reader = ragRes.body?.getReader()
-          const decoder = new TextDecoder()
-          let fullContent = ""
-          if (reader) {
-            while (true) {
-              const { done, value } = await reader.read()
-              if (done) break
-              const chunk = decoder.decode(value, { stream: true })
-              for (const line of chunk.split("\n")) {
-                if (!line.startsWith("data: ")) continue
-                const data = line.slice(6).trim()
-                if (data === "[DONE]") continue
-                try {
-                  const parsed = JSON.parse(data) as { choices?: Array<{ delta?: { content?: string } }> }
-                  fullContent += parsed.choices?.[0]?.delta?.content ?? ""
-                } catch { /* ignorar */ }
-              }
-            }
-            answer = fullContent || answer
-          }
+          const fullContent = await collectSseText(ragRes)
+          answer = fullContent || answer
         }
 
         await fetch(responseUrl, {

@@ -7,6 +7,7 @@
 import { NextResponse } from "next/server"
 import { getDb, botUserMappings } from "@rag-saldivia/db"
 import { eq, and } from "drizzle-orm"
+import { collectSseText } from "@/lib/rag/stream"
 
 const SYSTEM_API_KEY = process.env["SYSTEM_API_KEY"] ?? ""
 const BASE_URL = process.env["NEXTAUTH_URL"] ?? "http://localhost:3000"
@@ -51,23 +52,8 @@ export async function POST(request: Request) {
         signal: AbortSignal.timeout(30000),
       })
       if (ragRes.ok) {
-        const reader = ragRes.body?.getReader()
-        const decoder = new TextDecoder()
-        if (reader) {
-          let full = ""
-          while (true) {
-            const { done, value } = await reader.read()
-            if (done) break
-            const chunk = decoder.decode(value, { stream: true })
-            for (const line of chunk.split("\n")) {
-              if (!line.startsWith("data: ")) continue
-              const data = line.slice(6).trim()
-              if (data === "[DONE]") continue
-              try { full += (JSON.parse(data) as { choices?: Array<{ delta?: { content?: string } }> }).choices?.[0]?.delta?.content ?? "" } catch { /* ignorar */ }
-            }
-          }
-          answer = full || answer
-        }
+        const full = await collectSseText(ragRes)
+        answer = full || answer
       }
     } catch { /* ignorar */ }
 

@@ -5,27 +5,10 @@
  */
 
 import { NextResponse } from "next/server"
-import { unstable_cache } from "next/cache"
 import { ragFetch } from "@/lib/rag/client"
 import { extractClaims } from "@/lib/auth/jwt"
 import { getUserCollections } from "@rag-saldivia/db"
-
-const getCachedRagCollections = unstable_cache(
-  async () => {
-    const res = await ragFetch("/v1/collections")
-    if ("error" in res) return []
-    if (!res.ok) return []
-
-    try {
-      const data = await res.json()
-      return (data.collections ?? []) as string[]
-    } catch {
-      return []
-    }
-  },
-  ["rag-collections"],
-  { revalidate: 60, tags: ["collections"] }
-)
+import { getCachedRagCollections } from "@/lib/rag/collections-cache"
 
 export async function GET(request: Request) {
   const claims = await extractClaims(request)
@@ -58,7 +41,6 @@ export async function POST(request: Request) {
   if (!body?.name) return NextResponse.json({ ok: false, error: "name requerido" }, { status: 400 })
 
   try {
-    const ragUrl = process.env["RAG_SERVER_URL"] ?? "http://localhost:8081"
     const res = await ragFetch(`/v1/collections`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -72,12 +54,3 @@ export async function POST(request: Request) {
   }
 }
 
-async function ragFetchWithOptions(path: string, options?: RequestInit) {
-  const ragUrl = process.env["RAG_SERVER_URL"] ?? "http://localhost:8081"
-  try {
-    const res = await fetch(`${ragUrl}${path}`, { ...options, signal: AbortSignal.timeout(10000) })
-    return res
-  } catch {
-    return null
-  }
-}

@@ -7,6 +7,7 @@ import { EmptyPlaceholder } from "@/components/ui/empty-placeholder"
 import { SkeletonTable } from "@/components/ui/skeleton"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { downloadFile } from "@/lib/export"
+import { formatDate } from "@/lib/utils"
 import Link from "next/link"
 import { SearchX } from "lucide-react"
 
@@ -33,7 +34,7 @@ export function KnowledgeGapsClient() {
   function exportCSV() {
     const rows = [
       ["Sesión", "Colección", "Respuesta", "Fecha"],
-      ...gaps.map((g) => [g.sessionTitle, g.collection, `"${g.content.replace(/"/g, '""')}"`, new Date(g.timestamp).toLocaleDateString("es-AR")]),
+      ...gaps.map((g) => [g.sessionTitle, g.collection, `"${g.content.replace(/"/g, '""')}"`, formatDate(g.timestamp)]),
     ]
     downloadFile(rows.map((r) => r.join(",")).join("\n"), "knowledge-gaps.csv", "text/csv")
   }
@@ -93,7 +94,7 @@ export function KnowledgeGapsClient() {
                     <p className="text-xs text-fg-muted truncate">{gap.content}</p>
                   </TableCell>
                   <TableCell className="text-xs text-fg-muted">
-                    {new Date(gap.timestamp).toLocaleDateString("es-AR")}
+                    {formatDate(gap.timestamp)}
                   </TableCell>
                   <TableCell className="text-right">
                     <Button variant="ghost" size="sm" className="h-7 text-xs" asChild>

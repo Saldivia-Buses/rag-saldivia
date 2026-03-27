@@ -2,6 +2,7 @@ import { requireUser } from "@/lib/auth/current-user"
 import { listSavedResponses } from "@rag-saldivia/db"
 import { Bookmark } from "lucide-react"
 import { EmptyPlaceholder } from "@/components/ui/empty-placeholder"
+import { formatDateTime } from "@/lib/utils"
 
 export default async function SavedPage() {
   const user = await requireUser()
@@ -36,7 +37,7 @@ export default async function SavedPage() {
               )}
               <p className="text-sm whitespace-pre-wrap leading-relaxed text-fg">{item.content}</p>
               <p className="text-xs text-fg-subtle mt-3">
-                {new Date(item.createdAt).toLocaleString("es-AR")}
+                {formatDateTime(item.createdAt)}
               </p>
             </div>
           ))}

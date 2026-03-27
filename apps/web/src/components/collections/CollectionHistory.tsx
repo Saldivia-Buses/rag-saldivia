@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { GitCommit, Upload } from "lucide-react"
 import type { DbCollectionHistory } from "@rag-saldivia/db"
+import { formatDateTime } from "@/lib/utils"
 
 type Props = {
   collection: string
@@ -44,7 +45,7 @@ export function CollectionHistory({ collection }: Props) {
               {entry.filename && <span className="ml-1 text-xs" style={{ color: "var(--muted-foreground)" }}>{entry.filename}</span>}
             </p>
             <p className="text-xs" style={{ color: "var(--muted-foreground)" }}>
-              {new Date(entry.createdAt).toLocaleString("es-AR")}
+              {formatDateTime(entry.createdAt)}
             </p>
           </div>
         </div>

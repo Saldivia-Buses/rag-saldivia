@@ -3,6 +3,7 @@ import { requireUser } from "@/lib/auth/current-user"
 import { getProject } from "@rag-saldivia/db"
 import Link from "next/link"
 import { ArrowLeft, FolderKanban } from "lucide-react"
+import { formatDate } from "@/lib/utils"
 
 export default async function ProjectDetailPage({
   params,
@@ -39,7 +40,7 @@ export default async function ProjectDetailPage({
 
       <div className="text-sm" style={{ color: "var(--muted-foreground)" }}>
         <p>Las sesiones y colecciones del proyecto se configuran via la CLI o la API.</p>
-        <p className="mt-1">Creado: {new Date(project.createdAt).toLocaleDateString("es-AR")}</p>
+        <p className="mt-1">Creado: {formatDate(project.createdAt)}</p>
       </div>
     </div>
   )
