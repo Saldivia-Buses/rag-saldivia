@@ -115,9 +115,9 @@ function handleIngestionStarted(event: DbEvent, payload: Record<string, unknown>
   state.ingestionEvents.push({
     ts: event.ts,
     type: event.type,
-    filename: payload["filename"] != null ? String(payload["filename"]) : undefined,
-    collection: payload["collection"] != null ? String(payload["collection"]) : undefined,
-    sourceId: payload["sourceId"] != null ? String(payload["sourceId"]) : undefined,
+    ...(payload["filename"] != null ? { filename: String(payload["filename"]) } : {}),
+    ...(payload["collection"] != null ? { collection: String(payload["collection"]) } : {}),
+    ...(payload["sourceId"] != null ? { sourceId: String(payload["sourceId"]) } : {}),
   })
   state.timeline.push({
     ts: event.ts,
@@ -131,9 +131,9 @@ function handleIngestionCompleted(event: DbEvent, payload: Record<string, unknow
   state.ingestionEvents.push({
     ts: event.ts,
     type: event.type,
-    filename: payload["filename"] != null ? String(payload["filename"]) : undefined,
-    collection: payload["collection"] != null ? String(payload["collection"]) : undefined,
-    sourceId: payload["sourceId"] != null ? String(payload["sourceId"]) : undefined,
+    ...(payload["filename"] != null ? { filename: String(payload["filename"]) } : {}),
+    ...(payload["collection"] != null ? { collection: String(payload["collection"]) } : {}),
+    ...(payload["sourceId"] != null ? { sourceId: String(payload["sourceId"]) } : {}),
   })
   state.timeline.push({
     ts: event.ts,
@@ -148,9 +148,9 @@ function handleIngestionFailed(event: DbEvent, payload: Record<string, unknown>,
   state.ingestionEvents.push({
     ts: event.ts,
     type: event.type,
-    filename: payload["filename"] != null ? String(payload["filename"]) : undefined,
-    collection: payload["collection"] != null ? String(payload["collection"]) : undefined,
-    error: payload["error"] != null ? String(payload["error"]) : undefined,
+    ...(payload["filename"] != null ? { filename: String(payload["filename"]) } : {}),
+    ...(payload["collection"] != null ? { collection: String(payload["collection"]) } : {}),
+    ...(payload["error"] != null ? { error: String(payload["error"]) } : {}),
   })
   state.errors.push({
     ts: event.ts,
@@ -170,8 +170,8 @@ function handleIngestionStalled(event: DbEvent, payload: Record<string, unknown>
   state.ingestionEvents.push({
     ts: event.ts,
     type: event.type,
-    filename: payload["filename"] != null ? String(payload["filename"]) : undefined,
-    collection: payload["collection"] != null ? String(payload["collection"]) : undefined,
+    ...(payload["filename"] != null ? { filename: String(payload["filename"]) } : {}),
+    ...(payload["collection"] != null ? { collection: String(payload["collection"]) } : {}),
   })
   state.errors.push({
     ts: event.ts,
