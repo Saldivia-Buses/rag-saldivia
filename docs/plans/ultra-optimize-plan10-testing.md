@@ -555,3 +555,20 @@ Al final del Plan 10, el workflow `ci.yml` tiene 5 jobs paralelos:
 | `e2e` | 6 specs E2E + smoke Redis | ~120s |
 
 Tiempo total del CI (en paralelo): ~2 minutos.
+
+---
+
+## Commits en cadena (2026-03-27)
+
+Orden **de más antiguo a más reciente** (ver `git log` en la branch):
+
+1. `fix(web): eliminar middleware.ts duplicado (solo proxy en next 16)`
+2. `fix(auth): logout revoca jwt en redis y borra cookie auth_token`
+3. `fix(web): a11y token fg-subtle, main login, aria y opt-out react-scan`
+4. `test(web): playwright a11y con dev:webpack y env redis/db/jwt`
+5. `chore: versionar snapshots visuales e ignorar sqlite en apps/web/data`
+6. `test(web): baseline regresión visual storybook (22 capturas png)`
+7. `test(web): e2e playwright flujos críticos y smoke redis`
+8. `ci: umbral cobertura db, jobs e2e y a11y con redis`
+9. `docs: readme badges, changelog plan 10 y checklists planes 8/10`
+10. `docs(plans): lista de commits plan 10`
