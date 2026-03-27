@@ -1989,12 +1989,12 @@ Los 11 workarounds de código no existen más — ni como fallback, ni como dead
 
 - [x] `bun run test` — 259 tests pasan (167 db + 32 logger + 60 shared/config + 92 web) — completado 2026-03-27
 - [ ] `bun run test:components` — pendiente (no ejecutado en esta sesión)
-- [ ] Smoke test con Redis (`docker compose up redis` o `docker run -d -p 6379:6379 redis:alpine`):
-  - [ ] Login → logout → token revocado inmediatamente
-  - [ ] Ingesta → notificación llega en < 1s via EventSource
-  - [ ] Crear colección → cache invalida al instante en Redis
-  - [ ] `GET /api/health` retorna `{ redis: "healthy" }`
-  - [ ] Sin `REDIS_URL`: servidor falla con error claro al arrancar
+- [x] Smoke test con Redis — **parcialmente automatizado en Plan 10 F10.5** (`apps/web/tests/e2e-playwright/redis-smoke.spec.ts` + CI job `e2e`):
+  - [x] Login → logout → token revocado inmediatamente — Playwright `redis-smoke.spec.ts`
+  - [ ] Ingesta → notificación llega en < 1s via EventSource — manual / futuro E2E con worker
+  - [ ] Crear colección → cache invalida al instante en Redis — manual / futuro
+  - [x] `GET /api/health` con Redis up — contrato `ok` + `status: healthy` — `redis-smoke.spec.ts`
+  - [ ] Sin `REDIS_URL`: servidor falla con error claro al arrancar — documentado; no automatizado (CI siempre tiene Redis)
 - [x] **CI — `services: redis` agregado al workflow** `.github/workflows/ci.yml` con `REDIS_URL: redis://localhost:6379` — completado 2026-03-27
 - [x] `.env.example` — `REDIS_URL` marcado como `[REQUIRED-DEV]` — completado 2026-03-27
 - [x] CHANGELOG.md actualizado con entrada completa de Fase 8 — completado 2026-03-27

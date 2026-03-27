@@ -1,5 +1,8 @@
 # RAG Saldivia
 
+![Coverage packages/db](https://img.shields.io/badge/coverage%20(db)-~96%25-success)
+![CI](https://github.com/Camionerou/rag-saldivia/actions/workflows/ci.yml/badge.svg?branch=dev)
+
 Overlay sobre el **NVIDIA RAG Blueprint v2.5.0** con autenticación JWT, RBAC, multi-colección, frontend Next.js 15 y CLI TypeScript.
 
 > **Branch activa:** `experimental/ultra-optimize` — reescritura completa en TypeScript.

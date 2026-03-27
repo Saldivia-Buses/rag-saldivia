@@ -9,6 +9,26 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Plan 10 — Testing completo (visual, a11y, cobertura, E2E, smoke Redis)
+
+#### Added
+- `apps/web/playwright.e2e.config.ts` y `apps/web/tests/e2e-playwright/auth.spec.ts`, `chat.spec.ts`, `admin-users.spec.ts`, `upload.spec.ts`, `settings.spec.ts`, `redis-smoke.spec.ts` — flujos críticos con Playwright (MOCK_RAG, Redis en CI) — *(Plan 10 F10.4–F10.5)*
+- Script `apps/web`: `dev:webpack`, `test:e2e` — Next dev con webpack para Playwright; E2E en CI (`e2e` job) — *(Plan 10)*
+- CI: umbral de cobertura de líneas ≥80% en `packages/db`; job `e2e`; Redis + migrate/seed + `NEXT_PUBLIC_DISABLE_REACT_SCAN` en audit de accesibilidad — *(Plan 10 F10.4–F10.5)*
+- Badges en `README.md`: cobertura DB y CI — *(Plan 10 F10.3)*
+
+#### Changed
+- `--fg-subtle` (light) en `globals.css` para contraste WCAG AA; `login`: landmark `<main>`; `ReactScanProvider` respeta `NEXT_PUBLIC_DISABLE_REACT_SCAN` — *(Plan 10 F10.2)*
+- `NavRail` / `SessionList`: `aria-label` en logout y «Nueva sesión» — tests E2E — *(Plan 10)*
+- `actionLogout`: revoca JWT en Redis, borra cookie `auth_token` (antes `token`) — *(Plan 10)*
+
+#### Removed
+- `apps/web/src/middleware.ts` — Next.js 16 solo usa `proxy.ts` (conflicto middleware+proxy) — *(Plan 10 / convención Next 16)*
+
+#### Baseline visual
+- `apps/web/.gitignore`: deja de ignorar `tests/visual/snapshots/` — los 22 PNG de regresión visual quedan versionados (CI y clones tienen baseline) — *(F10.1)*
+- `docs/plans/ultra-optimize-plan10-testing.md` — Plan 10; `tokens-palette-*.png` actualizados tras `--fg-subtle` — *(F10.1)*
+
 ### Plan 9 — Repo Limpio (completado 2026-03-27)
 
 #### F9.1 — Git purge + `.gitignore`
