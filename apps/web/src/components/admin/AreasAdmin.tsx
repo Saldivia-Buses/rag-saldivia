@@ -40,14 +40,12 @@ export function AreasAdmin({ areas: initialAreas }: { areas: AreaWithCollections
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const createForm = useForm<{ name: string; description: string }>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(AreaSchema as any),
     defaultValues: { name: "", description: "" },
   })
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const editForm = useForm<{ name: string; description: string }>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(AreaSchema as any),

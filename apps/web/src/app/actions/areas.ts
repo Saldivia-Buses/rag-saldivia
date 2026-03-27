@@ -6,21 +6,13 @@
 import { revalidatePath } from "next/cache"
 import { requireAdmin } from "@/lib/auth/current-user"
 import {
-  listAreas,
-  getAreaById,
   createArea,
   updateArea,
   deleteArea,
   countUsersInArea,
   setAreaCollections,
-  addAreaCollection,
 } from "@rag-saldivia/db"
 import { log } from "@rag-saldivia/logger/backend"
-
-export async function actionListAreas() {
-  await requireAdmin()
-  return listAreas()
-}
 
 export async function actionCreateArea(name: string, description?: string) {
   const admin = await requireAdmin()

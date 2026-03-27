@@ -36,7 +36,7 @@ export function IntegrationsAdmin() {
         </div>
         <ol className="text-sm text-fg-muted space-y-2 list-decimal list-inside">
           <li>Crear una Slack App en <a href="https://api.slack.com/apps" target="_blank" rel="noreferrer" className="text-accent underline underline-offset-2">api.slack.com/apps</a></li>
-          <li>Habilitar "Slash Commands" y usar la URL:</li>
+          <li>Habilitar &quot;Slash Commands&quot; y usar la URL:</li>
         </ol>
         <div className="flex items-center gap-2 p-2.5 rounded-lg bg-surface-2 border border-border">
           <span className="flex-1 text-sm font-mono text-fg break-all">{slackUrl}</span>

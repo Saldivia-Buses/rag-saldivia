@@ -2,7 +2,7 @@
  * Utilidades compartidas para leer streams SSE del RAG Server.
  *
  * Centraliza la lógica de reader + TextDecoder + parseo de líneas que
- * estaba duplicada en useRagStream, useCrossdocStream, useCrossdocDecompose,
+ * estaba duplicada en useRagStream,
  * slack/route.ts y teams/route.ts.
  */
 

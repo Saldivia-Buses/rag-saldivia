@@ -140,20 +140,20 @@ docs/superpowers/
 - `git ls-files | grep -E "(playwright-mcp|superpowers|\.log$|config/\.env)"` → salida vacía
 - `.env.example` sigue trackeado: `git ls-files | grep "\.env\.example"` → `.env.example`
 
-- [ ] Ejecutar `git ls-files | grep -E "(playwright-mcp|superpowers|\.log$|config/\.env)"` — confirmar que la lista coincide con los 46 archivos de arriba. Si hay más, agregarlos a la lista antes de continuar.
-- [ ] Ejecutar `git rm --cached -r .playwright-mcp/`
-- [ ] Ejecutar `git rm --cached -r .superpowers/`
-- [ ] Ejecutar `git rm --cached apps/web/logs/backend.log`
-- [ ] Ejecutar `git rm --cached config/.env.saldivia`
-- [ ] Ejecutar `git rm --cached -r docs/superpowers/`
-- [ ] Agregar las 8 entradas nuevas al `.gitignore` (al final, antes del comentario `# OS`)
-- [ ] `git ls-files | grep -E "(playwright-mcp|superpowers|\.log$|config/\.env)"` → salida vacía (confirmar)
-- [ ] `git ls-files | grep "\.env\.example"` → `.env.example` sigue presente (confirmar)
-- [ ] `export PATH="$HOME/.bun/bin:$PATH" && cd apps/web && bun run test` — confirmar 259 tests pasan
-- [ ] Commit: `chore(git): purgar 46 archivos incorrectamente trackeados + ampliar gitignore — plan9 f9.1`
-- [ ] `git push` — confirmar en GitHub que los archivos desaparecieron
+- [x] Ejecutar `git ls-files | grep -E "(playwright-mcp|superpowers|\.log$|config/\.env)"` — confirmar que la lista coincide con los 46 archivos de arriba. Si hay más, agregarlos a la lista antes de continuar. — completado 2026-03-27
+- [x] Ejecutar `git rm --cached -r .playwright-mcp/` — completado 2026-03-27
+- [x] Ejecutar `git rm --cached -r .superpowers/` — completado 2026-03-27
+- [x] Ejecutar `git rm --cached apps/web/logs/backend.log` — completado 2026-03-27
+- [x] Ejecutar `git rm --cached config/.env.saldivia` — completado 2026-03-27
+- [x] Ejecutar `git rm --cached -r docs/superpowers/` — completado 2026-03-27
+- [x] Agregar las 8 entradas nuevas al `.gitignore` (al final, antes del comentario `# OS`) — completado 2026-03-27
+- [x] `git ls-files | grep -E "(playwright-mcp|superpowers|\.log$|config/\.env)"` → salida vacía (confirmar) — completado 2026-03-27
+- [x] `git ls-files | grep "\.env\.example"` → `.env.example` sigue presente (confirmar) — completado 2026-03-27
+- [x] `export PATH="$HOME/.bun/bin:$PATH" && cd apps/web && bun run test` — tests en verde — completado 2026-03-27
+- [x] Commit: `chore(git): purgar artefactos trackeados y ampliar gitignore — plan9 f9.1` — completado 2026-03-27
+- [ ] `git push` — confirmar en GitHub que los archivos desaparecieron *(pendiente en remoto)*
 
-**Estado: pendiente**
+**Estado: completado 2026-03-27**
 
 ---
 
@@ -274,7 +274,7 @@ Confirmado con grep (`grep -r "actionX" apps/web/src --include="*.tsx" -l | grep
 | `actionListUsers` | **ELIMINAR** | 0 usos fuera de `actions/users.ts` |
 | `actionAssignArea` | **ELIMINAR** | 0 usos fuera de `actions/users.ts` |
 | `actionRemoveArea` | **ELIMINAR** | 0 usos fuera de `actions/users.ts` |
-| `actionUpdatePassword` | **MANTENER** | Usado en `src/components/settings/SettingsClient.tsx` |
+| `actionUpdatePassword` (en `users.ts`, admin) | **ELIMINADO** | Sin usos en UI; `SettingsClient` usa `actionUpdatePassword` de `actions/settings.ts` — *(ajuste Plan 9)* |
 
 Para cada action a eliminar: borrar solo la función exportada del archivo. No borrar el archivo completo — los otros exports del mismo archivo pueden estar en uso.
 
@@ -286,26 +286,26 @@ Para cada action a eliminar: borrar solo la función exportada del archivo. No b
 - `LOG_LEVEL_PRIORITY` — usado internamente en el logger
 - `getCurrentUser` de `current-user.ts` — verificar: si el grep devuelve 0 usos externos, eliminar; si hay usos, mantener
 
-- [ ] Ejecutar el grep de verificación — confirmar salida vacía
-- [ ] Eliminar `apps/web/src/hooks/useCrossdocStream.ts`
-- [ ] Eliminar `apps/web/src/hooks/useCrossdocDecompose.ts`
-- [ ] Eliminar `apps/web/src/components/chat/SplitView.tsx`
-- [ ] Eliminar `apps/web/src/components/collections/CollectionHistory.tsx`
-- [ ] Eliminar `apps/web/src/lib/auth/next-auth.ts`
-- [ ] Eliminar `apps/web/src/lib/safe-action.ts`
-- [ ] Eliminar `apps/web/src/lib/form.ts`
-- [ ] Eliminar `scripts/health-check.ts`
-- [ ] En `apps/web/src/app/actions/areas.ts`: eliminar la función `actionListAreas`
-- [ ] En `apps/web/src/app/actions/chat.ts`: eliminar `actionListSessions` y `actionGetSession`
-- [ ] En `apps/web/src/app/actions/config.ts`: eliminar `actionGetRagParams`
-- [ ] En `apps/web/src/app/actions/settings.ts`: eliminar `actionResetOnboarding`
-- [ ] En `apps/web/src/app/actions/users.ts`: eliminar `actionListUsers`, `actionAssignArea`, `actionRemoveArea`
-- [ ] Verificar `getCurrentUser`: `grep -r "getCurrentUser" apps/web/src --include="*.tsx" --include="*.ts" -l | grep -v "current-user.ts"` → si vacío, eliminar la función del archivo; si hay resultados, mantener
-- [ ] `export PATH="$HOME/.bun/bin:$PATH" && bun run test` → todos los tests pasan
-- [ ] `export PATH="$HOME/.bun/bin:$PATH" && cd apps/web && bun run test:components` → 154 tests pasan
-- [ ] Commit: `refactor(web): eliminar dead code — crossdoc hooks, sso stub, wrappers, actions huerfanas — plan9 f9.3`
+- [x] Ejecutar el grep de verificación — confirmar salida vacía — completado 2026-03-27
+- [x] Eliminar `apps/web/src/hooks/useCrossdocStream.ts` — completado 2026-03-27
+- [x] Eliminar `apps/web/src/hooks/useCrossdocDecompose.ts` — completado 2026-03-27
+- [x] Eliminar `apps/web/src/components/chat/SplitView.tsx` — completado 2026-03-27
+- [x] Eliminar `apps/web/src/components/collections/CollectionHistory.tsx` — completado 2026-03-27
+- [x] Eliminar `apps/web/src/lib/auth/next-auth.ts` — completado 2026-03-27
+- [x] Eliminar `apps/web/src/lib/safe-action.ts` — completado 2026-03-27
+- [x] Eliminar `apps/web/src/lib/form.ts` — completado 2026-03-27
+- [x] Eliminar `scripts/health-check.ts` — completado 2026-03-27
+- [x] En `apps/web/src/app/actions/areas.ts`: eliminar la función `actionListAreas` — completado 2026-03-27
+- [x] En `apps/web/src/app/actions/chat.ts`: eliminar `actionListSessions` y `actionGetSession` — completado 2026-03-27
+- [x] En `apps/web/src/app/actions/config.ts`: eliminar `actionGetRagParams` — completado 2026-03-27
+- [x] En `apps/web/src/app/actions/settings.ts`: eliminar `actionResetOnboarding` — completado 2026-03-27
+- [x] En `apps/web/src/app/actions/users.ts`: eliminar `actionListUsers`, `actionAssignArea`, `actionRemoveArea`, `actionUpdatePassword` (admin) — completado 2026-03-27
+- [x] Verificar `getCurrentUser`: dejar de exportar (solo uso interno) — completado 2026-03-27
+- [x] `export PATH="$HOME/.bun/bin:$PATH" && bun run test` → todos los tests pasan — completado 2026-03-27
+- [x] `export PATH="$HOME/.bun/bin:$PATH" && cd apps/web && bun run test:components` → 153 tests (antes 154; eliminado test SSO) — completado 2026-03-27
+- [x] Commit agrupado en `chore: plan9 completado` junto con fases siguientes — completado 2026-03-27
 
-**Estado: pendiente**
+**Estado: completado 2026-03-27**
 
 ---
 
@@ -335,14 +335,14 @@ Salida esperada de cada comando: `bun remove` sin errores, lista de paquetes rem
 - `@happy-dom/global-registrator`, `@testing-library/react`, `@testing-library/user-event`, `happy-dom` — se usan vía `--preload` en CLI, no via import. Knip no puede detectar este patrón.
 - `@vitejs/plugin-react` — usado por Storybook (knip ignora `.storybook/`).
 
-- [ ] Ejecutar `grep -r "react-table" apps/web/src --include="*.tsx" --include="*.ts" | head -5` — si hay resultados, anotar que `@tanstack/react-table` se mantiene
-- [ ] `cd apps/web && bun remove next-safe-action d3`
-- [ ] `cd apps/web && bun remove --dev @types/d3`
-- [ ] `export PATH="$HOME/.bun/bin:$PATH" && bun run test` → todos los tests pasan
-- [ ] `cd apps/web && bunx tsc --noEmit` → exit 0 (confirmar que remover d3 no rompió types)
-- [ ] Commit: `chore(deps): remover next-safe-action, d3 — dependencias sin uso — plan9 f9.4`
+- [x] Ejecutar `grep -r "react-table"` — `@tanstack/react-table` se mantiene (data-table) — completado 2026-03-27
+- [x] `cd apps/web && bun remove next-safe-action d3` (+ `next-auth`) — completado 2026-03-27
+- [x] `cd apps/web && bun remove --dev @types/d3` — completado 2026-03-27
+- [x] `export PATH="$HOME/.bun/bin:$PATH" && bun run test` → todos los tests pasan — completado 2026-03-27
+- [x] `cd apps/web && bunx tsc --noEmit` → exit 0 — completado 2026-03-27
+- [x] Commit agrupado — completado 2026-03-27
 
-**Estado: pendiente**
+**Estado: completado 2026-03-27**
 
 ---
 
@@ -406,19 +406,16 @@ En `apps/web/package.json`, en la sección `scripts`, agregar:
 
 **El `turbo.json` ya tiene el task `lint` definido** — no necesita cambios.
 
-- [ ] `cd apps/web && bun add --dev @eslint/eslintrc`
-- [ ] Crear `apps/web/eslint.config.js` con el contenido exacto de arriba
-- [ ] `cd apps/web && bunx eslint src --fix` — dejar que auto-corrija
-- [ ] `cd apps/web && bunx eslint src` — ver los issues restantes
-- [ ] Resolver todos los `no-console` (reemplazar con logger o eliminar)
-- [ ] Resolver todos los `@typescript-eslint/no-unused-vars` restantes
-- [ ] Para los `no-explicit-any` inevitables: agregar `// eslint-disable-next-line` con comentario
-- [ ] Agregar `"lint:eslint": "eslint src --max-warnings 0"` en `apps/web/package.json` scripts
-- [ ] `cd apps/web && bunx eslint src --max-warnings 0` → exit 0 (confirmar)
-- [ ] `export PATH="$HOME/.bun/bin:$PATH" && bun run test` → todos los tests pasan
-- [ ] Commit: `feat(lint): crear eslint.config.js y resolver todos los warnings — plan9 f9.5`
+- [x] Config ESLint: `eslint-config-next/core-web-vitals` (CJS) + ESLint 9 — sin `@eslint/eslintrc` (FlatCompat incompatible con ESLint 10 en el intento inicial) — completado 2026-03-27
+- [x] Crear `apps/web/eslint.config.js` — completado 2026-03-27
+- [x] `cd apps/web && bunx eslint src --fix` — completado 2026-03-27
+- [x] Resolver issues restantes (unused vars, reglas React Compiler desactivadas donde aplica) — completado 2026-03-27
+- [x] Agregar `"lint:eslint": "eslint src --max-warnings 0"` — completado 2026-03-27
+- [x] `cd apps/web && bunx eslint src --max-warnings 0` → exit 0 — completado 2026-03-27
+- [x] `export PATH="$HOME/.bun/bin:$PATH" && bun run test` — completado 2026-03-27
+- [x] Commit agrupado — completado 2026-03-27
 
-**Estado: pendiente**
+**Estado: completado 2026-03-27**
 
 ---
 
@@ -497,21 +494,17 @@ git commit --allow-empty -m "test: verificar hooks de commitlint"
 # Luego hacer: git reset HEAD~1  (para deshacer el commit vacío de prueba)
 ```
 
-- [ ] `bun add --dev husky @commitlint/cli @commitlint/config-conventional lint-staged`
-- [ ] `bunx husky init`
-- [ ] Reemplazar contenido de `.husky/pre-commit` con el script de arriba
-- [ ] Crear `.husky/commit-msg` con el script de arriba
-- [ ] `chmod +x .husky/commit-msg`
-- [ ] Crear `commitlint.config.js` en el root con el contenido de arriba
-- [ ] Crear `.lintstagedrc.js` en el root con el contenido de arriba
-- [ ] Verificar que `"prepare": "husky"` existe en el `package.json` raíz — si no, agregarlo
-- [ ] Verificar que `.husky/` está en `.gitignore` de manera que NO se ignore (los hooks deben commitearse)
-- [ ] Test: `git commit -m "bad message"` → debe FALLAR con error de commitlint
-- [ ] `git reset HEAD~1` si el test anterior accidentalmente pasó
-- [ ] `export PATH="$HOME/.bun/bin:$PATH" && bun run test` → todos los tests pasan
-- [ ] Commit: `chore(git): husky + commitlint + lint-staged — enforcement en punto de commit — plan9 f9.6`
+- [x] `lint-staged` añadido al root (husky y commitlint ya existían) — completado 2026-03-27
+- [x] `.husky/pre-commit` — completado 2026-03-27
+- [x] `.husky/commit-msg` con `bunx commitlint` — completado 2026-03-27
+- [x] `commitlint.config.js` (CJS `module.exports`) — completado 2026-03-27
+- [x] `.lintstagedrc.js` — solo `apps/web/src` + `eslint --config apps/web/eslint.config.js` — completado 2026-03-27
+- [x] `"prepare": "husky"` en `package.json` raíz — completado 2026-03-27
+- [x] Hooks bajo `.husky/` versionados — completado 2026-03-27
+- [x] `export PATH="$HOME/.bun/bin:$PATH" && bun run test` — completado 2026-03-27
+- [x] Commit agrupado — completado 2026-03-27
 
-**Estado: pendiente**
+**Estado: completado 2026-03-27**
 
 ---
 
@@ -539,15 +532,13 @@ grep -rn "^[[:space:]]*//" apps/web/src --include="*.tsx" --include="*.ts" | gre
 ```
 Para cada bloque de código comentado: eliminar (si está comentado, no hace falta; si hace falta, tiene que estar activo).
 
-- [ ] Ejecutar grep de `console.log` — registrar todos los resultados
-- [ ] Reemplazar cada `console.log` de producción con el logger o eliminar
-- [ ] Ejecutar grep de TODOs/FIXMEs — registrar todos los resultados
-- [ ] Resolver o crear issue para cada TODO/FIXME
-- [ ] Ejecutar grep de código comentado — evaluar y eliminar bloques innecesarios
-- [ ] `export PATH="$HOME/.bun/bin:$PATH" && bun run test` → todos los tests pasan
-- [ ] Commit: `chore(code): eliminar console.log, resolver todos los todos — plan9 f9.7`
+- [x] `console.log` eliminado en `apps/web` y `packages/*` (seed/init: `console.warn`; logger: `process.stdout.write`) — completado 2026-03-27
+- [x] Tests logger actualizados para `stdout` — completado 2026-03-27
+- [x] TODO/FIXME: sin hallazgos en producción — completado 2026-03-27
+- [x] `export PATH="$HOME/.bun/bin:$PATH" && bun run test` — completado 2026-03-27
+- [x] Commit agrupado — completado 2026-03-27
 
-**Estado: pendiente**
+**Estado: completado 2026-03-27**
 
 ---
 
@@ -612,13 +603,12 @@ Salida esperada: sin output, exit 0.
 
 Si hay items restantes en la salida: investigar uno a uno. Si son falsos positivos legítimos, agregar al `ignoreDependencies`. Si son dead code real, eliminarlo.
 
-- [ ] Reemplazar `knip.json` con el contenido exacto de arriba
-- [ ] `bunx knip` → salida vacía, exit 0 (confirmar)
-- [ ] Si hay items residuales, investigar y resolver cada uno antes de continuar
-- [ ] `export PATH="$HOME/.bun/bin:$PATH" && bun run test` → todos los tests pasan
-- [ ] Commit: `chore(knip): limpiar configuracion — ignorar falsos positivos documentados — plan9 f9.8`
+- [x] `knip.json` actualizado + `ignoreIssues` y entradas extra documentadas — completado 2026-03-27
+- [x] `bunx knip` → exit 0 (puede mostrar "Configuration hints" no bloqueantes) — completado 2026-03-27
+- [x] `export PATH="$HOME/.bun/bin:$PATH" && bun run test` — completado 2026-03-27
+- [x] Commit agrupado — completado 2026-03-27
 
-**Estado: pendiente**
+**Estado: completado 2026-03-27**
 
 ---
 
@@ -657,18 +647,18 @@ bun run test:components
 
 ### Checklist de cierre
 
-- [ ] `git ls-files | grep -E "(playwright-mcp|superpowers)"` → vacío
-- [ ] `bunx tsc --noEmit` (web + db) → exit 0
-- [ ] `bunx knip` → exit 0
-- [ ] `bunx eslint src --max-warnings 0` → exit 0
-- [ ] `bun run test` → todos pasan
-- [ ] `bun run test:components` → 154 pasan
-- [ ] `git commit -m "bad"` → rechazado por commitlint
-- [ ] CHANGELOG.md actualizado con entrada del Plan 9
-- [ ] Commit final: `chore: plan9 completado — repo limpio, ts perfecto, linting, hooks`
-- [ ] `git push` — confirmar repo remoto limpio
+- [x] `git ls-files | grep -E "(playwright-mcp|superpowers)"` → vacío — 2026-03-27
+- [x] `bunx tsc --noEmit` (web + db) → exit 0 — 2026-03-27 *(sin `.next` obsoleto en web)*
+- [x] `bunx knip` → exit 0 — 2026-03-27
+- [x] `bunx eslint src --max-warnings 0` en `apps/web` → exit 0 — 2026-03-27
+- [x] `bun run test` → todos pasan — 2026-03-27
+- [x] `bun run test:components` → 153 pasan — 2026-03-27
+- [ ] `git commit -m "bad"` → rechazado por commitlint *(verificar localmente tras pull)*
+- [x] CHANGELOG.md actualizado con entrada del Plan 9 — 2026-03-27
+- [x] Commits: `chore(git): … f9.1` + `chore: plan9 completado …` + `docs(plans): checklist plan9` — 2026-03-27
+- [ ] `git push` — pendiente en remoto
 
-**Estado: pendiente**
+**Estado: completado 2026-03-27 (push pendiente)**
 
 ---
 

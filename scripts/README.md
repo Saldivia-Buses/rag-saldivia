@@ -7,7 +7,6 @@ Scripts de utilidad para setup, operaciones y health check del nuevo stack TypeS
 | Archivo | Qué hace |
 |---|---|
 | `setup.ts` | Onboarding completo: preflight check, instalar deps, crear `.env.local`, migrar DB, seed, resumen de estado |
-| `health-check.ts` | Verifica el estado de todos los servicios con latencias |
 
 ## Uso
 
@@ -22,11 +21,11 @@ bun scripts/setup.ts --check
 
 # Resetear DB a estado inicial
 bun scripts/setup.ts --reset
-
-# Health check
-bun scripts/health-check.ts
-bun scripts/health-check.ts --json   # output en JSON
 ```
+
+## Health del stack
+
+Usá `rag status` o la ruta `GET /api/health` del servidor web.
 
 ## Scripts del stack anterior
 

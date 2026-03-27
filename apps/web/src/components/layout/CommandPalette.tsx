@@ -23,7 +23,6 @@ import {
   Bookmark,
   FileText,
   Users,
-  Search,
   LayoutTemplate,
 } from "lucide-react"
 import type { CurrentUser } from "@/lib/auth/current-user"

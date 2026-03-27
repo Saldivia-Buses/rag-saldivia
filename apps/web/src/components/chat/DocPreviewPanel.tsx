@@ -1,10 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import { X, FileText, AlertCircle, ChevronLeft, ChevronRight } from "lucide-react"
+import { FileText, AlertCircle, ChevronLeft, ChevronRight } from "lucide-react"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
 
 type Props = {
   documentName: string | null
@@ -58,7 +57,7 @@ export function DocPreviewPanel({ documentName, highlightText, onClose }: Props)
           </div>
           {highlightText && (
             <p className="text-xs mt-1 line-clamp-2" style={{ color: "var(--muted-foreground)" }}>
-              Fragmento: "{highlightText}"
+              Fragmento: &quot;{highlightText}&quot;
             </p>
           )}
         </SheetHeader>

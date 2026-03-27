@@ -15,7 +15,6 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { CurrentUser } from "@/lib/auth/current-user"
-import { actionCreateSessionForDoc } from "@/app/actions/chat"
 import { actionCreateCollection, actionDeleteCollection } from "@/app/actions/collections"
 
 type Props = {
@@ -34,7 +33,6 @@ export function CollectionsList({ collections: initial, user }: Props) {
     }
   )
   const [isPending, startTransition] = useTransition()
-  const [creating, setCreating] = useState(false)
   const [newName, setNewName] = useState("")
   const [showCreate, setShowCreate] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -66,11 +64,6 @@ export function CollectionsList({ collections: initial, user }: Props) {
     router.push(`/chat?collection=${encodeURIComponent(name)}`)
   }
 
-  async function handleChatWithDoc(collection: string, docName: string) {
-    const session = await actionCreateSessionForDoc(collection, docName)
-    if (session) router.push(`/chat/${session.id}`)
-  }
-
   return (
     <div className="space-y-4">
       {user.role === "admin" && (
@@ -88,8 +81,8 @@ export function CollectionsList({ collections: initial, user }: Props) {
                 placeholder="nombre-de-coleccion"
                 className="w-48"
               />
-              <Button size="sm" type="submit" disabled={creating}>
-                {creating ? "Creando..." : "Crear"}
+              <Button size="sm" type="submit" disabled={isPending}>
+                {isPending ? "Creando..." : "Crear"}
               </Button>
               <Button size="sm" variant="ghost" type="button" onClick={() => setShowCreate(false)}>
                 Cancelar

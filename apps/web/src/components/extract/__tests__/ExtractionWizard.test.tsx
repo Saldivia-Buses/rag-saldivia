@@ -41,7 +41,7 @@ describe("<ExtractionWizard />", () => {
   })
 
   test("en step 2 muestra campos para completar", () => {
-    const { getByRole, getByText, getByPlaceholderText } = render(<ExtractionWizard />)
+    const { getByRole, getByPlaceholderText } = render(<ExtractionWizard />)
     fireEvent.change(getByPlaceholderText("nombre-de-coleccion"), { target: { value: "contratos" } })
     fireEvent.click(getByRole("button", { name: /Siguiente/ }))
     expect(getByPlaceholderText(/Nombre del campo/)).toBeInTheDocument()

@@ -49,6 +49,8 @@ export function UploadClient({ collections }: { collections: string[] }) {
 
   const onDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault(); setIsDragging(false); handleFiles(e.dataTransfer.files)
+  // handleFiles y uploadFile dependen de selectedCollection vía closure
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCollection])
 
   return (

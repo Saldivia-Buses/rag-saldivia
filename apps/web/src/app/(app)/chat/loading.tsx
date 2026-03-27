@@ -1,5 +1,3 @@
-import { SkeletonTable } from "@/components/ui/skeleton"
-
 export default function ChatLoading() {
   return (
     <div className="flex h-full">

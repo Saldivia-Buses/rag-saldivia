@@ -145,7 +145,7 @@ function createLogger() {
     if (level === "ERROR" || level === "FATAL") {
       console.error(line)
     } else {
-      console.log(line)
+      process.stdout.write(`${line}\n`)
     }
 
     // Persistir en DB y archivo de forma asíncrona

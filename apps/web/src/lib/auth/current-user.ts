@@ -19,7 +19,7 @@ export type CurrentUser = {
  * Obtener el usuario actual desde los headers del middleware.
  * Usa React.cache() para deduplicar dentro de la misma request.
  */
-export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
+const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
   const h = await headers()
   const userId = h.get("x-user-id")
   const email = h.get("x-user-email")

@@ -21,7 +21,7 @@ export function ProjectsClient({ initialProjects }: Props) {
       return state
     }
   )
-  const [isPending, startTransition] = useTransition()
+  const [_isPending, startTransition] = useTransition()
   const [showCreate, setShowCreate] = useState(false)
   const [form, setForm] = useState({ name: "", description: "", instructions: "" })
   const [creating, setCreating] = useState(false)

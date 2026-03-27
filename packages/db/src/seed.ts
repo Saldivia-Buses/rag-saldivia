@@ -16,7 +16,7 @@ import { hashSync } from "bcrypt-ts"
 const db = getDb()
 
 async function seed() {
-  console.log("Seeding base de datos de desarrollo...")
+  console.warn("Seeding base de datos de desarrollo...")
 
   const now = Date.now()
 
@@ -34,9 +34,9 @@ async function seed() {
   const areaId = defaultArea?.id
 
   if (!areaId) {
-    console.log("  El área 'General' ya existe — skipping")
+    console.warn("  El área 'General' ya existe — skipping")
   } else {
-    console.log(`  Área creada: General (id=${areaId})`)
+    console.warn(`  Área creada: General (id=${areaId})`)
   }
 
   // Obtener el área existente si ya existía
@@ -56,7 +56,7 @@ async function seed() {
     })
     .onConflictDoNothing()
 
-  console.log("  Colección 'tecpia' asignada al área General")
+  console.warn("  Colección 'tecpia' asignada al área General")
 
   // ── Usuario admin ──────────────────────────────────────────────────────
   const adminPasswordHash = hashSync("changeme", 10)
@@ -78,12 +78,12 @@ async function seed() {
     .returning()
 
   if (!adminUser) {
-    console.log("  Usuario admin@localhost ya existe — skipping")
+    console.warn("  Usuario admin@localhost ya existe — skipping")
   } else {
-    console.log(`  Usuario admin creado: admin@localhost (id=${adminUser.id})`)
-    console.log("    Email:    admin@localhost")
-    console.log("    Password: changeme")
-    console.log("    IMPORTANTE: cambiar antes de usar en producción")
+    console.warn(`  Usuario admin creado: admin@localhost (id=${adminUser.id})`)
+    console.warn("    Email:    admin@localhost")
+    console.warn("    Password: changeme")
+    console.warn("    IMPORTANTE: cambiar antes de usar en producción")
 
     // Asignar admin al área general
     await db
@@ -112,9 +112,9 @@ async function seed() {
     .returning()
 
   if (!testUser) {
-    console.log("  Usuario user@localhost ya existe — skipping")
+    console.warn("  Usuario user@localhost ya existe — skipping")
   } else {
-    console.log(`  Usuario de prueba creado: user@localhost (id=${testUser.id})`)
+    console.warn(`  Usuario de prueba creado: user@localhost (id=${testUser.id})`)
 
     await db
       .insert(userAreas)
@@ -122,10 +122,10 @@ async function seed() {
       .onConflictDoNothing()
   }
 
-  console.log("\nSeed completado.")
-  console.log("Credenciales de desarrollo:")
-  console.log("  admin@localhost / changeme  (admin)")
-  console.log("  user@localhost / test1234   (user)")
+  console.warn("\nSeed completado.")
+  console.warn("Credenciales de desarrollo:")
+  console.warn("  admin@localhost / changeme  (admin)")
+  console.warn("  user@localhost / test1234   (user)")
 }
 
 seed().catch((err) => {

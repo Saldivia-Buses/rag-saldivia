@@ -40,6 +40,7 @@ export function CollectionSelector({ defaultCollection, availableCollections, on
     const saved = loadSaved(defaultCollection)
     setSelected(saved)
     onCollectionsChange(saved)
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- sync al montar o si cambia la colección por defecto
   }, [defaultCollection])
 
   function toggle(collection: string) {

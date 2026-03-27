@@ -1,4 +1,4 @@
-import { test, expect, describe, afterEach, mock } from "bun:test"
+import { test, expect, describe, afterEach } from "bun:test"
 import { render, cleanup } from "@testing-library/react"
 import { ProjectsClient } from "@/components/projects/ProjectsClient"
 

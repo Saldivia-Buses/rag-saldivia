@@ -3,7 +3,7 @@
  * Corre con: bun test src/lib/auth/__tests__/jwt.test.ts
  */
 
-import { describe, test, expect, beforeEach } from "bun:test"
+import { describe, test, expect } from "bun:test"
 
 // Setup env vars para tests
 process.env["JWT_SECRET"] = "test-secret-key-at-least-16-chars"

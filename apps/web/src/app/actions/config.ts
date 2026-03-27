@@ -1,15 +1,10 @@
 "use server"
 
 import { requireAdmin } from "@/lib/auth/current-user"
-import { loadRagParams, saveRagParams } from "@rag-saldivia/config"
+import { saveRagParams } from "@rag-saldivia/config"
 import { log } from "@rag-saldivia/logger/backend"
 import { revalidatePath } from "next/cache"
 import type { RagParams } from "@rag-saldivia/shared"
-
-export async function actionGetRagParams() {
-  await requireAdmin()
-  return loadRagParams()
-}
 
 export async function actionUpdateRagParams(params: Partial<RagParams>) {
   const admin = await requireAdmin()

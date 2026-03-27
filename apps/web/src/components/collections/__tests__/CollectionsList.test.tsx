@@ -1,12 +1,8 @@
-import { test, expect, describe, afterEach, mock } from "bun:test"
+import { test, expect, describe, afterEach } from "bun:test"
 import { render, cleanup } from "@testing-library/react"
 import { CollectionsList } from "@/components/collections/CollectionsList"
 
 afterEach(cleanup)
-
-mock.module("@/app/actions/chat", () => ({
-  actionCreateSessionForDoc: mock(() => Promise.resolve("session-id")),
-}))
 
 const mockUser = { id: 1, email: "admin@test.com", name: "Admin", role: "admin" as const, active: true, preferences: {} }
 

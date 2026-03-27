@@ -105,6 +105,8 @@ export function DocumentGraph({ collection, onNodeClick }: Props) {
     }
     frame = requestAnimationFrame(run)
     return () => cancelAnimationFrame(frame)
+  // Simulación depende de edges y cardinalidad de nodos, no del array completo (evita re-run infinito)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [edges, nodes.length])
 
   if (loading) return <div className="flex items-center justify-center h-64 text-sm" style={{ color: "var(--muted-foreground)" }}>Cargando grafo...</div>

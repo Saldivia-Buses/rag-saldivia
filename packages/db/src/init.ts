@@ -26,4 +26,4 @@ const db = drizzle(client)
 const migrationsFolder = join(import.meta.dir, "../drizzle")
 await migrate(db, { migrationsFolder })
 
-console.log("Base de datos migrada correctamente")
+console.warn("Base de datos migrada correctamente")

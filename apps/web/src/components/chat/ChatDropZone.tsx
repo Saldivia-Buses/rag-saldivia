@@ -16,7 +16,7 @@ type Props = {
   children: React.ReactNode
 }
 
-export function ChatDropZone({ sessionId, children }: Props) {
+export function ChatDropZone({ sessionId: _sessionId, children }: Props) {
   const [isDragging, setIsDragging] = useState(false)
   const [uploadedFile, setUploadedFile] = useState<string | null>(null)
   const dragCountRef = useRef(0)

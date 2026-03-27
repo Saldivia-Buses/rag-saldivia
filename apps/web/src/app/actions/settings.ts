@@ -38,13 +38,6 @@ export async function actionCompleteOnboarding() {
   revalidatePath("/")
 }
 
-export async function actionResetOnboarding() {
-  const user = await requireUser()
-  const db = getDb()
-  await db.update(users).set({ onboardingCompleted: false }).where(eq(users.id, user.id))
-  revalidatePath("/")
-}
-
 export async function actionAddMemory(key: string, value: string) {
   const user = await requireUser()
   await setMemory(user.id, key, value, "explicit")

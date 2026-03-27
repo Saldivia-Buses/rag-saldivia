@@ -71,7 +71,7 @@ config/         → YAMLs de configuración (sin cambios)
 patches/        → patches del blueprint NVIDIA (sin cambios)
 legacy/         → stack original Python + SvelteKit (referencia)
 docs/           → arquitectura, CLI, blackbox, onboarding
-scripts/        → setup.ts, health-check.ts
+scripts/        → setup.ts
 ```
 
 ## Documentación

@@ -9,18 +9,71 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
-### Plan 9 — Repo Limpio (en progreso)
+### Plan 9 — Repo Limpio (completado 2026-03-27)
 
-#### F9.2 — TypeScript a cero errores en todos los packages (2026-03-27)
+#### F9.1 — Git purge + `.gitignore`
+##### Removed (destrackeado del índice)
+- `.playwright-mcp/`, `.superpowers/`, `apps/web/logs/backend.log`, `config/.env.saldivia`, `docs/superpowers/` — artefactos MCP, brainstorming interno, logs y env que no debían versionarse — *(Plan 9 F9.1)*
 
+##### Changed
+- `.gitignore`: reglas para `.playwright-mcp/`, `.superpowers/`, `apps/web/logs/`, `config/*.env.*`, `docs/superpowers/`, y archivos de sesión `*.pid`, `*.server-info`, `*.server-stopped` — *(Plan 9 F9.1)*
+
+#### F9.2 — TypeScript sin errores
 ##### Fixed
-- `apps/web/src/app/actions/collections.ts`: remover `updateTag` (API de `"use cache"` no usada en el proyecto) — reemplazar con `await invalidateCollectionsCache()` que es el mecanismo Redis correcto para este stack — *(Plan 9 F9.2)*
-- `packages/logger/src/blackbox.ts`: corregir las 4 funciones `handleIngestion*` — usar spread condicional `...(x != null ? { field: x } : {})` en lugar de `field: x | undefined` para cumplir con `exactOptionalPropertyTypes: true` en `IngestionEventRecord` — *(Plan 9 F9.2)*
-- `packages/db/src/ioredis-mock.d.ts`: declaración de tipos para `ioredis-mock` (`declare module "ioredis-mock"`) — *(Plan 9 F9.2)*
-- `packages/db/tsconfig.json`: excluir `src/test-setup.ts` de la compilación — evita error de `bun:test` module no encontrado por tsc — *(Plan 9 F9.2)*
+- `apps/web/src/app/actions/collections.ts`: `invalidateCollectionsCache()` + `revalidatePath` en lugar de APIs de cache incompatibles con Next.js 16 — *(Plan 9 F9.2)*
+- `packages/logger/src/blackbox.ts`: spread condicional en `handleIngestion*` para `exactOptionalPropertyTypes` — *(Plan 9 F9.2)*
+- `packages/db/src/ioredis-mock.d.ts`: `declare module "ioredis-mock"` — *(Plan 9 F9.2)*
+- `packages/db/tsconfig.json`: excluir `src/test-setup.ts` del compilado — *(Plan 9 F9.2)*
 
-##### Removed (git untrack)
-- `.turbo/cache/` (408 archivos): purgados con `git rm --cached -r .turbo/` — ya estaban en `.gitignore` pero nunca fueron destrackados
+##### Removed (git untrack previo)
+- `.turbo/cache/` (408 archivos): `git rm --cached -r .turbo/` — *(Plan 9 F9.2 / cierre Plan 8)*
+
+#### F9.3 — Dead code y actions huérfanas
+##### Removed
+- Hooks crossdoc (`useCrossdocStream`, `useCrossdocDecompose`), `SplitView`, `CollectionHistory`, SSO (`next-auth`, ruta `[...nextauth]`, `SSOButton` + test), `safe-action.ts`, `form.ts`, `scripts/health-check.ts` — *(Plan 9 F9.3)*
+- Server actions sin usos: `actionListAreas`, `actionListSessions`, `actionGetSession`, `actionGetRagParams`, `actionResetOnboarding`, `actionListUsers`, `actionAssignArea`, `actionRemoveArea`, `actionUpdatePassword` (admin en `users.ts`) — la UI usa `loadRagParams` / `actionUpdatePassword` de settings donde aplica — *(Plan 9 F9.3)*
+
+##### Changed
+- `apps/web/src/lib/auth/current-user.ts`: `getCurrentUser` deja de exportarse (solo uso interno en `requireUser`) — *(Plan 9 F9.3)*
+- `apps/web/src/app/(auth)/login/page.tsx`: flujo solo email/contraseña — *(Plan 9 F9.3)*
+- `README.md`, `scripts/README.md`: referencias a `health-check.ts` sustituidas por `rag status` / `/api/health` — *(Plan 9 F9.3)*
+
+#### F9.4 — Dependencias limpias
+##### Changed
+- `apps/web`: removidos `next-safe-action`, `d3`, `@types/d3`, `next-auth` — sin consumidores tras F9.3 — *(Plan 9 F9.4)*
+- `apps/cli`: removido `@rag-saldivia/shared` — sin imports — *(Plan 9 F9.4)*
+- `apps/web`: `postcss` declarado como devDependency (uso en `postcss.config.js`) — *(Plan 9 F9.4)*
+
+#### F9.5 — ESLint
+##### Added
+- `apps/web/eslint.config.js`: flat config con `eslint-config-next/core-web-vitals`, reglas `no-console`, `@typescript-eslint/*`, desactivación acotada de reglas React Compiler ruidosas — *(Plan 9 F9.5)*
+- `apps/web/package.json`: script `lint:eslint` — *(Plan 9 F9.5)*
+
+##### Changed
+- `apps/web`: ESLint 9.x pinneado; correcciones de unused vars, comillas JSX, exhaustive-deps documentados — *(Plan 9 F9.5)*
+
+#### F9.6 — Husky, commitlint, lint-staged
+##### Added
+- `commitlint.config.js`, `.lintstagedrc.js`, `.husky/pre-commit` (lint-staged), `.husky/commit-msg` (commitlint con `bunx`) — *(Plan 9 F9.6)*
+- `lint-staged` en el root; `prepare`: `husky` — *(Plan 9 F9.6)*
+
+##### Changed
+- `.lintstagedrc.js`: solo `apps/web/src/**/*.{ts,tsx}` con ESLint (evita lint masivo en `packages/*` sin config dedicada) — *(Plan 9 F9.6)*
+
+#### F9.7 — `console.log` y calidad
+##### Changed
+- `packages/db/src/init.ts`, `packages/db/src/seed.ts`: `console.warn` en lugar de `console.log` — *(Plan 9 F9.7)*
+- `packages/logger/src/backend.ts`: salida no-error vía `process.stdout.write` — sin `console.log` — *(Plan 9 F9.7)*
+- `packages/logger/src/__tests__/logger.test.ts`: mocks de `process.stdout.write` — *(Plan 9 F9.7)*
+
+#### F9.8 — Knip
+##### Changed
+- `knip.json`: entradas por workspace, `ignore` para tests/storybook/data-table/error-boundary, `ignoreDependencies` (Radix, testing, `@tanstack/react-table`), `ignoreIssues` para exports intencionales — `bunx knip` exit 0 — *(Plan 9 F9.8)*
+
+#### Otros
+##### Changed
+- `apps/web/src/lib/rag/client.ts`: combinar `AbortSignal` externo con timeout — *(Plan 9)*
+- `bun.lock`: resolución tras cambios de dependencias — *(Plan 9)*
 
 ---
 

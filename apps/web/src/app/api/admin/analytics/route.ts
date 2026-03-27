@@ -6,8 +6,8 @@
 
 import { NextResponse } from "next/server"
 import { extractClaims } from "@/lib/auth/jwt"
-import { getDb, events, messageFeedback, chatSessions } from "@rag-saldivia/db"
-import { desc, eq, sql, gte } from "drizzle-orm"
+import { getDb, events, messageFeedback } from "@rag-saldivia/db"
+import { desc, eq, sql } from "drizzle-orm"
 
 export async function GET(request: Request) {
   const claims = await extractClaims(request)

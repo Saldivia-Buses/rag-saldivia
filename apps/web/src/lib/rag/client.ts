@@ -59,10 +59,10 @@ export async function ragGenerateStream(
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), RAG_TIMEOUT_MS)
 
-  // Combinar signal externo con timeout
-  const combinedSignal = signal
-    ? new AbortController().signal // simplificado
-    : controller.signal
+  if (signal) {
+    if (signal.aborted) controller.abort()
+    else signal.addEventListener("abort", () => controller.abort(), { once: true })
+  }
 
   try {
     const response = await fetch(`${RAG_URL}/v1/chat/completions`, {

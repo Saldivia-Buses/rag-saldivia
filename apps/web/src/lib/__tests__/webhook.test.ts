@@ -3,7 +3,7 @@
  * Corre con: bun test apps/web/src/lib/__tests__/webhook.test.ts
  */
 
-import { describe, test, expect, beforeEach, mock, spyOn } from "bun:test"
+import { describe, test, expect, mock, spyOn } from "bun:test"
 import { createHmac } from "crypto"
 
 // Mock del logger para evitar efectos secundarios en tests
@@ -45,7 +45,6 @@ describe("dispatchWebhook — headers", () => {
     const payload = { event: "ingestion.completed", jobId: "job-1" }
     await dispatchWebhook(MOCK_WEBHOOK, payload)
 
-    const body = JSON.stringify({ ...payload, timestamp: expect.any(Number) })
     expect(capturedHeaders["x-signature"]).toMatch(/^sha256=[a-f0-9]{64}$/)
     expect(capturedHeaders["x-webhook-id"]).toBe("wh-test-123")
     expect(capturedHeaders["content-type"]).toBe("application/json")

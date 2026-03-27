@@ -10,12 +10,12 @@
  */
 
 import { NextResponse } from "next/server"
-import { getDb, botUserMappings, users } from "@rag-saldivia/db"
+import { getDb, botUserMappings } from "@rag-saldivia/db"
 import { eq, and } from "drizzle-orm"
 import { createHmac, timingSafeEqual } from "crypto"
 import { collectSseText } from "@/lib/rag/stream"
 
-const SLACK_BOT_TOKEN = process.env["SLACK_BOT_TOKEN"] ?? ""
+const _SLACK_BOT_TOKEN = process.env["SLACK_BOT_TOKEN"] ?? ""
 const SLACK_SIGNING_SECRET = process.env["SLACK_SIGNING_SECRET"] ?? ""
 const SYSTEM_API_KEY = process.env["SYSTEM_API_KEY"] ?? ""
 const BASE_URL = process.env["NEXTAUTH_URL"] ?? process.env["NEXT_PUBLIC_BASE_URL"] ?? "http://localhost:3000"

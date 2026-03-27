@@ -73,8 +73,9 @@ describe("log (backend)", () => {
 
   test("log.request usa EventType system.request", () => {
     const lines: string[] = []
-    const spy = spyOn(console, "log").mockImplementation((line: string) => {
-      lines.push(line)
+    const spy = spyOn(process.stdout, "write").mockImplementation((chunk: string | Uint8Array) => {
+      lines.push(String(chunk))
+      return true
     })
     try {
       log.request("GET", "/api/collections", 200, 42)
@@ -88,8 +89,9 @@ describe("log (backend)", () => {
   describe("output contiene la información del evento", () => {
     test("output de log.info contiene el tipo de evento", () => {
       const lines: string[] = []
-      const spy = spyOn(console, "log").mockImplementation((line: string) => {
-        lines.push(line)
+      const spy = spyOn(process.stdout, "write").mockImplementation((chunk: string | Uint8Array) => {
+        lines.push(String(chunk))
+        return true
       })
 
       try {

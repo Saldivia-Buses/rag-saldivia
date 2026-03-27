@@ -5,8 +5,7 @@
 
 import { NextResponse } from "next/server"
 import { extractClaims } from "@/lib/auth/jwt"
-import { getDb, listUsers, createUser, users } from "@rag-saldivia/db"
-import { eq } from "drizzle-orm"
+import { listUsers, createUser } from "@rag-saldivia/db"
 import { log } from "@rag-saldivia/logger/backend"
 
 export async function GET(request: Request) {

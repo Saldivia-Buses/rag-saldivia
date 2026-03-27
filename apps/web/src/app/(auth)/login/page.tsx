@@ -31,7 +31,7 @@ function LoginContent() {
   const [serverError, setServerError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
-  const { register, handleSubmit, formState: { errors, isValid } } = useForm<LoginInput>({
+  const { register, handleSubmit, formState: { errors } } = useForm<LoginInput>({
     resolver: zodResolver(LoginSchema),
     defaultValues: { email: "", password: "" },
     mode: "onBlur",
@@ -132,18 +132,6 @@ function LoginContent() {
                 {isPending ? "Iniciando sesión..." : "Iniciar sesión"}
               </Button>
             </form>
-
-            {/* SSO */}
-            {(process.env["NEXT_PUBLIC_GOOGLE_CLIENT_ID"] || process.env["NEXT_PUBLIC_AZURE_AD_CLIENT_ID"]) && (
-              <>
-                <div className="flex items-center gap-3">
-                  <div className="flex-1 h-px bg-border" />
-                  <span className="text-xs text-fg-subtle">o</span>
-                  <div className="flex-1 h-px bg-border" />
-                </div>
-                <SSOButtons />
-              </>
-            )}
           </div>
 
           {/* Footer */}
@@ -154,16 +142,6 @@ function LoginContent() {
             <ThemeToggle />
           </div>
         </div>
-    </div>
-  )
-}
-
-function SSOButtons() {
-  const { SSOButton } = require("@/components/auth/SSOButton") as { SSOButton: (p: { provider: "google" | "azure-ad" }) => React.ReactNode }
-  return (
-    <div className="space-y-2">
-      <SSOButton provider="google" />
-      <SSOButton provider="azure-ad" />
     </div>
   )
 }

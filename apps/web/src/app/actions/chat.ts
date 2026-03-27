@@ -6,7 +6,6 @@
 import { revalidatePath } from "next/cache"
 import { requireUser } from "@/lib/auth/current-user"
 import {
-  listSessionsByUser,
   getSessionById,
   createSession,
   updateSessionTitle,
@@ -18,24 +17,13 @@ import {
   saveAnnotation,
   addTag,
   removeTag,
-  listTagsBySession,
   getDb,
   chatMessages,
   chatSessions,
 } from "@rag-saldivia/db"
-import { eq as eqDrizzle, lte as lteDrizzle } from "drizzle-orm"
+import { eq as eqDrizzle } from "drizzle-orm"
 import { randomUUID } from "crypto"
 import { log } from "@rag-saldivia/logger/backend"
-
-export async function actionListSessions() {
-  const user = await requireUser()
-  return listSessionsByUser(user.id)
-}
-
-export async function actionGetSession(id: string) {
-  const user = await requireUser()
-  return getSessionById(id, user.id)
-}
 
 export async function actionCreateSession(data: {
   collection: string

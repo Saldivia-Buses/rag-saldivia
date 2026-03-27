@@ -56,7 +56,7 @@ type Template = {
 
 export function ChatInterface({
   session,
-  userId,
+  userId: _userId,
   templates = [],
   availableCollections = [],
 }: {
@@ -68,7 +68,7 @@ export function ChatInterface({
   const [messages, setMessages] = useState<Message[]>(() => parseSessionMessages(session))
   const [input, setInput] = useState("")
   const [error, setError] = useState<string | null>(null)
-  const [isPending, startTransition] = useTransition()
+  const [_isPending, startTransition] = useTransition()
   const [savedIds, setSavedIds] = useState<Set<number>>(new Set())
   const [currentArtifact, setCurrentArtifact] = useState<ArtifactData | null>(null)
   const [copiedId, setCopiedId] = useState<number | null>(null)
@@ -80,7 +80,7 @@ export function ChatInterface({
   const { focusMode, setFocusMode } = useFocusMode()
   const [activeCollections, setActiveCollections] = useState<string[]>([session.collection])
 
-  const { phase, stream, abort } = useRagStream({
+  const { phase, stream, abort: _abort } = useRagStream({
     sessionId: session.id,
     collection: session.collection,
     collections: activeCollections,
@@ -155,7 +155,7 @@ export function ChatInterface({
         })
       }
     })
-  }, [input, phase, messages, stream, session.id, session.title, session.collection, startTransition])
+  }, [input, phase, messages, stream, session.id, session.collection, startTransition])
 
   const handleRegenerate = useCallback(() => {
     const lastUser = [...messages].reverse().find((m) => m.role === "user")

@@ -3,7 +3,6 @@
 import { useState } from "react"
 import { ChevronDown, ChevronRight, FileText, Eye } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
 import { DocPreviewPanel } from "@/components/chat/DocPreviewPanel"
 
 type Source = {

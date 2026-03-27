@@ -7,21 +7,11 @@
 import { revalidatePath } from "next/cache"
 import { requireAdmin } from "@/lib/auth/current-user"
 import {
-  listUsers,
-  getUserById,
   createUser,
   updateUser,
   deleteUser,
-  addUserArea,
-  removeUserArea,
-  updatePassword,
 } from "@rag-saldivia/db"
 import { log } from "@rag-saldivia/logger/backend"
-
-export async function actionListUsers() {
-  await requireAdmin()
-  return listUsers()
-}
 
 export async function actionCreateUser(data: {
   email: string
@@ -66,24 +56,4 @@ export async function actionDeleteUser(id: number) {
   log.info("user.deleted", { targetUserId: id }, { userId: admin.id })
 
   revalidatePath("/admin/users")
-}
-
-export async function actionAssignArea(userId: number, areaId: number) {
-  const admin = await requireAdmin()
-  await addUserArea(userId, areaId)
-  log.info("user.area_assigned", { targetUserId: userId, areaId }, { userId: admin.id })
-  revalidatePath("/admin/users")
-}
-
-export async function actionRemoveArea(userId: number, areaId: number) {
-  const admin = await requireAdmin()
-  await removeUserArea(userId, areaId)
-  log.info("user.area_removed", { targetUserId: userId, areaId }, { userId: admin.id })
-  revalidatePath("/admin/users")
-}
-
-export async function actionUpdatePassword(userId: number, newPassword: string) {
-  const admin = await requireAdmin()
-  await updatePassword(userId, newPassword)
-  log.info("auth.password_changed", { targetUserId: userId }, { userId: admin.id })
 }
