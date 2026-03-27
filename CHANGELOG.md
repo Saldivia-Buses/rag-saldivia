@@ -9,6 +9,66 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+<!-- Cambios pendientes de release van aquí -->
+
+## [1.0.0] — 2026-03-27
+
+Primer release del stack TypeScript de RAG Saldivia. Reescritura completa del overlay
+sobre NVIDIA RAG Blueprint v2.5.0 — reemplaza el stack Python + SvelteKit con un proceso
+único Next.js 16 que incluye UI, autenticación, proxy RAG, admin y CLI TypeScript.
+
+### Highlights
+
+- **Next.js 16** App Router como proceso único — UI + auth + proxy + admin
+- **Autenticación JWT** con Redis blacklist para revocación inmediata + RBAC por roles y áreas
+- **BullMQ** para cola de ingesta — reemplaza worker manual + tabla SQLite
+- **Design system "Warm Intelligence"** — 24 páginas, dark mode, WCAG AA
+- **CLI TypeScript** — `rag users/collections/ingest/audit/config/db/status`
+- **413+ tests** — lógica, componentes, visual regression, a11y, E2E Playwright
+- **Código production-grade** — TypeScript strict, ESLint, commitlint, lint-staged, knip
+- **10 ADRs** documentando las decisiones de arquitectura
+
+### Plans completados (Plan 1 → Plan 11)
+
+**Plan 1 — Monorepo TypeScript**
+Birth del stack. Turborepo + Bun workspaces + Next.js 15 + Drizzle + JWT auth + CLI base.
+
+**Plan 2 — Testing sistemático**
+Primera suite de tests. 270 tests de lógica en verde. Estrategia de testing documentada.
+
+**Plan 3 — Bugfix CodeGraphContext**
+Estabilización post-birth. Fixes de imports, build, y MCP.
+
+**Plan 4 — Product Roadmap (Fases 0–2)**
+50 features en 3 fases. Design system base, dark mode, 24 páginas, shadcn/ui, design system.
+
+**Plan 5 — Testing Foundation**
+Coverage al 95% en lógica pura. 270 tests.
+
+**Plan 6 — UI Testing Suite**
+Visual regression con Playwright (22 snapshots). A11y con axe-playwright (WCAG AA).
+
+**Plan 7 — Design System "Warm Intelligence"**
+Paleta crema-navy, tokens CSS, 147 tests de componentes, Storybook 8.
+
+**Plan 8 — Optimización + Redis + BullMQ**
+~2.516 líneas eliminadas. Next.js 16, Zod 4, Drizzle 0.45, Lucide 1.7.
+Redis obligatorio: JWT revocación, cache, Pub/Sub, BullMQ.
+10 ADRs. CI paralelo con turbo --affected.
+
+**Plan 9 — Repo Limpio**
+46 archivos purgados del remoto. TypeScript a 0 errores.
+Dead code eliminado (crossdoc, SSO stub, wrappers). ESLint + husky + commitlint.
+
+**Plan 10 — Testing Completo**
+E2E Playwright (5 flujos críticos + smoke Redis).
+Visual regression verificada post-upgrades. A11y WCAG AA. Coverage ≥80%.
+
+**Plan 11 — Documentación Perfecta**
+README, CONTRIBUTING, SECURITY, LICENSE, CODEOWNERS, issue templates.
+ER diagram, API reference (30+ endpoints), JSDoc en funciones críticas.
+READMEs de packages. CLAUDE.md actualizado.
+
 ### Plan 11 — Documentación (README, CONTRIBUTING, API, packages, JSDoc, CLAUDE, docs/)
 
 #### Added
@@ -1048,6 +1108,11 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 - Next.js: `.env.local` debe vivir en `apps/web/` (el directorio del proyecto), no solo en la raíz del monorepo — 2026-03-24
 - Bun workspaces en WSL2: `bun install` en filesystem Windows (`/mnt/c/`) no crea symlinks en `node_modules/.bin/`. Resuelto clonando el repo en el filesystem nativo de Linux (`~/rag-saldivia/`). **En Ubuntu nativo (deployment target) este problema no existe** — 2026-03-24
 - `scripts/link-libsql.sh`: workaround específico de WSL2 para crear symlinks de `@libsql` manualmente. **No necesario en Ubuntu nativo ni en producción (workstation Ubuntu 24.04)** — 2026-03-24
+
+
+---
+
+[1.0.0]: https://github.com/Camionerou/rag-saldivia/releases/tag/v1.0.0
 
 ---
 

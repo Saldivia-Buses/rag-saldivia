@@ -1,6 +1,6 @@
 {
   "name": "rag-saldivia",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "description": "Overlay de autenticación y frontend sobre el NVIDIA RAG Blueprint",
   "packageManager": "bun@1.3.11",
