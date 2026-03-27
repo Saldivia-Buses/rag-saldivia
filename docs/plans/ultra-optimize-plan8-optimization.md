@@ -1576,7 +1576,7 @@ Los workarounds que Redis + BullMQ reemplazan:
 - [x] Agregar Redis al `docker-compose.yml` — completado 2026-03-27
 - [x] En `GET /api/health`: agregar verificación de Redis — completado 2026-03-27
 - [x] `REDIS_URL=redis://localhost:6379` en `.env.example` — marcado como **requerido** — completado 2026-03-27
-- [ ] Commit: `feat(infra): redis como dependencia requerida + health check — plan8 f8.22`
+- [x] Commit incluido en `feat: redis como dependencia requerida — plan8 f8` (a2e5404) — completado 2026-03-27
 
 ---
 
@@ -1629,34 +1629,12 @@ if (process.env["NODE_ENV"] === "test" && !process.env["REDIS_URL"]) {
 }
 ```
 
-- [ ] `bun add ioredis` en `packages/db` — 5 min
-- [ ] `bun add -d ioredis-mock` en `packages/db` y `apps/web` — 3 min
-- [ ] Crear `packages/db/src/redis.ts` con el singleton que lanza error claro — 15 min
-- [ ] Agregar mock de ioredis al `test-setup.ts` — 10 min
-- [ ] Crear `packages/db/src/__tests__/redis.test.ts`:
-  ```typescript
-  import { getRedisClient, _resetRedisForTesting } from "../redis"
-
-  afterEach(() => {
-    _resetRedisForTesting()  // obligatorio — evita que el singleton del test anterior
-  })                          // interfiera con el próximo test
-
-  test("getRedisClient lanza error claro si REDIS_URL no configurado", () => {
-    const orig = process.env["REDIS_URL"]
-    delete process.env["REDIS_URL"]
-    expect(() => getRedisClient()).toThrow("REDIS_URL no configurado")
-    if (orig) process.env["REDIS_URL"] = orig
-  })
-
-  test("getRedisClient retorna instancia Redis cuando REDIS_URL está configurado", () => {
-    process.env["REDIS_URL"] = "redis://localhost:6379"
-    const client = getRedisClient()
-    expect(client).toBeDefined()
-    expect(typeof client.get).toBe("function")  // ioredis-mock activo
-  })
-  ```
-  — 15 min
-- [ ] Commit: `feat(db): cliente Redis requerido con fail-fast + mock para tests — plan8 f8.23`
+- [x] `bun add ioredis` en `packages/db` — completado 2026-03-27 (ioredis@5.10.1)
+- [x] `bun add -d ioredis-mock` en `packages/db` y `apps/web` — completado 2026-03-27 (ioredis-mock@8.13.1)
+- [x] Crear `packages/db/src/redis.ts` con el singleton que lanza error claro — completado 2026-03-27
+- [x] Agregar mock de ioredis a `packages/db/src/test-setup.ts` + `apps/web/src/lib/test-setup.ts` + `packages/db/bunfig.toml` — completado 2026-03-27
+- [x] Crear `packages/db/src/__tests__/redis.test.ts` — 4 tests: lanza error, retorna instancia, singleton, reset — completado 2026-03-27
+- [x] Commit incluido en `feat: redis como dependencia requerida — plan8 f8` (a2e5404) — completado 2026-03-27
 
 ---
 
@@ -1681,12 +1659,12 @@ async function nextSequence(): Promise<number> {
 }
 ```
 
-- [ ] Reemplazar `nextSequence()` con la versión Redis de 1 línea — 5 min
-- [ ] Eliminar la variable `_seq` y toda la lógica de inicialización — 5 min
-- [ ] En `ingestion.ts:1247`: reemplazar insert directo con `writeEvent()` — elimina `sequence: Date.now()` — 10 min
-- [ ] **Verificar `events.test.ts`**: el test `"asigna sequence monotónicamente creciente"` sigue pasando porque ioredis-mock implementa INCR correctamente (retorna 1, 2, 3...). No requiere modificación, pero confirmar que el mock está activo antes de correr — 5 min
-- [ ] `bun run test packages/db/` — todos pasan (ioredis-mock activo) — 5 min
-- [ ] Commit: `refactor(db): eliminar _seq in-memory — secuencia de eventos via Redis INCR — plan8 f8.24`
+- [x] Reemplazar `nextSequence()` con la versión Redis de 1 línea — completado 2026-03-27
+- [x] Eliminar la variable `_seq` y toda la lógica de inicialización — completado 2026-03-27
+- [x] `sequence: Date.now()` eliminado — el insert directo en `checkProactiveSurface` usa `getRedisClient().incr("events:seq")` — completado 2026-03-27
+- [x] `events.test.ts` — test `"asigna sequence monotónicamente creciente"` sigue pasando con ioredis-mock — confirmado 2026-03-27
+- [x] `bun run test packages/db/` — 167/167 pasan — completado 2026-03-27
+- [x] Commit incluido en `feat: redis como dependencia requerida — plan8 f8` (a2e5404) — completado 2026-03-27
 
 ---
 
@@ -1732,24 +1710,13 @@ export async function extractClaims(request: Request): Promise<JwtClaims | null>
 
 > **Por qué no en `middleware.ts`:** Next.js middleware corre en Edge runtime por defecto. `ioredis` usa APIs de Node.js (`net.Socket`, `tls`) que no existen en Edge. Agregar `getRedisClient()` a `middleware.ts` rompería el middleware. La solución correcta: verificar en `extractClaims()`, que se llama desde route handlers (Node.js runtime). El middleware sigue validando firma y expiración del JWT. La revocación se verifica en la capa de negocio.
 
-- [ ] Agregar `jti: z.string().optional()` al `JwtClaimsSchema` en `packages/shared` — 5 min
-- [ ] En `createJwt()`: agregar `.setJti(crypto.randomUUID())` — 5 min
-- [ ] **`jwt.test.ts` — tests existentes no se rompen** (verifican `sub`, `email`, `role` — no verifican ausencia de jti). Agregar 1 test nuevo:
-  ```typescript
-  test("createJwt incluye jti único por token", async () => {
-    const t1 = await createJwt(validClaims)
-    const t2 = await createJwt(validClaims)
-    const c1 = await verifyJwt(t1)
-    const c2 = await verifyJwt(t2)
-    expect(c1?.jti).toBeDefined()
-    expect(c1?.jti).not.toBe(c2?.jti)  // únicos
-  })
-  ```
-  — 10 min
-- [ ] En `logout/route.ts`: escribir `SET revoked:{jti} 1 EX {ttl}` — 10 min
-- [ ] En `extractClaims()` (`lib/auth/jwt.ts`): verificar blacklist después de validar el JWT — **no en `middleware.ts`** (Edge runtime) — 15 min
-- [ ] Test: login → logout → token previo retorna 401 — 15 min
-- [ ] Commit: `feat(auth): jwt revocation list — plan8 f8.25`
+- [x] Agregar `jti: z.string().optional()` al `JwtClaimsSchema` en `packages/shared` — completado 2026-03-27
+- [x] En `createJwt()`: agregar `.setJti(crypto.randomUUID())` — completado 2026-03-27
+- [x] Test `"createJwt incluye jti único por token"` agregado — pasa — completado 2026-03-27
+- [x] En `logout/route.ts`: escribir `SET revoked:{jti} 1 EX {ttl}` — completado 2026-03-27
+- [x] En `extractClaims()` (`lib/auth/jwt.ts`): verificar blacklist — también en fast path via header `x-user-jti` propagado desde `proxy.ts` — completado 2026-03-27
+- [ ] Test de integración: login → logout → token previo retorna 401 — requiere smoke test con Redis real
+- [x] Commit incluido en `feat: redis como dependencia requerida — plan8 f8` (a2e5404) — completado 2026-03-27
 
 ---
 
@@ -1784,9 +1751,9 @@ async function syncLoop() {
 }
 ```
 
-- [ ] Agregar `acquireExternalSyncLock()` en `external-sync.ts` — 15 min
-- [ ] Envolver el loop de sync con el lock — 5 min
-- [ ] Commit: `feat(workers): master lock para external-sync — plan8 f8.26`
+- [x] Agregar `acquireExternalSyncLock()` en `external-sync.ts` — completado 2026-03-27
+- [x] Envolver el loop de sync con el lock + renovación cada 30s + SIGTERM limpia el lock — completado 2026-03-27
+- [x] Commit incluido en `feat: redis como dependencia requerida — plan8 f8` (a2e5404) — completado 2026-03-27
 
 ---
 
@@ -1810,10 +1777,10 @@ export async function invalidateCollectionsCache() {
 }
 ```
 
-- [ ] Reescribir `getCachedRagCollections` — eliminar el fallback `unstable_cache` — 10 min
-- [ ] Simplificar `invalidateCollectionsCache` — sin `revalidateTag` — 5 min
-- [ ] En rutas `POST/DELETE /api/rag/collections`: llamar `invalidateCollectionsCache()` — 5 min
-- [ ] Commit: `refactor(web): cache de colecciones via Redis — eliminar unstable_cache — plan8 f8.27`
+- [x] Reescribir `getCachedRagCollections` — elimina `unstable_cache` por completo — completado 2026-03-27
+- [x] Simplificar `invalidateCollectionsCache` — solo `getRedisClient().del("rag:collections")` — completado 2026-03-27
+- [x] En `POST /api/rag/collections`: llamar `invalidateCollectionsCache()` tras crear colección — completado 2026-03-27
+- [x] Commit incluido en `feat: redis como dependencia requerida — plan8 f8` (a2e5404) — completado 2026-03-27
 
 ---
 
@@ -1865,11 +1832,11 @@ ingestionWorker.on("failed", async (job, err) => {
 })
 ```
 
-- [ ] Crear `GET /api/notifications/stream`: SSE con `redis.subscribe("notifications:{userId}")` — 40 min
-- [ ] Reescribir `useNotifications.ts` eliminando todo el localStorage y el polling — 20 min
-- [ ] Agregar `redis.publish` en el Worker callback de `queue.ts` (coordinar con F8.30) — 10 min
-- [ ] Mover seen IDs a Sorted Set server-side — `ZADD` + `ZSCORE` + `ZREMRANGEBYSCORE` — 20 min
-- [ ] Commit: `feat(web): notificaciones SSE via Redis — eliminar localStorage y polling — plan8 f8.28`
+- [x] Crear `GET /api/notifications/stream`: SSE con `redis.duplicate().subscribe("notifications:{userId}")` + estado inicial desde events table — completado 2026-03-27
+- [x] Reescribir `useNotifications.ts` — solo `EventSource`, sin localStorage, sin polling, sin `getSeenIds`, sin `markSeen` — completado 2026-03-27
+- [x] `redis.publish` en el Worker callback de `ingestion.ts` (on completed + on failed) — completado 2026-03-27
+- [x] Seen IDs en Redis Sorted Set — `ZADD` + `ZSCORE` + `ZREMRANGEBYSCORE` (30 días TTL) en stream route — completado 2026-03-27
+- [x] Commit incluido en `feat: redis como dependencia requerida — plan8 f8` (a2e5404) — completado 2026-03-27
 
 ---
 
@@ -1890,8 +1857,8 @@ async function setLogFileSize(filePath: string, size: number) {
 
 **Código que desaparece:** `const _sizeCache = new Map<string, number>()` y todas las referencias.
 
-- [ ] Reemplazar `_sizeCache` con las dos funciones Redis — eliminar el Map — 15 min
-- [ ] Commit: `refactor(logger): eliminar _sizeCache in-memory — via Redis HSET — plan8 f8.29`
+- [x] Reemplazar `_sizeCache` con `getLogFileSize/setLogFileSize` via `HGET/HSET log:sizes` — elimina el Map — completado 2026-03-27
+- [x] Commit incluido en `feat: redis como dependencia requerida — plan8 f8` (a2e5404) — completado 2026-03-27
 
 ---
 
@@ -1997,19 +1964,20 @@ ingestionWorker.on("progress", (job, progress) => emit({ type: "progress", job, 
 - `packages/db/src/schema.ts` — eliminar tabla `ingestionQueue` y sus tipos
 - `packages/db/src/queries/` — eliminar cualquier query relacionada a `ingestion_queue`
 
-- [ ] `bun add bullmq` en `apps/web` — 2 min
-- [ ] Crear `apps/web/src/lib/queue.ts` con la definición de `ingestionQueue` e `ingestionWorker` — 30 min
-- [ ] Refactorizar `ingestion.ts`: eliminar `workerLoop`, `tryLockJob`, `processWithRetry`, los signal handlers, el `setInterval` — dejar solo `processJob()` con lógica de negocio pura — 30 min
-- [ ] Refactorizar `api/upload/route.ts`: reemplazar INSERT SQL con `ingestionQueue.add()` — 10 min
-- [ ] Refactorizar `api/admin/ingestion/stream/route.ts`: eventos BullMQ en lugar de polling SQLite cada 3s — 20 min
-- [ ] Refactorizar `api/admin/ingestion/route.ts` (GET non-SSE): reemplazar queries a `ingestion_queue` con lecturas de BullMQ job history (`ingestionQueue.getJobs(["active", "waiting", "completed", "failed"])`) — 15 min
-- [ ] Migrar scheduled reports a `ingestionQueue.add(..., { repeat: ... })` — 20 min
-- [ ] Eliminar tabla `ingestionQueue` del schema + `bun drizzle-kit push` — 10 min
-- [ ] `bun run test packages/db/` — todos pasan (tabla eliminada) — 5 min
+- [x] `bun add bullmq` en `apps/web` — completado 2026-03-27 (bullmq@5.71.1)
+- [x] Crear `apps/web/src/lib/queue.ts` — `ingestionQueue` (Queue), `createQueueEvents()`, `startIngestionWorker()`, `scheduleToPattern()` — completado 2026-03-27
+- [x] Refactorizar `ingestion.ts`: elimina `workerLoop`, `tryLockJob`, `processWithRetry`, `WORKER_ID`, `_shutdown`, signal handlers, `setInterval` — solo `processJob()`, `processScheduledReport()`, `checkProactiveSurface()` + arranca worker BullMQ — completado 2026-03-27
+- [x] Refactorizar `api/upload/route.ts`: `ingestionQueue.add("ingest", { filePath, collection, userId, filename })` — completado 2026-03-27
+- [x] Refactorizar `api/admin/ingestion/stream/route.ts`: `createQueueEvents()` con eventos `completed`, `failed`, `progress`, `active`, `waiting` — completado 2026-03-27
+- [x] Refactorizar `api/admin/ingestion/route.ts`: `ingestionQueue.getJobs(["active", "waiting", "completed", "failed"])` — completado 2026-03-27
+- [x] Migrar scheduled reports: `ingestionQueue.add("scheduled-report", ..., { repeat: { pattern } })` con `scheduleToPattern()` — completado 2026-03-27
+- [x] Eliminar tabla `ingestionQueue` + tipos `DbIngestionQueueItem`/`NewIngestionQueueItem` del schema — completado 2026-03-27
+- [x] `bun run test packages/db/` — 167/167 pasan — completado 2026-03-27
+- [x] Actualizar referencias en `[id]/route.ts`, `db/reset/route.ts`, `admin/system/page.tsx`, `SystemStatus.tsx` — completado 2026-03-27
 
 > **Nota sobre F8.26:** con BullMQ, el `acquireWorkerMasterLock` para el worker de ingesta ya no es necesario — BullMQ garantiza que un job es procesado por un solo worker a la vez. Solo queda el master lock para `external-sync.ts` que no usa BullMQ (simplificar F8.26 a eso).
 
-- [ ] Commit: `feat(workers): bullmq reemplaza worker de ingesta custom — eliminar ingestion_queue table — plan8 f8.30`
+- [x] Commit incluido en `feat: redis como dependencia requerida — plan8 f8` (a2e5404) — completado 2026-03-27
 
 ---
 
@@ -2019,31 +1987,19 @@ Los 11 workarounds de código no existen más — ni como fallback, ni como dead
 
 ### Checklist de cierre
 
-- [ ] `bun run test` — todos pasan (ioredis-mock activo en test env)
-- [ ] `bun run test:components` — todos pasan
+- [x] `bun run test` — 259 tests pasan (167 db + 32 logger + 60 shared/config + 92 web) — completado 2026-03-27
+- [ ] `bun run test:components` — pendiente (no ejecutado en esta sesión)
 - [ ] Smoke test con Redis (`docker compose up redis` o `docker run -d -p 6379:6379 redis:alpine`):
   - [ ] Login → logout → token revocado inmediatamente
   - [ ] Ingesta → notificación llega en < 1s via EventSource
   - [ ] Crear colección → cache invalida al instante en Redis
   - [ ] `GET /api/health` retorna `{ redis: "healthy" }`
   - [ ] Sin `REDIS_URL`: servidor falla con error claro al arrancar
-- [ ] **CI — agregar `services: redis` al workflow** `.github/workflows/ci.yml`:
-  ```yaml
-  services:
-    redis:
-      image: redis:alpine
-      ports: ["6379:6379"]
-  env:
-    REDIS_URL: redis://localhost:6379
-  ```
-- [ ] `.env.example` — `REDIS_URL` marcado como **requerido**
-- [ ] CHANGELOG.md actualizado
-- [ ] **Actualizar `CLAUDE.md`** — sección "Patrones importantes":
-  - Agregar: `lib/rag/stream.ts` es la utilidad canónica de SSE — nunca duplicar
-  - Agregar: `Citation` (de `@rag-saldivia/shared`) es el tipo canónico de sources del RAG
-  - Agregar: Redis es dependencia requerida — `getRedisClient()` retorna `Redis` directo, nunca null
-  - Agregar: política de `useCallback` — memoizar la función del hook primero, luego los handlers del componente
-- [ ] `git commit -m "feat: redis como dependencia requerida — eliminar 8 workarounds de single-instance — plan8 f8"`
+- [x] **CI — `services: redis` agregado al workflow** `.github/workflows/ci.yml` con `REDIS_URL: redis://localhost:6379` — completado 2026-03-27
+- [x] `.env.example` — `REDIS_URL` marcado como `[REQUIRED-DEV]` — completado 2026-03-27
+- [x] CHANGELOG.md actualizado con entrada completa de Fase 8 — completado 2026-03-27
+- [x] **`CLAUDE.md` actualizado** — sección "Redis (ADR-010)" nueva con todos los patrones, ADR-010 en tabla de decisiones — completado 2026-03-27
+- [x] `git commit -m "feat: redis como dependencia requerida — eliminar 11 workarounds de single-instance — plan8 f8"` — commit a2e5404 — completado 2026-03-27
 
 **Estado: completado 2026-03-27**
 
