@@ -29,5 +29,17 @@ out/
 logs/
 **/logs/
 
+# Base de datos SQLite — nunca al repo
+data/*.db
+data/*.db-shm
+data/*.db-wal
+data/uploads/
+
+# Playwright — resultados de tests y reportes locales
+test-results/
+**/test-results/
+playwright-report/
+**/playwright-report/
+
 # OS
 .DS_Store
