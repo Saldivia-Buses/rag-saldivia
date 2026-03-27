@@ -341,6 +341,7 @@ En `docs/decisions/` hay decisiones de arquitectura documentadas. **Leerlas ante
 | 008 | Lector SSE compartido | `apps/web/src/lib/rag/stream.ts` |
 | 009 | Server Components primero | UI y data fetching |
 | 010 | Redis como dependencia requerida | `packages/db/src/redis.ts`, BullMQ, JWT revocación, cache |
+| 011 | UI series 1.0.x — strategy Claude-style | `apps/web/src/app/globals.css`, todos los componentes UI |
 
 ---
 
@@ -492,6 +493,18 @@ Los siguientes componentes NO tienen tests de componente aún (pendiente para it
 Planes futuros pendientes:
 - **E2E Maestro** (opcional) — requiere Java 17 + Maestro CLI si se adopta además de Playwright
 - **Features RAG/GPU** — ver README (versiones futuras)
+
+### Serie 1.0.x — UI Foundation "Claude-style"
+
+Ver roadmap completo: `docs/roadmap-1.0.x.md`
+ADR de estrategia: `docs/decisions/011-ui-series-1.0.x-strategy.md`
+
+| Release | Plan | Scope | Estado |
+|---|---|---|---|
+| 1.0.1 | Plan 13 | Tokens + Font + NavRail + Login + Chat | En curso |
+| 1.0.2 | Plan 14 | /collections, /upload, /extract, /saved, /projects, componentes UI | Pendiente |
+| 1.0.3 | Plan 15 | 12 páginas admin + /audit + /settings | Pendiente |
+| 1.0.4 | Plan 16 | Dark mode rehecho con tokens oficiales Claude | Pendiente |
 
 ---
 
