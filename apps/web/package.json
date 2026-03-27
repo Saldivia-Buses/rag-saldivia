@@ -70,7 +70,7 @@
     "@happy-dom/global-registrator": "^20.8.8",
     "@next/bundle-analyzer": "^16.2.1",
     "@playwright/test": "^1.58.2",
-    "@storybook/addon-a11y": "^8",
+    "@storybook/addon-a11y": "^10",
     "@storybook/addon-essentials": "^8",
     "@storybook/addon-themes": "^8",
     "@storybook/react": "^8",
