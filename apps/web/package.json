@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --port 3000",
+    "dev:webpack": "next dev --port 3000 --webpack",
     "build": "next build --webpack",
     "start": "next start",
     "lint": "tsc --noEmit",
@@ -17,6 +18,7 @@
     "visual:update": "playwright test tests/visual --update-snapshots",
     "visual:show": "playwright show-report",
     "test:a11y": "playwright test tests/a11y --config playwright.a11y.config.ts",
+    "test:e2e": "playwright test --config playwright.e2e.config.ts",
     "test:ui": "bun run test:components && bun run test:visual",
     "test:components:watch": "bun test --preload ./src/lib/component-test-setup.ts src/components --watch",
     "storybook": "storybook dev -p 6006",
