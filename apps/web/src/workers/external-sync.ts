@@ -16,8 +16,11 @@ import { log } from "@rag-saldivia/logger/backend"
 const SYNC_INTERVAL_MS = 5 * 60 * 1000 // 5 minutos
 
 async function syncSource(source: Awaited<ReturnType<typeof listActiveSourcesToSync>>[number]) {
-  log.info("system.warning", {
-    message: `[external-sync] Starting sync: ${source.provider} / ${source.name} → ${source.collectionDest}`,
+  log.info("ingestion.started", {
+    provider: source.provider,
+    name: source.name,
+    collection: source.collectionDest,
+    sourceId: source.id,
   })
 
   try {
@@ -25,22 +28,33 @@ async function syncSource(source: Awaited<ReturnType<typeof listActiveSourcesToS
       case "google_drive": {
         // MVP: requiere googleapis instalado y credenciales OAuth configuradas
         // Implementación completa pendiente de credenciales reales
-        log.info("system.warning", { message: `[external-sync] Google Drive sync not yet implemented for source ${source.id}` })
+        log.info("system.warning", { message: `Google Drive sync not yet implemented`, sourceId: source.id })
         break
       }
       case "sharepoint": {
-        log.info("system.warning", { message: `[external-sync] SharePoint sync not yet implemented for source ${source.id}` })
+        log.info("system.warning", { message: `SharePoint sync not yet implemented`, sourceId: source.id })
         break
       }
       case "confluence": {
-        log.info("system.warning", { message: `[external-sync] Confluence sync not yet implemented for source ${source.id}` })
+        log.info("system.warning", { message: `Confluence sync not yet implemented`, sourceId: source.id })
         break
       }
     }
 
     await updateSourceLastSync(source.id)
+
+    log.info("ingestion.completed", {
+      provider: source.provider,
+      name: source.name,
+      collection: source.collectionDest,
+      sourceId: source.id,
+    })
   } catch (err) {
-    log.info("system.warning", { message: `[external-sync] Sync failed for ${source.id}: ${String(err).slice(0, 100)}` })
+    log.error("ingestion.failed", {
+      provider: source.provider,
+      sourceId: source.id,
+      error: String(err).slice(0, 200),
+    })
   }
 }
 
@@ -49,17 +63,17 @@ async function syncLoop() {
     try {
       const sources = await listActiveSourcesToSync()
       if (sources.length > 0) {
-        log.info("system.warning", { message: `[external-sync] Syncing ${sources.length} source(s)` })
+        log.info("system.start", { message: `[external-sync] Syncing ${sources.length} source(s)` })
         await Promise.allSettled(sources.map(syncSource))
       }
     } catch (err) {
-      log.info("system.warning", { message: `[external-sync] Loop error: ${String(err).slice(0, 100)}` })
+      log.error("system.error", { error: `[external-sync] Loop error: ${String(err).slice(0, 200)}` })
     }
     await new Promise((r) => setTimeout(r, SYNC_INTERVAL_MS))
   }
 }
 
 syncLoop().catch((e) => {
-  log.info("system.warning", { message: `[external-sync] Fatal: ${String(e)}` })
+  log.fatal("system.error", { error: `[external-sync] Fatal: ${String(e)}` })
   process.exit(1)
 })

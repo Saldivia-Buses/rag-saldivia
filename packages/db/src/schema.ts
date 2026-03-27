@@ -589,6 +589,8 @@ export const events = sqliteTable(
     userIdx: index("idx_events_user").on(t.userId),
     levelIdx: index("idx_events_level").on(t.level),
     sequenceIdx: index("idx_events_sequence").on(t.sequence),
+    // Índice compuesto para queries de analytics: type AND userId AND ts (O(log n) vs full scan)
+    queryIdx: index("idx_events_query").on(t.type, t.userId, t.ts),
   })
 )
 

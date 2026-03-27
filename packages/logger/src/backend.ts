@@ -21,46 +21,57 @@ export type LogContext = {
   sessionId?: string | null
   ip?: string
   duration?: number
+  requestId?: string
   [key: string]: unknown
 }
 
 type LogFn = (type: EventType, payload?: Record<string, unknown>, ctx?: LogContext) => void
 
-// ── Formato ────────────────────────────────────────────────────────────────
+// ── Helpers de formato (extraídos de formatPretty) ─────────────────────────
 
 function formatTimestamp(): string {
   return new Date().toISOString().slice(11, 23) // HH:MM:SS.mmm
 }
 
-function formatPretty(level: LogLevel, type: EventType, payload: Record<string, unknown>, ctx?: LogContext): string {
+export function formatHeader(level: LogLevel, type: EventType): string {
   const ts = DIM + formatTimestamp() + RESET
   const lvl = LEVEL_COLORS[level] + level.padEnd(5) + RESET
   const t = BOLD + type + RESET
+  return [ts, lvl, t].join("  ")
+}
 
-  const parts = [ts, lvl, t]
+export function formatContext(ctx?: LogContext): string {
+  if (!ctx) return ""
+  const parts: string[] = []
+  if (ctx.userId) parts.push(`user=${ctx.userId}`)
+  if (ctx.requestId) parts.push(`req=${ctx.requestId.slice(0, 8)}`)
+  if (ctx.duration !== undefined) parts.push(`${ctx.duration}ms`)
+  return parts.length > 0 ? DIM + parts.join("  ") + RESET : ""
+}
 
-  if (ctx?.userId) parts.push(DIM + `user=${ctx.userId}` + RESET)
-  if (ctx?.duration !== undefined) parts.push(DIM + `${ctx.duration}ms` + RESET)
-  if (Object.keys(payload).length > 0) {
-    const summary = Object.entries(payload)
-      .slice(0, 3)
-      .map(([k, v]) => `${k}=${JSON.stringify(v)}`)
-      .join("  ")
-    parts.push(DIM + summary + RESET)
-  }
+export function formatPayloadSummary(payload: Record<string, unknown>): string {
+  if (Object.keys(payload).length === 0) return ""
+  const summary = Object.entries(payload)
+    .slice(0, 3)
+    .map(([k, v]) => `${k}=${JSON.stringify(v)}`)
+    .join("  ")
+  return DIM + summary + RESET
+}
 
-  let line = parts.join("  ")
+export function formatSuggestion(level: LogLevel, payload: Record<string, unknown>): string {
+  if (level !== "ERROR" && level !== "FATAL") return ""
+  const errMsg = String(payload["error"] ?? payload["message"] ?? "")
+  const suggestion = getSuggestion(errMsg)
+  if (!suggestion) return ""
+  return "\n" + suggestion.split("\n").map((l) => "      " + DIM + l + RESET).join("\n")
+}
 
-  // Sugerencias para errores
-  if (level === "ERROR" || level === "FATAL") {
-    const errMsg = String(payload["error"] ?? payload["message"] ?? "")
-    const suggestion = getSuggestion(errMsg)
-    if (suggestion) {
-      line += "\n" + suggestion.split("\n").map((l) => "      " + DIM + l + RESET).join("\n")
-    }
-  }
-
-  return line
+function formatPretty(level: LogLevel, type: EventType, payload: Record<string, unknown>, ctx?: LogContext): string {
+  return [
+    formatHeader(level, type),
+    formatContext(ctx),
+    formatPayloadSummary(payload),
+  ].filter(Boolean).join("  ") + formatSuggestion(level, payload)
 }
 
 function formatJson(level: LogLevel, type: EventType, payload: Record<string, unknown>, ctx?: LogContext): string {
@@ -153,7 +164,7 @@ function createLogger() {
     // Helpers de uso común
     request: (method: string, path: string, status: number, duration: number, ctx?: LogContext) => {
       const level: LogLevel = status >= 500 ? "ERROR" : status >= 400 ? "WARN" : "INFO"
-      write(level, "system.warning", { method, path, status, duration }, ctx)
+      write(level, "system.request", { method, path, status, duration }, ctx)
     },
   }
 }

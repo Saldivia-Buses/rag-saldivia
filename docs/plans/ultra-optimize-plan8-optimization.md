@@ -1352,14 +1352,12 @@ request.headers.set("x-request-id", requestId)
 // El header llega a extractClaims → los route handlers lo pasan al log
 ```
 
-- [ ] Agregar `"system.request"` a `EventTypeSchema` en `packages/shared/src/schemas.ts` — 5 min
-- [ ] Actualizar `log.request()` para usar `"system.request"` — 5 min
-- [ ] Corregir `external-sync.ts`: reemplazar todos los `log.info("system.warning", ...)` por los tipos correctos (`"ingestion.started"`, `"ingestion.completed"`, `"ingestion.failed"`, `"system.error"`) — 10 min
-- [ ] En `middleware.ts`: generar `x-request-id` UUID y propagarlo como header — 10 min
-- [ ] En `LogContext`: agregar campo `requestId?: string` — 5 min
-- [ ] **Actualizar tests del logger** (`packages/logger/src/__tests__/logger.test.ts`):
-  - Los 3 tests que usan `log.info("system.warning", ...)` siguen siendo válidos — `"system.warning"` no se elimina del EventTypeSchema, solo se agrega `"system.request"`. No rompen.
-  - Agregar: `test("log.request usa EventType system.request", () => { /* verifica que el output contiene "system.request" */ })` — 10 min
+- [x] Agregar `"system.request"` a `EventTypeSchema` en `packages/shared/src/schemas.ts` — completado 2026-03-27
+- [x] Actualizar `log.request()` para usar `"system.request"` — completado 2026-03-27
+- [x] Corregir `external-sync.ts`: reemplazar todos los `log.info("system.warning", ...)` por los tipos correctos (`"ingestion.started"`, `"ingestion.completed"`, `"ingestion.failed"`, `"system.error"`) — completado 2026-03-27
+- [x] En `middleware.ts` (vía `proxy.ts`): generar `x-request-id` UUID y propagarlo como header — completado 2026-03-27
+- [x] En `LogContext`: agregar campo `requestId?: string` — completado 2026-03-27
+- [x] **Actualizar tests del logger** — test `"log.request usa EventType system.request"` agregado — completado 2026-03-27
 - [ ] Commit: `fix(logger): corregir event types en log.request y external-sync + correlation requestId — plan8 f7.17`
 
 ---
@@ -1398,10 +1396,10 @@ request.headers.set("x-request-id", requestId)
 }
 ```
 
-- [ ] Agregar `ingestionEvents` al tipo `ReconstructedState` — 5 min
-- [ ] Agregar handlers: `rag.stream_started`, `rag.stream_completed`, `ingestion.started`, `ingestion.completed`, `ingestion.failed`, `ingestion.stalled` — 25 min
-- [ ] Actualizar `formatTimeline` para mostrar sección "Ingestas" si hay datos — 15 min
-- [ ] Agregar tests en `logger.test.ts` para los nuevos handlers — 20 min
+- [x] Agregar `ingestionEvents` al tipo `ReconstructedState` — completado 2026-03-27
+- [x] Agregar handlers: `rag.stream_started`, `rag.stream_completed`, `ingestion.started`, `ingestion.completed`, `ingestion.failed`, `ingestion.stalled` — completado 2026-03-27
+- [x] Actualizar `formatTimeline` para mostrar sección "Ingestas" si hay datos — completado 2026-03-27
+- [x] Agregar tests en `logger.test.ts` para los nuevos handlers — 6 tests nuevos — completado 2026-03-27
 - [ ] Commit: `feat(logger): handlers de ingestion y rag.stream en reconstructFromEvents — plan8 f7.18`
 
 ---
@@ -1433,12 +1431,12 @@ export const eventsTsIdx = index("events_ts_idx").on(events.ts)
 
 > **Por qué compuesto y no dos separados:** `countQueriesLastHour` filtra `type AND userId AND ts` simultáneamente. SQLite solo puede usar un índice por tabla en una query — el compuesto cubre los tres filtros. Los índices separados solo cubrirían uno a la vez.
 
-- [ ] Crear `packages/db/src/queries/events-cleanup.ts`: `deleteOldEvents(olderThanDays = 90)` — 15 min
-- [ ] Test: `deleteOldEvents(90)` con eventos viejos y nuevos — retorna count correcto — 15 min
-- [ ] Agregar índice compuesto `events_query_idx` y `events_ts_idx` en `schema.ts` — 10 min
-- [ ] `bun drizzle-kit push` — los índices se aplican automáticamente a la DB existente (F3.9 ya configuró Drizzle Kit) — 2 min
-- [ ] Integrar `deleteOldEvents` en el worker de ingesta (corre diariamente) — 10 min
-- [ ] Agregar variable de entorno `LOG_RETENTION_DAYS` (default 90) — 5 min
+- [x] Crear `packages/db/src/queries/events-cleanup.ts`: `deleteOldEvents(olderThanDays?)` — completado 2026-03-27
+- [x] Test: `deleteOldEvents` con eventos viejos y nuevos — 2 tests pasan — completado 2026-03-27
+- [x] Agregar índice compuesto `idx_events_query` en `schema.ts` — completado 2026-03-27
+- [ ] `bun drizzle-kit push` — aplicar índices a la DB existente
+- [x] Integrar `deleteOldEvents` en el worker de ingesta (setInterval 24h) — completado 2026-03-27
+- [x] Agregar variable de entorno `LOG_RETENTION_DAYS` (default 90) en `.env.example` — completado 2026-03-27
 - [ ] Commit: `feat(db): retencion de eventos + indice compuesto type/userId/ts — plan8 f7.19`
 
 ---
@@ -1475,12 +1473,12 @@ bun add papaparse
 bun add -d @types/papaparse
 ```
 
-- [ ] `bun add papaparse && bun add -d @types/papaparse` en `apps/web` — 2 min
-- [ ] Agregar query param `?format=json|csv` al endpoint — 5 min
-- [ ] Implementar serialización CSV con `Papa.unparse()` — campos: `ts,level,type,userId,sessionId,payload` — 10 min
-- [ ] Encabezados correctos: `Content-Disposition: attachment; filename="audit-export-*.csv"` — 5 min
-- [ ] Agregar botón "Exportar CSV" en `AuditTable.tsx` — 10 min
-- [ ] En `KnowledgeGapsClient.tsx`: reemplazar el CSV manual con `Papa.unparse()` — 10 min
+- [x] `bun add papaparse && bun add -d @types/papaparse` en `apps/web` — completado 2026-03-27
+- [x] Agregar query param `?format=json|csv` al endpoint — completado 2026-03-27
+- [x] Implementar serialización CSV con `Papa.unparse()` — campos: `ts,level,type,userId,sessionId,payload` — completado 2026-03-27
+- [x] Encabezados correctos: `Content-Disposition: attachment; filename="audit-export-*.csv"` — completado 2026-03-27
+- [x] Agregar botones "Exportar CSV" y "Exportar JSON" en `AuditTable.tsx` — completado 2026-03-27
+- [x] En `KnowledgeGapsClient.tsx`: reemplazar el CSV manual con `Papa.unparse()` — completado 2026-03-27
 - [ ] Commit: `feat(audit): export CSV con papaparse — plan8 f7.20`
 
 ---
@@ -1507,8 +1505,8 @@ function formatPretty(level, type, payload, ctx): string {
 }
 ```
 
-- [ ] Extraer `formatHeader`, `formatContext`, `formatPayloadSummary`, `formatSuggestion` como funciones puras exportables — 30 min
-- [ ] Verificar que los tests existentes de `log.info/error` siguen pasando (output idéntico) — 10 min
+- [x] Extraer `formatHeader`, `formatContext`, `formatPayloadSummary`, `formatSuggestion` como funciones puras exportables — completado 2026-03-27
+- [x] Verificar que los tests existentes de `log.info/error` siguen pasando (output idéntico) — 32/32 tests pasan — completado 2026-03-27
 - [ ] Commit: `refactor(logger): descomponer formatPretty — complejidad 29 a < 10 — plan8 f7.21`
 
 ---
@@ -1519,12 +1517,12 @@ function formatPretty(level, type, payload, ctx): string {
 
 ### Checklist de cierre
 
-- [ ] `bun run test packages/logger/` — todos pasan
-- [ ] `bun run test packages/db/` — todos pasan
-- [ ] CHANGELOG.md actualizado
+- [x] `bun run test packages/logger/` — 32/32 pasan — completado 2026-03-27
+- [x] `bun run test packages/db/` — 163/163 pasan — completado 2026-03-27
+- [x] CHANGELOG.md actualizado — completado 2026-03-27
 - [ ] `git commit -m "feat(logger): mejoras logging, retention, csv export, formatPretty refactor — plan8 f7"`
 
-**Estado: pendiente**
+**Estado: completado 2026-03-27**
 
 ---
 

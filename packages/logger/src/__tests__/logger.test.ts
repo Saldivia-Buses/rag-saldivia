@@ -71,6 +71,20 @@ describe("log (backend)", () => {
     expect(() => log.request("POST", "/api/rag/generate", 500, 3000)).not.toThrow()
   })
 
+  test("log.request usa EventType system.request", () => {
+    const lines: string[] = []
+    const spy = spyOn(console, "log").mockImplementation((line: string) => {
+      lines.push(line)
+    })
+    try {
+      log.request("GET", "/api/collections", 200, 42)
+      expect(lines.length).toBeGreaterThan(0)
+      expect(lines[0]).toContain("system.request")
+    } finally {
+      spy.mockRestore()
+    }
+  })
+
   describe("output contiene la información del evento", () => {
     test("output de log.info contiene el tipo de evento", () => {
       const lines: string[] = []
@@ -230,6 +244,112 @@ describe("reconstructFromEvents (blackbox)", () => {
   })
 })
 
+describe("reconstructFromEvents — ingestion handlers", () => {
+  type TestEvent = {
+    id: string
+    ts: number
+    source: "backend" | "frontend" | "cli" | "worker"
+    level: "TRACE" | "DEBUG" | "INFO" | "WARN" | "ERROR" | "FATAL"
+    type: string
+    userId: number | null
+    sessionId: string | null
+    payload: Record<string, unknown>
+    sequence: number
+  }
+
+  function makeEvent(overrides: Partial<TestEvent> & { type: string }): TestEvent {
+    return {
+      id: crypto.randomUUID(),
+      ts: Date.now(),
+      source: "backend",
+      level: "INFO",
+      userId: null,
+      sessionId: null,
+      payload: {},
+      sequence: 0,
+      ...overrides,
+    }
+  }
+
+  test("reconstructFromEvents con rag.stream_started agrega entry al timeline", () => {
+    const state = reconstructFromEvents([
+      makeEvent({
+        type: "rag.stream_started",
+        userId: 1,
+        payload: { collection: "legales", sessionId: "abc12345-xyz" },
+      }),
+    ])
+    expect(state.timeline).toHaveLength(1)
+    expect(state.timeline[0]!.type).toBe("rag.stream_started")
+    expect(state.timeline[0]!.summary).toContain("legales")
+    expect(state.timeline[0]!.summary).toContain("abc12345")
+  })
+
+  test("reconstructFromEvents con rag.stream_completed agrega entry al timeline", () => {
+    const state = reconstructFromEvents([
+      makeEvent({
+        type: "rag.stream_completed",
+        payload: { collection: "tecnico", duration: 1234 },
+      }),
+    ])
+    expect(state.timeline[0]!.type).toBe("rag.stream_completed")
+    expect(state.timeline[0]!.summary).toContain("tecnico")
+    expect(state.timeline[0]!.summary).toContain("1234ms")
+  })
+
+  test("reconstructFromEvents con ingestion.started incrementa ingestionCount", () => {
+    const state = reconstructFromEvents([
+      makeEvent({
+        type: "ingestion.started",
+        payload: { filename: "contrato.pdf", collection: "legales" },
+      }),
+    ])
+    expect(state.stats.ingestionCount).toBe(1)
+    expect(state.ingestionEvents).toHaveLength(1)
+    expect(state.ingestionEvents[0]!.filename).toBe("contrato.pdf")
+    expect(state.ingestionEvents[0]!.collection).toBe("legales")
+  })
+
+  test("reconstructFromEvents con ingestion.completed agrega a ingestionEvents", () => {
+    const state = reconstructFromEvents([
+      makeEvent({
+        type: "ingestion.completed",
+        payload: { filename: "manual.pdf", collection: "docs" },
+      }),
+    ])
+    expect(state.ingestionEvents).toHaveLength(1)
+    expect(state.ingestionEvents[0]!.type).toBe("ingestion.completed")
+    expect(state.timeline[0]!.summary).toContain("manual.pdf")
+  })
+
+  test("reconstructFromEvents con ingestion.failed agrega a errors e ingestionEvents", () => {
+    const state = reconstructFromEvents([
+      makeEvent({
+        type: "ingestion.failed",
+        level: "ERROR",
+        payload: { filename: "corrupto.pdf", error: "PDF parsing failed" },
+      }),
+    ])
+    expect(state.errors).toHaveLength(1)
+    expect(state.errors[0]!.message).toContain("corrupto.pdf")
+    expect(state.errors[0]!.message).toContain("PDF parsing failed")
+    expect(state.ingestionEvents).toHaveLength(1)
+    expect(state.ingestionEvents[0]!.error).toBe("PDF parsing failed")
+  })
+
+  test("reconstructFromEvents con ingestion.stalled agrega a errors", () => {
+    const state = reconstructFromEvents([
+      makeEvent({
+        type: "ingestion.stalled",
+        payload: { filename: "grande.pdf", duration: 3600000 },
+      }),
+    ])
+    expect(state.errors).toHaveLength(1)
+    expect(state.errors[0]!.message).toContain("grande.pdf")
+    expect(state.ingestionEvents).toHaveLength(1)
+  })
+})
+
 describe("formatTimeline (blackbox)", () => {
   test("retorna string no vacío con eventos", () => {
     const state = reconstructFromEvents([
@@ -259,6 +379,26 @@ describe("formatTimeline (blackbox)", () => {
     expect(output).toContain("Total eventos: 0")
     expect(output).toContain("Errores: 0")
     expect(output).toContain("Queries RAG: 0")
+  })
+
+  test("muestra sección Ingestas cuando hay eventos de ingesta", () => {
+    const state = reconstructFromEvents([
+      {
+        id: "ing1",
+        ts: Date.now(),
+        source: "backend",
+        level: "INFO",
+        type: "ingestion.completed",
+        userId: 1,
+        sessionId: null,
+        payload: { filename: "reporte.pdf", collection: "reportes" },
+        sequence: 1,
+      },
+    ])
+    const output = formatTimeline(state)
+    expect(output).toContain("Ingestas")
+    expect(output).toContain("reporte.pdf")
+    expect(output).toContain("reportes")
   })
 
   test("muestra sección de errores cuando hay errores", () => {

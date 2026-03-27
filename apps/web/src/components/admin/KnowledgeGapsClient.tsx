@@ -1,13 +1,13 @@
 "use client"
 
-import { Upload } from "lucide-react"
+import { Upload, SearchX } from "lucide-react"
+import Papa from "papaparse"
 import { Button } from "@/components/ui/button"
 import { EmptyPlaceholder } from "@/components/ui/empty-placeholder"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { downloadFile } from "@/lib/export"
 import { formatDate } from "@/lib/utils"
 import Link from "next/link"
-import { SearchX } from "lucide-react"
 
 export type KnowledgeGap = {
   messageId: number
@@ -20,11 +20,11 @@ export type KnowledgeGap = {
 
 export function KnowledgeGapsClient({ gaps }: { gaps: KnowledgeGap[] }) {
   function exportCSV() {
-    const rows = [
-      ["Sesión", "Colección", "Respuesta", "Fecha"],
-      ...gaps.map((g) => [g.sessionTitle, g.collection, `"${g.content.replace(/"/g, '""')}"`, formatDate(g.timestamp)]),
-    ]
-    downloadFile(rows.map((r) => r.join(",")).join("\n"), "knowledge-gaps.csv", "text/csv")
+    const csv = Papa.unparse({
+      fields: ["Sesión", "Colección", "Respuesta", "Fecha"],
+      data: gaps.map((g) => [g.sessionTitle, g.collection, g.content, formatDate(g.timestamp)]),
+    })
+    downloadFile(csv, "knowledge-gaps.csv", "text/csv")
   }
 
   return (

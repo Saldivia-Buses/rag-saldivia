@@ -259,6 +259,7 @@ export const EventTypeSchema = z.enum([
   "system.start",
   "system.error",
   "system.warning",
+  "system.request",
 ])
 export type EventType = z.infer<typeof EventTypeSchema>
 

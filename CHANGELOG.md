@@ -9,6 +9,37 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Plan 8 — Optimización (Fases 1, 2, 3, 4, 5, 6 y 7 completadas)
+
+#### Fase 7 — Mejoras al sistema de logging y Black Box (2026-03-27)
+
+##### Added
+- `packages/shared/src/schemas.ts`: `"system.request"` agregado a `EventTypeSchema` — tipo semánticamente correcto para requests HTTP — *(Plan 8 F7.17)*
+- `packages/logger/src/backend.ts`: campo `requestId?: string` en `LogContext` para correlación de logs por request — *(Plan 8 F7.17)*
+- `apps/web/src/middleware.ts`: archivo entry point de Next.js middleware — re-exporta `proxy` como `middleware` — *(Plan 8 F7.17)*
+- `apps/web/src/proxy.ts`: generación de `x-request-id` UUID en cada request (público y autenticado) — *(Plan 8 F7.17)*
+- `packages/logger/src/blackbox.ts`: tipo `IngestionEventRecord` y campo `ingestionEvents` en `ReconstructedState` — *(Plan 8 F7.18)*
+- `packages/logger/src/blackbox.ts`: handlers para `rag.stream_started`, `rag.stream_completed`, `ingestion.started`, `ingestion.completed`, `ingestion.failed`, `ingestion.stalled` en `EVENT_HANDLERS` — *(Plan 8 F7.18)*
+- `packages/logger/src/blackbox.ts`: sección "Ingestas" en `formatTimeline` cuando hay eventos de ingesta — *(Plan 8 F7.18)*
+- `packages/logger/src/__tests__/logger.test.ts`: 7 tests nuevos para handlers de ingestion y RAG stream, test de `log.request` con `system.request`, test de sección Ingestas en `formatTimeline` — *(Plan 8 F7.17, F7.18)*
+- `packages/db/src/queries/events-cleanup.ts`: función `deleteOldEvents(olderThanDays?)` — elimina eventos más viejos que el cutoff, respeta `LOG_RETENTION_DAYS` env var — *(Plan 8 F7.19)*
+- `packages/db/src/__tests__/events.test.ts`: 2 tests nuevos para `deleteOldEvents` — *(Plan 8 F7.19)*
+- `.env.example`: variable `LOG_RETENTION_DAYS` documentada (default 90 días) — *(Plan 8 F7.19)*
+
+##### Changed
+- `packages/logger/src/backend.ts`: `log.request()` corregido de `"system.warning"` → `"system.request"` — *(Plan 8 F7.17)*
+- `packages/logger/src/backend.ts`: `formatPretty` descompuesto en 4 funciones puras exportables: `formatHeader`, `formatContext`, `formatPayloadSummary`, `formatSuggestion` — complejidad ciclomática 29 → < 10 — *(Plan 8 F7.21)*
+- `packages/logger/src/backend.ts`: `formatContext` incluye `requestId` truncado (primeros 8 chars) cuando está presente — *(Plan 8 F7.17)*
+- `packages/db/src/schema.ts`: índice compuesto `idx_events_query` en `(type, userId, ts)` — convierte analytics queries en index scan O(log n) — *(Plan 8 F7.19)*
+- `packages/db/src/index.ts`: exporta `deleteOldEvents` desde `queries/events-cleanup` — *(Plan 8 F7.19)*
+- `apps/web/src/workers/ingestion.ts`: integra `deleteOldEvents` en limpieza diaria (setInterval 24h) — *(Plan 8 F7.19)*
+- `apps/web/src/workers/external-sync.ts`: todos los `log.info("system.warning", ...)` reemplazados por tipos semánticamente correctos (`ingestion.started`, `ingestion.completed`, `ingestion.failed`, `system.error`) — *(Plan 8 F7.17)*
+- `apps/web/src/app/api/audit/export/route.ts`: soporte `?format=json|csv` — CSV generado con `papaparse` (RFC 4180 compliant) — *(Plan 8 F7.20)*
+- `apps/web/src/components/audit/AuditTable.tsx`: botones "Exportar CSV" y "Exportar JSON" visibles para admins — *(Plan 8 F7.20)*
+- `apps/web/src/components/admin/KnowledgeGapsClient.tsx`: CSV export reemplazado con `Papa.unparse()` — elimina escaping manual propenso a bugs — *(Plan 8 F7.20)*
+
+---
+
 ### Plan 8 — Optimización (Fases 1, 2, 3, 4, 5 y 6 completadas)
 
 #### Fase 6 — Error Boundaries y CI paralelo (2026-03-27)

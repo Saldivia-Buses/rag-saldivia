@@ -3,6 +3,7 @@
 import { useQueryState } from "nuqs"
 import type { DbEvent } from "@rag-saldivia/db"
 import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
 import { Badge, type BadgeVariant } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 
@@ -28,9 +29,21 @@ export function AuditTable({ events, isAdmin }: { events: DbEvent[]; isAdmin: bo
 
   return (
     <div className="p-6 space-y-5">
-      <div>
-        <h1 className="text-lg font-semibold text-fg">Auditoría</h1>
-        <p className="text-sm text-fg-muted mt-0.5">Historial de eventos del sistema</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-lg font-semibold text-fg">Auditoría</h1>
+          <p className="text-sm text-fg-muted mt-0.5">Historial de eventos del sistema</p>
+        </div>
+        {isAdmin && (
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" asChild>
+              <a href="/api/audit/export?format=csv" download>Exportar CSV</a>
+            </Button>
+            <Button variant="outline" size="sm" asChild>
+              <a href="/api/audit/export?format=json" download>Exportar JSON</a>
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Filtros */}

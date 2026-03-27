@@ -14,7 +14,7 @@
 
 import { eq, and, isNull, gte, desc } from "drizzle-orm"
 import { readFile, access } from "fs/promises"
-import { getDb, ingestionQueue, recordIngestionEvent, listActiveReports, updateLastRun, saveResponse, events } from "@rag-saldivia/db"
+import { getDb, ingestionQueue, recordIngestionEvent, listActiveReports, updateLastRun, saveResponse, events, deleteOldEvents } from "@rag-saldivia/db"
 import { randomUUID } from "crypto"
 import { dispatchEvent } from "@/lib/webhook"
 import { log } from "@rag-saldivia/logger/backend"
@@ -309,6 +309,17 @@ async function processScheduledReports() {
 // ── Main ───────────────────────────────────────────────────────────────────
 // Procesar informes programados cada 5 minutos
 setInterval(() => { processScheduledReports().catch(() => {}) }, 5 * 60 * 1000)
+
+// Limpieza diaria de eventos viejos (política de retención)
+setInterval(() => {
+  deleteOldEvents().then((deleted) => {
+    if (deleted > 0) {
+      log.info("system.start", { message: `[retention] ${deleted} eventos eliminados (> ${process.env["LOG_RETENTION_DAYS"] ?? 90} días)` })
+    }
+  }).catch((err) => {
+    log.error("system.error", { error: `[retention] ${String(err)}` })
+  })
+}, 24 * 60 * 60 * 1000)
 
 workerLoop().catch((err) => {
   log.fatal("system.error", { error: String(err), context: "ingestion_worker" })

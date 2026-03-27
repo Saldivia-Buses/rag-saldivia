@@ -23,11 +23,22 @@ export type DbEvent = {
   sequence: number
 }
 
+export type IngestionEventRecord = {
+  ts: number
+  type: string
+  filename?: string
+  collection?: string
+  sourceId?: string
+  error?: string
+}
+
 export type ReconstructedState = {
   // Estado de usuarios en ese momento
   users: Map<number, { email: string; role: string; active: boolean; lastAction?: string }>
   // Queries hechas al RAG
   ragQueries: Array<{ ts: number; userId: number; query: string; collection: string; success: boolean }>
+  // Eventos de ingesta (started, completed, failed, stalled)
+  ingestionEvents: IngestionEventRecord[]
   // Errores registrados
   errors: Array<{ ts: number; type: string; message: string; suggestion?: string }>
   // Timeline de eventos (los más recientes primero en la UI)
@@ -39,6 +50,7 @@ export type ReconstructedState = {
     warnCount: number
     uniqueUsers: number
     ragQueryCount: number
+    ingestionCount: number
   }
 }
 
@@ -77,6 +89,100 @@ function handleRagQuery(event: DbEvent, payload: Record<string, unknown>, state:
     type: event.type,
     ...(event.userId != null ? { userId: event.userId } : {}),
     summary: `Query: "${String(payload["query"] ?? "").slice(0, 60)}"`,
+  })
+}
+
+function handleRagStreamStarted(event: DbEvent, payload: Record<string, unknown>, state: ReconstructedState) {
+  state.timeline.push({
+    ts: event.ts,
+    type: event.type,
+    ...(event.userId != null ? { userId: event.userId } : {}),
+    summary: `RAG query → col: ${payload["collection"] ?? "?"} | session: ${String(payload["sessionId"] ?? "").slice(0, 8)}`,
+  })
+}
+
+function handleRagStreamCompleted(event: DbEvent, payload: Record<string, unknown>, state: ReconstructedState) {
+  state.timeline.push({
+    ts: event.ts,
+    type: event.type,
+    ...(event.userId != null ? { userId: event.userId } : {}),
+    summary: `RAG completado → col: ${payload["collection"] ?? "?"} | ${payload["duration"] != null ? `${payload["duration"]}ms` : ""}`,
+  })
+}
+
+function handleIngestionStarted(event: DbEvent, payload: Record<string, unknown>, state: ReconstructedState) {
+  state.stats.ingestionCount++
+  state.ingestionEvents.push({
+    ts: event.ts,
+    type: event.type,
+    filename: payload["filename"] != null ? String(payload["filename"]) : undefined,
+    collection: payload["collection"] != null ? String(payload["collection"]) : undefined,
+    sourceId: payload["sourceId"] != null ? String(payload["sourceId"]) : undefined,
+  })
+  state.timeline.push({
+    ts: event.ts,
+    type: event.type,
+    ...(event.userId != null ? { userId: event.userId } : {}),
+    summary: `Ingesta iniciada: ${payload["filename"] ?? payload["name"] ?? "?"} → ${payload["collection"] ?? payload["collectionDest"] ?? "?"}`,
+  })
+}
+
+function handleIngestionCompleted(event: DbEvent, payload: Record<string, unknown>, state: ReconstructedState) {
+  state.ingestionEvents.push({
+    ts: event.ts,
+    type: event.type,
+    filename: payload["filename"] != null ? String(payload["filename"]) : undefined,
+    collection: payload["collection"] != null ? String(payload["collection"]) : undefined,
+    sourceId: payload["sourceId"] != null ? String(payload["sourceId"]) : undefined,
+  })
+  state.timeline.push({
+    ts: event.ts,
+    type: event.type,
+    ...(event.userId != null ? { userId: event.userId } : {}),
+    summary: `Ingesta completada: ${payload["filename"] ?? payload["name"] ?? "?"} → ${payload["collection"] ?? payload["collectionDest"] ?? "?"}`,
+  })
+}
+
+function handleIngestionFailed(event: DbEvent, payload: Record<string, unknown>, state: ReconstructedState) {
+  const message = `Ingesta fallida: ${payload["filename"] ?? payload["name"] ?? "?"} — ${payload["error"] ?? ""}`
+  state.ingestionEvents.push({
+    ts: event.ts,
+    type: event.type,
+    filename: payload["filename"] != null ? String(payload["filename"]) : undefined,
+    collection: payload["collection"] != null ? String(payload["collection"]) : undefined,
+    error: payload["error"] != null ? String(payload["error"]) : undefined,
+  })
+  state.errors.push({
+    ts: event.ts,
+    type: event.type,
+    message,
+  })
+  state.timeline.push({
+    ts: event.ts,
+    type: event.type,
+    ...(event.userId != null ? { userId: event.userId } : {}),
+    summary: message.slice(0, 80),
+  })
+}
+
+function handleIngestionStalled(event: DbEvent, payload: Record<string, unknown>, state: ReconstructedState) {
+  const message = `Ingesta estancada: ${payload["filename"] ?? "?"} (${payload["duration"] != null ? `${payload["duration"]}ms` : "sin duración"})`
+  state.ingestionEvents.push({
+    ts: event.ts,
+    type: event.type,
+    filename: payload["filename"] != null ? String(payload["filename"]) : undefined,
+    collection: payload["collection"] != null ? String(payload["collection"]) : undefined,
+  })
+  state.errors.push({
+    ts: event.ts,
+    type: event.type,
+    message,
+  })
+  state.timeline.push({
+    ts: event.ts,
+    type: event.type,
+    ...(event.userId != null ? { userId: event.userId } : {}),
+    summary: message.slice(0, 80),
   })
 }
 
@@ -129,9 +235,15 @@ const EVENT_HANDLERS: Record<string, EventHandler> = {
   "auth.login": handleAuthLogin,
   "rag.query": handleRagQuery,
   "rag.query_crossdoc": handleRagQuery,
+  "rag.stream_started": handleRagStreamStarted,
+  "rag.stream_completed": handleRagStreamCompleted,
   "rag.error": handleError,
   "system.error": handleError,
   "client.error": handleError,
+  "ingestion.started": handleIngestionStarted,
+  "ingestion.completed": handleIngestionCompleted,
+  "ingestion.failed": handleIngestionFailed,
+  "ingestion.stalled": handleIngestionStalled,
   "user.created": handleUserCreatedOrUpdated,
   "user.updated": handleUserCreatedOrUpdated,
   "user.deleted": handleUserDeleted,
@@ -143,6 +255,7 @@ export function reconstructFromEvents(events: DbEvent[]): ReconstructedState {
   const state: ReconstructedState = {
     users: new Map(),
     ragQueries: [],
+    ingestionEvents: [],
     errors: [],
     timeline: [],
     stats: {
@@ -151,6 +264,7 @@ export function reconstructFromEvents(events: DbEvent[]): ReconstructedState {
       warnCount: 0,
       uniqueUsers: 0,
       ragQueryCount: 0,
+      ingestionCount: 0,
     },
   }
 
@@ -178,6 +292,7 @@ export function formatTimeline(state: ReconstructedState): string {
     `Warnings: ${state.stats.warnCount}`,
     `Usuarios únicos: ${state.stats.uniqueUsers}`,
     `Queries RAG: ${state.stats.ragQueryCount}`,
+    `Ingestas: ${state.stats.ingestionCount}`,
     "",
     "=== Timeline (más reciente primero) ===",
   ]
@@ -186,6 +301,17 @@ export function formatTimeline(state: ReconstructedState): string {
     const ts = new Date(event.ts).toISOString().replace("T", " ").slice(0, 19)
     const user = event.userId ? `[user=${event.userId}]` : ""
     lines.push(`  ${ts}  ${event.type.padEnd(25)} ${user}  ${event.summary}`)
+  }
+
+  if (state.ingestionEvents.length > 0) {
+    lines.push("", "=== Ingestas ===")
+    for (const ing of state.ingestionEvents.slice(-20)) {
+      const ts = new Date(ing.ts).toISOString().replace("T", " ").slice(0, 19)
+      const file = ing.filename ?? "?"
+      const col = ing.collection ?? "?"
+      const errPart = ing.error ? ` — ERROR: ${ing.error.slice(0, 60)}` : ""
+      lines.push(`  ${ts}  ${ing.type.padEnd(25)}  ${file} → ${col}${errPart}`)
+    }
   }
 
   if (state.errors.length > 0) {

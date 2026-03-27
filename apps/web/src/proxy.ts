@@ -49,9 +49,14 @@ async function verifyClaims(token: string): Promise<JwtClaims | null> {
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Rutas públicas siempre pasan
+  // Generar requestId de correlación para todos los requests
+  const requestId = crypto.randomUUID()
+
+  // Rutas públicas siempre pasan (con requestId propagado)
   if (isPublic(pathname)) {
-    return NextResponse.next()
+    const headers = new Headers(request.headers)
+    headers.set("x-request-id", requestId)
+    return NextResponse.next({ request: { headers } })
   }
 
   // Extraer JWT desde cookie o Authorization header
@@ -81,6 +86,7 @@ export async function proxy(request: NextRequest) {
     headers.set("x-user-email", "system@internal")
     headers.set("x-user-name", "System")
     headers.set("x-user-role", "admin")
+    headers.set("x-request-id", requestId)
     return NextResponse.next({ request: { headers } })
   }
 
@@ -123,12 +129,13 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/", request.url))
   }
 
-  // Pasar claims al request como headers para Server Components
+  // Pasar claims y requestId al request como headers para Server Components
   const headers = new Headers(request.headers)
   headers.set("x-user-id", String(claims.sub))
   headers.set("x-user-email", claims.email)
   headers.set("x-user-name", claims.name)
   headers.set("x-user-role", claims.role)
+  headers.set("x-request-id", requestId)
 
   return NextResponse.next({ request: { headers } })
 }

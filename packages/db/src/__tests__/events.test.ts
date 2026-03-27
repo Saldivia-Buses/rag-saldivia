@@ -7,6 +7,7 @@ import { describe, test, expect, beforeAll, afterAll, afterEach } from "bun:test
 import { _injectDbForTesting, _resetDbForTesting } from "../connection"
 import { createTestDb, initSchema, insertUser } from "./setup"
 import { writeEvent, queryEvents, getEventsForReplay } from "../queries/events"
+import { deleteOldEvents } from "../queries/events-cleanup"
 
 process.env["DATABASE_PATH"] = ":memory:"
 
@@ -109,5 +110,41 @@ describe("getEventsForReplay", () => {
     await writeEvent({ source: "backend", level: "INFO", type: "replay.test" })
     const events = await getEventsForReplay(before)
     expect(events.some((e) => e.type === "replay.test")).toBe(true)
+  })
+})
+
+describe("deleteOldEvents", () => {
+  test("elimina eventos más viejos que el cutoff y retorna el count", async () => {
+    const db = (await import("../connection")).getDb()
+    const { events: eventsTable } = await import("../schema")
+    const { randomUUID } = await import("crypto")
+
+    // Insertar evento muy viejo (200 días atrás)
+    const oldTs = Date.now() - 200 * 24 * 60 * 60 * 1000
+    await db.insert(eventsTable).values({
+      id: randomUUID(),
+      ts: oldTs,
+      source: "backend",
+      level: "INFO",
+      type: "system.start",
+      payload: {},
+      sequence: 9999,
+    })
+
+    // Insertar evento reciente
+    await writeEvent({ source: "backend", level: "INFO", type: "system.start" })
+
+    const deleted = await deleteOldEvents(90)
+    expect(deleted).toBeGreaterThanOrEqual(1)
+
+    // El evento reciente sigue existiendo
+    const remaining = await queryEvents({ type: "system.start" })
+    expect(remaining.some((e) => e.ts >= Date.now() - 1000)).toBe(true)
+  })
+
+  test("no elimina eventos dentro del rango de retención", async () => {
+    await writeEvent({ source: "backend", level: "INFO", type: "recent.event" })
+    const deleted = await deleteOldEvents(90)
+    expect(deleted).toBe(0)
   })
 })
