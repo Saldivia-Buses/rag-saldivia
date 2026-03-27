@@ -151,7 +151,7 @@ docs/superpowers/
 - [x] `git ls-files | grep "\.env\.example"` → `.env.example` sigue presente (confirmar) — completado 2026-03-27
 - [x] `export PATH="$HOME/.bun/bin:$PATH" && cd apps/web && bun run test` — tests en verde — completado 2026-03-27
 - [x] Commit: `chore(ci): purgar artefactos trackeados y ampliar gitignore — plan9 f9.1` — completado 2026-03-27
-- [ ] `git push` — confirmar en GitHub que los archivos desaparecieron *(pendiente en remoto)*
+- [x] `git push` — confirmado en remoto 2026-03-27
 
 **Estado: completado 2026-03-27**
 
@@ -655,7 +655,7 @@ bun run test:components
 - [x] `echo "bad" | bunx commitlint` → exit 1 (subject-empty, type-empty) — verificado 2026-03-27
 - [x] CHANGELOG.md actualizado con entrada del Plan 9 — 2026-03-27
 - [x] Commits: `chore(ci): … f9.1` + `chore(web): plan9 completado …` (incluye CHANGELOG y este plan) — 2026-03-27
-- [ ] `git push` — pendiente en remoto
+- [x] `git push` — 2026-03-27
 
 **Estado: completado 2026-03-27 (push pendiente)**
 
