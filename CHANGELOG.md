@@ -9,6 +9,35 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Plan 8 — Optimización (Fases 1, 2, 3 y 4 completadas)
+
+#### Fase 4 — Upgrades de dependencias (2026-03-27)
+
+##### Added
+- `apps/web/src/components/collections/DocumentGraphLazy.tsx`: Client Component wrapper que aplica `dynamic` con `ssr: false` para D3 — solución al breaking change de Next.js 16 que prohíbe `dynamic ssr:false` en Server Components — *(Plan 8 F4.9)*
+
+##### Changed
+- `next`: 15.5.14 → 16.2.1 — *(Plan 8 F4.9)*
+  - `next.config.ts`: `turbopack: { root: __dirname }` para compatibilidad con webpack config custom en Next.js 16
+  - `apps/web/package.json`: build script cambiado a `next build --webpack` (webpack config custom, Turbopack tiene limitación de monorepo)
+  - `apps/web/tsconfig.json`: `paths` alias `drizzle-orm → ./node_modules/drizzle-orm` para unificar tipos (fix `entityKind` unique symbol)
+- `apps/web/src/middleware.ts` → `apps/web/src/proxy.ts`: renombrado + export `middleware` → `proxy` (nueva convención Next.js 16) — *(Plan 8 F4.9)*
+- `apps/web/src/app/actions/collections.ts`: `revalidateTag` → `updateTag` (nueva API Next.js 16 para Server Actions) — *(Plan 8 F4.9)*
+- `drizzle-orm`: 0.38.4 → 0.45.1 en `packages/db`, `apps/web` y override del root — *(Plan 8 F4.10)*
+- `drizzle-kit`: 0.30.0 → 0.31.10 en `packages/db` — *(Plan 8 F4.10)*
+- `lucide-react`: 0.475.0 → 1.7.0 — mejor tree-shaking en 1.x — *(Plan 8 F4.11)*
+- `zod`: 3.25.0 → 4.3.6 — ~14x mejora de performance en parsing — *(Plan 8 F4.12)*
+- `@libsql/client`: 0.14.0 → 0.17.2 — *(Plan 8 F4.13)*
+- `next.config.ts`: `@libsql/core` agregado a `serverExternalPackages` (nuevo sub-paquete en 0.17) — *(Plan 8 F4.13)*
+
+##### Fixed
+- `apps/web/src/components/auth/SSOButton.tsx`: ícono `Chrome` (removido en lucide 1.x) → `Globe` — *(Plan 8 F4.11)*
+- `packages/shared/src/schemas.ts`: `z.record(valueType)` → `z.record(z.string(), valueType)` en 3 schemas (breaking change Zod 4: key schema explícito requerido) — *(Plan 8 F4.12)*
+- `apps/web/src/app/(app)/admin/analytics/page.tsx`: queries `sql<T>...as()` reescritas para Drizzle 0.45 (SQL type invariance) — *(Plan 8 F4.13)*
+- `apps/web/src/app/(app)/collections/[name]/graph/page.tsx`: eliminado `dynamic ssr:false` en Server Component — usa `DocumentGraphLazy` — *(Plan 8 F4.9)*
+
+---
+
 ### Plan 8 — Optimización (Fases 1, 2 y 3 completadas)
 
 #### Fase 3 — Unificación y limpieza de dependencias (2026-03-27)
