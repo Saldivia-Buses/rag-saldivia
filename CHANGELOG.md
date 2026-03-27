@@ -23,6 +23,7 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 #### Changed
 - `CLAUDE.md`, `docs/architecture.md`, `docs/onboarding.md`, `docs/workflows.md`, `docs/testing.md`, `docs/blackbox.md` — precisión post Plan 8–10 (Next 16, Redis, hooks, sin crossdoc/next-safe-action obsoletos)
+- `docs/plans/ultra-optimize-plan11-documentation.md` — checklist del Plan 11 marcada según lo verificado (pendientes explícitos: Quick Start manual, push, `cli.md` / `design-system.md`, etc.)
 
 #### Documentation (JSDoc)
 - Funciones críticas: `getRedisClient`, `nextSequence`, `createJwt`, `extractClaims`, `ragFetch`, `getCachedRagCollections`, `startIngestionWorker`, `proxy`, `persistEvent` (logger), `reconstructFromEvents`

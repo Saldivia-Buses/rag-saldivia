@@ -243,10 +243,10 @@ Lista de bullets de las features que funcionan ahora:
 
 - [x] Reemplazar `README.md` completo con el contenido de las 13 secciones descritas arriba
 - [x] Verificar que los badges apuntan a URLs correctas (repo Camionerou/rag-saldivia)
-- [x] Ejecutar los comandos del Quick Start para confirmar que funcionan
+- [ ] Ejecutar los comandos del Quick Start de punta a punta en un entorno limpio (no verificado en la sesión de implementación)
 - [x] Commit: `docs: reescribir readme desde cero — plan11 f11.1`
 
-**Estado: completado 2026-03-27**
+**Estado: parcial — README + badges + commit hechos; Quick Start sin verificación manual completa**
 
 ---
 
@@ -323,10 +323,10 @@ Objetivo: cualquier developer puede hacer su primer PR siguiendo solo este docum
 - Todos los comandos están verificados y funcionan
 
 - [x] Escribir CONTRIBUTING.md completo
-- [x] Verificar todos los comandos listados
+- [ ] Verificar todos los comandos listados ejecutándolos uno por uno (no hecho)
 - [x] Commit: `docs: crear contributing.md — plan11 f11.2`
 
-**Estado: completado 2026-03-27**
+**Estado: parcial — documento + commit; verificación de comandos pendiente**
 
 ---
 
@@ -352,9 +352,10 @@ Objetivo: el repo tiene una política de seguridad visible y una licencia declar
 
 - [x] Crear `SECURITY.md`
 - [x] Crear `LICENSE` (MIT)
+- [ ] Confirmar en GitHub que el sidebar muestra la licencia (requiere push / vista remota)
 - [x] Commit: `docs: agregar security.md y license mit — plan11 f11.3`
 
-**Estado: completado 2026-03-27**
+**Estado: archivos y commit hechos; detección de licencia en GitHub no verificada aquí**
 
 ---
 
@@ -378,9 +379,10 @@ Objetivo: el repo tiene una estructura de revisión de código definida y los co
 - [x] Crear `.github/CODEOWNERS`
 - [x] Crear `.github/ISSUE_TEMPLATE/bug_report.md`
 - [x] Crear `.github/ISSUE_TEMPLATE/feature_request.md`
+- [ ] Tras `git push`, comprobar en GitHub que “New issue” ofrece las plantillas
 - [x] Commit: `docs: codeowners + issue templates — plan11 f11.4`
 
-**Estado: completado 2026-03-27**
+**Estado: archivos y commit hechos; validación en UI de GitHub pendiente**
 
 ---
 
@@ -450,10 +452,10 @@ Objetivo: cada package del monorepo se entiende sin leer el código fuente.
 - [x] Crear `packages/shared/README.md`
 - [x] Crear `packages/config/README.md`
 - [x] Crear `apps/cli/README.md`
-- [x] Verificar que el ER diagram renderiza en GitHub (Mermaid es soportado nativo)
+- [ ] Abrir el README del paquete `db` en GitHub y confirmar render del bloque Mermaid (no verificado en esta sesión)
 - [x] Commit: `docs: readme de packages y cli con er diagram — plan11 f11.5`
 
-**Estado: completado 2026-03-27**
+**Estado: READMEs y commit hechos; preview en GitHub no verificado**
 
 ---
 
@@ -521,12 +523,12 @@ Si alguna ruta de la tabla no existe, eliminarla del documento.
 - Un developer puede construir un cliente sin mirar el código fuente
 - Los endpoints de SSE tienen ejemplo de consumo
 
-- [x] Crear `docs/api.md` con todos los endpoints
-- [x] Verificar que cada endpoint documentado existe realmente en `apps/web/src/app/api/`
-- [x] Verificar que no hay endpoints en el código que no estén en el doc
-- [x] Commit: `docs: api.md — referencia completa de los 30+ endpoints — plan11 f11.6`
+- [x] Crear `docs/api.md` con los grupos de rutas y notas (incl. rutas reales revisadas frente al árbol `app/api/`)
+- [x] Contrastar la documentación con el listado de `route.ts` bajo `apps/web/src/app/api/` (revisión hecha al redactar)
+- [ ] Auditoría exhaustiva “cada `route.ts` ↔ fila en api.md” (no realizada)
+- [x] Commit: `docs: api.md — referencia completa de endpoints — plan11 f11.6`
 
-**Estado: completado 2026-03-27**
+**Estado: doc + commit hechos; auditoría 1:1 completa no hecha**
 
 ---
 
@@ -613,13 +615,14 @@ Reconstruye el estado del sistema desde los eventos de la DB (blackbox replay). 
 - [x] Agregar JSDoc a `ragFetch()` en `apps/web/src/lib/rag/client.ts`
 - [x] Agregar JSDoc a `getCachedRagCollections()` en `apps/web/src/lib/rag/collections-cache.ts`
 - [x] Agregar JSDoc a `startIngestionWorker()` en `apps/web/src/lib/queue.ts`
-- [x] Agregar JSDoc al middleware en `apps/web/src/proxy.ts`
-- [x] Agregar JSDoc a `writeEvent()` en `packages/logger/src/backend.ts`
+- [x] Agregar JSDoc a `proxy()` (middleware) en `apps/web/src/proxy.ts`
+- [ ] Agregar JSDoc a `writeEvent()` — *no aplica tal cual:* la persistencia se documentó en `persistEvent()` en `packages/logger/src/backend.ts` (usa `writeEvent` de `@rag-saldivia/db`)
+- [x] Agregar JSDoc a `persistEvent()` en `packages/logger/src/backend.ts` (equivalente práctico al ítem anterior)
 - [x] Agregar JSDoc a `reconstructFromEvents()` en `packages/logger/src/blackbox.ts`
-- [x] `export PATH="$HOME/.bun/bin:$PATH" && bun run test` → todos pasan
-- [x] Commit: `docs: jsdoc en funciones criticas — plan11 f11.7`
+- [x] `bun run test` en la raíz del monorepo → pasa (incluye paquetes afectados)
+- [x] Commit: `docs: jsdoc en funciones criticas — plan11 f11.7` (incluye `middleware.ts` re-export y `next-env.d.ts` tocado por tooling)
 
-**Estado: completado 2026-03-27**
+**Estado: JSDoc + tests + commit hechos; ítem nominal `writeEvent` sustituido por `persistEvent`**
 
 ---
 
@@ -645,9 +648,9 @@ Objetivo: CLAUDE.md refleja el estado real del repo post-Plan 9 (sin referencias
 
 - [x] Revisar CLAUDE.md sección por sección contra el estado real del repo
 - [x] Actualizar cada sección desactualizada
-- [x] Commit: `docs: actualizar claude.md post-plan9 — plan11 f11.8`
+- [ ] Commit aislado `docs: actualizar claude.md post-plan9 — plan11 f11.8` — *no hecho:* se unificó con F11.9 en `docs: actualizar claude.md y docs existentes — plan11 f11.8-f11.9`
 
-**Estado: completado 2026-03-27**
+**Estado: contenido hecho; mensaje de commit del plan no usado como commit separado**
 
 ---
 
@@ -674,41 +677,43 @@ Objetivo: todos los documentos en `docs/` son precisos y no tienen información 
 - [x] Revisar `docs/workflows.md`
 - [x] Revisar `docs/testing.md` — agregar test:e2e y cobertura
 - [x] Revisar `docs/blackbox.md`
-- [x] Revisar `docs/cli.md`
-- [x] Revisar `docs/design-system.md`
-- [x] Commit: `docs: revisar y actualizar documentos existentes — plan11 f11.9`
+- [ ] Revisar `docs/cli.md` (sin cambios en esta implementación; se asume alineado con la CLI actual)
+- [ ] Revisar `docs/design-system.md` frente a `globals.css` (sin pass explícito en esta implementación)
+- [ ] Commit dedicado `docs: revisar y actualizar documentos existentes — plan11 f11.9` — *no hecho:* mismo commit conjunto que F11.8 (ver arriba)
 
-**Estado: completado 2026-03-27**
+**Estado: 5 docs tocados; cli/design-system y commit nominal F11.9 no realizados**
 
 ---
 
 ## Criterio de done global del Plan 11
 
-- `README.md` ≥ 300 líneas con todos los badges, Quick Start, arquitectura, stack, features v1.0.0 y features futuras
-- `CONTRIBUTING.md` existe y tiene los 9 pasos documentados
-- `SECURITY.md` existe
-- `LICENSE` existe y GitHub lo detecta automáticamente
-- `CODEOWNERS` existe
-- 2 issue templates en `.github/ISSUE_TEMPLATE/`
-- 5 READMEs de packages/apps creados
-- `docs/api.md` cubre los 30+ endpoints
-- JSDoc en las 10 funciones críticas
-- `CLAUDE.md` sin referencias a código eliminado
-- Todos los documentos en `docs/` son precisos
+Lista objetivo del plan; **estado real** según la implementación que generó este documento:
 
-### Checklist de cierre
+- [x] `README.md` ≥ 300 líneas con badges, arquitectura, stack, features v1.0.0 y futuras (Quick Start no verificado de punta a punta)
+- [x] `CONTRIBUTING.md` con los 9 apartados (comandos no ejecutados uno a uno)
+- [x] `SECURITY.md` y `LICENSE`
+- [ ] Licencia visible en sidebar de GitHub (requiere push / comprobación remota)
+- [x] `CODEOWNERS` y 2 issue templates
+- [x] 5 READMEs en packages + `apps/cli`
+- [x] `docs/api.md` con referencia amplia de la API (auditoría exhaustiva código↔doc no hecha)
+- [x] JSDoc en puntos críticos + `persistEvent` (sustituto documental de `writeEvent` en backend)
+- [x] `CLAUDE.md` actualizado (alineado a Plan 8–11)
+- [ ] Todo `docs/*.md` revisado: faltan `cli.md` y `design-system.md` en esta sesión
 
-- [x] README.md completo con badges y Quick Start verificado
-- [x] CONTRIBUTING.md completo
+### Checklist de cierre (solo lo realizado en esta implementación)
+
+- [x] README.md completo con badges (Quick Start no verificado de punta a punta)
+- [x] CONTRIBUTING.md creado (comandos no verificados uno a uno)
 - [x] SECURITY.md + LICENSE creados
 - [x] CODEOWNERS + issue templates creados
-- [x] 5 READMEs de packages con ER diagram verificado en GitHub
-- [x] `docs/api.md` completo
-- [x] JSDoc en funciones críticas
+- [x] 5 READMEs de packages/apps creados (render Mermaid en GitHub no verificado)
+- [x] `docs/api.md` creado (auditoría 1:1 de todos los `route.ts` no hecha)
+- [x] JSDoc en funciones críticas + `persistEvent`; `middleware.ts` re-export
 - [x] CLAUDE.md actualizado
-- [x] docs/ revisados
+- [x] docs/ parcialmente revisados (`architecture`, `onboarding`, `workflows`, `testing`, `blackbox` — no `cli.md` ni `design-system.md` en esta sesión)
 - [x] CHANGELOG.md actualizado con entrada del Plan 11
-- [ ] Commit final: `docs: plan11 completado — documentacion perfecta` (a cargo del mantenedor)
-- [ ] `git push` (a cargo del mantenedor)
+- [x] Commits atómicos por fase (9 commits `docs: … plan11 f11.x` + `docs(changelog): …`)
+- [ ] Commit único `docs: plan11 completado — documentacion perfecta` (no usado; se prefirieron commits por fase)
+- [ ] `git push` al remoto (no ejecutado aquí)
 
-**Estado: completado 2026-03-27** (salvo commit/push opcional)
+**Estado: implementación entregada en repo local con commits; push y comprobaciones en GitHub pendientes**
