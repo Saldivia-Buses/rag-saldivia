@@ -33,6 +33,6 @@
     "typescript": "^6.0.0"
   },
   "overrides": {
-    "drizzle-orm": "^0.38.0"
+    "drizzle-orm": "^0.45.0"
   }
 }

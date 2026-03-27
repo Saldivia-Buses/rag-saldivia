@@ -20,11 +20,11 @@
     "@libsql/client": "^0.14.0",
     "@rag-saldivia/shared": "workspace:*",
     "bcrypt-ts": "^5.0.0",
-    "drizzle-orm": "^0.38.4"
+    "drizzle-orm": "0.45.1"
   },
   "devDependencies": {
     "@types/node": "^25.5.0",
-    "drizzle-kit": "^0.30.0",
+    "drizzle-kit": "^0.31.10",
     "typescript": "^6.0.0"
   }
 }
