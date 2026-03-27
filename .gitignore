@@ -41,5 +41,25 @@ test-results/
 playwright-report/
 **/playwright-report/
 
+# MCP browser session artifacts
+.playwright-mcp/
+
+# Brainstorming artifacts (internal design sessions)
+.superpowers/
+
+# App runtime logs (covered by logs/ but adding specific path)
+apps/web/logs/
+
+# Config env files by environment
+config/*.env.*
+
+# Internal design specs
+docs/superpowers/
+
+# Process ID files
+*.pid
+*.server-info
+*.server-stopped
+
 # OS
 .DS_Store
