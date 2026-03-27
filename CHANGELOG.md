@@ -9,6 +9,25 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Plan 8 — Optimización (Fases 1, 2, 3, 4, 5 y 6 completadas)
+
+#### Fase 6 — Error Boundaries y CI paralelo (2026-03-27)
+
+##### Added
+- `apps/web/src/components/error-boundary.tsx`: componente `<ErrorBoundary>` reutilizable basado en clase React con estado `hasError`, soporte de `fallback` personalizado y callback `onReset` — *(Plan 8 F6.15)*
+- `apps/web/src/app/(app)/chat/error.tsx`: Error Boundary de Next.js App Router para la ruta `/chat` — sanitiza mensajes en producción — *(Plan 8 F6.15)*
+- `apps/web/src/app/(app)/admin/error.tsx`: Error Boundary para todo el panel de administración — *(Plan 8 F6.15)*
+- `apps/web/src/components/__tests__/error-boundary.test.tsx`: 7 tests de componente para `<ErrorBoundary>` — *(Plan 8 F6.15)*
+
+##### Changed
+- `.github/workflows/ci.yml`: jobs separados y paralelos (`type-check`, `test-logic`, `test-components`, `lint`, `coverage`) en lugar de un único job secuencial — *(Plan 8 F6.16)*
+- `.github/workflows/ci.yml`: `actions/cache@v4` para `~/.bun/install/cache` en todos los jobs — ahorra 30–60 s por job — *(Plan 8 F6.16)*
+- `.github/workflows/ci.yml`: `bunx turbo run test --affected --filter="...[HEAD^1]"` en PRs — solo testea packages afectados; push a dev sigue corriendo la suite completa — *(Plan 8 F6.16)*
+- `.github/workflows/ci.yml`: `visual-regression` y `accessibility` pasan a requerir `needs: [test-logic]` — no corren si los tests de lógica fallan — *(Plan 8 F6.16)*
+- `turbo.json`: tarea `test:components` agregada al pipeline de Turborepo — *(Plan 8 F6.16)*
+
+---
+
 ### Plan 8 — Optimización (Fases 1, 2, 3, 4 y 5 completadas)
 
 #### Fase 5 — Actualizar docs de arquitectura (2026-03-27)

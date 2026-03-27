@@ -25,6 +25,12 @@ jobs:
         with:
           bun-version: latest
 
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ hashFiles('**/bun.lockb') }}
+          restore-keys: bun-
+
       - name: Install commitlint
         run: bun install --frozen-lockfile
 
@@ -63,6 +69,12 @@ jobs:
         with:
           bun-version: latest
 
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ hashFiles('**/bun.lockb') }}
+          restore-keys: bun-
+
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
@@ -82,9 +94,9 @@ jobs:
         if: hashFiles('apps/web/package.json') == ''
         run: echo "apps/web no existe aún — type-check pendiente (Fase 2)"
 
-  # ── Tests ─────────────────────────────────────────────────────────────────
-  test:
-    name: Tests
+  # ── Tests de lógica ───────────────────────────────────────────────────────
+  test-logic:
+    name: Tests (lógica)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -93,11 +105,27 @@ jobs:
         with:
           bun-version: latest
 
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ hashFiles('**/bun.lockb') }}
+          restore-keys: bun-
+
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - name: Run tests
-        if: hashFiles('apps/web/package.json') != ''
+      # En PRs: solo testear packages afectados por los cambios del PR
+      - name: Run tests (affected — PR)
+        if: |
+          hashFiles('apps/web/package.json') != '' &&
+          github.event_name == 'pull_request'
+        run: bunx turbo run test --affected --filter="...[HEAD^1]"
+
+      # En push a dev: suite completa siempre
+      - name: Run tests (full — push)
+        if: |
+          hashFiles('apps/web/package.json') != '' &&
+          github.event_name != 'pull_request'
         run: bun run test
 
       - name: Skip (monorepo en construcción)
@@ -116,12 +144,16 @@ jobs:
         with:
           bun-version: latest
 
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ hashFiles('**/bun.lockb') }}
+          restore-keys: bun-
+
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
       - name: Run tests with coverage
-        # Falla si alguna capa está por debajo del threshold definido en bunfig.toml
-        # Threshold actual: 0.80 (sube a 0.90 al completar Plan 5 F3, a 0.95 al completar F4)
         run: bun run test:coverage
 
   # ── Lint ──────────────────────────────────────────────────────────────────
@@ -135,6 +167,12 @@ jobs:
         with:
           bun-version: latest
 
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ hashFiles('**/bun.lockb') }}
+          restore-keys: bun-
+
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
@@ -146,8 +184,8 @@ jobs:
         if: hashFiles('apps/web/package.json') == ''
         run: echo "apps/web no existe aún — lint pendiente (Fase 2)"
 
-  # ── Component tests (Plan 6 F3) ───────────────────────────────────────────
-  component-tests:
+  # ── Component tests ───────────────────────────────────────────────────────
+  test-components:
     name: Component Tests
     runs-on: ubuntu-latest
     defaults:
@@ -155,37 +193,60 @@ jobs:
         working-directory: .
     steps:
       - uses: actions/checkout@v4
+
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ hashFiles('**/bun.lockb') }}
+          restore-keys: bun-
+
       - run: bun install --frozen-lockfile
+
       - name: Run component tests
         run: bun test --preload ./apps/web/src/lib/component-test-setup.ts apps/web/src/components
         working-directory: .
 
-  # ── Visual regression (Plan 6 F4) ─────────────────────────────────────────
+  # ── Visual regression — requiere test-logic en verde ─────────────────────
   visual-regression:
     name: Visual Regression
     runs-on: ubuntu-latest
+    needs: [test-logic]
     steps:
       - uses: actions/checkout@v4
+
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ hashFiles('**/bun.lockb') }}
+          restore-keys: bun-
+
       - run: bun install --frozen-lockfile
+
       - name: Install Playwright Chromium
         run: bunx playwright install --with-deps chromium
         working-directory: apps/web
+
       - name: Build Storybook
         run: bun run build:storybook
         working-directory: apps/web
+
       - name: Serve Storybook y esperar
         run: |
           bunx serve apps/web/storybook-static -p 6006 &
           bunx wait-on http://localhost:6006 --timeout 60000
+
       - name: Run visual regression
         run: bun run test:visual
         working-directory: apps/web
+
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
@@ -193,19 +254,30 @@ jobs:
           path: apps/web/tests/visual/snapshots/
           retention-days: 7
 
-  # ── A11y audit (Plan 6 F6) ────────────────────────────────────────────────
+  # ── A11y audit — requiere test-logic en verde ─────────────────────────────
   accessibility:
     name: Accessibility Audit
     runs-on: ubuntu-latest
+    needs: [test-logic]
     steps:
       - uses: actions/checkout@v4
+
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ hashFiles('**/bun.lockb') }}
+          restore-keys: bun-
+
       - run: bun install --frozen-lockfile
+
       - name: Install Playwright Chromium
         run: bunx playwright install --with-deps chromium
         working-directory: apps/web
+
       - name: Levantar dev server y esperar
         run: |
           MOCK_RAG=true bun run dev &
@@ -215,6 +287,7 @@ jobs:
           DATABASE_PATH: ./data/test.db
           JWT_SECRET: test-secret-ci
           SYSTEM_API_KEY: test-api-key-ci
+
       - name: Run a11y audit
         run: bun run test:a11y
         working-directory: apps/web
