@@ -2,13 +2,14 @@
   "name": "@rag-saldivia/config",
   "version": "0.1.0",
   "private": true,
-    "exports": {
+  "exports": {
     ".": "./src/index.ts"
   },
   "scripts": {
     "test": "bun test src/__tests__",
     "test:coverage": "bun test src/__tests__ --coverage",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "lint": "tsc --noEmit"
   },
   "dependencies": {
     "@rag-saldivia/shared": "workspace:*",
@@ -16,6 +17,7 @@
     "zod": "^3.25.0"
   },
   "devDependencies": {
+    "@types/node": "^25.5.0",
     "typescript": "^6.0.0"
   }
 }

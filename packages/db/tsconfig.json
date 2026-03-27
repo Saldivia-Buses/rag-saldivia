@@ -1,9 +1,10 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
     "lib": ["ES2023"],
+    "types": ["node"],
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "noImplicitReturns": true,
@@ -12,5 +13,5 @@
     "outDir": "dist"
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "drizzle"]
+  "exclude": ["node_modules", "dist", "drizzle", "src/__tests__", "src/init.ts", "src/migrate.ts", "src/seed.ts"]
 }
