@@ -9,6 +9,23 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Plan 8 — Optimización (Fases 1, 2, 3, 4 y 5 completadas)
+
+#### Fase 5 — Actualizar docs de arquitectura (2026-03-27)
+
+##### Added
+- `docs/decisions/009-server-components-first.md`: ADR-009 — documenta la decisión de usar Server Components por defecto y Server Actions para mutaciones (Plan 8 — Fase 2) — *(Plan 8 F5.14)*
+- `docs/architecture.md`: sección "Utilidades de stream SSE" — describe las tres funciones públicas de `lib/rag/stream.ts` y sus consumers — *(Plan 8 F5.14)*
+- `docs/architecture.md`: sección "Redis (Fase 8 — próxima integración)" — documenta los workarounds SQLite/memoria que serán reemplazados y el motivo por el que Redis será dependencia requerida — *(Plan 8 F5.14)*
+- `docs/architecture.md`: ADR-010 agregado a la tabla de ADRs (pendiente Fase 8) — *(Plan 8 F5.14)*
+
+##### Changed
+- `docs/architecture.md`: tabla de ADRs actualizada con ADR-008 y ADR-009 — *(Plan 8 F5.14)*
+- `docs/architecture.md`: versión Next.js en estructura actualizada (15 → 16), añadidos `safe-action.ts` y `drizzle.config.ts` — *(Plan 8 F5.14)*
+- `docs/architecture.md`: sección de workers y Server Actions refleja los cambios de Fases 1–4 — *(Plan 8 F5.14)*
+
+---
+
 ### Plan 8 — Optimización (Fases 1, 2, 3 y 4 completadas)
 
 #### Fase 4 — Upgrades de dependencias (2026-03-27)

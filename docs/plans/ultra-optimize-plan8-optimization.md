@@ -1173,10 +1173,12 @@ Objetivo: reflejar los cambios estructurales del plan en `docs/architecture.md`.
 
 ### F5.14 — Actualizar `docs/architecture.md`
 
-- [ ] Agregar sección "Utilidades de stream" apuntando a `lib/rag/stream.ts` — 5 min
-- [ ] Agregar sección "Redis (requerido)" — dependencia del sistema igual que Milvus, sin fallback — 5 min
-- [ ] Actualizar la tabla de ADRs con ADR-008, ADR-009, ADR-010 — 5 min
-- [ ] Commit: `docs: actualizar architecture.md post-plan8 — plan8 f5`
+- [x] Agregar sección "Utilidades de stream" apuntando a `lib/rag/stream.ts` — completado 2026-03-27
+- [x] Agregar sección "Redis (Fase 8 — próxima integración)" con tabla de workarounds a reemplazar — completado 2026-03-27
+- [x] Crear `docs/decisions/009-server-components-first.md` (ADR-009, faltaba desde Fase 2) — completado 2026-03-27
+- [x] Actualizar la tabla de ADRs con ADR-008, ADR-009, ADR-010 — completado 2026-03-27
+- [x] Actualizar versión Next.js en estructura (15 → 16), añadir safe-action.ts y drizzle.config.ts — completado 2026-03-27
+- [x] Commit: `docs: actualizar architecture.md post-plan8 — plan8 f5`
 
 ---
 
@@ -1186,10 +1188,10 @@ Objetivo: reflejar los cambios estructurales del plan en `docs/architecture.md`.
 
 ### Checklist de cierre
 
-- [ ] CHANGELOG.md actualizado
-- [ ] `git commit -m "docs: architecture.md actualizado — plan8 f5"`
+- [x] CHANGELOG.md actualizado — completado 2026-03-27
+- [x] `git commit -m "docs: architecture.md actualizado — plan8 f5"` — completado 2026-03-27
 
-**Estado: pendiente**
+**Estado: completado 2026-03-27**
 
 ---
 
