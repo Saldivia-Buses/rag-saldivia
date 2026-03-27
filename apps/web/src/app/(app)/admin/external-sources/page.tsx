@@ -1,8 +1,11 @@
 import { requireAdmin } from "@/lib/auth/current-user"
+import { listExternalSources } from "@rag-saldivia/db"
 import { ExternalSourcesAdmin } from "@/components/admin/ExternalSourcesAdmin"
 
 export default async function ExternalSourcesPage() {
-  await requireAdmin()
+  const admin = await requireAdmin()
+  const sources = await listExternalSources(admin.id)
+
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <div className="mb-6">
@@ -12,7 +15,7 @@ export default async function ExternalSourcesPage() {
           El worker sincroniza automáticamente según el schedule configurado.
         </p>
       </div>
-      <ExternalSourcesAdmin />
+      <ExternalSourcesAdmin initialSources={sources} />
     </div>
   )
 }

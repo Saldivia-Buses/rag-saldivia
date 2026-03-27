@@ -1,13 +1,24 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useOptimistic, useState, useTransition } from "react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 import { Plus, Trash2, Cloud } from "lucide-react"
+
+const ExternalSourceSchema = z.object({
+  provider: z.enum(["google_drive", "sharepoint", "confluence"]),
+  name: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
+  collectionDest: z.string().min(1, "La colección destino es requerida"),
+  schedule: z.enum(["hourly", "daily", "weekly"]),
+})
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { EmptyPlaceholder } from "@/components/ui/empty-placeholder"
 import type { DbExternalSource } from "@rag-saldivia/db"
 import { formatDate } from "@/lib/utils"
+import { actionCreateExternalSource, actionDeleteExternalSource } from "@/app/actions/external-sources"
 
 const PROVIDER_LABELS: Record<string, string> = {
   google_drive: "Google Drive",
@@ -17,30 +28,34 @@ const PROVIDER_LABELS: Record<string, string> = {
 
 const SELECT_CLASS = "h-9 w-full rounded-md border border-border bg-bg px-3 text-sm text-fg focus:outline-none focus:ring-1 focus:ring-ring"
 
-export function ExternalSourcesAdmin() {
-  const [sources, setSources] = useState<DbExternalSource[]>([])
+export function ExternalSourcesAdmin({ initialSources }: { initialSources: DbExternalSource[] }) {
+  const [optimisticSources, applyOptimistic] = useOptimistic(
+    initialSources,
+    (state, action: { type: "delete"; id: string }) => {
+      if (action.type === "delete") return state.filter((s) => s.id !== action.id)
+      return state
+    }
+  )
+  const [isPending, startTransition] = useTransition()
   const [showCreate, setShowCreate] = useState(false)
-  const [form, setForm] = useState({ provider: "google_drive", name: "", collectionDest: "", schedule: "daily" })
-  const [creating, setCreating] = useState(false)
 
-  useEffect(() => {
-    fetch("/api/admin/external-sources").then((r) => r.json())
-      .then((d: { ok: boolean; data?: DbExternalSource[] }) => { if (d.ok) setSources(d.data ?? []) })
-  }, [])
+  const sourceForm = useForm<z.infer<typeof ExternalSourceSchema>>({
+    resolver: zodResolver(ExternalSourceSchema),
+    defaultValues: { provider: "google_drive", name: "", collectionDest: "", schedule: "daily" },
+  })
 
-  async function handleCreate(e: React.FormEvent) {
-    e.preventDefault()
-    setCreating(true)
-    try {
-      const res = await fetch("/api/admin/external-sources", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) })
-      const d = await res.json() as { ok: boolean; data?: DbExternalSource }
-      if (d.ok && d.data) { setSources((p) => [...p, d.data!]); setShowCreate(false) }
-    } finally { setCreating(false) }
+  function handleCreate(data: z.infer<typeof ExternalSourceSchema>) {
+    startTransition(async () => {
+      const source = await actionCreateExternalSource(data)
+      if (source) { setShowCreate(false); sourceForm.reset() }
+    })
   }
 
-  async function handleDelete(id: string) {
-    await fetch(`/api/admin/external-sources?id=${id}`, { method: "DELETE" })
-    setSources((p) => p.filter((s) => s.id !== id))
+  function handleDelete(id: string) {
+    startTransition(async () => {
+      applyOptimistic({ type: "delete", id })
+      await actionDeleteExternalSource(id)
+    })
   }
 
   return (
@@ -60,11 +75,11 @@ export function ExternalSourcesAdmin() {
       </div>
 
       {showCreate && (
-        <form onSubmit={handleCreate} className="rounded-xl border border-border bg-surface p-5 space-y-3">
+        <form onSubmit={sourceForm.handleSubmit(handleCreate)} className="rounded-xl border border-border bg-surface p-5 space-y-3">
           <h3 className="text-sm font-semibold text-fg">Nueva fuente externa</h3>
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-fg-muted">Provider</label>
-            <select value={form.provider} onChange={(e) => setForm((p) => ({ ...p, provider: e.target.value }))} className={SELECT_CLASS}>
+            <select {...sourceForm.register("provider")} className={SELECT_CLASS}>
               <option value="google_drive">Google Drive</option>
               <option value="sharepoint">SharePoint</option>
               <option value="confluence">Confluence</option>
@@ -72,28 +87,29 @@ export function ExternalSourcesAdmin() {
           </div>
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-fg-muted">Nombre</label>
-            <Input value={form.name} onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))} required />
+            <Input {...sourceForm.register("name")} />
+            {sourceForm.formState.errors.name && <p className="text-xs text-destructive">{sourceForm.formState.errors.name.message}</p>}
           </div>
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-fg-muted">Colección destino</label>
-            <Input value={form.collectionDest} onChange={(e) => setForm((p) => ({ ...p, collectionDest: e.target.value }))} required />
+            <Input {...sourceForm.register("collectionDest")} />
           </div>
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-fg-muted">Schedule</label>
-            <select value={form.schedule} onChange={(e) => setForm((p) => ({ ...p, schedule: e.target.value }))} className={SELECT_CLASS}>
+            <select {...sourceForm.register("schedule")} className={SELECT_CLASS}>
               <option value="hourly">Cada hora</option>
               <option value="daily">Diario</option>
               <option value="weekly">Semanal</option>
             </select>
           </div>
           <div className="flex gap-2">
-            <Button size="sm" type="submit" disabled={creating}>{creating ? "Creando..." : "Agregar"}</Button>
+            <Button size="sm" type="submit" disabled={isPending}>{isPending ? "Creando..." : "Agregar"}</Button>
             <Button size="sm" variant="outline" type="button" onClick={() => setShowCreate(false)}>Cancelar</Button>
           </div>
         </form>
       )}
 
-      {sources.length === 0 ? (
+      {optimisticSources.length === 0 ? (
         <EmptyPlaceholder>
           <EmptyPlaceholder.Icon icon={Cloud} />
           <EmptyPlaceholder.Title>Sin fuentes externas</EmptyPlaceholder.Title>
@@ -101,7 +117,7 @@ export function ExternalSourcesAdmin() {
         </EmptyPlaceholder>
       ) : (
         <div className="space-y-2">
-          {sources.map((s) => (
+          {optimisticSources.map((s) => (
             <div key={s.id} className="flex items-center justify-between p-4 rounded-xl border border-border bg-surface gap-3">
               <div className="min-w-0">
                 <div className="flex items-center gap-2">

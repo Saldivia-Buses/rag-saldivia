@@ -67,7 +67,7 @@ export async function actionAddMessage(data: {
   sessionId: string
   role: "user" | "assistant" | "system"
   content: string
-  sources?: unknown[]
+  sources?: import("@rag-saldivia/shared").Citation[]
 }) {
   const user = await requireUser()
   const message = await addMessage(data)

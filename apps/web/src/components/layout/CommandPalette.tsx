@@ -43,25 +43,20 @@ type Props = {
   onClose: () => void
   user: CurrentUser
   onToggleZen?: () => void
+  initialSessions: Session[]
 }
 
-export function CommandPalette({ open, onClose, user, onToggleZen }: Props) {
+export function CommandPalette({ open, onClose, user, onToggleZen, initialSessions }: Props) {
   const router = useRouter()
   const { theme, setTheme } = useTheme()
-  const [sessions, setSessions] = useState<Session[]>([])
+  const [sessions] = useState<Session[]>(initialSessions.slice(0, 8))
   const [query, setQuery] = useState("")
   const [searchResults, setSearchResults] = useState<SearchResult[]>([])
   const [searching, setSearching] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
-    if (!open) { setQuery(""); setSearchResults([]); return }
-    fetch("/api/chat/sessions")
-      .then((r) => r.json())
-      .then((d: { ok: boolean; data?: Session[] }) => {
-        if (d.ok && d.data) setSessions(d.data.slice(0, 8))
-      })
-      .catch(() => {})
+    if (!open) { setQuery(""); setSearchResults([]) }
   }, [open])
 
   useEffect(() => {

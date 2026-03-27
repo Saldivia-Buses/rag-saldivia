@@ -4,10 +4,17 @@ import { usePathname } from "next/navigation"
 import { ChatPanel } from "./panels/ChatPanel"
 import { AdminPanel } from "./panels/AdminPanel"
 import { ProjectsPanel } from "./panels/ProjectsPanel"
+import type { DbProject } from "@rag-saldivia/db"
 
 const PANEL_WIDTH = 168
 
-export function SecondaryPanel({ hidden }: { hidden?: boolean }) {
+export function SecondaryPanel({
+  hidden,
+  initialProjects,
+}: {
+  hidden?: boolean
+  initialProjects: DbProject[]
+}) {
   const pathname = usePathname()
 
   if (hidden) return null
@@ -17,7 +24,7 @@ export function SecondaryPanel({ hidden }: { hidden?: boolean }) {
     : pathname.startsWith("/admin")
     ? <AdminPanel />
     : pathname.startsWith("/projects")
-    ? <ProjectsPanel />
+    ? <ProjectsPanel initialProjects={initialProjects} />
     : null
 
   if (!panel) return null

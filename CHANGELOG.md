@@ -9,6 +9,68 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Plan 8 — Optimización (Fases 1 y 2 completadas)
+
+#### Fase 2 — Refactoring de arquitectura React (2026-03-27)
+
+##### Added
+- `apps/web/src/components/settings/MemoryClient.tsx`: Client Component que recibe `entries` como prop — sin `useEffect + fetch` — *(Plan 8 F2.4a)*
+- `apps/web/src/lib/safe-action.ts`: clientes `authClient` y `adminClient` de `next-safe-action` — *(Plan 8 F2.7)*
+- `apps/web/src/lib/form.ts`: helper `createForm` que combina `useForm + zodResolver` — *(Plan 8 F2.8)*
+- `apps/web/src/app/actions/auth.ts`: `actionLogout` — Server Action para cerrar sesión — *(Plan 8 F2.7)*
+- `apps/web/src/app/actions/projects.ts`: `actionCreateProject`, `actionDeleteProject` — *(Plan 8 F2.7)*
+- `apps/web/src/app/actions/webhooks.ts`: `actionCreateWebhook`, `actionDeleteWebhook` — *(Plan 8 F2.7)*
+- `apps/web/src/app/actions/reports.ts`: `actionCreateReport`, `actionDeleteReport` — *(Plan 8 F2.7)*
+- `apps/web/src/app/actions/external-sources.ts`: `actionCreateExternalSource`, `actionDeleteExternalSource` — *(Plan 8 F2.7)*
+- `apps/web/src/app/actions/share.ts`: `actionCreateShare`, `actionRevokeShare` — *(Plan 8 F2.7)*
+- `apps/web/src/app/actions/collections.ts`: `actionCreateCollection`, `actionDeleteCollection` — *(Plan 8 F2.7)*
+- `next-safe-action@8.1.8`, `react-hook-form@7.72.0`, `@hookform/resolvers@5.2.2`, `nuqs@2.8.9` como dependencias en `apps/web` — *(Plan 8 F2)*
+
+##### Changed
+- `settings/memory/page.tsx`: reescrito como Server Component — elimina `"use client"` y `useEffect + fetch` — *(Plan 8 F2.4a)*
+- `app/actions/settings.ts`: agrega `actionAddMemory`, `actionDeleteMemory` — *(Plan 8 F2.4a)*
+- `admin/webhooks/page.tsx`, `admin/reports/page.tsx`, `admin/external-sources/page.tsx`: fetches server-side + props a Client Components — *(Plan 8 F2.4b)*
+- `admin/knowledge-gaps/page.tsx`: extrae lógica de detección de brechas server-side — *(Plan 8 F2.4b)*
+- `WebhooksAdmin`, `ReportsAdmin`, `ExternalSourcesAdmin`: eliminan `useEffect`, aceptan `initialData` prop — *(Plan 8 F2.4b)*
+- `KnowledgeGapsClient`: eliminan `useEffect` y loading state, acepta `gaps` prop — *(Plan 8 F2.4b)*
+- `(app)/layout.tsx`: agrega `Promise.all` para pre-fetch de sessions, projects y changelog — *(Plan 8 F2.4c)*
+- `AppShell`, `AppShellChrome`: reciben y propagan `initialSessions`, `initialProjects`, `changelog` — *(Plan 8 F2.4c)*
+- `CommandPalette`: acepta `initialSessions` prop, elimina `useEffect + fetch` de sessions — *(Plan 8 F2.4c)*
+- `ProjectsPanel`: acepta `initialProjects` prop, elimina `useEffect + fetch` — *(Plan 8 F2.4c)*
+- `WhatsNewPanel`: acepta `changelog` prop, elimina `useEffect + fetch` — *(Plan 8 F2.4c)*
+- `PromptTemplates`: acepta `templates` prop, elimina `useEffect + fetch` — *(Plan 8 F2.4c)*
+- `CollectionSelector`: acepta `availableCollections` prop, elimina fetch — *(Plan 8 F2.4c)*
+- `chat/[id]/page.tsx`: pre-fetcha templates y collections server-side — *(Plan 8 F2.4c)*
+- `useRagStream.ts`: `stream` y `abort` envueltos en `useCallback` para estabilidad de referencia — *(Plan 8 F2.5)*
+- `ChatInterface.tsx`: 5 handlers (`handleSend`, `handleStop`, `handleCopy`, `handleRegenerate`, `handleBookmark`) con `useCallback` — *(Plan 8 F2.5)*
+- `SessionList.tsx`: handlers `toggleSelect`, `bulkDelete`, `bulkExport` con `useCallback` — *(Plan 8 F2.5)*
+- `AnalyticsDashboard.tsx`: acepta `data` como prop (Server Component pattern); `useMemo` para transformaciones de recharts — *(Plan 8 F2.5)*
+- `admin/analytics/page.tsx`: queries analytics server-side — *(Plan 8 F2.5)*
+- `collections/[name]/graph/page.tsx`: `DocumentGraph` con `next/dynamic` + skeleton loading — *(Plan 8 F2.6)*
+- `NavRail.tsx`: reemplaza `fetch("/api/auth/logout")` con `actionLogout()` — *(Plan 8 F2.7)*
+- `ShareDialog.tsx`: reemplaza `fetch("/api/share")` con `actionCreateShare()`/`actionRevokeShare()` — *(Plan 8 F2.7)*
+- `ProjectsClient.tsx`: reemplaza fetch mutations con `actionCreateProject`/`actionDeleteProject` — *(Plan 8 F2.7)*
+- `CollectionsList.tsx`: reemplaza fetch mutations con `actionCreateCollection`/`actionDeleteCollection` — *(Plan 8 F2.7)*
+- `AreasAdmin`, `UsersAdmin`, `WebhooksAdmin`, `ReportsAdmin`, `ExternalSourcesAdmin`, `ProjectsClient`, `CollectionsList`: `useOptimistic` para UI instantánea en delete/create — *(Plan 8 F2.7b)*
+- `SettingsClient.tsx`, `login/page.tsx`: migrados a `react-hook-form` con `zodResolver` — *(Plan 8 F2.8)*
+- `AreasAdmin`, `UsersAdmin`, `WebhooksAdmin`, `ReportsAdmin`, `ExternalSourcesAdmin`: formularios de creación migrados a `react-hook-form` — *(Plan 8 F2.8)*
+- `app/layout.tsx`: agrega `NuqsAdapter` para URL state — *(Plan 8 F2.9)*
+- `AuditTable.tsx`: `useState` → `useQueryState("q")` / `useQueryState("level")` — filtros en URL — *(Plan 8 F2.9)*
+- `AuditTable.test.tsx`: actualizado para usar `NuqsTestingAdapter` — *(Plan 8 F2.9)*
+
+##### Removed
+- `app/api/admin/webhooks/route.ts`: eliminado — reemplazado por Server Actions — *(Plan 8 F2.10)*
+- `app/api/admin/reports/route.ts`: eliminado — *(Plan 8 F2.10)*
+- `app/api/admin/external-sources/route.ts`: eliminado — *(Plan 8 F2.10)*
+- `app/api/admin/knowledge-gaps/route.ts`: eliminado — *(Plan 8 F2.10)*
+- `app/api/changelog/route.ts`: eliminado — datos pre-fetched en layout — *(Plan 8 F2.10)*
+- `app/api/memory/route.ts`: eliminado — reemplazado por Server Actions — *(Plan 8 F2.10)*
+- `app/api/projects/route.ts`: eliminado — *(Plan 8 F2.10)*
+- `app/api/chat/sessions/route.ts`: eliminado — datos pre-fetched en layout — *(Plan 8 F2.10)*
+- `app/api/share/route.ts`: eliminado — reemplazado por `actionCreateShare` — *(Plan 8 F2.10)*
+
+---
+
 ### Plan 8 — Optimización (Fase 1 completada)
 
 #### Added

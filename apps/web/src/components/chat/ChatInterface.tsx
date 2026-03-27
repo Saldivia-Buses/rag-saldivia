@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect, useTransition } from "react"
+import { useState, useRef, useEffect, useTransition, useCallback } from "react"
 import { Send, ThumbsUp, ThumbsDown, Loader2, Bookmark, RefreshCw, Copy, Check, GitBranch } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import type { DbChatSession, DbChatMessage } from "@rag-saldivia/db"
@@ -24,7 +24,7 @@ type Message = {
   id?: number
   role: "user" | "assistant"
   content: string
-  sources?: unknown[]
+  sources?: import("@rag-saldivia/shared").Citation[]
   feedback?: "up" | "down" | null
 }
 
@@ -33,7 +33,7 @@ function parseSessionMessages(session: DbChatSession & { messages?: DbChatMessag
     id: m.id ?? undefined,
     role: m.role as "user" | "assistant",
     content: m.content,
-    sources: (m.sources as unknown[]) ?? [],
+    sources: (m.sources as import("@rag-saldivia/shared").Citation[]) ?? [],
     feedback: null,
   }))
 }
@@ -47,12 +47,23 @@ function updateLastAssistantMessage(messages: Message[], content: string): Messa
   return updated
 }
 
+type Template = {
+  id: number
+  title: string
+  prompt: string
+  focusMode: string
+}
+
 export function ChatInterface({
   session,
   userId,
+  templates = [],
+  availableCollections = [],
 }: {
   session: DbChatSession & { messages?: DbChatMessage[] }
   userId: number
+  templates?: Template[]
+  availableCollections?: string[]
 }) {
   const [messages, setMessages] = useState<Message[]>(() => parseSessionMessages(session))
   const [input, setInput] = useState("")
@@ -65,7 +76,7 @@ export function ChatInterface({
   const [relatedQuestions, setRelatedQuestions] = useState<string[]>([])
   const streamStartRef = useRef<number>(0)
   const bottomRef = useRef<HTMLDivElement>(null)
-  const pendingSourcesRef = useRef<unknown[]>([])
+  const pendingSourcesRef = useRef<import("@rag-saldivia/shared").Citation[]>([])
   const { focusMode, setFocusMode } = useFocusMode()
   const [activeCollections, setActiveCollections] = useState<string[]>([session.collection])
 
@@ -88,7 +99,7 @@ export function ChatInterface({
     bottomRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
 
-  async function handleSend() {
+  const handleSend = useCallback(async () => {
     const query = input.trim()
     if (!query || phase === "streaming") return
 
@@ -144,22 +155,22 @@ export function ChatInterface({
         })
       }
     })
-  }
+  }, [input, phase, messages, stream, session.id, session.title, session.collection, startTransition])
 
-  function handleRegenerate() {
+  const handleRegenerate = useCallback(() => {
     const lastUser = [...messages].reverse().find((m) => m.role === "user")
     if (lastUser) {
       setInput(lastUser.content)
     }
-  }
+  }, [messages])
 
-  async function handleCopy(messageId: number, content: string) {
+  const handleCopy = useCallback(async (messageId: number, content: string) => {
     await navigator.clipboard.writeText(content)
     setCopiedId(messageId)
     setTimeout(() => setCopiedId(null), 2000)
-  }
+  }, [])
 
-  async function handleToggleSaved(messageId: number, content: string) {
+  const handleToggleSaved = useCallback(async (messageId: number, content: string) => {
     const isSaved = savedIds.has(messageId)
     setSavedIds((prev) => {
       const next = new Set(prev)
@@ -168,14 +179,14 @@ export function ChatInterface({
       return next
     })
     await actionToggleSaved(messageId, content, session.title, isSaved)
-  }
+  }, [savedIds, session.title])
 
-  async function handleFeedback(messageId: number, rating: "up" | "down") {
+  const handleFeedback = useCallback(async (messageId: number, rating: "up" | "down") => {
     await actionAddFeedback(messageId, rating)
     setMessages((prev) =>
       prev.map((m) => (m.id === messageId ? { ...m, feedback: rating } : m))
     )
-  }
+  }, [])
 
   return (
     <div className="flex-1 flex flex-col min-h-0">
@@ -359,6 +370,7 @@ export function ChatInterface({
         <div className="flex items-center gap-2 mb-2 flex-wrap">
           <CollectionSelector
             defaultCollection={session.collection}
+            availableCollections={availableCollections}
             onCollectionsChange={setActiveCollections}
             disabled={phase === "streaming"}
           />
@@ -368,6 +380,7 @@ export function ChatInterface({
             disabled={phase === "streaming"}
           />
           <PromptTemplates
+            templates={templates}
             onSelect={(prompt, fm) => { setInput(prompt); setFocusMode(fm as Parameters<typeof setFocusMode>[0]) }}
             disabled={phase === "streaming"}
           />

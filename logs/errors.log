@@ -22,3 +22,7 @@
 [2m02:24:40.870[0m  [31mERROR[0m  [1msystem.warning[0m  [2mmethod="POST"  path="/api/rag/generate"  status=500[0m
 [2m02:24:40.871[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="Something went wrong"[0m
 [2m02:24:40.867[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="test error"[0m
+[2m03:04:59.223[0m  [35mFATAL[0m  [1msystem.error[0m  [2merror="fatal error"[0m
+[2m03:04:59.221[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="test error"[0m
+[2m03:04:59.225[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="Something went wrong"[0m
+[2m03:04:59.224[0m  [31mERROR[0m  [1msystem.warning[0m  [2mmethod="POST"  path="/api/rag/generate"  status=500[0m

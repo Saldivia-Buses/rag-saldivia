@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useOptimistic, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { FolderOpen, Trash2, MessageSquare, Plus, Network } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/table"
 import type { CurrentUser } from "@/lib/auth/current-user"
 import { actionCreateSessionForDoc } from "@/app/actions/chat"
+import { actionCreateCollection, actionDeleteCollection } from "@/app/actions/collections"
 
 type Props = {
   collections: string[]
@@ -24,43 +25,41 @@ type Props = {
 
 export function CollectionsList({ collections: initial, user }: Props) {
   const router = useRouter()
-  const [collections, setCollections] = useState(initial)
+  const [optimisticCollections, applyOptimistic] = useOptimistic(
+    initial,
+    (state, action: { type: "delete"; name: string } | { type: "create"; name: string }) => {
+      if (action.type === "delete") return state.filter((c) => c !== action.name)
+      if (action.type === "create") return [...state, action.name]
+      return state
+    }
+  )
+  const [isPending, startTransition] = useTransition()
   const [creating, setCreating] = useState(false)
   const [newName, setNewName] = useState("")
   const [showCreate, setShowCreate] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  async function handleCreate(e: React.FormEvent) {
+  function handleCreate(e: React.FormEvent) {
     e.preventDefault()
     if (!newName.trim()) return
-    setCreating(true)
+    const name = newName.trim()
     setError(null)
-    try {
-      const res = await fetch("/api/rag/collections", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newName.trim() }),
-      })
-      const data = await res.json() as { ok: boolean; error?: string }
-      if (!data.ok) throw new Error(data.error ?? "Error")
-      setCollections((prev) => [...prev, newName.trim()])
-      setNewName("")
-      setShowCreate(false)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al crear")
-    } finally {
-      setCreating(false)
-    }
+    setNewName("")
+    setShowCreate(false)
+    startTransition(async () => {
+      applyOptimistic({ type: "create", name })
+      try { await actionCreateCollection(name) }
+      catch (err) { setError(err instanceof Error ? err.message : "Error al crear") }
+    })
   }
 
-  async function handleDelete(name: string) {
+  function handleDelete(name: string) {
     if (!confirm(`¿Eliminar la colección "${name}"? Esta acción no se puede deshacer.`)) return
-    try {
-      await fetch(`/api/rag/collections/${encodeURIComponent(name)}`, { method: "DELETE" })
-      setCollections((prev) => prev.filter((c) => c !== name))
-    } catch {
-      // silencioso
-    }
+    startTransition(async () => {
+      applyOptimistic({ type: "delete", name })
+      try { await actionDeleteCollection(name) }
+      catch { /* silencioso */ }
+    })
   }
 
   function handleChat(name: string) {
@@ -101,7 +100,7 @@ export function CollectionsList({ collections: initial, user }: Props) {
         </div>
       )}
 
-      {collections.length === 0 ? (
+      {optimisticCollections.length === 0 ? (
         <EmptyPlaceholder>
           <EmptyPlaceholder.Icon icon={FolderOpen} />
           <EmptyPlaceholder.Title>Sin colecciones disponibles</EmptyPlaceholder.Title>
@@ -122,7 +121,7 @@ export function CollectionsList({ collections: initial, user }: Props) {
           </TableHeader>
           <TableBody>
             {(
-              collections.map((name) => (
+              optimisticCollections.map((name) => (
                 <TableRow key={name}>
                   <TableCell>
                     <div className="flex items-center gap-2">

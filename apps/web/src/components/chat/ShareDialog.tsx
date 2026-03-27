@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { Share2, Copy, Check, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { actionCreateShare, actionRevokeShare } from "@/app/actions/share"
 import {
   Dialog,
   DialogContent,
@@ -25,15 +26,10 @@ export function ShareDialog({ sessionId }: Props) {
   async function handleCreate() {
     setLoading(true)
     try {
-      const res = await fetch("/api/share", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId, ttlDays: 7 }),
-      })
-      const data = await res.json() as { ok: boolean; url?: string; share?: { id: string } }
-      if (data.ok && data.url) {
-        setShareUrl(data.url)
-        setShareId(data.share?.id ?? null)
+      const result = await actionCreateShare(sessionId, 7)
+      if (result) {
+        setShareUrl(result.url)
+        setShareId(result.share.id)
       }
     } finally {
       setLoading(false)
@@ -49,7 +45,7 @@ export function ShareDialog({ sessionId }: Props) {
 
   async function handleRevoke() {
     if (!shareId) return
-    await fetch(`/api/share?id=${shareId}`, { method: "DELETE" })
+    await actionRevokeShare(shareId)
     setShareUrl(null)
     setShareId(null)
     setOpen(false)

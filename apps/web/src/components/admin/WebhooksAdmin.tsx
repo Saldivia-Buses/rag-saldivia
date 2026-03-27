@@ -1,45 +1,62 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useOptimistic, useState, useTransition } from "react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 import { Plus, Trash2, Copy, Check, Webhook } from "lucide-react"
+
+const WebhookSchema = z.object({
+  url: z.string().url("URL inválida — debe comenzar con https://"),
+})
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { EmptyPlaceholder } from "@/components/ui/empty-placeholder"
 import type { DbWebhook } from "@rag-saldivia/db"
+import { actionCreateWebhook, actionDeleteWebhook } from "@/app/actions/webhooks"
 
 const EVENT_OPTIONS = [
   "ingestion.completed", "ingestion.error",
   "query.completed", "query.low_confidence", "user.created",
 ]
 
-export function WebhooksAdmin() {
-  const [hooks, setHooks] = useState<DbWebhook[]>([])
+export function WebhooksAdmin({ initialHooks }: { initialHooks: DbWebhook[] }) {
+  const [optimisticHooks, applyOptimistic] = useOptimistic(
+    initialHooks,
+    (state, action: { type: "delete"; id: string } | { type: "create"; hook: DbWebhook }) => {
+      if (action.type === "delete") return state.filter((h) => h.id !== action.id)
+      if (action.type === "create") return [...state, action.hook]
+      return state
+    }
+  )
+  const [isPending, startTransition] = useTransition()
   const [showCreate, setShowCreate] = useState(false)
-  const [url, setUrl] = useState("")
   const [selectedEvents, setSelectedEvents] = useState<string[]>([])
-  const [creating, setCreating] = useState(false)
   const [copiedId, setCopiedId] = useState<string | null>(null)
 
-  useEffect(() => {
-    fetch("/api/admin/webhooks").then((r) => r.json())
-      .then((d: { ok: boolean; data?: DbWebhook[] }) => { if (d.ok) setHooks(d.data ?? []) })
-  }, [])
+  const urlForm = useForm<{ url: string }>({
+    resolver: zodResolver(WebhookSchema),
+    defaultValues: { url: "" },
+  })
 
-  async function handleCreate(e: React.FormEvent) {
-    e.preventDefault()
-    if (!url || selectedEvents.length === 0) return
-    setCreating(true)
-    try {
-      const res = await fetch("/api/admin/webhooks", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ url, events: selectedEvents }) })
-      const d = await res.json() as { ok: boolean; data?: DbWebhook }
-      if (d.ok && d.data) { setHooks((p) => [...p, d.data!]); setShowCreate(false); setUrl(""); setSelectedEvents([]) }
-    } finally { setCreating(false) }
+  function handleCreate(data: { url: string }) {
+    if (selectedEvents.length === 0) return
+    const events = selectedEvents
+    setShowCreate(false); setSelectedEvents([])
+    urlForm.reset()
+    startTransition(async () => {
+      const tempHook = { id: crypto.randomUUID(), userId: 0, url: data.url, events, secret: "...", active: true, createdAt: Date.now() } as DbWebhook
+      applyOptimistic({ type: "create", hook: tempHook })
+      await actionCreateWebhook({ url: data.url, events })
+    })
   }
 
-  async function handleDelete(id: string) {
-    await fetch(`/api/admin/webhooks?id=${id}`, { method: "DELETE" })
-    setHooks((p) => p.filter((h) => h.id !== id))
+  function handleDelete(id: string) {
+    startTransition(async () => {
+      applyOptimistic({ type: "delete", id })
+      await actionDeleteWebhook(id)
+    })
   }
 
   async function copySecret(secret: string, id: string) {
@@ -60,11 +77,12 @@ export function WebhooksAdmin() {
       </div>
 
       {showCreate && (
-        <form onSubmit={handleCreate} className="rounded-xl border border-border bg-surface p-5 space-y-4">
+        <form onSubmit={urlForm.handleSubmit(handleCreate)} className="rounded-xl border border-border bg-surface p-5 space-y-4">
           <h3 className="text-sm font-semibold text-fg">Nuevo webhook</h3>
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-fg-muted">URL destino</label>
-            <Input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://mi-sistema.com/webhook" required />
+            <Input {...urlForm.register("url")} placeholder="https://mi-sistema.com/webhook" />
+            {urlForm.formState.errors.url && <p className="text-xs text-destructive">{urlForm.formState.errors.url.message}</p>}
           </div>
           <div className="space-y-2">
             <label className="text-xs font-medium text-fg-muted">Eventos a escuchar</label>
@@ -85,13 +103,13 @@ export function WebhooksAdmin() {
             </div>
           </div>
           <div className="flex gap-2">
-            <Button size="sm" type="submit" disabled={creating || selectedEvents.length === 0}>{creating ? "Creando..." : "Crear webhook"}</Button>
+            <Button size="sm" type="submit" disabled={isPending || selectedEvents.length === 0}>{isPending ? "Creando..." : "Crear webhook"}</Button>
             <Button size="sm" variant="outline" type="button" onClick={() => setShowCreate(false)}>Cancelar</Button>
           </div>
         </form>
       )}
 
-      {hooks.length === 0 ? (
+      {optimisticHooks.length === 0 ? (
         <EmptyPlaceholder>
           <EmptyPlaceholder.Icon icon={Webhook} />
           <EmptyPlaceholder.Title>Sin webhooks configurados</EmptyPlaceholder.Title>
@@ -99,7 +117,7 @@ export function WebhooksAdmin() {
         </EmptyPlaceholder>
       ) : (
         <div className="space-y-2">
-          {hooks.map((h) => (
+          {optimisticHooks.map((h) => (
             <div key={h.id} className="p-4 rounded-xl border border-border bg-surface space-y-2">
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">

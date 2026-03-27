@@ -1,16 +1,16 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useMemo } from "react"
 import {
   LineChart, Line, BarChart, Bar, PieChart, Pie, Cell,
   XAxis, YAxis, Tooltip, ResponsiveContainer,
 } from "recharts"
 import { StatCard } from "@/components/ui/stat-card"
-import { SkeletonCard } from "@/components/ui/skeleton"
 import { EmptyPlaceholder } from "@/components/ui/empty-placeholder"
 import { BarChart2, MessageSquare, FolderOpen, ThumbsUp, Users } from "lucide-react"
+import { formatDate } from "@/lib/utils"
 
-type AnalyticsData = {
+export type AnalyticsData = {
   queriesByDay: Array<{ day: string; queries: number }>
   topCollections: Array<{ name: string; queries: number }>
   feedbackDistribution: Array<{ name: string; value: number }>
@@ -19,30 +19,24 @@ type AnalyticsData = {
 
 // Colores del design system — navy accent palette
 const CHART_PRIMARY   = "#1a5276"
-const CHART_SECONDARY = "#4a9fd4"
 const CHART_COLORS    = ["#1a5276", "#4a9fd4", "#93c5e8", "#d4e8f7"]
 
-export function AnalyticsDashboard() {
-  const [data, setData] = useState<AnalyticsData | null>(null)
-  const [loading, setLoading] = useState(true)
+export function AnalyticsDashboard({ data }: { data: AnalyticsData | null }) {
+  const queriesByDayFormatted = useMemo(
+    () => [...(data?.queriesByDay ?? [])].reverse().map((d) => ({ ...d, day: formatDate(new Date(d.day)) })),
+    [data?.queriesByDay]
+  )
 
-  useEffect(() => {
-    fetch("/api/admin/analytics")
-      .then((r) => r.json())
-      .then((d: { ok: boolean } & AnalyticsData) => { if (d.ok) setData(d) })
-      .finally(() => setLoading(false))
-  }, [])
+  const totalQueries = useMemo(
+    () => (data?.queriesByDay ?? []).reduce((s, d) => s + d.queries, 0),
+    [data?.queriesByDay]
+  )
 
-  if (loading) {
-    return (
-      <div className="p-6 space-y-6">
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-          {[0,1,2,3].map((i) => <SkeletonCard key={i} />)}
-        </div>
-        <SkeletonCard className="h-48" />
-      </div>
-    )
-  }
+  const { totalFeedback, positiveRate } = useMemo(() => {
+    const total = (data?.feedbackDistribution ?? []).reduce((s, d) => s + d.value, 0)
+    const positive = data?.feedbackDistribution[0]?.value ?? 0
+    return { totalFeedback: total, positiveRate: total > 0 ? Math.round((positive / total) * 100) : 0 }
+  }, [data?.feedbackDistribution])
 
   if (!data) {
     return (
@@ -55,11 +49,6 @@ export function AnalyticsDashboard() {
       </div>
     )
   }
-
-  const totalQueries  = data.queriesByDay.reduce((s, d) => s + d.queries, 0)
-  const totalFeedback = data.feedbackDistribution.reduce((s, d) => s + d.value, 0)
-  const positiveFeedback = data.feedbackDistribution[0]?.value ?? 0
-  const positiveRate  = totalFeedback > 0 ? Math.round((positiveFeedback / totalFeedback) * 100) : 0
 
   return (
     <div className="p-6 space-y-6">
@@ -80,9 +69,9 @@ export function AnalyticsDashboard() {
       {/* Queries por día */}
       <div className="rounded-xl border border-border bg-surface p-5">
         <h3 className="text-sm font-semibold text-fg mb-4">Queries por día</h3>
-        {data.queriesByDay.length > 0 ? (
+        {queriesByDayFormatted.length > 0 ? (
           <ResponsiveContainer width="100%" height={200}>
-            <LineChart data={[...data.queriesByDay].reverse()}>
+            <LineChart data={queriesByDayFormatted}>
               <XAxis dataKey="day" tick={{ fontSize: 11, fill: "var(--fg-muted)" }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 11, fill: "var(--fg-muted)" }} axisLine={false} tickLine={false} />
               <Tooltip

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useOptimistic, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import { Plus, Trash2, FolderKanban, MessageSquare } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -8,12 +8,20 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { EmptyPlaceholder } from "@/components/ui/empty-placeholder"
 import type { DbProject } from "@rag-saldivia/db"
+import { actionCreateProject, actionDeleteProject } from "@/app/actions/projects"
 
 type Props = { initialProjects: DbProject[] }
 
 export function ProjectsClient({ initialProjects }: Props) {
   const router = useRouter()
-  const [projects, setProjects] = useState(initialProjects)
+  const [optimisticProjects, applyOptimistic] = useOptimistic(
+    initialProjects,
+    (state, action: { type: "delete"; id: string }) => {
+      if (action.type === "delete") return state.filter((p) => p.id !== action.id)
+      return state
+    }
+  )
+  const [isPending, startTransition] = useTransition()
   const [showCreate, setShowCreate] = useState(false)
   const [form, setForm] = useState({ name: "", description: "", instructions: "" })
   const [creating, setCreating] = useState(false)
@@ -22,26 +30,20 @@ export function ProjectsClient({ initialProjects }: Props) {
     e.preventDefault()
     setCreating(true)
     try {
-      const res = await fetch("/api/projects", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      })
-      const d = await res.json() as { ok: boolean; data?: DbProject }
-      if (d.ok && d.data) {
-        setProjects((p) => [...p, d.data!])
-        setShowCreate(false)
-        setForm({ name: "", description: "", instructions: "" })
-      }
+      await actionCreateProject(form)
+      setShowCreate(false)
+      setForm({ name: "", description: "", instructions: "" })
     } finally {
       setCreating(false)
     }
   }
 
-  async function handleDelete(id: string) {
+  function handleDelete(id: string) {
     if (!confirm("¿Eliminar este proyecto?")) return
-    await fetch(`/api/projects?id=${id}`, { method: "DELETE" })
-    setProjects((p) => p.filter((pr) => pr.id !== id))
+    startTransition(async () => {
+      applyOptimistic({ type: "delete", id })
+      await actionDeleteProject(id)
+    })
   }
 
   return (
@@ -49,7 +51,7 @@ export function ProjectsClient({ initialProjects }: Props) {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-lg font-semibold text-fg">Proyectos</h1>
-          <p className="text-sm text-fg-muted mt-0.5">{projects.length} proyecto{projects.length !== 1 ? "s" : ""}</p>
+          <p className="text-sm text-fg-muted mt-0.5">{optimisticProjects.length} proyecto{optimisticProjects.length !== 1 ? "s" : ""}</p>
         </div>
         <Button size="sm" onClick={() => setShowCreate(!showCreate)}>
           <Plus className="h-3.5 w-3.5" /> Nuevo proyecto
@@ -83,7 +85,7 @@ export function ProjectsClient({ initialProjects }: Props) {
         </form>
       )}
 
-      {projects.length === 0 ? (
+      {optimisticProjects.length === 0 ? (
         <EmptyPlaceholder>
           <EmptyPlaceholder.Icon icon={FolderKanban} />
           <EmptyPlaceholder.Title>Sin proyectos</EmptyPlaceholder.Title>
@@ -93,7 +95,7 @@ export function ProjectsClient({ initialProjects }: Props) {
         </EmptyPlaceholder>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2">
-          {projects.map((p) => (
+          {optimisticProjects.map((p) => (
             <div key={p.id} className="rounded-xl border border-border bg-surface p-4 space-y-3 hover:shadow-sm transition-shadow">
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2 min-w-0">

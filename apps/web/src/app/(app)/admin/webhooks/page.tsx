@@ -1,8 +1,11 @@
 import { requireAdmin } from "@/lib/auth/current-user"
+import { listWebhooksByUser } from "@rag-saldivia/db"
 import { WebhooksAdmin } from "@/components/admin/WebhooksAdmin"
 
 export default async function WebhooksPage() {
-  await requireAdmin()
+  const admin = await requireAdmin()
+  const hooks = await listWebhooksByUser(admin.id)
+
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <div className="mb-6">
@@ -11,7 +14,7 @@ export default async function WebhooksPage() {
           Recibí notificaciones POST con firma HMAC-SHA256 cuando ocurran eventos en el sistema.
         </p>
       </div>
-      <WebhooksAdmin />
+      <WebhooksAdmin initialHooks={hooks} />
     </div>
   )
 }

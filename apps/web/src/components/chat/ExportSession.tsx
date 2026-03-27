@@ -23,7 +23,7 @@ export function ExportSession({ session }: Props) {
       messages: (session.messages ?? []).map((m) => ({
         role: m.role as "user" | "assistant",
         content: m.content,
-        sources: (m.sources as unknown[]) ?? [],
+        sources: (m.sources as import("@rag-saldivia/shared").Citation[]) ?? [],
       })),
     })
     const filename = `${session.title.replace(/\s+/g, "-").toLowerCase()}.md`

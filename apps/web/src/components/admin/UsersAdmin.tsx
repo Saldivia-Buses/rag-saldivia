@@ -1,8 +1,18 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useOptimistic, useState, useTransition } from "react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 import { UserPlus, Trash2, UserCheck, UserX } from "lucide-react"
 import type { DbUser, DbArea } from "@rag-saldivia/db"
+
+const CreateUserSchema = z.object({
+  email: z.string().email("Email inválido"),
+  name: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
+  password: z.string().min(8, "La contraseña debe tener al menos 8 caracteres"),
+  role: z.enum(["admin", "area_manager", "user"]),
+})
 import {
   actionCreateUser,
   actionDeleteUser,
@@ -41,25 +51,31 @@ export function UsersAdmin({
   users: UserWithAreas[]
   areas: DbArea[]
 }) {
-  const [users, setUsers] = useState(initialUsers)
+  const [optimisticUsers, applyOptimistic] = useOptimistic(
+    initialUsers,
+    (state, action: { type: "delete"; id: number }) => {
+      if (action.type === "delete") return state.filter((u) => u.id !== action.id)
+      return state
+    }
+  )
   const [showCreate, setShowCreate] = useState(false)
   const [isPending, startTransition] = useTransition()
-
-  const [newEmail, setNewEmail] = useState("")
-  const [newName, setNewName] = useState("")
-  const [newPassword, setNewPassword] = useState("")
-  const [newRole, setNewRole] = useState<"admin" | "area_manager" | "user">("user")
   const [newAreaIds, setNewAreaIds] = useState<number[]>([])
   const [formError, setFormError] = useState<string | null>(null)
 
-  async function handleCreate(e: React.FormEvent) {
-    e.preventDefault()
+  const createForm = useForm<z.infer<typeof CreateUserSchema>>({
+    resolver: zodResolver(CreateUserSchema),
+    defaultValues: { email: "", name: "", password: "", role: "user" },
+  })
+
+  function handleCreate(data: z.infer<typeof CreateUserSchema>) {
     setFormError(null)
     startTransition(async () => {
       try {
-        await actionCreateUser({ email: newEmail, name: newName, password: newPassword, role: newRole, areaIds: newAreaIds })
+        await actionCreateUser({ ...data, areaIds: newAreaIds })
         setShowCreate(false)
-        setNewEmail(""); setNewName(""); setNewPassword(""); setNewAreaIds([])
+        createForm.reset()
+        setNewAreaIds([])
       } catch (err) {
         setFormError(String(err))
       }
@@ -70,9 +86,12 @@ export function UsersAdmin({
     startTransition(async () => { await actionUpdateUser(user.id, { active: !user.active }) })
   }
 
-  async function handleDelete(id: number) {
+  function handleDelete(id: number) {
     if (!confirm("¿Eliminar este usuario? Esta acción no se puede deshacer.")) return
-    startTransition(async () => { await actionDeleteUser(id) })
+    startTransition(async () => {
+      applyOptimistic({ type: "delete", id })
+      await actionDeleteUser(id)
+    })
   }
 
   return (
@@ -81,7 +100,7 @@ export function UsersAdmin({
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-lg font-semibold text-fg">Usuarios</h1>
-          <p className="text-sm text-fg-muted mt-0.5">{users.length} usuario{users.length !== 1 ? "s" : ""} registrado{users.length !== 1 ? "s" : ""}</p>
+          <p className="text-sm text-fg-muted mt-0.5">{optimisticUsers.length} usuario{optimisticUsers.length !== 1 ? "s" : ""} registrado{optimisticUsers.length !== 1 ? "s" : ""}</p>
         </div>
         <Button size="sm" onClick={() => setShowCreate(!showCreate)}>
           <UserPlus className="h-3.5 w-3.5" />
@@ -93,14 +112,13 @@ export function UsersAdmin({
       {showCreate && (
         <div className="rounded-xl border border-border bg-surface p-5 space-y-4">
           <h3 className="text-sm font-semibold text-fg">Crear usuario</h3>
-          <form onSubmit={handleCreate} className="space-y-3">
+          <form onSubmit={createForm.handleSubmit(handleCreate)} className="space-y-3">
             <div className="grid grid-cols-2 gap-3">
-              <Input placeholder="Nombre completo" value={newName} onChange={(e) => setNewName(e.target.value)} required />
-              <Input placeholder="Email" type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} required />
-              <Input placeholder="Contraseña (mín. 8 caracteres)" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required minLength={8} />
+              <Input placeholder="Nombre completo" {...createForm.register("name")} />
+              <Input placeholder="Email" type="email" {...createForm.register("email")} />
+              <Input placeholder="Contraseña (mín. 8 caracteres)" type="password" {...createForm.register("password")} />
               <select
-                value={newRole}
-                onChange={(e) => setNewRole(e.target.value as typeof newRole)}
+                {...createForm.register("role")}
                 className="h-9 w-full rounded-md border border-border bg-bg px-3 text-sm text-fg focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
               >
                 <option value="user">Usuario</option>
@@ -108,6 +126,11 @@ export function UsersAdmin({
                 <option value="admin">Admin</option>
               </select>
             </div>
+            {(createForm.formState.errors.email || createForm.formState.errors.name || createForm.formState.errors.password) && (
+              <p className="text-xs text-destructive">
+                {createForm.formState.errors.email?.message ?? createForm.formState.errors.name?.message ?? createForm.formState.errors.password?.message}
+              </p>
+            )}
 
             {areas.length > 0 && (
               <div className="space-y-1.5">
@@ -145,7 +168,7 @@ export function UsersAdmin({
       )}
 
       {/* Tabla de usuarios */}
-      {users.length === 0 ? (
+      {optimisticUsers.length === 0 ? (
         <EmptyPlaceholder>
           <EmptyPlaceholder.Icon icon={Users} />
           <EmptyPlaceholder.Title>Sin usuarios</EmptyPlaceholder.Title>
@@ -165,7 +188,7 @@ export function UsersAdmin({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {users.map((user) => (
+              {optimisticUsers.map((user) => (
                 <TableRow key={user.id}>
                   <TableCell className="font-medium text-fg">{user.name}</TableCell>
                   <TableCell className="text-fg-muted">{user.email}</TableCell>

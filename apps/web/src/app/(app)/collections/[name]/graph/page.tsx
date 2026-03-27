@@ -1,7 +1,13 @@
 import { requireUser } from "@/lib/auth/current-user"
-import { DocumentGraph } from "@/components/collections/DocumentGraph"
+import dynamic from "next/dynamic"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
+
+const DocumentGraph = dynamic(
+  () => import("@/components/collections/DocumentGraph").then((m) => ({ default: m.DocumentGraph })),
+  { ssr: false, loading: () => <Skeleton className="h-96 w-full rounded-xl" /> }
+)
 
 export default async function CollectionGraphPage({
   params,

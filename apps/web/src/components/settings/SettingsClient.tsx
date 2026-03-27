@@ -1,6 +1,9 @@
 "use client"
 
 import { useState, useTransition } from "react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 import type { DbUser } from "@rag-saldivia/db"
 import {
   actionUpdateProfile,
@@ -12,16 +15,33 @@ import { Input } from "@/components/ui/input"
 
 type Tab = "perfil" | "contrasena" | "preferencias"
 
+const ProfileSchema = z.object({
+  name: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
+})
+
+const PasswordSchema = z.object({
+  currentPassword: z.string().min(1, "La contraseña actual es requerida"),
+  newPassword: z.string().min(8, "La nueva contraseña debe tener al menos 8 caracteres"),
+})
+
+type ProfileInput = z.infer<typeof ProfileSchema>
+type PasswordInput = z.infer<typeof PasswordSchema>
+
 export function SettingsClient({ user }: { user: DbUser }) {
   const [tab, setTab] = useState<Tab>("perfil")
   const [isPending, startTransition] = useTransition()
-
-  const [name, setName] = useState(user.name)
   const [profileMsg, setProfileMsg] = useState<{ type: "ok" | "error"; text: string } | null>(null)
-
-  const [currentPwd, setCurrentPwd] = useState("")
-  const [newPwd, setNewPwd] = useState("")
   const [pwdMsg, setPwdMsg] = useState<{ type: "ok" | "error"; text: string } | null>(null)
+
+  const profileForm = useForm<ProfileInput>({
+    resolver: zodResolver(ProfileSchema),
+    defaultValues: { name: user.name },
+  })
+
+  const passwordForm = useForm<PasswordInput>({
+    resolver: zodResolver(PasswordSchema),
+    defaultValues: { currentPassword: "", newPassword: "" },
+  })
 
   const preferences = user.preferences as Record<string, unknown>
 
@@ -31,12 +51,11 @@ export function SettingsClient({ user }: { user: DbUser }) {
     { key: "preferencias", label: "Preferencias" },
   ]
 
-  async function handleProfileSave(e: React.FormEvent) {
-    e.preventDefault()
+  function handleProfileSave(data: ProfileInput) {
     setProfileMsg(null)
     startTransition(async () => {
       try {
-        await actionUpdateProfile({ name })
+        await actionUpdateProfile(data)
         setProfileMsg({ type: "ok", text: "Perfil actualizado" })
       } catch (err) {
         setProfileMsg({ type: "error", text: String(err) })
@@ -44,18 +63,13 @@ export function SettingsClient({ user }: { user: DbUser }) {
     })
   }
 
-  async function handlePasswordSave(e: React.FormEvent) {
-    e.preventDefault()
+  function handlePasswordSave(data: PasswordInput) {
     setPwdMsg(null)
-    if (newPwd.length < 8) {
-      setPwdMsg({ type: "error", text: "La contraseña debe tener al menos 8 caracteres" })
-      return
-    }
     startTransition(async () => {
       try {
-        await actionUpdatePassword(currentPwd, newPwd)
+        await actionUpdatePassword(data.currentPassword, data.newPassword)
         setPwdMsg({ type: "ok", text: "Contraseña actualizada" })
-        setCurrentPwd(""); setNewPwd("")
+        passwordForm.reset()
       } catch (err) {
         setPwdMsg({ type: "error", text: String(err) })
       }
@@ -88,10 +102,13 @@ export function SettingsClient({ user }: { user: DbUser }) {
 
       {/* Perfil */}
       {tab === "perfil" && (
-        <form onSubmit={handleProfileSave} className="space-y-4">
+        <form onSubmit={profileForm.handleSubmit(handleProfileSave)} className="space-y-4">
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-fg">Nombre</label>
-            <Input value={name} onChange={(e) => setName(e.target.value)} />
+            <Input {...profileForm.register("name")} />
+            {profileForm.formState.errors.name && (
+              <p className="text-xs text-destructive">{profileForm.formState.errors.name.message}</p>
+            )}
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-fg">Email</label>
@@ -111,21 +128,27 @@ export function SettingsClient({ user }: { user: DbUser }) {
 
       {/* Contraseña */}
       {tab === "contrasena" && (
-        <form onSubmit={handlePasswordSave} className="space-y-4">
+        <form onSubmit={passwordForm.handleSubmit(handlePasswordSave)} className="space-y-4">
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-fg">Contraseña actual</label>
-            <Input type="password" value={currentPwd} onChange={(e) => setCurrentPwd(e.target.value)} required />
+            <Input type="password" {...passwordForm.register("currentPassword")} />
+            {passwordForm.formState.errors.currentPassword && (
+              <p className="text-xs text-destructive">{passwordForm.formState.errors.currentPassword.message}</p>
+            )}
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-fg">Nueva contraseña</label>
-            <Input type="password" value={newPwd} onChange={(e) => setNewPwd(e.target.value)} required minLength={8} />
+            <Input type="password" {...passwordForm.register("newPassword")} />
+            {passwordForm.formState.errors.newPassword && (
+              <p className="text-xs text-destructive">{passwordForm.formState.errors.newPassword.message}</p>
+            )}
           </div>
           {pwdMsg && (
             <p className={`text-sm ${pwdMsg.type === "ok" ? "text-success" : "text-destructive"}`}>
               {pwdMsg.text}
             </p>
           )}
-          <Button type="submit" disabled={isPending || !currentPwd || !newPwd} size="sm">
+          <Button type="submit" disabled={isPending || !passwordForm.formState.isDirty} size="sm">
             {isPending ? "Actualizando..." : "Actualizar contraseña"}
           </Button>
         </form>

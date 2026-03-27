@@ -118,3 +118,12 @@
 [2m02:24:40.867[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="test error"[0m
 [2m02:24:40.870[0m  [32mINFO [0m  [1mauth.login[0m  [2memail="test@example.com"[0m
 [2m02:24:40.851[0m  [32mINFO [0m  [1msystem.warning[0m  [2mmessage="test info"[0m
+[2m03:04:59.223[0m  [35mFATAL[0m  [1msystem.error[0m  [2merror="fatal error"[0m
+[2m03:04:59.198[0m  [32mINFO [0m  [1msystem.warning[0m  [2mmessage="test info"[0m
+[2m03:04:59.223[0m  [32mINFO [0m  [1msystem.warning[0m  [2mmethod="GET"  path="/api/health"  status=200[0m
+[2m03:04:59.221[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="test error"[0m
+[2m03:04:59.222[0m  [36mDEBUG[0m  [1msystem.warning[0m  [2mdetail="debug info"[0m
+[2m03:04:59.220[0m  [33mWARN [0m  [1msystem.warning[0m  [2mmessage="test warn"[0m
+[2m03:04:59.225[0m  [31mERROR[0m  [1msystem.error[0m  [2merror="Something went wrong"[0m
+[2m03:04:59.224[0m  [32mINFO [0m  [1mauth.login[0m  [2memail="test@example.com"[0m
+[2m03:04:59.224[0m  [31mERROR[0m  [1msystem.warning[0m  [2mmethod="POST"  path="/api/rag/generate"  status=500[0m

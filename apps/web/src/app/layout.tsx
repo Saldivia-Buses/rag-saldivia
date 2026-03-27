@@ -3,6 +3,7 @@ import { Instrument_Sans } from "next/font/google"
 import { Providers } from "@/components/providers"
 import { Toaster } from "@/components/ui/sonner"
 import { ReactScanProvider } from "@/components/dev/ReactScanProvider"
+import { NuqsAdapter } from "nuqs/adapters/next/app"
 import "./globals.css"
 
 const instrumentSans = Instrument_Sans({
@@ -27,10 +28,12 @@ export default function RootLayout({
     <html lang="es" suppressHydrationWarning className={instrumentSans.variable}>
       <body className="min-h-screen antialiased" style={{ background: "var(--background)", color: "var(--foreground)" }}>
         <ReactScanProvider />
-        <Providers>
-          {children}
-          <Toaster />
-        </Providers>
+        <NuqsAdapter>
+          <Providers>
+            {children}
+            <Toaster />
+          </Providers>
+        </NuqsAdapter>
       </body>
     </html>
   )

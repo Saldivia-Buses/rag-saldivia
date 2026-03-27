@@ -1,8 +1,11 @@
 import { requireAdmin } from "@/lib/auth/current-user"
+import { listReportsByUser } from "@rag-saldivia/db"
 import { ReportsAdmin } from "@/components/admin/ReportsAdmin"
 
 export default async function ReportsPage() {
-  await requireAdmin()
+  const admin = await requireAdmin()
+  const reports = await listReportsByUser(admin.id)
+
   return (
     <div className="p-6 max-w-4xl mx-auto">
       <div className="mb-6">
@@ -12,7 +15,7 @@ export default async function ReportsPage() {
           {!process.env["SMTP_HOST"] && " (Email no configurado — se usará destino Guardados)"}
         </p>
       </div>
-      <ReportsAdmin />
+      <ReportsAdmin initialReports={reports} />
     </div>
   )
 }

@@ -1,7 +1,7 @@
 "use server"
 
 import { requireUser } from "@/lib/auth/current-user"
-import { updateUser, updatePassword, getUserById, getDb, users } from "@rag-saldivia/db"
+import { updateUser, updatePassword, getUserById, getDb, users, setMemory, deleteMemory } from "@rag-saldivia/db"
 import { eq } from "drizzle-orm"
 import { log } from "@rag-saldivia/logger/backend"
 import { revalidatePath } from "next/cache"
@@ -43,4 +43,14 @@ export async function actionResetOnboarding() {
   const db = getDb()
   await db.update(users).set({ onboardingCompleted: false }).where(eq(users.id, user.id))
   revalidatePath("/")
+}
+
+export async function actionAddMemory(key: string, value: string) {
+  const user = await requireUser()
+  await setMemory(user.id, key, value, "explicit")
+}
+
+export async function actionDeleteMemory(key: string) {
+  const user = await requireUser()
+  await deleteMemory(user.id, key)
 }

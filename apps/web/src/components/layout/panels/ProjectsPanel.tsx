@@ -1,24 +1,15 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { Plus, FolderKanban } from "lucide-react"
 import { Separator } from "@/components/ui/separator"
 import type { DbProject } from "@rag-saldivia/db"
 
-export function ProjectsPanel() {
+export function ProjectsPanel({ initialProjects }: { initialProjects: DbProject[] }) {
   const pathname = usePathname()
-  const [projects, setProjects] = useState<DbProject[]>([])
-
-  useEffect(() => {
-    fetch("/api/projects")
-      .then((r) => r.json())
-      .then((d: { ok: boolean; data?: DbProject[] }) => {
-        if (d.ok) setProjects(d.data ?? [])
-      })
-      .catch(() => {})
-  }, [])
+  const [projects] = useState<DbProject[]>(initialProjects)
 
   return (
     <div className="flex flex-col h-full" style={{ background: "var(--sidebar-bg)" }}>

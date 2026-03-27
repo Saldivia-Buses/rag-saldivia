@@ -25,6 +25,9 @@ import {
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { CurrentUser } from "@/lib/auth/current-user"
+import { actionLogout } from "@/app/actions/auth"
+
+type Changelog = { version: string; entries: { version: string; content: string }[] }
 
 type NavItem = {
   href: string
@@ -72,14 +75,16 @@ export function NavRail({
   user,
   hidden,
   unreadCount = 0,
+  changelog,
 }: {
   user: CurrentUser
   hidden?: boolean
   unreadCount?: number
+  changelog: Changelog
 }) {
   const pathname = usePathname()
   const [whatsNewOpen, setWhatsNewOpen] = useState(false)
-  const hasNewVersion = useHasNewVersion("0.1.0")
+  const hasNewVersion = useHasNewVersion(changelog.version)
   const visible = NAV_ITEMS.filter(
     (i) => !i.roles || i.roles.includes(user.role)
   )
@@ -111,7 +116,7 @@ export function NavRail({
             </div>
           )}
         </div>
-        <WhatsNewPanel open={whatsNewOpen} onClose={() => setWhatsNewOpen(false)} />
+        <WhatsNewPanel open={whatsNewOpen} onClose={() => setWhatsNewOpen(false)} changelog={changelog} />
 
         {/* Separador */}
         <div className="w-5 h-px bg-border mb-1" />
@@ -135,10 +140,7 @@ export function NavRail({
           <Tooltip>
             <TooltipTrigger asChild>
               <button
-                onClick={async () => {
-                  await fetch("/api/auth/logout", { method: "DELETE" })
-                  window.location.href = "/login"
-                }}
+                onClick={() => actionLogout()}
                 className="w-9 h-9 flex items-center justify-center rounded-md text-fg-subtle hover:text-fg hover:bg-surface-2 transition-colors"
               >
                 <LogOut size={15} />

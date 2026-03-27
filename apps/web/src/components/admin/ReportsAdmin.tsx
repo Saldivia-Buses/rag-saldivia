@@ -1,7 +1,18 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useOptimistic, useState, useTransition } from "react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 import { Plus, Trash2, FileText } from "lucide-react"
+
+const ReportSchema = z.object({
+  query: z.string().min(5, "La query debe tener al menos 5 caracteres"),
+  collection: z.string().min(1, "La colección es requerida"),
+  schedule: z.enum(["daily", "weekly", "monthly"]),
+  destination: z.enum(["saved", "email"]),
+  email: z.string().optional(),
+})
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -9,35 +20,46 @@ import { Textarea } from "@/components/ui/textarea"
 import { EmptyPlaceholder } from "@/components/ui/empty-placeholder"
 import type { DbScheduledReport } from "@rag-saldivia/db"
 import { formatDate } from "@/lib/utils"
+import { actionCreateReport, actionDeleteReport } from "@/app/actions/reports"
 
 const SCHEDULE_LABELS: Record<string, string> = { daily: "Diario", weekly: "Semanal", monthly: "Mensual" }
 
 const SELECT_CLASS = "h-9 w-full rounded-md border border-border bg-bg px-3 text-sm text-fg focus:outline-none focus:ring-1 focus:ring-ring"
 
-export function ReportsAdmin() {
-  const [reports, setReports] = useState<DbScheduledReport[]>([])
+export function ReportsAdmin({ initialReports }: { initialReports: DbScheduledReport[] }) {
+  const [optimisticReports, applyOptimistic] = useOptimistic(
+    initialReports,
+    (state, action: { type: "delete"; id: string }) => {
+      if (action.type === "delete") return state.filter((r) => r.id !== action.id)
+      return state
+    }
+  )
+  const [isPending, startTransition] = useTransition()
   const [showCreate, setShowCreate] = useState(false)
-  const [form, setForm] = useState({ query: "", collection: "", schedule: "daily", destination: "saved", email: "" })
-  const [creating, setCreating] = useState(false)
 
-  useEffect(() => {
-    fetch("/api/admin/reports").then((r) => r.json())
-      .then((d: { ok: boolean; data?: DbScheduledReport[] }) => { if (d.ok) setReports(d.data ?? []) })
-  }, [])
+  const reportForm = useForm<z.infer<typeof ReportSchema>>({
+    resolver: zodResolver(ReportSchema),
+    defaultValues: { query: "", collection: "", schedule: "daily", destination: "saved", email: "" },
+  })
 
-  async function handleCreate(e: React.FormEvent) {
-    e.preventDefault()
-    setCreating(true)
-    try {
-      const res = await fetch("/api/admin/reports", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form) })
-      const d = await res.json() as { ok: boolean; data?: DbScheduledReport }
-      if (d.ok && d.data) { setReports((p) => [...p, d.data!]); setShowCreate(false); setForm({ query: "", collection: "", schedule: "daily", destination: "saved", email: "" }) }
-    } finally { setCreating(false) }
+  function handleCreate(data: z.infer<typeof ReportSchema>) {
+    startTransition(async () => {
+      const report = await actionCreateReport({
+        query: data.query,
+        collection: data.collection,
+        schedule: data.schedule,
+        destination: data.destination,
+        email: data.email || undefined,
+      })
+      if (report) { setShowCreate(false); reportForm.reset() }
+    })
   }
 
-  async function handleDelete(id: string) {
-    await fetch(`/api/admin/reports?id=${id}`, { method: "DELETE" })
-    setReports((p) => p.filter((r) => r.id !== id))
+  function handleDelete(id: string) {
+    startTransition(async () => {
+      applyOptimistic({ type: "delete", id })
+      await actionDeleteReport(id)
+    })
   }
 
   return (
@@ -53,44 +75,45 @@ export function ReportsAdmin() {
       </div>
 
       {showCreate && (
-        <form onSubmit={handleCreate} className="rounded-xl border border-border bg-surface p-5 space-y-3">
+        <form onSubmit={reportForm.handleSubmit(handleCreate)} className="rounded-xl border border-border bg-surface p-5 space-y-3">
           <h3 className="text-sm font-semibold text-fg">Nuevo informe</h3>
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-fg-muted">Query</label>
-            <Textarea value={form.query} onChange={(e) => setForm((p) => ({ ...p, query: e.target.value }))} placeholder="¿Cuáles son los contratos vigentes?" required className="min-h-[60px]" />
+            <Textarea {...reportForm.register("query")} placeholder="¿Cuáles son los contratos vigentes?" className="min-h-[60px]" />
+            {reportForm.formState.errors.query && <p className="text-xs text-destructive">{reportForm.formState.errors.query.message}</p>}
           </div>
           <div className="space-y-1.5">
             <label className="text-xs font-medium text-fg-muted">Colección</label>
-            <Input value={form.collection} onChange={(e) => setForm((p) => ({ ...p, collection: e.target.value }))} required />
+            <Input {...reportForm.register("collection")} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-fg-muted">Frecuencia</label>
-              <select value={form.schedule} onChange={(e) => setForm((p) => ({ ...p, schedule: e.target.value }))} className={SELECT_CLASS}>
+              <select {...reportForm.register("schedule")} className={SELECT_CLASS}>
                 <option value="daily">Diario</option><option value="weekly">Semanal</option><option value="monthly">Mensual</option>
               </select>
             </div>
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-fg-muted">Destino</label>
-              <select value={form.destination} onChange={(e) => setForm((p) => ({ ...p, destination: e.target.value }))} className={SELECT_CLASS}>
+              <select {...reportForm.register("destination")} className={SELECT_CLASS}>
                 <option value="saved">Guardados</option><option value="email">Email</option>
               </select>
             </div>
           </div>
-          {form.destination === "email" && (
+          {reportForm.watch("destination") === "email" && (
             <div className="space-y-1.5">
               <label className="text-xs font-medium text-fg-muted">Email destino</label>
-              <Input type="email" value={form.email} onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))} />
+              <Input type="email" {...reportForm.register("email")} />
             </div>
           )}
           <div className="flex gap-2 pt-1">
-            <Button size="sm" type="submit" disabled={creating}>{creating ? "Creando..." : "Crear informe"}</Button>
+            <Button size="sm" type="submit" disabled={isPending}>{isPending ? "Creando..." : "Crear informe"}</Button>
             <Button size="sm" variant="outline" type="button" onClick={() => setShowCreate(false)}>Cancelar</Button>
           </div>
         </form>
       )}
 
-      {reports.length === 0 ? (
+      {optimisticReports.length === 0 ? (
         <EmptyPlaceholder>
           <EmptyPlaceholder.Icon icon={FileText} />
           <EmptyPlaceholder.Title>Sin informes configurados</EmptyPlaceholder.Title>
@@ -98,7 +121,7 @@ export function ReportsAdmin() {
         </EmptyPlaceholder>
       ) : (
         <div className="space-y-2">
-          {reports.map((r) => (
+          {optimisticReports.map((r) => (
             <div key={r.id} className="p-4 rounded-xl border border-border bg-surface flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <p className="text-sm font-medium text-fg truncate">{r.query}</p>

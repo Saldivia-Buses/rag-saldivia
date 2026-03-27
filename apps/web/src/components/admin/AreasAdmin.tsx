@@ -1,11 +1,19 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useOptimistic, useTransition, useState } from "react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 import { Plus, Pencil, Trash2 } from "lucide-react"
 import type { DbArea } from "@rag-saldivia/db"
 import { actionCreateArea, actionUpdateArea, actionDeleteArea } from "@/app/actions/areas"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+
+const AreaSchema = z.object({
+  name: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
+  description: z.string().default(""),
+})
 import { EmptyPlaceholder } from "@/components/ui/empty-placeholder"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { FolderOpen } from "lucide-react"
@@ -14,41 +22,64 @@ type AreaWithCollections = DbArea & {
   areaCollections?: Array<{ collectionName: string; permission: string }>
 }
 
+type AreaAction =
+  | { type: "delete"; id: number }
+  | { type: "create"; area: AreaWithCollections }
+
 export function AreasAdmin({ areas: initialAreas }: { areas: AreaWithCollections[] }) {
-  const [areas, setAreas] = useState(initialAreas)
+  const [optimisticAreas, applyOptimistic] = useOptimistic(
+    initialAreas,
+    (state, action: AreaAction) => {
+      if (action.type === "delete") return state.filter((a) => a.id !== action.id)
+      if (action.type === "create") return [...state, action.area]
+      return state
+    }
+  )
   const [showCreate, setShowCreate] = useState(false)
   const [editingId, setEditingId] = useState<number | null>(null)
-  const [newName, setNewName] = useState("")
-  const [newDesc, setNewDesc] = useState("")
-  const [editName, setEditName] = useState("")
-  const [editDesc, setEditDesc] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
-  async function handleCreate(e: React.FormEvent) {
-    e.preventDefault()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const createForm = useForm<{ name: string; description: string }>({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(AreaSchema as any),
+    defaultValues: { name: "", description: "" },
+  })
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const editForm = useForm<{ name: string; description: string }>({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(AreaSchema as any),
+    defaultValues: { name: "", description: "" },
+  })
+
+  function handleCreate(data: { name: string; description: string }) {
     setError(null)
     startTransition(async () => {
+      applyOptimistic({ type: "create", area: { id: Date.now(), name: data.name, description: data.description, createdAt: Date.now(), areaCollections: [] } })
       try {
-        await actionCreateArea(newName, newDesc)
-        setShowCreate(false); setNewName(""); setNewDesc("")
+        await actionCreateArea(data.name, data.description || undefined)
+        setShowCreate(false)
+        createForm.reset()
       } catch (err) { setError(String(err)) }
     })
   }
 
-  async function handleUpdate(id: number) {
+  function handleUpdate(id: number, data: { name: string; description: string }) {
     setError(null)
     startTransition(async () => {
       try {
-        await actionUpdateArea(id, { name: editName, description: editDesc })
+        await actionUpdateArea(id, { name: data.name, description: data.description })
         setEditingId(null)
       } catch (err) { setError(String(err)) }
     })
   }
 
-  async function handleDelete(id: number, name: string) {
+  function handleDelete(id: number, name: string) {
     if (!confirm(`¿Eliminar el área "${name}"?\nTodos los usuarios del área perderán el acceso.`)) return
     startTransition(async () => {
+      applyOptimistic({ type: "delete", id })
       try { await actionDeleteArea(id) }
       catch (err) { setError(String(err)) }
     })
@@ -59,7 +90,7 @@ export function AreasAdmin({ areas: initialAreas }: { areas: AreaWithCollections
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-lg font-semibold text-fg">Áreas</h1>
-          <p className="text-sm text-fg-muted mt-0.5">{areas.length} área{areas.length !== 1 ? "s" : ""}</p>
+          <p className="text-sm text-fg-muted mt-0.5">{optimisticAreas.length} área{optimisticAreas.length !== 1 ? "s" : ""}</p>
         </div>
         <Button size="sm" onClick={() => setShowCreate(!showCreate)}>
           <Plus className="h-3.5 w-3.5" /> Nueva área
@@ -69,10 +100,11 @@ export function AreasAdmin({ areas: initialAreas }: { areas: AreaWithCollections
       {error && <p className="text-sm text-destructive">{error}</p>}
 
       {showCreate && (
-        <form onSubmit={handleCreate} className="rounded-xl border border-border bg-surface p-5 space-y-3">
+        <form onSubmit={createForm.handleSubmit(handleCreate)} className="rounded-xl border border-border bg-surface p-5 space-y-3">
           <h3 className="text-sm font-semibold text-fg">Nueva área</h3>
-          <Input placeholder="Nombre del área" value={newName} onChange={(e) => setNewName(e.target.value)} required />
-          <Input placeholder="Descripción (opcional)" value={newDesc} onChange={(e) => setNewDesc(e.target.value)} />
+          <Input placeholder="Nombre del área" {...createForm.register("name")} />
+          {createForm.formState.errors.name && <p className="text-xs text-destructive">{createForm.formState.errors.name.message}</p>}
+          <Input placeholder="Descripción (opcional)" {...createForm.register("description")} />
           <div className="flex gap-2">
             <Button size="sm" type="submit" disabled={isPending}>{isPending ? "Creando..." : "Crear"}</Button>
             <Button size="sm" variant="outline" type="button" onClick={() => setShowCreate(false)}>Cancelar</Button>
@@ -80,7 +112,7 @@ export function AreasAdmin({ areas: initialAreas }: { areas: AreaWithCollections
         </form>
       )}
 
-      {areas.length === 0 ? (
+      {optimisticAreas.length === 0 ? (
         <EmptyPlaceholder>
           <EmptyPlaceholder.Icon icon={FolderOpen} />
           <EmptyPlaceholder.Title>Sin áreas</EmptyPlaceholder.Title>
@@ -98,17 +130,17 @@ export function AreasAdmin({ areas: initialAreas }: { areas: AreaWithCollections
               </TableRow>
             </TableHeader>
             <TableBody>
-              {areas.map((area) => (
+              {optimisticAreas.map((area) => (
                 <TableRow key={area.id}>
                   <TableCell>
                     {editingId === area.id
-                      ? <Input value={editName} onChange={(e) => setEditName(e.target.value)} className="h-7 text-xs" />
+                      ? <Input {...editForm.register("name")} className="h-7 text-xs" />
                       : <span className="font-medium text-fg">{area.name}</span>
                     }
                   </TableCell>
                   <TableCell className="text-fg-muted">
                     {editingId === area.id
-                      ? <Input value={editDesc} onChange={(e) => setEditDesc(e.target.value)} className="h-7 text-xs" />
+                      ? <Input {...editForm.register("description")} className="h-7 text-xs" />
                       : area.description || "—"
                     }
                   </TableCell>
@@ -119,13 +151,13 @@ export function AreasAdmin({ areas: initialAreas }: { areas: AreaWithCollections
                     <div className="flex gap-1 justify-end">
                       {editingId === area.id ? (
                         <>
-                          <Button size="sm" className="h-7 text-xs" onClick={() => handleUpdate(area.id)} disabled={isPending}>Guardar</Button>
+                          <Button size="sm" className="h-7 text-xs" onClick={() => handleUpdate(area.id, editForm.getValues())} disabled={isPending}>Guardar</Button>
                           <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => setEditingId(null)}>Cancelar</Button>
                         </>
                       ) : (
                         <>
                           <Button variant="ghost" size="icon" className="h-7 w-7" title="Editar"
-                            onClick={() => { setEditingId(area.id); setEditName(area.name); setEditDesc(area.description) }}>
+                            onClick={() => { setEditingId(area.id); editForm.reset({ name: area.name, description: area.description ?? "" }) }}>
                             <Pencil className="h-3.5 w-3.5" />
                           </Button>
                           <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" title="Eliminar"

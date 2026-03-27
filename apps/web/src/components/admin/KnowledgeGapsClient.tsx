@@ -1,17 +1,15 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import { Upload } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { EmptyPlaceholder } from "@/components/ui/empty-placeholder"
-import { SkeletonTable } from "@/components/ui/skeleton"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { downloadFile } from "@/lib/export"
 import { formatDate } from "@/lib/utils"
 import Link from "next/link"
 import { SearchX } from "lucide-react"
 
-type Gap = {
+export type KnowledgeGap = {
   messageId: number
   content: string
   sessionId: string
@@ -20,17 +18,7 @@ type Gap = {
   timestamp: number
 }
 
-export function KnowledgeGapsClient() {
-  const [gaps, setGaps] = useState<Gap[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    fetch("/api/admin/knowledge-gaps")
-      .then((r) => r.json())
-      .then((d: { ok: boolean; data?: Gap[] }) => { if (d.ok) setGaps(d.data ?? []) })
-      .finally(() => setLoading(false))
-  }, [])
-
+export function KnowledgeGapsClient({ gaps }: { gaps: KnowledgeGap[] }) {
   function exportCSV() {
     const rows = [
       ["Sesión", "Colección", "Respuesta", "Fecha"],
@@ -38,13 +26,6 @@ export function KnowledgeGapsClient() {
     ]
     downloadFile(rows.map((r) => r.join(",")).join("\n"), "knowledge-gaps.csv", "text/csv")
   }
-
-  if (loading) return (
-    <div className="p-6 space-y-4">
-      <div className="h-5 w-48 bg-surface-2 animate-pulse rounded" />
-      <SkeletonTable rows={4} cols={5} />
-    </div>
-  )
 
   return (
     <div className="p-6 space-y-5">

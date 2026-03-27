@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useQueryState } from "nuqs"
 import type { DbEvent } from "@rag-saldivia/db"
 import { Input } from "@/components/ui/input"
 import { Badge, type BadgeVariant } from "@/components/ui/badge"
@@ -16,8 +16,8 @@ const LEVEL_BADGE: Record<string, BadgeVariant> = {
 }
 
 export function AuditTable({ events, isAdmin }: { events: DbEvent[]; isAdmin: boolean }) {
-  const [filter, setFilter] = useState("")
-  const [levelFilter, setLevelFilter] = useState("ALL")
+  const [filter, setFilter] = useQueryState("q", { defaultValue: "" })
+  const [levelFilter, setLevelFilter] = useQueryState("level", { defaultValue: "ALL" })
 
   const filtered = events.filter((e) => {
     const matchesLevel  = levelFilter === "ALL" || e.level === levelFilter
@@ -38,12 +38,12 @@ export function AuditTable({ events, isAdmin }: { events: DbEvent[]; isAdmin: bo
         <Input
           placeholder="Buscar por tipo o contenido..."
           value={filter}
-          onChange={(e) => setFilter(e.target.value)}
+          onChange={(e) => setFilter(e.target.value || null)}
           className="flex-1"
         />
         <select
           value={levelFilter}
-          onChange={(e) => setLevelFilter(e.target.value)}
+          onChange={(e) => setLevelFilter(e.target.value === "ALL" ? null : e.target.value)}
           className="h-9 rounded-md border border-border bg-bg px-3 text-sm text-fg focus:outline-none focus:ring-1 focus:ring-ring"
         >
           <option value="ALL">Todos los niveles</option>

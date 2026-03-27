@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useCallback } from "react"
 import { Plus, MessageSquare, Trash2, Pencil, Check, X, Tag, Download, GitBranch } from "lucide-react"
 import type { DbChatSession } from "@rag-saldivia/db"
 import { actionDeleteSession, actionCreateSession, actionRenameSession, actionAddTag, actionRemoveTag } from "@/app/actions/chat"
@@ -55,7 +55,7 @@ export function SessionList({ sessions }: { sessions: DbChatSession[] }) {
     }))
   }
 
-  function toggleSelect(id: string, e: React.MouseEvent) {
+  const toggleSelect = useCallback((id: string, e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
     setSelected((prev) => {
@@ -64,18 +64,18 @@ export function SessionList({ sessions }: { sessions: DbChatSession[] }) {
       else next.add(id)
       return next
     })
-  }
+  }, [])
 
-  async function bulkDelete() {
+  const bulkDelete = useCallback(async () => {
     if (!confirm(`¿Eliminar ${selected.size} sesiones?`)) return
     for (const id of selected) {
       await actionDeleteSession(id)
     }
     setSelected(new Set())
     if ([...selected].some((id) => pathname === `/chat/${id}`)) router.push("/chat")
-  }
+  }, [selected, pathname, router])
 
-  function bulkExport() {
+  const bulkExport = useCallback(() => {
     for (const id of selected) {
       const session = sessions.find((s) => s.id === id)
       if (!session) continue
@@ -83,7 +83,7 @@ export function SessionList({ sessions }: { sessions: DbChatSession[] }) {
       downloadFile(md, `${session.title}.md`, "text/markdown")
     }
     setSelected(new Set())
-  }
+  }, [selected, sessions])
 
   async function handleNew() {
     setCreating(true)

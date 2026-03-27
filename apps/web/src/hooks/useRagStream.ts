@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useCallback } from "react"
 import { detectArtifact, type ArtifactData } from "@/lib/rag/detect-artifact"
 import { parseSseLine } from "@/lib/rag/stream"
 import { CitationSchema, type Citation } from "@rag-saldivia/shared"
@@ -46,11 +46,11 @@ export function useRagStream({
   const [phase, setPhase] = useState<ChatPhase>("idle")
   const abortRef = useRef<AbortController | null>(null)
 
-  function abort() {
+  const abort = useCallback(() => {
     abortRef.current?.abort()
-  }
+  }, [])
 
-  async function stream(messages: StreamMessage[]): Promise<StreamResult | null> {
+  const stream = useCallback(async (messages: StreamMessage[]): Promise<StreamResult | null> => {
     setPhase("streaming")
     abortRef.current = new AbortController()
 
@@ -140,7 +140,7 @@ export function useRagStream({
       setPhase("error")
       return null
     }
-  }
+  }, [sessionId, collection, collections, focusMode, onDelta, onSources, onArtifact, onError])
 
   return { phase, stream, abort }
 }

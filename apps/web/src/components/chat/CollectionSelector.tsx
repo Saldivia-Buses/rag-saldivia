@@ -14,6 +14,7 @@ const STORAGE_KEY = "rag-selected-collections"
 
 type Props = {
   defaultCollection: string
+  availableCollections: string[]
   onCollectionsChange: (collections: string[]) => void
   disabled?: boolean
 }
@@ -31,8 +32,7 @@ function loadSaved(defaultCollection: string): string[] {
   return [defaultCollection]
 }
 
-export function CollectionSelector({ defaultCollection, onCollectionsChange, disabled }: Props) {
-  const [available, setAvailable] = useState<string[]>([])
+export function CollectionSelector({ defaultCollection, availableCollections, onCollectionsChange, disabled }: Props) {
   const [selected, setSelected] = useState<string[]>([defaultCollection])
   const [open, setOpen] = useState(false)
 
@@ -40,13 +40,6 @@ export function CollectionSelector({ defaultCollection, onCollectionsChange, dis
     const saved = loadSaved(defaultCollection)
     setSelected(saved)
     onCollectionsChange(saved)
-
-    fetch("/api/rag/collections")
-      .then((r) => r.json())
-      .then((d: { ok: boolean; data?: string[] }) => {
-        if (d.ok && d.data) setAvailable(d.data)
-      })
-      .catch(() => {})
   }, [defaultCollection])
 
   function toggle(collection: string) {
@@ -83,12 +76,12 @@ export function CollectionSelector({ defaultCollection, onCollectionsChange, dis
           Colecciones activas
         </p>
         <Separator className="mb-1" />
-        {available.length === 0 ? (
+        {availableCollections.length === 0 ? (
           <p className="text-xs px-1 py-1" style={{ color: "var(--muted-foreground)" }}>
-            Cargando...
+            Sin colecciones disponibles
           </p>
         ) : (
-          available.map((col) => {
+          availableCollections.map((col) => {
             const isSelected = selected.includes(col)
             return (
               <button

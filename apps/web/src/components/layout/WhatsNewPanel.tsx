@@ -8,42 +8,34 @@ const STORAGE_KEY = "last_seen_version"
 
 type Entry = { version: string; content: string }
 
+type Changelog = { version: string; entries: Entry[] }
+
 type Props = {
   open: boolean
   onClose: () => void
+  changelog: Changelog
 }
 
-export function WhatsNewPanel({ open, onClose }: Props) {
-  const [entries, setEntries] = useState<Entry[]>([])
-  const [version, setVersion] = useState("")
-
+export function WhatsNewPanel({ open, onClose, changelog }: Props) {
   useEffect(() => {
-    if (!open) return
-    fetch("/api/changelog")
-      .then((r) => r.json())
-      .then((data: { ok: boolean; version?: string; entries?: Entry[] }) => {
-        if (data.ok) {
-          setEntries(data.entries ?? [])
-          setVersion(data.version ?? "")
-          localStorage.setItem(STORAGE_KEY, data.version ?? "")
-        }
-      })
-      .catch(() => {})
-  }, [open])
+    if (open && changelog.version) {
+      localStorage.setItem(STORAGE_KEY, changelog.version)
+    }
+  }, [open, changelog.version])
 
   return (
     <Sheet open={open} onOpenChange={(o) => !o && onClose()}>
       <SheetContent side="right" className="w-80 overflow-y-auto">
         <SheetHeader>
           <SheetTitle>¿Qué hay de nuevo?</SheetTitle>
-          {version && (
+          {changelog.version && (
             <p className="text-xs" style={{ color: "var(--muted-foreground)" }}>
-              v{version}
+              v{changelog.version}
             </p>
           )}
         </SheetHeader>
         <div className="mt-4 space-y-6">
-          {entries.map((entry) => (
+          {changelog.entries.map((entry) => (
             <div key={entry.version}>
               <p className="text-xs font-semibold mb-2 uppercase tracking-wide" style={{ color: "var(--accent)" }}>
                 {entry.version}
@@ -55,9 +47,9 @@ export function WhatsNewPanel({ open, onClose }: Props) {
               />
             </div>
           ))}
-          {entries.length === 0 && (
+          {changelog.entries.length === 0 && (
             <p className="text-sm" style={{ color: "var(--muted-foreground)" }}>
-              Cargando...
+              Sin entradas de changelog.
             </p>
           )}
         </div>

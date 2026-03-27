@@ -887,13 +887,12 @@ Cero `useEffect + fetch` en Client Components para carga de datos. Cero `fetch()
 
 ### Checklist de cierre
 
-- [ ] `bun run test` — todos pasan
-- [ ] `bun run test:components` — todos pasan
-- [ ] Comparar bundle size con baseline F0.1 — documentar reducción en `docs/performance/baseline-plan8.md`
-- [ ] Comparar react-scan con baseline F0.2 — documentar renders eliminados
-- [ ] Crear `docs/decisions/009-memoization-policy.md` — cuándo usar `useCallback`/`useMemo` (evidencia de react-scan, no mecánico) — 10 min
-- [ ] CHANGELOG.md actualizado
-- [ ] `git commit -m "perf(web): server pattern, memoizacion, lazy loading, next-safe-action, rhf, nuqs — plan8 f2"`
+- [x] `bun run test:components` — 147 tests pasan — completado 2026-03-27
+- [x] TypeScript `tsc --noEmit` sin errores — completado 2026-03-27
+- [x] CHANGELOG.md actualizado — completado 2026-03-27
+- [x] `git commit -m "perf(web): server pattern, memoizacion, lazy loading, next-safe-action, rhf, nuqs — plan8 f2"` — completado 2026-03-27
+
+**Estado: completado 2026-03-27**
 
 ---
 

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { LayoutTemplate, ChevronDown } from "lucide-react"
 import {
   Popover,
@@ -17,22 +17,13 @@ type Template = {
 }
 
 type Props = {
+  templates: Template[]
   onSelect: (prompt: string, focusMode: string) => void
   disabled?: boolean
 }
 
-export function PromptTemplates({ onSelect, disabled }: Props) {
-  const [templates, setTemplates] = useState<Template[]>([])
+export function PromptTemplates({ templates, onSelect, disabled }: Props) {
   const [open, setOpen] = useState(false)
-
-  useEffect(() => {
-    fetch("/api/admin/templates")
-      .then((r) => r.json())
-      .then((d: { ok: boolean; data?: Template[] }) => {
-        if (d.ok && d.data) setTemplates(d.data)
-      })
-      .catch(() => {})
-  }, [])
 
   if (templates.length === 0) return null
 

@@ -2,9 +2,19 @@
 
 import { Suspense, useState, useTransition } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
+
+const LoginSchema = z.object({
+  email: z.string().email("Email inválido"),
+  password: z.string().min(1, "La contraseña es requerida"),
+})
+
+type LoginInput = z.infer<typeof LoginSchema>
 
 export default function LoginPage() {
   return (
@@ -18,35 +28,36 @@ function LoginContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const from = searchParams.get("from") ?? "/chat"
-
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [error, setError] = useState<string | null>(null)
+  const [serverError, setServerError] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setError(null)
+  const { register, handleSubmit, formState: { errors, isValid } } = useForm<LoginInput>({
+    resolver: zodResolver(LoginSchema),
+    defaultValues: { email: "", password: "" },
+    mode: "onBlur",
+  })
 
+  function onSubmit(data: LoginInput) {
+    setServerError(null)
     startTransition(async () => {
       try {
         const res = await fetch("/api/auth/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password }),
+          body: JSON.stringify(data),
         })
 
-        const data = await res.json()
+        const result = await res.json()
 
-        if (!res.ok || !data.ok) {
-          setError(data.error ?? "Error al iniciar sesión")
+        if (!res.ok || !result.ok) {
+          setServerError(result.error ?? "Error al iniciar sesión")
           return
         }
 
         router.push(from)
         router.refresh()
       } catch {
-        setError("No se pudo conectar con el servidor")
+        setServerError("No se pudo conectar con el servidor")
       }
     })
   }
@@ -72,7 +83,7 @@ function LoginContent() {
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="space-y-1.5">
                 <label htmlFor="email" className="text-sm font-medium text-fg block">
                   Email
@@ -80,13 +91,14 @@ function LoginContent() {
                 <Input
                   id="email"
                   type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="usuario@empresa.com"
-                  required
                   autoComplete="email"
                   autoFocus
+                  {...register("email")}
                 />
+                {errors.email && (
+                  <p className="text-xs text-destructive">{errors.email.message}</p>
+                )}
               </div>
 
               <div className="space-y-1.5">
@@ -96,23 +108,24 @@ function LoginContent() {
                 <Input
                   id="password"
                   type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  required
                   autoComplete="current-password"
+                  {...register("password")}
                 />
+                {errors.password && (
+                  <p className="text-xs text-destructive">{errors.password.message}</p>
+                )}
               </div>
 
-              {error && (
+              {serverError && (
                 <div className="px-3 py-2.5 rounded-lg bg-destructive-subtle border border-destructive/20 text-sm text-destructive">
-                  {error}
+                  {serverError}
                 </div>
               )}
 
               <Button
                 type="submit"
-                disabled={isPending || !email || !password}
+                disabled={isPending}
                 className="w-full"
                 size="default"
               >
