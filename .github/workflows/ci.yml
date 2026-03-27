@@ -140,6 +140,15 @@ jobs:
           github.event_name != 'pull_request'
         run: bun run test
 
+      - name: Verify line coverage threshold (packages/db ≥80%)
+        if: hashFiles('packages/db/package.json') != ''
+        working-directory: packages/db
+        run: |
+          set -e
+          LINE_COV=$(bun test src/__tests__ --coverage 2>&1 | grep "All files" | grep -oE '[0-9]+\.[0-9]+' | tail -1)
+          echo "packages/db line coverage: ${LINE_COV}%"
+          awk -v c="$LINE_COV" 'BEGIN { if (c+0 < 80) { print "::error::Coverage " c "% is below threshold of 80%"; exit 1 } }'
+
       - name: Skip (monorepo en construcción)
         if: hashFiles('apps/web/package.json') == ''
         run: echo "apps/web no existe aún — tests del monorepo pendientes"
@@ -271,6 +280,16 @@ jobs:
     name: Accessibility Audit
     runs-on: ubuntu-latest
     needs: [test-logic]
+    services:
+      redis:
+        image: redis:alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
     steps:
       - uses: actions/checkout@v4
 
@@ -290,16 +309,75 @@ jobs:
         run: bunx playwright install --with-deps chromium
         working-directory: apps/web
 
-      - name: Levantar dev server y esperar
-        run: |
-          MOCK_RAG=true bun run dev &
-          bunx wait-on http://localhost:3000 --timeout 60000
-        working-directory: apps/web
+      - name: Prepare database (SQLite + seed)
         env:
-          DATABASE_PATH: ./data/test.db
-          JWT_SECRET: test-secret-ci
-          SYSTEM_API_KEY: test-api-key-ci
+          DATABASE_PATH: ${{ github.workspace }}/apps/web/data/test.db
+        run: |
+          mkdir -p apps/web/data
+          bun run db:migrate
+          bun run db:seed
 
       - name: Run a11y audit
         run: bun run test:a11y
         working-directory: apps/web
+        env:
+          REDIS_URL: redis://localhost:6379
+          DATABASE_PATH: ./data/test.db
+          JWT_SECRET: test-secret-ci
+          SYSTEM_API_KEY: test-api-key-ci
+          MOCK_RAG: "true"
+          NEXT_PUBLIC_DISABLE_REACT_SCAN: "true"
+
+  # ── E2E Playwright — Redis + app ─────────────────────────────────────────
+  e2e:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    needs: [test-logic]
+    services:
+      redis:
+        image: redis:alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.bun/install/cache
+          key: bun-${{ hashFiles('**/bun.lockb') }}
+          restore-keys: bun-
+
+      - run: bun install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: bunx playwright install --with-deps chromium
+        working-directory: apps/web
+
+      - name: Prepare database (SQLite + seed)
+        env:
+          DATABASE_PATH: ${{ github.workspace }}/apps/web/data/test.db
+        run: |
+          mkdir -p apps/web/data
+          bun run db:migrate
+          bun run db:seed
+
+      - name: Run E2E tests
+        run: bun run test:e2e
+        working-directory: apps/web
+        env:
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: test-secret-for-ci-only
+          MOCK_RAG: "true"
+          DATABASE_PATH: ./data/test.db
+          NODE_ENV: test
+          NEXT_PUBLIC_DISABLE_REACT_SCAN: "true"
+          SYSTEM_API_KEY: test-api-key-ci
