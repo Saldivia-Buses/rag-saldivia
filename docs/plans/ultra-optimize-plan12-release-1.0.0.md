@@ -33,10 +33,10 @@ Es el momento del release 1.0.0.
 ## Orden de ejecución
 
 ```
-R1 → R2 → R3 → R4 → R5 → R6 → R7
+R0.1 → R0.2 → R1 → R2 → R3 → R4 → R5 → R6 → R7
 ```
 
-El orden es estricto: el tag se crea último, después de que todo está en el repo remoto y verificado.
+El orden es estricto: los fixes pre-release (R0.x) van primero porque afectan el CI y los tests. El tag se crea último.
 
 ---
 
@@ -44,6 +44,118 @@ El orden es estricto: el tag se crea último, después de que todo está en el r
 
 Formato: `- [ ] Descripción`
 Al completar: `- [x] Descripción — completado YYYY-MM-DD`
+
+---
+
+## R0.1 — Fix: a11y test falla silenciosamente sin Redis *(15 min)*
+
+Objetivo: `bun run test:a11y` sin Redis corriendo muestra un skip explicativo en lugar de pasar "en verde" auditando páginas incorrectas.
+
+**Problema concreto:** el `beforeEach` de `apps/web/tests/a11y/pages.spec.ts` hace login con `if (res.ok())` — si Redis no está disponible, el login falla silenciosamente, las cookies no se inyectan, y las páginas protegidas (`/chat`, `/admin/users`, `/settings`, `/collections`) se auditan en estado deslogueado (redireccionan a `/login`). El test pasa verde pero **no está auditando las páginas correctas**.
+
+En CI esto no es problema (Redis está disponible). Localmente sí — el developer cree que pasaron las 5 páginas cuando en realidad auditó `/login` 5 veces.
+
+**Archivo a modificar: `apps/web/tests/a11y/pages.spec.ts`**
+
+Cambiar el `beforeEach` actual:
+```typescript
+// ANTES — falla silenciosamente si Redis no está
+test.beforeEach(async ({ page }) => {
+  const res = await page.request.post("http://localhost:3000/api/auth/login", {
+    data: { email: "admin@localhost", password: "changeme" },
+  })
+  if (res.ok()) {
+    const cookies = await page.context().cookies()
+    await page.context().addCookies(cookies)
+  }
+})
+```
+
+Por este bloque exacto:
+```typescript
+// DESPUÉS — skip explícito si el login falla
+test.beforeEach(async ({ page }) => {
+  const res = await page.request.post("http://localhost:3000/api/auth/login", {
+    data: { email: "admin@localhost", password: "changeme" },
+  })
+  if (!res.ok()) {
+    test.skip(
+      true,
+      `Login falló (status ${res.status()}) — ¿está Redis corriendo?\n` +
+      `  Solución: docker run -d -p 6379:6379 redis:alpine\n` +
+      `  O configurar REDIS_URL en .env.local`
+    )
+    return
+  }
+  const cookies = await page.context().cookies()
+  await page.context().addCookies(cookies)
+})
+```
+
+**Verificación:**
+```bash
+# Sin Redis corriendo → debe mostrar 5 tests como skipped con el mensaje
+cd apps/web && bun run test:a11y 2>&1 | grep -E "skip|passed|failed"
+# Esperado: "5 skipped" o similar con el mensaje de Redis
+
+# Con Redis corriendo → debe pasar normalmente
+docker run -d -p 6379:6379 redis:alpine
+bun run test:a11y 2>&1 | grep -E "passed|failed"
+# Esperado: "5 passed"
+```
+
+- [ ] Modificar `apps/web/tests/a11y/pages.spec.ts`: cambiar el `beforeEach` exactamente como se muestra arriba
+- [ ] Sin Redis: `bun run test:a11y` → tests aparecen como skipped con mensaje explicativo (no como failed)
+- [ ] Con Redis (`docker run -d -p 6379:6379 redis:alpine`): `bun run test:a11y` → 5 passed
+- [ ] Commit: `fix(a11y): skip explicito cuando redis no esta disponible — plan12 r0.1`
+
+**Estado: pendiente**
+
+---
+
+## R0.2 — Fix: coverage threshold falta en apps/web/src/lib *(15 min)*
+
+Objetivo: el CI verifica cobertura ≥80% tanto en `packages/db` como en `apps/web/src/lib`.
+
+**Problema concreto:** el Plan 10 (F10.3) configuró el threshold de cobertura solo para `packages/db`. `apps/web/src/lib/` — que contiene la lógica crítica de auth, JWT, RAG, streaming y utilidades — no tiene ningún threshold verificado en CI. Podría caer por debajo del 80% sin que el CI lo detecte.
+
+**Archivo a modificar: `.github/workflows/ci.yml`**
+
+Buscar el step "Verify line coverage threshold (packages/db ≥80%)" (ya existe) y agregar inmediatamente después un step idéntico para `apps/web`:
+
+```yaml
+      - name: Verify line coverage threshold (apps/web/src/lib ≥80%)
+        working-directory: apps/web
+        run: |
+          set -e
+          LINE_COV=$(bun test src/lib --coverage 2>&1 | grep "All files" | grep -oE '[0-9]+\.[0-9]+' | tail -1)
+          echo "apps/web/src/lib line coverage: ${LINE_COV}%"
+          awk -v c="$LINE_COV" 'BEGIN { if (c+0 < 80) { print "::error::Coverage " c "% is below threshold of 80%"; exit 1 } }'
+        env:
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: ${{ secrets.JWT_SECRET || 'ci-test-secret' }}
+          DATABASE_PATH: ./data/test-coverage.db
+```
+
+Este step va dentro del job que ya tiene Redis configurado (el mismo job donde está el threshold de packages/db).
+
+**Verificación:**
+```bash
+# Correr localmente para ver la cobertura actual de apps/web/src/lib
+export PATH="$HOME/.bun/bin:$PATH"
+cd apps/web && bun test src/lib --coverage 2>&1 | grep "All files"
+# Si el porcentaje es ≥80%: el step de CI pasará
+# Si es <80%: hay que agregar tests antes de subir el threshold
+```
+
+**Importante:** verificar primero que la cobertura actual de `apps/web/src/lib` es ≥80% antes de agregar el step. Si es menor, ajustar el threshold al valor real (ej: `70%`) o agregar tests.
+
+- [ ] `cd apps/web && bun test src/lib --coverage 2>&1 | grep "All files"` — anotar el porcentaje actual
+- [ ] Si el porcentaje es ≥80%: agregar el step al CI con threshold 80%
+- [ ] Si el porcentaje es <80%: agregar el step al CI con el porcentaje real redondeado hacia abajo (ej: 72% → threshold 70%)
+- [ ] Commit: `ci: agregar coverage threshold para apps/web/src/lib — plan12 r0.2`
+
+**Estado: pendiente**
 
 ---
 
@@ -251,10 +363,10 @@ Objetivo: confirmar que absolutamente todo está en orden antes de crear el tag 
 **Checklist de verificación:**
 
 - [ ] `bun run test` → todos pasan (exit 0)
-- [ ] `bun run test:components` → 154 pass
+- [ ] `bun run test:components` → 153 pass (SSOButton eliminado en Plan 9)
 - [ ] `bun run test:visual` → 22 pass
-- [ ] `bun run test:a11y` → 0 violaciones
-- [ ] `bun run test:e2e` → todos pass
+- [ ] `bun run test:a11y` con Redis corriendo → 5 passed, 0 violations (sin Redis → 5 skipped con mensaje)
+- [ ] `bun run test:e2e` con Redis + servidor → todos pass
 - [ ] `cd apps/web && bunx tsc --noEmit` → exit 0
 - [ ] `cd packages/db && bunx tsc --noEmit` → exit 0
 - [ ] `bunx knip` → exit 0
@@ -329,6 +441,8 @@ Objetivo: el tag `v1.0.0` existe en el remoto y la GitHub Release está publicad
 
 ### Checklist de cierre
 
+- [ ] R0.1: a11y skip explícito sin Redis — test da skip (no false green)
+- [ ] R0.2: coverage threshold `apps/web/src/lib` en CI
 - [ ] 7 package.json en `1.0.0`
 - [ ] CHANGELOG `[1.0.0]` completo
 - [ ] `.editorconfig` creado
