@@ -1,6 +1,6 @@
 "use client"
 
-import { Chrome, Building2 } from "lucide-react"
+import { Globe, Building2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { signIn } from "next-auth/react"
 
@@ -12,7 +12,7 @@ const LABELS: Record<Provider, string> = {
 }
 
 const ICONS: Record<Provider, React.ReactNode> = {
-  "google": <Chrome size={16} />,
+  "google": <Globe size={16} />,
   "azure-ad": <Building2 size={16} />,
 }
 
