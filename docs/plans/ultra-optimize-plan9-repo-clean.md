@@ -150,7 +150,7 @@ docs/superpowers/
 - [x] `git ls-files | grep -E "(playwright-mcp|superpowers|\.log$|config/\.env)"` → salida vacía (confirmar) — completado 2026-03-27
 - [x] `git ls-files | grep "\.env\.example"` → `.env.example` sigue presente (confirmar) — completado 2026-03-27
 - [x] `export PATH="$HOME/.bun/bin:$PATH" && cd apps/web && bun run test` — tests en verde — completado 2026-03-27
-- [x] Commit: `chore(git): purgar artefactos trackeados y ampliar gitignore — plan9 f9.1` — completado 2026-03-27
+- [x] Commit: `chore(ci): purgar artefactos trackeados y ampliar gitignore — plan9 f9.1` — completado 2026-03-27
 - [ ] `git push` — confirmar en GitHub que los archivos desaparecieron *(pendiente en remoto)*
 
 **Estado: completado 2026-03-27**
@@ -225,7 +225,6 @@ cd ../../packages/db && bunx tsc --noEmit
 - [x] En `packages/logger/src/blackbox.ts`: aplicar spread condicional en `handleIngestionCompleted` (línea ~131) — completado 2026-03-27
 - [x] En `packages/logger/src/blackbox.ts`: aplicar spread condicional en `handleIngestionFailed` (línea ~148) — completado 2026-03-27
 - [x] En `packages/logger/src/blackbox.ts`: aplicar spread condicional en `handleIngestionStalled` (línea ~170) — completado 2026-03-27
-- [ ] Crear `packages/db/src/ioredis-mock.d.ts` con `declare module "ioredis-mock"`
 - [x] `cd apps/web && bunx tsc --noEmit` → salida vacía, exit 0 — confirmado 2026-03-27
 - [x] `cd packages/db && bunx tsc --noEmit` → salida vacía, exit 0 — confirmado 2026-03-27
 - [x] Crear `packages/db/src/ioredis-mock.d.ts` con `declare module "ioredis-mock"` — completado 2026-03-27
@@ -653,9 +652,9 @@ bun run test:components
 - [x] `bunx eslint src --max-warnings 0` en `apps/web` → exit 0 — 2026-03-27
 - [x] `bun run test` → todos pasan — 2026-03-27
 - [x] `bun run test:components` → 153 pasan — 2026-03-27
-- [ ] `git commit -m "bad"` → rechazado por commitlint *(verificar localmente tras pull)*
+- [x] `echo "bad" | bunx commitlint` → exit 1 (subject-empty, type-empty) — verificado 2026-03-27
 - [x] CHANGELOG.md actualizado con entrada del Plan 9 — 2026-03-27
-- [x] Commits: `chore(git): … f9.1` + `chore: plan9 completado …` + `docs(plans): checklist plan9` — 2026-03-27
+- [x] Commits: `chore(ci): … f9.1` + `chore(web): plan9 completado …` (incluye CHANGELOG y este plan) — 2026-03-27
 - [ ] `git push` — pendiente en remoto
 
 **Estado: completado 2026-03-27 (push pendiente)**
