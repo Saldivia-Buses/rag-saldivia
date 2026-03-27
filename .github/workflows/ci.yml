@@ -149,6 +149,20 @@ jobs:
           echo "packages/db line coverage: ${LINE_COV}%"
           awk -v c="$LINE_COV" 'BEGIN { if (c+0 < 80) { print "::error::Coverage " c "% is below threshold of 80%"; exit 1 } }'
 
+      - name: Verify line coverage threshold (apps/web/src/lib ≥40%)
+        if: hashFiles('apps/web/package.json') != ''
+        working-directory: apps/web
+        run: |
+          set -e
+          mkdir -p data
+          LINE_COV=$(bun test src/lib --coverage 2>&1 | grep "All files" | grep -oE '[0-9]+\.[0-9]+' | tail -1)
+          echo "apps/web/src/lib line coverage: ${LINE_COV}% (threshold ≥40%; Plan 12 — incluye dependencias transitivas en el reporte)"
+          awk -v c="$LINE_COV" 'BEGIN { if (c+0 < 40) { print "::error::Coverage " c "% is below threshold of 40%"; exit 1 } }'
+        env:
+          REDIS_URL: redis://localhost:6379
+          JWT_SECRET: ci-test-secret
+          DATABASE_PATH: ./data/test-coverage.db
+
       - name: Skip (monorepo en construcción)
         if: hashFiles('apps/web/package.json') == ''
         run: echo "apps/web no existe aún — tests del monorepo pendientes"
