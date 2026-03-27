@@ -13,14 +13,20 @@ import { checkA11y, injectAxe } from "axe-playwright"
 
 // Autenticación: inyectar cookie de sesión válida antes de cada test
 test.beforeEach(async ({ page }) => {
-  // Login programático para obtener cookie
   const res = await page.request.post("http://localhost:3000/api/auth/login", {
     data: { email: "admin@localhost", password: "changeme" },
   })
-  if (res.ok()) {
-    const cookies = await page.context().cookies()
-    await page.context().addCookies(cookies)
+  if (!res.ok()) {
+    test.skip(
+      true,
+      `Login falló (status ${res.status()}) — ¿está Redis corriendo?\n` +
+        `  Solución: docker run -d -p 6379:6379 redis:alpine\n` +
+        `  O configurar REDIS_URL en .env.local`,
+    )
+    return
   }
+  const cookies = await page.context().cookies()
+  await page.context().addCookies(cookies)
 })
 
 const PAGES_TO_AUDIT = [
