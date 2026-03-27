@@ -53,9 +53,9 @@ export function AnnotationPopover({ sessionId, messageId, onAskAbout, children }
     if (!popover) return
     await actionSaveAnnotation({
       sessionId,
-      messageId,
       selectedText: popover.text,
-      note: noteInput || undefined,
+      ...(messageId != null ? { messageId } : {}),
+      ...(noteInput ? { note: noteInput } : {}),
     })
     setSaved(true)
     setTimeout(() => setPopover(null), 1200)

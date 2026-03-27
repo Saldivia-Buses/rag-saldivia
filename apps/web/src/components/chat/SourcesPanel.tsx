@@ -56,7 +56,7 @@ export function SourcesPanel({ sources }: Props) {
                 <div key={i} className="px-3 py-2 space-y-1">
                   <div className="flex items-center justify-between gap-2">
                     <button
-                      onClick={() => setPreviewDoc({ name, snippet })}
+                      onClick={() => setPreviewDoc({ name, ...(snippet !== undefined ? { snippet } : {}) })}
                       className="font-medium truncate text-left hover:opacity-70 transition-opacity flex items-center gap-1"
                       style={{ color: "var(--accent)" }}
                       title="Ver documento"
@@ -88,7 +88,7 @@ export function SourcesPanel({ sources }: Props) {
       {/* Panel de preview — F3.40 */}
       <DocPreviewPanel
         documentName={previewDoc?.name ?? null}
-        highlightText={previewDoc?.snippet}
+        {...(previewDoc?.snippet !== undefined ? { highlightText: previewDoc.snippet } : {})}
         onClose={() => setPreviewDoc(null)}
       />
     </>

@@ -56,7 +56,7 @@ function handleAuthLogin(event: DbEvent, payload: Record<string, unknown>, state
   state.timeline.push({
     ts: event.ts,
     type: event.type,
-    userId: event.userId ?? undefined,
+    ...(event.userId != null ? { userId: event.userId } : {}),
     summary: `Login: ${payload["email"] ?? "unknown"}`,
   })
 }
@@ -75,7 +75,7 @@ function handleRagQuery(event: DbEvent, payload: Record<string, unknown>, state:
   state.timeline.push({
     ts: event.ts,
     type: event.type,
-    userId: event.userId ?? undefined,
+    ...(event.userId != null ? { userId: event.userId } : {}),
     summary: `Query: "${String(payload["query"] ?? "").slice(0, 60)}"`,
   })
 }
@@ -90,7 +90,7 @@ function handleError(event: DbEvent, payload: Record<string, unknown>, state: Re
   state.timeline.push({
     ts: event.ts,
     type: event.type,
-    userId: event.userId ?? undefined,
+    ...(event.userId != null ? { userId: event.userId } : {}),
     summary: `Error: ${String(payload["error"] ?? payload["message"] ?? "").slice(0, 80)}`,
   })
 }
@@ -118,7 +118,7 @@ function handleDefault(event: DbEvent, payload: Record<string, unknown>, state: 
   state.timeline.push({
     ts: event.ts,
     type: event.type,
-    userId: event.userId ?? undefined,
+    ...(event.userId != null ? { userId: event.userId } : {}),
     summary: JSON.stringify(payload).slice(0, 80),
   })
 }

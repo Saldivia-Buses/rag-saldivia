@@ -125,7 +125,7 @@ export function AnalyticsDashboard({ data }: { data: AnalyticsData | null }) {
                   labelLine={false}
                 >
                   {data.feedbackDistribution.map((_, i) => (
-                    <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                    <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]!} />
                   ))}
                 </Pie>
                 <Tooltip

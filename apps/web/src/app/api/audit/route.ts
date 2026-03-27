@@ -33,12 +33,12 @@ export async function GET(request: Request) {
   const userId = claims.role === "admin" ? undefined : Number(claims.sub)
 
   const events = await queryEvents({
-    fromTs,
-    toTs,
-    level: level ?? undefined,
-    type: type ?? undefined,
-    source: source ?? undefined,
-    userId,
+    ...(fromTs !== undefined ? { fromTs } : {}),
+    ...(toTs !== undefined ? { toTs } : {}),
+    ...(level ? { level } : {}),
+    ...(type ? { type } : {}),
+    ...(source ? { source } : {}),
+    ...(userId !== undefined ? { userId } : {}),
     limit,
     offset,
     order,

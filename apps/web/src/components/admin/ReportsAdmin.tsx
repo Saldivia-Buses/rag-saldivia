@@ -49,7 +49,7 @@ export function ReportsAdmin({ initialReports }: { initialReports: DbScheduledRe
         collection: data.collection,
         schedule: data.schedule,
         destination: data.destination,
-        email: data.email || undefined,
+        ...(data.email ? { email: data.email } : {}),
       })
       if (report) { setShowCreate(false); reportForm.reset() }
     })

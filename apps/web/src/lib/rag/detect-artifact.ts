@@ -19,7 +19,7 @@ export function detectArtifact(content: string): ArtifactData | null {
     return {
       type: (artifactMatch[1] as ArtifactData["type"]) ?? "document",
       content: (artifactMatch[3] ?? "").trim(),
-      language: artifactMatch[2],
+      ...(artifactMatch[2] ? { language: artifactMatch[2] } : {}),
     }
   }
 
@@ -28,7 +28,8 @@ export function detectArtifact(content: string): ArtifactData | null {
   if (codeMatch) {
     const lines = (codeMatch[2] ?? "").split("\n").length
     if (lines >= 40) {
-      return { type: "code", content: (codeMatch[2] ?? "").trim(), language: codeMatch[1] || undefined }
+      const lang = codeMatch[1] || undefined
+      return { type: "code", content: (codeMatch[2] ?? "").trim(), ...(lang ? { language: lang } : {}) }
     }
   }
 

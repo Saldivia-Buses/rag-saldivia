@@ -10,7 +10,7 @@ export default async function AuditPage() {
 
   // Admins ven todos los eventos, area_managers solo los suyos
   const events = await queryEvents({
-    userId: user.role === "admin" ? undefined : user.id,
+    ...(user.role !== "admin" ? { userId: user.id } : {}),
     limit: 200,
     order: "desc",
   })
