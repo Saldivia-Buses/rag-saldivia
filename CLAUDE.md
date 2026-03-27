@@ -2,7 +2,7 @@
 
 ## Qué es este proyecto
 
-Overlay sobre **NVIDIA RAG Blueprint v2.5.0** que agrega autenticación, RBAC, multi-colección, frontend Next.js 15, CLI TypeScript, design system completo, y suite de testing UI.
+Overlay sobre **NVIDIA RAG Blueprint v2.5.0** que agrega autenticación, RBAC, multi-colección, frontend Next.js 16, CLI TypeScript, design system completo, y suite de testing UI.
 
 - **No es un fork** — incluye el blueprint como git submodule en `vendor/rag-blueprint/` (commit a67a48c)
 - **Repo local:** `~/rag-saldivia/` — branch `experimental/ultra-optimize`
@@ -32,11 +32,11 @@ Usuario → Next.js :3000 ──────────────────
 
 ```
 apps/
-  web/              → Next.js 15 — servidor único (UI + auth + proxy RAG + admin)
+  web/              → Next.js 16 — servidor único (UI + auth + proxy RAG + admin)
   cli/              → CLI TypeScript (rag users/collections/ingest/audit/config/db)
 packages/
   shared/           → Zod schemas + tipos compartidos (User, Area, Session, etc.)
-  db/               → Drizzle ORM + @libsql/client (12 tablas, reemplaza auth.db + Redis)
+  db/               → Drizzle ORM + @libsql/client (esquema SQLite multi-tabla + Redis)
   config/           → config loader TypeScript (reemplaza config.py)
   logger/           → logger estructurado + black box replay + rotación de archivos
 scripts/
@@ -60,10 +60,10 @@ docs/
 |---|---|---|
 | Lenguaje | TypeScript | 6.0 |
 | Runtime | Bun | 1.3.x |
-| Framework web | Next.js App Router | 15.x |
+| Framework web | Next.js App Router | 16.x |
 | Base de datos | SQLite vía Drizzle ORM + @libsql/client | — |
 | Auth | JWT (jose) en cookie HttpOnly | — |
-| Validación | Zod (compartido entre todos los paquetes) | 3.x |
+| Validación | Zod (compartido entre todos los paquetes) | 4.3.x |
 | Build | Turborepo + Bun workspaces | — |
 | CLI | Commander + @clack/prompts + chalk | — |
 | CSS | Tailwind v4 + @tailwindcss/postcss | 4.x |
@@ -88,14 +88,16 @@ bun run dev              # Next.js en :3000
 bun run storybook        # Storybook en :6006
 
 # Tests — por capa
-bun run test                    # todos los tests (lógica) via Turborepo
-bun test apps/web/src/lib/      # solo lib/ de web (68 tests)
-bun test packages/db/           # solo DB queries (161 tests)
-bun run test:components         # component tests con happy-dom (147 tests)
+bun run test                    # todos los tests (lógica) via Turborepo (~311 tests)
+bun test apps/web/src/lib/      # solo lib/ de web
+bun test packages/db/           # solo DB queries (~167 tests)
+bun run test:components         # component tests con happy-dom (~153 tests)
 bun run test:visual             # visual regression Playwright (22 tests)
 bun run visual:update           # regenerar baseline de screenshots
 bun run test:a11y               # auditoría WCAG AA con axe-playwright
+bun run test:e2e                # E2E Playwright (apps/web)
 bun run test:ui                 # test:components + test:visual
+bun run lint                    # lint vía Turborepo
 
 # Health check
 rag status
@@ -182,14 +184,15 @@ Addons activos: **addon-a11y** (WCAG por componente), **addon-themes** (toggle l
 
 ## Testing
 
-### Suite actual (215+ tests en verde)
+### Suite actual
 
 | Capa | Comando | Tests | Cobertura |
 |---|---|---|---|
-| Lógica pura (lib/, db, config, logger) | `bun run test` | ~270 | ≥95% |
-| Componentes React | `bun run test:components` | 147 | 20 componentes |
-| Visual regression | `bun run test:visual` | 22 | 11 stories × 2 temas |
-| A11y WCAG AA | `bun run test:a11y` | 5 páginas | login, chat, collections, admin, settings |
+| Lógica pura (lib/, db, config, logger) | `bun run test` | ~311 | CI + threshold en paquetes |
+| Componentes React | `bun run test:components` | ~153 | Storybook + RTL |
+| Visual regression | `bun run test:visual` | 22 | baseline versionado |
+| A11y WCAG AA | `bun run test:a11y` | páginas clave | axe-playwright |
+| E2E | `bun run test:e2e` | flujos críticos | Playwright (MOCK_RAG) |
 
 ### Convención de tests de componentes
 
@@ -235,11 +238,12 @@ Si un cambio de diseño es intencional, regenerar el baseline con `visual:update
 
 | Archivo | Por qué es crítico |
 |---|---|
-| `apps/web/src/middleware.ts` | JWT + RBAC en cada request |
+| `apps/web/src/middleware.ts` | Re-export: delega en `proxy.ts` (JWT + RBAC en el edge) |
+| `apps/web/src/proxy.ts` | Implementación del middleware (auth, roles, `x-request-id`, `x-user-jti`) |
 | `apps/web/src/lib/auth/jwt.ts` | createJwt, verifyJwt, cookies |
 | `apps/web/src/app/globals.css` | tokens CSS del design system — cambios afectan toda la app |
-| `apps/web/src/lib/component-test-setup.ts` | setup de happy-dom — modificar puede romper 147 tests |
-| `packages/db/src/schema.ts` | schema completo de 12 tablas SQLite |
+| `apps/web/src/lib/component-test-setup.ts` | setup de happy-dom — modificar puede romper tests de componentes |
+| `packages/db/src/schema.ts` | schema SQLite completo (muchas tablas) |
 | `packages/db/src/queries/users.ts` | CRUD de usuarios + permisos |
 | `packages/logger/src/backend.ts` | logger con rotación de archivos |
 | `apps/web/src/lib/rag/client.ts` | proxy RAG con modo mock |
@@ -292,7 +296,7 @@ TEST_ADMIN_PASSWORD=changeme
 - **Redis es dependencia requerida** — `getRedisClient()` en `packages/db/src/redis.ts` retorna `Redis` directo, nunca null. Lanza error claro si `REDIS_URL` no configurado
 - **NO importar logger en redis.ts** — crearía dependencia circular `db → logger → db` (ADR-005). Usar `console.error` para errores de conexión en redis.ts
 - **BullMQ usa conexiones propias** — pasar `{ maxRetriesPerRequest: null }` y crear instancias separadas via `getBullMQConnection()`, no reutilizar el singleton de `getRedisClient()`
-- **JWT revocación** — verificada en `extractClaims()` (Node.js runtime), NO en `middleware.ts` (Edge runtime sin soporte de ioredis). El jti se propaga via header `x-user-jti`
+- **JWT revocación** — verificada en `extractClaims()` (Node.js runtime), NO en el middleware Edge (`proxy.ts`) sin ioredis. El jti se propaga via header `x-user-jti`
 - **Notificaciones** — publisher: `getRedisClient().publish("notifications:{userId}", ...)` en el worker BullMQ. Subscriber: endpoint SSE `/api/notifications/stream` crea conexión dedicada con `.duplicate()`
 - **Cache de colecciones** — `getCachedRagCollections()` en `lib/rag/collections-cache.ts`. Llamar `invalidateCollectionsCache()` después de POST/DELETE en `/api/rag/collections`
 - **Para tests** — ioredis-mock activo via preload (`packages/db/bunfig.toml` y `apps/web/bunfig.toml`). Tests unitarios no requieren Redis real
@@ -323,7 +327,7 @@ TEST_ADMIN_PASSWORD=changeme
 
 ## Architecture Decision Records (ADRs)
 
-En `docs/decisions/` hay 9 decisiones de arquitectura documentadas. **Leerlas antes de modificar las áreas que cubren:**
+En `docs/decisions/` hay decisiones de arquitectura documentadas. **Leerlas antes de modificar las áreas que cubren:**
 
 | ADR | Decisión | Área afectada |
 |---|---|---|
@@ -333,8 +337,10 @@ En `docs/decisions/` hay 9 decisiones de arquitectura documentadas. **Leerlas an
 | 004 | Temporal API para timestamps | toda query con fechas |
 | 005 | Import estático de db en logger | `packages/logger/src/backend.ts` |
 | 006 | Estrategia de testing | toda la suite de tests |
-| 010 | Redis como dependencia requerida | `packages/db/src/redis.ts`, BullMQ, JWT revocación, cache |
 | 007 | Funciones reales sobre helpers locales en tests | `packages/db/src/__tests__/` |
+| 008 | Lector SSE compartido | `apps/web/src/lib/rag/stream.ts` |
+| 009 | Server Components primero | UI y data fetching |
+| 010 | Redis como dependencia requerida | `packages/db/src/redis.ts`, BullMQ, JWT revocación, cache |
 
 ---
 
@@ -358,10 +364,8 @@ En `apps/web/src/hooks/` — todos Client Components:
 | Hook | Complejidad | Descripción |
 |---|---|---|
 | `useRagStream` | Alta (19) | Streaming SSE del RAG — maneja fases: idle → streaming → done. Detecta artifacts automáticamente |
-| `useCrossdocStream` | Alta (22) | Variante crossdoc del stream — consulta múltiples colecciones simultáneamente |
-| `useCrossdocDecompose` | Media | Descompone una query en sub-queries por colección |
 | `useGlobalHotkeys` | Media | Hotkeys globales (Cmd+K para CommandPalette, etc.) |
-| `useNotifications` | Baja | Poll de notificaciones via `/api/notifications` |
+| `useNotifications` | Media | Notificaciones (`/api/notifications` + SSE `/api/notifications/stream`) |
 | `useZenMode` | Baja | Toggle del modo zen (oculta NavRail y SecondaryPanel) |
 
 **Patrón crítico de useRagStream:** verifica el status HTTP **antes** de leer el stream. Si la respuesta no es 200, el stream devuelve un error — no asumir que siempre es exitoso.
@@ -399,8 +403,9 @@ En `apps/web/src/app/api/` — más de 30 routes. Las más críticas:
 | `/api/admin/ingestion/stream` | GET | SSE en tiempo real del estado de jobs |
 | `/api/admin/analytics` | GET | Estadísticas del sistema |
 | `/api/admin/users` | GET/POST | CRUD de usuarios |
-| `/api/memory` | GET/POST/DELETE | Memoria personalizada del usuario |
-| `/api/notifications` | GET | Poll de notificaciones (polling, no SSE) |
+| Memoria (settings) | Server Actions | Memoria personalizada — no hay `/api/memory` dedicado |
+| `/api/notifications` | GET | Lista de notificaciones recientes |
+| `/api/notifications/stream` | GET | SSE — notificaciones en tiempo real |
 | `/api/health` | GET | Health check del sistema |
 | `/api/slack` | POST | Bot endpoint de Slack |
 | `/api/teams` | POST | Bot endpoint de Microsoft Teams |
@@ -453,14 +458,14 @@ Los siguientes componentes NO tienen tests de componente aún (pendiente para it
 - `AnnotationPopover`, `ArtifactsPanel`, `ChatDropZone`
 - `CollectionSelector`, `DocPreviewPanel`, `ExportSession`
 - `FocusModeSelector`, `PromptTemplates`, `RelatedQuestions`
-- `ShareDialog`, `SourcesPanel`, `SplitView`, `ThinkingSteps`, `VoiceInput`
+- `ShareDialog`, `SourcesPanel`, `ThinkingSteps`, `VoiceInput`
 
 **Layout**:
 - `AppShell`, `AppShellChrome`, `CommandPalette`, `NavRail`
 - `SecondaryPanel`, `WhatsNewPanel`
 - `panels/AdminPanel`, `panels/ChatPanel`, `panels/ProjectsPanel`
 
-**Collections**: `CollectionHistory`, `DocumentGraph`
+**Collections**: `DocumentGraph` (y vistas relacionadas en `collections/`)
 
 **Onboarding**: `OnboardingTour`
 
@@ -479,10 +484,14 @@ Los siguientes componentes NO tienen tests de componente aún (pendiente para it
 | Plan 5 | Testing foundation (95% cobertura) | ✅ completado 2026-03-26 |
 | Plan 6 | UI Testing Suite completa | ✅ completado 2026-03-26 |
 | Plan 7 | Design System "Warm Intelligence" | ✅ completado 2026-03-26 |
+| Plan 8 | Optimización (Next 16, Redis, BullMQ, ESLint, etc.) | ✅ completado 2026-03-27 |
+| Plan 9 | Repo limpio (dead code, husky, commitlint) | ✅ completado 2026-03-27 |
+| Plan 10 | Testing (visual, a11y, E2E Playwright, cobertura) | ✅ completado 2026-03-27 |
+| Plan 11 | Documentación (README, API, packages, JSDoc) | ✅ completado 2026-03-27 |
 
 Planes futuros pendientes:
-- **Plan 8** — Dependency Upgrades (Next.js 16, Zod 4, Lucide 1.x, Drizzle 0.45)
-- **Plan 9** — E2E Maestro (requiere instalar Java 17 + Maestro CLI)
+- **E2E Maestro** (opcional) — requiere Java 17 + Maestro CLI si se adopta además de Playwright
+- **Features RAG/GPU** — ver README (versiones futuras)
 
 ---
 
@@ -531,7 +540,7 @@ src/components/
   chat/         — ChatInterface, SessionList, SourcesPanel, ArtifactsPanel,
                   CollectionSelector, FocusModeSelector, VoiceInput,
                   ExportSession, ShareDialog, ThinkingSteps, RelatedQuestions,
-                  AnnotationPopover, PromptTemplates, ChatDropZone, SplitView
+                  AnnotationPopover, PromptTemplates, ChatDropZone
   admin/        — UsersAdmin, AreasAdmin, PermissionsAdmin, RagConfigAdmin,
                   SystemStatus, IngestionKanban, AnalyticsDashboard,
                   KnowledgeGapsClient, ReportsAdmin, WebhooksAdmin,
@@ -542,7 +551,6 @@ src/components/
   extract/      — ExtractionWizard
   audit/        — AuditTable
   projects/     — ProjectsClient
-  auth/         — SSOButton
   onboarding/   — OnboardingTour
   dev/          — ReactScan, ReactScanProvider (solo dev)
   providers.tsx — ThemeProvider (next-themes)

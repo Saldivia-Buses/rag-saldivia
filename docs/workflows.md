@@ -7,6 +7,14 @@ Este documento describe los flujos de trabajo que usamos en el proyecto. Es la r
 
 ---
 
+## 0. Commits y commitlint
+
+Los mensajes siguen **Conventional Commits** (`feat:`, `fix:`, `docs:`, …). Husky ejecuta **commitlint** en el hook `commit-msg`; un mensaje inválido bloquea el commit.
+
+Ver [CONTRIBUTING.md](../CONTRIBUTING.md) en la raíz del repo.
+
+---
+
 ## 1. Workflow de desarrollo local
 
 ### Arrancar el entorno
@@ -37,7 +45,7 @@ cd apps/cli && bun link
 |---------|------------------------|
 | `apps/web/src/middleware.ts` | Controla toda la auth y RBAC; afecta cada request |
 | `apps/web/src/lib/auth/jwt.ts` | Cómo se leen los claims; tiene lógica de headers vs cookies |
-| `packages/db/src/schema.ts` | Schema de las 12 tablas; cambios requieren migración |
+| `packages/db/src/schema.ts` | Esquema SQLite (muchas tablas); cambios requieren migración / drizzle |
 | `packages/shared/src/schemas.ts` | Zod schemas compartidos; cambiar aquí afecta web y cli |
 | `packages/logger/src/backend.ts` | Logger usa import estático de `@rag-saldivia/db` (no dinámico) |
 

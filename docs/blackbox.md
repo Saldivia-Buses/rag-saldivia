@@ -38,9 +38,11 @@ Los eventos del browser se envían en batches a `POST /api/log` y se persisten e
   userId: 42,
   sessionId: "uuid",
   payload: { query: "...", collection: "tecpia" },
-  sequence: 1234               // monotónico, para replay ordenado
+  sequence: 1234               // monotónico — generado con Redis INCR `events:seq`
 }
 ```
+
+La secuencia monotónica depende de **Redis**; la rotación de archivos `logs/*.log` persiste tamaños en el hash Redis `log:sizes` (Plan 8).
 
 ### 3. Tipos de eventos registrados
 

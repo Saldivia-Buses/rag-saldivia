@@ -8,12 +8,12 @@
 
 | Capa | Herramienta | Comando | Tests | Estado |
 |---|---|---|---|---|
-| Lógica pura (lib, db, config, logger) | bun:test | `bun run test` | ~270 | ✅ verde |
-| Componentes React | @testing-library/react + happy-dom | `bun run test:components` | 147 | ✅ verde |
+| Lógica pura (lib, db, config, logger) | bun:test | `bun run test` | ~311 | ✅ verde |
+| Componentes React | @testing-library/react + happy-dom | `bun run test:components` | ~153 | ✅ verde |
 | Visual regression | Playwright screenshots | `bun run test:visual` | 22 | ✅ verde |
-| A11y WCAG AA | axe-playwright | `bun run test:a11y` | 5 páginas | config lista |
-| E2E flujos de usuario | Maestro | `maestro test tests/e2e/` | 7 flows | pendiente Java |
-| Performance/re-renders | react-scan | `bun run dev` | baseline | ver docs/superpowers/ |
+| A11y WCAG AA | axe-playwright | `bun run test:a11y` | páginas clave | ✅ en CI |
+| E2E flujos críticos | Playwright | `bun run test:e2e` (en `apps/web`) | varios specs | ✅ verde (MOCK_RAG + Redis en CI) |
+| Performance/re-renders | react-scan | `bun run dev` | baseline | opcional |
 
 ---
 

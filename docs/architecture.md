@@ -1,7 +1,7 @@
 # Arquitectura — RAG Saldivia (experimental/ultra-optimize)
 
 > Branch: `experimental/ultra-optimize`
-> Última actualización: 2026-03-27 (Plan 8 — Fases 1–4)
+> Última actualización: 2026-03-27 (Plan 11 — documentación y precisión post Plan 8–10)
 
 ---
 
@@ -55,15 +55,15 @@ rag-saldivia/
 │   │   │   ├── actions/      → Server Actions (chat, users, areas, settings, auth, projects,
 │   │   │   │                    webhooks, reports, external-sources, share, memory)
 │   │   │   ├── components/   → React components
-│   │   │   ├── hooks/        → useRagStream, useCrossdocStream, useCrossdocDecompose
+│   │   │   ├── hooks/        → useRagStream, useNotifications, useGlobalHotkeys, useZenMode
 │   │   │   ├── lib/
 │   │   │   │   ├── auth/     → jwt.ts, rbac.ts, current-user.ts
 │   │   │   │   ├── rag/      → client.ts (proxy + mock), collections-cache.ts,
 │   │   │   │   │                stream.ts (SSE reader compartido — ver ADR-008)
-│   │   │   │   ├── safe-action.ts  → cliente next-safe-action con middleware auth
 │   │   │   │   └── utils.ts        → formatDate, formatDateTime, cn
 │   │   │   ├── workers/      → ingestion.ts (worker de ingesta)
-│   │   │   └── middleware.ts → JWT + RBAC en el edge
+│   │   │   ├── proxy.ts        → lógica de middleware (auth + RBAC en el edge)
+│   │   │   └── middleware.ts   → re-export de `proxy` como `middleware` (Next.js)
 │   └── cli/                  → CLI TypeScript (rag users/collections/ingest/...)
 │       └── src/
 │           ├── index.ts      → Commander + REPL interactivo
@@ -73,7 +73,7 @@ rag-saldivia/
 ├── packages/
 │   ├── shared/               → Zod schemas + TypeScript types
 │   ├── db/                   → Drizzle ORM + @libsql/client
-│   │   ├── src/schema.ts     → 12 tablas SQLite
+│   │   ├── src/schema.ts     → esquema SQLite (muchas tablas; ver packages/db/README.md)
 │   │   ├── src/connection.ts → singleton WAL
 │   │   ├── src/queries/      → users, areas, sessions, events
 │   │   └── drizzle.config.ts → Drizzle Kit (schema.ts es la única fuente de verdad)
@@ -87,7 +87,10 @@ rag-saldivia/
 │   │   ├── ultra-optimize-plan1-birth.md     → Plan 1: monorepo TS (completado 2026-03-24)
 │   │   ├── ultra-optimize-plan2-testing.md   → Plan 2: testing 7 fases (completado 2026-03-25)
 │   │   ├── ultra-optimize-plan3-bugfix.md    → Plan 3: bugfix + code quality (completado 2026-03-25)
-│   │   └── ultra-optimize-plan8-optimization.md → Plan 8: optimización (en curso)
+│   │   ├── ultra-optimize-plan8-optimization.md → Plan 8: optimización (completado)
+│   │   ├── ultra-optimize-plan9-repo-clean.md → Plan 9 (completado)
+│   │   ├── ultra-optimize-plan10-testing.md → Plan 10 (completado)
+│   │   └── ultra-optimize-plan11-documentation.md → Plan 11 (completado)
 │   ├── architecture.md       → este archivo
 │   ├── workflows.md          → flujos de trabajo del proyecto
 │   ├── cli.md

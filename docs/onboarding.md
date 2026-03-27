@@ -7,9 +7,10 @@
 ## Prerrequisitos
 
 - [Bun](https://bun.sh) ≥ 1.3 — `curl -fsSL https://bun.sh/install | bash`
+- **Redis 7+** (obligatorio — ADR-010): `docker run -d -p 6379:6379 redis:alpine`
 - [Docker](https://docs.docker.com/get-docker/) con Docker Compose v2 (opcional, solo para RAG real)
 - Git
-- Node.js ≥ 18 (para algunas herramientas del monorepo)
+- Node.js ≥ 22 (recomendado para herramientas del monorepo / CI)
 
 ---
 
@@ -59,6 +60,7 @@ Las más importantes:
 
 ```env
 JWT_SECRET=...          # openssl rand -base64 32
+REDIS_URL=redis://localhost:6379
 SYSTEM_API_KEY=...      # openssl rand -hex 32
 RAG_SERVER_URL=http://localhost:8081
 DATABASE_PATH=./data/app.db   # en WSL2: usar ruta absoluta
