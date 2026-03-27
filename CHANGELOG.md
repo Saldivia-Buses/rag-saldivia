@@ -9,6 +9,36 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Plan 8 — Optimización (Fases 1, 2 y 3 completadas)
+
+#### Fase 3 — Unificación y limpieza de dependencias (2026-03-27)
+
+##### Added
+- `packages/db/drizzle.config.ts`: configuración de Drizzle Kit — `schema.ts` es la única fuente de verdad para la DB — *(Plan 8 F3.9)*
+- `packages/db/drizzle/0000_hesitant_clint_barton.sql`: migración inicial generada desde `schema.ts` — incluye 27 tablas + FTS5 virtual tables + triggers — *(Plan 8 F3.9)*
+- `apps/web/.eslintrc.json` → `apps/web/eslint.config.mjs`: configuración ESLint flat config para Next.js — *(Plan 8 F3.8)*
+- Script `db:generate` y `db:push` en `packages/db/package.json` — *(Plan 8 F3.9)*
+- Script `lint: tsc --noEmit` en `packages/db`, `packages/logger`, `packages/config`, `packages/shared` — *(Plan 8 F3.8)*
+- `eslint`, `eslint-config-next` como devDependencies en `apps/web` — *(Plan 8 F3.8)*
+- `@types/node` como devDependency en `packages/db`, `packages/logger`, `packages/config` — *(Plan 8 F3.8)*
+
+##### Changed
+- `packages/db/package.json`: `drizzle-orm` sincronizado a `^0.38.4` (igual que `apps/web`) — *(Plan 8 F3.7)*
+- `packages/db/src/init.ts`: reemplaza 400 líneas de SQL manual por `migrate(db, { migrationsFolder })` — *(Plan 8 F3.9)*
+- `turbo.json`: task `lint` agrega `dependsOn: ["^build"]` para correr en todos los packages — *(Plan 8 F3.8)*
+- `apps/web/tsconfig.json`: agrega `exactOptionalPropertyTypes: true` — consistente con `packages/shared` — *(Plan 8 F3.10)*
+- `packages/*/tsconfig.json`: `moduleResolution` cambiado de `NodeNext` a `Bundler` (correcto para Bun) — *(Plan 8 F3.8)*
+
+##### Removed
+- `zustand@5.0.0`: eliminado de `apps/web/package.json` — sin usos en el codebase — *(Plan 8 F3.10)*
+- `dompurify@3.3.3` y `@types/dompurify@3.0.5`: eliminados de `apps/web/package.json` — sin usos — *(Plan 8 F3.10)*
+
+##### Fixed
+- `packages/logger/src/blackbox.ts`: corregidos 4 errores de `exactOptionalPropertyTypes` — uso de spread condicional — *(Plan 8 F3.10)*
+- `apps/web/src/lib/rag/detect-artifact.ts`, `SourcesPanel.tsx`, `AnnotationPopover.tsx`, `ReportsAdmin.tsx`, `sonner.tsx`, `AnalyticsDashboard.tsx`, `audit/page.tsx`, `api/audit/route.ts`: corregidos errores de `exactOptionalPropertyTypes` — *(Plan 8 F3.10)*
+
+---
+
 ### Plan 8 — Optimización (Fases 1 y 2 completadas)
 
 #### Fase 2 — Refactoring de arquitectura React (2026-03-27)

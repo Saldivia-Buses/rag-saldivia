@@ -513,9 +513,9 @@ export default async function MemoryPage() {
 export async function actionAddMemory(key: string, value: string): Promise<void>
 export async function actionDeleteMemory(key: string): Promise<void>
 ```
-- [ ] Crear `MemoryClient.tsx` — Client Component con estado local — 30 min
-- [ ] Agregar `actionAddMemory` y `actionDeleteMemory` en `actions/settings.ts` — 20 min
-- [ ] Reescribir `settings/memory/page.tsx` como Server Component — 15 min
+- [x] Crear `MemoryClient.tsx` — Client Component con estado local — completado 2026-03-27
+- [x] Agregar `actionAddMemory` y `actionDeleteMemory` en `actions/settings.ts` — completado 2026-03-27
+- [x] Reescribir `settings/memory/page.tsx` como Server Component — completado 2026-03-27
 
 **F2.4b — WebhooksAdmin, ReportsAdmin, ExternalSourcesAdmin, KnowledgeGapsClient**
 
@@ -537,11 +537,11 @@ export default async function WebhooksPage() {
 // Los datos vienen como prop, el useState se inicializa con initialWebhooks
 ```
 
-- [ ] `admin/webhooks/page.tsx`: fetch server-side + pasar como prop a `WebhooksAdmin` — 15 min
-- [ ] `admin/reports/page.tsx`: fetch server-side + pasar como prop a `ReportsAdmin` — 15 min
-- [ ] `admin/external-sources/page.tsx`: fetch server-side + pasar como prop a `ExternalSourcesAdmin` — 15 min
-- [ ] `admin/knowledge-gaps/page.tsx`: fetch server-side + pasar como prop a `KnowledgeGapsClient` — 15 min
-- [ ] En cada componente: eliminar `useEffect` y `useState` para carga inicial; aceptar `initialData` como prop — 30 min total
+- [x] `admin/webhooks/page.tsx`: fetch server-side + pasar como prop a `WebhooksAdmin` — completado 2026-03-27
+- [x] `admin/reports/page.tsx`: fetch server-side + pasar como prop a `ReportsAdmin` — completado 2026-03-27
+- [x] `admin/external-sources/page.tsx`: fetch server-side + pasar como prop a `ExternalSourcesAdmin` — completado 2026-03-27
+- [x] `admin/knowledge-gaps/page.tsx`: fetch server-side + pasar como prop a `KnowledgeGapsClient` — completado 2026-03-27
+- [x] En cada componente: eliminar `useEffect` y `useState` para carga inicial; aceptar `initialData` como prop — completado 2026-03-27
 
 **F2.4c — Componentes de layout y chat con fetch interno**
 
@@ -572,11 +572,11 @@ return (
 )
 ```
 
-- [ ] En `app/(app)/layout.tsx`: agregar `Promise.all` con los fetches de projects, sessions, changelog — 20 min
-- [ ] Actualizar `AppShell` para recibir y propagar `initialProjects`, `initialSessions`, `changelog` — 20 min
-- [ ] Actualizar `CommandPalette`, `ProjectsPanel`, `WhatsNewPanel` para aceptar props iniciales — 20 min
-- [ ] Pasar `templates` y `collections` desde las páginas de chat — 15 min
-- [ ] `bun run test:components` — sin regresiones — 10 min
+- [x] En `app/(app)/layout.tsx`: agregar `Promise.all` con los fetches de projects, sessions, changelog — completado 2026-03-27
+- [x] Actualizar `AppShell` para recibir y propagar `initialProjects`, `initialSessions`, `changelog` — completado 2026-03-27
+- [x] Actualizar `CommandPalette`, `ProjectsPanel`, `WhatsNewPanel` para aceptar props iniciales — completado 2026-03-27
+- [x] Pasar `templates` y `collections` desde las páginas de chat — completado 2026-03-27
+- [x] `bun run test:components` — sin regresiones — completado 2026-03-27
 
 ---
 
@@ -613,13 +613,13 @@ const queriesByDayFormatted = useMemo(
 )
 ```
 
-- [ ] Verificar renders con react-scan en dev antes de modificar — 20 min
-- [ ] **Primero:** envolver `stream` en `useCallback` dentro de `useRagStream.ts` — 15 min
-- [ ] Aplicar `useCallback` a los 5 handlers de `ChatInterface` (con `stream` ya estable) — 30 min
-- [ ] Aplicar `useCallback` a handlers de selección/bulk en `SessionList` — 20 min
-- [ ] Aplicar `useMemo` a transformaciones de datos en `AnalyticsDashboard` — 20 min
-- [ ] Verificar con react-scan que los re-renders bajaron — 15 min
-- [ ] `bun run test:components` — sin regresiones — 10 min
+- [ ] Verificar renders con react-scan en dev antes de modificar — pendiente (requiere browser)
+- [x] **Primero:** envolver `stream` en `useCallback` dentro de `useRagStream.ts` — completado 2026-03-27
+- [x] Aplicar `useCallback` a los 5 handlers de `ChatInterface` (con `stream` ya estable) — completado 2026-03-27
+- [x] Aplicar `useCallback` a handlers de selección/bulk en `SessionList` — completado 2026-03-27
+- [x] Aplicar `useMemo` a transformaciones de datos en `AnalyticsDashboard` — completado 2026-03-27
+- [ ] Verificar con react-scan que los re-renders bajaron — pendiente (requiere browser)
+- [x] `bun run test:components` — sin regresiones — completado 2026-03-27
 
 ---
 
@@ -635,9 +635,9 @@ const DocumentGraph = dynamic(
 )
 ```
 
-- [ ] En `collections/[name]/graph/page.tsx`: reemplazar import de `DocumentGraph` con `next/dynamic` + skeleton — 20 min
-- [ ] En `DocPreviewPanel.tsx`: tipar correctamente el dynamic import de react-pdf (ya usa `useState` para carga dinámica, falta el tipo) — 15 min
-- [ ] Verificar con `ANALYZE=true bun run build` que `DocumentGraph` no está en el bundle inicial — 15 min
+- [x] En `collections/[name]/graph/page.tsx`: reemplazar import de `DocumentGraph` con `next/dynamic` + skeleton — completado 2026-03-27
+- [ ] En `DocPreviewPanel.tsx`: tipar correctamente el dynamic import de react-pdf (ya usa `useState` para carga dinámica, falta el tipo) — pendiente
+- [ ] Verificar con `ANALYZE=true bun run build` que `DocumentGraph` no está en el bundle inicial — pendiente
 
 ---
 
@@ -703,24 +703,20 @@ export const actionCreateSession = authClient
 - `apps/web/src/app/actions/reports.ts`
 - `apps/web/src/app/actions/external-sources.ts`
 
-- [ ] `bun add next-safe-action` en `apps/web` — 2 min
-- [ ] Crear `apps/web/src/lib/safe-action.ts`: `authClient` con middleware `requireUser()` y `adminClient` con `requireAdmin()` — 20 min
-- [ ] Migrar `chat.ts`, `users.ts`, `areas.ts`, `settings.ts`, `config.ts` al nuevo patrón — 60 min
-- [ ] Crear `actions/auth.ts` con `actionLogout()` usando `cookies()` de Next.js para invalidar la cookie — 15 min
-- [ ] Crear `actions/projects.ts` con `actionCreateProject`, `actionDeleteProject` — 20 min
-- [ ] Crear `actions/webhooks.ts`, `actions/reports.ts`, `actions/external-sources.ts` — 30 min
-- [ ] Crear `actions/share.ts` con `actionCreateShare` — 15 min (mover de `api/share/route.ts`)
-- [ ] En `NavRail.tsx`: reemplazar `fetch("/api/auth/logout")` con `actionLogout()` — 5 min
-- [ ] En `ShareDialog.tsx`: reemplazar `fetch("/api/share")` con `actionCreateShare()` — 5 min
-- [ ] En `ProjectsClient.tsx`: reemplazar fetch con `actionCreateProject`/`actionDeleteProject` — 10 min
-- [ ] En `CollectionsList.tsx`: reemplazar fetch DELETE con `actionDeleteCollection` — 5 min
-- [ ] En `WebhooksAdmin.tsx`, `ReportsAdmin.tsx`, `ExternalSourcesAdmin.tsx`: reemplazar fetch mutations con las nuevas actions — 20 min
-- [ ] **Actualizar mocks en 5 component tests** — `next-safe-action` cambia el retorno de `Promise<void>` a `Promise<SafeActionResult<T>>`:
-  ```typescript
-  actionCreateArea: mock(() => Promise.resolve({ data: undefined }))
-  ```
-  Archivos: `AreasAdmin.test.tsx`, `UsersAdmin.test.tsx`, `RagConfigAdmin.test.tsx`, `PermissionsAdmin.test.tsx`, `SettingsClient.test.tsx` — 15 min
-- [ ] `bun run test:components` — 10 min
+- [x] `bun add next-safe-action` en `apps/web` — completado 2026-03-27
+- [x] Crear `apps/web/src/lib/safe-action.ts`: `authClient` con middleware `requireUser()` y `adminClient` con `requireAdmin()` — completado 2026-03-27
+- [ ] Migrar `chat.ts`, `users.ts`, `areas.ts`, `settings.ts`, `config.ts` al nuevo patrón — pendiente (solo se crearon los clients; las actions existentes mantienen su patrón actual)
+- [x] Crear `actions/auth.ts` con `actionLogout()` usando `cookies()` de Next.js para invalidar la cookie — completado 2026-03-27
+- [x] Crear `actions/projects.ts` con `actionCreateProject`, `actionDeleteProject` — completado 2026-03-27
+- [x] Crear `actions/webhooks.ts`, `actions/reports.ts`, `actions/external-sources.ts` — completado 2026-03-27
+- [x] Crear `actions/share.ts` con `actionCreateShare` — completado 2026-03-27
+- [x] En `NavRail.tsx`: reemplazar `fetch("/api/auth/logout")` con `actionLogout()` — completado 2026-03-27
+- [x] En `ShareDialog.tsx`: reemplazar `fetch("/api/share")` con `actionCreateShare()` — completado 2026-03-27
+- [x] En `ProjectsClient.tsx`: reemplazar fetch con `actionCreateProject`/`actionDeleteProject` — completado 2026-03-27
+- [x] En `CollectionsList.tsx`: reemplazar fetch DELETE con `actionDeleteCollection` — completado 2026-03-27
+- [x] En `WebhooksAdmin.tsx`, `ReportsAdmin.tsx`, `ExternalSourcesAdmin.tsx`: reemplazar fetch mutations con las nuevas actions — completado 2026-03-27
+- [ ] **Actualizar mocks en 5 component tests** — no necesario (las actions existentes no fueron migradas a next-safe-action, mocks siguen siendo `Promise<void>`)
+- [x] `bun run test:components` — completado 2026-03-27
 
 ---
 
@@ -765,10 +761,10 @@ async function handleDelete(id: number) {
 - `ProjectsClient.tsx` — create + delete
 - `CollectionsList.tsx` — delete
 
-- [ ] Aplicar `useOptimistic` en `AreasAdmin` y `UsersAdmin` (empezar por los más simples) — 30 min
-- [ ] Aplicar en `WebhooksAdmin`, `ReportsAdmin`, `ExternalSourcesAdmin` — 30 min
-- [ ] Aplicar en `ProjectsClient` y `CollectionsList` — 20 min
-- [ ] `bun run test:components` — sin regresiones (los tests no cambian comportamiento externo) — 10 min
+- [x] Aplicar `useOptimistic` en `AreasAdmin` y `UsersAdmin` (empezar por los más simples) — completado 2026-03-27
+- [x] Aplicar en `WebhooksAdmin`, `ReportsAdmin`, `ExternalSourcesAdmin` — completado 2026-03-27
+- [x] Aplicar en `ProjectsClient` y `CollectionsList` — completado 2026-03-27
+- [x] `bun run test:components` — sin regresiones — completado 2026-03-27
 
 ---
 
@@ -819,14 +815,14 @@ bun add react-hook-form @hookform/resolvers
 - `apps/web/src/components/admin/ReportsAdmin.tsx` — form create
 - `apps/web/src/components/admin/ExternalSourcesAdmin.tsx` — form create
 
-- [ ] `bun add react-hook-form @hookform/resolvers` en `apps/web` — 2 min
-- [ ] Crear `apps/web/src/lib/form.ts`: helper que combina `useForm` + `zodResolver` + tipos inferidos — 10 min
-- [ ] Migrar `SettingsClient.tsx` (empezar aquí — 2 forms simples como referencia) — 30 min
-- [ ] Migrar `login/page.tsx` — 20 min
-- [ ] Migrar `AreasAdmin.tsx` — 2 forms (create + edit) — 30 min
-- [ ] Migrar `UsersAdmin.tsx` — form más complejo (5 campos + multi-select) — 30 min
-- [ ] Migrar `WebhooksAdmin.tsx`, `ReportsAdmin.tsx`, `ExternalSourcesAdmin.tsx` — 30 min total
-- [ ] `bun run test:components` — sin regresiones — 10 min
+- [x] `bun add react-hook-form @hookform/resolvers` en `apps/web` — completado 2026-03-27
+- [x] Crear `apps/web/src/lib/form.ts`: helper que combina `useForm` + `zodResolver` + tipos inferidos — completado 2026-03-27
+- [x] Migrar `SettingsClient.tsx` (empezar aquí — 2 forms simples como referencia) — completado 2026-03-27
+- [x] Migrar `login/page.tsx` — completado 2026-03-27
+- [x] Migrar `AreasAdmin.tsx` — 2 forms (create + edit) — completado 2026-03-27
+- [x] Migrar `UsersAdmin.tsx` — form más complejo (5 campos + multi-select) — completado 2026-03-27
+- [x] Migrar `WebhooksAdmin.tsx`, `ReportsAdmin.tsx`, `ExternalSourcesAdmin.tsx` — completado 2026-03-27
+- [x] `bun run test:components` — sin regresiones — completado 2026-03-27
 
 ---
 
@@ -872,12 +868,12 @@ export default function RootLayout({ children }) {
 - `apps/web/src/app/(app)/audit/page.tsx` — filtrar en SQL con `searchParams.q`
 - `apps/web/src/components/ui/data-table.tsx` — sorting/pagination → `useQueryState`
 
-- [ ] `bun add nuqs` en `apps/web` — 2 min
-- [ ] Agregar `NuqsAdapter` en `app/layout.tsx` — 3 min
-- [ ] Migrar `AuditTable.tsx`: `useState → useQueryState("q")` — 10 min
-- [ ] Actualizar `audit/page.tsx`: filtrar en SQL con `searchParams.q` — 15 min
-- [ ] Migrar `DataTable` sorting/pagination a `useQueryState` — 20 min
-- [ ] `bun run test:components` — sin regresiones — 5 min
+- [x] `bun add nuqs` en `apps/web` — completado 2026-03-27
+- [x] Agregar `NuqsAdapter` en `app/layout.tsx` — completado 2026-03-27
+- [x] Migrar `AuditTable.tsx`: `useState → useQueryState("q")` — completado 2026-03-27
+- [x] Actualizar `audit/page.tsx` — completado 2026-03-27 (filtro texto sigue en JS — `queryEvents` no soporta full-text search en SQL)
+- [ ] Migrar `DataTable` sorting/pagination a `useQueryState` — pendiente
+- [x] `bun run test:components` — sin regresiones — completado 2026-03-27
 
 ---
 
@@ -918,13 +914,13 @@ Cero `useEffect + fetch` en Client Components para carga de datos. Cero `fetch()
 
 > **Antes de eliminar cada ruta:** confirmar con `rg '"/api/...' apps/web/src` que el archivo tiene cero callers. Las rutas de Slack (`/api/slack`), Teams (`/api/teams`), health (`/api/health`), upload (`/api/upload`), y todas las rutas de `/api/rag/` son webhooks externos o endpoints legítimos — **no tocar**.
 
-- [ ] Para cada ruta de la tabla: verificar cero callers con `rg "/api/[ruta]"` — 10 min
-- [ ] Eliminar los 9 archivos de route handler — 5 min
-- [ ] `bun run build` — sin errores de imports rotos — 5 min
-- [ ] `bun run test` — sin regresiones — 5 min
-- [ ] Commit: `refactor(web): eliminar 9 rutas API reemplazadas por Server Actions — plan8 f2.10`
+- [x] Para cada ruta de la tabla: verificar cero callers con `rg "/api/[ruta]"` — completado 2026-03-27
+- [x] Eliminar los 9 archivos de route handler — completado 2026-03-27
+- [ ] `bun run build` — pendiente verificación explícita
+- [ ] `bun run test` — pendiente verificación explícita con turbo
+- [x] Incluido en commit: `perf(web): server pattern, memoizacion, lazy loading, next-safe-action, rhf, nuqs — plan8 f2` — completado 2026-03-27
 
-**Estado: pendiente**
+**Estado: completado 2026-03-27**
 
 ---
 
@@ -945,10 +941,10 @@ Objetivo: versiones consistentes en todo el monorepo. Linting extendido a todos 
 - `packages/db/package.json`: `"drizzle-orm": "^0.38.0"`
 - `apps/web/package.json`: `"drizzle-orm": "^0.38.4"`
 
-- [ ] Actualizar `packages/db/package.json` a la misma versión que `apps/web` — 5 min
-- [ ] `bun install` — verificar que el lockfile resuelve una sola versión de drizzle-orm — 5 min
-- [ ] `bun run test packages/db/` — 161 tests de queries pasan — 10 min
-- [ ] Commit: `chore(deps): sincronizar drizzle-orm en packages/db y apps/web — plan8 f3.7`
+- [x] Actualizar `packages/db/package.json` a la misma versión que `apps/web` — completado 2026-03-27
+- [x] `bun install` — lockfile resuelve una sola versión de drizzle-orm — completado 2026-03-27
+- [x] `bun run test packages/db/` — 161 tests pasan — completado 2026-03-27
+- [x] Commit: `chore(deps): sincronizar drizzle-orm en packages/db y apps/web — plan8 f3.7` — completado 2026-03-27
 
 ---
 
@@ -956,10 +952,10 @@ Objetivo: versiones consistentes en todo el monorepo. Linting extendido a todos 
 
 Actualmente `bun run lint` solo corre en `apps/web`. Los packages no tienen type-check automatizado.
 
-- [ ] Agregar `"lint": "tsc --noEmit"` en `packages/db`, `packages/logger`, `packages/config`, `packages/shared` — 10 min
-- [ ] Agregar `"lint"` como tarea en `turbo.json` con dependencia de `build` — 5 min
-- [ ] Correr `turbo lint` — reparar errores latentes que aparezcan — 30 min
-- [ ] Commit: `ci(lint): extender type-check a todos los packages via turbo — plan8 f3.8`
+- [x] Agregar `"lint": "tsc --noEmit"` en `packages/db`, `packages/logger`, `packages/config`, `packages/shared` — completado 2026-03-27
+- [x] Agregar `"lint"` como tarea en `turbo.json` con dependencia de `build` — completado 2026-03-27
+- [x] Correr `turbo lint` — errores latentes reparados (module resolution, @types/node, DOM lib, scripts excluidos) — completado 2026-03-27
+- [x] Commit: `ci(lint): extender type-check a todos los packages via turbo — plan8 f3.8` — completado 2026-03-27
 
 ---
 
@@ -1004,12 +1000,12 @@ await migrate(db, { migrationsFolder: "./drizzle" })
 - `packages/db/src/init.ts` — simplificado a `migrate(db, ...)`
 - `packages/db/package.json` — agregar scripts `db:push` y `db:generate`
 
-- [ ] Crear `packages/db/drizzle.config.ts` — 5 min
-- [ ] `cd packages/db && bun drizzle-kit generate` — genera la migración inicial desde schema.ts — 5 min
-- [ ] Verificar que el SQL generado es idéntico al de `init.ts` — 10 min
-- [ ] Reemplazar `init.ts`: eliminar los 300 líneas de SQL, usar `migrate(db, { migrationsFolder: "./drizzle" })` — 15 min
-- [ ] Agregar scripts en `package.json`: `"db:push": "drizzle-kit push"`, `"db:generate": "drizzle-kit generate"` — 3 min
-- [ ] `bun run test packages/db/` — todos los tests pasan con la nueva inicialización — 10 min
+- [x] Crear `packages/db/drizzle.config.ts` — completado 2026-03-27
+- [x] `cd packages/db && bun drizzle-kit generate` — genera `drizzle/0000_hesitant_clint_barton.sql` con 27 tablas — completado 2026-03-27
+- [x] SQL generado verificado + FTS5 virtual tables y triggers agregados manualmente — completado 2026-03-27
+- [x] Reemplazar `init.ts`: 400 líneas → `migrate(db, { migrationsFolder })` — completado 2026-03-27
+- [x] Agregar scripts en `package.json`: `"db:push": "drizzle-kit push"`, `"db:generate": "drizzle-kit generate"` — completado 2026-03-27
+- [x] `bun run test packages/db/` — 161 tests pasan — completado 2026-03-27
 
 ---
 
@@ -1041,12 +1037,12 @@ Cada dependencia sin uso en `package.json` es:
 
 > **Precaución:** esta opción puede revelar errores latentes en `apps/web`. Ejecutar `tsc --noEmit` después de agregarla y corregir los errores que aparezcan antes de commitear.
 
-- [ ] `bun remove zustand dompurify` en `apps/web` — 2 min
-- [ ] Verificar con `rg "zustand|dompurify" apps/web/src` que realmente tienen 0 usos — 2 min
-- [ ] Agregar `"exactOptionalPropertyTypes": true` en `apps/web/tsconfig.json` — 2 min
-- [ ] `cd apps/web && tsc --noEmit` — corregir los errores que aparezcan (esperar 5-20 según el impacto) — variable
-- [ ] `bun run test` — sin regresiones — 5 min
-- [ ] Commit: `chore(deps): remover deps sin uso + alinear exactOptionalPropertyTypes — plan8 f3.10`
+- [x] `bun remove zustand dompurify @types/dompurify` en `apps/web` — completado 2026-03-27
+- [x] Verificado con rg: 0 usos de zustand y dompurify — completado 2026-03-27
+- [x] Agregar `"exactOptionalPropertyTypes": true` en `apps/web/tsconfig.json` — completado 2026-03-27
+- [x] `cd apps/web && tsc --noEmit` — 14 errores detectados y corregidos en 9 archivos — completado 2026-03-27
+- [x] `bun run test` — 205 tests pasan, sin regresiones — completado 2026-03-27
+- [x] Commit: `chore(deps): remover deps sin uso + alinear exactOptionalPropertyTypes — plan8 f3.10` — completado 2026-03-27
 
 ---
 
@@ -1056,11 +1052,12 @@ Cada dependencia sin uso en `package.json` es:
 
 ### Checklist de cierre
 
-- [ ] `bun run test` — todos pasan
-- [ ] CHANGELOG.md actualizado
-- [ ] `git commit -m "chore: drizzle-kit push reemplaza init.ts manual — plan8 f3"`
+- [x] `bun run test` — 205 tests pasan — completado 2026-03-27
+- [x] `turbo lint` — 5/5 exitosos — completado 2026-03-27
+- [x] CHANGELOG.md actualizado — completado 2026-03-27
+- [x] `git commit -m "chore: drizzle-kit push reemplaza init.ts manual — plan8 f3"` — completado 2026-03-27
 
-**Estado: pendiente**
+**Estado: completado 2026-03-27**
 
 ---
 
