@@ -7,22 +7,23 @@ async function getAnalyticsData(): Promise<AnalyticsData> {
   const db = getDb()
   const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000
 
+  // Drizzle 0.45: SQL<T> es invariante — usar SQL sin genérico y castear al mapear
   const [queriesByDayRaw, topCollectionsRaw, feedbackRaw, topUsersRaw] = await Promise.all([
     db
       .select({
-        day: sql<string>`date(${events.ts}/1000, 'unixepoch')`.as("day"),
-        count: sql<number>`count(*)`.as("count"),
+        day: sql`date(${events.ts}/1000, 'unixepoch')`,
+        count: sql`count(*)`,
       })
       .from(events)
       .where(sql`${events.type} = 'rag.stream_started' AND ${events.ts} >= ${thirtyDaysAgo}`)
       .groupBy(sql`date(${events.ts}/1000, 'unixepoch')`)
-      .orderBy(sql`day DESC`)
+      .orderBy(sql`date(${events.ts}/1000, 'unixepoch') DESC`)
       .limit(30),
 
     db
       .select({
-        collection: sql<string>`json_extract(${events.payload}, '$.collection')`.as("collection"),
-        count: sql<number>`count(*)`.as("count"),
+        collection: sql`json_extract(${events.payload}, '$.collection')`,
+        count: sql`count(*)`,
       })
       .from(events)
       .where(eq(events.type, "rag.stream_started"))
@@ -33,7 +34,7 @@ async function getAnalyticsData(): Promise<AnalyticsData> {
     db
       .select({
         rating: messageFeedback.rating,
-        count: sql<number>`count(*)`.as("count"),
+        count: sql`count(*)`,
       })
       .from(messageFeedback)
       .groupBy(messageFeedback.rating),
@@ -41,7 +42,7 @@ async function getAnalyticsData(): Promise<AnalyticsData> {
     db
       .select({
         userId: events.userId,
-        queries: sql<number>`count(*)`.as("queries"),
+        queries: sql`count(*)`,
       })
       .from(events)
       .where(eq(events.type, "rag.stream_started"))
@@ -51,15 +52,15 @@ async function getAnalyticsData(): Promise<AnalyticsData> {
   ])
 
   return {
-    queriesByDay: queriesByDayRaw.map((r) => ({ day: r.day, queries: r.count })),
+    queriesByDay: queriesByDayRaw.map((r) => ({ day: r.day as string, queries: r.count as number })),
     topCollections: topCollectionsRaw
       .filter((r) => r.collection)
-      .map((r) => ({ name: r.collection, queries: r.count })),
+      .map((r) => ({ name: r.collection as string, queries: r.count as number })),
     feedbackDistribution: [
-      { name: "👍 Útil", value: feedbackRaw.find((r) => r.rating === "up")?.count ?? 0 },
-      { name: "👎 No útil", value: feedbackRaw.find((r) => r.rating === "down")?.count ?? 0 },
+      { name: "👍 Útil", value: (feedbackRaw.find((r) => r.rating === "up")?.count as number) ?? 0 },
+      { name: "👎 No útil", value: (feedbackRaw.find((r) => r.rating === "down")?.count as number) ?? 0 },
     ],
-    topUsers: topUsersRaw.map((r) => ({ userId: r.userId, queries: r.queries })),
+    topUsers: topUsersRaw.map((r) => ({ userId: r.userId, queries: r.queries as number })),
   }
 }
 

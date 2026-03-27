@@ -17,7 +17,7 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
-    "@libsql/client": "^0.14.0",
+    "@libsql/client": "^0.17.2",
     "@rag-saldivia/shared": "workspace:*",
     "bcrypt-ts": "^5.0.0",
     "drizzle-orm": "0.45.1"

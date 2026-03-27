@@ -19,6 +19,7 @@ const nextConfig: NextConfig = {
   // drizzle-orm NO va acá — debe bundlearse con el schema para evitar conflictos de instancias
   serverExternalPackages: [
     "@libsql/client",
+    "@libsql/core",
     "@libsql/isomorphic-fetch",
     "@libsql/isomorphic-ws",
     "@libsql/hrana-client",
