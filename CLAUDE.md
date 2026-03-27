@@ -545,7 +545,7 @@ src/components/
                   SystemStatus, IngestionKanban, AnalyticsDashboard,
                   KnowledgeGapsClient, ReportsAdmin, WebhooksAdmin,
                   IntegrationsAdmin, ExternalSourcesAdmin
-  collections/  — CollectionsList, DocumentGraph, CollectionHistory
+  collections/  — CollectionsList, DocumentGraph
   settings/     — SettingsClient
   upload/       — UploadClient
   extract/      — ExtractionWizard
