@@ -9,6 +9,24 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Plan 11 — Documentación (README, CONTRIBUTING, API, packages, JSDoc, CLAUDE, docs/)
+
+#### Added
+- `README.md` — reescrito (badges, Quick Start, arquitectura, stack, features v1 y futuras, ≥300 líneas)
+- `CONTRIBUTING.md` — setup, tests, commits, PR, patrones de código
+- `SECURITY.md`, `LICENSE` (MIT, 2026)
+- `.github/CODEOWNERS`, `.github/ISSUE_TEMPLATE/bug_report.md`, `feature_request.md`
+- `packages/db/README.md` — diagrama ER Mermaid + lista de queries
+- `packages/logger/README.md`, `packages/shared/README.md`, `packages/config/README.md`, `apps/cli/README.md`
+- `docs/api.md` — referencia de endpoints HTTP verificados
+- `apps/web/src/middleware.ts` — re-export de `proxy` como middleware de Next.js
+
+#### Changed
+- `CLAUDE.md`, `docs/architecture.md`, `docs/onboarding.md`, `docs/workflows.md`, `docs/testing.md`, `docs/blackbox.md` — precisión post Plan 8–10 (Next 16, Redis, hooks, sin crossdoc/next-safe-action obsoletos)
+
+#### Documentation (JSDoc)
+- Funciones críticas: `getRedisClient`, `nextSequence`, `createJwt`, `extractClaims`, `ragFetch`, `getCachedRagCollections`, `startIngestionWorker`, `proxy`, `persistEvent` (logger), `reconstructFromEvents`
+
 ### Plan 10 — Testing completo (visual, a11y, cobertura, E2E, smoke Redis)
 
 #### Added
