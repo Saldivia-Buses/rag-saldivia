@@ -34,6 +34,9 @@ data/*.db
 data/*.db-shm
 data/*.db-wal
 data/uploads/
+apps/web/data/*.db
+apps/web/data/*.db-shm
+apps/web/data/*.db-wal
 
 # Playwright — resultados de tests y reportes locales
 test-results/
