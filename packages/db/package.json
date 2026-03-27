@@ -2,24 +2,28 @@
   "name": "@rag-saldivia/db",
   "version": "0.1.0",
   "private": true,
-    "exports": {
+  "exports": {
     ".": "./src/index.ts"
   },
   "scripts": {
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push",
     "generate": "drizzle-kit generate",
     "migrate": "bun src/migrate.ts",
     "seed": "bun src/seed.ts",
     "test": "bun test src/__tests__",
     "test:coverage": "bun test src/__tests__ --coverage",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "lint": "tsc --noEmit"
   },
   "dependencies": {
     "@libsql/client": "^0.14.0",
     "@rag-saldivia/shared": "workspace:*",
     "bcrypt-ts": "^5.0.0",
-    "drizzle-orm": "^0.38.0"
+    "drizzle-orm": "^0.38.4"
   },
   "devDependencies": {
+    "@types/node": "^25.5.0",
     "drizzle-kit": "^0.30.0",
     "typescript": "^6.0.0"
   }
