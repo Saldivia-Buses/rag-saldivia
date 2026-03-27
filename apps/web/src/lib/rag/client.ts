@@ -114,7 +114,11 @@ export async function ragGenerateStream(
 }
 
 /**
- * Request simple al RAG (sin stream) para health check y metadata.
+ * Hace `fetch` al RAG Server. Con `MOCK_RAG=true` no llama al servidor real.
+ *
+ * Los consumidores deben comprobar `response.ok` o el código HTTP antes de parsear el body;
+ * un upstream puede devolver 4xx/5xx. El streaming de chat usa `ragGenerateStream`, que valida
+ * el status antes de devolver el stream.
  */
 export async function ragFetch(
   path: string,

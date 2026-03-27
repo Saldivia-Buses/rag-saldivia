@@ -7,8 +7,8 @@
  * - logout escribe `SET revoked:{jti} 1 EX {ttl}` en Redis
  * - extractClaims verifica blacklist antes de retornar claims
  *
- * NOTA: la verificación de revocación NO está en middleware.ts porque
- * el middleware corre en Edge runtime y ioredis requiere Node.js APIs.
+ * NOTA: la verificación de revocación NO está en `proxy.ts` (middleware Edge) porque
+ * ioredis requiere Node.js APIs.
  * extractClaims() es llamado desde route handlers (Node.js) — ahí funciona.
  */
 
@@ -26,6 +26,11 @@ function getExpiry(): string {
   return process.env["JWT_EXPIRY"] ?? "24h"
 }
 
+/**
+ * Crea un JWT firmado con `jti` (JWT ID) único. El `jti` es requerido para que el logout pueda
+ * revocar el token en Redis. Si se elimina el `setJti()`, el logout dejará de funcionar de inmediato.
+ * El `jti` se propaga en el header `x-user-jti` desde el middleware en `proxy.ts`.
+ */
 export async function createJwt(claims: Omit<JwtClaims, "iat" | "exp" | "jti">): Promise<string> {
   const expiry = getExpiry()
   return new SignJWT({ ...claims })
@@ -55,6 +60,11 @@ async function isRevoked(jti: string): Promise<boolean> {
   }
 }
 
+/**
+ * Verifica el JWT y comprueba la blacklist en Redis. Corre en runtime Node.js (route handlers).
+ * No corre en `proxy.ts` (Edge) porque ioredis no es compatible con Edge. La revocación se
+ * resuelve aquí usando el `jti` que el proxy añade en `x-user-jti`.
+ */
 export async function extractClaims(request: Request): Promise<JwtClaims | null> {
   // Si el middleware ya autenticó la request (JWT o SYSTEM_API_KEY),
   // los claims están en los headers x-user-* — usarlos directamente.

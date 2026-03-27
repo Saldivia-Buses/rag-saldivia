@@ -16,6 +16,11 @@ import Redis from "ioredis"
 
 let _client: Redis | null = null
 
+/**
+ * Retorna el cliente Redis singleton. Lanza error en el primer acceso si `REDIS_URL`
+ * no está configurado (fail-fast en startup, no lazy). No usar en Edge runtime — solo en Node.js.
+ * Para BullMQ, usar `getBullMQConnection()` en `apps/web` en lugar de este singleton.
+ */
 export function getRedisClient(): Redis {
   if (!_client) {
     const url = process.env["REDIS_URL"]

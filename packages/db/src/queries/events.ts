@@ -9,6 +9,11 @@ import { getRedisClient } from "../redis"
 import { events } from "../schema"
 import type { EventSource, LogLevel, EventType } from "@rag-saldivia/shared"
 
+/**
+ * Genera el siguiente número de secuencia monotónico usando Redis `INCR` en la key `events:seq`.
+ * Si Redis falla, esta función lanza — el evento no se graba. Los números no son necesariamente
+ * consecutivos entre reinicios si Redis pierde estado.
+ */
 async function nextSequence(): Promise<number> {
   return getRedisClient().incr("events:seq")
 }

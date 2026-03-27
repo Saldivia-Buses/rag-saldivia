@@ -251,6 +251,11 @@ const EVENT_HANDLERS: Record<string, EventHandler> = {
 
 // ── Función principal ───────────────────────────────────────────────────────
 
+/**
+ * Reconstruye el estado del sistema a partir de eventos (blackbox replay). Carga todos los eventos
+ * en memoria — no usar en producción con cientos de miles de filas sin paginar. El estado refleja
+ * el pasado observado, no predice el futuro.
+ */
 export function reconstructFromEvents(events: DbEvent[]): ReconstructedState {
   const state: ReconstructedState = {
     users: new Map(),

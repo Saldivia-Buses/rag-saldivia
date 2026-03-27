@@ -24,6 +24,11 @@ async function fetchCollectionsFromRAG(): Promise<string[]> {
   }
 }
 
+/**
+ * Obtiene la lista de colecciones desde Redis (TTL: 60s). Llamar a `invalidateCollectionsCache()`
+ * después de cualquier POST o DELETE en `/api/rag/collections` — si no, la UI puede mostrar
+ * datos obsoletos hasta ~60 segundos.
+ */
 export async function getCachedRagCollections(): Promise<string[]> {
   const redis = getRedisClient()
   const cached = await redis.get(CACHE_KEY)

@@ -112,6 +112,11 @@ async function writeToFiles(level: LogLevel, line: string): Promise<void> {
 
 // ── Write Event ────────────────────────────────────────────────────────────
 
+/**
+ * Persiste en la tabla `events` vía `writeEvent` de `@rag-saldivia/db`. El campo `type` debe ser un
+ * `EventType` válido del schema compartido; un string arbitrario puede degradar el comportamiento
+ * en validación. Preferir siempre tipos importados de `@rag-saldivia/shared`.
+ */
 async function persistEvent(level: LogLevel, type: EventType, payload: Record<string, unknown>, ctx?: LogContext) {
   try {
     // userId=0 es el sistema (SYSTEM_API_KEY) — no tiene FK en la tabla users

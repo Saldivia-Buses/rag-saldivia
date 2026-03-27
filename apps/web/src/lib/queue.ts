@@ -47,6 +47,10 @@ export function createQueueEvents(): QueueEvents {
  * Factory para el Worker — solo llamar desde el worker entry point (ingestion.ts).
  * Acepta la función de procesamiento como parámetro para evitar dependencia circular.
  */
+/**
+ * Inicia el worker de BullMQ. No debe llamarse desde route handlers: va en el entry point del
+ * worker (`workers/ingestion.ts`). Llamar dos veces puede producir advertencias de BullMQ.
+ */
 export function startIngestionWorker(
   processJobFn: (job: Job) => Promise<void>
 ): Worker {

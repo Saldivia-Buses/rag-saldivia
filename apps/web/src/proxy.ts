@@ -46,6 +46,11 @@ async function verifyClaims(token: string): Promise<JwtClaims | null> {
   }
 }
 
+/**
+ * Punto de entrada del middleware de Next.js (auth + RBAC en el edge). Genera `x-request-id`
+ * para correlación de logs. Propaga `x-user-jti` para que los route handlers puedan comprobar
+ * revocación de JWT con Redis. Corre en Edge — sin ioredis, SQLite ni `fs`.
+ */
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
