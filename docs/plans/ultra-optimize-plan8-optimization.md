@@ -1228,11 +1228,11 @@ export default function ChatError({ error, reset }: { error: Error; reset: () =>
 }
 ```
 
-- [ ] Crear `apps/web/src/components/error-boundary.tsx` — componente base reutilizable `<ErrorBoundary>` con estado `hasError` — 20 min
-- [ ] Crear `apps/web/src/app/(app)/chat/error.tsx` — Error Boundary específico para la ruta `/chat` — 10 min
-- [ ] Crear `apps/web/src/app/(app)/admin/error.tsx` — Error Boundary para todo el panel admin — 10 min
-- [ ] Test: `ErrorBoundary` renderiza el fallback cuando `error` prop tiene mensaje — 15 min
-- [ ] Commit: `feat(web): error boundaries en chat y admin — plan8 f6.15`
+- [x] Crear `apps/web/src/components/error-boundary.tsx` — componente base reutilizable `<ErrorBoundary>` con estado `hasError` — completado 2026-03-27
+- [x] Crear `apps/web/src/app/(app)/chat/error.tsx` — Error Boundary específico para la ruta `/chat` — completado 2026-03-27
+- [x] Crear `apps/web/src/app/(app)/admin/error.tsx` — Error Boundary para todo el panel admin — completado 2026-03-27
+- [x] Test: `ErrorBoundary` renderiza el fallback cuando `error` prop tiene mensaje — 7 tests en verde — completado 2026-03-27
+- [x] Commit: `feat(web): error boundaries en chat y admin — plan8 f6.15` — completado 2026-03-27
 
 ---
 
@@ -1278,11 +1278,11 @@ Turborepo puede determinar qué packages fueron afectados por un PR comparando c
 
 > **Para push a main:** siempre correr la suite completa (`bun run test` sin `--affected`). El `--affected` solo aplica a PRs donde el contexto de base branch está disponible.
 
-- [ ] Agregar `actions/cache` para `~/.bun/install/cache` — ahorra 30-60s por job — 15 min
-- [ ] Separar `test-logic`, `test-components`, `type-check` y `lint` en jobs paralelos — 20 min
-- [ ] Agregar `bunx turbo run test --affected` para jobs de PR — 10 min
-- [ ] Verificar que `test:visual` y `test:a11y` corren solo después de que pase `test-logic` — 10 min
-- [ ] Commit: `ci: paralelizar jobs, cache de Bun, turbo --affected — plan8 f6.16`
+- [x] Agregar `actions/cache` para `~/.bun/install/cache` — ahorra 30-60s por job — completado 2026-03-27
+- [x] Separar `test-logic`, `test-components`, `type-check` y `lint` en jobs paralelos — completado 2026-03-27
+- [x] Agregar `bunx turbo run test --affected` para jobs de PR — completado 2026-03-27
+- [x] Verificar que `test:visual` y `test:a11y` corren solo después de que pase `test-logic` — completado 2026-03-27
+- [x] Commit: `ci: paralelizar jobs, cache de bun, turbo --affected — plan8 f6.16` — completado 2026-03-27
 
 ---
 
@@ -1292,12 +1292,12 @@ Error Boundaries activos en `/chat` y `/admin`. CI muestra jobs paralelos en el 
 
 ### Checklist de cierre
 
-- [ ] `bun run test` — todos pasan
-- [ ] `bun run test:components` — todos pasan
-- [ ] CHANGELOG.md actualizado
-- [ ] `git commit -m "feat(web): error boundaries + ci paralelo — plan8 f6"`
+- [x] `bun run test` — todos pasan (273 tests) — completado 2026-03-27
+- [x] `bun run test:components` — todos pasan (154 tests, +7 nuevos) — completado 2026-03-27
+- [x] CHANGELOG.md actualizado — completado 2026-03-27
+- [x] Commits realizados: `feat(web): error boundaries en chat y admin — plan8 f6.15` + `ci: paralelizar jobs, cache de bun, turbo --affected — plan8 f6.16`
 
-**Estado: pendiente**
+**Estado: completado 2026-03-27**
 
 ---
 
