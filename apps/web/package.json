@@ -87,7 +87,7 @@
     "@types/react-dom": "^19.0.0",
     "@vitejs/plugin-react": "^6.0.1",
     "axe-playwright": "^2.2.2",
-    "eslint": "9",
+    "eslint": "10",
     "eslint-config-next": "^16.2.1",
     "happy-dom": "^20.8.8",
     "ioredis-mock": "^8.13.1",
