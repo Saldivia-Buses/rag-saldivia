@@ -161,19 +161,11 @@ Objetivo: `cd apps/web && bunx tsc --noEmit` devuelve exit code 0 con exactament
 
 ### Error 1 — `apps/web/src/app/actions/collections.ts:3`
 
-**Problema:** `updateTag` no existe en `next/cache` en Next.js 16.
+**Problema:** `updateTag` no existe en `next/cache` en Next.js 16. Es una API de la directiva `"use cache"`, no del App Router cache tradicional.
 
-**Línea 3 actual:**
-```typescript
-import { revalidatePath, updateTag } from "next/cache"
-```
+> **Nota sobre la solución real aplicada:** `revalidateTag` tampoco funciona en Next.js 16 sin un segundo argumento. La solución correcta fue eliminar `updateTag` completamente y reemplazarlo por `invalidateCollectionsCache()` — el mecanismo Redis ya existente en el proyecto para invalidar la cache de colecciones. El import quedó solo `import { revalidatePath } from "next/cache"` más el import de `invalidateCollectionsCache`.
 
-**Línea 3 correcta:**
-```typescript
-import { revalidatePath, revalidateTag } from "next/cache"
-```
-
-**Adicionalmente:** en el mismo archivo, reemplazar las dos llamadas a `updateTag("collections")` por `revalidateTag("collections")`.
+La lógica en cada action quedó: `await invalidateCollectionsCache()` + `revalidatePath("/collections")`.
 
 Hay exactamente dos llamadas, en `actionCreateCollection` y `actionDeleteCollection`.
 
@@ -226,19 +218,18 @@ cd ../../packages/db && bunx tsc --noEmit
 # Salida esperada: (vacía) — exit code 0
 ```
 
-- [ ] En `apps/web/src/app/actions/collections.ts`: cambiar `updateTag` → `revalidateTag` en el import (línea 3)
-- [ ] En el mismo archivo: cambiar las dos llamadas `updateTag("collections")` → `revalidateTag("collections")`
-- [ ] En `packages/logger/src/blackbox.ts`: aplicar el patrón de spread condicional en `handleIngestionStarted` (línea ~115)
-- [ ] En `packages/logger/src/blackbox.ts`: aplicar el patrón de spread condicional en `handleIngestionCompleted` (línea ~131)
-- [ ] En `packages/logger/src/blackbox.ts`: aplicar el patrón de spread condicional en `handleIngestionFailed` (línea ~148) — usa `error` en lugar de `sourceId`
-- [ ] En `packages/logger/src/blackbox.ts`: aplicar el patrón de spread condicional en `handleIngestionStalled` (línea ~170) — sin `sourceId` ni `error`
+- [x] En `apps/web/src/app/actions/collections.ts`: remover `updateTag`, reemplazar con `invalidateCollectionsCache()` + solo `revalidatePath` — completado 2026-03-27
+- [x] En `packages/logger/src/blackbox.ts`: aplicar spread condicional en `handleIngestionStarted` (línea ~115) — completado 2026-03-27
+- [x] En `packages/logger/src/blackbox.ts`: aplicar spread condicional en `handleIngestionCompleted` (línea ~131) — completado 2026-03-27
+- [x] En `packages/logger/src/blackbox.ts`: aplicar spread condicional en `handleIngestionFailed` (línea ~148) — completado 2026-03-27
+- [x] En `packages/logger/src/blackbox.ts`: aplicar spread condicional en `handleIngestionStalled` (línea ~170) — completado 2026-03-27
 - [ ] Crear `packages/db/src/ioredis-mock.d.ts` con `declare module "ioredis-mock"`
-- [ ] `cd apps/web && bunx tsc --noEmit` → salida vacía, exit 0 (confirmar)
-- [ ] `cd packages/db && bunx tsc --noEmit` → salida vacía, exit 0 (confirmar)
-- [ ] `export PATH="$HOME/.bun/bin:$PATH" && cd /home/enzo/rag-saldivia && bun run test` → 259 tests pasan
-- [ ] Commit: `fix(ts): resolver 5 errores tsc — revalidateTag, exactOptionalPropertyTypes, ioredis-mock types — plan9 f9.2`
+- [x] `cd apps/web && bunx tsc --noEmit` → salida vacía, exit 0 — confirmado 2026-03-27
+- [ ] `cd packages/db && bunx tsc --noEmit` → salida vacía, exit 0 (pendiente — ioredis-mock.d.ts falta)
+- [x] `export PATH="$HOME/.bun/bin:$PATH" && cd /home/enzo/rag-saldivia && bun run test` → 259 tests pasan — confirmado 2026-03-27
+- [x] Commits: `fix(blackbox)` + `fix(collections)` — 2026-03-27
 
-**Estado: pendiente**
+**Estado: parcialmente completado — falta crear `packages/db/src/ioredis-mock.d.ts` para que packages/db pase tsc**
 
 ---
 

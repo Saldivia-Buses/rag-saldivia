@@ -9,6 +9,18 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
+### Plan 9 — Repo Limpio (en progreso)
+
+#### F9.2 — TypeScript a cero errores en apps/web (2026-03-27)
+
+##### Fixed
+- `apps/web/src/app/actions/collections.ts`: remover `updateTag` (API de `"use cache"` no usada en el proyecto) — reemplazar con `await invalidateCollectionsCache()` que es el mecanismo Redis correcto para este stack — *(Plan 9 F9.2)*
+- `packages/logger/src/blackbox.ts`: corregir las 4 funciones `handleIngestion*` — usar spread condicional `...(x != null ? { field: x } : {})` en lugar de `field: x | undefined` para cumplir con `exactOptionalPropertyTypes: true` en `IngestionEventRecord` — *(Plan 9 F9.2)*
+
+**Pendiente de F9.2:** crear `packages/db/src/ioredis-mock.d.ts` para resolver el error de tipos de `ioredis-mock` en `packages/db`.
+
+---
+
 ### Plan 8 — Optimización (Fases 0–8 completadas)
 
 #### Fase 8 — Redis como dependencia requerida + BullMQ (2026-03-27)
