@@ -1,3 +1,4 @@
+import path from "path"
 import type { NextConfig } from "next"
 import withBundleAnalyzerFactory from "@next/bundle-analyzer"
 
@@ -60,6 +61,12 @@ const nextConfig: NextConfig = {
     fetches: {
       fullUrl: process.env["NODE_ENV"] === "development",
     },
+  },
+
+  // Next.js 16: Turbopack es el bundler default.
+  // turbopack.root y outputFileTracingRoot deben apuntar al mismo valor.
+  turbopack: {
+    root: __dirname,
   },
 
   // Headers de seguridad

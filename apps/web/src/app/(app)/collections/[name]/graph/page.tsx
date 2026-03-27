@@ -1,13 +1,7 @@
 import { requireUser } from "@/lib/auth/current-user"
-import dynamic from "next/dynamic"
 import Link from "next/link"
 import { ArrowLeft } from "lucide-react"
-import { Skeleton } from "@/components/ui/skeleton"
-
-const DocumentGraph = dynamic(
-  () => import("@/components/collections/DocumentGraph").then((m) => ({ default: m.DocumentGraph })),
-  { ssr: false, loading: () => <Skeleton className="h-96 w-full rounded-xl" /> }
-)
+import { DocumentGraphLazy } from "@/components/collections/DocumentGraphLazy"
 
 export default async function CollectionGraphPage({
   params,
@@ -29,7 +23,7 @@ export default async function CollectionGraphPage({
           Similitud semántica entre documentos de <strong>{collection}</strong>. Nodos cercanos tienen contenido relacionado.
         </p>
       </div>
-      <DocumentGraph collection={collection} />
+      <DocumentGraphLazy collection={collection} />
       <p className="text-xs mt-3" style={{ color: "var(--muted-foreground)" }}>
         Simulación de similitud. En producción los embeddings vienen de Milvus via el RAG server.
       </p>

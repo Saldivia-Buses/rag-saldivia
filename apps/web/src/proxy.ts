@@ -46,7 +46,7 @@ async function verifyClaims(token: string): Promise<JwtClaims | null> {
   }
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Rutas públicas siempre pasan

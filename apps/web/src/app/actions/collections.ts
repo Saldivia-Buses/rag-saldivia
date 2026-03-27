@@ -1,6 +1,6 @@
 "use server"
 
-import { revalidatePath, revalidateTag } from "next/cache"
+import { revalidatePath, updateTag } from "next/cache"
 import { requireAdmin } from "@/lib/auth/current-user"
 import { ragFetch } from "@/lib/rag/client"
 
@@ -12,7 +12,7 @@ export async function actionCreateCollection(name: string) {
     body: JSON.stringify({ collection_name: name }),
   } as Parameters<typeof ragFetch>[1])
   if ("error" in res) throw new Error(res.error.message)
-  revalidateTag("collections")
+  updateTag("collections")
   revalidatePath("/collections")
 }
 
@@ -25,6 +25,6 @@ export async function actionDeleteCollection(name: string) {
   } catch {
     // En modo mock: simular éxito
   }
-  revalidateTag("collections")
+  updateTag("collections")
   revalidatePath("/collections")
 }
