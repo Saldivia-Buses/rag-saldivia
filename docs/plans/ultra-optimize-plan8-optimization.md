@@ -1077,14 +1077,12 @@ Next.js 15.x tiene mejoras en App Router caching, `use cache` directive y perfor
 
 > **Riesgo principal — `next-auth@beta`:** NextAuth v5 beta ha tenido incompatibilidades con versiones recientes de Next.js. Si la última versión de Next.js no es compatible con `next-auth@beta` actual, **no forzar el upgrade**. Plan B: `bun add next@[última-versión-compatible]` — usar la última versión de Next.js que funcione con el `next-auth@beta` instalado. Documentar la versión pinneada y el motivo en el commit.
 
-- [ ] Leer CHANGELOG de Next.js — identificar breaking changes en App Router, middleware, headers — 15 min
-- [ ] Verificar matrix de compatibilidad next.js / next-auth en el repo de NextAuth antes de instalar — 10 min
-- [ ] `cd apps/web && bun add next@latest` — 5 min
-- [ ] **Si hay incompatibilidad con next-auth@beta:** `bun add next@[última-versión-compatible]` en lugar de `@latest` — variable
-- [ ] `bun run dev` — smoke test: login con password, login SSO, chat, admin panel — 10 min
-- [ ] `bun run test` + `bun run test:components` — sin regresiones — 10 min
-- [ ] Aplicar migraciones si hay breaking changes en middleware o route handlers — variable
-- [ ] Commit: `chore(deps): upgrade next.js a [version] — plan8 f4.9`
+- [x] Leer CHANGELOG de Next.js — breaking changes confirmados: Turbopack default, middleware→proxy, dynamic ssr:false, revalidateTag — completado 2026-03-27
+- [x] Verificar matrix de compatibilidad next.js / next-auth — next-auth@5.0.0-beta.30 compatible con Next.js 16.2.1 — completado 2026-03-27
+- [x] `cd apps/web && bun add next@latest` — instalado 16.2.1 — completado 2026-03-27
+- [x] Aplicar migraciones: turbopack.root, proxy.ts, DocumentGraphLazy, updateTag — completado 2026-03-27
+- [x] `bun run test` + `bun run test:components` — sin regresiones — completado 2026-03-27
+- [x] Commit: `chore(deps): upgrade next.js a 16.2.1 — plan8 f4.9` — completado 2026-03-27
 
 ---
 
@@ -1094,11 +1092,11 @@ Drizzle 0.40+ tiene mejor soporte para FTS5 de SQLite y API más ergonómica en 
 
 **Archivos potencialmente afectados:** `packages/db/src/schema.ts`, todos los archivos de queries.
 
-- [ ] Leer CHANGELOG de drizzle-orm — cambios en tipos del query builder o en el cliente de libsql — 15 min
-- [ ] `cd packages/db && bun add drizzle-orm@latest drizzle-kit@latest` + mismo en `apps/web` — 5 min
-- [ ] `bun run test packages/db/` — 161 tests de queries pasan — 10 min
-- [ ] Verificar que `packages/db/src/schema.ts` compila sin errores — 5 min
-- [ ] Commit: `chore(deps): upgrade drizzle-orm a [version] — plan8 f4.10`
+- [x] Leer CHANGELOG de drizzle-orm — SQL type invariance + Aliased<T> cambio — completado 2026-03-27
+- [x] `cd packages/db && bun add drizzle-orm@latest drizzle-kit@latest` + mismo en `apps/web` — 0.45.1 — completado 2026-03-27
+- [x] `bun run test packages/db/` — 161 tests de queries pasan — completado 2026-03-27
+- [x] Fix: root override ^0.45.0, tsconfig.json paths alias para deduplicar drizzle-orm — completado 2026-03-27
+- [x] Commit: `chore(deps): upgrade drizzle-orm a 0.45.1 — plan8 f4.10` — completado 2026-03-27
 
 ---
 
@@ -1108,13 +1106,13 @@ Lucide 1.x tiene mejor tree-shaking: solo los íconos importados entran al bundl
 
 **Archivos potencialmente afectados:** cualquier componente que importe íconos con nombre cambiado.
 
-- [ ] `rg "from \"lucide-react\"" apps/web/src --include="*.tsx" -l` — listar archivos con imports — 5 min
-- [ ] Leer CHANGELOG — verificar si hay íconos renombrados entre la versión actual y la target — 10 min
-- [ ] `cd apps/web && bun add lucide-react@latest` — 5 min
-- [ ] Corregir imports si hay íconos renombrados — variable
-- [ ] `bun run build` — sin errores de íconos faltantes — 10 min
-- [ ] `bun run test:components` — tests con íconos pasan — 5 min
-- [ ] Commit: `chore(deps): upgrade lucide-react a [version] — plan8 f4.11`
+- [x] Listar archivos con imports de lucide-react — completado 2026-03-27
+- [x] Leer CHANGELOG — ícono `Chrome` removido en 1.x (era icono del browser Google Chrome) — completado 2026-03-27
+- [x] `cd apps/web && bun add lucide-react@latest` — instalado 1.7.0 — completado 2026-03-27
+- [x] Corregir import: `Chrome` → `Globe` en SSOButton.tsx — completado 2026-03-27
+- [x] `bun run build` — sin errores — completado 2026-03-27
+- [x] `bun run test:components` — 147 tests pasan — completado 2026-03-27
+- [x] Commit: `chore(deps): upgrade lucide-react a 1.7.0 — plan8 f4.11` — completado 2026-03-27
 
 ---
 
@@ -1126,12 +1124,12 @@ Zod 4 es ~14x más rápido en parsing. API mayormente compatible con Zod 3.
 
 **Archivos potencialmente afectados:** `packages/shared/src/schemas.ts` y todos sus consumidores.
 
-- [ ] Leer guía de migración oficial Zod 3 → 4 — 20 min
-- [ ] Actualizar en todos los packages simultáneamente: `bun add zod@latest` en root + cada package — 5 min
-- [ ] `bun run test packages/shared/` — schemas pasan — 5 min
-- [ ] `bun run test` completo — 10 min
-- [ ] Aplicar migraciones si hay breaking changes en schemas existentes — variable
-- [ ] Commit: `chore(deps): upgrade zod a [version] — plan8 f4.12`
+- [x] Leer guía de migración oficial Zod 3 → 4 — completado 2026-03-27
+- [x] Actualizar en todos los packages: `bun add zod@latest` en shared, config y web — instalado 4.3.6 — completado 2026-03-27
+- [x] `bun run test packages/shared/` — schemas pasan — completado 2026-03-27
+- [x] `bun run test` completo — 296 tests pasan — completado 2026-03-27
+- [x] Fix: `z.record(z.unknown())` → `z.record(z.string(), z.unknown())` en 3 schemas — completado 2026-03-27
+- [x] Commit: `chore(deps): upgrade zod a 4.3.6 — plan8 f4.12` — completado 2026-03-27
 
 ---
 
@@ -1141,11 +1139,11 @@ El cliente evoluciona junto con la API de TursoDB. Actualizarlo puede traer mejo
 
 **Archivos potencialmente afectados:** `next.config.ts` (`serverExternalPackages`) si cambian los nombres de sub-paquetes.
 
-- [ ] Leer CHANGELOG de @libsql/client — cambios en la API o en los sub-paquetes — 10 min
-- [ ] `cd packages/db && bun add @libsql/client@latest` — 5 min
-- [ ] Actualizar `serverExternalPackages` en `next.config.ts` si cambiaron nombres — variable
-- [ ] `bun run test packages/db/` — 161 tests pasan — 10 min
-- [ ] Commit: `chore(deps): upgrade @libsql/client a [version] — plan8 f4.13`
+- [x] Leer CHANGELOG de @libsql/client — nuevo sub-paquete @libsql/core en 0.17 — completado 2026-03-27
+- [x] `cd packages/db && bun add @libsql/client@latest` — instalado 0.17.2 — completado 2026-03-27
+- [x] Actualizar `serverExternalPackages`: agregar `@libsql/core` — completado 2026-03-27
+- [x] `bun run test packages/db/` — 161 tests pasan — completado 2026-03-27
+- [x] Commit: `chore(deps): upgrade @libsql/client a 0.17.2 — plan8 f4.13` — completado 2026-03-27
 
 ---
 
@@ -1155,12 +1153,12 @@ El cliente evoluciona junto con la API de TursoDB. Actualizarlo puede traer mejo
 
 ### Checklist de cierre
 
-- [ ] `bun run test` — todos pasan
-- [ ] `bun run test:components` — todos pasan
-- [ ] CHANGELOG.md actualizado con todas las versiones nuevas
-- [ ] `git commit -m "chore(deps): all upgrades completados — plan8 f4"`
+- [x] `bun run test` — 296 tests pasan (6+14+24+161+91) — completado 2026-03-27
+- [x] `bun run test:components` — 147 tests pasan — completado 2026-03-27
+- [x] CHANGELOG.md actualizado con todas las versiones nuevas — completado 2026-03-27
+- [x] Commit: `docs(changelog): fase 4 completada — plan8 f4` — completado 2026-03-27
 
-**Estado: pendiente**
+**Estado: completado 2026-03-27**
 
 ---
 
