@@ -1,0 +1,34 @@
+---
+description: Flujo obligatorio antes de escribir un plan de implementación
+alwaysApply: true
+---
+
+# Antes de escribir un plan — flujo obligatorio
+
+**ANTES de escribir cualquier plan de implementación:**
+
+## 1. Contar instancias exactas con repomix
+```
+pack_codebase(directory) → grep_repomix_output(pattern)
+```
+Nunca estimar. Nunca decir "hay N instancias" sin haberlas contado con repomix o grep.
+
+## 2. Verificar archivos que faltan
+Buscar en TODAS las ubicaciones relevantes:
+- `apps/web/src/components/` (componentes)
+- `apps/web/src/app/(app)/` (páginas)
+- `apps/web/src/app/(auth)/` (auth pages)
+- `apps/web/src/lib/` (utilidades)
+
+Los `loading.tsx`, `error.tsx`, `layout.tsx` en páginas se olvidan frecuentemente.
+
+## 3. Verificar con CodeGraphContext si el cambio afecta dependencias
+```
+analyze_code_relationships(fileToChange) → ver qué importa este archivo
+```
+
+## 4. Formato del plan
+- Archivos del proyecto: `docs/plans/{branch}-plan{N}-{slug}.mdc`  ← incluir branch
+- Estructura: igual a `ultra-optimize-plan9-repo-clean.md` (el formato que no falla con Composer)
+- Instancias en tabla: número exacto verificado, no estimado
+- Criterio de done: grep command que retorna 0 resultados

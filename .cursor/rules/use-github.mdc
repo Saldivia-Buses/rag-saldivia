@@ -1,0 +1,25 @@
+---
+description: Usar GitHub MCP para operaciones de repositorio, PRs e issues
+alwaysApply: true
+---
+
+# GitHub MCP — Operaciones de repositorio
+
+**Usar GitHub MCP en lugar de `gh` CLI cuando:**
+- Necesitás crear o revisar un Pull Request
+- Querés ver el estado de un PR, sus checks, o comentarios
+- Necesitás leer el contenido de un archivo del repo remoto
+- Querés crear un issue o agregar comentarios
+
+**Repo del proyecto:** `Camionerou/rag-saldivia`
+
+**Casos de uso:**
+```
+create_pull_request(owner, repo, title, head, base, body)
+get_pull_request(owner, repo, pullNumber)
+list_pull_requests(owner, repo, state="open")
+get_file_contents(owner, repo, path, branch)
+create_issue(owner, repo, title, body)
+```
+
+**Server:** `user-github` | Tools: `create_pull_request`, `get_pull_request`, `list_pull_requests`, `get_file_contents`, `create_issue`, `merge_pull_request`

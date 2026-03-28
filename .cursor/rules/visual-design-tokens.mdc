@@ -1,0 +1,49 @@
+---
+description: Reglas de design system para archivos TSX — tokens CSS y patrones visuales
+globs: apps/web/src/**/*.tsx
+alwaysApply: false
+---
+
+# Design System "Claude-style" — Reglas visuales
+
+## Tokens CSS — NUNCA hardcodear colores
+
+```tsx
+// ❌ MAL
+style={{ backgroundColor: "#FAF9F5", border: "1px solid #e8e8e8" }}
+className="bg-white border-gray-200"
+
+// ✅ BIEN
+className="bg-bg"
+style={{ border: "0.5px solid var(--border)" }}
+```
+
+## Border system — SIEMPRE 0.5px inline, nunca Tailwind `border-border`
+
+```tsx
+// ❌ MAL — genera 1px
+className="border border-border"
+className="border-b border-border"
+
+// ✅ BIEN — 0.5px
+style={{ border: "0.5px solid var(--border)" }}
+style={{ borderBottom: "0.5px solid var(--border)" }}
+style={{ borderTop: "0.5px solid var(--border)" }}
+```
+
+## Tokens de texto disponibles
+- `text-fg` — primario (#141413)
+- `text-fg-muted` — secundario (#3D3D3A)  
+- `text-fg-subtle` — terciario (#73726C)
+
+## Botón primario = OSCURO
+```tsx
+// Default variant ya es dark (#141413) via --primary
+<Button variant="default">Acción</Button>  // ✅ oscuro
+<Button variant="accent">Acción</Button>   // azul #0066cc
+```
+
+## Recharts contentStyle — 0.5px
+```tsx
+contentStyle={{ background: "var(--surface)", border: "0.5px solid var(--border)", borderRadius: "8px" }}
+```
