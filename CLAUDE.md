@@ -1,16 +1,37 @@
 # RAG Saldivia — Contexto de proyecto
 
+## Herramientas MCP disponibles
+
+Este proyecto tiene MCPs configurados en `.mcp.json`. Úsalos activamente:
+
+| MCP | Cuándo usarlo |
+|---|---|
+| **repomix** | Buscar patrones en código, contar instancias, leer múltiples archivos de una carpeta. `pack_codebase` + `grep_repomix_output`. NUNCA leer 10 archivos con Read uno por uno. |
+| **CodeGraphContext** | Complejidad ciclomática, dead code, dependencias entre archivos. Usar antes de refactors. |
+| **firecrawl** | URLs con SPAs (React/Next.js/etc) — `WebFetch` falla con JS. Screenshots, extraer CSS de sites. `firecrawl_scrape(url, formats=["screenshot"])` |
+| **context7** | Docs de librerías (Next.js, Drizzle, Zod, Tailwind, shadcn...) antes que WebSearch. `resolve_library_id` → `query_docs` |
+| **playwright** | Verificación visual en browser, extraer CSS computed de localhost, testing de UI. |
+| **github** | PRs, issues, archivos del repo remoto `Camionerou/rag-saldivia`. Mejor que `gh` CLI para lectura. |
+
+### Flujo obligatorio antes de escribir un plan
+
+1. **Contar instancias exactas** con `repomix pack_codebase` + `grep_repomix_output` — nunca estimar
+2. **Verificar archivos que se olvidan**: `loading.tsx`, `error.tsx`, `layout.tsx` en páginas
+3. **Nombre del archivo de plan**: `docs/plans/{branch}-plan{N}-{slug}.md`
+
+---
+
 ## Qué es este proyecto
 
 Overlay sobre **NVIDIA RAG Blueprint v2.5.0** que agrega autenticación, RBAC, multi-colección, frontend Next.js 16, CLI TypeScript, design system completo, y suite de testing UI.
 
 - **No es un fork** — incluye el blueprint como git submodule en `vendor/rag-blueprint/` (commit a67a48c)
-- **Repo local:** `~/rag-saldivia/` — branch `experimental/ultra-optimize`
+- **Repo local:** `~/rag-saldivia/` — branch activa: `1.0.x`
 - **Repo remoto:** https://github.com/Camionerou/rag-saldivia
 - **Deploy activo:** workstation física Ubuntu 24.04 (1x RTX PRO 6000 Blackwell, 96GB VRAM)
 
 > **Nota:** La branch `main` tiene el stack Python+SvelteKit (estable en producción).
-> Esta branch (`experimental/ultra-optimize`) es la reescritura completa en TypeScript.
+> La branch `1.0.x` es la reescritura completa en TypeScript — base para la serie 1.0.x.
 
 ---
 
