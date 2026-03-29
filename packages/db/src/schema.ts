@@ -51,6 +51,7 @@ export const users = sqliteTable(
     ssoSubject: text("sso_subject"),    // external user ID from provider
     createdAt: integer("created_at").notNull(), // epoch ms
     lastLogin: integer("last_login"), // epoch ms, nullable
+    lastSeen: integer("last_seen"), // epoch ms, updated on each request for presence
   },
   (t) => ({
     apiKeyIdx: index("idx_users_api_key").on(t.apiKeyHash),
@@ -563,11 +564,70 @@ export const events = sqliteTable(
   })
 )
 
+// ── RBAC: Roles ──────────────────────────────────────────────────────────
+
+export const roles = sqliteTable("roles", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull().unique(),
+  description: text("description").notNull().default(""),
+  level: integer("level").notNull().default(0), // higher = more powerful
+  color: text("color").notNull().default("#6e6c69"), // hex for UI badges
+  icon: text("icon").notNull().default("user"), // lucide icon name
+  isSystem: integer("is_system", { mode: "boolean" }).notNull().default(false),
+  createdAt: integer("created_at").notNull(),
+})
+
+// ── RBAC: Permission catalog ─────────────────────────────────────────────
+
+export const permissions = sqliteTable("permissions", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  key: text("key").notNull().unique(), // e.g. "users.manage"
+  label: text("label").notNull(), // e.g. "Gestionar usuarios"
+  category: text("category").notNull(), // e.g. "Usuarios"
+  description: text("description").notNull().default(""),
+})
+
+// ── RBAC: Role ↔ Permission (many-to-many) ───────────────────────────────
+
+export const rolePermissions = sqliteTable(
+  "role_permissions",
+  {
+    roleId: integer("role_id")
+      .notNull()
+      .references(() => roles.id, { onDelete: "cascade" }),
+    permissionId: integer("permission_id")
+      .notNull()
+      .references(() => permissions.id, { onDelete: "cascade" }),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.roleId, t.permissionId] }),
+  })
+)
+
+// ── RBAC: User ↔ Role (many-to-many) ─────────────────────────────────────
+
+export const userRoleAssignments = sqliteTable(
+  "user_role_assignments",
+  {
+    userId: integer("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    roleId: integer("role_id")
+      .notNull()
+      .references(() => roles.id, { onDelete: "cascade" }),
+    assignedAt: integer("assigned_at").notNull(),
+  },
+  (t) => ({
+    pk: primaryKey({ columns: [t.userId, t.roleId] }),
+  })
+)
+
 // ── Relations (necesarias para .query con `with`) ─────────────────────────
 
 export const usersRelations = relations(users, ({ many }) => ({
   userAreas: many(userAreas),
   chatSessions: many(chatSessions),
+  userRoleAssignments: many(userRoleAssignments),
 }))
 
 export const areasRelations = relations(areas, ({ many }) => ({
@@ -597,6 +657,25 @@ export const chatMessagesRelations = relations(chatMessages, ({ one, many }) => 
 export const messageFeedbackRelations = relations(messageFeedback, ({ one }) => ({
   message: one(chatMessages, { fields: [messageFeedback.messageId], references: [chatMessages.id] }),
   user: one(users, { fields: [messageFeedback.userId], references: [users.id] }),
+}))
+
+export const rolesRelations = relations(roles, ({ many }) => ({
+  rolePermissions: many(rolePermissions),
+  userRoleAssignments: many(userRoleAssignments),
+}))
+
+export const permissionsRelations = relations(permissions, ({ many }) => ({
+  rolePermissions: many(rolePermissions),
+}))
+
+export const rolePermissionsRelations = relations(rolePermissions, ({ one }) => ({
+  role: one(roles, { fields: [rolePermissions.roleId], references: [roles.id] }),
+  permission: one(permissions, { fields: [rolePermissions.permissionId], references: [permissions.id] }),
+}))
+
+export const userRoleAssignmentsRelations = relations(userRoleAssignments, ({ one }) => ({
+  user: one(users, { fields: [userRoleAssignments.userId], references: [users.id] }),
+  role: one(roles, { fields: [userRoleAssignments.roleId], references: [roles.id] }),
 }))
 
 // ── Type exports (Drizzle inferred) ───────────────────────────────────────
@@ -639,3 +718,8 @@ export type DbIngestionJob = typeof ingestionJobs.$inferSelect
 export type NewIngestionJob = typeof ingestionJobs.$inferInsert
 export type DbEvent = typeof events.$inferSelect
 export type NewEvent = typeof events.$inferInsert
+export type DbRole = typeof roles.$inferSelect
+export type NewRole = typeof roles.$inferInsert
+export type DbPermission = typeof permissions.$inferSelect
+export type DbRolePermission = typeof rolePermissions.$inferSelect
+export type DbUserRoleAssignment = typeof userRoleAssignments.$inferSelect
