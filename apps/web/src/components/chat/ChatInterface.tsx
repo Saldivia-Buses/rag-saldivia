@@ -205,17 +205,22 @@ export function ChatInterface({
 
                       {/* Content */}
                       <div className="flex-1 min-w-0">
-                        <MarkdownMessage content={text} onOpenArtifact={(a) => {
-                          setArtifacts(prev => {
-                            const exists = prev.findIndex(p => p.content === a.content)
-                            if (exists >= 0) {
-                              setActiveArtifactIndex(exists)
-                              return prev
-                            }
-                            setActiveArtifactIndex(prev.length)
-                            return [...prev, a]
-                          })
-                        }} />
+                        {/* Durante streaming: texto plano (performance). Completo: markdown */}
+                        {isStreaming && msg === messages[messages.length - 1] ? (
+                          <div className="text-sm text-fg leading-relaxed whitespace-pre-wrap">{text}</div>
+                        ) : (
+                          <MarkdownMessage content={text} onOpenArtifact={(a) => {
+                            setArtifacts(prev => {
+                              const exists = prev.findIndex(p => p.content === a.content)
+                              if (exists >= 0) {
+                                setActiveArtifactIndex(exists)
+                                return prev
+                              }
+                              setActiveArtifactIndex(prev.length)
+                              return [...prev, a]
+                            })
+                          }} />
+                        )}
 
                         {sources.length > 0 && (
                           <div style={{ marginTop: "12px" }}>
