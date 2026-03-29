@@ -14,8 +14,24 @@ export type Artifact = {
 
 const highlighterCache = new Map<string, string>()
 
+function useIsDark() {
+  const [dark, setDark] = useState(() =>
+    typeof document !== "undefined" && document.documentElement.classList.contains("dark")
+  )
+  useEffect(() => {
+    const obs = new MutationObserver(() => {
+      setDark(document.documentElement.classList.contains("dark"))
+    })
+    obs.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] })
+    return () => obs.disconnect()
+  }, [])
+  return dark
+}
+
 const HighlightedCode = memo(function HighlightedCode({ code, language }: { code: string; language: string }) {
-  const cacheKey = `${language}:${code}`
+  const isDark = useIsDark()
+  const theme = isDark ? "github-dark" : "github-light"
+  const cacheKey = `${theme}:${language}:${code}`
   const [html, setHtml] = useState<string | null>(() => highlighterCache.get(cacheKey) ?? null)
 
   useEffect(() => {
@@ -27,11 +43,11 @@ const HighlightedCode = memo(function HighlightedCode({ code, language }: { code
     import("shiki").then(async ({ createHighlighter }) => {
       try {
         const highlighter = await createHighlighter({
-          themes: ["github-dark"],
+          themes: [theme],
           langs: [language],
         })
         if (cancelled) return
-        const result = highlighter.codeToHtml(code, { lang: language, theme: "github-dark" })
+        const result = highlighter.codeToHtml(code, { lang: language, theme })
         highlighterCache.set(cacheKey, result)
         setHtml(result)
       } catch {
@@ -39,7 +55,7 @@ const HighlightedCode = memo(function HighlightedCode({ code, language }: { code
       }
     })
     return () => { cancelled = true }
-  }, [code, language, cacheKey])
+  }, [code, language, theme, cacheKey])
 
   if (html) {
     return (

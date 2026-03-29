@@ -45,29 +45,27 @@ export function SessionList({ sessions }: { sessions: DbChatSession[] }) {
       style={{ width: open ? "240px" : "0px", borderRightWidth: open ? "1px" : "0px" }}
     >
       <div style={{ width: "240px", minWidth: "240px" }} className="flex flex-col h-full">
-        {/* Header */}
-        <div className="flex items-center justify-between" style={{ padding: "12px 12px 8px" }}>
-          <div className="flex items-center" style={{ gap: "6px" }}>
-            <button
-              type="button"
-              onClick={toggle}
-              className="flex items-center justify-center rounded-lg text-fg-muted hover:text-fg hover:bg-surface-2 transition-colors"
-            style={{ width: "42px", height: "42px" }}
-              title="Ocultar panel (Ctrl+Shift+S)"
-              aria-label="Ocultar panel de chats"
-            >
-              <PanelLeftClose size={18} />
-            </button>
-            <span className="text-xs font-semibold uppercase tracking-wide text-fg-subtle">
-              Chats
-            </span>
-          </div>
+        {/* Header — toggle | title | new */}
+        <div className="flex items-center justify-between" style={{ padding: "8px" }}>
+          <button
+            type="button"
+            onClick={toggle}
+            className="flex items-center justify-center shrink-0 rounded-lg text-fg-muted hover:text-fg hover:bg-surface-2 transition-colors"
+            style={{ width: "36px", height: "36px" }}
+            title="Ocultar panel (Ctrl+Shift+S)"
+            aria-label="Ocultar panel de chats"
+          >
+            <PanelLeftClose size={18} />
+          </button>
+          <span className="text-xs font-semibold uppercase tracking-wide text-fg-subtle">
+            Chats
+          </span>
           <button
             type="button"
             onClick={handleNew}
             disabled={creating}
-            className="flex items-center justify-center rounded-lg text-fg-muted hover:text-fg hover:bg-surface-2 transition-colors disabled:opacity-40"
-            style={{ width: "42px", height: "42px" }}
+            className="flex items-center justify-center shrink-0 rounded-lg text-fg-muted hover:text-fg hover:bg-surface-2 transition-colors disabled:opacity-40"
+            style={{ width: "36px", height: "36px" }}
             title="Nuevo chat"
             aria-label="Nuevo chat"
           >
