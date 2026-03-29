@@ -1,6 +1,6 @@
 "use client"
 
-import { Copy, Check, Code, Eye, Download, PanelRightClose } from "lucide-react"
+import { Copy, Check, Code, Eye, Download } from "lucide-react"
 import { useState, useEffect, useRef, useCallback, memo } from "react"
 
 export type Artifact = {
@@ -140,7 +140,7 @@ export function ArtifactPanel({
   artifacts,
   activeIndex,
   onSelect,
-  onClose,
+  onClose: _onClose,
 }: {
   artifacts: Artifact[]
   activeIndex: number
@@ -278,14 +278,6 @@ export function ArtifactPanel({
               title="Copiar"
             >
               {copied ? <Check size={18} /> : <Copy size={18} />}
-            </button>
-            <button
-              onClick={onClose}
-              className="flex items-center justify-center rounded-lg text-fg-subtle hover:text-fg hover:bg-surface-2 transition-colors"
-              style={{ width: "36px", height: "36px" }}
-              title="Cerrar panel"
-            >
-              <PanelRightClose size={18} />
             </button>
           </div>
         </div>
