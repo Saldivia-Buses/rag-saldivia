@@ -14,10 +14,13 @@ import {
   FolderOpen,
   Settings,
   LogOut,
+  SquarePen,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { CurrentUser } from "@/lib/auth/current-user"
 import { actionLogout } from "@/app/actions/auth"
+import { actionCreateSession } from "@/app/actions/chat"
+import { useRouter } from "next/navigation"
 
 type Changelog = { version: string; entries: { version: string; content: string }[] }
 
@@ -65,6 +68,12 @@ export function NavRail({
   changelog: Changelog
 }) {
   const pathname = usePathname()
+  const router = useRouter()
+
+  async function handleNewChat() {
+    const session = await actionCreateSession({ collection: "tecpia" })
+    router.push(`/chat/${session!.id}`)
+  }
 
   return (
     <TooltipProvider delayDuration={100}>
@@ -74,11 +83,28 @@ export function NavRail({
         style={{ width: 48, padding: "16px 0 12px", gap: "4px" }}
       >
         {/* Brand */}
-        <div style={{ marginBottom: "8px" }}>
+        <div style={{ marginBottom: "4px" }}>
           <div className="flex items-center justify-center rounded-lg bg-accent" style={{ width: "32px", height: "32px" }}>
             <span className="text-xs font-bold text-accent-fg select-none">S</span>
           </div>
         </div>
+
+        {/* New chat button */}
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <button
+              type="button"
+              onClick={handleNewChat}
+              aria-label="Nuevo chat"
+              className="w-9 h-9 flex items-center justify-center rounded-md text-fg-muted hover:bg-surface-2 hover:text-fg transition-colors"
+            >
+              <SquarePen size={16} aria-hidden />
+            </button>
+          </TooltipTrigger>
+          <TooltipContent side="right" sideOffset={16}>
+            Nuevo chat
+          </TooltipContent>
+        </Tooltip>
 
         {/* Separador */}
         <div className="w-5 h-px bg-border mb-1" />

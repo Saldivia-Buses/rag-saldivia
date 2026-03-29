@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Plus, MessageSquare, Trash2, Search, PanelLeftClose, PanelLeft } from "lucide-react"
 import type { DbChatSession } from "@rag-saldivia/db"
 import { actionDeleteSession, actionCreateSession } from "@/app/actions/chat"
@@ -13,6 +13,18 @@ export function SessionList({ sessions }: { sessions: DbChatSession[] }) {
   const [creating, setCreating] = useState(false)
   const [search, setSearch] = useState("")
   const [collapsed, setCollapsed] = useState(false)
+
+  // Keyboard shortcut: Ctrl+Shift+S to toggle sidebar
+  useEffect(() => {
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.ctrlKey && e.shiftKey && e.key === "S") {
+        e.preventDefault()
+        setCollapsed(c => !c)
+      }
+    }
+    window.addEventListener("keydown", onKeyDown)
+    return () => window.removeEventListener("keydown", onKeyDown)
+  }, [])
 
   const filtered = useMemo(() => {
     if (!search.trim()) return sessions

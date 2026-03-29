@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect, useCallback, useTransition } from "react"
-import { ThumbsUp, ThumbsDown, Copy, Check, RotateCcw, Square, Plus, ChevronDown } from "lucide-react"
+import { ThumbsUp, ThumbsDown, Copy, Check, RotateCcw, Square, Plus, ChevronDown, ArrowDown } from "lucide-react"
 import { useChat } from "@ai-sdk/react"
 import { DefaultChatTransport, type UIMessage } from "ai"
 import type { DbChatSession, DbChatMessage } from "@rag-saldivia/db"
@@ -134,6 +134,8 @@ export function ChatInterface({
   const isStreaming = status === "streaming" || status === "submitted"
 
   const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const [showScrollButton, setShowScrollButton] = useState(false)
+
   useEffect(() => {
     const container = scrollContainerRef.current
     if (!container) return
@@ -144,6 +146,22 @@ export function ChatInterface({
       })
     }
   }, [messages])
+
+  // Track scroll position for scroll-to-bottom button
+  useEffect(() => {
+    const container = scrollContainerRef.current
+    if (!container) return
+    function onScroll() {
+      const gap = container!.scrollHeight - container!.scrollTop - container!.clientHeight
+      setShowScrollButton(gap > 300)
+    }
+    container.addEventListener("scroll", onScroll, { passive: true })
+    return () => container.removeEventListener("scroll", onScroll)
+  }, [])
+
+  const scrollToBottom = useCallback(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" })
+  }, [])
 
   useEffect(() => {
     const ta = textareaRef.current
@@ -444,6 +462,20 @@ export function ChatInterface({
           </div>
         )}
       </div>
+
+      {/* ── Scroll to bottom ── */}
+      {showScrollButton && messages.length > 0 && (
+        <div className="flex justify-center" style={{ position: "relative" }}>
+          <button
+            onClick={scrollToBottom}
+            className="absolute flex items-center justify-center rounded-full border border-border bg-bg text-fg-muted hover:text-fg hover:bg-surface shadow-md transition-all"
+            style={{ width: "32px", height: "32px", bottom: "8px" }}
+            title="Ir al final"
+          >
+            <ArrowDown size={14} />
+          </button>
+        </div>
+      )}
 
       {/* ── Input area (only when there are messages) ── */}
       {messages.length > 0 && (
