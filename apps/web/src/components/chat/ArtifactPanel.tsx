@@ -44,7 +44,7 @@ const HighlightedCode = memo(function HighlightedCode({ code, language }: { code
   if (html) {
     return (
       <div
-        className="text-sm overflow-x-auto [&_pre]:!bg-transparent [&_pre]:!p-0 [&_pre]:overflow-x-auto [&_pre]:w-full [&_code]:!text-sm [&_code]:!whitespace-pre"
+        className="text-sm [&_pre]:!bg-transparent [&_pre]:!p-0 [&_code]:!text-sm [&_code]:!whitespace-pre-wrap [&_code]:!break-all"
         style={{ width: "100%", minWidth: 0 }}
         dangerouslySetInnerHTML={{ __html: html }}
       />
@@ -52,7 +52,7 @@ const HighlightedCode = memo(function HighlightedCode({ code, language }: { code
   }
 
   return (
-    <pre className="text-sm font-mono text-fg whitespace-pre overflow-x-auto" style={{ width: "100%", minWidth: 0 }}>
+    <pre className="text-sm font-mono text-fg whitespace-pre-wrap break-all" style={{ width: "100%", minWidth: 0 }}>
       <code>{code}</code>
     </pre>
   )
@@ -141,15 +141,18 @@ export function ArtifactPanel({
   activeIndex,
   onSelect,
   onClose: _onClose,
+  panelWidth,
+  onWidthChange,
 }: {
   artifacts: Artifact[]
   activeIndex: number
   onSelect: (index: number) => void
   onClose: () => void
+  panelWidth: number
+  onWidthChange: (w: number) => void
 }) {
   const [viewMode, setViewMode] = useState<ViewMode>("preview")
   const [copied, setCopied] = useState(false)
-  const [panelWidth, setPanelWidth] = useState(480)
   const resizing = useRef(false)
 
   const artifact = artifacts[activeIndex] as Artifact | undefined
@@ -175,7 +178,6 @@ export function ArtifactPanel({
     URL.revokeObjectURL(url)
   }
 
-  // ── Resize ──
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
     resizing.current = true
@@ -187,7 +189,7 @@ export function ArtifactPanel({
     function onMouseMove(ev: MouseEvent) {
       if (!resizing.current) return
       const delta = startX - ev.clientX
-      setPanelWidth(Math.max(320, Math.min(900, startWidth + delta)))
+      onWidthChange(Math.max(320, Math.min(900, startWidth + delta)))
     }
 
     function onMouseUp() {
@@ -200,15 +202,18 @@ export function ArtifactPanel({
 
     document.addEventListener("mousemove", onMouseMove)
     document.addEventListener("mouseup", onMouseUp)
-  }, [panelWidth])
+  }, [panelWidth, onWidthChange])
 
   if (!artifact) return null
 
   const typeLabel = isMermaid ? "MERMAID" : (artifact.language ?? artifact.type).toUpperCase()
 
   return (
-    <div className="shrink-0 flex h-full" style={{ width: `${panelWidth}px` }}>
-      {/* Resize handle — visible bar */}
+    <div
+      className="shrink-0 flex h-full overflow-hidden transition-[width] duration-200"
+      style={{ width: `${panelWidth}px` }}
+    >
+      {/* Resize handle */}
       <div
         className="shrink-0 cursor-col-resize group flex items-center justify-center hover:bg-accent/10 transition-colors"
         style={{ width: "8px" }}
@@ -227,7 +232,6 @@ export function ArtifactPanel({
           style={{ height: "48px", padding: "0 8px 0 12px" }}
         >
           <div className="flex items-center min-w-0" style={{ gap: "8px" }}>
-            {/* View mode toggle */}
             {hasPreview && (
               <div className="flex rounded-lg border border-border overflow-hidden shrink-0" style={{ height: "32px" }}>
                 <button
@@ -282,12 +286,12 @@ export function ArtifactPanel({
           </div>
         </div>
 
-        {/* Content — scrollable both directions */}
+        {/* Content */}
         <div className="flex-1 overflow-auto">
           {isMermaid && viewMode === "preview" ? (
             <MermaidPreview content={artifact.content} />
           ) : (
-            <div style={{ padding: "16px" }} className="overflow-x-auto min-w-0 w-full">
+            <div style={{ padding: "16px" }} className="min-w-0 w-full">
               <HighlightedCode
                 code={artifact.content}
                 language={artifact.language ?? "text"}

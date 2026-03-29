@@ -80,6 +80,7 @@ export function ChatInterface({
   const [artifacts, setArtifacts] = useState<Artifact[]>([])
   const [activeArtifactIndex, setActiveArtifactIndex] = useState(0)
   const [showArtifactPanel, setShowArtifactPanel] = useState(false)
+  const [artifactPanelWidth, setArtifactPanelWidth] = useState(480)
   const [_isPending, startTransition] = useTransition()
   const [editingTitle, setEditingTitle] = useState(false)
   const [titleDraft, setTitleDraft] = useState(session.title)
@@ -609,6 +610,8 @@ export function ChatInterface({
         activeIndex={activeArtifactIndex}
         onSelect={setActiveArtifactIndex}
         onClose={() => setShowArtifactPanel(false)}
+        panelWidth={artifactPanelWidth}
+        onWidthChange={setArtifactPanelWidth}
       />
     )}
     </div>
