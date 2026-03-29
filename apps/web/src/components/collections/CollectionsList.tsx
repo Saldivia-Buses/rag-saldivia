@@ -1,3 +1,19 @@
+/**
+ * Milvus collection management UI — list, create, delete, and jump to chat.
+ *
+ * Displays all available vector collections with optimistic UI updates.
+ * Admin users see create/delete controls; regular users see read-only list.
+ *
+ * Key patterns:
+ *   - useOptimistic: create/delete actions update the UI instantly, then the
+ *     server action runs in a transition. On error, React re-renders with the
+ *     actual server state (automatic rollback).
+ *   - "Chat" button navigates to /chat?collection=<name> to start a session
+ *     scoped to that collection.
+ *
+ * Data flow: /collections page (RSC, fetches from RAG API) -> collections prop
+ * Depends on: server actions (create/delete collection), EmptyPlaceholder
+ */
 "use client"
 
 import { useOptimistic, useState, useTransition } from "react"

@@ -1,3 +1,20 @@
+/**
+ * Client-side app chrome — wraps all authenticated page content.
+ *
+ * Provides three things:
+ *   1. SidebarProvider — context for sidebar open/closed state across the app
+ *   2. NavRail — the 64px vertical navigation strip on the left
+ *   3. Main content area — flex-1 scrollable region for page content
+ *
+ * Layout: `flex h-screen` → NavRail (fixed 64px) + main (flex-1, scrollable)
+ *
+ * This is a Client Component ("use client") because SidebarProvider uses
+ * useState + localStorage + keyboard listeners. The parent AppShell is a
+ * Server Component that fetches user data before passing it here.
+ *
+ * Rendered by: AppShell (Server Component)
+ * Depends on: NavRail, SidebarProvider (ChatLayout)
+ */
 "use client"
 
 import { NavRail } from "./NavRail"
