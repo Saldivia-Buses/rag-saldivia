@@ -15,7 +15,6 @@ const PUBLIC_ROUTES = [
   "/api/auth/refresh",
   "/api/health",        // Health check público para CLI y monitoreo
   "/api/log",           // Frontend puede logear sin auth
-  "/share/",            // Sesiones compartidas — acceso público sin auth (F2.25)
   "/_next",
   "/favicon.ico",
 ]

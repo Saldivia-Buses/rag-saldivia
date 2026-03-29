@@ -92,7 +92,6 @@ export async function actionToggleSaved(
   } else {
     await saveResponse({ userId: user.id, messageId, content, sessionTitle })
   }
-  revalidatePath("/saved")
 }
 
 export async function actionSaveAnnotation(data: {
