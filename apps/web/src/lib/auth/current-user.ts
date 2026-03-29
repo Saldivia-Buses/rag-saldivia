@@ -7,6 +7,7 @@ import { headers } from "next/headers"
 import { redirect } from "next/navigation"
 import { cache } from "react"
 import type { Role } from "@rag-saldivia/shared"
+import { touchUserPresence } from "@rag-saldivia/db"
 
 export type CurrentUser = {
   id: number
@@ -43,6 +44,8 @@ const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
 export async function requireUser(): Promise<CurrentUser> {
   const user = await getCurrentUser()
   if (!user) redirect("/login")
+  // Fire and forget — update presence without blocking the response
+  touchUserPresence(user.id).catch(() => {})
   return user
 }
 
