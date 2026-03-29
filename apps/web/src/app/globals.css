@@ -188,6 +188,10 @@
   margin: 0;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   background-color: var(--background);
   color: var(--foreground);
@@ -196,6 +200,37 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-feature-settings: "rlig" 1, "calt" 1, "cv01" 1, "cv02" 1;
+}
+
+/* ── Smooth theme transitions ── */
+body, body * {
+  transition-property: background-color, border-color, color, fill, stroke, box-shadow;
+  transition-duration: 150ms;
+  transition-timing-function: ease-out;
+}
+
+/* Exclude elements that need instant response during interaction */
+input, textarea, button, a, [role="button"] {
+  transition-duration: 100ms;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--fg-subtle);
 }
 
 @media print {

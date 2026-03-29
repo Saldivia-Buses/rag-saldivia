@@ -609,14 +609,14 @@ export function ChatInterface({
       )}
     </div>
 
-    {/* Artifact panel */}
-    {showArtifactPanel && artifacts.length > 0 && (
+    {/* Artifact panel — always rendered for smooth transition */}
+    {artifacts.length > 0 && (
       <ArtifactPanel
         artifacts={artifacts}
         activeIndex={activeArtifactIndex}
         onSelect={setActiveArtifactIndex}
         onClose={() => setShowArtifactPanel(false)}
-        panelWidth={artifactPanelWidth}
+        panelWidth={showArtifactPanel ? artifactPanelWidth : 0}
         onWidthChange={setArtifactPanelWidth}
         isResizing={isResizingPanel}
         onResizeStart={() => setIsResizingPanel(true)}
