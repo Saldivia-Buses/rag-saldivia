@@ -35,9 +35,9 @@ function EmptyPlaceholderTitle({
   children: React.ReactNode
 }) {
   return (
-    <h3 className={cn("text-base font-semibold text-fg", className)}>
+    <h2 className={cn("text-base font-semibold text-fg", className)}>
       {children}
-    </h3>
+    </h2>
   )
 }
 

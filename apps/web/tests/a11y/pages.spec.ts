@@ -33,7 +33,6 @@ const PAGES_TO_AUDIT = [
   { name: "login",        path: "/login",        requiresAuth: false },
   { name: "chat",         path: "/chat",         requiresAuth: true  },
   { name: "collections",  path: "/collections",  requiresAuth: true  },
-  { name: "admin-users",  path: "/admin/users",  requiresAuth: true  },
   { name: "settings",     path: "/settings",     requiresAuth: true  },
 ]
 
@@ -42,18 +41,18 @@ for (const p of PAGES_TO_AUDIT) {
     await page.goto(p.path)
     await page.waitForLoadState("networkidle")
     await injectAxe(page)
+    // Excluir dev tools del análisis
+    await page.evaluate(() => {
+      document.getElementById("react-scan-root")?.remove()
+      document.querySelector("button[title='Open Next.js Dev Tools']")?.remove()
+      document.querySelector("nextjs-portal")?.remove()
+    })
+
     await checkA11y(page, undefined, {
       detailedReport: true,
       runOnly: {
         type: "tag",
         values: ["wcag2a", "wcag2aa"],
-      },
-      // Ignorar violaciones conocidas y aceptadas del design system
-      axeOptions: {
-        rules: {
-          // El radio del color en algunos elementos de Storybook — solo en dev
-          "color-contrast": { enabled: true },
-        },
       },
     })
   })

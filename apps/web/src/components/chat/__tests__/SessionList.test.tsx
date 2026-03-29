@@ -7,16 +7,6 @@ afterEach(cleanup)
 mock.module("@/app/actions/chat", () => ({
   actionDeleteSession: mock(() => Promise.resolve()),
   actionCreateSession: mock(() => Promise.resolve("new-id")),
-  actionRenameSession: mock(() => Promise.resolve()),
-  actionAddTag: mock(() => Promise.resolve()),
-  actionRemoveTag: mock(() => Promise.resolve()),
-  actionForkSession: mock(() => Promise.resolve("fork-id")),
-  actionToggleSaved: mock(() => Promise.resolve()),
-}))
-
-mock.module("@/lib/export", () => ({
-  exportToMarkdown: mock(() => "# Sesión"),
-  downloadFile: mock(() => {}),
 }))
 
 const sessions = [
@@ -31,19 +21,19 @@ describe("<SessionList />", () => {
     expect(getByText("Segunda sesión")).toBeInTheDocument()
   })
 
-  test("muestra encabezado Sesiones", () => {
-    const { getAllByText } = render(<SessionList sessions={sessions} />)
-    expect(getAllByText("Sesiones").length).toBeGreaterThan(0)
+  test("muestra encabezado Chats", () => {
+    const { getByText } = render(<SessionList sessions={sessions} />)
+    expect(getByText("Chats")).toBeInTheDocument()
   })
 
-  test("sin sesiones muestra lista vacía (sin mensaje de error)", () => {
-    const { container } = render(<SessionList sessions={[]} />)
-    expect(container.querySelector(".flex-1")).toBeInTheDocument()
+  test("sin sesiones muestra mensaje vacío", () => {
+    const { getByText } = render(<SessionList sessions={[]} />)
+    expect(getByText("Sin chats todavía")).toBeInTheDocument()
   })
 
-  test("botón Nueva sesión presente", () => {
+  test("botón Nuevo chat presente", () => {
     const { getByTitle } = render(<SessionList sessions={sessions} />)
-    expect(getByTitle("Nueva sesión")).toBeInTheDocument()
+    expect(getByTitle("Nuevo chat")).toBeInTheDocument()
   })
 
   test("tiene clase bg-surface en el contenedor", () => {

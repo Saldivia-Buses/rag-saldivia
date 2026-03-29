@@ -131,6 +131,7 @@ export function ChatInterface({
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-bg">
+      <h1 className="sr-only">Chat — {session.collection}</h1>
       {/* Messages */}
       <div className="flex-1 overflow-y-auto">
         {messages.length === 0 && (
@@ -143,7 +144,7 @@ export function ChatInterface({
                 <span className="text-xl font-bold text-accent-fg select-none">S</span>
               </div>
               <div className="text-center" style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-                <p className="text-lg font-semibold text-fg">¿En qué puedo ayudarte?</p>
+                <h1 className="text-lg font-semibold text-fg">¿En qué puedo ayudarte?</h1>
                 <p className="text-sm text-fg-subtle">
                   Preguntá sobre los documentos de {session.collection}
                 </p>

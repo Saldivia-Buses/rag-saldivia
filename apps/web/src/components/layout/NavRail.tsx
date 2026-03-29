@@ -39,6 +39,7 @@ function NavIcon({ item, active }: { item: NavItem; active: boolean }) {
       <TooltipTrigger asChild>
         <Link
           href={item.href}
+          aria-label={item.label}
           className={cn(
             "w-9 h-9 flex items-center justify-center rounded-md transition-colors",
             active
@@ -68,6 +69,7 @@ export function NavRail({
   return (
     <TooltipProvider delayDuration={100}>
       <nav
+        aria-label="Navegación principal"
         className="flex flex-col items-center h-screen shrink-0 bg-surface border-r border-border"
         style={{ width: 48, padding: "16px 0 12px", gap: "4px" }}
       >

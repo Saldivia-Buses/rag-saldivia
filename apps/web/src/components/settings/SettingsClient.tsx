@@ -113,15 +113,15 @@ export function SettingsClient({ user }: { user: DbUser }) {
       {tab === "perfil" && (
         <form onSubmit={profileForm.handleSubmit(handleProfileSave)} className="flex flex-col" style={{ gap: "24px" }}>
           <div className="flex flex-col" style={{ gap: "6px" }}>
-            <label className="text-sm font-medium text-fg">Nombre</label>
-            <Input {...profileForm.register("name")} className="h-11 text-base rounded-[10px]" />
+            <label htmlFor="settings-name" className="text-sm font-medium text-fg">Nombre</label>
+            <Input id="settings-name" {...profileForm.register("name")} className="h-11 text-base rounded-[10px]" />
             {profileForm.formState.errors.name && (
               <p className="text-xs text-destructive">{profileForm.formState.errors.name.message}</p>
             )}
           </div>
           <div className="flex flex-col" style={{ gap: "6px" }}>
-            <label className="text-sm font-medium text-fg">Email</label>
-            <Input value={user.email} disabled className="h-11 text-base rounded-[10px]" />
+            <label htmlFor="settings-email" className="text-sm font-medium text-fg">Email</label>
+            <Input id="settings-email" value={user.email} disabled className="h-11 text-base rounded-[10px]" />
             <p className="text-xs text-fg-subtle">El email no se puede cambiar. Contactá al administrador.</p>
           </div>
           {profileMsg && (

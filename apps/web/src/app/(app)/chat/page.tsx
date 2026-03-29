@@ -13,6 +13,7 @@ export default async function ChatPage() {
       <SessionList sessions={sessions} />
       <div className="flex-1 flex items-center justify-center p-8">
         <EmptyPlaceholder className="max-w-sm border-none bg-transparent">
+          <h1 className="sr-only">Chat</h1>
           <EmptyPlaceholder.Icon icon={MessageSquare} />
           <EmptyPlaceholder.Title>
             Seleccioná una sesión o creá una nueva

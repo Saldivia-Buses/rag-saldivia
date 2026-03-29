@@ -50,7 +50,7 @@ export function SessionList({ sessions }: { sessions: DbChatSession[] }) {
       </div>
 
       {/* Sessions */}
-      <nav className="flex-1 overflow-y-auto flex flex-col" style={{ padding: "0 8px 8px", gap: "2px" }}>
+      <nav aria-label="Lista de chats" className="flex-1 overflow-y-auto flex flex-col" style={{ padding: "0 8px 8px", gap: "2px" }}>
         {sessions.length === 0 && (
           <p className="text-sm text-center text-fg-subtle" style={{ padding: "24px 12px" }}>
             Sin chats todavía
