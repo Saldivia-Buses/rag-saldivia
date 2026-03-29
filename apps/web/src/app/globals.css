@@ -33,37 +33,37 @@
   --color-warning-subtle:     var(--warning-subtle);
 }
 
-/* ── Light mode — "Warm Intelligence" ── */
+/* ── Light mode — Saldivia RAG (tokens extraídos de claude.ai + azure accent) ── */
 :root {
-  /* ── Fondos ── */
-  --bg:          #faf8f4;
-  --surface:     #f0ebe0;
-  --surface-2:   #e8e1d4;
+  /* ── Fondos (claude.ai warm grays, hue 45-60) ── */
+  --bg:          #faf9f5;
+  --surface:     #f0eee8;
+  --surface-2:   #e5e3dc;
 
-  /* ── Bordes ── */
-  --border:        #ede9e0;
-  --border-strong: #d5cfc4;
+  /* ── Bordes (claude.ai usa rgba semi-transparente, traducido a sólido) ── */
+  --border:        #e0ddd6;
+  --border-strong: #d0ccc4;
 
   /* ── Texto ── */
-  --fg:         #1a1a1a;
-  --fg-muted:   #5a5048;
+  --fg:         #141413;
+  --fg-muted:   #4a4a47;
   /* ≥4.5:1 sobre --bg (WCAG AA texto normal) */
-  --fg-subtle:  #6b6258;
+  --fg-subtle:  #6e6c69;
 
-  /* ── Acento: navy profundo ── */
-  --accent:        #1a5276;
-  --accent-hover:  #154360;
-  --accent-dark:   #0d3349;
-  --accent-subtle: #d4e8f7;
+  /* ── Acento: azure blue (identidad Saldivia RAG) ── */
+  --accent:        #2563eb;
+  --accent-hover:  #1d4ed8;
+  --accent-dark:   #1e40af;
+  --accent-subtle: #dbeafe;
   --accent-fg:     #ffffff;
 
   /* ── Estados semánticos ── */
-  --destructive:        #c0392b;
-  --destructive-subtle: #fde8e8;
-  --success:            #2d6a4f;
-  --success-subtle:     #d4f1e4;
-  --warning:            #d68910;
-  --warning-subtle:     #fef9e7;
+  --destructive:        #dc2626;
+  --destructive-subtle: #fef2f2;
+  --success:            #16a34a;
+  --success-subtle:     #f0fdf4;
+  --warning:            #d97706;
+  --warning-subtle:     #fffbeb;
 
   /* ── Aliases shadcn — compatibilidad con componentes existentes ── */
   --background:           var(--bg);
@@ -94,35 +94,35 @@
   color-scheme: light;
 }
 
-/* ── Dark mode — warm dark, nunca negro frío ── */
+/* ── Dark mode — warm dark (claude.ai gray scale inverted) ── */
 .dark {
   /* ── Fondos ── */
-  --bg:        #1a1812;
-  --surface:   #24221a;
-  --surface-2: #2e2b21;
+  --bg:        #1a1917;
+  --surface:   #242320;
+  --surface-2: #2e2d29;
 
   /* ── Bordes ── */
-  --border:        #35312a;
-  --border-strong: #46423a;
+  --border:        #3a3935;
+  --border-strong: #4a4945;
 
   /* ── Texto ── */
-  --fg:        #f0ebe0;
-  --fg-muted:  #b0a898;
-  --fg-subtle: #7a7268;
+  --fg:        #f5f4f0;
+  --fg-muted:  #a5a39e;
+  --fg-subtle: #75736e;
 
-  /* ── Acento: navy más claro para contraste en dark ── */
-  --accent:        #4a9fd4;
-  --accent-hover:  #5aafde;
-  --accent-dark:   #6bbfe8;
-  --accent-subtle: #1a3a52;
-  --accent-fg:     #0d1a24;
+  /* ── Acento: azure más claro para contraste en dark ── */
+  --accent:        #60a5fa;
+  --accent-hover:  #93c5fd;
+  --accent-dark:   #3b82f6;
+  --accent-subtle: #1e3a5f;
+  --accent-fg:     #0c1929;
 
   /* ── Estados semánticos dark ── */
-  --destructive:        #e57373;
+  --destructive:        #f87171;
   --destructive-subtle: #2a1515;
-  --success:            #66bb6a;
+  --success:            #4ade80;
   --success-subtle:     #0d2a14;
-  --warning:            #ffa726;
+  --warning:            #fbbf24;
   --warning-subtle:     #2a1e00;
 
   /* ── Aliases shadcn dark ── */
