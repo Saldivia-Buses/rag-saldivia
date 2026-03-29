@@ -19,8 +19,9 @@ describe("<ThemeToggle />", () => {
     expect(hasLabel).toBeTruthy()
   })
 
-  test("tiene clase h-9 w-9", () => {
+  test("tiene tamaño 44px", () => {
     const { container } = render(<ThemeToggle />)
-    expect(container.querySelector("button")?.className ?? "").toContain("h-9")
+    const btn = container.querySelector("button")
+    expect(btn?.style.width).toBe("44px")
   })
 })
