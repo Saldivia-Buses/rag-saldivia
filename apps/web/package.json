@@ -25,6 +25,8 @@
     "build:storybook": "storybook build"
   },
   "dependencies": {
+    "@ai-sdk/openai-compatible": "^2.0.37",
+    "@ai-sdk/react": "^3.0.143",
     "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-avatar": "^1.1.11",
     "@radix-ui/react-checkbox": "^1.3.3",
@@ -42,6 +44,7 @@
     "@rag-saldivia/logger": "workspace:*",
     "@rag-saldivia/shared": "workspace:*",
     "@tanstack/react-table": "^8.21.3",
+    "ai": "^6.0.141",
     "bullmq": "^5.71.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
