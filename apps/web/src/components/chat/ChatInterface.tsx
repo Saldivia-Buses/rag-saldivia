@@ -7,18 +7,7 @@ import type { DbChatSession, DbChatMessage } from "@rag-saldivia/db"
 import { actionAddMessage, actionAddFeedback, actionToggleSaved, actionForkSession } from "@/app/actions/chat"
 import { clientLog } from "@rag-saldivia/logger/frontend"
 import { useRagStream } from "@/hooks/useRagStream"
-import { ThinkingSteps } from "@/components/chat/ThinkingSteps"
-import { FocusModeSelector, useFocusMode } from "@/components/chat/FocusModeSelector"
-import { VoiceInput } from "@/components/chat/VoiceInput"
-import { ExportSession } from "@/components/chat/ExportSession"
-import { ShareDialog } from "@/components/chat/ShareDialog"
 import { SourcesPanel } from "@/components/chat/SourcesPanel"
-import { RelatedQuestions } from "@/components/chat/RelatedQuestions"
-import { CollectionSelector } from "@/components/chat/CollectionSelector"
-import { PromptTemplates } from "@/components/chat/PromptTemplates"
-import { ArtifactsPanel } from "@/components/chat/ArtifactsPanel"
-import type { ArtifactData } from "@/hooks/useRagStream"
-import { AnnotationPopover } from "@/components/chat/AnnotationPopover"
 
 type Message = {
   id?: number
@@ -47,45 +36,29 @@ function updateLastAssistantMessage(messages: Message[], content: string): Messa
   return updated
 }
 
-type Template = {
-  id: number
-  title: string
-  prompt: string
-  focusMode: string
-}
-
 export function ChatInterface({
   session,
   userId: _userId,
-  templates = [],
-  availableCollections = [],
 }: {
   session: DbChatSession & { messages?: DbChatMessage[] }
   userId: number
-  templates?: Template[]
-  availableCollections?: string[]
 }) {
   const [messages, setMessages] = useState<Message[]>(() => parseSessionMessages(session))
   const [input, setInput] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [_isPending, startTransition] = useTransition()
   const [savedIds, setSavedIds] = useState<Set<number>>(new Set())
-  const [currentArtifact, setCurrentArtifact] = useState<ArtifactData | null>(null)
   const [copiedId, setCopiedId] = useState<number | null>(null)
   const [queryStats, setQueryStats] = useState<{ ms: number; sources: number } | null>(null)
-  const [relatedQuestions, setRelatedQuestions] = useState<string[]>([])
   const streamStartRef = useRef<number>(0)
   const bottomRef = useRef<HTMLDivElement>(null)
   const pendingSourcesRef = useRef<import("@rag-saldivia/shared").Citation[]>([])
-  const { focusMode, setFocusMode } = useFocusMode()
-  const [activeCollections, setActiveCollections] = useState<string[]>([session.collection])
 
-  const { phase, stream, abort: _abort } = useRagStream({
+  const { phase, stream } = useRagStream({
     sessionId: session.id,
     collection: session.collection,
-    collections: activeCollections,
-    focusMode,
-    onArtifact: (artifact) => setCurrentArtifact(artifact),
+    collections: [session.collection],
+    focusMode: "detailed",
     onDelta: (fullContent) => setMessages((prev) => updateLastAssistantMessage(prev, fullContent)),
     onSources: (sources) => { pendingSourcesRef.current = sources },
     onError: (message) => {
@@ -106,7 +79,6 @@ export function ChatInterface({
     setInput("")
     setError(null)
     setQueryStats(null)
-    setRelatedQuestions([])
     pendingSourcesRef.current = []
     streamStartRef.current = Date.now()
 
@@ -122,18 +94,6 @@ export function ChatInterface({
     if (!result) return
 
     setQueryStats({ ms: Date.now() - streamStartRef.current, sources: result.sources.length })
-
-    // Generar preguntas relacionadas en background — F2.20
-    fetch("/api/rag/suggest", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query, lastResponse: result.fullContent }),
-    })
-      .then((r) => r.json())
-      .then((data: { ok: boolean; questions?: string[] }) => {
-        if (data.ok && data.questions) setRelatedQuestions(data.questions)
-      })
-      .catch(() => {})
 
     clientLog.action("rag.query", { collection: session.collection, sessionId: session.id })
 
@@ -195,19 +155,6 @@ export function ChatInterface({
         <span className="text-sm font-medium text-fg-muted truncate">
           {session.collection}
         </span>
-        <div className="flex items-center gap-1">
-          {currentArtifact && (
-            <button
-              onClick={() => setCurrentArtifact(currentArtifact)}
-              className="px-2 py-0.5 rounded-full text-xs font-medium animate-pulse bg-accent text-accent-fg"
-              title="Ver artifact detectado"
-            >
-              Artifact
-            </button>
-          )}
-          <ShareDialog sessionId={session.id} />
-          <ExportSession session={session} />
-        </div>
       </div>
 
       {/* Messages */}
@@ -233,26 +180,14 @@ export function ChatInterface({
                   : "rounded-bl-sm bg-surface text-fg border border-border"
               }`}
             >
-              {msg.role === "assistant" && msg.id ? (
-                <AnnotationPopover
-                  sessionId={session.id}
-                  messageId={msg.id}
-                  onAskAbout={(text) => setInput(`Sobre esto: "${text.slice(0, 80)}..."\n`)}
-                >
-                  <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
-                </AnnotationPopover>
-              ) : (
-                <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
-              )}
+              <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
 
-              {/* Panel de fuentes — F2.19 */}
               {msg.role === "assistant" && msg.sources && msg.sources.length > 0 && (
                 <SourcesPanel sources={msg.sources} />
               )}
 
               {msg.role === "assistant" && msg.content && phase !== "streaming" && (
                 <div className="flex gap-1 pt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  {/* Bifurcar — F3.43 */}
                   {msg.id && (
                     <Button
                       variant="ghost"
@@ -267,7 +202,6 @@ export function ChatInterface({
                       <GitBranch size={13} />
                     </Button>
                   )}
-                  {/* Regenerar — F1.15 */}
                   <Button
                     variant="ghost"
                     size="icon"
@@ -277,7 +211,6 @@ export function ChatInterface({
                   >
                     <RefreshCw size={13} />
                   </Button>
-                  {/* Copy — F1.16 */}
                   <Button
                     variant="ghost"
                     size="icon"
@@ -320,39 +253,13 @@ export function ChatInterface({
           </div>
         ))}
 
-        {/* Stats del último query — F1.17 */}
         {queryStats && phase === "done" && (
-          <div
-            className="flex justify-start px-1"
-          >
-            <span className="text-xs opacity-0 group-hover:opacity-100 transition-opacity text-fg-subtle">
+          <div className="flex justify-start px-1">
+            <span className="text-xs text-fg-subtle">
               {queryStats.ms}ms · {queryStats.sources} doc{queryStats.sources !== 1 ? "s" : ""}
             </span>
           </div>
         )}
-
-        {/* Preguntas relacionadas tras la última respuesta — F2.20 */}
-        {phase === "done" && relatedQuestions.length > 0 && (
-          <div className="flex justify-start px-1">
-            <div className="max-w-2xl w-full">
-              <RelatedQuestions
-                questions={relatedQuestions}
-                onSelect={(q) => setInput(q)}
-              />
-            </div>
-          </div>
-        )}
-
-        <ThinkingSteps phase={phase} />
-
-        {/* Artifacts panel — F3.42 */}
-        <ArtifactsPanel
-          artifact={currentArtifact}
-          onClose={() => setCurrentArtifact(null)}
-          onSave={(content) => {
-            if (session.id) actionToggleSaved(-1, content, session.title, false).catch(() => {})
-          }}
-        />
 
         {phase === "streaming" && messages[messages.length - 1]?.content === "" && (
           <div className="flex justify-start">
@@ -367,24 +274,6 @@ export function ChatInterface({
 
       {/* Input */}
       <div className="p-4 border-t border-border bg-bg">
-        <div className="flex items-center gap-2 mb-2 flex-wrap">
-          <CollectionSelector
-            defaultCollection={session.collection}
-            availableCollections={availableCollections}
-            onCollectionsChange={setActiveCollections}
-            disabled={phase === "streaming"}
-          />
-          <FocusModeSelector
-            value={focusMode}
-            onChange={setFocusMode}
-            disabled={phase === "streaming"}
-          />
-          <PromptTemplates
-            templates={templates}
-            onSelect={(prompt, fm) => { setInput(prompt); setFocusMode(fm as Parameters<typeof setFocusMode>[0]) }}
-            disabled={phase === "streaming"}
-          />
-        </div>
         {error && (
           <div className="mb-3 px-3 py-2 rounded-lg bg-destructive-subtle text-destructive text-xs border border-destructive/20">
             {error}
@@ -400,10 +289,6 @@ export function ChatInterface({
             placeholder={`Preguntá sobre ${session.collection}...`}
             disabled={phase === "streaming"}
             className="flex-1 px-4 py-2.5 rounded-xl border border-border bg-bg text-fg text-sm placeholder:text-fg-subtle outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:border-accent disabled:opacity-50 transition-colors"
-          />
-          <VoiceInput
-            onTranscript={(text) => setInput(text)}
-            disabled={phase === "streaming"}
           />
           <Button
             type="submit"

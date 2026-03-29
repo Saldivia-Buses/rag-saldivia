@@ -1,8 +1,5 @@
 import { requireUser } from "@/lib/auth/current-user"
 import { AppShell } from "@/components/layout/AppShell"
-import { OnboardingTour } from "@/components/onboarding/OnboardingTour"
-import { getDb, users, listSessionsByUser, listProjects } from "@rag-saldivia/db"
-import { eq } from "drizzle-orm"
 import { parseChangelog } from "@/lib/changelog"
 import { readFileSync } from "fs"
 import { join } from "path"
@@ -22,26 +19,10 @@ function loadChangelog() {
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const user = await requireUser()
-
-  const db = getDb()
-  const [dbUser, sessions, projects] = await Promise.all([
-    db.select({ onboardingCompleted: users.onboardingCompleted }).from(users).where(eq(users.id, user.id)).limit(1),
-    listSessionsByUser(user.id),
-    listProjects(user.id),
-  ])
-
-  const onboardingCompleted = dbUser[0]?.onboardingCompleted ?? true
   const changelog = loadChangelog()
 
   return (
-    <AppShell
-      user={user}
-      initialSessions={sessions}
-      initialProjects={projects}
-      changelog={changelog}
-    >
-      <OnboardingTour completed={onboardingCompleted} />
-      {/* Densidad spacious por defecto — los layouts de admin sobrescriben con compact */}
+    <AppShell user={user} changelog={changelog}>
       <div data-density="spacious" className="h-full">
         {children}
       </div>
