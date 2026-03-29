@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect, useCallback, useTransition } from "react"
-import { ThumbsUp, ThumbsDown, Copy, Check, RotateCcw, Square, Plus, ChevronDown, ArrowDown, PanelLeft } from "lucide-react"
+import { ThumbsUp, ThumbsDown, Copy, Check, RotateCcw, Square, Plus, ChevronDown, ArrowDown, PanelLeft, PanelRightClose } from "lucide-react"
 import { useChat } from "@ai-sdk/react"
 import { DefaultChatTransport, type UIMessage } from "ai"
 import type { DbChatSession, DbChatMessage } from "@rag-saldivia/db"
@@ -234,20 +234,23 @@ export function ChatInterface({
       {messages.length > 0 && (
         <div
           className="shrink-0 flex items-center border-b border-border"
-          style={{ height: "48px", padding: "0 12px" }}
+          style={{ height: "48px", padding: "0 8px" }}
         >
-          {/* Sidebar toggle — only when sidebar is closed */}
-          {!sidebarOpen && (
-            <button
-              onClick={toggleSidebar}
-              className="p-1.5 rounded-md text-fg-muted hover:text-fg hover:bg-surface transition-colors"
-              title="Mostrar panel (Ctrl+Shift+S)"
-            >
-              <PanelLeft size={16} />
-            </button>
-          )}
+          {/* Left: sidebar toggle */}
+          <div style={{ width: "40px" }}>
+            {!sidebarOpen && (
+              <button
+                onClick={toggleSidebar}
+                className="flex items-center justify-center rounded-lg text-fg-muted hover:text-fg hover:bg-surface-2 transition-colors"
+                style={{ width: "36px", height: "36px" }}
+                title="Mostrar panel (Ctrl+Shift+S)"
+              >
+                <PanelLeft size={18} />
+              </button>
+            )}
+          </div>
 
-          {/* Title — centered */}
+          {/* Center: title */}
           <div className="flex-1 flex items-center justify-center">
             {editingTitle ? (
               <input
@@ -276,8 +279,19 @@ export function ChatInterface({
             )}
           </div>
 
-          {/* Spacer to keep title centered when sidebar toggle is shown */}
-          {!sidebarOpen && <div style={{ width: "28px" }} />}
+          {/* Right: artifact panel toggle */}
+          <div style={{ width: "40px" }}>
+            {artifacts.length > 0 && (
+              <button
+                onClick={() => { setArtifacts([]); setActiveArtifactIndex(0) }}
+                className="flex items-center justify-center rounded-lg text-fg-muted hover:text-fg hover:bg-surface-2 transition-colors"
+                style={{ width: "36px", height: "36px" }}
+                title="Cerrar panel de artifacts"
+              >
+                <PanelRightClose size={18} />
+              </button>
+            )}
+          </div>
         </div>
       )}
 
