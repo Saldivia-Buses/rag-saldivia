@@ -68,12 +68,12 @@ export function NavRail({
   return (
     <TooltipProvider delayDuration={100}>
       <nav
-        className="flex flex-col items-center py-3 gap-1 h-screen shrink-0 bg-surface border-r border-border"
-        style={{ width: 44 }}
+        className="flex flex-col items-center h-screen shrink-0 bg-surface border-r border-border"
+        style={{ width: 48, padding: "16px 0 12px", gap: "4px" }}
       >
         {/* Brand */}
-        <div className="mb-2">
-          <div className="w-7 h-7 rounded-md flex items-center justify-center bg-accent">
+        <div style={{ marginBottom: "8px" }}>
+          <div className="flex items-center justify-center rounded-lg bg-accent" style={{ width: "32px", height: "32px" }}>
             <span className="text-xs font-bold text-accent-fg select-none">S</span>
           </div>
         </div>
@@ -94,9 +94,16 @@ export function NavRail({
 
         {/* Bottom: theme toggle + logout */}
         <div className="flex flex-col items-center gap-0.5 shrink-0">
-          <div className="text-fg-muted">
-            <ThemeToggle />
-          </div>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="text-fg-muted">
+                <ThemeToggle />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="right" sideOffset={16}>
+              Cambiar tema
+            </TooltipContent>
+          </Tooltip>
           <Tooltip>
             <TooltipTrigger asChild>
               <button
