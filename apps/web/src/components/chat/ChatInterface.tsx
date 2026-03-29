@@ -1,17 +1,16 @@
 "use client"
 
 import { useState, useRef, useEffect, useCallback, useTransition } from "react"
-import { Send, ThumbsUp, ThumbsDown, Loader2, Bookmark, Copy, Check, GitBranch } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import { Send, ThumbsUp, ThumbsDown, Loader2, Copy, Check } from "lucide-react"
 import { useChat } from "@ai-sdk/react"
 import { DefaultChatTransport, type UIMessage } from "ai"
 import type { DbChatSession, DbChatMessage } from "@rag-saldivia/db"
-import { actionAddMessage, actionAddFeedback, actionToggleSaved, actionForkSession } from "@/app/actions/chat"
+import { actionAddMessage, actionAddFeedback } from "@/app/actions/chat"
 import { clientLog } from "@rag-saldivia/logger/frontend"
 import { SourcesPanel } from "@/components/chat/SourcesPanel"
 import type { Citation } from "@rag-saldivia/shared"
 
-// ── Helpers: convert between DB messages and AI SDK UIMessage ──
+// ── Helpers ──
 
 function dbToUIMessages(session: DbChatSession & { messages?: DbChatMessage[] }): UIMessage[] {
   return (session.messages ?? []).map((m) => ({
@@ -47,10 +46,10 @@ export function ChatInterface({
   userId: number
 }) {
   const [input, setInput] = useState("")
-  const [savedIds, setSavedIds] = useState<Set<number>>(new Set())
-  const [copiedId, setCopiedId] = useState<number | null>(null)
+  const [copiedId, setCopiedId] = useState<string | null>(null)
   const [_isPending, startTransition] = useTransition()
   const bottomRef = useRef<HTMLDivElement>(null)
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   const { messages, sendMessage, status, error, stop } = useChat({
     id: session.id,
@@ -98,6 +97,14 @@ export function ChatInterface({
     bottomRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
 
+  useEffect(() => {
+    const ta = textareaRef.current
+    if (ta) {
+      ta.style.height = "auto"
+      ta.style.height = `${Math.min(ta.scrollHeight, 200)}px`
+    }
+  }, [input])
+
   const handleSend = useCallback(async () => {
     const query = input.trim()
     if (!query || isStreaming) return
@@ -105,181 +112,212 @@ export function ChatInterface({
     await sendMessage({ text: query })
   }, [input, isStreaming, sendMessage])
 
-  const handleCopy = useCallback(async (content: string, msgId?: string) => {
-    await navigator.clipboard.writeText(content)
-    if (msgId) {
-      setCopiedId(Number(msgId))
-      setTimeout(() => setCopiedId(null), 2000)
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault()
+      handleSend()
     }
-  }, [])
+  }, [handleSend])
 
-  const handleToggleSaved = useCallback(async (messageId: number, content: string) => {
-    const isSaved = savedIds.has(messageId)
-    setSavedIds((prev) => {
-      const next = new Set(prev)
-      if (isSaved) next.delete(messageId)
-      else next.add(messageId)
-      return next
-    })
-    await actionToggleSaved(messageId, content, session.title, isSaved)
-  }, [savedIds, session.title])
+  const handleCopy = useCallback(async (content: string, msgId: string) => {
+    await navigator.clipboard.writeText(content)
+    setCopiedId(msgId)
+    setTimeout(() => setCopiedId(null), 2000)
+  }, [])
 
   const handleFeedback = useCallback(async (messageId: number, rating: "up" | "down") => {
     await actionAddFeedback(messageId, rating)
   }, [])
 
   return (
-    <div className="flex-1 flex flex-col min-h-0">
-      {/* Header */}
-      <div className="flex items-center justify-between px-6 py-3 border-b border-border shrink-0 no-print">
-        <span className="text-sm font-medium text-fg-muted truncate">
-          {session.collection}
-        </span>
-        {isStreaming && (
-          <Button variant="ghost" size="sm" onClick={stop} className="text-xs">
-            Detener
-          </Button>
-        )}
-      </div>
-
+    <div className="flex-1 flex flex-col min-h-0 bg-bg">
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-6">
+      <div className="flex-1 overflow-y-auto">
         {messages.length === 0 && (
           <div className="h-full flex items-center justify-center">
-            <div className="text-center space-y-1 text-fg-muted">
-              <p className="font-medium text-fg">Colección: {session.collection}</p>
-              <p className="text-sm">Hacé tu primera pregunta</p>
-            </div>
-          </div>
-        )}
-
-        {messages.map((msg) => {
-          const text = getMessageText(msg)
-          const sources = getMessageSources(msg)
-          const numId = Number(msg.id) || undefined
-
-          return (
-            <div
-              key={msg.id}
-              className={`flex group ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-            >
+            <div className="flex flex-col items-center" style={{ gap: "16px" }}>
               <div
-                className={`max-w-2xl rounded-2xl px-4 py-3 text-sm space-y-1 ${
-                  msg.role === "user"
-                    ? "rounded-br-sm bg-accent text-accent-fg"
-                    : "rounded-bl-sm bg-surface text-fg border border-border"
-                }`}
+                className="flex items-center justify-center rounded-2xl bg-accent"
+                style={{ width: "48px", height: "48px" }}
               >
-                <p className="whitespace-pre-wrap leading-relaxed">{text}</p>
-
-                {msg.role === "assistant" && sources.length > 0 && (
-                  <SourcesPanel sources={sources} />
-                )}
-
-                {msg.role === "assistant" && text && !isStreaming && (
-                  <div className="flex gap-1 pt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    {numId && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-6 w-6"
-                        title="Bifurcar desde aquí"
-                        onClick={async () => {
-                          const newId = await actionForkSession(session.id, numId)
-                          if (newId) window.location.href = `/chat/${newId}`
-                        }}
-                      >
-                        <GitBranch size={13} />
-                      </Button>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-6 w-6"
-                      onClick={() => handleCopy(text, msg.id)}
-                      title="Copiar respuesta"
-                    >
-                      {numId && copiedId === numId ? <Check size={13} /> : <Copy size={13} />}
-                    </Button>
-                    {numId && (
-                      <>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6"
-                          onClick={() => handleFeedback(numId, "up")}
-                          title="Útil"
-                        >
-                          <ThumbsUp size={13} />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6"
-                          onClick={() => handleFeedback(numId, "down")}
-                          title="No útil"
-                        >
-                          <ThumbsDown size={13} />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className={`h-6 w-6 ${savedIds.has(numId) ? "text-accent opacity-100" : ""}`}
-                          onClick={() => handleToggleSaved(numId, text)}
-                          title={savedIds.has(numId) ? "Quitar de guardados" : "Guardar respuesta"}
-                        >
-                          <Bookmark size={13} />
-                        </Button>
-                      </>
-                    )}
-                  </div>
-                )}
+                <span className="text-xl font-bold text-accent-fg select-none">S</span>
+              </div>
+              <div className="text-center" style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                <p className="text-lg font-semibold text-fg">¿En qué puedo ayudarte?</p>
+                <p className="text-sm text-fg-subtle">
+                  Preguntá sobre los documentos de {session.collection}
+                </p>
               </div>
             </div>
-          )
-        })}
-
-        {(() => { const last = messages[messages.length - 1]; return isStreaming && last && last.role === "assistant" && getMessageText(last) === "" })() && (
-          <div className="flex justify-start">
-            <div className="px-4 py-3 rounded-2xl rounded-bl-sm bg-surface border border-border">
-              <Loader2 size={16} className="animate-spin text-fg-muted" />
-            </div>
           </div>
         )}
 
-        <div ref={bottomRef} />
+        {messages.length > 0 && (
+          <div className="max-w-3xl mx-auto" style={{ padding: "24px 24px 0" }}>
+            {messages.map((msg) => {
+              const text = getMessageText(msg)
+              const sources = getMessageSources(msg)
+              const numId = Number(msg.id) || undefined
+              const isUser = msg.role === "user"
+
+              return (
+                <div
+                  key={msg.id}
+                  className="group"
+                  style={{ marginBottom: "32px" }}
+                >
+                  {isUser ? (
+                    /* ── User message ── */
+                    <div
+                      className="rounded-2xl text-sm text-fg leading-relaxed whitespace-pre-wrap"
+                      style={{
+                        background: "var(--surface)",
+                        padding: "16px 20px",
+                      }}
+                    >
+                      {text}
+                    </div>
+                  ) : (
+                    /* ── Assistant message ── */
+                    <div className="flex" style={{ gap: "12px" }}>
+                      {/* Avatar */}
+                      <div
+                        className="shrink-0 flex items-center justify-center rounded-full bg-accent"
+                        style={{ width: "28px", height: "28px", marginTop: "2px" }}
+                      >
+                        <span className="text-xs font-bold text-accent-fg select-none">S</span>
+                      </div>
+
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm text-fg leading-relaxed whitespace-pre-wrap">
+                          {text}
+                        </div>
+
+                        {sources.length > 0 && (
+                          <div style={{ marginTop: "12px" }}>
+                            <SourcesPanel sources={sources} />
+                          </div>
+                        )}
+
+                        {/* Actions on hover */}
+                        {text && !isStreaming && (
+                          <div
+                            className="flex opacity-0 group-hover:opacity-100 transition-opacity"
+                            style={{ gap: "2px", marginTop: "8px" }}
+                          >
+                            <button
+                              onClick={() => handleCopy(text, msg.id)}
+                              className="p-1.5 rounded-md text-fg-subtle hover:text-fg hover:bg-surface transition-colors"
+                              title="Copiar"
+                            >
+                              {copiedId === msg.id ? <Check size={14} /> : <Copy size={14} />}
+                            </button>
+                            {numId && (
+                              <>
+                                <button
+                                  onClick={() => handleFeedback(numId, "up")}
+                                  className="p-1.5 rounded-md text-fg-subtle hover:text-fg hover:bg-surface transition-colors"
+                                  title="Útil"
+                                >
+                                  <ThumbsUp size={14} />
+                                </button>
+                                <button
+                                  onClick={() => handleFeedback(numId, "down")}
+                                  className="p-1.5 rounded-md text-fg-subtle hover:text-fg hover:bg-surface transition-colors"
+                                  title="No útil"
+                                >
+                                  <ThumbsDown size={14} />
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+
+            {/* Streaming indicator */}
+            {(() => {
+              const last = messages[messages.length - 1]
+              return isStreaming && last && last.role === "assistant" && getMessageText(last) === ""
+            })() && (
+              <div className="flex" style={{ gap: "12px", marginBottom: "32px" }}>
+                <div
+                  className="shrink-0 flex items-center justify-center rounded-full bg-accent"
+                  style={{ width: "28px", height: "28px" }}
+                >
+                  <span className="text-xs font-bold text-accent-fg select-none">S</span>
+                </div>
+                <Loader2 size={16} className="animate-spin text-fg-muted" style={{ marginTop: "6px" }} />
+              </div>
+            )}
+
+            <div ref={bottomRef} />
+          </div>
+        )}
       </div>
 
-      {/* Input */}
-      <div className="p-4 border-t border-border bg-bg">
-        {error && (
-          <div className="mb-3 px-3 py-2 rounded-lg bg-destructive-subtle text-destructive text-xs border border-destructive/20">
-            {error.message}
-          </div>
-        )}
-        <form
-          onSubmit={(e) => { e.preventDefault(); handleSend() }}
-          className="flex gap-2"
-        >
-          <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder={`Preguntá sobre ${session.collection}...`}
-            disabled={isStreaming}
-            className="flex-1 px-4 py-2.5 rounded-xl border border-border bg-bg text-fg text-sm placeholder:text-fg-subtle outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:border-accent disabled:opacity-50 transition-colors"
-          />
-          <Button
-            type="submit"
-            size="icon"
-            className="h-10 w-10 rounded-xl shrink-0"
-            disabled={!input.trim() || isStreaming}
+      {/* Input area */}
+      <div style={{ padding: "12px 24px 24px" }}>
+        <div className="max-w-3xl mx-auto">
+          {error && (
+            <div
+              className="text-sm text-destructive"
+              style={{
+                marginBottom: "12px",
+                padding: "12px 16px",
+                borderRadius: "12px",
+                background: "var(--destructive-subtle)",
+                border: "1px solid color-mix(in srgb, var(--destructive) 20%, transparent)",
+              }}
+            >
+              {error.message}
+            </div>
+          )}
+
+          <div
+            className="border border-border rounded-2xl bg-bg transition-colors focus-within:border-accent"
+            style={{ padding: "12px 16px" }}
           >
-            {isStreaming
-              ? <Loader2 size={16} className="animate-spin" />
-              : <Send size={16} />
-            }
-          </Button>
-        </form>
+            <textarea
+              ref={textareaRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder="Respondeme..."
+              disabled={isStreaming}
+              rows={1}
+              className="w-full resize-none bg-transparent text-fg text-sm placeholder:text-fg-subtle outline-none disabled:opacity-50"
+              style={{ minHeight: "24px", maxHeight: "200px", lineHeight: "1.5" }}
+            />
+            <div className="flex items-center justify-between" style={{ marginTop: "8px" }}>
+              <div className="text-xs text-fg-subtle">
+                {isStreaming ? (
+                  <button onClick={stop} className="text-accent hover:underline">
+                    Detener generación
+                  </button>
+                ) : (
+                  <span>{session.collection}</span>
+                )}
+              </div>
+              <button
+                onClick={handleSend}
+                disabled={!input.trim() || isStreaming}
+                className="flex items-center justify-center rounded-lg bg-accent text-accent-fg disabled:opacity-30 transition-opacity hover:opacity-90"
+                style={{ width: "32px", height: "32px" }}
+              >
+                {isStreaming
+                  ? <Loader2 size={16} className="animate-spin" />
+                  : <Send size={16} />
+                }
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   )

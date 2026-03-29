@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { ThemeToggle } from "@/components/ui/theme-toggle"
 
 const LoginSchema = z.object({
-  email: z.string().email("Email inválido"),
+  email: z.string().min(1, "El email es requerido"),
   password: z.string().min(1, "La contraseña es requerida"),
 })
 
