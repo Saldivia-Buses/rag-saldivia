@@ -96,8 +96,17 @@ export function ChatInterface({
 
   const isStreaming = status === "streaming" || status === "submitted"
 
+  // Solo auto-scroll si el usuario está cerca del fondo (no si scrolleó arriba)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" })
+    const container = scrollContainerRef.current
+    if (!container) return
+    const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 150
+    if (isNearBottom) {
+      requestAnimationFrame(() => {
+        bottomRef.current?.scrollIntoView({ behavior: "instant" })
+      })
+    }
   }, [messages])
 
   useEffect(() => {
@@ -137,7 +146,7 @@ export function ChatInterface({
     <div className={`flex-1 flex flex-col min-h-0 bg-bg ${currentArtifact ? "" : ""}`}>
       <h1 className="sr-only">Chat — {session.collection}</h1>
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto">
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto">
         {messages.length === 0 && (
           <div className="h-full flex items-center justify-center">
             <div className="flex flex-col items-center" style={{ gap: "16px" }}>

@@ -93,8 +93,12 @@ export function MarkdownMessage({ content, onOpenArtifact }: { content: string; 
         ),
         code: ({ className, children }) => {
           const isBlock = className?.includes("language-")
+          if (isBlock && onOpenArtifact) {
+            // Si hay handler de artifacts, mostrar solo una card compacta
+            return <ArtifactCard className={className} onOpenArtifact={onOpenArtifact}>{children}</ArtifactCard>
+          }
           if (isBlock) {
-            return <CodeBlock className={className} onOpenArtifact={onOpenArtifact}>{children}</CodeBlock>
+            return <CodeBlock className={className}>{children}</CodeBlock>
           }
           return (
             <code
@@ -117,7 +121,51 @@ export function MarkdownMessage({ content, onOpenArtifact }: { content: string; 
   )
 }
 
-function CodeBlock({ className, children, onOpenArtifact }: { className?: string | undefined; children: React.ReactNode; onOpenArtifact?: ((artifact: Artifact) => void) | undefined }) {
+function ArtifactCard({ className, children, onOpenArtifact }: { className?: string | undefined; children: React.ReactNode; onOpenArtifact: (artifact: Artifact) => void }) {
+  const lang = className?.replace("language-", "") ?? "código"
+  const text = typeof children === "string" ? children : String(children ?? "")
+  const lines = text.split("\n").length
+  const preview = text.split("\n").slice(0, 3).join("\n")
+
+  function handleOpen() {
+    onOpenArtifact({
+      type: "code",
+      title: lang ? `Código ${lang}` : "Código",
+      content: text,
+      language: lang || undefined,
+    })
+  }
+
+  return (
+    <button
+      onClick={handleOpen}
+      className="w-full text-left rounded-xl border border-border bg-surface hover:bg-surface-2 transition-colors cursor-pointer"
+      style={{ marginBottom: "12px", padding: "12px 16px" }}
+    >
+      <div className="flex items-center justify-between" style={{ marginBottom: "8px" }}>
+        <div className="flex items-center" style={{ gap: "8px" }}>
+          <div
+            className="text-xs font-medium uppercase tracking-wide text-accent"
+            style={{
+              backgroundColor: "var(--accent-subtle)",
+              padding: "2px 8px",
+              borderRadius: "4px",
+            }}
+          >
+            {lang}
+          </div>
+          <span className="text-xs text-fg-subtle">{lines} líneas</span>
+        </div>
+        <PanelRightOpen size={14} className="text-fg-subtle" />
+      </div>
+      <pre className="text-xs font-mono text-fg-muted overflow-hidden" style={{ maxHeight: "48px", lineHeight: "1.4" }}>
+        <code>{preview}</code>
+      </pre>
+    </button>
+  )
+}
+
+function CodeBlock({ className, children }: { className?: string | undefined; children: React.ReactNode }) {
   const [copied, setCopied] = useState(false)
   const lang = className?.replace("language-", "") ?? ""
   const text = typeof children === "string" ? children : String(children ?? "")
@@ -128,37 +176,17 @@ function CodeBlock({ className, children, onOpenArtifact }: { className?: string
     setTimeout(() => setCopied(false), 2000)
   }
 
-  function handleOpen() {
-    onOpenArtifact?.({
-      type: "code",
-      title: lang ? `Código ${lang}` : "Código",
-      content: text,
-      language: lang || undefined,
-    })
-  }
-
   return (
     <div className="relative rounded-lg overflow-hidden" style={{ marginBottom: "12px", backgroundColor: "var(--surface)" }}>
       <div className="flex items-center justify-between" style={{ padding: "6px 12px", borderBottom: "1px solid var(--border)" }}>
         <span className="text-xs text-fg-subtle">{lang}</span>
-        <div className="flex items-center" style={{ gap: "4px" }}>
-          {onOpenArtifact && (
-            <button
-              onClick={handleOpen}
-              className="text-fg-subtle hover:text-accent transition-colors"
-              title="Abrir en panel"
-            >
-              <PanelRightOpen size={14} />
-            </button>
-          )}
-          <button
-            onClick={handleCopy}
-            className="text-fg-subtle hover:text-fg transition-colors"
-            title="Copiar código"
-          >
-            {copied ? <Check size={14} /> : <Copy size={14} />}
-          </button>
-        </div>
+        <button
+          onClick={handleCopy}
+          className="text-fg-subtle hover:text-fg transition-colors"
+          title="Copiar código"
+        >
+          {copied ? <Check size={14} /> : <Copy size={14} />}
+        </button>
       </div>
       <pre style={{ padding: "12px", overflowX: "auto" }}>
         <code className="text-sm font-mono text-fg">{children}</code>
