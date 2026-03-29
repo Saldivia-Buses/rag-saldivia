@@ -2,7 +2,7 @@
 
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
-import { useState } from "react"
+import { useState, memo } from "react"
 import { Check, Copy, PanelRightOpen } from "lucide-react"
 import type { Artifact } from "./ArtifactPanel"
 
@@ -10,7 +10,7 @@ import type { Artifact } from "./ArtifactPanel"
  * Renderiza texto markdown con estilos del design system.
  * Soporta: headers, listas, tablas (GFM), code blocks, links, bold, italic.
  */
-export function MarkdownMessage({ content, onOpenArtifact }: { content: string; onOpenArtifact?: (artifact: Artifact) => void }) {
+export const MarkdownMessage = memo(function MarkdownMessage({ content, onOpenArtifact }: { content: string; onOpenArtifact?: (artifact: Artifact) => void }) {
   return (
     <ReactMarkdown
       remarkPlugins={[remarkGfm]}
@@ -119,9 +119,9 @@ export function MarkdownMessage({ content, onOpenArtifact }: { content: string; 
       {content}
     </ReactMarkdown>
   )
-}
+})
 
-function ArtifactCard({ className, children, onOpenArtifact, isMermaid }: { className?: string | undefined; children: React.ReactNode; onOpenArtifact: (artifact: Artifact) => void; isMermaid?: boolean | undefined }) {
+const ArtifactCard = memo(function ArtifactCard({ className, children, onOpenArtifact, isMermaid }: { className?: string | undefined; children: React.ReactNode; onOpenArtifact: (artifact: Artifact) => void; isMermaid?: boolean | undefined }) {
   const lang = className?.replace("language-", "") ?? "código"
   const text = typeof children === "string" ? children : String(children ?? "")
   const lines = text.split("\n").length
@@ -168,7 +168,7 @@ function ArtifactCard({ className, children, onOpenArtifact, isMermaid }: { clas
       )}
     </button>
   )
-}
+})
 
 function CodeBlock({ className, children }: { className?: string | undefined; children: React.ReactNode }) {
   const [copied, setCopied] = useState(false)

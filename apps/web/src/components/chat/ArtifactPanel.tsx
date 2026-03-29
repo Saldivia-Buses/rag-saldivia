@@ -1,7 +1,7 @@
 "use client"
 
 import { X, Copy, Check, Code, Eye, Download } from "lucide-react"
-import { useState, useEffect, useRef, useCallback } from "react"
+import { useState, useEffect, useRef, useCallback, memo } from "react"
 
 export type Artifact = {
   type: "code" | "table" | "text" | "mermaid"
@@ -12,10 +12,18 @@ export type Artifact = {
 
 // ── Syntax highlighting con shiki (lazy) ──
 
-function HighlightedCode({ code, language }: { code: string; language: string }) {
-  const [html, setHtml] = useState<string | null>(null)
+// Cache global de highlighter para no recrear en cada render
+let highlighterCache: Map<string, string> = new Map()
+
+const HighlightedCode = memo(function HighlightedCode({ code, language }: { code: string; language: string }) {
+  const cacheKey = `${language}:${code}`
+  const [html, setHtml] = useState<string | null>(() => highlighterCache.get(cacheKey) ?? null)
 
   useEffect(() => {
+    if (highlighterCache.has(cacheKey)) {
+      setHtml(highlighterCache.get(cacheKey)!)
+      return
+    }
     let cancelled = false
     import("shiki").then(async ({ createHighlighter }) => {
       try {
@@ -28,13 +36,14 @@ function HighlightedCode({ code, language }: { code: string; language: string })
           lang: language,
           theme: "github-dark",
         })
+        highlighterCache.set(cacheKey, result)
         setHtml(result)
       } catch {
-        // Lenguaje no soportado — mostrar plain
+        // Lenguaje no soportado
       }
     })
     return () => { cancelled = true }
-  }, [code, language])
+  }, [code, language, cacheKey])
 
   if (html) {
     return (
@@ -51,11 +60,11 @@ function HighlightedCode({ code, language }: { code: string; language: string })
       <code>{code}</code>
     </pre>
   )
-}
+})
 
 // ── Mermaid rendering ──
 
-function MermaidPreview({ content }: { content: string }) {
+const MermaidPreview = memo(function MermaidPreview({ content }: { content: string }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [svg, setSvg] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -100,7 +109,7 @@ function MermaidPreview({ content }: { content: string }) {
       Renderizando diagrama...
     </div>
   )
-}
+})
 
 // ── Panel principal ──
 
