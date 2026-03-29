@@ -145,13 +145,25 @@ export async function ragFetch(
 
 // ── Mock para desarrollo sin RAG ───────────────────────────────────────────
 
+const OPENROUTER_KEY = process.env["OPENROUTER_API_KEY"]
+const OPENROUTER_MODEL = process.env["OPENROUTER_MODEL"] ?? "anthropic/claude-sonnet-4"
+
 function mockRagStream(
-  _body: RagGenerateRequest
-): { stream: ReadableStream; contentType: string } {
+  body: RagGenerateRequest
+): { stream: ReadableStream; contentType: string } | Promise<{ stream: ReadableStream; contentType: string } | { error: RagError }> {
+  // Si hay key de OpenRouter, usar LLM real
+  if (OPENROUTER_KEY) {
+    return openRouterStream(body)
+  }
+
+  // Fallback: respuesta hardcoded
   const messages = [
-    "Esta es una respuesta simulada del RAG Server.",
-    " El sistema está en modo MOCK_RAG=true.",
-    " Para usar el RAG real, levantá Docker y desactivá MOCK_RAG en .env.local.",
+    "Esta es una respuesta simulada del RAG Server.\n\n",
+    "## Modo Mock\n\n",
+    "El sistema está en modo `MOCK_RAG=true`.\n\n",
+    "Para usar el **RAG real**, levantá Docker y desactivá `MOCK_RAG` en `.env.local`.\n\n",
+    "### Alternativa\n\n",
+    "Configurá `OPENROUTER_API_KEY` en `.env.local` para usar un LLM real sin GPU.",
   ]
 
   const stream = new ReadableStream({
@@ -161,7 +173,7 @@ function mockRagStream(
           choices: [{ delta: { content: msg }, finish_reason: null }],
         })
         controller.enqueue(new TextEncoder().encode(`data: ${data}\n\n`))
-        await new Promise((r) => setTimeout(r, 100))
+        await new Promise((r) => setTimeout(r, 80))
       }
       controller.enqueue(new TextEncoder().encode("data: [DONE]\n\n"))
       controller.close()
@@ -169,6 +181,38 @@ function mockRagStream(
   })
 
   return { stream, contentType: "text/event-stream" }
+}
+
+async function openRouterStream(
+  body: RagGenerateRequest
+): Promise<{ stream: ReadableStream; contentType: string } | { error: RagError }> {
+  try {
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${OPENROUTER_KEY}`,
+      },
+      body: JSON.stringify({
+        model: OPENROUTER_MODEL,
+        messages: body.messages,
+        stream: true,
+      }),
+    })
+
+    if (!response.ok) {
+      const text = await response.text().catch(() => "")
+      return { error: createRagError("UPSTREAM_ERROR", `OpenRouter ${response.status}: ${text.slice(0, 200)}`) }
+    }
+
+    if (!response.body) {
+      return { error: createRagError("UPSTREAM_ERROR", "OpenRouter no retornó stream") }
+    }
+
+    return { stream: response.body, contentType: "text/event-stream" }
+  } catch (err) {
+    return { error: createRagError("UNAVAILABLE", `OpenRouter: ${String(err)}`) }
+  }
 }
 
 /**
