@@ -8,6 +8,7 @@ import type { DbChatSession, DbChatMessage } from "@rag-saldivia/db"
 import { actionAddMessage, actionAddFeedback } from "@/app/actions/chat"
 import { clientLog } from "@rag-saldivia/logger/frontend"
 import { SourcesPanel } from "@/components/chat/SourcesPanel"
+import { MarkdownMessage } from "@/components/chat/MarkdownMessage"
 import type { Citation } from "@rag-saldivia/shared"
 
 // ── Helpers ──
@@ -191,9 +192,7 @@ export function ChatInterface({
 
                       {/* Content */}
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm text-fg leading-relaxed whitespace-pre-wrap">
-                          {text}
-                        </div>
+                        <MarkdownMessage content={text} />
 
                         {sources.length > 0 && (
                           <div style={{ marginTop: "12px" }}>
