@@ -6,10 +6,8 @@
  *   data: {"choices":[{"delta":{"sources":[...]}}]}
  *   data: [DONE]
  *
- * El AI SDK espera su propio protocolo con text-delta, data parts, etc.
+ * El AI SDK espera su propio protocolo con text-start, text-delta, data parts, etc.
  * Este adapter lee el primero y escribe el segundo.
- *
- * Citations se pasan como `data-sources` parts (custom data type).
  */
 
 import {
@@ -29,20 +27,17 @@ type NvidiaSseEvent = {
   }>
 }
 
-// Custom data types para nuestro stream — citations del RAG
 type RagDataTypes = {
   sources: { citations: Citation[] }
 }
 
 export type RagUIMessage = UIMessage<unknown, RagDataTypes>
 
-type RagWriter = Parameters<
-  Parameters<typeof createUIMessageStream<UIMessage<unknown, RagDataTypes>>>[0]["execute"]
->[0]["writer"]
+const TEXT_PART_ID = "msg-text"
 
 /**
  * Crea una Response en formato AI SDK Data Stream a partir de un ReadableStream
- * SSE del RAG Server NVIDIA.
+ * SSE del RAG Server (NVIDIA o OpenRouter).
  */
 export function createRagStreamResponse(ragStream: ReadableStream<Uint8Array>) {
   const stream = createUIMessageStream<UIMessage<unknown, RagDataTypes>>({
@@ -50,6 +45,7 @@ export function createRagStreamResponse(ragStream: ReadableStream<Uint8Array>) {
       const reader = ragStream.getReader()
       const decoder = new TextDecoder()
       let buffer = ""
+      let textStarted = false
 
       try {
         while (true) {
@@ -61,12 +57,55 @@ export function createRagStreamResponse(ragStream: ReadableStream<Uint8Array>) {
           buffer = lines.pop() ?? ""
 
           for (const line of lines) {
-            processLine(line, writer)
+            // Extraer token de texto
+            const token = parseSseLine(line)
+            if (token) {
+              if (!textStarted) {
+                writer.write({ type: "text-start", id: TEXT_PART_ID })
+                textStarted = true
+              }
+              writer.write({ type: "text-delta", delta: token, id: TEXT_PART_ID })
+            }
+
+            // Extraer citations de delta.sources
+            if (line.startsWith("data: ")) {
+              const rawData = line.slice(6).trim()
+              if (rawData && rawData !== "[DONE]") {
+                try {
+                  const parsed = JSON.parse(rawData) as NvidiaSseEvent
+                  const srcData = parsed.choices?.[0]?.delta?.sources
+                  if (srcData) {
+                    const result = CitationSchema.array().safeParse(srcData)
+                    if (result.success) {
+                      writer.write({
+                        type: "data-sources",
+                        data: { citations: result.data },
+                      })
+                    }
+                  }
+                } catch {
+                  // Ignorar líneas malformadas
+                }
+              }
+            }
           }
         }
 
+        // Procesar buffer restante
         if (buffer) {
-          processLine(buffer, writer)
+          const token = parseSseLine(buffer)
+          if (token) {
+            if (!textStarted) {
+              writer.write({ type: "text-start", id: TEXT_PART_ID })
+              textStarted = true
+            }
+            writer.write({ type: "text-delta", delta: token, id: TEXT_PART_ID })
+          }
+        }
+
+        // Cerrar el text part si se abrió
+        if (textStarted) {
+          writer.write({ type: "text-end", id: TEXT_PART_ID })
         }
       } finally {
         reader.releaseLock()
@@ -75,35 +114,4 @@ export function createRagStreamResponse(ragStream: ReadableStream<Uint8Array>) {
   })
 
   return createUIMessageStreamResponse({ stream })
-}
-
-let partIdCounter = 0
-
-function processLine(line: string, writer: RagWriter) {
-  // Extraer token de texto
-  const token = parseSseLine(line)
-  if (token) {
-    writer.write({ type: "text-delta", delta: token, id: `t-${partIdCounter++}` })
-  }
-
-  // Extraer citations de delta.sources
-  if (!line.startsWith("data: ")) return
-  const rawData = line.slice(6).trim()
-  if (!rawData || rawData === "[DONE]") return
-
-  try {
-    const parsed = JSON.parse(rawData) as NvidiaSseEvent
-    const srcData = parsed.choices?.[0]?.delta?.sources
-    if (!srcData) return
-
-    const result = CitationSchema.array().safeParse(srcData)
-    if (!result.success) return
-
-    writer.write({
-      type: "data-sources",
-      data: { citations: result.data },
-    })
-  } catch {
-    // Ignorar líneas malformadas
-  }
 }

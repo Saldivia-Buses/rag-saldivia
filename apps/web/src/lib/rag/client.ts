@@ -146,7 +146,7 @@ export async function ragFetch(
 // ── Mock para desarrollo sin RAG ───────────────────────────────────────────
 
 const OPENROUTER_KEY = process.env["OPENROUTER_API_KEY"]
-const OPENROUTER_MODEL = process.env["OPENROUTER_MODEL"] ?? "anthropic/claude-sonnet-4"
+const OPENROUTER_MODEL = process.env["OPENROUTER_MODEL"] ?? "anthropic/claude-haiku-4-5"
 
 function mockRagStream(
   body: RagGenerateRequest
