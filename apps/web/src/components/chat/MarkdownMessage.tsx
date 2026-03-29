@@ -3,13 +3,14 @@
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import { useState } from "react"
-import { Check, Copy } from "lucide-react"
+import { Check, Copy, PanelRightOpen } from "lucide-react"
+import type { Artifact } from "./ArtifactPanel"
 
 /**
  * Renderiza texto markdown con estilos del design system.
  * Soporta: headers, listas, tablas (GFM), code blocks, links, bold, italic.
  */
-export function MarkdownMessage({ content }: { content: string }) {
+export function MarkdownMessage({ content, onOpenArtifact }: { content: string; onOpenArtifact?: (artifact: Artifact) => void }) {
   return (
     <ReactMarkdown
       remarkPlugins={[remarkGfm]}
@@ -93,7 +94,7 @@ export function MarkdownMessage({ content }: { content: string }) {
         code: ({ className, children }) => {
           const isBlock = className?.includes("language-")
           if (isBlock) {
-            return <CodeBlock className={className}>{children}</CodeBlock>
+            return <CodeBlock className={className} onOpenArtifact={onOpenArtifact}>{children}</CodeBlock>
           }
           return (
             <code
@@ -116,28 +117,48 @@ export function MarkdownMessage({ content }: { content: string }) {
   )
 }
 
-function CodeBlock({ className, children }: { className?: string | undefined; children: React.ReactNode }) {
+function CodeBlock({ className, children, onOpenArtifact }: { className?: string | undefined; children: React.ReactNode; onOpenArtifact?: ((artifact: Artifact) => void) | undefined }) {
   const [copied, setCopied] = useState(false)
   const lang = className?.replace("language-", "") ?? ""
+  const text = typeof children === "string" ? children : String(children ?? "")
 
   function handleCopy() {
-    const text = typeof children === "string" ? children : ""
     navigator.clipboard.writeText(text)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  function handleOpen() {
+    onOpenArtifact?.({
+      type: "code",
+      title: lang ? `Código ${lang}` : "Código",
+      content: text,
+      language: lang || undefined,
+    })
   }
 
   return (
     <div className="relative rounded-lg overflow-hidden" style={{ marginBottom: "12px", backgroundColor: "var(--surface)" }}>
       <div className="flex items-center justify-between" style={{ padding: "6px 12px", borderBottom: "1px solid var(--border)" }}>
         <span className="text-xs text-fg-subtle">{lang}</span>
-        <button
-          onClick={handleCopy}
-          className="text-fg-subtle hover:text-fg transition-colors"
-          title="Copiar código"
-        >
-          {copied ? <Check size={14} /> : <Copy size={14} />}
-        </button>
+        <div className="flex items-center" style={{ gap: "4px" }}>
+          {onOpenArtifact && (
+            <button
+              onClick={handleOpen}
+              className="text-fg-subtle hover:text-accent transition-colors"
+              title="Abrir en panel"
+            >
+              <PanelRightOpen size={14} />
+            </button>
+          )}
+          <button
+            onClick={handleCopy}
+            className="text-fg-subtle hover:text-fg transition-colors"
+            title="Copiar código"
+          >
+            {copied ? <Check size={14} /> : <Copy size={14} />}
+          </button>
+        </div>
       </div>
       <pre style={{ padding: "12px", overflowX: "auto" }}>
         <code className="text-sm font-mono text-fg">{children}</code>

@@ -9,6 +9,7 @@ import { actionAddMessage, actionAddFeedback } from "@/app/actions/chat"
 import { clientLog } from "@rag-saldivia/logger/frontend"
 import { SourcesPanel } from "@/components/chat/SourcesPanel"
 import { MarkdownMessage } from "@/components/chat/MarkdownMessage"
+import { ArtifactPanel, type Artifact } from "@/components/chat/ArtifactPanel"
 import type { Citation } from "@rag-saldivia/shared"
 
 // ── Helpers ──
@@ -48,6 +49,7 @@ export function ChatInterface({
 }) {
   const [input, setInput] = useState("")
   const [copiedId, setCopiedId] = useState<string | null>(null)
+  const [currentArtifact, setCurrentArtifact] = useState<Artifact | null>(null)
   const [_isPending, startTransition] = useTransition()
   const bottomRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -131,7 +133,8 @@ export function ChatInterface({
   }, [])
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 bg-bg">
+    <div className="flex-1 flex min-h-0">
+    <div className={`flex-1 flex flex-col min-h-0 bg-bg ${currentArtifact ? "" : ""}`}>
       <h1 className="sr-only">Chat — {session.collection}</h1>
       {/* Messages */}
       <div className="flex-1 overflow-y-auto">
@@ -192,7 +195,7 @@ export function ChatInterface({
 
                       {/* Content */}
                       <div className="flex-1 min-w-0">
-                        <MarkdownMessage content={text} />
+                        <MarkdownMessage content={text} onOpenArtifact={setCurrentArtifact} />
 
                         {sources.length > 0 && (
                           <div style={{ marginTop: "12px" }}>
@@ -319,6 +322,15 @@ export function ChatInterface({
           </div>
         </div>
       </div>
+    </div>
+
+    {/* Artifact panel */}
+    {currentArtifact && (
+      <ArtifactPanel
+        artifact={currentArtifact}
+        onClose={() => setCurrentArtifact(null)}
+      />
+    )}
     </div>
   )
 }
