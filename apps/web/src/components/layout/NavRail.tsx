@@ -74,7 +74,7 @@ export function NavRail({
         {/* Brand */}
         <div className="mb-2">
           <div className="w-7 h-7 rounded-md flex items-center justify-center bg-accent">
-            <span className="text-xs font-bold text-accent-fg select-none">R</span>
+            <span className="text-xs font-bold text-accent-fg select-none">S</span>
           </div>
         </div>
 

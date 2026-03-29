@@ -73,10 +73,10 @@ function LoginContent() {
             {/* Header */}
             <div className="text-center space-y-1.5">
               <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-accent mb-3">
-                <span className="text-base font-bold text-accent-fg select-none">R</span>
+                <span className="text-base font-bold text-accent-fg select-none">S</span>
               </div>
               <h1 className="text-xl font-semibold text-fg tracking-tight">
-                RAG Saldivia
+                Saldivia RAG
               </h1>
               <p className="text-sm text-fg-muted">
                 Iniciá sesión para continuar
