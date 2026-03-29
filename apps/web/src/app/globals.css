@@ -203,9 +203,14 @@ body {
 }
 
 /* ── Smooth theme transitions (targeted, not global) ── */
-nav, aside, main, header, footer,
+nav, main, header, footer,
 [data-density] {
   transition: background-color 200ms ease-out, border-color 200ms ease-out, color 200ms ease-out;
+}
+
+/* Sidebar needs width transition for collapse animation */
+aside {
+  transition: width 200ms ease-out, background-color 200ms ease-out, border-color 200ms ease-out, color 200ms ease-out;
 }
 
 /* Scrollbar styling */
