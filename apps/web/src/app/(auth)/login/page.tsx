@@ -68,14 +68,14 @@ function LoginContent() {
         <div className="w-full">
 
           {/* Card */}
-          <div className="rounded-2xl border border-border bg-surface shadow-sm px-8 py-10 space-y-8">
+          <div className="flex flex-col gap-10 rounded-2xl border border-border bg-surface shadow-sm" style={{ padding: "3rem 2.5rem" }}>
 
             {/* Header */}
-            <div className="text-center space-y-1.5">
-              <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-accent mb-3">
-                <span className="text-base font-bold text-accent-fg select-none">S</span>
+            <div className="flex flex-col items-center gap-2 text-center">
+              <div className="inline-flex h-12 w-12 items-center justify-center rounded-xl bg-accent mb-2">
+                <span className="text-lg font-bold text-accent-fg select-none">S</span>
               </div>
-              <h1 className="text-xl font-semibold text-fg tracking-tight">
+              <h1 className="text-2xl font-semibold text-fg tracking-tight">
                 Saldivia RAG
               </h1>
               <p className="text-sm text-fg-muted">
@@ -84,9 +84,9 @@ function LoginContent() {
             </div>
 
             {/* Form */}
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div className="space-y-1.5">
-                <label htmlFor="email" className="text-sm font-medium text-fg block">
+            <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-5">
+              <div className="flex flex-col gap-2">
+                <label htmlFor="email" className="text-sm font-medium text-fg">
                   Email
                 </label>
                 <Input
@@ -95,15 +95,16 @@ function LoginContent() {
                   placeholder="usuario@empresa.com"
                   autoComplete="email"
                   autoFocus
+                  className="h-11 text-base px-4 rounded-[10px]"
                   {...register("email")}
                 />
                 {errors.email && (
-                  <p className="text-xs text-destructive">{errors.email.message}</p>
+                  <p className="text-xs text-destructive mt-1">{errors.email.message}</p>
                 )}
               </div>
 
-              <div className="space-y-1.5">
-                <label htmlFor="password" className="text-sm font-medium text-fg block">
+              <div className="flex flex-col gap-2">
+                <label htmlFor="password" className="text-sm font-medium text-fg">
                   Contraseña
                 </label>
                 <Input
@@ -111,15 +112,16 @@ function LoginContent() {
                   type="password"
                   placeholder="••••••••"
                   autoComplete="current-password"
+                  className="h-11 text-base px-4 rounded-[10px]"
                   {...register("password")}
                 />
                 {errors.password && (
-                  <p className="text-xs text-destructive">{errors.password.message}</p>
+                  <p className="text-xs text-destructive mt-1">{errors.password.message}</p>
                 )}
               </div>
 
               {serverError && (
-                <div className="px-3 py-2.5 rounded-lg bg-destructive-subtle border border-destructive/20 text-sm text-destructive">
+                <div className="px-4 py-3 rounded-xl bg-destructive-subtle border border-destructive/20 text-sm text-destructive">
                   {serverError}
                 </div>
               )}
@@ -127,7 +129,7 @@ function LoginContent() {
               <Button
                 type="submit"
                 disabled={isPending}
-                className="w-full"
+                className="w-full h-11 text-base rounded-[10px] mt-1"
                 size="default"
               >
                 {isPending ? "Iniciando sesión..." : "Iniciar sesión"}

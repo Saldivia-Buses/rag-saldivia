@@ -54,8 +54,8 @@ const nextConfig: NextConfig = {
     return config
   },
 
-  // Forzar el root del proyecto para evitar que Next.js confunda el workspace root
-  outputFileTracingRoot: __dirname,
+  // Forzar el root al monorepo para que Turbopack resuelva packages/
+  outputFileTracingRoot: path.resolve(__dirname, "../.."),
 
   // Logging detallado en dev
   logging: {
@@ -67,7 +67,7 @@ const nextConfig: NextConfig = {
   // Next.js 16: Turbopack es el bundler default.
   // turbopack.root y outputFileTracingRoot deben apuntar al mismo valor.
   turbopack: {
-    root: __dirname,
+    root: path.resolve(__dirname, "../.."),
   },
 
   // Headers de seguridad
