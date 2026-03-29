@@ -148,6 +148,21 @@ export async function ragFetch(
 const OPENROUTER_KEY = process.env["OPENROUTER_API_KEY"]
 const OPENROUTER_MODEL = process.env["OPENROUTER_MODEL"] ?? "anthropic/claude-haiku-4-5"
 
+const ARTIFACT_SYSTEM_PROMPT = `Cuando generes código, HTML, SVG, diagramas o contenido estructurado sustancial, envolvelo en tags artifact:
+
+<artifact type="code" language="python" title="Título descriptivo corto">
+código aquí, SIN markdown fences
+</artifact>
+
+Tipos soportados: code, html, svg, mermaid, table, text
+- type="code": siempre incluí el atributo language
+- NO uses \`\`\` (markdown code fences) dentro de artifact tags
+- Código inline corto (1-2 líneas) dejalo como \`código\` en markdown, no como artifact
+- Usá artifacts para bloques sustanciales (3+ líneas de código, HTML completo, diagramas, etc.)
+- Siempre poné un title descriptivo
+- Podés incluir múltiples artifacts en una respuesta
+- El texto explicativo va FUERA de los tags artifact, en markdown normal`
+
 function mockRagStream(
   body: RagGenerateRequest
 ): { stream: ReadableStream; contentType: string } | Promise<{ stream: ReadableStream; contentType: string } | { error: RagError }> {
@@ -195,7 +210,10 @@ async function openRouterStream(
       },
       body: JSON.stringify({
         model: OPENROUTER_MODEL,
-        messages: body.messages,
+        messages: [
+          { role: "system", content: ARTIFACT_SYSTEM_PROMPT },
+          ...body.messages,
+        ],
         stream: true,
       }),
     })

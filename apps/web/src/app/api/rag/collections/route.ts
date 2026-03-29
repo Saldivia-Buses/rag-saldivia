@@ -1,44 +1,40 @@
 /**
- * GET /api/rag/collections
- * Lista las colecciones del RAG Server con cache de 60 segundos.
- * Filtra por las colecciones a las que el usuario tiene acceso.
+ * /api/rag/collections — CRUD for RAG document collections.
+ *
+ * GET:  List collections (filtered by user permissions, admins see all)
+ * POST: Create collection (admin only, proxied to RAG server or mock)
+ *
+ * Data flow: request → auth check → RAG server/cache → filtered response
+ * Depends on: lib/rag/client.ts, lib/rag/collections-cache.ts, lib/api-utils.ts
  */
 
 import { NextResponse } from "next/server"
 import { ragFetch } from "@/lib/rag/client"
-import { extractClaims } from "@/lib/auth/jwt"
 import { getUserCollections } from "@rag-saldivia/db"
 import { getCachedRagCollections, invalidateCollectionsCache } from "@/lib/rag/collections-cache"
+import { requireAuth, requireAdmin, apiOk, apiError } from "@/lib/api-utils"
 
 export async function GET(request: Request) {
-  const claims = await extractClaims(request)
-  if (!claims) {
-    return NextResponse.json({ ok: false, error: "No autenticado" }, { status: 401 })
-  }
+  const claims = await requireAuth(request)
+  if (claims instanceof NextResponse) return claims
 
   const userId = Number(claims.sub)
   const ragCollections = await getCachedRagCollections()
 
-  if (claims.role === "admin") {
-    return NextResponse.json({ ok: true, data: ragCollections })
-  }
+  // Admins see all collections, others see only permitted ones
+  if (claims.role === "admin") return apiOk(ragCollections)
 
   const userCollections = await getUserCollections(userId)
   const allowed = new Set(userCollections.map((c) => c.name))
-
-  return NextResponse.json({
-    ok: true,
-    data: ragCollections.filter((name) => allowed.has(name)),
-  })
+  return apiOk(ragCollections.filter((name) => allowed.has(name)))
 }
 
 export async function POST(request: Request) {
-  const claims = await extractClaims(request)
-  if (!claims) return NextResponse.json({ ok: false, error: "No autenticado" }, { status: 401 })
-  if (claims.role !== "admin") return NextResponse.json({ ok: false, error: "Solo admins" }, { status: 403 })
+  const claims = await requireAdmin(request)
+  if (claims instanceof NextResponse) return claims
 
   const body = await request.json().catch(() => null)
-  if (!body?.name) return NextResponse.json({ ok: false, error: "name requerido" }, { status: 400 })
+  if (!body?.name) return apiError("name requerido")
 
   try {
     const res = await ragFetch(`/v1/collections`, {
@@ -48,11 +44,11 @@ export async function POST(request: Request) {
     } as Parameters<typeof ragFetch>[1])
     if ("error" in res) throw new Error(res.error.message)
     await invalidateCollectionsCache()
-    return NextResponse.json({ ok: true })
+    return apiOk()
   } catch {
-    // En modo mock: simular éxito e invalidar cache de todas formas
+    // Mock mode: simulate success and invalidate cache anyway
     await invalidateCollectionsCache().catch(() => {})
-    return NextResponse.json({ ok: true })
+    return apiOk()
   }
 }
 

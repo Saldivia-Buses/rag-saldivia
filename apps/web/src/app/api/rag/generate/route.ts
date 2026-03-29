@@ -1,23 +1,31 @@
 /**
- * POST /api/rag/generate
+ * POST /api/rag/generate — Main chat streaming endpoint.
  *
- * Proxy SSE al RAG Server en :8081.
- * Verifica permisos de colección antes de streamear.
+ * Pipeline (executed in order):
+ *   1. Auth check (JWT)
+ *   2. Rate limiting (queries/hour per user)
+ *   3. Collection access verification (multi-collection support)
+ *   4. System prompt injection: focus mode → project context → memory → language hint
+ *   5. Proxy to RAG server (or OpenRouter in mock mode)
+ *   6. Transform SSE stream to AI SDK Data Stream protocol
  *
- * Preserva el fix crítico del gateway Python: verifica el status HTTP
- * ANTES de retornar el stream (evita el bug donde siempre se retornaba 200).
+ * Critical: verifies HTTP status BEFORE streaming (prevents the gateway.py
+ * bug where StreamingResponse always returned 200 even on upstream errors).
+ *
+ * Data flow: Client (useChat) → this route → ragGenerateStream → createRagStreamResponse → SSE
+ * Depends on: lib/rag/client.ts, lib/rag/ai-stream.ts, lib/api-utils.ts
  */
 
 import { NextResponse } from "next/server"
 import { ragGenerateStream } from "@/lib/rag/client"
 import { createRagStreamResponse } from "@/lib/rag/ai-stream"
-import { extractClaims } from "@/lib/auth/jwt"
 import { canAccessCollection, getUserCollections } from "@rag-saldivia/db"
 import { log } from "@rag-saldivia/logger/backend"
 import { FOCUS_MODES, type FocusModeId } from "@rag-saldivia/shared"
 import { detectLanguageHint } from "@/lib/rag/client"
 import { getRateLimit, countQueriesLastHour, getProjectBySession, getMemoryAsContext } from "@rag-saldivia/db"
 import { dispatchEvent } from "@/lib/webhook"
+import { requireAuth, apiError, apiServerError } from "@/lib/api-utils"
 
 export const runtime = "nodejs" // SSE requiere Node runtime, no Edge
 
@@ -40,35 +48,27 @@ function normalizeMessages(raw: RawMessage[]): Array<{ role: string; content: st
 export async function POST(request: Request) {
   const start = Date.now()
 
-  // Autenticación
-  const claims = await extractClaims(request)
-  if (!claims) {
-    return NextResponse.json({ ok: false, error: "No autenticado" }, { status: 401 })
-  }
+  // Auth check
+  const claims = await requireAuth(request)
+  if (claims instanceof NextResponse) return claims
 
   const userId = Number(claims.sub)
 
   try {
     const body = await request.json().catch(() => null)
     if (!body || !Array.isArray(body.messages) || body.messages.length === 0) {
-      return NextResponse.json(
-        { ok: false, error: "El campo 'messages' es requerido y no puede estar vacío" },
-        { status: 400 }
-      )
+      return apiError("El campo 'messages' es requerido y no puede estar vacío")
     }
 
     // Normalizar mensajes: AI SDK envía parts[], legacy envía content string
     body.messages = normalizeMessages(body.messages as RawMessage[])
 
-    // Rate limiting — F2.36
+    // Rate limiting — reject if user exceeded queries/hour quota
     const maxQph = await getRateLimit(userId)
     if (maxQph !== null) {
       const count = await countQueriesLastHour(userId)
       if (count >= maxQph) {
-        return NextResponse.json(
-          { ok: false, error: `Límite de ${maxQph} queries/hora alcanzado. Intentá más tarde.` },
-          { status: 429 }
-        )
+        return apiError(`Límite de ${maxQph} queries/hora alcanzado. Intentá más tarde.`, 429)
       }
     }
 
@@ -85,10 +85,7 @@ export async function POST(request: Request) {
       )
       for (const col of collectionNames) {
         if (!accessSet.has(col)) {
-          return NextResponse.json(
-            { ok: false, error: `Sin acceso a la colección '${col}'` },
-            { status: 403 }
-          )
+          return apiError(`Sin acceso a la colección '${col}'`, 403)
         }
       }
       // El Blueprint acepta colecciones múltiples como array
@@ -113,10 +110,7 @@ export async function POST(request: Request) {
           reason: "forbidden",
           collection: collectionName,
         }, { userId })
-        return NextResponse.json(
-          { ok: false, error: `Sin acceso a la colección '${collectionName}'` },
-          { status: 403 }
-        )
+        return apiError(`Sin acceso a la colección '${collectionName}'`, 403)
       }
     }
 
@@ -164,18 +158,9 @@ export async function POST(request: Request) {
         duration: Date.now() - start,
       }, { userId })
 
-      return NextResponse.json(
-        {
-          ok: false,
-          error: result.error.message,
-          suggestion: result.error.suggestion,
-        },
-        {
-          status: result.error.code === "TIMEOUT" ? 504
-            : result.error.code === "UNAVAILABLE" ? 503
-            : 502,
-        }
-      )
+      const status = result.error.code === "TIMEOUT" ? 504
+        : result.error.code === "UNAVAILABLE" ? 503 : 502
+      return apiError(result.error.message, status, { suggestion: result.error.suggestion })
     }
 
     log.info("rag.stream_completed", {
@@ -189,15 +174,6 @@ export async function POST(request: Request) {
 
     return createRagStreamResponse(result.stream)
   } catch (error) {
-    log.error("system.error", {
-      error: String(error),
-      endpoint: "POST /api/rag/generate",
-      duration: Date.now() - start,
-    }, { userId })
-
-    return NextResponse.json(
-      { ok: false, error: "Error interno del servidor" },
-      { status: 500 }
-    )
+    return apiServerError(error, "POST /api/rag/generate", userId)
   }
 }

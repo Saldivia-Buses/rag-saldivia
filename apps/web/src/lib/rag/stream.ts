@@ -1,14 +1,34 @@
 /**
- * Utilidades compartidas para leer streams SSE del RAG Server.
+ * Shared SSE stream reader for the NVIDIA RAG Server.
  *
- * Centraliza la lógica de reader + TextDecoder + parseo de líneas que
- * estaba duplicada en useRagStream,
- * slack/route.ts y teams/route.ts.
+ * The RAG server (port 8081) streams responses as Server-Sent Events in
+ * OpenAI-compatible format: `data: {"choices":[{"delta":{"content":"..."}}]}`
+ *
+ * This module provides three layers of abstraction:
+ *   1. `parseSseLine` — single line -> token string (or null)
+ *   2. `readSseTokens` — ReadableStream -> AsyncGenerator of tokens
+ *   3. `collectSseText` — full Response -> accumulated string
+ *
+ * Used by: ai-stream.ts (AI SDK adapter), webhook integrations (Slack/Teams),
+ *          and any route that proxies RAG responses.
+ * Depends on: nothing (pure streaming utilities, no external deps)
+ *
+ * Edge case: includes repetition detection to truncate LLM hallucination
+ * loops where the model repeats the same ~60-char window multiple times.
  */
 
+/** Number of characters in the sliding window used to detect repeated text. */
 const REPETITION_WINDOW = 60
+
+/** How many times the window must repeat to trigger truncation. */
 const REPETITION_THRESHOLD = 3
 
+/**
+ * Detect hallucination loops by checking if the last REPETITION_WINDOW chars
+ * appear REPETITION_THRESHOLD times in the preceding text.
+ *
+ * @returns Index at which to truncate, or -1 if no repetition detected.
+ */
 function detectRepetition(text: string): number {
   if (text.length <= REPETITION_WINDOW * REPETITION_THRESHOLD) return -1
   const tail = text.slice(-REPETITION_WINDOW)
@@ -23,8 +43,11 @@ function detectRepetition(text: string): number {
 }
 
 /**
- * Parsea una línea SSE "data: {...}" y extrae el token de contenido.
- * Retorna null para [DONE], líneas malformadas o sin contenido de texto.
+ * Parse a single SSE line and extract the content token.
+ *
+ * Expects OpenAI-compatible format: `data: {"choices":[{"delta":{"content":"token"}}]}`
+ * Returns null for `[DONE]` sentinel, non-data lines, malformed JSON,
+ * or events without text content (e.g. role-only deltas).
  */
 export function parseSseLine(line: string): string | null {
   if (!line.startsWith("data: ")) return null
@@ -41,8 +64,11 @@ export function parseSseLine(line: string): string | null {
 }
 
 /**
- * Yields tokens individuales de contenido a medida que llegan del ReadableStream.
- * Incluye buffering de líneas parciales para manejar chunks que cortan en mitad de una línea SSE.
+ * Async generator that yields individual content tokens from a ReadableStream.
+ *
+ * Handles the common SSE edge case where a network chunk splits in the middle
+ * of a line — incomplete lines are buffered until the next chunk arrives.
+ * Always releases the reader lock in the finally block to avoid stream leaks.
  */
 export async function* readSseTokens(
   body: ReadableStream<Uint8Array>
@@ -73,12 +99,15 @@ export async function* readSseTokens(
 }
 
 /**
- * Acumula todo el texto del stream SSE en un string.
- * Maneja tanto respuestas SSE (text/event-stream) como JSON estándar.
+ * Accumulate the full text from a RAG server response into a single string.
  *
- * @param response - La Response del fetch al RAG Server
- * @param options.maxChars - Truncar si el texto supera este límite
- * @param options.detectRepetition - Cortar si se detecta texto repetitivo (útil para modelos con alucinaciones en loop)
+ * Handles both SSE streams (`text/event-stream`) and standard JSON responses
+ * (the RAG server may return either depending on configuration).
+ *
+ * @param response - The fetch Response from the RAG server
+ * @param options.maxChars - Hard limit on accumulated text length
+ * @param options.detectRepetition - Enable hallucination loop detection;
+ *   truncates output when the model repeats the same text block multiple times
  */
 export async function collectSseText(
   response: Response,

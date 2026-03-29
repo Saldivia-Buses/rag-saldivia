@@ -7,7 +7,7 @@
  */
 
 import { NextResponse } from "next/server"
-import { extractClaims } from "@/lib/auth/jwt"
+import { requireAuth, apiOk, apiError, apiServerError } from "@/lib/api-utils"
 
 const MOCK_RAG = process.env["MOCK_RAG"] === "true"
 
@@ -19,20 +19,14 @@ const MOCK_SUGGESTIONS = [
 ]
 
 export async function POST(request: Request) {
-  const claims = await extractClaims(request)
-  if (!claims) {
-    return NextResponse.json({ ok: false, error: "No autenticado" }, { status: 401 })
-  }
+  const claims = await requireAuth(request)
+  if (claims instanceof NextResponse) return claims
 
   try {
     const body = await request.json().catch(() => null)
-    if (!body?.query) {
-      return NextResponse.json({ ok: false, error: "El campo 'query' es requerido" }, { status: 400 })
-    }
+    if (!body?.query) return apiError("El campo 'query' es requerido")
 
-    if (MOCK_RAG) {
-      return NextResponse.json({ ok: true, questions: MOCK_SUGGESTIONS })
-    }
+    if (MOCK_RAG) return apiOk({ questions: MOCK_SUGGESTIONS })
 
     // En producción: usar el RAG server para generar sugerencias contextuales
     const ragUrl = process.env["RAG_SERVER_URL"] ?? "http://localhost:8081"
@@ -59,15 +53,15 @@ Answer: ${String(body.lastResponse ?? "").slice(0, 500)}`
         const match = content.match(/\[[\s\S]*\]/)
         if (match) {
           const questions = JSON.parse(match[0]) as string[]
-          return NextResponse.json({ ok: true, questions: questions.slice(0, 4) })
+          return apiOk({ questions: questions.slice(0, 4) })
         }
       }
     } catch {
       // Si falla el RAG, caer al mock
     }
 
-    return NextResponse.json({ ok: true, questions: MOCK_SUGGESTIONS })
-  } catch {
-    return NextResponse.json({ ok: false, error: "Error interno" }, { status: 500 })
+    return apiOk({ questions: MOCK_SUGGESTIONS })
+  } catch (err) {
+    return apiServerError(err, "POST /api/rag/suggest")
   }
 }
