@@ -40,7 +40,7 @@ export function SessionList({ sessions }: { sessions: DbChatSession[] }) {
 
   if (collapsed) {
     return (
-      <aside className="shrink-0 border-r border-border bg-surface flex flex-col items-center" style={{ width: "48px", padding: "12px 0" }}>
+      <aside className="shrink-0 border-r border-border bg-surface flex flex-col items-center transition-all duration-200" style={{ width: "48px", padding: "12px 0" }}>
         <button
           type="button"
           onClick={() => setCollapsed(false)}
@@ -67,7 +67,7 @@ export function SessionList({ sessions }: { sessions: DbChatSession[] }) {
   }
 
   return (
-    <aside className="w-60 shrink-0 border-r border-border bg-surface flex flex-col h-full">
+    <aside className="w-60 shrink-0 border-r border-border bg-surface flex flex-col h-full transition-all duration-200">
       {/* Header */}
       <div className="flex items-center justify-between" style={{ padding: "12px 12px 8px" }}>
         <div className="flex items-center" style={{ gap: "6px" }}>

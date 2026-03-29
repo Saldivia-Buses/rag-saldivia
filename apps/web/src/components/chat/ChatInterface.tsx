@@ -6,6 +6,7 @@ import { useChat } from "@ai-sdk/react"
 import { DefaultChatTransport, type UIMessage } from "ai"
 import type { DbChatSession, DbChatMessage } from "@rag-saldivia/db"
 import { actionAddMessage, actionAddFeedback, actionRenameSession } from "@/app/actions/chat"
+import { useRouter } from "next/navigation"
 import { clientLog } from "@rag-saldivia/logger/frontend"
 import { SourcesPanel } from "@/components/chat/SourcesPanel"
 import { MarkdownMessage } from "@/components/chat/MarkdownMessage"
@@ -77,6 +78,10 @@ export function ChatInterface({
   const [artifacts, setArtifacts] = useState<Artifact[]>([])
   const [activeArtifactIndex, setActiveArtifactIndex] = useState(0)
   const [_isPending, startTransition] = useTransition()
+  const [editingTitle, setEditingTitle] = useState(false)
+  const [titleDraft, setTitleDraft] = useState(session.title)
+  const titleInputRef = useRef<HTMLInputElement>(null)
+  const router = useRouter()
   const bottomRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
@@ -172,6 +177,15 @@ export function ChatInterface({
     await actionAddFeedback(messageId, rating)
   }, [])
 
+  const handleTitleSave = useCallback(async () => {
+    const newTitle = titleDraft.trim()
+    if (newTitle && newTitle !== session.title) {
+      await actionRenameSession(session.id, newTitle)
+      router.refresh()
+    }
+    setEditingTitle(false)
+  }, [titleDraft, session.id, session.title, router])
+
   const handleRetry = useCallback(async () => {
     const lastUserMsg = [...messages].reverse().find((m) => m.role === "user")
     if (!lastUserMsg || isStreaming) return
@@ -188,10 +202,31 @@ export function ChatInterface({
           className="shrink-0 flex items-center justify-center border-b border-border"
           style={{ height: "48px" }}
         >
-          <button className="flex items-center text-sm font-medium text-fg hover:text-fg-muted transition-colors" style={{ gap: "4px" }}>
-            {session.title}
-            <ChevronDown size={14} className="text-fg-subtle" />
-          </button>
+          {editingTitle ? (
+            <input
+              ref={titleInputRef}
+              value={titleDraft}
+              onChange={(e) => setTitleDraft(e.target.value)}
+              onBlur={handleTitleSave}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleTitleSave()
+                if (e.key === "Escape") { setTitleDraft(session.title); setEditingTitle(false) }
+              }}
+              className="text-sm font-medium text-fg bg-transparent text-center outline-none border-b border-accent"
+              style={{ maxWidth: "300px" }}
+              autoFocus
+            />
+          ) : (
+            <button
+              onClick={() => { setEditingTitle(true); setTitleDraft(session.title) }}
+              className="flex items-center text-sm font-medium text-fg hover:text-fg-muted transition-colors"
+              style={{ gap: "4px" }}
+              title="Click para renombrar"
+            >
+              {session.title}
+              <ChevronDown size={14} className="text-fg-subtle" />
+            </button>
+          )}
         </div>
       )}
 
