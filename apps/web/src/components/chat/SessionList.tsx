@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useState, useMemo } from "react"
-import { Plus, MessageSquare, Trash2, Search } from "lucide-react"
+import { Plus, MessageSquare, Trash2, Search, PanelLeftClose, PanelLeft } from "lucide-react"
 import type { DbChatSession } from "@rag-saldivia/db"
 import { actionDeleteSession, actionCreateSession } from "@/app/actions/chat"
 
@@ -12,6 +12,7 @@ export function SessionList({ sessions }: { sessions: DbChatSession[] }) {
   const router = useRouter()
   const [creating, setCreating] = useState(false)
   const [search, setSearch] = useState("")
+  const [collapsed, setCollapsed] = useState(false)
 
   const filtered = useMemo(() => {
     if (!search.trim()) return sessions
@@ -37,13 +38,52 @@ export function SessionList({ sessions }: { sessions: DbChatSession[] }) {
     if (pathname === `/chat/${id}`) router.push("/chat")
   }
 
+  if (collapsed) {
+    return (
+      <aside className="shrink-0 border-r border-border bg-surface flex flex-col items-center" style={{ width: "48px", padding: "12px 0" }}>
+        <button
+          type="button"
+          onClick={() => setCollapsed(false)}
+          className="p-1.5 rounded-md text-fg-muted hover:text-fg hover:bg-surface-2 transition-colors"
+          title="Mostrar panel"
+          aria-label="Mostrar panel de chats"
+        >
+          <PanelLeft size={16} />
+        </button>
+        <div style={{ marginTop: "8px" }}>
+          <button
+            type="button"
+            onClick={handleNew}
+            disabled={creating}
+            className="p-1.5 rounded-md text-fg-muted hover:text-fg hover:bg-surface-2 transition-colors disabled:opacity-40"
+            title="Nuevo chat"
+            aria-label="Nuevo chat"
+          >
+            <Plus size={16} />
+          </button>
+        </div>
+      </aside>
+    )
+  }
+
   return (
     <aside className="w-60 shrink-0 border-r border-border bg-surface flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center justify-between" style={{ padding: "16px 16px 8px" }}>
-        <span className="text-xs font-semibold uppercase tracking-wide text-fg-subtle">
-          Chats
-        </span>
+      <div className="flex items-center justify-between" style={{ padding: "12px 12px 8px" }}>
+        <div className="flex items-center" style={{ gap: "6px" }}>
+          <button
+            type="button"
+            onClick={() => setCollapsed(true)}
+            className="p-1 rounded-md text-fg-muted hover:text-fg hover:bg-surface-2 transition-colors"
+            title="Ocultar panel"
+            aria-label="Ocultar panel de chats"
+          >
+            <PanelLeftClose size={16} />
+          </button>
+          <span className="text-xs font-semibold uppercase tracking-wide text-fg-subtle">
+            Chats
+          </span>
+        </div>
         <button
           type="button"
           onClick={handleNew}

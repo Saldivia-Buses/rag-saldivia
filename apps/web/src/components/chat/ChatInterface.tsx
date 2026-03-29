@@ -5,7 +5,7 @@ import { ThumbsUp, ThumbsDown, Copy, Check, RotateCcw, Square, Plus, ChevronDown
 import { useChat } from "@ai-sdk/react"
 import { DefaultChatTransport, type UIMessage } from "ai"
 import type { DbChatSession, DbChatMessage } from "@rag-saldivia/db"
-import { actionAddMessage, actionAddFeedback } from "@/app/actions/chat"
+import { actionAddMessage, actionAddFeedback, actionRenameSession } from "@/app/actions/chat"
 import { clientLog } from "@rag-saldivia/logger/frontend"
 import { SourcesPanel } from "@/components/chat/SourcesPanel"
 import { MarkdownMessage } from "@/components/chat/MarkdownMessage"
@@ -113,6 +113,12 @@ export function ChatInterface({
         })
 
         clientLog.action("rag.query", { collection: session.collection, sessionId: session.id })
+
+        // Auto-rename session from first user message
+        if (allMessages.filter(m => m.role === "user").length === 1) {
+          const title = userText.slice(0, 60) + (userText.length > 60 ? "..." : "")
+          actionRenameSession(session.id, title)
+        }
       }
     },
     onError: (err) => {
