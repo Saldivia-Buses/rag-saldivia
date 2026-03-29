@@ -10,10 +10,9 @@ export type Artifact = {
   language?: string | undefined
 }
 
-// ── Syntax highlighting con shiki (lazy) ──
+// ── Syntax highlighting con shiki (lazy + cached) ──
 
-// Cache global de highlighter para no recrear en cada render
-let highlighterCache: Map<string, string> = new Map()
+const highlighterCache = new Map<string, string>()
 
 const HighlightedCode = memo(function HighlightedCode({ code, language }: { code: string; language: string }) {
   const cacheKey = `${language}:${code}`
@@ -32,14 +31,11 @@ const HighlightedCode = memo(function HighlightedCode({ code, language }: { code
           langs: [language],
         })
         if (cancelled) return
-        const result = highlighter.codeToHtml(code, {
-          lang: language,
-          theme: "github-dark",
-        })
+        const result = highlighter.codeToHtml(code, { lang: language, theme: "github-dark" })
         highlighterCache.set(cacheKey, result)
         setHtml(result)
       } catch {
-        // Lenguaje no soportado
+        // Lenguaje no soportado — fallback a plain text
       }
     })
     return () => { cancelled = true }
@@ -54,7 +50,6 @@ const HighlightedCode = memo(function HighlightedCode({ code, language }: { code
     )
   }
 
-  // Fallback sin highlighting
   return (
     <pre className="text-sm font-mono text-fg whitespace-pre overflow-x-auto">
       <code>{code}</code>
@@ -62,7 +57,7 @@ const HighlightedCode = memo(function HighlightedCode({ code, language }: { code
   )
 })
 
-// ── Mermaid rendering ──
+// ── Mermaid rendering with custom theme ──
 
 const MermaidPreview = memo(function MermaidPreview({ content }: { content: string }) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -73,7 +68,39 @@ const MermaidPreview = memo(function MermaidPreview({ content }: { content: stri
     let cancelled = false
     import("mermaid").then(async (mod) => {
       const mermaid = mod.default
-      mermaid.initialize({ startOnLoad: false, theme: "dark" })
+      mermaid.initialize({
+        startOnLoad: false,
+        theme: "base",
+        themeVariables: {
+          // Match our design system tokens
+          primaryColor: "#2563eb",
+          primaryTextColor: "#ffffff",
+          primaryBorderColor: "#1d4ed8",
+          secondaryColor: "#dbeafe",
+          secondaryTextColor: "#141413",
+          secondaryBorderColor: "#93c5fd",
+          tertiaryColor: "#f0eee8",
+          tertiaryTextColor: "#141413",
+          tertiaryBorderColor: "#e0ddd6",
+          lineColor: "#6e6c69",
+          textColor: "#f5f4f0",
+          mainBkg: "#2563eb",
+          nodeBorder: "#1d4ed8",
+          clusterBkg: "#242320",
+          clusterBorder: "#3a3935",
+          titleColor: "#f5f4f0",
+          edgeLabelBackground: "#242320",
+          nodeTextColor: "#ffffff",
+          // Flowchart
+          fillType0: "#2563eb",
+          fillType1: "#60a5fa",
+          fillType2: "#dbeafe",
+          fillType3: "#1e3a5f",
+          // Fonts
+          fontFamily: "Instrument Sans, system-ui, sans-serif",
+          fontSize: "14px",
+        },
+      })
       try {
         const id = `mermaid-${Date.now()}`
         const { svg: result } = await mermaid.render(id, content)
@@ -97,7 +124,7 @@ const MermaidPreview = memo(function MermaidPreview({ content }: { content: stri
     return (
       <div
         ref={containerRef}
-        className="flex items-center justify-center"
+        className="flex items-center justify-center [&_svg]:max-w-full"
         style={{ padding: "24px", minHeight: "200px" }}
         dangerouslySetInnerHTML={{ __html: svg }}
       />
@@ -128,7 +155,7 @@ export function ArtifactPanel({
 }) {
   const [viewMode, setViewMode] = useState<ViewMode>("preview")
   const [copied, setCopied] = useState(false)
-  const [panelWidth, setPanelWidth] = useState(500)
+  const [panelWidth, setPanelWidth] = useState(440)
   const resizing = useRef(false)
 
   const artifact = artifacts[activeIndex] as Artifact | undefined
@@ -155,7 +182,6 @@ export function ArtifactPanel({
     URL.revokeObjectURL(url)
   }
 
-  // ── Resize drag ──
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
     resizing.current = true
@@ -165,7 +191,7 @@ export function ArtifactPanel({
     function onMouseMove(ev: MouseEvent) {
       if (!resizing.current) return
       const delta = startX - ev.clientX
-      setPanelWidth(Math.max(300, Math.min(900, startWidth + delta)))
+      setPanelWidth(Math.max(320, Math.min(800, startWidth + delta)))
     }
 
     function onMouseUp() {
@@ -180,34 +206,37 @@ export function ArtifactPanel({
 
   if (!artifact) return null
 
+  const typeLabel = isMermaid ? "MERMAID" : (artifact.language ?? artifact.type).toUpperCase()
+
   return (
-    <div className="shrink-0 flex h-full" style={{ width: `${panelWidth}px` }}>
+    <div className="shrink-0 flex h-full border-l border-border" style={{ width: `${panelWidth}px` }}>
       {/* Resize handle */}
       <div
-        className="w-1 cursor-col-resize hover:bg-accent/30 transition-colors shrink-0"
+        className="shrink-0 cursor-col-resize group"
+        style={{ width: "6px", marginLeft: "-3px" }}
         onMouseDown={handleMouseDown}
-        style={{ borderLeft: "1px solid var(--border)" }}
-      />
+      >
+        <div className="w-px h-full mx-auto group-hover:bg-accent transition-colors" />
+      </div>
 
       <div className="flex-1 flex flex-col bg-bg overflow-hidden">
-        {/* Header */}
+        {/* Header — clean like Claude */}
         <div
           className="flex items-center justify-between border-b border-border shrink-0"
-          style={{ padding: "8px 12px" }}
+          style={{ height: "48px", padding: "0 12px" }}
         >
-          <div className="flex items-center" style={{ gap: "6px" }}>
-            {/* View mode toggle */}
+          <div className="flex items-center" style={{ gap: "8px" }}>
+            {/* View mode toggle (only for mermaid) */}
             {hasPreview && (
-              <div
-                className="flex rounded-md border border-border overflow-hidden"
-                style={{ height: "28px" }}
-              >
+              <div className="flex rounded-md overflow-hidden" style={{ height: "28px" }}>
                 <button
                   onClick={() => setViewMode("preview")}
                   className={`flex items-center justify-center transition-colors ${
-                    viewMode === "preview" ? "bg-surface-2 text-fg" : "text-fg-subtle hover:text-fg"
+                    viewMode === "preview"
+                      ? "bg-surface-2 text-fg"
+                      : "text-fg-subtle hover:text-fg hover:bg-surface"
                   }`}
-                  style={{ width: "32px" }}
+                  style={{ width: "30px" }}
                   title="Preview"
                 >
                   <Eye size={14} />
@@ -215,9 +244,11 @@ export function ArtifactPanel({
                 <button
                   onClick={() => setViewMode("code")}
                   className={`flex items-center justify-center transition-colors ${
-                    viewMode === "code" ? "bg-surface-2 text-fg" : "text-fg-subtle hover:text-fg"
+                    viewMode === "code"
+                      ? "bg-surface-2 text-fg"
+                      : "text-fg-subtle hover:text-fg hover:bg-surface"
                   }`}
-                  style={{ width: "32px", borderLeft: "1px solid var(--border)" }}
+                  style={{ width: "30px" }}
                   title="Código"
                 >
                   <Code size={14} />
@@ -225,7 +256,7 @@ export function ArtifactPanel({
               </div>
             )}
 
-            {/* Type badge */}
+            {/* Type + title */}
             <span
               className="text-xs font-medium uppercase tracking-wide text-accent"
               style={{
@@ -234,9 +265,8 @@ export function ArtifactPanel({
                 borderRadius: "4px",
               }}
             >
-              {isMermaid ? "mermaid" : artifact.language ?? artifact.type}
+              {typeLabel}
             </span>
-
             <span className="text-sm text-fg truncate">{artifact.title}</span>
           </div>
 
@@ -266,18 +296,11 @@ export function ArtifactPanel({
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-auto" style={{ padding: "16px" }}>
+        <div className="flex-1 overflow-auto">
           {isMermaid && viewMode === "preview" ? (
             <MermaidPreview content={artifact.content} />
           ) : (
-            <div
-              style={{
-                backgroundColor: "var(--surface)",
-                borderRadius: "8px",
-                padding: "16px",
-                overflow: "auto",
-              }}
-            >
+            <div style={{ padding: "16px" }}>
               <HighlightedCode
                 code={artifact.content}
                 language={artifact.language ?? "text"}
@@ -286,7 +309,7 @@ export function ArtifactPanel({
           )}
         </div>
 
-        {/* Artifact list (if multiple) */}
+        {/* Artifact tabs (if multiple) */}
         {artifacts.length > 1 && (
           <div
             className="border-t border-border shrink-0 overflow-x-auto flex"
