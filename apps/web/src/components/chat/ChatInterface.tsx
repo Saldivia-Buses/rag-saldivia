@@ -79,6 +79,7 @@ export function ChatInterface({
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [artifacts, setArtifacts] = useState<Artifact[]>([])
   const [activeArtifactIndex, setActiveArtifactIndex] = useState(0)
+  const [showArtifactPanel, setShowArtifactPanel] = useState(false)
   const [_isPending, startTransition] = useTransition()
   const [editingTitle, setEditingTitle] = useState(false)
   const [titleDraft, setTitleDraft] = useState(session.title)
@@ -216,6 +217,7 @@ export function ChatInterface({
       setActiveArtifactIndex(prev.length)
       return [...prev, a]
     })
+    setShowArtifactPanel(true)
     // Auto-close sidebar when opening artifact panel
     if (sidebarOpen) toggleSidebar()
   }, [sidebarOpen, toggleSidebar])
@@ -283,10 +285,12 @@ export function ChatInterface({
           <div style={{ width: "40px" }}>
             {artifacts.length > 0 && (
               <button
-                onClick={() => { setArtifacts([]); setActiveArtifactIndex(0) }}
-                className="flex items-center justify-center rounded-lg text-fg-muted hover:text-fg hover:bg-surface-2 transition-colors"
+                onClick={() => setShowArtifactPanel(p => !p)}
+                className={`flex items-center justify-center rounded-lg hover:bg-surface-2 transition-colors ${
+                  showArtifactPanel ? "text-accent" : "text-fg-muted hover:text-fg"
+                }`}
                 style={{ width: "36px", height: "36px" }}
-                title="Cerrar panel de artifacts"
+                title={showArtifactPanel ? "Cerrar panel" : "Abrir panel"}
               >
                 <PanelRightClose size={18} />
               </button>
@@ -599,12 +603,12 @@ export function ChatInterface({
     </div>
 
     {/* Artifact panel */}
-    {artifacts.length > 0 && (
+    {showArtifactPanel && artifacts.length > 0 && (
       <ArtifactPanel
         artifacts={artifacts}
         activeIndex={activeArtifactIndex}
         onSelect={setActiveArtifactIndex}
-        onClose={() => { setArtifacts([]); setActiveArtifactIndex(0) }}
+        onClose={() => setShowArtifactPanel(false)}
       />
     )}
     </div>
