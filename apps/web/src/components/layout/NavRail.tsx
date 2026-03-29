@@ -24,6 +24,9 @@ import { useRouter } from "next/navigation"
 
 type Changelog = { version: string; entries: { version: string; content: string }[] }
 
+const BTN = "flex items-center justify-center rounded-xl transition-colors"
+const BTN_SIZE = { width: "44px", height: "44px" } as const
+
 type NavItem = {
   href: string
   label: string
@@ -31,9 +34,9 @@ type NavItem = {
 }
 
 const NAV_ITEMS: NavItem[] = [
-  { href: "/chat",        label: "Chat",          icon: <MessageSquare size={16} /> },
-  { href: "/collections", label: "Colecciones",   icon: <FolderOpen size={16} /> },
-  { href: "/settings",    label: "Configuración", icon: <Settings size={16} /> },
+  { href: "/chat",        label: "Chat",          icon: <MessageSquare size={20} /> },
+  { href: "/collections", label: "Colecciones",   icon: <FolderOpen size={20} /> },
+  { href: "/settings",    label: "Configuración", icon: <Settings size={20} /> },
 ]
 
 function NavIcon({ item, active }: { item: NavItem; active: boolean }) {
@@ -44,17 +47,17 @@ function NavIcon({ item, active }: { item: NavItem; active: boolean }) {
           href={item.href}
           aria-label={item.label}
           className={cn(
-            "flex items-center justify-center rounded-lg transition-colors",
+            BTN,
             active
               ? "bg-accent-subtle text-accent"
               : "text-fg-muted hover:bg-surface-2 hover:text-fg"
           )}
-          style={{ width: "42px", height: "42px" }}
+          style={BTN_SIZE}
         >
           {item.icon}
         </Link>
       </TooltipTrigger>
-      <TooltipContent side="right" sideOffset={16}>
+      <TooltipContent side="right" sideOffset={12}>
         {item.label}
       </TooltipContent>
     </Tooltip>
@@ -81,38 +84,41 @@ export function NavRail({
       <nav
         aria-label="Navegación principal"
         className="flex flex-col items-center h-screen shrink-0 bg-surface border-r border-border"
-        style={{ width: 56, padding: "16px 0 12px", gap: "4px" }}
+        style={{ width: 64, padding: "12px 0", gap: "4px" }}
       >
         {/* Brand */}
         <div style={{ marginBottom: "4px" }}>
-          <div className="flex items-center justify-center rounded-lg bg-accent" style={{ width: "32px", height: "32px" }}>
-            <span className="text-xs font-bold text-accent-fg select-none">S</span>
+          <div
+            className="flex items-center justify-center rounded-xl bg-accent"
+            style={{ width: "38px", height: "38px" }}
+          >
+            <span className="text-sm font-bold text-accent-fg select-none">S</span>
           </div>
         </div>
 
-        {/* New chat button */}
+        {/* New chat */}
         <Tooltip>
           <TooltipTrigger asChild>
             <button
               type="button"
               onClick={handleNewChat}
               aria-label="Nuevo chat"
-              className="flex items-center justify-center rounded-lg text-fg-muted hover:bg-surface-2 hover:text-fg transition-colors"
-              style={{ width: "42px", height: "42px" }}
+              className={`${BTN} text-fg-muted hover:bg-surface-2 hover:text-fg`}
+              style={BTN_SIZE}
             >
-              <SquarePen size={16} aria-hidden />
+              <SquarePen size={20} aria-hidden />
             </button>
           </TooltipTrigger>
-          <TooltipContent side="right" sideOffset={16}>
+          <TooltipContent side="right" sideOffset={12}>
             Nuevo chat
           </TooltipContent>
         </Tooltip>
 
-        {/* Separador */}
-        <div className="w-5 h-px bg-border mb-1" />
+        {/* Separator */}
+        <div className="w-6 h-px bg-border" style={{ margin: "4px 0" }} />
 
         {/* Nav items */}
-        <div className="flex flex-col items-center gap-0.5 flex-1">
+        <div className="flex flex-col items-center gap-1 flex-1">
           {NAV_ITEMS.map((item) => (
             <NavIcon
               key={item.href}
@@ -122,15 +128,15 @@ export function NavRail({
           ))}
         </div>
 
-        {/* Bottom: theme toggle + logout */}
-        <div className="flex flex-col items-center gap-0.5 shrink-0">
+        {/* Bottom */}
+        <div className="flex flex-col items-center gap-1 shrink-0">
           <Tooltip>
             <TooltipTrigger asChild>
               <div className="text-fg-muted">
                 <ThemeToggle />
               </div>
             </TooltipTrigger>
-            <TooltipContent side="right" sideOffset={16}>
+            <TooltipContent side="right" sideOffset={12}>
               Cambiar tema
             </TooltipContent>
           </Tooltip>
@@ -140,13 +146,13 @@ export function NavRail({
                 type="button"
                 aria-label="Cerrar sesión"
                 onClick={() => actionLogout()}
-                className="flex items-center justify-center rounded-lg text-fg-subtle hover:text-fg hover:bg-surface-2 transition-colors"
-                style={{ width: "42px", height: "42px" }}
+                className={`${BTN} text-fg-subtle hover:text-fg hover:bg-surface-2`}
+                style={BTN_SIZE}
               >
-                <LogOut size={15} aria-hidden />
+                <LogOut size={18} aria-hidden />
               </button>
             </TooltipTrigger>
-            <TooltipContent side="right" sideOffset={16}>
+            <TooltipContent side="right" sideOffset={12}>
               Cerrar sesión
             </TooltipContent>
           </Tooltip>
