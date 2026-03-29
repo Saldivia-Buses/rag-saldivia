@@ -49,7 +49,8 @@ export function ChatInterface({
 }) {
   const [input, setInput] = useState("")
   const [copiedId, setCopiedId] = useState<string | null>(null)
-  const [currentArtifact, setCurrentArtifact] = useState<Artifact | null>(null)
+  const [artifacts, setArtifacts] = useState<Artifact[]>([])
+  const [activeArtifactIndex, setActiveArtifactIndex] = useState(0)
   const [_isPending, startTransition] = useTransition()
   const bottomRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -143,7 +144,7 @@ export function ChatInterface({
 
   return (
     <div className="flex-1 flex min-h-0">
-    <div className={`flex-1 flex flex-col min-h-0 bg-bg ${currentArtifact ? "" : ""}`}>
+    <div className="flex-1 flex flex-col min-h-0 bg-bg">
       <h1 className="sr-only">Chat — {session.collection}</h1>
       {/* Messages */}
       <div ref={scrollContainerRef} className="flex-1 overflow-y-auto">
@@ -204,7 +205,17 @@ export function ChatInterface({
 
                       {/* Content */}
                       <div className="flex-1 min-w-0">
-                        <MarkdownMessage content={text} onOpenArtifact={setCurrentArtifact} />
+                        <MarkdownMessage content={text} onOpenArtifact={(a) => {
+                          setArtifacts(prev => {
+                            const exists = prev.findIndex(p => p.content === a.content)
+                            if (exists >= 0) {
+                              setActiveArtifactIndex(exists)
+                              return prev
+                            }
+                            setActiveArtifactIndex(prev.length)
+                            return [...prev, a]
+                          })
+                        }} />
 
                         {sources.length > 0 && (
                           <div style={{ marginTop: "12px" }}>
@@ -334,10 +345,12 @@ export function ChatInterface({
     </div>
 
     {/* Artifact panel */}
-    {currentArtifact && (
+    {artifacts.length > 0 && (
       <ArtifactPanel
-        artifact={currentArtifact}
-        onClose={() => setCurrentArtifact(null)}
+        artifacts={artifacts}
+        activeIndex={activeArtifactIndex}
+        onSelect={setActiveArtifactIndex}
+        onClose={() => { setArtifacts([]); setActiveArtifactIndex(0) }}
       />
     )}
     </div>

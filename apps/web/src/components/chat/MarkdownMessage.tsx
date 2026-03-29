@@ -94,8 +94,8 @@ export function MarkdownMessage({ content, onOpenArtifact }: { content: string; 
         code: ({ className, children }) => {
           const isBlock = className?.includes("language-")
           if (isBlock && onOpenArtifact) {
-            // Si hay handler de artifacts, mostrar solo una card compacta
-            return <ArtifactCard className={className} onOpenArtifact={onOpenArtifact}>{children}</ArtifactCard>
+            const isMermaid = className?.includes("language-mermaid")
+            return <ArtifactCard className={className} onOpenArtifact={onOpenArtifact} isMermaid={isMermaid}>{children}</ArtifactCard>
           }
           if (isBlock) {
             return <CodeBlock className={className}>{children}</CodeBlock>
@@ -121,7 +121,7 @@ export function MarkdownMessage({ content, onOpenArtifact }: { content: string; 
   )
 }
 
-function ArtifactCard({ className, children, onOpenArtifact }: { className?: string | undefined; children: React.ReactNode; onOpenArtifact: (artifact: Artifact) => void }) {
+function ArtifactCard({ className, children, onOpenArtifact, isMermaid }: { className?: string | undefined; children: React.ReactNode; onOpenArtifact: (artifact: Artifact) => void; isMermaid?: boolean | undefined }) {
   const lang = className?.replace("language-", "") ?? "código"
   const text = typeof children === "string" ? children : String(children ?? "")
   const lines = text.split("\n").length
@@ -129,8 +129,8 @@ function ArtifactCard({ className, children, onOpenArtifact }: { className?: str
 
   function handleOpen() {
     onOpenArtifact({
-      type: "code",
-      title: lang ? `Código ${lang}` : "Código",
+      type: isMermaid ? "mermaid" : "code",
+      title: isMermaid ? "Diagrama" : (lang ? `Código ${lang}` : "Código"),
       content: text,
       language: lang || undefined,
     })
@@ -152,15 +152,20 @@ function ArtifactCard({ className, children, onOpenArtifact }: { className?: str
               borderRadius: "4px",
             }}
           >
-            {lang}
+            {isMermaid ? "Diagrama · MERMAID" : lang}
           </div>
           <span className="text-xs text-fg-subtle">{lines} líneas</span>
         </div>
         <PanelRightOpen size={14} className="text-fg-subtle" />
       </div>
-      <pre className="text-xs font-mono text-fg-muted overflow-hidden" style={{ maxHeight: "48px", lineHeight: "1.4" }}>
-        <code>{preview}</code>
-      </pre>
+      {!isMermaid && (
+        <pre className="text-xs font-mono text-fg-muted overflow-hidden" style={{ maxHeight: "48px", lineHeight: "1.4" }}>
+          <code>{preview}</code>
+        </pre>
+      )}
+      {isMermaid && (
+        <p className="text-xs text-fg-muted">Click para ver el diagrama</p>
+      )}
     </button>
   )
 }
