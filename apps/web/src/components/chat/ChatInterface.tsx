@@ -1,40 +1,43 @@
 "use client"
 
-import { useState, useRef, useEffect, useTransition, useCallback } from "react"
-import { Send, ThumbsUp, ThumbsDown, Loader2, Bookmark, RefreshCw, Copy, Check, GitBranch } from "lucide-react"
+import { useState, useRef, useEffect, useCallback, useTransition } from "react"
+import { Send, ThumbsUp, ThumbsDown, Loader2, Bookmark, Copy, Check, GitBranch } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { useChat } from "@ai-sdk/react"
+import { DefaultChatTransport, type UIMessage } from "ai"
 import type { DbChatSession, DbChatMessage } from "@rag-saldivia/db"
 import { actionAddMessage, actionAddFeedback, actionToggleSaved, actionForkSession } from "@/app/actions/chat"
 import { clientLog } from "@rag-saldivia/logger/frontend"
-import { useRagStream } from "@/hooks/useRagStream"
 import { SourcesPanel } from "@/components/chat/SourcesPanel"
+import type { Citation } from "@rag-saldivia/shared"
 
-type Message = {
-  id?: number
-  role: "user" | "assistant"
-  content: string
-  sources?: import("@rag-saldivia/shared").Citation[]
-  feedback?: "up" | "down" | null
-}
+// ── Helpers: convert between DB messages and AI SDK UIMessage ──
 
-function parseSessionMessages(session: DbChatSession & { messages?: DbChatMessage[] }): Message[] {
+function dbToUIMessages(session: DbChatSession & { messages?: DbChatMessage[] }): UIMessage[] {
   return (session.messages ?? []).map((m) => ({
-    id: m.id ?? undefined,
+    id: String(m.id ?? Math.random()),
     role: m.role as "user" | "assistant",
-    content: m.content,
-    sources: (m.sources as import("@rag-saldivia/shared").Citation[]) ?? [],
-    feedback: null,
+    parts: [{ type: "text" as const, text: m.content }],
+    createdAt: new Date(m.timestamp ?? Date.now()),
   }))
 }
 
-function updateLastAssistantMessage(messages: Message[], content: string): Message[] {
-  const updated = [...messages]
-  const last = updated[updated.length - 1]
-  if (last?.role === "assistant") {
-    updated[updated.length - 1] = { ...last, content }
-  }
-  return updated
+function getMessageText(msg: UIMessage): string {
+  return msg.parts
+    .filter((p): p is { type: "text"; text: string } => p.type === "text")
+    .map((p) => p.text)
+    .join("")
 }
+
+function getMessageSources(msg: UIMessage): Citation[] {
+  return msg.parts
+    .filter((p): p is { type: `data-${string}`; data: { citations: Citation[] } } =>
+      p.type === "data-sources"
+    )
+    .flatMap((p) => p.data.citations)
+}
+
+// ── Component ──
 
 export function ChatInterface({
   session,
@@ -43,30 +46,53 @@ export function ChatInterface({
   session: DbChatSession & { messages?: DbChatMessage[] }
   userId: number
 }) {
-  const [messages, setMessages] = useState<Message[]>(() => parseSessionMessages(session))
   const [input, setInput] = useState("")
-  const [error, setError] = useState<string | null>(null)
-  const [_isPending, startTransition] = useTransition()
   const [savedIds, setSavedIds] = useState<Set<number>>(new Set())
   const [copiedId, setCopiedId] = useState<number | null>(null)
-  const [queryStats, setQueryStats] = useState<{ ms: number; sources: number } | null>(null)
-  const streamStartRef = useRef<number>(0)
+  const [_isPending, startTransition] = useTransition()
   const bottomRef = useRef<HTMLDivElement>(null)
-  const pendingSourcesRef = useRef<import("@rag-saldivia/shared").Citation[]>([])
 
-  const { phase, stream } = useRagStream({
-    sessionId: session.id,
-    collection: session.collection,
-    collections: [session.collection],
-    focusMode: "detailed",
-    onDelta: (fullContent) => setMessages((prev) => updateLastAssistantMessage(prev, fullContent)),
-    onSources: (sources) => { pendingSourcesRef.current = sources },
-    onError: (message) => {
-      setError(message)
-      setMessages((prev) => updateLastAssistantMessage(prev, `Error: ${message}`))
-      clientLog.error(new Error(message))
+  const { messages, sendMessage, status, error, stop } = useChat({
+    id: session.id,
+    transport: new DefaultChatTransport({
+      api: "/api/rag/generate",
+      body: {
+        collection_name: session.collection,
+        collection_names: [session.collection],
+        session_id: session.id,
+        use_knowledge_base: true,
+        focus_mode: "detallado",
+      },
+    }),
+    messages: dbToUIMessages(session),
+    onFinish: ({ messages: allMessages }) => {
+      const lastAssistant = [...allMessages].reverse().find((m) => m.role === "assistant")
+      const lastUser = [...allMessages].reverse().find((m) => m.role === "user")
+
+      if (lastUser && lastAssistant) {
+        const userText = getMessageText(lastUser)
+        const assistantText = getMessageText(lastAssistant)
+        const sources = getMessageSources(lastAssistant)
+
+        startTransition(async () => {
+          await actionAddMessage({ sessionId: session.id, role: "user", content: userText })
+          await actionAddMessage({
+            sessionId: session.id,
+            role: "assistant",
+            content: assistantText,
+            sources,
+          })
+        })
+
+        clientLog.action("rag.query", { collection: session.collection, sessionId: session.id })
+      }
+    },
+    onError: (err) => {
+      clientLog.error(err instanceof Error ? err : new Error(String(err)))
     },
   })
+
+  const isStreaming = status === "streaming" || status === "submitted"
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -74,60 +100,17 @@ export function ChatInterface({
 
   const handleSend = useCallback(async () => {
     const query = input.trim()
-    if (!query || phase === "streaming") return
-
+    if (!query || isStreaming) return
     setInput("")
-    setError(null)
-    setQueryStats(null)
-    pendingSourcesRef.current = []
-    streamStartRef.current = Date.now()
+    await sendMessage({ text: query })
+  }, [input, isStreaming, sendMessage])
 
-    const userMsg: Message = { role: "user", content: query }
-    const assistantMsg: Message = { role: "assistant", content: "" }
-    setMessages((prev) => [...prev, userMsg, assistantMsg])
-
-    startTransition(async () => {
-      await actionAddMessage({ sessionId: session.id, role: "user", content: query })
-    })
-
-    const result = await stream([...messages, userMsg])
-    if (!result) return
-
-    setQueryStats({ ms: Date.now() - streamStartRef.current, sources: result.sources.length })
-
-    clientLog.action("rag.query", { collection: session.collection, sessionId: session.id })
-
-    startTransition(async () => {
-      const saved = await actionAddMessage({
-        sessionId: session.id,
-        role: "assistant",
-        content: result.fullContent,
-        sources: result.sources,
-      })
-      if (saved) {
-        setMessages((prev) => {
-          const updated = [...prev]
-          const last = updated[updated.length - 1]
-          if (last?.role === "assistant") {
-            updated[updated.length - 1] = { ...last, id: saved.id, sources: result.sources }
-          }
-          return updated
-        })
-      }
-    })
-  }, [input, phase, messages, stream, session.id, session.collection, startTransition])
-
-  const handleRegenerate = useCallback(() => {
-    const lastUser = [...messages].reverse().find((m) => m.role === "user")
-    if (lastUser) {
-      setInput(lastUser.content)
-    }
-  }, [messages])
-
-  const handleCopy = useCallback(async (messageId: number, content: string) => {
+  const handleCopy = useCallback(async (content: string, msgId?: string) => {
     await navigator.clipboard.writeText(content)
-    setCopiedId(messageId)
-    setTimeout(() => setCopiedId(null), 2000)
+    if (msgId) {
+      setCopiedId(Number(msgId))
+      setTimeout(() => setCopiedId(null), 2000)
+    }
   }, [])
 
   const handleToggleSaved = useCallback(async (messageId: number, content: string) => {
@@ -143,9 +126,6 @@ export function ChatInterface({
 
   const handleFeedback = useCallback(async (messageId: number, rating: "up" | "down") => {
     await actionAddFeedback(messageId, rating)
-    setMessages((prev) =>
-      prev.map((m) => (m.id === messageId ? { ...m, feedback: rating } : m))
-    )
   }, [])
 
   return (
@@ -155,6 +135,11 @@ export function ChatInterface({
         <span className="text-sm font-medium text-fg-muted truncate">
           {session.collection}
         </span>
+        {isStreaming && (
+          <Button variant="ghost" size="sm" onClick={stop} className="text-xs">
+            Detener
+          </Button>
+        )}
       </div>
 
       {/* Messages */}
@@ -168,100 +153,93 @@ export function ChatInterface({
           </div>
         )}
 
-        {messages.map((msg, i) => (
-          <div
-            key={i}
-            className={`flex group ${msg.role === "user" ? "justify-end" : "justify-start"}`}
-          >
+        {messages.map((msg) => {
+          const text = getMessageText(msg)
+          const sources = getMessageSources(msg)
+          const numId = Number(msg.id) || undefined
+
+          return (
             <div
-              className={`max-w-2xl rounded-2xl px-4 py-3 text-sm space-y-1 ${
-                msg.role === "user"
-                  ? "rounded-br-sm bg-accent text-accent-fg"
-                  : "rounded-bl-sm bg-surface text-fg border border-border"
-              }`}
+              key={msg.id}
+              className={`flex group ${msg.role === "user" ? "justify-end" : "justify-start"}`}
             >
-              <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+              <div
+                className={`max-w-2xl rounded-2xl px-4 py-3 text-sm space-y-1 ${
+                  msg.role === "user"
+                    ? "rounded-br-sm bg-accent text-accent-fg"
+                    : "rounded-bl-sm bg-surface text-fg border border-border"
+                }`}
+              >
+                <p className="whitespace-pre-wrap leading-relaxed">{text}</p>
 
-              {msg.role === "assistant" && msg.sources && msg.sources.length > 0 && (
-                <SourcesPanel sources={msg.sources} />
-              )}
+                {msg.role === "assistant" && sources.length > 0 && (
+                  <SourcesPanel sources={sources} />
+                )}
 
-              {msg.role === "assistant" && msg.content && phase !== "streaming" && (
-                <div className="flex gap-1 pt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  {msg.id && (
+                {msg.role === "assistant" && text && !isStreaming && (
+                  <div className="flex gap-1 pt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {numId && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        title="Bifurcar desde aquí"
+                        onClick={async () => {
+                          const newId = await actionForkSession(session.id, numId)
+                          if (newId) window.location.href = `/chat/${newId}`
+                        }}
+                      >
+                        <GitBranch size={13} />
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       size="icon"
                       className="h-6 w-6"
-                      title="Bifurcar desde aquí"
-                      onClick={async () => {
-                        const newId = await actionForkSession(session.id, msg.id!)
-                        if (newId) window.location.href = `/chat/${newId}`
-                      }}
+                      onClick={() => handleCopy(text, msg.id)}
+                      title="Copiar respuesta"
                     >
-                      <GitBranch size={13} />
+                      {numId && copiedId === numId ? <Check size={13} /> : <Copy size={13} />}
                     </Button>
-                  )}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                    onClick={handleRegenerate}
-                    title="Regenerar respuesta"
-                  >
-                    <RefreshCw size={13} />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-6 w-6"
-                    onClick={() => msg.id ? handleCopy(msg.id, msg.content) : navigator.clipboard.writeText(msg.content)}
-                    title="Copiar respuesta"
-                  >
-                    {msg.id && copiedId === msg.id ? <Check size={13} /> : <Copy size={13} />}
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className={`h-6 w-6 ${msg.feedback === "up" ? "text-accent opacity-100" : ""}`}
-                    onClick={() => handleFeedback(msg.id!, "up")}
-                    title="Útil"
-                  >
-                    <ThumbsUp size={13} />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className={`h-6 w-6 ${msg.feedback === "down" ? "text-destructive opacity-100" : ""}`}
-                    onClick={() => handleFeedback(msg.id!, "down")}
-                    title="No útil"
-                  >
-                    <ThumbsDown size={13} />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className={`h-6 w-6 ${savedIds.has(msg.id!) ? "text-accent opacity-100" : ""}`}
-                    onClick={() => handleToggleSaved(msg.id!, msg.content)}
-                    title={savedIds.has(msg.id!) ? "Quitar de guardados" : "Guardar respuesta"}
-                  >
-                    <Bookmark size={13} />
-                  </Button>
-                </div>
-              )}
+                    {numId && (
+                      <>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6"
+                          onClick={() => handleFeedback(numId, "up")}
+                          title="Útil"
+                        >
+                          <ThumbsUp size={13} />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-6 w-6"
+                          onClick={() => handleFeedback(numId, "down")}
+                          title="No útil"
+                        >
+                          <ThumbsDown size={13} />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className={`h-6 w-6 ${savedIds.has(numId) ? "text-accent opacity-100" : ""}`}
+                          onClick={() => handleToggleSaved(numId, text)}
+                          title={savedIds.has(numId) ? "Quitar de guardados" : "Guardar respuesta"}
+                        >
+                          <Bookmark size={13} />
+                        </Button>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          )
+        })}
 
-        {queryStats && phase === "done" && (
-          <div className="flex justify-start px-1">
-            <span className="text-xs text-fg-subtle">
-              {queryStats.ms}ms · {queryStats.sources} doc{queryStats.sources !== 1 ? "s" : ""}
-            </span>
-          </div>
-        )}
-
-        {phase === "streaming" && messages[messages.length - 1]?.content === "" && (
+        {(() => { const last = messages[messages.length - 1]; return isStreaming && last && last.role === "assistant" && getMessageText(last) === "" })() && (
           <div className="flex justify-start">
             <div className="px-4 py-3 rounded-2xl rounded-bl-sm bg-surface border border-border">
               <Loader2 size={16} className="animate-spin text-fg-muted" />
@@ -276,7 +254,7 @@ export function ChatInterface({
       <div className="p-4 border-t border-border bg-bg">
         {error && (
           <div className="mb-3 px-3 py-2 rounded-lg bg-destructive-subtle text-destructive text-xs border border-destructive/20">
-            {error}
+            {error.message}
           </div>
         )}
         <form
@@ -287,16 +265,16 @@ export function ChatInterface({
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder={`Preguntá sobre ${session.collection}...`}
-            disabled={phase === "streaming"}
+            disabled={isStreaming}
             className="flex-1 px-4 py-2.5 rounded-xl border border-border bg-bg text-fg text-sm placeholder:text-fg-subtle outline-none focus-visible:ring-1 focus-visible:ring-ring focus-visible:border-accent disabled:opacity-50 transition-colors"
           />
           <Button
             type="submit"
             size="icon"
             className="h-10 w-10 rounded-xl shrink-0"
-            disabled={!input.trim() || phase === "streaming"}
+            disabled={!input.trim() || isStreaming}
           >
-            {phase === "streaming"
+            {isStreaming
               ? <Loader2 size={16} className="animate-spin" />
               : <Send size={16} />
             }

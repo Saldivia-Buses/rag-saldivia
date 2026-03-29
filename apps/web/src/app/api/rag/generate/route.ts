@@ -21,6 +21,22 @@ import { dispatchEvent } from "@/lib/webhook"
 
 export const runtime = "nodejs" // SSE requiere Node runtime, no Edge
 
+type RawMessage = { role: string; content?: string; parts?: Array<{ type: string; text?: string }> }
+
+/** Normaliza mensajes del AI SDK (parts) o legacy (content) a formato OpenAI. */
+function normalizeMessages(raw: RawMessage[]): Array<{ role: string; content: string }> {
+  return raw.map((m) => {
+    if (m.parts) {
+      const text = m.parts
+        .filter((p) => p.type === "text" && p.text)
+        .map((p) => p.text!)
+        .join("")
+      return { role: m.role, content: text }
+    }
+    return { role: m.role, content: m.content ?? "" }
+  })
+}
+
 export async function POST(request: Request) {
   const start = Date.now()
 
@@ -40,6 +56,9 @@ export async function POST(request: Request) {
         { status: 400 }
       )
     }
+
+    // Normalizar mensajes: AI SDK envía parts[], legacy envía content string
+    body.messages = normalizeMessages(body.messages as RawMessage[])
 
     // Rate limiting — F2.36
     const maxQph = await getRateLimit(userId)
