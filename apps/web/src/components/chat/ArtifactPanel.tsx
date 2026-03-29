@@ -1,83 +1,121 @@
 "use client"
 
-import { Copy, Check, Code, Eye, Download } from "lucide-react"
+import { Copy, Check, Code, Eye, Download, Maximize2, Minimize2, X } from "lucide-react"
 import { useState, useEffect, useRef, useCallback, memo } from "react"
+import type { ParsedArtifact } from "@/lib/rag/artifact-parser"
 
-export type Artifact = {
-  type: "code" | "table" | "text" | "mermaid"
-  title: string
-  content: string
-  language?: string | undefined
-}
+// Re-export for external use
+export type { ParsedArtifact as Artifact } from "@/lib/rag/artifact-parser"
 
-// ── Syntax highlighting con shiki (lazy + cached) ──
-
-const highlighterCache = new Map<string, string>()
+// ── Theme detection ──
 
 function useIsDark() {
   const [dark, setDark] = useState(() =>
     typeof document !== "undefined" && document.documentElement.classList.contains("dark")
   )
   useEffect(() => {
-    const obs = new MutationObserver(() => {
+    const obs = new MutationObserver(() =>
       setDark(document.documentElement.classList.contains("dark"))
-    })
+    )
     obs.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] })
     return () => obs.disconnect()
   }, [])
   return dark
 }
 
-const HighlightedCode = memo(function HighlightedCode({ code, language }: { code: string; language: string }) {
+// ── Syntax highlighting (Shiki, lazy + cached) ──
+
+const hlCache = new Map<string, string>()
+
+const HighlightedCode = memo(function HighlightedCode({
+  code,
+  language,
+}: {
+  code: string
+  language: string
+}) {
   const isDark = useIsDark()
   const theme = isDark ? "github-dark" : "github-light"
   const cacheKey = `${theme}:${language}:${code}`
-  const [html, setHtml] = useState<string | null>(() => highlighterCache.get(cacheKey) ?? null)
+  const [html, setHtml] = useState<string | null>(() => hlCache.get(cacheKey) ?? null)
 
   useEffect(() => {
-    if (highlighterCache.has(cacheKey)) {
-      setHtml(highlighterCache.get(cacheKey)!)
+    if (hlCache.has(cacheKey)) {
+      setHtml(hlCache.get(cacheKey)!)
       return
     }
     let cancelled = false
     import("shiki").then(async ({ createHighlighter }) => {
       try {
-        const highlighter = await createHighlighter({
-          themes: [theme],
-          langs: [language],
-        })
+        const h = await createHighlighter({ themes: [theme], langs: [language] })
         if (cancelled) return
-        const result = highlighter.codeToHtml(code, { lang: language, theme })
-        highlighterCache.set(cacheKey, result)
+        const result = h.codeToHtml(code, { lang: language, theme })
+        hlCache.set(cacheKey, result)
         setHtml(result)
       } catch {
-        // Lenguaje no soportado
+        /* unsupported language */
       }
     })
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [code, language, theme, cacheKey])
 
   if (html) {
     return (
       <div
-        className="text-sm [&_pre]:!bg-transparent [&_pre]:!p-0 [&_code]:!text-sm [&_code]:!whitespace-pre-wrap [&_code]:!break-all"
-        style={{ width: "100%", minWidth: 0 }}
+        className="[&_pre]:!bg-transparent [&_pre]:!p-0 [&_pre]:!m-0 [&_code]:!text-[13px] [&_code]:!leading-[1.7] [&_code]:!whitespace-pre"
         dangerouslySetInnerHTML={{ __html: html }}
       />
     )
   }
 
   return (
-    <pre className="text-sm font-mono text-fg whitespace-pre-wrap break-all" style={{ width: "100%", minWidth: 0 }}>
+    <pre className="text-[13px] leading-[1.7] font-mono text-fg whitespace-pre">
       <code>{code}</code>
     </pre>
   )
 })
 
-// ── Mermaid rendering ──
+// ── Code view with line numbers ──
+
+const CodeView = memo(function CodeView({
+  code,
+  language,
+}: {
+  code: string
+  language: string
+}) {
+  const lines = code.split("\n")
+  const gutterWidth = Math.max(32, String(lines.length).length * 10 + 24)
+
+  return (
+    <div className="flex min-h-full">
+      {/* Gutter */}
+      <div
+        className="shrink-0 text-right select-none font-mono text-[13px] leading-[1.7] border-r border-border/50"
+        style={{
+          padding: "16px 12px 16px 16px",
+          minWidth: `${gutterWidth}px`,
+          color: "var(--fg-subtle)",
+          opacity: 0.4,
+        }}
+      >
+        {lines.map((_, i) => (
+          <div key={i}>{i + 1}</div>
+        ))}
+      </div>
+      {/* Code */}
+      <div className="flex-1 overflow-x-auto" style={{ padding: "16px" }}>
+        <HighlightedCode code={code} language={language} />
+      </div>
+    </div>
+  )
+})
+
+// ── Mermaid preview ──
 
 const MermaidPreview = memo(function MermaidPreview({ content }: { content: string }) {
-  const containerRef = useRef<HTMLDivElement>(null)
   const [svg, setSvg] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -119,7 +157,9 @@ const MermaidPreview = memo(function MermaidPreview({ content }: { content: stri
         if (!cancelled) setError(String(err))
       }
     })
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [content])
 
   if (error) {
@@ -129,46 +169,87 @@ const MermaidPreview = memo(function MermaidPreview({ content }: { content: stri
       </div>
     )
   }
-
   if (svg) {
     return (
       <div
-        ref={containerRef}
         className="flex items-center justify-center overflow-auto [&_svg]:max-w-full"
         style={{ padding: "24px", minHeight: "200px" }}
         dangerouslySetInnerHTML={{ __html: svg }}
       />
     )
   }
-
   return (
-    <div className="flex items-center justify-center text-fg-subtle text-sm" style={{ padding: "48px" }}>
+    <div
+      className="flex items-center justify-center text-fg-subtle text-sm"
+      style={{ padding: "48px" }}
+    >
       Renderizando diagrama...
     </div>
   )
 })
 
-// ── Panel principal ──
+// ── HTML preview (sandboxed iframe) ──
+
+const HtmlPreview = memo(function HtmlPreview({ content }: { content: string }) {
+  return (
+    <iframe
+      srcDoc={content}
+      sandbox="allow-scripts"
+      className="w-full h-full border-0 bg-white"
+      title="HTML Preview"
+    />
+  )
+})
+
+// ── SVG preview ──
+
+const SvgPreview = memo(function SvgPreview({ content }: { content: string }) {
+  return (
+    <div
+      className="flex items-center justify-center overflow-auto [&_svg]:max-w-full [&_svg]:max-h-full"
+      style={{ padding: "24px", minHeight: "200px" }}
+      dangerouslySetInnerHTML={{ __html: content }}
+    />
+  )
+})
+
+// ── Type config ──
+
+export const TYPE_CONFIG: Record<
+  string,
+  { label: string; color: string; previewable: boolean }
+> = {
+  code: { label: "CODE", color: "var(--accent)", previewable: false },
+  html: { label: "HTML", color: "#e34c26", previewable: true },
+  svg: { label: "SVG", color: "#ffb13b", previewable: true },
+  mermaid: { label: "MERMAID", color: "#ff3670", previewable: true },
+  table: { label: "TABLE", color: "#16a34a", previewable: false },
+  text: { label: "TEXT", color: "var(--fg-subtle)", previewable: false },
+}
+
+// ── Helpers ──
+
+const ICON_BTN = "flex items-center justify-center rounded-lg transition-colors"
+const ICON_SIZE = { width: "36px", height: "36px" } as const
 
 type ViewMode = "preview" | "code"
 
-const ICON_BTN = "flex items-center justify-center rounded-lg transition-colors"
-const ICON_BTN_SIZE = { width: "42px", height: "42px" } as const
+// ── Main panel ──
 
 export function ArtifactPanel({
   artifacts,
-  activeIndex,
+  activeId,
   onSelect,
-  onClose: _onClose,
+  onClose,
   panelWidth,
   onWidthChange,
   isResizing: isResizingProp,
   onResizeStart,
   onResizeEnd,
 }: {
-  artifacts: Artifact[]
-  activeIndex: number
-  onSelect: (index: number) => void
+  artifacts: ParsedArtifact[]
+  activeId: string | null
+  onSelect: (id: string) => void
   onClose: () => void
   panelWidth: number
   onWidthChange: (w: number) => void
@@ -178,66 +259,243 @@ export function ArtifactPanel({
 }) {
   const [viewMode, setViewMode] = useState<ViewMode>("preview")
   const [copied, setCopied] = useState(false)
+  const [fullscreen, setFullscreen] = useState(false)
   const resizing = useRef(false)
 
-  const artifact = artifacts[activeIndex] as Artifact | undefined
-  const isMermaid = artifact?.type === "mermaid" || artifact?.language === "mermaid"
-  const hasPreview = isMermaid
+  const artifact = artifacts.find((a) => a.id === activeId) ?? null
+
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault()
+      resizing.current = true
+      onResizeStart()
+      const startX = e.clientX
+      const startWidth = panelWidth
+      document.body.style.cursor = "col-resize"
+      document.body.style.userSelect = "none"
+
+      function onMouseMove(ev: MouseEvent) {
+        if (!resizing.current) return
+        const delta = startX - ev.clientX
+        onWidthChange(Math.max(360, Math.min(1200, startWidth + delta)))
+      }
+
+      function onMouseUp() {
+        resizing.current = false
+        onResizeEnd()
+        document.body.style.cursor = ""
+        document.body.style.userSelect = ""
+        document.removeEventListener("mousemove", onMouseMove)
+        document.removeEventListener("mouseup", onMouseUp)
+      }
+
+      document.addEventListener("mousemove", onMouseMove)
+      document.addEventListener("mouseup", onMouseUp)
+    },
+    [panelWidth, onWidthChange, onResizeStart, onResizeEnd]
+  )
+
+  // Escape key closes fullscreen
+  useEffect(() => {
+    if (!fullscreen) return
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setFullscreen(false)
+    }
+    document.addEventListener("keydown", onKey)
+    return () => document.removeEventListener("keydown", onKey)
+  }, [fullscreen])
+
+  // ── Early return AFTER all hooks ──
+  if (!artifact) {
+    return (
+      <div
+        className={`shrink-0 flex h-full overflow-hidden ${
+          isResizingProp ? "" : "transition-[width] duration-200"
+        }`}
+        style={{ width: `${panelWidth}px` }}
+      />
+    )
+  }
+
+  const config = TYPE_CONFIG[artifact.type] ?? TYPE_CONFIG.code!
+  const hasPreview =
+    config.previewable || artifact.type === "mermaid" || artifact.language === "mermaid"
+  const langLabel = artifact.language?.toUpperCase() ?? ""
+  const typeLabel = langLabel && langLabel !== config.label ? `${config.label} · ${langLabel}` : config.label
 
   function handleCopy() {
-    if (!artifact) return
-    navigator.clipboard.writeText(artifact.content)
+    navigator.clipboard.writeText(artifact!.content)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
 
   function handleDownload() {
-    if (!artifact) return
-    const ext = artifact.language ?? (artifact.type === "mermaid" ? "mmd" : "txt")
-    const blob = new Blob([artifact.content], { type: "text/plain" })
+    const a = artifact!
+    const extMap: Record<string, string> = { html: "html", svg: "svg", mermaid: "mmd" }
+    const ext = extMap[a.type] ?? a.language ?? "txt"
+    const blob = new Blob([a.content], { type: "text/plain" })
     const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = `artifact.${ext}`
-    a.click()
+    const link = document.createElement("a")
+    link.href = url
+    link.download = `${a.title.toLowerCase().replace(/\s+/g, "-")}.${ext}`
+    link.click()
     URL.revokeObjectURL(url)
   }
 
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    e.preventDefault()
-    resizing.current = true
-    onResizeStart()
-    const startX = e.clientX
-    const startWidth = panelWidth
-    document.body.style.cursor = "col-resize"
-    document.body.style.userSelect = "none"
-
-    function onMouseMove(ev: MouseEvent) {
-      if (!resizing.current) return
-      const delta = startX - ev.clientX
-      onWidthChange(Math.max(320, Math.min(900, startWidth + delta)))
+  function renderContent() {
+    const a = artifact!
+    if (hasPreview && viewMode === "preview") {
+      if (a.type === "mermaid" || a.language === "mermaid") return <MermaidPreview content={a.content} />
+      if (a.type === "html") return <HtmlPreview content={a.content} />
+      if (a.type === "svg") return <SvgPreview content={a.content} />
     }
+    return <CodeView code={a.content} language={a.language ?? "text"} />
+  }
 
-    function onMouseUp() {
-      resizing.current = false
-      onResizeEnd()
-      document.body.style.cursor = ""
-      document.body.style.userSelect = ""
-      document.removeEventListener("mousemove", onMouseMove)
-      document.removeEventListener("mouseup", onMouseUp)
-    }
+  const panelContent = (
+    <>
+      {/* ── Header ── */}
+      <div className="shrink-0 border-b border-border" style={{ padding: "12px 16px" }}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center min-w-0" style={{ gap: "10px" }}>
+            <span
+              className="shrink-0 text-[11px] font-semibold uppercase tracking-wider"
+              style={{
+                color: config.color,
+                backgroundColor: `color-mix(in srgb, ${config.color} 12%, transparent)`,
+                padding: "3px 8px",
+                borderRadius: "6px",
+              }}
+            >
+              {typeLabel}
+            </span>
+            <span className="text-sm font-medium text-fg truncate">{artifact.title}</span>
+            {artifact.isStreaming && (
+              <span className="text-xs text-fg-subtle italic animate-pulse">
+                generando...
+              </span>
+            )}
+          </div>
 
-    document.addEventListener("mousemove", onMouseMove)
-    document.addEventListener("mouseup", onMouseUp)
-  }, [panelWidth, onWidthChange, onResizeStart, onResizeEnd])
+          <div className="flex items-center shrink-0" style={{ gap: "2px" }}>
+            <button
+              onClick={() => setFullscreen((f) => !f)}
+              className={`${ICON_BTN} text-fg-subtle hover:text-fg hover:bg-surface-2`}
+              style={ICON_SIZE}
+              title={fullscreen ? "Salir de pantalla completa" : "Pantalla completa"}
+            >
+              {fullscreen ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
+            </button>
+            <button
+              onClick={handleCopy}
+              className={`${ICON_BTN} text-fg-subtle hover:text-fg hover:bg-surface-2`}
+              style={ICON_SIZE}
+              title="Copiar"
+            >
+              {copied ? <Check size={15} className="text-success" /> : <Copy size={15} />}
+            </button>
+            <button
+              onClick={handleDownload}
+              className={`${ICON_BTN} text-fg-subtle hover:text-fg hover:bg-surface-2`}
+              style={ICON_SIZE}
+              title="Descargar"
+            >
+              <Download size={15} />
+            </button>
+            <button
+              onClick={fullscreen ? () => setFullscreen(false) : onClose}
+              className={`${ICON_BTN} text-fg-subtle hover:text-fg hover:bg-surface-2`}
+              style={ICON_SIZE}
+              title="Cerrar"
+            >
+              <X size={15} />
+            </button>
+          </div>
+        </div>
 
-  if (!artifact) return null
+        {/* Preview / Code toggle */}
+        {hasPreview && (
+          <div className="flex" style={{ marginTop: "10px", gap: "2px" }}>
+            <button
+              onClick={() => setViewMode("preview")}
+              className={`flex items-center text-xs font-medium rounded-md transition-colors ${
+                viewMode === "preview"
+                  ? "bg-surface-2 text-fg"
+                  : "text-fg-subtle hover:text-fg hover:bg-surface"
+              }`}
+              style={{ padding: "6px 12px", gap: "6px" }}
+            >
+              <Eye size={14} />
+              Preview
+            </button>
+            <button
+              onClick={() => setViewMode("code")}
+              className={`flex items-center text-xs font-medium rounded-md transition-colors ${
+                viewMode === "code"
+                  ? "bg-surface-2 text-fg"
+                  : "text-fg-subtle hover:text-fg hover:bg-surface"
+              }`}
+              style={{ padding: "6px 12px", gap: "6px" }}
+            >
+              <Code size={14} />
+              Código
+            </button>
+          </div>
+        )}
+      </div>
 
-  const typeLabel = isMermaid ? "MERMAID" : (artifact.language ?? artifact.type).toUpperCase()
+      {/* ── Content ── */}
+      <div className="flex-1 overflow-auto">{renderContent()}</div>
 
+      {/* ── Bottom tabs ── */}
+      {artifacts.length > 1 && (
+        <div
+          className="shrink-0 border-t border-border overflow-x-auto flex"
+          style={{ padding: "8px 12px", gap: "4px" }}
+        >
+          {artifacts.map((a) => {
+            const c = TYPE_CONFIG[a.type] ?? TYPE_CONFIG.code!
+            return (
+              <button
+                key={a.id}
+                onClick={() => onSelect(a.id)}
+                className={`shrink-0 text-xs rounded-lg transition-colors ${
+                  a.id === activeId
+                    ? "font-medium"
+                    : "text-fg-subtle hover:text-fg hover:bg-surface"
+                }`}
+                style={{
+                  padding: "6px 12px",
+                  ...(a.id === activeId
+                    ? {
+                        color: c.color,
+                        backgroundColor: `color-mix(in srgb, ${c.color} 10%, transparent)`,
+                      }
+                    : {}),
+                }}
+              >
+                {a.title}
+              </button>
+            )
+          })}
+        </div>
+      )}
+    </>
+  )
+
+  // ── Fullscreen ──
+  if (fullscreen) {
+    return (
+      <div className="fixed inset-0 z-50 bg-bg flex flex-col">{panelContent}</div>
+    )
+  }
+
+  // ── Side panel ──
   return (
     <div
-      className={`shrink-0 flex h-full overflow-hidden ${isResizingProp ? "" : "transition-[width] duration-200"}`}
+      className={`shrink-0 flex h-full overflow-hidden ${
+        isResizingProp ? "" : "transition-[width] duration-200"
+      }`}
       style={{ width: `${panelWidth}px` }}
     >
       {/* Resize handle */}
@@ -252,93 +510,9 @@ export function ArtifactPanel({
         />
       </div>
 
+      {/* Panel body */}
       <div className="flex-1 flex flex-col bg-bg overflow-hidden border-l border-border">
-        {/* Header */}
-        <div
-          className="flex items-center justify-between border-b border-border shrink-0"
-          style={{ height: "48px", padding: "0 8px 0 12px" }}
-        >
-          <div className="flex items-center min-w-0" style={{ gap: "8px" }}>
-            {hasPreview && (
-              <div className="flex rounded-lg border border-border overflow-hidden shrink-0" style={{ height: "36px" }}>
-                <button
-                  onClick={() => setViewMode("preview")}
-                  className={`flex items-center justify-center transition-colors ${
-                    viewMode === "preview" ? "bg-surface-2 text-fg" : "text-fg-subtle hover:text-fg hover:bg-surface"
-                  }`}
-                  style={{ width: "38px" }}
-                  title="Preview"
-                >
-                  <Eye size={18} />
-                </button>
-                <button
-                  onClick={() => setViewMode("code")}
-                  className={`flex items-center justify-center border-l border-border transition-colors ${
-                    viewMode === "code" ? "bg-surface-2 text-fg" : "text-fg-subtle hover:text-fg hover:bg-surface"
-                  }`}
-                  style={{ width: "38px" }}
-                  title="Código"
-                >
-                  <Code size={18} />
-                </button>
-              </div>
-            )}
-
-            <span
-              className="shrink-0 text-xs font-medium uppercase tracking-wide text-accent"
-              style={{ backgroundColor: "var(--accent-subtle)", padding: "3px 8px", borderRadius: "4px" }}
-            >
-              {typeLabel}
-            </span>
-            <span className="text-sm text-fg truncate">{artifact.title}</span>
-          </div>
-
-          <div className="flex items-center shrink-0" style={{ gap: "4px" }}>
-            <button onClick={handleDownload} className={`${ICON_BTN} text-fg-subtle hover:text-fg hover:bg-surface-2`} style={ICON_BTN_SIZE} title="Descargar">
-              <Download size={16} />
-            </button>
-            <button onClick={handleCopy} className={`${ICON_BTN} text-fg-subtle hover:text-fg hover:bg-surface-2`} style={ICON_BTN_SIZE} title="Copiar">
-              {copied ? <Check size={16} /> : <Copy size={16} />}
-            </button>
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 overflow-auto">
-          {isMermaid && viewMode === "preview" ? (
-            <MermaidPreview content={artifact.content} />
-          ) : (
-            <div style={{ padding: "16px" }} className="min-w-0 w-full">
-              <HighlightedCode
-                code={artifact.content}
-                language={artifact.language ?? "text"}
-              />
-            </div>
-          )}
-        </div>
-
-        {/* Artifact tabs */}
-        {artifacts.length > 1 && (
-          <div
-            className="border-t border-border shrink-0 overflow-x-auto flex"
-            style={{ padding: "8px 12px", gap: "4px" }}
-          >
-            {artifacts.map((a, i) => (
-              <button
-                key={i}
-                onClick={() => onSelect(i)}
-                className={`shrink-0 text-xs rounded-lg transition-colors ${
-                  i === activeIndex
-                    ? "bg-accent-subtle text-accent font-medium"
-                    : "text-fg-subtle hover:text-fg hover:bg-surface"
-                }`}
-                style={{ padding: "6px 12px" }}
-              >
-                {a.language ?? a.type} #{i + 1}
-              </button>
-            ))}
-          </div>
-        )}
+        {panelContent}
       </div>
     </div>
   )

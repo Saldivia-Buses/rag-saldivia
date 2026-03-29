@@ -1,3 +1,19 @@
+/**
+ * Chat session sidebar list with search, create, and delete.
+ *
+ * Renders the collapsible left panel inside the chat area. Sessions are
+ * passed as props from a Server Component (the /chat layout fetches them).
+ *
+ * Features:
+ *   - Client-side search filtering (useMemo, no server round-trip)
+ *   - New session creation via server action -> redirect to /chat/[id]
+ *   - Delete with confirmation -> server action + redirect if active
+ *   - Width animates to 0 when sidebar is closed (via useSidebar context)
+ *   - Inner content uses a fixed 260px wrapper to prevent layout shift
+ *
+ * Data flow: /chat layout (RSC) -> sessions prop -> SessionList (client)
+ * Depends on: ChatLayout (useSidebar), server actions (create/delete)
+ */
 "use client"
 
 import Link from "next/link"

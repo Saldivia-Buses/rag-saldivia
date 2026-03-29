@@ -3,10 +3,12 @@
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import { useState, useMemo, memo } from "react"
-import { Check, Copy, FileText } from "lucide-react"
-import type { Artifact } from "./ArtifactPanel"
+import { Check, Copy, Code, Eye, FileText } from "lucide-react"
+import type { ParsedArtifact } from "@/lib/rag/artifact-parser"
+import { extractArtifacts } from "@/lib/rag/artifact-parser"
+import { TYPE_CONFIG } from "./ArtifactPanel"
 
-// ── Stable component renderers (no re-creation per render) ──
+// ── Stable markdown component renderers ──
 
 const H1 = ({ children }: { children?: React.ReactNode }) => (
   <h2 className="text-lg font-semibold text-fg" style={{ marginTop: "24px", marginBottom: "8px" }}>{children}</h2>
@@ -60,95 +62,67 @@ const Pre = ({ children }: { children?: React.ReactNode }) => <>{children}</>
 
 const REMARK_PLUGINS = [remarkGfm]
 
-// ── Main component ──
+// ── Artifact card (inline in messages) ──
 
-export const MarkdownMessage = memo(function MarkdownMessage({ content, onOpenArtifact }: { content: string; onOpenArtifact?: (artifact: Artifact) => void }) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const components = useMemo((): any => ({
-    h1: H1, h2: H2, h3: H3, p: P, ul: Ul, ol: Ol, li: Li,
-    strong: Strong, em: Em, a: A, blockquote: Blockquote, hr: Hr,
-    table: Table, thead: Thead, th: Th, td: Td, pre: Pre,
-    code: ({ className, children }: { className?: string; children?: React.ReactNode }) => {
-      const isBlock = className?.includes("language-")
-      if (isBlock && onOpenArtifact) {
-        const isMermaid = className?.includes("language-mermaid")
-        return <ArtifactCard className={className} onOpenArtifact={onOpenArtifact} isMermaid={isMermaid}>{children}</ArtifactCard>
-      }
-      if (isBlock) {
-        return <CodeBlock className={className}>{children}</CodeBlock>
-      }
-      return (
-        <code className="text-sm font-mono text-accent" style={{ backgroundColor: "var(--surface)", padding: "2px 6px", borderRadius: "4px" }}>
-          {children}
-        </code>
-      )
-    },
-  }), [onOpenArtifact])
-
-  return (
-    <ReactMarkdown remarkPlugins={REMARK_PLUGINS} components={components}>
-      {content}
-    </ReactMarkdown>
-  )
-})
-
-// ── Artifact card ──
-
-const ArtifactCard = memo(function ArtifactCard({ className, children, onOpenArtifact, isMermaid }: { className?: string | undefined; children: React.ReactNode; onOpenArtifact: (artifact: Artifact) => void; isMermaid?: boolean | undefined }) {
-  const lang = className?.replace("language-", "") ?? "código"
-  const text = typeof children === "string" ? children : String(children ?? "")
-  const title = isMermaid ? "Diagram" : (lang ? lang.charAt(0).toUpperCase() + lang.slice(1) : "Código")
-  const subtitle = isMermaid ? "Diagrama · MERMAID" : lang.toUpperCase()
-
-  function handleOpen() {
-    onOpenArtifact({
-      type: isMermaid ? "mermaid" : "code",
-      title: isMermaid ? "Diagrama" : (lang ? `Código ${lang}` : "Código"),
-      content: text,
-      language: lang || undefined,
-    })
-  }
-
-  function handleDownload(e: React.MouseEvent) {
-    e.stopPropagation()
-    const ext = isMermaid ? "mmd" : (lang || "txt")
-    const blob = new Blob([text], { type: "text/plain" })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = `${title.toLowerCase()}.${ext}`
-    a.click()
-    URL.revokeObjectURL(url)
-  }
+export const ArtifactCard = memo(function ArtifactCard({
+  artifact,
+  onClick,
+}: {
+  artifact: ParsedArtifact
+  onClick: () => void
+}) {
+  const config = TYPE_CONFIG[artifact.type] ?? TYPE_CONFIG.code!
 
   return (
     <div
-      className="flex items-center rounded-xl border border-border hover:bg-surface transition-colors cursor-pointer"
-      style={{ marginBottom: "12px", padding: "12px 16px", gap: "12px" }}
-      onClick={handleOpen}
+      className="flex items-center rounded-xl border border-border hover:border-accent/30 hover:bg-surface/50 transition-all cursor-pointer group"
+      style={{ margin: "12px 0", padding: "14px 16px", gap: "14px" }}
+      onClick={onClick}
       role="button"
       tabIndex={0}
-      onKeyDown={(e) => { if (e.key === "Enter") handleOpen() }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") onClick()
+      }}
     >
-      <div className="shrink-0 flex items-center justify-center rounded-lg bg-surface" style={{ width: "40px", height: "40px" }}>
-        <FileText size={18} className="text-fg-subtle" />
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="text-sm font-medium text-fg truncate">{title}</div>
-        <div className="text-xs text-fg-subtle truncate">{subtitle}</div>
-      </div>
-      <button
-        onClick={handleDownload}
-        className="shrink-0 text-xs text-fg-muted hover:text-fg border border-border rounded-lg transition-colors"
-        style={{ padding: "6px 12px" }}
+      {/* Icon */}
+      <div
+        className="shrink-0 flex items-center justify-center rounded-lg"
+        style={{
+          width: "44px",
+          height: "44px",
+          backgroundColor: `color-mix(in srgb, ${config.color} 12%, transparent)`,
+        }}
       >
-        Descargar
-      </button>
+        {artifact.type === "html" || artifact.type === "svg" ? (
+          <Eye size={20} style={{ color: config.color }} />
+        ) : artifact.type === "mermaid" ? (
+          <FileText size={20} style={{ color: config.color }} />
+        ) : (
+          <Code size={20} style={{ color: config.color }} />
+        )}
+      </div>
+      {/* Info */}
+      <div className="flex-1 min-w-0">
+        <div className="text-sm font-medium text-fg truncate">{artifact.title}</div>
+        <div className="text-xs text-fg-subtle" style={{ marginTop: "2px" }}>
+          {config.label}
+          {artifact.language && artifact.language !== artifact.type
+            ? ` · ${artifact.language}`
+            : ""}
+          {artifact.isStreaming && (
+            <span className="italic animate-pulse"> · generando...</span>
+          )}
+        </div>
+      </div>
+      {/* Arrow hint on hover */}
+      <div className="shrink-0 text-fg-subtle opacity-0 group-hover:opacity-100 transition-opacity">
+        <Eye size={16} />
+      </div>
     </div>
   )
 })
 
-// ── Code block ──
+// ── Code block fallback (when no artifact callback) ──
 
 function CodeBlock({ className, children }: { className?: string | undefined; children: React.ReactNode }) {
   const [copied, setCopied] = useState(false)
@@ -162,10 +136,23 @@ function CodeBlock({ className, children }: { className?: string | undefined; ch
   }
 
   return (
-    <div className="relative rounded-lg overflow-hidden" style={{ marginBottom: "12px", backgroundColor: "var(--surface)" }}>
-      <div className="flex items-center justify-between" style={{ padding: "6px 12px", borderBottom: "1px solid var(--border)" }}>
+    <div
+      className="relative rounded-lg overflow-hidden"
+      style={{ marginBottom: "12px", backgroundColor: "var(--surface)" }}
+    >
+      <div
+        className="flex items-center justify-between"
+        style={{
+          padding: "6px 12px",
+          borderBottom: "1px solid var(--border)",
+        }}
+      >
         <span className="text-xs text-fg-subtle">{lang}</span>
-        <button onClick={handleCopy} className="text-fg-subtle hover:text-fg transition-colors" title="Copiar código">
+        <button
+          onClick={handleCopy}
+          className="text-fg-subtle hover:text-fg transition-colors"
+          title="Copiar código"
+        >
           {copied ? <Check size={14} /> : <Copy size={14} />}
         </button>
       </div>
@@ -175,3 +162,143 @@ function CodeBlock({ className, children }: { className?: string | undefined; ch
     </div>
   )
 }
+
+// ── Markdown renderer (no artifact awareness) ──
+
+const MarkdownOnly = memo(function MarkdownOnly({ content }: { content: string }) {
+  const components = useMemo(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (): any => ({
+      h1: H1, h2: H2, h3: H3, p: P, ul: Ul, ol: Ol, li: Li,
+      strong: Strong, em: Em, a: A, blockquote: Blockquote, hr: Hr,
+      table: Table, thead: Thead, th: Th, td: Td, pre: Pre,
+      code: ({ className, children }: { className?: string; children?: React.ReactNode }) => {
+        const isBlock = className?.includes("language-")
+        if (isBlock) return <CodeBlock className={className}>{children}</CodeBlock>
+        return (
+          <code
+            className="text-sm font-mono text-accent"
+            style={{
+              backgroundColor: "var(--surface)",
+              padding: "2px 6px",
+              borderRadius: "4px",
+            }}
+          >
+            {children}
+          </code>
+        )
+      },
+    }),
+    []
+  )
+
+  return (
+    <ReactMarkdown remarkPlugins={REMARK_PLUGINS} components={components}>
+      {content}
+    </ReactMarkdown>
+  )
+})
+
+// ── Legacy markdown with code-block-as-artifact detection ──
+
+const MarkdownWithCodeBlockArtifacts = memo(function MarkdownWithCodeBlockArtifacts({
+  content,
+  onOpenArtifact,
+}: {
+  content: string
+  onOpenArtifact: (artifact: ParsedArtifact) => void
+}) {
+  const components = useMemo(
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (): any => ({
+      h1: H1, h2: H2, h3: H3, p: P, ul: Ul, ol: Ol, li: Li,
+      strong: Strong, em: Em, a: A, blockquote: Blockquote, hr: Hr,
+      table: Table, thead: Thead, th: Th, td: Td, pre: Pre,
+      code: ({ className, children }: { className?: string; children?: React.ReactNode }) => {
+        const isBlock = className?.includes("language-")
+        if (isBlock) {
+          const lang = className?.replace("language-", "") ?? "text"
+          const text = typeof children === "string" ? children : String(children ?? "")
+          const isMermaid = lang === "mermaid"
+          // Only create artifact cards for substantial blocks
+          if (text.trim().split("\n").length >= 3) {
+            const artifact: ParsedArtifact = {
+              id: `cb_${Math.random().toString(36).slice(2, 8)}`,
+              type: isMermaid ? "mermaid" : "code",
+              title: isMermaid ? "Diagrama" : `Código ${lang}`,
+              content: text,
+              language: lang,
+              version: 1,
+            }
+            return <ArtifactCard artifact={artifact} onClick={() => onOpenArtifact(artifact)} />
+          }
+          return <CodeBlock className={className}>{children}</CodeBlock>
+        }
+        return (
+          <code
+            className="text-sm font-mono text-accent"
+            style={{
+              backgroundColor: "var(--surface)",
+              padding: "2px 6px",
+              borderRadius: "4px",
+            }}
+          >
+            {children}
+          </code>
+        )
+      },
+    }),
+    [onOpenArtifact]
+  )
+
+  return (
+    <ReactMarkdown remarkPlugins={REMARK_PLUGINS} components={components}>
+      {content}
+    </ReactMarkdown>
+  )
+})
+
+// ── Main export: renders message with artifact support ──
+
+export const MarkdownMessage = memo(function MarkdownMessage({
+  content,
+  onOpenArtifact,
+}: {
+  content: string
+  onOpenArtifact?: (artifact: ParsedArtifact) => void
+}) {
+  // Try extracting <artifact> tags first
+  const { cleanText, artifacts } = useMemo(() => extractArtifacts(content), [content])
+
+  // If artifact tags found, render with inline cards
+  if (artifacts.length > 0 && onOpenArtifact) {
+    const segments = cleanText.split(/\[ARTIFACT:([\w_]+)\]/)
+
+    return (
+      <>
+        {segments.map((segment, i) => {
+          if (i % 2 === 0) {
+            const trimmed = segment.trim()
+            return trimmed ? <MarkdownOnly key={i} content={trimmed} /> : null
+          }
+          const art = artifacts.find((a) => a.id === segment)
+          return art ? (
+            <ArtifactCard key={i} artifact={art} onClick={() => onOpenArtifact(art)} />
+          ) : null
+        })}
+      </>
+    )
+  }
+
+  // Fallback: detect code blocks as artifacts
+  if (onOpenArtifact) {
+    return (
+      <MarkdownWithCodeBlockArtifacts
+        content={content}
+        onOpenArtifact={onOpenArtifact}
+      />
+    )
+  }
+
+  return <MarkdownOnly content={content} />
+})

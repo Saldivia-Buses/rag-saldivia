@@ -1,3 +1,19 @@
+/**
+ * Collapsible citation/sources panel displayed below assistant messages.
+ *
+ * When the RAG server returns source documents alongside a response, this
+ * component renders them as an expandable list showing document name,
+ * relevance score (as percentage badge), and a 2-line content snippet.
+ *
+ * The `sources` prop is typed as `unknown[]` because the shape comes from
+ * the RAG server's raw JSON — it's cast to the local `Source` type internally,
+ * with safe fallbacks for missing fields (document_name, content, score).
+ *
+ * Renders nothing if sources array is empty or undefined.
+ *
+ * Used by: MessageBubble (assistant messages with citations)
+ * Depends on: Badge (ui primitive)
+ */
 "use client"
 
 import { useState } from "react"

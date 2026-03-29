@@ -1,3 +1,17 @@
+/**
+ * Chat sidebar context and layout wrapper.
+ *
+ * Provides `SidebarProvider` (context for open/closed state) and `ChatLayout`
+ * (the flex container that holds SessionList + chat content side by side).
+ *
+ * Sidebar state is persisted in localStorage (`saldivia-sidebar-open`) so it
+ * survives page reloads and navigation. A keyboard shortcut (Ctrl+Shift+S)
+ * toggles the sidebar from anywhere within the provider.
+ *
+ * Consumed by: NavRail (toggle button), SessionList (reads `open` state),
+ *              AppShellChrome (wraps entire app in SidebarProvider)
+ * Depends on: React context only — no external deps
+ */
 "use client"
 
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react"

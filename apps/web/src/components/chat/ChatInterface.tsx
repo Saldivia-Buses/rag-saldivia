@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useEffect, useCallback, useTransition } from "react"
+import { useState, useRef, useEffect, useCallback, useTransition, useMemo } from "react"
 import { ThumbsUp, ThumbsDown, Copy, Check, RotateCcw, Square, Plus, ChevronDown, ArrowDown, PanelRightClose } from "lucide-react"
 import { useChat } from "@ai-sdk/react"
 import { DefaultChatTransport, type UIMessage } from "ai"
@@ -10,7 +10,9 @@ import { useRouter } from "next/navigation"
 import { clientLog } from "@rag-saldivia/logger/frontend"
 import { SourcesPanel } from "@/components/chat/SourcesPanel"
 import { MarkdownMessage } from "@/components/chat/MarkdownMessage"
-import { ArtifactPanel, type Artifact } from "@/components/chat/ArtifactPanel"
+import { ArtifactPanel } from "@/components/chat/ArtifactPanel"
+import type { ParsedArtifact } from "@/lib/rag/artifact-parser"
+import { extractArtifacts, extractCodeBlocks, extractStreamingArtifact, stripArtifactTags } from "@/lib/rag/artifact-parser"
 import type { Citation } from "@rag-saldivia/shared"
 import { useSidebar } from "./ChatLayout"
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip"
@@ -57,14 +59,29 @@ function SparkIcon({ className, size = 16 }: { className?: string; size?: number
   )
 }
 
-// ── Suggestion chips for empty state ──
+// ── Fallback suggestions when no templates are loaded from DB ──
 
-const SUGGESTIONS = [
-  { icon: "📄", label: "Buscar documentos" },
-  { icon: "❓", label: "Hacer preguntas" },
-  { icon: "📊", label: "Analizar datos" },
-  { icon: "📝", label: "Resumir contenido" },
+const FALLBACK_SUGGESTIONS = [
+  { title: "Buscar documentos", prompt: "Buscá información sobre " },
+  { title: "Hacer preguntas", prompt: "¿Qué es " },
+  { title: "Analizar datos", prompt: "Analizá los datos sobre " },
+  { title: "Resumir contenido", prompt: "Hacé un resumen de " },
 ]
+
+/** Icon map for template titles — matches keywords to emoji */
+function getTemplateIcon(title: string): string {
+  const lower = title.toLowerCase()
+  if (lower.includes("buscar") || lower.includes("documento")) return "📄"
+  if (lower.includes("resumir") || lower.includes("resumen")) return "📝"
+  if (lower.includes("analizar") || lower.includes("dato")) return "📊"
+  if (lower.includes("comparar") || lower.includes("alternativa")) return "⚖️"
+  if (lower.includes("técnic") || lower.includes("explicar")) return "🔧"
+  if (lower.includes("pregunta") || lower.includes("frecuente")) return "❓"
+  return "💬"
+}
+
+/** Template type from DB */
+type PromptTemplate = { id: number; title: string; prompt: string; focusMode: string }
 
 // ── Shared icon button with tooltip ──
 const ICON_BTN = "flex items-center justify-center rounded-lg transition-colors"
@@ -102,16 +119,19 @@ function TipBtn({ label, onClick, disabled, className, style, children }: {
 export function ChatInterface({
   session,
   userId: _userId,
+  templates = [],
 }: {
   session: DbChatSession & { messages?: DbChatMessage[] }
   userId: number
+  templates?: PromptTemplate[]
 }) {
   const { open: sidebarOpen, toggle: toggleSidebar } = useSidebar()
   const [input, setInput] = useState("")
   const [copiedId, setCopiedId] = useState<string | null>(null)
-  const [artifacts, setArtifacts] = useState<Artifact[]>([])
-  const [activeArtifactIndex, setActiveArtifactIndex] = useState(0)
+  const [activeArtifactId, setActiveArtifactId] = useState<string | null>(null)
   const [showArtifactPanel, setShowArtifactPanel] = useState(false)
+  // Store artifacts opened from MarkdownMessage (which creates its own ids)
+  const [adhocArtifacts, setAdhocArtifacts] = useState<ParsedArtifact[]>([])
   const [artifactPanelWidth, setArtifactPanelWidth] = useState(() => {
     if (typeof window === "undefined") return 480
     const stored = localStorage.getItem("saldivia-artifact-width")
@@ -174,28 +194,56 @@ export function ChatInterface({
 
   const isStreaming = status === "streaming" || status === "submitted"
 
-  // Auto-extract artifacts from existing messages on mount
-  useEffect(() => {
-    if (artifacts.length > 0) return
-    const extracted: Artifact[] = []
+  // Derive artifacts from all messages
+  const allArtifacts = useMemo(() => {
+    const result: ParsedArtifact[] = []
     for (const msg of messages) {
       if (msg.role !== "assistant") continue
       const text = getMessageText(msg)
-      const re = /```(\w+)?\n([\s\S]*?)```/g
-      let m
-      while ((m = re.exec(text)) !== null) {
-        const lang = m[1] || "text"
-        extracted.push({
-          type: lang === "mermaid" ? "mermaid" : "code",
-          title: lang === "mermaid" ? "Diagrama" : `Código ${lang}`,
-          content: m[2] ?? "",
-          language: lang,
-        })
+      const { artifacts: tagArtifacts } = extractArtifacts(text)
+      if (tagArtifacts.length > 0) {
+        result.push(...tagArtifacts)
+      } else {
+        result.push(...extractCodeBlocks(text))
       }
     }
-    if (extracted.length > 0) setArtifacts(extracted)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    return result
+  }, [messages])
+
+  // Detect streaming artifact (partial, still being generated)
+  const streamingArtifact = useMemo(() => {
+    if (!isStreaming) return null
+    const lastMsg = messages[messages.length - 1]
+    if (!lastMsg || lastMsg.role !== "assistant") return null
+    return extractStreamingArtifact(getMessageText(lastMsg))
+  }, [messages, isStreaming])
+
+  // Combined artifacts for the panel (includes adhoc from MarkdownMessage clicks)
+  const panelArtifacts = useMemo(() => {
+    const all = [...allArtifacts]
+    // Add adhoc artifacts that aren't already in allArtifacts
+    for (const a of adhocArtifacts) {
+      if (!all.some((x) => x.id === a.id)) all.push(a)
+    }
+    if (streamingArtifact) all.push(streamingArtifact)
+    return all
+  }, [allArtifacts, adhocArtifacts, streamingArtifact])
+
+  // Clear adhoc artifacts when session changes
+  useEffect(() => {
+    setAdhocArtifacts([])
+    setActiveArtifactId(null)
+    setShowArtifactPanel(false)
+  }, [session.id])
+
+  // Auto-open panel when streaming artifact starts
+  useEffect(() => {
+    if (streamingArtifact && !showArtifactPanel) {
+      setActiveArtifactId(streamingArtifact.id)
+      setShowArtifactPanel(true)
+      if (sidebarOpen) toggleSidebar()
+    }
+  }, [streamingArtifact, showArtifactPanel, sidebarOpen, toggleSidebar])
 
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const [showScrollButton, setShowScrollButton] = useState(false)
@@ -235,19 +283,19 @@ export function ChatInterface({
     }
   }, [input])
 
-  const handleSend = useCallback(async () => {
+  async function handleSend() {
     const query = input.trim()
     if (!query || isStreaming) return
     setInput("")
     await sendMessage({ text: query })
-  }, [input, isStreaming, sendMessage])
+  }
 
-  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+  function handleKeyDown(e: React.KeyboardEvent) {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault()
       handleSend()
     }
-  }, [handleSend])
+  }
 
   const handleCopy = useCallback(async (content: string, msgId: string) => {
     await navigator.clipboard.writeText(content)
@@ -268,20 +316,17 @@ export function ChatInterface({
     setEditingTitle(false)
   }, [titleDraft, session.id, session.title, router])
 
-  const handleOpenArtifact = useCallback((a: Artifact) => {
-    setArtifacts(prev => {
-      const exists = prev.findIndex(p => p.content === a.content)
-      if (exists >= 0) {
-        setActiveArtifactIndex(exists)
-        return prev
-      }
-      setActiveArtifactIndex(prev.length)
+  function handleOpenArtifact(a: ParsedArtifact) {
+    // Register adhoc artifacts (e.g. from MarkdownMessage code block detection)
+    // so the panel can find them by id
+    setAdhocArtifacts((prev) => {
+      if (prev.some((x) => x.id === a.id)) return prev
       return [...prev, a]
     })
+    setActiveArtifactId(a.id)
     setShowArtifactPanel(true)
-    // Auto-close sidebar when opening artifact panel
     if (sidebarOpen) toggleSidebar()
-  }, [sidebarOpen, toggleSidebar])
+  }
 
   const handleRetry = useCallback(async () => {
     const lastUserMsg = [...messages].reverse().find((m) => m.role === "user")
@@ -334,8 +379,15 @@ export function ChatInterface({
 
           {/* Right: artifact panel toggle */}
           <div style={{ width: "42px" }}>
-            {artifacts.length > 0 && (
-              <TipBtn label={showArtifactPanel ? "Cerrar artifacts" : "Abrir artifacts"} onClick={() => setShowArtifactPanel(p => !p)} className={`${ICON_BTN} hover:bg-surface-2 ${showArtifactPanel ? "text-accent" : "text-fg-muted hover:text-fg"}`} style={ICON_BTN_SIZE}>
+            {panelArtifacts.length > 0 && (
+              <TipBtn label={showArtifactPanel ? "Cerrar artifacts" : "Abrir artifacts"} onClick={() => {
+                const next = !showArtifactPanel
+                setShowArtifactPanel(next)
+                // Auto-select first artifact if none selected
+                if (next && !activeArtifactId && panelArtifacts.length > 0) {
+                  setActiveArtifactId(panelArtifacts[0]!.id)
+                }
+              }} className={`${ICON_BTN} hover:bg-surface-2 ${showArtifactPanel ? "text-accent" : "text-fg-muted hover:text-fg"}`} style={ICON_BTN_SIZE}>
                 <PanelRightClose size={ICON_PX} />
               </TipBtn>
             )}
@@ -402,20 +454,20 @@ export function ChatInterface({
                 </div>
               </div>
 
-              {/* Suggestion chips */}
+              {/* Prompt template chips — loaded from DB, fallback to defaults */}
               <div className="flex items-center justify-center flex-wrap" style={{ gap: "8px", marginTop: "16px" }}>
-                {SUGGESTIONS.map((s) => (
+                {(templates.length > 0 ? templates : FALLBACK_SUGGESTIONS).map((t) => (
                   <button
-                    key={s.label}
+                    key={t.title}
                     onClick={() => {
-                      setInput(s.label)
+                      setInput(t.prompt)
                       textareaRef.current?.focus()
                     }}
                     className="flex items-center border border-border rounded-full text-sm text-fg-muted hover:text-fg hover:bg-surface transition-colors"
                     style={{ padding: "6px 14px", gap: "6px" }}
                   >
-                    <span>{s.icon}</span>
-                    <span>{s.label}</span>
+                    <span>{getTemplateIcon(t.title)}</span>
+                    <span>{t.title}</span>
                   </button>
                 ))}
               </div>
@@ -473,7 +525,9 @@ export function ChatInterface({
                       {text && (
                         <>
                           {isLastAssistant ? (
-                            <div className="text-sm text-fg leading-relaxed whitespace-pre-wrap">{text}</div>
+                            <div className="text-sm text-fg leading-relaxed whitespace-pre-wrap">
+                              {stripArtifactTags(text)}
+                            </div>
                           ) : (
                             <MarkdownMessage content={text} onOpenArtifact={handleOpenArtifact} />
                           )}
@@ -623,14 +677,14 @@ export function ChatInterface({
       )}
     </div>
 
-    {/* Artifact panel — always rendered for smooth transition */}
-    {artifacts.length > 0 && (
+    {/* Artifact panel — always rendered when artifacts exist for smooth transitions */}
+    {panelArtifacts.length > 0 && (
       <ArtifactPanel
-        artifacts={artifacts}
-        activeIndex={activeArtifactIndex}
-        onSelect={setActiveArtifactIndex}
+        artifacts={panelArtifacts}
+        activeId={activeArtifactId}
+        onSelect={(id) => { setActiveArtifactId(id); setShowArtifactPanel(true) }}
         onClose={() => setShowArtifactPanel(false)}
-        panelWidth={showArtifactPanel ? artifactPanelWidth : 0}
+        panelWidth={showArtifactPanel && activeArtifactId ? artifactPanelWidth : 0}
         onWidthChange={(w) => { setArtifactPanelWidth(w); localStorage.setItem("saldivia-artifact-width", String(w)) }}
         isResizing={isResizingPanel}
         onResizeStart={() => setIsResizingPanel(true)}
