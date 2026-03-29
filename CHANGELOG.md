@@ -9,7 +9,25 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 
 ## [Unreleased]
 
-<!-- Cambios pendientes de release van aquí -->
+### Added
+- 6 documentation templates: plan, commit, PR, version, ADR, artifact (Plan 13)
+- ADR-012: stack definitivo for 1.0.x series (Plan 13)
+- `docs/artifacts/` directory for review/audit results (Plan 13)
+
+### Changed
+- All 10 Claude Code agents rewritten for TypeScript stack (Plan 13)
+- NavRail simplified to 3 links: Chat, Collections, Settings (Plan 13)
+- CLAUDE.md rewritten: 591 → 312 lines, only active code described (Plan 13)
+- README.md rewritten to reflect core-only codebase (Plan 13)
+- ADRs 001, 003, 008, 011 updated with current status notes (Plan 13)
+- commitlint: added `style` type, `agents`/`ui`/`release` scopes (Plan 13)
+
+### Removed
+- ~100 aspirational files archived to `_archive/` (Plan 13)
+- CLI app archived (Plan 13)
+- 12 admin components + routes archived (Plan 13)
+- 12 aspirational chat components archived (Plan 13)
+- Dead `revalidatePath` calls and `/share/` public route (Plan 13)
 
 ## [1.0.0] — 2026-03-27
 
