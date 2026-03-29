@@ -8,6 +8,13 @@
       "when": 1774581661852,
       "tag": "0000_hesitant_clint_barton",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1774810277007,
+      "tag": "0001_chubby_chronomancer",
+      "breakpoints": true
     }
   ]
 }

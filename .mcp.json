@@ -23,7 +23,7 @@
       "command": "npx",
       "args": ["-y", "@modelcontextprotocol/server-github"],
       "env": {
-        "GITHUB_PERSONAL_ACCESS_TOKEN": "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I"
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "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"
       }
     },
     "playwright": {
