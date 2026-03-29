@@ -7,13 +7,18 @@ alwaysApply: true
 
 **ANTES de escribir cualquier plan de implementación:**
 
-## 1. Contar instancias exactas con repomix
-```
-pack_codebase(directory) → grep_repomix_output(pattern)
-```
-Nunca estimar. Nunca decir "hay N instancias" sin haberlas contado con repomix o grep.
+## 1. Leer la biblia y el plan maestro
+- `docs/bible.md` — reglas permanentes
+- `docs/plans/1.0.x-plan-maestro.md` — roadmap actual
+- `docs/templates/plan-template.md` — formato de plan
 
-## 2. Verificar archivos que faltan
+## 2. Contar instancias exactas
+```
+Grep/Glob para contar archivos afectados
+```
+Nunca estimar. Nunca decir "hay N instancias" sin haberlas contado.
+
+## 3. Verificar archivos que faltan
 Buscar en TODAS las ubicaciones relevantes:
 - `apps/web/src/components/` (componentes)
 - `apps/web/src/app/(app)/` (páginas)
@@ -22,13 +27,14 @@ Buscar en TODAS las ubicaciones relevantes:
 
 Los `loading.tsx`, `error.tsx`, `layout.tsx` en páginas se olvidan frecuentemente.
 
-## 3. Verificar con CodeGraphContext si el cambio afecta dependencias
+## 4. Verificar dependencias con CodeGraphContext
 ```
 analyze_code_relationships(fileToChange) → ver qué importa este archivo
 ```
 
-## 4. Formato del plan
-- Archivos del proyecto: `docs/plans/{branch}-plan{N}-{slug}.mdc`  ← incluir branch
-- Estructura: igual a `ultra-optimize-plan9-repo-clean.md` (el formato que no falla con Composer)
-- Instancias en tabla: número exacto verificado, no estimado
-- Criterio de done: grep command que retorna 0 resultados
+## 5. Formato del plan
+- Archivo: `docs/plans/1.0.x-plan{N}-{slug}.md`
+- Template: `docs/templates/plan-template.md`
+- Instancias en tabla: número exacto verificado
+- Scope drift checklist obligatorio
+- Commit convention: `tipo(scope): desc — planN fN`
