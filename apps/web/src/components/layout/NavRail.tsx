@@ -44,11 +44,12 @@ function NavIcon({ item, active }: { item: NavItem; active: boolean }) {
           href={item.href}
           aria-label={item.label}
           className={cn(
-            "w-9 h-9 flex items-center justify-center rounded-md transition-colors",
+            "flex items-center justify-center rounded-lg transition-colors",
             active
               ? "bg-accent-subtle text-accent"
               : "text-fg-muted hover:bg-surface-2 hover:text-fg"
           )}
+          style={{ width: "38px", height: "38px" }}
         >
           {item.icon}
         </Link>
@@ -80,7 +81,7 @@ export function NavRail({
       <nav
         aria-label="Navegación principal"
         className="flex flex-col items-center h-screen shrink-0 bg-surface border-r border-border"
-        style={{ width: 48, padding: "16px 0 12px", gap: "4px" }}
+        style={{ width: 52, padding: "16px 0 12px", gap: "4px" }}
       >
         {/* Brand */}
         <div style={{ marginBottom: "4px" }}>
@@ -96,7 +97,8 @@ export function NavRail({
               type="button"
               onClick={handleNewChat}
               aria-label="Nuevo chat"
-              className="w-9 h-9 flex items-center justify-center rounded-md text-fg-muted hover:bg-surface-2 hover:text-fg transition-colors"
+              className="flex items-center justify-center rounded-lg text-fg-muted hover:bg-surface-2 hover:text-fg transition-colors"
+              style={{ width: "38px", height: "38px" }}
             >
               <SquarePen size={16} aria-hidden />
             </button>
@@ -138,7 +140,8 @@ export function NavRail({
                 type="button"
                 aria-label="Cerrar sesión"
                 onClick={() => actionLogout()}
-                className="w-9 h-9 flex items-center justify-center rounded-md text-fg-subtle hover:text-fg hover:bg-surface-2 transition-colors"
+                className="flex items-center justify-center rounded-lg text-fg-subtle hover:text-fg hover:bg-surface-2 transition-colors"
+                style={{ width: "38px", height: "38px" }}
               >
                 <LogOut size={15} aria-hidden />
               </button>

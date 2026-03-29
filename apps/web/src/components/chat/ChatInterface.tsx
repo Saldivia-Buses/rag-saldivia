@@ -65,6 +65,11 @@ const SUGGESTIONS = [
   { icon: "📝", label: "Resumir contenido" },
 ]
 
+// ── Shared icon button style ──
+const ICON_BTN = "flex items-center justify-center rounded-lg transition-colors"
+const ICON_BTN_SIZE = { width: "38px", height: "38px" } as const
+const ICON_PX = 18
+
 // ── Component ──
 
 export function ChatInterface({
@@ -81,6 +86,7 @@ export function ChatInterface({
   const [activeArtifactIndex, setActiveArtifactIndex] = useState(0)
   const [showArtifactPanel, setShowArtifactPanel] = useState(false)
   const [artifactPanelWidth, setArtifactPanelWidth] = useState(480)
+  const [isResizingPanel, setIsResizingPanel] = useState(false)
   const [_isPending, startTransition] = useTransition()
   const [editingTitle, setEditingTitle] = useState(false)
   const [titleDraft, setTitleDraft] = useState(session.title)
@@ -136,6 +142,29 @@ export function ChatInterface({
   })
 
   const isStreaming = status === "streaming" || status === "submitted"
+
+  // Auto-extract artifacts from existing messages on mount
+  useEffect(() => {
+    if (artifacts.length > 0) return
+    const extracted: Artifact[] = []
+    for (const msg of messages) {
+      if (msg.role !== "assistant") continue
+      const text = getMessageText(msg)
+      const re = /```(\w+)?\n([\s\S]*?)```/g
+      let m
+      while ((m = re.exec(text)) !== null) {
+        const lang = m[1] || "text"
+        extracted.push({
+          type: lang === "mermaid" ? "mermaid" : "code",
+          title: lang === "mermaid" ? "Diagrama" : `Código ${lang}`,
+          content: m[2] ?? "",
+          language: lang,
+        })
+      }
+    }
+    if (extracted.length > 0) setArtifacts(extracted)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const [showScrollButton, setShowScrollButton] = useState(false)
@@ -240,15 +269,15 @@ export function ChatInterface({
           style={{ height: "48px", padding: "0 8px" }}
         >
           {/* Left: sidebar toggle */}
-          <div style={{ width: "40px" }}>
+          <div style={{ width: "38px" }}>
             {!sidebarOpen && (
               <button
                 onClick={toggleSidebar}
-                className="flex items-center justify-center rounded-lg text-fg-muted hover:text-fg hover:bg-surface-2 transition-colors"
-                style={{ width: "36px", height: "36px" }}
+                className={`${ICON_BTN} text-fg-muted hover:text-fg hover:bg-surface-2`}
+                style={ICON_BTN_SIZE}
                 title="Mostrar panel (Ctrl+Shift+S)"
               >
-                <PanelLeft size={18} />
+                <PanelLeft size={ICON_PX} />
               </button>
             )}
           </div>
@@ -283,17 +312,17 @@ export function ChatInterface({
           </div>
 
           {/* Right: artifact panel toggle */}
-          <div style={{ width: "40px" }}>
+          <div style={{ width: "38px" }}>
             {artifacts.length > 0 && (
               <button
                 onClick={() => setShowArtifactPanel(p => !p)}
-                className={`flex items-center justify-center rounded-lg hover:bg-surface-2 transition-colors ${
+                className={`${ICON_BTN} hover:bg-surface-2 ${
                   showArtifactPanel ? "text-accent" : "text-fg-muted hover:text-fg"
                 }`}
-                style={{ width: "36px", height: "36px" }}
+                style={ICON_BTN_SIZE}
                 title={showArtifactPanel ? "Cerrar panel" : "Abrir panel"}
               >
-                <PanelRightClose size={18} />
+                <PanelRightClose size={ICON_PX} />
               </button>
             )}
           </div>
@@ -336,8 +365,8 @@ export function ChatInterface({
                 <div className="flex items-center justify-between" style={{ marginTop: "8px" }}>
                   <button
                     type="button"
-                    className="flex items-center justify-center rounded-lg text-fg-subtle hover:text-fg hover:bg-surface transition-colors"
-                    style={{ width: "28px", height: "28px" }}
+                    className={`${ICON_BTN} text-fg-subtle hover:text-fg hover:bg-surface`}
+                    style={ICON_BTN_SIZE}
                     title="Adjuntar"
                   >
                     <Plus size={16} />
@@ -348,7 +377,7 @@ export function ChatInterface({
                       onClick={handleSend}
                       disabled={!input.trim()}
                       className="flex items-center justify-center rounded-lg bg-accent text-accent-fg disabled:opacity-30 transition-opacity hover:opacity-90"
-                      style={{ width: "32px", height: "32px" }}
+                      style={ICON_BTN_SIZE}
                     >
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <line x1="22" y1="2" x2="11" y2="13" />
@@ -445,45 +474,22 @@ export function ChatInterface({
 
                       {/* Actions — always visible like Claude */}
                       {text && !isStreaming && (
-                        <div
-                          className="flex"
-                          style={{ gap: "4px", marginTop: "8px" }}
-                        >
-                          <button
-                            onClick={() => handleCopy(text, msg.id)}
-                            className="flex items-center justify-center rounded-lg text-fg-subtle hover:text-fg hover:bg-surface-2 transition-colors"
-                            style={{ width: "32px", height: "32px" }}
-                            title="Copiar"
-                          >
-                            {copiedId === msg.id ? <Check size={16} /> : <Copy size={16} />}
+                        <div className="flex" style={{ gap: "2px", marginTop: "8px" }}>
+                          <button onClick={() => handleCopy(text, msg.id)} className={`${ICON_BTN} text-fg-subtle hover:text-fg hover:bg-surface-2`} style={ICON_BTN_SIZE} title="Copiar">
+                            {copiedId === msg.id ? <Check size={ICON_PX} /> : <Copy size={ICON_PX} />}
                           </button>
                           {numId && (
                             <>
-                              <button
-                                onClick={() => handleFeedback(numId, "up")}
-                                className="flex items-center justify-center rounded-lg text-fg-subtle hover:text-fg hover:bg-surface-2 transition-colors"
-                                style={{ width: "32px", height: "32px" }}
-                                title="Útil"
-                              >
-                                <ThumbsUp size={16} />
+                              <button onClick={() => handleFeedback(numId, "up")} className={`${ICON_BTN} text-fg-subtle hover:text-fg hover:bg-surface-2`} style={ICON_BTN_SIZE} title="Útil">
+                                <ThumbsUp size={ICON_PX} />
                               </button>
-                              <button
-                                onClick={() => handleFeedback(numId, "down")}
-                                className="flex items-center justify-center rounded-lg text-fg-subtle hover:text-fg hover:bg-surface-2 transition-colors"
-                                style={{ width: "32px", height: "32px" }}
-                                title="No útil"
-                              >
-                                <ThumbsDown size={16} />
+                              <button onClick={() => handleFeedback(numId, "down")} className={`${ICON_BTN} text-fg-subtle hover:text-fg hover:bg-surface-2`} style={ICON_BTN_SIZE} title="No útil">
+                                <ThumbsDown size={ICON_PX} />
                               </button>
                             </>
                           )}
-                          <button
-                            onClick={handleRetry}
-                            className="flex items-center justify-center rounded-lg text-fg-subtle hover:text-fg hover:bg-surface-2 transition-colors"
-                            style={{ width: "32px", height: "32px" }}
-                            title="Reintentar"
-                          >
-                            <RotateCcw size={16} />
+                          <button onClick={handleRetry} className={`${ICON_BTN} text-fg-subtle hover:text-fg hover:bg-surface-2`} style={ICON_BTN_SIZE} title="Reintentar">
+                            <RotateCcw size={ICON_PX} />
                           </button>
                         </div>
                       )}
@@ -572,7 +578,7 @@ export function ChatInterface({
                     <button
                       onClick={stop}
                       className="flex items-center justify-center rounded-full border border-border text-fg-muted hover:text-fg hover:border-fg-subtle transition-colors"
-                      style={{ width: "32px", height: "32px" }}
+                      style={ICON_BTN_SIZE}
                       title="Detener"
                     >
                       <Square size={12} fill="currentColor" />
@@ -582,7 +588,7 @@ export function ChatInterface({
                       onClick={handleSend}
                       disabled={!input.trim()}
                       className="flex items-center justify-center rounded-lg bg-accent text-accent-fg disabled:opacity-30 transition-opacity hover:opacity-90"
-                      style={{ width: "32px", height: "32px" }}
+                      style={ICON_BTN_SIZE}
                     >
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                         <line x1="22" y1="2" x2="11" y2="13" />
@@ -612,6 +618,9 @@ export function ChatInterface({
         onClose={() => setShowArtifactPanel(false)}
         panelWidth={artifactPanelWidth}
         onWidthChange={setArtifactPanelWidth}
+        isResizing={isResizingPanel}
+        onResizeStart={() => setIsResizingPanel(true)}
+        onResizeEnd={() => setIsResizingPanel(false)}
       />
     )}
     </div>

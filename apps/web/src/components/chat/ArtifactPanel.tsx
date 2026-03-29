@@ -136,6 +136,9 @@ const MermaidPreview = memo(function MermaidPreview({ content }: { content: stri
 
 type ViewMode = "preview" | "code"
 
+const ICON_BTN = "flex items-center justify-center rounded-lg transition-colors"
+const ICON_BTN_SIZE = { width: "38px", height: "38px" } as const
+
 export function ArtifactPanel({
   artifacts,
   activeIndex,
@@ -143,6 +146,9 @@ export function ArtifactPanel({
   onClose: _onClose,
   panelWidth,
   onWidthChange,
+  isResizing: isResizingProp,
+  onResizeStart,
+  onResizeEnd,
 }: {
   artifacts: Artifact[]
   activeIndex: number
@@ -150,6 +156,9 @@ export function ArtifactPanel({
   onClose: () => void
   panelWidth: number
   onWidthChange: (w: number) => void
+  isResizing: boolean
+  onResizeStart: () => void
+  onResizeEnd: () => void
 }) {
   const [viewMode, setViewMode] = useState<ViewMode>("preview")
   const [copied, setCopied] = useState(false)
@@ -181,6 +190,7 @@ export function ArtifactPanel({
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
     resizing.current = true
+    onResizeStart()
     const startX = e.clientX
     const startWidth = panelWidth
     document.body.style.cursor = "col-resize"
@@ -194,6 +204,7 @@ export function ArtifactPanel({
 
     function onMouseUp() {
       resizing.current = false
+      onResizeEnd()
       document.body.style.cursor = ""
       document.body.style.userSelect = ""
       document.removeEventListener("mousemove", onMouseMove)
@@ -202,7 +213,7 @@ export function ArtifactPanel({
 
     document.addEventListener("mousemove", onMouseMove)
     document.addEventListener("mouseup", onMouseUp)
-  }, [panelWidth, onWidthChange])
+  }, [panelWidth, onWidthChange, onResizeStart, onResizeEnd])
 
   if (!artifact) return null
 
@@ -210,7 +221,7 @@ export function ArtifactPanel({
 
   return (
     <div
-      className="shrink-0 flex h-full overflow-hidden transition-[width] duration-200"
+      className={`shrink-0 flex h-full overflow-hidden ${isResizingProp ? "" : "transition-[width] duration-200"}`}
       style={{ width: `${panelWidth}px` }}
     >
       {/* Resize handle */}
@@ -267,21 +278,11 @@ export function ArtifactPanel({
           </div>
 
           <div className="flex items-center shrink-0" style={{ gap: "4px" }}>
-            <button
-              onClick={handleDownload}
-              className="flex items-center justify-center rounded-lg text-fg-subtle hover:text-fg hover:bg-surface-2 transition-colors"
-              style={{ width: "36px", height: "36px" }}
-              title="Descargar"
-            >
-              <Download size={18} />
+            <button onClick={handleDownload} className={`${ICON_BTN} text-fg-subtle hover:text-fg hover:bg-surface-2`} style={ICON_BTN_SIZE} title="Descargar">
+              <Download size={16} />
             </button>
-            <button
-              onClick={handleCopy}
-              className="flex items-center justify-center rounded-lg text-fg-subtle hover:text-fg hover:bg-surface-2 transition-colors"
-              style={{ width: "36px", height: "36px" }}
-              title="Copiar"
-            >
-              {copied ? <Check size={18} /> : <Copy size={18} />}
+            <button onClick={handleCopy} className={`${ICON_BTN} text-fg-subtle hover:text-fg hover:bg-surface-2`} style={ICON_BTN_SIZE} title="Copiar">
+              {copied ? <Check size={16} /> : <Copy size={16} />}
             </button>
           </div>
         </div>
