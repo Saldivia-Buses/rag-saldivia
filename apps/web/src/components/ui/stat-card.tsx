@@ -26,9 +26,10 @@ export function StatCard({
   return (
     <div
       className={cn(
-        "rounded-xl border border-border bg-surface p-5 flex flex-col gap-3 hover:shadow-sm transition-shadow",
+        "rounded-xl bg-surface flex flex-col transition-shadow hover:shadow-sm",
         className
       )}
+      style={{ padding: "20px", gap: "12px", border: "1px solid var(--border)" }}
     >
       <div className="flex items-start justify-between">
         <span className="text-xs font-semibold uppercase tracking-wide text-fg-subtle">

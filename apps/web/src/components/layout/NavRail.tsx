@@ -1,3 +1,21 @@
+/**
+ * Vertical navigation rail — the 64px-wide strip on the left edge of the app.
+ *
+ * Always visible on authenticated pages. Contains (top to bottom):
+ *   - Sidebar toggle (only on /chat/* routes) or brand logo
+ *   - New chat button
+ *   - Separator
+ *   - Nav links: Chat, Collections, Settings (with active state highlighting)
+ *   - (spacer)
+ *   - Theme toggle (light/dark)
+ *   - Logout button
+ *
+ * All icons have tooltips (right-aligned) for discoverability.
+ * Uses `usePathname` for active-state detection via prefix matching.
+ *
+ * Rendered by: AppShellChrome (client component)
+ * Depends on: useSidebar (ChatLayout), server actions (logout, createSession)
+ */
 "use client"
 
 import Link from "next/link"
@@ -14,6 +32,7 @@ import {
   Settings,
   LogOut,
   SquarePen,
+  ShieldCheck,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import type { CurrentUser } from "@/lib/auth/current-user"
@@ -38,6 +57,11 @@ const NAV_ITEMS: NavItem[] = [
   { href: "/chat",        label: "Chat",          icon: <MessageSquare size={20} /> },
   { href: "/collections", label: "Colecciones",   icon: <FolderOpen size={20} /> },
   { href: "/settings",    label: "Configuración", icon: <Settings size={20} /> },
+]
+
+/** Admin-only nav items — shown below the separator when user.role === "admin" */
+const ADMIN_NAV_ITEMS: NavItem[] = [
+  { href: "/admin", label: "Admin",      icon: <ShieldCheck size={20} /> },
 ]
 
 function NavIcon({ item, active }: { item: NavItem; active: boolean }) {
@@ -66,12 +90,13 @@ function NavIcon({ item, active }: { item: NavItem; active: boolean }) {
 }
 
 export function NavRail({
-  user: _user,
+  user,
   changelog: _changelog,
 }: {
   user: CurrentUser
   changelog: Changelog
 }) {
+  const isAdmin = user.role === "admin"
   const pathname = usePathname()
   const router = useRouter()
   const { open: sidebarOpen, toggle: toggleSidebar } = useSidebar()
@@ -89,7 +114,17 @@ export function NavRail({
         className="flex flex-col items-center h-screen shrink-0 bg-surface border-r border-border"
         style={{ width: 64, padding: "12px 0", gap: "4px" }}
       >
-        {/* Sidebar toggle — always accessible */}
+        {/* Brand — always visible */}
+        <div style={{ marginBottom: "2px" }}>
+          <div
+            className="flex items-center justify-center rounded-xl bg-accent"
+            style={{ width: "38px", height: "38px" }}
+          >
+            <span className="text-sm font-bold text-accent-fg select-none">S</span>
+          </div>
+        </div>
+
+        {/* Sidebar toggle — only on chat pages, below brand */}
         {isOnChat && (
           <Tooltip>
             <TooltipTrigger asChild>
@@ -107,18 +142,6 @@ export function NavRail({
               {sidebarOpen ? "Ocultar chats" : "Mostrar chats"} (Ctrl+Shift+S)
             </TooltipContent>
           </Tooltip>
-        )}
-
-        {/* Brand */}
-        {!isOnChat && (
-          <div style={{ marginBottom: "4px" }}>
-            <div
-              className="flex items-center justify-center rounded-xl bg-accent"
-              style={{ width: "38px", height: "38px" }}
-            >
-              <span className="text-sm font-bold text-accent-fg select-none">S</span>
-            </div>
-          </div>
         )}
 
         {/* New chat */}
@@ -151,6 +174,20 @@ export function NavRail({
               active={pathname.startsWith(item.href)}
             />
           ))}
+
+          {/* Admin-only section */}
+          {isAdmin && (
+            <>
+              <div className="w-6 h-px bg-border" style={{ margin: "4px 0" }} />
+              {ADMIN_NAV_ITEMS.map((item) => (
+                <NavIcon
+                  key={item.href}
+                  item={item}
+                  active={pathname.startsWith(item.href)}
+                />
+              ))}
+            </>
+          )}
         </div>
 
         {/* Bottom */}
