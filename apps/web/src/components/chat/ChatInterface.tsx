@@ -206,6 +206,20 @@ export function ChatInterface({
     setEditingTitle(false)
   }, [titleDraft, session.id, session.title, router])
 
+  const handleOpenArtifact = useCallback((a: Artifact) => {
+    setArtifacts(prev => {
+      const exists = prev.findIndex(p => p.content === a.content)
+      if (exists >= 0) {
+        setActiveArtifactIndex(exists)
+        return prev
+      }
+      setActiveArtifactIndex(prev.length)
+      return [...prev, a]
+    })
+    // Auto-close sidebar when opening artifact panel
+    if (sidebarOpen) toggleSidebar()
+  }, [sidebarOpen, toggleSidebar])
+
   const handleRetry = useCallback(async () => {
     const lastUserMsg = [...messages].reverse().find((m) => m.role === "user")
     if (!lastUserMsg || isStreaming) return
@@ -399,17 +413,7 @@ export function ChatInterface({
                           {isLastAssistant ? (
                             <div className="text-sm text-fg leading-relaxed whitespace-pre-wrap">{text}</div>
                           ) : (
-                            <MarkdownMessage content={text} onOpenArtifact={(a) => {
-                              setArtifacts(prev => {
-                                const exists = prev.findIndex(p => p.content === a.content)
-                                if (exists >= 0) {
-                                  setActiveArtifactIndex(exists)
-                                  return prev
-                                }
-                                setActiveArtifactIndex(prev.length)
-                                return [...prev, a]
-                              })
-                            }} />
+                            <MarkdownMessage content={text} onOpenArtifact={handleOpenArtifact} />
                           )}
                         </>
                       )}
