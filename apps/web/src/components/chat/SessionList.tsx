@@ -42,9 +42,9 @@ export function SessionList({ sessions }: { sessions: DbChatSession[] }) {
   return (
     <aside
       className="shrink-0 border-r border-border bg-surface flex flex-col h-full overflow-hidden transition-[width] duration-200"
-      style={{ width: open ? "240px" : "0px", borderRightWidth: open ? "1px" : "0px" }}
+      style={{ width: open ? "260px" : "0px", borderRightWidth: open ? "1px" : "0px" }}
     >
-      <div style={{ width: "240px", minWidth: "240px" }} className="flex flex-col h-full">
+      <div style={{ width: "260px", minWidth: "260px" }} className="flex flex-col h-full">
         {/* Header — toggle | title | new */}
         <div className="flex items-center justify-between" style={{ padding: "8px" }}>
           <button

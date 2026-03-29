@@ -13,6 +13,7 @@ import { MarkdownMessage } from "@/components/chat/MarkdownMessage"
 import { ArtifactPanel, type Artifact } from "@/components/chat/ArtifactPanel"
 import type { Citation } from "@rag-saldivia/shared"
 import { useSidebar } from "./ChatLayout"
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip"
 
 // ── Helpers ──
 
@@ -65,10 +66,36 @@ const SUGGESTIONS = [
   { icon: "📝", label: "Resumir contenido" },
 ]
 
-// ── Shared icon button style ──
+// ── Shared icon button with tooltip ──
 const ICON_BTN = "flex items-center justify-center rounded-lg transition-colors"
 const ICON_BTN_SIZE = { width: "42px", height: "42px" } as const
 const ICON_PX = 18
+
+function TipBtn({ label, onClick, disabled, className, style, children }: {
+  label: string
+  onClick?: () => void
+  disabled?: boolean
+  className?: string
+  style?: React.CSSProperties
+  children: React.ReactNode
+}) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <button
+          type="button"
+          onClick={onClick}
+          disabled={disabled}
+          className={className}
+          style={style}
+        >
+          {children}
+        </button>
+      </TooltipTrigger>
+      <TooltipContent side="bottom" sideOffset={8}>{label}</TooltipContent>
+    </Tooltip>
+  )
+}
 
 // ── Component ──
 
@@ -260,6 +287,7 @@ export function ChatInterface({
   }, [messages, isStreaming, sendMessage])
 
   return (
+    <TooltipProvider delayDuration={200}>
     <div className="flex-1 flex min-h-0">
     <div className="flex-1 flex flex-col min-h-0 bg-bg">
       {/* ── Conversation header ── */}
@@ -271,14 +299,9 @@ export function ChatInterface({
           {/* Left: sidebar toggle */}
           <div style={{ width: "42px" }}>
             {!sidebarOpen && (
-              <button
-                onClick={toggleSidebar}
-                className={`${ICON_BTN} text-fg-muted hover:text-fg hover:bg-surface-2`}
-                style={ICON_BTN_SIZE}
-                title="Mostrar panel (Ctrl+Shift+S)"
-              >
+              <TipBtn label="Mostrar chats (Ctrl+Shift+S)" onClick={toggleSidebar} className={`${ICON_BTN} text-fg-muted hover:text-fg hover:bg-surface-2`} style={ICON_BTN_SIZE}>
                 <PanelLeft size={ICON_PX} />
-              </button>
+              </TipBtn>
             )}
           </div>
 
@@ -314,16 +337,9 @@ export function ChatInterface({
           {/* Right: artifact panel toggle */}
           <div style={{ width: "42px" }}>
             {artifacts.length > 0 && (
-              <button
-                onClick={() => setShowArtifactPanel(p => !p)}
-                className={`${ICON_BTN} hover:bg-surface-2 ${
-                  showArtifactPanel ? "text-accent" : "text-fg-muted hover:text-fg"
-                }`}
-                style={ICON_BTN_SIZE}
-                title={showArtifactPanel ? "Cerrar panel" : "Abrir panel"}
-              >
+              <TipBtn label={showArtifactPanel ? "Cerrar artifacts" : "Abrir artifacts"} onClick={() => setShowArtifactPanel(p => !p)} className={`${ICON_BTN} hover:bg-surface-2 ${showArtifactPanel ? "text-accent" : "text-fg-muted hover:text-fg"}`} style={ICON_BTN_SIZE}>
                 <PanelRightClose size={ICON_PX} />
-              </button>
+              </TipBtn>
             )}
           </div>
         </div>
@@ -475,22 +491,22 @@ export function ChatInterface({
                       {/* Actions — always visible like Claude */}
                       {text && !isStreaming && (
                         <div className="flex" style={{ gap: "2px", marginTop: "8px" }}>
-                          <button onClick={() => handleCopy(text, msg.id)} className={`${ICON_BTN} text-fg-subtle hover:text-fg hover:bg-surface-2`} style={ICON_BTN_SIZE} title="Copiar">
+                          <TipBtn label="Copiar" onClick={() => handleCopy(text, msg.id)} className={`${ICON_BTN} text-fg-subtle hover:text-fg hover:bg-surface-2`} style={ICON_BTN_SIZE}>
                             {copiedId === msg.id ? <Check size={ICON_PX} /> : <Copy size={ICON_PX} />}
-                          </button>
+                          </TipBtn>
                           {numId && (
                             <>
-                              <button onClick={() => handleFeedback(numId, "up")} className={`${ICON_BTN} text-fg-subtle hover:text-fg hover:bg-surface-2`} style={ICON_BTN_SIZE} title="Útil">
+                              <TipBtn label="Útil" onClick={() => handleFeedback(numId, "up")} className={`${ICON_BTN} text-fg-subtle hover:text-fg hover:bg-surface-2`} style={ICON_BTN_SIZE}>
                                 <ThumbsUp size={ICON_PX} />
-                              </button>
-                              <button onClick={() => handleFeedback(numId, "down")} className={`${ICON_BTN} text-fg-subtle hover:text-fg hover:bg-surface-2`} style={ICON_BTN_SIZE} title="No útil">
+                              </TipBtn>
+                              <TipBtn label="No útil" onClick={() => handleFeedback(numId, "down")} className={`${ICON_BTN} text-fg-subtle hover:text-fg hover:bg-surface-2`} style={ICON_BTN_SIZE}>
                                 <ThumbsDown size={ICON_PX} />
-                              </button>
+                              </TipBtn>
                             </>
                           )}
-                          <button onClick={handleRetry} className={`${ICON_BTN} text-fg-subtle hover:text-fg hover:bg-surface-2`} style={ICON_BTN_SIZE} title="Reintentar">
+                          <TipBtn label="Reintentar" onClick={handleRetry} className={`${ICON_BTN} text-fg-subtle hover:text-fg hover:bg-surface-2`} style={ICON_BTN_SIZE}>
                             <RotateCcw size={ICON_PX} />
-                          </button>
+                          </TipBtn>
                         </div>
                       )}
                     </div>
@@ -624,5 +640,6 @@ export function ChatInterface({
       />
     )}
     </div>
+    </TooltipProvider>
   )
 }
