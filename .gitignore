@@ -64,5 +64,9 @@ docs/superpowers/
 *.server-info
 *.server-stopped
 
+# Screenshots (verification artifacts, not versioned)
+*.png
+!apps/web/public/**/*.png
+
 # OS
 .DS_Store
