@@ -49,7 +49,7 @@ function NavIcon({ item, active }: { item: NavItem; active: boolean }) {
               ? "bg-accent-subtle text-accent"
               : "text-fg-muted hover:bg-surface-2 hover:text-fg"
           )}
-          style={{ width: "38px", height: "38px" }}
+          style={{ width: "42px", height: "42px" }}
         >
           {item.icon}
         </Link>
@@ -81,7 +81,7 @@ export function NavRail({
       <nav
         aria-label="Navegación principal"
         className="flex flex-col items-center h-screen shrink-0 bg-surface border-r border-border"
-        style={{ width: 52, padding: "16px 0 12px", gap: "4px" }}
+        style={{ width: 56, padding: "16px 0 12px", gap: "4px" }}
       >
         {/* Brand */}
         <div style={{ marginBottom: "4px" }}>
@@ -98,7 +98,7 @@ export function NavRail({
               onClick={handleNewChat}
               aria-label="Nuevo chat"
               className="flex items-center justify-center rounded-lg text-fg-muted hover:bg-surface-2 hover:text-fg transition-colors"
-              style={{ width: "38px", height: "38px" }}
+              style={{ width: "42px", height: "42px" }}
             >
               <SquarePen size={16} aria-hidden />
             </button>
@@ -141,7 +141,7 @@ export function NavRail({
                 aria-label="Cerrar sesión"
                 onClick={() => actionLogout()}
                 className="flex items-center justify-center rounded-lg text-fg-subtle hover:text-fg hover:bg-surface-2 transition-colors"
-                style={{ width: "38px", height: "38px" }}
+                style={{ width: "42px", height: "42px" }}
               >
                 <LogOut size={15} aria-hidden />
               </button>

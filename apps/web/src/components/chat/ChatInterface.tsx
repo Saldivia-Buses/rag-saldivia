@@ -67,7 +67,7 @@ const SUGGESTIONS = [
 
 // ── Shared icon button style ──
 const ICON_BTN = "flex items-center justify-center rounded-lg transition-colors"
-const ICON_BTN_SIZE = { width: "38px", height: "38px" } as const
+const ICON_BTN_SIZE = { width: "42px", height: "42px" } as const
 const ICON_PX = 18
 
 // ── Component ──
@@ -269,7 +269,7 @@ export function ChatInterface({
           style={{ height: "48px", padding: "0 8px" }}
         >
           {/* Left: sidebar toggle */}
-          <div style={{ width: "38px" }}>
+          <div style={{ width: "42px" }}>
             {!sidebarOpen && (
               <button
                 onClick={toggleSidebar}
@@ -312,7 +312,7 @@ export function ChatInterface({
           </div>
 
           {/* Right: artifact panel toggle */}
-          <div style={{ width: "38px" }}>
+          <div style={{ width: "42px" }}>
             {artifacts.length > 0 && (
               <button
                 onClick={() => setShowArtifactPanel(p => !p)}
@@ -521,10 +521,10 @@ export function ChatInterface({
           <button
             onClick={scrollToBottom}
             className="absolute flex items-center justify-center rounded-full border border-border bg-bg text-fg-muted hover:text-fg hover:bg-surface shadow-md transition-all"
-            style={{ width: "32px", height: "32px", bottom: "8px" }}
+            style={{ width: "36px", height: "36px", bottom: "8px" }}
             title="Ir al final"
           >
-            <ArrowDown size={14} />
+            <ArrowDown size={ICON_PX} />
           </button>
         </div>
       )}
@@ -566,11 +566,11 @@ export function ChatInterface({
               <div className="flex items-center justify-between" style={{ marginTop: "8px" }}>
                 <button
                   type="button"
-                  className="flex items-center justify-center rounded-lg text-fg-subtle hover:text-fg hover:bg-surface transition-colors"
-                  style={{ width: "28px", height: "28px" }}
+                  className={`${ICON_BTN} text-fg-subtle hover:text-fg hover:bg-surface`}
+                  style={ICON_BTN_SIZE}
                   title="Adjuntar"
                 >
-                  <Plus size={16} />
+                  <Plus size={ICON_PX} />
                 </button>
                 <div className="flex items-center" style={{ gap: "8px" }}>
                   <span className="text-xs text-fg-subtle">{session.collection}</span>

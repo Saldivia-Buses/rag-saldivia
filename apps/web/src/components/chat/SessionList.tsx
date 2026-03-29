@@ -51,11 +51,12 @@ export function SessionList({ sessions }: { sessions: DbChatSession[] }) {
             <button
               type="button"
               onClick={toggle}
-              className="p-1 rounded-md text-fg-muted hover:text-fg hover:bg-surface-2 transition-colors"
+              className="flex items-center justify-center rounded-lg text-fg-muted hover:text-fg hover:bg-surface-2 transition-colors"
+            style={{ width: "42px", height: "42px" }}
               title="Ocultar panel (Ctrl+Shift+S)"
               aria-label="Ocultar panel de chats"
             >
-              <PanelLeftClose size={16} />
+              <PanelLeftClose size={18} />
             </button>
             <span className="text-xs font-semibold uppercase tracking-wide text-fg-subtle">
               Chats
@@ -65,11 +66,12 @@ export function SessionList({ sessions }: { sessions: DbChatSession[] }) {
             type="button"
             onClick={handleNew}
             disabled={creating}
-            className="p-1 rounded-md text-fg-muted hover:text-fg hover:bg-surface-2 transition-colors disabled:opacity-40"
+            className="flex items-center justify-center rounded-lg text-fg-muted hover:text-fg hover:bg-surface-2 transition-colors disabled:opacity-40"
+            style={{ width: "42px", height: "42px" }}
             title="Nuevo chat"
             aria-label="Nuevo chat"
           >
-            <Plus size={16} aria-hidden />
+            <Plus size={18} aria-hidden />
           </button>
         </div>
 

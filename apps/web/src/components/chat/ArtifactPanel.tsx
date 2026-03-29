@@ -137,7 +137,7 @@ const MermaidPreview = memo(function MermaidPreview({ content }: { content: stri
 type ViewMode = "preview" | "code"
 
 const ICON_BTN = "flex items-center justify-center rounded-lg transition-colors"
-const ICON_BTN_SIZE = { width: "38px", height: "38px" } as const
+const ICON_BTN_SIZE = { width: "42px", height: "42px" } as const
 
 export function ArtifactPanel({
   artifacts,
@@ -244,26 +244,26 @@ export function ArtifactPanel({
         >
           <div className="flex items-center min-w-0" style={{ gap: "8px" }}>
             {hasPreview && (
-              <div className="flex rounded-lg border border-border overflow-hidden shrink-0" style={{ height: "32px" }}>
+              <div className="flex rounded-lg border border-border overflow-hidden shrink-0" style={{ height: "36px" }}>
                 <button
                   onClick={() => setViewMode("preview")}
                   className={`flex items-center justify-center transition-colors ${
                     viewMode === "preview" ? "bg-surface-2 text-fg" : "text-fg-subtle hover:text-fg hover:bg-surface"
                   }`}
-                  style={{ width: "34px" }}
+                  style={{ width: "38px" }}
                   title="Preview"
                 >
-                  <Eye size={16} />
+                  <Eye size={18} />
                 </button>
                 <button
                   onClick={() => setViewMode("code")}
                   className={`flex items-center justify-center border-l border-border transition-colors ${
                     viewMode === "code" ? "bg-surface-2 text-fg" : "text-fg-subtle hover:text-fg hover:bg-surface"
                   }`}
-                  style={{ width: "34px" }}
+                  style={{ width: "38px" }}
                   title="Código"
                 >
-                  <Code size={16} />
+                  <Code size={18} />
                 </button>
               </div>
             )}
