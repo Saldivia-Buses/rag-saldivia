@@ -36,7 +36,8 @@ export async function initSchema(client: ReturnType<typeof createClient>) {
       sso_provider TEXT,
       sso_subject TEXT,
       created_at INTEGER NOT NULL,
-      last_login INTEGER
+      last_login INTEGER,
+      last_seen INTEGER
     );
     CREATE TABLE IF NOT EXISTS areas (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
