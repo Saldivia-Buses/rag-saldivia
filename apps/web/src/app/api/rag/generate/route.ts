@@ -10,6 +10,7 @@
 
 import { NextResponse } from "next/server"
 import { ragGenerateStream } from "@/lib/rag/client"
+import { createRagStreamResponse } from "@/lib/rag/ai-stream"
 import { extractClaims } from "@/lib/auth/jwt"
 import { canAccessCollection, getUserCollections } from "@rag-saldivia/db"
 import { log } from "@rag-saldivia/logger/backend"
@@ -167,14 +168,7 @@ export async function POST(request: Request) {
     // (la detección real ocurre en el cliente; aquí delegamos al hook de post-stream)
     dispatchEvent("query.completed", { userId, collection: collectionName }).catch(() => {})
 
-    return new Response(result.stream, {
-      headers: {
-        "Content-Type": result.contentType,
-        "Cache-Control": "no-cache",
-        Connection: "keep-alive",
-        "X-Accel-Buffering": "no", // Deshabilitar buffering en nginx
-      },
-    })
+    return createRagStreamResponse(result.stream)
   } catch (error) {
     log.error("system.error", {
       error: String(error),
