@@ -49,7 +49,7 @@ function NavIcon({ item, active }: { item: NavItem; active: boolean }) {
           {item.icon}
         </Link>
       </TooltipTrigger>
-      <TooltipContent side="right" sideOffset={8}>
+      <TooltipContent side="right" sideOffset={16}>
         {item.label}
       </TooltipContent>
     </Tooltip>
@@ -108,7 +108,7 @@ export function NavRail({
                 <LogOut size={15} aria-hidden />
               </button>
             </TooltipTrigger>
-            <TooltipContent side="right" sideOffset={8}>
+            <TooltipContent side="right" sideOffset={16}>
               Cerrar sesión
             </TooltipContent>
           </Tooltip>
