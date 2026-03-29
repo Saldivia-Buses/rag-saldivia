@@ -10,11 +10,15 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 ## [Unreleased]
 
 ### Added
+- Vercel AI SDK (`ai@6`, `@ai-sdk/react@3`) for chat streaming (Plan 14)
+- `ai-stream.ts` adapter: transforms NVIDIA SSE to AI SDK Data Stream protocol (Plan 14)
 - 6 documentation templates: plan, commit, PR, version, ADR, artifact (Plan 13)
 - ADR-012: stack definitivo for 1.0.x series (Plan 13)
 - `docs/artifacts/` directory for review/audit results (Plan 13)
 
 ### Changed
+- ChatInterface migrated from manual SSE to `useChat` from AI SDK (Plan 14)
+- `/api/rag/generate` now returns AI SDK Data Stream protocol (Plan 14)
 - All 10 Claude Code agents rewritten for TypeScript stack (Plan 13)
 - NavRail simplified to 3 links: Chat, Collections, Settings (Plan 13)
 - CLAUDE.md rewritten: 591 → 312 lines, only active code described (Plan 13)
@@ -28,6 +32,8 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 - 12 admin components + routes archived (Plan 13)
 - 12 aspirational chat components archived (Plan 13)
 - Dead `revalidatePath` calls and `/share/` public route (Plan 13)
+- `useRagStream` hook archived, replaced by AI SDK `useChat` (Plan 14)
+- `detect-artifact.ts` archived with artifacts feature (Plan 14)
 
 ## [1.0.0] — 2026-03-27
 

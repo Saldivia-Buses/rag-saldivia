@@ -44,6 +44,7 @@ Un único proceso Next.js reemplaza el gateway Python + frontend SvelteKit del s
 | Base de datos | SQLite vía Drizzle ORM + @libsql/client |
 | Auth | JWT (jose) en cookie HttpOnly + Redis blacklist |
 | Queue | BullMQ + Redis |
+| AI/Streaming | Vercel AI SDK (`ai` + `@ai-sdk/react`) |
 | Validación | Zod (compartido entre paquetes) |
 | CSS | Tailwind v4 + shadcn/ui + Radix |
 | Monorepo | Turborepo + Bun workspaces |
@@ -59,7 +60,7 @@ apps/
     src/
       app/              --> rutas y API routes
       components/       --> componentes React por dominio
-      hooks/            --> useRagStream
+      hooks/            --> (useChat from @ai-sdk/react)
       lib/              --> lógica (auth, rag, utils)
 
 packages/
@@ -179,7 +180,7 @@ components/
 
 | Capa | Comando | Tests |
 |---|---|---|
-| Lógica pura | `bun run test` | ~92 |
+| Lógica pura | `bun run test` | ~77 |
 | Componentes | `bun run test:components` (desde apps/web/) | ~99 |
 | Visual | `bun run test:visual` | 22 baselines |
 | A11y | `bun run test:a11y` | páginas clave |
@@ -213,7 +214,7 @@ const { getByRole } = render(<Button>Click</Button>)
 | `apps/web/src/proxy.ts` | Middleware real: JWT + RBAC en edge |
 | `apps/web/src/lib/auth/jwt.ts` | createJwt, verifyJwt, cookies |
 | `apps/web/src/app/globals.css` | Tokens CSS — cambios afectan toda la app |
-| `apps/web/src/hooks/useRagStream.ts` | SSE streaming (complejidad 19) |
+| `apps/web/src/lib/rag/ai-stream.ts` | Adapter: NVIDIA SSE → AI SDK Data Stream |
 | `apps/web/src/components/chat/ChatInterface.tsx` | Componente más complejo de la UI |
 | `apps/web/src/lib/component-test-setup.ts` | Setup happy-dom — modificar puede romper tests |
 | `packages/db/src/schema.ts` | Schema SQLite completo |
@@ -244,9 +245,11 @@ LOG_LEVEL=INFO
 
 ## Patrones importantes
 
-### SSE / Streaming
-- Verificar status HTTP **ANTES** de streamear (patrón crítico)
-- `lib/rag/stream.ts` es la utilidad canónica de SSE
+### Streaming (AI SDK)
+- Verificar status HTTP **ANTES** de streamear (patrón crítico en `lib/rag/client.ts`)
+- `lib/rag/ai-stream.ts` transforma SSE de NVIDIA al protocolo AI SDK Data Stream
+- `useChat` de `@ai-sdk/react` en ChatInterface (reemplaza `useRagStream`)
+- Citations pasan como `data-sources` custom parts en el stream
 
 ### Redis (ADR-010)
 - `getRedisClient()` nunca retorna null — lanza error
@@ -276,7 +279,7 @@ LOG_LEVEL=INFO
 | 005 | Import estático de db en logger |
 | 006 | Estrategia de testing |
 | 007 | Funciones reales sobre helpers en tests |
-| 008 | Lector SSE compartido (será superada por AI SDK, Plan 14) |
+| 008 | Lector SSE compartido (superada — AI SDK adoptado en Plan 14) |
 | 009 | Server Components primero |
 | 010 | Redis como dependencia requerida |
 | 011 | UI strategy (superada por Plan Maestro 1.0.x) |
