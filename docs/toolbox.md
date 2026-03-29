@@ -15,7 +15,6 @@ actualizado cada vez que se encuentra algo nuevo.
 | shadcn/ui + Radix | Componentes UI + primitivos headless | Design system completo de la app |
 | Tailwind CSS v4 | Utility-first CSS | Styling de toda la app |
 | @tanstack/react-table | Tablas avanzadas | DataTable con sorting, filtro, paginación |
-| recharts | Gráficos React | Dashboard de analytics |
 | Lucide React | Iconos | Iconografía consistente en toda la app |
 | Drizzle ORM | ORM TypeScript | Todas las queries a SQLite |
 
@@ -23,8 +22,9 @@ actualizado cada vez que se encuentra algo nuevo.
 
 | Repo | Qué es | Para qué nos serviría | Plan |
 |---|---|---|---|
-| [vercel-labs/json-render](https://github.com/vercel-labs/json-render) | Generative UI — LLM produce JSON → renderiza React components. 36 shadcn/ui incluidos. Streaming con `SpecStreamCompiler`. Paquete MCP. 26 packages. | Respuestas ricas del RAG: tablas, cards, badges, gráficos. Encaja 1:1 con nuestro stack. Packages: `@json-render/core` + `@json-render/react` + `@json-render/shadcn`. | Plan 14 |
-| [JCodesMore/ai-website-cloner-template](https://github.com/JCodesMore/ai-website-cloner-template) | Clona websites como pixel-perfect copies usando AI agents. Pipeline de 5 fases: reconnaissance → foundation → component specs → parallel build (worktrees) → assembly + QA. Genera specs con CSS computed exacto. Stack: Next.js 16, React 19, shadcn/ui, Tailwind v4. Optimizado para Claude Code + Opus 4.6. | **Clonar claude.ai como base para nuestra UI.** En vez de recrear el design system a mano, clonamos la interfaz real de Claude, extraemos los tokens/layout/componentes exactos, y después lo customizamos para nuestro RAG use case (SourcesPanel, Collections, branding Saldivia). Ahorra semanas de trabajo de diseño. | Plan 15 (Core UI) |
+| [ai (Vercel AI SDK)](https://sdk.vercel.ai) | Toolkit para apps de IA — streaming, tools, agents | Reemplaza SSE manual en `useRagStream`. Base para json-render. | Plan 14 |
+| [vercel-labs/json-render](https://github.com/vercel-labs/json-render) | Generative UI — LLM produce JSON → renderiza React components. 36 shadcn/ui incluidos. Streaming con `SpecStreamCompiler`. | Respuestas ricas del RAG: tablas, cards, badges, gráficos. Packages: `@json-render/core` + `@json-render/react` + `@json-render/shadcn`. | Plan 17 |
+| [JCodesMore/ai-website-cloner-template](https://github.com/JCodesMore/ai-website-cloner-template) | Clona websites usando AI agents. Pipeline: reconnaissance → foundation → component specs → parallel build → assembly + QA. | Extraer tokens/layout de claude.ai para nuestra UI. Modo reconnaissance, no clon literal. | Plan 15 |
 
 
 ## Por evaluar
@@ -45,7 +45,7 @@ Librerías que no usamos pero podrían agregar valor:
 |---|---|---|
 | [react-hook-form](https://react-hook-form.com) | Forms performantes con validación | Útil para settings, login, formularios admin. Combina bien con Zod. |
 | [nuqs](https://nuqs.47ng.com) | URL search params management para Next.js | Útil para filtros en collections y futuras tablas. Type-safe. |
-| [ai (Vercel AI SDK)](https://sdk.vercel.ai) | Toolkit para apps de IA — streaming, tools, agents | **Muy relevante** — podría reemplazar nuestro SSE manual en `useRagStream`. json-render lo usa. |
+| [ai (Vercel AI SDK)](https://sdk.vercel.ai) | Toolkit para apps de IA — streaming, tools, agents | **Decidido adoptar (Plan 14).** Ver "Por integrar". |
 | [zustand](https://zustand-demo.pmnd.rs) | State management minimalista | Alternativa a React context para estado global (theme, user, notifications). |
 | [date-fns](https://date-fns.org) | Utilidades de fechas | Tree-shakeable, mejor que moment. Para timestamps en chat y audit. |
 | [motion (Framer)](https://motion.dev) | Animaciones React | Para 2.x — no es prioridad ahora. |
@@ -82,7 +82,6 @@ sin GPU solo sirven para el frontend si se separa de backend.
 | Repo | Qué es | Por qué |
 |---|---|---|
 | [chenglou/pretext](https://github.com/chenglou/pretext) | Text layout en JS puro sin DOM | Sin uso directo. Reconsiderar para rendering custom. |
-| ~~[JCodesMore/ai-website-cloner-template](https://github.com/JCodesMore/ai-website-cloner-template)~~ | ~~Movido a "Por integrar"~~ | — |
 | [greensock/gsap-skills](https://github.com/greensock/gsap-skills) | Skills de GSAP para AI agents (animaciones) | Animaciones son 2.x. No es prioridad. |
 | [0xSero/parchi](https://github.com/0xSero/parchi) | Browser automation extension con AI | No construimos un browser agent. Risks de seguridad altos. |
 | Recoil (Facebook) | State management React | Deprecated. Usar zustand o jotai en su lugar. |
