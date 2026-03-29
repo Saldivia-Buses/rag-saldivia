@@ -2,18 +2,10 @@
 
 import { useOptimistic, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
-import { FolderOpen, Trash2, MessageSquare, Plus, Network } from "lucide-react"
+import { FolderOpen, Trash2, MessageSquare, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { EmptyPlaceholder } from "@/components/ui/empty-placeholder"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
 import type { CurrentUser } from "@/lib/auth/current-user"
 import { actionCreateCollection, actionDeleteCollection } from "@/app/actions/collections"
 
@@ -65,31 +57,32 @@ export function CollectionsList({ collections: initial, user }: Props) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col" style={{ gap: "24px" }}>
       {user.role === "admin" && (
         <div>
           {!showCreate ? (
-            <Button size="sm" onClick={() => setShowCreate(true)} className="gap-1.5">
-              <Plus size={14} /> Nueva colección
+            <Button onClick={() => setShowCreate(true)} style={{ gap: "6px" }}>
+              <Plus size={16} /> Nueva colección
             </Button>
           ) : (
-            <form onSubmit={handleCreate} className="flex items-center gap-2">
+            <form onSubmit={handleCreate} className="flex items-center" style={{ gap: "8px" }}>
               <Input
                 autoFocus
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
                 placeholder="nombre-de-coleccion"
-                className="w-48"
+                className="h-11 rounded-[10px]"
+                style={{ width: "240px" }}
               />
-              <Button size="sm" type="submit" disabled={isPending}>
+              <Button type="submit" disabled={isPending}>
                 {isPending ? "Creando..." : "Crear"}
               </Button>
-              <Button size="sm" variant="ghost" type="button" onClick={() => setShowCreate(false)}>
+              <Button variant="ghost" type="button" onClick={() => setShowCreate(false)}>
                 Cancelar
               </Button>
             </form>
           )}
-          {error && <p className="text-sm mt-1 text-destructive">{error}</p>}
+          {error && <p className="text-sm text-destructive" style={{ marginTop: "8px" }}>{error}</p>}
         </div>
       )}
 
@@ -104,62 +97,39 @@ export function CollectionsList({ collections: initial, user }: Props) {
           </EmptyPlaceholder.Description>
         </EmptyPlaceholder>
       ) : (
-      <div className="rounded-lg border border-border overflow-hidden">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Colección</TableHead>
-              <TableHead className="text-right">Acciones</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {(
-              optimisticCollections.map((name) => (
-                <TableRow key={name}>
-                  <TableCell>
-                    <div className="flex items-center gap-2">
-                      <FolderOpen size={15} className="text-accent" />
-                      <span className="font-medium">{name}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex items-center justify-end gap-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 gap-1 text-xs"
-                        onClick={() => handleChat(name)}
-                      >
-                        <MessageSquare size={12} /> Chat
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 gap-1 text-xs"
-                        onClick={() => router.push(`/collections/${encodeURIComponent(name)}/graph`)}
-                        title="Ver grafo de documentos"
-                      >
-                        <Network size={12} /> Grafo
-                      </Button>
-                      {user.role === "admin" && (
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-7 w-7 text-destructive hover:text-destructive"
-                          onClick={() => handleDelete(name)}
-                          title="Eliminar colección"
-                        >
-                          <Trash2 size={13} />
-                        </Button>
-                      )}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
+        <div className="flex flex-col" style={{ gap: "8px" }}>
+          {optimisticCollections.map((name) => (
+            <div
+              key={name}
+              className="group flex items-center justify-between rounded-xl border border-border bg-surface transition-colors hover:bg-surface-2"
+              style={{ padding: "16px 20px" }}
+            >
+              <div className="flex items-center" style={{ gap: "12px" }}>
+                <FolderOpen size={18} className="text-accent" />
+                <span className="font-medium text-fg">{name}</span>
+              </div>
+              <div className="flex items-center" style={{ gap: "4px" }}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleChat(name)}
+                  style={{ gap: "6px" }}
+                >
+                  <MessageSquare size={14} /> Chat
+                </Button>
+                {user.role === "admin" && (
+                  <button
+                    onClick={() => handleDelete(name)}
+                    className="p-2 rounded-md text-fg-subtle opacity-0 group-hover:opacity-100 hover:text-destructive hover:bg-surface transition-all"
+                    title="Eliminar colección"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   )

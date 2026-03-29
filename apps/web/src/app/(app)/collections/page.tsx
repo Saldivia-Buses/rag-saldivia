@@ -33,10 +33,10 @@ export default async function CollectionsPage() {
   const collections = await getCollections(user.id, user.role)
 
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <div className="mb-6">
-        <h1 className="text-xl font-semibold">Colecciones</h1>
-        <p className="text-sm mt-1 text-fg-muted">
+    <div className="max-w-3xl mx-auto" style={{ padding: "32px 24px" }}>
+      <div style={{ marginBottom: "32px" }}>
+        <h1 className="text-2xl font-semibold text-fg">Colecciones</h1>
+        <p className="text-sm text-fg-muted" style={{ marginTop: "4px" }}>
           {collections.length} colección{collections.length !== 1 ? "es" : ""} disponible{collections.length !== 1 ? "s" : ""}
         </p>
       </div>

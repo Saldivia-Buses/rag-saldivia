@@ -77,23 +77,32 @@ export function SettingsClient({ user }: { user: DbUser }) {
   }
 
   return (
-    <div className="p-6 max-w-xl space-y-6">
+    <div className="flex flex-col" style={{ gap: "32px" }}>
+      {/* Header */}
       <div>
-        <h1 className="text-lg font-semibold text-fg">Configuración</h1>
-        <p className="text-sm text-fg-muted mt-0.5">Gestioná tu perfil y preferencias</p>
+        <h1 className="text-2xl font-semibold text-fg">Configuración</h1>
+        <p className="text-sm text-fg-muted" style={{ marginTop: "4px" }}>
+          Gestioná tu perfil y preferencias
+        </p>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-0 border-b border-border">
+      <div className="flex border-b border-border" style={{ gap: "0" }}>
         {TABS.map((t) => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
-            className={`px-4 py-2.5 text-sm font-medium border-b-2 transition-colors -mb-px ${
+            className={`text-sm font-medium transition-colors ${
               tab === t.key
                 ? "border-accent text-fg"
                 : "border-transparent text-fg-muted hover:text-fg"
             }`}
+            style={{
+              padding: "10px 20px",
+              borderBottom: "2px solid",
+              borderColor: tab === t.key ? "var(--accent)" : "transparent",
+              marginBottom: "-1px",
+            }}
           >
             {t.label}
           </button>
@@ -102,17 +111,17 @@ export function SettingsClient({ user }: { user: DbUser }) {
 
       {/* Perfil */}
       {tab === "perfil" && (
-        <form onSubmit={profileForm.handleSubmit(handleProfileSave)} className="space-y-4">
-          <div className="space-y-1.5">
+        <form onSubmit={profileForm.handleSubmit(handleProfileSave)} className="flex flex-col" style={{ gap: "24px" }}>
+          <div className="flex flex-col" style={{ gap: "6px" }}>
             <label className="text-sm font-medium text-fg">Nombre</label>
-            <Input {...profileForm.register("name")} />
+            <Input {...profileForm.register("name")} className="h-11 text-base rounded-[10px]" />
             {profileForm.formState.errors.name && (
               <p className="text-xs text-destructive">{profileForm.formState.errors.name.message}</p>
             )}
           </div>
-          <div className="space-y-1.5">
+          <div className="flex flex-col" style={{ gap: "6px" }}>
             <label className="text-sm font-medium text-fg">Email</label>
-            <Input value={user.email} disabled />
+            <Input value={user.email} disabled className="h-11 text-base rounded-[10px]" />
             <p className="text-xs text-fg-subtle">El email no se puede cambiar. Contactá al administrador.</p>
           </div>
           {profileMsg && (
@@ -120,25 +129,27 @@ export function SettingsClient({ user }: { user: DbUser }) {
               {profileMsg.text}
             </p>
           )}
-          <Button type="submit" disabled={isPending} size="sm">
-            {isPending ? "Guardando..." : "Guardar cambios"}
-          </Button>
+          <div>
+            <Button type="submit" disabled={isPending}>
+              {isPending ? "Guardando..." : "Guardar cambios"}
+            </Button>
+          </div>
         </form>
       )}
 
       {/* Contraseña */}
       {tab === "contrasena" && (
-        <form onSubmit={passwordForm.handleSubmit(handlePasswordSave)} className="space-y-4">
-          <div className="space-y-1.5">
+        <form onSubmit={passwordForm.handleSubmit(handlePasswordSave)} className="flex flex-col" style={{ gap: "24px" }}>
+          <div className="flex flex-col" style={{ gap: "6px" }}>
             <label className="text-sm font-medium text-fg">Contraseña actual</label>
-            <Input type="password" {...passwordForm.register("currentPassword")} />
+            <Input type="password" {...passwordForm.register("currentPassword")} className="h-11 text-base rounded-[10px]" />
             {passwordForm.formState.errors.currentPassword && (
               <p className="text-xs text-destructive">{passwordForm.formState.errors.currentPassword.message}</p>
             )}
           </div>
-          <div className="space-y-1.5">
+          <div className="flex flex-col" style={{ gap: "6px" }}>
             <label className="text-sm font-medium text-fg">Nueva contraseña</label>
-            <Input type="password" {...passwordForm.register("newPassword")} />
+            <Input type="password" {...passwordForm.register("newPassword")} className="h-11 text-base rounded-[10px]" />
             {passwordForm.formState.errors.newPassword && (
               <p className="text-xs text-destructive">{passwordForm.formState.errors.newPassword.message}</p>
             )}
@@ -148,15 +159,17 @@ export function SettingsClient({ user }: { user: DbUser }) {
               {pwdMsg.text}
             </p>
           )}
-          <Button type="submit" disabled={isPending || !passwordForm.formState.isDirty} size="sm">
-            {isPending ? "Actualizando..." : "Actualizar contraseña"}
-          </Button>
+          <div>
+            <Button type="submit" disabled={isPending || !passwordForm.formState.isDirty}>
+              {isPending ? "Actualizando..." : "Actualizar contraseña"}
+            </Button>
+          </div>
         </form>
       )}
 
       {/* Preferencias */}
       {tab === "preferencias" && (
-        <div className="space-y-1">
+        <div className="flex flex-col" style={{ gap: "0" }}>
           <PreferenceToggle
             label="Tema"
             description="Preferencia de tema visual"
@@ -194,15 +207,16 @@ function PreferenceToggle({
   onChange: (value: string) => void
 }) {
   return (
-    <div className="flex items-center justify-between py-4 border-b border-border">
+    <div className="flex items-center justify-between border-b border-border" style={{ padding: "20px 0" }}>
       <div>
         <p className="text-sm font-medium text-fg">{label}</p>
-        <p className="text-xs text-fg-muted">{description}</p>
+        <p className="text-xs text-fg-muted" style={{ marginTop: "2px" }}>{description}</p>
       </div>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="h-8 rounded-md border border-border bg-bg px-2 text-sm text-fg focus:outline-none focus:ring-1 focus:ring-ring"
+        className="h-9 rounded-lg border border-border bg-bg text-sm text-fg focus:outline-none focus:ring-1 focus:ring-accent"
+        style={{ padding: "0 12px" }}
       >
         {options.map((opt) => (
           <option key={opt.value} value={opt.value}>{opt.label}</option>

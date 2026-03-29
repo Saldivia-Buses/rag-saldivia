@@ -8,14 +8,10 @@ export default async function SettingsPage() {
   if (!user) return null
 
   return (
-    <div className="p-6 max-w-2xl mx-auto space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Configuración</h1>
-        <p className="text-sm mt-1" style={{ color: "var(--muted-foreground)" }}>
-          Perfil, contraseña y preferencias
-        </p>
+    <div style={{ padding: "32px 24px" }}>
+      <div className="max-w-xl mx-auto">
+        <SettingsClient user={user} />
       </div>
-      <SettingsClient user={user} />
     </div>
   )
 }
