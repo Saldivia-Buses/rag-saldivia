@@ -162,11 +162,11 @@ components/
 ### Tokens CSS
 
 ```css
-/* Light mode */
---bg: #faf8f4;  --surface: #f0ebe0;  --surface-2: #e8e1d4;
---border: #ede9e0;  --fg: #1a1a1a;  --fg-muted: #5a5048;
---fg-subtle: #9a9088;  --accent: #1a5276;  --accent-subtle: #d4e8f7;
---success: #2d6a4f;  --destructive: #c0392b;  --warning: #d68910;
+/* Light mode (tokens extraídos de claude.ai + azure accent) */
+--bg: #faf9f5;  --surface: #f0eee8;  --surface-2: #e5e3dc;
+--border: #e0ddd6;  --fg: #141413;  --fg-muted: #4a4a47;
+--fg-subtle: #6e6c69;  --accent: #2563eb;  --accent-subtle: #dbeafe;
+--success: #16a34a;  --destructive: #dc2626;  --warning: #d97706;
 ```
 
 - **Font:** Instrument Sans via `next/font/google`

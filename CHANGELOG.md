@@ -10,6 +10,7 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 ## [Unreleased]
 
 ### Added
+- Design tokens extracted from claude.ai via Playwright reconnaissance (Plan 15)
 - Vercel AI SDK (`ai@6`, `@ai-sdk/react@3`) for chat streaming (Plan 14)
 - `ai-stream.ts` adapter: transforms NVIDIA SSE to AI SDK Data Stream protocol (Plan 14)
 - 6 documentation templates: plan, commit, PR, version, ADR, artifact (Plan 13)
@@ -17,6 +18,8 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 - `docs/artifacts/` directory for review/audit results (Plan 13)
 
 ### Changed
+- Light/dark tokens: warm grays (claude.ai scale) + azure blue accent (Plan 15)
+- Branding: "Saldivia RAG", brand mark "S", consistent across login and NavRail (Plan 15)
 - ChatInterface migrated from manual SSE to `useChat` from AI SDK (Plan 14)
 - `/api/rag/generate` now returns AI SDK Data Stream protocol (Plan 14)
 - All 10 Claude Code agents rewritten for TypeScript stack (Plan 13)
