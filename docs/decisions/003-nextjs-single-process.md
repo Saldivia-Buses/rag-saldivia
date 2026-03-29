@@ -43,6 +43,12 @@ El proceso escucha en puerto 3000 y se comunica con el RAG server (`localhost:80
 - SSE requiere cuidado especial: verificar el status HTTP de la respuesta del RAG server **antes** de iniciar el stream. El gateway Python original tenía un bug donde siempre retornaba 200 aunque el RAG fallara — documentado en `CLAUDE.md` como patrón a evitar.
 - El worker de ingesta (`apps/web/src/workers/ingestion.ts`) corre dentro del mismo proceso Next.js en desarrollo. En producción debería ser un proceso separado o un cron job.
 
+## Nota (2026-03-29, Plan 13)
+
+La lógica de negocio vive en `packages/` (db, shared, config, logger). Si algún
+día se necesita un API backend separado, se importa desde packages/ sin duplicar
+código. Next.js es extraíble, no es lock-in.
+
 ## Referencias
 
 - `apps/web/src/middleware.ts` — auth + RBAC

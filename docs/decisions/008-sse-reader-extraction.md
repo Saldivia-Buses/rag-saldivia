@@ -1,6 +1,6 @@
 # ADR-008: Extracción de SSE reader compartido a `lib/rag/stream.ts`
 
-**Estado:** Aceptado  
+**Estado:** Aceptado — será superada por Vercel AI SDK (Plan 14)  
 **Fecha:** 2026-03-27  
 **Contexto:** Plan 8 — Fase 1 (Eliminación de duplicación)
 

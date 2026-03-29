@@ -1,7 +1,7 @@
 # ADR-011: Estrategia de UI para la serie 1.0.x
 
 **Fecha:** 2026-03-27
-**Estado:** Aceptada
+**Estado:** Superada por Plan Maestro 1.0.x (`docs/plans/1.0.x-plan-maestro.md`)
 **Contexto:** Plan 13 — UI Foundation "Claude-style"
 
 ---
