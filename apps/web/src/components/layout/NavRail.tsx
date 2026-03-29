@@ -1,7 +1,6 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
 import {
   Tooltip,
   TooltipContent,
@@ -20,7 +19,9 @@ import { cn } from "@/lib/utils"
 import type { CurrentUser } from "@/lib/auth/current-user"
 import { actionLogout } from "@/app/actions/auth"
 import { actionCreateSession } from "@/app/actions/chat"
-import { useRouter } from "next/navigation"
+import { useSidebar } from "@/components/chat/ChatLayout"
+import { useRouter, usePathname } from "next/navigation"
+import { PanelLeft, PanelLeftClose } from "lucide-react"
 
 type Changelog = { version: string; entries: { version: string; content: string }[] }
 
@@ -73,6 +74,8 @@ export function NavRail({
 }) {
   const pathname = usePathname()
   const router = useRouter()
+  const { open: sidebarOpen, toggle: toggleSidebar } = useSidebar()
+  const isOnChat = pathname.startsWith("/chat")
 
   async function handleNewChat() {
     const session = await actionCreateSession({ collection: "tecpia" })
@@ -86,15 +89,37 @@ export function NavRail({
         className="flex flex-col items-center h-screen shrink-0 bg-surface border-r border-border"
         style={{ width: 64, padding: "12px 0", gap: "4px" }}
       >
+        {/* Sidebar toggle — always accessible */}
+        {isOnChat && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                type="button"
+                onClick={toggleSidebar}
+                aria-label={sidebarOpen ? "Ocultar chats" : "Mostrar chats"}
+                className={`${BTN} ${sidebarOpen ? "text-fg" : "text-fg-muted"} hover:bg-surface-2 hover:text-fg`}
+                style={BTN_SIZE}
+              >
+                {sidebarOpen ? <PanelLeftClose size={20} /> : <PanelLeft size={20} />}
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="right" sideOffset={12}>
+              {sidebarOpen ? "Ocultar chats" : "Mostrar chats"} (Ctrl+Shift+S)
+            </TooltipContent>
+          </Tooltip>
+        )}
+
         {/* Brand */}
-        <div style={{ marginBottom: "4px" }}>
-          <div
-            className="flex items-center justify-center rounded-xl bg-accent"
-            style={{ width: "38px", height: "38px" }}
-          >
-            <span className="text-sm font-bold text-accent-fg select-none">S</span>
+        {!isOnChat && (
+          <div style={{ marginBottom: "4px" }}>
+            <div
+              className="flex items-center justify-center rounded-xl bg-accent"
+              style={{ width: "38px", height: "38px" }}
+            >
+              <span className="text-sm font-bold text-accent-fg select-none">S</span>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* New chat */}
         <Tooltip>

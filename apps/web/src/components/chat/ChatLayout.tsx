@@ -13,28 +13,22 @@ export function useSidebar() {
   return useContext(SidebarContext)
 }
 
-function usePersistedState(key: string, defaultValue: boolean): [boolean, () => void] {
-  const [value, setValue] = useState(() => {
-    if (typeof window === "undefined") return defaultValue
-    const stored = localStorage.getItem(key)
-    return stored !== null ? stored === "true" : defaultValue
+export function SidebarProvider({ children }: { children: ReactNode }) {
+  const [open, setOpen] = useState(() => {
+    if (typeof window === "undefined") return true
+    const stored = localStorage.getItem("saldivia-sidebar-open")
+    return stored !== null ? stored === "true" : true
   })
 
   const toggle = useCallback(() => {
-    setValue(prev => {
+    setOpen(prev => {
       const next = !prev
-      localStorage.setItem(key, String(next))
+      localStorage.setItem("saldivia-sidebar-open", String(next))
       return next
     })
-  }, [key])
+  }, [])
 
-  return [value, toggle]
-}
-
-export function ChatLayout({ children }: { children: ReactNode }) {
-  const [open, toggle] = usePersistedState("saldivia-sidebar-open", true)
-
-  // Keyboard shortcut: Ctrl+Shift+S to toggle sidebar
+  // Keyboard shortcut: Ctrl+Shift+S
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
       if (e.ctrlKey && e.shiftKey && e.key === "S") {
@@ -48,9 +42,15 @@ export function ChatLayout({ children }: { children: ReactNode }) {
 
   return (
     <SidebarContext.Provider value={{ open, toggle }}>
-      <div className="flex h-full">
-        {children}
-      </div>
+      {children}
     </SidebarContext.Provider>
+  )
+}
+
+export function ChatLayout({ children }: { children: ReactNode }) {
+  return (
+    <div className="flex h-full">
+      {children}
+    </div>
   )
 }

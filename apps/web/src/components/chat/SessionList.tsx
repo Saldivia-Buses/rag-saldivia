@@ -3,7 +3,7 @@
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { useState, useMemo } from "react"
-import { Plus, MessageSquare, Trash2, Search, PanelLeftClose } from "lucide-react"
+import { Plus, MessageSquare, Trash2, Search } from "lucide-react"
 import type { DbChatSession } from "@rag-saldivia/db"
 import { actionDeleteSession, actionCreateSession } from "@/app/actions/chat"
 import { useSidebar } from "./ChatLayout"
@@ -13,7 +13,7 @@ export function SessionList({ sessions }: { sessions: DbChatSession[] }) {
   const router = useRouter()
   const [creating, setCreating] = useState(false)
   const [search, setSearch] = useState("")
-  const { open, toggle } = useSidebar()
+  const { open } = useSidebar()
 
   const filtered = useMemo(() => {
     if (!search.trim()) return sessions
@@ -45,18 +45,8 @@ export function SessionList({ sessions }: { sessions: DbChatSession[] }) {
       style={{ width: open ? "260px" : "0px", borderRightWidth: open ? "1px" : "0px" }}
     >
       <div style={{ width: "260px", minWidth: "260px" }} className="flex flex-col h-full">
-        {/* Header — toggle | title | new */}
-        <div className="flex items-center justify-between" style={{ padding: "8px" }}>
-          <button
-            type="button"
-            onClick={toggle}
-            className="flex items-center justify-center shrink-0 rounded-lg text-fg-muted hover:text-fg hover:bg-surface-2 transition-colors"
-            style={{ width: "36px", height: "36px" }}
-            title="Ocultar panel (Ctrl+Shift+S)"
-            aria-label="Ocultar panel de chats"
-          >
-            <PanelLeftClose size={18} />
-          </button>
+        {/* Header */}
+        <div className="flex items-center justify-between" style={{ padding: "12px 12px 8px" }}>
           <span className="text-xs font-semibold uppercase tracking-wide text-fg-subtle">
             Chats
           </span>
