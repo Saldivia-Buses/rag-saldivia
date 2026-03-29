@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect, useCallback, useTransition } from "react"
-import { ThumbsUp, ThumbsDown, Copy, Check, RotateCcw, Square, Plus, ChevronDown, ArrowDown } from "lucide-react"
+import { ThumbsUp, ThumbsDown, Copy, Check, RotateCcw, Square, Plus, ChevronDown, ArrowDown, PanelLeft } from "lucide-react"
 import { useChat } from "@ai-sdk/react"
 import { DefaultChatTransport, type UIMessage } from "ai"
 import type { DbChatSession, DbChatMessage } from "@rag-saldivia/db"
@@ -12,6 +12,7 @@ import { SourcesPanel } from "@/components/chat/SourcesPanel"
 import { MarkdownMessage } from "@/components/chat/MarkdownMessage"
 import { ArtifactPanel, type Artifact } from "@/components/chat/ArtifactPanel"
 import type { Citation } from "@rag-saldivia/shared"
+import { useSidebar } from "./ChatLayout"
 
 // ── Helpers ──
 
@@ -73,6 +74,7 @@ export function ChatInterface({
   session: DbChatSession & { messages?: DbChatMessage[] }
   userId: number
 }) {
+  const { open: sidebarOpen, toggle: toggleSidebar } = useSidebar()
   const [input, setInput] = useState("")
   const [copiedId, setCopiedId] = useState<string | null>(null)
   const [artifacts, setArtifacts] = useState<Artifact[]>([])
@@ -217,34 +219,51 @@ export function ChatInterface({
       {/* ── Conversation header ── */}
       {messages.length > 0 && (
         <div
-          className="shrink-0 flex items-center justify-center border-b border-border"
-          style={{ height: "48px" }}
+          className="shrink-0 flex items-center border-b border-border"
+          style={{ height: "48px", padding: "0 12px" }}
         >
-          {editingTitle ? (
-            <input
-              ref={titleInputRef}
-              value={titleDraft}
-              onChange={(e) => setTitleDraft(e.target.value)}
-              onBlur={handleTitleSave}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") handleTitleSave()
-                if (e.key === "Escape") { setTitleDraft(session.title); setEditingTitle(false) }
-              }}
-              className="text-sm font-medium text-fg bg-transparent text-center outline-none border-b border-accent"
-              style={{ maxWidth: "300px" }}
-              autoFocus
-            />
-          ) : (
+          {/* Sidebar toggle — only when sidebar is closed */}
+          {!sidebarOpen && (
             <button
-              onClick={() => { setEditingTitle(true); setTitleDraft(session.title) }}
-              className="flex items-center text-sm font-medium text-fg hover:text-fg-muted transition-colors"
-              style={{ gap: "4px" }}
-              title="Click para renombrar"
+              onClick={toggleSidebar}
+              className="p-1.5 rounded-md text-fg-muted hover:text-fg hover:bg-surface transition-colors"
+              title="Mostrar panel (Ctrl+Shift+S)"
             >
-              {session.title}
-              <ChevronDown size={14} className="text-fg-subtle" />
+              <PanelLeft size={16} />
             </button>
           )}
+
+          {/* Title — centered */}
+          <div className="flex-1 flex items-center justify-center">
+            {editingTitle ? (
+              <input
+                ref={titleInputRef}
+                value={titleDraft}
+                onChange={(e) => setTitleDraft(e.target.value)}
+                onBlur={handleTitleSave}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") handleTitleSave()
+                  if (e.key === "Escape") { setTitleDraft(session.title); setEditingTitle(false) }
+                }}
+                className="text-sm font-medium text-fg bg-transparent text-center outline-none border-b border-accent"
+                style={{ maxWidth: "300px" }}
+                autoFocus
+              />
+            ) : (
+              <button
+                onClick={() => { setEditingTitle(true); setTitleDraft(session.title) }}
+                className="flex items-center text-sm font-medium text-fg hover:text-fg-muted transition-colors"
+                style={{ gap: "4px" }}
+                title="Click para renombrar"
+              >
+                {session.title}
+                <ChevronDown size={14} className="text-fg-subtle" />
+              </button>
+            )}
+          </div>
+
+          {/* Spacer to keep title centered when sidebar toggle is shown */}
+          {!sidebarOpen && <div style={{ width: "28px" }} />}
         </div>
       )}
 

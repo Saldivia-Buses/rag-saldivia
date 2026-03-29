@@ -7,7 +7,7 @@ export default async function ChatPage() {
   const sessions = await listSessionsByUser(user.id)
 
   return (
-    <div className="flex h-full">
+    <>
       <SessionList sessions={sessions} />
       <div className="flex-1 flex flex-col items-center justify-center bg-bg">
         <h1 className="sr-only">Chat</h1>
@@ -25,6 +25,6 @@ export default async function ChatPage() {
           Seleccioná una sesión o creá una nueva
         </p>
       </div>
-    </div>
+    </>
   )
 }

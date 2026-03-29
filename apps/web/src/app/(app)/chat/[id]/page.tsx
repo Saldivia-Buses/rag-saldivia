@@ -20,12 +20,12 @@ export default async function ChatSessionPage({
   if (!session) notFound()
 
   return (
-    <div className="flex h-full">
+    <>
       <SessionList sessions={sessions} />
       <ChatInterface
         session={session}
         userId={user.id}
       />
-    </div>
+    </>
   )
 }

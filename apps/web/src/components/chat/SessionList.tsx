@@ -2,29 +2,18 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { useState, useMemo, useEffect } from "react"
-import { Plus, MessageSquare, Trash2, Search, PanelLeftClose, PanelLeft } from "lucide-react"
+import { useState, useMemo } from "react"
+import { Plus, MessageSquare, Trash2, Search, PanelLeftClose } from "lucide-react"
 import type { DbChatSession } from "@rag-saldivia/db"
 import { actionDeleteSession, actionCreateSession } from "@/app/actions/chat"
+import { useSidebar } from "./ChatLayout"
 
 export function SessionList({ sessions }: { sessions: DbChatSession[] }) {
   const pathname = usePathname()
   const router = useRouter()
   const [creating, setCreating] = useState(false)
   const [search, setSearch] = useState("")
-  const [collapsed, setCollapsed] = useState(false)
-
-  // Keyboard shortcut: Ctrl+Shift+S to toggle sidebar
-  useEffect(() => {
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.ctrlKey && e.shiftKey && e.key === "S") {
-        e.preventDefault()
-        setCollapsed(c => !c)
-      }
-    }
-    window.addEventListener("keydown", onKeyDown)
-    return () => window.removeEventListener("keydown", onKeyDown)
-  }, [])
+  const { open, toggle } = useSidebar()
 
   const filtered = useMemo(() => {
     if (!search.trim()) return sessions
@@ -50,44 +39,19 @@ export function SessionList({ sessions }: { sessions: DbChatSession[] }) {
     if (pathname === `/chat/${id}`) router.push("/chat")
   }
 
-  if (collapsed) {
-    return (
-      <aside className="shrink-0 border-r border-border bg-surface flex flex-col items-center transition-all duration-200" style={{ width: "48px", padding: "12px 0" }}>
-        <button
-          type="button"
-          onClick={() => setCollapsed(false)}
-          className="p-1.5 rounded-md text-fg-muted hover:text-fg hover:bg-surface-2 transition-colors"
-          title="Mostrar panel"
-          aria-label="Mostrar panel de chats"
-        >
-          <PanelLeft size={16} />
-        </button>
-        <div style={{ marginTop: "8px" }}>
-          <button
-            type="button"
-            onClick={handleNew}
-            disabled={creating}
-            className="p-1.5 rounded-md text-fg-muted hover:text-fg hover:bg-surface-2 transition-colors disabled:opacity-40"
-            title="Nuevo chat"
-            aria-label="Nuevo chat"
-          >
-            <Plus size={16} />
-          </button>
-        </div>
-      </aside>
-    )
-  }
+  // When closed, render nothing — toggle lives in ChatInterface header
+  if (!open) return null
 
   return (
-    <aside className="w-60 shrink-0 border-r border-border bg-surface flex flex-col h-full transition-all duration-200">
+    <aside className="w-60 shrink-0 border-r border-border bg-surface flex flex-col h-full">
       {/* Header */}
       <div className="flex items-center justify-between" style={{ padding: "12px 12px 8px" }}>
         <div className="flex items-center" style={{ gap: "6px" }}>
           <button
             type="button"
-            onClick={() => setCollapsed(true)}
+            onClick={toggle}
             className="p-1 rounded-md text-fg-muted hover:text-fg hover:bg-surface-2 transition-colors"
-            title="Ocultar panel"
+            title="Ocultar panel (Ctrl+Shift+S)"
             aria-label="Ocultar panel de chats"
           >
             <PanelLeftClose size={16} />
