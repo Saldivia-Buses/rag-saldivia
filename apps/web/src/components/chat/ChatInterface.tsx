@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useRef, useEffect, useCallback, useTransition } from "react"
-import { ThumbsUp, ThumbsDown, Copy, Check, RotateCcw, Square, Plus, ChevronDown, ArrowDown, PanelLeft, PanelRightClose } from "lucide-react"
+import { ThumbsUp, ThumbsDown, Copy, Check, RotateCcw, Square, Plus, ChevronDown, ArrowDown, PanelRightClose } from "lucide-react"
 import { useChat } from "@ai-sdk/react"
 import { DefaultChatTransport, type UIMessage } from "ai"
 import type { DbChatSession, DbChatMessage } from "@rag-saldivia/db"
@@ -300,14 +300,8 @@ export function ChatInterface({
           className="shrink-0 flex items-center border-b border-border"
           style={{ height: "48px", padding: "0 8px" }}
         >
-          {/* Left: sidebar toggle */}
-          <div style={{ width: "42px" }}>
-            {!sidebarOpen && (
-              <TipBtn label="Mostrar chats (Ctrl+Shift+S)" onClick={toggleSidebar} className={`${ICON_BTN} text-fg-muted hover:text-fg hover:bg-surface-2`} style={ICON_BTN_SIZE}>
-                <PanelLeft size={ICON_PX} />
-              </TipBtn>
-            )}
-          </div>
+          {/* Left spacer (sidebar toggle is in NavRail) */}
+          <div style={{ width: "42px" }} />
 
           {/* Center: title */}
           <div className="flex-1 flex items-center justify-center">
