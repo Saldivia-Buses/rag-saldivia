@@ -2,8 +2,8 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { useState } from "react"
-import { Plus, MessageSquare, Trash2 } from "lucide-react"
+import { useState, useMemo } from "react"
+import { Plus, MessageSquare, Trash2, Search } from "lucide-react"
 import type { DbChatSession } from "@rag-saldivia/db"
 import { actionDeleteSession, actionCreateSession } from "@/app/actions/chat"
 
@@ -11,6 +11,13 @@ export function SessionList({ sessions }: { sessions: DbChatSession[] }) {
   const pathname = usePathname()
   const router = useRouter()
   const [creating, setCreating] = useState(false)
+  const [search, setSearch] = useState("")
+
+  const filtered = useMemo(() => {
+    if (!search.trim()) return sessions
+    const q = search.toLowerCase()
+    return sessions.filter((s) => s.title.toLowerCase().includes(q))
+  }, [sessions, search])
 
   async function handleNew() {
     setCreating(true)
@@ -33,7 +40,7 @@ export function SessionList({ sessions }: { sessions: DbChatSession[] }) {
   return (
     <aside className="w-60 shrink-0 border-r border-border bg-surface flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center justify-between" style={{ padding: "16px 16px 12px" }}>
+      <div className="flex items-center justify-between" style={{ padding: "16px 16px 8px" }}>
         <span className="text-xs font-semibold uppercase tracking-wide text-fg-subtle">
           Chats
         </span>
@@ -49,14 +56,29 @@ export function SessionList({ sessions }: { sessions: DbChatSession[] }) {
         </button>
       </div>
 
+      {/* Search */}
+      <div style={{ padding: "0 12px 8px" }}>
+        <div className="flex items-center rounded-md border border-border bg-bg transition-colors focus-within:border-accent" style={{ padding: "4px 8px", gap: "6px" }}>
+          <Search size={12} className="text-fg-subtle shrink-0" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar chats..."
+            className="flex-1 bg-transparent text-xs text-fg placeholder:text-fg-subtle outline-none"
+            style={{ minWidth: 0 }}
+          />
+        </div>
+      </div>
+
       {/* Sessions */}
       <nav aria-label="Lista de chats" className="flex-1 overflow-y-auto flex flex-col" style={{ padding: "0 8px 8px", gap: "2px" }}>
-        {sessions.length === 0 && (
-          <p className="text-sm text-center text-fg-subtle" style={{ padding: "24px 12px" }}>
-            Sin chats todavía
+        {filtered.length === 0 && (
+          <p className="text-xs text-center text-fg-subtle" style={{ padding: "24px 12px" }}>
+            {search ? "Sin resultados" : "Sin chats todavía"}
           </p>
         )}
-        {sessions.map((session) => {
+        {filtered.map((session) => {
           const active = pathname === `/chat/${session.id}`
 
           return (

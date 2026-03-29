@@ -1,8 +1,6 @@
 import { requireUser } from "@/lib/auth/current-user"
 import { listSessionsByUser } from "@rag-saldivia/db"
 import { SessionList } from "@/components/chat/SessionList"
-import { EmptyPlaceholder } from "@/components/ui/empty-placeholder"
-import { MessageSquare } from "lucide-react"
 
 export default async function ChatPage() {
   const user = await requireUser()
@@ -11,17 +9,21 @@ export default async function ChatPage() {
   return (
     <div className="flex h-full">
       <SessionList sessions={sessions} />
-      <div className="flex-1 flex items-center justify-center p-8">
-        <EmptyPlaceholder className="max-w-sm border-none bg-transparent">
-          <h1 className="sr-only">Chat</h1>
-          <EmptyPlaceholder.Icon icon={MessageSquare} />
-          <EmptyPlaceholder.Title>
-            Seleccioná una sesión o creá una nueva
-          </EmptyPlaceholder.Title>
-          <EmptyPlaceholder.Description>
-            Hacé una pregunta sobre tus documentos y obtené respuestas fundamentadas.
-          </EmptyPlaceholder.Description>
-        </EmptyPlaceholder>
+      <div className="flex-1 flex flex-col items-center justify-center bg-bg">
+        <h1 className="sr-only">Chat</h1>
+        <svg
+          width="32" height="32" viewBox="0 0 16 16" fill="none"
+          className="text-fg-subtle"
+          style={{ marginBottom: "16px", opacity: 0.4 }}
+        >
+          <path
+            d="M8 1L9.5 6.5L15 8L9.5 9.5L8 15L6.5 9.5L1 8L6.5 6.5L8 1Z"
+            fill="currentColor"
+          />
+        </svg>
+        <p className="text-sm text-fg-subtle">
+          Seleccioná una sesión o creá una nueva
+        </p>
       </div>
     </div>
   )

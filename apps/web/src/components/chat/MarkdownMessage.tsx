@@ -3,7 +3,7 @@
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import { useState, memo } from "react"
-import { Check, Copy, PanelRightOpen } from "lucide-react"
+import { Check, Copy, FileText } from "lucide-react"
 import type { Artifact } from "./ArtifactPanel"
 
 /**
@@ -124,8 +124,8 @@ export const MarkdownMessage = memo(function MarkdownMessage({ content, onOpenAr
 const ArtifactCard = memo(function ArtifactCard({ className, children, onOpenArtifact, isMermaid }: { className?: string | undefined; children: React.ReactNode; onOpenArtifact: (artifact: Artifact) => void; isMermaid?: boolean | undefined }) {
   const lang = className?.replace("language-", "") ?? "código"
   const text = typeof children === "string" ? children : String(children ?? "")
-  const lines = text.split("\n").length
-  const preview = text.split("\n").slice(0, 3).join("\n")
+  const title = isMermaid ? "Diagram" : (lang ? lang.charAt(0).toUpperCase() + lang.slice(1) : "Código")
+  const subtitle = isMermaid ? "Diagrama · MERMAID" : lang.toUpperCase()
 
   function handleOpen() {
     onOpenArtifact({
@@ -136,37 +136,50 @@ const ArtifactCard = memo(function ArtifactCard({ className, children, onOpenArt
     })
   }
 
+  function handleDownload(e: React.MouseEvent) {
+    e.stopPropagation()
+    const ext = isMermaid ? "mmd" : (lang || "txt")
+    const blob = new Blob([text], { type: "text/plain" })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = `${title.toLowerCase()}.${ext}`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
   return (
-    <button
+    <div
+      className="flex items-center rounded-xl border border-border hover:bg-surface transition-colors cursor-pointer"
+      style={{ marginBottom: "12px", padding: "12px 16px", gap: "12px" }}
       onClick={handleOpen}
-      className="w-full text-left rounded-xl border border-border bg-surface hover:bg-surface-2 transition-colors cursor-pointer"
-      style={{ marginBottom: "12px", padding: "12px 16px" }}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => { if (e.key === "Enter") handleOpen() }}
     >
-      <div className="flex items-center justify-between" style={{ marginBottom: "8px" }}>
-        <div className="flex items-center" style={{ gap: "8px" }}>
-          <div
-            className="text-xs font-medium uppercase tracking-wide text-accent"
-            style={{
-              backgroundColor: "var(--accent-subtle)",
-              padding: "2px 8px",
-              borderRadius: "4px",
-            }}
-          >
-            {isMermaid ? "Diagrama · MERMAID" : lang}
-          </div>
-          <span className="text-xs text-fg-subtle">{lines} líneas</span>
-        </div>
-        <PanelRightOpen size={14} className="text-fg-subtle" />
+      {/* Document icon */}
+      <div
+        className="shrink-0 flex items-center justify-center rounded-lg bg-surface"
+        style={{ width: "40px", height: "40px" }}
+      >
+        <FileText size={18} className="text-fg-subtle" />
       </div>
-      {!isMermaid && (
-        <pre className="text-xs font-mono text-fg-muted overflow-hidden" style={{ maxHeight: "48px", lineHeight: "1.4" }}>
-          <code>{preview}</code>
-        </pre>
-      )}
-      {isMermaid && (
-        <p className="text-xs text-fg-muted">Click para ver el diagrama</p>
-      )}
-    </button>
+
+      {/* Title + subtitle */}
+      <div className="flex-1 min-w-0">
+        <div className="text-sm font-medium text-fg truncate">{title}</div>
+        <div className="text-xs text-fg-subtle truncate">{subtitle}</div>
+      </div>
+
+      {/* Download button */}
+      <button
+        onClick={handleDownload}
+        className="shrink-0 text-xs text-fg-muted hover:text-fg border border-border rounded-lg transition-colors"
+        style={{ padding: "6px 12px" }}
+      >
+        Descargar
+      </button>
+    </div>
   )
 })
 
