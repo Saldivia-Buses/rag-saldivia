@@ -44,14 +44,15 @@ const HighlightedCode = memo(function HighlightedCode({ code, language }: { code
   if (html) {
     return (
       <div
-        className="text-sm overflow-x-auto [&_pre]:!bg-transparent [&_pre]:!p-0 [&_pre]:overflow-x-auto [&_code]:!text-sm"
+        className="text-sm overflow-x-auto [&_pre]:!bg-transparent [&_pre]:!p-0 [&_pre]:overflow-x-auto [&_pre]:w-full [&_code]:!text-sm [&_code]:!whitespace-pre"
+        style={{ width: "100%", minWidth: 0 }}
         dangerouslySetInnerHTML={{ __html: html }}
       />
     )
   }
 
   return (
-    <pre className="text-sm font-mono text-fg whitespace-pre overflow-x-auto">
+    <pre className="text-sm font-mono text-fg whitespace-pre overflow-x-auto" style={{ width: "100%", minWidth: 0 }}>
       <code>{code}</code>
     </pre>
   )
@@ -261,27 +262,30 @@ export function ArtifactPanel({
             <span className="text-sm text-fg truncate">{artifact.title}</span>
           </div>
 
-          <div className="flex items-center shrink-0" style={{ gap: "2px" }}>
+          <div className="flex items-center shrink-0" style={{ gap: "4px" }}>
             <button
               onClick={handleDownload}
-              className="p-2 rounded-md text-fg-subtle hover:text-fg hover:bg-surface transition-colors"
+              className="flex items-center justify-center rounded-lg text-fg-subtle hover:text-fg hover:bg-surface-2 transition-colors"
+              style={{ width: "36px", height: "36px" }}
               title="Descargar"
             >
-              <Download size={16} />
+              <Download size={18} />
             </button>
             <button
               onClick={handleCopy}
-              className="p-2 rounded-md text-fg-subtle hover:text-fg hover:bg-surface transition-colors"
+              className="flex items-center justify-center rounded-lg text-fg-subtle hover:text-fg hover:bg-surface-2 transition-colors"
+              style={{ width: "36px", height: "36px" }}
               title="Copiar"
             >
-              {copied ? <Check size={16} /> : <Copy size={16} />}
+              {copied ? <Check size={18} /> : <Copy size={18} />}
             </button>
             <button
               onClick={onClose}
-              className="p-2 rounded-md text-fg-subtle hover:text-fg hover:bg-surface transition-colors"
+              className="flex items-center justify-center rounded-lg text-fg-subtle hover:text-fg hover:bg-surface-2 transition-colors"
+              style={{ width: "36px", height: "36px" }}
               title="Cerrar panel"
             >
-              <PanelRightClose size={16} />
+              <PanelRightClose size={18} />
             </button>
           </div>
         </div>
@@ -291,7 +295,7 @@ export function ArtifactPanel({
           {isMermaid && viewMode === "preview" ? (
             <MermaidPreview content={artifact.content} />
           ) : (
-            <div style={{ padding: "16px" }} className="overflow-x-auto">
+            <div style={{ padding: "16px" }} className="overflow-x-auto min-w-0 w-full">
               <HighlightedCode
                 code={artifact.content}
                 language={artifact.language ?? "text"}

@@ -284,7 +284,7 @@ export function ChatInterface({
       <h1 className="sr-only">Chat — {session.collection}</h1>
 
       {/* ── Messages ── */}
-      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto">
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto w-full">
         {/* Empty state */}
         {messages.length === 0 && (
           <div className="h-full flex flex-col items-center justify-center" style={{ padding: "0 24px" }}>
@@ -368,7 +368,7 @@ export function ChatInterface({
 
         {/* Messages list */}
         {messages.length > 0 && (
-          <div className="mx-auto w-full" style={{ padding: "24px 24px 0", maxWidth: "min(768px, 100%)" }}>
+          <div style={{ padding: "24px 24px 0", maxWidth: "768px", marginLeft: "auto", marginRight: "auto" }}>
             {messages.map((msg) => {
               const text = getMessageText(msg)
               const sources = getMessageSources(msg)
@@ -428,39 +428,43 @@ export function ChatInterface({
                       {text && !isStreaming && (
                         <div
                           className="flex"
-                          style={{ gap: "2px", marginTop: "8px" }}
+                          style={{ gap: "4px", marginTop: "8px" }}
                         >
                           <button
                             onClick={() => handleCopy(text, msg.id)}
-                            className="p-1.5 rounded-md text-fg-subtle hover:text-fg hover:bg-surface transition-colors"
+                            className="flex items-center justify-center rounded-lg text-fg-subtle hover:text-fg hover:bg-surface-2 transition-colors"
+                            style={{ width: "32px", height: "32px" }}
                             title="Copiar"
                           >
-                            {copiedId === msg.id ? <Check size={14} /> : <Copy size={14} />}
+                            {copiedId === msg.id ? <Check size={16} /> : <Copy size={16} />}
                           </button>
                           {numId && (
                             <>
                               <button
                                 onClick={() => handleFeedback(numId, "up")}
-                                className="p-1.5 rounded-md text-fg-subtle hover:text-fg hover:bg-surface transition-colors"
+                                className="flex items-center justify-center rounded-lg text-fg-subtle hover:text-fg hover:bg-surface-2 transition-colors"
+                                style={{ width: "32px", height: "32px" }}
                                 title="Útil"
                               >
-                                <ThumbsUp size={14} />
+                                <ThumbsUp size={16} />
                               </button>
                               <button
                                 onClick={() => handleFeedback(numId, "down")}
-                                className="p-1.5 rounded-md text-fg-subtle hover:text-fg hover:bg-surface transition-colors"
+                                className="flex items-center justify-center rounded-lg text-fg-subtle hover:text-fg hover:bg-surface-2 transition-colors"
+                                style={{ width: "32px", height: "32px" }}
                                 title="No útil"
                               >
-                                <ThumbsDown size={14} />
+                                <ThumbsDown size={16} />
                               </button>
                             </>
                           )}
                           <button
                             onClick={handleRetry}
-                            className="p-1.5 rounded-md text-fg-subtle hover:text-fg hover:bg-surface transition-colors"
+                            className="flex items-center justify-center rounded-lg text-fg-subtle hover:text-fg hover:bg-surface-2 transition-colors"
+                            style={{ width: "32px", height: "32px" }}
                             title="Reintentar"
                           >
-                            <RotateCcw size={14} />
+                            <RotateCcw size={16} />
                           </button>
                         </div>
                       )}
@@ -503,7 +507,7 @@ export function ChatInterface({
       {/* ── Input area (only when there are messages) ── */}
       {messages.length > 0 && (
         <div style={{ padding: "12px 24px 16px" }}>
-          <div className="mx-auto w-full" style={{ maxWidth: "min(768px, 100%)" }}>
+          <div style={{ maxWidth: "768px", marginLeft: "auto", marginRight: "auto" }}>
             {error && (
               <div
                 className="text-sm text-destructive"
