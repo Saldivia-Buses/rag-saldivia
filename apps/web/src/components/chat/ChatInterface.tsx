@@ -40,10 +40,10 @@ function getMessageSources(msg: UIMessage): Citation[] {
 
 // ── Spark thinking indicator ──
 
-function SparkIcon({ className }: { className?: string }) {
+function SparkIcon({ className, size = 16 }: { className?: string; size?: number }) {
   return (
     <svg
-      width="16" height="16" viewBox="0 0 16 16" fill="none"
+      width={size} height={size} viewBox="0 0 16 16" fill="none"
       className={className}
     >
       <path
@@ -196,11 +196,11 @@ export function ChatInterface({
         {/* Empty state */}
         {messages.length === 0 && (
           <div className="h-full flex flex-col items-center justify-center" style={{ padding: "0 24px" }}>
-            <div className="flex flex-col items-center" style={{ gap: "8px", marginBottom: "32px" }}>
-              <SparkIcon className="text-accent" />
+            <div className="flex items-center justify-center" style={{ gap: "12px", marginBottom: "32px" }}>
+              <SparkIcon className="text-accent" size={28} />
               <h1
                 className="font-semibold text-fg text-center"
-                style={{ fontSize: "28px", lineHeight: "1.2", letterSpacing: "-0.02em" }}
+                style={{ fontSize: "40px", lineHeight: "1.1", letterSpacing: "-0.03em" }}
               >
                 ¿En qué pensamos?
               </h1>
@@ -296,7 +296,7 @@ export function ChatInterface({
                       <div
                         className="rounded-2xl text-sm text-fg leading-relaxed whitespace-pre-wrap"
                         style={{
-                          background: "var(--surface)",
+                          background: "var(--surface-2)",
                           padding: "12px 16px",
                           maxWidth: "85%",
                         }}
@@ -310,7 +310,7 @@ export function ChatInterface({
                       {/* Thinking indicator */}
                       {isLastAssistant && text === "" && (
                         <div className="flex items-center" style={{ gap: "8px", marginBottom: "8px" }}>
-                          <SparkIcon className="text-accent animate-pulse" />
+                          <SparkIcon className="text-accent animate-pulse" size={20} />
                           <span className="text-sm text-fg-muted italic">Pensando...</span>
                         </div>
                       )}
@@ -342,10 +342,10 @@ export function ChatInterface({
                         </div>
                       )}
 
-                      {/* Actions */}
+                      {/* Actions — always visible like Claude */}
                       {text && !isStreaming && (
                         <div
-                          className="flex opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="flex"
                           style={{ gap: "2px", marginTop: "8px" }}
                         >
                           <button
