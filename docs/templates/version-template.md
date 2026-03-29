@@ -2,43 +2,38 @@
 
 ## Formato: semver (MAJOR.MINOR.PATCH)
 
-| Tipo | Cuándo |
-|------|--------|
-| MAJOR (2.0.0) | Cambios breaking, nueva arquitectura |
-| MINOR (1.1.0) | Features nuevas, backwards-compatible |
-| PATCH (1.0.1) | Bugfixes |
+- **MAJOR** (2.0.0): cambios breaking, nueva arquitectura
+- **MINOR** (1.1.0): features nuevas, backwards-compatible
+- **PATCH** (1.0.1): bugfixes
 
-## Proceso de release
+## Checklist de release
 
-1. Todos los planes del milestone completados
-2. Todos los tests en verde (`tsc`, `test`, `test:components`, `lint`)
-3. Security audit aprobado
-4. CHANGELOG actualizado con sección `[X.Y.Z]`
-5. Version bump en todos los `package.json`
-6. Commit: `chore(changelog): vX.Y.Z`
-7. Tag: `git tag -a vX.Y.Z -m "Release X.Y.Z — [descripción]"`
-8. Push tag → GitHub Release automática
+```bash
+# 1. Todos los tests en verde
+bunx tsc --noEmit
+bun run test
+bun run test:components
+bun run lint
 
-## CHANGELOG format (Keep a Changelog)
+# 2. Security audit (agent security-auditor)
 
-```markdown
-## [X.Y.Z] — YYYY-MM-DD
+# 3. CHANGELOG actualizado
+# Mover [Unreleased] a [X.Y.Z] — YYYY-MM-DD
 
-### Added
-- [feature] (Plan N)
+# 4. Version bump
+# Actualizar version en package.json raíz + apps/web + packages/*
 
-### Changed
-- [change] (Plan N)
+# 5. Commit + tag
+git add -A
+git commit -m "chore(release): vX.Y.Z"
+git tag -a vX.Y.Z -m "release X.Y.Z — [descripción corta]"
 
-### Fixed
-- [fix] (Plan N)
-
-### Removed
-- [removal] (Plan N)
+# 6. Push
+git push origin 1.0.x --tags
 ```
 
 ## Nota para la serie 1.0.x
 
-La serie 1.0.x NO es una secuencia de releases granulares. Es una versión
-grande construida por múltiples planes. Cuando el conjunto esté listo,
-se libera como una versión significativa.
+La serie 1.0.x es **una versión grande** construida por múltiples planes.
+No se hacen releases granulares (1.0.1, 1.0.2). Cuando Plans 13-19 estén
+listos, se libera como una versión significativa.
