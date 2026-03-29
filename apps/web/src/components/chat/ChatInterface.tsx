@@ -368,7 +368,7 @@ export function ChatInterface({
 
         {/* Messages list */}
         {messages.length > 0 && (
-          <div className="max-w-3xl mx-auto" style={{ padding: "24px 24px 0" }}>
+          <div className="mx-auto w-full" style={{ padding: "24px 24px 0", maxWidth: "min(768px, 100%)" }}>
             {messages.map((msg) => {
               const text = getMessageText(msg)
               const sources = getMessageSources(msg)
@@ -503,7 +503,7 @@ export function ChatInterface({
       {/* ── Input area (only when there are messages) ── */}
       {messages.length > 0 && (
         <div style={{ padding: "12px 24px 16px" }}>
-          <div className="max-w-3xl mx-auto">
+          <div className="mx-auto w-full" style={{ maxWidth: "min(768px, 100%)" }}>
             {error && (
               <div
                 className="text-sm text-destructive"

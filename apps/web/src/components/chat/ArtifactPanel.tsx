@@ -1,6 +1,6 @@
 "use client"
 
-import { X, Copy, Check, Code, Eye, Download } from "lucide-react"
+import { Copy, Check, Code, Eye, Download, PanelRightClose } from "lucide-react"
 import { useState, useEffect, useRef, useCallback, memo } from "react"
 
 export type Artifact = {
@@ -35,7 +35,7 @@ const HighlightedCode = memo(function HighlightedCode({ code, language }: { code
         highlighterCache.set(cacheKey, result)
         setHtml(result)
       } catch {
-        // Lenguaje no soportado — fallback a plain text
+        // Lenguaje no soportado
       }
     })
     return () => { cancelled = true }
@@ -44,7 +44,7 @@ const HighlightedCode = memo(function HighlightedCode({ code, language }: { code
   if (html) {
     return (
       <div
-        className="text-sm [&_pre]:!bg-transparent [&_pre]:!p-0 [&_code]:!text-sm"
+        className="text-sm overflow-x-auto [&_pre]:!bg-transparent [&_pre]:!p-0 [&_pre]:overflow-x-auto [&_code]:!text-sm"
         dangerouslySetInnerHTML={{ __html: html }}
       />
     )
@@ -57,7 +57,7 @@ const HighlightedCode = memo(function HighlightedCode({ code, language }: { code
   )
 })
 
-// ── Mermaid rendering with custom theme ──
+// ── Mermaid rendering ──
 
 const MermaidPreview = memo(function MermaidPreview({ content }: { content: string }) {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -72,7 +72,6 @@ const MermaidPreview = memo(function MermaidPreview({ content }: { content: stri
         startOnLoad: false,
         theme: "base",
         themeVariables: {
-          // Match our design system tokens
           primaryColor: "#2563eb",
           primaryTextColor: "#ffffff",
           primaryBorderColor: "#1d4ed8",
@@ -91,12 +90,6 @@ const MermaidPreview = memo(function MermaidPreview({ content }: { content: stri
           titleColor: "#f5f4f0",
           edgeLabelBackground: "#242320",
           nodeTextColor: "#ffffff",
-          // Flowchart
-          fillType0: "#2563eb",
-          fillType1: "#60a5fa",
-          fillType2: "#dbeafe",
-          fillType3: "#1e3a5f",
-          // Fonts
           fontFamily: "Instrument Sans, system-ui, sans-serif",
           fontSize: "14px",
         },
@@ -124,7 +117,7 @@ const MermaidPreview = memo(function MermaidPreview({ content }: { content: stri
     return (
       <div
         ref={containerRef}
-        className="flex items-center justify-center [&_svg]:max-w-full"
+        className="flex items-center justify-center overflow-auto [&_svg]:max-w-full"
         style={{ padding: "24px", minHeight: "200px" }}
         dangerouslySetInnerHTML={{ __html: svg }}
       />
@@ -155,11 +148,10 @@ export function ArtifactPanel({
 }) {
   const [viewMode, setViewMode] = useState<ViewMode>("preview")
   const [copied, setCopied] = useState(false)
-  const [panelWidth, setPanelWidth] = useState(440)
+  const [panelWidth, setPanelWidth] = useState(480)
   const resizing = useRef(false)
 
   const artifact = artifacts[activeIndex] as Artifact | undefined
-
   const isMermaid = artifact?.type === "mermaid" || artifact?.language === "mermaid"
   const hasPreview = isMermaid
 
@@ -182,20 +174,25 @@ export function ArtifactPanel({
     URL.revokeObjectURL(url)
   }
 
+  // ── Resize ──
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
     resizing.current = true
     const startX = e.clientX
     const startWidth = panelWidth
+    document.body.style.cursor = "col-resize"
+    document.body.style.userSelect = "none"
 
     function onMouseMove(ev: MouseEvent) {
       if (!resizing.current) return
       const delta = startX - ev.clientX
-      setPanelWidth(Math.max(320, Math.min(800, startWidth + delta)))
+      setPanelWidth(Math.max(320, Math.min(900, startWidth + delta)))
     }
 
     function onMouseUp() {
       resizing.current = false
+      document.body.style.cursor = ""
+      document.body.style.userSelect = ""
       document.removeEventListener("mousemove", onMouseMove)
       document.removeEventListener("mouseup", onMouseUp)
     }
@@ -209,98 +206,92 @@ export function ArtifactPanel({
   const typeLabel = isMermaid ? "MERMAID" : (artifact.language ?? artifact.type).toUpperCase()
 
   return (
-    <div className="shrink-0 flex h-full border-l border-border" style={{ width: `${panelWidth}px` }}>
-      {/* Resize handle */}
+    <div className="shrink-0 flex h-full" style={{ width: `${panelWidth}px` }}>
+      {/* Resize handle — visible bar */}
       <div
-        className="shrink-0 cursor-col-resize group"
-        style={{ width: "6px", marginLeft: "-3px" }}
+        className="shrink-0 cursor-col-resize group flex items-center justify-center hover:bg-accent/10 transition-colors"
+        style={{ width: "8px" }}
         onMouseDown={handleMouseDown}
       >
-        <div className="w-px h-full mx-auto group-hover:bg-accent transition-colors" />
+        <div
+          className="rounded-full bg-border group-hover:bg-accent transition-colors"
+          style={{ width: "3px", height: "40px" }}
+        />
       </div>
 
-      <div className="flex-1 flex flex-col bg-bg overflow-hidden">
-        {/* Header — clean like Claude */}
+      <div className="flex-1 flex flex-col bg-bg overflow-hidden border-l border-border">
+        {/* Header */}
         <div
           className="flex items-center justify-between border-b border-border shrink-0"
-          style={{ height: "48px", padding: "0 12px" }}
+          style={{ height: "48px", padding: "0 8px 0 12px" }}
         >
-          <div className="flex items-center" style={{ gap: "8px" }}>
-            {/* View mode toggle (only for mermaid) */}
+          <div className="flex items-center min-w-0" style={{ gap: "8px" }}>
+            {/* View mode toggle */}
             {hasPreview && (
-              <div className="flex rounded-md overflow-hidden" style={{ height: "28px" }}>
+              <div className="flex rounded-lg border border-border overflow-hidden shrink-0" style={{ height: "32px" }}>
                 <button
                   onClick={() => setViewMode("preview")}
                   className={`flex items-center justify-center transition-colors ${
-                    viewMode === "preview"
-                      ? "bg-surface-2 text-fg"
-                      : "text-fg-subtle hover:text-fg hover:bg-surface"
+                    viewMode === "preview" ? "bg-surface-2 text-fg" : "text-fg-subtle hover:text-fg hover:bg-surface"
                   }`}
-                  style={{ width: "30px" }}
+                  style={{ width: "34px" }}
                   title="Preview"
                 >
-                  <Eye size={14} />
+                  <Eye size={16} />
                 </button>
                 <button
                   onClick={() => setViewMode("code")}
-                  className={`flex items-center justify-center transition-colors ${
-                    viewMode === "code"
-                      ? "bg-surface-2 text-fg"
-                      : "text-fg-subtle hover:text-fg hover:bg-surface"
+                  className={`flex items-center justify-center border-l border-border transition-colors ${
+                    viewMode === "code" ? "bg-surface-2 text-fg" : "text-fg-subtle hover:text-fg hover:bg-surface"
                   }`}
-                  style={{ width: "30px" }}
+                  style={{ width: "34px" }}
                   title="Código"
                 >
-                  <Code size={14} />
+                  <Code size={16} />
                 </button>
               </div>
             )}
 
-            {/* Type + title */}
             <span
-              className="text-xs font-medium uppercase tracking-wide text-accent"
-              style={{
-                backgroundColor: "var(--accent-subtle)",
-                padding: "2px 8px",
-                borderRadius: "4px",
-              }}
+              className="shrink-0 text-xs font-medium uppercase tracking-wide text-accent"
+              style={{ backgroundColor: "var(--accent-subtle)", padding: "3px 8px", borderRadius: "4px" }}
             >
               {typeLabel}
             </span>
             <span className="text-sm text-fg truncate">{artifact.title}</span>
           </div>
 
-          <div className="flex items-center" style={{ gap: "2px" }}>
+          <div className="flex items-center shrink-0" style={{ gap: "2px" }}>
             <button
               onClick={handleDownload}
-              className="p-1.5 rounded-md text-fg-subtle hover:text-fg hover:bg-surface transition-colors"
+              className="p-2 rounded-md text-fg-subtle hover:text-fg hover:bg-surface transition-colors"
               title="Descargar"
             >
-              <Download size={14} />
+              <Download size={16} />
             </button>
             <button
               onClick={handleCopy}
-              className="p-1.5 rounded-md text-fg-subtle hover:text-fg hover:bg-surface transition-colors"
+              className="p-2 rounded-md text-fg-subtle hover:text-fg hover:bg-surface transition-colors"
               title="Copiar"
             >
-              {copied ? <Check size={14} /> : <Copy size={14} />}
+              {copied ? <Check size={16} /> : <Copy size={16} />}
             </button>
             <button
               onClick={onClose}
-              className="p-1.5 rounded-md text-fg-subtle hover:text-fg hover:bg-surface transition-colors"
-              title="Cerrar"
+              className="p-2 rounded-md text-fg-subtle hover:text-fg hover:bg-surface transition-colors"
+              title="Cerrar panel"
             >
-              <X size={14} />
+              <PanelRightClose size={16} />
             </button>
           </div>
         </div>
 
-        {/* Content */}
+        {/* Content — scrollable both directions */}
         <div className="flex-1 overflow-auto">
           {isMermaid && viewMode === "preview" ? (
             <MermaidPreview content={artifact.content} />
           ) : (
-            <div style={{ padding: "16px" }}>
+            <div style={{ padding: "16px" }} className="overflow-x-auto">
               <HighlightedCode
                 code={artifact.content}
                 language={artifact.language ?? "text"}
@@ -309,22 +300,22 @@ export function ArtifactPanel({
           )}
         </div>
 
-        {/* Artifact tabs (if multiple) */}
+        {/* Artifact tabs */}
         {artifacts.length > 1 && (
           <div
             className="border-t border-border shrink-0 overflow-x-auto flex"
-            style={{ padding: "6px 12px", gap: "4px" }}
+            style={{ padding: "8px 12px", gap: "4px" }}
           >
             {artifacts.map((a, i) => (
               <button
                 key={i}
                 onClick={() => onSelect(i)}
-                className={`shrink-0 text-xs rounded-md transition-colors ${
+                className={`shrink-0 text-xs rounded-lg transition-colors ${
                   i === activeIndex
                     ? "bg-accent-subtle text-accent font-medium"
                     : "text-fg-subtle hover:text-fg hover:bg-surface"
                 }`}
-                style={{ padding: "4px 10px" }}
+                style={{ padding: "6px 12px" }}
               >
                 {a.language ?? a.type} #{i + 1}
               </button>
