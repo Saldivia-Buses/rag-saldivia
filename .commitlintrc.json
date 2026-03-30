@@ -11,8 +11,10 @@
       "always",
       [
         "setup", "web", "db", "config", "logger", "shared",
-        "auth", "rag", "chat", "admin", "collections", "ingestion",
-        "deps", "ci", "docs", "changelog", "plans", "agents", "ui", "release"
+        "auth", "rag", "chat", "messaging", "admin", "collections",
+        "ingestion", "settings", "roles", "areas", "permissions",
+        "ui", "ws", "queue", "workers",
+        "deps", "ci", "docs", "changelog", "plans", "agents", "release"
       ]
     ],
     "subject-case": [2, "always", "lower-case"],
