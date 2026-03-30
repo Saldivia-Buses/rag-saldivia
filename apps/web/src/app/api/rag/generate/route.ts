@@ -22,7 +22,7 @@ import { ragGenerateStream } from "@/lib/rag/client"
 import { createRagStreamResponse } from "@/lib/rag/ai-stream"
 import { canAccessCollection, getUserCollections } from "@rag-saldivia/db"
 import { log } from "@rag-saldivia/logger/backend"
-import { FOCUS_MODES, type FocusModeId } from "@rag-saldivia/shared"
+import { FOCUS_MODES, type FocusModeId, CollectionNameSchema } from "@rag-saldivia/shared"
 import { detectLanguageHint } from "@/lib/rag/client"
 import { getRateLimit, countQueriesLastHour, getProjectBySession, getMemoryAsContext } from "@rag-saldivia/db"
 import { dispatchEvent } from "@/lib/webhook"
@@ -38,8 +38,8 @@ const MessageSchema = z.object({
 
 const GenerateBodySchema = z.object({
   messages: z.array(MessageSchema).min(1, "El campo 'messages' es requerido y no puede estar vacío"),
-  collection_name: z.string().optional(),
-  collection_names: z.array(z.string()).optional(),
+  collection_name: CollectionNameSchema.optional(),
+  collection_names: z.array(CollectionNameSchema).optional(),
   session_id: z.string().optional(),
   use_knowledge_base: z.boolean().optional(),
   focus_mode: z.string().optional(),

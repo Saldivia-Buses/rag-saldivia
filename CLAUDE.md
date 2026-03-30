@@ -99,14 +99,22 @@ bunx tsc --noEmit               # type check (correr desde apps/web/)
 
 ---
 
-## Páginas activas (5 rutas)
+## Páginas activas (12 rutas)
 
 ```
 /login                  --> pública, sin NavRail
 /chat                   --> lista de sesiones + empty state
 /chat/[id]              --> conversación con mensajes y input
-/collections            --> lista de colecciones
-/settings               --> perfil, contraseña, preferencias
+/collections            --> lista de colecciones del usuario con permisos
+/collections/[name]     --> detalle de colección + historial ingesta
+/settings               --> perfil, contraseña, preferencias, colecciones
+/admin                  --> dashboard con stats
+/admin/users            --> CRUD usuarios con roles
+/admin/roles            --> CRUD roles con permisos
+/admin/areas            --> CRUD áreas con miembros y colecciones
+/admin/permissions      --> matriz area-colección read/write/admin
+/admin/collections      --> gestión completa de colecciones
+/admin/config           --> parámetros RAG (temperature, top_k, etc.)
 ```
 
 ---
@@ -152,7 +160,7 @@ components/
                           table, separator, tooltip, dialog, sheet, command,
                           sonner, theme-toggle, skeleton, stat-card,
                           empty-placeholder, data-table, popover, confirm-dialog
-  chat/               --> ChatInterface, ChatInputBar, SessionList, SourcesPanel
+  chat/               --> ChatInterface, ChatInputBar, SessionList, SourcesPanel, CollectionSelector
   layout/             --> AppShell, AppShellChrome, NavRail
   collections/        --> CollectionsList
   settings/           --> SettingsClient, MemoryClient
@@ -186,8 +194,8 @@ components/
 
 | Capa | Comando | Tests |
 |---|---|---|
-| Lógica pura + actions + API + proxy | `bun run test` | ~161 |
-| Componentes + hooks | `bun run test:components` (desde apps/web/) | ~123 |
+| Lógica pura + actions + API + proxy | `bun run test` | ~198 |
+| Componentes + hooks | `bun run test:components` (desde apps/web/) | ~134 |
 | Visual | `bun run test:visual` | 22 baselines |
 | A11y | `bun run test:a11y` | páginas clave |
 | E2E | `bun run test:e2e` | flujos críticos |

@@ -20,15 +20,18 @@ export function AppShell({
   user,
   children,
   changelog,
+  defaultCollection,
 }: {
   user: CurrentUser
   children: React.ReactNode
   changelog: Changelog
+  defaultCollection?: string
 }) {
   return (
     <AppShellChrome
       user={user}
       changelog={changelog}
+      {...(defaultCollection ? { defaultCollection } : {})}
     >
       {children}
     </AppShellChrome>

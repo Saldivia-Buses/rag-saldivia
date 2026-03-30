@@ -6,9 +6,13 @@ afterEach(cleanup)
 
 const mockUser = { id: 1, email: "admin@test.com", name: "Admin", role: "admin" as const, active: true, preferences: {} }
 
+function cols(...names: string[]) {
+  return names.map((name) => ({ name, permission: null }))
+}
+
 describe("<CollectionsList />", () => {
   test("renderiza las colecciones", () => {
-    const { getByText } = render(<CollectionsList collections={["contratos", "politicas"]} user={mockUser} />)
+    const { getByText } = render(<CollectionsList collections={cols("contratos", "politicas")} user={mockUser} />)
     expect(getByText("contratos")).toBeInTheDocument()
     expect(getByText("politicas")).toBeInTheDocument()
   })
@@ -31,8 +35,16 @@ describe("<CollectionsList />", () => {
   })
 
   test("las colecciones tienen botón Chat", () => {
-    const { getAllByRole } = render(<CollectionsList collections={["contratos"]} user={mockUser} />)
+    const { getAllByRole } = render(<CollectionsList collections={cols("contratos")} user={mockUser} />)
     const chatBtns = getAllByRole("button", { name: /Chat/ })
     expect(chatBtns.length).toBeGreaterThan(0)
+  })
+
+  test("muestra badge de permiso cuando tiene permiso", () => {
+    const user = { ...mockUser, role: "user" as const }
+    const { getByText } = render(
+      <CollectionsList collections={[{ name: "docs", permission: "read" }]} user={user} />
+    )
+    expect(getByText("read")).toBeInTheDocument()
   })
 })

@@ -13,7 +13,9 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
-type Tab = "perfil" | "contrasena" | "preferencias"
+type Tab = "perfil" | "contrasena" | "preferencias" | "colecciones"
+
+type CollectionInfo = { name: string; permission: string }
 
 const ProfileSchema = z.object({
   name: z.string().min(2, "El nombre debe tener al menos 2 caracteres"),
@@ -27,7 +29,7 @@ const PasswordSchema = z.object({
 type ProfileInput = z.infer<typeof ProfileSchema>
 type PasswordInput = z.infer<typeof PasswordSchema>
 
-export function SettingsClient({ user }: { user: DbUser }) {
+export function SettingsClient({ user, userCollections = [] }: { user: DbUser; userCollections?: CollectionInfo[] }) {
   const [tab, setTab] = useState<Tab>("perfil")
   const [isProfilePending, startProfileTransition] = useTransition()
   const [isPasswordPending, startPasswordTransition] = useTransition()
@@ -51,6 +53,7 @@ export function SettingsClient({ user }: { user: DbUser }) {
     { key: "perfil", label: "Perfil" },
     { key: "contrasena", label: "Contraseña" },
     { key: "preferencias", label: "Preferencias" },
+    { key: "colecciones", label: "Colecciones" },
   ]
 
   function handleProfileSave(data: ProfileInput) {
@@ -195,6 +198,49 @@ export function SettingsClient({ user }: { user: DbUser }) {
             onChange={(v) => startPrefsTransition(async () => { await actionUpdatePreferences({ crossdocEnabled: v === "true" }) })}
             disabled={isPrefsPending}
           />
+        </div>
+      )}
+
+      {/* Colecciones */}
+      {tab === "colecciones" && (
+        <div className="flex flex-col" style={{ gap: "0" }}>
+          <PreferenceToggle
+            label="Colección por defecto"
+            description="Se usa al crear nuevas sesiones de chat"
+            value={String(preferences["defaultCollection"] ?? "")}
+            options={[
+              { value: "", label: "Ninguna (primera disponible)" },
+              ...userCollections.map((c) => ({ value: c.name, label: c.name })),
+            ]}
+            onChange={(v) => startPrefsTransition(async () => { await actionUpdatePreferences({ defaultCollection: v || null }) })}
+            disabled={isPrefsPending}
+          />
+          {userCollections.length > 0 && (
+            <div style={{ padding: "20px 0" }}>
+              <p className="text-xs font-semibold uppercase tracking-wider text-fg-subtle" style={{ marginBottom: "8px" }}>
+                Tus colecciones
+              </p>
+              <div className="flex flex-col" style={{ gap: "4px" }}>
+                {userCollections.map((c) => (
+                  <div
+                    key={c.name}
+                    className="flex items-center justify-between rounded-lg border border-border"
+                    style={{ padding: "10px 14px" }}
+                  >
+                    <span className="text-sm text-fg">{c.name}</span>
+                    <span
+                      className="text-xs font-medium"
+                      style={{
+                        color: c.permission === "admin" ? "var(--warning)" : c.permission === "write" ? "var(--success)" : "var(--accent)",
+                      }}
+                    >
+                      {c.permission}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -11,13 +11,17 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, Users, Shield } from "lucide-react"
+import { LayoutDashboard, Users, Shield, Map, Lock, FolderOpen, SlidersHorizontal } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const TABS = [
   { href: "/admin", label: "Dashboard", exact: true, Icon: LayoutDashboard },
   { href: "/admin/users", label: "Usuarios", exact: false, Icon: Users },
   { href: "/admin/roles", label: "Roles", exact: false, Icon: Shield },
+  { href: "/admin/areas", label: "Áreas", exact: false, Icon: Map },
+  { href: "/admin/permissions", label: "Permisos", exact: false, Icon: Lock },
+  { href: "/admin/collections", label: "Colecciones", exact: false, Icon: FolderOpen },
+  { href: "/admin/config", label: "Config RAG", exact: false, Icon: SlidersHorizontal },
 ] as const
 
 export function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -38,7 +42,7 @@ export function AdminLayout({ children }: { children: React.ReactNode }) {
 
         {/* Tabs */}
         <div
-          className="flex"
+          className="flex overflow-x-auto"
           style={{ marginBottom: "28px", gap: "4px", borderBottom: "1px solid var(--border)" }}
         >
           {TABS.map((tab) => {

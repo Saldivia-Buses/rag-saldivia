@@ -1,36 +1,23 @@
 import { requireUser } from "@/lib/auth/current-user"
+import { getUserCollections } from "@rag-saldivia/db"
+import { getCachedRagCollections } from "@/lib/rag/collections-cache"
 import { CollectionsList } from "@/components/collections/CollectionsList"
-
-async function getCollections(userId: number, role: string): Promise<string[]> {
-  try {
-    // Llamamos al propio endpoint (server-side fetch relativo no funciona en Next.js — usamos la lógica directa)
-    const { ragFetch } = await import("@/lib/rag/client")
-    const { getUserCollections } = await import("@rag-saldivia/db")
-
-    const res = await ragFetch("/v1/collections")
-    let allCollections: string[] = []
-    if (!("error" in res) && res.ok) {
-      try {
-        const data = await res.json() as { collections?: string[] }
-        allCollections = data.collections ?? []
-      } catch {
-        allCollections = []
-      }
-    }
-
-    if (role === "admin") return allCollections
-
-    const userCols = await getUserCollections(userId)
-    const allowed = new Set(userCols.map((c) => c.name))
-    return allCollections.filter((name) => allowed.has(name))
-  } catch {
-    return []
-  }
-}
 
 export default async function CollectionsPage() {
   const user = await requireUser()
-  const collections = await getCollections(user.id, user.role)
+
+  const ragCollections = await getCachedRagCollections()
+
+  let collections: Array<{ name: string; permission: string | null }>
+  if (user.role === "admin") {
+    collections = ragCollections.map((name) => ({ name, permission: null }))
+  } else {
+    const userCols = await getUserCollections(user.id)
+    const allowed = new Map(userCols.map((c) => [c.name, c.permission]))
+    collections = ragCollections
+      .filter((name) => allowed.has(name))
+      .map((name) => ({ name, permission: allowed.get(name) ?? null }))
+  }
 
   return (
     <div className="max-w-3xl mx-auto" style={{ padding: "32px 24px" }}>

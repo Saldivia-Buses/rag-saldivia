@@ -1,4 +1,5 @@
 import { requireUser } from "@/lib/auth/current-user"
+import { getUserById } from "@rag-saldivia/db"
 import { AppShell } from "@/components/layout/AppShell"
 import { parseChangelog } from "@/lib/changelog"
 import { readFileSync } from "fs"
@@ -20,9 +21,12 @@ function loadChangelog() {
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const user = await requireUser()
   const changelog = loadChangelog()
+  const fullUser = await getUserById(user.id)
+  const prefs = fullUser?.preferences as Record<string, unknown> | undefined
+  const defaultCollection = (prefs?.defaultCollection as string) ?? undefined
 
   return (
-    <AppShell user={user} changelog={changelog}>
+    <AppShell user={user} changelog={changelog} defaultCollection={defaultCollection}>
       <div data-density="spacious" className="h-full">
         {children}
       </div>

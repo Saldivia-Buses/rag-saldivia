@@ -23,10 +23,9 @@ import { Plus, MessageSquare, Trash2, Search } from "lucide-react"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import type { DbChatSession } from "@rag-saldivia/db"
 import { actionDeleteSession, actionCreateSession } from "@/app/actions/chat"
-import { DEFAULT_COLLECTION } from "@/lib/defaults"
 import { useSidebar } from "./ChatLayout"
 
-export function SessionList({ sessions }: { sessions: DbChatSession[] }) {
+export function SessionList({ sessions, defaultCollection }: { sessions: DbChatSession[]; defaultCollection?: string }) {
   const pathname = usePathname()
   const router = useRouter()
   const [creating, setCreating] = useState(false)
@@ -43,7 +42,7 @@ export function SessionList({ sessions }: { sessions: DbChatSession[] }) {
   async function handleNew() {
     setCreating(true)
     try {
-      const result = await actionCreateSession({ collection: DEFAULT_COLLECTION })
+      const result = await actionCreateSession({ collection: defaultCollection ?? "default" })
       router.push(`/chat/${result?.data?.id}`)
     } finally {
       setCreating(false)

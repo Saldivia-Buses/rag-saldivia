@@ -10,6 +10,18 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 ## [Unreleased]
 
 ### Added
+- Admin panel expanded: 7 tabs — Dashboard, Users, Roles, Areas, Permissions, Collections, Config RAG (Plan 24)
+- Areas management: CRUD, member assignment, collection badges (Plan 24)
+- Permission matrix: area-collection read/write/admin with bulk actions (Plan 24)
+- Admin collections page: full management with area info, search, detail links (Plan 24)
+- Collection detail page `/collections/[name]` with ingestion history and chat button (Plan 24)
+- History API route `GET /api/rag/collections/[name]/history` (Plan 24)
+- RAG Config admin: sliders for temperature, top_k, chunk_size, reranker + toggles + reset (Plan 24)
+- CollectionSelector: multi-collection picker in chat with localStorage persistence (Plan 24)
+- Settings "Colecciones" tab: default collection dropdown + user permissions list (Plan 24)
+- User `defaultCollection` preference: flows from DB → layout → NavRail/SessionList (Plan 24)
+- `CollectionNameSchema` Zod validation: `^[a-z0-9_-]+$`, max 64 chars (Plan 24)
+- 47 new tests: areas actions (19), collections API (18), CollectionSelector (10) (Plan 24)
 - DOMPurify XSS sanitization on SVG/Mermaid `dangerouslySetInnerHTML` (Plan 23)
 - React Compiler enabled with eslint healthcheck (Plan 23)
 - `next-safe-action` — all 37 server actions migrated with Zod schemas and auth middleware (Plan 23)
@@ -27,6 +39,12 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 - `docs/artifacts/` directory for review/audit results (Plan 13)
 
 ### Changed
+- Collection DELETE route: uses `requireAdmin`, invalidates cache, returns real errors (Plan 24)
+- Collection POST route: Zod validation on names, real error on RAG failure (Plan 24)
+- Redis collections cache: graceful degradation when Redis unavailable (Plan 24)
+- CollectionsList: permission badges, search, click-to-detail, ConfirmDialog (Plan 24)
+- Collections page: uses `getCachedRagCollections` + user permissions (Plan 24)
+- `RagGenerateRequest` type: added `collection_names?: string[]` (Plan 24)
 - JWT cookie `maxAge` now derived from `JWT_EXPIRY` env var instead of hardcoded 24h (Plan 23)
 - RBAC in proxy.ts unified via `canAccessRoute()` from `lib/auth/rbac.ts` (Plan 23)
 - `bcrypt` switched from sync to async (`hash`/`compare`) in user queries (Plan 23)

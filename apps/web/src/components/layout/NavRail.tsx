@@ -38,7 +38,6 @@ import { cn } from "@/lib/utils"
 import type { CurrentUser } from "@/lib/auth/current-user"
 import { actionLogout } from "@/app/actions/auth"
 import { actionCreateSession } from "@/app/actions/chat"
-import { DEFAULT_COLLECTION } from "@/lib/defaults"
 import { useSidebar } from "@/components/chat/ChatLayout"
 import { useRouter, usePathname } from "next/navigation"
 import { PanelLeft, PanelLeftClose } from "lucide-react"
@@ -93,9 +92,11 @@ function NavIcon({ item, active }: { item: NavItem; active: boolean }) {
 export function NavRail({
   user,
   changelog: _changelog,
+  defaultCollection,
 }: {
   user: CurrentUser
   changelog: Changelog
+  defaultCollection?: string
 }) {
   const isAdmin = user.role === "admin"
   const pathname = usePathname()
@@ -104,7 +105,7 @@ export function NavRail({
   const isOnChat = pathname.startsWith("/chat")
 
   async function handleNewChat() {
-    const result = await actionCreateSession({ collection: DEFAULT_COLLECTION })
+    const result = await actionCreateSession({ collection: defaultCollection ?? "default" })
     router.push(`/chat/${result?.data?.id}`)
   }
 

@@ -1,14 +1,18 @@
 import { requireUser } from "@/lib/auth/current-user"
-import { listSessionsByUser } from "@rag-saldivia/db"
+import { listSessionsByUser, getUserById } from "@rag-saldivia/db"
 import { SessionList } from "@/components/chat/SessionList"
 
 export default async function ChatPage() {
   const user = await requireUser()
-  const sessions = await listSessionsByUser(user.id)
+  const [sessions, fullUser] = await Promise.all([
+    listSessionsByUser(user.id),
+    getUserById(user.id),
+  ])
+  const defaultCollection = (fullUser?.preferences as Record<string, unknown> | undefined)?.defaultCollection as string | undefined
 
   return (
     <>
-      <SessionList sessions={sessions} />
+      <SessionList sessions={sessions} {...(defaultCollection ? { defaultCollection } : {})} />
       <div className="flex-1 flex flex-col items-center justify-center bg-bg">
         <h1 className="sr-only">Chat</h1>
         <svg

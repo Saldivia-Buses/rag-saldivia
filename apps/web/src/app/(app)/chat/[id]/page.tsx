@@ -9,7 +9,7 @@
 
 import { notFound } from "next/navigation"
 import { requireUser } from "@/lib/auth/current-user"
-import { getSessionById, listSessionsByUser, listActiveTemplates } from "@rag-saldivia/db"
+import { getSessionById, listSessionsByUser, listActiveTemplates, getUserById } from "@rag-saldivia/db"
 import { SessionList } from "@/components/chat/SessionList"
 import { ChatInterface } from "@/components/chat/ChatInterface"
 
@@ -21,17 +21,19 @@ export default async function ChatSessionPage({
   const user = await requireUser()
   const { id } = await params
 
-  const [session, sessions, templates] = await Promise.all([
+  const [session, sessions, templates, fullUser] = await Promise.all([
     getSessionById(id, user.id),
     listSessionsByUser(user.id),
-    listActiveTemplates().catch(() => []), // Resilient: fallback to empty if table missing
+    listActiveTemplates().catch(() => []),
+    getUserById(user.id),
   ])
+  const defaultCollection = (fullUser?.preferences as Record<string, unknown> | undefined)?.defaultCollection as string | undefined
 
   if (!session) notFound()
 
   return (
     <>
-      <SessionList sessions={sessions} />
+      <SessionList sessions={sessions} {...(defaultCollection ? { defaultCollection } : {})} />
       <ChatInterface
         session={session}
         userId={user.id}

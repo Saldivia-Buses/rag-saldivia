@@ -1,43 +1,44 @@
 /**
- * Milvus collection management UI — list, create, delete, and jump to chat.
- *
- * Displays all available vector collections with optimistic UI updates.
- * Admin users see create/delete controls; regular users see read-only list.
- *
- * Key patterns:
- *   - useOptimistic: create/delete actions update the UI instantly, then the
- *     server action runs in a transition. On error, React re-renders with the
- *     actual server state (automatic rollback).
- *   - "Chat" button navigates to /chat?collection=<name> to start a session
- *     scoped to that collection.
- *
- * Data flow: /collections page (RSC, fetches from RAG API) -> collections prop
- * Depends on: server actions (create/delete collection), EmptyPlaceholder
+ * Milvus collection list with optimistic UI, search, permission badges, and detail navigation.
  */
 "use client"
 
 import { useOptimistic, useState, useTransition, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { FolderOpen, Trash2, MessageSquare, Plus } from "lucide-react"
+import { FolderOpen, Trash2, MessageSquare, Plus, Search } from "lucide-react"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Badge } from "@/components/ui/badge"
 import { EmptyPlaceholder } from "@/components/ui/empty-placeholder"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import type { CurrentUser } from "@/lib/auth/current-user"
 import { actionCreateCollection, actionDeleteCollection } from "@/app/actions/collections"
-import { ConfirmDialog } from "@/components/ui/confirm-dialog"
+
+type CollectionRow = { name: string; permission: string | null }
 
 type Props = {
-  collections: string[]
+  collections: CollectionRow[]
   user: CurrentUser
+}
+
+type Action =
+  | { type: "create"; name: string }
+  | { type: "delete"; name: string }
+
+const PERM_COLORS: Record<string, string> = {
+  read: "var(--accent)",
+  write: "var(--success)",
+  admin: "var(--warning)",
 }
 
 export function CollectionsList({ collections: initial, user }: Props) {
   const router = useRouter()
-  const [optimisticCollections, applyOptimistic] = useOptimistic(
+  const [optimistic, applyOptimistic] = useOptimistic(
     initial,
-    (state, action: { type: "delete"; name: string } | { type: "create"; name: string }) => {
-      if (action.type === "delete") return state.filter((c) => c !== action.name)
-      if (action.type === "create") return [...state, action.name]
+    (state: CollectionRow[], action: Action) => {
+      if (action.type === "delete") return state.filter((c) => c.name !== action.name)
+      if (action.type === "create") return [...state, { name: action.name, permission: null }]
       return state
     }
   )
@@ -46,6 +47,11 @@ export function CollectionsList({ collections: initial, user }: Props) {
   const [showCreate, setShowCreate] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
+  const [search, setSearch] = useState("")
+
+  const filtered = search.trim()
+    ? optimistic.filter((c) => c.name.toLowerCase().includes(search.toLowerCase()))
+    : optimistic
 
   function handleCreate(e: React.FormEvent) {
     e.preventDefault()
@@ -106,40 +112,72 @@ export function CollectionsList({ collections: initial, user }: Props) {
         </div>
       )}
 
-      {optimisticCollections.length === 0 ? (
+      {/* Search */}
+      {optimistic.length > 5 && (
+        <div className="flex items-center rounded-lg border border-border bg-bg" style={{ padding: "4px 10px", gap: "6px", maxWidth: "300px" }}>
+          <Search size={14} className="text-fg-subtle shrink-0" />
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar colección..."
+            className="flex-1 bg-transparent text-sm text-fg placeholder:text-fg-subtle outline-none"
+          />
+        </div>
+      )}
+
+      {filtered.length === 0 ? (
         <EmptyPlaceholder>
           <EmptyPlaceholder.Icon icon={FolderOpen} />
-          <EmptyPlaceholder.Title>Sin colecciones disponibles</EmptyPlaceholder.Title>
+          <EmptyPlaceholder.Title>
+            {search ? "Sin resultados" : "Sin colecciones disponibles"}
+          </EmptyPlaceholder.Title>
           <EmptyPlaceholder.Description>
-            {user.role === "admin"
-              ? "Creá una colección para empezar a ingestar documentos."
-              : "No tenés acceso a ninguna colección todavía."}
+            {search
+              ? "Probá con otro término."
+              : user.role === "admin"
+                ? "Creá una colección para empezar a ingestar documentos."
+                : "No tenés acceso a ninguna colección todavía."}
           </EmptyPlaceholder.Description>
         </EmptyPlaceholder>
       ) : (
         <div className="flex flex-col" style={{ gap: "8px" }}>
-          {optimisticCollections.map((name) => (
+          {filtered.map((col) => (
             <div
-              key={name}
+              key={col.name}
               className="group flex items-center justify-between rounded-xl border border-border bg-surface transition-colors hover:bg-surface-2"
               style={{ padding: "16px 20px" }}
             >
               <div className="flex items-center" style={{ gap: "12px" }}>
                 <FolderOpen size={18} className="text-accent" />
-                <span className="font-medium text-fg">{name}</span>
+                <Link
+                  href={`/collections/${encodeURIComponent(col.name)}`}
+                  className="font-medium text-fg hover:text-accent transition-colors"
+                >
+                  {col.name}
+                </Link>
+                {col.permission && (
+                  <Badge
+                    variant="outline"
+                    className="text-xs"
+                    style={{ color: PERM_COLORS[col.permission] ?? "var(--fg-subtle)" }}
+                  >
+                    {col.permission}
+                  </Badge>
+                )}
               </div>
               <div className="flex items-center" style={{ gap: "4px" }}>
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => handleChat(name)}
+                  onClick={() => handleChat(col.name)}
                   style={{ gap: "6px" }}
                 >
                   <MessageSquare size={14} /> Chat
                 </Button>
                 {user.role === "admin" && (
                   <button
-                    onClick={() => setDeleteTarget(name)}
+                    onClick={() => setDeleteTarget(col.name)}
                     className="p-2 rounded-md text-fg-subtle opacity-0 group-hover:opacity-100 hover:text-destructive hover:bg-surface transition-all"
                     title="Eliminar colección"
                   >

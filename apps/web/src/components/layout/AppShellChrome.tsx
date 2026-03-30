@@ -27,17 +27,19 @@ type Props = {
   user: CurrentUser
   children: React.ReactNode
   changelog: Changelog
+  defaultCollection?: string
 }
 
 export function AppShellChrome({
   user,
   children,
   changelog,
+  defaultCollection,
 }: Props) {
   return (
     <SidebarProvider>
       <div className="flex h-screen overflow-hidden bg-bg">
-        <NavRail user={user} changelog={changelog} />
+        <NavRail user={user} changelog={changelog} {...(defaultCollection ? { defaultCollection } : {})} />
         <main className="flex-1 overflow-y-auto bg-bg">{children}</main>
       </div>
     </SidebarProvider>

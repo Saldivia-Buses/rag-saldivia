@@ -19,6 +19,7 @@ export type RagGenerateRequest = {
   messages: Array<{ role: string; content: string }>
   use_knowledge_base?: boolean
   collection_name?: string
+  collection_names?: string[]
   temperature?: number
   top_p?: number
   max_tokens?: number
