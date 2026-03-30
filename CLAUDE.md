@@ -43,6 +43,7 @@ Un único proceso Next.js reemplaza el gateway Python + frontend SvelteKit del s
 | Runtime | Bun 1.3.x |
 | Base de datos | SQLite vía Drizzle ORM + @libsql/client |
 | Auth | JWT (jose) en cookie HttpOnly + Redis blacklist |
+| Server Actions | next-safe-action + Zod schemas |
 | Queue | BullMQ + Redis |
 | AI/Streaming | Vercel AI SDK (`ai` + `@ai-sdk/react`) |
 | Validación | Zod (compartido entre paquetes) |
@@ -60,7 +61,7 @@ apps/
     src/
       app/              --> rutas y API routes
       components/       --> componentes React por dominio
-      hooks/            --> (useChat from @ai-sdk/react)
+      hooks/            --> useChat, useLocalStorage, useCopyToClipboard, useAutoResize
       lib/              --> lógica (auth, rag, utils)
 
 packages/
@@ -128,13 +129,18 @@ bunx tsc --noEmit               # type check (correr desde apps/web/)
 
 ## Server Actions activas
 
-| Archivo | Actions |
-|---|---|
-| `actions/auth.ts` | `actionLogout` |
-| `actions/chat.ts` | `actionCreateSession`, `actionDeleteSession`, `actionRenameSession`, `actionAddMessage`, `actionAddFeedback`, `actionToggleSaved`, `actionForkSession` |
-| `actions/collections.ts` | `actionSetAreaCollections` |
-| `actions/config.ts` | `actionUpdateRagParams`, `actionResetRagParams` |
-| `actions/settings.ts` | `actionUpdateProfile`, `actionUpdatePassword`, `actionUpdatePreferences` |
+Todas migradas a `next-safe-action` con Zod validation (`lib/safe-action.ts`).
+
+| Archivo | Actions | Middleware |
+|---|---|---|
+| `actions/auth.ts` | `actionLogout` | authAction |
+| `actions/chat.ts` | `actionCreateSession`, `actionDeleteSession`, `actionRenameSession`, `actionAddMessage`, `actionAddFeedback`, `actionToggleSaved`, `actionForkSession`, `actionSaveAnnotation`, `actionCreateSessionForDoc`, `actionAddTag`, `actionRemoveTag` | authAction |
+| `actions/collections.ts` | `actionCreateCollection`, `actionDeleteCollection` | adminAction |
+| `actions/config.ts` | `actionUpdateRagParams`, `actionResetRagParams` | adminAction |
+| `actions/settings.ts` | `actionUpdateProfile`, `actionUpdatePassword`, `actionUpdatePreferences`, `actionCompleteOnboarding`, `actionAddMemory`, `actionDeleteMemory` | authAction |
+| `actions/admin.ts` | `actionListUsers`, `actionCreateUser`, `actionUpdateUser`, `actionResetPassword`, `actionDeleteUser` | adminAction |
+| `actions/roles.ts` | `actionListRoles`, `actionCreateRole`, `actionUpdateRole`, `actionDeleteRole`, `actionSetRolePermissions`, `actionSetUserRoles`, `actionGetRolePermissions`, `actionListPermissions` | authAction + permission |
+| `actions/templates.ts` | `actionListTemplates`, `actionCreateTemplate`, `actionDeleteTemplate` | authAction/adminAction |
 
 ---
 
@@ -142,11 +148,11 @@ bunx tsc --noEmit               # type check (correr desde apps/web/)
 
 ```
 components/
-  ui/                 --> 18 primitivos: button, badge, input, textarea, avatar,
+  ui/                 --> 19 primitivos: button, badge, input, textarea, avatar,
                           table, separator, tooltip, dialog, sheet, command,
                           sonner, theme-toggle, skeleton, stat-card,
-                          empty-placeholder, data-table, popover
-  chat/               --> ChatInterface, SessionList, SourcesPanel
+                          empty-placeholder, data-table, popover, confirm-dialog
+  chat/               --> ChatInterface, ChatInputBar, SessionList, SourcesPanel
   layout/             --> AppShell, AppShellChrome, NavRail
   collections/        --> CollectionsList
   settings/           --> SettingsClient, MemoryClient
@@ -180,8 +186,8 @@ components/
 
 | Capa | Comando | Tests |
 |---|---|---|
-| Lógica pura | `bun run test` | ~77 |
-| Componentes | `bun run test:components` (desde apps/web/) | ~99 |
+| Lógica pura + actions + API + proxy | `bun run test` | ~161 |
+| Componentes + hooks | `bun run test:components` (desde apps/web/) | ~123 |
 | Visual | `bun run test:visual` | 22 baselines |
 | A11y | `bun run test:a11y` | páginas clave |
 | E2E | `bun run test:e2e` | flujos críticos |
@@ -216,6 +222,8 @@ const { getByRole } = render(<Button>Click</Button>)
 | `apps/web/src/app/globals.css` | Tokens CSS — cambios afectan toda la app |
 | `apps/web/src/lib/rag/ai-stream.ts` | Adapter: NVIDIA SSE → AI SDK Data Stream |
 | `apps/web/src/components/chat/ChatInterface.tsx` | Componente más complejo de la UI |
+| `apps/web/src/lib/safe-action.ts` | authAction/adminAction — middleware de todas las server actions |
+| `apps/web/src/lib/defaults.ts` | DEFAULT_COLLECTION — configurable via env |
 | `apps/web/src/lib/component-test-setup.ts` | Setup happy-dom — modificar puede romper tests |
 | `packages/db/src/schema.ts` | Schema SQLite completo |
 | `packages/db/src/queries/users.ts` | CRUD usuarios + permisos |
@@ -256,6 +264,12 @@ LOG_LEVEL=INFO
 - NO importar logger en `redis.ts` (dependencia circular, ADR-005)
 - BullMQ usa `getBullMQConnection()` con `{ maxRetriesPerRequest: null }`
 - JWT revocación verificada en `extractClaims()`, NO en middleware edge
+
+### Server Actions (next-safe-action)
+- Todas las actions usan `authAction` o `adminAction` de `lib/safe-action.ts`
+- Input validado con Zod schema via `.schema(z.object({...}))`
+- Retorno wrapped: callers acceden a `result?.data` (no directo)
+- `clean()` helper para bridge Zod optional → `exactOptionalPropertyTypes`
 
 ### Next.js
 - Server Components por defecto, `"use client"` solo donde necesario

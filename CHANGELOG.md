@@ -10,6 +10,15 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 ## [Unreleased]
 
 ### Added
+- DOMPurify XSS sanitization on SVG/Mermaid `dangerouslySetInnerHTML` (Plan 23)
+- React Compiler enabled with eslint healthcheck (Plan 23)
+- `next-safe-action` — all 37 server actions migrated with Zod schemas and auth middleware (Plan 23)
+- `ConfirmDialog` component replacing `window.confirm` in SessionList and CollectionsList (Plan 23)
+- `ChatInputBar` component extracted from duplicated input areas (Plan 23)
+- Custom hooks: `useLocalStorage` (SSR-safe), `useCopyToClipboard`, `useAutoResize` (Plan 23)
+- `DEFAULT_COLLECTION` env-configurable constant replacing hardcoded "tecpia" (Plan 23)
+- `aria-live` on chat message area, focus management post-send (Plan 23)
+- 108 new tests: proxy middleware (44), server actions (22), API routes (18), hooks (24) (Plan 23)
 - Design tokens extracted from claude.ai via Playwright reconnaissance (Plan 15)
 - Vercel AI SDK (`ai@6`, `@ai-sdk/react@3`) for chat streaming (Plan 14)
 - `ai-stream.ts` adapter: transforms NVIDIA SSE to AI SDK Data Stream protocol (Plan 14)
@@ -18,6 +27,17 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 - `docs/artifacts/` directory for review/audit results (Plan 13)
 
 ### Changed
+- JWT cookie `maxAge` now derived from `JWT_EXPIRY` env var instead of hardcoded 24h (Plan 23)
+- RBAC in proxy.ts unified via `canAccessRoute()` from `lib/auth/rbac.ts` (Plan 23)
+- `bcrypt` switched from sync to async (`hash`/`compare`) in user queries (Plan 23)
+- Shiki highlighter singleton with LRU cache (max 100 entries) (Plan 23)
+- `Promise.all` for parallel message persistence in `onFinish` (Plan 23)
+- Batch insert in `actionForkSession` replacing sequential loop (Plan 23)
+- `SourcesPanel` typed with `Citation[]` instead of `unknown[]` (Plan 23)
+- `SettingsClient` uses 3 independent `useTransition` per tab (Plan 23)
+- `MemoryClient` uses `useOptimistic` with server revalidation (Plan 23)
+- `/api/rag/generate` body validated with Zod schema (Plan 23)
+- React keys: `Math.random()` replaced with stable IDs (Plan 23)
 - Light/dark tokens: warm grays (claude.ai scale) + azure blue accent (Plan 15)
 - Branding: "Saldivia RAG", brand mark "S", consistent across login and NavRail (Plan 15)
 - ChatInterface migrated from manual SSE to `useChat` from AI SDK (Plan 14)
