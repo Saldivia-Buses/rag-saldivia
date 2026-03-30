@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev --port 3000",
     "dev:webpack": "next dev --port 3000 --webpack",
+    "ws": "bun src/lib/ws/sidecar.ts",
     "build": "next build --webpack",
     "start": "next start",
     "lint": "tsc --noEmit",

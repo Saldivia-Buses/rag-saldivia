@@ -310,6 +310,51 @@ async function seed() {
 
   console.warn(`  ${allUsers.length} usuarios migrados al RBAC`)
 
+  // ── Messaging: canales default ─────────────────────────────────────────
+  const { channels, channelMembers } = await import("./schema")
+  const { randomUUID } = await import("crypto")
+
+  const defaultChannels = [
+    { name: "general", description: "Canal general de la empresa" },
+    { name: "random", description: "Conversaciones casuales" },
+  ]
+
+  for (const ch of defaultChannels) {
+    const existing = await db.query.channels.findFirst({
+      where: (c, { eq }) => eq(c.name, ch.name),
+    })
+    if (existing) continue
+
+    const chId = randomUUID()
+    const chTs = Date.now()
+    await db.insert(channels).values({
+      id: chId,
+      type: "public",
+      name: ch.name,
+      description: ch.description,
+      topic: null,
+      createdBy: adminId,
+      createdAt: chTs,
+      updatedAt: chTs,
+      archivedAt: null,
+    })
+
+    // Add all seed users as members
+    const seedUsers = await db.query.users.findMany()
+    for (const u of seedUsers) {
+      await db.insert(channelMembers).values({
+        channelId: chId,
+        userId: u.id,
+        role: u.id === adminId ? "owner" : "member",
+        lastReadAt: chTs,
+        muted: false,
+        joinedAt: chTs,
+      }).onConflictDoNothing()
+    }
+
+    console.warn(`  Canal #${ch.name} creado con ${seedUsers.length} miembros`)
+  }
+
   console.warn("\nSeed completado.")
   console.warn("Credenciales de desarrollo:")
   console.warn("  admin@localhost / changeme  (admin)")
