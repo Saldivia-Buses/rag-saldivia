@@ -28,6 +28,7 @@ import {
 import { ThemeToggle } from "@/components/ui/theme-toggle"
 import {
   MessageSquare,
+  MessagesSquare,
   FolderOpen,
   Settings,
   LogOut,
@@ -55,6 +56,7 @@ type NavItem = {
 
 const NAV_ITEMS: NavItem[] = [
   { href: "/chat",        label: "Chat",          icon: <MessageSquare size={20} /> },
+  { href: "/messaging",   label: "Mensajería",    icon: <MessagesSquare size={20} /> },
   { href: "/collections", label: "Colecciones",   icon: <FolderOpen size={20} /> },
   { href: "/settings",    label: "Configuración", icon: <Settings size={20} /> },
 ]

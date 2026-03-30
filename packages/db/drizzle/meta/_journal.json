@@ -15,6 +15,13 @@
       "when": 1774810277007,
       "tag": "0001_chubby_chronomancer",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1774849629464,
+      "tag": "0002_parched_jean_grey",
+      "breakpoints": true
     }
   ]
 }
