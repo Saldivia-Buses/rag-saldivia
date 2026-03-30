@@ -22,6 +22,7 @@
 import { useState, useTransition, useCallback } from "react"
 import { Plus, Trash2, KeyRound, Power, Check, X, Wand2, Copy } from "lucide-react"
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import {
   actionCreateUser,
   actionUpdateUser,
@@ -81,6 +82,7 @@ export function AdminUsers({
   const [showCreate, setShowCreate] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<UserRow | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
 
   // Reset password state
@@ -225,13 +227,19 @@ export function AdminUsers({
 
   // ── Delete ──
 
-  function handleDelete(user: UserRow) {
+  function handleDeleteClick(user: UserRow) {
     if (user.id === currentUserId) {
       setError("No podés eliminarte a vos mismo")
       setTimeout(() => setError(null), 3000)
       return
     }
-    if (!confirm(`¿Eliminar a ${user.name} (${user.email})?\nEsta acción no se puede deshacer.`)) return
+    setDeleteTarget(user)
+  }
+
+  const confirmDeleteUser = useCallback(() => {
+    if (!deleteTarget) return
+    const user = deleteTarget
+    setDeleteTarget(null)
 
     // Optimistic: remove from list
     setUsers((prev) => prev.filter((u) => u.id !== user.id))
@@ -246,7 +254,7 @@ export function AdminUsers({
         setError("Error al eliminar usuario")
       }
     })
-  }
+  }, [deleteTarget, refreshUsers, startTransition])
 
   return (
     <TooltipProvider delayDuration={200}>
@@ -550,7 +558,7 @@ export function AdminUsers({
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <button
-                                onClick={() => handleDelete(user)}
+                                onClick={() => handleDeleteClick(user)}
                                 disabled={isProtected}
                                 className="flex items-center justify-center rounded-lg text-fg-subtle hover:text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:text-fg-subtle disabled:hover:bg-transparent"
                                 style={{ width: "32px", height: "32px" }}
@@ -571,6 +579,14 @@ export function AdminUsers({
             </table>
           </div>
       </div>
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        onOpenChange={(o) => { if (!o) setDeleteTarget(null) }}
+        title={`¿Eliminar a ${deleteTarget?.name}?`}
+        description={`${deleteTarget?.email} — Esta acción no se puede deshacer.`}
+        onConfirm={confirmDeleteUser}
+      />
     </TooltipProvider>
   )
 }

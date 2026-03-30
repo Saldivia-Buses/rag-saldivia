@@ -18,6 +18,7 @@ import type { ParsedArtifact } from "@/lib/rag/artifact-parser"
 import { extractArtifacts, extractCodeBlocks, extractStreamingArtifact, stripArtifactTags } from "@/lib/rag/artifact-parser"
 import type { Citation } from "@rag-saldivia/shared"
 import { ChatInputBar } from "./ChatInputBar"
+import { CollectionSelector } from "./CollectionSelector"
 import { useSidebar } from "./ChatLayout"
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip"
 
@@ -124,10 +125,12 @@ export function ChatInterface({
   session,
   userId: _userId,
   templates = [],
+  availableCollections = [],
 }: {
   session: DbChatSession & { messages?: DbChatMessage[] }
   userId: number
   templates?: PromptTemplate[]
+  availableCollections?: string[]
 }) {
   const { open: sidebarOpen, toggle: toggleSidebar } = useSidebar()
   const [input, setInput] = useState("")
@@ -136,6 +139,7 @@ export function ChatInterface({
   const [showArtifactPanel, setShowArtifactPanel] = useState(false)
   // Store artifacts opened from MarkdownMessage (which creates its own ids)
   const [adhocArtifacts, setAdhocArtifacts] = useState<ParsedArtifact[]>([])
+  const [selectedCollections, setSelectedCollections] = useState<string[]>([session.collection])
   const [artifactPanelWidth, setArtifactPanelWidth] = useLocalStorage("saldivia-artifact-width", 480)
   const [isResizingPanel, setIsResizingPanel] = useState(false)
   const [_isPending, startTransition] = useTransition()
@@ -151,8 +155,8 @@ export function ChatInterface({
     transport: new DefaultChatTransport({
       api: "/api/rag/generate",
       body: {
-        collection_name: session.collection,
-        collection_names: [session.collection],
+        collection_name: selectedCollections[0] ?? session.collection,
+        collection_names: selectedCollections,
         session_id: session.id,
         use_knowledge_base: true,
         focus_mode: "detallado",
@@ -418,6 +422,13 @@ export function ChatInterface({
                 textareaRef={textareaRef}
                 placeholder="¿Cómo puedo ayudarte hoy?"
                 collection={session.collection}
+                collectionSlot={availableCollections.length > 1 ? (
+                  <CollectionSelector
+                    defaultCollection={session.collection}
+                    availableCollections={availableCollections}
+                    onCollectionsChange={setSelectedCollections}
+                  />
+                ) : undefined}
               />
 
               {/* Prompt template chips — loaded from DB, fallback to defaults */}
@@ -591,6 +602,14 @@ export function ChatInterface({
               textareaRef={textareaRef}
               placeholder="Responder..."
               collection={session.collection}
+              collectionSlot={availableCollections.length > 1 ? (
+                <CollectionSelector
+                  defaultCollection={session.collection}
+                  availableCollections={availableCollections}
+                  onCollectionsChange={setSelectedCollections}
+                  disabled={isStreaming}
+                />
+              ) : undefined}
               isStreaming={isStreaming}
               disabled={isStreaming}
             />

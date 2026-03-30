@@ -58,12 +58,12 @@ async function seed() {
     .insert(areaCollections)
     .values({
       areaId: existingArea.id,
-      collectionName: "tecpia",
+      collectionName: "default",
       permission: "write",
     })
     .onConflictDoNothing()
 
-  console.warn("  Colección 'tecpia' asignada al área General")
+  console.warn("  Colección 'default' asignada al área General")
 
   // ── Usuario admin ──────────────────────────────────────────────────────
   const adminPasswordHash = hashSync("changeme", 10)

@@ -22,6 +22,9 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 - User `defaultCollection` preference: flows from DB → layout → NavRail/SessionList (Plan 24)
 - `CollectionNameSchema` Zod validation: `^[a-z0-9_-]+$`, max 64 chars (Plan 24)
 - 47 new tests: areas actions (19), collections API (18), CollectionSelector (10) (Plan 24)
+- CollectionSelector wired into ChatInterface input bar with multi-collection support (Plan 22)
+- ConfirmDialog in AdminRoles and AdminUsers replacing last window.confirm calls (Plan 22)
+- 24 component tests: ChatInputBar (6), ConfirmDialog (4), AdminAreas (4), AdminCollections (3), AdminRagConfig (3), CollectionDetail (4) (Plan 22)
 - DOMPurify XSS sanitization on SVG/Mermaid `dangerouslySetInnerHTML` (Plan 23)
 - React Compiler enabled with eslint healthcheck (Plan 23)
 - `next-safe-action` — all 37 server actions migrated with Zod schemas and auth middleware (Plan 23)
@@ -39,6 +42,9 @@ Versionado basado en [Semantic Versioning](https://semver.org/lang/es/).
 - `docs/artifacts/` directory for review/audit results (Plan 13)
 
 ### Changed
+- Removed `defaults.ts` — DEFAULT_COLLECTION replaced by user preferences via DB (Plan 22)
+- seed.ts: "tecpia" replaced with "default" (Plan 22)
+- `clean()` in safe-action documented with rationale for `any` return type (Plan 22)
 - Collection DELETE route: uses `requireAdmin`, invalidates cache, returns real errors (Plan 24)
 - Collection POST route: Zod validation on names, real error on RAG failure (Plan 24)
 - Redis collections cache: graceful degradation when Redis unavailable (Plan 24)

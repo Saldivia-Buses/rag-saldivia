@@ -195,7 +195,7 @@ components/
 | Capa | Comando | Tests |
 |---|---|---|
 | Lógica pura + actions + API + proxy | `bun run test` | ~198 |
-| Componentes + hooks | `bun run test:components` (desde apps/web/) | ~134 |
+| Componentes + hooks | `bun run test:components` (desde apps/web/) | ~158 |
 | Visual | `bun run test:visual` | 22 baselines |
 | A11y | `bun run test:a11y` | páginas clave |
 | E2E | `bun run test:e2e` | flujos críticos |

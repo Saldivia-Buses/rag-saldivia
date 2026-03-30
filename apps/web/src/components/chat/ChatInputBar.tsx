@@ -24,6 +24,7 @@ export function ChatInputBar({
   textareaRef,
   placeholder,
   collection,
+  collectionSlot,
   isStreaming,
   disabled,
 }: {
@@ -35,6 +36,7 @@ export function ChatInputBar({
   textareaRef?: RefObject<HTMLTextAreaElement | null>
   placeholder: string
   collection: string
+  collectionSlot?: React.ReactNode
   isStreaming?: boolean
   disabled?: boolean
 }) {
@@ -64,7 +66,7 @@ export function ChatInputBar({
           <Plus size={18} />
         </button>
         <div className="flex items-center" style={{ gap: "8px" }}>
-          <span className="text-xs text-fg-subtle">{collection}</span>
+          {collectionSlot ?? <span className="text-xs text-fg-subtle">{collection}</span>}
           {isStreaming && onStop ? (
             <button
               onClick={onStop}

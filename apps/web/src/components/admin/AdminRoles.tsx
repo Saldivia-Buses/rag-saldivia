@@ -13,13 +13,14 @@
 
 "use client"
 
-import { useState, useEffect, useTransition } from "react"
+import { useState, useEffect, useTransition, useCallback } from "react"
 import {
   Plus, Trash2, Check, X, Users, Crown, ShieldCheck, User,
   Eye, Pencil, Lock, Star, Zap, Briefcase, BookOpen, Headphones,
   Wrench, Globe, Bell, Heart, Layers, Database,
 } from "lucide-react"
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { PermissionMatrix } from "./PermissionMatrix"
 import {
   actionCreateRole,
@@ -104,6 +105,7 @@ export function AdminRoles({
   const [keysLoaded, setKeysLoaded] = useState(false)
   const [isPending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<RoleWithCount | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
   const [showCreate, setShowCreate] = useState(false)
   const [editingRoleId, setEditingRoleId] = useState<number | null>(null)
@@ -218,15 +220,20 @@ export function AdminRoles({
     })
   }
 
-  function handleDelete(role: RoleWithCount) {
+  function handleDeleteClick(role: RoleWithCount) {
     if (role.isSystem) return
     if (role.userCount > 0) {
       setError(`No se puede eliminar "${role.name}" porque tiene ${role.userCount} usuario(s) asignado(s)`)
       setTimeout(() => setError(null), 4000)
       return
     }
-    if (!confirm(`¿Eliminar el rol "${role.name}"?\nEsta acción no se puede deshacer.`)) return
+    setDeleteTarget(role)
+  }
 
+  const confirmDelete = useCallback(() => {
+    if (!deleteTarget) return
+    const role = deleteTarget
+    setDeleteTarget(null)
     startTransition(async () => {
       try {
         await actionDeleteRole({ id: role.id })
@@ -241,7 +248,7 @@ export function AdminRoles({
         setError("Error al eliminar rol")
       }
     })
-  }
+  }, [deleteTarget, startTransition, selectedRoleId])
 
   return (
     <TooltipProvider delayDuration={200}>
@@ -493,7 +500,7 @@ export function AdminRoles({
                           <TooltipTrigger asChild>
                             <div
                               role="button"
-                              onClick={(e) => { e.stopPropagation(); handleDelete(role) }}
+                              onClick={(e) => { e.stopPropagation(); handleDeleteClick(role) }}
                               className="flex items-center justify-center rounded-lg text-fg-subtle hover:text-destructive hover:bg-destructive/10 transition-colors"
                               style={{ width: "28px", height: "28px" }}
                             >
@@ -569,7 +576,7 @@ export function AdminRoles({
                         </Tooltip>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <div role="button" onClick={(e) => { e.stopPropagation(); handleDelete(role) }} className="flex items-center justify-center rounded-lg text-fg-subtle hover:text-destructive hover:bg-destructive/10 transition-colors" style={{ width: "28px", height: "28px" }}>
+                            <div role="button" onClick={(e) => { e.stopPropagation(); handleDeleteClick(role) }} className="flex items-center justify-center rounded-lg text-fg-subtle hover:text-destructive hover:bg-destructive/10 transition-colors" style={{ width: "28px", height: "28px" }}>
                               <Trash2 size={13} />
                             </div>
                           </TooltipTrigger>
@@ -606,6 +613,14 @@ export function AdminRoles({
           />
         )}
       </div>
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        onOpenChange={(o) => { if (!o) setDeleteTarget(null) }}
+        title={`¿Eliminar el rol "${deleteTarget?.name}"?`}
+        description="Esta acción no se puede deshacer."
+        onConfirm={confirmDelete}
+      />
     </TooltipProvider>
   )
 }
