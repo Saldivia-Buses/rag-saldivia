@@ -1,7 +1,10 @@
 "use client"
 
 import { useState, useRef, useEffect, useCallback, useTransition, useMemo } from "react"
-import { ThumbsUp, ThumbsDown, Copy, Check, RotateCcw, Square, Plus, ChevronDown, ArrowDown, PanelRightClose } from "lucide-react"
+import { useLocalStorage } from "@/hooks/useLocalStorage"
+import { useCopyToClipboard } from "@/hooks/useCopyToClipboard"
+import { useAutoResize } from "@/hooks/useAutoResize"
+import { ThumbsUp, ThumbsDown, Copy, Check, RotateCcw, ChevronDown, ArrowDown, PanelRightClose } from "lucide-react"
 import { useChat } from "@ai-sdk/react"
 import { DefaultChatTransport, type UIMessage } from "ai"
 import type { DbChatSession, DbChatMessage } from "@rag-saldivia/db"
@@ -14,14 +17,15 @@ import { ArtifactPanel } from "@/components/chat/ArtifactPanel"
 import type { ParsedArtifact } from "@/lib/rag/artifact-parser"
 import { extractArtifacts, extractCodeBlocks, extractStreamingArtifact, stripArtifactTags } from "@/lib/rag/artifact-parser"
 import type { Citation } from "@rag-saldivia/shared"
+import { ChatInputBar } from "./ChatInputBar"
 import { useSidebar } from "./ChatLayout"
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip"
 
 // ── Helpers ──
 
 function dbToUIMessages(session: DbChatSession & { messages?: DbChatMessage[] }): UIMessage[] {
-  return (session.messages ?? []).map((m) => ({
-    id: String(m.id ?? Math.random()),
+  return (session.messages ?? []).map((m, i) => ({
+    id: String(m.id ?? `temp-${i}`),
     role: m.role as "user" | "assistant",
     parts: [{ type: "text" as const, text: m.content }],
     createdAt: new Date(m.timestamp ?? Date.now()),
@@ -127,16 +131,12 @@ export function ChatInterface({
 }) {
   const { open: sidebarOpen, toggle: toggleSidebar } = useSidebar()
   const [input, setInput] = useState("")
-  const [copiedId, setCopiedId] = useState<string | null>(null)
+  const { copy, copiedKey } = useCopyToClipboard()
   const [activeArtifactId, setActiveArtifactId] = useState<string | null>(null)
   const [showArtifactPanel, setShowArtifactPanel] = useState(false)
   // Store artifacts opened from MarkdownMessage (which creates its own ids)
   const [adhocArtifacts, setAdhocArtifacts] = useState<ParsedArtifact[]>([])
-  const [artifactPanelWidth, setArtifactPanelWidth] = useState(() => {
-    if (typeof window === "undefined") return 480
-    const stored = localStorage.getItem("saldivia-artifact-width")
-    return stored ? Number(stored) : 480
-  })
+  const [artifactPanelWidth, setArtifactPanelWidth] = useLocalStorage("saldivia-artifact-width", 480)
   const [isResizingPanel, setIsResizingPanel] = useState(false)
   const [_isPending, startTransition] = useTransition()
   const [editingTitle, setEditingTitle] = useState(false)
@@ -169,13 +169,15 @@ export function ChatInterface({
         const sources = getMessageSources(lastAssistant)
 
         startTransition(async () => {
-          await actionAddMessage({ sessionId: session.id, role: "user", content: userText })
-          await actionAddMessage({
-            sessionId: session.id,
-            role: "assistant",
-            content: assistantText,
-            sources,
-          })
+          await Promise.all([
+            actionAddMessage({ sessionId: session.id, role: "user", content: userText }),
+            actionAddMessage({
+              sessionId: session.id,
+              role: "assistant",
+              content: assistantText,
+              sources,
+            }),
+          ])
         })
 
         clientLog.action("rag.query", { collection: session.collection, sessionId: session.id })
@@ -183,7 +185,7 @@ export function ChatInterface({
         // Auto-rename session from first user message
         if (allMessages.filter(m => m.role === "user").length === 1) {
           const title = userText.slice(0, 60) + (userText.length > 60 ? "..." : "")
-          actionRenameSession(session.id, title)
+          actionRenameSession({ id: session.id, title })
         }
       }
     },
@@ -275,19 +277,15 @@ export function ChatInterface({
     bottomRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [])
 
-  useEffect(() => {
-    const ta = textareaRef.current
-    if (ta) {
-      ta.style.height = "auto"
-      ta.style.height = `${Math.min(ta.scrollHeight, 200)}px`
-    }
-  }, [input])
+  useAutoResize(textareaRef, input)
 
   async function handleSend() {
     const query = input.trim()
     if (!query || isStreaming) return
     setInput("")
     await sendMessage({ text: query })
+    // Return focus to textarea after sending
+    requestAnimationFrame(() => textareaRef.current?.focus())
   }
 
   function handleKeyDown(e: React.KeyboardEvent) {
@@ -298,19 +296,17 @@ export function ChatInterface({
   }
 
   const handleCopy = useCallback(async (content: string, msgId: string) => {
-    await navigator.clipboard.writeText(content)
-    setCopiedId(msgId)
-    setTimeout(() => setCopiedId(null), 2000)
-  }, [])
+    await copy(content, msgId)
+  }, [copy])
 
   const handleFeedback = useCallback(async (messageId: number, rating: "up" | "down") => {
-    await actionAddFeedback(messageId, rating)
+    await actionAddFeedback({ messageId, rating })
   }, [])
 
   const handleTitleSave = useCallback(async () => {
     const newTitle = titleDraft.trim()
     if (newTitle && newTitle !== session.title) {
-      await actionRenameSession(session.id, newTitle)
+      await actionRenameSession({ id: session.id, title: newTitle })
       router.refresh()
     }
     setEditingTitle(false)
@@ -414,45 +410,15 @@ export function ChatInterface({
 
             {/* Input in empty state — centered */}
             <div className="w-full" style={{ maxWidth: "640px" }}>
-              <div
-                className="border border-border rounded-2xl bg-bg transition-colors focus-within:border-accent"
-                style={{ padding: "12px 16px" }}
-              >
-                <textarea
-                  ref={textareaRef}
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  placeholder="¿Cómo puedo ayudarte hoy?"
-                  rows={1}
-                  className="w-full resize-none bg-transparent text-fg text-sm placeholder:text-fg-subtle outline-none"
-                  style={{ minHeight: "24px", maxHeight: "200px", lineHeight: "1.5" }}
-                />
-                <div className="flex items-center justify-between" style={{ marginTop: "8px" }}>
-                  <button
-                    type="button"
-                    className={`${ICON_BTN} text-fg-subtle hover:text-fg hover:bg-surface`}
-                    style={ICON_BTN_SIZE}
-                    title="Adjuntar"
-                  >
-                    <Plus size={16} />
-                  </button>
-                  <div className="flex items-center" style={{ gap: "8px" }}>
-                    <span className="text-xs text-fg-subtle">{session.collection}</span>
-                    <button
-                      onClick={handleSend}
-                      disabled={!input.trim()}
-                      className="flex items-center justify-center rounded-lg bg-accent text-accent-fg disabled:opacity-30 transition-opacity hover:opacity-90"
-                      style={ICON_BTN_SIZE}
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <line x1="22" y1="2" x2="11" y2="13" />
-                        <polygon points="22 2 15 22 11 13 2 9 22 2" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              </div>
+              <ChatInputBar
+                value={input}
+                onChange={setInput}
+                onKeyDown={handleKeyDown}
+                onSend={handleSend}
+                textareaRef={textareaRef}
+                placeholder="¿Cómo puedo ayudarte hoy?"
+                collection={session.collection}
+              />
 
               {/* Prompt template chips — loaded from DB, fallback to defaults */}
               <div className="flex items-center justify-center flex-wrap" style={{ gap: "8px", marginTop: "16px" }}>
@@ -482,7 +448,7 @@ export function ChatInterface({
 
         {/* Messages list */}
         {messages.length > 0 && (
-          <div style={{ padding: "24px 24px 0", maxWidth: "768px", marginLeft: "auto", marginRight: "auto" }}>
+          <div role="log" aria-live="polite" aria-label="Mensajes del chat" style={{ padding: "24px 24px 0", maxWidth: "768px", marginLeft: "auto", marginRight: "auto" }}>
             {messages.map((msg) => {
               const text = getMessageText(msg)
               const sources = getMessageSources(msg)
@@ -544,7 +510,7 @@ export function ChatInterface({
                       {text && !isStreaming && (
                         <div className="flex" style={{ gap: "2px", marginTop: "8px" }}>
                           <TipBtn label="Copiar" onClick={() => handleCopy(text, msg.id)} className={`${ICON_BTN} text-fg-subtle hover:text-fg hover:bg-surface-2`} style={ICON_BTN_SIZE}>
-                            {copiedId === msg.id ? <Check size={ICON_PX} /> : <Copy size={ICON_PX} />}
+                            {copiedKey === msg.id ? <Check size={ICON_PX} /> : <Copy size={ICON_PX} />}
                           </TipBtn>
                           {numId && (
                             <>
@@ -616,57 +582,18 @@ export function ChatInterface({
               </div>
             )}
 
-            <div
-              className="border border-border rounded-2xl bg-bg transition-colors focus-within:border-accent"
-              style={{ padding: "12px 16px" }}
-            >
-              <textarea
-                ref={messages.length > 0 ? textareaRef : undefined}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="Responder..."
-                disabled={isStreaming}
-                rows={1}
-                className="w-full resize-none bg-transparent text-fg text-sm placeholder:text-fg-subtle outline-none disabled:opacity-50"
-                style={{ minHeight: "24px", maxHeight: "200px", lineHeight: "1.5" }}
-              />
-              <div className="flex items-center justify-between" style={{ marginTop: "8px" }}>
-                <button
-                  type="button"
-                  className={`${ICON_BTN} text-fg-subtle hover:text-fg hover:bg-surface`}
-                  style={ICON_BTN_SIZE}
-                  title="Adjuntar"
-                >
-                  <Plus size={ICON_PX} />
-                </button>
-                <div className="flex items-center" style={{ gap: "8px" }}>
-                  <span className="text-xs text-fg-subtle">{session.collection}</span>
-                  {isStreaming ? (
-                    <button
-                      onClick={stop}
-                      className="flex items-center justify-center rounded-full border border-border text-fg-muted hover:text-fg hover:border-fg-subtle transition-colors"
-                      style={ICON_BTN_SIZE}
-                      title="Detener"
-                    >
-                      <Square size={12} fill="currentColor" />
-                    </button>
-                  ) : (
-                    <button
-                      onClick={handleSend}
-                      disabled={!input.trim()}
-                      className="flex items-center justify-center rounded-lg bg-accent text-accent-fg disabled:opacity-30 transition-opacity hover:opacity-90"
-                      style={ICON_BTN_SIZE}
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <line x1="22" y1="2" x2="11" y2="13" />
-                        <polygon points="22 2 15 22 11 13 2 9 22 2" />
-                      </svg>
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
+            <ChatInputBar
+              value={input}
+              onChange={setInput}
+              onKeyDown={handleKeyDown}
+              onSend={handleSend}
+              onStop={stop}
+              textareaRef={textareaRef}
+              placeholder="Responder..."
+              collection={session.collection}
+              isStreaming={isStreaming}
+              disabled={isStreaming}
+            />
 
             {/* Disclaimer */}
             <p className="text-xs text-fg-subtle text-center" style={{ marginTop: "8px" }}>
@@ -685,7 +612,7 @@ export function ChatInterface({
         onSelect={(id) => { setActiveArtifactId(id); setShowArtifactPanel(true) }}
         onClose={() => setShowArtifactPanel(false)}
         panelWidth={showArtifactPanel && activeArtifactId ? artifactPanelWidth : 0}
-        onWidthChange={(w) => { setArtifactPanelWidth(w); localStorage.setItem("saldivia-artifact-width", String(w)) }}
+        onWidthChange={setArtifactPanelWidth}
         isResizing={isResizingPanel}
         onResizeStart={() => setIsResizingPanel(true)}
         onResizeEnd={() => setIsResizingPanel(false)}

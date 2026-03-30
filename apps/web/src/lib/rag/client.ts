@@ -125,7 +125,7 @@ export async function ragFetch(
   options: RequestInit = {}
 ): Promise<Response | { error: RagError }> {
   if (MOCK_RAG) {
-    return new Response(JSON.stringify({ status: "mock", collections: ["tecpia"] }), {
+    return new Response(JSON.stringify({ status: "mock", collections: ["default"] }), {
       headers: { "Content-Type": "application/json" },
     })
   }

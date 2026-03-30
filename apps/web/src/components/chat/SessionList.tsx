@@ -18,10 +18,12 @@
 
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
-import { useState, useMemo } from "react"
+import { useState, useMemo, useCallback } from "react"
 import { Plus, MessageSquare, Trash2, Search } from "lucide-react"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import type { DbChatSession } from "@rag-saldivia/db"
 import { actionDeleteSession, actionCreateSession } from "@/app/actions/chat"
+import { DEFAULT_COLLECTION } from "@/lib/defaults"
 import { useSidebar } from "./ChatLayout"
 
 export function SessionList({ sessions }: { sessions: DbChatSession[] }) {
@@ -30,6 +32,7 @@ export function SessionList({ sessions }: { sessions: DbChatSession[] }) {
   const [creating, setCreating] = useState(false)
   const [search, setSearch] = useState("")
   const { open } = useSidebar()
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
 
   const filtered = useMemo(() => {
     if (!search.trim()) return sessions
@@ -40,20 +43,26 @@ export function SessionList({ sessions }: { sessions: DbChatSession[] }) {
   async function handleNew() {
     setCreating(true)
     try {
-      const session = await actionCreateSession({ collection: "tecpia" })
-      router.push(`/chat/${session!.id}`)
+      const result = await actionCreateSession({ collection: DEFAULT_COLLECTION })
+      router.push(`/chat/${result?.data?.id}`)
     } finally {
       setCreating(false)
     }
   }
 
-  async function handleDelete(id: string, e: React.MouseEvent) {
+  function handleDeleteClick(id: string, e: React.MouseEvent) {
     e.preventDefault()
     e.stopPropagation()
-    if (!confirm("¿Eliminar esta sesión?")) return
-    await actionDeleteSession(id)
-    if (pathname === `/chat/${id}`) router.push("/chat")
+    setDeleteTarget(id)
   }
+
+  const confirmDelete = useCallback(async () => {
+    if (!deleteTarget) return
+    const id = deleteTarget
+    setDeleteTarget(null)
+    await actionDeleteSession({ id })
+    if (pathname === `/chat/${id}`) router.push("/chat")
+  }, [deleteTarget, pathname, router])
 
   return (
     <aside
@@ -120,7 +129,7 @@ export function SessionList({ sessions }: { sessions: DbChatSession[] }) {
                 <MessageSquare size={14} className="shrink-0 opacity-50" />
                 <span className="flex-1 truncate">{session.title}</span>
                 <button
-                  onClick={(e) => handleDelete(session.id, e)}
+                  onClick={(e) => handleDeleteClick(session.id, e)}
                   className="opacity-0 group-hover:opacity-50 hover:!opacity-100 transition-opacity p-0.5 text-fg-subtle hover:text-destructive"
                   title="Eliminar"
                   tabIndex={open ? 0 : -1}
@@ -131,6 +140,14 @@ export function SessionList({ sessions }: { sessions: DbChatSession[] }) {
             )
           })}
         </nav>
+
+        <ConfirmDialog
+          open={deleteTarget !== null}
+          onOpenChange={(o) => { if (!o) setDeleteTarget(null) }}
+          title="¿Eliminar esta sesión?"
+          description="Se perderán todos los mensajes de esta conversación."
+          onConfirm={confirmDelete}
+        />
       </div>
     </aside>
   )

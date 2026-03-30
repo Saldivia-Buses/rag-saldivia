@@ -1,24 +1,24 @@
 "use server"
 
-import { requireAdmin } from "@/lib/auth/current-user"
+import { z } from "zod"
+import { adminAction } from "@/lib/safe-action"
 import { saveRagParams } from "@rag-saldivia/config"
 import { log } from "@rag-saldivia/logger/backend"
-import type { RagParams } from "@rag-saldivia/shared"
 
-export async function actionUpdateRagParams(params: Partial<RagParams>) {
-  const admin = await requireAdmin()
-  await saveRagParams(params)
-  log.info("admin.config_changed", { params }, { userId: admin.id })
-}
+export const actionUpdateRagParams = adminAction
+  .schema(z.record(z.string(), z.unknown()))
+  .action(async ({ parsedInput: params, ctx: { user } }) => {
+    await saveRagParams(params)
+    log.info("admin.config_changed", { params }, { userId: user.id })
+  })
 
-export async function actionResetRagParams() {
-  const admin = await requireAdmin()
-  // Eliminar overrides (vuelve a los defaults)
-  const { unlink } = await import("fs/promises")
-  const { join } = await import("path")
-  const overridesPath = join(process.cwd(), "config", "admin-overrides.yaml")
-  try {
-    await unlink(overridesPath)
-  } catch { /* ya no existía */ }
-  log.info("admin.config_changed", { action: "reset" }, { userId: admin.id })
-}
+export const actionResetRagParams = adminAction
+  .action(async ({ ctx: { user } }) => {
+    const { unlink } = await import("fs/promises")
+    const { join } = await import("path")
+    const overridesPath = join(process.cwd(), "config", "admin-overrides.yaml")
+    try {
+      await unlink(overridesPath)
+    } catch { /* ya no existía */ }
+    log.info("admin.config_changed", { action: "reset" }, { userId: user.id })
+  })

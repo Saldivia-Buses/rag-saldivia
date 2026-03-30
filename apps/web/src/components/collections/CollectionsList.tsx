@@ -16,7 +16,7 @@
  */
 "use client"
 
-import { useOptimistic, useState, useTransition } from "react"
+import { useOptimistic, useState, useTransition, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { FolderOpen, Trash2, MessageSquare, Plus } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -24,6 +24,7 @@ import { Input } from "@/components/ui/input"
 import { EmptyPlaceholder } from "@/components/ui/empty-placeholder"
 import type { CurrentUser } from "@/lib/auth/current-user"
 import { actionCreateCollection, actionDeleteCollection } from "@/app/actions/collections"
+import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 
 type Props = {
   collections: string[]
@@ -44,6 +45,7 @@ export function CollectionsList({ collections: initial, user }: Props) {
   const [newName, setNewName] = useState("")
   const [showCreate, setShowCreate] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null)
 
   function handleCreate(e: React.FormEvent) {
     e.preventDefault()
@@ -54,19 +56,21 @@ export function CollectionsList({ collections: initial, user }: Props) {
     setShowCreate(false)
     startTransition(async () => {
       applyOptimistic({ type: "create", name })
-      try { await actionCreateCollection(name) }
+      try { await actionCreateCollection({ name }) }
       catch (err) { setError(err instanceof Error ? err.message : "Error al crear") }
     })
   }
 
-  function handleDelete(name: string) {
-    if (!confirm(`¿Eliminar la colección "${name}"? Esta acción no se puede deshacer.`)) return
+  const confirmDelete = useCallback(() => {
+    if (!deleteTarget) return
+    const name = deleteTarget
+    setDeleteTarget(null)
     startTransition(async () => {
       applyOptimistic({ type: "delete", name })
-      try { await actionDeleteCollection(name) }
+      try { await actionDeleteCollection({ name }) }
       catch { /* silencioso */ }
     })
-  }
+  }, [deleteTarget, applyOptimistic, startTransition])
 
   function handleChat(name: string) {
     router.push(`/chat?collection=${encodeURIComponent(name)}`)
@@ -135,7 +139,7 @@ export function CollectionsList({ collections: initial, user }: Props) {
                 </Button>
                 {user.role === "admin" && (
                   <button
-                    onClick={() => handleDelete(name)}
+                    onClick={() => setDeleteTarget(name)}
                     className="p-2 rounded-md text-fg-subtle opacity-0 group-hover:opacity-100 hover:text-destructive hover:bg-surface transition-all"
                     title="Eliminar colección"
                   >
@@ -147,6 +151,14 @@ export function CollectionsList({ collections: initial, user }: Props) {
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        onOpenChange={(o) => { if (!o) setDeleteTarget(null) }}
+        title={`¿Eliminar la colección "${deleteTarget}"?`}
+        description="Esta acción no se puede deshacer. Se perderán todos los documentos indexados."
+        onConfirm={confirmDelete}
+      />
     </div>
   )
 }

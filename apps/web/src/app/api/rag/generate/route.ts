@@ -17,6 +17,7 @@
  */
 
 import { NextResponse } from "next/server"
+import { z } from "zod"
 import { ragGenerateStream } from "@/lib/rag/client"
 import { createRagStreamResponse } from "@/lib/rag/ai-stream"
 import { canAccessCollection, getUserCollections } from "@rag-saldivia/db"
@@ -29,7 +30,23 @@ import { requireAuth, apiError, apiServerError } from "@/lib/api-utils"
 
 export const runtime = "nodejs" // SSE requiere Node runtime, no Edge
 
-type RawMessage = { role: string; content?: string; parts?: Array<{ type: string; text?: string }> }
+const MessageSchema = z.object({
+  role: z.string(),
+  content: z.string().optional(),
+  parts: z.array(z.object({ type: z.string(), text: z.string().optional() })).optional(),
+})
+
+const GenerateBodySchema = z.object({
+  messages: z.array(MessageSchema).min(1, "El campo 'messages' es requerido y no puede estar vacío"),
+  collection_name: z.string().optional(),
+  collection_names: z.array(z.string()).optional(),
+  session_id: z.string().optional(),
+  use_knowledge_base: z.boolean().optional(),
+  focus_mode: z.string().optional(),
+  crossdoc: z.boolean().optional(),
+})
+
+type RawMessage = z.infer<typeof MessageSchema>
 
 /** Normaliza mensajes del AI SDK (parts) o legacy (content) a formato OpenAI. */
 function normalizeMessages(raw: RawMessage[]): Array<{ role: string; content: string }> {
@@ -55,13 +72,16 @@ export async function POST(request: Request) {
   const userId = Number(claims.sub)
 
   try {
-    const body = await request.json().catch(() => null)
-    if (!body || !Array.isArray(body.messages) || body.messages.length === 0) {
-      return apiError("El campo 'messages' es requerido y no puede estar vacío")
+    const raw = await request.json().catch(() => null)
+    const parsed = GenerateBodySchema.safeParse(raw)
+    if (!parsed.success) {
+      return apiError(parsed.error.issues[0]?.message ?? "Body inválido")
     }
-
-    // Normalizar mensajes: AI SDK envía parts[], legacy envía content string
-    body.messages = normalizeMessages(body.messages as RawMessage[])
+    // Mutable copy — Zod validated, messages normalized for system prompt injection
+    const body = {
+      ...parsed.data,
+      messages: normalizeMessages(parsed.data.messages),
+    }
 
     // Rate limiting — reject if user exceeded queries/hour quota
     const maxQph = await getRateLimit(userId)
@@ -117,7 +137,7 @@ export async function POST(request: Request) {
     log.info("rag.stream_started", {
       collection: collectionName,
       crossdoc: body.crossdoc ?? false,
-    }, { userId, sessionId: body.session_id })
+    }, { userId, sessionId: body.session_id ?? null })
 
     // Inyectar memoria del usuario si existe — F3.44
     try {
@@ -148,7 +168,7 @@ export async function POST(request: Request) {
       body.messages = [{ role: "system", content: langHint }, ...body.messages]
     }
 
-    const result = await ragGenerateStream(body, request.signal)
+    const result = await ragGenerateStream(body as import("@/lib/rag/client").RagGenerateRequest, request.signal)
 
     if ("error" in result) {
       log.error("rag.error", {

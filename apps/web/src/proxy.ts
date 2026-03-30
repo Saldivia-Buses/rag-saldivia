@@ -8,6 +8,7 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { jwtVerify } from "jose"
 import type { JwtClaims } from "@rag-saldivia/shared"
+import { canAccessRoute } from "@/lib/auth/rbac"
 
 const PUBLIC_ROUTES = [
   "/login",
@@ -18,9 +19,6 @@ const PUBLIC_ROUTES = [
   "/_next",
   "/favicon.ico",
 ]
-
-const ADMIN_ROUTES = [/^\/admin(\/|$)/, /^\/api\/admin(\/|$)/]
-const AREA_MANAGER_ROUTES = [/^\/audit(\/|$)/, /^\/api\/audit(\/|$)/]
 
 function isPublic(pathname: string): boolean {
   return PUBLIC_ROUTES.some((p) => pathname.startsWith(p))
@@ -109,21 +107,8 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // Verificar roles para rutas protegidas
-  const isAdminRoute = ADMIN_ROUTES.some((p) => p.test(pathname))
-  const isAreaManagerRoute = AREA_MANAGER_ROUTES.some((p) => p.test(pathname))
-
-  if (isAdminRoute && claims.role !== "admin") {
-    if (pathname.startsWith("/api/")) {
-      return NextResponse.json(
-        { ok: false, error: "Acceso denegado — se requiere rol admin" },
-        { status: 403 }
-      )
-    }
-    return NextResponse.redirect(new URL("/", request.url))
-  }
-
-  if (isAreaManagerRoute && claims.role === "user") {
+  // Verificar roles para rutas protegidas (single source of truth: lib/auth/rbac.ts)
+  if (!canAccessRoute(claims, pathname)) {
     if (pathname.startsWith("/api/")) {
       return NextResponse.json(
         { ok: false, error: "Acceso denegado" },

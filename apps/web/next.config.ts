@@ -7,6 +7,9 @@ const withBundleAnalyzer = withBundleAnalyzerFactory({
 })
 
 const nextConfig: NextConfig = {
+  // React Compiler — auto-memoization, no manual useMemo/useCallback needed
+  reactCompiler: true,
+
   // Transpilar los paquetes workspace (TypeScript → JS via webpack)
   transpilePackages: [
     "@rag-saldivia/shared",

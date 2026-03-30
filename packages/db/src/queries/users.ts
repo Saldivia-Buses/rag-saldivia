@@ -7,7 +7,7 @@ import { eq, and } from "drizzle-orm"
 import { createHash } from "crypto"
 import { getDb } from "../connection"
 import { users, userAreas, areas } from "../schema"
-import { compareSync, hashSync } from "bcrypt-ts"
+import { compare, hash } from "bcrypt-ts"
 
 function now() {
   return Date.now()
@@ -47,7 +47,7 @@ export async function listUsers() {
 export async function verifyPassword(email: string, password: string) {
   const user = await getUserByEmail(email)
   if (!user || !user.active || !user.passwordHash) return null
-  const valid = compareSync(password, user.passwordHash)
+  const valid = await compare(password, user.passwordHash)
   if (!valid) return null
 
   await getDb()
@@ -68,7 +68,7 @@ export async function createUser(data: {
   areaIds?: number[]
 }) {
   const db = getDb()
-  const passwordHash = hashSync(data.password, 10)
+  const passwordHash = await hash(data.password, 10)
   const apiKeyHash = createHash("sha256").update(`rsk_${crypto.randomUUID()}`).digest("hex").slice(0, 32)
 
   const [user] = await db
@@ -115,7 +115,7 @@ export async function updateUser(
 }
 
 export async function updatePassword(id: number, newPassword: string) {
-  const passwordHash = hashSync(newPassword, 10)
+  const passwordHash = await hash(newPassword, 10)
   await getDb().update(users).set({ passwordHash }).where(eq(users.id, id))
 }
 

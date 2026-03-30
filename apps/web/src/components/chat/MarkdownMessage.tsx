@@ -2,11 +2,21 @@
 
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
-import { useState, useMemo, memo } from "react"
+import { useMemo, memo } from "react"
 import { Check, Copy, Code, Eye, FileText } from "lucide-react"
+import { useCopyToClipboard } from "@/hooks/useCopyToClipboard"
 import type { ParsedArtifact } from "@/lib/rag/artifact-parser"
 import { extractArtifacts } from "@/lib/rag/artifact-parser"
 import { TYPE_CONFIG } from "./ArtifactPanel"
+
+/** Deterministic hash for stable React keys on code blocks */
+function stableHash(str: string): string {
+  let h = 0
+  for (let i = 0; i < str.length; i++) {
+    h = ((h << 5) - h + str.charCodeAt(i)) | 0
+  }
+  return Math.abs(h).toString(36)
+}
 
 // ── Stable markdown component renderers ──
 
@@ -125,15 +135,9 @@ export const ArtifactCard = memo(function ArtifactCard({
 // ── Code block fallback (when no artifact callback) ──
 
 function CodeBlock({ className, children }: { className?: string | undefined; children: React.ReactNode }) {
-  const [copied, setCopied] = useState(false)
+  const { copy, copied } = useCopyToClipboard()
   const lang = className?.replace("language-", "") ?? ""
   const text = typeof children === "string" ? children : String(children ?? "")
-
-  function handleCopy() {
-    navigator.clipboard.writeText(text)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 2000)
-  }
 
   return (
     <div
@@ -149,7 +153,7 @@ function CodeBlock({ className, children }: { className?: string | undefined; ch
       >
         <span className="text-xs text-fg-subtle">{lang}</span>
         <button
-          onClick={handleCopy}
+          onClick={() => copy(text)}
           className="text-fg-subtle hover:text-fg transition-colors"
           title="Copiar código"
         >
@@ -223,7 +227,7 @@ const MarkdownWithCodeBlockArtifacts = memo(function MarkdownWithCodeBlockArtifa
           // Only create artifact cards for substantial blocks
           if (text.trim().split("\n").length >= 3) {
             const artifact: ParsedArtifact = {
-              id: `cb_${Math.random().toString(36).slice(2, 8)}`,
+              id: `cb_${lang}_${stableHash(text)}`,
               type: isMermaid ? "mermaid" : "code",
               title: isMermaid ? "Diagrama" : `Código ${lang}`,
               content: text,

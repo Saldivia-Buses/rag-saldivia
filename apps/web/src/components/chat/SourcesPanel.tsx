@@ -1,17 +1,10 @@
 /**
  * Collapsible citation/sources panel displayed below assistant messages.
  *
- * When the RAG server returns source documents alongside a response, this
- * component renders them as an expandable list showing document name,
+ * Renders source documents as an expandable list showing document name,
  * relevance score (as percentage badge), and a 2-line content snippet.
  *
- * The `sources` prop is typed as `unknown[]` because the shape comes from
- * the RAG server's raw JSON — it's cast to the local `Source` type internally,
- * with safe fallbacks for missing fields (document_name, content, score).
- *
- * Renders nothing if sources array is empty or undefined.
- *
- * Used by: MessageBubble (assistant messages with citations)
+ * Used by: ChatInterface (assistant messages with citations)
  * Depends on: Badge (ui primitive)
  */
 "use client"
@@ -19,23 +12,12 @@
 import { useState } from "react"
 import { ChevronDown, ChevronRight, FileText } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import type { Citation } from "@rag-saldivia/shared"
 
-type Source = {
-  document_name?: string
-  content?: string
-  score?: number
-  [key: string]: unknown
-}
-
-type Props = {
-  sources: unknown[]
-}
-
-export function SourcesPanel({ sources }: Props) {
+export function SourcesPanel({ sources }: { sources: Citation[] }) {
   const [expanded, setExpanded] = useState(true)
 
-  const typed = sources as Source[]
-  if (!typed || typed.length === 0) return null
+  if (!sources || sources.length === 0) return null
 
   return (
     <div
@@ -50,7 +32,7 @@ export function SourcesPanel({ sources }: Props) {
         {expanded ? <ChevronDown size={12} /> : <ChevronRight size={12} />}
         <FileText size={12} />
         <span className="font-medium">
-          {typed.length} fuente{typed.length !== 1 ? "s" : ""}
+          {sources.length} fuente{sources.length !== 1 ? "s" : ""}
         </span>
       </button>
 
@@ -59,10 +41,10 @@ export function SourcesPanel({ sources }: Props) {
           className="border-t divide-y"
           style={{ borderColor: "var(--border)" }}
         >
-          {typed.map((src, i) => {
-            const name = src.document_name ?? (src.filename as string | undefined) ?? `Documento ${i + 1}`
-            const snippet = src.content as string | undefined
-            const score = src.score as number | undefined
+          {sources.map((src, i) => {
+            const name = src.document ?? `Documento ${i + 1}`
+            const snippet = src.content
+            const score = src.score
 
             return (
               <div key={i} className="px-3 py-2 space-y-1">

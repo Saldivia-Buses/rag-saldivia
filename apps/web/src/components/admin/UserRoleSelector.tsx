@@ -66,7 +66,7 @@ export function UserRoleSelector({
 
     startTransition(async () => {
       try {
-        await actionSetUserRoles(userId, newIds)
+        await actionSetUserRoles({ userId, roleIds: newIds })
       } catch {
         onUpdate(assignedRoleIds)
       }

@@ -1,31 +1,34 @@
 "use server"
 
+import { z } from "zod"
 import { revalidatePath } from "next/cache"
-import { requireAdmin } from "@/lib/auth/current-user"
+import { adminAction } from "@/lib/safe-action"
 import { ragFetch } from "@/lib/rag/client"
 import { invalidateCollectionsCache } from "@/lib/rag/collections-cache"
 
-export async function actionCreateCollection(name: string) {
-  await requireAdmin()
-  const res = await ragFetch(`/v1/collections`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ collection_name: name }),
-  } as Parameters<typeof ragFetch>[1])
-  if ("error" in res) throw new Error(res.error.message)
-  await invalidateCollectionsCache()
-  revalidatePath("/collections")
-}
-
-export async function actionDeleteCollection(name: string) {
-  await requireAdmin()
-  try {
-    await ragFetch(`/v1/collections/${encodeURIComponent(name)}`, {
-      method: "DELETE",
+export const actionCreateCollection = adminAction
+  .schema(z.object({ name: z.string().min(1) }))
+  .action(async ({ parsedInput: { name } }) => {
+    const res = await ragFetch(`/v1/collections`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ collection_name: name }),
     } as Parameters<typeof ragFetch>[1])
-  } catch {
-    // En modo mock: simular éxito
-  }
-  await invalidateCollectionsCache()
-  revalidatePath("/collections")
-}
+    if ("error" in res) throw new Error(res.error.message)
+    await invalidateCollectionsCache()
+    revalidatePath("/collections")
+  })
+
+export const actionDeleteCollection = adminAction
+  .schema(z.object({ name: z.string().min(1) }))
+  .action(async ({ parsedInput: { name } }) => {
+    try {
+      await ragFetch(`/v1/collections/${encodeURIComponent(name)}`, {
+        method: "DELETE",
+      } as Parameters<typeof ragFetch>[1])
+    } catch {
+      // En modo mock: simular éxito
+    }
+    await invalidateCollectionsCache()
+    revalidatePath("/collections")
+  })

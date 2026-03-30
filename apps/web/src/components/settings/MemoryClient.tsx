@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useState, useTransition, useOptimistic } from "react"
 import { Plus, Trash2, Brain } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -9,11 +9,23 @@ import { Separator } from "@/components/ui/separator"
 import type { DbUserMemory } from "@rag-saldivia/db"
 import { actionAddMemory, actionDeleteMemory } from "@/app/actions/settings"
 
+type MemoryAction =
+  | { type: "add"; entry: DbUserMemory }
+  | { type: "delete"; key: string }
+
 export function MemoryClient({ entries: initial }: { entries: DbUserMemory[] }) {
-  const [entries, setEntries] = useState<DbUserMemory[]>(initial)
   const [newKey, setNewKey] = useState("")
   const [newValue, setNewValue] = useState("")
   const [isPending, startTransition] = useTransition()
+  const [optimisticEntries, applyOptimistic] = useOptimistic(
+    initial,
+    (state: DbUserMemory[], action: MemoryAction) => {
+      if (action.type === "add") {
+        return [...state.filter((e) => e.key !== action.entry.key), action.entry]
+      }
+      return state.filter((e) => e.key !== action.key)
+    }
+  )
 
   function handleAdd(e: React.FormEvent) {
     e.preventDefault()
@@ -23,18 +35,18 @@ export function MemoryClient({ entries: initial }: { entries: DbUserMemory[] }) 
     setNewKey("")
     setNewValue("")
     startTransition(async () => {
-      await actionAddMemory(key, value)
-      setEntries((p) => [
-        ...p.filter((e) => e.key !== key),
-        { id: Date.now(), userId: 0, key, value, source: "explicit", createdAt: Date.now(), updatedAt: Date.now() },
-      ])
+      applyOptimistic({
+        type: "add",
+        entry: { id: 0, userId: 0, key, value, source: "explicit", createdAt: Date.now(), updatedAt: Date.now() },
+      })
+      await actionAddMemory({ key, value })
     })
   }
 
   function handleDelete(key: string) {
     startTransition(async () => {
-      await actionDeleteMemory(key)
-      setEntries((p) => p.filter((e) => e.key !== key))
+      applyOptimistic({ type: "delete", key })
+      await actionDeleteMemory({ key })
     })
   }
 
@@ -70,11 +82,11 @@ export function MemoryClient({ entries: initial }: { entries: DbUserMemory[] }) 
         </Button>
       </form>
 
-      {entries.length === 0 ? (
+      {optimisticEntries.length === 0 ? (
         <p className="text-sm text-fg-muted">Sin preferencias guardadas.</p>
       ) : (
         <div className="space-y-2">
-          {entries.map((e) => (
+          {optimisticEntries.map((e) => (
             <div key={e.key} className="flex items-center gap-3 p-3 rounded-xl border border-border bg-surface">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">

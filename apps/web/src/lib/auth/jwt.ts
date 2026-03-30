@@ -26,6 +26,15 @@ function getExpiry(): string {
   return process.env["JWT_EXPIRY"] ?? "24h"
 }
 
+/** Parse JWT_EXPIRY string (e.g. "24h", "7d", "30m") into seconds */
+function parseExpirySeconds(str: string): number {
+  const match = str.match(/^(\d+)(m|h|d)$/)
+  if (!match) return 86400 // default 24h
+  const [, n, unit] = match
+  const multipliers = { m: 60, h: 3600, d: 86400 }
+  return Number(n) * multipliers[unit as keyof typeof multipliers]
+}
+
 /**
  * Crea un JWT firmado con `jti` (JWT ID) único. El `jti` es requerido para que el logout pueda
  * revocar el token en Redis. Si se elimina el `setJti()`, el logout dejará de funcionar de inmediato.
@@ -113,7 +122,7 @@ export async function extractClaims(request: Request): Promise<JwtClaims | null>
 
 export function makeAuthCookie(token: string): string {
   const isProduction = process.env["NODE_ENV"] === "production"
-  const maxAge = 60 * 60 * 24 // 24 horas en segundos
+  const maxAge = parseExpirySeconds(getExpiry())
   return [
     `auth_token=${encodeURIComponent(token)}`,
     `Max-Age=${maxAge}`,

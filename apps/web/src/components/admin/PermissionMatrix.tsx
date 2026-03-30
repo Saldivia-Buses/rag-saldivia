@@ -58,7 +58,7 @@ export function PermissionMatrix({
 
     startTransition(async () => {
       try {
-        await actionSetRolePermissions(roleId, newKeys)
+        await actionSetRolePermissions({ roleId, permissionKeys: newKeys })
       } catch {
         onUpdate(activeKeys)
       }
@@ -75,7 +75,7 @@ export function PermissionMatrix({
 
     startTransition(async () => {
       try {
-        await actionSetRolePermissions(roleId, newKeys)
+        await actionSetRolePermissions({ roleId, permissionKeys: newKeys })
       } catch {
         onUpdate(activeKeys)
       }

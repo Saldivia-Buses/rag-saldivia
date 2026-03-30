@@ -38,6 +38,7 @@ import { cn } from "@/lib/utils"
 import type { CurrentUser } from "@/lib/auth/current-user"
 import { actionLogout } from "@/app/actions/auth"
 import { actionCreateSession } from "@/app/actions/chat"
+import { DEFAULT_COLLECTION } from "@/lib/defaults"
 import { useSidebar } from "@/components/chat/ChatLayout"
 import { useRouter, usePathname } from "next/navigation"
 import { PanelLeft, PanelLeftClose } from "lucide-react"
@@ -103,8 +104,8 @@ export function NavRail({
   const isOnChat = pathname.startsWith("/chat")
 
   async function handleNewChat() {
-    const session = await actionCreateSession({ collection: "tecpia" })
-    router.push(`/chat/${session!.id}`)
+    const result = await actionCreateSession({ collection: DEFAULT_COLLECTION })
+    router.push(`/chat/${result?.data?.id}`)
   }
 
   return (

@@ -29,7 +29,9 @@ type PasswordInput = z.infer<typeof PasswordSchema>
 
 export function SettingsClient({ user }: { user: DbUser }) {
   const [tab, setTab] = useState<Tab>("perfil")
-  const [isPending, startTransition] = useTransition()
+  const [isProfilePending, startProfileTransition] = useTransition()
+  const [isPasswordPending, startPasswordTransition] = useTransition()
+  const [isPrefsPending, startPrefsTransition] = useTransition()
   const [profileMsg, setProfileMsg] = useState<{ type: "ok" | "error"; text: string } | null>(null)
   const [pwdMsg, setPwdMsg] = useState<{ type: "ok" | "error"; text: string } | null>(null)
 
@@ -53,7 +55,7 @@ export function SettingsClient({ user }: { user: DbUser }) {
 
   function handleProfileSave(data: ProfileInput) {
     setProfileMsg(null)
-    startTransition(async () => {
+    startProfileTransition(async () => {
       try {
         await actionUpdateProfile(data)
         setProfileMsg({ type: "ok", text: "Perfil actualizado" })
@@ -65,9 +67,9 @@ export function SettingsClient({ user }: { user: DbUser }) {
 
   function handlePasswordSave(data: PasswordInput) {
     setPwdMsg(null)
-    startTransition(async () => {
+    startPasswordTransition(async () => {
       try {
-        await actionUpdatePassword(data.currentPassword, data.newPassword)
+        await actionUpdatePassword({ currentPassword: data.currentPassword, newPassword: data.newPassword })
         setPwdMsg({ type: "ok", text: "Contraseña actualizada" })
         passwordForm.reset()
       } catch (err) {
@@ -130,8 +132,8 @@ export function SettingsClient({ user }: { user: DbUser }) {
             </p>
           )}
           <div>
-            <Button type="submit" disabled={isPending}>
-              {isPending ? "Guardando..." : "Guardar cambios"}
+            <Button type="submit" disabled={isProfilePending}>
+              {isProfilePending ? "Guardando..." : "Guardar cambios"}
             </Button>
           </div>
         </form>
@@ -160,8 +162,8 @@ export function SettingsClient({ user }: { user: DbUser }) {
             </p>
           )}
           <div>
-            <Button type="submit" disabled={isPending || !passwordForm.formState.isDirty}>
-              {isPending ? "Actualizando..." : "Actualizar contraseña"}
+            <Button type="submit" disabled={isPasswordPending || !passwordForm.formState.isDirty}>
+              {isPasswordPending ? "Actualizando..." : "Actualizar contraseña"}
             </Button>
           </div>
         </form>
@@ -179,7 +181,8 @@ export function SettingsClient({ user }: { user: DbUser }) {
               { value: "light", label: "Claro" },
               { value: "dark", label: "Oscuro" },
             ]}
-            onChange={(v) => actionUpdatePreferences({ theme: v })}
+            onChange={(v) => startPrefsTransition(async () => { await actionUpdatePreferences({ theme: v }) })}
+            disabled={isPrefsPending}
           />
           <PreferenceToggle
             label="Crossdoc por defecto"
@@ -189,7 +192,8 @@ export function SettingsClient({ user }: { user: DbUser }) {
               { value: "false", label: "Desactivado" },
               { value: "true", label: "Activado" },
             ]}
-            onChange={(v) => actionUpdatePreferences({ crossdocEnabled: v === "true" })}
+            onChange={(v) => startPrefsTransition(async () => { await actionUpdatePreferences({ crossdocEnabled: v === "true" }) })}
+            disabled={isPrefsPending}
           />
         </div>
       )}
@@ -198,13 +202,14 @@ export function SettingsClient({ user }: { user: DbUser }) {
 }
 
 function PreferenceToggle({
-  label, description, value, options, onChange,
+  label, description, value, options, onChange, disabled,
 }: {
   label: string
   description: string
   value: string
   options: Array<{ value: string; label: string }>
   onChange: (value: string) => void
+  disabled?: boolean
 }) {
   return (
     <div className="flex items-center justify-between border-b border-border" style={{ padding: "20px 0" }}>
@@ -215,7 +220,8 @@ function PreferenceToggle({
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="h-9 rounded-lg border border-border bg-bg text-sm text-fg focus:outline-none focus:ring-1 focus:ring-accent"
+        disabled={disabled}
+        className="h-9 rounded-lg border border-border bg-bg text-sm text-fg focus:outline-none focus:ring-1 focus:ring-accent disabled:opacity-50"
         style={{ padding: "0 12px" }}
       >
         {options.map((opt) => (

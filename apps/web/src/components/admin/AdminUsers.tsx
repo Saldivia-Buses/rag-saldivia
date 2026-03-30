@@ -152,7 +152,7 @@ export function AdminUsers({
 
     startTransition(async () => {
       try {
-        await actionUpdateUser(user.id, { active: newActive })
+        await actionUpdateUser({ id: user.id, data: { active: newActive } })
         flashSuccess(`${user.name} ${newActive ? "activado" : "desactivado"}`)
       } catch {
         // Revert on error
@@ -174,7 +174,7 @@ export function AdminUsers({
 
     startTransition(async () => {
       try {
-        await actionUpdateUser(userId, { role: newRole as "admin" | "area_manager" | "user" })
+        await actionUpdateUser({ id: userId, data: { role: newRole as "admin" | "area_manager" | "user" } })
         flashSuccess(`Rol de ${user.name} cambiado a ${newRole}`)
       } catch {
         // Revert
@@ -205,7 +205,7 @@ export function AdminUsers({
     setResetError(null)
     startTransition(async () => {
       try {
-        await actionResetPassword(userId, newPassword)
+        await actionResetPassword({ userId, newPassword })
         setGeneratedPassword({ userId, password: newPassword })
         setResetingId(null)
         setNewPassword("")
@@ -238,7 +238,7 @@ export function AdminUsers({
 
     startTransition(async () => {
       try {
-        await actionDeleteUser(user.id)
+        await actionDeleteUser({ id: user.id })
         flashSuccess(`${user.name} eliminado`)
       } catch {
         // Revert

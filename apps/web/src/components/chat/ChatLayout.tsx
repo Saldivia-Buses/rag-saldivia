@@ -14,7 +14,8 @@
  */
 "use client"
 
-import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from "react"
+import { createContext, useContext, useEffect, useCallback, type ReactNode } from "react"
+import { useLocalStorage } from "@/hooks/useLocalStorage"
 
 type SidebarContextType = {
   open: boolean
@@ -28,19 +29,11 @@ export function useSidebar() {
 }
 
 export function SidebarProvider({ children }: { children: ReactNode }) {
-  const [open, setOpen] = useState(() => {
-    if (typeof window === "undefined") return true
-    const stored = localStorage.getItem("saldivia-sidebar-open")
-    return stored !== null ? stored === "true" : true
-  })
+  const [open, setOpen] = useLocalStorage("saldivia-sidebar-open", true)
 
   const toggle = useCallback(() => {
-    setOpen(prev => {
-      const next = !prev
-      localStorage.setItem("saldivia-sidebar-open", String(next))
-      return next
-    })
-  }, [])
+    setOpen((prev) => !prev)
+  }, [setOpen])
 
   // Keyboard shortcut: Ctrl+Shift+S
   useEffect(() => {

@@ -120,7 +120,8 @@ export function AdminRoles({
   async function loadRolePermissions(roleId: number) {
     // Don't set keysLoaded=false to avoid collapsing the matrix (causes scroll jump)
     try {
-      const keys = await actionGetRolePermissions(roleId)
+      const result = await actionGetRolePermissions({ roleId })
+      const keys = result?.data ?? []
       setActiveKeys(keys)
     } catch {
       setActiveKeys([])
@@ -199,13 +200,13 @@ export function AdminRoles({
 
     startTransition(async () => {
       try {
-        await actionUpdateRole(editingRoleId, {
+        await actionUpdateRole({ id: editingRoleId, data: {
           name: form.name.trim(),
           description: form.description.trim(),
           level,
           color: form.color,
           icon: form.icon,
-        })
+        } })
         setEditingRoleId(null)
         setForm({ name: "", description: "", level: "20", color: "#6e6c69", icon: "user" })
         flashSuccess("Rol actualizado")
@@ -228,7 +229,7 @@ export function AdminRoles({
 
     startTransition(async () => {
       try {
-        await actionDeleteRole(role.id)
+        await actionDeleteRole({ id: role.id })
         flashSuccess(`Rol "${role.name}" eliminado`)
         const fresh = await actionListRoles()
         setRoles(fresh as RoleWithCount[])
