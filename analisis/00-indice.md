@@ -8,7 +8,7 @@
 
 ---
 
-## Indice de documentos (18)
+## Indice de documentos (20)
 
 | # | Archivo | Contenido |
 |---|---------|-----------|
@@ -29,6 +29,8 @@
 | 15 | `15-agentes-y-workflow.md` | 10 agents Opus, OODA-SQ, sprint sequence, quality gates |
 | 16 | `16-rendimiento.md` | **Caching, lazy loading, memoizacion, streaming, DB** — medido |
 | 17 | `17-riesgos-y-deuda-tecnica.md` | Deuda tecnica, riesgos, **dead code confirmado**, recomendaciones |
+| 18 | `18-benchmark-externo.md` | **Competidores RAG enterprise**, precios, feature matrix, gaps vs industria, **5 estrategias para ir adelante** |
+| 19 | `19-sota-saldivia-rag.md` | **Vision SOTA** — todo lo que Saldivia RAG necesita para ser #1: core engine, connectors, intelligence, security, UX, collaboration, operations, scale |
 
 ---
 
