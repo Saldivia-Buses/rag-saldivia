@@ -30,7 +30,7 @@ export type RagGenerateRequest = {
 }
 
 export type RagError = {
-  code: "UNAVAILABLE" | "TIMEOUT" | "FORBIDDEN" | "UPSTREAM_ERROR"
+  code: "UNAVAILABLE" | "TIMEOUT" | "FORBIDDEN" | "UPSTREAM_ERROR" | "RATE_LIMITED"
   message: string
   suggestion: string
 }

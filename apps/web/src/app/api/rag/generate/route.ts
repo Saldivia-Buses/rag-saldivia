@@ -88,7 +88,11 @@ export async function POST(request: Request) {
     if (maxQph !== null) {
       const count = await countQueriesLastHour(userId)
       if (count >= maxQph) {
-        return apiError(`Límite de ${maxQph} queries/hora alcanzado. Intentá más tarde.`, 429)
+        return apiError(`Límite de ${maxQph} queries/hora alcanzado.`, 429, {
+          code: "RATE_LIMITED",
+          retryAfterMs: 3600_000, // conservative: up to 60 min
+          maxCount: maxQph,
+        })
       }
     }
 
@@ -105,7 +109,7 @@ export async function POST(request: Request) {
       )
       for (const col of collectionNames) {
         if (!accessSet.has(col)) {
-          return apiError(`Sin acceso a la colección '${col}'`, 403)
+          return apiError("Sin acceso a la colección solicitada", 403)
         }
       }
       // El Blueprint acepta colecciones múltiples como array
@@ -130,7 +134,7 @@ export async function POST(request: Request) {
           reason: "forbidden",
           collection: collectionName,
         }, { userId })
-        return apiError(`Sin acceso a la colección '${collectionName}'`, 403)
+        return apiError("Sin acceso a la colección solicitada", 403)
       }
     }
 
@@ -180,7 +184,10 @@ export async function POST(request: Request) {
 
       const status = result.error.code === "TIMEOUT" ? 504
         : result.error.code === "UNAVAILABLE" ? 503 : 502
-      return apiError(result.error.message, status, { suggestion: result.error.suggestion })
+      return apiError(result.error.message, status, {
+        code: result.error.code,
+        suggestion: result.error.suggestion,
+      })
     }
 
     log.info("rag.stream_completed", {

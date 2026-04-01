@@ -1,9 +1,7 @@
 "use client"
 
 import React from "react"
-import { AlertTriangle } from "lucide-react"
-import { Button } from "@/components/ui/button"
-import { EmptyPlaceholder } from "@/components/ui/empty-placeholder"
+import { ErrorRecoveryFromError } from "@/components/ui/error-recovery"
 
 interface ErrorBoundaryProps {
   children: React.ReactNode
@@ -41,21 +39,13 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
         return this.props.fallback
       }
 
-      const message =
-        process.env.NODE_ENV === "production"
-          ? "Ha ocurrido un error inesperado."
-          : (this.state.error?.message ?? "Error desconocido.")
-
       return (
         <div className="flex flex-col items-center justify-center h-full gap-4 p-8">
-          <EmptyPlaceholder>
-            <EmptyPlaceholder.Icon icon={AlertTriangle} />
-            <EmptyPlaceholder.Title>Algo salió mal</EmptyPlaceholder.Title>
-            <EmptyPlaceholder.Description>{message}</EmptyPlaceholder.Description>
-          </EmptyPlaceholder>
-          <Button onClick={this.handleReset} variant="outline">
-            Reintentar
-          </Button>
+          <ErrorRecoveryFromError
+            error={this.state.error ?? new Error("Error desconocido")}
+            variant="page"
+            reset={this.handleReset}
+          />
         </div>
       )
     }

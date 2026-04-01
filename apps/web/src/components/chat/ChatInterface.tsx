@@ -12,6 +12,8 @@ import { actionAddMessage, actionAddFeedback, actionRenameSession } from "@/app/
 import { useRouter } from "next/navigation"
 import { clientLog } from "@rag-saldivia/logger/frontend"
 import { ArtifactPanel } from "@/components/chat/ArtifactPanel"
+import { ErrorRecovery } from "@/components/ui/error-recovery"
+import { getErrorRecovery, parseUseChatError } from "@/lib/error-recovery"
 import type { ParsedArtifact } from "@/lib/rag/artifact-parser"
 import { extractArtifacts, extractCodeBlocks, extractStreamingArtifact } from "@/lib/rag/artifact-parser"
 import { ChatInputBar } from "./ChatInputBar"
@@ -316,13 +318,18 @@ export function ChatInterface({
         <div style={{ padding: "12px 24px 16px" }}>
           <div style={{ maxWidth: "768px", marginLeft: "auto", marginRight: "auto" }}>
             {error && (
-              <div className="text-sm text-destructive" style={{
-                marginBottom: "12px", padding: "12px 16px", borderRadius: "12px",
-                background: "var(--destructive-subtle)",
-                border: "1px solid color-mix(in srgb, var(--destructive) 20%, transparent)",
-              }}>
-                {error.message}
-              </div>
+              <ErrorRecovery
+                recovery={getErrorRecovery(parseUseChatError(error))}
+                variant="inline"
+                onRetry={() => {
+                  // Re-send last user message to retry
+                  const lastUserMsg = [...messages].reverse().find((m) => m.role === "user")
+                  if (lastUserMsg) {
+                    const text = lastUserMsg.parts?.find((p) => p.type === "text")
+                    if (text && "text" in text) sendMessage({ text: text.text as string })
+                  }
+                }}
+              />
             )}
             <ChatInputBar
               value={input} onChange={setInput} onKeyDown={handleKeyDown} onSend={handleSend} onStop={stop}

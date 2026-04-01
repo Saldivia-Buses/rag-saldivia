@@ -35,7 +35,7 @@ describe("<ErrorBoundary />", () => {
         <Thrower shouldThrow={true} />
       </ErrorBoundary>
     )
-    expect(getByText("Algo salió mal")).toBeInTheDocument()
+    expect(getByText("Error inesperado")).toBeInTheDocument()
     expect(getByText("error de prueba")).toBeInTheDocument()
   })
 
@@ -74,12 +74,12 @@ describe("<ErrorBoundary />", () => {
         <Thrower shouldThrow={true} />
       </ErrorBoundary>
     )
-    expect(getByText("Algo salió mal")).toBeInTheDocument()
+    expect(getByText("Error inesperado")).toBeInTheDocument()
     fireEvent.click(getByRole("button", { name: "Reintentar" }))
     // Después del reset el boundary vuelve a intentar renderizar los hijos
     // (que siguen lanzando el error, por lo que el boundary vuelve al estado error)
     // Lo que importa: el handler se llama y el estado se resetea correctamente
-    expect(queryByText("Algo salió mal")).toBeInTheDocument()
+    expect(queryByText("Error inesperado")).toBeInTheDocument()
   })
 
   test("muestra el ícono de alerta en el fallback", () => {
