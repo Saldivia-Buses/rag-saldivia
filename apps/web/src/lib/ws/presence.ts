@@ -7,8 +7,8 @@
  */
 
 import type { Redis } from "ioredis"
+import { PRESENCE_TTL_S } from "@rag-saldivia/config"
 
-const PRESENCE_TTL = 30 // seconds
 const PRESENCE_PREFIX = "presence:user:"
 
 export type PresenceStatus = "online" | "away" | "offline"
@@ -19,7 +19,7 @@ export async function setPresence(
   userId: number,
   status: "online" | "away"
 ): Promise<void> {
-  await redis.set(`${PRESENCE_PREFIX}${userId}`, status, "EX", PRESENCE_TTL)
+  await redis.set(`${PRESENCE_PREFIX}${userId}`, status, "EX", PRESENCE_TTL_S)
 }
 
 /** Get a single user's presence status. */

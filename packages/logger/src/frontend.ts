@@ -9,6 +9,7 @@
  */
 
 import type { EventType } from "@rag-saldivia/shared"
+import { LOGGER_BATCH_SIZE, LOGGER_FLUSH_INTERVAL_MS } from "@rag-saldivia/config"
 
 type ClientEvent = {
   type: EventType
@@ -19,8 +20,8 @@ type ClientEvent = {
 class ClientLogger {
   private batch: ClientEvent[] = []
   private timer: ReturnType<typeof setTimeout> | null = null
-  private readonly BATCH_SIZE = 20
-  private readonly FLUSH_INTERVAL_MS = 5000
+  private readonly BATCH_SIZE = LOGGER_BATCH_SIZE
+  private readonly FLUSH_INTERVAL_MS = LOGGER_FLUSH_INTERVAL_MS
   private endpoint = "/api/log"
 
   private schedule() {

@@ -3,10 +3,9 @@
 import { useState, useEffect, useCallback, useRef } from "react"
 import { wsClient } from "@/lib/ws/client"
 import type { ServerMessage } from "@rag-saldivia/shared"
+import { TYPING_TIMEOUT_MS } from "@rag-saldivia/config"
 
 type TypingUser = { userId: number; displayName: string }
-
-const TYPING_TIMEOUT_MS = 3000 // Auto-expire typing indicator after 3s
 const TYPING_DEBOUNCE_MS = 1000 // Don't send typing_start more than once per second
 
 /**

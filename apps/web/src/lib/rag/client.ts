@@ -10,9 +10,10 @@
  */
 
 import { getSuggestion } from "@rag-saldivia/logger/suggestions"
+import { RAG_TIMEOUT_MS as DEFAULT_RAG_TIMEOUT } from "@rag-saldivia/config"
 
 const RAG_URL = process.env["RAG_SERVER_URL"] ?? "http://localhost:8081"
-const RAG_TIMEOUT_MS = parseInt(process.env["RAG_TIMEOUT_MS"] ?? "120000")
+const RAG_TIMEOUT_MS = parseInt(process.env["RAG_TIMEOUT_MS"] ?? String(DEFAULT_RAG_TIMEOUT))
 const MOCK_RAG = process.env["MOCK_RAG"] === "true"
 
 export type RagGenerateRequest = {

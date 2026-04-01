@@ -17,7 +17,8 @@
   },
   "dependencies": {
     "@rag-saldivia/shared": "workspace:*",
-    "@rag-saldivia/db": "workspace:*"
+    "@rag-saldivia/db": "workspace:*",
+    "@rag-saldivia/config": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^25.5.0",

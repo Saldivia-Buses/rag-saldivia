@@ -9,9 +9,9 @@
 
 import { ragFetch } from "./client"
 import { getRedisClient } from "@rag-saldivia/db"
+import { COLLECTIONS_CACHE_TTL_S } from "@rag-saldivia/config"
 
 const CACHE_KEY = "rag:collections"
-const CACHE_TTL_S = 60
 
 async function fetchCollectionsFromRAG(): Promise<string[]> {
   const res = await ragFetch("/v1/collections")
@@ -35,7 +35,7 @@ export async function getCachedRagCollections(): Promise<string[]> {
     const cached = await redis.get(CACHE_KEY)
     if (cached) return JSON.parse(cached) as string[]
     const fresh = await fetchCollectionsFromRAG()
-    await redis.set(CACHE_KEY, JSON.stringify(fresh), "EX", CACHE_TTL_S).catch(() => {})
+    await redis.set(CACHE_KEY, JSON.stringify(fresh), "EX", COLLECTIONS_CACHE_TTL_S).catch(() => {})
     return fresh
   } catch {
     // Redis unavailable — bypass cache, fetch directly

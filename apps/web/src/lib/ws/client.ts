@@ -9,15 +9,13 @@
  */
 
 import type { ServerMessage, ClientMessage } from "@rag-saldivia/shared"
+import { WS_RECONNECT_BASE_MS, WS_RECONNECT_MAX_MS } from "@rag-saldivia/config"
 
 type Listener = (msg: ServerMessage) => void
 
 const WS_URL = typeof window !== "undefined"
   ? (process.env["NEXT_PUBLIC_WS_URL"] ?? `ws://${window.location.hostname}:3001`)
   : ""
-
-const RECONNECT_BASE_MS = 1000
-const RECONNECT_MAX_MS = 30000
 
 class WsClient {
   private ws: WebSocket | null = null
@@ -116,8 +114,8 @@ class WsClient {
   private scheduleReconnect() {
     if (!this.token) return
     const delay = Math.min(
-      RECONNECT_BASE_MS * Math.pow(2, this.reconnectAttempt),
-      RECONNECT_MAX_MS
+      WS_RECONNECT_BASE_MS * Math.pow(2, this.reconnectAttempt),
+      WS_RECONNECT_MAX_MS
     )
     this.reconnectAttempt++
     this.reconnectTimer = setTimeout(() => this.doConnect(), delay)
