@@ -53,6 +53,24 @@ export async function deleteExternalSource(id: string, userId: number) {
   await db.delete(externalSources).where(and(eq(externalSources.id, id), eq(externalSources.userId, userId)))
 }
 
+export async function toggleExternalSource(id: string, userId: number, active: boolean) {
+  const db = getDb()
+  await db
+    .update(externalSources)
+    .set({ active })
+    .where(and(eq(externalSources.id, id), eq(externalSources.userId, userId)))
+}
+
+export async function getExternalSourceById(id: string, userId: number) {
+  const db = getDb()
+  const [row] = await db
+    .select()
+    .from(externalSources)
+    .where(and(eq(externalSources.id, id), eq(externalSources.userId, userId)))
+    .limit(1)
+  return row ?? null
+}
+
 // ── Sync Documents (change detection) ─────────────────────────────────────
 
 export async function upsertSyncDocument(data: {

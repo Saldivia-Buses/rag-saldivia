@@ -60,25 +60,26 @@ export function AdminConnectors({ initialConnectors }: { initialConnectors: Conn
 
   const handleDelete = useCallback((c: ConnectorRow) => {
     startTransition(async () => {
-      await actionDeleteConnector({ id: c.id })
-      toast.success(`Conector "${c.name}" eliminado`)
-      refresh()
+      const result = await actionDeleteConnector({ id: c.id })
+      if (result?.data) { toast.success(`Conector "${c.name}" eliminado`); refresh() }
+      else toast.error("Error al eliminar conector")
     })
     setDeleteTarget(null)
   }, [startTransition, refresh])
 
   const handleToggle = useCallback((c: ConnectorRow) => {
     startTransition(async () => {
-      await actionToggleConnector({ id: c.id, active: !c.active })
-      toast.success(c.active ? "Conector desactivado" : "Conector activado")
-      refresh()
+      const result = await actionToggleConnector({ id: c.id, active: !c.active })
+      if (result?.data) { toast.success(c.active ? "Conector desactivado" : "Conector activado"); refresh() }
+      else toast.error("Error al cambiar estado")
     })
   }, [startTransition, refresh])
 
   const handleSync = useCallback((c: ConnectorRow) => {
     startTransition(async () => {
-      await actionSyncNow({ id: c.id, provider: c.provider, collectionDest: c.collectionDest })
-      toast.success("Sincronización encolada")
+      const result = await actionSyncNow({ id: c.id })
+      if (result?.data) toast.success("Sincronización encolada")
+      else toast.error("Error al encolear sincronización")
     })
   }, [startTransition])
 
@@ -227,8 +228,9 @@ function ConnectorForm({ onSave, onCancel }: { onSave: () => void; onCancel: () 
       <h3 className="font-medium text-fg">Nuevo conector</h3>
 
       <div className="flex flex-col gap-2">
-        <label className="text-sm text-fg-muted">Tipo</label>
+        <label htmlFor="conn-type" className="text-sm text-fg-muted">Tipo</label>
         <select
+          id="conn-type"
           value={provider}
           onChange={(e) => setProvider(e.target.value as ConnectorProvider)}
           className="h-10 rounded-lg border border-border bg-bg px-3 text-sm text-fg"
@@ -241,18 +243,19 @@ function ConnectorForm({ onSave, onCancel }: { onSave: () => void; onCancel: () 
       </div>
 
       <div className="flex flex-col gap-2">
-        <label className="text-sm text-fg-muted">Nombre</label>
-        <Input value={name} onChange={(e) => setName(e.target.value)} placeholder={PROVIDER_LABELS[provider]} />
+        <label htmlFor="conn-name" className="text-sm text-fg-muted">Nombre</label>
+        <Input id="conn-name" value={name} onChange={(e) => setName(e.target.value)} placeholder={PROVIDER_LABELS[provider]} />
       </div>
 
       <div className="flex flex-col gap-2">
-        <label className="text-sm text-fg-muted">Colección destino</label>
-        <Input value={collectionDest} onChange={(e) => setCollectionDest(e.target.value)} placeholder="nombre-coleccion" required />
+        <label htmlFor="conn-dest" className="text-sm text-fg-muted">Colección destino</label>
+        <Input id="conn-dest" value={collectionDest} onChange={(e) => setCollectionDest(e.target.value)} placeholder="nombre-coleccion" required />
       </div>
 
       <div className="flex flex-col gap-2">
-        <label className="text-sm text-fg-muted">Frecuencia de sincronización</label>
+        <label htmlFor="conn-schedule" className="text-sm text-fg-muted">Frecuencia de sincronización</label>
         <select
+          id="conn-schedule"
           value={schedule}
           onChange={(e) => setSchedule(e.target.value as "hourly" | "daily" | "weekly")}
           className="h-10 rounded-lg border border-border bg-bg px-3 text-sm text-fg"
@@ -277,20 +280,20 @@ function ConnectorForm({ onSave, onCancel }: { onSave: () => void; onCancel: () 
       {provider === "confluence" && (
         <>
           <div className="flex flex-col gap-2">
-            <label className="text-sm text-fg-muted">URL base de Confluence</label>
-            <Input value={baseUrl} onChange={(e) => setBaseUrl(e.target.value)} placeholder="https://tu-empresa.atlassian.net" required />
+            <label htmlFor="conn-baseurl" className="text-sm text-fg-muted">URL base de Confluence</label>
+            <Input id="conn-baseurl" value={baseUrl} onChange={(e) => setBaseUrl(e.target.value)} placeholder="https://tu-empresa.atlassian.net" required />
           </div>
           <div className="flex flex-col gap-2">
-            <label className="text-sm text-fg-muted">Email</label>
-            <Input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="usuario@empresa.com" required />
+            <label htmlFor="conn-email" className="text-sm text-fg-muted">Email</label>
+            <Input id="conn-email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="usuario@empresa.com" required />
           </div>
           <div className="flex flex-col gap-2">
-            <label className="text-sm text-fg-muted">API Token</label>
-            <Input type="password" value={apiToken} onChange={(e) => setApiToken(e.target.value)} placeholder="••••••••" required />
+            <label htmlFor="conn-apitoken" className="text-sm text-fg-muted">API Token</label>
+            <Input id="conn-apitoken" type="password" value={apiToken} onChange={(e) => setApiToken(e.target.value)} placeholder="••••••••" required />
           </div>
           <div className="flex flex-col gap-2">
-            <label className="text-sm text-fg-muted">Space Key (opcional)</label>
-            <Input value={spaceKey} onChange={(e) => setSpaceKey(e.target.value)} placeholder="TEAM" />
+            <label htmlFor="conn-spacekey" className="text-sm text-fg-muted">Space Key (opcional)</label>
+            <Input id="conn-spacekey" value={spaceKey} onChange={(e) => setSpaceKey(e.target.value)} placeholder="TEAM" />
           </div>
         </>
       )}
@@ -299,12 +302,12 @@ function ConnectorForm({ onSave, onCancel }: { onSave: () => void; onCancel: () 
       {provider === "web_crawler" && (
         <>
           <div className="flex flex-col gap-2">
-            <label className="text-sm text-fg-muted">URLs a crawlear (una por línea)</label>
-            <Textarea value={urls} onChange={(e) => setUrls(e.target.value)} placeholder={"https://docs.empresa.com\nhttps://wiki.empresa.com"} rows={3} />
+            <label htmlFor="conn-urls" className="text-sm text-fg-muted">URLs a crawlear (una por línea)</label>
+            <Textarea id="conn-urls" value={urls} onChange={(e) => setUrls(e.target.value)} placeholder={"https://docs.empresa.com\nhttps://wiki.empresa.com"} rows={3} />
           </div>
           <div className="flex flex-col gap-2">
-            <label className="text-sm text-fg-muted">Profundidad máxima</label>
-            <Input type="number" value={maxDepth} onChange={(e) => setMaxDepth(e.target.value)} min="0" max="5" />
+            <label htmlFor="conn-depth" className="text-sm text-fg-muted">Profundidad máxima</label>
+            <Input id="conn-depth" type="number" value={maxDepth} onChange={(e) => setMaxDepth(e.target.value)} min="0" max="5" />
           </div>
         </>
       )}

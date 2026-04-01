@@ -8,6 +8,8 @@ import {
   deleteExternalSource,
   countSyncDocuments,
   deleteSyncDocumentsForSource,
+  toggleExternalSource,
+  getExternalSourceById,
 } from "@rag-saldivia/db"
 import { ConnectorProviderSchema } from "@rag-saldivia/shared"
 import { externalSyncQueue } from "@/lib/queue"
@@ -17,7 +19,6 @@ export const actionListConnectors = adminAction
   .schema(z.object({}))
   .action(async ({ ctx }) => {
     const sources = await listExternalSources(ctx.user.id)
-    // Add doc count for each source
     const withStats = await Promise.all(
       sources.map(async (s) => ({
         id: s.id,
@@ -41,7 +42,7 @@ export const actionCreateConnector = adminAction
       name: z.string().min(1).max(200),
       collectionDest: z.string().min(1),
       schedule: z.enum(["hourly", "daily", "weekly"]),
-      credentials: z.string().min(1), // JSON string with provider-specific creds
+      credentials: z.string().min(1),
     })
   )
   .action(async ({ parsedInput: data, ctx }) => {
@@ -69,25 +70,23 @@ export const actionDeleteConnector = adminAction
 export const actionToggleConnector = adminAction
   .schema(z.object({ id: z.string().min(1), active: z.boolean() }))
   .action(async ({ parsedInput: { id, active }, ctx }) => {
-    const { getDb } = await import("@rag-saldivia/db")
-    const { externalSources } = await import("@rag-saldivia/db")
-    const { eq, and } = await import("drizzle-orm")
-    const db = getDb()
-    await db
-      .update(externalSources)
-      .set({ active })
-      .where(and(eq(externalSources.id, id), eq(externalSources.userId, ctx.user.id)))
+    await toggleExternalSource(id, ctx.user.id, active)
     revalidatePath("/admin/connectors")
     return { ok: true }
   })
 
 export const actionSyncNow = adminAction
-  .schema(z.object({ id: z.string().min(1), provider: z.string().min(1), collectionDest: z.string().min(1) }))
-  .action(async ({ parsedInput: { id, provider, collectionDest } }) => {
+  .schema(z.object({ id: z.string().min(1) }))
+  .action(async ({ parsedInput: { id }, ctx }) => {
+    // Verify ownership and read provider/collection from DB (not client input)
+    const source = await getExternalSourceById(id, ctx.user.id)
+    if (!source) throw new Error("Conector no encontrado")
+    if (!source.active) throw new Error("Conector desactivado")
+
     await externalSyncQueue.add("manual-sync", {
-      sourceId: id,
-      provider,
-      collectionDest,
+      sourceId: source.id,
+      provider: source.provider,
+      collectionDest: source.collectionDest,
       fullSync: false,
     })
     return { ok: true }
