@@ -6,7 +6,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useMemo, useState } from "react"
+import { useMemo, useState, memo } from "react"
 import { Hash, Lock, MessageCircle, Users, Plus } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { UnreadBadge } from "./UnreadBadge"
@@ -39,7 +39,7 @@ function channelDisplayName(channel: ChannelData, _userId: number): string {
   return "Canal sin nombre"
 }
 
-export function ChannelList({
+export const ChannelList = memo(function ChannelList({
   channels,
   unreadCounts,
   userId,
@@ -162,4 +162,4 @@ export function ChannelList({
       )}
     </aside>
   )
-}
+})

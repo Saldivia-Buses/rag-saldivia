@@ -23,11 +23,18 @@ export async function GET(request: Request) {
   const ragCollections = await getCachedRagCollections()
 
   // Admins see all collections, others see only permitted ones
-  if (claims.role === "admin") return apiOk(ragCollections)
+  let filtered: string[]
+  if (claims.role === "admin") {
+    filtered = ragCollections
+  } else {
+    const userCollections = await getUserCollections(userId)
+    const allowed = new Set(userCollections.map((c) => c.name))
+    filtered = ragCollections.filter((name) => allowed.has(name))
+  }
 
-  const userCollections = await getUserCollections(userId)
-  const allowed = new Set(userCollections.map((c) => c.name))
-  return apiOk(ragCollections.filter((name) => allowed.has(name)))
+  const response = apiOk(filtered)
+  response.headers.set("Cache-Control", "private, max-age=60")
+  return response
 }
 
 export async function POST(request: Request) {

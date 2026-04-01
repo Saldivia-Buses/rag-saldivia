@@ -4,7 +4,7 @@
  */
 "use client"
 
-import { useRef, useEffect, useState } from "react"
+import { useRef, useEffect, useState, memo } from "react"
 import { ArrowDown } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { MessageItem, DateSeparator } from "./MessageItem"
@@ -38,7 +38,7 @@ function shouldShowHeader(msg: MessageData, prev: MessageData | undefined): bool
   return false
 }
 
-export function MessageList({
+export const MessageList = memo(function MessageList({
   channelId: _channelId,
   initialMessages,
   currentUserId,
@@ -140,4 +140,4 @@ export function MessageList({
       )}
     </div>
   )
-}
+})
