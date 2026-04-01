@@ -15,6 +15,12 @@
 import { SignJWT, jwtVerify } from "jose"
 import type { JwtClaims } from "@rag-saldivia/shared"
 import { getRedisClient } from "@rag-saldivia/db"
+import {
+  ACCESS_TOKEN_EXPIRY,
+  ACCESS_TOKEN_MAX_AGE_S,
+  REFRESH_TOKEN_EXPIRY,
+  REFRESH_TOKEN_MAX_AGE_S,
+} from "@rag-saldivia/config"
 
 function getSecret(): Uint8Array {
   const secret = process.env["JWT_SECRET"]
@@ -22,33 +28,35 @@ function getSecret(): Uint8Array {
   return new TextEncoder().encode(secret)
 }
 
-function getExpiry(): string {
-  return process.env["JWT_EXPIRY"] ?? "24h"
-}
-
-/** Parse JWT_EXPIRY string (e.g. "24h", "7d", "30m") into seconds */
-function parseExpirySeconds(str: string): number {
-  const match = str.match(/^(\d+)(m|h|d)$/)
-  if (!match) return 86400 // default 24h
-  const [, n, unit] = match
-  const multipliers = { m: 60, h: 3600, d: 86400 }
-  return Number(n) * multipliers[unit as keyof typeof multipliers]
-}
-
 /**
- * Crea un JWT firmado con `jti` (JWT ID) único. El `jti` es requerido para que el logout pueda
- * revocar el token en Redis. Si se elimina el `setJti()`, el logout dejará de funcionar de inmediato.
+ * Crea un access token (15m) con claims completos.
+ * El `jti` es requerido para revocación en Redis.
  * El `jti` se propaga en el header `x-user-jti` desde el middleware en `proxy.ts`.
  */
-export async function createJwt(claims: Omit<JwtClaims, "iat" | "exp" | "jti">): Promise<string> {
-  const expiry = getExpiry()
-  return new SignJWT({ ...claims })
+export async function createAccessToken(claims: Omit<JwtClaims, "iat" | "exp" | "jti">): Promise<string> {
+  return new SignJWT({ ...claims, type: "access" })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
-    .setExpirationTime(expiry)
+    .setExpirationTime(ACCESS_TOKEN_EXPIRY)
     .setJti(crypto.randomUUID())
     .sign(getSecret())
 }
+
+/**
+ * Crea un refresh token (7d) con claims mínimos (solo sub).
+ * Se usa para obtener un nuevo access token sin re-autenticar.
+ */
+export async function createRefreshToken(sub: string): Promise<string> {
+  return new SignJWT({ sub, type: "refresh" })
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime(REFRESH_TOKEN_EXPIRY)
+    .setJti(crypto.randomUUID())
+    .sign(getSecret())
+}
+
+/** Backward-compatible alias — creates an access token. */
+export const createJwt = createAccessToken
 
 export async function verifyJwt(token: string): Promise<JwtClaims | null> {
   try {
@@ -122,10 +130,9 @@ export async function extractClaims(request: Request): Promise<JwtClaims | null>
 
 export function makeAuthCookie(token: string): string {
   const isProduction = process.env["NODE_ENV"] === "production"
-  const maxAge = parseExpirySeconds(getExpiry())
   return [
     `auth_token=${encodeURIComponent(token)}`,
-    `Max-Age=${maxAge}`,
+    `Max-Age=${ACCESS_TOKEN_MAX_AGE_S}`,
     "Path=/",
     "HttpOnly",
     "SameSite=Lax",
@@ -133,6 +140,30 @@ export function makeAuthCookie(token: string): string {
   ].join("; ")
 }
 
+export function makeRefreshCookie(token: string): string {
+  const isProduction = process.env["NODE_ENV"] === "production"
+  return [
+    `refresh_token=${encodeURIComponent(token)}`,
+    `Max-Age=${REFRESH_TOKEN_MAX_AGE_S}`,
+    "Path=/api/auth/refresh",
+    "HttpOnly",
+    "SameSite=Strict",
+    ...(isProduction ? ["Secure"] : []),
+  ].join("; ")
+}
+
 export function makeClearAuthCookie(): string {
   return "auth_token=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax"
+}
+
+export function makeClearRefreshCookie(): string {
+  return "refresh_token=; Max-Age=0; Path=/api/auth/refresh; HttpOnly; SameSite=Strict"
+}
+
+/** Revoke a token's JTI in Redis with TTL = remaining lifetime. */
+export async function revokeToken(jti: string, expSeconds: number): Promise<void> {
+  const ttl = expSeconds - Math.floor(Date.now() / 1000)
+  if (ttl > 0) {
+    await getRedisClient().set(`revoked:${jti}`, "1", "EX", ttl).catch(() => {})
+  }
 }

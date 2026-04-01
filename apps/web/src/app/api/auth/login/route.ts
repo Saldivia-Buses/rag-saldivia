@@ -6,7 +6,7 @@
 import { NextResponse } from "next/server"
 import { LoginRequestSchema } from "@rag-saldivia/shared"
 import { verifyPassword, getUserByEmail } from "@rag-saldivia/db"
-import { createJwt, makeAuthCookie } from "@/lib/auth/jwt"
+import { createAccessToken, createRefreshToken, makeAuthCookie, makeRefreshCookie } from "@/lib/auth/jwt"
 import { log } from "@rag-saldivia/logger/backend"
 
 export async function POST(request: Request) {
@@ -47,12 +47,13 @@ export async function POST(request: Request) {
       )
     }
 
-    const token = await createJwt({
+    const accessToken = await createAccessToken({
       sub: String(user.id),
       email: user.email,
       name: user.name,
       role: user.role as "admin" | "area_manager" | "user",
     })
+    const refreshToken = await createRefreshToken(String(user.id))
 
     log.info("auth.login", { email, role: user.role, duration: Date.now() - start }, { userId: user.id })
 
@@ -72,7 +73,8 @@ export async function POST(request: Request) {
       },
     })
 
-    response.headers.set("Set-Cookie", makeAuthCookie(token))
+    response.headers.append("Set-Cookie", makeAuthCookie(accessToken))
+    response.headers.append("Set-Cookie", makeRefreshCookie(refreshToken))
     return response
   } catch (error) {
     log.error("system.error", { error: String(error), endpoint: "POST /api/auth/login" })

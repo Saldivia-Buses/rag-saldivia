@@ -1,11 +1,18 @@
 /**
  * DELETE /api/auth/logout
- * Limpia la cookie de autenticación y agrega el jti a la blacklist Redis.
+ * Revoca ambos tokens (access + refresh) y limpia las cookies.
+ *
+ * Plan 26: migrado a access+refresh con revocación de ambos.
  */
 
 import { NextResponse } from "next/server"
-import { makeClearAuthCookie, extractClaims } from "@/lib/auth/jwt"
-import { getRedisClient } from "@rag-saldivia/db"
+import {
+  extractClaims,
+  verifyJwt,
+  makeClearAuthCookie,
+  makeClearRefreshCookie,
+  revokeToken,
+} from "@/lib/auth/jwt"
 import { log } from "@rag-saldivia/logger/backend"
 
 export async function DELETE(request: Request) {
@@ -14,21 +21,29 @@ export async function DELETE(request: Request) {
   if (claims) {
     log.info("auth.logout", { email: claims.email }, { userId: Number(claims.sub) })
 
-    // Agregar jti a la blacklist con TTL = tiempo restante del token
+    // Revoke access token
     if (claims.jti && claims.exp > 0) {
-      const ttl = claims.exp - Math.floor(Date.now() / 1000)
-      if (ttl > 0) {
-        getRedisClient()
-          .set(`revoked:${claims.jti}`, "1", "EX", ttl)
-          .catch(() => {})
+      await revokeToken(claims.jti, claims.exp)
+    }
+  }
+
+  // Revoke refresh token (from cookie)
+  const cookieHeader = request.headers.get("cookie")
+  if (cookieHeader) {
+    const match = cookieHeader.match(/(?:^|;\s*)refresh_token=([^;]+)/)
+    if (match?.[1]) {
+      const refreshClaims = await verifyJwt(decodeURIComponent(match[1]))
+      if (refreshClaims?.jti && refreshClaims.exp > 0) {
+        await revokeToken(refreshClaims.jti, refreshClaims.exp)
       }
     }
   }
 
   const response = NextResponse.json({ ok: true })
-  response.headers.set("Set-Cookie", makeClearAuthCookie())
+  response.headers.append("Set-Cookie", makeClearAuthCookie())
+  response.headers.append("Set-Cookie", makeClearRefreshCookie())
   return response
 }
 
-// Alias para POST (algunos clientes usan POST para logout)
+// Alias for POST (some clients use POST for logout)
 export const POST = DELETE
