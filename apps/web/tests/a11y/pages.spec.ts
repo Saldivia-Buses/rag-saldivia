@@ -34,6 +34,10 @@ const PAGES_TO_AUDIT = [
   { name: "chat",         path: "/chat",         requiresAuth: true  },
   { name: "collections",  path: "/collections",  requiresAuth: true  },
   { name: "settings",     path: "/settings",     requiresAuth: true  },
+  { name: "messaging",    path: "/messaging",    requiresAuth: true  },
+  { name: "admin",        path: "/admin",        requiresAuth: true  },
+  { name: "admin-users",  path: "/admin/users",  requiresAuth: true  },
+  { name: "admin-roles",  path: "/admin/roles",  requiresAuth: true  },
 ]
 
 for (const p of PAGES_TO_AUDIT) {
