@@ -32,6 +32,19 @@ function getDbUrl(): string {
 function createConnection() {
   const url = getDbUrl()
   const client = createClient({ url })
+
+  // Production PRAGMAs (Plan 26)
+  // Skip for :memory: (tests use in-memory DBs)
+  if (url !== ":memory:") {
+    client.executeMultiple(`
+      PRAGMA journal_mode = WAL;
+      PRAGMA synchronous = NORMAL;
+      PRAGMA cache_size = -20000;
+      PRAGMA busy_timeout = 5000;
+      PRAGMA foreign_keys = ON;
+    `)
+  }
+
   return drizzle(client, { schema })
 }
 
