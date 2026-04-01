@@ -75,6 +75,34 @@ export type IngestionJobData = {
   filename?: string
 }
 
+// ── External Sync Queue ───────────────────────────────────────────────────
+
+export const externalSyncQueue = new Queue("external-sync", {
+  connection: getBullMQConnection(),
+  defaultJobOptions: {
+    attempts: 3,
+    backoff: { type: "exponential", delay: 30_000 },
+    removeOnComplete: 50,
+    removeOnFail: 200,
+  },
+})
+
+export type ExternalSyncJobData = {
+  sourceId: string
+  provider: string
+  collectionDest: string
+  fullSync?: boolean | undefined
+}
+
+export function startExternalSyncWorker(
+  processJobFn: (job: Job) => Promise<void>
+): Worker {
+  return new Worker("external-sync", processJobFn, {
+    connection: getBullMQConnection(),
+    concurrency: 2,
+  })
+}
+
 export type ScheduledReportJobData = {
   id: string
   query: string
