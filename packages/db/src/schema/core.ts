@@ -228,7 +228,7 @@ export const externalSources = sqliteTable(
     userId: integer("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
-    provider: text("provider", { enum: ["google_drive", "sharepoint", "confluence"] }).notNull(),
+    provider: text("provider", { enum: ["google_drive", "sharepoint", "confluence", "web_crawler"] }).notNull(),
     name: text("name").notNull(),
     credentials: text("credentials").notNull().default("{}"), // JSON cifrado (en prod: cifrar con SYSTEM_API_KEY)
     collectionDest: text("collection_dest").notNull(),
@@ -239,6 +239,31 @@ export const externalSources = sqliteTable(
   },
   (t) => ({
     userIdx: index("idx_external_sources_user").on(t.userId),
+  })
+)
+
+// ── Sync Documents (change detection for connectors) ──────────────────────
+
+export const syncDocuments = sqliteTable(
+  "sync_documents",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    sourceId: text("source_id")
+      .notNull()
+      .references(() => externalSources.id, { onDelete: "cascade" }),
+    externalId: text("external_id").notNull(),
+    title: text("title").notNull(),
+    contentHash: text("content_hash").notNull(), // SHA-256
+    mimeType: text("mime_type").notNull().default("application/octet-stream"),
+    sizeBytes: integer("size_bytes"),
+    lastModifiedExternal: integer("last_modified_external"),
+    lastSyncedAt: integer("last_synced_at").notNull(),
+    status: text("status", { enum: ["synced", "failed", "pending"] }).notNull().default("synced"),
+    errorMessage: text("error_message"),
+  },
+  (t) => ({
+    sourceIdx: index("idx_sync_docs_source").on(t.sourceId),
+    externalIdIdx: uniqueIndex("idx_sync_docs_external").on(t.sourceId, t.externalId),
   })
 )
 
@@ -281,5 +306,7 @@ export type NewRateLimit = typeof rateLimits.$inferInsert
 export type DbBotUserMapping = typeof botUserMappings.$inferSelect
 export type DbExternalSource = typeof externalSources.$inferSelect
 export type NewExternalSource = typeof externalSources.$inferInsert
+export type DbSyncDocument = typeof syncDocuments.$inferSelect
+export type NewSyncDocument = typeof syncDocuments.$inferInsert
 export type DbSsoProvider = typeof ssoProviders.$inferSelect
 export type NewSsoProvider = typeof ssoProviders.$inferInsert

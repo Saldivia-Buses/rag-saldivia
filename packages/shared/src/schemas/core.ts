@@ -132,6 +132,36 @@ export const SsoProviderPublicSchema = z.object({
 })
 export type SsoProviderPublic = z.infer<typeof SsoProviderPublicSchema>
 
+// ── Connectors ────────────────────────────────────────────────────────────
+
+export const ConnectorProviderSchema = z.enum([
+  "google_drive", "sharepoint", "confluence", "web_crawler",
+])
+export type ConnectorProvider = z.infer<typeof ConnectorProviderSchema>
+
+export const ExternalSourceSchema = z.object({
+  id: z.string(),
+  provider: ConnectorProviderSchema,
+  name: z.string().min(1).max(200),
+  collectionDest: z.string().min(1),
+  schedule: z.enum(["hourly", "daily", "weekly"]),
+  active: z.boolean(),
+  lastSync: z.number().int().nullable(),
+  createdAt: z.number().int(),
+})
+export type ExternalSource = z.infer<typeof ExternalSourceSchema>
+
+export const SyncDocumentSchema = z.object({
+  id: z.number().int(),
+  sourceId: z.string(),
+  externalId: z.string(),
+  title: z.string(),
+  contentHash: z.string(),
+  status: z.enum(["synced", "failed", "pending"]),
+  lastSyncedAt: z.number().int(),
+})
+export type SyncDocument = z.infer<typeof SyncDocumentSchema>
+
 // ── API Response wrappers ──────────────────────────────────────────────────
 
 export const ApiSuccessSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
