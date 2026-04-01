@@ -1,12 +1,13 @@
 /**
- * GET /api/auth/callback/[provider] — SSO callback from IdP.
+ * GET /api/auth/callback/[provider] — OIDC callback from IdP.
+ * POST /api/auth/callback/saml — SAML callback (IdPs POST the SAMLResponse).
  *
- * Verifies state, exchanges code for tokens via arctic, extracts user info,
+ * Verifies state, exchanges code for tokens, extracts user info,
  * finds or provisions user, creates our JWT, sets cookies, redirects to /chat.
  */
 
 import { NextResponse } from "next/server"
-import { loadProvider, verifyStateToken, extractUserInfo } from "@/lib/auth/sso"
+import { loadProvider, loadSamlProvider, verifyStateToken, extractUserInfo, validateSamlResponse } from "@/lib/auth/sso"
 import { createAccessToken, createRefreshToken, makeAuthCookie, makeRefreshCookie } from "@/lib/auth/jwt"
 import { findUserBySso, linkSsoToUser, createSsoUser, getUserByEmail, getUserById } from "@rag-saldivia/db"
 import { log } from "@rag-saldivia/logger/backend"
@@ -87,46 +88,104 @@ export async function GET(
   }
 
   // 7. Find or provision user
+  const user = await findOrProvisionUser(providerType, userInfo, loaded.config)
+  if (!user) return user as unknown as NextResponse
+
+  // 8. Issue session and redirect
+  return issueSessionAndRedirect(user, providerType)
+}
+
+/** SAML callback — IdPs POST the SAMLResponse. */
+export async function POST(request: Request) {
+  const samlProvider = await loadSamlProvider()
+  if (!samlProvider) {
+    return errorRedirect("SAML provider no configurado", "provider_error")
+  }
+
+  // Parse form body (SAMLResponse + RelayState)
+  const formData = await request.formData()
+  const samlResponse = formData.get("SAMLResponse") as string | null
+  const relayState = formData.get("RelayState") as string | null
+
+  if (!samlResponse) {
+    return errorRedirect("SAMLResponse faltante", "missing_params")
+  }
+
+  // Verify state
+  const savedState = getCookieValue(request, "sso_state")
+  if (!savedState || savedState !== relayState) {
+    log.warn("auth.failed", { reason: "saml_state_mismatch" })
+    return errorRedirect("Estado de sesión SAML inválido", "invalid_state")
+  }
+
+  const stateToken = getCookieValue(request, "sso_token")
+  if (stateToken) {
+    const tokenPayload = await verifyStateToken(stateToken)
+    if (!tokenPayload || tokenPayload.provider !== "saml" || tokenPayload.state !== relayState) {
+      return errorRedirect("Token de estado SAML expirado", "expired_state")
+    }
+  }
+
+  // Validate SAML assertion
+  const userInfo = await validateSamlResponse(samlProvider.saml, {
+    SAMLResponse: samlResponse,
+  })
+  if (!userInfo || !userInfo.email) {
+    log.error("auth.failed", { reason: "saml_assertion_invalid" })
+    return errorRedirect("Aserción SAML inválida", "provider_error")
+  }
+
+  // Find or provision user (same logic as OIDC)
+  const user = await findOrProvisionUser("saml", userInfo, samlProvider.config)
+  if (!user) return user as unknown as NextResponse // errorRedirect already returned
+
+  return issueSessionAndRedirect(user, "saml")
+}
+
+// ── Shared helpers ────────────────────────────────────────────────────────
+
+async function findOrProvisionUser(
+  providerType: string,
+  userInfo: { email: string; name: string; sub: string },
+  config: { autoProvision: boolean; defaultRole: string },
+) {
   let user = await findUserBySso(providerType, userInfo.sub)
 
   if (!user) {
-    // Try account linking by email
     const existingUser = await getUserByEmail(userInfo.email)
     if (existingUser) {
-      // Link SSO to existing account (one-time)
       if (existingUser.ssoProvider && existingUser.ssoProvider !== providerType) {
-        // Already linked to a different provider
-        return errorRedirect("Esta cuenta ya está vinculada a otro proveedor SSO", "already_linked")
+        return errorRedirect("Esta cuenta ya está vinculada a otro proveedor SSO", "already_linked") as unknown as null
       }
       await linkSsoToUser(existingUser.id, providerType, userInfo.sub)
       user = Object.assign({}, existingUser, { ssoProvider: providerType, ssoSubject: userInfo.sub })
       log.info("auth.login", { method: "sso_link", provider: providerType }, { userId: existingUser.id })
-    } else if (loaded.config.autoProvision) {
-      // Auto-provision new user
+    } else if (config.autoProvision) {
       const created = await createSsoUser({
         email: userInfo.email,
         name: userInfo.name,
         ssoProvider: providerType,
         ssoSubject: userInfo.sub,
-        role: loaded.config.defaultRole as "admin" | "area_manager" | "user",
+        role: config.defaultRole as "admin" | "area_manager" | "user",
       })
       user = await getUserById(created.id)
       log.info("user.created", { method: "sso_provision", provider: providerType, email: userInfo.email }, { userId: user!.id })
     } else {
-      return errorRedirect("No se encontró una cuenta. Contactá al administrador.", "no_account")
+      return errorRedirect("No se encontró una cuenta. Contactá al administrador.", "no_account") as unknown as null
     }
   }
 
-  if (!user) {
-    return errorRedirect("Error interno al procesar usuario", "provider_error")
+  if (!user || !user.active) {
+    return errorRedirect(user ? "Tu cuenta está desactivada" : "Error interno", user ? "inactive" : "provider_error") as unknown as null
   }
 
-  // Check user is active
-  if (!user.active) {
-    return errorRedirect("Tu cuenta está desactivada", "inactive")
-  }
+  return user
+}
 
-  // 8. Create our JWT (same pipeline as email/password login)
+async function issueSessionAndRedirect(
+  user: { id: number; email: string; name: string; role: string },
+  providerType: string,
+): Promise<NextResponse> {
   const accessJwt = await createAccessToken({
     sub: String(user.id),
     email: user.email,
@@ -137,12 +196,10 @@ export async function GET(
 
   log.info("auth.login", { method: "sso", provider: providerType }, { userId: user.id })
 
-  // 9. Set cookies and redirect
   const baseUrl = process.env["APP_URL"] ?? "http://localhost:3000"
   const response = NextResponse.redirect(new URL("/chat", baseUrl))
   response.headers.append("Set-Cookie", makeAuthCookie(accessJwt))
   response.headers.append("Set-Cookie", makeRefreshCookie(refreshJwt))
   clearSsoCookies(response)
-
   return response
 }

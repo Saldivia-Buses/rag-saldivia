@@ -104,7 +104,7 @@ export type UserPreferences = z.infer<typeof UserPreferencesSchema>
 
 // ── SSO ───────────────────────────────────────────────────────────────────
 
-export const SsoProviderTypeSchema = z.enum(["google", "microsoft", "github", "oidc_generic"])
+export const SsoProviderTypeSchema = z.enum(["google", "microsoft", "github", "oidc_generic", "saml"])
 export type SsoProviderType = z.infer<typeof SsoProviderTypeSchema>
 
 /** Full SSO provider (admin view — no secret) */

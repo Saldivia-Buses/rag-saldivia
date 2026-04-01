@@ -247,12 +247,14 @@ export const externalSources = sqliteTable(
 export const ssoProviders = sqliteTable("sso_providers", {
   id: integer("id").primaryKey({ autoIncrement: true }),
   name: text("name").notNull(), // Display name: "Google", "Microsoft"
-  type: text("type", { enum: ["google", "microsoft", "github", "oidc_generic"] }).notNull(),
-  clientId: text("client_id").notNull(),
-  clientSecretEncrypted: text("client_secret_encrypted").notNull(), // AES-256-GCM
+  type: text("type", { enum: ["google", "microsoft", "github", "oidc_generic", "saml"] }).notNull(),
+  clientId: text("client_id").notNull(), // For SAML: entityId
+  clientSecretEncrypted: text("client_secret_encrypted").notNull(), // AES-256-GCM. For SAML: not used (store "none")
   tenantId: text("tenant_id"), // For Microsoft/Azure AD
-  issuerUrl: text("issuer_url"), // For generic OIDC
+  issuerUrl: text("issuer_url"), // For generic OIDC or SAML entryPoint
   scopes: text("scopes").notNull().default("openid email profile"),
+  samlCert: text("saml_cert"), // X.509 certificate for SAML IdP signature verification
+  samlEntryPoint: text("saml_entry_point"), // SAML IdP login URL
   autoProvision: integer("auto_provision", { mode: "boolean" }).notNull().default(true),
   defaultRole: text("default_role", { enum: ["admin", "area_manager", "user"] }).notNull().default("user"),
   active: integer("active", { mode: "boolean" }).notNull().default(true),

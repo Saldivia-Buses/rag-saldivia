@@ -1,20 +1,22 @@
 /**
- * sso.ts — SSO core logic using arctic for OAuth2/OIDC.
+ * sso.ts — SSO core logic using arctic for OAuth2/OIDC + node-saml for SAML 2.0.
  *
  * Arctic provides pure functions that generate authorization URLs and parse
  * callbacks. After the callback, we use our existing createAccessToken() +
  * createRefreshToken() — the JWT pipeline is unchanged.
  *
+ * SAML uses @node-saml/node-saml for AuthnRequest generation and assertion parsing.
+ *
  * Used by: /api/auth/sso/[provider]/route.ts, /api/auth/callback/[provider]/route.ts
  */
 
 import { Google, MicrosoftEntraId, GitHub } from "arctic"
+import { SAML } from "@node-saml/node-saml"
 import { SignJWT, jwtVerify } from "jose"
 import { SSO_STATE_TTL_S, SSO_CALLBACK_PATH } from "@rag-saldivia/config"
 import { getSsoProviderByType, type DbSsoProvider } from "@rag-saldivia/db"
-// decryptSecret is used by sso queries (re-exported from db), not directly here
 
-type SsoProviderType = "google" | "microsoft" | "github" | "oidc_generic"
+export type SsoProviderType = "google" | "microsoft" | "github" | "oidc_generic" | "saml"
 
 // ── Arctic provider factory ───────────────────────────────────────────────
 
@@ -34,7 +36,7 @@ export type ArcticProvider = {
 }
 
 export function createArcticProvider(
-  type: SsoProviderType,
+  type: Exclude<SsoProviderType, "saml">,
   clientId: string,
   clientSecret: string,
   tenantId?: string | null,
@@ -158,16 +160,72 @@ export async function extractUserInfo(
 
 // ── Provider config loader ────────────────────────────────────────────────
 
+type ProviderConfig = Omit<DbSsoProvider, "clientSecretEncrypted"> & { clientSecret: string }
+
 export type LoadedProvider = {
-  config: Omit<DbSsoProvider, "clientSecretEncrypted"> & { clientSecret: string }
-  arctic: ReturnType<typeof createArcticProvider>
+  config: ProviderConfig
+  arctic: ArcticProvider
 }
 
-/** Load provider config from DB + create arctic instance. */
+export type LoadedSamlProvider = {
+  config: ProviderConfig
+  saml: SAML
+}
+
+/** Load OIDC provider config from DB + create arctic instance. */
 export async function loadProvider(type: SsoProviderType): Promise<LoadedProvider | null> {
-  const config = await getSsoProviderByType(type)
+  if (type === "saml") return null // Use loadSamlProvider for SAML
+  const config = await getSsoProviderByType(type as Exclude<SsoProviderType, "saml">)
   if (!config || !config.clientSecret) return null
 
-  const arctic = createArcticProvider(type, config.clientId, config.clientSecret, config.tenantId)
-  return { config: config as LoadedProvider["config"], arctic }
+  const arctic = createArcticProvider(
+    type as Exclude<SsoProviderType, "saml">,
+    config.clientId,
+    config.clientSecret,
+    config.tenantId,
+  )
+  return { config: config as ProviderConfig, arctic }
+}
+
+/** Load SAML provider config from DB + create node-saml instance. */
+export async function loadSamlProvider(): Promise<LoadedSamlProvider | null> {
+  const config = await getSsoProviderByType("saml" as Parameters<typeof getSsoProviderByType>[0])
+  if (!config) return null
+
+  const saml = new SAML({
+    callbackUrl: `${getBaseUrl()}${SSO_CALLBACK_PATH}/saml`,
+    entryPoint: (config as unknown as Record<string, string>).samlEntryPoint ?? config.issuerUrl ?? "",
+    issuer: config.clientId, // entityId
+    idpCert: (config as unknown as Record<string, string>).samlCert ?? "",
+    wantAuthnResponseSigned: true,
+    wantAssertionsSigned: true,
+  })
+
+  return { config: config as ProviderConfig, saml }
+}
+
+// ── SAML helpers ──────────────────────────────────────────────────────────
+
+/** Generate SAML AuthnRequest URL. */
+export async function createSamlAuthorizeUrl(saml: SAML, relayState: string): Promise<string> {
+  const url = await saml.getAuthorizeUrlAsync(relayState, undefined, {})
+  return url
+}
+
+/** Parse and validate a SAML Response assertion. */
+export async function validateSamlResponse(
+  saml: SAML,
+  body: Record<string, string>,
+): Promise<SsoUserInfo | null> {
+  try {
+    const { profile } = await saml.validatePostResponseAsync(body)
+    if (!profile) return null
+    return {
+      email: (profile.email ?? profile.nameID ?? "") as string,
+      name: ((profile.firstName ?? "") + " " + (profile.lastName ?? "")).trim() || (profile.nameID as string),
+      sub: (profile.nameID ?? profile.email ?? "") as string,
+    }
+  } catch {
+    return null
+  }
 }

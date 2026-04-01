@@ -38,7 +38,7 @@ export async function listAllSsoProviders() {
 }
 
 /** Get a single provider by type. Decrypts secret. */
-export async function getSsoProviderByType(type: "google" | "microsoft" | "github" | "oidc_generic") {
+export async function getSsoProviderByType(type: "google" | "microsoft" | "github" | "oidc_generic" | "saml") {
   const db = getDb()
   const row = await db.select().from(ssoProviders).where(eq(ssoProviders.type, type)).limit(1)
   const r = row[0]
