@@ -47,6 +47,7 @@
     "@rag-saldivia/shared": "workspace:*",
     "@tanstack/react-table": "^8.21.3",
     "ai": "^6.0.141",
+    "arctic": "^3.7.0",
     "bullmq": "^5.71.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

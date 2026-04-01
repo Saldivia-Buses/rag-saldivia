@@ -163,6 +163,64 @@ export async function getUserCollections(userId: number): Promise<Array<{ name: 
   return Array.from(seen.entries()).map(([name, permission]) => ({ name, permission }))
 }
 
+// ── SSO ───────────────────────────────────────────────────────────────────
+
+export async function findUserBySso(provider: string, subject: string) {
+  return getDb().query.users.findFirst({
+    where: (u, { and, eq }) => and(eq(u.ssoProvider, provider), eq(u.ssoSubject, subject)),
+    with: { userAreas: { with: { area: true } } },
+  })
+}
+
+export async function linkSsoToUser(userId: number, provider: string, subject: string) {
+  await getDb().update(users).set({
+    ssoProvider: provider,
+    ssoSubject: subject,
+    lastLogin: now(),
+  }).where(eq(users.id, userId))
+}
+
+export async function createSsoUser(data: {
+  email: string
+  name: string
+  ssoProvider: string
+  ssoSubject: string
+  role?: "admin" | "area_manager" | "user"
+  areaIds?: number[]
+}) {
+  const db = getDb()
+  const apiKeyHash = createHash("sha256").update(`rsk_${crypto.randomUUID()}`).digest("hex").slice(0, 32)
+
+  const [user] = await db
+    .insert(users)
+    .values({
+      email: data.email.toLowerCase(),
+      name: data.name,
+      role: data.role ?? "user",
+      apiKeyHash,
+      passwordHash: null,
+      ssoProvider: data.ssoProvider,
+      ssoSubject: data.ssoSubject,
+      preferences: {},
+      active: true,
+      createdAt: now(),
+      lastLogin: now(),
+    })
+    .returning()
+
+  if (!user) throw new Error("Failed to create SSO user")
+
+  if (data.areaIds && data.areaIds.length > 0) {
+    await db.insert(userAreas).values(
+      data.areaIds.map((areaId) => ({ userId: user.id, areaId }))
+    )
+  }
+
+  return user
+}
+
+// ── Collection access ─────────────────────────────────────────────────────
+
 export async function canAccessCollection(
   userId: number,
   collectionName: string,
