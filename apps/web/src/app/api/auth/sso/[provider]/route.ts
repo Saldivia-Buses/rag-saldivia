@@ -31,8 +31,8 @@ export async function GET(
   const state = generateState()
   const codeVerifier = generateCodeVerifier()
 
-  // Sign the state so we can verify it in the callback
-  const stateToken = await createStateToken(providerType, request.url)
+  // Sign the state binding it to the random value for CSRF verification in callback
+  const stateToken = await createStateToken(providerType, state)
 
   // Generate authorization URL with scopes from config
   const scopes = loaded.config.scopes.split(" ").filter(Boolean)

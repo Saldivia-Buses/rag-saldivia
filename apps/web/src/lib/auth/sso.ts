@@ -69,9 +69,9 @@ function getStateSecret(): Uint8Array {
   return new TextEncoder().encode(secret)
 }
 
-/** Create a signed state token containing provider and optional redirect. */
-export async function createStateToken(provider: string, redirectTo?: string | undefined): Promise<string> {
-  const builder = new SignJWT({ provider, ...(redirectTo ? { redirectTo } : {}) })
+/** Create a signed state token binding provider + random state for CSRF. */
+export async function createStateToken(provider: string, state: string, redirectTo?: string | undefined): Promise<string> {
+  const builder = new SignJWT({ provider, state, ...(redirectTo ? { redirectTo } : {}) })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime(`${SSO_STATE_TTL_S}s`)
@@ -79,10 +79,13 @@ export async function createStateToken(provider: string, redirectTo?: string | u
 }
 
 /** Verify a state token. Returns null if invalid or expired. */
-export async function verifyStateToken(token: string): Promise<{ provider: string; redirectTo?: string | undefined } | null> {
+export async function verifyStateToken(token: string): Promise<{ provider: string; state: string; redirectTo?: string | undefined } | null> {
   try {
     const { payload } = await jwtVerify(token, getStateSecret())
-    const result: { provider: string; redirectTo?: string | undefined } = { provider: payload.provider as string }
+    const result: { provider: string; state: string; redirectTo?: string | undefined } = {
+      provider: payload.provider as string,
+      state: payload.state as string,
+    }
     if (payload.redirectTo) result.redirectTo = payload.redirectTo as string
     return result
   } catch {

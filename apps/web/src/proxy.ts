@@ -16,7 +16,8 @@ const PUBLIC_ROUTES = [
   "/api/auth/refresh",
   "/api/health",        // Health check público para CLI y monitoreo
   "/api/log",           // Frontend puede logear sin auth
-  "/api/auth/sso",      // SSO authorization redirect + callback + providers listing
+  "/api/auth/sso",      // SSO authorization redirect + providers listing
+  "/api/auth/callback", // SSO callback from IdP (user has no JWT yet)
   "/_next",
   "/favicon.ico",
 ]

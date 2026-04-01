@@ -9,13 +9,7 @@ import { NextResponse } from "next/server"
 import { loadProvider, verifyStateToken, extractUserInfo } from "@/lib/auth/sso"
 import { createAccessToken, createRefreshToken, makeAuthCookie, makeRefreshCookie } from "@/lib/auth/jwt"
 import { findUserBySso, linkSsoToUser, createSsoUser, getUserByEmail, getUserById } from "@rag-saldivia/db"
- 
-const ssoLog = {
-  warn: (type: string, data: Record<string, unknown>) => console.warn(`[SSO] ${type}`, data),
-  error: (type: string, data: Record<string, unknown>) => console.error(`[SSO] ${type}`, data),
-  info: (type: string, data: Record<string, unknown>) => console.error(`[SSO] ${type}`, data), // console.error is allowed
-}
- 
+import { log } from "@rag-saldivia/logger/backend"
 import type { SsoProviderType } from "@rag-saldivia/shared"
 
 function getCookieValue(request: Request, name: string): string | null {
@@ -54,7 +48,7 @@ export async function GET(
   // 2. Verify state against cookie (CSRF protection)
   const savedState = getCookieValue(request, "sso_state")
   if (!savedState || savedState !== state) {
-    ssoLog.warn("sso.state_mismatch", { provider: providerType })
+    log.warn("auth.failed", { reason: "sso_state_mismatch", provider: providerType })
     return errorRedirect("Estado de sesión inválido", "invalid_state")
   }
 
@@ -64,7 +58,7 @@ export async function GET(
     return errorRedirect("Token de estado faltante", "invalid_state")
   }
   const tokenPayload = await verifyStateToken(stateToken)
-  if (!tokenPayload || tokenPayload.provider !== providerType) {
+  if (!tokenPayload || tokenPayload.provider !== providerType || tokenPayload.state !== state) {
     return errorRedirect("Token de estado expirado o inválido", "expired_state")
   }
 
@@ -80,7 +74,7 @@ export async function GET(
   try {
     tokens = await loaded.arctic.validateAuthorizationCode(code, codeVerifier) as { accessToken: () => string }
   } catch (err) {
-    ssoLog.error("sso.token_exchange_failed", { provider: providerType, error: String(err) })
+    log.error("auth.failed", { reason: "sso_token_exchange", provider: providerType, error: String(err) })
     return errorRedirect("Error al intercambiar código con el proveedor", "provider_error")
   }
 
@@ -88,7 +82,7 @@ export async function GET(
   const accessToken = tokens.accessToken()
   const userInfo = await extractUserInfo(providerType as SsoProviderType, accessToken)
   if (!userInfo || !userInfo.email) {
-    ssoLog.error("sso.user_info_failed", { provider: providerType })
+    log.error("auth.failed", { reason: "sso_user_info", provider: providerType })
     return errorRedirect("No se pudo obtener información del usuario", "provider_error")
   }
 
@@ -106,7 +100,7 @@ export async function GET(
       }
       await linkSsoToUser(existingUser.id, providerType, userInfo.sub)
       user = Object.assign({}, existingUser, { ssoProvider: providerType, ssoSubject: userInfo.sub })
-      ssoLog.info("sso.account_linked", { userId: existingUser.id, provider: providerType })
+      log.info("auth.login", { method: "sso_link", provider: providerType }, { userId: existingUser.id })
     } else if (loaded.config.autoProvision) {
       // Auto-provision new user
       const created = await createSsoUser({
@@ -117,7 +111,7 @@ export async function GET(
         role: loaded.config.defaultRole as "admin" | "area_manager" | "user",
       })
       user = await getUserById(created.id)
-      ssoLog.info("sso.user_provisioned", { userId: user!.id, provider: providerType, email: userInfo.email })
+      log.info("user.created", { method: "sso_provision", provider: providerType, email: userInfo.email }, { userId: user!.id })
     } else {
       return errorRedirect("No se encontró una cuenta. Contactá al administrador.", "no_account")
     }
@@ -141,7 +135,7 @@ export async function GET(
   })
   const refreshJwt = await createRefreshToken(String(user.id))
 
-  ssoLog.info("sso.login_success", { userId: user.id, provider: providerType })
+  log.info("auth.login", { method: "sso", provider: providerType }, { userId: user.id })
 
   // 9. Set cookies and redirect
   const baseUrl = process.env["APP_URL"] ?? "http://localhost:3000"
