@@ -256,7 +256,7 @@ export const ssoProviders = sqliteTable("sso_providers", {
   samlCert: text("saml_cert"), // X.509 certificate for SAML IdP signature verification
   samlEntryPoint: text("saml_entry_point"), // SAML IdP login URL
   autoProvision: integer("auto_provision", { mode: "boolean" }).notNull().default(true),
-  defaultRole: text("default_role", { enum: ["admin", "area_manager", "user"] }).notNull().default("user"),
+  defaultRole: text("default_role", { enum: ["area_manager", "user"] }).notNull().default("user"),
   active: integer("active", { mode: "boolean" }).notNull().default(true),
   createdAt: integer("created_at").notNull(),
   updatedAt: integer("updated_at").notNull(),

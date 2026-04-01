@@ -15,7 +15,8 @@ export const actionListSsoProviders = adminAction
   .schema(z.object({}))
   .action(async () => {
     const providers = await listAllSsoProviders()
-    return { providers }
+    // Strip decrypted secrets — admin UI doesn't need them
+    return { providers: providers.map(({ clientSecret: _s, ...rest }) => rest) }
   })
 
 export const actionCreateSsoProvider = adminAction
@@ -29,7 +30,7 @@ export const actionCreateSsoProvider = adminAction
       issuerUrl: z.string().optional(),
       scopes: z.string().optional(),
       autoProvision: z.boolean().optional(),
-      defaultRole: z.enum(["admin", "area_manager", "user"]).optional(),
+      defaultRole: z.enum(["area_manager", "user"]).optional(),
       samlCert: z.string().optional(),
       samlEntryPoint: z.string().optional(),
     })
@@ -46,6 +47,8 @@ export const actionCreateSsoProvider = adminAction
       autoProvision: data.autoProvision,
       defaultRole: data.defaultRole,
       active: true,
+      ...(data.samlCert ? { samlCert: data.samlCert } : {}),
+      ...(data.samlEntryPoint ? { samlEntryPoint: data.samlEntryPoint } : {}),
     })
     revalidatePath("/admin/sso")
     return { ok: true }
@@ -62,7 +65,7 @@ export const actionUpdateSsoProvider = adminAction
       issuerUrl: z.string().optional(),
       scopes: z.string().optional(),
       autoProvision: z.boolean().optional(),
-      defaultRole: z.enum(["admin", "area_manager", "user"]).optional(),
+      defaultRole: z.enum(["area_manager", "user"]).optional(),
       active: z.boolean().optional(),
     })
   )

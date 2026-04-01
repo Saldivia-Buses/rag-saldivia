@@ -7,9 +7,10 @@
  */
 
 import { NextResponse } from "next/server"
+import { timingSafeEqual } from "crypto"
 import { loadProvider, loadSamlProvider, verifyStateToken, extractUserInfo, validateSamlResponse } from "@/lib/auth/sso"
 import { createAccessToken, createRefreshToken, makeAuthCookie, makeRefreshCookie } from "@/lib/auth/jwt"
-import { findUserBySso, linkSsoToUser, createSsoUser, getUserByEmail, getUserById } from "@rag-saldivia/db"
+import { findUserBySso, createSsoUser, getUserByEmail, getUserById } from "@rag-saldivia/db"
 import { log } from "@rag-saldivia/logger/backend"
 import type { SsoProviderType } from "@rag-saldivia/shared"
 
@@ -20,6 +21,11 @@ function getCookieValue(request: Request, name: string): string | null {
   return match?.[1] ? decodeURIComponent(match[1]) : null
 }
 
+function safeEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) return false
+  return timingSafeEqual(Buffer.from(a), Buffer.from(b))
+}
+
 function clearSsoCookies(response: NextResponse): void {
   response.headers.append("Set-Cookie", "sso_state=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax")
   response.headers.append("Set-Cookie", "sso_verifier=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax")
@@ -27,7 +33,7 @@ function clearSsoCookies(response: NextResponse): void {
 }
 
 function errorRedirect(message: string, code: string): NextResponse {
-  const response = NextResponse.redirect(new URL(`/login?sso_error=${code}`, process.env["APP_URL"] ?? "http://localhost:3000"))
+  const response = NextResponse.redirect(new URL(`/login?sso_error=${encodeURIComponent(code)}`, process.env["APP_URL"] ?? "http://localhost:3000"))
   clearSsoCookies(response)
   return response
 }
@@ -48,7 +54,7 @@ export async function GET(
 
   // 2. Verify state against cookie (CSRF protection)
   const savedState = getCookieValue(request, "sso_state")
-  if (!savedState || savedState !== state) {
+  if (!savedState || !safeEqual(savedState, state)) {
     log.warn("auth.failed", { reason: "sso_state_mismatch", provider: providerType })
     return errorRedirect("Estado de sesión inválido", "invalid_state")
   }
@@ -113,17 +119,18 @@ export async function POST(request: Request) {
 
   // Verify state
   const savedState = getCookieValue(request, "sso_state")
-  if (!savedState || savedState !== relayState) {
+  if (!savedState || !relayState || !safeEqual(savedState, relayState)) {
     log.warn("auth.failed", { reason: "saml_state_mismatch" })
     return errorRedirect("Estado de sesión SAML inválido", "invalid_state")
   }
 
   const stateToken = getCookieValue(request, "sso_token")
-  if (stateToken) {
-    const tokenPayload = await verifyStateToken(stateToken)
-    if (!tokenPayload || tokenPayload.provider !== "saml" || tokenPayload.state !== relayState) {
-      return errorRedirect("Token de estado SAML expirado", "expired_state")
-    }
+  if (!stateToken) {
+    return errorRedirect("Token de estado SAML faltante", "invalid_state")
+  }
+  const tokenPayload = await verifyStateToken(stateToken)
+  if (!tokenPayload || tokenPayload.provider !== "saml" || tokenPayload.state !== relayState) {
+    return errorRedirect("Token de estado SAML expirado", "expired_state")
   }
 
   // Validate SAML assertion
@@ -152,14 +159,13 @@ async function findOrProvisionUser(
   let user = await findUserBySso(providerType, userInfo.sub)
 
   if (!user) {
+    // Check if a local account with this email exists — do NOT auto-link
+    // (prevents account takeover if attacker registers victim's email on an IdP)
     const existingUser = await getUserByEmail(userInfo.email)
     if (existingUser) {
-      if (existingUser.ssoProvider && existingUser.ssoProvider !== providerType) {
-        return errorRedirect("Esta cuenta ya está vinculada a otro proveedor SSO", "already_linked") as unknown as null
-      }
-      await linkSsoToUser(existingUser.id, providerType, userInfo.sub)
-      user = Object.assign({}, existingUser, { ssoProvider: providerType, ssoSubject: userInfo.sub })
-      log.info("auth.login", { method: "sso_link", provider: providerType }, { userId: existingUser.id })
+      // Account exists but is not SSO-linked — user must login with password
+      // and link SSO from settings (or admin links it manually)
+      return errorRedirect("Ya existe una cuenta con este email. Iniciá sesión con contraseña para vincular SSO.", "account_exists") as unknown as null
     } else if (config.autoProvision) {
       const created = await createSsoUser({
         email: userInfo.email,

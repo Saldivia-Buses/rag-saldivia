@@ -13,6 +13,8 @@ import { encryptSecret, decryptSecret } from "../crypto"
 
 type SsoProviderInput = Omit<NewSsoProvider, "id" | "createdAt" | "updatedAt" | "clientSecretEncrypted"> & {
   clientSecret: string
+  samlCert?: string | undefined
+  samlEntryPoint?: string | undefined
 }
 
 /** List active providers — public fields only (for login page). */
@@ -78,6 +80,8 @@ export async function createSsoProvider(data: SsoProviderInput) {
     autoProvision: data.autoProvision ?? true,
     defaultRole: data.defaultRole ?? "user",
     active: data.active ?? true,
+    samlCert: data.samlCert ?? null,
+    samlEntryPoint: data.samlEntryPoint ?? null,
     createdAt: now,
     updatedAt: now,
   }).returning()
@@ -100,6 +104,8 @@ export async function updateSsoProvider(
   if (data.autoProvision !== undefined) updates.autoProvision = data.autoProvision
   if (data.defaultRole !== undefined) updates.defaultRole = data.defaultRole
   if (data.active !== undefined) updates.active = data.active
+  if (data.samlCert !== undefined) updates.samlCert = data.samlCert
+  if (data.samlEntryPoint !== undefined) updates.samlEntryPoint = data.samlEntryPoint
   await db.update(ssoProviders).set(updates).where(eq(ssoProviders.id, id))
 }
 

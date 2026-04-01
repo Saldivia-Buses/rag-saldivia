@@ -31,6 +31,7 @@ const SSO_ERRORS: Record<string, string> = {
   invalid_state: "Sesión de SSO inválida. Intentá de nuevo.",
   expired_state: "La sesión de SSO expiró. Intentá de nuevo.",
   already_linked: "Esta cuenta ya está vinculada a otro proveedor SSO.",
+  account_exists: "Ya existe una cuenta con este email. Iniciá sesión con contraseña para vincular SSO.",
   missing_params: "Respuesta incompleta del proveedor SSO.",
 }
 

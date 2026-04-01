@@ -25,7 +25,9 @@ export async function GET(
   }
 
   const isProduction = process.env["NODE_ENV"] === "production"
-  const cookieOpts = `Path=/; HttpOnly; SameSite=Lax; Max-Age=${SSO_STATE_TTL_S}${isProduction ? "; Secure" : ""}`
+  // OIDC uses Lax (GET callback from same-site redirect). SAML uses None (POST from cross-origin IdP).
+  const oidcCookieOpts = `Path=/; HttpOnly; SameSite=Lax; Max-Age=${SSO_STATE_TTL_S}${isProduction ? "; Secure" : ""}`
+  const samlCookieOpts = `Path=/; HttpOnly; SameSite=None; Secure; Max-Age=${SSO_STATE_TTL_S}`
 
   // ── SAML flow ────────────────────────────────────────────────────────
   if (providerType === "saml") {
@@ -39,8 +41,8 @@ export async function GET(
     const url = await createSamlAuthorizeUrl(samlProvider.saml, state)
 
     const response = NextResponse.redirect(url)
-    response.headers.append("Set-Cookie", `sso_state=${encodeURIComponent(state)}; ${cookieOpts}`)
-    response.headers.append("Set-Cookie", `sso_token=${encodeURIComponent(stateToken)}; ${cookieOpts}`)
+    response.headers.append("Set-Cookie", `sso_state=${encodeURIComponent(state)}; ${samlCookieOpts}`)
+    response.headers.append("Set-Cookie", `sso_token=${encodeURIComponent(stateToken)}; ${samlCookieOpts}`)
     return response
   }
 
@@ -58,9 +60,9 @@ export async function GET(
   const url = loaded.arctic.createAuthorizationURL(state, codeVerifier, scopes)
 
   const response = NextResponse.redirect(url.toString())
-  response.headers.append("Set-Cookie", `sso_state=${encodeURIComponent(state)}; ${cookieOpts}`)
-  response.headers.append("Set-Cookie", `sso_verifier=${encodeURIComponent(codeVerifier)}; ${cookieOpts}`)
-  response.headers.append("Set-Cookie", `sso_token=${encodeURIComponent(stateToken)}; ${cookieOpts}`)
+  response.headers.append("Set-Cookie", `sso_state=${encodeURIComponent(state)}; ${oidcCookieOpts}`)
+  response.headers.append("Set-Cookie", `sso_verifier=${encodeURIComponent(codeVerifier)}; ${oidcCookieOpts}`)
+  response.headers.append("Set-Cookie", `sso_token=${encodeURIComponent(stateToken)}; ${oidcCookieOpts}`)
 
   return response
 }

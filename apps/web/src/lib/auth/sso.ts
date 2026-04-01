@@ -59,7 +59,9 @@ export function createArcticProvider(
       }
     }
     case "oidc_generic":
-      return new Google(clientId, clientSecret, callbackUrl)
+      // TODO: implement proper generic OIDC with configurable endpoints
+      // For now, not supported — admin should use Google/Microsoft/GitHub directly
+      throw new Error("Generic OIDC not yet implemented. Use a specific provider.")
   }
 }
 
@@ -192,11 +194,16 @@ export async function loadSamlProvider(): Promise<LoadedSamlProvider | null> {
   const config = await getSsoProviderByType("saml" as Parameters<typeof getSsoProviderByType>[0])
   if (!config) return null
 
+  // Reject SAML providers without cert — unsigned assertions are not acceptable
+  const samlCert = config.samlCert as string | null
+  const samlEntryPoint = config.samlEntryPoint as string | null
+  if (!samlCert) return null
+
   const saml = new SAML({
     callbackUrl: `${getBaseUrl()}${SSO_CALLBACK_PATH}/saml`,
-    entryPoint: (config as unknown as Record<string, string>).samlEntryPoint ?? config.issuerUrl ?? "",
+    entryPoint: samlEntryPoint ?? config.issuerUrl ?? "",
     issuer: config.clientId, // entityId
-    idpCert: (config as unknown as Record<string, string>).samlCert ?? "",
+    idpCert: samlCert,
     wantAuthnResponseSigned: true,
     wantAssertionsSigned: true,
   })
