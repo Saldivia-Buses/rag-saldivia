@@ -98,7 +98,9 @@ const nextConfig: NextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+              // unsafe-inline required by Next.js (inline scripts). unsafe-eval removed (only needed in dev HMR).
+              // Nonce-based CSP requires custom middleware — planned for future hardening.
+              "script-src 'self' 'unsafe-inline'",
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: blob:",
               "font-src 'self'",
