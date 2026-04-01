@@ -132,6 +132,7 @@ bunx tsc --noEmit               # type check (correr desde apps/web/)
 | `/api/rag/document/[name]` | GET | Documento por nombre |
 | `/api/rag/suggest` | POST | Preguntas relacionadas |
 | `/api/health` | GET | Health check |
+| `/api/feedback` | POST | Error feedback (guarda en audit_log) |
 
 ---
 
@@ -160,13 +161,18 @@ components/
                           table, separator, tooltip, dialog, sheet, command,
                           sonner, theme-toggle, skeleton, stat-card,
                           empty-placeholder, data-table, popover, confirm-dialog
-  chat/               --> ChatInterface, ChatInputBar, SessionList, SourcesPanel, CollectionSelector
+  chat/               --> ChatInterface, ChatInputBar, SessionList, SourcesPanel, CollectionSelector,
+                          ChatEmptyState, ChatMessages, ArtifactPanel, MarkdownMessage, ChatLayout
+  admin/              --> AdminDashboard, AdminLayout, AdminUsers, AdminRoles, AdminAreas,
+                          AdminCollections, AdminPermissions, AdminRagConfig, PermissionMatrix,
+                          RoleBadge, UserRoleSelector, RoleCard, RoleForm,
+                          CreateUserForm, PasswordResetCell
   layout/             --> AppShell, AppShellChrome, NavRail
   collections/        --> CollectionsList
   settings/           --> SettingsClient, MemoryClient
   dev/                --> ReactScan, ReactScanProvider (solo dev)
   error-boundary.tsx
-  providers.tsx       --> ThemeProvider (next-themes)
+  providers.tsx       --> ThemeProvider (next-themes) + ErrorFeedbackMount
 ```
 
 ---
@@ -194,8 +200,8 @@ components/
 
 | Capa | Comando | Tests |
 |---|---|---|
-| Lógica pura + actions + API + proxy | `bun run test` | ~198 |
-| Componentes + hooks | `bun run test:components` (desde apps/web/) | ~158 |
+| Lógica pura + actions + API + proxy | `bun run test` | ~693 |
+| Componentes + hooks | `bun run test:components` (desde apps/web/) | ~314 |
 | Visual | `bun run test:visual` | 22 baselines |
 | A11y | `bun run test:a11y` | páginas clave |
 | E2E | `bun run test:e2e` | flujos críticos |
