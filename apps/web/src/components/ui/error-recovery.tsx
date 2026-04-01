@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation"
 import { AlertTriangle, Clock, ShieldX, Zap, ServerCrash, LogIn, Search, HelpCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { getErrorRecovery, parseUseChatError, type UserErrorRecovery, type ErrorAction } from "@/lib/error-recovery"
+import { showErrorFeedback } from "@/lib/error-feedback"
 
 const ICONS = {
   unavailable: ServerCrash,
@@ -46,13 +47,10 @@ export function ErrorRecovery({
         onDismiss?.()
         break
       case "report":
-        // Use the global error feedback if available
-        if (typeof window !== "undefined") {
-          const win = window as unknown as Record<string, unknown>
-          if (typeof win.__showErrorFeedback === "function") {
-            ;(win.__showErrorFeedback as () => void)()
-          }
-        }
+        showErrorFeedback(
+          recovery.description,
+          `${recovery.title}: ${recovery.suggestion}`,
+        )
         break
     }
   }
