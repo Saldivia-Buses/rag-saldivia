@@ -11,9 +11,20 @@ process.env["JWT_EXPIRY"] = "1h"
 process.env["NODE_ENV"] = "test"
 
 // Import after env setup
-const { createJwt, verifyJwt, extractClaims, makeAuthCookie, makeClearAuthCookie } =
-  await import("../jwt.js")
-const { hasRole, canAccessRoute, getRequiredRole } = await import("../rbac.js")
+const {
+  createJwt,
+  verifyJwt,
+  extractClaims,
+  makeAuthCookie,
+  makeClearAuthCookie,
+  createAccessToken,
+  createRefreshToken,
+  makeRefreshCookie,
+  makeClearRefreshCookie,
+  revokeToken,
+} = await import("../jwt.js")
+const { hasRole, canAccessRoute, getRequiredRole, isAdmin, isAreaManager } = await import("../rbac.js")
+const { getRedisClient } = await import("@rag-saldivia/db")
 
 describe("JWT utilities", () => {
   const validClaims = {
@@ -163,4 +174,245 @@ describe("RBAC utilities", () => {
     expect(cookie).toContain("Secure")
     process.env["NODE_ENV"] = originalEnv
   })
+
+  // ── isAdmin / isAreaManager ──────────────────────────────────────────────
+
+  test("isAdmin returns true only for admin role", () => {
+    expect(isAdmin({ sub: "1", email: "a@b.com", name: "A", role: "admin" as const, iat: 0, exp: 9999999999 })).toBe(true)
+    expect(isAdmin({ sub: "2", email: "m@b.com", name: "M", role: "area_manager" as const, iat: 0, exp: 9999999999 })).toBe(false)
+    expect(isAdmin({ sub: "3", email: "u@b.com", name: "U", role: "user" as const, iat: 0, exp: 9999999999 })).toBe(false)
+  })
+
+  test("isAreaManager returns true for admin and area_manager", () => {
+    expect(isAreaManager({ sub: "1", email: "a@b.com", name: "A", role: "admin" as const, iat: 0, exp: 9999999999 })).toBe(true)
+    expect(isAreaManager({ sub: "2", email: "m@b.com", name: "M", role: "area_manager" as const, iat: 0, exp: 9999999999 })).toBe(true)
+    expect(isAreaManager({ sub: "3", email: "u@b.com", name: "U", role: "user" as const, iat: 0, exp: 9999999999 })).toBe(false)
+  })
+
+  // ── Route edge cases ─────────────────────────────────────────────────────
+
+  test("getRequiredRole handles trailing slash on /admin/", () => {
+    expect(getRequiredRole("/admin/")).toBe("admin")
+  })
+
+  test("getRequiredRole handles exact /admin without trailing slash", () => {
+    expect(getRequiredRole("/admin")).toBe("admin")
+  })
+
+  test("getRequiredRole handles deeply nested admin route /admin/users/123/edit", () => {
+    expect(getRequiredRole("/admin/users/123/edit")).toBe("admin")
+  })
+
+  test("getRequiredRole handles /api/admin exact (no sub-path)", () => {
+    expect(getRequiredRole("/api/admin")).toBe("admin")
+  })
+
+  test("getRequiredRole handles /api/audit/logs nested route", () => {
+    expect(getRequiredRole("/api/audit/logs")).toBe("area_manager")
+  })
+
+  test("getRequiredRole handles /audit trailing slash", () => {
+    expect(getRequiredRole("/audit/")).toBe("area_manager")
+  })
+
+  test("getRequiredRole is case-sensitive — /Admin/users is NOT protected", () => {
+    // The regex uses lowercase /admin, so /Admin should not match
+    expect(getRequiredRole("/Admin/users")).toBeNull()
+  })
+
+  test("getRequiredRole does not match partial prefix — /administration is NOT protected", () => {
+    // /admin(\/|$)/ should NOT match /administration because the regex requires / or end-of-string after 'admin'
+    expect(getRequiredRole("/administration")).toBeNull()
+  })
+
+  test("getRequiredRole does not match /api/administrator", () => {
+    expect(getRequiredRole("/api/administrator")).toBeNull()
+  })
+
+  test("getRequiredRole returns null for /login, /settings, /collections", () => {
+    expect(getRequiredRole("/login")).toBeNull()
+    expect(getRequiredRole("/settings")).toBeNull()
+    expect(getRequiredRole("/collections")).toBeNull()
+  })
+
+  test("canAccessRoute allows any role on unprotected routes with query params", () => {
+    const userClaims = { sub: "3", email: "u@b.com", name: "U", role: "user" as const, iat: 0, exp: 9999999999 }
+    // getRequiredRole receives pathname, not full URL — query params should not appear
+    // but test that pathnames with query-like strings are still handled
+    expect(canAccessRoute(userClaims, "/chat")).toBe(true)
+    expect(canAccessRoute(userClaims, "/collections")).toBe(true)
+  })
+
+  test("canAccessRoute blocks user on /admin with trailing slash", () => {
+    const userClaims = { sub: "3", email: "u@b.com", name: "U", role: "user" as const, iat: 0, exp: 9999999999 }
+    expect(canAccessRoute(userClaims, "/admin/")).toBe(false)
+  })
+
+  test("canAccessRoute blocks user on deeply nested /api/admin/roles/5", () => {
+    const userClaims = { sub: "3", email: "u@b.com", name: "U", role: "user" as const, iat: 0, exp: 9999999999 }
+    expect(canAccessRoute(userClaims, "/api/admin/roles/5")).toBe(false)
+  })
+
+  test("canAccessRoute allows admin on all protected routes", () => {
+    const adminClaims = { sub: "1", email: "a@b.com", name: "A", role: "admin" as const, iat: 0, exp: 9999999999 }
+    expect(canAccessRoute(adminClaims, "/admin")).toBe(true)
+    expect(canAccessRoute(adminClaims, "/admin/users/123")).toBe(true)
+    expect(canAccessRoute(adminClaims, "/api/admin/config")).toBe(true)
+    expect(canAccessRoute(adminClaims, "/audit")).toBe(true)
+    expect(canAccessRoute(adminClaims, "/api/audit/logs")).toBe(true)
+  })
+})
+
+describe("Plan 26: access+refresh tokens", () => {
+  const baseClaims = {
+    sub: "99",
+    email: "plan26@test.com",
+    name: "Plan26 User",
+    role: "user" as const,
+  }
+
+  // ── createAccessToken ──────────────────────────────────────────────────
+
+  test("createAccessToken includes type: 'access' in claims", async () => {
+    const token = await createAccessToken(baseClaims)
+    const claims = await verifyJwt(token)
+    expect(claims).not.toBeNull()
+    expect((claims as Record<string, unknown>)["type"]).toBe("access")
+  })
+
+  test("createAccessToken generates unique JTI per token", async () => {
+    const t1 = await createAccessToken(baseClaims)
+    const t2 = await createAccessToken(baseClaims)
+    const c1 = await verifyJwt(t1)
+    const c2 = await verifyJwt(t2)
+    expect(c1?.jti).toBeDefined()
+    expect(c2?.jti).toBeDefined()
+    expect(c1!.jti).not.toBe(c2!.jti)
+  })
+
+  test("createAccessToken is aliased as createJwt", () => {
+    expect(createAccessToken).toBe(createJwt)
+  })
+
+  // ── createRefreshToken ─────────────────────────────────────────────────
+
+  test("createRefreshToken includes type: 'refresh' in claims", async () => {
+    const token = await createRefreshToken("99")
+    const claims = await verifyJwt(token)
+    expect(claims).not.toBeNull()
+    expect((claims as Record<string, unknown>)["type"]).toBe("refresh")
+  })
+
+  test("createRefreshToken only includes sub claim (no email/name/role)", async () => {
+    const token = await createRefreshToken("99")
+    const claims = await verifyJwt(token)
+    expect(claims).not.toBeNull()
+    expect(claims!.sub).toBe("99")
+    // Refresh tokens should NOT have user-detail claims
+    expect((claims as Record<string, unknown>)["email"]).toBeUndefined()
+    expect((claims as Record<string, unknown>)["name"]).toBeUndefined()
+    expect((claims as Record<string, unknown>)["role"]).toBeUndefined()
+  })
+
+  test("createRefreshToken generates unique JTI per token", async () => {
+    const t1 = await createRefreshToken("99")
+    const t2 = await createRefreshToken("99")
+    const c1 = await verifyJwt(t1)
+    const c2 = await verifyJwt(t2)
+    expect(c1?.jti).toBeDefined()
+    expect(c2?.jti).toBeDefined()
+    expect(c1!.jti).not.toBe(c2!.jti)
+  })
+
+  // ── makeRefreshCookie ──────────────────────────────────────────────────
+
+  test("makeRefreshCookie has SameSite=Strict", async () => {
+    const token = await createRefreshToken("99")
+    const cookie = makeRefreshCookie(token)
+    expect(cookie).toContain("SameSite=Strict")
+  })
+
+  test("makeRefreshCookie has Path=/api/auth/refresh", async () => {
+    const token = await createRefreshToken("99")
+    const cookie = makeRefreshCookie(token)
+    expect(cookie).toContain("Path=/api/auth/refresh")
+  })
+
+  test("makeRefreshCookie has HttpOnly", async () => {
+    const token = await createRefreshToken("99")
+    const cookie = makeRefreshCookie(token)
+    expect(cookie).toContain("HttpOnly")
+  })
+
+  test("makeRefreshCookie includes refresh_token name", async () => {
+    const token = await createRefreshToken("99")
+    const cookie = makeRefreshCookie(token)
+    expect(cookie).toContain("refresh_token=")
+  })
+
+  test("makeRefreshCookie includes Secure in production", async () => {
+    const originalEnv = process.env["NODE_ENV"]
+    process.env["NODE_ENV"] = "production"
+    const token = await createRefreshToken("99")
+    const cookie = makeRefreshCookie(token)
+    expect(cookie).toContain("Secure")
+    process.env["NODE_ENV"] = originalEnv
+  })
+
+  // ── makeClearRefreshCookie ─────────────────────────────────────────────
+
+  test("makeClearRefreshCookie has Max-Age=0", () => {
+    const cookie = makeClearRefreshCookie()
+    expect(cookie).toContain("Max-Age=0")
+  })
+
+  test("makeClearRefreshCookie has correct Path=/api/auth/refresh", () => {
+    const cookie = makeClearRefreshCookie()
+    expect(cookie).toContain("Path=/api/auth/refresh")
+  })
+
+  test("makeClearRefreshCookie has SameSite=Strict", () => {
+    const cookie = makeClearRefreshCookie()
+    expect(cookie).toContain("SameSite=Strict")
+  })
+
+  test("makeClearRefreshCookie has HttpOnly", () => {
+    const cookie = makeClearRefreshCookie()
+    expect(cookie).toContain("HttpOnly")
+  })
+
+  // ── revokeToken ────────────────────────────────────────────────────────
+
+  test("revokeToken calls Redis SET with correct key and TTL", async () => {
+    const redis = getRedisClient()
+    const jti = crypto.randomUUID()
+    const futureExp = Math.floor(Date.now() / 1000) + 3600 // 1h from now
+
+    await revokeToken(jti, futureExp)
+
+    const stored = await redis.get(`revoked:${jti}`)
+    expect(stored).toBe("1")
+
+    // Verify TTL was set (ioredis-mock supports ttl)
+    if (typeof redis.ttl === "function") {
+      const ttl = await redis.ttl(`revoked:${jti}`)
+      expect(ttl).toBeGreaterThan(3500)
+      expect(ttl).toBeLessThanOrEqual(3600)
+    }
+  })
+
+  test("revokeToken with expired TTL (exp in past) does not call Redis", async () => {
+    const redis = getRedisClient()
+    const jti = crypto.randomUUID()
+    const pastExp = Math.floor(Date.now() / 1000) - 100 // 100s ago
+
+    await revokeToken(jti, pastExp)
+
+    const stored = await redis.get(`revoked:${jti}`)
+    expect(stored).toBeNull()
+  })
+
+  // NOTE: extractClaims revocation tests are in auth-routes.test.ts (tests 14-16)
+  // because they require a controlled Redis mock. Running them here conflicts with
+  // auth-routes.test.ts which mocks @rag-saldivia/db globally via mock.module().
 })

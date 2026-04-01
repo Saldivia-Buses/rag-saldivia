@@ -11,7 +11,7 @@
     "lint": "tsc --noEmit",
     "lint:eslint": "eslint src --max-warnings 0",
     "lint:next": "next lint",
-    "test": "bun test src/lib && bun test src/__tests__/actions src/__tests__/api && bun test src/__tests__/proxy.test.ts",
+    "test": "bun test src/lib/auth src/lib/rag src/lib/__tests__/utils.test.ts src/lib/__tests__/changelog.test.ts src/lib/__tests__/webhook.test.ts src/lib/__tests__/export.test.ts && bun test src/__tests__/actions src/__tests__/api && bun test src/lib/__tests__/api-utils.test.ts && bun test src/__tests__/proxy.test.ts",
     "test:coverage": "bun test src/lib --coverage",
     "type-check": "tsc --noEmit",
     "test:components": "bun test --preload ./src/lib/component-test-setup.ts src/components src/__tests__/hooks",
