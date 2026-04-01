@@ -12,8 +12,13 @@ import { createClient } from "@libsql/client"
 import { drizzle } from "drizzle-orm/libsql"
 import * as schema from "../schema"
 
+/**
+ * Create a test DB with shared cache so Drizzle transactions
+ * (which open separate connections internally) can see the same data.
+ * Without `cache=shared`, :memory: DBs are per-connection and transactions fail.
+ */
 export function createTestDb() {
-  const client = createClient({ url: ":memory:" })
+  const client = createClient({ url: "file::memory:?cache=shared" })
   const db = drizzle(client, { schema })
   return { client, db }
 }
@@ -215,6 +220,94 @@ export async function initSchema(client: ReturnType<typeof createClient>) {
     CREATE INDEX IF NOT EXISTS idx_events_sequence ON events(sequence);
     CREATE UNIQUE INDEX IF NOT EXISTS idx_session_shares_token ON session_shares(token);
     CREATE UNIQUE INDEX IF NOT EXISTS idx_user_memory_unique ON user_memory(user_id, key);
+
+    -- RBAC tables (Plan 21)
+    CREATE TABLE IF NOT EXISTS roles (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE,
+      description TEXT NOT NULL DEFAULT '',
+      level INTEGER NOT NULL DEFAULT 0,
+      color TEXT NOT NULL DEFAULT '#6e6c69',
+      icon TEXT NOT NULL DEFAULT 'user',
+      is_system INTEGER NOT NULL DEFAULT 0,
+      created_at INTEGER NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS permissions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      key TEXT NOT NULL UNIQUE,
+      label TEXT NOT NULL,
+      category TEXT NOT NULL,
+      description TEXT NOT NULL DEFAULT ''
+    );
+    CREATE TABLE IF NOT EXISTS role_permissions (
+      role_id INTEGER NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
+      permission_id INTEGER NOT NULL REFERENCES permissions(id) ON DELETE CASCADE,
+      PRIMARY KEY (role_id, permission_id)
+    );
+    CREATE TABLE IF NOT EXISTS user_role_assignments (
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      role_id INTEGER NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
+      assigned_at INTEGER NOT NULL,
+      PRIMARY KEY (user_id, role_id)
+    );
+
+    -- Messaging tables (Plan 25)
+    CREATE TABLE IF NOT EXISTS channels (
+      id TEXT PRIMARY KEY,
+      type TEXT NOT NULL,
+      name TEXT,
+      description TEXT,
+      topic TEXT,
+      created_by INTEGER REFERENCES users(id),
+      created_at INTEGER NOT NULL,
+      updated_at INTEGER NOT NULL,
+      archived_at INTEGER
+    );
+    CREATE TABLE IF NOT EXISTS channel_members (
+      channel_id TEXT NOT NULL REFERENCES channels(id) ON DELETE CASCADE,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      role TEXT NOT NULL DEFAULT 'member',
+      last_read_at INTEGER NOT NULL,
+      muted INTEGER NOT NULL DEFAULT 0,
+      joined_at INTEGER NOT NULL,
+      PRIMARY KEY (channel_id, user_id)
+    );
+    CREATE TABLE IF NOT EXISTS msg_messages (
+      id TEXT PRIMARY KEY,
+      channel_id TEXT NOT NULL REFERENCES channels(id) ON DELETE CASCADE,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      parent_id TEXT,
+      content TEXT NOT NULL,
+      type TEXT NOT NULL DEFAULT 'text',
+      reply_count INTEGER NOT NULL DEFAULT 0,
+      last_reply_at INTEGER,
+      edited_at INTEGER,
+      deleted_at INTEGER,
+      metadata TEXT,
+      created_at INTEGER NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_msg_channel_created ON msg_messages(channel_id, created_at);
+    CREATE INDEX IF NOT EXISTS idx_msg_parent ON msg_messages(parent_id);
+    CREATE TABLE IF NOT EXISTS msg_reactions (
+      message_id TEXT NOT NULL REFERENCES msg_messages(id) ON DELETE CASCADE,
+      user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+      emoji TEXT NOT NULL,
+      created_at INTEGER NOT NULL,
+      PRIMARY KEY (message_id, user_id, emoji)
+    );
+    CREATE TABLE IF NOT EXISTS msg_mentions (
+      id TEXT PRIMARY KEY,
+      message_id TEXT NOT NULL REFERENCES msg_messages(id) ON DELETE CASCADE,
+      user_id INTEGER,
+      type TEXT NOT NULL
+    );
+    CREATE TABLE IF NOT EXISTS pinned_messages (
+      channel_id TEXT NOT NULL REFERENCES channels(id) ON DELETE CASCADE,
+      message_id TEXT NOT NULL REFERENCES msg_messages(id) ON DELETE CASCADE,
+      pinned_by INTEGER NOT NULL REFERENCES users(id),
+      pinned_at INTEGER NOT NULL,
+      PRIMARY KEY (channel_id, message_id)
+    );
   `)
 }
 
@@ -260,4 +353,48 @@ export async function insertMessage(
     .returning()
   if (!msg) throw new Error("insertMessage failed")
   return msg
+}
+
+export async function insertRole(
+  db: TestDb,
+  name: string,
+  level = 0,
+  isSystem = false
+) {
+  const [role] = await db
+    .insert(schema.roles)
+    .values({ name, level, isSystem, createdAt: Date.now() })
+    .returning()
+  if (!role) throw new Error("insertRole failed")
+  return role
+}
+
+export async function insertPermission(
+  db: TestDb,
+  key: string,
+  label = key,
+  category = "General"
+) {
+  const [perm] = await db
+    .insert(schema.permissions)
+    .values({ key, label, category })
+    .returning()
+  if (!perm) throw new Error("insertPermission failed")
+  return perm
+}
+
+export async function insertChannel(
+  db: TestDb,
+  createdBy: number,
+  type: "public" | "private" | "dm" | "group_dm" = "public",
+  name = "test-channel"
+) {
+  const id = crypto.randomUUID()
+  const ts = Date.now()
+  const [channel] = await db
+    .insert(schema.channels)
+    .values({ id, type, name, createdBy, createdAt: ts, updatedAt: ts })
+    .returning()
+  if (!channel) throw new Error("insertChannel failed")
+  return channel
 }
