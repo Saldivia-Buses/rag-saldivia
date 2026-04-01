@@ -171,34 +171,36 @@ Archivos de test en `components/__tests__/`:
 
 ## Hotspots de complejidad (medidos)
 
-### Top 10 archivos mas complejos
+### Top 10 archivos mas complejos (actualizado post Plan 28)
 
-| # | Archivo | Lineas | Imports | Condicionales | Riesgo |
-|---|---------|--------|---------|---------------|--------|
-| 1 | `ChatInterface.tsx` | 643 | 21 | 94 if/else/switch | CRITICO |
-| 2 | `AdminRoles.tsx` | 626 | 6 | CRUD roles+permisos | ALTO |
-| 3 | `AdminUsers.tsx` | 592 | 6 | CRUD usuarios+roles | ALTO |
-| 4 | `ArtifactPanel.tsx` | 541 | 5 | DOMPurify + parser | ALTO |
-| 5 | `MarkdownMessage.tsx` | 308 | 8 | Shiki + markdown | MEDIO |
-| 6 | `AdminDashboard.tsx` | 254 | — | Dashboard stats | MEDIO |
-| 7 | `NavRail.tsx` | 229 | 11 | Navigation logic | MEDIO |
-| 8 | `AdminPermissions.tsx` | 225 | — | Matriz de permisos | MEDIO |
-| 9 | `PermissionMatrix.tsx` | 205 | — | Grid interactivo | MEDIO |
-| 10 | `MessageItem.tsx` | 194 | — | Mensaje individual | BAJO |
+| # | Archivo | Lineas | Estado | Riesgo |
+|---|---------|--------|--------|--------|
+| 1 | `ArtifactPanel.tsx` | 541 | Sin cambios | ALTO |
+| 2 | `ChatInterface.tsx` | ~360 | Descompuesto (Plan 28): -44% | MEDIO (era CRITICO) |
+| 3 | `MarkdownMessage.tsx` | 308 | Sin cambios | MEDIO |
+| 4 | `AdminDashboard.tsx` | 254 | Sin cambios | MEDIO |
+| 5 | `AdminRoles.tsx` | ~238 | Descompuesto (Plan 28): -62% | BAJO (era ALTO) |
+| 6 | `AdminUsers.tsx` | ~260 | Descompuesto (Plan 28): -56% | BAJO (era ALTO) |
+| 7 | `NavRail.tsx` | 229 | Sin cambios | MEDIO |
+| 8 | `AdminPermissions.tsx` | 225 | Sin cambios | MEDIO |
+| 9 | `PermissionMatrix.tsx` | 205 | Sin cambios | MEDIO |
+| 10 | `MessageItem.tsx` | 194 | Sin cambios | BAJO |
 
-### ChatInterface.tsx — el componente mas complejo del proyecto
+### Decomposicion (Plan 28) — reduccion total: 1,861 → 858 lineas (-54%)
 
-**643 lineas, 21 imports, 94 condicionales.** Maneja:
-- `useChat` del AI SDK (streaming)
-- Estado de sesiones (crear, borrar, renombrar)
-- CollectionSelector, SourcesPanel, ArtifactPanel
-- ChatInputBar (auto-resize, keyboard shortcuts)
-- SessionList (sidebar)
-- Markdown rendering, error handling, loading states
+**ChatInterface.tsx: 643 → ~360 lineas.** Extraidos:
+- `ChatEmptyState` — estado vacio cuando no hay sesion
+- `ChatMessages` — rendering de mensajes con streaming
 
-**21 imports incluyen:** AI SDK (useChat, UIMessage), 3 custom hooks, 6 server actions, DB types, shared schemas, 6 sub-componentes.
+**AdminRoles.tsx: 626 → ~238 lineas.** Extraidos:
+- `RoleCard` — card individual de rol con badge y permisos
+- `RoleForm` — formulario de crear/editar rol
 
-**Recomendacion:** Descomponer en sub-componentes: ChatContainer (estado), ChatMessages (rendering), ChatToolbar (input + actions).
+**AdminUsers.tsx: 592 → ~260 lineas.** Extraidos:
+- `CreateUserForm` — formulario de creacion de usuario
+- `PasswordResetCell` — celda de reset password en la tabla
+
+**7 sub-componentes nuevos** con responsabilidad unica. Todos con tests (Plan 29).
 
 ### Acoplamiento por imports (>10 imports)
 

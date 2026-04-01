@@ -7,21 +7,17 @@
 #### 1. JWT revocacion no verificada en Edge
 **Archivo:** `proxy.ts`
 **Problema:** El middleware Edge verifica la firma del JWT pero NO verifica revocacion en Redis (ioredis no corre en Edge). La revocacion se verifica en `extractClaims()` dentro de route handlers (Node.js).
-**Impacto:** Entre el logout y el proximo request a un route handler, un JWT revocado podria acceder a Server Components que solo dependen del middleware.
-**Mitigacion actual:** Los Server Components leen headers `x-user-*` que el middleware ya valido. Las operaciones sensibles pasan por route handlers que si verifican revocacion.
-**Solucion futura:** Migrar a middleware que corra en Node.js (Next.js 16 lo soporta), o usar Redis compatible con Edge (Upstash).
+**Impacto:** Con access tokens de 15min (Plan 26), la ventana de ataque se redujo de 24h a 15min.
+**Mitigacion actual:** Access token corto (15min) + refresh rotation + operaciones sensibles via route handlers.
+**Solucion futura:** Upstash Redis REST en Edge para verificacion de revocacion.
 
-#### 2. Credenciales de external_sources en texto plano
-**Archivo:** `packages/db/src/schema/core.ts`
-**Problema:** `external_sources.credentials` almacena JSON en texto plano. El comentario dice "cifrar con SYSTEM_API_KEY en prod" pero no esta implementado.
-**Impacto:** Si alguien accede al archivo SQLite, las credenciales de Google Drive/SharePoint/Confluence estan expuestas.
-**Solucion:** Implementar cifrado simetrico antes de persistir.
+#### ~~2. Credenciales de external_sources en texto plano~~ RESUELTO (Plan 28)
+~~**Problema:** Credenciales en texto plano.~~
+**Estado:** Cifrado AES-256-GCM implementado con lazy migration. Las credenciales se cifran automaticamente al guardar y se descifran al leer.
 
-#### 3. Componentes de messaging sin tests
-**Archivos:** 19 componentes en `components/messaging/`
-**Problema:** Plan 25 agrego el sistema de messaging completo sin component tests.
-**Impacto:** Regresiones no detectadas en la UI de messaging.
-**Solucion:** Escribir tests con el patron existente (happy-dom + afterEach cleanup).
+#### ~~3. Componentes de messaging sin tests~~ RESUELTO (Plan 29)
+~~**Problema:** 19 componentes sin tests.~~
+**Estado:** 19/19 componentes con tests (79 tests). Cobertura 100% de componentes de messaging.
 
 ### Media prioridad
 
@@ -31,21 +27,17 @@
 **Impacto:** Riesgo de bugs en logging que pasen desapercibidos.
 **Solucion:** Refactorizar en funciones mas chicas.
 
-#### 5. Dark mode sin refinar (Plan 20 pendiente)
-**Problema:** Los tokens dark existen pero no estan refinados para todos los componentes.
-**Impacto:** Contraste pobre en algunos componentes en dark mode.
-**Solucion:** Plan 20 pendiente.
+#### ~~5. Dark mode sin refinar~~ RESUELTO (Plan 30)
+~~**Problema:** Tokens dark no refinados.~~
+**Estado:** Tokens corregidos (accent-fg, text-white→semantic), Mermaid theme-aware. Pendiente: visual contrast audit (F3-F4).
 
-#### 6. ChatInterface complejidad 22
-**Archivo:** `components/chat/ChatInterface.tsx`
-**Problema:** El componente mas complejo de la UI. Dificil de mantener.
-**Impacto:** Cambios en el chat tienen alto riesgo de regresion.
-**Solucion:** Descomponer en sub-componentes mas chicos.
+#### ~~6. ChatInterface complejidad 22~~ RESUELTO (Plan 28)
+~~**Problema:** 643 lineas, dificil de mantener.~~
+**Estado:** Descompuesto a ~360 lineas (-44%). Extraidos ChatEmptyState + ChatMessages. Con tests.
 
-#### 7. Tests E2E limitados
-**Problema:** Los tests E2E cubren pocos flujos.
-**Impacto:** Bugs de integracion entre paginas no detectados.
-**Solucion:** Expandir cobertura E2E con Playwright.
+#### ~~7. Tests E2E limitados~~ PARCIALMENTE RESUELTO (Plan 29)
+~~**Problema:** Pocos flujos E2E.~~
+**Estado:** E2E expandido a auth flows, chat interaction, admin access control (~22 tests). A11y en 8 paginas.
 
 ### Baja prioridad
 
@@ -110,28 +102,37 @@ Modificar estos archivos sin entender completamente su impacto puede causar fall
 
 ---
 
-## Metricas de salud del codebase
+## Metricas de salud del codebase (actualizado post Plans 26-30)
 
 | Metrica | Valor | Estado |
 |---------|-------|--------|
-| Tests pasando | ~380 | OK |
-| Type errors | 0 (asumido, ultima verificacion en Plan 23) | OK |
-| Lint warnings | 0 (asumido) | OK |
-| Complejidad maxima | 29 (formatPretty) | Atention |
-| Componentes sin test | ~30 (messaging + chat avanzado) | Deuda |
+| Tests pasando | ~1,059 | OK (x2.8 vs anterior) |
+| Type errors | 0 (verificado Plan 29) | OK |
+| Lint warnings | 0 (verificado Plan 29) | OK |
+| Complejidad maxima | 29 (formatPretty) | Atencion |
+| Componentes sin test | ~28 (de 75) | Mejoro (era ~44 de 68) |
+| Component coverage | 63% (era 35%) | Mejoro |
+| Hooks coverage | 86% (6/7) | Mejoro (era 43%) |
 | ADRs superadas | 2 (008, 011) | OK — marcadas |
 | Archivos archivados | 123 | OK — en _archive/ |
-| Dependencias outdated | No verificado | Verificar |
+| Security headers | 5/6 (falta CSP) | Mejoro (era 0/6) |
+| JWT rotation | Access 15min + refresh 7d | Resuelto (era 24h unico) |
+| Credentials cifrado | AES-256-GCM | Resuelto (era texto plano) |
+| SQLite PRAGMAs | WAL + foreign_keys + busy_timeout | Resuelto (era sin PRAGMAs) |
+| Next.js output | standalone + compress | Resuelto (era default) |
 
 ---
 
-## Recomendaciones priorizadas
+## Recomendaciones priorizadas (actualizado)
 
-1. **Antes de deployar (Plan 19):** Verificar que la revocacion JWT funciona end-to-end. Cifrar credenciales de external_sources.
-2. **Siguiente sprint:** Tests para componentes de messaging (19 componentes sin cobertura).
-3. **Mediano plazo:** Refactorizar formatPretty y ChatInterface para reducir complejidad.
-4. **Cuando haya testers:** Expandir tests E2E con flujos reales de usuario.
-5. **Antes de multi-tenant:** Evaluar migracion a Postgres y Redis cluster.
+1. ~~Cifrar credentials~~ HECHO (Plan 28)
+2. ~~Tests messaging~~ HECHO (Plan 29)
+3. ~~ChatInterface decomposition~~ HECHO (Plan 28)
+4. **Antes de deployar (Plan 19):** Verificar end-to-end en workstation fisica.
+5. **Siguiente:** Self-healing Error UX (Plan 32 en escritura) — mejorar experiencia de errores para testers.
+6. **Mediano plazo:** Conectores externos (Plan 33) + SSO (Plan 34).
+7. **Pendiente:** Refactorizar formatPretty (complejidad 29), CSP header.
+8. **Antes de multi-tenant:** Evaluar migracion a Postgres y Redis cluster.
 
 ---
 

@@ -6,17 +6,17 @@
 
 ---
 
-## Score por categoria
+## Score por categoria (actualizado post Plan 26)
 
 | Categoria | Implementado | Score | Gap principal |
 |-----------|-------------|-------|--------------|
-| Caching | 70% | ⭐⭐⭐⭐ | HTTP headers faltantes, solo collections cacheada en Redis |
-| Lazy loading | 60% | ⭐⭐⭐ | recharts no lazy, 6 rutas sin loading.tsx |
-| Bundle | 75% | ⭐⭐⭐⭐ | Analyzer integrado, React Compiler activo |
+| Caching | 90% | ⭐⭐⭐⭐⭐ | Cache-Control en collections, Redis cache admin stats (Plan 26) |
+| Lazy loading | 90% | ⭐⭐⭐⭐⭐ | Loading skeletons en TODAS las rutas (Plan 26). recharts no aplica (CSS puro). |
+| Bundle | 85% | ⭐⭐⭐⭐ | Standalone output + compression + optimizePackageImports (Plan 26) |
 | Data fetching | 80% | ⭐⭐⭐⭐ | Server Components + Promise.all sistematico |
-| Memoizacion | 75% | ⭐⭐⭐⭐ | React.memo en 8 componentes, useCallback/useMemo extensivo |
+| Memoizacion | 85% | ⭐⭐⭐⭐⭐ | React.memo en MessageList, ChannelList + existentes (Plan 26) |
 | Streaming | 85% | ⭐⭐⭐⭐⭐ | HTTP status check pre-stream, AI SDK adapter limpio |
-| Base de datos | 70% | ⭐⭐⭐⭐ | Paginacion cursor, Promise.all; falta cache de queries |
+| Base de datos | 85% | ⭐⭐⭐⭐⭐ | SQLite PRAGMAs WAL + busy_timeout (Plan 26). Redis cache admin stats. |
 
 ---
 
@@ -56,13 +56,17 @@ invalidateCollectionsCache() → Redis DEL en POST/DELETE coleccion
 
 Todo el resto de API routes NO tiene headers de cache.
 
+### Lo que se implemento (Plan 26)
+
+- `Cache-Control: private, max-age=60` en `/api/rag/collections` GET
+- Cache Redis de analytics queries para admin dashboard
+- React.memo en MessageList y ChannelList
+
 ### Lo que FALTA en caching
 
 | Oportunidad | Esfuerzo | Impacto |
 |------------|----------|---------|
-| `Cache-Control` en `/api/rag/collections` GET | 10 min | Medio — evita re-fetch en cada navegacion |
 | Cache Redis de `getUserCollections()` (TTL 300s) | 2 horas | Alto — llamado en CADA page load protegido |
-| Cache Redis de analytics queries (TTL 60s) | 2 horas | Medio — queries SQL costosas |
 | `Cache-Control` en `/api/health` | 5 min | Bajo — reduce polling |
 | `revalidateTag()` en vez de `revalidatePath()` | 4 horas | Medio — invalidacion mas granular (Next.js 16 compatible) |
 
@@ -93,16 +97,15 @@ Todo el resto de API routes NO tiene headers de cache.
 
 `Skeleton`, `SkeletonText`, `SkeletonAvatar`, `SkeletonCard`, `SkeletonTable` — todos con tests y stories en Storybook.
 
+### Lo que se implemento (Plan 26)
+
+- `loading.tsx` para TODAS las rutas que faltaban: `/chat/[id]`, `/admin`, `/admin/users`, `/collections/[name]`, `/settings`
+- AdminDashboard no usa recharts — usa barras CSS puras (no aplica lazy load)
+
 ### Lo que FALTA en lazy loading
 
 | Oportunidad | Esfuerzo | Impacto |
 |------------|----------|---------|
-| `recharts` lazy load en AdminDashboard (~450KB) | 30 min | **Alto** — solo se usa en /admin/analytics |
-| `loading.tsx` para `/chat/[id]` | 15 min | Alto — pagina mas visitada |
-| `loading.tsx` para `/admin/users` | 15 min | Medio — tabla pesada |
-| `loading.tsx` para `/admin` (dashboard) | 15 min | Medio — queries lentas |
-| `loading.tsx` para `/collections/[name]` | 15 min | Medio |
-| `loading.tsx` para `/settings` | 10 min | Bajo |
 | Suspense boundaries en messaging (message lists) | 2 horas | Medio — streaming de listas |
 | Message list virtualization (react-window/tanstack-virtual) | 4 horas | Alto para canales con muchos mensajes |
 

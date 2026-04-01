@@ -17,12 +17,17 @@ La serie 1.0.x NO es una secuencia de releases granulares. Es **una version gran
 | **17** | Markdown rendering + OpenRouter mock | 14 | Completado | 2026-03-29 |
 | **18** | Testing + visual regression con nueva UI | 16 | Completado | 2026-03-29 |
 | **19** | Deploy para testers (Enzo, papa, tio) | 13-18 | **Pendiente** | — |
-| **20** | Dark mode refinamiento | 16 | **Pendiente** | — |
+| **20** | Dark mode → renumerado Plan 30 | 16 | — | — |
 | **21** | RBAC admin (roles, permisos granulares) | — | Completado | 2026-03-30 |
 | **22** | Collection polish + confirm dialogs + tests | 21 | Completado | 2026-03-30 |
 | **23** | Code Hardening (security, perf, a11y, tests) | 18 | Completado | 2026-03-30 |
 | **24** | Admin system (collections, areas, permissions, config) | 23 | Completado | 2026-03-30 |
 | **25** | Internal Messaging System (canales, DMs, threads) | 23, 24 | Completado | 2026-03-31 |
+| **26** | Production Hardening & Config Unification | 25 | Completado | 2026-04-01 |
+| **27** | Testing Coverage Sprint (DB, lib, auth routes) | 26 | Completado | 2026-04-01 |
+| **28** | Security Fixes + Decomposition + Error UX | 27 | Completado | 2026-04-01 |
+| **29** | Testing Sprint II (components, E2E, a11y) | 28 | Completado | 2026-04-01 |
+| **30** | Dark Mode Refinement | 28 | Completado (F3-F4 visual pending) | 2026-04-01 |
 
 ---
 
@@ -119,29 +124,57 @@ La serie 1.0.x NO es una secuencia de releases granulares. Es **una version gran
 
 ---
 
+## Detalle de planes 26-30
+
+### Plan 26 — Production Hardening & Config Unification
+**Objetivo:** Zero features nuevas. 9 fases de hardening para produccion.
+**Entregables:** Config centralizada (17 constantes), JWT access+refresh rotation, SQLite PRAGMAs (WAL), Next.js standalone + compression + security headers, Redis hardening, loading skeletons para todas las rutas, Cache-Control headers, React.memo optimizations, Redis caching para admin stats, backup script, 9 archivos dead code eliminados.
+
+### Plan 27 — Testing Coverage Sprint
+**Objetivo:** Subir cobertura de 38% a ~55%. ~125 tests nuevos.
+**Entregables:** Tests RBAC (25-30), channels+messaging (15-20), ai-stream adapter (8-10), RAG client (8-10), auth routes (12-15). DB queries 81% → 95%.
+
+### Plan 28 — Security Fixes + Decomposition + Error UX
+**Objetivo:** 2 fixes de seguridad, 3 decomposiciones de componentes, sistema de error feedback.
+**Entregables:** FTS5 sanitization, AES-256-GCM para credentials, ChatInterface 643→360 lineas, AdminRoles 626→238, AdminUsers 592→260 (7 sub-componentes nuevos), error feedback system (lib + UI + API).
+
+### Plan 29 — Testing Sprint II (Components + E2E + A11y)
+**Objetivo:** Cobertura de componentes 19% → 100%.
+**Entregables:** 314 component tests (vs 158 anterior), hooks 6/7, messaging 19/19, admin 11/11, E2E auth+chat+admin, a11y 8 paginas.
+
+### Plan 30 — Dark Mode Refinement
+**Objetivo:** Refinar tokens dark mode, migrar a tokens semanticos.
+**Entregables:** accent-fg fix, 5x text-white → text-accent-fg, Mermaid theme-aware, bg-white → bg-bg. Pendiente: visual contrast audit (F3-F4).
+
+---
+
 ## Planes pendientes
 
 ### Plan 19 — Deploy para testers
 **Objetivo:** Primera version deployable para 3 testers (Enzo, su papa, su tio).
-**Prerequisitos:** Plans 13-18 (completados)
+**Prerequisitos:** Plans 13-18 (completados). Plans 26-30 lo hacen mucho mas production-ready.
 **Que falta:** Configurar deploy en workstation fisica, seedear datos, documentar setup.
-
-### Plan 20 — Dark mode
-**Objetivo:** Refinar el dark mode que ya tiene tokens definidos.
-**Prerequisito:** Plan 16 (completado)
-**Que falta:** Ajustar contraste en todos los componentes, visual regression en dark.
 
 ---
 
-## Planes futuros (sin definir)
+## Planes futuros (en definicion)
+
+| Plan | Foco | Estado |
+|------|------|--------|
+| **32** | Self-Healing Error UX | Plan en escritura |
+| **33** | Conectores Externos (Google Drive, SharePoint, Confluence) | Plan en escritura |
+| **34** | SSO (SAML/OIDC) | Plan en escritura |
+
+### Otros futuros (sin plan formal)
 
 | Area | Ideas |
 |------|-------|
-| RAG features | Knowledge gaps, sugerencias automaticas, multi-modal |
-| Integraciones | Slack bot, Teams bot, webhooks |
-| Admin avanzado | Analytics dashboard, reportes, auditoria avanzada |
-| Scale | Postgres, multi-tenant, horizontal scaling |
-| Mobile | PWA o app nativa |
+| RAG engine | Knowledge gaps, RAG Fusion, Graph RAG, CRAG |
+| RAG quality | Hallucination detection, RAGAS evaluation |
+| Colaboracion | RAG multiplayer (queries compartidas en canales) |
+| Integraciones | Slack bot, Teams bot, MCP server |
+| Scale | Postgres migration, multi-tenant |
+| Mobile | PWA con voice input |
 
 ---
 

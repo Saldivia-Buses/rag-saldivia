@@ -1,14 +1,14 @@
 # 09 — Testing
 
-## Suite actual: ~380 tests
+## Suite actual: ~1,059 tests (actualizado post Plans 27-29)
 
 | Capa | Comando | Tests | Que testea |
 |------|---------|-------|-----------|
-| Logica pura + actions + API + proxy | `bun run test` | ~198 | lib/, packages/db, packages/config, packages/logger |
-| Componentes + hooks | `bun run test:components` | ~158 | Componentes React con happy-dom |
+| Logica pura + actions + API + proxy | `bun run test` | ~693 | lib/, packages/db, packages/config, packages/logger, auth routes |
+| Componentes + hooks | `bun run test:components` | ~314 | Componentes React con happy-dom (47/47 componentes) |
 | Visual regression | `bun run test:visual` | 22 | Screenshots de Storybook (11 stories x 2 temas) |
-| A11y WCAG AA | `bun run test:a11y` | paginas clave | Audita con axe-playwright |
-| E2E | `bun run test:e2e` | flujos criticos | Playwright browser tests |
+| A11y WCAG AA | `bun run test:a11y` | 8 paginas | Audita con axe-playwright (incl. messaging, admin) |
+| E2E | `bun run test:e2e` | ~22 | Playwright: auth, chat, admin access control |
 
 ---
 
@@ -207,69 +207,49 @@ AppShell, AppShellChrome, NavRail
 
 ---
 
-## Gaps de cobertura — analisis profundo
+## Cobertura post Plans 27-29 (actualizado 2026-04-01)
 
 ### Cobertura real por capa
 
 ```
-                          Con test    Sin test    Cobertura
-DB queries (21 modulos)   17          4           81%
-Componentes (68 activos)  24          44          35%
-Hooks (7)                 3           4           43%
-Lib files (~23)           7           ~16         30%
-API routes (18)           2           16          11%
-Shared schemas (4)        1           3           25%
-TOTAL                     54          ~87         ~38%
+                          Con test    Sin test    Cobertura    Cambio
+DB queries (21 modulos)   ~20         1           ~95%         81% → 95%
+Componentes (75 activos)  47          28          ~63%         35% → 63%
+Hooks (7)                 6           1           86%          43% → 86%
+Lib files (~25)           ~12         ~13         ~48%         30% → 48%
+API routes (19)           ~6          ~13         ~32%         11% → 32%
+Shared schemas (4)        1           3           25%          sin cambio
+TOTAL                     ~92         ~59         ~61%         38% → 61%
 ```
 
-### DB queries SIN tests (4 de 21)
+### Gaps cerrados por Plans 27-29
 
-| Query module | Lineas | Prioridad |
-|-------------|--------|-----------|
-| **`rbac.ts`** | 302 | **CRITICA** — permission resolution, logica compleja |
-| **`channels.ts`** | 255 | **ALTA** — CRUD canales (Plan 25) |
-| **`messaging.ts`** | 242 | **ALTA** — messages + reactions (Plan 25) |
-| `events-cleanup.ts` | 24 | BAJA — modulo minimo |
+| Lo que faltaba | Lo que se hizo | Plan |
+|---------------|---------------|------|
+| `rbac.ts` sin tests (CRITICO) | 25-30 tests de RBAC | Plan 27 |
+| `channels.ts` sin tests | 15-20 tests de channels + messaging | Plan 27 |
+| `messaging.ts` sin tests | Incluido en Plan 27 | Plan 27 |
+| `ai-stream.ts` sin tests | 8-10 tests de SSE parsing + citations | Plan 27 |
+| `rag/client.ts` sin tests | 8-10 tests mock mode + errors | Plan 27 |
+| Auth routes sin tests | 12-15 tests login/refresh/logout | Plan 27 |
+| ChatInterface sin tests | Tests del componente descompuesto | Plan 29 |
+| AdminRoles/AdminUsers sin tests | Tests de componentes + sub-componentes | Plan 29 |
+| Messaging 0/19 componentes | 19/19 componentes con tests (79 tests) | Plan 29 |
+| Admin 3/11 componentes | 11/11 componentes con tests (36 tests) | Plan 29 |
+| Hooks 3/7 | 6/7 (useMessaging, useGlobalHotkeys, useTyping agregados) | Plan 29 |
+| E2E limitado | Auth flows, chat, admin access control | Plan 29 |
+| A11y 4 paginas | 8 paginas (+ messaging, admin) | Plan 29 |
 
-### Componentes CRITICOS sin test (>500 lineas)
+### Gaps remanentes
 
-| Componente | Lineas | Imports | Riesgo |
-|-----------|--------|---------|--------|
-| `ChatInterface.tsx` | 643 | 21 | Mas complejo, 94 condicionales, 0 tests |
-| `AdminRoles.tsx` | 626 | 6 | CRUD roles + permisos |
-| `AdminUsers.tsx` | 592 | 6 | CRUD usuarios |
-| `ArtifactPanel.tsx` | 541 | 5 | Renderiza HTML/SVG con DOMPurify |
-
-### Hooks — 43% cobertura (3 de 7)
-
-**CON tests:** useAutoResize, useCopyToClipboard, useLocalStorage
-
-**SIN tests:**
-
-| Hook | Prioridad de test |
-|------|-------------------|
-| `useMessaging.ts` | **Alta** — API integration |
-| `useGlobalHotkeys.ts` | Media — keyboard events |
-| `useTyping.ts` | Media — timer logic |
-| `usePresence.ts` | Baja — posiblemente dead code |
-
-### Lib files CRITICOS sin test
-
-| Archivo | Prioridad |
-|---------|-----------|
-| `rag/ai-stream.ts` | **Alta** — adapter critico NVIDIA → AI SDK |
-| `rag/client.ts` | **Alta** — mock mode + error handling |
-| `rag/artifact-parser.ts` | **Alta** — parser de artifacts |
-| `auth/current-user.ts` | Media — 43 archivos dependen de el |
-| `auth/rbac.ts` | Media — logica RBAC |
-
-### Plan de accion priorizado
-
-1. **Sprint 1 (criticos):** tests para `rbac.ts`, `channels.ts`, `messaging.ts`, `ChatInterface.tsx`
-2. **Sprint 2 (admin):** tests para `AdminRoles.tsx`, `AdminUsers.tsx`, `ArtifactPanel.tsx`
-3. **Sprint 3 (lib):** tests para `ai-stream.ts`, `client.ts`, `artifact-parser.ts`
-4. **Sprint 4 (auth routes):** tests para `/api/auth/login`, `/api/auth/logout`, `/api/auth/refresh`
-5. **Sprint 5 (messaging):** tests para ChannelView, MessageList, MessageComposer, MessageItem
+| Area | Sin test | Prioridad |
+|------|---------|-----------|
+| `ArtifactPanel.tsx` | 541 lineas, DOMPurify + parser | Media |
+| `MarkdownMessage.tsx` | 308 lineas, Shiki + markdown | Media |
+| `usePresence.ts` | Posible dead code | Baja |
+| `events-cleanup.ts` | 24 lineas, modulo minimo | Baja |
+| ~13 API routes | La mayoria son CRUD simple | Baja |
+| 3 shared schemas | core, rag, messaging | Baja |
 
 ---
 

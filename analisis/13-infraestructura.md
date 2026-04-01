@@ -145,9 +145,32 @@ RAG_TIMEOUT_MS=120000
 MOCK_RAG=false
 OPENROUTER_API_KEY=...     # para mock mode
 OPENROUTER_MODEL=anthropic/claude-haiku-4-5
-JWT_EXPIRY=24h
+JWT_ACCESS_EXPIRY=15m      # access token (Plan 26, antes JWT_EXPIRY=24h)
+JWT_REFRESH_EXPIRY=7d      # refresh token (Plan 26)
 LOG_LEVEL=INFO
 NODE_ENV=development
+```
+
+### Constantes centralizadas (Plan 26)
+
+17 constantes dispersas fueron centralizadas en `packages/config/src/constants.ts`.
+
+### Next.js production config (Plan 26)
+
+```typescript
+// next.config.ts
+output: "standalone"              // Build optimizado, -300-500MB RAM
+compress: true                    // Gzip built-in
+optimizePackageImports: ["lucide-react"]  // Tree-shaking
+reactCompiler: true               // Auto-memoizacion
+```
+
+### SQLite PRAGMAs (Plan 26)
+
+```sql
+PRAGMA journal_mode = WAL;        -- Write-Ahead Logging
+PRAGMA foreign_keys = ON;         -- Enforce FK constraints
+PRAGMA busy_timeout = 5000;       -- 5s wait on lock
 ```
 
 ### Archivos de config

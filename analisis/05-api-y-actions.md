@@ -39,11 +39,12 @@
 | `/api/messaging/search` | GET | Busca mensajes | Requerida |
 | `/api/messaging/upload` | POST | Sube archivo adjunto | Requerida |
 
-### Sistema (1 route)
+### Sistema (2 routes)
 
 | Ruta | Metodo | Descripcion | Auth |
 |------|--------|-------------|------|
 | `/api/health` | GET | Health check | Publica |
+| `/api/feedback` | POST | Error feedback (guarda en audit_log) — Plan 28 | Requerida |
 
 ---
 

@@ -656,13 +656,13 @@ Projects con 200K context window. Documentos, instrucciones custom, actividad de
 | Predictive caching | No | — | Si |
 | Feedback loop | Parcial (up/down) | Score-based reranking | Bidirectional RAG |
 | **Security** | | | |
-| Auth JWT | Si (24h) | Access+refresh | Edge revocation |
-| SSO (SAML/OIDC) | No | Si | Si + group sync |
+| Auth JWT | ~~24h~~ Access 15min + refresh 7d (Plan 26) | Access+refresh | Edge revocation |
+| SSO (SAML/OIDC) | No → **Plan 34 en escritura** | Si | Si + group sync |
 | Document-level ACL | Por area | Por chunk | Zero-trust pre-filter |
 | PII redaction | No | Si | Role-based |
-| Security headers | 3/6 | 6/6 | 6/6 + CSP nonces |
-| Backups | No | Cron | Litestream streaming |
-| Compliance | Audit log | GDPR ready | SOC 2 ready |
+| Security headers | ~~3/6~~ 5/6 (Plan 26) | 6/6 | 6/6 + CSP nonces |
+| Backups | ~~No~~ Script (Plan 26) | Cron | Litestream streaming |
+| Compliance | Audit log + cifrado credentials (Plan 28) | GDPR ready | SOC 2 ready |
 | **UX** | | | |
 | Chat streaming | Si | — | — |
 | Citations | Si (panel) | Inline + click | Highlight en doc |
@@ -681,7 +681,7 @@ Projects con 200K context window. Documentos, instrucciones custom, actividad de
 | **Operations** | | | |
 | Pipeline observability | Logger | Langfuse basic | Langfuse + alerting |
 | Alerting | No | Email/Slack | Multi-canal + ML |
-| Testing | 38% | 70% | 88%+ |
+| Testing | ~~38%~~ ~61% (1,059 tests, Plans 27-29) | 70% | 88%+ |
 | **Scale** | | | |
 | Postgres path | Drizzle ready | Migrated | + read replicas |
 | Multi-tenant | No | DB-per-tenant | Full isolation |

@@ -390,48 +390,47 @@ Comparacion contra patrones usados por Cal.com (40K stars), Clerk, Supabase, Dub
 | Memoizacion | React.memo (9), useCallback (30+), useMemo (20+) | Industria standard | Empate |
 | Promise.all sistematico | 31 usos en fetching paralelo | Cal.com, Vercel best practices | Empate |
 
-### Lo que Saldivia RAG hace PEOR que la industria
+### Lo que Saldivia RAG hace PEOR que la industria (actualizado post Plans 26-30)
 
-| Patron | Saldivia RAG | Industria | Gap |
-|--------|-------------|-----------|-----|
-| JWT lifetime | Token unico de 24h | Access 15-60min + refresh rotation | Token comprometido = 24h de ventana |
-| SQLite config | Sin PRAGMAs | WAL + synchronous=NORMAL + cache 20MB+ | 50% mas lento en writes |
-| Redis limites | Sin maxmemory | Acotado + allkeys-lru | RAM sin tope |
-| Redis degradation | Parcial (isRevoked fail-open) | Sistematico (cache reads fallback a DB) | Cache miss = error en vez de fallback |
-| Error handling UI | `catch {}` silencioso en admin | Toast sistematico con onSuccess/onError | Usuario no sabe que algo fallo |
-| Security headers | 3/6 (falta CSP, HSTS, Permissions-Policy) | 6/6 en produccion | Superficie de ataque innecesaria |
-| Backups | Ninguno documentado | Litestream a S3/MinIO o cron backups | Disco muere = se pierde todo |
-| Testing coverage | ~38% merged (380 tests) | ~88% merged (unit + component + E2E) | ChatInterface 0 tests, messaging 0 tests |
-| Next.js output | Sin `output: 'standalone'` | Standalone en produccion | +300-500MB RAM innecesaria |
-| BullMQ connections | N conexiones Redis (1 por import) | Singleton compartido | Memoria desperdiciada |
-| Logging en prod | LOG_LEVEL=INFO | LOG_LEVEL=WARN en produccion | I/O innecesario |
+| Patron | Saldivia RAG | Industria | Gap | Estado |
+|--------|-------------|-----------|-----|--------|
+| JWT lifetime | ~~24h unico~~ Access 15min + refresh 7d | Access 15-60min + refresh rotation | **CERRADO** (Plan 26) | Resuelto |
+| SQLite config | ~~Sin PRAGMAs~~ WAL + foreign_keys + busy_timeout | WAL + synchronous=NORMAL + cache 20MB+ | **CERRADO** (Plan 26) | Resuelto |
+| Redis limites | ~~Sin maxmemory~~ Configurado | Acotado + allkeys-lru | **CERRADO** (Plan 26) | Resuelto |
+| Error handling UI | ~~Silencioso~~ Error feedback system | Toast sistematico | **CERRADO** (Plan 28) | Resuelto |
+| Security headers | ~~3/6~~ 5/6 (falta CSP) | 6/6 en produccion | **PARCIAL** — CSP pendiente | Mejoro |
+| Testing coverage | ~~38%~~ ~61% (1,059 tests) | ~88% | **PARCIAL** — subio pero falta | Mejoro |
+| Next.js output | ~~Sin standalone~~ Standalone + compress | Standalone en produccion | **CERRADO** (Plan 26) | Resuelto |
+| Backups | Script documentado (Plan 26) | Litestream a S3/MinIO | **PARCIAL** — script, no streaming | Mejoro |
+| Redis degradation | Parcial (isRevoked fail-open) | Sistematico | Abierto | Sin cambio |
+| BullMQ connections | N conexiones | Singleton compartido | Abierto | Sin cambio |
+| Logging en prod | LOG_LEVEL configurable | LOG_LEVEL=WARN en produccion | Menor | Sin cambio |
 
 ### Hoja de ruta para cerrar los gaps
 
-**Fase 1 — Config hardening (1 dia, 0 riesgo):**
-- SQLite PRAGMAs (WAL, synchronous, cache_size, busy_timeout)
-- `output: 'standalone'` + `compress` + `optimizePackageImports` en next.config
-- Redis maxmemory 256mb + allkeys-lru en docker-compose
-- Security headers completos (HSTS, Permissions-Policy, CSP basico)
-- LOG_LEVEL=WARN + NODE_ENV=production en .env de produccion
-- BullMQ Redis singleton
+**~~Fase 1 — Config hardening~~** COMPLETADA (Plan 26)
+- ~~SQLite PRAGMAs~~ HECHO — WAL, foreign_keys, busy_timeout
+- ~~standalone + compress + optimizePackageImports~~ HECHO
+- ~~Redis maxmemory~~ HECHO
+- ~~Security headers~~ HECHO (5/6, falta CSP)
 
-**Fase 2 — Auth hardening (2-3 dias):**
-- JWT access token (15 min) + refresh token (7 dias) con rotation
-- Refresh token family tracking en Redis (detectar token theft)
-- Backup de SQLite (cron + Litestream)
+**~~Fase 2 — Auth hardening~~** COMPLETADA (Plan 26)
+- ~~JWT access 15min + refresh 7d~~ HECHO
+- ~~Backup script~~ HECHO (cron, no Litestream streaming)
 
-**Fase 3 — UX y testing (1-2 semanas):**
-- Toast sistematico en todas las server actions (onSuccess/onError)
-- Tests para ChatInterface, rbac.ts, messaging components, ai-stream.ts
-- E2E tests para flujos criticos
+**~~Fase 3 — UX y testing~~** COMPLETADA (Plans 27-29)
+- ~~Error feedback system~~ HECHO (Plan 28)
+- ~~Tests para ChatInterface, rbac.ts, messaging, ai-stream.ts~~ HECHO (Plans 27-29)
+- ~~E2E tests~~ HECHO (Plan 29)
 
-**Fase 4 — Diferenciadores (2-4 semanas cada uno):**
-- Knowledge gap detection
-- Self-healing error UX
-- Revocacion JWT en Edge (Upstash)
-- RAG multiplayer
-- Predictive cache warming
+**Fase 4 — Diferenciadores (en progreso):**
+- Self-healing error UX → **Plan 32 en escritura**
+- Conectores externos → **Plan 33 en escritura**
+- SSO (SAML/OIDC) → **Plan 34 en escritura**
+- Knowledge gap detection → futuro
+- Revocacion JWT en Edge (Upstash) → futuro
+- RAG multiplayer → futuro
+- Predictive cache warming → futuro
 
 ---
 

@@ -53,9 +53,10 @@ Corre en **Node.js Runtime** — tiene acceso a ioredis.
 
 **`createJwt(claims)`:**
 - Algoritmo: HS256
-- Expiracion: configurable via `JWT_EXPIRY` env (default 24h)
+- Expiracion: access token 15min, refresh token 7 dias (Plan 26 — antes era 24h unico)
 - JTI: `crypto.randomUUID()` — requerido para revocacion
 - Secret: `JWT_SECRET` env (requerido, no hay fallback)
+- Refresh token rotation: cada refresh revoca el token viejo y emite uno nuevo
 
 **`makeAuthCookie(token)`:**
 - `HttpOnly` — no accesible desde JavaScript
@@ -231,14 +232,14 @@ sql`... LIKE ${"%" + q + "%"} ...`
 - Server Actions: cookies HttpOnly + SameSite=Lax (proteccion implicita)
 - API routes: JWT en cookie HttpOnly o Authorization header
 
-### Headers de seguridad FALTANTES (agregar en next.config para deploy)
+### Headers de seguridad (configurados en Plan 26)
 
 | Header | Proposito | Estado |
 |--------|-----------|--------|
-| `X-Content-Type-Options: nosniff` | Previene MIME sniffing | No configurado |
-| `X-Frame-Options: DENY` | Previene clickjacking | No configurado |
-| `Strict-Transport-Security` | Fuerza HTTPS | No configurado |
-| `Content-Security-Policy` | Previene XSS/injection | No configurado |
+| `X-Content-Type-Options: nosniff` | Previene MIME sniffing | Configurado (Plan 26) |
+| `X-Frame-Options: DENY` | Previene clickjacking | Configurado (Plan 26) |
+| `Strict-Transport-Security` | Fuerza HTTPS | Configurado (Plan 26) |
+| `Content-Security-Policy` | Previene XSS/injection | Pendiente (requiere tunning por app) |
 
 ### Resumen de hallazgos
 
@@ -248,7 +249,8 @@ sql`... LIKE ${"%" + q + "%"} ...`
 | SQL injection protegido (Drizzle parametrizado) | OK |
 | XSS protegido (DOMPurify) | OK |
 | CSRF protegido (SameSite + HttpOnly) | OK |
-| FTS5 MATCH sin sanitizar chars especiales | Baja |
-| `external_sources.credentials` en texto plano | Media |
-| Headers de seguridad faltantes (CSP, HSTS) | Media |
+| FTS5 MATCH sanitizado (Plan 28 — input wrapped in quotes) | OK (resuelto) |
+| `external_sources.credentials` cifrado AES-256-GCM (Plan 28) | OK (resuelto) |
+| Security headers configurados (Plan 26 — HSTS, X-Frame, nosniff) | OK (CSP pendiente) |
+| JWT access 15min + refresh 7d con rotation (Plan 26) | OK (resuelto) |
 | Revocacion JWT no verificada en Edge | Media (documentado, mitigado) |
