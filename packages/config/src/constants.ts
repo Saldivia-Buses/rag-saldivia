@@ -48,3 +48,11 @@ export const ACCESS_TOKEN_MAX_AGE_S = 15 * 60
 export const REFRESH_TOKEN_EXPIRY = "7d"
 /** Refresh token max-age in seconds (7 days) */
 export const REFRESH_TOKEN_MAX_AGE_S = 7 * 86_400
+
+// ── SSO ───────────────────────────────────────────────────────────────────
+/** SSO state cookie TTL in seconds (5 minutes) */
+export const SSO_STATE_TTL_S = 300
+/** SSO callback base path */
+export const SSO_CALLBACK_PATH = "/api/auth/callback"
+/** Default role for auto-provisioned SSO users */
+export const SSO_DEFAULT_ROLE = "user" as const

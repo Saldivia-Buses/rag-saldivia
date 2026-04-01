@@ -242,6 +242,24 @@ export const externalSources = sqliteTable(
   })
 )
 
+// ── SSO Providers ─────────────────────────────────────────────────────────
+
+export const ssoProviders = sqliteTable("sso_providers", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull(), // Display name: "Google", "Microsoft"
+  type: text("type", { enum: ["google", "microsoft", "github", "oidc_generic"] }).notNull(),
+  clientId: text("client_id").notNull(),
+  clientSecretEncrypted: text("client_secret_encrypted").notNull(), // AES-256-GCM
+  tenantId: text("tenant_id"), // For Microsoft/Azure AD
+  issuerUrl: text("issuer_url"), // For generic OIDC
+  scopes: text("scopes").notNull().default("openid email profile"),
+  autoProvision: integer("auto_provision", { mode: "boolean" }).notNull().default(true),
+  defaultRole: text("default_role", { enum: ["admin", "area_manager", "user"] }).notNull().default("user"),
+  active: integer("active", { mode: "boolean" }).notNull().default(true),
+  createdAt: integer("created_at").notNull(),
+  updatedAt: integer("updated_at").notNull(),
+})
+
 // ── Type exports (Drizzle inferred) ───────────────────────────────────────
 
 export type DbArea = typeof areas.$inferSelect
@@ -261,3 +279,5 @@ export type NewRateLimit = typeof rateLimits.$inferInsert
 export type DbBotUserMapping = typeof botUserMappings.$inferSelect
 export type DbExternalSource = typeof externalSources.$inferSelect
 export type NewExternalSource = typeof externalSources.$inferInsert
+export type DbSsoProvider = typeof ssoProviders.$inferSelect
+export type NewSsoProvider = typeof ssoProviders.$inferInsert

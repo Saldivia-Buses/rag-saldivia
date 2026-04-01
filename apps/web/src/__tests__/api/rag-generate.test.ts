@@ -256,7 +256,7 @@ describe("POST /api/rag/generate — collection access", () => {
 
     expect(response.status).toBe(403)
     const json = await response.json()
-    expect(json.error).toContain("secret-collection")
+    expect(json.error).toContain("Sin acceso")
   })
 
   test("allows request when user has collection access", async () => {
@@ -283,7 +283,7 @@ describe("POST /api/rag/generate — collection access", () => {
 
     expect(response.status).toBe(403)
     const json = await response.json()
-    expect(json.error).toContain("forbidden")
+    expect(json.error).toContain("Sin acceso")
   })
 })
 

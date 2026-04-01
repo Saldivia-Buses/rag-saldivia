@@ -102,6 +102,36 @@ export const UserPreferencesSchema = z.object({
 })
 export type UserPreferences = z.infer<typeof UserPreferencesSchema>
 
+// ── SSO ───────────────────────────────────────────────────────────────────
+
+export const SsoProviderTypeSchema = z.enum(["google", "microsoft", "github", "oidc_generic"])
+export type SsoProviderType = z.infer<typeof SsoProviderTypeSchema>
+
+/** Full SSO provider (admin view — no secret) */
+export const SsoProviderSchema = z.object({
+  id: z.number().int().positive(),
+  name: z.string().min(1),
+  type: SsoProviderTypeSchema,
+  clientId: z.string().min(1),
+  tenantId: z.string().nullable(),
+  issuerUrl: z.string().nullable(),
+  scopes: z.string(),
+  autoProvision: z.boolean(),
+  defaultRole: RoleSchema,
+  active: z.boolean(),
+  createdAt: z.number().int(),
+  updatedAt: z.number().int(),
+})
+export type SsoProvider = z.infer<typeof SsoProviderSchema>
+
+/** Public SSO provider (login page — minimal fields) */
+export const SsoProviderPublicSchema = z.object({
+  id: z.number().int().positive(),
+  name: z.string(),
+  type: SsoProviderTypeSchema,
+})
+export type SsoProviderPublic = z.infer<typeof SsoProviderPublicSchema>
+
 // ── API Response wrappers ──────────────────────────────────────────────────
 
 export const ApiSuccessSchema = <T extends z.ZodTypeAny>(dataSchema: T) =>
