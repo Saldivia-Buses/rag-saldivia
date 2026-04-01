@@ -12,6 +12,18 @@ export type SearchResult = {
 }
 
 /**
+ * Sanitize user input for FTS5 MATCH queries.
+ * FTS5 interprets operators (AND, OR, NOT, NEAR, *, ") inside the query string.
+ * We strip these so user input is treated as literal text.
+ */
+export function sanitizeFts5Query(input: string): string {
+  // Wrap the entire input in double quotes to treat it as a phrase literal.
+  // Escape any double quotes inside the input first.
+  const escaped = input.replace(/"/g, '""')
+  return `"${escaped}"`
+}
+
+/**
  * Búsqueda universal con FTS5 (F3.39).
  * Si FTS5 no está disponible, cae a LIKE sobre las tablas principales.
  */
@@ -25,13 +37,14 @@ export async function universalSearch(
   const db = getDb()
   const results: SearchResult[] = []
   const q = query.trim()
+  const ftsQ = sanitizeFts5Query(q)
 
   try {
-    // Intentar FTS5
+    // Intentar FTS5 (sanitized query to neutralize operators)
     const sessionRows = await db.run(
       sql`SELECT session_id, title, snippet(sessions_fts, 2, '<b>', '</b>', '...', 10) as snip
           FROM sessions_fts
-          WHERE sessions_fts MATCH ${q} AND user_id = ${userId}
+          WHERE sessions_fts MATCH ${ftsQ} AND user_id = ${userId}
           LIMIT ${Math.floor(limit / 2)}`
     )
     for (const row of sessionRows.rows) {
@@ -48,7 +61,7 @@ export async function universalSearch(
       sql`SELECT m.message_id, m.session_id, s.title, snippet(messages_fts, 2, '<b>', '</b>', '...', 10) as snip
           FROM messages_fts m
           JOIN chat_sessions s ON s.id = m.session_id
-          WHERE messages_fts MATCH ${q} AND s.user_id = ${userId}
+          WHERE messages_fts MATCH ${ftsQ} AND s.user_id = ${userId}
           LIMIT ${Math.floor(limit / 3)}`
     )
     for (const row of msgRows.rows) {

@@ -6,7 +6,7 @@
 import { describe, test, expect, beforeAll, afterAll, afterEach } from "bun:test"
 import { _injectDbForTesting, _resetDbForTesting } from "../connection"
 import { createTestDb, initSchema, insertUser } from "./setup"
-import { createExternalSource, listExternalSources, listActiveSourcesToSync, updateSourceLastSync, deleteExternalSource } from "../queries/external-sources"
+import { createExternalSource, listExternalSources, listActiveSourcesToSync, updateSourceLastSync, deleteExternalSource, encryptCredentials, decryptCredentials } from "../queries/external-sources"
 import * as schema from "../schema"
 import { eq } from "drizzle-orm"
 
@@ -23,6 +23,75 @@ afterAll(() => { _resetDbForTesting() })
 
 afterEach(async () => {
   await client.executeMultiple("DELETE FROM external_sources; DELETE FROM users;")
+})
+
+describe("encryptCredentials / decryptCredentials", () => {
+  const VALID_KEY = "WtEvqXmBo8r3nB7olBxkdDw4hHVdFSD2Oyjaqx5UFAA="  // 32 bytes base64
+
+  test("round-trip: encrypt then decrypt returns original", () => {
+    const original = process.env["SYSTEM_API_KEY"]
+    process.env["SYSTEM_API_KEY"] = VALID_KEY
+    try {
+      const plain = '{"token":"secret123","refresh":"abc"}'
+      const encrypted = encryptCredentials(plain)
+      expect(encrypted).not.toBe(plain)
+      expect(decryptCredentials(encrypted)).toBe(plain)
+    } finally {
+      if (original) process.env["SYSTEM_API_KEY"] = original
+      else delete process.env["SYSTEM_API_KEY"]
+    }
+  })
+
+  test("different encryptions of same plaintext produce different ciphertext", () => {
+    const original = process.env["SYSTEM_API_KEY"]
+    process.env["SYSTEM_API_KEY"] = VALID_KEY
+    try {
+      const plain = '{"key":"value"}'
+      const a = encryptCredentials(plain)
+      const b = encryptCredentials(plain)
+      expect(a).not.toBe(b) // random IV
+    } finally {
+      if (original) process.env["SYSTEM_API_KEY"] = original
+      else delete process.env["SYSTEM_API_KEY"]
+    }
+  })
+
+  test("returns plaintext when no SYSTEM_API_KEY", () => {
+    const original = process.env["SYSTEM_API_KEY"]
+    delete process.env["SYSTEM_API_KEY"]
+    try {
+      const plain = '{"token":"visible"}'
+      expect(encryptCredentials(plain)).toBe(plain)
+      expect(decryptCredentials(plain)).toBe(plain)
+    } finally {
+      if (original) process.env["SYSTEM_API_KEY"] = original
+    }
+  })
+
+  test("returns plaintext when key is wrong length", () => {
+    const original = process.env["SYSTEM_API_KEY"]
+    process.env["SYSTEM_API_KEY"] = "tooshort"
+    try {
+      const plain = '{"token":"visible"}'
+      expect(encryptCredentials(plain)).toBe(plain)
+    } finally {
+      if (original) process.env["SYSTEM_API_KEY"] = original
+      else delete process.env["SYSTEM_API_KEY"]
+    }
+  })
+
+  test("decryptCredentials handles plaintext gracefully (lazy migration)", () => {
+    const original = process.env["SYSTEM_API_KEY"]
+    process.env["SYSTEM_API_KEY"] = VALID_KEY
+    try {
+      // Plaintext JSON that was stored before encryption was enabled
+      const plaintext = '{"old":"creds"}'
+      expect(decryptCredentials(plaintext)).toBe(plaintext)
+    } finally {
+      if (original) process.env["SYSTEM_API_KEY"] = original
+      else delete process.env["SYSTEM_API_KEY"]
+    }
+  })
 })
 
 describe("createExternalSource", () => {

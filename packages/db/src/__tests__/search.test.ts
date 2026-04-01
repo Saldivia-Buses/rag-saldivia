@@ -8,7 +8,7 @@
 import { describe, test, expect, beforeAll, afterAll, afterEach } from "bun:test"
 import { _injectDbForTesting, _resetDbForTesting } from "../connection"
 import { createTestDb, initSchema, insertUser, insertSession } from "./setup"
-import { universalSearch } from "../queries/search"
+import { universalSearch, sanitizeFts5Query } from "../queries/search"
 import { saveResponse } from "../queries/saved"
 import { createTemplate } from "../queries/templates"
 
@@ -25,6 +25,35 @@ afterAll(() => { _resetDbForTesting() })
 
 afterEach(async () => {
   await client.executeMultiple("DELETE FROM saved_responses; DELETE FROM prompt_templates; DELETE FROM chat_messages; DELETE FROM chat_sessions; DELETE FROM users;")
+})
+
+describe("sanitizeFts5Query", () => {
+  test("wraps plain text in quotes", () => {
+    expect(sanitizeFts5Query("hello world")).toBe('"hello world"')
+  })
+
+  test("escapes double quotes inside input", () => {
+    expect(sanitizeFts5Query('say "hello"')).toBe('"say ""hello"""')
+  })
+
+  test("neutralizes AND/OR/NOT operators", () => {
+    // Wrapped in quotes, FTS5 treats these as literal words
+    expect(sanitizeFts5Query("foo AND bar")).toBe('"foo AND bar"')
+    expect(sanitizeFts5Query("NOT secret")).toBe('"NOT secret"')
+    expect(sanitizeFts5Query("a OR b")).toBe('"a OR b"')
+  })
+
+  test("neutralizes wildcard *", () => {
+    expect(sanitizeFts5Query("test*")).toBe('"test*"')
+  })
+
+  test("neutralizes NEAR operator", () => {
+    expect(sanitizeFts5Query("foo NEAR bar")).toBe('"foo NEAR bar"')
+  })
+
+  test("handles empty string", () => {
+    expect(sanitizeFts5Query("")).toBe('""')
+  })
 })
 
 describe("universalSearch — casos edge", () => {
