@@ -51,3 +51,51 @@ mock.module("next/image", () => ({
   default: ({ src, alt, ...props }: { src: string; alt: string; [key: string]: unknown }) =>
     Object.assign(document.createElement("img"), { src, alt, ...props }),
 }))
+
+// ── Messaging mocks (Plan 29) ────────────────────────────────────────────
+
+// Mock WebSocket client singleton — used by useMessaging, useTyping
+mock.module("@/lib/ws/client", () => ({
+  wsClient: {
+    send: mock(() => {}),
+    on: mock(() => mock(() => {})),  // returns unsubscribe fn
+    connect: mock(() => {}),
+    disconnect: mock(() => {}),
+    get connected() { return false },
+    get userId() { return null },
+  },
+}))
+
+// Mock messaging server actions — used by 5+ messaging components
+const mockAction = mock(async () => ({ data: true }))
+mock.module("@/app/actions/messaging", () => ({
+  actionSendMessage: mockAction,
+  actionEditMessage: mockAction,
+  actionDeleteMessage: mockAction,
+  actionCreateChannel: mock(async () => ({ data: { id: 1 } })),
+  actionJoinChannel: mockAction,
+  actionLeaveChannel: mockAction,
+  actionPinMessage: mockAction,
+  actionUnpinMessage: mockAction,
+  actionReactToMessage: mockAction,
+  actionRemoveReaction: mockAction,
+  actionMarkAsRead: mockAction,
+}))
+
+// Mock error feedback — used by admin components
+mock.module("@/lib/error-feedback", () => ({
+  reportError: mock(async () => true),
+  showErrorFeedback: mock(() => {}),
+  registerFeedbackSetter: mock(() => {}),
+}))
+
+// Mock navigator.clipboard (happy-dom doesn't support it)
+if (!navigator.clipboard) {
+  Object.defineProperty(navigator, "clipboard", {
+    value: {
+      writeText: mock(async () => {}),
+      readText: mock(async () => ""),
+    },
+    writable: true,
+  })
+}
