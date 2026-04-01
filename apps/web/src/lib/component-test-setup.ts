@@ -82,6 +82,35 @@ mock.module("@/app/actions/messaging", () => ({
   actionMarkAsRead: mockAction,
 }))
 
+// Mock admin server actions
+mock.module("@/app/actions/admin", () => ({
+  actionCreateUser: mock(async () => ({ data: { id: 1 } })),
+  actionUpdateUser: mock(async () => ({ data: true })),
+  actionResetPassword: mock(async () => ({ data: true })),
+  actionDeleteUser: mock(async () => ({ data: true })),
+  actionListUsers: mock(async () => []),
+}))
+
+mock.module("@/app/actions/roles", () => ({
+  actionCreateRole: mock(async () => ({ data: { id: 1 } })),
+  actionUpdateRole: mock(async () => ({ data: true })),
+  actionDeleteRole: mock(async () => ({ data: true })),
+  actionListRoles: mock(async () => []),
+  actionGetRolePermissions: mock(async () => ({ data: [] })),
+  actionSetRolePermissions: mock(async () => ({ data: true })),
+  actionSetUserRoles: mock(async () => ({ data: true })),
+  actionListPermissions: mock(async () => ({ data: [] })),
+}))
+
+mock.module("@/app/actions/areas", () => ({
+  actionCreateArea: mock(async () => ({ data: { id: 1 } })),
+  actionUpdateArea: mock(async () => ({ data: true })),
+  actionDeleteArea: mock(async () => ({ data: true })),
+  actionSetAreaCollections: mock(async () => ({ data: true })),
+  actionAddUserToArea: mock(async () => ({ data: true })),
+  actionRemoveUserFromArea: mock(async () => ({ data: true })),
+}))
+
 // Mock error feedback — used by admin components
 mock.module("@/lib/error-feedback", () => ({
   reportError: mock(async () => true),
