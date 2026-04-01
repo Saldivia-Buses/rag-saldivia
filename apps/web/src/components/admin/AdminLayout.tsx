@@ -11,7 +11,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, Users, Shield, Map, Lock, FolderOpen, SlidersHorizontal, KeyRound } from "lucide-react"
+import { LayoutDashboard, Users, Shield, Map, Lock, FolderOpen, SlidersHorizontal, KeyRound, Plug } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const TABS = [
@@ -22,6 +22,7 @@ const TABS = [
   { href: "/admin/permissions", label: "Permisos", exact: false, Icon: Lock },
   { href: "/admin/collections", label: "Colecciones", exact: false, Icon: FolderOpen },
   { href: "/admin/config", label: "Config RAG", exact: false, Icon: SlidersHorizontal },
+  { href: "/admin/connectors", label: "Conectores", exact: false, Icon: Plug },
   { href: "/admin/sso", label: "SSO", exact: false, Icon: KeyRound },
 ] as const
 
