@@ -8,7 +8,7 @@ export function UnreadBadge({ count, className }: { count: number; className?: s
   return (
     <span
       className={cn(
-        "inline-flex items-center justify-center min-w-5 h-5 px-1.5 text-xs font-medium rounded-full bg-accent text-white",
+        "inline-flex items-center justify-center min-w-5 h-5 px-1.5 text-xs font-medium rounded-full bg-accent text-accent-fg",
         className,
       )}
     >

@@ -131,7 +131,7 @@ export function MessageComposer({
             className={cn(
               "flex items-center justify-center rounded-lg transition-colors",
               value.trim()
-                ? "bg-accent text-white hover:bg-accent/90"
+                ? "bg-accent text-accent-fg hover:bg-accent/90"
                 : "bg-surface-2 text-fg-subtle",
             )}
             style={{ width: "34px", height: "34px" }}

@@ -174,7 +174,7 @@ export function ThreadPanel({
               className={cn(
                 "flex items-center justify-center rounded-md transition-colors",
                 value.trim()
-                  ? "bg-accent text-white hover:bg-accent/90"
+                  ? "bg-accent text-accent-fg hover:bg-accent/90"
                   : "bg-surface-2 text-fg-subtle",
               )}
               style={{ width: "28px", height: "28px" }}

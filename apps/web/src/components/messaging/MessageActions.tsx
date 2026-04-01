@@ -89,7 +89,7 @@ export function MessageActions({
             type="button"
             onClick={handleEdit}
             disabled={isPending || !editContent.trim()}
-            className="px-2.5 py-1 text-xs rounded bg-accent text-white hover:bg-accent/90 disabled:opacity-50"
+            className="px-2.5 py-1 text-xs rounded bg-accent text-accent-fg hover:bg-accent/90 disabled:opacity-50"
           >
             {isPending ? "Guardando..." : "Guardar"}
           </button>
@@ -115,7 +115,7 @@ export function MessageActions({
             type="button"
             onClick={handleDelete}
             disabled={isPending}
-            className="px-2.5 py-1 text-xs rounded bg-destructive text-white hover:bg-destructive/90"
+            className="px-2.5 py-1 text-xs rounded bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
             {isPending ? "Eliminando..." : "Eliminar"}
           </button>

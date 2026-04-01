@@ -126,7 +126,7 @@ export const ChannelList = memo(function ChannelList({
                       className={cn(
                         "flex items-center gap-2 px-2 py-1.5 rounded-md text-sm transition-colors",
                         isActive
-                          ? "bg-accent text-white"
+                          ? "bg-accent text-accent-fg"
                           : "text-fg-muted hover:bg-surface-2",
                         unread > 0 && !isActive && "font-medium text-fg",
                       )}
