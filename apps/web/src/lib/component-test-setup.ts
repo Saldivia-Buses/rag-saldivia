@@ -111,6 +111,36 @@ mock.module("@/app/actions/areas", () => ({
   actionRemoveUserFromArea: mock(async () => ({ data: true })),
 }))
 
+// Mock auth + chat actions — used by NavRail, ChatInterface, SessionList
+mock.module("@/app/actions/auth", () => ({
+  actionLogout: mock(async () => ({ data: true })),
+}))
+
+mock.module("@/app/actions/chat", () => ({
+  actionCreateSession: mock(async () => ({ data: { id: "new-session" } })),
+  actionDeleteSession: mock(async () => ({ data: true })),
+  actionRenameSession: mock(async () => ({ data: true })),
+  actionAddMessage: mock(async () => ({ data: true })),
+  actionAddFeedback: mock(async () => ({ data: true })),
+  actionToggleSaved: mock(async () => ({ data: true })),
+  actionForkSession: mock(async () => ({ data: { id: "forked" } })),
+}))
+
+// Mock AI SDK — used by ChatInterface
+mock.module("@ai-sdk/react", () => ({
+  useChat: () => ({
+    messages: [],
+    sendMessage: mock(async () => {}),
+    status: "idle",
+    error: null,
+    stop: mock(() => {}),
+  }),
+}))
+
+mock.module("ai", () => ({
+  DefaultChatTransport: class { constructor() {} },
+}))
+
 // Mock error feedback — used by admin components
 mock.module("@/lib/error-feedback", () => ({
   reportError: mock(async () => true),
