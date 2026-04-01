@@ -361,6 +361,18 @@ describe("getUserEffectivePermissions", () => {
     const perms = await getUserEffectivePermissions(99999)
     expect(perms.size).toBe(0)
   })
+
+  test("invalid legacy role falls through to 'Usuario' mapping", async () => {
+    // If users.role has an unknown value, legacyMap returns undefined,
+    // the ?? fallback produces "Usuario". If no "Usuario" role exists → empty Set.
+    const [user] = await db
+      .insert(users)
+      .values({ email: "weird@test.com", name: "T", role: "superadmin" as "user", apiKeyHash: "h", preferences: {}, active: true, createdAt: Date.now() })
+      .returning()
+
+    const perms = await getUserEffectivePermissions(user!.id)
+    expect(perms.size).toBe(0) // "superadmin" → legacyMap miss → "Usuario" → role not found → empty
+  })
 })
 
 describe("hasPermission", () => {

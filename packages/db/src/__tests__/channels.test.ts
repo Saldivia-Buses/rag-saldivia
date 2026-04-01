@@ -592,3 +592,44 @@ describe("getUnreadCounts", () => {
     expect(counts[chB.id]).toBe(5)
   })
 })
+
+// ── Edge cases ────────────────────────────────────────────────────────────────
+
+describe("edge cases", () => {
+  test("createChannel with empty memberIds array creates only owner", async () => {
+    const user = await insertUser(db, "u@test.com")
+    const channel = await createChannel({
+      type: "public",
+      name: "solo-owner",
+      createdBy: user.id,
+      memberIds: [],
+    })
+    const members = await getChannelMembers(channel.id)
+    expect(members).toHaveLength(1)
+    expect(members[0]!.role).toBe("owner")
+  })
+
+  test("updateLastRead for non-member silently does nothing", async () => {
+    const user = await insertUser(db, "u@test.com")
+    const other = await insertUser(db, "other@test.com")
+    const channel = await createChannel({ type: "public", name: "test", createdBy: user.id })
+    // other is NOT a member — update should be a no-op
+    await updateLastRead(channel.id, other.id)
+    const members = await getChannelMembers(channel.id)
+    expect(members).toHaveLength(1) // still just the owner
+  })
+
+  test("getChannel returns undefined for non-existent ID", async () => {
+    const result = await getChannel("non-existent-id")
+    expect(result).toBeUndefined()
+  })
+
+  test("removeChannelMember on non-member silently does nothing", async () => {
+    const user = await insertUser(db, "u@test.com")
+    const channel = await createChannel({ type: "public", name: "test", createdBy: user.id })
+    // Removing a user that was never a member — should not throw
+    await removeChannelMember(channel.id, 99999)
+    const members = await getChannelMembers(channel.id)
+    expect(members).toHaveLength(1) // still just the owner
+  })
+})

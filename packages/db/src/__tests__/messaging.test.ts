@@ -500,3 +500,39 @@ describe("getMentionsForUser", () => {
     expect(mentions).toHaveLength(0)
   })
 })
+
+// ── Edge cases ────────────────────────────────────────────────────────────────
+
+describe("edge cases", () => {
+  test("sendMessage with non-existent parentId silently succeeds (known limitation)", async () => {
+    // KNOWN ISSUE: sendMessage doesn't validate parentId existence.
+    // The replyCount update is a no-op (0 rows affected), and the message
+    // is created with a dangling parentId reference. The UI prevents this
+    // by only allowing replies to visible messages, but the DB layer doesn't enforce it.
+    const user = await insertUser(db, "u1@test.com")
+    const channel = await insertChannel(db, user.id)
+    const msg = await sendMessage({ channelId: channel.id, userId: user.id, content: "orphan reply", parentId: "non-existent-id" })
+    expect(msg.parentId).toBe("non-existent-id")
+    expect(msg.content).toBe("orphan reply")
+  })
+
+  test("deleteMessage on non-existent ID returns undefined", async () => {
+    const result = await deleteMessage("non-existent-id")
+    expect(result).toBeUndefined()
+  })
+
+  test("editMessage on non-existent ID returns undefined", async () => {
+    const result = await editMessage("non-existent-id", "new content")
+    expect(result).toBeUndefined()
+  })
+
+  test("getMessage on non-existent ID returns undefined", async () => {
+    const result = await getMessage("non-existent-id")
+    expect(result).toBeUndefined()
+  })
+
+  test("getThreadReplies on non-existent parent returns empty", async () => {
+    const replies = await getThreadReplies("non-existent-id")
+    expect(replies).toHaveLength(0)
+  })
+})
