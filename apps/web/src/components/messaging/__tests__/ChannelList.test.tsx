@@ -49,6 +49,13 @@ describe("ChannelList", () => {
     expect(getByTitle("Crear canal")).toBeTruthy()
   })
 
+  test("shows unread badge when channel has unreads", () => {
+    const { getByText } = render(
+      <ChannelList channels={CHANNELS} unreadCounts={{ "ch-1": 3 }} userId={1} />
+    )
+    expect(getByText("3")).toBeTruthy()
+  })
+
   test("renders DM button when allUsers provided", () => {
     const { getByTitle } = render(
       <ChannelList

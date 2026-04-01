@@ -48,6 +48,28 @@ describe("MessageComposer", () => {
     expect(textarea.value).toBe("")
   })
 
+  test("sends on Enter key", () => {
+    const onOptimistic = mock(() => {})
+    const { getByPlaceholderText } = render(
+      <MessageComposer channelId="ch-1" currentUserId={1} members={MEMBERS} onOptimisticMessage={onOptimistic} />
+    )
+    const textarea = getByPlaceholderText("Escribí un mensaje...")
+    fireEvent.change(textarea, { target: { value: "Hello" } })
+    fireEvent.keyDown(textarea, { key: "Enter" })
+    expect(onOptimistic).toHaveBeenCalled()
+  })
+
+  test("does not send on Shift+Enter", () => {
+    const onOptimistic = mock(() => {})
+    const { getByPlaceholderText } = render(
+      <MessageComposer channelId="ch-1" currentUserId={1} members={MEMBERS} onOptimisticMessage={onOptimistic} />
+    )
+    const textarea = getByPlaceholderText("Escribí un mensaje...")
+    fireEvent.change(textarea, { target: { value: "Hello" } })
+    fireEvent.keyDown(textarea, { key: "Enter", shiftKey: true })
+    expect(onOptimistic).not.toHaveBeenCalled()
+  })
+
   test("shows reply indicator when replyTo is set", () => {
     const { getByText } = render(
       <MessageComposer

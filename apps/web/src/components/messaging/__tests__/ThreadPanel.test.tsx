@@ -1,5 +1,5 @@
 import { describe, test, expect, afterEach, mock } from "bun:test"
-import { cleanup, render } from "@testing-library/react"
+import { cleanup, render, fireEvent } from "@testing-library/react"
 import { ThreadPanel } from "../ThreadPanel"
 
 afterEach(cleanup)
@@ -37,10 +37,10 @@ describe("ThreadPanel", () => {
     const { getByText } = render(
       <ThreadPanel channelId="ch-1" parentMessage={PARENT} replies={[]} members={MEMBERS} currentUserId={1} onClose={onClose} />
     )
-    // Close button is next to "Hilo" heading — find it by its sibling X icon
     const heading = getByText("Hilo")
-    const closeBtn = heading.parentElement?.querySelector("button")
-    closeBtn?.click()
+    const closeBtn = heading.parentElement!.querySelector("button")
+    expect(closeBtn).not.toBeNull()
+    fireEvent.click(closeBtn!)
     expect(onClose).toHaveBeenCalled()
   })
 })

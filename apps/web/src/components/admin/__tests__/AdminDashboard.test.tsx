@@ -2,12 +2,9 @@ import { describe, test, expect, afterEach } from "bun:test"
 import { cleanup, render } from "@testing-library/react"
 import { AdminDashboard } from "../AdminDashboard"
 
-afterEach(() => {
-  cleanup()
-  // AdminDashboard uses setInterval — force-clear any lingering timers
-  const id = setTimeout(() => {}, 0) as unknown as number
-  for (let i = 0; i < id; i++) clearInterval(i)
-})
+// cleanup() unmounts the component, which triggers useEffect cleanup
+// and clears the 30s setInterval in AdminDashboard
+afterEach(cleanup)
 
 const STATS = {
   users: { total: 10, active: 8, inactive: 2 },
