@@ -93,9 +93,9 @@ export function ThreadPanel({
   }
 
   return (
-    <div className="w-80 shrink-0 border-l border-border bg-surface flex flex-col h-full">
+    <div className="shrink-0 border-l border-border bg-surface flex flex-col h-full" style={{ width: "340px" }}>
       {/* Header */}
-      <div className="px-4 py-3 border-b border-border flex items-center justify-between">
+      <div className="border-b border-border flex items-center justify-between" style={{ padding: "14px 16px", minHeight: "52px" }}>
         <h3 className="text-sm font-semibold text-fg">Hilo</h3>
         <button
           type="button"
@@ -108,10 +108,10 @@ export function ThreadPanel({
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto">
-        {/* Parent message */}
-        <div className="border-b border-border pb-2">
+        {/* Parent message — no thread link (we're already in the thread) */}
+        <div className="border-b border-border" style={{ paddingBottom: "8px" }}>
           <MessageItem
-            message={parentMessage}
+            message={{ ...parentMessage, replyCount: 0 }}
             members={members}
             showHeader
             currentUserId={currentUserId}
@@ -147,13 +147,13 @@ export function ThreadPanel({
       </div>
 
       {/* Thread composer */}
-      <div className="shrink-0 border-t border-border p-3">
+      <div className="shrink-0 border-t border-border" style={{ padding: "12px 16px" }}>
         <div
           className={cn(
-            "border border-border rounded-lg bg-bg transition-colors focus-within:border-accent",
+            "border border-border bg-bg transition-colors focus-within:border-accent",
             isPending && "opacity-70",
           )}
-          style={{ padding: "8px 10px" }}
+          style={{ padding: "10px 12px", borderRadius: "12px" }}
         >
           <textarea
             ref={textareaRef}
@@ -166,21 +166,21 @@ export function ThreadPanel({
             className="w-full resize-none bg-transparent text-fg text-sm placeholder:text-fg-subtle outline-none disabled:opacity-50"
             style={{ minHeight: "22px", maxHeight: "120px", lineHeight: "1.5" }}
           />
-          <div className="flex items-center justify-end" style={{ marginTop: "4px" }}>
+          <div className="flex items-center justify-end" style={{ marginTop: "6px" }}>
             <button
               type="button"
               onClick={handleSend}
               disabled={!value.trim() || isPending}
               className={cn(
-                "flex items-center justify-center rounded-md transition-colors",
+                "flex items-center justify-center transition-colors",
                 value.trim()
                   ? "bg-accent text-accent-fg hover:bg-accent/90"
-                  : "bg-surface-2 text-fg-subtle",
+                  : "text-fg-subtle",
               )}
-              style={{ width: "28px", height: "28px" }}
+              style={{ width: "30px", height: "30px", borderRadius: "8px" }}
               title="Enviar (Enter)"
             >
-              <Send size={14} />
+              <Send size={15} />
             </button>
           </div>
         </div>

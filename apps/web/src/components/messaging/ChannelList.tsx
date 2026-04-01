@@ -78,9 +78,9 @@ export const ChannelList = memo(function ChannelList({
   ].filter((s) => s.items.length > 0)
 
   return (
-    <aside className="w-64 shrink-0 border-r border-border bg-surface flex flex-col h-full">
-      <div className="p-3 border-b border-border flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-fg">Mensajería</h2>
+    <aside className="shrink-0 border-r border-border bg-surface flex flex-col h-full" style={{ width: "272px" }}>
+      <div className="border-b border-border flex items-center justify-between" style={{ padding: "14px 16px", minHeight: "52px" }}>
+        <h2 className="text-sm font-semibold text-fg tracking-tight">Mensajería</h2>
         <div className="flex items-center gap-0.5">
           <button
             type="button"
@@ -105,15 +105,15 @@ export const ChannelList = memo(function ChannelList({
         </div>
       </div>
 
-      <nav className="flex-1 overflow-y-auto p-2">
+      <nav className="flex-1 overflow-y-auto" style={{ padding: "12px 10px" }}>
         {sections.map((section) => (
-          <div key={section.key} className="mb-3">
-            <div className="px-2 mb-1">
-              <span className="text-xs font-medium text-fg-subtle uppercase tracking-wide">
+          <div key={section.key} style={{ marginBottom: "20px" }}>
+            <div style={{ padding: "0 8px", marginBottom: "6px" }}>
+              <span className="text-xs font-medium text-fg-subtle uppercase" style={{ letterSpacing: "0.05em" }}>
                 {section.label}
               </span>
             </div>
-            <ul className="flex flex-col gap-0.5">
+            <ul className="flex flex-col" style={{ gap: "2px" }}>
               {section.items.map((ch) => {
                 const Icon = channelIcon(ch.type)
                 const unread = unreadCounts[ch.id] ?? 0
@@ -124,14 +124,15 @@ export const ChannelList = memo(function ChannelList({
                     <Link
                       href={`/messaging/${ch.id}`}
                       className={cn(
-                        "flex items-center gap-2 px-2 py-1.5 rounded-md text-sm transition-colors",
+                        "flex items-center gap-2.5 text-sm transition-colors",
                         isActive
                           ? "bg-accent text-accent-fg"
-                          : "text-fg-muted hover:bg-surface-2",
+                          : "text-fg-muted hover:bg-surface-2 hover:text-fg",
                         unread > 0 && !isActive && "font-medium text-fg",
                       )}
+                      style={{ padding: "8px 12px", borderRadius: "8px" }}
                     >
-                      <Icon className="h-4 w-4 shrink-0" />
+                      <Icon className="h-4 w-4 shrink-0 opacity-70" />
                       <span className="truncate flex-1">
                         {channelDisplayName(ch, userId)}
                       </span>

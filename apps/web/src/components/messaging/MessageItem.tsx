@@ -49,7 +49,10 @@ function UserAvatar({ name }: { name: string }) {
     .toUpperCase()
 
   return (
-    <div className="h-8 w-8 rounded-full bg-accent-subtle text-accent flex items-center justify-center text-xs font-semibold shrink-0">
+    <div
+      className="rounded-full bg-accent text-accent-fg flex items-center justify-center text-xs font-semibold shrink-0"
+      style={{ width: "36px", height: "36px" }}
+    >
       {initials || "?"}
     </div>
   )
@@ -100,16 +103,18 @@ export function MessageItem({
   return (
     <div
       className={cn(
-        "group relative flex gap-3 px-4 hover:bg-surface transition-colors",
-        showHeader ? "pt-2" : "pt-0.5",
+        "group relative flex gap-3 hover:bg-surface transition-colors",
       )}
+      style={{
+        padding: showHeader ? "8px 20px 2px" : "0 20px",
+      }}
     >
       {showHeader ? (
         <UserAvatar name={author?.name ?? "?"} />
       ) : (
-        <div className="w-8 shrink-0 flex items-start justify-center">
-          <span className="text-[10px] text-fg-subtle opacity-0 group-hover:opacity-100 transition-opacity leading-5">
-            {formatTime(message.createdAt)}
+        <div className="shrink-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" style={{ width: "36px" }}>
+          <span className="text-[10px] text-fg-subtle" style={{ lineHeight: 1 }}>
+            {formatTime(message.createdAt).replace(/\s/g, "")}
           </span>
         </div>
       )}
@@ -125,7 +130,7 @@ export function MessageItem({
             </span>
           </div>
         )}
-        <p className="text-sm text-fg whitespace-pre-wrap break-words">
+        <p className="text-sm text-fg whitespace-pre-wrap break-words" style={{ lineHeight: "1.4" }}>
           {renderWithMentions(message.content, members)}
           {message.editedAt && (
             <span className="text-xs text-fg-subtle ml-1">(editado)</span>
@@ -145,8 +150,10 @@ export function MessageItem({
         {message.replyCount > 0 && (
           <button
             onClick={() => onOpenThread?.(message)}
-            className="mt-1 text-xs text-accent hover:underline"
+            className="text-xs text-accent hover:underline flex items-center gap-1"
+            style={{ marginTop: "4px" }}
           >
+            <MessageSquare size={12} />
             {message.replyCount} {message.replyCount === 1 ? "respuesta" : "respuestas"}
           </button>
         )}
@@ -154,7 +161,10 @@ export function MessageItem({
 
       {/* Hover actions */}
       {(onReply || onReact) && !message.deletedAt && message.type !== "system" && (
-        <div className="absolute top-0 right-4 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5 bg-surface border border-border rounded-md shadow-sm p-0.5">
+        <div
+          className="absolute right-5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5 bg-surface border border-border shadow-sm"
+          style={{ top: "-14px", borderRadius: "8px", padding: "3px" }}
+        >
           {onReact && (
             <button
               type="button"
@@ -185,9 +195,19 @@ export function MessageItem({
 
 export function DateSeparator({ timestamp }: { timestamp: number }) {
   return (
-    <div className="flex items-center gap-3 px-4 py-2">
+    <div className="flex items-center gap-3" style={{ padding: "16px 20px 8px" }}>
       <div className="flex-1 h-px bg-border" />
-      <span className="text-xs text-fg-subtle font-medium">{formatDate(timestamp)}</span>
+      <span
+        className="text-xs text-fg-subtle font-medium"
+        style={{
+          padding: "2px 10px",
+          borderRadius: "999px",
+          border: "1px solid var(--border)",
+          background: "var(--surface)",
+        }}
+      >
+        {formatDate(timestamp)}
+      </span>
       <div className="flex-1 h-px bg-border" />
     </div>
   )

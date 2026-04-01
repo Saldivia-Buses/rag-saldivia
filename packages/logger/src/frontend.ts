@@ -9,7 +9,7 @@
  */
 
 import type { EventType } from "@rag-saldivia/shared"
-import { LOGGER_BATCH_SIZE, LOGGER_FLUSH_INTERVAL_MS } from "@rag-saldivia/config"
+import { LOGGER_BATCH_SIZE, LOGGER_FLUSH_INTERVAL_MS } from "@rag-saldivia/config/constants"
 
 type ClientEvent = {
   type: EventType
