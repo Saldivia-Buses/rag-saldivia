@@ -647,7 +647,7 @@ Projects con 200K context window. Documentos, instrucciones custom, actividad de
 | Hallucination detection | No | Si | — |
 | Evaluacion automatica (RAGAS) | No | — | Si |
 | **Connectors** | | | |
-| Conectores externos | 0 | 10+ | 40+ |
+| Conectores externos | **4 (Plan 33)** — Drive, SharePoint, Confluence, Crawler | 10+ | 40+ |
 | Parseo inteligente docs | Basico | Hi-Res | VLM adaptive |
 | Chunking inteligente | Token-based | Semantic | Hierarchical |
 | Incremental indexing | No | Si | Si + webhooks |

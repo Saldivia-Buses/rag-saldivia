@@ -164,7 +164,7 @@ La serie 1.0.x NO es una secuencia de releases granulares. Es **una version gran
 | Plan | Foco | Estado |
 |------|------|--------|
 | **32** | Self-Healing Error UX | Completado 2026-04-01 |
-| **33** | Conectores Externos (Google Drive, SharePoint, Confluence) | **Siguiente** |
+| **33** | Conectores Externos (Google Drive, SharePoint, Confluence, Web Crawler) | Completado 2026-04-01 |
 | **34** | SSO (SAML/OIDC) — Google, Microsoft, GitHub, SAML 2.0 | Completado 2026-04-01 |
 
 ### Otros futuros (sin plan formal)

@@ -27,14 +27,14 @@ Un **overlay empresarial** sobre el NVIDIA RAG Blueprint v2.5.0 que agrega todo 
 | Lineas de codigo activo | ~6,800 |
 | Tablas SQLite | 31 en 4 modulos |
 | Paginas (rutas) | 16 activas |
-| API routes | 19 (+1: /api/feedback) |
+| API routes | 21 (+/api/feedback, /api/connectors/callback, /api/auth/sso/*) |
 | Server actions | 50+ en 10 archivos |
-| Componentes React | 75 activos (68 + 7 nuevos de decomposicion) |
+| Componentes React | ~80 activos (+ ErrorRecovery, AdminSso, AdminConnectors, SsoProviderForm) |
 | Hooks custom | 7 (6 con test — solo usePresence sin test) |
 | Modulos de queries | 21 |
 | Tests totales | ~1,059 (693 unit + 314 component + 22 visual + 8 a11y + ~22 E2E) |
 | ADRs documentadas | 12 (001-012) |
-| Planes completados | 18 (Plan 13-30) |
+| Planes completados | 21 (Plans 13-30, 32-34) |
 | Planes pendientes | 1 (Plan 19 — deploy testers) |
 | Archivos archivados | 123 en `_archive/` |
 | Agents especializados | 10 (todos Opus) |
