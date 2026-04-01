@@ -137,7 +137,27 @@ const CodeView = memo(function CodeView({
 
 // ── Mermaid preview ──
 
-const MermaidPreview = memo(function MermaidPreview({ content }: { content: string }) {
+const MERMAID_LIGHT = {
+  primaryColor: "#2563eb", primaryTextColor: "#ffffff", primaryBorderColor: "#1d4ed8",
+  secondaryColor: "#dbeafe", secondaryTextColor: "#141413", secondaryBorderColor: "#93c5fd",
+  tertiaryColor: "#f0eee8", tertiaryTextColor: "#141413", tertiaryBorderColor: "#e0ddd6",
+  lineColor: "#6e6c69", textColor: "#141413", mainBkg: "#2563eb", nodeBorder: "#1d4ed8",
+  clusterBkg: "#f0eee8", clusterBorder: "#e0ddd6", titleColor: "#141413",
+  edgeLabelBackground: "#faf9f5", nodeTextColor: "#ffffff",
+  fontFamily: "Instrument Sans, system-ui, sans-serif", fontSize: "14px",
+}
+
+const MERMAID_DARK = {
+  primaryColor: "#60a5fa", primaryTextColor: "#ffffff", primaryBorderColor: "#3b82f6",
+  secondaryColor: "#1e3a5f", secondaryTextColor: "#f5f4f0", secondaryBorderColor: "#60a5fa",
+  tertiaryColor: "#2e2d29", tertiaryTextColor: "#f5f4f0", tertiaryBorderColor: "#3a3935",
+  lineColor: "#75736e", textColor: "#f5f4f0", mainBkg: "#60a5fa", nodeBorder: "#3b82f6",
+  clusterBkg: "#242320", clusterBorder: "#3a3935", titleColor: "#f5f4f0",
+  edgeLabelBackground: "#242320", nodeTextColor: "#ffffff",
+  fontFamily: "Instrument Sans, system-ui, sans-serif", fontSize: "14px",
+}
+
+const MermaidPreview = memo(function MermaidPreview({ content, dark }: { content: string; dark: boolean }) {
   const [svg, setSvg] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -148,28 +168,7 @@ const MermaidPreview = memo(function MermaidPreview({ content }: { content: stri
       mermaid.initialize({
         startOnLoad: false,
         theme: "base",
-        themeVariables: {
-          primaryColor: "#2563eb",
-          primaryTextColor: "#ffffff",
-          primaryBorderColor: "#1d4ed8",
-          secondaryColor: "#dbeafe",
-          secondaryTextColor: "#141413",
-          secondaryBorderColor: "#93c5fd",
-          tertiaryColor: "#f0eee8",
-          tertiaryTextColor: "#141413",
-          tertiaryBorderColor: "#e0ddd6",
-          lineColor: "#6e6c69",
-          textColor: "#f5f4f0",
-          mainBkg: "#2563eb",
-          nodeBorder: "#1d4ed8",
-          clusterBkg: "#242320",
-          clusterBorder: "#3a3935",
-          titleColor: "#f5f4f0",
-          edgeLabelBackground: "#242320",
-          nodeTextColor: "#ffffff",
-          fontFamily: "Instrument Sans, system-ui, sans-serif",
-          fontSize: "14px",
-        },
+        themeVariables: dark ? MERMAID_DARK : MERMAID_LIGHT,
       })
       try {
         const id = `mermaid-${Date.now()}`
@@ -182,7 +181,7 @@ const MermaidPreview = memo(function MermaidPreview({ content }: { content: stri
     return () => {
       cancelled = true
     }
-  }, [content])
+  }, [content, dark])
 
   if (error) {
     return (
@@ -217,7 +216,7 @@ const HtmlPreview = memo(function HtmlPreview({ content }: { content: string }) 
     <iframe
       srcDoc={content}
       sandbox="allow-scripts"
-      className="w-full h-full border-0 bg-white"
+      className="w-full h-full border-0 bg-bg"
       title="HTML Preview"
     />
   )
@@ -283,6 +282,7 @@ export function ArtifactPanel({
   const [copied, setCopied] = useState(false)
   const [fullscreen, setFullscreen] = useState(false)
   const resizing = useRef(false)
+  const isDark = useIsDark()
 
   const artifact = artifacts.find((a) => a.id === activeId) ?? null
 
@@ -367,7 +367,7 @@ export function ArtifactPanel({
   function renderContent() {
     const a = artifact!
     if (hasPreview && viewMode === "preview") {
-      if (a.type === "mermaid" || a.language === "mermaid") return <MermaidPreview content={a.content} />
+      if (a.type === "mermaid" || a.language === "mermaid") return <MermaidPreview content={a.content} dark={isDark} />
       if (a.type === "html") return <HtmlPreview content={a.content} />
       if (a.type === "svg") return <SvgPreview content={a.content} />
     }
