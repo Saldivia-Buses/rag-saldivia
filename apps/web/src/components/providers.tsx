@@ -1,6 +1,7 @@
 "use client"
 
 import { ThemeProvider } from "next-themes"
+import { ErrorFeedbackMount } from "@/components/ui/error-feedback"
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
@@ -12,6 +13,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
       storageKey="rag-theme"
     >
       {children}
+      <ErrorFeedbackMount />
     </ThemeProvider>
   )
 }

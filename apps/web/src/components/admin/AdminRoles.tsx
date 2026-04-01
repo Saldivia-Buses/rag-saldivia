@@ -15,6 +15,8 @@
 
 import { useState, useEffect, useTransition, useCallback } from "react"
 import { Plus, Check, X } from "lucide-react"
+import { toast } from "sonner"
+import { showErrorFeedback } from "@/lib/error-feedback"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { PermissionMatrix } from "./PermissionMatrix"
@@ -99,7 +101,9 @@ export function AdminRoles({
         setRoles(await actionListRoles() as RoleWithCount[])
       } catch (err) {
         const msg = String(err)
-        setError(msg.includes("UNIQUE") || msg.includes("unique") ? "Ya existe un rol con ese nombre" : "Error al crear rol")
+        const userMsg = msg.includes("UNIQUE") || msg.includes("unique") ? "Ya existe un rol con ese nombre" : "Error al crear rol"
+        setError(userMsg)
+        toast.error(userMsg, { action: { label: "Reportar", onClick: () => showErrorFeedback(userMsg, "Crear rol") } })
       }
     })
   }
@@ -122,7 +126,9 @@ export function AdminRoles({
         setEditingRoleId(null); setForm(EMPTY_FORM); flashSuccess("Rol actualizado")
         setRoles(await actionListRoles() as RoleWithCount[])
       } catch (err) {
-        setError(String(err).includes("UNIQUE") ? "Ya existe un rol con ese nombre" : "Error al actualizar")
+        const userMsg = String(err).includes("UNIQUE") ? "Ya existe un rol con ese nombre" : "Error al actualizar"
+        setError(userMsg)
+        toast.error(userMsg, { action: { label: "Reportar", onClick: () => showErrorFeedback(userMsg, "Editar rol") } })
       }
     })
   }
@@ -147,7 +153,10 @@ export function AdminRoles({
         flashSuccess(`Rol "${role.name}" eliminado`)
         setRoles(await actionListRoles() as RoleWithCount[])
         if (selectedRoleId === role.id) { setSelectedRoleId(null); setKeysLoaded(false) }
-      } catch { setError("Error al eliminar rol") }
+      } catch {
+        setError("Error al eliminar rol")
+        toast.error("Error al eliminar rol", { action: { label: "Reportar", onClick: () => showErrorFeedback("Error al eliminar rol", "Eliminar rol") } })
+      }
     })
   }, [deleteTarget, startTransition, selectedRoleId])
 

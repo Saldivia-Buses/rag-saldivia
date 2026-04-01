@@ -32,14 +32,10 @@ export function encryptCredentials(plaintext: string): string {
 export function decryptCredentials(stored: string): string {
   const key = getEncryptionKey()
   if (!key) return stored
-  // Try to decode as base64 — if it fails, it's plaintext (lazy migration)
-  let buf: Buffer
-  try {
-    buf = Buffer.from(stored, "base64")
-  } catch {
-    return stored
-  }
-  // Minimum length: IV(12) + TAG(16) + at least 1 byte
+  // Buffer.from(x, "base64") never throws — it silently ignores invalid chars.
+  // The length check below catches plaintext (lazy migration): real ciphertext
+  // is always >= IV(12) + TAG(16) + 1 byte = 29 bytes after base64 decode.
+  const buf = Buffer.from(stored, "base64")
   if (buf.length < IV_LEN + TAG_LEN + 1) return stored
   const iv = buf.subarray(0, IV_LEN)
   const tag = buf.subarray(IV_LEN, IV_LEN + TAG_LEN)

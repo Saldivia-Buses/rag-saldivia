@@ -17,6 +17,8 @@
 
 import { useState, useTransition, useCallback } from "react"
 import { Plus, Trash2, Power, Check, X } from "lucide-react"
+import { toast } from "sonner"
+import { showErrorFeedback } from "@/lib/error-feedback"
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip"
 import { ConfirmDialog } from "@/components/ui/confirm-dialog"
 import { actionUpdateUser, actionDeleteUser, actionListUsers } from "@/app/actions/admin"
@@ -74,6 +76,7 @@ export function AdminUsers({
       } catch {
         setUsers((prev) => prev.map((u) => (u.id === user.id ? { ...u, active: !newActive } : u)))
         setError("Error al cambiar estado")
+        toast.error("Error al cambiar estado", { action: { label: "Reportar", onClick: () => showErrorFeedback("Error al cambiar estado", `Toggle activo: ${user.name}`) } })
       }
     })
   }
@@ -99,6 +102,7 @@ export function AdminUsers({
       } catch {
         await refreshUsers()
         setError("Error al eliminar usuario")
+        toast.error("Error al eliminar usuario", { action: { label: "Reportar", onClick: () => showErrorFeedback("Error al eliminar usuario", `Eliminar: ${user.name}`) } })
       }
     })
   }, [deleteTarget, refreshUsers, startTransition])

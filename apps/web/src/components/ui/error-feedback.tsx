@@ -1,18 +1,35 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useState, useEffect, useTransition } from "react"
 import { MessageSquareWarning, Send, X } from "lucide-react"
-import { reportError } from "@/lib/error-feedback"
+import { reportError, registerFeedbackSetter } from "@/lib/error-feedback"
 import { toast } from "sonner"
 
 /**
- * Standalone error feedback dialog.
- * Opens inline (no portal) to report an error to the server.
+ * Error feedback dialog — renders at layout level.
+ * Opens when showErrorFeedback() is called from anywhere.
  *
- * Usage:
- *   <ErrorFeedbackDialog error="Something failed" context="Creating role" onClose={() => {}} />
+ * Mount once in a layout or page wrapper:
+ *   <ErrorFeedbackMount />
  */
-export function ErrorFeedbackDialog({
+export function ErrorFeedbackMount() {
+  const [state, setState] = useState<{ error: string; context: string } | null>(null)
+
+  useEffect(() => {
+    registerFeedbackSetter(setState)
+    return () => registerFeedbackSetter(null)
+  }, [])
+
+  if (!state) return null
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center" style={{ background: "rgba(0,0,0,0.3)" }}>
+      <ErrorFeedbackDialog error={state.error} context={state.context} onClose={() => setState(null)} />
+    </div>
+  )
+}
+
+function ErrorFeedbackDialog({
   error,
   context,
   onClose,
@@ -39,7 +56,7 @@ export function ErrorFeedbackDialog({
   return (
     <div
       className="rounded-xl border border-border bg-surface shadow-lg"
-      style={{ padding: "16px", maxWidth: "400px" }}
+      style={{ padding: "16px", maxWidth: "400px", width: "90%" }}
     >
       <div className="flex items-start justify-between" style={{ marginBottom: "12px" }}>
         <div className="flex items-center" style={{ gap: "8px" }}>
