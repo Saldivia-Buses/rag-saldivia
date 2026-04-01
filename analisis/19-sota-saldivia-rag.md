@@ -657,7 +657,7 @@ Projects con 200K context window. Documentos, instrucciones custom, actividad de
 | Feedback loop | Parcial (up/down) | Score-based reranking | Bidirectional RAG |
 | **Security** | | | |
 | Auth JWT | ~~24h~~ Access 15min + refresh 7d (Plan 26) | Access+refresh | Edge revocation |
-| SSO (SAML/OIDC) | No → **Plan 34 en escritura** | Si | Si + group sync |
+| SSO (SAML/OIDC) | **Si (Plan 34)** — Google, Microsoft, GitHub, SAML 2.0 | Si | Si + group sync |
 | Document-level ACL | Por area | Por chunk | Zero-trust pre-filter |
 | PII redaction | No | Si | Role-based |
 | Security headers | ~~3/6~~ 5/6 (Plan 26) | 6/6 | 6/6 + CSP nonces |

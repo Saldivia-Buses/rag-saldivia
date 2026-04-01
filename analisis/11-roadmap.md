@@ -28,6 +28,8 @@ La serie 1.0.x NO es una secuencia de releases granulares. Es **una version gran
 | **28** | Security Fixes + Decomposition + Error UX | 27 | Completado | 2026-04-01 |
 | **29** | Testing Sprint II (components, E2E, a11y) | 28 | Completado | 2026-04-01 |
 | **30** | Dark Mode Refinement | 28 | Completado (F3-F4 visual pending) | 2026-04-01 |
+| **32** | Self-Healing Error UX | 28 | Completado | 2026-04-01 |
+| **34** | SSO (SAML/OIDC) | 26, 27, 28 | Completado | 2026-04-01 |
 
 ---
 
@@ -161,9 +163,9 @@ La serie 1.0.x NO es una secuencia de releases granulares. Es **una version gran
 
 | Plan | Foco | Estado |
 |------|------|--------|
-| **32** | Self-Healing Error UX | Plan en escritura |
-| **33** | Conectores Externos (Google Drive, SharePoint, Confluence) | Plan en escritura |
-| **34** | SSO (SAML/OIDC) | Plan en escritura |
+| **32** | Self-Healing Error UX | Completado 2026-04-01 |
+| **33** | Conectores Externos (Google Drive, SharePoint, Confluence) | **Siguiente** |
+| **34** | SSO (SAML/OIDC) — Google, Microsoft, GitHub, SAML 2.0 | Completado 2026-04-01 |
 
 ### Otros futuros (sin plan formal)
 

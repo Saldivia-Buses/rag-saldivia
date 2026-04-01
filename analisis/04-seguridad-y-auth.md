@@ -254,3 +254,8 @@ sql`... LIKE ${"%" + q + "%"} ...`
 | Security headers configurados (Plan 26 — HSTS, X-Frame, nosniff) | OK (CSP pendiente) |
 | JWT access 15min + refresh 7d con rotation (Plan 26) | OK (resuelto) |
 | Revocacion JWT no verificada en Edge | Media (documentado, mitigado) |
+| SSO (OIDC + SAML 2.0) implementado (Plan 34) | OK — Google, Microsoft, GitHub, SAML |
+| State tokens CSRF con timingSafeEqual + signed JWT (Plan 34) | OK |
+| SAML cert validation mandatory + SameSite=None (Plan 34) | OK |
+| Auto-provisioning sin role admin + no auto-link (Plan 34) | OK |
+| CSP sin unsafe-eval (Plan 34 B-2) | OK |

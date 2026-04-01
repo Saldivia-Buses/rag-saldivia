@@ -424,9 +424,9 @@ Comparacion contra patrones usados por Cal.com (40K stars), Clerk, Supabase, Dub
 - ~~E2E tests~~ HECHO (Plan 29)
 
 **Fase 4 — Diferenciadores (en progreso):**
-- Self-healing error UX → **Plan 32 en escritura**
-- Conectores externos → **Plan 33 en escritura**
-- SSO (SAML/OIDC) → **Plan 34 en escritura**
+- Self-healing error UX → **Plan 32 completado**
+- SSO (SAML/OIDC) → **Plan 34 completado** (Google, Microsoft, GitHub, SAML 2.0)
+- Conectores externos → **Plan 33 siguiente**
 - Knowledge gap detection → futuro
 - Revocacion JWT en Edge (Upstash) → futuro
 - RAG multiplayer → futuro
