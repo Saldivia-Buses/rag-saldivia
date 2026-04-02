@@ -1,0 +1,45 @@
+# Traefik dynamic config for local development.
+# Routes *.localhost subdomains to Go services running on the host.
+#
+# In dev, Go services run directly on the host machine (go run ./cmd/...),
+# so Traefik routes to host.docker.internal (the host from inside Docker).
+#
+# Example: dev-tenant.localhost:80 → auth service on host:8001
+
+http:
+  routers:
+    # Auth service — handles login, token refresh
+    auth-router:
+      rule: "PathPrefix(`/v1/auth`)"
+      service: auth-service
+      entryPoints:
+        - web
+
+    # API catch-all — routes to appropriate service based on path
+    # In production, Traefik extracts tenant from subdomain.
+    # In dev, tenant is hardcoded to "dev" via header.
+    api-router:
+      rule: "PathPrefix(`/v1/`)"
+      service: api-gateway
+      entryPoints:
+        - web
+      middlewares:
+        - dev-tenant-header
+
+  services:
+    auth-service:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:8001"
+
+    api-gateway:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:8002"
+
+  middlewares:
+    # In dev, inject X-Tenant-ID header for all requests
+    dev-tenant-header:
+      headers:
+        customRequestHeaders:
+          X-Tenant-ID: "dev"

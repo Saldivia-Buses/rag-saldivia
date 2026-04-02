@@ -1,0 +1,110 @@
+# SDA Framework — Development Stack
+# Usage: make dev (or: docker compose -f deploy/docker-compose.dev.yml up)
+#
+# This brings up ALL infrastructure needed for local development.
+# Go services run directly on the host (go run ./cmd/...) and connect
+# to these containers via localhost.
+
+services:
+
+  # ── PostgreSQL ─────────────────────────────────────────────────────────
+  # Platform DB + one dev tenant DB. In production, each tenant gets its
+  # own PostgreSQL instance. In dev, we use one instance with two databases.
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: sda
+      POSTGRES_PASSWORD: sda_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sda"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  # ── Redis ──────────────────────────────────────────────────────────────
+  # Platform Redis + dev tenant Redis. In production, each tenant gets its
+  # own Redis instance. In dev, we use one instance with DB namespacing
+  # (SELECT 0 = platform, SELECT 1 = tenant-dev).
+
+  redis:
+    image: redis:7-alpine
+    command: >
+      redis-server
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  # ── NATS + JetStream ──────────────────────────────────────────────────
+  # Message broker for async events between services.
+  # JetStream enabled for persistent message delivery.
+
+  nats:
+    image: nats:2-alpine
+    command: ["--js", "--sd", "/data", "-m", "8222"]
+    ports:
+      - "4222:4222"   # Client connections
+      - "8222:8222"   # HTTP monitoring
+    volumes:
+      - nats_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8222/healthz || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  # ── Traefik ────────────────────────────────────────────────────────────
+  # Reverse proxy with subdomain routing for multi-tenant.
+  # In dev: *.localhost routes to Go services on the host.
+  # Dashboard available at http://localhost:8080
+
+  traefik:
+    image: traefik:v3
+    command:
+      - "--api.dashboard=true"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.file.directory=/etc/traefik/dynamic"
+      - "--entrypoints.web.address=:80"
+      - "--log.level=INFO"
+    ports:
+      - "80:80"       # HTTP entrypoint
+      - "8080:8080"   # Dashboard
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/dynamic:/etc/traefik/dynamic:ro
+    restart: unless-stopped
+
+  # ── Mailpit ────────────────────────────────────────────────────────────
+  # Catches all outgoing emails. Web UI to inspect them.
+  # Notification Service sends emails here instead of real SMTP.
+
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - "1025:1025"   # SMTP
+      - "8025:8025"   # Web UI
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  redis_data:
+  nats_data:

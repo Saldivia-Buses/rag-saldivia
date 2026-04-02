@@ -1,0 +1,49 @@
+# SDA Framework — Test Stack (CI)
+# Usage: docker compose -f deploy/docker-compose.test.yml up -d
+#
+# Ephemeral infra for integration/E2E tests. No persistent volumes.
+# Services start clean on each test run.
+
+services:
+
+  postgres-test:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: sda
+      POSTGRES_PASSWORD: sda_test
+    ports:
+      - "5433:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sda"]
+      interval: 2s
+      timeout: 2s
+      retries: 10
+
+  redis-test:
+    image: redis:7-alpine
+    command: redis-server --maxmemory 64mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6380:6379"
+    tmpfs:
+      - /data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 2s
+      retries: 5
+
+  nats-test:
+    image: nats:2-alpine
+    command: ["--js", "-m", "8222"]
+    ports:
+      - "4223:4222"
+      - "8223:8222"
+    tmpfs:
+      - /data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8222/healthz || exit 1"]
+      interval: 2s
+      timeout: 2s
+      retries: 5
