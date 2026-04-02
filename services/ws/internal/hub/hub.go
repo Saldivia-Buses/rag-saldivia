@@ -6,28 +6,30 @@ import (
 	"sync"
 )
 
+const (
+	defaultMaxClients          = 1000
+	defaultMaxClientsPerTenant = 300
+)
+
 // Hub manages all WebSocket connections and channel subscriptions.
-// It routes messages between clients and NATS.
 type Hub struct {
 	clients    map[*Client]bool
 	mu         sync.RWMutex
 	register   chan *Client
 	unregister chan *Client
-	broadcast  chan broadcastMsg
+
+	MaxClients          int
+	MaxClientsPerTenant int
 }
 
-type broadcastMsg struct {
-	channel string
-	data    []byte
-}
-
-// New creates a new Hub.
+// New creates a new Hub with default connection limits.
 func New() *Hub {
 	return &Hub{
-		clients:    make(map[*Client]bool),
-		register:   make(chan *Client, 32),
-		unregister: make(chan *Client, 32),
-		broadcast:  make(chan broadcastMsg, 256),
+		clients:             make(map[*Client]bool),
+		register:            make(chan *Client, 32),
+		unregister:          make(chan *Client, 32),
+		MaxClients:          defaultMaxClients,
+		MaxClientsPerTenant: defaultMaxClientsPerTenant,
 	}
 }
 
@@ -37,6 +39,26 @@ func (h *Hub) Run() {
 		select {
 		case client := <-h.register:
 			h.mu.Lock()
+			// Check global limit
+			if len(h.clients) >= h.MaxClients {
+				h.mu.Unlock()
+				client.SendMessage(Message{Type: Error, Error: "server at capacity"})
+				client.markClosed()
+				continue
+			}
+			// Check per-tenant limit
+			tenantCount := 0
+			for c := range h.clients {
+				if c.Slug == client.Slug {
+					tenantCount++
+				}
+			}
+			if tenantCount >= h.MaxClientsPerTenant {
+				h.mu.Unlock()
+				client.SendMessage(Message{Type: Error, Error: "tenant connection limit reached"})
+				client.markClosed()
+				continue
+			}
 			h.clients[client] = true
 			h.mu.Unlock()
 			slog.Info("client connected",
@@ -48,26 +70,13 @@ func (h *Hub) Run() {
 			h.mu.Lock()
 			if _, ok := h.clients[client]; ok {
 				delete(h.clients, client)
-				close(client.send)
+				client.markClosed()
 			}
 			h.mu.Unlock()
 			slog.Info("client disconnected",
 				"user_id", client.UserID,
 				"tenant", client.Slug,
 				"total_clients", h.ClientCount())
-
-		case msg := <-h.broadcast:
-			h.mu.RLock()
-			for client := range h.clients {
-				if client.IsSubscribed(msg.channel) {
-					select {
-					case client.send <- msg.data:
-					default:
-						// Buffer full — will be cleaned up
-					}
-				}
-			}
-			h.mu.RUnlock()
 		}
 	}
 }
@@ -84,11 +93,19 @@ func (h *Hub) Broadcast(channel string, msg Message) {
 		slog.Error("marshal broadcast", "error", err, "channel", channel)
 		return
 	}
-	h.broadcast <- broadcastMsg{channel: channel, data: data}
+
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+
+	for client := range h.clients {
+		if client.IsSubscribed(channel) {
+			client.TrySend(data)
+		}
+	}
 }
 
 // BroadcastToTenant sends a message to all clients of a specific tenant
-// that are subscribed to the channel.
+// that are subscribed to the channel. Uses TrySend to avoid write-after-close panic.
 func (h *Hub) BroadcastToTenant(tenantSlug, channel string, msg Message) {
 	data, err := json.Marshal(msg)
 	if err != nil {
@@ -101,10 +118,7 @@ func (h *Hub) BroadcastToTenant(tenantSlug, channel string, msg Message) {
 
 	for client := range h.clients {
 		if client.Slug == tenantSlug && client.IsSubscribed(channel) {
-			select {
-			case client.send <- data:
-			default:
-			}
+			client.TrySend(data)
 		}
 	}
 }
@@ -137,7 +151,10 @@ func (h *Hub) handleMessage(client *Client, msg Message) {
 			client.SendMessage(Message{Type: Error, ID: msg.ID, Error: "channel is required"})
 			return
 		}
-		client.Subscribe(msg.Channel)
+		if !client.Subscribe(msg.Channel) {
+			client.SendMessage(Message{Type: Error, ID: msg.ID, Error: "max subscriptions reached"})
+			return
+		}
 		client.SendMessage(Message{
 			Type:    Event,
 			Channel: msg.Channel,
@@ -156,8 +173,6 @@ func (h *Hub) handleMessage(client *Client, msg Message) {
 		})
 
 	case Mutation:
-		// Mutations are forwarded to the appropriate service via gRPC/HTTP.
-		// For now, return an error — will be implemented per service.
 		client.SendMessage(Message{
 			Type:  Error,
 			ID:    msg.ID,

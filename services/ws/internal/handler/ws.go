@@ -4,6 +4,7 @@ package handler
 import (
 	"log/slog"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/coder/websocket"
@@ -16,22 +17,22 @@ import (
 type WS struct {
 	hub       *hub.Hub
 	jwtSecret string
+	origins   []string // allowed origins (e.g., "*.sda.app", "localhost:*")
 }
 
 // NewWS creates a WebSocket handler.
 func NewWS(h *hub.Hub, jwtSecret string) *WS {
-	return &WS{hub: h, jwtSecret: jwtSecret}
+	origins := parseOrigins(os.Getenv("WS_ALLOWED_ORIGINS"))
+	return &WS{hub: h, jwtSecret: jwtSecret, origins: origins}
 }
 
 // Upgrade handles GET /ws — upgrades HTTP to WebSocket.
-// The client must provide a valid JWT either as:
-//   - Authorization: Bearer <token> header
-//   - ?token=<token> query parameter (for browsers that can't set headers on WS)
+// The client must provide a valid JWT as Authorization: Bearer <token> header.
 func (h *WS) Upgrade(w http.ResponseWriter, r *http.Request) {
-	// Extract JWT
-	token := extractToken(r)
+	// Extract JWT from Authorization header only (not query param, to avoid log leakage)
+	token := extractBearerToken(r)
 	if token == "" {
-		http.Error(w, "missing authentication token", http.StatusUnauthorized)
+		http.Error(w, "missing Authorization: Bearer <token>", http.StatusUnauthorized)
 		return
 	}
 
@@ -42,12 +43,17 @@ func (h *WS) Upgrade(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Accept WebSocket connection
-	conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{
-		// In production, set InsecureSkipVerify to false and configure allowed origins.
-		// For dev, accept all origins.
-		InsecureSkipVerify: true,
-	})
+	// Accept WebSocket connection with origin check
+	opts := &websocket.AcceptOptions{}
+	if len(h.origins) > 0 {
+		opts.OriginPatterns = h.origins
+	} else {
+		// Dev mode: no origins configured → accept all (log warning)
+		opts.InsecureSkipVerify = true
+		slog.Warn("WS_ALLOWED_ORIGINS not set, accepting all origins (dev mode)")
+	}
+
+	conn, err := websocket.Accept(w, r, opts)
 	if err != nil {
 		slog.Error("websocket accept failed", "error", err)
 		return
@@ -70,13 +76,27 @@ func (h *WS) Upgrade(w http.ResponseWriter, r *http.Request) {
 	client.ReadPump(ctx) // blocks until disconnect
 }
 
-func extractToken(r *http.Request) string {
-	// Try Authorization header first
+func extractBearerToken(r *http.Request) string {
 	auth := r.Header.Get("Authorization")
 	if strings.HasPrefix(auth, "Bearer ") {
 		return strings.TrimPrefix(auth, "Bearer ")
 	}
+	return ""
+}
 
-	// Fallback to query parameter (for browser WebSocket API)
-	return r.URL.Query().Get("token")
+// parseOrigins splits a comma-separated string of origin patterns.
+// e.g., "*.sda.app,localhost:3000" → ["*.sda.app", "localhost:3000"]
+func parseOrigins(s string) []string {
+	if s == "" {
+		return nil
+	}
+	parts := strings.Split(s, ",")
+	origins := make([]string, 0, len(parts))
+	for _, p := range parts {
+		p = strings.TrimSpace(p)
+		if p != "" {
+			origins = append(origins, p)
+		}
+	}
+	return origins
 }

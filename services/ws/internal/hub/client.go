@@ -5,14 +5,16 @@ import (
 	"encoding/json"
 	"log/slog"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"github.com/coder/websocket"
 )
 
 const (
-	writeTimeout = 10 * time.Second
-	sendBufSize  = 64
+	writeTimeout   = 10 * time.Second
+	sendBufSize    = 64
+	maxSubscriptions = 64
 )
 
 // Client represents a single WebSocket connection.
@@ -22,6 +24,7 @@ type Client struct {
 	send   chan []byte
 	subs   map[string]bool // channels this client is subscribed to
 	mu     sync.RWMutex
+	closed atomic.Bool // set when send channel is closed, prevents write-after-close panic
 
 	// Identity (set after JWT verification)
 	UserID   string
@@ -46,11 +49,15 @@ func NewClientWithIdentity(hub *Hub, conn *websocket.Conn, userID, email, tenant
 	}
 }
 
-// Subscribe adds a channel subscription.
-func (c *Client) Subscribe(channel string) {
+// Subscribe adds a channel subscription. Returns false if max subscriptions reached.
+func (c *Client) Subscribe(channel string) bool {
 	c.mu.Lock()
+	defer c.mu.Unlock()
+	if len(c.subs) >= maxSubscriptions && !c.subs[channel] {
+		return false
+	}
 	c.subs[channel] = true
-	c.mu.Unlock()
+	return true
 }
 
 // Unsubscribe removes a channel subscription.
@@ -78,19 +85,36 @@ func (c *Client) Channels() []string {
 	return chs
 }
 
-// SendMessage sends a message to this client. Non-blocking — drops if buffer full.
+// TrySend attempts to send data to the client. Returns false if the client
+// is closed or the buffer is full. Safe to call concurrently with Close.
+func (c *Client) TrySend(data []byte) bool {
+	if c.closed.Load() {
+		return false
+	}
+	select {
+	case c.send <- data:
+		return true
+	default:
+		slog.Warn("client send buffer full, dropping message", "user_id", c.UserID)
+		return false
+	}
+}
+
+// SendMessage sends a structured message to this client. Non-blocking.
 func (c *Client) SendMessage(msg Message) {
 	data, err := json.Marshal(msg)
 	if err != nil {
 		slog.Error("marshal message", "error", err)
 		return
 	}
+	c.TrySend(data)
+}
 
-	select {
-	case c.send <- data:
-	default:
-		slog.Warn("client send buffer full, dropping message",
-			"user_id", c.UserID, "channel", msg.Channel)
+// markClosed marks the client as closed and closes the send channel.
+// Must only be called once (by the hub's unregister handler).
+func (c *Client) markClosed() {
+	if c.closed.CompareAndSwap(false, true) {
+		close(c.send)
 	}
 }
 
