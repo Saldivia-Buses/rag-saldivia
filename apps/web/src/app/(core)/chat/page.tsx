@@ -7,7 +7,6 @@ import {
   PromptInput,
   PromptInputTextarea,
   PromptInputActions,
-  PromptInputAction,
 } from "@/components/ui/prompt-input";
 import {
   ChatContainerRoot,
@@ -287,23 +286,21 @@ export default function ChatPage() {
             >
               <PromptInputTextarea placeholder="Escribí tu mensaje..." />
               <PromptInputActions>
-                <PromptInputAction tooltip={isLoading ? "Detener" : "Enviar"}>
-                  <Button
-                    variant="default"
-                    size="icon"
-                    className="size-8 rounded-full"
-                    disabled={!isLoading && !input.trim()}
-                    onClick={
-                      isLoading ? () => setIsLoading(false) : handleSubmit
-                    }
-                  >
-                    {isLoading ? (
-                      <SquareIcon className="size-3 fill-current" />
-                    ) : (
-                      <ArrowUpIcon className="size-4" />
-                    )}
-                  </Button>
-                </PromptInputAction>
+                <Button
+                  variant="default"
+                  size="icon"
+                  className="size-8 rounded-full"
+                  disabled={!isLoading && !input.trim()}
+                  onClick={
+                    isLoading ? () => setIsLoading(false) : handleSubmit
+                  }
+                >
+                  {isLoading ? (
+                    <SquareIcon className="size-3 fill-current" />
+                  ) : (
+                    <ArrowUpIcon className="size-4" />
+                  )}
+                </Button>
               </PromptInputActions>
             </PromptInput>
           </div>
