@@ -27,6 +27,7 @@ func NewNotification(svc *service.NotificationService) *Notification {
 // Routes returns a chi router with all notification routes.
 func (h *Notification) Routes() chi.Router {
 	r := chi.NewRouter()
+	r.Use(requireUserID)
 
 	r.Get("/", h.List)
 	r.Get("/count", h.UnreadCount)
@@ -139,6 +140,16 @@ func writeJSON(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	json.NewEncoder(w).Encode(v)
+}
+
+func requireUserID(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("X-User-ID") == "" {
+			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "missing user identity"})
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
 }
 
 func serverError(w http.ResponseWriter, r *http.Request, err error) {

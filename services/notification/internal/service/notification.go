@@ -3,6 +3,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -23,7 +24,7 @@ type Notification struct {
 	Type      string          `json:"type"`
 	Title     string          `json:"title"`
 	Body      string          `json:"body"`
-	Data      []byte          `json:"data,omitempty"`
+	Data      json.RawMessage `json:"data"`
 	Channel   string          `json:"channel"`
 	IsRead    bool            `json:"is_read"`
 	ReadAt    *time.Time      `json:"read_at,omitempty"`
@@ -52,7 +53,7 @@ func New(db *pgxpool.Pool) *NotificationService {
 }
 
 // Create persists a notification in the database.
-func (s *NotificationService) Create(ctx context.Context, userID, notifType, title, body string, data []byte, channel string) (*Notification, error) {
+func (s *NotificationService) Create(ctx context.Context, userID, notifType, title, body string, data json.RawMessage, channel string) (*Notification, error) {
 	if channel == "" {
 		channel = "in_app"
 	}
@@ -131,13 +132,16 @@ func (s *NotificationService) MarkRead(ctx context.Context, notifID, userID stri
 		return fmt.Errorf("mark read: %w", err)
 	}
 	if result.RowsAffected() == 0 {
-		// Check if it exists at all
+		// Check existence scoped to user — never leak other users' notification IDs
 		var exists bool
-		s.db.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM notifications WHERE id = $1)`, notifID).Scan(&exists)
+		s.db.QueryRow(ctx,
+			`SELECT EXISTS(SELECT 1 FROM notifications WHERE id = $1 AND user_id = $2)`,
+			notifID, userID,
+		).Scan(&exists)
 		if !exists {
 			return ErrNotificationNotFound
 		}
-		// Already read or not owned — no-op
+		// Exists but already read — no-op
 	}
 	return nil
 }

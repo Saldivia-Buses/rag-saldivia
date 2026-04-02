@@ -69,7 +69,7 @@ func main() {
 	notifSvc := service.New(pool)
 	consumer := service.NewConsumer(nc, notifSvc, mailer)
 
-	if err := consumer.Start(); err != nil {
+	if err := consumer.Start(ctx); err != nil {
 		slog.Error("failed to start NATS consumer", "error", err)
 		os.Exit(1)
 	}
