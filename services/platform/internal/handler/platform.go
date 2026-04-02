@@ -3,6 +3,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"log/slog"
@@ -17,14 +18,32 @@ import (
 	"github.com/Camionerou/rag-saldivia/services/platform/internal/service"
 )
 
+// PlatformService defines the operations the handler needs from the service layer.
+type PlatformService interface {
+	ListTenants(ctx context.Context) ([]db.ListTenantsRow, error)
+	GetTenant(ctx context.Context, slug string) (service.TenantDetail, error)
+	CreateTenant(ctx context.Context, arg db.CreateTenantParams) (service.TenantDetail, error)
+	UpdateTenant(ctx context.Context, arg db.UpdateTenantParams) error
+	DisableTenant(ctx context.Context, id string) error
+	EnableTenant(ctx context.Context, id string) error
+	ListModules(ctx context.Context) ([]db.Module, error)
+	GetTenantModules(ctx context.Context, tenantID string) ([]db.GetEnabledModulesForTenantRow, error)
+	EnableModule(ctx context.Context, arg db.EnableModuleForTenantParams) error
+	DisableModule(ctx context.Context, tenantID, moduleID string) error
+	ListFeatureFlags(ctx context.Context) ([]service.FeatureFlag, error)
+	ToggleFeatureFlag(ctx context.Context, id string, enabled bool) error
+	GetConfig(ctx context.Context, key string) (service.ConfigEntry, error)
+	SetConfig(ctx context.Context, key string, value []byte, updatedBy string) error
+}
+
 // Platform handles HTTP requests for platform operations.
 type Platform struct {
-	svc       *service.Platform
+	svc       PlatformService
 	jwtSecret string
 }
 
 // NewPlatform creates platform HTTP handlers.
-func NewPlatform(svc *service.Platform, jwtSecret string) *Platform {
+func NewPlatform(svc PlatformService, jwtSecret string) *Platform {
 	return &Platform{svc: svc, jwtSecret: jwtSecret}
 }
 
