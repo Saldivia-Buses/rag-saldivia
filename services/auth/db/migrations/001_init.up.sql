@@ -19,7 +19,7 @@ CREATE TABLE users (
     updated_at      TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX idx_users_email ON users(email);
+-- Note: email already has a UNIQUE constraint which creates an implicit index.
 
 -- Roles
 CREATE TABLE roles (

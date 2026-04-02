@@ -31,7 +31,8 @@ CREATE TABLE tenants (
     updated_at   TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX idx_tenants_slug ON tenants(slug);
+-- Note: slug already has a UNIQUE constraint which creates an implicit index.
+-- No additional index needed.
 
 -- Module registry — all available modules in the system
 CREATE TABLE modules (
@@ -103,6 +104,8 @@ CREATE TABLE deploy_log (
     finished_at TIMESTAMPTZ,
     notes       TEXT
 );
+
+CREATE INDEX idx_deploy_log_service ON deploy_log(service, started_at DESC);
 
 -- Seed default plans
 INSERT INTO plans (id, name, max_users, max_storage_mb, ai_credits_monthly, price_usd) VALUES
