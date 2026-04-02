@@ -18,15 +18,16 @@ import (
 // --- mock ---
 
 type mockRAGService struct {
-	collections []string
-	streamBody  string
-	healthErr   error
-	err         error
+	collections    []string
+	streamBody     string
+	generateErr    error
+	collectionsErr error
+	healthErr      error
 }
 
 func (m *mockRAGService) GenerateStream(_ context.Context, tenantSlug string, req service.GenerateRequest) (io.ReadCloser, string, error) {
-	if m.err != nil {
-		return nil, "", m.err
+	if m.generateErr != nil {
+		return nil, "", m.generateErr
 	}
 	body := m.streamBody
 	if body == "" {
@@ -36,8 +37,8 @@ func (m *mockRAGService) GenerateStream(_ context.Context, tenantSlug string, re
 }
 
 func (m *mockRAGService) ListCollections(_ context.Context, tenantSlug string) ([]string, error) {
-	if m.err != nil {
-		return nil, m.err
+	if m.collectionsErr != nil {
+		return nil, m.collectionsErr
 	}
 	return m.collections, nil
 }
@@ -112,7 +113,7 @@ func TestGenerate_InvalidJSON_Returns400(t *testing.T) {
 }
 
 func TestGenerate_BlueprintError_Returns502(t *testing.T) {
-	mock := &mockRAGService{err: errors.New("blueprint unreachable")}
+	mock := &mockRAGService{generateErr: errors.New("blueprint unreachable")}
 	r := setupRAGRouter(mock)
 
 	body := `{"messages":[{"role":"user","content":"test"}]}`
@@ -156,7 +157,7 @@ func TestListCollections_Success(t *testing.T) {
 }
 
 func TestListCollections_BlueprintDown_Returns502(t *testing.T) {
-	mock := &mockRAGService{err: errors.New("connection refused")}
+	mock := &mockRAGService{collectionsErr: errors.New("connection refused")}
 	r := setupRAGRouter(mock)
 
 	req := httptest.NewRequest(http.MethodGet, "/v1/rag/collections", nil)

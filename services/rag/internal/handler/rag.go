@@ -106,8 +106,9 @@ func (h *RAG) ListCollections(w http.ResponseWriter, r *http.Request) {
 // Health checks if the RAG Blueprint is reachable.
 func (h *RAG) Health(w http.ResponseWriter, r *http.Request) {
 	if err := h.ragSvc.Health(r.Context()); err != nil {
+		slog.Error("blueprint health check failed", "error", err)
 		writeJSON(w, http.StatusServiceUnavailable, map[string]string{
-			"status": "unhealthy", "service": "rag", "error": err.Error(),
+			"status": "unhealthy", "service": "rag",
 		})
 		return
 	}
