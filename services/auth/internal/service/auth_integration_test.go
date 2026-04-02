@@ -261,8 +261,10 @@ func TestLogin_DisabledUser(t *testing.T) {
 	_, err := auth.Login(context.Background(), LoginRequest{
 		Email: "disabled@test.com", Password: "pass123",
 	})
-	if err != ErrAccountDisabled {
-		t.Fatalf("expected ErrAccountDisabled, got: %v", err)
+	// Disabled users get the same error as invalid credentials
+	// to prevent information leakage about account state
+	if err != ErrInvalidCredentials {
+		t.Fatalf("expected ErrInvalidCredentials for disabled user, got: %v", err)
 	}
 }
 

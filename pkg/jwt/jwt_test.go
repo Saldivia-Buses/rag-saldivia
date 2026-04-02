@@ -122,3 +122,25 @@ func TestVerify_InvalidString(t *testing.T) {
 		t.Fatal("expected error for invalid token string")
 	}
 }
+
+func TestCreateAccess_SecretTooShort(t *testing.T) {
+	cfg := DefaultConfig("short")
+	claims := Claims{UserID: "u-1", TenantID: "t-1", Slug: "x", Role: "user"}
+
+	_, err := CreateAccess(cfg, claims)
+	if err != ErrSecretTooShort {
+		t.Fatalf("expected ErrSecretTooShort, got %v", err)
+	}
+}
+
+func TestCreateAccess_SetsSubject(t *testing.T) {
+	cfg := DefaultConfig(testSecret)
+	claims := Claims{UserID: "u-42", TenantID: "t-1", Slug: "x", Role: "user"}
+
+	token, _ := CreateAccess(cfg, claims)
+	got, _ := Verify(testSecret, token)
+
+	if got.Subject != "u-42" {
+		t.Errorf("expected Subject 'u-42', got %q", got.Subject)
+	}
+}

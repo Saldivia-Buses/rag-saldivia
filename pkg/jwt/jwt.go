@@ -13,8 +13,9 @@ import (
 )
 
 var (
-	ErrInvalidToken = errors.New("invalid or expired token")
-	ErrMissingClaim = errors.New("missing required claim")
+	ErrInvalidToken  = errors.New("invalid or expired token")
+	ErrMissingClaim  = errors.New("missing required claim")
+	ErrSecretTooShort = errors.New("JWT secret must be at least 32 bytes")
 )
 
 // Claims holds the custom claims for an SDA JWT.
@@ -48,12 +49,17 @@ func DefaultConfig(secret string) Config {
 
 // CreateAccess creates a short-lived access token.
 func CreateAccess(cfg Config, claims Claims) (string, error) {
+	if len(cfg.Secret) < 32 {
+		return "", ErrSecretTooShort
+	}
+
 	now := time.Now()
 	claims.RegisteredClaims = gojwt.RegisteredClaims{
 		Issuer:    cfg.Issuer,
+		Subject:   claims.UserID, // RFC 7519: sub = principal identifier
 		IssuedAt:  gojwt.NewNumericDate(now),
 		ExpiresAt: gojwt.NewNumericDate(now.Add(cfg.AccessExpiry)),
-		ID:        claims.ID, // preserve JTI if set
+		ID:        claims.ID,
 	}
 
 	token := gojwt.NewWithClaims(gojwt.SigningMethodHS256, claims)
@@ -62,9 +68,14 @@ func CreateAccess(cfg Config, claims Claims) (string, error) {
 
 // CreateRefresh creates a long-lived refresh token.
 func CreateRefresh(cfg Config, claims Claims) (string, error) {
+	if len(cfg.Secret) < 32 {
+		return "", ErrSecretTooShort
+	}
+
 	now := time.Now()
 	claims.RegisteredClaims = gojwt.RegisteredClaims{
 		Issuer:    cfg.Issuer,
+		Subject:   claims.UserID,
 		IssuedAt:  gojwt.NewNumericDate(now),
 		ExpiresAt: gojwt.NewNumericDate(now.Add(cfg.RefreshExpiry)),
 		ID:        claims.ID,
