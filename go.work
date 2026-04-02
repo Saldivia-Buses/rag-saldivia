@@ -1,18 +1,5 @@
-go 1.24
+go 1.25.0
 
-// Go workspace for SDA Framework microservices.
-// Each service and shared package is a separate Go module.
-// Uncomment modules as they get initialized with go.mod.
-
-// use (
-// 	./services/auth
-// 	./services/ws
-// 	./services/chat
-// 	./services/rag
-// 	./services/notification
-// 	./services/platform
-// 	./services/ingest
-// 	./pkg
-// 	./tools/cli
-// 	./tools/mcp
-// )
+use (
+	./pkg
+)
