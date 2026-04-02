@@ -55,21 +55,26 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Connect to NATS (optional — events are best-effort)
+	// Connect to NATS (best-effort — retries in background, events fail gracefully)
 	natsURL := env("NATS_URL", nats.DefaultURL)
-	var publisher *natspub.Publisher
 	nc, err := nats.Connect(natsURL,
 		nats.RetryOnFailedConnect(true),
 		nats.MaxReconnects(-1),
 		nats.ReconnectWait(2*time.Second),
+		nats.DisconnectErrHandler(func(_ *nats.Conn, err error) {
+			slog.Warn("NATS disconnected", "error", err)
+		}),
+		nats.ReconnectHandler(func(_ *nats.Conn) {
+			slog.Info("NATS reconnected")
+		}),
 	)
 	if err != nil {
-		slog.Warn("NATS not available, events disabled", "error", err)
-	} else {
-		defer nc.Close()
-		publisher = natspub.New(nc)
-		slog.Info("connected to NATS", "url", natsURL)
+		slog.Error("failed to connect to NATS", "error", err)
+		os.Exit(1)
 	}
+	defer nc.Close()
+	publisher := natspub.New(nc)
+	slog.Info("connected to NATS", "url", natsURL)
 
 	// Initialize services
 	jwtCfg := sdajwt.DefaultConfig(jwtSecret)

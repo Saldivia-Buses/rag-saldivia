@@ -6,6 +6,7 @@ package natspub
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"github.com/nats-io/nats.go"
 )
@@ -35,8 +36,8 @@ func New(nc *nats.Conn) *Publisher {
 // Subject format: tenant.{slug}.notify.{eventType}
 // evt can be an Event struct or any map/struct with a "type" field.
 func (p *Publisher) Notify(tenantSlug string, evt any) error {
-	if tenantSlug == "" {
-		return fmt.Errorf("tenant slug is required")
+	if !isValidSubjectToken(tenantSlug) {
+		return fmt.Errorf("invalid tenant slug for NATS subject: %q", tenantSlug)
 	}
 
 	data, err := json.Marshal(evt)
@@ -46,7 +47,9 @@ func (p *Publisher) Notify(tenantSlug string, evt any) error {
 
 	// Extract event type for the NATS subject
 	var parsed struct{ Type string `json:"type"` }
-	json.Unmarshal(data, &parsed)
+	if err := json.Unmarshal(data, &parsed); err != nil {
+		return fmt.Errorf("extract event type: %w", err)
+	}
 	if parsed.Type == "" {
 		return fmt.Errorf("event type is required")
 	}
@@ -72,9 +75,19 @@ func (p *Publisher) Broadcast(tenantSlug, channel string, data any) error {
 		return fmt.Errorf("marshal broadcast: %w", err)
 	}
 
+	if !isValidSubjectToken(tenantSlug) {
+		return fmt.Errorf("invalid tenant slug for NATS subject: %q", tenantSlug)
+	}
+
 	subject := "tenant." + tenantSlug + "." + channel
 	if err := p.nc.Publish(subject, payload); err != nil {
 		return fmt.Errorf("broadcast %s: %w", subject, err)
 	}
 	return nil
+}
+
+// isValidSubjectToken checks that a string is safe to use as a NATS subject token.
+// Rejects empty strings and strings containing NATS special characters.
+func isValidSubjectToken(s string) bool {
+	return s != "" && !strings.ContainsAny(s, ".*> \t\r\n")
 }

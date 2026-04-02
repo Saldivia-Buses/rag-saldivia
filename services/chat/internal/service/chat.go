@@ -151,7 +151,7 @@ func (c *Chat) RenameSession(ctx context.Context, sessionID, userID, title strin
 }
 
 // AddMessage adds a message to a session.
-func (c *Chat) AddMessage(ctx context.Context, sessionID, role, content string, sources, metadata []byte) (*Message, error) {
+func (c *Chat) AddMessage(ctx context.Context, sessionID, userID, role, content string, sources, metadata []byte) (*Message, error) {
 	var m Message
 	err := c.db.QueryRow(ctx,
 		`INSERT INTO messages (session_id, role, content, sources, metadata)
@@ -166,11 +166,11 @@ func (c *Chat) AddMessage(ctx context.Context, sessionID, role, content string, 
 	// Touch session updated_at
 	c.db.Exec(ctx, `UPDATE sessions SET updated_at = now() WHERE id = $1`, sessionID)
 
-	// Broadcast new message to WS Hub for real-time updates
-	if c.events != nil && c.tenantSlug != "" {
+	// Publish notification event for user messages only (not assistant/system)
+	if c.events != nil && c.tenantSlug != "" && role == "user" {
 		data, _ := json.Marshal(map[string]string{"session_id": sessionID, "message_id": m.ID})
 		err := c.events.Notify(c.tenantSlug, map[string]any{
-			"user_id": "",
+			"user_id": userID,
 			"type":    "chat.new_message",
 			"title":   "Nuevo mensaje",
 			"body":    truncate(content, 100),
@@ -186,10 +186,11 @@ func (c *Chat) AddMessage(ctx context.Context, sessionID, role, content string, 
 }
 
 func truncate(s string, maxLen int) string {
-	if len(s) <= maxLen {
+	runes := []rune(s)
+	if len(runes) <= maxLen {
 		return s
 	}
-	return s[:maxLen] + "..."
+	return string(runes[:maxLen]) + "..."
 }
 
 // GetMessages returns all messages for a session, oldest first.

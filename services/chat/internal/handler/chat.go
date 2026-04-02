@@ -147,7 +147,19 @@ func (h *Chat) RenameSession(w http.ResponseWriter, r *http.Request) {
 
 // GetMessages handles GET /v1/chat/sessions/{sessionID}/messages
 func (h *Chat) GetMessages(w http.ResponseWriter, r *http.Request) {
+	userID := r.Header.Get("X-User-ID")
 	sessionID := chi.URLParam(r, "sessionID")
+
+	// Verify ownership before returning messages
+	if _, err := h.chatSvc.GetSession(r.Context(), sessionID, userID); err != nil {
+		if errors.Is(err, service.ErrSessionNotFound) || errors.Is(err, service.ErrNotOwner) {
+			writeJSON(w, http.StatusNotFound, map[string]string{"error": "session not found"})
+			return
+		}
+		serverError(w, r, err)
+		return
+	}
+
 	messages, err := h.chatSvc.GetMessages(r.Context(), sessionID)
 	if err != nil {
 		serverError(w, r, err)
@@ -156,9 +168,12 @@ func (h *Chat) GetMessages(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, messages)
 }
 
+var validRoles = map[string]bool{"user": true, "assistant": true, "system": true}
+
 // AddMessage handles POST /v1/chat/sessions/{sessionID}/messages
 func (h *Chat) AddMessage(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+	userID := r.Header.Get("X-User-ID")
 	sessionID := chi.URLParam(r, "sessionID")
 
 	var req addMessageRequest
@@ -171,8 +186,22 @@ func (h *Chat) AddMessage(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "role and content are required"})
 		return
 	}
+	if !validRoles[req.Role] {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "role must be user, assistant, or system"})
+		return
+	}
 
-	msg, err := h.chatSvc.AddMessage(r.Context(), sessionID, req.Role, req.Content, req.Sources, req.Metadata)
+	// Verify ownership before adding message
+	if _, err := h.chatSvc.GetSession(r.Context(), sessionID, userID); err != nil {
+		if errors.Is(err, service.ErrSessionNotFound) || errors.Is(err, service.ErrNotOwner) {
+			writeJSON(w, http.StatusNotFound, map[string]string{"error": "session not found"})
+			return
+		}
+		serverError(w, r, err)
+		return
+	}
+
+	msg, err := h.chatSvc.AddMessage(r.Context(), sessionID, userID, req.Role, req.Content, req.Sources, req.Metadata)
 	if err != nil {
 		serverError(w, r, err)
 		return

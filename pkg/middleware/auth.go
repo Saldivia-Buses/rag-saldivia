@@ -23,21 +23,29 @@ import (
 func Auth(jwtSecret string) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// Skip health checks
-			if r.URL.Path == "/health" {
+			// Strip any client-spoofed identity headers before processing
+			r.Header.Del("X-User-ID")
+			r.Header.Del("X-User-Email")
+			r.Header.Del("X-User-Role")
+			r.Header.Del("X-Tenant-ID")
+			r.Header.Del("X-Tenant-Slug")
+
+			// Skip health checks (exact path, with or without trailing slash)
+			path := strings.TrimRight(r.URL.Path, "/")
+			if path == "/health" {
 				next.ServeHTTP(w, r)
 				return
 			}
 
 			token := extractBearer(r)
 			if token == "" {
-				http.Error(w, `{"error":"missing authorization"}`, http.StatusUnauthorized)
+				writeJSONError(w, http.StatusUnauthorized, "missing authorization")
 				return
 			}
 
 			claims, err := sdajwt.Verify(jwtSecret, token)
 			if err != nil {
-				http.Error(w, `{"error":"invalid token"}`, http.StatusUnauthorized)
+				writeJSONError(w, http.StatusUnauthorized, "invalid token")
 				return
 			}
 
@@ -65,4 +73,10 @@ func extractBearer(r *http.Request) string {
 		return auth[7:]
 	}
 	return ""
+}
+
+func writeJSONError(w http.ResponseWriter, status int, msg string) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	w.Write([]byte(`{"error":"` + msg + `"}`))
 }
