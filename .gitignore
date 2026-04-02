@@ -9,6 +9,7 @@
 .env.build
 *.key
 config/*.env.*
+.mcp.json
 
 # --- Go ---
 # Binaries

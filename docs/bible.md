@@ -204,11 +204,10 @@ entienda todo sin preguntar. Si un agente se confunde, el doc esta mal.
 
 ## Referencias
 
-| Documento | Que contiene |
-|---|---|
-| `docs/plans/2.0.x-plan01-sda-framework.md` | Spec completo del sistema |
-| `CLAUDE.md` | Mapa para agentes |
-| `docs/decisions/` | ADRs |
-| `docs/api/` | OpenAPI specs por servicio |
-| `CONTRIBUTING.md` | Workflow para contribuir |
-| `SECURITY.md` | Modelo de seguridad |
+| Documento | Que contiene | Estado |
+|---|---|---|
+| `docs/plans/2.0.x-plan01-sda-framework.md` | Spec completo del sistema | Activo |
+| `CLAUDE.md` | Mapa para agentes | Activo |
+| `docs/bible.md` | Este documento | Activo |
+| `docs/decisions/` | ADRs | Activo (12 ADRs de 1.0.x, pendiente actualizar) |
+| `README.md` | Overview del proyecto | Activo |
