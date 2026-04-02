@@ -37,6 +37,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { ThemeSelector } from "@/components/theme-selector";
 
 interface ProfileData {
   name: string;
@@ -428,6 +429,10 @@ const SettingsProfile4 = ({
                         </SelectContent>
                       </Select>
                     </div>
+
+                    <Separator className="my-2" />
+
+                    <ThemeSelector />
                   </div>
                 </div>
               )}
