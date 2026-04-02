@@ -2,6 +2,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"log/slog"
@@ -13,13 +14,24 @@ import (
 	"github.com/Camionerou/rag-saldivia/services/chat/internal/service"
 )
 
+// ChatService defines the operations the handler needs from the service layer.
+type ChatService interface {
+	CreateSession(ctx context.Context, userID, title string, collection *string) (*service.Session, error)
+	GetSession(ctx context.Context, sessionID, userID string) (*service.Session, error)
+	ListSessions(ctx context.Context, userID string) ([]service.Session, error)
+	DeleteSession(ctx context.Context, sessionID, userID string) error
+	RenameSession(ctx context.Context, sessionID, userID, title string) error
+	AddMessage(ctx context.Context, sessionID, userID, role, content string, sources, metadata []byte) (*service.Message, error)
+	GetMessages(ctx context.Context, sessionID string) ([]service.Message, error)
+}
+
 // Chat handles HTTP requests for chat operations.
 type Chat struct {
-	chatSvc *service.Chat
+	chatSvc ChatService
 }
 
 // NewChat creates chat HTTP handlers.
-func NewChat(chatSvc *service.Chat) *Chat {
+func NewChat(chatSvc ChatService) *Chat {
 	return &Chat{chatSvc: chatSvc}
 }
 
