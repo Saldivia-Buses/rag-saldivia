@@ -4,6 +4,7 @@ use (
 	./pkg
 	./services/auth
 	./services/chat
+	./services/ingest
 	./services/notification
 	./services/platform
 	./services/rag
