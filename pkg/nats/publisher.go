@@ -66,6 +66,13 @@ func (p *Publisher) Notify(tenantSlug string, evt any) error {
 // to be persisted as notifications (e.g., session list updates, typing indicators).
 // Subject format: tenant.{slug}.{channel}
 func (p *Publisher) Broadcast(tenantSlug, channel string, data any) error {
+	if !isValidSubjectToken(tenantSlug) {
+		return fmt.Errorf("invalid tenant slug for NATS subject: %q", tenantSlug)
+	}
+	if !isValidSubjectToken(channel) {
+		return fmt.Errorf("invalid channel for NATS subject: %q", channel)
+	}
+
 	payload, err := json.Marshal(map[string]any{
 		"type":    "event",
 		"channel": channel,
@@ -73,10 +80,6 @@ func (p *Publisher) Broadcast(tenantSlug, channel string, data any) error {
 	})
 	if err != nil {
 		return fmt.Errorf("marshal broadcast: %w", err)
-	}
-
-	if !isValidSubjectToken(tenantSlug) {
-		return fmt.Errorf("invalid tenant slug for NATS subject: %q", tenantSlug)
 	}
 
 	subject := "tenant." + tenantSlug + "." + channel
