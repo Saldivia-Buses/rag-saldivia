@@ -1,15 +1,34 @@
 # SDA Framework — Development Stack
-# Usage: make dev (or: docker compose -f deploy/docker-compose.dev.yml up)
 #
-# This brings up ALL infrastructure needed for local development.
-# Go services run directly on the host (go run ./cmd/...) and connect
-# to these containers via localhost.
+# Two modes:
+#   make dev       → infra only (postgres, redis, nats, traefik, mailpit)
+#                    run Go services on host: go run ./services/auth/cmd/...
+#                    traefik routes via deploy/traefik/dynamic/dev.yml → host.docker.internal
+#
+#   make dev-full  → infra + all Go services in Docker
+#                    traefik auto-discovers containers via Docker labels (priority 100)
+#                    file-based dev.yml routes (priority 1) serve as fallback
+
+x-service-defaults: &service-defaults
+  build:
+    context: ..
+  restart: unless-stopped
+  depends_on:
+    postgres:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+    nats:
+      condition: service_healthy
+
+x-env-common: &env-common
+  NATS_URL: nats://nats:4222
+  JWT_SECRET: dev-secret-at-least-32-characters-long!!
+  POSTGRES_TENANT_URL: postgres://sda:sda_dev@postgres:5432/sda_tenant_dev?sslmode=disable
 
 services:
 
-  # ── PostgreSQL ─────────────────────────────────────────────────────────
-  # Platform DB + one dev tenant DB. In production, each tenant gets its
-  # own PostgreSQL instance. In dev, we use one instance with two databases.
+  # ── Infrastructure ────────────────────────────────────────────────────
 
   postgres:
     image: postgres:16-alpine
@@ -27,11 +46,6 @@ services:
       timeout: 3s
       retries: 10
     restart: unless-stopped
-
-  # ── Redis ──────────────────────────────────────────────────────────────
-  # Platform Redis + dev tenant Redis. In production, each tenant gets its
-  # own Redis instance. In dev, we use one instance with DB namespacing
-  # (SELECT 0 = platform, SELECT 1 = tenant-dev).
 
   redis:
     image: redis:7-alpine
@@ -51,16 +65,12 @@ services:
       retries: 5
     restart: unless-stopped
 
-  # ── NATS + JetStream ──────────────────────────────────────────────────
-  # Message broker for async events between services.
-  # JetStream enabled for persistent message delivery.
-
   nats:
     image: nats:2-alpine
     command: ["--js", "--sd", "/data", "-m", "8222"]
     ports:
-      - "4222:4222"   # Client connections
-      - "8222:8222"   # HTTP monitoring
+      - "4222:4222"
+      - "8222:8222"
     volumes:
       - nats_data:/data
     healthcheck:
@@ -69,11 +79,6 @@ services:
       timeout: 3s
       retries: 5
     restart: unless-stopped
-
-  # ── Traefik ────────────────────────────────────────────────────────────
-  # Reverse proxy with subdomain routing for multi-tenant.
-  # In dev: *.localhost routes to Go services on the host.
-  # Dashboard available at http://localhost:8080
 
   traefik:
     image: traefik:v3
@@ -86,23 +91,170 @@ services:
       - "--entrypoints.web.address=:80"
       - "--log.level=INFO"
     ports:
-      - "80:80"       # HTTP entrypoint
-      - "8080:8080"   # Dashboard
+      - "80:80"
+      - "8080:8080"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./traefik/dynamic:/etc/traefik/dynamic:ro
     restart: unless-stopped
 
-  # ── Mailpit ────────────────────────────────────────────────────────────
-  # Catches all outgoing emails. Web UI to inspect them.
-  # Notification Service sends emails here instead of real SMTP.
-
   mailpit:
     image: axllent/mailpit:latest
     ports:
-      - "1025:1025"   # SMTP
-      - "8025:8025"   # Web UI
+      - "1025:1025"
+      - "8025:8025"
     restart: unless-stopped
+
+  # ── Go Services (profile: full) ──────────────────────────────────────
+  # Only start with: docker compose --profile full up --build
+  # Traefik auto-discovers these via Docker labels (priority 100).
+
+  auth:
+    <<: *service-defaults
+    profiles: [full]
+    build:
+      context: ..
+      dockerfile: services/auth/Dockerfile
+    environment:
+      <<: *env-common
+      AUTH_PORT: "8001"
+      TENANT_SLUG: dev
+    ports:
+      - "8001:8001"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.auth-docker.rule=PathPrefix(`/v1/auth`)"
+      - "traefik.http.routers.auth-docker.entrypoints=web"
+      - "traefik.http.routers.auth-docker.priority=100"
+      - "traefik.http.services.auth-docker.loadbalancer.server.port=8001"
+
+  ws:
+    <<: *service-defaults
+    profiles: [full]
+    build:
+      context: ..
+      dockerfile: services/ws/Dockerfile
+    environment:
+      <<: *env-common
+      WS_PORT: "8002"
+      # DEV ONLY — production must use explicit origins
+      WS_ALLOWED_ORIGINS: "http://localhost:3000,http://localhost:80"
+    ports:
+      - "8002:8002"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.ws-docker.rule=PathPrefix(`/ws`)"
+      - "traefik.http.routers.ws-docker.entrypoints=web"
+      - "traefik.http.routers.ws-docker.priority=100"
+      - "traefik.http.services.ws-docker.loadbalancer.server.port=8002"
+
+  chat:
+    <<: *service-defaults
+    profiles: [full]
+    build:
+      context: ..
+      dockerfile: services/chat/Dockerfile
+    environment:
+      <<: *env-common
+      CHAT_PORT: "8003"
+      TENANT_SLUG: dev
+    ports:
+      - "8003:8003"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.chat-docker.rule=PathPrefix(`/v1/chat`)"
+      - "traefik.http.routers.chat-docker.entrypoints=web"
+      - "traefik.http.routers.chat-docker.priority=100"
+      - "traefik.http.services.chat-docker.loadbalancer.server.port=8003"
+
+  rag:
+    profiles: [full]
+    build:
+      context: ..
+      dockerfile: services/rag/Dockerfile
+    restart: unless-stopped
+    environment:
+      <<: *env-common
+      RAG_PORT: "8004"
+      RAG_SERVER_URL: http://host.docker.internal:8081
+    ports:
+      - "8004:8004"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.rag-docker.rule=PathPrefix(`/v1/rag`)"
+      - "traefik.http.routers.rag-docker.entrypoints=web"
+      - "traefik.http.routers.rag-docker.priority=100"
+      - "traefik.http.services.rag-docker.loadbalancer.server.port=8004"
+
+  notification:
+    <<: *service-defaults
+    profiles: [full]
+    build:
+      context: ..
+      dockerfile: services/notification/Dockerfile
+    environment:
+      <<: *env-common
+      NOTIFICATION_PORT: "8005"
+      SMTP_HOST: mailpit
+      SMTP_PORT: "1025"
+      SMTP_FROM: noreply@sda.local
+    ports:
+      - "8005:8005"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.notification-docker.rule=PathPrefix(`/v1/notifications`)"
+      - "traefik.http.routers.notification-docker.entrypoints=web"
+      - "traefik.http.routers.notification-docker.priority=100"
+      - "traefik.http.services.notification-docker.loadbalancer.server.port=8005"
+
+  platform:
+    profiles: [full]
+    build:
+      context: ..
+      dockerfile: services/platform/Dockerfile
+    restart: unless-stopped
+    environment:
+      <<: *env-common
+      PLATFORM_PORT: "8006"
+      POSTGRES_PLATFORM_URL: postgres://sda:sda_dev@postgres:5432/sda_platform?sslmode=disable
+    ports:
+      - "8006:8006"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.platform-docker.rule=PathPrefix(`/v1/platform`)"
+      - "traefik.http.routers.platform-docker.entrypoints=web"
+      - "traefik.http.routers.platform-docker.priority=100"
+      - "traefik.http.services.platform-docker.loadbalancer.server.port=8006"
+
+  ingest:
+    <<: *service-defaults
+    profiles: [full]
+    build:
+      context: ..
+      dockerfile: services/ingest/Dockerfile
+    environment:
+      <<: *env-common
+      INGEST_PORT: "8007"
+      RAG_SERVER_URL: http://host.docker.internal:8081
+      INGEST_STAGING_DIR: /tmp/ingest-staging
+    ports:
+      - "8007:8007"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.ingest-docker.rule=PathPrefix(`/v1/ingest`)"
+      - "traefik.http.routers.ingest-docker.entrypoints=web"
+      - "traefik.http.routers.ingest-docker.priority=100"
+      - "traefik.http.services.ingest-docker.loadbalancer.server.port=8007"
 
 volumes:
   postgres_data:
