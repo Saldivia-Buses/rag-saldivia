@@ -17,7 +17,7 @@ export function ThemeSelector() {
         </p>
       </div>
 
-      <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
         {Object.entries(themePresets).map(([id, preset]) => {
           const isActive = id === themeId;
           const primary = preset.light.primary || "#000";
@@ -29,7 +29,7 @@ export function ThemeSelector() {
               key={id}
               onClick={() => setTheme(id)}
               className={cn(
-                "flex items-center gap-2 rounded-md border px-2.5 py-2 text-left transition-all hover:border-ring",
+                "flex items-center gap-2.5 rounded-md border px-3 py-2 text-left transition-all hover:border-ring",
                 isActive
                   ? "border-ring ring-2 ring-ring/20"
                   : "border-border"
@@ -49,7 +49,7 @@ export function ThemeSelector() {
                   style={{ backgroundColor: bg }}
                 />
               </div>
-              <span className="text-xs truncate">
+              <span className="text-xs">
                 {preset.label}
               </span>
             </button>

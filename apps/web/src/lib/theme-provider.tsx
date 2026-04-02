@@ -28,13 +28,42 @@ function resolveFontVar(fontValue: string): string {
   return fontValue;
 }
 
+// Defaults for variables that themes might not define
+const defaults: Record<string, string> = {
+  "font-sans": "Inter, sans-serif",
+  "font-serif": "Georgia, serif",
+  "font-mono": "monospace",
+  "radius": "0.5rem",
+};
+
+// All CSS variable names that themes can set
+const allThemeVars = [
+  "background", "foreground", "card", "card-foreground", "popover", "popover-foreground",
+  "primary", "primary-foreground", "secondary", "secondary-foreground",
+  "muted", "muted-foreground", "accent", "accent-foreground",
+  "destructive", "destructive-foreground", "border", "input", "ring",
+  "chart-1", "chart-2", "chart-3", "chart-4", "chart-5",
+  "sidebar", "sidebar-foreground", "sidebar-primary", "sidebar-primary-foreground",
+  "sidebar-accent", "sidebar-accent-foreground", "sidebar-border", "sidebar-ring",
+  "font-sans", "font-serif", "font-mono", "radius",
+];
+
 function applyTheme(preset: ThemePreset) {
   const root = document.documentElement;
   const isDark = root.classList.contains("dark");
-  const vars = isDark ? preset.dark : preset.light;
+  // Use dark vars but fall back to light for any missing keys (fonts, radius, etc.)
+  const vars = isDark ? { ...preset.light, ...preset.dark } : preset.light;
 
+  // Clear all theme vars first to prevent bleed from previous theme
+  for (const key of allThemeVars) {
+    root.style.removeProperty(`--${key}`);
+  }
+
+  // Apply theme vars, falling back to defaults for missing ones
   const resolved: Record<string, string> = {};
-  for (const [key, value] of Object.entries(vars)) {
+  for (const key of allThemeVars) {
+    const value = vars[key] || defaults[key];
+    if (!value) continue;
     const resolvedValue = key.startsWith("font-") ? resolveFontVar(value) : value;
     root.style.setProperty(`--${key}`, resolvedValue);
     resolved[key] = resolvedValue;
@@ -65,6 +94,16 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(STORAGE_KEY, id);
     applyTheme(themePresets[id]);
   }, []);
+
+  // Re-apply theme when dark mode toggles
+  useEffect(() => {
+    const handler = () => {
+      const current = themePresets[themeId] || themePresets[DEFAULT_THEME];
+      applyTheme(current);
+    };
+    window.addEventListener("sda-mode-change", handler);
+    return () => window.removeEventListener("sda-mode-change", handler);
+  }, [themeId]);
 
   const theme = themePresets[themeId] || themePresets[DEFAULT_THEME];
 

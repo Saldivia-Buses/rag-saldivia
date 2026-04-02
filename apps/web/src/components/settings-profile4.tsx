@@ -37,7 +37,6 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { ThemeSelector } from "@/components/theme-selector";
 
 interface ProfileData {
   name: string;
@@ -64,7 +63,6 @@ const sections = [
   { id: "personal", label: "Personal Info", icon: User },
   { id: "contact", label: "Contact", icon: Mail },
   { id: "social", label: "Social Links", icon: Link2 },
-  { id: "preferences", label: "Preferences", icon: Settings },
 ];
 
 const SettingsProfile4 = ({
@@ -372,67 +370,6 @@ const SettingsProfile4 = ({
                         />
                       </div>
                     </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Preferences Section */}
-              {activeSection === "preferences" && (
-                <div className="p-6">
-                  <h2 className="text-lg font-semibold">Preferences</h2>
-                  <p className="text-sm text-muted-foreground">
-                    Customize your experience
-                  </p>
-
-                  <div className="mt-6 space-y-6">
-                    <div className="space-y-2">
-                      <Label htmlFor="language">Language</Label>
-                      <Select defaultValue={defaultValues.language}>
-                        <SelectTrigger id="language">
-                          <SelectValue placeholder="Select language" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="en">English</SelectItem>
-                          <SelectItem value="es">Español</SelectItem>
-                          <SelectItem value="fr">Français</SelectItem>
-                          <SelectItem value="de">Deutsch</SelectItem>
-                          <SelectItem value="ja">日本語</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="timezone">Timezone</Label>
-                      <Select defaultValue={defaultValues.timezone}>
-                        <SelectTrigger id="timezone">
-                          <SelectValue placeholder="Select timezone" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="America/New_York">
-                            Eastern Time (ET)
-                          </SelectItem>
-                          <SelectItem value="America/Chicago">
-                            Central Time (CT)
-                          </SelectItem>
-                          <SelectItem value="America/Denver">
-                            Mountain Time (MT)
-                          </SelectItem>
-                          <SelectItem value="America/Los_Angeles">
-                            Pacific Time (PT)
-                          </SelectItem>
-                          <SelectItem value="Europe/London">
-                            Greenwich Mean Time (GMT)
-                          </SelectItem>
-                          <SelectItem value="Europe/Paris">
-                            Central European Time (CET)
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    <Separator className="my-2" />
-
-                    <ThemeSelector />
                   </div>
                 </div>
               )}

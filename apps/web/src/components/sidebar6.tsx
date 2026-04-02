@@ -59,12 +59,14 @@ import {
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
+import { DarkModeToggle } from "@/components/dark-mode-toggle";
 
 const routeLabels: Record<string, string> = {
   "/dashboard": "Dashboard",
   "/chat": "Chat",
   "/notifications": "Notificaciones",
-  "/settings": "Configuración",
+  "/settings": "Mi cuenta",
+  "/system-settings": "Configuración",
 };
 
 // Base nav item - used by simple sidebars
@@ -140,7 +142,7 @@ const sidebarData: SidebarData = {
   footerGroup: {
     title: "Cuenta",
     items: [
-      { label: "Configuración", icon: Settings, href: "/settings" },
+      { label: "Configuración", icon: Settings, href: "/system-settings" },
       { label: "Ayuda", icon: HelpCircle, href: "#" },
     ],
   },
@@ -192,13 +194,15 @@ const SearchForm = () => {
 };
 
 const NavMenuItem = ({ item }: { item: NavItem }) => {
+  const pathname = usePathname();
   const Icon = item.icon;
+  const isActive = pathname === item.href;
   const hasChildren = item.children && item.children.length > 0;
 
   if (!hasChildren) {
     return (
       <SidebarMenuItem>
-        <SidebarMenuButton isActive={item.isActive} render={<a href={item.href} />}>
+        <SidebarMenuButton isActive={isActive} render={<a href={item.href} />}>
           <Icon className="size-4" />
           <span>{item.label}</span>
         </SidebarMenuButton>
@@ -326,6 +330,16 @@ const AppSidebar = ({ ...props }: React.ComponentProps<typeof Sidebar>) => {
         </ScrollArea>
       </SidebarContent>
       <SidebarFooter>
+        <SidebarGroup className="py-0">
+          <SidebarGroupLabel>{sidebarData.footerGroup.title}</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {sidebarData.footerGroup.items.map((item) => (
+                <NavMenuItem key={item.label} item={item} />
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
         {sidebarData.user && <NavUser user={sidebarData.user} />}
       </SidebarFooter>
       <SidebarRail />
@@ -363,6 +377,9 @@ const Sidebar6 = ({ className, children }: Sidebar6Props) => {
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
+          <div className="ml-auto">
+            <DarkModeToggle />
+          </div>
         </header>
         <div className="flex flex-1 flex-col min-h-0">
           {children}
