@@ -118,6 +118,7 @@ services:
     environment:
       <<: *env-common
       AUTH_PORT: "8001"
+      TENANT_SLUG: dev
     ports:
       - "8001:8001"
     labels:
@@ -134,10 +135,10 @@ services:
       context: ..
       dockerfile: services/ws/Dockerfile
     environment:
-      NATS_URL: nats://nats:4222
+      <<: *env-common
       WS_PORT: "8002"
-      JWT_SECRET: dev-secret-at-least-32-characters-long!!
-      WS_ALLOWED_ORIGINS: "*"
+      # DEV ONLY — production must use explicit origins
+      WS_ALLOWED_ORIGINS: "http://localhost:3000,http://localhost:80"
     ports:
       - "8002:8002"
     labels:
@@ -173,6 +174,7 @@ services:
       dockerfile: services/rag/Dockerfile
     restart: unless-stopped
     environment:
+      <<: *env-common
       RAG_PORT: "8004"
       RAG_SERVER_URL: http://host.docker.internal:8081
     ports:
@@ -219,9 +221,9 @@ services:
       dockerfile: services/platform/Dockerfile
     restart: unless-stopped
     environment:
+      <<: *env-common
       PLATFORM_PORT: "8006"
       POSTGRES_PLATFORM_URL: postgres://sda:sda_dev@postgres:5432/sda_platform?sslmode=disable
-      JWT_SECRET: dev-secret-at-least-32-characters-long!!
     ports:
       - "8006:8006"
     depends_on:
