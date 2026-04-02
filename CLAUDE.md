@@ -106,7 +106,6 @@ deploy/                      ← Docker Compose, Traefik, scripts
 config/                      ← NVIDIA Blueprint configs
 vendor/                      ← Blueprint submodule
 docs/                        ← Documentacion
-_archive/                    ← Codigo 1.0.x (referencia)
 ```
 
 ---

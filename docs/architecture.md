@@ -96,12 +96,3 @@ Browser --> /api/rag/generate (POST)
 **Patrón crítico:** verificar status HTTP del RAG **antes** de streamear.
 El gateway Python original siempre retornaba 200 aunque el RAG fallara.
 
----
-
-## Código archivado
-
-En `_archive/` hay ~100 archivos de features aspiracionales:
-admin (12 components + routes), CLI, upload, extract, projects, audit,
-notifications, workers, hooks (zen mode, hotkeys, notifications).
-
-Recuperable con `git mv _archive/... apps/web/src/...` cuando se necesite.
