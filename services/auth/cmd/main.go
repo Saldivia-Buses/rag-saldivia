@@ -12,8 +12,10 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/nats-io/nats.go"
 
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
+	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
 	"github.com/Camionerou/rag-saldivia/services/auth/internal/handler"
 	"github.com/Camionerou/rag-saldivia/services/auth/internal/service"
 )
@@ -53,9 +55,25 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Connect to NATS (optional — events are best-effort)
+	natsURL := env("NATS_URL", nats.DefaultURL)
+	var publisher *natspub.Publisher
+	nc, err := nats.Connect(natsURL,
+		nats.RetryOnFailedConnect(true),
+		nats.MaxReconnects(-1),
+		nats.ReconnectWait(2*time.Second),
+	)
+	if err != nil {
+		slog.Warn("NATS not available, events disabled", "error", err)
+	} else {
+		defer nc.Close()
+		publisher = natspub.New(nc)
+		slog.Info("connected to NATS", "url", natsURL)
+	}
+
 	// Initialize services
 	jwtCfg := sdajwt.DefaultConfig(jwtSecret)
-	authSvc := service.NewAuth(pool, jwtCfg, tenantID, tenantSlug)
+	authSvc := service.NewAuth(pool, jwtCfg, tenantID, tenantSlug, publisher)
 	authHandler := handler.NewAuth(authSvc)
 
 	// Router
