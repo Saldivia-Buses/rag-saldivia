@@ -177,15 +177,15 @@ make status                  # Estado de servicios + GPU
 
 ## Agents disponibles (`.claude/agents/`)
 
-| Agent | Cuando |
-|---|---|
-| `frontend-reviewer` | Cambios en componentes/UI |
-| `gateway-reviewer` | Cambios en API routes/auth |
-| `security-auditor` | Antes de releases |
-| `test-writer` | Tests nuevos |
-| `debugger` | Algo no funciona |
-| `doc-writer` | Actualizar docs |
-| `deploy` | Deploy |
-| `status` | Estado de servicios |
-| `plan-writer` | Planes nuevos |
-| `ingest` | Ingestar documentos |
+| Agent | Cuando | Scope |
+|---|---|---|
+| `gateway-reviewer` | Cambios en `services/*/internal/`, `pkg/` | Handlers chi, middleware, JWT, RBAC, sqlc, NATS events, tenant isolation |
+| `frontend-reviewer` | Cambios en `apps/web/`, `apps/login/` | Componentes, hooks, auth, comunicacion con backend Go |
+| `security-auditor` | Antes de releases, sospecha de vulnerabilidad | Audit completo: JWT, tenant isolation, SQL injection, NATS, Docker |
+| `test-writer` | Tests nuevos o faltantes | Go tests (testify, testcontainers), frontend tests (bun, Playwright) |
+| `debugger` | Algo no funciona | Failure modes, logs Docker/Go, config, trazado de codigo |
+| `deploy` | Deployar a produccion | Preflight checks, Docker Compose, health verification |
+| `status` | Estado de servicios | Health checks Go services + infra Docker + GPU + recursos |
+| `doc-writer` | Actualizar docs | CLAUDE.md, bible, README por servicio, ADRs |
+| `plan-writer` | Planear feature nueva | Planes con phases, migrations, NATS events, scope control |
+| `ingest` | Ingestar documentos | Pipeline ingesta, RAG Blueprint, Milvus |
