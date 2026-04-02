@@ -8,17 +8,24 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"regexp"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/Camionerou/rag-saldivia/services/platform/db"
 )
 
+var slugRegex = regexp.MustCompile(`^[a-z][a-z0-9-]{1,62}$`)
+
 var (
 	ErrTenantNotFound = errors.New("tenant not found")
 	ErrModuleNotFound = errors.New("module not found")
 	ErrSlugTaken      = errors.New("tenant slug already taken")
+	ErrInvalidSlug    = errors.New("slug must be lowercase alphanumeric with hyphens, 2-63 chars")
+	ErrFlagNotFound   = errors.New("feature flag not found")
+	ErrConfigNotFound = errors.New("config key not found")
 )
 
 // Platform handles platform operations.
@@ -35,6 +42,40 @@ func New(pool *pgxpool.Pool) *Platform {
 	}
 }
 
+// TenantDetail is a safe representation of a tenant (no connection strings).
+type TenantDetail struct {
+	ID        string `json:"id"`
+	Slug      string `json:"slug"`
+	Name      string `json:"name"`
+	PlanID    string `json:"plan_id"`
+	Enabled   bool   `json:"enabled"`
+	LogoURL   string `json:"logo_url,omitempty"`
+	Domain    string `json:"domain,omitempty"`
+	Settings  []byte `json:"settings"`
+	CreatedAt string `json:"created_at"`
+	UpdatedAt string `json:"updated_at"`
+}
+
+func tenantToDetail(t db.Tenant) TenantDetail {
+	d := TenantDetail{
+		ID:        t.ID,
+		Slug:      t.Slug,
+		Name:      t.Name,
+		PlanID:    t.PlanID,
+		Enabled:   t.Enabled,
+		Settings:  t.Settings,
+		CreatedAt: t.CreatedAt.Time.Format("2006-01-02T15:04:05Z"),
+		UpdatedAt: t.UpdatedAt.Time.Format("2006-01-02T15:04:05Z"),
+	}
+	if t.LogoUrl.Valid {
+		d.LogoURL = t.LogoUrl.String
+	}
+	if t.Domain.Valid {
+		d.Domain = t.Domain.String
+	}
+	return d
+}
+
 // ── Tenants ─────────────────────────────────────────────────────────────
 
 // ListTenants returns all tenants (summary view).
@@ -46,28 +87,32 @@ func (p *Platform) ListTenants(ctx context.Context) ([]db.ListTenantsRow, error)
 	return tenants, nil
 }
 
-// GetTenant returns a tenant by slug (full detail).
-func (p *Platform) GetTenant(ctx context.Context, slug string) (db.Tenant, error) {
+// GetTenant returns a tenant by slug (safe view without connection strings).
+func (p *Platform) GetTenant(ctx context.Context, slug string) (TenantDetail, error) {
 	tenant, err := p.queries.GetTenantBySlug(ctx, slug)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return db.Tenant{}, ErrTenantNotFound
+			return TenantDetail{}, ErrTenantNotFound
 		}
-		return db.Tenant{}, fmt.Errorf("get tenant: %w", err)
+		return TenantDetail{}, fmt.Errorf("get tenant: %w", err)
 	}
-	return tenant, nil
+	return tenantToDetail(tenant), nil
 }
 
 // CreateTenant creates a new tenant.
-func (p *Platform) CreateTenant(ctx context.Context, arg db.CreateTenantParams) (db.Tenant, error) {
+func (p *Platform) CreateTenant(ctx context.Context, arg db.CreateTenantParams) (TenantDetail, error) {
+	if !slugRegex.MatchString(arg.Slug) {
+		return TenantDetail{}, ErrInvalidSlug
+	}
+
 	tenant, err := p.queries.CreateTenant(ctx, arg)
 	if err != nil {
 		if isDuplicateKey(err) {
-			return db.Tenant{}, ErrSlugTaken
+			return TenantDetail{}, ErrSlugTaken
 		}
-		return db.Tenant{}, fmt.Errorf("create tenant: %w", err)
+		return TenantDetail{}, fmt.Errorf("create tenant: %w", err)
 	}
-	return tenant, nil
+	return tenantToDetail(tenant), nil
 }
 
 // UpdateTenant updates a tenant's name, plan, and settings.
@@ -164,6 +209,9 @@ func (p *Platform) ListFeatureFlags(ctx context.Context) ([]FeatureFlag, error) 
 		}
 		flags = append(flags, f)
 	}
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate feature flags: %w", err)
+	}
 	if flags == nil {
 		flags = []FeatureFlag{}
 	}
@@ -180,7 +228,7 @@ func (p *Platform) ToggleFeatureFlag(ctx context.Context, id string, enabled boo
 		return fmt.Errorf("toggle feature flag: %w", err)
 	}
 	if result.RowsAffected() == 0 {
-		return errors.New("feature flag not found")
+		return ErrFlagNotFound
 	}
 	return nil
 }
@@ -203,7 +251,7 @@ func (p *Platform) GetConfig(ctx context.Context, key string) (ConfigEntry, erro
 	).Scan(&c.Key, &c.Value, &c.UpdatedBy)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return ConfigEntry{}, errors.New("config key not found")
+			return ConfigEntry{}, ErrConfigNotFound
 		}
 		return ConfigEntry{}, fmt.Errorf("get config: %w", err)
 	}
@@ -224,21 +272,8 @@ func (p *Platform) SetConfig(ctx context.Context, key string, value []byte, upda
 	return nil
 }
 
-// isDuplicateKey checks for unique constraint violation.
+// isDuplicateKey checks for unique constraint violation (PG error code 23505).
 func isDuplicateKey(err error) bool {
-	return err != nil && (errors.Is(err, pgx.ErrNoRows) == false) &&
-		(fmt.Sprintf("%v", err) != "" && contains(err.Error(), "duplicate key") || contains(err.Error(), "23505"))
-}
-
-func contains(s, substr string) bool {
-	return len(s) >= len(substr) && searchString(s, substr)
-}
-
-func searchString(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
+	var pgErr *pgconn.PgError
+	return errors.As(err, &pgErr) && pgErr.Code == "23505"
 }

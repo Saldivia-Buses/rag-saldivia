@@ -23,9 +23,14 @@ func main() {
 
 	port := env("PLATFORM_PORT", "8006")
 	dbURL := env("POSTGRES_PLATFORM_URL", "")
+	jwtSecret := env("JWT_SECRET", "")
 
 	if dbURL == "" {
 		slog.Error("POSTGRES_PLATFORM_URL is required")
+		os.Exit(1)
+	}
+	if jwtSecret == "" {
+		slog.Error("JWT_SECRET is required")
 		os.Exit(1)
 	}
 
@@ -40,7 +45,7 @@ func main() {
 	defer pool.Close()
 
 	platformSvc := service.New(pool)
-	platformHandler := handler.NewPlatform(platformSvc)
+	platformHandler := handler.NewPlatform(platformSvc, jwtSecret)
 
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)

@@ -1,5 +1,5 @@
 // Package handler implements HTTP handlers for the platform service.
-// All endpoints require platform admin role (X-Platform-Admin: true).
+// All endpoints require platform admin role verified via JWT.
 package handler
 
 import (
@@ -7,28 +7,31 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 
+	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	"github.com/Camionerou/rag-saldivia/services/platform/db"
 	"github.com/Camionerou/rag-saldivia/services/platform/internal/service"
 )
 
 // Platform handles HTTP requests for platform operations.
 type Platform struct {
-	svc *service.Platform
+	svc       *service.Platform
+	jwtSecret string
 }
 
 // NewPlatform creates platform HTTP handlers.
-func NewPlatform(svc *service.Platform) *Platform {
-	return &Platform{svc: svc}
+func NewPlatform(svc *service.Platform, jwtSecret string) *Platform {
+	return &Platform{svc: svc, jwtSecret: jwtSecret}
 }
 
 // Routes returns a chi router with all platform routes.
 func (h *Platform) Routes() chi.Router {
 	r := chi.NewRouter()
-	r.Use(requirePlatformAdmin)
+	r.Use(h.requirePlatformAdmin)
 
 	// Tenants
 	r.Route("/tenants", func(r chi.Router) {
@@ -117,6 +120,10 @@ func (h *Platform) CreateTenant(w http.ResponseWriter, r *http.Request) {
 		Settings:    []byte("{}"),
 	})
 	if err != nil {
+		if errors.Is(err, service.ErrInvalidSlug) {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "slug must be lowercase alphanumeric with hyphens, 2-63 chars"})
+			return
+		}
 		if errors.Is(err, service.ErrSlugTaken) {
 			writeJSON(w, http.StatusConflict, map[string]string{"error": "tenant slug already taken"})
 			return
@@ -283,6 +290,10 @@ func (h *Platform) ToggleFeatureFlag(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err := h.svc.ToggleFeatureFlag(r.Context(), flagID, req.Enabled); err != nil {
+		if errors.Is(err, service.ErrFlagNotFound) {
+			writeJSON(w, http.StatusNotFound, map[string]string{"error": "feature flag not found"})
+			return
+		}
 		serverError(w, r, err)
 		return
 	}
@@ -296,7 +307,11 @@ func (h *Platform) GetConfig(w http.ResponseWriter, r *http.Request) {
 	key := chi.URLParam(r, "key")
 	config, err := h.svc.GetConfig(r.Context(), key)
 	if err != nil {
-		writeJSON(w, http.StatusNotFound, map[string]string{"error": "config key not found"})
+		if errors.Is(err, service.ErrConfigNotFound) {
+			writeJSON(w, http.StatusNotFound, map[string]string{"error": "config key not found"})
+			return
+		}
+		serverError(w, r, err)
 		return
 	}
 	writeJSON(w, http.StatusOK, config)
@@ -327,14 +342,29 @@ func (h *Platform) SetConfig(w http.ResponseWriter, r *http.Request) {
 
 // ── Middleware & Helpers ─────────────────────────────────────────────────
 
-// requirePlatformAdmin rejects requests without platform admin identity.
-// In production, Traefik/gateway sets X-Platform-Admin after JWT verification.
-func requirePlatformAdmin(next http.Handler) http.Handler {
+// requirePlatformAdmin verifies the JWT and checks that the user has admin role.
+// The JWT is passed via Authorization: Bearer <token>.
+func (h *Platform) requirePlatformAdmin(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.Header.Get("X-Platform-Admin") != "true" {
+		auth := r.Header.Get("Authorization")
+		if !strings.HasPrefix(auth, "Bearer ") {
+			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "missing authorization"})
+			return
+		}
+
+		claims, err := sdajwt.Verify(h.jwtSecret, strings.TrimPrefix(auth, "Bearer "))
+		if err != nil {
+			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "invalid token"})
+			return
+		}
+
+		if claims.Role != "admin" {
 			writeJSON(w, http.StatusForbidden, map[string]string{"error": "platform admin access required"})
 			return
 		}
+
+		// Propagate identity via headers for downstream use
+		r.Header.Set("X-User-ID", claims.UserID)
 		next.ServeHTTP(w, r)
 	})
 }
