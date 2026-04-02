@@ -359,16 +359,26 @@ func TestDisableTenant_and_EnableTenant_Integration(t *testing.T) {
 	if err := svc.DisableTenant(ctx, tenant.ID); err != nil {
 		t.Fatalf("disable: %v", err)
 	}
-	got, _ := svc.GetTenant(ctx, "toggleme")
-	if got.Enabled {
-		t.Error("expected tenant disabled after DisableTenant")
+	// GetTenant filters by enabled=true, so disabled tenant returns ErrTenantNotFound
+	_, err := svc.GetTenant(ctx, "toggleme")
+	if err != ErrTenantNotFound {
+		t.Fatalf("expected ErrTenantNotFound for disabled tenant, got: %v", err)
+	}
+	// Verify directly in DB that enabled=false
+	var enabled bool
+	pool.QueryRow(ctx, `SELECT enabled FROM tenants WHERE id = $1`, tenant.ID).Scan(&enabled)
+	if enabled {
+		t.Error("expected enabled=false in DB after DisableTenant")
 	}
 
 	// Re-enable
 	if err := svc.EnableTenant(ctx, tenant.ID); err != nil {
 		t.Fatalf("enable: %v", err)
 	}
-	got, _ = svc.GetTenant(ctx, "toggleme")
+	got, err := svc.GetTenant(ctx, "toggleme")
+	if err != nil {
+		t.Fatalf("expected tenant visible after re-enable: %v", err)
+	}
 	if !got.Enabled {
 		t.Error("expected tenant enabled after EnableTenant")
 	}
