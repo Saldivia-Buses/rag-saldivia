@@ -2,6 +2,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"log/slog"
@@ -14,13 +15,23 @@ import (
 	"github.com/Camionerou/rag-saldivia/services/notification/internal/service"
 )
 
+// NotificationService defines the operations the handler needs from the service layer.
+type NotificationService interface {
+	List(ctx context.Context, userID string, unreadOnly bool, limit int) ([]service.Notification, error)
+	UnreadCount(ctx context.Context, userID string) (int, error)
+	MarkRead(ctx context.Context, notifID, userID string) error
+	MarkAllRead(ctx context.Context, userID string) (int64, error)
+	GetPreferences(ctx context.Context, userID string) (*service.Preferences, error)
+	UpdatePreferences(ctx context.Context, userID string, emailEnabled, inAppEnabled bool, quietStart, quietEnd *string, mutedTypes []string) (*service.Preferences, error)
+}
+
 // Notification handles HTTP requests for notification operations.
 type Notification struct {
-	svc *service.NotificationService
+	svc NotificationService
 }
 
 // NewNotification creates notification HTTP handlers.
-func NewNotification(svc *service.NotificationService) *Notification {
+func NewNotification(svc NotificationService) *Notification {
 	return &Notification{svc: svc}
 }
 
