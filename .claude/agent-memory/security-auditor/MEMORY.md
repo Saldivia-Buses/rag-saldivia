@@ -1,0 +1,1 @@
+- [Plan 34 SSO audit](project_plan34_sso_audit.md) -- 2 critical (SAML state bypass, cert not persisted), 3 high. NOT APTO.

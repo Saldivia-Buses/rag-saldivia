@@ -1,9 +1,9 @@
-# Saldivia RAG
+# SDA Framework
 
-## LEER PRIMERO — antes de cualquier trabajo
+## LEER PRIMERO
 
-1. `docs/bible.md` — reglas permanentes (workflow, stack, protocolos, naming)
-2. `docs/plans/1.0.x-plan-maestro.md` — roadmap y planes de la versión actual
+1. `docs/plans/2.0.x-plan01-sda-framework.md` — spec completo del sistema (la biblia)
+2. `docs/bible.md` — reglas permanentes de trabajo
 
 No empezar a trabajar sin leer estos documentos.
 
@@ -11,11 +11,11 @@ No empezar a trabajar sin leer estos documentos.
 
 ## Qué es este proyecto
 
-Overlay sobre **NVIDIA RAG Blueprint v2.5.0** que agrega autenticación, RBAC,
-multi-colección, y frontend Next.js 16. Deploy en workstation física con 1x RTX
-PRO 6000 Blackwell (96GB VRAM).
+Plataforma SaaS multi-tenant de microservicios Go con servicios de IA y
+módulos de negocio por industria. Backend inhouse (RTX PRO 6000, 96GB VRAM),
+frontends en la nube.
 
-- **Repo:** `~/rag-saldivia/` — branch activa: `1.0.x`
+- **Repo:** `~/rag-saldivia/` — branch activa: `2.0.x`
 - **Remoto:** https://github.com/Camionerou/rag-saldivia
 
 ---
@@ -23,62 +23,90 @@ PRO 6000 Blackwell (96GB VRAM).
 ## Arquitectura
 
 ```
-Usuario --> Next.js :3000 (UI + auth + proxy) --> RAG Server :8081
-                                                       |
-                                                  Milvus + NIMs
-                                                       |
-                                                  Nemotron-Super-49B
+CLOUD                                    INHOUSE (workstation)
+┌──────────────┐                         ┌────────────────────────────────┐
+│  Next.js     │                         │  Traefik (gateway)             │
+│  Frontend    │──── REST/WS ──────────►│    ├─► Auth Service (Go)       │
+│  (CDN)       │   Cloudflare Tunnel    │    ├─► WebSocket Hub (Go)     │
+└──────────────┘                         │    ├─► Chat Service (Go)      │
+                                         │    ├─► RAG Service (Go)       │
+CLOUD (APIs)                             │    ├─► Notification (Go)      │
+┌──────────────┐                         │    ├─► Platform (Go)          │
+│  NVIDIA API  │◄── LLM queries ───────│    ├─► Ingest (Go)            │
+│  Nemotron-49B│                         │    └─► [N modular services]   │
+└──────────────┘                         │                                │
+                                         │  PostgreSQL per-tenant        │
+                                         │  Redis per-tenant             │
+                                         │  NATS + JetStream             │
+                                         │  Milvus + NIMs (RAG)          │
+                                         └────────────────────────────────┘
 ```
-
-Un único proceso Next.js reemplaza el gateway Python + frontend SvelteKit del stack viejo.
 
 ---
 
-## Stack técnico
+## Stack
 
-| Componente | Tecnología |
+| Componente | Tecnologia |
 |---|---|
-| Framework | Next.js 16 App Router |
-| Lenguaje | TypeScript 6 |
-| Runtime | Bun 1.3.x |
-| Base de datos | SQLite vía Drizzle ORM + @libsql/client |
-| Auth | JWT (jose) en cookie HttpOnly + Redis blacklist |
-| Server Actions | next-safe-action + Zod schemas |
-| Queue | BullMQ + Redis |
-| AI/Streaming | Vercel AI SDK (`ai` + `@ai-sdk/react`) |
-| Validación | Zod (compartido entre paquetes) |
-| CSS | Tailwind v4 + shadcn/ui + Radix |
-| Monorepo | Turborepo + Bun workspaces |
-| Testing | bun:test + happy-dom + @testing-library/react + Playwright |
+| Backend | Go (chi + sqlc + slog) |
+| Database | PostgreSQL per-tenant |
+| Cache | Redis per-tenant + platform |
+| Message broker | NATS + JetStream |
+| Frontend | Next.js + React + shadcn/ui + Tailwind + TanStack Query |
+| Gateway | Traefik |
+| RAG | NVIDIA RAG Blueprint v2.5.0 |
+| LLM | Nemotron-Super-49B via NVIDIA API |
+| Agent framework | NeMo Agent Toolkit |
+| Observability | OpenTelemetry + Grafana (Tempo + Prometheus + Loki) |
+| CI/CD | GitHub Actions |
+| CLI | Go (Cobra) |
 
 ---
 
 ## Estructura del repo
 
 ```
+services/                    ← Go microservicios
+  auth/                      ← Auth Gateway + RBAC + MFA
+  ws/                        ← WebSocket Hub
+  chat/                      ← Sesiones + mensajes
+  rag/                       ← Proxy NVIDIA Blueprint
+  notification/              ← In-app + email
+  platform/                  ← Control de tenants (platform admins)
+  ingest/                    ← Pipeline de documentos
+  .scaffold/                 ← Template para make new-service
+
+pkg/                         ← Go packages compartidos
+  jwt/                       ← JWT validation local
+  tenant/                    ← Tenant context, DB resolver
+  middleware/                ← Auth, logging, tracing
+  nats/                      ← NATS helpers
+  security/                  ← Rate limiting, brute force
+  config/                    ← Config loading
+
+proto/                       ← Protobuf (gRPC contracts)
+
 apps/
-  web/                  --> Next.js (UI + API + auth)
-    src/
-      app/              --> rutas y API routes
-      components/       --> componentes React por dominio
-      hooks/            --> useChat, useLocalStorage, useCopyToClipboard, useAutoResize
-      lib/              --> lógica (auth, rag, utils)
+  web/                       ← Next.js frontend
+  login/                     ← Login page aislada
 
-packages/
-  db/                   --> Drizzle ORM + queries + schema
-  shared/               --> Zod schemas + tipos
-  config/               --> config loader
-  logger/               --> logger estructurado
+ai/
+  agents/                    ← NeMo Agent Toolkit configs
+  guardrails/                ← NeMo Guardrails policies
+  models/                    ← Model configs, VRAM profiles
 
-docs/
-  bible.md              --> reglas permanentes del proyecto
-  plans/                --> planes de implementación
-  decisions/            --> ADRs (11 activas)
-  templates/            --> templates (plan, commit, PR, version, ADR, artifact)
-  artifacts/            --> resultados de reviews/audits
-  toolbox.md            --> herramientas externas
+modules/                     ← Modulos verticales por industria
 
-_archive/               --> código aspiracional (recuperable con git)
+tools/
+  cli/                       ← CLI binario (sda)
+  mcp/                       ← MCP Server para IA
+  pkg/                       ← Logica compartida CLI + MCP
+
+deploy/                      ← Docker Compose, Traefik, scripts
+config/                      ← NVIDIA Blueprint configs
+vendor/                      ← Blueprint submodule
+docs/                        ← Documentacion
+_archive/                    ← Codigo 1.0.x (referencia)
 ```
 
 ---
@@ -86,237 +114,71 @@ _archive/               --> código aspiracional (recuperable con git)
 ## Comandos clave
 
 ```bash
-bun run dev                     # Next.js en :3000
-bun run test                    # unit tests via Turborepo
-bun run test:components         # component tests (happy-dom) — correr desde apps/web/
-bun run test:visual             # visual regression Playwright
-bun run test:a11y               # WCAG AA con axe-playwright
-bun run test:e2e                # E2E Playwright
-bun run lint                    # lint via Turborepo
-bun run storybook               # Storybook en :6006
-bunx tsc --noEmit               # type check (correr desde apps/web/)
+make dev                     # Levantar stack de desarrollo
+make stop                    # Bajar servicios
+make test                    # Tests Go
+make test-auth               # Tests de un servicio especifico
+make lint                    # Lint Go
+make build                   # Build todos los servicios
+make build-auth              # Build un servicio
+make new-service NAME=x      # Scaffold servicio nuevo
+make proto                   # Generar codigo gRPC
+make sqlc                    # Generar codigo sqlc
+make migrate                 # Correr migraciones
+make deploy                  # Deploy a produccion
+make versions                # Ver versiones running vs available
+make status                  # Estado de servicios + GPU
 ```
 
 ---
 
-## Páginas activas (12 rutas)
+## Convenciones
 
-```
-/login                  --> pública, sin NavRail
-/chat                   --> lista de sesiones + empty state
-/chat/[id]              --> conversación con mensajes y input
-/collections            --> lista de colecciones del usuario con permisos
-/collections/[name]     --> detalle de colección + historial ingesta
-/settings               --> perfil, contraseña, preferencias, colecciones
-/admin                  --> dashboard con stats
-/admin/users            --> CRUD usuarios con roles
-/admin/roles            --> CRUD roles con permisos
-/admin/areas            --> CRUD áreas con miembros y colecciones
-/admin/permissions      --> matriz area-colección read/write/admin
-/admin/collections      --> gestión completa de colecciones
-/admin/config           --> parámetros RAG (temperature, top_k, etc.)
-```
+### Go
 
----
-
-## API routes activas
-
-| Ruta | Método | Descripción |
+| Tipo | Convencion | Ejemplo |
 |---|---|---|
-| `/api/auth/login` | POST | JWT + cookie HttpOnly |
-| `/api/auth/logout` | DELETE | Invalida sesión |
-| `/api/auth/refresh` | POST | Renueva JWT |
-| `/api/rag/generate` | POST | Proxy SSE al RAG server |
-| `/api/rag/collections` | GET/POST | CRUD colecciones Milvus |
-| `/api/rag/collections/[name]` | DELETE | Eliminar colección |
-| `/api/rag/document/[name]` | GET | Documento por nombre |
-| `/api/rag/suggest` | POST | Preguntas relacionadas |
-| `/api/health` | GET | Health check |
-| `/api/feedback` | POST | Error feedback (guarda en audit_log) |
+| Packages | lowercase, single word | `handler`, `service` |
+| Files | snake_case | `user_handler.go` |
+| Structs | PascalCase | `UserService` |
+| Interfaces | PascalCase, -er suffix | `UserRepository` |
+| Functions | PascalCase/camelCase | `CreateUser()`, `hashPassword()` |
+| Errors | Wrap con contexto | `fmt.Errorf("get user: %w", err)` |
+| Context | Primer parametro siempre | `func (s *Svc) Get(ctx context.Context, id string)` |
+
+### Git
+
+- Branch: `main` protegida, feature branches con PR
+- Commits: `tipo(servicio): descripcion` (lowercase)
+- Tipos: `feat`, `fix`, `refactor`, `test`, `docs`, `ci`, `chore`
+- Squash merge a main
+- Docs actualizadas en el mismo PR que el codigo
+
+### Frontend
+
+- Componentes: PascalCase (`VehicleTable.tsx`)
+- Hooks: camelCase con `use` (`useEnabledModules.ts`)
+- Lib/utils: kebab-case (`module-guard.ts`)
 
 ---
 
-## Server Actions activas
+## Archivos criticos
 
-Todas migradas a `next-safe-action` con Zod validation (`lib/safe-action.ts`).
-
-| Archivo | Actions | Middleware |
-|---|---|---|
-| `actions/auth.ts` | `actionLogout` | authAction |
-| `actions/chat.ts` | `actionCreateSession`, `actionDeleteSession`, `actionRenameSession`, `actionAddMessage`, `actionAddFeedback`, `actionToggleSaved`, `actionForkSession`, `actionSaveAnnotation`, `actionCreateSessionForDoc`, `actionAddTag`, `actionRemoveTag` | authAction |
-| `actions/collections.ts` | `actionCreateCollection`, `actionDeleteCollection` | adminAction |
-| `actions/config.ts` | `actionUpdateRagParams`, `actionResetRagParams` | adminAction |
-| `actions/settings.ts` | `actionUpdateProfile`, `actionUpdatePassword`, `actionUpdatePreferences`, `actionCompleteOnboarding`, `actionAddMemory`, `actionDeleteMemory` | authAction |
-| `actions/admin.ts` | `actionListUsers`, `actionCreateUser`, `actionUpdateUser`, `actionResetPassword`, `actionDeleteUser` | adminAction |
-| `actions/roles.ts` | `actionListRoles`, `actionCreateRole`, `actionUpdateRole`, `actionDeleteRole`, `actionSetRolePermissions`, `actionSetUserRoles`, `actionGetRolePermissions`, `actionListPermissions` | authAction + permission |
-| `actions/templates.ts` | `actionListTemplates`, `actionCreateTemplate`, `actionDeleteTemplate` | authAction/adminAction |
-
----
-
-## Componentes activos
-
-```
-components/
-  ui/                 --> 19 primitivos: button, badge, input, textarea, avatar,
-                          table, separator, tooltip, dialog, sheet, command,
-                          sonner, theme-toggle, skeleton, stat-card,
-                          empty-placeholder, data-table, popover, confirm-dialog
-  chat/               --> ChatInterface, ChatInputBar, SessionList, SourcesPanel, CollectionSelector,
-                          ChatEmptyState, ChatMessages, ArtifactPanel, MarkdownMessage, ChatLayout
-  admin/              --> AdminDashboard, AdminLayout, AdminUsers, AdminRoles, AdminAreas,
-                          AdminCollections, AdminPermissions, AdminRagConfig, PermissionMatrix,
-                          RoleBadge, UserRoleSelector, RoleCard, RoleForm,
-                          CreateUserForm, PasswordResetCell
-  layout/             --> AppShell, AppShellChrome, NavRail
-  collections/        --> CollectionsList
-  settings/           --> SettingsClient, MemoryClient
-  dev/                --> ReactScan, ReactScanProvider (solo dev)
-  error-boundary.tsx
-  providers.tsx       --> ThemeProvider (next-themes) + ErrorFeedbackMount
-```
-
----
-
-## Design system
-
-### Tokens CSS
-
-```css
-/* Light mode (tokens extraídos de claude.ai + azure accent) */
---bg: #faf9f5;  --surface: #f0eee8;  --surface-2: #e5e3dc;
---border: #e0ddd6;  --fg: #141413;  --fg-muted: #4a4a47;
---fg-subtle: #6e6c69;  --accent: #2563eb;  --accent-subtle: #dbeafe;
---success: #16a34a;  --destructive: #dc2626;  --warning: #d97706;
-```
-
-- **Font:** Instrument Sans via `next/font/google`
-- **Tokens CSS siempre** — nunca hardcodear colores
-- **`bg-surface`** para cards/paneles, **`bg-bg`** para fondo base
-- **`@theme inline`** en Tailwind v4 para dark mode class-based
-
----
-
-## Testing
-
-| Capa | Comando | Tests |
-|---|---|---|
-| Lógica pura + actions + API + proxy | `bun run test` | ~693 |
-| Componentes + hooks | `bun run test:components` (desde apps/web/) | ~314 |
-| Visual | `bun run test:visual` | 22 baselines |
-| A11y | `bun run test:a11y` | páginas clave |
-| E2E | `bun run test:e2e` | flujos críticos |
-
-### Convenciones de component tests
-
-```typescript
-import { afterEach } from "bun:test"
-import { cleanup, render, fireEvent } from "@testing-library/react"
-
-afterEach(cleanup)  // OBLIGATORIO
-
-// Queries escopadas, NO screen global:
-const { getByRole } = render(<Button>Click</Button>)
-
-// fireEvent sobre userEvent (happy-dom compatibility)
-```
-
-### Preloads
-- **Component tests:** `--preload ./src/lib/component-test-setup.ts`
-- **Lib tests:** `--preload ./src/lib/test-setup.ts`
-- **DB tests:** ioredis-mock via `packages/db/bunfig.toml`
-
----
-
-## Archivos críticos
-
-| Archivo | Por qué |
+| Archivo | Por que |
 |---|---|
-| `apps/web/src/proxy.ts` | Middleware real: JWT + RBAC en edge |
-| `apps/web/src/lib/auth/jwt.ts` | createJwt, verifyJwt, cookies |
-| `apps/web/src/app/globals.css` | Tokens CSS — cambios afectan toda la app |
-| `apps/web/src/lib/rag/ai-stream.ts` | Adapter: NVIDIA SSE → AI SDK Data Stream |
-| `apps/web/src/components/chat/ChatInterface.tsx` | Componente más complejo de la UI |
-| `apps/web/src/lib/safe-action.ts` | authAction/adminAction — middleware de todas las server actions |
-| `apps/web/src/lib/defaults.ts` | DEFAULT_COLLECTION — configurable via env |
-| `apps/web/src/lib/component-test-setup.ts` | Setup happy-dom — modificar puede romper tests |
-| `packages/db/src/schema.ts` | Schema SQLite completo |
-| `packages/db/src/queries/users.ts` | CRUD usuarios + permisos |
-
----
-
-## Variables de entorno
-
-```env
-JWT_SECRET=...             # openssl rand -base64 32
-SYSTEM_API_KEY=...         # openssl rand -hex 32
-RAG_SERVER_URL=http://localhost:8081
-DATABASE_PATH=./data/app.db
-REDIS_URL=redis://localhost:6379
-MOCK_RAG=false             # true para dev sin Docker
-LOG_LEVEL=INFO
-```
-
-### Credenciales de desarrollo (seed)
-
-| Email | Password | Rol |
-|---|---|---|
-| `admin@localhost` | `changeme` | admin |
-| `user@localhost` | `test1234` | user |
-
----
-
-## Patrones importantes
-
-### Streaming (AI SDK)
-- Verificar status HTTP **ANTES** de streamear (patrón crítico en `lib/rag/client.ts`)
-- `lib/rag/ai-stream.ts` transforma SSE de NVIDIA al protocolo AI SDK Data Stream
-- `useChat` de `@ai-sdk/react` en ChatInterface (reemplaza `useRagStream`)
-- Citations pasan como `data-sources` custom parts en el stream
-
-### Redis (ADR-010)
-- `getRedisClient()` nunca retorna null — lanza error
-- NO importar logger en `redis.ts` (dependencia circular, ADR-005)
-- BullMQ usa `getBullMQConnection()` con `{ maxRetriesPerRequest: null }`
-- JWT revocación verificada en `extractClaims()`, NO en middleware edge
-
-### Server Actions (next-safe-action)
-- Todas las actions usan `authAction` o `adminAction` de `lib/safe-action.ts`
-- Input validado con Zod schema via `.schema(z.object({...}))`
-- Retorno wrapped: callers acceden a `result?.data` (no directo)
-- `clean()` helper para bridge Zod optional → `exactOptionalPropertyTypes`
-
-### Next.js
-- Server Components por defecto, `"use client"` solo donde necesario
-- `next/font/google` para Instrument Sans
-- `next/dynamic` con `ssr: false` solo en Client Components
-
-### Base de datos
-- `Date.now()` para timestamps (ADR-004), no `_ts()` de SQLite
-- CJS sobre ESM en packages (ADR-002)
-
----
-
-## ADRs vigentes
-
-| ADR | Decisión |
-|---|---|
-| 001 | libsql sobre better-sqlite3 |
-| 002 | CJS sobre ESM en packages |
-| 003 | Next.js como proceso único |
-| 004 | Temporal API para timestamps |
-| 005 | Import estático de db en logger |
-| 006 | Estrategia de testing |
-| 007 | Funciones reales sobre helpers en tests |
-| 008 | Lector SSE compartido (superada — AI SDK adoptado en Plan 14) |
-| 009 | Server Components primero |
-| 010 | Redis como dependencia requerida |
-| 011 | UI strategy (superada por Plan Maestro 1.0.x) |
+| `docs/plans/2.0.x-plan01-sda-framework.md` | Spec completo — la biblia del sistema |
+| `docs/bible.md` | Reglas permanentes de trabajo |
+| `services/{name}/README.md` | Que hace cada servicio |
+| `go.work` | Go workspace — modulos registrados |
+| `Makefile` | Todos los comandos |
+| `deploy/` | Docker Compose configs |
+| `config/` | NVIDIA Blueprint configs |
 
 ---
 
 ## Agents disponibles (`.claude/agents/`)
 
-| Agent | Cuándo |
+| Agent | Cuando |
 |---|---|
 | `frontend-reviewer` | Cambios en componentes/UI |
 | `gateway-reviewer` | Cambios en API routes/auth |
@@ -328,16 +190,3 @@ LOG_LEVEL=INFO
 | `status` | Estado de servicios |
 | `plan-writer` | Planes nuevos |
 | `ingest` | Ingestar documentos |
-
-Todos corren como Opus. Ver `.claude/agents/` para checklists detalladas.
-
----
-
-## Referencias
-
-- `docs/bible.md` — reglas permanentes
-- `docs/plans/1.0.x-plan-maestro.md` — roadmap actual
-- `docs/toolbox.md` — herramientas externas evaluadas
-- `docs/templates/` — templates de plan, commit, PR, version, ADR, artifact
-- `docs/decisions/` — ADRs
-- `_archive/` — código aspiracional (admin, upload, extract, projects, CLI, etc.)

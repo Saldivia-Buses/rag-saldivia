@@ -1,77 +1,87 @@
-# Blueprint clone (not tracked — cloned by setup.sh)
-blueprint/
+# ============================================================
+# SDA Framework .gitignore
+# ============================================================
 
-# Stack anterior (Python + SvelteKit) — preservado localmente, fuera del repo
-legacy/
-
-# Secrets — nunca al repo
+# --- Secrets ---
 .env.local
 .env.merged
 .env.blueprint
 .env.build
 *.key
+config/*.env.*
 
-# Node
+# --- Go ---
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+/bin/
+**/bin/
+# Build cache
+vendor/
+# Test output
+*.test
+*.out
+cover.html
+coverage.out
+**/coverage.out
+
+# --- Node/Frontend ---
 node_modules/
-
-# Next.js build
 .next/
 out/
-
-# Bun
 *.tsbuildinfo
-
-# Turbo
 .turbo/
 **/.turbo/
+bun.lock
 
-# Runtime logs
+# --- Docker ---
+docker-compose.override.yml
+
+# --- Data (never commit) ---
+data/
+dump.rdb
+*.db
+*.db-shm
+*.db-wal
+
+# --- Logs ---
 logs/
 **/logs/
+*.log
 
-# Base de datos SQLite — nunca al repo
-data/*.db
-data/*.db-shm
-data/*.db-wal
-data/uploads/
-dump.rdb
-data/messaging-files/
-apps/web/data/*.db
-apps/web/data/*.db-shm
-apps/web/data/*.db-wal
-packages/db/data/*.db
-packages/db/data/*.db-shm
-packages/db/data/*.db-wal
-
-# Playwright — resultados de tests y reportes locales
+# --- Test artifacts ---
 test-results/
 **/test-results/
 playwright-report/
 **/playwright-report/
-
-# MCP browser session artifacts
 .playwright-mcp/
 
-# Brainstorming artifacts (internal design sessions)
-.superpowers/
+# --- IDE ---
+.vscode/
+.idea/
+*.swp
+*.swo
 
-# App runtime logs (covered by logs/ but adding specific path)
-apps/web/logs/
+# --- OS ---
+.DS_Store
+Thumbs.db
 
-# Config env files by environment
-config/*.env.*
-
-# Internal design specs
-docs/superpowers/
-
-# Process ID files
+# --- Runtime ---
 *.pid
 *.server-info
 *.server-stopped
 
-# Screenshots (verification artifacts, not versioned)
+# --- Blueprint (cloned by setup, not tracked) ---
+blueprint/
+
+# --- Internal artifacts ---
+.superpowers/
+docs/superpowers/
+
+# --- Screenshots ---
 *.png
 !apps/web/public/**/*.png
-
-# OS
-.DS_Store
+!apps/login/public/**/*.png

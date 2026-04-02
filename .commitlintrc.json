@@ -10,11 +10,13 @@
       1,
       "always",
       [
-        "setup", "web", "db", "config", "logger", "shared",
-        "auth", "rag", "chat", "messaging", "admin", "collections",
-        "ingestion", "settings", "roles", "areas", "permissions",
-        "ui", "ws", "queue", "workers",
-        "deps", "ci", "docs", "changelog", "plans", "agents", "release"
+        "auth", "ws", "chat", "rag", "ingest", "notification", "platform",
+        "agent", "docai", "vision", "feedback", "speech", "optimization",
+        "workflow", "forecast", "translation",
+        "web", "login",
+        "cli", "mcp",
+        "infra", "deploy", "ci", "docs", "deps", "release",
+        "pkg", "proto", "config"
       ]
     ],
     "subject-case": [2, "always", "lower-case"],

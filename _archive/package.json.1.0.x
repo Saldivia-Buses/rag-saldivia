@@ -1,0 +1,40 @@
+{
+  "name": "rag-saldivia",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Overlay de autenticación y frontend sobre el NVIDIA RAG Blueprint",
+  "packageManager": "bun@1.3.11",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "setup": "bun scripts/setup.ts",
+    "setup:check": "bun scripts/setup.ts --check",
+    "setup:reset": "bun scripts/setup.ts --reset",
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "test": "turbo test",
+    "test:coverage": "turbo test:coverage",
+    "lint": "turbo lint",
+    "type-check": "turbo type-check",
+    "db:migrate": "bun run --filter=./packages/db migrate",
+    "db:seed": "bun run --filter=./packages/db seed",
+    "db:generate": "bun run --filter=./packages/db generate",
+    "lint:commits": "commitlint --from HEAD~1 --to HEAD",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.0.0",
+    "@commitlint/config-conventional": "^19.0.0",
+    "eslint": "9",
+    "husky": "^9.0.0",
+    "knip": "^6.0.6",
+    "lint-staged": "^16.4.0",
+    "turbo": "^2.0.0",
+    "typescript": "^6.0.0"
+  },
+  "overrides": {
+    "drizzle-orm": "^0.45.0"
+  }
+}
