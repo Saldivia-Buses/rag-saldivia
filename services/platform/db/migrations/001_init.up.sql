@@ -4,7 +4,7 @@
 -- Each tenant has its OWN PostgreSQL instance — this DB only tracks metadata.
 
 -- Subscription plans
-CREATE TABLE plans (
+CREATE TABLE IF NOT EXISTS plans (
     id          TEXT PRIMARY KEY,
     name        TEXT NOT NULL,                          -- 'Starter', 'Business', 'Professional', 'Enterprise'
     max_users   INTEGER NOT NULL DEFAULT 10,
@@ -16,7 +16,7 @@ CREATE TABLE plans (
 );
 
 -- Tenant registry
-CREATE TABLE tenants (
+CREATE TABLE IF NOT EXISTS tenants (
     id           TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
     slug         TEXT NOT NULL UNIQUE,                   -- subdomain: 'saldivia', 'empresa2'
     name         TEXT NOT NULL,                          -- display name: 'Saldivia Buses'
@@ -35,7 +35,7 @@ CREATE TABLE tenants (
 -- No additional index needed.
 
 -- Module registry — all available modules in the system
-CREATE TABLE modules (
+CREATE TABLE IF NOT EXISTS modules (
     id          TEXT PRIMARY KEY,                        -- 'fleet', 'construction', 'crm', 'docai'
     name        TEXT NOT NULL,                           -- 'Gestion de Flota'
     category    TEXT NOT NULL,                           -- 'core', 'platform', 'vertical', 'ai_service'
@@ -48,7 +48,7 @@ CREATE TABLE modules (
 );
 
 -- Which modules each tenant has
-CREATE TABLE tenant_modules (
+CREATE TABLE IF NOT EXISTS tenant_modules (
     tenant_id   TEXT NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
     module_id   TEXT NOT NULL REFERENCES modules(id),
     enabled     BOOLEAN NOT NULL DEFAULT true,
@@ -59,7 +59,7 @@ CREATE TABLE tenant_modules (
 );
 
 -- Global configuration
-CREATE TABLE global_config (
+CREATE TABLE IF NOT EXISTS global_config (
     key         TEXT PRIMARY KEY,
     value       JSONB NOT NULL,
     updated_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -67,7 +67,7 @@ CREATE TABLE global_config (
 );
 
 -- RAG models registry
-CREATE TABLE rag_models (
+CREATE TABLE IF NOT EXISTS rag_models (
     id          TEXT PRIMARY KEY,
     name        TEXT NOT NULL,
     provider    TEXT NOT NULL,                           -- 'local', 'nvidia-api', 'openrouter'
@@ -80,7 +80,7 @@ CREATE TABLE rag_models (
 );
 
 -- Feature flags (global or per-tenant)
-CREATE TABLE feature_flags (
+CREATE TABLE IF NOT EXISTS feature_flags (
     id          TEXT PRIMARY KEY,
     name        TEXT NOT NULL,
     description TEXT,
@@ -90,10 +90,10 @@ CREATE TABLE feature_flags (
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX idx_feature_flags_tenant ON feature_flags(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_feature_flags_tenant ON feature_flags(tenant_id);
 
 -- Deploy log
-CREATE TABLE deploy_log (
+CREATE TABLE IF NOT EXISTS deploy_log (
     id          TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
     service     TEXT NOT NULL,
     version_from TEXT NOT NULL,
@@ -105,20 +105,22 @@ CREATE TABLE deploy_log (
     notes       TEXT
 );
 
-CREATE INDEX idx_deploy_log_service ON deploy_log(service, started_at DESC);
+CREATE INDEX IF NOT EXISTS idx_deploy_log_service ON deploy_log(service, started_at DESC);
 
 -- Seed default plans
 INSERT INTO plans (id, name, max_users, max_storage_mb, ai_credits_monthly, price_usd) VALUES
     ('starter',       'Starter',       10,   5120,    1000,   49),
     ('business',      'Business',      50,   51200,   5000,   299),
     ('professional',  'Professional',  200,  102400,  20000,  999),
-    ('enterprise',    'Enterprise',    -1,   -1,      -1,     0);  -- -1 = unlimited, custom pricing
+    ('enterprise',    'Enterprise',    -1,   -1,      -1,     0)  -- -1 = unlimited, custom pricing
+ON CONFLICT (id) DO NOTHING;
 
 -- Seed core modules (always active, can't be disabled)
 INSERT INTO modules (id, name, category, tier_min) VALUES
     ('chat',          'Chat + RAG',           'core',        'starter'),
     ('auth',          'Auth + RBAC',          'core',        'starter'),
-    ('notifications', 'Notificaciones',       'core',        'starter');
+    ('notifications', 'Notificaciones',       'core',        'starter')
+ON CONFLICT (id) DO NOTHING;
 
 -- Seed platform modules
 INSERT INTO modules (id, name, category, tier_min) VALUES
@@ -132,13 +134,15 @@ INSERT INTO modules (id, name, category, tier_min) VALUES
     ('calendar',      'Calendario',            'platform',    'business'),
     ('reports',       'Reportes',              'platform',    'professional'),
     ('whatsapp',      'WhatsApp Business',     'platform',    'business'),
-    ('email',         'Email Integration',     'platform',    'business');
+    ('email',         'Email Integration',     'platform',    'business')
+ON CONFLICT (id) DO NOTHING;
 
 -- Seed vertical modules
 INSERT INTO modules (id, name, category, tier_min) VALUES
     ('fleet',         'Transporte/Logistica',  'vertical',    'starter'),
     ('construction',  'Construccion',           'vertical',    'starter'),
-    ('professional',  'Servicios Profesionales','vertical',   'starter');
+    ('professional',  'Servicios Profesionales','vertical',   'starter')
+ON CONFLICT (id) DO NOTHING;
 
 -- Seed AI service modules
 INSERT INTO modules (id, name, category, tier_min) VALUES
@@ -149,4 +153,5 @@ INSERT INTO modules (id, name, category, tier_min) VALUES
     ('optimization',  'Optimization (Rutas)',  'ai_service',  'business'),
     ('feedback',      'Calidad IA',            'ai_service',  'starter'),
     ('forecast',      'Forecasting',           'ai_service',  'professional'),
-    ('translation',   'Traduccion',            'ai_service',  'business');
+    ('translation',   'Traduccion',            'ai_service',  'business')
+ON CONFLICT (id) DO NOTHING;

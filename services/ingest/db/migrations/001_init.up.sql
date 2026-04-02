@@ -13,8 +13,8 @@ CREATE TABLE IF NOT EXISTS ingest_jobs (
     updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX idx_ingest_jobs_user ON ingest_jobs (user_id, created_at DESC);
-CREATE INDEX idx_ingest_jobs_status ON ingest_jobs (status) WHERE status IN ('pending', 'processing');
+CREATE INDEX IF NOT EXISTS idx_ingest_jobs_user ON ingest_jobs (user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_ingest_jobs_status ON ingest_jobs (status) WHERE status IN ('pending', 'processing');
 
 CREATE TABLE IF NOT EXISTS connectors (
     id          TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,

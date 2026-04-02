@@ -14,8 +14,8 @@ x-service-defaults: &service-defaults
     context: ..
   restart: unless-stopped
   depends_on:
-    postgres:
-      condition: service_healthy
+    db-init:
+      condition: service_completed_successfully
     redis:
       condition: service_healthy
     nats:
@@ -105,6 +105,25 @@ services:
       - "8025:8025"
     restart: unless-stopped
 
+  # ── Database Init ──────────────────────────────────────────────────────
+  # Runs migrations + seed on first boot. Exits after completion.
+  # Re-running is safe (all statements use IF NOT EXISTS / ON CONFLICT).
+
+  db-init:
+    image: postgres:16-alpine
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./scripts:/scripts:ro
+      - ../services:/services:ro
+    environment:
+      PLATFORM_DB_URL: postgres://sda:sda_dev@postgres:5432/sda_platform?sslmode=disable
+      TENANT_DB_URL: postgres://sda:sda_dev@postgres:5432/sda_tenant_dev?sslmode=disable
+      PGPASSWORD: sda_dev
+    entrypoint: ["/bin/bash", "-c", "/scripts/migrate.sh && /scripts/seed.sh"]
+    restart: "no"
+
   # ── Go Services (profile: full) ──────────────────────────────────────
   # Only start with: docker compose --profile full up --build
   # Traefik auto-discovers these via Docker labels (priority 100).
@@ -168,11 +187,11 @@ services:
       - "traefik.http.services.chat-docker.loadbalancer.server.port=8003"
 
   rag:
+    <<: *service-defaults
     profiles: [full]
     build:
       context: ..
       dockerfile: services/rag/Dockerfile
-    restart: unless-stopped
     environment:
       <<: *env-common
       RAG_PORT: "8004"
@@ -201,8 +220,8 @@ services:
     ports:
       - "8005:8005"
     depends_on:
-      postgres:
-        condition: service_healthy
+      db-init:
+        condition: service_completed_successfully
       nats:
         condition: service_healthy
       mailpit:
@@ -215,20 +234,17 @@ services:
       - "traefik.http.services.notification-docker.loadbalancer.server.port=8005"
 
   platform:
+    <<: *service-defaults
     profiles: [full]
     build:
       context: ..
       dockerfile: services/platform/Dockerfile
-    restart: unless-stopped
     environment:
       <<: *env-common
       PLATFORM_PORT: "8006"
       POSTGRES_PLATFORM_URL: postgres://sda:sda_dev@postgres:5432/sda_platform?sslmode=disable
     ports:
       - "8006:8006"
-    depends_on:
-      postgres:
-        condition: service_healthy
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.platform-docker.rule=PathPrefix(`/v1/platform`)"

@@ -1,7 +1,7 @@
 -- Tenant DB — chat tables (applied on top of auth tables)
 
 -- Chat sessions
-CREATE TABLE sessions (
+CREATE TABLE IF NOT EXISTS sessions (
     id          TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
     user_id     TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     title       TEXT NOT NULL DEFAULT 'Nueva conversacion',
@@ -11,10 +11,10 @@ CREATE TABLE sessions (
     updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX idx_sessions_user ON sessions(user_id, updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id, updated_at DESC);
 
 -- Chat messages
-CREATE TABLE messages (
+CREATE TABLE IF NOT EXISTS messages (
     id          TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
     session_id  TEXT NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
     role        TEXT NOT NULL CHECK (role IN ('user', 'assistant', 'system')),
@@ -24,10 +24,10 @@ CREATE TABLE messages (
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX idx_messages_session ON messages(session_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_messages_session ON messages(session_id, created_at);
 
 -- Session tags
-CREATE TABLE tags (
+CREATE TABLE IF NOT EXISTS tags (
     id          TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
     session_id  TEXT NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
     name        TEXT NOT NULL,
@@ -36,7 +36,7 @@ CREATE TABLE tags (
 );
 
 -- Chat feedback (thumbs up/down on messages)
-CREATE TABLE chat_feedback (
+CREATE TABLE IF NOT EXISTS chat_feedback (
     id          TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
     message_id  TEXT NOT NULL REFERENCES messages(id) ON DELETE CASCADE,
     user_id     TEXT NOT NULL REFERENCES users(id),
