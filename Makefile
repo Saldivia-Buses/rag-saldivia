@@ -98,15 +98,13 @@ sqlc-%: ## Generate sqlc for a specific service
 
 # ── Database ─────────────────────────────────────────────────────────────
 
-migrate: ## Run migrations for all tenants
-	@echo "Running migrations..."
-	$(GOBIN)/sda db migrate --tenant all
+migrate: ## Run database migrations (platform + tenant)
+	$(DEPLOY_DIR)/scripts/migrate.sh
 
-migrate-%: ## Run migrations for a specific service
-	$(GOBIN)/sda db migrate --service $*
+seed: ## Seed development data (users, roles, tenant)
+	$(DEPLOY_DIR)/scripts/seed.sh
 
-seed: ## Seed development data
-	$(GOBIN)/sda db seed
+migrate-seed: migrate seed ## Run migrations + seed in one step
 
 # ── Deploy ───────────────────────────────────────────────────────────────
 

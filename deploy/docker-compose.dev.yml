@@ -14,8 +14,8 @@ x-service-defaults: &service-defaults
     context: ..
   restart: unless-stopped
   depends_on:
-    postgres:
-      condition: service_healthy
+    db-init:
+      condition: service_completed_successfully
     redis:
       condition: service_healthy
     nats:
@@ -104,6 +104,25 @@ services:
       - "1025:1025"
       - "8025:8025"
     restart: unless-stopped
+
+  # ── Database Init ──────────────────────────────────────────────────────
+  # Runs migrations + seed on first boot. Exits after completion.
+  # Re-running is safe (all statements use IF NOT EXISTS / ON CONFLICT).
+
+  db-init:
+    image: postgres:16-alpine
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./scripts:/scripts:ro
+      - ../services:/services:ro
+    environment:
+      PLATFORM_DB_URL: postgres://sda:sda_dev@postgres:5432/sda_platform?sslmode=disable
+      TENANT_DB_URL: postgres://sda:sda_dev@postgres:5432/sda_tenant_dev?sslmode=disable
+      PGPASSWORD: sda_dev
+    entrypoint: ["/bin/bash", "-c", "/scripts/migrate.sh && /scripts/seed.sh"]
+    restart: "no"
 
   # ── Go Services (profile: full) ──────────────────────────────────────
   # Only start with: docker compose --profile full up --build

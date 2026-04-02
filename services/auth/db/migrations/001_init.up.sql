@@ -2,7 +2,7 @@
 -- This is the base schema that every tenant starts with.
 
 -- Users
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id              TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
     email           TEXT NOT NULL UNIQUE,
     name            TEXT NOT NULL,
@@ -22,7 +22,7 @@ CREATE TABLE users (
 -- Note: email already has a UNIQUE constraint which creates an implicit index.
 
 -- Roles
-CREATE TABLE roles (
+CREATE TABLE IF NOT EXISTS roles (
     id          TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
     name        TEXT NOT NULL UNIQUE,                         -- 'admin', 'manager', 'user', 'viewer'
     description TEXT,
@@ -31,7 +31,7 @@ CREATE TABLE roles (
 );
 
 -- Permissions
-CREATE TABLE permissions (
+CREATE TABLE IF NOT EXISTS permissions (
     id          TEXT PRIMARY KEY,                              -- 'users.read', 'collections.write'
     name        TEXT NOT NULL,
     description TEXT,
@@ -39,21 +39,21 @@ CREATE TABLE permissions (
 );
 
 -- Role-Permission mapping
-CREATE TABLE role_permissions (
+CREATE TABLE IF NOT EXISTS role_permissions (
     role_id       TEXT NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
     permission_id TEXT NOT NULL REFERENCES permissions(id) ON DELETE CASCADE,
     PRIMARY KEY (role_id, permission_id)
 );
 
 -- User-Role mapping
-CREATE TABLE user_roles (
+CREATE TABLE IF NOT EXISTS user_roles (
     user_id  TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     role_id  TEXT NOT NULL REFERENCES roles(id) ON DELETE CASCADE,
     PRIMARY KEY (user_id, role_id)
 );
 
 -- Refresh tokens
-CREATE TABLE refresh_tokens (
+CREATE TABLE IF NOT EXISTS refresh_tokens (
     id          TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
     user_id     TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     token_hash  TEXT NOT NULL UNIQUE,                          -- bcrypt hash of the refresh token
@@ -62,11 +62,11 @@ CREATE TABLE refresh_tokens (
     revoked_at  TIMESTAMPTZ                                    -- NULL = active
 );
 
-CREATE INDEX idx_refresh_tokens_user ON refresh_tokens(user_id);
-CREATE INDEX idx_refresh_tokens_hash ON refresh_tokens(token_hash);
+CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user ON refresh_tokens(user_id);
+CREATE INDEX IF NOT EXISTS idx_refresh_tokens_hash ON refresh_tokens(token_hash);
 
 -- Audit log (immutable)
-CREATE TABLE audit_log (
+CREATE TABLE IF NOT EXISTS audit_log (
     id          TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
     user_id     TEXT REFERENCES users(id),                     -- NULL for system events
     action      TEXT NOT NULL,                                 -- 'user.login', 'collection.create', etc.
@@ -77,16 +77,17 @@ CREATE TABLE audit_log (
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX idx_audit_log_user ON audit_log(user_id);
-CREATE INDEX idx_audit_log_action ON audit_log(action);
-CREATE INDEX idx_audit_log_created ON audit_log(created_at);
+CREATE INDEX IF NOT EXISTS idx_audit_log_user ON audit_log(user_id);
+CREATE INDEX IF NOT EXISTS idx_audit_log_action ON audit_log(action);
+CREATE INDEX IF NOT EXISTS idx_audit_log_created ON audit_log(created_at);
 
 -- Seed system roles
 INSERT INTO roles (id, name, description, is_system) VALUES
     ('role-admin',   'admin',   'Full access to all tenant features',  true),
     ('role-manager', 'manager', 'Manage users and content',            true),
     ('role-user',    'user',    'Standard user access',                true),
-    ('role-viewer',  'viewer',  'Read-only access',                    true);
+    ('role-viewer',  'viewer',  'Read-only access',                    true)
+ON CONFLICT (id) DO NOTHING;
 
 -- Seed base permissions
 INSERT INTO permissions (id, name, description, category) VALUES
@@ -103,16 +104,19 @@ INSERT INTO permissions (id, name, description, category) VALUES
     ('docs.read',         'Ver documentos',         'Acceder a gestion documental',          'docs'),
     ('docs.write',        'Gestionar documentos',   'Subir, editar, eliminar documentos',    'docs'),
     ('ingest.write',      'Ingestar documentos',    'Subir documentos al pipeline RAG',      'ingest'),
-    ('audit.read',        'Ver audit log',          'Consultar registro de auditoría',       'audit');
+    ('audit.read',        'Ver audit log',          'Consultar registro de auditoría',       'audit')
+ON CONFLICT (id) DO NOTHING;
 
 -- Assign all permissions to admin
 INSERT INTO role_permissions (role_id, permission_id)
-SELECT 'role-admin', id FROM permissions;
+SELECT 'role-admin', id FROM permissions
+ON CONFLICT DO NOTHING;
 
 -- Manager: everything except config.write, roles.write, audit.read
 INSERT INTO role_permissions (role_id, permission_id)
 SELECT 'role-manager', id FROM permissions
-WHERE id NOT IN ('config.write', 'roles.write', 'audit.read');
+WHERE id NOT IN ('config.write', 'roles.write', 'audit.read')
+ON CONFLICT DO NOTHING;
 
 -- User: read + chat + docs + ingest
 INSERT INTO role_permissions (role_id, permission_id)
@@ -122,11 +126,13 @@ VALUES
     ('role-user', 'chat.write'),
     ('role-user', 'docs.read'),
     ('role-user', 'docs.write'),
-    ('role-user', 'ingest.write');
+    ('role-user', 'ingest.write')
+ON CONFLICT DO NOTHING;
 
 -- Viewer: read-only
 INSERT INTO role_permissions (role_id, permission_id)
 VALUES
     ('role-viewer', 'collections.read'),
     ('role-viewer', 'chat.read'),
-    ('role-viewer', 'docs.read');
+    ('role-viewer', 'docs.read')
+ON CONFLICT DO NOTHING;

@@ -1,7 +1,7 @@
 -- Tenant DB — notification tables (applied on top of auth tables)
 
 -- Notifications
-CREATE TABLE notifications (
+CREATE TABLE IF NOT EXISTS notifications (
     id          TEXT PRIMARY KEY DEFAULT gen_random_uuid()::text,
     user_id     TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     type        TEXT NOT NULL,                                    -- 'chat.new_message', 'auth.login_new_ip', 'ingest.completed', etc.
@@ -14,11 +14,11 @@ CREATE TABLE notifications (
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE INDEX idx_notifications_user ON notifications(user_id, created_at DESC);
-CREATE INDEX idx_notifications_unread ON notifications(user_id) WHERE is_read = false;
+CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_notifications_unread ON notifications(user_id) WHERE is_read = false;
 
 -- User notification preferences
-CREATE TABLE notification_preferences (
+CREATE TABLE IF NOT EXISTS notification_preferences (
     user_id         TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
     email_enabled   BOOLEAN NOT NULL DEFAULT true,
     in_app_enabled  BOOLEAN NOT NULL DEFAULT true,
