@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/lib/theme-provider";
 import { fontVariables, fontClassNames } from "@/lib/fonts";
+import { SearchCommand } from "@/components/search-command";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -31,7 +32,10 @@ export default function RootLayout({
         {/* Hidden preloader — forces browser to download all font files upfront */}
         <div aria-hidden="true" className={`${fontClassNames} absolute opacity-0 pointer-events-none h-0 overflow-hidden`}>.</div>
         <ThemeProvider>
-          <TooltipProvider>{children}</TooltipProvider>
+          <TooltipProvider>
+            <SearchCommand />
+            {children}
+          </TooltipProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -34,7 +34,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -45,7 +44,6 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
   SidebarHeader,
-  SidebarInput,
   SidebarInset,
   SidebarMenu,
   SidebarMenuButton,
@@ -60,6 +58,7 @@ import {
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
 import { DarkModeToggle } from "@/components/dark-mode-toggle";
+import { useSearchCommand } from "@/components/search-command";
 
 const routeLabels: Record<string, string> = {
   "/dashboard": "Dashboard",
@@ -67,6 +66,7 @@ const routeLabels: Record<string, string> = {
   "/notifications": "Notificaciones",
   "/settings": "Mi cuenta",
   "/system-settings": "Configuración",
+  "/fleet": "Flota",
 };
 
 // Base nav item - used by simple sidebars
@@ -177,19 +177,23 @@ const SidebarLogo = ({ logo }: { logo: SidebarData["logo"] }) => {
   );
 };
 
-const SearchForm = () => {
+const SearchButton = () => {
+  const { open } = useSearchCommand();
   return (
-    <form>
-      <SidebarGroup className="py-0">
-        <SidebarGroupContent className="relative">
-          <Label htmlFor="search" className="sr-only">
-            Search
-          </Label>
-          <SidebarInput id="search" placeholder="Buscar..." className="pl-8" />
-          <Search className="pointer-events-none absolute top-1/2 left-2 size-4 -translate-y-1/2 opacity-50 select-none" />
-        </SidebarGroupContent>
-      </SidebarGroup>
-    </form>
+    <SidebarGroup className="py-0">
+      <SidebarGroupContent className="relative">
+        <button
+          onClick={open}
+          className="flex w-full items-center gap-2 rounded-md border bg-background px-3 py-2 text-sm text-muted-foreground hover:bg-muted transition-colors"
+        >
+          <Search className="size-4 opacity-50" />
+          <span className="flex-1 text-left">Buscar...</span>
+          <kbd className="hidden sm:inline-flex h-5 items-center gap-0.5 rounded border bg-muted px-1.5 text-[10px] font-medium text-muted-foreground">
+            ⌘K
+          </kbd>
+        </button>
+      </SidebarGroupContent>
+    </SidebarGroup>
   );
 };
 
@@ -311,7 +315,7 @@ const AppSidebar = ({ ...props }: React.ComponentProps<typeof Sidebar>) => {
     <Sidebar {...props}>
       <SidebarHeader>
         <SidebarLogo logo={sidebarData.logo} />
-        <SearchForm />
+        <SearchButton />
       </SidebarHeader>
       <SidebarContent className="overflow-hidden">
         <ScrollArea className="min-h-0 flex-1">
