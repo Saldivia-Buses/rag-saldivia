@@ -1,45 +1,100 @@
 # Traefik dynamic config for local development.
-# Routes *.localhost subdomains to Go services running on the host.
+# Routes API paths to Go services running on the host (go run ./cmd/...).
 #
-# In dev, Go services run directly on the host machine (go run ./cmd/...),
-# so Traefik routes to host.docker.internal (the host from inside Docker).
+# Services run on the host machine, Traefik runs in Docker.
+# host.docker.internal resolves to the host from inside Docker.
 #
-# Example: dev-tenant.localhost:80 → auth service on host:8001
+# In dev, tenant slug is injected via middleware header.
+# In production, Traefik extracts it from the subdomain.
+#
+# Ports:
+#   auth:8001  ws:8002  chat:8003  rag:8004
+#   notification:8005  platform:8006  ingest:8007
 
 http:
   routers:
-    # Auth service — handles login, token refresh
-    auth-router:
+    # Auth — login, token refresh (no tenant context needed)
+    auth:
       rule: "PathPrefix(`/v1/auth`)"
-      service: auth-service
-      entryPoints:
-        - web
+      service: auth
+      entryPoints: [web]
 
-    # API catch-all — routes to appropriate service based on path
-    # In production, Traefik extracts tenant from subdomain.
-    # In dev, tenant is hardcoded to "dev" via header.
-    api-router:
-      rule: "PathPrefix(`/v1/`)"
-      service: api-gateway
-      entryPoints:
-        - web
-      middlewares:
-        - dev-tenant-header
+    # WebSocket — real-time channel
+    ws:
+      rule: "PathPrefix(`/ws`)"
+      service: ws
+      entryPoints: [web]
+      middlewares: [dev-tenant]
+
+    # Chat — sessions + messages
+    chat:
+      rule: "PathPrefix(`/v1/chat`)"
+      service: chat
+      entryPoints: [web]
+      middlewares: [dev-tenant]
+
+    # RAG — generate + collections
+    rag:
+      rule: "PathPrefix(`/v1/rag`)"
+      service: rag
+      entryPoints: [web]
+      middlewares: [dev-tenant]
+
+    # Notifications — in-app + preferences
+    notifications:
+      rule: "PathPrefix(`/v1/notifications`)"
+      service: notification
+      entryPoints: [web]
+      middlewares: [dev-tenant]
+
+    # Platform — admin-only tenant/module/config management
+    platform:
+      rule: "PathPrefix(`/v1/platform`)"
+      service: platform
+      entryPoints: [web]
+
+    # Ingest — document upload + job tracking
+    ingest:
+      rule: "PathPrefix(`/v1/ingest`)"
+      service: ingest
+      entryPoints: [web]
+      middlewares: [dev-tenant]
 
   services:
-    auth-service:
+    auth:
       loadBalancer:
         servers:
           - url: "http://host.docker.internal:8001"
-
-    api-gateway:
+    ws:
       loadBalancer:
         servers:
           - url: "http://host.docker.internal:8002"
+    chat:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:8003"
+    rag:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:8004"
+    notification:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:8005"
+    platform:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:8006"
+    ingest:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:8007"
 
   middlewares:
-    # In dev, inject X-Tenant-ID header for all requests
-    dev-tenant-header:
+    # In dev, inject tenant headers for all tenant-scoped routes.
+    # In production, Traefik extracts these from the subdomain.
+    dev-tenant:
       headers:
         customRequestHeaders:
-          X-Tenant-ID: "dev"
+          X-Tenant-ID: "dev-tenant-id"
+          X-Tenant-Slug: "dev"

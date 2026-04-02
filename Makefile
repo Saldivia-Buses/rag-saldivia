@@ -23,11 +23,14 @@ help: ## Show this help
 
 # ── Development ──────────────────────────────────────────────────────────
 
-dev: ## Start all services in dev mode (Docker Compose)
-	docker compose -f $(DEPLOY_DIR)/docker-compose.dev.yml up --build
+dev: ## Start infra only (run Go services on host)
+	docker compose -f $(DEPLOY_DIR)/docker-compose.dev.yml up
+
+dev-full: ## Start infra + all Go services in Docker
+	docker compose -f $(DEPLOY_DIR)/docker-compose.dev.yml --profile full up --build
 
 stop: ## Stop all services
-	docker compose -f $(DEPLOY_DIR)/docker-compose.dev.yml down
+	docker compose -f $(DEPLOY_DIR)/docker-compose.dev.yml --profile full down
 
 # ── Build ────────────────────────────────────────────────────────────────
 
