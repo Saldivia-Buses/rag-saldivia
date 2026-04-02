@@ -13,20 +13,9 @@
 - [ ] `ci` — Cambios en CI/CD
 - [ ] `perf` — Mejora de performance
 
-## Entrada en CHANGELOG
-
-> ⚠️ **Requerido.** El CI bloquea PRs sin entrada en CHANGELOG.md.
-> Agregá una línea en la sección `[Unreleased]` del archivo `CHANGELOG.md`.
-
-Categoría: `Added` / `Changed` / `Fixed` / `Removed` / `Security`
-
-```
-- Descripción del cambio para el usuario final — YYYY-MM-DD
-```
-
 ## Testing
 
-- [ ] Los tests existentes siguen pasando
+- [ ] Los tests existentes siguen pasando (`make test`)
 - [ ] Agregué tests para la funcionalidad nueva (si aplica)
 - [ ] Probé manualmente en desarrollo local
 
@@ -34,7 +23,6 @@ Categoría: `Added` / `Changed` / `Fixed` / `Removed` / `Security`
 
 - [ ] El código sigue las convenciones del proyecto
 - [ ] Los commits siguen Conventional Commits (`type(scope): description`)
-- [ ] CHANGELOG.md actualizado con este cambio
 - [ ] No hay secrets ni credenciales hardcodeadas
 
 ## Notas para el reviewer

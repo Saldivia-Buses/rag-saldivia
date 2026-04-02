@@ -64,7 +64,6 @@ tools/            CLI (sda) + MCP Server
 deploy/           Docker Compose, Traefik, deploy scripts
 config/           NVIDIA Blueprint configs
 docs/             Documentation, ADRs, plans
-_archive/         1.0.x code (reference)
 ```
 
 ## Docs

@@ -2,9 +2,9 @@ name: CI
 
 on:
   pull_request:
-    branches: [main, dev]
+    branches: [experimental/ultra-optimize]
   push:
-    branches: [dev]
+    branches: [experimental/ultra-optimize]
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -37,361 +37,69 @@ jobs:
       - name: Validate PR commits
         run: npx commitlint --from ${{ github.event.pull_request.base.sha }} --to ${{ github.event.pull_request.head.sha }} --verbose
 
-  # ── Check CHANGELOG ───────────────────────────────────────────────────────
-  changelog:
-    name: Check CHANGELOG entry
+  # ── Go Build ──────────────────────────────────────────────────────────────
+  go-build:
+    name: Build Go services
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Verify CHANGELOG updated
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.work
+          cache-dependency-path: "**/go.sum"
+
+      - name: Build all services
         run: |
-          CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...HEAD | grep "CHANGELOG.md" || true)
-          if [ -z "$CHANGED" ]; then
-            echo "::error::Este PR no actualiza CHANGELOG.md."
-            echo "::error::Agregá una entrada en la sección [Unreleased] antes de mergear."
-            echo "::error::Ver formato en: https://keepachangelog.com/es/1.1.0/"
-            exit 1
-          fi
-          echo "CHANGELOG.md actualizado ✓"
+          for svc in services/*/; do
+            echo "::group::Building ${svc}"
+            go build "./${svc}cmd/"
+            echo "::endgroup::"
+          done
 
-  # ── Type Check ────────────────────────────────────────────────────────────
-  type-check:
-    name: TypeScript type check
+  # ── Go Vet ────────────────────────────────────────────────────────────────
+  go-vet:
+    name: Vet Go code
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - uses: oven-sh/setup-bun@v2
+      - uses: actions/setup-go@v5
         with:
-          bun-version: latest
+          go-version-file: go.work
+          cache-dependency-path: "**/go.sum"
 
-      - uses: actions/cache@v4
-        with:
-          path: ~/.bun/install/cache
-          key: bun-${{ hashFiles('**/bun.lockb') }}
-          restore-keys: bun-
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Type check (apps/web)
-        if: hashFiles('apps/web/package.json') != ''
-        run: bun run --filter=./apps/web type-check
-
-      - name: Type check (apps/cli)
-        if: hashFiles('apps/cli/package.json') != ''
-        run: bun run --filter=./apps/cli type-check
-
-      - name: Type check (packages/*)
-        if: hashFiles('packages/shared/package.json') != ''
-        run: bun run --filter='./packages/*' type-check
-
-      - name: Skip (monorepo en construcción)
-        if: hashFiles('apps/web/package.json') == ''
-        run: echo "apps/web no existe aún — type-check pendiente (Fase 2)"
-
-  # ── Tests de lógica ───────────────────────────────────────────────────────
-  test-logic:
-    name: Tests (lógica)
-    runs-on: ubuntu-latest
-    services:
-      redis:
-        image: redis:alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 5s
-          --health-timeout 3s
-          --health-retries 5
-    env:
-      REDIS_URL: redis://localhost:6379
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - uses: actions/cache@v4
-        with:
-          path: ~/.bun/install/cache
-          key: bun-${{ hashFiles('**/bun.lockb') }}
-          restore-keys: bun-
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-
-      # En PRs: solo testear packages afectados por los cambios del PR
-      - name: Run tests (affected — PR)
-        if: |
-          hashFiles('apps/web/package.json') != '' &&
-          github.event_name == 'pull_request'
-        run: bunx turbo run test --affected --filter="...[HEAD^1]"
-
-      # En push a dev: suite completa siempre
-      - name: Run tests (full — push)
-        if: |
-          hashFiles('apps/web/package.json') != '' &&
-          github.event_name != 'pull_request'
-        run: bun run test
-
-      - name: Verify line coverage threshold (packages/db ≥80%)
-        if: hashFiles('packages/db/package.json') != ''
-        working-directory: packages/db
+      - name: Vet all modules
         run: |
-          set -e
-          LINE_COV=$(bun test src/__tests__ --coverage 2>&1 | grep "All files" | grep -oE '[0-9]+\.[0-9]+' | tail -1)
-          echo "packages/db line coverage: ${LINE_COV}%"
-          awk -v c="$LINE_COV" 'BEGIN { if (c+0 < 80) { print "::error::Coverage " c "% is below threshold of 80%"; exit 1 } }'
+          for svc in services/*/; do
+            echo "::group::Vetting ${svc}"
+            go vet "./${svc}..."
+            echo "::endgroup::"
+          done
+          echo "::group::Vetting pkg/"
+          go vet ./pkg/...
+          echo "::endgroup::"
 
-      - name: Verify line coverage threshold (apps/web/src/lib ≥40%)
-        if: hashFiles('apps/web/package.json') != ''
-        working-directory: apps/web
+  # ── Go Test ───────────────────────────────────────────────────────────────
+  go-test:
+    name: Test Go services
+    runs-on: ubuntu-latest
+    needs: [go-build]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.work
+          cache-dependency-path: "**/go.sum"
+
+      - name: Test all modules
         run: |
-          set -e
-          mkdir -p data
-          LINE_COV=$(bun test src/lib --coverage 2>&1 | grep "All files" | grep -oE '[0-9]+\.[0-9]+' | tail -1)
-          echo "apps/web/src/lib line coverage: ${LINE_COV}% (threshold ≥40%; Plan 12 — incluye dependencias transitivas en el reporte)"
-          awk -v c="$LINE_COV" 'BEGIN { if (c+0 < 40) { print "::error::Coverage " c "% is below threshold of 40%"; exit 1 } }'
-        env:
-          REDIS_URL: redis://localhost:6379
-          JWT_SECRET: ci-test-secret
-          DATABASE_PATH: ./data/test-coverage.db
-
-      - name: Skip (monorepo en construcción)
-        if: hashFiles('apps/web/package.json') == ''
-        run: echo "apps/web no existe aún — tests del monorepo pendientes"
-
-  # ── Coverage (solo en PRs) ────────────────────────────────────────────────
-  coverage:
-    name: Coverage ≥ 80%
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - uses: actions/cache@v4
-        with:
-          path: ~/.bun/install/cache
-          key: bun-${{ hashFiles('**/bun.lockb') }}
-          restore-keys: bun-
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Run tests with coverage
-        run: bun run test:coverage
-
-  # ── Lint ──────────────────────────────────────────────────────────────────
-  lint:
-    name: ESLint + Biome
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - uses: actions/cache@v4
-        with:
-          path: ~/.bun/install/cache
-          key: bun-${{ hashFiles('**/bun.lockb') }}
-          restore-keys: bun-
-
-      - name: Install dependencies
-        run: bun install --frozen-lockfile
-
-      - name: Lint (apps/web)
-        if: hashFiles('apps/web/package.json') != ''
-        run: bun run --filter=./apps/web lint
-
-      - name: Skip (monorepo en construcción)
-        if: hashFiles('apps/web/package.json') == ''
-        run: echo "apps/web no existe aún — lint pendiente (Fase 2)"
-
-  # ── Component tests ───────────────────────────────────────────────────────
-  test-components:
-    name: Component Tests
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: .
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - uses: actions/cache@v4
-        with:
-          path: ~/.bun/install/cache
-          key: bun-${{ hashFiles('**/bun.lockb') }}
-          restore-keys: bun-
-
-      - run: bun install --frozen-lockfile
-
-      - name: Run component tests
-        run: bun test --preload ./apps/web/src/lib/component-test-setup.ts apps/web/src/components
-        working-directory: .
-
-  # ── Visual regression — requiere test-logic en verde ─────────────────────
-  visual-regression:
-    name: Visual Regression
-    runs-on: ubuntu-latest
-    needs: [test-logic]
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - uses: actions/cache@v4
-        with:
-          path: ~/.bun/install/cache
-          key: bun-${{ hashFiles('**/bun.lockb') }}
-          restore-keys: bun-
-
-      - run: bun install --frozen-lockfile
-
-      - name: Install Playwright Chromium
-        run: bunx playwright install --with-deps chromium
-        working-directory: apps/web
-
-      - name: Build Storybook
-        run: bun run build:storybook
-        working-directory: apps/web
-
-      - name: Serve Storybook y esperar
-        run: |
-          bunx serve apps/web/storybook-static -p 6006 &
-          bunx wait-on http://localhost:6006 --timeout 60000
-
-      - name: Run visual regression
-        run: bun run test:visual
-        working-directory: apps/web
-
-      - uses: actions/upload-artifact@v4
-        if: failure()
-        with:
-          name: visual-diff-${{ github.run_id }}
-          path: apps/web/tests/visual/snapshots/
-          retention-days: 7
-
-  # ── A11y audit — requiere test-logic en verde ─────────────────────────────
-  accessibility:
-    name: Accessibility Audit
-    runs-on: ubuntu-latest
-    needs: [test-logic]
-    services:
-      redis:
-        image: redis:alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 5s
-          --health-timeout 3s
-          --health-retries 5
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - uses: actions/cache@v4
-        with:
-          path: ~/.bun/install/cache
-          key: bun-${{ hashFiles('**/bun.lockb') }}
-          restore-keys: bun-
-
-      - run: bun install --frozen-lockfile
-
-      - name: Install Playwright Chromium
-        run: bunx playwright install --with-deps chromium
-        working-directory: apps/web
-
-      - name: Prepare database (SQLite + seed)
-        env:
-          DATABASE_PATH: ${{ github.workspace }}/apps/web/data/test.db
-        run: |
-          mkdir -p apps/web/data
-          bun run db:migrate
-          bun run db:seed
-
-      - name: Run a11y audit
-        run: bun run test:a11y
-        working-directory: apps/web
-        env:
-          REDIS_URL: redis://localhost:6379
-          DATABASE_PATH: ./data/test.db
-          JWT_SECRET: test-secret-ci
-          SYSTEM_API_KEY: test-api-key-ci
-          MOCK_RAG: "true"
-          NEXT_PUBLIC_DISABLE_REACT_SCAN: "true"
-
-  # ── E2E Playwright — Redis + app ─────────────────────────────────────────
-  e2e:
-    name: E2E Tests
-    runs-on: ubuntu-latest
-    needs: [test-logic]
-    services:
-      redis:
-        image: redis:alpine
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd "redis-cli ping"
-          --health-interval 5s
-          --health-timeout 3s
-          --health-retries 5
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: oven-sh/setup-bun@v2
-        with:
-          bun-version: latest
-
-      - uses: actions/cache@v4
-        with:
-          path: ~/.bun/install/cache
-          key: bun-${{ hashFiles('**/bun.lockb') }}
-          restore-keys: bun-
-
-      - run: bun install --frozen-lockfile
-
-      - name: Install Playwright browsers
-        run: bunx playwright install --with-deps chromium
-        working-directory: apps/web
-
-      - name: Prepare database (SQLite + seed)
-        env:
-          DATABASE_PATH: ${{ github.workspace }}/apps/web/data/test.db
-        run: |
-          mkdir -p apps/web/data
-          bun run db:migrate
-          bun run db:seed
-
-      - name: Run E2E tests
-        run: bun run test:e2e
-        working-directory: apps/web
-        env:
-          REDIS_URL: redis://localhost:6379
-          JWT_SECRET: test-secret-for-ci-only
-          MOCK_RAG: "true"
-          DATABASE_PATH: ./data/test.db
-          NODE_ENV: test
-          NEXT_PUBLIC_DISABLE_REACT_SCAN: "true"
-          SYSTEM_API_KEY: test-api-key-ci
+          for svc in services/*/; do
+            echo "::group::Testing ${svc}"
+            go test -race -count=1 "./${svc}..."
+            echo "::endgroup::"
+          done
+          echo "::group::Testing pkg/"
+          go test -race -count=1 ./pkg/...
+          echo "::endgroup::"

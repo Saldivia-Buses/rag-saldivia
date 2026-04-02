@@ -22,8 +22,7 @@ data/
 logs/
 *.log
 
-# Código archivado / legacy
-_archive/
+# Legacy
 legacy/
 
 # Archivos de entorno

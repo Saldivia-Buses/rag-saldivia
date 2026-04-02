@@ -1,5 +1,0 @@
-export * from "./core"
-export * from "./chat"
-export * from "./events"
-export * from "./messaging"
-export * from "./relations"
