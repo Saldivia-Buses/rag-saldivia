@@ -2,6 +2,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"log/slog"
@@ -12,13 +13,18 @@ import (
 	"github.com/Camionerou/rag-saldivia/services/auth/internal/service"
 )
 
+// AuthService defines the operations the handler needs from the service layer.
+type AuthService interface {
+	Login(ctx context.Context, req service.LoginRequest) (*service.TokenPair, error)
+}
+
 // Auth handles HTTP requests for authentication.
 type Auth struct {
-	authSvc *service.Auth
+	authSvc AuthService
 }
 
 // NewAuth creates auth HTTP handlers.
-func NewAuth(authSvc *service.Auth) *Auth {
+func NewAuth(authSvc AuthService) *Auth {
 	return &Auth{authSvc: authSvc}
 }
 
