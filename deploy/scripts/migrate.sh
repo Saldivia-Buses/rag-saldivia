@@ -33,7 +33,7 @@ run_sql() {
     local name
     name=$(basename "$(dirname "$(dirname "$(dirname "$file")")")")
     log "applying $name/$(basename "$file") → $(echo "$db_url" | sed 's|.*@||; s|?.*||')"
-    psql "$db_url" -f "$file" -v ON_ERROR_STOP=1 --quiet 2>&1 | grep -v "^$" || true
+    psql "$db_url" -f "$file" -v ON_ERROR_STOP=1 --quiet
 }
 
 # ── Platform DB ──────────────────────────────────────────────────────────

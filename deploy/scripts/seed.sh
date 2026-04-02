@@ -14,6 +14,7 @@ log() { echo "[seed] $1"; }
 
 # ── Platform DB — register the dev tenant ────────────────────────────────
 log "seeding platform db..."
+# DEV ONLY — production must use secrets manager for connection strings
 psql "$PLATFORM_DB_URL" -v ON_ERROR_STOP=1 --quiet <<'SQL'
 -- Dev tenant (matches docker-compose dev config)
 INSERT INTO tenants (id, slug, name, plan_id, postgres_url, redis_url, settings)
@@ -46,18 +47,21 @@ SQL
 log "seeding tenant db..."
 
 # Password: "admin123" — bcrypt hash (cost 12)
+# Passed via psql -v to avoid shell expansion of $ in bcrypt hashes
 ADMIN_HASH='$2b$12$EC4HSJuWfO8E52aGBICWbuy/g3HSEMk2L2ml6N7DNfWUriOm0XTV.'
 USER_HASH='$2b$12$EC4HSJuWfO8E52aGBICWbuy/g3HSEMk2L2ml6N7DNfWUriOm0XTV.'
 
-psql "$TENANT_DB_URL" -v ON_ERROR_STOP=1 --quiet <<SQL
+psql "$TENANT_DB_URL" -v ON_ERROR_STOP=1 --quiet \
+    -v admin_hash="$ADMIN_HASH" \
+    -v user_hash="$USER_HASH" <<'SQL'
 -- Admin user (Enzo)
 INSERT INTO users (id, email, name, password_hash)
-VALUES ('u-admin', 'admin@sda.local', 'Enzo Saldivia', '$ADMIN_HASH')
+VALUES ('u-admin', 'admin@sda.local', 'Enzo Saldivia', :'admin_hash')
 ON CONFLICT (email) DO NOTHING;
 
 -- Regular user
 INSERT INTO users (id, email, name, password_hash)
-VALUES ('u-user', 'user@sda.local', 'Usuario Test', '$USER_HASH')
+VALUES ('u-user', 'user@sda.local', 'Usuario Test', :'user_hash')
 ON CONFLICT (email) DO NOTHING;
 
 -- Assign roles
