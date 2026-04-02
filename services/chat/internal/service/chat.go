@@ -3,8 +3,10 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -38,14 +40,21 @@ type Message struct {
 	CreatedAt time.Time       `json:"created_at"`
 }
 
+// EventPublisher can publish notification events. Optional.
+type EventPublisher interface {
+	Notify(tenantSlug string, evt any) error
+}
+
 // Chat handles chat operations for a single tenant.
 type Chat struct {
-	db *pgxpool.Pool
+	db         *pgxpool.Pool
+	events     EventPublisher
+	tenantSlug string
 }
 
 // NewChat creates a chat service.
-func NewChat(db *pgxpool.Pool) *Chat {
-	return &Chat{db: db}
+func NewChat(db *pgxpool.Pool, tenantSlug string, events EventPublisher) *Chat {
+	return &Chat{db: db, tenantSlug: tenantSlug, events: events}
 }
 
 // CreateSession creates a new chat session.
@@ -142,7 +151,7 @@ func (c *Chat) RenameSession(ctx context.Context, sessionID, userID, title strin
 }
 
 // AddMessage adds a message to a session.
-func (c *Chat) AddMessage(ctx context.Context, sessionID, role, content string, sources, metadata []byte) (*Message, error) {
+func (c *Chat) AddMessage(ctx context.Context, sessionID, userID, role, content string, sources, metadata []byte) (*Message, error) {
 	var m Message
 	err := c.db.QueryRow(ctx,
 		`INSERT INTO messages (session_id, role, content, sources, metadata)
@@ -157,7 +166,31 @@ func (c *Chat) AddMessage(ctx context.Context, sessionID, role, content string, 
 	// Touch session updated_at
 	c.db.Exec(ctx, `UPDATE sessions SET updated_at = now() WHERE id = $1`, sessionID)
 
+	// Publish notification event for user messages only (not assistant/system)
+	if c.events != nil && c.tenantSlug != "" && role == "user" {
+		data, _ := json.Marshal(map[string]string{"session_id": sessionID, "message_id": m.ID})
+		err := c.events.Notify(c.tenantSlug, map[string]any{
+			"user_id": userID,
+			"type":    "chat.new_message",
+			"title":   "Nuevo mensaje",
+			"body":    truncate(content, 100),
+			"channel": "in_app",
+			"data":    json.RawMessage(data),
+		})
+		if err != nil {
+			slog.Warn("failed to publish chat event", "error", err)
+		}
+	}
+
 	return &m, nil
+}
+
+func truncate(s string, maxLen int) string {
+	runes := []rune(s)
+	if len(runes) <= maxLen {
+		return s
+	}
+	return string(runes[:maxLen]) + "..."
 }
 
 // GetMessages returns all messages for a session, oldest first.

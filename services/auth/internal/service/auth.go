@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -33,10 +34,16 @@ const (
 // Prevents enumeration via response timing differences.
 var dummyHash, _ = bcrypt.GenerateFromPassword([]byte("dummy-password-for-timing"), bcryptCost)
 
+// EventPublisher can publish notification events. Optional — if nil, no events are published.
+type EventPublisher interface {
+	Notify(tenantSlug string, evt any) error
+}
+
 // Auth handles authentication operations for a single tenant.
 type Auth struct {
 	db     *pgxpool.Pool
 	jwtCfg sdajwt.Config
+	events EventPublisher
 	tenant struct {
 		ID   string
 		Slug string
@@ -44,8 +51,8 @@ type Auth struct {
 }
 
 // NewAuth creates an auth service for a specific tenant.
-func NewAuth(db *pgxpool.Pool, jwtCfg sdajwt.Config, tenantID, tenantSlug string) *Auth {
-	a := &Auth{db: db, jwtCfg: jwtCfg}
+func NewAuth(db *pgxpool.Pool, jwtCfg sdajwt.Config, tenantID, tenantSlug string, events EventPublisher) *Auth {
+	a := &Auth{db: db, jwtCfg: jwtCfg, events: events}
 	a.tenant.ID = tenantID
 	a.tenant.Slug = tenantSlug
 	return a
@@ -169,6 +176,11 @@ func (a *Auth) Login(ctx context.Context, req LoginRequest) (*TokenPair, error) 
 	// Audit log
 	a.audit(ctx, userID, "user.login", email, req.IP, req.UserAgent)
 
+	// Publish login event for notifications
+	a.publishEvent("auth.login_success", userID, name, email, map[string]string{
+		"ip": req.IP,
+	})
+
 	return &TokenPair{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
@@ -232,6 +244,36 @@ func (a *Auth) getPrimaryRole(ctx context.Context, userID string) (string, error
 		return "", fmt.Errorf("query role for user %s: %w", userID, err)
 	}
 	return role, nil
+}
+
+func (a *Auth) publishEvent(eventType, userID, name, email string, extra map[string]string) {
+	if a.events == nil {
+		return
+	}
+
+	data, _ := json.Marshal(extra)
+	err := a.events.Notify(a.tenant.Slug, map[string]any{
+		"user_id": userID,
+		"type":    eventType,
+		"title":   formatEventTitle(eventType, name),
+		"body":    "",
+		"channel": "in_app",
+		"data":    json.RawMessage(data),
+	})
+	if err != nil {
+		slog.Warn("failed to publish auth event", "error", err, "type", eventType)
+	}
+}
+
+func formatEventTitle(eventType, name string) string {
+	switch eventType {
+	case "auth.login_success":
+		return name + " inicio sesion"
+	case "auth.account_locked":
+		return "Cuenta bloqueada: " + name
+	default:
+		return eventType
+	}
 }
 
 func (a *Auth) audit(ctx context.Context, userID, action, resource, ip, ua string) {

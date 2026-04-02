@@ -12,7 +12,9 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/nats-io/nats.go"
 
+	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
 	"github.com/Camionerou/rag-saldivia/services/chat/internal/handler"
 	"github.com/Camionerou/rag-saldivia/services/chat/internal/service"
 )
@@ -23,6 +25,8 @@ func main() {
 
 	port := env("CHAT_PORT", "8003")
 	dbURL := env("POSTGRES_TENANT_URL", "")
+	tenantSlug := env("TENANT_SLUG", "dev")
+	natsURL := env("NATS_URL", nats.DefaultURL)
 
 	if dbURL == "" {
 		slog.Error("POSTGRES_TENANT_URL is required")
@@ -39,7 +43,27 @@ func main() {
 	}
 	defer pool.Close()
 
-	chatSvc := service.NewChat(pool)
+	// NATS (best-effort — retries in background, events fail gracefully)
+	nc, err := nats.Connect(natsURL,
+		nats.RetryOnFailedConnect(true),
+		nats.MaxReconnects(-1),
+		nats.ReconnectWait(2*time.Second),
+		nats.DisconnectErrHandler(func(_ *nats.Conn, err error) {
+			slog.Warn("NATS disconnected", "error", err)
+		}),
+		nats.ReconnectHandler(func(_ *nats.Conn) {
+			slog.Info("NATS reconnected")
+		}),
+	)
+	if err != nil {
+		slog.Error("failed to connect to NATS", "error", err)
+		os.Exit(1)
+	}
+	defer nc.Close()
+	publisher := natspub.New(nc)
+	slog.Info("connected to NATS", "url", natsURL)
+
+	chatSvc := service.NewChat(pool, tenantSlug, publisher)
 	chatHandler := handler.NewChat(chatSvc)
 
 	r := chi.NewRouter()
