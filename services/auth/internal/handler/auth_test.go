@@ -15,11 +15,13 @@ import (
 // --- mock ---
 
 type mockAuthService struct {
-	tokens *service.TokenPair
-	err    error
+	tokens     *service.TokenPair
+	err        error
+	lastReq    service.LoginRequest
 }
 
 func (m *mockAuthService) Login(_ context.Context, req service.LoginRequest) (*service.TokenPair, error) {
+	m.lastReq = req
 	if m.err != nil {
 		return nil, m.err
 	}
@@ -160,6 +162,35 @@ func TestLogin_InternalError_Returns500_Generic(t *testing.T) {
 	json.NewDecoder(rec.Body).Decode(&resp)
 	if resp.Error != "internal error" {
 		t.Errorf("expected generic error, got %q — internals may be leaking", resp.Error)
+	}
+}
+
+func TestLogin_PropagatesIPAndUserAgent(t *testing.T) {
+	mock := &mockAuthService{
+		tokens: &service.TokenPair{AccessToken: "t", RefreshToken: "r", ExpiresIn: 900},
+	}
+	h := NewAuth(mock)
+
+	body := `{"email":"user@test.com","password":"pass"}`
+	req := httptest.NewRequest(http.MethodPost, "/v1/auth/login", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	req.RemoteAddr = "192.168.1.100:54321"
+	req.Header.Set("User-Agent", "SDA-Client/1.0")
+	rec := httptest.NewRecorder()
+
+	h.Login(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", rec.Code)
+	}
+	if mock.lastReq.IP != "192.168.1.100:54321" {
+		t.Errorf("expected IP propagated, got %q", mock.lastReq.IP)
+	}
+	if mock.lastReq.UserAgent != "SDA-Client/1.0" {
+		t.Errorf("expected UserAgent propagated, got %q", mock.lastReq.UserAgent)
+	}
+	if mock.lastReq.Email != "user@test.com" {
+		t.Errorf("expected email propagated, got %q", mock.lastReq.Email)
 	}
 }
 

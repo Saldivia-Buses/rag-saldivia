@@ -312,6 +312,143 @@ func TestDisableModule_Integration(t *testing.T) {
 	}
 }
 
+func TestUpdateTenant_Integration(t *testing.T) {
+	pool, cleanup := setupTestDB(t)
+	defer cleanup()
+
+	svc := New(pool)
+	ctx := context.Background()
+
+	tenant, _ := svc.CreateTenant(ctx, db.CreateTenantParams{
+		Slug: "updateme", Name: "Original", PlanID: "starter",
+		PostgresUrl: "pg://x", RedisUrl: "redis://x", Settings: []byte("{}"),
+	})
+
+	err := svc.UpdateTenant(ctx, db.UpdateTenantParams{
+		ID:       tenant.ID,
+		Name:     "Updated Name",
+		PlanID:   "business",
+		Settings: []byte(`{"theme":"dark"}`),
+	})
+	if err != nil {
+		t.Fatalf("update tenant: %v", err)
+	}
+
+	got, _ := svc.GetTenant(ctx, "updateme")
+	if got.Name != "Updated Name" {
+		t.Errorf("expected name 'Updated Name', got %q", got.Name)
+	}
+	if got.PlanID != "business" {
+		t.Errorf("expected plan_id 'business', got %q", got.PlanID)
+	}
+}
+
+func TestDisableTenant_and_EnableTenant_Integration(t *testing.T) {
+	pool, cleanup := setupTestDB(t)
+	defer cleanup()
+
+	svc := New(pool)
+	ctx := context.Background()
+
+	tenant, _ := svc.CreateTenant(ctx, db.CreateTenantParams{
+		Slug: "toggleme", Name: "Toggle", PlanID: "starter",
+		PostgresUrl: "pg://x", RedisUrl: "redis://x", Settings: []byte("{}"),
+	})
+
+	// Disable
+	if err := svc.DisableTenant(ctx, tenant.ID); err != nil {
+		t.Fatalf("disable: %v", err)
+	}
+	// GetTenant filters by enabled=true, so disabled tenant returns ErrTenantNotFound
+	_, err := svc.GetTenant(ctx, "toggleme")
+	if err != ErrTenantNotFound {
+		t.Fatalf("expected ErrTenantNotFound for disabled tenant, got: %v", err)
+	}
+	// Verify directly in DB that enabled=false
+	var enabled bool
+	pool.QueryRow(ctx, `SELECT enabled FROM tenants WHERE id = $1`, tenant.ID).Scan(&enabled)
+	if enabled {
+		t.Error("expected enabled=false in DB after DisableTenant")
+	}
+
+	// Re-enable
+	if err := svc.EnableTenant(ctx, tenant.ID); err != nil {
+		t.Fatalf("enable: %v", err)
+	}
+	got, err := svc.GetTenant(ctx, "toggleme")
+	if err != nil {
+		t.Fatalf("expected tenant visible after re-enable: %v", err)
+	}
+	if !got.Enabled {
+		t.Error("expected tenant enabled after EnableTenant")
+	}
+}
+
+func TestListModules_Integration(t *testing.T) {
+	pool, cleanup := setupTestDB(t)
+	defer cleanup()
+
+	svc := New(pool)
+	modules, err := svc.ListModules(context.Background())
+	if err != nil {
+		t.Fatalf("list modules: %v", err)
+	}
+	// Seed has 3 modules: chat, docs, fleet
+	if len(modules) != 3 {
+		t.Errorf("expected 3 seeded modules, got %d", len(modules))
+	}
+}
+
+func TestToggleFeatureFlag_Integration(t *testing.T) {
+	pool, cleanup := setupTestDB(t)
+	defer cleanup()
+
+	svc := New(pool)
+	ctx := context.Background()
+
+	// Seed a flag
+	pool.Exec(ctx, `INSERT INTO feature_flags (id, name, enabled) VALUES ('ff-1', 'dark_mode', false)`)
+
+	// Toggle on
+	if err := svc.ToggleFeatureFlag(ctx, "ff-1", true); err != nil {
+		t.Fatalf("toggle on: %v", err)
+	}
+
+	flags, _ := svc.ListFeatureFlags(ctx)
+	found := false
+	for _, f := range flags {
+		if f.ID == "ff-1" {
+			found = true
+			if !f.Enabled {
+				t.Error("expected flag enabled after toggle on")
+			}
+		}
+	}
+	if !found {
+		t.Error("flag ff-1 not found in list")
+	}
+
+	// Toggle off
+	svc.ToggleFeatureFlag(ctx, "ff-1", false)
+	flags, _ = svc.ListFeatureFlags(ctx)
+	for _, f := range flags {
+		if f.ID == "ff-1" && f.Enabled {
+			t.Error("expected flag disabled after toggle off")
+		}
+	}
+}
+
+func TestToggleFeatureFlag_NotFound_Integration(t *testing.T) {
+	pool, cleanup := setupTestDB(t)
+	defer cleanup()
+
+	svc := New(pool)
+	err := svc.ToggleFeatureFlag(context.Background(), "nonexistent", true)
+	if err != ErrFlagNotFound {
+		t.Fatalf("expected ErrFlagNotFound, got: %v", err)
+	}
+}
+
 func TestSetConfig_and_GetConfig_Integration(t *testing.T) {
 	pool, cleanup := setupTestDB(t)
 	defer cleanup()

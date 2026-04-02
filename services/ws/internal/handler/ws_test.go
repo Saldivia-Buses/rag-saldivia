@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"net/http/httptest"
 	"testing"
 )
 
@@ -23,6 +24,31 @@ func TestParseOrigins(t *testing.T) {
 				t.Errorf("parseOrigins(%q) = %d origins, want %d", tt.input, len(origins), tt.want)
 			}
 		})
+	}
+}
+
+func TestUpgrade_NoToken_Returns401(t *testing.T) {
+	h := &WS{jwtSecret: "test-secret-at-least-32-chars-long!!"}
+	req := httptest.NewRequest(http.MethodGet, "/ws", nil)
+	rec := httptest.NewRecorder()
+
+	h.Upgrade(rec, req)
+
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401 for missing token, got %d", rec.Code)
+	}
+}
+
+func TestUpgrade_InvalidToken_Returns401(t *testing.T) {
+	h := &WS{jwtSecret: "test-secret-at-least-32-chars-long!!"}
+	req := httptest.NewRequest(http.MethodGet, "/ws", nil)
+	req.Header.Set("Authorization", "Bearer invalid.jwt.token")
+	rec := httptest.NewRecorder()
+
+	h.Upgrade(rec, req)
+
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401 for invalid token, got %d", rec.Code)
 	}
 }
 
