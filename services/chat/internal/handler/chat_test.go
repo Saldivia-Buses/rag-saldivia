@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -131,6 +132,19 @@ func decodeJSON(t *testing.T, rec *httptest.ResponseRecorder, v any) {
 }
 
 // --- tests ---
+
+func TestListSessions_MissingUserID_Returns401(t *testing.T) {
+	r := setupRouter(&mockChatService{})
+
+	req := httptest.NewRequest(http.MethodGet, "/v1/chat/sessions", nil)
+	// No X-User-ID header
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401 for missing user identity, got %d", rec.Code)
+	}
+}
 
 func TestListSessions_ReturnsUserSessions(t *testing.T) {
 	mock := &mockChatService{
@@ -408,6 +422,25 @@ func TestAddMessage_NonOwnerSession_Returns404(t *testing.T) {
 
 	if rec.Code != http.StatusNotFound {
 		t.Fatalf("expected 404 for non-owner adding message, got %d", rec.Code)
+	}
+}
+
+func TestListSessions_ServiceError_Returns500_GenericMessage(t *testing.T) {
+	mock := &mockChatService{err: errors.New("database connection lost")}
+	r := setupRouter(mock)
+
+	req := withUserID(httptest.NewRequest(http.MethodGet, "/v1/chat/sessions", nil), "u-1")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusInternalServerError {
+		t.Fatalf("expected 500, got %d", rec.Code)
+	}
+
+	var resp map[string]string
+	decodeJSON(t, rec, &resp)
+	if resp["error"] != "internal error" {
+		t.Errorf("expected generic error, got %q — service internals may be leaking", resp["error"])
 	}
 }
 

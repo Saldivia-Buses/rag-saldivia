@@ -38,6 +38,7 @@ func NewChat(chatSvc ChatService) *Chat {
 // Routes returns a chi router with all chat routes.
 func (h *Chat) Routes() chi.Router {
 	r := chi.NewRouter()
+	r.Use(requireUserID)
 
 	r.Get("/", h.ListSessions)
 	r.Post("/", h.CreateSession)
@@ -225,6 +226,16 @@ func writeJSON(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	json.NewEncoder(w).Encode(v)
+}
+
+func requireUserID(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Header.Get("X-User-ID") == "" {
+			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "missing user identity"})
+			return
+		}
+		next.ServeHTTP(w, r)
+	})
 }
 
 func serverError(w http.ResponseWriter, r *http.Request, err error) {

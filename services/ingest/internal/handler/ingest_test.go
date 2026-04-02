@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
@@ -301,6 +302,27 @@ func TestDeleteJob_Success(t *testing.T) {
 
 	if rec.Code != http.StatusNoContent {
 		t.Fatalf("expected 204, got %d", rec.Code)
+	}
+}
+
+func TestListJobs_ServiceError_Returns500_GenericMessage(t *testing.T) {
+	mock := &mockIngestService{err: errors.New("database connection lost")}
+	r := setupIngestRouter(mock)
+
+	req := httptest.NewRequest(http.MethodGet, "/v1/ingest/jobs", nil)
+	req.Header.Set("X-User-ID", "u-1")
+	req.Header.Set("X-Tenant-Slug", "saldivia")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusInternalServerError {
+		t.Fatalf("expected 500, got %d", rec.Code)
+	}
+
+	var resp map[string]string
+	json.NewDecoder(rec.Body).Decode(&resp)
+	if resp["error"] != "internal error" {
+		t.Errorf("expected generic error, got %q — service internals may be leaking", resp["error"])
 	}
 }
 
