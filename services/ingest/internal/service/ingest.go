@@ -7,6 +7,8 @@ package service
 
 import (
 	"context"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log/slog"
@@ -20,6 +22,8 @@ import (
 	"github.com/nats-io/nats.go"
 )
 
+var ErrJobNotFound = errors.New("job not found")
+
 // EventPublisher can publish notification events. Optional.
 type EventPublisher interface {
 	Notify(tenantSlug string, evt any) error
@@ -30,6 +34,17 @@ type Config struct {
 	BlueprintURL string        // http://localhost:8081
 	StagingDir   string        // /tmp/ingest-staging
 	Timeout      time.Duration // request timeout for Blueprint uploads
+}
+
+// IngestMessage is published to NATS for the worker to process.
+// Shared between Submit (producer) and Worker (consumer).
+type IngestMessage struct {
+	JobID      string `json:"job_id"`
+	TenantSlug string `json:"tenant_slug"`
+	UserID     string `json:"user_id"`
+	Collection string `json:"collection"`
+	FileName   string `json:"file_name"`
+	StagedPath string `json:"staged_path"`
 }
 
 // Ingest manages document upload and job tracking.
@@ -45,7 +60,9 @@ func New(pool *pgxpool.Pool, nc *nats.Conn, publisher EventPublisher, cfg Config
 	if cfg.StagingDir == "" {
 		cfg.StagingDir = "/tmp/ingest-staging"
 	}
-	os.MkdirAll(cfg.StagingDir, 0750)
+	if err := os.MkdirAll(cfg.StagingDir, 0750); err != nil {
+		slog.Error("failed to create staging directory", "error", err, "path", cfg.StagingDir)
+	}
 
 	return &Ingest{
 		pool:      pool,
@@ -108,13 +125,26 @@ func (s *Ingest) Submit(ctx context.Context, tenantSlug, userID, collection, fil
 		return nil, fmt.Errorf("create ingest job: %w", err)
 	}
 
-	// Publish to NATS for async processing
+	// Publish to NATS for async processing (B3 fix: json.Marshal instead of Sprintf)
 	subject := "tenant." + tenantSlug + ".ingest.process"
-	payload := fmt.Sprintf(`{"job_id":"%s","tenant_slug":"%s","collection":"%s","file_name":"%s","staged_path":"%s"}`,
-		job.ID, tenantSlug, collection, fileName, stagedPath)
+	payload, err := json.Marshal(IngestMessage{
+		JobID:      job.ID,
+		TenantSlug: tenantSlug,
+		UserID:     userID,
+		Collection: collection,
+		FileName:   fileName,
+		StagedPath: stagedPath,
+	})
+	if err != nil {
+		os.Remove(stagedPath)
+		return nil, fmt.Errorf("marshal ingest message: %w", err)
+	}
 
-	if err := s.nc.Publish(subject, []byte(payload)); err != nil {
-		slog.Warn("failed to publish ingest job to NATS, will retry on restart", "error", err, "job_id", job.ID)
+	// S7 fix: fail the upload if NATS publish fails — prevents orphaned pending jobs
+	if err := s.nc.Publish(subject, payload); err != nil {
+		os.Remove(stagedPath)
+		s.pool.Exec(ctx, `DELETE FROM ingest_jobs WHERE id = $1`, job.ID)
+		return nil, fmt.Errorf("publish ingest job: %w", err)
 	}
 
 	return &job, nil
@@ -163,13 +193,13 @@ func (s *Ingest) GetJob(ctx context.Context, jobID, userID string) (*Job, error)
 	).Scan(&j.ID, &j.UserID, &j.Collection, &j.FileName, &j.FileSize,
 		&j.Status, &j.Error, &j.CreatedAt, &j.UpdatedAt)
 	if err == pgx.ErrNoRows {
-		return nil, fmt.Errorf("job not found")
+		return nil, ErrJobNotFound
 	}
 	if err != nil {
 		return nil, fmt.Errorf("get ingest job: %w", err)
 	}
 	if j.UserID != userID {
-		return nil, fmt.Errorf("job not found")
+		return nil, ErrJobNotFound
 	}
 	return &j, nil
 }
@@ -182,7 +212,7 @@ func (s *Ingest) DeleteJob(ctx context.Context, jobID, userID string) error {
 		return fmt.Errorf("delete ingest job: %w", err)
 	}
 	if result.RowsAffected() == 0 {
-		return fmt.Errorf("job not found")
+		return ErrJobNotFound
 	}
 	return nil
 }

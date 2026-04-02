@@ -44,15 +44,8 @@ const (
 	streamName    = "INGEST"
 	durableName   = "ingest-worker"
 	subjectFilter = "tenant.*.ingest.process"
+	maxDeliveries = 3
 )
-
-type ingestMessage struct {
-	JobID      string `json:"job_id"`
-	TenantSlug string `json:"tenant_slug"`
-	Collection string `json:"collection"`
-	FileName   string `json:"file_name"`
-	StagedPath string `json:"staged_path"`
-}
 
 // Start creates a JetStream durable consumer and begins processing.
 func (w *Worker) Start(ctx context.Context) error {
@@ -75,7 +68,7 @@ func (w *Worker) Start(ctx context.Context) error {
 		Durable:       durableName,
 		AckPolicy:     jetstream.AckExplicitPolicy,
 		FilterSubject: subjectFilter,
-		MaxDeliver:    3, // max 3 attempts before giving up
+		MaxDeliver:    maxDeliveries,
 	})
 	if err != nil {
 		return fmt.Errorf("create consumer: %w", err)
@@ -120,7 +113,7 @@ func (w *Worker) consumeLoop() {
 }
 
 func (w *Worker) processJob(msg jetstream.Msg) {
-	var im ingestMessage
+	var im IngestMessage
 	if err := json.Unmarshal(msg.Data(), &im); err != nil {
 		slog.Warn("invalid ingest message", "error", err, "subject", msg.Subject())
 		msg.Term()
@@ -133,6 +126,13 @@ func (w *Worker) processJob(msg jetstream.Msg) {
 		return
 	}
 
+	// S4: validate tenant from NATS subject matches payload
+	if subjectTenant := tenantFromSubject(msg.Subject()); subjectTenant != im.TenantSlug {
+		slog.Warn("tenant mismatch between subject and payload", "subject", subjectTenant, "payload", im.TenantSlug)
+		msg.Term()
+		return
+	}
+
 	ctx := w.ctx
 	slog.Info("processing ingest job", "job_id", im.JobID, "file", im.FileName, "collection", im.Collection)
 
@@ -141,10 +141,18 @@ func (w *Worker) processJob(msg jetstream.Msg) {
 
 	// Forward to Blueprint
 	if err := w.forwardToBlueprint(ctx, im); err != nil {
-		errMsg := err.Error()
 		slog.Error("ingest job failed", "job_id", im.JobID, "error", err)
-		w.svc.UpdateJobStatus(ctx, im.JobID, "failed", &errMsg)
-		msg.Nak() // retry
+
+		// D5: only mark "failed" on final attempt, keep "processing" during retries
+		meta, _ := msg.Metadata()
+		if meta != nil && meta.NumDelivered >= maxDeliveries {
+			errMsg := fmt.Sprintf("failed after %d attempts: %v", maxDeliveries, err)
+			w.svc.UpdateJobStatus(ctx, im.JobID, "failed", &errMsg)
+			os.Remove(im.StagedPath)
+			msg.Term()
+		} else {
+			msg.Nak() // retry — status stays as "processing"
+		}
 		return
 	}
 
@@ -159,7 +167,7 @@ func (w *Worker) processJob(msg jetstream.Msg) {
 	slog.Info("ingest job completed", "job_id", im.JobID, "file", im.FileName)
 }
 
-func (w *Worker) forwardToBlueprint(ctx context.Context, im ingestMessage) error {
+func (w *Worker) forwardToBlueprint(ctx context.Context, im IngestMessage) error {
 	file, err := os.Open(im.StagedPath)
 	if err != nil {
 		return fmt.Errorf("open staged file: %w", err)
@@ -198,19 +206,21 @@ func (w *Worker) forwardToBlueprint(ctx context.Context, im ingestMessage) error
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusCreated {
-		respBody, _ := io.ReadAll(resp.Body)
-		return fmt.Errorf("blueprint returned %d: %s", resp.StatusCode, string(respBody))
+		// D3: log full response body but don't expose to clients
+		respBody, _ := io.ReadAll(io.LimitReader(resp.Body, 1024))
+		slog.Error("blueprint error response", "status", resp.StatusCode, "body", string(respBody), "job_id", im.JobID)
+		return fmt.Errorf("blueprint returned HTTP %d", resp.StatusCode)
 	}
 
 	return nil
 }
 
-func (w *Worker) publishCompletion(im ingestMessage) {
-	// Notification event
+func (w *Worker) publishCompletion(im IngestMessage) {
+	// D4: use actual user_id from the ingest message
 	if w.publisher != nil {
 		evt := map[string]string{
 			"type":    "ingest.completed",
-			"user_id": im.JobID, // worker doesn't have user_id; notification service looks it up
+			"user_id": im.UserID,
 			"title":   "Documento procesado",
 			"body":    im.FileName + " ingresado en " + im.Collection,
 		}
@@ -237,6 +247,7 @@ func (w *Worker) publishCompletion(im ingestMessage) {
 }
 
 // tenantFromSubject extracts the tenant slug from a NATS subject.
+// Subject format: tenant.{slug}.ingest.process
 func tenantFromSubject(subject string) string {
 	parts := strings.SplitN(subject, ".", 4)
 	if len(parts) < 3 || parts[0] != "tenant" {

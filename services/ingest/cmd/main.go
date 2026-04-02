@@ -14,6 +14,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/nats-io/nats.go"
 
+	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
 	"github.com/Camionerou/rag-saldivia/services/ingest/internal/handler"
 	"github.com/Camionerou/rag-saldivia/services/ingest/internal/service"
@@ -28,9 +29,14 @@ func main() {
 	natsURL := env("NATS_URL", nats.DefaultURL)
 	blueprintURL := env("RAG_SERVER_URL", "http://localhost:8081")
 	stagingDir := env("INGEST_STAGING_DIR", "/tmp/ingest-staging")
+	jwtSecret := env("JWT_SECRET", "")
 
 	if dbURL == "" {
 		slog.Error("POSTGRES_TENANT_URL is required")
+		os.Exit(1)
+	}
+	if jwtSecret == "" {
+		slog.Error("JWT_SECRET is required")
 		os.Exit(1)
 	}
 
@@ -89,7 +95,8 @@ func main() {
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Recoverer)
-	r.Use(middleware.Timeout(30 * time.Second))
+	r.Use(middleware.Timeout(60 * time.Second))
+	r.Use(sdamw.Auth(jwtSecret))
 
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -101,7 +108,7 @@ func main() {
 		Addr:         ":" + port,
 		Handler:      r,
 		ReadTimeout:  120 * time.Second, // large uploads
-		WriteTimeout: 30 * time.Second,
+		WriteTimeout: 60 * time.Second,
 		IdleTimeout:  60 * time.Second,
 	}
 

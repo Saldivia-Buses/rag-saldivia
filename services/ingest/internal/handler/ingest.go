@@ -3,9 +3,12 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"net/http"
+	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -15,6 +18,12 @@ import (
 
 // MaxUploadSize is the maximum document upload size (100MB).
 const MaxUploadSize = 100 << 20
+
+var allowedExts = map[string]bool{
+	".pdf": true, ".docx": true, ".doc": true, ".txt": true,
+	".md": true, ".csv": true, ".xlsx": true, ".pptx": true,
+	".html": true, ".json": true, ".xml": true,
+}
 
 // Ingest handles HTTP requests for document ingestion.
 type Ingest struct {
@@ -36,18 +45,24 @@ func (h *Ingest) Routes() chi.Router {
 	return r
 }
 
+// requireIdentity extracts and validates identity headers set by auth middleware.
+func requireIdentity(r *http.Request) (userID, tenantSlug string, ok bool) {
+	userID = r.Header.Get("X-User-ID")
+	tenantSlug = r.Header.Get("X-Tenant-Slug")
+	return userID, tenantSlug, userID != "" && tenantSlug != ""
+}
+
 // Upload handles POST /v1/ingest/upload — multipart document upload.
 func (h *Ingest) Upload(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, MaxUploadSize)
 
-	userID := r.Header.Get("X-User-ID")
-	tenantSlug := r.Header.Get("X-Tenant-Slug")
-	if userID == "" || tenantSlug == "" {
+	userID, tenantSlug, ok := requireIdentity(r)
+	if !ok {
 		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "missing identity headers"})
 		return
 	}
 
-	if err := r.ParseMultipartForm(MaxUploadSize); err != nil {
+	if err := r.ParseMultipartForm(10 << 20); err != nil { // 10MB in memory, rest to disk
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid multipart form"})
 		return
 	}
@@ -58,6 +73,13 @@ func (h *Ingest) Upload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	defer file.Close()
+
+	// S6: validate file extension
+	ext := strings.ToLower(filepath.Ext(header.Filename))
+	if !allowedExts[ext] {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "unsupported file type: " + ext})
+		return
+	}
 
 	collection := r.FormValue("collection")
 	if collection == "" {
@@ -78,8 +100,8 @@ func (h *Ingest) Upload(w http.ResponseWriter, r *http.Request) {
 
 // ListJobs handles GET /v1/ingest/jobs
 func (h *Ingest) ListJobs(w http.ResponseWriter, r *http.Request) {
-	userID := r.Header.Get("X-User-ID")
-	if userID == "" {
+	userID, _, ok := requireIdentity(r)
+	if !ok {
 		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "missing identity headers"})
 		return
 	}
@@ -103,8 +125,8 @@ func (h *Ingest) ListJobs(w http.ResponseWriter, r *http.Request) {
 
 // GetJob handles GET /v1/ingest/jobs/{jobID}
 func (h *Ingest) GetJob(w http.ResponseWriter, r *http.Request) {
-	userID := r.Header.Get("X-User-ID")
-	if userID == "" {
+	userID, _, ok := requireIdentity(r)
+	if !ok {
 		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "missing identity headers"})
 		return
 	}
@@ -112,7 +134,7 @@ func (h *Ingest) GetJob(w http.ResponseWriter, r *http.Request) {
 	jobID := chi.URLParam(r, "jobID")
 	job, err := h.svc.GetJob(r.Context(), jobID, userID)
 	if err != nil {
-		if err.Error() == "job not found" {
+		if errors.Is(err, service.ErrJobNotFound) {
 			writeJSON(w, http.StatusNotFound, map[string]string{"error": "job not found"})
 			return
 		}
@@ -126,15 +148,15 @@ func (h *Ingest) GetJob(w http.ResponseWriter, r *http.Request) {
 
 // DeleteJob handles DELETE /v1/ingest/jobs/{jobID}
 func (h *Ingest) DeleteJob(w http.ResponseWriter, r *http.Request) {
-	userID := r.Header.Get("X-User-ID")
-	if userID == "" {
+	userID, _, ok := requireIdentity(r)
+	if !ok {
 		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "missing identity headers"})
 		return
 	}
 
 	jobID := chi.URLParam(r, "jobID")
 	if err := h.svc.DeleteJob(r.Context(), jobID, userID); err != nil {
-		if err.Error() == "job not found" {
+		if errors.Is(err, service.ErrJobNotFound) {
 			writeJSON(w, http.StatusNotFound, map[string]string{"error": "job not found"})
 			return
 		}
