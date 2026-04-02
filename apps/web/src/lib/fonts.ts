@@ -57,14 +57,19 @@ const ubuntuMono = Ubuntu_Mono({ subsets: ["latin"], variable: "--font-ubuntu-mo
 const lora = Lora({ subsets: ["latin"], variable: "--font-lora", display: "swap" });
 const sourceSerif4 = Source_Serif_4({ subsets: ["latin"], variable: "--font-source-serif-4", display: "swap" });
 
-// All font CSS variable classes combined
-export const fontVariables = [
+const allFonts = [
   inter, dmSans, plusJakarta, poppins, montserrat, openSans, roboto,
   outfit, quicksand, oxanium, antic, architectsDaughter, libreBaskerville,
   merriweather, playfairDisplay, geist,
   jetbrainsMono, firaCode, robotoMono, sourceCodePro, ibmPlexMono, spaceMono, ubuntuMono,
   lora, sourceSerif4,
-].map((f) => f.variable).join(" ");
+];
+
+// All font CSS variable classes combined
+export const fontVariables = allFonts.map((f) => f.variable).join(" ");
+
+// Font class names for preloading (forces browser to download all font files)
+export const fontClassNames = allFonts.map((f) => f.className).join(" ");
 
 // Map font names (as they appear in theme presets) to CSS variable references
 export const fontFamilyMap: Record<string, string> = {
