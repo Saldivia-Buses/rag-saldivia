@@ -1,22 +1,17 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans, Roboto_Mono } from "next/font/google";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ThemeProvider } from "@/lib/theme-provider";
+import { fontVariables } from "@/lib/fonts";
 import "./globals.css";
-
-const plusJakarta = Plus_Jakarta_Sans({
-  variable: "--font-sans",
-  subsets: ["latin"],
-});
-
-const robotoMono = Roboto_Mono({
-  variable: "--font-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: "SDA Framework",
   description: "SDA Framework — Plataforma empresarial",
 };
+
+// Inline script that runs before React hydration to prevent theme flash.
+// Reads cached CSS variables from localStorage and applies them immediately.
+const themeScript = `(function(){try{var v=localStorage.getItem("sda-theme-vars");if(v){var d=document.documentElement,o=JSON.parse(v);for(var k in o)d.style.setProperty("--"+k,o[k])}}catch(e){}})()`;
 
 export default function RootLayout({
   children,
@@ -26,10 +21,16 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${plusJakarta.variable} ${robotoMono.variable} h-full antialiased`}
+      className={`${fontVariables} h-full antialiased`}
+      suppressHydrationWarning
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body className="min-h-full flex flex-col font-sans">
-        <TooltipProvider>{children}</TooltipProvider>
+        <ThemeProvider>
+          <TooltipProvider>{children}</TooltipProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
