@@ -2,6 +2,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"io"
 	"log/slog"
@@ -13,13 +14,20 @@ import (
 	"github.com/Camionerou/rag-saldivia/services/rag/internal/service"
 )
 
+// RAGService defines the operations the handler needs from the service layer.
+type RAGService interface {
+	GenerateStream(ctx context.Context, tenantSlug string, req service.GenerateRequest) (io.ReadCloser, string, error)
+	ListCollections(ctx context.Context, tenantSlug string) ([]string, error)
+	Health(ctx context.Context) error
+}
+
 // RAG handles HTTP requests for RAG operations.
 type RAG struct {
-	ragSvc *service.RAG
+	ragSvc RAGService
 }
 
 // NewRAG creates RAG HTTP handlers.
-func NewRAG(ragSvc *service.RAG) *RAG {
+func NewRAG(ragSvc RAGService) *RAG {
 	return &RAG{ragSvc: ragSvc}
 }
 
@@ -98,8 +106,9 @@ func (h *RAG) ListCollections(w http.ResponseWriter, r *http.Request) {
 // Health checks if the RAG Blueprint is reachable.
 func (h *RAG) Health(w http.ResponseWriter, r *http.Request) {
 	if err := h.ragSvc.Health(r.Context()); err != nil {
+		slog.Error("blueprint health check failed", "error", err)
 		writeJSON(w, http.StatusServiceUnavailable, map[string]string{
-			"status": "unhealthy", "service": "rag", "error": err.Error(),
+			"status": "unhealthy", "service": "rag",
 		})
 		return
 	}
