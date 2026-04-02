@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	"github.com/Camionerou/rag-saldivia/pkg/tenant"
@@ -32,7 +33,7 @@ func validToken(t *testing.T) string {
 // echoHandler writes identity headers back as JSON so tests can inspect them.
 func echoHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		info := tenant.FromContext(r.Context())
+		info, _ := tenant.FromContext(r.Context())
 		resp := map[string]string{
 			"user_id":     r.Header.Get("X-User-ID"),
 			"user_email":  r.Header.Get("X-User-Email"),
@@ -202,6 +203,31 @@ func TestAuth_SpoofedHeaders_NoToken_NotLeaked(t *testing.T) {
 	// Should get 401, so the spoofed headers never reach the handler
 	if rec.Code != http.StatusUnauthorized {
 		t.Fatalf("expected 401, got %d", rec.Code)
+	}
+}
+
+func TestAuth_ExpiredToken_Returns401(t *testing.T) {
+	cfg := sdajwt.Config{
+		Secret:       testSecret,
+		AccessExpiry: -1 * time.Hour, // already expired
+		Issuer:       "sda",
+	}
+	token, err := sdajwt.CreateAccess(cfg, sdajwt.Claims{
+		UserID: "u-1", TenantID: "t-1", Slug: "test", Role: "user",
+	})
+	if err != nil {
+		t.Fatalf("create expired token: %v", err)
+	}
+
+	handler := Auth(testSecret)(echoHandler())
+	req := httptest.NewRequest(http.MethodGet, "/v1/something", nil)
+	req.Header.Set("Authorization", "Bearer "+token)
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401 for expired token, got %d", rec.Code)
 	}
 }
 

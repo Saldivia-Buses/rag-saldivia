@@ -165,6 +165,29 @@ func TestPublisher_Broadcast_InvalidSlug_Returns_Error(t *testing.T) {
 	}
 }
 
+func TestPublisher_Broadcast_InvalidChannel_Returns_Error(t *testing.T) {
+	nc := startTestNATS(t)
+	pub := New(nc)
+
+	tests := []struct {
+		name    string
+		channel string
+	}{
+		{"empty", ""},
+		{"dots", "some.channel"},
+		{"wildcard", "notifications*"},
+		{"gt", "notifications>"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := pub.Broadcast("saldivia", tt.channel, "data")
+			if err == nil {
+				t.Errorf("expected error for channel %q", tt.channel)
+			}
+		})
+	}
+}
+
 func TestIsValidSubjectToken(t *testing.T) {
 	tests := []struct {
 		input string
