@@ -58,6 +58,14 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
+import { usePathname } from "next/navigation";
+
+const routeLabels: Record<string, string> = {
+  "/dashboard": "Dashboard",
+  "/chat": "Chat",
+  "/notifications": "Notificaciones",
+  "/settings": "Configuración",
+};
 
 // Base nav item - used by simple sidebars
 type NavItem = {
@@ -331,6 +339,9 @@ interface Sidebar6Props {
 }
 
 const Sidebar6 = ({ className, children }: Sidebar6Props) => {
+  const pathname = usePathname();
+  const pageLabel = routeLabels[pathname] || pathname.replace("/", "");
+
   return (
     <SidebarProvider className={cn("!h-svh !min-h-0 overflow-hidden", className)}>
       <AppSidebar />
@@ -341,14 +352,14 @@ const Sidebar6 = ({ className, children }: Sidebar6Props) => {
             orientation="vertical"
             className="mr-2 data-[orientation=vertical]:h-4"
           />
-          <Breadcrumb>
+          <Breadcrumb className="w-fit rounded-lg border px-3 py-2">
             <BreadcrumbList>
-              <BreadcrumbItem className="hidden md:block">
-                <BreadcrumbLink href="#">Overview</BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator className="hidden md:block" />
               <BreadcrumbItem>
-                <BreadcrumbPage>Dashboard</BreadcrumbPage>
+                <BreadcrumbLink href="/dashboard">SDA</BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>{pageLabel}</BreadcrumbPage>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
