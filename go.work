@@ -5,6 +5,7 @@ use (
 	./services/auth
 	./services/chat
 	./services/notification
+	./services/platform
 	./services/rag
 	./services/ws
 )
