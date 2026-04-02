@@ -2,9 +2,11 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"log/slog"
+	"mime/multipart"
 	"net/http"
 	"path/filepath"
 	"strconv"
@@ -25,13 +27,21 @@ var allowedExts = map[string]bool{
 	".html": true, ".json": true, ".xml": true,
 }
 
+// IngestService defines the operations the handler needs from the service layer.
+type IngestService interface {
+	Submit(ctx context.Context, tenantSlug, userID, collection, fileName string, fileSize int64, file multipart.File) (*service.Job, error)
+	ListJobs(ctx context.Context, userID string, limit int) ([]service.Job, error)
+	GetJob(ctx context.Context, jobID, userID string) (*service.Job, error)
+	DeleteJob(ctx context.Context, jobID, userID string) error
+}
+
 // Ingest handles HTTP requests for document ingestion.
 type Ingest struct {
-	svc *service.Ingest
+	svc IngestService
 }
 
 // NewIngest creates Ingest HTTP handlers.
-func NewIngest(svc *service.Ingest) *Ingest {
+func NewIngest(svc IngestService) *Ingest {
 	return &Ingest{svc: svc}
 }
 
