@@ -16,6 +16,11 @@ import {
 } from "@/components/ui/chat-container";
 import { cn } from "@/lib/utils";
 import { api, ApiError } from "@/lib/api/client";
+import {
+  Reasoning,
+  ReasoningTrigger,
+  ReasoningContent,
+} from "@/components/ai-elements/reasoning";
 import { MODELS, DEFAULT_MODEL, type LLMModel } from "@/lib/models";
 import {
   ModelSelector,
@@ -155,11 +160,13 @@ export default function ChatPage() {
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingContent, setStreamingContent] = useState("");
+  const [thinkingContent, setThinkingContent] = useState("");
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [selectedModel, setSelectedModel] = useState<LLMModel>(DEFAULT_MODEL);
   const [modelSelectorOpen, setModelSelectorOpen] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const streamRef = useRef(""); // tracks streaming content synchronously
+  const thinkingRef = useRef(""); // tracks thinking content synchronously
   const queryClient = useQueryClient();
 
   // Fetch sessions
@@ -261,17 +268,24 @@ export default function ChatPage() {
     // Stream RAG response
     setIsStreaming(true);
     setStreamingContent("");
+    setThinkingContent("");
     streamRef.current = "";
+    thinkingRef.current = "";
 
     try {
-      for await (const chunk of api.stream("/v1/rag/generate", {
+      for await (const chunk of api.streamWithThinking("/v1/rag/generate", {
         messages: [{ role: "user", content }],
         model: selectedModel.id,
         stream: true,
         use_knowledge_base: true,
       })) {
-        streamRef.current += chunk;
-        setStreamingContent(streamRef.current);
+        if (chunk.type === "thinking") {
+          thinkingRef.current += chunk.text;
+          setThinkingContent(thinkingRef.current);
+        } else {
+          streamRef.current += chunk.text;
+          setStreamingContent(streamRef.current);
+        }
       }
 
       // Store assistant message in backend using the ref (always current)
@@ -296,7 +310,9 @@ export default function ChatPage() {
     } finally {
       setIsStreaming(false);
       setStreamingContent("");
+      setThinkingContent("");
       streamRef.current = "";
+      thinkingRef.current = "";
     }
   }, [input, isStreaming, activeSessionId, queryClient, sendMessageMutation]);
 
@@ -384,7 +400,27 @@ export default function ChatPage() {
               </div>
             ))}
 
-            {isStreaming && !streamingContent && (
+            {/* Thinking / Reasoning */}
+            {thinkingContent && (
+              <div className="flex justify-start">
+                <div className="max-w-[80%]">
+                  <Reasoning isStreaming={isStreaming && !streamingContent}>
+                    <ReasoningTrigger
+                      getThinkingMessage={(streaming, duration) => {
+                        if (streaming || duration === 0)
+                          return <span className="text-muted-foreground">Pensando...</span>;
+                        if (duration === undefined)
+                          return <span>Penso unos segundos</span>;
+                        return <span>Penso {duration} segundos</span>;
+                      }}
+                    />
+                    <ReasoningContent>{thinkingContent}</ReasoningContent>
+                  </Reasoning>
+                </div>
+              </div>
+            )}
+
+            {isStreaming && !streamingContent && !thinkingContent && (
               <div className="flex justify-start">
                 <div className="text-sm text-muted-foreground">
                   <span className="inline-flex gap-1">

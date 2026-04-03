@@ -165,6 +165,55 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * Shared SSE line reader — connects to an endpoint and yields raw JSON data strings.
+ */
+async function* sseLines(path: string, body: unknown): AsyncGenerator<string> {
+  const base = getApiBaseUrl();
+  const token = useAuthStore.getState().accessToken;
+
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    Accept: "text/event-stream",
+  };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  const res = await fetch(`${base}${path}`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body),
+    credentials: "include",
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: res.statusText }));
+    throw new ApiError(res.status, err.error ?? res.statusText);
+  }
+
+  const reader = res.body?.getReader();
+  if (!reader) return;
+
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() ?? "";
+
+    for (const line of lines) {
+      if (line.startsWith("data: ")) {
+        const data = line.slice(6).trim();
+        if (data === "[DONE]") return;
+        yield data;
+      }
+    }
+  }
+}
+
 export const api = {
   get: <T>(path: string, opts?: RequestOptions) =>
     request<T>(path, { ...opts, method: "GET" }),
@@ -182,57 +231,39 @@ export const api = {
     request<T>(path, { ...opts, method: "DELETE" }),
 
   /**
-   * SSE streaming for RAG responses.
-   * Returns an async iterator that yields parsed SSE data chunks.
+   * SSE streaming with thinking/reasoning support.
+   * Yields { type: "thinking" | "content", text: string } chunks.
+   * Works with OpenRouter (delta.reasoning), Anthropic (delta.thinking),
+   * and any provider that puts reasoning in a separate field.
+   */
+  streamWithThinking: async function* (
+    path: string,
+    body: unknown,
+  ): AsyncGenerator<{ type: "thinking" | "content"; text: string }> {
+    for await (const line of sseLines(path, body)) {
+      try {
+        const parsed = JSON.parse(line);
+        const delta = parsed.choices?.[0]?.delta;
+        if (delta?.reasoning) yield { type: "thinking", text: delta.reasoning };
+        if (delta?.thinking) yield { type: "thinking", text: delta.thinking };
+        if (delta?.content) yield { type: "content", text: delta.content };
+      } catch {
+        // skip unparseable
+      }
+    }
+  },
+
+  /**
+   * SSE streaming for RAG responses (content only).
    */
   stream: async function* (path: string, body: unknown): AsyncGenerator<string> {
-    const base = getApiBaseUrl();
-    const token = useAuthStore.getState().accessToken;
-
-    const headers: Record<string, string> = {
-      "Content-Type": "application/json",
-      Accept: "text/event-stream",
-    };
-    if (token) headers["Authorization"] = `Bearer ${token}`;
-
-    const res = await fetch(`${base}${path}`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(body),
-      credentials: "include",
-    });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({ error: res.statusText }));
-      throw new ApiError(res.status, err.error ?? res.statusText);
-    }
-
-    const reader = res.body?.getReader();
-    if (!reader) return;
-
-    const decoder = new TextDecoder();
-    let buffer = "";
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split("\n");
-      buffer = lines.pop() ?? "";
-
-      for (const line of lines) {
-        if (line.startsWith("data: ")) {
-          const data = line.slice(6).trim();
-          if (data === "[DONE]") return;
-          try {
-            const parsed = JSON.parse(data);
-            const content = parsed.choices?.[0]?.delta?.content;
-            if (content) yield content;
-          } catch {
-            // skip unparseable SSE lines
-          }
-        }
+    for await (const line of sseLines(path, body)) {
+      try {
+        const parsed = JSON.parse(line);
+        const content = parsed.choices?.[0]?.delta?.content;
+        if (content) yield content;
+      } catch {
+        // skip unparseable
       }
     }
   },
