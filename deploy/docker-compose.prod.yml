@@ -100,15 +100,17 @@ services:
     <<: *service-defaults
     image: redis:7-alpine
     command: >
-      redis-server
+      sh -c "redis-server
       --maxmemory 512mb
       --maxmemory-policy allkeys-lru
       --appendonly yes
-      --requirepass ${REDIS_PASSWORD}
+      --requirepass $$(cat /run/secrets/redis_password)"
+    secrets:
+      - redis_password
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
+      test: ["CMD-SHELL", "redis-cli -a $$(cat /run/secrets/redis_password) ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -147,7 +149,7 @@ services:
       dockerfile: services/auth/Dockerfile
     environment:
       AUTH_PORT: "8001"
-      NATS_URL: nats://nats:4222
+      NATS_URL: nats://${NATS_TOKEN}@nats:4222
       TENANT_SLUG: dev
     secrets:
       - jwt_private_key
@@ -180,7 +182,7 @@ services:
       dockerfile: services/ws/Dockerfile
     environment:
       WS_PORT: "8002"
-      NATS_URL: nats://nats:4222
+      NATS_URL: nats://${NATS_TOKEN}@nats:4222
       WS_ALLOWED_ORIGINS: "https://*.sda.app"
     secrets:
       - jwt_public_key
@@ -210,7 +212,7 @@ services:
       dockerfile: services/chat/Dockerfile
     environment:
       CHAT_PORT: "8003"
-      NATS_URL: nats://nats:4222
+      NATS_URL: nats://${NATS_TOKEN}@nats:4222
       TENANT_SLUG: dev
     secrets:
       - jwt_public_key
@@ -272,7 +274,7 @@ services:
       dockerfile: services/notification/Dockerfile
     environment:
       NOTIFICATION_PORT: "8005"
-      NATS_URL: nats://nats:4222
+      NATS_URL: nats://${NATS_TOKEN}@nats:4222
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_FROM: ${SMTP_FROM:-noreply@sda.app}
@@ -337,7 +339,7 @@ services:
       dockerfile: services/ingest/Dockerfile
     environment:
       INGEST_PORT: "8007"
-      NATS_URL: nats://nats:4222
+      NATS_URL: nats://${NATS_TOKEN}@nats:4222
       RAG_SERVER_URL: ${RAG_SERVER_URL:-http://host.docker.internal:8081}
       INGEST_STAGING_DIR: /tmp/ingest-staging
     secrets:
@@ -370,7 +372,7 @@ services:
       dockerfile: services/feedback/Dockerfile
     environment:
       FEEDBACK_PORT: "8008"
-      NATS_URL: nats://nats:4222
+      NATS_URL: nats://${NATS_TOKEN}@nats:4222
     secrets:
       - jwt_public_key
       - db_platform_url

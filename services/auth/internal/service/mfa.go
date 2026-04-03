@@ -8,6 +8,7 @@ import (
 	"github.com/pquerna/otp/totp"
 
 	"github.com/Camionerou/rag-saldivia/pkg/audit"
+	sdacrypto "github.com/Camionerou/rag-saldivia/pkg/crypto"
 	"github.com/Camionerou/rag-saldivia/services/auth/internal/repository"
 )
 
@@ -33,10 +34,18 @@ func (a *Auth) SetupMFA(ctx context.Context, userID string) (*MFASetupResult, er
 		return nil, fmt.Errorf("generate TOTP key: %w", err)
 	}
 
-	// Store secret (not yet activated — mfa_enabled stays false until VerifySetup)
+	// Store secret (encrypted if key available, plaintext otherwise)
+	secretToStore := key.Secret()
+	if a.encryptionKey != nil {
+		encrypted, encErr := sdacrypto.Encrypt(a.encryptionKey, secretToStore)
+		if encErr != nil {
+			return nil, fmt.Errorf("encrypt MFA secret: %w", encErr)
+		}
+		secretToStore = encrypted
+	}
 	err = a.repo.SetMFASecret(ctx, repository.SetMFASecretParams{
 		ID:        userID,
-		MfaSecret: pgtype.Text{String: key.Secret(), Valid: true},
+		MfaSecret: pgtype.Text{String: secretToStore, Valid: true},
 	})
 	if err != nil {
 		return nil, fmt.Errorf("store MFA secret: %w", err)
@@ -120,6 +129,15 @@ func (a *Auth) getMFASecret(ctx context.Context, userID string) (string, error) 
 	}
 	if !secret.Valid {
 		return "", nil
+	}
+	// Decrypt if encrypted (encrypted values are base64 and longer than raw TOTP secrets)
+	if a.encryptionKey != nil && len(secret.String) > 40 {
+		decrypted, err := sdacrypto.Decrypt(a.encryptionKey, secret.String)
+		if err != nil {
+			// Fallback to plaintext (pre-encryption migration)
+			return secret.String, nil
+		}
+		return decrypted, nil
 	}
 	return secret.String, nil
 }

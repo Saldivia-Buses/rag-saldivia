@@ -49,12 +49,13 @@ type EventPublisher interface {
 
 // Auth handles authentication operations for a single tenant.
 type Auth struct {
-	db      *pgxpool.Pool
-	repo    *repository.Queries
-	jwtCfg  sdajwt.Config
-	events  EventPublisher
-	auditor *audit.Writer
-	tenant  struct {
+	db            *pgxpool.Pool
+	repo          *repository.Queries
+	jwtCfg        sdajwt.Config
+	events        EventPublisher
+	auditor       *audit.Writer
+	encryptionKey []byte // AES-256 key for MFA secret encryption (nil = plaintext)
+	tenant        struct {
 		ID   string
 		Slug string
 	}
@@ -251,6 +252,24 @@ func (a *Auth) CompleteMFALogin(ctx context.Context, mfaToken, code string) (*To
 	}
 	if claims.Role != "mfa_pending" {
 		return nil, ErrInvalidRefreshToken
+	}
+
+	// Prevent MFA token replay: check if JTI was already used
+	if claims.ID != "" {
+		var used bool
+		_ = a.db.QueryRow(ctx,
+			`SELECT EXISTS(SELECT 1 FROM refresh_tokens WHERE token_hash = $1)`,
+			"mfa:"+claims.ID,
+		).Scan(&used)
+		if used {
+			return nil, ErrInvalidRefreshToken
+		}
+		// Mark JTI as used (store in refresh_tokens with immediate revocation)
+		_, _ = a.db.Exec(ctx,
+			`INSERT INTO refresh_tokens (user_id, token_hash, expires_at, revoked_at)
+			 VALUES ($1, $2, $3, now())`,
+			claims.UserID, "mfa:"+claims.ID, claims.ExpiresAt.Time,
+		)
 	}
 
 	// Verify TOTP code

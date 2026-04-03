@@ -379,7 +379,7 @@ func (h *Platform) requirePlatformAdmin(next http.Handler) http.Handler {
 			return
 		}
 
-		if claims.Role != "admin" || (h.platformSlug != "" && claims.Slug != h.platformSlug) {
+		if claims.Role != "admin" || claims.Slug != h.platformSlug {
 			writeJSON(w, http.StatusForbidden, map[string]string{"error": "platform admin access required"})
 			return
 		}
