@@ -167,6 +167,7 @@ export default function ChatPage() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingContent, setStreamingContent] = useState("");
   const [thinkingContent, setThinkingContent] = useState("");
+  const [savedThinking, setSavedThinking] = useState<Record<string, string>>({}); // messageId → thinking
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const [selectedModel, setSelectedModel] = useState<LLMModel>(DEFAULT_MODEL);
   const [modelSelectorOpen, setModelSelectorOpen] = useState(false);
@@ -279,8 +280,15 @@ export default function ChatPage() {
     thinkingRef.current = "";
 
     try {
+      // Build full conversation history for context
+      const history = messages.map((m) => ({
+        role: m.role as "user" | "assistant",
+        content: m.content,
+      }));
+      history.push({ role: "user", content });
+
       for await (const chunk of api.streamWithThinking("/v1/rag/generate", {
-        messages: [{ role: "user", content }],
+        messages: history,
         model: selectedModel.id,
         stream: true,
         use_knowledge_base: true,
@@ -299,11 +307,17 @@ export default function ChatPage() {
 
       // Store assistant message in backend using the ref (always current)
       const finalContent = streamRef.current;
+      const finalThinking = thinkingRef.current;
       if (finalContent) {
-        await api.post(`/v1/chat/sessions/${sessionId}/messages`, {
+        const saved = await api.post<ApiMessage>(`/v1/chat/sessions/${sessionId}/messages`, {
           role: "assistant",
           content: finalContent,
         });
+
+        // Save thinking for this message so it persists across re-renders
+        if (finalThinking && saved?.id) {
+          setSavedThinking((prev) => ({ ...prev, [saved.id]: finalThinking }));
+        }
 
         // Refetch messages — streaming content stays visible until data arrives
         await queryClient.invalidateQueries({
@@ -395,7 +409,7 @@ export default function ChatPage() {
                   )}
                 >
                   {/* Reasoning block (above response content) */}
-                  {"thinking" in message && message.thinking && (
+                  {(("thinking" in message && message.thinking) || savedThinking[message.id]) && (
                     <Reasoning
                       isStreaming={message.id === "streaming" && isStreaming && !message.content}
                     >
@@ -408,7 +422,9 @@ export default function ChatPage() {
                           return <span>Penso {duration} segundos</span>;
                         }}
                       />
-                      <ReasoningContent>{message.thinking}</ReasoningContent>
+                      <ReasoningContent>
+                        {("thinking" in message && message.thinking) || savedThinking[message.id] || ""}
+                      </ReasoningContent>
                     </Reasoning>
                   )}
                   {message.role === "user" ? (
