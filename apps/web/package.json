@@ -74,7 +74,7 @@
     "@storybook/addon-essentials": "^8",
     "@storybook/addon-themes": "^8",
     "@storybook/react": "^8",
-    "@storybook/react-vite": "^8",
+    "@storybook/react-vite": "^10",
     "@tailwindcss/postcss": "^4.2.2",
     "@tailwindcss/vite": "^4.0.0",
     "@testing-library/jest-dom": "^6.9.1",
