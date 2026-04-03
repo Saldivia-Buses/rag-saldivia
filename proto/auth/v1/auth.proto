@@ -1,0 +1,197 @@
+// Auth Service gRPC contract.
+// Handles authentication, token management, and user identity.
+// Currently implemented as HTTP in services/auth — this proto defines
+// the inter-service contract for future gRPC migration.
+
+syntax = "proto3";
+
+package sda.auth.v1;
+
+option go_package = "github.com/Camionerou/rag-saldivia/proto/auth/v1;authv1";
+
+import "google/protobuf/timestamp.proto";
+
+// AuthService provides authentication and user identity operations.
+// Every service calls VerifyToken to validate JWTs without round-tripping
+// to the auth service (shared secret), but GetUser is available for
+// enriching user data when needed.
+service AuthService {
+  // VerifyToken validates a JWT and returns the embedded claims.
+  // Used by services that need to verify tokens without the shared secret.
+  rpc VerifyToken(VerifyTokenRequest) returns (VerifyTokenResponse);
+
+  // Login authenticates a user with email/password and returns a token pair.
+  rpc Login(LoginRequest) returns (LoginResponse);
+
+  // Refresh exchanges a valid refresh token for a new token pair (rotation).
+  rpc Refresh(RefreshRequest) returns (RefreshResponse);
+
+  // Logout revokes the given refresh token.
+  rpc Logout(LogoutRequest) returns (LogoutResponse);
+
+  // GetUser returns profile information for an authenticated user.
+  rpc GetUser(GetUserRequest) returns (UserInfo);
+
+  // GetEnabledModules returns the list of modules enabled for the current tenant.
+  rpc GetEnabledModules(GetEnabledModulesRequest) returns (GetEnabledModulesResponse);
+}
+
+// ── Verify Token ────────────────────────────────────────────────────────
+
+message VerifyTokenRequest {
+  // The JWT access token to verify.
+  string token = 1;
+}
+
+message VerifyTokenResponse {
+  // Whether the token is valid and not expired.
+  bool valid = 1;
+
+  // The decoded claims from the token. Only populated when valid is true.
+  TokenClaims claims = 2;
+}
+
+// TokenClaims holds the decoded JWT claims.
+message TokenClaims {
+  // JWT ID (jti).
+  string jti = 1;
+
+  // User UUID.
+  string user_id = 2;
+
+  // User email address.
+  string email = 3;
+
+  // User display name.
+  string name = 4;
+
+  // Tenant UUID.
+  string tenant_id = 5;
+
+  // Tenant subdomain slug.
+  string tenant_slug = 6;
+
+  // Primary role name (admin, manager, user).
+  string role = 7;
+
+  // Token issue time.
+  google.protobuf.Timestamp issued_at = 8;
+
+  // Token expiration time.
+  google.protobuf.Timestamp expires_at = 9;
+}
+
+// ── Login ───────────────────────────────────────────────────────────────
+
+message LoginRequest {
+  // User email address.
+  string email = 1;
+
+  // User password (plaintext, will be verified against bcrypt hash).
+  string password = 2;
+
+  // Client IP address for audit logging.
+  string ip = 3;
+
+  // Client user agent for audit logging.
+  string user_agent = 4;
+}
+
+message LoginResponse {
+  // Short-lived access token (JWT, 15min default).
+  string access_token = 1;
+
+  // Long-lived refresh token (JWT, 7d default).
+  string refresh_token = 2;
+
+  // Access token TTL in seconds.
+  int32 expires_in = 3;
+
+  // Refresh token expiration time (used for cookie Max-Age).
+  google.protobuf.Timestamp refresh_expires_at = 4;
+}
+
+// ── Refresh ─────────────────────────────────────────────────────────────
+
+message RefreshRequest {
+  // The refresh token to exchange. Single-use (rotation).
+  string refresh_token = 1;
+}
+
+message RefreshResponse {
+  // New short-lived access token.
+  string access_token = 1;
+
+  // New refresh token (old one is revoked).
+  string refresh_token = 2;
+
+  // Access token TTL in seconds.
+  int32 expires_in = 3;
+
+  // New refresh token expiration time.
+  google.protobuf.Timestamp refresh_expires_at = 4;
+}
+
+// ── Logout ──────────────────────────────────────────────────────────────
+
+message LogoutRequest {
+  // The refresh token to revoke.
+  string refresh_token = 1;
+}
+
+message LogoutResponse {
+  // Confirmation status.
+  string status = 1;
+}
+
+// ── Get User ────────────────────────────────────────────────────────────
+
+message GetUserRequest {
+  // User UUID (extracted from JWT by auth middleware).
+  string user_id = 1;
+}
+
+// UserInfo holds the current user's profile data.
+message UserInfo {
+  // User UUID.
+  string id = 1;
+
+  // User email address.
+  string email = 2;
+
+  // User display name.
+  string name = 3;
+
+  // Primary role name (admin, manager, user).
+  string role = 4;
+
+  // Tenant UUID the user belongs to.
+  string tenant_id = 5;
+
+  // Tenant subdomain slug.
+  string tenant_slug = 6;
+}
+
+// ── Enabled Modules ─────────────────────────────────────────────────────
+
+message GetEnabledModulesRequest {
+  // Tenant UUID. If empty, uses tenant from JWT context.
+  string tenant_id = 1;
+}
+
+message GetEnabledModulesResponse {
+  // List of modules enabled for the tenant.
+  repeated ModuleEntry modules = 1;
+}
+
+// ModuleEntry represents a module available to a tenant.
+message ModuleEntry {
+  // Module identifier (e.g. "chat", "rag", "ingest").
+  string id = 1;
+
+  // Human-readable module name.
+  string name = 2;
+
+  // Module category (core, industry, addon).
+  string category = 3;
+}

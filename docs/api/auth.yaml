@@ -1,0 +1,387 @@
+openapi: "3.1.0"
+info:
+  title: Auth Service
+  version: "1.0.0"
+  description: |
+    Authentication gateway for the SDA Framework. Handles login, JWT token
+    management, refresh token rotation, logout, and user identity. Every
+    request to the platform passes through this service first. Provides
+    tenant-aware RBAC and module access control.
+
+servers:
+  - url: http://localhost:8001
+    description: Local development
+
+tags:
+  - name: auth
+    description: Authentication and token management
+  - name: modules
+    description: Tenant module access
+  - name: health
+    description: Service health checks
+
+security:
+  - bearerAuth: []
+
+paths:
+  /v1/auth/login:
+    post:
+      operationId: login
+      summary: Login with email and password
+      description: |
+        Authenticates a user with email and password credentials. Returns an
+        access token (short-lived JWT) and a refresh token. The refresh token
+        is also set as an HttpOnly secure cookie for browser clients.
+      tags: [auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Successful authentication
+          headers:
+            Set-Cookie:
+              description: HttpOnly secure cookie containing the refresh token
+              schema:
+                type: string
+                example: refresh_token=eyJ...; Path=/; HttpOnly; Secure; SameSite=Strict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "400":
+          description: Missing or invalid request fields
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: "missing_fields"
+                message: "email and password are required"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: "invalid_credentials"
+                message: "invalid email or password"
+        "429":
+          description: Account locked due to too many failed attempts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: "account_locked"
+                message: "account temporarily locked, try again in 15 minutes"
+
+  /v1/auth/refresh:
+    post:
+      operationId: refreshTokens
+      summary: Refresh access token
+      description: |
+        Issues a new access token using a valid refresh token. The refresh
+        token can be provided via the HttpOnly cookie (preferred for browser
+        clients) or in the JSON request body. Implements token rotation:
+        old refresh token is invalidated and a new one is issued.
+      tags: [auth]
+      security: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshRequest"
+      responses:
+        "200":
+          description: New tokens issued
+          headers:
+            Set-Cookie:
+              description: New HttpOnly secure cookie with rotated refresh token
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RefreshResponse"
+        "400":
+          description: No refresh token provided
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: "missing_token"
+                message: "refresh token required via cookie or body"
+        "401":
+          description: Invalid or expired refresh token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: "invalid_token"
+                message: "refresh token is invalid or expired"
+
+  /v1/auth/logout:
+    post:
+      operationId: logout
+      summary: Logout and revoke refresh token
+      description: |
+        Revokes the current refresh token and clears the HttpOnly cookie.
+        Always returns 200 regardless of whether a valid token was provided,
+        to prevent information leakage about token validity.
+      tags: [auth]
+      responses:
+        "200":
+          description: Logout successful
+          headers:
+            Set-Cookie:
+              description: Cleared refresh token cookie
+              schema:
+                type: string
+                example: refresh_token=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: logged out
+                required:
+                  - message
+
+  /v1/auth/me:
+    get:
+      operationId: getMe
+      summary: Get authenticated user info
+      description: |
+        Returns the profile of the currently authenticated user, extracted
+        from the JWT claims. Includes tenant context for multi-tenant routing.
+      tags: [auth]
+      responses:
+        "200":
+          description: Current user info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserInfo"
+        "401":
+          description: Missing or invalid bearer token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: "unauthorized"
+                message: "invalid or expired token"
+        "404":
+          description: User not found in database
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: "not_found"
+                message: "user not found"
+
+  /v1/modules/enabled:
+    get:
+      operationId: getEnabledModules
+      summary: List enabled modules for current tenant
+      description: |
+        Returns the list of modules enabled for the tenant of the
+        authenticated user. Used by the frontend to determine which
+        navigation items, routes, and features to render.
+      tags: [modules]
+      responses:
+        "200":
+          description: List of enabled modules
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/EnabledModule"
+        "401":
+          description: Missing or invalid bearer token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /health:
+    get:
+      operationId: healthCheck
+      summary: Health check
+      description: Returns service health status. No authentication required.
+      tags: [health]
+      security: []
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+              example:
+                status: ok
+                service: auth
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT access token issued by POST /v1/auth/login. Include in the
+        Authorization header as: Bearer <token>
+
+  schemas:
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: enzo@saldivia.com
+        password:
+          type: string
+          format: password
+          minLength: 8
+          example: "••••••••"
+
+    LoginResponse:
+      type: object
+      required:
+        - access_token
+        - refresh_token
+        - expires_in
+      properties:
+        access_token:
+          type: string
+          description: Short-lived JWT for API access
+          example: eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9...
+        refresh_token:
+          type: string
+          description: Long-lived token for obtaining new access tokens
+          example: eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9...
+        expires_in:
+          type: integer
+          description: Access token TTL in seconds
+          example: 900
+
+    RefreshRequest:
+      type: object
+      properties:
+        refresh_token:
+          type: string
+          description: Refresh token (alternative to cookie)
+          example: eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9...
+
+    RefreshResponse:
+      type: object
+      required:
+        - access_token
+        - expires_in
+      properties:
+        access_token:
+          type: string
+          description: New short-lived JWT
+          example: eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9...
+        expires_in:
+          type: integer
+          description: Access token TTL in seconds
+          example: 900
+
+    UserInfo:
+      type: object
+      required:
+        - id
+        - email
+        - name
+        - role
+        - tenant_id
+        - tenant_slug
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-446655440000
+        email:
+          type: string
+          format: email
+          example: enzo@saldivia.com
+        name:
+          type: string
+          example: Enzo Saldivia
+        role:
+          type: string
+          enum: [platform_admin, tenant_admin, user]
+          example: platform_admin
+        tenant_id:
+          type: string
+          format: uuid
+          example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+        tenant_slug:
+          type: string
+          example: saldivia
+
+    EnabledModule:
+      type: object
+      required:
+        - id
+        - name
+        - category
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 660e8400-e29b-41d4-a716-446655440001
+        name:
+          type: string
+          example: ingest
+        category:
+          type: string
+          enum: [core, ai, business]
+          example: ai
+
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - service
+      properties:
+        status:
+          type: string
+          enum: [ok, degraded]
+          example: ok
+        service:
+          type: string
+          example: auth
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          description: Machine-readable error code
+          example: invalid_credentials
+        message:
+          type: string
+          description: Human-readable error description
+          example: invalid email or password

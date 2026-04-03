@@ -1,0 +1,180 @@
+// Chat Service gRPC contract.
+// Manages chat sessions and messages per tenant.
+// Currently implemented as HTTP in services/chat — this proto defines
+// the inter-service contract for future gRPC migration.
+
+syntax = "proto3";
+
+package sda.chat.v1;
+
+option go_package = "github.com/Camionerou/rag-saldivia/proto/chat/v1;chatv1";
+
+import "google/protobuf/timestamp.proto";
+
+// ChatService provides chat session and message management.
+// All operations are scoped to the authenticated user — ownership
+// is verified on every request to prevent cross-user data access.
+service ChatService {
+  // ListSessions returns all chat sessions for the authenticated user,
+  // ordered by most recently updated first.
+  rpc ListSessions(ListSessionsRequest) returns (ListSessionsResponse);
+
+  // CreateSession creates a new chat session.
+  rpc CreateSession(CreateSessionRequest) returns (Session);
+
+  // GetSession returns a single session by ID, verifying ownership.
+  rpc GetSession(GetSessionRequest) returns (Session);
+
+  // DeleteSession removes a session and all its messages.
+  rpc DeleteSession(DeleteSessionRequest) returns (DeleteSessionResponse);
+
+  // RenameSession updates a session's title.
+  rpc RenameSession(RenameSessionRequest) returns (RenameSessionResponse);
+
+  // ListMessages returns all messages for a session, oldest first.
+  rpc ListMessages(ListMessagesRequest) returns (ListMessagesResponse);
+
+  // AddMessage appends a message to a session.
+  rpc AddMessage(AddMessageRequest) returns (Message);
+}
+
+// ── Sessions ────────────────────────────────────────────────────────────
+
+// Session represents a chat conversation.
+message Session {
+  // Session UUID.
+  string id = 1;
+
+  // Owner user UUID.
+  string user_id = 2;
+
+  // Session display title.
+  string title = 3;
+
+  // Optional RAG collection name associated with this session.
+  optional string collection = 4;
+
+  // Whether the session is saved/pinned by the user.
+  bool is_saved = 5;
+
+  // When the session was created.
+  google.protobuf.Timestamp created_at = 6;
+
+  // When the session was last updated (new message or rename).
+  google.protobuf.Timestamp updated_at = 7;
+}
+
+message ListSessionsRequest {
+  // User UUID. Set by auth middleware from JWT.
+  string user_id = 1;
+}
+
+message ListSessionsResponse {
+  // All sessions for the user, most recently updated first.
+  repeated Session sessions = 1;
+}
+
+message CreateSessionRequest {
+  // User UUID. Set by auth middleware from JWT.
+  string user_id = 1;
+
+  // Session title. Defaults to "Nueva conversacion" if empty.
+  string title = 2;
+
+  // Optional RAG collection to associate with this session.
+  optional string collection = 3;
+}
+
+message GetSessionRequest {
+  // Session UUID to retrieve.
+  string session_id = 1;
+
+  // User UUID for ownership verification.
+  string user_id = 2;
+}
+
+message DeleteSessionRequest {
+  // Session UUID to delete.
+  string session_id = 1;
+
+  // User UUID for ownership verification.
+  string user_id = 2;
+}
+
+message DeleteSessionResponse {
+  // Empty on success. Error status codes used for failures.
+}
+
+message RenameSessionRequest {
+  // Session UUID to rename.
+  string session_id = 1;
+
+  // User UUID for ownership verification.
+  string user_id = 2;
+
+  // New session title. Must not be empty.
+  string title = 3;
+}
+
+message RenameSessionResponse {
+  // Empty on success. Error status codes used for failures.
+}
+
+// ── Messages ────────────────────────────────────────────────────────────
+
+// Message represents a single chat message within a session.
+message Message {
+  // Message UUID.
+  string id = 1;
+
+  // Parent session UUID.
+  string session_id = 2;
+
+  // Message role: "user", "assistant", or "system".
+  string role = 3;
+
+  // Message text content.
+  string content = 4;
+
+  // RAG source citations as JSON. Empty for non-assistant messages.
+  bytes sources = 5;
+
+  // Additional metadata as JSON (e.g. model info, token counts).
+  bytes metadata = 6;
+
+  // When the message was created.
+  google.protobuf.Timestamp created_at = 7;
+}
+
+message ListMessagesRequest {
+  // Session UUID to list messages for.
+  string session_id = 1;
+
+  // User UUID for ownership verification (checked via session).
+  string user_id = 2;
+}
+
+message ListMessagesResponse {
+  // All messages in the session, oldest first.
+  repeated Message messages = 1;
+}
+
+message AddMessageRequest {
+  // Session UUID to add the message to.
+  string session_id = 1;
+
+  // User UUID for ownership verification.
+  string user_id = 2;
+
+  // Message role: must be "user", "assistant", or "system".
+  string role = 3;
+
+  // Message text content. Must not be empty.
+  string content = 4;
+
+  // Optional RAG source citations as JSON.
+  bytes sources = 5;
+
+  // Optional additional metadata as JSON.
+  bytes metadata = 6;
+}

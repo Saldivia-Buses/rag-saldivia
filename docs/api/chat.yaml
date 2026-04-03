@@ -1,0 +1,404 @@
+openapi: "3.1.0"
+info:
+  title: Chat Service
+  version: "1.0.0"
+  description: |
+    Chat session and message management for the SDA Framework. Handles
+    conversation lifecycle (create, list, rename, delete) and message
+    persistence. Acts as the primary user interaction interface — messages
+    sent here are forwarded to RAG/Agent services for AI responses.
+
+servers:
+  - url: http://localhost:8003
+    description: Local development
+
+tags:
+  - name: sessions
+    description: Chat session management
+  - name: messages
+    description: Message operations within sessions
+
+security:
+  - bearerAuth: []
+
+paths:
+  /v1/chat/sessions:
+    get:
+      operationId: listSessions
+      summary: List chat sessions for the current user
+      description: |
+        Returns all chat sessions owned by the user identified in the
+        X-User-ID header. Sessions are ordered by last activity (most
+        recent first).
+      tags: [sessions]
+      parameters:
+        - $ref: "#/components/parameters/XUserID"
+      responses:
+        "200":
+          description: List of sessions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Session"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    post:
+      operationId: createSession
+      summary: Create a new chat session
+      description: |
+        Creates a new chat session for the current user. Optionally binds
+        the session to a specific RAG collection for scoped knowledge base
+        queries.
+      tags: [sessions]
+      parameters:
+        - $ref: "#/components/parameters/XUserID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateSessionRequest"
+      responses:
+        "201":
+          description: Session created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /v1/chat/sessions/{sessionID}:
+    get:
+      operationId: getSession
+      summary: Get session detail
+      description: Returns a single chat session by ID.
+      tags: [sessions]
+      parameters:
+        - $ref: "#/components/parameters/SessionID"
+        - $ref: "#/components/parameters/XUserID"
+      responses:
+        "200":
+          description: Session detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    patch:
+      operationId: renameSession
+      summary: Rename a chat session
+      description: Updates the title of an existing chat session.
+      tags: [sessions]
+      parameters:
+        - $ref: "#/components/parameters/SessionID"
+        - $ref: "#/components/parameters/XUserID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RenameSessionRequest"
+      responses:
+        "200":
+          description: Session renamed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    delete:
+      operationId: deleteSession
+      summary: Delete a chat session
+      description: |
+        Deletes a chat session and all its messages. This action is
+        irreversible.
+      tags: [sessions]
+      parameters:
+        - $ref: "#/components/parameters/SessionID"
+        - $ref: "#/components/parameters/XUserID"
+      responses:
+        "204":
+          description: Session deleted
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /v1/chat/sessions/{sessionID}/messages:
+    get:
+      operationId: listMessages
+      summary: Get all messages in a session
+      description: |
+        Returns all messages in a chat session, ordered chronologically.
+        Includes both user and assistant messages.
+      tags: [messages]
+      parameters:
+        - $ref: "#/components/parameters/SessionID"
+        - $ref: "#/components/parameters/XUserID"
+      responses:
+        "200":
+          description: List of messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Message"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    post:
+      operationId: addMessage
+      summary: Add a message to a session
+      description: |
+        Appends a new message to a chat session. Typically used to persist
+        user messages and AI responses. The session's updated_at timestamp
+        is refreshed on each message.
+      tags: [messages]
+      parameters:
+        - $ref: "#/components/parameters/SessionID"
+        - $ref: "#/components/parameters/XUserID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMessageRequest"
+      responses:
+        "201":
+          description: Message added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    SessionID:
+      name: sessionID
+      in: path
+      required: true
+      description: Chat session UUID
+      schema:
+        type: string
+        format: uuid
+
+    XUserID:
+      name: X-User-ID
+      in: header
+      required: true
+      description: |
+        Authenticated user ID, injected by the gateway after JWT validation.
+        Services trust this header because it originates from the internal
+        network (Traefik strips it from external requests).
+      schema:
+        type: string
+        format: uuid
+
+  schemas:
+    Session:
+      type: object
+      required:
+        - id
+        - user_id
+        - title
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 770e8400-e29b-41d4-a716-446655440010
+        user_id:
+          type: string
+          format: uuid
+          example: 550e8400-e29b-41d4-a716-446655440000
+        title:
+          type: string
+          example: Fleet maintenance costs Q1
+        collection:
+          type: string
+          nullable: true
+          description: Bound RAG collection name, null for general chat
+          example: saldivia-docs
+        created_at:
+          type: string
+          format: date-time
+          example: "2026-04-03T10:30:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2026-04-03T11:45:00Z"
+
+    CreateSessionRequest:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+          example: New conversation
+        collection:
+          type: string
+          description: Optional RAG collection to scope this session
+          example: saldivia-docs
+
+    RenameSessionRequest:
+      type: object
+      required:
+        - title
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+          example: Fuel cost analysis
+
+    Message:
+      type: object
+      required:
+        - id
+        - session_id
+        - role
+        - content
+        - created_at
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 880e8400-e29b-41d4-a716-446655440020
+        session_id:
+          type: string
+          format: uuid
+          example: 770e8400-e29b-41d4-a716-446655440010
+        role:
+          type: string
+          enum: [user, assistant, system]
+          example: user
+        content:
+          type: string
+          example: What were the maintenance costs for bus fleet in March?
+        created_at:
+          type: string
+          format: date-time
+          example: "2026-04-03T11:00:00Z"
+
+    CreateMessageRequest:
+      type: object
+      required:
+        - role
+        - content
+      properties:
+        role:
+          type: string
+          enum: [user, assistant, system]
+          example: user
+        content:
+          type: string
+          minLength: 1
+          example: What were the maintenance costs for bus fleet in March?
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          example: not_found
+        message:
+          type: string
+          example: session not found

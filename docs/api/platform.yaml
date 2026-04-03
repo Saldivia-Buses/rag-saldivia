@@ -1,0 +1,802 @@
+openapi: "3.1.0"
+info:
+  title: Platform Service
+  version: "1.0.0"
+  description: |
+    Platform administration service for the SDA Framework. Provides full
+    control over the multi-tenant system: tenant lifecycle, module
+    assignment, feature flags, and global configuration. Accessible only
+    by platform admins (Saldivia team). Operates on the Platform DB,
+    separate from any tenant database.
+
+servers:
+  - url: http://localhost:8006
+    description: Local development
+
+tags:
+  - name: tenants
+    description: Tenant CRUD and lifecycle
+  - name: tenant-modules
+    description: Module assignment per tenant
+  - name: modules
+    description: Global module catalog
+  - name: flags
+    description: Feature flags
+  - name: config
+    description: Global configuration
+
+security:
+  - bearerAuth: []
+
+paths:
+  # --- Tenants ---
+
+  /v1/platform/tenants:
+    get:
+      operationId: listTenants
+      summary: List all tenants
+      description: Returns all tenants registered in the platform.
+      tags: [tenants]
+      responses:
+        "200":
+          description: List of tenants
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Tenant"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden — platform admin role required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    post:
+      operationId: createTenant
+      summary: Create a new tenant
+      description: |
+        Provisions a new tenant: creates the tenant record in Platform DB,
+        initializes a per-tenant PostgreSQL database and Redis instance,
+        and sets up default module assignments.
+      tags: [tenants]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateTenantRequest"
+      responses:
+        "201":
+          description: Tenant created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tenant"
+        "400":
+          description: Invalid request or slug already taken
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /v1/platform/tenants/{tenantID}:
+    get:
+      operationId: getTenant
+      summary: Get tenant detail
+      description: Returns a single tenant by ID with full configuration.
+      tags: [tenants]
+      parameters:
+        - $ref: "#/components/parameters/TenantID"
+      responses:
+        "200":
+          description: Tenant detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tenant"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Tenant not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    patch:
+      operationId: updateTenant
+      summary: Update tenant
+      description: Partially updates a tenant's configuration.
+      tags: [tenants]
+      parameters:
+        - $ref: "#/components/parameters/TenantID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateTenantRequest"
+      responses:
+        "200":
+          description: Tenant updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Tenant"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Tenant not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    delete:
+      operationId: deleteTenant
+      summary: Delete tenant
+      description: |
+        Deletes a tenant and all associated resources (database, Redis,
+        Milvus collections). This action is irreversible. Requires
+        confirmation via the X-Confirm-Delete header.
+      tags: [tenants]
+      parameters:
+        - $ref: "#/components/parameters/TenantID"
+        - name: X-Confirm-Delete
+          in: header
+          required: true
+          description: Must be set to the tenant slug to confirm deletion
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Tenant deleted
+        "400":
+          description: Confirmation header missing or incorrect
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Tenant not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # --- Tenant Modules ---
+
+  /v1/platform/tenants/{tenantID}/modules:
+    get:
+      operationId: listTenantModules
+      summary: List modules enabled for a tenant
+      description: Returns all modules currently assigned to a specific tenant.
+      tags: [tenant-modules]
+      parameters:
+        - $ref: "#/components/parameters/TenantID"
+      responses:
+        "200":
+          description: Enabled modules for tenant
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TenantModule"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Tenant not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    post:
+      operationId: enableModule
+      summary: Enable a module for a tenant
+      description: |
+        Assigns a module from the global catalog to a specific tenant.
+        The module becomes available to the tenant's users immediately.
+      tags: [tenant-modules]
+      parameters:
+        - $ref: "#/components/parameters/TenantID"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EnableModuleRequest"
+      responses:
+        "201":
+          description: Module enabled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TenantModule"
+        "400":
+          description: Module already enabled or invalid module ID
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Tenant not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /v1/platform/tenants/{tenantID}/modules/{moduleID}:
+    delete:
+      operationId: disableModule
+      summary: Disable a module for a tenant
+      description: |
+        Removes a module assignment from a tenant. The module is no longer
+        accessible to the tenant's users.
+      tags: [tenant-modules]
+      parameters:
+        - $ref: "#/components/parameters/TenantID"
+        - $ref: "#/components/parameters/ModuleID"
+      responses:
+        "204":
+          description: Module disabled
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Tenant or module assignment not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # --- Module Catalog ---
+
+  /v1/platform/modules:
+    get:
+      operationId: listModuleCatalog
+      summary: List available modules
+      description: |
+        Returns the global module catalog — all modules available for
+        assignment to tenants, including core and modular services.
+      tags: [modules]
+      responses:
+        "200":
+          description: Module catalog
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Module"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # --- Feature Flags ---
+
+  /v1/platform/flags:
+    get:
+      operationId: listFlags
+      summary: List feature flags
+      description: Returns all feature flags and their current values.
+      tags: [flags]
+      responses:
+        "200":
+          description: Feature flags
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FeatureFlag"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    patch:
+      operationId: updateFlags
+      summary: Update feature flags
+      description: |
+        Updates one or more feature flags. Accepts a partial update —
+        only the flags included in the request body are modified.
+      tags: [flags]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: "#/components/schemas/UpdateFlagRequest"
+      responses:
+        "200":
+          description: Flags updated
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/FeatureFlag"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  # --- Global Config ---
+
+  /v1/platform/config/{key}:
+    get:
+      operationId: getConfig
+      summary: Get a global config value
+      description: Returns a single global configuration entry by key.
+      tags: [config]
+      parameters:
+        - $ref: "#/components/parameters/ConfigKey"
+      responses:
+        "200":
+          description: Config value
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConfigEntry"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Config key not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+    put:
+      operationId: setConfig
+      summary: Set a global config value
+      description: |
+        Creates or updates a global configuration entry. The value is
+        stored as a JSON-compatible string.
+      tags: [config]
+      parameters:
+        - $ref: "#/components/parameters/ConfigKey"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SetConfigRequest"
+      responses:
+        "200":
+          description: Config value set
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConfigEntry"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT with platform_admin role claim required for all endpoints.
+
+  parameters:
+    TenantID:
+      name: tenantID
+      in: path
+      required: true
+      description: Tenant UUID
+      schema:
+        type: string
+        format: uuid
+
+    ModuleID:
+      name: moduleID
+      in: path
+      required: true
+      description: Module UUID
+      schema:
+        type: string
+        format: uuid
+
+    ConfigKey:
+      name: key
+      in: path
+      required: true
+      description: Configuration key identifier
+      schema:
+        type: string
+        example: rag.default_model
+
+  schemas:
+    Tenant:
+      type: object
+      required:
+        - id
+        - name
+        - slug
+        - status
+        - created_at
+        - updated_at
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+        name:
+          type: string
+          example: Saldivia Buses
+        slug:
+          type: string
+          pattern: "^[a-z0-9-]+$"
+          description: URL-safe tenant identifier, used in subdomains
+          example: saldivia
+        status:
+          type: string
+          enum: [active, suspended, provisioning]
+          example: active
+        plan:
+          type: string
+          enum: [starter, professional, enterprise]
+          example: enterprise
+        max_users:
+          type: integer
+          description: Maximum number of users allowed
+          example: 50
+        settings:
+          type: object
+          nullable: true
+          description: Tenant-specific settings (JSON object)
+          additionalProperties: true
+        created_at:
+          type: string
+          format: date-time
+          example: "2026-01-15T10:00:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2026-04-01T14:30:00Z"
+
+    CreateTenantRequest:
+      type: object
+      required:
+        - name
+        - slug
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          example: Acme Transport
+        slug:
+          type: string
+          pattern: "^[a-z0-9-]+$"
+          minLength: 3
+          maxLength: 63
+          example: acme-transport
+        plan:
+          type: string
+          enum: [starter, professional, enterprise]
+          default: starter
+          example: professional
+        max_users:
+          type: integer
+          minimum: 1
+          default: 10
+          example: 25
+
+    UpdateTenantRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+          example: Acme Transport LLC
+        status:
+          type: string
+          enum: [active, suspended]
+        plan:
+          type: string
+          enum: [starter, professional, enterprise]
+        max_users:
+          type: integer
+          minimum: 1
+        settings:
+          type: object
+          additionalProperties: true
+
+    TenantModule:
+      type: object
+      required:
+        - module_id
+        - module_name
+        - category
+        - enabled_at
+      properties:
+        module_id:
+          type: string
+          format: uuid
+          example: 660e8400-e29b-41d4-a716-446655440001
+        module_name:
+          type: string
+          example: ingest
+        category:
+          type: string
+          enum: [core, ai, business]
+          example: ai
+        enabled_at:
+          type: string
+          format: date-time
+          example: "2026-03-01T09:00:00Z"
+
+    EnableModuleRequest:
+      type: object
+      required:
+        - module_id
+      properties:
+        module_id:
+          type: string
+          format: uuid
+          example: 660e8400-e29b-41d4-a716-446655440001
+
+    Module:
+      type: object
+      required:
+        - id
+        - name
+        - category
+        - description
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: 660e8400-e29b-41d4-a716-446655440001
+        name:
+          type: string
+          example: ingest
+        category:
+          type: string
+          enum: [core, ai, business]
+          example: ai
+        description:
+          type: string
+          example: Document upload and processing pipeline
+        requires_gpu:
+          type: boolean
+          example: false
+
+    FeatureFlag:
+      type: object
+      required:
+        - key
+        - value
+        - description
+      properties:
+        key:
+          type: string
+          example: mfa_required
+        value:
+          oneOf:
+            - type: boolean
+            - type: string
+            - type: integer
+          description: Flag value (boolean, string, or integer)
+          example: true
+        description:
+          type: string
+          example: Require MFA for all tenant admins
+        scope:
+          type: string
+          enum: [global, tenant]
+          description: Whether the flag applies globally or per-tenant
+          example: global
+
+    UpdateFlagRequest:
+      type: object
+      required:
+        - key
+        - value
+      properties:
+        key:
+          type: string
+          example: mfa_required
+        value:
+          oneOf:
+            - type: boolean
+            - type: string
+            - type: integer
+          example: false
+
+    ConfigEntry:
+      type: object
+      required:
+        - key
+        - value
+        - updated_at
+      properties:
+        key:
+          type: string
+          example: rag.default_model
+        value:
+          type: string
+          description: JSON-encoded configuration value
+          example: "nemotron-super-49b"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2026-04-01T12:00:00Z"
+
+    SetConfigRequest:
+      type: object
+      required:
+        - value
+      properties:
+        value:
+          type: string
+          description: JSON-encoded configuration value
+          example: "nemotron-super-49b"
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          example: forbidden
+        message:
+          type: string
+          example: platform admin role required
