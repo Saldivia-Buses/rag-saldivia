@@ -143,6 +143,7 @@ export default function ChatPage() {
   const [streamingContent, setStreamingContent] = useState("");
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const streamRef = useRef(""); // tracks streaming content synchronously
   const queryClient = useQueryClient();
 
   // Fetch sessions
@@ -244,6 +245,7 @@ export default function ChatPage() {
     // Stream RAG response
     setIsStreaming(true);
     setStreamingContent("");
+    streamRef.current = "";
 
     try {
       for await (const chunk of api.stream("/v1/rag/generate", {
@@ -251,36 +253,33 @@ export default function ChatPage() {
         stream: true,
         use_knowledge_base: true,
       })) {
-        setStreamingContent((prev) => prev + chunk);
+        streamRef.current += chunk;
+        setStreamingContent(streamRef.current);
       }
 
-      // Save the complete assistant response — capture from state setter
-      let finalContent = "";
-      setStreamingContent((prev) => {
-        finalContent = prev;
-        return prev;
-      });
-
-      // Store assistant message in backend
+      // Store assistant message in backend using the ref (always current)
+      const finalContent = streamRef.current;
       if (finalContent) {
         await api.post(`/v1/chat/sessions/${sessionId}/messages`, {
           role: "assistant",
           content: finalContent,
         });
-      }
 
-      queryClient.invalidateQueries({
-        queryKey: ["chat", "messages", sessionId],
-      });
+        // Refetch messages — streaming content stays visible until data arrives
+        await queryClient.invalidateQueries({
+          queryKey: ["chat", "messages", sessionId],
+        });
+      }
     } catch (err) {
       if (err instanceof ApiError) {
-        setStreamingContent(
-          `Error: ${err.message}. El servicio RAG puede no estar disponible.`,
-        );
+        streamRef.current = `Error: ${err.message}`;
+        setStreamingContent(streamRef.current);
+        await new Promise((r) => setTimeout(r, 3000));
       }
     } finally {
       setIsStreaming(false);
       setStreamingContent("");
+      streamRef.current = "";
     }
   }, [input, isStreaming, activeSessionId, queryClient, sendMessageMutation]);
 

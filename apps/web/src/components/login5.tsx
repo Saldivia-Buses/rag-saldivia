@@ -43,8 +43,8 @@ const Login5 = ({
 
     try {
       await login(email, password);
-      // Redirect to main app
-      window.location.href = "/";
+      // Redirect to dashboard
+      window.location.href = "/dashboard";
     } catch (err) {
       if (err instanceof ApiError) {
         switch (err.status) {
