@@ -18,6 +18,7 @@ import (
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
 	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
+	"github.com/Camionerou/rag-saldivia/pkg/tenant"
 	"github.com/Camionerou/rag-saldivia/services/auth/internal/handler"
 	"github.com/Camionerou/rag-saldivia/services/auth/internal/service"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
@@ -29,19 +30,11 @@ func main() {
 
 	port := env("AUTH_PORT", "8001")
 	jwtSecret := env("JWT_SECRET", "")
-	dbURL := env("POSTGRES_TENANT_URL", "")
-	// TODO: Refactor to use tenant.Resolver for multi-tenant support.
-	// Currently hardcoded to a single tenant — production requires either
-	// one instance per tenant or dynamic resolution per request.
-	tenantID := env("TENANT_ID", "dev")
-	tenantSlug := env("TENANT_SLUG", "dev")
+	tenantDBURL := env("POSTGRES_TENANT_URL", "")
+	platformDBURL := env("POSTGRES_PLATFORM_URL", "")
 
 	if jwtSecret == "" {
 		slog.Error("JWT_SECRET is required")
-		os.Exit(1)
-	}
-	if dbURL == "" {
-		slog.Error("POSTGRES_TENANT_URL is required")
 		os.Exit(1)
 	}
 
@@ -60,20 +53,7 @@ func main() {
 		defer otelShutdown(context.Background())
 	}
 
-	// Connect to tenant database
-	pool, err := pgxpool.New(ctx, dbURL)
-	if err != nil {
-		slog.Error("failed to connect to database", "error", err)
-		os.Exit(1)
-	}
-	defer pool.Close()
-
-	if err := pool.Ping(ctx); err != nil {
-		slog.Error("failed to ping database", "error", err)
-		os.Exit(1)
-	}
-
-	// Connect to NATS (best-effort — retries in background, events fail gracefully)
+	// Connect to NATS
 	natsURL := env("NATS_URL", nats.DefaultURL)
 	nc, err := nats.Connect(natsURL,
 		nats.RetryOnFailedConnect(true),
@@ -94,10 +74,54 @@ func main() {
 	publisher := natspub.New(nc)
 	slog.Info("connected to NATS", "url", natsURL)
 
-	// Initialize services
 	jwtCfg := sdajwt.DefaultConfig(jwtSecret)
-	authSvc := service.NewAuth(pool, jwtCfg, tenantID, tenantSlug, publisher)
-	authHandler := handler.NewAuth(authSvc)
+
+	// Multi-tenant mode: platform DB available → use Resolver
+	// Single-tenant mode: only tenant DB URL → legacy mode (dev)
+	var authHandler *handler.Auth
+
+	if platformDBURL != "" {
+		// Multi-tenant: resolve tenant DB per request from platform DB
+		platformPool, err := pgxpool.New(ctx, platformDBURL)
+		if err != nil {
+			slog.Error("failed to connect to platform database", "error", err)
+			os.Exit(1)
+		}
+		defer platformPool.Close()
+
+		if err := platformPool.Ping(ctx); err != nil {
+			slog.Error("failed to ping platform database", "error", err)
+			os.Exit(1)
+		}
+
+		resolver := tenant.NewResolver(platformPool)
+		defer resolver.Close()
+
+		authHandler = handler.NewMultiTenantAuth(resolver, jwtCfg, publisher)
+		slog.Info("auth service starting in multi-tenant mode")
+	} else if tenantDBURL != "" {
+		// Single-tenant: direct connection (dev mode)
+		pool, err := pgxpool.New(ctx, tenantDBURL)
+		if err != nil {
+			slog.Error("failed to connect to database", "error", err)
+			os.Exit(1)
+		}
+		defer pool.Close()
+
+		if err := pool.Ping(ctx); err != nil {
+			slog.Error("failed to ping database", "error", err)
+			os.Exit(1)
+		}
+
+		tenantID := env("TENANT_ID", "dev")
+		tenantSlug := env("TENANT_SLUG", "dev")
+		authSvc := service.NewAuth(pool, jwtCfg, tenantID, tenantSlug, publisher)
+		authHandler = handler.NewAuth(authSvc)
+		slog.Info("auth service starting in single-tenant mode", "tenant_slug", tenantSlug)
+	} else {
+		slog.Error("either POSTGRES_TENANT_URL or POSTGRES_PLATFORM_URL is required")
+		os.Exit(1)
+	}
 
 	// Router
 	r := chi.NewRouter()
@@ -118,7 +142,7 @@ func main() {
 		r.Get("/v1/modules/enabled", authHandler.EnabledModules)
 	})
 
-	// Server — wrap with OTel HTTP instrumentation
+	// Server
 	srv := &http.Server{
 		Addr:         ":" + port,
 		Handler:      otelhttp.NewHandler(r, "sda-auth"),
@@ -127,16 +151,14 @@ func main() {
 		IdleTimeout:  60 * time.Second,
 	}
 
-	// Start
 	go func() {
-		slog.Info("auth service starting", "port", port, "tenant_id", tenantID, "tenant_slug", tenantSlug)
+		slog.Info("auth service listening", "port", port)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			slog.Error("server error", "error", err)
 			os.Exit(1)
 		}
 	}()
 
-	// Graceful shutdown
 	<-ctx.Done()
 	slog.Info("auth service shutting down")
 

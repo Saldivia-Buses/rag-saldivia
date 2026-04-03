@@ -49,6 +49,8 @@ func main() {
 	ragSvc := service.NewRAG(service.Config{
 		BlueprintURL: blueprintURL,
 		Timeout:      timeout,
+		APIKey:       env("RAG_API_KEY", ""),
+		Model:        env("RAG_MODEL", ""),
 	})
 
 	ragHandler := handler.NewRAG(ragSvc)

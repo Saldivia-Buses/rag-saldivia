@@ -15,8 +15,10 @@ import (
 
 // Config holds RAG service configuration.
 type Config struct {
-	BlueprintURL string        // http://localhost:8081
+	BlueprintURL string        // http://localhost:8081 or https://openrouter.ai/api
 	Timeout      time.Duration // request timeout
+	APIKey       string        // optional: API key for OpenRouter/external providers
+	Model        string        // optional: model ID for OpenRouter (e.g. "anthropic/claude-sonnet-4")
 }
 
 // RAG proxies requests to the NVIDIA Blueprint.
@@ -37,15 +39,16 @@ func NewRAG(cfg Config) *RAG {
 
 // GenerateRequest holds the input for a RAG query.
 type GenerateRequest struct {
-	Messages       []ChatMessage `json:"messages"`
-	CollectionName string        `json:"collection_name"`
-	Stream         bool          `json:"stream"`
-	Temperature    float64       `json:"temperature,omitempty"`
-	TopP           float64       `json:"top_p,omitempty"`
-	MaxTokens      int           `json:"max_tokens,omitempty"`
-	VdbTopK        int           `json:"vdb_top_k,omitempty"`
-	RerankerTopK   int           `json:"reranker_top_k,omitempty"`
-	UseKnowledgeBase bool        `json:"use_knowledge_base"`
+	Messages         []ChatMessage `json:"messages"`
+	Model            string        `json:"model,omitempty"`
+	CollectionName   string        `json:"collection_name,omitempty"`
+	Stream           bool          `json:"stream"`
+	Temperature      float64       `json:"temperature,omitempty"`
+	TopP             float64       `json:"top_p,omitempty"`
+	MaxTokens        int           `json:"max_tokens,omitempty"`
+	VdbTopK          int           `json:"vdb_top_k,omitempty"`
+	RerankerTopK     int           `json:"reranker_top_k,omitempty"`
+	UseKnowledgeBase bool          `json:"use_knowledge_base"`
 }
 
 // ChatMessage is a single message in the conversation.
@@ -57,12 +60,24 @@ type ChatMessage struct {
 // GenerateStream sends a streaming request to the Blueprint and returns the raw SSE body.
 // The caller is responsible for closing the response body.
 func (r *RAG) GenerateStream(ctx context.Context, tenantSlug string, req GenerateRequest) (io.ReadCloser, string, error) {
-	// Namespace collection by tenant
-	collection := req.CollectionName
-	if collection != "" && !strings.HasPrefix(collection, tenantSlug+"-") {
-		collection = tenantSlug + "-" + collection
+	// Namespace collection by tenant (only for Blueprint mode, not OpenRouter)
+	if r.cfg.APIKey == "" {
+		collection := req.CollectionName
+		if collection != "" && !strings.HasPrefix(collection, tenantSlug+"-") {
+			collection = tenantSlug + "-" + collection
+		}
+		req.CollectionName = collection
+	} else {
+		// OpenRouter/external mode: inject model if configured
+		if r.cfg.Model != "" && req.Model == "" {
+			req.Model = r.cfg.Model
+		}
+		// Clear Blueprint-specific fields
+		req.CollectionName = ""
+		req.UseKnowledgeBase = false
+		req.VdbTopK = 0
+		req.RerankerTopK = 0
 	}
-	req.CollectionName = collection
 	req.Stream = true
 
 	body, err := marshalJSON(req)
@@ -77,6 +92,11 @@ func (r *RAG) GenerateStream(ctx context.Context, tenantSlug string, req Generat
 	}
 	httpReq.Header.Set("Content-Type", "application/json")
 	httpReq.Header.Set("Accept", "text/event-stream")
+
+	// Add API key for external providers (OpenRouter, OpenAI, etc.)
+	if r.cfg.APIKey != "" {
+		httpReq.Header.Set("Authorization", "Bearer "+r.cfg.APIKey)
+	}
 
 	resp, err := r.client.Do(httpReq)
 	if err != nil {
@@ -93,7 +113,12 @@ func (r *RAG) GenerateStream(ctx context.Context, tenantSlug string, req Generat
 }
 
 // ListCollections returns all collections from the Blueprint, filtered by tenant prefix.
+// In OpenRouter mode (no Blueprint), returns an empty list.
 func (r *RAG) ListCollections(ctx context.Context, tenantSlug string) ([]string, error) {
+	if r.cfg.APIKey != "" {
+		return []string{}, nil // no collections in OpenRouter mode
+	}
+
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodGet,
 		r.cfg.BlueprintURL+"/v1/collections", nil)
 	if err != nil {
@@ -136,8 +161,13 @@ func (r *RAG) ListCollections(ctx context.Context, tenantSlug string) ([]string,
 	return filtered, nil
 }
 
-// Health checks if the Blueprint is reachable.
+// Health checks if the upstream LLM provider is reachable.
 func (r *RAG) Health(ctx context.Context) error {
+	if r.cfg.APIKey != "" {
+		// OpenRouter mode — no health endpoint, just verify config exists
+		return nil
+	}
+
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodGet,
 		r.cfg.BlueprintURL+"/health", nil)
 	if err != nil {
