@@ -30,6 +30,38 @@ type FeatureFlag struct {
 	CreatedAt   pgtype.Timestamptz `json:"created_at"`
 }
 
+type FeedbackAlert struct {
+	ID             string             `json:"id"`
+	TenantID       string             `json:"tenant_id"`
+	AlertType      string             `json:"alert_type"`
+	Severity       string             `json:"severity"`
+	Module         pgtype.Text        `json:"module"`
+	Title          string             `json:"title"`
+	Description    string             `json:"description"`
+	Threshold      pgtype.Text        `json:"threshold"`
+	CurrentValue   pgtype.Text        `json:"current_value"`
+	Status         string             `json:"status"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+	ResolvedAt     pgtype.Timestamptz `json:"resolved_at"`
+	AcknowledgedBy pgtype.Text        `json:"acknowledged_by"`
+}
+
+type FeedbackMetric struct {
+	TenantID     string             `json:"tenant_id"`
+	Module       string             `json:"module"`
+	Category     string             `json:"category"`
+	Period       pgtype.Timestamptz `json:"period"`
+	TotalEvents  int32              `json:"total_events"`
+	Positive     int32              `json:"positive"`
+	Negative     int32              `json:"negative"`
+	AvgScore     pgtype.Float4      `json:"avg_score"`
+	P50LatencyMs pgtype.Float4      `json:"p50_latency_ms"`
+	P95LatencyMs pgtype.Float4      `json:"p95_latency_ms"`
+	P99LatencyMs pgtype.Float4      `json:"p99_latency_ms"`
+	ErrorCount   int32              `json:"error_count"`
+	Metadata     []byte             `json:"metadata"`
+}
+
 type GlobalConfig struct {
 	Key       string             `json:"key"`
 	Value     []byte             `json:"value"`
@@ -73,18 +105,33 @@ type RagModel struct {
 }
 
 type Tenant struct {
-	ID          string             `json:"id"`
-	Slug        string             `json:"slug"`
-	Name        string             `json:"name"`
-	PlanID      string             `json:"plan_id"`
-	PostgresUrl string             `json:"postgres_url"`
-	RedisUrl    string             `json:"redis_url"`
-	Enabled     bool               `json:"enabled"`
-	LogoUrl     pgtype.Text        `json:"logo_url"`
-	Domain      pgtype.Text        `json:"domain"`
-	Settings    []byte             `json:"settings"`
-	CreatedAt   pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+	ID             string             `json:"id"`
+	Slug           string             `json:"slug"`
+	Name           string             `json:"name"`
+	PlanID         string             `json:"plan_id"`
+	PostgresUrl    string             `json:"postgres_url"`
+	RedisUrl       string             `json:"redis_url"`
+	Enabled        bool               `json:"enabled"`
+	LogoUrl        pgtype.Text        `json:"logo_url"`
+	Domain         pgtype.Text        `json:"domain"`
+	Settings       []byte             `json:"settings"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt      pgtype.Timestamptz `json:"updated_at"`
+	PostgresUrlEnc pgtype.Text        `json:"postgres_url_enc"`
+	RedisUrlEnc    pgtype.Text        `json:"redis_url_enc"`
+}
+
+type TenantHealthScore struct {
+	TenantID         string             `json:"tenant_id"`
+	Period           pgtype.Timestamptz `json:"period"`
+	OverallScore     float32            `json:"overall_score"`
+	AiQualityScore   float32            `json:"ai_quality_score"`
+	ErrorRateScore   float32            `json:"error_rate_score"`
+	UsageScore       float32            `json:"usage_score"`
+	PerformanceScore float32            `json:"performance_score"`
+	SecurityScore    float32            `json:"security_score"`
+	NpsScore         pgtype.Float4      `json:"nps_score"`
+	Details          []byte             `json:"details"`
 }
 
 type TenantModule struct {

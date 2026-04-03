@@ -12,6 +12,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
+	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/services/rag/internal/service"
 )
 
@@ -57,6 +58,11 @@ func setupRAGRouter(mock *mockRAGService) *chi.Mux {
 	return r
 }
 
+func withAdminContext(req *http.Request) *http.Request {
+	ctx := sdamw.WithRole(req.Context(), "admin")
+	return req.WithContext(ctx)
+}
+
 // --- generate tests ---
 
 func TestGenerate_Success_StreamsSSE(t *testing.T) {
@@ -69,6 +75,7 @@ func TestGenerate_Success_StreamsSSE(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/v1/rag/generate", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("X-Tenant-Slug", "saldivia")
+	req = withAdminContext(req)
 	rec := httptest.NewRecorder()
 	r.ServeHTTP(rec, req)
 
@@ -90,6 +97,7 @@ func TestGenerate_EmptyMessages_Returns400(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/v1/rag/generate", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("X-Tenant-Slug", "saldivia")
+	req = withAdminContext(req)
 	rec := httptest.NewRecorder()
 	r.ServeHTTP(rec, req)
 
@@ -104,6 +112,7 @@ func TestGenerate_InvalidJSON_Returns400(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/v1/rag/generate", strings.NewReader("not json"))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("X-Tenant-Slug", "saldivia")
+	req = withAdminContext(req)
 	rec := httptest.NewRecorder()
 	r.ServeHTTP(rec, req)
 
@@ -120,6 +129,7 @@ func TestGenerate_BlueprintError_Returns502(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/v1/rag/generate", strings.NewReader(body))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("X-Tenant-Slug", "saldivia")
+	req = withAdminContext(req)
 	rec := httptest.NewRecorder()
 	r.ServeHTTP(rec, req)
 
@@ -142,6 +152,7 @@ func TestListCollections_Success(t *testing.T) {
 
 	req := httptest.NewRequest(http.MethodGet, "/v1/rag/collections", nil)
 	req.Header.Set("X-Tenant-Slug", "saldivia")
+	req = withAdminContext(req)
 	rec := httptest.NewRecorder()
 	r.ServeHTTP(rec, req)
 
@@ -162,6 +173,7 @@ func TestListCollections_BlueprintDown_Returns502(t *testing.T) {
 
 	req := httptest.NewRequest(http.MethodGet, "/v1/rag/collections", nil)
 	req.Header.Set("X-Tenant-Slug", "saldivia")
+	req = withAdminContext(req)
 	rec := httptest.NewRecorder()
 	r.ServeHTTP(rec, req)
 

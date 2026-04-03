@@ -9,9 +9,12 @@ import (
 	"syscall"
 	"time"
 
+	"crypto/ed25519"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 
+	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
 	"github.com/Camionerou/rag-saldivia/services/rag/internal/handler"
@@ -24,7 +27,7 @@ func main() {
 	slog.SetDefault(logger)
 
 	port := env("RAG_PORT", "8004")
-	jwtSecret := env("JWT_SECRET", "")
+	publicKey := loadPublicKey()
 	blueprintURL := env("RAG_SERVER_URL", "http://localhost:8081")
 	timeoutMs := env("RAG_TIMEOUT_MS", "120000")
 
@@ -61,10 +64,11 @@ func main() {
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Recoverer)
+	r.Use(sdamw.SecureHeaders())
 
 	r.Get("/health", ragHandler.Health)
 	r.Group(func(r chi.Router) {
-		r.Use(sdamw.Auth(jwtSecret))
+		r.Use(sdamw.Auth(publicKey))
 		r.Mount("/v1/rag", ragHandler.Routes())
 	})
 
@@ -98,4 +102,18 @@ func env(key, fallback string) string {
 		return v
 	}
 	return fallback
+}
+
+func loadPublicKey() ed25519.PublicKey {
+	pubB64 := env("JWT_PUBLIC_KEY", "")
+	if pubB64 == "" {
+		slog.Error("JWT_PUBLIC_KEY is required")
+		os.Exit(1)
+	}
+	key, err := sdajwt.ParsePublicKeyEnv(pubB64)
+	if err != nil {
+		slog.Error("failed to parse JWT_PUBLIC_KEY", "error", err)
+		os.Exit(1)
+	}
+	return key
 }

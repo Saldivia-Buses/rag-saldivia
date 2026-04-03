@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/ed25519"
 	"log/slog"
 	"net/http"
 	"os"
@@ -13,6 +14,8 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
+	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
 	"github.com/Camionerou/rag-saldivia/services/platform/internal/handler"
 	"github.com/Camionerou/rag-saldivia/services/platform/internal/service"
@@ -25,14 +28,10 @@ func main() {
 
 	port := env("PLATFORM_PORT", "8006")
 	dbURL := env("POSTGRES_PLATFORM_URL", "")
-	jwtSecret := env("JWT_SECRET", "")
+	publicKey := loadPublicKey()
 
 	if dbURL == "" {
 		slog.Error("POSTGRES_PLATFORM_URL is required")
-		os.Exit(1)
-	}
-	if jwtSecret == "" {
-		slog.Error("JWT_SECRET is required")
 		os.Exit(1)
 	}
 
@@ -59,12 +58,14 @@ func main() {
 	defer pool.Close()
 
 	platformSvc := service.New(pool)
-	platformHandler := handler.NewPlatform(platformSvc, jwtSecret)
+	platformSlug := env("PLATFORM_TENANT_SLUG", "platform")
+	platformHandler := handler.NewPlatform(platformSvc, publicKey, platformSlug)
 
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Recoverer)
+	r.Use(sdamw.SecureHeaders())
 	r.Use(middleware.Timeout(30 * time.Second))
 
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
@@ -103,4 +104,18 @@ func env(key, fallback string) string {
 		return v
 	}
 	return fallback
+}
+
+func loadPublicKey() ed25519.PublicKey {
+	pubB64 := env("JWT_PUBLIC_KEY", "")
+	if pubB64 == "" {
+		slog.Error("JWT_PUBLIC_KEY is required")
+		os.Exit(1)
+	}
+	key, err := sdajwt.ParsePublicKeyEnv(pubB64)
+	if err != nil {
+		slog.Error("failed to parse JWT_PUBLIC_KEY", "error", err)
+		os.Exit(1)
+	}
+	return key
 }

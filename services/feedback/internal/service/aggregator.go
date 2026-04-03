@@ -6,13 +6,17 @@ import (
 	"math"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/Camionerou/rag-saldivia/services/feedback/internal/repository"
 )
 
 // Aggregator runs periodically to compute metrics and health scores.
 type Aggregator struct {
 	tenantDB    *pgxpool.Pool
 	platformDB  *pgxpool.Pool
+	repo        *repository.Queries
 	feedbackSvc *Feedback
 	alerter     *Alerter
 	interval    time.Duration
@@ -25,6 +29,7 @@ func NewAggregator(tenantDB, platformDB *pgxpool.Pool, feedbackSvc *Feedback, al
 	return &Aggregator{
 		tenantDB:    tenantDB,
 		platformDB:  platformDB,
+		repo:        feedbackSvc.Repo(),
 		feedbackSvc: feedbackSvc,
 		alerter:     alerter,
 		interval:    interval,
@@ -78,7 +83,7 @@ func (a *Aggregator) aggregate(tenantID, tenantSlug string) {
 	// Weighted composite
 	overall := aiScore*0.30 + errorScore*0.25 + perfScore*0.20 + securityScore*0.15 + usageScore*0.10
 
-	// Upsert health score in platform DB
+	// Upsert health score in platform DB (platform DB queries stay inline)
 	_, err := a.platformDB.Exec(ctx,
 		`INSERT INTO tenant_health_scores (tenant_id, period, overall_score, ai_quality_score, error_rate_score, usage_score, performance_score, security_score)
 		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
@@ -206,13 +211,12 @@ func (a *Aggregator) computeSecurityScore(ctx context.Context) float64 {
 		return 100
 	}
 
-	// Check for critical severity
-	var critCount int
-	a.tenantDB.QueryRow(ctx,
-		`SELECT COUNT(*) FROM feedback_events
-		 WHERE category = 'security' AND severity = 'critical'
-		   AND created_at > now() - interval '1 hour'`,
-	).Scan(&critCount)
+	// Check for critical severity via repository
+	critCount, err := a.repo.CountCriticalSecurityEvents(ctx)
+	if err != nil {
+		slog.Error("failed to count critical security events", "error", err)
+		return 70 // degrade gracefully
+	}
 
 	if critCount > 1 {
 		return 10
@@ -240,10 +244,11 @@ func (a *Aggregator) computeUsageScore(ctx context.Context) float64 {
 	currentUsage := counts["usage"]
 	if currentUsage == 0 {
 		// Check if this is a new tenant (no historical data)
-		var historicalCount int
-		a.tenantDB.QueryRow(ctx,
-			`SELECT COUNT(*) FROM feedback_events WHERE category = 'usage'`,
-		).Scan(&historicalCount)
+		historicalCount, err := a.repo.CountHistoricalUsage(ctx)
+		if err != nil {
+			slog.Error("failed to count historical usage", "error", err)
+			return 50
+		}
 
 		if historicalCount == 0 {
 			return 50 // new tenant, neutral
@@ -252,13 +257,11 @@ func (a *Aggregator) computeUsageScore(ctx context.Context) float64 {
 	}
 
 	// Compare to 7-day average
-	var avgHourly float64
-	a.tenantDB.QueryRow(ctx,
-		`SELECT COALESCE(COUNT(*)::float / GREATEST(EXTRACT(EPOCH FROM (now() - MIN(created_at))) / 3600, 1), 0)
-		 FROM feedback_events
-		 WHERE category = 'usage'
-		   AND created_at > now() - interval '7 days'`,
-	).Scan(&avgHourly)
+	avgHourly, err := a.repo.AvgHourlyUsage(ctx)
+	if err != nil {
+		slog.Error("failed to get avg hourly usage", "error", err)
+		return 100
+	}
 
 	if avgHourly == 0 {
 		return 100
@@ -278,34 +281,17 @@ func (a *Aggregator) computeUsageScore(ctx context.Context) float64 {
 }
 
 func (a *Aggregator) aggregateMetrics(ctx context.Context, tenantID string, period time.Time) {
-	rows, err := a.tenantDB.Query(ctx,
-		`SELECT module, category,
-			COUNT(*),
-			COUNT(*) FILTER (WHERE thumbs = 'up'),
-			COUNT(*) FILTER (WHERE thumbs = 'down'),
-			AVG(score),
-			COUNT(*) FILTER (WHERE category = 'error_report')
-		 FROM feedback_events
-		 WHERE created_at > $1 AND created_at <= $2
-		 GROUP BY module, category`,
-		period.Add(-a.interval), period,
-	)
+	rows, err := a.repo.AggregateByModuleCategory(ctx, repository.AggregateByModuleCategoryParams{
+		CreatedAt:   pgtype.Timestamptz{Time: period.Add(-a.interval), Valid: true},
+		CreatedAt_2: pgtype.Timestamptz{Time: period, Valid: true},
+	})
 	if err != nil {
 		slog.Error("failed to query aggregate data", "error", err)
 		return
 	}
-	defer rows.Close()
 
-	for rows.Next() {
-		var module, category string
-		var total, positive, negative, errorCount int
-		var avgScore *float64
-
-		if err := rows.Scan(&module, &category, &total, &positive, &negative, &avgScore, &errorCount); err != nil {
-			slog.Error("failed to scan aggregate row", "error", err)
-			continue
-		}
-
+	for _, row := range rows {
+		// Platform DB upsert stays inline (different database)
 		_, err := a.platformDB.Exec(ctx,
 			`INSERT INTO feedback_metrics (tenant_id, module, category, period, total_events, positive, negative, avg_score, error_count)
 			 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
@@ -315,23 +301,22 @@ func (a *Aggregator) aggregateMetrics(ctx context.Context, tenantID string, peri
 			   negative = EXCLUDED.negative,
 			   avg_score = EXCLUDED.avg_score,
 			   error_count = EXCLUDED.error_count`,
-			tenantID, module, category, period, total, positive, negative, avgScore, errorCount,
+			tenantID, row.Module, row.Category, period,
+			row.Total, row.Positive, row.Negative, row.AvgScore, row.ErrorCount,
 		)
 		if err != nil {
-			slog.Error("failed to upsert metric", "error", err, "module", module, "category", category)
+			slog.Error("failed to upsert metric", "error", err, "module", row.Module, "category", row.Category)
 		}
 	}
 }
 
 func (a *Aggregator) purgeOldEvents(ctx context.Context) {
-	result, err := a.tenantDB.Exec(ctx,
-		`DELETE FROM feedback_events WHERE created_at < now() - interval '90 days'`,
-	)
+	count, err := a.repo.PurgeOldEvents(ctx)
 	if err != nil {
 		slog.Error("failed to purge old feedback events", "error", err)
 		return
 	}
-	if result.RowsAffected() > 0 {
-		slog.Info("purged old feedback events", "count", result.RowsAffected())
+	if count > 0 {
+		slog.Info("purged old feedback events", "count", count)
 	}
 }

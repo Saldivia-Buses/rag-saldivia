@@ -6,7 +6,7 @@ import (
 )
 
 func TestNewResolver(t *testing.T) {
-	r := NewResolver(nil) // nil platformDB is fine for construction test
+	r := NewResolver(nil, nil) // nil platformDB is fine for construction test
 	if r == nil {
 		t.Fatal("expected non-nil resolver")
 	}
@@ -19,7 +19,7 @@ func TestNewResolver(t *testing.T) {
 }
 
 func TestResolver_Close(t *testing.T) {
-	r := NewResolver(nil)
+	r := NewResolver(nil, nil)
 	r.Close()
 
 	if !r.closed {
@@ -39,14 +39,14 @@ func TestResolver_Close(t *testing.T) {
 }
 
 func TestResolver_Close_Idempotent(t *testing.T) {
-	r := NewResolver(nil)
+	r := NewResolver(nil, nil)
 	r.Close()
 	r.Close() // should not panic
 }
 
 func TestResolver_PostgresPool_NoDatabase(t *testing.T) {
 	// Without a real platform DB, resolveConnInfo will fail
-	r := NewResolver(nil)
+	r := NewResolver(nil, nil)
 	defer r.Close()
 
 	_, err := r.PostgresPool(context.Background(), "nonexistent")
@@ -56,7 +56,7 @@ func TestResolver_PostgresPool_NoDatabase(t *testing.T) {
 }
 
 func TestResolver_RedisClient_NoDatabase(t *testing.T) {
-	r := NewResolver(nil)
+	r := NewResolver(nil, nil)
 	defer r.Close()
 
 	_, err := r.RedisClient(context.Background(), "nonexistent")

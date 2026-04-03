@@ -11,6 +11,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 
+	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/services/chat/internal/service"
 )
 
@@ -40,13 +41,16 @@ func (h *Chat) Routes() chi.Router {
 	r := chi.NewRouter()
 	r.Use(requireUserID)
 
-	r.Get("/", h.ListSessions)
-	r.Post("/", h.CreateSession)
-	r.Get("/{sessionID}", h.GetSession)
-	r.Delete("/{sessionID}", h.DeleteSession)
-	r.Patch("/{sessionID}", h.RenameSession)
-	r.Get("/{sessionID}/messages", h.GetMessages)
-	r.Post("/{sessionID}/messages", h.AddMessage)
+	// Read operations — require chat.read
+	r.With(sdamw.RequirePermission("chat.read")).Get("/", h.ListSessions)
+	r.With(sdamw.RequirePermission("chat.read")).Get("/{sessionID}", h.GetSession)
+	r.With(sdamw.RequirePermission("chat.read")).Get("/{sessionID}/messages", h.GetMessages)
+
+	// Write operations — require chat.write
+	r.With(sdamw.RequirePermission("chat.write")).Post("/", h.CreateSession)
+	r.With(sdamw.RequirePermission("chat.write")).Post("/{sessionID}/messages", h.AddMessage)
+	r.With(sdamw.RequirePermission("chat.write")).Delete("/{sessionID}", h.DeleteSession)
+	r.With(sdamw.RequirePermission("chat.write")).Patch("/{sessionID}", h.RenameSession)
 
 	return r
 }

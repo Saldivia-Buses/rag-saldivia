@@ -103,3 +103,37 @@ jobs:
           echo "::group::Testing pkg/"
           go test -race -count=1 ./pkg/...
           echo "::endgroup::"
+
+  # ── Security Scanning ──────────────────────────────────────────────────
+  security:
+    name: Security scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.work
+          cache-dependency-path: "**/go.sum"
+
+      - name: Install gosec
+        run: go install github.com/securego/gosec/v2/cmd/gosec@latest
+
+      - name: Run gosec
+        run: |
+          for svc in services/*/; do
+            echo "::group::gosec ${svc}"
+            gosec -quiet "./${svc}..." || true
+            echo "::endgroup::"
+          done
+          echo "::group::gosec pkg/"
+          gosec -quiet ./pkg/... || true
+          echo "::endgroup::"
+
+      - name: Trivy filesystem scan
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          severity: 'HIGH,CRITICAL'
+          exit-code: '0'

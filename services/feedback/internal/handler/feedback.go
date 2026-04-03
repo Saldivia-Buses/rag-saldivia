@@ -3,25 +3,25 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
 	"log/slog"
 	"net/http"
 	"strconv"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/jackc/pgx/v5/pgtype"
 
-	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/Camionerou/rag-saldivia/services/feedback/internal/repository"
 )
 
 // Feedback handles tenant-scoped feedback endpoints (read-only).
 type Feedback struct {
-	tenantDB *pgxpool.Pool
+	repo *repository.Queries
 }
 
 // NewFeedback creates feedback HTTP handlers.
-func NewFeedback(tenantDB *pgxpool.Pool) *Feedback {
-	return &Feedback{tenantDB: tenantDB}
+func NewFeedback(repo *repository.Queries) *Feedback {
+	return &Feedback{repo: repo}
 }
 
 // Routes returns the chi router for /v1/feedback/*.
@@ -43,79 +43,52 @@ func (h *Feedback) Summary(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hours := parsePeriod(r.URL.Query().Get("period"))
+	hours := int32(parsePeriod(r.URL.Query().Get("period")))
 	ctx := r.Context()
 
 	// AI quality
-	var positiveRate float64
-	var totalFeedback int
-	var avgScore float64
-	if err := h.tenantDB.QueryRow(ctx,
-		`SELECT COUNT(*), COALESCE(AVG(score), 0),
-			CASE WHEN COUNT(*) > 0 THEN COUNT(*) FILTER (WHERE thumbs = 'up')::float / NULLIF(COUNT(*), 0)
-			ELSE 0 END
-		 FROM feedback_events
-		 WHERE category IN ('response_quality','agent_quality','extraction','detection')
-		   AND created_at > now() - make_interval(hours => $1)`, hours,
-	).Scan(&totalFeedback, &avgScore, &positiveRate); err != nil {
+	aiRow, err := h.repo.GetSummaryAIQuality(ctx, hours)
+	if err != nil {
 		slog.Error("summary: ai quality query failed", "error", err)
 	}
 
 	// Errors
-	var totalErrors, openErrors, criticalErrors int
-	if err := h.tenantDB.QueryRow(ctx,
-		`SELECT COUNT(*),
-			COUNT(*) FILTER (WHERE status = 'open'),
-			COUNT(*) FILTER (WHERE severity = 'critical')
-		 FROM feedback_events WHERE category = 'error_report'
-		   AND created_at > now() - make_interval(hours => $1)`, hours,
-	).Scan(&totalErrors, &openErrors, &criticalErrors); err != nil {
+	errRow, err := h.repo.GetSummaryErrors(ctx, hours)
+	if err != nil {
 		slog.Error("summary: errors query failed", "error", err)
 	}
 
 	// Feature requests
-	var totalFeatures, openFeatures int
-	if err := h.tenantDB.QueryRow(ctx,
-		`SELECT COUNT(*), COUNT(*) FILTER (WHERE status = 'open')
-		 FROM feedback_events WHERE category = 'feature_request'
-		   AND created_at > now() - make_interval(hours => $1)`, hours,
-	).Scan(&totalFeatures, &openFeatures); err != nil {
+	featRow, err := h.repo.GetSummaryFeatures(ctx, hours)
+	if err != nil {
 		slog.Error("summary: features query failed", "error", err)
 	}
 
 	// NPS (30 day rolling)
-	var npsScore float64
-	var npsResponses int
-	if err := h.tenantDB.QueryRow(ctx,
-		`SELECT COUNT(*),
-			COALESCE(
-				(COUNT(*) FILTER (WHERE score >= 9)::float - COUNT(*) FILTER (WHERE score < 7)::float)
-				/ NULLIF(COUNT(*), 0) * 100, 0)
-		 FROM feedback_events WHERE category = 'nps'
-		   AND created_at > now() - interval '30 days'`,
-	).Scan(&npsResponses, &npsScore); err != nil {
+	npsRow, err := h.repo.GetSummaryNPS(ctx)
+	if err != nil {
 		slog.Error("summary: nps query failed", "error", err)
 	}
 
 	writeJSON(w, http.StatusOK, map[string]any{
 		"period": r.URL.Query().Get("period"),
 		"ai_quality": map[string]any{
-			"total_feedback": totalFeedback,
-			"positive_rate":  positiveRate,
-			"avg_score":      avgScore,
+			"total_feedback": aiRow.TotalFeedback,
+			"positive_rate":  aiRow.PositiveRate,
+			"avg_score":      aiRow.AvgScore,
 		},
 		"errors": map[string]any{
-			"total":    totalErrors,
-			"open":     openErrors,
-			"critical": criticalErrors,
+			"total":    errRow.Total,
+			"open":     errRow.Open,
+			"critical": errRow.Critical,
 		},
 		"feature_requests": map[string]any{
-			"total": totalFeatures,
-			"open":  openFeatures,
+			"total": featRow.Total,
+			"open":  featRow.Open,
 		},
 		"nps": map[string]any{
-			"score":     npsScore,
-			"responses": npsResponses,
+			"score":     npsRow.Score,
+			"responses": npsRow.Responses,
 		},
 	})
 }
@@ -128,51 +101,46 @@ func (h *Feedback) Quality(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hours := parsePeriod(r.URL.Query().Get("period"))
+	hours := int32(parsePeriod(r.URL.Query().Get("period")))
 	module := r.URL.Query().Get("module")
-	limit := parseIntParam(r.URL.Query().Get("limit"), 50, 200)
+	limit := int32(parseIntParam(r.URL.Query().Get("limit"), 50, 200))
 	ctx := r.Context()
 
-	query := `SELECT id, category, module, score, thumbs, comment, created_at
-		FROM feedback_events
-		WHERE category IN ('response_quality','agent_quality','extraction','detection')
-		  AND created_at > now() - make_interval(hours => $1)`
-	args := []any{hours}
-	argIdx := 2
-
 	if module != "" {
-		query += fmt.Sprintf(` AND module = $%d`, argIdx)
-		args = append(args, module)
-		argIdx++
-	}
-	query += fmt.Sprintf(` ORDER BY created_at DESC LIMIT $%d`, argIdx)
-	args = append(args, limit)
+		rows, err := h.repo.ListQualityEventsByModule(ctx, repository.ListQualityEventsByModuleParams{
+			Hours:  hours,
+			Module: module,
+			Limit:  limit,
+		})
+		if err != nil {
+			reqID := middleware.GetReqID(ctx)
+			slog.Error("quality query failed", "error", err, "request_id", reqID)
+			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+			return
+		}
 
-	rows, err := h.tenantDB.Query(ctx, query, args...)
+		items := make([]map[string]any, 0, len(rows))
+		for _, row := range rows {
+			items = append(items, qualityEventToMap(row.ID, row.Category, row.Module, row.Score, row.Thumbs, row.Comment, row.CreatedAt))
+		}
+		writeJSON(w, http.StatusOK, items)
+		return
+	}
+
+	rows, err := h.repo.ListQualityEvents(ctx, repository.ListQualityEventsParams{
+		Hours: hours,
+		Limit: limit,
+	})
 	if err != nil {
 		reqID := middleware.GetReqID(ctx)
 		slog.Error("quality query failed", "error", err, "request_id", reqID)
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
-	defer rows.Close()
 
-	var items []map[string]any
-	for rows.Next() {
-		var id, category, mod string
-		var score *int
-		var thumbs, comment *string
-		var createdAt string
-		rows.Scan(&id, &category, &mod, &score, &thumbs, &comment, &createdAt)
-		items = append(items, map[string]any{
-			"id": id, "category": category, "module": mod,
-			"score": score, "thumbs": thumbs, "comment": comment,
-			"created_at": createdAt,
-		})
-	}
-
-	if items == nil {
-		items = []map[string]any{}
+	items := make([]map[string]any, 0, len(rows))
+	for _, row := range rows {
+		items = append(items, qualityEventToMap(row.ID, row.Category, row.Module, row.Score, row.Thumbs, row.Comment, row.CreatedAt))
 	}
 	writeJSON(w, http.StatusOK, items)
 }
@@ -189,36 +157,36 @@ func (h *Feedback) Errors(w http.ResponseWriter, r *http.Request) {
 	if status == "" {
 		status = "open"
 	}
-	limit := parseIntParam(r.URL.Query().Get("limit"), 50, 200)
+	limit := int32(parseIntParam(r.URL.Query().Get("limit"), 50, 200))
 	ctx := r.Context()
 
-	rows, err := h.tenantDB.Query(ctx,
-		`SELECT id, module, severity, status, context, comment, created_at
-		 FROM feedback_events WHERE category = 'error_report' AND status = $1
-		 ORDER BY created_at DESC LIMIT $2`, status, limit,
-	)
+	rows, err := h.repo.ListErrorEvents(ctx, repository.ListErrorEventsParams{
+		Status: status,
+		Limit:  limit,
+	})
 	if err != nil {
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
-	defer rows.Close()
 
-	var items []map[string]any
-	for rows.Next() {
-		var id, mod, sev, st string
-		var context json.RawMessage
+	items := make([]map[string]any, 0, len(rows))
+	for _, row := range rows {
 		var comment *string
-		var createdAt string
-		rows.Scan(&id, &mod, &sev, &st, &context, &comment, &createdAt)
+		if row.Comment.Valid {
+			comment = &row.Comment.String
+		}
+		var severity *string
+		if row.Severity.Valid {
+			severity = &row.Severity.String
+		}
 		items = append(items, map[string]any{
-			"id": id, "module": mod, "severity": sev, "status": st,
-			"context": context, "comment": comment, "created_at": createdAt,
+			"id": row.ID, "module": row.Module,
+			"severity": severity, "status": row.Status,
+			"context": json.RawMessage(row.Context), "comment": comment,
+			"created_at": row.CreatedAt.Time,
 		})
 	}
 
-	if items == nil {
-		items = []map[string]any{}
-	}
 	writeJSON(w, http.StatusOK, items)
 }
 
@@ -230,34 +198,22 @@ func (h *Feedback) Usage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hours := parsePeriod(r.URL.Query().Get("period"))
+	hours := int32(parsePeriod(r.URL.Query().Get("period")))
 	ctx := r.Context()
 
-	rows, err := h.tenantDB.Query(ctx,
-		`SELECT module, COUNT(*), COUNT(DISTINCT user_id)
-		 FROM feedback_events WHERE category = 'usage'
-		   AND created_at > now() - make_interval(hours => $1)
-		 GROUP BY module ORDER BY COUNT(*) DESC`, hours,
-	)
+	rows, err := h.repo.GetUsageByModule(ctx, hours)
 	if err != nil {
 		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
 		return
 	}
-	defer rows.Close()
 
-	var items []map[string]any
-	for rows.Next() {
-		var module string
-		var actions, users int
-		rows.Scan(&module, &actions, &users)
+	items := make([]map[string]any, 0, len(rows))
+	for _, row := range rows {
 		items = append(items, map[string]any{
-			"module": module, "actions": actions, "unique_users": users,
+			"module": row.Module, "actions": row.Actions, "unique_users": row.UniqueUsers,
 		})
 	}
 
-	if items == nil {
-		items = []map[string]any{}
-	}
 	writeJSON(w, http.StatusOK, items)
 }
 
@@ -308,4 +264,24 @@ func writeJSON(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	json.NewEncoder(w).Encode(v)
+}
+
+// qualityEventToMap builds a response map from typed quality event fields.
+func qualityEventToMap(id, category, module string, score pgtype.Int4, thumbs, comment pgtype.Text, createdAt pgtype.Timestamptz) map[string]any {
+	m := map[string]any{
+		"id":         id,
+		"category":   category,
+		"module":     module,
+		"created_at": createdAt.Time,
+	}
+	if score.Valid {
+		m["score"] = score.Int32
+	}
+	if thumbs.Valid {
+		m["thumbs"] = thumbs.String
+	}
+	if comment.Valid {
+		m["comment"] = comment.String
+	}
+	return m
 }

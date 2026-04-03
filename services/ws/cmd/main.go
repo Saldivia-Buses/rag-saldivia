@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/ed25519"
 	"encoding/json"
 	"log/slog"
 	"net/http"
@@ -14,6 +15,8 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/nats-io/nats.go"
 
+	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
+	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
 	"github.com/Camionerou/rag-saldivia/services/ws/internal/handler"
 	"github.com/Camionerou/rag-saldivia/services/ws/internal/hub"
@@ -25,13 +28,8 @@ func main() {
 	slog.SetDefault(logger)
 
 	port := env("WS_PORT", "8002")
-	jwtSecret := env("JWT_SECRET", "")
+	publicKey := loadPublicKey()
 	natsURL := env("NATS_URL", nats.DefaultURL)
-
-	if jwtSecret == "" {
-		slog.Error("JWT_SECRET is required")
-		os.Exit(1)
-	}
 
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
@@ -80,13 +78,14 @@ func main() {
 	defer bridge.Stop()
 
 	// Handlers
-	wsHandler := handler.NewWS(h, jwtSecret)
+	wsHandler := handler.NewWS(h, publicKey)
 
 	// Router
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Recoverer)
+	r.Use(sdamw.SecureHeaders())
 
 	r.Get("/ws", wsHandler.Upgrade)
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
@@ -132,4 +131,18 @@ func env(key, fallback string) string {
 		return v
 	}
 	return fallback
+}
+
+func loadPublicKey() ed25519.PublicKey {
+	pubB64 := env("JWT_PUBLIC_KEY", "")
+	if pubB64 == "" {
+		slog.Error("JWT_PUBLIC_KEY is required")
+		os.Exit(1)
+	}
+	key, err := sdajwt.ParsePublicKeyEnv(pubB64)
+	if err != nil {
+		slog.Error("failed to parse JWT_PUBLIC_KEY", "error", err)
+		os.Exit(1)
+	}
+	return key
 }

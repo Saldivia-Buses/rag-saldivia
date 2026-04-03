@@ -14,6 +14,8 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/nats-io/nats.go"
 
+	"crypto/ed25519"
+
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
@@ -29,14 +31,10 @@ func main() {
 	slog.SetDefault(logger)
 
 	port := env("AUTH_PORT", "8001")
-	jwtSecret := env("JWT_SECRET", "")
 	tenantDBURL := env("POSTGRES_TENANT_URL", "")
 	platformDBURL := env("POSTGRES_PLATFORM_URL", "")
 
-	if jwtSecret == "" {
-		slog.Error("JWT_SECRET is required")
-		os.Exit(1)
-	}
+	privateKey, publicKey := loadJWTKeys()
 
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
@@ -74,7 +72,7 @@ func main() {
 	publisher := natspub.New(nc)
 	slog.Info("connected to NATS", "url", natsURL)
 
-	jwtCfg := sdajwt.DefaultConfig(jwtSecret)
+	jwtCfg := sdajwt.DefaultConfig(privateKey, publicKey)
 
 	// Multi-tenant mode: platform DB available → use Resolver
 	// Single-tenant mode: only tenant DB URL → legacy mode (dev)
@@ -94,7 +92,7 @@ func main() {
 			os.Exit(1)
 		}
 
-		resolver := tenant.NewResolver(platformPool)
+		resolver := tenant.NewResolver(platformPool, nil) // nil = no credential encryption (yet)
 		defer resolver.Close()
 
 		authHandler = handler.NewMultiTenantAuth(resolver, jwtCfg, publisher)
@@ -128,6 +126,7 @@ func main() {
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Recoverer)
+	r.Use(sdamw.SecureHeaders())
 	r.Use(middleware.Timeout(30 * time.Second))
 
 	r.Get("/health", authHandler.Health)
@@ -137,10 +136,17 @@ func main() {
 
 	// Protected routes — require valid access token
 	r.Group(func(r chi.Router) {
-		r.Use(sdamw.Auth(jwtSecret))
+		r.Use(sdamw.Auth(publicKey))
 		r.Get("/v1/auth/me", authHandler.Me)
 		r.Get("/v1/modules/enabled", authHandler.EnabledModules)
+		// MFA management (requires authenticated user)
+		r.Post("/v1/auth/mfa/setup", authHandler.SetupMFA)
+		r.Post("/v1/auth/mfa/verify-setup", authHandler.VerifySetup)
+		r.Post("/v1/auth/mfa/disable", authHandler.DisableMFA)
 	})
+
+	// MFA login verification (uses temp mfa_token, not regular access token)
+	r.Post("/v1/auth/mfa/verify", authHandler.VerifyMFALogin)
 
 	// Server
 	srv := &http.Server{
@@ -176,4 +182,29 @@ func env(key, fallback string) string {
 		return v
 	}
 	return fallback
+}
+
+// loadJWTKeys loads Ed25519 keys from env vars (base64-encoded PEM).
+// Auth service needs both private (signing) and public (verification).
+func loadJWTKeys() (ed25519.PrivateKey, ed25519.PublicKey) {
+	privB64 := env("JWT_PRIVATE_KEY", "")
+	pubB64 := env("JWT_PUBLIC_KEY", "")
+	if privB64 == "" || pubB64 == "" {
+		slog.Error("JWT_PRIVATE_KEY and JWT_PUBLIC_KEY are required")
+		os.Exit(1)
+	}
+
+	privateKey, err := sdajwt.ParsePrivateKeyEnv(privB64)
+	if err != nil {
+		slog.Error("failed to parse JWT_PRIVATE_KEY", "error", err)
+		os.Exit(1)
+	}
+
+	publicKey, err := sdajwt.ParsePublicKeyEnv(pubB64)
+	if err != nil {
+		slog.Error("failed to parse JWT_PUBLIC_KEY", "error", err)
+		os.Exit(1)
+	}
+
+	return privateKey, publicKey
 }

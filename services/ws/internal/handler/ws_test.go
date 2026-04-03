@@ -1,10 +1,13 @@
 package handler
 
 import (
+	"crypto/ed25519"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 )
+
+var testPub, _, _ = ed25519.GenerateKey(nil)
 
 func TestParseOrigins(t *testing.T) {
 	tests := []struct {
@@ -28,7 +31,7 @@ func TestParseOrigins(t *testing.T) {
 }
 
 func TestUpgrade_NoToken_Returns401(t *testing.T) {
-	h := &WS{jwtSecret: "test-secret-at-least-32-chars-long!!"}
+	h := &WS{publicKey: testPub}
 	req := httptest.NewRequest(http.MethodGet, "/ws", nil)
 	rec := httptest.NewRecorder()
 
@@ -40,7 +43,7 @@ func TestUpgrade_NoToken_Returns401(t *testing.T) {
 }
 
 func TestUpgrade_InvalidToken_Returns401(t *testing.T) {
-	h := &WS{jwtSecret: "test-secret-at-least-32-chars-long!!"}
+	h := &WS{publicKey: testPub}
 	req := httptest.NewRequest(http.MethodGet, "/ws", nil)
 	req.Header.Set("Authorization", "Bearer invalid.jwt.token")
 	rec := httptest.NewRecorder()

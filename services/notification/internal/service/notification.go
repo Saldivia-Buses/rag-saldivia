@@ -9,7 +9,11 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/Camionerou/rag-saldivia/pkg/audit"
+	"github.com/Camionerou/rag-saldivia/services/notification/internal/repository"
 )
 
 var (
@@ -44,12 +48,18 @@ type Preferences struct {
 
 // Notification service handles notification operations for a single tenant.
 type NotificationService struct {
-	db *pgxpool.Pool
+	db      *pgxpool.Pool
+	repo    *repository.Queries
+	auditor *audit.Writer
 }
 
 // New creates a notification service.
 func New(db *pgxpool.Pool) *NotificationService {
-	return &NotificationService{db: db}
+	return &NotificationService{
+		db:      db,
+		repo:    repository.New(db),
+		auditor: audit.NewWriter(db),
+	}
 }
 
 // Create persists a notification in the database.
@@ -61,17 +71,18 @@ func (s *NotificationService) Create(ctx context.Context, userID, notifType, tit
 		data = []byte("{}")
 	}
 
-	var n Notification
-	err := s.db.QueryRow(ctx,
-		`INSERT INTO notifications (user_id, type, title, body, data, channel)
-		 VALUES ($1, $2, $3, $4, $5, $6)
-		 RETURNING id, user_id, type, title, body, data, channel, is_read, read_at, created_at`,
-		userID, notifType, title, body, data, channel,
-	).Scan(&n.ID, &n.UserID, &n.Type, &n.Title, &n.Body, &n.Data, &n.Channel, &n.IsRead, &n.ReadAt, &n.CreatedAt)
+	row, err := s.repo.CreateNotification(ctx, repository.CreateNotificationParams{
+		UserID:  userID,
+		Type:    notifType,
+		Title:   title,
+		Body:    body,
+		Data:    []byte(data),
+		Channel: channel,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("create notification: %w", err)
 	}
-	return &n, nil
+	return repoToNotification(row), nil
 }
 
 // List returns notifications for a user, most recent first.
@@ -81,64 +92,47 @@ func (s *NotificationService) List(ctx context.Context, userID string, unreadOnl
 		limit = 50
 	}
 
-	query := `SELECT id, user_id, type, title, body, data, channel, is_read, read_at, created_at
-		 FROM notifications WHERE user_id = $1`
-	if unreadOnly {
-		query += ` AND is_read = false`
-	}
-	query += ` ORDER BY created_at DESC LIMIT $2`
-
-	rows, err := s.db.Query(ctx, query, userID, limit)
+	rows, err := s.repo.ListNotifications(ctx, repository.ListNotificationsParams{
+		UserID:     userID,
+		Limit:      int32(limit),
+		UnreadOnly: unreadOnly,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("list notifications: %w", err)
 	}
-	defer rows.Close()
 
-	var notifications []Notification
-	for rows.Next() {
-		var n Notification
-		if err := rows.Scan(&n.ID, &n.UserID, &n.Type, &n.Title, &n.Body, &n.Data, &n.Channel, &n.IsRead, &n.ReadAt, &n.CreatedAt); err != nil {
-			return nil, fmt.Errorf("scan notification: %w", err)
-		}
-		notifications = append(notifications, n)
-	}
-	if notifications == nil {
-		notifications = []Notification{}
+	notifications := make([]Notification, 0, len(rows))
+	for _, r := range rows {
+		notifications = append(notifications, *repoToNotification(r))
 	}
 	return notifications, nil
 }
 
 // UnreadCount returns the number of unread notifications for a user.
 func (s *NotificationService) UnreadCount(ctx context.Context, userID string) (int, error) {
-	var count int
-	err := s.db.QueryRow(ctx,
-		`SELECT COUNT(*) FROM notifications WHERE user_id = $1 AND is_read = false`,
-		userID,
-	).Scan(&count)
+	count, err := s.repo.UnreadCount(ctx, userID)
 	if err != nil {
 		return 0, fmt.Errorf("unread count: %w", err)
 	}
-	return count, nil
+	return int(count), nil
 }
 
 // MarkRead marks a single notification as read.
 func (s *NotificationService) MarkRead(ctx context.Context, notifID, userID string) error {
-	result, err := s.db.Exec(ctx,
-		`UPDATE notifications SET is_read = true, read_at = now()
-		 WHERE id = $1 AND user_id = $2 AND is_read = false`,
-		notifID, userID,
-	)
+	rowsAffected, err := s.repo.MarkRead(ctx, repository.MarkReadParams{
+		ID:     notifID,
+		UserID: userID,
+	})
 	if err != nil {
 		return fmt.Errorf("mark read: %w", err)
 	}
-	if result.RowsAffected() == 0 {
+	if rowsAffected == 0 {
 		// Check existence scoped to user — never leak other users' notification IDs
-		var exists bool
-		s.db.QueryRow(ctx,
-			`SELECT EXISTS(SELECT 1 FROM notifications WHERE id = $1 AND user_id = $2)`,
-			notifID, userID,
-		).Scan(&exists)
-		if !exists {
+		exists, err := s.repo.NotificationExistsByUser(ctx, repository.NotificationExistsByUserParams{
+			ID:     notifID,
+			UserID: userID,
+		})
+		if err != nil || !exists {
 			return ErrNotificationNotFound
 		}
 		// Exists but already read — no-op
@@ -148,27 +142,17 @@ func (s *NotificationService) MarkRead(ctx context.Context, notifID, userID stri
 
 // MarkAllRead marks all unread notifications as read for a user.
 func (s *NotificationService) MarkAllRead(ctx context.Context, userID string) (int64, error) {
-	result, err := s.db.Exec(ctx,
-		`UPDATE notifications SET is_read = true, read_at = now()
-		 WHERE user_id = $1 AND is_read = false`,
-		userID,
-	)
+	count, err := s.repo.MarkAllRead(ctx, userID)
 	if err != nil {
 		return 0, fmt.Errorf("mark all read: %w", err)
 	}
-	return result.RowsAffected(), nil
+	return count, nil
 }
 
 // GetPreferences returns notification preferences for a user.
 // Returns defaults if no preferences are saved.
 func (s *NotificationService) GetPreferences(ctx context.Context, userID string) (*Preferences, error) {
-	var p Preferences
-	var quietStart, quietEnd *time.Time
-	err := s.db.QueryRow(ctx,
-		`SELECT user_id, email_enabled, in_app_enabled, quiet_start, quiet_end, muted_types, updated_at
-		 FROM notification_preferences WHERE user_id = $1`,
-		userID,
-	).Scan(&p.UserID, &p.EmailEnabled, &p.InAppEnabled, &quietStart, &quietEnd, &p.MutedTypes, &p.UpdatedAt)
+	row, err := s.repo.GetPreferences(ctx, userID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return &Preferences{
@@ -181,18 +165,7 @@ func (s *NotificationService) GetPreferences(ctx context.Context, userID string)
 		}
 		return nil, fmt.Errorf("get preferences: %w", err)
 	}
-	if quietStart != nil {
-		s := quietStart.Format("15:04")
-		p.QuietStart = &s
-	}
-	if quietEnd != nil {
-		s := quietEnd.Format("15:04")
-		p.QuietEnd = &s
-	}
-	if p.MutedTypes == nil {
-		p.MutedTypes = []string{}
-	}
-	return &p, nil
+	return repoToPreferences(row), nil
 }
 
 // UpdatePreferences upserts notification preferences for a user.
@@ -201,34 +174,82 @@ func (s *NotificationService) UpdatePreferences(ctx context.Context, userID stri
 		mutedTypes = []string{}
 	}
 
-	var p Preferences
-	var qs, qe *time.Time
-	err := s.db.QueryRow(ctx,
-		`INSERT INTO notification_preferences (user_id, email_enabled, in_app_enabled, quiet_start, quiet_end, muted_types, updated_at)
-		 VALUES ($1, $2, $3, $4::time, $5::time, $6, now())
-		 ON CONFLICT (user_id) DO UPDATE SET
-		   email_enabled = EXCLUDED.email_enabled,
-		   in_app_enabled = EXCLUDED.in_app_enabled,
-		   quiet_start = EXCLUDED.quiet_start,
-		   quiet_end = EXCLUDED.quiet_end,
-		   muted_types = EXCLUDED.muted_types,
-		   updated_at = now()
-		 RETURNING user_id, email_enabled, in_app_enabled, quiet_start, quiet_end, muted_types, updated_at`,
-		userID, emailEnabled, inAppEnabled, quietStart, quietEnd, mutedTypes,
-	).Scan(&p.UserID, &p.EmailEnabled, &p.InAppEnabled, &qs, &qe, &p.MutedTypes, &p.UpdatedAt)
+	row, err := s.repo.UpsertPreferences(ctx, repository.UpsertPreferencesParams{
+		UserID:       userID,
+		EmailEnabled: emailEnabled,
+		InAppEnabled: inAppEnabled,
+		QuietStart:   stringToPgTime(quietStart),
+		QuietEnd:     stringToPgTime(quietEnd),
+		MutedTypes:   mutedTypes,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("update preferences: %w", err)
 	}
-	if qs != nil {
-		s := qs.Format("15:04")
+
+	s.auditor.Write(ctx, audit.Entry{
+		UserID: userID, Action: "notification.preferences.update",
+	})
+	return repoToPreferences(row), nil
+}
+
+// --- type conversion helpers ---
+
+// repoToNotification converts a sqlc-generated Notification to the domain type.
+func repoToNotification(r repository.Notification) *Notification {
+	n := &Notification{
+		ID:      r.ID,
+		UserID:  r.UserID,
+		Type:    r.Type,
+		Title:   r.Title,
+		Body:    r.Body,
+		Data:    json.RawMessage(r.Data),
+		Channel: r.Channel,
+		IsRead:  r.IsRead,
+	}
+	if r.ReadAt.Valid {
+		t := r.ReadAt.Time
+		n.ReadAt = &t
+	}
+	if r.CreatedAt.Valid {
+		n.CreatedAt = r.CreatedAt.Time
+	}
+	return n
+}
+
+// repoToPreferences converts a sqlc-generated NotificationPreference to the domain type.
+func repoToPreferences(r repository.NotificationPreference) *Preferences {
+	p := &Preferences{
+		UserID:       r.UserID,
+		EmailEnabled: r.EmailEnabled,
+		InAppEnabled: r.InAppEnabled,
+		MutedTypes:   r.MutedTypes,
+	}
+	if r.UpdatedAt.Valid {
+		p.UpdatedAt = r.UpdatedAt.Time
+	}
+	if r.QuietStart.Valid {
+		s := fmt.Sprintf("%02d:%02d", r.QuietStart.Microseconds/3600000000, (r.QuietStart.Microseconds%3600000000)/60000000)
 		p.QuietStart = &s
 	}
-	if qe != nil {
-		s := qe.Format("15:04")
+	if r.QuietEnd.Valid {
+		s := fmt.Sprintf("%02d:%02d", r.QuietEnd.Microseconds/3600000000, (r.QuietEnd.Microseconds%3600000000)/60000000)
 		p.QuietEnd = &s
 	}
 	if p.MutedTypes == nil {
 		p.MutedTypes = []string{}
 	}
-	return &p, nil
+	return p
+}
+
+// stringToPgTime converts a "HH:MM" string pointer to pgtype.Time.
+func stringToPgTime(s *string) pgtype.Time {
+	if s == nil || *s == "" {
+		return pgtype.Time{Valid: false}
+	}
+	t, err := time.Parse("15:04", *s)
+	if err != nil {
+		return pgtype.Time{Valid: false}
+	}
+	micros := int64(t.Hour())*3600000000 + int64(t.Minute())*60000000
+	return pgtype.Time{Microseconds: micros, Valid: true}
 }

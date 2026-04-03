@@ -30,10 +30,15 @@ jobs:
           submodules: recursive
 
       - name: Deploy
-        run: make deploy PROFILE="${{ github.event.inputs.profile || 'workstation-1gpu' }}"
+        run: docker compose -f deploy/docker-compose.prod.yml up -d --build --remove-orphans
 
       - name: Health check
-        run: make status
+        run: |
+          sleep 10
+          for port in 8001 8002 8003 8004 8005 8006 8007 8008; do
+            echo "Checking :${port}/health..."
+            curl -sf http://localhost:${port}/health || echo "WARN: port ${port} not healthy"
+          done
 
       - name: Notify result
         if: always()

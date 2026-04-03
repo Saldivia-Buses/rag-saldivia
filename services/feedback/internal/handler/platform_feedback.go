@@ -31,7 +31,8 @@ func (h *PlatformFeedback) Routes() chi.Router {
 // Returns health scores for all tenants.
 func (h *PlatformFeedback) Tenants(w http.ResponseWriter, r *http.Request) {
 	role := r.Header.Get("X-User-Role")
-	if role != "admin" {
+	slug := r.Header.Get("X-Tenant-Slug")
+	if role != "admin" || (slug != "" && slug != "platform") {
 		writeJSON(w, http.StatusForbidden, map[string]string{"error": "platform admin required"})
 		return
 	}
@@ -86,7 +87,8 @@ func (h *PlatformFeedback) Tenants(w http.ResponseWriter, r *http.Request) {
 // Alerts handles GET /v1/platform/feedback/alerts
 func (h *PlatformFeedback) Alerts(w http.ResponseWriter, r *http.Request) {
 	role := r.Header.Get("X-User-Role")
-	if role != "admin" {
+	slug := r.Header.Get("X-Tenant-Slug")
+	if role != "admin" || (slug != "" && slug != "platform") {
 		writeJSON(w, http.StatusForbidden, map[string]string{"error": "platform admin required"})
 		return
 	}
@@ -158,7 +160,8 @@ func (h *PlatformFeedback) Alerts(w http.ResponseWriter, r *http.Request) {
 // Cross-tenant AI quality comparison.
 func (h *PlatformFeedback) Quality(w http.ResponseWriter, r *http.Request) {
 	role := r.Header.Get("X-User-Role")
-	if role != "admin" {
+	slug := r.Header.Get("X-Tenant-Slug")
+	if role != "admin" || (slug != "" && slug != "platform") {
 		writeJSON(w, http.StatusForbidden, map[string]string{"error": "platform admin required"})
 		return
 	}

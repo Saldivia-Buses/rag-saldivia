@@ -2,6 +2,7 @@
 package handler
 
 import (
+	"crypto/ed25519"
 	"log/slog"
 	"net/http"
 	"os"
@@ -16,14 +17,14 @@ import (
 // WS handles WebSocket upgrade requests.
 type WS struct {
 	hub       *hub.Hub
-	jwtSecret string
+	publicKey ed25519.PublicKey
 	origins   []string // allowed origins (e.g., "*.sda.app", "localhost:*")
 }
 
 // NewWS creates a WebSocket handler.
-func NewWS(h *hub.Hub, jwtSecret string) *WS {
+func NewWS(h *hub.Hub, publicKey ed25519.PublicKey) *WS {
 	origins := parseOrigins(os.Getenv("WS_ALLOWED_ORIGINS"))
-	return &WS{hub: h, jwtSecret: jwtSecret, origins: origins}
+	return &WS{hub: h, publicKey: publicKey, origins: origins}
 }
 
 // Upgrade handles GET /ws — upgrades HTTP to WebSocket.
@@ -37,7 +38,7 @@ func (h *WS) Upgrade(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Verify JWT
-	claims, err := sdajwt.Verify(h.jwtSecret, token)
+	claims, err := sdajwt.Verify(h.publicKey, token)
 	if err != nil {
 		http.Error(w, "invalid token", http.StatusUnauthorized)
 		return
