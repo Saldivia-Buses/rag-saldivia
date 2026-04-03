@@ -106,6 +106,16 @@ func main() {
 	}
 	defer consumer.Stop()
 
+	// Start aggregator
+	aggInterval := 1 * time.Hour
+	if v := env("AGGREGATION_INTERVAL", ""); v == "1m" {
+		aggInterval = 1 * time.Minute // for testing
+	}
+	tenantID := env("TENANT_ID", "dev")
+	aggregator := service.NewAggregator(tenantPool, platformPool, feedbackSvc, aggInterval)
+	aggregator.Start(ctx, tenantID)
+	defer aggregator.Stop()
+
 	// Router — health endpoint only for now (REST handlers in Fase 4)
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
