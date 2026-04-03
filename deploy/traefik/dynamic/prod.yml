@@ -129,6 +129,5 @@ http:
           - X-Tenant-Slug
         accessControlAllowOriginListRegex:
           - "^https://[a-z0-9-]+\\.sda\\.app$"
-          - "^http://localhost:\\d+$"
         accessControlMaxAge: 3600
         accessControlAllowCredentials: true
