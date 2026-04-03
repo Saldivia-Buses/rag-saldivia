@@ -95,7 +95,7 @@ func (h *PlatformFeedback) Alerts(w http.ResponseWriter, r *http.Request) {
 	if status == "" {
 		status = "active"
 	}
-	limit := parseIntParam(r.URL.Query().Get("limit"), 50)
+	limit := parseIntParam(r.URL.Query().Get("limit"), 50, 200)
 	ctx := r.Context()
 
 	rows, err := h.platformDB.Query(ctx,

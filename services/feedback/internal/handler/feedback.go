@@ -3,6 +3,7 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -129,7 +130,7 @@ func (h *Feedback) Quality(w http.ResponseWriter, r *http.Request) {
 
 	hours := parsePeriod(r.URL.Query().Get("period"))
 	module := r.URL.Query().Get("module")
-	limit := parseIntParam(r.URL.Query().Get("limit"), 50)
+	limit := parseIntParam(r.URL.Query().Get("limit"), 50, 200)
 	ctx := r.Context()
 
 	query := `SELECT id, category, module, score, thumbs, comment, created_at
@@ -137,12 +138,15 @@ func (h *Feedback) Quality(w http.ResponseWriter, r *http.Request) {
 		WHERE category IN ('response_quality','agent_quality','extraction','detection')
 		  AND created_at > now() - make_interval(hours => $1)`
 	args := []any{hours}
+	argIdx := 2
 
 	if module != "" {
-		query += ` AND module = $2`
+		query += fmt.Sprintf(` AND module = $%d`, argIdx)
 		args = append(args, module)
+		argIdx++
 	}
-	query += ` ORDER BY created_at DESC LIMIT ` + strconv.Itoa(limit)
+	query += fmt.Sprintf(` ORDER BY created_at DESC LIMIT $%d`, argIdx)
+	args = append(args, limit)
 
 	rows, err := h.tenantDB.Query(ctx, query, args...)
 	if err != nil {
@@ -185,7 +189,7 @@ func (h *Feedback) Errors(w http.ResponseWriter, r *http.Request) {
 	if status == "" {
 		status = "open"
 	}
-	limit := parseIntParam(r.URL.Query().Get("limit"), 50)
+	limit := parseIntParam(r.URL.Query().Get("limit"), 50, 200)
 	ctx := r.Context()
 
 	rows, err := h.tenantDB.Query(ctx,
@@ -286,13 +290,16 @@ func parsePeriod(s string) int {
 	}
 }
 
-func parseIntParam(s string, fallback int) int {
+func parseIntParam(s string, fallback, max int) int {
 	if s == "" {
 		return fallback
 	}
 	v, err := strconv.Atoi(s)
 	if err != nil || v <= 0 {
 		return fallback
+	}
+	if v > max {
+		return max
 	}
 	return v
 }

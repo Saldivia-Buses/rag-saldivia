@@ -117,8 +117,9 @@ func main() {
 		aggInterval = 1 * time.Minute // for testing
 	}
 	tenantID := env("TENANT_ID", "dev")
+	tenantSlug := env("TENANT_SLUG", "dev")
 	aggregator := service.NewAggregator(tenantPool, platformPool, feedbackSvc, alerter, aggInterval)
-	aggregator.Start(ctx, tenantID)
+	aggregator.Start(ctx, tenantID, tenantSlug)
 	defer aggregator.Stop()
 
 	// Router — health endpoint only for now (REST handlers in Fase 4)

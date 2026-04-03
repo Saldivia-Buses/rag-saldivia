@@ -32,12 +32,12 @@ func NewAggregator(tenantDB, platformDB *pgxpool.Pool, feedbackSvc *Feedback, al
 }
 
 // Start begins the aggregation loop.
-func (a *Aggregator) Start(ctx context.Context, tenantID string) {
+func (a *Aggregator) Start(ctx context.Context, tenantID, tenantSlug string) {
 	a.ctx, a.cancel = context.WithCancel(ctx)
 
 	go func() {
 		// Run once immediately on startup
-		a.aggregate(tenantID)
+		a.aggregate(tenantID, tenantSlug)
 
 		ticker := time.NewTicker(a.interval)
 		defer ticker.Stop()
@@ -47,7 +47,7 @@ func (a *Aggregator) Start(ctx context.Context, tenantID string) {
 			case <-a.ctx.Done():
 				return
 			case <-ticker.C:
-				a.aggregate(tenantID)
+				a.aggregate(tenantID, tenantSlug)
 			}
 		}
 	}()
@@ -62,7 +62,7 @@ func (a *Aggregator) Stop() {
 	}
 }
 
-func (a *Aggregator) aggregate(tenantID string) {
+func (a *Aggregator) aggregate(tenantID, tenantSlug string) {
 	ctx := context.Background()
 	period := time.Now().Truncate(time.Hour)
 
@@ -109,7 +109,7 @@ func (a *Aggregator) aggregate(tenantID string) {
 			Security:    securityScore,
 			Usage:       usageScore,
 		}
-		a.alerter.CheckAndAlert(ctx, tenantID, "", scores) // slug resolved from tenantID in prod
+		a.alerter.CheckAndAlert(ctx, tenantID, tenantSlug, scores)
 	}
 
 	// Purge old granular data (90 days)
