@@ -11,6 +11,8 @@ import (
 
 	"github.com/go-chi/chi/v5/middleware"
 
+	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
+	"github.com/Camionerou/rag-saldivia/pkg/tenant"
 	"github.com/Camionerou/rag-saldivia/services/auth/internal/service"
 )
 
@@ -22,14 +24,55 @@ type AuthService interface {
 	Me(ctx context.Context, userID string) (*service.UserInfo, error)
 }
 
-// Auth handles HTTP requests for authentication.
-type Auth struct {
-	authSvc AuthService
+// EventPublisher can publish notification events via NATS.
+type EventPublisher interface {
+	Notify(tenantSlug string, evt any) error
+	Broadcast(tenantSlug, channel string, data any) error
 }
 
-// NewAuth creates auth HTTP handlers.
+// Auth handles HTTP requests for authentication.
+type Auth struct {
+	authSvc   AuthService     // static service (single-tenant mode)
+	resolver  *tenant.Resolver // per-request resolution (multi-tenant mode)
+	jwtCfg    sdajwt.Config
+	publisher EventPublisher
+}
+
+// NewAuth creates auth HTTP handlers in single-tenant mode.
 func NewAuth(authSvc AuthService) *Auth {
 	return &Auth{authSvc: authSvc}
+}
+
+// NewMultiTenantAuth creates auth HTTP handlers that resolve the tenant DB per request.
+func NewMultiTenantAuth(resolver *tenant.Resolver, jwtCfg sdajwt.Config, publisher EventPublisher) *Auth {
+	return &Auth{
+		resolver:  resolver,
+		jwtCfg:    jwtCfg,
+		publisher: publisher,
+	}
+}
+
+// resolveService returns the AuthService for the current request's tenant.
+// In single-tenant mode, returns the static service. In multi-tenant mode,
+// resolves the tenant DB from the X-Tenant-Slug header.
+func (h *Auth) resolveService(r *http.Request) (AuthService, error) {
+	if h.authSvc != nil {
+		return h.authSvc, nil
+	}
+
+	slug := r.Header.Get("X-Tenant-Slug")
+	if slug == "" {
+		return nil, errors.New("missing tenant context")
+	}
+
+	pool, err := h.resolver.PostgresPool(r.Context(), slug)
+	if err != nil {
+		return nil, err
+	}
+
+	// Look up tenant ID from platform DB (cached in resolver)
+	tenantID := slug // simplified: use slug as ID for now
+	return service.NewAuth(pool, h.jwtCfg, tenantID, slug, h.publisher), nil
 }
 
 type loginRequest struct {
@@ -57,7 +100,14 @@ func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokens, err := h.authSvc.Login(r.Context(), service.LoginRequest{
+	svc, err := h.resolveService(r)
+	if err != nil {
+		slog.Error("failed to resolve tenant for login", "error", err)
+		writeJSON(w, http.StatusBadGateway, errorResponse{Error: "tenant not available"})
+		return
+	}
+
+	tokens, err := svc.Login(r.Context(), service.LoginRequest{
 		Email:     req.Email,
 		Password:  req.Password,
 		IP:        r.RemoteAddr, // chi's RealIP middleware already rewrites this
@@ -108,7 +158,13 @@ func (h *Auth) Refresh(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokens, err := h.authSvc.Refresh(r.Context(), refreshToken)
+	svc, err := h.resolveService(r)
+	if err != nil {
+		writeJSON(w, http.StatusBadGateway, errorResponse{Error: "tenant not available"})
+		return
+	}
+
+	tokens, err := svc.Refresh(r.Context(), refreshToken)
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrInvalidRefreshToken):
@@ -148,7 +204,9 @@ func (h *Auth) Logout(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if refreshToken != "" {
-		_ = h.authSvc.Logout(r.Context(), refreshToken)
+		if svc, err := h.resolveService(r); err == nil {
+			_ = svc.Logout(r.Context(), refreshToken)
+		}
 	}
 
 	clearRefreshCookie(w)
@@ -163,7 +221,13 @@ func (h *Auth) Me(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	user, err := h.authSvc.Me(r.Context(), userID)
+	svc, err := h.resolveService(r)
+	if err != nil {
+		writeJSON(w, http.StatusBadGateway, errorResponse{Error: "tenant not available"})
+		return
+	}
+
+	user, err := svc.Me(r.Context(), userID)
 	if err != nil {
 		switch {
 		case errors.Is(err, service.ErrUserNotFound):
