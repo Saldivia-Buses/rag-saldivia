@@ -21,7 +21,7 @@ type ChatService interface {
 	ListSessions(ctx context.Context, userID string) ([]service.Session, error)
 	DeleteSession(ctx context.Context, sessionID, userID string) error
 	RenameSession(ctx context.Context, sessionID, userID, title string) error
-	AddMessage(ctx context.Context, sessionID, userID, role, content string, sources, metadata []byte) (*service.Message, error)
+	AddMessage(ctx context.Context, sessionID, userID, role, content string, thinking *string, sources, metadata []byte) (*service.Message, error)
 	GetMessages(ctx context.Context, sessionID string) ([]service.Message, error)
 }
 
@@ -61,9 +61,10 @@ type renameRequest struct {
 }
 
 type addMessageRequest struct {
-	Role    string          `json:"role"`
-	Content string          `json:"content"`
-	Sources json.RawMessage `json:"sources,omitempty"`
+	Role     string          `json:"role"`
+	Content  string          `json:"content"`
+	Thinking *string         `json:"thinking,omitempty"`
+	Sources  json.RawMessage `json:"sources,omitempty"`
 	Metadata json.RawMessage `json:"metadata,omitempty"`
 }
 
@@ -214,7 +215,7 @@ func (h *Chat) AddMessage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	msg, err := h.chatSvc.AddMessage(r.Context(), sessionID, userID, req.Role, req.Content, req.Sources, req.Metadata)
+	msg, err := h.chatSvc.AddMessage(r.Context(), sessionID, userID, req.Role, req.Content, req.Thinking, req.Sources, req.Metadata)
 	if err != nil {
 		serverError(w, r, err)
 		return

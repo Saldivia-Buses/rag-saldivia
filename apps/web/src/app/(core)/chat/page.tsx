@@ -77,6 +77,7 @@ interface ApiMessage {
   id: string;
   role: "user" | "assistant" | "system";
   content: string;
+  thinking?: string | null;
   sources?: Array<{ document_name: string; content: string; score: number }>;
   created_at: string;
 }
@@ -321,11 +322,12 @@ export default function ChatPage() {
 
       // Store assistant message in backend using the ref (always current)
       const finalContent = streamRef.current;
-      const finalThinking = thinkingRef.current;
+      const finalThinking = thinkingRef.current || undefined;
       if (finalContent) {
         const saved = await api.post<ApiMessage>(`/v1/chat/sessions/${sessionId}/messages`, {
           role: "assistant",
           content: finalContent,
+          thinking: finalThinking,
         });
 
         // Save thinking for this message so it persists across re-renders
@@ -423,7 +425,7 @@ export default function ChatPage() {
                   )}
                 >
                   {/* Reasoning block (above response content) */}
-                  {(("thinking" in message && message.thinking) || savedThinking[message.id]) && (
+                  {(message.thinking || savedThinking[message.id]) && (
                     <Reasoning
                       isStreaming={message.id === "streaming" && isStreaming && !message.content}
                     >
@@ -437,7 +439,7 @@ export default function ChatPage() {
                         }}
                       />
                       <ReasoningContent>
-                        {("thinking" in message && message.thinking) || savedThinking[message.id] || ""}
+                        {message.thinking || savedThinking[message.id] || ""}
                       </ReasoningContent>
                     </Reasoning>
                   )}
