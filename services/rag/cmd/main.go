@@ -12,8 +12,10 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 
+	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
 	"github.com/Camionerou/rag-saldivia/services/rag/internal/handler"
 	"github.com/Camionerou/rag-saldivia/services/rag/internal/service"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 func main() {
@@ -32,6 +34,18 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
 
+	// Initialize OpenTelemetry
+	otelShutdown, err := sdaotel.Setup(ctx, sdaotel.Config{
+		ServiceName:    "sda-rag",
+		ServiceVersion: "1.0.0",
+		Endpoint:       env("OTEL_EXPORTER_OTLP_ENDPOINT", "localhost:4317"),
+	})
+	if err != nil {
+		slog.Warn("otel init failed, traces disabled", "error", err)
+	} else {
+		defer otelShutdown(context.Background())
+	}
+
 	ragSvc := service.NewRAG(service.Config{
 		BlueprintURL: blueprintURL,
 		Timeout:      timeout,
@@ -49,7 +63,7 @@ func main() {
 
 	srv := &http.Server{
 		Addr:         ":" + port,
-		Handler:      r,
+		Handler:      otelhttp.NewHandler(r, "sda-rag"),
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 0, // no limit for SSE streaming
 		IdleTimeout:  120 * time.Second,

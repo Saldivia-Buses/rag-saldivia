@@ -14,8 +14,10 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/nats-io/nats.go"
 
+	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
 	"github.com/Camionerou/rag-saldivia/services/notification/internal/handler"
 	"github.com/Camionerou/rag-saldivia/services/notification/internal/service"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 func main() {
@@ -36,6 +38,18 @@ func main() {
 
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
+
+	// Initialize OpenTelemetry
+	otelShutdown, err := sdaotel.Setup(ctx, sdaotel.Config{
+		ServiceName:    "sda-notification",
+		ServiceVersion: "1.0.0",
+		Endpoint:       env("OTEL_EXPORTER_OTLP_ENDPOINT", "localhost:4317"),
+	})
+	if err != nil {
+		slog.Warn("otel init failed, traces disabled", "error", err)
+	} else {
+		defer otelShutdown(context.Background())
+	}
 
 	// Database
 	pool, err := pgxpool.New(ctx, dbURL)
@@ -92,7 +106,7 @@ func main() {
 
 	srv := &http.Server{
 		Addr:         ":" + port,
-		Handler:      r,
+		Handler:      otelhttp.NewHandler(r, "sda-notification"),
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 30 * time.Second,
 		IdleTimeout:  60 * time.Second,
