@@ -15,6 +15,7 @@ import (
 	"github.com/nats-io/nats.go"
 
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
+	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
 	"github.com/Camionerou/rag-saldivia/services/auth/internal/handler"
 	"github.com/Camionerou/rag-saldivia/services/auth/internal/service"
@@ -90,6 +91,14 @@ func main() {
 
 	r.Get("/health", authHandler.Health)
 	r.Post("/v1/auth/login", authHandler.Login)
+	r.Post("/v1/auth/refresh", authHandler.Refresh)
+	r.Post("/v1/auth/logout", authHandler.Logout)
+
+	// Protected routes — require valid access token
+	r.Group(func(r chi.Router) {
+		r.Use(sdamw.Auth(jwtSecret))
+		r.Get("/v1/auth/me", authHandler.Me)
+	})
 
 	// Server
 	srv := &http.Server{

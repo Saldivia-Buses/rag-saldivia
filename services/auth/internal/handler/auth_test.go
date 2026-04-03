@@ -15,9 +15,13 @@ import (
 // --- mock ---
 
 type mockAuthService struct {
-	tokens     *service.TokenPair
-	err        error
-	lastReq    service.LoginRequest
+	tokens      *service.TokenPair
+	err         error
+	lastReq     service.LoginRequest
+	refreshErr  error
+	logoutErr   error
+	userInfo    *service.UserInfo
+	meErr       error
 }
 
 func (m *mockAuthService) Login(_ context.Context, req service.LoginRequest) (*service.TokenPair, error) {
@@ -26,6 +30,24 @@ func (m *mockAuthService) Login(_ context.Context, req service.LoginRequest) (*s
 		return nil, m.err
 	}
 	return m.tokens, nil
+}
+
+func (m *mockAuthService) Refresh(_ context.Context, _ string) (*service.TokenPair, error) {
+	if m.refreshErr != nil {
+		return nil, m.refreshErr
+	}
+	return m.tokens, nil
+}
+
+func (m *mockAuthService) Logout(_ context.Context, _ string) error {
+	return m.logoutErr
+}
+
+func (m *mockAuthService) Me(_ context.Context, _ string) (*service.UserInfo, error) {
+	if m.meErr != nil {
+		return nil, m.meErr
+	}
+	return m.userInfo, nil
 }
 
 // --- tests ---
@@ -204,5 +226,180 @@ func TestHealth_Returns200(t *testing.T) {
 
 	if rec.Code != http.StatusOK {
 		t.Fatalf("expected 200, got %d", rec.Code)
+	}
+}
+
+// --- Refresh tests ---
+
+func TestRefresh_Success_WithBody(t *testing.T) {
+	mock := &mockAuthService{
+		tokens: &service.TokenPair{
+			AccessToken:  "new.access.token",
+			RefreshToken: "new.refresh.token",
+			ExpiresIn:    900,
+		},
+	}
+	h := NewAuth(mock)
+
+	body := `{"refresh_token":"old.refresh.token"}`
+	req := httptest.NewRequest(http.MethodPost, "/v1/auth/refresh", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	h.Refresh(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", rec.Code, rec.Body.String())
+	}
+
+	// Should set refresh cookie
+	cookies := rec.Result().Cookies()
+	found := false
+	for _, c := range cookies {
+		if c.Name == "sda_refresh" {
+			found = true
+			if !c.HttpOnly {
+				t.Error("refresh cookie must be HttpOnly")
+			}
+			if !c.Secure {
+				t.Error("refresh cookie must be Secure")
+			}
+		}
+	}
+	if !found {
+		t.Error("expected sda_refresh cookie to be set")
+	}
+}
+
+func TestRefresh_Success_WithCookie(t *testing.T) {
+	mock := &mockAuthService{
+		tokens: &service.TokenPair{
+			AccessToken:  "new.access.token",
+			RefreshToken: "new.refresh.token",
+			ExpiresIn:    900,
+		},
+	}
+	h := NewAuth(mock)
+
+	req := httptest.NewRequest(http.MethodPost, "/v1/auth/refresh", nil)
+	req.AddCookie(&http.Cookie{Name: "sda_refresh", Value: "old.refresh.token"})
+	rec := httptest.NewRecorder()
+
+	h.Refresh(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestRefresh_MissingToken_Returns400(t *testing.T) {
+	h := NewAuth(&mockAuthService{})
+
+	req := httptest.NewRequest(http.MethodPost, "/v1/auth/refresh", nil)
+	rec := httptest.NewRecorder()
+
+	h.Refresh(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d", rec.Code)
+	}
+}
+
+func TestRefresh_InvalidToken_Returns401(t *testing.T) {
+	mock := &mockAuthService{refreshErr: service.ErrInvalidRefreshToken}
+	h := NewAuth(mock)
+
+	body := `{"refresh_token":"bad.token"}`
+	req := httptest.NewRequest(http.MethodPost, "/v1/auth/refresh", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+
+	h.Refresh(rec, req)
+
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401, got %d", rec.Code)
+	}
+}
+
+// --- Logout tests ---
+
+func TestLogout_ClearsCookie(t *testing.T) {
+	h := NewAuth(&mockAuthService{})
+
+	req := httptest.NewRequest(http.MethodPost, "/v1/auth/logout", nil)
+	req.AddCookie(&http.Cookie{Name: "sda_refresh", Value: "some.token"})
+	rec := httptest.NewRecorder()
+
+	h.Logout(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", rec.Code)
+	}
+
+	cookies := rec.Result().Cookies()
+	for _, c := range cookies {
+		if c.Name == "sda_refresh" && c.MaxAge != -1 {
+			t.Error("expected refresh cookie to be cleared (MaxAge -1)")
+		}
+	}
+}
+
+// --- Me tests ---
+
+func TestMe_Success(t *testing.T) {
+	mock := &mockAuthService{
+		userInfo: &service.UserInfo{
+			ID:         "user-123",
+			Email:      "enzo@saldivia.com",
+			Name:       "Enzo",
+			Role:       "admin",
+			TenantID:   "tenant-1",
+			TenantSlug: "saldivia",
+		},
+	}
+	h := NewAuth(mock)
+
+	req := httptest.NewRequest(http.MethodGet, "/v1/auth/me", nil)
+	req.Header.Set("X-User-ID", "user-123")
+	rec := httptest.NewRecorder()
+
+	h.Me(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", rec.Code, rec.Body.String())
+	}
+
+	var user service.UserInfo
+	json.NewDecoder(rec.Body).Decode(&user)
+	if user.Email != "enzo@saldivia.com" {
+		t.Errorf("expected email enzo@saldivia.com, got %q", user.Email)
+	}
+}
+
+func TestMe_NoUserID_Returns401(t *testing.T) {
+	h := NewAuth(&mockAuthService{})
+
+	req := httptest.NewRequest(http.MethodGet, "/v1/auth/me", nil)
+	rec := httptest.NewRecorder()
+
+	h.Me(rec, req)
+
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401, got %d", rec.Code)
+	}
+}
+
+func TestMe_UserNotFound_Returns404(t *testing.T) {
+	mock := &mockAuthService{meErr: service.ErrUserNotFound}
+	h := NewAuth(mock)
+
+	req := httptest.NewRequest(http.MethodGet, "/v1/auth/me", nil)
+	req.Header.Set("X-User-ID", "nonexistent")
+	rec := httptest.NewRecorder()
+
+	h.Me(rec, req)
+
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("expected 404, got %d", rec.Code)
 	}
 }
