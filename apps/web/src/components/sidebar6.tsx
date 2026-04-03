@@ -39,7 +39,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import {
   Sidebar,
   SidebarContent,
@@ -403,12 +402,8 @@ const Sidebar6 = ({ className, children }: Sidebar6Props) => {
     <SidebarProvider className={cn("!h-svh !min-h-0 overflow-hidden", className)}>
       <AppSidebar />
       <SidebarInset className="flex flex-col h-svh overflow-hidden">
-        <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4">
-          <SidebarTrigger className="-ml-1" />
-          <Separator
-            orientation="vertical"
-            className="mr-2 data-[orientation=vertical]:h-4"
-          />
+        <header className="flex h-14 shrink-0 items-center gap-3 border-b px-4">
+          <SidebarTrigger className="-ml-1 size-8 [&>svg]:size-5" />
           <Breadcrumb className="w-fit rounded-lg border px-3 py-2">
             <BreadcrumbList>
               <BreadcrumbItem>

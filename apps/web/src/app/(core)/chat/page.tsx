@@ -119,7 +119,7 @@ function ChatSidebar({
             <div
               key={session.id}
               className={cn(
-                "group flex items-start justify-between gap-2 border-b px-4 py-3 cursor-pointer transition-colors",
+                "group flex items-start justify-between gap-2 px-4 py-2.5 cursor-pointer transition-colors rounded-md mx-2",
                 activeSessionId === session.id
                   ? "bg-accent/50"
                   : "hover:bg-muted/50",
@@ -127,7 +127,7 @@ function ChatSidebar({
               onClick={() => onSelectSession(session.id)}
             >
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{session.title}</p>
+                <p className="text-[13px] font-medium truncate">{session.title}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   {formatRelativeDate(session.created_at)}
                 </p>
