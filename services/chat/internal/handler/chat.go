@@ -43,12 +43,12 @@ func (h *Chat) Routes() chi.Router {
 
 	// Read operations — require chat.read
 	r.With(sdamw.RequirePermission("chat.read")).Get("/", h.ListSessions)
-	r.With(sdamw.RequirePermission("chat.read")).Post("/", h.CreateSession)
 	r.With(sdamw.RequirePermission("chat.read")).Get("/{sessionID}", h.GetSession)
 	r.With(sdamw.RequirePermission("chat.read")).Get("/{sessionID}/messages", h.GetMessages)
-	r.With(sdamw.RequirePermission("chat.read")).Post("/{sessionID}/messages", h.AddMessage)
 
 	// Write operations — require chat.write
+	r.With(sdamw.RequirePermission("chat.write")).Post("/", h.CreateSession)
+	r.With(sdamw.RequirePermission("chat.write")).Post("/{sessionID}/messages", h.AddMessage)
 	r.With(sdamw.RequirePermission("chat.write")).Delete("/{sessionID}", h.DeleteSession)
 	r.With(sdamw.RequirePermission("chat.write")).Patch("/{sessionID}", h.RenameSession)
 

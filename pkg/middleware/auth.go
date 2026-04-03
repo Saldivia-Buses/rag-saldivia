@@ -53,6 +53,12 @@ func Auth(publicKey ed25519.PublicKey) func(http.Handler) http.Handler {
 				return
 			}
 
+			// Reject MFA-pending tokens — they're only valid for /v1/auth/mfa/verify
+			if claims.Role == "mfa_pending" {
+				writeJSONError(w, http.StatusUnauthorized, "mfa verification required")
+				return
+			}
+
 			// Inject identity headers for downstream handlers
 			r.Header.Set("X-User-ID", claims.UserID)
 			r.Header.Set("X-User-Email", claims.Email)
