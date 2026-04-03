@@ -178,6 +178,28 @@ func (h *Auth) Me(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, user)
 }
 
+// EnabledModules handles GET /v1/modules/enabled
+// Returns the list of modules enabled for the current tenant.
+// TODO: Read from Platform DB via tenant_modules table. Currently returns
+// core modules as a baseline until Platform Service integration.
+func (h *Auth) EnabledModules(w http.ResponseWriter, r *http.Request) {
+	type moduleEntry struct {
+		ID       string `json:"id"`
+		Name     string `json:"name"`
+		Category string `json:"category"`
+	}
+
+	// Core modules — always enabled for all tenants
+	modules := []moduleEntry{
+		{ID: "chat", Name: "Chat", Category: "core"},
+		{ID: "rag", Name: "RAG", Category: "core"},
+		{ID: "notifications", Name: "Notificaciones", Category: "core"},
+		{ID: "ingest", Name: "Ingesta", Category: "core"},
+	}
+
+	writeJSON(w, http.StatusOK, modules)
+}
+
 // Health handles GET /health
 func (h *Auth) Health(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]string{"status": "ok", "service": "auth"})

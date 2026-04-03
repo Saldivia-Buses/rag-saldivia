@@ -98,6 +98,7 @@ func main() {
 	r.Group(func(r chi.Router) {
 		r.Use(sdamw.Auth(jwtSecret))
 		r.Get("/v1/auth/me", authHandler.Me)
+		r.Get("/v1/modules/enabled", authHandler.EnabledModules)
 	})
 
 	// Server

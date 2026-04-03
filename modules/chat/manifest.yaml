@@ -1,0 +1,26 @@
+id: chat
+name: Chat
+category: core
+tier_min: starter
+icon: message-square
+requires: []
+
+routes:
+  - path: /chat
+    label: Chat
+    icon: message-square
+
+nav:
+  - label: Chat
+    icon: message-square
+    path: /chat
+    position: 0
+
+api_endpoints:
+  - /v1/chat/sessions
+  - /v1/chat/sessions/{id}
+  - /v1/chat/sessions/{id}/messages
+
+ws_channels:
+  - chat.messages
+  - sessions
