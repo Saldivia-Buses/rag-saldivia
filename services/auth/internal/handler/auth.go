@@ -335,7 +335,15 @@ func (h *Auth) UpdateMe(w http.ResponseWriter, r *http.Request) {
 
 	user, err := svc.UpdateProfile(r.Context(), userID, service.UpdateProfileRequest{Name: req.Name})
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, errorResponse{Error: err.Error()})
+		switch {
+		case errors.Is(err, service.ErrUserNotFound):
+			writeJSON(w, http.StatusNotFound, errorResponse{Error: "user not found"})
+		case errors.Is(err, service.ErrValidation):
+			writeJSON(w, http.StatusBadRequest, errorResponse{Error: err.Error()})
+		default:
+			slog.Error("update profile failed", "error", err, "user_id", userID)
+			writeJSON(w, http.StatusInternalServerError, errorResponse{Error: "internal error"})
+		}
 		return
 	}
 

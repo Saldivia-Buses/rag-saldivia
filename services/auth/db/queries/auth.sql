@@ -97,6 +97,6 @@ SELECT COALESCE(mfa_enabled, false)::bool AS enabled FROM users WHERE id = $1;
 -- name: GetMFASecret :one
 SELECT mfa_secret FROM users WHERE id = $1;
 
--- name: UpdateUserName :exec
+-- name: UpdateUserName :execrows
 UPDATE users SET name = $2, updated_at = now()
 WHERE id = $1 AND is_active = true;

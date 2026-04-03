@@ -30,6 +30,7 @@ var (
 	ErrUserNotFound        = errors.New("user not found")
 	ErrInvalidMFACode      = errors.New("invalid MFA code")
 	ErrMFARequired         = errors.New("MFA verification required")
+	ErrValidation          = errors.New("validation error")
 )
 
 const (
@@ -485,18 +486,21 @@ func (a *Auth) Me(ctx context.Context, userID string) (*UserInfo, error) {
 func (a *Auth) UpdateProfile(ctx context.Context, userID string, req UpdateProfileRequest) (*UserInfo, error) {
 	name := strings.TrimSpace(req.Name)
 	if name == "" {
-		return nil, fmt.Errorf("name is required")
+		return nil, fmt.Errorf("%w: name is required", ErrValidation)
 	}
 	if len(name) > 200 {
-		return nil, fmt.Errorf("name too long")
+		return nil, fmt.Errorf("%w: name too long", ErrValidation)
 	}
 
-	err := a.repo.UpdateUserName(ctx, repository.UpdateUserNameParams{
+	rowsAffected, err := a.repo.UpdateUserName(ctx, repository.UpdateUserNameParams{
 		ID:   userID,
 		Name: name,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("update profile: %w", err)
+	}
+	if rowsAffected == 0 {
+		return nil, ErrUserNotFound
 	}
 
 	a.auditor.Write(ctx, audit.Entry{
