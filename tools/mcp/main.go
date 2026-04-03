@@ -17,6 +17,10 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"strings"
+	"time"
+
+	"github.com/Camionerou/rag-saldivia/tools/pkg/admin"
 )
 
 // MCP JSON-RPC types
@@ -56,7 +60,7 @@ var tools = []toolDef{
 	},
 	{
 		Name:        "tenant_list",
-		Description: "List all tenants in the platform. Returns slug, name, enabled status.",
+		Description: "List all tenants in the platform. Returns slug, name, plan, enabled status.",
 		InputSchema: map[string]interface{}{
 			"type":       "object",
 			"properties": map[string]interface{}{},
@@ -70,7 +74,7 @@ var tools = []toolDef{
 			"properties": map[string]interface{}{
 				"service": map[string]interface{}{
 					"type":        "string",
-					"description": "Service name (auth, ws, chat, rag, notification, platform, ingest)",
+					"description": "Service name (auth, ws, chat, rag, notification, platform, ingest, feedback)",
 				},
 				"lines": map[string]interface{}{
 					"type":        "integer",
@@ -96,6 +100,38 @@ var tools = []toolDef{
 				},
 			},
 			"required": []string{"tenant", "query"},
+		},
+	},
+	{
+		Name:        "deploy",
+		Description: "Deploy a service to production.",
+		InputSchema: map[string]interface{}{
+			"type": "object",
+			"properties": map[string]interface{}{
+				"service": map[string]interface{}{
+					"type":        "string",
+					"description": "Service name to deploy",
+				},
+			},
+			"required": []string{"service"},
+		},
+	},
+	{
+		Name:        "rag_query",
+		Description: "Query a RAG collection with a natural language question.",
+		InputSchema: map[string]interface{}{
+			"type": "object",
+			"properties": map[string]interface{}{
+				"collection": map[string]interface{}{
+					"type":        "string",
+					"description": "RAG collection name",
+				},
+				"query": map[string]interface{}{
+					"type":        "string",
+					"description": "Natural language query",
+				},
+			},
+			"required": []string{"collection", "query"},
 		},
 	},
 }
@@ -164,6 +200,25 @@ func handleRequest(req jsonRPCRequest) jsonRPCResponse {
 	}
 }
 
+// envOrDefault reads an environment variable with a fallback.
+func envOrDefault(key, fallback string) string {
+	if v := os.Getenv(key); v != "" {
+		return v
+	}
+	return fallback
+}
+
+func getPlatformDBURL() string {
+	url := envOrDefault("POSTGRES_PLATFORM_URL", "")
+	if url == "" {
+		url = envOrDefault("SDA_PLATFORM_DB", "")
+	}
+	if url == "" {
+		url = "postgres://sda:sda_dev@localhost:5432/sda_platform?sslmode=disable"
+	}
+	return url
+}
+
 func handleToolCall(req jsonRPCRequest) jsonRPCResponse {
 	var params struct {
 		Name      string          `json:"name"`
@@ -175,29 +230,96 @@ func handleToolCall(req jsonRPCRequest) jsonRPCResponse {
 
 	switch params.Name {
 	case "service_health":
-		return jsonRPCResponse{
-			JSONRPC: "2.0",
-			ID:      req.ID,
-			Result: map[string]interface{}{
-				"content": []map[string]interface{}{
-					{"type": "text", "text": "TODO: implement service health check via tools/pkg/admin"},
-				},
-			},
-		}
+		return handleServiceHealth(req.ID)
 
 	case "tenant_list":
-		return jsonRPCResponse{
-			JSONRPC: "2.0",
-			ID:      req.ID,
-			Result: map[string]interface{}{
-				"content": []map[string]interface{}{
-					{"type": "text", "text": "TODO: implement tenant list via tools/pkg/admin"},
-				},
-			},
-		}
+		return handleTenantList(req.ID)
+
+	case "service_logs":
+		return handleServiceLogs(req.ID, params.Arguments)
+
+	case "db_query":
+		return textResult(req.ID, "TODO: implement read-only SQL query via tenant DB resolver")
+
+	case "deploy":
+		return textResult(req.ID, "TODO: implement deploy via docker compose")
+
+	case "rag_query":
+		return textResult(req.ID, "TODO: implement RAG query via NVIDIA Blueprint")
 
 	default:
 		return errorResponse(req.ID, -32602, "unknown tool: "+params.Name)
+	}
+}
+
+func handleServiceHealth(id any) jsonRPCResponse {
+	baseHost := envOrDefault("SDA_HOST", "localhost")
+	results := admin.ServiceHealth(baseHost)
+
+	var sb strings.Builder
+	sb.WriteString("SERVICE      PORT  STATUS  LATENCY\n")
+	for _, s := range results {
+		latency := "-"
+		if s.Latency > 0 {
+			latency = s.Latency.Round(time.Millisecond).String()
+		}
+		sb.WriteString(fmt.Sprintf("%-12s %s  %-6s  %s\n", s.Name, s.Port, s.Status, latency))
+	}
+
+	return textResult(id, sb.String())
+}
+
+func handleTenantList(id any) jsonRPCResponse {
+	dbURL := getPlatformDBURL()
+	tenants, err := admin.TenantList(dbURL)
+	if err != nil {
+		return textResult(id, fmt.Sprintf("Error listing tenants: %v", err))
+	}
+
+	if len(tenants) == 0 {
+		return textResult(id, "No tenants found.")
+	}
+
+	var sb strings.Builder
+	sb.WriteString("SLUG         NAME                  PLAN       ENABLED  CREATED\n")
+	for _, t := range tenants {
+		sb.WriteString(fmt.Sprintf("%-12s %-21s %-10s %-7v  %s\n",
+			t.Slug, t.Name, t.PlanID, t.Enabled, t.CreatedAt.Format("2006-01-02")))
+	}
+
+	return textResult(id, sb.String())
+}
+
+func handleServiceLogs(id any, argsRaw json.RawMessage) jsonRPCResponse {
+	var args struct {
+		Service string `json:"service"`
+		Lines   int    `json:"lines"`
+	}
+	if err := json.Unmarshal(argsRaw, &args); err != nil {
+		return errorResponse(id, -32602, "invalid arguments for service_logs")
+	}
+
+	if args.Lines <= 0 {
+		args.Lines = 50
+	}
+
+	output, err := admin.ServiceLogs(args.Service, args.Lines)
+	if err != nil {
+		return textResult(id, fmt.Sprintf("Error getting logs: %v", err))
+	}
+
+	return textResult(id, output)
+}
+
+func textResult(id any, text string) jsonRPCResponse {
+	return jsonRPCResponse{
+		JSONRPC: "2.0",
+		ID:      id,
+		Result: map[string]interface{}{
+			"content": []map[string]interface{}{
+				{"type": "text", "text": text},
+			},
+		},
 	}
 }
 

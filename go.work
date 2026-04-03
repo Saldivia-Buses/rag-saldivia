@@ -12,4 +12,5 @@ use (
 	./services/ws
 	./tools/cli
 	./tools/mcp
+	./tools/pkg
 )

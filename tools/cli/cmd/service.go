@@ -2,11 +2,11 @@ package cmd
 
 import (
 	"fmt"
-	"net/http"
 	"os"
 	"text/tabwriter"
 	"time"
 
+	"github.com/Camionerou/rag-saldivia/tools/pkg/admin"
 	"github.com/spf13/cobra"
 )
 
@@ -21,50 +21,44 @@ var serviceHealthCmd = &cobra.Command{
 	Run:   runServiceHealth,
 }
 
+var serviceLogsLines int
+
+var serviceLogsCmd = &cobra.Command{
+	Use:   "logs [service]",
+	Short: "Show recent logs from a service container",
+	Args:  cobra.ExactArgs(1),
+	Run:   runServiceLogs,
+}
+
 func init() {
+	serviceLogsCmd.Flags().IntVarP(&serviceLogsLines, "lines", "n", 50, "Number of log lines to show")
 	serviceCmd.AddCommand(serviceHealthCmd)
-}
-
-type serviceInfo struct {
-	Name string
-	Port string
-}
-
-var services = []serviceInfo{
-	{Name: "auth", Port: "8001"},
-	{Name: "ws", Port: "8002"},
-	{Name: "chat", Port: "8003"},
-	{Name: "rag", Port: "8004"},
-	{Name: "notification", Port: "8005"},
-	{Name: "platform", Port: "8006"},
-	{Name: "ingest", Port: "8007"},
+	serviceCmd.AddCommand(serviceLogsCmd)
 }
 
 func runServiceHealth(cmd *cobra.Command, args []string) {
 	baseHost := env("SDA_HOST", "localhost")
-	client := &http.Client{Timeout: 3 * time.Second}
+	results := admin.ServiceHealth(baseHost)
 
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	fmt.Fprintf(w, "SERVICE\tPORT\tSTATUS\tLATENCY\n")
-
-	for _, svc := range services {
-		url := fmt.Sprintf("http://%s:%s/health", baseHost, svc.Port)
-		start := time.Now()
-		resp, err := client.Get(url)
-		latency := time.Since(start)
-
-		if err != nil {
-			fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", svc.Name, svc.Port, "DOWN", "-")
-			continue
+	for _, s := range results {
+		latency := "-"
+		if s.Latency > 0 {
+			latency = s.Latency.Round(time.Millisecond).String()
 		}
-
-		status := "UP"
-		if resp.StatusCode != http.StatusOK {
-			status = fmt.Sprintf("ERR(%d)", resp.StatusCode)
-		}
-		resp.Body.Close()
-
-		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", svc.Name, svc.Port, status, latency.Round(time.Millisecond))
+		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", s.Name, s.Port, s.Status, latency)
 	}
 	w.Flush()
+}
+
+func runServiceLogs(cmd *cobra.Command, args []string) {
+	serviceName := args[0]
+
+	output, err := admin.ServiceLogs(serviceName, serviceLogsLines)
+	if err != nil {
+		exitErr("%v", err)
+	}
+
+	fmt.Print(output)
 }
