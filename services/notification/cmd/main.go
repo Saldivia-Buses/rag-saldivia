@@ -9,11 +9,14 @@ import (
 	"syscall"
 	"time"
 
+	"crypto/ed25519"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/nats-io/nats.go"
 
+	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
 	"github.com/Camionerou/rag-saldivia/services/notification/internal/handler"
@@ -27,7 +30,7 @@ func main() {
 
 	port := env("NOTIFICATION_PORT", "8005")
 	dbURL := env("POSTGRES_TENANT_URL", "")
-	jwtSecret := env("JWT_SECRET", "")
+	publicKey := loadPublicKey()
 	natsURL := env("NATS_URL", nats.DefaultURL)
 	smtpHost := env("SMTP_HOST", "localhost")
 	smtpPort := env("SMTP_PORT", "1025")
@@ -105,7 +108,7 @@ func main() {
 		w.Write([]byte(`{"status":"ok","service":"notification"}`))
 	})
 	r.Group(func(r chi.Router) {
-		r.Use(sdamw.Auth(jwtSecret))
+		r.Use(sdamw.Auth(publicKey))
 		r.Mount("/v1/notifications", notifHandler.Routes())
 	})
 
@@ -139,4 +142,18 @@ func env(key, fallback string) string {
 		return v
 	}
 	return fallback
+}
+
+func loadPublicKey() ed25519.PublicKey {
+	pubB64 := env("JWT_PUBLIC_KEY", "")
+	if pubB64 == "" {
+		slog.Error("JWT_PUBLIC_KEY is required")
+		os.Exit(1)
+	}
+	key, err := sdajwt.ParsePublicKeyEnv(pubB64)
+	if err != nil {
+		slog.Error("failed to parse JWT_PUBLIC_KEY", "error", err)
+		os.Exit(1)
+	}
+	return key
 }

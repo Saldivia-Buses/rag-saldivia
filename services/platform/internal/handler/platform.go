@@ -4,6 +4,7 @@ package handler
 
 import (
 	"context"
+	"crypto/ed25519"
 	"encoding/json"
 	"errors"
 	"log/slog"
@@ -39,12 +40,12 @@ type PlatformService interface {
 // Platform handles HTTP requests for platform operations.
 type Platform struct {
 	svc       PlatformService
-	jwtSecret string
+	publicKey ed25519.PublicKey
 }
 
 // NewPlatform creates platform HTTP handlers.
-func NewPlatform(svc PlatformService, jwtSecret string) *Platform {
-	return &Platform{svc: svc, jwtSecret: jwtSecret}
+func NewPlatform(svc PlatformService, publicKey ed25519.PublicKey) *Platform {
+	return &Platform{svc: svc, publicKey: publicKey}
 }
 
 // Routes returns a chi router with all platform routes.
@@ -371,7 +372,7 @@ func (h *Platform) requirePlatformAdmin(next http.Handler) http.Handler {
 			return
 		}
 
-		claims, err := sdajwt.Verify(h.jwtSecret, strings.TrimPrefix(auth, "Bearer "))
+		claims, err := sdajwt.Verify(h.publicKey, strings.TrimPrefix(auth, "Bearer "))
 		if err != nil {
 			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "invalid token"})
 			return

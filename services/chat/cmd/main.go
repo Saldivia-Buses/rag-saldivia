@@ -9,11 +9,14 @@ import (
 	"syscall"
 	"time"
 
+	"crypto/ed25519"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/nats-io/nats.go"
 
+	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
 	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
@@ -28,8 +31,8 @@ func main() {
 
 	port := env("CHAT_PORT", "8003")
 	dbURL := env("POSTGRES_TENANT_URL", "")
-	jwtSecret := env("JWT_SECRET", "")
 	tenantSlug := env("TENANT_SLUG", "dev")
+	publicKey := loadPublicKey()
 	natsURL := env("NATS_URL", nats.DefaultURL)
 
 	if dbURL == "" {
@@ -95,7 +98,7 @@ func main() {
 
 	// All chat routes require authentication
 	r.Group(func(r chi.Router) {
-		r.Use(sdamw.Auth(jwtSecret))
+		r.Use(sdamw.Auth(publicKey))
 		r.Mount("/v1/chat/sessions", chatHandler.Routes())
 	})
 
@@ -129,4 +132,18 @@ func env(key, fallback string) string {
 		return v
 	}
 	return fallback
+}
+
+func loadPublicKey() ed25519.PublicKey {
+	pubB64 := env("JWT_PUBLIC_KEY", "")
+	if pubB64 == "" {
+		slog.Error("JWT_PUBLIC_KEY is required")
+		os.Exit(1)
+	}
+	key, err := sdajwt.ParsePublicKeyEnv(pubB64)
+	if err != nil {
+		slog.Error("failed to parse JWT_PUBLIC_KEY", "error", err)
+		os.Exit(1)
+	}
+	return key
 }

@@ -8,6 +8,8 @@
 .env.blueprint
 .env.build
 *.key
+*.pem
+deploy/secrets/dynamic/
 config/*.env.*
 .mcp.json
 

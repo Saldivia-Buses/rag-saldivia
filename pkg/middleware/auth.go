@@ -2,6 +2,7 @@
 package middleware
 
 import (
+	"crypto/ed25519"
 	"net/http"
 	"strings"
 
@@ -10,7 +11,7 @@ import (
 )
 
 // Auth returns a chi middleware that verifies the JWT from the Authorization
-// header and injects identity into the request:
+// header using an Ed25519 public key and injects identity into the request:
 //   - X-User-ID header (user UUID)
 //   - X-User-Email header
 //   - X-User-Role header
@@ -20,7 +21,7 @@ import (
 //
 // Requests without a valid JWT get a 401 response.
 // The /health endpoint is excluded from auth.
-func Auth(jwtSecret string) func(http.Handler) http.Handler {
+func Auth(publicKey ed25519.PublicKey) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// Strip any client-spoofed identity headers before processing
@@ -43,7 +44,7 @@ func Auth(jwtSecret string) func(http.Handler) http.Handler {
 				return
 			}
 
-			claims, err := sdajwt.Verify(jwtSecret, token)
+			claims, err := sdajwt.Verify(publicKey, token)
 			if err != nil {
 				writeJSONError(w, http.StatusUnauthorized, "invalid token")
 				return

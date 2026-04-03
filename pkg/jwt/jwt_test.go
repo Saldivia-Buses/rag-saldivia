@@ -1,14 +1,31 @@
 package jwt
 
 import (
+	"crypto/ed25519"
+	"crypto/x509"
+	"encoding/pem"
 	"testing"
 	"time"
 )
 
-const testSecret = "test-secret-at-least-32-chars-long!!"
+// generateTestKeys creates a fresh Ed25519 keypair for testing.
+func generateTestKeys(t *testing.T) (ed25519.PublicKey, ed25519.PrivateKey) {
+	t.Helper()
+	pub, priv, err := ed25519.GenerateKey(nil)
+	if err != nil {
+		t.Fatalf("generate keys: %v", err)
+	}
+	return pub, priv
+}
+
+func testConfig(t *testing.T) Config {
+	t.Helper()
+	pub, priv := generateTestKeys(t)
+	return DefaultConfig(priv, pub)
+}
 
 func TestCreateAccess_and_Verify(t *testing.T) {
-	cfg := DefaultConfig(testSecret)
+	cfg := testConfig(t)
 
 	claims := Claims{
 		UserID:   "u-123",
@@ -24,7 +41,7 @@ func TestCreateAccess_and_Verify(t *testing.T) {
 		t.Fatalf("CreateAccess failed: %v", err)
 	}
 
-	got, err := Verify(testSecret, token)
+	got, err := Verify(cfg.PublicKey, token)
 	if err != nil {
 		t.Fatalf("Verify failed: %v", err)
 	}
@@ -49,8 +66,37 @@ func TestCreateAccess_and_Verify(t *testing.T) {
 	}
 }
 
+func TestCreateAccess_WithPermissions(t *testing.T) {
+	cfg := testConfig(t)
+
+	claims := Claims{
+		UserID:      "u-1",
+		TenantID:    "t-1",
+		Slug:        "test",
+		Role:        "user",
+		Permissions: []string{"chat.read", "chat.write", "collections.read"},
+	}
+
+	token, err := CreateAccess(cfg, claims)
+	if err != nil {
+		t.Fatalf("CreateAccess failed: %v", err)
+	}
+
+	got, err := Verify(cfg.PublicKey, token)
+	if err != nil {
+		t.Fatalf("Verify failed: %v", err)
+	}
+
+	if len(got.Permissions) != 3 {
+		t.Fatalf("expected 3 permissions, got %d", len(got.Permissions))
+	}
+	if got.Permissions[0] != "chat.read" {
+		t.Errorf("expected chat.read, got %q", got.Permissions[0])
+	}
+}
+
 func TestCreateRefresh_and_Verify(t *testing.T) {
-	cfg := DefaultConfig(testSecret)
+	cfg := testConfig(t)
 	claims := Claims{
 		UserID:   "u-1",
 		TenantID: "t-1",
@@ -63,7 +109,7 @@ func TestCreateRefresh_and_Verify(t *testing.T) {
 		t.Fatalf("CreateRefresh failed: %v", err)
 	}
 
-	got, err := Verify(testSecret, token)
+	got, err := Verify(cfg.PublicKey, token)
 	if err != nil {
 		t.Fatalf("Verify failed: %v", err)
 	}
@@ -75,21 +121,25 @@ func TestCreateRefresh_and_Verify(t *testing.T) {
 	}
 }
 
-func TestVerify_WrongSecret(t *testing.T) {
-	cfg := DefaultConfig(testSecret)
+func TestVerify_WrongKey(t *testing.T) {
+	cfg := testConfig(t)
 	claims := Claims{UserID: "u-1", TenantID: "t-1", Slug: "x", Role: "user"}
 
 	token, _ := CreateAccess(cfg, claims)
 
-	_, err := Verify("wrong-secret", token)
+	// Verify with a different public key
+	otherPub, _ := generateTestKeys(t)
+	_, err := Verify(otherPub, token)
 	if err == nil {
-		t.Fatal("expected error with wrong secret")
+		t.Fatal("expected error with wrong public key")
 	}
 }
 
 func TestVerify_ExpiredToken(t *testing.T) {
+	pub, priv := generateTestKeys(t)
 	cfg := Config{
-		Secret:       testSecret,
+		PrivateKey:   priv,
+		PublicKey:    pub,
 		AccessExpiry: -1 * time.Hour, // already expired
 		Issuer:       "sda",
 	}
@@ -97,50 +147,125 @@ func TestVerify_ExpiredToken(t *testing.T) {
 
 	token, _ := CreateAccess(cfg, claims)
 
-	_, err := Verify(testSecret, token)
+	_, err := Verify(pub, token)
 	if err == nil {
 		t.Fatal("expected error for expired token")
 	}
 }
 
 func TestVerify_MissingClaims(t *testing.T) {
-	cfg := DefaultConfig(testSecret)
+	cfg := testConfig(t)
 
 	// Missing TenantID and Slug
 	claims := Claims{UserID: "u-1"}
 	token, _ := CreateAccess(cfg, claims)
 
-	_, err := Verify(testSecret, token)
+	_, err := Verify(cfg.PublicKey, token)
 	if err == nil {
 		t.Fatal("expected ErrMissingClaim for missing tenant info")
 	}
 }
 
 func TestVerify_InvalidString(t *testing.T) {
-	_, err := Verify(testSecret, "not-a-jwt")
+	pub, _ := generateTestKeys(t)
+	_, err := Verify(pub, "not-a-jwt")
 	if err == nil {
 		t.Fatal("expected error for invalid token string")
 	}
 }
 
-func TestCreateAccess_SecretTooShort(t *testing.T) {
-	cfg := DefaultConfig("short")
+func TestCreateAccess_NilPrivateKey(t *testing.T) {
+	pub, _ := generateTestKeys(t)
+	cfg := VerifyOnlyConfig(pub)
 	claims := Claims{UserID: "u-1", TenantID: "t-1", Slug: "x", Role: "user"}
 
 	_, err := CreateAccess(cfg, claims)
-	if err != ErrSecretTooShort {
-		t.Fatalf("expected ErrSecretTooShort, got %v", err)
+	if err == nil {
+		t.Fatal("expected error when signing without private key")
+	}
+}
+
+func TestVerify_NilPublicKey(t *testing.T) {
+	_, err := Verify(nil, "some.jwt.token")
+	if err == nil {
+		t.Fatal("expected error when verifying without public key")
 	}
 }
 
 func TestCreateAccess_SetsSubject(t *testing.T) {
-	cfg := DefaultConfig(testSecret)
+	cfg := testConfig(t)
 	claims := Claims{UserID: "u-42", TenantID: "t-1", Slug: "x", Role: "user"}
 
 	token, _ := CreateAccess(cfg, claims)
-	got, _ := Verify(testSecret, token)
+	got, _ := Verify(cfg.PublicKey, token)
 
 	if got.Subject != "u-42" {
 		t.Errorf("expected Subject 'u-42', got %q", got.Subject)
+	}
+}
+
+func TestParseKeyPEM_Roundtrip(t *testing.T) {
+	pub, priv := generateTestKeys(t)
+
+	// Encode private key to PEM
+	privBytes, err := x509.MarshalPKCS8PrivateKey(priv)
+	if err != nil {
+		t.Fatalf("marshal private key: %v", err)
+	}
+	privPEM := pem.EncodeToMemory(&pem.Block{Type: "PRIVATE KEY", Bytes: privBytes})
+
+	// Encode public key to PEM
+	pubBytes, err := x509.MarshalPKIXPublicKey(pub)
+	if err != nil {
+		t.Fatalf("marshal public key: %v", err)
+	}
+	pubPEM := pem.EncodeToMemory(&pem.Block{Type: "PUBLIC KEY", Bytes: pubBytes})
+
+	// Parse back
+	parsedPriv, err := ParsePrivateKeyPEM(privPEM)
+	if err != nil {
+		t.Fatalf("ParsePrivateKeyPEM: %v", err)
+	}
+	parsedPub, err := ParsePublicKeyPEM(pubPEM)
+	if err != nil {
+		t.Fatalf("ParsePublicKeyPEM: %v", err)
+	}
+
+	// Sign with parsed private, verify with parsed public
+	cfg := DefaultConfig(parsedPriv, parsedPub)
+	claims := Claims{UserID: "u-1", TenantID: "t-1", Slug: "test", Role: "user"}
+	token, err := CreateAccess(cfg, claims)
+	if err != nil {
+		t.Fatalf("CreateAccess with parsed keys: %v", err)
+	}
+
+	got, err := Verify(parsedPub, token)
+	if err != nil {
+		t.Fatalf("Verify with parsed keys: %v", err)
+	}
+	if got.UserID != "u-1" {
+		t.Errorf("expected u-1, got %q", got.UserID)
+	}
+}
+
+func TestParseKeyPEM_InvalidData(t *testing.T) {
+	_, err := ParsePrivateKeyPEM([]byte("not a pem"))
+	if err == nil {
+		t.Fatal("expected error for invalid PEM")
+	}
+
+	_, err = ParsePublicKeyPEM([]byte("not a pem"))
+	if err == nil {
+		t.Fatal("expected error for invalid PEM")
+	}
+}
+
+func TestVerifyOnlyConfig_CannotSign(t *testing.T) {
+	pub, _ := generateTestKeys(t)
+	cfg := VerifyOnlyConfig(pub)
+
+	_, err := CreateAccess(cfg, Claims{UserID: "u-1", TenantID: "t-1", Slug: "x", Role: "user"})
+	if err == nil {
+		t.Fatal("VerifyOnlyConfig should not be able to sign tokens")
 	}
 }

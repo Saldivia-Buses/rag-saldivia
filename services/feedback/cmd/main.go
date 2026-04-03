@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"crypto/ed25519"
 	"log/slog"
 	"net/http"
 	"os"
@@ -14,6 +15,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/nats-io/nats.go"
 
+	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
 	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
@@ -129,7 +131,7 @@ func main() {
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Timeout(30 * time.Second))
 
-	jwtSecret := env("JWT_SECRET", "")
+	publicKey := loadPublicKey()
 
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -140,14 +142,14 @@ func main() {
 	// Tenant-scoped feedback endpoints (require auth)
 	feedbackHandler := handler.NewFeedback(tenantPool)
 	r.Group(func(r chi.Router) {
-		r.Use(sdamw.Auth(jwtSecret))
+		r.Use(sdamw.Auth(publicKey))
 		r.Mount("/v1/feedback", feedbackHandler.Routes())
 	})
 
 	// Platform admin feedback endpoints (require admin JWT)
 	platformFeedbackHandler := handler.NewPlatformFeedback(platformPool)
 	r.Group(func(r chi.Router) {
-		r.Use(sdamw.Auth(jwtSecret))
+		r.Use(sdamw.Auth(publicKey))
 		r.Mount("/v1/platform/feedback", platformFeedbackHandler.Routes())
 	})
 
@@ -186,4 +188,18 @@ func env(key, fallback string) string {
 		return v
 	}
 	return fallback
+}
+
+func loadPublicKey() ed25519.PublicKey {
+	pubB64 := env("JWT_PUBLIC_KEY", "")
+	if pubB64 == "" {
+		slog.Error("JWT_PUBLIC_KEY is required")
+		os.Exit(1)
+	}
+	key, err := sdajwt.ParsePublicKeyEnv(pubB64)
+	if err != nil {
+		slog.Error("failed to parse JWT_PUBLIC_KEY", "error", err)
+		os.Exit(1)
+	}
+	return key
 }

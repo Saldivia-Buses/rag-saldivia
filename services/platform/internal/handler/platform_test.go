@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"crypto/ed25519"
 	"encoding/json"
 	"errors"
 	"net/http"
@@ -16,7 +17,12 @@ import (
 	"github.com/Camionerou/rag-saldivia/services/platform/internal/service"
 )
 
-const testSecret = "test-secret-at-least-32-chars-long!!"
+var testPub ed25519.PublicKey
+var testPriv ed25519.PrivateKey
+
+func init() {
+	testPub, testPriv, _ = ed25519.GenerateKey(nil)
+}
 
 // --- mock ---
 
@@ -113,7 +119,7 @@ func (m *mockPlatformService) SetConfig(_ context.Context, key string, value []b
 
 func adminToken(t *testing.T) string {
 	t.Helper()
-	cfg := sdajwt.DefaultConfig(testSecret)
+	cfg := sdajwt.DefaultConfig(testPriv, testPub)
 	token, err := sdajwt.CreateAccess(cfg, sdajwt.Claims{
 		UserID: "u-admin", Email: "admin@sda.app", TenantID: "platform",
 		Slug: "platform", Role: "admin",
@@ -126,7 +132,7 @@ func adminToken(t *testing.T) string {
 
 func userToken(t *testing.T) string {
 	t.Helper()
-	cfg := sdajwt.DefaultConfig(testSecret)
+	cfg := sdajwt.DefaultConfig(testPriv, testPub)
 	token, err := sdajwt.CreateAccess(cfg, sdajwt.Claims{
 		UserID: "u-user", Email: "user@tenant.com", TenantID: "t-1",
 		Slug: "saldivia", Role: "user",
@@ -138,7 +144,7 @@ func userToken(t *testing.T) string {
 }
 
 func setupPlatformRouter(mock *mockPlatformService) *chi.Mux {
-	h := NewPlatform(mock, testSecret)
+	h := NewPlatform(mock, testPub)
 	r := chi.NewRouter()
 	r.Mount("/v1/platform", h.Routes())
 	return r

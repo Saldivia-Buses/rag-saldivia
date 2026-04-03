@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"crypto/ed25519"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -11,11 +12,18 @@ import (
 	"github.com/Camionerou/rag-saldivia/pkg/tenant"
 )
 
-const testSecret = "test-secret-at-least-32-chars-long!!"
+var (
+	testPub  ed25519.PublicKey
+	testPriv ed25519.PrivateKey
+)
+
+func init() {
+	testPub, testPriv, _ = ed25519.GenerateKey(nil)
+}
 
 func validToken(t *testing.T) string {
 	t.Helper()
-	cfg := sdajwt.DefaultConfig(testSecret)
+	cfg := sdajwt.DefaultConfig(testPriv, testPub)
 	token, err := sdajwt.CreateAccess(cfg, sdajwt.Claims{
 		UserID:   "u-123",
 		Email:    "admin@saldivia.com",
@@ -48,7 +56,7 @@ func echoHandler() http.HandlerFunc {
 }
 
 func TestAuth_ValidToken_InjectsHeaders(t *testing.T) {
-	handler := Auth(testSecret)(echoHandler())
+	handler := Auth(testPub)(echoHandler())
 	req := httptest.NewRequest(http.MethodGet, "/v1/chat/sessions", nil)
 	req.Header.Set("Authorization", "Bearer "+validToken(t))
 	rec := httptest.NewRecorder()
@@ -83,7 +91,7 @@ func TestAuth_ValidToken_InjectsHeaders(t *testing.T) {
 }
 
 func TestAuth_NoAuthHeader_Returns401(t *testing.T) {
-	handler := Auth(testSecret)(echoHandler())
+	handler := Auth(testPub)(echoHandler())
 	req := httptest.NewRequest(http.MethodGet, "/v1/chat/sessions", nil)
 	rec := httptest.NewRecorder()
 
@@ -98,7 +106,7 @@ func TestAuth_NoAuthHeader_Returns401(t *testing.T) {
 }
 
 func TestAuth_InvalidToken_Returns401(t *testing.T) {
-	handler := Auth(testSecret)(echoHandler())
+	handler := Auth(testPub)(echoHandler())
 	req := httptest.NewRequest(http.MethodGet, "/v1/chat/sessions", nil)
 	req.Header.Set("Authorization", "Bearer invalid.jwt.token")
 	rec := httptest.NewRecorder()
@@ -110,9 +118,10 @@ func TestAuth_InvalidToken_Returns401(t *testing.T) {
 	}
 }
 
-func TestAuth_WrongSecret_Returns401(t *testing.T) {
-	// Token signed with testSecret, middleware configured with different secret
-	handler := Auth("different-secret-at-least-32-chars!!")(echoHandler())
+func TestAuth_WrongKey_Returns401(t *testing.T) {
+	// Token signed with testPriv, middleware configured with different public key
+	otherPub, _, _ := ed25519.GenerateKey(nil)
+	handler := Auth(otherPub)(echoHandler())
 	req := httptest.NewRequest(http.MethodGet, "/v1/chat/sessions", nil)
 	req.Header.Set("Authorization", "Bearer "+validToken(t))
 	rec := httptest.NewRecorder()
@@ -126,7 +135,7 @@ func TestAuth_WrongSecret_Returns401(t *testing.T) {
 
 func TestAuth_HealthBypass(t *testing.T) {
 	called := false
-	handler := Auth(testSecret)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	handler := Auth(testPub)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		called = true
 		w.WriteHeader(http.StatusOK)
 	}))
@@ -145,7 +154,7 @@ func TestAuth_HealthBypass(t *testing.T) {
 }
 
 func TestAuth_HealthBypass_TrailingSlash(t *testing.T) {
-	handler := Auth(testSecret)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	handler := Auth(testPub)(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 	}))
 
@@ -159,7 +168,7 @@ func TestAuth_HealthBypass_TrailingSlash(t *testing.T) {
 }
 
 func TestAuth_SpoofedHeadersStripped(t *testing.T) {
-	handler := Auth(testSecret)(echoHandler())
+	handler := Auth(testPub)(echoHandler())
 	req := httptest.NewRequest(http.MethodGet, "/v1/something", nil)
 	req.Header.Set("Authorization", "Bearer "+validToken(t))
 	// Attacker tries to inject headers — middleware should overwrite with JWT claims
@@ -190,17 +199,14 @@ func TestAuth_SpoofedHeadersStripped(t *testing.T) {
 }
 
 func TestAuth_SpoofedHeaders_NoToken_NotLeaked(t *testing.T) {
-	// Without a valid token, spoofed headers must NOT reach the handler
-	handler := Auth(testSecret)(echoHandler())
+	handler := Auth(testPub)(echoHandler())
 	req := httptest.NewRequest(http.MethodGet, "/v1/something", nil)
 	req.Header.Set("X-User-ID", "attacker-id")
 	req.Header.Set("X-Tenant-Slug", "victim-tenant")
-	// No Authorization header
 	rec := httptest.NewRecorder()
 
 	handler.ServeHTTP(rec, req)
 
-	// Should get 401, so the spoofed headers never reach the handler
 	if rec.Code != http.StatusUnauthorized {
 		t.Fatalf("expected 401, got %d", rec.Code)
 	}
@@ -208,8 +214,9 @@ func TestAuth_SpoofedHeaders_NoToken_NotLeaked(t *testing.T) {
 
 func TestAuth_ExpiredToken_Returns401(t *testing.T) {
 	cfg := sdajwt.Config{
-		Secret:       testSecret,
-		AccessExpiry: -1 * time.Hour, // already expired
+		PrivateKey:   testPriv,
+		PublicKey:    testPub,
+		AccessExpiry: -1 * time.Hour,
 		Issuer:       "sda",
 	}
 	token, err := sdajwt.CreateAccess(cfg, sdajwt.Claims{
@@ -219,7 +226,7 @@ func TestAuth_ExpiredToken_Returns401(t *testing.T) {
 		t.Fatalf("create expired token: %v", err)
 	}
 
-	handler := Auth(testSecret)(echoHandler())
+	handler := Auth(testPub)(echoHandler())
 	req := httptest.NewRequest(http.MethodGet, "/v1/something", nil)
 	req.Header.Set("Authorization", "Bearer "+token)
 	rec := httptest.NewRecorder()
@@ -232,9 +239,8 @@ func TestAuth_ExpiredToken_Returns401(t *testing.T) {
 }
 
 func TestAuth_BearerPrefix_Required(t *testing.T) {
-	handler := Auth(testSecret)(echoHandler())
+	handler := Auth(testPub)(echoHandler())
 
-	// Token without "Bearer " prefix
 	req := httptest.NewRequest(http.MethodGet, "/v1/something", nil)
 	req.Header.Set("Authorization", validToken(t))
 	rec := httptest.NewRecorder()

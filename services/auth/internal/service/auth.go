@@ -205,7 +205,7 @@ func (a *Auth) Login(ctx context.Context, req LoginRequest) (*TokenPair, error) 
 // Refresh validates a refresh token and returns a new token pair (rotation).
 func (a *Auth) Refresh(ctx context.Context, refreshToken string) (*TokenPair, error) {
 	// Verify the JWT signature and expiry
-	claims, err := sdajwt.Verify(a.jwtCfg.Secret, refreshToken)
+	claims, err := sdajwt.Verify(a.jwtCfg.PublicKey, refreshToken)
 	if err != nil {
 		return nil, ErrInvalidRefreshToken
 	}
