@@ -49,44 +49,52 @@ func (h *Feedback) Summary(w http.ResponseWriter, r *http.Request) {
 	var positiveRate float64
 	var totalFeedback int
 	var avgScore float64
-	h.tenantDB.QueryRow(ctx,
+	if err := h.tenantDB.QueryRow(ctx,
 		`SELECT COUNT(*), COALESCE(AVG(score), 0),
-			CASE WHEN COUNT(*) > 0 THEN COUNT(*) FILTER (WHERE thumbs = 'up')::float / COUNT(*)
+			CASE WHEN COUNT(*) > 0 THEN COUNT(*) FILTER (WHERE thumbs = 'up')::float / NULLIF(COUNT(*), 0)
 			ELSE 0 END
 		 FROM feedback_events
 		 WHERE category IN ('response_quality','agent_quality','extraction','detection')
 		   AND created_at > now() - make_interval(hours => $1)`, hours,
-	).Scan(&totalFeedback, &avgScore, &positiveRate)
+	).Scan(&totalFeedback, &avgScore, &positiveRate); err != nil {
+		slog.Error("summary: ai quality query failed", "error", err)
+	}
 
 	// Errors
 	var totalErrors, openErrors, criticalErrors int
-	h.tenantDB.QueryRow(ctx,
+	if err := h.tenantDB.QueryRow(ctx,
 		`SELECT COUNT(*),
 			COUNT(*) FILTER (WHERE status = 'open'),
 			COUNT(*) FILTER (WHERE severity = 'critical')
 		 FROM feedback_events WHERE category = 'error_report'
 		   AND created_at > now() - make_interval(hours => $1)`, hours,
-	).Scan(&totalErrors, &openErrors, &criticalErrors)
+	).Scan(&totalErrors, &openErrors, &criticalErrors); err != nil {
+		slog.Error("summary: errors query failed", "error", err)
+	}
 
 	// Feature requests
 	var totalFeatures, openFeatures int
-	h.tenantDB.QueryRow(ctx,
+	if err := h.tenantDB.QueryRow(ctx,
 		`SELECT COUNT(*), COUNT(*) FILTER (WHERE status = 'open')
 		 FROM feedback_events WHERE category = 'feature_request'
 		   AND created_at > now() - make_interval(hours => $1)`, hours,
-	).Scan(&totalFeatures, &openFeatures)
+	).Scan(&totalFeatures, &openFeatures); err != nil {
+		slog.Error("summary: features query failed", "error", err)
+	}
 
 	// NPS (30 day rolling)
 	var npsScore float64
 	var npsResponses int
-	h.tenantDB.QueryRow(ctx,
+	if err := h.tenantDB.QueryRow(ctx,
 		`SELECT COUNT(*),
 			COALESCE(
 				(COUNT(*) FILTER (WHERE score >= 9)::float - COUNT(*) FILTER (WHERE score < 7)::float)
 				/ NULLIF(COUNT(*), 0) * 100, 0)
 		 FROM feedback_events WHERE category = 'nps'
 		   AND created_at > now() - interval '30 days'`,
-	).Scan(&npsResponses, &npsScore)
+	).Scan(&npsResponses, &npsScore); err != nil {
+		slog.Error("summary: nps query failed", "error", err)
+	}
 
 	writeJSON(w, http.StatusOK, map[string]any{
 		"period": r.URL.Query().Get("period"),

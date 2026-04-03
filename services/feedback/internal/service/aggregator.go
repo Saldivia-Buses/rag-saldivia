@@ -132,13 +132,18 @@ func (a *Aggregator) computeAIQualityScore(ctx context.Context) float64 {
 		return 100 // no data = assume OK
 	}
 
-	// If very few samples, attenuate the change
-	if total < 5 {
-		positiveRate := float64(positive) / float64(positive+negative)
+	rated := positive + negative
+	if rated == 0 {
+		return 100 // events exist but none have thumbs — assume OK
+	}
+
+	positiveRate := float64(positive) / float64(rated)
+
+	// If very few rated samples, attenuate the change
+	if rated < 5 {
 		return 50 + positiveRate*50 // range 50-100 for low sample
 	}
 
-	positiveRate := float64(positive) / float64(positive+negative)
 	return positiveRate * 100
 }
 
@@ -149,7 +154,7 @@ func (a *Aggregator) computeErrorRateScore(ctx context.Context) float64 {
 	}
 
 	if critical > 0 {
-		return math.Min(30, float64(100-total*5))
+		return math.Max(0, math.Min(30, float64(100-total*5)))
 	}
 
 	switch {

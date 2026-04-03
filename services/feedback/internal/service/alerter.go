@@ -9,9 +9,10 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-// EventPublisher can publish notification events via NATS.
+// EventPublisher can publish events via NATS.
 type EventPublisher interface {
 	Notify(tenantSlug string, evt any) error
+	Broadcast(tenantSlug, channel string, data any) error
 }
 
 // Alerter checks health metrics against thresholds and creates alerts.
@@ -189,18 +190,19 @@ func (a *Alerter) CheckAndAlert(ctx context.Context, tenantID, tenantSlug string
 			"value", currentVal,
 		)
 
-		// Notify via NATS
+		// Broadcast alert to WS Hub for platform admins (not via Notification
+		// Service, which requires a valid user_id FK). Platform admins subscribe
+		// to the feedback.alerts channel on the WS Hub.
 		if a.publisher != nil {
-			a.publisher.Notify(tenantSlug, map[string]any{
-				"user_id": "platform-admin-broadcast",
-				"type":    "feedback.alert",
-				"title":   title,
-				"body":    desc,
-				"channel": "both",
+			a.publisher.Broadcast(tenantSlug, "feedback.alerts", map[string]any{
+				"type":     "feedback_alert",
+				"alert_id": check.AlertType + "-" + tenantID,
 				"data": map[string]string{
 					"alert_type":    check.AlertType,
 					"severity":      check.Severity,
 					"tenant_id":     tenantID,
+					"title":         title,
+					"description":   desc,
 					"current_value": currentVal,
 					"threshold":     check.Threshold,
 				},
