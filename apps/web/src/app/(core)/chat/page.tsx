@@ -318,10 +318,10 @@ export default function ChatPage() {
       }
     } finally {
       setIsStreaming(false);
+      // Clear streaming content (thinking stays visible — Reasoning component
+      // auto-collapses it, and it persists as part of the message)
       setStreamingContent("");
-      setThinkingContent("");
       streamRef.current = "";
-      thinkingRef.current = "";
     }
   }, [input, isStreaming, activeSessionId, queryClient, sendMessageMutation]);
 
@@ -333,12 +333,14 @@ export default function ChatPage() {
   // Combine persisted messages with streaming content
   const displayMessages = [
     ...messages,
-    ...(streamingContent
+    ...((streamingContent || thinkingContent)
       ? [
           {
             id: "streaming",
             role: "assistant" as const,
             content: streamingContent,
+            thinking: thinkingContent,
+            sources: [] as Array<{ document_name: string; content: string; score: number }>,
             created_at: new Date().toISOString(),
           },
         ]
@@ -392,12 +394,31 @@ export default function ChatPage() {
                       : "text-foreground leading-relaxed prose prose-sm dark:prose-invert prose-p:my-1 prose-headings:my-2 prose-pre:my-2 prose-ul:my-1 prose-ol:my-1 max-w-none",
                   )}
                 >
+                  {/* Reasoning block (above response content) */}
+                  {"thinking" in message && message.thinking && (
+                    <Reasoning
+                      isStreaming={message.id === "streaming" && isStreaming && !message.content}
+                    >
+                      <ReasoningTrigger
+                        getThinkingMessage={(streaming, duration) => {
+                          if (streaming || duration === 0)
+                            return <span className="text-muted-foreground">Pensando...</span>;
+                          if (duration === undefined)
+                            return <span>Penso unos segundos</span>;
+                          return <span>Penso {duration} segundos</span>;
+                        }}
+                      />
+                      <ReasoningContent>{message.thinking}</ReasoningContent>
+                    </Reasoning>
+                  )}
                   {message.role === "user" ? (
                     message.content
                   ) : (
-                    <Streamdown plugins={{ code, math: mathPlugin }}>
-                      {message.content}
-                    </Streamdown>
+                    message.content && (
+                      <Streamdown plugins={{ code, math: mathPlugin }}>
+                        {message.content}
+                      </Streamdown>
+                    )
                   )}
                   {message.sources && message.sources.length > 0 && (
                     <div className="mt-3 flex flex-wrap gap-1.5">
@@ -414,26 +435,6 @@ export default function ChatPage() {
                 </div>
               </div>
             ))}
-
-            {/* Thinking / Reasoning */}
-            {thinkingContent && (
-              <div className="flex justify-start">
-                <div className="max-w-[80%]">
-                  <Reasoning isStreaming={isStreaming && !streamingContent}>
-                    <ReasoningTrigger
-                      getThinkingMessage={(streaming, duration) => {
-                        if (streaming || duration === 0)
-                          return <span className="text-muted-foreground">Pensando...</span>;
-                        if (duration === undefined)
-                          return <span>Penso unos segundos</span>;
-                        return <span>Penso {duration} segundos</span>;
-                      }}
-                    />
-                    <ReasoningContent>{thinkingContent}</ReasoningContent>
-                  </Reasoning>
-                </div>
-              </div>
-            )}
 
             {isStreaming && !streamingContent && !thinkingContent && (
               <div className="flex justify-start">
