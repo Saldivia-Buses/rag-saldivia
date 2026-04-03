@@ -64,6 +64,7 @@ func main() {
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Recoverer)
+	r.Use(sdamw.SecureHeaders())
 
 	r.Get("/health", ragHandler.Health)
 	r.Group(func(r chi.Router) {

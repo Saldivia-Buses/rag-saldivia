@@ -107,6 +107,7 @@ func main() {
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Recoverer)
+	r.Use(sdamw.SecureHeaders())
 	r.Use(middleware.Timeout(60 * time.Second))
 
 	// Health check outside auth middleware (monitoring needs unauthenticated access)

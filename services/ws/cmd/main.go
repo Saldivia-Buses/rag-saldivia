@@ -16,6 +16,7 @@ import (
 	"github.com/nats-io/nats.go"
 
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
+	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
 	"github.com/Camionerou/rag-saldivia/services/ws/internal/handler"
 	"github.com/Camionerou/rag-saldivia/services/ws/internal/hub"
@@ -84,6 +85,7 @@ func main() {
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Recoverer)
+	r.Use(sdamw.SecureHeaders())
 
 	r.Get("/ws", wsHandler.Upgrade)
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
