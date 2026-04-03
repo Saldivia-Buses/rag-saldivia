@@ -92,7 +92,7 @@ func (m *mockChatService) RenameSession(_ context.Context, sessionID, userID, ti
 	return service.ErrSessionNotFound
 }
 
-func (m *mockChatService) AddMessage(_ context.Context, sessionID, userID, role, content string, sources, metadata []byte) (*service.Message, error) {
+func (m *mockChatService) AddMessage(_ context.Context, sessionID, userID, role, content string, thinking *string, sources, metadata []byte) (*service.Message, error) {
 	if m.err != nil {
 		return nil, m.err
 	}

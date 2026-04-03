@@ -73,6 +73,7 @@ func (r *RAG) GenerateStream(ctx context.Context, tenantSlug string, req Generat
 			collection = tenantSlug + "-" + collection
 		}
 		req.CollectionName = collection
+		req.Reasoning = nil // Blueprint doesn't understand this field
 	} else {
 		// OpenRouter/external mode: inject model if configured
 		if r.cfg.Model != "" && req.Model == "" {
