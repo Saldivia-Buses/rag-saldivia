@@ -11,7 +11,7 @@ ORDER BY created_at;
 -- name: CreateTenant :one
 INSERT INTO tenants (slug, name, plan_id, postgres_url, redis_url, settings)
 VALUES ($1, $2, $3, $4, $5, $6)
-RETURNING *;
+RETURNING id, slug, name, plan_id, enabled, logo_url, domain, settings, created_at, updated_at;
 
 -- name: UpdateTenant :exec
 UPDATE tenants

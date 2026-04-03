@@ -14,7 +14,7 @@ import (
 const createTenant = `-- name: CreateTenant :one
 INSERT INTO tenants (slug, name, plan_id, postgres_url, redis_url, settings)
 VALUES ($1, $2, $3, $4, $5, $6)
-RETURNING id, slug, name, plan_id, postgres_url, redis_url, enabled, logo_url, domain, settings, created_at, updated_at
+RETURNING id, slug, name, plan_id, enabled, logo_url, domain, settings, created_at, updated_at
 `
 
 type CreateTenantParams struct {
@@ -26,7 +26,20 @@ type CreateTenantParams struct {
 	Settings    []byte `json:"settings"`
 }
 
-func (q *Queries) CreateTenant(ctx context.Context, arg CreateTenantParams) (Tenant, error) {
+type CreateTenantRow struct {
+	ID        string             `json:"id"`
+	Slug      string             `json:"slug"`
+	Name      string             `json:"name"`
+	PlanID    string             `json:"plan_id"`
+	Enabled   bool               `json:"enabled"`
+	LogoUrl   pgtype.Text        `json:"logo_url"`
+	Domain    pgtype.Text        `json:"domain"`
+	Settings  []byte             `json:"settings"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+}
+
+func (q *Queries) CreateTenant(ctx context.Context, arg CreateTenantParams) (CreateTenantRow, error) {
 	row := q.db.QueryRow(ctx, createTenant,
 		arg.Slug,
 		arg.Name,
@@ -35,14 +48,12 @@ func (q *Queries) CreateTenant(ctx context.Context, arg CreateTenantParams) (Ten
 		arg.RedisUrl,
 		arg.Settings,
 	)
-	var i Tenant
+	var i CreateTenantRow
 	err := row.Scan(
 		&i.ID,
 		&i.Slug,
 		&i.Name,
 		&i.PlanID,
-		&i.PostgresUrl,
-		&i.RedisUrl,
 		&i.Enabled,
 		&i.LogoUrl,
 		&i.Domain,

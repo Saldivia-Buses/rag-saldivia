@@ -57,7 +57,8 @@ func main() {
 	defer pool.Close()
 
 	platformSvc := service.New(pool)
-	platformHandler := handler.NewPlatform(platformSvc, publicKey)
+	platformSlug := env("PLATFORM_TENANT_SLUG", "platform")
+	platformHandler := handler.NewPlatform(platformSvc, publicKey, platformSlug)
 
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)

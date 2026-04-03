@@ -39,13 +39,14 @@ type PlatformService interface {
 
 // Platform handles HTTP requests for platform operations.
 type Platform struct {
-	svc       PlatformService
-	publicKey ed25519.PublicKey
+	svc          PlatformService
+	publicKey    ed25519.PublicKey
+	platformSlug string // tenant slug that identifies platform admins
 }
 
 // NewPlatform creates platform HTTP handlers.
-func NewPlatform(svc PlatformService, publicKey ed25519.PublicKey) *Platform {
-	return &Platform{svc: svc, publicKey: publicKey}
+func NewPlatform(svc PlatformService, publicKey ed25519.PublicKey, platformSlug string) *Platform {
+	return &Platform{svc: svc, publicKey: publicKey, platformSlug: platformSlug}
 }
 
 // Routes returns a chi router with all platform routes.
@@ -378,7 +379,7 @@ func (h *Platform) requirePlatformAdmin(next http.Handler) http.Handler {
 			return
 		}
 
-		if claims.Role != "admin" {
+		if claims.Role != "admin" || (h.platformSlug != "" && claims.Slug != h.platformSlug) {
 			writeJSON(w, http.StatusForbidden, map[string]string{"error": "platform admin access required"})
 			return
 		}

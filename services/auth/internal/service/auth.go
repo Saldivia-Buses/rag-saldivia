@@ -31,8 +31,9 @@ var (
 )
 
 const (
-	bcryptCost      = 12
-	maxFailedLogins = 5
+	bcryptCost              = 12
+	maxFailedLogins         = 5  // temporary lockout threshold (15 min)
+	permanentLockoutLogins  = 20 // permanent lockout threshold (admin reset required)
 )
 
 // dummyHash is used for timing-safe responses when the user doesn't exist.
@@ -497,9 +498,10 @@ func hashToken(token string) string {
 func (a *Auth) recordFailedLogin(ctx context.Context, userID string) {
 	_, err := a.db.Exec(ctx,
 		`UPDATE users SET failed_logins = failed_logins + 1,
-		 locked_until = CASE WHEN failed_logins + 1 >= $2 THEN now() + interval '15 minutes' ELSE locked_until END
+		 locked_until = CASE WHEN failed_logins + 1 >= $2 THEN now() + interval '15 minutes' ELSE locked_until END,
+		 is_active = CASE WHEN failed_logins + 1 >= $3 THEN false ELSE is_active END
 		 WHERE id = $1`,
-		userID, maxFailedLogins,
+		userID, maxFailedLogins, permanentLockoutLogins,
 	)
 	if err != nil {
 		slog.Error("failed to record failed login", "error", err, "user_id", userID)

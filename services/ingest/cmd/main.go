@@ -108,13 +108,18 @@ func main() {
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Timeout(60 * time.Second))
-	r.Use(sdamw.Auth(publicKey))
 
+	// Health check outside auth middleware (monitoring needs unauthenticated access)
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.Write([]byte(`{"status":"ok","service":"ingest"}`))
 	})
-	r.Mount("/v1/ingest", ingestHandler.Routes())
+
+	// Protected routes
+	r.Group(func(r chi.Router) {
+		r.Use(sdamw.Auth(publicKey))
+		r.Mount("/v1/ingest", ingestHandler.Routes())
+	})
 
 	srv := &http.Server{
 		Addr:         ":" + port,
