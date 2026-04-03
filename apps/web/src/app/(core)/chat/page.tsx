@@ -21,6 +21,8 @@ import {
   ReasoningTrigger,
   ReasoningContent,
 } from "@/components/ai-elements/reasoning";
+import { Streamdown } from "streamdown";
+import { code } from "@streamdown/code";
 import { MODELS, DEFAULT_MODEL, type LLMModel } from "@/lib/models";
 import {
   ModelSelector,
@@ -278,6 +280,9 @@ export default function ChatPage() {
         model: selectedModel.id,
         stream: true,
         use_knowledge_base: true,
+        ...(selectedModel.supportsReasoning
+          ? { reasoning: { effort: "medium" } }
+          : {}),
       })) {
         if (chunk.type === "thinking") {
           thinkingRef.current += chunk.text;
@@ -377,13 +382,19 @@ export default function ChatPage() {
               >
                 <div
                   className={cn(
-                    "max-w-[80%] text-sm whitespace-pre-wrap",
+                    "max-w-[80%] text-sm",
                     message.role === "user"
-                      ? "rounded-2xl bg-muted px-4 py-2.5"
-                      : "text-foreground leading-relaxed",
+                      ? "rounded-2xl bg-muted px-4 py-2.5 whitespace-pre-wrap"
+                      : "text-foreground leading-relaxed prose prose-sm dark:prose-invert prose-p:my-1 prose-headings:my-2 prose-pre:my-2 prose-ul:my-1 prose-ol:my-1 max-w-none",
                   )}
                 >
-                  {message.content}
+                  {message.role === "user" ? (
+                    message.content
+                  ) : (
+                    <Streamdown plugins={{ code }}>
+                      {message.content}
+                    </Streamdown>
+                  )}
                   {message.sources && message.sources.length > 0 && (
                     <div className="mt-3 flex flex-wrap gap-1.5">
                       {message.sources.map((src, i) => (

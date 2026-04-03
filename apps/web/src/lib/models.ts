@@ -10,6 +10,7 @@ export interface LLMModel {
   providerLogo: string;
   description: string;
   contextWindow: string;
+  supportsReasoning?: boolean;
 }
 
 export const MODELS: LLMModel[] = [
@@ -21,6 +22,7 @@ export const MODELS: LLMModel[] = [
     providerLogo: "anthropic",
     description: "Rapido, inteligente, ideal para todo",
     contextWindow: "200K",
+    supportsReasoning: true,
   },
   {
     id: "anthropic/claude-opus-4-6",
@@ -29,6 +31,7 @@ export const MODELS: LLMModel[] = [
     providerLogo: "anthropic",
     description: "Maximo razonamiento y precision",
     contextWindow: "1M",
+    supportsReasoning: true,
   },
   {
     id: "anthropic/claude-haiku-4-5",
@@ -63,6 +66,7 @@ export const MODELS: LLMModel[] = [
     providerLogo: "deepseek",
     description: "Razonamiento avanzado open source",
     contextWindow: "164K",
+    supportsReasoning: true,
   },
   // Meta
   {
