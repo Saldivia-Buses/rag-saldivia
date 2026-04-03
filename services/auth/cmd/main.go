@@ -92,7 +92,7 @@ func main() {
 			os.Exit(1)
 		}
 
-		resolver := tenant.NewResolver(platformPool)
+		resolver := tenant.NewResolver(platformPool, nil) // nil = no credential encryption (yet)
 		defer resolver.Close()
 
 		authHandler = handler.NewMultiTenantAuth(resolver, jwtCfg, publisher)

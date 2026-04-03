@@ -10,6 +10,8 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
+
+	sdacrypto "github.com/Camionerou/rag-saldivia/pkg/crypto"
 )
 
 // ConnInfo holds connection details for a tenant's databases.
@@ -26,7 +28,8 @@ type ConnInfo struct {
 // It caches connection pools so we don't create a new pool per request.
 // Uses singleflight-style locking to prevent thundering herd on pool creation.
 type Resolver struct {
-	platformDB *pgxpool.Pool
+	platformDB    *pgxpool.Pool
+	encryptionKey []byte // 32-byte AES-256 key; nil = no encryption (backwards compat)
 
 	mu        sync.Mutex
 	pools     map[string]*pgxpool.Pool // slug → PostgreSQL pool
@@ -46,13 +49,15 @@ type connEntry struct {
 const defaultCacheTTL = 5 * time.Minute
 
 // NewResolver creates a tenant resolver backed by the platform database.
-func NewResolver(platformDB *pgxpool.Pool) *Resolver {
+// encryptionKey is optional (nil = credentials stored in plaintext).
+func NewResolver(platformDB *pgxpool.Pool, encryptionKey []byte) *Resolver {
 	return &Resolver{
-		platformDB:   platformDB,
-		pools:        make(map[string]*pgxpool.Pool),
-		redisClts:    make(map[string]*redis.Client),
-		connCache:    make(map[string]connEntry),
-		PoolMaxConns: 4,
+		platformDB:    platformDB,
+		encryptionKey: encryptionKey,
+		pools:         make(map[string]*pgxpool.Pool),
+		redisClts:     make(map[string]*redis.Client),
+		connCache:     make(map[string]connEntry),
+		PoolMaxConns:  4,
 	}
 }
 
@@ -104,15 +109,52 @@ func (r *Resolver) resolveConnInfo(ctx context.Context, slug string) (ConnInfo, 
 	}
 
 	var info ConnInfo
+	var pgURL, redisURL string
+	var pgURLEnc, redisURLEnc *string
 	err := r.platformDB.QueryRow(ctx,
-		`SELECT id, postgres_url, redis_url FROM tenants WHERE slug = $1 AND enabled = true`,
+		`SELECT id, postgres_url, redis_url,
+		        postgres_url_enc, redis_url_enc
+		 FROM tenants WHERE slug = $1 AND enabled = true`,
 		slug,
-	).Scan(&info.TenantID, &info.PostgresURL, &info.RedisURL)
+	).Scan(&info.TenantID, &pgURL, &redisURL, &pgURLEnc, &redisURLEnc)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return ConnInfo{}, fmt.Errorf("resolve tenant %q: %w", slug, ErrTenantUnknown)
 		}
-		return ConnInfo{}, fmt.Errorf("resolve tenant %q: %w", slug, err)
+		// Fallback: _enc columns may not exist yet (pre-migration)
+		err2 := r.platformDB.QueryRow(ctx,
+			`SELECT id, postgres_url, redis_url FROM tenants WHERE slug = $1 AND enabled = true`,
+			slug,
+		).Scan(&info.TenantID, &info.PostgresURL, &info.RedisURL)
+		if err2 != nil {
+			if errors.Is(err2, pgx.ErrNoRows) {
+				return ConnInfo{}, fmt.Errorf("resolve tenant %q: %w", slug, ErrTenantUnknown)
+			}
+			return ConnInfo{}, fmt.Errorf("resolve tenant %q: %w", slug, err2)
+		}
+		r.connCache[slug] = connEntry{info: info, fetchedAt: time.Now()}
+		return info, nil
+	}
+
+	// Prefer encrypted URLs if available and we have a key
+	if r.encryptionKey != nil && pgURLEnc != nil && *pgURLEnc != "" {
+		decrypted, err := sdacrypto.Decrypt(r.encryptionKey, *pgURLEnc)
+		if err != nil {
+			return ConnInfo{}, fmt.Errorf("decrypt postgres_url for tenant %q: %w", slug, err)
+		}
+		info.PostgresURL = decrypted
+	} else {
+		info.PostgresURL = pgURL
+	}
+
+	if r.encryptionKey != nil && redisURLEnc != nil && *redisURLEnc != "" {
+		decrypted, err := sdacrypto.Decrypt(r.encryptionKey, *redisURLEnc)
+		if err != nil {
+			return ConnInfo{}, fmt.Errorf("decrypt redis_url for tenant %q: %w", slug, err)
+		}
+		info.RedisURL = decrypted
+	} else {
+		info.RedisURL = redisURL
 	}
 
 	r.connCache[slug] = connEntry{info: info, fetchedAt: time.Now()}
