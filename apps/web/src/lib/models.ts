@@ -19,7 +19,8 @@ export const MODELS: LLMModel[] = [
     id: "anthropic/claude-sonnet-4-6",
     name: "Claude Sonnet 4.6",
     provider: "Claude",
-    providerLogo: "claude",
+    providerLogo: "anthropic",
+
     description: "Excelente balance velocidad/calidad",
     contextWindow: "200K",
     speed: "fast",
@@ -28,7 +29,8 @@ export const MODELS: LLMModel[] = [
     id: "anthropic/claude-opus-4-6",
     name: "Claude Opus 4.6",
     provider: "Claude",
-    providerLogo: "claude",
+    providerLogo: "anthropic",
+
     description: "Maximo razonamiento y calidad",
     contextWindow: "1M",
     speed: "slow",
@@ -37,7 +39,8 @@ export const MODELS: LLMModel[] = [
     id: "anthropic/claude-haiku-4-5",
     name: "Claude Haiku 4.5",
     provider: "Claude",
-    providerLogo: "claude",
+    providerLogo: "anthropic",
+
     description: "Ultra rapido para tareas simples",
     contextWindow: "200K",
     speed: "fast",

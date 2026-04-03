@@ -1,1 +1,2 @@
 - [Plan 34 SSO audit](project_plan34_sso_audit.md) -- 2 critical (SAML state bypass, cert not persisted), 3 high. NOT APTO.
+- [PR 53 Feedback audit](project_pr53_feedback_audit.md) -- 2 critical (NATS no auth, LIMIT concat), 3 high. NOT APTO.
