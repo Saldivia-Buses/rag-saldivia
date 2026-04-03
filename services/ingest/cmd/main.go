@@ -16,8 +16,10 @@ import (
 
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
+	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
 	"github.com/Camionerou/rag-saldivia/services/ingest/internal/handler"
 	"github.com/Camionerou/rag-saldivia/services/ingest/internal/service"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 func main() {
@@ -42,6 +44,18 @@ func main() {
 
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
+
+	// Initialize OpenTelemetry
+	otelShutdown, err := sdaotel.Setup(ctx, sdaotel.Config{
+		ServiceName:    "sda-ingest",
+		ServiceVersion: "1.0.0",
+		Endpoint:       env("OTEL_EXPORTER_OTLP_ENDPOINT", "localhost:4317"),
+	})
+	if err != nil {
+		slog.Warn("otel init failed, traces disabled", "error", err)
+	} else {
+		defer otelShutdown(context.Background())
+	}
 
 	// Database
 	pool, err := pgxpool.New(ctx, dbURL)
@@ -106,7 +120,7 @@ func main() {
 
 	srv := &http.Server{
 		Addr:         ":" + port,
-		Handler:      r,
+		Handler:      otelhttp.NewHandler(r, "sda-ingest"),
 		ReadTimeout:  120 * time.Second, // large uploads
 		WriteTimeout: 60 * time.Second,
 		IdleTimeout:  60 * time.Second,
