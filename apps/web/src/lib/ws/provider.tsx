@@ -45,17 +45,17 @@ export function WsProvider({ children }: { children: React.ReactNode }) {
       wsManager.subscribe("notifications", (data) => {
         queryClient.invalidateQueries({ queryKey: ["notifications"] });
 
-        const evt = data as { type?: string; data?: string };
+        // data is already a parsed object from the WS JSON message (not a string)
+        const evt = data as { type?: string; data?: { session_id?: string } | string };
         if (evt.type === "chat.new_message" && evt.data) {
-          try {
-            const parsed = JSON.parse(evt.data);
-            if (parsed.session_id) {
-              queryClient.invalidateQueries({
-                queryKey: ["chat", "messages", parsed.session_id],
-              });
-            }
-          } catch {
-            // skip unparseable
+          // evt.data may be an object (already parsed) or a string (needs parsing)
+          const payload = typeof evt.data === "string"
+            ? (() => { try { return JSON.parse(evt.data as string); } catch { return null; } })()
+            : evt.data;
+          if (payload?.session_id) {
+            queryClient.invalidateQueries({
+              queryKey: ["chat", "messages", payload.session_id],
+            });
           }
         }
         queryClient.invalidateQueries({ queryKey: ["chat", "sessions"] });
