@@ -169,6 +169,9 @@ func ServiceLogs(serviceName string, lines int) (string, error) {
 	if lines <= 0 {
 		lines = 50
 	}
+	if lines > 10000 {
+		lines = 10000
+	}
 
 	// Docker container names follow the pattern: sda-{service}-1
 	containerName := fmt.Sprintf("sda-%s-1", serviceName)
