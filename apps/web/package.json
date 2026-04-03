@@ -51,7 +51,7 @@
     "ioredis": "^5.10.1",
     "jose": "^5.0.0",
     "lucide-react": "^1.7.0",
-    "marked": "^14.0.0",
+    "marked": "^17.0.5",
     "next": "^16.2.1",
     "next-themes": "^0.4.6",
     "nuqs": "^2.8.9",
