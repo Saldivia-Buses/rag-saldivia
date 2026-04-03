@@ -13,9 +13,9 @@
 
 http:
   routers:
-    # Auth — login, token refresh (no tenant context needed)
+    # Auth — login, token refresh, modules (no tenant context needed for login)
     auth:
-      rule: "PathPrefix(`/v1/auth`)"
+      rule: "PathPrefix(`/v1/auth`) || PathPrefix(`/v1/modules`)"
       service: auth
       entryPoints: [web]
 

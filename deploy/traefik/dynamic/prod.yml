@@ -1,0 +1,126 @@
+# Traefik dynamic config for production.
+# Extracts tenant slug from subdomain and injects as headers.
+# Traffic arrives via Cloudflare Tunnel → Traefik → services.
+#
+# Subdomain routing: {slug}.sda.app → X-Tenant-Slug: {slug}
+# Services run as Docker containers on the same network.
+
+http:
+  routers:
+    # Auth — login, token refresh (no tenant context needed)
+    auth:
+      rule: "PathPrefix(`/v1/auth`) || PathPrefix(`/v1/modules`)"
+      service: auth
+      entryPoints: [web]
+      middlewares: [rate-limit, cors]
+
+    # WebSocket — real-time channel
+    ws:
+      rule: "PathPrefix(`/ws`)"
+      service: ws
+      entryPoints: [web]
+      middlewares: [tenant-from-subdomain, rate-limit, cors]
+
+    # Chat — sessions + messages
+    chat:
+      rule: "PathPrefix(`/v1/chat`)"
+      service: chat
+      entryPoints: [web]
+      middlewares: [tenant-from-subdomain, rate-limit, cors]
+
+    # RAG — generate + collections
+    rag:
+      rule: "PathPrefix(`/v1/rag`)"
+      service: rag
+      entryPoints: [web]
+      middlewares: [tenant-from-subdomain, rate-limit, cors]
+
+    # Notifications
+    notifications:
+      rule: "PathPrefix(`/v1/notifications`)"
+      service: notification
+      entryPoints: [web]
+      middlewares: [tenant-from-subdomain, rate-limit, cors]
+
+    # Platform — admin-only (platform.sda.app)
+    platform:
+      rule: "Host(`platform.sda.app`) && PathPrefix(`/v1/platform`)"
+      service: platform
+      entryPoints: [web]
+      middlewares: [rate-limit, cors]
+
+    # Ingest — document upload
+    ingest:
+      rule: "PathPrefix(`/v1/ingest`)"
+      service: ingest
+      entryPoints: [web]
+      middlewares: [tenant-from-subdomain, rate-limit, cors]
+
+  services:
+    auth:
+      loadBalancer:
+        servers:
+          - url: "http://auth:8001"
+    ws:
+      loadBalancer:
+        servers:
+          - url: "http://ws:8002"
+    chat:
+      loadBalancer:
+        servers:
+          - url: "http://chat:8003"
+    rag:
+      loadBalancer:
+        servers:
+          - url: "http://rag:8004"
+    notification:
+      loadBalancer:
+        servers:
+          - url: "http://notification:8005"
+    platform:
+      loadBalancer:
+        servers:
+          - url: "http://platform:8006"
+    ingest:
+      loadBalancer:
+        servers:
+          - url: "http://ingest:8007"
+
+  middlewares:
+    # Extract tenant slug from subdomain via regex.
+    # saldivia.sda.app → X-Tenant-Slug: saldivia
+    tenant-from-subdomain:
+      plugin:
+        rewriteHeaders:
+          rewrites:
+            - header: "Host"
+              regex: "^([^.]+)\\.sda\\.app$"
+              replacement: "$1"
+              targetHeader: "X-Tenant-Slug"
+
+    # Rate limiting per client IP
+    rate-limit:
+      rateLimit:
+        average: 100
+        burst: 200
+        period: 1s
+
+    # CORS for frontend domains
+    cors:
+      headers:
+        accessControlAllowMethods:
+          - GET
+          - POST
+          - PUT
+          - PATCH
+          - DELETE
+          - OPTIONS
+        accessControlAllowHeaders:
+          - Authorization
+          - Content-Type
+          - X-Tenant-Slug
+        accessControlAllowOriginListRegex:
+          - "^https://[a-z0-9-]+\\.sda\\.app$"
+          - "^http://localhost:\\d+$"
+        accessControlMaxAge: 3600
+        accessControlAllowCredentials: true
