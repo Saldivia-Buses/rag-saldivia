@@ -72,7 +72,12 @@ function PromptInput({
   }
 
   const handleClick: React.MouseEventHandler<HTMLDivElement> = (e) => {
-    if (!disabled) textareaRef.current?.focus()
+    // Only refocus textarea if the click was directly inside this container,
+    // not inside a dialog/portal that renders on top of it
+    const target = e.target as HTMLElement
+    if (!disabled && e.currentTarget.contains(target)) {
+      textareaRef.current?.focus()
+    }
     onClick?.(e)
   }
 
