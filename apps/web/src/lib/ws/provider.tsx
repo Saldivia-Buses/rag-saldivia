@@ -40,10 +40,25 @@ export function WsProvider({ children }: { children: React.ReactNode }) {
       }),
     );
 
-    // Notification events → re-fetch notifications
+    // Notification events → re-fetch notifications + chat invalidation
     unsubs.push(
-      wsManager.subscribe("notifications", () => {
+      wsManager.subscribe("notifications", (data) => {
         queryClient.invalidateQueries({ queryKey: ["notifications"] });
+
+        // data is already a parsed object from the WS JSON message (not a string)
+        const evt = data as { type?: string; data?: { session_id?: string } | string };
+        if (evt.type === "chat.new_message" && evt.data) {
+          // evt.data may be an object (already parsed) or a string (needs parsing)
+          const payload = typeof evt.data === "string"
+            ? (() => { try { return JSON.parse(evt.data as string); } catch { return null; } })()
+            : evt.data;
+          if (payload?.session_id) {
+            queryClient.invalidateQueries({
+              queryKey: ["chat", "messages", payload.session_id],
+            });
+          }
+        }
+        queryClient.invalidateQueries({ queryKey: ["chat", "sessions"] });
       }),
     );
 

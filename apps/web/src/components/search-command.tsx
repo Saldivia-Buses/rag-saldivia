@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
@@ -10,16 +10,16 @@ import {
   SearchIcon,
   Settings,
   SlidersHorizontal,
-  TruckIcon,
 } from "lucide-react";
+import { MODULE_REGISTRY } from "@/lib/modules/registry";
+import { useEnabledModules } from "@/lib/modules/hooks";
 
-const pages = [
+const corePages = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { label: "Chat", href: "/chat", icon: MessageSquare },
   { label: "Notificaciones", href: "/notifications", icon: Bell },
   { label: "Mi cuenta", href: "/settings", icon: Settings },
   { label: "Configuración", href: "/system-settings", icon: SlidersHorizontal },
-  { label: "Flota", href: "/fleet", icon: TruckIcon },
 ];
 
 let globalOpen: ((v: boolean) => void) | null = null;
@@ -30,6 +30,21 @@ export function SearchCommand() {
   const [selected, setSelected] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
+  const { data: enabledModules } = useEnabledModules();
+
+  const pages = useMemo(() => {
+    const modulePages = (enabledModules ?? [])
+      .map((m) => MODULE_REGISTRY[m.id])
+      .filter(Boolean)
+      .sort((a, b) => a.nav.position - b.nav.position)
+      .map((manifest) => ({
+        label: manifest.nav.label,
+        href: manifest.nav.path,
+        icon: manifest.nav.icon,
+      }));
+
+    return [...corePages, ...modulePages];
+  }, [enabledModules]);
 
   useEffect(() => {
     globalOpen = setOpen;

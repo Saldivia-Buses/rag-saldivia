@@ -30,6 +30,7 @@ var (
 	ErrUserNotFound        = errors.New("user not found")
 	ErrInvalidMFACode      = errors.New("invalid MFA code")
 	ErrMFARequired         = errors.New("MFA verification required")
+	ErrValidation          = errors.New("validation error")
 )
 
 const (
@@ -85,6 +86,11 @@ type TokenPair struct {
 	RefreshExpiresAt time.Time `json:"-"`                // used by handler for cookie, not serialized
 	MFARequired      bool      `json:"mfa_required,omitempty"` // true when MFA pending
 	MFAToken         string    `json:"mfa_token,omitempty"`    // temp JWT for MFA verification
+}
+
+// UpdateProfileRequest holds allowed profile updates.
+type UpdateProfileRequest struct {
+	Name string
 }
 
 // UserInfo holds the current user's profile data.
@@ -474,6 +480,35 @@ func (a *Auth) Me(ctx context.Context, userID string) (*UserInfo, error) {
 		TenantID:   a.tenant.ID,
 		TenantSlug: a.tenant.Slug,
 	}, nil
+}
+
+// UpdateProfile updates the authenticated user's profile.
+func (a *Auth) UpdateProfile(ctx context.Context, userID string, req UpdateProfileRequest) (*UserInfo, error) {
+	name := strings.TrimSpace(req.Name)
+	if name == "" {
+		return nil, fmt.Errorf("%w: name is required", ErrValidation)
+	}
+	if len(name) > 200 {
+		return nil, fmt.Errorf("%w: name too long", ErrValidation)
+	}
+
+	rowsAffected, err := a.repo.UpdateUserName(ctx, repository.UpdateUserNameParams{
+		ID:   userID,
+		Name: name,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("update profile: %w", err)
+	}
+	if rowsAffected == 0 {
+		return nil, ErrUserNotFound
+	}
+
+	a.auditor.Write(ctx, audit.Entry{
+		UserID: userID, Action: "user.profile_updated",
+		Details: map[string]any{"name": name},
+	})
+
+	return a.Me(ctx, userID)
 }
 
 // HashPassword hashes a password with bcrypt.

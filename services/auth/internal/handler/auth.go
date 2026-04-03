@@ -26,6 +26,7 @@ type AuthService interface {
 	VerifySetup(ctx context.Context, userID, code string) error
 	DisableMFA(ctx context.Context, userID, code string) error
 	CompleteMFALogin(ctx context.Context, mfaToken, code string) (*service.TokenPair, error)
+	UpdateProfile(ctx context.Context, userID string, req service.UpdateProfileRequest) (*service.UserInfo, error)
 }
 
 // EventPublisher can publish notification events via NATS.
@@ -307,6 +308,46 @@ func clearRefreshCookie(w http.ResponseWriter) {
 		SameSite: http.SameSiteStrictMode,
 		MaxAge:   -1,
 	})
+}
+
+// UpdateMe handles PATCH /v1/auth/me
+func (h *Auth) UpdateMe(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+	userID := r.Header.Get("X-User-ID")
+	if userID == "" {
+		writeJSON(w, http.StatusUnauthorized, errorResponse{Error: "not authenticated"})
+		return
+	}
+
+	var req struct {
+		Name string `json:"name"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		writeJSON(w, http.StatusBadRequest, errorResponse{Error: "invalid request body"})
+		return
+	}
+
+	svc, err := h.resolveService(r)
+	if err != nil {
+		writeJSON(w, http.StatusBadGateway, errorResponse{Error: "tenant not available"})
+		return
+	}
+
+	user, err := svc.UpdateProfile(r.Context(), userID, service.UpdateProfileRequest{Name: req.Name})
+	if err != nil {
+		switch {
+		case errors.Is(err, service.ErrUserNotFound):
+			writeJSON(w, http.StatusNotFound, errorResponse{Error: "user not found"})
+		case errors.Is(err, service.ErrValidation):
+			writeJSON(w, http.StatusBadRequest, errorResponse{Error: err.Error()})
+		default:
+			slog.Error("update profile failed", "error", err, "user_id", userID)
+			writeJSON(w, http.StatusInternalServerError, errorResponse{Error: "internal error"})
+		}
+		return
+	}
+
+	writeJSON(w, http.StatusOK, user)
 }
 
 func writeJSON(w http.ResponseWriter, status int, v any) {

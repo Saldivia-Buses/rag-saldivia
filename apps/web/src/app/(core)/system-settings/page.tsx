@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -12,7 +13,30 @@ import { Separator } from "@/components/ui/separator";
 import { ThemeSelector } from "@/components/theme-selector";
 import { DarkModeToggle } from "@/components/dark-mode-toggle";
 
+function useLocalStorage(key: string, fallback: string) {
+  const [value, setValue] = useState(fallback);
+
+  useEffect(() => {
+    const stored = localStorage.getItem(key);
+    if (stored) setValue(stored);
+  }, [key]);
+
+  const set = (v: string | null) => {
+    if (v === null) return;
+    setValue(v);
+    localStorage.setItem(key, v);
+  };
+
+  return [value, set] as const;
+}
+
 export default function SystemSettingsPage() {
+  const [language, setLanguage] = useLocalStorage("sda-language", "es");
+  const [timezone, setTimezone] = useLocalStorage(
+    "sda-timezone",
+    "America/Argentina/Buenos_Aires",
+  );
+
   return (
     <div className="flex-1 overflow-y-auto px-10 py-8">
       <div className="mx-auto w-full max-w-4xl">
@@ -28,7 +52,7 @@ export default function SystemSettingsPage() {
             {/* Language */}
             <div className="space-y-2">
               <Label htmlFor="language">Idioma</Label>
-              <Select defaultValue="es">
+              <Select value={language} onValueChange={setLanguage}>
                 <SelectTrigger id="language">
                   <SelectValue placeholder="Seleccionar idioma" />
                 </SelectTrigger>
@@ -45,7 +69,7 @@ export default function SystemSettingsPage() {
             {/* Timezone */}
             <div className="space-y-2">
               <Label htmlFor="timezone">Zona horaria</Label>
-              <Select defaultValue="America/Argentina/Buenos_Aires">
+              <Select value={timezone} onValueChange={setTimezone}>
                 <SelectTrigger id="timezone">
                   <SelectValue placeholder="Seleccionar zona horaria" />
                 </SelectTrigger>
