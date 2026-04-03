@@ -35,7 +35,6 @@ import {
   PlusIcon,
   SquareIcon,
   Trash2Icon,
-  ZapIcon,
 } from "lucide-react";
 
 function formatRelativeDate(dateStr: string): string {
@@ -431,7 +430,7 @@ export default function ChatPage() {
                   >
                     <ModelSelectorLogo
                       provider={selectedModel.providerLogo}
-                      className="size-3.5"
+                      className="size-4"
                     />
                     <span className="hidden sm:inline">
                       {selectedModel.name}
@@ -457,7 +456,7 @@ export default function ChatPage() {
                           >
                             <ModelSelectorLogo
                               provider={model.providerLogo}
-                              className="size-4 shrink-0"
+                              className="size-5 shrink-0"
                             />
                             <div className="flex-1 min-w-0">
                               <ModelSelectorName className="text-sm font-medium">
@@ -467,14 +466,9 @@ export default function ChatPage() {
                                 {model.description}
                               </p>
                             </div>
-                            <div className="flex items-center gap-2 shrink-0">
-                              <span className="text-[10px] text-muted-foreground">
-                                {model.contextWindow}
-                              </span>
-                              {model.speed === "fast" && (
-                                <ZapIcon className="size-3 text-yellow-500" />
-                              )}
-                            </div>
+                            <span className="text-xs text-muted-foreground shrink-0">
+                              {model.contextWindow}
+                            </span>
                           </ModelSelectorItem>
                         ))}
                       </ModelSelectorGroup>
