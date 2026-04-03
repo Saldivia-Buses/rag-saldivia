@@ -212,17 +212,17 @@ func (a *Auth) Refresh(ctx context.Context, refreshToken string) (*TokenPair, er
 
 	// Verify the token hash exists in DB and is not revoked
 	tokenHash := hashToken(refreshToken)
-	var id int
+	var exists bool
 	err = a.db.QueryRow(ctx,
-		`SELECT id FROM refresh_tokens
-		 WHERE token_hash = $1 AND user_id = $2 AND revoked_at IS NULL AND expires_at > now()`,
+		`SELECT EXISTS(SELECT 1 FROM refresh_tokens
+		 WHERE token_hash = $1 AND user_id = $2 AND revoked_at IS NULL AND expires_at > now())`,
 		tokenHash, claims.UserID,
-	).Scan(&id)
+	).Scan(&exists)
 	if err != nil {
-		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, ErrInvalidRefreshToken
-		}
 		return nil, fmt.Errorf("query refresh token: %w", err)
+	}
+	if !exists {
+		return nil, ErrInvalidRefreshToken
 	}
 
 	// Revoke the old refresh token (rotation — each token is single-use)

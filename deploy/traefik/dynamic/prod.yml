@@ -19,28 +19,28 @@ http:
       rule: "PathPrefix(`/ws`)"
       service: ws
       entryPoints: [web]
-      middlewares: [tenant-from-subdomain, rate-limit, cors]
+      middlewares: [strip-spoofed-headers, tenant-from-subdomain, rate-limit, cors]
 
     # Chat — sessions + messages
     chat:
       rule: "PathPrefix(`/v1/chat`)"
       service: chat
       entryPoints: [web]
-      middlewares: [tenant-from-subdomain, rate-limit, cors]
+      middlewares: [strip-spoofed-headers, tenant-from-subdomain, rate-limit, cors]
 
     # RAG — generate + collections
     rag:
       rule: "PathPrefix(`/v1/rag`)"
       service: rag
       entryPoints: [web]
-      middlewares: [tenant-from-subdomain, rate-limit, cors]
+      middlewares: [strip-spoofed-headers, tenant-from-subdomain, rate-limit, cors]
 
     # Notifications
     notifications:
       rule: "PathPrefix(`/v1/notifications`)"
       service: notification
       entryPoints: [web]
-      middlewares: [tenant-from-subdomain, rate-limit, cors]
+      middlewares: [strip-spoofed-headers, tenant-from-subdomain, rate-limit, cors]
 
     # Platform — admin-only (platform.sda.app)
     platform:
@@ -54,7 +54,7 @@ http:
       rule: "PathPrefix(`/v1/ingest`)"
       service: ingest
       entryPoints: [web]
-      middlewares: [tenant-from-subdomain, rate-limit, cors]
+      middlewares: [strip-spoofed-headers, tenant-from-subdomain, rate-limit, cors]
 
   services:
     auth:
@@ -87,14 +87,22 @@ http:
           - url: "http://ingest:8007"
 
   middlewares:
+    # Strip client-spoofed tenant headers before processing
+    strip-spoofed-headers:
+      headers:
+        customRequestHeaders:
+          X-Tenant-Slug: ""
+          X-Tenant-ID: ""
+
     # Extract tenant slug from subdomain via regex.
     # saldivia.sda.app → X-Tenant-Slug: saldivia
+    # Only allows valid slugs: lowercase alphanumeric + hyphens, max 63 chars
     tenant-from-subdomain:
       plugin:
         rewriteHeaders:
           rewrites:
             - header: "Host"
-              regex: "^([^.]+)\\.sda\\.app$"
+              regex: "^([a-z0-9][a-z0-9-]{0,62})\\.sda\\.app$"
               replacement: "$1"
               targetHeader: "X-Tenant-Slug"
 

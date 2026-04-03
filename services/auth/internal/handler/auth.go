@@ -124,8 +124,9 @@ func (h *Auth) Refresh(w http.ResponseWriter, r *http.Request) {
 
 	setRefreshCookie(w, tokens.RefreshToken, tokens.RefreshExpiresAt)
 	writeJSON(w, http.StatusOK, map[string]any{
-		"access_token": tokens.AccessToken,
-		"expires_in":   tokens.ExpiresIn,
+		"access_token":  tokens.AccessToken,
+		"refresh_token": tokens.RefreshToken,
+		"expires_in":    tokens.ExpiresIn,
 	})
 }
 

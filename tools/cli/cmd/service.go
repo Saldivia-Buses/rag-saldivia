@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -58,15 +57,14 @@ func runServiceHealth(cmd *cobra.Command, args []string) {
 			fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", svc.Name, svc.Port, "DOWN", "-")
 			continue
 		}
+
+		status := "UP"
+		if resp.StatusCode != http.StatusOK {
+			status = fmt.Sprintf("ERR(%d)", resp.StatusCode)
+		}
 		resp.Body.Close()
 
-		var body map[string]string
-		if resp.StatusCode == http.StatusOK {
-			json.NewDecoder(resp.Body).Decode(&body)
-			fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", svc.Name, svc.Port, "UP", latency.Round(time.Millisecond))
-		} else {
-			fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", svc.Name, svc.Port, fmt.Sprintf("ERR(%d)", resp.StatusCode), latency.Round(time.Millisecond))
-		}
+		fmt.Fprintf(w, "%s\t%s\t%s\t%s\n", svc.Name, svc.Port, status, latency.Round(time.Millisecond))
 	}
 	w.Flush()
 }

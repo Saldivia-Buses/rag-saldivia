@@ -28,6 +28,9 @@ func main() {
 	port := env("AUTH_PORT", "8001")
 	jwtSecret := env("JWT_SECRET", "")
 	dbURL := env("POSTGRES_TENANT_URL", "")
+	// TODO: Refactor to use tenant.Resolver for multi-tenant support.
+	// Currently hardcoded to a single tenant — production requires either
+	// one instance per tenant or dynamic resolution per request.
 	tenantID := env("TENANT_ID", "dev")
 	tenantSlug := env("TENANT_SLUG", "dev")
 
@@ -112,7 +115,7 @@ func main() {
 
 	// Start
 	go func() {
-		slog.Info("auth service starting", "port", port)
+		slog.Info("auth service starting", "port", port, "tenant_id", tenantID, "tenant_slug", tenantSlug)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			slog.Error("server error", "error", err)
 			os.Exit(1)

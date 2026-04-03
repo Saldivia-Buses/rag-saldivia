@@ -42,13 +42,14 @@ func runDeploy(cmd *cobra.Command, args []string) {
 		return
 	}
 
+	composeFile := env("SDA_COMPOSE_FILE", "deploy/docker-compose.prod.yml")
 	steps := []struct {
 		desc string
 		cmd  string
 		args []string
 	}{
-		{"Pulling latest image", "docker", []string{"compose", "-f", "deploy/docker-compose.dev.yml", "pull", service}},
-		{"Restarting service", "docker", []string{"compose", "-f", "deploy/docker-compose.dev.yml", "up", "-d", "--no-deps", service}},
+		{"Pulling latest image", "docker", []string{"compose", "-f", composeFile, "pull", service}},
+		{"Restarting service", "docker", []string{"compose", "-f", composeFile, "up", "-d", "--no-deps", service}},
 	}
 
 	for _, step := range steps {

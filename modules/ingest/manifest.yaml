@@ -1,6 +1,6 @@
 id: ingest
 name: Ingesta de Documentos
-category: core
+category: platform
 tier_min: starter
 icon: upload
 requires: []
