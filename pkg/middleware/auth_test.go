@@ -171,10 +171,11 @@ func TestAuth_SpoofedHeadersStripped(t *testing.T) {
 	handler := Auth(testPub)(echoHandler())
 	req := httptest.NewRequest(http.MethodGet, "/v1/something", nil)
 	req.Header.Set("Authorization", "Bearer "+validToken(t))
-	// Attacker tries to inject headers — middleware should overwrite with JWT claims
+	// Attacker tries to inject identity headers — non-slug headers overwritten with JWT claims
 	req.Header.Set("X-User-ID", "attacker-id")
 	req.Header.Set("X-User-Role", "platform_admin")
-	req.Header.Set("X-Tenant-Slug", "victim-tenant")
+	// Slug matches JWT so cross-validation passes; identity headers are still tested
+	req.Header.Set("X-Tenant-Slug", "saldivia")
 	rec := httptest.NewRecorder()
 
 	handler.ServeHTTP(rec, req)
@@ -195,6 +196,22 @@ func TestAuth_SpoofedHeadersStripped(t *testing.T) {
 	}
 	if got["tenant_slug"] != "saldivia" {
 		t.Errorf("spoofed X-Tenant-Slug leaked: got %q, want saldivia", got["tenant_slug"])
+	}
+}
+
+func TestAuth_SpoofedSlug_DifferentTenant_Returns403(t *testing.T) {
+	handler := Auth(testPub)(echoHandler())
+	req := httptest.NewRequest(http.MethodGet, "/v1/something", nil)
+	req.Header.Set("Authorization", "Bearer "+validToken(t))
+	// Attacker has JWT for "saldivia" but tries to access "victim-tenant"
+	req.Header.Set("X-Tenant-Slug", "victim-tenant")
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	// Cross-validation blocks: JWT slug != header slug
+	if rec.Code != http.StatusForbidden {
+		t.Fatalf("expected 403 for slug mismatch attack, got %d", rec.Code)
 	}
 }
 
@@ -235,6 +252,50 @@ func TestAuth_ExpiredToken_Returns401(t *testing.T) {
 
 	if rec.Code != http.StatusUnauthorized {
 		t.Fatalf("expected 401 for expired token, got %d", rec.Code)
+	}
+}
+
+func TestAuth_SlugCrossValidation_Mismatch_Returns403(t *testing.T) {
+	handler := Auth(testPub)(echoHandler())
+	req := httptest.NewRequest(http.MethodGet, "/v1/something", nil)
+	req.Header.Set("Authorization", "Bearer "+validToken(t))
+	// Simulate Traefik injecting a different tenant slug (token has "saldivia")
+	req.Header.Set("X-Tenant-Slug", "other-tenant")
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusForbidden {
+		t.Fatalf("expected 403 for slug mismatch, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestAuth_SlugCrossValidation_Match_Passes(t *testing.T) {
+	handler := Auth(testPub)(echoHandler())
+	req := httptest.NewRequest(http.MethodGet, "/v1/something", nil)
+	req.Header.Set("Authorization", "Bearer "+validToken(t))
+	// Traefik slug matches JWT slug — should pass
+	req.Header.Set("X-Tenant-Slug", "saldivia")
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200 for matching slug, got %d: %s", rec.Code, rec.Body.String())
+	}
+}
+
+func TestAuth_SlugCrossValidation_NoHeader_Passes(t *testing.T) {
+	handler := Auth(testPub)(echoHandler())
+	req := httptest.NewRequest(http.MethodGet, "/v1/something", nil)
+	req.Header.Set("Authorization", "Bearer "+validToken(t))
+	// No X-Tenant-Slug header at all — should pass (no cross-validation)
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200 when no slug header, got %d: %s", rec.Code, rec.Body.String())
 	}
 }
 

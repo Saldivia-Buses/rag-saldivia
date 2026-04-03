@@ -24,6 +24,9 @@ import (
 func Auth(publicKey ed25519.PublicKey) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Save Traefik-injected slug before stripping (Traefik re-injects after client spoofing is stripped)
+			traefikSlug := r.Header.Get("X-Tenant-Slug")
+
 			// Strip any client-spoofed identity headers before processing
 			r.Header.Del("X-User-ID")
 			r.Header.Del("X-User-Email")
@@ -66,6 +69,12 @@ func Auth(publicKey ed25519.PublicKey) func(http.Handler) http.Handler {
 			// Inject role + permissions into context for RBAC middleware
 			ctx = WithRole(ctx, claims.Role)
 			ctx = WithPermissions(ctx, claims.Permissions)
+
+			// Cross-validate: JWT slug must match subdomain-derived slug (prevents token replay)
+			if traefikSlug != "" && claims.Slug != traefikSlug {
+				writeJSONError(w, http.StatusForbidden, "tenant mismatch")
+				return
+			}
 
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
