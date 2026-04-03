@@ -413,7 +413,7 @@ export default function ChatPage() {
               onSubmit={handleSubmit}
             >
               <PromptInputTextarea placeholder="Escribi tu mensaje..." />
-              <PromptInputActions>
+              <PromptInputActions className="justify-between">
                 {/* Model selector */}
                 <ModelSelector
                   open={modelSelectorOpen}
