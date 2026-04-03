@@ -437,9 +437,16 @@ export default function ChatPage() {
                     </span>
                     <ChevronDownIcon className="size-3 opacity-50" />
                   </ModelSelectorTrigger>
-                  <ModelSelectorContent title="Elegir modelo">
-                    <ModelSelectorInput placeholder="Buscar modelo..." />
-                    <ModelSelectorList>
+                  <ModelSelectorContent
+                    title="Elegir modelo"
+                    className="sm:max-w-md"
+                  >
+                    <ModelSelectorInput
+                      placeholder="Buscar modelo..."
+                      autoFocus
+                      onKeyDown={(e) => e.stopPropagation()}
+                    />
+                    <ModelSelectorList className="max-h-[400px]">
                       <ModelSelectorEmpty>
                         No se encontraron modelos
                       </ModelSelectorEmpty>
@@ -452,17 +459,17 @@ export default function ChatPage() {
                               setSelectedModel(model);
                               setModelSelectorOpen(false);
                             }}
-                            className="flex items-center gap-3 py-2.5"
+                            className="flex items-center gap-3.5 py-3 px-3"
                           >
                             <ModelSelectorLogo
                               provider={model.providerLogo}
-                              className="size-5 shrink-0"
+                              className="size-6 shrink-0"
                             />
                             <div className="flex-1 min-w-0">
                               <ModelSelectorName className="text-sm font-medium">
                                 {model.name}
                               </ModelSelectorName>
-                              <p className="text-xs text-muted-foreground truncate">
+                              <p className="text-xs text-muted-foreground mt-0.5">
                                 {model.description}
                               </p>
                             </div>
