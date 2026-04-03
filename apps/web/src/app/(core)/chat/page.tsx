@@ -424,18 +424,18 @@ export default function ChatPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="gap-1.5 text-xs text-muted-foreground hover:text-foreground h-8 px-2"
+                        className="gap-2 text-sm text-muted-foreground hover:text-foreground h-9 px-3"
                       />
                     }
                   >
                     <ModelSelectorLogo
                       provider={selectedModel.providerLogo}
-                      className="size-4"
+                      className="size-5"
                     />
                     <span className="hidden sm:inline">
                       {selectedModel.name}
                     </span>
-                    <ChevronDownIcon className="size-3 opacity-50" />
+                    <ChevronDownIcon className="size-3.5 opacity-50" />
                   </ModelSelectorTrigger>
                   <ModelSelectorContent
                     title="Elegir modelo"
@@ -487,7 +487,7 @@ export default function ChatPage() {
                 <Button
                   variant="default"
                   size="icon"
-                  className="size-8 rounded-full"
+                  className="size-9 rounded-full"
                   disabled={!isStreaming && !input.trim()}
                   onClick={isStreaming ? handleStop : handleSubmit}
                 >
