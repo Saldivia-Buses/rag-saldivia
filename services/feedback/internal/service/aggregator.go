@@ -11,20 +11,22 @@ import (
 
 // Aggregator runs periodically to compute metrics and health scores.
 type Aggregator struct {
-	tenantDB   *pgxpool.Pool
-	platformDB *pgxpool.Pool
+	tenantDB    *pgxpool.Pool
+	platformDB  *pgxpool.Pool
 	feedbackSvc *Feedback
-	interval   time.Duration
-	ctx        context.Context
-	cancel     context.CancelFunc
+	alerter     *Alerter
+	interval    time.Duration
+	ctx         context.Context
+	cancel      context.CancelFunc
 }
 
 // NewAggregator creates an aggregator that runs on the given interval.
-func NewAggregator(tenantDB, platformDB *pgxpool.Pool, feedbackSvc *Feedback, interval time.Duration) *Aggregator {
+func NewAggregator(tenantDB, platformDB *pgxpool.Pool, feedbackSvc *Feedback, alerter *Alerter, interval time.Duration) *Aggregator {
 	return &Aggregator{
 		tenantDB:    tenantDB,
 		platformDB:  platformDB,
 		feedbackSvc: feedbackSvc,
+		alerter:     alerter,
 		interval:    interval,
 	}
 }
@@ -96,6 +98,19 @@ func (a *Aggregator) aggregate(tenantID string) {
 
 	// Upsert aggregated metrics per category
 	a.aggregateMetrics(ctx, tenantID, period)
+
+	// Run alerter — check thresholds and create alerts
+	if a.alerter != nil {
+		scores := HealthScores{
+			Overall:     overall,
+			AIQuality:   aiScore,
+			ErrorRate:   errorScore,
+			Performance: perfScore,
+			Security:    securityScore,
+			Usage:       usageScore,
+		}
+		a.alerter.CheckAndAlert(ctx, tenantID, "", scores) // slug resolved from tenantID in prod
+	}
 
 	// Purge old granular data (90 days)
 	a.purgeOldEvents(ctx)

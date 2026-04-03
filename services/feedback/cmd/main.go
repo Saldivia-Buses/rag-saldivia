@@ -14,6 +14,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/nats-io/nats.go"
 
+	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
 	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
 	"github.com/Camionerou/rag-saldivia/services/feedback/internal/service"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
@@ -96,7 +97,9 @@ func main() {
 	slog.Info("connected to NATS", "url", natsURL)
 
 	// Initialize services
+	publisher := natspub.New(nc)
 	feedbackSvc := service.NewFeedback(tenantPool, platformPool)
+	alerter := service.NewAlerter(platformPool, publisher)
 
 	// Start NATS consumer
 	consumer := service.NewConsumer(nc, feedbackSvc)
@@ -112,7 +115,7 @@ func main() {
 		aggInterval = 1 * time.Minute // for testing
 	}
 	tenantID := env("TENANT_ID", "dev")
-	aggregator := service.NewAggregator(tenantPool, platformPool, feedbackSvc, aggInterval)
+	aggregator := service.NewAggregator(tenantPool, platformPool, feedbackSvc, alerter, aggInterval)
 	aggregator.Start(ctx, tenantID)
 	defer aggregator.Stop()
 
