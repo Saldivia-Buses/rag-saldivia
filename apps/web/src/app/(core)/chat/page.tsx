@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -168,9 +169,22 @@ export default function ChatPage() {
   const [streamingContent, setStreamingContent] = useState("");
   const [thinkingContent, setThinkingContent] = useState("");
   const [savedThinking, setSavedThinking] = useState<Record<string, string>>({}); // messageId → thinking
-  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const activeSessionId = searchParams.get("s");
   const [selectedModel, setSelectedModel] = useState<LLMModel>(DEFAULT_MODEL);
   const [modelSelectorOpen, setModelSelectorOpen] = useState(false);
+  const setActiveSessionId = useCallback(
+    (id: string | null) => {
+      if (id) {
+        router.push(`/chat?s=${id}`);
+      } else {
+        router.push("/chat");
+      }
+    },
+    [router],
+  );
+
   const abortRef = useRef<AbortController | null>(null);
   const streamRef = useRef(""); // tracks streaming content synchronously
   const thinkingRef = useRef(""); // tracks thinking content synchronously
@@ -241,7 +255,7 @@ export default function ChatPage() {
         setActiveSessionId(null);
       }
     },
-    [activeSessionId, deleteSessionMutation],
+    [activeSessionId, deleteSessionMutation, setActiveSessionId],
   );
 
   const handleSubmit = useCallback(async () => {
