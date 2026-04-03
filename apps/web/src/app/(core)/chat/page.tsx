@@ -23,6 +23,10 @@ import {
 } from "@/components/ai-elements/reasoning";
 import { Streamdown } from "streamdown";
 import { code } from "@streamdown/code";
+import { createMathPlugin } from "@streamdown/math";
+import "katex/dist/katex.min.css";
+
+const mathPlugin = createMathPlugin({ singleDollarTextMath: true });
 import { MODELS, DEFAULT_MODEL, type LLMModel } from "@/lib/models";
 import {
   ModelSelector,
@@ -391,7 +395,7 @@ export default function ChatPage() {
                   {message.role === "user" ? (
                     message.content
                   ) : (
-                    <Streamdown plugins={{ code }}>
+                    <Streamdown plugins={{ code, math: mathPlugin }}>
                       {message.content}
                     </Streamdown>
                   )}
