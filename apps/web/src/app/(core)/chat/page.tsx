@@ -335,10 +335,22 @@ export default function ChatPage() {
         });
       }
     } catch (err) {
-      if (err instanceof ApiError) {
-        streamRef.current = `Error: ${err.message}`;
+      // Save error as assistant message so it persists in the conversation
+      const errorMsg = err instanceof ApiError
+        ? `Error: ${err.message}`
+        : "Error: no se pudo obtener respuesta";
+      try {
+        await api.post(`/v1/chat/sessions/${sessionId}/messages`, {
+          role: "assistant",
+          content: errorMsg,
+        });
+        await queryClient.invalidateQueries({
+          queryKey: ["chat", "messages", sessionId],
+        });
+      } catch {
+        // If saving fails, at least show it in streaming
+        streamRef.current = errorMsg;
         setStreamingContent(streamRef.current);
-        await new Promise((r) => setTimeout(r, 3000));
       }
     } finally {
       setIsStreaming(false);
