@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/lib/theme-provider";
+import { QueryProvider } from "@/lib/api/query-provider";
+import { AuthInitializer } from "@/lib/auth/auth-initializer";
 import { fontVariables, fontClassNames } from "@/lib/fonts";
 import { SearchCommand } from "@/components/search-command";
 import "./globals.css";
@@ -31,12 +33,16 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col font-sans">
         {/* Hidden preloader — forces browser to download all font files upfront */}
         <div aria-hidden="true" className={`${fontClassNames} absolute opacity-0 pointer-events-none h-0 overflow-hidden`}>.</div>
-        <ThemeProvider>
-          <TooltipProvider>
-            <SearchCommand />
-            {children}
-          </TooltipProvider>
-        </ThemeProvider>
+        <QueryProvider>
+          <ThemeProvider>
+            <TooltipProvider>
+              <AuthInitializer>
+                <SearchCommand />
+                {children}
+              </AuthInitializer>
+            </TooltipProvider>
+          </ThemeProvider>
+        </QueryProvider>
       </body>
     </html>
   );
