@@ -334,7 +334,7 @@ export default function ChatPage() {
       />
 
       {/* Chat area */}
-      <div className="flex flex-1 flex-col min-h-0 min-w-0">
+      <div className="flex flex-1 flex-col min-h-0 min-w-0 relative">
         {/* Messages */}
         <ChatContainerRoot className="flex-1">
           <ChatContainerContent className="max-w-3xl mx-auto w-full px-4 py-6 gap-6">
@@ -401,8 +401,11 @@ export default function ChatPage() {
           </ChatContainerContent>
         </ChatContainerRoot>
 
-        {/* Input */}
-        <div className="border-t bg-background p-4">
+        {/* Fade gradient — chat disappears behind the input */}
+        <div className="pointer-events-none h-8 -mt-8 bg-gradient-to-t from-background to-transparent relative z-10" />
+
+        {/* Input — no border, seamless with chat */}
+        <div className="bg-background p-4 pb-6 relative z-10">
           <div className="mx-auto max-w-3xl flex flex-col gap-2">
             <PromptInput
               value={input}
