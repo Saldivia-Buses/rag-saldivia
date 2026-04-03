@@ -17,6 +17,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/crypto/bcrypt"
 
+	"github.com/Camionerou/rag-saldivia/pkg/audit"
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 )
 
@@ -43,10 +44,11 @@ type EventPublisher interface {
 
 // Auth handles authentication operations for a single tenant.
 type Auth struct {
-	db     *pgxpool.Pool
-	jwtCfg sdajwt.Config
-	events EventPublisher
-	tenant struct {
+	db      *pgxpool.Pool
+	jwtCfg  sdajwt.Config
+	events  EventPublisher
+	auditor *audit.Writer
+	tenant  struct {
 		ID   string
 		Slug string
 	}
@@ -54,7 +56,7 @@ type Auth struct {
 
 // NewAuth creates an auth service for a specific tenant.
 func NewAuth(db *pgxpool.Pool, jwtCfg sdajwt.Config, tenantID, tenantSlug string, events EventPublisher) *Auth {
-	a := &Auth{db: db, jwtCfg: jwtCfg, events: events}
+	a := &Auth{db: db, jwtCfg: jwtCfg, events: events, auditor: audit.NewWriter(db)}
 	a.tenant.ID = tenantID
 	a.tenant.Slug = tenantSlug
 	return a
@@ -127,6 +129,10 @@ func (a *Auth) Login(ctx context.Context, req LoginRequest) (*TokenPair, error) 
 
 	if err := bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(req.Password)); err != nil {
 		a.recordFailedLogin(ctx, userID)
+		a.auditor.Write(ctx, audit.Entry{
+			UserID: userID, Action: "user.login_failed", Resource: email,
+			IP: req.IP, UserAgent: req.UserAgent,
+		})
 		return nil, ErrInvalidCredentials
 	}
 
@@ -194,7 +200,10 @@ func (a *Auth) Login(ctx context.Context, req LoginRequest) (*TokenPair, error) 
 	}
 
 	// Audit log
-	a.audit(ctx, userID, "user.login", email, req.IP, req.UserAgent)
+	a.auditor.Write(ctx, audit.Entry{
+		UserID: userID, Action: "user.login", Resource: email,
+		IP: req.IP, UserAgent: req.UserAgent,
+	})
 
 	// Publish login event for notifications
 	a.publishEvent("auth.login_success", userID, name, email, map[string]string{
@@ -301,6 +310,10 @@ func (a *Auth) Refresh(ctx context.Context, refreshToken string) (*TokenPair, er
 		return nil, fmt.Errorf("store refresh token: %w", err)
 	}
 
+	a.auditor.Write(ctx, audit.Entry{
+		UserID: claims.UserID, Action: "user.refresh",
+	})
+
 	return &TokenPair{
 		AccessToken:      accessToken,
 		RefreshToken:     newRefresh,
@@ -312,6 +325,13 @@ func (a *Auth) Refresh(ctx context.Context, refreshToken string) (*TokenPair, er
 // Logout revokes the given refresh token.
 func (a *Auth) Logout(ctx context.Context, refreshToken string) error {
 	tokenHash := hashToken(refreshToken)
+
+	// Get user_id from the token record for audit logging
+	var userID *string
+	_ = a.db.QueryRow(ctx,
+		`SELECT user_id FROM refresh_tokens WHERE token_hash = $1`, tokenHash,
+	).Scan(&userID)
+
 	_, err := a.db.Exec(ctx,
 		`UPDATE refresh_tokens SET revoked_at = now() WHERE token_hash = $1 AND revoked_at IS NULL`,
 		tokenHash,
@@ -319,6 +339,14 @@ func (a *Auth) Logout(ctx context.Context, refreshToken string) error {
 	if err != nil {
 		return fmt.Errorf("revoke refresh token: %w", err)
 	}
+
+	uid := ""
+	if userID != nil {
+		uid = *userID
+	}
+	a.auditor.Write(ctx, audit.Entry{
+		UserID: uid, Action: "user.logout",
+	})
 	return nil
 }
 
@@ -463,13 +491,3 @@ func formatEventTitle(eventType, name string) string {
 	}
 }
 
-func (a *Auth) audit(ctx context.Context, userID, action, resource, ip, ua string) {
-	_, err := a.db.Exec(ctx,
-		`INSERT INTO audit_log (user_id, action, resource, ip_address, user_agent)
-		 VALUES ($1, $2, $3, $4, $5)`,
-		userID, action, resource, ip, ua,
-	)
-	if err != nil {
-		slog.Error("failed to write audit log", "error", err, "action", action)
-	}
-}

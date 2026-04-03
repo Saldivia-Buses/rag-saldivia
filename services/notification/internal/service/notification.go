@@ -10,6 +10,8 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/Camionerou/rag-saldivia/pkg/audit"
 )
 
 var (
@@ -44,12 +46,13 @@ type Preferences struct {
 
 // Notification service handles notification operations for a single tenant.
 type NotificationService struct {
-	db *pgxpool.Pool
+	db      *pgxpool.Pool
+	auditor *audit.Writer
 }
 
 // New creates a notification service.
 func New(db *pgxpool.Pool) *NotificationService {
-	return &NotificationService{db: db}
+	return &NotificationService{db: db, auditor: audit.NewWriter(db)}
 }
 
 // Create persists a notification in the database.
@@ -230,5 +233,9 @@ func (s *NotificationService) UpdatePreferences(ctx context.Context, userID stri
 	if p.MutedTypes == nil {
 		p.MutedTypes = []string{}
 	}
+
+	s.auditor.Write(ctx, audit.Entry{
+		UserID: userID, Action: "notification.preferences.update",
+	})
 	return &p, nil
 }

@@ -11,6 +11,8 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/Camionerou/rag-saldivia/pkg/audit"
 )
 
 var (
@@ -50,12 +52,13 @@ type EventPublisher interface {
 type Chat struct {
 	db         *pgxpool.Pool
 	events     EventPublisher
+	auditor    *audit.Writer
 	tenantSlug string
 }
 
 // NewChat creates a chat service.
 func NewChat(db *pgxpool.Pool, tenantSlug string, events EventPublisher) *Chat {
-	return &Chat{db: db, tenantSlug: tenantSlug, events: events}
+	return &Chat{db: db, tenantSlug: tenantSlug, events: events, auditor: audit.NewWriter(db)}
 }
 
 // CreateSession creates a new chat session.
@@ -70,6 +73,10 @@ func (c *Chat) CreateSession(ctx context.Context, userID, title string, collecti
 	if err != nil {
 		return nil, fmt.Errorf("create session: %w", err)
 	}
+
+	c.auditor.Write(ctx, audit.Entry{
+		UserID: userID, Action: "chat.session.create", Resource: s.ID,
+	})
 	return &s, nil
 }
 
@@ -132,6 +139,10 @@ func (c *Chat) DeleteSession(ctx context.Context, sessionID, userID string) erro
 	if result.RowsAffected() == 0 {
 		return ErrSessionNotFound
 	}
+
+	c.auditor.Write(ctx, audit.Entry{
+		UserID: userID, Action: "chat.session.delete", Resource: sessionID,
+	})
 	return nil
 }
 
@@ -148,6 +159,11 @@ func (c *Chat) RenameSession(ctx context.Context, sessionID, userID, title strin
 	if result.RowsAffected() == 0 {
 		return ErrSessionNotFound
 	}
+
+	c.auditor.Write(ctx, audit.Entry{
+		UserID: userID, Action: "chat.session.rename", Resource: sessionID,
+		Details: map[string]any{"title": title},
+	})
 	return nil
 }
 
