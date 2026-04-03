@@ -1,0 +1,8 @@
+# CrowdSec acquisition config — reads Traefik access logs.
+# CrowdSec detects brute force, scanners, and known attack patterns,
+# then feeds decisions to the Traefik bouncer for automatic IP blocking.
+
+filenames:
+  - /var/log/traefik/access.log
+labels:
+  type: traefik
