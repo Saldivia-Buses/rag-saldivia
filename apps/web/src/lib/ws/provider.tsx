@@ -40,10 +40,25 @@ export function WsProvider({ children }: { children: React.ReactNode }) {
       }),
     );
 
-    // Notification events → re-fetch notifications
+    // Notification events → re-fetch notifications + chat invalidation
     unsubs.push(
-      wsManager.subscribe("notifications", () => {
+      wsManager.subscribe("notifications", (data) => {
         queryClient.invalidateQueries({ queryKey: ["notifications"] });
+
+        const evt = data as { type?: string; data?: string };
+        if (evt.type === "chat.new_message" && evt.data) {
+          try {
+            const parsed = JSON.parse(evt.data);
+            if (parsed.session_id) {
+              queryClient.invalidateQueries({
+                queryKey: ["chat", "messages", parsed.session_id],
+              });
+            }
+          } catch {
+            // skip unparseable
+          }
+        }
+        queryClient.invalidateQueries({ queryKey: ["chat", "sessions"] });
       }),
     );
 

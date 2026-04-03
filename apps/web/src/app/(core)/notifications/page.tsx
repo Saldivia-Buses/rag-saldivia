@@ -1,11 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Bell, Check, CheckCheck } from "lucide-react";
+import { Bell, Check, CheckCheck, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { NotificationPreferences } from "@/components/notification-preferences";
 
 interface Notification {
   id: string;
@@ -33,6 +35,7 @@ function formatDate(dateStr: string): string {
 
 export default function NotificationsPage() {
   const queryClient = useQueryClient();
+  const [showPrefs, setShowPrefs] = useState(false);
 
   const { data: notifications = [], isLoading } = useQuery({
     queryKey: ["notifications"],
@@ -64,17 +67,35 @@ export default function NotificationsPage() {
     );
   }
 
-  if (notifications.length === 0) {
+  if (notifications.length === 0 && !showPrefs) {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-4">
-        <div className="flex size-16 items-center justify-center rounded-full bg-muted">
-          <Bell className="size-8 text-muted-foreground" />
+      <div className="flex flex-1 flex-col">
+        {/* Header with prefs button even on empty state */}
+        <div className="flex items-center justify-between border-b px-6 py-4">
+          <div>
+            <h1 className="text-lg font-semibold">Notificaciones</h1>
+          </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowPrefs((v) => !v)}
+            className="gap-1.5"
+          >
+            <Settings className="size-3.5" />
+            Preferencias
+          </Button>
         </div>
-        <div className="text-center">
-          <h2 className="text-lg font-semibold">Sin notificaciones</h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            Cuando haya novedades, van a aparecer aca.
-          </p>
+
+        <div className="flex flex-1 flex-col items-center justify-center gap-4">
+          <div className="flex size-16 items-center justify-center rounded-full bg-muted">
+            <Bell className="size-8 text-muted-foreground" />
+          </div>
+          <div className="text-center">
+            <h2 className="text-lg font-semibold">Sin notificaciones</h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              Cuando haya novedades, van a aparecer aca.
+            </p>
+          </div>
         </div>
       </div>
     );
@@ -92,19 +113,37 @@ export default function NotificationsPage() {
             </p>
           )}
         </div>
-        {unreadCount > 0 && (
+        <div className="flex items-center gap-2">
+          {unreadCount > 0 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => markAllReadMutation.mutate()}
+              disabled={markAllReadMutation.isPending}
+              className="gap-1.5"
+            >
+              <CheckCheck className="size-3.5" />
+              Marcar todas como leidas
+            </Button>
+          )}
           <Button
             variant="outline"
             size="sm"
-            onClick={() => markAllReadMutation.mutate()}
-            disabled={markAllReadMutation.isPending}
+            onClick={() => setShowPrefs((v) => !v)}
             className="gap-1.5"
           >
-            <CheckCheck className="size-3.5" />
-            Marcar todas como leidas
+            <Settings className="size-3.5" />
+            Preferencias
           </Button>
-        )}
+        </div>
       </div>
+
+      {/* Preferences collapsible section */}
+      {showPrefs && (
+        <div className="border-b">
+          <NotificationPreferences />
+        </div>
+      )}
 
       {/* List */}
       <ScrollArea className="flex-1">
