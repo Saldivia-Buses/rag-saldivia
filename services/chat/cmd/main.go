@@ -14,6 +14,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/nats-io/nats.go"
 
+	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
 	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
 	"github.com/Camionerou/rag-saldivia/services/chat/internal/handler"
@@ -27,6 +28,7 @@ func main() {
 
 	port := env("CHAT_PORT", "8003")
 	dbURL := env("POSTGRES_TENANT_URL", "")
+	jwtSecret := env("JWT_SECRET", "")
 	tenantSlug := env("TENANT_SLUG", "dev")
 	natsURL := env("NATS_URL", nats.DefaultURL)
 
@@ -90,7 +92,12 @@ func main() {
 		w.Header().Set("Content-Type", "application/json")
 		w.Write([]byte(`{"status":"ok","service":"chat"}`))
 	})
-	r.Mount("/v1/chat/sessions", chatHandler.Routes())
+
+	// All chat routes require authentication
+	r.Group(func(r chi.Router) {
+		r.Use(sdamw.Auth(jwtSecret))
+		r.Mount("/v1/chat/sessions", chatHandler.Routes())
+	})
 
 	srv := &http.Server{
 		Addr:         ":" + port,

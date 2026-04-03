@@ -152,6 +152,11 @@ func (c *Chat) RenameSession(ctx context.Context, sessionID, userID, title strin
 
 // AddMessage adds a message to a session.
 func (c *Chat) AddMessage(ctx context.Context, sessionID, userID, role, content string, sources, metadata []byte) (*Message, error) {
+	// Default metadata to empty JSON object if nil (column is NOT NULL)
+	if metadata == nil {
+		metadata = []byte("{}")
+	}
+
 	var m Message
 	err := c.db.QueryRow(ctx,
 		`INSERT INTO messages (session_id, role, content, sources, metadata)

@@ -14,6 +14,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/nats-io/nats.go"
 
+	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
 	"github.com/Camionerou/rag-saldivia/services/notification/internal/handler"
 	"github.com/Camionerou/rag-saldivia/services/notification/internal/service"
@@ -26,6 +27,7 @@ func main() {
 
 	port := env("NOTIFICATION_PORT", "8005")
 	dbURL := env("POSTGRES_TENANT_URL", "")
+	jwtSecret := env("JWT_SECRET", "")
 	natsURL := env("NATS_URL", nats.DefaultURL)
 	smtpHost := env("SMTP_HOST", "localhost")
 	smtpPort := env("SMTP_PORT", "1025")
@@ -102,7 +104,10 @@ func main() {
 		w.Header().Set("Content-Type", "application/json")
 		w.Write([]byte(`{"status":"ok","service":"notification"}`))
 	})
-	r.Mount("/v1/notifications", notifHandler.Routes())
+	r.Group(func(r chi.Router) {
+		r.Use(sdamw.Auth(jwtSecret))
+		r.Mount("/v1/notifications", notifHandler.Routes())
+	})
 
 	srv := &http.Server{
 		Addr:         ":" + port,

@@ -12,6 +12,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 
+	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
 	"github.com/Camionerou/rag-saldivia/services/rag/internal/handler"
 	"github.com/Camionerou/rag-saldivia/services/rag/internal/service"
@@ -23,6 +24,7 @@ func main() {
 	slog.SetDefault(logger)
 
 	port := env("RAG_PORT", "8004")
+	jwtSecret := env("JWT_SECRET", "")
 	blueprintURL := env("RAG_SERVER_URL", "http://localhost:8081")
 	timeoutMs := env("RAG_TIMEOUT_MS", "120000")
 
@@ -61,7 +63,10 @@ func main() {
 	r.Use(middleware.Recoverer)
 
 	r.Get("/health", ragHandler.Health)
-	r.Mount("/v1/rag", ragHandler.Routes())
+	r.Group(func(r chi.Router) {
+		r.Use(sdamw.Auth(jwtSecret))
+		r.Mount("/v1/rag", ragHandler.Routes())
+	})
 
 	srv := &http.Server{
 		Addr:         ":" + port,
