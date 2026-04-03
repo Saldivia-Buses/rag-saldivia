@@ -1,0 +1,289 @@
+openapi: "3.1.0"
+info:
+  title: RAG Service
+  version: "1.0.0"
+  description: |
+    Retrieval-Augmented Generation proxy for the SDA Framework. Sits between
+    the frontend and the NVIDIA RAG Blueprint v2.5.0. Handles streaming
+    generation via Server-Sent Events (SSE) in OpenAI-compatible format,
+    collection management, and tenant-scoped Milvus vector isolation.
+
+servers:
+  - url: http://localhost:8004
+    description: Local development
+
+tags:
+  - name: generation
+    description: RAG generation (streaming)
+  - name: collections
+    description: Vector collection management
+
+security:
+  - bearerAuth: []
+
+paths:
+  /v1/rag/generate:
+    post:
+      operationId: generate
+      summary: Stream RAG generation via SSE
+      description: |
+        Sends a prompt (with optional conversation history) to the NVIDIA
+        RAG Blueprint for retrieval-augmented generation. When `stream: true`
+        (default), the response is delivered as Server-Sent Events in
+        OpenAI-compatible format.
+
+        Each SSE chunk has the format:
+        ```
+        data: {"id":"chatcmpl-...","choices":[{"delta":{"content":"token"},"index":0}]}
+        ```
+
+        The final chunk signals completion:
+        ```
+        data: [DONE]
+        ```
+
+        When `stream: false`, the full response is returned as a single
+        JSON object.
+      tags: [generation]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GenerateRequest"
+      responses:
+        "200":
+          description: |
+            Streaming SSE response (when stream=true) or complete JSON
+            response (when stream=false).
+          content:
+            text/event-stream:
+              schema:
+                $ref: "#/components/schemas/SSEChunk"
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenerateResponse"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: "invalid_request"
+                message: "messages array cannot be empty"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "502":
+          description: RAG Blueprint backend unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+              example:
+                error: "upstream_error"
+                message: "RAG Blueprint is unavailable"
+
+  /v1/rag/collections:
+    get:
+      operationId: listCollections
+      summary: List vector collections
+      description: |
+        Returns the Milvus vector collections available to the current
+        tenant. Each collection represents an isolated knowledge base
+        that can be referenced during generation.
+      tags: [collections]
+      responses:
+        "200":
+          description: List of collections
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Collection"
+        "401":
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    GenerateRequest:
+      type: object
+      required:
+        - messages
+      properties:
+        messages:
+          type: array
+          minItems: 1
+          description: Conversation history in OpenAI message format
+          items:
+            $ref: "#/components/schemas/ChatMessage"
+        stream:
+          type: boolean
+          default: true
+          description: Whether to stream the response via SSE
+        use_knowledge_base:
+          type: boolean
+          default: true
+          description: Whether to retrieve context from Milvus before generation
+        collection_name:
+          type: string
+          description: |
+            Specific Milvus collection to search. If omitted, uses the
+            tenant default collection.
+          example: saldivia-docs
+        temperature:
+          type: number
+          minimum: 0
+          maximum: 2
+          default: 0.7
+          description: Sampling temperature for generation
+          example: 0.7
+        top_p:
+          type: number
+          minimum: 0
+          maximum: 1
+          default: 0.95
+          description: Nucleus sampling parameter
+          example: 0.95
+        max_tokens:
+          type: integer
+          minimum: 1
+          maximum: 4096
+          default: 1024
+          description: Maximum number of tokens to generate
+          example: 1024
+
+    ChatMessage:
+      type: object
+      required:
+        - role
+        - content
+      properties:
+        role:
+          type: string
+          enum: [user, assistant, system]
+          example: user
+        content:
+          type: string
+          example: What are the maintenance procedures for Mercedes O500 buses?
+
+    SSEChunk:
+      type: object
+      description: |
+        A single Server-Sent Events data chunk in OpenAI-compatible format.
+        Streamed as `data: {json}\n\n` lines.
+      properties:
+        id:
+          type: string
+          example: chatcmpl-abc123
+        object:
+          type: string
+          example: chat.completion.chunk
+        created:
+          type: integer
+          description: Unix timestamp
+          example: 1711929600
+        choices:
+          type: array
+          items:
+            type: object
+            properties:
+              index:
+                type: integer
+                example: 0
+              delta:
+                type: object
+                properties:
+                  content:
+                    type: string
+                    example: The
+                  role:
+                    type: string
+                    example: assistant
+              finish_reason:
+                type: string
+                nullable: true
+                enum: [null, stop, length]
+
+    GenerateResponse:
+      type: object
+      description: Complete generation response (when stream=false)
+      required:
+        - id
+        - choices
+      properties:
+        id:
+          type: string
+          example: chatcmpl-abc123
+        object:
+          type: string
+          example: chat.completion
+        created:
+          type: integer
+          example: 1711929600
+        choices:
+          type: array
+          items:
+            type: object
+            required:
+              - index
+              - message
+              - finish_reason
+            properties:
+              index:
+                type: integer
+                example: 0
+              message:
+                $ref: "#/components/schemas/ChatMessage"
+              finish_reason:
+                type: string
+                enum: [stop, length]
+                example: stop
+
+    Collection:
+      type: object
+      required:
+        - name
+        - document_count
+        - created_at
+      properties:
+        name:
+          type: string
+          description: Collection identifier (tenant-scoped)
+          example: saldivia-docs
+        document_count:
+          type: integer
+          description: Number of documents ingested into this collection
+          example: 142
+        created_at:
+          type: string
+          format: date-time
+          example: "2026-03-15T08:00:00Z"
+
+    ErrorResponse:
+      type: object
+      required:
+        - error
+        - message
+      properties:
+        error:
+          type: string
+          example: upstream_error
+        message:
+          type: string
+          example: RAG Blueprint is unavailable

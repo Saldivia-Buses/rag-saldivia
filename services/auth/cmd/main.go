@@ -15,6 +15,7 @@ import (
 	"github.com/nats-io/nats.go"
 
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
+	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
 	"github.com/Camionerou/rag-saldivia/services/auth/internal/handler"
 	"github.com/Camionerou/rag-saldivia/services/auth/internal/service"
@@ -27,6 +28,9 @@ func main() {
 	port := env("AUTH_PORT", "8001")
 	jwtSecret := env("JWT_SECRET", "")
 	dbURL := env("POSTGRES_TENANT_URL", "")
+	// TODO: Refactor to use tenant.Resolver for multi-tenant support.
+	// Currently hardcoded to a single tenant — production requires either
+	// one instance per tenant or dynamic resolution per request.
 	tenantID := env("TENANT_ID", "dev")
 	tenantSlug := env("TENANT_SLUG", "dev")
 
@@ -90,6 +94,15 @@ func main() {
 
 	r.Get("/health", authHandler.Health)
 	r.Post("/v1/auth/login", authHandler.Login)
+	r.Post("/v1/auth/refresh", authHandler.Refresh)
+	r.Post("/v1/auth/logout", authHandler.Logout)
+
+	// Protected routes — require valid access token
+	r.Group(func(r chi.Router) {
+		r.Use(sdamw.Auth(jwtSecret))
+		r.Get("/v1/auth/me", authHandler.Me)
+		r.Get("/v1/modules/enabled", authHandler.EnabledModules)
+	})
 
 	// Server
 	srv := &http.Server{
@@ -102,7 +115,7 @@ func main() {
 
 	// Start
 	go func() {
-		slog.Info("auth service starting", "port", port)
+		slog.Info("auth service starting", "port", port, "tenant_id", tenantID, "tenant_slug", tenantSlug)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			slog.Error("server error", "error", err)
 			os.Exit(1)

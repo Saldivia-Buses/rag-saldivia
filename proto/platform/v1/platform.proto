@@ -1,0 +1,369 @@
+// Platform Service gRPC contract.
+// Control plane for tenant management, module enablement, feature flags,
+// and global configuration. Only accessible by platform admins (Saldivia team).
+// Operates on the Platform DB, not tenant DBs.
+// Currently implemented as HTTP in services/platform — this proto defines
+// the inter-service contract for future gRPC migration.
+
+syntax = "proto3";
+
+package sda.platform.v1;
+
+option go_package = "github.com/Camionerou/rag-saldivia/proto/platform/v1;platformv1";
+
+import "google/protobuf/timestamp.proto";
+
+// PlatformService provides tenant, module, feature flag, and config management.
+// All endpoints require platform admin role verified via JWT.
+service PlatformService {
+  // ── Tenants ─────────────────────────────────────────────────────────
+
+  // ListTenants returns a summary list of all tenants.
+  rpc ListTenants(ListTenantsRequest) returns (ListTenantsResponse);
+
+  // CreateTenant provisions a new tenant with its DB and Redis connections.
+  rpc CreateTenant(CreateTenantRequest) returns (TenantDetail);
+
+  // GetTenant returns detailed information about a tenant by slug.
+  // Connection strings are excluded for security.
+  rpc GetTenant(GetTenantRequest) returns (TenantDetail);
+
+  // UpdateTenant modifies a tenant's name, plan, and settings.
+  rpc UpdateTenant(UpdateTenantRequest) returns (UpdateTenantResponse);
+
+  // DisableTenant soft-disables a tenant. Users can no longer log in.
+  rpc DisableTenant(DisableTenantRequest) returns (DisableTenantResponse);
+
+  // EnableTenant re-enables a previously disabled tenant.
+  rpc EnableTenant(EnableTenantRequest) returns (EnableTenantResponse);
+
+  // ── Modules ─────────────────────────────────────────────────────────
+
+  // ListModules returns the catalog of all available modules.
+  rpc ListModules(ListModulesRequest) returns (ListModulesResponse);
+
+  // ListTenantModules returns modules enabled for a specific tenant.
+  rpc ListTenantModules(ListTenantModulesRequest) returns (ListTenantModulesResponse);
+
+  // EnableModule enables a module for a tenant with optional configuration.
+  rpc EnableModule(EnableModuleRequest) returns (EnableModuleResponse);
+
+  // DisableModule disables a module for a tenant.
+  rpc DisableModule(DisableModuleRequest) returns (DisableModuleResponse);
+
+  // ── Feature Flags ───────────────────────────────────────────────────
+
+  // ListFlags returns all feature flags (global and tenant-specific).
+  rpc ListFlags(ListFlagsRequest) returns (ListFlagsResponse);
+
+  // ToggleFlag enables or disables a feature flag.
+  rpc ToggleFlag(ToggleFlagRequest) returns (ToggleFlagResponse);
+
+  // ── Global Config ───────────────────────────────────────────────────
+
+  // GetConfig returns a global configuration value by key.
+  rpc GetConfig(GetConfigRequest) returns (ConfigEntry);
+
+  // SetConfig creates or updates a global configuration value.
+  rpc SetConfig(SetConfigRequest) returns (SetConfigResponse);
+}
+
+// ── Tenant Messages ─────────────────────────────────────────────────────
+
+// TenantSummary is the compact view used in list responses.
+message TenantSummary {
+  // Tenant UUID.
+  string id = 1;
+
+  // Tenant subdomain slug (unique, lowercase, alphanumeric with hyphens).
+  string slug = 2;
+
+  // Tenant display name.
+  string name = 3;
+
+  // Plan identifier.
+  string plan_id = 4;
+
+  // Whether the tenant is active.
+  bool enabled = 5;
+
+  // When the tenant was created.
+  google.protobuf.Timestamp created_at = 6;
+}
+
+// TenantDetail is the full view of a tenant (excludes connection strings).
+message TenantDetail {
+  // Tenant UUID.
+  string id = 1;
+
+  // Tenant subdomain slug.
+  string slug = 2;
+
+  // Tenant display name.
+  string name = 3;
+
+  // Plan identifier.
+  string plan_id = 4;
+
+  // Whether the tenant is active.
+  bool enabled = 5;
+
+  // Optional logo URL.
+  optional string logo_url = 6;
+
+  // Optional custom domain.
+  optional string domain = 7;
+
+  // Tenant-specific settings as JSON.
+  bytes settings = 8;
+
+  // When the tenant was created.
+  google.protobuf.Timestamp created_at = 9;
+
+  // When the tenant was last updated.
+  google.protobuf.Timestamp updated_at = 10;
+}
+
+message ListTenantsRequest {
+  // Empty. Returns all tenants. Pagination may be added later.
+}
+
+message ListTenantsResponse {
+  // All tenants in the platform.
+  repeated TenantSummary tenants = 1;
+}
+
+message CreateTenantRequest {
+  // Unique slug (lowercase alphanumeric with hyphens, 2-63 chars).
+  string slug = 1;
+
+  // Tenant display name.
+  string name = 2;
+
+  // Plan identifier (references plans table).
+  string plan_id = 3;
+
+  // PostgreSQL connection URL for the tenant's database.
+  string postgres_url = 4;
+
+  // Redis connection URL for the tenant's cache.
+  string redis_url = 5;
+
+  // Optional initial settings as JSON. Defaults to "{}".
+  bytes settings = 6;
+}
+
+message GetTenantRequest {
+  // Tenant slug to look up.
+  string slug = 1;
+}
+
+message UpdateTenantRequest {
+  // Tenant UUID to update.
+  string tenant_id = 1;
+
+  // New display name.
+  string name = 2;
+
+  // New plan identifier.
+  string plan_id = 3;
+
+  // Updated settings as JSON.
+  bytes settings = 4;
+}
+
+message UpdateTenantResponse {
+  // Empty on success.
+}
+
+message DisableTenantRequest {
+  // Tenant UUID to disable.
+  string tenant_id = 1;
+}
+
+message DisableTenantResponse {
+  // Empty on success.
+}
+
+message EnableTenantRequest {
+  // Tenant UUID to re-enable.
+  string tenant_id = 1;
+}
+
+message EnableTenantResponse {
+  // Empty on success.
+}
+
+// ── Module Messages ─────────────────────────────────────────────────────
+
+// Module represents an available module in the platform catalog.
+message Module {
+  // Module identifier (e.g. "chat", "rag", "fleet").
+  string id = 1;
+
+  // Human-readable module name.
+  string name = 2;
+
+  // Module category (core, industry, addon).
+  string category = 3;
+
+  // Module description.
+  optional string description = 4;
+
+  // Icon identifier for the UI.
+  optional string icon = 5;
+
+  // Module version (semver).
+  string version = 6;
+
+  // IDs of modules this one depends on.
+  repeated string requires = 7;
+
+  // Minimum plan tier required (e.g. "basic", "pro", "enterprise").
+  string tier_min = 8;
+
+  // Whether the module is globally enabled in the catalog.
+  bool enabled = 9;
+}
+
+// TenantModule represents a module enabled for a specific tenant.
+message TenantModule {
+  // Module identifier.
+  string id = 1;
+
+  // Module name.
+  string name = 2;
+
+  // Module category.
+  string category = 3;
+
+  // Icon identifier.
+  optional string icon = 4;
+
+  // Tenant-specific module configuration as JSON.
+  bytes config = 5;
+
+  // When the module was enabled for this tenant.
+  google.protobuf.Timestamp enabled_at = 6;
+}
+
+message ListModulesRequest {
+  // Empty. Returns all modules in the catalog.
+}
+
+message ListModulesResponse {
+  // All available modules.
+  repeated Module modules = 1;
+}
+
+message ListTenantModulesRequest {
+  // Tenant UUID to list modules for.
+  string tenant_id = 1;
+}
+
+message ListTenantModulesResponse {
+  // Modules enabled for this tenant.
+  repeated TenantModule modules = 1;
+}
+
+message EnableModuleRequest {
+  // Tenant UUID to enable the module for.
+  string tenant_id = 1;
+
+  // Module identifier to enable.
+  string module_id = 2;
+
+  // Optional module configuration as JSON. Defaults to "{}".
+  bytes config = 3;
+
+  // Admin user UUID performing the action (for audit).
+  string enabled_by = 4;
+}
+
+message EnableModuleResponse {
+  // Empty on success.
+}
+
+message DisableModuleRequest {
+  // Tenant UUID.
+  string tenant_id = 1;
+
+  // Module identifier to disable.
+  string module_id = 2;
+}
+
+message DisableModuleResponse {
+  // Empty on success.
+}
+
+// ── Feature Flag Messages ───────────────────────────────────────────────
+
+// FeatureFlag represents a global or tenant-specific feature flag.
+message FeatureFlag {
+  // Flag UUID.
+  string id = 1;
+
+  // Flag name (unique identifier).
+  string name = 2;
+
+  // Tenant UUID if this is a tenant-specific flag. Empty for global flags.
+  string tenant_id = 3;
+
+  // Whether the flag is enabled.
+  bool enabled = 4;
+}
+
+message ListFlagsRequest {
+  // Empty. Returns all flags.
+}
+
+message ListFlagsResponse {
+  // All feature flags, ordered by name.
+  repeated FeatureFlag flags = 1;
+}
+
+message ToggleFlagRequest {
+  // Flag UUID to toggle.
+  string flag_id = 1;
+
+  // New enabled state.
+  bool enabled = 2;
+}
+
+message ToggleFlagResponse {
+  // Empty on success. NOT_FOUND if flag doesn't exist.
+}
+
+// ── Config Messages ─────────────────────────────────────────────────────
+
+// ConfigEntry represents a global configuration key-value pair.
+message ConfigEntry {
+  // Configuration key.
+  string key = 1;
+
+  // Configuration value as JSON.
+  bytes value = 2;
+
+  // Admin user UUID who last updated this config.
+  string updated_by = 3;
+}
+
+message GetConfigRequest {
+  // Configuration key to retrieve.
+  string key = 1;
+}
+
+message SetConfigRequest {
+  // Configuration key to set.
+  string key = 1;
+
+  // Configuration value as JSON.
+  bytes value = 2;
+
+  // Admin user UUID performing the action (for audit).
+  string updated_by = 3;
+}
+
+message SetConfigResponse {
+  // Empty on success.
+}

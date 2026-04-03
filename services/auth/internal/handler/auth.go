@@ -7,6 +7,7 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/go-chi/chi/v5/middleware"
 
@@ -16,6 +17,9 @@ import (
 // AuthService defines the operations the handler needs from the service layer.
 type AuthService interface {
 	Login(ctx context.Context, req service.LoginRequest) (*service.TokenPair, error)
+	Refresh(ctx context.Context, refreshToken string) (*service.TokenPair, error)
+	Logout(ctx context.Context, refreshToken string) error
+	Me(ctx context.Context, userID string) (*service.UserInfo, error)
 }
 
 // Auth handles HTTP requests for authentication.
@@ -73,12 +77,159 @@ func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Set refresh token as HttpOnly cookie for browser clients
+	setRefreshCookie(w, tokens.RefreshToken, tokens.RefreshExpiresAt)
+
+	// Return access token in body (refresh token also in body for CLI/MCP clients)
 	writeJSON(w, http.StatusOK, tokens)
+}
+
+// Refresh handles POST /v1/auth/refresh
+func (h *Auth) Refresh(w http.ResponseWriter, r *http.Request) {
+	// Read refresh token from HttpOnly cookie first, fall back to body
+	refreshToken := ""
+	if cookie, err := r.Cookie("sda_refresh"); err == nil {
+		refreshToken = cookie.Value
+	}
+
+	if refreshToken == "" {
+		// Fall back to JSON body for non-browser clients (CLI, MCP)
+		r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+		var req struct {
+			RefreshToken string `json:"refresh_token"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err == nil {
+			refreshToken = req.RefreshToken
+		}
+	}
+
+	if refreshToken == "" {
+		writeJSON(w, http.StatusBadRequest, errorResponse{Error: "refresh token is required"})
+		return
+	}
+
+	tokens, err := h.authSvc.Refresh(r.Context(), refreshToken)
+	if err != nil {
+		switch {
+		case errors.Is(err, service.ErrInvalidRefreshToken):
+			clearRefreshCookie(w)
+			writeJSON(w, http.StatusUnauthorized, errorResponse{Error: "invalid or expired refresh token"})
+		default:
+			reqID := middleware.GetReqID(r.Context())
+			slog.Error("refresh failed", "error", err, "request_id", reqID)
+			writeJSON(w, http.StatusInternalServerError, errorResponse{Error: "internal error"})
+		}
+		return
+	}
+
+	setRefreshCookie(w, tokens.RefreshToken, tokens.RefreshExpiresAt)
+	writeJSON(w, http.StatusOK, map[string]any{
+		"access_token":  tokens.AccessToken,
+		"refresh_token": tokens.RefreshToken,
+		"expires_in":    tokens.ExpiresIn,
+	})
+}
+
+// Logout handles POST /v1/auth/logout
+func (h *Auth) Logout(w http.ResponseWriter, r *http.Request) {
+	refreshToken := ""
+	if cookie, err := r.Cookie("sda_refresh"); err == nil {
+		refreshToken = cookie.Value
+	}
+
+	if refreshToken == "" {
+		r.Body = http.MaxBytesReader(w, r.Body, 1<<20)
+		var req struct {
+			RefreshToken string `json:"refresh_token"`
+		}
+		if err := json.NewDecoder(r.Body).Decode(&req); err == nil {
+			refreshToken = req.RefreshToken
+		}
+	}
+
+	if refreshToken != "" {
+		_ = h.authSvc.Logout(r.Context(), refreshToken)
+	}
+
+	clearRefreshCookie(w)
+	writeJSON(w, http.StatusOK, map[string]string{"status": "logged_out"})
+}
+
+// Me handles GET /v1/auth/me
+func (h *Auth) Me(w http.ResponseWriter, r *http.Request) {
+	userID := r.Header.Get("X-User-ID")
+	if userID == "" {
+		writeJSON(w, http.StatusUnauthorized, errorResponse{Error: "not authenticated"})
+		return
+	}
+
+	user, err := h.authSvc.Me(r.Context(), userID)
+	if err != nil {
+		switch {
+		case errors.Is(err, service.ErrUserNotFound):
+			writeJSON(w, http.StatusNotFound, errorResponse{Error: "user not found"})
+		default:
+			reqID := middleware.GetReqID(r.Context())
+			slog.Error("me failed", "error", err, "request_id", reqID)
+			writeJSON(w, http.StatusInternalServerError, errorResponse{Error: "internal error"})
+		}
+		return
+	}
+
+	writeJSON(w, http.StatusOK, user)
+}
+
+// EnabledModules handles GET /v1/modules/enabled
+// Returns the list of modules enabled for the current tenant.
+// TODO: Read from Platform DB via tenant_modules table. Currently returns
+// core modules as a baseline until Platform Service integration.
+func (h *Auth) EnabledModules(w http.ResponseWriter, r *http.Request) {
+	type moduleEntry struct {
+		ID       string `json:"id"`
+		Name     string `json:"name"`
+		Category string `json:"category"`
+	}
+
+	// Core modules — always enabled for all tenants
+	modules := []moduleEntry{
+		{ID: "chat", Name: "Chat", Category: "core"},
+		{ID: "rag", Name: "RAG", Category: "core"},
+		{ID: "notifications", Name: "Notificaciones", Category: "core"},
+		{ID: "ingest", Name: "Ingesta", Category: "core"},
+	}
+
+	writeJSON(w, http.StatusOK, modules)
 }
 
 // Health handles GET /health
 func (h *Auth) Health(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]string{"status": "ok", "service": "auth"})
+}
+
+// setRefreshCookie sets the refresh token as an HttpOnly secure cookie.
+func setRefreshCookie(w http.ResponseWriter, token string, expiresAt time.Time) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     "sda_refresh",
+		Value:    token,
+		Path:     "/v1/auth",
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+		Expires:  expiresAt,
+	})
+}
+
+// clearRefreshCookie removes the refresh cookie.
+func clearRefreshCookie(w http.ResponseWriter) {
+	http.SetCookie(w, &http.Cookie{
+		Name:     "sda_refresh",
+		Value:    "",
+		Path:     "/v1/auth",
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+		MaxAge:   -1,
+	})
 }
 
 func writeJSON(w http.ResponseWriter, status int, v any) {

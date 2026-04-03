@@ -1,0 +1,25 @@
+id: ingest
+name: Ingesta de Documentos
+category: platform
+tier_min: starter
+icon: upload
+requires: []
+
+routes:
+  - path: /documents
+    label: Documentos
+    icon: file-text
+
+nav:
+  - label: Documentos
+    icon: file-text
+    path: /documents
+    position: 10
+
+api_endpoints:
+  - /v1/ingest/upload
+  - /v1/ingest/jobs
+  - /v1/ingest/jobs/{id}
+
+ws_channels:
+  - ingest.jobs

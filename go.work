@@ -9,4 +9,6 @@ use (
 	./services/platform
 	./services/rag
 	./services/ws
+	./tools/cli
+	./tools/mcp
 )

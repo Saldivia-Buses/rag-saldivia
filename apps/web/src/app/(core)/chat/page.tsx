@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -14,6 +15,7 @@ import {
   ChatContainerScrollAnchor,
 } from "@/components/ui/chat-container";
 import { cn } from "@/lib/utils";
+import { api, ApiError } from "@/lib/api/client";
 import {
   ArrowUpIcon,
   PlusIcon,
@@ -21,7 +23,8 @@ import {
   Trash2Icon,
 } from "lucide-react";
 
-function formatRelativeDate(date: Date): string {
+function formatRelativeDate(dateStr: string): string {
+  const date = new Date(dateStr);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffMin = Math.floor(diffMs / 60000);
@@ -36,29 +39,34 @@ function formatRelativeDate(date: Date): string {
 
 // --- Types ---
 
-interface Message {
-  id: string;
-  role: "user" | "assistant";
-  content: string;
-}
-
-interface Session {
+interface ApiSession {
   id: string;
   title: string;
-  createdAt: Date;
-  messages: Message[];
+  collection: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface ApiMessage {
+  id: string;
+  role: "user" | "assistant" | "system";
+  content: string;
+  sources?: Array<{ document_name: string; content: string; score: number }>;
+  created_at: string;
 }
 
 // --- Chat Sessions Sidebar ---
 
 function ChatSidebar({
   sessions,
+  isLoading: sessionsLoading,
   activeSessionId,
   onSelectSession,
   onNewSession,
   onDeleteSession,
 }: {
-  sessions: Session[];
+  sessions: ApiSession[];
+  isLoading: boolean;
   activeSessionId: string | null;
   onSelectSession: (id: string) => void;
   onNewSession: () => void;
@@ -83,9 +91,14 @@ function ChatSidebar({
       {/* List */}
       <ScrollArea className="flex-1">
         <div className="flex flex-col">
-          {sessions.length === 0 && (
+          {sessionsLoading && (
+            <div className="px-4 py-12 text-sm text-center text-muted-foreground">
+              Cargando...
+            </div>
+          )}
+          {!sessionsLoading && sessions.length === 0 && (
             <p className="px-4 py-12 text-sm text-center text-muted-foreground">
-              Tus conversaciones aparecerán acá
+              Tus conversaciones apareceran aca
             </p>
           )}
           {sessions.map((session) => (
@@ -95,16 +108,14 @@ function ChatSidebar({
                 "group flex items-start justify-between gap-2 border-b px-4 py-3 cursor-pointer transition-colors",
                 activeSessionId === session.id
                   ? "bg-accent/50"
-                  : "hover:bg-muted/50"
+                  : "hover:bg-muted/50",
               )}
               onClick={() => onSelectSession(session.id)}
             >
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">
-                  {session.title}
-                </p>
+                <p className="text-sm font-medium truncate">{session.title}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  {formatRelativeDate(session.createdAt)}
+                  {formatRelativeDate(session.created_at)}
                 </p>
               </div>
               <button
@@ -128,94 +139,180 @@ function ChatSidebar({
 
 export default function ChatPage() {
   const [input, setInput] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [sessions, setSessions] = useState<Session[]>([]);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [streamingContent, setStreamingContent] = useState("");
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
+  const queryClient = useQueryClient();
 
-  const activeSession = sessions.find((s) => s.id === activeSessionId);
-  const messages = activeSession?.messages ?? [];
+  // Fetch sessions
+  const { data: sessions = [], isLoading: sessionsLoading } = useQuery({
+    queryKey: ["chat", "sessions"],
+    queryFn: () => api.get<ApiSession[]>("/v1/chat/sessions"),
+  });
 
-  const createSession = useCallback(
-    (firstMessage?: string) => {
-      const session: Session = {
-        id: crypto.randomUUID(),
-        title: firstMessage?.slice(0, 50) || "Nueva conversación",
-        createdAt: new Date(),
-        messages: [],
-      };
-      setSessions((prev) => [session, ...prev]);
+  // Fetch messages for active session
+  const { data: messages = [] } = useQuery({
+    queryKey: ["chat", "messages", activeSessionId],
+    queryFn: () =>
+      api.get<ApiMessage[]>(
+        `/v1/chat/sessions/${activeSessionId}/messages`,
+      ),
+    enabled: !!activeSessionId,
+  });
+
+  // Create session mutation
+  const createSessionMutation = useMutation({
+    mutationFn: (title: string) =>
+      api.post<ApiSession>("/v1/chat/sessions", { title }),
+    onSuccess: (session) => {
+      queryClient.invalidateQueries({ queryKey: ["chat", "sessions"] });
       setActiveSessionId(session.id);
-      return session.id;
     },
-    []
-  );
+  });
 
-  const handleSubmit = useCallback(() => {
-    if (!input.trim() || isLoading) return;
+  // Delete session mutation
+  const deleteSessionMutation = useMutation({
+    mutationFn: (id: string) => api.delete(`/v1/chat/sessions/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["chat", "sessions"] });
+    },
+  });
 
-    let sessionId = activeSessionId;
-    if (!sessionId) {
-      sessionId = createSession(input);
-    }
+  // Send message mutation
+  const sendMessageMutation = useMutation({
+    mutationFn: ({
+      sessionId,
+      content,
+    }: {
+      sessionId: string;
+      content: string;
+    }) =>
+      api.post<ApiMessage>(`/v1/chat/sessions/${sessionId}/messages`, {
+        role: "user",
+        content,
+      }),
+    onSuccess: (_, vars) => {
+      queryClient.invalidateQueries({
+        queryKey: ["chat", "messages", vars.sessionId],
+      });
+    },
+  });
 
-    const userMessage: Message = {
-      id: crypto.randomUUID(),
-      role: "user",
-      content: input,
-    };
-
-    // Update session title if it's the first message
-    setSessions((prev) =>
-      prev.map((s) =>
-        s.id === sessionId
-          ? {
-              ...s,
-              title: s.messages.length === 0 ? input.slice(0, 50) : s.title,
-              messages: [...s.messages, userMessage],
-            }
-          : s
-      )
-    );
-    setInput("");
-
-    // TODO: connect to RAG backend
-    setIsLoading(true);
-    setTimeout(() => {
-      const assistantMessage: Message = {
-        id: crypto.randomUUID(),
-        role: "assistant",
-        content:
-          "Esta es una respuesta de ejemplo. Cuando el backend esté conectado, las respuestas vendrán del servicio RAG con streaming via SSE.",
-      };
-      setSessions((prev) =>
-        prev.map((s) =>
-          s.id === sessionId
-            ? { ...s, messages: [...s.messages, assistantMessage] }
-            : s
-        )
-      );
-      setIsLoading(false);
-    }, 1000);
-  }, [input, isLoading, activeSessionId, createSession]);
+  const handleNewSession = useCallback(() => {
+    createSessionMutation.mutate("Nueva conversacion");
+  }, [createSessionMutation]);
 
   const handleDeleteSession = useCallback(
     (id: string) => {
-      setSessions((prev) => prev.filter((s) => s.id !== id));
+      deleteSessionMutation.mutate(id);
       if (activeSessionId === id) {
         setActiveSessionId(null);
       }
     },
-    [activeSessionId]
+    [activeSessionId, deleteSessionMutation],
   );
+
+  const handleSubmit = useCallback(async () => {
+    if (!input.trim() || isStreaming) return;
+
+    const content = input;
+    setInput("");
+
+    // Create session if none is active
+    let sessionId = activeSessionId;
+    if (!sessionId) {
+      try {
+        const session = await api.post<ApiSession>("/v1/chat/sessions", {
+          title: content.slice(0, 50),
+        });
+        sessionId = session.id;
+        setActiveSessionId(session.id);
+        queryClient.invalidateQueries({ queryKey: ["chat", "sessions"] });
+      } catch {
+        return;
+      }
+    }
+
+    // Send user message
+    try {
+      await sendMessageMutation.mutateAsync({ sessionId, content });
+    } catch {
+      return;
+    }
+
+    // Stream RAG response
+    setIsStreaming(true);
+    setStreamingContent("");
+
+    try {
+      for await (const chunk of api.stream("/v1/rag/generate", {
+        messages: [{ role: "user", content }],
+        stream: true,
+        use_knowledge_base: true,
+      })) {
+        setStreamingContent((prev) => prev + chunk);
+      }
+
+      // Save the complete assistant response — capture from state setter
+      let finalContent = "";
+      setStreamingContent((prev) => {
+        finalContent = prev;
+        return prev;
+      });
+
+      // Store assistant message in backend
+      if (finalContent) {
+        await api.post(`/v1/chat/sessions/${sessionId}/messages`, {
+          role: "assistant",
+          content: finalContent,
+        });
+      }
+
+      queryClient.invalidateQueries({
+        queryKey: ["chat", "messages", sessionId],
+      });
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setStreamingContent(
+          `Error: ${err.message}. El servicio RAG puede no estar disponible.`,
+        );
+      }
+    } finally {
+      setIsStreaming(false);
+      setStreamingContent("");
+    }
+  }, [input, isStreaming, activeSessionId, queryClient, sendMessageMutation]);
+
+  const handleStop = useCallback(() => {
+    abortRef.current?.abort();
+    setIsStreaming(false);
+  }, []);
+
+  // Combine persisted messages with streaming content
+  const displayMessages = [
+    ...messages,
+    ...(streamingContent
+      ? [
+          {
+            id: "streaming",
+            role: "assistant" as const,
+            content: streamingContent,
+            created_at: new Date().toISOString(),
+          },
+        ]
+      : []),
+  ];
 
   return (
     <div className="flex flex-1 min-h-0">
       {/* Sessions sidebar */}
       <ChatSidebar
         sessions={sessions}
+        isLoading={sessionsLoading}
         activeSessionId={activeSessionId}
         onSelectSession={setActiveSessionId}
-        onNewSession={() => createSession()}
+        onNewSession={handleNewSession}
         onDeleteSession={handleDeleteSession}
       />
 
@@ -224,26 +321,26 @@ export default function ChatPage() {
         {/* Messages */}
         <ChatContainerRoot className="flex-1">
           <ChatContainerContent className="max-w-3xl mx-auto w-full px-4 py-6 gap-6">
-            {messages.length === 0 && !isLoading && (
+            {displayMessages.length === 0 && !isStreaming && (
               <div className="flex flex-1 items-center justify-center">
                 <div className="text-center">
                   <h2 className="text-lg font-semibold">
-                    ¿En qué puedo ayudarte?
+                    En que puedo ayudarte?
                   </h2>
                   <p className="text-sm text-muted-foreground mt-1">
-                    Preguntá sobre tus documentos o cualquier tema de tu
+                    Pregunta sobre tus documentos o cualquier tema de tu
                     empresa.
                   </p>
                 </div>
               </div>
             )}
 
-            {messages.map((message) => (
+            {displayMessages.map((message) => (
               <div
                 key={message.id}
                 className={cn(
                   "flex",
-                  message.role === "user" ? "justify-end" : "justify-start"
+                  message.role === "user" ? "justify-end" : "justify-start",
                 )}
               >
                 <div
@@ -251,15 +348,27 @@ export default function ChatPage() {
                     "max-w-[80%] text-sm whitespace-pre-wrap",
                     message.role === "user"
                       ? "rounded-2xl bg-muted px-4 py-2.5"
-                      : "text-foreground leading-relaxed"
+                      : "text-foreground leading-relaxed",
                   )}
                 >
                   {message.content}
+                  {message.sources && message.sources.length > 0 && (
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      {message.sources.map((src, i) => (
+                        <span
+                          key={i}
+                          className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs text-muted-foreground"
+                        >
+                          {src.document_name}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
 
-            {isLoading && (
+            {isStreaming && !streamingContent && (
               <div className="flex justify-start">
                 <div className="text-sm text-muted-foreground">
                   <span className="inline-flex gap-1">
@@ -281,21 +390,19 @@ export default function ChatPage() {
             <PromptInput
               value={input}
               onValueChange={setInput}
-              isLoading={isLoading}
+              isLoading={isStreaming}
               onSubmit={handleSubmit}
             >
-              <PromptInputTextarea placeholder="Escribí tu mensaje..." />
+              <PromptInputTextarea placeholder="Escribi tu mensaje..." />
               <PromptInputActions>
                 <Button
                   variant="default"
                   size="icon"
                   className="size-8 rounded-full"
-                  disabled={!isLoading && !input.trim()}
-                  onClick={
-                    isLoading ? () => setIsLoading(false) : handleSubmit
-                  }
+                  disabled={!isStreaming && !input.trim()}
+                  onClick={isStreaming ? handleStop : handleSubmit}
                 >
-                  {isLoading ? (
+                  {isStreaming ? (
                     <SquareIcon className="size-3 fill-current" />
                   ) : (
                     <ArrowUpIcon className="size-4" />

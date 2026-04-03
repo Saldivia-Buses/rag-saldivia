@@ -1,0 +1,21 @@
+id: notifications
+name: Notificaciones
+category: core
+tier_min: starter
+icon: bell
+requires: []
+
+routes:
+  - path: /notifications
+    label: Notificaciones
+    icon: bell
+
+api_endpoints:
+  - /v1/notifications
+  - /v1/notifications/count
+  - /v1/notifications/{id}/read
+  - /v1/notifications/read-all
+  - /v1/notifications/preferences
+
+ws_channels:
+  - notifications

@@ -21,8 +21,10 @@ import (
 )
 
 var (
-	ErrInvalidCredentials = errors.New("invalid email or password")
-	ErrAccountLocked      = errors.New("account is locked")
+	ErrInvalidCredentials  = errors.New("invalid email or password")
+	ErrAccountLocked       = errors.New("account is locked")
+	ErrInvalidRefreshToken = errors.New("invalid or expired refresh token")
+	ErrUserNotFound        = errors.New("user not found")
 )
 
 const (
@@ -68,9 +70,20 @@ type LoginRequest struct {
 
 // TokenPair holds access + refresh tokens.
 type TokenPair struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-	ExpiresIn    int    `json:"expires_in"` // seconds
+	AccessToken      string    `json:"access_token"`
+	RefreshToken     string    `json:"refresh_token"`
+	ExpiresIn        int       `json:"expires_in"` // seconds
+	RefreshExpiresAt time.Time `json:"-"`           // used by handler for cookie, not serialized
+}
+
+// UserInfo holds the current user's profile data.
+type UserInfo struct {
+	ID         string `json:"id"`
+	Email      string `json:"email"`
+	Name       string `json:"name"`
+	Role       string `json:"role"`
+	TenantID   string `json:"tenant_id"`
+	TenantSlug string `json:"tenant_slug"`
 }
 
 // Login authenticates a user and returns a token pair.
@@ -182,9 +195,144 @@ func (a *Auth) Login(ctx context.Context, req LoginRequest) (*TokenPair, error) 
 	})
 
 	return &TokenPair{
-		AccessToken:  accessToken,
-		RefreshToken: refreshToken,
-		ExpiresIn:    int(a.jwtCfg.AccessExpiry.Seconds()),
+		AccessToken:      accessToken,
+		RefreshToken:     refreshToken,
+		ExpiresIn:        int(a.jwtCfg.AccessExpiry.Seconds()),
+		RefreshExpiresAt: time.Now().Add(a.jwtCfg.RefreshExpiry),
+	}, nil
+}
+
+// Refresh validates a refresh token and returns a new token pair (rotation).
+func (a *Auth) Refresh(ctx context.Context, refreshToken string) (*TokenPair, error) {
+	// Verify the JWT signature and expiry
+	claims, err := sdajwt.Verify(a.jwtCfg.Secret, refreshToken)
+	if err != nil {
+		return nil, ErrInvalidRefreshToken
+	}
+
+	// Verify the token hash exists in DB and is not revoked
+	tokenHash := hashToken(refreshToken)
+	var exists bool
+	err = a.db.QueryRow(ctx,
+		`SELECT EXISTS(SELECT 1 FROM refresh_tokens
+		 WHERE token_hash = $1 AND user_id = $2 AND revoked_at IS NULL AND expires_at > now())`,
+		tokenHash, claims.UserID,
+	).Scan(&exists)
+	if err != nil {
+		return nil, fmt.Errorf("query refresh token: %w", err)
+	}
+	if !exists {
+		return nil, ErrInvalidRefreshToken
+	}
+
+	// Revoke the old refresh token (rotation — each token is single-use)
+	_, _ = a.db.Exec(ctx,
+		`UPDATE refresh_tokens SET revoked_at = now() WHERE token_hash = $1`,
+		tokenHash,
+	)
+
+	// Re-fetch user data to get current role (may have changed since login)
+	var name, email string
+	var isActive bool
+	err = a.db.QueryRow(ctx,
+		`SELECT name, email, is_active FROM users WHERE id = $1`, claims.UserID,
+	).Scan(&name, &email, &isActive)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrInvalidRefreshToken
+		}
+		return nil, fmt.Errorf("query user for refresh: %w", err)
+	}
+	if !isActive {
+		return nil, ErrInvalidRefreshToken
+	}
+
+	role, err := a.getPrimaryRole(ctx, claims.UserID)
+	if err != nil {
+		return nil, fmt.Errorf("get role for refresh: %w", err)
+	}
+
+	// Issue new token pair
+	newAccessClaims := sdajwt.Claims{
+		UserID:   claims.UserID,
+		Email:    email,
+		Name:     name,
+		TenantID: a.tenant.ID,
+		Slug:     a.tenant.Slug,
+		Role:     role,
+	}
+	newAccessClaims.ID = uuid.New().String()
+
+	newRefreshClaims := newAccessClaims
+	newRefreshClaims.ID = uuid.New().String()
+
+	accessToken, err := sdajwt.CreateAccess(a.jwtCfg, newAccessClaims)
+	if err != nil {
+		return nil, fmt.Errorf("create access token: %w", err)
+	}
+
+	newRefresh, err := sdajwt.CreateRefresh(a.jwtCfg, newRefreshClaims)
+	if err != nil {
+		return nil, fmt.Errorf("create refresh token: %w", err)
+	}
+
+	// Store new refresh token
+	newHash := hashToken(newRefresh)
+	refreshExpiry := time.Now().Add(a.jwtCfg.RefreshExpiry)
+	_, err = a.db.Exec(ctx,
+		`INSERT INTO refresh_tokens (user_id, token_hash, expires_at) VALUES ($1, $2, $3)`,
+		claims.UserID, newHash, refreshExpiry,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("store refresh token: %w", err)
+	}
+
+	return &TokenPair{
+		AccessToken:      accessToken,
+		RefreshToken:     newRefresh,
+		ExpiresIn:        int(a.jwtCfg.AccessExpiry.Seconds()),
+		RefreshExpiresAt: refreshExpiry,
+	}, nil
+}
+
+// Logout revokes the given refresh token.
+func (a *Auth) Logout(ctx context.Context, refreshToken string) error {
+	tokenHash := hashToken(refreshToken)
+	_, err := a.db.Exec(ctx,
+		`UPDATE refresh_tokens SET revoked_at = now() WHERE token_hash = $1 AND revoked_at IS NULL`,
+		tokenHash,
+	)
+	if err != nil {
+		return fmt.Errorf("revoke refresh token: %w", err)
+	}
+	return nil
+}
+
+// Me returns profile info for the authenticated user.
+func (a *Auth) Me(ctx context.Context, userID string) (*UserInfo, error) {
+	var email, name string
+	err := a.db.QueryRow(ctx,
+		`SELECT email, name FROM users WHERE id = $1 AND is_active = true`, userID,
+	).Scan(&email, &name)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, ErrUserNotFound
+		}
+		return nil, fmt.Errorf("query user: %w", err)
+	}
+
+	role, err := a.getPrimaryRole(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("get role: %w", err)
+	}
+
+	return &UserInfo{
+		ID:         userID,
+		Email:      email,
+		Name:       name,
+		Role:       role,
+		TenantID:   a.tenant.ID,
+		TenantSlug: a.tenant.Slug,
 	}, nil
 }
 
