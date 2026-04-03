@@ -70,8 +70,11 @@ func (h *Auth) resolveService(r *http.Request) (AuthService, error) {
 		return nil, err
 	}
 
-	// Look up tenant ID from platform DB (cached in resolver)
-	tenantID := slug // simplified: use slug as ID for now
+	tenantID, err := h.resolver.TenantID(r.Context(), slug)
+	if err != nil {
+		return nil, err
+	}
+
 	return service.NewAuth(pool, h.jwtCfg, tenantID, slug, h.publisher), nil
 }
 

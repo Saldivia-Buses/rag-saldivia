@@ -17,6 +17,7 @@ import (
 // these should be encrypted at the application layer before storing in
 // the platform DB, or fetched from a secrets manager (Vault, etc.).
 type ConnInfo struct {
+	TenantID    string // UUID from platform DB
 	PostgresURL string
 	RedisURL    string
 }
@@ -104,9 +105,9 @@ func (r *Resolver) resolveConnInfo(ctx context.Context, slug string) (ConnInfo, 
 
 	var info ConnInfo
 	err := r.platformDB.QueryRow(ctx,
-		`SELECT postgres_url, redis_url FROM tenants WHERE slug = $1 AND enabled = true`,
+		`SELECT id, postgres_url, redis_url FROM tenants WHERE slug = $1 AND enabled = true`,
 		slug,
-	).Scan(&info.PostgresURL, &info.RedisURL)
+	).Scan(&info.TenantID, &info.PostgresURL, &info.RedisURL)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return ConnInfo{}, fmt.Errorf("resolve tenant %q: %w", slug, ErrTenantUnknown)
@@ -184,6 +185,18 @@ func (r *Resolver) createRedisClientLocked(ctx context.Context, slug string) (*r
 
 	r.redisClts[slug] = client
 	return client, nil
+}
+
+// TenantID returns the UUID for the given tenant slug (cached).
+func (r *Resolver) TenantID(ctx context.Context, slug string) (string, error) {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+
+	info, err := r.resolveConnInfo(ctx, slug)
+	if err != nil {
+		return "", err
+	}
+	return info.TenantID, nil
 }
 
 // Close shuts down all cached connection pools and Redis clients.

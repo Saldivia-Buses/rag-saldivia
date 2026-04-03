@@ -113,7 +113,12 @@ func (r *RAG) GenerateStream(ctx context.Context, tenantSlug string, req Generat
 }
 
 // ListCollections returns all collections from the Blueprint, filtered by tenant prefix.
+// In OpenRouter mode (no Blueprint), returns an empty list.
 func (r *RAG) ListCollections(ctx context.Context, tenantSlug string) ([]string, error) {
+	if r.cfg.APIKey != "" {
+		return []string{}, nil // no collections in OpenRouter mode
+	}
+
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodGet,
 		r.cfg.BlueprintURL+"/v1/collections", nil)
 	if err != nil {
@@ -156,8 +161,13 @@ func (r *RAG) ListCollections(ctx context.Context, tenantSlug string) ([]string,
 	return filtered, nil
 }
 
-// Health checks if the Blueprint is reachable.
+// Health checks if the upstream LLM provider is reachable.
 func (r *RAG) Health(ctx context.Context) error {
+	if r.cfg.APIKey != "" {
+		// OpenRouter mode — no health endpoint, just verify config exists
+		return nil
+	}
+
 	httpReq, err := http.NewRequestWithContext(ctx, http.MethodGet,
 		r.cfg.BlueprintURL+"/health", nil)
 	if err != nil {

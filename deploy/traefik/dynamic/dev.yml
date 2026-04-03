@@ -13,11 +13,13 @@
 
 http:
   routers:
-    # Auth — login, token refresh, modules (no tenant context needed for login)
+    # Auth — login, token refresh, modules
+    # Needs dev-tenant in multi-tenant mode so X-Tenant-Slug is available for login
     auth:
       rule: "PathPrefix(`/v1/auth`) || PathPrefix(`/v1/modules`)"
       service: auth
       entryPoints: [web]
+      middlewares: [dev-tenant]
 
     # WebSocket — real-time channel
     ws:

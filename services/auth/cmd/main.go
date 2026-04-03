@@ -89,6 +89,11 @@ func main() {
 		}
 		defer platformPool.Close()
 
+		if err := platformPool.Ping(ctx); err != nil {
+			slog.Error("failed to ping platform database", "error", err)
+			os.Exit(1)
+		}
+
 		resolver := tenant.NewResolver(platformPool)
 		defer resolver.Close()
 
