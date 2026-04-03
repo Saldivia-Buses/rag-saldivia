@@ -13,6 +13,9 @@ import {
   User,
 } from "lucide-react";
 import { useAuthStore } from "@/lib/auth/store";
+import { useEnabledModules } from "@/lib/modules/hooks";
+import { MODULE_REGISTRY, CORE_NAV_ITEMS } from "@/lib/modules/registry";
+import { FileText, Database } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -121,38 +124,67 @@ type SidebarData = {
   activeWorkspace?: string;
 };
 
-// Shared sidebar data - works with all sidebar variations
-const sidebarData: SidebarData = {
-  logo: {
-    src: "/logo-placeholder.svg",
-    alt: "SDA Framework",
-    title: "SDA Framework",
-    description: "Plataforma empresarial",
-  },
-  navGroups: [
-    {
-      title: "Principal",
-      defaultOpen: true,
-      items: [
-        { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
-        { label: "Chat", icon: MessageSquare, href: "/chat" },
-        { label: "Notificaciones", icon: Bell, href: "/notifications" },
-      ],
-    },
-  ],
-  footerGroup: {
-    title: "Cuenta",
-    items: [
-      { label: "Configuración", icon: Settings, href: "/system-settings" },
-      { label: "Ayuda", icon: HelpCircle, href: "#" },
-    ],
-  },
-  user: {
-    name: "Enzo Saldivia",
-    email: "enzo@saldivia.com",
-    avatar: "",
-  },
+// Static sidebar parts
+const sidebarLogo = {
+  src: "/logo-placeholder.svg",
+  alt: "SDA Framework",
+  title: "SDA Framework",
+  description: "Plataforma empresarial",
 };
+
+const footerGroup: NavGroup = {
+  title: "Cuenta",
+  items: [
+    { label: "Configuracion", icon: Settings, href: "/system-settings" },
+    { label: "Ayuda", icon: HelpCircle, href: "#" },
+  ],
+};
+
+/**
+ * Builds the dynamic nav groups from core items + enabled modules.
+ */
+function useSidebarData(): SidebarData {
+  const user = useAuthStore((s) => s.user);
+  const { data: enabledModules = [] } = useEnabledModules();
+
+  // Core items — always visible
+  const coreItems: NavItem[] = [
+    { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+    { label: "Chat", icon: MessageSquare, href: "/chat" },
+    { label: "Documentos", icon: FileText, href: "/documents" },
+    { label: "Colecciones", icon: Database, href: "/collections" },
+    { label: "Notificaciones", icon: Bell, href: "/notifications" },
+  ];
+
+  // Module items — only enabled modules for this tenant
+  const moduleItems: NavItem[] = enabledModules
+    .map((m) => MODULE_REGISTRY[m.id])
+    .filter(Boolean)
+    .filter((m) => !["chat", "rag", "notifications", "ingest"].includes(m.id)) // core already shown above
+    .sort((a, b) => a.nav.position - b.nav.position)
+    .map((m) => ({
+      label: m.nav.label,
+      icon: m.nav.icon,
+      href: m.nav.path,
+    }));
+
+  const navGroups: NavGroup[] = [
+    { title: "Principal", defaultOpen: true, items: coreItems },
+  ];
+
+  if (moduleItems.length > 0) {
+    navGroups.push({ title: "Modulos", defaultOpen: true, items: moduleItems });
+  }
+
+  return {
+    logo: sidebarLogo,
+    navGroups,
+    footerGroup,
+    user: user
+      ? { name: user.name, email: user.email, avatar: "" }
+      : { name: "Usuario", email: "", avatar: "" },
+  };
+}
 
 const SidebarLogo = ({ logo }: { logo: SidebarData["logo"] }) => {
   return (
@@ -316,15 +348,17 @@ const NavUser = ({ user }: { user: UserData }) => {
 };
 
 const AppSidebar = ({ ...props }: React.ComponentProps<typeof Sidebar>) => {
+  const data = useSidebarData();
+
   return (
     <Sidebar {...props}>
       <SidebarHeader>
-        <SidebarLogo logo={sidebarData.logo} />
+        <SidebarLogo logo={data.logo} />
         <SearchButton />
       </SidebarHeader>
       <SidebarContent className="overflow-hidden">
         <ScrollArea className="min-h-0 flex-1">
-          {sidebarData.navGroups.map((group) => (
+          {data.navGroups.map((group) => (
             <SidebarGroup key={group.title}>
               <SidebarGroupLabel>{group.title}</SidebarGroupLabel>
               <SidebarGroupContent>
@@ -340,16 +374,16 @@ const AppSidebar = ({ ...props }: React.ComponentProps<typeof Sidebar>) => {
       </SidebarContent>
       <SidebarFooter>
         <SidebarGroup className="py-0">
-          <SidebarGroupLabel>{sidebarData.footerGroup.title}</SidebarGroupLabel>
+          <SidebarGroupLabel>{data.footerGroup.title}</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {sidebarData.footerGroup.items.map((item) => (
+              {data.footerGroup.items.map((item) => (
                 <NavMenuItem key={item.label} item={item} />
               ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-        {sidebarData.user && <NavUser user={sidebarData.user} />}
+        {data.user && <NavUser user={data.user} />}
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
