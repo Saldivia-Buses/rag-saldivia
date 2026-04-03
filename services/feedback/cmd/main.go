@@ -14,8 +14,10 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/nats-io/nats.go"
 
+	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
 	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
+	"github.com/Camionerou/rag-saldivia/services/feedback/internal/handler"
 	"github.com/Camionerou/rag-saldivia/services/feedback/internal/service"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
@@ -126,10 +128,26 @@ func main() {
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Timeout(30 * time.Second))
 
+	jwtSecret := env("JWT_SECRET", "")
+
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(`{"status":"ok","service":"feedback"}`))
+	})
+
+	// Tenant-scoped feedback endpoints (require auth)
+	feedbackHandler := handler.NewFeedback(tenantPool)
+	r.Group(func(r chi.Router) {
+		r.Use(sdamw.Auth(jwtSecret))
+		r.Mount("/v1/feedback", feedbackHandler.Routes())
+	})
+
+	// Platform admin feedback endpoints (require admin JWT)
+	platformFeedbackHandler := handler.NewPlatformFeedback(platformPool)
+	r.Group(func(r chi.Router) {
+		r.Use(sdamw.Auth(jwtSecret))
+		r.Mount("/v1/platform/feedback", platformFeedbackHandler.Routes())
 	})
 
 	// Server
