@@ -50,6 +50,15 @@ func (m *mockAuthService) Me(_ context.Context, _ string) (*service.UserInfo, er
 	return m.userInfo, nil
 }
 
+func (m *mockAuthService) SetupMFA(_ context.Context, _ string) (*service.MFASetupResult, error) {
+	return &service.MFASetupResult{Secret: "TESTSECRET", URI: "otpauth://totp/test"}, nil
+}
+func (m *mockAuthService) VerifySetup(_ context.Context, _, _ string) error { return nil }
+func (m *mockAuthService) DisableMFA(_ context.Context, _, _ string) error  { return nil }
+func (m *mockAuthService) CompleteMFALogin(_ context.Context, _, _ string) (*service.TokenPair, error) {
+	return m.tokens, m.err
+}
+
 // --- tests ---
 
 func TestLogin_Success(t *testing.T) {

@@ -22,6 +22,10 @@ type AuthService interface {
 	Refresh(ctx context.Context, refreshToken string) (*service.TokenPair, error)
 	Logout(ctx context.Context, refreshToken string) error
 	Me(ctx context.Context, userID string) (*service.UserInfo, error)
+	SetupMFA(ctx context.Context, userID string) (*service.MFASetupResult, error)
+	VerifySetup(ctx context.Context, userID, code string) error
+	DisableMFA(ctx context.Context, userID, code string) error
+	CompleteMFALogin(ctx context.Context, mfaToken, code string) (*service.TokenPair, error)
 }
 
 // EventPublisher can publish notification events via NATS.
@@ -127,6 +131,12 @@ func (h *Auth) Login(w http.ResponseWriter, r *http.Request) {
 			slog.Error("login failed", "error", err, "request_id", reqID)
 			writeJSON(w, http.StatusInternalServerError, errorResponse{Error: "internal error"})
 		}
+		return
+	}
+
+	// MFA required — return challenge, not tokens
+	if tokens.MFARequired {
+		writeJSON(w, http.StatusOK, tokens)
 		return
 	}
 

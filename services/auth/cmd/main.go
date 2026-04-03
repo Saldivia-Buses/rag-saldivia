@@ -138,7 +138,14 @@ func main() {
 		r.Use(sdamw.Auth(publicKey))
 		r.Get("/v1/auth/me", authHandler.Me)
 		r.Get("/v1/modules/enabled", authHandler.EnabledModules)
+		// MFA management (requires authenticated user)
+		r.Post("/v1/auth/mfa/setup", authHandler.SetupMFA)
+		r.Post("/v1/auth/mfa/verify-setup", authHandler.VerifySetup)
+		r.Post("/v1/auth/mfa/disable", authHandler.DisableMFA)
 	})
+
+	// MFA login verification (uses temp mfa_token, not regular access token)
+	r.Post("/v1/auth/mfa/verify", authHandler.VerifyMFALogin)
 
 	// Server
 	srv := &http.Server{

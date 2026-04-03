@@ -26,6 +26,8 @@ var (
 	ErrAccountLocked       = errors.New("account is locked")
 	ErrInvalidRefreshToken = errors.New("invalid or expired refresh token")
 	ErrUserNotFound        = errors.New("user not found")
+	ErrInvalidMFACode      = errors.New("invalid MFA code")
+	ErrMFARequired         = errors.New("MFA verification required")
 )
 
 const (
@@ -74,8 +76,10 @@ type LoginRequest struct {
 type TokenPair struct {
 	AccessToken      string    `json:"access_token"`
 	RefreshToken     string    `json:"refresh_token"`
-	ExpiresIn        int       `json:"expires_in"` // seconds
-	RefreshExpiresAt time.Time `json:"-"`           // used by handler for cookie, not serialized
+	ExpiresIn        int       `json:"expires_in"`      // seconds
+	RefreshExpiresAt time.Time `json:"-"`                // used by handler for cookie, not serialized
+	MFARequired      bool      `json:"mfa_required,omitempty"` // true when MFA pending
+	MFAToken         string    `json:"mfa_token,omitempty"`    // temp JWT for MFA verification
 }
 
 // UserInfo holds the current user's profile data.
@@ -138,6 +142,32 @@ func (a *Auth) Login(ctx context.Context, req LoginRequest) (*TokenPair, error) 
 
 	// Success — reset failed logins, record login
 	a.recordSuccessfulLogin(ctx, userID, req.IP)
+
+	// Check MFA
+	mfaRequired, err := a.CheckMFARequired(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("check MFA: %w", err)
+	}
+	if mfaRequired {
+		// Return a short-lived MFA token instead of real tokens.
+		// The user must complete MFA verification to get access/refresh tokens.
+		mfaClaims := sdajwt.Claims{
+			UserID:   userID,
+			Email:    email,
+			Name:     name,
+			TenantID: a.tenant.ID,
+			Slug:     a.tenant.Slug,
+			Role:     "mfa_pending", // not a real role — signals MFA is pending
+		}
+		mfaClaims.ID = uuid.New().String()
+		mfaCfg := a.jwtCfg
+		mfaCfg.AccessExpiry = 5 * time.Minute // short-lived
+		mfaToken, err := sdajwt.CreateAccess(mfaCfg, mfaClaims)
+		if err != nil {
+			return nil, fmt.Errorf("create MFA token: %w", err)
+		}
+		return &TokenPair{MFARequired: true, MFAToken: mfaToken}, nil
+	}
 
 	// Get primary role
 	role, err := a.getPrimaryRole(ctx, userID)
@@ -208,6 +238,77 @@ func (a *Auth) Login(ctx context.Context, req LoginRequest) (*TokenPair, error) 
 	// Publish login event for notifications
 	a.publishEvent("auth.login_success", userID, name, email, map[string]string{
 		"ip": req.IP,
+	})
+
+	return &TokenPair{
+		AccessToken:      accessToken,
+		RefreshToken:     refreshToken,
+		ExpiresIn:        int(a.jwtCfg.AccessExpiry.Seconds()),
+		RefreshExpiresAt: time.Now().Add(a.jwtCfg.RefreshExpiry),
+	}, nil
+}
+
+// CompleteMFALogin verifies the TOTP code and issues real tokens.
+// Called after the user passes the MFA challenge.
+func (a *Auth) CompleteMFALogin(ctx context.Context, mfaToken, code string) (*TokenPair, error) {
+	// Verify the MFA temp token
+	claims, err := sdajwt.Verify(a.jwtCfg.PublicKey, mfaToken)
+	if err != nil {
+		return nil, ErrInvalidRefreshToken
+	}
+	if claims.Role != "mfa_pending" {
+		return nil, ErrInvalidRefreshToken
+	}
+
+	// Verify TOTP code
+	if err := a.VerifyMFA(ctx, claims.UserID, code); err != nil {
+		return nil, err
+	}
+
+	// Issue real tokens (same as post-password login)
+	role, err := a.getPrimaryRole(ctx, claims.UserID)
+	if err != nil {
+		return nil, fmt.Errorf("get role: %w", err)
+	}
+	permissions, err := a.getPermissions(ctx, claims.UserID)
+	if err != nil {
+		return nil, fmt.Errorf("get permissions: %w", err)
+	}
+
+	accessClaims := sdajwt.Claims{
+		UserID:      claims.UserID,
+		Email:       claims.Email,
+		Name:        claims.Name,
+		TenantID:    a.tenant.ID,
+		Slug:        a.tenant.Slug,
+		Role:        role,
+		Permissions: permissions,
+	}
+	accessClaims.ID = uuid.New().String()
+	refreshClaims := accessClaims
+	refreshClaims.ID = uuid.New().String()
+
+	accessToken, err := sdajwt.CreateAccess(a.jwtCfg, accessClaims)
+	if err != nil {
+		return nil, fmt.Errorf("create access token: %w", err)
+	}
+	refreshToken, err := sdajwt.CreateRefresh(a.jwtCfg, refreshClaims)
+	if err != nil {
+		return nil, fmt.Errorf("create refresh token: %w", err)
+	}
+
+	refreshHash := hashToken(refreshToken)
+	_, err = a.db.Exec(ctx,
+		`INSERT INTO refresh_tokens (user_id, token_hash, expires_at) VALUES ($1, $2, $3)`,
+		claims.UserID, refreshHash, time.Now().Add(a.jwtCfg.RefreshExpiry),
+	)
+	if err != nil {
+		return nil, fmt.Errorf("store refresh token: %w", err)
+	}
+
+	a.auditor.Write(ctx, audit.Entry{
+		UserID: claims.UserID, Action: "user.login", Resource: claims.Email,
+		Details: map[string]any{"mfa": true},
 	})
 
 	return &TokenPair{
