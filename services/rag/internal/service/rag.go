@@ -39,16 +39,22 @@ func NewRAG(cfg Config) *RAG {
 
 // GenerateRequest holds the input for a RAG query.
 type GenerateRequest struct {
-	Messages         []ChatMessage `json:"messages"`
-	Model            string        `json:"model,omitempty"`
-	CollectionName   string        `json:"collection_name,omitempty"`
-	Stream           bool          `json:"stream"`
-	Temperature      float64       `json:"temperature,omitempty"`
-	TopP             float64       `json:"top_p,omitempty"`
-	MaxTokens        int           `json:"max_tokens,omitempty"`
-	VdbTopK          int           `json:"vdb_top_k,omitempty"`
-	RerankerTopK     int           `json:"reranker_top_k,omitempty"`
-	UseKnowledgeBase bool          `json:"use_knowledge_base"`
+	Messages         []ChatMessage  `json:"messages"`
+	Model            string         `json:"model,omitempty"`
+	CollectionName   string         `json:"collection_name,omitempty"`
+	Stream           bool           `json:"stream"`
+	Temperature      float64        `json:"temperature,omitempty"`
+	TopP             float64        `json:"top_p,omitempty"`
+	MaxTokens        int            `json:"max_tokens,omitempty"`
+	VdbTopK          int            `json:"vdb_top_k,omitempty"`
+	RerankerTopK     int            `json:"reranker_top_k,omitempty"`
+	UseKnowledgeBase bool           `json:"use_knowledge_base"`
+	Reasoning        *ReasoningCfg  `json:"reasoning,omitempty"`
+}
+
+// ReasoningCfg enables extended thinking for supported models.
+type ReasoningCfg struct {
+	Effort string `json:"effort,omitempty"` // "low", "medium", "high"
 }
 
 // ChatMessage is a single message in the conversation.
@@ -67,6 +73,7 @@ func (r *RAG) GenerateStream(ctx context.Context, tenantSlug string, req Generat
 			collection = tenantSlug + "-" + collection
 		}
 		req.CollectionName = collection
+		req.Reasoning = nil // Blueprint doesn't understand this field
 	} else {
 		// OpenRouter/external mode: inject model if configured
 		if r.cfg.Model != "" && req.Model == "" {

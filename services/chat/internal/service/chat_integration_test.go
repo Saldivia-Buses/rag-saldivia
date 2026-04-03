@@ -75,6 +75,7 @@ func setupTestDB(t *testing.T) (*pgxpool.Pool, func()) {
 			session_id TEXT NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
 			role TEXT NOT NULL CHECK (role IN ('user', 'assistant', 'system')),
 			content TEXT NOT NULL,
+			thinking TEXT,
 			sources JSONB,
 			metadata JSONB,
 			created_at TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -187,7 +188,7 @@ func TestAddMessage_and_GetMessages_Integration(t *testing.T) {
 
 	session, _ := svc.CreateSession(ctx, "u-1", "Chat", nil)
 
-	msg, err := svc.AddMessage(ctx, session.ID, "u-1", "user", "Hola", nil, nil)
+	msg, err := svc.AddMessage(ctx, session.ID, "u-1", "user", "Hola", nil, nil, nil)
 	if err != nil {
 		t.Fatalf("add message: %v", err)
 	}
@@ -195,7 +196,7 @@ func TestAddMessage_and_GetMessages_Integration(t *testing.T) {
 		t.Errorf("expected content 'Hola', got %q", msg.Content)
 	}
 
-	svc.AddMessage(ctx, session.ID, "u-1", "assistant", "Hola! En que puedo ayudarte?", nil, nil)
+	svc.AddMessage(ctx, session.ID, "u-1", "assistant", "Hola! En que puedo ayudarte?", nil, nil, nil)
 
 	messages, err := svc.GetMessages(ctx, session.ID)
 	if err != nil {
@@ -240,8 +241,8 @@ func TestDeleteSession_CascadesMessages_Integration(t *testing.T) {
 	ctx := context.Background()
 
 	session, _ := svc.CreateSession(ctx, "u-1", "Chat", nil)
-	svc.AddMessage(ctx, session.ID, "u-1", "user", "msg1", nil, nil)
-	svc.AddMessage(ctx, session.ID, "u-1", "assistant", "msg2", nil, nil)
+	svc.AddMessage(ctx, session.ID, "u-1", "user", "msg1", nil, nil, nil)
+	svc.AddMessage(ctx, session.ID, "u-1", "assistant", "msg2", nil, nil, nil)
 
 	svc.DeleteSession(ctx, session.ID, "u-1")
 

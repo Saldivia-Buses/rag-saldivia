@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -17,7 +18,32 @@ import {
 import { cn } from "@/lib/utils";
 import { api, ApiError } from "@/lib/api/client";
 import {
+  Reasoning,
+  ReasoningTrigger,
+  ReasoningContent,
+} from "@/components/ai-elements/reasoning";
+import { Streamdown } from "streamdown";
+import { code } from "@streamdown/code";
+import { createMathPlugin } from "@streamdown/math";
+import "katex/dist/katex.min.css";
+
+const mathPlugin = createMathPlugin({ singleDollarTextMath: true });
+import { MODELS, DEFAULT_MODEL, type LLMModel } from "@/lib/models";
+import {
+  ModelSelector,
+  ModelSelectorTrigger,
+  ModelSelectorContent,
+  ModelSelectorInput,
+  ModelSelectorList,
+  ModelSelectorEmpty,
+  ModelSelectorGroup,
+  ModelSelectorItem,
+  ModelSelectorLogo,
+  ModelSelectorName,
+} from "@/components/ai-elements/model-selector";
+import {
   ArrowUpIcon,
+  ChevronDownIcon,
   PlusIcon,
   SquareIcon,
   Trash2Icon,
@@ -51,6 +77,7 @@ interface ApiMessage {
   id: string;
   role: "user" | "assistant" | "system";
   content: string;
+  thinking?: string | null;
   sources?: Array<{ document_name: string; content: string; score: number }>;
   created_at: string;
 }
@@ -75,7 +102,7 @@ function ChatSidebar({
   return (
     <div className="hidden md:flex w-72 shrink-0 border-r flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b">
+      <div className="flex items-center justify-between px-4 py-3">
         <h2 className="font-semibold text-lg">Chats</h2>
         <Button
           onClick={onNewSession}
@@ -105,16 +132,16 @@ function ChatSidebar({
             <div
               key={session.id}
               className={cn(
-                "group flex items-start justify-between gap-2 border-b px-4 py-3 cursor-pointer transition-colors",
+                "group flex items-start justify-between gap-2 px-3 py-2.5 cursor-pointer transition-colors rounded-md mx-2",
                 activeSessionId === session.id
-                  ? "bg-accent/50"
-                  : "hover:bg-muted/50",
+                  ? "bg-accent/60"
+                  : "hover:bg-muted",
               )}
               onClick={() => onSelectSession(session.id)}
             >
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium truncate">{session.title}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
+                <p className="text-[13px] text-muted-foreground mt-0.5">
                   {formatRelativeDate(session.created_at)}
                 </p>
               </div>
@@ -141,9 +168,26 @@ export default function ChatPage() {
   const [input, setInput] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingContent, setStreamingContent] = useState("");
-  const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const [thinkingContent, setThinkingContent] = useState("");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const activeSessionId = searchParams.get("s");
+  const [selectedModel, setSelectedModel] = useState<LLMModel>(DEFAULT_MODEL);
+  const [modelSelectorOpen, setModelSelectorOpen] = useState(false);
+  const setActiveSessionId = useCallback(
+    (id: string | null) => {
+      if (id) {
+        router.push(`/chat?s=${id}`);
+      } else {
+        router.push("/chat");
+      }
+    },
+    [router],
+  );
+
   const abortRef = useRef<AbortController | null>(null);
   const streamRef = useRef(""); // tracks streaming content synchronously
+  const thinkingRef = useRef(""); // tracks thinking content synchronously
   const queryClient = useQueryClient();
 
   // Fetch sessions
@@ -211,7 +255,7 @@ export default function ChatPage() {
         setActiveSessionId(null);
       }
     },
-    [activeSessionId, deleteSessionMutation],
+    [activeSessionId, deleteSessionMutation, setActiveSessionId],
   );
 
   const handleSubmit = useCallback(async () => {
@@ -245,24 +289,44 @@ export default function ChatPage() {
     // Stream RAG response
     setIsStreaming(true);
     setStreamingContent("");
+    setThinkingContent("");
     streamRef.current = "";
+    thinkingRef.current = "";
 
     try {
-      for await (const chunk of api.stream("/v1/rag/generate", {
-        messages: [{ role: "user", content }],
+      // Build full conversation history for context
+      const history = messages.map((m) => ({
+        role: m.role as "user" | "assistant",
+        content: m.content,
+      }));
+      history.push({ role: "user", content });
+
+      for await (const chunk of api.streamWithThinking("/v1/rag/generate", {
+        messages: history,
+        model: selectedModel.id,
         stream: true,
         use_knowledge_base: true,
+        ...(selectedModel.supportsReasoning
+          ? { reasoning: { effort: "medium" } }
+          : {}),
       })) {
-        streamRef.current += chunk;
-        setStreamingContent(streamRef.current);
+        if (chunk.type === "thinking") {
+          thinkingRef.current += chunk.text;
+          setThinkingContent(thinkingRef.current);
+        } else {
+          streamRef.current += chunk.text;
+          setStreamingContent(streamRef.current);
+        }
       }
 
       // Store assistant message in backend using the ref (always current)
       const finalContent = streamRef.current;
+      const finalThinking = thinkingRef.current || undefined;
       if (finalContent) {
-        await api.post(`/v1/chat/sessions/${sessionId}/messages`, {
+        const saved = await api.post<ApiMessage>(`/v1/chat/sessions/${sessionId}/messages`, {
           role: "assistant",
           content: finalContent,
+          thinking: finalThinking,
         });
 
         // Refetch messages — streaming content stays visible until data arrives
@@ -279,7 +343,9 @@ export default function ChatPage() {
     } finally {
       setIsStreaming(false);
       setStreamingContent("");
+      setThinkingContent("");
       streamRef.current = "";
+      thinkingRef.current = "";
     }
   }, [input, isStreaming, activeSessionId, queryClient, sendMessageMutation]);
 
@@ -291,12 +357,14 @@ export default function ChatPage() {
   // Combine persisted messages with streaming content
   const displayMessages = [
     ...messages,
-    ...(streamingContent
+    ...((streamingContent || thinkingContent)
       ? [
           {
             id: "streaming",
             role: "assistant" as const,
             content: streamingContent,
+            thinking: thinkingContent,
+            sources: [] as Array<{ document_name: string; content: string; score: number }>,
             created_at: new Date().toISOString(),
           },
         ]
@@ -316,7 +384,7 @@ export default function ChatPage() {
       />
 
       {/* Chat area */}
-      <div className="flex flex-1 flex-col min-h-0 min-w-0">
+      <div className="flex flex-1 flex-col min-h-0 min-w-0 relative">
         {/* Messages */}
         <ChatContainerRoot className="flex-1">
           <ChatContainerContent className="max-w-3xl mx-auto w-full px-4 py-6 gap-6">
@@ -344,13 +412,40 @@ export default function ChatPage() {
               >
                 <div
                   className={cn(
-                    "max-w-[80%] text-sm whitespace-pre-wrap",
+                    "max-w-[80%] text-sm",
                     message.role === "user"
-                      ? "rounded-2xl bg-muted px-4 py-2.5"
-                      : "text-foreground leading-relaxed",
+                      ? "rounded-2xl bg-muted px-4 py-2.5 whitespace-pre-wrap"
+                      : "text-foreground leading-relaxed prose prose-sm dark:prose-invert prose-p:my-1 prose-headings:my-2 prose-pre:my-2 prose-ul:my-1 prose-ol:my-1 max-w-none",
                   )}
                 >
-                  {message.content}
+                  {/* Reasoning block (above response content) */}
+                  {(message.thinking || null) && (
+                    <Reasoning
+                      isStreaming={message.id === "streaming" && isStreaming && !message.content}
+                    >
+                      <ReasoningTrigger
+                        getThinkingMessage={(streaming, duration) => {
+                          if (streaming || duration === 0)
+                            return <span className="text-muted-foreground">Pensando...</span>;
+                          if (duration === undefined)
+                            return <span>Penso unos segundos</span>;
+                          return <span>Penso {duration} segundos</span>;
+                        }}
+                      />
+                      <ReasoningContent>
+                        {message.thinking || null || ""}
+                      </ReasoningContent>
+                    </Reasoning>
+                  )}
+                  {message.role === "user" ? (
+                    message.content
+                  ) : (
+                    message.content && (
+                      <Streamdown plugins={{ code, math: mathPlugin }}>
+                        {message.content}
+                      </Streamdown>
+                    )
+                  )}
                   {message.sources && message.sources.length > 0 && (
                     <div className="mt-3 flex flex-wrap gap-1.5">
                       {message.sources.map((src, i) => (
@@ -367,7 +462,7 @@ export default function ChatPage() {
               </div>
             ))}
 
-            {isStreaming && !streamingContent && (
+            {isStreaming && !streamingContent && !thinkingContent && (
               <div className="flex justify-start">
                 <div className="text-sm text-muted-foreground">
                   <span className="inline-flex gap-1">
@@ -383,9 +478,12 @@ export default function ChatPage() {
           </ChatContainerContent>
         </ChatContainerRoot>
 
-        {/* Input */}
-        <div className="border-t bg-background p-4">
-          <div className="mx-auto max-w-3xl">
+        {/* Fade gradient — chat disappears behind the input */}
+        <div className="pointer-events-none h-8 -mt-8 bg-gradient-to-t from-background to-transparent relative z-10" />
+
+        {/* Input — no border, seamless with chat */}
+        <div className="bg-background p-4 pb-6 relative z-10">
+          <div className="mx-auto max-w-3xl flex flex-col gap-2">
             <PromptInput
               value={input}
               onValueChange={setInput}
@@ -393,11 +491,81 @@ export default function ChatPage() {
               onSubmit={handleSubmit}
             >
               <PromptInputTextarea placeholder="Escribi tu mensaje..." />
-              <PromptInputActions>
+              <PromptInputActions className="justify-between">
+                {/* Model selector */}
+                <ModelSelector
+                  open={modelSelectorOpen}
+                  onOpenChange={setModelSelectorOpen}
+                >
+                  <ModelSelectorTrigger
+                    render={
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="gap-2 text-sm text-muted-foreground hover:text-foreground h-9 px-3"
+                      />
+                    }
+                  >
+                    <ModelSelectorLogo
+                      provider={selectedModel.providerLogo}
+                      className="size-5"
+                    />
+                    <span className="hidden sm:inline">
+                      {selectedModel.name}
+                    </span>
+                    <ChevronDownIcon className="size-3.5 opacity-50" />
+                  </ModelSelectorTrigger>
+                  <ModelSelectorContent
+                    title="Elegir modelo"
+                    className="sm:max-w-md"
+                  >
+                    <ModelSelectorInput
+                      placeholder="Buscar modelo..."
+                      autoFocus
+                      onKeyDown={(e) => e.stopPropagation()}
+                    />
+                    <ModelSelectorList className="max-h-[400px]">
+                      <ModelSelectorEmpty>
+                        No se encontraron modelos
+                      </ModelSelectorEmpty>
+                      <ModelSelectorGroup heading="Modelos disponibles">
+                        {MODELS.map((model) => (
+                          <ModelSelectorItem
+                            key={model.id}
+                            value={model.id}
+                            onSelect={() => {
+                              setSelectedModel(model);
+                              setModelSelectorOpen(false);
+                            }}
+                            className="flex items-center gap-3.5 py-3 px-3"
+                          >
+                            <ModelSelectorLogo
+                              provider={model.providerLogo}
+                              className="size-6 shrink-0"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <ModelSelectorName className="text-sm font-medium">
+                                {model.name}
+                              </ModelSelectorName>
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                {model.description}
+                              </p>
+                            </div>
+                            <span className="text-xs text-muted-foreground shrink-0">
+                              {model.contextWindow}
+                            </span>
+                          </ModelSelectorItem>
+                        ))}
+                      </ModelSelectorGroup>
+                    </ModelSelectorList>
+                  </ModelSelectorContent>
+                </ModelSelector>
+
+                {/* Send / Stop */}
                 <Button
                   variant="default"
                   size="icon"
-                  className="size-8 rounded-full"
+                  className="size-9 rounded-full"
                   disabled={!isStreaming && !input.trim()}
                   onClick={isStreaming ? handleStop : handleSubmit}
                 >

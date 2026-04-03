@@ -35,8 +35,9 @@ type Message struct {
 	SessionID string          `json:"session_id"`
 	Role      string          `json:"role"`
 	Content   string          `json:"content"`
-	Sources   []byte          `json:"sources,omitempty"`  // raw JSON
-	Metadata  []byte          `json:"metadata,omitempty"` // raw JSON
+	Thinking  *string         `json:"thinking,omitempty"`  // model reasoning/thinking
+	Sources   []byte          `json:"sources,omitempty"`   // raw JSON
+	Metadata  []byte          `json:"metadata,omitempty"`  // raw JSON
 	CreatedAt time.Time       `json:"created_at"`
 }
 
@@ -151,7 +152,7 @@ func (c *Chat) RenameSession(ctx context.Context, sessionID, userID, title strin
 }
 
 // AddMessage adds a message to a session.
-func (c *Chat) AddMessage(ctx context.Context, sessionID, userID, role, content string, sources, metadata []byte) (*Message, error) {
+func (c *Chat) AddMessage(ctx context.Context, sessionID, userID, role, content string, thinking *string, sources, metadata []byte) (*Message, error) {
 	// Default metadata to empty JSON object if nil (column is NOT NULL)
 	if metadata == nil {
 		metadata = []byte("{}")
@@ -159,11 +160,11 @@ func (c *Chat) AddMessage(ctx context.Context, sessionID, userID, role, content 
 
 	var m Message
 	err := c.db.QueryRow(ctx,
-		`INSERT INTO messages (session_id, role, content, sources, metadata)
-		 VALUES ($1, $2, $3, $4, $5)
-		 RETURNING id, session_id, role, content, sources, metadata, created_at`,
-		sessionID, role, content, sources, metadata,
-	).Scan(&m.ID, &m.SessionID, &m.Role, &m.Content, &m.Sources, &m.Metadata, &m.CreatedAt)
+		`INSERT INTO messages (session_id, role, content, thinking, sources, metadata)
+		 VALUES ($1, $2, $3, $4, $5, $6)
+		 RETURNING id, session_id, role, content, thinking, sources, metadata, created_at`,
+		sessionID, role, content, thinking, sources, metadata,
+	).Scan(&m.ID, &m.SessionID, &m.Role, &m.Content, &m.Thinking, &m.Sources, &m.Metadata, &m.CreatedAt)
 	if err != nil {
 		return nil, fmt.Errorf("add message: %w", err)
 	}
@@ -201,7 +202,7 @@ func truncate(s string, maxLen int) string {
 // GetMessages returns all messages for a session, oldest first.
 func (c *Chat) GetMessages(ctx context.Context, sessionID string) ([]Message, error) {
 	rows, err := c.db.Query(ctx,
-		`SELECT id, session_id, role, content, sources, metadata, created_at
+		`SELECT id, session_id, role, content, thinking, sources, metadata, created_at
 		 FROM messages WHERE session_id = $1
 		 ORDER BY created_at`,
 		sessionID,
@@ -214,7 +215,7 @@ func (c *Chat) GetMessages(ctx context.Context, sessionID string) ([]Message, er
 	var messages []Message
 	for rows.Next() {
 		var m Message
-		if err := rows.Scan(&m.ID, &m.SessionID, &m.Role, &m.Content, &m.Sources, &m.Metadata, &m.CreatedAt); err != nil {
+		if err := rows.Scan(&m.ID, &m.SessionID, &m.Role, &m.Content, &m.Thinking, &m.Sources, &m.Metadata, &m.CreatedAt); err != nil {
 			return nil, fmt.Errorf("scan message: %w", err)
 		}
 		messages = append(messages, m)
