@@ -87,6 +87,11 @@ type TokenPair struct {
 	MFAToken         string    `json:"mfa_token,omitempty"`    // temp JWT for MFA verification
 }
 
+// UpdateProfileRequest holds allowed profile updates.
+type UpdateProfileRequest struct {
+	Name string
+}
+
 // UserInfo holds the current user's profile data.
 type UserInfo struct {
 	ID         string `json:"id"`
@@ -474,6 +479,32 @@ func (a *Auth) Me(ctx context.Context, userID string) (*UserInfo, error) {
 		TenantID:   a.tenant.ID,
 		TenantSlug: a.tenant.Slug,
 	}, nil
+}
+
+// UpdateProfile updates the authenticated user's profile.
+func (a *Auth) UpdateProfile(ctx context.Context, userID string, req UpdateProfileRequest) (*UserInfo, error) {
+	name := strings.TrimSpace(req.Name)
+	if name == "" {
+		return nil, fmt.Errorf("name is required")
+	}
+	if len(name) > 200 {
+		return nil, fmt.Errorf("name too long")
+	}
+
+	err := a.repo.UpdateUserName(ctx, repository.UpdateUserNameParams{
+		ID:   userID,
+		Name: name,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("update profile: %w", err)
+	}
+
+	a.auditor.Write(ctx, audit.Entry{
+		UserID: userID, Action: "user.profile_updated",
+		Details: map[string]any{"name": name},
+	})
+
+	return a.Me(ctx, userID)
 }
 
 // HashPassword hashes a password with bcrypt.

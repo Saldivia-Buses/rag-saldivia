@@ -138,6 +138,7 @@ func main() {
 	r.Group(func(r chi.Router) {
 		r.Use(sdamw.Auth(publicKey))
 		r.Get("/v1/auth/me", authHandler.Me)
+		r.Patch("/v1/auth/me", authHandler.UpdateMe)
 		r.Get("/v1/modules/enabled", authHandler.EnabledModules)
 		// MFA management (requires authenticated user)
 		r.Post("/v1/auth/mfa/setup", authHandler.SetupMFA)

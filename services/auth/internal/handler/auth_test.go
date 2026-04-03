@@ -58,6 +58,12 @@ func (m *mockAuthService) DisableMFA(_ context.Context, _, _ string) error  { re
 func (m *mockAuthService) CompleteMFALogin(_ context.Context, _, _ string) (*service.TokenPair, error) {
 	return m.tokens, m.err
 }
+func (m *mockAuthService) UpdateProfile(_ context.Context, _ string, _ service.UpdateProfileRequest) (*service.UserInfo, error) {
+	if m.meErr != nil {
+		return nil, m.meErr
+	}
+	return m.userInfo, nil
+}
 
 // --- tests ---
 

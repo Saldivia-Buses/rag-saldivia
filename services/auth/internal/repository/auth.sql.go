@@ -291,6 +291,21 @@ func (q *Queries) StoreRefreshToken(ctx context.Context, arg StoreRefreshTokenPa
 	return err
 }
 
+const updateUserName = `-- name: UpdateUserName :exec
+UPDATE users SET name = $2, updated_at = now()
+WHERE id = $1 AND is_active = true
+`
+
+type UpdateUserNameParams struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
+func (q *Queries) UpdateUserName(ctx context.Context, arg UpdateUserNameParams) error {
+	_, err := q.db.Exec(ctx, updateUserName, arg.ID, arg.Name)
+	return err
+}
+
 const validateRefreshToken = `-- name: ValidateRefreshToken :one
 SELECT EXISTS(
     SELECT 1 FROM refresh_tokens
