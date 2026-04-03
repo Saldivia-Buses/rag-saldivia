@@ -169,7 +169,6 @@ export default function ChatPage() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingContent, setStreamingContent] = useState("");
   const [thinkingContent, setThinkingContent] = useState("");
-  const [savedThinking, setSavedThinking] = useState<Record<string, string>>({}); // messageId → thinking
   const router = useRouter();
   const searchParams = useSearchParams();
   const activeSessionId = searchParams.get("s");
@@ -330,11 +329,6 @@ export default function ChatPage() {
           thinking: finalThinking,
         });
 
-        // Save thinking for this message so it persists across re-renders
-        if (finalThinking && saved?.id) {
-          setSavedThinking((prev) => ({ ...prev, [saved.id]: finalThinking }));
-        }
-
         // Refetch messages — streaming content stays visible until data arrives
         await queryClient.invalidateQueries({
           queryKey: ["chat", "messages", sessionId],
@@ -348,10 +342,10 @@ export default function ChatPage() {
       }
     } finally {
       setIsStreaming(false);
-      // Clear streaming content (thinking stays visible — Reasoning component
-      // auto-collapses it, and it persists as part of the message)
       setStreamingContent("");
+      setThinkingContent("");
       streamRef.current = "";
+      thinkingRef.current = "";
     }
   }, [input, isStreaming, activeSessionId, queryClient, sendMessageMutation]);
 
@@ -425,7 +419,7 @@ export default function ChatPage() {
                   )}
                 >
                   {/* Reasoning block (above response content) */}
-                  {(message.thinking || savedThinking[message.id]) && (
+                  {(message.thinking || null) && (
                     <Reasoning
                       isStreaming={message.id === "streaming" && isStreaming && !message.content}
                     >
@@ -439,7 +433,7 @@ export default function ChatPage() {
                         }}
                       />
                       <ReasoningContent>
-                        {message.thinking || savedThinking[message.id] || ""}
+                        {message.thinking || null || ""}
                       </ReasoningContent>
                     </Reasoning>
                   )}
