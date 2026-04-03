@@ -89,7 +89,7 @@ function ChatSidebar({
   return (
     <div className="hidden md:flex w-72 shrink-0 border-r flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b">
+      <div className="flex items-center justify-between px-4 py-3">
         <h2 className="font-semibold text-lg">Chats</h2>
         <Button
           onClick={onNewSession}
@@ -119,16 +119,16 @@ function ChatSidebar({
             <div
               key={session.id}
               className={cn(
-                "group flex items-start justify-between gap-2 px-4 py-2.5 cursor-pointer transition-colors rounded-md mx-2",
+                "group flex items-start justify-between gap-2 px-3 py-2.5 cursor-pointer transition-colors rounded-md mx-2",
                 activeSessionId === session.id
-                  ? "bg-accent/50"
-                  : "hover:bg-muted/50",
+                  ? "bg-accent/60"
+                  : "hover:bg-muted",
               )}
               onClick={() => onSelectSession(session.id)}
             >
               <div className="flex-1 min-w-0">
-                <p className="text-[13px] font-medium truncate">{session.title}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
+                <p className="text-sm font-medium truncate">{session.title}</p>
+                <p className="text-[13px] text-muted-foreground mt-0.5">
                   {formatRelativeDate(session.created_at)}
                 </p>
               </div>
