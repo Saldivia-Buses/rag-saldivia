@@ -15,6 +15,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 
+	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/services/ingest/internal/service"
 )
 
@@ -48,10 +49,10 @@ func NewIngest(svc IngestService) *Ingest {
 // Routes returns a chi router with all ingest routes.
 func (h *Ingest) Routes() chi.Router {
 	r := chi.NewRouter()
-	r.Post("/upload", h.Upload)
-	r.Get("/jobs", h.ListJobs)
-	r.Get("/jobs/{jobID}", h.GetJob)
-	r.Delete("/jobs/{jobID}", h.DeleteJob)
+	r.With(sdamw.RequirePermission("ingest.write")).Post("/upload", h.Upload)
+	r.With(sdamw.RequirePermission("ingest.write")).Get("/jobs", h.ListJobs)
+	r.With(sdamw.RequirePermission("ingest.write")).Get("/jobs/{jobID}", h.GetJob)
+	r.With(sdamw.RequirePermission("ingest.write")).Delete("/jobs/{jobID}", h.DeleteJob)
 	return r
 }
 

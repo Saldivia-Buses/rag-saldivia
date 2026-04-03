@@ -13,6 +13,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
+	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/services/ingest/internal/service"
 )
 
@@ -97,7 +98,13 @@ func makeUploadRequest(t *testing.T, fileName, collection, userID, tenantSlug st
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	req.Header.Set("X-User-ID", userID)
 	req.Header.Set("X-Tenant-Slug", tenantSlug)
+	req = withAdminContext(req)
 	return req
+}
+
+func withAdminContext(req *http.Request) *http.Request {
+	ctx := sdamw.WithRole(req.Context(), "admin")
+	return req.WithContext(ctx)
 }
 
 // --- tests ---
@@ -120,7 +127,7 @@ func TestUpload_Success(t *testing.T) {
 	}
 }
 
-func TestUpload_MissingUserID_Returns401(t *testing.T) {
+func TestUpload_MissingUserID_Returns403(t *testing.T) {
 	r := setupIngestRouter(&mockIngestService{})
 
 	var buf bytes.Buffer
@@ -132,12 +139,12 @@ func TestUpload_MissingUserID_Returns401(t *testing.T) {
 
 	req := httptest.NewRequest(http.MethodPost, "/v1/ingest/upload", &buf)
 	req.Header.Set("Content-Type", writer.FormDataContentType())
-	// No X-User-ID or X-Tenant-Slug
+	// No X-User-ID, X-Tenant-Slug, or role — RBAC middleware rejects with 403
 	rec := httptest.NewRecorder()
 	r.ServeHTTP(rec, req)
 
-	if rec.Code != http.StatusUnauthorized {
-		t.Fatalf("expected 401, got %d", rec.Code)
+	if rec.Code != http.StatusForbidden {
+		t.Fatalf("expected 403, got %d", rec.Code)
 	}
 }
 
@@ -202,6 +209,7 @@ func TestUpload_MissingCollection_Returns400(t *testing.T) {
 	req.Header.Set("Content-Type", writer.FormDataContentType())
 	req.Header.Set("X-User-ID", "u-1")
 	req.Header.Set("X-Tenant-Slug", "saldivia")
+	req = withAdminContext(req)
 	rec := httptest.NewRecorder()
 	r.ServeHTTP(rec, req)
 
@@ -222,6 +230,7 @@ func TestListJobs_ReturnsUserJobs(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/v1/ingest/jobs", nil)
 	req.Header.Set("X-User-ID", "u-1")
 	req.Header.Set("X-Tenant-Slug", "saldivia")
+	req = withAdminContext(req)
 	rec := httptest.NewRecorder()
 	r.ServeHTTP(rec, req)
 
@@ -236,15 +245,16 @@ func TestListJobs_ReturnsUserJobs(t *testing.T) {
 	}
 }
 
-func TestListJobs_MissingIdentity_Returns401(t *testing.T) {
+func TestListJobs_MissingIdentity_Returns403(t *testing.T) {
 	r := setupIngestRouter(&mockIngestService{})
 
 	req := httptest.NewRequest(http.MethodGet, "/v1/ingest/jobs", nil)
+	// No identity or role — RBAC middleware rejects with 403
 	rec := httptest.NewRecorder()
 	r.ServeHTTP(rec, req)
 
-	if rec.Code != http.StatusUnauthorized {
-		t.Fatalf("expected 401, got %d", rec.Code)
+	if rec.Code != http.StatusForbidden {
+		t.Fatalf("expected 403, got %d", rec.Code)
 	}
 }
 
@@ -259,6 +269,7 @@ func TestGetJob_OwnerCanAccess(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/v1/ingest/jobs/j-1", nil)
 	req.Header.Set("X-User-ID", "u-1")
 	req.Header.Set("X-Tenant-Slug", "saldivia")
+	req = withAdminContext(req)
 	rec := httptest.NewRecorder()
 	r.ServeHTTP(rec, req)
 
@@ -278,6 +289,7 @@ func TestGetJob_NonOwner_Returns404(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/v1/ingest/jobs/j-1", nil)
 	req.Header.Set("X-User-ID", "u-2")
 	req.Header.Set("X-Tenant-Slug", "saldivia")
+	req = withAdminContext(req)
 	rec := httptest.NewRecorder()
 	r.ServeHTTP(rec, req)
 
@@ -297,6 +309,7 @@ func TestDeleteJob_Success(t *testing.T) {
 	req := httptest.NewRequest(http.MethodDelete, "/v1/ingest/jobs/j-1", nil)
 	req.Header.Set("X-User-ID", "u-1")
 	req.Header.Set("X-Tenant-Slug", "saldivia")
+	req = withAdminContext(req)
 	rec := httptest.NewRecorder()
 	r.ServeHTTP(rec, req)
 
@@ -312,6 +325,7 @@ func TestListJobs_ServiceError_Returns500_GenericMessage(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/v1/ingest/jobs", nil)
 	req.Header.Set("X-User-ID", "u-1")
 	req.Header.Set("X-Tenant-Slug", "saldivia")
+	req = withAdminContext(req)
 	rec := httptest.NewRecorder()
 	r.ServeHTTP(rec, req)
 
@@ -332,6 +346,7 @@ func TestDeleteJob_NotFound_Returns404(t *testing.T) {
 	req := httptest.NewRequest(http.MethodDelete, "/v1/ingest/jobs/nonexistent", nil)
 	req.Header.Set("X-User-ID", "u-1")
 	req.Header.Set("X-Tenant-Slug", "saldivia")
+	req = withAdminContext(req)
 	rec := httptest.NewRecorder()
 	r.ServeHTTP(rec, req)
 

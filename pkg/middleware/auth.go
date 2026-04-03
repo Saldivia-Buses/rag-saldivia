@@ -63,6 +63,10 @@ func Auth(publicKey ed25519.PublicKey) func(http.Handler) http.Handler {
 				Slug: claims.Slug,
 			})
 
+			// Inject role + permissions into context for RBAC middleware
+			ctx = WithRole(ctx, claims.Role)
+			ctx = WithPermissions(ctx, claims.Permissions)
+
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}

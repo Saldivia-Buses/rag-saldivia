@@ -11,6 +11,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 
+	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/services/rag/internal/service"
 )
 
@@ -34,8 +35,8 @@ func NewRAG(ragSvc RAGService) *RAG {
 // Routes returns a chi router with all RAG routes.
 func (h *RAG) Routes() chi.Router {
 	r := chi.NewRouter()
-	r.Post("/generate", h.Generate)
-	r.Get("/collections", h.ListCollections)
+	r.With(sdamw.RequirePermission("collections.read")).Post("/generate", h.Generate)
+	r.With(sdamw.RequirePermission("collections.read")).Get("/collections", h.ListCollections)
 	return r
 }
 

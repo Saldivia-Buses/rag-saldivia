@@ -12,6 +12,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
+	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/services/chat/internal/service"
 )
 
@@ -121,7 +122,10 @@ func setupRouter(mock *mockChatService) *chi.Mux {
 
 func withUserID(req *http.Request, userID string) *http.Request {
 	req.Header.Set("X-User-ID", userID)
-	return req
+	// Inject admin role + all permissions so RBAC middleware passes in tests.
+	// Tests verify handler logic, not RBAC (RBAC has its own tests in pkg/middleware).
+	ctx := sdamw.WithRole(req.Context(), "admin")
+	return req.WithContext(ctx)
 }
 
 func decodeJSON(t *testing.T, rec *httptest.ResponseRecorder, v any) {

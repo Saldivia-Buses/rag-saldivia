@@ -139,14 +139,21 @@ func (a *Auth) Login(ctx context.Context, req LoginRequest) (*TokenPair, error) 
 		return nil, fmt.Errorf("get role: %w", err)
 	}
 
+	// Load permissions for RBAC
+	permissions, err := a.getPermissions(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("get permissions: %w", err)
+	}
+
 	// Create tokens with separate JTIs
 	accessClaims := sdajwt.Claims{
-		UserID:   userID,
-		Email:    email,
-		Name:     name,
-		TenantID: a.tenant.ID,
-		Slug:     a.tenant.Slug,
-		Role:     role,
+		UserID:      userID,
+		Email:       email,
+		Name:        name,
+		TenantID:    a.tenant.ID,
+		Slug:        a.tenant.Slug,
+		Role:        role,
+		Permissions: permissions,
 	}
 	accessClaims.ID = uuid.New().String()
 
@@ -252,14 +259,21 @@ func (a *Auth) Refresh(ctx context.Context, refreshToken string) (*TokenPair, er
 		return nil, fmt.Errorf("get role for refresh: %w", err)
 	}
 
+	// Load permissions for RBAC
+	permissions, err := a.getPermissions(ctx, claims.UserID)
+	if err != nil {
+		return nil, fmt.Errorf("get permissions for refresh: %w", err)
+	}
+
 	// Issue new token pair
 	newAccessClaims := sdajwt.Claims{
-		UserID:   claims.UserID,
-		Email:    email,
-		Name:     name,
-		TenantID: a.tenant.ID,
-		Slug:     a.tenant.Slug,
-		Role:     role,
+		UserID:      claims.UserID,
+		Email:       email,
+		Name:        name,
+		TenantID:    a.tenant.ID,
+		Slug:        a.tenant.Slug,
+		Role:        role,
+		Permissions: permissions,
 	}
 	newAccessClaims.ID = uuid.New().String()
 
@@ -392,6 +406,31 @@ func (a *Auth) getPrimaryRole(ctx context.Context, userID string) (string, error
 		return "", fmt.Errorf("query role for user %s: %w", userID, err)
 	}
 	return role, nil
+}
+
+func (a *Auth) getPermissions(ctx context.Context, userID string) ([]string, error) {
+	rows, err := a.db.Query(ctx,
+		`SELECT DISTINCT p.id FROM permissions p
+		 JOIN role_permissions rp ON rp.permission_id = p.id
+		 JOIN user_roles ur ON ur.role_id = rp.role_id
+		 WHERE ur.user_id = $1
+		 ORDER BY p.id`,
+		userID,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("query permissions for user %s: %w", userID, err)
+	}
+	defer rows.Close()
+
+	var perms []string
+	for rows.Next() {
+		var p string
+		if err := rows.Scan(&p); err != nil {
+			return nil, fmt.Errorf("scan permission: %w", err)
+		}
+		perms = append(perms, p)
+	}
+	return perms, rows.Err()
 }
 
 func (a *Auth) publishEvent(eventType, userID, name, email string, extra map[string]string) {
