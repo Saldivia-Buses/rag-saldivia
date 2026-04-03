@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/lib/auth/store";
+import { ApiError } from "@/lib/api/client";
 
 interface Login5Props {
   heading?: string;
@@ -32,6 +34,7 @@ const Login5 = ({
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const login = useAuthStore((s) => s.login);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,36 +42,24 @@ const Login5 = ({
     setLoading(true);
 
     try {
-      const res = await fetch("/v1/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (res.status === 401) {
-        setError("Email o contraseña incorrectos");
-        return;
-      }
-      if (res.status === 429) {
-        setError("Demasiados intentos. Intentá de nuevo más tarde.");
-        return;
-      }
-      if (!res.ok) {
-        setError("Error interno. Intentá de nuevo.");
-        return;
-      }
-
-      const data = await res.json();
-
-      // Store tokens
-      const storage = rememberMe ? localStorage : sessionStorage;
-      storage.setItem("access_token", data.access_token);
-      storage.setItem("refresh_token", data.refresh_token);
-
-      // Redirect to dashboard
+      await login(email, password);
+      // Redirect to main app
       window.location.href = "/";
-    } catch {
-      setError("No se pudo conectar al servidor.");
+    } catch (err) {
+      if (err instanceof ApiError) {
+        switch (err.status) {
+          case 401:
+            setError("Email o contrasena incorrectos");
+            break;
+          case 429:
+            setError("Demasiados intentos. Intenta de nuevo mas tarde.");
+            break;
+          default:
+            setError("Error interno. Intenta de nuevo.");
+        }
+      } else {
+        setError("No se pudo conectar al servidor.");
+      }
     } finally {
       setLoading(false);
     }

@@ -3,6 +3,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { ThemeProvider } from "@/lib/theme-provider";
 import { QueryProvider } from "@/lib/api/query-provider";
 import { AuthInitializer } from "@/lib/auth/auth-initializer";
+import { WsProvider } from "@/lib/ws/provider";
 import { fontVariables, fontClassNames } from "@/lib/fonts";
 import { SearchCommand } from "@/components/search-command";
 import "./globals.css";
@@ -37,8 +38,10 @@ export default function RootLayout({
           <ThemeProvider>
             <TooltipProvider>
               <AuthInitializer>
-                <SearchCommand />
-                {children}
+                <WsProvider>
+                  <SearchCommand />
+                  {children}
+                </WsProvider>
               </AuthInitializer>
             </TooltipProvider>
           </ThemeProvider>
