@@ -105,18 +105,20 @@ type RagModel struct {
 }
 
 type Tenant struct {
-	ID          string             `json:"id"`
-	Slug        string             `json:"slug"`
-	Name        string             `json:"name"`
-	PlanID      string             `json:"plan_id"`
-	PostgresUrl string             `json:"postgres_url"`
-	RedisUrl    string             `json:"redis_url"`
-	Enabled     bool               `json:"enabled"`
-	LogoUrl     pgtype.Text        `json:"logo_url"`
-	Domain      pgtype.Text        `json:"domain"`
-	Settings    []byte             `json:"settings"`
-	CreatedAt   pgtype.Timestamptz `json:"created_at"`
-	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+	ID             string             `json:"id"`
+	Slug           string             `json:"slug"`
+	Name           string             `json:"name"`
+	PlanID         string             `json:"plan_id"`
+	PostgresUrl    string             `json:"postgres_url"`
+	RedisUrl       string             `json:"redis_url"`
+	Enabled        bool               `json:"enabled"`
+	LogoUrl        pgtype.Text        `json:"logo_url"`
+	Domain         pgtype.Text        `json:"domain"`
+	Settings       []byte             `json:"settings"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt      pgtype.Timestamptz `json:"updated_at"`
+	PostgresUrlEnc pgtype.Text        `json:"postgres_url_enc"`
+	RedisUrlEnc    pgtype.Text        `json:"redis_url_enc"`
 }
 
 type TenantHealthScore struct {

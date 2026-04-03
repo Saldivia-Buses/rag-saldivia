@@ -14,11 +14,13 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/Camionerou/rag-saldivia/pkg/audit"
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
+	"github.com/Camionerou/rag-saldivia/services/auth/internal/repository"
 )
 
 var (
@@ -48,6 +50,7 @@ type EventPublisher interface {
 // Auth handles authentication operations for a single tenant.
 type Auth struct {
 	db      *pgxpool.Pool
+	repo    *repository.Queries
 	jwtCfg  sdajwt.Config
 	events  EventPublisher
 	auditor *audit.Writer
@@ -59,7 +62,7 @@ type Auth struct {
 
 // NewAuth creates an auth service for a specific tenant.
 func NewAuth(db *pgxpool.Pool, jwtCfg sdajwt.Config, tenantID, tenantSlug string, events EventPublisher) *Auth {
-	a := &Auth{db: db, jwtCfg: jwtCfg, events: events, auditor: audit.NewWriter(db)}
+	a := &Auth{db: db, repo: repository.New(db), jwtCfg: jwtCfg, events: events, auditor: audit.NewWriter(db)}
 	a.tenant.ID = tenantID
 	a.tenant.Slug = tenantSlug
 	return a
@@ -98,19 +101,7 @@ func (a *Auth) Login(ctx context.Context, req LoginRequest) (*TokenPair, error) 
 	// Normalize email
 	email := strings.ToLower(strings.TrimSpace(req.Email))
 
-	var (
-		userID       string
-		name         string
-		passwordHash string
-		isActive     bool
-		failedLogins int
-		lockedUntil  *time.Time
-	)
-
-	err := a.db.QueryRow(ctx,
-		`SELECT id, name, password_hash, is_active, failed_logins, locked_until
-		 FROM users WHERE email = $1`, email,
-	).Scan(&userID, &name, &passwordHash, &isActive, &failedLogins, &lockedUntil)
+	row, err := a.repo.GetUserByEmail(ctx, email)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			// Timing-safe: run bcrypt even when user doesn't exist
@@ -121,6 +112,11 @@ func (a *Auth) Login(ctx context.Context, req LoginRequest) (*TokenPair, error) 
 		return nil, fmt.Errorf("query user: %w", err)
 	}
 
+	userID := row.ID
+	name := row.Name
+	passwordHash := row.PasswordHash
+	isActive := row.IsActive
+
 	// Disabled and locked accounts return the same error as invalid credentials
 	// to prevent information leakage about account state
 	if !isActive {
@@ -128,7 +124,7 @@ func (a *Auth) Login(ctx context.Context, req LoginRequest) (*TokenPair, error) 
 		return nil, ErrInvalidCredentials
 	}
 
-	if lockedUntil != nil && time.Now().Before(*lockedUntil) {
+	if row.LockedUntil.Valid && time.Now().Before(row.LockedUntil.Time) {
 		return nil, ErrAccountLocked
 	}
 
@@ -212,20 +208,16 @@ func (a *Auth) Login(ctx context.Context, req LoginRequest) (*TokenPair, error) 
 	refreshHash := hashToken(refreshToken)
 
 	// Revoke old refresh tokens for this user
-	_, err = a.db.Exec(ctx,
-		`UPDATE refresh_tokens SET revoked_at = now() WHERE user_id = $1 AND revoked_at IS NULL`,
-		userID,
-	)
-	if err != nil {
+	if err := a.repo.RevokeUserRefreshTokens(ctx, userID); err != nil {
 		slog.Warn("failed to revoke old refresh tokens", "error", err, "user_id", userID)
 	}
 
 	// Store new refresh token
-	_, err = a.db.Exec(ctx,
-		`INSERT INTO refresh_tokens (user_id, token_hash, expires_at)
-		 VALUES ($1, $2, $3)`,
-		userID, refreshHash, time.Now().Add(a.jwtCfg.RefreshExpiry),
-	)
+	err = a.repo.StoreRefreshToken(ctx, repository.StoreRefreshTokenParams{
+		UserID:    userID,
+		TokenHash: refreshHash,
+		ExpiresAt: pgtype.Timestamptz{Time: time.Now().Add(a.jwtCfg.RefreshExpiry), Valid: true},
+	})
 	if err != nil {
 		return nil, fmt.Errorf("store refresh token: %w", err)
 	}
@@ -299,10 +291,11 @@ func (a *Auth) CompleteMFALogin(ctx context.Context, mfaToken, code string) (*To
 	}
 
 	refreshHash := hashToken(refreshToken)
-	_, err = a.db.Exec(ctx,
-		`INSERT INTO refresh_tokens (user_id, token_hash, expires_at) VALUES ($1, $2, $3)`,
-		claims.UserID, refreshHash, time.Now().Add(a.jwtCfg.RefreshExpiry),
-	)
+	err = a.repo.StoreRefreshToken(ctx, repository.StoreRefreshTokenParams{
+		UserID:    claims.UserID,
+		TokenHash: refreshHash,
+		ExpiresAt: pgtype.Timestamptz{Time: time.Now().Add(a.jwtCfg.RefreshExpiry), Valid: true},
+	})
 	if err != nil {
 		return nil, fmt.Errorf("store refresh token: %w", err)
 	}
@@ -330,12 +323,10 @@ func (a *Auth) Refresh(ctx context.Context, refreshToken string) (*TokenPair, er
 
 	// Verify the token hash exists in DB and is not revoked
 	tokenHash := hashToken(refreshToken)
-	var exists bool
-	err = a.db.QueryRow(ctx,
-		`SELECT EXISTS(SELECT 1 FROM refresh_tokens
-		 WHERE token_hash = $1 AND user_id = $2 AND revoked_at IS NULL AND expires_at > now())`,
-		tokenHash, claims.UserID,
-	).Scan(&exists)
+	exists, err := a.repo.ValidateRefreshToken(ctx, repository.ValidateRefreshTokenParams{
+		TokenHash: tokenHash,
+		UserID:    claims.UserID,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("query refresh token: %w", err)
 	}
@@ -344,26 +335,22 @@ func (a *Auth) Refresh(ctx context.Context, refreshToken string) (*TokenPair, er
 	}
 
 	// Revoke the old refresh token (rotation — each token is single-use)
-	_, _ = a.db.Exec(ctx,
-		`UPDATE refresh_tokens SET revoked_at = now() WHERE token_hash = $1`,
-		tokenHash,
-	)
+	_ = a.repo.RevokeRefreshToken(ctx, tokenHash)
 
 	// Re-fetch user data to get current role (may have changed since login)
-	var name, email string
-	var isActive bool
-	err = a.db.QueryRow(ctx,
-		`SELECT name, email, is_active FROM users WHERE id = $1`, claims.UserID,
-	).Scan(&name, &email, &isActive)
+	userRow, err := a.repo.GetUserForRefresh(ctx, claims.UserID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrInvalidRefreshToken
 		}
 		return nil, fmt.Errorf("query user for refresh: %w", err)
 	}
-	if !isActive {
+	if !userRow.IsActive {
 		return nil, ErrInvalidRefreshToken
 	}
+
+	name := userRow.Name
+	email := userRow.Email
 
 	role, err := a.getPrimaryRole(ctx, claims.UserID)
 	if err != nil {
@@ -404,10 +391,11 @@ func (a *Auth) Refresh(ctx context.Context, refreshToken string) (*TokenPair, er
 	// Store new refresh token
 	newHash := hashToken(newRefresh)
 	refreshExpiry := time.Now().Add(a.jwtCfg.RefreshExpiry)
-	_, err = a.db.Exec(ctx,
-		`INSERT INTO refresh_tokens (user_id, token_hash, expires_at) VALUES ($1, $2, $3)`,
-		claims.UserID, newHash, refreshExpiry,
-	)
+	err = a.repo.StoreRefreshToken(ctx, repository.StoreRefreshTokenParams{
+		UserID:    claims.UserID,
+		TokenHash: newHash,
+		ExpiresAt: pgtype.Timestamptz{Time: refreshExpiry, Valid: true},
+	})
 	if err != nil {
 		return nil, fmt.Errorf("store refresh token: %w", err)
 	}
@@ -429,23 +417,15 @@ func (a *Auth) Logout(ctx context.Context, refreshToken string) error {
 	tokenHash := hashToken(refreshToken)
 
 	// Get user_id from the token record for audit logging
-	var userID *string
-	_ = a.db.QueryRow(ctx,
-		`SELECT user_id FROM refresh_tokens WHERE token_hash = $1`, tokenHash,
-	).Scan(&userID)
+	uid := ""
+	if ownerID, err := a.repo.GetRefreshTokenOwner(ctx, tokenHash); err == nil {
+		uid = ownerID
+	}
 
-	_, err := a.db.Exec(ctx,
-		`UPDATE refresh_tokens SET revoked_at = now() WHERE token_hash = $1 AND revoked_at IS NULL`,
-		tokenHash,
-	)
-	if err != nil {
+	if err := a.repo.RevokeRefreshTokenByHash(ctx, tokenHash); err != nil {
 		return fmt.Errorf("revoke refresh token: %w", err)
 	}
 
-	uid := ""
-	if userID != nil {
-		uid = *userID
-	}
 	a.auditor.Write(ctx, audit.Entry{
 		UserID: uid, Action: "user.logout",
 	})
@@ -454,10 +434,7 @@ func (a *Auth) Logout(ctx context.Context, refreshToken string) error {
 
 // Me returns profile info for the authenticated user.
 func (a *Auth) Me(ctx context.Context, userID string) (*UserInfo, error) {
-	var email, name string
-	err := a.db.QueryRow(ctx,
-		`SELECT email, name FROM users WHERE id = $1 AND is_active = true`, userID,
-	).Scan(&email, &name)
+	userRow, err := a.repo.GetActiveUserById(ctx, userID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrUserNotFound
@@ -472,8 +449,8 @@ func (a *Auth) Me(ctx context.Context, userID string) (*UserInfo, error) {
 
 	return &UserInfo{
 		ID:         userID,
-		Email:      email,
-		Name:       name,
+		Email:      userRow.Email,
+		Name:       userRow.Name,
 		Role:       role,
 		TenantID:   a.tenant.ID,
 		TenantSlug: a.tenant.Slug,
@@ -496,40 +473,28 @@ func hashToken(token string) string {
 }
 
 func (a *Auth) recordFailedLogin(ctx context.Context, userID string) {
-	_, err := a.db.Exec(ctx,
-		`UPDATE users SET failed_logins = failed_logins + 1,
-		 locked_until = CASE WHEN failed_logins + 1 >= $2 THEN now() + interval '15 minutes' ELSE locked_until END,
-		 is_active = CASE WHEN failed_logins + 1 >= $3 THEN false ELSE is_active END
-		 WHERE id = $1`,
-		userID, maxFailedLogins, permanentLockoutLogins,
-	)
+	err := a.repo.RecordFailedLogin(ctx, repository.RecordFailedLoginParams{
+		ID:               userID,
+		MaxFailed:        int32(maxFailedLogins),
+		PermanentLockout: int32(permanentLockoutLogins),
+	})
 	if err != nil {
 		slog.Error("failed to record failed login", "error", err, "user_id", userID)
 	}
 }
 
 func (a *Auth) recordSuccessfulLogin(ctx context.Context, userID, ip string) {
-	_, err := a.db.Exec(ctx,
-		`UPDATE users SET failed_logins = 0, locked_until = NULL,
-		 last_login_at = now(), last_login_ip = $2
-		 WHERE id = $1`,
-		userID, ip,
-	)
+	err := a.repo.RecordSuccessfulLogin(ctx, repository.RecordSuccessfulLoginParams{
+		ID:          userID,
+		LastLoginIp: pgtype.Text{String: ip, Valid: ip != ""},
+	})
 	if err != nil {
 		slog.Error("failed to record successful login", "error", err, "user_id", userID)
 	}
 }
 
 func (a *Auth) getPrimaryRole(ctx context.Context, userID string) (string, error) {
-	var role string
-	err := a.db.QueryRow(ctx,
-		`SELECT r.name FROM roles r
-		 JOIN user_roles ur ON ur.role_id = r.id
-		 WHERE ur.user_id = $1
-		 ORDER BY CASE r.name WHEN 'admin' THEN 1 WHEN 'manager' THEN 2 WHEN 'user' THEN 3 ELSE 4 END
-		 LIMIT 1`,
-		userID,
-	).Scan(&role)
+	role, err := a.repo.GetPrimaryRole(ctx, userID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return "user", nil // no role assigned, default
@@ -540,28 +505,11 @@ func (a *Auth) getPrimaryRole(ctx context.Context, userID string) (string, error
 }
 
 func (a *Auth) getPermissions(ctx context.Context, userID string) ([]string, error) {
-	rows, err := a.db.Query(ctx,
-		`SELECT DISTINCT p.id FROM permissions p
-		 JOIN role_permissions rp ON rp.permission_id = p.id
-		 JOIN user_roles ur ON ur.role_id = rp.role_id
-		 WHERE ur.user_id = $1
-		 ORDER BY p.id`,
-		userID,
-	)
+	perms, err := a.repo.GetPermissions(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("query permissions for user %s: %w", userID, err)
 	}
-	defer rows.Close()
-
-	var perms []string
-	for rows.Next() {
-		var p string
-		if err := rows.Scan(&p); err != nil {
-			return nil, fmt.Errorf("scan permission: %w", err)
-		}
-		perms = append(perms, p)
-	}
-	return perms, rows.Err()
+	return perms, nil
 }
 
 func (a *Auth) publishEvent(eventType, userID, name, email string, extra map[string]string) {

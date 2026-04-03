@@ -88,9 +88,24 @@ FROM tenants
 WHERE slug = $1 AND enabled = true
 `
 
-func (q *Queries) GetTenantBySlug(ctx context.Context, slug string) (Tenant, error) {
+type GetTenantBySlugRow struct {
+	ID          string             `json:"id"`
+	Slug        string             `json:"slug"`
+	Name        string             `json:"name"`
+	PlanID      string             `json:"plan_id"`
+	PostgresUrl string             `json:"postgres_url"`
+	RedisUrl    string             `json:"redis_url"`
+	Enabled     bool               `json:"enabled"`
+	LogoUrl     pgtype.Text        `json:"logo_url"`
+	Domain      pgtype.Text        `json:"domain"`
+	Settings    []byte             `json:"settings"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+}
+
+func (q *Queries) GetTenantBySlug(ctx context.Context, slug string) (GetTenantBySlugRow, error) {
 	row := q.db.QueryRow(ctx, getTenantBySlug, slug)
-	var i Tenant
+	var i GetTenantBySlugRow
 	err := row.Scan(
 		&i.ID,
 		&i.Slug,

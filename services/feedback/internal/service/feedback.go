@@ -7,7 +7,10 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/Camionerou/rag-saldivia/services/feedback/internal/repository"
 )
 
 // FeedbackEvent represents a single feedback event to be stored.
@@ -26,11 +29,22 @@ type FeedbackEvent struct {
 type Feedback struct {
 	tenantDB   *pgxpool.Pool
 	platformDB *pgxpool.Pool
+	repo       *repository.Queries
 }
 
 // NewFeedback creates a feedback service.
 func NewFeedback(tenantDB, platformDB *pgxpool.Pool) *Feedback {
-	return &Feedback{tenantDB: tenantDB, platformDB: platformDB}
+	return &Feedback{
+		tenantDB:   tenantDB,
+		platformDB: platformDB,
+		repo:       repository.New(tenantDB),
+	}
+}
+
+// Repo returns the underlying repository queries for direct use by other
+// components (e.g. aggregator, handler) that need tenant DB access.
+func (f *Feedback) Repo() *repository.Queries {
+	return f.repo
 }
 
 // RecordEvent persists a feedback event in the tenant DB.
@@ -44,13 +58,16 @@ func (f *Feedback) RecordEvent(ctx context.Context, evt FeedbackEvent) error {
 		ctxJSON = json.RawMessage("{}")
 	}
 
-	_, err := f.tenantDB.Exec(ctx,
-		`INSERT INTO feedback_events (category, module, user_id, score, thumbs, severity, context, comment)
-		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-		evt.Category, evt.Module, nullIfEmpty(evt.UserID),
-		evt.Score, nullIfEmpty(evt.Thumbs), nullIfEmpty(evt.Severity),
-		ctxJSON, nullIfEmpty(evt.Comment),
-	)
+	err := f.repo.InsertFeedbackEvent(ctx, repository.InsertFeedbackEventParams{
+		Category: evt.Category,
+		Module:   evt.Module,
+		UserID:   pgtext(evt.UserID),
+		Score:    pgint(evt.Score),
+		Thumbs:   pgtext(evt.Thumbs),
+		Severity: pgtext(evt.Severity),
+		Context:  ctxJSON,
+		Comment:  pgtext(evt.Comment),
+	})
 	if err != nil {
 		return fmt.Errorf("insert feedback event: %w", err)
 	}
@@ -65,87 +82,70 @@ func (f *Feedback) RecordEvent(ctx context.Context, evt FeedbackEvent) error {
 
 // CountByCategory returns event counts by category for the given time window.
 func (f *Feedback) CountByCategory(ctx context.Context, hours int) (map[string]int, error) {
-	rows, err := f.tenantDB.Query(ctx,
-		`SELECT category, COUNT(*) FROM feedback_events
-		 WHERE created_at > now() - make_interval(hours => $1)
-		 GROUP BY category`,
-		hours,
-	)
+	rows, err := f.repo.CountByCategory(ctx, int32(hours))
 	if err != nil {
 		return nil, fmt.Errorf("count by category: %w", err)
 	}
-	defer rows.Close()
 
 	counts := make(map[string]int)
-	for rows.Next() {
-		var cat string
-		var count int
-		if err := rows.Scan(&cat, &count); err != nil {
-			return nil, fmt.Errorf("scan count: %w", err)
-		}
-		counts[cat] = count
+	for _, row := range rows {
+		counts[row.Category] = int(row.Count)
 	}
 	return counts, nil
 }
 
 // QualityMetrics returns positive/negative/total counts for AI quality feedback.
 func (f *Feedback) QualityMetrics(ctx context.Context, hours int) (positive, negative, total int, avgScore float64, err error) {
-	err = f.tenantDB.QueryRow(ctx,
-		`SELECT
-			COUNT(*) FILTER (WHERE thumbs = 'up') AS positive,
-			COUNT(*) FILTER (WHERE thumbs = 'down') AS negative,
-			COUNT(*) AS total,
-			COALESCE(AVG(score), 0) AS avg_score
-		 FROM feedback_events
-		 WHERE category IN ('response_quality', 'agent_quality', 'extraction', 'detection')
-		   AND created_at > now() - make_interval(hours => $1)`,
-		hours,
-	).Scan(&positive, &negative, &total, &avgScore)
+	row, err := f.repo.QualityMetrics(ctx, int32(hours))
 	if err != nil {
 		err = fmt.Errorf("quality metrics: %w", err)
+		return
 	}
+	positive = int(row.Positive)
+	negative = int(row.Negative)
+	total = int(row.Total)
+	avgScore = row.AvgScore
 	return
 }
 
 // ErrorCounts returns error report counts by severity.
 func (f *Feedback) ErrorCounts(ctx context.Context, hours int) (total, critical, open int, err error) {
-	err = f.tenantDB.QueryRow(ctx,
-		`SELECT
-			COUNT(*) AS total,
-			COUNT(*) FILTER (WHERE severity = 'critical') AS critical,
-			COUNT(*) FILTER (WHERE status = 'open') AS open
-		 FROM feedback_events
-		 WHERE category = 'error_report'
-		   AND created_at > now() - make_interval(hours => $1)`,
-		hours,
-	).Scan(&total, &critical, &open)
+	row, err := f.repo.ErrorCounts(ctx, int32(hours))
 	if err != nil {
 		err = fmt.Errorf("error counts: %w", err)
+		return
 	}
+	total = int(row.Total)
+	critical = int(row.Critical)
+	open = int(row.Open)
 	return
 }
 
 // PerformancePercentiles returns p50, p95, p99 latency from performance events.
 func (f *Feedback) PerformancePercentiles(ctx context.Context, hours int) (p50, p95, p99 float64, err error) {
-	err = f.tenantDB.QueryRow(ctx,
-		`SELECT
-			COALESCE(percentile_cont(0.50) WITHIN GROUP (ORDER BY (context->>'latency_ms')::numeric), 0),
-			COALESCE(percentile_cont(0.95) WITHIN GROUP (ORDER BY (context->>'latency_ms')::numeric), 0),
-			COALESCE(percentile_cont(0.99) WITHIN GROUP (ORDER BY (context->>'latency_ms')::numeric), 0)
-		 FROM feedback_events
-		 WHERE category = 'performance'
-		   AND created_at > now() - make_interval(hours => $1)`,
-		hours,
-	).Scan(&p50, &p95, &p99)
+	row, err := f.repo.PerformancePercentiles(ctx, int32(hours))
 	if err != nil {
 		err = fmt.Errorf("performance percentiles: %w", err)
+		return
 	}
+	p50 = row.P50
+	p95 = row.P95
+	p99 = row.P99
 	return
 }
 
-func nullIfEmpty(s string) *string {
+// pgtext converts a string to pgtype.Text, treating empty strings as NULL.
+func pgtext(s string) pgtype.Text {
 	if s == "" {
-		return nil
+		return pgtype.Text{}
 	}
-	return &s
+	return pgtype.Text{String: s, Valid: true}
+}
+
+// pgint converts a *int to pgtype.Int4.
+func pgint(v *int) pgtype.Int4 {
+	if v == nil {
+		return pgtype.Int4{}
+	}
+	return pgtype.Int4{Int32: int32(*v), Valid: true}
 }

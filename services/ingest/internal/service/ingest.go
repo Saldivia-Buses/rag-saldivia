@@ -18,8 +18,11 @@ import (
 	"time"
 
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/nats-io/nats.go"
+
+	"github.com/Camionerou/rag-saldivia/services/ingest/internal/repository"
 )
 
 var ErrJobNotFound = errors.New("job not found")
@@ -50,6 +53,7 @@ type IngestMessage struct {
 // Ingest manages document upload and job tracking.
 type Ingest struct {
 	pool      *pgxpool.Pool
+	repo      *repository.Queries
 	nc        *nats.Conn
 	publisher EventPublisher
 	cfg       Config
@@ -66,6 +70,7 @@ func New(pool *pgxpool.Pool, nc *nats.Conn, publisher EventPublisher, cfg Config
 
 	return &Ingest{
 		pool:      pool,
+		repo:      repository.New(pool),
 		nc:        nc,
 		publisher: publisher,
 		cfg:       cfg,
@@ -83,6 +88,24 @@ type Job struct {
 	Error      *string   `json:"error,omitempty"`
 	CreatedAt  time.Time `json:"created_at"`
 	UpdatedAt  time.Time `json:"updated_at"`
+}
+
+// toJob converts a sqlc-generated IngestJob to the service-layer Job type.
+func toJob(r repository.IngestJob) Job {
+	j := Job{
+		ID:         r.ID,
+		UserID:     r.UserID,
+		Collection: r.Collection,
+		FileName:   r.FileName,
+		FileSize:   r.FileSize,
+		Status:     r.Status,
+		CreatedAt:  r.CreatedAt.Time,
+		UpdatedAt:  r.UpdatedAt.Time,
+	}
+	if r.Error.Valid {
+		j.Error = &r.Error.String
+	}
+	return j
 }
 
 // Submit stages a document to disk, creates a pending job, and publishes
@@ -112,18 +135,17 @@ func (s *Ingest) Submit(ctx context.Context, tenantSlug, userID, collection, fil
 	}
 
 	// Create job in DB
-	var job Job
-	err = s.pool.QueryRow(ctx,
-		`INSERT INTO ingest_jobs (user_id, collection, file_name, file_size, status)
-		 VALUES ($1, $2, $3, $4, 'pending')
-		 RETURNING id, user_id, collection, file_name, file_size, status, error, created_at, updated_at`,
-		userID, collection, fileName, fileSize,
-	).Scan(&job.ID, &job.UserID, &job.Collection, &job.FileName, &job.FileSize,
-		&job.Status, &job.Error, &job.CreatedAt, &job.UpdatedAt)
+	row, err := s.repo.CreateJob(ctx, repository.CreateJobParams{
+		UserID:     userID,
+		Collection: collection,
+		FileName:   fileName,
+		FileSize:   fileSize,
+	})
 	if err != nil {
 		os.Remove(stagedPath)
 		return nil, fmt.Errorf("create ingest job: %w", err)
 	}
+	job := toJob(row)
 
 	// Publish to NATS for async processing (B3 fix: json.Marshal instead of Sprintf)
 	subject := "tenant." + tenantSlug + ".ingest.process"
@@ -143,7 +165,7 @@ func (s *Ingest) Submit(ctx context.Context, tenantSlug, userID, collection, fil
 	// S7 fix: fail the upload if NATS publish fails — prevents orphaned pending jobs
 	if err := s.nc.Publish(subject, payload); err != nil {
 		os.Remove(stagedPath)
-		s.pool.Exec(ctx, `DELETE FROM ingest_jobs WHERE id = $1`, job.ID)
+		s.repo.DeleteJobByID(ctx, job.ID)
 		return nil, fmt.Errorf("publish ingest job: %w", err)
 	}
 
@@ -156,62 +178,47 @@ func (s *Ingest) ListJobs(ctx context.Context, userID string, limit int) ([]Job,
 		limit = 50
 	}
 
-	rows, err := s.pool.Query(ctx,
-		`SELECT id, user_id, collection, file_name, file_size, status, error, created_at, updated_at
-		 FROM ingest_jobs WHERE user_id = $1 ORDER BY created_at DESC LIMIT $2`,
-		userID, limit)
+	rows, err := s.repo.ListJobsByUser(ctx, repository.ListJobsByUserParams{
+		UserID: userID,
+		Limit:  int32(limit),
+	})
 	if err != nil {
 		return nil, fmt.Errorf("list ingest jobs: %w", err)
 	}
-	defer rows.Close()
 
-	var jobs []Job
-	for rows.Next() {
-		var j Job
-		if err := rows.Scan(&j.ID, &j.UserID, &j.Collection, &j.FileName, &j.FileSize,
-			&j.Status, &j.Error, &j.CreatedAt, &j.UpdatedAt); err != nil {
-			return nil, fmt.Errorf("scan ingest job: %w", err)
-		}
-		jobs = append(jobs, j)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, fmt.Errorf("iterate ingest jobs: %w", err)
-	}
-	if jobs == nil {
-		jobs = []Job{}
+	jobs := make([]Job, len(rows))
+	for i, r := range rows {
+		jobs[i] = toJob(r)
 	}
 	return jobs, nil
 }
 
 // GetJob returns a single job by ID, verifying ownership.
 func (s *Ingest) GetJob(ctx context.Context, jobID, userID string) (*Job, error) {
-	var j Job
-	err := s.pool.QueryRow(ctx,
-		`SELECT id, user_id, collection, file_name, file_size, status, error, created_at, updated_at
-		 FROM ingest_jobs WHERE id = $1`,
-		jobID,
-	).Scan(&j.ID, &j.UserID, &j.Collection, &j.FileName, &j.FileSize,
-		&j.Status, &j.Error, &j.CreatedAt, &j.UpdatedAt)
-	if err == pgx.ErrNoRows {
+	row, err := s.repo.GetJob(ctx, jobID)
+	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, ErrJobNotFound
 	}
 	if err != nil {
 		return nil, fmt.Errorf("get ingest job: %w", err)
 	}
-	if j.UserID != userID {
+	if row.UserID != userID {
 		return nil, ErrJobNotFound
 	}
-	return &j, nil
+	job := toJob(row)
+	return &job, nil
 }
 
 // DeleteJob removes a job record, verifying ownership.
 func (s *Ingest) DeleteJob(ctx context.Context, jobID, userID string) error {
-	result, err := s.pool.Exec(ctx,
-		`DELETE FROM ingest_jobs WHERE id = $1 AND user_id = $2`, jobID, userID)
+	n, err := s.repo.DeleteJob(ctx, repository.DeleteJobParams{
+		ID:     jobID,
+		UserID: userID,
+	})
 	if err != nil {
 		return fmt.Errorf("delete ingest job: %w", err)
 	}
-	if result.RowsAffected() == 0 {
+	if n == 0 {
 		return ErrJobNotFound
 	}
 	return nil
@@ -220,13 +227,14 @@ func (s *Ingest) DeleteJob(ctx context.Context, jobID, userID string) error {
 // UpdateJobStatus updates a job's status. Used by the worker.
 func (s *Ingest) UpdateJobStatus(ctx context.Context, jobID, status string, errMsg *string) error {
 	if errMsg != nil {
-		_, err := s.pool.Exec(ctx,
-			`UPDATE ingest_jobs SET status = $1, error = $2, updated_at = now() WHERE id = $3`,
-			status, *errMsg, jobID)
-		return err
+		return s.repo.UpdateJobStatusWithError(ctx, repository.UpdateJobStatusWithErrorParams{
+			Status: status,
+			Error:  pgtype.Text{String: *errMsg, Valid: true},
+			ID:     jobID,
+		})
 	}
-	_, err := s.pool.Exec(ctx,
-		`UPDATE ingest_jobs SET status = $1, updated_at = now() WHERE id = $2`,
-		status, jobID)
-	return err
+	return s.repo.UpdateJobStatus(ctx, repository.UpdateJobStatusParams{
+		Status: status,
+		ID:     jobID,
+	})
 }

@@ -76,6 +76,26 @@ func tenantToDetail(t db.Tenant) TenantDetail {
 	return d
 }
 
+func slugRowToDetail(t db.GetTenantBySlugRow) TenantDetail {
+	d := TenantDetail{
+		ID:        t.ID,
+		Slug:      t.Slug,
+		Name:      t.Name,
+		PlanID:    t.PlanID,
+		Enabled:   t.Enabled,
+		Settings:  t.Settings,
+		CreatedAt: t.CreatedAt.Time.Format("2006-01-02T15:04:05Z"),
+		UpdatedAt: t.UpdatedAt.Time.Format("2006-01-02T15:04:05Z"),
+	}
+	if t.LogoUrl.Valid {
+		d.LogoURL = t.LogoUrl.String
+	}
+	if t.Domain.Valid {
+		d.Domain = t.Domain.String
+	}
+	return d
+}
+
 func createRowToDetail(t db.CreateTenantRow) TenantDetail {
 	d := TenantDetail{
 		ID:        t.ID,
@@ -116,7 +136,7 @@ func (p *Platform) GetTenant(ctx context.Context, slug string) (TenantDetail, er
 		}
 		return TenantDetail{}, fmt.Errorf("get tenant: %w", err)
 	}
-	return tenantToDetail(tenant), nil
+	return slugRowToDetail(tenant), nil
 }
 
 // CreateTenant creates a new tenant.

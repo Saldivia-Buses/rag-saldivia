@@ -4,9 +4,11 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/pquerna/otp/totp"
 
 	"github.com/Camionerou/rag-saldivia/pkg/audit"
+	"github.com/Camionerou/rag-saldivia/services/auth/internal/repository"
 )
 
 // MFASetupResult holds the data needed for a user to configure their authenticator app.
@@ -18,8 +20,7 @@ type MFASetupResult struct {
 // SetupMFA generates a TOTP secret for the user and stores it (inactive until verified).
 func (a *Auth) SetupMFA(ctx context.Context, userID string) (*MFASetupResult, error) {
 	// Get user email for the TOTP issuer label
-	var email string
-	err := a.db.QueryRow(ctx, `SELECT email FROM users WHERE id = $1`, userID).Scan(&email)
+	email, err := a.repo.GetUserEmail(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("get user email: %w", err)
 	}
@@ -33,10 +34,10 @@ func (a *Auth) SetupMFA(ctx context.Context, userID string) (*MFASetupResult, er
 	}
 
 	// Store secret (not yet activated — mfa_enabled stays false until VerifySetup)
-	_, err = a.db.Exec(ctx,
-		`UPDATE users SET mfa_secret = $2 WHERE id = $1`,
-		userID, key.Secret(),
-	)
+	err = a.repo.SetMFASecret(ctx, repository.SetMFASecretParams{
+		ID:        userID,
+		MfaSecret: pgtype.Text{String: key.Secret(), Valid: true},
+	})
 	if err != nil {
 		return nil, fmt.Errorf("store MFA secret: %w", err)
 	}
@@ -61,11 +62,7 @@ func (a *Auth) VerifySetup(ctx context.Context, userID, code string) error {
 		return ErrInvalidMFACode
 	}
 
-	_, err = a.db.Exec(ctx,
-		`UPDATE users SET mfa_enabled = true WHERE id = $1`,
-		userID,
-	)
-	if err != nil {
+	if err = a.repo.EnableMFA(ctx, userID); err != nil {
 		return fmt.Errorf("enable MFA: %w", err)
 	}
 
@@ -97,11 +94,7 @@ func (a *Auth) DisableMFA(ctx context.Context, userID, code string) error {
 		return ErrInvalidMFACode
 	}
 
-	_, err = a.db.Exec(ctx,
-		`UPDATE users SET mfa_enabled = false, mfa_secret = NULL WHERE id = $1`,
-		userID,
-	)
-	if err != nil {
+	if err = a.repo.DisableMFA(ctx, userID); err != nil {
 		return fmt.Errorf("disable MFA: %w", err)
 	}
 
@@ -113,11 +106,7 @@ func (a *Auth) DisableMFA(ctx context.Context, userID, code string) error {
 
 // CheckMFARequired returns true if the user has MFA enabled.
 func (a *Auth) CheckMFARequired(ctx context.Context, userID string) (bool, error) {
-	var enabled bool
-	err := a.db.QueryRow(ctx,
-		`SELECT COALESCE(mfa_enabled, false) FROM users WHERE id = $1`,
-		userID,
-	).Scan(&enabled)
+	enabled, err := a.repo.CheckMFAEnabled(ctx, userID)
 	if err != nil {
 		return false, fmt.Errorf("check MFA status: %w", err)
 	}
@@ -125,16 +114,12 @@ func (a *Auth) CheckMFARequired(ctx context.Context, userID string) (bool, error
 }
 
 func (a *Auth) getMFASecret(ctx context.Context, userID string) (string, error) {
-	var secret *string
-	err := a.db.QueryRow(ctx,
-		`SELECT mfa_secret FROM users WHERE id = $1`,
-		userID,
-	).Scan(&secret)
+	secret, err := a.repo.GetMFASecret(ctx, userID)
 	if err != nil {
 		return "", fmt.Errorf("get MFA secret: %w", err)
 	}
-	if secret == nil {
+	if !secret.Valid {
 		return "", nil
 	}
-	return *secret, nil
+	return secret.String, nil
 }
