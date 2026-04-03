@@ -16,11 +16,26 @@ import {
 } from "@/components/ui/chat-container";
 import { cn } from "@/lib/utils";
 import { api, ApiError } from "@/lib/api/client";
+import { MODELS, DEFAULT_MODEL, type LLMModel } from "@/lib/models";
+import {
+  ModelSelector,
+  ModelSelectorTrigger,
+  ModelSelectorContent,
+  ModelSelectorInput,
+  ModelSelectorList,
+  ModelSelectorEmpty,
+  ModelSelectorGroup,
+  ModelSelectorItem,
+  ModelSelectorLogo,
+  ModelSelectorName,
+} from "@/components/ai-elements/model-selector";
 import {
   ArrowUpIcon,
+  ChevronDownIcon,
   PlusIcon,
   SquareIcon,
   Trash2Icon,
+  ZapIcon,
 } from "lucide-react";
 
 function formatRelativeDate(dateStr: string): string {
@@ -142,6 +157,8 @@ export default function ChatPage() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingContent, setStreamingContent] = useState("");
   const [activeSessionId, setActiveSessionId] = useState<string | null>(null);
+  const [selectedModel, setSelectedModel] = useState<LLMModel>(DEFAULT_MODEL);
+  const [modelSelectorOpen, setModelSelectorOpen] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const streamRef = useRef(""); // tracks streaming content synchronously
   const queryClient = useQueryClient();
@@ -250,6 +267,7 @@ export default function ChatPage() {
     try {
       for await (const chunk of api.stream("/v1/rag/generate", {
         messages: [{ role: "user", content }],
+        model: selectedModel.id,
         stream: true,
         use_knowledge_base: true,
       })) {
@@ -385,7 +403,7 @@ export default function ChatPage() {
 
         {/* Input */}
         <div className="border-t bg-background p-4">
-          <div className="mx-auto max-w-3xl">
+          <div className="mx-auto max-w-3xl flex flex-col gap-2">
             <PromptInput
               value={input}
               onValueChange={setInput}
@@ -394,6 +412,74 @@ export default function ChatPage() {
             >
               <PromptInputTextarea placeholder="Escribi tu mensaje..." />
               <PromptInputActions>
+                {/* Model selector */}
+                <ModelSelector
+                  open={modelSelectorOpen}
+                  onOpenChange={setModelSelectorOpen}
+                >
+                  <ModelSelectorTrigger
+                    render={
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="gap-1.5 text-xs text-muted-foreground hover:text-foreground h-8 px-2"
+                      />
+                    }
+                  >
+                    <ModelSelectorLogo
+                      provider={selectedModel.providerLogo}
+                      className="size-3.5"
+                    />
+                    <span className="hidden sm:inline">
+                      {selectedModel.name}
+                    </span>
+                    <ChevronDownIcon className="size-3 opacity-50" />
+                  </ModelSelectorTrigger>
+                  <ModelSelectorContent title="Elegir modelo">
+                    <ModelSelectorInput placeholder="Buscar modelo..." />
+                    <ModelSelectorList>
+                      <ModelSelectorEmpty>
+                        No se encontraron modelos
+                      </ModelSelectorEmpty>
+                      <ModelSelectorGroup heading="Modelos disponibles">
+                        {MODELS.map((model) => (
+                          <ModelSelectorItem
+                            key={model.id}
+                            value={model.id}
+                            onSelect={() => {
+                              setSelectedModel(model);
+                              setModelSelectorOpen(false);
+                            }}
+                            className="flex items-center gap-3 py-2.5"
+                          >
+                            <ModelSelectorLogo
+                              provider={model.providerLogo}
+                              className="size-4 shrink-0"
+                            />
+                            <div className="flex-1 min-w-0">
+                              <ModelSelectorName className="text-sm font-medium">
+                                {model.name}
+                              </ModelSelectorName>
+                              <p className="text-xs text-muted-foreground truncate">
+                                {model.description}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <span className="text-[10px] text-muted-foreground">
+                                {model.contextWindow}
+                              </span>
+                              {model.speed === "fast" && (
+                                <ZapIcon className="size-3 text-yellow-500" />
+                              )}
+                            </div>
+                          </ModelSelectorItem>
+                        ))}
+                      </ModelSelectorGroup>
+                    </ModelSelectorList>
+                  </ModelSelectorContent>
+                </ModelSelector>
+
+                {/* Send / Stop */}
                 <Button
                   variant="default"
                   size="icon"
