@@ -254,18 +254,20 @@ export default function ChatPage() {
         setStreamingContent((prev) => prev + chunk);
       }
 
-      // Save the complete assistant response
-      const finalContent = useRef<string>("");
+      // Save the complete assistant response — capture from state setter
+      let finalContent = "";
       setStreamingContent((prev) => {
-        finalContent.current = prev;
+        finalContent = prev;
         return prev;
       });
 
       // Store assistant message in backend
-      await api.post(`/v1/chat/sessions/${sessionId}/messages`, {
-        role: "assistant",
-        content: finalContent.current,
-      });
+      if (finalContent) {
+        await api.post(`/v1/chat/sessions/${sessionId}/messages`, {
+          role: "assistant",
+          content: finalContent,
+        });
+      }
 
       queryClient.invalidateQueries({
         queryKey: ["chat", "messages", sessionId],

@@ -12,6 +12,7 @@ import {
   Settings,
   User,
 } from "lucide-react";
+import { useAuthStore } from "@/lib/auth/store";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -297,12 +298,16 @@ const NavUser = ({ user }: { user: UserData }) => {
               </DropdownMenuItem>
             </a>
             <DropdownMenuSeparator />
-            <a href="/login">
-              <DropdownMenuItem>
-                <LogOut className="mr-2 size-4" />
-                Cerrar sesión
-              </DropdownMenuItem>
-            </a>
+            <DropdownMenuItem
+              onClick={() => {
+                useAuthStore.getState().logout().then(() => {
+                  window.location.href = "/login";
+                });
+              }}
+            >
+              <LogOut className="mr-2 size-4" />
+              Cerrar sesion
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>
