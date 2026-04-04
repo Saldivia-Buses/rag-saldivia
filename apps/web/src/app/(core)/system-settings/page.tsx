@@ -9,8 +9,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
-import { ThemeSelector } from "@/components/theme-selector";
 import { DarkModeToggle } from "@/components/dark-mode-toggle";
 
 function useLocalStorage(key: string, fallback: string) {
@@ -47,7 +45,7 @@ export default function SystemSettingsPage() {
           </p>
         </div>
 
-        <div className="rounded-xl border bg-card shadow-sm">
+        <div className="rounded-xl bg-card">
           <div className="p-6 space-y-6">
             {/* Language */}
             <div className="space-y-2">
@@ -108,11 +106,6 @@ export default function SystemSettingsPage() {
             </div>
           </div>
         </div>
-
-        <Separator className="my-8" />
-
-        {/* Theme selector */}
-        <ThemeSelector />
       </div>
     </div>
   );

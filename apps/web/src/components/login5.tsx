@@ -131,7 +131,7 @@ const Login5 = ({
                 type="checkbox"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
-                className="rounded border-border"
+                className="rounded"
               />
               Recordarme por 30 días
             </label>
@@ -142,9 +142,9 @@ const Login5 = ({
 
             {/* Social login divider */}
             <div className="flex w-full items-center gap-4">
-              <div className="h-px flex-1 bg-border" />
+              <div className="h-px flex-1 bg-muted-foreground/20" />
               <span className="text-xs text-muted-foreground">o continuar con</span>
-              <div className="h-px flex-1 bg-border" />
+              <div className="h-px flex-1 bg-muted-foreground/20" />
             </div>
 
             <div className="flex w-full flex-col gap-2">

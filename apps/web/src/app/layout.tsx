@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { ThemeProvider } from "@/lib/theme-provider";
 import { QueryProvider } from "@/lib/api/query-provider";
 import { AuthInitializer } from "@/lib/auth/auth-initializer";
 import { WsProvider } from "@/lib/ws/provider";
 import { fontVariables, fontClassNames } from "@/lib/fonts";
-import { SearchCommand } from "@/components/search-command";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -13,9 +11,8 @@ export const metadata: Metadata = {
   description: "SDA Framework — Plataforma empresarial",
 };
 
-// Inline script that runs before React hydration to prevent theme flash.
-// Reads cached CSS variables from localStorage and applies them immediately.
-const themeScript = `(function(){try{var d=document.documentElement;if(localStorage.getItem("sda-dark-mode")==="true")d.classList.add("dark");var v=localStorage.getItem("sda-theme-vars");if(v){var o=JSON.parse(v);for(var k in o)d.style.setProperty("--"+k,o[k])}}catch(e){}})()`;
+// Inline script — applies dark mode class before React hydration to prevent flash.
+const themeScript = `(function(){try{if(localStorage.getItem("sda-dark-mode")==="true")document.documentElement.classList.add("dark")}catch(e){}})()`;
 
 export default function RootLayout({
   children,
@@ -35,16 +32,13 @@ export default function RootLayout({
         {/* Hidden preloader — forces browser to download all font files upfront */}
         <div aria-hidden="true" className={`${fontClassNames} absolute opacity-0 pointer-events-none h-0 overflow-hidden`}>.</div>
         <QueryProvider>
-          <ThemeProvider>
-            <TooltipProvider>
-              <AuthInitializer>
-                <WsProvider>
-                  <SearchCommand />
-                  {children}
-                </WsProvider>
-              </AuthInitializer>
-            </TooltipProvider>
-          </ThemeProvider>
+          <TooltipProvider>
+            <AuthInitializer>
+              <WsProvider>
+                {children}
+              </WsProvider>
+            </AuthInitializer>
+          </TooltipProvider>
         </QueryProvider>
       </body>
     </html>

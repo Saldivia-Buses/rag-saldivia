@@ -81,7 +81,7 @@ const SettingsProfile4 = ({ className }: SettingsProfile4Props) => {
         </div>
 
         <div className="mx-auto w-full max-w-2xl">
-          <div className="rounded-xl border bg-card shadow-sm">
+          <div className="rounded-xl bg-card">
             {/* Personal info */}
             <div className="p-6">
               <h2 className="text-lg font-semibold">Información personal</h2>
@@ -105,7 +105,7 @@ const SettingsProfile4 = ({ className }: SettingsProfile4Props) => {
                   </div>
                 </div>
 
-                <Separator />
+                <div className="h-4" />
 
                 {/* Name (editable) */}
                 <div className="space-y-2">
@@ -141,13 +141,13 @@ const SettingsProfile4 = ({ className }: SettingsProfile4Props) => {
               </div>
             </div>
 
-            <Separator />
+            <div className="h-4" />
 
             {/* Notification preferences link */}
             <div className="p-6">
               <Link
                 href="/notifications"
-                className="flex items-center gap-3 rounded-lg border px-4 py-3 text-sm transition-colors hover:bg-muted"
+                className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm transition-colors hover:bg-muted"
               >
                 <Bell className="size-4 text-muted-foreground" />
                 <div className="flex-1">
@@ -161,7 +161,7 @@ const SettingsProfile4 = ({ className }: SettingsProfile4Props) => {
             </div>
 
             {/* Footer */}
-            <div className="flex items-center justify-end gap-3 border-t px-6 py-4">
+            <div className="flex items-center justify-end gap-3 px-6 py-4">
               <Button
                 onClick={handleSave}
                 disabled={

@@ -71,7 +71,7 @@ export default function NotificationsPage() {
     return (
       <div className="flex flex-1 flex-col">
         {/* Header with prefs button even on empty state */}
-        <div className="flex items-center justify-between border-b px-6 py-4">
+        <div className="flex items-center justify-between px-6 py-4">
           <div>
             <h1 className="text-lg font-semibold">Notificaciones</h1>
           </div>
@@ -104,7 +104,7 @@ export default function NotificationsPage() {
   return (
     <div className="flex flex-1 flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between border-b px-6 py-4">
+      <div className="flex items-center justify-between px-6 py-4">
         <div>
           <h1 className="text-lg font-semibold">Notificaciones</h1>
           {unreadCount > 0 && (
@@ -140,7 +140,7 @@ export default function NotificationsPage() {
 
       {/* Preferences collapsible section */}
       {showPrefs && (
-        <div className="border-b">
+        <div>
           <NotificationPreferences />
         </div>
       )}
@@ -152,7 +152,7 @@ export default function NotificationsPage() {
             <div
               key={notification.id}
               className={cn(
-                "flex items-start gap-3 border-b px-6 py-4 transition-colors",
+                "flex items-start gap-3 px-6 py-4 transition-colors rounded-lg mx-2",
                 !notification.read_at && "bg-accent/30",
               )}
             >

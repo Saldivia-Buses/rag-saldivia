@@ -22,13 +22,16 @@ const corePages = [
   { label: "Configuración", href: "/system-settings", icon: SlidersHorizontal },
 ];
 
-let globalOpen: ((v: boolean) => void) | null = null;
-
-export function SearchCommand() {
+/**
+ * Inline expanding search — sits fixed at viewport center in the header row.
+ * Collapsed: small trigger bar. Expanded: wider input + results dropdown.
+ */
+export function HeaderSearch() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const { data: enabledModules } = useEnabledModules();
 
@@ -42,15 +45,10 @@ export function SearchCommand() {
         href: manifest.nav.path,
         icon: manifest.nav.icon,
       }));
-
     return [...corePages, ...modulePages];
   }, [enabledModules]);
 
-  useEffect(() => {
-    globalOpen = setOpen;
-    return () => { globalOpen = null; };
-  }, []);
-
+  // ⌘K shortcut
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === "k") {
@@ -62,16 +60,29 @@ export function SearchCommand() {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
 
+  // Focus input when opening
   useEffect(() => {
     if (open) {
       setQuery("");
       setSelected(0);
-      setTimeout(() => inputRef.current?.focus(), 0);
+      setTimeout(() => inputRef.current?.focus(), 50);
     }
   }, [open]);
 
+  // Close on click outside
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open]);
+
   const filtered = pages.filter((p) =>
-    p.label.toLowerCase().includes(query.toLowerCase())
+    p.label.toLowerCase().includes(query.toLowerCase()),
   );
 
   const navigate = useCallback(
@@ -79,7 +90,7 @@ export function SearchCommand() {
       setOpen(false);
       router.push(href);
     },
-    [router]
+    [router],
   );
 
   const handleKeyDown = useCallback(
@@ -96,73 +107,101 @@ export function SearchCommand() {
         setOpen(false);
       }
     },
-    [filtered, selected, navigate]
+    [filtered, selected, navigate],
   );
-
-  if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-[20vh]">
+    <>
       {/* Backdrop */}
+      {open && (
+        <div className="fixed inset-0 z-40 bg-black/40" />
+      )}
+
+      {/* Search — fixed at viewport center, header row */}
       <div
-        className="absolute inset-0 bg-black/50"
-        onClick={() => setOpen(false)}
-      />
-
-      {/* Dialog */}
-      <div className="relative w-full max-w-md rounded-xl border bg-popover shadow-lg animate-in fade-in-0 zoom-in-95">
-        {/* Input */}
-        <div className="flex items-center gap-2 border-b px-3 py-2.5">
-          <SearchIcon className="size-4 text-muted-foreground" />
-          <input
-            ref={inputRef}
-            value={query}
-            onChange={(e) => {
-              setQuery(e.target.value);
-              setSelected(0);
-            }}
-            onKeyDown={handleKeyDown}
-            placeholder="Buscar páginas..."
-            className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-          />
-          <kbd className="hidden sm:inline-flex h-5 items-center rounded border bg-muted px-1.5 text-[10px] text-muted-foreground">
-            ESC
-          </kbd>
-        </div>
-
-        {/* Results */}
-        <div className="max-h-64 overflow-y-auto p-1.5">
-          {filtered.length === 0 && (
-            <p className="py-4 text-center text-sm text-muted-foreground">
-              Sin resultados.
-            </p>
+        ref={containerRef}
+        className={cn(
+          "fixed top-0 left-1/2 -translate-x-1/2 z-50 flex flex-col items-center",
+          "h-14 justify-center",
+          open && "h-auto",
+        )}
+      >
+        <div
+          className={cn(
+            "flex flex-col transition-all duration-200 ease-out mt-1.5",
+            open
+              ? "w-[28rem] rounded-xl bg-popover shadow-2xl"
+              : "w-64 rounded-lg bg-background shadow-md",
           )}
-          {filtered.map((page, i) => {
-            const Icon = page.icon;
-            return (
+        >
+          {/* Input row */}
+          <div
+            className={cn(
+              "flex items-center gap-2 px-3 transition-all",
+              open ? "py-2.5" : "py-1.5",
+            )}
+          >
+            <SearchIcon className="size-3.5 text-muted-foreground shrink-0" />
+            {open ? (
+              <input
+                ref={inputRef}
+                value={query}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  setSelected(0);
+                }}
+                onKeyDown={handleKeyDown}
+                placeholder="Busca ayuda, páginas y más..."
+                className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+              />
+            ) : (
               <button
-                key={page.href}
-                onClick={() => navigate(page.href)}
-                className={cn(
-                  "flex w-full items-center gap-2.5 rounded-md px-2.5 py-2 text-sm transition-colors",
-                  i === selected
-                    ? "bg-accent text-accent-foreground"
-                    : "text-popover-foreground hover:bg-muted"
-                )}
+                onClick={() => setOpen(true)}
+                className="flex flex-1 items-center justify-between text-sm text-muted-foreground bg-transparent"
               >
-                <Icon className="size-4 shrink-0" />
-                {page.label}
+                <span>Buscar en SDA...</span>
+                <kbd className="hidden sm:inline-flex h-5 items-center gap-0.5 rounded bg-background/30 px-1.5 text-[10px] font-medium">
+                  ⌘K
+                </kbd>
               </button>
-            );
-          })}
+            )}
+          </div>
+
+          {/* Expanded: results */}
+          {open && (
+            <div className="max-h-72 overflow-y-auto px-1.5 pb-1.5">
+              {filtered.length === 0 && (
+                <p className="py-6 text-center text-sm text-muted-foreground">
+                  Sin resultados.
+                </p>
+              )}
+              {filtered.length > 0 && (
+                <p className="px-2.5 pb-1.5 pt-1 text-xs text-muted-foreground">
+                  Páginas
+                </p>
+              )}
+              {filtered.map((page, i) => {
+                const Icon = page.icon;
+                return (
+                  <button
+                    key={page.href}
+                    onClick={() => navigate(page.href)}
+                    className={cn(
+                      "flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm transition-colors",
+                      i === selected
+                        ? "bg-accent text-accent-foreground"
+                        : "text-popover-foreground hover:bg-muted",
+                    )}
+                  >
+                    <Icon className="size-4 shrink-0" />
+                    {page.label}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
-    </div>
+    </>
   );
-}
-
-export function useSearchCommand() {
-  return {
-    open: () => globalOpen?.(true),
-  };
 }

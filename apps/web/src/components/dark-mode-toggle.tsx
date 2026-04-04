@@ -20,14 +20,6 @@ export function DarkModeToggle() {
     setIsDark(next);
     document.documentElement.classList.toggle("dark", next);
     localStorage.setItem("sda-dark-mode", String(next));
-
-    // Re-apply theme for the new mode
-    const themeVarsStr = localStorage.getItem("sda-theme-vars");
-    if (themeVarsStr) {
-      // Theme provider will handle this on next render, but we
-      // also need to trigger it. Dispatch a custom event.
-      window.dispatchEvent(new Event("sda-mode-change"));
-    }
   }, [isDark]);
 
   return (

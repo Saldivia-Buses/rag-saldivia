@@ -8,24 +8,16 @@ import {
   LayoutDashboard,
   LogOut,
   MessageSquare,
-  Search,
   Settings,
   User,
+  FileText,
+  Database,
 } from "lucide-react";
 import { useAuthStore } from "@/lib/auth/store";
 import { useEnabledModules } from "@/lib/modules/hooks";
 import { MODULE_REGISTRY, CORE_NAV_ITEMS } from "@/lib/modules/registry";
-import { FileText, Database } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  Breadcrumb,
-  BreadcrumbItem,
-  BreadcrumbLink,
-  BreadcrumbList,
-  BreadcrumbPage,
-  BreadcrumbSeparator,
-} from "@/components/ui/breadcrumb";
 import {
   Collapsible,
   CollapsibleContent,
@@ -61,7 +53,7 @@ import {
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
 import { DarkModeToggle } from "@/components/dark-mode-toggle";
-import { useSearchCommand } from "@/components/search-command";
+import { HeaderSearch } from "@/components/search-command";
 
 const routeLabels: Record<string, string> = {
   "/dashboard": "Dashboard",
@@ -197,7 +189,7 @@ const SidebarLogo = ({ logo }: { logo: SidebarData["logo"] }) => {
               className="size-6 text-primary-foreground invert dark:invert-0"
             />
           </div>
-          <div className="flex flex-col gap-0.5 leading-none">
+          <div className="flex flex-col gap-0.5 leading-none group-data-[collapsible=icon]:hidden">
             <span className="font-medium">{logo.title}</span>
             <span className="text-xs text-muted-foreground">
               {logo.description}
@@ -209,25 +201,6 @@ const SidebarLogo = ({ logo }: { logo: SidebarData["logo"] }) => {
   );
 };
 
-const SearchButton = () => {
-  const { open } = useSearchCommand();
-  return (
-    <SidebarGroup className="py-0">
-      <SidebarGroupContent className="relative">
-        <button
-          onClick={open}
-          className="flex w-full items-center gap-2 rounded-md border bg-background px-3 py-2 text-sm text-muted-foreground hover:bg-muted transition-colors"
-        >
-          <Search className="size-4 opacity-50" />
-          <span className="flex-1 text-left">Buscar...</span>
-          <kbd className="hidden sm:inline-flex h-5 items-center gap-0.5 rounded border bg-muted px-1.5 text-[10px] font-medium text-muted-foreground">
-            ⌘K
-          </kbd>
-        </button>
-      </SidebarGroupContent>
-    </SidebarGroup>
-  );
-};
 
 const NavMenuItem = ({ item }: { item: NavItem }) => {
   const pathname = usePathname();
@@ -290,13 +263,13 @@ const NavUser = ({ user }: { user: UserData }) => {
                   .join("")}
               </AvatarFallback>
             </Avatar>
-            <div className="grid flex-1 text-left text-sm leading-tight">
+            <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
               <span className="truncate font-medium">{user.name}</span>
               <span className="truncate text-xs text-muted-foreground">
                 {user.email}
               </span>
             </div>
-            <ChevronsUpDown className="ml-auto size-4" />
+            <ChevronsUpDown className="ml-auto size-4 group-data-[collapsible=icon]:hidden" />
           </DropdownMenuTrigger>
           <DropdownMenuContent
             className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
@@ -350,10 +323,9 @@ const AppSidebar = ({ ...props }: React.ComponentProps<typeof Sidebar>) => {
   const data = useSidebarData();
 
   return (
-    <Sidebar {...props}>
+    <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <SidebarLogo logo={data.logo} />
-        <SearchButton />
       </SidebarHeader>
       <SidebarContent className="overflow-hidden">
         <ScrollArea className="min-h-0 flex-1">
@@ -397,29 +369,21 @@ interface Sidebar6Props {
 const Sidebar6 = ({ className, children }: Sidebar6Props) => {
   const pathname = usePathname();
   const pageLabel = routeLabels[pathname] || pathname.replace("/", "");
-
   return (
     <SidebarProvider className={cn("!h-svh !min-h-0 overflow-hidden", className)}>
       <AppSidebar />
-      <SidebarInset className="flex flex-col h-svh overflow-hidden">
-        <header className="flex h-14 shrink-0 items-center gap-3 border-b px-4">
+      <SidebarInset className="flex flex-col h-svh overflow-hidden !bg-sidebar">
+        {/* Header — same gray as sidebar */}
+        <header className="flex h-14 shrink-0 items-center gap-3 px-4">
           <SidebarTrigger className="-ml-1 size-8 [&>svg]:size-5" />
-          <Breadcrumb className="w-fit rounded-lg border px-3 py-2">
-            <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink href="/dashboard">SDA</BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>{pageLabel}</BreadcrumbPage>
-              </BreadcrumbItem>
-            </BreadcrumbList>
-          </Breadcrumb>
-          <div className="ml-auto">
-            <DarkModeToggle />
-          </div>
+          <span className="text-sm font-medium text-sidebar-foreground/70">{pageLabel}</span>
+          <div className="flex-1" />
+          <DarkModeToggle />
         </header>
-        <div className="flex flex-1 flex-col min-h-0">
+        {/* Search — inline expanding, fixed at viewport center */}
+        <HeaderSearch />
+        {/* Workspace — darker bg with rounded top corners, inset shadow for depth in light mode */}
+        <div className="flex flex-1 flex-col min-h-0 bg-background rounded-t-2xl overflow-hidden shadow-[inset_1px_1px_4px_0px_rgba(0,0,0,0.15)] dark:shadow-none">
           {children}
         </div>
       </SidebarInset>

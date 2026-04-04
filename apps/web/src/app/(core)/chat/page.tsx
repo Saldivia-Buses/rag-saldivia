@@ -100,7 +100,7 @@ function ChatSidebar({
   onDeleteSession: (id: string) => void;
 }) {
   return (
-    <div className="hidden md:flex w-72 shrink-0 border-r flex-col">
+    <div className="hidden md:flex w-72 shrink-0 flex-col min-h-0">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3">
         <h2 className="font-semibold text-lg">Chats</h2>

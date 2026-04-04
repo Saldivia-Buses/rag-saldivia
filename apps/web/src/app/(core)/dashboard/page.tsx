@@ -51,7 +51,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Link
           href="/chat"
-          className="flex flex-col gap-2 rounded-lg border p-4 hover:bg-muted/50 transition-colors"
+          className="flex flex-col gap-2 rounded-lg bg-card p-4 hover:bg-muted/50 transition-colors"
         >
           <MessageSquare className="size-5 text-muted-foreground" />
           <div>
@@ -62,7 +62,7 @@ export default function DashboardPage() {
 
         <Link
           href="/notifications"
-          className="flex flex-col gap-2 rounded-lg border p-4 hover:bg-muted/50 transition-colors"
+          className="flex flex-col gap-2 rounded-lg bg-card p-4 hover:bg-muted/50 transition-colors"
         >
           <Bell className="size-5 text-muted-foreground" />
           <div>
@@ -71,7 +71,7 @@ export default function DashboardPage() {
           </div>
         </Link>
 
-        <div className="flex flex-col gap-2 rounded-lg border p-4">
+        <div className="flex flex-col gap-2 rounded-lg bg-card p-4">
           <Database className="size-5 text-muted-foreground" />
           <div>
             <p className="text-2xl font-semibold">{modules.length}</p>
@@ -81,7 +81,7 @@ export default function DashboardPage() {
 
         <Link
           href="/chat"
-          className="flex flex-col gap-2 rounded-lg border border-dashed p-4 hover:bg-muted/50 transition-colors items-center justify-center"
+          className="flex flex-col gap-2 rounded-lg bg-card p-4 hover:bg-muted/50 transition-colors items-center justify-center"
         >
           <Upload className="size-5 text-muted-foreground" />
           <p className="text-xs text-muted-foreground text-center">
@@ -102,12 +102,12 @@ export default function DashboardPage() {
               Ver todas <ArrowRight className="size-3" />
             </Link>
           </div>
-          <div className="flex flex-col rounded-lg border divide-y">
+          <div className="flex flex-col gap-1">
             {recentSessions.map((session) => (
               <Link
                 key={session.id}
                 href="/chat"
-                className="flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors"
+                className="flex items-center justify-between px-4 py-3 rounded-lg hover:bg-muted/50 transition-colors"
               >
                 <p className="text-sm truncate">{session.title}</p>
                 <p className="text-xs text-muted-foreground shrink-0 ml-4">
