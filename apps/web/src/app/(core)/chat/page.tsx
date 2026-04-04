@@ -100,7 +100,7 @@ function ChatSidebar({
   onDeleteSession: (id: string) => void;
 }) {
   return (
-    <div className="hidden md:flex w-72 shrink-0 flex-col min-h-0">
+    <div className="hidden md:flex w-72 flex-col min-h-0 absolute left-0 top-0 bottom-0 z-10 bg-background">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3">
         <h2 className="font-semibold text-lg">Chats</h2>
@@ -384,7 +384,7 @@ export default function ChatPage() {
   ];
 
   return (
-    <div className="flex flex-1 min-h-0">
+    <div className="flex flex-1 min-h-0 relative">
       {/* Sessions sidebar */}
       <ChatSidebar
         sessions={sessions}
@@ -399,7 +399,7 @@ export default function ChatPage() {
       <div className="flex flex-1 flex-col min-h-0 min-w-0 relative">
         {/* Messages */}
         <ChatContainerRoot className="flex-1">
-          <ChatContainerContent className="max-w-3xl mx-auto w-full px-4 py-6 gap-6">
+          <ChatContainerContent className="max-w-4xl mx-auto w-full px-6 py-6 gap-6">
             {displayMessages.length === 0 && !isStreaming && (
               <div className="flex flex-1 items-center justify-center">
                 <div className="text-center">
@@ -495,7 +495,7 @@ export default function ChatPage() {
 
         {/* Input — no border, seamless with chat */}
         <div className="bg-background p-4 pb-6 relative z-10">
-          <div className="mx-auto max-w-3xl flex flex-col gap-2">
+          <div className="max-w-4xl mx-auto w-full flex flex-col gap-2">
             <PromptInput
               value={input}
               onValueChange={setInput}
