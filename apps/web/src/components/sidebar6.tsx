@@ -47,8 +47,6 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   SidebarProvider,
-  SidebarRail,
-  SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
@@ -56,7 +54,7 @@ import { DarkModeToggle } from "@/components/dark-mode-toggle";
 import { HeaderSearch } from "@/components/search-command";
 
 const routeLabels: Record<string, string> = {
-  "/dashboard": "Dashboard",
+  "/dashboard": "Inicio",
   "/chat": "Chat",
   "/notifications": "Notificaciones",
   "/settings": "Mi cuenta",
@@ -140,7 +138,7 @@ function useSidebarData(): SidebarData {
 
   // Core items — always visible
   const coreItems: NavItem[] = [
-    { label: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
+    { label: "Inicio", icon: LayoutDashboard, href: "/dashboard" },
     { label: "Chat", icon: MessageSquare, href: "/chat" },
     { label: "Documentos", icon: FileText, href: "/documents" },
     { label: "Colecciones", icon: Database, href: "/collections" },
@@ -356,7 +354,6 @@ const AppSidebar = ({ ...props }: React.ComponentProps<typeof Sidebar>) => {
         </SidebarGroup>
         {data.user && <NavUser user={data.user} />}
       </SidebarFooter>
-      <SidebarRail />
     </Sidebar>
   );
 };
@@ -370,12 +367,11 @@ const Sidebar6 = ({ className, children }: Sidebar6Props) => {
   const pathname = usePathname();
   const pageLabel = routeLabels[pathname] || pathname.replace("/", "");
   return (
-    <SidebarProvider className={cn("!h-svh !min-h-0 overflow-hidden", className)}>
+    <SidebarProvider open={false} className={cn("!h-svh !min-h-0 overflow-hidden", className)}>
       <AppSidebar />
       <SidebarInset className="flex flex-col h-svh overflow-hidden !bg-sidebar">
         {/* Header — same gray as sidebar */}
         <header className="flex h-14 shrink-0 items-center gap-3 px-4">
-          <SidebarTrigger className="-ml-1 size-8 [&>svg]:size-5" />
           <span className="text-sm font-medium text-sidebar-foreground/70">{pageLabel}</span>
           <div className="flex-1" />
           <DarkModeToggle />
