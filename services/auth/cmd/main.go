@@ -139,6 +139,7 @@ func main() {
 		r.Use(sdamw.Auth(publicKey))
 		r.Get("/v1/auth/me", authHandler.Me)
 		r.Patch("/v1/auth/me", authHandler.UpdateMe)
+		r.With(sdamw.RequirePermission("users.read")).Get("/v1/auth/users", authHandler.ListUsers)
 		r.Get("/v1/modules/enabled", authHandler.EnabledModules)
 		// MFA management (requires authenticated user)
 		r.Post("/v1/auth/mfa/setup", authHandler.SetupMFA)

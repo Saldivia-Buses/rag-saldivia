@@ -10,7 +10,7 @@ export default function LoginPage() {
   // If already authenticated, go to dashboard
   useEffect(() => {
     if (isAuthenticated) {
-      window.location.href = "/dashboard";
+      window.location.href = "/inicio";
     }
   }, [isAuthenticated]);
 

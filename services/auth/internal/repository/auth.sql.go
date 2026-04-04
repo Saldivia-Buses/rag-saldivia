@@ -187,6 +187,59 @@ func (q *Queries) GetUserForRefresh(ctx context.Context, id string) (GetUserForR
 	return i, err
 }
 
+const listActiveUsers = `-- name: ListActiveUsers :many
+SELECT u.id, u.email, u.name, u.created_at,
+       COALESCE((
+           SELECT r.name FROM roles r
+           JOIN user_roles ur ON ur.role_id = r.id
+           WHERE ur.user_id = u.id
+           ORDER BY CASE r.name
+               WHEN 'admin' THEN 1
+               WHEN 'manager' THEN 2
+               WHEN 'user' THEN 3
+               ELSE 4
+           END
+           LIMIT 1
+       ), 'user') AS role
+FROM users u
+WHERE u.is_active = true
+ORDER BY u.created_at ASC
+`
+
+type ListActiveUsersRow struct {
+	ID        string             `json:"id"`
+	Email     string             `json:"email"`
+	Name      string             `json:"name"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	Role      interface{}        `json:"role"`
+}
+
+func (q *Queries) ListActiveUsers(ctx context.Context) ([]ListActiveUsersRow, error) {
+	rows, err := q.db.Query(ctx, listActiveUsers)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListActiveUsersRow{}
+	for rows.Next() {
+		var i ListActiveUsersRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Email,
+			&i.Name,
+			&i.CreatedAt,
+			&i.Role,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const recordFailedLogin = `-- name: RecordFailedLogin :exec
 UPDATE users SET
     failed_logins = failed_logins + 1,

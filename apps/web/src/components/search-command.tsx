@@ -15,7 +15,7 @@ import { MODULE_REGISTRY } from "@/lib/modules/registry";
 import { useEnabledModules } from "@/lib/modules/hooks";
 
 const corePages = [
-  { label: "Inicio", href: "/dashboard", icon: LayoutDashboard },
+  { label: "Inicio", href: "/inicio", icon: LayoutDashboard },
   { label: "Chat", href: "/chat", icon: MessageSquare },
   { label: "Notificaciones", href: "/notifications", icon: Bell },
   { label: "Mi cuenta", href: "/settings", icon: Settings },
