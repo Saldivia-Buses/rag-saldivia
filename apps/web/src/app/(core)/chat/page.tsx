@@ -398,7 +398,7 @@ export default function ChatPage() {
       {/* Chat area */}
       <div className="flex flex-1 flex-col min-h-0 min-w-0 relative">
         {/* Messages */}
-        <ChatContainerRoot className="flex-1">
+        <ChatContainerRoot className="flex-1 [mask-image:linear-gradient(to_bottom,transparent,black_1.5rem,black_calc(100%-2rem),transparent)]">
           <ChatContainerContent className="max-w-4xl mx-auto w-full px-6 py-6 gap-6">
             {displayMessages.length === 0 && !isStreaming && (
               <div className="flex flex-1 items-center justify-center">
@@ -489,9 +489,6 @@ export default function ChatPage() {
             <ChatContainerScrollAnchor />
           </ChatContainerContent>
         </ChatContainerRoot>
-
-        {/* Fade gradient — chat disappears behind the input */}
-        <div className="pointer-events-none h-8 -mt-8 bg-gradient-to-t from-background to-transparent relative z-10" />
 
         {/* Input — no border, seamless with chat */}
         <div className="bg-background p-4 pb-6 relative z-10">
