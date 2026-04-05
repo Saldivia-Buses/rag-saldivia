@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS tool_calls (
     tool_name   TEXT NOT NULL,
     input       JSONB NOT NULL,
     output      JSONB,
-    status      TEXT NOT NULL,
+    status      TEXT NOT NULL CHECK (status IN ('success', 'error', 'timeout', 'denied')),
     duration_ms INT,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );

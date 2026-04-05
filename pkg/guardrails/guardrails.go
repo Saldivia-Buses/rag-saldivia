@@ -12,13 +12,12 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"regexp"
 	"strings"
 )
 
 // InputConfig configures input validation rules.
 type InputConfig struct {
-	MaxLength     int      // truncate input beyond this length (0 = no limit)
+	MaxLength     int      // truncate input beyond this rune count (0 = no limit)
 	BlockPatterns []string // reject input matching any of these (case-insensitive)
 }
 
@@ -62,12 +61,15 @@ func (e *ValidationError) Error() string {
 // If llm is nil, only Layer 1 runs.
 // Returns the (possibly truncated) input or an error.
 func ValidateInput(ctx context.Context, input string, cfg InputConfig, llm LLMClassifier) (string, error) {
-	// Layer 1: truncate
-	if cfg.MaxLength > 0 && len(input) > cfg.MaxLength {
-		input = input[:cfg.MaxLength]
+	// B1: truncate by runes, not bytes, to avoid breaking multi-byte characters
+	if cfg.MaxLength > 0 {
+		runes := []rune(input)
+		if len(runes) > cfg.MaxLength {
+			input = string(runes[:cfg.MaxLength])
+		}
 	}
 
-	// Layer 1: pattern matching
+	// Layer 1: pattern matching (case-insensitive)
 	lower := strings.ToLower(input)
 	for _, pattern := range cfg.BlockPatterns {
 		if strings.Contains(lower, strings.ToLower(pattern)) {
@@ -80,7 +82,6 @@ func ValidateInput(ctx context.Context, input string, cfg InputConfig, llm LLMCl
 		safe, reason, err := llm.Classify(ctx, input)
 		if err != nil {
 			// fail-open: if classifier is down, continue with Layer 1 only
-			// (configurable via guardrails.classifier_fail_open)
 			return input, nil
 		}
 		if !safe {
@@ -92,33 +93,37 @@ func ValidateInput(ctx context.Context, input string, cfg InputConfig, llm LLMCl
 }
 
 // ValidateOutput sanitizes LLM output (Layer 1 only — no LLM call for output).
-// Strips system prompt leaks and raw JSON from tool calls.
+// Strips system prompt leaks (case-insensitive) and raw JSON from tool calls.
 func ValidateOutput(output string, cfg OutputConfig) string {
 	for _, fragment := range cfg.SystemPromptFragments {
-		if fragment != "" {
-			output = strings.ReplaceAll(output, fragment, "[redacted]")
+		if fragment == "" {
+			continue
+		}
+		// B2: case-insensitive replacement to catch LLM casing variations
+		outputLower := strings.ToLower(output)
+		fragLower := strings.ToLower(fragment)
+		for {
+			idx := strings.Index(outputLower, fragLower)
+			if idx < 0 {
+				break
+			}
+			output = output[:idx] + "[redacted]" + output[idx+len(fragment):]
+			outputLower = strings.ToLower(output)
 		}
 	}
 	return output
 }
 
 // ValidateToolParams validates tool call parameters against a JSON schema.
-// Returns nil if valid, error with details if invalid.
+// Checks: valid JSON, required fields present, basic type validation.
 func ValidateToolParams(params json.RawMessage, schema json.RawMessage) error {
-	// Basic validation: ensure params is valid JSON
 	if !json.Valid(params) {
 		return fmt.Errorf("invalid JSON in tool params")
 	}
 
-	// Schema validation: check required fields from schema
 	var schemaMap map[string]any
 	if err := json.Unmarshal(schema, &schemaMap); err != nil {
 		return fmt.Errorf("invalid schema: %w", err)
-	}
-
-	required, _ := schemaMap["required"].([]any)
-	if len(required) == 0 {
-		return nil
 	}
 
 	var paramsMap map[string]any
@@ -126,28 +131,76 @@ func ValidateToolParams(params json.RawMessage, schema json.RawMessage) error {
 		return fmt.Errorf("params is not a JSON object: %w", err)
 	}
 
-	for _, r := range required {
-		key, ok := r.(string)
+	// Check required fields
+	if required, ok := schemaMap["required"].([]any); ok {
+		for _, r := range required {
+			key, ok := r.(string)
+			if !ok {
+				continue
+			}
+			if _, exists := paramsMap[key]; !exists {
+				return fmt.Errorf("missing required param: %q", key)
+			}
+		}
+	}
+
+	// B3: type validation for declared properties
+	properties, _ := schemaMap["properties"].(map[string]any)
+	for key, val := range paramsMap {
+		propSchema, ok := properties[key]
+		if !ok {
+			continue // extra params are allowed
+		}
+		propMap, ok := propSchema.(map[string]any)
 		if !ok {
 			continue
 		}
-		if _, exists := paramsMap[key]; !exists {
-			return fmt.Errorf("missing required param: %q", key)
+		expectedType, _ := propMap["type"].(string)
+		if expectedType == "" {
+			continue
+		}
+		if err := checkType(key, val, expectedType); err != nil {
+			return err
 		}
 	}
 
 	return nil
 }
 
+// checkType validates a single value against its expected JSON schema type.
+func checkType(key string, val any, expectedType string) error {
+	switch expectedType {
+	case "string":
+		if _, ok := val.(string); !ok {
+			return fmt.Errorf("param %q: expected string, got %T", key, val)
+		}
+	case "number", "integer":
+		if _, ok := val.(float64); !ok {
+			return fmt.Errorf("param %q: expected number, got %T", key, val)
+		}
+	case "boolean":
+		if _, ok := val.(bool); !ok {
+			return fmt.Errorf("param %q: expected boolean, got %T", key, val)
+		}
+	case "array":
+		if _, ok := val.([]any); !ok {
+			return fmt.Errorf("param %q: expected array, got %T", key, val)
+		}
+	case "object":
+		if _, ok := val.(map[string]any); !ok {
+			return fmt.Errorf("param %q: expected object, got %T", key, val)
+		}
+	}
+	return nil
+}
+
 // DetectLoop checks if the agent is stuck in a loop.
 // Returns true + reason if a loop is detected.
 func DetectLoop(history []ToolCallRecord, cfg LoopConfig) (bool, string) {
-	// Check max iterations
 	if cfg.MaxIterations > 0 && len(history) >= cfg.MaxIterations {
 		return true, fmt.Sprintf("exceeded max iterations: %d", cfg.MaxIterations)
 	}
 
-	// Check consecutive identical calls
 	if cfg.MaxIdenticalToolCalls > 0 && len(history) >= cfg.MaxIdenticalToolCalls {
 		last := history[len(history)-1]
 		identical := 0
@@ -164,17 +217,4 @@ func DetectLoop(history []ToolCallRecord, cfg LoopConfig) (bool, string) {
 	}
 
 	return false, ""
-}
-
-// compile-time check: ensure patterns are valid (called during init in production)
-func CompilePatterns(patterns []string) ([]*regexp.Regexp, error) {
-	compiled := make([]*regexp.Regexp, 0, len(patterns))
-	for _, p := range patterns {
-		re, err := regexp.Compile("(?i)" + regexp.QuoteMeta(p))
-		if err != nil {
-			return nil, fmt.Errorf("invalid pattern %q: %w", p, err)
-		}
-		compiled = append(compiled, re)
-	}
-	return compiled, nil
 }
