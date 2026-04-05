@@ -47,8 +47,12 @@
 | Auth | JWT (golang-jwt) + refresh tokens |
 | Frontend | Next.js + React + shadcn/ui + Tailwind + TanStack Query |
 | Gateway | Traefik |
-| RAG | NVIDIA RAG Blueprint v2.5.0 |
-| LLM | Nemotron-Super-49B via NVIDIA API (externo) |
+| RAG | Tree reasoning (PageIndex-inspired, no vectors) |
+| LLM | Model-agnostic via SGLang (slot-per-pipeline-step) |
+| OCR | PaddleOCR-VL 1.5 via SGLang |
+| Vision | Qwen3.5-9B via SGLang |
+| Model server | SGLang (1 instance per model, OpenAI-compatible API) |
+| Object storage | MinIO (S3-compatible, migrable a AWS S3) |
 | Observability | OpenTelemetry + Grafana stack |
 | Logger | slog (Go stdlib) |
 | Testing | go test + testify + testcontainers |
@@ -81,8 +85,9 @@ refactor(rag): extract collection resolver to pkg/tenant
 
 Tipos: `feat`, `fix`, `refactor`, `test`, `docs`, `ci`, `chore`
 
-Scopes: `auth`, `chat`, `rag`, `ingest`, `notification`, `ws`, `platform`,
-`web`, `cli`, `mcp`, `agent`, `docai`, `vision`, `feedback`, `infra`
+Scopes: `auth`, `chat`, `agent`, `search`, `traces`, `ingest`, `extractor`,
+`notification`, `ws`, `platform`, `feedback`, `web`, `cli`, `mcp`, `infra`,
+`pkg`, `docs`, `deploy`
 
 ### Pull Requests
 
