@@ -209,6 +209,11 @@ func (h *Chat) AddMessage(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "role must be user, assistant, or system"})
 		return
 	}
+	// C4: block system role from external clients — only internal services should set system messages
+	if req.Role == "system" {
+		writeJSON(w, http.StatusForbidden, map[string]string{"error": "system messages cannot be added via API"})
+		return
+	}
 
 	// P1: validate user message content through guardrails
 	if req.Role == "user" {

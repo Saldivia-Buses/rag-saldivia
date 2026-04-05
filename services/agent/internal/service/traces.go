@@ -4,10 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"regexp"
 
 	"github.com/google/uuid"
 	"github.com/nats-io/nats.go"
 )
+
+var safeToken = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)
 
 // TracePublisher publishes execution trace events to NATS for the Traces Service.
 type TracePublisher struct {
@@ -22,7 +25,7 @@ func NewTracePublisher(nc *nats.Conn) *TracePublisher {
 // TraceStart publishes a trace start event.
 func (p *TracePublisher) TraceStart(tenantSlug, sessionID, userID, query string) string {
 	traceID := uuid.New().String()
-	if p.nc == nil {
+	if p.nc == nil || !validateToken(tenantSlug) {
 		return traceID
 	}
 	evt := map[string]string{
@@ -38,7 +41,7 @@ func (p *TracePublisher) TraceStart(tenantSlug, sessionID, userID, query string)
 
 // TraceEnd publishes a trace end event.
 func (p *TracePublisher) TraceEnd(tenantSlug, traceID, status string, modelsUsed []string, durationMS, inputTokens, outputTokens, toolCallCount int, costUSD float64) {
-	if p.nc == nil {
+	if p.nc == nil || !validateToken(tenantSlug) {
 		return
 	}
 	evt := map[string]any{
@@ -57,7 +60,7 @@ func (p *TracePublisher) TraceEnd(tenantSlug, traceID, status string, modelsUsed
 
 // TraceEvent publishes a single trace event (llm_call, tool_call, error, etc.).
 func (p *TracePublisher) TraceEvent(tenantSlug, traceID, eventType string, seq, durationMS int, data any) {
-	if p.nc == nil {
+	if p.nc == nil || !validateToken(tenantSlug) {
 		return
 	}
 	evt := map[string]any{
@@ -80,4 +83,9 @@ func (p *TracePublisher) publish(subject string, evt any) {
 	if err := p.nc.Publish(subject, data); err != nil {
 		slog.Error("publish trace event", "error", err, "subject", subject)
 	}
+}
+
+// validateToken checks if a string is safe for NATS subject interpolation.
+func validateToken(s string) bool {
+	return s != "" && safeToken.MatchString(s)
 }

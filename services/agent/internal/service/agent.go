@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/Camionerou/rag-saldivia/pkg/guardrails"
+	"github.com/Camionerou/rag-saldivia/pkg/tenant"
 	"github.com/Camionerou/rag-saldivia/services/agent/internal/llm"
 	"github.com/Camionerou/rag-saldivia/services/agent/internal/tools"
 )
@@ -81,8 +82,14 @@ type ToolCallLog struct {
 func (a *Agent) Query(ctx context.Context, jwt, userMessage string, history []llm.Message) (*QueryResult, error) {
 	start := time.Now()
 
-	// Publish trace start (tenant extracted from JWT would be ideal, using "default" for now)
-	traceID := a.tracePublisher.TraceStart("default", "", "", userMessage)
+	// B1: extract tenant + user from JWT context
+	ti, _ := tenant.FromContext(ctx)
+	tenantSlug := ti.Slug
+	if tenantSlug == "" {
+		tenantSlug = ti.ID
+	}
+	userID := "" // TODO: extract from context when middleware exposes it
+	traceID := a.tracePublisher.TraceStart(tenantSlug, "", userID, userMessage)
 
 	// Input guardrails
 	sanitized, err := guardrails.ValidateInput(ctx, userMessage, a.config.GuardrailsConfig, nil)
@@ -138,7 +145,7 @@ func (a *Agent) Query(ctx context.Context, jwt, userMessage string, history []ll
 				DurationMS:   int(time.Since(start).Milliseconds()),
 				Model:        a.llmAdapter.Model(),
 			}
-			return a.publishTraceEnd(traceID, r, "completed"), nil
+			return a.publishTraceEnd(tenantSlug, traceID, r, "completed"), nil
 		}
 
 		// Process tool calls
@@ -199,7 +206,7 @@ func (a *Agent) Query(ctx context.Context, jwt, userMessage string, history []ll
 				// Tool needs user approval — pause the loop and return
 				tcLog.Status = "pending_confirmation"
 				allToolCalls = append(allToolCalls, tcLog)
-				return &QueryResult{
+				r := &QueryResult{
 					Response:     result.ActionPlan,
 					ToolCalls:    allToolCalls,
 					InputTokens:  totalInput,
@@ -211,7 +218,9 @@ func (a *Agent) Query(ctx context.Context, jwt, userMessage string, history []ll
 						ActionPlan: result.ActionPlan,
 						Params:     json.RawMessage(tc.Function.Arguments),
 					},
-				}, nil
+				}
+				// B3: publish trace end even for pending_confirmation
+				return a.publishTraceEnd(tenantSlug, traceID, r, "pending_confirmation"), nil
 			} else {
 				tcLog.Status = result.Status
 				if result.Status == "success" {
@@ -246,7 +255,7 @@ func (a *Agent) Query(ctx context.Context, jwt, userMessage string, history []ll
 		DurationMS:   int(time.Since(start).Milliseconds()),
 		Model:        a.llmAdapter.Model(),
 	}
-	return a.publishTraceEnd(traceID, r, "timeout"), nil
+	return a.publishTraceEnd(tenantSlug, traceID, r, "timeout"), nil
 }
 
 // ExecuteConfirmed runs a previously-pending tool after user approval.
@@ -255,9 +264,9 @@ func (a *Agent) ExecuteConfirmed(ctx context.Context, jwt, toolName string, para
 }
 
 // publishTraceEnd is a convenience to publish trace end + return result.
-func (a *Agent) publishTraceEnd(traceID string, result *QueryResult, status string) *QueryResult {
+func (a *Agent) publishTraceEnd(tenantSlug, traceID string, result *QueryResult, status string) *QueryResult {
 	a.tracePublisher.TraceEnd(
-		"default", traceID, status,
+		tenantSlug, traceID, status,
 		[]string{result.Model}, result.DurationMS,
 		result.InputTokens, result.OutputTokens,
 		len(result.ToolCalls), 0,
