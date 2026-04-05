@@ -29,17 +29,19 @@ func NewTokenBlacklist(rdb *redis.Client) *TokenBlacklist {
 
 // Revoke adds a token ID to the blacklist. Expires when the token would
 // have expired naturally, so the blacklist doesn't grow forever.
+// Revoke adds a token ID to the blacklist.
+// tenantID is optional (empty = no namespace). Used for defense-in-depth in multi-tenant.
 func (b *TokenBlacklist) Revoke(ctx context.Context, jti string, expiresAt time.Time) error {
 	ttl := time.Until(expiresAt)
 	if ttl <= 0 {
 		return nil
 	}
-	return b.rdb.Set(ctx, b.prefix+jti, "1", ttl).Err()
+	return b.rdb.Set(ctx, b.key(jti), "1", ttl).Err()
 }
 
 // IsRevoked checks if a token ID has been blacklisted.
 func (b *TokenBlacklist) IsRevoked(ctx context.Context, jti string) (bool, error) {
-	result, err := b.rdb.Exists(ctx, b.prefix+jti).Result()
+	result, err := b.rdb.Exists(ctx, b.key(jti)).Result()
 	if err != nil {
 		return false, fmt.Errorf("check blacklist: %w", err)
 	}
@@ -54,8 +56,12 @@ func (b *TokenBlacklist) RevokeAll(ctx context.Context, jtis []string, expiresAt
 	}
 	pipe := b.rdb.Pipeline()
 	for _, jti := range jtis {
-		pipe.Set(ctx, b.prefix+jti, "1", ttl)
+		pipe.Set(ctx, b.key(jti), "1", ttl)
 	}
 	_, err := pipe.Exec(ctx)
 	return err
+}
+
+func (b *TokenBlacklist) key(jti string) string {
+	return b.prefix + jti
 }
