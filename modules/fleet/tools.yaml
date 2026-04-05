@@ -1,0 +1,86 @@
+# Fleet module — tool definitions for the Agent Runtime.
+# When this module is enabled for a tenant, these tools become available in chat.
+module: fleet
+name: "Transporte/Logistica"
+
+tools:
+  - id: search_vehicles
+    service: fleet
+    method: SearchVehicles
+    protocol: grpc
+    type: read
+    requires_confirmation: false
+    description: "Search for vehicles by plate number, model, or status. Returns vehicle details including current location and maintenance status."
+    parameters:
+      type: object
+      properties:
+        query:
+          type: string
+          description: "search query (plate, model, or keywords)"
+        status:
+          type: string
+          description: "filter by status: active, maintenance, retired"
+      required:
+        - query
+
+  - id: search_repuestos
+    service: fleet
+    method: SearchRepuestos
+    protocol: grpc
+    type: read
+    requires_confirmation: false
+    description: "Search for spare parts by name, part number, or vehicle model. Returns price, stock, and supplier info."
+    parameters:
+      type: object
+      properties:
+        nombre:
+          type: string
+          description: "part name or number"
+        vehiculo:
+          type: string
+          description: "vehicle model to filter compatible parts"
+      required:
+        - nombre
+
+  - id: get_proveedor
+    service: fleet
+    method: GetProveedor
+    protocol: grpc
+    type: read
+    requires_confirmation: false
+    description: "Get supplier details for a specific spare part. Returns contact info, prices, and delivery times."
+    parameters:
+      type: object
+      properties:
+        repuesto_id:
+          type: string
+          description: "spare part ID"
+      required:
+        - repuesto_id
+
+  - id: schedule_maintenance
+    service: fleet
+    method: ScheduleMaintenance
+    protocol: grpc
+    type: action
+    requires_confirmation: true
+    description: "Schedule a maintenance job for a vehicle. Requires confirmation before creating the work order."
+    parameters:
+      type: object
+      properties:
+        vehicle_id:
+          type: string
+          description: "vehicle ID"
+        type:
+          type: string
+          description: "maintenance type: preventive, corrective"
+        description:
+          type: string
+          description: "description of the maintenance needed"
+        scheduled_date:
+          type: string
+          description: "date in YYYY-MM-DD format"
+      required:
+        - vehicle_id
+        - type
+        - description
