@@ -27,6 +27,12 @@ x-env-common: &env-common
   JWT_PRIVATE_KEY: LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1DNENBUUF3QlFZREsyVndCQ0lFSUZvSXFxYU1BcjVjYnZFSE9Rc2g0cnVQTUUzeCtRSkVlVDByNnkxQ2tjMmgKLS0tLS1FTkQgUFJJVkFURSBLRVktLS0tLQo=
   JWT_PUBLIC_KEY: LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUNvd0JRWURLMlZ3QXlFQVpMSmkrZmtPbitKUllNQmc4VkVBTkh2bXRzZUxQK3JmRFdFUStZL3ZIU0E9Ci0tLS0tRU5EIFBVQkxJQyBLRVktLS0tLQo=
   POSTGRES_TENANT_URL: postgres://sda:sda_dev@postgres:5432/sda_tenant_dev?sslmode=disable
+  # MinIO storage — Docker-internal hostname. When running Go on host
+  # (make dev), override: STORAGE_ENDPOINT=http://localhost:9000
+  STORAGE_ENDPOINT: http://minio:9000
+  STORAGE_BUCKET: sda-documents
+  STORAGE_ACCESS_KEY: sda-admin
+  STORAGE_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-sda-dev-secret}
 
 services:
 
@@ -110,6 +116,97 @@ services:
     ports:
       - "1025:1025"
       - "8025:8025"
+    restart: unless-stopped
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    ports:
+      - "127.0.0.1:9000:9000"
+      - "127.0.0.1:9001:9001"
+    volumes:
+      - minio_data:/data
+    environment:
+      MINIO_ROOT_USER: sda-admin
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-sda-dev-secret}
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  # ── SGLang Model Servers (profile: gpu) ─────────────────────────────
+  # Only start with: docker compose --profile gpu up
+  # Requires NVIDIA GPU with Container Toolkit installed.
+  # Each instance serves exactly one model on its own port.
+
+  sglang-ocr:
+    image: lmsysorg/sglang:latest-nvidia-gpu
+    profiles: [gpu]
+    command:
+      - python3
+      - -m
+      - sglang.launch_server
+      - --model
+      - PaddlePaddle/PaddleOCR-VL-1.5
+      - --port
+      - "8000"
+      - --host
+      - "0.0.0.0"
+    ports:
+      - "127.0.0.1:8100:8000"
+    volumes:
+      - model_cache:/root/.cache/huggingface
+    environment:
+      - CUDA_VISIBLE_DEVICES=0
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped
+
+  sglang-vision:
+    image: lmsysorg/sglang:latest-nvidia-gpu
+    profiles: [gpu]
+    command:
+      - python3
+      - -m
+      - sglang.launch_server
+      - --model
+      - Qwen/Qwen3.5-9B
+      - --port
+      - "8000"
+      - --host
+      - "0.0.0.0"
+    ports:
+      - "127.0.0.1:8101:8000"
+    volumes:
+      - model_cache:/root/.cache/huggingface
+    environment:
+      - CUDA_VISIBLE_DEVICES=0
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 120s
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
     restart: unless-stopped
 
   # ── Database Init ──────────────────────────────────────────────────────
@@ -283,3 +380,5 @@ volumes:
   postgres_data:
   redis_data:
   nats_data:
+  minio_data:
+  model_cache:
