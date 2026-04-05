@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 
+	"github.com/Camionerou/rag-saldivia/pkg/audit"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/pkg/tenant"
 	"github.com/Camionerou/rag-saldivia/services/search/internal/service"
@@ -16,12 +17,13 @@ import (
 
 // Handler wraps the Search service for HTTP.
 type Handler struct {
-	svc *service.Search
+	svc   *service.Search
+	audit *audit.Writer
 }
 
 // New creates a search Handler.
-func New(svc *service.Search) *Handler {
-	return &Handler{svc: svc}
+func New(svc *service.Search, auditWriter *audit.Writer) *Handler {
+	return &Handler{svc: svc, audit: auditWriter}
 }
 
 // Routes returns the search router.
@@ -68,6 +70,16 @@ func (h *Handler) SearchDocuments(w http.ResponseWriter, r *http.Request) {
 			"request_id", reqID, "tenant_id", ti.ID)
 		http.Error(w, `{"error":"search failed"}`, http.StatusInternalServerError)
 		return
+	}
+
+	// Audit search query
+	if h.audit != nil {
+		h.audit.Write(r.Context(), audit.Entry{
+			Action:   "search.query",
+			Resource: req.Query,
+			Details:  map[string]any{"results": len(result.Selections), "duration_ms": result.DurationMS},
+			IP:       r.RemoteAddr,
+		})
 	}
 
 	w.Header().Set("Content-Type", "application/json")
