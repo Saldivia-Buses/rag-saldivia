@@ -29,8 +29,11 @@ dev: ## Start infra only (run Go services on host)
 dev-full: ## Start infra + all Go services in Docker
 	docker compose -f $(DEPLOY_DIR)/docker-compose.dev.yml --profile full up --build
 
+dev-gpu: ## Start infra + SGLang model servers (requires NVIDIA GPU)
+	docker compose -f $(DEPLOY_DIR)/docker-compose.dev.yml --profile gpu up
+
 stop: ## Stop all services
-	docker compose -f $(DEPLOY_DIR)/docker-compose.dev.yml --profile full down
+	docker compose -f $(DEPLOY_DIR)/docker-compose.dev.yml --profile full --profile gpu down
 
 # ── Build ────────────────────────────────────────────────────────────────
 
@@ -65,6 +68,9 @@ test-frontend: ## Run frontend tests
 
 test-e2e: ## Run E2E tests (Playwright)
 	cd apps/web && bunx playwright test
+
+test-storage: ## Run storage tests (requires MinIO running)
+	cd $(ROOT_DIR)/pkg && go test ./storage/... -v -count=1
 
 test-all: test test-frontend test-e2e ## Run all test suites
 
