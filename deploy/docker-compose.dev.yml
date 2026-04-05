@@ -224,6 +224,7 @@ services:
         condition: service_healthy
     volumes:
       - ./scripts:/scripts:ro
+      - ../db:/db:ro
       - ../services:/services:ro
     environment:
       PLATFORM_DB_URL: postgres://sda:sda_dev@postgres:5432/sda_platform?sslmode=disable

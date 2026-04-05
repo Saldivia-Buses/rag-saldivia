@@ -1,56 +1,71 @@
 #!/bin/bash
 # SDA Framework — Database Migration Runner
-# Applies all migration files in order to the correct databases.
+# Applies migration files from the centralized db/ directory.
+# Tracks applied migrations in a schema_migrations table to prevent re-application.
 #
 # Usage:
-#   ./deploy/scripts/migrate.sh                    # defaults to dev
+#   ./deploy/scripts/migrate.sh
 #   PLATFORM_DB_URL=... TENANT_DB_URL=... ./deploy/scripts/migrate.sh
-#
-# Platform DB gets: platform migrations
-# Tenant DB gets: auth → chat → notification → ingest (order matters for FK deps)
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
-# Support both host (../../services) and container (/services) paths
-if [ -d "/services" ]; then
-    ROOT_DIR=""
-    SERVICES_DIR="/services"
+if [ -d "/db" ]; then
+    DB_DIR="/db"
 else
-    ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
-    SERVICES_DIR="$ROOT_DIR/services"
+    DB_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)/db"
 fi
 
-# Database URLs (defaults for dev)
 PLATFORM_DB_URL="${PLATFORM_DB_URL:-postgres://sda:sda_dev@localhost:5432/sda_platform?sslmode=disable}"
 TENANT_DB_URL="${TENANT_DB_URL:-postgres://sda:sda_dev@localhost:5432/sda_tenant_dev?sslmode=disable}"
 
 log() { echo "[migrate] $1"; }
 
-run_sql() {
+# Create schema_migrations tracking table if it doesn't exist
+ensure_tracking() {
+    local db_url="$1"
+    psql "$db_url" --quiet -v ON_ERROR_STOP=1 <<'SQL'
+CREATE TABLE IF NOT EXISTS schema_migrations (
+    filename TEXT PRIMARY KEY,
+    applied_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+SQL
+}
+
+# Apply a migration if not already applied
+apply_migration() {
     local db_url="$1"
     local file="$2"
-    local name
-    name=$(basename "$(dirname "$(dirname "$(dirname "$file")")")")
-    log "applying $name/$(basename "$file") → $(echo "$db_url" | sed 's|.*@||; s|?.*||')"
+    local filename
+    filename=$(basename "$file")
+
+    # Check if already applied
+    local applied
+    applied=$(psql "$db_url" -t -c "SELECT 1 FROM schema_migrations WHERE filename = '$filename'" 2>/dev/null | tr -d ' ')
+
+    if [ "$applied" = "1" ]; then
+        return 0
+    fi
+
+    log "applying $filename → $(echo "$db_url" | sed 's|.*@||; s|?.*||')"
     psql "$db_url" -f "$file" -v ON_ERROR_STOP=1 --quiet
+
+    # Record as applied
+    psql "$db_url" --quiet -c "INSERT INTO schema_migrations (filename) VALUES ('$filename') ON CONFLICT DO NOTHING"
 }
 
 # ── Platform DB ──────────────────────────────────────────────────────────
 log "=== Platform DB ==="
-for f in "$SERVICES_DIR"/platform/db/migrations/*.up.sql; do
-    [ -f "$f" ] && run_sql "$PLATFORM_DB_URL" "$f"
+ensure_tracking "$PLATFORM_DB_URL"
+for f in "$DB_DIR"/platform/migrations/*.up.sql; do
+    [ -f "$f" ] && apply_migration "$PLATFORM_DB_URL" "$f"
 done
 
 # ── Tenant DB ────────────────────────────────────────────────────────────
-# Order matters: auth first (creates users table), then services with FK deps
-TENANT_MIGRATION_ORDER=(auth chat notification ingest)
-
 log "=== Tenant DB ==="
-for svc in "${TENANT_MIGRATION_ORDER[@]}"; do
-    for f in "$SERVICES_DIR"/"$svc"/db/migrations/*.up.sql; do
-        [ -f "$f" ] && run_sql "$TENANT_DB_URL" "$f"
-    done
+ensure_tracking "$TENANT_DB_URL"
+for f in "$DB_DIR"/tenant/migrations/*.up.sql; do
+    [ -f "$f" ] && apply_migration "$TENANT_DB_URL" "$f"
 done
 
 log "=== Done ==="
