@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"crypto/ed25519"
 	"log/slog"
 	"net/http"
 	"os"
@@ -16,6 +15,7 @@ import (
 
 	"github.com/Camionerou/rag-saldivia/pkg/audit"
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
+	"github.com/Camionerou/rag-saldivia/pkg/config"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
 	"github.com/Camionerou/rag-saldivia/services/search/internal/handler"
@@ -27,9 +27,9 @@ func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
 	slog.SetDefault(logger)
 
-	port := env("SEARCH_PORT", "8010")
-	publicKey := loadPublicKey()
-	tenantDBURL := env("POSTGRES_TENANT_URL", "")
+	port := config.Env("SEARCH_PORT", "8010")
+	publicKey := sdajwt.MustLoadPublicKey("JWT_PUBLIC_KEY")
+	tenantDBURL := config.Env("POSTGRES_TENANT_URL", "")
 
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
@@ -37,7 +37,7 @@ func main() {
 	otelShutdown, err := sdaotel.Setup(ctx, sdaotel.Config{
 		ServiceName:    "sda-search",
 		ServiceVersion: "0.1.0",
-		Endpoint:       env("OTEL_EXPORTER_OTLP_ENDPOINT", "localhost:4317"),
+		Endpoint:       config.Env("OTEL_EXPORTER_OTLP_ENDPOINT", "localhost:4317"),
 	})
 	if err != nil {
 		slog.Warn("otel init failed", "error", err)
@@ -54,8 +54,8 @@ func main() {
 	defer pool.Close()
 
 	// LLM client for tree navigation
-	llmEndpoint := env("SGLANG_LLM_URL", "http://localhost:8102")
-	llmModel := env("SGLANG_LLM_MODEL", "")
+	llmEndpoint := config.Env("SGLANG_LLM_URL", "http://localhost:8102")
+	llmModel := config.Env("SGLANG_LLM_MODEL", "")
 
 	searchSvc := service.New(pool, llmEndpoint, llmModel)
 	auditWriter := audit.NewWriter(pool)
@@ -102,23 +102,5 @@ func main() {
 	srv.Shutdown(shutdownCtx)
 }
 
-func env(key, fallback string) string {
-	if v := os.Getenv(key); v != "" {
-		return v
-	}
-	return fallback
-}
 
-func loadPublicKey() ed25519.PublicKey {
-	pubB64 := env("JWT_PUBLIC_KEY", "")
-	if pubB64 == "" {
-		slog.Error("JWT_PUBLIC_KEY is required")
-		os.Exit(1)
-	}
-	key, err := sdajwt.ParsePublicKeyEnv(pubB64)
-	if err != nil {
-		slog.Error("failed to parse JWT_PUBLIC_KEY", "error", err)
-		os.Exit(1)
-	}
-	return key
-}
+
