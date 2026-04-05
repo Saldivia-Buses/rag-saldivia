@@ -142,14 +142,14 @@ func (t *Traces) ListTraces(ctx context.Context, tenantID string, limit, offset 
 	return traces, rows.Err()
 }
 
-// GetTraceDetail returns a trace with all its events.
-func (t *Traces) GetTraceDetail(ctx context.Context, traceID string) (*Trace, []TraceEvent, error) {
+// GetTraceDetail returns a trace with all its events. Enforces tenant isolation.
+func (t *Traces) GetTraceDetail(ctx context.Context, traceID, tenantID string) (*Trace, []TraceEvent, error) {
 	var tr Trace
 	err := t.pool.QueryRow(ctx,
 		`SELECT id, tenant_id, session_id, user_id, query, status, models_used,
 			total_duration_ms, total_input_tokens, total_output_tokens,
 			total_cost_usd, tool_call_count, error, created_at
-		 FROM execution_traces WHERE id = $1`, traceID,
+		 FROM execution_traces WHERE id = $1 AND tenant_id = $2`, traceID, tenantID,
 	).Scan(
 		&tr.ID, &tr.TenantID, &tr.SessionID, &tr.UserID, &tr.Query,
 		&tr.Status, &tr.ModelsUsed, &tr.TotalDurationMS,

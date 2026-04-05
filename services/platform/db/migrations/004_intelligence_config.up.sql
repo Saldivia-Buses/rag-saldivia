@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS execution_traces (
     session_id          TEXT NOT NULL,
     user_id             TEXT NOT NULL,
     query               TEXT NOT NULL,
-    status              TEXT NOT NULL CHECK (status IN ('completed', 'failed', 'cancelled', 'timeout')),
+    status              TEXT NOT NULL CHECK (status IN ('running', 'completed', 'failed', 'cancelled', 'timeout')),
     models_used         TEXT[] DEFAULT '{}',
     total_duration_ms   INT,
     total_input_tokens  INT DEFAULT 0,

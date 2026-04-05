@@ -59,46 +59,54 @@ func main() {
 	}
 
 	// Ensure stream
+	// B5: use tenant.*.traces.> subject convention
 	js.AddStream(&nats.StreamConfig{
 		Name:     "TRACES",
-		Subjects: []string{"traces.>"},
+		Subjects: []string{"tenant.*.traces.>"},
 	})
 
-	// Subscribe to trace events
-	js.Subscribe("traces.start.*", func(msg *nats.Msg) {
+	// B4: NATS callbacks use background context with timeout, not the signal
+	// context. During drain, callbacks can still fire — they need a live context.
+	natsCtx := func() context.Context {
+		c, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		_ = cancel // GC will clean up; callback is short-lived
+		return c
+	}
+
+	js.Subscribe("tenant.*.traces.start", func(msg *nats.Msg) {
 		var evt service.TraceStartEvent
 		if err := json.Unmarshal(msg.Data, &evt); err != nil {
 			slog.Error("invalid trace start event", "error", err)
 			msg.Ack()
 			return
 		}
-		if err := tracesSvc.RecordTraceStart(ctx, evt); err != nil {
+		if err := tracesSvc.RecordTraceStart(natsCtx(), evt); err != nil {
 			slog.Error("record trace start failed", "error", err, "trace_id", evt.TraceID)
 		}
 		msg.Ack()
 	}, nats.Durable("traces-start"), nats.ManualAck())
 
-	js.Subscribe("traces.end.*", func(msg *nats.Msg) {
+	js.Subscribe("tenant.*.traces.end", func(msg *nats.Msg) {
 		var evt service.TraceEndEvent
 		if err := json.Unmarshal(msg.Data, &evt); err != nil {
 			slog.Error("invalid trace end event", "error", err)
 			msg.Ack()
 			return
 		}
-		if err := tracesSvc.RecordTraceEnd(ctx, evt); err != nil {
+		if err := tracesSvc.RecordTraceEnd(natsCtx(), evt); err != nil {
 			slog.Error("record trace end failed", "error", err, "trace_id", evt.TraceID)
 		}
 		msg.Ack()
 	}, nats.Durable("traces-end"), nats.ManualAck())
 
-	js.Subscribe("traces.event.*", func(msg *nats.Msg) {
+	js.Subscribe("tenant.*.traces.event", func(msg *nats.Msg) {
 		var evt service.TraceEvent
 		if err := json.Unmarshal(msg.Data, &evt); err != nil {
 			slog.Error("invalid trace event", "error", err)
 			msg.Ack()
 			return
 		}
-		if err := tracesSvc.RecordEvent(ctx, evt); err != nil {
+		if err := tracesSvc.RecordEvent(natsCtx(), evt); err != nil {
 			slog.Error("record event failed", "error", err, "trace_id", evt.TraceID)
 		}
 		msg.Ack()

@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
+	"github.com/Camionerou/rag-saldivia/pkg/tenant"
 	"github.com/Camionerou/rag-saldivia/services/traces/internal/service"
 )
 
@@ -27,16 +28,18 @@ func New(svc *service.Traces) *Handler {
 func (h *Handler) Routes() chi.Router {
 	r := chi.NewRouter()
 	r.Get("/", h.ListTraces)
+	r.Get("/costs", h.GetTenantCost)
 	r.Get("/{traceID}", h.GetTraceDetail)
-	r.Get("/costs/{tenantID}", h.GetTenantCost)
 	return r
 }
 
-// ListTraces handles GET /v1/traces?tenant_id=X&limit=N&offset=N
+// ListTraces handles GET /v1/traces?limit=N&offset=N
+// B2: tenant_id comes from JWT context, not query string
 func (h *Handler) ListTraces(w http.ResponseWriter, r *http.Request) {
-	tenantID := r.URL.Query().Get("tenant_id")
-	if tenantID == "" {
-		http.Error(w, `{"error":"tenant_id is required"}`, http.StatusBadRequest)
+	ti, err := tenant.FromContext(r.Context())
+	tenantID := ti.ID
+	if err != nil || tenantID == "" {
+		http.Error(w, `{"error":"tenant context missing"}`, http.StatusUnauthorized)
 		return
 	}
 
@@ -58,10 +61,18 @@ func (h *Handler) ListTraces(w http.ResponseWriter, r *http.Request) {
 }
 
 // GetTraceDetail handles GET /v1/traces/{traceID}
+// B3: enforces tenant isolation via tenant_id in query
 func (h *Handler) GetTraceDetail(w http.ResponseWriter, r *http.Request) {
+	ti, err := tenant.FromContext(r.Context())
+	tenantID := ti.ID
+	if err != nil || tenantID == "" {
+		http.Error(w, `{"error":"tenant context missing"}`, http.StatusUnauthorized)
+		return
+	}
+
 	traceID := chi.URLParam(r, "traceID")
 
-	trace, events, err := h.svc.GetTraceDetail(r.Context(), traceID)
+	trace, events, err := h.svc.GetTraceDetail(r.Context(), traceID, tenantID)
 	if err != nil {
 		slog.Error("get trace failed", "error", err, "trace_id", traceID)
 		http.Error(w, `{"error":"trace not found"}`, http.StatusNotFound)
@@ -76,13 +87,19 @@ func (h *Handler) GetTraceDetail(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(resp)
 }
 
-// GetTenantCost handles GET /v1/traces/costs/{tenantID}?from=2026-04-01&to=2026-05-01
+// GetTenantCost handles GET /v1/traces/costs?from=2026-04-01&to=2026-05-01
+// B2: tenant_id from JWT, not URL param
 func (h *Handler) GetTenantCost(w http.ResponseWriter, r *http.Request) {
-	tenantID := chi.URLParam(r, "tenantID")
+	ti, err := tenant.FromContext(r.Context())
+	tenantID := ti.ID
+	if err != nil || tenantID == "" {
+		http.Error(w, `{"error":"tenant context missing"}`, http.StatusUnauthorized)
+		return
+	}
 
 	from, err := time.Parse("2006-01-02", r.URL.Query().Get("from"))
 	if err != nil {
-		from = time.Now().AddDate(0, -1, 0) // default: last month
+		from = time.Now().AddDate(0, -1, 0)
 	}
 	to, err := time.Parse("2006-01-02", r.URL.Query().Get("to"))
 	if err != nil {
