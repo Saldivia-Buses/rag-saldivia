@@ -13,9 +13,11 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/nats-io/nats.go"
 
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
+	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
 	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
 	"github.com/Camionerou/rag-saldivia/services/platform/internal/handler"
 	"github.com/Camionerou/rag-saldivia/services/platform/internal/service"
@@ -57,7 +59,17 @@ func main() {
 	}
 	defer pool.Close()
 
-	platformSvc := service.New(pool)
+	// NATS for lifecycle event publishing
+	natsURL := env("NATS_URL", "nats://localhost:4222")
+	nc, err := nats.Connect(natsURL, nats.MaxReconnects(-1), nats.ReconnectWait(2*time.Second))
+	if err != nil {
+		slog.Warn("nats connect failed, lifecycle events disabled", "error", err)
+	} else {
+		defer nc.Drain()
+	}
+	publisher := natspub.New(nc)
+
+	platformSvc := service.New(pool, publisher)
 	platformSlug := env("PLATFORM_TENANT_SLUG", "platform")
 	platformHandler := handler.NewPlatform(platformSvc, publicKey, platformSlug)
 

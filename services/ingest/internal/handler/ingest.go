@@ -91,6 +91,13 @@ func (h *Ingest) Upload(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "unsupported file type: " + ext})
 		return
 	}
+	// P1: sanitize filename — strip path components, reject dangerous patterns
+	safeName := filepath.Base(header.Filename)
+	if safeName == "." || safeName == ".." || strings.ContainsAny(safeName, "/\\") {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid file name"})
+		return
+	}
+	header.Filename = safeName
 
 	collection := r.FormValue("collection")
 	if collection == "" {

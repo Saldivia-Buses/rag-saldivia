@@ -10,10 +10,13 @@ import (
 	"fmt"
 	"regexp"
 
+	"log/slog"
+
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
 	"github.com/Camionerou/rag-saldivia/services/platform/db"
 )
 
@@ -30,15 +33,31 @@ var (
 
 // Platform handles platform operations.
 type Platform struct {
-	pool    *pgxpool.Pool
-	queries *db.Queries
+	pool      *pgxpool.Pool
+	queries   *db.Queries
+	publisher *natspub.Publisher
 }
 
 // New creates a platform service.
-func New(pool *pgxpool.Pool) *Platform {
+func New(pool *pgxpool.Pool, publisher *natspub.Publisher) *Platform {
 	return &Platform{
-		pool:    pool,
-		queries: db.New(pool),
+		pool:      pool,
+		queries:   db.New(pool),
+		publisher: publisher,
+	}
+}
+
+// publishLifecycleEvent emits a NATS event for config/tenant changes.
+// Other services can react without polling or restarting.
+func (p *Platform) publishLifecycleEvent(tenantSlug, eventType string, data any) {
+	if p.publisher == nil {
+		return
+	}
+	if err := p.publisher.Notify(tenantSlug, map[string]any{
+		"type": "platform." + eventType,
+		"data": data,
+	}); err != nil {
+		slog.Warn("publish lifecycle event failed", "event", eventType, "error", err)
 	}
 }
 
@@ -152,7 +171,9 @@ func (p *Platform) CreateTenant(ctx context.Context, arg db.CreateTenantParams) 
 		}
 		return TenantDetail{}, fmt.Errorf("create tenant: %w", err)
 	}
-	return createRowToDetail(tenant), nil
+	detail := createRowToDetail(tenant)
+	p.publishLifecycleEvent(arg.Slug, "tenant.created", detail)
+	return detail, nil
 }
 
 // UpdateTenant updates a tenant's name, plan, and settings.
