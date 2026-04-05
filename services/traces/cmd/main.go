@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"crypto/ed25519"
 	"encoding/json"
 	"log/slog"
 	"net/http"
@@ -18,6 +17,7 @@ import (
 	"github.com/nats-io/nats.go"
 
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
+	"github.com/Camionerou/rag-saldivia/pkg/config"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
 	"github.com/Camionerou/rag-saldivia/services/traces/internal/handler"
@@ -29,10 +29,10 @@ func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
 	slog.SetDefault(logger)
 
-	port := env("TRACES_PORT", "8009")
-	publicKey := loadPublicKey()
-	platformDBURL := env("POSTGRES_PLATFORM_URL", "")
-	natsURL := env("NATS_URL", "nats://localhost:4222")
+	port := config.Env("TRACES_PORT", "8009")
+	publicKey := sdajwt.MustLoadPublicKey("JWT_PUBLIC_KEY")
+	platformDBURL := config.Env("POSTGRES_PLATFORM_URL", "")
+	natsURL := config.Env("NATS_URL", "nats://localhost:4222")
 
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
@@ -40,7 +40,7 @@ func main() {
 	otelShutdown, err := sdaotel.Setup(ctx, sdaotel.Config{
 		ServiceName:    "sda-traces",
 		ServiceVersion: "0.1.0",
-		Endpoint:       env("OTEL_EXPORTER_OTLP_ENDPOINT", "localhost:4317"),
+		Endpoint:       config.Env("OTEL_EXPORTER_OTLP_ENDPOINT", "localhost:4317"),
 	})
 	if err != nil {
 		slog.Warn("otel init failed", "error", err)
@@ -203,23 +203,5 @@ func main() {
 	srv.Shutdown(shutdownCtx)
 }
 
-func env(key, fallback string) string {
-	if v := os.Getenv(key); v != "" {
-		return v
-	}
-	return fallback
-}
 
-func loadPublicKey() ed25519.PublicKey {
-	pubB64 := env("JWT_PUBLIC_KEY", "")
-	if pubB64 == "" {
-		slog.Error("JWT_PUBLIC_KEY is required")
-		os.Exit(1)
-	}
-	key, err := sdajwt.ParsePublicKeyEnv(pubB64)
-	if err != nil {
-		slog.Error("failed to parse JWT_PUBLIC_KEY", "error", err)
-		os.Exit(1)
-	}
-	return key
-}
+
