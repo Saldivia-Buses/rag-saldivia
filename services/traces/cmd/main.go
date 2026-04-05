@@ -125,6 +125,13 @@ func main() {
 			msg.Ack()
 			return
 		}
+		// B1: validate tenant from subject
+		subjectTenant := extractSubjectTenant(msg.Subject)
+		if subjectTenant != "" && evt.TenantID != "" && evt.TenantID != subjectTenant {
+			slog.Error("tenant mismatch in trace end", "subject", subjectTenant, "payload", evt.TenantID)
+			msg.Ack()
+			return
+		}
 		if err := tracesSvc.RecordTraceEnd(ctx, evt); err != nil {
 			slog.Error("record trace end failed", "error", err, "trace_id", evt.TraceID)
 		}
@@ -137,6 +144,13 @@ func main() {
 		var evt service.TraceEvent
 		if err := json.Unmarshal(msg.Data, &evt); err != nil {
 			slog.Error("invalid trace event", "error", err)
+			msg.Ack()
+			return
+		}
+		// B1: validate tenant from subject
+		subjectTenant := extractSubjectTenant(msg.Subject)
+		if subjectTenant != "" && evt.TenantID != "" && evt.TenantID != subjectTenant {
+			slog.Error("tenant mismatch in trace event", "subject", subjectTenant, "payload", evt.TenantID)
 			msg.Ack()
 			return
 		}
