@@ -26,6 +26,7 @@ func New(svc *service.Agent) *Handler {
 func (h *Handler) Routes() chi.Router {
 	r := chi.NewRouter()
 	r.Post("/query", h.Query)
+	r.Post("/confirm", h.Confirm)
 	return r
 }
 
@@ -36,13 +37,9 @@ type queryRequest struct {
 
 // Query handles POST /v1/agent/query
 func (h *Handler) Query(w http.ResponseWriter, r *http.Request) {
-	r.Body = http.MaxBytesReader(w, r.Body, 256*1024) // 256KB max
+	r.Body = http.MaxBytesReader(w, r.Body, 256*1024)
 
-	// Extract JWT from auth header for tool passthrough
-	jwt := r.Header.Get("Authorization")
-	if len(jwt) > 7 && jwt[:7] == "Bearer " {
-		jwt = jwt[7:]
-	}
+	jwt := extractJWT(r)
 
 	var req queryRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -64,4 +61,45 @@ func (h *Handler) Query(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(result)
+}
+
+type confirmRequest struct {
+	Tool   string          `json:"tool"`
+	Params json.RawMessage `json:"params"`
+}
+
+// Confirm handles POST /v1/agent/confirm — executes a tool after user approval.
+func (h *Handler) Confirm(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, 64*1024)
+
+	jwt := extractJWT(r)
+
+	var req confirmRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, `{"error":"invalid request body"}`, http.StatusBadRequest)
+		return
+	}
+
+	if req.Tool == "" {
+		http.Error(w, `{"error":"tool is required"}`, http.StatusBadRequest)
+		return
+	}
+
+	result, err := h.svc.ExecuteConfirmed(r.Context(), jwt, req.Tool, req.Params)
+	if err != nil {
+		slog.Error("confirm execution failed", "error", err, "tool", req.Tool)
+		http.Error(w, `{"error":"execution failed"}`, http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(result)
+}
+
+func extractJWT(r *http.Request) string {
+	auth := r.Header.Get("Authorization")
+	if len(auth) > 7 && auth[:7] == "Bearer " {
+		return auth[7:]
+	}
+	return ""
 }

@@ -50,12 +50,20 @@ func New(adapter *llm.Adapter, executor *tools.Executor, schemas []llm.ToolSchem
 
 // QueryResult is the output of an agent query.
 type QueryResult struct {
-	Response     string        `json:"response"`
-	ToolCalls    []ToolCallLog `json:"tool_calls"`
-	InputTokens  int           `json:"input_tokens"`
-	OutputTokens int           `json:"output_tokens"`
-	DurationMS   int           `json:"duration_ms"`
-	Model        string        `json:"model"`
+	Response             string              `json:"response"`
+	ToolCalls            []ToolCallLog       `json:"tool_calls"`
+	InputTokens          int                 `json:"input_tokens"`
+	OutputTokens         int                 `json:"output_tokens"`
+	DurationMS           int                 `json:"duration_ms"`
+	Model                string              `json:"model"`
+	PendingConfirmation  *PendingConfirmation `json:"pending_confirmation,omitempty"`
+}
+
+// PendingConfirmation is returned when a tool needs user approval before executing.
+type PendingConfirmation struct {
+	Tool       string          `json:"tool"`
+	ActionPlan string          `json:"action_plan"`
+	Params     json.RawMessage `json:"params"`
 }
 
 // ToolCallLog records a single tool call for tracing.
@@ -176,12 +184,28 @@ func (a *Agent) Query(ctx context.Context, jwt, userMessage string, history []ll
 
 			if err != nil {
 				tcLog.Status = "error"
-				// B3: sanitize error — don't leak internal details
 				messages = append(messages, llm.Message{
 					Role:       "tool",
 					ToolCallID: tc.ID,
 					Content:    `{"error":"tool execution failed"}`,
 				})
+			} else if result.Status == "pending_confirmation" {
+				// Tool needs user approval — pause the loop and return
+				tcLog.Status = "pending_confirmation"
+				allToolCalls = append(allToolCalls, tcLog)
+				return &QueryResult{
+					Response:     result.ActionPlan,
+					ToolCalls:    allToolCalls,
+					InputTokens:  totalInput,
+					OutputTokens: totalOutput,
+					DurationMS:   int(time.Since(start).Milliseconds()),
+					Model:        a.llmAdapter.Model(),
+					PendingConfirmation: &PendingConfirmation{
+						Tool:       tc.Function.Name,
+						ActionPlan: result.ActionPlan,
+						Params:     json.RawMessage(tc.Function.Arguments),
+					},
+				}, nil
 			} else {
 				tcLog.Status = result.Status
 				if result.Status == "success" {
@@ -192,7 +216,6 @@ func (a *Agent) Query(ctx context.Context, jwt, userMessage string, history []ll
 						Content:    string(result.Data),
 					})
 				} else {
-					// B3: don't expose raw service errors to LLM
 					messages = append(messages, llm.Message{
 						Role:       "tool",
 						ToolCallID: tc.ID,
@@ -217,6 +240,11 @@ func (a *Agent) Query(ctx context.Context, jwt, userMessage string, history []ll
 		DurationMS:   int(time.Since(start).Milliseconds()),
 		Model:        a.llmAdapter.Model(),
 	}, nil
+}
+
+// ExecuteConfirmed runs a previously-pending tool after user approval.
+func (a *Agent) ExecuteConfirmed(ctx context.Context, jwt, toolName string, params json.RawMessage) (*tools.Result, error) {
+	return a.toolExecutor.ExecuteConfirmed(ctx, jwt, toolName, params)
 }
 
 // filterHistory allows only user and assistant messages, validates content.
