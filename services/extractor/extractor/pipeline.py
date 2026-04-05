@@ -9,7 +9,7 @@ import time
 
 import fitz  # pymupdf
 
-from .images import ExtractedImage, extract_images_from_pdf, render_page_as_image
+from .images import extract_images_from_doc, render_page_as_image_from_doc
 from .ocr import OCRClient
 from .schema import (
     ExtractionJob,
@@ -40,58 +40,67 @@ class ExtractionPipeline:
 
         Steps:
         1. Download PDF from MinIO
-        2. OCR each page via PaddleOCR-VL (SGLang)
-        3. Extract embedded images via pymupdf
-        4. Analyze each image via Qwen3.5-9B (SGLang)
-        5. Store extracted images in MinIO
-        6. Return unified ExtractionResult
+        2. Open PDF once with pymupdf
+        3. OCR each page via PaddleOCR-VL (SGLang) — errors per page, not fatal
+        4. Extract embedded images via pymupdf
+        5. Analyze each image via Qwen3.5-9B (SGLang) — errors per image, not fatal
+        6. Store extracted images in MinIO
+        7. Return unified ExtractionResult
         """
         start = time.monotonic()
         logger.info("extracting document=%s file=%s", job.document_id, job.file_name)
 
         # 1. Download from MinIO
         pdf_bytes = self.storage.get(job.storage_key)
+
+        # 2. Open PDF once — reused for page rendering and image extraction
         doc = fitz.open(stream=pdf_bytes, filetype="pdf")
         total_pages = len(doc)
-        doc.close()
-
         logger.info("document has %d pages", total_pages)
 
-        # 2. OCR each page
+        # 3. OCR each page (B4: partial failure — log and continue)
         pages: list[PageResult] = []
         for page_num in range(1, total_pages + 1):
-            page_image = render_page_as_image(pdf_bytes, page_num)
-            text = self.ocr.extract_page(page_image)
-            pages.append(PageResult(page_number=page_num, text=text))
+            try:
+                page_image = render_page_as_image_from_doc(doc, page_num)
+                text = self.ocr.extract_page(page_image)
+                pages.append(PageResult(page_number=page_num, text=text))
+            except Exception:
+                logger.warning("ocr failed on page %d/%d, recording empty", page_num, total_pages, exc_info=True)
+                pages.append(PageResult(page_number=page_num, text=""))
             logger.debug("ocr page %d/%d done", page_num, total_pages)
 
-        # 3. Extract embedded images
-        extracted_images = extract_images_from_pdf(pdf_bytes)
+        # 4. Extract embedded images (reuse open doc)
+        extracted_images = extract_images_from_doc(doc)
+        doc.close()
         logger.info("found %d embedded images", len(extracted_images))
 
-        # 4. Analyze each image + store in MinIO
+        # 5. Analyze each image + store in MinIO (B4: partial failure per image)
         images_by_page: dict[int, list[ImageResult]] = {}
         for img in extracted_images:
-            # Store image in MinIO
             img_key = (
                 f"{job.tenant_slug}/{job.document_id}"
                 f"/images/p{img.page_number}_img{img.index}.png"
             )
-            self.storage.put(img_key, img.image_bytes, content_type="image/png")
 
-            # Analyze via vision model
-            result = self.vision.analyze_image(img.image_bytes)
-            result.storage_key = img_key
+            try:
+                self.storage.put(img_key, img.image_bytes, content_type="image/png")
+                result = self.vision.analyze_image(img.image_bytes)
+                result.storage_key = img_key
+            except Exception:
+                logger.warning(
+                    "vision/storage failed for p%d_img%d, recording placeholder",
+                    img.page_number, img.index, exc_info=True,
+                )
+                result = ImageResult(
+                    description="[extraction failed]",
+                    type="error",
+                    storage_key=img_key,
+                )
 
             images_by_page.setdefault(img.page_number, []).append(result)
-            logger.debug(
-                "analyzed image p%d_img%d: type=%s",
-                img.page_number,
-                img.index,
-                result.type,
-            )
 
-        # 5. Attach images to their pages
+        # 6. Attach images to their pages
         for page in pages:
             page.images = images_by_page.get(page.page_number, [])
 

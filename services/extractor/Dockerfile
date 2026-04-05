@@ -13,5 +13,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY extractor/ extractor/
 COPY main.py .
 
+# Non-root user (bible: "usuario no-root")
+RUN useradd -r -s /bin/false extractor
+USER extractor
+
+EXPOSE 8090
+
 # No GPU needed — all inference goes through SGLang HTTP API
 CMD ["python", "main.py"]
