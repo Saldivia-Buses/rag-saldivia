@@ -50,11 +50,11 @@ func New(pool *pgxpool.Pool, publisher *natspub.Publisher) *Platform {
 // publishLifecycleEvent emits a NATS event for config/tenant changes.
 // Other services can react without polling or restarting.
 func (p *Platform) publishLifecycleEvent(tenantSlug, eventType string, data any) {
-	if p.publisher == nil {
+	if p.publisher == nil || tenantSlug == "" {
 		return
 	}
 	if err := p.publisher.Notify(tenantSlug, map[string]any{
-		"type": "platform." + eventType,
+		"type": "platform_" + eventType,
 		"data": data,
 	}); err != nil {
 		slog.Warn("publish lifecycle event failed", "event", eventType, "error", err)

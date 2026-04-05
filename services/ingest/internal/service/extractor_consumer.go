@@ -15,13 +15,15 @@ import (
 )
 
 // ExtractorConsumer subscribes to extractor results and stores pages + generates trees.
+// NOTE: In multi-tenant mode, this consumer needs a tenant.Resolver to get the
+// correct DB pool per tenant. Currently uses a single pool (single-tenant dev mode).
 type ExtractorConsumer struct {
-	nc       *nats.Conn
-	pool     *pgxpool.Pool
-	repo     *repository.Queries
-	treeGen  *tree.Generator
-	ctx      context.Context
-	cancel   context.CancelFunc
+	nc      *nats.Conn
+	pool    *pgxpool.Pool
+	repo    *repository.Queries
+	treeGen *tree.Generator
+	ctx     context.Context
+	cancel  context.CancelFunc
 }
 
 // NewExtractorConsumer creates a consumer for extractor results.
@@ -72,7 +74,7 @@ func (c *ExtractorConsumer) Start(ctx context.Context) error {
 		Durable:       "ingest-extractor-consumer",
 		FilterSubject: "tenant.*.extractor.result.>",
 		MaxDeliver:    3,
-		AckWait:       300_000_000_000, // 5 min for tree generation
+		AckWait:       300_000_000_000, // 5 min
 	})
 	if err != nil {
 		return err
@@ -80,10 +82,10 @@ func (c *ExtractorConsumer) Start(ctx context.Context) error {
 
 	go func() {
 		for {
-			msg, err := cons.Next(jetstream.FetchMaxWait(30_000_000_000)) // 30s poll
+			msg, err := cons.Next(jetstream.FetchMaxWait(30_000_000_000))
 			if err != nil {
 				if c.ctx.Err() != nil {
-					return // shutting down
+					return
 				}
 				continue
 			}
@@ -99,25 +101,33 @@ func (c *ExtractorConsumer) handleResult(msg jetstream.Msg) {
 	var result ExtractionResult
 	if err := json.Unmarshal(msg.Data(), &result); err != nil {
 		slog.Error("invalid extraction result", "error", err)
-		msg.Ack()
+		// C2: terminate invalid messages instead of acking
+		msg.Term()
 		return
 	}
 
 	slog.Info("received extraction result", "doc_id", result.DocumentID, "pages", result.TotalPages)
-
 	ctx := c.ctx
+	failed := false
 
-	// 1. Update document status + page count
-	c.repo.UpdateDocumentStatus(ctx, repository.UpdateDocumentStatusParams{
+	// 1. Update document status
+	if err := c.repo.UpdateDocumentStatus(ctx, repository.UpdateDocumentStatusParams{
 		Status: "indexing",
 		ID:     result.DocumentID,
-	})
+	}); err != nil {
+		slog.Error("update status failed", "doc_id", result.DocumentID, "error", err)
+		msg.Nak()
+		return
+	}
+
+	// B2: check errors on page count update
 	c.repo.UpdateDocumentPages(ctx, repository.UpdateDocumentPagesParams{
 		TotalPages: pgtype.Int4{Int32: int32(result.TotalPages), Valid: true},
 		ID:         result.DocumentID,
 	})
 
-	// 2. Store pages in document_pages
+	// 2. Store pages — B2: track failures
+	storedPages := 0
 	for _, page := range result.Pages {
 		tables := page.Tables
 		if tables == nil {
@@ -127,16 +137,28 @@ func (c *ExtractorConsumer) handleResult(msg jetstream.Msg) {
 		if images == nil {
 			images = json.RawMessage("[]")
 		}
-		c.repo.InsertDocumentPage(ctx, repository.InsertDocumentPageParams{
+		if err := c.repo.InsertDocumentPage(ctx, repository.InsertDocumentPageParams{
 			DocumentID: result.DocumentID,
 			PageNumber: int32(page.PageNumber),
 			Text:       page.Text,
 			Tables:     tables,
 			Images:     images,
-		})
+		}); err != nil {
+			slog.Error("insert page failed", "doc_id", result.DocumentID, "page", page.PageNumber, "error", err)
+			failed = true
+		} else {
+			storedPages++
+		}
 	}
 
-	// 3. Generate tree (if tree generator is available)
+	if storedPages == 0 && len(result.Pages) > 0 {
+		slog.Error("all page inserts failed", "doc_id", result.DocumentID)
+		setDocError(ctx, c.repo, result.DocumentID, "all page inserts failed")
+		msg.Nak()
+		return
+	}
+
+	// 3. Generate tree
 	if c.treeGen != nil {
 		treePages := make([]tree.ExtractionPage, len(result.Pages))
 		for i, p := range result.Pages {
@@ -148,27 +170,44 @@ func (c *ExtractorConsumer) handleResult(msg jetstream.Msg) {
 
 		treeResult, err := c.treeGen.Generate(ctx, treePages, tree.Prompts{})
 		if err != nil {
+			// C1: tree gen failure → document stays in error, not ready
 			slog.Error("tree generation failed", "doc_id", result.DocumentID, "error", err)
+			failed = true
 		} else {
 			treeJSON, _ := json.Marshal(treeResult.Tree)
-			c.repo.InsertDocumentTree(ctx, repository.InsertDocumentTreeParams{
+			if _, err := c.repo.InsertDocumentTree(ctx, repository.InsertDocumentTreeParams{
 				DocumentID:     result.DocumentID,
 				Tree:           treeJSON,
 				DocDescription: pgtype.Text{String: treeResult.DocDescription, Valid: treeResult.DocDescription != ""},
-				ModelUsed:      "unknown", // TODO: from config
+				ModelUsed:      "unknown",
 				NodeCount:      int32(treeResult.NodeCount),
-			})
+			}); err != nil {
+				slog.Error("insert tree failed", "doc_id", result.DocumentID, "error", err)
+				failed = true
+			}
 		}
 	}
 
-	// 4. Update document status to ready
-	c.repo.UpdateDocumentStatus(ctx, repository.UpdateDocumentStatusParams{
-		Status: "ready",
-		ID:     result.DocumentID,
-	})
+	// 4. Final status
+	if failed {
+		setDocError(ctx, c.repo, result.DocumentID, "partial failure during indexing")
+	} else {
+		c.repo.UpdateDocumentStatus(ctx, repository.UpdateDocumentStatusParams{
+			Status: "ready",
+			ID:     result.DocumentID,
+		})
+	}
 
 	msg.Ack()
-	slog.Info("extraction result processed", "doc_id", result.DocumentID)
+	slog.Info("extraction result processed", "doc_id", result.DocumentID, "pages", storedPages, "failed", failed)
+}
+
+func setDocError(ctx context.Context, repo *repository.Queries, docID, errMsg string) {
+	repo.UpdateDocumentStatusWithError(ctx, repository.UpdateDocumentStatusWithErrorParams{
+		Status: "error",
+		Error:  pgtype.Text{String: errMsg, Valid: true},
+		ID:     docID,
+	})
 }
 
 // Stop cancels the consumer.
