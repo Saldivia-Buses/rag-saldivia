@@ -50,6 +50,13 @@ class ExtractionPipeline:
         start = time.monotonic()
         logger.info("extracting document=%s file=%s", job.document_id, job.file_name)
 
+        # H4: validate storage key starts with tenant prefix (prevent cross-tenant access)
+        expected_prefix = f"{job.tenant_slug}/"
+        if not job.storage_key.startswith(expected_prefix):
+            raise ValueError(
+                f"storage key {job.storage_key!r} does not match tenant {job.tenant_slug!r}"
+            )
+
         # 1. Download from MinIO
         pdf_bytes = self.storage.get(job.storage_key)
 

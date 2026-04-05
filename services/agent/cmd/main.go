@@ -16,8 +16,10 @@ import (
 
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
+	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
 	"github.com/Camionerou/rag-saldivia/pkg/guardrails"
 	"github.com/Camionerou/rag-saldivia/services/agent/internal/handler"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	agentllm "github.com/Camionerou/rag-saldivia/services/agent/internal/llm"
 	"github.com/Camionerou/rag-saldivia/services/agent/internal/service"
 	"github.com/Camionerou/rag-saldivia/services/agent/internal/tools"
@@ -27,13 +29,22 @@ func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
 	slog.SetDefault(logger)
 
-	// Port 8004: inherits from RAG service which this replaces.
-	// Traefik route update needed: /v1/rag → /v1/agent (separate PR).
 	port := env("AGENT_PORT", "8004")
 	publicKey := loadPublicKey()
 
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
+
+	otelShutdown, err := sdaotel.Setup(ctx, sdaotel.Config{
+		ServiceName:    "sda-agent",
+		ServiceVersion: "0.1.0",
+		Endpoint:       env("OTEL_EXPORTER_OTLP_ENDPOINT", "localhost:4317"),
+	})
+	if err != nil {
+		slog.Warn("otel init failed", "error", err)
+	} else {
+		defer otelShutdown(context.Background())
+	}
 
 	// LLM adapter — resolves to SGLang or cloud via config
 	llmEndpoint := env("SGLANG_LLM_URL", "http://localhost:8102")
@@ -136,9 +147,9 @@ func main() {
 
 	srv := &http.Server{
 		Addr:         ":" + port,
-		Handler:      r,
+		Handler:      otelhttp.NewHandler(r, "sda-agent"),
 		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 0, // no limit for streaming responses
+		WriteTimeout: 0,
 		IdleTimeout:  120 * time.Second,
 	}
 
