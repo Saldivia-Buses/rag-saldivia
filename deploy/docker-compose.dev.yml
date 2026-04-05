@@ -33,6 +33,10 @@ x-env-common: &env-common
   STORAGE_BUCKET: sda-documents
   STORAGE_ACCESS_KEY: sda-admin
   STORAGE_SECRET_KEY: ${MINIO_ROOT_PASSWORD:-sda-dev-secret}
+  # OpenTelemetry — requires observability stack running (deploy/observability/).
+  # If otel-collector is not reachable, tracing degrades gracefully (disabled).
+  # For host dev: OTEL_EXPORTER_OTLP_ENDPOINT=localhost:4317
+  OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-localhost:4317}
 
 services:
 

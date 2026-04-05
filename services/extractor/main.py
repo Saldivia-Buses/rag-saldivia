@@ -27,11 +27,14 @@ from extractor.schema import ExtractionJob
 from extractor.storage import StorageClient
 from extractor.vision import VisionClient
 
-logging.basicConfig(
-    level=logging.INFO,
-    format='{"time":"%(asctime)s","level":"%(levelname)s","msg":"%(message)s"}',
-    stream=sys.stdout,
-)
+from pythonjsonlogger.json import JsonFormatter
+
+_handler = logging.StreamHandler(sys.stdout)
+_handler.setFormatter(JsonFormatter(
+    fmt="%(asctime)s %(levelname)s %(name)s %(message)s",
+    rename_fields={"asctime": "time", "levelname": "level", "name": "logger"},
+))
+logging.basicConfig(level=logging.INFO, handlers=[_handler])
 logger = logging.getLogger("extractor")
 
 _SAFE_SUBJECT_RE = re.compile(r"^[a-zA-Z0-9_-]+$")

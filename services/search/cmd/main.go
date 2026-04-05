@@ -16,8 +16,10 @@ import (
 
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
+	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
 	"github.com/Camionerou/rag-saldivia/services/search/internal/handler"
 	"github.com/Camionerou/rag-saldivia/services/search/internal/service"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 func main() {
@@ -30,6 +32,17 @@ func main() {
 
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
+
+	otelShutdown, err := sdaotel.Setup(ctx, sdaotel.Config{
+		ServiceName:    "sda-search",
+		ServiceVersion: "0.1.0",
+		Endpoint:       env("OTEL_EXPORTER_OTLP_ENDPOINT", "localhost:4317"),
+	})
+	if err != nil {
+		slog.Warn("otel init failed", "error", err)
+	} else {
+		defer otelShutdown(context.Background())
+	}
 
 	// Connect to tenant DB (read document_pages, document_trees)
 	pool, err := pgxpool.New(ctx, tenantDBURL)
@@ -65,7 +78,7 @@ func main() {
 
 	srv := &http.Server{
 		Addr:         ":" + port,
-		Handler:      r,
+		Handler:      otelhttp.NewHandler(r, "sda-search"),
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 60 * time.Second,
 		IdleTimeout:  120 * time.Second,

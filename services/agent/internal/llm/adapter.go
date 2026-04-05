@@ -11,6 +11,8 @@ import (
 	"io"
 	"net/http"
 	"time"
+
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 // Adapter calls an OpenAI-compatible chat completions endpoint.
@@ -22,13 +24,15 @@ type Adapter struct {
 }
 
 // NewAdapter creates an LLM adapter. Works with SGLang and any OpenAI-compatible API.
+// O3: uses otelhttp.NewTransport for trace propagation to LLM endpoints.
 func NewAdapter(endpoint, model, apiKey string) *Adapter {
 	return &Adapter{
 		endpoint: endpoint,
 		model:    model,
 		apiKey:   apiKey,
 		httpClient: &http.Client{
-			Timeout: 120 * time.Second,
+			Timeout:   120 * time.Second,
+			Transport: otelhttp.NewTransport(http.DefaultTransport),
 		},
 	}
 }

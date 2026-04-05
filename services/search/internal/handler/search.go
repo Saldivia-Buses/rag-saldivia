@@ -7,7 +7,10 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 
+	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
+	"github.com/Camionerou/rag-saldivia/pkg/tenant"
 	"github.com/Camionerou/rag-saldivia/services/search/internal/service"
 )
 
@@ -24,7 +27,8 @@ func New(svc *service.Search) *Handler {
 // Routes returns the search router.
 func (h *Handler) Routes() chi.Router {
 	r := chi.NewRouter()
-	r.Post("/query", h.SearchDocuments)
+	// D2: require chat.read permission for search
+	r.With(sdamw.RequirePermission("chat.read")).Post("/query", h.SearchDocuments)
 	return r
 }
 
@@ -36,8 +40,16 @@ type searchRequest struct {
 
 // SearchDocuments handles POST /v1/search/query
 func (h *Handler) SearchDocuments(w http.ResponseWriter, r *http.Request) {
-	// B3: limit request body size
-	r.Body = http.MaxBytesReader(w, r.Body, 64*1024) // 64KB max
+	r.Body = http.MaxBytesReader(w, r.Body, 64*1024)
+
+	// C1: tenant isolation — read from JWT context
+	ti, err := tenant.FromContext(r.Context())
+	if err != nil || ti.ID == "" {
+		http.Error(w, `{"error":"tenant context missing"}`, http.StatusUnauthorized)
+		return
+	}
+
+	reqID := middleware.GetReqID(r.Context())
 
 	var req searchRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
@@ -52,7 +64,8 @@ func (h *Handler) SearchDocuments(w http.ResponseWriter, r *http.Request) {
 
 	result, err := h.svc.SearchDocuments(r.Context(), req.Query, req.CollectionID, req.MaxNodes)
 	if err != nil {
-		slog.Error("search failed", "error", err, "query", req.Query)
+		slog.Error("search failed", "error", err, "query", req.Query,
+			"request_id", reqID, "tenant_id", ti.ID)
 		http.Error(w, `{"error":"search failed"}`, http.StatusInternalServerError)
 		return
 	}

@@ -33,6 +33,7 @@ type TraceStartEvent struct {
 // TraceEndEvent is published when a query completes.
 type TraceEndEvent struct {
 	TraceID          string   `json:"trace_id"`
+	TenantID         string   `json:"tenant_id"`
 	Status           string   `json:"status"`
 	ModelsUsed       []string `json:"models_used"`
 	TotalDurationMS  int      `json:"total_duration_ms"`
@@ -46,6 +47,7 @@ type TraceEndEvent struct {
 // TraceEvent is a single event within a trace (llm_call, tool_call, error, etc.).
 type TraceEvent struct {
 	TraceID    string          `json:"trace_id"`
+	TenantID   string          `json:"tenant_id"`
 	Seq        int             `json:"seq"`
 	EventType  string          `json:"event_type"`
 	Data       json.RawMessage `json:"data"`
