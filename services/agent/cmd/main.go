@@ -13,16 +13,17 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"github.com/nats-io/nats.go"
 
+	"github.com/Camionerou/rag-saldivia/pkg/guardrails"
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
-	"github.com/Camionerou/rag-saldivia/pkg/guardrails"
 	"github.com/Camionerou/rag-saldivia/services/agent/internal/handler"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	agentllm "github.com/Camionerou/rag-saldivia/services/agent/internal/llm"
 	"github.com/Camionerou/rag-saldivia/services/agent/internal/service"
 	"github.com/Camionerou/rag-saldivia/services/agent/internal/tools"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 func main() {
@@ -45,6 +46,17 @@ func main() {
 	} else {
 		defer otelShutdown(context.Background())
 	}
+
+	// NATS connection for trace + feedback event publishing
+	natsURL := env("NATS_URL", "nats://localhost:4222")
+	nc, err := nats.Connect(natsURL, nats.MaxReconnects(-1), nats.ReconnectWait(2*time.Second))
+	if err != nil {
+		slog.Warn("nats connect failed, trace publishing disabled", "error", err)
+	} else {
+		defer nc.Drain()
+		slog.Info("connected to nats", "url", natsURL)
+	}
+	tracePublisher := service.NewTracePublisher(nc)
 
 	// LLM adapter — resolves to SGLang or cloud via config
 	llmEndpoint := env("SGLANG_LLM_URL", "http://localhost:8102")
@@ -114,7 +126,7 @@ func main() {
 		}
 	}
 
-	agentSvc := service.New(adapter, executor, schemas, service.Config{
+	agentSvc := service.New(adapter, executor, schemas, tracePublisher, service.Config{
 		SystemPrompt:        env("SYSTEM_PROMPT", "Sos el asistente inteligente. Responde en espanol. Usa las tools disponibles para buscar informacion. Siempre cita la fuente."),
 		MaxToolCallsPerTurn: 25,
 		MaxLoopIterations:   10,

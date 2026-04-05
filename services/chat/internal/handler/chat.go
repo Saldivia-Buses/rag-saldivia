@@ -11,6 +11,7 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 
+	"github.com/Camionerou/rag-saldivia/pkg/guardrails"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/services/chat/internal/service"
 )
@@ -207,6 +208,24 @@ func (h *Chat) AddMessage(w http.ResponseWriter, r *http.Request) {
 	if !validRoles[req.Role] {
 		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "role must be user, assistant, or system"})
 		return
+	}
+	// C4: block system role from external clients — only internal services should set system messages
+	if req.Role == "system" {
+		writeJSON(w, http.StatusForbidden, map[string]string{"error": "system messages cannot be added via API"})
+		return
+	}
+
+	// P1: validate user message content through guardrails
+	if req.Role == "user" {
+		sanitized, err := guardrails.ValidateInput(r.Context(), req.Content, guardrails.InputConfig{
+			MaxLength:     50000,
+			BlockPatterns: []string{"ignora tus instrucciones", "ignore your instructions"},
+		}, nil)
+		if err != nil {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "message blocked by guardrails"})
+			return
+		}
+		req.Content = sanitized
 	}
 
 	// Verify ownership before adding message
