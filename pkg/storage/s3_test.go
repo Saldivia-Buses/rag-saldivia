@@ -3,6 +3,7 @@ package storage_test
 import (
 	"bytes"
 	"context"
+	"errors"
 	"io"
 	"os"
 	"testing"
@@ -43,8 +44,11 @@ func TestPutGetDelete(t *testing.T) {
 	key := "test-tenant/doc-1/original.pdf"
 	content := []byte("fake pdf content for testing")
 
-	// Put
-	if err := store.Put(ctx, key, bytes.NewReader(content)); err != nil {
+	// Put with content type
+	err := store.Put(ctx, key, bytes.NewReader(content), &storage.PutOptions{
+		ContentType: "application/pdf",
+	})
+	if err != nil {
 		t.Fatalf("put: %v", err)
 	}
 
@@ -83,6 +87,28 @@ func TestPutGetDelete(t *testing.T) {
 	}
 	if exists {
 		t.Fatal("file should not exist after delete")
+	}
+}
+
+func TestPutNilOpts(t *testing.T) {
+	store := newTestStore(t)
+	ctx := context.Background()
+
+	key := "test-tenant/nil-opts-test"
+	err := store.Put(ctx, key, bytes.NewReader([]byte("data")), nil)
+	if err != nil {
+		t.Fatalf("put with nil opts: %v", err)
+	}
+	store.Delete(ctx, key)
+}
+
+func TestGetNotFound(t *testing.T) {
+	store := newTestStore(t)
+	ctx := context.Background()
+
+	_, err := store.Get(ctx, "nonexistent/key")
+	if !errors.Is(err, storage.ErrNotFound) {
+		t.Fatalf("expected ErrNotFound, got: %v", err)
 	}
 }
 

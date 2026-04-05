@@ -27,6 +27,8 @@ x-env-common: &env-common
   JWT_PRIVATE_KEY: LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1DNENBUUF3QlFZREsyVndCQ0lFSUZvSXFxYU1BcjVjYnZFSE9Rc2g0cnVQTUUzeCtRSkVlVDByNnkxQ2tjMmgKLS0tLS1FTkQgUFJJVkFURSBLRVktLS0tLQo=
   JWT_PUBLIC_KEY: LS0tLS1CRUdJTiBQVUJMSUMgS0VZLS0tLS0KTUNvd0JRWURLMlZ3QXlFQVpMSmkrZmtPbitKUllNQmc4VkVBTkh2bXRzZUxQK3JmRFdFUStZL3ZIU0E9Ci0tLS0tRU5EIFBVQkxJQyBLRVktLS0tLQo=
   POSTGRES_TENANT_URL: postgres://sda:sda_dev@postgres:5432/sda_tenant_dev?sslmode=disable
+  # MinIO storage — Docker-internal hostname. When running Go on host
+  # (make dev), override: STORAGE_ENDPOINT=http://localhost:9000
   STORAGE_ENDPOINT: http://minio:9000
   STORAGE_BUCKET: sda-documents
   STORAGE_ACCESS_KEY: sda-admin

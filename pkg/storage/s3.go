@@ -60,7 +60,13 @@ func (s *S3Store) EnsureBucket(ctx context.Context) error {
 		Bucket: aws.String(s.bucket),
 	})
 	if err == nil {
-		return nil // bucket exists
+		return nil
+	}
+
+	// Only create if the bucket genuinely doesn't exist.
+	// On permission errors or network failures, return the original error.
+	if !isNotFound(err) {
+		return fmt.Errorf("head bucket %q: %w", s.bucket, err)
 	}
 
 	_, err = s.client.CreateBucket(ctx, &s3.CreateBucketInput{
@@ -72,12 +78,17 @@ func (s *S3Store) EnsureBucket(ctx context.Context) error {
 	return nil
 }
 
-func (s *S3Store) Put(ctx context.Context, key string, r io.Reader) error {
-	_, err := s.client.PutObject(ctx, &s3.PutObjectInput{
+func (s *S3Store) Put(ctx context.Context, key string, r io.Reader, opts *PutOptions) error {
+	input := &s3.PutObjectInput{
 		Bucket: aws.String(s.bucket),
 		Key:    aws.String(key),
 		Body:   r,
-	})
+	}
+	if opts != nil && opts.ContentType != "" {
+		input.ContentType = aws.String(opts.ContentType)
+	}
+
+	_, err := s.client.PutObject(ctx, input)
 	if err != nil {
 		return fmt.Errorf("put %q: %w", key, err)
 	}
@@ -90,6 +101,9 @@ func (s *S3Store) Get(ctx context.Context, key string) (io.ReadCloser, error) {
 		Key:    aws.String(key),
 	})
 	if err != nil {
+		if isNotFound(err) {
+			return nil, fmt.Errorf("get %q: %w", key, ErrNotFound)
+		}
 		return nil, fmt.Errorf("get %q: %w", key, err)
 	}
 	return out.Body, nil
@@ -112,16 +126,24 @@ func (s *S3Store) Exists(ctx context.Context, key string) (bool, error) {
 		Key:    aws.String(key),
 	})
 	if err != nil {
-		var nsk *types.NotFound
-		if errors.As(err, &nsk) {
-			return false, nil
-		}
-		// Also check for NoSuchKey via error code
-		var nf *types.NoSuchKey
-		if errors.As(err, &nf) {
+		if isNotFound(err) {
 			return false, nil
 		}
 		return false, fmt.Errorf("head %q: %w", key, err)
 	}
 	return true, nil
+}
+
+// isNotFound checks if an S3 error means the object/bucket doesn't exist.
+func isNotFound(err error) bool {
+	var nf *types.NotFound
+	if errors.As(err, &nf) {
+		return true
+	}
+	var nsk *types.NoSuchKey
+	if errors.As(err, &nsk) {
+		return true
+	}
+	var nsb *types.NoSuchBucket
+	return errors.As(err, &nsb)
 }

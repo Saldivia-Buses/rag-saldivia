@@ -5,16 +5,27 @@ package storage
 
 import (
 	"context"
+	"errors"
 	"io"
 )
+
+// ErrNotFound is returned when a requested key does not exist.
+var ErrNotFound = errors.New("storage: not found")
+
+// PutOptions configures a Put operation.
+type PutOptions struct {
+	ContentType string // e.g. "application/pdf", "image/png". Empty = "application/octet-stream".
+}
 
 // Store is the interface for file storage operations.
 // Keys are slash-separated paths: "{tenant}/{doc_id}/original.pdf".
 type Store interface {
 	// Put stores a file at the given key, reading from r.
-	Put(ctx context.Context, key string, r io.Reader) error
+	// opts may be nil for defaults.
+	Put(ctx context.Context, key string, r io.Reader, opts *PutOptions) error
 
 	// Get returns a reader for the file at the given key.
+	// Returns ErrNotFound if the key does not exist.
 	// The caller must close the returned ReadCloser.
 	Get(ctx context.Context, key string) (io.ReadCloser, error)
 
