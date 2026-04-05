@@ -54,7 +54,7 @@ import { DarkModeToggle } from "@/components/dark-mode-toggle";
 import { HeaderSearch } from "@/components/search-command";
 
 const routeLabels: Record<string, string> = {
-  "/dashboard": "Inicio",
+  "/inicio": "Inicio",
   "/chat": "Chat",
   "/notifications": "Notificaciones",
   "/settings": "Mi cuenta",
@@ -138,7 +138,7 @@ function useSidebarData(): SidebarData {
 
   // Core items — always visible
   const coreItems: NavItem[] = [
-    { label: "Inicio", icon: LayoutDashboard, href: "/dashboard" },
+    { label: "Inicio", icon: LayoutDashboard, href: "/inicio" },
     { label: "Chat", icon: MessageSquare, href: "/chat" },
     { label: "Documentos", icon: FileText, href: "/documents" },
     { label: "Colecciones", icon: Database, href: "/collections" },

@@ -93,6 +93,15 @@ type UpdateProfileRequest struct {
 	Name string
 }
 
+// UserListItem represents a user in the list response.
+type UserListItem struct {
+	ID        string    `json:"id"`
+	Email     string    `json:"email"`
+	Name      string    `json:"name"`
+	Role      string    `json:"role"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
 // UserInfo holds the current user's profile data.
 type UserInfo struct {
 	ID         string `json:"id"`
@@ -509,6 +518,30 @@ func (a *Auth) UpdateProfile(ctx context.Context, userID string, req UpdateProfi
 	})
 
 	return a.Me(ctx, userID)
+}
+
+// ListUsers returns all active users for the current tenant.
+func (a *Auth) ListUsers(ctx context.Context) ([]UserListItem, error) {
+	rows, err := a.repo.ListActiveUsers(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("list users: %w", err)
+	}
+
+	users := make([]UserListItem, len(rows))
+	for i, row := range rows {
+		role := "user"
+		if r, ok := row.Role.(string); ok {
+			role = r
+		}
+		users[i] = UserListItem{
+			ID:        row.ID,
+			Email:     row.Email,
+			Name:      row.Name,
+			Role:      role,
+			CreatedAt: row.CreatedAt.Time,
+		}
+	}
+	return users, nil
 }
 
 // HashPassword hashes a password with bcrypt.

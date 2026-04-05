@@ -27,6 +27,7 @@ type AuthService interface {
 	DisableMFA(ctx context.Context, userID, code string) error
 	CompleteMFALogin(ctx context.Context, mfaToken, code string) (*service.TokenPair, error)
 	UpdateProfile(ctx context.Context, userID string, req service.UpdateProfileRequest) (*service.UserInfo, error)
+	ListUsers(ctx context.Context) ([]service.UserListItem, error)
 }
 
 // EventPublisher can publish notification events via NATS.
@@ -348,6 +349,25 @@ func (h *Auth) UpdateMe(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, user)
+}
+
+// ListUsers handles GET /v1/auth/users — returns all active users for the tenant.
+func (h *Auth) ListUsers(w http.ResponseWriter, r *http.Request) {
+	svc, err := h.resolveService(r)
+	if err != nil {
+		writeJSON(w, http.StatusBadGateway, errorResponse{Error: "tenant not available"})
+		return
+	}
+
+	users, err := svc.ListUsers(r.Context())
+	if err != nil {
+		reqID := middleware.GetReqID(r.Context())
+		slog.Error("list users failed", "error", err, "request_id", reqID)
+		writeJSON(w, http.StatusInternalServerError, errorResponse{Error: "internal error"})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, users)
 }
 
 func writeJSON(w http.ResponseWriter, status int, v any) {

@@ -100,3 +100,21 @@ SELECT mfa_secret FROM users WHERE id = $1;
 -- name: UpdateUserName :execrows
 UPDATE users SET name = $2, updated_at = now()
 WHERE id = $1 AND is_active = true;
+
+-- name: ListActiveUsers :many
+SELECT u.id, u.email, u.name, u.created_at,
+       COALESCE((
+           SELECT r.name FROM roles r
+           JOIN user_roles ur ON ur.role_id = r.id
+           WHERE ur.user_id = u.id
+           ORDER BY CASE r.name
+               WHEN 'admin' THEN 1
+               WHEN 'manager' THEN 2
+               WHEN 'user' THEN 3
+               ELSE 4
+           END
+           LIMIT 1
+       ), 'user') AS role
+FROM users u
+WHERE u.is_active = true
+ORDER BY u.created_at ASC;

@@ -44,7 +44,7 @@ const Login5 = ({
     try {
       await login(email, password);
       // Redirect to dashboard
-      window.location.href = "/dashboard";
+      window.location.href = "/inicio";
     } catch (err) {
       if (err instanceof ApiError) {
         switch (err.status) {
