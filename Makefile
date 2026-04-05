@@ -72,6 +72,9 @@ test-e2e: ## Run E2E tests (Playwright)
 test-storage: ## Run storage tests (requires MinIO running)
 	cd $(ROOT_DIR)/pkg && go test ./storage/... -v -count=1
 
+test-guardrails: ## Run guardrails tests
+	cd $(ROOT_DIR)/pkg && go test ./guardrails/... -v -count=1
+
 test-extractor: ## Run extractor tests (Python, no GPU needed)
 	cd $(SERVICES_DIR)/extractor && .venv/bin/python -m pytest tests/ -v
 
