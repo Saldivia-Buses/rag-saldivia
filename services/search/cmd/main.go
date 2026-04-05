@@ -14,6 +14,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"github.com/Camionerou/rag-saldivia/pkg/audit"
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
@@ -57,7 +58,8 @@ func main() {
 	llmModel := env("SGLANG_LLM_MODEL", "")
 
 	searchSvc := service.New(pool, llmEndpoint, llmModel)
-	searchHandler := handler.New(searchSvc)
+	auditWriter := audit.NewWriter(pool)
+	searchHandler := handler.New(searchSvc, auditWriter)
 
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
