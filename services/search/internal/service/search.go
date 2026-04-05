@@ -13,6 +13,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Camionerou/rag-saldivia/pkg/guardrails"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -69,6 +70,18 @@ func (s *Search) SearchDocuments(ctx context.Context, query string, collectionID
 
 	if maxNodes <= 0 {
 		maxNodes = 5
+	}
+	if maxNodes > 20 {
+		maxNodes = 20 // D4: cap to prevent abuse
+	}
+
+	// B1: validate query through guardrails before sending to LLM
+	query, err := guardrails.ValidateInput(ctx, query, guardrails.InputConfig{
+		MaxLength:     10000,
+		BlockPatterns: []string{"ignora tus instrucciones", "ignore your instructions", "system prompt"},
+	}, nil)
+	if err != nil {
+		return nil, fmt.Errorf("query blocked: %w", err)
 	}
 
 	// Load trees from DB
@@ -343,7 +356,7 @@ func (s *Search) llmChat(ctx context.Context, prompt string) (string, error) {
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		respBody, _ := io.ReadAll(resp.Body)
+		respBody, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
 		return "", fmt.Errorf("llm returned %d: %s", resp.StatusCode, string(respBody))
 	}
 

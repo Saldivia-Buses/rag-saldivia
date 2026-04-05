@@ -3,6 +3,7 @@ package handler
 
 import (
 	"encoding/json"
+	"log/slog"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -35,6 +36,9 @@ type searchRequest struct {
 
 // SearchDocuments handles POST /v1/search/query
 func (h *Handler) SearchDocuments(w http.ResponseWriter, r *http.Request) {
+	// B3: limit request body size
+	r.Body = http.MaxBytesReader(w, r.Body, 64*1024) // 64KB max
+
 	var req searchRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		http.Error(w, `{"error":"invalid request body"}`, http.StatusBadRequest)
@@ -48,6 +52,7 @@ func (h *Handler) SearchDocuments(w http.ResponseWriter, r *http.Request) {
 
 	result, err := h.svc.SearchDocuments(r.Context(), req.Query, req.CollectionID, req.MaxNodes)
 	if err != nil {
+		slog.Error("search failed", "error", err, "query", req.Query)
 		http.Error(w, `{"error":"search failed"}`, http.StatusInternalServerError)
 		return
 	}

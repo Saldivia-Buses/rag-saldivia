@@ -1,15 +1,18 @@
 FROM golang:1.25-alpine AS builder
 
-WORKDIR /build
-COPY go.mod go.sum ./
-COPY ../../pkg /build/pkg
+WORKDIR /app
+
+# Copy workspace files for module resolution
+COPY go.work go.work.sum ./
+COPY pkg/ ./pkg/
+COPY services/search/ ./services/search/
+
+WORKDIR /app/services/search
 RUN go mod download
+RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/search ./cmd/...
 
-COPY . .
-RUN CGO_ENABLED=0 go build -o /search ./cmd/...
-
-FROM scratch
-COPY --from=builder /search /search
-USER 65534
+FROM gcr.io/distroless/static-debian12
+COPY --from=builder /bin/search /search
+USER nonroot:nonroot
 EXPOSE 8010
 ENTRYPOINT ["/search"]
