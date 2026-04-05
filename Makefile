@@ -75,6 +75,9 @@ test-storage: ## Run storage tests (requires MinIO running)
 test-guardrails: ## Run guardrails tests
 	cd $(ROOT_DIR)/pkg && go test ./guardrails/... -v -count=1
 
+test-search: ## Run search service tests
+	cd $(SERVICES_DIR)/search && go test ./... -v -count=1
+
 test-extractor: ## Run extractor tests (Python, no GPU needed)
 	cd $(SERVICES_DIR)/extractor && .venv/bin/python -m pytest tests/ -v
 

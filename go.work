@@ -9,6 +9,7 @@ use (
 	./services/notification
 	./services/platform
 	./services/rag
+	./services/search
 	./services/ws
 	./tools/cli
 	./tools/mcp
