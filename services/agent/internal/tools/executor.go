@@ -86,6 +86,12 @@ func (e *Executor) Execute(ctx context.Context, jwt, toolName string, params jso
 	return &Result{Status: "success", Data: body}, nil
 }
 
+// GetDefinition returns a tool definition by name.
+func (e *Executor) GetDefinition(name string) (Definition, bool) {
+	d, ok := e.tools[name]
+	return d, ok
+}
+
 // ListTools returns all registered tool names.
 func (e *Executor) ListTools() []string {
 	names := make([]string, 0, len(e.tools))

@@ -24,7 +24,7 @@ type Agent struct {
 
 // Config holds agent runtime configuration (from agent_config).
 type Config struct {
-	SystemPrompt       string
+	SystemPrompt        string
 	MaxToolCallsPerTurn int
 	MaxLoopIterations   int
 	Temperature         float64
@@ -50,12 +50,12 @@ func New(adapter *llm.Adapter, executor *tools.Executor, schemas []llm.ToolSchem
 
 // QueryResult is the output of an agent query.
 type QueryResult struct {
-	Response      string          `json:"response"`
-	ToolCalls     []ToolCallLog   `json:"tool_calls"`
-	InputTokens   int             `json:"input_tokens"`
-	OutputTokens  int             `json:"output_tokens"`
-	DurationMS    int             `json:"duration_ms"`
-	Model         string          `json:"model"`
+	Response     string        `json:"response"`
+	ToolCalls    []ToolCallLog `json:"tool_calls"`
+	InputTokens  int           `json:"input_tokens"`
+	OutputTokens int           `json:"output_tokens"`
+	DurationMS   int           `json:"duration_ms"`
+	Model        string        `json:"model"`
 }
 
 // ToolCallLog records a single tool call for tracing.
@@ -77,19 +77,26 @@ func (a *Agent) Query(ctx context.Context, jwt, userMessage string, history []ll
 		return nil, fmt.Errorf("guardrails blocked: %w", err)
 	}
 
+	// B1: filter history — only allow user and assistant roles, validate content
+	safeHistory := filterHistory(history, a.config.GuardrailsConfig)
+
 	// Build messages
-	messages := make([]llm.Message, 0, len(history)+2)
+	messages := make([]llm.Message, 0, len(safeHistory)+2)
 	messages = append(messages, llm.Message{Role: "system", Content: a.config.SystemPrompt})
-	messages = append(messages, history...)
+	messages = append(messages, safeHistory...)
 	messages = append(messages, llm.Message{Role: "user", Content: sanitized})
 
 	var allToolCalls []ToolCallLog
 	var totalInput, totalOutput int
 	var loopHistory []guardrails.ToolCallRecord
 
+	// Output guardrails config with system prompt fragments
+	outputCfg := guardrails.OutputConfig{
+		SystemPromptFragments: []string{a.config.SystemPrompt},
+	}
+
 	// Agent loop: LLM → tool calls → LLM → ... → text response
 	for i := 0; i < a.config.MaxLoopIterations; i++ {
-		// Loop detection
 		if loop, reason := guardrails.DetectLoop(loopHistory, guardrails.LoopConfig{
 			MaxIterations:         a.config.MaxLoopIterations,
 			MaxIdenticalToolCalls: 3,
@@ -106,9 +113,10 @@ func (a *Agent) Query(ctx context.Context, jwt, userMessage string, history []ll
 		totalInput += resp.InputTokens
 		totalOutput += resp.OutputTokens
 
-		// No tool calls — we have a final text response
+		// No tool calls — final text response
 		if len(resp.ToolCalls) == 0 {
-			output := guardrails.ValidateOutput(resp.Content, guardrails.OutputConfig{})
+			// B5: output guardrails with system prompt leak detection
+			output := guardrails.ValidateOutput(resp.Content, outputCfg)
 			return &QueryResult{
 				Response:     output,
 				ToolCalls:    allToolCalls,
@@ -135,36 +143,62 @@ func (a *Agent) Query(ctx context.Context, jwt, userMessage string, history []ll
 				continue
 			}
 
+			// B4: validate tool params against schema
+			if def, ok := a.toolExecutor.GetDefinition(tc.Function.Name); ok {
+				if err := guardrails.ValidateToolParams(
+					json.RawMessage(tc.Function.Arguments),
+					def.Parameters,
+				); err != nil {
+					slog.Warn("invalid tool params", "tool", tc.Function.Name, "error", err)
+					messages = append(messages, llm.Message{
+						Role:       "tool",
+						ToolCallID: tc.ID,
+						Content:    fmt.Sprintf(`{"error":"invalid parameters: %s"}`, err.Error()),
+					})
+					allToolCalls = append(allToolCalls, ToolCallLog{
+						Tool:   tc.Function.Name,
+						Input:  json.RawMessage(tc.Function.Arguments),
+						Status: "error",
+					})
+					continue
+				}
+			}
+
 			tcStart := time.Now()
 			result, err := a.toolExecutor.Execute(ctx, jwt, tc.Function.Name, json.RawMessage(tc.Function.Arguments))
 			tcDuration := int(time.Since(tcStart).Milliseconds())
 
-			var tcLog ToolCallLog
-			tcLog.Tool = tc.Function.Name
-			tcLog.Input = json.RawMessage(tc.Function.Arguments)
-			tcLog.DurationMS = tcDuration
+			tcLog := ToolCallLog{
+				Tool:       tc.Function.Name,
+				Input:      json.RawMessage(tc.Function.Arguments),
+				DurationMS: tcDuration,
+			}
 
 			if err != nil {
 				tcLog.Status = "error"
-				tcLog.Output = json.RawMessage(fmt.Sprintf(`{"error":%q}`, err.Error()))
+				// B3: sanitize error — don't leak internal details
 				messages = append(messages, llm.Message{
 					Role:       "tool",
 					ToolCallID: tc.ID,
-					Content:    fmt.Sprintf(`{"error":%q}`, err.Error()),
+					Content:    `{"error":"tool execution failed"}`,
 				})
 			} else {
 				tcLog.Status = result.Status
-				tcLog.Output = result.Data
-				// Feed result back to LLM
-				content := string(result.Data)
-				if result.Status != "success" {
-					content = fmt.Sprintf(`{"error":%q,"status":%q}`, result.Error, result.Status)
+				if result.Status == "success" {
+					tcLog.Output = result.Data
+					messages = append(messages, llm.Message{
+						Role:       "tool",
+						ToolCallID: tc.ID,
+						Content:    string(result.Data),
+					})
+				} else {
+					// B3: don't expose raw service errors to LLM
+					messages = append(messages, llm.Message{
+						Role:       "tool",
+						ToolCallID: tc.ID,
+						Content:    fmt.Sprintf(`{"error":"tool %s: %s"}`, result.Status, sanitizeError(result.Error)),
+					})
 				}
-				messages = append(messages, llm.Message{
-					Role:       "tool",
-					ToolCallID: tc.ID,
-					Content:    content,
-				})
 			}
 
 			allToolCalls = append(allToolCalls, tcLog)
@@ -175,7 +209,6 @@ func (a *Agent) Query(ctx context.Context, jwt, userMessage string, history []ll
 		}
 	}
 
-	// Max loops reached — return what we have
 	return &QueryResult{
 		Response:     "Lo siento, no pude completar la consulta en el tiempo permitido.",
 		ToolCalls:    allToolCalls,
@@ -184,4 +217,31 @@ func (a *Agent) Query(ctx context.Context, jwt, userMessage string, history []ll
 		DurationMS:   int(time.Since(start).Milliseconds()),
 		Model:        a.llmAdapter.Model(),
 	}, nil
+}
+
+// filterHistory allows only user and assistant messages, validates content.
+func filterHistory(history []llm.Message, cfg guardrails.InputConfig) []llm.Message {
+	safe := make([]llm.Message, 0, len(history))
+	for _, m := range history {
+		if m.Role != "user" && m.Role != "assistant" {
+			continue // B1: reject system, tool, and other roles
+		}
+		// Truncate content with same guardrails config
+		if cfg.MaxLength > 0 {
+			runes := []rune(m.Content)
+			if len(runes) > cfg.MaxLength {
+				m.Content = string(runes[:cfg.MaxLength])
+			}
+		}
+		safe = append(safe, llm.Message{Role: m.Role, Content: m.Content})
+	}
+	return safe
+}
+
+// sanitizeError removes internal details from error messages.
+func sanitizeError(err string) string {
+	if len(err) > 200 {
+		err = err[:200]
+	}
+	return err
 }

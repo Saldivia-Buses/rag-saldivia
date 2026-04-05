@@ -27,6 +27,8 @@ func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
 	slog.SetDefault(logger)
 
+	// Port 8004: inherits from RAG service which this replaces.
+	// Traefik route update needed: /v1/rag → /v1/agent (separate PR).
 	port := env("AGENT_PORT", "8004")
 	publicKey := loadPublicKey()
 
