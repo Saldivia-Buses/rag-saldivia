@@ -2,7 +2,7 @@
 // Every service that has access to a tenant DB can write audit entries.
 // The audit_log table is created by auth migration 001.
 //
-// Writes are non-blocking: errors are logged but not returned, so audit
+// Writes are non-failing: errors are logged but not returned, so audit
 // failures never break business logic.
 package audit
 
@@ -34,7 +34,7 @@ type Entry struct {
 	UserAgent string         // client user-agent string
 }
 
-// Write inserts an audit entry. Non-blocking — errors are logged, not returned.
+// Write inserts an audit entry. Non-failing — errors are logged, not returned.
 // This ensures audit failures never break the business operation that triggered them.
 func (w *Writer) Write(ctx context.Context, e Entry) {
 	details, err := json.Marshal(e.Details)
