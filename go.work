@@ -10,6 +10,7 @@ use (
 	./services/platform
 	./services/rag
 	./services/search
+	./services/traces
 	./services/ws
 	./tools/cli
 	./tools/mcp
