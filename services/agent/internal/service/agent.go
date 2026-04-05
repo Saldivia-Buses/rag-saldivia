@@ -11,13 +11,13 @@ import (
 
 	"github.com/Camionerou/rag-saldivia/pkg/guardrails"
 	"github.com/Camionerou/rag-saldivia/pkg/tenant"
-	"github.com/Camionerou/rag-saldivia/services/agent/internal/llm"
+	"github.com/Camionerou/rag-saldivia/pkg/llm"
 	"github.com/Camionerou/rag-saldivia/services/agent/internal/tools"
 )
 
 // Agent orchestrates chat queries: guardrails → LLM → tools → response.
 type Agent struct {
-	llmAdapter     *llm.Adapter
+	llmAdapter     *llm.Client
 	toolExecutor   *tools.Executor
 	toolSchemas    []llm.ToolSchema
 	tracePublisher *TracePublisher
@@ -35,7 +35,7 @@ type Config struct {
 }
 
 // New creates an Agent service.
-func New(adapter *llm.Adapter, executor *tools.Executor, schemas []llm.ToolSchema, tp *TracePublisher, cfg Config) *Agent {
+func New(adapter *llm.Client, executor *tools.Executor, schemas []llm.ToolSchema, tp *TracePublisher, cfg Config) *Agent {
 	if cfg.MaxToolCallsPerTurn <= 0 {
 		cfg.MaxToolCallsPerTurn = 25
 	}

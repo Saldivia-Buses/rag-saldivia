@@ -20,7 +20,7 @@ import (
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
 	"github.com/Camionerou/rag-saldivia/services/agent/internal/handler"
-	agentllm "github.com/Camionerou/rag-saldivia/services/agent/internal/llm"
+	agentllm "github.com/Camionerou/rag-saldivia/pkg/llm"
 	"github.com/Camionerou/rag-saldivia/services/agent/internal/service"
 	"github.com/Camionerou/rag-saldivia/services/agent/internal/tools"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
@@ -62,7 +62,7 @@ func main() {
 	llmEndpoint := env("SGLANG_LLM_URL", "http://localhost:8102")
 	llmModel := env("SGLANG_LLM_MODEL", "")
 	llmAPIKey := env("LLM_API_KEY", "")
-	adapter := agentllm.NewAdapter(llmEndpoint, llmModel, llmAPIKey)
+	adapter := agentllm.NewClient(llmEndpoint, llmModel, llmAPIKey)
 
 	// Tool definitions — hardcoded for now, will come from tool_registry in Phase 9
 	searchURL := env("SEARCH_SERVICE_URL", "http://localhost:8010")

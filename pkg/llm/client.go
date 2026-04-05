@@ -1,6 +1,9 @@
-// Package llm provides the LLM adapter layer for the Agent Runtime.
-// All model calls go through this interface — SGLang local and cloud
-// providers use the same OpenAI-compatible API.
+// Package llm provides a single OpenAI-compatible HTTP client for the entire
+// SDA Framework. All services that need to call an LLM (SGLang, OpenAI, any
+// provider) import this package instead of implementing their own client.
+//
+// Supports: chat, tool calling, token counting, trace propagation (otelhttp),
+// API key auth, and a SimplePrompt convenience method.
 package llm
 
 import (
@@ -15,18 +18,19 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
-// Adapter calls an OpenAI-compatible chat completions endpoint.
-type Adapter struct {
+// Client calls an OpenAI-compatible chat completions endpoint.
+// Works with SGLang (local) and any cloud provider (OpenAI, Anthropic, etc).
+// Thread-safe: the underlying http.Client is safe for concurrent use.
+type Client struct {
 	endpoint   string
 	model      string
 	apiKey     string
 	httpClient *http.Client
 }
 
-// NewAdapter creates an LLM adapter. Works with SGLang and any OpenAI-compatible API.
-// O3: uses otelhttp.NewTransport for trace propagation to LLM endpoints.
-func NewAdapter(endpoint, model, apiKey string) *Adapter {
-	return &Adapter{
+// NewClient creates an LLM client with trace propagation via otelhttp.
+func NewClient(endpoint, model, apiKey string) *Client {
+	return &Client{
 		endpoint: endpoint,
 		model:    model,
 		apiKey:   apiKey,
@@ -39,11 +43,11 @@ func NewAdapter(endpoint, model, apiKey string) *Adapter {
 
 // Message is a single chat message.
 type Message struct {
-	Role       string          `json:"role"`
-	Content    string          `json:"content,omitempty"`
-	ToolCalls  []ToolCall      `json:"tool_calls,omitempty"`
-	ToolCallID string          `json:"tool_call_id,omitempty"`
-	Name       string          `json:"name,omitempty"`
+	Role       string     `json:"role"`
+	Content    string     `json:"content,omitempty"`
+	ToolCalls  []ToolCall `json:"tool_calls,omitempty"`
+	ToolCallID string     `json:"tool_call_id,omitempty"`
+	Name       string     `json:"name,omitempty"`
 }
 
 // ToolCall is a tool invocation from the LLM.
@@ -74,16 +78,16 @@ type ToolDefinition struct {
 
 // ChatResponse is the parsed response from the LLM.
 type ChatResponse struct {
-	Content    string     // text response (if no tool calls)
-	ToolCalls  []ToolCall // tool calls (if any)
+	Content      string     // text response (if no tool calls)
+	ToolCalls    []ToolCall // tool calls (if any)
 	InputTokens  int
 	OutputTokens int
 }
 
 // Chat sends a chat completion request with optional tools.
-func (a *Adapter) Chat(ctx context.Context, messages []Message, tools []ToolSchema, temperature float64, maxTokens int) (*ChatResponse, error) {
+func (c *Client) Chat(ctx context.Context, messages []Message, tools []ToolSchema, temperature float64, maxTokens int) (*ChatResponse, error) {
 	body := map[string]any{
-		"model":       a.model,
+		"model":       c.model,
 		"messages":    messages,
 		"temperature": temperature,
 	}
@@ -100,16 +104,16 @@ func (a *Adapter) Chat(ctx context.Context, messages []Message, tools []ToolSche
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost,
-		a.endpoint+"/v1/chat/completions", bytes.NewReader(jsonBody))
+		c.endpoint+"/v1/chat/completions", bytes.NewReader(jsonBody))
 	if err != nil {
 		return nil, fmt.Errorf("create request: %w", err)
 	}
 	req.Header.Set("Content-Type", "application/json")
-	if a.apiKey != "" {
-		req.Header.Set("Authorization", "Bearer "+a.apiKey)
+	if c.apiKey != "" {
+		req.Header.Set("Authorization", "Bearer "+c.apiKey)
 	}
 
-	resp, err := a.httpClient.Do(req)
+	resp, err := c.httpClient.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("llm request: %w", err)
 	}
@@ -135,6 +139,7 @@ func (a *Adapter) Chat(ctx context.Context, messages []Message, tools []ToolSche
 	if err := json.NewDecoder(resp.Body).Decode(&raw); err != nil {
 		return nil, fmt.Errorf("decode: %w", err)
 	}
+	io.Copy(io.Discard, resp.Body) // drain for connection reuse
 	if len(raw.Choices) == 0 {
 		return nil, fmt.Errorf("empty choices")
 	}
@@ -147,5 +152,25 @@ func (a *Adapter) Chat(ctx context.Context, messages []Message, tools []ToolSche
 	}, nil
 }
 
+// SimplePrompt sends a single user message and returns the text content.
+// Convenience for services that don't need tool calling (ingest, search).
+// maxTokens of 0 defaults to 4096.
+func (c *Client) SimplePrompt(ctx context.Context, prompt string, temperature float64, maxTokens ...int) (string, error) {
+	mt := 4096
+	if len(maxTokens) > 0 && maxTokens[0] > 0 {
+		mt = maxTokens[0]
+	}
+	resp, err := c.Chat(ctx, []Message{
+		{Role: "user", Content: prompt},
+	}, nil, temperature, mt)
+	if err != nil {
+		return "", err
+	}
+	return resp.Content, nil
+}
+
 // Model returns the model ID.
-func (a *Adapter) Model() string { return a.model }
+func (c *Client) Model() string { return c.model }
+
+// Endpoint returns the endpoint URL.
+func (c *Client) Endpoint() string { return c.endpoint }
