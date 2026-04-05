@@ -263,7 +263,7 @@ func (a *Agent) ExecuteConfirmed(ctx context.Context, jwt, toolName string, para
 	return a.toolExecutor.ExecuteConfirmed(ctx, jwt, toolName, params)
 }
 
-// publishTraceEnd is a convenience to publish trace end + return result.
+// publishTraceEnd publishes trace end + feedback events, returns result.
 func (a *Agent) publishTraceEnd(tenantSlug, traceID string, result *QueryResult, status string) *QueryResult {
 	a.tracePublisher.TraceEnd(
 		tenantSlug, traceID, status,
@@ -271,6 +271,22 @@ func (a *Agent) publishTraceEnd(tenantSlug, traceID string, result *QueryResult,
 		result.InputTokens, result.OutputTokens,
 		len(result.ToolCalls), 0,
 	)
+	// Publish feedback events for the feedback service
+	a.tracePublisher.PublishFeedback(tenantSlug, "usage", map[string]any{
+		"trace_id":      traceID,
+		"model":         result.Model,
+		"input_tokens":  result.InputTokens,
+		"output_tokens": result.OutputTokens,
+		"duration_ms":   result.DurationMS,
+		"tool_calls":    len(result.ToolCalls),
+		"status":        status,
+	})
+	if status != "completed" {
+		a.tracePublisher.PublishFeedback(tenantSlug, "error_report", map[string]any{
+			"trace_id": traceID,
+			"status":   status,
+		})
+	}
 	return result
 }
 

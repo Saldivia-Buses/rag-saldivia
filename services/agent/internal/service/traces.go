@@ -85,6 +85,20 @@ func (p *TracePublisher) publish(subject string, evt any) {
 	}
 }
 
+// PublishFeedback sends a feedback event for the feedback service to consume.
+// Categories: response_quality, agent_quality, performance, usage, error_report
+func (p *TracePublisher) PublishFeedback(tenantSlug, category string, data any) {
+	if p.nc == nil || !validateToken(tenantSlug) || !validateToken(category) {
+		return
+	}
+	evt := map[string]any{
+		"category":  category,
+		"tenant_id": tenantSlug,
+		"data":      data,
+	}
+	p.publish(fmt.Sprintf("tenant.%s.feedback.%s", tenantSlug, category), evt)
+}
+
 // validateToken checks if a string is safe for NATS subject interpolation.
 func validateToken(s string) bool {
 	return s != "" && safeToken.MatchString(s)
