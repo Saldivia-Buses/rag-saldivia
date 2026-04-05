@@ -311,7 +311,13 @@ func (g *Generator) generateSummaries(ctx context.Context, nodes []Node, pages [
 			node := &nodes[i]
 
 			wg.Add(1)
-			sem <- struct{}{}
+			// B5: context-aware semaphore — don't block forever on cancellation
+			select {
+			case sem <- struct{}{}:
+			case <-ctx.Done():
+				wg.Done()
+				return
+			}
 			go func(n *Node) {
 				defer wg.Done()
 				defer func() { <-sem }()

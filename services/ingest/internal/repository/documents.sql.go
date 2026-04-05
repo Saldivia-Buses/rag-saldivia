@@ -601,3 +601,17 @@ func (q *Queries) UpdateDocumentStatusWithError(ctx context.Context, arg UpdateD
 	_, err := q.db.Exec(ctx, updateDocumentStatusWithError, arg.Status, arg.Error, arg.ID)
 	return err
 }
+
+const updateDocumentStorageKey = `-- name: UpdateDocumentStorageKey :exec
+UPDATE documents SET storage_key = $1, updated_at = now() WHERE id = $2
+`
+
+type UpdateDocumentStorageKeyParams struct {
+	StorageKey string `json:"storage_key"`
+	ID         string `json:"id"`
+}
+
+func (q *Queries) UpdateDocumentStorageKey(ctx context.Context, arg UpdateDocumentStorageKeyParams) error {
+	_, err := q.db.Exec(ctx, updateDocumentStorageKey, arg.StorageKey, arg.ID)
+	return err
+}

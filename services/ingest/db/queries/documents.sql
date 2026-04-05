@@ -15,6 +15,9 @@ SELECT * FROM documents WHERE uploaded_by = $1 ORDER BY created_at DESC LIMIT $2
 -- name: ListDocuments :many
 SELECT * FROM documents ORDER BY created_at DESC LIMIT $1 OFFSET $2;
 
+-- name: UpdateDocumentStorageKey :exec
+UPDATE documents SET storage_key = $1, updated_at = now() WHERE id = $2;
+
 -- name: UpdateDocumentStatus :exec
 UPDATE documents SET status = $1, updated_at = now() WHERE id = $2;
 
