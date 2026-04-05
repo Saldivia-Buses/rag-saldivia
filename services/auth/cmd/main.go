@@ -20,7 +20,9 @@ import (
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
 	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
+	"github.com/Camionerou/rag-saldivia/pkg/security"
 	"github.com/Camionerou/rag-saldivia/pkg/tenant"
+	"github.com/redis/go-redis/v9"
 	"github.com/Camionerou/rag-saldivia/services/auth/internal/handler"
 	"github.com/Camionerou/rag-saldivia/services/auth/internal/service"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
@@ -72,6 +74,21 @@ func main() {
 	publisher := natspub.New(nc)
 	slog.Info("connected to NATS", "url", natsURL)
 
+	// Redis for token blacklist
+	redisURL := env("REDIS_URL", "localhost:6379")
+	rdb := redis.NewClient(&redis.Options{Addr: redisURL})
+	if err := rdb.Ping(ctx).Err(); err != nil {
+		slog.Warn("redis not available, token blacklist disabled", "error", err)
+		rdb = nil
+	} else {
+		defer rdb.Close()
+	}
+	var blacklist *security.TokenBlacklist
+	if rdb != nil {
+		blacklist = security.NewTokenBlacklist(rdb)
+		slog.Info("token blacklist enabled")
+	}
+
 	jwtCfg := sdajwt.DefaultConfig(privateKey, publicKey)
 
 	// Multi-tenant mode: platform DB available → use Resolver
@@ -114,6 +131,7 @@ func main() {
 		tenantID := env("TENANT_ID", "dev")
 		tenantSlug := env("TENANT_SLUG", "dev")
 		authSvc := service.NewAuth(pool, jwtCfg, tenantID, tenantSlug, publisher)
+		authSvc.SetBlacklist(blacklist)
 		authHandler = handler.NewAuth(authSvc)
 		slog.Info("auth service starting in single-tenant mode", "tenant_slug", tenantSlug)
 	} else {
@@ -134,9 +152,9 @@ func main() {
 	r.Post("/v1/auth/refresh", authHandler.Refresh)
 	r.Post("/v1/auth/logout", authHandler.Logout)
 
-	// Protected routes — require valid access token
+	// Protected routes — require valid access token + blacklist check
 	r.Group(func(r chi.Router) {
-		r.Use(sdamw.Auth(publicKey))
+		r.Use(sdamw.AuthWithConfig(publicKey, sdamw.AuthConfig{Blacklist: blacklist}))
 		r.Get("/v1/auth/me", authHandler.Me)
 		r.Patch("/v1/auth/me", authHandler.UpdateMe)
 		r.With(sdamw.RequirePermission("users.read")).Get("/v1/auth/users", authHandler.ListUsers)

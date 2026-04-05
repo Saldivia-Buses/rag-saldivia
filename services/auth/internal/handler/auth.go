@@ -20,7 +20,7 @@ import (
 type AuthService interface {
 	Login(ctx context.Context, req service.LoginRequest) (*service.TokenPair, error)
 	Refresh(ctx context.Context, refreshToken string) (*service.TokenPair, error)
-	Logout(ctx context.Context, refreshToken string) error
+	Logout(ctx context.Context, refreshToken, accessJTI string, accessExpiry time.Time) error
 	Me(ctx context.Context, userID string) (*service.UserInfo, error)
 	SetupMFA(ctx context.Context, userID string) (*service.MFASetupResult, error)
 	VerifySetup(ctx context.Context, userID, code string) error
@@ -220,7 +220,18 @@ func (h *Auth) Logout(w http.ResponseWriter, r *http.Request) {
 
 	if refreshToken != "" {
 		if svc, err := h.resolveService(r); err == nil {
-			_ = svc.Logout(r.Context(), refreshToken)
+			// Extract access token JTI for blacklisting
+			accessJTI := ""
+			accessExpiry := time.Now().Add(15 * time.Minute) // default
+			if bearer := r.Header.Get("Authorization"); len(bearer) > 7 {
+				if claims, err := sdajwt.Verify(h.jwtCfg.PublicKey, bearer[7:]); err == nil {
+					accessJTI = claims.ID
+					if claims.ExpiresAt != nil {
+						accessExpiry = claims.ExpiresAt.Time
+					}
+				}
+			}
+			_ = svc.Logout(r.Context(), refreshToken, accessJTI, accessExpiry)
 		}
 	}
 
