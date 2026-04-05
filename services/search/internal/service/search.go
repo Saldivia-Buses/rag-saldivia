@@ -325,4 +325,3 @@ func containsInt(s []int, v int) bool {
 	return false
 }
 
-// llmChat is now handled by pkg/llm.Client.SimplePrompt — see line 191.

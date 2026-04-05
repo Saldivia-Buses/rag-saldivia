@@ -139,6 +139,7 @@ func (c *Client) Chat(ctx context.Context, messages []Message, tools []ToolSchem
 	if err := json.NewDecoder(resp.Body).Decode(&raw); err != nil {
 		return nil, fmt.Errorf("decode: %w", err)
 	}
+	io.Copy(io.Discard, resp.Body) // drain for connection reuse
 	if len(raw.Choices) == 0 {
 		return nil, fmt.Errorf("empty choices")
 	}
@@ -153,10 +154,15 @@ func (c *Client) Chat(ctx context.Context, messages []Message, tools []ToolSchem
 
 // SimplePrompt sends a single user message and returns the text content.
 // Convenience for services that don't need tool calling (ingest, search).
-func (c *Client) SimplePrompt(ctx context.Context, prompt string, temperature float64) (string, error) {
+// maxTokens of 0 defaults to 4096.
+func (c *Client) SimplePrompt(ctx context.Context, prompt string, temperature float64, maxTokens ...int) (string, error) {
+	mt := 4096
+	if len(maxTokens) > 0 && maxTokens[0] > 0 {
+		mt = maxTokens[0]
+	}
 	resp, err := c.Chat(ctx, []Message{
 		{Role: "user", Content: prompt},
-	}, nil, temperature, 4096)
+	}, nil, temperature, mt)
 	if err != nil {
 		return "", err
 	}

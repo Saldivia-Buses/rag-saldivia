@@ -10,7 +10,7 @@ import (
 	chimw "github.com/go-chi/chi/v5/middleware"
 
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
-	"github.com/Camionerou/rag-saldivia/services/agent/internal/llm"
+	"github.com/Camionerou/rag-saldivia/pkg/llm"
 	"github.com/Camionerou/rag-saldivia/services/agent/internal/service"
 )
 
