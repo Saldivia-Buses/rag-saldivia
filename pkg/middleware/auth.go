@@ -3,12 +3,19 @@ package middleware
 
 import (
 	"crypto/ed25519"
+	"log/slog"
 	"net/http"
 	"strings"
 
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
+	"github.com/Camionerou/rag-saldivia/pkg/security"
 	"github.com/Camionerou/rag-saldivia/pkg/tenant"
 )
+
+// AuthConfig holds optional dependencies for the auth middleware.
+type AuthConfig struct {
+	Blacklist *security.TokenBlacklist // nil = no blacklist checking
+}
 
 // Auth returns a chi middleware that verifies the JWT from the Authorization
 // header using an Ed25519 public key and injects identity into the request:
@@ -22,6 +29,11 @@ import (
 // Requests without a valid JWT get a 401 response.
 // The /health endpoint is excluded from auth.
 func Auth(publicKey ed25519.PublicKey) func(http.Handler) http.Handler {
+	return AuthWithConfig(publicKey, AuthConfig{})
+}
+
+// AuthWithConfig is like Auth but accepts optional configuration (blacklist, etc).
+func AuthWithConfig(publicKey ed25519.PublicKey, cfg AuthConfig) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// Save Traefik-injected slug before stripping (Traefik re-injects after client spoofing is stripped)
@@ -51,6 +63,18 @@ func Auth(publicKey ed25519.PublicKey) func(http.Handler) http.Handler {
 			if err != nil {
 				writeJSONError(w, http.StatusUnauthorized, "invalid token")
 				return
+			}
+
+			// Check token blacklist (revoked on logout/password change)
+			if cfg.Blacklist != nil && claims.ID != "" {
+				revoked, err := cfg.Blacklist.IsRevoked(r.Context(), claims.ID)
+				if err != nil {
+					slog.Error("blacklist check failed", "error", err)
+					// fail-open: if Redis is down, don't block all requests
+				} else if revoked {
+					writeJSONError(w, http.StatusUnauthorized, "token revoked")
+					return
+				}
 			}
 
 			// Reject MFA-pending tokens — they're only valid for /v1/auth/mfa/verify
