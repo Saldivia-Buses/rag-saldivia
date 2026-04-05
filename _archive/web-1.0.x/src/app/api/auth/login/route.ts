@@ -1,0 +1,86 @@
+/**
+ * POST /api/auth/login
+ * Verifica credenciales contra la DB y emite JWT en cookie HttpOnly.
+ */
+
+import { NextResponse } from "next/server"
+import { LoginRequestSchema } from "@rag-saldivia/shared"
+import { verifyPassword, getUserByEmail } from "@rag-saldivia/db"
+import { createAccessToken, createRefreshToken, makeAuthCookie, makeRefreshCookie } from "@/lib/auth/jwt"
+import { log } from "@rag-saldivia/logger/backend"
+
+export async function POST(request: Request) {
+  const start = Date.now()
+
+  try {
+    const body = await request.json()
+    const parsed = LoginRequestSchema.safeParse(body)
+
+    if (!parsed.success) {
+      return NextResponse.json(
+        { ok: false, error: "Datos inválidos", details: parsed.error.flatten() },
+        { status: 400 }
+      )
+    }
+
+    const { email, password } = parsed.data
+
+    // Verificar si el usuario existe y está activo antes de comprobar password
+    const existing = await getUserByEmail(email)
+    if (existing && !existing.active) {
+      log.warn("auth.failed", { email, reason: "account_inactive", userId: existing.id })
+      return NextResponse.json(
+        { ok: false, error: "Cuenta desactivada. Contactá al administrador." },
+        { status: 403 }
+      )
+    }
+
+    const user = await verifyPassword(email, password)
+
+    if (!user) {
+      log.warn("auth.failed", { email, reason: "invalid_credentials" })
+      // Delay deliberado para dificultar brute force
+      await new Promise((r) => setTimeout(r, 300))
+      return NextResponse.json(
+        { ok: false, error: "Email o contraseña incorrectos" },
+        { status: 401 }
+      )
+    }
+
+    const accessToken = await createAccessToken({
+      sub: String(user.id),
+      email: user.email,
+      name: user.name,
+      role: user.role as "admin" | "area_manager" | "user",
+    })
+    const refreshToken = await createRefreshToken(String(user.id))
+
+    log.info("auth.login", { email, role: user.role, duration: Date.now() - start }, { userId: user.id })
+
+    const response = NextResponse.json({
+      ok: true,
+      data: {
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          active: user.active,
+          preferences: user.preferences ?? {},
+          createdAt: user.createdAt,
+          lastLogin: user.lastLogin ?? null,
+        },
+      },
+    })
+
+    response.headers.append("Set-Cookie", makeAuthCookie(accessToken))
+    response.headers.append("Set-Cookie", makeRefreshCookie(refreshToken))
+    return response
+  } catch (error) {
+    log.error("system.error", { error: String(error), endpoint: "POST /api/auth/login" })
+    return NextResponse.json(
+      { ok: false, error: "Error interno del servidor" },
+      { status: 500 }
+    )
+  }
+}

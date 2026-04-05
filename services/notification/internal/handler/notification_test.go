@@ -1,0 +1,262 @@
+package handler
+
+import (
+	"context"
+	"encoding/json"
+	"errors"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+	"time"
+
+	"github.com/go-chi/chi/v5"
+
+	"github.com/Camionerou/rag-saldivia/services/notification/internal/service"
+)
+
+// --- mock ---
+
+type mockNotificationService struct {
+	notifications []service.Notification
+	prefs         *service.Preferences
+	unreadCount   int
+	markedCount   int64
+	err           error
+}
+
+func (m *mockNotificationService) List(_ context.Context, userID string, unreadOnly bool, limit int) ([]service.Notification, error) {
+	if m.err != nil {
+		return nil, m.err
+	}
+	return m.notifications, nil
+}
+
+func (m *mockNotificationService) UnreadCount(_ context.Context, userID string) (int, error) {
+	if m.err != nil {
+		return 0, m.err
+	}
+	return m.unreadCount, nil
+}
+
+func (m *mockNotificationService) MarkRead(_ context.Context, notifID, userID string) error {
+	if m.err != nil {
+		return m.err
+	}
+	for _, n := range m.notifications {
+		if n.ID == notifID && n.UserID == userID {
+			return nil
+		}
+	}
+	return service.ErrNotificationNotFound
+}
+
+func (m *mockNotificationService) MarkAllRead(_ context.Context, userID string) (int64, error) {
+	if m.err != nil {
+		return 0, m.err
+	}
+	return m.markedCount, nil
+}
+
+func (m *mockNotificationService) GetPreferences(_ context.Context, userID string) (*service.Preferences, error) {
+	if m.err != nil {
+		return nil, m.err
+	}
+	if m.prefs != nil {
+		return m.prefs, nil
+	}
+	return &service.Preferences{EmailEnabled: true, InAppEnabled: true, MutedTypes: []string{}}, nil
+}
+
+func (m *mockNotificationService) UpdatePreferences(_ context.Context, userID string, emailEnabled, inAppEnabled bool, quietStart, quietEnd *string, mutedTypes []string) (*service.Preferences, error) {
+	if m.err != nil {
+		return nil, m.err
+	}
+	return &service.Preferences{
+		EmailEnabled: emailEnabled,
+		InAppEnabled: inAppEnabled,
+		MutedTypes:   mutedTypes,
+	}, nil
+}
+
+// --- helpers ---
+
+func setupNotifRouter(mock *mockNotificationService) *chi.Mux {
+	h := NewNotification(mock)
+	r := chi.NewRouter()
+	r.Mount("/v1/notifications", h.Routes())
+	return r
+}
+
+func withUser(req *http.Request, userID string) *http.Request {
+	req.Header.Set("X-User-ID", userID)
+	return req
+}
+
+// --- tests ---
+
+func TestList_MissingUserID_Returns401(t *testing.T) {
+	r := setupNotifRouter(&mockNotificationService{})
+
+	req := httptest.NewRequest(http.MethodGet, "/v1/notifications", nil)
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusUnauthorized {
+		t.Fatalf("expected 401, got %d", rec.Code)
+	}
+}
+
+func TestList_ReturnsNotifications(t *testing.T) {
+	mock := &mockNotificationService{
+		notifications: []service.Notification{
+			{ID: "n-1", UserID: "u-1", Title: "Test", CreatedAt: time.Now()},
+		},
+	}
+	r := setupNotifRouter(mock)
+
+	req := withUser(httptest.NewRequest(http.MethodGet, "/v1/notifications", nil), "u-1")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", rec.Code)
+	}
+}
+
+func TestUnreadCount_Returns_Count(t *testing.T) {
+	mock := &mockNotificationService{unreadCount: 5}
+	r := setupNotifRouter(mock)
+
+	req := withUser(httptest.NewRequest(http.MethodGet, "/v1/notifications/count", nil), "u-1")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", rec.Code)
+	}
+
+	var resp map[string]int
+	json.NewDecoder(rec.Body).Decode(&resp)
+	if resp["count"] != 5 {
+		t.Errorf("expected count 5, got %d", resp["count"])
+	}
+}
+
+func TestMarkRead_Owner_Success(t *testing.T) {
+	mock := &mockNotificationService{
+		notifications: []service.Notification{
+			{ID: "n-1", UserID: "u-1"},
+		},
+	}
+	r := setupNotifRouter(mock)
+
+	req := withUser(httptest.NewRequest(http.MethodPatch, "/v1/notifications/n-1/read", nil), "u-1")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusNoContent {
+		t.Fatalf("expected 204, got %d", rec.Code)
+	}
+}
+
+func TestMarkRead_NotFound_Returns404(t *testing.T) {
+	r := setupNotifRouter(&mockNotificationService{})
+
+	req := withUser(httptest.NewRequest(http.MethodPatch, "/v1/notifications/nonexistent/read", nil), "u-1")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusNotFound {
+		t.Fatalf("expected 404, got %d", rec.Code)
+	}
+}
+
+func TestMarkAllRead_Returns_Count(t *testing.T) {
+	mock := &mockNotificationService{markedCount: 3}
+	r := setupNotifRouter(mock)
+
+	req := withUser(httptest.NewRequest(http.MethodPost, "/v1/notifications/read-all", nil), "u-1")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", rec.Code)
+	}
+
+	var resp map[string]int64
+	json.NewDecoder(rec.Body).Decode(&resp)
+	if resp["marked"] != 3 {
+		t.Errorf("expected marked 3, got %d", resp["marked"])
+	}
+}
+
+func TestGetPreferences_Returns_Defaults(t *testing.T) {
+	r := setupNotifRouter(&mockNotificationService{})
+
+	req := withUser(httptest.NewRequest(http.MethodGet, "/v1/notifications/preferences", nil), "u-1")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", rec.Code)
+	}
+
+	var prefs service.Preferences
+	json.NewDecoder(rec.Body).Decode(&prefs)
+	if !prefs.EmailEnabled {
+		t.Error("expected email_enabled true by default")
+	}
+}
+
+func TestUpdatePreferences_Success(t *testing.T) {
+	r := setupNotifRouter(&mockNotificationService{})
+
+	body := `{"email_enabled":false,"in_app_enabled":true,"muted_types":["chat.new_message"]}`
+	req := withUser(httptest.NewRequest(http.MethodPut, "/v1/notifications/preferences", strings.NewReader(body)), "u-1")
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d: %s", rec.Code, rec.Body.String())
+	}
+
+	var prefs service.Preferences
+	json.NewDecoder(rec.Body).Decode(&prefs)
+	if prefs.EmailEnabled {
+		t.Error("expected email_enabled false")
+	}
+}
+
+func TestUpdatePreferences_InvalidJSON_Returns400(t *testing.T) {
+	r := setupNotifRouter(&mockNotificationService{})
+
+	req := withUser(httptest.NewRequest(http.MethodPut, "/v1/notifications/preferences", strings.NewReader("not json")), "u-1")
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusBadRequest {
+		t.Fatalf("expected 400, got %d", rec.Code)
+	}
+}
+
+func TestList_ServiceError_Returns500_GenericMessage(t *testing.T) {
+	mock := &mockNotificationService{err: errors.New("database down")}
+	r := setupNotifRouter(mock)
+
+	req := withUser(httptest.NewRequest(http.MethodGet, "/v1/notifications", nil), "u-1")
+	rec := httptest.NewRecorder()
+	r.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusInternalServerError {
+		t.Fatalf("expected 500, got %d", rec.Code)
+	}
+
+	var resp map[string]string
+	json.NewDecoder(rec.Body).Decode(&resp)
+	if resp["error"] != "internal error" {
+		t.Errorf("expected generic error, got %q", resp["error"])
+	}
+}

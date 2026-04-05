@@ -1,0 +1,43 @@
+id: fleet
+name: Gestion de Flota
+category: vertical
+tier_min: starter
+icon: truck
+requires: [ingest]
+
+routes:
+  - path: /fleet
+    label: Flota
+    icon: truck
+  - path: /fleet/vehicles
+    label: Vehiculos
+    parent: /fleet
+  - path: /fleet/drivers
+    label: Conductores
+    parent: /fleet
+  - path: /fleet/maintenance
+    label: Mantenimiento
+    parent: /fleet
+  - path: /fleet/routes
+    label: Rutas
+    parent: /fleet
+
+nav:
+  - label: Flota
+    icon: truck
+    path: /fleet
+    position: 40
+
+api_endpoints:
+  - /v1/fleet/vehicles
+  - /v1/fleet/drivers
+  - /v1/fleet/maintenance
+  - /v1/fleet/routes
+
+ai_services: [optimization, forecast]
+
+migrations: services/fleet/db/migrations/
+
+ws_channels:
+  - fleet.vehicles
+  - fleet.maintenance

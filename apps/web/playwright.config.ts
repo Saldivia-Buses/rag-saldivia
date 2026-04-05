@@ -1,17 +1,20 @@
-import { defineConfig } from "@playwright/test"
+import { defineConfig } from "@playwright/test";
 
 export default defineConfig({
-  testDir: "./tests/visual",
-  snapshotDir: "./tests/visual/snapshots",
-  snapshotPathTemplate: "{snapshotDir}/{testFilePath}/{arg}{ext}",
+  testDir: "./e2e",
+  timeout: 30_000,
+  retries: 0,
+  workers: 1,
   use: {
-    baseURL: "http://localhost:6006",
+    baseURL: "http://localhost:3000",
+    headless: true,
+    screenshot: "only-on-failure",
+    trace: "retain-on-failure",
   },
-  // No emular colorScheme — el dark mode es class-based (next-themes attribute="class")
-  webServer: {
-    command: "bun run storybook",
-    url: "http://localhost:6006",
-    reuseExistingServer: true,
-    timeout: 60_000,
-  },
-})
+  projects: [
+    {
+      name: "chromium",
+      use: { browserName: "chromium" },
+    },
+  ],
+});

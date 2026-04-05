@@ -1,0 +1,124 @@
+# Traefik dynamic config for local development.
+# Routes API paths to Go services running on the host (go run ./cmd/...).
+#
+# Services run on the host machine, Traefik runs in Docker.
+# host.docker.internal resolves to the host from inside Docker.
+#
+# In dev, tenant slug is injected via middleware header.
+# In production, Traefik extracts it from the subdomain.
+#
+# Ports:
+#   auth:8001  ws:8002  chat:8003  rag:8004
+#   notification:8005  platform:8006  ingest:8007
+
+http:
+  routers:
+    # Auth — login, token refresh, modules
+    # Needs dev-tenant in multi-tenant mode so X-Tenant-Slug is available for login
+    auth:
+      rule: "PathPrefix(`/v1/auth`) || PathPrefix(`/v1/modules`)"
+      service: auth
+      entryPoints: [web]
+      middlewares: [dev-cors, dev-tenant]
+
+    # WebSocket — real-time channel
+    ws:
+      rule: "PathPrefix(`/ws`)"
+      service: ws
+      entryPoints: [web]
+      middlewares: [dev-cors, dev-tenant]
+
+    # Chat — sessions + messages
+    chat:
+      rule: "PathPrefix(`/v1/chat`)"
+      service: chat
+      entryPoints: [web]
+      middlewares: [dev-cors, dev-tenant]
+
+    # RAG — generate + collections
+    rag:
+      rule: "PathPrefix(`/v1/rag`)"
+      service: rag
+      entryPoints: [web]
+      middlewares: [dev-cors, dev-tenant]
+
+    # Notifications — in-app + preferences
+    notifications:
+      rule: "PathPrefix(`/v1/notifications`)"
+      service: notification
+      entryPoints: [web]
+      middlewares: [dev-cors, dev-tenant]
+
+    # Platform — admin-only tenant/module/config management
+    platform:
+      rule: "PathPrefix(`/v1/platform`)"
+      service: platform
+      entryPoints: [web]
+      middlewares: [dev-cors]
+
+    # Ingest — document upload + job tracking
+    ingest:
+      rule: "PathPrefix(`/v1/ingest`)"
+      service: ingest
+      entryPoints: [web]
+      middlewares: [dev-cors, dev-tenant]
+
+  services:
+    auth:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:8001"
+    ws:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:8002"
+    chat:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:8003"
+    rag:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:8004"
+    notification:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:8005"
+    platform:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:8006"
+    ingest:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:8007"
+
+  middlewares:
+    # CORS for dev — frontend on :3000, API on :80
+    dev-cors:
+      headers:
+        accessControlAllowMethods:
+          - GET
+          - POST
+          - PUT
+          - PATCH
+          - DELETE
+          - OPTIONS
+        accessControlAllowHeaders:
+          - Authorization
+          - Content-Type
+          - X-Tenant-Slug
+          - X-Tenant-ID
+        accessControlAllowOriginList:
+          - "http://localhost:3000"
+          - "http://localhost:3001"
+        accessControlAllowCredentials: true
+        accessControlMaxAge: 3600
+
+    # In dev, inject tenant headers for all tenant-scoped routes.
+    # In production, Traefik extracts these from the subdomain.
+    dev-tenant:
+      headers:
+        customRequestHeaders:
+          X-Tenant-ID: "dev-tenant-id"
+          X-Tenant-Slug: "dev"

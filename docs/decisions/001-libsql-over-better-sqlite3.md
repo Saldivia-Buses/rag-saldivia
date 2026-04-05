@@ -38,6 +38,12 @@ Un workaround adicional para WSL2: `scripts/link-libsql.sh` crea symlinks manual
 - En WSL2, hay que correr `scripts/link-libsql.sh` después de `bun install` la primera vez.
 - Si Bun implementa un ABI de Node.js completo en el futuro, `better-sqlite3` podría ser una opción más performante.
 
+## Nota (2026-03-29, Plan 13)
+
+SQLite es suficiente para single-tenant. Si un cliente necesita >50 usuarios
+simultáneos, Drizzle facilita la migración a Postgres en ~1 día (cambiar driver
+de `drizzle-orm/libsql` a `drizzle-orm/postgres-js`, ajustar tipos fecha).
+
 ## Referencias
 
 - `packages/db/src/connection.ts`

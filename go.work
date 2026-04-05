@@ -1,0 +1,19 @@
+go 1.25.0
+
+use (
+	./pkg
+	./services/agent
+	./services/auth
+	./services/chat
+	./services/feedback
+	./services/ingest
+	./services/notification
+	./services/platform
+	./services/rag
+	./services/search
+	./services/traces
+	./services/ws
+	./tools/cli
+	./tools/mcp
+	./tools/pkg
+)

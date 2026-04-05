@@ -1,0 +1,24 @@
+id: rag
+name: RAG
+category: core
+tier_min: starter
+icon: database
+requires: []
+
+routes:
+  - path: /collections
+    label: Colecciones
+    icon: database
+
+nav:
+  - label: Colecciones
+    icon: database
+    path: /collections
+    position: 20
+
+api_endpoints:
+  - /v1/rag/generate
+  - /v1/rag/collections
+
+ws_channels:
+  - collections

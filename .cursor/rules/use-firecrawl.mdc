@@ -1,0 +1,24 @@
+---
+description: Usar firecrawl para web scraping, screenshots y research de URLs
+alwaysApply: true
+---
+
+# Firecrawl — Web research
+
+**SIEMPRE usar firecrawl cuando:**
+- Necesitás extraer contenido de una URL (especialmente SPAs que WebFetch no puede renderizar)
+- Querés capturar un screenshot de una página web
+- Necesitás scrapear CSS, tokens de diseño, o estilos de un sitio de referencia
+- Querés buscar en la web con contenido completo de cada resultado
+
+**WebFetch falla con SPAs (React/Next.js).** Firecrawl ejecuta JavaScript. Usar para: claude.ai, vercel.com, sitios de documentación modernos.
+
+**Casos de uso:**
+```
+firecrawl_scrape(url, formats=["screenshot"]) → captura visual de la UI
+firecrawl_scrape(url, formats=["html"], includeTags=["style"]) → extraer CSS
+firecrawl_search(query, limit=5) → buscar + contenido completo
+firecrawl_browser_create(url) → sesión persistente para JS interactivo
+```
+
+**Server:** `user-firecrawl` | Tools: `firecrawl_scrape`, `firecrawl_search`, `firecrawl_extract`, `firecrawl_browser_create`, `firecrawl_browser_execute`

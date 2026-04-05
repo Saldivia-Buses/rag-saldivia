@@ -4,15 +4,19 @@
     "type-enum": [
       2,
       "always",
-      ["feat", "fix", "refactor", "chore", "docs", "test", "ci", "perf", "revert"]
+      ["feat", "fix", "refactor", "style", "chore", "docs", "test", "ci", "perf", "revert"]
     ],
     "scope-enum": [
       1,
       "always",
       [
-        "setup", "web", "cli", "db", "config", "logger", "shared",
-        "auth", "rag", "chat", "admin", "collections", "ingestion",
-        "blackbox", "deps", "ci", "docs", "changelog", "plans"
+        "auth", "ws", "chat", "rag", "ingest", "notification", "platform",
+        "agent", "docai", "vision", "feedback", "speech", "optimization",
+        "workflow", "forecast", "translation",
+        "web", "login",
+        "cli", "mcp",
+        "infra", "deploy", "ci", "docs", "deps", "release",
+        "pkg", "proto", "config"
       ]
     ],
     "subject-case": [2, "always", "lower-case"],

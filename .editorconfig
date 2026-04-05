@@ -2,12 +2,42 @@
 root = true
 
 [*]
-indent_style = space
-indent_size = 2
 end_of_line = lf
 charset = utf-8
 trim_trailing_whitespace = true
 insert_final_newline = true
 
+# Go — tabs (gofmt standard)
+[*.go]
+indent_style = tab
+indent_size = 4
+
+# TypeScript/JavaScript/JSON/YAML — spaces
+[*.{ts,tsx,js,jsx,json,yaml,yml,css,html}]
+indent_style = space
+indent_size = 2
+
+# Protobuf — spaces
+[*.proto]
+indent_style = space
+indent_size = 2
+
+# Markdown — preserve trailing whitespace (line breaks)
 [*.md]
 trim_trailing_whitespace = false
+indent_style = space
+indent_size = 2
+
+# Makefile — tabs (required by make)
+[Makefile]
+indent_style = tab
+
+# SQL
+[*.sql]
+indent_style = space
+indent_size = 4
+
+# Dockerfile
+[Dockerfile*]
+indent_style = space
+indent_size = 4

@@ -1,0 +1,39 @@
+id: construction
+name: Gestion de Obra
+category: vertical
+tier_min: business
+icon: hard-hat
+requires: [ingest]
+
+routes:
+  - path: /construction
+    label: Obra
+    icon: hard-hat
+  - path: /construction/projects
+    label: Proyectos
+    parent: /construction
+  - path: /construction/safety
+    label: Seguridad
+    parent: /construction
+  - path: /construction/blueprints
+    label: Planos
+    parent: /construction
+
+nav:
+  - label: Obra
+    icon: hard-hat
+    path: /construction
+    position: 41
+
+api_endpoints:
+  - /v1/construction/projects
+  - /v1/construction/safety
+  - /v1/construction/blueprints
+
+ai_services: [vision, forecast]
+
+migrations: services/construction/db/migrations/
+
+ws_channels:
+  - construction.projects
+  - construction.safety

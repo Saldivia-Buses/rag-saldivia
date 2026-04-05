@@ -1,0 +1,33 @@
+id: feedback
+name: Calidad y Feedback
+category: ai_service
+tier_min: starter
+icon: message-square
+requires: []
+
+routes:
+  - path: /feedback
+    label: Calidad IA
+    icon: message-square
+  - path: /feedback/errors
+    label: Errores
+    parent: /feedback
+  - path: /feedback/usage
+    label: Uso
+    parent: /feedback
+
+nav:
+  - label: Calidad IA
+    icon: message-square
+    path: /feedback
+    position: 50
+
+api_endpoints:
+  - /v1/feedback/summary
+  - /v1/feedback/quality
+  - /v1/feedback/errors
+  - /v1/feedback/usage
+  - /v1/feedback/health-score
+
+ws_channels:
+  - feedback.alerts

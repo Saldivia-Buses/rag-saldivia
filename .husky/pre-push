@@ -6,7 +6,7 @@ BUN="${BUN_PATH:-$(which bun 2>/dev/null || echo /home/enzo/.bun/bin/bun)}"
 
 if [ -f "apps/web/package.json" ]; then
   echo "Corriendo type-check antes del push..."
-  "$BUN" run --filter=./apps/web type-check || {
+  (cd apps/web && "$BUN" run type-check) || {
     echo "Type-check falló. Corregí los errores antes de hacer push."
     exit 1
   }

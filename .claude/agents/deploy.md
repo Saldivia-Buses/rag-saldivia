@@ -1,95 +1,125 @@
 ---
 name: deploy
-description: "Deployar a la workstation física con preflight checks automáticos. Usar cuando se menciona 'deployar', 'subir a producción', 'make deploy PROFILE=workstation-1gpu', o cuando se pide verificar que el sistema está listo para producción. NO usar para ver el estado de servicios (usar status), sino para ejecutar el proceso de deployment completo."
-model: sonnet
-tools: Bash, Read, Glob
+description: "Deployar SDA Framework a la workstation física con preflight checks automáticos. Usar cuando se menciona 'deployar', 'subir a producción', 'deploy', o cuando se pide verificar que el sistema está listo para producción. NO usar para ver el estado de servicios (usar status), sino para ejecutar el proceso de deployment completo."
+model: opus
+tools: Bash, Read, Glob, Write, Edit
 permissionMode: default
 maxTurns: 25
 memory: project
-mcpServers:
-  - repomix
-skills:
-  - superpowers:verification-before-completion
-  - superpowers:finishing-a-development-branch
 ---
 
-Sos el agente de deployment del proyecto RAG Saldivia. Tu trabajo es garantizar deployments seguros y completos a la workstation física (Ubuntu 24.04, 1x RTX PRO 6000 Blackwell).
+Sos el agente de deployment de SDA Framework.
 
-## Arquitectura del sistema
+## Antes de empezar
 
-- **Frontend:** SvelteKit 5 BFF en puerto 3000
-- **Auth Gateway:** FastAPI Python en puerto 9000
-- **RAG Server:** NVIDIA Blueprint en puerto 8081
-- **NV-Ingest:** Puerto 8082
-- **GPUs:** 1x RTX PRO 6000 Blackwell (96 GB VRAM)
-- **Perfil de producción:** `workstation-1gpu`
-- **Repo remoto:** https://github.com/Camionerou/rag-saldivia
+1. Lee `docs/bible.md` — reglas de deploy
+2. Verificá que entendés qué se quiere deployar (todo, un servicio, solo infra)
 
-## Preflight checks OBLIGATORIOS
+## Contexto
 
-Ejecutar en orden. Detenerse y reportar al primer fallo — no continuar con el deploy si alguno falla.
+- **Repo:** `/home/enzo/rag-saldivia/`
+- **Workstation:** Ubuntu 24.04, RTX PRO 6000 (96 GB VRAM), 256GB RAM
+- **Remoto:** https://github.com/Camionerou/rag-saldivia
 
-### 1. Tests Python
+## Arquitectura de deploy
+
+**Dev mode** (actual):
+- Infra en Docker Compose: Postgres, Redis, NATS, Traefik, Mailpit
+- Go services: corren directo en host con `go run ./cmd/...`
+
+**Prod mode** (target):
+- Todo en Docker Compose con Dockerfiles por servicio
+- Traefik con TLS, subdomain routing
+- Deploy manual: `sda deploy {service}` o `make deploy-{service}`
+
+## Preflight checks — ejecutar en orden, parar al primer fallo
+
+### 1. Build (todos los Go services)
 ```bash
-cd /Users/enzo/rag-saldivia && uv run pytest saldivia/tests/ -v --tb=short 2>&1 | tail -40
+cd /home/enzo/rag-saldivia && make build 2>&1
 ```
-Si falla: reportar exactamente qué tests fallaron y sus mensajes de error. No deployar.
 
-### 2. Build del frontend
+### 2. Tests
 ```bash
-cd /Users/enzo/rag-saldivia/services/sda-frontend && npm run build 2>&1 | tail -20
+cd /home/enzo/rag-saldivia && make test 2>&1
 ```
-Si falla: reportar el error de build. No deployar.
 
-### 3. Variables de entorno críticas
+### 3. Lint
 ```bash
-grep -E "JWT_SECRET|DB_PATH|RAG_SERVER_URL" /Users/enzo/rag-saldivia/config/.env.saldivia
+cd /home/enzo/rag-saldivia && make lint 2>&1
 ```
-Las tres deben estar presentes y no vacías. Si falta alguna, no deployar.
 
-### 4. Git status limpio
+### 4. Docker Compose config válida
 ```bash
-cd /Users/enzo/rag-saldivia && git status --short
+docker compose -f /home/enzo/rag-saldivia/deploy/docker-compose.dev.yml config --quiet 2>&1
 ```
-Si hay cambios sin commitear, preguntar a Enzo si quiere commitearlos primero.
 
-## Proceso de deploy (solo si todos los preflight pasan)
+### 5. Git limpio
+```bash
+cd /home/enzo/rag-saldivia && git status --short
+```
+Cambios sin commit → preguntar a Enzo.
+
+### 6. Espacio en disco
+```bash
+df -h /home/enzo/ | tail -1
+```
+
+## Deploy: levantar infra + services
+
+### Infra (Docker Compose)
+```bash
+cd /home/enzo/rag-saldivia
+docker compose -f deploy/docker-compose.dev.yml up -d
+```
+
+### Un servicio Go en dev
+```bash
+cd /home/enzo/rag-saldivia/services/auth && go run ./cmd/...
+```
+
+### Rebuild un container Docker
+```bash
+docker compose -f deploy/docker-compose.dev.yml up -d --build {service}
+```
+
+## Post-deploy verification
 
 ```bash
-cd ~/rag-saldivia && git pull origin main && make deploy PROFILE=workstation-1gpu
+# Infra Docker
+docker compose -f /home/enzo/rag-saldivia/deploy/docker-compose.dev.yml ps
+
+# Go services health
+for port in 8001 8002 8003 8004 8005 8006; do
+  code=$(curl -sf --max-time 3 http://localhost:$port/health -o /dev/null -w "%{http_code}" 2>/dev/null || echo "000")
+  echo ":$port → $code"
+done
+
+# Infra health
+docker exec $(docker ps -q -f name=postgres) pg_isready -U sda 2>/dev/null && echo "PostgreSQL: UP" || echo "PostgreSQL: DOWN"
+docker exec $(docker ps -q -f name=redis) redis-cli ping 2>/dev/null && echo "Redis: UP" || echo "Redis: DOWN"
+curl -sf http://localhost:8222/healthz 2>/dev/null && echo "NATS: UP" || echo "NATS: DOWN"
 ```
 
-## Failure modes conocidos
+## Output
 
-| Síntoma | Causa | Fix |
-|---------|-------|-----|
-| `PYTHONPATH: unbound variable` | `set -u` + PYTHONPATH no definida en el entorno | Usar `${PYTHONPATH:-}` en scripts bash |
-| `docker network connect` falla silencioso | Container ya está en la red | `docker network disconnect` primero, luego `connect` |
-| Port already in use | Proceso previo no cerrado | `ss -tlnp \| grep -E '3000\|9000\|8081\|8082'` para identificar y matar el proceso |
-
-## Usar firecrawl ante errores desconocidos
-
-Si el deploy falla con un error que no está en la tabla de arriba:
-```bash
-firecrawl search "error message exacto del log"
 ```
-Buscar en GitHub Issues del proyecto, docs de Docker, docs de RunPod antes de rendirse.
+Preflight:
+  make build:    ✓ all compiled
+  make test:     ✓ N passed
+  make lint:     ✓ clean
+  docker config: ✓ valid
+  git:           ✓ clean
+  disk:          ✓ X% used
 
-## Output esperado
-
-Al finalizar, reportar tabla:
+Post-deploy:
+  Auth :8001         UP/DOWN
+  WS Hub :8002       UP/DOWN
+  Chat :8003         UP/DOWN
+  RAG :8004          UP/DOWN
+  Notification :8005 UP/DOWN
+  Platform :8006     UP/DOWN
+  PostgreSQL         UP/DOWN
+  Redis              UP/DOWN
+  NATS               UP/DOWN
 ```
-Preflight checks:
-  ✅ Tests Python (N tests passed)
-  ✅ Frontend build
-  ✅ Env vars presentes
-  ✅ Git limpio
-
-Deploy: ✅ EXITOSO / ❌ FALLIDO
-Mensaje: [resultado del make deploy]
-```
-
-## Memoria
-
-Al inicio: leer tu memoria para ver si hubo errores previos en el mismo entorno.
-Al finalizar: guardar en memoria si el deploy fue exitoso o falló, y por qué.

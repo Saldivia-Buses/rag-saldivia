@@ -1,0 +1,27 @@
+---
+description: Usar context7 para documentación actualizada de librerías antes de buscar en web
+alwaysApply: true
+---
+
+# Context7 — Documentación de librerías
+
+**SIEMPRE usar context7 ANTES de WebSearch cuando:**
+- Tenés preguntas sobre APIs de librerías que usa el proyecto
+- Necesitás saber si una función existe o cómo se usa
+- Querés ejemplos de código actualizados
+
+**Librerías del proyecto con docs en context7:**
+`next.js`, `react`, `tailwindcss`, `drizzle-orm`, `zod`, `shadcn/ui`, `radix-ui`, `bun`, `ioredis`, `bullmq`, `jose`, `@tanstack/react-table`, `playwright`, `storybook`
+
+**Flujo:**
+```
+resolve_library_id(libraryName) → query_docs(libraryId, topic)
+```
+
+**Ejemplo:**
+```
+resolve_library_id("drizzle-orm") → "drizzle-orm/latest"
+query_docs("drizzle-orm/latest", "how to use with libsql")
+```
+
+**Server:** `plugin-context7-plugin-context7` | Tools: `resolve-library-id`, `query-docs`

@@ -1,9 +1,9 @@
 ---
 name: rag-nextjs
-description: Next.js 15 patterns, file placement, and project-specific conventions for RAG Saldivia. Use when creating new pages, API routes, Server Actions, hooks, or components — or when the user asks "¿dónde pongo X?", "¿cómo agrego una página?", "¿Server Component o Client Component?", "cómo cachear", or mentions SSE, streaming, or Next.js patterns.
+description: Next.js 16 patterns, file placement, and project-specific conventions for RAG Saldivia. Use when creating new pages, API routes, Server Actions, hooks, or components — or when the user asks "¿dónde pongo X?", "¿cómo agrego una página?", "¿Server Component o Client Component?", "cómo cachear", or mentions SSE, streaming, or Next.js patterns.
 ---
 
-# RAG Saldivia — Next.js 15 Patterns
+# RAG Saldivia — Next.js 16 Patterns
 
 Reference: `docs/architecture.md` para el diagrama completo de flujos.
 
@@ -17,8 +17,7 @@ Reference: `docs/architecture.md` para el diagrama completo de flujos.
 | UI con estado local | `apps/web/src/components/[nombre].tsx` (Client Component) |
 | Lógica de fetch/streaming | `apps/web/src/hooks/use[Nombre].ts` |
 | Query de DB nueva | `packages/db/src/queries/[dominio].ts` |
-| Tipo compartido web+cli | `packages/shared/src/schemas.ts` |
-| Comando CLI nuevo | `apps/cli/src/commands/[nombre].ts` + registrar en `index.ts` |
+| Tipo compartido | `packages/shared/src/schemas.ts` |
 
 ## Reglas de arquitectura
 

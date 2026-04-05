@@ -1,131 +1,171 @@
-# RAG Saldivia — Unified Interface
-# Usage: make <target> [ARGS]
+# SDA Framework — Unified Interface
+# Usage: make <target>
 
 SHELL := /bin/bash
 .DEFAULT_GOAL := help
 
-SALDIVIA_ROOT := $(shell pwd)
-BLUEPRINT_DIR := $(SALDIVIA_ROOT)/vendor/rag-blueprint
-COMPOSE_DIR := $(BLUEPRINT_DIR)/deploy/compose
-PROFILE ?= workstation-1gpu
-BLUEPRINT_VERSION ?= 2.5.0
+# Directories
+ROOT_DIR := $(shell pwd)
+SERVICES_DIR := $(ROOT_DIR)/services
+DEPLOY_DIR := $(ROOT_DIR)/deploy
 
-export SALDIVIA_ROOT
+# Go
+GOBIN := $(ROOT_DIR)/bin
+GO_SERVICES := $(shell ls -d $(SERVICES_DIR)/*/go.mod 2>/dev/null | xargs -I{} dirname {} | xargs -I{} basename {})
 
-.PHONY: help setup setup-blueprint setup-check dev check reset deploy stop restart status health ingest query test test-unit test-coverage test-e2e test-e2e-brev test-backend test-stress patch-check patch-create clean validate show-env watch cli
+export GOBIN
+
+.PHONY: help dev stop test lint build proto migrate deploy new-service clean versions
 
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
-## ── Nuevo stack (experimental/ultra-optimize) ────────────────────────────
+# ── Development ──────────────────────────────────────────────────────────
 
-setup: ## [NEW] Setup completo: preflight check, instalar deps, migrar DB, seed
-	@bun scripts/setup.ts
+dev: ## Start infra only (run Go services on host)
+	docker compose -f $(DEPLOY_DIR)/docker-compose.dev.yml up
 
-setup-check: ## [NEW] Solo verifica prerequisitos sin instalar nada
-	@bun scripts/setup.ts --check
+dev-full: ## Start infra + all Go services in Docker
+	docker compose -f $(DEPLOY_DIR)/docker-compose.dev.yml --profile full up --build
 
-reset: ## [NEW] Limpia la DB y rehace migraciones + seed
-	@bun scripts/setup.ts --reset
-
-dev: ## [NEW] Levanta el servidor en modo desarrollo
-	@bun run dev
-
-## ── Stack original (blueprint + Python) ─────────────────────────────────
-
-setup-blueprint: ## Clone blueprint, apply patches, build images (stack original)
-	@./scripts/setup.sh $(BLUEPRINT_VERSION)
-
-deploy: ## Start services (PROFILE=workstation-1gpu)
-	@./scripts/deploy.sh $(PROFILE)
+dev-gpu: ## Start infra + SGLang model servers (requires NVIDIA GPU)
+	docker compose -f $(DEPLOY_DIR)/docker-compose.dev.yml --profile gpu up
 
 stop: ## Stop all services
-	@cd $(COMPOSE_DIR) && docker compose --env-file .env.merged \
-		-f docker-compose-rag-server.yaml \
-		-f $(SALDIVIA_ROOT)/config/compose-overrides.yaml down
+	docker compose -f $(DEPLOY_DIR)/docker-compose.dev.yml --profile full --profile gpu down
 
-restart: ## Stop and redeploy (PROFILE=workstation-1gpu)
-	$(MAKE) stop && $(MAKE) deploy PROFILE=$(PROFILE)
+# ── Build ────────────────────────────────────────────────────────────────
 
-status: ## Show GPU, Docker, and Milvus status
-	@echo "=== GPU ===" && nvidia-smi --query-gpu=index,memory.used,memory.total --format=csv,noheader 2>/dev/null || echo "No GPU"
-	@echo ""
-	@echo "=== Docker ===" && docker ps --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}' 2>/dev/null | head -20
-	@echo ""
-	@echo "=== RAG Health ===" && curl -sf http://localhost:8081/health 2>/dev/null | python3 -m json.tool 2>/dev/null || echo "RAG server not responding"
+build: ## Build all Go services
+	@for svc in $(GO_SERVICES); do \
+		echo "Building $$svc..."; \
+		cd $(SERVICES_DIR)/$$svc && go build -o $(GOBIN)/$$svc ./cmd/... || exit 1; \
+	done
+	@echo "All services built → $(GOBIN)/"
 
+build-%: ## Build a specific service (e.g., make build-auth)
+	cd $(SERVICES_DIR)/$* && go build -o $(GOBIN)/$* ./cmd/...
 
-health: ## Run health check on all services
-	@bash $(SALDIVIA_ROOT)/scripts/health_check.sh
-ingest: ## Smart ingest PDFs (DOCS=path COLLECTION=name)
-	@python3 $(SALDIVIA_ROOT)/scripts/smart_ingest.py \
-		$(or $(COLLECTION),tecpia) \
-		$(or $(DOCS),$(error DOCS is required. Usage: make ingest DOCS=~/docs/pdfs/))
+# ── Testing ──────────────────────────────────────────────────────────────
 
-query: ## Crossdoc query (Q="question")
-	@python3 $(SALDIVIA_ROOT)/scripts/crossdoc_client.py \
-		$(or $(Q),$(error Q is required. Usage: make query Q="your question here"))
+test: ## Run all Go tests
+	go test ./services/... ./pkg/... ./tools/... -count=1
 
-## ── Testing ──────────────────────────────────────────────────────────────────
-test: test-unit test-backend ## Run unit + component + backend tests (no E2E — E2E requires app running)
+test-%: ## Run tests for a specific service (e.g., make test-auth)
+	cd $(SERVICES_DIR)/$* && go test ./... -count=1 -v
 
-test-unit: ## Run Vitest unit + component tests (frontend)
-	cd services/sda-frontend && npm run test
+test-coverage: ## Run tests with coverage report
+	go test ./services/... ./pkg/... ./tools/... -count=1 -coverprofile=coverage.out
+	go tool cover -html=coverage.out -o cover.html
+	@echo "Coverage report → cover.html"
 
-test-coverage: ## Run Vitest con reporte de coverage (falla si <80%)
-	cd services/sda-frontend && npm run test:coverage
-	@echo "Coverage report: services/sda-frontend/coverage/index.html"
+test-integration: ## Run integration tests (requires Docker)
+	go test ./services/... -tags=integration -count=1 -v
 
-test-e2e: ## Run Playwright E2E tests (build + preview + tests)
-	cd services/sda-frontend && npm run build && npm run preview & \
-	sleep 5 && npx playwright test; \
-	kill %1
+test-frontend: ## Run frontend tests
+	cd apps/web && bun test
 
-test-e2e-brev: ## Run E2E tests against Brev instance (BREV_URL=https://...)
-	cd services/sda-frontend && PLAYWRIGHT_BASE_URL=$(BREV_URL) npx playwright test
+test-e2e: ## Run E2E tests (Playwright)
+	cd apps/web && bunx playwright test
 
-test-backend: ## Run Python pytest tests (saldivia SDK)
-	uv run pytest saldivia/tests/ -v
+test-storage: ## Run storage tests (requires MinIO running)
+	cd $(ROOT_DIR)/pkg && go test ./storage/... -v -count=1
 
-test-stress: ## Run HTTP stress test against running gateway
-	@python3 $(SALDIVIA_ROOT)/scripts/stress_test.py
+test-guardrails: ## Run guardrails tests
+	cd $(ROOT_DIR)/pkg && go test ./guardrails/... -v -count=1
 
-patch-check: ## Validate patches without applying (dry-run)
-	@cd $(BLUEPRINT_DIR) && \
-	for patch in $(SALDIVIA_ROOT)/patches/frontend/patches/*.patch; do \
-		[ -f "$$patch" ] || continue; \
-		if git apply --check "$$patch" 2>/dev/null; then \
-			echo "OK: $$(basename $$patch)"; \
-		else \
-			echo "FAIL: $$(basename $$patch)"; \
+test-search: ## Run search service tests
+	cd $(SERVICES_DIR)/search && go test ./... -v -count=1
+
+test-extractor: ## Run extractor tests (Python, no GPU needed)
+	cd $(SERVICES_DIR)/extractor && .venv/bin/python -m pytest tests/ -v
+
+test-all: test test-frontend test-e2e ## Run all test suites
+
+# ── Linting ──────────────────────────────────────────────────────────────
+
+lint: ## Lint all Go code
+	golangci-lint run ./services/... ./pkg/... ./tools/...
+
+lint-%: ## Lint a specific service
+	cd $(SERVICES_DIR)/$* && golangci-lint run ./...
+
+lint-frontend: ## Lint frontend code
+	cd apps/web && bun run lint
+
+# ── Code Generation ─────────────────────────────────────────────────────
+
+proto: ## Generate gRPC code from proto files
+	@echo "Generating protobuf code..."
+	buf generate proto/
+
+sqlc: ## Generate Go code from SQL queries (all services)
+	@for svc in $(GO_SERVICES); do \
+		if [ -f "$(SERVICES_DIR)/$$svc/db/sqlc.yaml" ]; then \
+			echo "sqlc generate → $$svc"; \
+			cd $(SERVICES_DIR)/$$svc/db && sqlc generate || exit 1; \
 		fi; \
 	done
 
-patch-create: ## Generate patches from current blueprint changes
-	@cd $(BLUEPRINT_DIR) && \
-	git diff --cached > /tmp/saldivia-patches.patch && \
-	echo "Patch saved to /tmp/saldivia-patches.patch"
+sqlc-%: ## Generate sqlc for a specific service
+	cd $(SERVICES_DIR)/$*/db && sqlc generate
 
-validate: ## Validate config for PROFILE (PROFILE=workstation-1gpu)
-	@python3 -c "from saldivia.config import ConfigLoader, validate_config; \
-		c = ConfigLoader('config').load('$(PROFILE)'); \
-		errors = validate_config(c); \
-		print('OK' if not errors else '\n'.join(errors))"
+# ── Database ─────────────────────────────────────────────────────────────
 
-show-env: ## Show generated env vars for PROFILE
-	@python3 -c "from saldivia.config import ConfigLoader; \
-		env = ConfigLoader('config').generate_env('$(PROFILE)'); \
-		print('\n'.join(f'{k}={v}' for k,v in sorted(env.items())))"
+migrate: ## Run database migrations (platform + tenant)
+	$(DEPLOY_DIR)/scripts/migrate.sh
 
-watch: ## Watch folder for auto-ingest (COLLECTION=name)
-	python -m saldivia.watch ./watch $(COLLECTION)
+seed: ## Seed development data (users, roles, tenant)
+	$(DEPLOY_DIR)/scripts/seed.sh
 
-cli: ## Run CLI command (ARGS="command [options]")
-	python -m cli.main $(ARGS)
+migrate-seed: migrate seed ## Run migrations + seed in one step
 
-clean: ## Remove blueprint clone and build artifacts
-	@echo "This will delete the blueprint/ directory. Are you sure? (Ctrl+C to cancel)"
-	@read -r
-	@rm -rf $(BLUEPRINT_DIR)
-	@echo "Cleaned."
+# ── Deploy ───────────────────────────────────────────────────────────────
+
+deploy: ## Deploy all services to production
+	$(GOBIN)/sda deploy --all
+
+deploy-%: ## Deploy a specific service
+	$(GOBIN)/sda deploy $*
+
+rollback-%: ## Rollback a specific service
+	$(GOBIN)/sda rollback $*
+
+versions: ## Show running vs available versions
+	$(GOBIN)/sda versions
+
+# ── Scaffolding ──────────────────────────────────────────────────────────
+
+new-service: ## Create a new service (make new-service NAME=billing)
+ifndef NAME
+	$(error NAME is required. Usage: make new-service NAME=billing)
+endif
+	@echo "Creating service: $(NAME)"
+	@cp -r $(SERVICES_DIR)/.scaffold $(SERVICES_DIR)/$(NAME)
+	@find $(SERVICES_DIR)/$(NAME) -type f -exec sed -i 's/scaffold/$(NAME)/g' {} +
+	@echo "0.1.0" > $(SERVICES_DIR)/$(NAME)/VERSION
+	@echo "Service created → services/$(NAME)/"
+	@echo "Next: initialize go.mod and add to go.work"
+
+# ── Security ─────────────────────────────────────────────────────────────
+
+security: ## Run security scans
+	gosec ./services/... ./pkg/...
+	trivy fs --scanners vuln .
+
+# ── Cleanup ──────────────────────────────────────────────────────────────
+
+clean: ## Remove build artifacts
+	rm -rf $(GOBIN) coverage.out cover.html
+	@for svc in $(GO_SERVICES); do \
+		rm -rf $(SERVICES_DIR)/$$svc/tmp; \
+	done
+
+# ── Status ───────────────────────────────────────────────────────────────
+
+status: ## Show status of all services
+	@docker compose -f $(DEPLOY_DIR)/docker-compose.dev.yml ps 2>/dev/null || echo "No services running"
+	@echo ""
+	@echo "GPU:"
+	@nvidia-smi --query-gpu=name,memory.used,memory.total --format=csv,noheader 2>/dev/null || echo "  No GPU detected"

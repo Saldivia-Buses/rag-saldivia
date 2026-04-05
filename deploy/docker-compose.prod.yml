@@ -1,0 +1,408 @@
+# SDA Framework — Production Stack
+#
+# Deploy: docker compose -f deploy/docker-compose.prod.yml up -d
+# Prerequisites: deploy/secrets/ populated with keys + credentials
+#
+# Differences from dev:
+# - No exposed ports (only Traefik 80/443)
+# - Docker secrets for credentials
+# - Resource limits per service
+# - Redis with password, NATS with auth token
+# - Traefik with HTTPS + dashboard disabled
+# - Network segmentation (frontend/backend/data)
+
+secrets:
+  jwt_private_key:
+    file: ./secrets/jwt-private.pem
+  jwt_public_key:
+    file: ./secrets/jwt-public.pem
+  db_platform_url:
+    file: ./secrets/db-platform-url
+  db_tenant_template_url:
+    file: ./secrets/db-tenant-template-url
+  redis_password:
+    file: ./secrets/redis-password
+  nats_token:
+    file: ./secrets/nats-token
+  encryption_master_key:
+    file: ./secrets/encryption-master-key
+
+x-service-defaults: &service-defaults
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+
+x-jwt-public: &jwt-public
+  JWT_PUBLIC_KEY_FILE: /run/secrets/jwt_public_key
+
+services:
+
+  # ── Gateway ────────────────────────────────────────────────────────────
+
+  traefik:
+    <<: *service-defaults
+    image: traefik:v3
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.file.directory=/etc/traefik/dynamic"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
+      - "--entrypoints.websecure.address=:443"
+      - "--api.dashboard=false"
+      - "--log.level=WARN"
+      - "--accesslog=true"
+      - "--accesslog.filepath=/var/log/traefik/access.log"
+      - "--accesslog.bufferingsize=100"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./traefik/dynamic:/etc/traefik/dynamic:ro
+      - ./traefik/traefik.prod.yml:/etc/traefik/traefik.yml:ro
+      - traefik_logs:/var/log/traefik
+      - traefik_acme:/etc/traefik/acme
+    networks:
+      - frontend
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  # ── Data ───────────────────────────────────────────────────────────────
+
+  postgres-platform:
+    <<: *service-defaults
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: sda
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_platform_password
+    volumes:
+      - postgres_platform_data:/var/lib/postgresql/data
+      - ./postgres-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sda"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - data
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+
+  redis:
+    <<: *service-defaults
+    image: redis:7-alpine
+    command: >
+      sh -c "redis-server
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+      --appendonly yes
+      --requirepass $$(cat /run/secrets/redis_password)"
+    secrets:
+      - redis_password
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a $$(cat /run/secrets/redis_password) ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - data
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+
+  nats:
+    <<: *service-defaults
+    image: nats:2-alpine
+    command: ["--js", "--sd", "/data", "--auth", "${NATS_TOKEN}"]
+    volumes:
+      - nats_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8222/healthz || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - backend
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  # ── Go Services ────────────────────────────────────────────────────────
+
+  auth:
+    <<: *service-defaults
+    image: ghcr.io/camionerou/sda-auth:${AUTH_VERSION:-latest}
+    build:
+      context: ..
+      dockerfile: services/auth/Dockerfile
+    environment:
+      AUTH_PORT: "8001"
+      NATS_URL: nats://${NATS_TOKEN}@nats:4222
+      TENANT_SLUG: dev
+    secrets:
+      - jwt_private_key
+      - jwt_public_key
+      - db_platform_url
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8001/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - frontend
+      - backend
+      - data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.auth.rule=PathPrefix(`/v1/auth`) || PathPrefix(`/v1/modules`)"
+      - "traefik.http.routers.auth.entrypoints=websecure"
+      - "traefik.http.services.auth.loadbalancer.server.port=8001"
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+  ws:
+    <<: *service-defaults
+    image: ghcr.io/camionerou/sda-ws:${WS_VERSION:-latest}
+    build:
+      context: ..
+      dockerfile: services/ws/Dockerfile
+    environment:
+      WS_PORT: "8002"
+      NATS_URL: nats://${NATS_TOKEN}@nats:4222
+      WS_ALLOWED_ORIGINS: "https://*.sda.app"
+    secrets:
+      - jwt_public_key
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8002/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - frontend
+      - backend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.ws.rule=PathPrefix(`/ws`)"
+      - "traefik.http.routers.ws.entrypoints=websecure"
+      - "traefik.http.services.ws.loadbalancer.server.port=8002"
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  chat:
+    <<: *service-defaults
+    image: ghcr.io/camionerou/sda-chat:${CHAT_VERSION:-latest}
+    build:
+      context: ..
+      dockerfile: services/chat/Dockerfile
+    environment:
+      CHAT_PORT: "8003"
+      NATS_URL: nats://${NATS_TOKEN}@nats:4222
+      TENANT_SLUG: dev
+    secrets:
+      - jwt_public_key
+      - db_tenant_template_url
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8003/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - frontend
+      - backend
+      - data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.chat.rule=PathPrefix(`/v1/chat`)"
+      - "traefik.http.routers.chat.entrypoints=websecure"
+      - "traefik.http.services.chat.loadbalancer.server.port=8003"
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+  rag:
+    <<: *service-defaults
+    image: ghcr.io/camionerou/sda-rag:${RAG_VERSION:-latest}
+    build:
+      context: ..
+      dockerfile: services/rag/Dockerfile
+    environment:
+      RAG_PORT: "8004"
+      RAG_SERVER_URL: ${RAG_SERVER_URL:-http://host.docker.internal:8081}
+    secrets:
+      - jwt_public_key
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8004/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - frontend
+      - backend
+      - data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.rag.rule=PathPrefix(`/v1/rag`)"
+      - "traefik.http.routers.rag.entrypoints=websecure"
+      - "traefik.http.services.rag.loadbalancer.server.port=8004"
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+  notification:
+    <<: *service-defaults
+    image: ghcr.io/camionerou/sda-notification:${NOTIFICATION_VERSION:-latest}
+    build:
+      context: ..
+      dockerfile: services/notification/Dockerfile
+    environment:
+      NOTIFICATION_PORT: "8005"
+      NATS_URL: nats://${NATS_TOKEN}@nats:4222
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_FROM: ${SMTP_FROM:-noreply@sda.app}
+    secrets:
+      - jwt_public_key
+      - db_tenant_template_url
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8005/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - frontend
+      - backend
+      - data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.notification.rule=PathPrefix(`/v1/notifications`)"
+      - "traefik.http.routers.notification.entrypoints=websecure"
+      - "traefik.http.services.notification.loadbalancer.server.port=8005"
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+  platform:
+    <<: *service-defaults
+    image: ghcr.io/camionerou/sda-platform:${PLATFORM_VERSION:-latest}
+    build:
+      context: ..
+      dockerfile: services/platform/Dockerfile
+    environment:
+      PLATFORM_PORT: "8006"
+      PLATFORM_TENANT_SLUG: platform
+    secrets:
+      - jwt_public_key
+      - db_platform_url
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8006/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - frontend
+      - backend
+      - data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.platform.rule=Host(`platform.sda.app`) && PathPrefix(`/v1/platform`)"
+      - "traefik.http.routers.platform.entrypoints=websecure"
+      - "traefik.http.services.platform.loadbalancer.server.port=8006"
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+  ingest:
+    <<: *service-defaults
+    image: ghcr.io/camionerou/sda-ingest:${INGEST_VERSION:-latest}
+    build:
+      context: ..
+      dockerfile: services/ingest/Dockerfile
+    environment:
+      INGEST_PORT: "8007"
+      NATS_URL: nats://${NATS_TOKEN}@nats:4222
+      RAG_SERVER_URL: ${RAG_SERVER_URL:-http://host.docker.internal:8081}
+      INGEST_STAGING_DIR: /tmp/ingest-staging
+    secrets:
+      - jwt_public_key
+      - db_tenant_template_url
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8007/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - frontend
+      - backend
+      - data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.ingest.rule=PathPrefix(`/v1/ingest`)"
+      - "traefik.http.routers.ingest.entrypoints=websecure"
+      - "traefik.http.services.ingest.loadbalancer.server.port=8007"
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  feedback:
+    <<: *service-defaults
+    image: ghcr.io/camionerou/sda-feedback:${FEEDBACK_VERSION:-latest}
+    build:
+      context: ..
+      dockerfile: services/feedback/Dockerfile
+    environment:
+      FEEDBACK_PORT: "8008"
+      NATS_URL: nats://${NATS_TOKEN}@nats:4222
+    secrets:
+      - jwt_public_key
+      - db_platform_url
+      - db_tenant_template_url
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8008/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - backend
+      - data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.feedback.rule=PathPrefix(`/v1/feedback`) || PathPrefix(`/v1/platform/feedback`)"
+      - "traefik.http.routers.feedback.entrypoints=websecure"
+      - "traefik.http.services.feedback.loadbalancer.server.port=8008"
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+networks:
+  frontend:    # traefik ↔ Go services
+  backend:     # Go services ↔ NATS
+  data:        # Go services ↔ PostgreSQL, Redis
+
+volumes:
+  postgres_platform_data:
+  redis_data:
+  nats_data:
+  traefik_logs:
+  traefik_acme:

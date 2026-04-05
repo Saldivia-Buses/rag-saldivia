@@ -1,40 +1,46 @@
-import type { Metadata } from "next"
-import { Instrument_Sans } from "next/font/google"
-import { Providers } from "@/components/providers"
-import { Toaster } from "@/components/ui/sonner"
-import { ReactScanProvider } from "@/components/dev/ReactScanProvider"
-import { NuqsAdapter } from "nuqs/adapters/next/app"
-import "./globals.css"
-
-const instrumentSans = Instrument_Sans({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  style: ["normal", "italic"],
-  variable: "--font-instrument-sans",
-  display: "swap",
-})
+import type { Metadata } from "next";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { QueryProvider } from "@/lib/api/query-provider";
+import { AuthInitializer } from "@/lib/auth/auth-initializer";
+import { WsProvider } from "@/lib/ws/provider";
+import { fontVariables, fontClassNames } from "@/lib/fonts";
+import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "RAG Saldivia",
-  description: "Sistema RAG empresarial con autenticación y RBAC",
-}
+  title: "SDA Framework",
+  description: "SDA Framework — Plataforma empresarial",
+};
+
+// Inline script — applies dark mode class before React hydration to prevent flash.
+const themeScript = `(function(){try{if(localStorage.getItem("sda-dark-mode")==="true")document.documentElement.classList.add("dark")}catch(e){}})()`;
 
 export default function RootLayout({
   children,
-}: {
-  children: React.ReactNode
-}) {
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
-    <html lang="es" suppressHydrationWarning className={instrumentSans.variable}>
-      <body className="min-h-screen antialiased" style={{ background: "var(--background)", color: "var(--foreground)" }}>
-        <ReactScanProvider />
-        <NuqsAdapter>
-          <Providers>
-            {children}
-            <Toaster />
-          </Providers>
-        </NuqsAdapter>
+    <html
+      lang="es"
+      className={`${fontVariables} h-full antialiased`}
+      suppressHydrationWarning
+    >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
+      <body className="min-h-full flex flex-col font-sans">
+        {/* Hidden preloader — forces browser to download all font files upfront */}
+        <div aria-hidden="true" className={`${fontClassNames} absolute opacity-0 pointer-events-none h-0 overflow-hidden`}>.</div>
+        <QueryProvider>
+          <TooltipProvider>
+            <AuthInitializer>
+              <WsProvider>
+                {children}
+              </WsProvider>
+            </AuthInitializer>
+          </TooltipProvider>
+        </QueryProvider>
       </body>
     </html>
-  )
+  );
 }
