@@ -29,16 +29,20 @@ CLOUD                                    INHOUSE (workstation)
 │  Frontend    │──── REST/WS ──────────►│    ├─► Auth Service (Go)       │
 │  (CDN)       │   Cloudflare Tunnel    │    ├─► WebSocket Hub (Go)     │
 └──────────────┘                         │    ├─► Chat Service (Go)      │
-                                         │    ├─► RAG Service (Go)       │
-CLOUD (APIs)                             │    ├─► Notification (Go)      │
-┌──────────────┐                         │    ├─► Platform (Go)          │
-│  NVIDIA API  │◄── LLM queries ───────│    ├─► Ingest (Go)            │
-│  Nemotron-49B│                         │    └─► [N modular services]   │
-└──────────────┘                         │                                │
+                                         │    ├─► Agent Runtime (Go)     │
+                                         │    ├─► Search Service (Go)    │
+                                         │    ├─► Traces Service (Go)    │
+                                         │    ├─► Notification (Go)      │
+                                         │    ├─► Platform (Go)          │
+                                         │    ├─► Ingest (Go)            │
+                                         │    ├─► Extractor (Python)     │
+                                         │    └─► [N modular services]   │
+                                         │                                │
+                                         │  SGLang (model server, GPU)   │
                                          │  PostgreSQL per-tenant        │
                                          │  Redis per-tenant             │
                                          │  NATS + JetStream             │
-                                         │  Milvus + NIMs (RAG)          │
+                                         │  MinIO (S3 storage)           │
                                          └────────────────────────────────┘
 ```
 
@@ -54,9 +58,12 @@ CLOUD (APIs)                             │    ├─► Notification (Go)     
 | Message broker | NATS + JetStream |
 | Frontend | Next.js + React + shadcn/ui + Tailwind + TanStack Query |
 | Gateway | Traefik |
-| RAG | NVIDIA RAG Blueprint v2.5.0 |
-| LLM | Nemotron-Super-49B via NVIDIA API |
-| Agent framework | NeMo Agent Toolkit |
+| RAG | Tree reasoning (PageIndex-inspired, no vectors) |
+| LLM | Model-agnostic via SGLang (slot-per-pipeline-step) |
+| OCR | PaddleOCR-VL 1.5 via SGLang |
+| Vision | Qwen3.5-9B via SGLang |
+| Model server | SGLang (1 instance per model, OpenAI-compatible API) |
+| Object storage | MinIO (S3-compatible) |
 | Observability | OpenTelemetry + Grafana (Tempo + Prometheus + Loki) |
 | CI/CD | GitHub Actions |
 | CLI | Go (Cobra) |
@@ -70,17 +77,26 @@ services/                    ← Go microservicios
   auth/                      ← Auth Gateway + RBAC + MFA
   ws/                        ← WebSocket Hub
   chat/                      ← Sesiones + mensajes
-  rag/                       ← Proxy NVIDIA Blueprint
+  agent/                     ← Agent Runtime (LLM + tools, reemplaza rag/)
+  search/                    ← Tree search (PageIndex-inspired)
+  traces/                    ← Execution traces + cost tracking
+  extractor/                 ← Document extraction (Python, OCR + vision)
   notification/              ← In-app + email
   platform/                  ← Control de tenants (platform admins)
-  ingest/                    ← Pipeline de documentos
+  ingest/                    ← Pipeline de documentos + tree generation
+  rag/                       ← [DEPRECATED — replaced by agent/]
   .scaffold/                 ← Template para make new-service
+
+modules/                     ← Tool manifests por modulo (YAML)
+  fleet/                     ← Transporte/Logistica tools
 
 pkg/                         ← Go packages compartidos
   jwt/                       ← JWT validation local
   tenant/                    ← Tenant context, DB resolver
   middleware/                ← Auth, logging, tracing
   nats/                      ← NATS helpers
+  guardrails/                ← Input/output validation, loop detection
+  storage/                   ← S3-compatible file storage (MinIO/AWS)
   security/                  ← Rate limiting, brute force
   config/                    ← Config loading
 
