@@ -1,4 +1,0 @@
-DROP TABLE IF EXISTS chat_feedback;
-DROP TABLE IF EXISTS tags;
-DROP TABLE IF EXISTS messages;
-DROP TABLE IF EXISTS sessions;

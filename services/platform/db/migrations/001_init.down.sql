@@ -1,8 +1,0 @@
-DROP TABLE IF EXISTS deploy_log;
-DROP TABLE IF EXISTS feature_flags;
-DROP TABLE IF EXISTS rag_models;
-DROP TABLE IF EXISTS global_config;
-DROP TABLE IF EXISTS tenant_modules;
-DROP TABLE IF EXISTS modules;
-DROP TABLE IF EXISTS tenants;
-DROP TABLE IF EXISTS plans;

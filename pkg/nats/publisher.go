@@ -36,12 +36,22 @@ func Connect(url string) (*nats.Conn, error) {
 	)
 }
 
-// IsValidSubjectToken checks that a string is safe to use as a NATS subject token.
+// IsValidSubjectToken checks that a string is safe to use as a single NATS subject token.
 // Uses allowlist regex: only alphanumeric, underscore, and hyphen.
 // This is the canonical validation — Go services use this function,
 // Python extractor mirrors the same regex (^[a-zA-Z0-9_-]+$).
 func IsValidSubjectToken(s string) bool {
 	return s != "" && safeTokenRegex.MatchString(s)
+}
+
+// eventTypeRegex allows dots for hierarchical event types like "chat.new_message"
+// but rejects wildcards, spaces, and control characters.
+var eventTypeRegex = regexp.MustCompile(`^[a-zA-Z0-9_][a-zA-Z0-9_.-]*$`)
+
+// IsValidEventType checks that an event type is safe for NATS subject interpolation.
+// Allows dots (for chat.new_message style) unlike IsValidSubjectToken.
+func IsValidEventType(s string) bool {
+	return s != "" && eventTypeRegex.MatchString(s)
 }
 
 // Event is the payload published to NATS for the notification service.
@@ -85,6 +95,9 @@ func (p *Publisher) Notify(tenantSlug string, evt any) error {
 	}
 	if parsed.Type == "" {
 		return fmt.Errorf("event type is required")
+	}
+	if !IsValidEventType(parsed.Type) {
+		return fmt.Errorf("invalid event type for NATS subject: %q", parsed.Type)
 	}
 
 	subject := "tenant." + tenantSlug + ".notify." + parsed.Type

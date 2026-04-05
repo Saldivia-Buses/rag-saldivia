@@ -225,7 +225,6 @@ services:
     volumes:
       - ./scripts:/scripts:ro
       - ../db:/db:ro
-      - ../services:/services:ro
     environment:
       PLATFORM_DB_URL: postgres://sda:sda_dev@postgres:5432/sda_platform?sslmode=disable
       TENANT_DB_URL: postgres://sda:sda_dev@postgres:5432/sda_tenant_dev?sslmode=disable
