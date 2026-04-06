@@ -17,6 +17,7 @@ type FullContext struct {
 	Year         int                              `json:"year"`
 	Chart        *natal.Chart                     `json:"-"`
 	SolarArc     []technique.SolarArcResult       `json:"solar_arc"`
+	Transits     []technique.TransitActivation   `json:"transits"`
 	Directions   []technique.PrimaryDirection     `json:"directions"`
 	Progressions *technique.ProgressionsResult    `json:"progressions"`
 	SolarReturn  *technique.SolarReturn           `json:"solar_return"`
@@ -91,8 +92,8 @@ func Build(chart *natal.Chart, contactName string, birthDate time.Time, year int
 	ctx.ZRFortune = technique.CalcZodiacalReleasing(chart, "Fortune", age)
 	ctx.ZRSpirit = technique.CalcZodiacalReleasing(chart, "Spirit", age)
 
-	// NOTE: Transits (slow planet sampling) deferred — requires Phase 9b implementation.
-	// Golden file exists but technique/transits.go not yet written.
+	// Slow planet transits (5-day sampling, mundane aspects)
+	ctx.Transits = technique.CalcTransits(chart, year)
 
 	// Build intelligence brief
 	ctx.Brief = BuildBrief(ctx)
