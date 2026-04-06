@@ -162,7 +162,7 @@ func main() {
 		Handler:      otelhttp.NewHandler(r, "sda-agent"),
 		ReadTimeout:  10 * time.Second,
 		ReadHeaderTimeout: 10 * time.Second,
-		WriteTimeout: 0,
+		WriteTimeout: 5 * time.Minute, // long for LLM streaming, but prevents indefinite slowloris
 		IdleTimeout:  120 * time.Second,
 	}
 
