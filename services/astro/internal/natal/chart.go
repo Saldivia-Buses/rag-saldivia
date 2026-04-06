@@ -51,7 +51,7 @@ func BuildNatal(year, month, day int, localHour float64, lat, lon, alt float64, 
 		return nil, err
 	}
 
-	cusps, ascmc, err := ephemeris.CalcHouses(jd, lat, lon, ephemeris.HouseTopocentric)
+	cusps, ascmc, err := ephemeris.CalcHousesEx(jd, ephemeris.FlagSwieph|ephemeris.FlagTopoctr, lat, lon, ephemeris.HouseTopocentric)
 	if err != nil {
 		return nil, err
 	}
@@ -78,7 +78,7 @@ func BuildNatal(year, month, day int, localHour float64, lat, lon, alt float64, 
 		planets["Nodo Sur"] = &ephemeris.PlanetPos{
 			Lon:   astromath.Normalize360(pos.Lon + 180),
 			Lat:   -pos.Lat,
-			Speed: pos.Speed,
+			Speed: -pos.Speed,
 			RA:    astromath.Normalize360(pos.RA + 180),
 			Dec:   -pos.Dec,
 		}
@@ -104,7 +104,7 @@ func BuildNatal(year, month, day int, localHour float64, lat, lon, alt float64, 
 	// Combustion + retrograde status
 	combustion := make(map[string]string)
 	retrograde := make(map[string]bool)
-	skip := map[string]bool{"Sol": true, "Fortuna": true, "Espíritu": true, "Nodo Norte": true, "Nodo Sur": true}
+	skip := map[string]bool{"Sol": true, "Fortuna": true, "Espíritu": true, "Nodo Norte": true, "Nodo Sur": true, "Lilith": true}
 	for name, pos := range planets {
 		if skip[name] {
 			continue

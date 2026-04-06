@@ -89,6 +89,16 @@ func TestBuildNatal_Golden(t *testing.T) {
 			t.Errorf("%s: lon = %.4f, Python = %.4f (diff %.4f)",
 				name, goPos.Lon, pyData.Lon, math.Abs(goPos.Lon-pyData.Lon))
 		}
+		// Skip RA/Dec for calculated points (no real equatorial position)
+		calcPoints := map[string]bool{"Fortuna": true, "Espíritu": true, "Nodo Sur": true, "Lilith": true, "AS": true, "MC": true, "Vértice": true}
+		if !calcPoints[name] && pyData.RA != 0 && goPos.RA != 0 {
+			if math.Abs(goPos.RA-pyData.RA) > 0.05 {
+				t.Errorf("%s: RA = %.4f, Python = %.4f", name, goPos.RA, pyData.RA)
+			}
+			if math.Abs(goPos.Dec-pyData.Dec) > 0.05 {
+				t.Errorf("%s: Dec = %.4f, Python = %.4f", name, goPos.Dec, pyData.Dec)
+			}
+		}
 	}
 
 	// Verify South Node is 180° from North Node
