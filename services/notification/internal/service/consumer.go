@@ -79,6 +79,7 @@ func (c *Consumer) Start(ctx context.Context) error {
 		Durable:       durableName,
 		AckPolicy:     jetstream.AckExplicitPolicy,
 		FilterSubject: subjectFilter,
+		MaxDeliver:    5, // DLQ after 5 failed attempts
 	})
 	if err != nil {
 		return fmt.Errorf("create consumer: %w", err)

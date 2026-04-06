@@ -49,6 +49,7 @@ func (c *Consumer) Start(ctx context.Context) error {
 		Durable:       "traces-consumer",
 		AckPolicy:     jetstream.AckExplicitPolicy,
 		FilterSubject: tracesSubject,
+		MaxDeliver:    5,
 	})
 	if err != nil {
 		return fmt.Errorf("create traces consumer: %w", err)
