@@ -1,0 +1,182 @@
+# Astro module — astrological calculation tools for the Agent Runtime.
+module: astro
+name: "Astrología"
+
+tools:
+  - id: natal_chart
+    service: astro
+    endpoint: POST /v1/astro/natal
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Calcula la carta natal completa de un contacto. Retorna posiciones planetarias, cúspides, dignidades, combustión, retrogradación, Parte de Fortuna y Espíritu."
+    parameters:
+      type: object
+      properties:
+        contact_name:
+          type: string
+          description: "Nombre del contacto"
+      required: [contact_name]
+
+  - id: transit_analysis
+    service: astro
+    endpoint: POST /v1/astro/transits
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Analiza tránsitos de planetas lentos sobre la carta natal para un año dado."
+    parameters:
+      type: object
+      properties:
+        contact_name:
+          type: string
+          description: "Nombre del contacto"
+        year:
+          type: integer
+          description: "Año a analizar"
+      required: [contact_name, year]
+
+  - id: solar_arc_directions
+    service: astro
+    endpoint: POST /v1/astro/solar-arc
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Direcciones de Arco Solar activas para un año. Incluye antiscia."
+    parameters:
+      type: object
+      properties:
+        contact_name:
+          type: string
+        year:
+          type: integer
+      required: [contact_name, year]
+
+  - id: primary_directions
+    service: astro
+    endpoint: POST /v1/astro/directions
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Direcciones Primarias Polich-Page mundanas. La técnica más precisa para timing de eventos."
+    parameters:
+      type: object
+      properties:
+        contact_name:
+          type: string
+        year:
+          type: integer
+      required: [contact_name, year]
+
+  - id: secondary_progressions
+    service: astro
+    endpoint: POST /v1/astro/progressions
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Progresiones Secundarias (día por año). Detecta ingresos de signo y casa."
+    parameters:
+      type: object
+      properties:
+        contact_name:
+          type: string
+        year:
+          type: integer
+      required: [contact_name, year]
+
+  - id: solar_lunar_return
+    service: astro
+    endpoint: POST /v1/astro/returns
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Revolución Solar y/o Lunar para un año."
+    parameters:
+      type: object
+      properties:
+        contact_name:
+          type: string
+        year:
+          type: integer
+      required: [contact_name, year]
+
+  - id: profections
+    service: astro
+    endpoint: POST /v1/astro/profections
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Profecciones anuales. Casa activa, cronócrata, tema de casa."
+    parameters:
+      type: object
+      properties:
+        contact_name:
+          type: string
+        year:
+          type: integer
+      required: [contact_name, year]
+
+  - id: firdaria
+    service: astro
+    endpoint: POST /v1/astro/firdaria
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Períodos Firdaria. Señor mayor y sub-período activos."
+    parameters:
+      type: object
+      properties:
+        contact_name:
+          type: string
+        year:
+          type: integer
+      required: [contact_name, year]
+
+  - id: fixed_star_conjunctions
+    service: astro
+    endpoint: POST /v1/astro/fixed-stars
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Conjunciones de estrellas fijas con puntos natales."
+    parameters:
+      type: object
+      properties:
+        contact_name:
+          type: string
+      required: [contact_name]
+
+  - id: intelligence_brief
+    service: astro
+    endpoint: POST /v1/astro/brief
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Brief de inteligencia astrológica completo. Ejecuta TODAS las técnicas, cruza resultados y produce matriz de convergencia. Usar cuando se pide un análisis completo."
+    parameters:
+      type: object
+      properties:
+        contact_name:
+          type: string
+        year:
+          type: integer
+      required: [contact_name, year]
+
+  - id: astro_query
+    service: astro
+    endpoint: POST /v1/astro/query
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Consulta astrológica con narración LLM via SSE. Ejecuta todas las técnicas y genera interpretación narrativa."
+    parameters:
+      type: object
+      properties:
+        contact_name:
+          type: string
+        query:
+          type: string
+          description: "Pregunta o tema a analizar"
+        year:
+          type: integer
+      required: [contact_name, query]
