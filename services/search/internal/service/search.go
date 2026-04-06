@@ -70,10 +70,7 @@ func (s *Search) SearchDocuments(ctx context.Context, query string, collectionID
 	}
 
 	// B1: validate query through guardrails before sending to LLM
-	query, err := guardrails.ValidateInput(ctx, query, guardrails.InputConfig{
-		MaxLength:     10000,
-		BlockPatterns: []string{"ignora tus instrucciones", "ignore your instructions", "system prompt"},
-	}, nil)
+	query, err := guardrails.ValidateInput(ctx, query, guardrails.DefaultInputConfig(10000), nil)
 	if err != nil {
 		return nil, fmt.Errorf("query blocked: %w", err)
 	}
