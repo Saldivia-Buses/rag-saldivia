@@ -394,6 +394,10 @@ services:
       <<: *env-common
       ASTRO_PORT: "8011"
       EPHE_PATH: "/ephe"
+      REDIS_URL: redis:6379
+      SGLANG_LLM_URL: ${SGLANG_LLM_URL:-}
+      SGLANG_LLM_MODEL: ${SGLANG_LLM_MODEL:-}
+      LLM_API_KEY: ${LLM_API_KEY:-}
     ports:
       - "8011:8011"
     volumes:
