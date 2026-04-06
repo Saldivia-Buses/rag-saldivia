@@ -18,36 +18,31 @@ func TestCalcProgressions(t *testing.T) {
 		t.Errorf("year = %d, want 2026", result.Year)
 	}
 
-	// Age ~50.5 → progressed JD should be natal JD + ~50.5 days
-	expectedAgeDays := (ephemeris.JulDay(2026, 7, 1, 12.0) - chart.JD) / 365.25
-	if math.Abs(result.AgeDays-expectedAgeDays) > 0.1 {
-		t.Errorf("age_days = %.2f, want ~%.2f", result.AgeDays, expectedAgeDays)
+	expectedAge := (ephemeris.JulDay(2026, 7, 1, 12.0) - chart.JD) / 365.25
+	if math.Abs(result.AgeYears-expectedAge) > 0.1 {
+		t.Errorf("age_years = %.2f, want ~%.2f", result.AgeYears, expectedAge)
 	}
 
-	// Should have at least 7 planets (Sol through Saturno)
 	if len(result.Positions) < 7 {
 		t.Errorf("got %d positions, want >= 7", len(result.Positions))
 	}
 
-	// Progressed Sun should have moved ~50° from natal (1°/year)
-	var progSunLon float64
-	for _, pp := range result.Positions {
-		if pp.Name == "Sol" {
-			progSunLon = pp.Lon
-			break
-		}
+	// Deterministic order: first should be Sol
+	if result.Positions[0].Name != "Sol" {
+		t.Errorf("first position = %q, want Sol", result.Positions[0].Name)
 	}
+
+	// Progressed Sun should have moved ~50° from natal
+	progSunLon := result.Positions[0].Lon
 	natalSunLon := chart.Planets["Sol"].Lon
 	diff := progSunLon - natalSunLon
 	if diff < 0 {
 		diff += 360
 	}
-	// Progressed Sun moves ~1°/year → ~50° in 50 years
 	if diff < 40 || diff > 60 {
 		t.Errorf("progressed Sun moved %.1f° from natal, expected ~50°", diff)
 	}
 
-	// Each position should have valid sign
 	for _, pp := range result.Positions {
 		if pp.Sign == "" {
 			t.Errorf("%s has empty sign", pp.Name)
@@ -61,22 +56,25 @@ func TestCalcProgressions(t *testing.T) {
 func TestCalcProgressions_IngressDetection(t *testing.T) {
 	chart := adrianChart(t)
 
-	// Check multiple years — at least one should have an ingress
-	hasIngress := false
+	signIngresses := 0
+	houseIngresses := 0
 	for y := 2020; y <= 2030; y++ {
 		result, err := CalcProgressions(chart, y)
 		if err != nil {
 			continue
 		}
 		for _, pp := range result.Positions {
-			if pp.Ingress != "" {
-				hasIngress = true
-				t.Logf("Ingress found: %s %s ingress in %d (prev %s)",
-					pp.Name, pp.Ingress, y, pp.PrevSign)
+			if pp.SignIngress {
+				signIngresses++
+				t.Logf("%d: %s sign ingress (%s → %s)", y, pp.Name, pp.PrevSign, pp.Sign)
+			}
+			if pp.HouseIngress {
+				houseIngresses++
 			}
 		}
 	}
-	if !hasIngress {
-		t.Log("no ingresses found in 2020-2030 (may be correct, depends on chart)")
+	if signIngresses == 0 {
+		t.Error("no sign ingresses found in 2020-2030")
 	}
+	t.Logf("Total: %d sign ingresses, %d house ingresses", signIngresses, houseIngresses)
 }

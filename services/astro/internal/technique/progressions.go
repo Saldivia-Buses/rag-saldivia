@@ -8,58 +8,74 @@ import (
 
 // ProgressedPosition holds a progressed planet's position and ingress info.
 type ProgressedPosition struct {
-	Name      string  `json:"name"`
-	Lon       float64 `json:"lon"`
-	Sign      string  `json:"sign"`
-	Speed     float64 `json:"speed"`
-	Retro     bool    `json:"retrograde"`
-	House     int     `json:"house"`
-	Ingress   string  `json:"ingress,omitempty"`   // "sign" or "house" if changed
-	PrevSign  string  `json:"prev_sign,omitempty"`
-	PrevHouse int     `json:"prev_house,omitempty"`
+	Name         string  `json:"name"`
+	Lon          float64 `json:"lon"`
+	Sign         string  `json:"sign"`
+	Speed        float64 `json:"speed"`
+	Retro        bool    `json:"retrograde"`
+	House        int     `json:"house"`
+	SignIngress  bool    `json:"sign_ingress,omitempty"`
+	HouseIngress bool    `json:"house_ingress,omitempty"`
+	PrevSign     string  `json:"prev_sign,omitempty"`
+	PrevHouse    int     `json:"prev_house,omitempty"`
 }
 
 // ProgressionsResult holds all progressed positions for a target year.
 type ProgressionsResult struct {
-	Year        int                   `json:"year"`
+	Year         int                  `json:"year"`
 	ProgressedJD float64             `json:"progressed_jd"`
-	AgeDays     float64              `json:"age_days"`
-	Positions   []ProgressedPosition `json:"positions"`
+	AgeYears     float64             `json:"age_years"`
+	Positions    []ProgressedPosition `json:"positions"`
 }
 
-// progressedPlanets are planets calculated in secondary progressions.
-var progressedPlanets = map[string]int{
-	"Sol": ephemeris.Sun, "Luna": ephemeris.Moon,
-	"Mercurio": ephemeris.Mercury, "Venus": ephemeris.Venus,
-	"Marte": ephemeris.Mars, "Júpiter": ephemeris.Jupiter,
-	"Saturno": ephemeris.Saturn,
+// progressedPlanetOrder ensures deterministic iteration.
+var progressedPlanetOrder = []struct {
+	Name string
+	ID   int
+}{
+	{"Sol", ephemeris.Sun}, {"Luna", ephemeris.Moon},
+	{"Mercurio", ephemeris.Mercury}, {"Venus", ephemeris.Venus},
+	{"Marte", ephemeris.Mars}, {"Júpiter", ephemeris.Jupiter},
+	{"Saturno", ephemeris.Saturn},
 }
 
-// CalcProgressions calculates Secondary Progressions for a target year.
-// Day-for-year: 1 day of ephemeris = 1 year of life.
-// progressed_jd = natal_jd + age_in_years (each year = 1 day)
+// CalcProgressions calculates Secondary Progressions for a target year (mid-year anchor).
+// Uses topocentric positions with CalcMu for SetTopo atomicity.
 func CalcProgressions(chart *natal.Chart, targetYear int) (*ProgressionsResult, error) {
-	// Age in years at mid-year
 	jdMid := ephemeris.JulDay(targetYear, 7, 1, 12.0)
-	ageYears := (jdMid - chart.JD) / 365.25
+	result, err := CalcProgressionsForJD(chart, jdMid)
+	if err != nil {
+		return nil, err
+	}
+	result.Year = targetYear
+	return result, nil
+}
 
-	// Progressed JD: natal JD + age in days (1 day = 1 year)
+// CalcProgressionsForJD calculates progressions for a precise Julian Day.
+func CalcProgressionsForJD(chart *natal.Chart, jdTarget float64) (*ProgressionsResult, error) {
+	ageYears := (jdTarget - chart.JD) / 365.25
 	progressedJD := chart.JD + ageYears
-
-	// Also calculate previous year for ingress detection
 	prevProgressedJD := chart.JD + (ageYears - 1.0)
 
-	flag := ephemeris.FlagSwieph | ephemeris.FlagSpeed
-	var positions []ProgressedPosition
+	ephemeris.CalcMu.Lock()
+	defer ephemeris.CalcMu.Unlock()
 
-	for name, pid := range progressedPlanets {
-		pos, err := ephemeris.CalcPlanet(progressedJD, pid, flag)
+	ephemeris.SetTopo(chart.Lon, chart.Lat, chart.Alt)
+
+	flag := ephemeris.FlagSwieph | ephemeris.FlagTopoctr | ephemeris.FlagSpeed
+	positions := make([]ProgressedPosition, 0, len(progressedPlanetOrder))
+
+	for _, p := range progressedPlanetOrder {
+		pos, err := ephemeris.CalcPlanet(progressedJD, p.ID, flag)
 		if err != nil {
+			if p.Name == "Sol" || p.Name == "Luna" {
+				return nil, err
+			}
 			continue
 		}
 
 		pp := ProgressedPosition{
-			Name:  name,
+			Name:  p.Name,
 			Lon:   pos.Lon,
 			Sign:  astromath.SignName(pos.Lon),
 			Speed: pos.Speed,
@@ -67,17 +83,17 @@ func CalcProgressions(chart *natal.Chart, targetYear int) (*ProgressionsResult, 
 			House: astromath.HouseForLon(pos.Lon, chart.Cusps),
 		}
 
-		// Ingress detection: compare with previous year's progressed position
-		prevPos, err := ephemeris.CalcPlanet(prevProgressedJD, pid, flag)
+		prevPos, err := ephemeris.CalcPlanet(prevProgressedJD, p.ID, flag)
 		if err == nil {
 			prevSign := astromath.SignName(prevPos.Lon)
 			prevHouse := astromath.HouseForLon(prevPos.Lon, chart.Cusps)
 
 			if prevSign != pp.Sign {
-				pp.Ingress = "sign"
+				pp.SignIngress = true
 				pp.PrevSign = prevSign
-			} else if prevHouse != pp.House {
-				pp.Ingress = "house"
+			}
+			if prevHouse != pp.House {
+				pp.HouseIngress = true
 				pp.PrevHouse = prevHouse
 			}
 		}
@@ -85,10 +101,11 @@ func CalcProgressions(chart *natal.Chart, targetYear int) (*ProgressionsResult, 
 		positions = append(positions, pp)
 	}
 
+	y, _, _, _ := ephemeris.RevJul(jdTarget)
 	return &ProgressionsResult{
-		Year:         targetYear,
+		Year:         y,
 		ProgressedJD: progressedJD,
-		AgeDays:      ageYears,
+		AgeYears:     ageYears,
 		Positions:    positions,
 	}, nil
 }
