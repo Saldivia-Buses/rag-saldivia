@@ -10,6 +10,7 @@ const (
 	DefaultPage     = 1
 	DefaultPageSize = 50
 	MaxPageSize     = 100
+	MaxPage         = 10000 // cap to prevent int32 overflow on Offset()
 )
 
 // Params holds pagination parameters parsed from a request.
@@ -43,6 +44,9 @@ func Parse(r *http.Request) Params {
 
 	if p.PageSize > MaxPageSize {
 		p.PageSize = MaxPageSize
+	}
+	if p.Page > MaxPage {
+		p.Page = MaxPage
 	}
 
 	return p

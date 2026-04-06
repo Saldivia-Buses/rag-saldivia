@@ -29,9 +29,9 @@ WHERE category = 'error_report'
 
 -- name: PerformancePercentiles :one
 SELECT
-    COALESCE(percentile_cont(0.50) WITHIN GROUP (ORDER BY (context->>'latency_ms')::numeric), 0)::float8 AS p50,
-    COALESCE(percentile_cont(0.95) WITHIN GROUP (ORDER BY (context->>'latency_ms')::numeric), 0)::float8 AS p95,
-    COALESCE(percentile_cont(0.99) WITHIN GROUP (ORDER BY (context->>'latency_ms')::numeric), 0)::float8 AS p99
+    COALESCE(percentile_cont(0.50) WITHIN GROUP (ORDER BY latency_ms), 0)::float8 AS p50,
+    COALESCE(percentile_cont(0.95) WITHIN GROUP (ORDER BY latency_ms), 0)::float8 AS p95,
+    COALESCE(percentile_cont(0.99) WITHIN GROUP (ORDER BY latency_ms), 0)::float8 AS p99
 FROM feedback_events
 WHERE category = 'performance'
   AND created_at > now() - make_interval(hours => $1);
