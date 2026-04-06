@@ -7,10 +7,12 @@
 # In dev, tenant slug is injected via middleware header.
 # In production, Traefik extracts it from the subdomain.
 #
-# Ports:
+# Ports (HTTP):
 #   auth:8001  ws:8002  chat:8003  agent:8004
 #   notification:8005  platform:8006  ingest:8007
 #   feedback:8008  traces:8009  search:8010
+# Ports (gRPC, internal only):
+#   search:50051
 
 http:
   routers:
