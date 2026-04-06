@@ -17,6 +17,7 @@ import (
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
 	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
+	"github.com/Camionerou/rag-saldivia/pkg/security"
 	"github.com/Camionerou/rag-saldivia/services/platform/internal/handler"
 	"github.com/Camionerou/rag-saldivia/services/platform/internal/service"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
@@ -68,9 +69,12 @@ func main() {
 	}
 	publisher := natspub.New(nc)
 
+	// Token blacklist (shared Redis)
+	blacklist := security.InitBlacklist(ctx, config.Env("REDIS_URL", "localhost:6379"))
+
 	platformSvc := service.New(pool, publisher)
 	platformSlug := config.Env("PLATFORM_TENANT_SLUG", "platform")
-	platformHandler := handler.NewPlatform(platformSvc, publicKey, platformSlug)
+	platformHandler := handler.NewPlatform(platformSvc, publicKey, platformSlug, blacklist)
 
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)

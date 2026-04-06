@@ -17,6 +17,7 @@ import (
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	"github.com/Camionerou/rag-saldivia/pkg/config"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
+	"github.com/Camionerou/rag-saldivia/pkg/security"
 	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
 	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
 	"github.com/Camionerou/rag-saldivia/services/feedback/internal/handler"
@@ -56,6 +57,9 @@ func main() {
 	} else {
 		defer otelShutdown(context.Background())
 	}
+
+	// Token blacklist (shared Redis)
+	blacklist := security.InitBlacklist(ctx, config.Env("REDIS_URL", "localhost:6379"))
 
 	// Connect to tenant database
 	tenantPool, err := pgxpool.New(ctx, tenantDBURL)
@@ -134,14 +138,14 @@ func main() {
 	// Tenant-scoped feedback endpoints (require auth)
 	feedbackHandler := handler.NewFeedback(feedbackSvc.Repo(), platformPool)
 	r.Group(func(r chi.Router) {
-		r.Use(sdamw.Auth(publicKey))
+		r.Use(sdamw.AuthWithConfig(publicKey, sdamw.AuthConfig{Blacklist: blacklist, FailOpen: true}))
 		r.Mount("/v1/feedback", feedbackHandler.Routes())
 	})
 
 	// Platform admin feedback endpoints (require admin JWT)
 	platformFeedbackHandler := handler.NewPlatformFeedback(platformPool)
 	r.Group(func(r chi.Router) {
-		r.Use(sdamw.Auth(publicKey))
+		r.Use(sdamw.AuthWithConfig(publicKey, sdamw.AuthConfig{Blacklist: blacklist, FailOpen: true}))
 		r.Mount("/v1/platform/feedback", platformFeedbackHandler.Routes())
 	})
 

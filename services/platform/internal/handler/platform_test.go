@@ -144,7 +144,7 @@ func userToken(t *testing.T) string {
 }
 
 func setupPlatformRouter(mock *mockPlatformService) *chi.Mux {
-	h := NewPlatform(mock, testPub, "platform")
+	h := NewPlatform(mock, testPub, "platform", nil)
 	r := chi.NewRouter()
 	r.Mount("/v1/platform", h.Routes())
 	return r
