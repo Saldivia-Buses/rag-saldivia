@@ -145,9 +145,12 @@ func createRowToDetail(t db.CreateTenantRow) TenantDetail {
 
 // ── Tenants ─────────────────────────────────────────────────────────────
 
-// ListTenants returns all tenants (summary view).
-func (p *Platform) ListTenants(ctx context.Context) ([]db.ListTenantsRow, error) {
-	tenants, err := p.queries.ListTenants(ctx)
+// ListTenants returns tenants (summary view, paginated).
+func (p *Platform) ListTenants(ctx context.Context, limit, offset int32) ([]db.ListTenantsRow, error) {
+	tenants, err := p.queries.ListTenants(ctx, db.ListTenantsParams{
+		Limit:  limit,
+		Offset: offset,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("list tenants: %w", err)
 	}

@@ -50,7 +50,7 @@ func (m *mockChatService) GetSession(_ context.Context, sessionID, userID string
 	return nil, service.ErrSessionNotFound
 }
 
-func (m *mockChatService) ListSessions(_ context.Context, userID string) ([]service.Session, error) {
+func (m *mockChatService) ListSessions(_ context.Context, userID string, _, _ int32) ([]service.Session, error) {
 	if m.err != nil {
 		return nil, m.err
 	}
@@ -104,7 +104,7 @@ func (m *mockChatService) AddMessage(_ context.Context, sessionID, userID, role,
 	return &msg, nil
 }
 
-func (m *mockChatService) GetMessages(_ context.Context, sessionID string) ([]service.Message, error) {
+func (m *mockChatService) GetMessages(_ context.Context, sessionID string, _ int32) ([]service.Message, error) {
 	if m.err != nil {
 		return nil, m.err
 	}

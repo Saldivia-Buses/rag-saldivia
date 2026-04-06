@@ -66,7 +66,7 @@ func (m *mockAuthService) UpdateProfile(_ context.Context, _ string, _ service.U
 	return m.userInfo, nil
 }
 
-func (m *mockAuthService) ListUsers(_ context.Context) ([]service.UserListItem, error) {
+func (m *mockAuthService) ListUsers(_ context.Context, _, _ int32) ([]service.UserListItem, error) {
 	return nil, nil
 }
 

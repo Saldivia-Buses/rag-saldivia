@@ -103,18 +103,20 @@ WHERE id = $1 AND is_active = true;
 
 -- name: ListActiveUsers :many
 SELECT u.id, u.email, u.name, u.created_at,
-       COALESCE((
-           SELECT r.name FROM roles r
-           JOIN user_roles ur ON ur.role_id = r.id
-           WHERE ur.user_id = u.id
-           ORDER BY CASE r.name
-               WHEN 'admin' THEN 1
-               WHEN 'manager' THEN 2
-               WHEN 'user' THEN 3
-               ELSE 4
-           END
-           LIMIT 1
-       ), 'user') AS role
+       COALESCE(r.name, 'user') AS role
 FROM users u
+LEFT JOIN LATERAL (
+    SELECT r.name FROM roles r
+    JOIN user_roles ur ON ur.role_id = r.id
+    WHERE ur.user_id = u.id
+    ORDER BY CASE r.name
+        WHEN 'admin' THEN 1
+        WHEN 'manager' THEN 2
+        WHEN 'user' THEN 3
+        ELSE 4
+    END
+    LIMIT 1
+) r ON true
 WHERE u.is_active = true
-ORDER BY u.created_at ASC;
+ORDER BY u.created_at ASC
+LIMIT $1 OFFSET $2;

@@ -35,7 +35,7 @@ type mockPlatformService struct {
 	err     error
 }
 
-func (m *mockPlatformService) ListTenants(_ context.Context) ([]db.ListTenantsRow, error) {
+func (m *mockPlatformService) ListTenants(_ context.Context, _, _ int32) ([]db.ListTenantsRow, error) {
 	if m.err != nil {
 		return nil, m.err
 	}

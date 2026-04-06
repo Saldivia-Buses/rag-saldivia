@@ -10,7 +10,8 @@ FROM sessions WHERE id = $1 AND user_id = $2;
 -- name: ListSessionsByUser :many
 SELECT id, user_id, title, collection, is_saved, created_at, updated_at
 FROM sessions WHERE user_id = $1
-ORDER BY updated_at DESC;
+ORDER BY updated_at DESC
+LIMIT $2 OFFSET $3;
 
 -- name: DeleteSession :execrows
 DELETE FROM sessions WHERE id = $1 AND user_id = $2;
@@ -30,4 +31,5 @@ RETURNING id, session_id, role, content, thinking, sources, metadata, created_at
 -- name: ListMessages :many
 SELECT id, session_id, role, content, thinking, sources, metadata, created_at
 FROM messages WHERE session_id = $1
-ORDER BY created_at;
+ORDER BY created_at
+LIMIT $2;

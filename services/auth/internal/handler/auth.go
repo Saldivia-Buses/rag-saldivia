@@ -12,6 +12,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
+	"github.com/Camionerou/rag-saldivia/pkg/pagination"
 	"github.com/Camionerou/rag-saldivia/pkg/tenant"
 	"github.com/Camionerou/rag-saldivia/services/auth/internal/service"
 )
@@ -27,7 +28,7 @@ type AuthService interface {
 	DisableMFA(ctx context.Context, userID, code string) error
 	CompleteMFALogin(ctx context.Context, mfaToken, code string) (*service.TokenPair, error)
 	UpdateProfile(ctx context.Context, userID string, req service.UpdateProfileRequest) (*service.UserInfo, error)
-	ListUsers(ctx context.Context) ([]service.UserListItem, error)
+	ListUsers(ctx context.Context, limit, offset int32) ([]service.UserListItem, error)
 }
 
 // EventPublisher can publish notification events via NATS.
@@ -362,7 +363,7 @@ func (h *Auth) UpdateMe(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, user)
 }
 
-// ListUsers handles GET /v1/auth/users — returns all active users for the tenant.
+// ListUsers handles GET /v1/auth/users — returns active users for the tenant (paginated).
 func (h *Auth) ListUsers(w http.ResponseWriter, r *http.Request) {
 	svc, err := h.resolveService(r)
 	if err != nil {
@@ -370,7 +371,8 @@ func (h *Auth) ListUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	users, err := svc.ListUsers(r.Context())
+	pg := pagination.Parse(r)
+	users, err := svc.ListUsers(r.Context(), int32(pg.Limit()), int32(pg.Offset()))
 	if err != nil {
 		reqID := middleware.GetReqID(r.Context())
 		slog.Error("list users failed", "error", err, "request_id", reqID)
