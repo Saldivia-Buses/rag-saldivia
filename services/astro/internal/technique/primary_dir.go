@@ -179,9 +179,20 @@ func FindDirections(chart *natal.Chart, targetAge, orbDeg float64) []PrimaryDire
 	}
 
 	var points []point
+
+	// Add angles as synthetic equatorial points
+	mcRA, mcDec := astromath.EclToEq(chart.MC, 0, chart.Epsilon)
+	points = append(points, point{"MC", mcRA, mcDec})
+	ascRA, ascDec := astromath.EclToEq(chart.ASC, 0, chart.Epsilon)
+	points = append(points, point{"AS", ascRA, ascDec})
+	if chart.Vertex != 0 {
+		vtxRA, vtxDec := astromath.EclToEq(chart.Vertex, 0, chart.Epsilon)
+		points = append(points, point{"Vértice", vtxRA, vtxDec})
+	}
+
 	for name, pos := range chart.Planets {
 		if pos.RA == 0 && pos.Dec == 0 && pos.Lon == 0 {
-			continue // skip calculated points without real positions
+			continue
 		}
 		points = append(points, point{name, pos.RA, pos.Dec})
 	}
