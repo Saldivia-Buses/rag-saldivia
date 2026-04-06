@@ -132,7 +132,7 @@ func main() {
 	})
 
 	// Tenant-scoped feedback endpoints (require auth)
-	feedbackHandler := handler.NewFeedback(feedbackSvc.Repo())
+	feedbackHandler := handler.NewFeedback(feedbackSvc.Repo(), platformPool)
 	r.Group(func(r chi.Router) {
 		r.Use(sdamw.Auth(publicKey))
 		r.Mount("/v1/feedback", feedbackHandler.Routes())

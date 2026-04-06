@@ -2,11 +2,9 @@ package main
 
 import (
 	"context"
-	"encoding/json"
 	"log/slog"
 	"net/http"
 	"os"
-	"strings"
 	"os/signal"
 	"syscall"
 	"time"
@@ -14,7 +12,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/nats-io/nats.go"
 
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	"github.com/Camionerou/rag-saldivia/pkg/config"
@@ -60,7 +57,7 @@ func main() {
 	tracesSvc := service.New(pool)
 	tracesHandler := handler.New(tracesSvc)
 
-	// NATS subscriber for trace events
+	// NATS consumer for trace events (new JetStream API)
 	nc, err := natspub.Connect(natsURL)
 	if err != nil {
 		slog.Error("failed to connect to nats", "error", err)
@@ -68,101 +65,12 @@ func main() {
 	}
 	defer nc.Drain()
 
-	js, err := nc.JetStream()
-	if err != nil {
-		slog.Error("failed to get jetstream", "error", err)
+	tracesConsumer := service.NewConsumer(nc, tracesSvc)
+	if err := tracesConsumer.Start(ctx); err != nil {
+		slog.Error("failed to start traces consumer", "error", err)
 		os.Exit(1)
 	}
-
-	// Ensure stream
-	// B5: use tenant.*.traces.> subject convention
-	js.AddStream(&nats.StreamConfig{
-		Name:     "TRACES",
-		Subjects: []string{"tenant.*.traces.>"},
-	})
-
-	// H2: fixed — properly cancel context after use
-	natsCtx := func() (context.Context, context.CancelFunc) {
-		return context.WithTimeout(context.Background(), 10*time.Second)
-	}
-
-	// C2: extract tenant from NATS subject and validate against payload
-	extractSubjectTenant := func(subject string) string {
-		// subject format: tenant.{slug}.traces.{action}
-		parts := strings.Split(subject, ".")
-		if len(parts) >= 2 {
-			return parts[1]
-		}
-		return ""
-	}
-
-	js.Subscribe("tenant.*.traces.start", func(msg *nats.Msg) {
-		ctx, cancel := natsCtx()
-		defer cancel()
-		var evt service.TraceStartEvent
-		if err := json.Unmarshal(msg.Data, &evt); err != nil {
-			slog.Error("invalid trace start event", "error", err)
-			msg.Ack()
-			return
-		}
-		// C2: validate tenant from subject matches payload
-		subjectTenant := extractSubjectTenant(msg.Subject)
-		if subjectTenant != "" && evt.TenantID != subjectTenant {
-			slog.Error("tenant mismatch", "subject_tenant", subjectTenant, "payload_tenant", evt.TenantID)
-			msg.Ack()
-			return
-		}
-		if err := tracesSvc.RecordTraceStart(ctx, evt); err != nil {
-			slog.Error("record trace start failed", "error", err, "trace_id", evt.TraceID)
-		}
-		msg.Ack()
-	}, nats.Durable("traces-start"), nats.ManualAck())
-
-	js.Subscribe("tenant.*.traces.end", func(msg *nats.Msg) {
-		ctx, cancel := natsCtx()
-		defer cancel()
-		var evt service.TraceEndEvent
-		if err := json.Unmarshal(msg.Data, &evt); err != nil {
-			slog.Error("invalid trace end event", "error", err)
-			msg.Ack()
-			return
-		}
-		// B1: validate tenant from subject
-		subjectTenant := extractSubjectTenant(msg.Subject)
-		if subjectTenant != "" && evt.TenantID != "" && evt.TenantID != subjectTenant {
-			slog.Error("tenant mismatch in trace end", "subject", subjectTenant, "payload", evt.TenantID)
-			msg.Ack()
-			return
-		}
-		if err := tracesSvc.RecordTraceEnd(ctx, evt); err != nil {
-			slog.Error("record trace end failed", "error", err, "trace_id", evt.TraceID)
-		}
-		msg.Ack()
-	}, nats.Durable("traces-end"), nats.ManualAck())
-
-	js.Subscribe("tenant.*.traces.event", func(msg *nats.Msg) {
-		ctx, cancel := natsCtx()
-		defer cancel()
-		var evt service.TraceEvent
-		if err := json.Unmarshal(msg.Data, &evt); err != nil {
-			slog.Error("invalid trace event", "error", err)
-			msg.Ack()
-			return
-		}
-		// B1: validate tenant from subject
-		subjectTenant := extractSubjectTenant(msg.Subject)
-		if subjectTenant != "" && evt.TenantID != "" && evt.TenantID != subjectTenant {
-			slog.Error("tenant mismatch in trace event", "subject", subjectTenant, "payload", evt.TenantID)
-			msg.Ack()
-			return
-		}
-		if err := tracesSvc.RecordEvent(ctx, evt); err != nil {
-			slog.Error("record event failed", "error", err, "trace_id", evt.TraceID)
-		}
-		msg.Ack()
-	}, nats.Durable("traces-events"), nats.ManualAck())
-
-	slog.Info("nats trace subscribers active")
+	defer tracesConsumer.Stop()
 
 	// HTTP server
 	r := chi.NewRouter()
