@@ -29,16 +29,21 @@ func FindAspect(lon1, lon2, maxOrb float64) *Aspect {
 }
 
 // FindAspectWithMotion checks aspect and determines if applying/separating.
+// Uses shortest-arc signed difference to correctly handle all configurations.
 func FindAspectWithMotion(lon1, lon2, speed1, speed2, maxOrb float64) *Aspect {
 	asp := FindAspect(lon1, lon2, maxOrb)
 	if asp == nil {
 		return nil
 	}
+	// Signed shortest-arc difference: positive = lon1 ahead of lon2
+	signed := SignedDiff(lon2, lon1)
+	currentSep := math.Abs(signed)
 	relSpeed := speed1 - speed2
-	diff := Normalize360(lon1) - Normalize360(lon2)
-	if diff < 0 {
-		diff += 360
+	// Applying: the separation is decreasing toward the exact aspect angle
+	if signed >= 0 {
+		asp.Applying = relSpeed < 0 || currentSep > asp.Angle
+	} else {
+		asp.Applying = relSpeed > 0 || currentSep > asp.Angle
 	}
-	asp.Applying = (relSpeed > 0 && diff < asp.Angle) || (relSpeed < 0 && diff > asp.Angle)
 	return asp
 }

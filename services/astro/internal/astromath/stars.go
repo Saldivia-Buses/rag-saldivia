@@ -8,7 +8,7 @@ type FixedStar struct {
 	Nature    string
 }
 
-// MajorFixedStars — magnitude ≤ 1.5 stars with astrological significance.
+// MajorFixedStars — bright stars with astrological significance (magnitude ≤ ~2.1).
 // Ecliptic longitudes must be calculated via ephemeris.FixstarUT() for the date.
 var MajorFixedStars = []FixedStar{
 	{"Algol", "Algol", 2.1, "Saturn/Jupiter"},
