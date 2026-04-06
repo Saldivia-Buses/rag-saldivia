@@ -28,10 +28,31 @@ http:
       entryPoints: [web]
       middlewares: [strip-spoofed-headers, tenant-from-subdomain, rate-limit, cors]
 
-    # RAG — generate + collections
-    rag:
-      rule: "PathPrefix(`/v1/rag`)"
-      service: rag
+    # Agent — LLM runtime + tool execution
+    agent:
+      rule: "PathPrefix(`/v1/agent`)"
+      service: agent
+      entryPoints: [web]
+      middlewares: [strip-spoofed-headers, tenant-from-subdomain, rate-limit, cors]
+
+    # Search — tree-based document retrieval
+    search:
+      rule: "PathPrefix(`/v1/search`)"
+      service: search
+      entryPoints: [web]
+      middlewares: [strip-spoofed-headers, tenant-from-subdomain, rate-limit, cors]
+
+    # Traces — execution traces + cost tracking
+    traces:
+      rule: "PathPrefix(`/v1/traces`)"
+      service: traces
+      entryPoints: [web]
+      middlewares: [strip-spoofed-headers, tenant-from-subdomain, rate-limit, cors]
+
+    # Feedback — quality metrics + alerts
+    feedback:
+      rule: "PathPrefix(`/v1/feedback`) || PathPrefix(`/v1/platform/feedback`)"
+      service: feedback
       entryPoints: [web]
       middlewares: [strip-spoofed-headers, tenant-from-subdomain, rate-limit, cors]
 
@@ -69,10 +90,22 @@ http:
       loadBalancer:
         servers:
           - url: "http://chat:8003"
-    rag:
+    agent:
       loadBalancer:
         servers:
-          - url: "http://rag:8004"
+          - url: "http://agent:8004"
+    search:
+      loadBalancer:
+        servers:
+          - url: "http://search:8010"
+    traces:
+      loadBalancer:
+        servers:
+          - url: "http://traces:8009"
+    feedback:
+      loadBalancer:
+        servers:
+          - url: "http://feedback:8008"
     notification:
       loadBalancer:
         servers:

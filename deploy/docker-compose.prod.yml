@@ -236,15 +236,21 @@ services:
         limits:
           memory: 128M
 
-  rag:
+  agent:
     <<: *service-defaults
-    image: ghcr.io/camionerou/sda-rag:${RAG_VERSION:-latest}
+    image: ghcr.io/camionerou/sda-agent:${AGENT_VERSION:-latest}
     build:
       context: ..
-      dockerfile: services/rag/Dockerfile
+      dockerfile: services/agent/Dockerfile
     environment:
-      RAG_PORT: "8004"
-      RAG_SERVER_URL: ${RAG_SERVER_URL:-http://host.docker.internal:8081}
+      AGENT_PORT: "8004"
+      NATS_URL: nats://${NATS_TOKEN}@nats:4222
+      SGLANG_LLM_URL: ${SGLANG_LLM_URL:-http://host.docker.internal:8102}
+      SGLANG_LLM_MODEL: ${SGLANG_LLM_MODEL:-}
+      SEARCH_SERVICE_URL: http://search:8010
+      INGEST_SERVICE_URL: http://ingest:8007
+      NOTIFICATION_SERVICE_URL: http://notification:8005
+      <<: *jwt-public
     secrets:
       - jwt_public_key
     healthcheck:
@@ -255,12 +261,75 @@ services:
     networks:
       - frontend
       - backend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.agent.rule=PathPrefix(`/v1/agent`)"
+      - "traefik.http.routers.agent.entrypoints=websecure"
+      - "traefik.http.services.agent.loadbalancer.server.port=8004"
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  search:
+    <<: *service-defaults
+    image: ghcr.io/camionerou/sda-search:${SEARCH_VERSION:-latest}
+    build:
+      context: ..
+      dockerfile: services/search/Dockerfile
+    environment:
+      SEARCH_PORT: "8010"
+      SGLANG_LLM_URL: ${SGLANG_LLM_URL:-http://host.docker.internal:8102}
+      SGLANG_LLM_MODEL: ${SGLANG_LLM_MODEL:-}
+      <<: *jwt-public
+    secrets:
+      - jwt_public_key
+      - db_tenant_template_url
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8010/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - frontend
       - data
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.rag.rule=PathPrefix(`/v1/rag`)"
-      - "traefik.http.routers.rag.entrypoints=websecure"
-      - "traefik.http.services.rag.loadbalancer.server.port=8004"
+      - "traefik.http.routers.search.rule=PathPrefix(`/v1/search`)"
+      - "traefik.http.routers.search.entrypoints=websecure"
+      - "traefik.http.services.search.loadbalancer.server.port=8010"
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+
+  traces:
+    <<: *service-defaults
+    image: ghcr.io/camionerou/sda-traces:${TRACES_VERSION:-latest}
+    build:
+      context: ..
+      dockerfile: services/traces/Dockerfile
+    environment:
+      TRACES_PORT: "8009"
+      NATS_URL: nats://${NATS_TOKEN}@nats:4222
+      <<: *jwt-public
+    secrets:
+      - jwt_public_key
+      - db_platform_url
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8009/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - frontend
+      - backend
+      - data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traces.rule=PathPrefix(`/v1/traces`)"
+      - "traefik.http.routers.traces.entrypoints=websecure"
+      - "traefik.http.services.traces.loadbalancer.server.port=8009"
     deploy:
       resources:
         limits:
