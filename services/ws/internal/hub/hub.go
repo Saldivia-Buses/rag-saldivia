@@ -20,6 +20,7 @@ type Hub struct {
 
 	MaxClients          int
 	MaxClientsPerTenant int
+	Mutations           *MutationHandler // nil = mutations disabled
 }
 
 // New creates a new Hub with default connection limits.
@@ -173,11 +174,11 @@ func (h *Hub) handleMessage(client *Client, msg Message) {
 		})
 
 	case Mutation:
-		client.SendMessage(Message{
-			Type:  Error,
-			ID:    msg.ID,
-			Error: "mutations not yet implemented",
-		})
+		if h.Mutations == nil {
+			client.SendMessage(Message{Type: Error, ID: msg.ID, Error: "mutations not available"})
+			return
+		}
+		h.Mutations.Handle(client, msg)
 
 	default:
 		client.SendMessage(Message{

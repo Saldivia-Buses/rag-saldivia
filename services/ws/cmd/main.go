@@ -69,6 +69,13 @@ func main() {
 	}
 	defer bridge.Stop()
 
+	// Wire mutations via gRPC to Chat service
+	chatGRPC := config.Env("CHAT_GRPC_URL", "")
+	if mutations := hub.NewMutationHandler(chatGRPC); mutations != nil {
+		h.Mutations = mutations
+		defer mutations.Close()
+	}
+
 	// Handlers
 	wsHandler := handler.NewWS(h, publicKey)
 

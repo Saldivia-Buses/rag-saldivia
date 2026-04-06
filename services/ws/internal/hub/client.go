@@ -32,10 +32,11 @@ type Client struct {
 	TenantID string
 	Slug     string
 	Role     string
+	JWT      string // raw token for forwarding to gRPC services
 }
 
 // NewClientWithIdentity creates a client with pre-set identity from JWT claims.
-func NewClientWithIdentity(hub *Hub, conn *websocket.Conn, userID, email, tenantID, slug, role string) *Client {
+func NewClientWithIdentity(hub *Hub, conn *websocket.Conn, userID, email, tenantID, slug, role, jwt string) *Client {
 	return &Client{
 		hub:      hub,
 		conn:     conn,
@@ -46,6 +47,7 @@ func NewClientWithIdentity(hub *Hub, conn *websocket.Conn, userID, email, tenant
 		TenantID: tenantID,
 		Slug:     slug,
 		Role:     role,
+		JWT:      jwt,
 	}
 }
 
