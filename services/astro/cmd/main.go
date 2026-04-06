@@ -79,7 +79,6 @@ func main() {
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Recoverer)
-	r.Use(middleware.Timeout(5 * time.Minute))
 	r.Use(sdamw.SecureHeaders())
 
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
@@ -87,16 +86,21 @@ func main() {
 		w.Write([]byte(`{"status":"ok","service":"astro"}`))
 	})
 
+	authMw := sdamw.AuthWithConfig(publicKey, sdamw.AuthConfig{
+		Blacklist: blacklist,
+		FailOpen:  true,
+	})
+	rateMw := sdamw.RateLimit(sdamw.RateLimitConfig{
+		Requests: 10,
+		Window:   time.Minute,
+		KeyFunc:  sdamw.ByUser,
+	})
+
+	// JSON endpoints — with request timeout
 	r.Group(func(r chi.Router) {
-		r.Use(sdamw.AuthWithConfig(publicKey, sdamw.AuthConfig{
-			Blacklist: blacklist,
-			FailOpen:  false,
-		}))
-		r.Use(sdamw.RateLimit(sdamw.RateLimitConfig{
-			Requests: 10,
-			Window:   time.Minute,
-			KeyFunc:  sdamw.ByUser,
-		}))
+		r.Use(authMw)
+		r.Use(rateMw)
+		r.Use(middleware.Timeout(5 * time.Minute))
 
 		r.Post("/v1/astro/natal", astroHandler.Natal)
 		r.Post("/v1/astro/transits", astroHandler.Transits)
@@ -108,10 +112,16 @@ func main() {
 		r.Post("/v1/astro/firdaria", astroHandler.Firdaria)
 		r.Post("/v1/astro/fixed-stars", astroHandler.FixedStars)
 		r.Post("/v1/astro/brief", astroHandler.Brief)
-		r.Post("/v1/astro/query", astroHandler.Query)
 
 		r.Get("/v1/astro/contacts", astroHandler.ListContacts)
 		r.Post("/v1/astro/contacts", astroHandler.CreateContact)
+	})
+
+	// SSE endpoint — no chi timeout (WriteTimeout on http.Server is the safety net)
+	r.Group(func(r chi.Router) {
+		r.Use(authMw)
+		r.Use(rateMw)
+		r.Post("/v1/astro/query", astroHandler.Query)
 	})
 
 	srv := &http.Server{

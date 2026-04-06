@@ -1,6 +1,8 @@
+-- +migrate Up
 CREATE TABLE IF NOT EXISTS contacts (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    tenant_id   TEXT NOT NULL,
+    tenant_id   UUID NOT NULL,
+    user_id     UUID NOT NULL,
     name        TEXT NOT NULL,
     birth_date  DATE NOT NULL,
     birth_time  TIME,
@@ -13,10 +15,14 @@ CREATE TABLE IF NOT EXISTS contacts (
     utc_offset  INTEGER NOT NULL DEFAULT -3,
     relationship TEXT,
     notes       TEXT,
-    tipo        TEXT NOT NULL DEFAULT 'persona',
+    kind        TEXT NOT NULL DEFAULT 'persona',
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
     updated_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
     UNIQUE(tenant_id, lower(name))
 );
 
 CREATE INDEX idx_contacts_tenant ON contacts(tenant_id);
+CREATE INDEX idx_contacts_user ON contacts(tenant_id, user_id);
+
+-- +migrate Down
+DROP TABLE IF EXISTS contacts;
