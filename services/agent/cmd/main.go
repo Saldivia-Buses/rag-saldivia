@@ -102,6 +102,19 @@ func main() {
 
 	executor := tools.NewExecutor(toolDefs)
 
+	// Wire gRPC for search (falls back to HTTP if unavailable)
+	searchGRPC := config.Env("SEARCH_GRPC_URL", "")
+	if searchGRPC != "" {
+		grpcClient, err := tools.NewGRPCSearchClient(searchGRPC)
+		if err != nil {
+			slog.Warn("grpc search client failed, using http fallback", "error", err)
+		} else {
+			executor.SetGRPCSearch(grpcClient)
+			defer grpcClient.Close()
+			slog.Info("search via grpc", "target", searchGRPC)
+		}
+	}
+
 	// Build tool schemas for LLM
 	schemas := make([]agentllm.ToolSchema, len(toolDefs))
 	for i, d := range toolDefs {

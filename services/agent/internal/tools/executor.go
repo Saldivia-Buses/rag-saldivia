@@ -36,9 +36,11 @@ type Definition struct {
 }
 
 // Executor calls tools by name, routing to the correct service.
+// Supports both HTTP and gRPC backends per tool.
 type Executor struct {
-	tools  map[string]Definition
-	client *http.Client
+	tools        map[string]Definition
+	client       *http.Client
+	grpcSearch   *GRPCSearchClient // nil = fallback to HTTP
 }
 
 // NewExecutor creates a tool executor with the given tool definitions.
@@ -54,6 +56,12 @@ func NewExecutor(defs []Definition) *Executor {
 			Transport: otelhttp.NewTransport(http.DefaultTransport),
 		},
 	}
+}
+
+// SetGRPCSearch configures gRPC for the search_documents tool.
+// If set, search calls use gRPC instead of HTTP.
+func (e *Executor) SetGRPCSearch(c *GRPCSearchClient) {
+	e.grpcSearch = c
 }
 
 // Execute calls a tool by name with the given parameters and JWT.
@@ -76,6 +84,11 @@ func (e *Executor) Execute(ctx context.Context, jwt, toolName string, params jso
 			ActionPlan:           fmt.Sprintf("Tool %q wants to: %s", def.Name, def.Description),
 			Data:                 params,
 		}, nil
+	}
+
+	// Use gRPC for search if available
+	if toolName == "search_documents" && e.grpcSearch != nil {
+		return e.grpcSearch.Execute(ctx, jwt, params)
 	}
 
 	return e.executeHTTP(ctx, jwt, def, params)
