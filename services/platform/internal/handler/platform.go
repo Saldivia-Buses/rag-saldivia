@@ -406,6 +406,10 @@ func (h *Platform) requirePlatformAdmin(next http.Handler) http.Handler {
 
 		// Propagate identity via headers for downstream use
 		r.Header.Set("X-User-ID", claims.UserID)
+		r.Header.Set("X-User-Email", claims.Email)
+		r.Header.Set("X-User-Role", claims.Role)
+		r.Header.Set("X-Tenant-ID", claims.TenantID)
+		r.Header.Set("X-Tenant-Slug", claims.Slug)
 		next.ServeHTTP(w, r)
 	})
 }

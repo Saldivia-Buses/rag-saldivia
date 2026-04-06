@@ -14,6 +14,7 @@ import (
 
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	"github.com/Camionerou/rag-saldivia/pkg/pagination"
+	"github.com/Camionerou/rag-saldivia/pkg/security"
 	"github.com/Camionerou/rag-saldivia/pkg/tenant"
 	"github.com/Camionerou/rag-saldivia/services/auth/internal/service"
 )
@@ -44,6 +45,7 @@ type Auth struct {
 	resolver  *tenant.Resolver // per-request resolution (multi-tenant mode)
 	jwtCfg    sdajwt.Config
 	publisher EventPublisher
+	blacklist *security.TokenBlacklist // for multi-tenant service wiring
 	svcCache  sync.Map         // slug → AuthService (multi-tenant cache)
 }
 
@@ -53,11 +55,12 @@ func NewAuth(authSvc AuthService) *Auth {
 }
 
 // NewMultiTenantAuth creates auth HTTP handlers that resolve the tenant DB per request.
-func NewMultiTenantAuth(resolver *tenant.Resolver, jwtCfg sdajwt.Config, publisher EventPublisher) *Auth {
+func NewMultiTenantAuth(resolver *tenant.Resolver, jwtCfg sdajwt.Config, publisher EventPublisher, blacklist *security.TokenBlacklist) *Auth {
 	return &Auth{
 		resolver:  resolver,
 		jwtCfg:    jwtCfg,
 		publisher: publisher,
+		blacklist: blacklist,
 	}
 }
 
@@ -91,6 +94,7 @@ func (h *Auth) resolveService(r *http.Request) (AuthService, error) {
 	}
 
 	svc := service.NewAuth(pool, h.jwtCfg, tenantID, slug, h.publisher)
+	svc.SetBlacklist(h.blacklist)
 	h.svcCache.Store(slug, svc)
 	return svc, nil
 }

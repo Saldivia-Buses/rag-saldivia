@@ -145,7 +145,7 @@ func main() {
 	// Platform admin feedback endpoints (require admin JWT)
 	platformFeedbackHandler := handler.NewPlatformFeedback(platformPool)
 	r.Group(func(r chi.Router) {
-		r.Use(sdamw.AuthWithConfig(publicKey, sdamw.AuthConfig{Blacklist: blacklist, FailOpen: true}))
+		r.Use(sdamw.AuthWithConfig(publicKey, sdamw.AuthConfig{Blacklist: blacklist, FailOpen: false})) // admin routes: security > availability
 		r.Mount("/v1/platform/feedback", platformFeedbackHandler.Routes())
 	})
 
