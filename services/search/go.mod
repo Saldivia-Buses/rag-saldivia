@@ -2,12 +2,13 @@ module github.com/Camionerou/rag-saldivia/services/search
 
 go 1.25.0
 
-
 require (
+	github.com/Camionerou/rag-saldivia/gen/go v0.0.0-00010101000000-000000000000
 	github.com/Camionerou/rag-saldivia/pkg v0.0.0-00010101000000-000000000000
 	github.com/go-chi/chi/v5 v5.2.5
 	github.com/jackc/pgx/v5 v5.9.1
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.67.0
+	google.golang.org/grpc v1.80.0
 )
 
 require (
@@ -37,10 +38,12 @@ require (
 	golang.org/x/sync v0.20.0 // indirect
 	golang.org/x/sys v0.42.0 // indirect
 	golang.org/x/text v0.35.0 // indirect
+	golang.org/x/time v0.15.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20260209200024-4cfbd4190f57 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260209200024-4cfbd4190f57 // indirect
-	google.golang.org/grpc v1.79.2 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 )
 
 replace github.com/Camionerou/rag-saldivia/pkg => ../../pkg
+
+replace github.com/Camionerou/rag-saldivia/gen/go => ../../gen/go
