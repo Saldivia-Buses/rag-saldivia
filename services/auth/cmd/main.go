@@ -147,9 +147,14 @@ func main() {
 	r.Use(sdamw.SecureHeaders())
 	r.Use(middleware.Timeout(30 * time.Second))
 
+	// Rate limiters for sensitive endpoints
+	loginRL := sdamw.RateLimit(sdamw.RateLimitConfig{Requests: 5, Window: time.Minute, KeyFunc: sdamw.ByIP})
+	refreshRL := sdamw.RateLimit(sdamw.RateLimitConfig{Requests: 10, Window: time.Minute, KeyFunc: sdamw.ByIP})
+	mfaRL := sdamw.RateLimit(sdamw.RateLimitConfig{Requests: 5, Window: time.Minute, KeyFunc: sdamw.ByIP})
+
 	r.Get("/health", authHandler.Health)
-	r.Post("/v1/auth/login", authHandler.Login)
-	r.Post("/v1/auth/refresh", authHandler.Refresh)
+	r.With(loginRL).Post("/v1/auth/login", authHandler.Login)
+	r.With(refreshRL).Post("/v1/auth/refresh", authHandler.Refresh)
 	r.Post("/v1/auth/logout", authHandler.Logout)
 
 	// Protected routes — require valid access token + blacklist check
@@ -166,7 +171,7 @@ func main() {
 	})
 
 	// MFA login verification (uses temp mfa_token, not regular access token)
-	r.Post("/v1/auth/mfa/verify", authHandler.VerifyMFALogin)
+	r.With(mfaRL).Post("/v1/auth/mfa/verify", authHandler.VerifyMFALogin)
 
 	// Server
 	srv := &http.Server{

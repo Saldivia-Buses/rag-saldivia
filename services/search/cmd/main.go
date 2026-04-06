@@ -73,8 +73,11 @@ func main() {
 		w.Write([]byte(`{"status":"ok"}`))
 	})
 
+	searchRL := sdamw.RateLimit(sdamw.RateLimitConfig{Requests: 30, Window: time.Minute, KeyFunc: sdamw.ByUser})
+
 	r.Group(func(r chi.Router) {
 		r.Use(sdamw.Auth(publicKey))
+		r.Use(searchRL)
 		r.Mount("/v1/search", searchHandler.Routes())
 	})
 

@@ -152,8 +152,11 @@ func main() {
 		w.Write([]byte(`{"status":"ok"}`))
 	})
 
+	aiRL := sdamw.RateLimit(sdamw.RateLimitConfig{Requests: 30, Window: time.Minute, KeyFunc: sdamw.ByUser})
+
 	r.Group(func(r chi.Router) {
 		r.Use(sdamw.Auth(publicKey))
+		r.Use(aiRL)
 		r.Mount("/v1/agent", agentHandler.Routes())
 	})
 
