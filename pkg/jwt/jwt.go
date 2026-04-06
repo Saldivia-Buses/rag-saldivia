@@ -18,6 +18,7 @@ import (
 	"time"
 
 	gojwt "github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
 var (
@@ -67,9 +68,15 @@ func VerifyOnlyConfig(publicKey ed25519.PublicKey) Config {
 }
 
 // CreateAccess creates a short-lived access token. Requires private key.
+// If claims.ID (JTI) is empty, a random UUID is generated automatically
+// to ensure the blacklist check in the auth middleware always has an ID.
 func CreateAccess(cfg Config, claims Claims) (string, error) {
 	if cfg.PrivateKey == nil {
 		return "", fmt.Errorf("%w: private key required for signing", ErrInvalidKey)
+	}
+
+	if claims.ID == "" {
+		claims.ID = uuid.NewString()
 	}
 
 	now := time.Now()
@@ -89,6 +96,10 @@ func CreateAccess(cfg Config, claims Claims) (string, error) {
 func CreateRefresh(cfg Config, claims Claims) (string, error) {
 	if cfg.PrivateKey == nil {
 		return "", fmt.Errorf("%w: private key required for signing", ErrInvalidKey)
+	}
+
+	if claims.ID == "" {
+		claims.ID = uuid.NewString()
 	}
 
 	now := time.Now()

@@ -154,7 +154,7 @@ func main() {
 
 	// Protected routes — require valid access token + blacklist check
 	r.Group(func(r chi.Router) {
-		r.Use(sdamw.AuthWithConfig(publicKey, sdamw.AuthConfig{Blacklist: blacklist}))
+		r.Use(sdamw.AuthWithConfig(publicKey, sdamw.AuthConfig{Blacklist: blacklist, FailOpen: false}))
 		r.Get("/v1/auth/me", authHandler.Me)
 		r.Patch("/v1/auth/me", authHandler.UpdateMe)
 		r.With(sdamw.RequirePermission("users.read")).Get("/v1/auth/users", authHandler.ListUsers)

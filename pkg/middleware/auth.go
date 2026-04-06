@@ -3,6 +3,7 @@ package middleware
 
 import (
 	"crypto/ed25519"
+	"encoding/json"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -15,6 +16,7 @@ import (
 // AuthConfig holds optional dependencies for the auth middleware.
 type AuthConfig struct {
 	Blacklist *security.TokenBlacklist // nil = no blacklist checking
+	FailOpen  bool                     // true = allow on Redis error (default), false = reject
 }
 
 // Auth returns a chi middleware that verifies the JWT from the Authorization
@@ -66,11 +68,18 @@ func AuthWithConfig(publicKey ed25519.PublicKey, cfg AuthConfig) func(http.Handl
 			}
 
 			// Check token blacklist (revoked on logout/password change)
-			if cfg.Blacklist != nil && claims.ID != "" {
+			if cfg.Blacklist != nil {
+				if claims.ID == "" {
+					writeJSONError(w, http.StatusUnauthorized, "invalid token")
+					return
+				}
 				revoked, err := cfg.Blacklist.IsRevoked(r.Context(), claims.ID)
 				if err != nil {
 					slog.Error("blacklist check failed", "error", err)
-					// fail-open: if Redis is down, don't block all requests
+					if !cfg.FailOpen {
+						writeJSONError(w, http.StatusServiceUnavailable, "auth check unavailable")
+						return
+					}
 				} else if revoked {
 					writeJSONError(w, http.StatusUnauthorized, "token revoked")
 					return
@@ -122,5 +131,5 @@ func extractBearer(r *http.Request) string {
 func writeJSONError(w http.ResponseWriter, status int, msg string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	w.Write([]byte(`{"error":"` + msg + `"}`))
+	json.NewEncoder(w).Encode(map[string]string{"error": msg})
 }
