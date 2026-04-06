@@ -124,9 +124,10 @@ services:
   nats:
     <<: *service-defaults
     image: nats:2-alpine
-    command: ["--js", "--sd", "/data", "--auth", "${NATS_TOKEN}"]
+    command: ["-c", "/etc/nats/nats-server.conf", "-m", "8222"]
     volumes:
       - nats_data:/data
+      - ./nats/nats-server.conf:/etc/nats/nats-server.conf:ro
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8222/healthz || exit 1"]
       interval: 10s
@@ -149,7 +150,7 @@ services:
       dockerfile: services/auth/Dockerfile
     environment:
       AUTH_PORT: "8001"
-      NATS_URL: nats://${NATS_TOKEN}@nats:4222
+      NATS_URL: nats://auth:${AUTH_NATS_PASS}@nats:4222
       TENANT_SLUG: dev
     secrets:
       - jwt_private_key
@@ -182,7 +183,7 @@ services:
       dockerfile: services/ws/Dockerfile
     environment:
       WS_PORT: "8002"
-      NATS_URL: nats://${NATS_TOKEN}@nats:4222
+      NATS_URL: nats://ws:${WS_NATS_PASS}@nats:4222
       WS_ALLOWED_ORIGINS: "https://*.sda.app"
     secrets:
       - jwt_public_key
@@ -212,7 +213,7 @@ services:
       dockerfile: services/chat/Dockerfile
     environment:
       CHAT_PORT: "8003"
-      NATS_URL: nats://${NATS_TOKEN}@nats:4222
+      NATS_URL: nats://chat:${CHAT_NATS_PASS}@nats:4222
       TENANT_SLUG: dev
     secrets:
       - jwt_public_key
@@ -244,7 +245,7 @@ services:
       dockerfile: services/agent/Dockerfile
     environment:
       AGENT_PORT: "8004"
-      NATS_URL: nats://${NATS_TOKEN}@nats:4222
+      NATS_URL: nats://agent:${AGENT_NATS_PASS}@nats:4222
       SGLANG_LLM_URL: ${SGLANG_LLM_URL:-http://host.docker.internal:8102}
       SGLANG_LLM_MODEL: ${SGLANG_LLM_MODEL:-}
       SEARCH_SERVICE_URL: http://search:8010
@@ -311,7 +312,7 @@ services:
       dockerfile: services/traces/Dockerfile
     environment:
       TRACES_PORT: "8009"
-      NATS_URL: nats://${NATS_TOKEN}@nats:4222
+      NATS_URL: nats://traces:${TRACES_NATS_PASS}@nats:4222
       <<: *jwt-public
     secrets:
       - jwt_public_key
@@ -343,7 +344,7 @@ services:
       dockerfile: services/notification/Dockerfile
     environment:
       NOTIFICATION_PORT: "8005"
-      NATS_URL: nats://${NATS_TOKEN}@nats:4222
+      NATS_URL: nats://notification:${NOTIF_NATS_PASS}@nats:4222
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_FROM: ${SMTP_FROM:-noreply@sda.app}
@@ -408,7 +409,7 @@ services:
       dockerfile: services/ingest/Dockerfile
     environment:
       INGEST_PORT: "8007"
-      NATS_URL: nats://${NATS_TOKEN}@nats:4222
+      NATS_URL: nats://ingest:${INGEST_NATS_PASS}@nats:4222
       RAG_SERVER_URL: ${RAG_SERVER_URL:-http://host.docker.internal:8081}
       INGEST_STAGING_DIR: /tmp/ingest-staging
     secrets:
@@ -441,7 +442,7 @@ services:
       dockerfile: services/feedback/Dockerfile
     environment:
       FEEDBACK_PORT: "8008"
-      NATS_URL: nats://${NATS_TOKEN}@nats:4222
+      NATS_URL: nats://feedback:${FEEDBACK_NATS_PASS}@nats:4222
     secrets:
       - jwt_public_key
       - db_platform_url
