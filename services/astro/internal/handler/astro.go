@@ -37,24 +37,36 @@ func New(db *pgxpool.Pool, llmClient llm.ChatClient) *Handler {
 
 // --- Contact helpers ---
 
-func tenantAndUser(r *http.Request) (pgtype.UUID, pgtype.UUID) {
-	info, _ := tenant.FromContext(r.Context())
+func tenantAndUser(r *http.Request) (pgtype.UUID, pgtype.UUID, error) {
+	info, err := tenant.FromContext(r.Context())
+	if err != nil {
+		return pgtype.UUID{}, pgtype.UUID{}, fmt.Errorf("no tenant in context")
+	}
 	uid := sdamw.UserIDFromContext(r.Context())
+	if uid == "" {
+		return pgtype.UUID{}, pgtype.UUID{}, fmt.Errorf("no user in context")
+	}
 	var tid, uidPG pgtype.UUID
 	tid.Scan(info.ID)
 	uidPG.Scan(uid)
-	return tid, uidPG
+	return tid, uidPG, nil
 }
 
-func (h *Handler) resolveContact(r *http.Request, contactName string) (*repository.Contact, error) {
-	tid, uid := tenantAndUser(r)
+func (h *Handler) resolveContact(r *http.Request, contactName string) (*repository.Contact, int, error) {
+	if contactName == "" {
+		return nil, http.StatusBadRequest, fmt.Errorf("contact_name is required")
+	}
+	tid, uid, err := tenantAndUser(r)
+	if err != nil {
+		return nil, http.StatusUnauthorized, err
+	}
 	c, err := h.q.GetContactByName(r.Context(), repository.GetContactByNameParams{
 		TenantID: tid, UserID: uid, Lower: contactName,
 	})
 	if err != nil {
-		return nil, err
+		return nil, http.StatusNotFound, fmt.Errorf("contact %q not found", contactName)
 	}
-	return &c, nil
+	return &c, 0, nil
 }
 
 func contactToChart(c *repository.Contact) (*natal.Chart, time.Time, error) {
@@ -76,18 +88,25 @@ func contactToChart(c *repository.Contact) (*natal.Chart, time.Time, error) {
 
 // --- Technique request ---
 
+// maxBodySize limits request body to 1MB.
+const maxBodySize = 1 << 20
+
 type techniqueRequest struct {
 	ContactName string `json:"contact_name"`
 	Year        int    `json:"year"`
 }
 
 func (h *Handler) parseRequest(r *http.Request) (*techniqueRequest, error) {
+	r.Body = http.MaxBytesReader(nil, r.Body, maxBodySize)
 	var req techniqueRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, err
 	}
 	if req.Year == 0 {
 		req.Year = time.Now().Year()
+	}
+	if req.Year < -5000 || req.Year > 5000 {
+		return nil, fmt.Errorf("year out of range")
 	}
 	return &req, nil
 }
@@ -111,9 +130,9 @@ func (h *Handler) Natal(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, "invalid request", http.StatusBadRequest)
 		return
 	}
-	contact, err := h.resolveContact(r, req.ContactName)
+	contact, code, err := h.resolveContact(r, req.ContactName)
 	if err != nil {
-		jsonError(w, "contact not found", http.StatusNotFound)
+		jsonError(w, err.Error(), code)
 		return
 	}
 	chart, _, err := contactToChart(contact)
@@ -136,9 +155,9 @@ func (h *Handler) SolarArc(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, "invalid request", http.StatusBadRequest)
 		return
 	}
-	contact, err := h.resolveContact(r, req.ContactName)
+	contact, code, err := h.resolveContact(r, req.ContactName)
 	if err != nil {
-		jsonError(w, "contact not found", http.StatusNotFound)
+		jsonError(w, err.Error(), code)
 		return
 	}
 	chart, _, err := contactToChart(contact)
@@ -156,9 +175,9 @@ func (h *Handler) Profections(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, "invalid request", http.StatusBadRequest)
 		return
 	}
-	contact, err := h.resolveContact(r, req.ContactName)
+	contact, code, err := h.resolveContact(r, req.ContactName)
 	if err != nil {
-		jsonError(w, "contact not found", http.StatusNotFound)
+		jsonError(w, err.Error(), code)
 		return
 	}
 	chart, birthDate, err := contactToChart(contact)
@@ -176,9 +195,9 @@ func (h *Handler) Firdaria(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, "invalid request", http.StatusBadRequest)
 		return
 	}
-	contact, err := h.resolveContact(r, req.ContactName)
+	contact, code, err := h.resolveContact(r, req.ContactName)
 	if err != nil {
-		jsonError(w, "contact not found", http.StatusNotFound)
+		jsonError(w, err.Error(), code)
 		return
 	}
 	chart, birthDate, err := contactToChart(contact)
@@ -196,9 +215,9 @@ func (h *Handler) Brief(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, "invalid request", http.StatusBadRequest)
 		return
 	}
-	contact, err := h.resolveContact(r, req.ContactName)
+	contact, code, err := h.resolveContact(r, req.ContactName)
 	if err != nil {
-		jsonError(w, "contact not found", http.StatusNotFound)
+		jsonError(w, err.Error(), code)
 		return
 	}
 	chart, birthDate, err := contactToChart(contact)
@@ -222,28 +241,31 @@ func (h *Handler) Query(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "streaming not supported", http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("Content-Type", "text/event-stream")
-	w.Header().Set("Cache-Control", "no-cache")
-	w.Header().Set("Connection", "keep-alive")
-	w.Header().Set("X-Accel-Buffering", "no")
 
+	// Parse body BEFORE setting SSE headers (D6)
+	r.Body = http.MaxBytesReader(nil, r.Body, maxBodySize)
 	var req struct {
 		ContactName string `json:"contact_name"`
 		Query       string `json:"query"`
 		Year        int    `json:"year"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		sseError(w, flusher, "invalid request: "+err.Error())
+		jsonError(w, "invalid request", http.StatusBadRequest)
 		return
 	}
+
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("Connection", "keep-alive")
+	w.Header().Set("X-Accel-Buffering", "no")
 	if req.Year == 0 {
 		req.Year = time.Now().Year()
 	}
 
 	// 1. Resolve contact
-	contact, err := h.resolveContact(r, req.ContactName)
+	contact, _, err := h.resolveContact(r, req.ContactName)
 	if err != nil {
-		sseError(w, flusher, "contact not found: "+req.ContactName)
+		sseError(w, flusher, "contact not found")
 		return
 	}
 	sseEvent(w, flusher, "contact_recognized", map[string]string{"name": contact.Name})
@@ -266,7 +288,8 @@ func (h *Handler) Query(w http.ResponseWriter, r *http.Request) {
 		prompt := fmt.Sprintf("Eres un astrólogo profesional. Analiza el siguiente brief y responde la consulta del usuario.\n\n%s\n\nConsulta: %s", ctx.Brief, req.Query)
 		response, err := h.llm.SimplePrompt(r.Context(), prompt, 0.7)
 		if err != nil {
-			sseError(w, flusher, "LLM error: "+err.Error())
+			slog.Error("llm call failed", "error", err)
+			sseError(w, flusher, "narration unavailable")
 		} else {
 			// Stream response in ~50 char chunks
 			for i := 0; i < len(response); i += 50 {
@@ -292,7 +315,11 @@ func (h *Handler) ListContacts(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, "database not configured", http.StatusServiceUnavailable)
 		return
 	}
-	tid, uid := tenantAndUser(r)
+	tid, uid, err := tenantAndUser(r)
+	if err != nil {
+		jsonError(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
 	contacts, err := h.q.ListContacts(r.Context(), repository.ListContactsParams{
 		TenantID: tid, UserID: uid, Limit: 100, Offset: 0,
 	})
@@ -308,22 +335,28 @@ func (h *Handler) CreateContact(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, "database not configured", http.StatusServiceUnavailable)
 		return
 	}
+	r.Body = http.MaxBytesReader(nil, r.Body, maxBodySize)
 	var req repository.CreateContactParams
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		jsonError(w, "invalid request", http.StatusBadRequest)
 		return
 	}
-	tid, uid := tenantAndUser(r)
+	tid, uid, err := tenantAndUser(r)
+	if err != nil {
+		jsonError(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
 	req.TenantID = tid
 	req.UserID = uid
 
 	contact, err := h.q.CreateContact(r.Context(), req)
 	if err != nil {
-		jsonError(w, "create failed: "+err.Error(), http.StatusInternalServerError)
+		jsonError(w, "create failed", http.StatusConflict)
 		return
 	}
+	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
-	jsonOK(w, contact)
+	json.NewEncoder(w).Encode(contact)
 }
 
 // --- SSE helpers ---
