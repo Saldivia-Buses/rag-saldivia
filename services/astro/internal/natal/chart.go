@@ -97,9 +97,14 @@ func BuildNatal(year, month, day int, localHour float64, lat, lon, alt float64, 
 	sunHouse := astromath.HouseForLon(sunLon, cusps)
 	diurnal := sunHouse >= 7
 
-	// Part of Fortune + Part of Spirit
-	planets["Fortuna"] = &ephemeris.PlanetPos{Lon: astromath.PartOfFortune(asc, moonLon, sunLon, diurnal)}
-	planets["Espíritu"] = &ephemeris.PlanetPos{Lon: astromath.PartOfSpirit(asc, moonLon, sunLon, diurnal)}
+	// Part of Fortune + Part of Spirit (with RA/Dec for primary directions)
+	pofLon := astromath.PartOfFortune(asc, moonLon, sunLon, diurnal)
+	pofRA, pofDec := astromath.EclToEq(pofLon, 0, epsilon)
+	planets["Fortuna"] = &ephemeris.PlanetPos{Lon: pofLon, RA: pofRA, Dec: pofDec}
+
+	posLon := astromath.PartOfSpirit(asc, moonLon, sunLon, diurnal)
+	posRA, posDec := astromath.EclToEq(posLon, 0, epsilon)
+	planets["Espíritu"] = &ephemeris.PlanetPos{Lon: posLon, RA: posRA, Dec: posDec}
 
 	// Combustion + retrograde status
 	combustion := make(map[string]string)
