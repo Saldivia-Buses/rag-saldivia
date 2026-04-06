@@ -131,23 +131,30 @@ func CalcPlanet(jdUT float64, planet, flags int) (*PlanetPos, error) {
 }
 
 // CalcPlanetFull calculates both ecliptic AND equatorial positions in one call.
-// Locks CalcMu internally when topocentric flag is present to ensure atomicity
-// between the two CalcPlanet calls (both must see the same SetTopo state).
+// If the caller already holds CalcMu (e.g., BuildNatal), use calcPlanetFullLocked.
+// For standalone calls with topocentric flag, this locks CalcMu automatically.
 func CalcPlanetFull(jdUT float64, planet, baseFlags int) (*PlanetPos, error) {
 	topo := baseFlags&FlagTopoctr != 0
 	if topo {
 		CalcMu.Lock()
 		defer CalcMu.Unlock()
 	}
+	return calcPlanetFullLocked(jdUT, planet, baseFlags)
+}
 
-	// Ecliptic position (with topocentric if requested)
+// CalcPlanetFullLocked is like CalcPlanetFull but assumes CalcMu is already held.
+// Use this inside compound operations that already lock CalcMu (e.g., BuildNatal).
+func CalcPlanetFullLocked(jdUT float64, planet, baseFlags int) (*PlanetPos, error) {
+	return calcPlanetFullLocked(jdUT, planet, baseFlags)
+}
+
+func calcPlanetFullLocked(jdUT float64, planet, baseFlags int) (*PlanetPos, error) {
 	eclFlags := baseFlags &^ FlagEquatorial
 	ecl, err := CalcPlanet(jdUT, planet, eclFlags)
 	if err != nil {
 		return nil, err
 	}
 
-	// Equatorial position (keep topocentric if requested)
 	eqFlags := baseFlags | FlagEquatorial | FlagSwieph | FlagSpeed
 	eq, err := CalcPlanet(jdUT, planet, eqFlags)
 	if err != nil {
