@@ -25,9 +25,10 @@ type EclipseActivation struct {
 	Aspect    string  `json:"aspect"`
 }
 
-const eclipseNatalOrb = 3.0 // degrees
+const eclipseNatalOrb = 3.0
 
 // FindEclipses finds all solar and lunar eclipses in a given year.
+// Note: no CalcMu lock needed — these functions don't use SetTopo.
 func FindEclipses(targetYear int) ([]Eclipse, error) {
 	jdStart := ephemeris.JulDay(targetYear, 1, 1, 0.0)
 	jdEnd := ephemeris.JulDay(targetYear+1, 1, 1, 0.0)
@@ -38,12 +39,11 @@ func FindEclipses(targetYear int) ([]Eclipse, error) {
 	// Solar eclipses
 	jd := jdStart
 	for jd < jdEnd {
-		tret, err := ephemeris.SolEclipseWhenGlob(jd, flags, 0)
+		typeFlags, tret, err := ephemeris.SolEclipseWhenGlob(jd, flags, 0)
 		if err != nil || tret[0] >= jdEnd {
 			break
 		}
 		eclJD := tret[0]
-		// Get Sun longitude at eclipse time
 		sunPos, err := ephemeris.CalcPlanet(eclJD, ephemeris.Sun, flags|ephemeris.FlagSpeed)
 		if err != nil {
 			jd = eclJD + 30
@@ -52,7 +52,7 @@ func FindEclipses(targetYear int) ([]Eclipse, error) {
 		_, m, d, _ := ephemeris.RevJul(eclJD)
 		eclipses = append(eclipses, Eclipse{
 			Type:    "solar",
-			SubType: eclipseSubType(tret),
+			SubType: classifyEclipse(typeFlags),
 			JD:      eclJD,
 			Lon:     sunPos.Lon,
 			Month:   m,
@@ -64,12 +64,11 @@ func FindEclipses(targetYear int) ([]Eclipse, error) {
 	// Lunar eclipses
 	jd = jdStart
 	for jd < jdEnd {
-		tret, err := ephemeris.LunEclipseWhen(jd, flags, 0)
+		typeFlags, tret, err := ephemeris.LunEclipseWhen(jd, flags, 0)
 		if err != nil || tret[0] >= jdEnd {
 			break
 		}
 		eclJD := tret[0]
-		// Lunar eclipse: Moon opposite Sun, so eclipse lon = Moon lon
 		moonPos, err := ephemeris.CalcPlanet(eclJD, ephemeris.Moon, flags|ephemeris.FlagSpeed)
 		if err != nil {
 			jd = eclJD + 30
@@ -78,7 +77,7 @@ func FindEclipses(targetYear int) ([]Eclipse, error) {
 		_, m, d, _ := ephemeris.RevJul(eclJD)
 		eclipses = append(eclipses, Eclipse{
 			Type:    "lunar",
-			SubType: eclipseSubType(tret),
+			SubType: classifyEclipse(typeFlags),
 			JD:      eclJD,
 			Lon:     moonPos.Lon,
 			Month:   m,
@@ -123,14 +122,16 @@ func FindEclipseActivations(chart *natal.Chart, targetYear int) ([]EclipseActiva
 	return activations, nil
 }
 
-func eclipseSubType(tret []float64) string {
-	// tret[0] = max eclipse JD, type info from return flags
-	// Simplified: check if total, annular, or partial based on tret values
-	if len(tret) > 4 && tret[4] > 0 {
+// classifyEclipse reads the return value bitmask from Swiss Ephemeris.
+func classifyEclipse(typeFlags int) string {
+	if typeFlags&ephemeris.EclTotal != 0 {
 		return "total"
 	}
-	if len(tret) > 5 && tret[5] > 0 {
+	if typeFlags&ephemeris.EclAnnular != 0 {
 		return "annular"
+	}
+	if typeFlags&ephemeris.EclPartial != 0 {
+		return "partial"
 	}
 	return "partial"
 }

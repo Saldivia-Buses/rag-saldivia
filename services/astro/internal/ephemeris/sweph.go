@@ -216,27 +216,29 @@ func FixstarUT(name string, jdUT float64, flags int) (float64, error) {
 }
 
 // SolEclipseWhenGlob finds next solar eclipse after tjdStart.
-func SolEclipseWhenGlob(tjdStart float64, flags, eclType int) ([]float64, error) {
+// Returns (typeFlags, tret, error). typeFlags is a bitmask of EclTotal/EclAnnular/EclPartial.
+func SolEclipseWhenGlob(tjdStart float64, flags, eclType int) (int, []float64, error) {
 	tret := make([]float64, 10)
 	serr := make([]byte, 256)
 
 	ret := swe.SolEclipseWhenGlob(tjdStart, flags, eclType, tret, 0, serr)
 	if ret < 0 {
-		return nil, fmt.Errorf("swe.SolEclipseWhenGlob: %s", cstr(serr))
+		return 0, nil, fmt.Errorf("swe.SolEclipseWhenGlob: %s", cstr(serr))
 	}
-	return tret, nil
+	return int(ret), tret, nil
 }
 
 // LunEclipseWhen finds next lunar eclipse after tjdStart.
-func LunEclipseWhen(tjdStart float64, flags, eclType int) ([]float64, error) {
+// Returns (typeFlags, tret, error). typeFlags is a bitmask of EclTotal/EclAnnular/EclPartial.
+func LunEclipseWhen(tjdStart float64, flags, eclType int) (int, []float64, error) {
 	tret := make([]float64, 10)
 	serr := make([]byte, 256)
 
 	ret := swe.LunEclipseWhen(tjdStart, flags, eclType, tret, 0, serr)
 	if ret < 0 {
-		return nil, fmt.Errorf("swe.LunEclipseWhen: %s", cstr(serr))
+		return 0, nil, fmt.Errorf("swe.LunEclipseWhen: %s", cstr(serr))
 	}
-	return tret, nil
+	return int(ret), tret, nil
 }
 
 // GetAyanamsaUT returns the ayanamsa (sidereal offset) for a Julian Day.

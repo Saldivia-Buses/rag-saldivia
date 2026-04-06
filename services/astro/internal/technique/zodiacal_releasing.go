@@ -105,12 +105,11 @@ func findSubPeriod(major *ZRPeriod, targetAge float64) *ZRPeriod {
 		return nil
 	}
 
-	totalYears := astromath.ZRSignYears[0] + astromath.ZRSignYears[1] + astromath.ZRSignYears[2] +
-		astromath.ZRSignYears[3] + astromath.ZRSignYears[4] + astromath.ZRSignYears[5] +
-		astromath.ZRSignYears[6] + astromath.ZRSignYears[7] + astromath.ZRSignYears[8] +
-		astromath.ZRSignYears[9] + astromath.ZRSignYears[10] + astromath.ZRSignYears[11]
+	var totalYears float64
+	for _, y := range astromath.ZRSignYears {
+		totalYears += y
+	}
 
-	ageInMajor := targetAge - major.StartAge
 	cumAge := major.StartAge
 
 	for i := 0; i < 12; i++ {
@@ -133,8 +132,6 @@ func findSubPeriod(major *ZRPeriod, targetAge float64) *ZRPeriod {
 		cumAge = endAge
 	}
 
-	// Fallback: rounding — use last sub-period
-	_ = ageInMajor
 	return nil
 }
 
