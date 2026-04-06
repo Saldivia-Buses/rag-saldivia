@@ -79,16 +79,15 @@ type ToolCallLog struct {
 }
 
 // Query runs a user query through the agent loop.
-func (a *Agent) Query(ctx context.Context, jwt, userMessage string, history []llm.Message) (*QueryResult, error) {
+func (a *Agent) Query(ctx context.Context, jwt, userID, userMessage string, history []llm.Message) (*QueryResult, error) {
 	start := time.Now()
 
-	// B1: extract tenant + user from JWT context
+	// B1: extract tenant from context
 	ti, _ := tenant.FromContext(ctx)
 	tenantSlug := ti.Slug
 	if tenantSlug == "" {
 		tenantSlug = ti.ID
 	}
-	userID := "" // TODO: extract from context when middleware exposes it
 	traceID := a.tracePublisher.TraceStart(tenantSlug, "", userID, userMessage)
 
 	// Input guardrails

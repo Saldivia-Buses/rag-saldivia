@@ -17,6 +17,7 @@ import (
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	"github.com/Camionerou/rag-saldivia/pkg/config"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
+	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
 	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
 	"github.com/Camionerou/rag-saldivia/services/ws/internal/handler"
 	"github.com/Camionerou/rag-saldivia/services/ws/internal/hub"
@@ -47,22 +48,12 @@ func main() {
 	}
 
 	// Connect to NATS
-	nc, err := nats.Connect(natsURL,
-		nats.RetryOnFailedConnect(true),
-		nats.MaxReconnects(-1),
-		nats.ReconnectWait(2*time.Second),
-		nats.DisconnectErrHandler(func(_ *nats.Conn, err error) {
-			slog.Warn("NATS disconnected", "error", err)
-		}),
-		nats.ReconnectHandler(func(_ *nats.Conn) {
-			slog.Info("NATS reconnected")
-		}),
-	)
+	nc, err := natspub.Connect(natsURL)
 	if err != nil {
 		slog.Error("failed to connect to NATS", "error", err, "url", natsURL)
 		os.Exit(1)
 	}
-	defer nc.Close()
+	defer nc.Drain()
 	slog.Info("connected to NATS", "url", natsURL)
 
 	// Create hub

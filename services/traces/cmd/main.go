@@ -19,6 +19,7 @@ import (
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	"github.com/Camionerou/rag-saldivia/pkg/config"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
+	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
 	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
 	"github.com/Camionerou/rag-saldivia/services/traces/internal/handler"
 	"github.com/Camionerou/rag-saldivia/services/traces/internal/service"
@@ -59,7 +60,7 @@ func main() {
 	tracesHandler := handler.New(tracesSvc)
 
 	// NATS subscriber for trace events
-	nc, err := nats.Connect(natsURL, nats.MaxReconnects(-1), nats.ReconnectWait(2*time.Second))
+	nc, err := natspub.Connect(natsURL)
 	if err != nil {
 		slog.Error("failed to connect to nats", "error", err)
 		os.Exit(1)

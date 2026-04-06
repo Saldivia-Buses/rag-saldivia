@@ -146,7 +146,7 @@ func (c *Consumer) handleEvent(msg jetstream.Msg) {
 		return
 	}
 
-	ctx := context.Background()
+	ctx := c.ctx
 
 	// Check user preferences
 	prefs, err := c.svc.GetPreferences(ctx, evt.UserID)

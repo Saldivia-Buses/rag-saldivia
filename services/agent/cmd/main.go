@@ -12,12 +12,11 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/nats-io/nats.go"
-
 	"github.com/Camionerou/rag-saldivia/pkg/guardrails"
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	"github.com/Camionerou/rag-saldivia/pkg/config"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
+	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
 	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
 	"github.com/Camionerou/rag-saldivia/services/agent/internal/handler"
 	agentllm "github.com/Camionerou/rag-saldivia/pkg/llm"
@@ -49,7 +48,7 @@ func main() {
 
 	// NATS connection for trace + feedback event publishing
 	natsURL := config.Env("NATS_URL", "nats://localhost:4222")
-	nc, err := nats.Connect(natsURL, nats.MaxReconnects(-1), nats.ReconnectWait(2*time.Second))
+	nc, err := natspub.Connect(natsURL)
 	if err != nil {
 		slog.Warn("nats connect failed, trace publishing disabled", "error", err)
 	} else {

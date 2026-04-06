@@ -55,22 +55,12 @@ func main() {
 
 	// Connect to NATS
 	natsURL := env("NATS_URL", nats.DefaultURL)
-	nc, err := nats.Connect(natsURL,
-		nats.RetryOnFailedConnect(true),
-		nats.MaxReconnects(-1),
-		nats.ReconnectWait(2*time.Second),
-		nats.DisconnectErrHandler(func(_ *nats.Conn, err error) {
-			slog.Warn("NATS disconnected", "error", err)
-		}),
-		nats.ReconnectHandler(func(_ *nats.Conn) {
-			slog.Info("NATS reconnected")
-		}),
-	)
+	nc, err := natspub.Connect(natsURL)
 	if err != nil {
 		slog.Error("failed to connect to NATS", "error", err)
 		os.Exit(1)
 	}
-	defer nc.Close()
+	defer nc.Drain()
 	publisher := natspub.New(nc)
 	slog.Info("connected to NATS", "url", natsURL)
 

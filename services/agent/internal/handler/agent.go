@@ -55,7 +55,8 @@ func (h *Handler) Query(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, err := h.svc.Query(r.Context(), jwt, req.Message, req.History)
+	userID := r.Header.Get("X-User-ID")
+	result, err := h.svc.Query(r.Context(), jwt, userID, req.Message, req.History)
 	if err != nil {
 		slog.Error("agent query failed", "error", err,
 			"request_id", chimw.GetReqID(r.Context()))
