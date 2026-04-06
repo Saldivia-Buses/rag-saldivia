@@ -5,7 +5,7 @@ RETURNING id, user_id, title, collection, is_saved, created_at, updated_at;
 
 -- name: GetSession :one
 SELECT id, user_id, title, collection, is_saved, created_at, updated_at
-FROM sessions WHERE id = $1;
+FROM sessions WHERE id = $1 AND user_id = $2;
 
 -- name: ListSessionsByUser :many
 SELECT id, user_id, title, collection, is_saved, created_at, updated_at
@@ -20,7 +20,7 @@ UPDATE sessions SET title = $3, updated_at = now()
 WHERE id = $1 AND user_id = $2;
 
 -- name: TouchSession :exec
-UPDATE sessions SET updated_at = now() WHERE id = $1;
+UPDATE sessions SET updated_at = now() WHERE id = $1 AND user_id = $2;
 
 -- name: CreateMessage :one
 INSERT INTO messages (session_id, role, content, thinking, sources, metadata)
