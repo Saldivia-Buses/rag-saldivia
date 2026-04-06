@@ -143,11 +143,112 @@ func (h *Handler) Natal(w http.ResponseWriter, r *http.Request) {
 	jsonOK(w, chart)
 }
 
-func (h *Handler) Transits(w http.ResponseWriter, r *http.Request)     { stub(w, "transits") }
-func (h *Handler) Directions(w http.ResponseWriter, r *http.Request)   { stub(w, "directions") }
-func (h *Handler) Progressions(w http.ResponseWriter, r *http.Request) { stub(w, "progressions") }
-func (h *Handler) Returns(w http.ResponseWriter, r *http.Request)      { stub(w, "returns") }
-func (h *Handler) FixedStars(w http.ResponseWriter, r *http.Request)   { stub(w, "fixed-stars") }
+func (h *Handler) Transits(w http.ResponseWriter, r *http.Request) {
+	req, err := h.parseRequest(r)
+	if err != nil {
+		jsonError(w, "invalid request", http.StatusBadRequest)
+		return
+	}
+	contact, code, err := h.resolveContact(r, req.ContactName)
+	if err != nil {
+		jsonError(w, err.Error(), code)
+		return
+	}
+	chart, _, err := contactToChart(contact)
+	if err != nil {
+		jsonError(w, "chart calculation failed", http.StatusInternalServerError)
+		return
+	}
+	jsonOK(w, technique.CalcTransits(chart, req.Year))
+}
+
+func (h *Handler) Directions(w http.ResponseWriter, r *http.Request) {
+	req, err := h.parseRequest(r)
+	if err != nil {
+		jsonError(w, "invalid request", http.StatusBadRequest)
+		return
+	}
+	contact, code, err := h.resolveContact(r, req.ContactName)
+	if err != nil {
+		jsonError(w, err.Error(), code)
+		return
+	}
+	chart, birthDate, err := contactToChart(contact)
+	if err != nil {
+		jsonError(w, "chart calculation failed", http.StatusInternalServerError)
+		return
+	}
+	midYear := time.Date(req.Year, 7, 1, 0, 0, 0, 0, time.UTC)
+	age := midYear.Sub(birthDate).Hours() / (24 * 365.25)
+	jsonOK(w, technique.FindDirections(chart, age, 2.0))
+}
+
+func (h *Handler) Progressions(w http.ResponseWriter, r *http.Request) {
+	req, err := h.parseRequest(r)
+	if err != nil {
+		jsonError(w, "invalid request", http.StatusBadRequest)
+		return
+	}
+	contact, code, err := h.resolveContact(r, req.ContactName)
+	if err != nil {
+		jsonError(w, err.Error(), code)
+		return
+	}
+	chart, _, err := contactToChart(contact)
+	if err != nil {
+		jsonError(w, "chart calculation failed", http.StatusInternalServerError)
+		return
+	}
+	prog, err := technique.CalcProgressions(chart, req.Year)
+	if err != nil {
+		jsonError(w, "progressions failed", http.StatusInternalServerError)
+		return
+	}
+	jsonOK(w, prog)
+}
+
+func (h *Handler) Returns(w http.ResponseWriter, r *http.Request) {
+	req, err := h.parseRequest(r)
+	if err != nil {
+		jsonError(w, "invalid request", http.StatusBadRequest)
+		return
+	}
+	contact, code, err := h.resolveContact(r, req.ContactName)
+	if err != nil {
+		jsonError(w, err.Error(), code)
+		return
+	}
+	chart, _, err := contactToChart(contact)
+	if err != nil {
+		jsonError(w, "chart calculation failed", http.StatusInternalServerError)
+		return
+	}
+	sr, err := technique.CalcSolarReturnAtBirthplace(chart, req.Year)
+	if err != nil {
+		jsonError(w, "solar return failed", http.StatusInternalServerError)
+		return
+	}
+	jsonOK(w, sr)
+}
+
+func (h *Handler) FixedStars(w http.ResponseWriter, r *http.Request) {
+	req, err := h.parseRequest(r)
+	if err != nil {
+		jsonError(w, "invalid request", http.StatusBadRequest)
+		return
+	}
+	contact, code, err := h.resolveContact(r, req.ContactName)
+	if err != nil {
+		jsonError(w, err.Error(), code)
+		return
+	}
+	chart, _, err := contactToChart(contact)
+	if err != nil {
+		jsonError(w, "chart calculation failed", http.StatusInternalServerError)
+		return
+	}
+	jsonOK(w, technique.FindFixedStarConjunctions(chart))
+}
 
 func (h *Handler) SolarArc(w http.ResponseWriter, r *http.Request) {
 	req, err := h.parseRequest(r)
