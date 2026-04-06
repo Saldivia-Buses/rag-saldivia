@@ -9,7 +9,7 @@ syntax = "proto3";
 
 package sda.platform.v1;
 
-option go_package = "github.com/Camionerou/rag-saldivia/proto/platform/v1;platformv1";
+option go_package = "github.com/Camionerou/rag-saldivia/gen/go/platform/v1;platformv1";
 
 import "google/protobuf/timestamp.proto";
 
