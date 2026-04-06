@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
+	"net/url"
 	"sync"
 	"time"
 
@@ -57,7 +59,7 @@ func NewResolver(platformDB *pgxpool.Pool, encryptionKey []byte) *Resolver {
 		pools:         make(map[string]*pgxpool.Pool),
 		redisClts:     make(map[string]*redis.Client),
 		connCache:     make(map[string]connEntry),
-		PoolMaxConns:  4,
+		PoolMaxConns:  4, // override via Resolver.PoolMaxConns before first use
 	}
 }
 
@@ -170,15 +172,24 @@ func (r *Resolver) createPoolLocked(ctx context.Context, slug string) (*pgxpool.
 		return nil, err
 	}
 
-	config, err := pgxpool.ParseConfig(info.PostgresURL)
+	pgURL := ensureSSLMode(info.PostgresURL)
+	config, err := pgxpool.ParseConfig(pgURL)
 	if err != nil {
 		return nil, fmt.Errorf("parse pool config for tenant %q: %w", slug, err)
 	}
 	config.MaxConns = r.PoolMaxConns
 
-	// Release lock during network I/O
+	// Release lock during network I/O. Recover wrapper protects mutex
+	// state if pool creation panics unexpectedly.
 	r.mu.Unlock()
-	pool, err := pgxpool.NewWithConfig(ctx, config)
+	pool, err := func() (p *pgxpool.Pool, createErr error) {
+		defer func() {
+			if rv := recover(); rv != nil {
+				createErr = fmt.Errorf("pool creation panicked: %v", rv)
+			}
+		}()
+		return pgxpool.NewWithConfig(ctx, config)
+	}()
 	r.mu.Lock()
 
 	if err != nil {
@@ -241,6 +252,58 @@ func (r *Resolver) TenantID(ctx context.Context, slug string) (string, error) {
 	return info.TenantID, nil
 }
 
+// EnabledModule represents a module enabled for a tenant.
+type EnabledModule struct {
+	ID       string `json:"id"`
+	Name     string `json:"name"`
+	Category string `json:"category"`
+}
+
+// ListEnabledModules returns the modules enabled for a tenant by querying
+// the Platform DB. Falls back to core modules if the query fails.
+func (r *Resolver) ListEnabledModules(ctx context.Context, tenantID string) ([]EnabledModule, error) {
+	if r.platformDB == nil {
+		return coreModules(), nil
+	}
+
+	rows, err := r.platformDB.Query(ctx,
+		`SELECT m.id, m.name, m.category
+		 FROM tenant_modules tm
+		 JOIN modules m ON m.id = tm.module_id
+		 WHERE tm.tenant_id = $1 AND tm.enabled = true
+		 UNION
+		 SELECT id, name, category FROM modules WHERE category = 'core'
+		 ORDER BY category, name`,
+		tenantID,
+	)
+	if err != nil {
+		slog.Warn("failed to query enabled modules, using core defaults", "error", err)
+		return coreModules(), nil
+	}
+	defer rows.Close()
+
+	var modules []EnabledModule
+	for rows.Next() {
+		var m EnabledModule
+		if err := rows.Scan(&m.ID, &m.Name, &m.Category); err != nil {
+			continue
+		}
+		modules = append(modules, m)
+	}
+	if len(modules) == 0 {
+		return coreModules(), nil
+	}
+	return modules, nil
+}
+
+func coreModules() []EnabledModule {
+	return []EnabledModule{
+		{ID: "chat", Name: "Chat + RAG", Category: "core"},
+		{ID: "auth", Name: "Auth + RBAC", Category: "core"},
+		{ID: "notifications", Name: "Notificaciones", Category: "core"},
+	}
+}
+
 // Close shuts down all cached connection pools and Redis clients.
 // After Close, all methods return errors.
 func (r *Resolver) Close() {
@@ -258,4 +321,50 @@ func (r *Resolver) Close() {
 		delete(r.redisClts, slug)
 	}
 	r.connCache = make(map[string]connEntry)
+}
+
+// StartHealthCheck launches a background goroutine that pings all cached
+// pools every interval. Unhealthy pools are closed and removed from the
+// cache so the next request creates a fresh connection.
+func (r *Resolver) StartHealthCheck(ctx context.Context, interval time.Duration) {
+	go func() {
+		ticker := time.NewTicker(interval)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				r.mu.Lock()
+				for slug, pool := range r.pools {
+					if err := pool.Ping(ctx); err != nil {
+						slog.Warn("tenant pool unhealthy, removing from cache",
+							"tenant", slug, "error", err)
+						pool.Close()
+						delete(r.pools, slug)
+						delete(r.connCache, slug)
+					}
+				}
+				r.mu.Unlock()
+			}
+		}
+	}()
+}
+
+// ensureSSLMode appends sslmode=require to a PostgreSQL URL if no sslmode
+// is already specified. This enforces encrypted connections in production
+// without breaking dev URLs that explicitly set sslmode=disable.
+func ensureSSLMode(pgURL string) string {
+	u, err := url.Parse(pgURL)
+	if err != nil {
+		slog.Warn("failed to parse PG URL for SSL enforcement", "error", err)
+		return pgURL
+	}
+	q := u.Query()
+	if q.Get("sslmode") == "" {
+		q.Set("sslmode", "require")
+		u.RawQuery = q.Encode()
+		return u.String()
+	}
+	return pgURL
 }

@@ -5,7 +5,7 @@ RETURNING id, user_id, collection, file_name, file_size, status, error, created_
 
 -- name: GetJob :one
 SELECT id, user_id, collection, file_name, file_size, status, error, created_at, updated_at
-FROM ingest_jobs WHERE id = $1;
+FROM ingest_jobs WHERE id = $1 AND user_id = $2;
 
 -- name: ListJobsByUser :many
 SELECT id, user_id, collection, file_name, file_size, status, error, created_at, updated_at

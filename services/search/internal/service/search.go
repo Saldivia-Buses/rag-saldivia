@@ -3,17 +3,15 @@
 package service
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
 	"log/slog"
-	"net/http"
 	"strings"
 	"time"
 
 	"github.com/Camionerou/rag-saldivia/pkg/guardrails"
+	"github.com/Camionerou/rag-saldivia/pkg/llm"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
@@ -48,19 +46,15 @@ type SearchResult struct {
 
 // Search implements the 3-phase tree search.
 type Search struct {
-	pool        *pgxpool.Pool
-	llmEndpoint string
-	llmModel    string
-	httpClient  *http.Client
+	pool      *pgxpool.Pool
+	llmClient *llm.Client
 }
 
 // New creates a Search service.
 func New(pool *pgxpool.Pool, llmEndpoint, llmModel string) *Search {
 	return &Search{
-		pool:        pool,
-		llmEndpoint: llmEndpoint,
-		llmModel:    llmModel,
-		httpClient:  &http.Client{Timeout: 60 * time.Second},
+		pool:      pool,
+		llmClient: llm.NewClient(llmEndpoint, llmModel, ""),
 	}
 }
 
@@ -76,10 +70,7 @@ func (s *Search) SearchDocuments(ctx context.Context, query string, collectionID
 	}
 
 	// B1: validate query through guardrails before sending to LLM
-	query, err := guardrails.ValidateInput(ctx, query, guardrails.InputConfig{
-		MaxLength:     10000,
-		BlockPatterns: []string{"ignora tus instrucciones", "ignore your instructions", "system prompt"},
-	}, nil)
+	query, err := guardrails.ValidateInput(ctx, query, guardrails.DefaultInputConfig(10000), nil)
 	if err != nil {
 		return nil, fmt.Errorf("query blocked: %w", err)
 	}
@@ -194,7 +185,7 @@ func (s *Search) navigateTrees(ctx context.Context, query string, trees []docTre
 		query, treeView.String(), maxNodes,
 	)
 
-	content, err := s.llmChat(ctx, prompt)
+	content, err := s.llmClient.SimplePrompt(ctx, prompt, 0.0)
 	if err != nil {
 		return nil, err
 	}
@@ -331,47 +322,3 @@ func containsInt(s []int, v int) bool {
 	return false
 }
 
-// llmChat sends a single prompt to the LLM via OpenAI-compatible API.
-func (s *Search) llmChat(ctx context.Context, prompt string) (string, error) {
-	body, _ := json.Marshal(map[string]any{
-		"model": s.llmModel,
-		"messages": []map[string]string{
-			{"role": "user", "content": prompt},
-		},
-		"temperature": 0.0,
-		"max_tokens":  512,
-	})
-
-	req, err := http.NewRequestWithContext(ctx, http.MethodPost,
-		s.llmEndpoint+"/v1/chat/completions", bytes.NewReader(body))
-	if err != nil {
-		return "", err
-	}
-	req.Header.Set("Content-Type", "application/json")
-
-	resp, err := s.httpClient.Do(req)
-	if err != nil {
-		return "", fmt.Errorf("llm request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		respBody, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
-		return "", fmt.Errorf("llm returned %d: %s", resp.StatusCode, string(respBody))
-	}
-
-	var chatResp struct {
-		Choices []struct {
-			Message struct {
-				Content string `json:"content"`
-			} `json:"message"`
-		} `json:"choices"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&chatResp); err != nil {
-		return "", fmt.Errorf("decode: %w", err)
-	}
-	if len(chatResp.Choices) == 0 {
-		return "", fmt.Errorf("empty choices")
-	}
-	return chatResp.Choices[0].Message.Content, nil
-}

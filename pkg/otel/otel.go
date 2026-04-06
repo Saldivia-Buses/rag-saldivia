@@ -22,6 +22,7 @@ type Config struct {
 	ServiceName    string // e.g. "sda-auth"
 	ServiceVersion string // e.g. "1.0.0"
 	Endpoint       string // OTel Collector gRPC endpoint, e.g. "localhost:4317"
+	Insecure       bool   // true = no TLS (default for local collector), false = require TLS
 }
 
 // Shutdown is returned by Setup and should be called on service shutdown.
@@ -45,11 +46,14 @@ func Setup(ctx context.Context, cfg Config) (Shutdown, error) {
 	}
 
 	// OTLP gRPC exporter — connects to OTel Collector
-	exporter, err := otlptracegrpc.New(ctx,
+	opts := []otlptracegrpc.Option{
 		otlptracegrpc.WithEndpoint(cfg.Endpoint),
-		otlptracegrpc.WithInsecure(), // TLS not needed for local collector
-		otlptracegrpc.WithTimeout(5*time.Second),
-	)
+		otlptracegrpc.WithTimeout(5 * time.Second),
+	}
+	if cfg.Insecure {
+		opts = append(opts, otlptracegrpc.WithInsecure())
+	}
+	exporter, err := otlptracegrpc.New(ctx, opts...)
 	if err != nil {
 		return nil, fmt.Errorf("otel exporter: %w", err)
 	}

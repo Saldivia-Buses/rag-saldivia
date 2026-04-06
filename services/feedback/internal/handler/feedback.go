@@ -10,18 +10,20 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/Camionerou/rag-saldivia/services/feedback/internal/repository"
 )
 
 // Feedback handles tenant-scoped feedback endpoints (read-only).
 type Feedback struct {
-	repo *repository.Queries
+	repo       *repository.Queries
+	platformDB *pgxpool.Pool // for health scores (lives in platform DB)
 }
 
 // NewFeedback creates feedback HTTP handlers.
-func NewFeedback(repo *repository.Queries) *Feedback {
-	return &Feedback{repo: repo}
+func NewFeedback(repo *repository.Queries, platformDB *pgxpool.Pool) *Feedback {
+	return &Feedback{repo: repo, platformDB: platformDB}
 }
 
 // Routes returns the chi router for /v1/feedback/*.
@@ -50,24 +52,32 @@ func (h *Feedback) Summary(w http.ResponseWriter, r *http.Request) {
 	aiRow, err := h.repo.GetSummaryAIQuality(ctx, hours)
 	if err != nil {
 		slog.Error("summary: ai quality query failed", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
 	}
 
 	// Errors
 	errRow, err := h.repo.GetSummaryErrors(ctx, hours)
 	if err != nil {
 		slog.Error("summary: errors query failed", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
 	}
 
 	// Feature requests
 	featRow, err := h.repo.GetSummaryFeatures(ctx, hours)
 	if err != nil {
 		slog.Error("summary: features query failed", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
 	}
 
 	// NPS (30 day rolling)
 	npsRow, err := h.repo.GetSummaryNPS(ctx)
 	if err != nil {
 		slog.Error("summary: nps query failed", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
 	}
 
 	writeJSON(w, http.StatusOK, map[string]any{
@@ -218,19 +228,47 @@ func (h *Feedback) Usage(w http.ResponseWriter, r *http.Request) {
 }
 
 // HealthScore handles GET /v1/feedback/health-score
+// Queries tenant_health_scores from platform DB for the current tenant.
 func (h *Feedback) HealthScore(w http.ResponseWriter, r *http.Request) {
-	userID := r.Header.Get("X-User-ID")
-	if userID == "" {
+	tenantID := r.Header.Get("X-Tenant-ID")
+	if tenantID == "" {
 		writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "not authenticated"})
 		return
 	}
 
-	// This queries the platform DB — but for now returns a stub
-	// since the handler only has tenantDB. In production, this would
-	// query tenant_health_scores from platform DB.
-	writeJSON(w, http.StatusOK, map[string]any{
-		"message": "health score endpoint — requires platform DB integration",
-	})
+	if h.platformDB == nil {
+		writeJSON(w, http.StatusServiceUnavailable, map[string]string{"error": "platform DB not configured"})
+		return
+	}
+
+	var score struct {
+		OverallScore     float64 `json:"overall_score"`
+		AIQualityScore   float64 `json:"ai_quality_score"`
+		ErrorRateScore   float64 `json:"error_rate_score"`
+		PerformanceScore float64 `json:"performance_score"`
+		SecurityScore    float64 `json:"security_score"`
+		UsageScore       float64 `json:"usage_score"`
+		Period           string  `json:"period"`
+	}
+
+	err := h.platformDB.QueryRow(r.Context(),
+		`SELECT overall_score, ai_quality_score, error_rate_score,
+		        performance_score, security_score, usage_score, period::text
+		 FROM tenant_health_scores
+		 WHERE tenant_id = $1
+		 ORDER BY period DESC LIMIT 1`,
+		tenantID,
+	).Scan(&score.OverallScore, &score.AIQualityScore, &score.ErrorRateScore,
+		&score.PerformanceScore, &score.SecurityScore, &score.UsageScore, &score.Period)
+
+	if err != nil {
+		// No scores yet — return zeros (new tenant)
+		slog.Debug("no health scores for tenant", "tenant_id", tenantID, "error", err)
+		writeJSON(w, http.StatusOK, score)
+		return
+	}
+
+	writeJSON(w, http.StatusOK, score)
 }
 
 // --- Helpers ---

@@ -2,9 +2,9 @@ name: CI
 
 on:
   pull_request:
-    branches: [2.0.x]
+    branches: [2.0.x, 2.0.1, main]
   push:
-    branches: [2.0.x]
+    branches: [2.0.x, 2.0.1, main]
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -49,9 +49,13 @@ jobs:
           go-version-file: go.work
           cache-dependency-path: "**/go.sum"
 
+      - name: Build generated code
+        run: go build ./gen/go/...
+
       - name: Build all services
         run: |
           for svc in services/*/; do
+            [ -f "${svc}cmd/main.go" ] || continue  # skip non-Go (extractor)
             echo "::group::Building ${svc}"
             go build "./${svc}cmd/"
             echo "::endgroup::"
@@ -72,12 +76,16 @@ jobs:
       - name: Vet all modules
         run: |
           for svc in services/*/; do
+            [ -f "${svc}go.mod" ] || continue
             echo "::group::Vetting ${svc}"
             go vet "./${svc}..."
             echo "::endgroup::"
           done
           echo "::group::Vetting pkg/"
           go vet ./pkg/...
+          echo "::endgroup::"
+          echo "::group::Vetting gen/go/"
+          go vet ./gen/go/...
           echo "::endgroup::"
 
   # ── Go Test ───────────────────────────────────────────────────────────────
@@ -96,6 +104,7 @@ jobs:
       - name: Test all modules
         run: |
           for svc in services/*/; do
+            [ -f "${svc}go.mod" ] || continue
             echo "::group::Testing ${svc}"
             go test -race -count=1 "./${svc}..."
             echo "::endgroup::"
@@ -122,12 +131,13 @@ jobs:
       - name: Run gosec
         run: |
           for svc in services/*/; do
+            [ -f "${svc}go.mod" ] || continue
             echo "::group::gosec ${svc}"
-            gosec -quiet "./${svc}..." || true
+            gosec -quiet "./${svc}..."
             echo "::endgroup::"
           done
           echo "::group::gosec pkg/"
-          gosec -quiet ./pkg/... || true
+          gosec -quiet ./pkg/...
           echo "::endgroup::"
 
       - name: Trivy filesystem scan
@@ -136,4 +146,4 @@ jobs:
           scan-type: 'fs'
           scan-ref: '.'
           severity: 'HIGH,CRITICAL'
-          exit-code: '0'
+          exit-code: '1'

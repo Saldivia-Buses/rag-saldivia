@@ -7,7 +7,7 @@ syntax = "proto3";
 
 package sda.chat.v1;
 
-option go_package = "github.com/Camionerou/rag-saldivia/proto/chat/v1;chatv1";
+option go_package = "github.com/Camionerou/rag-saldivia/gen/go/chat/v1;chatv1";
 
 import "google/protobuf/timestamp.proto";
 

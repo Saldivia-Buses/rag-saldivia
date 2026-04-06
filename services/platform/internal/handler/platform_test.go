@@ -35,7 +35,7 @@ type mockPlatformService struct {
 	err     error
 }
 
-func (m *mockPlatformService) ListTenants(_ context.Context) ([]db.ListTenantsRow, error) {
+func (m *mockPlatformService) ListTenants(_ context.Context, _, _ int32) ([]db.ListTenantsRow, error) {
 	if m.err != nil {
 		return nil, m.err
 	}
@@ -144,7 +144,7 @@ func userToken(t *testing.T) string {
 }
 
 func setupPlatformRouter(mock *mockPlatformService) *chi.Mux {
-	h := NewPlatform(mock, testPub, "platform")
+	h := NewPlatform(mock, testPub, "platform", nil)
 	r := chi.NewRouter()
 	r.Mount("/v1/platform", h.Routes())
 	return r

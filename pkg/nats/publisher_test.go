@@ -207,8 +207,8 @@ func TestIsValidSubjectToken(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {
-			if got := isValidSubjectToken(tt.input); got != tt.want {
-				t.Errorf("isValidSubjectToken(%q) = %v, want %v", tt.input, got, tt.want)
+			if got := IsValidSubjectToken(tt.input); got != tt.want {
+				t.Errorf("IsValidSubjectToken(%q) = %v, want %v", tt.input, got, tt.want)
 			}
 		})
 	}

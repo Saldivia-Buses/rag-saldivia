@@ -8,6 +8,26 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type AgentConfig struct {
+	ID        string             `json:"id"`
+	Scope     string             `json:"scope"`
+	Key       string             `json:"key"`
+	Value     []byte             `json:"value"`
+	UpdatedBy pgtype.Text        `json:"updated_by"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+}
+
+type AuditLog struct {
+	ID        string             `json:"id"`
+	UserID    pgtype.Text        `json:"user_id"`
+	Action    string             `json:"action"`
+	Resource  pgtype.Text        `json:"resource"`
+	Details   []byte             `json:"details"`
+	IpAddress pgtype.Text        `json:"ip_address"`
+	UserAgent pgtype.Text        `json:"user_agent"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
 type DeployLog struct {
 	ID          string             `json:"id"`
 	Service     string             `json:"service"`
@@ -18,6 +38,23 @@ type DeployLog struct {
 	StartedAt   pgtype.Timestamptz `json:"started_at"`
 	FinishedAt  pgtype.Timestamptz `json:"finished_at"`
 	Notes       pgtype.Text        `json:"notes"`
+}
+
+type ExecutionTrace struct {
+	ID                string             `json:"id"`
+	TenantID          string             `json:"tenant_id"`
+	SessionID         string             `json:"session_id"`
+	UserID            string             `json:"user_id"`
+	Query             string             `json:"query"`
+	Status            string             `json:"status"`
+	ModelsUsed        []string           `json:"models_used"`
+	TotalDurationMs   pgtype.Int4        `json:"total_duration_ms"`
+	TotalInputTokens  pgtype.Int4        `json:"total_input_tokens"`
+	TotalOutputTokens pgtype.Int4        `json:"total_output_tokens"`
+	TotalCostUsd      pgtype.Numeric     `json:"total_cost_usd"`
+	ToolCallCount     pgtype.Int4        `json:"tool_call_count"`
+	Error             pgtype.Text        `json:"error"`
+	CreatedAt         pgtype.Timestamptz `json:"created_at"`
 }
 
 type FeatureFlag struct {
@@ -69,6 +106,21 @@ type GlobalConfig struct {
 	UpdatedBy string             `json:"updated_by"`
 }
 
+type LlmModel struct {
+	ID              string             `json:"id"`
+	Name            string             `json:"name"`
+	Adapter         string             `json:"adapter"`
+	Endpoint        string             `json:"endpoint"`
+	ApiKey          pgtype.Text        `json:"api_key"`
+	ModelID         string             `json:"model_id"`
+	Location        string             `json:"location"`
+	Enabled         pgtype.Bool        `json:"enabled"`
+	CostPer1kInput  pgtype.Numeric     `json:"cost_per_1k_input"`
+	CostPer1kOutput pgtype.Numeric     `json:"cost_per_1k_output"`
+	Config          []byte             `json:"config"`
+	CreatedAt       pgtype.Timestamptz `json:"created_at"`
+}
+
 type Module struct {
 	ID          string      `json:"id"`
 	Name        string      `json:"name"`
@@ -90,6 +142,16 @@ type Plan struct {
 	PriceUsd         pgtype.Numeric     `json:"price_usd"`
 	Features         []byte             `json:"features"`
 	CreatedAt        pgtype.Timestamptz `json:"created_at"`
+}
+
+type PromptVersion struct {
+	ID        string             `json:"id"`
+	PromptKey string             `json:"prompt_key"`
+	Version   int32              `json:"version"`
+	Content   string             `json:"content"`
+	IsActive  pgtype.Bool        `json:"is_active"`
+	CreatedBy string             `json:"created_by"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
 }
 
 type RagModel struct {
@@ -141,4 +203,29 @@ type TenantModule struct {
 	Config    []byte             `json:"config"`
 	EnabledAt pgtype.Timestamptz `json:"enabled_at"`
 	EnabledBy string             `json:"enabled_by"`
+}
+
+type ToolRegistry struct {
+	ID                   string             `json:"id"`
+	Module               string             `json:"module"`
+	Service              string             `json:"service"`
+	Method               string             `json:"method"`
+	Protocol             string             `json:"protocol"`
+	Type                 string             `json:"type"`
+	RequiresConfirmation pgtype.Bool        `json:"requires_confirmation"`
+	Description          string             `json:"description"`
+	Parameters           []byte             `json:"parameters"`
+	Version              int32              `json:"version"`
+	Enabled              pgtype.Bool        `json:"enabled"`
+	CreatedAt            pgtype.Timestamptz `json:"created_at"`
+}
+
+type TraceEvent struct {
+	ID         string             `json:"id"`
+	TraceID    string             `json:"trace_id"`
+	Seq        int32              `json:"seq"`
+	EventType  string             `json:"event_type"`
+	Data       []byte             `json:"data"`
+	DurationMs pgtype.Int4        `json:"duration_ms"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
 }

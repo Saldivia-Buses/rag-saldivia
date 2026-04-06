@@ -22,6 +22,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/nats-io/nats.go"
 
+	"github.com/Camionerou/rag-saldivia/pkg/audit"
 	"github.com/Camionerou/rag-saldivia/services/ingest/internal/repository"
 )
 
@@ -56,6 +57,7 @@ type Ingest struct {
 	repo      *repository.Queries
 	nc        *nats.Conn
 	publisher EventPublisher
+	auditor   *audit.Writer
 	cfg       Config
 }
 
@@ -73,6 +75,7 @@ func New(pool *pgxpool.Pool, nc *nats.Conn, publisher EventPublisher, cfg Config
 		repo:      repository.New(pool),
 		nc:        nc,
 		publisher: publisher,
+		auditor:   audit.NewWriter(pool),
 		cfg:       cfg,
 	}
 }
@@ -169,6 +172,11 @@ func (s *Ingest) Submit(ctx context.Context, tenantSlug, userID, collection, fil
 		return nil, fmt.Errorf("publish ingest job: %w", err)
 	}
 
+	s.auditor.Write(ctx, audit.Entry{
+		UserID: userID, Action: "ingest.upload", Resource: job.ID,
+		Details: map[string]any{"file": fileName, "collection": collection, "size": fileSize},
+	})
+
 	return &job, nil
 }
 
@@ -193,17 +201,17 @@ func (s *Ingest) ListJobs(ctx context.Context, userID string, limit int) ([]Job,
 	return jobs, nil
 }
 
-// GetJob returns a single job by ID, verifying ownership.
+// GetJob returns a single job by ID, verifying ownership at the query level.
 func (s *Ingest) GetJob(ctx context.Context, jobID, userID string) (*Job, error) {
-	row, err := s.repo.GetJob(ctx, jobID)
+	row, err := s.repo.GetJob(ctx, repository.GetJobParams{
+		ID:     jobID,
+		UserID: userID,
+	})
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, ErrJobNotFound
 	}
 	if err != nil {
 		return nil, fmt.Errorf("get ingest job: %w", err)
-	}
-	if row.UserID != userID {
-		return nil, ErrJobNotFound
 	}
 	job := toJob(row)
 	return &job, nil
@@ -221,6 +229,11 @@ func (s *Ingest) DeleteJob(ctx context.Context, jobID, userID string) error {
 	if n == 0 {
 		return ErrJobNotFound
 	}
+
+	s.auditor.Write(ctx, audit.Entry{
+		UserID: userID, Action: "ingest.delete_job", Resource: jobID,
+	})
+
 	return nil
 }
 

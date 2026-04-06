@@ -88,26 +88,29 @@ func (c *Chat) CreateSession(ctx context.Context, userID, title string, collecti
 	return &s, nil
 }
 
-// GetSession returns a session by ID, verifying ownership.
+// GetSession returns a session by ID, verifying ownership at the query level.
 func (c *Chat) GetSession(ctx context.Context, sessionID, userID string) (*Session, error) {
-	row, err := c.repo.GetSession(ctx, sessionID)
+	row, err := c.repo.GetSession(ctx, repository.GetSessionParams{
+		ID:     sessionID,
+		UserID: userID,
+	})
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrSessionNotFound
 		}
 		return nil, fmt.Errorf("get session: %w", err)
 	}
-
-	if row.UserID != userID {
-		return nil, ErrNotOwner
-	}
 	s := sessionFromRepo(row)
 	return &s, nil
 }
 
-// ListSessions returns all sessions for a user, most recent first.
-func (c *Chat) ListSessions(ctx context.Context, userID string) ([]Session, error) {
-	rows, err := c.repo.ListSessionsByUser(ctx, userID)
+// ListSessions returns sessions for a user, most recent first (paginated).
+func (c *Chat) ListSessions(ctx context.Context, userID string, limit, offset int32) ([]Session, error) {
+	rows, err := c.repo.ListSessionsByUser(ctx, repository.ListSessionsByUserParams{
+		UserID: userID,
+		Limit:  limit,
+		Offset: offset,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("list sessions: %w", err)
 	}
@@ -175,8 +178,11 @@ func (c *Chat) AddMessage(ctx context.Context, sessionID, userID, role, content 
 		return nil, fmt.Errorf("add message: %w", err)
 	}
 
-	// Touch session updated_at
-	c.repo.TouchSession(ctx, sessionID)
+	// Touch session updated_at (user_id filter for defense-in-depth)
+	c.repo.TouchSession(ctx, repository.TouchSessionParams{
+		ID:     sessionID,
+		UserID: userID,
+	})
 
 	m := messageFromRepo(row)
 
@@ -207,9 +213,12 @@ func truncate(s string, maxLen int) string {
 	return string(runes[:maxLen]) + "..."
 }
 
-// GetMessages returns all messages for a session, oldest first.
-func (c *Chat) GetMessages(ctx context.Context, sessionID string) ([]Message, error) {
-	rows, err := c.repo.ListMessages(ctx, sessionID)
+// GetMessages returns messages for a session, oldest first (with limit).
+func (c *Chat) GetMessages(ctx context.Context, sessionID string, limit int32) ([]Message, error) {
+	rows, err := c.repo.ListMessages(ctx, repository.ListMessagesParams{
+		SessionID: sessionID,
+		Limit:     limit,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("get messages: %w", err)
 	}

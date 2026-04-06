@@ -8,6 +8,7 @@ import (
 	"slices"
 	"strings"
 
+	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
 	"github.com/nats-io/nats.go"
 	"github.com/nats-io/nats.go/jetstream"
 )
@@ -24,10 +25,11 @@ type Event struct {
 
 // Consumer listens to NATS events and creates notifications + sends emails.
 type Consumer struct {
-	nc     *nats.Conn
-	svc    *NotificationService
-	mailer Mailer
-	cons   jetstream.Consumer
+	nc        *nats.Conn
+	publisher *natspub.Publisher
+	svc       *NotificationService
+	mailer    Mailer
+	cons      jetstream.Consumer
 	ctx    context.Context
 	cancel context.CancelFunc
 }
@@ -77,6 +79,7 @@ func (c *Consumer) Start(ctx context.Context) error {
 		Durable:       durableName,
 		AckPolicy:     jetstream.AckExplicitPolicy,
 		FilterSubject: subjectFilter,
+		MaxDeliver:    5, // DLQ after 5 failed attempts
 	})
 	if err != nil {
 		return fmt.Errorf("create consumer: %w", err)
@@ -144,7 +147,7 @@ func (c *Consumer) handleEvent(msg jetstream.Msg) {
 		return
 	}
 
-	ctx := context.Background()
+	ctx := c.ctx
 
 	// Check user preferences
 	prefs, err := c.svc.GetPreferences(ctx, evt.UserID)
@@ -193,16 +196,19 @@ func (c *Consumer) handleEvent(msg jetstream.Msg) {
 // publishToWS publishes a notification event to the WS Hub via NATS.
 // Uses the trusted tenant slug extracted from the inbound NATS subject.
 func (c *Consumer) publishToWS(tenantSlug string, notif *Notification) {
-	payload, err := json.Marshal(map[string]any{
+	// P2: use pkg/nats publisher with subject validation instead of raw nc.Publish
+	if c.publisher != nil {
+		if err := c.publisher.Broadcast(tenantSlug, "notifications", notif); err != nil {
+			slog.Error("failed to broadcast to WS", "error", err, "tenant", tenantSlug)
+		}
+		return
+	}
+	// Fallback if publisher not available
+	payload, _ := json.Marshal(map[string]any{
 		"type":    "event",
 		"channel": "notifications",
 		"data":    notif,
 	})
-	if err != nil {
-		slog.Error("failed to marshal ws notification", "error", err)
-		return
-	}
-
 	subject := "tenant." + tenantSlug + ".notifications"
 	if err := c.nc.Publish(subject, payload); err != nil {
 		slog.Error("failed to publish to WS", "error", err, "subject", subject)

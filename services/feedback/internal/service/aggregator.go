@@ -68,7 +68,7 @@ func (a *Aggregator) Stop() {
 }
 
 func (a *Aggregator) aggregate(tenantID, tenantSlug string) {
-	ctx := context.Background()
+	ctx := a.ctx
 	period := time.Now().Truncate(time.Hour)
 
 	slog.Debug("running feedback aggregation", "period", period, "tenant", tenantID)
@@ -244,7 +244,8 @@ func (a *Aggregator) computeUsageScore(ctx context.Context) float64 {
 	currentUsage := counts["usage"]
 	if currentUsage == 0 {
 		// Check if this is a new tenant (no historical data)
-		historicalCount, err := a.repo.CountHistoricalUsage(ctx)
+		since := pgtype.Timestamptz{Time: time.Now().AddDate(0, -3, 0), Valid: true} // last 3 months
+		historicalCount, err := a.repo.CountHistoricalUsage(ctx, since)
 		if err != nil {
 			slog.Error("failed to count historical usage", "error", err)
 			return 50

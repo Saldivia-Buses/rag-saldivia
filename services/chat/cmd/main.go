@@ -3,21 +3,24 @@ package main
 import (
 	"context"
 	"log/slog"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
-	"crypto/ed25519"
-
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/nats-io/nats.go"
 
+	chatv1 "github.com/Camionerou/rag-saldivia/gen/go/chat/v1"
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
+	"github.com/Camionerou/rag-saldivia/pkg/config"
+	sdagrpc "github.com/Camionerou/rag-saldivia/pkg/grpc"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
+	"github.com/Camionerou/rag-saldivia/pkg/security"
 	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
 	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
 	"github.com/Camionerou/rag-saldivia/services/chat/internal/handler"
@@ -29,11 +32,11 @@ func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
 	slog.SetDefault(logger)
 
-	port := env("CHAT_PORT", "8003")
-	dbURL := env("POSTGRES_TENANT_URL", "")
-	tenantSlug := env("TENANT_SLUG", "dev")
-	publicKey := loadPublicKey()
-	natsURL := env("NATS_URL", nats.DefaultURL)
+	port := config.Env("CHAT_PORT", "8003")
+	dbURL := config.Env("POSTGRES_TENANT_URL", "")
+	tenantSlug := config.Env("TENANT_SLUG", "dev")
+	publicKey := sdajwt.MustLoadPublicKey("JWT_PUBLIC_KEY")
+	natsURL := config.Env("NATS_URL", nats.DefaultURL)
 
 	if dbURL == "" {
 		slog.Error("POSTGRES_TENANT_URL is required")
@@ -47,13 +50,17 @@ func main() {
 	otelShutdown, err := sdaotel.Setup(ctx, sdaotel.Config{
 		ServiceName:    "sda-chat",
 		ServiceVersion: "1.0.0",
-		Endpoint:       env("OTEL_EXPORTER_OTLP_ENDPOINT", "localhost:4317"),
+		Endpoint:       config.Env("OTEL_EXPORTER_OTLP_ENDPOINT", "localhost:4317"),
+		Insecure:       true,
 	})
 	if err != nil {
 		slog.Warn("otel init failed, traces disabled", "error", err)
 	} else {
 		defer otelShutdown(context.Background())
 	}
+
+	// Token blacklist (shared Redis)
+	blacklist := security.InitBlacklist(ctx, config.Env("REDIS_URL", "localhost:6379"))
 
 	pool, err := pgxpool.New(ctx, dbURL)
 	if err != nil {
@@ -63,22 +70,12 @@ func main() {
 	defer pool.Close()
 
 	// NATS (best-effort — retries in background, events fail gracefully)
-	nc, err := nats.Connect(natsURL,
-		nats.RetryOnFailedConnect(true),
-		nats.MaxReconnects(-1),
-		nats.ReconnectWait(2*time.Second),
-		nats.DisconnectErrHandler(func(_ *nats.Conn, err error) {
-			slog.Warn("NATS disconnected", "error", err)
-		}),
-		nats.ReconnectHandler(func(_ *nats.Conn) {
-			slog.Info("NATS reconnected")
-		}),
-	)
+	nc, err := natspub.Connect(natsURL)
 	if err != nil {
 		slog.Error("failed to connect to NATS", "error", err)
 		os.Exit(1)
 	}
-	defer nc.Close()
+	defer nc.Drain()
 	publisher := natspub.New(nc)
 	slog.Info("connected to NATS", "url", natsURL)
 
@@ -99,7 +96,7 @@ func main() {
 
 	// All chat routes require authentication
 	r.Group(func(r chi.Router) {
-		r.Use(sdamw.Auth(publicKey))
+		r.Use(sdamw.AuthWithConfig(publicKey, sdamw.AuthConfig{Blacklist: blacklist, FailOpen: true}))
 		r.Mount("/v1/chat/sessions", chatHandler.Routes())
 	})
 
@@ -107,10 +104,30 @@ func main() {
 		Addr:         ":" + port,
 		Handler:      otelhttp.NewHandler(r, "sda-chat"),
 		ReadTimeout:  10 * time.Second,
+		ReadHeaderTimeout: 10 * time.Second,
 		WriteTimeout: 30 * time.Second,
 		IdleTimeout:  60 * time.Second,
 	}
 
+	// gRPC server (internal inter-service communication)
+	grpcPort := config.Env("CHAT_GRPC_PORT", "50052")
+	grpcSrv := sdagrpc.NewServer(sdagrpc.InterceptorConfig{PublicKey: publicKey, Blacklist: blacklist, FailOpen: true})
+	chatv1.RegisterChatServiceServer(grpcSrv, handler.NewGRPC(chatSvc))
+	sdagrpc.RegisterHealthServer(grpcSrv)
+
+	go func() {
+		lis, err := net.Listen("tcp", ":"+grpcPort)
+		if err != nil {
+			slog.Error("grpc listen failed", "error", err)
+			os.Exit(1)
+		}
+		slog.Info("chat grpc server starting", "port", grpcPort)
+		if err := grpcSrv.Serve(lis); err != nil {
+			slog.Error("grpc serve error", "error", err)
+		}
+	}()
+
+	// HTTP server
 	go func() {
 		slog.Info("chat service starting", "port", port)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
@@ -122,29 +139,15 @@ func main() {
 	<-ctx.Done()
 	slog.Info("chat service shutting down")
 
+	grpcSrv.GracefulStop()
+
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer shutdownCancel()
-	srv.Shutdown(shutdownCtx)
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		slog.Error("shutdown error", "error", err)
+	}
 	slog.Info("chat service stopped")
 }
 
-func env(key, fallback string) string {
-	if v := os.Getenv(key); v != "" {
-		return v
-	}
-	return fallback
-}
 
-func loadPublicKey() ed25519.PublicKey {
-	pubB64 := env("JWT_PUBLIC_KEY", "")
-	if pubB64 == "" {
-		slog.Error("JWT_PUBLIC_KEY is required")
-		os.Exit(1)
-	}
-	key, err := sdajwt.ParsePublicKeyEnv(pubB64)
-	if err != nil {
-		slog.Error("failed to parse JWT_PUBLIC_KEY", "error", err)
-		os.Exit(1)
-	}
-	return key
-}
+

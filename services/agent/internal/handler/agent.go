@@ -7,8 +7,10 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
+	chimw "github.com/go-chi/chi/v5/middleware"
 
-	"github.com/Camionerou/rag-saldivia/services/agent/internal/llm"
+	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
+	"github.com/Camionerou/rag-saldivia/pkg/llm"
 	"github.com/Camionerou/rag-saldivia/services/agent/internal/service"
 )
 
@@ -25,8 +27,9 @@ func New(svc *service.Agent) *Handler {
 // Routes returns the agent router.
 func (h *Handler) Routes() chi.Router {
 	r := chi.NewRouter()
-	r.Post("/query", h.Query)
-	r.Post("/confirm", h.Confirm)
+	// H5: require chat.read permission for agent endpoints
+	r.With(sdamw.RequirePermission("chat.read")).Post("/query", h.Query)
+	r.With(sdamw.RequirePermission("chat.read")).Post("/confirm", h.Confirm)
 	return r
 }
 
@@ -52,9 +55,11 @@ func (h *Handler) Query(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	result, err := h.svc.Query(r.Context(), jwt, req.Message, req.History)
+	userID := r.Header.Get("X-User-ID")
+	result, err := h.svc.Query(r.Context(), jwt, userID, req.Message, req.History)
 	if err != nil {
-		slog.Error("agent query failed", "error", err)
+		slog.Error("agent query failed", "error", err,
+			"request_id", chimw.GetReqID(r.Context()))
 		http.Error(w, `{"error":"query failed"}`, http.StatusInternalServerError)
 		return
 	}

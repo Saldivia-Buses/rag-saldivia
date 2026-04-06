@@ -7,7 +7,7 @@ syntax = "proto3";
 
 package sda.auth.v1;
 
-option go_package = "github.com/Camionerou/rag-saldivia/proto/auth/v1;authv1";
+option go_package = "github.com/Camionerou/rag-saldivia/gen/go/auth/v1;authv1";
 
 import "google/protobuf/timestamp.proto";
 

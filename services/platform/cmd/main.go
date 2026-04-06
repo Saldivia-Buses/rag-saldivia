@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"crypto/ed25519"
 	"log/slog"
 	"net/http"
 	"os"
@@ -13,10 +12,12 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
-
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
+	"github.com/Camionerou/rag-saldivia/pkg/config"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
+	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
 	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
+	"github.com/Camionerou/rag-saldivia/pkg/security"
 	"github.com/Camionerou/rag-saldivia/services/platform/internal/handler"
 	"github.com/Camionerou/rag-saldivia/services/platform/internal/service"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
@@ -26,9 +27,9 @@ func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
 	slog.SetDefault(logger)
 
-	port := env("PLATFORM_PORT", "8006")
-	dbURL := env("POSTGRES_PLATFORM_URL", "")
-	publicKey := loadPublicKey()
+	port := config.Env("PLATFORM_PORT", "8006")
+	dbURL := config.Env("POSTGRES_PLATFORM_URL", "")
+	publicKey := sdajwt.MustLoadPublicKey("JWT_PUBLIC_KEY")
 
 	if dbURL == "" {
 		slog.Error("POSTGRES_PLATFORM_URL is required")
@@ -42,7 +43,8 @@ func main() {
 	otelShutdown, err := sdaotel.Setup(ctx, sdaotel.Config{
 		ServiceName:    "sda-platform",
 		ServiceVersion: "1.0.0",
-		Endpoint:       env("OTEL_EXPORTER_OTLP_ENDPOINT", "localhost:4317"),
+		Endpoint:       config.Env("OTEL_EXPORTER_OTLP_ENDPOINT", "localhost:4317"),
+		Insecure:       true,
 	})
 	if err != nil {
 		slog.Warn("otel init failed, traces disabled", "error", err)
@@ -57,9 +59,22 @@ func main() {
 	}
 	defer pool.Close()
 
-	platformSvc := service.New(pool)
-	platformSlug := env("PLATFORM_TENANT_SLUG", "platform")
-	platformHandler := handler.NewPlatform(platformSvc, publicKey, platformSlug)
+	// NATS for lifecycle event publishing
+	natsURL := config.Env("NATS_URL", "nats://localhost:4222")
+	nc, err := natspub.Connect(natsURL)
+	if err != nil {
+		slog.Warn("nats connect failed, lifecycle events disabled", "error", err)
+	} else {
+		defer nc.Drain()
+	}
+	publisher := natspub.New(nc)
+
+	// Token blacklist (shared Redis)
+	blacklist := security.InitBlacklist(ctx, config.Env("REDIS_URL", "localhost:6379"))
+
+	platformSvc := service.New(pool, publisher)
+	platformSlug := config.Env("PLATFORM_TENANT_SLUG", "platform")
+	platformHandler := handler.NewPlatform(platformSvc, publicKey, platformSlug, blacklist)
 
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
@@ -78,6 +93,7 @@ func main() {
 		Addr:         ":" + port,
 		Handler:      otelhttp.NewHandler(r, "sda-platform"),
 		ReadTimeout:  10 * time.Second,
+		ReadHeaderTimeout: 10 * time.Second,
 		WriteTimeout: 30 * time.Second,
 		IdleTimeout:  60 * time.Second,
 	}
@@ -95,27 +111,11 @@ func main() {
 
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer shutdownCancel()
-	srv.Shutdown(shutdownCtx)
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		slog.Error("shutdown error", "error", err)
+	}
 	slog.Info("platform service stopped")
 }
 
-func env(key, fallback string) string {
-	if v := os.Getenv(key); v != "" {
-		return v
-	}
-	return fallback
-}
 
-func loadPublicKey() ed25519.PublicKey {
-	pubB64 := env("JWT_PUBLIC_KEY", "")
-	if pubB64 == "" {
-		slog.Error("JWT_PUBLIC_KEY is required")
-		os.Exit(1)
-	}
-	key, err := sdajwt.ParsePublicKeyEnv(pubB64)
-	if err != nil {
-		slog.Error("failed to parse JWT_PUBLIC_KEY", "error", err)
-		os.Exit(1)
-	}
-	return key
-}
+

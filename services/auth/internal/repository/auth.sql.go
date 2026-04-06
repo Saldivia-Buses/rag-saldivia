@@ -189,33 +189,40 @@ func (q *Queries) GetUserForRefresh(ctx context.Context, id string) (GetUserForR
 
 const listActiveUsers = `-- name: ListActiveUsers :many
 SELECT u.id, u.email, u.name, u.created_at,
-       COALESCE((
-           SELECT r.name FROM roles r
-           JOIN user_roles ur ON ur.role_id = r.id
-           WHERE ur.user_id = u.id
-           ORDER BY CASE r.name
-               WHEN 'admin' THEN 1
-               WHEN 'manager' THEN 2
-               WHEN 'user' THEN 3
-               ELSE 4
-           END
-           LIMIT 1
-       ), 'user') AS role
+       COALESCE(r.name, 'user') AS role
 FROM users u
+LEFT JOIN LATERAL (
+    SELECT r.name FROM roles r
+    JOIN user_roles ur ON ur.role_id = r.id
+    WHERE ur.user_id = u.id
+    ORDER BY CASE r.name
+        WHEN 'admin' THEN 1
+        WHEN 'manager' THEN 2
+        WHEN 'user' THEN 3
+        ELSE 4
+    END
+    LIMIT 1
+) r ON true
 WHERE u.is_active = true
 ORDER BY u.created_at ASC
+LIMIT $1 OFFSET $2
 `
+
+type ListActiveUsersParams struct {
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
+}
 
 type ListActiveUsersRow struct {
 	ID        string             `json:"id"`
 	Email     string             `json:"email"`
 	Name      string             `json:"name"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
-	Role      interface{}        `json:"role"`
+	Role      string             `json:"role"`
 }
 
-func (q *Queries) ListActiveUsers(ctx context.Context) ([]ListActiveUsersRow, error) {
-	rows, err := q.db.Query(ctx, listActiveUsers)
+func (q *Queries) ListActiveUsers(ctx context.Context, arg ListActiveUsersParams) ([]ListActiveUsersRow, error) {
+	rows, err := q.db.Query(ctx, listActiveUsers, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}

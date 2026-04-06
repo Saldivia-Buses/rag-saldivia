@@ -22,8 +22,6 @@ secrets:
     file: ./secrets/db-tenant-template-url
   redis_password:
     file: ./secrets/redis-password
-  nats_token:
-    file: ./secrets/nats-token
   encryption_master_key:
     file: ./secrets/encryption-master-key
 
@@ -40,14 +38,40 @@ x-jwt-public: &jwt-public
 
 services:
 
+  # ── Docker Socket Proxy (L14) ──────────────────────────────────────────
+  # Traefik talks to Docker via this proxy instead of the raw socket.
+  # Limits API surface: only container listing (no exec, no networks).
+
+  docker-socket-proxy:
+    <<: *service-defaults
+    image: tecnativa/docker-socket-proxy:latest
+    environment:
+      CONTAINERS: 1
+      NETWORKS: 0
+      SERVICES: 0
+      TASKS: 0
+      INFO: 0
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - frontend
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+          cpus: "0.25"
+
   # ── Gateway ────────────────────────────────────────────────────────────
 
   traefik:
     <<: *service-defaults
     image: traefik:v3
+    depends_on:
+      - docker-socket-proxy
     command:
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.endpoint=tcp://docker-socket-proxy:2375"
       - "--providers.file.directory=/etc/traefik/dynamic"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
@@ -61,7 +85,6 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./traefik/dynamic:/etc/traefik/dynamic:ro
       - ./traefik/traefik.prod.yml:/etc/traefik/traefik.yml:ro
       - traefik_logs:/var/log/traefik
@@ -72,6 +95,27 @@ services:
       resources:
         limits:
           memory: 256M
+          cpus: "1.0"
+
+  # ── CrowdSec IDS (M12) ───────────────────────────────────────────────
+
+  crowdsec:
+    <<: *service-defaults
+    image: crowdsecurity/crowdsec:latest
+    environment:
+      COLLECTIONS: "crowdsecurity/traefik crowdsecurity/http-cve"
+    volumes:
+      - ./crowdsec/acquis.yaml:/etc/crowdsec/acquis.yaml:ro
+      - traefik_logs:/var/log/traefik:ro
+      - crowdsec_data:/var/lib/crowdsec/data
+      - crowdsec_config:/etc/crowdsec
+    networks:
+      - frontend
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.5"
 
   # ── Data ───────────────────────────────────────────────────────────────
 
@@ -95,6 +139,7 @@ services:
       resources:
         limits:
           memory: 1G
+          cpus: "2.0"
 
   redis:
     <<: *service-defaults
@@ -120,13 +165,26 @@ services:
       resources:
         limits:
           memory: 768M
+          cpus: "0.5"
 
   nats:
     <<: *service-defaults
     image: nats:2-alpine
-    command: ["--js", "--sd", "/data", "--auth", "${NATS_TOKEN}"]
+    command: ["-c", "/etc/nats/nats-server.conf", "-m", "8222"]
+    environment:
+      AUTH_NATS_PASS: ${AUTH_NATS_PASS}
+      CHAT_NATS_PASS: ${CHAT_NATS_PASS}
+      WS_NATS_PASS: ${WS_NATS_PASS}
+      NOTIF_NATS_PASS: ${NOTIF_NATS_PASS}
+      INGEST_NATS_PASS: ${INGEST_NATS_PASS}
+      FEEDBACK_NATS_PASS: ${FEEDBACK_NATS_PASS}
+      AGENT_NATS_PASS: ${AGENT_NATS_PASS}
+      TRACES_NATS_PASS: ${TRACES_NATS_PASS}
+      PLATFORM_NATS_PASS: ${PLATFORM_NATS_PASS}
+      EXTRACTOR_NATS_PASS: ${EXTRACTOR_NATS_PASS}
     volumes:
       - nats_data:/data
+      - ./nats/nats-server.conf:/etc/nats/nats-server.conf:ro
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8222/healthz || exit 1"]
       interval: 10s
@@ -138,6 +196,7 @@ services:
       resources:
         limits:
           memory: 256M
+          cpus: "1.0"
 
   # ── Go Services ────────────────────────────────────────────────────────
 
@@ -149,7 +208,7 @@ services:
       dockerfile: services/auth/Dockerfile
     environment:
       AUTH_PORT: "8001"
-      NATS_URL: nats://${NATS_TOKEN}@nats:4222
+      NATS_URL: nats://auth:${AUTH_NATS_PASS}@nats:4222
       TENANT_SLUG: dev
     secrets:
       - jwt_private_key
@@ -173,6 +232,7 @@ services:
       resources:
         limits:
           memory: 128M
+          cpus: "1.0"
 
   ws:
     <<: *service-defaults
@@ -182,7 +242,7 @@ services:
       dockerfile: services/ws/Dockerfile
     environment:
       WS_PORT: "8002"
-      NATS_URL: nats://${NATS_TOKEN}@nats:4222
+      NATS_URL: nats://ws:${WS_NATS_PASS}@nats:4222
       WS_ALLOWED_ORIGINS: "https://*.sda.app"
     secrets:
       - jwt_public_key
@@ -203,6 +263,7 @@ services:
       resources:
         limits:
           memory: 256M
+          cpus: "1.0"
 
   chat:
     <<: *service-defaults
@@ -212,7 +273,7 @@ services:
       dockerfile: services/chat/Dockerfile
     environment:
       CHAT_PORT: "8003"
-      NATS_URL: nats://${NATS_TOKEN}@nats:4222
+      NATS_URL: nats://chat:${CHAT_NATS_PASS}@nats:4222
       TENANT_SLUG: dev
     secrets:
       - jwt_public_key
@@ -235,16 +296,24 @@ services:
       resources:
         limits:
           memory: 128M
+          cpus: "1.0"
 
-  rag:
+  agent:
     <<: *service-defaults
-    image: ghcr.io/camionerou/sda-rag:${RAG_VERSION:-latest}
+    image: ghcr.io/camionerou/sda-agent:${AGENT_VERSION:-latest}
     build:
       context: ..
-      dockerfile: services/rag/Dockerfile
+      dockerfile: services/agent/Dockerfile
     environment:
-      RAG_PORT: "8004"
-      RAG_SERVER_URL: ${RAG_SERVER_URL:-http://host.docker.internal:8081}
+      AGENT_PORT: "8004"
+      NATS_URL: nats://agent:${AGENT_NATS_PASS}@nats:4222
+      SGLANG_LLM_URL: ${SGLANG_LLM_URL:-http://host.docker.internal:8102}
+      SGLANG_LLM_MODEL: ${SGLANG_LLM_MODEL:-}
+      SEARCH_SERVICE_URL: http://search:8010
+      SEARCH_GRPC_URL: search:50051
+      INGEST_SERVICE_URL: http://ingest:8007
+      NOTIFICATION_SERVICE_URL: http://notification:8005
+      <<: *jwt-public
     secrets:
       - jwt_public_key
     healthcheck:
@@ -255,16 +324,86 @@ services:
     networks:
       - frontend
       - backend
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.agent.rule=PathPrefix(`/v1/agent`)"
+      - "traefik.http.routers.agent.entrypoints=websecure"
+      - "traefik.http.services.agent.loadbalancer.server.port=8004"
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "1.0"
+
+  search:
+    <<: *service-defaults
+    image: ghcr.io/camionerou/sda-search:${SEARCH_VERSION:-latest}
+    build:
+      context: ..
+      dockerfile: services/search/Dockerfile
+    environment:
+      SEARCH_PORT: "8010"
+      SEARCH_GRPC_PORT: "50051"
+      SGLANG_LLM_URL: ${SGLANG_LLM_URL:-http://host.docker.internal:8102}
+      SGLANG_LLM_MODEL: ${SGLANG_LLM_MODEL:-}
+      <<: *jwt-public
+    secrets:
+      - jwt_public_key
+      - db_tenant_template_url
+    expose:
+      - "50051"  # gRPC — internal only, not routed by Traefik
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8010/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - frontend
+      - backend  # needed for agent→search gRPC
       - data
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.rag.rule=PathPrefix(`/v1/rag`)"
-      - "traefik.http.routers.rag.entrypoints=websecure"
-      - "traefik.http.services.rag.loadbalancer.server.port=8004"
+      - "traefik.http.routers.search.rule=PathPrefix(`/v1/search`)"
+      - "traefik.http.routers.search.entrypoints=websecure"
+      - "traefik.http.services.search.loadbalancer.server.port=8010"
     deploy:
       resources:
         limits:
           memory: 128M
+          cpus: "1.0"
+
+  traces:
+    <<: *service-defaults
+    image: ghcr.io/camionerou/sda-traces:${TRACES_VERSION:-latest}
+    build:
+      context: ..
+      dockerfile: services/traces/Dockerfile
+    environment:
+      TRACES_PORT: "8009"
+      NATS_URL: nats://traces:${TRACES_NATS_PASS}@nats:4222
+      <<: *jwt-public
+    secrets:
+      - jwt_public_key
+      - db_platform_url
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8009/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - frontend
+      - backend
+      - data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traces.rule=PathPrefix(`/v1/traces`)"
+      - "traefik.http.routers.traces.entrypoints=websecure"
+      - "traefik.http.services.traces.loadbalancer.server.port=8009"
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: "1.0"
 
   notification:
     <<: *service-defaults
@@ -274,7 +413,7 @@ services:
       dockerfile: services/notification/Dockerfile
     environment:
       NOTIFICATION_PORT: "8005"
-      NATS_URL: nats://${NATS_TOKEN}@nats:4222
+      NATS_URL: nats://notification:${NOTIF_NATS_PASS}@nats:4222
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_FROM: ${SMTP_FROM:-noreply@sda.app}
@@ -299,6 +438,7 @@ services:
       resources:
         limits:
           memory: 128M
+          cpus: "1.0"
 
   platform:
     <<: *service-defaults
@@ -309,6 +449,8 @@ services:
     environment:
       PLATFORM_PORT: "8006"
       PLATFORM_TENANT_SLUG: platform
+      NATS_URL: nats://platform:${PLATFORM_NATS_PASS}@nats:4222
+      <<: *jwt-public
     secrets:
       - jwt_public_key
       - db_platform_url
@@ -330,6 +472,7 @@ services:
       resources:
         limits:
           memory: 128M
+          cpus: "1.0"
 
   ingest:
     <<: *service-defaults
@@ -339,7 +482,7 @@ services:
       dockerfile: services/ingest/Dockerfile
     environment:
       INGEST_PORT: "8007"
-      NATS_URL: nats://${NATS_TOKEN}@nats:4222
+      NATS_URL: nats://ingest:${INGEST_NATS_PASS}@nats:4222
       RAG_SERVER_URL: ${RAG_SERVER_URL:-http://host.docker.internal:8081}
       INGEST_STAGING_DIR: /tmp/ingest-staging
     secrets:
@@ -363,6 +506,7 @@ services:
       resources:
         limits:
           memory: 256M
+          cpus: "1.0"
 
   feedback:
     <<: *service-defaults
@@ -372,7 +516,7 @@ services:
       dockerfile: services/feedback/Dockerfile
     environment:
       FEEDBACK_PORT: "8008"
-      NATS_URL: nats://${NATS_TOKEN}@nats:4222
+      NATS_URL: nats://feedback:${FEEDBACK_NATS_PASS}@nats:4222
     secrets:
       - jwt_public_key
       - db_platform_url
@@ -394,6 +538,7 @@ services:
       resources:
         limits:
           memory: 128M
+          cpus: "1.0"
 
 networks:
   frontend:    # traefik ↔ Go services
@@ -406,3 +551,5 @@ volumes:
   nats_data:
   traefik_logs:
   traefik_acme:
+  crowdsec_data:
+  crowdsec_config:

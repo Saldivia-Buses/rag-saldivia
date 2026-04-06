@@ -29,9 +29,9 @@ WHERE category = 'error_report'
 
 -- name: PerformancePercentiles :one
 SELECT
-    COALESCE(percentile_cont(0.50) WITHIN GROUP (ORDER BY (context->>'latency_ms')::numeric), 0)::float8 AS p50,
-    COALESCE(percentile_cont(0.95) WITHIN GROUP (ORDER BY (context->>'latency_ms')::numeric), 0)::float8 AS p95,
-    COALESCE(percentile_cont(0.99) WITHIN GROUP (ORDER BY (context->>'latency_ms')::numeric), 0)::float8 AS p99
+    COALESCE(percentile_cont(0.50) WITHIN GROUP (ORDER BY latency_ms), 0)::float8 AS p50,
+    COALESCE(percentile_cont(0.95) WITHIN GROUP (ORDER BY latency_ms), 0)::float8 AS p95,
+    COALESCE(percentile_cont(0.99) WITHIN GROUP (ORDER BY latency_ms), 0)::float8 AS p99
 FROM feedback_events
 WHERE category = 'performance'
   AND created_at > now() - make_interval(hours => $1);
@@ -45,7 +45,7 @@ WHERE category = 'security' AND severity = 'critical'
 -- name: CountHistoricalUsage :one
 SELECT COUNT(*)::int AS count
 FROM feedback_events
-WHERE category = 'usage';
+WHERE category = 'usage' AND created_at > $1;
 
 -- name: AvgHourlyUsage :one
 SELECT COALESCE(COUNT(*)::float8 / GREATEST(EXTRACT(EPOCH FROM (now() - MIN(created_at))) / 3600, 1), 0)::float8 AS avg_hourly

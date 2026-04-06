@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"crypto/ed25519"
 	"encoding/json"
 	"log/slog"
 	"net/http"
@@ -16,7 +15,9 @@ import (
 	"github.com/nats-io/nats.go"
 
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
+	"github.com/Camionerou/rag-saldivia/pkg/config"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
+	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
 	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
 	"github.com/Camionerou/rag-saldivia/services/ws/internal/handler"
 	"github.com/Camionerou/rag-saldivia/services/ws/internal/hub"
@@ -27,9 +28,9 @@ func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
 	slog.SetDefault(logger)
 
-	port := env("WS_PORT", "8002")
-	publicKey := loadPublicKey()
-	natsURL := env("NATS_URL", nats.DefaultURL)
+	port := config.Env("WS_PORT", "8002")
+	publicKey := sdajwt.MustLoadPublicKey("JWT_PUBLIC_KEY")
+	natsURL := config.Env("NATS_URL", nats.DefaultURL)
 
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
@@ -38,7 +39,8 @@ func main() {
 	otelShutdown, err := sdaotel.Setup(ctx, sdaotel.Config{
 		ServiceName:    "sda-ws",
 		ServiceVersion: "1.0.0",
-		Endpoint:       env("OTEL_EXPORTER_OTLP_ENDPOINT", "localhost:4317"),
+		Endpoint:       config.Env("OTEL_EXPORTER_OTLP_ENDPOINT", "localhost:4317"),
+		Insecure:       true,
 	})
 	if err != nil {
 		slog.Warn("otel init failed, traces disabled", "error", err)
@@ -47,22 +49,12 @@ func main() {
 	}
 
 	// Connect to NATS
-	nc, err := nats.Connect(natsURL,
-		nats.RetryOnFailedConnect(true),
-		nats.MaxReconnects(-1),
-		nats.ReconnectWait(2*time.Second),
-		nats.DisconnectErrHandler(func(_ *nats.Conn, err error) {
-			slog.Warn("NATS disconnected", "error", err)
-		}),
-		nats.ReconnectHandler(func(_ *nats.Conn) {
-			slog.Info("NATS reconnected")
-		}),
-	)
+	nc, err := natspub.Connect(natsURL)
 	if err != nil {
 		slog.Error("failed to connect to NATS", "error", err, "url", natsURL)
 		os.Exit(1)
 	}
-	defer nc.Close()
+	defer nc.Drain()
 	slog.Info("connected to NATS", "url", natsURL)
 
 	// Create hub
@@ -76,6 +68,13 @@ func main() {
 		os.Exit(1)
 	}
 	defer bridge.Stop()
+
+	// Wire mutations via gRPC to Chat service
+	chatGRPC := config.Env("CHAT_GRPC_URL", "")
+	if mutations := hub.NewMutationHandler(chatGRPC); mutations != nil {
+		h.Mutations = mutations
+		defer mutations.Close()
+	}
 
 	// Handlers
 	wsHandler := handler.NewWS(h, publicKey)
@@ -102,7 +101,8 @@ func main() {
 		Addr:         ":" + port,
 		Handler:      otelhttp.NewHandler(r, "sda-ws"),
 		ReadTimeout:  10 * time.Second,
-		WriteTimeout: 30 * time.Second,
+		ReadHeaderTimeout: 10 * time.Second,
+		WriteTimeout: 0,               // WebSocket connections are long-lived
 		IdleTimeout:  120 * time.Second,
 	}
 
@@ -126,23 +126,5 @@ func main() {
 	slog.Info("ws-hub stopped")
 }
 
-func env(key, fallback string) string {
-	if v := os.Getenv(key); v != "" {
-		return v
-	}
-	return fallback
-}
 
-func loadPublicKey() ed25519.PublicKey {
-	pubB64 := env("JWT_PUBLIC_KEY", "")
-	if pubB64 == "" {
-		slog.Error("JWT_PUBLIC_KEY is required")
-		os.Exit(1)
-	}
-	key, err := sdajwt.ParsePublicKeyEnv(pubB64)
-	if err != nil {
-		slog.Error("failed to parse JWT_PUBLIC_KEY", "error", err)
-		os.Exit(1)
-	}
-	return key
-}
+

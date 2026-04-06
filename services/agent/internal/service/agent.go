@@ -10,16 +10,18 @@ import (
 	"time"
 
 	"github.com/Camionerou/rag-saldivia/pkg/guardrails"
-	"github.com/Camionerou/rag-saldivia/services/agent/internal/llm"
+	"github.com/Camionerou/rag-saldivia/pkg/tenant"
+	"github.com/Camionerou/rag-saldivia/pkg/llm"
 	"github.com/Camionerou/rag-saldivia/services/agent/internal/tools"
 )
 
 // Agent orchestrates chat queries: guardrails → LLM → tools → response.
 type Agent struct {
-	llmAdapter   *llm.Adapter
-	toolExecutor *tools.Executor
-	toolSchemas  []llm.ToolSchema
-	config       Config
+	llmAdapter     *llm.Client
+	toolExecutor   *tools.Executor
+	toolSchemas    []llm.ToolSchema
+	tracePublisher *TracePublisher
+	config         Config
 }
 
 // Config holds agent runtime configuration (from agent_config).
@@ -33,7 +35,7 @@ type Config struct {
 }
 
 // New creates an Agent service.
-func New(adapter *llm.Adapter, executor *tools.Executor, schemas []llm.ToolSchema, cfg Config) *Agent {
+func New(adapter *llm.Client, executor *tools.Executor, schemas []llm.ToolSchema, tp *TracePublisher, cfg Config) *Agent {
 	if cfg.MaxToolCallsPerTurn <= 0 {
 		cfg.MaxToolCallsPerTurn = 25
 	}
@@ -41,7 +43,8 @@ func New(adapter *llm.Adapter, executor *tools.Executor, schemas []llm.ToolSchem
 		cfg.MaxLoopIterations = 10
 	}
 	return &Agent{
-		llmAdapter:   adapter,
+		llmAdapter:     adapter,
+		tracePublisher: tp,
 		toolExecutor: executor,
 		toolSchemas:  schemas,
 		config:       cfg,
@@ -76,8 +79,16 @@ type ToolCallLog struct {
 }
 
 // Query runs a user query through the agent loop.
-func (a *Agent) Query(ctx context.Context, jwt, userMessage string, history []llm.Message) (*QueryResult, error) {
+func (a *Agent) Query(ctx context.Context, jwt, userID, userMessage string, history []llm.Message) (*QueryResult, error) {
 	start := time.Now()
+
+	// B1: extract tenant from context
+	ti, _ := tenant.FromContext(ctx)
+	tenantSlug := ti.Slug
+	if tenantSlug == "" {
+		tenantSlug = ti.ID
+	}
+	traceID := a.tracePublisher.TraceStart(tenantSlug, "", userID, userMessage)
 
 	// Input guardrails
 	sanitized, err := guardrails.ValidateInput(ctx, userMessage, a.config.GuardrailsConfig, nil)
@@ -125,14 +136,15 @@ func (a *Agent) Query(ctx context.Context, jwt, userMessage string, history []ll
 		if len(resp.ToolCalls) == 0 {
 			// B5: output guardrails with system prompt leak detection
 			output := guardrails.ValidateOutput(resp.Content, outputCfg)
-			return &QueryResult{
+			r := &QueryResult{
 				Response:     output,
 				ToolCalls:    allToolCalls,
 				InputTokens:  totalInput,
 				OutputTokens: totalOutput,
 				DurationMS:   int(time.Since(start).Milliseconds()),
 				Model:        a.llmAdapter.Model(),
-			}, nil
+			}
+			return a.publishTraceEnd(tenantSlug, traceID, r, "completed"), nil
 		}
 
 		// Process tool calls
@@ -193,7 +205,7 @@ func (a *Agent) Query(ctx context.Context, jwt, userMessage string, history []ll
 				// Tool needs user approval — pause the loop and return
 				tcLog.Status = "pending_confirmation"
 				allToolCalls = append(allToolCalls, tcLog)
-				return &QueryResult{
+				r := &QueryResult{
 					Response:     result.ActionPlan,
 					ToolCalls:    allToolCalls,
 					InputTokens:  totalInput,
@@ -205,7 +217,9 @@ func (a *Agent) Query(ctx context.Context, jwt, userMessage string, history []ll
 						ActionPlan: result.ActionPlan,
 						Params:     json.RawMessage(tc.Function.Arguments),
 					},
-				}, nil
+				}
+				// B3: publish trace end even for pending_confirmation
+				return a.publishTraceEnd(tenantSlug, traceID, r, "pending_confirmation"), nil
 			} else {
 				tcLog.Status = result.Status
 				if result.Status == "success" {
@@ -232,19 +246,47 @@ func (a *Agent) Query(ctx context.Context, jwt, userMessage string, history []ll
 		}
 	}
 
-	return &QueryResult{
+	r := &QueryResult{
 		Response:     "Lo siento, no pude completar la consulta en el tiempo permitido.",
 		ToolCalls:    allToolCalls,
 		InputTokens:  totalInput,
 		OutputTokens: totalOutput,
 		DurationMS:   int(time.Since(start).Milliseconds()),
 		Model:        a.llmAdapter.Model(),
-	}, nil
+	}
+	return a.publishTraceEnd(tenantSlug, traceID, r, "timeout"), nil
 }
 
 // ExecuteConfirmed runs a previously-pending tool after user approval.
 func (a *Agent) ExecuteConfirmed(ctx context.Context, jwt, toolName string, params json.RawMessage) (*tools.Result, error) {
 	return a.toolExecutor.ExecuteConfirmed(ctx, jwt, toolName, params)
+}
+
+// publishTraceEnd publishes trace end + feedback events, returns result.
+func (a *Agent) publishTraceEnd(tenantSlug, traceID string, result *QueryResult, status string) *QueryResult {
+	a.tracePublisher.TraceEnd(
+		tenantSlug, traceID, status,
+		[]string{result.Model}, result.DurationMS,
+		result.InputTokens, result.OutputTokens,
+		len(result.ToolCalls), 0,
+	)
+	// Publish feedback events for the feedback service
+	a.tracePublisher.PublishFeedback(tenantSlug, "usage", map[string]any{
+		"trace_id":      traceID,
+		"model":         result.Model,
+		"input_tokens":  result.InputTokens,
+		"output_tokens": result.OutputTokens,
+		"duration_ms":   result.DurationMS,
+		"tool_calls":    len(result.ToolCalls),
+		"status":        status,
+	})
+	if status != "completed" {
+		a.tracePublisher.PublishFeedback(tenantSlug, "error_report", map[string]any{
+			"trace_id": traceID,
+			"status":   status,
+		})
+	}
+	return result
 }
 
 // filterHistory allows only user and assistant messages, validates content.

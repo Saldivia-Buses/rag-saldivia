@@ -20,6 +20,7 @@ import (
 
 	"github.com/Camionerou/rag-saldivia/pkg/audit"
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
+	"github.com/Camionerou/rag-saldivia/pkg/security"
 	"github.com/Camionerou/rag-saldivia/services/auth/internal/repository"
 )
 
@@ -55,6 +56,7 @@ type Auth struct {
 	jwtCfg        sdajwt.Config
 	events        EventPublisher
 	auditor       *audit.Writer
+	blacklist     *security.TokenBlacklist
 	encryptionKey []byte // AES-256 key for MFA secret encryption (nil = plaintext)
 	tenant        struct {
 		ID   string
@@ -68,6 +70,11 @@ func NewAuth(db *pgxpool.Pool, jwtCfg sdajwt.Config, tenantID, tenantSlug string
 	a.tenant.ID = tenantID
 	a.tenant.Slug = tenantSlug
 	return a
+}
+
+// SetBlacklist injects the token blacklist for logout/revocation.
+func (a *Auth) SetBlacklist(bl *security.TokenBlacklist) {
+	a.blacklist = bl
 }
 
 // LoginRequest holds the login input.
@@ -446,11 +453,12 @@ func (a *Auth) Refresh(ctx context.Context, refreshToken string) (*TokenPair, er
 	}, nil
 }
 
-// Logout revokes the given refresh token.
-func (a *Auth) Logout(ctx context.Context, refreshToken string) error {
+// Logout revokes the refresh token AND blacklists the access token JTI.
+// accessJTI is the JWT ID from the access token (claims.ID).
+// accessExpiry is when the access token expires (for blacklist TTL).
+func (a *Auth) Logout(ctx context.Context, refreshToken, accessJTI string, accessExpiry time.Time) error {
 	tokenHash := hashToken(refreshToken)
 
-	// Get user_id from the token record for audit logging
 	uid := ""
 	if ownerID, err := a.repo.GetRefreshTokenOwner(ctx, tokenHash); err == nil {
 		uid = ownerID
@@ -458,6 +466,14 @@ func (a *Auth) Logout(ctx context.Context, refreshToken string) error {
 
 	if err := a.repo.RevokeRefreshTokenByHash(ctx, tokenHash); err != nil {
 		return fmt.Errorf("revoke refresh token: %w", err)
+	}
+
+	// Blacklist the access token so it's rejected immediately
+	if a.blacklist != nil && accessJTI != "" {
+		if err := a.blacklist.Revoke(ctx, accessJTI, accessExpiry); err != nil {
+			slog.Error("blacklist access token failed", "error", err, "jti", accessJTI)
+			// non-fatal: refresh token is already revoked
+		}
 	}
 
 	a.auditor.Write(ctx, audit.Entry{
@@ -520,24 +536,23 @@ func (a *Auth) UpdateProfile(ctx context.Context, userID string, req UpdateProfi
 	return a.Me(ctx, userID)
 }
 
-// ListUsers returns all active users for the current tenant.
-func (a *Auth) ListUsers(ctx context.Context) ([]UserListItem, error) {
-	rows, err := a.repo.ListActiveUsers(ctx)
+// ListUsers returns all active users for the current tenant (paginated).
+func (a *Auth) ListUsers(ctx context.Context, limit, offset int32) ([]UserListItem, error) {
+	rows, err := a.repo.ListActiveUsers(ctx, repository.ListActiveUsersParams{
+		Limit:  limit,
+		Offset: offset,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("list users: %w", err)
 	}
 
 	users := make([]UserListItem, len(rows))
 	for i, row := range rows {
-		role := "user"
-		if r, ok := row.Role.(string); ok {
-			role = r
-		}
 		users[i] = UserListItem{
 			ID:        row.ID,
 			Email:     row.Email,
 			Name:      row.Name,
-			Role:      role,
+			Role:      row.Role,
 			CreatedAt: row.CreatedAt.Time,
 		}
 	}

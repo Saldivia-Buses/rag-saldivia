@@ -6,7 +6,8 @@ WHERE slug = $1 AND enabled = true;
 -- name: ListTenants :many
 SELECT id, slug, name, plan_id, enabled, created_at
 FROM tenants
-ORDER BY created_at;
+ORDER BY created_at
+LIMIT $1 OFFSET $2;
 
 -- name: CreateTenant :one
 INSERT INTO tenants (slug, name, plan_id, postgres_url, redis_url, settings)

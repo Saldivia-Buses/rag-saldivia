@@ -7,11 +7,14 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/go-chi/chi/v5/middleware"
 
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
+	"github.com/Camionerou/rag-saldivia/pkg/pagination"
+	"github.com/Camionerou/rag-saldivia/pkg/security"
 	"github.com/Camionerou/rag-saldivia/pkg/tenant"
 	"github.com/Camionerou/rag-saldivia/services/auth/internal/service"
 )
@@ -20,14 +23,14 @@ import (
 type AuthService interface {
 	Login(ctx context.Context, req service.LoginRequest) (*service.TokenPair, error)
 	Refresh(ctx context.Context, refreshToken string) (*service.TokenPair, error)
-	Logout(ctx context.Context, refreshToken string) error
+	Logout(ctx context.Context, refreshToken, accessJTI string, accessExpiry time.Time) error
 	Me(ctx context.Context, userID string) (*service.UserInfo, error)
 	SetupMFA(ctx context.Context, userID string) (*service.MFASetupResult, error)
 	VerifySetup(ctx context.Context, userID, code string) error
 	DisableMFA(ctx context.Context, userID, code string) error
 	CompleteMFALogin(ctx context.Context, mfaToken, code string) (*service.TokenPair, error)
 	UpdateProfile(ctx context.Context, userID string, req service.UpdateProfileRequest) (*service.UserInfo, error)
-	ListUsers(ctx context.Context) ([]service.UserListItem, error)
+	ListUsers(ctx context.Context, limit, offset int32) ([]service.UserListItem, error)
 }
 
 // EventPublisher can publish notification events via NATS.
@@ -38,10 +41,12 @@ type EventPublisher interface {
 
 // Auth handles HTTP requests for authentication.
 type Auth struct {
-	authSvc   AuthService     // static service (single-tenant mode)
+	authSvc   AuthService      // static service (single-tenant mode)
 	resolver  *tenant.Resolver // per-request resolution (multi-tenant mode)
 	jwtCfg    sdajwt.Config
 	publisher EventPublisher
+	blacklist *security.TokenBlacklist // for multi-tenant service wiring
+	svcCache  sync.Map         // slug → AuthService (multi-tenant cache)
 }
 
 // NewAuth creates auth HTTP handlers in single-tenant mode.
@@ -50,17 +55,19 @@ func NewAuth(authSvc AuthService) *Auth {
 }
 
 // NewMultiTenantAuth creates auth HTTP handlers that resolve the tenant DB per request.
-func NewMultiTenantAuth(resolver *tenant.Resolver, jwtCfg sdajwt.Config, publisher EventPublisher) *Auth {
+func NewMultiTenantAuth(resolver *tenant.Resolver, jwtCfg sdajwt.Config, publisher EventPublisher, blacklist *security.TokenBlacklist) *Auth {
 	return &Auth{
 		resolver:  resolver,
 		jwtCfg:    jwtCfg,
 		publisher: publisher,
+		blacklist: blacklist,
 	}
 }
 
 // resolveService returns the AuthService for the current request's tenant.
 // In single-tenant mode, returns the static service. In multi-tenant mode,
-// resolves the tenant DB from the X-Tenant-Slug header.
+// resolves the tenant DB from the X-Tenant-Slug header and caches the
+// service struct per slug to avoid allocation per request.
 func (h *Auth) resolveService(r *http.Request) (AuthService, error) {
 	if h.authSvc != nil {
 		return h.authSvc, nil
@@ -69,6 +76,11 @@ func (h *Auth) resolveService(r *http.Request) (AuthService, error) {
 	slug := r.Header.Get("X-Tenant-Slug")
 	if slug == "" {
 		return nil, errors.New("missing tenant context")
+	}
+
+	// Check cache first
+	if cached, ok := h.svcCache.Load(slug); ok {
+		return cached.(AuthService), nil
 	}
 
 	pool, err := h.resolver.PostgresPool(r.Context(), slug)
@@ -81,7 +93,10 @@ func (h *Auth) resolveService(r *http.Request) (AuthService, error) {
 		return nil, err
 	}
 
-	return service.NewAuth(pool, h.jwtCfg, tenantID, slug, h.publisher), nil
+	svc := service.NewAuth(pool, h.jwtCfg, tenantID, slug, h.publisher)
+	svc.SetBlacklist(h.blacklist)
+	h.svcCache.Store(slug, svc)
+	return svc, nil
 }
 
 type loginRequest struct {
@@ -220,7 +235,18 @@ func (h *Auth) Logout(w http.ResponseWriter, r *http.Request) {
 
 	if refreshToken != "" {
 		if svc, err := h.resolveService(r); err == nil {
-			_ = svc.Logout(r.Context(), refreshToken)
+			// Extract access token JTI for blacklisting
+			accessJTI := ""
+			accessExpiry := time.Now().Add(15 * time.Minute) // default
+			if bearer := r.Header.Get("Authorization"); len(bearer) > 7 {
+				if claims, err := sdajwt.Verify(h.jwtCfg.PublicKey, bearer[7:]); err == nil {
+					accessJTI = claims.ID
+					if claims.ExpiresAt != nil {
+						accessExpiry = claims.ExpiresAt.Time
+					}
+				}
+			}
+			_ = svc.Logout(r.Context(), refreshToken, accessJTI, accessExpiry)
 		}
 	}
 
@@ -259,25 +285,27 @@ func (h *Auth) Me(w http.ResponseWriter, r *http.Request) {
 }
 
 // EnabledModules handles GET /v1/modules/enabled
-// Returns the list of modules enabled for the current tenant.
-// TODO: Read from Platform DB via tenant_modules table. Currently returns
-// core modules as a baseline until Platform Service integration.
+// Returns modules enabled for the current tenant from Platform DB.
+// In single-tenant mode or if resolver is unavailable, returns core defaults.
 func (h *Auth) EnabledModules(w http.ResponseWriter, r *http.Request) {
-	type moduleEntry struct {
-		ID       string `json:"id"`
-		Name     string `json:"name"`
-		Category string `json:"category"`
+	tenantID := r.Header.Get("X-Tenant-ID")
+
+	if h.resolver != nil && tenantID != "" {
+		modules, err := h.resolver.ListEnabledModules(r.Context(), tenantID)
+		if err != nil {
+			slog.Error("list enabled modules failed", "error", err)
+		} else {
+			writeJSON(w, http.StatusOK, modules)
+			return
+		}
 	}
 
-	// Core modules — always enabled for all tenants
-	modules := []moduleEntry{
-		{ID: "chat", Name: "Chat", Category: "core"},
-		{ID: "rag", Name: "RAG", Category: "core"},
+	// Fallback: core modules when no resolver (single-tenant mode)
+	writeJSON(w, http.StatusOK, []tenant.EnabledModule{
+		{ID: "chat", Name: "Chat + RAG", Category: "core"},
+		{ID: "auth", Name: "Auth + RBAC", Category: "core"},
 		{ID: "notifications", Name: "Notificaciones", Category: "core"},
-		{ID: "ingest", Name: "Ingesta", Category: "core"},
-	}
-
-	writeJSON(w, http.StatusOK, modules)
+	})
 }
 
 // Health handles GET /health
@@ -351,7 +379,7 @@ func (h *Auth) UpdateMe(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, user)
 }
 
-// ListUsers handles GET /v1/auth/users — returns all active users for the tenant.
+// ListUsers handles GET /v1/auth/users — returns active users for the tenant (paginated).
 func (h *Auth) ListUsers(w http.ResponseWriter, r *http.Request) {
 	svc, err := h.resolveService(r)
 	if err != nil {
@@ -359,7 +387,8 @@ func (h *Auth) ListUsers(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	users, err := svc.ListUsers(r.Context())
+	pg := pagination.Parse(r)
+	users, err := svc.ListUsers(r.Context(), int32(pg.Limit()), int32(pg.Offset()))
 	if err != nil {
 		reqID := middleware.GetReqID(r.Context())
 		slog.Error("list users failed", "error", err, "request_id", reqID)

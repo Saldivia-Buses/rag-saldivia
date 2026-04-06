@@ -16,10 +16,12 @@ import (
 
 	"crypto/ed25519"
 
+	"github.com/Camionerou/rag-saldivia/pkg/config"
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
 	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
+	"github.com/Camionerou/rag-saldivia/pkg/security"
 	"github.com/Camionerou/rag-saldivia/pkg/tenant"
 	"github.com/Camionerou/rag-saldivia/services/auth/internal/handler"
 	"github.com/Camionerou/rag-saldivia/services/auth/internal/service"
@@ -30,9 +32,9 @@ func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
 	slog.SetDefault(logger)
 
-	port := env("AUTH_PORT", "8001")
-	tenantDBURL := env("POSTGRES_TENANT_URL", "")
-	platformDBURL := env("POSTGRES_PLATFORM_URL", "")
+	port := config.Env("AUTH_PORT", "8001")
+	tenantDBURL := config.Env("POSTGRES_TENANT_URL", "")
+	platformDBURL := config.Env("POSTGRES_PLATFORM_URL", "")
 
 	privateKey, publicKey := loadJWTKeys()
 
@@ -43,7 +45,8 @@ func main() {
 	otelShutdown, err := sdaotel.Setup(ctx, sdaotel.Config{
 		ServiceName:    "sda-auth",
 		ServiceVersion: "1.0.0",
-		Endpoint:       env("OTEL_EXPORTER_OTLP_ENDPOINT", "localhost:4317"),
+		Endpoint:       config.Env("OTEL_EXPORTER_OTLP_ENDPOINT", "localhost:4317"),
+		Insecure:       true,
 	})
 	if err != nil {
 		slog.Warn("otel init failed, traces disabled", "error", err)
@@ -52,25 +55,18 @@ func main() {
 	}
 
 	// Connect to NATS
-	natsURL := env("NATS_URL", nats.DefaultURL)
-	nc, err := nats.Connect(natsURL,
-		nats.RetryOnFailedConnect(true),
-		nats.MaxReconnects(-1),
-		nats.ReconnectWait(2*time.Second),
-		nats.DisconnectErrHandler(func(_ *nats.Conn, err error) {
-			slog.Warn("NATS disconnected", "error", err)
-		}),
-		nats.ReconnectHandler(func(_ *nats.Conn) {
-			slog.Info("NATS reconnected")
-		}),
-	)
+	natsURL := config.Env("NATS_URL", nats.DefaultURL)
+	nc, err := natspub.Connect(natsURL)
 	if err != nil {
 		slog.Error("failed to connect to NATS", "error", err)
 		os.Exit(1)
 	}
-	defer nc.Close()
+	defer nc.Drain()
 	publisher := natspub.New(nc)
 	slog.Info("connected to NATS", "url", natsURL)
+
+	// Token blacklist (shared Redis)
+	blacklist := security.InitBlacklist(ctx, config.Env("REDIS_URL", "localhost:6379"))
 
 	jwtCfg := sdajwt.DefaultConfig(privateKey, publicKey)
 
@@ -95,7 +91,7 @@ func main() {
 		resolver := tenant.NewResolver(platformPool, nil) // nil = no credential encryption (yet)
 		defer resolver.Close()
 
-		authHandler = handler.NewMultiTenantAuth(resolver, jwtCfg, publisher)
+		authHandler = handler.NewMultiTenantAuth(resolver, jwtCfg, publisher, blacklist)
 		slog.Info("auth service starting in multi-tenant mode")
 	} else if tenantDBURL != "" {
 		// Single-tenant: direct connection (dev mode)
@@ -111,9 +107,10 @@ func main() {
 			os.Exit(1)
 		}
 
-		tenantID := env("TENANT_ID", "dev")
-		tenantSlug := env("TENANT_SLUG", "dev")
+		tenantID := config.Env("TENANT_ID", "dev")
+		tenantSlug := config.Env("TENANT_SLUG", "dev")
 		authSvc := service.NewAuth(pool, jwtCfg, tenantID, tenantSlug, publisher)
+		authSvc.SetBlacklist(blacklist)
 		authHandler = handler.NewAuth(authSvc)
 		slog.Info("auth service starting in single-tenant mode", "tenant_slug", tenantSlug)
 	} else {
@@ -129,14 +126,19 @@ func main() {
 	r.Use(sdamw.SecureHeaders())
 	r.Use(middleware.Timeout(30 * time.Second))
 
+	// Rate limiters for sensitive endpoints
+	loginRL := sdamw.RateLimit(sdamw.RateLimitConfig{Requests: 5, Window: time.Minute, KeyFunc: sdamw.ByIP})
+	refreshRL := sdamw.RateLimit(sdamw.RateLimitConfig{Requests: 10, Window: time.Minute, KeyFunc: sdamw.ByIP})
+	mfaRL := sdamw.RateLimit(sdamw.RateLimitConfig{Requests: 5, Window: time.Minute, KeyFunc: sdamw.ByIP})
+
 	r.Get("/health", authHandler.Health)
-	r.Post("/v1/auth/login", authHandler.Login)
-	r.Post("/v1/auth/refresh", authHandler.Refresh)
+	r.With(loginRL).Post("/v1/auth/login", authHandler.Login)
+	r.With(refreshRL).Post("/v1/auth/refresh", authHandler.Refresh)
 	r.Post("/v1/auth/logout", authHandler.Logout)
 
-	// Protected routes — require valid access token
+	// Protected routes — require valid access token + blacklist check
 	r.Group(func(r chi.Router) {
-		r.Use(sdamw.Auth(publicKey))
+		r.Use(sdamw.AuthWithConfig(publicKey, sdamw.AuthConfig{Blacklist: blacklist, FailOpen: false}))
 		r.Get("/v1/auth/me", authHandler.Me)
 		r.Patch("/v1/auth/me", authHandler.UpdateMe)
 		r.With(sdamw.RequirePermission("users.read")).Get("/v1/auth/users", authHandler.ListUsers)
@@ -148,13 +150,14 @@ func main() {
 	})
 
 	// MFA login verification (uses temp mfa_token, not regular access token)
-	r.Post("/v1/auth/mfa/verify", authHandler.VerifyMFALogin)
+	r.With(mfaRL).Post("/v1/auth/mfa/verify", authHandler.VerifyMFALogin)
 
 	// Server
 	srv := &http.Server{
 		Addr:         ":" + port,
 		Handler:      otelhttp.NewHandler(r, "sda-auth"),
 		ReadTimeout:  10 * time.Second,
+		ReadHeaderTimeout: 10 * time.Second,
 		WriteTimeout: 30 * time.Second,
 		IdleTimeout:  60 * time.Second,
 	}
@@ -179,18 +182,11 @@ func main() {
 	slog.Info("auth service stopped")
 }
 
-func env(key, fallback string) string {
-	if v := os.Getenv(key); v != "" {
-		return v
-	}
-	return fallback
-}
-
 // loadJWTKeys loads Ed25519 keys from env vars (base64-encoded PEM).
 // Auth service needs both private (signing) and public (verification).
 func loadJWTKeys() (ed25519.PrivateKey, ed25519.PublicKey) {
-	privB64 := env("JWT_PRIVATE_KEY", "")
-	pubB64 := env("JWT_PUBLIC_KEY", "")
+	privB64 := config.Env("JWT_PRIVATE_KEY", "")
+	pubB64 := config.Env("JWT_PUBLIC_KEY", "")
 	if privB64 == "" || pubB64 == "" {
 		slog.Error("JWT_PRIVATE_KEY and JWT_PUBLIC_KEY are required")
 		os.Exit(1)

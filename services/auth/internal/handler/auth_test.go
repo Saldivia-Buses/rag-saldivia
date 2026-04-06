@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/Camionerou/rag-saldivia/services/auth/internal/service"
 )
@@ -39,7 +40,7 @@ func (m *mockAuthService) Refresh(_ context.Context, _ string) (*service.TokenPa
 	return m.tokens, nil
 }
 
-func (m *mockAuthService) Logout(_ context.Context, _ string) error {
+func (m *mockAuthService) Logout(_ context.Context, _, _ string, _ time.Time) error {
 	return m.logoutErr
 }
 
@@ -65,7 +66,7 @@ func (m *mockAuthService) UpdateProfile(_ context.Context, _ string, _ service.U
 	return m.userInfo, nil
 }
 
-func (m *mockAuthService) ListUsers(_ context.Context) ([]service.UserListItem, error) {
+func (m *mockAuthService) ListUsers(_ context.Context, _, _ int32) ([]service.UserListItem, error) {
 	return nil, nil
 }
 

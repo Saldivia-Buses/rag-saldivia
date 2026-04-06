@@ -9,7 +9,6 @@ import (
 	"syscall"
 	"time"
 
-	"crypto/ed25519"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -17,7 +16,10 @@ import (
 	"github.com/nats-io/nats.go"
 
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
+	"github.com/Camionerou/rag-saldivia/pkg/config"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
+	"github.com/Camionerou/rag-saldivia/pkg/security"
+	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
 	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
 	"github.com/Camionerou/rag-saldivia/services/notification/internal/handler"
 	"github.com/Camionerou/rag-saldivia/services/notification/internal/service"
@@ -28,13 +30,13 @@ func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
 	slog.SetDefault(logger)
 
-	port := env("NOTIFICATION_PORT", "8005")
-	dbURL := env("POSTGRES_TENANT_URL", "")
-	publicKey := loadPublicKey()
-	natsURL := env("NATS_URL", nats.DefaultURL)
-	smtpHost := env("SMTP_HOST", "localhost")
-	smtpPort := env("SMTP_PORT", "1025")
-	smtpFrom := env("SMTP_FROM", "noreply@sda.local")
+	port := config.Env("NOTIFICATION_PORT", "8005")
+	dbURL := config.Env("POSTGRES_TENANT_URL", "")
+	publicKey := sdajwt.MustLoadPublicKey("JWT_PUBLIC_KEY")
+	natsURL := config.Env("NATS_URL", nats.DefaultURL)
+	smtpHost := config.Env("SMTP_HOST", "localhost")
+	smtpPort := config.Env("SMTP_PORT", "1025")
+	smtpFrom := config.Env("SMTP_FROM", "noreply@sda.local")
 
 	if dbURL == "" {
 		slog.Error("POSTGRES_TENANT_URL is required")
@@ -48,13 +50,17 @@ func main() {
 	otelShutdown, err := sdaotel.Setup(ctx, sdaotel.Config{
 		ServiceName:    "sda-notification",
 		ServiceVersion: "1.0.0",
-		Endpoint:       env("OTEL_EXPORTER_OTLP_ENDPOINT", "localhost:4317"),
+		Endpoint:       config.Env("OTEL_EXPORTER_OTLP_ENDPOINT", "localhost:4317"),
+		Insecure:       true,
 	})
 	if err != nil {
 		slog.Warn("otel init failed, traces disabled", "error", err)
 	} else {
 		defer otelShutdown(context.Background())
 	}
+
+	// Token blacklist (shared Redis)
+	blacklist := security.InitBlacklist(ctx, config.Env("REDIS_URL", "localhost:6379"))
 
 	// Database
 	pool, err := pgxpool.New(ctx, dbURL)
@@ -65,22 +71,12 @@ func main() {
 	defer pool.Close()
 
 	// NATS
-	nc, err := nats.Connect(natsURL,
-		nats.RetryOnFailedConnect(true),
-		nats.MaxReconnects(-1),
-		nats.ReconnectWait(2*time.Second),
-		nats.DisconnectErrHandler(func(_ *nats.Conn, err error) {
-			slog.Warn("NATS disconnected", "error", err)
-		}),
-		nats.ReconnectHandler(func(_ *nats.Conn) {
-			slog.Info("NATS reconnected")
-		}),
-	)
+	nc, err := natspub.Connect(natsURL)
 	if err != nil {
 		slog.Error("failed to connect to NATS", "error", err, "url", natsURL)
 		os.Exit(1)
 	}
-	defer nc.Close()
+	defer nc.Drain()
 	slog.Info("connected to NATS", "url", natsURL)
 
 	// Services
@@ -109,7 +105,7 @@ func main() {
 		w.Write([]byte(`{"status":"ok","service":"notification"}`))
 	})
 	r.Group(func(r chi.Router) {
-		r.Use(sdamw.Auth(publicKey))
+		r.Use(sdamw.AuthWithConfig(publicKey, sdamw.AuthConfig{Blacklist: blacklist, FailOpen: true}))
 		r.Mount("/v1/notifications", notifHandler.Routes())
 	})
 
@@ -117,6 +113,7 @@ func main() {
 		Addr:         ":" + port,
 		Handler:      otelhttp.NewHandler(r, "sda-notification"),
 		ReadTimeout:  10 * time.Second,
+		ReadHeaderTimeout: 10 * time.Second,
 		WriteTimeout: 30 * time.Second,
 		IdleTimeout:  60 * time.Second,
 	}
@@ -134,27 +131,11 @@ func main() {
 
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer shutdownCancel()
-	srv.Shutdown(shutdownCtx)
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		slog.Error("shutdown error", "error", err)
+	}
 	slog.Info("notification service stopped")
 }
 
-func env(key, fallback string) string {
-	if v := os.Getenv(key); v != "" {
-		return v
-	}
-	return fallback
-}
 
-func loadPublicKey() ed25519.PublicKey {
-	pubB64 := env("JWT_PUBLIC_KEY", "")
-	if pubB64 == "" {
-		slog.Error("JWT_PUBLIC_KEY is required")
-		os.Exit(1)
-	}
-	key, err := sdajwt.ParsePublicKeyEnv(pubB64)
-	if err != nil {
-		slog.Error("failed to parse JWT_PUBLIC_KEY", "error", err)
-		os.Exit(1)
-	}
-	return key
-}
+

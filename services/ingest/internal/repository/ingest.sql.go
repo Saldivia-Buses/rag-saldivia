@@ -74,11 +74,16 @@ func (q *Queries) DeleteJobByID(ctx context.Context, id string) error {
 
 const getJob = `-- name: GetJob :one
 SELECT id, user_id, collection, file_name, file_size, status, error, created_at, updated_at
-FROM ingest_jobs WHERE id = $1
+FROM ingest_jobs WHERE id = $1 AND user_id = $2
 `
 
-func (q *Queries) GetJob(ctx context.Context, id string) (IngestJob, error) {
-	row := q.db.QueryRow(ctx, getJob, id)
+type GetJobParams struct {
+	ID     string `json:"id"`
+	UserID string `json:"user_id"`
+}
+
+func (q *Queries) GetJob(ctx context.Context, arg GetJobParams) (IngestJob, error) {
+	row := q.db.QueryRow(ctx, getJob, arg.ID, arg.UserID)
 	var i IngestJob
 	err := row.Scan(
 		&i.ID,

@@ -10,6 +10,8 @@ import (
 	"io"
 	"net/http"
 	"time"
+
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 // Result is the output of a tool execution.
@@ -34,9 +36,11 @@ type Definition struct {
 }
 
 // Executor calls tools by name, routing to the correct service.
+// Supports both HTTP and gRPC backends per tool.
 type Executor struct {
-	tools  map[string]Definition
-	client *http.Client
+	tools        map[string]Definition
+	client       *http.Client
+	grpcSearch   *GRPCSearchClient // nil = fallback to HTTP
 }
 
 // NewExecutor creates a tool executor with the given tool definitions.
@@ -47,8 +51,17 @@ func NewExecutor(defs []Definition) *Executor {
 	}
 	return &Executor{
 		tools:  m,
-		client: &http.Client{Timeout: 30 * time.Second},
+		client: &http.Client{
+			Timeout:   30 * time.Second,
+			Transport: otelhttp.NewTransport(http.DefaultTransport),
+		},
 	}
+}
+
+// SetGRPCSearch configures gRPC for the search_documents tool.
+// If set, search calls use gRPC instead of HTTP.
+func (e *Executor) SetGRPCSearch(c *GRPCSearchClient) {
+	e.grpcSearch = c
 }
 
 // Execute calls a tool by name with the given parameters and JWT.
@@ -73,6 +86,11 @@ func (e *Executor) Execute(ctx context.Context, jwt, toolName string, params jso
 		}, nil
 	}
 
+	// Use gRPC for search if available
+	if toolName == "search_documents" && e.grpcSearch != nil {
+		return e.grpcSearch.Execute(ctx, jwt, params)
+	}
+
 	return e.executeHTTP(ctx, jwt, def, params)
 }
 
@@ -81,6 +99,9 @@ func (e *Executor) ExecuteConfirmed(ctx context.Context, jwt, toolName string, p
 	def, ok := e.tools[toolName]
 	if !ok {
 		return &Result{Status: "error", Error: fmt.Sprintf("unknown tool: %q", toolName)}, nil
+	}
+	if toolName == "search_documents" && e.grpcSearch != nil {
+		return e.grpcSearch.Execute(ctx, jwt, params)
 	}
 	return e.executeHTTP(ctx, jwt, def, params)
 }

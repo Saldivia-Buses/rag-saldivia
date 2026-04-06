@@ -34,8 +34,8 @@ jobs:
 
       - name: Health check
         run: |
-          sleep 10
-          for port in 8001 8002 8003 8004 8005 8006 8007 8008; do
+          sleep 15
+          for port in 8001 8002 8003 8004 8005 8006 8007 8008 8009 8010; do
             echo "Checking :${port}/health..."
             curl -sf http://localhost:${port}/health || echo "WARN: port ${port} not healthy"
           done

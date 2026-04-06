@@ -83,10 +83,12 @@ ORDER BY d.created_at DESC;
 SELECT dt.* FROM document_trees dt
 JOIN documents d ON d.id = dt.document_id
 WHERE d.status = 'ready'
-ORDER BY dt.created_at DESC;
+ORDER BY dt.created_at DESC
+LIMIT $1 OFFSET $2;
 
 -- name: GetCollectionDocumentTrees :many
 SELECT dt.* FROM document_trees dt
 JOIN collection_documents cd ON cd.document_id = dt.document_id
 WHERE cd.collection_id = $1
-ORDER BY dt.created_at DESC;
+ORDER BY dt.created_at DESC
+LIMIT $2 OFFSET $3;

@@ -98,7 +98,9 @@ lint-frontend: ## Lint frontend code
 
 proto: ## Generate gRPC code from proto files
 	@echo "Generating protobuf code..."
-	buf generate proto/
+	cd proto && buf lint && buf generate
+	cd gen/go && go mod tidy
+	@echo "Generated → gen/go/"
 
 sqlc: ## Generate Go code from SQL queries (all services)
 	@for svc in $(GO_SERVICES); do \

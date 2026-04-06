@@ -105,10 +105,16 @@ SELECT dt.id, dt.document_id, dt.tree, dt.doc_description, dt.tree_version, dt.m
 JOIN documents d ON d.id = dt.document_id
 WHERE d.status = 'ready'
 ORDER BY dt.created_at DESC
+LIMIT $1 OFFSET $2
 `
 
-func (q *Queries) GetAllDocumentTrees(ctx context.Context) ([]DocumentTree, error) {
-	rows, err := q.db.Query(ctx, getAllDocumentTrees)
+type GetAllDocumentTreesParams struct {
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
+}
+
+func (q *Queries) GetAllDocumentTrees(ctx context.Context, arg GetAllDocumentTreesParams) ([]DocumentTree, error) {
+	rows, err := q.db.Query(ctx, getAllDocumentTrees, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
@@ -141,10 +147,17 @@ SELECT dt.id, dt.document_id, dt.tree, dt.doc_description, dt.tree_version, dt.m
 JOIN collection_documents cd ON cd.document_id = dt.document_id
 WHERE cd.collection_id = $1
 ORDER BY dt.created_at DESC
+LIMIT $2 OFFSET $3
 `
 
-func (q *Queries) GetCollectionDocumentTrees(ctx context.Context, collectionID string) ([]DocumentTree, error) {
-	rows, err := q.db.Query(ctx, getCollectionDocumentTrees, collectionID)
+type GetCollectionDocumentTreesParams struct {
+	CollectionID string `json:"collection_id"`
+	Limit        int32  `json:"limit"`
+	Offset       int32  `json:"offset"`
+}
+
+func (q *Queries) GetCollectionDocumentTrees(ctx context.Context, arg GetCollectionDocumentTreesParams) ([]DocumentTree, error) {
+	rows, err := q.db.Query(ctx, getCollectionDocumentTrees, arg.CollectionID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}

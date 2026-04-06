@@ -2,8 +2,6 @@ package main
 
 import (
 	"context"
-	"crypto/ed25519"
-	"encoding/json"
 	"log/slog"
 	"net/http"
 	"os"
@@ -14,25 +12,44 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/nats-io/nats.go"
 
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
+	"github.com/Camionerou/rag-saldivia/pkg/config"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
+	"github.com/Camionerou/rag-saldivia/pkg/security"
+	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
+	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
 	"github.com/Camionerou/rag-saldivia/services/traces/internal/handler"
 	"github.com/Camionerou/rag-saldivia/services/traces/internal/service"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
 	slog.SetDefault(logger)
 
-	port := env("TRACES_PORT", "8009")
-	publicKey := loadPublicKey()
-	platformDBURL := env("POSTGRES_PLATFORM_URL", "")
-	natsURL := env("NATS_URL", "nats://localhost:4222")
+	port := config.Env("TRACES_PORT", "8009")
+	publicKey := sdajwt.MustLoadPublicKey("JWT_PUBLIC_KEY")
+	platformDBURL := config.Env("POSTGRES_PLATFORM_URL", "")
+	natsURL := config.Env("NATS_URL", "nats://localhost:4222")
 
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
+
+	otelShutdown, err := sdaotel.Setup(ctx, sdaotel.Config{
+		ServiceName:    "sda-traces",
+		ServiceVersion: "0.1.0",
+		Endpoint:       config.Env("OTEL_EXPORTER_OTLP_ENDPOINT", "localhost:4317"),
+		Insecure:       true,
+	})
+	if err != nil {
+		slog.Warn("otel init failed", "error", err)
+	} else {
+		defer otelShutdown(context.Background())
+	}
+
+	// Token blacklist (shared Redis)
+	blacklist := security.InitBlacklist(ctx, config.Env("REDIS_URL", "localhost:6379"))
 
 	pool, err := pgxpool.New(ctx, platformDBURL)
 	if err != nil {
@@ -44,75 +61,20 @@ func main() {
 	tracesSvc := service.New(pool)
 	tracesHandler := handler.New(tracesSvc)
 
-	// NATS subscriber for trace events
-	nc, err := nats.Connect(natsURL)
+	// NATS consumer for trace events (new JetStream API)
+	nc, err := natspub.Connect(natsURL)
 	if err != nil {
 		slog.Error("failed to connect to nats", "error", err)
 		os.Exit(1)
 	}
 	defer nc.Drain()
 
-	js, err := nc.JetStream()
-	if err != nil {
-		slog.Error("failed to get jetstream", "error", err)
+	tracesConsumer := service.NewConsumer(nc, tracesSvc)
+	if err := tracesConsumer.Start(ctx); err != nil {
+		slog.Error("failed to start traces consumer", "error", err)
 		os.Exit(1)
 	}
-
-	// Ensure stream
-	// B5: use tenant.*.traces.> subject convention
-	js.AddStream(&nats.StreamConfig{
-		Name:     "TRACES",
-		Subjects: []string{"tenant.*.traces.>"},
-	})
-
-	// B4: NATS callbacks use background context with timeout, not the signal
-	// context. During drain, callbacks can still fire — they need a live context.
-	natsCtx := func() context.Context {
-		c, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-		_ = cancel // GC will clean up; callback is short-lived
-		return c
-	}
-
-	js.Subscribe("tenant.*.traces.start", func(msg *nats.Msg) {
-		var evt service.TraceStartEvent
-		if err := json.Unmarshal(msg.Data, &evt); err != nil {
-			slog.Error("invalid trace start event", "error", err)
-			msg.Ack()
-			return
-		}
-		if err := tracesSvc.RecordTraceStart(natsCtx(), evt); err != nil {
-			slog.Error("record trace start failed", "error", err, "trace_id", evt.TraceID)
-		}
-		msg.Ack()
-	}, nats.Durable("traces-start"), nats.ManualAck())
-
-	js.Subscribe("tenant.*.traces.end", func(msg *nats.Msg) {
-		var evt service.TraceEndEvent
-		if err := json.Unmarshal(msg.Data, &evt); err != nil {
-			slog.Error("invalid trace end event", "error", err)
-			msg.Ack()
-			return
-		}
-		if err := tracesSvc.RecordTraceEnd(natsCtx(), evt); err != nil {
-			slog.Error("record trace end failed", "error", err, "trace_id", evt.TraceID)
-		}
-		msg.Ack()
-	}, nats.Durable("traces-end"), nats.ManualAck())
-
-	js.Subscribe("tenant.*.traces.event", func(msg *nats.Msg) {
-		var evt service.TraceEvent
-		if err := json.Unmarshal(msg.Data, &evt); err != nil {
-			slog.Error("invalid trace event", "error", err)
-			msg.Ack()
-			return
-		}
-		if err := tracesSvc.RecordEvent(natsCtx(), evt); err != nil {
-			slog.Error("record event failed", "error", err, "trace_id", evt.TraceID)
-		}
-		msg.Ack()
-	}, nats.Durable("traces-events"), nats.ManualAck())
-
-	slog.Info("nats trace subscribers active")
+	defer tracesConsumer.Stop()
 
 	// HTTP server
 	r := chi.NewRouter()
@@ -128,14 +90,15 @@ func main() {
 	})
 
 	r.Group(func(r chi.Router) {
-		r.Use(sdamw.Auth(publicKey))
+		r.Use(sdamw.AuthWithConfig(publicKey, sdamw.AuthConfig{Blacklist: blacklist, FailOpen: true}))
 		r.Mount("/v1/traces", tracesHandler.Routes())
 	})
 
 	srv := &http.Server{
 		Addr:         ":" + port,
-		Handler:      r,
+		Handler:      otelhttp.NewHandler(r, "sda-traces"),
 		ReadTimeout:  10 * time.Second,
+		ReadHeaderTimeout: 10 * time.Second,
 		WriteTimeout: 30 * time.Second,
 		IdleTimeout:  120 * time.Second,
 	}
@@ -152,26 +115,10 @@ func main() {
 	slog.Info("traces service shutting down")
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer shutdownCancel()
-	srv.Shutdown(shutdownCtx)
+	if err := srv.Shutdown(shutdownCtx); err != nil {
+		slog.Error("shutdown error", "error", err)
+	}
 }
 
-func env(key, fallback string) string {
-	if v := os.Getenv(key); v != "" {
-		return v
-	}
-	return fallback
-}
 
-func loadPublicKey() ed25519.PublicKey {
-	pubB64 := env("JWT_PUBLIC_KEY", "")
-	if pubB64 == "" {
-		slog.Error("JWT_PUBLIC_KEY is required")
-		os.Exit(1)
-	}
-	key, err := sdajwt.ParsePublicKeyEnv(pubB64)
-	if err != nil {
-		slog.Error("failed to parse JWT_PUBLIC_KEY", "error", err)
-		os.Exit(1)
-	}
-	return key
-}
+

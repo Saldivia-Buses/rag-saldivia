@@ -8,7 +8,7 @@ syntax = "proto3";
 
 package sda.notification.v1;
 
-option go_package = "github.com/Camionerou/rag-saldivia/proto/notification/v1;notificationv1";
+option go_package = "github.com/Camionerou/rag-saldivia/gen/go/notification/v1;notificationv1";
 
 import "google/protobuf/timestamp.proto";
 

@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"crypto/ed25519"
 	"log/slog"
 	"net/http"
 	"os"
@@ -16,7 +15,9 @@ import (
 	"github.com/nats-io/nats.go"
 
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
+	"github.com/Camionerou/rag-saldivia/pkg/config"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
+	"github.com/Camionerou/rag-saldivia/pkg/security"
 	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
 	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
 	"github.com/Camionerou/rag-saldivia/services/feedback/internal/handler"
@@ -28,9 +29,9 @@ func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
 	slog.SetDefault(logger)
 
-	port := env("FEEDBACK_PORT", "8008")
-	tenantDBURL := env("POSTGRES_TENANT_URL", "")
-	platformDBURL := env("POSTGRES_PLATFORM_URL", "")
+	port := config.Env("FEEDBACK_PORT", "8008")
+	tenantDBURL := config.Env("POSTGRES_TENANT_URL", "")
+	platformDBURL := config.Env("POSTGRES_PLATFORM_URL", "")
 
 	if tenantDBURL == "" {
 		slog.Error("POSTGRES_TENANT_URL is required")
@@ -48,13 +49,17 @@ func main() {
 	otelShutdown, err := sdaotel.Setup(ctx, sdaotel.Config{
 		ServiceName:    "sda-feedback",
 		ServiceVersion: "0.1.0",
-		Endpoint:       env("OTEL_EXPORTER_OTLP_ENDPOINT", "localhost:4317"),
+		Endpoint:       config.Env("OTEL_EXPORTER_OTLP_ENDPOINT", "localhost:4317"),
+		Insecure:       true,
 	})
 	if err != nil {
 		slog.Warn("otel init failed, traces disabled", "error", err)
 	} else {
 		defer otelShutdown(context.Background())
 	}
+
+	// Token blacklist (shared Redis)
+	blacklist := security.InitBlacklist(ctx, config.Env("REDIS_URL", "localhost:6379"))
 
 	// Connect to tenant database
 	tenantPool, err := pgxpool.New(ctx, tenantDBURL)
@@ -81,23 +86,13 @@ func main() {
 	}
 
 	// Connect to NATS
-	natsURL := env("NATS_URL", nats.DefaultURL)
-	nc, err := nats.Connect(natsURL,
-		nats.RetryOnFailedConnect(true),
-		nats.MaxReconnects(-1),
-		nats.ReconnectWait(2*time.Second),
-		nats.DisconnectErrHandler(func(_ *nats.Conn, err error) {
-			slog.Warn("NATS disconnected", "error", err)
-		}),
-		nats.ReconnectHandler(func(_ *nats.Conn) {
-			slog.Info("NATS reconnected")
-		}),
-	)
+	natsURL := config.Env("NATS_URL", nats.DefaultURL)
+	nc, err := natspub.Connect(natsURL)
 	if err != nil {
 		slog.Error("failed to connect to NATS", "error", err)
 		os.Exit(1)
 	}
-	defer nc.Close()
+	defer nc.Drain()
 	slog.Info("connected to NATS", "url", natsURL)
 
 	// Initialize services
@@ -115,11 +110,11 @@ func main() {
 
 	// Start aggregator
 	aggInterval := 1 * time.Hour
-	if v := env("AGGREGATION_INTERVAL", ""); v == "1m" {
+	if v := config.Env("AGGREGATION_INTERVAL", ""); v == "1m" {
 		aggInterval = 1 * time.Minute // for testing
 	}
-	tenantID := env("TENANT_ID", "dev")
-	tenantSlug := env("TENANT_SLUG", "dev")
+	tenantID := config.Env("TENANT_ID", "dev")
+	tenantSlug := config.Env("TENANT_SLUG", "dev")
 	aggregator := service.NewAggregator(tenantPool, platformPool, feedbackSvc, alerter, aggInterval)
 	aggregator.Start(ctx, tenantID, tenantSlug)
 	defer aggregator.Stop()
@@ -132,7 +127,7 @@ func main() {
 	r.Use(sdamw.SecureHeaders())
 	r.Use(middleware.Timeout(30 * time.Second))
 
-	publicKey := loadPublicKey()
+	publicKey := sdajwt.MustLoadPublicKey("JWT_PUBLIC_KEY")
 
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -141,16 +136,16 @@ func main() {
 	})
 
 	// Tenant-scoped feedback endpoints (require auth)
-	feedbackHandler := handler.NewFeedback(feedbackSvc.Repo())
+	feedbackHandler := handler.NewFeedback(feedbackSvc.Repo(), platformPool)
 	r.Group(func(r chi.Router) {
-		r.Use(sdamw.Auth(publicKey))
+		r.Use(sdamw.AuthWithConfig(publicKey, sdamw.AuthConfig{Blacklist: blacklist, FailOpen: true}))
 		r.Mount("/v1/feedback", feedbackHandler.Routes())
 	})
 
 	// Platform admin feedback endpoints (require admin JWT)
 	platformFeedbackHandler := handler.NewPlatformFeedback(platformPool)
 	r.Group(func(r chi.Router) {
-		r.Use(sdamw.Auth(publicKey))
+		r.Use(sdamw.AuthWithConfig(publicKey, sdamw.AuthConfig{Blacklist: blacklist, FailOpen: false})) // admin routes: security > availability
 		r.Mount("/v1/platform/feedback", platformFeedbackHandler.Routes())
 	})
 
@@ -159,6 +154,7 @@ func main() {
 		Addr:         ":" + port,
 		Handler:      otelhttp.NewHandler(r, "sda-feedback"),
 		ReadTimeout:  10 * time.Second,
+		ReadHeaderTimeout: 10 * time.Second,
 		WriteTimeout: 30 * time.Second,
 		IdleTimeout:  60 * time.Second,
 	}
@@ -184,23 +180,5 @@ func main() {
 	slog.Info("feedback service stopped")
 }
 
-func env(key, fallback string) string {
-	if v := os.Getenv(key); v != "" {
-		return v
-	}
-	return fallback
-}
 
-func loadPublicKey() ed25519.PublicKey {
-	pubB64 := env("JWT_PUBLIC_KEY", "")
-	if pubB64 == "" {
-		slog.Error("JWT_PUBLIC_KEY is required")
-		os.Exit(1)
-	}
-	key, err := sdajwt.ParsePublicKeyEnv(pubB64)
-	if err != nil {
-		slog.Error("failed to parse JWT_PUBLIC_KEY", "error", err)
-		os.Exit(1)
-	}
-	return key
-}
+

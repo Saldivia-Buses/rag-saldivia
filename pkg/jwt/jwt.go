@@ -14,9 +14,11 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
+	"os"
 	"time"
 
 	gojwt "github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
 var (
@@ -66,9 +68,15 @@ func VerifyOnlyConfig(publicKey ed25519.PublicKey) Config {
 }
 
 // CreateAccess creates a short-lived access token. Requires private key.
+// If claims.ID (JTI) is empty, a random UUID is generated automatically
+// to ensure the blacklist check in the auth middleware always has an ID.
 func CreateAccess(cfg Config, claims Claims) (string, error) {
 	if cfg.PrivateKey == nil {
 		return "", fmt.Errorf("%w: private key required for signing", ErrInvalidKey)
+	}
+
+	if claims.ID == "" {
+		claims.ID = uuid.NewString()
 	}
 
 	now := time.Now()
@@ -88,6 +96,10 @@ func CreateAccess(cfg Config, claims Claims) (string, error) {
 func CreateRefresh(cfg Config, claims Claims) (string, error) {
 	if cfg.PrivateKey == nil {
 		return "", fmt.Errorf("%w: private key required for signing", ErrInvalidKey)
+	}
+
+	if claims.ID == "" {
+		claims.ID = uuid.NewString()
 	}
 
 	now := time.Now()
@@ -187,4 +199,18 @@ func ParsePublicKeyEnv(b64 string) (ed25519.PublicKey, error) {
 		return nil, fmt.Errorf("%w: base64 decode failed: %v", ErrInvalidKey, err)
 	}
 	return ParsePublicKeyPEM(pemData)
+}
+
+// MustLoadPublicKey reads a base64-encoded public key from an env var or panics.
+// Replaces the copy-pasted loadPublicKey() in every cmd/main.go.
+func MustLoadPublicKey(envVar string) ed25519.PublicKey {
+	b64 := os.Getenv(envVar)
+	if b64 == "" {
+		panic(fmt.Sprintf("%s environment variable is required", envVar))
+	}
+	key, err := ParsePublicKeyEnv(b64)
+	if err != nil {
+		panic(fmt.Sprintf("failed to parse %s: %v", envVar, err))
+	}
+	return key
 }

@@ -50,7 +50,7 @@ func (m *mockChatService) GetSession(_ context.Context, sessionID, userID string
 	return nil, service.ErrSessionNotFound
 }
 
-func (m *mockChatService) ListSessions(_ context.Context, userID string) ([]service.Session, error) {
+func (m *mockChatService) ListSessions(_ context.Context, userID string, _, _ int32) ([]service.Session, error) {
 	if m.err != nil {
 		return nil, m.err
 	}
@@ -104,7 +104,7 @@ func (m *mockChatService) AddMessage(_ context.Context, sessionID, userID, role,
 	return &msg, nil
 }
 
-func (m *mockChatService) GetMessages(_ context.Context, sessionID string) ([]service.Message, error) {
+func (m *mockChatService) GetMessages(_ context.Context, sessionID string, _ int32) ([]service.Message, error) {
 	if m.err != nil {
 		return nil, m.err
 	}
@@ -357,7 +357,7 @@ func TestAddMessage_ValidRole_Success(t *testing.T) {
 	}
 	r := setupRouter(mock)
 
-	for _, role := range []string{"user", "assistant", "system"} {
+	for _, role := range []string{"user", "assistant"} {
 		t.Run(role, func(t *testing.T) {
 			body := `{"role":"` + role + `","content":"hello"}`
 			req := withUserID(httptest.NewRequest(http.MethodPost, "/v1/chat/sessions/s-1/messages", strings.NewReader(body)), "u-1")
@@ -370,6 +370,19 @@ func TestAddMessage_ValidRole_Success(t *testing.T) {
 			}
 		})
 	}
+
+	// "system" role is blocked from API clients (only internal use)
+	t.Run("system_blocked", func(t *testing.T) {
+		body := `{"role":"system","content":"hello"}`
+		req := withUserID(httptest.NewRequest(http.MethodPost, "/v1/chat/sessions/s-1/messages", strings.NewReader(body)), "u-1")
+		req.Header.Set("Content-Type", "application/json")
+		rec := httptest.NewRecorder()
+		r.ServeHTTP(rec, req)
+
+		if rec.Code != http.StatusForbidden {
+			t.Fatalf("expected 403 for system role, got %d", rec.Code)
+		}
+	})
 }
 
 func TestAddMessage_InvalidRole_Returns400(t *testing.T) {

@@ -3,12 +3,21 @@ package middleware
 
 import (
 	"crypto/ed25519"
+	"encoding/json"
+	"log/slog"
 	"net/http"
 	"strings"
 
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
+	"github.com/Camionerou/rag-saldivia/pkg/security"
 	"github.com/Camionerou/rag-saldivia/pkg/tenant"
 )
+
+// AuthConfig holds optional dependencies for the auth middleware.
+type AuthConfig struct {
+	Blacklist *security.TokenBlacklist // nil = no blacklist checking
+	FailOpen  bool                     // true = allow on Redis error, false = reject (default)
+}
 
 // Auth returns a chi middleware that verifies the JWT from the Authorization
 // header using an Ed25519 public key and injects identity into the request:
@@ -22,6 +31,11 @@ import (
 // Requests without a valid JWT get a 401 response.
 // The /health endpoint is excluded from auth.
 func Auth(publicKey ed25519.PublicKey) func(http.Handler) http.Handler {
+	return AuthWithConfig(publicKey, AuthConfig{})
+}
+
+// AuthWithConfig is like Auth but accepts optional configuration (blacklist, etc).
+func AuthWithConfig(publicKey ed25519.PublicKey, cfg AuthConfig) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// Save Traefik-injected slug before stripping (Traefik re-injects after client spoofing is stripped)
@@ -53,6 +67,25 @@ func Auth(publicKey ed25519.PublicKey) func(http.Handler) http.Handler {
 				return
 			}
 
+			// Check token blacklist (revoked on logout/password change)
+			if cfg.Blacklist != nil {
+				if claims.ID == "" {
+					writeJSONError(w, http.StatusUnauthorized, "invalid token")
+					return
+				}
+				revoked, err := cfg.Blacklist.IsRevoked(r.Context(), claims.ID)
+				if err != nil {
+					slog.Error("blacklist check failed", "error", err)
+					if !cfg.FailOpen {
+						writeJSONError(w, http.StatusServiceUnavailable, "auth check unavailable")
+						return
+					}
+				} else if revoked {
+					writeJSONError(w, http.StatusUnauthorized, "token revoked")
+					return
+				}
+			}
+
 			// Reject MFA-pending tokens — they're only valid for /v1/auth/mfa/verify
 			if claims.Role == "mfa_pending" {
 				writeJSONError(w, http.StatusUnauthorized, "mfa verification required")
@@ -72,9 +105,11 @@ func Auth(publicKey ed25519.PublicKey) func(http.Handler) http.Handler {
 				Slug: claims.Slug,
 			})
 
-			// Inject role + permissions into context for RBAC middleware
+			// Inject identity into context for RBAC and downstream use
 			ctx = WithRole(ctx, claims.Role)
 			ctx = WithPermissions(ctx, claims.Permissions)
+			ctx = WithUserID(ctx, claims.UserID)
+			ctx = WithUserEmail(ctx, claims.Email)
 
 			// Cross-validate: JWT slug must match subdomain-derived slug (prevents token replay)
 			if traefikSlug != "" && claims.Slug != traefikSlug {
@@ -98,5 +133,5 @@ func extractBearer(r *http.Request) string {
 func writeJSONError(w http.ResponseWriter, status int, msg string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	w.Write([]byte(`{"error":"` + msg + `"}`))
+	json.NewEncoder(w).Encode(map[string]string{"error": msg})
 }
