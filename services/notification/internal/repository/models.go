@@ -100,6 +100,7 @@ type FeedbackEvent struct {
 	Context   []byte             `json:"context"`
 	Comment   pgtype.Text        `json:"comment"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	LatencyMs pgtype.Numeric     `json:"latency_ms"`
 }
 
 type IngestJob struct {

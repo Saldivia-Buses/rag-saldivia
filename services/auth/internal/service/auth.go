@@ -536,24 +536,23 @@ func (a *Auth) UpdateProfile(ctx context.Context, userID string, req UpdateProfi
 	return a.Me(ctx, userID)
 }
 
-// ListUsers returns all active users for the current tenant.
-func (a *Auth) ListUsers(ctx context.Context) ([]UserListItem, error) {
-	rows, err := a.repo.ListActiveUsers(ctx)
+// ListUsers returns all active users for the current tenant (paginated).
+func (a *Auth) ListUsers(ctx context.Context, limit, offset int32) ([]UserListItem, error) {
+	rows, err := a.repo.ListActiveUsers(ctx, repository.ListActiveUsersParams{
+		Limit:  limit,
+		Offset: offset,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("list users: %w", err)
 	}
 
 	users := make([]UserListItem, len(rows))
 	for i, row := range rows {
-		role := "user"
-		if r, ok := row.Role.(string); ok {
-			role = r
-		}
 		users[i] = UserListItem{
 			ID:        row.ID,
 			Email:     row.Email,
 			Name:      row.Name,
-			Role:      role,
+			Role:      row.Role,
 			CreatedAt: row.CreatedAt.Time,
 		}
 	}

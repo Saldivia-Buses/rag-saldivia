@@ -104,9 +104,13 @@ func (c *Chat) GetSession(ctx context.Context, sessionID, userID string) (*Sessi
 	return &s, nil
 }
 
-// ListSessions returns all sessions for a user, most recent first.
-func (c *Chat) ListSessions(ctx context.Context, userID string) ([]Session, error) {
-	rows, err := c.repo.ListSessionsByUser(ctx, userID)
+// ListSessions returns sessions for a user, most recent first (paginated).
+func (c *Chat) ListSessions(ctx context.Context, userID string, limit, offset int32) ([]Session, error) {
+	rows, err := c.repo.ListSessionsByUser(ctx, repository.ListSessionsByUserParams{
+		UserID: userID,
+		Limit:  limit,
+		Offset: offset,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("list sessions: %w", err)
 	}
@@ -209,9 +213,12 @@ func truncate(s string, maxLen int) string {
 	return string(runes[:maxLen]) + "..."
 }
 
-// GetMessages returns all messages for a session, oldest first.
-func (c *Chat) GetMessages(ctx context.Context, sessionID string) ([]Message, error) {
-	rows, err := c.repo.ListMessages(ctx, sessionID)
+// GetMessages returns messages for a session, oldest first (with limit).
+func (c *Chat) GetMessages(ctx context.Context, sessionID string, limit int32) ([]Message, error) {
+	rows, err := c.repo.ListMessages(ctx, repository.ListMessagesParams{
+		SessionID: sessionID,
+		Limit:     limit,
+	})
 	if err != nil {
 		return nil, fmt.Errorf("get messages: %w", err)
 	}

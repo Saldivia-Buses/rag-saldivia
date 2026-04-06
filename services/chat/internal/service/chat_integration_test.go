@@ -151,7 +151,7 @@ func TestListSessions_FiltersbyUser_Integration(t *testing.T) {
 	svc.CreateSession(ctx, "u-1", "Alice chat 2", nil)
 	svc.CreateSession(ctx, "u-2", "Bob chat", nil)
 
-	sessions, err := svc.ListSessions(ctx, "u-1")
+	sessions, err := svc.ListSessions(ctx, "u-1", 50, 0)
 	if err != nil {
 		t.Fatalf("list sessions: %v", err)
 	}
@@ -198,7 +198,7 @@ func TestAddMessage_and_GetMessages_Integration(t *testing.T) {
 
 	svc.AddMessage(ctx, session.ID, "u-1", "assistant", "Hola! En que puedo ayudarte?", nil, nil, nil)
 
-	messages, err := svc.GetMessages(ctx, session.ID)
+	messages, err := svc.GetMessages(ctx, session.ID, 100)
 	if err != nil {
 		t.Fatalf("get messages: %v", err)
 	}

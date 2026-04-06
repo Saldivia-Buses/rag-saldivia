@@ -127,7 +127,13 @@ const listTenants = `-- name: ListTenants :many
 SELECT id, slug, name, plan_id, enabled, created_at
 FROM tenants
 ORDER BY created_at
+LIMIT $1 OFFSET $2
 `
+
+type ListTenantsParams struct {
+	Limit  int32 `json:"limit"`
+	Offset int32 `json:"offset"`
+}
 
 type ListTenantsRow struct {
 	ID        string             `json:"id"`
@@ -138,8 +144,8 @@ type ListTenantsRow struct {
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 }
 
-func (q *Queries) ListTenants(ctx context.Context) ([]ListTenantsRow, error) {
-	rows, err := q.db.Query(ctx, listTenants)
+func (q *Queries) ListTenants(ctx context.Context, arg ListTenantsParams) ([]ListTenantsRow, error) {
+	rows, err := q.db.Query(ctx, listTenants, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}

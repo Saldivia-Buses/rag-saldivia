@@ -15,13 +15,14 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
+	"github.com/Camionerou/rag-saldivia/pkg/pagination"
 	"github.com/Camionerou/rag-saldivia/services/platform/db"
 	"github.com/Camionerou/rag-saldivia/services/platform/internal/service"
 )
 
 // PlatformService defines the operations the handler needs from the service layer.
 type PlatformService interface {
-	ListTenants(ctx context.Context) ([]db.ListTenantsRow, error)
+	ListTenants(ctx context.Context, limit, offset int32) ([]db.ListTenantsRow, error)
 	GetTenant(ctx context.Context, slug string) (service.TenantDetail, error)
 	CreateTenant(ctx context.Context, arg db.CreateTenantParams) (service.TenantDetail, error)
 	UpdateTenant(ctx context.Context, arg db.UpdateTenantParams) error
@@ -85,9 +86,10 @@ func (h *Platform) Routes() chi.Router {
 
 // ── Tenants ─────────────────────────────────────────────────────────────
 
-// ListTenants handles GET /v1/platform/tenants
+// ListTenants handles GET /v1/platform/tenants (paginated)
 func (h *Platform) ListTenants(w http.ResponseWriter, r *http.Request) {
-	tenants, err := h.svc.ListTenants(r.Context())
+	pg := pagination.Parse(r)
+	tenants, err := h.svc.ListTenants(r.Context(), int32(pg.Limit()), int32(pg.Offset()))
 	if err != nil {
 		serverError(w, r, err)
 		return

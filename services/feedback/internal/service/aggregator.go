@@ -244,7 +244,8 @@ func (a *Aggregator) computeUsageScore(ctx context.Context) float64 {
 	currentUsage := counts["usage"]
 	if currentUsage == 0 {
 		// Check if this is a new tenant (no historical data)
-		historicalCount, err := a.repo.CountHistoricalUsage(ctx)
+		since := pgtype.Timestamptz{Time: time.Now().AddDate(0, -3, 0), Valid: true} // last 3 months
+		historicalCount, err := a.repo.CountHistoricalUsage(ctx, since)
 		if err != nil {
 			slog.Error("failed to count historical usage", "error", err)
 			return 50

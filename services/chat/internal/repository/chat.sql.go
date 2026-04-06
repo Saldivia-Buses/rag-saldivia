@@ -133,7 +133,13 @@ const listMessages = `-- name: ListMessages :many
 SELECT id, session_id, role, content, thinking, sources, metadata, created_at
 FROM messages WHERE session_id = $1
 ORDER BY created_at
+LIMIT $2
 `
+
+type ListMessagesParams struct {
+	SessionID string `json:"session_id"`
+	Limit     int32  `json:"limit"`
+}
 
 type ListMessagesRow struct {
 	ID        string             `json:"id"`
@@ -146,8 +152,8 @@ type ListMessagesRow struct {
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 }
 
-func (q *Queries) ListMessages(ctx context.Context, sessionID string) ([]ListMessagesRow, error) {
-	rows, err := q.db.Query(ctx, listMessages, sessionID)
+func (q *Queries) ListMessages(ctx context.Context, arg ListMessagesParams) ([]ListMessagesRow, error) {
+	rows, err := q.db.Query(ctx, listMessages, arg.SessionID, arg.Limit)
 	if err != nil {
 		return nil, err
 	}
@@ -179,10 +185,17 @@ const listSessionsByUser = `-- name: ListSessionsByUser :many
 SELECT id, user_id, title, collection, is_saved, created_at, updated_at
 FROM sessions WHERE user_id = $1
 ORDER BY updated_at DESC
+LIMIT $2 OFFSET $3
 `
 
-func (q *Queries) ListSessionsByUser(ctx context.Context, userID string) ([]Session, error) {
-	rows, err := q.db.Query(ctx, listSessionsByUser, userID)
+type ListSessionsByUserParams struct {
+	UserID string `json:"user_id"`
+	Limit  int32  `json:"limit"`
+	Offset int32  `json:"offset"`
+}
+
+func (q *Queries) ListSessionsByUser(ctx context.Context, arg ListSessionsByUserParams) ([]Session, error) {
+	rows, err := q.db.Query(ctx, listSessionsByUser, arg.UserID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}

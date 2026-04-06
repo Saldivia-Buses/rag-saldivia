@@ -213,7 +213,7 @@ func TestListTenants_Integration(t *testing.T) {
 		PostgresUrl: "pg://b", RedisUrl: "redis://b", Settings: []byte("{}"),
 	})
 
-	tenants, err := svc.ListTenants(ctx)
+	tenants, err := svc.ListTenants(ctx, 50, 0)
 	if err != nil {
 		t.Fatalf("list: %v", err)
 	}

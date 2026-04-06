@@ -7,12 +7,14 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"strconv"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 
 	"github.com/Camionerou/rag-saldivia/pkg/guardrails"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
+	"github.com/Camionerou/rag-saldivia/pkg/pagination"
 	"github.com/Camionerou/rag-saldivia/services/chat/internal/service"
 )
 
@@ -20,11 +22,11 @@ import (
 type ChatService interface {
 	CreateSession(ctx context.Context, userID, title string, collection *string) (*service.Session, error)
 	GetSession(ctx context.Context, sessionID, userID string) (*service.Session, error)
-	ListSessions(ctx context.Context, userID string) ([]service.Session, error)
+	ListSessions(ctx context.Context, userID string, limit, offset int32) ([]service.Session, error)
 	DeleteSession(ctx context.Context, sessionID, userID string) error
 	RenameSession(ctx context.Context, sessionID, userID, title string) error
 	AddMessage(ctx context.Context, sessionID, userID, role, content string, thinking *string, sources, metadata []byte) (*service.Message, error)
-	GetMessages(ctx context.Context, sessionID string) ([]service.Message, error)
+	GetMessages(ctx context.Context, sessionID string, limit int32) ([]service.Message, error)
 }
 
 // Chat handles HTTP requests for chat operations.
@@ -73,10 +75,11 @@ type addMessageRequest struct {
 	Metadata json.RawMessage `json:"metadata,omitempty"`
 }
 
-// ListSessions handles GET /v1/chat/sessions
+// ListSessions handles GET /v1/chat/sessions (paginated)
 func (h *Chat) ListSessions(w http.ResponseWriter, r *http.Request) {
 	userID := r.Header.Get("X-User-ID")
-	sessions, err := h.chatSvc.ListSessions(r.Context(), userID)
+	pg := pagination.Parse(r)
+	sessions, err := h.chatSvc.ListSessions(r.Context(), userID, int32(pg.Limit()), int32(pg.Offset()))
 	if err != nil {
 		serverError(w, r, err)
 		return
@@ -179,7 +182,14 @@ func (h *Chat) GetMessages(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	messages, err := h.chatSvc.GetMessages(r.Context(), sessionID)
+	// Messages use limit-only (no offset) — they're loaded oldest-first sequentially
+	limit := int32(pagination.DefaultPageSize)
+	if v := r.URL.Query().Get("limit"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 && n <= pagination.MaxPageSize {
+			limit = int32(n)
+		}
+	}
+	messages, err := h.chatSvc.GetMessages(r.Context(), sessionID, limit)
 	if err != nil {
 		serverError(w, r, err)
 		return

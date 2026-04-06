@@ -164,6 +164,19 @@ func (q *Queries) NotificationExistsByUser(ctx context.Context, arg Notification
 	return exists, err
 }
 
+const purgeOldNotifications = `-- name: PurgeOldNotifications :execrows
+DELETE FROM notifications
+WHERE is_read = true AND created_at < now() - interval '90 days'
+`
+
+func (q *Queries) PurgeOldNotifications(ctx context.Context) (int64, error) {
+	result, err := q.db.Exec(ctx, purgeOldNotifications)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
 const unreadCount = `-- name: UnreadCount :one
 SELECT COUNT(*)::int FROM notifications
 WHERE user_id = $1 AND is_read = false
