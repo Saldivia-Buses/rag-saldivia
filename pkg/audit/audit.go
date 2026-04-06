@@ -14,10 +14,19 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
+// Logger is the interface for audit logging. Services should depend on this
+// interface, not on *Writer directly, to enable mocking in tests.
+type Logger interface {
+	Write(ctx context.Context, e Entry)
+}
+
 // Writer writes audit entries to the tenant's audit_log table.
 type Writer struct {
 	db *pgxpool.Pool
 }
+
+// Ensure Writer implements Logger at compile time.
+var _ Logger = (*Writer)(nil)
 
 // NewWriter creates an audit writer for the given tenant database.
 func NewWriter(db *pgxpool.Pool) *Writer {

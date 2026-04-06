@@ -52,24 +52,32 @@ func (h *Feedback) Summary(w http.ResponseWriter, r *http.Request) {
 	aiRow, err := h.repo.GetSummaryAIQuality(ctx, hours)
 	if err != nil {
 		slog.Error("summary: ai quality query failed", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
 	}
 
 	// Errors
 	errRow, err := h.repo.GetSummaryErrors(ctx, hours)
 	if err != nil {
 		slog.Error("summary: errors query failed", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
 	}
 
 	// Feature requests
 	featRow, err := h.repo.GetSummaryFeatures(ctx, hours)
 	if err != nil {
 		slog.Error("summary: features query failed", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
 	}
 
 	// NPS (30 day rolling)
 	npsRow, err := h.repo.GetSummaryNPS(ctx)
 	if err != nil {
 		slog.Error("summary: nps query failed", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal error"})
+		return
 	}
 
 	writeJSON(w, http.StatusOK, map[string]any{

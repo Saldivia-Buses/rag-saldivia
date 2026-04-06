@@ -65,6 +65,16 @@ type Event struct {
 	Channel string          `json:"channel,omitempty"` // "in_app" (default), "email", "both"
 }
 
+// EventPublisher is the interface for NATS event publishing. Services should
+// depend on this interface, not on *Publisher directly, to enable mocking.
+type EventPublisher interface {
+	Notify(tenantSlug string, evt any) error
+	Broadcast(tenantSlug, channel string, data any) error
+}
+
+// Ensure Publisher implements EventPublisher at compile time.
+var _ EventPublisher = (*Publisher)(nil)
+
 // Publisher wraps a NATS connection for publishing typed events.
 type Publisher struct {
 	nc *nats.Conn
