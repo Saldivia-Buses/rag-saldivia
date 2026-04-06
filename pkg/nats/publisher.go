@@ -83,24 +83,34 @@ func (p *Publisher) Notify(tenantSlug string, evt any) error {
 		return fmt.Errorf("invalid tenant slug for NATS subject: %q", tenantSlug)
 	}
 
+	// Extract event type without double-serialization
+	var eventType string
+	switch e := evt.(type) {
+	case Event:
+		eventType = e.Type
+	case *Event:
+		eventType = e.Type
+	default:
+		// Fallback: marshal once, extract type from JSON
+		if m, ok := evt.(map[string]any); ok {
+			if t, ok := m["type"].(string); ok {
+				eventType = t
+			}
+		}
+	}
+	if eventType == "" {
+		return fmt.Errorf("event type is required")
+	}
+	if !IsValidEventType(eventType) {
+		return fmt.Errorf("invalid event type for NATS subject: %q", eventType)
+	}
+
 	data, err := json.Marshal(evt)
 	if err != nil {
 		return fmt.Errorf("marshal event: %w", err)
 	}
 
-	// Extract event type for the NATS subject
-	var parsed struct{ Type string `json:"type"` }
-	if err := json.Unmarshal(data, &parsed); err != nil {
-		return fmt.Errorf("extract event type: %w", err)
-	}
-	if parsed.Type == "" {
-		return fmt.Errorf("event type is required")
-	}
-	if !IsValidEventType(parsed.Type) {
-		return fmt.Errorf("invalid event type for NATS subject: %q", parsed.Type)
-	}
-
-	subject := "tenant." + tenantSlug + ".notify." + parsed.Type
+	subject := "tenant." + tenantSlug + ".notify." + eventType
 	if err := p.nc.Publish(subject, data); err != nil {
 		return fmt.Errorf("publish %s: %w", subject, err)
 	}

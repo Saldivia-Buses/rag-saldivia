@@ -179,9 +179,17 @@ func (r *Resolver) createPoolLocked(ctx context.Context, slug string) (*pgxpool.
 	}
 	config.MaxConns = r.PoolMaxConns
 
-	// Release lock during network I/O
+	// Release lock during network I/O. Recover wrapper protects mutex
+	// state if pool creation panics unexpectedly.
 	r.mu.Unlock()
-	pool, err := pgxpool.NewWithConfig(ctx, config)
+	pool, err := func() (p *pgxpool.Pool, createErr error) {
+		defer func() {
+			if rv := recover(); rv != nil {
+				createErr = fmt.Errorf("pool creation panicked: %v", rv)
+			}
+		}()
+		return pgxpool.NewWithConfig(ctx, config)
+	}()
 	r.mu.Lock()
 
 	if err != nil {
@@ -261,6 +269,34 @@ func (r *Resolver) Close() {
 		delete(r.redisClts, slug)
 	}
 	r.connCache = make(map[string]connEntry)
+}
+
+// StartHealthCheck launches a background goroutine that pings all cached
+// pools every interval. Unhealthy pools are closed and removed from the
+// cache so the next request creates a fresh connection.
+func (r *Resolver) StartHealthCheck(ctx context.Context, interval time.Duration) {
+	go func() {
+		ticker := time.NewTicker(interval)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-ticker.C:
+				r.mu.Lock()
+				for slug, pool := range r.pools {
+					if err := pool.Ping(ctx); err != nil {
+						slog.Warn("tenant pool unhealthy, removing from cache",
+							"tenant", slug, "error", err)
+						pool.Close()
+						delete(r.pools, slug)
+						delete(r.connCache, slug)
+					}
+				}
+				r.mu.Unlock()
+			}
+		}
+	}()
 }
 
 // ensureSSLMode appends sslmode=require to a PostgreSQL URL if no sslmode
