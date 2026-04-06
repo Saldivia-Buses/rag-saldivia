@@ -252,6 +252,58 @@ func (r *Resolver) TenantID(ctx context.Context, slug string) (string, error) {
 	return info.TenantID, nil
 }
 
+// EnabledModule represents a module enabled for a tenant.
+type EnabledModule struct {
+	ID       string `json:"id"`
+	Name     string `json:"name"`
+	Category string `json:"category"`
+}
+
+// ListEnabledModules returns the modules enabled for a tenant by querying
+// the Platform DB. Falls back to core modules if the query fails.
+func (r *Resolver) ListEnabledModules(ctx context.Context, tenantID string) ([]EnabledModule, error) {
+	if r.platformDB == nil {
+		return coreModules(), nil
+	}
+
+	rows, err := r.platformDB.Query(ctx,
+		`SELECT m.id, m.name, m.category
+		 FROM tenant_modules tm
+		 JOIN modules m ON m.id = tm.module_id
+		 WHERE tm.tenant_id = $1 AND tm.enabled = true
+		 UNION
+		 SELECT id, name, category FROM modules WHERE category = 'core'
+		 ORDER BY category, name`,
+		tenantID,
+	)
+	if err != nil {
+		slog.Warn("failed to query enabled modules, using core defaults", "error", err)
+		return coreModules(), nil
+	}
+	defer rows.Close()
+
+	var modules []EnabledModule
+	for rows.Next() {
+		var m EnabledModule
+		if err := rows.Scan(&m.ID, &m.Name, &m.Category); err != nil {
+			continue
+		}
+		modules = append(modules, m)
+	}
+	if len(modules) == 0 {
+		return coreModules(), nil
+	}
+	return modules, nil
+}
+
+func coreModules() []EnabledModule {
+	return []EnabledModule{
+		{ID: "chat", Name: "Chat + RAG", Category: "core"},
+		{ID: "auth", Name: "Auth + RBAC", Category: "core"},
+		{ID: "notifications", Name: "Notificaciones", Category: "core"},
+	}
+}
+
 // Close shuts down all cached connection pools and Redis clients.
 // After Close, all methods return errors.
 func (r *Resolver) Close() {

@@ -281,25 +281,27 @@ func (h *Auth) Me(w http.ResponseWriter, r *http.Request) {
 }
 
 // EnabledModules handles GET /v1/modules/enabled
-// Returns the list of modules enabled for the current tenant.
-// TODO: Read from Platform DB via tenant_modules table. Currently returns
-// core modules as a baseline until Platform Service integration.
+// Returns modules enabled for the current tenant from Platform DB.
+// In single-tenant mode or if resolver is unavailable, returns core defaults.
 func (h *Auth) EnabledModules(w http.ResponseWriter, r *http.Request) {
-	type moduleEntry struct {
-		ID       string `json:"id"`
-		Name     string `json:"name"`
-		Category string `json:"category"`
+	tenantID := r.Header.Get("X-Tenant-ID")
+
+	if h.resolver != nil && tenantID != "" {
+		modules, err := h.resolver.ListEnabledModules(r.Context(), tenantID)
+		if err != nil {
+			slog.Error("list enabled modules failed", "error", err)
+		} else {
+			writeJSON(w, http.StatusOK, modules)
+			return
+		}
 	}
 
-	// Core modules — always enabled for all tenants
-	modules := []moduleEntry{
-		{ID: "chat", Name: "Chat", Category: "core"},
-		{ID: "rag", Name: "RAG", Category: "core"},
+	// Fallback: core modules when no resolver (single-tenant mode)
+	writeJSON(w, http.StatusOK, []tenant.EnabledModule{
+		{ID: "chat", Name: "Chat + RAG", Category: "core"},
+		{ID: "auth", Name: "Auth + RBAC", Category: "core"},
 		{ID: "notifications", Name: "Notificaciones", Category: "core"},
-		{ID: "ingest", Name: "Ingesta", Category: "core"},
-	}
-
-	writeJSON(w, http.StatusOK, modules)
+	})
 }
 
 // Health handles GET /health
