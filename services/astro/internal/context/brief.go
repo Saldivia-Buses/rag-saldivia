@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/Camionerou/rag-saldivia/services/astro/internal/astromath"
+	"github.com/Camionerou/rag-saldivia/services/astro/internal/ephemeris"
 )
 
 // MonthScore holds convergence data for a single month.
@@ -129,10 +130,19 @@ func BuildBrief(ctx *FullContext) string {
 }
 
 // buildConvergenceMatrix scores each month based on technique overlap.
+// Weights: PD=3, eclipse=2, progression ingress=2 (month of birthday only),
+// SA=1 (month of birthday only as background), lunar return=0 (noise).
 func buildConvergenceMatrix(ctx *FullContext) []MonthScore {
 	scores := make([]MonthScore, 12)
 	for i := range scores {
 		scores[i].Month = i + 1
+	}
+
+	// Birth month for calendar-month derivation from age
+	birthMonth := 1
+	if ctx.Chart != nil {
+		_, bm, _, _ := ephemeris.RevJul(ctx.Chart.JD)
+		birthMonth = bm
 	}
 
 	// Eclipse activations score by month
@@ -144,49 +154,38 @@ func buildConvergenceMatrix(ctx *FullContext) []MonthScore {
 		}
 	}
 
-	// Primary Directions: approximate month from age
+	// Primary Directions: convert age to calendar month using birth month
 	for _, d := range ctx.Directions {
-		fractionalYear := d.AgeExact - float64(int(d.AgeExact))
-		month := int(fractionalYear*12) + 1
-		if month >= 1 && month <= 12 {
-			scores[month-1].Score += 3 // PD is highest weight
-			scores[month-1].Techniques = append(scores[month-1].Techniques,
+		// Age fraction → months after birthday → calendar month
+		ageYears := d.AgeExact
+		monthsAfterBday := (ageYears - float64(int(ageYears))) * 12
+		calMonth := ((birthMonth - 1) + int(monthsAfterBday)) % 12
+		if calMonth >= 0 && calMonth < 12 {
+			scores[calMonth].Score += 3
+			scores[calMonth].Techniques = append(scores[calMonth].Techniques,
 				fmt.Sprintf("PD_%s_%s_%s", d.Promissor, d.Aspect, d.Significator))
 		}
 	}
 
-	// Solar Arc activations (year-long, score all months equally but +1)
-	if len(ctx.SolarArc) > 0 {
-		for i := range scores {
-			scores[i].Score++
-			if i == 0 { // only annotate once
-				scores[i].Techniques = append(scores[i].Techniques, fmt.Sprintf("%d_SA_activas", len(ctx.SolarArc)))
-			}
-		}
+	// Solar Arc: background indicator, annotate birthday month only
+	if len(ctx.SolarArc) > 0 && birthMonth >= 1 && birthMonth <= 12 {
+		scores[birthMonth-1].Score++
+		scores[birthMonth-1].Techniques = append(scores[birthMonth-1].Techniques,
+			fmt.Sprintf("%d_SA_activas", len(ctx.SolarArc)))
 	}
 
-	// Lunar Returns: score their months
-	for _, lr := range ctx.LunarReturns {
-		if lr.Month >= 1 && lr.Month <= 12 {
-			scores[lr.Month-1].Score++
-			scores[lr.Month-1].Techniques = append(scores[lr.Month-1].Techniques, "lunar_return")
-		}
-	}
-
-	// Progressions ingresses: score all months (year-long effect)
-	if ctx.Progressions != nil {
+	// Progression ingresses: score birthday month only (year-long background effect)
+	if ctx.Progressions != nil && birthMonth >= 1 && birthMonth <= 12 {
 		for _, pp := range ctx.Progressions.Positions {
 			if pp.SignIngress {
-				for i := range scores {
-					scores[i].Score += 2
-					if i == 0 {
-						scores[i].Techniques = append(scores[i].Techniques,
-							fmt.Sprintf("prog_ingress_%s", pp.Name))
-					}
-				}
+				scores[birthMonth-1].Score += 2
+				scores[birthMonth-1].Techniques = append(scores[birthMonth-1].Techniques,
+					fmt.Sprintf("prog_ingress_%s", pp.Name))
 			}
 		}
 	}
+
+	// Lunar Returns: omitted from scoring (13/year = noise, not signal)
 
 	sort.Slice(scores, func(i, j int) bool {
 		return scores[i].Month < scores[j].Month

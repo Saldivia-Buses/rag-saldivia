@@ -3,6 +3,7 @@
 package context
 
 import (
+	"fmt"
 	"time"
 
 	"github.com/Camionerou/rag-saldivia/services/astro/internal/ephemeris"
@@ -27,6 +28,7 @@ type FullContext struct {
 	ZRFortune    *technique.ZRResult              `json:"zr_fortune"`
 	ZRSpirit     *technique.ZRResult              `json:"zr_spirit"`
 	Brief        string                           `json:"brief"`
+	Warnings     []string                         `json:"warnings,omitempty"`
 }
 
 // Build runs all techniques and produces a FullContext.
@@ -37,9 +39,10 @@ func Build(chart *natal.Chart, contactName string, birthDate time.Time, year int
 		Chart:       chart,
 	}
 
+	// Consistent mid-year anchor for age and JD
+	jdMid := ephemeris.JulDay(year, 7, 1, 12.0)
 	midYear := time.Date(year, 7, 1, 0, 0, 0, 0, time.UTC)
 	age := midYear.Sub(birthDate).Hours() / (24 * 365.25)
-	jdMid := ephemeris.JulDay(year, 6, 15, 12.0)
 
 	// Solar Arc
 	ctx.SolarArc = technique.FindSolarArcActivations(chart, jdMid)
@@ -48,17 +51,23 @@ func Build(chart *natal.Chart, contactName string, birthDate time.Time, year int
 	ctx.Directions = technique.FindDirections(chart, age, 2.0)
 
 	// Progressions
-	if prog, err := technique.CalcProgressions(chart, year); err == nil {
+	if prog, err := technique.CalcProgressions(chart, year); err != nil {
+		ctx.Warnings = append(ctx.Warnings, fmt.Sprintf("progressions: %v", err))
+	} else {
 		ctx.Progressions = prog
 	}
 
 	// Solar Return
-	if sr, err := technique.CalcSolarReturnAtBirthplace(chart, year); err == nil {
+	if sr, err := technique.CalcSolarReturnAtBirthplace(chart, year); err != nil {
+		ctx.Warnings = append(ctx.Warnings, fmt.Sprintf("solar_return: %v", err))
+	} else {
 		ctx.SolarReturn = sr
 	}
 
 	// Lunar Returns
-	if lr, err := technique.CalcLunarReturns(chart, year); err == nil {
+	if lr, err := technique.CalcLunarReturns(chart, year); err != nil {
+		ctx.Warnings = append(ctx.Warnings, fmt.Sprintf("lunar_returns: %v", err))
+	} else {
 		ctx.LunarReturns = lr
 	}
 
@@ -69,7 +78,9 @@ func Build(chart *natal.Chart, contactName string, birthDate time.Time, year int
 	ctx.Firdaria = technique.CalcFirdaria(birthDate, chart.Diurnal, year)
 
 	// Eclipses
-	if ecl, err := technique.FindEclipseActivations(chart, year); err == nil {
+	if ecl, err := technique.FindEclipseActivations(chart, year); err != nil {
+		ctx.Warnings = append(ctx.Warnings, fmt.Sprintf("eclipses: %v", err))
+	} else {
 		ctx.Eclipses = ecl
 	}
 
@@ -79,6 +90,9 @@ func Build(chart *natal.Chart, contactName string, birthDate time.Time, year int
 	// Zodiacal Releasing
 	ctx.ZRFortune = technique.CalcZodiacalReleasing(chart, "Fortune", age)
 	ctx.ZRSpirit = technique.CalcZodiacalReleasing(chart, "Spirit", age)
+
+	// NOTE: Transits (slow planet sampling) deferred — requires Phase 9b implementation.
+	// Golden file exists but technique/transits.go not yet written.
 
 	// Build intelligence brief
 	ctx.Brief = BuildBrief(ctx)
