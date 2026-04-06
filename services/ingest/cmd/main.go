@@ -126,6 +126,7 @@ func main() {
 		Addr:         ":" + port,
 		Handler:      otelhttp.NewHandler(r, "sda-ingest"),
 		ReadTimeout:  120 * time.Second, // large uploads
+		ReadHeaderTimeout: 10 * time.Second,
 		WriteTimeout: 60 * time.Second,
 		IdleTimeout:  60 * time.Second,
 	}

@@ -133,10 +133,10 @@ func TestGetSession_Ownership_Integration(t *testing.T) {
 		t.Errorf("expected session %s, got %s", session.ID, got.ID)
 	}
 
-	// Non-owner gets ErrNotOwner
+	// Non-owner gets ErrSessionNotFound (SQL-level filtering, not post-fetch check)
 	_, err = svc.GetSession(ctx, session.ID, "u-2")
-	if err != ErrNotOwner {
-		t.Fatalf("expected ErrNotOwner, got: %v", err)
+	if err != ErrSessionNotFound {
+		t.Fatalf("expected ErrSessionNotFound, got: %v", err)
 	}
 }
 

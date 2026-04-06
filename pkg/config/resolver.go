@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -39,6 +40,17 @@ type ModelConfig struct {
 	Endpoint        string  `json:"endpoint"`
 	ModelID         string  `json:"model_id"`
 	APIKey          string  `json:"api_key,omitempty"`
+	Location        string  `json:"location"`
+	CostPer1kInput  float64 `json:"cost_per_1k_input"`
+	CostPer1kOutput float64 `json:"cost_per_1k_output"`
+}
+
+// cachedModelConfig is ModelConfig without the API key — safe to store in Redis.
+type cachedModelConfig struct {
+	ID              string  `json:"id"`
+	Name            string  `json:"name"`
+	Endpoint        string  `json:"endpoint"`
+	ModelID         string  `json:"model_id"`
 	Location        string  `json:"location"`
 	CostPer1kInput  float64 `json:"cost_per_1k_input"`
 	CostPer1kOutput float64 `json:"cost_per_1k_output"`
@@ -146,13 +158,22 @@ func (r *Resolver) ResolveSlot(ctx context.Context, tenantID, slot string) (*Mod
 		return nil, fmt.Errorf("slot %q is not configured", slot)
 	}
 
-	// Check model cache
+	// Check model cache (cached without API key for security)
 	if r.cache != nil {
 		cacheKey := "sda:model:" + modelID
 		val, err := r.cache.Get(ctx, cacheKey).Result()
 		if err == nil {
 			var mc ModelConfig
 			if json.Unmarshal([]byte(val), &mc) == nil {
+				// API key is never cached — fetch from DB on every call
+				var apiKey string
+				if err := r.pool.QueryRow(ctx,
+					`SELECT COALESCE(api_key, '') FROM llm_models WHERE id = $1`,
+					modelID,
+				).Scan(&apiKey); err != nil {
+					slog.Warn("failed to fetch API key for cached model", "model", modelID, "error", err)
+				}
+				mc.APIKey = apiKey
 				return &mc, nil
 			}
 		}
@@ -172,9 +193,14 @@ func (r *Resolver) ResolveSlot(ctx context.Context, tenantID, slot string) (*Mod
 		return nil, fmt.Errorf("query model: %w", err)
 	}
 
-	// Cache model config
+	// Cache model config without API key (security: key stays in DB only)
 	if r.cache != nil {
-		data, _ := json.Marshal(mc)
+		safe := cachedModelConfig{
+			ID: mc.ID, Name: mc.Name, Endpoint: mc.Endpoint,
+			ModelID: mc.ModelID, Location: mc.Location,
+			CostPer1kInput: mc.CostPer1kInput, CostPer1kOutput: mc.CostPer1kOutput,
+		}
+		data, _ := json.Marshal(safe)
 		r.cache.Set(ctx, "sda:model:"+modelID, string(data), r.cacheTTL)
 	}
 

@@ -106,11 +106,16 @@ func (q *Queries) DeleteSession(ctx context.Context, arg DeleteSessionParams) (i
 
 const getSession = `-- name: GetSession :one
 SELECT id, user_id, title, collection, is_saved, created_at, updated_at
-FROM sessions WHERE id = $1
+FROM sessions WHERE id = $1 AND user_id = $2
 `
 
-func (q *Queries) GetSession(ctx context.Context, id string) (Session, error) {
-	row := q.db.QueryRow(ctx, getSession, id)
+type GetSessionParams struct {
+	ID     string `json:"id"`
+	UserID string `json:"user_id"`
+}
+
+func (q *Queries) GetSession(ctx context.Context, arg GetSessionParams) (Session, error) {
+	row := q.db.QueryRow(ctx, getSession, arg.ID, arg.UserID)
 	var i Session
 	err := row.Scan(
 		&i.ID,
@@ -224,10 +229,15 @@ func (q *Queries) RenameSession(ctx context.Context, arg RenameSessionParams) (i
 }
 
 const touchSession = `-- name: TouchSession :exec
-UPDATE sessions SET updated_at = now() WHERE id = $1
+UPDATE sessions SET updated_at = now() WHERE id = $1 AND user_id = $2
 `
 
-func (q *Queries) TouchSession(ctx context.Context, id string) error {
-	_, err := q.db.Exec(ctx, touchSession, id)
+type TouchSessionParams struct {
+	ID     string `json:"id"`
+	UserID string `json:"user_id"`
+}
+
+func (q *Queries) TouchSession(ctx context.Context, arg TouchSessionParams) error {
+	_, err := q.db.Exec(ctx, touchSession, arg.ID, arg.UserID)
 	return err
 }

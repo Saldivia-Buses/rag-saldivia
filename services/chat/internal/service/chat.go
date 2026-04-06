@@ -88,18 +88,17 @@ func (c *Chat) CreateSession(ctx context.Context, userID, title string, collecti
 	return &s, nil
 }
 
-// GetSession returns a session by ID, verifying ownership.
+// GetSession returns a session by ID, verifying ownership at the query level.
 func (c *Chat) GetSession(ctx context.Context, sessionID, userID string) (*Session, error) {
-	row, err := c.repo.GetSession(ctx, sessionID)
+	row, err := c.repo.GetSession(ctx, repository.GetSessionParams{
+		ID:     sessionID,
+		UserID: userID,
+	})
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, ErrSessionNotFound
 		}
 		return nil, fmt.Errorf("get session: %w", err)
-	}
-
-	if row.UserID != userID {
-		return nil, ErrNotOwner
 	}
 	s := sessionFromRepo(row)
 	return &s, nil
@@ -175,8 +174,11 @@ func (c *Chat) AddMessage(ctx context.Context, sessionID, userID, role, content 
 		return nil, fmt.Errorf("add message: %w", err)
 	}
 
-	// Touch session updated_at
-	c.repo.TouchSession(ctx, sessionID)
+	// Touch session updated_at (user_id filter for defense-in-depth)
+	c.repo.TouchSession(ctx, repository.TouchSessionParams{
+		ID:     sessionID,
+		UserID: userID,
+	})
 
 	m := messageFromRepo(row)
 

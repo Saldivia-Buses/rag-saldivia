@@ -201,17 +201,17 @@ func (s *Ingest) ListJobs(ctx context.Context, userID string, limit int) ([]Job,
 	return jobs, nil
 }
 
-// GetJob returns a single job by ID, verifying ownership.
+// GetJob returns a single job by ID, verifying ownership at the query level.
 func (s *Ingest) GetJob(ctx context.Context, jobID, userID string) (*Job, error) {
-	row, err := s.repo.GetJob(ctx, jobID)
+	row, err := s.repo.GetJob(ctx, repository.GetJobParams{
+		ID:     jobID,
+		UserID: userID,
+	})
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, ErrJobNotFound
 	}
 	if err != nil {
 		return nil, fmt.Errorf("get ingest job: %w", err)
-	}
-	if row.UserID != userID {
-		return nil, ErrJobNotFound
 	}
 	job := toJob(row)
 	return &job, nil
