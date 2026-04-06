@@ -15,10 +15,30 @@ import (
 	"strings"
 )
 
+// DefaultBlockPatterns are the standard prompt injection patterns blocked
+// across all services. Services can extend this list but should always
+// include these as a baseline.
+var DefaultBlockPatterns = []string{
+	"ignora tus instrucciones",
+	"ignore your instructions",
+	"system prompt",
+	"olvida todo lo anterior",
+	"forget all previous",
+}
+
 // InputConfig configures input validation rules.
 type InputConfig struct {
 	MaxLength     int      // truncate input beyond this rune count (0 = no limit)
 	BlockPatterns []string // reject input matching any of these (case-insensitive)
+}
+
+// DefaultInputConfig returns a standard input config with the default block
+// patterns. maxLength of 0 means no limit.
+func DefaultInputConfig(maxLength int) InputConfig {
+	return InputConfig{
+		MaxLength:     maxLength,
+		BlockPatterns: DefaultBlockPatterns,
+	}
 }
 
 // OutputConfig configures output validation rules.

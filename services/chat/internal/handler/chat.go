@@ -227,10 +227,7 @@ func (h *Chat) AddMessage(w http.ResponseWriter, r *http.Request) {
 
 	// P1: validate user message content through guardrails
 	if req.Role == "user" {
-		sanitized, err := guardrails.ValidateInput(r.Context(), req.Content, guardrails.InputConfig{
-			MaxLength:     50000,
-			BlockPatterns: []string{"ignora tus instrucciones", "ignore your instructions"},
-		}, nil)
+		sanitized, err := guardrails.ValidateInput(r.Context(), req.Content, guardrails.DefaultInputConfig(50000), nil)
 		if err != nil {
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "message blocked by guardrails"})
 			return

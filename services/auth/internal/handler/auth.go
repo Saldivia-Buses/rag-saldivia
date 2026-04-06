@@ -7,6 +7,7 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/go-chi/chi/v5/middleware"
@@ -39,10 +40,11 @@ type EventPublisher interface {
 
 // Auth handles HTTP requests for authentication.
 type Auth struct {
-	authSvc   AuthService     // static service (single-tenant mode)
+	authSvc   AuthService      // static service (single-tenant mode)
 	resolver  *tenant.Resolver // per-request resolution (multi-tenant mode)
 	jwtCfg    sdajwt.Config
 	publisher EventPublisher
+	svcCache  sync.Map         // slug → AuthService (multi-tenant cache)
 }
 
 // NewAuth creates auth HTTP handlers in single-tenant mode.
@@ -61,7 +63,8 @@ func NewMultiTenantAuth(resolver *tenant.Resolver, jwtCfg sdajwt.Config, publish
 
 // resolveService returns the AuthService for the current request's tenant.
 // In single-tenant mode, returns the static service. In multi-tenant mode,
-// resolves the tenant DB from the X-Tenant-Slug header.
+// resolves the tenant DB from the X-Tenant-Slug header and caches the
+// service struct per slug to avoid allocation per request.
 func (h *Auth) resolveService(r *http.Request) (AuthService, error) {
 	if h.authSvc != nil {
 		return h.authSvc, nil
@@ -70,6 +73,11 @@ func (h *Auth) resolveService(r *http.Request) (AuthService, error) {
 	slug := r.Header.Get("X-Tenant-Slug")
 	if slug == "" {
 		return nil, errors.New("missing tenant context")
+	}
+
+	// Check cache first
+	if cached, ok := h.svcCache.Load(slug); ok {
+		return cached.(AuthService), nil
 	}
 
 	pool, err := h.resolver.PostgresPool(r.Context(), slug)
@@ -82,7 +90,9 @@ func (h *Auth) resolveService(r *http.Request) (AuthService, error) {
 		return nil, err
 	}
 
-	return service.NewAuth(pool, h.jwtCfg, tenantID, slug, h.publisher), nil
+	svc := service.NewAuth(pool, h.jwtCfg, tenantID, slug, h.publisher)
+	h.svcCache.Store(slug, svc)
+	return svc, nil
 }
 
 type loginRequest struct {
