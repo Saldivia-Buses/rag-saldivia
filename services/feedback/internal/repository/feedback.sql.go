@@ -129,11 +129,11 @@ func (q *Queries) CountCriticalSecurityEvents(ctx context.Context) (int32, error
 const countHistoricalUsage = `-- name: CountHistoricalUsage :one
 SELECT COUNT(*)::int AS count
 FROM feedback_events
-WHERE category = 'usage'
+WHERE category = 'usage' AND created_at > $1
 `
 
-func (q *Queries) CountHistoricalUsage(ctx context.Context) (int32, error) {
-	row := q.db.QueryRow(ctx, countHistoricalUsage)
+func (q *Queries) CountHistoricalUsage(ctx context.Context, createdAt pgtype.Timestamptz) (int32, error) {
+	row := q.db.QueryRow(ctx, countHistoricalUsage, createdAt)
 	var count int32
 	err := row.Scan(&count)
 	return count, err

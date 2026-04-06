@@ -45,7 +45,7 @@ WHERE category = 'security' AND severity = 'critical'
 -- name: CountHistoricalUsage :one
 SELECT COUNT(*)::int AS count
 FROM feedback_events
-WHERE category = 'usage';
+WHERE category = 'usage' AND created_at > $1;
 
 -- name: AvgHourlyUsage :one
 SELECT COALESCE(COUNT(*)::float8 / GREATEST(EXTRACT(EPOCH FROM (now() - MIN(created_at))) / 3600, 1), 0)::float8 AS avg_hourly

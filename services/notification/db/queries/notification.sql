@@ -49,3 +49,7 @@ ON CONFLICT (user_id) DO UPDATE SET
   muted_types = EXCLUDED.muted_types,
   updated_at = now()
 RETURNING user_id, email_enabled, in_app_enabled, quiet_start, quiet_end, muted_types, updated_at;
+
+-- name: PurgeOldNotifications :execrows
+DELETE FROM notifications
+WHERE is_read = true AND created_at < now() - interval '90 days';
