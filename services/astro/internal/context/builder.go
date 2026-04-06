@@ -18,6 +18,7 @@ type FullContext struct {
 	Chart        *natal.Chart                     `json:"-"`
 	SolarArc     []technique.SolarArcResult       `json:"solar_arc"`
 	Transits     []technique.TransitActivation   `json:"transits"`
+	Stations     []technique.Station            `json:"stations"`
 	Directions   []technique.PrimaryDirection     `json:"directions"`
 	Progressions *technique.ProgressionsResult    `json:"progressions"`
 	SolarReturn  *technique.SolarReturn           `json:"solar_return"`
@@ -94,6 +95,9 @@ func Build(chart *natal.Chart, contactName string, birthDate time.Time, year int
 
 	// Slow planet transits (5-day sampling, mundane aspects)
 	ctx.Transits = technique.CalcTransits(chart, year)
+
+	// Station detection (D→Rx, Rx→D near natal points)
+	ctx.Stations = technique.FindStations(chart, year)
 
 	// Build intelligence brief
 	ctx.Brief = BuildBrief(ctx)
