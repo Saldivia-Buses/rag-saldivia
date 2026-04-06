@@ -97,7 +97,23 @@ func BuildBrief(ctx *FullContext) string {
 	}
 	b.WriteString("\n")
 
-	// Section 5: Eclipses
+	// Section 5: Transits
+	b.WriteString("## TRÁNSITOS LENTOS\n\n")
+	if len(ctx.Transits) > 0 {
+		for _, tr := range ctx.Transits {
+			retro := ""
+			if tr.Retrograde {
+				retro = " Rx"
+			}
+			b.WriteString(fmt.Sprintf("- %s %s %s (orbe %.2f° %d pasadas%s mes %d %s)\n",
+				tr.Transit, tr.Aspect, tr.Natal, tr.Orb, tr.Passes, retro, tr.Month, tr.Nature))
+		}
+	} else {
+		b.WriteString("Sin tránsitos lentos activos.\n")
+	}
+	b.WriteString("\n")
+
+	// Section 6: Eclipses
 	b.WriteString("## ECLIPSES\n\n")
 	if len(ctx.Eclipses) > 0 {
 		for _, e := range ctx.Eclipses {
@@ -181,6 +197,21 @@ func buildConvergenceMatrix(ctx *FullContext) []MonthScore {
 				scores[birthMonth-1].Score += 2
 				scores[birthMonth-1].Techniques = append(scores[birthMonth-1].Techniques,
 					fmt.Sprintf("prog_ingress_%s", pp.Name))
+			}
+		}
+	}
+
+	// Transits: score by episode months
+	for _, tr := range ctx.Transits {
+		for _, ep := range tr.EpDetails {
+			for m := ep.MonthStart; m <= ep.MonthEnd; m++ {
+				if m >= 1 && m <= 12 {
+					scores[m-1].Score += 2
+					if m == ep.MonthStart {
+						scores[m-1].Techniques = append(scores[m-1].Techniques,
+							fmt.Sprintf("TR_%s_%s_%s", tr.Transit, tr.Aspect, tr.Natal))
+					}
+				}
 			}
 		}
 	}
