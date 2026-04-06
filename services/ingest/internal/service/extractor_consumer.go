@@ -126,29 +126,22 @@ func (c *ExtractorConsumer) handleResult(msg jetstream.Msg) {
 		ID:         result.DocumentID,
 	})
 
-	// 2. Store pages — B2: track failures
-	storedPages := 0
-	for _, page := range result.Pages {
-		tables := page.Tables
-		if tables == nil {
-			tables = json.RawMessage("[]")
-		}
-		images := page.Images
-		if images == nil {
-			images = json.RawMessage("[]")
-		}
-		if err := c.repo.InsertDocumentPage(ctx, repository.InsertDocumentPageParams{
+	// 2. Store pages — bulk insert via pgx.CopyFrom (single round-trip)
+	pageData := make([]PageData, len(result.Pages))
+	for i, page := range result.Pages {
+		pageData[i] = PageData{
 			DocumentID: result.DocumentID,
 			PageNumber: int32(page.PageNumber),
 			Text:       page.Text,
-			Tables:     tables,
-			Images:     images,
-		}); err != nil {
-			slog.Error("insert page failed", "doc_id", result.DocumentID, "page", page.PageNumber, "error", err)
-			failed = true
-		} else {
-			storedPages++
+			Tables:     page.Tables,
+			Images:     page.Images,
 		}
+	}
+
+	storedPages, bulkErr := BulkInsertPages(ctx, c.pool, result.DocumentID, pageData)
+	if bulkErr != nil {
+		slog.Error("bulk insert pages failed", "doc_id", result.DocumentID, "error", bulkErr)
+		failed = true
 	}
 
 	if storedPages == 0 && len(result.Pages) > 0 {

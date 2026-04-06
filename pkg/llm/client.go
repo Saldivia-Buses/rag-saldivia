@@ -84,6 +84,18 @@ type ChatResponse struct {
 	OutputTokens int
 }
 
+// ChatClient is the interface for LLM interaction. Services should depend on
+// this interface, not on *Client directly, to enable mocking in tests.
+type ChatClient interface {
+	Chat(ctx context.Context, messages []Message, tools []ToolSchema, temperature float64, maxTokens int) (*ChatResponse, error)
+	SimplePrompt(ctx context.Context, prompt string, temperature float64, maxTokens ...int) (string, error)
+	Model() string
+	Endpoint() string
+}
+
+// Ensure Client implements ChatClient at compile time.
+var _ ChatClient = (*Client)(nil)
+
 // Chat sends a chat completion request with optional tools.
 func (c *Client) Chat(ctx context.Context, messages []Message, tools []ToolSchema, temperature float64, maxTokens int) (*ChatResponse, error) {
 	body := map[string]any{
