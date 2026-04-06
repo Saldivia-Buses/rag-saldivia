@@ -100,6 +100,9 @@ func (e *Executor) ExecuteConfirmed(ctx context.Context, jwt, toolName string, p
 	if !ok {
 		return &Result{Status: "error", Error: fmt.Sprintf("unknown tool: %q", toolName)}, nil
 	}
+	if toolName == "search_documents" && e.grpcSearch != nil {
+		return e.grpcSearch.Execute(ctx, jwt, params)
+	}
 	return e.executeHTTP(ctx, jwt, def, params)
 }
 

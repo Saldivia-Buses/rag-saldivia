@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"log/slog"
 
+	"google.golang.org/protobuf/encoding/protojson"
+
 	searchv1 "github.com/Camionerou/rag-saldivia/gen/go/search/v1"
 	sdagrpc "github.com/Camionerou/rag-saldivia/pkg/grpc"
 	"google.golang.org/grpc"
@@ -44,7 +46,7 @@ func (c *GRPCSearchClient) Execute(ctx context.Context, jwt string, params json.
 		MaxNodes     int32  `json:"max_nodes"`
 	}
 	if err := json.Unmarshal(params, &p); err != nil {
-		return &Result{Status: "error", Error: "invalid search params: " + err.Error()}, nil
+		return &Result{Status: "error", Error: "invalid search params"}, nil
 	}
 
 	// Forward user JWT via gRPC metadata
@@ -64,6 +66,9 @@ func (c *GRPCSearchClient) Execute(ctx context.Context, jwt string, params json.
 		return &Result{Status: "error", Error: "search failed"}, nil
 	}
 
-	data, _ := json.Marshal(resp)
-	return &Result{Status: "success", Data: data}, nil
+	data, err := protojson.Marshal(resp)
+	if err != nil {
+		return &Result{Status: "error", Error: "search failed"}, nil
+	}
+	return &Result{Status: "success", Data: json.RawMessage(data)}, nil
 }
