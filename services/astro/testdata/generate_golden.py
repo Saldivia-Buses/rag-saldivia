@@ -109,16 +109,39 @@ def generate_solar_arc(natal):
     })
 
 
+def _clean_episode_hit(hit):
+    """Convert positional tuple (orb, tr_lon, rx_flag, jd) to named dict."""
+    if isinstance(hit, (tuple, list)) and len(hit) == 4:
+        return {"orb": hit[0], "transit_lon": hit[1], "retrograde": bool(hit[2]), "jd": hit[3]}
+    return hit
+
+
+def _clean_ep_detail(detail):
+    """Convert positional tuple (month_start, month_end, retrograde) to named dict."""
+    if isinstance(detail, (tuple, list)) and len(detail) == 3:
+        return {"month_start": detail[0], "month_end": detail[1], "retrograde": bool(detail[2])}
+    return detail
+
+
 def generate_transits(natal):
     """Capture transit activations for 2026."""
     try:
         from query_engine import transits_context
         text, activations = transits_context(natal, TEST_YEAR)
-        # Clean activations for JSON
+        # Clean activations: convert positional tuples to named dicts (M-01)
         clean = []
         for a in activations:
-            clean.append({k: (v if not isinstance(v, (date,)) else str(v))
-                          for k, v in a.items()})
+            entry = {}
+            for k, v in a.items():
+                if isinstance(v, date):
+                    entry[k] = str(v)
+                elif k == "episodes" and isinstance(v, list):
+                    entry[k] = [[_clean_episode_hit(h) for h in ep] for ep in v]
+                elif k == "ep_details" and isinstance(v, list):
+                    entry[k] = [_clean_ep_detail(d) for d in v]
+                else:
+                    entry[k] = v
+            clean.append(entry)
         save("transits_adrian_2026", {
             "input": {"year": TEST_YEAR},
             "output": clean,
@@ -147,14 +170,33 @@ def generate_profections(natal):
         import traceback; traceback.print_exc()
 
 
+def _strip_emoji(s):
+    """Strip emoji prefixes from planet names (M-03: ☊ Nodo Norte → Nodo Norte)."""
+    if isinstance(s, str):
+        # Common astro emojis: ☊ ☋ ☽ ☉ etc.
+        return s.lstrip("☊☋☽☉☿♀♂♃♄♅♆♇⚷ ").strip()
+    return s
+
+
 def generate_firdaria(natal):
     """Capture firdaria data for 2026."""
     try:
         from firdaria import calculate_firdaria
-        # calculate_firdaria reads natal["_contact"]["birth_date"]
         natal_with_contact = dict(natal)
         natal_with_contact["_contact"] = TEST_CONTACT
         data = calculate_firdaria(natal_with_contact, TEST_YEAR)
+        # M-03: strip emoji prefixes for consistency with other files
+        for key in ("major_lord", "sub_lord", "next_major_lord"):
+            if key in data and isinstance(data[key], str):
+                data[key] = _strip_emoji(data[key])
+        # M-02: convert sequence tuples to named dicts
+        if "sequence" in data and isinstance(data["sequence"], list):
+            data["sequence"] = [
+                {"lord": _strip_emoji(item[0]), "years": item[1]}
+                if isinstance(item, (tuple, list)) and len(item) == 2
+                else item
+                for item in data["sequence"]
+            ]
         save("firdaria_adrian_2026", {
             "input": {"birth_date": TEST_CONTACT["birth_date"], "year": TEST_YEAR},
             "output": data,

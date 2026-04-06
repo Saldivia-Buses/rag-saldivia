@@ -22,42 +22,42 @@
     "years_remaining": 0.489,
     "cycle": 1,
     "sequence": [
-      [
-        "Sol",
-        10
-      ],
-      [
-        "Venus",
-        8
-      ],
-      [
-        "Mercurio",
-        13
-      ],
-      [
-        "Luna",
-        9
-      ],
-      [
-        "Saturno",
-        11
-      ],
-      [
-        "Júpiter",
-        12
-      ],
-      [
-        "Marte",
-        7
-      ],
-      [
-        "☊ Nodo Norte",
-        3
-      ],
-      [
-        "☋ Nodo Sur",
-        2
-      ]
+      {
+        "lord": "Sol",
+        "years": 10
+      },
+      {
+        "lord": "Venus",
+        "years": 8
+      },
+      {
+        "lord": "Mercurio",
+        "years": 13
+      },
+      {
+        "lord": "Luna",
+        "years": 9
+      },
+      {
+        "lord": "Saturno",
+        "years": 11
+      },
+      {
+        "lord": "Júpiter",
+        "years": 12
+      },
+      {
+        "lord": "Marte",
+        "years": 7
+      },
+      {
+        "lord": "Nodo Norte",
+        "years": 3
+      },
+      {
+        "lord": "Nodo Sur",
+        "years": 2
+      }
     ],
     "birth": "1975-12-27"
   }
