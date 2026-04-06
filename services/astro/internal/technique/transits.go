@@ -64,7 +64,7 @@ func CalcTransits(chart *natal.Chart, year int) []TransitActivation {
 	flags := ephemeris.FlagSwieph | ephemeris.FlagSpeed
 	orb := astromath.OrbDefaults.Transit
 
-	// Collect natal points (RA for mundane aspects)
+	// Collect natal points (RA for mundane aspects) including angles
 	type natalPoint struct {
 		name string
 		ra   float64
@@ -76,26 +76,30 @@ func CalcTransits(chart *natal.Chart, year int) []TransitActivation {
 		}
 		natPoints = append(natPoints, natalPoint{name, pos.RA})
 	}
+	// Add angles as transit targets (convert ecliptic lon → RA)
+	ascRA, _ := astromath.EclToEq(chart.ASC, 0, chart.Epsilon)
+	natPoints = append(natPoints, natalPoint{"ASC", ascRA})
+	mcRA, _ := astromath.EclToEq(chart.MC, 0, chart.Epsilon)
+	natPoints = append(natPoints, natalPoint{"MC", mcRA})
+	if chart.Vertex != 0 {
+		vtxRA, _ := astromath.EclToEq(chart.Vertex, 0, chart.Epsilon)
+		natPoints = append(natPoints, natalPoint{"Vertex", vtxRA})
+	}
 
 	var results []TransitActivation
 
 	for _, sp := range slowPlanetIDs {
-		// Sample this planet every 5 days
+		// Sample this planet every 5 days (single CalcPlanetFull call per sample)
 		var samples []transitSample
 		for jd := jdStart; jd < jdEnd; jd += sampleDays {
-			pos, err := ephemeris.CalcPlanet(jd, sp.ID, flags)
-			if err != nil {
-				continue
-			}
-			// Get RA for mundane aspects
-			eqPos, err := ephemeris.CalcPlanet(jd, sp.ID, flags|ephemeris.FlagEquatorial)
+			pos, err := ephemeris.CalcPlanetFull(jd, sp.ID, flags)
 			if err != nil {
 				continue
 			}
 			samples = append(samples, transitSample{
 				jd:    jd,
 				lon:   pos.Lon,
-				ra:    eqPos.RA,
+				ra:    pos.RA,
 				speed: pos.Speed,
 			})
 		}
@@ -184,6 +188,8 @@ func CalcTransits(chart *natal.Chart, year int) []TransitActivation {
 	return results
 }
 
+// groupEpisodes splits hits into episodes separated by >20 days.
+// Assumes hits are ordered by JD ascending (guaranteed by the sampling loop).
 func groupEpisodes(hits []hit) [][]hit {
 	if len(hits) == 0 {
 		return nil
