@@ -310,6 +310,7 @@ services:
       SGLANG_LLM_URL: ${SGLANG_LLM_URL:-http://host.docker.internal:8102}
       SGLANG_LLM_MODEL: ${SGLANG_LLM_MODEL:-}
       SEARCH_SERVICE_URL: http://search:8010
+      SEARCH_GRPC_URL: search:50051
       INGEST_SERVICE_URL: http://ingest:8007
       NOTIFICATION_SERVICE_URL: http://notification:8005
       <<: *jwt-public
@@ -342,12 +343,15 @@ services:
       dockerfile: services/search/Dockerfile
     environment:
       SEARCH_PORT: "8010"
+      SEARCH_GRPC_PORT: "50051"
       SGLANG_LLM_URL: ${SGLANG_LLM_URL:-http://host.docker.internal:8102}
       SGLANG_LLM_MODEL: ${SGLANG_LLM_MODEL:-}
       <<: *jwt-public
     secrets:
       - jwt_public_key
       - db_tenant_template_url
+    expose:
+      - "50051"  # gRPC — internal only, not routed by Traefik
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8010/health || exit 1"]
       interval: 10s
@@ -355,6 +359,7 @@ services:
       retries: 3
     networks:
       - frontend
+      - backend  # needed for agent→search gRPC
       - data
     labels:
       - "traefik.enable=true"
