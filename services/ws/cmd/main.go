@@ -40,6 +40,7 @@ func main() {
 		ServiceName:    "sda-ws",
 		ServiceVersion: "1.0.0",
 		Endpoint:       config.Env("OTEL_EXPORTER_OTLP_ENDPOINT", "localhost:4317"),
+		Insecure:       true,
 	})
 	if err != nil {
 		slog.Warn("otel init failed, traces disabled", "error", err)
