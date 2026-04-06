@@ -16,6 +16,7 @@ import (
 
 	"crypto/ed25519"
 
+	"github.com/Camionerou/rag-saldivia/pkg/config"
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
@@ -32,9 +33,9 @@ func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
 	slog.SetDefault(logger)
 
-	port := env("AUTH_PORT", "8001")
-	tenantDBURL := env("POSTGRES_TENANT_URL", "")
-	platformDBURL := env("POSTGRES_PLATFORM_URL", "")
+	port := config.Env("AUTH_PORT", "8001")
+	tenantDBURL := config.Env("POSTGRES_TENANT_URL", "")
+	platformDBURL := config.Env("POSTGRES_PLATFORM_URL", "")
 
 	privateKey, publicKey := loadJWTKeys()
 
@@ -45,7 +46,7 @@ func main() {
 	otelShutdown, err := sdaotel.Setup(ctx, sdaotel.Config{
 		ServiceName:    "sda-auth",
 		ServiceVersion: "1.0.0",
-		Endpoint:       env("OTEL_EXPORTER_OTLP_ENDPOINT", "localhost:4317"),
+		Endpoint:       config.Env("OTEL_EXPORTER_OTLP_ENDPOINT", "localhost:4317"),
 	})
 	if err != nil {
 		slog.Warn("otel init failed, traces disabled", "error", err)
@@ -54,7 +55,7 @@ func main() {
 	}
 
 	// Connect to NATS
-	natsURL := env("NATS_URL", nats.DefaultURL)
+	natsURL := config.Env("NATS_URL", nats.DefaultURL)
 	nc, err := natspub.Connect(natsURL)
 	if err != nil {
 		slog.Error("failed to connect to NATS", "error", err)
@@ -65,7 +66,7 @@ func main() {
 	slog.Info("connected to NATS", "url", natsURL)
 
 	// Redis for token blacklist
-	redisURL := env("REDIS_URL", "localhost:6379")
+	redisURL := config.Env("REDIS_URL", "localhost:6379")
 	rdb := redis.NewClient(&redis.Options{Addr: redisURL})
 	if err := rdb.Ping(ctx).Err(); err != nil {
 		slog.Warn("redis not available, token blacklist disabled", "error", err)
@@ -118,8 +119,8 @@ func main() {
 			os.Exit(1)
 		}
 
-		tenantID := env("TENANT_ID", "dev")
-		tenantSlug := env("TENANT_SLUG", "dev")
+		tenantID := config.Env("TENANT_ID", "dev")
+		tenantSlug := config.Env("TENANT_SLUG", "dev")
 		authSvc := service.NewAuth(pool, jwtCfg, tenantID, tenantSlug, publisher)
 		authSvc.SetBlacklist(blacklist)
 		authHandler = handler.NewAuth(authSvc)
@@ -193,18 +194,11 @@ func main() {
 	slog.Info("auth service stopped")
 }
 
-func env(key, fallback string) string {
-	if v := os.Getenv(key); v != "" {
-		return v
-	}
-	return fallback
-}
-
 // loadJWTKeys loads Ed25519 keys from env vars (base64-encoded PEM).
 // Auth service needs both private (signing) and public (verification).
 func loadJWTKeys() (ed25519.PrivateKey, ed25519.PublicKey) {
-	privB64 := env("JWT_PRIVATE_KEY", "")
-	pubB64 := env("JWT_PUBLIC_KEY", "")
+	privB64 := config.Env("JWT_PRIVATE_KEY", "")
+	pubB64 := config.Env("JWT_PUBLIC_KEY", "")
 	if privB64 == "" || pubB64 == "" {
 		slog.Error("JWT_PRIVATE_KEY and JWT_PUBLIC_KEY are required")
 		os.Exit(1)

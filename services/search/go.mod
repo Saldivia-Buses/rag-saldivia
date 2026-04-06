@@ -2,7 +2,6 @@ module github.com/Camionerou/rag-saldivia/services/search
 
 go 1.25.0
 
-replace github.com/Camionerou/rag-saldivia/pkg => ../../pkg
 
 require (
 	github.com/Camionerou/rag-saldivia/pkg v0.0.0-00010101000000-000000000000
@@ -43,3 +42,5 @@ require (
 	google.golang.org/grpc v1.79.2 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 )
+
+replace github.com/Camionerou/rag-saldivia/pkg => ../../pkg
