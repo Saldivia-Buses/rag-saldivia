@@ -16,7 +16,7 @@ import (
 // AuthConfig holds optional dependencies for the auth middleware.
 type AuthConfig struct {
 	Blacklist *security.TokenBlacklist // nil = no blacklist checking
-	FailOpen  bool                     // true = allow on Redis error (default), false = reject
+	FailOpen  bool                     // true = allow on Redis error, false = reject (default)
 }
 
 // Auth returns a chi middleware that verifies the JWT from the Authorization

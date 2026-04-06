@@ -103,7 +103,7 @@ func main() {
 		Handler:      otelhttp.NewHandler(r, "sda-ws"),
 		ReadTimeout:  10 * time.Second,
 		ReadHeaderTimeout: 10 * time.Second,
-		WriteTimeout: 30 * time.Second,
+		WriteTimeout: 0,               // WebSocket connections are long-lived
 		IdleTimeout:  120 * time.Second,
 	}
 

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -166,10 +167,12 @@ func (r *Resolver) ResolveSlot(ctx context.Context, tenantID, slot string) (*Mod
 			if json.Unmarshal([]byte(val), &mc) == nil {
 				// API key is never cached — fetch from DB on every call
 				var apiKey string
-				_ = r.pool.QueryRow(ctx,
+				if err := r.pool.QueryRow(ctx,
 					`SELECT COALESCE(api_key, '') FROM llm_models WHERE id = $1`,
 					modelID,
-				).Scan(&apiKey)
+				).Scan(&apiKey); err != nil {
+					slog.Warn("failed to fetch API key for cached model", "model", modelID, "error", err)
+				}
 				mc.APIKey = apiKey
 				return &mc, nil
 			}

@@ -39,6 +39,10 @@ func ByUser(r *http.Request) string {
 // Uses an in-memory token bucket (golang.org/x/time/rate). For multi-node
 // production deployments, migrate to a Redis-backed sliding window.
 //
+// The token bucket allows a burst of up to Requests tokens, then refills
+// at a steady rate of Requests/Window. This means short bursts up to the
+// limit are allowed, but sustained traffic is capped at the configured rate.
+//
 // Stale entries are cleaned up every 10 minutes.
 func RateLimit(cfg RateLimitConfig) func(http.Handler) http.Handler {
 	if cfg.KeyFunc == nil {
