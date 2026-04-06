@@ -15,6 +15,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
+	"github.com/Camionerou/rag-saldivia/pkg/security"
 	"github.com/Camionerou/rag-saldivia/pkg/pagination"
 	"github.com/Camionerou/rag-saldivia/services/platform/db"
 	"github.com/Camionerou/rag-saldivia/services/platform/internal/service"
@@ -43,11 +44,12 @@ type Platform struct {
 	svc          PlatformService
 	publicKey    ed25519.PublicKey
 	platformSlug string // tenant slug that identifies platform admins
+	blacklist    *security.TokenBlacklist
 }
 
 // NewPlatform creates platform HTTP handlers.
-func NewPlatform(svc PlatformService, publicKey ed25519.PublicKey, platformSlug string) *Platform {
-	return &Platform{svc: svc, publicKey: publicKey, platformSlug: platformSlug}
+func NewPlatform(svc PlatformService, publicKey ed25519.PublicKey, platformSlug string, blacklist *security.TokenBlacklist) *Platform {
+	return &Platform{svc: svc, publicKey: publicKey, platformSlug: platformSlug, blacklist: blacklist}
 }
 
 // Routes returns a chi router with all platform routes.
@@ -365,10 +367,17 @@ func (h *Platform) SetConfig(w http.ResponseWriter, r *http.Request) {
 
 // ── Middleware & Helpers ─────────────────────────────────────────────────
 
-// requirePlatformAdmin verifies the JWT and checks that the user has admin role.
-// The JWT is passed via Authorization: Bearer <token>.
+// requirePlatformAdmin verifies JWT, checks blacklist, strips spoofed headers,
+// and ensures the user has admin role on the platform tenant.
 func (h *Platform) requirePlatformAdmin(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// H2: strip spoofed identity headers before processing
+		r.Header.Del("X-User-ID")
+		r.Header.Del("X-User-Email")
+		r.Header.Del("X-User-Role")
+		r.Header.Del("X-Tenant-ID")
+		r.Header.Del("X-Tenant-Slug")
+
 		auth := r.Header.Get("Authorization")
 		if !strings.HasPrefix(auth, "Bearer ") {
 			writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "missing authorization"})
@@ -381,6 +390,15 @@ func (h *Platform) requirePlatformAdmin(next http.Handler) http.Handler {
 			return
 		}
 
+		// Check blacklist (revoked tokens)
+		if h.blacklist != nil && claims.ID != "" {
+			revoked, err := h.blacklist.IsRevoked(r.Context(), claims.ID)
+			if err == nil && revoked {
+				writeJSON(w, http.StatusUnauthorized, map[string]string{"error": "token revoked"})
+				return
+			}
+		}
+
 		if claims.Role != "admin" || claims.Slug != h.platformSlug {
 			writeJSON(w, http.StatusForbidden, map[string]string{"error": "platform admin access required"})
 			return
@@ -388,6 +406,10 @@ func (h *Platform) requirePlatformAdmin(next http.Handler) http.Handler {
 
 		// Propagate identity via headers for downstream use
 		r.Header.Set("X-User-ID", claims.UserID)
+		r.Header.Set("X-User-Email", claims.Email)
+		r.Header.Set("X-User-Role", claims.Role)
+		r.Header.Set("X-Tenant-ID", claims.TenantID)
+		r.Header.Set("X-Tenant-Slug", claims.Slug)
 		next.ServeHTTP(w, r)
 	})
 }

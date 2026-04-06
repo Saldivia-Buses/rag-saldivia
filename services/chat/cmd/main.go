@@ -18,6 +18,7 @@ import (
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	"github.com/Camionerou/rag-saldivia/pkg/config"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
+	"github.com/Camionerou/rag-saldivia/pkg/security"
 	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
 	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
 	"github.com/Camionerou/rag-saldivia/services/chat/internal/handler"
@@ -56,6 +57,9 @@ func main() {
 		defer otelShutdown(context.Background())
 	}
 
+	// Token blacklist (shared Redis)
+	blacklist := security.InitBlacklist(ctx, config.Env("REDIS_URL", "localhost:6379"))
+
 	pool, err := pgxpool.New(ctx, dbURL)
 	if err != nil {
 		slog.Error("failed to connect to database", "error", err)
@@ -90,7 +94,7 @@ func main() {
 
 	// All chat routes require authentication
 	r.Group(func(r chi.Router) {
-		r.Use(sdamw.Auth(publicKey))
+		r.Use(sdamw.AuthWithConfig(publicKey, sdamw.AuthConfig{Blacklist: blacklist, FailOpen: true}))
 		r.Mount("/v1/chat/sessions", chatHandler.Routes())
 	})
 

@@ -23,7 +23,6 @@ import (
 	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
 	"github.com/Camionerou/rag-saldivia/pkg/security"
 	"github.com/Camionerou/rag-saldivia/pkg/tenant"
-	"github.com/redis/go-redis/v9"
 	"github.com/Camionerou/rag-saldivia/services/auth/internal/handler"
 	"github.com/Camionerou/rag-saldivia/services/auth/internal/service"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
@@ -66,20 +65,8 @@ func main() {
 	publisher := natspub.New(nc)
 	slog.Info("connected to NATS", "url", natsURL)
 
-	// Redis for token blacklist
-	redisURL := config.Env("REDIS_URL", "localhost:6379")
-	rdb := redis.NewClient(&redis.Options{Addr: redisURL})
-	if err := rdb.Ping(ctx).Err(); err != nil {
-		slog.Warn("redis not available, token blacklist disabled", "error", err)
-		rdb = nil
-	} else {
-		defer rdb.Close()
-	}
-	var blacklist *security.TokenBlacklist
-	if rdb != nil {
-		blacklist = security.NewTokenBlacklist(rdb)
-		slog.Info("token blacklist enabled")
-	}
+	// Token blacklist (shared Redis)
+	blacklist := security.InitBlacklist(ctx, config.Env("REDIS_URL", "localhost:6379"))
 
 	jwtCfg := sdajwt.DefaultConfig(privateKey, publicKey)
 
@@ -104,7 +91,7 @@ func main() {
 		resolver := tenant.NewResolver(platformPool, nil) // nil = no credential encryption (yet)
 		defer resolver.Close()
 
-		authHandler = handler.NewMultiTenantAuth(resolver, jwtCfg, publisher)
+		authHandler = handler.NewMultiTenantAuth(resolver, jwtCfg, publisher, blacklist)
 		slog.Info("auth service starting in multi-tenant mode")
 	} else if tenantDBURL != "" {
 		// Single-tenant: direct connection (dev mode)

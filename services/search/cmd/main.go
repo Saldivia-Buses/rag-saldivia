@@ -20,6 +20,7 @@ import (
 	"github.com/Camionerou/rag-saldivia/pkg/config"
 	sdagrpc "github.com/Camionerou/rag-saldivia/pkg/grpc"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
+	"github.com/Camionerou/rag-saldivia/pkg/security"
 	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
 	"github.com/Camionerou/rag-saldivia/services/search/internal/handler"
 	"github.com/Camionerou/rag-saldivia/services/search/internal/service"
@@ -48,6 +49,9 @@ func main() {
 	} else {
 		defer otelShutdown(context.Background())
 	}
+
+	// Token blacklist (shared Redis)
+	blacklist := security.InitBlacklist(ctx, config.Env("REDIS_URL", "localhost:6379"))
 
 	// Connect to tenant DB (read document_pages, document_trees)
 	pool, err := pgxpool.New(ctx, tenantDBURL)
@@ -80,7 +84,7 @@ func main() {
 	searchRL := sdamw.RateLimit(sdamw.RateLimitConfig{Requests: 30, Window: time.Minute, KeyFunc: sdamw.ByUser})
 
 	r.Group(func(r chi.Router) {
-		r.Use(sdamw.Auth(publicKey))
+		r.Use(sdamw.AuthWithConfig(publicKey, sdamw.AuthConfig{Blacklist: blacklist, FailOpen: true}))
 		r.Use(searchRL)
 		r.Mount("/v1/search", searchHandler.Routes())
 	})
@@ -96,7 +100,7 @@ func main() {
 
 	// gRPC server (internal inter-service communication)
 	grpcPort := config.Env("SEARCH_GRPC_PORT", "50051")
-	grpcSrv := sdagrpc.NewServer(sdagrpc.InterceptorConfig{PublicKey: publicKey})
+	grpcSrv := sdagrpc.NewServer(sdagrpc.InterceptorConfig{PublicKey: publicKey, Blacklist: blacklist, FailOpen: true})
 	searchv1.RegisterSearchServiceServer(grpcSrv, handler.NewGRPC(searchSvc))
 
 	go func() {
