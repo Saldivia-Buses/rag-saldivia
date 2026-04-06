@@ -4,6 +4,8 @@ import (
 	"time"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/health"
+	healthpb "google.golang.org/grpc/health/grpc_health_v1"
 	"google.golang.org/grpc/keepalive"
 )
 
@@ -26,4 +28,12 @@ func NewServer(cfg InterceptorConfig, opts ...grpc.ServerOption) *grpc.Server {
 		}),
 	}
 	return grpc.NewServer(append(defaults, opts...)...)
+}
+
+// RegisterHealthServer registers the standard gRPC health check service.
+// Allows container orchestration (Docker, k8s) to probe gRPC readiness.
+func RegisterHealthServer(s *grpc.Server) {
+	healthSrv := health.NewServer()
+	healthSrv.SetServingStatus("", healthpb.HealthCheckResponse_SERVING)
+	healthpb.RegisterHealthServer(s, healthSrv)
 }

@@ -102,6 +102,7 @@ func main() {
 	grpcPort := config.Env("SEARCH_GRPC_PORT", "50051")
 	grpcSrv := sdagrpc.NewServer(sdagrpc.InterceptorConfig{PublicKey: publicKey, Blacklist: blacklist, FailOpen: true})
 	searchv1.RegisterSearchServiceServer(grpcSrv, handler.NewGRPC(searchSvc))
+	sdagrpc.RegisterHealthServer(grpcSrv)
 
 	go func() {
 		lis, err := net.Listen("tcp", ":"+grpcPort)
