@@ -113,6 +113,7 @@ func main() {
 	grpcPort := config.Env("CHAT_GRPC_PORT", "50052")
 	grpcSrv := sdagrpc.NewServer(sdagrpc.InterceptorConfig{PublicKey: publicKey, Blacklist: blacklist, FailOpen: true})
 	chatv1.RegisterChatServiceServer(grpcSrv, handler.NewGRPC(chatSvc))
+	sdagrpc.RegisterHealthServer(grpcSrv)
 
 	go func() {
 		lis, err := net.Listen("tcp", ":"+grpcPort)

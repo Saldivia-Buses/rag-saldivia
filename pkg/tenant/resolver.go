@@ -59,7 +59,7 @@ func NewResolver(platformDB *pgxpool.Pool, encryptionKey []byte) *Resolver {
 		pools:         make(map[string]*pgxpool.Pool),
 		redisClts:     make(map[string]*redis.Client),
 		connCache:     make(map[string]connEntry),
-		PoolMaxConns:  4,
+		PoolMaxConns:  4, // override via Resolver.PoolMaxConns before first use
 	}
 }
 
