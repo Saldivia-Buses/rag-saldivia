@@ -26,7 +26,7 @@ func NewGRPC(svc *service.Chat) *GRPCHandler {
 func (h *GRPCHandler) CreateSession(ctx context.Context, req *chatv1.CreateSessionRequest) (*chatv1.Session, error) {
 	userID := sdamw.UserIDFromContext(ctx)
 	if userID == "" {
-		userID = req.UserId
+		return nil, status.Error(codes.Unauthenticated, "missing user context")
 	}
 
 	var collection *string
@@ -45,7 +45,7 @@ func (h *GRPCHandler) CreateSession(ctx context.Context, req *chatv1.CreateSessi
 func (h *GRPCHandler) GetSession(ctx context.Context, req *chatv1.GetSessionRequest) (*chatv1.Session, error) {
 	userID := sdamw.UserIDFromContext(ctx)
 	if userID == "" {
-		userID = req.UserId
+		return nil, status.Error(codes.Unauthenticated, "missing user context")
 	}
 
 	s, err := h.svc.GetSession(ctx, req.SessionId, userID)
@@ -61,7 +61,7 @@ func (h *GRPCHandler) GetSession(ctx context.Context, req *chatv1.GetSessionRequ
 func (h *GRPCHandler) ListSessions(ctx context.Context, req *chatv1.ListSessionsRequest) (*chatv1.ListSessionsResponse, error) {
 	userID := sdamw.UserIDFromContext(ctx)
 	if userID == "" {
-		userID = req.UserId
+		return nil, status.Error(codes.Unauthenticated, "missing user context")
 	}
 
 	sessions, err := h.svc.ListSessions(ctx, userID, 50, 0)
@@ -79,7 +79,7 @@ func (h *GRPCHandler) ListSessions(ctx context.Context, req *chatv1.ListSessions
 func (h *GRPCHandler) DeleteSession(ctx context.Context, req *chatv1.DeleteSessionRequest) (*chatv1.DeleteSessionResponse, error) {
 	userID := sdamw.UserIDFromContext(ctx)
 	if userID == "" {
-		userID = req.UserId
+		return nil, status.Error(codes.Unauthenticated, "missing user context")
 	}
 
 	if err := h.svc.DeleteSession(ctx, req.SessionId, userID); err != nil {
@@ -94,7 +94,7 @@ func (h *GRPCHandler) DeleteSession(ctx context.Context, req *chatv1.DeleteSessi
 func (h *GRPCHandler) RenameSession(ctx context.Context, req *chatv1.RenameSessionRequest) (*chatv1.RenameSessionResponse, error) {
 	userID := sdamw.UserIDFromContext(ctx)
 	if userID == "" {
-		userID = req.UserId
+		return nil, status.Error(codes.Unauthenticated, "missing user context")
 	}
 
 	if err := h.svc.RenameSession(ctx, req.SessionId, userID, req.Title); err != nil {
@@ -109,7 +109,17 @@ func (h *GRPCHandler) RenameSession(ctx context.Context, req *chatv1.RenameSessi
 func (h *GRPCHandler) AddMessage(ctx context.Context, req *chatv1.AddMessageRequest) (*chatv1.Message, error) {
 	userID := sdamw.UserIDFromContext(ctx)
 	if userID == "" {
-		userID = req.UserId
+		return nil, status.Error(codes.Unauthenticated, "missing user context")
+	}
+
+	// Validate role (parity with HTTP handler)
+	switch req.Role {
+	case "user", "assistant":
+		// ok
+	case "system":
+		return nil, status.Error(codes.PermissionDenied, "system role not allowed from API")
+	default:
+		return nil, status.Error(codes.InvalidArgument, "invalid role")
 	}
 
 	m, err := h.svc.AddMessage(ctx, req.SessionId, userID, req.Role, req.Content, nil, req.Sources, req.Metadata)
@@ -123,7 +133,7 @@ func (h *GRPCHandler) AddMessage(ctx context.Context, req *chatv1.AddMessageRequ
 func (h *GRPCHandler) ListMessages(ctx context.Context, req *chatv1.ListMessagesRequest) (*chatv1.ListMessagesResponse, error) {
 	userID := sdamw.UserIDFromContext(ctx)
 	if userID == "" {
-		userID = req.UserId
+		return nil, status.Error(codes.Unauthenticated, "missing user context")
 	}
 
 	// Verify session ownership

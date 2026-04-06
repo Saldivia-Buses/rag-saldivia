@@ -4,10 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"log/slog"
+	"time"
 
 	chatv1 "github.com/Camionerou/rag-saldivia/gen/go/chat/v1"
 	sdagrpc "github.com/Camionerou/rag-saldivia/pkg/grpc"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/encoding/protojson"
 )
 
@@ -50,11 +53,27 @@ func (h *MutationHandler) Handle(client *Client, msg Message) {
 	go func() {
 		result, err := h.dispatch(client, msg)
 		if err != nil {
-			client.SendMessage(Message{
-				Type:  Error,
-				ID:    msg.ID,
-				Error: err.Error(),
-			})
+			// B1: clean error messages, detect token expiry (B2)
+			errMsg := "mutation failed"
+			errCode := ""
+			if st, ok := status.FromError(err); ok {
+				switch st.Code() {
+				case codes.Unauthenticated:
+					errMsg = "authentication required"
+					errCode = "token_expired"
+				case codes.NotFound:
+					errMsg = "not found"
+				case codes.PermissionDenied:
+					errMsg = "permission denied"
+				case codes.InvalidArgument:
+					errMsg = st.Message()
+				}
+			}
+			resp := Message{Type: Error, ID: msg.ID, Error: errMsg}
+			if errCode != "" {
+				resp.Data = json.RawMessage(`{"code":"` + errCode + `"}`)
+			}
+			client.SendMessage(resp)
 			return
 		}
 
@@ -67,7 +86,9 @@ func (h *MutationHandler) Handle(client *Client, msg Message) {
 }
 
 func (h *MutationHandler) dispatch(client *Client, msg Message) (json.RawMessage, error) {
-	ctx := sdagrpc.ForwardJWT(context.Background(), client.JWT)
+	baseCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	ctx := sdagrpc.ForwardJWT(baseCtx, client.JWT)
 
 	switch msg.Action {
 	case "create_session":
