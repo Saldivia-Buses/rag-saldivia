@@ -68,7 +68,7 @@ func (a *Aggregator) Stop() {
 }
 
 func (a *Aggregator) aggregate(tenantID, tenantSlug string) {
-	ctx := context.Background()
+	ctx := a.ctx
 	period := time.Now().Truncate(time.Hour)
 
 	slog.Debug("running feedback aggregation", "period", period, "tenant", tenantID)

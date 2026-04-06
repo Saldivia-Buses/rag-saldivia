@@ -165,7 +165,7 @@ func (c *Consumer) handleEvent(msg jetstream.Msg) {
 		evt.Severity = "error"
 	}
 
-	ctx := context.Background()
+	ctx := c.ctx
 	if err := c.svc.RecordEvent(ctx, evt); err != nil {
 		slog.Error("failed to record feedback event",
 			"error", err,

@@ -12,8 +12,6 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/nats-io/nats.go"
-
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	"github.com/Camionerou/rag-saldivia/pkg/config"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
@@ -61,7 +59,7 @@ func main() {
 
 	// NATS for lifecycle event publishing
 	natsURL := config.Env("NATS_URL", "nats://localhost:4222")
-	nc, err := nats.Connect(natsURL, nats.MaxReconnects(-1), nats.ReconnectWait(2*time.Second))
+	nc, err := natspub.Connect(natsURL)
 	if err != nil {
 		slog.Warn("nats connect failed, lifecycle events disabled", "error", err)
 	} else {
