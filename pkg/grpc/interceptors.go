@@ -99,13 +99,15 @@ func extractAndVerifyJWT(ctx context.Context, cfg InterceptorConfig) (context.Co
 		return nil, status.Error(codes.Unauthenticated, "mfa verification required")
 	}
 
-	// Inject tenant, role, permissions into context (full parity with HTTP)
+	// Inject identity into context (full parity with HTTP middleware)
 	ctx = tenant.WithInfo(ctx, tenant.Info{
 		ID:   claims.TenantID,
 		Slug: claims.Slug,
 	})
 	ctx = sdamw.WithRole(ctx, claims.Role)
 	ctx = sdamw.WithPermissions(ctx, claims.Permissions)
+	ctx = sdamw.WithUserID(ctx, claims.UserID)
+	ctx = sdamw.WithUserEmail(ctx, claims.Email)
 
 	return ctx, nil
 }

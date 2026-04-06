@@ -10,6 +10,8 @@ type contextKey string
 const (
 	permissionsKey contextKey = "permissions"
 	roleKey        contextKey = "role"
+	userIDKey      contextKey = "user_id"
+	userEmailKey   contextKey = "user_email"
 )
 
 // WithPermissions stores the user's permissions in context.
@@ -32,6 +34,28 @@ func WithRole(ctx context.Context, role string) context.Context {
 func RoleFromContext(ctx context.Context) string {
 	role, _ := ctx.Value(roleKey).(string)
 	return role
+}
+
+// WithUserID stores the user's ID in context.
+func WithUserID(ctx context.Context, id string) context.Context {
+	return context.WithValue(ctx, userIDKey, id)
+}
+
+// UserIDFromContext returns the user's ID from context.
+func UserIDFromContext(ctx context.Context) string {
+	id, _ := ctx.Value(userIDKey).(string)
+	return id
+}
+
+// WithUserEmail stores the user's email in context.
+func WithUserEmail(ctx context.Context, email string) context.Context {
+	return context.WithValue(ctx, userEmailKey, email)
+}
+
+// UserEmailFromContext returns the user's email from context.
+func UserEmailFromContext(ctx context.Context) string {
+	email, _ := ctx.Value(userEmailKey).(string)
+	return email
 }
 
 // RequirePermission returns middleware that checks if the authenticated user

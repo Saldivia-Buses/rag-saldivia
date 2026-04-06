@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log/slog"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -13,9 +14,11 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	searchv1 "github.com/Camionerou/rag-saldivia/gen/go/search/v1"
 	"github.com/Camionerou/rag-saldivia/pkg/audit"
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	"github.com/Camionerou/rag-saldivia/pkg/config"
+	sdagrpc "github.com/Camionerou/rag-saldivia/pkg/grpc"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
 	"github.com/Camionerou/rag-saldivia/services/search/internal/handler"
@@ -91,6 +94,24 @@ func main() {
 		IdleTimeout:  120 * time.Second,
 	}
 
+	// gRPC server (internal inter-service communication)
+	grpcPort := config.Env("SEARCH_GRPC_PORT", "50051")
+	grpcSrv := sdagrpc.NewServer(sdagrpc.InterceptorConfig{PublicKey: publicKey})
+	searchv1.RegisterSearchServiceServer(grpcSrv, handler.NewGRPC(searchSvc))
+
+	go func() {
+		lis, err := net.Listen("tcp", ":"+grpcPort)
+		if err != nil {
+			slog.Error("grpc listen failed", "error", err)
+			os.Exit(1)
+		}
+		slog.Info("search grpc server starting", "port", grpcPort)
+		if err := grpcSrv.Serve(lis); err != nil {
+			slog.Error("grpc serve error", "error", err)
+		}
+	}()
+
+	// HTTP server (frontend REST + health checks)
 	go func() {
 		slog.Info("search service starting", "port", port)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
@@ -101,6 +122,8 @@ func main() {
 
 	<-ctx.Done()
 	slog.Info("search service shutting down")
+
+	grpcSrv.GracefulStop()
 
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer shutdownCancel()
