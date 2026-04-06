@@ -1,0 +1,15 @@
+version: v2
+modules:
+  - path: .
+    name: buf.build/sda/proto
+lint:
+  use:
+    - STANDARD
+  except:
+    - PACKAGE_DIRECTORY_MATCH   # protos use {service}/v1/ not sda/{service}/v1/
+    - RPC_REQUEST_RESPONSE_UNIQUE  # reuse types like Session, Job as responses
+    - RPC_REQUEST_STANDARD_NAME
+    - RPC_RESPONSE_STANDARD_NAME
+breaking:
+  use:
+    - FILE

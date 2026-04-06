@@ -8,7 +8,7 @@ syntax = "proto3";
 
 package sda.rag.v1;
 
-option go_package = "github.com/Camionerou/rag-saldivia/proto/rag/v1;ragv1";
+option go_package = "github.com/Camionerou/rag-saldivia/gen/go/rag/v1;ragv1";
 
 import "google/protobuf/empty.proto";
 

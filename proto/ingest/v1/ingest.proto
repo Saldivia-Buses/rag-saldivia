@@ -13,7 +13,7 @@ syntax = "proto3";
 
 package sda.ingest.v1;
 
-option go_package = "github.com/Camionerou/rag-saldivia/proto/ingest/v1;ingestv1";
+option go_package = "github.com/Camionerou/rag-saldivia/gen/go/ingest/v1;ingestv1";
 
 import "google/protobuf/timestamp.proto";
 
