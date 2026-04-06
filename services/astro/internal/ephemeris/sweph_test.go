@@ -6,18 +6,15 @@ import (
 	"testing"
 )
 
-func ephePath(t *testing.T) string {
-	t.Helper()
+func TestMain(m *testing.M) {
 	p := os.Getenv("EPHE_PATH")
-	if p == "" {
-		// Use empty string — swephgo falls back to Moshier (sufficient for tests)
-		return ""
-	}
-	return p
+	Init(p) // empty string = Moshier fallback
+	code := m.Run()
+	Close()
+	os.Exit(code)
 }
 
 func TestJulDay_KnownDate(t *testing.T) {
-	// J2000.0 epoch: 2000-01-01 12:00 UT = JD 2451545.0
 	jd := JulDay(2000, 1, 1, 12.0)
 	if math.Abs(jd-2451545.0) > 0.0001 {
 		t.Errorf("JulDay = %.4f, want 2451545.0", jd)
@@ -36,15 +33,11 @@ func TestRevJul_RoundTrip(t *testing.T) {
 }
 
 func TestCalcPlanet_SunPosition(t *testing.T) {
-	Init(ephePath(t))
-	defer Close()
-
 	jd := JulDay(2000, 1, 1, 12.0)
 	pos, err := CalcPlanet(jd, Sun, FlagSwieph|FlagSpeed)
 	if err != nil {
 		t.Fatal(err)
 	}
-	// Sun at J2000.0 ≈ 280.46° ecliptic longitude
 	if math.Abs(pos.Lon-280.46) > 0.1 {
 		t.Errorf("Sun lon = %.4f, want ~280.46", pos.Lon)
 	}
@@ -53,30 +46,39 @@ func TestCalcPlanet_SunPosition(t *testing.T) {
 	}
 }
 
-func TestCalcPlanetFull_Equatorial(t *testing.T) {
-	Init(ephePath(t))
-	defer Close()
+func TestCalcPlanet_Equatorial(t *testing.T) {
+	jd := JulDay(2000, 1, 1, 12.0)
+	pos, err := CalcPlanet(jd, Sun, FlagSwieph|FlagSpeed|FlagEquatorial)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if pos.RA < 270 || pos.RA > 290 {
+		t.Errorf("Sun RA = %.4f, expected ~281", pos.RA)
+	}
+	// With equatorial flag, ecliptic fields should be zeroed
+	if pos.Lon != 0 {
+		t.Errorf("Lon should be 0 with equatorial flag, got %.4f", pos.Lon)
+	}
+}
 
+func TestCalcPlanetFull(t *testing.T) {
 	jd := JulDay(2000, 1, 1, 12.0)
 	pos, err := CalcPlanetFull(jd, Sun, FlagSwieph|FlagSpeed)
 	if err != nil {
 		t.Fatal(err)
 	}
-	// Ecliptic lon populated
 	if math.Abs(pos.Lon-280.46) > 0.1 {
 		t.Errorf("Sun lon = %.4f, want ~280.46", pos.Lon)
 	}
-	// RA should also be populated (~281° for J2000.0 Sun)
 	if pos.RA < 270 || pos.RA > 290 {
 		t.Errorf("Sun RA = %.4f, expected ~281", pos.RA)
+	}
+	if pos.Dec > -20 || pos.Dec < -25 {
+		t.Errorf("Sun Dec = %.4f, expected ~-23", pos.Dec)
 	}
 }
 
 func TestCalcHouses_TopocentricoRosario(t *testing.T) {
-	Init(ephePath(t))
-	defer Close()
-
-	// Adrian's birth: 1975-12-27 19:14 UT, Rosario
 	jd := JulDay(1975, 12, 27, 19.0+14.0/60.0)
 	cusps, ascmc, err := CalcHouses(jd, -32.9468, -60.6393, HouseTopocentric)
 	if err != nil {
@@ -92,25 +94,17 @@ func TestCalcHouses_TopocentricoRosario(t *testing.T) {
 }
 
 func TestEclNut(t *testing.T) {
-	Init(ephePath(t))
-	defer Close()
-
 	jd := JulDay(2000, 1, 1, 12.0)
 	eps, err := EclNut(jd)
 	if err != nil {
 		t.Fatal(err)
 	}
-	// Obliquity ~23.44° at J2000.0
 	if math.Abs(eps-23.44) > 0.1 {
 		t.Errorf("epsilon = %.4f, want ~23.44", eps)
 	}
 }
 
 func TestSolcrossUT(t *testing.T) {
-	Init(ephePath(t))
-	defer Close()
-
-	// Find when Sun crosses 0° (vernal equinox) in 2026
 	jdStart := JulDay(2026, 3, 1, 0.0)
 	jd, err := SolcrossUT(0.0, jdStart, FlagSwieph|FlagSpeed)
 	if err != nil {
@@ -119,5 +113,22 @@ func TestSolcrossUT(t *testing.T) {
 	y, m, d, _ := RevJul(jd)
 	if y != 2026 || m != 3 || (d < 19 || d > 21) {
 		t.Errorf("vernal equinox 2026 = %d-%d-%d, want ~2026-03-20", y, m, d)
+	}
+}
+
+func TestCstr(t *testing.T) {
+	tests := []struct {
+		in   []byte
+		want string
+	}{
+		{[]byte("hello\x00\x00\x00"), "hello"},
+		{[]byte{0, 0, 0}, ""},
+		{[]byte("no null"), "no null"},
+	}
+	for _, tc := range tests {
+		got := cstr(tc.in)
+		if got != tc.want {
+			t.Errorf("cstr(%v) = %q, want %q", tc.in, got, tc.want)
+		}
 	}
 }

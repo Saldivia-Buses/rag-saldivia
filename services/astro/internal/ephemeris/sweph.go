@@ -7,6 +7,7 @@
 package ephemeris
 
 import (
+	"bytes"
 	"fmt"
 	"sync"
 
@@ -15,28 +16,28 @@ import (
 
 // Planet IDs — mirrors pyswisseph constants.
 const (
-	Sun      = 0
-	Moon     = 1
-	Mercury  = 2
-	Venus    = 3
-	Mars     = 4
-	Jupiter  = 5
-	Saturn   = 6
-	Uranus   = 7
-	Neptune  = 8
-	Pluto    = 9
-	TrueNode = 11
-	MeanApog = 12 // Black Moon Lilith
-	Chiron   = 15
-	EclNutID = -1 // swe.SE_ECL_NUT
+	Sun      = swe.SeSun
+	Moon     = swe.SeMoon
+	Mercury  = swe.SeMercury
+	Venus    = swe.SeVenus
+	Mars     = swe.SeMars
+	Jupiter  = swe.SeJupiter
+	Saturn   = swe.SeSaturn
+	Uranus   = swe.SeUranus
+	Neptune  = swe.SeNeptune
+	Pluto    = swe.SePluto
+	TrueNode = swe.SeTrueNode
+	MeanApog = swe.SeMeanApog // Black Moon Lilith
+	Chiron   = swe.SeChiron
+	EclNutID = swe.SeEclNut
 )
 
 // Calc flags.
 const (
-	FlagSwieph     = 2     // swe.SEFLG_SWIEPH
-	FlagSpeed      = 256   // swe.SEFLG_SPEED
-	FlagEquatorial = 2048  // swe.SEFLG_EQUATORIAL
-	FlagTopoctr    = 32768 // swe.SEFLG_TOPOCTR
+	FlagSwieph     = swe.SeflgSwieph
+	FlagSpeed      = swe.SeflgSpeed
+	FlagEquatorial = swe.SeflgEquatorial
+	FlagTopoctr    = swe.SeflgTopoctr
 )
 
 // House systems.
@@ -44,15 +45,15 @@ const HouseTopocentric = 'T' // Polich-Page Topocentric
 
 // Eclipse type flags.
 const (
-	EclTotal   = 4
-	EclAnnular = 8
-	EclPartial = 16
+	EclTotal   = swe.SeEclTotal
+	EclAnnular = swe.SeEclAnnular
+	EclPartial = swe.SeEclPartial
 )
 
 // PlanetPos holds calculated planetary position.
 type PlanetPos struct {
-	Lon   float64 // ecliptic longitude (degrees) — or RA if FlagEquatorial
-	Lat   float64 // ecliptic latitude (degrees) — or Dec if FlagEquatorial
+	Lon   float64 // ecliptic longitude (degrees)
+	Lat   float64 // ecliptic latitude (degrees)
 	Dist  float64 // distance (AU)
 	Speed float64 // speed in longitude (degrees/day)
 	RA    float64 // right ascension (degrees)
@@ -61,6 +62,14 @@ type PlanetPos struct {
 
 // CalcMu protects compound operations where SetTopo + CalcPlanet must be atomic.
 var CalcMu sync.Mutex
+
+// cstr trims a C null-terminated byte buffer to a Go string.
+func cstr(b []byte) string {
+	if i := bytes.IndexByte(b, 0); i >= 0 {
+		return string(b[:i])
+	}
+	return string(b)
+}
 
 // Init sets the ephemeris data path. Must be called before any calculation.
 func Init(ephePath string) {
@@ -94,13 +103,15 @@ func RevJul(jd float64) (year, month, day int, hour float64) {
 }
 
 // CalcPlanet calculates a planet's position for a given Julian Day (UT).
+// When FlagEquatorial is set, Lon/Lat contain RA/Dec (swephgo convention),
+// and RA/Dec fields are also populated for convenience.
 func CalcPlanet(jdUT float64, planet, flags int) (*PlanetPos, error) {
 	xx := make([]float64, 6)
 	serr := make([]byte, 256)
 
 	ret := swe.CalcUt(jdUT, planet, flags, xx, serr)
 	if ret < 0 {
-		return nil, fmt.Errorf("swe.CalcUt(planet=%d): %s", planet, string(serr))
+		return nil, fmt.Errorf("swe.CalcUt(planet=%d): %s", planet, cstr(serr))
 	}
 
 	pos := &PlanetPos{
@@ -112,20 +123,32 @@ func CalcPlanet(jdUT float64, planet, flags int) (*PlanetPos, error) {
 	if flags&FlagEquatorial != 0 {
 		pos.RA = xx[0]
 		pos.Dec = xx[1]
+		// Clear ecliptic fields — they're not valid with equatorial flag
+		pos.Lon = 0
+		pos.Lat = 0
 	}
 	return pos, nil
 }
 
-// CalcPlanetFull calculates both ecliptic AND equatorial positions.
-// Caller must hold CalcMu if using topocentric positions.
+// CalcPlanetFull calculates both ecliptic AND equatorial positions in one call.
+// Locks CalcMu internally when topocentric flag is present to ensure atomicity
+// between the two CalcPlanet calls (both must see the same SetTopo state).
 func CalcPlanetFull(jdUT float64, planet, baseFlags int) (*PlanetPos, error) {
+	topo := baseFlags&FlagTopoctr != 0
+	if topo {
+		CalcMu.Lock()
+		defer CalcMu.Unlock()
+	}
+
+	// Ecliptic position (with topocentric if requested)
 	eclFlags := baseFlags &^ FlagEquatorial
 	ecl, err := CalcPlanet(jdUT, planet, eclFlags)
 	if err != nil {
 		return nil, err
 	}
 
-	eqFlags := (baseFlags &^ FlagTopoctr) | FlagEquatorial | FlagSwieph | FlagSpeed
+	// Equatorial position (keep topocentric if requested)
+	eqFlags := baseFlags | FlagEquatorial | FlagSwieph | FlagSpeed
 	eq, err := CalcPlanet(jdUT, planet, eqFlags)
 	if err != nil {
 		return nil, err
@@ -162,16 +185,25 @@ func CalcHousesEx(jdUT float64, flags int, geolat, geolon float64, hsys int) ([]
 	return cusps, ascmc, nil
 }
 
+// fixstarBufSize is the minimum buffer for swe.FixstarUt (SE_MAX_STNAME*2+1).
+const fixstarBufSize = 41
+
 // FixstarUT calculates a fixed star's position.
 func FixstarUT(name string, jdUT float64, flags int) (float64, error) {
 	xx := make([]float64, 6)
 	serr := make([]byte, 256)
-	star := make([]byte, len(name)+1)
+	// Buffer must be at least 41 bytes — Swiss Ephemeris writes the resolved
+	// star name back into this buffer (e.g., "Regulus" → "Regulus,alLeo").
+	bufLen := fixstarBufSize
+	if len(name)+1 > bufLen {
+		bufLen = len(name) + 1
+	}
+	star := make([]byte, bufLen)
 	copy(star, name)
 
 	ret := swe.FixstarUt(star, jdUT, flags, xx, serr)
 	if ret < 0 {
-		return 0, fmt.Errorf("swe.FixstarUt(%s): %s", name, string(serr))
+		return 0, fmt.Errorf("swe.FixstarUt(%s): %s", name, cstr(serr))
 	}
 	return xx[0], nil
 }
@@ -183,7 +215,7 @@ func SolEclipseWhenGlob(tjdStart float64, flags, eclType int) ([]float64, error)
 
 	ret := swe.SolEclipseWhenGlob(tjdStart, flags, eclType, tret, 0, serr)
 	if ret < 0 {
-		return nil, fmt.Errorf("swe.SolEclipseWhenGlob: %s", string(serr))
+		return nil, fmt.Errorf("swe.SolEclipseWhenGlob: %s", cstr(serr))
 	}
 	return tret, nil
 }
@@ -195,7 +227,7 @@ func LunEclipseWhen(tjdStart float64, flags, eclType int) ([]float64, error) {
 
 	ret := swe.LunEclipseWhen(tjdStart, flags, eclType, tret, 0, serr)
 	if ret < 0 {
-		return nil, fmt.Errorf("swe.LunEclipseWhen: %s", string(serr))
+		return nil, fmt.Errorf("swe.LunEclipseWhen: %s", cstr(serr))
 	}
 	return tret, nil
 }
@@ -212,7 +244,7 @@ func EclNut(jdUT float64) (float64, error) {
 
 	ret := swe.CalcUt(jdUT, EclNutID, FlagSwieph, xx, serr)
 	if ret < 0 {
-		return 0, fmt.Errorf("swe.CalcUt(ECL_NUT): %s", string(serr))
+		return 0, fmt.Errorf("swe.CalcUt(ECL_NUT): %s", cstr(serr))
 	}
 	return xx[0], nil
 }
@@ -224,7 +256,7 @@ func RiseTrans(jdUT float64, planet int, epheflag, rsmi int, geopos []float64, a
 
 	ret := swe.RiseTrans(jdUT, planet, nil, epheflag, rsmi, geopos, atpress, attemp, tret, serr)
 	if ret < 0 {
-		return 0, fmt.Errorf("swe.RiseTrans: %s", string(serr))
+		return 0, fmt.Errorf("swe.RiseTrans: %s", cstr(serr))
 	}
 	return tret[0], nil
 }

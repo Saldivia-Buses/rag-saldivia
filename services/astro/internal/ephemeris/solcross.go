@@ -11,6 +11,7 @@ import (
 func SolcrossUT(targetLon, tjdStart float64, flags int) (float64, error) {
 	const maxIter = 50
 	const tolerance = 1e-7
+	const maxStep = 200.0 // days — clamp to prevent wild jumps near 180° diff
 
 	jd := tjdStart
 	for iter := 0; iter < maxIter; iter++ {
@@ -32,7 +33,13 @@ func SolcrossUT(targetLon, tjdStart float64, flags int) (float64, error) {
 		if speed == 0 {
 			speed = 1.0
 		}
-		jd += diff / speed
+		step := diff / speed
+		if step > maxStep {
+			step = maxStep
+		} else if step < -maxStep {
+			step = -maxStep
+		}
+		jd += step
 	}
 	return 0, fmt.Errorf("SolcrossUT: did not converge after %d iterations (target=%.4f)", maxIter, targetLon)
 }
