@@ -3,20 +3,22 @@ package main
 import (
 	"context"
 	"log/slog"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
-
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/nats-io/nats.go"
 
+	chatv1 "github.com/Camionerou/rag-saldivia/gen/go/chat/v1"
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	"github.com/Camionerou/rag-saldivia/pkg/config"
+	sdagrpc "github.com/Camionerou/rag-saldivia/pkg/grpc"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/pkg/security"
 	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
@@ -107,6 +109,24 @@ func main() {
 		IdleTimeout:  60 * time.Second,
 	}
 
+	// gRPC server (internal inter-service communication)
+	grpcPort := config.Env("CHAT_GRPC_PORT", "50052")
+	grpcSrv := sdagrpc.NewServer(sdagrpc.InterceptorConfig{PublicKey: publicKey, Blacklist: blacklist, FailOpen: true})
+	chatv1.RegisterChatServiceServer(grpcSrv, handler.NewGRPC(chatSvc))
+
+	go func() {
+		lis, err := net.Listen("tcp", ":"+grpcPort)
+		if err != nil {
+			slog.Error("grpc listen failed", "error", err)
+			os.Exit(1)
+		}
+		slog.Info("chat grpc server starting", "port", grpcPort)
+		if err := grpcSrv.Serve(lis); err != nil {
+			slog.Error("grpc serve error", "error", err)
+		}
+	}()
+
+	// HTTP server
 	go func() {
 		slog.Info("chat service starting", "port", port)
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
@@ -117,6 +137,8 @@ func main() {
 
 	<-ctx.Done()
 	slog.Info("chat service shutting down")
+
+	grpcSrv.GracefulStop()
 
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer shutdownCancel()

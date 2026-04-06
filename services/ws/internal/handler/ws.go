@@ -61,7 +61,7 @@ func (h *WS) Upgrade(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create client with identity from JWT
-	client := hub.NewClientWithIdentity(h.hub, conn, claims.UserID, claims.Email, claims.TenantID, claims.Slug, claims.Role)
+	client := hub.NewClientWithIdentity(h.hub, conn, claims.UserID, claims.Email, claims.TenantID, claims.Slug, claims.Role, token)
 
 	// Register with hub
 	h.hub.Register(client)
