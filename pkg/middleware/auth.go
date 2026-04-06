@@ -105,9 +105,11 @@ func AuthWithConfig(publicKey ed25519.PublicKey, cfg AuthConfig) func(http.Handl
 				Slug: claims.Slug,
 			})
 
-			// Inject role + permissions into context for RBAC middleware
+			// Inject identity into context for RBAC and downstream use
 			ctx = WithRole(ctx, claims.Role)
 			ctx = WithPermissions(ctx, claims.Permissions)
+			ctx = WithUserID(ctx, claims.UserID)
+			ctx = WithUserEmail(ctx, claims.Email)
 
 			// Cross-validate: JWT slug must match subdomain-derived slug (prevents token replay)
 			if traefikSlug != "" && claims.Slug != traefikSlug {

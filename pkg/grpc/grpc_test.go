@@ -6,6 +6,8 @@ import (
 	"testing"
 
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
+	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
+	"github.com/Camionerou/rag-saldivia/pkg/tenant"
 	"google.golang.org/grpc/metadata"
 )
 
@@ -42,6 +44,24 @@ func TestExtractAndVerifyJWT_ValidToken(t *testing.T) {
 	}
 	if newCtx == nil {
 		t.Fatal("expected non-nil context")
+	}
+
+	// Verify all identity fields are injected into context
+	ti, _ := tenant.FromContext(newCtx)
+	if ti.ID != "t-1" {
+		t.Errorf("expected tenant ID t-1, got %q", ti.ID)
+	}
+	if ti.Slug != "test" {
+		t.Errorf("expected tenant slug test, got %q", ti.Slug)
+	}
+	if sdamw.RoleFromContext(newCtx) != "admin" {
+		t.Errorf("expected role admin, got %q", sdamw.RoleFromContext(newCtx))
+	}
+	if sdamw.UserIDFromContext(newCtx) != "u-1" {
+		t.Errorf("expected user ID u-1, got %q", sdamw.UserIDFromContext(newCtx))
+	}
+	if sdamw.UserEmailFromContext(newCtx) != "test@sda.app" {
+		t.Errorf("expected email test@sda.app, got %q", sdamw.UserEmailFromContext(newCtx))
 	}
 }
 
@@ -88,8 +108,6 @@ func TestExtractAndVerifyJWT_WrongKey_Rejected(t *testing.T) {
 	priv, _ := testKeys(t)
 	_, otherPub := testKeys(t) // different key pair
 
-	cfg := sdajwt.DefaultConfig(priv, nil)
-	cfg.PublicKey = nil // only need private for signing
 	token, _ := sdajwt.CreateAccess(sdajwt.DefaultConfig(priv, otherPub), sdajwt.Claims{
 		UserID: "u-1", TenantID: "t-1", Slug: "test", Role: "user",
 	})

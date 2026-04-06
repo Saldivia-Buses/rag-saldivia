@@ -5,6 +5,7 @@ import (
 	"log/slog"
 
 	searchv1 "github.com/Camionerou/rag-saldivia/gen/go/search/v1"
+	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/services/search/internal/service"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -22,7 +23,24 @@ func NewGRPC(svc *service.Search) *GRPCHandler {
 }
 
 // Query performs a 3-phase tree search across document collections.
+// Requires chat.read permission (same as HTTP handler).
 func (h *GRPCHandler) Query(ctx context.Context, req *searchv1.SearchRequest) (*searchv1.SearchResponse, error) {
+	// Permission check (parity with HTTP RequirePermission("chat.read"))
+	role := sdamw.RoleFromContext(ctx)
+	if role != "admin" {
+		perms := sdamw.PermissionsFromContext(ctx)
+		hasPermission := false
+		for _, p := range perms {
+			if p == "chat.read" {
+				hasPermission = true
+				break
+			}
+		}
+		if !hasPermission {
+			return nil, status.Error(codes.PermissionDenied, "insufficient permissions")
+		}
+	}
+
 	if req.Query == "" {
 		return nil, status.Error(codes.InvalidArgument, "query is required")
 	}
