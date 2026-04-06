@@ -96,8 +96,8 @@ type techniqueRequest struct {
 	Year        int    `json:"year"`
 }
 
-func (h *Handler) parseRequest(r *http.Request) (*techniqueRequest, error) {
-	r.Body = http.MaxBytesReader(nil, r.Body, maxBodySize)
+func (h *Handler) parseRequest(w http.ResponseWriter, r *http.Request) (*techniqueRequest, error) {
+	r.Body = http.MaxBytesReader(w, r.Body, maxBodySize)
 	var req techniqueRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		return nil, err
@@ -125,7 +125,7 @@ func jsonOK(w http.ResponseWriter, data any) {
 // --- Technique endpoints ---
 
 func (h *Handler) Natal(w http.ResponseWriter, r *http.Request) {
-	req, err := h.parseRequest(r)
+	req, err := h.parseRequest(w, r)
 	if err != nil {
 		jsonError(w, "invalid request", http.StatusBadRequest)
 		return
@@ -144,7 +144,7 @@ func (h *Handler) Natal(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) Transits(w http.ResponseWriter, r *http.Request) {
-	req, err := h.parseRequest(r)
+	req, err := h.parseRequest(w, r)
 	if err != nil {
 		jsonError(w, "invalid request", http.StatusBadRequest)
 		return
@@ -163,7 +163,7 @@ func (h *Handler) Transits(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) Directions(w http.ResponseWriter, r *http.Request) {
-	req, err := h.parseRequest(r)
+	req, err := h.parseRequest(w, r)
 	if err != nil {
 		jsonError(w, "invalid request", http.StatusBadRequest)
 		return
@@ -184,7 +184,7 @@ func (h *Handler) Directions(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) Progressions(w http.ResponseWriter, r *http.Request) {
-	req, err := h.parseRequest(r)
+	req, err := h.parseRequest(w, r)
 	if err != nil {
 		jsonError(w, "invalid request", http.StatusBadRequest)
 		return
@@ -208,7 +208,7 @@ func (h *Handler) Progressions(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) Returns(w http.ResponseWriter, r *http.Request) {
-	req, err := h.parseRequest(r)
+	req, err := h.parseRequest(w, r)
 	if err != nil {
 		jsonError(w, "invalid request", http.StatusBadRequest)
 		return
@@ -232,7 +232,7 @@ func (h *Handler) Returns(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) FixedStars(w http.ResponseWriter, r *http.Request) {
-	req, err := h.parseRequest(r)
+	req, err := h.parseRequest(w, r)
 	if err != nil {
 		jsonError(w, "invalid request", http.StatusBadRequest)
 		return
@@ -251,7 +251,7 @@ func (h *Handler) FixedStars(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) SolarArc(w http.ResponseWriter, r *http.Request) {
-	req, err := h.parseRequest(r)
+	req, err := h.parseRequest(w, r)
 	if err != nil {
 		jsonError(w, "invalid request", http.StatusBadRequest)
 		return
@@ -271,7 +271,7 @@ func (h *Handler) SolarArc(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) Profections(w http.ResponseWriter, r *http.Request) {
-	req, err := h.parseRequest(r)
+	req, err := h.parseRequest(w, r)
 	if err != nil {
 		jsonError(w, "invalid request", http.StatusBadRequest)
 		return
@@ -291,7 +291,7 @@ func (h *Handler) Profections(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) Firdaria(w http.ResponseWriter, r *http.Request) {
-	req, err := h.parseRequest(r)
+	req, err := h.parseRequest(w, r)
 	if err != nil {
 		jsonError(w, "invalid request", http.StatusBadRequest)
 		return
@@ -311,7 +311,7 @@ func (h *Handler) Firdaria(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) Brief(w http.ResponseWriter, r *http.Request) {
-	req, err := h.parseRequest(r)
+	req, err := h.parseRequest(w, r)
 	if err != nil {
 		jsonError(w, "invalid request", http.StatusBadRequest)
 		return
@@ -344,7 +344,7 @@ func (h *Handler) Query(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Parse body BEFORE setting SSE headers (D6)
-	r.Body = http.MaxBytesReader(nil, r.Body, maxBodySize)
+	r.Body = http.MaxBytesReader(w, r.Body, maxBodySize)
 	var req struct {
 		ContactName string `json:"contact_name"`
 		Query       string `json:"query"`
@@ -354,14 +354,22 @@ func (h *Handler) Query(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, "invalid request", http.StatusBadRequest)
 		return
 	}
+	if req.Year == 0 {
+		req.Year = time.Now().Year()
+	}
+	if req.Year < -5000 || req.Year > 5000 {
+		jsonError(w, "year out of range", http.StatusBadRequest)
+		return
+	}
+	if req.ContactName == "" {
+		jsonError(w, "contact_name is required", http.StatusBadRequest)
+		return
+	}
 
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
 	w.Header().Set("X-Accel-Buffering", "no")
-	if req.Year == 0 {
-		req.Year = time.Now().Year()
-	}
 
 	// 1. Resolve contact
 	contact, _, err := h.resolveContact(r, req.ContactName)
@@ -436,10 +444,23 @@ func (h *Handler) CreateContact(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, "database not configured", http.StatusServiceUnavailable)
 		return
 	}
-	r.Body = http.MaxBytesReader(nil, r.Body, maxBodySize)
+	r.Body = http.MaxBytesReader(w, r.Body, maxBodySize)
 	var req repository.CreateContactParams
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		jsonError(w, "invalid request", http.StatusBadRequest)
+		return
+	}
+	if req.Name == "" {
+		jsonError(w, "name is required", http.StatusBadRequest)
+		return
+	}
+	if req.Lat < -90 || req.Lat > 90 || req.Lon < -180 || req.Lon > 180 {
+		jsonError(w, "invalid coordinates", http.StatusBadRequest)
+		return
+	}
+	validKinds := map[string]bool{"persona": true, "empresa": true}
+	if req.Kind != "" && !validKinds[req.Kind] {
+		jsonError(w, "kind must be 'persona' or 'empresa'", http.StatusBadRequest)
 		return
 	}
 	tid, uid, err := tenantAndUser(r)
