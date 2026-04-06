@@ -38,14 +38,40 @@ x-jwt-public: &jwt-public
 
 services:
 
+  # ── Docker Socket Proxy (L14) ──────────────────────────────────────────
+  # Traefik talks to Docker via this proxy instead of the raw socket.
+  # Limits API surface: only container listing (no exec, no networks).
+
+  docker-socket-proxy:
+    <<: *service-defaults
+    image: tecnativa/docker-socket-proxy:latest
+    environment:
+      CONTAINERS: 1
+      NETWORKS: 0
+      SERVICES: 0
+      TASKS: 0
+      INFO: 0
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - frontend
+    deploy:
+      resources:
+        limits:
+          memory: 64M
+          cpus: "0.25"
+
   # ── Gateway ────────────────────────────────────────────────────────────
 
   traefik:
     <<: *service-defaults
     image: traefik:v3
+    depends_on:
+      - docker-socket-proxy
     command:
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.endpoint=tcp://docker-socket-proxy:2375"
       - "--providers.file.directory=/etc/traefik/dynamic"
       - "--entrypoints.web.address=:80"
       - "--entrypoints.web.http.redirections.entrypoint.to=websecure"
@@ -59,7 +85,6 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
       - ./traefik/dynamic:/etc/traefik/dynamic:ro
       - ./traefik/traefik.prod.yml:/etc/traefik/traefik.yml:ro
       - traefik_logs:/var/log/traefik
@@ -70,6 +95,27 @@ services:
       resources:
         limits:
           memory: 256M
+          cpus: "1.0"
+
+  # ── CrowdSec IDS (M12) ───────────────────────────────────────────────
+
+  crowdsec:
+    <<: *service-defaults
+    image: crowdsecurity/crowdsec:latest
+    environment:
+      COLLECTIONS: "crowdsecurity/traefik crowdsecurity/http-cve"
+    volumes:
+      - ./crowdsec/acquis.yaml:/etc/crowdsec/acquis.yaml:ro
+      - traefik_logs:/var/log/traefik:ro
+      - crowdsec_data:/var/lib/crowdsec/data
+      - crowdsec_config:/etc/crowdsec
+    networks:
+      - frontend
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+          cpus: "0.5"
 
   # ── Data ───────────────────────────────────────────────────────────────
 
@@ -93,6 +139,7 @@ services:
       resources:
         limits:
           memory: 1G
+          cpus: "2.0"
 
   redis:
     <<: *service-defaults
@@ -118,6 +165,7 @@ services:
       resources:
         limits:
           memory: 768M
+          cpus: "0.5"
 
   nats:
     <<: *service-defaults
@@ -148,6 +196,7 @@ services:
       resources:
         limits:
           memory: 256M
+          cpus: "1.0"
 
   # ── Go Services ────────────────────────────────────────────────────────
 
@@ -183,6 +232,7 @@ services:
       resources:
         limits:
           memory: 128M
+          cpus: "1.0"
 
   ws:
     <<: *service-defaults
@@ -213,6 +263,7 @@ services:
       resources:
         limits:
           memory: 256M
+          cpus: "1.0"
 
   chat:
     <<: *service-defaults
@@ -245,6 +296,7 @@ services:
       resources:
         limits:
           memory: 128M
+          cpus: "1.0"
 
   agent:
     <<: *service-defaults
@@ -280,6 +332,7 @@ services:
       resources:
         limits:
           memory: 256M
+          cpus: "1.0"
 
   search:
     <<: *service-defaults
@@ -312,6 +365,7 @@ services:
       resources:
         limits:
           memory: 128M
+          cpus: "1.0"
 
   traces:
     <<: *service-defaults
@@ -344,6 +398,7 @@ services:
       resources:
         limits:
           memory: 128M
+          cpus: "1.0"
 
   notification:
     <<: *service-defaults
@@ -378,6 +433,7 @@ services:
       resources:
         limits:
           memory: 128M
+          cpus: "1.0"
 
   platform:
     <<: *service-defaults
@@ -411,6 +467,7 @@ services:
       resources:
         limits:
           memory: 128M
+          cpus: "1.0"
 
   ingest:
     <<: *service-defaults
@@ -444,6 +501,7 @@ services:
       resources:
         limits:
           memory: 256M
+          cpus: "1.0"
 
   feedback:
     <<: *service-defaults
@@ -475,6 +533,7 @@ services:
       resources:
         limits:
           memory: 128M
+          cpus: "1.0"
 
 networks:
   frontend:    # traefik ↔ Go services
@@ -487,3 +546,5 @@ volumes:
   nats_data:
   traefik_logs:
   traefik_acme:
+  crowdsec_data:
+  crowdsec_config:
