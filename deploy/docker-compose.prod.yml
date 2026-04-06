@@ -22,8 +22,6 @@ secrets:
     file: ./secrets/db-tenant-template-url
   redis_password:
     file: ./secrets/redis-password
-  nats_token:
-    file: ./secrets/nats-token
   encryption_master_key:
     file: ./secrets/encryption-master-key
 
@@ -125,6 +123,17 @@ services:
     <<: *service-defaults
     image: nats:2-alpine
     command: ["-c", "/etc/nats/nats-server.conf", "-m", "8222"]
+    environment:
+      AUTH_NATS_PASS: ${AUTH_NATS_PASS}
+      CHAT_NATS_PASS: ${CHAT_NATS_PASS}
+      WS_NATS_PASS: ${WS_NATS_PASS}
+      NOTIF_NATS_PASS: ${NOTIF_NATS_PASS}
+      INGEST_NATS_PASS: ${INGEST_NATS_PASS}
+      FEEDBACK_NATS_PASS: ${FEEDBACK_NATS_PASS}
+      AGENT_NATS_PASS: ${AGENT_NATS_PASS}
+      TRACES_NATS_PASS: ${TRACES_NATS_PASS}
+      PLATFORM_NATS_PASS: ${PLATFORM_NATS_PASS}
+      EXTRACTOR_NATS_PASS: ${EXTRACTOR_NATS_PASS}
     volumes:
       - nats_data:/data
       - ./nats/nats-server.conf:/etc/nats/nats-server.conf:ro
@@ -379,6 +388,8 @@ services:
     environment:
       PLATFORM_PORT: "8006"
       PLATFORM_TENANT_SLUG: platform
+      NATS_URL: nats://platform:${PLATFORM_NATS_PASS}@nats:4222
+      <<: *jwt-public
     secrets:
       - jwt_public_key
       - db_platform_url

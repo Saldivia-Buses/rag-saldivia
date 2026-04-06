@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strings"
 
 	"log/slog"
 
@@ -52,12 +53,16 @@ func New(pool *pgxpool.Pool, publisher *natspub.Publisher) *Platform {
 
 // publishLifecycleEvent emits a NATS event for config/tenant changes.
 // Other services can react without polling or restarting.
+// Event type dots are replaced with underscores to keep NATS subjects
+// at 4 segments (tenant.{slug}.notify.{type}) matching the permission
+// grant tenant.*.notify.* in nats-server.conf.
 func (p *Platform) publishLifecycleEvent(tenantSlug, eventType string, data any) {
 	if p.publisher == nil || tenantSlug == "" {
 		return
 	}
+	safeType := "platform_" + strings.ReplaceAll(eventType, ".", "_")
 	if err := p.publisher.Notify(tenantSlug, map[string]any{
-		"type": "platform_" + eventType,
+		"type": safeType,
 		"data": data,
 	}); err != nil {
 		slog.Warn("publish lifecycle event failed", "event", eventType, "error", err)

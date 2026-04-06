@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"net/url"
 	"sync"
 	"time"
@@ -268,7 +269,8 @@ func (r *Resolver) Close() {
 func ensureSSLMode(pgURL string) string {
 	u, err := url.Parse(pgURL)
 	if err != nil {
-		return pgURL // can't parse, return as-is — pgxpool will report the error
+		slog.Warn("failed to parse PG URL for SSL enforcement", "error", err)
+		return pgURL
 	}
 	q := u.Query()
 	if q.Get("sslmode") == "" {
