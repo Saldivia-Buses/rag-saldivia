@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
+	"net/url"
 	"sync"
 	"time"
 
@@ -170,7 +172,8 @@ func (r *Resolver) createPoolLocked(ctx context.Context, slug string) (*pgxpool.
 		return nil, err
 	}
 
-	config, err := pgxpool.ParseConfig(info.PostgresURL)
+	pgURL := ensureSSLMode(info.PostgresURL)
+	config, err := pgxpool.ParseConfig(pgURL)
 	if err != nil {
 		return nil, fmt.Errorf("parse pool config for tenant %q: %w", slug, err)
 	}
@@ -258,4 +261,22 @@ func (r *Resolver) Close() {
 		delete(r.redisClts, slug)
 	}
 	r.connCache = make(map[string]connEntry)
+}
+
+// ensureSSLMode appends sslmode=require to a PostgreSQL URL if no sslmode
+// is already specified. This enforces encrypted connections in production
+// without breaking dev URLs that explicitly set sslmode=disable.
+func ensureSSLMode(pgURL string) string {
+	u, err := url.Parse(pgURL)
+	if err != nil {
+		slog.Warn("failed to parse PG URL for SSL enforcement", "error", err)
+		return pgURL
+	}
+	q := u.Query()
+	if q.Get("sslmode") == "" {
+		q.Set("sslmode", "require")
+		u.RawQuery = q.Encode()
+		return u.String()
+	}
+	return pgURL
 }

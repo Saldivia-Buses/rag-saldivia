@@ -8,6 +8,26 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type AuditLog struct {
+	ID        string             `json:"id"`
+	UserID    pgtype.Text        `json:"user_id"`
+	Action    string             `json:"action"`
+	Resource  pgtype.Text        `json:"resource"`
+	Details   []byte             `json:"details"`
+	IpAddress pgtype.Text        `json:"ip_address"`
+	UserAgent pgtype.Text        `json:"user_agent"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
+type ChatFeedback struct {
+	ID        string             `json:"id"`
+	MessageID string             `json:"message_id"`
+	UserID    string             `json:"user_id"`
+	Thumbs    string             `json:"thumbs"`
+	Comment   pgtype.Text        `json:"comment"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
 type Collection struct {
 	ID          string             `json:"id"`
 	Name        string             `json:"name"`
@@ -68,6 +88,20 @@ type DocumentTree struct {
 	CreatedAt      pgtype.Timestamptz `json:"created_at"`
 }
 
+type FeedbackEvent struct {
+	ID        string             `json:"id"`
+	Category  string             `json:"category"`
+	Module    string             `json:"module"`
+	UserID    pgtype.Text        `json:"user_id"`
+	Score     pgtype.Int4        `json:"score"`
+	Thumbs    pgtype.Text        `json:"thumbs"`
+	Severity  pgtype.Text        `json:"severity"`
+	Status    string             `json:"status"`
+	Context   []byte             `json:"context"`
+	Comment   pgtype.Text        `json:"comment"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
 type IngestJob struct {
 	ID         string             `json:"id"`
 	UserID     string             `json:"user_id"`
@@ -78,6 +112,86 @@ type IngestJob struct {
 	Error      pgtype.Text        `json:"error"`
 	CreatedAt  pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
+}
+
+type Message struct {
+	ID        string             `json:"id"`
+	SessionID string             `json:"session_id"`
+	Role      string             `json:"role"`
+	Content   string             `json:"content"`
+	Sources   []byte             `json:"sources"`
+	Metadata  []byte             `json:"metadata"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	Thinking  pgtype.Text        `json:"thinking"`
+}
+
+type Notification struct {
+	ID        string             `json:"id"`
+	UserID    string             `json:"user_id"`
+	Type      string             `json:"type"`
+	Title     string             `json:"title"`
+	Body      string             `json:"body"`
+	Data      []byte             `json:"data"`
+	Channel   string             `json:"channel"`
+	IsRead    bool               `json:"is_read"`
+	ReadAt    pgtype.Timestamptz `json:"read_at"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
+type NotificationPreference struct {
+	UserID       string             `json:"user_id"`
+	EmailEnabled bool               `json:"email_enabled"`
+	InAppEnabled bool               `json:"in_app_enabled"`
+	QuietStart   pgtype.Time        `json:"quiet_start"`
+	QuietEnd     pgtype.Time        `json:"quiet_end"`
+	MutedTypes   []string           `json:"muted_types"`
+	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
+}
+
+type Permission struct {
+	ID          string      `json:"id"`
+	Name        string      `json:"name"`
+	Description pgtype.Text `json:"description"`
+	Category    string      `json:"category"`
+}
+
+type RefreshToken struct {
+	ID        string             `json:"id"`
+	UserID    string             `json:"user_id"`
+	TokenHash string             `json:"token_hash"`
+	ExpiresAt pgtype.Timestamptz `json:"expires_at"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	RevokedAt pgtype.Timestamptz `json:"revoked_at"`
+}
+
+type Role struct {
+	ID          string             `json:"id"`
+	Name        string             `json:"name"`
+	Description pgtype.Text        `json:"description"`
+	IsSystem    bool               `json:"is_system"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
+}
+
+type RolePermission struct {
+	RoleID       string `json:"role_id"`
+	PermissionID string `json:"permission_id"`
+}
+
+type Session struct {
+	ID         string             `json:"id"`
+	UserID     string             `json:"user_id"`
+	Title      string             `json:"title"`
+	Collection pgtype.Text        `json:"collection"`
+	IsSaved    bool               `json:"is_saved"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt  pgtype.Timestamptz `json:"updated_at"`
+}
+
+type Tag struct {
+	ID        string             `json:"id"`
+	SessionID string             `json:"session_id"`
+	Name      string             `json:"name"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
 }
 
 type ToolCall struct {
@@ -94,5 +208,23 @@ type ToolCall struct {
 }
 
 type User struct {
-	ID string `json:"id"`
+	ID           string             `json:"id"`
+	Email        string             `json:"email"`
+	Name         string             `json:"name"`
+	PasswordHash string             `json:"password_hash"`
+	AvatarUrl    pgtype.Text        `json:"avatar_url"`
+	MfaSecret    pgtype.Text        `json:"mfa_secret"`
+	MfaEnabled   bool               `json:"mfa_enabled"`
+	IsActive     bool               `json:"is_active"`
+	FailedLogins int32              `json:"failed_logins"`
+	LockedUntil  pgtype.Timestamptz `json:"locked_until"`
+	LastLoginAt  pgtype.Timestamptz `json:"last_login_at"`
+	LastLoginIp  pgtype.Text        `json:"last_login_ip"`
+	CreatedAt    pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
+}
+
+type UserRole struct {
+	UserID string `json:"user_id"`
+	RoleID string `json:"role_id"`
 }

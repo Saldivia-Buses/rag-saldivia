@@ -294,24 +294,27 @@ services:
       - "traefik.http.routers.chat-docker.priority=100"
       - "traefik.http.services.chat-docker.loadbalancer.server.port=8003"
 
-  rag:
+  agent:
     <<: *service-defaults
     profiles: [full]
     build:
       context: ..
-      dockerfile: services/rag/Dockerfile
+      dockerfile: services/agent/Dockerfile
     environment:
       <<: *env-common
-      RAG_PORT: "8004"
-      RAG_SERVER_URL: http://host.docker.internal:8081
+      AGENT_PORT: "8004"
+      SGLANG_LLM_URL: http://host.docker.internal:8102
+      SEARCH_SERVICE_URL: http://host.docker.internal:8010
+      INGEST_SERVICE_URL: http://host.docker.internal:8007
+      NOTIFICATION_SERVICE_URL: http://host.docker.internal:8005
     ports:
       - "8004:8004"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.rag-docker.rule=PathPrefix(`/v1/rag`)"
-      - "traefik.http.routers.rag-docker.entrypoints=web"
-      - "traefik.http.routers.rag-docker.priority=100"
-      - "traefik.http.services.rag-docker.loadbalancer.server.port=8004"
+      - "traefik.http.routers.agent-docker.rule=PathPrefix(`/v1/agent`)"
+      - "traefik.http.routers.agent-docker.entrypoints=web"
+      - "traefik.http.routers.agent-docker.priority=100"
+      - "traefik.http.services.agent-docker.loadbalancer.server.port=8004"
 
   notification:
     <<: *service-defaults

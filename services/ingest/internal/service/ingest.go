@@ -22,6 +22,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/nats-io/nats.go"
 
+	"github.com/Camionerou/rag-saldivia/pkg/audit"
 	"github.com/Camionerou/rag-saldivia/services/ingest/internal/repository"
 )
 
@@ -56,6 +57,7 @@ type Ingest struct {
 	repo      *repository.Queries
 	nc        *nats.Conn
 	publisher EventPublisher
+	auditor   *audit.Writer
 	cfg       Config
 }
 
@@ -73,6 +75,7 @@ func New(pool *pgxpool.Pool, nc *nats.Conn, publisher EventPublisher, cfg Config
 		repo:      repository.New(pool),
 		nc:        nc,
 		publisher: publisher,
+		auditor:   audit.NewWriter(pool),
 		cfg:       cfg,
 	}
 }
@@ -169,6 +172,11 @@ func (s *Ingest) Submit(ctx context.Context, tenantSlug, userID, collection, fil
 		return nil, fmt.Errorf("publish ingest job: %w", err)
 	}
 
+	s.auditor.Write(ctx, audit.Entry{
+		UserID: userID, Action: "ingest.upload", Resource: job.ID,
+		Details: map[string]any{"file": fileName, "collection": collection, "size": fileSize},
+	})
+
 	return &job, nil
 }
 
@@ -221,6 +229,11 @@ func (s *Ingest) DeleteJob(ctx context.Context, jobID, userID string) error {
 	if n == 0 {
 		return ErrJobNotFound
 	}
+
+	s.auditor.Write(ctx, audit.Entry{
+		UserID: userID, Action: "ingest.delete_job", Resource: jobID,
+	})
+
 	return nil
 }
 

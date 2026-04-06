@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strings"
 
 	"log/slog"
 
@@ -16,6 +17,7 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"github.com/Camionerou/rag-saldivia/pkg/audit"
 	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
 	"github.com/Camionerou/rag-saldivia/services/platform/db"
 )
@@ -36,6 +38,7 @@ type Platform struct {
 	pool      *pgxpool.Pool
 	queries   *db.Queries
 	publisher *natspub.Publisher
+	auditor   *audit.Writer
 }
 
 // New creates a platform service.
@@ -44,17 +47,22 @@ func New(pool *pgxpool.Pool, publisher *natspub.Publisher) *Platform {
 		pool:      pool,
 		queries:   db.New(pool),
 		publisher: publisher,
+		auditor:   audit.NewWriter(pool),
 	}
 }
 
 // publishLifecycleEvent emits a NATS event for config/tenant changes.
 // Other services can react without polling or restarting.
+// Event type dots are replaced with underscores to keep NATS subjects
+// at 4 segments (tenant.{slug}.notify.{type}) matching the permission
+// grant tenant.*.notify.* in nats-server.conf.
 func (p *Platform) publishLifecycleEvent(tenantSlug, eventType string, data any) {
 	if p.publisher == nil || tenantSlug == "" {
 		return
 	}
+	safeType := "platform_" + strings.ReplaceAll(eventType, ".", "_")
 	if err := p.publisher.Notify(tenantSlug, map[string]any{
-		"type": "platform_" + eventType,
+		"type": safeType,
 		"data": data,
 	}); err != nil {
 		slog.Warn("publish lifecycle event failed", "event", eventType, "error", err)
@@ -173,6 +181,10 @@ func (p *Platform) CreateTenant(ctx context.Context, arg db.CreateTenantParams) 
 	}
 	detail := createRowToDetail(tenant)
 	p.publishLifecycleEvent(arg.Slug, "tenant.created", detail)
+	p.auditor.Write(ctx, audit.Entry{
+		Action: "tenant.created", Resource: detail.ID,
+		Details: map[string]any{"slug": arg.Slug, "name": arg.Name, "plan": arg.PlanID},
+	})
 	return detail, nil
 }
 
@@ -181,6 +193,10 @@ func (p *Platform) UpdateTenant(ctx context.Context, arg db.UpdateTenantParams) 
 	if err := p.queries.UpdateTenant(ctx, arg); err != nil {
 		return fmt.Errorf("update tenant: %w", err)
 	}
+	p.auditor.Write(ctx, audit.Entry{
+		Action: "tenant.updated", Resource: arg.ID,
+		Details: map[string]any{"name": arg.Name, "plan": arg.PlanID},
+	})
 	return nil
 }
 
@@ -189,6 +205,7 @@ func (p *Platform) DisableTenant(ctx context.Context, id string) error {
 	if err := p.queries.DisableTenant(ctx, id); err != nil {
 		return fmt.Errorf("disable tenant: %w", err)
 	}
+	p.auditor.Write(ctx, audit.Entry{Action: "tenant.disabled", Resource: id})
 	return nil
 }
 
@@ -197,6 +214,7 @@ func (p *Platform) EnableTenant(ctx context.Context, id string) error {
 	if err := p.queries.EnableTenant(ctx, id); err != nil {
 		return fmt.Errorf("enable tenant: %w", err)
 	}
+	p.auditor.Write(ctx, audit.Entry{Action: "tenant.enabled", Resource: id})
 	return nil
 }
 
@@ -225,6 +243,10 @@ func (p *Platform) EnableModule(ctx context.Context, arg db.EnableModuleForTenan
 	if err := p.queries.EnableModuleForTenant(ctx, arg); err != nil {
 		return fmt.Errorf("enable module: %w", err)
 	}
+	p.auditor.Write(ctx, audit.Entry{
+		Action: "module.enabled", Resource: arg.ModuleID,
+		Details: map[string]any{"tenant_id": arg.TenantID, "enabled_by": arg.EnabledBy},
+	})
 	return nil
 }
 
@@ -236,6 +258,10 @@ func (p *Platform) DisableModule(ctx context.Context, tenantID, moduleID string)
 	}); err != nil {
 		return fmt.Errorf("disable module: %w", err)
 	}
+	p.auditor.Write(ctx, audit.Entry{
+		Action: "module.disabled", Resource: moduleID,
+		Details: map[string]any{"tenant_id": tenantID},
+	})
 	return nil
 }
 
@@ -291,6 +317,10 @@ func (p *Platform) ToggleFeatureFlag(ctx context.Context, id string, enabled boo
 	if result.RowsAffected() == 0 {
 		return ErrFlagNotFound
 	}
+	p.auditor.Write(ctx, audit.Entry{
+		Action: "flag.toggled", Resource: id,
+		Details: map[string]any{"enabled": enabled},
+	})
 	return nil
 }
 
@@ -330,6 +360,9 @@ func (p *Platform) SetConfig(ctx context.Context, key string, value []byte, upda
 	if err != nil {
 		return fmt.Errorf("set config: %w", err)
 	}
+	p.auditor.Write(ctx, audit.Entry{
+		UserID: updatedBy, Action: "config.updated", Resource: key,
+	})
 	return nil
 }
 
