@@ -1,4 +1,3 @@
--- +migrate Up
 CREATE TABLE IF NOT EXISTS contacts (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id   UUID NOT NULL,
@@ -23,6 +22,3 @@ CREATE TABLE IF NOT EXISTS contacts (
 
 CREATE INDEX idx_contacts_tenant ON contacts(tenant_id);
 CREATE INDEX idx_contacts_user ON contacts(tenant_id, user_id);
-
--- +migrate Down
-DROP TABLE IF EXISTS contacts;
