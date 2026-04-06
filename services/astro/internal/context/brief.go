@@ -113,6 +113,20 @@ func BuildBrief(ctx *FullContext) string {
 	}
 	b.WriteString("\n")
 
+	// Section 5b: Stations
+	if len(ctx.Stations) > 0 {
+		b.WriteString("## ESTACIONES PLANETARIAS\n\n")
+		for _, st := range ctx.Stations {
+			line := fmt.Sprintf("- %s %s en %s (mes %d, día %d)",
+				st.Planet, st.Type, astromath.PosToStr(st.Lon), st.Month, st.Day)
+			if st.NatPoint != "" {
+				line += fmt.Sprintf(" ⚠ cerca de %s (orbe %.1f°)", st.NatPoint, st.NatOrb)
+			}
+			b.WriteString(line + "\n")
+		}
+		b.WriteString("\n")
+	}
+
 	// Section 6: Eclipses
 	b.WriteString("## ECLIPSES\n\n")
 	if len(ctx.Eclipses) > 0 {
@@ -198,6 +212,15 @@ func buildConvergenceMatrix(ctx *FullContext) []MonthScore {
 				scores[birthMonth-1].Techniques = append(scores[birthMonth-1].Techniques,
 					fmt.Sprintf("prog_ingress_%s", pp.Name))
 			}
+		}
+	}
+
+	// Stations near natal points: highest weight (most significant transit event)
+	for _, st := range ctx.Stations {
+		if st.NatPoint != "" && st.Month >= 1 && st.Month <= 12 {
+			scores[st.Month-1].Score += 4
+			scores[st.Month-1].Techniques = append(scores[st.Month-1].Techniques,
+				fmt.Sprintf("STATION_%s_%s_%s", st.Planet, st.Type, st.NatPoint))
 		}
 	}
 

@@ -29,6 +29,18 @@ type EpisodeDetail struct {
 	Retrograde bool `json:"retrograde"`
 }
 
+// Station represents a planet changing direction (D→Rx or Rx→D).
+type Station struct {
+	Planet   string  `json:"planet"`
+	Type     string  `json:"type"` // "SR" (station retrograde) or "SD" (station direct)
+	JD       float64 `json:"jd"`
+	Lon      float64 `json:"lon"`
+	Month    int     `json:"month"`
+	Day      int     `json:"day"`
+	NatPoint string  `json:"natal_point,omitempty"` // nearest natal point within station orb
+	NatOrb   float64 `json:"natal_orb,omitempty"`
+}
+
 // transitSample holds a sampled position for a slow planet.
 type transitSample struct {
 	jd    float64
@@ -215,4 +227,96 @@ type hit struct {
 	aspect string
 	retro  bool
 	trLon  float64
+}
+
+// stationPlanets — only real planets get station detection (nodes oscillate too fast).
+var stationPlanets = []struct {
+	Name string
+	ID   int
+}{
+	{"Júpiter", ephemeris.Jupiter},
+	{"Saturno", ephemeris.Saturn},
+	{"Urano", ephemeris.Uranus},
+	{"Neptuno", ephemeris.Neptune},
+	{"Plutón", ephemeris.Pluto},
+}
+
+// FindStations detects when slow planets change direction during a year.
+// A station within OrbDefaults.Station (5°) of a natal point is highly significant.
+func FindStations(chart *natal.Chart, year int) []Station {
+	jdStart := ephemeris.JulDay(year, 1, 1, 0.0)
+	jdEnd := ephemeris.JulDay(year+1, 1, 1, 0.0)
+	flags := ephemeris.FlagSwieph | ephemeris.FlagSpeed
+	stationOrb := astromath.OrbDefaults.Station
+
+	natalLons := make(map[string]float64)
+	for name, pos := range chart.Planets {
+		if pos.Lon != 0 || pos.Lat != 0 {
+			natalLons[name] = pos.Lon
+		}
+	}
+	natalLons["ASC"] = chart.ASC
+	natalLons["MC"] = chart.MC
+
+	var stations []Station
+
+	for _, sp := range stationPlanets {
+		var prevSpeed float64
+		var prevJD float64
+		first := true
+
+		for jd := jdStart; jd < jdEnd; jd += sampleDays {
+			pos, err := ephemeris.CalcPlanet(jd, sp.ID, flags)
+			if err != nil {
+				continue
+			}
+
+			if !first {
+				// Detect direction change
+				var stationType string
+				if prevSpeed > 0 && pos.Speed < 0 {
+					stationType = "SR" // station retrograde
+				} else if prevSpeed < 0 && pos.Speed > 0 {
+					stationType = "SD" // station direct
+				}
+
+				if stationType != "" {
+					// Interpolate station JD (linear between samples)
+					frac := prevSpeed / (prevSpeed - pos.Speed)
+					stationJD := prevJD + frac*sampleDays
+					stationLon := pos.Lon // approximate
+
+					_, m, d, _ := ephemeris.RevJul(stationJD)
+
+					st := Station{
+						Planet: sp.Name,
+						Type:   stationType,
+						JD:     stationJD,
+						Lon:    stationLon,
+						Month:  m,
+						Day:    d,
+					}
+
+					// Check proximity to natal points
+					bestOrb := stationOrb + 1
+					for natName, natLon := range natalLons {
+						orb := astromath.AngDiff(stationLon, natLon)
+						if orb <= stationOrb && orb < bestOrb {
+							bestOrb = orb
+							st.NatPoint = natName
+							st.NatOrb = orb
+						}
+					}
+
+					stations = append(stations, st)
+				}
+			}
+
+			prevSpeed = pos.Speed
+			prevJD = jd
+			first = false
+		}
+	}
+
+	return stations
 }
