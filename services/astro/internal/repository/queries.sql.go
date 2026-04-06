@@ -78,30 +78,32 @@ func (q *Queries) CreateContact(ctx context.Context, arg CreateContactParams) (C
 }
 
 const deleteContact = `-- name: DeleteContact :exec
-DELETE FROM contacts WHERE tenant_id = $1 AND id = $2
+DELETE FROM contacts WHERE tenant_id = $1 AND user_id = $2 AND id = $3
 `
 
 type DeleteContactParams struct {
 	TenantID pgtype.UUID `json:"tenant_id"`
+	UserID   pgtype.UUID `json:"user_id"`
 	ID       pgtype.UUID `json:"id"`
 }
 
 func (q *Queries) DeleteContact(ctx context.Context, arg DeleteContactParams) error {
-	_, err := q.db.Exec(ctx, deleteContact, arg.TenantID, arg.ID)
+	_, err := q.db.Exec(ctx, deleteContact, arg.TenantID, arg.UserID, arg.ID)
 	return err
 }
 
 const getContact = `-- name: GetContact :one
-SELECT id, tenant_id, user_id, name, birth_date, birth_time, birth_time_known, city, nation, lat, lon, alt, utc_offset, relationship, notes, kind, created_at, updated_at FROM contacts WHERE tenant_id = $1 AND id = $2
+SELECT id, tenant_id, user_id, name, birth_date, birth_time, birth_time_known, city, nation, lat, lon, alt, utc_offset, relationship, notes, kind, created_at, updated_at FROM contacts WHERE tenant_id = $1 AND user_id = $2 AND id = $3
 `
 
 type GetContactParams struct {
 	TenantID pgtype.UUID `json:"tenant_id"`
+	UserID   pgtype.UUID `json:"user_id"`
 	ID       pgtype.UUID `json:"id"`
 }
 
 func (q *Queries) GetContact(ctx context.Context, arg GetContactParams) (Contact, error) {
-	row := q.db.QueryRow(ctx, getContact, arg.TenantID, arg.ID)
+	row := q.db.QueryRow(ctx, getContact, arg.TenantID, arg.UserID, arg.ID)
 	var i Contact
 	err := row.Scan(
 		&i.ID,
@@ -127,16 +129,17 @@ func (q *Queries) GetContact(ctx context.Context, arg GetContactParams) (Contact
 }
 
 const getContactByName = `-- name: GetContactByName :one
-SELECT id, tenant_id, user_id, name, birth_date, birth_time, birth_time_known, city, nation, lat, lon, alt, utc_offset, relationship, notes, kind, created_at, updated_at FROM contacts WHERE tenant_id = $1 AND lower(name) = lower($2)
+SELECT id, tenant_id, user_id, name, birth_date, birth_time, birth_time_known, city, nation, lat, lon, alt, utc_offset, relationship, notes, kind, created_at, updated_at FROM contacts WHERE tenant_id = $1 AND user_id = $2 AND lower(name) = lower($3)
 `
 
 type GetContactByNameParams struct {
 	TenantID pgtype.UUID `json:"tenant_id"`
+	UserID   pgtype.UUID `json:"user_id"`
 	Lower    string      `json:"lower"`
 }
 
 func (q *Queries) GetContactByName(ctx context.Context, arg GetContactByNameParams) (Contact, error) {
-	row := q.db.QueryRow(ctx, getContactByName, arg.TenantID, arg.Lower)
+	row := q.db.QueryRow(ctx, getContactByName, arg.TenantID, arg.UserID, arg.Lower)
 	var i Contact
 	err := row.Scan(
 		&i.ID,
@@ -162,16 +165,23 @@ func (q *Queries) GetContactByName(ctx context.Context, arg GetContactByNamePara
 }
 
 const listContacts = `-- name: ListContacts :many
-SELECT id, tenant_id, user_id, name, birth_date, birth_time, birth_time_known, city, nation, lat, lon, alt, utc_offset, relationship, notes, kind, created_at, updated_at FROM contacts WHERE tenant_id = $1 AND user_id = $2 ORDER BY name
+SELECT id, tenant_id, user_id, name, birth_date, birth_time, birth_time_known, city, nation, lat, lon, alt, utc_offset, relationship, notes, kind, created_at, updated_at FROM contacts WHERE tenant_id = $1 AND user_id = $2 ORDER BY name LIMIT $3 OFFSET $4
 `
 
 type ListContactsParams struct {
 	TenantID pgtype.UUID `json:"tenant_id"`
 	UserID   pgtype.UUID `json:"user_id"`
+	Limit    int32       `json:"limit"`
+	Offset   int32       `json:"offset"`
 }
 
 func (q *Queries) ListContacts(ctx context.Context, arg ListContactsParams) ([]Contact, error) {
-	rows, err := q.db.Query(ctx, listContacts, arg.TenantID, arg.UserID)
+	rows, err := q.db.Query(ctx, listContacts,
+		arg.TenantID,
+		arg.UserID,
+		arg.Limit,
+		arg.Offset,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -210,17 +220,25 @@ func (q *Queries) ListContacts(ctx context.Context, arg ListContactsParams) ([]C
 }
 
 const searchContacts = `-- name: SearchContacts :many
-SELECT id, tenant_id, user_id, name, birth_date, birth_time, birth_time_known, city, nation, lat, lon, alt, utc_offset, relationship, notes, kind, created_at, updated_at FROM contacts WHERE tenant_id = $1 AND user_id = $2 AND name ILIKE '%' || $3 || '%' ORDER BY name
+SELECT id, tenant_id, user_id, name, birth_date, birth_time, birth_time_known, city, nation, lat, lon, alt, utc_offset, relationship, notes, kind, created_at, updated_at FROM contacts WHERE tenant_id = $1 AND user_id = $2 AND name ILIKE '%' || $5::text || '%' ORDER BY name LIMIT $3 OFFSET $4
 `
 
 type SearchContactsParams struct {
 	TenantID pgtype.UUID `json:"tenant_id"`
 	UserID   pgtype.UUID `json:"user_id"`
-	Column3  pgtype.Text `json:"column_3"`
+	Limit    int32       `json:"limit"`
+	Offset   int32       `json:"offset"`
+	Query    string      `json:"query"`
 }
 
 func (q *Queries) SearchContacts(ctx context.Context, arg SearchContactsParams) ([]Contact, error) {
-	rows, err := q.db.Query(ctx, searchContacts, arg.TenantID, arg.UserID, arg.Column3)
+	rows, err := q.db.Query(ctx, searchContacts,
+		arg.TenantID,
+		arg.UserID,
+		arg.Limit,
+		arg.Offset,
+		arg.Query,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -260,15 +278,16 @@ func (q *Queries) SearchContacts(ctx context.Context, arg SearchContactsParams) 
 
 const updateContact = `-- name: UpdateContact :one
 UPDATE contacts SET
-    name = $3, birth_date = $4, birth_time = $5, birth_time_known = $6,
-    city = $7, nation = $8, lat = $9, lon = $10, alt = $11, utc_offset = $12,
-    relationship = $13, notes = $14, kind = $15, updated_at = now()
-WHERE tenant_id = $1 AND id = $2
+    name = $4, birth_date = $5, birth_time = $6, birth_time_known = $7,
+    city = $8, nation = $9, lat = $10, lon = $11, alt = $12, utc_offset = $13,
+    relationship = $14, notes = $15, kind = $16, updated_at = now()
+WHERE tenant_id = $1 AND user_id = $2 AND id = $3
 RETURNING id, tenant_id, user_id, name, birth_date, birth_time, birth_time_known, city, nation, lat, lon, alt, utc_offset, relationship, notes, kind, created_at, updated_at
 `
 
 type UpdateContactParams struct {
 	TenantID       pgtype.UUID `json:"tenant_id"`
+	UserID         pgtype.UUID `json:"user_id"`
 	ID             pgtype.UUID `json:"id"`
 	Name           string      `json:"name"`
 	BirthDate      pgtype.Date `json:"birth_date"`
@@ -288,6 +307,7 @@ type UpdateContactParams struct {
 func (q *Queries) UpdateContact(ctx context.Context, arg UpdateContactParams) (Contact, error) {
 	row := q.db.QueryRow(ctx, updateContact,
 		arg.TenantID,
+		arg.UserID,
 		arg.ID,
 		arg.Name,
 		arg.BirthDate,

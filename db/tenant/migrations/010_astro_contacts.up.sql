@@ -19,6 +19,6 @@ CREATE TABLE IF NOT EXISTS contacts (
     updated_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
-CREATE UNIQUE INDEX idx_contacts_tenant_name ON contacts(tenant_id, lower(name));
+CREATE UNIQUE INDEX idx_contacts_tenant_user_name ON contacts(tenant_id, user_id, lower(name));
 CREATE INDEX idx_contacts_tenant ON contacts(tenant_id);
 CREATE INDEX idx_contacts_user ON contacts(tenant_id, user_id);
