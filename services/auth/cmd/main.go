@@ -65,7 +65,7 @@ func main() {
 	}
 	defer nc.Drain()
 	publisher := natspub.New(nc)
-	slog.Info("connected to NATS", "url", natsURL)
+	slog.Info("connected to NATS", "url", config.RedactURL(natsURL))
 
 	// Token blacklist (shared Redis)
 	blacklist := security.InitBlacklist(ctx, config.Env("REDIS_URL", "localhost:6379"))

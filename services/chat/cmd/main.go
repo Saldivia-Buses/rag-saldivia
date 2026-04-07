@@ -79,7 +79,7 @@ func main() {
 	}
 	defer nc.Drain()
 	publisher := natspub.New(nc)
-	slog.Info("connected to NATS", "url", natsURL)
+	slog.Info("connected to NATS", "url", config.RedactURL(natsURL))
 
 	chatSvc := service.NewChat(pool, tenantSlug, publisher)
 	chatHandler := handler.NewChat(chatSvc)

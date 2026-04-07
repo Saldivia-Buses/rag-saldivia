@@ -61,7 +61,7 @@ func main() {
 		slog.Warn("nats connect failed, trace publishing disabled", "error", err)
 	} else {
 		defer nc.Drain()
-		slog.Info("connected to nats", "url", natsURL)
+		slog.Info("connected to nats", "url", config.RedactURL(natsURL))
 	}
 	tracePublisher := service.NewTracePublisher(nc)
 

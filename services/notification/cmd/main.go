@@ -74,11 +74,11 @@ func main() {
 	// NATS
 	nc, err := natspub.Connect(natsURL)
 	if err != nil {
-		slog.Error("failed to connect to NATS", "error", err, "url", natsURL)
+		slog.Error("failed to connect to NATS", "error", err, "url", config.RedactURL(natsURL))
 		os.Exit(1)
 	}
 	defer nc.Drain()
-	slog.Info("connected to NATS", "url", natsURL)
+	slog.Info("connected to NATS", "url", config.RedactURL(natsURL))
 
 	// Services
 	mailer := service.NewSMTPMailer(smtpHost, smtpPort, smtpFrom)

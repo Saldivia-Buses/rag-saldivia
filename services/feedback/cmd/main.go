@@ -95,7 +95,7 @@ func main() {
 		os.Exit(1)
 	}
 	defer nc.Drain()
-	slog.Info("connected to NATS", "url", natsURL)
+	slog.Info("connected to NATS", "url", config.RedactURL(natsURL))
 
 	// Initialize services
 	publisher := natspub.New(nc)

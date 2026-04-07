@@ -4,6 +4,7 @@ import (
 	"context"
 	"log/slog"
 
+	"github.com/Camionerou/rag-saldivia/pkg/config"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -21,6 +22,6 @@ func InitBlacklist(ctx context.Context, redisURL string) *TokenBlacklist {
 		return nil
 	}
 
-	slog.Info("token blacklist enabled", "redis", redisURL)
+	slog.Info("token blacklist enabled", "redis", config.RedactURL(redisURL))
 	return NewTokenBlacklist(rdb)
 }
