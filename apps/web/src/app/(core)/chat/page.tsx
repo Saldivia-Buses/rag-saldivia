@@ -301,32 +301,30 @@ export default function ChatPage() {
       }));
       history.push({ role: "user", content });
 
-      for await (const chunk of api.streamWithThinking("/v1/rag/generate", {
-        messages: history,
-        model: selectedModel.id,
-        stream: true,
-        use_knowledge_base: true,
-        ...(selectedModel.supportsReasoning
-          ? { reasoning: { effort: "medium" } }
-          : {}),
-      })) {
-        if (chunk.type === "thinking") {
-          thinkingRef.current += chunk.text;
-          setThinkingContent(thinkingRef.current);
-        } else {
-          streamRef.current += chunk.text;
-          setStreamingContent(streamRef.current);
-        }
-      }
+      const agentResp = await api.post<{
+        response: string;
+        tool_calls: unknown[] | null;
+        input_tokens: number;
+        output_tokens: number;
+        model: string;
+      }>("/v1/agent/query", {
+        message: content,
+        history: messages.map((m) => ({
+          role: m.role as "user" | "assistant",
+          content: m.content,
+        })),
+      });
 
-      // Store assistant message in backend using the ref (always current)
-      const finalContent = streamRef.current;
-      const finalThinking = thinkingRef.current || undefined;
+      streamRef.current = agentResp.response;
+      setStreamingContent(agentResp.response);
+
+      // Store assistant message in backend
+      const finalContent = agentResp.response;
+      const finalThinking = undefined;
       if (finalContent) {
         const saved = await api.post<ApiMessage>(`/v1/chat/sessions/${sessionId}/messages`, {
           role: "assistant",
           content: finalContent,
-          thinking: finalThinking,
         });
 
         // Refetch messages — streaming content stays visible until data arrives

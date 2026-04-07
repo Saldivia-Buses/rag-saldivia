@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   Bell,
   ChevronRight,
@@ -209,7 +210,7 @@ const NavMenuItem = ({ item }: { item: NavItem }) => {
   if (!hasChildren) {
     return (
       <SidebarMenuItem>
-        <SidebarMenuButton isActive={isActive} render={<a href={item.href} />}>
+        <SidebarMenuButton isActive={isActive} render={<Link href={item.href} prefetch />}>
           <Icon className="size-4" />
           <span>{item.label}</span>
         </SidebarMenuButton>
@@ -228,7 +229,7 @@ const NavMenuItem = ({ item }: { item: NavItem }) => {
         <SidebarMenuSub>
           {item.children!.map((child) => (
             <SidebarMenuSubItem key={child.label}>
-              <SidebarMenuSubButton isActive={child.isActive} render={<a href={child.href} />}>
+              <SidebarMenuSubButton isActive={child.isActive} render={<Link href={child.href} prefetch />}>
                 {child.label}
               </SidebarMenuSubButton>
             </SidebarMenuSubItem>
@@ -293,12 +294,12 @@ const NavUser = ({ user }: { user: UserData }) => {
               </div>
             </div>
             <DropdownMenuSeparator />
-            <a href="/settings">
+            <Link href="/settings">
               <DropdownMenuItem>
                 <User className="mr-2 size-4" />
                 Mi cuenta
               </DropdownMenuItem>
-            </a>
+            </Link>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={() => {

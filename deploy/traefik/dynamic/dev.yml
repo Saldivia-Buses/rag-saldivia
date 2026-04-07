@@ -2,7 +2,7 @@
 # Routes API paths to Go services running on the host (go run ./cmd/...).
 #
 # Services run on the host machine, Traefik runs in Docker.
-# host.docker.internal resolves to the host from inside Docker.
+# 172.28.241.36 resolves to the host from inside Docker.
 #
 # In dev, tenant slug is injected via middleware header.
 # In production, Traefik extracts it from the subdomain.
@@ -98,47 +98,47 @@ http:
     auth:
       loadBalancer:
         servers:
-          - url: "http://host.docker.internal:8001"
+          - url: "http://172.28.241.36:8001"
     ws:
       loadBalancer:
         servers:
-          - url: "http://host.docker.internal:8002"
+          - url: "http://172.28.241.36:8002"
     chat:
       loadBalancer:
         servers:
-          - url: "http://host.docker.internal:8003"
+          - url: "http://172.28.241.36:8003"
     agent:
       loadBalancer:
         servers:
-          - url: "http://host.docker.internal:8004"
+          - url: "http://172.28.241.36:8004"
     search:
       loadBalancer:
         servers:
-          - url: "http://host.docker.internal:8010"
+          - url: "http://172.28.241.36:8010"
     traces:
       loadBalancer:
         servers:
-          - url: "http://host.docker.internal:8009"
+          - url: "http://172.28.241.36:8009"
     feedback:
       loadBalancer:
         servers:
-          - url: "http://host.docker.internal:8008"
+          - url: "http://172.28.241.36:8008"
     notification:
       loadBalancer:
         servers:
-          - url: "http://host.docker.internal:8005"
+          - url: "http://172.28.241.36:8005"
     platform:
       loadBalancer:
         servers:
-          - url: "http://host.docker.internal:8006"
+          - url: "http://172.28.241.36:8006"
     ingest:
       loadBalancer:
         servers:
-          - url: "http://host.docker.internal:8007"
+          - url: "http://172.28.241.36:8007"
     astro:
       loadBalancer:
         servers:
-          - url: "http://host.docker.internal:8011"
+          - url: "http://172.28.241.36:8011"
 
   middlewares:
     # CORS for dev — frontend on :3000, API on :80

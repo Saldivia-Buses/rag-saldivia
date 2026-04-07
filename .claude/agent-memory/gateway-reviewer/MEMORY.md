@@ -31,3 +31,4 @@
 - [Plan 10 Backend Polish](project_plan10_review.md) -- CAMBIOS REQUERIDOS: llm interface mismatch, WS JWT expiry gap, platform blacklist missing, OpenAPI scope creep
 - [PR #100 Blacklist Wiring](project_pr100_blacklist_wiring.md) -- CAMBIOS REQUERIDOS: auth multi-tenant never wires blacklist (logout broken in prod), Redis client leak in auth, feedback platform route FailOpen wrong
 - [PR #102 Plan 10 Phase 6](project_pr102_plan10_phase6.md) -- Chat gRPC server + WS Hub mutations, CAMBIOS REQUERIDOS: gRPC error leak to browser, JWT expiry unhandled, UserID fallback escalation, role not validated
+- [2.0.3 Branch Review](project_pr_2.0.3_review.md) -- Health/OTel/MCP/alerts/dashboards, CAMBIOS REQUERIDOS: JSON injection, db_query bypass, no deploy confirmation
