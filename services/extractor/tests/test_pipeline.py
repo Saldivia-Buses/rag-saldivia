@@ -7,6 +7,7 @@ actual SGLang model servers to be running.
 from unittest.mock import MagicMock, patch
 
 import fitz
+import pytest
 
 from extractor.pipeline import ExtractionPipeline
 from extractor.schema import ExtractionJob, ImageResult
@@ -131,3 +132,91 @@ def test_pipeline_metadata():
     assert result.metadata.models["ocr"] == "PaddleOCR-VL-1.5"
     assert result.metadata.models["vision"] == "Qwen3.5-9B"
     assert result.metadata.extraction_time_ms >= 0
+
+
+def test_pipeline_ocr_failure_continues():
+    """Pipeline records empty text when OCR fails on a page."""
+    pdf = _make_test_pdf(with_image=False)
+
+    mock_storage = MagicMock()
+    mock_storage.get.return_value = pdf
+
+    mock_ocr = MagicMock()
+    mock_ocr.model = "test-ocr"
+    mock_ocr.extract_page.side_effect = Exception("SGLang timeout")
+
+    mock_vision = MagicMock()
+    mock_vision.model = "test-vision"
+
+    pipeline = ExtractionPipeline(mock_ocr, mock_vision, mock_storage)
+
+    job = ExtractionJob(
+        document_id="doc-fail",
+        tenant_slug="t",
+        storage_key="t/doc-fail/original.pdf",
+        file_name="fail.pdf",
+        file_type="pdf",
+    )
+
+    result = pipeline.extract(job)
+
+    assert result.total_pages == 1
+    assert result.pages[0].text == ""  # fallback to empty
+
+
+def test_pipeline_vision_failure_records_placeholder():
+    """Pipeline records placeholder when vision analysis fails."""
+    pdf = _make_test_pdf(with_image=True)
+
+    mock_storage = MagicMock()
+    mock_storage.get.return_value = pdf
+
+    mock_ocr = MagicMock()
+    mock_ocr.model = "test-ocr"
+    mock_ocr.extract_page.return_value = "text"
+
+    mock_vision = MagicMock()
+    mock_vision.model = "test-vision"
+    mock_vision.analyze_image.side_effect = Exception("Vision model down")
+
+    pipeline = ExtractionPipeline(mock_ocr, mock_vision, mock_storage)
+
+    job = ExtractionJob(
+        document_id="doc-v",
+        tenant_slug="t",
+        storage_key="t/doc-v/original.pdf",
+        file_name="v.pdf",
+        file_type="pdf",
+    )
+
+    result = pipeline.extract(job)
+
+    # Pipeline should still complete
+    assert result.total_pages == 1
+    # Image should have error placeholder
+    if result.pages[0].images:
+        assert result.pages[0].images[0].description == "[extraction failed]"
+        assert result.pages[0].images[0].type == "error"
+
+
+def test_pipeline_rejects_cross_tenant_storage_key():
+    """Pipeline rejects storage keys that don't match tenant slug."""
+    mock_storage = MagicMock()
+    mock_ocr = MagicMock()
+    mock_vision = MagicMock()
+
+    pipeline = ExtractionPipeline(mock_ocr, mock_vision, mock_storage)
+
+    job = ExtractionJob(
+        document_id="doc-1",
+        tenant_slug="tenant-a",
+        storage_key="tenant-b/doc-1/original.pdf",  # wrong tenant!
+        file_name="test.pdf",
+        file_type="pdf",
+    )
+
+    with pytest.raises(ValueError, match="does not match tenant"):
+        pipeline.extract(job)
+
+    # Storage should never be called
+    mock_storage.get.assert_not_called()
