@@ -106,10 +106,11 @@ func Setup(ctx context.Context, cfg Config) (Shutdown, error) {
 
 	shutdown := func(ctx context.Context) error {
 		var errs []error
-		errs = append(errs, tp.Shutdown(ctx))
+		// Shutdown meters first so final metrics are captured before traces stop
 		if mp != nil {
 			errs = append(errs, mp.Shutdown(ctx))
 		}
+		errs = append(errs, tp.Shutdown(ctx))
 		for _, e := range errs {
 			if e != nil {
 				return e

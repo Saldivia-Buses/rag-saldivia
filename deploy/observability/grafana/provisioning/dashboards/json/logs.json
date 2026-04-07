@@ -61,7 +61,7 @@
       "targets": [
         {
           "refId": "A",
-          "expr": "{service_name=~\"$service\"} |= \"error\" | json",
+          "expr": "{service_name=~\"$service\"} | json | level = \"error\"",
           "queryType": "range"
         }
       ],

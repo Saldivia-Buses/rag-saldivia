@@ -162,12 +162,6 @@ func DBQuery(platformDBURL, tenantSlug, query string) ([]map[string]any, error) 
 	if !strings.HasPrefix(upper, "SELECT") {
 		return nil, fmt.Errorf("only SELECT queries are allowed")
 	}
-	// Reject dangerous patterns
-	for _, blocked := range []string{"INSERT", "UPDATE", "DELETE", "DROP", "ALTER", "TRUNCATE", "CREATE", "GRANT", "REVOKE"} {
-		if strings.Contains(upper, blocked) {
-			return nil, fmt.Errorf("query contains blocked keyword: %s", blocked)
-		}
-	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
@@ -190,14 +184,20 @@ func DBQuery(platformDBURL, tenantSlug, query string) ([]map[string]any, error) 
 		return nil, fmt.Errorf("resolve tenant: %w", err)
 	}
 
-	// Connect to tenant DB and execute
+	// Connect to tenant DB with read-only transaction (enforced by PostgreSQL)
 	tConn, err := pgx.Connect(ctx, tenantDBURL)
 	if err != nil {
 		return nil, fmt.Errorf("connect to tenant db: %w", err)
 	}
 	defer tConn.Close(ctx)
 
-	rows, err := tConn.Query(ctx, query)
+	tx, err := tConn.BeginTx(ctx, pgx.TxOptions{AccessMode: pgx.ReadOnly})
+	if err != nil {
+		return nil, fmt.Errorf("begin read-only tx: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	rows, err := tx.Query(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("query: %w", err)
 	}

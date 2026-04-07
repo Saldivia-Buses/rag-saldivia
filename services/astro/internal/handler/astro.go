@@ -560,9 +560,11 @@ func (h *Handler) CreateContact(w http.ResponseWriter, r *http.Request) {
 	}
 	if h.auditor != nil {
 		h.auditor.Write(r.Context(), audit.Entry{
-			UserID:   sdamw.UserIDFromContext(r.Context()),
-			Action:   "astro.contact.create",
-			Resource: contact.Name,
+			UserID:    sdamw.UserIDFromContext(r.Context()),
+			Action:    "astro.contact.create",
+			Resource:  contact.Name,
+			IP:        r.RemoteAddr,
+			UserAgent: r.UserAgent(),
 		})
 	}
 	w.Header().Set("Content-Type", "application/json")
@@ -678,9 +680,11 @@ func (h *Handler) UpdateContact(w http.ResponseWriter, r *http.Request) {
 	}
 	if h.auditor != nil {
 		h.auditor.Write(r.Context(), audit.Entry{
-			UserID:   sdamw.UserIDFromContext(r.Context()),
-			Action:   "astro.contact.update",
-			Resource: idStr,
+			UserID:    sdamw.UserIDFromContext(r.Context()),
+			Action:    "astro.contact.update",
+			Resource:  idStr,
+			IP:        r.RemoteAddr,
+			UserAgent: r.UserAgent(),
 		})
 	}
 	jsonOK(w, contact)
@@ -715,9 +719,11 @@ func (h *Handler) DeleteContact(w http.ResponseWriter, r *http.Request) {
 	}
 	if h.auditor != nil {
 		h.auditor.Write(r.Context(), audit.Entry{
-			UserID:   sdamw.UserIDFromContext(r.Context()),
-			Action:   "astro.contact.delete",
-			Resource: idStr,
+			UserID:    sdamw.UserIDFromContext(r.Context()),
+			Action:    "astro.contact.delete",
+			Resource:  idStr,
+			IP:        r.RemoteAddr,
+			UserAgent: r.UserAgent(),
 		})
 	}
 	w.WriteHeader(http.StatusNoContent)

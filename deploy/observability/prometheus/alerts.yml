@@ -1,16 +1,16 @@
 groups:
   - name: sda-service-health
     rules:
-      # Service is not receiving any requests for 5 minutes
+      # Service metric series disappeared (service crashed or stopped exporting)
       - alert: ServiceDown
         expr: |
-          sum by (service_name) (rate(http_server_request_duration_seconds_count[5m])) == 0
-        for: 5m
+          absent(up{job=~"sda-.*"}) == 1
+        for: 3m
         labels:
           severity: critical
         annotations:
-          summary: "{{ $labels.service_name }} is not receiving requests"
-          description: "Service {{ $labels.service_name }} has not processed any HTTP requests in the last 5 minutes."
+          summary: "SDA service metrics absent — possible crash"
+          description: "No metrics received from SDA services for 3 minutes. Check OTel collector and service health."
 
       # Error rate above 5% for 5 minutes
       - alert: HighErrorRate
@@ -71,4 +71,4 @@ groups:
           severity: warning
         annotations:
           summary: "Prometheus storage above 8GB"
-          description: "Current storage: {{ $value | humanize1024 }}B"
+          description: "Current storage: {{ $value | printf \"%.1f\" }}GB"

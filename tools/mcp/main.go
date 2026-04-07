@@ -13,8 +13,10 @@ package main
 
 import (
 	"bufio"
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log/slog"
 	"net/http"
 	"os"
@@ -105,7 +107,7 @@ var tools = []toolDef{
 	},
 	{
 		Name:        "deploy",
-		Description: "Deploy a service to production.",
+		Description: "Deploy a service to production. Requires confirm=true to execute.",
 		InputSchema: map[string]interface{}{
 			"type": "object",
 			"properties": map[string]interface{}{
@@ -113,8 +115,12 @@ var tools = []toolDef{
 					"type":        "string",
 					"description": "Service name to deploy",
 				},
+				"confirm": map[string]interface{}{
+					"type":        "boolean",
+					"description": "Must be true to execute the deploy",
+				},
 			},
-			"required": []string{"service"},
+			"required": []string{"service", "confirm"},
 		},
 	},
 	{
@@ -337,9 +343,13 @@ func handleDBQuery(id any, argsRaw json.RawMessage) jsonRPCResponse {
 func handleDeploy(id any, argsRaw json.RawMessage) jsonRPCResponse {
 	var args struct {
 		Service string `json:"service"`
+		Confirm bool   `json:"confirm"`
 	}
 	if err := json.Unmarshal(argsRaw, &args); err != nil {
 		return errorResponse(id, -32602, "invalid arguments for deploy")
+	}
+	if !args.Confirm {
+		return textResult(id, fmt.Sprintf("Deploy %q requires confirm=true. This will restart the service in production.", args.Service))
 	}
 
 	output, err := admin.Deploy(args.Service)
@@ -359,18 +369,21 @@ func handleRAGQuery(id any, argsRaw json.RawMessage) jsonRPCResponse {
 	}
 
 	// Call search service directly
-	baseHost := envOrDefault("SDA_HOST", "localhost")
-	url := fmt.Sprintf("http://%s:8010/v1/search/query", baseHost)
+	searchURL := envOrDefault("SEARCH_SERVICE_URL", "http://localhost:8010")
 
-	body := fmt.Sprintf(`{"collection":"%s","query":"%s"}`, args.Collection, args.Query)
-	resp, err := http.Post(url, "application/json", strings.NewReader(body))
+	payload := map[string]string{"collection": args.Collection, "query": args.Query}
+	bodyBytes, err := json.Marshal(payload)
+	if err != nil {
+		return errorResponse(id, -32602, "failed to marshal request")
+	}
+	resp, err := http.Post(searchURL+"/v1/search/query", "application/json", bytes.NewReader(bodyBytes))
 	if err != nil {
 		return textResult(id, fmt.Sprintf("Search service unreachable: %v", err))
 	}
 	defer resp.Body.Close()
 
 	var result json.RawMessage
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+	if err := json.NewDecoder(io.LimitReader(resp.Body, 10<<20)).Decode(&result); err != nil {
 		return textResult(id, fmt.Sprintf("Failed to parse search response: %v", err))
 	}
 	out, _ := json.MarshalIndent(result, "", "  ")

@@ -7,6 +7,7 @@ package health
 import (
 	"context"
 	"encoding/json"
+	"log/slog"
 	"net/http"
 	"sync"
 	"time"
@@ -90,7 +91,8 @@ func (c *Checker) Handler() http.HandlerFunc {
 				}
 				if err != nil {
 					dep.Status = "down"
-					dep.Error = err.Error()
+					dep.Error = "unavailable"
+					slog.Warn("health check failed", "dependency", name, "error", err)
 				}
 
 				mu.Lock()
@@ -116,6 +118,7 @@ func (c *Checker) Handler() http.HandlerFunc {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Cache-Control", "no-store")
 		if allHealthy {
 			w.WriteHeader(http.StatusOK)
 		} else {
