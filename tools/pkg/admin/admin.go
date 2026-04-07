@@ -29,11 +29,14 @@ var KnownServices = []struct {
 	{Name: "auth", Port: "8001"},
 	{Name: "ws", Port: "8002"},
 	{Name: "chat", Port: "8003"},
-	{Name: "rag", Port: "8004"},
+	{Name: "agent", Port: "8004"},
 	{Name: "notification", Port: "8005"},
 	{Name: "platform", Port: "8006"},
 	{Name: "ingest", Port: "8007"},
 	{Name: "feedback", Port: "8008"},
+	{Name: "traces", Port: "8009"},
+	{Name: "search", Port: "8010"},
+	{Name: "astro", Port: "8011"},
 }
 
 // ServiceHealth checks the /health endpoint of all known services.
@@ -149,6 +152,97 @@ func TenantStatus(platformDBURL, slug string) (*TenantDetail, error) {
 	}
 
 	return &d, nil
+}
+
+// DBQuery executes a read-only SELECT query against a tenant's database.
+// Only SELECT statements are allowed — any other statement type is rejected.
+func DBQuery(platformDBURL, tenantSlug, query string) ([]map[string]any, error) {
+	query = strings.TrimSpace(query)
+	upper := strings.ToUpper(query)
+	if !strings.HasPrefix(upper, "SELECT") {
+		return nil, fmt.Errorf("only SELECT queries are allowed")
+	}
+	// Reject dangerous patterns
+	for _, blocked := range []string{"INSERT", "UPDATE", "DELETE", "DROP", "ALTER", "TRUNCATE", "CREATE", "GRANT", "REVOKE"} {
+		if strings.Contains(upper, blocked) {
+			return nil, fmt.Errorf("query contains blocked keyword: %s", blocked)
+		}
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+	defer cancel()
+
+	// Resolve tenant DB URL from platform
+	pConn, err := pgx.Connect(ctx, platformDBURL)
+	if err != nil {
+		return nil, fmt.Errorf("connect to platform db: %w", err)
+	}
+	defer pConn.Close(ctx)
+
+	var tenantDBURL string
+	err = pConn.QueryRow(ctx,
+		`SELECT postgres_url FROM tenants WHERE slug = $1 AND enabled = true`, tenantSlug,
+	).Scan(&tenantDBURL)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, fmt.Errorf("tenant %q not found or disabled", tenantSlug)
+		}
+		return nil, fmt.Errorf("resolve tenant: %w", err)
+	}
+
+	// Connect to tenant DB and execute
+	tConn, err := pgx.Connect(ctx, tenantDBURL)
+	if err != nil {
+		return nil, fmt.Errorf("connect to tenant db: %w", err)
+	}
+	defer tConn.Close(ctx)
+
+	rows, err := tConn.Query(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("query: %w", err)
+	}
+	defer rows.Close()
+
+	cols := rows.FieldDescriptions()
+	var results []map[string]any
+	for rows.Next() {
+		vals, err := rows.Values()
+		if err != nil {
+			return nil, fmt.Errorf("scan row: %w", err)
+		}
+		row := make(map[string]any, len(cols))
+		for i, col := range cols {
+			row[string(col.Name)] = vals[i]
+		}
+		results = append(results, row)
+		if len(results) >= 100 {
+			break // safety limit
+		}
+	}
+	return results, rows.Err()
+}
+
+// Deploy restarts a service via docker compose.
+func Deploy(serviceName string) (string, error) {
+	valid := false
+	for _, svc := range KnownServices {
+		if svc.Name == serviceName {
+			valid = true
+			break
+		}
+	}
+	if !valid {
+		return "", fmt.Errorf("unknown service %q", serviceName)
+	}
+
+	//nolint:gosec // serviceName is validated above
+	cmd := exec.Command("docker", "compose", "-f", "deploy/docker-compose.prod.yml",
+		"up", "-d", "--force-recreate", "--no-deps", serviceName)
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return string(out), fmt.Errorf("deploy failed: %w", err)
+	}
+	return strings.TrimSpace(string(out)), nil
 }
 
 // ServiceLogs reads the last N lines from Docker logs for a service.

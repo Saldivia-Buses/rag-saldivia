@@ -16,6 +16,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"os"
 	"strings"
 	"time"
@@ -239,13 +240,13 @@ func handleToolCall(req jsonRPCRequest) jsonRPCResponse {
 		return handleServiceLogs(req.ID, params.Arguments)
 
 	case "db_query":
-		return textResult(req.ID, "TODO: implement read-only SQL query via tenant DB resolver")
+		return handleDBQuery(req.ID, params.Arguments)
 
 	case "deploy":
-		return textResult(req.ID, "TODO: implement deploy via docker compose")
+		return handleDeploy(req.ID, params.Arguments)
 
 	case "rag_query":
-		return textResult(req.ID, "TODO: implement RAG query via NVIDIA Blueprint")
+		return handleRAGQuery(req.ID, params.Arguments)
 
 	default:
 		return errorResponse(req.ID, -32602, "unknown tool: "+params.Name)
@@ -309,6 +310,71 @@ func handleServiceLogs(id any, argsRaw json.RawMessage) jsonRPCResponse {
 	}
 
 	return textResult(id, output)
+}
+
+func handleDBQuery(id any, argsRaw json.RawMessage) jsonRPCResponse {
+	var args struct {
+		Tenant string `json:"tenant"`
+		Query  string `json:"query"`
+	}
+	if err := json.Unmarshal(argsRaw, &args); err != nil {
+		return errorResponse(id, -32602, "invalid arguments for db_query")
+	}
+
+	dbURL := getPlatformDBURL()
+	rows, err := admin.DBQuery(dbURL, args.Tenant, args.Query)
+	if err != nil {
+		return textResult(id, fmt.Sprintf("Error: %v", err))
+	}
+	if len(rows) == 0 {
+		return textResult(id, "No rows returned.")
+	}
+
+	out, _ := json.MarshalIndent(rows, "", "  ")
+	return textResult(id, fmt.Sprintf("%d rows returned:\n%s", len(rows), string(out)))
+}
+
+func handleDeploy(id any, argsRaw json.RawMessage) jsonRPCResponse {
+	var args struct {
+		Service string `json:"service"`
+	}
+	if err := json.Unmarshal(argsRaw, &args); err != nil {
+		return errorResponse(id, -32602, "invalid arguments for deploy")
+	}
+
+	output, err := admin.Deploy(args.Service)
+	if err != nil {
+		return textResult(id, fmt.Sprintf("Deploy failed: %v\nOutput: %s", err, output))
+	}
+	return textResult(id, fmt.Sprintf("Service %q deployed successfully.\n%s", args.Service, output))
+}
+
+func handleRAGQuery(id any, argsRaw json.RawMessage) jsonRPCResponse {
+	var args struct {
+		Collection string `json:"collection"`
+		Query      string `json:"query"`
+	}
+	if err := json.Unmarshal(argsRaw, &args); err != nil {
+		return errorResponse(id, -32602, "invalid arguments for rag_query")
+	}
+
+	// Call search service directly
+	baseHost := envOrDefault("SDA_HOST", "localhost")
+	url := fmt.Sprintf("http://%s:8010/v1/search/query", baseHost)
+
+	body := fmt.Sprintf(`{"collection":"%s","query":"%s"}`, args.Collection, args.Query)
+	resp, err := http.Post(url, "application/json", strings.NewReader(body))
+	if err != nil {
+		return textResult(id, fmt.Sprintf("Search service unreachable: %v", err))
+	}
+	defer resp.Body.Close()
+
+	var result json.RawMessage
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return textResult(id, fmt.Sprintf("Failed to parse search response: %v", err))
+	}
+	out, _ := json.MarshalIndent(result, "", "  ")
+	return textResult(id, string(out))
 }
 
 func textResult(id any, text string) jsonRPCResponse {
