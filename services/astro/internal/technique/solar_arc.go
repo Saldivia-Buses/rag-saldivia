@@ -132,8 +132,8 @@ func aspectNature(name string) string {
 	}
 }
 
-// CalcSolarArcForYear is a convenience that computes SA for mid-year (June 15).
+// CalcSolarArcForYear is a convenience that computes SA for mid-year (July 1).
 func CalcSolarArcForYear(chart *natal.Chart, year int) *SolarArcPositions {
-	jdMid := ephemeris.JulDay(year, 6, 15, 12.0)
+	jdMid := ephemeris.JulDay(year, 7, 1, 12.0)
 	return CalcSolarArc(chart, jdMid)
 }

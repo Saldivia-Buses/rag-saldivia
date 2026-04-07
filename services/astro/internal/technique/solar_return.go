@@ -1,6 +1,8 @@
 package technique
 
 import (
+	"fmt"
+
 	"github.com/Camionerou/rag-saldivia/services/astro/internal/astromath"
 	"github.com/Camionerou/rag-saldivia/services/astro/internal/ephemeris"
 	"github.com/Camionerou/rag-saldivia/services/astro/internal/natal"
@@ -147,8 +149,8 @@ func moonCrossUT(targetLon, jdStart float64, flags int) (float64, error) {
 		}
 		jd += step
 	}
-	// Non-convergence: skip this cycle
-	return jdStart + 30, nil
+	// Non-convergence: return error so caller can decide to skip
+	return 0, fmt.Errorf("moonCrossUT: no convergence after %d iterations", maxIter)
 }
 
 func abs(x float64) float64 {

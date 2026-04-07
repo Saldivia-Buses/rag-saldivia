@@ -25,6 +25,8 @@ import (
 	"github.com/Camionerou/rag-saldivia/services/astro/internal/handler"
 )
 
+const serviceVersion = "0.1.0"
+
 func main() {
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
 	slog.SetDefault(logger)
@@ -43,7 +45,7 @@ func main() {
 
 	otelShutdown, err := sdaotel.Setup(ctx, sdaotel.Config{
 		ServiceName:    "sda-astro",
-		ServiceVersion: "0.1.0",
+		ServiceVersion: serviceVersion,
 		Endpoint:       config.Env("OTEL_EXPORTER_OTLP_ENDPOINT", "localhost:4317"),
 		Insecure:       true,
 	})
@@ -86,9 +88,15 @@ func main() {
 		w.Write([]byte(`{"status":"ok","service":"astro"}`))
 	})
 
-	authMw := sdamw.AuthWithConfig(publicKey, sdamw.AuthConfig{
+	// Read endpoints: FailOpen true (available during Redis outage)
+	authRead := sdamw.AuthWithConfig(publicKey, sdamw.AuthConfig{
 		Blacklist: blacklist,
 		FailOpen:  true,
+	})
+	// Write endpoints: FailOpen false (revoked tokens must be rejected)
+	authWrite := sdamw.AuthWithConfig(publicKey, sdamw.AuthConfig{
+		Blacklist: blacklist,
+		FailOpen:  false,
 	})
 	rateMw := sdamw.RateLimit(sdamw.RateLimitConfig{
 		Requests: 10,
@@ -96,10 +104,11 @@ func main() {
 		KeyFunc:  sdamw.ByUser,
 	})
 
-	// JSON endpoints — with request timeout
+	// Read-only calculation endpoints — FailOpen, astro.read permission
 	r.Group(func(r chi.Router) {
-		r.Use(authMw)
+		r.Use(authRead)
 		r.Use(rateMw)
+		r.Use(sdamw.RequirePermission("astro.read"))
 		r.Use(middleware.Timeout(5 * time.Minute))
 
 		r.Post("/v1/astro/natal", astroHandler.Natal)
@@ -112,15 +121,24 @@ func main() {
 		r.Post("/v1/astro/firdaria", astroHandler.Firdaria)
 		r.Post("/v1/astro/fixed-stars", astroHandler.FixedStars)
 		r.Post("/v1/astro/brief", astroHandler.Brief)
-
 		r.Get("/v1/astro/contacts", astroHandler.ListContacts)
+	})
+
+	// Write endpoint — FailOpen false, astro.write permission
+	r.Group(func(r chi.Router) {
+		r.Use(authWrite)
+		r.Use(rateMw)
+		r.Use(sdamw.RequirePermission("astro.write"))
+		r.Use(middleware.Timeout(30 * time.Second))
+
 		r.Post("/v1/astro/contacts", astroHandler.CreateContact)
 	})
 
-	// SSE endpoint — no chi timeout (WriteTimeout on http.Server is the safety net)
+	// SSE endpoint — no chi timeout, astro.read permission
 	r.Group(func(r chi.Router) {
-		r.Use(authMw)
+		r.Use(authRead)
 		r.Use(rateMw)
+		r.Use(sdamw.RequirePermission("astro.read"))
 		r.Post("/v1/astro/query", astroHandler.Query)
 	})
 
