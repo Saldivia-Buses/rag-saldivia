@@ -90,3 +90,4 @@ _archive/
 *.png
 !apps/web/public/**/*.png
 !apps/login/public/**/*.png
+apps/web/.firecrawl/
