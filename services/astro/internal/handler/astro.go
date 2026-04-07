@@ -11,6 +11,7 @@ import (
 	"time"
 	"unicode"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -408,21 +409,24 @@ func (h *Handler) Query(w http.ResponseWriter, r *http.Request) {
 	}
 	sseEvent(w, flusher, "calc_context", map[string]string{"status": "complete", "brief_length": strconv.Itoa(len(ctx.Brief))})
 
-	// 3. LLM narration (buffered + chunked SSE)
+	// 3. LLM narration (true token streaming via SSE)
 	if h.llm != nil {
 		prompt := fmt.Sprintf("Eres un astrólogo profesional. Analiza el siguiente brief y responde la consulta del usuario.\n\n%s\n\nConsulta: %s", ctx.Brief, req.Query)
-		response, err := h.llm.SimplePrompt(r.Context(), prompt, 0.7)
+		msgs := []llm.Message{{Role: "user", Content: prompt}}
+		stream, err := h.llm.StreamChat(r.Context(), msgs, 0.7, 4096)
 		if err != nil {
-			slog.Error("llm call failed", "error", err, "request_id", middleware.GetReqID(r.Context()))
+			slog.Error("llm stream failed", "error", err, "request_id", middleware.GetReqID(r.Context()))
 			sseError(w, flusher, r, "narration unavailable")
 		} else {
-			// Stream response in ~50 char chunks
-			for i := 0; i < len(response); i += 50 {
-				end := i + 50
-				if end > len(response) {
-					end = len(response)
+			for delta := range stream {
+				if delta.Err != nil {
+					slog.Error("llm stream error", "error", delta.Err, "request_id", middleware.GetReqID(r.Context()))
+					sseError(w, flusher, r, "narration interrupted")
+					break
 				}
-				sseEvent(w, flusher, "token", map[string]string{"text": response[i:end]})
+				if delta.Text != "" {
+					sseEvent(w, flusher, "token", map[string]string{"text": delta.Text})
+				}
 			}
 		}
 	} else {
@@ -553,6 +557,145 @@ func (h *Handler) CreateContact(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(contact)
+}
+
+func (h *Handler) SearchContacts(w http.ResponseWriter, r *http.Request) {
+	if h.q == nil {
+		jsonError(w, "database not configured", http.StatusServiceUnavailable)
+		return
+	}
+	tid, uid, err := tenantAndUser(r)
+	if err != nil {
+		jsonError(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	query := r.URL.Query().Get("q")
+	if query == "" {
+		jsonError(w, "q parameter is required", http.StatusBadRequest)
+		return
+	}
+	limit := int32(50)
+	offset := int32(0)
+	if v := r.URL.Query().Get("limit"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 && n <= 100 {
+			limit = int32(n)
+		}
+	}
+	if v := r.URL.Query().Get("offset"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n >= 0 {
+			offset = int32(n)
+		}
+	}
+	contacts, err := h.q.SearchContacts(r.Context(), repository.SearchContactsParams{
+		TenantID: tid, UserID: uid, Query: query, Limit: limit, Offset: offset,
+	})
+	if err != nil {
+		serverError(w, r, "search failed", err)
+		return
+	}
+	jsonOK(w, contacts)
+}
+
+func (h *Handler) UpdateContact(w http.ResponseWriter, r *http.Request) {
+	if h.q == nil {
+		jsonError(w, "database not configured", http.StatusServiceUnavailable)
+		return
+	}
+	r.Body = http.MaxBytesReader(w, r.Body, maxBodySize)
+
+	idStr := chi.URLParam(r, "id")
+	if idStr == "" {
+		jsonError(w, "id is required", http.StatusBadRequest)
+		return
+	}
+	var contactID pgtype.UUID
+	if err := contactID.Scan(idStr); err != nil {
+		jsonError(w, "invalid id", http.StatusBadRequest)
+		return
+	}
+
+	var req createContactRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		jsonError(w, "invalid request", http.StatusBadRequest)
+		return
+	}
+	if req.Name == "" {
+		jsonError(w, "name is required", http.StatusBadRequest)
+		return
+	}
+	if !req.BirthDate.Valid || req.BirthDate.Time.IsZero() {
+		jsonError(w, "birth_date is required", http.StatusBadRequest)
+		return
+	}
+	if req.Lat < -90 || req.Lat > 90 || req.Lon < -180 || req.Lon > 180 {
+		jsonError(w, "invalid coordinates", http.StatusBadRequest)
+		return
+	}
+
+	tid, uid, err := tenantAndUser(r)
+	if err != nil {
+		jsonError(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+
+	contact, err := h.q.UpdateContact(r.Context(), repository.UpdateContactParams{
+		TenantID:       tid,
+		UserID:         uid,
+		ID:             contactID,
+		Name:           req.Name,
+		BirthDate:      req.BirthDate,
+		BirthTime:      req.BirthTime,
+		BirthTimeKnown: req.BirthTimeKnown,
+		City:           req.City,
+		Nation:         req.Nation,
+		Lat:            req.Lat,
+		Lon:            req.Lon,
+		Alt:            req.Alt,
+		UtcOffset:      req.UtcOffset,
+		Relationship:   req.Relationship,
+		Notes:          req.Notes,
+		Kind:           req.Kind,
+	})
+	if err != nil {
+		var pgErr *pgconn.PgError
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			jsonError(w, "contact with this name already exists", http.StatusConflict)
+		} else {
+			serverError(w, r, "update failed", err)
+		}
+		return
+	}
+	jsonOK(w, contact)
+}
+
+func (h *Handler) DeleteContact(w http.ResponseWriter, r *http.Request) {
+	if h.q == nil {
+		jsonError(w, "database not configured", http.StatusServiceUnavailable)
+		return
+	}
+	idStr := chi.URLParam(r, "id")
+	if idStr == "" {
+		jsonError(w, "id is required", http.StatusBadRequest)
+		return
+	}
+	var contactID pgtype.UUID
+	if err := contactID.Scan(idStr); err != nil {
+		jsonError(w, "invalid id", http.StatusBadRequest)
+		return
+	}
+	tid, uid, err := tenantAndUser(r)
+	if err != nil {
+		jsonError(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	err = h.q.DeleteContact(r.Context(), repository.DeleteContactParams{
+		TenantID: tid, UserID: uid, ID: contactID,
+	})
+	if err != nil {
+		serverError(w, r, "delete failed", err)
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }
 
 // --- SSE helpers ---

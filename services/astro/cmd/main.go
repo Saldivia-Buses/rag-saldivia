@@ -122,9 +122,10 @@ func main() {
 		r.Post("/v1/astro/fixed-stars", astroHandler.FixedStars)
 		r.Post("/v1/astro/brief", astroHandler.Brief)
 		r.Get("/v1/astro/contacts", astroHandler.ListContacts)
+		r.Get("/v1/astro/contacts/search", astroHandler.SearchContacts)
 	})
 
-	// Write endpoint — FailOpen false, astro.write permission
+	// Write endpoints — FailOpen false, astro.write permission
 	r.Group(func(r chi.Router) {
 		r.Use(authWrite)
 		r.Use(rateMw)
@@ -132,6 +133,8 @@ func main() {
 		r.Use(middleware.Timeout(30 * time.Second))
 
 		r.Post("/v1/astro/contacts", astroHandler.CreateContact)
+		r.Put("/v1/astro/contacts/{id}", astroHandler.UpdateContact)
+		r.Delete("/v1/astro/contacts/{id}", astroHandler.DeleteContact)
 	})
 
 	// SSE endpoint — no chi timeout, astro.read permission
