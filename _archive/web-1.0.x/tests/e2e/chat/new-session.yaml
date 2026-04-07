@@ -1,7 +1,0 @@
----
-# Flow: Crear nueva sesión de chat
-- runFlow: auth/login-success.yaml
-- openLink: ${BASE_URL}/chat
-- assertVisible: "Sesiones"
-- tapOn: "Nueva sesión"
-- assertVisible: "Seleccioná una sesión o creá una nueva"

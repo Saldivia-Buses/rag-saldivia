@@ -65,6 +65,7 @@ playwright-report/
 # --- IDE ---
 .vscode/
 .idea/
+.cursor/
 *.swp
 *.swo
 
@@ -83,6 +84,7 @@ blueprint/
 # --- Internal artifacts ---
 .superpowers/
 docs/superpowers/
+_archive/
 
 # --- Screenshots ---
 *.png
