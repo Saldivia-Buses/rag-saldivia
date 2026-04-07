@@ -21,6 +21,8 @@ import (
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/pkg/tenant"
 
+	"github.com/Camionerou/rag-saldivia/pkg/audit"
+
 	astrocontext "github.com/Camionerou/rag-saldivia/services/astro/internal/context"
 	"github.com/Camionerou/rag-saldivia/services/astro/internal/natal"
 	"github.com/Camionerou/rag-saldivia/services/astro/internal/repository"
@@ -28,15 +30,17 @@ import (
 )
 
 type Handler struct {
-	db  *pgxpool.Pool
-	llm llm.ChatClient
-	q   *repository.Queries
+	db      *pgxpool.Pool
+	llm     llm.ChatClient
+	q       *repository.Queries
+	auditor *audit.Writer
 }
 
 func New(db *pgxpool.Pool, llmClient llm.ChatClient) *Handler {
 	h := &Handler{db: db, llm: llmClient}
 	if db != nil {
 		h.q = repository.New(db)
+		h.auditor = audit.NewWriter(db)
 	}
 	return h
 }
@@ -554,6 +558,13 @@ func (h *Handler) CreateContact(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
+	if h.auditor != nil {
+		h.auditor.Write(r.Context(), audit.Entry{
+			UserID:   sdamw.UserIDFromContext(r.Context()),
+			Action:   "astro.contact.create",
+			Resource: contact.Name,
+		})
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(contact)
@@ -665,6 +676,13 @@ func (h *Handler) UpdateContact(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
+	if h.auditor != nil {
+		h.auditor.Write(r.Context(), audit.Entry{
+			UserID:   sdamw.UserIDFromContext(r.Context()),
+			Action:   "astro.contact.update",
+			Resource: idStr,
+		})
+	}
 	jsonOK(w, contact)
 }
 
@@ -694,6 +712,13 @@ func (h *Handler) DeleteContact(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		serverError(w, r, "delete failed", err)
 		return
+	}
+	if h.auditor != nil {
+		h.auditor.Write(r.Context(), audit.Entry{
+			UserID:   sdamw.UserIDFromContext(r.Context()),
+			Action:   "astro.contact.delete",
+			Resource: idStr,
+		})
 	}
 	w.WriteHeader(http.StatusNoContent)
 }
