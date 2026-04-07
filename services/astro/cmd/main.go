@@ -15,6 +15,7 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 
 	"github.com/Camionerou/rag-saldivia/pkg/config"
+	"github.com/Camionerou/rag-saldivia/pkg/health"
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	"github.com/Camionerou/rag-saldivia/pkg/llm"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
@@ -83,10 +84,14 @@ func main() {
 	r.Use(middleware.Recoverer)
 	r.Use(sdamw.SecureHeaders())
 
-	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{"status":"ok","service":"astro"}`))
-	})
+	hc := health.New("astro")
+	if pool != nil {
+		hc.Add("postgres", func(ctx context.Context) error { return pool.Ping(ctx) })
+	}
+	if blacklist != nil {
+		hc.Add("redis", func(ctx context.Context) error { return blacklist.Ping(ctx) })
+	}
+	r.Get("/health", hc.Handler())
 
 	// Read endpoints: FailOpen true (available during Redis outage)
 	authRead := sdamw.AuthWithConfig(publicKey, sdamw.AuthConfig{

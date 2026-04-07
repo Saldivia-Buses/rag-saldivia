@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -15,6 +16,7 @@ import (
 
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	"github.com/Camionerou/rag-saldivia/pkg/config"
+	"github.com/Camionerou/rag-saldivia/pkg/health"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/pkg/security"
 	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
@@ -76,6 +78,19 @@ func main() {
 	}
 	defer tracesConsumer.Stop()
 
+	// Health checker
+	hc := health.New("traces")
+	hc.Add("postgres", func(ctx context.Context) error { return pool.Ping(ctx) })
+	hc.Add("nats", func(ctx context.Context) error {
+		if !nc.IsConnected() {
+			return fmt.Errorf("nats disconnected")
+		}
+		return nil
+	})
+	if blacklist != nil {
+		hc.Add("redis", func(ctx context.Context) error { return blacklist.Ping(ctx) })
+	}
+
 	// HTTP server
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
@@ -84,10 +99,7 @@ func main() {
 	r.Use(middleware.Timeout(30 * time.Second))
 	r.Use(sdamw.SecureHeaders())
 
-	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{"status":"ok"}`))
-	})
+	r.Get("/health", hc.Handler())
 
 	r.Group(func(r chi.Router) {
 		r.Use(sdamw.AuthWithConfig(publicKey, sdamw.AuthConfig{Blacklist: blacklist, FailOpen: true}))

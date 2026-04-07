@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"encoding/json"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -14,8 +14,9 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/nats-io/nats.go"
 
-	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	"github.com/Camionerou/rag-saldivia/pkg/config"
+	"github.com/Camionerou/rag-saldivia/pkg/health"
+	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
 	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
@@ -87,14 +88,15 @@ func main() {
 	r.Use(sdamw.SecureHeaders())
 
 	r.Get("/ws", wsHandler.Upgrade)
-	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(map[string]any{
-			"status":  "ok",
-			"service": "ws-hub",
-			"clients": h.ClientCount(),
-		})
+	hc := health.New("ws-hub")
+	hc.Add("nats", func(ctx context.Context) error {
+		if !nc.IsConnected() {
+			return fmt.Errorf("nats disconnected")
+		}
+		return nil
 	})
+	hc.AddExtra(func() (string, any) { return "clients", h.ClientCount() })
+	r.Get("/health", hc.Handler())
 
 	// Server
 	srv := &http.Server{

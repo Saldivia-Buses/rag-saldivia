@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -14,6 +15,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	"github.com/Camionerou/rag-saldivia/pkg/config"
+	"github.com/Camionerou/rag-saldivia/pkg/health"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
 	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
@@ -76,6 +78,21 @@ func main() {
 	platformSlug := config.Env("PLATFORM_TENANT_SLUG", "platform")
 	platformHandler := handler.NewPlatform(platformSvc, publicKey, platformSlug, blacklist)
 
+	// Health checker
+	hc := health.New("platform")
+	hc.Add("postgres", func(ctx context.Context) error { return pool.Ping(ctx) })
+	if nc != nil {
+		hc.Add("nats", func(ctx context.Context) error {
+			if !nc.IsConnected() {
+				return fmt.Errorf("nats disconnected")
+			}
+			return nil
+		})
+	}
+	if blacklist != nil {
+		hc.Add("redis", func(ctx context.Context) error { return blacklist.Ping(ctx) })
+	}
+
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
@@ -83,10 +100,7 @@ func main() {
 	r.Use(sdamw.SecureHeaders())
 	r.Use(middleware.Timeout(30 * time.Second))
 
-	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{"status":"ok","service":"platform"}`))
-	})
+	r.Get("/health", hc.Handler())
 	r.Mount("/v1/platform", platformHandler.Routes())
 
 	srv := &http.Server{

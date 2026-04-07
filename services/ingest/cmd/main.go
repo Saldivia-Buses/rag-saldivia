@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -16,6 +17,7 @@ import (
 
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	"github.com/Camionerou/rag-saldivia/pkg/config"
+	"github.com/Camionerou/rag-saldivia/pkg/health"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/pkg/security"
 	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
@@ -95,6 +97,19 @@ func main() {
 	}
 	defer worker.Stop()
 
+	// Health checker
+	hc := health.New("ingest")
+	hc.Add("postgres", func(ctx context.Context) error { return pool.Ping(ctx) })
+	hc.Add("nats", func(ctx context.Context) error {
+		if !nc.IsConnected() {
+			return fmt.Errorf("nats disconnected")
+		}
+		return nil
+	})
+	if blacklist != nil {
+		hc.Add("redis", func(ctx context.Context) error { return blacklist.Ping(ctx) })
+	}
+
 	// HTTP
 	ingestHandler := handler.NewIngest(ingestSvc)
 
@@ -106,10 +121,7 @@ func main() {
 	r.Use(middleware.Timeout(60 * time.Second))
 
 	// Health check outside auth middleware (monitoring needs unauthenticated access)
-	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{"status":"ok","service":"ingest"}`))
-	})
+	r.Get("/health", hc.Handler())
 
 	// Protected routes
 	r.Group(func(r chi.Router) {

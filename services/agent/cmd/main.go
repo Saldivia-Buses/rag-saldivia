@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -12,9 +13,11 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/Camionerou/rag-saldivia/pkg/guardrails"
-	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
+
 	"github.com/Camionerou/rag-saldivia/pkg/config"
+	"github.com/Camionerou/rag-saldivia/pkg/guardrails"
+	"github.com/Camionerou/rag-saldivia/pkg/health"
+	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/pkg/security"
 	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
@@ -150,10 +153,19 @@ func main() {
 	r.Use(middleware.Timeout(90 * time.Second))
 	r.Use(sdamw.SecureHeaders())
 
-	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{"status":"ok"}`))
-	})
+	hc := health.New("agent")
+	if nc != nil {
+		hc.Add("nats", func(ctx context.Context) error {
+			if !nc.IsConnected() {
+				return fmt.Errorf("nats disconnected")
+			}
+			return nil
+		})
+	}
+	if blacklist != nil {
+		hc.Add("redis", func(ctx context.Context) error { return blacklist.Ping(ctx) })
+	}
+	r.Get("/health", hc.Handler())
 
 	aiRL := sdamw.RateLimit(sdamw.RateLimitConfig{Requests: 30, Window: time.Minute, KeyFunc: sdamw.ByUser})
 

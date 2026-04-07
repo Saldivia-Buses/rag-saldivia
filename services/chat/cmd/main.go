@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"net"
 	"net/http"
@@ -19,6 +20,7 @@ import (
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	"github.com/Camionerou/rag-saldivia/pkg/config"
 	sdagrpc "github.com/Camionerou/rag-saldivia/pkg/grpc"
+	"github.com/Camionerou/rag-saldivia/pkg/health"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/pkg/security"
 	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
@@ -82,6 +84,19 @@ func main() {
 	chatSvc := service.NewChat(pool, tenantSlug, publisher)
 	chatHandler := handler.NewChat(chatSvc)
 
+	// Health checker
+	hc := health.New("chat")
+	hc.Add("postgres", func(ctx context.Context) error { return pool.Ping(ctx) })
+	hc.Add("nats", func(ctx context.Context) error {
+		if !nc.IsConnected() {
+			return fmt.Errorf("nats disconnected")
+		}
+		return nil
+	})
+	if blacklist != nil {
+		hc.Add("redis", func(ctx context.Context) error { return blacklist.Ping(ctx) })
+	}
+
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
@@ -89,10 +104,7 @@ func main() {
 	r.Use(sdamw.SecureHeaders())
 	r.Use(middleware.Timeout(30 * time.Second))
 
-	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{"status":"ok","service":"chat"}`))
-	})
+	r.Get("/health", hc.Handler())
 
 	// All chat routes require authentication
 	r.Group(func(r chi.Router) {

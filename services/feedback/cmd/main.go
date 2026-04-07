@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -16,6 +17,7 @@ import (
 
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	"github.com/Camionerou/rag-saldivia/pkg/config"
+	"github.com/Camionerou/rag-saldivia/pkg/health"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/pkg/security"
 	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
@@ -119,7 +121,21 @@ func main() {
 	aggregator.Start(ctx, tenantID, tenantSlug)
 	defer aggregator.Stop()
 
-	// Router — health endpoint only for now (REST handlers in Fase 4)
+	// Health checker
+	hc := health.New("feedback")
+	hc.Add("postgres-tenant", func(ctx context.Context) error { return tenantPool.Ping(ctx) })
+	hc.Add("postgres-platform", func(ctx context.Context) error { return platformPool.Ping(ctx) })
+	hc.Add("nats", func(ctx context.Context) error {
+		if !nc.IsConnected() {
+			return fmt.Errorf("nats disconnected")
+		}
+		return nil
+	})
+	if blacklist != nil {
+		hc.Add("redis", func(ctx context.Context) error { return blacklist.Ping(ctx) })
+	}
+
+	// Router
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
@@ -129,11 +145,7 @@ func main() {
 
 	publicKey := sdajwt.MustLoadPublicKey("JWT_PUBLIC_KEY")
 
-	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status":"ok","service":"feedback"}`))
-	})
+	r.Get("/health", hc.Handler())
 
 	// Tenant-scoped feedback endpoints (require auth)
 	feedbackHandler := handler.NewFeedback(feedbackSvc.Repo(), platformPool)

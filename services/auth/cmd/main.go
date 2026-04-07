@@ -11,12 +11,14 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+	"crypto/ed25519"
+	"fmt"
+
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/nats-io/nats.go"
 
-	"crypto/ed25519"
-
 	"github.com/Camionerou/rag-saldivia/pkg/config"
+	"github.com/Camionerou/rag-saldivia/pkg/health"
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
@@ -68,6 +70,18 @@ func main() {
 	// Token blacklist (shared Redis)
 	blacklist := security.InitBlacklist(ctx, config.Env("REDIS_URL", "localhost:6379"))
 
+	// Health checker — dependency checks added per mode below
+	hc := health.New("auth")
+	hc.Add("nats", func(ctx context.Context) error {
+		if !nc.IsConnected() {
+			return fmt.Errorf("nats disconnected")
+		}
+		return nil
+	})
+	if blacklist != nil {
+		hc.Add("redis", func(ctx context.Context) error { return blacklist.Ping(ctx) })
+	}
+
 	jwtCfg := sdajwt.DefaultConfig(privateKey, publicKey)
 
 	// Multi-tenant mode: platform DB available → use Resolver
@@ -92,6 +106,7 @@ func main() {
 		defer resolver.Close()
 
 		authHandler = handler.NewMultiTenantAuth(resolver, jwtCfg, publisher, blacklist)
+		hc.Add("postgres", func(ctx context.Context) error { return platformPool.Ping(ctx) })
 		slog.Info("auth service starting in multi-tenant mode")
 	} else if tenantDBURL != "" {
 		// Single-tenant: direct connection (dev mode)
@@ -112,6 +127,7 @@ func main() {
 		authSvc := service.NewAuth(pool, jwtCfg, tenantID, tenantSlug, publisher)
 		authSvc.SetBlacklist(blacklist)
 		authHandler = handler.NewAuth(authSvc)
+		hc.Add("postgres", func(ctx context.Context) error { return pool.Ping(ctx) })
 		slog.Info("auth service starting in single-tenant mode", "tenant_slug", tenantSlug)
 	} else {
 		slog.Error("either POSTGRES_TENANT_URL or POSTGRES_PLATFORM_URL is required")
@@ -131,7 +147,7 @@ func main() {
 	refreshRL := sdamw.RateLimit(sdamw.RateLimitConfig{Requests: 10, Window: time.Minute, KeyFunc: sdamw.ByIP})
 	mfaRL := sdamw.RateLimit(sdamw.RateLimitConfig{Requests: 5, Window: time.Minute, KeyFunc: sdamw.ByIP})
 
-	r.Get("/health", authHandler.Health)
+	r.Get("/health", hc.Handler())
 	r.With(loginRL).Post("/v1/auth/login", authHandler.Login)
 	r.With(refreshRL).Post("/v1/auth/refresh", authHandler.Refresh)
 	r.Post("/v1/auth/logout", authHandler.Logout)

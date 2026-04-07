@@ -62,6 +62,11 @@ func (b *TokenBlacklist) RevokeAll(ctx context.Context, jtis []string, expiresAt
 	return err
 }
 
+// Ping checks Redis connectivity. Used by health checks.
+func (b *TokenBlacklist) Ping(ctx context.Context) error {
+	return b.rdb.Ping(ctx).Err()
+}
+
 func (b *TokenBlacklist) key(jti string) string {
 	return b.prefix + jti
 }
