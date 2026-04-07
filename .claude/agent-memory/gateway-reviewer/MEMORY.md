@@ -4,3 +4,30 @@
 - [NATS channel validation gap](project_nats_channel_bug.md) -- Broadcast does not validate channel param, subject injection risk
 - [NATS Notify type not validated](project_nats_notify_type_bug.md) -- Notify validates slug but not event type, found in PR #52
 - [Auth service multi-tenant WIP](project_auth_single_tenant.md) -- PR #54 adds dual-mode, blockers: slug-as-tenantID, missing Traefik header for login
+- [Plan 06 Phase 1 review](project_plan06_phase1.md) -- PR #64 infra for SGLang + MinIO + pkg/storage, blockers: missing go.mod deps and Makefile targets
+- [Plan 06 Phase 2 review](project_plan06_phase2.md) -- PR #66 Extractor (Python), blockers: NATS subject injection, convention mismatch, no retry cap, no partial failure
+- [Plan 06 Phase 3 review](project_plan06_phase3.md) -- PR #67 guardrails + DB migrations, blockers: UTF-8 truncation, incomplete schema validation, case-sensitive leak detection
+- [Plan 06 Phase 4 review](project_plan06_phase4.md) -- PR #68 tree gen + doc service, blockers: dead Put, missing storage_key, io.ReadAll OOM, NATS injection, ctx-unaware sem
+- [Plan 06 Phase 5 review](project_plan06_phase5.md) -- PR #69 Search Service, blockers: prompt injection (no guardrails), io.ReadAll OOM, no MaxBytesReader, broken Dockerfile
+- [Plan 06 Phase 6 review](project_plan06_phase6.md) -- PR #70 Traces Service, blockers: status CHECK mismatch, tenant isolation broken in 3 places, NATS ctx bug, NATS subject divergence
+- [Plan 06 Phase 7 review](project_plan06_phase7.md) -- PR #71 Agent Runtime, blockers: history injection (prompt bypass), port 8004 collision, tool error leak, no param validation, empty output guardrails
+- [Plan 04 Hardening review](project_plan04_hardening_review.md) -- PR #77 hardening fixes, blockers: C2 incomplete (traces.end/event), search SQL no tenant_id
+- [PR #78 Wiring Expansion review](project_pr78_wiring.md) -- TracePublisher hardcodes "default" tenant, no NATS validation, dead TraceEvent, system role bypass in chat
+- [PR #79 Service Expansion P1/P2](project_pr79_expansion.md) -- ExtractorConsumer tenant isolation broken, NATS type injection in platform, DB errors swallowed
+- [PR #82 Plan 07 Consolidation](project_pr82_consolidation.md) -- Centralized migrations + pkg/config + NATS standardization, blockers: event type injection unfixed, duplicate migration files
+- [PR #83 Config Resolver](project_pr83_config_resolver.md) -- Plan 07 Phase 2b, blockers: global cache invalidation broken, 3-query cascade should be 1
+- [PR #84 pkg/llm client](project_pr84_pkgllm.md) -- Plan 07 Phase 3, blockers: ingest go.mod missing pkg dep, plan verification not met (shims vs direct import)
+- [PR #86 Standardize main.go](project_pr86_standardize_main.md) -- Plan 07 Phases 6+7, APPROVED, replaced env()+loadPublicKey() with config.Env()+MustLoadPublicKey()
+- [Plan 08 Backend Hardening](project_plan08_hardening.md) -- 52-finding plan review, scope creep (gRPC), factual errors (audit/rate-limit), missing Traefik updates
+- [PR #87 Plan 08 Phase 1](project_pr87_plan08_phase1.md) -- 5 critical fixes, blockers: NATS env vars empty, platform NATS_URL missing, event type dots break permissions
+- [PR #88 Plan 08 Phase 2](project_pr88_plan08_phase2.md) -- 9 security fixes, blockers: chat tests fail (ErrNotOwner + system role 403), cachedModelConfig swallows DB error
+- [PR #89 Plan 08 Phase 3](project_pr89_db_hardening.md) -- DB hardening, blockers: pagination int32 overflow, stale sqlc models, SetHeaders unused, PerformancePercentiles not using generated column
+- [PR #90 Plan 08 Phase 4a](project_pr90_nats_standardization.md) -- NATS standardization, APPROVED, all 9 services migrated to natspub.Connect(), 6 to Drain(), context fix in consumers
+- [Plan 08 Final Review](project_plan08_final_review.md) -- All 9 PRs (#87-#95) consolidated review, 42/52 done, APPROVED, plan closed
+- [Plan 09 gRPC review](project_plan09_grpc.md) -- gRPC inter-service, 7 compile-error bloqueantes, 8 parity gaps with HTTP auth
+- [PR #96 gRPC Phase 1](project_pr96_grpc_phase1.md) -- APPROVED, interceptor parity except UserID not in context, no tests
+- [PR #97 gRPC Phase 3](project_pr97_grpc_phase3.md) -- CAMBIOS REQUERIDOS: blocker=no permission check on gRPC Query, must-fix=hollow ValidToken test + auth.go missing WithUserID/WithUserEmail context injection
+- [PR #98 Agent gRPC Client](project_pr98_grpc_client.md) -- APPROVED, must-fix: use protojson not encoding/json for proto messages (silent null risk), ExecuteConfirmed bypasses gRPC path
+- [Plan 10 Backend Polish](project_plan10_review.md) -- CAMBIOS REQUERIDOS: llm interface mismatch, WS JWT expiry gap, platform blacklist missing, OpenAPI scope creep
+- [PR #100 Blacklist Wiring](project_pr100_blacklist_wiring.md) -- CAMBIOS REQUERIDOS: auth multi-tenant never wires blacklist (logout broken in prod), Redis client leak in auth, feedback platform route FailOpen wrong
+- [PR #102 Plan 10 Phase 6](project_pr102_plan10_phase6.md) -- Chat gRPC server + WS Hub mutations, CAMBIOS REQUERIDOS: gRPC error leak to browser, JWT expiry unhandled, UserID fallback escalation, role not validated

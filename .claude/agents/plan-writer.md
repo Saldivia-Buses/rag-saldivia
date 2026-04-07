@@ -5,7 +5,6 @@ model: opus
 tools: Read, Write, Glob, Edit
 permissionMode: acceptEdits
 effort: high
-maxTurns: 30
 memory: project
 mcpServers:
   - CodeGraphContext
