@@ -203,15 +203,9 @@ export const CORE_NAV_ITEMS = [
     position: 0,
   },
   {
-    label: "Documentos",
-    icon: FileText,
-    path: "/documents",
-    position: 10,
-  },
-  {
     label: "Colecciones",
     icon: Database,
     path: "/collections",
-    position: 20,
+    position: 10,
   },
 ];

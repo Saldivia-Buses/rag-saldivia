@@ -85,7 +85,7 @@ export default function DashboardPage() {
           <CardStandard4 title="Producción" description="Órdenes y seguimiento de unidades" href="/produccion" />
           <CardStandard4 title="Calidad" description="Inspecciones y trazabilidad" href="/calidad" />
           <CardStandard4 title="Compras" description="Órdenes de compra y proveedores" href="/compras" />
-          <CardStandard4 title="Documentos" description="Base de conocimiento empresarial" href="/documents" />
+          <CardStandard4 title="Colecciones" description="Base de conocimiento empresarial" href="/collections" />
         </div>
       </div>
 
