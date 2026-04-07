@@ -10,8 +10,10 @@ import (
 	"time"
 
 	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetricgrpc"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc"
 	"go.opentelemetry.io/otel/propagation"
+	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
@@ -76,10 +78,44 @@ func Setup(ctx context.Context, cfg Config) (Shutdown, error) {
 		propagation.Baggage{},
 	))
 
-	slog.Info("otel initialized", "service", cfg.ServiceName, "endpoint", cfg.Endpoint)
+	// Meter provider — exports metrics via OTLP gRPC to OTel Collector
+	metricOpts := []otlpmetricgrpc.Option{
+		otlpmetricgrpc.WithEndpoint(cfg.Endpoint),
+		otlpmetricgrpc.WithTimeout(5 * time.Second),
+	}
+	if cfg.Insecure {
+		metricOpts = append(metricOpts, otlpmetricgrpc.WithInsecure())
+	}
+	metricExporter, err := otlpmetricgrpc.New(ctx, metricOpts...)
+	if err != nil {
+		slog.Warn("otel metric exporter failed, metrics disabled", "error", err)
+	}
+
+	var mp *sdkmetric.MeterProvider
+	if metricExporter != nil {
+		mp = sdkmetric.NewMeterProvider(
+			sdkmetric.WithResource(res),
+			sdkmetric.WithReader(sdkmetric.NewPeriodicReader(metricExporter,
+				sdkmetric.WithInterval(15*time.Second),
+			)),
+		)
+		otel.SetMeterProvider(mp)
+	}
+
+	slog.Info("otel initialized", "service", cfg.ServiceName, "endpoint", cfg.Endpoint, "metrics", metricExporter != nil)
 
 	shutdown := func(ctx context.Context) error {
-		return tp.Shutdown(ctx)
+		var errs []error
+		errs = append(errs, tp.Shutdown(ctx))
+		if mp != nil {
+			errs = append(errs, mp.Shutdown(ctx))
+		}
+		for _, e := range errs {
+			if e != nil {
+				return e
+			}
+		}
+		return nil
 	}
 
 	return shutdown, nil
