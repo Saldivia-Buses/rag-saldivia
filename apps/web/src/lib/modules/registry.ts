@@ -1,22 +1,27 @@
 /**
  * Module registry — maps module IDs to their frontend manifest.
  *
- * This is the static definition of what each module contributes to the UI.
+ * Based on Saldivia Buses organigram Rev. 28 (2025).
+ * Each module maps to a real area of the company.
+ *
  * The list of ENABLED modules for a tenant comes from the backend
- * (via useEnabledModules hook). This registry just says "if module X is
+ * (via useEnabledModules hook). This registry says "if module X is
  * enabled, here's what it adds to the nav."
  */
 
 import {
-  Truck,
-  HardHat,
+  Factory,
+  ClipboardCheck,
+  Ruler,
+  Wrench,
+  ShoppingCart,
+  DollarSign,
   Users,
-  GitBranch,
-  Calendar,
-  BarChart3,
+  ShieldCheck,
   MessageSquare,
   FileText,
   Database,
+  Star,
   type LucideIcon,
 } from "lucide-react";
 
@@ -32,70 +37,104 @@ export interface ModuleManifest {
 }
 
 export const MODULE_REGISTRY: Record<string, ModuleManifest> = {
-  fleet: {
-    id: "fleet",
-    nav: { label: "Flota", icon: Truck, path: "/fleet", position: 40 },
+  // ── Operaciones ──────────────────────────────────────────
+  produccion: {
+    id: "produccion",
+    nav: { label: "Producción", icon: Factory, path: "/produccion", position: 30 },
     routes: [
-      "/fleet",
-      "/fleet/vehicles",
-      "/fleet/drivers",
-      "/fleet/maintenance",
-      "/fleet/routes",
+      "/produccion",
+      "/produccion/ordenes",
+      "/produccion/seguimiento",
+      "/produccion/pcp",
+      "/produccion/preentrega",
     ],
   },
-  construction: {
-    id: "construction",
-    nav: { label: "Obra", icon: HardHat, path: "/construction", position: 41 },
+  calidad: {
+    id: "calidad",
+    nav: { label: "Calidad", icon: ClipboardCheck, path: "/calidad", position: 31 },
     routes: [
-      "/construction",
-      "/construction/projects",
-      "/construction/safety",
-      "/construction/blueprints",
+      "/calidad",
+      "/calidad/inspecciones",
+      "/calidad/no-conformidades",
+      "/calidad/trazabilidad",
+      "/calidad/postventa",
+      "/calidad/sgc",
     ],
   },
-  crm: {
-    id: "crm",
-    nav: { label: "CRM", icon: Users, path: "/crm", position: 30 },
-    routes: ["/crm", "/crm/contacts", "/crm/pipeline"],
+  ingenieria: {
+    id: "ingenieria",
+    nav: { label: "Ingeniería", icon: Ruler, path: "/ingenieria", position: 32 },
+    routes: [
+      "/ingenieria",
+      "/ingenieria/producto",
+      "/ingenieria/desarrollo",
+      "/ingenieria/definicion",
+      "/ingenieria/legal",
+    ],
   },
-  workflows: {
-    id: "workflows",
-    nav: {
-      label: "Workflows",
-      icon: GitBranch,
-      path: "/workflows",
-      position: 31,
-    },
-    routes: ["/workflows"],
+  mantenimiento: {
+    id: "mantenimiento",
+    nav: { label: "Mantenimiento", icon: Wrench, path: "/mantenimiento", position: 33 },
+    routes: [
+      "/mantenimiento",
+      "/mantenimiento/preventivo",
+      "/mantenimiento/correctivo",
+      "/mantenimiento/equipos",
+    ],
   },
-  calendar: {
-    id: "calendar",
-    nav: {
-      label: "Calendario",
-      icon: Calendar,
-      path: "/calendar",
-      position: 32,
-    },
-    routes: ["/calendar"],
+
+  // ── Soporte ──────────────────────────────────────────────
+  compras: {
+    id: "compras",
+    nav: { label: "Compras", icon: ShoppingCart, path: "/compras", position: 40 },
+    routes: [
+      "/compras",
+      "/compras/ordenes",
+      "/compras/proveedores",
+      "/compras/abastecimiento",
+      "/compras/comex",
+    ],
   },
-  reports: {
-    id: "reports",
-    nav: {
-      label: "Reportes",
-      icon: BarChart3,
-      path: "/reports",
-      position: 33,
-    },
-    routes: ["/reports"],
+  administracion: {
+    id: "administracion",
+    nav: { label: "Administración", icon: DollarSign, path: "/administracion", position: 41 },
+    routes: [
+      "/administracion",
+      "/administracion/facturacion",
+      "/administracion/pagos",
+      "/administracion/contable",
+    ],
+  },
+  rrhh: {
+    id: "rrhh",
+    nav: { label: "RRHH", icon: Users, path: "/rrhh", position: 42 },
+    routes: [
+      "/rrhh",
+      "/rrhh/legajos",
+      "/rrhh/licencias",
+      "/rrhh/capacitaciones",
+    ],
+  },
+  seguridad: {
+    id: "seguridad",
+    nav: { label: "Higiene y Seguridad", icon: ShieldCheck, path: "/seguridad", position: 43 },
+    routes: [
+      "/seguridad",
+      "/seguridad/inspecciones",
+      "/seguridad/medicina",
+      "/seguridad/incidentes",
+    ],
+  },
+
+  // ── Inteligencia ─────────────────────────────────────────
+  astro: {
+    id: "astro",
+    nav: { label: "Astro", icon: Star, path: "/astro", position: 90 },
+    routes: ["/astro"],
   },
   feedback: {
     id: "feedback",
-    nav: {
-      label: "Calidad IA",
-      icon: MessageSquare,
-      path: "/feedback",
-      position: 50,
-    },
+    nav: { label: "Calidad IA", icon: MessageSquare, path: "/feedback", position: 91 },
     routes: ["/feedback"],
   },
 };

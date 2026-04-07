@@ -82,8 +82,10 @@ export default function DashboardPage() {
       {/* Main content */}
       <div className="flex-1 overflow-y-auto p-8">
         <div className="flex flex-wrap gap-4">
-          <CardStandard4 title="Facturas" description="Gestión de facturas automatizada" href="/facturas" />
-          <CardStandard4 title="Remitos" description="Gestión de remitos automatizada" href="/remitos" />
+          <CardStandard4 title="Producción" description="Órdenes y seguimiento de unidades" href="/produccion" />
+          <CardStandard4 title="Calidad" description="Inspecciones y trazabilidad" href="/calidad" />
+          <CardStandard4 title="Compras" description="Órdenes de compra y proveedores" href="/compras" />
+          <CardStandard4 title="Documentos" description="Base de conocimiento empresarial" href="/documents" />
         </div>
       </div>
 
