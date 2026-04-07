@@ -27,9 +27,10 @@ func init() {
 }
 
 var validServices = map[string]bool{
-	"auth": true, "ws": true, "chat": true, "rag": true,
-	"notification": true, "platform": true, "ingest": true,
-	"feedback": true, "web": true,
+	"auth": true, "ws": true, "chat": true, "agent": true,
+	"search": true, "astro": true, "notification": true,
+	"platform": true, "ingest": true, "feedback": true,
+	"traces": true, "web": true,
 }
 
 func runDeploy(cmd *cobra.Command, args []string) {

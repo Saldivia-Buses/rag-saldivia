@@ -2,5 +2,8 @@ global:
   scrape_interval: 15s
   evaluation_interval: 15s
 
+rule_files:
+  - /etc/prometheus/alerts.yml
+
 # Prometheus remote write receiver is enabled via --web.enable-remote-write-receiver
 # OTel Collector sends metrics here

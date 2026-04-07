@@ -1,11 +1,14 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 
+	"github.com/Camionerou/rag-saldivia/tools/pkg/admin"
 	"github.com/spf13/cobra"
 )
 
@@ -36,10 +39,39 @@ var dbBackupCmd = &cobra.Command{
 	},
 }
 
+var dbQueryCmd = &cobra.Command{
+	Use:   "query [tenant] [sql]",
+	Short: "Execute a read-only SELECT query against a tenant database",
+	Long: `Execute a read-only SQL query against a tenant's database.
+Only SELECT queries are allowed. Results are limited to 100 rows.
+
+  sda db query dev "SELECT id, email FROM users LIMIT 5"`,
+	Args: cobra.ExactArgs(2),
+	Run:  runDBQuery,
+}
+
 func init() {
 	dbCmd.AddCommand(dbMigrateCmd)
 	dbCmd.AddCommand(dbSeedCmd)
 	dbCmd.AddCommand(dbBackupCmd)
+	dbCmd.AddCommand(dbQueryCmd)
+}
+
+func runDBQuery(cmd *cobra.Command, args []string) {
+	tenant := args[0]
+	query := strings.TrimSpace(args[1])
+
+	platformURL := env("POSTGRES_PLATFORM_URL", "postgres://sda:sda_dev@localhost:5432/sda_platform?sslmode=disable")
+	rows, err := admin.DBQuery(platformURL, tenant, query)
+	if err != nil {
+		exitErr("%v", err)
+	}
+	if len(rows) == 0 {
+		fmt.Println("No rows returned.")
+		return
+	}
+	out, _ := json.MarshalIndent(rows, "", "  ")
+	fmt.Printf("%d rows:\n%s\n", len(rows), string(out))
 }
 
 // repoRoot finds the repository root by looking for go.work.

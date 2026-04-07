@@ -1,0 +1,74 @@
+groups:
+  - name: sda-service-health
+    rules:
+      # Service is not receiving any requests for 5 minutes
+      - alert: ServiceDown
+        expr: |
+          sum by (service_name) (rate(http_server_request_duration_seconds_count[5m])) == 0
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $labels.service_name }} is not receiving requests"
+          description: "Service {{ $labels.service_name }} has not processed any HTTP requests in the last 5 minutes."
+
+      # Error rate above 5% for 5 minutes
+      - alert: HighErrorRate
+        expr: |
+          (
+            sum by (service_name) (rate(http_server_request_duration_seconds_count{http_status_code=~"5.."}[5m]))
+            /
+            sum by (service_name) (rate(http_server_request_duration_seconds_count[5m]))
+          ) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.service_name }} error rate above 5%"
+          description: "Service {{ $labels.service_name }} has {{ $value | humanizePercentage }} 5xx error rate."
+
+      # P99 latency above 5 seconds
+      - alert: HighLatency
+        expr: |
+          histogram_quantile(0.99,
+            sum by (service_name, le) (rate(http_server_request_duration_seconds_bucket[5m]))
+          ) > 5
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.service_name }} P99 latency above 5s"
+          description: "Service {{ $labels.service_name }} P99 latency is {{ $value | humanizeDuration }}."
+
+      # Too many active requests (possible resource exhaustion)
+      - alert: HighActiveRequests
+        expr: |
+          sum by (service_name) (http_server_active_requests) > 50
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.service_name }} has high active request count"
+          description: "Service {{ $labels.service_name }} has {{ $value }} active requests."
+
+  - name: sda-infrastructure
+    rules:
+      # Prometheus target is down (if scrape jobs are added later)
+      - alert: TargetDown
+        expr: up == 0
+        for: 3m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Prometheus target {{ $labels.instance }} is down"
+
+      # Prometheus is running low on storage
+      - alert: PrometheusStorageHigh
+        expr: |
+          (prometheus_tsdb_storage_blocks_bytes / (1024 * 1024 * 1024)) > 8
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Prometheus storage above 8GB"
+          description: "Current storage: {{ $value | humanize1024 }}B"
