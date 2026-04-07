@@ -31,6 +31,7 @@ CLOUD                                    INHOUSE (workstation)
 └──────────────┘                         │    ├─► Chat Service (Go)      │
                                          │    ├─► Agent Runtime (Go)     │
                                          │    ├─► Search Service (Go)    │
+                                         │    ├─► Astro Service (Go+CGO) │
                                          │    ├─► Traces Service (Go)    │
                                          │    ├─► Notification (Go)      │
                                          │    ├─► Platform (Go)          │
@@ -79,6 +80,7 @@ services/                    ← Go microservicios
   chat/                      ← Sesiones + mensajes
   agent/                     ← Agent Runtime (LLM + tools, reemplaza rag/)
   search/                    ← Tree search (PageIndex-inspired)
+  astro/                     ← Astrological calculations (Swiss Ephemeris, CGO)
   traces/                    ← Execution traces + cost tracking
   extractor/                 ← Document extraction (Python, OCR + vision)
   notification/              ← In-app + email
@@ -133,9 +135,11 @@ make dev                     # Levantar stack de desarrollo
 make stop                    # Bajar servicios
 make test                    # Tests Go
 make test-auth               # Tests de un servicio especifico
+make test-astro              # Astro tests (requires EPHE_PATH, CGO_ENABLED=1)
 make lint                    # Lint Go
 make build                   # Build todos los servicios
 make build-auth              # Build un servicio
+make build-astro             # Build astro (requires CGO_ENABLED=1, libswe.a)
 make new-service NAME=x      # Scaffold servicio nuevo
 make proto                   # Generar codigo gRPC
 make sqlc                    # Generar codigo sqlc

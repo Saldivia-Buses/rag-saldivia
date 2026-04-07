@@ -44,6 +44,9 @@ build: ## Build all Go services
 	done
 	@echo "All services built → $(GOBIN)/"
 
+build-astro: ## Build astro service (requires CGO for Swiss Ephemeris)
+	cd $(SERVICES_DIR)/astro && CGO_ENABLED=1 go build -o $(GOBIN)/astro ./cmd/...
+
 build-%: ## Build a specific service (e.g., make build-auth)
 	cd $(SERVICES_DIR)/$* && go build -o $(GOBIN)/$* ./cmd/...
 
@@ -51,6 +54,9 @@ build-%: ## Build a specific service (e.g., make build-auth)
 
 test: ## Run all Go tests
 	go test ./services/... ./pkg/... ./tools/... -count=1
+
+test-astro: ## Run astro tests (requires CGO + EPHE_PATH)
+	cd $(SERVICES_DIR)/astro && CGO_ENABLED=1 go test ./... -count=1 -v
 
 test-%: ## Run tests for a specific service (e.g., make test-auth)
 	cd $(SERVICES_DIR)/$* && go test ./... -count=1 -v
