@@ -25,6 +25,12 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
+export interface SubRoute {
+  path: string;
+  label: string;
+  icon?: LucideIcon;
+}
+
 export interface ModuleManifest {
   id: string;
   nav: {
@@ -34,6 +40,8 @@ export interface ModuleManifest {
     position: number;
   };
   routes: string[];
+  /** Sub-navigation items shown inside the module. Tenant can disable individual sub-routes via config. */
+  subnav?: SubRoute[];
 }
 
 export const MODULE_REGISTRY: Record<string, ModuleManifest> = {
@@ -48,6 +56,12 @@ export const MODULE_REGISTRY: Record<string, ModuleManifest> = {
       "/produccion/pcp",
       "/produccion/preentrega",
     ],
+    subnav: [
+      { path: "/produccion/ordenes", label: "Órdenes" },
+      { path: "/produccion/seguimiento", label: "Seguimiento" },
+      { path: "/produccion/pcp", label: "PCP" },
+      { path: "/produccion/preentrega", label: "Preentrega" },
+    ],
   },
   calidad: {
     id: "calidad",
@@ -60,6 +74,13 @@ export const MODULE_REGISTRY: Record<string, ModuleManifest> = {
       "/calidad/postventa",
       "/calidad/sgc",
     ],
+    subnav: [
+      { path: "/calidad/inspecciones", label: "Inspecciones" },
+      { path: "/calidad/no-conformidades", label: "No Conformidades" },
+      { path: "/calidad/trazabilidad", label: "Trazabilidad" },
+      { path: "/calidad/postventa", label: "Postventa" },
+      { path: "/calidad/sgc", label: "SGC" },
+    ],
   },
   ingenieria: {
     id: "ingenieria",
@@ -71,6 +92,12 @@ export const MODULE_REGISTRY: Record<string, ModuleManifest> = {
       "/ingenieria/definicion",
       "/ingenieria/legal",
     ],
+    subnav: [
+      { path: "/ingenieria/producto", label: "Producto" },
+      { path: "/ingenieria/desarrollo", label: "Desarrollo" },
+      { path: "/ingenieria/definicion", label: "Definición" },
+      { path: "/ingenieria/legal", label: "Legal y Técnica" },
+    ],
   },
   mantenimiento: {
     id: "mantenimiento",
@@ -80,6 +107,11 @@ export const MODULE_REGISTRY: Record<string, ModuleManifest> = {
       "/mantenimiento/preventivo",
       "/mantenimiento/correctivo",
       "/mantenimiento/equipos",
+    ],
+    subnav: [
+      { path: "/mantenimiento/preventivo", label: "Preventivo" },
+      { path: "/mantenimiento/correctivo", label: "Correctivo" },
+      { path: "/mantenimiento/equipos", label: "Equipos" },
     ],
   },
 
@@ -94,6 +126,12 @@ export const MODULE_REGISTRY: Record<string, ModuleManifest> = {
       "/compras/abastecimiento",
       "/compras/comex",
     ],
+    subnav: [
+      { path: "/compras/ordenes", label: "Órdenes de Compra" },
+      { path: "/compras/proveedores", label: "Proveedores" },
+      { path: "/compras/abastecimiento", label: "Abastecimiento" },
+      { path: "/compras/comex", label: "Comex" },
+    ],
   },
   administracion: {
     id: "administracion",
@@ -103,6 +141,11 @@ export const MODULE_REGISTRY: Record<string, ModuleManifest> = {
       "/administracion/facturacion",
       "/administracion/pagos",
       "/administracion/contable",
+    ],
+    subnav: [
+      { path: "/administracion/facturacion", label: "Facturación" },
+      { path: "/administracion/pagos", label: "Pagos" },
+      { path: "/administracion/contable", label: "Contabilidad" },
     ],
   },
   rrhh: {
@@ -114,6 +157,11 @@ export const MODULE_REGISTRY: Record<string, ModuleManifest> = {
       "/rrhh/licencias",
       "/rrhh/capacitaciones",
     ],
+    subnav: [
+      { path: "/rrhh/legajos", label: "Legajos" },
+      { path: "/rrhh/licencias", label: "Licencias" },
+      { path: "/rrhh/capacitaciones", label: "Capacitaciones" },
+    ],
   },
   seguridad: {
     id: "seguridad",
@@ -123,6 +171,11 @@ export const MODULE_REGISTRY: Record<string, ModuleManifest> = {
       "/seguridad/inspecciones",
       "/seguridad/medicina",
       "/seguridad/incidentes",
+    ],
+    subnav: [
+      { path: "/seguridad/inspecciones", label: "Inspecciones" },
+      { path: "/seguridad/medicina", label: "Medicina Laboral" },
+      { path: "/seguridad/incidentes", label: "Incidentes" },
     ],
   },
 
