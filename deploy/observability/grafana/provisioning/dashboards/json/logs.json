@@ -1,0 +1,178 @@
+{
+  "uid": "sda-logs",
+  "title": "SDA Logs",
+  "tags": ["sda"],
+  "timezone": "browser",
+  "refresh": "30s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "editable": true,
+  "schemaVersion": 39,
+  "templating": {
+    "list": [
+      {
+        "name": "service",
+        "type": "custom",
+        "label": "Service",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "options": [
+          { "text": "All", "value": "$__all", "selected": true },
+          { "text": "sda-auth", "value": "sda-auth", "selected": false },
+          { "text": "sda-ws", "value": "sda-ws", "selected": false },
+          { "text": "sda-chat", "value": "sda-chat", "selected": false },
+          { "text": "sda-agent", "value": "sda-agent", "selected": false },
+          { "text": "sda-search", "value": "sda-search", "selected": false },
+          { "text": "sda-astro", "value": "sda-astro", "selected": false },
+          { "text": "sda-notification", "value": "sda-notification", "selected": false },
+          { "text": "sda-platform", "value": "sda-platform", "selected": false },
+          { "text": "sda-ingest", "value": "sda-ingest", "selected": false },
+          { "text": "sda-feedback", "value": "sda-feedback", "selected": false },
+          { "text": "sda-traces", "value": "sda-traces", "selected": false }
+        ],
+        "includeAll": true,
+        "multi": true,
+        "query": "sda-auth,sda-ws,sda-chat,sda-agent,sda-search,sda-astro,sda-notification,sda-platform,sda-ingest,sda-feedback,sda-traces"
+      },
+      {
+        "name": "search",
+        "type": "textbox",
+        "label": "Search",
+        "current": {
+          "text": "",
+          "value": ""
+        },
+        "options": []
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Error Log Stream",
+      "description": "Live stream of error-level logs across services",
+      "type": "logs",
+      "gridPos": { "h": 14, "w": 24, "x": 0, "y": 0 },
+      "datasource": { "uid": "loki", "type": "loki" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "{service_name=~\"$service\"} |= \"error\" | json",
+          "queryType": "range"
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "showLabels": true,
+        "showCommonLabels": false,
+        "wrapLogMessage": true,
+        "prettifyLogMessage": false,
+        "enableLogDetails": true,
+        "sortOrder": "Descending",
+        "dedupStrategy": "none"
+      }
+    },
+    {
+      "id": 2,
+      "title": "Log Volume by Service",
+      "description": "Total log lines per service per minute",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 14 },
+      "datasource": { "uid": "loki", "type": "loki" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (service_name) (count_over_time({service_name=~\"$service\"}[1m]))",
+          "legendFormat": "{{service_name}}",
+          "queryType": "range"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 50,
+            "stacking": { "mode": "normal", "group": "A" },
+            "pointSize": 5,
+            "showPoints": "never"
+          },
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["sum", "mean"] },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      }
+    },
+    {
+      "id": 3,
+      "title": "Error vs Warn vs Info",
+      "description": "Log level distribution over time",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 14 },
+      "datasource": { "uid": "loki", "type": "loki" },
+      "targets": [
+        {
+          "refId": "errors",
+          "expr": "sum(count_over_time({service_name=~\"$service\"} | json | level = \"error\" [1m]))",
+          "legendFormat": "error",
+          "queryType": "range"
+        },
+        {
+          "refId": "warns",
+          "expr": "sum(count_over_time({service_name=~\"$service\"} | json | level = \"warn\" [1m]))",
+          "legendFormat": "warn",
+          "queryType": "range"
+        },
+        {
+          "refId": "info",
+          "expr": "sum(count_over_time({service_name=~\"$service\"} | json | level = \"info\" [1m]))",
+          "legendFormat": "info",
+          "queryType": "range"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "line",
+            "lineInterpolation": "smooth",
+            "fillOpacity": 15,
+            "pointSize": 5,
+            "showPoints": "auto",
+            "spanNulls": false
+          },
+          "unit": "short"
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "error" },
+            "properties": [
+              { "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "warn" },
+            "properties": [
+              { "id": "color", "value": { "mode": "fixed", "fixedColor": "yellow" } }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "info" },
+            "properties": [
+              { "id": "color", "value": { "mode": "fixed", "fixedColor": "green" } }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      }
+    }
+  ]
+}

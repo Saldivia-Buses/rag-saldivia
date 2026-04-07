@@ -1,0 +1,171 @@
+{
+  "uid": "sda-traces-cost",
+  "title": "SDA Traces & Cost",
+  "tags": ["sda"],
+  "timezone": "browser",
+  "refresh": "30s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "editable": true,
+  "schemaVersion": 39,
+  "templating": {
+    "list": [
+      {
+        "name": "service",
+        "type": "custom",
+        "label": "Service",
+        "current": {
+          "text": "All",
+          "value": "$__all"
+        },
+        "options": [
+          { "text": "All", "value": "$__all", "selected": true },
+          { "text": "sda-auth", "value": "sda-auth", "selected": false },
+          { "text": "sda-ws", "value": "sda-ws", "selected": false },
+          { "text": "sda-chat", "value": "sda-chat", "selected": false },
+          { "text": "sda-agent", "value": "sda-agent", "selected": false },
+          { "text": "sda-search", "value": "sda-search", "selected": false },
+          { "text": "sda-astro", "value": "sda-astro", "selected": false },
+          { "text": "sda-notification", "value": "sda-notification", "selected": false },
+          { "text": "sda-platform", "value": "sda-platform", "selected": false },
+          { "text": "sda-ingest", "value": "sda-ingest", "selected": false },
+          { "text": "sda-feedback", "value": "sda-feedback", "selected": false },
+          { "text": "sda-traces", "value": "sda-traces", "selected": false }
+        ],
+        "includeAll": true,
+        "multi": true,
+        "query": "sda-auth,sda-ws,sda-chat,sda-agent,sda-search,sda-astro,sda-notification,sda-platform,sda-ingest,sda-feedback,sda-traces"
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Recent Traces",
+      "description": "Latest traces from Tempo with duration and status",
+      "type": "table",
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 0 },
+      "datasource": { "uid": "tempo", "type": "tempo" },
+      "targets": [
+        {
+          "refId": "A",
+          "queryType": "traceqlSearch",
+          "filters": [
+            {
+              "id": "service-name",
+              "tag": "resource.service.name",
+              "operator": "=~",
+              "value": ["$service"],
+              "scope": "resource"
+            }
+          ],
+          "limit": 50
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Duration" },
+            "properties": [
+              { "id": "unit", "value": "ns" }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          { "displayName": "Start time", "desc": true }
+        ],
+        "cellHeight": "sm"
+      },
+      "transformations": []
+    },
+    {
+      "id": 2,
+      "title": "Trace Duration Distribution",
+      "description": "How long traces take, bucketed by duration",
+      "type": "histogram",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 10 },
+      "datasource": { "uid": "prometheus", "type": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "sum by (le) (increase(http_server_request_duration_seconds_bucket{service_name=~\"$service\"}[5m]))",
+          "legendFormat": "{{le}}s",
+          "format": "heatmap"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "fillOpacity": 80,
+            "gradientMode": "scheme"
+          },
+          "color": { "mode": "continuous-GrYlRd" },
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "options": {
+        "bucketSize": "",
+        "combine": false,
+        "fillOpacity": 80,
+        "gradientMode": "scheme",
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "single" }
+      }
+    },
+    {
+      "id": 3,
+      "title": "Service Communication (Top Routes by Service)",
+      "description": "Which services handle which routes, showing inter-service traffic patterns",
+      "type": "table",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 10 },
+      "datasource": { "uid": "prometheus", "type": "prometheus" },
+      "targets": [
+        {
+          "refId": "A",
+          "expr": "topk(20, sum by (service_name, http_route, http_method) (rate(http_server_request_duration_seconds_count{service_name=~\"$service\"}[5m])))",
+          "legendFormat": "{{service_name}} {{http_method}} {{http_route}}",
+          "instant": true,
+          "format": "table"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Value" },
+            "properties": [
+              { "id": "displayName", "value": "Req/s" },
+              { "id": "unit", "value": "reqps" },
+              { "id": "decimals", "value": 2 }
+            ]
+          },
+          {
+            "matcher": { "id": "byName", "options": "Time" },
+            "properties": [
+              { "id": "custom.hidden", "value": true }
+            ]
+          }
+        ]
+      },
+      "options": {
+        "showHeader": true,
+        "sortBy": [
+          { "displayName": "Req/s", "desc": true }
+        ],
+        "cellHeight": "sm"
+      },
+      "transformations": []
+    }
+  ]
+}
