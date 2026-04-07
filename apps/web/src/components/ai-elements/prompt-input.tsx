@@ -1,4 +1,3 @@
-// @ts-nocheck — Base UI version mismatch with current shadcn/ui components
 "use client";
 
 import {

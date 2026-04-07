@@ -57,11 +57,43 @@ import { HeaderSearch } from "@/components/search-command";
 const routeLabels: Record<string, string> = {
   "/inicio": "Inicio",
   "/chat": "Chat",
+  "/collections": "Colecciones",
+  "/documents": "Documentos",
   "/notifications": "Notificaciones",
   "/settings": "Mi cuenta",
   "/system-settings": "Configuración",
   "/fleet": "Flota",
 };
+
+function NavBreadcrumb() {
+  const pathname = usePathname();
+  const segments = pathname.split("/").filter(Boolean);
+
+  if (segments.length === 0) return null;
+
+  return (
+    <nav aria-label="breadcrumb" className="flex items-center gap-1.5 text-sm">
+      {segments.map((seg, i) => {
+        const href = "/" + segments.slice(0, i + 1).join("/");
+        const label = routeLabels[href] || seg.charAt(0).toUpperCase() + seg.slice(1);
+        const isLast = i === segments.length - 1;
+
+        return (
+          <span key={href} className="flex items-center gap-1.5">
+            {i > 0 && <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/50" />}
+            {isLast ? (
+              <span className="font-medium text-foreground/70">{label}</span>
+            ) : (
+              <Link href={href} className="text-muted-foreground/50 hover:text-foreground/70 transition-colors">
+                {label}
+              </Link>
+            )}
+          </span>
+        );
+      })}
+    </nav>
+  );
+}
 
 // Base nav item - used by simple sidebars
 type NavItem = {
@@ -373,7 +405,7 @@ const Sidebar6 = ({ className, children }: Sidebar6Props) => {
       <SidebarInset className="flex flex-col h-svh overflow-hidden !bg-sidebar">
         {/* Header — same gray as sidebar */}
         <header className="flex h-14 shrink-0 items-center gap-3 px-4">
-          <span className="text-sm font-medium text-sidebar-foreground/70">{pageLabel}</span>
+          <NavBreadcrumb />
           <div className="flex-1" />
           <DarkModeToggle />
         </header>

@@ -28,6 +28,9 @@
         "Authorization": "Bearer ${SHADCNBLOCKS_API_KEY}"
       }
     },
-    "@diceui": "https://diceui.com/r/{name}.json"
+    "@diceui": "https://diceui.com/r/{name}.json",
+    "@ss-components": "https://shadcnstudio.com/r/{name}.json",
+    "@iconiq": "https://iconiqui.com/r/{name}.json",
+    "@abui": "https://www.abui.io/r/{name}.json"
   }
 }

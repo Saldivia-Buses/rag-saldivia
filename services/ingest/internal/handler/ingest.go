@@ -16,6 +16,7 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
+	"github.com/Camionerou/rag-saldivia/services/ingest/internal/repository"
 	"github.com/Camionerou/rag-saldivia/services/ingest/internal/service"
 )
 
@@ -34,6 +35,8 @@ type IngestService interface {
 	ListJobs(ctx context.Context, userID string, limit int) ([]service.Job, error)
 	GetJob(ctx context.Context, jobID, userID string) (*service.Job, error)
 	DeleteJob(ctx context.Context, jobID, userID string) error
+	ListCollections(ctx context.Context) ([]repository.Collection, error)
+	CreateCollection(ctx context.Context, name, description string) (repository.Collection, error)
 }
 
 // Ingest handles HTTP requests for document ingestion.
@@ -53,6 +56,8 @@ func (h *Ingest) Routes() chi.Router {
 	r.With(sdamw.RequirePermission("ingest.write")).Get("/jobs", h.ListJobs)
 	r.With(sdamw.RequirePermission("ingest.write")).Get("/jobs/{jobID}", h.GetJob)
 	r.With(sdamw.RequirePermission("ingest.write")).Delete("/jobs/{jobID}", h.DeleteJob)
+	r.With(sdamw.RequirePermission("collections.read")).Get("/collections", h.ListCollections)
+	r.With(sdamw.RequirePermission("collections.write")).Post("/collections", h.CreateCollection)
 	return r
 }
 
@@ -190,4 +195,42 @@ func writeJSON(w http.ResponseWriter, status int, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	json.NewEncoder(w).Encode(v)
+}
+
+// ListCollections handles GET /v1/ingest/collections.
+func (h *Ingest) ListCollections(w http.ResponseWriter, r *http.Request) {
+	collections, err := h.svc.ListCollections(r.Context())
+	if err != nil {
+		slog.Error("list collections failed", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to list collections"})
+		return
+	}
+	writeJSON(w, http.StatusOK, collections)
+}
+
+// CreateCollection handles POST /v1/ingest/collections.
+func (h *Ingest) CreateCollection(w http.ResponseWriter, r *http.Request) {
+	var req struct {
+		Name        string `json:"name"`
+		Description string `json:"description"`
+	}
+	if err := json.NewDecoder(http.MaxBytesReader(w, r.Body, 1<<20)).Decode(&req); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid request"})
+		return
+	}
+	if strings.TrimSpace(req.Name) == "" {
+		writeJSON(w, http.StatusBadRequest, map[string]string{"error": "name is required"})
+		return
+	}
+	col, err := h.svc.CreateCollection(r.Context(), strings.TrimSpace(req.Name), strings.TrimSpace(req.Description))
+	if err != nil {
+		if strings.Contains(err.Error(), "duplicate") || strings.Contains(err.Error(), "unique") {
+			writeJSON(w, http.StatusConflict, map[string]string{"error": "collection already exists"})
+			return
+		}
+		slog.Error("create collection failed", "error", err)
+		writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "failed to create collection"})
+		return
+	}
+	writeJSON(w, http.StatusCreated, col)
 }

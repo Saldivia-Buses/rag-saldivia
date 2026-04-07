@@ -251,3 +251,16 @@ func (s *Ingest) UpdateJobStatus(ctx context.Context, jobID, status string, errM
 		ID:     jobID,
 	})
 }
+
+// ListCollections returns all collections.
+func (s *Ingest) ListCollections(ctx context.Context) ([]repository.Collection, error) {
+	return s.repo.ListCollections(ctx)
+}
+
+// CreateCollection creates a new collection.
+func (s *Ingest) CreateCollection(ctx context.Context, name, description string) (repository.Collection, error) {
+	return s.repo.CreateCollection(ctx, repository.CreateCollectionParams{
+		Name:        name,
+		Description: pgtype.Text{String: description, Valid: description != ""},
+	})
+}
