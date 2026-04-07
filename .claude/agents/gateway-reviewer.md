@@ -44,6 +44,7 @@ En dev, Traefik rutea a `host.docker.internal` (Go services en host, no en Docke
 | WS Hub :8002 | `WS_PORT` | JWT en upgrade handler | `GET /ws` (WS upgrade), `GET /health` |
 | Chat :8003 | `CHAT_PORT` | via headers (necesita middleware upstream) | `GET/POST /v1/chat/sessions`, `GET/DELETE/PATCH /{id}`, `GET/POST /{id}/messages` |
 | RAG :8004 | `RAG_PORT` | via headers | `POST /v1/rag/generate` (SSE proxy), `GET /v1/rag/collections` |
+| Astro :8011 | `ASTRO_PORT` | JWT (AuthWithConfig, FailOpen) | `POST /v1/astro/{natal,transits,solar-arc,directions,progressions,returns,profections,firdaria,fixed-stars,brief}`, `POST /v1/astro/query` (SSE), `GET/POST /v1/astro/contacts` |
 | Notification :8005 | `NOTIFICATION_PORT` | `requireUserID` (X-User-ID) | `GET /v1/notifications`, `GET /count`, `POST /read-all`, `PATCH /{id}/read`, `GET/PUT /preferences` |
 | Platform :8006 | `PLATFORM_PORT` | `requirePlatformAdmin` (JWT directo) | `/v1/platform/tenants/*`, `/modules`, `/flags/*`, `/config/*` |
 
@@ -120,6 +121,15 @@ r.Use(middleware.Timeout(30s))// chi (excepto WS y RAG que omiten o usan 0)
 - [ ] Errores wrapeados: `fmt.Errorf("create user: %w", err)`
 - [ ] Sentinel errors para control flow: `errors.Is(err, service.ErrNotFound)`
 - [ ] `serverError(w, r, err)` helper logea + retorna 500 genérico
+
+### Astro service (CGO / ephemeris specifics)
+- [ ] `ephemeris.CalcMu` held for compound SetTopo + CalcPlanet sequences (never call SetTopo without holding the mutex)
+- [ ] `ephemeris.Init(ephePath)` called before any calculation, `Close()` deferred
+- [ ] Contact resolution uses `tenant.FromContext()` + `sdamw.UserIDFromContext()` -- never from body
+- [ ] Contact queries filter by `tenant_id AND user_id` (tenant isolation)
+- [ ] SSE endpoint (`/v1/astro/query`) parses body BEFORE setting SSE headers (can't send HTTP error after headers are flushed)
+- [ ] SSE endpoint excluded from chi `middleware.Timeout` (uses `http.Server.WriteTimeout` as safety net)
+- [ ] `http.MaxBytesReader` applied to all POST endpoints (1MB limit)
 
 ### Platform admin
 - [ ] Platform service tiene su propio `requirePlatformAdmin` middleware — verifica JWT directamente

@@ -85,7 +85,7 @@ refactor(rag): extract collection resolver to pkg/tenant
 
 Tipos: `feat`, `fix`, `refactor`, `test`, `docs`, `ci`, `chore`
 
-Scopes: `auth`, `chat`, `agent`, `search`, `traces`, `ingest`, `extractor`,
+Scopes: `auth`, `chat`, `agent`, `search`, `astro`, `traces`, `ingest`, `extractor`,
 `notification`, `ws`, `platform`, `feedback`, `web`, `cli`, `mcp`, `infra`,
 `pkg`, `docs`, `deploy`
 

@@ -87,6 +87,13 @@ http:
       entryPoints: [web]
       middlewares: [dev-cors, dev-tenant]
 
+    # Astro — astrological calculations + SSE query
+    astro:
+      rule: "PathPrefix(`/v1/astro`)"
+      service: astro
+      entryPoints: [web]
+      middlewares: [dev-cors, dev-tenant]
+
   services:
     auth:
       loadBalancer:
@@ -128,6 +135,10 @@ http:
       loadBalancer:
         servers:
           - url: "http://host.docker.internal:8007"
+    astro:
+      loadBalancer:
+        servers:
+          - url: "http://host.docker.internal:8011"
 
   middlewares:
     # CORS for dev — frontend on :3000, API on :80

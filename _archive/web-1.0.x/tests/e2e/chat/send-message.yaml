@@ -1,9 +1,0 @@
----
-# Flow: Enviar mensaje en chat (requiere MOCK_RAG=true)
-- runFlow: auth/login-success.yaml
-- openLink: ${BASE_URL}/chat
-- tapOn: "Nueva sesión"
-- tapOn: "Preguntá sobre"
-- inputText: "¿Qué documentos están disponibles?"
-- tapOn: "Enviar"
-- assertVisible: "Esta es una respuesta simulada"

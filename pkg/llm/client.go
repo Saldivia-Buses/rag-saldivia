@@ -13,6 +13,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
@@ -89,8 +90,18 @@ type ChatResponse struct {
 type ChatClient interface {
 	Chat(ctx context.Context, messages []Message, tools []ToolSchema, temperature float64, maxTokens int) (*ChatResponse, error)
 	SimplePrompt(ctx context.Context, prompt string, temperature float64, maxTokens ...int) (string, error)
+	StreamChat(ctx context.Context, messages []Message, temperature float64, maxTokens int) (<-chan StreamDelta, error)
 	Model() string
 	Endpoint() string
+}
+
+// StreamDelta is a single token or error from a streaming LLM response.
+type StreamDelta struct {
+	Text         string // token text (empty on final/error)
+	InputTokens  int    // set on final chunk only
+	OutputTokens int    // set on final chunk only
+	Done         bool   // true on final chunk
+	Err          error  // non-nil on error
 }
 
 // Ensure Client implements ChatClient at compile time.
@@ -179,6 +190,141 @@ func (c *Client) SimplePrompt(ctx context.Context, prompt string, temperature fl
 		return "", err
 	}
 	return resp.Content, nil
+}
+
+// StreamChat sends a streaming chat completion request and returns a channel
+// of token deltas. The channel is closed when the stream ends or errors.
+// Callers must drain the channel.
+func (c *Client) StreamChat(ctx context.Context, messages []Message, temperature float64, maxTokens int) (<-chan StreamDelta, error) {
+	if maxTokens <= 0 {
+		maxTokens = 4096
+	}
+	body := map[string]any{
+		"model":       c.model,
+		"messages":    messages,
+		"temperature": temperature,
+		"max_tokens":  maxTokens,
+		"stream":      true,
+	}
+
+	jsonBody, err := json.Marshal(body)
+	if err != nil {
+		return nil, fmt.Errorf("marshal: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost,
+		c.endpoint+"/v1/chat/completions", bytes.NewReader(jsonBody))
+	if err != nil {
+		return nil, fmt.Errorf("create request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+	if c.apiKey != "" {
+		req.Header.Set("Authorization", "Bearer "+c.apiKey)
+	}
+
+	// Use a separate client without timeout for streaming
+	streamClient := &http.Client{Transport: c.httpClient.Transport}
+	resp, err := streamClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("llm stream request: %w", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		errBody, _ := io.ReadAll(io.LimitReader(resp.Body, 4096))
+		resp.Body.Close()
+		return nil, fmt.Errorf("llm returned %d: %s", resp.StatusCode, string(errBody))
+	}
+
+	ch := make(chan StreamDelta, 64)
+	go func() {
+		defer close(ch)
+		defer resp.Body.Close()
+		parseSSEStream(resp.Body, ch)
+	}()
+
+	return ch, nil
+}
+
+// parseSSEStream reads an OpenAI-compatible SSE stream and sends deltas to ch.
+func parseSSEStream(body io.Reader, ch chan<- StreamDelta) {
+	buf := make([]byte, 4096)
+	var partial string
+
+	scanner := func(data string) {
+		// Each SSE line starts with "data: "
+		for _, line := range splitLines(data) {
+			line = strings.TrimSpace(line)
+			if line == "" || strings.HasPrefix(line, ":") {
+				continue
+			}
+			if !strings.HasPrefix(line, "data: ") {
+				continue
+			}
+			payload := strings.TrimPrefix(line, "data: ")
+			if payload == "[DONE]" {
+				ch <- StreamDelta{Done: true}
+				return
+			}
+			var chunk struct {
+				Choices []struct {
+					Delta struct {
+						Content string `json:"content"`
+					} `json:"delta"`
+				} `json:"choices"`
+				Usage *struct {
+					PromptTokens     int `json:"prompt_tokens"`
+					CompletionTokens int `json:"completion_tokens"`
+				} `json:"usage"`
+			}
+			if err := json.Unmarshal([]byte(payload), &chunk); err != nil {
+				continue
+			}
+			if len(chunk.Choices) > 0 && chunk.Choices[0].Delta.Content != "" {
+				ch <- StreamDelta{Text: chunk.Choices[0].Delta.Content}
+			}
+			if chunk.Usage != nil {
+				ch <- StreamDelta{
+					InputTokens:  chunk.Usage.PromptTokens,
+					OutputTokens: chunk.Usage.CompletionTokens,
+				}
+			}
+		}
+	}
+
+	for {
+		n, err := body.Read(buf)
+		if n > 0 {
+			partial += string(buf[:n])
+			// Process complete lines
+			if idx := strings.LastIndex(partial, "\n"); idx >= 0 {
+				scanner(partial[:idx+1])
+				partial = partial[idx+1:]
+			}
+		}
+		if err != nil {
+			if partial != "" {
+				scanner(partial)
+			}
+			if err != io.EOF {
+				ch <- StreamDelta{Err: err}
+			}
+			return
+		}
+	}
+}
+
+func splitLines(s string) []string {
+	var lines []string
+	for s != "" {
+		idx := strings.Index(s, "\n")
+		if idx < 0 {
+			lines = append(lines, s)
+			break
+		}
+		lines = append(lines, s[:idx])
+		s = s[idx+1:]
+	}
+	return lines
 }
 
 // Model returns the model ID.
