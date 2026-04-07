@@ -17,15 +17,15 @@
 | avatar | 34 | 1 | - | - | - | 1 | sb |
 | avatar-group | 9 | - | - | - | - | - | sb |
 | badge | 20 | 1 | 1 | 1 | - | 1 | iq+tg+fl |
-| breadcrumb | 14 | 1 | - | 1 | - | 1 | |
-| button | 35 | 1 | 1 | 1 | 1 | 1 | |
-| button-group | 39 | 1 | - | - | - | 1 | |
+| breadcrumb | 14 | 1 | - | 1 | - | 1 | sb |
+| button | 35 | 1 | 1 | 1 | 1 | 1 | sb+fl |
+| button-group | 39 | 1 | - | - | - | 1 | sb |
 | calendar | 16 | - | - | - | - | - | |
-| card | 5 | 1 | - | - | - | 1 | |
+| card | 5 | 1 | - | - | - | 1 | sb |
 | carousel | 4 | 1 | - | - | - | 1 | |
 | chart | - | - | - | 1 | - | - | |
-| checkbox | 12 | 1 | - | - | - | - | |
-| collapsible | 23 | 1 | - | - | - | 1 | |
+| checkbox | 12 | 1 | - | - | - | - | sb |
+| collapsible | 23 | 1 | - | - | - | 1 | sb |
 | color-picker | - | - | - | - | 1 | - | |
 | combobox | 42 | 1 | - | - | - | - | |
 | command | 21 | 1 | - | - | - | 1 | |
@@ -76,12 +76,12 @@
 | switch | 19 | - | 1 | - | - | 1 | |
 | table | 8 | 1 | - | - | - | - | |
 | tabs | 11 | 1 | - | 1 | - | 1 | |
-| textarea | 13 | 1 | - | - | - | 1 | |
+| textarea | 13 | 1 | - | - | - | 1 | sb |
 | time-picker | - | 1 | - | - | - | - | |
-| toggle | 7 | 1 | - | - | - | - | |
-| toggle-group | 7 | - | - | - | - | - | |
+| toggle | 7 | 1 | - | - | - | - | sb+tg |
+| toggle-group | 7 | - | - | - | - | - | sb+tg |
 | toolbar | - | - | - | - | - | - | |
-| tooltip | 8 | 1 | 1 | 1 | 1 | 1 | |
+| tooltip | 8 | 1 | 1 | 1 | 1 | 1 | sb |
 
 ---
 
