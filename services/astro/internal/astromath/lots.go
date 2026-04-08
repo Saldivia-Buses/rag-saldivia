@@ -35,9 +35,9 @@ var LotDefinitions = []LotDefinition{
 
 	// Planetary lots
 	{"eros", "Eros", "amor, deseo, atracción", "Venus", "Spirit", false},
-	{"necessity", "Necesidad", "restricción, obligación, karma", "Fortune", "Spirit", true}, // Basis: always same formula
+	{"necessity", "Necesidad", "restricción, obligación, karma", "Fortune", "Mercurio", false},
 	{"valor", "Valor", "coraje, audacia, acción", "Fortune", "Marte", false},
-	{"victory", "Victoria", "éxito, logro, triunfo", "Fortune", "Júpiter", false},
+	{"victory", "Victoria", "éxito, logro, triunfo", "Júpiter", "Spirit", false},
 	{"nemesis", "Némesis", "enemigos ocultos, justicia kármica", "Fortune", "Saturno", false},
 
 	// Life lots
@@ -49,7 +49,7 @@ var LotDefinitions = []LotDefinition{
 	{"death", "Muerte", "mortalidad, transformaciones radicales", "Luna", "Saturno", false}, // night: ASC + Sat - Moon
 
 	// Business lots
-	{"commerce", "Comercio", "negocios, transacciones", "Mercurio", "Fortune", false},
+	{"commerce", "Comercio", "negocios, transacciones", "Mercurio", "Sol", false},
 	{"prosperity", "Prosperidad", "abundancia, riqueza acumulada", "Fortune", "Spirit", false},
 	{"acquisition", "Adquisición", "ganancias, ingresos", "Fortune", "Júpiter", false},
 	{"travel", "Viajes", "desplazamientos, cambios de residencia", "Saturno", "Marte", false},
@@ -57,7 +57,7 @@ var LotDefinitions = []LotDefinition{
 
 	// Profession/vocation
 	{"profession", "Profesión", "vocación, carrera, estatus", "Luna", "Sol", false}, // same as fortune formula but used differently
-	{"exaltation", "Exaltación", "honor, reconocimiento público", "Sol", "SunExalt", true}, // always: ASC + Sol - 19°Aries
+	{"exaltation", "Exaltación", "honor, reconocimiento público", "SunExalt", "Sol", false},
 }
 
 // resolveOperand converts a lot operand key to an ecliptic longitude.
