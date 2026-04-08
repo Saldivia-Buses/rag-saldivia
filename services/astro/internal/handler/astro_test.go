@@ -42,7 +42,7 @@ func TestHealthEndpoint(t *testing.T) {
 }
 
 func TestHandlerStubsReturn401WithoutAuth(t *testing.T) {
-	h := New(nil, nil)
+	h := New(nil, nil, nil, nil, nil, nil, "test")
 	r := chi.NewRouter()
 
 	// No auth middleware — tenantAndUser will fail
@@ -88,7 +88,7 @@ func TestHandlerStubsReturn401WithoutAuth(t *testing.T) {
 }
 
 func TestHandlerBadRequest(t *testing.T) {
-	h := New(nil, nil)
+	h := New(nil, nil, nil, nil, nil, nil, "test")
 	r := chi.NewRouter()
 	r.Post("/v1/astro/natal", h.Natal)
 
@@ -104,7 +104,7 @@ func TestHandlerBadRequest(t *testing.T) {
 }
 
 func TestHandlerYearValidation(t *testing.T) {
-	h := New(nil, nil)
+	h := New(nil, nil, nil, nil, nil, nil, "test")
 	r := chi.NewRouter()
 	r.Post("/v1/astro/natal", h.Natal)
 

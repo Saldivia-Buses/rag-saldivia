@@ -19,11 +19,11 @@ func TestDignityScoreAt_Exaltation(t *testing.T) {
 }
 
 func TestDignityScoreAt_Triplicity(t *testing.T) {
-	// Sol is day triplicity lord of fire signs. Sol at 0° Aries (fire, diurnal)
-	score, dignity := DignityScoreAt("Sol", 0, true)
-	// Sol is not domicile (Marte) nor exalted here. Triplicity of fire day = Sol
+	// Sol at 0° Aries is EXALTED (score 4), not triplicity (3) — exaltation wins.
+	// Test triplicity with Júpiter at 0° Aries nocturnal (fire night = Júpiter).
+	score, dignity := DignityScoreAt("Júpiter", 0, false)
 	if score != ScoreTriplicity || dignity != "triplicidad" {
-		t.Errorf("Sol at 0° Aries diurnal: got score=%d dignity=%q, want %d triplicidad", score, dignity, ScoreTriplicity)
+		t.Errorf("Júpiter at 0° Aries nocturnal: got score=%d dignity=%q, want %d triplicidad", score, dignity, ScoreTriplicity)
 	}
 }
 

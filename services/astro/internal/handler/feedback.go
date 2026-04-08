@@ -8,6 +8,7 @@ import (
 
 	"github.com/Camionerou/rag-saldivia/pkg/audit"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
+	"github.com/Camionerou/rag-saldivia/services/astro/internal/repository"
 )
 
 // --- Feedback (thumbs up/down) ---

@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -10,6 +11,7 @@ import (
 
 	"github.com/Camionerou/rag-saldivia/pkg/audit"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
+	"github.com/Camionerou/rag-saldivia/services/astro/internal/repository"
 )
 
 // --- Session CRUD ---
@@ -58,7 +60,7 @@ func (h *Handler) CreateSession(w http.ResponseWriter, r *http.Request) {
 		h.auditor.Write(r.Context(), audit.Entry{
 			UserID:   sdamw.UserIDFromContext(r.Context()),
 			Action:   "astro.session.create",
-			Resource: session.ID.Bytes[:],
+			Resource: fmt.Sprintf("%x", session.ID.Bytes),
 		})
 	}
 	if h.traces != nil {

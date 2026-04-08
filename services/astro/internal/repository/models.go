@@ -8,6 +8,82 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type AstroFeedback struct {
+	ID        pgtype.UUID        `json:"id"`
+	TenantID  pgtype.UUID        `json:"tenant_id"`
+	MessageID pgtype.UUID        `json:"message_id"`
+	UserID    pgtype.UUID        `json:"user_id"`
+	Thumbs    string             `json:"thumbs"`
+	Comment   pgtype.Text        `json:"comment"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
+type AstroFollowup struct {
+	ID             pgtype.UUID        `json:"id"`
+	TenantID       pgtype.UUID        `json:"tenant_id"`
+	UserID         pgtype.UUID        `json:"user_id"`
+	CompanyID      pgtype.UUID        `json:"company_id"`
+	CounterpartyID pgtype.UUID        `json:"counterparty_id"`
+	Title          string             `json:"title"`
+	Description    pgtype.Text        `json:"description"`
+	DueDate        pgtype.Date        `json:"due_date"`
+	Status         string             `json:"status"`
+	Category       string             `json:"category"`
+	AstroBasis     pgtype.Text        `json:"astro_basis"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt      pgtype.Timestamptz `json:"updated_at"`
+}
+
+type AstroMessage struct {
+	ID         pgtype.UUID        `json:"id"`
+	TenantID   pgtype.UUID        `json:"tenant_id"`
+	SessionID  pgtype.UUID        `json:"session_id"`
+	Role       string             `json:"role"`
+	Content    string             `json:"content"`
+	Thinking   pgtype.Text        `json:"thinking"`
+	Techniques []string           `json:"techniques"`
+	Metadata   []byte             `json:"metadata"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+}
+
+type AstroPrediction struct {
+	ID           pgtype.UUID        `json:"id"`
+	TenantID     pgtype.UUID        `json:"tenant_id"`
+	UserID       pgtype.UUID        `json:"user_id"`
+	SessionID    pgtype.UUID        `json:"session_id"`
+	ContactID    pgtype.UUID        `json:"contact_id"`
+	Category     string             `json:"category"`
+	Description  string             `json:"description"`
+	DateFrom     pgtype.Date        `json:"date_from"`
+	DateTo       pgtype.Date        `json:"date_to"`
+	Techniques   []string           `json:"techniques"`
+	Outcome      pgtype.Text        `json:"outcome"`
+	OutcomeNotes pgtype.Text        `json:"outcome_notes"`
+	VerifiedAt   pgtype.Timestamptz `json:"verified_at"`
+	CreatedAt    pgtype.Timestamptz `json:"created_at"`
+}
+
+type AstroSession struct {
+	ID        pgtype.UUID        `json:"id"`
+	TenantID  pgtype.UUID        `json:"tenant_id"`
+	UserID    pgtype.UUID        `json:"user_id"`
+	ContactID pgtype.UUID        `json:"contact_id"`
+	Title     string             `json:"title"`
+	Pinned    bool               `json:"pinned"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+}
+
+type AstroUsage struct {
+	ID        pgtype.UUID `json:"id"`
+	TenantID  pgtype.UUID `json:"tenant_id"`
+	UserID    pgtype.UUID `json:"user_id"`
+	Date      pgtype.Date `json:"date"`
+	Queries   int32       `json:"queries"`
+	TokensIn  int32       `json:"tokens_in"`
+	TokensOut int32       `json:"tokens_out"`
+}
+
 type AuditLog struct {
 	ID        string             `json:"id"`
 	UserID    pgtype.Text        `json:"user_id"`

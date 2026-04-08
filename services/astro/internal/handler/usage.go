@@ -2,6 +2,8 @@ package handler
 
 import (
 	"net/http"
+
+	"github.com/Camionerou/rag-saldivia/services/astro/internal/repository"
 )
 
 // --- Daily Usage ---
