@@ -10,17 +10,30 @@ import (
 // Engine is the intelligence layer orchestrator. Thread-safe, created once at startup.
 type Engine struct {
 	registry *DomainRegistry
+	parser   IntentParser
 	log      *slog.Logger
 }
 
-// NewEngine creates the intelligence engine with the default domain registry.
+// NewEngine creates the intelligence engine with the default domain registry
+// and utterance-based intent router (falls back to keyword matching).
 func NewEngine(log *slog.Logger) (*Engine, error) {
 	domains := defaultDomains()
 	registry, err := NewDomainRegistry(domains)
 	if err != nil {
 		return nil, err
 	}
-	return &Engine{registry: registry, log: log}, nil
+	parser := NewUtteranceRouter(registry)
+	return &Engine{registry: registry, parser: parser, log: log}, nil
+}
+
+// NewEngineWithParser creates the engine with a custom IntentParser (for testing).
+func NewEngineWithParser(parser IntentParser, log *slog.Logger) (*Engine, error) {
+	domains := defaultDomains()
+	registry, err := NewDomainRegistry(domains)
+	if err != nil {
+		return nil, err
+	}
+	return &Engine{registry: registry, parser: parser, log: log}, nil
 }
 
 // AnalysisRequest holds everything the intelligence layer needs.
@@ -53,8 +66,8 @@ type AnalysisResult struct {
 func (e *Engine) Analyze(ctx context.Context, req *AnalysisRequest) (*AnalysisResult, error) {
 	result := &AnalysisResult{}
 
-	// Step 1: Parse intent from query
-	result.Intent = ParseIntent(req.Query, e.registry)
+	// Step 1: Parse intent from query (via utterance router or keyword fallback)
+	result.Intent = e.parser.Parse(req.Query)
 	e.log.Debug("intent parsed",
 		"domain", result.Intent.PrimaryDomain,
 		"confidence", result.Intent.Confidence,
@@ -127,3 +140,10 @@ func (e *Engine) Analyze(ctx context.Context, req *AnalysisRequest) (*AnalysisRe
 
 // Registry returns the domain registry (for intent parsing in handlers).
 func (e *Engine) Registry() *DomainRegistry { return e.registry }
+
+// QuickDomain does fast domain-only detection without the full Analyze pipeline.
+// Used by handler for domain-aware lazy calc (Plan 13 Fase 5c).
+func (e *Engine) QuickDomain(query string) string {
+	intent := e.parser.Parse(query)
+	return intent.PrimaryDomain
+}
