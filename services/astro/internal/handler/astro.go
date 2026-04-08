@@ -24,6 +24,7 @@ import (
 	"github.com/Camionerou/rag-saldivia/pkg/audit"
 
 	"github.com/Camionerou/rag-saldivia/services/astro/internal/astromath"
+	"github.com/Camionerou/rag-saldivia/services/astro/internal/business"
 	"github.com/Camionerou/rag-saldivia/services/astro/internal/cache"
 	astrocontext "github.com/Camionerou/rag-saldivia/services/astro/internal/context"
 	"github.com/Camionerou/rag-saldivia/services/astro/internal/intelligence"
@@ -37,12 +38,13 @@ type Handler struct {
 	llm     llm.ChatClient
 	q       *repository.Queries
 	auditor *audit.Writer
-	intel   *intelligence.Engine // Plan 12: intelligence layer
-	charts  *cache.ChartRegistry // Plan 12: in-memory chart cache
+	intel   *intelligence.Engine    // Plan 12: intelligence layer
+	charts  *cache.ChartRegistry   // Plan 12: in-memory chart cache
+	biz     *business.Service      // Plan 12: business intelligence
 }
 
-func New(db *pgxpool.Pool, llmClient llm.ChatClient, intel *intelligence.Engine, charts *cache.ChartRegistry) *Handler {
-	h := &Handler{db: db, llm: llmClient, intel: intel, charts: charts}
+func New(db *pgxpool.Pool, llmClient llm.ChatClient, intel *intelligence.Engine, charts *cache.ChartRegistry, biz *business.Service) *Handler {
+	h := &Handler{db: db, llm: llmClient, intel: intel, charts: charts, biz: biz}
 	if db != nil {
 		h.q = repository.New(db)
 		h.auditor = audit.NewWriter(db)

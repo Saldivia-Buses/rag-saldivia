@@ -22,6 +22,7 @@ import (
 	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
 	"github.com/Camionerou/rag-saldivia/pkg/security"
 
+	"github.com/Camionerou/rag-saldivia/services/astro/internal/business"
 	"github.com/Camionerou/rag-saldivia/services/astro/internal/cache"
 	"github.com/Camionerou/rag-saldivia/services/astro/internal/ephemeris"
 	"github.com/Camionerou/rag-saldivia/services/astro/internal/handler"
@@ -85,8 +86,9 @@ func main() {
 		os.Exit(1)
 	}
 	chartCache := cache.NewChartRegistry()
+	bizService := business.NewService()
 
-	astroHandler := handler.New(pool, llmClient, intel, chartCache)
+	astroHandler := handler.New(pool, llmClient, intel, chartCache, bizService)
 
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
@@ -188,6 +190,21 @@ func main() {
 		r.Use(sdamw.RateLimit(sdamw.RateLimitConfig{Requests: 5, Window: time.Minute, KeyFunc: sdamw.ByUser}))
 		r.Use(sdamw.RequirePermission("astro.read"))
 		r.Post("/v1/astro/query", astroHandler.Query)
+	})
+
+	// Business intelligence — separate permission, lower rate limit
+	r.Group(func(r chi.Router) {
+		r.Use(authRead)
+		r.Use(sdamw.RateLimit(sdamw.RateLimitConfig{Requests: 10, Window: time.Minute, KeyFunc: sdamw.ByUser}))
+		r.Use(sdamw.RequirePermission("astro.business"))
+		r.Use(middleware.Timeout(2 * time.Minute))
+		r.Get("/v1/astro/business/dashboard", astroHandler.Dashboard)
+		r.Get("/v1/astro/business/cashflow", astroHandler.CashFlow)
+		r.Get("/v1/astro/business/risk", astroHandler.RiskHeatmap)
+		r.Get("/v1/astro/business/forecast", astroHandler.QuarterlyForecast)
+		r.Get("/v1/astro/business/team", astroHandler.TeamCompatibility)
+		r.Get("/v1/astro/business/hiring", astroHandler.HiringCalendar)
+		r.Get("/v1/astro/business/mercury-rx", astroHandler.MercuryRx)
 	})
 
 	srv := &http.Server{
