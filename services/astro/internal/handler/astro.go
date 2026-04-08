@@ -858,6 +858,16 @@ func (h *Handler) Query(w http.ResponseWriter, r *http.Request) {
 			"issues":         len(auditResult.Issues),
 			"validation":     len(validationIssues),
 		})
+		// Server-side technique detection (Plan 13 Fase 6)
+		detection := quality.DetectTechniques(briefText, fullResponse.String())
+		if len(detection.Details) > 0 {
+			sseEvent(w, flusher, "techniques_used", map[string]interface{}{
+				"used":    detection.Used,
+				"partial": detection.Partial,
+				"omitted": detection.Omitted,
+			})
+		}
+
 		// Publish quality metrics to feedback service via NATS
 		if h.traces != nil {
 			h.traces.Feedback(h.slug, "astro_quality", map[string]any{
