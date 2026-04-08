@@ -2,6 +2,7 @@ package intelligence
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 
 	astrocontext "github.com/Camionerou/rag-saldivia/services/astro/internal/context"
@@ -119,8 +120,25 @@ func (e *Engine) Analyze(ctx context.Context, req *AnalysisRequest) (*AnalysisRe
 		)
 	}
 
+	// Step 7c: Confidence after objections (Plan 13 Fase 9b)
+	confidence := ConfidenceAfterObjections(req.FullCtx)
+	if confidence < 0.5 {
+		result.Warnings = append(result.Warnings,
+			fmt.Sprintf("confianza post-objeciones baja: %.0f%%", confidence*100))
+	}
+
 	// Step 8: Build domain-aware intelligence brief
 	result.Brief = BuildIntelligenceBrief(req.FullCtx, domain, result.Gate, result.CrossRefs)
+
+	// Step 8b: Nuclear month injection (Plan 13 Fase 9c)
+	nuclearMonth := astrocontext.FindNuclearMonth(req.FullCtx.MonthlyScores)
+	if nuclearMonth != nil {
+		monthNames := [12]string{"Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+			"Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"}
+		monthName := monthNames[nuclearMonth.Month-1]
+		result.Brief = fmt.Sprintf("**MES NUCLEAR: %s (score %d — %d técnicas convergen)**\n\n",
+			monthName, nuclearMonth.Score, nuclearMonth.Techniques) + result.Brief
+	}
 
 	// Prepend wakeup context (memory) to brief
 	if wakeupCtx != "" {
@@ -131,6 +149,9 @@ func (e *Engine) Analyze(ctx context.Context, req *AnalysisRequest) (*AnalysisRe
 	if result.NarrativeArc != nil {
 		result.Brief += "\n" + FormatNarrativeGuide(result.NarrativeArc)
 	}
+
+	// Step 8c: BCA compression (Plan 13 Fase 5a)
+	result.Brief = CompressBCA(result.Brief)
 
 	// Step 9: Build domain-aware system prompt
 	result.SystemPrompt = BuildSystemPrompt(domain, result.Gate, result.CrossRefs)

@@ -770,6 +770,13 @@ func (h *Handler) Query(w http.ResponseWriter, r *http.Request) {
 	}
 	sseEvent(w, flusher, "contact_recognized", map[string]string{"name": contact.Name})
 
+	// 1b. Follow-up detection (Plan 13 Fase 7)
+	var followUp *intelligence.FollowUpContext
+	if h.intel != nil && req.SessionID != "" {
+		// Check if this is a follow-up to a previous exchange
+		followUp = intelligence.DetectFollowUp(req.Query, req.SessionID != "", "", "")
+	}
+
 	// 2. Build chart + context (using cache for expensive BuildNatal)
 	tenantInfo, tenantErr := tenant.FromContext(r.Context())
 	tenantSlug := ""
@@ -781,7 +788,28 @@ func (h *Handler) Query(w http.ResponseWriter, r *http.Request) {
 		sseError(w, flusher, r, "chart calculation failed")
 		return
 	}
-	fullCtx, err := astrocontext.Build(chart, contact.Name, birthDate, req.Year)
+
+	// 2a. Domain-aware lazy calc (Plan 13 Fase 5c): detect domain BEFORE Build
+	var domainTechniques map[string]bool
+	if h.intel != nil && req.Query != "" && (followUp == nil || !followUp.IsFollowUp) {
+		domainID := h.intel.QuickDomain(req.Query)
+		if domainID != "" && domainID != "predictivo" {
+			if resolved, err := h.intel.Registry().Resolve(domainID); err == nil {
+				domainTechniques = make(map[string]bool)
+				for _, t := range resolved.TechniquesRequired {
+					domainTechniques[t] = true
+				}
+				for _, t := range resolved.TechniquesExpected {
+					domainTechniques[t] = true
+				}
+				for _, tw := range resolved.TechniquesBrief {
+					domainTechniques[tw.ID] = true
+				}
+			}
+		}
+	}
+
+	fullCtx, err := astrocontext.BuildWithDomain(chart, contact.Name, birthDate, req.Year, domainTechniques)
 	if err != nil {
 		sseError(w, flusher, r, "context build failed")
 		return

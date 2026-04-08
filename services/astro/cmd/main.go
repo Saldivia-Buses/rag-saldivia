@@ -194,6 +194,7 @@ func main() {
 		r.Get("/v1/astro/predictions", astroHandler.ListPredictions)
 		r.Get("/v1/astro/predictions/stats", astroHandler.PredictionStats)
 		r.Get("/v1/astro/usage", astroHandler.DailyUsage)
+		r.Get("/v1/astro/alerts", astroHandler.Alerts)
 	})
 
 	// Write endpoints — FailOpen false, astro.write permission
