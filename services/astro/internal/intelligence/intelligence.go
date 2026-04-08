@@ -25,19 +25,27 @@ func NewEngine(log *slog.Logger) (*Engine, error) {
 
 // AnalysisRequest holds everything the intelligence layer needs.
 type AnalysisRequest struct {
-	Query   string
-	FullCtx *astrocontext.FullContext
+	Query          string
+	FullCtx        *astrocontext.FullContext
+	ContactName    string             // for memory lookup
+	Predictions    []PredictionRecord // from DB, for wakeup context
+	Sessions       []SessionRecord    // from DB, for wakeup context
+	BirthTimeKnown bool
+	RectPending    bool               // rectification suggestion pending
 }
 
 // AnalysisResult is the output of the intelligence layer.
 type AnalysisResult struct {
-	Intent       *Intent
-	Domain       *ResolvedDomain
-	Gate         *GateResult
-	CrossRefs    []CrossReference
-	Brief        string // domain-aware intelligence brief
-	SystemPrompt string // domain-aware system prompt for LLM
-	Warnings     []string
+	Intent          *Intent
+	Domain          *ResolvedDomain
+	Gate            *GateResult
+	CrossRefs       []CrossReference
+	Contraindications []Contraindication
+	NarrativeArc    *NarrativeArc
+	AdaptiveConfig  *AdaptiveConfig
+	Brief           string // domain-aware intelligence brief
+	SystemPrompt    string // domain-aware system prompt for LLM
+	Warnings        []string
 }
 
 // Analyze runs the full intelligence pipeline.
@@ -73,10 +81,45 @@ func (e *Engine) Analyze(ctx context.Context, req *AnalysisRequest) (*AnalysisRe
 	result.CrossRefs = AnalyzeCrossReferences(req.FullCtx)
 	e.log.Debug("cross-references found", "count", len(result.CrossRefs))
 
-	// Step 5: Build domain-aware intelligence brief
+	// Step 5: Contraindications (misleading reading detection)
+	result.Contraindications = FindContraindications(req.FullCtx)
+	for _, ci := range result.Contraindications {
+		if ci.Severity == "high" {
+			result.Warnings = append(result.Warnings, ci.Description)
+		}
+	}
+
+	// Step 6: Narrative arc structure
+	result.NarrativeArc = BuildNarrativeArc(result.CrossRefs, domain)
+
+	// Step 7: Adaptive thinking configuration
+	result.AdaptiveConfig = AdaptiveThinking(
+		len(result.Gate.Validated), len(result.CrossRefs), domain, len(req.FullCtx.Brief),
+	)
+
+	// Step 7b: Build wakeup context (inter-session memory)
+	wakeupCtx := ""
+	if req.ContactName != "" && (len(req.Predictions) > 0 || len(req.Sessions) > 0) {
+		wakeupCtx = BuildWakeupContext(
+			req.ContactName, req.Predictions, req.Sessions,
+			req.BirthTimeKnown, req.RectPending,
+		)
+	}
+
+	// Step 8: Build domain-aware intelligence brief
 	result.Brief = BuildIntelligenceBrief(req.FullCtx, domain, result.Gate, result.CrossRefs)
 
-	// Step 6: Build domain-aware system prompt
+	// Prepend wakeup context (memory) to brief
+	if wakeupCtx != "" {
+		result.Brief = wakeupCtx + "\n" + result.Brief
+	}
+
+	// Append narrative guide to brief
+	if result.NarrativeArc != nil {
+		result.Brief += "\n" + FormatNarrativeGuide(result.NarrativeArc)
+	}
+
+	// Step 9: Build domain-aware system prompt
 	result.SystemPrompt = BuildSystemPrompt(domain, result.Gate, result.CrossRefs)
 
 	return result, nil

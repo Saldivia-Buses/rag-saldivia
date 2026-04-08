@@ -75,7 +75,29 @@ func BuildIntelligenceBrief(fullCtx *astrocontext.FullContext, domain *ResolvedD
 		b.WriteString("\n")
 	}
 
-	// Section 3: The actual computed brief (from context builder)
+	// Section 3: Technique interpretations (wired from interpretations_full.go)
+	if len(fullCtx.Transits) > 0 || len(fullCtx.SolarArc) > 0 {
+		b.WriteString("## INTERPRETACIONES\n\n")
+		for _, tr := range fullCtx.Transits {
+			if tr.Orb < 2.0 { // only tight transits get interpretation
+				b.WriteString("- " + InterpretTransit(tr.Transit, tr.Aspect, tr.Natal).Detail + "\n")
+			}
+		}
+		for _, sa := range fullCtx.SolarArc {
+			if sa.Orb < 1.0 {
+				b.WriteString("- " + InterpretSA(sa.SAplanet, sa.Aspect, sa.NatPlanet) + "\n")
+			}
+		}
+		if fullCtx.Profection != nil {
+			b.WriteString("- " + InterpretProfection(fullCtx.Profection.ActiveHouse, fullCtx.Profection.Lord, fullCtx.Profection.Theme) + "\n")
+		}
+		if fullCtx.Firdaria != nil {
+			b.WriteString("- " + InterpretFirdaria(fullCtx.Firdaria.MajorLord, fullCtx.Firdaria.SubLord) + "\n")
+		}
+		b.WriteString("\n")
+	}
+
+	// Section 4: The actual computed brief (from context builder)
 	// This is the full brief with all technique sections
 	if fullCtx.Brief != "" {
 		b.WriteString(fullCtx.Brief)

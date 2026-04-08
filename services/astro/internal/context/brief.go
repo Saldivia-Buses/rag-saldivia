@@ -311,7 +311,47 @@ func BuildBrief(ctx *FullContext) string {
 		b.WriteString("\n")
 	}
 
-	// Section 18: Convergence matrix
+	// Section 18: Transit context builders (antiscia, fixed stars, cazimi)
+	b.WriteString(AntisciaContext(ctx.Chart, ctx.Year))
+	b.WriteString(FixedStarsTransitContext(ctx.Year))
+	b.WriteString(CazimiCombustionTransitContext(ctx.Year))
+
+	// Section 19: Natal sub-analyses
+	natalText := astromath.FormatNatalAnalysis(
+		ctx.AspectPatterns, ctx.ChartShape, ctx.Hemispheres,
+		ctx.FullDignities, ctx.PlanetaryAge,
+	)
+	if natalText != "" {
+		b.WriteString(natalText)
+	}
+
+	// Section 19: Cross-technique analyses
+	crossText := FormatCrossAnalyses(
+		ctx.RSLRCrossings, ctx.PrenatalTransits,
+		ctx.Divisor, ctx.TriplicityLords, ctx.ChronoCross,
+	)
+	if crossText != "" {
+		b.WriteString(crossText)
+	}
+
+	// Section 20: Scoring + Synthesis
+	b.WriteString(fmt.Sprintf("## SCORE DE ACTIVACIÓN: %d/100\n\n", ctx.Score))
+
+	// Dominant themes
+	themes := DominantThemes(ctx, 3)
+	if len(themes) > 0 {
+		b.WriteString("## TEMAS DOMINANTES\n\n")
+		for _, t := range themes {
+			b.WriteString(fmt.Sprintf("- %s\n", t))
+		}
+		b.WriteString("\n")
+	}
+
+	// Synthesis (verdicts + contradictions + month scores)
+	b.WriteString(SynthesisBrief(ctx.Verdicts, ctx.Contradictions, ctx.MonthlyScores))
+	b.WriteString("\n")
+
+	// Section 21: Convergence matrix
 	b.WriteString("## MATRIZ DE CONVERGENCIA MENSUAL\n\n")
 	scores := buildConvergenceMatrix(ctx)
 	for _, ms := range scores {

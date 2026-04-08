@@ -59,6 +59,22 @@ type FullContext struct {
 	Midpoints    *technique.MidpointResult                 `json:"midpoints,omitempty"`
 	Declinations *technique.DeclinationResult              `json:"declinations,omitempty"`
 
+	// --- Plan 12: Scoring + Cross-analyses + Natal analysis ---
+	Score            int                                    `json:"score"`             // 0-100 activation score
+	MonthlyScores    [12]int                                `json:"monthly_scores"`
+	Verdicts         []TechniqueVerdict                     `json:"verdicts,omitempty"`
+	Contradictions   []Contradiction                        `json:"contradictions,omitempty"`
+	AspectPatterns   []astromath.AspectPattern              `json:"aspect_patterns,omitempty"`
+	ChartShape       *astromath.ChartShape                  `json:"chart_shape,omitempty"`
+	Hemispheres      *astromath.HemisphericDist             `json:"hemispheres,omitempty"`
+	FullDignities    []astromath.DignityEntry               `json:"full_dignities,omitempty"`
+	PlanetaryAge     *astromath.PlanetaryAgePeriod          `json:"planetary_age,omitempty"`
+	Divisor          *DivisorResult                         `json:"divisor,omitempty"`
+	TriplicityLords  *TriplicityLordsResult                 `json:"triplicity_lords,omitempty"`
+	ChronoCross      *ChronocratorCross                     `json:"chrono_cross,omitempty"`
+	RSLRCrossings    []RSLRCrossing                         `json:"rs_lr_crossings,omitempty"`
+	PrenatalTransits []PrenatalEclipseActivation            `json:"prenatal_transits,omitempty"`
+
 	Brief        string                                    `json:"brief"`
 	Warnings     []string                                  `json:"warnings,omitempty"`
 }
@@ -197,6 +213,33 @@ func Build(chart *natal.Chart, contactName string, birthDate time.Time, year int
 	ctx.ActivationChains = technique.CalcActivationChains(
 		ctx.SolarArc, ctx.Directions, ctx.Transits, ctx.Eclipses, ctx.Stations,
 	)
+
+	// ── Plan 12: Natal sub-analyses ──
+
+	ctx.AspectPatterns = astromath.DetectAspectPatterns(chart.Planets)
+	ctx.ChartShape = astromath.DetectChartShape(chart.Planets)
+	ctx.Hemispheres = astromath.CalcHemisphericDist(chart.Planets, chart.Cusps)
+	ctx.FullDignities = astromath.BuildFullDignityTable(chart.Planets, chart.Diurnal)
+	ctx.PlanetaryAge = astromath.CurrentPlanetaryAge(age)
+
+	// ── Plan 12: Cross-technique analyses ──
+
+	ctx.Divisor = CalcDivisor(chart, age)
+	ctx.TriplicityLords = CalcTriplicityLords(chart, age)
+	ctx.ChronoCross = CalcChronocratorFirdariaCross(ctx.Profection, ctx.Firdaria)
+	if ctx.SolarReturn != nil {
+		ctx.RSLRCrossings = CalcRSLRCrossings(ctx.SolarReturn, ctx.LunarReturns)
+	}
+	ctx.PrenatalTransits = CalcPrenatalEclipseTransits(
+		chart, ctx.PrenatalEclipse, ctx.SolarArc, ctx.Transits, ctx.Directions, year,
+	)
+
+	// ── Plan 12: Scoring + Synthesis ──
+
+	ctx.Score = ActivationScore(ctx)
+	ctx.MonthlyScores = MonthScores(ctx)
+	ctx.Verdicts = ExtractVerdicts(ctx)
+	ctx.Contradictions = ResolveContradictions(ctx.Verdicts)
 
 	// Build intelligence brief
 	ctx.Brief = BuildBrief(ctx)
