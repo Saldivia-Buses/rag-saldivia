@@ -19,7 +19,9 @@ type LifeEvent struct {
 }
 
 // Past-tense verb patterns that indicate life events.
-var eventVerbs = regexp.MustCompile(`(?i)\b(firm[eé]|contrat[eé]|perd[ií]|gan[eé]|empec[eé]|cerr[eé]|abr[ií]|vend[ií]|compr[eé]|mud[eé]|separ[eé]|divorci[eé]|cas[eé]|oper[eé]|enferme|renunci[eé]|ascend[ií]|cambi[eé]|viaj[eé]|naci[oó]|muri[oó]|jubil[eé])\b`)
+// eventVerbs matches past-tense Spanish verbs indicating life events.
+// Uses \s or punctuation boundaries instead of \b (which doesn't work with UTF-8 accented chars in Go).
+var eventVerbs = regexp.MustCompile(`(?i)(?:^|\s)(firm[eé]|contrat[eé]|perd[ií]|gan[eé]|empec[eé]|cerr[eé]|abr[ií]|vend[ií]|compr[eé]|mud[eé]|separ[eé]|divorci[eé]|cas[eé]|oper[eé]|enferme|renunci[eé]|ascend[ií]|cambi[eé]|viaj[eé]|naci[oó]|muri[oó]|jubil[eé])(?:\s|$|[.,;!?])`)
 
 // Month name patterns for date extraction.
 var monthPattern = regexp.MustCompile(`(?i)(enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)\s*(?:de\s+)?(\d{4})`)
@@ -37,12 +39,13 @@ func ExtractLifeEvents(messages []string) []LifeEvent {
 	var events []LifeEvent
 
 	for _, msg := range messages {
-		if !eventVerbs.MatchString(msg) {
+		match := eventVerbs.FindStringSubmatch(msg)
+		if match == nil {
 			continue
 		}
 
-		// Extract the verb match for category
-		verb := eventVerbs.FindString(msg)
+		// Extract the verb match for category (group 1)
+		verb := match[1]
 		category := categorizeVerb(strings.ToLower(verb))
 
 		// Try to extract date

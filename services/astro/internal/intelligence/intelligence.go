@@ -39,27 +39,30 @@ func NewEngineWithParser(parser IntentParser, log *slog.Logger) (*Engine, error)
 
 // AnalysisRequest holds everything the intelligence layer needs.
 type AnalysisRequest struct {
-	Query          string
-	FullCtx        *astrocontext.FullContext
-	ContactName    string             // for memory lookup
-	Predictions    []PredictionRecord // from DB, for wakeup context
-	Sessions       []SessionRecord    // from DB, for wakeup context
-	BirthTimeKnown bool
-	RectPending    bool               // rectification suggestion pending
+	Query           string
+	FullCtx         *astrocontext.FullContext
+	ContactName     string             // for memory lookup
+	Predictions     []PredictionRecord // from DB, for wakeup context
+	Sessions        []SessionRecord    // from DB, for wakeup context
+	BirthTimeKnown  bool
+	RectPending     bool               // rectification suggestion pending
+	SessionMessages []string           // user messages from current session (for event extraction)
 }
 
 // AnalysisResult is the output of the intelligence layer.
 type AnalysisResult struct {
-	Intent          *Intent
-	Domain          *ResolvedDomain
-	Gate            *GateResult
-	CrossRefs       []CrossReference
+	Intent            *Intent
+	Domain            *ResolvedDomain
+	Gate              *GateResult
+	CrossRefs         []CrossReference
 	Contraindications []Contraindication
-	NarrativeArc    *NarrativeArc
-	AdaptiveConfig  *AdaptiveConfig
-	Brief           string // domain-aware intelligence brief
-	SystemPrompt    string // domain-aware system prompt for LLM
-	Warnings        []string
+	NarrativeArc      *NarrativeArc
+	AdaptiveConfig    *AdaptiveConfig
+	Brief             string     // domain-aware intelligence brief
+	SystemPrompt      string     // domain-aware system prompt for LLM
+	Warnings          []string
+	LifeEvents        []LifeEvent // detected past-tense events for auto-rectification
+	AutoRectReady     bool        // true if >= 3 dated events accumulated
 }
 
 // Analyze runs the full intelligence pipeline.
@@ -155,6 +158,16 @@ func (e *Engine) Analyze(ctx context.Context, req *AnalysisRequest) (*AnalysisRe
 
 	// Step 9: Build domain-aware system prompt
 	result.SystemPrompt = BuildSystemPrompt(domain, result.Gate, result.CrossRefs)
+
+	// Step 10: Extract life events for auto-rectification (Plan 13 Fase 14)
+	if len(req.SessionMessages) > 0 {
+		result.LifeEvents = ExtractLifeEvents(req.SessionMessages)
+		result.AutoRectReady = ShouldAutoRectify(result.LifeEvents)
+		if result.AutoRectReady {
+			result.Warnings = append(result.Warnings,
+				fmt.Sprintf("auto-rectificación lista: %d eventos detectados con fecha", len(result.LifeEvents)))
+		}
+	}
 
 	return result, nil
 }

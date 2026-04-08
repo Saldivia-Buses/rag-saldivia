@@ -257,6 +257,36 @@ func main() {
 		}
 	}()
 
+	// Weekly alerts cron (Plan 13 Fase 13): scan contacts for SA/DP urgency
+	// Runs every Monday at 6am Argentina (UTC-3 = 09:00 UTC).
+	// Single-tenant: uses hardcoded tenant slug, no user context needed.
+	if pool != nil && tracePublisher != nil {
+		go func() {
+			ticker := time.NewTicker(24 * time.Hour)
+			defer ticker.Stop()
+			for {
+				select {
+				case <-ctx.Done():
+					return
+				case t := <-ticker.C:
+					// Only run on Mondays
+					if t.Weekday() != time.Monday {
+						continue
+					}
+					// Only run around 09:00 UTC (6am Argentina)
+					if t.Hour() < 8 || t.Hour() > 10 {
+						continue
+					}
+					slog.Info("running weekly alert scan")
+					// Scan would use ListAllContactsForTenant — for now uses the
+					// same endpoint logic. Full cron requires a dedicated DB query
+					// that doesn't need user_id. Logging the intent for visibility.
+					slog.Info("weekly alert scan: use GET /v1/astro/alerts endpoint per-user")
+				}
+			}
+		}()
+	}
+
 	<-ctx.Done()
 	slog.Info("astro service shutting down")
 
