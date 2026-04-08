@@ -128,12 +128,99 @@ func RunAudit(
 		}
 	}
 	if hasAction {
-		result.ScoreCommunication += 10
+		result.ScoreCommunication += 5
 	} else {
+		result.ScoreCommunication -= 5
 		result.Issues = append(result.Issues, AuditIssue{
 			Severity: "info", Category: "actionable",
 			Description: "Sin recomendación accionable detectada",
 		})
+	}
+
+	// Narrative arc check: opening (direct answer), development (techniques), closing (wisdom/advice)
+	sentences := strings.Split(response, ".")
+	hasDirectOpening := false
+	if len(sentences) >= 3 {
+		// First 2 sentences should address the question directly (not preamble)
+		opening := strings.ToLower(strings.Join(sentences[:2], "."))
+		directPatterns := []string{"este año", "este período", "el año", "tu ", "vas ", "hay ", "se viene", "durante"}
+		for _, dp := range directPatterns {
+			if strings.Contains(opening, dp) {
+				hasDirectOpening = true
+				break
+			}
+		}
+	}
+	if hasDirectOpening {
+		result.ScoreCommunication += 5
+	} else if len(sentences) >= 3 {
+		result.Issues = append(result.Issues, AuditIssue{
+			Severity: "info", Category: "narrative",
+			Description: "La respuesta no empieza con respuesta directa al consultante",
+		})
+	}
+
+	// Timing precision: mentions specific months/weeks (not just vague "este año")
+	monthNames := []string{"enero", "febrero", "marzo", "abril", "mayo", "junio",
+		"julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"}
+	monthCount := 0
+	for _, m := range monthNames {
+		if strings.Contains(lower, m) {
+			monthCount++
+		}
+	}
+	if monthCount >= 3 {
+		result.ScoreCommunication += 5 // good timing precision
+	} else if monthCount == 0 {
+		result.ScoreCommunication -= 5
+		result.Issues = append(result.Issues, AuditIssue{
+			Severity: "warning", Category: "timing",
+			Description: "Sin meses específicos mencionados — timing vago",
+		})
+	}
+
+	// Quincena/week precision bonus
+	weekPatterns := []string{"primera quincena", "segunda quincena", "principios de", "mediados de", "fines de",
+		"primera semana", "segunda semana", "tercera semana", "cuarta semana"}
+	hasWeekPrecision := false
+	for _, wp := range weekPatterns {
+		if strings.Contains(lower, wp) {
+			hasWeekPrecision = true
+			break
+		}
+	}
+	if hasWeekPrecision {
+		result.ScoreCommunication += 5
+	}
+
+	// Anti-jargon: check ratio of technical terms vs accessible language
+	jargonTerms := []string{"orbe", "progresado", "mundano", "eclíptica", "cúspide",
+		"dispositor", "almutén", "hyleg", "decenial", "topocéntrico", "regiomontanus"}
+	jargonCount := 0
+	for _, jt := range jargonTerms {
+		if strings.Contains(lower, jt) {
+			jargonCount++
+		}
+	}
+	if jargonCount > 5 {
+		result.ScoreCommunication -= 5
+		result.Issues = append(result.Issues, AuditIssue{
+			Severity: "info", Category: "jargon",
+			Description: fmt.Sprintf("Exceso de jerga técnica (%d términos técnicos detectados)", jargonCount),
+		})
+	}
+
+	// Predictive richness: response mentions specific events/outcomes, not just vague tendencies
+	richPatterns := []string{"va a ", "se va a ", "puede ", "es probable que", "hay chances de",
+		"momento ideal para", "cuidado con", "aprovechar", "evitar"}
+	richCount := 0
+	for _, rp := range richPatterns {
+		if strings.Contains(lower, rp) {
+			richCount++
+		}
+	}
+	if richCount >= 3 {
+		result.ScoreCommunication += 5
 	}
 
 	// Precautions check
