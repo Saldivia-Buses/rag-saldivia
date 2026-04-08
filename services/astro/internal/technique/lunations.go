@@ -99,23 +99,47 @@ func CalcLunations(chart *natal.Chart, year int) (*LunationResult, error) {
 	}, nil
 }
 
-// interpolateExact linearly interpolates to find the JD when diff crosses target.
+// refineLunationJD uses Newton iteration to find the exact JD when Sun-Moon
+// elongation equals the target (0° for New Moon, 180° for Full Moon).
+// Starts from a rough estimate between jd1 and jd2.
 func interpolateExact(jd1, jd2, diff1, diff2, target float64) float64 {
-	// Handle wrap-around for new moons (target=0)
-	if target == 0 && diff1 > 300 {
-		diff1 -= 360
+	flags := ephemeris.FlagSwieph | ephemeris.FlagSpeed
+
+	// Linear interpolation for initial guess
+	if target == 0 && diff1 > 300 { diff1 -= 360 }
+	frac := 0.5
+	if diff2-diff1 != 0 {
+		frac = (target - diff1) / (diff2 - diff1)
+		if frac < 0 { frac = 0 }
+		if frac > 1 { frac = 1 }
 	}
-	if diff2-diff1 == 0 {
-		return (jd1 + jd2) / 2
+	jd := jd1 + frac*(jd2-jd1)
+
+	// Newton refinement: converge to exact elongation = target
+	for iter := 0; iter < 20; iter++ {
+		sunPos, err := ephemeris.CalcPlanet(jd, ephemeris.Sun, flags)
+		if err != nil { return jd }
+		moonPos, err := ephemeris.CalcPlanet(jd, ephemeris.Moon, flags)
+		if err != nil { return jd }
+
+		elongation := math.Mod(moonPos.Lon-sunPos.Lon+360, 360)
+		diff := elongation - target
+
+		// Normalize diff to [-180, 180]
+		if diff > 180 { diff -= 360 }
+		if diff < -180 { diff += 360 }
+
+		if math.Abs(diff) < 0.001 { // < 0.001° = < 4 seconds of arc
+			return jd
+		}
+
+		// Relative speed: Moon speed - Sun speed (~12°/day)
+		relSpeed := moonPos.Speed - sunPos.Speed
+		if relSpeed == 0 { relSpeed = 12.0 }
+
+		jd -= diff / relSpeed
 	}
-	frac := (target - diff1) / (diff2 - diff1)
-	if frac < 0 {
-		frac = 0
-	}
-	if frac > 1 {
-		frac = 1
-	}
-	return jd1 + frac*(jd2-jd1)
+	return jd
 }
 
 // buildLunation creates a Lunation with natal aspect checking.

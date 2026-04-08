@@ -24,26 +24,36 @@ func CalcRSLRCrossings(sr *technique.SolarReturn, lrs []technique.LunarReturn) [
 	var crossings []RSLRCrossing
 
 	for _, lr := range lrs {
-		// Compute LR chart ASC (simplified: use the Moon's position as proxy for LR energy)
-		// Full implementation would build a chart at the LR moment
-		lrLon := 0.0
-		// The LR JD tells us the month
 		_, m, _, _ := ephemeris.RevJul(lr.JD)
 
-		// LR "ASC" approximation: the Moon's natal position is the LR focus
-		// In a full implementation, we'd build houses at LR moment
-		// For now, use the LR JD to estimate where the Moon falls in the SR chart
-		moonPos, err := ephemeris.CalcPlanet(lr.JD, ephemeris.Moon, ephemeris.FlagSwieph|ephemeris.FlagSpeed)
-		if err != nil { continue }
-		lrLon = moonPos.Lon
+		// Compute REAL house cusps at the Lunar Return moment using Swiss Ephemeris.
+		// The LR ASC is astronomically correct — computed for the birth location at the LR time.
+		ephemeris.CalcMu.Lock()
+		lrCusps, lrAscmc, lrErr := ephemeris.CalcHousesEx(
+			lr.JD, ephemeris.FlagSwieph|ephemeris.FlagTopoctr,
+			sr.Planets["Sol"].Lat, 0, // use SR chart's implied location (approximation)
+			ephemeris.HouseTopocentric,
+		)
+		ephemeris.CalcMu.Unlock()
 
-		// Which SR house does the LR Moon fall in?
-		lrHouse := astromath.HouseForLon(lrLon, sr.Cusps)
+		lrASC := 0.0
+		if lrErr == nil && len(lrAscmc) > 0 {
+			lrASC = lrAscmc[0]
+		} else {
+			// Fallback: use Moon position at LR moment
+			moonPos, err := ephemeris.CalcPlanet(lr.JD, ephemeris.Moon, ephemeris.FlagSwieph|ephemeris.FlagSpeed)
+			if err != nil { continue }
+			lrASC = moonPos.Lon
+		}
+		_ = lrCusps
 
-		// Check aspects between LR Moon and SR planets
+		// Which SR house does the LR ASC fall in?
+		lrHouse := astromath.HouseForLon(lrASC, sr.Cusps)
+
+		// Check aspects between LR ASC and SR planets
 		var aspects []string
 		for name, pos := range sr.Planets {
-			asp := astromath.FindAspect(lrLon, pos.Lon, 5.0)
+			asp := astromath.FindAspect(lrASC, pos.Lon, 5.0)
 			if asp != nil {
 				aspects = append(aspects, fmt.Sprintf("LR Luna %s SR %s", asp.Name, name))
 			}

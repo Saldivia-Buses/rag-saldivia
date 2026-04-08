@@ -100,34 +100,51 @@ func CastHorary(questionTime time.Time, lat, lon, alt float64, utcOffset int) (*
 	return result, nil
 }
 
-// isVOC checks if the Moon is void-of-course (no major aspects before sign change).
+// isVOC checks if the Moon is void-of-course (no applying major aspects before sign change).
+// Correct method: for each planet, compute where each exact aspect angle falls on the ecliptic.
+// If the Moon will reach any of those points before exiting the sign, it's NOT void.
+// The Moon must be APPLYING (moving toward the aspect, not separating from it).
 func isVOC(moonPos *ephemeris.PlanetPos, chart *natal.Chart) bool {
-	moonSign := astromath.SignIndex(moonPos.Lon)
-	degsRemaining := 30.0 - (moonPos.Lon - float64(moonSign)*30)
+	moonLon := moonPos.Lon
+	moonSign := astromath.SignIndex(moonLon)
+	// Degrees from Moon's current position to the END of its current sign
+	signEnd := float64(moonSign+1) * 30.0
+	degsToSignEnd := signEnd - moonLon
+	if degsToSignEnd <= 0 {
+		degsToSignEnd += 360
+	}
+	if degsToSignEnd > 30 {
+		degsToSignEnd = 30 // safety
+	}
 
-	// How many degrees until sign change
-	// Check if Moon makes any major aspect within those degrees
+	aspectAngles := []float64{0, 60, 90, 120, 180}
+
 	for name, pos := range chart.Planets {
-		if name == "Luna" {
-			continue
+		if name == "Luna" || name == "Nodo Norte" || name == "Nodo Sur" ||
+			name == "Fortuna" || name == "Espíritu" {
+			continue // skip non-physical points
 		}
-		// Check if Moon will aspect this planet before sign change
-		for _, aspAngle := range []float64{0, 60, 90, 120, 180} {
-			targetLon := astromath.Normalize360(pos.Lon + aspAngle)
-			diff := astromath.SignedDiff(moonPos.Lon, targetLon)
-			// Moon must be approaching (diff > 0) and within remaining degrees
-			if diff > 0 && diff < degsRemaining {
-				return false // Moon will make an aspect — not VOC
-			}
-			// Also check the other direction for the same aspect
-			targetLon2 := astromath.Normalize360(pos.Lon - aspAngle)
-			diff2 := astromath.SignedDiff(moonPos.Lon, targetLon2)
-			if diff2 > 0 && diff2 < degsRemaining {
-				return false
+		planetLon := pos.Lon
+
+		for _, aspAngle := range aspectAngles {
+			// Two possible exact aspect points (planet + angle, planet - angle)
+			for _, sign := range []float64{1, -1} {
+				if aspAngle == 0 && sign == -1 { continue }
+				if aspAngle == 180 && sign == -1 { continue }
+
+				exactPoint := astromath.Normalize360(planetLon + aspAngle*sign)
+				// How far does the Moon need to travel to reach this point?
+				dist := astromath.Normalize360(exactPoint - moonLon)
+
+				// Moon is applying if: distance is positive (ahead in zodiac) and within sign
+				if dist > 0 && dist < degsToSignEnd {
+					return false // Moon WILL form this aspect before sign change — NOT void
+				}
 			}
 		}
 	}
-	return true
+
+	return true // no applying aspects found — Moon is VOC
 }
 
 // moonAspects finds Moon's most recent past aspect and next future aspect.

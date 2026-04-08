@@ -121,7 +121,8 @@ func Rectify(
 }
 
 // scoreCandidate evaluates a candidate birth time against life events.
-// Uses Solar Arc directions to relevant houses.
+// Uses THREE techniques for robust scoring: Solar Arcs + Primary Directions + Profections.
+// Each technique that hits a relevant house cusp adds to the score.
 func scoreCandidate(chart *natal.Chart, events []RectificationEvent, birthDate time.Time) (float64, []string) {
 	score := 0.0
 	var factors []string
@@ -130,32 +131,24 @@ func scoreCandidate(chart *natal.Chart, events []RectificationEvent, birthDate t
 		ageDays := event.Date.Sub(birthDate).Hours() / 24
 		ageYears := ageDays / 365.25
 
-		// Solar Arc: arc = age * Naibod rate
-		arc := ageYears * astromath.NaibodRate
-
 		// Get the house cusps relevant to this event category
 		houses := categoryHouses[event.Category]
 		if len(houses) == 0 {
 			houses = []int{1} // fallback
 		}
 
+		// === TECHNIQUE 1: Solar Arcs (weight: 10) ===
+		arc := ageYears * astromath.NaibodRate
 		for _, houseNum := range houses {
-			if houseNum < 1 || houseNum > 12 || len(chart.Cusps) < 13 {
-				continue
-			}
+			if houseNum < 1 || houseNum > 12 || len(chart.Cusps) < 13 { continue }
 			cuspLon := chart.Cusps[houseNum]
-
-			// Check if any SA planet hits this cusp
 			for _, name := range []string{"Sol", "Luna", "Marte", "Saturno", "Júpiter"} {
 				pos, ok := chart.Planets[name]
-				if !ok {
-					continue
-				}
+				if !ok { continue }
 				saLon := astromath.Normalize360(pos.Lon + arc)
 				orbVal := astromath.AngDiff(saLon, cuspLon)
-
-				if orbVal < 2.0 { // within 2° orb
-					eventScore := (2.0 - orbVal) * 10 // closer = higher score
+				if orbVal < 2.0 {
+					eventScore := (2.0 - orbVal) * 10
 					score += eventScore
 					factors = append(factors, fmt.Sprintf("SA %s → cúspide %d (orbe %.1f°) [%s]",
 						name, houseNum, orbVal, event.Description))
@@ -177,6 +170,34 @@ func scoreCandidate(chart *natal.Chart, events []RectificationEvent, birthDate t
 						factors = append(factors, fmt.Sprintf("SA %s → MC (orbe %.1f°) [%s]",
 							name, orbVal, event.Description))
 					}
+				}
+			}
+		}
+
+		// === TECHNIQUE 2: Primary Directions (weight: 15 — highest precision) ===
+		directions := FindDirections(chart, ageYears, 2.0)
+		for _, d := range directions {
+			if d.OrbDeg < 1.0 {
+				for _, houseNum := range houses {
+					if (houseNum == 1 && d.Significator == "AS") ||
+						(houseNum == 10 && d.Significator == "MC") ||
+						(houseNum == 7 && d.Significator == "AS") {
+						score += (1.0 - d.OrbDeg) * 15
+						factors = append(factors, fmt.Sprintf("PD %s %s %s (orbe %.2f°) [%s]",
+							d.Promissor, d.Aspect, d.Significator, d.OrbDeg, event.Description))
+					}
+				}
+			}
+		}
+
+		// === TECHNIQUE 3: Profections (weight: 5 — house activation check) ===
+		profection := CalcProfection(chart, birthDate, event.Date.Year())
+		if profection != nil {
+			for _, houseNum := range houses {
+				if profection.ActiveHouse == houseNum {
+					score += 5
+					factors = append(factors, fmt.Sprintf("Profección casa %d activa [%s]",
+						houseNum, event.Description))
 				}
 			}
 		}

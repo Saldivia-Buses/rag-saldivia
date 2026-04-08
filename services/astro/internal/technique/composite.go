@@ -115,7 +115,9 @@ func CompositeToChart(comp *CompositeResult) *natal.Chart {
 		planets[name] = &ephemeris.PlanetPos{Lon: lon}
 	}
 
-	// Build equal-house cusps from composite ASC
+	// Equal-house cusps from composite ASC — this IS the correct method for composites.
+	// Rob Hand (Planets in Composite): composite charts use equal houses because
+	// midpoint ASC/MC are not astronomically related (no real time/place).
 	cusps := make([]float64, 13)
 	for i := 0; i <= 12; i++ {
 		cusps[i] = astromath.Normalize360(comp.ASC + float64(i)*30)
