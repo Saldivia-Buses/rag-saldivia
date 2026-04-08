@@ -80,7 +80,7 @@ services/                    ← Go microservicios
   chat/                      ← Sesiones + mensajes
   agent/                     ← Agent Runtime (LLM + tools, reemplaza rag/)
   search/                    ← Tree search (PageIndex-inspired)
-  astro/                     ← Astrological calculations (Swiss Ephemeris, CGO)
+  astro/                     ← Astro Super Agent (55+ techniques, intelligence layer, CGO)
   traces/                    ← Execution traces + cost tracking
   extractor/                 ← Document extraction (Python, OCR + vision)
   notification/              ← In-app + email
@@ -91,16 +91,24 @@ services/                    ← Go microservicios
 
 modules/                     ← Tool manifests por modulo (YAML)
   fleet/                     ← Transporte/Logistica tools
+  astro/                     ← Astrologia tools (54 tools)
 
 pkg/                         ← Go packages compartidos
   jwt/                       ← JWT validation local
   tenant/                    ← Tenant context, DB resolver
   middleware/                ← Auth, logging, tracing
   nats/                      ← NATS helpers
+  traces/                    ← Shared trace publisher (agent + astro)
+  cache/                     ← Shared Redis JSON cache
   guardrails/                ← Input/output validation, loop detection
   storage/                   ← S3-compatible file storage (MinIO/AWS)
   security/                  ← Rate limiting, brute force
   config/                    ← Config loading
+  llm/                       ← LLM client (OpenAI-compatible)
+  audit/                     ← Immutable audit log writer
+  health/                    ← Health check helpers
+  otel/                      ← OpenTelemetry setup
+  grpc/                      ← gRPC server helpers
 
 proto/                       ← Protobuf (gRPC contracts)
 
@@ -188,10 +196,13 @@ make status                  # Estado de servicios + GPU
 | `docs/plans/2.0.x-plan01-sda-framework.md` | Spec completo — la biblia del sistema |
 | `docs/bible.md` | Reglas permanentes de trabajo |
 | `services/{name}/README.md` | Que hace cada servicio |
+| `services/astro/README.md` | Astro service: 55+ tecnicas, 64 endpoints, intelligence layer |
+| `modules/astro/tools.yaml` | 54 tools para Agent Runtime |
+| `pkg/traces/publisher.go` | Shared trace publisher (agent + astro) |
+| `pkg/cache/redis.go` | Shared Redis JSON cache |
 | `go.work` | Go workspace — modulos registrados |
 | `Makefile` | Todos los comandos |
 | `deploy/` | Docker Compose configs |
-| `config/` | NVIDIA Blueprint configs |
 
 ---
 

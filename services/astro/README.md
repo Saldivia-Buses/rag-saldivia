@@ -2,143 +2,277 @@
 
 ## What it does
 
-Astrological calculation engine. Computes natal charts, predictive techniques, and
-structured intelligence briefs via Swiss Ephemeris (CGO). Optionally narrates results
-through an LLM via SSE streaming.
+Professional astrological intelligence engine. Computes 55+ astrological
+techniques deterministically via Swiss Ephemeris (CGO), routes queries through
+a 20-domain intelligence layer, and narrates results through an LLM via SSE
+streaming. Includes business intelligence module, quality audit system,
+session management, prediction tracking, and SVG chart rendering.
 
-Version: 0.1.0 | Port: 8011
+Version: 0.2.0 | Port: 8011
 
 ## Architecture
 
 ```
-ephemeris (swephgo CGO wrapper)
-  -> astromath (angles, aspects, houses, bounds, stars, conversions)
-    -> natal (chart builder: planets, cusps, lots, combustion, retrograde)
-      -> technique (11 predictive techniques)
-        -> context (orchestrator: runs all techniques, builds brief)
-          -> handler (HTTP endpoints, SSE streaming, contact CRUD)
+ephemeris (swephgo CGO wrapper — Swiss Ephemeris C library)
+  → astromath (21 files: angles, aspects, dignities, lots, sabian, disposition, etc.)
+    → natal (chart builder + SVG wheel + aspect grid)
+      → technique (35 files: 55+ predictive techniques)
+        → context (orchestrator: 55 techniques phased, 25+ brief sections, scoring)
+          → intelligence (18 files: domain routing, gating, cross-refs, interpretations)
+            → quality (4 files: audit, validator, certainty, benchmark)
+              → business (11 files: timing, cashflow, risk, forecast, hiring, etc.)
+                → handler (6 files: 64 HTTP endpoints, SSE streaming)
+                  → cache (LRU charts + Redis context)
 ```
 
 Key design decisions:
-- All Swiss Ephemeris access goes through `internal/ephemeris` -- never swephgo directly
+- All Swiss Ephemeris access through `internal/ephemeris` — never swephgo directly
 - `ephemeris.CalcMu` mutex protects compound SetTopo + CalcPlanet sequences
+- Lock-per-chart (not per-scan) for expensive techniques (rectification, electional)
 - Planet names in Spanish (`Sol`, `Luna`, `Mercurio`, etc.)
 - House system: Polich-Page Topocentric (`'T'`)
 - Topocentric planetary positions (observer-location-corrected)
+- Intelligence layer is stateless (Engine created once at startup)
+- Quality audit is deterministic (no LLM, <10ms)
+- Single-tenant deployment (Saldivia Buses), tenant_id for defense-in-depth
 
-## Techniques (11)
+## Packages (111 Go files)
 
-| # | Technique | File | Function |
-|---|-----------|------|----------|
-| 1 | Natal chart | `natal/chart.go` | `BuildNatal()` |
-| 2 | Transits (slow planets) | `technique/transits.go` | `CalcTransits()` |
-| 3 | Solar Arc directions | `technique/solar_arc.go` | `CalcSolarArcForYear()`, `FindSolarArcActivations()` |
-| 4 | Primary Directions (Naibod RA) | `technique/primary_dir.go` | `FindDirections()` |
-| 5 | Secondary Progressions | `technique/progressions.go` | `CalcProgressions()` |
-| 6 | Solar Return | `technique/solar_return.go` | `CalcSolarReturn()`, `CalcSolarReturnAtBirthplace()` |
-| 7 | Profections | `technique/profections.go` | `CalcProfection()` |
-| 8 | Firdaria | `technique/firdaria.go` | `CalcFirdaria()` |
-| 9 | Eclipses | `technique/eclipses.go` | `FindEclipses()`, `FindEclipseActivations()` |
-| 10 | Fixed Stars | `technique/fixed_stars.go` | `FindFixedStarConjunctions()` |
-| 11 | Zodiacal Releasing | `technique/zodiacal_releasing.go` | `CalcZodiacalReleasing()` |
+| Package | Files | Purpose |
+|---------|-------|---------|
+| `technique/` | 35 | 55+ astrological techniques (transits, directions, synastry, electional, etc.) |
+| `astromath/` | 21 | Math utilities, dignity tables, 360 Sabian symbols, 20 hellenistic lots, geocoding |
+| `intelligence/` | 18 | Domain registry, intent parser, technique gate, cross-references, interpretations, memory |
+| `business/` | 11 | Negotiation timing, cashflow, risk heatmap, forecast, hiring, succession, vocational |
+| `handler/` | 6 | 64 HTTP endpoints + SSE streaming |
+| `context/` | 5 | Orchestrates 55 techniques, builds brief (25+ sections), scoring, cross-analyses |
+| `quality/` | 4 | Deterministic audit, response validation, certainty scoring, benchmark |
+| `natal/` | 3 | Chart builder + SVG wheel (800×800) + aspect grids |
+| `cache/` | 2 | In-memory LRU chart registry (500 entries) + Redis context cache |
+| `repository/` | 5 | sqlc generated — contacts, sessions, messages, predictions, feedback, usage |
+| `ephemeris/` | 2 | Swiss Ephemeris CGO wrapper |
 
-Additional computations inside context builder: planetary stations (`FindStations()`),
-lunar returns (`CalcLunarReturns()`), monthly convergence matrix.
+## Techniques (55+)
 
-## Endpoints
+### Core Predictive (Plan 11 — original 11)
+| Technique | File |
+|-----------|------|
+| Natal Chart | `natal/chart.go` |
+| Slow Transits (5-day sampling) | `technique/transits.go` |
+| Solar Arc Directions + Antiscia | `technique/solar_arc.go` |
+| Primary Directions (Polich-Page Mundane) | `technique/primary_dir.go` |
+| Secondary Progressions | `technique/progressions.go` |
+| Solar/Lunar Return | `technique/solar_return.go` |
+| Profections | `technique/profections.go` |
+| Firdaria | `technique/firdaria.go` |
+| Eclipses | `technique/eclipses.go` |
+| Fixed Stars | `technique/fixed_stars.go` |
+| Zodiacal Releasing | `technique/zodiacal_releasing.go` |
 
-| Method | Path | Auth | Description |
-|--------|------|------|-------------|
-| GET | `/health` | No | Health check |
-| POST | `/v1/astro/natal` | JWT | Natal chart for a contact |
-| POST | `/v1/astro/transits` | JWT | Slow-planet transits for a year |
-| POST | `/v1/astro/solar-arc` | JWT | Solar arc directions for a year |
-| POST | `/v1/astro/directions` | JWT | Primary directions (Naibod RA) |
-| POST | `/v1/astro/progressions` | JWT | Secondary progressions for a year |
-| POST | `/v1/astro/returns` | JWT | Solar return chart for a year |
-| POST | `/v1/astro/profections` | JWT | Annual profection for a year |
-| POST | `/v1/astro/firdaria` | JWT | Firdaria periods for a year |
-| POST | `/v1/astro/fixed-stars` | JWT | Fixed star conjunctions to natal points |
-| POST | `/v1/astro/brief` | JWT | Full context: all techniques + intelligence brief |
-| POST | `/v1/astro/query` | JWT | SSE stream: context + LLM narration |
-| GET | `/v1/astro/contacts` | JWT | List contacts for current user/tenant |
-| POST | `/v1/astro/contacts` | JWT | Create a contact |
+### Plan 12 — Expanded (44 new)
+| Technique | File |
+|-----------|------|
+| Tertiary Progressions | `technique/tertiary_prog.go` |
+| Decennials (Vettius Valens) | `technique/decennials.go` |
+| Fast Transits (inner planets) | `technique/fast_transits.go` |
+| Lunations (New/Full Moon) | `technique/lunations.go` |
+| Prenatal Eclipse | `technique/prenatal_eclipse.go` |
+| Eclipse Triggers | `technique/eclipse_triggers.go` |
+| Planetary Cycles (returns) | `technique/planetary_cycles.go` |
+| Planetary Returns (exact) | `technique/planetary_returns.go` |
+| Timing Windows | `technique/timing_window.go` |
+| Weekly Transits | `technique/weekly_transits.go` |
+| Activation Chains | `technique/activation_chains.go` |
+| Activation Timeline | `technique/activation_timeline.go` |
+| Synastry | `technique/synastry.go` |
+| Composite Chart | `technique/composite.go` |
+| Davison Chart | `technique/davison.go` |
+| Predictive Synastry | `technique/predictive_synastry.go` |
+| Electional Astrology | `technique/electional.go` |
+| Horary | `technique/horary.go` |
+| Midpoints (Ebertin) | `technique/midpoints.go` |
+| Declinations | `technique/declinations.go` |
+| Astrocartography | `technique/astrocartography.go` |
+| Rectification | `technique/rectification.go` |
+| Relocation | `technique/relocation.go` |
+| Lilith/Vertex | `technique/lilith_vertex.go` |
+| Time Lords (unified) | `technique/time_lords.go` |
+| Aspect Patterns (T-Square, Grand Trine, Yod) | `astromath/natal_analysis.go` |
+| Chart Shape (Jones patterns) | `astromath/natal_analysis.go` |
+| Hemispheric Distribution | `astromath/natal_analysis.go` |
+| Full Dignity Table | `astromath/natal_analysis.go` |
+| Planetary Age (Valens) | `astromath/natal_analysis.go` |
+| Almuten Figuris | `astromath/almuten.go` |
+| 360 Sabian Symbols | `astromath/sabian.go` |
+| 20 Hellenistic Lots | `astromath/lots.go` |
+| Dispositor Chains | `astromath/disposition.go` |
+| Sect Analysis | `astromath/sect.go` |
+| House Rulership | `astromath/house_rulership.go` |
+| Classical Temperament | `astromath/temperament.go` |
+| Melothesia (medical) | `astromath/melothesia.go` |
+| Hyleg/Alcochoden | `astromath/hyleg.go` |
+| Decumbitura | `astromath/decumbitura.go` |
+| Argentine Calendar | `astromath/calendar.go` |
+| Geocoding (20 AR cities) | `astromath/geocoding.go` |
 
-All POST technique endpoints accept:
-```json
-{"contact_name": "string", "year": 2026}
-```
-- `year` defaults to current year if omitted, range: -5000 to 5000
-- `contact_name` is resolved per-tenant per-user from the contacts table
+### Scoring & Synthesis
+| Function | File |
+|----------|------|
+| Activation Score (0-100) | `context/scoring.go` |
+| Monthly Scores | `context/scoring.go` |
+| Technique Verdicts | `context/scoring.go` |
+| Contradiction Resolution | `context/scoring.go` |
+| Synthesis Brief | `context/scoring.go` |
+| Dominant Themes | `context/scoring.go` |
+| Convergence Score by Point | `context/scoring.go` |
 
-The `/v1/astro/query` SSE endpoint accepts:
-```json
-{"contact_name": "string", "query": "string", "year": 2026}
-```
-SSE events: `contact_recognized`, `calc_context`, `token` (chunked LLM response), `brief` (if no LLM), `error`, `done`.
+### Cross-Technique Analyses
+| Analysis | File |
+|----------|------|
+| RS × LR Crossings | `context/cross_analyses.go` |
+| Prenatal Eclipse Transits | `context/cross_analyses.go` |
+| Divisor (Hellenistic) | `context/cross_analyses.go` |
+| Triplicity Lords | `context/cross_analyses.go` |
+| Chronocrator × Firdaria Cross | `context/cross_analyses.go` |
+| Multi-entity Comparison Table | `context/cross_analyses.go` |
+| Antiscia Context | `context/transit_contexts.go` |
+| Fixed Stars Transit | `context/transit_contexts.go` |
+| Cazimi/Combustion Transit | `context/transit_contexts.go` |
+| Davison Transits | `context/transit_contexts.go` |
+| VOC Moon Periods | `context/transit_contexts.go` |
+
+## Intelligence Layer (18 files)
+
+| Module | File | Purpose |
+|--------|------|---------|
+| Engine | `intelligence.go` | Orchestrator: Analyze() → single entry point |
+| Domain Registry | `domain.go` + `domain_data.go` | 20 domains (12 root + 8 sub) with inheritance |
+| Intent Parser | `intent.go` | Spanish keyword → domain routing |
+| Technique Gate | `gate.go` | Struct inspection → validated/ghost classification |
+| Cross-References | `crossref.go` | 3 algorithms: ruler, point, temporal convergence |
+| Intelligence Brief | `brief.go` | Domain-weighted, ghost-free brief |
+| System Prompt | `prompt.go` | Domain-aware LLM prompt builder |
+| Interpretations | `interpretation.go` + `interpretations_full.go` | 14 technique-specific interpretation functions |
+| Narrative Arc | `narrative.go` | Response structure: opening/convergences/closing |
+| Response Skeleton | `skeleton.go` | Template per domain for consistent output |
+| Compressor | `compressor.go` | Brief compression by removing low-weight sections |
+| Chronocrator | `chronocrator.go` | Time lord filter: boost/demote activations |
+| Contraindications | `contraindications.go` | Detects misleading readings |
+| Contact Resolver | `contact_resolver.go` | Fuzzy name matching |
+| Memory | `memory.go` | Inter-session wakeup context + event extraction |
+| Adaptive | `adaptive.go` | LLM params by query complexity |
+
+## Business Module (11 files)
+
+| Module | File | Purpose |
+|--------|------|---------|
+| Dashboard | `business.go` | Orchestrator: full dashboard + team compatibility |
+| Timing | `timing.go` | Negotiation windows per day, Mercury Rx penalty |
+| Cash Flow | `cashflow.go` | 12-month H2/H8 transit forecast |
+| Risk | `risk.go` | 5 categories × 12 months heatmap |
+| Forecast | `forecast.go` | Quarterly Jupiter/Saturn outlook |
+| Mercury Rx | `mercury.go` | Retrograde calendar with impact by element |
+| Agenda | `agenda.go` | Daily action items from timing + risk |
+| Employee | `employee.go` | Candidate screening via synastry |
+| Succession | `succession.go` | Leadership transition planning |
+| Vocational | `vocational.go` | Career analysis from MC/H10 |
+| Types | `types.go` | Shared business types |
+
+## Endpoints (64)
+
+### Technique endpoints (POST, `astro.read`)
+`/v1/astro/natal`, `/transits`, `/solar-arc`, `/directions`, `/progressions`,
+`/returns`, `/profections`, `/firdaria`, `/fixed-stars`, `/brief`,
+`/eclipses`, `/zodiacal-releasing`, `/lunations`, `/lots`, `/dignities`,
+`/midpoints`, `/declinations`, `/fast-transits`, `/wheel` (SVG),
+`/synastry`, `/composite`, `/tertiary-progressions`, `/decennials`,
+`/planetary-cycles`, `/planetary-returns`, `/lilith-vertex`, `/time-lords`,
+`/electional`, `/horary`, `/astrocartography`, `/rectification`,
+`/weekly-transits`, `/activation-timeline`, `/score`, `/voc-moon`,
+`/tabla`, `/vocational`, `/employee-screening`
+
+### Session endpoints (`astro.read` / `astro.write`)
+`GET/POST /v1/astro/sessions`, `GET/DELETE/PATCH /v1/astro/sessions/{id}`,
+`GET /v1/astro/sessions/{id}/messages`
+
+### Chat SSE (`astro.read`, 5/min)
+`POST /v1/astro/query` — full pipeline: context → intelligence → LLM → audit → SSE
+
+### Business endpoints (`astro.business`)
+`GET /v1/astro/business/dashboard`, `/cashflow`, `/risk`, `/forecast`,
+`/team`, `/hiring`, `/mercury-rx`
+
+### Quality/Tracking (`astro.read` / `astro.write`)
+`POST/GET /v1/astro/predictions`, `PATCH /v1/astro/predictions/{id}/verify`,
+`GET /v1/astro/predictions/stats`, `POST /v1/astro/feedback`,
+`GET /v1/astro/usage`
+
+### Contact CRUD (`astro.read` / `astro.write`)
+`GET/POST /v1/astro/contacts`, `GET /v1/astro/contacts/search`,
+`PUT/DELETE /v1/astro/contacts/{id}`
+
+## Agent Runtime Tools (54)
+
+Manifest: `modules/astro/tools.yaml` — 54 tools callable by the Agent Runtime.
 
 ## NATS Events
 
-None. This service is stateless compute -- no pub/sub.
+| Subject | Event | Trigger |
+|---------|-------|---------|
+| `tenant.{slug}.astro.sessions` | created/deleted | Session CRUD |
+| `tenant.{slug}.feedback.astro_quality` | quality metrics | After audit |
+
+## SSE Event Protocol (`/v1/astro/query`)
+
+```
+contact_recognized → calc_context → think_start → think_delta → think_done
+→ token → natal_wheel → aspect_grid → tabla → usage → audit → done | error
+```
 
 ## Env vars
 
 | Var | Required | Default | Description |
 |-----|----------|---------|-------------|
 | `ASTRO_PORT` | No | `8011` | HTTP listen port |
-| `EPHE_PATH` | No | `/ephe` | Path to Swiss Ephemeris data files |
-| `POSTGRES_TENANT_URL` | No | `""` | Tenant DB connection string (contacts CRUD disabled if empty) |
-| `SGLANG_LLM_URL` | No | `""` | LLM endpoint for narration (SSE brief sent if empty) |
-| `SGLANG_LLM_MODEL` | No | `""` | Model name for LLM requests |
-| `LLM_API_KEY` | No | `""` | API key for LLM endpoint |
-| `JWT_PUBLIC_KEY` | Yes | -- | Ed25519/RSA public key for JWT verification |
-| `REDIS_URL` | No | `localhost:6379` | Redis for JWT blacklist |
-| `OTEL_EXPORTER_OTLP_ENDPOINT` | No | `localhost:4317` | OpenTelemetry collector |
+| `EPHE_PATH` | No | `/ephe` | Swiss Ephemeris data files |
+| `POSTGRES_TENANT_URL` | No | `""` | Tenant DB (contacts/sessions disabled if empty) |
+| `SGLANG_LLM_URL` | No | `""` | LLM endpoint for narration |
+| `SGLANG_LLM_MODEL` | No | `""` | Model name |
+| `LLM_API_KEY` | No | `""` | API key for LLM |
+| `JWT_PUBLIC_KEY` | Yes | — | Ed25519/RSA public key |
+| `REDIS_URL` | No | `localhost:6379` | Redis for blacklist + cache |
+| `NATS_URL` | No | `nats://localhost:4222` | NATS for events |
+| `TENANT_SLUG` | No | `saldivia` | Tenant slug for NATS subjects |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | No | `localhost:4317` | OpenTelemetry |
 
-## Dependencies
+## DB Schema (7 tables)
 
-- **PostgreSQL:** tenant DB (contacts table, optional -- pure calculation works without DB)
-- **Redis:** JWT blacklist via `pkg/security`
-- **Swiss Ephemeris:** ephemeris data files mounted at `EPHE_PATH`
-- **LLM (optional):** SGLang or any OpenAI-compatible endpoint for query narration
-- No NATS dependency
+- `contacts` — birth data with tenant+user isolation
+- `astro_sessions` — conversation threads
+- `astro_messages` — chat messages (role: user/assistant only)
+- `astro_predictions` — prediction tracking with verification
+- `astro_feedback` — thumbs up/down per message
+- `astro_followups` — business follow-up items
+- `astro_usage` — daily token usage
 
-## DB schema
-
-- Migrations: uses shared tenant migrations (`db/tenant/migrations/`) -- contacts table
-- sqlc config: `db/sqlc.yaml`
-- sqlc queries: `internal/repository/queries.sql`
-- Generated code: `internal/repository/` (queries.sql.go, models.go, db.go)
+Migrations: `db/tenant/migrations/010-012`
 
 ## Build
 
-Requires **CGO_ENABLED=1** because swephgo wraps the Swiss Ephemeris C library.
+Requires **CGO_ENABLED=1** (swephgo wraps Swiss Ephemeris C library).
 
 ```bash
-# Local build (macOS/Linux with gcc)
+# Local build
 cd services/astro && CGO_ENABLED=1 go build -o astro ./cmd/...
 
-# Docker (uses alpine + musl-dev)
+# Run tests
+CGO_ENABLED=1 CGO_LDFLAGS="-L$(pwd) -lm" go test ./internal/... -count=1
+
+# Docker
 docker build -f services/astro/Dockerfile .
 ```
 
-The Dockerfile installs `gcc` and `musl-dev` in the builder stage, produces a minimal
-alpine image with `/ephe` as a volume mount point for ephemeris data.
-
 ## Testing
 
-14 test files, uses golden file pattern for cross-validation with Python astro-v2.
-
-```bash
-# Run all astro tests (needs EPHE_PATH set or ephemeris files in default location)
-make test-astro
-
-# With explicit ephemeris path
-cd services/astro && EPHE_PATH=/path/to/ephe go test ./... -v -count=1
-```
-
-Test patterns:
-- `TestMain` in handler and technique tests calls `ephemeris.Init()` / `ephemeris.Close()`
-- Golden files in `testdata/golden/` generated by `testdata/generate_golden.py` from Python astro-v2
-- `adrianChart(t)` helper builds a reference natal chart for technique tests
-- Tests validate against known astronomical events (eclipse counts, station dates, etc.)
+20 test files across 7 packages. All pass.
+Golden file tests against Python astro-v2 reference data.

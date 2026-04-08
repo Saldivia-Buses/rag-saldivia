@@ -34,7 +34,9 @@ CLOUD                                    INHOUSE (workstation)
                                          │    ├── Notification (push + email)│
                                          │    ├── Platform    (tenant mgmt)  │
                                          │    ├── Traces      (observability)│
-                                         │    └── Feedback    (quality loop) │
+                                         │    ├── Feedback    (quality loop) │
+                                         │    ├── Astro       (55+ astro AI) │
+                                         │    └── Extractor   (Python OCR)   │
                                          │                                    │
                                          │  PostgreSQL per-tenant             │
                                          │  Redis (blacklist + cache)         │
@@ -71,13 +73,15 @@ CLOUD                                    INHOUSE (workstation)
 | **auth** | 8001 | — | JWT, RBAC, MFA, brute force protection, token blacklist |
 | **ws** | 8002 | — | WebSocket Hub — real-time channel, mutation routing via gRPC |
 | **chat** | 8003 | 50052 | Sessions, messages, history |
-| **agent** | 8004 | — | LLM runtime + tool execution (search, ingest, notify) |
+| **agent** | 8004 | — | LLM runtime + tool execution (search, ingest, notify, astro) |
 | **notification** | 8005 | — | In-app + email push, NATS consumer, user preferences |
 | **platform** | 8006 | — | Tenant registry, modules, feature flags, global config |
 | **ingest** | 8007 | — | Document upload, extraction pipeline, tree generation |
 | **feedback** | 8008 | — | Quality metrics, health scores, alerting |
 | **traces** | 8009 | — | Execution traces, cost tracking, NATS consumer |
 | **search** | 8010 | 50051 | Tree-based document search (3-phase: navigate → extract → cite) |
+| **astro** | 8011 | — | Astrological intelligence (55+ techniques, 64 endpoints, CGO) |
+| **extractor** | 8012 | — | Document extraction (Python, OCR + vision) |
 
 ## Quick start
 
