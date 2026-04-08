@@ -1,0 +1,134 @@
+{
+  "natal": {
+    "planets": {
+      "MC": 321.12206541293665,
+      "AS": 45.01849020162753,
+      "Sol": 275.4094459580063,
+      "Luna": 213.05010692144404,
+      "Mercurio": 291.2691683713382,
+      "Venus": 234.36317841640908,
+      "Marte": 78.5872595058926,
+      "Júpiter": 15.260072143964322,
+      "Saturno": 121.36009773683736,
+      "Urano": 216.2232475272934,
+      "Neptuno": 252.3803153521886,
+      "Plutón": 191.61846496525428,
+      "Nodo Norte": 231.00082367008915,
+      "Nodo Sur": 51.000823670089176,
+      "Lilith": 6.385144467252114,
+      "Fortuna": 342.6591511650653,
+      "Vértice": 274.8475396390812,
+      "Ecl.Prenatal": 220.4949,
+      "Ecl.Prenatal.L": 55.9195
+    },
+    "jd": 2442774.301388889,
+    "cusps": [
+      45.01849020162753,
+      74.4974921366831,
+      106.98168443055754,
+      141.12206541293665,
+      173.53418013182284,
+      201.4893129620781,
+      225.01849020162751,
+      254.4974921366831,
+      286.98168443055755,
+      321.12206541293665,
+      353.53418013182284,
+      21.489312962078078
+    ]
+  },
+  "profection": {
+    "casa_activa": 3,
+    "lord": "Luna",
+    "prof_lon": 105.018
+  },
+  "firdaria": {
+    "major_lord": "Saturno",
+    "sub_lord": "Luna",
+    "diurnal": true
+  },
+  "almuten": {
+    "winner": "Venus",
+    "score": 15,
+    "diurnal": true
+  },
+  "lots": {
+    "Fortuna": {
+      "degree": 342.6591511650653,
+      "sign": "Piscis"
+    },
+    "Espíritu": {
+      "degree": 107.37782923818978,
+      "sign": "Cáncer"
+    },
+    "Eros": {
+      "degree": 172.00383937984682,
+      "sign": "Virgo"
+    },
+    "Necesidad": {
+      "degree": 96.4084729953546,
+      "sign": "Cáncer"
+    },
+    "Coraje": {
+      "degree": 309.0903818608002,
+      "sign": "Acuario"
+    },
+    "Victoria": {
+      "degree": 312.90073310740206,
+      "sign": "Acuario"
+    },
+    "Némesis": {
+      "degree": 266.31754362985544,
+      "sign": "Sagitario"
+    },
+    "Basis": {
+      "degree": 280.29981212850305,
+      "sign": "Capricornio"
+    },
+    "Exaltación": {
+      "degree": 148.6090442436212,
+      "sign": "Leo"
+    },
+    "Acusación": {
+      "degree": 2.245651970682772,
+      "sign": "Aries"
+    },
+    "Matrimonio": {
+      "degree": 158.02157088119924,
+      "sign": "Virgo"
+    },
+    "Hijos": {
+      "degree": 298.9184646087545,
+      "sign": "Capricornio"
+    },
+    "Comercio": {
+      "degree": 60.87821261495941,
+      "sign": "Géminis"
+    },
+    "Empresa": {
+      "degree": 208.19630374951385,
+      "sign": "Libra"
+    },
+    "Sociedad": {
+      "degree": 191.44972089736243,
+      "sign": "Libra"
+    }
+  },
+  "eclipses": {
+    "text_length": 1847,
+    "eclipse_mentions": 14
+  },
+  "solar_return": {
+    "jd": 2461401.6802585204,
+    "asc": 230.35949498331888
+  },
+  "decennials": {
+    "major_planet": "Júpiter",
+    "sub_planet": "Saturno",
+    "diurnal": true
+  },
+  "sabian_sun": {
+    "lon": 275.4094459580063,
+    "symbol": "Ten logs lie under an archway leading to darker woods"
+  }
+}
