@@ -232,6 +232,43 @@ func MonthScores(ctx *FullContext) [12]int {
 	return scores
 }
 
+// NuclearMonth represents the month with highest technique convergence.
+type NuclearMonth struct {
+	Month      int      `json:"month"`       // 1-12
+	Score      int      `json:"score"`       // 0-100
+	Techniques int      `json:"techniques"`  // count of techniques converging
+}
+
+// FindNuclearMonth returns the month with the highest convergence score.
+// Injected into brief as "MES NUCLEAR: Mayo (score 92 — 4 técnicas convergen)".
+func FindNuclearMonth(monthlyScores [12]int) *NuclearMonth {
+	bestMonth := 0
+	bestScore := 0
+	for i, s := range monthlyScores {
+		if s > bestScore {
+			bestScore = s
+			bestMonth = i + 1
+		}
+	}
+	if bestScore < 30 {
+		return nil // no significant convergence
+	}
+
+	// Count how many months have >50% of the nuclear month's score
+	techCount := 0
+	for _, s := range monthlyScores {
+		if s >= bestScore/2 {
+			techCount++
+		}
+	}
+
+	return &NuclearMonth{
+		Month:      bestMonth,
+		Score:      bestScore,
+		Techniques: techCount,
+	}
+}
+
 // BirthTimeStatus returns reliability of birth time and which techniques to trust.
 type BirthTimeReliability struct {
 	Known        bool     `json:"known"`
