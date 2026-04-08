@@ -180,3 +180,210 @@ tools:
         year:
           type: integer
       required: [contact_name, query]
+
+  # ── Plan 12: New technique tools ──
+
+  - id: eclipses
+    service: astro
+    endpoint: POST /v1/astro/eclipses
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Eclipses del año y su activación sobre puntos natales."
+    parameters:
+      type: object
+      properties:
+        contact_name: { type: string }
+        year: { type: integer }
+      required: [contact_name, year]
+
+  - id: zodiacal_releasing
+    service: astro
+    endpoint: POST /v1/astro/zodiacal-releasing
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Zodiacal Releasing de Fortuna y Espíritu. Niveles L1-L3, loosing of the bond."
+    parameters:
+      type: object
+      properties:
+        contact_name: { type: string }
+        year: { type: integer }
+      required: [contact_name, year]
+
+  - id: lunations
+    service: astro
+    endpoint: POST /v1/astro/lunations
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Lunas nuevas y llenas del año, aspectos a puntos natales."
+    parameters:
+      type: object
+      properties:
+        contact_name: { type: string }
+        year: { type: integer }
+      required: [contact_name, year]
+
+  - id: hellenistic_lots
+    service: astro
+    endpoint: POST /v1/astro/lots
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "20 lotes helenísticos (Fortuna, Espíritu, Eros, Victoria, etc.) con posición, casa y señor."
+    parameters:
+      type: object
+      properties:
+        contact_name: { type: string }
+      required: [contact_name]
+
+  - id: dignities_almuten
+    service: astro
+    endpoint: POST /v1/astro/dignities
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Dignidades esenciales completas + Almutén Figuris. Domicilio, exaltación, triplicidad, término, faz."
+    parameters:
+      type: object
+      properties:
+        contact_name: { type: string }
+      required: [contact_name]
+
+  - id: midpoints_ebertin
+    service: astro
+    endpoint: POST /v1/astro/midpoints
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Puntos medios Ebertin: sort de 45°, puntos medios activados por planetas natales."
+    parameters:
+      type: object
+      properties:
+        contact_name: { type: string }
+      required: [contact_name]
+
+  - id: declinations
+    service: astro
+    endpoint: POST /v1/astro/declinations
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Declinaciones: paralelos, contra-paralelos, planetas fuera de límites (OOB)."
+    parameters:
+      type: object
+      properties:
+        contact_name: { type: string }
+      required: [contact_name]
+
+  - id: fast_transits
+    service: astro
+    endpoint: POST /v1/astro/fast-transits
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Tránsitos de planetas rápidos (Sol, Mercurio, Venus, Marte) sobre puntos natales."
+    parameters:
+      type: object
+      properties:
+        contact_name: { type: string }
+        year: { type: integer }
+      required: [contact_name, year]
+
+  - id: natal_wheel_svg
+    service: astro
+    endpoint: POST /v1/astro/wheel
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Rueda natal SVG (800x800). Retorna image/svg+xml."
+    parameters:
+      type: object
+      properties:
+        contact_name: { type: string }
+      required: [contact_name]
+
+  - id: synastry
+    service: astro
+    endpoint: POST /v1/astro/synastry
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Sinastría entre dos contactos: aspectos cruzados, score de compatibilidad, overlay de casas."
+    parameters:
+      type: object
+      properties:
+        contact_a: { type: string, description: "Nombre del primer contacto" }
+        contact_b: { type: string, description: "Nombre del segundo contacto" }
+      required: [contact_a, contact_b]
+
+  - id: composite_chart
+    service: astro
+    endpoint: POST /v1/astro/composite
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Carta compuesta (puntos medios) entre dos contactos. Representa la relación como entidad."
+    parameters:
+      type: object
+      properties:
+        contact_a: { type: string }
+        contact_b: { type: string }
+      required: [contact_a, contact_b]
+
+  # ── Session management tools ──
+
+  - id: create_session
+    service: astro
+    endpoint: POST /v1/astro/sessions
+    protocol: http
+    type: write
+    requires_confirmation: false
+    description: "Crear una nueva sesión de consulta astrológica."
+    parameters:
+      type: object
+      properties:
+        title: { type: string, description: "Título de la sesión" }
+
+  - id: list_sessions
+    service: astro
+    endpoint: GET /v1/astro/sessions
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Listar sesiones de consulta del usuario."
+
+  # ── Prediction tracking tools ──
+
+  - id: log_prediction
+    service: astro
+    endpoint: POST /v1/astro/predictions
+    protocol: http
+    type: write
+    requires_confirmation: false
+    description: "Registrar una predicción para seguimiento y verificación posterior."
+    parameters:
+      type: object
+      properties:
+        contact_id: { type: string }
+        category: { type: string, description: "timing, event, financial, relational, health, general" }
+        description: { type: string }
+        date_from: { type: string, description: "Fecha inicio (ISO)" }
+        date_to: { type: string, description: "Fecha fin (ISO)" }
+        techniques: { type: array, items: { type: string } }
+      required: [contact_id, description, date_from, date_to]
+
+  - id: verify_prediction
+    service: astro
+    endpoint: PATCH /v1/astro/predictions/{id}/verify
+    protocol: http
+    type: write
+    requires_confirmation: true
+    description: "Verificar si una predicción se cumplió (correct, incorrect, partial)."
+    parameters:
+      type: object
+      properties:
+        outcome: { type: string, description: "correct, incorrect, partial" }
+        notes: { type: string }
+      required: [outcome]
