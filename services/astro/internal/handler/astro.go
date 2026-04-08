@@ -104,6 +104,37 @@ func contactToChart(c *repository.Contact) (*natal.Chart, time.Time, error) {
 	return chart, birthDate, err
 }
 
+// contactToChartCached wraps contactToChart with the in-memory LRU cache.
+// Cache hit avoids the expensive BuildNatal (ephemeris + CalcMu).
+func (h *Handler) contactToChartCached(c *repository.Contact, tenantID string) (*natal.Chart, time.Time, error) {
+	contactID := ""
+	if c.ID.Valid {
+		contactID = fmt.Sprintf("%x", c.ID.Bytes)
+	}
+
+	// Try cache first
+	if h.charts != nil && contactID != "" {
+		if cached := h.charts.Get(tenantID, contactID); cached != nil {
+			bd := c.BirthDate.Time
+			birthDate := time.Date(bd.Year(), bd.Month(), bd.Day(), 0, 0, 0, 0, time.UTC)
+			return cached, birthDate, nil
+		}
+	}
+
+	// Cache miss — compute
+	chart, birthDate, err := contactToChart(c)
+	if err != nil {
+		return nil, birthDate, err
+	}
+
+	// Store in cache
+	if h.charts != nil && contactID != "" {
+		h.charts.Put(tenantID, contactID, chart)
+	}
+
+	return chart, birthDate, nil
+}
+
 // --- Technique request ---
 
 // maxBodySize limits request body to 1MB.
@@ -500,7 +531,10 @@ func (h *Handler) Brief(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, err.Error(), code)
 		return
 	}
-	chart, birthDate, err := contactToChart(contact)
+	tInfo, _ := tenant.FromContext(r.Context())
+	tSlug := ""
+	if tInfo != nil { tSlug = tInfo.ID }
+	chart, birthDate, err := h.contactToChartCached(contact, tSlug)
 	if err != nil {
 		serverError(w, r, "chart calculation failed", err)
 		return
@@ -563,8 +597,13 @@ func (h *Handler) Query(w http.ResponseWriter, r *http.Request) {
 	}
 	sseEvent(w, flusher, "contact_recognized", map[string]string{"name": contact.Name})
 
-	// 2. Build chart + context
-	chart, birthDate, err := contactToChart(contact)
+	// 2. Build chart + context (using cache for expensive BuildNatal)
+	tenantInfo, _ := tenant.FromContext(r.Context())
+	tenantSlug := ""
+	if tenantInfo != nil {
+		tenantSlug = tenantInfo.ID
+	}
+	chart, birthDate, err := h.contactToChartCached(contact, tenantSlug)
 	if err != nil {
 		sseError(w, flusher, r, "chart calculation failed")
 		return
