@@ -23,7 +23,10 @@ import (
 
 	"github.com/Camionerou/rag-saldivia/pkg/audit"
 
+	"github.com/Camionerou/rag-saldivia/services/astro/internal/astromath"
+	"github.com/Camionerou/rag-saldivia/services/astro/internal/cache"
 	astrocontext "github.com/Camionerou/rag-saldivia/services/astro/internal/context"
+	"github.com/Camionerou/rag-saldivia/services/astro/internal/intelligence"
 	"github.com/Camionerou/rag-saldivia/services/astro/internal/natal"
 	"github.com/Camionerou/rag-saldivia/services/astro/internal/repository"
 	"github.com/Camionerou/rag-saldivia/services/astro/internal/technique"
@@ -34,10 +37,12 @@ type Handler struct {
 	llm     llm.ChatClient
 	q       *repository.Queries
 	auditor *audit.Writer
+	intel   *intelligence.Engine // Plan 12: intelligence layer
+	charts  *cache.ChartRegistry // Plan 12: in-memory chart cache
 }
 
-func New(db *pgxpool.Pool, llmClient llm.ChatClient) *Handler {
-	h := &Handler{db: db, llm: llmClient}
+func New(db *pgxpool.Pool, llmClient llm.ChatClient, intel *intelligence.Engine, charts *cache.ChartRegistry) *Handler {
+	h := &Handler{db: db, llm: llmClient, intel: intel, charts: charts}
 	if db != nil {
 		h.q = repository.New(db)
 		h.auditor = audit.NewWriter(db)
@@ -326,6 +331,158 @@ func (h *Handler) Firdaria(w http.ResponseWriter, r *http.Request) {
 	jsonOK(w, fird)
 }
 
+// --- Plan 12: New technique endpoints ---
+
+func (h *Handler) Eclipses(w http.ResponseWriter, r *http.Request) {
+	req, err := h.parseRequest(w, r)
+	if err != nil { jsonError(w, "invalid request", http.StatusBadRequest); return }
+	contact, code, err := h.resolveContact(r, req.ContactName)
+	if err != nil { jsonError(w, err.Error(), code); return }
+	chart, _, err := contactToChart(contact)
+	if err != nil { serverError(w, r, "chart calculation failed", err); return }
+	ecl, err := technique.FindEclipseActivations(chart, req.Year)
+	if err != nil { serverError(w, r, "eclipses failed", err); return }
+	jsonOK(w, ecl)
+}
+
+func (h *Handler) ZodiacalReleasing(w http.ResponseWriter, r *http.Request) {
+	req, err := h.parseRequest(w, r)
+	if err != nil { jsonError(w, "invalid request", http.StatusBadRequest); return }
+	contact, code, err := h.resolveContact(r, req.ContactName)
+	if err != nil { jsonError(w, err.Error(), code); return }
+	chart, birthDate, err := contactToChart(contact)
+	if err != nil { serverError(w, r, "chart calculation failed", err); return }
+	midYear := time.Date(req.Year, 7, 1, 0, 0, 0, 0, time.UTC)
+	age := midYear.Sub(birthDate).Hours() / (24 * 365.25)
+	jsonOK(w, map[string]interface{}{
+		"fortune": technique.CalcZodiacalReleasing(chart, "Fortune", age),
+		"spirit":  technique.CalcZodiacalReleasing(chart, "Spirit", age),
+	})
+}
+
+func (h *Handler) Lunations(w http.ResponseWriter, r *http.Request) {
+	req, err := h.parseRequest(w, r)
+	if err != nil { jsonError(w, "invalid request", http.StatusBadRequest); return }
+	contact, code, err := h.resolveContact(r, req.ContactName)
+	if err != nil { jsonError(w, err.Error(), code); return }
+	chart, _, err := contactToChart(contact)
+	if err != nil { serverError(w, r, "chart calculation failed", err); return }
+	lun, err := technique.CalcLunations(chart, req.Year)
+	if err != nil { serverError(w, r, "lunations failed", err); return }
+	jsonOK(w, lun)
+}
+
+func (h *Handler) Lots(w http.ResponseWriter, r *http.Request) {
+	req, err := h.parseRequest(w, r)
+	if err != nil { jsonError(w, "invalid request", http.StatusBadRequest); return }
+	contact, code, err := h.resolveContact(r, req.ContactName)
+	if err != nil { jsonError(w, err.Error(), code); return }
+	chart, _, err := contactToChart(contact)
+	if err != nil { serverError(w, r, "chart calculation failed", err); return }
+	lots := astromath.CalcAllLots(chart.Planets, chart.ASC, chart.Diurnal, chart.Cusps)
+	jsonOK(w, lots)
+}
+
+func (h *Handler) Dignities(w http.ResponseWriter, r *http.Request) {
+	req, err := h.parseRequest(w, r)
+	if err != nil { jsonError(w, "invalid request", http.StatusBadRequest); return }
+	contact, code, err := h.resolveContact(r, req.ContactName)
+	if err != nil { jsonError(w, err.Error(), code); return }
+	chart, _, err := contactToChart(contact)
+	if err != nil { serverError(w, r, "chart calculation failed", err); return }
+	jsonOK(w, astromath.CalcAlmuten(chart.Planets, chart.ASC, chart.MC, chart.Diurnal))
+}
+
+func (h *Handler) Midpoints(w http.ResponseWriter, r *http.Request) {
+	req, err := h.parseRequest(w, r)
+	if err != nil { jsonError(w, "invalid request", http.StatusBadRequest); return }
+	contact, code, err := h.resolveContact(r, req.ContactName)
+	if err != nil { jsonError(w, err.Error(), code); return }
+	chart, _, err := contactToChart(contact)
+	if err != nil { serverError(w, r, "chart calculation failed", err); return }
+	jsonOK(w, technique.CalcMidpoints(chart))
+}
+
+func (h *Handler) Declinations(w http.ResponseWriter, r *http.Request) {
+	req, err := h.parseRequest(w, r)
+	if err != nil { jsonError(w, "invalid request", http.StatusBadRequest); return }
+	contact, code, err := h.resolveContact(r, req.ContactName)
+	if err != nil { jsonError(w, err.Error(), code); return }
+	chart, _, err := contactToChart(contact)
+	if err != nil { serverError(w, r, "chart calculation failed", err); return }
+	jsonOK(w, technique.CalcDeclinations(chart))
+}
+
+func (h *Handler) FastTransits(w http.ResponseWriter, r *http.Request) {
+	req, err := h.parseRequest(w, r)
+	if err != nil { jsonError(w, "invalid request", http.StatusBadRequest); return }
+	contact, code, err := h.resolveContact(r, req.ContactName)
+	if err != nil { jsonError(w, err.Error(), code); return }
+	chart, _, err := contactToChart(contact)
+	if err != nil { serverError(w, r, "chart calculation failed", err); return }
+	jsonOK(w, technique.CalcFastTransits(chart, req.Year))
+}
+
+func (h *Handler) Wheel(w http.ResponseWriter, r *http.Request) {
+	req, err := h.parseRequest(w, r)
+	if err != nil { jsonError(w, "invalid request", http.StatusBadRequest); return }
+	contact, code, err := h.resolveContact(r, req.ContactName)
+	if err != nil { jsonError(w, err.Error(), code); return }
+	chart, _, err := contactToChart(contact)
+	if err != nil { serverError(w, r, "chart calculation failed", err); return }
+	svg := natal.RenderWheel(chart, contact.Name)
+	w.Header().Set("Content-Type", "image/svg+xml")
+	w.Write([]byte(svg))
+}
+
+// --- Multi-chart endpoints ---
+
+type multiChartRequest struct {
+	ContactNameA string `json:"contact_a"`
+	ContactNameB string `json:"contact_b"`
+	Year         int    `json:"year"`
+}
+
+func (h *Handler) parseMultiRequest(w http.ResponseWriter, r *http.Request) (*multiChartRequest, error) {
+	r.Body = http.MaxBytesReader(w, r.Body, maxBodySize)
+	var req multiChartRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return nil, err
+	}
+	if req.Year == 0 { req.Year = time.Now().Year() }
+	return &req, nil
+}
+
+func (h *Handler) Synastry(w http.ResponseWriter, r *http.Request) {
+	req, err := h.parseMultiRequest(w, r)
+	if err != nil { jsonError(w, "invalid request", http.StatusBadRequest); return }
+	contactA, code, err := h.resolveContact(r, req.ContactNameA)
+	if err != nil { jsonError(w, err.Error(), code); return }
+	contactB, code, err := h.resolveContact(r, req.ContactNameB)
+	if err != nil { jsonError(w, err.Error(), code); return }
+	chartA, _, err := contactToChart(contactA)
+	if err != nil { serverError(w, r, "chart A calculation failed", err); return }
+	chartB, _, err := contactToChart(contactB)
+	if err != nil { serverError(w, r, "chart B calculation failed", err); return }
+	pair := &technique.ChartPair{ChartA: chartA, ChartB: chartB, NameA: contactA.Name, NameB: contactB.Name}
+	jsonOK(w, technique.CalcSynastry(pair))
+}
+
+func (h *Handler) Composite(w http.ResponseWriter, r *http.Request) {
+	req, err := h.parseMultiRequest(w, r)
+	if err != nil { jsonError(w, "invalid request", http.StatusBadRequest); return }
+	contactA, code, err := h.resolveContact(r, req.ContactNameA)
+	if err != nil { jsonError(w, err.Error(), code); return }
+	contactB, code, err := h.resolveContact(r, req.ContactNameB)
+	if err != nil { jsonError(w, err.Error(), code); return }
+	chartA, _, err := contactToChart(contactA)
+	if err != nil { serverError(w, r, "chart A calculation failed", err); return }
+	chartB, _, err := contactToChart(contactB)
+	if err != nil { serverError(w, r, "chart B calculation failed", err); return }
+	pair := &technique.ChartPair{ChartA: chartA, ChartB: chartB, NameA: contactA.Name, NameB: contactB.Name}
+	jsonOK(w, technique.CalcComposite(pair))
+}
+
 func (h *Handler) Brief(w http.ResponseWriter, r *http.Request) {
 	req, err := h.parseRequest(w, r)
 	if err != nil {
@@ -406,16 +563,40 @@ func (h *Handler) Query(w http.ResponseWriter, r *http.Request) {
 		sseError(w, flusher, r, "chart calculation failed")
 		return
 	}
-	ctx, err := astrocontext.Build(chart, contact.Name, birthDate, req.Year)
+	fullCtx, err := astrocontext.Build(chart, contact.Name, birthDate, req.Year)
 	if err != nil {
 		sseError(w, flusher, r, "context build failed")
 		return
 	}
-	sseEvent(w, flusher, "calc_context", map[string]string{"status": "complete", "brief_length": strconv.Itoa(len(ctx.Brief))})
+	sseEvent(w, flusher, "calc_context", map[string]string{"status": "complete", "brief_length": strconv.Itoa(len(fullCtx.Brief))})
+
+	// 2b. Intelligence layer: domain routing, technique gating, cross-references
+	var briefText, systemPrompt string
+	if h.intel != nil && req.Query != "" {
+		analysis, err := h.intel.Analyze(r.Context(), &intelligence.AnalysisRequest{
+			Query:   req.Query,
+			FullCtx: fullCtx,
+		})
+		if err == nil {
+			briefText = analysis.Brief
+			systemPrompt = analysis.SystemPrompt
+			sseEvent(w, flusher, "calc_context", map[string]string{
+				"domain":     analysis.Domain.Name,
+				"crossrefs":  strconv.Itoa(len(analysis.CrossRefs)),
+				"coverage":   fmt.Sprintf("%.0f%%", analysis.Gate.Coverage*100),
+			})
+		}
+	}
+	if briefText == "" {
+		briefText = fullCtx.Brief
+	}
+	if systemPrompt == "" {
+		systemPrompt = "Eres un astrólogo profesional. Analiza el siguiente brief y responde la consulta del usuario."
+	}
 
 	// 3. LLM narration (true token streaming via SSE)
 	if h.llm != nil {
-		prompt := fmt.Sprintf("Eres un astrólogo profesional. Analiza el siguiente brief y responde la consulta del usuario.\n\n%s\n\nConsulta: %s", ctx.Brief, req.Query)
+		prompt := fmt.Sprintf("%s\n\n%s\n\nConsulta: %s", systemPrompt, briefText, req.Query)
 		msgs := []llm.Message{{Role: "user", Content: prompt}}
 		stream, err := h.llm.StreamChat(r.Context(), msgs, 0.7, 4096)
 		if err != nil {

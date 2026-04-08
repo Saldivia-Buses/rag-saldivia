@@ -22,8 +22,10 @@ import (
 	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
 	"github.com/Camionerou/rag-saldivia/pkg/security"
 
+	"github.com/Camionerou/rag-saldivia/services/astro/internal/cache"
 	"github.com/Camionerou/rag-saldivia/services/astro/internal/ephemeris"
 	"github.com/Camionerou/rag-saldivia/services/astro/internal/handler"
+	"github.com/Camionerou/rag-saldivia/services/astro/internal/intelligence"
 )
 
 const serviceVersion = "0.1.0"
@@ -76,7 +78,15 @@ func main() {
 		llmClient = llm.NewClient(llmEndpoint, llmModel, llmAPIKey)
 	}
 
-	astroHandler := handler.New(pool, llmClient)
+	// Plan 12: Intelligence engine + chart cache
+	intel, err := intelligence.NewEngine(logger)
+	if err != nil {
+		slog.Error("intelligence engine init failed", "error", err)
+		os.Exit(1)
+	}
+	chartCache := cache.NewChartRegistry()
+
+	astroHandler := handler.New(pool, llmClient, intel, chartCache)
 
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
@@ -126,8 +136,30 @@ func main() {
 		r.Post("/v1/astro/firdaria", astroHandler.Firdaria)
 		r.Post("/v1/astro/fixed-stars", astroHandler.FixedStars)
 		r.Post("/v1/astro/brief", astroHandler.Brief)
+		// Plan 12: new technique endpoints
+		r.Post("/v1/astro/eclipses", astroHandler.Eclipses)
+		r.Post("/v1/astro/zodiacal-releasing", astroHandler.ZodiacalReleasing)
+		r.Post("/v1/astro/lunations", astroHandler.Lunations)
+		r.Post("/v1/astro/lots", astroHandler.Lots)
+		r.Post("/v1/astro/dignities", astroHandler.Dignities)
+		r.Post("/v1/astro/midpoints", astroHandler.Midpoints)
+		r.Post("/v1/astro/declinations", astroHandler.Declinations)
+		r.Post("/v1/astro/fast-transits", astroHandler.FastTransits)
+		r.Post("/v1/astro/wheel", astroHandler.Wheel)
+		// Multi-chart endpoints
+		r.Post("/v1/astro/synastry", astroHandler.Synastry)
+		r.Post("/v1/astro/composite", astroHandler.Composite)
+		// Contacts
 		r.Get("/v1/astro/contacts", astroHandler.ListContacts)
 		r.Get("/v1/astro/contacts/search", astroHandler.SearchContacts)
+		// Sessions (read)
+		r.Get("/v1/astro/sessions", astroHandler.ListSessions)
+		r.Get("/v1/astro/sessions/{id}", astroHandler.GetSession)
+		r.Get("/v1/astro/sessions/{id}/messages", astroHandler.GetMessages)
+		// Quality (read)
+		r.Get("/v1/astro/predictions", astroHandler.ListPredictions)
+		r.Get("/v1/astro/predictions/stats", astroHandler.PredictionStats)
+		r.Get("/v1/astro/usage", astroHandler.DailyUsage)
 	})
 
 	// Write endpoints — FailOpen false, astro.write permission
@@ -140,12 +172,20 @@ func main() {
 		r.Post("/v1/astro/contacts", astroHandler.CreateContact)
 		r.Put("/v1/astro/contacts/{id}", astroHandler.UpdateContact)
 		r.Delete("/v1/astro/contacts/{id}", astroHandler.DeleteContact)
+		// Sessions (write)
+		r.Post("/v1/astro/sessions", astroHandler.CreateSession)
+		r.Patch("/v1/astro/sessions/{id}", astroHandler.UpdateSession)
+		r.Delete("/v1/astro/sessions/{id}", astroHandler.DeleteSession)
+		// Predictions (write)
+		r.Post("/v1/astro/predictions", astroHandler.CreatePrediction)
+		r.Patch("/v1/astro/predictions/{id}/verify", astroHandler.VerifyPrediction)
+		r.Post("/v1/astro/feedback", astroHandler.SubmitFeedback)
 	})
 
 	// SSE endpoint — no chi timeout, astro.read permission
 	r.Group(func(r chi.Router) {
 		r.Use(authRead)
-		r.Use(rateMw)
+		r.Use(sdamw.RateLimit(sdamw.RateLimitConfig{Requests: 5, Window: time.Minute, KeyFunc: sdamw.ByUser}))
 		r.Use(sdamw.RequirePermission("astro.read"))
 		r.Post("/v1/astro/query", astroHandler.Query)
 	})
