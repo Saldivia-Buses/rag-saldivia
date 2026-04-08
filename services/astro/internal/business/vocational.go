@@ -2,7 +2,6 @@ package business
 
 import (
 	"github.com/Camionerou/rag-saldivia/services/astro/internal/astromath"
-	"github.com/Camionerou/rag-saldivia/services/astro/internal/ephemeris"
 	"github.com/Camionerou/rag-saldivia/services/astro/internal/natal"
 )
 
@@ -113,8 +112,6 @@ func CalcVocational(chart *natal.Chart) *VocationalResult {
 	} else {
 		result.SectLightCareer = "Luna (carta nocturna) — vocación adaptable, intuitiva, de servicio"
 	}
-
-	_ = ephemeris.Sun // keep import for consistency
 
 	return result
 }

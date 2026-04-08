@@ -49,7 +49,7 @@ func (h *Handler) Alerts(w http.ResponseWriter, r *http.Request) {
 	limitStr := r.URL.Query().Get("limit")
 	limit := 10
 	if limitStr != "" {
-		if n, err := strconv.Atoi(limitStr); err == nil && n > 0 && n <= 50 {
+		if n, err := strconv.Atoi(limitStr); err == nil && n > 0 && n <= 10 {
 			limit = n
 		}
 	}
@@ -77,7 +77,9 @@ func (h *Handler) Alerts(w http.ResponseWriter, r *http.Request) {
 			hour = float64(c.BirthTime.Microseconds) / 3_600_000_000.0
 		}
 		scannable = append(scannable, intelligence.ContactForAlert{
-			ID:         fmt.Sprintf("%x", c.ID.Bytes),
+			ID:         fmt.Sprintf("%08x-%04x-%04x-%04x-%012x",
+				c.ID.Bytes[0:4], c.ID.Bytes[4:6], c.ID.Bytes[6:8],
+				c.ID.Bytes[8:10], c.ID.Bytes[10:16]),
 			Name:       c.Name,
 			BirthYear:  bd.Year(),
 			BirthMonth: int(bd.Month()),

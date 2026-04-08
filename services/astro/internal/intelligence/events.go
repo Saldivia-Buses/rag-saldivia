@@ -1,7 +1,6 @@
 package intelligence
 
 import (
-	"fmt"
 	"regexp"
 	"strings"
 	"time"
@@ -100,7 +99,6 @@ func ToRectificationEvents(events []LifeEvent) []technique.RectificationEvent {
 			})
 		}
 	}
-	_ = fmt.Sprint // keep import
 	return result
 }
 
@@ -140,8 +138,9 @@ func categorizeVerb(verb string) string {
 }
 
 func truncate(s string, maxLen int) string {
-	if len(s) <= maxLen {
+	runes := []rune(s)
+	if len(runes) <= maxLen {
 		return s
 	}
-	return s[:maxLen] + "..."
+	return string(runes[:maxLen]) + "..."
 }

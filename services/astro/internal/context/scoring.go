@@ -234,9 +234,9 @@ func MonthScores(ctx *FullContext) [12]int {
 
 // NuclearMonth represents the month with highest technique convergence.
 type NuclearMonth struct {
-	Month      int      `json:"month"`       // 1-12
-	Score      int      `json:"score"`       // 0-100
-	Techniques int      `json:"techniques"`  // count of techniques converging
+	Month           int `json:"month"`            // 1-12
+	Score           int `json:"score"`            // 0-100
+	ConvergentMonths int `json:"convergent_months"` // months with >= 50% of nuclear score
 }
 
 // FindNuclearMonth returns the month with the highest convergence score.
@@ -263,9 +263,9 @@ func FindNuclearMonth(monthlyScores [12]int) *NuclearMonth {
 	}
 
 	return &NuclearMonth{
-		Month:      bestMonth,
-		Score:      bestScore,
-		Techniques: techCount,
+		Month:            bestMonth,
+		Score:            bestScore,
+		ConvergentMonths: techCount,
 	}
 }
 

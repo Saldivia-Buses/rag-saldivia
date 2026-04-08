@@ -133,8 +133,22 @@ func hasContinuationSignals(lower string, words []string) bool {
 	}
 
 	// Very short question (1-4 words) ending with ? — likely a follow-up
+	// BUT not if it contains a year (e.g., "Jupiter 2027?" is a new query)
 	if len(words) <= 4 && strings.HasSuffix(strings.TrimSpace(lower), "?") {
-		return true
+		hasYear := false
+		for _, w := range words {
+			cleaned := strings.TrimRight(w, "?!.,;:")
+			if len(cleaned) == 4 && cleaned[0] >= '1' && cleaned[0] <= '2' &&
+				cleaned[1] >= '0' && cleaned[1] <= '9' &&
+				cleaned[2] >= '0' && cleaned[2] <= '9' &&
+				cleaned[3] >= '0' && cleaned[3] <= '9' {
+				hasYear = true
+				break
+			}
+		}
+		if !hasYear {
+			return true
+		}
 	}
 
 	return false

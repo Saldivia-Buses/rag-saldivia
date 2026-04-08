@@ -136,8 +136,8 @@ func (e *Engine) Analyze(ctx context.Context, req *AnalysisRequest) (*AnalysisRe
 		monthNames := [12]string{"Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
 			"Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"}
 		monthName := monthNames[nuclearMonth.Month-1]
-		result.Brief = fmt.Sprintf("**MES NUCLEAR: %s (score %d — %d técnicas convergen)**\n\n",
-			monthName, nuclearMonth.Score, nuclearMonth.Techniques) + result.Brief
+		result.Brief = fmt.Sprintf("**MES NUCLEAR: %s (score %d — %d meses activos)**\n\n",
+			monthName, nuclearMonth.Score, nuclearMonth.ConvergentMonths) + result.Brief
 	}
 
 	// Prepend wakeup context (memory) to brief

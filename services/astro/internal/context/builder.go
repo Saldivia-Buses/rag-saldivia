@@ -128,11 +128,13 @@ func BuildWithDomain(chart *natal.Chart, contactName string, birthDate time.Time
 		ctx.Progressions = prog
 	}
 
-	// Solar Return
-	if sr, err := technique.CalcSolarReturnAtBirthplace(chart, year); err != nil {
-		ctx.Warnings = append(ctx.Warnings, fmt.Sprintf("solar_return: %v", err))
-	} else {
-		ctx.SolarReturn = sr
+	// Solar Return (Newton iteration — moderately expensive)
+	if shouldRun("revolucion_solar") {
+		if sr, err := technique.CalcSolarReturnAtBirthplace(chart, year); err != nil {
+			ctx.Warnings = append(ctx.Warnings, fmt.Sprintf("solar_return: %v", err))
+		} else {
+			ctx.SolarReturn = sr
+		}
 	}
 
 	// Lunar Returns
@@ -144,31 +146,41 @@ func BuildWithDomain(chart *natal.Chart, contactName string, birthDate time.Time
 		}
 	}
 
-	// Profection
+	// Profection (pure math — always cheap, always run)
 	ctx.Profection = technique.CalcProfection(chart, birthDate, year)
 
-	// Firdaria
+	// Firdaria (pure math — always cheap, always run)
 	ctx.Firdaria = technique.CalcFirdaria(birthDate, chart.Diurnal, year)
 
-	// Eclipses
-	if ecl, err := technique.FindEclipseActivations(chart, year); err != nil {
-		ctx.Warnings = append(ctx.Warnings, fmt.Sprintf("eclipses: %v", err))
-	} else {
-		ctx.Eclipses = ecl
+	// Eclipses (scan — moderately expensive)
+	if shouldRun("eclipses") {
+		if ecl, err := technique.FindEclipseActivations(chart, year); err != nil {
+			ctx.Warnings = append(ctx.Warnings, fmt.Sprintf("eclipses: %v", err))
+		} else {
+			ctx.Eclipses = ecl
+		}
 	}
 
 	// Fixed Stars
-	ctx.FixedStars = technique.FindFixedStarConjunctions(chart)
+	if shouldRun("estrellas_fijas") {
+		ctx.FixedStars = technique.FindFixedStarConjunctions(chart)
+	}
 
 	// Zodiacal Releasing
-	ctx.ZRFortune = technique.CalcZodiacalReleasing(chart, "Fortune", age)
-	ctx.ZRSpirit = technique.CalcZodiacalReleasing(chart, "Spirit", age)
+	if shouldRun("zodiacal_releasing") {
+		ctx.ZRFortune = technique.CalcZodiacalReleasing(chart, "Fortune", age)
+		ctx.ZRSpirit = technique.CalcZodiacalReleasing(chart, "Spirit", age)
+	}
 
-	// Slow planet transits (5-day sampling, mundane aspects)
-	ctx.Transits = technique.CalcTransits(chart, year)
+	// Slow planet transits (5-day sampling — most expensive technique)
+	if shouldRun("transitos") {
+		ctx.Transits = technique.CalcTransits(chart, year)
+	}
 
 	// Station detection (D→Rx, Rx→D near natal points)
-	ctx.Stations = technique.FindStations(chart, year)
+	if shouldRun("estaciones", "transitos") {
+		ctx.Stations = technique.FindStations(chart, year)
+	}
 
 	// ── Plan 12: Pure arithmetic (no ephemeris, no errors) ──
 

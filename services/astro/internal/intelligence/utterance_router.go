@@ -86,7 +86,7 @@ func (r *UtteranceRouter) Parse(query string) *Intent {
 
 	// Score each route by token overlap
 	routeScores := make(map[string]float64)
-	routeHits := make(map[string]int)
+	routeHitsUnique := make(map[string]map[string]bool) // route → set of matched query tokens
 
 	for _, tok := range queryTokens {
 		entries, ok := r.index[tok]
@@ -107,7 +107,10 @@ func (r *UtteranceRouter) Parse(query string) *Intent {
 			// Weight by: IDF * (1 / utterance length) — shorter utterances with matching tokens score higher
 			weight := idf / math.Sqrt(float64(e.tokenCount))
 			routeScores[e.route] += weight
-			routeHits[e.route]++
+			if routeHitsUnique[e.route] == nil {
+				routeHitsUnique[e.route] = make(map[string]bool)
+			}
+			routeHitsUnique[e.route][tok] = true
 		}
 	}
 
@@ -126,8 +129,9 @@ func (r *UtteranceRouter) Parse(query string) *Intent {
 		}
 	}
 
-	// Normalize confidence: proportion of query tokens that matched
-	confidence := float64(routeHits[bestRoute]) / float64(len(queryTokens))
+	// Normalize confidence: proportion of unique query tokens that matched
+	bestHits := len(routeHitsUnique[bestRoute])
+	confidence := float64(bestHits) / float64(len(queryTokens))
 	if confidence > 1.0 {
 		confidence = 1.0
 	}
@@ -236,5 +240,5 @@ var stopwords = map[string]bool{
 	"yo": true, "eso": true, "son": true, "todo": true, "fue": true,
 	"nos": true, "tan": true, "ni": true, "te": true, "ti": true,
 	"ese": true, "esa": true, "cual": true, "quien": true, "va": true,
-	"puede": true, "sobre": true, "entre": true, "ano": true, "viene": true,
+	"puede": true, "sobre": true, "entre": true, "viene": true,
 }
