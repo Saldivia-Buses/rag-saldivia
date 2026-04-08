@@ -1,6 +1,6 @@
 # Ingest Service
 
-> Async document upload and processing pipeline. Stages files to disk, tracks jobs in tenant DB, and processes via NATS JetStream worker that forwards to the NVIDIA RAG Blueprint for vectorization.
+> Async document upload and processing pipeline. Stages files to disk, tracks jobs in tenant DB, and processes via NATS JetStream worker that extracts content and generates document trees for the Search Service.
 
 ## Endpoints
 

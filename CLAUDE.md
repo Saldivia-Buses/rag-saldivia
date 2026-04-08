@@ -219,4 +219,4 @@ make status                  # Estado de servicios + GPU
 | `status` | Estado de servicios | Health checks Go services + infra Docker + GPU + recursos |
 | `doc-writer` | Actualizar docs | CLAUDE.md, bible, README por servicio, ADRs |
 | `plan-writer` | Planear feature nueva | Planes con phases, migrations, NATS events, scope control |
-| `ingest` | Ingestar documentos | Pipeline ingesta, RAG Blueprint, Milvus |
+| `ingest` | Ingestar documentos | Pipeline ingesta, tree generation, PostgreSQL |
