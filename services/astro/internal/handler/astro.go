@@ -23,7 +23,14 @@ import (
 
 	"github.com/Camionerou/rag-saldivia/pkg/audit"
 
+	"github.com/Camionerou/rag-saldivia/services/astro/internal/astromath"
+	"github.com/Camionerou/rag-saldivia/services/astro/internal/business"
+	"github.com/Camionerou/rag-saldivia/services/astro/internal/cache"
 	astrocontext "github.com/Camionerou/rag-saldivia/services/astro/internal/context"
+	"github.com/Camionerou/rag-saldivia/services/astro/internal/ephemeris"
+	"github.com/Camionerou/rag-saldivia/services/astro/internal/intelligence"
+	"github.com/Camionerou/rag-saldivia/pkg/traces"
+	"github.com/Camionerou/rag-saldivia/services/astro/internal/quality"
 	"github.com/Camionerou/rag-saldivia/services/astro/internal/natal"
 	"github.com/Camionerou/rag-saldivia/services/astro/internal/repository"
 	"github.com/Camionerou/rag-saldivia/services/astro/internal/technique"
@@ -34,10 +41,15 @@ type Handler struct {
 	llm     llm.ChatClient
 	q       *repository.Queries
 	auditor *audit.Writer
+	intel   *intelligence.Engine    // Plan 12: intelligence layer
+	charts  *cache.ChartRegistry   // Plan 12: in-memory chart cache
+	biz     *business.Service      // Plan 12: business intelligence
+	traces  *traces.Publisher       // Plan 12: NATS trace/event publisher
+	slug    string                  // tenant slug for NATS subjects
 }
 
-func New(db *pgxpool.Pool, llmClient llm.ChatClient) *Handler {
-	h := &Handler{db: db, llm: llmClient}
+func New(db *pgxpool.Pool, llmClient llm.ChatClient, intel *intelligence.Engine, charts *cache.ChartRegistry, biz *business.Service, tp *traces.Publisher, slug string) *Handler {
+	h := &Handler{db: db, llm: llmClient, intel: intel, charts: charts, biz: biz, traces: tp, slug: slug}
 	if db != nil {
 		h.q = repository.New(db)
 		h.auditor = audit.NewWriter(db)
@@ -96,6 +108,37 @@ func contactToChart(c *repository.Contact) (*natal.Chart, time.Time, error) {
 	return chart, birthDate, err
 }
 
+// contactToChartCached wraps contactToChart with the in-memory LRU cache.
+// Cache hit avoids the expensive BuildNatal (ephemeris + CalcMu).
+func (h *Handler) contactToChartCached(c *repository.Contact, tenantID string) (*natal.Chart, time.Time, error) {
+	contactID := ""
+	if c.ID.Valid {
+		contactID = fmt.Sprintf("%x", c.ID.Bytes)
+	}
+
+	// Try cache first
+	if h.charts != nil && contactID != "" {
+		if cached := h.charts.Get(tenantID, contactID); cached != nil {
+			bd := c.BirthDate.Time
+			birthDate := time.Date(bd.Year(), bd.Month(), bd.Day(), 0, 0, 0, 0, time.UTC)
+			return cached, birthDate, nil
+		}
+	}
+
+	// Cache miss — compute
+	chart, birthDate, err := contactToChart(c)
+	if err != nil {
+		return nil, birthDate, err
+	}
+
+	// Store in cache
+	if h.charts != nil && contactID != "" {
+		h.charts.Put(tenantID, contactID, chart)
+	}
+
+	return chart, birthDate, nil
+}
+
 // --- Technique request ---
 
 // maxBodySize limits request body to 1MB.
@@ -128,9 +171,10 @@ func jsonError(w http.ResponseWriter, msg string, code int) {
 }
 
 // serverError logs a 500-class error with request context, then sends a generic message.
+// The msg is logged but NOT sent to the client (M1 fix — no operation name leak).
 func serverError(w http.ResponseWriter, r *http.Request, msg string, err error) {
 	slog.Error(msg, "error", err, "request_id", middleware.GetReqID(r.Context()))
-	jsonError(w, msg, http.StatusInternalServerError)
+	jsonError(w, "internal error", http.StatusInternalServerError)
 }
 
 func jsonOK(w http.ResponseWriter, data any) {
@@ -326,6 +370,328 @@ func (h *Handler) Firdaria(w http.ResponseWriter, r *http.Request) {
 	jsonOK(w, fird)
 }
 
+// --- Plan 12: New technique endpoints ---
+
+func (h *Handler) Eclipses(w http.ResponseWriter, r *http.Request) {
+	req, err := h.parseRequest(w, r)
+	if err != nil { jsonError(w, "invalid request", http.StatusBadRequest); return }
+	contact, code, err := h.resolveContact(r, req.ContactName)
+	if err != nil { jsonError(w, err.Error(), code); return }
+	chart, _, err := contactToChart(contact)
+	if err != nil { serverError(w, r, "chart calculation failed", err); return }
+	ecl, err := technique.FindEclipseActivations(chart, req.Year)
+	if err != nil { serverError(w, r, "eclipses failed", err); return }
+	jsonOK(w, ecl)
+}
+
+func (h *Handler) ZodiacalReleasing(w http.ResponseWriter, r *http.Request) {
+	req, err := h.parseRequest(w, r)
+	if err != nil { jsonError(w, "invalid request", http.StatusBadRequest); return }
+	contact, code, err := h.resolveContact(r, req.ContactName)
+	if err != nil { jsonError(w, err.Error(), code); return }
+	chart, birthDate, err := contactToChart(contact)
+	if err != nil { serverError(w, r, "chart calculation failed", err); return }
+	midYear := time.Date(req.Year, 7, 1, 0, 0, 0, 0, time.UTC)
+	age := midYear.Sub(birthDate).Hours() / (24 * 365.25)
+	jsonOK(w, map[string]interface{}{
+		"fortune": technique.CalcZodiacalReleasing(chart, "Fortune", age),
+		"spirit":  technique.CalcZodiacalReleasing(chart, "Spirit", age),
+	})
+}
+
+func (h *Handler) Lunations(w http.ResponseWriter, r *http.Request) {
+	req, err := h.parseRequest(w, r)
+	if err != nil { jsonError(w, "invalid request", http.StatusBadRequest); return }
+	contact, code, err := h.resolveContact(r, req.ContactName)
+	if err != nil { jsonError(w, err.Error(), code); return }
+	chart, _, err := contactToChart(contact)
+	if err != nil { serverError(w, r, "chart calculation failed", err); return }
+	lun, err := technique.CalcLunations(chart, req.Year)
+	if err != nil { serverError(w, r, "lunations failed", err); return }
+	jsonOK(w, lun)
+}
+
+func (h *Handler) Lots(w http.ResponseWriter, r *http.Request) {
+	req, err := h.parseRequest(w, r)
+	if err != nil { jsonError(w, "invalid request", http.StatusBadRequest); return }
+	contact, code, err := h.resolveContact(r, req.ContactName)
+	if err != nil { jsonError(w, err.Error(), code); return }
+	chart, _, err := contactToChart(contact)
+	if err != nil { serverError(w, r, "chart calculation failed", err); return }
+	lots := astromath.CalcAllLots(chart.Planets, chart.ASC, chart.Diurnal, chart.Cusps)
+	jsonOK(w, lots)
+}
+
+func (h *Handler) Dignities(w http.ResponseWriter, r *http.Request) {
+	req, err := h.parseRequest(w, r)
+	if err != nil { jsonError(w, "invalid request", http.StatusBadRequest); return }
+	contact, code, err := h.resolveContact(r, req.ContactName)
+	if err != nil { jsonError(w, err.Error(), code); return }
+	chart, _, err := contactToChart(contact)
+	if err != nil { serverError(w, r, "chart calculation failed", err); return }
+	jsonOK(w, astromath.CalcAlmuten(chart.Planets, chart.ASC, chart.MC, chart.Diurnal))
+}
+
+func (h *Handler) Midpoints(w http.ResponseWriter, r *http.Request) {
+	req, err := h.parseRequest(w, r)
+	if err != nil { jsonError(w, "invalid request", http.StatusBadRequest); return }
+	contact, code, err := h.resolveContact(r, req.ContactName)
+	if err != nil { jsonError(w, err.Error(), code); return }
+	chart, _, err := contactToChart(contact)
+	if err != nil { serverError(w, r, "chart calculation failed", err); return }
+	jsonOK(w, technique.CalcMidpoints(chart))
+}
+
+func (h *Handler) Declinations(w http.ResponseWriter, r *http.Request) {
+	req, err := h.parseRequest(w, r)
+	if err != nil { jsonError(w, "invalid request", http.StatusBadRequest); return }
+	contact, code, err := h.resolveContact(r, req.ContactName)
+	if err != nil { jsonError(w, err.Error(), code); return }
+	chart, _, err := contactToChart(contact)
+	if err != nil { serverError(w, r, "chart calculation failed", err); return }
+	jsonOK(w, technique.CalcDeclinations(chart))
+}
+
+func (h *Handler) FastTransits(w http.ResponseWriter, r *http.Request) {
+	req, err := h.parseRequest(w, r)
+	if err != nil { jsonError(w, "invalid request", http.StatusBadRequest); return }
+	contact, code, err := h.resolveContact(r, req.ContactName)
+	if err != nil { jsonError(w, err.Error(), code); return }
+	chart, _, err := contactToChart(contact)
+	if err != nil { serverError(w, r, "chart calculation failed", err); return }
+	jsonOK(w, technique.CalcFastTransits(chart, req.Year))
+}
+
+func (h *Handler) Wheel(w http.ResponseWriter, r *http.Request) {
+	req, err := h.parseRequest(w, r)
+	if err != nil { jsonError(w, "invalid request", http.StatusBadRequest); return }
+	contact, code, err := h.resolveContact(r, req.ContactName)
+	if err != nil { jsonError(w, err.Error(), code); return }
+	chart, _, err := contactToChart(contact)
+	if err != nil { serverError(w, r, "chart calculation failed", err); return }
+	svg := natal.RenderWheel(chart, contact.Name)
+	w.Header().Set("Content-Type", "image/svg+xml")
+	w.Header().Set("Content-Security-Policy", "default-src 'none'")
+	w.Write([]byte(svg))
+}
+
+// --- Multi-chart endpoints ---
+
+type multiChartRequest struct {
+	ContactNameA string `json:"contact_a"`
+	ContactNameB string `json:"contact_b"`
+	Year         int    `json:"year"`
+}
+
+func (h *Handler) parseMultiRequest(w http.ResponseWriter, r *http.Request) (*multiChartRequest, error) {
+	r.Body = http.MaxBytesReader(w, r.Body, maxBodySize)
+	var req multiChartRequest
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		return nil, err
+	}
+	if req.Year == 0 { req.Year = time.Now().Year() }
+	if req.Year < -5000 || req.Year > 5000 { return nil, fmt.Errorf("year out of range") }
+	return &req, nil
+}
+
+func (h *Handler) Synastry(w http.ResponseWriter, r *http.Request) {
+	req, err := h.parseMultiRequest(w, r)
+	if err != nil { jsonError(w, "invalid request", http.StatusBadRequest); return }
+	contactA, code, err := h.resolveContact(r, req.ContactNameA)
+	if err != nil { jsonError(w, err.Error(), code); return }
+	contactB, code, err := h.resolveContact(r, req.ContactNameB)
+	if err != nil { jsonError(w, err.Error(), code); return }
+	chartA, _, err := contactToChart(contactA)
+	if err != nil { serverError(w, r, "chart A calculation failed", err); return }
+	chartB, _, err := contactToChart(contactB)
+	if err != nil { serverError(w, r, "chart B calculation failed", err); return }
+	pair := &technique.ChartPair{ChartA: chartA, ChartB: chartB, NameA: contactA.Name, NameB: contactB.Name}
+	jsonOK(w, technique.CalcSynastry(pair))
+}
+
+func (h *Handler) Composite(w http.ResponseWriter, r *http.Request) {
+	req, err := h.parseMultiRequest(w, r)
+	if err != nil { jsonError(w, "invalid request", http.StatusBadRequest); return }
+	contactA, code, err := h.resolveContact(r, req.ContactNameA)
+	if err != nil { jsonError(w, err.Error(), code); return }
+	contactB, code, err := h.resolveContact(r, req.ContactNameB)
+	if err != nil { jsonError(w, err.Error(), code); return }
+	chartA, _, err := contactToChart(contactA)
+	if err != nil { serverError(w, r, "chart A calculation failed", err); return }
+	chartB, _, err := contactToChart(contactB)
+	if err != nil { serverError(w, r, "chart B calculation failed", err); return }
+	pair := &technique.ChartPair{ChartA: chartA, ChartB: chartB, NameA: contactA.Name, NameB: contactB.Name}
+	jsonOK(w, technique.CalcComposite(pair))
+}
+
+// --- Plan 12: Remaining technique endpoints (24 functions without endpoints) ---
+
+func (h *Handler) TertiaryProgressions(w http.ResponseWriter, r *http.Request) {
+	req, err := h.parseRequest(w, r); if err != nil { jsonError(w, "invalid request", http.StatusBadRequest); return }
+	contact, code, err := h.resolveContact(r, req.ContactName); if err != nil { jsonError(w, err.Error(), code); return }
+	chart, _, err := contactToChart(contact); if err != nil { serverError(w, r, "chart failed", err); return }
+	tp, err := technique.CalcTertiaryProgressions(chart, req.Year)
+	if err != nil { serverError(w, r, "tertiary progressions failed", err); return }
+	jsonOK(w, tp)
+}
+
+func (h *Handler) Decennials(w http.ResponseWriter, r *http.Request) {
+	req, err := h.parseRequest(w, r); if err != nil { jsonError(w, "invalid request", http.StatusBadRequest); return }
+	contact, code, err := h.resolveContact(r, req.ContactName); if err != nil { jsonError(w, err.Error(), code); return }
+	chart, birthDate, err := contactToChart(contact); if err != nil { serverError(w, r, "chart failed", err); return }
+	jsonOK(w, technique.CalcDecennials(chart, birthDate, req.Year))
+}
+
+func (h *Handler) PlanetaryCycles(w http.ResponseWriter, r *http.Request) {
+	req, err := h.parseRequest(w, r); if err != nil { jsonError(w, "invalid request", http.StatusBadRequest); return }
+	contact, code, err := h.resolveContact(r, req.ContactName); if err != nil { jsonError(w, err.Error(), code); return }
+	chart, _, err := contactToChart(contact); if err != nil { serverError(w, r, "chart failed", err); return }
+	jsonOK(w, technique.CalcPlanetaryCycles(chart, req.Year))
+}
+
+func (h *Handler) PlanetaryReturns(w http.ResponseWriter, r *http.Request) {
+	req, err := h.parseRequest(w, r); if err != nil { jsonError(w, "invalid request", http.StatusBadRequest); return }
+	contact, code, err := h.resolveContact(r, req.ContactName); if err != nil { jsonError(w, err.Error(), code); return }
+	chart, _, err := contactToChart(contact); if err != nil { serverError(w, r, "chart failed", err); return }
+	jsonOK(w, technique.CalcPlanetaryReturns(chart, req.Year))
+}
+
+func (h *Handler) LilithVertex(w http.ResponseWriter, r *http.Request) {
+	req, err := h.parseRequest(w, r); if err != nil { jsonError(w, "invalid request", http.StatusBadRequest); return }
+	contact, code, err := h.resolveContact(r, req.ContactName); if err != nil { jsonError(w, err.Error(), code); return }
+	chart, _, err := contactToChart(contact); if err != nil { serverError(w, r, "chart failed", err); return }
+	jsonOK(w, technique.CalcLilithVertex(chart, req.Year))
+}
+
+func (h *Handler) TimeLords(w http.ResponseWriter, r *http.Request) {
+	req, err := h.parseRequest(w, r); if err != nil { jsonError(w, "invalid request", http.StatusBadRequest); return }
+	contact, code, err := h.resolveContact(r, req.ContactName); if err != nil { jsonError(w, err.Error(), code); return }
+	chart, birthDate, err := contactToChart(contact); if err != nil { serverError(w, r, "chart failed", err); return }
+	midYear := time.Date(req.Year, 7, 1, 0, 0, 0, 0, time.UTC)
+	age := midYear.Sub(birthDate).Hours() / (24 * 365.25)
+	profection := technique.CalcProfection(chart, birthDate, req.Year)
+	firdaria := technique.CalcFirdaria(birthDate, chart.Diurnal, req.Year)
+	zrF := technique.CalcZodiacalReleasing(chart, "Fortune", age)
+	zrS := technique.CalcZodiacalReleasing(chart, "Spirit", age)
+	decennials := technique.CalcDecennials(chart, birthDate, req.Year)
+	jsonOK(w, technique.CalcTimeLords(profection, firdaria, zrF, zrS, decennials, birthDate, req.Year))
+}
+
+func (h *Handler) Electional(w http.ResponseWriter, r *http.Request) {
+	req, err := h.parseRequest(w, r); if err != nil { jsonError(w, "invalid request", http.StatusBadRequest); return }
+	contact, code, err := h.resolveContact(r, req.ContactName); if err != nil { jsonError(w, err.Error(), code); return }
+	chart, _, err := contactToChart(contact); if err != nil { serverError(w, r, "chart failed", err); return }
+	result, err := technique.CalcElectional(chart, req.Year, technique.ElectionalCriteria{AvoidVOC: true})
+	if err != nil { serverError(w, r, "electional failed", err); return }
+	jsonOK(w, result)
+}
+
+func (h *Handler) Horary(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, maxBodySize)
+	var req struct {
+		Lat       float64 `json:"lat"`
+		Lon       float64 `json:"lon"`
+		Alt       float64 `json:"alt"`
+		UTCOffset int     `json:"utc_offset"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil { jsonError(w, "invalid request", http.StatusBadRequest); return }
+	result, err := technique.CastHorary(time.Now(), req.Lat, req.Lon, req.Alt, req.UTCOffset)
+	if err != nil { serverError(w, r, "horary failed", err); return }
+	jsonOK(w, result)
+}
+
+func (h *Handler) Astrocartography(w http.ResponseWriter, r *http.Request) {
+	req, err := h.parseRequest(w, r); if err != nil { jsonError(w, "invalid request", http.StatusBadRequest); return }
+	contact, code, err := h.resolveContact(r, req.ContactName); if err != nil { jsonError(w, err.Error(), code); return }
+	chart, _, err := contactToChart(contact); if err != nil { serverError(w, r, "chart failed", err); return }
+	jsonOK(w, technique.CalcAstrocartography(chart, 5.0))
+}
+
+func (h *Handler) Rectification(w http.ResponseWriter, r *http.Request) {
+	r.Body = http.MaxBytesReader(w, r.Body, maxBodySize)
+	var req struct {
+		Year        int                          `json:"year"`
+		Month       int                          `json:"month"`
+		Day         int                          `json:"day"`
+		Lat         float64                      `json:"lat"`
+		Lon         float64                      `json:"lon"`
+		Alt         float64                      `json:"alt"`
+		UTCOffset   int                          `json:"utc_offset"`
+		SearchMin   float64                      `json:"search_min"`
+		SearchMax   float64                      `json:"search_max"`
+		StepMinutes float64                      `json:"step_minutes"`
+		Events      []technique.RectificationEvent `json:"events"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil { jsonError(w, "invalid request", http.StatusBadRequest); return }
+	result, err := technique.Rectify(req.Year, req.Month, req.Day, req.Lat, req.Lon, req.Alt, req.UTCOffset, [2]float64{req.SearchMin, req.SearchMax}, req.StepMinutes, req.Events)
+	if err != nil { serverError(w, r, "rectification failed", err); return }
+	jsonOK(w, result)
+}
+
+func (h *Handler) WeeklyTransits(w http.ResponseWriter, r *http.Request) {
+	req, err := h.parseRequest(w, r); if err != nil { jsonError(w, "invalid request", http.StatusBadRequest); return }
+	contact, code, err := h.resolveContact(r, req.ContactName); if err != nil { jsonError(w, err.Error(), code); return }
+	chart, _, err := contactToChart(contact); if err != nil { serverError(w, r, "chart failed", err); return }
+	startJD := ephemeris.JulDay(time.Now().Year(), int(time.Now().Month()), time.Now().Day(), 0)
+	jsonOK(w, technique.CalcWeeklyTransits(chart, startJD))
+}
+
+func (h *Handler) ActivationTimeline(w http.ResponseWriter, r *http.Request) {
+	req, err := h.parseRequest(w, r); if err != nil { jsonError(w, "invalid request", http.StatusBadRequest); return }
+	contact, code, err := h.resolveContact(r, req.ContactName); if err != nil { jsonError(w, err.Error(), code); return }
+	chart, birthDate, err := contactToChart(contact); if err != nil { serverError(w, r, "chart failed", err); return }
+	fullCtx, err := astrocontext.Build(chart, contact.Name, birthDate, req.Year)
+	if err != nil { serverError(w, r, "context build failed", err); return }
+	jsonOK(w, technique.BuildActivationTimeline(fullCtx.Transits, fullCtx.FastTransits, fullCtx.Eclipses, fullCtx.Stations, fullCtx.SolarArc, fullCtx.EclipseTriggers))
+}
+
+func (h *Handler) Score(w http.ResponseWriter, r *http.Request) {
+	req, err := h.parseRequest(w, r); if err != nil { jsonError(w, "invalid request", http.StatusBadRequest); return }
+	contact, code, err := h.resolveContact(r, req.ContactName); if err != nil { jsonError(w, err.Error(), code); return }
+	chart, birthDate, err := contactToChart(contact); if err != nil { serverError(w, r, "chart failed", err); return }
+	fullCtx, err := astrocontext.Build(chart, contact.Name, birthDate, req.Year)
+	if err != nil { serverError(w, r, "context build failed", err); return }
+	jsonOK(w, map[string]any{"score": fullCtx.Score, "monthly": fullCtx.MonthlyScores, "verdicts": fullCtx.Verdicts, "contradictions": fullCtx.Contradictions})
+}
+
+func (h *Handler) VOCMoon(w http.ResponseWriter, r *http.Request) {
+	req, err := h.parseRequest(w, r); if err != nil { jsonError(w, "invalid request", http.StatusBadRequest); return }
+	month := int(time.Now().Month())
+	if req.Year == 0 { req.Year = time.Now().Year() }
+	jsonOK(w, astrocontext.CalcVOCPeriods(req.Year, month))
+}
+
+func (h *Handler) Tabla(w http.ResponseWriter, r *http.Request) {
+	// Multi-entity table requires multiple contacts — simplified for single contact
+	req, err := h.parseRequest(w, r); if err != nil { jsonError(w, "invalid request", http.StatusBadRequest); return }
+	contact, code, err := h.resolveContact(r, req.ContactName); if err != nil { jsonError(w, err.Error(), code); return }
+	chart, birthDate, err := contactToChart(contact); if err != nil { serverError(w, r, "chart failed", err); return }
+	fullCtx, err := astrocontext.Build(chart, contact.Name, birthDate, req.Year)
+	if err != nil { serverError(w, r, "context build failed", err); return }
+	entity := astrocontext.TablaEntity{
+		Name: contact.Name, Profection: fullCtx.Profection, Firdaria: fullCtx.Firdaria,
+		SolarArcs: fullCtx.SolarArc, Transits: fullCtx.Transits, Eclipses: fullCtx.Eclipses,
+	}
+	jsonOK(w, astrocontext.BuildTabla([]astrocontext.TablaEntity{entity}, req.Year, req.Year))
+}
+
+// Business: employee screening, succession, vocational
+func (h *Handler) EmployeeScreening(w http.ResponseWriter, r *http.Request) {
+	req, err := h.parseMultiRequest(w, r); if err != nil { jsonError(w, "invalid request", http.StatusBadRequest); return }
+	companyContact, code, err := h.resolveContact(r, req.ContactNameA); if err != nil { jsonError(w, err.Error(), code); return }
+	candidateContact, code, err := h.resolveContact(r, req.ContactNameB); if err != nil { jsonError(w, err.Error(), code); return }
+	companyChart, _, err := contactToChart(companyContact); if err != nil { serverError(w, r, "company chart failed", err); return }
+	candidateChart, _, err := contactToChart(candidateContact); if err != nil { serverError(w, r, "candidate chart failed", err); return }
+	jsonOK(w, business.ScreenEmployee(companyChart, candidateChart, candidateContact.Name))
+}
+
+func (h *Handler) Vocational(w http.ResponseWriter, r *http.Request) {
+	req, err := h.parseRequest(w, r); if err != nil { jsonError(w, "invalid request", http.StatusBadRequest); return }
+	contact, code, err := h.resolveContact(r, req.ContactName); if err != nil { jsonError(w, err.Error(), code); return }
+	chart, _, err := contactToChart(contact); if err != nil { serverError(w, r, "chart failed", err); return }
+	jsonOK(w, business.CalcVocational(chart))
+}
+
 func (h *Handler) Brief(w http.ResponseWriter, r *http.Request) {
 	req, err := h.parseRequest(w, r)
 	if err != nil {
@@ -337,7 +703,10 @@ func (h *Handler) Brief(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, err.Error(), code)
 		return
 	}
-	chart, birthDate, err := contactToChart(contact)
+	tInfo, tErr := tenant.FromContext(r.Context())
+	tSlug := ""
+	if tErr == nil { tSlug = tInfo.ID }
+	chart, birthDate, err := h.contactToChartCached(contact, tSlug)
 	if err != nil {
 		serverError(w, r, "chart calculation failed", err)
 		return
@@ -400,23 +769,58 @@ func (h *Handler) Query(w http.ResponseWriter, r *http.Request) {
 	}
 	sseEvent(w, flusher, "contact_recognized", map[string]string{"name": contact.Name})
 
-	// 2. Build chart + context
-	chart, birthDate, err := contactToChart(contact)
+	// 2. Build chart + context (using cache for expensive BuildNatal)
+	tenantInfo, tenantErr := tenant.FromContext(r.Context())
+	tenantSlug := ""
+	if tenantErr == nil {
+		tenantSlug = tenantInfo.ID
+	}
+	chart, birthDate, err := h.contactToChartCached(contact, tenantSlug)
 	if err != nil {
 		sseError(w, flusher, r, "chart calculation failed")
 		return
 	}
-	ctx, err := astrocontext.Build(chart, contact.Name, birthDate, req.Year)
+	fullCtx, err := astrocontext.Build(chart, contact.Name, birthDate, req.Year)
 	if err != nil {
 		sseError(w, flusher, r, "context build failed")
 		return
 	}
-	sseEvent(w, flusher, "calc_context", map[string]string{"status": "complete", "brief_length": strconv.Itoa(len(ctx.Brief))})
+	sseEvent(w, flusher, "calc_context", map[string]string{"status": "complete", "brief_length": strconv.Itoa(len(fullCtx.Brief))})
+
+	// 2b. Intelligence layer: domain routing, technique gating, cross-references
+	var briefText, systemPrompt string
+	var analysis *intelligence.AnalysisResult
+	if h.intel != nil && req.Query != "" {
+		var err error
+		analysis, err = h.intel.Analyze(r.Context(), &intelligence.AnalysisRequest{
+			Query:   req.Query,
+			FullCtx: fullCtx,
+		})
+		if err == nil {
+			briefText = analysis.Brief
+			systemPrompt = analysis.SystemPrompt
+			sseEvent(w, flusher, "calc_context", map[string]string{
+				"domain":     analysis.Domain.Name,
+				"crossrefs":  strconv.Itoa(len(analysis.CrossRefs)),
+				"coverage":   fmt.Sprintf("%.0f%%", analysis.Gate.Coverage*100),
+			})
+		}
+	}
+	if briefText == "" {
+		briefText = fullCtx.Brief
+	}
+	if systemPrompt == "" {
+		systemPrompt = "Eres un astrólogo profesional. Analiza el siguiente brief y responde la consulta del usuario."
+	}
 
 	// 3. LLM narration (true token streaming via SSE)
+	var fullResponse strings.Builder
 	if h.llm != nil {
-		prompt := fmt.Sprintf("Eres un astrólogo profesional. Analiza el siguiente brief y responde la consulta del usuario.\n\n%s\n\nConsulta: %s", ctx.Brief, req.Query)
-		msgs := []llm.Message{{Role: "user", Content: prompt}}
+		// Separate system/user messages to prevent prompt injection (B5 fix)
+		msgs := []llm.Message{
+			{Role: "system", Content: systemPrompt + "\n\n" + briefText},
+			{Role: "user", Content: req.Query},
+		}
 		stream, err := h.llm.StreamChat(r.Context(), msgs, 0.7, 4096)
 		if err != nil {
 			slog.Error("llm stream failed", "error", err, "request_id", middleware.GetReqID(r.Context()))
@@ -429,13 +833,44 @@ func (h *Handler) Query(w http.ResponseWriter, r *http.Request) {
 					break
 				}
 				if delta.Text != "" {
+					fullResponse.WriteString(delta.Text)
 					sseEvent(w, flusher, "token", map[string]string{"text": delta.Text})
 				}
 			}
 		}
 	} else {
 		// No LLM — send brief directly
-		sseEvent(w, flusher, "brief", map[string]string{"text": ctx.Brief})
+		sseEvent(w, flusher, "brief", map[string]string{"text": fullCtx.Brief})
+	}
+
+	// 4. Quality audit on LLM response (wired from dead code → live)
+	if fullResponse.Len() > 0 && h.intel != nil {
+		domain, _ := h.intel.Registry().Resolve("predictivo")
+		if analysis != nil {
+			domain = analysis.Domain
+		}
+		gate := intelligence.ValidateTechniques(fullCtx, domain)
+		auditResult := quality.RunAudit(fullResponse.String(), domain, gate)
+		validationIssues := quality.ValidateResponse(fullResponse.String(), fullCtx)
+		sseEvent(w, flusher, "audit", map[string]interface{}{
+			"score_total":    auditResult.ScoreTotal,
+			"score_technical": auditResult.ScoreTechnical,
+			"issues":         len(auditResult.Issues),
+			"validation":     len(validationIssues),
+		})
+		// Publish quality metrics to feedback service via NATS
+		if h.traces != nil {
+			h.traces.Feedback(h.slug, "astro_quality", map[string]any{
+				"score_total":        auditResult.ScoreTotal,
+				"score_technical":    auditResult.ScoreTechnical,
+				"score_communication": auditResult.ScoreCommunication,
+				"issues":            len(auditResult.Issues),
+				"validation_issues": len(validationIssues),
+				"techniques_used":   auditResult.TechniquesUsed,
+				"techniques_expected": auditResult.TechniquesExpected,
+				"domain":            domain.ID,
+			})
+		}
 	}
 
 	sseEvent(w, flusher, "done", nil)
@@ -585,6 +1020,10 @@ func (h *Handler) SearchContacts(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("q")
 	if query == "" {
 		jsonError(w, "q parameter is required", http.StatusBadRequest)
+		return
+	}
+	if len(query) > 200 {
+		jsonError(w, "query too long (max 200 chars)", http.StatusBadRequest)
 		return
 	}
 	limit := int32(50)

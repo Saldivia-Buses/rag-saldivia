@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"gopkg.in/yaml.v3"
 )
@@ -21,8 +22,9 @@ type ModuleManifest struct {
 type ManifestTool struct {
 	ID                   string         `yaml:"id"`
 	Service              string         `yaml:"service"`
-	Method               string         `yaml:"method"`
-	Protocol             string         `yaml:"protocol"`
+	Method               string         `yaml:"method"`   // gRPC method name (protocol: grpc)
+	Endpoint             string         `yaml:"endpoint"` // HTTP "VERB /path" (protocol: http)
+	Protocol             string         `yaml:"protocol"` // "grpc" or "http"
 	Type                 string         `yaml:"type"`
 	RequiresConfirmation bool           `yaml:"requires_confirmation"`
 	Description          string         `yaml:"description"`
@@ -69,11 +71,14 @@ func LoadModuleTools(modulesDir string, enabledModules map[string]bool, serviceU
 
 			params, _ := json.Marshal(t.Parameters)
 
+			// Resolve endpoint URL and HTTP method based on protocol
+			httpMethod, fullURL := resolveEndpoint(baseURL, t)
+
 			defs = append(defs, Definition{
 				Name:                 t.ID,
 				Service:              t.Service,
-				Endpoint:             baseURL + "/" + t.Method, // simplified — real impl uses gRPC
-				Method:               "POST",
+				Endpoint:             fullURL,
+				Method:               httpMethod,
 				Type:                 t.Type,
 				RequiresConfirmation: t.RequiresConfirmation,
 				Description:          t.Description,
@@ -85,6 +90,30 @@ func LoadModuleTools(modulesDir string, enabledModules map[string]bool, serviceU
 	}
 
 	return defs, nil
+}
+
+// resolveEndpoint determines the HTTP method and full URL for a tool.
+// Supports two protocols:
+//   - grpc: Method field is a gRPC method name → POST baseURL/method
+//   - http:  Endpoint field is "VERB /path" → VERB baseURL+path
+func resolveEndpoint(baseURL string, t ManifestTool) (httpMethod, fullURL string) {
+	switch t.Protocol {
+	case "http":
+		// Endpoint format: "POST /v1/astro/natal" or "GET /v1/astro/contacts"
+		if t.Endpoint != "" {
+			parts := strings.SplitN(t.Endpoint, " ", 2)
+			if len(parts) == 2 {
+				return strings.ToUpper(parts[0]), baseURL + parts[1]
+			}
+			// Endpoint is just a path without verb → default to POST
+			return "POST", baseURL + t.Endpoint
+		}
+		// Fallback to method field
+		return "POST", baseURL + "/" + t.Method
+	default:
+		// gRPC or unspecified: original behavior
+		return "POST", baseURL + "/" + t.Method
+	}
 }
 
 func loadManifest(path string) (*ModuleManifest, error) {

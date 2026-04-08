@@ -19,11 +19,16 @@ import (
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	"github.com/Camionerou/rag-saldivia/pkg/llm"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
+	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
 	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
 	"github.com/Camionerou/rag-saldivia/pkg/security"
+	"github.com/Camionerou/rag-saldivia/pkg/traces"
 
+	"github.com/Camionerou/rag-saldivia/services/astro/internal/business"
+	"github.com/Camionerou/rag-saldivia/services/astro/internal/cache"
 	"github.com/Camionerou/rag-saldivia/services/astro/internal/ephemeris"
 	"github.com/Camionerou/rag-saldivia/services/astro/internal/handler"
+	"github.com/Camionerou/rag-saldivia/services/astro/internal/intelligence"
 )
 
 const serviceVersion = "0.1.0"
@@ -58,6 +63,18 @@ func main() {
 
 	blacklist := security.InitBlacklist(ctx, config.Env("REDIS_URL", "localhost:6379"))
 
+	// NATS connection for traces, notifications, broadcasts
+	natsURL := config.Env("NATS_URL", "nats://localhost:4222")
+	nc, err := natspub.Connect(natsURL)
+	if err != nil {
+		slog.Warn("nats connect failed, event publishing disabled", "error", err)
+	} else {
+		defer nc.Drain()
+		slog.Info("connected to nats", "url", natsURL)
+	}
+	tracePublisher := traces.NewPublisher(nc)
+	tenantSlug := config.Env("TENANT_SLUG", "saldivia")
+
 	ephemeris.Init(ephePath)
 	defer ephemeris.Close()
 
@@ -76,7 +93,16 @@ func main() {
 		llmClient = llm.NewClient(llmEndpoint, llmModel, llmAPIKey)
 	}
 
-	astroHandler := handler.New(pool, llmClient)
+	// Plan 12: Intelligence engine + chart cache
+	intel, err := intelligence.NewEngine(logger)
+	if err != nil {
+		slog.Error("intelligence engine init failed", "error", err)
+		os.Exit(1)
+	}
+	chartCache := cache.NewChartRegistry()
+	bizService := business.NewService()
+
+	astroHandler := handler.New(pool, llmClient, intel, chartCache, bizService, tracePublisher, tenantSlug)
 
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)
@@ -126,8 +152,48 @@ func main() {
 		r.Post("/v1/astro/firdaria", astroHandler.Firdaria)
 		r.Post("/v1/astro/fixed-stars", astroHandler.FixedStars)
 		r.Post("/v1/astro/brief", astroHandler.Brief)
+		// Plan 12: new technique endpoints
+		r.Post("/v1/astro/eclipses", astroHandler.Eclipses)
+		r.Post("/v1/astro/zodiacal-releasing", astroHandler.ZodiacalReleasing)
+		r.Post("/v1/astro/lunations", astroHandler.Lunations)
+		r.Post("/v1/astro/lots", astroHandler.Lots)
+		r.Post("/v1/astro/dignities", astroHandler.Dignities)
+		r.Post("/v1/astro/midpoints", astroHandler.Midpoints)
+		r.Post("/v1/astro/declinations", astroHandler.Declinations)
+		r.Post("/v1/astro/fast-transits", astroHandler.FastTransits)
+		r.Post("/v1/astro/wheel", astroHandler.Wheel)
+		// More technique endpoints
+		r.Post("/v1/astro/tertiary-progressions", astroHandler.TertiaryProgressions)
+		r.Post("/v1/astro/decennials", astroHandler.Decennials)
+		r.Post("/v1/astro/planetary-cycles", astroHandler.PlanetaryCycles)
+		r.Post("/v1/astro/planetary-returns", astroHandler.PlanetaryReturns)
+		r.Post("/v1/astro/lilith-vertex", astroHandler.LilithVertex)
+		r.Post("/v1/astro/time-lords", astroHandler.TimeLords)
+		r.Post("/v1/astro/electional", astroHandler.Electional)
+		r.Post("/v1/astro/horary", astroHandler.Horary)
+		r.Post("/v1/astro/astrocartography", astroHandler.Astrocartography)
+		r.Post("/v1/astro/rectification", astroHandler.Rectification)
+		r.Post("/v1/astro/weekly-transits", astroHandler.WeeklyTransits)
+		r.Post("/v1/astro/activation-timeline", astroHandler.ActivationTimeline)
+		r.Post("/v1/astro/score", astroHandler.Score)
+		r.Post("/v1/astro/voc-moon", astroHandler.VOCMoon)
+		r.Post("/v1/astro/tabla", astroHandler.Tabla)
+		r.Post("/v1/astro/vocational", astroHandler.Vocational)
+		// Multi-chart endpoints
+		r.Post("/v1/astro/synastry", astroHandler.Synastry)
+		r.Post("/v1/astro/composite", astroHandler.Composite)
+		r.Post("/v1/astro/employee-screening", astroHandler.EmployeeScreening)
+		// Contacts
 		r.Get("/v1/astro/contacts", astroHandler.ListContacts)
 		r.Get("/v1/astro/contacts/search", astroHandler.SearchContacts)
+		// Sessions (read)
+		r.Get("/v1/astro/sessions", astroHandler.ListSessions)
+		r.Get("/v1/astro/sessions/{id}", astroHandler.GetSession)
+		r.Get("/v1/astro/sessions/{id}/messages", astroHandler.GetMessages)
+		// Quality (read)
+		r.Get("/v1/astro/predictions", astroHandler.ListPredictions)
+		r.Get("/v1/astro/predictions/stats", astroHandler.PredictionStats)
+		r.Get("/v1/astro/usage", astroHandler.DailyUsage)
 	})
 
 	// Write endpoints — FailOpen false, astro.write permission
@@ -140,14 +206,37 @@ func main() {
 		r.Post("/v1/astro/contacts", astroHandler.CreateContact)
 		r.Put("/v1/astro/contacts/{id}", astroHandler.UpdateContact)
 		r.Delete("/v1/astro/contacts/{id}", astroHandler.DeleteContact)
+		// Sessions (write)
+		r.Post("/v1/astro/sessions", astroHandler.CreateSession)
+		r.Patch("/v1/astro/sessions/{id}", astroHandler.UpdateSession)
+		r.Delete("/v1/astro/sessions/{id}", astroHandler.DeleteSession)
+		// Predictions (write)
+		r.Post("/v1/astro/predictions", astroHandler.CreatePrediction)
+		r.Patch("/v1/astro/predictions/{id}/verify", astroHandler.VerifyPrediction)
+		r.Post("/v1/astro/feedback", astroHandler.SubmitFeedback)
 	})
 
 	// SSE endpoint — no chi timeout, astro.read permission
 	r.Group(func(r chi.Router) {
 		r.Use(authRead)
-		r.Use(rateMw)
+		r.Use(sdamw.RateLimit(sdamw.RateLimitConfig{Requests: 5, Window: time.Minute, KeyFunc: sdamw.ByUser}))
 		r.Use(sdamw.RequirePermission("astro.read"))
 		r.Post("/v1/astro/query", astroHandler.Query)
+	})
+
+	// Business intelligence — separate permission, lower rate limit
+	r.Group(func(r chi.Router) {
+		r.Use(authRead)
+		r.Use(sdamw.RateLimit(sdamw.RateLimitConfig{Requests: 10, Window: time.Minute, KeyFunc: sdamw.ByUser}))
+		r.Use(sdamw.RequirePermission("astro.business"))
+		r.Use(middleware.Timeout(2 * time.Minute))
+		r.Get("/v1/astro/business/dashboard", astroHandler.Dashboard)
+		r.Get("/v1/astro/business/cashflow", astroHandler.CashFlow)
+		r.Get("/v1/astro/business/risk", astroHandler.RiskHeatmap)
+		r.Get("/v1/astro/business/forecast", astroHandler.QuarterlyForecast)
+		r.Get("/v1/astro/business/team", astroHandler.TeamCompatibility)
+		r.Get("/v1/astro/business/hiring", astroHandler.HiringCalendar)
+		r.Get("/v1/astro/business/mercury-rx", astroHandler.MercuryRx)
 	})
 
 	srv := &http.Server{

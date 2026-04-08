@@ -147,7 +147,211 @@ func BuildBrief(ctx *FullContext) string {
 	}
 	b.WriteString("\n")
 
-	// Section 7: Convergence matrix
+	// Section 7: Dignities and Disposition (Plan 12)
+	if ctx.Almuten != nil {
+		b.WriteString("## DIGNIDADES Y DISPOSICIÓN\n\n")
+		b.WriteString(fmt.Sprintf("**Almutén Figuris:** %s (puntaje %d)\n", ctx.Almuten.Winner, ctx.Almuten.Score))
+		if ctx.Disposition != nil {
+			if ctx.Disposition.FinalDispositor != "" {
+				b.WriteString(fmt.Sprintf("**Dispositor final:** %s\n", ctx.Disposition.FinalDispositor))
+			}
+			if len(ctx.Disposition.MutualReceptions) > 0 {
+				for _, mr := range ctx.Disposition.MutualReceptions {
+					b.WriteString(fmt.Sprintf("  Recepción mutua: %s (%s) ↔ %s (%s)\n",
+						mr.PlanetA, mr.SignA, mr.PlanetB, mr.SignB))
+				}
+			}
+		}
+		if ctx.Sect != nil {
+			b.WriteString(fmt.Sprintf("**Secta:** luz=%s, benéfico=%s, maléfico=%s\n",
+				ctx.Sect.SectLight, ctx.Sect.SectBenefic, ctx.Sect.SectMalefic))
+			if len(ctx.Sect.Hayz) > 0 {
+				b.WriteString(fmt.Sprintf("  Hayz: %s\n", strings.Join(ctx.Sect.Hayz, ", ")))
+			}
+		}
+		b.WriteString("\n")
+	}
+
+	// Section 8: Decennials (Plan 12)
+	if ctx.Decennials != nil {
+		b.WriteString("## DECENIALES\n\n")
+		b.WriteString(fmt.Sprintf("**Período mayor:** %s (%d años, hasta edad %.1f)\n",
+			ctx.Decennials.MajorPlanet, ctx.Decennials.MajorYears, ctx.Decennials.MajorEndAge))
+		b.WriteString(fmt.Sprintf("**Sub-período:** %s (edad %.1f–%.1f)\n",
+			ctx.Decennials.SubPlanet, ctx.Decennials.SubStartAge, ctx.Decennials.SubEndAge))
+		b.WriteString(fmt.Sprintf("**Próximo mayor:** %s\n\n", ctx.Decennials.NextMajor))
+	}
+
+	// Section 9: Tertiary Progressions (Plan 12)
+	if ctx.TertiaryProg != nil && len(ctx.TertiaryProg.Positions) > 0 {
+		b.WriteString("## PROGRESIONES TERCIARIAS\n\n")
+		for _, pp := range ctx.TertiaryProg.Positions {
+			line := fmt.Sprintf("- %s TP en %s (casa %d)", pp.Name, pp.Sign, pp.House)
+			if pp.Retro {
+				line += " Rx"
+			}
+			if pp.SignIngress {
+				line += fmt.Sprintf(" ⚠ INGRESO %s → %s", pp.PrevSign, pp.Sign)
+			}
+			b.WriteString(line + "\n")
+		}
+		b.WriteString("\n")
+	}
+
+	// Section 10: Fast Transits (Plan 12)
+	if len(ctx.FastTransits) > 0 {
+		b.WriteString("## TRÁNSITOS RÁPIDOS\n\n")
+		for _, ft := range ctx.FastTransits {
+			b.WriteString(fmt.Sprintf("- %s %s %s (orbe %.2f° mes %d %s)\n",
+				ft.Transit, ft.Aspect, ft.Natal, ft.Orb, ft.Month, ft.Nature))
+		}
+		b.WriteString("\n")
+	}
+
+	// Section 11: Lunations (Plan 12)
+	if ctx.Lunations != nil && len(ctx.Lunations.Lunations) > 0 {
+		b.WriteString("## LUNACIONES\n\n")
+		for _, l := range ctx.Lunations.Lunations {
+			line := fmt.Sprintf("- Luna %s: %d/%d en %s (casa %d)",
+				l.Type, l.Day, l.Month, l.Sign, l.House)
+			if l.NatPoint != "" {
+				line += fmt.Sprintf(" → %s %s (orbe %.1f°)", l.NatAspect, l.NatPoint, l.NatOrb)
+			}
+			b.WriteString(line + "\n")
+		}
+		b.WriteString("\n")
+	}
+
+	// Section 12: Planetary Cycles (Plan 12)
+	if len(ctx.PlanetaryCycles) > 0 {
+		b.WriteString("## CICLOS PLANETARIOS\n\n")
+		for _, c := range ctx.PlanetaryCycles {
+			b.WriteString(fmt.Sprintf("- %s (orbe %.1f° mes %d)\n", c.Description, c.Orb, c.Month))
+		}
+		b.WriteString("\n")
+	}
+
+	// Section 13: Eclipse Triggers (Plan 12)
+	if len(ctx.EclipseTriggers) > 0 {
+		b.WriteString("## ACTIVACIÓN DE ECLIPSES\n\n")
+		for _, t := range ctx.EclipseTriggers {
+			line := fmt.Sprintf("- %s %s eclipse %s (orbe %.1f° mes %d)",
+				t.TriggerPlanet, t.Aspect, t.EclipseType, t.Orb, t.Month)
+			if t.NatPoint != "" {
+				line += fmt.Sprintf(" ⚠ sobre %s natal", t.NatPoint)
+			}
+			b.WriteString(line + "\n")
+		}
+		b.WriteString("\n")
+	}
+
+	// Section 14: Lots (Plan 12)
+	if len(ctx.Lots) > 0 {
+		b.WriteString("## LOTES HELENÍSTICOS\n\n")
+		for _, lot := range ctx.Lots {
+			b.WriteString(fmt.Sprintf("- %s: %s (casa %d) — %s\n",
+				lot.Name, lot.Pos, lot.House, lot.Description))
+		}
+		if len(ctx.LotsActivated) > 0 {
+			b.WriteString("\nActivaciones SA sobre lotes:\n")
+			for _, la := range ctx.LotsActivated {
+				b.WriteString(fmt.Sprintf("  SA %s %s %s (orbe %.1f°)\n",
+					la.SAPlanet, la.Aspect, la.LotName, la.Orb))
+			}
+		}
+		b.WriteString("\n")
+	}
+
+	// Section 15: Midpoints (Plan 12)
+	if ctx.Midpoints != nil && len(ctx.Midpoints.Activated) > 0 {
+		b.WriteString("## PUNTOS MEDIOS ACTIVADOS (Ebertin)\n\n")
+		top := ctx.Midpoints.Activated
+		if len(top) > 10 {
+			top = top[:10]
+		}
+		for _, mp := range top {
+			b.WriteString(fmt.Sprintf("- %s (orbe %.2f°)\n", mp.Notation, mp.Orb))
+		}
+		b.WriteString("\n")
+	}
+
+	// Section 16: Declinations (Plan 12)
+	if ctx.Declinations != nil {
+		if len(ctx.Declinations.OOBPlanets) > 0 {
+			b.WriteString("## DECLINACIONES\n\n")
+			b.WriteString("Planetas fuera de límites:\n")
+			for _, p := range ctx.Declinations.OOBPlanets {
+				hemisphere := "N"
+				if p.Dec < 0 {
+					hemisphere = "S"
+				}
+				b.WriteString(fmt.Sprintf("  %s: %.2f° %s ⚠ OOB\n", p.Planet, p.Dec, hemisphere))
+			}
+			b.WriteString("\n")
+		}
+		if len(ctx.Declinations.Parallels) > 0 {
+			if len(ctx.Declinations.OOBPlanets) == 0 {
+				b.WriteString("## DECLINACIONES\n\n")
+			}
+			for _, pa := range ctx.Declinations.Parallels {
+				b.WriteString(fmt.Sprintf("  %s %s %s (orbe %.2f°)\n",
+					pa.PlanetA, pa.Type, pa.PlanetB, pa.Orb))
+			}
+			b.WriteString("\n")
+		}
+	}
+
+	// Section 17: Activation Chains (Plan 12)
+	if len(ctx.ActivationChains) > 0 {
+		b.WriteString("## CADENAS DE ACTIVACIÓN\n\n")
+		for _, ac := range ctx.ActivationChains {
+			b.WriteString(fmt.Sprintf("- %s — %s (%d técnicas, %s)\n",
+				ac.Planet, ac.Description, ac.Count, ac.Significance))
+		}
+		b.WriteString("\n")
+	}
+
+	// Section 18: Transit context builders (antiscia, fixed stars, cazimi)
+	b.WriteString(AntisciaContext(ctx.Chart, ctx.Year))
+	b.WriteString(FixedStarsTransitContext(ctx.Year))
+	b.WriteString(CazimiCombustionTransitContext(ctx.Year))
+
+	// Section 19: Natal sub-analyses
+	natalText := astromath.FormatNatalAnalysis(
+		ctx.AspectPatterns, ctx.ChartShape, ctx.Hemispheres,
+		ctx.FullDignities, ctx.PlanetaryAge,
+	)
+	if natalText != "" {
+		b.WriteString(natalText)
+	}
+
+	// Section 19: Cross-technique analyses
+	crossText := FormatCrossAnalyses(
+		ctx.RSLRCrossings, ctx.PrenatalTransits,
+		ctx.Divisor, ctx.TriplicityLords, ctx.ChronoCross,
+	)
+	if crossText != "" {
+		b.WriteString(crossText)
+	}
+
+	// Section 20: Scoring + Synthesis
+	b.WriteString(fmt.Sprintf("## SCORE DE ACTIVACIÓN: %d/100\n\n", ctx.Score))
+
+	// Dominant themes
+	themes := DominantThemes(ctx, 3)
+	if len(themes) > 0 {
+		b.WriteString("## TEMAS DOMINANTES\n\n")
+		for _, t := range themes {
+			b.WriteString(fmt.Sprintf("- %s\n", t))
+		}
+		b.WriteString("\n")
+	}
+
+	// Synthesis (verdicts + contradictions + month scores)
+	b.WriteString(SynthesisBrief(ctx.Verdicts, ctx.Contradictions, ctx.MonthlyScores))
+	b.WriteString("\n")
+
+	// Section 21: Convergence matrix
 	b.WriteString("## MATRIZ DE CONVERGENCIA MENSUAL\n\n")
 	scores := buildConvergenceMatrix(ctx)
 	for _, ms := range scores {
