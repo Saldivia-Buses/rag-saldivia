@@ -100,6 +100,146 @@ func TestResolve_Fallback(t *testing.T) {
 	}
 }
 
+func TestDomainRegistry_Plan13_TotalCount(t *testing.T) {
+	domains := defaultDomains()
+	if got := len(domains); got < 60 {
+		t.Errorf("domain count = %d, want >= 60 (8 root + 50+ sub)", got)
+	}
+	t.Logf("total domains: %d", len(domains))
+}
+
+func TestDomainRegistry_Plan13_RootDomains(t *testing.T) {
+	domains := defaultDomains()
+	roots := make([]string, 0)
+	for _, d := range domains {
+		if d.Parent == "" {
+			roots = append(roots, d.ID)
+		}
+	}
+
+	expectedRoots := map[string]bool{
+		"natal": true, "predictivo": true, "empresa": true,
+		"electiva": true, "horaria": true, "relocation": true,
+		"sinastria": true, "rectificacion": true,
+	}
+	for _, r := range roots {
+		if !expectedRoots[r] {
+			t.Errorf("unexpected root domain: %q", r)
+		}
+		delete(expectedRoots, r)
+	}
+	for missing := range expectedRoots {
+		t.Errorf("missing expected root domain: %q", missing)
+	}
+}
+
+func TestDomainRegistry_Plan13_NoDuplicateIDs(t *testing.T) {
+	domains := defaultDomains()
+	seen := make(map[string]bool, len(domains))
+	for _, d := range domains {
+		if seen[d.ID] {
+			t.Errorf("duplicate domain ID: %q", d.ID)
+		}
+		seen[d.ID] = true
+	}
+}
+
+func TestDomainRegistry_Plan13_UniqueKeywords(t *testing.T) {
+	domains := defaultDomains()
+
+	// Build parent map for ancestry check
+	parentMap := make(map[string]string)
+	for _, d := range domains {
+		parentMap[d.ID] = d.Parent
+	}
+	isAncestor := func(child, ancestor string) bool {
+		for cur := parentMap[child]; cur != ""; cur = parentMap[cur] {
+			if cur == ancestor {
+				return true
+			}
+		}
+		return false
+	}
+
+	// Keyword collisions between parent and child are OK (child specializes parent).
+	// Collisions between UNRELATED domains are real problems.
+	kwMap := make(map[string]string)
+	for _, d := range domains {
+		for _, kw := range d.Keywords {
+			if existing, ok := kwMap[kw]; ok {
+				if isAncestor(d.ID, existing) || isAncestor(existing, d.ID) {
+					continue // parent-child overlap is fine
+				}
+				t.Errorf("keyword %q used by unrelated domains %q and %q", kw, existing, d.ID)
+			}
+			kwMap[kw] = d.ID
+		}
+	}
+}
+
+func TestDomainRegistry_Plan13_AllResolveNoCycles(t *testing.T) {
+	reg := mustRegistry(t)
+	domains := defaultDomains()
+	for _, d := range domains {
+		resolved, err := reg.Resolve(d.ID)
+		if err != nil {
+			t.Errorf("Resolve(%q) failed: %v", d.ID, err)
+			continue
+		}
+		if d.Parent != "" && len(resolved.InheritedFrom) < 2 {
+			t.Errorf("Resolve(%q): subdomain should inherit, got InheritedFrom=%v", d.ID, resolved.InheritedFrom)
+		}
+	}
+}
+
+func TestDomainRegistry_Plan13_NewSubdomains(t *testing.T) {
+	reg := mustRegistry(t)
+
+	newDomains := []struct {
+		id     string
+		parent string
+	}{
+		// Natal subdomains
+		{"personal", "natal"}, {"espiritualidad", "natal"}, {"viajes", "natal"},
+		// Empresa subdomains
+		{"negociacion", "empresa"}, {"deudores", "empresa"}, {"cash_flow", "empresa"},
+		{"lanzamiento", "empresa"}, {"screening", "empresa"}, {"reunion_socios", "empresa"},
+		{"sucesion", "empresa"}, {"sociedad", "empresa"}, {"timing", "empresa"},
+		{"riesgos", "empresa"}, {"enterprise_general", "empresa"}, {"produccion", "empresa"},
+		{"proveedores", "empresa"}, {"licitaciones", "empresa"}, {"expansion", "empresa"},
+		{"calidad", "empresa"}, {"logistica", "empresa"}, {"empresa_competitivo", "empresa"},
+		// Carrera subdomains
+		{"educacion", "carrera"}, {"legal", "carrera"}, {"creatividad", "carrera"},
+		{"fama", "carrera"}, {"relacion_laboral", "carrera"},
+		// Salud subdomains
+		{"crisis", "salud"}, {"deporte", "salud"}, {"cronico", "salud"},
+		{"recuperacion", "salud"}, {"emergencia", "salud"},
+		// Amor subdomains
+		{"pareja", "amor"}, {"relacion", "amor"}, {"matrimonio", "amor"},
+		// Dinero subdomains
+		{"inmobiliario", "dinero"}, {"inversiones", "dinero"},
+		{"deudas", "dinero"}, {"emprendimiento", "dinero"},
+		// Familia subdomains
+		{"herencia", "familia"}, {"fertilidad", "familia"}, {"hijos", "familia"},
+		{"padres", "familia"}, {"divorcio", "familia"},
+		// Competitivo subdomain
+		{"competencia", "competitivo"},
+		// Root additions
+		{"sinastria", ""}, {"rectificacion", ""},
+	}
+
+	for _, tt := range newDomains {
+		resolved, err := reg.Resolve(tt.id)
+		if err != nil {
+			t.Errorf("Resolve(%q): %v", tt.id, err)
+			continue
+		}
+		if tt.parent != "" && resolved.Parent != tt.parent {
+			t.Errorf("domain %q: parent = %q, want %q", tt.id, resolved.Parent, tt.parent)
+		}
+	}
+}
+
 func mustRegistry(t *testing.T) *DomainRegistry {
 	t.Helper()
 	reg, err := NewDomainRegistry(defaultDomains())

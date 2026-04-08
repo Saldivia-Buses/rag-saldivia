@@ -734,6 +734,7 @@ func (h *Handler) Query(w http.ResponseWriter, r *http.Request) {
 		ContactName string `json:"contact_name"`
 		Query       string `json:"query"`
 		Year        int    `json:"year"`
+		SessionID   string `json:"session_id,omitempty"` // optional: for follow-up detection
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		jsonError(w, "invalid request", http.StatusBadRequest)
@@ -769,6 +770,17 @@ func (h *Handler) Query(w http.ResponseWriter, r *http.Request) {
 	}
 	sseEvent(w, flusher, "contact_recognized", map[string]string{"name": contact.Name})
 
+	// 1b. Follow-up detection (Plan 13 Fase 7)
+	// Note: full follow-up continuity (inheriting brief/domain from previous exchange)
+	// requires loading session messages from DB. Detection logic is ready in
+	// intelligence/followup.go but DB integration deferred — needs session message
+	// loading + metadata extraction. For now, only used to skip lazy calc on follow-ups.
+	isFollowUp := false
+	if h.intel != nil && req.SessionID != "" {
+		fu := intelligence.DetectFollowUp(req.Query, true, "", "")
+		isFollowUp = fu != nil && fu.IsFollowUp
+	}
+
 	// 2. Build chart + context (using cache for expensive BuildNatal)
 	tenantInfo, tenantErr := tenant.FromContext(r.Context())
 	tenantSlug := ""
@@ -780,7 +792,28 @@ func (h *Handler) Query(w http.ResponseWriter, r *http.Request) {
 		sseError(w, flusher, r, "chart calculation failed")
 		return
 	}
-	fullCtx, err := astrocontext.Build(chart, contact.Name, birthDate, req.Year)
+
+	// 2a. Domain-aware lazy calc (Plan 13 Fase 5c): detect domain BEFORE Build
+	var domainTechniques map[string]bool
+	if h.intel != nil && req.Query != "" && !isFollowUp {
+		domainID := h.intel.QuickDomain(req.Query)
+		if domainID != "" && domainID != "predictivo" {
+			if resolved, err := h.intel.Registry().Resolve(domainID); err == nil {
+				domainTechniques = make(map[string]bool)
+				for _, t := range resolved.TechniquesRequired {
+					domainTechniques[t] = true
+				}
+				for _, t := range resolved.TechniquesExpected {
+					domainTechniques[t] = true
+				}
+				for _, tw := range resolved.TechniquesBrief {
+					domainTechniques[tw.ID] = true
+				}
+			}
+		}
+	}
+
+	fullCtx, err := astrocontext.BuildWithDomain(chart, contact.Name, birthDate, req.Year, domainTechniques)
 	if err != nil {
 		sseError(w, flusher, r, "context build failed")
 		return
@@ -858,6 +891,16 @@ func (h *Handler) Query(w http.ResponseWriter, r *http.Request) {
 			"issues":         len(auditResult.Issues),
 			"validation":     len(validationIssues),
 		})
+		// Server-side technique detection (Plan 13 Fase 6)
+		detection := quality.DetectTechniques(briefText, fullResponse.String())
+		if len(detection.Details) > 0 {
+			sseEvent(w, flusher, "techniques_used", map[string]interface{}{
+				"used":    detection.Used,
+				"partial": detection.Partial,
+				"omitted": detection.Omitted,
+			})
+		}
+
 		// Publish quality metrics to feedback service via NATS
 		if h.traces != nil {
 			h.traces.Feedback(h.slug, "astro_quality", map[string]any{

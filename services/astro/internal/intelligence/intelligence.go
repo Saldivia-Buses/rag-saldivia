@@ -2,6 +2,7 @@ package intelligence
 
 import (
 	"context"
+	"fmt"
 	"log/slog"
 
 	astrocontext "github.com/Camionerou/rag-saldivia/services/astro/internal/context"
@@ -10,42 +11,58 @@ import (
 // Engine is the intelligence layer orchestrator. Thread-safe, created once at startup.
 type Engine struct {
 	registry *DomainRegistry
+	parser   IntentParser
 	log      *slog.Logger
 }
 
-// NewEngine creates the intelligence engine with the default domain registry.
+// NewEngine creates the intelligence engine with the default domain registry
+// and utterance-based intent router (falls back to keyword matching).
 func NewEngine(log *slog.Logger) (*Engine, error) {
 	domains := defaultDomains()
 	registry, err := NewDomainRegistry(domains)
 	if err != nil {
 		return nil, err
 	}
-	return &Engine{registry: registry, log: log}, nil
+	parser := NewUtteranceRouter(registry)
+	return &Engine{registry: registry, parser: parser, log: log}, nil
+}
+
+// NewEngineWithParser creates the engine with a custom IntentParser (for testing).
+func NewEngineWithParser(parser IntentParser, log *slog.Logger) (*Engine, error) {
+	domains := defaultDomains()
+	registry, err := NewDomainRegistry(domains)
+	if err != nil {
+		return nil, err
+	}
+	return &Engine{registry: registry, parser: parser, log: log}, nil
 }
 
 // AnalysisRequest holds everything the intelligence layer needs.
 type AnalysisRequest struct {
-	Query          string
-	FullCtx        *astrocontext.FullContext
-	ContactName    string             // for memory lookup
-	Predictions    []PredictionRecord // from DB, for wakeup context
-	Sessions       []SessionRecord    // from DB, for wakeup context
-	BirthTimeKnown bool
-	RectPending    bool               // rectification suggestion pending
+	Query           string
+	FullCtx         *astrocontext.FullContext
+	ContactName     string             // for memory lookup
+	Predictions     []PredictionRecord // from DB, for wakeup context
+	Sessions        []SessionRecord    // from DB, for wakeup context
+	BirthTimeKnown  bool
+	RectPending     bool               // rectification suggestion pending
+	SessionMessages []string           // user messages from current session (for event extraction)
 }
 
 // AnalysisResult is the output of the intelligence layer.
 type AnalysisResult struct {
-	Intent          *Intent
-	Domain          *ResolvedDomain
-	Gate            *GateResult
-	CrossRefs       []CrossReference
+	Intent            *Intent
+	Domain            *ResolvedDomain
+	Gate              *GateResult
+	CrossRefs         []CrossReference
 	Contraindications []Contraindication
-	NarrativeArc    *NarrativeArc
-	AdaptiveConfig  *AdaptiveConfig
-	Brief           string // domain-aware intelligence brief
-	SystemPrompt    string // domain-aware system prompt for LLM
-	Warnings        []string
+	NarrativeArc      *NarrativeArc
+	AdaptiveConfig    *AdaptiveConfig
+	Brief             string     // domain-aware intelligence brief
+	SystemPrompt      string     // domain-aware system prompt for LLM
+	Warnings          []string
+	LifeEvents        []LifeEvent // detected past-tense events for auto-rectification
+	AutoRectReady     bool        // true if >= 3 dated events accumulated
 }
 
 // Analyze runs the full intelligence pipeline.
@@ -53,8 +70,8 @@ type AnalysisResult struct {
 func (e *Engine) Analyze(ctx context.Context, req *AnalysisRequest) (*AnalysisResult, error) {
 	result := &AnalysisResult{}
 
-	// Step 1: Parse intent from query
-	result.Intent = ParseIntent(req.Query, e.registry)
+	// Step 1: Parse intent from query (via utterance router or keyword fallback)
+	result.Intent = e.parser.Parse(req.Query)
 	e.log.Debug("intent parsed",
 		"domain", result.Intent.PrimaryDomain,
 		"confidence", result.Intent.Confidence,
@@ -106,8 +123,25 @@ func (e *Engine) Analyze(ctx context.Context, req *AnalysisRequest) (*AnalysisRe
 		)
 	}
 
+	// Step 7c: Confidence after objections (Plan 13 Fase 9b)
+	confidence := ConfidenceAfterObjections(req.FullCtx)
+	if confidence < 0.5 {
+		result.Warnings = append(result.Warnings,
+			fmt.Sprintf("confianza post-objeciones baja: %.0f%%", confidence*100))
+	}
+
 	// Step 8: Build domain-aware intelligence brief
 	result.Brief = BuildIntelligenceBrief(req.FullCtx, domain, result.Gate, result.CrossRefs)
+
+	// Step 8b: Nuclear month injection (Plan 13 Fase 9c)
+	nuclearMonth := astrocontext.FindNuclearMonth(req.FullCtx.MonthlyScores)
+	if nuclearMonth != nil {
+		monthNames := [12]string{"Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
+			"Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"}
+		monthName := monthNames[nuclearMonth.Month-1]
+		result.Brief = fmt.Sprintf("**MES NUCLEAR: %s (score %d — %d meses activos)**\n\n",
+			monthName, nuclearMonth.Score, nuclearMonth.ConvergentMonths) + result.Brief
+	}
 
 	// Prepend wakeup context (memory) to brief
 	if wakeupCtx != "" {
@@ -119,11 +153,31 @@ func (e *Engine) Analyze(ctx context.Context, req *AnalysisRequest) (*AnalysisRe
 		result.Brief += "\n" + FormatNarrativeGuide(result.NarrativeArc)
 	}
 
+	// Step 8c: BCA compression (Plan 13 Fase 5a)
+	result.Brief = CompressBCA(result.Brief)
+
 	// Step 9: Build domain-aware system prompt
 	result.SystemPrompt = BuildSystemPrompt(domain, result.Gate, result.CrossRefs)
+
+	// Step 10: Extract life events for auto-rectification (Plan 13 Fase 14)
+	if len(req.SessionMessages) > 0 {
+		result.LifeEvents = ExtractLifeEvents(req.SessionMessages)
+		result.AutoRectReady = ShouldAutoRectify(result.LifeEvents)
+		if result.AutoRectReady {
+			result.Warnings = append(result.Warnings,
+				fmt.Sprintf("auto-rectificación lista: %d eventos detectados con fecha", len(result.LifeEvents)))
+		}
+	}
 
 	return result, nil
 }
 
 // Registry returns the domain registry (for intent parsing in handlers).
 func (e *Engine) Registry() *DomainRegistry { return e.registry }
+
+// QuickDomain does fast domain-only detection without the full Analyze pipeline.
+// Used by handler for domain-aware lazy calc (Plan 13 Fase 5c).
+func (e *Engine) QuickDomain(query string) string {
+	intent := e.parser.Parse(query)
+	return intent.PrimaryDomain
+}
