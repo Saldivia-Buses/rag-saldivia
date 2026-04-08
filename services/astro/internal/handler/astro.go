@@ -28,6 +28,7 @@ import (
 	"github.com/Camionerou/rag-saldivia/services/astro/internal/cache"
 	astrocontext "github.com/Camionerou/rag-saldivia/services/astro/internal/context"
 	"github.com/Camionerou/rag-saldivia/services/astro/internal/intelligence"
+	"github.com/Camionerou/rag-saldivia/services/astro/internal/quality"
 	"github.com/Camionerou/rag-saldivia/services/astro/internal/natal"
 	"github.com/Camionerou/rag-saldivia/services/astro/internal/repository"
 	"github.com/Camionerou/rag-saldivia/services/astro/internal/technique"
@@ -135,9 +136,10 @@ func jsonError(w http.ResponseWriter, msg string, code int) {
 }
 
 // serverError logs a 500-class error with request context, then sends a generic message.
+// The msg is logged but NOT sent to the client (M1 fix — no operation name leak).
 func serverError(w http.ResponseWriter, r *http.Request, msg string, err error) {
 	slog.Error(msg, "error", err, "request_id", middleware.GetReqID(r.Context()))
-	jsonError(w, msg, http.StatusInternalServerError)
+	jsonError(w, "internal error", http.StatusInternalServerError)
 }
 
 func jsonOK(w http.ResponseWriter, data any) {
@@ -434,6 +436,7 @@ func (h *Handler) Wheel(w http.ResponseWriter, r *http.Request) {
 	if err != nil { serverError(w, r, "chart calculation failed", err); return }
 	svg := natal.RenderWheel(chart, contact.Name)
 	w.Header().Set("Content-Type", "image/svg+xml")
+	w.Header().Set("Content-Security-Policy", "default-src 'none'")
 	w.Write([]byte(svg))
 }
 
@@ -452,6 +455,7 @@ func (h *Handler) parseMultiRequest(w http.ResponseWriter, r *http.Request) (*mu
 		return nil, err
 	}
 	if req.Year == 0 { req.Year = time.Now().Year() }
+	if req.Year < -5000 || req.Year > 5000 { return nil, fmt.Errorf("year out of range") }
 	return &req, nil
 }
 
@@ -574,8 +578,10 @@ func (h *Handler) Query(w http.ResponseWriter, r *http.Request) {
 
 	// 2b. Intelligence layer: domain routing, technique gating, cross-references
 	var briefText, systemPrompt string
+	var analysis *intelligence.AnalysisResult
 	if h.intel != nil && req.Query != "" {
-		analysis, err := h.intel.Analyze(r.Context(), &intelligence.AnalysisRequest{
+		var err error
+		analysis, err = h.intel.Analyze(r.Context(), &intelligence.AnalysisRequest{
 			Query:   req.Query,
 			FullCtx: fullCtx,
 		})
@@ -597,9 +603,13 @@ func (h *Handler) Query(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// 3. LLM narration (true token streaming via SSE)
+	var fullResponse strings.Builder
 	if h.llm != nil {
-		prompt := fmt.Sprintf("%s\n\n%s\n\nConsulta: %s", systemPrompt, briefText, req.Query)
-		msgs := []llm.Message{{Role: "user", Content: prompt}}
+		// Separate system/user messages to prevent prompt injection (B5 fix)
+		msgs := []llm.Message{
+			{Role: "system", Content: systemPrompt + "\n\n" + briefText},
+			{Role: "user", Content: req.Query},
+		}
 		stream, err := h.llm.StreamChat(r.Context(), msgs, 0.7, 4096)
 		if err != nil {
 			slog.Error("llm stream failed", "error", err, "request_id", middleware.GetReqID(r.Context()))
@@ -612,13 +622,31 @@ func (h *Handler) Query(w http.ResponseWriter, r *http.Request) {
 					break
 				}
 				if delta.Text != "" {
+					fullResponse.WriteString(delta.Text)
 					sseEvent(w, flusher, "token", map[string]string{"text": delta.Text})
 				}
 			}
 		}
 	} else {
 		// No LLM — send brief directly
-		sseEvent(w, flusher, "brief", map[string]string{"text": ctx.Brief})
+		sseEvent(w, flusher, "brief", map[string]string{"text": fullCtx.Brief})
+	}
+
+	// 4. Quality audit on LLM response (wired from dead code → live)
+	if fullResponse.Len() > 0 && h.intel != nil {
+		domain, _ := h.intel.Registry().Resolve("predictivo")
+		if analysis != nil {
+			domain = analysis.Domain
+		}
+		gate := intelligence.ValidateTechniques(fullCtx, domain)
+		auditResult := quality.RunAudit(fullResponse.String(), domain, gate)
+		validationIssues := quality.ValidateResponse(fullResponse.String(), fullCtx)
+		sseEvent(w, flusher, "audit", map[string]interface{}{
+			"score_total":    auditResult.ScoreTotal,
+			"score_technical": auditResult.ScoreTechnical,
+			"issues":         len(auditResult.Issues),
+			"validation":     len(validationIssues),
+		})
 	}
 
 	sseEvent(w, flusher, "done", nil)
@@ -768,6 +796,10 @@ func (h *Handler) SearchContacts(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query().Get("q")
 	if query == "" {
 		jsonError(w, "q parameter is required", http.StatusBadRequest)
+		return
+	}
+	if len(query) > 200 {
+		jsonError(w, "query too long (max 200 chars)", http.StatusBadRequest)
 		return
 	}
 	limit := int32(50)

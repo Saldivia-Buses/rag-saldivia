@@ -184,14 +184,20 @@ func (h *Handler) UpdateSession(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if req.Title != nil {
-		h.q.UpdateSessionTitle(r.Context(), repository.UpdateSessionTitleParams{
+		if err := h.q.UpdateSessionTitle(r.Context(), repository.UpdateSessionTitleParams{
 			TenantID: tid, UserID: uid, ID: sessionID, Title: *req.Title,
-		})
+		}); err != nil {
+			serverError(w, r, "update title failed", err)
+			return
+		}
 	}
 	if req.Pinned != nil {
-		h.q.UpdateSessionPinned(r.Context(), repository.UpdateSessionPinnedParams{
+		if err := h.q.UpdateSessionPinned(r.Context(), repository.UpdateSessionPinnedParams{
 			TenantID: tid, UserID: uid, ID: sessionID, Pinned: *req.Pinned,
-		})
+		}); err != nil {
+			serverError(w, r, "update pinned failed", err)
+			return
+		}
 	}
 	if h.auditor != nil {
 		h.auditor.Write(r.Context(), audit.Entry{
@@ -208,7 +214,7 @@ func (h *Handler) GetMessages(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, "database not configured", http.StatusServiceUnavailable)
 		return
 	}
-	tid, _, err := tenantAndUser(r)
+	tid, uid, err := tenantAndUser(r)
 	if err != nil {
 		jsonError(w, "unauthorized", http.StatusUnauthorized)
 		return
@@ -217,6 +223,14 @@ func (h *Handler) GetMessages(w http.ResponseWriter, r *http.Request) {
 	var sessionID pgtype.UUID
 	if err := sessionID.Scan(idStr); err != nil {
 		jsonError(w, "invalid id", http.StatusBadRequest)
+		return
+	}
+	// Verify session ownership before returning messages (IDOR fix)
+	_, err = h.q.GetSession(r.Context(), repository.GetSessionParams{
+		TenantID: tid, UserID: uid, ID: sessionID,
+	})
+	if err != nil {
+		jsonError(w, "session not found", http.StatusNotFound)
 		return
 	}
 	limit := int32(100)

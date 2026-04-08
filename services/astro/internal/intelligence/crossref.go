@@ -55,7 +55,7 @@ func AnalyzeCrossReferences(fullCtx *astrocontext.FullContext) []CrossReference 
 				Type:         CrossRefRuler,
 				Techniques:   techs,
 				Planet:       planet,
-				Significance: min64(float64(len(techs))/4.0, 1.0),
+				Significance: min(float64(len(techs))/4.0, 1.0),
 				Description:  fmt.Sprintf("%s es señor del tiempo en %d técnicas: %v — tema dominante del año", planet, len(techs), techs),
 			})
 		}
@@ -86,7 +86,7 @@ func AnalyzeCrossReferences(fullCtx *astrocontext.FullContext) []CrossReference 
 				Type:         CrossRefPoint,
 				Techniques:   unique,
 				NatalPoint:   point,
-				Significance: min64(float64(len(unique))/4.0, 1.0),
+				Significance: min(float64(len(unique))/4.0, 1.0),
 				Description:  fmt.Sprintf("%s activado por %d técnicas: %v — punto focal del año", point, len(unique), unique),
 			})
 		}
@@ -125,7 +125,7 @@ func AnalyzeCrossReferences(fullCtx *astrocontext.FullContext) []CrossReference 
 				Type:         CrossRefTemporal,
 				Techniques:   unique,
 				Month:        month,
-				Significance: min64(float64(len(unique))/5.0, 1.0),
+				Significance: min(float64(len(unique))/5.0, 1.0),
 				Description:  fmt.Sprintf("Mes %d: convergencia de %d técnicas — período de alta actividad", month, len(unique)),
 			})
 		}

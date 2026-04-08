@@ -2,6 +2,7 @@ package business
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/Camionerou/rag-saldivia/services/astro/internal/astromath"
 	"github.com/Camionerou/rag-saldivia/services/astro/internal/ephemeris"
@@ -46,8 +47,8 @@ func CalcNegotiationTiming(
 	jdStart := ephemeris.JulDay(year, month, 1, 12.0)
 	var windows []TimingWindow
 
-	// Score each day of the month
-	daysInMonth := 30 // simplified
+	// Actual days in month
+	daysInMonth := time.Date(year, time.Month(month+1), 0, 0, 0, 0, 0, time.UTC).Day()
 	for day := 1; day <= daysInMonth; day++ {
 		jd := jdStart + float64(day-1)
 		score := 50.0 // baseline

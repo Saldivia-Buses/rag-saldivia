@@ -2,6 +2,7 @@ package natal
 
 import (
 	"fmt"
+	"html"
 	"math"
 	"strings"
 
@@ -83,7 +84,7 @@ func RenderWheel(chart *Chart, name string) string {
 
 	// Title
 	if name != "" {
-		b.WriteString(fmt.Sprintf(`<text x="%d" y="25" text-anchor="middle" font-size="14" fill="#404040" font-weight="600">%s</text>`, wheelCX, name))
+		b.WriteString(fmt.Sprintf(`<text x="%d" y="25" text-anchor="middle" font-size="14" fill="#404040" font-weight="600">%s</text>`, wheelCX, html.EscapeString(name)))
 	}
 
 	// Zodiac band — 12 colored sectors

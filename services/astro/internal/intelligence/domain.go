@@ -62,7 +62,16 @@ func NewDomainRegistry(domains []Domain) (*DomainRegistry, error) {
 }
 
 // Resolve resolves a domain ID with full inheritance applied.
+// Detects cycles to prevent stack overflow (D6 fix).
 func (r *DomainRegistry) Resolve(domainID string) (*ResolvedDomain, error) {
+	return r.resolveWithVisited(domainID, make(map[string]bool))
+}
+
+func (r *DomainRegistry) resolveWithVisited(domainID string, visited map[string]bool) (*ResolvedDomain, error) {
+	if visited[domainID] {
+		return nil, fmt.Errorf("cycle detected in domain inheritance: %s", domainID)
+	}
+	visited[domainID] = true
 	// Check alias
 	if canonical, ok := r.aliases[domainID]; ok {
 		domainID = canonical
@@ -81,7 +90,7 @@ func (r *DomainRegistry) Resolve(domainID string) (*ResolvedDomain, error) {
 	}
 
 	// Apply inheritance
-	parent, err := r.Resolve(d.Parent)
+	parent, err := r.resolveWithVisited(d.Parent, visited)
 	if err != nil {
 		return nil, err
 	}

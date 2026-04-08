@@ -35,4 +35,4 @@ ORDER BY created_at ASC LIMIT $3;
 
 -- name: TouchSession :exec
 UPDATE astro_sessions SET updated_at = now()
-WHERE id = $1;
+WHERE tenant_id = $1 AND id = $2;

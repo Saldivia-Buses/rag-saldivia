@@ -99,7 +99,7 @@ func ParseIntent(query string, registry *DomainRegistry) *Intent {
 
 	intent.PrimaryDomain = scores[0].id
 	intent.MatchedKeywords = scores[0].keywords
-	intent.Confidence = min64(scores[0].score/3.0, 1.0) // normalize to 0-1
+	intent.Confidence = min(scores[0].score/3.0, 1.0) // normalize to 0-1
 
 	// Secondary domains (score > 50% of primary)
 	for _, s := range scores[1:] {
@@ -111,9 +111,4 @@ func ParseIntent(query string, registry *DomainRegistry) *Intent {
 	return intent
 }
 
-func min64(a, b float64) float64 {
-	if a < b {
-		return a
-	}
-	return b
-}
+// min64 removed — Go 1.21+ builtin min works with float64

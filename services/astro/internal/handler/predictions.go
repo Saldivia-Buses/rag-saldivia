@@ -39,6 +39,14 @@ func (h *Handler) CreatePrediction(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, "contact_id, description, date_from, date_to are required", http.StatusBadRequest)
 		return
 	}
+	validCategories := map[string]bool{"timing": true, "event": true, "financial": true, "relational": true, "health": true, "general": true}
+	if req.Category == "" {
+		req.Category = "general"
+	}
+	if !validCategories[req.Category] {
+		jsonError(w, "invalid category", http.StatusBadRequest)
+		return
+	}
 
 	tid, uid, err := tenantAndUser(r)
 	if err != nil {
@@ -129,6 +137,11 @@ func (h *Handler) VerifyPrediction(w http.ResponseWriter, r *http.Request) {
 		jsonError(w, "invalid request", http.StatusBadRequest)
 		return
 	}
+	validOutcomes := map[string]bool{"correct": true, "incorrect": true, "partial": true}
+	if !validOutcomes[req.Outcome] {
+		jsonError(w, "outcome must be correct, incorrect, or partial", http.StatusBadRequest)
+		return
+	}
 	tid, uid, err := tenantAndUser(r)
 	if err != nil {
 		jsonError(w, "unauthorized", http.StatusUnauthorized)
@@ -187,9 +200,4 @@ func (h *Handler) PredictionStats(w http.ResponseWriter, r *http.Request) {
 	jsonOK(w, stats)
 }
 
-func min(a, b int) int {
-	if a < b {
-		return a
-	}
-	return b
-}
+// min is builtin in Go 1.21+ — removed custom definition (D4 fix)
