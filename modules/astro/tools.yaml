@@ -387,3 +387,165 @@ tools:
         outcome: { type: string, description: "correct, incorrect, partial" }
         notes: { type: string }
       required: [outcome]
+
+  # ── Contact management tools ──
+
+  - id: search_contacts
+    service: astro
+    endpoint: GET /v1/astro/contacts/search
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Buscar contactos por nombre. Retorna matches parciales."
+    parameters:
+      type: object
+      properties:
+        q: { type: string, description: "Texto de búsqueda" }
+      required: [q]
+
+  - id: create_contact
+    service: astro
+    endpoint: POST /v1/astro/contacts
+    protocol: http
+    type: write
+    requires_confirmation: true
+    description: "Crear un nuevo contacto con datos de nacimiento para cálculos astrológicos."
+    parameters:
+      type: object
+      properties:
+        name: { type: string }
+        birth_date: { type: string, description: "YYYY-MM-DD" }
+        birth_time: { type: string, description: "HH:MM" }
+        birth_time_known: { type: boolean }
+        city: { type: string }
+        nation: { type: string }
+        lat: { type: number }
+        lon: { type: number }
+        kind: { type: string, description: "persona o empresa" }
+      required: [name, birth_date, city]
+
+  - id: list_contacts
+    service: astro
+    endpoint: GET /v1/astro/contacts
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Listar todos los contactos del usuario."
+
+  # ── Prediction stats ──
+
+  - id: prediction_stats
+    service: astro
+    endpoint: GET /v1/astro/predictions/stats
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Estadísticas de predicciones: total, correctas, incorrectas, parciales, pendientes."
+
+  - id: list_predictions
+    service: astro
+    endpoint: GET /v1/astro/predictions
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Listar predicciones registradas del usuario."
+
+  # ── Business intelligence tools ──
+
+  - id: business_dashboard
+    service: astro
+    endpoint: GET /v1/astro/business/dashboard
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Dashboard empresarial completo: agenda, cash flow, riesgos, timing, Mercury Rx."
+    parameters:
+      type: object
+      properties:
+        company_id: { type: string, description: "Nombre del contacto empresa" }
+        year: { type: integer }
+        month: { type: integer }
+      required: [company_id]
+
+  - id: business_cashflow
+    service: astro
+    endpoint: GET /v1/astro/business/cashflow
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Pronóstico de cash flow mensual basado en tránsitos a casas 2 y 8."
+    parameters:
+      type: object
+      properties:
+        company_id: { type: string }
+        year: { type: integer }
+      required: [company_id]
+
+  - id: business_risk
+    service: astro
+    endpoint: GET /v1/astro/business/risk
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Heatmap de riesgos por categoría (financiero, operativo, legal, personal, reputacional) × mes."
+    parameters:
+      type: object
+      properties:
+        company_id: { type: string }
+        year: { type: integer }
+      required: [company_id]
+
+  - id: business_forecast
+    service: astro
+    endpoint: GET /v1/astro/business/forecast
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Pronóstico trimestral: outlook, eventos clave, acciones recomendadas."
+    parameters:
+      type: object
+      properties:
+        company_id: { type: string }
+        year: { type: integer }
+        month: { type: integer }
+      required: [company_id]
+
+  - id: business_mercury_rx
+    service: astro
+    endpoint: GET /v1/astro/business/mercury-rx
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Calendario de Mercurio retrógrado del año con impacto por área de negocio."
+    parameters:
+      type: object
+      properties:
+        year: { type: integer }
+
+  - id: business_hiring
+    service: astro
+    endpoint: GET /v1/astro/business/hiring
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Calendario de contratación: días favorables para incorporar personal."
+    parameters:
+      type: object
+      properties:
+        company_id: { type: string }
+        year: { type: integer }
+        month: { type: integer }
+      required: [company_id]
+
+  - id: business_team
+    service: astro
+    endpoint: GET /v1/astro/business/team
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Compatibilidad del equipo: sinastría entre empresa y cada miembro."
+    parameters:
+      type: object
+      properties:
+        company_id: { type: string }
+      required: [company_id]
