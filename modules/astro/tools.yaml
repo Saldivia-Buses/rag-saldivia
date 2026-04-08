@@ -549,3 +549,232 @@ tools:
       properties:
         company_id: { type: string }
       required: [company_id]
+
+  # ── All remaining technique tools ──
+
+  - id: tertiary_progressions
+    service: astro
+    endpoint: POST /v1/astro/tertiary-progressions
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Progresiones terciarias (1 día = 1 mes lunar). Detecta ingresos de signo y casa."
+    parameters:
+      type: object
+      properties:
+        contact_name: { type: string }
+        year: { type: integer }
+      required: [contact_name, year]
+
+  - id: decennials
+    service: astro
+    endpoint: POST /v1/astro/decennials
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Deceniales (Vettius Valens): período mayor y sub-período activos, secuencia completa."
+    parameters:
+      type: object
+      properties:
+        contact_name: { type: string }
+        year: { type: integer }
+      required: [contact_name, year]
+
+  - id: planetary_cycles
+    service: astro
+    endpoint: POST /v1/astro/planetary-cycles
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Retornos y ciclos planetarios (Saturno, Júpiter, Urano, etc.) activos en el año."
+    parameters:
+      type: object
+      properties:
+        contact_name: { type: string }
+        year: { type: integer }
+      required: [contact_name, year]
+
+  - id: planetary_returns
+    service: astro
+    endpoint: POST /v1/astro/planetary-returns
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Retornos planetarios exactos (Júpiter, Saturno, Marte) durante el año."
+    parameters:
+      type: object
+      properties:
+        contact_name: { type: string }
+        year: { type: integer }
+      required: [contact_name, year]
+
+  - id: lilith_vertex
+    service: astro
+    endpoint: POST /v1/astro/lilith-vertex
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Análisis extendido de Lilith y Vertex: posiciones natales + tránsitos lentos."
+    parameters:
+      type: object
+      properties:
+        contact_name: { type: string }
+        year: { type: integer }
+      required: [contact_name, year]
+
+  - id: time_lords
+    service: astro
+    endpoint: POST /v1/astro/time-lords
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Vista unificada de todos los señores del tiempo: profecciones + firdaria + ZR + deceniales. Planeta dominante y nivel de acuerdo."
+    parameters:
+      type: object
+      properties:
+        contact_name: { type: string }
+        year: { type: integer }
+      required: [contact_name, year]
+
+  - id: electional_dates
+    service: astro
+    endpoint: POST /v1/astro/electional
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Astrología electiva: mejores fechas del año según Luna, tránsitos favorables, Mercury Rx."
+    parameters:
+      type: object
+      properties:
+        contact_name: { type: string }
+        year: { type: integer }
+      required: [contact_name, year]
+
+  - id: horary_chart
+    service: astro
+    endpoint: POST /v1/astro/horary
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Carta horaria: análisis de la pregunta del momento. VOC Moon, radicalidad, significadores."
+    parameters:
+      type: object
+      properties:
+        lat: { type: number }
+        lon: { type: number }
+        alt: { type: number }
+        utc_offset: { type: integer }
+      required: [lat, lon]
+
+  - id: astrocartography
+    service: astro
+    endpoint: POST /v1/astro/astrocartography
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Líneas planetarias MC/IC/ASC/DSC sobre mapa geográfico."
+    parameters:
+      type: object
+      properties:
+        contact_name: { type: string }
+      required: [contact_name]
+
+  - id: rectification
+    service: astro
+    endpoint: POST /v1/astro/rectification
+    protocol: http
+    type: read
+    requires_confirmation: true
+    description: "Rectificación de hora de nacimiento. Escanea rango de horas y puntúa contra eventos conocidos."
+    parameters:
+      type: object
+      properties:
+        year: { type: integer }
+        month: { type: integer }
+        day: { type: integer }
+        lat: { type: number }
+        lon: { type: number }
+        search_min: { type: number, description: "Hora mínima (ej: 14.0)" }
+        search_max: { type: number, description: "Hora máxima (ej: 18.0)" }
+        events: { type: array, description: "Eventos de vida conocidos" }
+      required: [year, month, day, lat, lon, search_min, search_max]
+
+  - id: weekly_transits
+    service: astro
+    endpoint: POST /v1/astro/weekly-transits
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Digest de tránsitos de los próximos 7 días: ingresos, estaciones, aspectos."
+    parameters:
+      type: object
+      properties:
+        contact_name: { type: string }
+      required: [contact_name]
+
+  - id: activation_score
+    service: astro
+    endpoint: POST /v1/astro/score
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Score de activación 0-100 del año + scores mensuales + veredictos por técnica + contradicciones."
+    parameters:
+      type: object
+      properties:
+        contact_name: { type: string }
+        year: { type: integer }
+      required: [contact_name, year]
+
+  - id: voc_moon
+    service: astro
+    endpoint: POST /v1/astro/voc-moon
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Períodos de Luna vacía de curso del mes."
+    parameters:
+      type: object
+      properties:
+        year: { type: integer }
+
+  - id: comparison_table
+    service: astro
+    endpoint: POST /v1/astro/tabla
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Tabla comparativa multi-año con profecciones, firdaria, SA, tránsitos, eclipses."
+    parameters:
+      type: object
+      properties:
+        contact_name: { type: string }
+        year: { type: integer }
+      required: [contact_name, year]
+
+  - id: vocational_analysis
+    service: astro
+    endpoint: POST /v1/astro/vocational
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Análisis vocacional: MC, regente, planetas en casa 10, sugerencias de carrera."
+    parameters:
+      type: object
+      properties:
+        contact_name: { type: string }
+      required: [contact_name]
+
+  - id: employee_screening
+    service: astro
+    endpoint: POST /v1/astro/employee-screening
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Evaluación de candidato vs empresa: compatibilidad sinástrica + rol sugerido."
+    parameters:
+      type: object
+      properties:
+        contact_a: { type: string, description: "Empresa" }
+        contact_b: { type: string, description: "Candidato" }
+      required: [contact_a, contact_b]
