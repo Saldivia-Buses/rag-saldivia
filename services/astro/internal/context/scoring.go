@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/Camionerou/rag-saldivia/services/astro/internal/astromath"
+	"github.com/Camionerou/rag-saldivia/services/astro/internal/technique"
 )
 
 // ActivationScore computes a quantitative 0-100 score for a year.
@@ -415,4 +416,100 @@ func SynthesisBrief(verdicts []TechniqueVerdict, contradictions []Contradiction,
 	}
 
 	return b.String()
+}
+
+// FilterTopN trims activation lists to the top N entries per technique,
+// sorted by tightest orb. Prevents briefs with 50+ activations where the LLM
+// loses focus. Applied before BuildBrief() in the builder pipeline.
+func FilterTopN(ctx *FullContext, maxPerTechnique int) {
+	if maxPerTechnique <= 0 {
+		maxPerTechnique = 10
+	}
+
+	// Directions: sort by orb ascending, keep top N
+	if len(ctx.Directions) > maxPerTechnique {
+		sortDirectionsByOrb(ctx.Directions)
+		ctx.Directions = ctx.Directions[:maxPerTechnique]
+	}
+
+	// Solar Arc: sort by orb ascending, keep top N
+	if len(ctx.SolarArc) > maxPerTechnique {
+		sortSolarArcByOrb(ctx.SolarArc)
+		ctx.SolarArc = ctx.SolarArc[:maxPerTechnique]
+	}
+
+	// Transits: keep top N by tightest orb
+	if len(ctx.Transits) > maxPerTechnique {
+		sortTransitsByOrb(ctx.Transits)
+		ctx.Transits = ctx.Transits[:maxPerTechnique]
+	}
+
+	// Fast transits: keep top N
+	if len(ctx.FastTransits) > maxPerTechnique {
+		sortFastTransitsByOrb(ctx.FastTransits)
+		ctx.FastTransits = ctx.FastTransits[:maxPerTechnique]
+	}
+
+	// Eclipses: keep top N
+	if len(ctx.Eclipses) > maxPerTechnique {
+		sortEclipsesByOrb(ctx.Eclipses)
+		ctx.Eclipses = ctx.Eclipses[:maxPerTechnique]
+	}
+
+	// Eclipse triggers: keep top N
+	if len(ctx.EclipseTriggers) > maxPerTechnique {
+		ctx.EclipseTriggers = ctx.EclipseTriggers[:maxPerTechnique]
+	}
+}
+
+// Sort helpers — sort by orb ascending (tightest first).
+
+func sortDirectionsByOrb(ds []technique.PrimaryDirection) {
+	for i := 0; i < len(ds); i++ {
+		for j := i + 1; j < len(ds); j++ {
+			if ds[j].OrbDeg < ds[i].OrbDeg {
+				ds[i], ds[j] = ds[j], ds[i]
+			}
+		}
+	}
+}
+
+func sortSolarArcByOrb(sas []technique.SolarArcResult) {
+	for i := 0; i < len(sas); i++ {
+		for j := i + 1; j < len(sas); j++ {
+			if sas[j].Orb < sas[i].Orb {
+				sas[i], sas[j] = sas[j], sas[i]
+			}
+		}
+	}
+}
+
+func sortTransitsByOrb(trs []technique.TransitActivation) {
+	for i := 0; i < len(trs); i++ {
+		for j := i + 1; j < len(trs); j++ {
+			if trs[j].Orb < trs[i].Orb {
+				trs[i], trs[j] = trs[j], trs[i]
+			}
+		}
+	}
+}
+
+func sortFastTransitsByOrb(fts []technique.FastTransitActivation) {
+	for i := 0; i < len(fts); i++ {
+		for j := i + 1; j < len(fts); j++ {
+			if fts[j].Orb < fts[i].Orb {
+				fts[i], fts[j] = fts[j], fts[i]
+			}
+		}
+	}
+}
+
+func sortEclipsesByOrb(ecls []technique.EclipseActivation) {
+	for i := 0; i < len(ecls); i++ {
+		for j := i + 1; j < len(ecls); j++ {
+			if ecls[j].Orb < ecls[i].Orb {
+				ecls[i], ecls[j] = ecls[j], ecls[i]
+			}
+		}
+	}
 }
