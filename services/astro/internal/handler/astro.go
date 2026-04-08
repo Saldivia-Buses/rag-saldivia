@@ -734,6 +734,7 @@ func (h *Handler) Query(w http.ResponseWriter, r *http.Request) {
 		ContactName string `json:"contact_name"`
 		Query       string `json:"query"`
 		Year        int    `json:"year"`
+		SessionID   string `json:"session_id,omitempty"` // optional: for follow-up detection
 	}
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		jsonError(w, "invalid request", http.StatusBadRequest)
