@@ -19,8 +19,10 @@ import (
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	"github.com/Camionerou/rag-saldivia/pkg/llm"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
+	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
 	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
 	"github.com/Camionerou/rag-saldivia/pkg/security"
+	"github.com/Camionerou/rag-saldivia/pkg/traces"
 
 	"github.com/Camionerou/rag-saldivia/services/astro/internal/business"
 	"github.com/Camionerou/rag-saldivia/services/astro/internal/cache"
@@ -61,6 +63,18 @@ func main() {
 
 	blacklist := security.InitBlacklist(ctx, config.Env("REDIS_URL", "localhost:6379"))
 
+	// NATS connection for traces, notifications, broadcasts
+	natsURL := config.Env("NATS_URL", "nats://localhost:4222")
+	nc, err := natspub.Connect(natsURL)
+	if err != nil {
+		slog.Warn("nats connect failed, event publishing disabled", "error", err)
+	} else {
+		defer nc.Drain()
+		slog.Info("connected to nats", "url", natsURL)
+	}
+	tracePublisher := traces.NewPublisher(nc)
+	tenantSlug := config.Env("TENANT_SLUG", "saldivia")
+
 	ephemeris.Init(ephePath)
 	defer ephemeris.Close()
 
@@ -88,7 +102,7 @@ func main() {
 	chartCache := cache.NewChartRegistry()
 	bizService := business.NewService()
 
-	astroHandler := handler.New(pool, llmClient, intel, chartCache, bizService)
+	astroHandler := handler.New(pool, llmClient, intel, chartCache, bizService, tracePublisher, tenantSlug)
 
 	r := chi.NewRouter()
 	r.Use(middleware.RequestID)

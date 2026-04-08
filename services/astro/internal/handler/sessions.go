@@ -61,6 +61,11 @@ func (h *Handler) CreateSession(w http.ResponseWriter, r *http.Request) {
 			Resource: session.ID.Bytes[:],
 		})
 	}
+	if h.traces != nil {
+		h.traces.Broadcast(h.slug, "astro.sessions", map[string]any{
+			"event": "created", "session_id": session.ID, "title": session.Title,
+		})
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(session)
@@ -151,6 +156,11 @@ func (h *Handler) DeleteSession(w http.ResponseWriter, r *http.Request) {
 			UserID:   sdamw.UserIDFromContext(r.Context()),
 			Action:   "astro.session.delete",
 			Resource: idStr,
+		})
+	}
+	if h.traces != nil {
+		h.traces.Broadcast(h.slug, "astro.sessions", map[string]any{
+			"event": "deleted", "session_id": idStr,
 		})
 	}
 	w.WriteHeader(http.StatusNoContent)

@@ -28,6 +28,7 @@ import (
 	"github.com/Camionerou/rag-saldivia/services/astro/internal/cache"
 	astrocontext "github.com/Camionerou/rag-saldivia/services/astro/internal/context"
 	"github.com/Camionerou/rag-saldivia/services/astro/internal/intelligence"
+	"github.com/Camionerou/rag-saldivia/pkg/traces"
 	"github.com/Camionerou/rag-saldivia/services/astro/internal/quality"
 	"github.com/Camionerou/rag-saldivia/services/astro/internal/natal"
 	"github.com/Camionerou/rag-saldivia/services/astro/internal/repository"
@@ -42,10 +43,12 @@ type Handler struct {
 	intel   *intelligence.Engine    // Plan 12: intelligence layer
 	charts  *cache.ChartRegistry   // Plan 12: in-memory chart cache
 	biz     *business.Service      // Plan 12: business intelligence
+	traces  *traces.Publisher       // Plan 12: NATS trace/event publisher
+	slug    string                  // tenant slug for NATS subjects
 }
 
-func New(db *pgxpool.Pool, llmClient llm.ChatClient, intel *intelligence.Engine, charts *cache.ChartRegistry, biz *business.Service) *Handler {
-	h := &Handler{db: db, llm: llmClient, intel: intel, charts: charts, biz: biz}
+func New(db *pgxpool.Pool, llmClient llm.ChatClient, intel *intelligence.Engine, charts *cache.ChartRegistry, biz *business.Service, tp *traces.Publisher, slug string) *Handler {
+	h := &Handler{db: db, llm: llmClient, intel: intel, charts: charts, biz: biz, traces: tp, slug: slug}
 	if db != nil {
 		h.q = repository.New(db)
 		h.auditor = audit.NewWriter(db)
@@ -686,6 +689,19 @@ func (h *Handler) Query(w http.ResponseWriter, r *http.Request) {
 			"issues":         len(auditResult.Issues),
 			"validation":     len(validationIssues),
 		})
+		// Publish quality metrics to feedback service via NATS
+		if h.traces != nil {
+			h.traces.Feedback(h.slug, "astro_quality", map[string]any{
+				"score_total":        auditResult.ScoreTotal,
+				"score_technical":    auditResult.ScoreTechnical,
+				"score_communication": auditResult.ScoreCommunication,
+				"issues":            len(auditResult.Issues),
+				"validation_issues": len(validationIssues),
+				"techniques_used":   auditResult.TechniquesUsed,
+				"techniques_expected": auditResult.TechniquesExpected,
+				"domain":            domain.ID,
+			})
+		}
 	}
 
 	sseEvent(w, flusher, "done", nil)
