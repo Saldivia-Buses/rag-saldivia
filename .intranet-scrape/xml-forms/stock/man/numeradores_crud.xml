@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="crud">
+  <title>Numeradores</title>
+  <obs/>
+  <form>
+    <table id="STK_NUMERADORES" label="Numeradores">
+      <field id="id_stknumerador" esClave="true" noshow="true"/>
+      <field id="subsistema_id" oculto="true"/>
+      <field id="puesto">
+        <!--			<helper type="combo" xml="stkdeposito_qry.xml" dir="/ayudas" />-->
+        <label>Depósito</label>
+        <format>%04d</format>
+      </field>
+      <field id="stkconcepto_id">
+        <helper type="combo" xml="stkconcepto_qry.xml" dir="/ayudas" empty="true">
+          <!--
+				<field id="subsistema_id">
+					<condicion operador="=">'[__subsistema_id__]'</condicion>
+				</field>-->
+        </helper>
+        <label>Concepto</label>
+      </field>
+      <field id="numero">
+        <label>Numero</label>
+        <size>8</size>
+        <format>%08d</format>
+      </field>
+      <field id="ejecuta">
+        <label>Ejecuta</label>
+        <size>60</size>
+        <tipo>varchar</tipo>
+      </field>
+      <field id="printer">
+        <label>Printer</label>
+      </field>
+      <order>
+        <field id="puesto"/>
+        <field id="stkconcepto_id"/>
+      </order>
+    </table>
+  </form>
+</histrix>

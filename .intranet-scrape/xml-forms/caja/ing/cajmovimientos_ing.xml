@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="fichaing" inserta="false" borra="false" modifica="false" imprime="false" tooltip="false" confirma="CONFIRMAR" form="false" importTempTable="WASIENTOS" updateTempTable="false">
+  <title>Detalle de Valores</title>
+  <obs/>
+  <customScript><![CDATA[
+    
+    var $change = $('[instance="[__instance__]"] [name="auto_change"]');
+    if ($change.val() == 1) {
+      $('[instance="[__instance__]"] [name="imputado"]').change(function(){
+        var imputado = $(this).val();
+        var importe = $('[instance="[__instance__]"] [name="importe_movimiento"]').val();
+        var vuelto = imputado - importe;
+        $('[instance="[__instance__]"] [name="pago_vuelto"]:enabled').val(vuelto).change();
+      });
+    }
+    ]]></customScript>
+  <form>
+    <table id="CAJ_MOVIMIENTOS" label="Detalle de Valores" idCampoCond="grabar">
+      <validation>
+        <condition><![CDATA[ diferencia + 0 != 0 || (diferencia + 0 &lt; 0 && importe_anticipo != 0) ]]></condition>
+        <message>Importes no Coinciden</message>
+      </validation>
+
+      <movimientos>
+	    <relacion id="cajmovimientos_ins.xml"/>
+        <relacion id="cajvalores_cct_ins.xml"/> VALORES PARA CCT
+        <relacion id="cajdetalle_reg_ins.xml"/>
+        <!-- Grabación de Anticipos -->
+        <relacion id="cajmovimientos_ant_upd.xml"/>
+        <relacion id="cajdetalle_ant_ins.xml"/>
+        <relacion id="regmovimientos_ant_ins.xml"/>
+
+      </movimientos>
+
+
+      <fieldGroup id="parametros_ingreso" local="true" noshow="true">
+
+      <field id="auto_change"></field>
+
+        <field id="retencion_ganancias"  />
+        <field id="retencion_iibb" />
+        <field id="sin_importe"/>
+        <field id="moneda_id"/>
+        <field id="cajpuesto_id"/>
+        <field id="cajconcepto_id" />
+        <field id="imputacion_concepto"/>
+        <field id="fecha_movimiento"/>
+        <field id="referencia_movimiento"/>
+        <field id="puesto_movimiento"/>
+        <field id="nro_movimiento"/>
+        <field id="ctbcuenta_reg_id"/>
+        <field id="ctbcuenta_reg_doh"/>
+        <field id="id_cajmovimiento"/>
+        <field id="cajregistro_id"/>
+        <field id="validacuenta">
+          <if exp="'ctbcuenta_reg_id' == ''">
+            <true>0</true>
+            <false>1</false>
+          </if>
+        </field>
+        <field id="stkdeposito_id"/>
+        <field id="limite_credito"/>
+        <!-- Cuenta y Subsistema del movimiento Padre -->
+        <field id="regcuenta_id"/>
+        <field id="subsistema_id"/>
+      </fieldGroup>
+
+      <field id="hascredit" local="true" noshow="true">
+        <if exp="limite_credito+0 &gt; 0">
+          <true>'false'</true>
+          <false>'true'</false>
+        </if>
+      </field>
+      <field id="saldo_a_cct" local="true" noshow="true">
+            </field>
+      <field id="para_cct" desactiva="true" local="true">
+        <label>A Cuenta Corriente</label>
+        <tipo>check</tipo>
+        <!--
+                Si alguien tiene que cambiar el attribute por favor consultar
+                ya que causa que muestre el check en lugares donde no quieren
+                (The Best por ejemplo)
+                -->
+        <attribute id="noshow">hascredit</attribute>
+      </field>
+      <field id="cocina_cajvalores" local="true" noshow="true">
+        <if exp="para_cct+0 == 1">
+          <true>true</true>
+          <false>false</false>
+        </if>
+      </field>
+      <field id="forma_pago" local="true" activador="para_cct">
+        <label colspan="8"/>
+        <helper type="object" xml="cajvalores_grid.xml">
+          <parameter target="moneda_id" source="moneda_id"/>
+          <parameter target="cajpuesto_id" source="cajpuesto_id"/>
+          <parameter target="cajconcepto_id" source="cajconcepto_id"/>
+          <parameter target="imputacion_concepto" source="imputacion_concepto"/>
+          <parameter target="fecha_movimiento" source="fecha_movimiento"/>
+          <parameter target="puesto_movimiento" source="puesto_movimiento"/>
+          <parameter target="nro_movimiento" source="nro_movimiento"/>
+          <parameter target="importe_movimiento" source="importe_movimiento"/>
+          <parameter target="stkdeposito_id" source="stkdeposito_id"/>
+          <parameter target="regcuentapadre_id" source="regcuenta_id"/>
+        </helper>
+      </field>
+      <field id="importe_movimiento" deshabilitado="true">
+        <label style="color:green;font-size:large;">A Imputar</label>
+        <tipo>numeric</tipo>
+      </field>
+      <field id="importe_anticipo" deshabilitado="true" activador="Anticipo">
+        <label style="color:blue;font-size:large; ">anticipo</label>
+        <tipo>numeric</tipo>
+        <attribute id="noshow">anticipo</attribute>
+      </field>
+      <field id="imputado" local="true" suma="true" deshabilitado="true">
+        <label style="color:green;font-size:medium;">Imputado</label>
+        <tipo>numeric</tipo>
+        <jseval campodestino="importe_movimiento" actxml="true"><![CDATA[ (sin_importe == 1) ? imputado : importe_movimiento ]]></jseval>
+        <jseval campodestino="importe_anticipo" actxml="true"><![CDATA[ ((importe_movimiento < imputado && Anticipo == 1) ? Math.abs((importe_movimiento) - (imputado - vuelto)) : 0).toFixed(2) ]]></jseval>
+        <jseval campodestino="diferencia" actxml="true">((importe_movimiento + importe_anticipo) - (imputado - vuelto)).toFixed(2)</jseval>
+      </field>
+      <field id="vuelto" local="true" suma="true" deshabilitado="true">
+        <label style="color:green;font-size:medium;">Vuelto</label>
+        <tipo>numeric</tipo>
+        <jseval campodestino="diferencia" actxml="true">((importe_movimiento + importe_anticipo) - (imputado - vuelto)).toFixed(2)</jseval>
+      </field>
+      <field id="diferencia" local="true" deshabilitado="true">
+        <label style="color:red;font-size:large;">Saldo</label>
+        <tipo>numeric</tipo>
+        <actualiza>
+          <field id="continua"/>
+        </actualiza>
+      </field>
+      <field id="importe_total" local="true" noshow="true">
+        <if exp="regconcepto_id+0 != 0">
+          <true>  importe_movimiento + importe_anticipo + 0 </true>
+          <false> importe_movimiento + 0 </false>
+        </if>
+      </field>
+      <!-- Determina si el subsistema acepta generar anticipos -->
+      <field id="acepta_anticipo" local="true" noshow="true">
+        <if exp="regconcepto_id+0 != 0">
+          <true>'false'</true>
+          <false>'true'</false>
+        </if>
+      </field>
+
+      <field id="Anticipo" local="true">
+        <label>Dejar como anticipo</label>
+        <tipo>check</tipo>
+        <jseval campodestino="graba_anticipo" actxml="true"><![CDATA[ (Anticipo == 1)?1:0]]></jseval>
+        <jseval campodestino="importe_anticipo" actxml="true"><![CDATA[ ((importe_movimiento < imputado && Anticipo == 1) ? Math.abs((importe_movimiento) - (imputado - vuelto)) : 0).toFixed(2) ]]></jseval>
+        <jseval campodestino="diferencia" actxml="true">((importe_movimiento + importe_anticipo) - (imputado - vuelto)).toFixed(2)</jseval>
+        <attribute id="noshow">acepta_anticipo</attribute>
+      </field>
+      <field id="graba_anticipo" local="true" noshow="true">
+        <if exp="Anticipo + 0 == 1">
+          <true>1</true>
+          <false>0</false>
+        </if>
+      </field>
+      <!-- Contabilización de Anticipos -->
+      <field id="regconcepto_id" noshow="true">
+        <expression sql="true">SELECT CASE WHEN '[__imputacion_concepto__]' = '0' then regconceptoing_id else regconceptoegr_id END FROM GEN_SUBSISTEMAS WHERE id_subsistema = '[__subsistema_id__]'</expression>
+      </field>
+      <field id="ctbcuenta_ant_doh" noshow="true">
+        <expression sql="true">SELECT CASE WHEN '[__imputacion_concepto__]' = '0' then 1 else 0 END</expression>
+      </field>
+      <field id="ctbcuenta_ant_id" noshow="true">
+        <expression sql="true">SELECT cuenta_anticipo_id FROM GEN_SUBSISTEMAS WHERE id_subsistema = '[__subsistema_id__]'</expression>
+      </field>
+           
+      <!-- -->
+      <field id="wasientos" local="true" style="display: none;">
+        <label colspan="4">asiento</label>
+        <helper type="object" xml="asiento_contable_grid.xml" />
+      </field>
+      <!-- -->
+      
+      <!-- Carga de Garantías -->
+      <fieldGroup>
+        <if>if (strpos($_SESSION['properties']['modulos'],'garantias') != false) return true;</if>
+        <importar xml="ficha_garantia.xml" dir="/service/ing" label="GARANTIA" ventint="true"/>
+      </fieldGroup>
+      <field id="usuario_id" local="true" noshow="true">
+        <valor eval="true">$_SESSION['idUser']</valor>
+      </field>
+    </table>
+  </form>
+</histrix>

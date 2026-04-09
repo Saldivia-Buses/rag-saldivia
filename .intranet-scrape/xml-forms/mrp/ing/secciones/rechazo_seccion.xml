@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="fichaing" procesa="true" inserta="no" modifica="false"  borra="no" tableHeight="auto" deleteRow="false" log="false"
+ imprime="false" preFetch="true">
+    <title>Rechazo</title>
+    <obs></obs>
+    <form  >
+	        
+	<table id="MRP_ORDEN_PRODUCCION" label="Rechazo" >
+
+
+	    <movimientos>
+		<relacion id="detalle_registro_insert.xml" />
+        </movimientos>
+
+            <field id="mrpconcepto_id" local="true" noshow="true" valauto="true">
+                <valor>2</valor>
+            </field>
+
+            <field id="fecha_orden" noshow="true">
+                <label>Fecha</label>
+            </field>
+            <field id="fecha_ingreso" local="true" deshabilitado="false">
+                <label>Fecha</label>
+		<tipo>date</tipo>
+		<valor>today</valor>
+
+            </field>
+
+            <field id="id_mrpordendetalle" noshow="true" tabla="MRP_ORDEN_DETALLE">
+	        </field>
+
+    		<field id="mrpseccion_id" local="true" noshow="true">
+    		</field>                 
+
+            <field id="id_mrporden" noshow="true">
+            </field>
+
+    	    <field id="stkarticulo_id" tabla="MRP_ORDEN_DETALLE" deshabilitado="true" noshow="true">
+    	       	<label>Código</label>
+        		<size>12</size>
+    	    </field>                 
+
+    	    <field id="nombre_articulo" tabla="STK_ARTICULOS" deshabilitado="true" local="true">
+    		  <label>Artículo</label>
+		      <size>30</size>
+    	    </field>                 
+
+            <field id="id_detalle_reg" noshow="true" local="true">
+            </field>
+
+            <field id="ingreso" editable="true" deshabilitado="false" local="true" valauto="true" noshow="true">
+                <label>Inicio</label>
+                <tipo>time</tipo>
+                <valor eval="true">time()</valor>
+            </field>
+
+            <field id="cantidad" editable="true" deshabilitado="false" local="true" >
+                <label>Rechazados</label>
+                <tipo>integer</tipo>
+            </field>
+
+            <field id="mrpcontrol_id" local="true">
+                <label>Motivo Rechazo</label>
+                <helper id="MRP_CONTROLES" type="combo">
+                        <field id="id_mrpcontrol" />
+                        <field id="nombre_control" />
+                        <field id="mrpseccion_id">
+                            <condicion operador="=" valorde="mrpseccion_id"></condicion>
+                        </field>
+                </helper>
+            </field>
+
+            <field id="observacion" local="true">
+                <label>Observaciones</label>
+                <size>80</size>
+            </field>
+
+            <group>
+                <field id="id_mrpordendetalle"></field>
+            </group>
+            <order>
+                <field id="fecha_orden"></field>
+            </order>
+        </table>
+
+        <join tipo="left">
+    	    <table id="MRP_ORDEN_DETALLE">
+                <field id="mrporden_id">
+            	    <condicion operador="=">MRP_ORDEN_PRODUCCION.id_mrporden</condicion>
+                </field>
+    	    </table>
+        </join>
+
+        <join tipo="inner">
+    	    <table id="STK_ARTICULOS">
+    		<field id="id_stkarticulo">
+    		    <condicion  operador="=">MRP_ORDEN_DETALLE.stkarticulo_id</condicion>
+    		</field>
+    	    </table>
+        </join>
+        <join tipo="inner">
+    	    <table id="MRP_PRODUCT_PATH">
+                <field id="mrpseccion_id">
+            	    <condicion operador="=">[__mrpseccion_id__]</condicion>
+                </field>
+                <field id="stkrubro_id">
+            	    <condicion operador="=">STK_ARTICULOS.stkrubro_id</condicion>
+                </field>
+    	    </table>
+        </join>
+        
+    </form>
+</histrix>

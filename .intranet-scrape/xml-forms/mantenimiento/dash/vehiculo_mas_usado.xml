@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="chart">
+    <title>Estadisticas de vehiculos mas usados</title>
+    <obs></obs>
+    <form >
+        <table id="MANT_VIAJES_VEHICULO" label="VIAJES VEHICULOS">
+     		<grafico id="usos_vehiculos" >
+                <ancho>400</ancho>
+                <tipo>P</tipo>
+                <etiquetas>vehiculo</etiquetas>
+                <datos>usos</datos>
+                <title>Vehiculos mas utilizados</title>
+				<!--<subtitulo>x Sección</subtitulo>-->
+            </grafico>
+
+			<!--<field id="id_seccion" noshow="true"/> -->
+
+			<!--<field id="nombre">
+				<label>Seccion</label>
+				<condicion operador="!=">''</condicion>
+			</field> -->
+            <field id="vehiculo">
+                <label>Vehiculo</label>
+                <expression>descripcion_vehiculo</expression>
+            </field>
+
+
+        <!--        
+            <field id="personal" tipoOrden="DESC">
+                <expression>(SELECT count(*) FROM PERSONAL  where id_seccion = SECCION.id_seccion and fechaEgreso = '0000-00-00')</expression>
+                <label>Cantidad</label>
+                <tipo>integer</tipo>
+
+            </field>
+        -->
+            <field id="usos" tipoOrden="DESC">
+                <label>Porc utilizacion</label>
+                <expression>count(*)</expression>
+                <tipo>integer</tipo>
+            </field>        
+
+			<group>
+                <field id="mantvehiculo_id"></field>
+			</group>
+
+			
+            <order>
+				<field id="usos"/>
+			</order>
+
+        </table>
+
+        <join tipo="left">
+            <table id="MANT_VEHICULOS">
+                <field id="id_mantvehiculo">
+                    <condicion operador="=">MANT_VIAJES_VEHICULO.mantvehiculo_id</condicion>    
+                </field>
+            </table>
+        </join>
+      
+    </form>
+</histrix>

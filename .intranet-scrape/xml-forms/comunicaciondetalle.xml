@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+	<histrix tipo="abm-mini" class="anchamitad">
+		<title>CONTACTOS</title>
+		<obs></obs>
+		<consulta>
+			<table id="COMUNICACIONESCLI" label="Detalle de Comunicaciones">
+				<field id="siscod" oculto="true">
+					<label>Codigo Sistema </label>
+					<help>
+					</help>
+				</field>
+				<field id="idComunicacion" autoinc="true" noshow="true">
+					<label>id</label>
+					<help>
+					</help>
+				</field>				
+				<field id="ctacod" oculto="true">
+					<label>Cuenta</label>
+					<help>
+					</help>
+				</field>
+				
+				<field id="login" deshabilitado="true">
+					<label>Usuario </label>
+	    				<help>Usuario que hace el pedido</help>
+					<tabla_ex id="HTXUSERS">
+					    <field id="login"></field>
+					    <field id="nombre"></field>
+					    <order>
+						<field id="nombre"></field>
+					    </order>
+					</tabla_ex>
+					<valor eval="true">$_SESSION['usuario']</valor>
+				</field>
+
+				
+				<field id="consulta">
+					<label>Consulta</label>
+					<size>90</size>
+				</field>
+				<field id="hora" deshabilitado="true" esclave="true" valauto="true" >
+					<label>Fecha y Hora</label>
+					<expresion>hora</expresion>
+				</field>
+				<field id="idtema" deshabilitado="true">
+				    <label>Nro Tema</label>
+				</field>
+
+			</table>
+		</consulta>
+	</histrix>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="delete" limit="1">
+	<titulo>Control Calidad</titulo>
+	<obs/>
+	<form>
+		<table id="PROD_CONTROL_HOMOLOG">
+
+			<field id="prodcontrol_id"   id_temp="id_prodcontrol"/>
+			<field id="homologacion_id"    id_temp="id_homologacion" />
+		</table>
+
+	</form>
+</histrix>

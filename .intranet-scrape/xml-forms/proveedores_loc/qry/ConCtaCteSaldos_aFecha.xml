@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8" ?>
+   <histrix tipo="consulta" >
+		<title>Cuenta Corriente</title>
+		<obs></obs>
+               <form  detalle="ConCtaCteDetSal.xml" dir="/clientes_local/qry/">
+					<table id="CCTMOVIM" label="Movimientos">
+						<filters>
+						    <field id="movfec" >
+							<label>Hasta Fecha Mov.</label>
+    							<operador>&lt;=</operador>
+							<valor>today</valor>
+		    				    </field> 
+
+		    				    <field id="regfec" >
+							<label>Hasta Fecha Reg.</label>
+    							<operador>&lt;=</operador>
+							<valor>today</valor>
+		    				    </field> 
+						</filters>
+						
+						<field id="siscod" oculto="true">
+							<label>Cod.</label>
+							<detalle>siscod</detalle>
+						</field>
+						
+						<field id="ctacod">
+							<label>Cuenta</label>
+							<help>Código de Cuenta</help>
+							<detalle>ctacod</detalle>
+							<format>%04d</format>
+							
+						</field>
+						
+						<field id="ctanom">
+							<expression>CCTCUENT.ctanom</expression>
+							<label>Nombre</label>
+							<help>Código de Cuenta</help>
+							<format>%30s</format>
+						</field>
+						
+						<!--                  <field id="ctanro">
+						<expression>CCTCUENT.ctanro</expression>
+						<label>CUIT</label>
+						<help>CUIT</help>
+						<format>%30s</format>
+						</field>
+						-->
+						<!--                  <field id="movsal" suma="true">
+						<expression>sum(movsal)</expression>
+						<label>Saldo</label>
+						<help> </help>
+						<condicion operador=" != ">0</condicion>  
+						</field> -->
+						<field id="movfec">
+							<label>Fecha</label>
+						</field>
+						<field id="regfec">
+							<label>Fecha de Registración</label>
+						</field>
+						<field id="debe" suma="true">
+							<expression>sum(movimp * (case when conimp = 1 then 1 else 0 end))</expression>
+							<label>Debe</label>
+						</field>
+						<field id="haber" suma="true">
+							<expression>sum(movimp * (case when conimp = 2 then 1 else 0 end))</expression>
+							<label>Haber</label>
+						</field>
+						<field id="dif" >
+							<label>Diferencia</label>
+							<expression>sum(movimp * (case when conimp = 1 then 1 else 0 end)) - sum(movimp * (case when conimp = 2 then 1 else 0 end))</expression>
+							<condicion operador="!=">0</condicion>
+						</field> 
+						<group>
+							<field id="CCTMOVIM.siscod"></field>
+							<field id="CCTCUENT.siscod"></field>
+							<field id="CCTMOVIM.ctacod"></field>
+							<field id="CCTCUENT.ctacod"></field>
+							<field id="CCTCUENT.ctanom"></field>
+							<field id="CCTCUENT.ctanro"></field>
+							
+						</group>
+						
+					</table>
+
+   		  <join tipo="left">
+		    <table id="CCTCUENT">
+			<field id="siscod" oculto="true">
+			    <condicion operador="=">CCTMOVIM.siscod</condicion>
+			</field>
+			<field id="ctacod" oculto="true">
+			    <condicion operador="=">CCTMOVIM.ctacod</condicion>
+			</field>
+		    </table>
+		  </join>
+		<join tipo="left">
+			<table id="CCTCONCE">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">CCTMOVIM.siscod</condicion>
+				</field>
+				<field id="concod" oculto="true">
+					<condicion operador="=">CCTMOVIM.concod</condicion>
+				</field>
+			</table>
+		</join>						   
+	   </form>
+</histrix>

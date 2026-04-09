@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="update" limit="0">
+  <title>numerador</title>
+  <obs />
+  <form>
+    <table id="REG_NUMERADORES" idCampoCond="grabar">
+		<field id="subsistema_id"  id_temp="subsistema_id" esClave="true"/>
+		<field id="puesto"         id_cab="puesto_movimiento" esClave="true"/>
+		<field id="letra"          id_temp="letra_movimiento" esClave="true"/>
+		<field id="numero"  >
+		    <valor>numero + 1</valor>
+		</field>
+		
+    </table>
+  </form>
+</histrix>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" limit="100">
+  <title>Chasis sin ficha</title>
+  <obs/>
+  <form >
+    <table id="CHASIS">
+      <title>Homologaciones por modelo</title>
+      
+
+      
+      <field id="nrocha">
+        <label>Descripcion</label>
+        <condicion operador="NOT IN">(select nrocha from PEDCOTIZ where nrocha IS NOT NULL)</condicion>         
+      </field>
+      
+      <field id="nrocha2">
+        <label>Descripcion</label>
+        <expression>CHASIS.nrocha</expression>
+      </field>
+
+      <field id="homologacion_id" local="true" noshow="true">
+      </field>
+	<order>
+	<field id="nrocha" />
+	</order>
+    </table>
+
+    <join _tipo="left">
+      <table id="HOMOLOGMOD">
+        <field id="modcha">
+          <condicion operador="=">CHASIS.modcod</condicion>
+        </field>
+        <field id="marcod">
+          <condicion operador="=">CHASIS.marcod</condicion>
+        </field>
+        <field id="id_homologacion">
+          <condicion operador="=">'[__homologacion_id__]'</condicion>
+        </field>
+      </table>
+    </join>
+
+    <!--<join tipo="left">
+      <table id="PEDCOTIZ">
+        <field id="nrocha">
+          <condicion operador="=">CHASIS.nrocha</condicion>
+        </field>
+      </table>
+    </join>  -->      
+  </form>
+</histrix>

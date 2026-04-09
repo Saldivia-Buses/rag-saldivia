@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="nosql" >
+  <title>Insumos</title>
+  <obs></obs>
+
+  <form>
+
+    <table id="STKINSUM" styleTbody="height:500px;overflow-x:hidden;">
+      <title>Insumos</title>
+		<ejecuta>
+                        <![CDATA[
+		if($this->Etiquetas == ''){
+                 $this->Etiquetas = new BarcodeEtiq("codest", "artcod", "nomherr", "ctacod", "ctanom", "ocpnro", "ocpfec","id_herramienta", "remfec","remnro","remnpv","recLote");
+
+                 $this->Etiquetas->setFormato= true;
+		}
+if(("orden" % 2) != 0){
+                         #$this->Etiquetas->addRenglon("\n");
+                         #$this->Etiquetas->addRenglon('N'."\n");
+                         #$this->Etiquetas->addRenglon('q790'."\n");
+                         #$this->Etiquetas->addRenglon('Q254,19'."\n");
+
+                         $this->Etiquetas->addRenglon('A3,00,0,1,4,4,N,"artcod"'."\n");
+                         $this->Etiquetas->addRenglon('A3,50,0,1,2,4,N,"'.substr("artdes", 0, 38).'"'."\n");
+
+#if(strlen("artdes") > 19) $this->Etiquetas->addRenglon('A3,85,0,1,1,4,N,"'.substr("artdes", 19, 38).'"'."\n");
+
+
+						 $this->Etiquetas->addRenglon('A3,130,0,1,2,2,N,"valcps"'."\n");
+						 $this->Etiquetas->addRenglon('A120,130,0,1,2,2,N,"unicps"'."\n");
+
+
+if("valcps" != "valuso") $this->Etiquetas->addRenglon('A165,130,0,1,2,2,N," - valuso"'."\n");
+if("unicps" != "artuni") $this->Etiquetas->addRenglon('A350,130,0,1,2,2,N,"'.substr("artuni", 0, 2).'"'."\n");
+
+                         $this->Etiquetas->addRenglon('B3,165,0,1,2,30,60,N,"artcod"'."\n");
+
+		 if("fifo" == 1) $this->Etiquetas->addRenglon('A150,180,0,1,2,4,N,"FIFO"'."\n");
+		 if(strlen("nombre_herr") != 0) $this->Etiquetas->addRenglon('A230,180,0,1,2,4,N,"/abrev_herr"'."\n");
+			if (orden == $this->TotalRegistros){
+                         $this->Etiquetas->addRenglon('Pcopias'."\n");
+                         $this->Etiquetas->addRenglon('N'."\n");
+					
+			}
+               			 
+}
+else {
+                         $this->Etiquetas->addRenglon('A428,10,0,1,4,2,R,"artcod"'."\n");
+$this->Etiquetas->addRenglon('A428,40,0,1,2,4,N,"'.substr("artdes", 0, 19).'"'."\n");
+if(strlen("artdes") > 19) $this->Etiquetas->addRenglon('A428,85,0,1,1,4,N,"'.substr("artdes", 19, 38).'"'."\n");
+
+
+						 $this->Etiquetas->addRenglon('A428,130,0,1,2,2,N,"valcps"'."\n");
+						 $this->Etiquetas->addRenglon('A545,130,0,1,2,2,N,"unicps"'."\n");
+
+
+if("valcps" != "valuso") $this->Etiquetas->addRenglon('A490,130,0,1,2,2,N," - valuso"'."\n");
+if("unicps" != "artuni") $this->Etiquetas->addRenglon('A775,130,0,1,2,2,N,"artuni"'."\n");
+
+                         $this->Etiquetas->addRenglon('B428,165,0,1,2,30,60,N,"artcod"'."\n");
+
+		 if("fifo" == 1) $this->Etiquetas->addRenglon('A575,180,0,1,2,4,N,"FIFO"'."\n");
+		 if(strlen("nombre_herr") != 0) $this->Etiquetas->addRenglon('A655,180,0,1,2,4,N,"/abrev_herr"'."\n");
+
+                         $this->Etiquetas->addRenglon('Pcopias'."\n");
+                         $this->Etiquetas->addRenglon('N'."\n");
+}
+                        ]]>
+
+		</ejecuta>
+
+		  <field id="artcod" id_temp="artcod">      </field>
+		  <field id="artdes" id_temp="artdes2">      </field>
+		  <field id="valcps" id_temp="valcps">      </field>
+		  <field id="unicps" id_temp="unicps">      </field>
+		  <field id="valuso" id_temp="valuso">      </field>
+		  <field id="artuni" id_temp="artuni">      </field>
+		  <field id="orden"  id_temp="_ORDEN">      </field>
+		  <field id="copias" id_temp="copias">		</field>
+		  <field id="fifo"   id_temp="fifo">		</field>
+		  <field id="abrev_herr" id_temp="abrev_herr">	</field>
+
+    </table>
+
+
+  </form>
+</histrix>

@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" _dataSource="HtxMailgunEvents" _filter="true" _serverSide="true"  paginar="500">
+  <title>Estadisticas</title>
+  <obs/>
+  <form >
+    <table id="HtxMailgunEvents">
+
+      <filters _auto="true">
+          <field id="event">
+            <label>Evento</label>
+          </field>
+      <field id="fecha" deshabilitado="false">
+        <label>Desde fecha</label>
+	<valor>today</valor>
+	<operador>&gt;=</operador>
+      </field>
+      <field id="fecha" deshabilitado="false">
+        <label>Hasta fecha</label>
+	<valor>today</valor>
+	<operador>&lt;=</operador>
+      </field>
+
+      <field id="from">
+        <label>Remitente</label>
+	<operador>like</operador>
+	<size>50</size>
+      </field>
+      <field id="recipient">
+        <label>Destinatarios</label>
+	<operador>like</operador>
+	<size>50</size>
+      </field>
+      </filters>
+      <field id="id" noshow="true"/>
+
+      <field id="fecha">
+	<expression>str_to_date(left(timestamp, 10), '%d/%c/%Y')</expression>
+        <label>fecha</label>
+	<tipo>date</tipo>
+      </field>
+
+
+      <field id="timestamp">
+        <label>time</label>
+      </field>
+
+      <field id="event" >
+        <label>event</label>
+        <helper type="combo" >
+          <option value=""></option>
+          <option value="opened">Abierto</option>
+          <option value="delivered">Enviado</option>
+          <option value="accepted">Aceptado</option>
+          <option value="rejected">Rechazado</option>
+
+          <option value="failed">Fallo</option>
+          <option value="unsubscribed">Desuscripto</option>
+          <option value="complained">Reportado como Spam</option>
+
+        </helper>
+      </field>
+
+
+
+      <field id="sender">
+        <label>Sender</label>
+      </field>
+      <field id="from">
+        <label>From</label>
+	<size>50</size>
+      </field>
+      <field id="targets" noshow="true">
+        <label>targets</label>
+      </field>
+      <field id="recipient">
+        <label>recipient</label>
+	<size>50</size>
+      </field>
+      <field id="subject">
+        <label>subject</label>
+      </field>
+      <field id="color" clasefila="true" noshow="true">
+	    <expression>case when log_level = 'error' then 'error' end</expression>
+	</field>
+
+      <field id="log_level" _clasefila="true">
+        <label>log-level</label>
+	<helper xml="events_ficha.xml" type="link" width="80%" heigth="600px">
+	    <parameter source="id" target="id" />
+	</helper>
+      </field>
+<!--
+      <field id="item" noshow="true"  >
+        <label>item</label>
+
+      </field>
+-->
+	
+      <field id="domain" noshow="true" local="true">
+            <label>Domain</label>
+            <valor eval="true">$_SESSION['properties']['domain']</valor>
+      </field>
+	<order>
+	    <field id="timestamp" orderType="DESC" />
+	</order>
+
+    </table>
+  </form>
+</histrix>

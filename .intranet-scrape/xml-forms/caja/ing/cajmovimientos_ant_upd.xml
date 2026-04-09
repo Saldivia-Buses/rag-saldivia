@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="update">
+    <title/>
+    <obs/>
+    <form>
+        <table id="CAJ_MOVIMIENTOS" idCampoCond="graba_anticipo">
+            <field id="id_cajmovimiento" lastId="cajmovimientos_ins.xml" esClave="true"/>
+            <field id="importe_movimiento" id_temp="importe_total" />
+        </table>
+    </form>
+</histrix>

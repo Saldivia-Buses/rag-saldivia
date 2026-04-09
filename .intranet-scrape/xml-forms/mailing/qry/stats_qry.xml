@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" _tipo="chart" dataSource="HtxMailgunStats" filter="true" >
+  <title>Eventos</title>
+  <obs/>
+  <form >
+    <table id="Eventos">
+
+	<agrafico id="cantidad" >
+	    <ancho>600</ancho>
+	    <tipo>L</tipo>
+	    <etiquetas>time</etiquetas>
+
+	    <serie>accepted</serie> 
+	    <serie>delivered</serie>
+	    <serie>opened</serie> 
+	    <serie>clicked</serie>
+	    <serie>bounce</serie>
+	    <serie>complain</serie>
+
+	    <title>Estadística</title>
+	    <subtitulo>Mailing</subtitulo>
+	</agrafico>
+
+      <filters auto="true">
+          <field id="duration">
+            <label>Duracion</label>
+          </field>
+      </filters>
+
+
+      <field id="time" break="true">
+        <label>Fecha</label>
+        <tipo>date</tipo>
+      </field>
+      <field id="hora">
+        <label>Hora</label>
+        <tipo>time</tipo>
+      </field>
+
+      <field id="accepted"  noZero="true" suma="true">
+        <label>Aceptados</label>
+      </field>
+      <field id="delivered"  noZero="true"  suma="true">
+        <label>Enviados</label>
+      </field>
+      <field id="opened" noZero="true"  suma="true">
+        <label>Abiertos</label>
+      </field>
+      <field id="clicked" noZero="true"  suma="true">
+        <label>Clicks</label>
+      </field>
+
+      <field id="bounce"  noZero="true"  suma="true">
+        <label>Rebotes</label>
+      </field>
+      <field id="complain"  noZero="true"  suma="true">
+        <label>Spam</label>
+      </field>
+
+      <field id="domain" noshow="true" local="true">
+            <label>Domain</label>
+            <valor eval="true">$_SESSION['properties']['domain']</valor>
+      </field>
+      <field id="duration" noshow="true">
+          <helper type="combo">
+             <option value=""></option>
+             <option value="1h">Ultima Hora</option>
+             <option value="12h">Ultimas 12 horas</option>
+             <option value="24h">Ultimas 24 horas</option>
+             <option value="1d">Ultimo día</option>
+             <option value="7d">Ultimos 7 días</option>
+             <option value="15d">Ultimos 15 días</option>
+             <option value="30d">Ultimo mes</option>
+          </helper>
+      </field>
+
+    </table>
+  </form>
+</histrix>

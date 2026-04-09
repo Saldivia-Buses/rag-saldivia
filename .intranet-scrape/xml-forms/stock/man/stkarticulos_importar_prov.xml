@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<histrix tipo="insert" tipoInsert="REPLACE">
+    <title>Mantenimiento</title>
+    <obs></obs>
+    <form>
+        <table id="STK_ARTICULO_PROVEEDOR" label="Importacion de Articulos" idCampoCond="importar">
+            
+            <field id="stkarticulo_id"      id_temp="id_stkarticulo" />
+
+            <field id="regcuenta_id"      id_cab="regcuenta_id" />
+
+            <field id="compra_minima">
+                <valor>0</valor>
+            </field>
+
+            <field id="prv_articulo">
+                <valor>''</valor>
+            </field>
+
+        </table>
+    </form>
+</histrix>	

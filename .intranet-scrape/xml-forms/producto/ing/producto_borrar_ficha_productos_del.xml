@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="delete" limit="99">
+    <titulo>Atributos</titulo>
+    <obs/>
+    <form>
+        <table id="PRODUCTOS">
+
+            <field id="id_producto" id_temp="id" esClave="true" />
+
+        </table>
+    </form>
+</histrix>

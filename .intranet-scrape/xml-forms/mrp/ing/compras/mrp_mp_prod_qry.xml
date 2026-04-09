@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta"  >
+    <title>Materia Prima  Articulos</title>
+    <obs></obs>
+    <form >
+        <table id="STK_BOM" label="Forecast">
+            <fieldGroup>
+
+		<field id="stkarticulohijo_id" deshabilitado="false"   noshow="true" />
+
+		<field id="stkarticulopadre_id" deshabilitado="false" noshow="true"   >
+		    <label modpos="nobr">Articulo</label>
+		    <help>Codigo de Articulo</help> 
+		</field>
+                <field id="id_stkarticulo" tabla="STK_ARTICULOS">
+                    <label>Código</label>
+                    <help>Codigo de Articulo</help>
+                    <helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas"/>
+                </field>    
+                <field id="nombre_articulo" tabla="STK_ARTICULOS">
+                    <detalle>nombre_articulo</detalle>
+                </field>
+                <field id="cantidad"  _noshow="true">
+                        <label>x unidad</label>
+			<tipo>numeric</tipo>
+                </field>
+            </fieldGroup>
+            <group>
+                <field id="id_stkarticulo" ></field>
+            </group>
+
+        </table>
+        <join tipo="left">
+            <table id="STK_ARTICULOS">
+                <field id="id_stkarticulo">
+                    <condicion operador="=">stkarticulopadre_id</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix>

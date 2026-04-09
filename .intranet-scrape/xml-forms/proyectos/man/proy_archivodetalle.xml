@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<histrix tipo="abm-mini" subtipo="vertical" path="/fotos/proyectos">
+        <title>Archivos De Detalle</title>
+        <obs></obs>
+        <form>
+                <table id="PROY_DETALLE" >
+                    
+                	<field id="id_proydetalle" autoinc="true" _noshow="true" deshabilitado="true">
+                        <label>Detalle</label>
+                    </field>
+
+                    <field id="proyecto_id" _noshow="true" valauto="true" deshabilitado="true">   <label>Proyecto</label>
+                    </field>
+                    
+                    <field id="pathdet" local="true" _noshow="true" deshabilitado="true">
+                        <if exp="true">
+                            <true>'proyecto_id/detalle/id_proydetalle'</true>
+                            <false>''</false>
+                        </if>
+                        <label>pathdet</label>
+                    </field>
+
+                    <field id="directorio"  path="pathdet">
+                      <expression>CONCAT('/fotos/proyectos/', proyecto_id, '/detalle/', id_proydetalle, '/' )</expression>
+                            <label>Archivos</label>
+                            <help>Archivos de la etapa</help>
+                            <tipo>dir</tipo>
+                        
+                    </field>
+                </table>
+        </form>           
+</histrix>

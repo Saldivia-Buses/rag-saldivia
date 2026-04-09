@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="grid" preloadData="true" procesa="true" imprime="false" inserta="false" log="false" deleteRow="false">
+	<title>Renumeración de Minutas</title>
+	<obs></obs>
+	<form >
+		<table id="CTB_MOVIMIENTOS" label="Renumeración de Minutas">
+			<movimientos>
+				<relacion id="renumeracion_upd.xml" />
+			</movimientos>
+			<filters>
+				<field id="ejercicio_id">
+					<label>Ejercicio</label>
+					<operador>=</operador>
+				</field>
+				<field id="fecha_movimiento">
+					<label>Desde</label>
+					<operador>&gt;=</operador>
+					<valor>today</valor>
+				</field>
+				<field id="fecha_movimiento">
+					<label>Hasta</label>
+					<operador>&lt;=</operador>
+					<valor>today</valor>
+				</field>
+			</filters>
+			<field id="id_movimiento" noshow="true">
+			</field>
+			<field id="nro_minuta" >
+				<label>Nro Minuta</label>
+			</field>
+			<field id="_ORDEN" local="true" colstyle="color:blue;">
+				<label>Nro Nuevo</label>
+			</field>
+			<field id="fecha_movimiento" >
+				<label>Fecha</label>
+				<tipo>date</tipo>
+			</field>
+			<field id="referencia" >
+				<label>Referencia</label>
+			</field>
+			<field id="ejercicio_id" noshow="true">
+				<helper type="combo" dir="/ayudas" xml="ctbejercicio_qry.xml" empty="true" >
+					<field id="cerrado" noshow="true" />
+				</helper>
+				<label>Ejercicio</label>
+			</field>
+			<field id="concepto_id" noshow="true">
+				<label>Concepto</label>
+			</field>
+			<field id="campo_ordenador" noshow="true">
+				<expression>CASE WHEN referencia like "%APERTURA EJERCICIO%" THEN 1 ELSE  
+								CASE WHEN referencia like "%CIERRE EJERCICIO%" or referencia like "%REFUNDICION EJERCICIO%" THEN 3
+								ELSE 2 END
+				END</expression>
+			</field>
+			<field id="graba" local="true" noshow="true">
+				<if exp="_ORDEN == nro_minuta">
+					<true>0</true>
+					<false>1</false>
+				</if>
+			</field>
+			<order>
+				<field id="campo_ordenador" />
+				<field id="fecha_movimiento" />
+				<field id="nro_minuta" />
+			</order>
+		</table>
+	</form>
+</histrix>

@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="map" limit="200">
+  <title>GPS PACKAGES</title>
+  <obs></obs>
+  <form>
+    <table id="GPS_TACOEXTEND" label="Paquetes">
+      
+      
+      
+      
+      <filters>
+       
+        
+          <field id="device_id" deshabilitado="false">
+          <label>Equipo</label>
+          <operador>=</operador>
+          
+        </field>
+        </filters>
+
+       
+       
+      
+      
+      
+      <field id="id_package" autoinc="true" noshow="true" tipoOrden="DESC">
+        <label>id</label>
+      </field> 
+      
+      <field id="device_id">
+        <label>Equipo</label>
+      </field> 
+      <field id="gps_date" >
+        <label>Fecha</label>
+        <tipo>date</tipo>
+        <condicion operador="=">date(now())</condicion>
+      </field> 
+      <field id="gps_time" >
+        <label>Hora</label>
+        <tipo>time</tipo>
+      </field> 
+ 
+ <!--
+
+        <field id="duration" suma="true">
+          <expresion>sec_to_time(duration)</expresion>
+                <label>Tiempo </label>
+                <tipo>time</tipo>
+            </field>      
+  -->    
+      
+
+      <!-- <field id="gps_latitude">
+        <label>Latitud</label>
+        <help>Latitud del gps</help>
+      </field>
+      <field id="gps_longitude">
+        <label>Longitud</label>
+        <help>Longitud del gps</help>
+        <condicion operador="!=">0</condicion>
+      </field>
+      -->
+      <field id="gps_direction" noshow="true">
+        <help>Direccion</help>
+      </field>
+     
+      <field id="gps_directionhumans">
+        <label>Direccion</label>
+        <help>Direccion para humanos.</help>
+      </field>
+      
+      
+      <field id="gps_speed" noshow="false">
+        <label>Velocidad</label>
+        <help>Velocidad</help>
+        
+        
+      </field>
+      <field id="gps_odometerp">
+        <label>Odometro parcial</label>
+        <help>Odometro parcial</help>
+      </field>
+      <field id="gps_odometert">
+        <label>Odometro total</label>
+        <help>Odometro total</help>
+      </field>
+      <field id="gps_in0">
+        <label>Sensor Combustible</label>
+        <help>Voltaje de Combusitble....</help>
+      </field>
+          <field id="gps_volt_serial">
+        <label>Sensor Serie Fuel </label>
+        <help>Sensor serie Voltaje</help>
+      </field>
+        <field id="gps_alt_serial">
+        <label>Altura Combustible</label>
+        <help>Altura de Combusitble....</help>
+      </field>
+      
+      <field id="gps_baterybus">
+        <label>Bateria Bus</label>
+        <help>Bateria</help>
+      </field>
+      <field id="gps_baterygps">
+        <label>Bateria Gps</label>
+        <help>Bateria.</help>
+      </field>
+      <!--
+      <field id="gps_in1">
+        <label>Contacto</label>
+        <help>Ignicion</help>
+        <expression>select (SUM(TIME_TO_SEC((GPS.gps_time)))) / 3600 FROM `GPS_TACOEXTEND` as GPS  
+          where ( GPS.gps_date = GPS_TACOEXTEND.gps_date) AND 
+                 GPS.device_id = GPS_TACOEXTEND.device_id and 
+                 GPS.gps_time &lt; GPS_TACOEXTEND.gps_time and 
+                 GPS.gps_in1="inactivo"</expression>
+      </field>
+      -->
+      <!-- SELECT (SUM(TIME_TO_SEC((gps_time)))) / 3600,gps_in1,gps_date FROM `GPS_TACOEXTEND`  where  (gps_date="2012-10-27") AND (gps_in1="inactivo")-->
+
+    
+
+      <field id="gps_point">
+        <label>point</label>
+        <expression>concat( replace(gps_latitude,',','.'),',', replace(gps_longitude,',','.'))</expression>
+        <tipo>geoPoint</tipo>
+      </field>
+      
+      
+      <field id="device_id" _noshow="true">
+        <label>Tipo</label> 
+        <helper type="combo" id="gps_equipos" empty="true">           
+          <field id="device_id" />
+          <field id="Cliente" />        
+        </helper>      
+      </field>
+      
+      <order>
+        <field id="id_package"></field>
+      </order>
+    </table>
+  </form>
+</histrix>  

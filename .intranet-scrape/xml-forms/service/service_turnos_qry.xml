@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" subtipo="vertical"  path="/fotos/archivo/Services/" limit="10">
+  <title>TURNOS DE SERVICE/REPARACION</title>
+  <obs/>
+  <form>
+    <table id="SERVICE_TURNOS" label="Turnos de Reparaciones">
+<!--
+      <filters>
+      	<field id="ctacod">
+      	    <label>Cliente</label>
+      	    <operador>=</operador>
+      	</field>
+      	<field id="nrofab">
+      	    <label>Nro.</label>
+      	    <operador>=</operador>
+      	</field>
+      </filters>
+-->
+      <field id="siscli" noshow="true" local="true">
+        <valor>'02'</valor>
+      </field>
+      
+      <field autoinc="true" id="idTurno"  esClave="true" deshabilitado="true" calendarId="true" noshow="true">
+        <label modpos="nobr" Formstyle="display:none;">Turno</label>
+        <help>Turno</help>
+      </field>
+
+      <field id="fecha" tipoOrden="DESC" calendarStartDate="true">
+        <label modpos="nobr" >Fecha</label>
+        <tipo>date</tipo>
+        <valor>today</valor>
+      </field>
+
+      <field id="fechaFin">
+      	<label modpos="nobr">Fecha Fin</label>
+      	<tipo>date</tipo>
+	<condicion operador="&gt;=">now() or fechaFin = '0000-00-00'</condicion> 
+      </field>
+      
+      <field id="numero" _deshabilitado="true">
+        <label modpos="nobr" style="font-size:15px; color:red;">Número</label>
+        <help>Número de Reparación/Service</help>
+        <parametro id="service_numerador.xml" retorna="numero2">
+          <field id="numero" noselect="true">
+          </field>
+        </parametro>
+      </field>
+      
+      <field id="ctacod" _calendarSubject="true" noshow="true">
+        <label modpos="nobr" >Cliente:</label>
+        <help>Código de Cuenta</help>
+      </field>
+<!--
+      <field id="nombre" _calendarSubject="true">
+        <label modpos="nobr" >Cliente</label>
+	    <expression>nombre_cuenta</expression>
+        <help>Código de Cuenta</help>
+	</field>
+-->
+
+      <field deshabilitado="true" id="ctacodot" local="true" linkint="fichas_x_cliente.xml" linkdes="Total de Coches" print="false">
+        <expression>select count(*) from PEDCOTIZ as PED where PED.ctacod = SERVICE_TURNOS.ctacod</expression>
+        <label >Ot.</label>
+        <help>Código de Cuenta</help>
+        <paring destino="ctacod">ctacod</paring>
+        <tipo>varchar</tipo>
+      </field>
+
+        <field id="ficha_id" noshow="true">
+            <expression>PEDCOTIZ.id</expression>
+        </field>
+
+        <field id="nrofab"  noZero="true">
+            <label modpos="nobr" style="text-align:center;color:#444;font-size:14px;">Fab</label>
+            <help>Número de Fabricación</help>
+                <paring destino="nrocha">nrofab</paring>
+            <helper type="link" xml="ficha_producto1_qry.xml" dir="/producto" modal="true" title="Ficha Técnica">
+                <parameter source="ficha_id" target="producto_id"/>
+                <parameter source="nrofab" target="nrofab"/>
+            </helper>
+        </field>
+        
+        <field id="idconta"  noshow="true">
+          <label modpos="nobr" colspan="4">Cliente - Contacto</label>
+          <help>Código de Cuenta</help>
+	                  <expression>CONCAT(nombre_cuenta, ' (',nombre,'-' , mail, ' - ', Telefono,')')</expression>
+
+        </field>
+
+	<field id="cumplidos" noshow="true">
+	    <expression>@cump:=(select count(*) from SERVICE_TAREA_UNIDAD WHERE SERVICE_TAREA_UNIDAD.idTurno = SERVICE_TURNOS.idTurno and cumplida = 1)</expression>
+	</field>
+	<field id="pendientes" noshow="true">
+	    <expression>(select count(*) from SERVICE_TAREA_UNIDAD WHERE SERVICE_TAREA_UNIDAD.idTurno = SERVICE_TURNOS.idTurno and cumplida = 0)</expression>
+	    <condicion operador="&gt;">0</condicion>
+	</field>
+	<field id="total" noshow="true">
+	    <expression>@total:=(select count(*) from SERVICE_TAREA_UNIDAD WHERE SERVICE_TAREA_UNIDAD.idTurno = SERVICE_TURNOS.idTurno)</expression>
+	</field>
+        <!--
+        <field deshabilitado="true" id="ctacod2" tabla="PEDCOTIZ" linkint="cctconta_consulta.xml" linkdes="Ver medios de Contacto">
+          <expression>SERVICE_TURNOS.ctacod</expression>
+          <label Formstyle="display:none;" style="width:auto;">Cliente</label>
+          <help>Código de Cuenta</help>
+          <tabla_ex condes="true" id="CCTCUENT">
+            <field id="ctacod"/>
+            <field id="ctafan">
+              <expression>LEFT(ctafan, 17)</expression>
+            </field>
+            <field id="siscod" oculto="true">
+              <condicion operador="=">'02'</condicion>
+            </field>
+          </tabla_ex>
+          <paring destino="ctacod">ctacod</paring>
+          <paring destino="siscod">siscli</paring>
+          <tipo>button</tipo>
+        </field>
+-->
+        <field id="trabajos" obj="service_tarea_unidad_grid.xml" showObjTabla="true"  showValor="true" _linkint="service_tarea_unidad.xml" linkdes="Tareas" _local="true" _style="text-align:center;">
+          <label Formstyle="display:none;" colspan="5" >Tareas a Realizar</label>
+          <paring destino="idTurno" operador="=">idTurno</paring>
+<!--          <valor>Agregar / Modificar Tareas</valor> -->
+	                  <expression><![CDATA[CONCAT('<h3>', ifnull(nombre_cuenta, ''), ' (',ifnull(nombre, ''),' - ' , ifnull(mail, ''), ' - ', ifnull(Telefono, ''),') - <span style="color:red;">(',@cump,'/',@total,')</span> </h3>')]]></expression>
+          <tipo>varchar</tipo>
+        </field>
+        <!--
+        <field id="corpath" local="true" noshow="true">
+          <if exp="true">
+            <true>'nrofab/corte'</true>
+            <false>''</false>
+          </if>
+          <tipo>varchar</tipo>
+        </field>
+        
+        <field id="cortePint" tabla="PEDCOTIZ" path="corpath" download="true" print="false" disabled="true" local="true">
+          <label Formstyle="display:none">Corte</label>
+          <tipo>file</tipo>
+        </field>
+-->
+        <!--
+        <field id="Imprimir" linkint="service_ficha.xml" linkdes="Ver Ficha de service" local="true">
+          <label modpos="nobr" style="font-weight:bold; height:3em;width:auto;" Formstyle="display:none;">Ficha</label>
+          <paring destino="idTurno">idTurno</paring>
+          <valor>Imprimir</valor>
+        </field>
+
+        <field id="numpath" noshow="true">
+          <expression>numero</expression>
+        </field>
+
+      <field id="archivo"  local="true" _browse="true" _deshabilitado="true" path="numpath" colstyle="display:none;" width="25">
+        <label Formstyle="width:10px;">Fotos.</label>
+        <tipo>file</tipo>
+        <size>45</size>
+      </field>                 
+
+      <field id="fotos" _imageWidth="165" watermark="chasis" style="white-space:nowrap;" Formstyle="display:none;" deshabilitado="true" _foto="true"  PDFcolWidth="11">
+        <expression>CONCAT('/fotos/archivo/Services/', numero,'/')</expression>
+        <label>Fotos</label>
+        <tipo>dir</tipo>
+      </field>
+-->
+        <order>
+          <field id="fecha" orderType="desc"/>
+        </order>
+
+      </table>
+
+        <join tipo="left">
+          <table id="PEDCOTIZ">
+            <field id="nrocha">
+              <condicion operador="=">SERVICE_TURNOS.nrofab</condicion>
+            </field>
+          </table>
+        </join>
+        <join tipo="left">
+          <table id="REG_CUENTA">
+            <field id="nro_cuenta">
+              <condicion operador="=">SERVICE_TURNOS.ctacod</condicion>
+            </field>
+            <field id="subsistema_id">
+             <condicion operador="=">'02'</condicion>
+            </field>
+          </table>
+        </join>
+        <join tipo="left">
+          <table id="CCTCONTA">
+            <field id="idconta">
+              <condicion operador="=">SERVICE_TURNOS.idconta</condicion>
+            </field>
+<!--
+            <field id="subsistema_id">
+             <condicion operador="=">'02'</condicion>
+            </field>
+-->
+          </table>
+        </join>
+                
+      </form>
+      </histrix>

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF8"?>
+<histrix tipo="crud" >
+  <titulo>Embalajes</titulo>
+  <obs/>
+  <form>
+    <table id="STK_STANDARD_PACK">
+      <title>Embalajes</title>
+      
+      <field id="id_standardpack" noshow="true" autoinc="true" />
+
+    
+      <field id="descripcion_standardpack" required="true">
+         <label>Embalaje</label>
+	<size>70</size>
+      </field>
+
+      <field id="contenedor_stkarticulo_id">
+	<label>Artículo Contenedor (opcional)</label>
+	<helper id="STK_ARTICULOS" type="external">
+	    <field id="id_stkarticulo" />
+	    <field id="nombre_articulo" />
+	    <order>
+		<field id="nombre_articulo" />
+	    </order>
+	</helper>
+      </field>
+    <!--
+    <field id="nombre_articulo">
+	<label>Articulo Relacionado</label>
+	    <expression>nombre_articulo</expression>
+	    <size>40</size>
+	</field>
+-->
+
+    </table>
+    <join tipo="left">
+	<table id="STK_ARTICULOS">
+	    <field id="id_stkarticulo">
+		<condicion operador="=">contenedor_stkarticulo_id</condicion>
+	    </field>
+	</table>
+    </join>
+    
+  </form>
+</histrix>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="fichaing" inserta="false" modifica="false"  >
+  <title>Actualizar costos</title>
+  <obs/>
+  <form >
+    <table id="HTXMENU" label="Actualizar Costos">
+	<field id="menuId" noshow="true" />
+      <movimientos>
+        <relacion id="act_costos_sql.xml" />
+      </movimientos>                                 
+    </table>
+  </form>
+</histrix>

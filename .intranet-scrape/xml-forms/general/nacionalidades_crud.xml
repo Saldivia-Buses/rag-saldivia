@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="crud" filter="true">
+  <title>Nacionalidades</title>
+  <obs></obs>
+  <form>
+    <table id="GEN_NACIONALIDADES" label="Nacionalidades">
+      
+      <field id="id_nacionalidad" autoinc="true" noshow="true">
+        <label>Código</label>
+      </field>
+      
+      <field id="nacionalidad">
+          <label>Nacionalidad</label>
+	       <size>25</size>
+      </field>
+      
+      <field id="pais">
+        <label>Pais</label>
+      </field>
+      
+      <field id="idioma">
+        <label>Idioma</label>
+      </field>
+      <!-- <field id="prefijo_pais" local="true">
+        <label>Prefijo Internacional</label>
+      </field> -->
+      <field id="habilitado" local="true" colstyle="display:none;">
+        <label>Habilitado</label>
+        <tipo>check</tipo>
+      </field>
+
+      <order>
+         <field id="nacionalidad" />
+      </order>
+
+    </table>
+  </form>
+</histrix>  

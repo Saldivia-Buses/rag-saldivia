@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="consulta" _oldSearch="true" path="fotos/articulos">
+	<title>Insumos</title>
+	<obs></obs>
+	<form detalle="stkpieza_qry.xml" dir="/articulos">
+		<table id="STKINSUM" >
+			<title>Insumos</title>
+			
+			
+			<field id="artcod" _deshabilitado="true" >
+				<label>Cod.</label>
+				<detalle>idPadre</detalle>
+			</field>
+<!--
+			<field id="codart" _deshabilitado="true" local="true">
+				<label>CodArt</label>
+		       <helper type="link" xml="stkpieza_qry.xml" dir="/articulos" modal="true">
+               	<parameter source="artcod" target="idPadre" operator="=" />
+               </helper>
+               <expresion>artcod</expresion>
+           
+
+			</field>
+		
+-->
+<!--
+			<field id="codart" _deshabilitado="true" local="true" linkint="stkpieza_qry.xml" linkdes="Articulos hijos" print="false"  linkdir="/articulos/" linkmodal="true"> 
+				<label>CodArt</label>
+		       <paring destino="idPadre">artcod</paring>
+               <expresion>artcod</expresion>
+           
+
+			</field>
+		-->
+			<field id="artdes" deshabilitado="true">
+				<label>Insumo</label>
+				<help>Descripcion</help>
+
+			</field>
+			<field id="artpor" oculto="true">
+				<label>Porcent</label>
+			</field>
+			<field id="artcos" oculto="true">
+				<label>costo</label>
+			</field>
+			<field id="unicps" oculto="true">
+				<label>U.Compra</label>
+			</field>
+			<field id="artuni" oculto="true">
+			</field>
+			<field id="artcos" oculto="true">
+			</field>
+			<field id="artrub" oculto="true">
+			</field>
+			<field id="unidef" oculto="true">
+			</field>
+			<field id="valcps" oculto="true">
+			</field>
+			<field id="ultima_compra"  tipoOrden="DESC">
+				<label>ult.compra</label>
+				<tipo>date</tipo>
+			</field>
+			<field id="costo">
+			    <label style="font-weight:bold;">Costo.</label>
+			    <!-- NO TOCAR, TE MATO -->
+			    <expression having="false" >( case when (select sum(round( (costo_automatico * cantidad) * (1 + recargo / 100) , 2))
+			    from STKPIEZA where idPadre  = STKINSUM.artcod limit 1) != 0 then
+			    (select sum(round( (costo_automatico  * cantidad) * (1 + recargo / 100) , 2))
+			    from STKPIEZA where idPadre  = STKINSUM.artcod limit 1)
+			    else  STKINSUM.costo_calculado * valcps / valuso  end)
+			    </expression>
+			    <tipo>numeric</tipo>
+			    <detalle>costo</detalle>
+			</field>
+			<field id="cos2to" noshow="true">
+			    <label>Costo Ant</label>
+			    <expression _sql="true">
+			    <![CDATA[ select round(STKINS.artcos * STKINSUM.valcps / STKINSUM.valuso, 2)
+			    from STKINSPR as STKINS where STKINS.artcod = STKINSUM.artcod and STKINS.fecult < STKINSUM.ultima_compra
+			    and STKINS.siscod='01' order by fecult DESC limit 1 ]]></expression>
+			    <detalle>cos2to</detalle>
+			</field>
+			<field id="ultsalida" >
+			    <label Formstyle="display:none;">Ultima Salida</label>
+			    <expression>
+			    select max(STK.movfec) from STKINMOV as STK where STK.artcod = STKINSUM.artcod and STK.siscod = '01' and STK.movcod = 10
+			    </expression>
+			    <!--<tipo>date</tipo>-->
+			    <detalle>ultsalida</detalle>
+			</field>
+			<field id="foto" path="fotopath" download="true">
+          		<expression>select ARTICULO_FOTO.foto from ARTICULO_FOTO where ARTICULO_FOTO.idArticulo = STKINSUM.artcod and ARTICULO_FOTO.foto != '' order by revision desc limit 1</expression> 
+			    <label  Formstyle="display:none;">Imagen</label>
+			    <tipo >file</tipo>
+			    <size>40</size>
+			    <detalle>foto</detalle>
+			</field>
+			<field id="ctbnom" tabla="CTBCUENT" >
+			    <expression>ctbnom</expression>
+			    <label modpos="nobr" Formstyle="display:none;">CtaCtb</label>
+			    <tipo>varchar</tipo>
+			    <detalle>ctbnom</detalle>
+			</field>
+			<field id="baja" oculto="true">
+				<label>baja</label>
+				<condicion operador="!=">1</condicion>
+			</field>			
+			<field id="siscod" oculto="true">
+				<label>siscod</label>
+				<condicion operador="=">'01'</condicion>
+			</field>
+
+			<field id="fotopath" local="true" noshow="true">
+				<if exp="true">
+					<true>'artcod/'</true>
+					<false>''</false>
+				</if>
+				<tipo>varchar</tipo>
+			</field>
+
+
+			<order>
+				<field id="artdes"></field>
+			</order>
+		</table>
+		<join tipo="left">
+		    <table id="ARTICULO_FOTO">
+			<field id="idArticulo" >
+			    <condicion operador="=">STKINSUM.artcod</condicion>
+			</field>
+		    </table>
+		</join>
+		<join tipo="left">
+		    <table id="CTBCUENT">
+<!--
+			<field id="siscod" >
+			    <condicion operador="=">'10'</condicion>
+		    	</field>
+-->
+			<field id="ctbcod" >
+			    <condicion operador="=">STKINSUM.artctb</condicion>
+			</field>
+		    </table>
+		</join>
+	</form>
+</histrix>

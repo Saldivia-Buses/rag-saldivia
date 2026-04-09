@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="chart">
+	<title>Gravedad Accidentes</title>
+	<obs></obs>
+	<form>
+		<table id="GEN_CALENDAR" label="ESTAD INASISTENCIAS">
+
+			<grafico id="Inasistencias">
+				<ancho>400</ancho>
+				<tipo>L</tipo>
+				<etiquetas>mes</etiquetas>
+				<serie>dias_perdidos</serie>
+				<serie>calculo</serie>
+				<title>Gravedad (Dias perdidos * 200000)/Cant.Hs</title>
+			</grafico>
+
+			<filters>
+				<field id="fecha">
+					<label>Desde</label>
+					<valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m" ,strtotime('-12 month')) , 1, date("Y") -  1 ))</valor>
+					<operador>&gt;=</operador>
+				</field>
+
+				<field id="fecha">
+					<label>Hasta</label>
+					<valor eval="true">date('d/m/Y', strtotime('-1 second', strtotime(date('Y-m-01'))))</valor>
+					<operador>&lt;=</operador>
+				</field>
+			</filters> 
+
+			<field id="mes">
+				<expression>month(GEN_CALENDAR.fecha)</expression>
+				<label>Mes</label>
+				<options>
+					<option valor="1">Ene</option>
+					<option valor="2">Feb</option>
+					<option valor="3">Mar</option>
+					<option valor="4">Abr</option>
+					<option valor="5">May</option>
+					<option valor="6">Jun</option>
+					<option valor="7">Jul</option>
+					<option valor="8">Ago</option>
+					<option valor="9">Sep</option>
+					<option valor="10">Oct</option>
+					<option valor="11">Nov</option>
+					<option valor="12">Dic</option>
+				</options>
+	       			<tipo>varchar</tipo>
+			</field>
+
+			<field id="fecha" _oculto="true">
+				<tipo>date</tipo>
+			</field>
+
+			<field id="year" oculto="true">
+				<expression>year(GEN_CALENDAR.fecha)</expression>
+			</field>
+
+			<field id="dias_perdidos">
+				<!--<expression>SELECT count(*)
+                                                FROM GEN_CALENDAR GC
+
+                                                LEFT JOIN FRANCOS_PER FP on FP.tipo = 1
+
+                                                WHERE DAYOFWEEK(GC.fecha) NOT IN (1,7)
+                                                  AND MONTH(GEN_CALENDAR.fecha) = MONTH(FP.fechainicio)
+                                                  AND YEAR(GEN_CALENDAR.fecha) = year(FP.fechainicio)
+                                                  AND GC.fecha &gt;= FP.fechainicio
+                                                  AND GC.fecha &lt;= IF(FP.fechafin = '0000-00-00',str_to_date('[__fecha__]', '%d/%m/%Y'), FP.fechafin)
+                                                  AND GC.fecha NOT IN (select idFeriado from FERIADOS)</expression>-->
+				<expression><![CDATA[SELECT COUNT(*)
+								FROM FRANCOS_PER FP
+								JOIN GEN_CALENDAR GC ON GC.fecha >= FP.fechainicio
+										    AND GC.fecha <= IF(FP.fechafin = '0000-00-00', CURDATE(), FP.fechafin)
+								LEFT JOIN PERSONAL P ON P.idPersona = FP.idPersona
+								WHERE FP.tipo = 1
+								  AND DAYOFWEEK(GC.fecha) NOT IN (1,7)
+								  AND GC.fecha NOT IN (SELECT FERIADOS.idFeriado FROM FERIADOS)
+								  AND MONTH(GC.fecha) = MONTH(GEN_CALENDAR.fecha)
+								  AND YEAR(GC.fecha) = YEAR(GEN_CALENDAR.fecha)
+								  AND FP.idPersona != 0]]></expression>
+				<label>Dias Perdidos</label>
+				<help></help>
+				<tipo>integer</tipo>
+			</field>
+
+            <field id="hnorm" _noshow="true">
+                <label>Horas</label>
+                <expression><![CDATA[
+                    ROUND(sum(
+ifnull( time_to_sec( timediff( case when FICHADADIA.h2 > hegreso then hegreso else FICHADADIA.h2 end , case when FICHADADIA.h1 < hingreso then hingreso else FICHADADIA.h1 end )), 0)
++
+ifnull( time_to_sec( timediff( case when FICHADADIA.h4 > hegreso then hegreso else FICHADADIA.h4 end , case when FICHADADIA.h4 < hingreso then hingreso else FICHADADIA.h3 end )), 0)
+) / 3600, 0) ]]>
+                </expression>
+            </field>
+
+            <field id="calculo" local="true">
+            	<if exp="true">
+            		<true>ROUND(((dias_perdidos * 200000) / hnorm), 2)</true>
+            		<false>0</false>
+            	</if>
+            	<tipo>custom_numeric</tipo>
+				<label>Indice Gravedad</label>
+            </field>
+            
+			<group>
+				<field id="year"></field>
+				<field id="mes"></field>			
+			</group>
+
+		</table>
+
+        <join tipo="left">
+            <table id="FICHADADIA">
+                <field id="fecha">
+                    <condicion operador="=">GEN_CALENDAR.fecha</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="PERSONAL">
+                <field id="legajo">
+                    <condicion operador="=">FICHADADIA.legajo</condicion>
+                </field>
+            </table>
+        </join>
+
+	</form>
+</histrix>

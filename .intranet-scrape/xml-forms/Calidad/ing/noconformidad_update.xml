@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<histrix tipo="update"   >
+        <title>Ingreso de No Conformidad</title>
+        <obs></obs>
+        <form >
+                <table id="CAL_NOCONFORMIDADES" >
+                    <title>Estados</title>
+                        <field id="id_noconformidad" id_temp="id_noconformidad" esClave="true"/>
+                        <field id="estadonconf_id" id_temp="nuevoestadonconf_id"/>
+                        <field id="fecha_cierrenconf" id_temp="fecha_cierrenconf"/>
+                        
+
+                </table>
+        </form>           
+</histrix>

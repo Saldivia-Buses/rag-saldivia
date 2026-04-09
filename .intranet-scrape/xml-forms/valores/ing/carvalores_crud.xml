@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud" paginar="100" inserta="false">
+	<title>Consulta Cartera de Valores</title>
+	<obs></obs>
+	<consulta>
+		<table id="CAR_VALORES" label="Cartera de Cheques">
+			<filters>
+				<field id="fecha_mov1">
+					<operador>&gt;=</operador>
+					<label>Desde Fecha</label>
+					<tipo>date</tipo>
+				</field>
+				<field id="fecha_mov2">
+					<operador>&lt;=</operador>
+					<label>Hasta Fecha</label>
+					<tipo>date</tipo>
+					<valor>today</valor>
+				</field>
+				<field id="importe_valor" deshabilitado="false">
+					<operador>&gt;=</operador>
+					<label>Desde Importe</label>
+					<tipo>decimal</tipo>
+				</field>
+				<field id="importe_valor" deshabilitado="false">
+					<operador>&lt;=</operador>
+					<label>Hasta Importe</label>
+					<tipo>decimal</tipo>
+				</field>
+				<field id="moneda_id" grupo="Avanzado">
+					<operador>=</operador>
+					<label>Moneda</label>
+				</field>
+				<field id="carbanco_id" grupo="Avanzado">
+					<label>Banco</label>
+					<operador>=</operador>
+				</field>
+				<field id="carplaza_id" grupo="Avanzado">
+					<label>Plaza</label>
+					<operador>=</operador>
+				</field>
+				<field id="nro_valor" grupo="Avanzado">
+					<label>Nº</label>
+					<operador>=</operador>
+				</field>
+				<field id="cuit_valor" grupo="Avanzado">
+					<label>Cuit</label>
+					<operador>=</operador>
+				</field>
+				<field id="filtroEstado">
+					<label>Estado</label>
+					<operador>=</operador>
+					<valor>1</valor>
+				</field>
+			</filters>
+			<field id="id_carvalor" noshow="true">
+				<label>Nº Interno</label>
+			</field>
+			<field id="carbanco_id">
+				<label>Banco</label>
+				<helper type="combo" xml="carbanco_qry.xml" dir="/ayudas" empty="true" />
+			</field>
+			<field id="sucursal_banco">
+				<label>Sucursal</label>
+			</field>
+			<field id="carplaza_id">
+				<label>Plaza</label>
+				<helper type="combo" xml="carplaza_qry.xml" dir="/ayudas" empty="true" />
+			</field>
+			<field id="cuenta_valor">
+				<label>Nº Cuenta</label>
+				<help>Cuenta del cheque</help>
+			</field>
+			<field id="nro_valor" >
+				<label>Nº</label>
+			</field>
+			<field id="titular_valor">
+				<label>Titular</label>
+			</field>
+			<field id="cuit_valor">
+				<label>CUIT</label>
+			</field>
+			<field id="fecha_valor"  noshow="true" >
+				<label>Registrado</label>
+				<condicion operador="&gt;=">
+					STR_TO_DATE('[__fecha_mov1__]', '%d/%m/%Y') and fecha_valor &lt;= STR_TO_DATE('[__fecha_mov2__]' ,'%d/%m/%Y')
+				</condicion>
+				<tipo>date</tipo>
+			</field>
+			<field id="acreditacion_valor">
+				<label>Acreditacion</label>
+				<tipo>date</tipo>
+			</field>
+			<field id="egreso_valor" _noshow="true">
+				<condicion operador="!=">
+					'' and egreso_valor like CASE WHEN '[__filtroEstado__]' = 0 THEN '%' WHEN '[__filtroEstado__]' = 1 THEN '0000-00-00' WHEN '[__filtroEstado__]' = 2 THEN '2%-%-%' END
+				</condicion>
+				<label>Egreso</label>
+			</field>
+			<field id="importe_valor" suma="true" >
+				<label>importe</label>
+				<tipo>numeric</tipo>
+			</field>
+			<field id="moneda_id" >
+				<label>Moneda</label>
+				<helper type="combo" xml="monedas_qry.xml" dir="/ayudas" empty="true" />
+			</field>
+			<!-- Filtros -->
+			<field id="fecha_mov1" noshow="true" local="true">
+				<tipo>date</tipo>
+			</field>
+			<field id="fecha_mov2" noshow="true" local="true">
+				<tipo>date</tipo>
+			</field>
+			<field id="filtroEstado" noshow="true" local="true">
+				<helper type="combo" >
+					<option value="0">Todos</option>
+					<option value="1">En cartera</option>
+					<option value="2">Egresados</option>
+				</helper>
+			</field>
+		</table>
+	</consulta>
+</histrix>

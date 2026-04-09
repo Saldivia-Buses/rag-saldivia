@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ayuda" >
+    <title>Movimientos</title>
+    <obs></obs>
+    <form  >
+        <table id="REG_CUENTA" >
+	     <field id="id_regcuenta" autoinc="true" _noshow="true" esClave="true">
+                <label>Numero Cuenta</label>
+		        <detalle>regcuenta_id</detalle>
+          </field>
+          <field id="nombre_cuenta">
+                <label>Nombre</label>
+                <detalle>nombre</detalle>
+            </field>
+	     <field id="iva_id" noshow="true">
+                <label>Condicion Iva</label>
+                <detalle>iva</detalle>
+            </field>
+	     <field id="ref_cuenta" noshow="true">
+                <label>detalle</label>
+                <detalle>referencia</detalle>
+            </field>
+	    <field id="letra" tabla="GEN_IVA" noshow="true">
+                <label>letra</label>
+                <detalle>letra_movimiento</detalle>
+            </field>
+	      <field id="abreviacion_iva" tabla="GEN_IVA" noshow="true">
+                <label>Abr</label>
+                <detalle>categoria_iva</detalle>
+            </field>
+            <field id="cuit_cuenta">
+                <label>Cuit</label>
+                <detalle>CUIT</detalle>
+            </field>
+	    <field id="cod_direccion">
+                <label>Direccion</label>
+                <detalle>direccion</detalle>
+            </field>
+	    <field id="nombre_localidad" tabla="GEN_LOCALIDADES">
+                <label>Localidad</label>
+                <detalle>localidad</detalle>
+            </field>
+	    <field id="localidad_id" noshow="true">
+                <label>id_localidad</label>
+                <detalle>CP</detalle>
+            </field>
+	      <field id="provincia_id" noshow="true">
+                <label>id_Provincia</label>
+            </field>
+	     <field id="tel_cuenta">
+                 <label>Telefono</label>
+                 <detalle>telefono</detalle>
+            </field>
+  	
+	    <field id="nombre_provincia" tabla="GEN_PROVINCIAS">
+                <label>Provincia</label>
+                <detalle>provincia</detalle>
+            </field>
+	      <field id="percepcion"  noshow="true">
+                 <label>Percepcion</label>
+                 <detalle>percepcion</detalle>
+            </field>
+        <!--    <field id="subsistema_id" oculto="true" esClave="true">
+                <label>Subsistema</label>
+            </field> -->
+	    <field id="concepto_id" noshow="true" local="true">
+                <label>concepto</label>
+            </field>
+	    <field id="npv_movimiento" noshow="true" local="true">
+                <label>Npv</label>
+            </field>
+	     <field id="baja_cuenta" noshow="true">
+	      <label>baja</label>
+		<condicion operador="=">'0000-00-00'</condicion>
+	     </field>
+	     <order>
+	        <field id="nombre_cuenta" />
+	     </order>
+      </table>
+	<join tipo="left">
+	    <table id="GEN_LOCALIDADES">
+		<field id="id_localidad">
+		    <condicion operador="=">REG_CUENTA.localidad_id</condicion>
+		</field>
+	     </table>
+	</join>
+	<join tipo="left">
+	    <table id="GEN_IVA">
+		<field id="id_iva">
+		    <condicion operador="=">REG_CUENTA.iva_id</condicion>
+		</field>
+	     </table>
+	</join>
+	<join tipo="left">
+	    <table id="GEN_PROVINCIAS">
+		<field id="id_provincia">
+		    <condicion operador="=">REG_CUENTA.provincia_id</condicion>
+		</field>
+	     </table>
+	</join>
+	
+    </form>
+</histrix>
+

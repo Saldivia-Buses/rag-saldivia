@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" subtipo="vertical" llenoTemporal="false" 
+    impresion="ordenproduccion_imp.xml"
+    dirimpresion="/mrp_interno/qry"
+    imprime="false"
+    transaccional="true"
+    >
+    <title>ORDENE DE PRODUCCION</title>
+    <form>
+        <table id="MRP_ORDEN_DETALLE" label="DETALLE DE LA ORDEN DE PRODUCCION">
+            <movimientos cabecera="mrp_ordenproduccion_cab.xml">
+                <relacion id="mrp_ordenproduccion_insert.xml"></relacion>
+
+                <relacion id="mrp_ordendetalle_insert.xml"></relacion>
+<!-- VIA TRIGGER                <relacion id="mrp_controldetalle_insert.xml"></relacion> -->
+
+            </movimientos>
+               <!--
+            <validation>
+                <condition><![CDATA[$('[name=codemp]').val() < 1 ]]></condition>
+                <message>Debe Especificar un Empleado</message>
+            </validation>
+            -->                                                                                                        
+
+            <field id="_ORDEN" oculto="true" local="true">
+                <label>Orden</label>
+            </field>
+
+            <field id="hoy" noshow="true">
+                <tipo>date</tipo>
+                <valor eval="true">date("d/m/Y", mktime(0, 0, 0, date("m")  , date("d")+3, date("Y")))</valor>
+            </field>
+
+            <field id="fecha_requerido">
+                <label modpos="nobr">Fec.Requerimiento</label>
+                <help>Fecha de Requerimiento </help>
+
+            <valor eval="true">(date("N", mktime(0, 0, 0, date("m")  , date("d"), date("Y"))) > 2 )  ? date("d/m/Y", mktime(0, 0, 0, date("m")  , date("d")+5, date("Y"))) : date("d/m/Y", mktime(0, 0, 0, date("m")  , date("d")+3, date("Y")))</valor>
+            
+                <jseval actxml="false">straFecha(\'hoy\') &lt;= aFecha(\'fecha_requerido\')</jseval>
+                <jseval actxml="true" campodestino="fecha_requerido">\'fecha_requerido\'</jseval>
+                <tipo>date</tipo>
+                <actualiza>
+                    <field id="feriado" destino="fecha" />
+                </actualiza>
+            </field>
+
+           <field id="feriado" local="true" deshabilitado="true" sincelda="true" style="color: red; font-weight: bold; font-size: 14px;">
+                <label modpos="nobr" />
+                <helper type="combo" id="CALENDAR">
+                    <field id="fecha">
+                      <tipo>date</tipo>
+                       <expression>DATE_FORMAT(fecha, '%d/%m/%Y')</expression>
+                    </field>
+                    <field id="es_feriado">
+                        <expression><![CDATA[select concat('Feriado: ',descripcion) from FERIADOS where idFeriado = CALENDAR.fecha]]></expression>
+                    </field>
+                </helper>
+            </field>
+
+            <field id="stkarticulo_id"  esClave="true" linkint="stk_hist_costos_qry.xml" linkdes="Precios" linkdir="/compras/qry">
+                <paring destino="stkarticulo_id" colspan="2">stkarticulo_id</paring>
+                <label modpos="nobr">Artículo</label>
+                <help>Codigo de Articulo</help>
+                <helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas_local">
+
+                    <field id="artcod">
+                        <detalle>stkarticulo_id</detalle>
+                    </field>
+
+                    <field id="artdes">
+                        <detalle>nombre_articulo</detalle>
+                    </field>
+                    <!--
+                    <field id="produccion_diaria">
+                        <detalle>minimo_ordendetalle</detalle>
+                    </field>
+                    <field id="objetivo">
+                        <expression>ROUND( produccion_diaria / 85 * 100)</expression>
+                        <detalle>objetivo_ordendetalle</detalle>
+                    </field>-->
+                    <field id="bom">
+                        <expression having="false">(select count(*) from STKPIEZA WHERE STKPIEZA.idPadre = STKINSUM.artcod)</expression>
+                        <condicion operador="&gt;">0</condicion>
+                    </field>
+                    <!--
+                    <field id="codigo_plu"  >
+                        <label modpos="nobr">Codigo Ant</label>
+                        <detalle>codigo_plu</detalle>
+                    </field>-->
+                </helper>
+            </field>
+            <!--
+            <field id="codigo_plu"  deshabilitado="true">
+                <label modpos="nobr">Codigo Ant</label>
+            </field>
+            -->
+            <field id="nombre_articulo"  tabla="STK_ARTICULOS" esClave="true" deshabilitado="true">
+                <label modpos="nobr" colspan="5"></label>
+                <tipo>varchar</tipo>
+                <size>20</size>
+            </field>
+            <!--
+            <field id="minimo_ordendetalle" >
+                <label>Minimo</label>
+            </field>
+            -->
+            <field id="objetivo_ordendetalle" required="true" >
+                <label modpos="nobr">Cantidad</label>
+            </field>
+            
+            <field id="compos" local="true" style="font-size:small" showObjTabla="true" Formstyle="display:none;"> 
+        	<label>Composicion</label>
+        	<helper type="object" xml="composicion_qry.xml">
+        	    <parameter source="stkarticulo_id" target="idPadre" />
+        	    <parameter source="objetivo_ordendetalle" target="cant_prod" />
+        	</helper>
+            </field>
+            <field id="objetivo_ordendetalle" required="true" >
+                <label modpos="nobr">Cantidad</label>
+            </field>
+            
+<!--            <field id="producido_ordendetalle" >
+                <label modpos="nobr">Producido</label>
+            </field>
+            -->
+            <field id="mrpobservaciones"  esClave="true" required="false">
+                <label colspan="5"  >Observaciones</label>
+                <size>80</size>
+                <valor></valor>
+            </field>
+            
+
+<!--            
+            <field id="fotopath" local="true" noshow="true">
+                <if exp="true">
+                    <true>'articulos/stkarticulo_id/'</true>
+                    <false>''</false>
+                </if>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="pedidopath" local="true" noshow="true">
+                <tipo>varchar</tipo>
+            </field>
+            <field id="foto" path="fotopath" download="true" deshabilitado="true">
+                <expression sql="true">select STK_ARTICULO_FOTO.foto from STK_ARTICULO_FOTO where STK_ARTICULO_FOTO.stkarticulo_id = '[__stkarticulo_id__]' limit 1</expression>
+                <label Formstyle="display:none;">Imagen</label>
+                <tipo >file</tipo>
+                <size>40</size>
+            </field>
+            <field id="archivo" _noshow="true" deshabilitado="true" esClave="true" path="pedidopath" download="true">
+                <tipo >file</tipo>
+                <label Formstyle="display:none;">Adjunto</label>
+                <size>40</size>
+            </field>
+            
+-->
+            
+            <order>
+                <field id="ocpren"></field>
+            </order>
+        </table>
+        <join tipo="left">
+            <table id="STK_ARTICULOS">
+                <field id="subsistema_id" oculto="true">
+                    <label>STK_ARTICULOS.subsistema_id</label>
+                    <condicion operador="=">'01'</condicion>
+                </field>
+                <field id="stkarticulo_id" oculto="true">
+                    <condicion operador="=">CPS_DETALLE.stkarticulo_id</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix>

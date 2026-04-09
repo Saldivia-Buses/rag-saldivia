@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert">
+    <title>Ordenes Viejas</title>
+    <obs></obs>
+    <form>
+        <table id="MRP_ORDEN_DETALLE" label="Ordenes Viejas">
+
+            <field id="mrporden_id"			lastId="mrp_carga_ordenes_viejas.xml" />
+            <field id="stkarticulo_id"			id_temp="id_stkarticulo" />
+            <field id="observaciones_ordendetalle"	id_temp="nombre_articulo" />
+            <field id="objetivo_ordendetalle"		id_temp="cantidad" />
+
+        </table>
+    </form>
+</histrix>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm">
+  <title>Actividades</title>
+  <obs></obs>
+  <consulta>
+    <table id="ALA_TIPOSALARMAS">
+      <field id="id_tipoalarma" autoinc="true" noshow="true">
+        <label>Codigo</label>
+      </field>
+      <field id="tipoalarma_descripcion">
+        <label>Descripcion</label>
+      </field>
+    </table>
+  </consulta>
+</histrix>  

@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" _conBusqueda="true" _imprimetanda="true" pageBreak="true" _imprime="false" _preloadData="false">
+  <title>Movimientos</title>
+  <obs/>
+  <consulta _detalle="movimientos_cuenta_expand.xml" _inline="true">
+
+    <table id="CTB_MOVIMIENTOS" label="Libro Mayor">
+
+      <filters>
+
+        <field id="fecha_movimiento" >
+          <operador>&gt;=</operador>
+          <label  >Desde</label>
+          <valor>today</valor>
+        </field>
+
+        <field id="fecha_movimiento" >
+          <operador>&lt;=</operador>
+          <label modpos="nobr">Hasta</label>
+          <valor>today</valor>
+        </field>
+
+      </filters>
+
+      <fieldGroup>
+
+      <field id="ctbgrupo_id" tabla="CTB_CUENTA_GRUPO" noshow="true" _multiple="true">
+  	    <helper id="CTB_GRUPO_REPORTE" type="combo" empty="true">
+      		<field id="id_ctbgrupo" />
+      		<field id="nombre_grupo_reporte" />
+  	    </helper>
+<!--        <condicion operador="=">6 or CTB_DETALLES.cuenta_id = '511174'</condicion> -->
+      </field>
+
+      <field id="estcod" tabla="REG_CUENTA" noshow="true" >
+  	    <expression having="false">ifnull(estcod, 0)</expression>
+      <!--	<condicion operador="=">0</condicion> -->
+      	<tipo>check</tipo>
+      </field>
+ 
+      <field id="logregion_id" multiple="true">
+        <label modpos="nobr">Región</label>
+  	    <expression having="false">REG_MOVIMIENTOS.logregion_id</expression>
+        <help>Región de Logistica</help>
+	      <helper xml="log_region_crud.xml" dir="/logistica" type="combo" empty="true">
+	      </helper>        
+      </field>
+
+      <field id="id_movimiento" noshow="true" />
+
+      <field id="concepto_id" noshow="true">
+        <helper type="combo" xml="ctbconcepto_qry.xml" dir="/ayudas" />
+        <label>Concepto</label>
+        <detalle>concepto_id</detalle>
+      </field>
+
+      <field id="fecha_movimiento" noshow="true" tabla="REG_MOVIMIENTOS"/>
+
+      <field id="cuenta_contable" tabla="CTB_DETALLES"  _multiple="true" noshow="true">
+	      <expression having="false">CTB_DETALLES.cuenta_id</expression>
+        <label>Cuenta</label>
+<!--        <helper type="external" xml="cuentas_habilitadas_qry.xml" dir="/ayudas" empty="true" /> -->
+
+        <helper type="external" id="CTBCUENT"  dir="/ayudas" empty="true" >
+        		<field id="ctbcod">
+        		    <detalle>cuenta_id</detalle>
+        		</field>
+        		
+        		<field id="nombres">
+        		    <expression having="false">concat(ctbcod, ' ', ctbnom)</expression>
+        		</field>
+        		
+        		<field id="ctbhab" noshow="true">
+        			<condicion operador="=">1</condicion>
+        		</field>
+        		<order>
+        			<field id="nombres" />
+        		</order>
+
+      	</helper>
+
+        <detalle>cuenta_id</detalle>
+      </field>
+      
+      <field id="nombre_cuenta2" local="true" noshow="true" style="color:red;font-weight:bold; ">
+	       <size>60</size>
+      </field>
+
+      <field id="cuenta_id" noshow="true">
+      	<expression>cuenta_id</expression>
+              <detalle>cuenta_id</detalle>
+      	<tipo>integer</tipo>
+
+      </field>
+
+      <!--
+      <field id="nombre_cuenta" >
+        <label>Nombre Cuenta</label>
+	     <expression>ctbnom</expression>
+      </field>
+    -->
+      <field id="xcentro_id" noZero="true" noshow="true">
+        <label>C.Costos</label>
+	       <expression>count(distinct ifnull(ctbcentro_id, 0)) - 1</expression>
+
+        <helper type="link" xml="movimientos_cuenta_expand_por_centro.xml" width="95%">
+      	    <!-- <parameter source="cuenta_id" 	target="cuenta_id" /> -->
+      	    <parameter source="anio" 		target="anio" />
+      	    <!-- <parameter source="ctbcentro_id" 	target="ctbcentro_id" operator="in"/> -->
+      	</helper>
+        <detalle>cuenta_id</detalle>
+      </field>
+
+
+    </fieldGroup>
+    <fieldGroup style="text-align:right;">
+      <field id="prov_id"  deshabilitado="true" local="true" noshow="true">
+      </field>
+
+     <field id="mat_prima"  suma="true">
+        <expresion>sum( (case when ctbgrupo_id = 6 then round(importe, 2) * (case when doh = 1 then -1 else 1 end) else 0 end))</expresion>
+        <label>Mat.Prima</label>
+        <tipo>custom_numeric</tipo>
+	<helper xml="movimientos_mensuales_agrup_region.xml" type="link" width="80%">
+	    <parameter source="desde_fecha" target="desde_fecha" operator="&gt;="/>
+	    <parameter source="hasta_fecha" target="hasta_fecha" operator="&lt;="/>
+	    <parameter source="6" target="ctbgrupo_id" />
+	    <parameter source="logregion_id" target="logregion_id" />
+	</helper>
+
+     </field>
+    <field id="desde_fecha" noshow="true">>
+	<expression>min(REG_MOVIMIENTOS.fecha_movimiento)</expression>
+    </field>
+    <field id="hasta_fecha" noshow="true">>
+	<expression>max(REG_MOVIMIENTOS.fecha_movimiento)</expression>
+    </field>
+    <field id="cuenta_importacion" tabla="LOG_REGION" noshow="true"/>
+     <field id="gastos_imp" suma="true">
+        <expresion>sum( (case when cuenta_id = cuenta_importacion   then round(importe, 2) * (case when doh = 1 then -1 else 1 end) else 0 end))</expresion>
+        <label>Costos Logísticos</label>
+        <tipo>custom_numeric</tipo>
+	<helper xml="movimientos_mensuales_agrup_region.xml" type="link" width="80%">
+	    <parameter source="desde_fecha" target="desde_fecha" operator="&gt;="/>
+	    <parameter source="hasta_fecha" target="hasta_fecha" operator="&lt;="/>
+	    <parameter source="cuenta_importacion" target="cuenta_id" />
+	    <parameter source="logregion_id" target="logregion_id" />
+	</helper>
+     </field>
+
+
+     <field id="incidencia" local="true" suma="true">
+	
+        <label>incidencia</label>
+        <if exp="mat_prima != 0">
+          <true>'% '. round(gastos_imp / mat_prima * 100, 2)</true>
+          <false>0</false>
+        </if>
+        <tipo>custom_numeric</tipo>
+     </field>
+    </fieldGroup>
+    <fieldGroup>
+
+        <field id="anio" deshabilitado="false" noshow="true">
+	    <expression having="false">year(CTB_MOVIMIENTOS.fecha_movimiento)</expression>
+          <label modpos="nobr">Año</label>
+	    <detalle>anio</detalle>
+        </field>
+ 
+     <field id="fecha_minima" noshow="true">
+        <expresion>min(CTB_MOVIMIENTOS.fecha_movimiento)</expresion>
+        <detalle>fecha_minima</detalle>
+        <tipo>date</tipo>
+     </field>
+
+     <field id="fecha_maxima" noshow="true">
+        <expresion>max(CTB_MOVIMIENTOS.fecha_movimiento)</expresion>
+        <detalle>fecha_maxima</detalle>
+        <tipo>date</tipo>
+     </field>
+
+    </fieldGroup>
+     <group>
+<!--        <field id="cuenta_id" table="CTB_DETALLES"/> -->
+        <field id="logregion_id" table="REG_MOVIMIENTOS"/>
+     </group>
+
+    </table>
+ 
+    <join _tipo="left">
+      <table id="REG_MOVIMIENTOS">
+        <field id="id_regmovim">
+          <condicion operador="=">CTB_MOVIMIENTOS.regmovim_id</condicion>
+        </field>
+        <field id="bienes_capital">
+          <condicion operador="=">0</condicion>
+        </field>
+      </table>
+    </join>
+    <join>
+      <table id="LOG_REGION">
+        <field id="id_logregion">
+          <condicion operador="=">REG_MOVIMIENTOS.logregion_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="REG_CUENTA">
+        <field id="id_regcuenta">
+          <condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+        </field>
+        <field id="estcod">
+          <condicion operador="=">0</condicion>
+        </field>
+      </table>
+    </join>
+    <join>
+      <table id="CTB_DETALLES">
+        <field id="movimiento_id">
+          <condicion operador="=">id_movimiento</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join>
+      <table id="CTBCUENT">
+        <field id="ctbcod">
+          <condicion operador="=">CTB_DETALLES.cuenta_id</condicion>
+        </field>
+ 
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="CTB_CUENTA_GRUPO">
+        <field id="ctbcuenta_id">
+          <condicion operador="=">CTB_DETALLES.cuenta_id</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join tipo="left">
+      <table id="CTB_GRUPO_REPORTE">
+        <field id="id_ctbgrupo">
+          <condicion operador="=">ctbgrupo_id</condicion>
+        </field>
+      </table>
+    </join>
+  </consulta>
+</histrix>

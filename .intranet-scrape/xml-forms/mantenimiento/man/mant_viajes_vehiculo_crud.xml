@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  CRUD
+Tarea: Tabla de Viajes del vehiculo
+Autor: 
+Fecha: 29/08/12
+*******************************************************************************
+-->
+<histrix tipo="crud" _PDForientacion="L">
+     <title>Viajes Vehiculos</title>
+    <obs></obs>
+    <form _detalle="plan_mant_herr_cons.xml">
+
+        <table id="MANT_VIAJES_VEHICULO" label="Viajes del vehiculo">
+
+            <field id="id_mantviajesvehiculo"  esClave="true" autoinc="true" noshow="true">
+                <label>Id viajes Vehiculo</label>
+                <help>Id viajes Vehiculo</help>
+            </field>
+                       
+            <field id="mantvehiculo_id" required="true">
+                <label>Vehiculo</label>
+                <help>Vehiculo</help>
+                <helper type="combo" id="MANT_VEHICULOS" _xml="mant_vehiculos_crud.xml" empty="true">
+                <!--
+                    <field id="tipo_vehiculo">
+                        <expression>id_manttipovehiculo</expression>
+                        <expression>MANT_TIPO_VEHICULO.descripcion</expression>
+                    </field>
+                -->
+                    <field id="id_mantvehiculo" />
+
+                    <field id="descripcion_vehiculo" />
+
+                    <order>
+                        <field id="descripcion_vehiculo" table="MANT_VEHICULOS" />
+                    </order>
+
+                </helper>
+            </field>
+
+            <!-- ver si es necesario -->
+            <field id="fecha_solicitud" required="true">
+                <label>Fecha de solicitud</label>
+                <help>Fecha de solicitud</help>
+                <tipo>date</tipo>
+            </field>
+        <!--
+            <field id="tipo_vehiculo" local="true" _noshow="true" deshabilitado="true">
+                <label modpos="nobr">Tipo</label>
+            </field> 
+        -->
+                           
+            
+            <!--
+            <field id="nombre_solicitante">
+                <label>Nombre del solicitante</label>
+                <help>Nombre del solicitante</help>
+                <size>20</size>
+            </field>
+            -->
+
+            <field id="usuario_id">
+                <label>usuario</label>
+                <helper type="combo" id="HTXUSERS" empty="true">
+                    <field id="Id_usuario" />
+                    <field id="usuario">
+                        <label>Nombre</label>
+                        <expression>CONCAT(Nombre, ' ', apellido)</expression>
+                    </field> 
+                    <order>
+                      <field id="usuario" />
+                    </order>  
+                </helper>
+            <!-- 
+                <label>Chofer</label>
+                <helper type="combo" id="MANT_CHOFERES" empty="true">
+                    <field id="id_mantchofer" />
+                    <field id="chofer">
+                        <label>Nombre</label>
+                        <expression>concat(nombre, ' ', apellido)</expression>
+                    </field>
+                    <order>
+                        <field id="chofer" />
+                    </order>
+                </helper>
+            -->
+            </field>
+
+
+            
+            <field id="departamento">
+                <label>Departamento</label>
+                <help>departamento</help>
+            </field>
+           
+            <field id="fecha_salida">
+                <label>Fecha de salida</label>
+                <help>Fecha de salida</help>
+                <tipo>date</tipo>
+           </field>
+           
+           <field id="hora_salida">
+                <label>Hora de salida</label>
+                <help>Hora de salida</help>
+                <tipo>hora</tipo>
+           </field>
+
+            <field id="fecha_regreso">
+                <label>Fecha de regreso</label>
+                <help>Fecha de regreso</help>
+                <tipo>date</tipo>
+            </field>
+            
+            <field id="hora_regreso">
+                <label>Hora de regreso</label>
+                <help>Hora de regreso</help>
+                <tipo>hora</tipo>
+            </field>
+
+            <!-- ver hacer tabla de recorridos/destino -->
+            <field id="destino">
+                <label>Destino</label>
+                <help>Destino</help>
+            </field>
+            
+            <field id="km_inicial" _noshow="true">
+                <label>KM Iniciales</label>
+                <help>KM Iniciales</help>
+            </field>
+            
+            <field id="km_final" _noshow="true">
+                <label>KM Finales</label>
+                <help>KM Finales</help>
+            </field>
+
+        
+
+            <field id="cant_inicial_combustible">
+                <label>Cant inicial combustible</label>
+                <help>Cantidad combustible al comienzo viaje</help>
+            </field>
+            
+            <field id="cant_final_combustible">
+                <label>Cant final combustible</label>
+                <help>Cantidad combustible al final viaje</help>
+            </field>
+            
+            <!-- incidencias -->
+
+            <field id="boton_incidecia" style="width:20px" tdWidth="5%">
+                <label modpos="nobr">Incid.</label>
+                <helper xml="mant_viajes_vehiculo_incidencias_crud.xml" type="link">
+                    <parameter source="id_mantviajesvehiculo" target="mantviajesvehiculo_id"/>
+                </helper>
+                <expression>case when (select count(*) from  MANT_VIAJES_INCIDENCIAS  
+                    where MANT_VIAJES_INCIDENCIAS.mantviajesvehiculo_id = MANT_VIAJES_VEHICULO.id_mantviajesvehiculo ) = 0 then '+' else (select count(*) from  MANT_VIAJES_INCIDENCIAS  where MANT_VIAJES_INCIDENCIAS.mantviajesvehiculo_id = MANT_VIAJES_VEHICULO.id_mantviajesvehiculo ) end
+                </expression>
+            </field>
+               
+      
+    	    <filters>
+               <!--  
+            <field id="nombre_equipo">
+                <label>Nombre</label>
+                <help>Nombre</help>
+                <operador>like</operador>
+            </field>
+            <field id="tipoequipo_id" >
+                <label>Tipo</label>
+                <help>Tipo</help>
+                <operador>=</operador>
+				<valor>1</valor>
+            </field>
+			
+			<field id="deposito_id">
+				<label modpos="nobr">Depósito</label>
+				<helper type="combo" id="DEPOSITO">
+					<field id="idDeposito">
+						<label>Cod</label>
+						<help>Codigo</help>
+					</field>
+					<field id="direccion">
+						<label>Direccion</label>
+						<help>Direccion</help>
+					</field>
+				</helper>
+                <operador>=</operador>
+
+			</field>
+            -->
+                <field id="usuario_id">
+                    <label>Usuario</label>
+                    <operador>=</operador>
+                </field>
+
+                <field id="mantvehiculo_id">
+                    <label modpos="nobr">Vehiculo</label>
+                    <operador>=</operador>
+                </field>
+
+                <field id="fecha_solicitud">
+                    <label>Desde Fecha</label>
+                    <operador>&gt;=</operador>
+                   
+                </field>
+
+                <field id="fecha_solicitud">
+                    <label modpos="nobr">Hasta Fecha</label>
+                    <operador>&lt;=</operador>
+                    <valor>today</valor>
+                </field>
+                
+                
+           
+    	    </filters>
+
+        
+            
+
+		<order>
+			<field id="fecha_solicitud" />
+		</order>
+		
+                  	    
+        </table>
+        
+	<!--
+        <join tipo="left">
+             <table id="MANT_COMBUSTIBLES">
+                <field id="id_mantcombustible">
+                    <condicion operador="=">mantcombustible_id</condicion>
+                </field>
+             </table>
+        </join>
+        
+          -->
+     
+        <join tipo="left">
+             <table id="MANT_VEHICULOS">
+                <field id="id_mantvehiculo">
+                    <condicion operador="=">mantvehiculo_id</condicion>
+                </field>
+             </table>
+        </join>
+       
+
+
+    </form>
+</histrix>	

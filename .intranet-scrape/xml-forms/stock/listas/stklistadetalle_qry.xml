@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<histrix tipo="consulta" _paginar="100" llenotemporal="false" prefetch="false">
+	<title>Detalle de Listas de Precios de Productos</title>
+	<pie>[__leyenda__]</pie>
+	<obs/>
+
+	<form>
+
+		<table id="STK_LISTADETALLE" label="Maestro de Precios de Productos">
+
+
+			<filters>
+				<field id="stklista_id">
+					<operador>=</operador>
+					<label colspan="2">Lista</label>
+				</field>
+
+				<field id="stkrubro_id">
+					<operador>=</operador>
+					<label>Rubro</label>
+				</field>
+
+				<field id="stkmarca_id">
+					<label modpos="nobr">Marca</label>
+				</field>
+
+				<field id="stkfamilia_id">
+					<operador>=</operador>
+					<label modpos="nobr">Familia</label>
+				</field>
+
+				<field id="nombre_articulo" deshabilitado="false">
+					<label colspan="2">Articulo</label>
+					<operador>like</operador>
+				</field>
+
+				<field id="moneda_id" print="false">
+					<label colspan="2">Moneda</label>
+				</field>
+
+				<field id="totalstk" deshabilitado="false">
+					<label>Desde Stock</label>
+					<operador>&gt;=</operador>
+					<valor>1</valor>
+				</field>
+				
+				<field id="totalstk" deshabilitado="false">
+					<label modpos="nobr">Hasta Stock</label>
+					<operador>&lt;=</operador>
+				</field>
+
+			</filters>
+
+
+			<field id="leyenda" noshow="true" local="true" print="false">
+				<label colspan="6">Leyenda</label>
+				<expression>CONCAT('Los precios no contienen IVA // Cotización 1 U$S = ', GEN_FN_COTIZACION(genmoneda_origen_id, CURDATE()), '$' )</expression>
+				<size>120</size>
+			</field>
+			
+			<field id="id_stklistadetalle" autoinc="true" esClave="true" noshow="true" />
+
+			<field id="nombre_rubro" tabla="STK_RUBROS" repeat="false">
+				<label>Rubro</label>
+			</field>
+
+			<field id="stkarticulo_id" style="text-align: right;padding-right: 0.5em;" esClave="true">
+				<label>Cod.</label>
+			</field>
+
+			<field id="nombre_articulo" tabla="STK_ARTICULOS">
+				<label>Descripcion</label>
+				<!-- expression>STK_ARTICULOS.nombre_articulo</expression -->
+			</field>
+
+			<field id="stkmarca_id" _noshow="true" tabla="STK_ARTICULOS">
+				<label>Marca</label>
+				<helper type="combo" xml="stkmarca_qry.xml" dir="/ayudas" empty="true" />
+			</field>
+
+			<field id="stkrubro_id" tabla="STK_ARTICULOS" noshow="true" _multiple="true">
+				<helper type="combo" xml="stkrubro_qry.xml" dir="/ayudas" empty="true" />
+			</field>
+
+			<field id="stklistadetalle_precioventa" _noshow="true">
+				<label>P.Neto</label>
+				<condicion operador="!=">0</condicion> 
+				<expression having="false">@PRE :=
+        (CASE WHEN STK_ARTICULOS.genmoneda_origen_id = '[__moneda_id__]' THEN
+           ifnull(stklistadetalle_precioventa,0)
+         ELSE 
+          (CASE WHEN STK_ARTICULOS.genmoneda_origen_id = 1 THEN 
+              ifnull(stklistadetalle_precioventa,0) / GEN_FN_COTIZACION( '[__moneda_id__]', current_date() )
+          ELSE
+              ifnull(stklistadetalle_precioventa,0) * GEN_FN_COTIZACION(STK_ARTICULOS.genmoneda_origen_id, current_date() )
+          END)
+         END)
+				</expression>
+				<tipo>numeric</tipo>
+			</field>
+
+			<field id="alicuota" noshow="true">
+				<label>% Alic</label>
+				<expression>IF(gravado = 1, GEN_IVA_ALICUOTAS.alicuota,0)</expression> 
+				<tipo>numeric</tipo>
+			</field>
+
+			<field id="final" noshow="true">
+				<label>P.Final</label>
+				<expression>ROUND(@PRE * IF(gravado = 1, (1 + GEN_IVA_ALICUOTAS.alicuota / 100),1),2)</expression>
+				<tipo>numeric</tipo>
+			</field>
+
+			<!-- Filtros -->
+
+			<field id="stklista_id" noshow="true">
+				<label>Codigo Lista</label>
+				<helper type="combo" xml="stklista_qry.xml" dir="/ayudas">
+					<option value="-1">Seleccione</option>
+				</helper>
+			</field>
+
+			<field id="stkfamilia_id" tabla="STK_ARTICULOS" noshow="true">
+				<label>Familia</label>
+				<helper type="combo" xml="stkfamilia_qry.xml" dir="/ayudas" empty="true" />
+			</field>
+
+			<field id="moneda_id" local="true" noshow="true">
+				<helper type="combo" xml="moneda_qry.xml" dir="/ayudas" empty="true" />
+			</field>
+
+			<field id="test_desc" local="true" noshow="true" print="false">
+				<helper type="combo" >
+					<option value="0">S/ Dto</option>
+					<option value="1">Dto 1</option>
+					<option value="2">Dto 2</option>
+					<option value="3">Dto1 + Dto2</option>
+				</helper>
+			</field> 
+
+			<field id="porcentaje_desc" _noshow="true" noZero="true" noEmpty="true">
+				<label>Descuento 1 </label>
+				<expresion>@PRE * (1 - STK_LISTAS.porcentaje_desc / 100) * (case '[__test_desc__]' when 1 then 1 when 3 then 1 else 0 end)
+				</expresion>
+				<tipo>numeric</tipo>
+			</field>
+
+			<field id="porcentaje_desc1" _noshow="true" noZero="true" noEmpty="true">
+				<label>Descuento 2</label>
+				<expresion>(CASE WHEN STK_LISTAS.porcentaje_desc1 != 0 	THEN @PRE * (1 - STK_LISTAS.porcentaje_desc / 100) * (1 - STK_LISTAS.porcentaje_desc1 / 100) ELSE 0 END) * (case when '[__test_desc__]' > 1 then 1 else 0 end)</expresion>
+				<tipo>numeric</tipo>
+			</field>
+
+			<field id="totalstk" noshow="true" print="false">
+				<label>Stock</label>
+				<expresion>IF( sum(cantidad_stock) &gt; 0, 'SI', '')</expresion>
+				<tipo>varchar</tipo>
+			</field>
+
+			<order>
+				<field id="nombre_rubro"    tabla="STK_RUBROS" />
+				<field id="nombre_articulo" tabla="STK_ARTICULOS" />
+			</order>
+
+			<group>
+				<field id="stkarticulo_id" tabla="STK_LISTADETALLE" />
+			</group>
+
+		</table>
+
+		<join>
+			<table id="STK_LISTAS">
+				<field id="id_stklista">
+					<condicion operador="=">STK_LISTADETALLE.stklista_id</condicion>
+				</field>
+			</table>
+		</join>
+
+		<join>
+			<table id="STK_ARTICULOS">
+				<field id="id_stkarticulo">
+					<condicion operador="=">STK_LISTADETALLE.stkarticulo_id</condicion>
+				</field>
+			</table>
+		</join>
+
+		<join>
+			<table id="STK_RUBROS">
+				<field id="id_stkrubro">
+					<condicion operador="=">STK_ARTICULOS.stkrubro_id</condicion>
+				</field>
+			</table>
+		</join>
+
+		<join tipo="left">
+			<table id="STK_STOCKACTUAL">
+				<field id="stkarticulo_id">
+					<condicion operador="=">STK_LISTADETALLE.stkarticulo_id</condicion>
+				</field>
+			</table>
+		</join>
+
+		<join tipo="left">
+			<table id="GEN_IVA_ALICUOTAS">
+				<field id="iva_regimen_id">
+					<condicion operador="=">STK_ARTICULOS.ivaregimen_id</condicion>
+				</field>
+				<field id="iva_id">
+					<condicion operador="=">1</condicion>
+				</field>
+			</table>
+		</join>
+
+
+	</form>
+
+</histrix>
+
+
+
+

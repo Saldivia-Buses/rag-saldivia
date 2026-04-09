@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  Ayuda
+Tarea: Ayuda para la Tabla de Servicios
+Autor: d!ego2k
+Fecha: 27/08/10
+*******************************************************************************
+-->
+<histrix tipo="consulta">
+	<title>Estados de Servicios</title>
+	<obs></obs>
+	<form >	    
+		<table id="FAC_SERVICIO_EST" label="Servicios">
+
+			<field id="id_facestado" />
+
+			<field id="nombre" />
+
+		</table>
+	</form>
+</histrix>	

@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ficha" borra="false" inserta="false" modifica="true" preFetch="true" log="true" logreference="ctafan">
+	<title>Fichas de venta</title>
+	<obs></obs>
+	<eventos>
+        <event id="update">close</event>
+        <event id="update">refresh</event>
+    </eventos>
+	<form>
+		<table id="PEDCOTIZ" label="Cambio estado ficha">
+			
+			<movimientos>
+				<relacion id="certificado_fab_upd.xml"/>
+			</movimientos>
+
+			<field id="nrocha" deshabilitado="true" esClave="true">
+				<label>N.Fab.</label>
+				<help>Número de Unidad.</help>
+				<detalle>nrocha</detalle>
+			</field>		
+
+ 			<field id="id" deshabilitado="true" noshow="true" log="false">
+				<label>id</label>
+				<help>id de Unidad.</help>
+			</field>
+			
+		    <field id="estado_ficha" editable="true">
+		        <label modpos="nobr">Estado</label>
+		        <help>Estado Ficha de Venta</help>
+		            <options>
+		              <option valor="0">Borrador</option>
+		              <option valor="1">Publicada</option>
+		              <option valor="2">Comercial</option>
+		            </options>
+	       	</field>
+ç
+			<field id="entrega_probable" modpos="nobr">
+			    <label>Entrega Probable</label>
+			    <tipo>date</tipo>
+			</field>
+
+			<field id="ctacod" log="true" colspan="4">
+				<label>Cliente</label>
+				<help>Código de Cuenta</help>
+				<helper id="CCTCUENT" type="combo">
+					<field id="ctacod"/>
+					<field id="ctafan">
+						<expression>CCTCUENT.ctafan</expression>
+						<detalle>ctafan</detalle>
+					</field>
+					<field id="siscod" oculto="true">
+						<condicion operador="=">'02'</condicion>
+					</field>
+					<field id="baja" oculto="true">
+						<condicion operador="=">0</condicion>
+					</field>
+					<order>
+						<field id="ctafan" />
+					</order>
+				</helper>
+			</field>
+
+			<field id="ctafan" tabla="CCTCUENT" noshow="true" deshabilitado="true">
+				<label>ctafan</label>
+			</field>
+
+			<field id="homologacion_id" required="true"  colspan="4">
+				<label colstyle="display:none;">Homologación</label>
+				<helper type="combo" xml="combo_homologacion_modelo.xml" dir="/fabricacion" empty="true">
+					<field id="baja" oculto="true">
+					<condicion operador="=">0</condicion>
+					</field>
+				</helper>
+			</field>
+
+			<field id="lcm" tabla="HOMOLOGMOD" noshow="true">
+                <label>L.C.m. Nro</label>
+            </field>
+
+            <field id="plano" tabla="HOMOLOGMOD" noshow="true">
+                <label>Plano Nro</label>
+            </field>
+
+            <field id="expte" tabla="HOMOLOGMOD" noshow="true">
+            	<label>expte</label>
+            </field>
+
+            <field id="dispos" tabla="HOMOLOGMOD" noshow="true">
+                <label>Disposición</label>
+            </field>
+			<field id="marcado_pendientes">
+			    <label>Con Pendientes</label>
+			    <tipo>check</tipo>
+			</field>
+	          
+	   		</table>	
+
+		    <join>
+			    <table id="CCTCUENT">
+			        <field id="ctacod">
+			            <condicion operador="=">PEDCOTIZ.ctacod</condicion>
+			        </field>
+			        <field id="siscod">
+			            <condicion operador="=">'02'</condicion>
+			        </field>     
+		    	</table>
+		    </join>
+
+		    <join>
+			    <table id="HOMOLOGMOD">
+			        <field id="id_homologacion">
+			            <condicion operador="=">PEDCOTIZ.homologacion_id</condicion>
+			        </field>  
+		    	</table>
+		    </join>
+
+</form>
+</histrix>

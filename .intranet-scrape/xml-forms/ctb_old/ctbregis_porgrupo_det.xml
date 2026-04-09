@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="utf-8"?>
+<histrix tipo="consulta">
+	<title>Resumen contable por grupo</title>
+	<obs></obs>
+	<form >
+		<table id="CTBREGIS" label="Minutas por grupo">
+				<field id="siscod" noshow="true">
+				</field>
+
+			<field id="regfec" tabla="CTBREGIS">
+				<label>Fecha </label>
+				<help></help>
+				<tipo>date</tipo>
+				<condicion operador="&gt;="></condicion>
+			</field>
+
+			<field id="rfec2" noshow="true">
+				<expression having="false">CTBREGIS.regfec</expression>
+				<label>CTBREGIS.regfec</label>
+				<help></help>
+				<tipo>date</tipo>
+				<condicion operador="&lt;="></condicion>
+			</field>
+
+			<field id="regmin" >
+				<label>Minuta</label>
+				<help></help>
+			</field>
+
+			<field id="minuta" local="true" linkint="ctbregis2.xml" linkdes="Ver minuta" >
+				<label>Min.</label>
+				<help></help>
+				<paring destino="regmin">regmin</paring>
+				<paring destino="regfec">regfec</paring>
+				<paring destino="regnro">regnro</paring>
+				<valor>'Ver Minuta'</valor>
+				<tipo>varchar</tipo>
+			</field>
+
+			<field id="regnpv" >
+				<label>Npv</label>
+			</field>
+
+			<field id="regnro" >
+				<label>Nro</label>
+			</field>
+
+			<field id="ctbcod" noshow="true">
+				<label>Cuenta</label>
+			</field>
+
+			<field id="ctbnom" tabla="CTBCUENT" noshow="true">
+				<label>Nombre</label>
+				<tipo>varchar</tipo>
+			</field>
+
+<!--	        <field id="prov" alias="prov" >
+				<label>Proov</label>
+				<expression>((select CCTCUENT.totatr from IVACOMPRAS left join CCTCUENT on CCTCUENT.siscod = '01' and CCTCUENT.ctacod = IVACOMPRAS.ctacod where IVACOMPRAS.fecreg = CTBREGIS.regfec and IVACOMPRAS.nrocom = CTBREGIS.regnro limit 1))</expression>
+				<tipo>integer</tipo>
+				<condicion operador="!=">1 or Proov is null</condicion>
+			</field>
+-->
+			<field id="totatr" tabla="CCTCUENT" noshow="true">
+				<label>totatr</label>
+				<condicion operador="!=">1 or totatr is null</condicion>
+			</field>
+
+			<field id="ctacod" tabla="CCTCUENT" >
+				<label>Cuenta Prov.</label>
+				<tipo>integer</tipo>
+			</field>
+
+			<field id="ctanom" tabla="CCTCUENT" >
+				<label>Nombre Prov.</label>
+				<tipo>varchar</tipo>
+			</field>
+
+			<field id="comp" local="true" linkint="cctmovim_comp_prv.xml" linkdes="Detalle de comprobantes" >
+				<label>Detalle</label>
+				<paring destino="ctacod" operador="=">ctacod</paring>
+				<paring destino="movnro" operador="=" >regmin</paring>
+				<paring destino="movnro" operador="=" >regnro</paring>
+				<valor>'Ver Comprobante'</valor>
+				<tipo>varchar</tipo>
+			</field>
+
+			<field id="debe" suma="true" noZero="true">
+				<expression>sum(regimp * (case when regdoh = 1 then 1 else 0	end))</expression>
+				<label>Debe</label>
+				<help>Importe del Movimiento en el Debe</help>
+			</field>
+
+			<field id="haber" suma="true" noZero="true">
+				<expression>sum(regimp * (case when regdoh = 2 then 1 else 0	end))</expression>
+				<label>Haber</label>
+				<help>Importe del Movimiento en el Haber</help>
+			</field>
+
+			<field id="dif" local="true"  >
+				<if exp="debe &gt; 0">
+					<true>debe</true>
+					<false>haber</false>
+				</if>
+				<label>Gráfico</label>
+				<tipo>grafico</tipo>
+			</field>
+			
+	<!--		<field id="dif" local="true"  >
+				<expression> sum(regimp * (case when regdoh = 1 then 1 else 0	end)) - sum(regimp * (case when regdoh = 2 then 1 else 0	end))</expression>
+				<label>Grafico</label>
+				<help>Importe del Movimiento en el Haber</help>
+				<tipo>grafico</tipo>
+			</field> -->
+
+<!--			<filters>
+
+				<field id="idGrupo">
+					<operador>=</operador>
+					<label>Grupo</label>
+
+				</field>
+				<field id="regfec">
+					<operador>>=</operador>
+					<label>Desde Fecha</label>
+					<valor>today</valor>
+
+				</field>
+				<field id="regfec">
+					<operador>&lt;=</operador>
+					<label>Hasta Fecha</label>
+					<valor>today</valor>
+
+				</field>
+
+			</filters>
+-->
+			<group>
+				<field id="regfec" tabla="CTBREGIS"></field>
+				<field id="regmin" tabla="CTBREGIS"></field>
+			</group>
+
+			<order>
+				<field id="regfec" tabla="CTBREGIS"></field>
+			</order>
+
+		</table>
+
+		<join tipo="left">
+			<table id="CTBCUENT">
+			    <!--
+				<field id="siscod" oculto="true">
+					<condicion operador="=">CTBREGIS.siscod</condicion>
+				</field>
+			    -->
+				<field id="ctbcod" oculto="true">
+					<condicion operador="=">CTBREGIS.ctbcod</condicion>
+				</field>
+
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="CCTMOVIM">
+
+				<field id="siscod" oculto="true">
+					<condicion operador="=">'01'</condicion>
+				</field>
+		<!--		<field id="movnpv" oculto="true">
+					<condicion operador="=">CTBREGIS.regnpv</condicion>
+				</field>  -->
+
+				<field id="movnro" oculto="true">
+					<condicion operador="=">CTBREGIS.regnro</condicion>
+				</field>
+
+				<field id="regmin" oculto="true">
+					<condicion operador="=">CTBREGIS.regmin</condicion>
+				</field>
+				<field id="regfec" oculto="true">
+					<condicion operador="=">CTBREGIS.regfec</condicion>
+				</field>
+
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="CCTCUENT">
+
+				<field id="siscod" oculto="true">
+					<condicion operador="=">CCTMOVIM.siscod</condicion>
+				</field>
+				<field id="ctacod" oculto="true">
+					<condicion operador="=">CCTMOVIM.ctacod</condicion>
+				</field>
+			</table>
+		</join>
+	</form>
+</histrix>

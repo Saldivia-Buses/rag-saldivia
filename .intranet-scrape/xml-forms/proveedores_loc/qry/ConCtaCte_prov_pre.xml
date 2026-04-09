@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="consulta">
+    <title>Cuenta Corriente</title>
+    <obs></obs>
+    <form  detalle="imputaciones.xml" inline="true">
+        <table id="REG_MOVIMIENTOS" label="Movimientos" styleTbody="height:500px;">
+
+	       <field id="id_regmovim" noshow="true" />
+	    
+            <field id="subsistema_id" oculto="true">
+                <label>Cod.</label>
+                <help>
+                </help>
+            </field>
+            
+            <field id="nro_cuenta" noshow="true">
+                <help>Codigo de Cuenta </help>
+                    <ayuda_ex id="REG_CUENTA">
+            		<field id="nro_cuenta">
+                    	    <detalle>nro_cuenta</detalle>
+                        </field>
+                        <field id="nombre_cuenta">
+                            <detalle>ctanom</detalle>
+                        </field>
+                        <field id="subsistema_id" oculto="true"></field>
+                        <field id="baja">
+                    	    <condicion operador="=">0</condicion>
+                        </field>
+                                                                                                                
+                        <order>
+                            <field id="nombre_cuenta"></field>
+                        </order>
+                                                                                
+                        <filtra>nro_cuenta</filtra>
+                    </ayuda_ex>
+                    <detalle>nro_cuenta</detalle>
+            </field>
+                                                                                                                                                            
+	    <field id="nombre_cuenta" tabla="REG_CUENTA" deshabilitado="true" local="true" noshow="true">
+	        <label>Nombre</label>
+	    </field>
+
+            <field id="concod" noshow="true">
+                <label>concod</label>
+                <detalle>concod</detalle>
+            </field>
+            <field id="puesto_movimiento" noshow="true">
+                <label>P.V.</label>
+                <help> Punto Venta</help>
+                <format>%04d</format>
+                <detalle>movnpv</detalle>
+            </field>
+            <field id="nro_movimiento"> <!-- linkint="factura_detalle.xml" linkdes="Ver Detalle del Comprobante">-->
+                <label>Numero</label>
+                <help> Numero Comprobante</help>
+                <format>%12d</format>
+                <expression>''</expression>
+                <detalle>movnro</detalle>
+            </field>
+            
+            <field id="concepto">
+                <expression>'SALDO ANTERIOR'</expression>
+                <label>Comprobante </label>
+            </field>  
+
+            <field id="regmin" _oculto="true">
+                <label>minuta</label>
+                <expression>''</expression>
+            </field>
+            <field deshabilitado="true" id="OP" local="true" print="false">
+                <label >Ot.</label>
+                <expression>''</expression>
+                <tipo>varchar</tipo>
+            </field>
+<!--            <field id="isedit" local="true" noshow="true">
+              <valor eval="true">$_SESSION['EDITOR']</valor>
+          </field>
+            <field id="EDITOR" local="true" noshow="true">
+          <if exp="'editor' = 'isedit'">
+              <true>true</true>
+              <false>false</false>
+          </if>
+          </field>
+    -->      
+          <!--
+            <field deshabilitado="true" id="mod" local="true" linkint="cctmovim_modif.xml" linkdes="Modif" print="false">
+    <attribute id="noshow">EDITOR</attribute>
+                <label >Modif</label>
+              <valor>Modif</valor>
+
+        
+                <paring destino="siscod">siscod</paring>
+        
+                <paring destino="ctacod">ctacod</paring>
+                <paring destino="cajcta">ctacod</paring>
+                <paring destino="movnpv">movnpv</paring>
+                <paring destino="movnro">movnro</paring>
+                <paring destino="concod">concod</paring>
+               
+                <paring destino="movfec">movfec</paring>
+
+                            
+              
+                <tipo>varchar</tipo>
+            </field>
+         -->
+            <field id="fecha_desde" local="true" noshow="true" required="false">
+                <label>d</label>
+                <tipo>date</tipo>
+            </field>
+            <field id="fecha_movimiento">
+                <label>Fecha </label>
+                <help>
+                </help>
+                <condicion operador="&lt;">(CASE '[__fecha_desde__]' WHEN '' THEN '1950-01-01' ELSE '[__fecha_desde__]' END)</condicion>
+            </field>
+
+            <!--          <field id="movvto">
+            <label>Venc. </label>
+            <help> </help>
+            </field>
+            -->
+            <field id="importe_movimiento" noshow="true" />
+
+            <field id="Debe" suma="true" noZero="true">
+                <expression>sum(REG_MOVIMIENTOS.importe_movimiento * (case when (REG_CONCEPTOS.imputacion_concepto + 1) = 1 then 1 else 0 end))</expression>
+                <label>Debe</label>
+                <help>
+                </help>
+                <tipo>numeric</tipo>
+              
+            </field>
+
+            <field id="Haber" suma="true"   noZero="true" link_int="cctmovim_comp.xml" linkdes="Ver Recibo">
+		<expression>sum(REG_MOVIMIENTOS.importe_movimiento * (case when (REG_CONCEPTOS.imputacion_concepto + 1) = 2 then 1 else 0 end))</expression>
+                <label>Haber</label>
+                <help>
+                </help>
+                <paring destino="movnro">movnro</paring>
+                <paring destino="carrec">movnro</paring>
+                <paring destino="cajnro">movnro</paring>
+                <paring destino="movinc">movnro</paring>
+                <paring destino="movnpv">movnpv</paring>
+                <paring destino="ctacod">ctacod</paring>
+                <paring destino="movfec">movfec</paring>
+                <paring destino="cajfec">movfec</paring>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="saldo_movimiento" suma="true">
+                <label>Saldo</label>
+                <help></help>
+                <tipo>numeric</tipo>
+            </field>
+            <field id="acumulado" suma="true" acumula="true" local="true">
+                <if exp="true">
+                    <true>Haber - Debe</true>
+                    <false>0</false>
+                </if>
+                <tipo>numeric</tipo>
+                <label>Acumulado</label>
+            </field>
+            <field id="tiene_detalle" noshow="true">
+                <expression>0</expression>
+            </field>
+            <field id="resaltado" clasefila="true" local="true" noshow="true">
+                <expression>'resaltadoRojo'</expression>
+                <tipo>varchar</tipo>
+            </field>
+            <order>
+                <field id="fecha_movimiento"></field>
+            </order>
+        </table>
+
+        <join tipo="left">
+            <table id="REG_CUENTA">
+        	<field id="id_regcuenta" >
+	            <condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="REG_CONCEPTOS">
+                <field id="id_concepto" oculto="true">
+                     <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+                 </field>
+	    </table>
+	</join>
+                                                                                                             
+    </form>
+</histrix>

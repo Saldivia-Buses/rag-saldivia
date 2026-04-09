@@ -1,0 +1,345 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="liveGrid" inserta="false" deleteRow="false" conBusqueda="true" logReference="artdes" paginar="100" _width="35%" preloadData="false" log="false">
+  <title>Insumos</title>
+  <obs/>
+  <form >
+    <table id="STKINSUM" label="Insumos">
+
+      <filters>
+        <field id="artcod">
+          <label>Cod.Articulo</label>
+          <operador>like</operador>
+        </field>
+        <field id="artdes2" deshabilitado="false">
+          <label modpos="br">Descripcion</label>
+          <operador>like</operador>
+        </field>
+                        <field id="ctacod" >
+                                <label>Prov.</label>
+				<operador>=</operador>
+                        </field>
+
+      </filters>
+
+      <field  clave="true" id="artcod" deshabilitado="true" esClave="true">
+        <label>Codigo Articulo</label>
+        <help>Codigo de Articulo</help>
+      </field>
+
+      <field id="artdes2" deshabilitado="true">
+	<expression having="false">artdes</expression>
+        <label colspan="10" modpos="nobr">Descripcion</label>
+        <help>Descripcion de Articulo</help>
+        <size>50</size>
+      </field>
+
+      <field id="siscod" noshow="true" esClave="true">
+        <label>Codigo Sistema</label>
+        <valor>'01'</valor>
+      </field>
+
+      <field id="baja" noshow="true">
+        <label modpos="nobr" style="color:red;">Condicion</label>
+        <help>Baja</help>
+        <options>
+          <option valor="0">Activo</option>
+          <option valor="1">Baja</option>
+        </options>
+        <valor>0</valor>
+        <tipo>integer</tipo>
+	<condicion operador="=">0</condicion>
+      </field>
+                        <field id="ctacod" deshabilitado="true" tabla="STKINSPR">
+                                <label>Prov.</label>
+                                <helper id="CCTCUENT" _xml="HLPcctcuent_saldo.xml" dir="/help_local" empty="true" type="combo">
+                                        <field id="ctacod">
+                                                <label>Nro</label>
+                                        </field>
+                                        <field id="ctanom">
+                                                <label>Nombre</label>
+                                                <detalle>ctanom</detalle>
+                                        </field>
+                                        <field id="siscod" oculto="true">
+                                                <label>siscod</label>
+                                                <condicion operador="=">'01'</condicion>
+                                        </field>
+                                        <field id="baja" oculto="true">
+                                                <label>siscod</label>
+                                                <condicion operador="=">0</condicion>
+                                        </field>
+					<order>
+					    <field id="ctanom" />
+					</order>
+                                        <clave>ctacod</clave>
+                                        <descripcion>ctanom</descripcion>
+                                </helper>
+
+                        </field>
+
+<!--
+      <field id="valcps" noshow="true">
+        <label>Val.Compra</label>
+        <help>Valor de Compra</help>
+      </field>
+      <field id="unicps" noshow="true">
+        <label modpos="nobr">U. Compra</label>
+        <help>Unidad de Compra</help>
+        <tabla_ex id="FSMUNIDS">
+          <field id="unicod"/>
+          <field id="uninom"/>
+        </tabla_ex>
+      </field>
+      <field id="valuso" noshow="true">
+        <label modpos="nobr">Val.Uso</label>
+        <help>Valor de Uso</help>
+      </field>
+      <field id="artuni" noshow="true">
+        <label modpos="nobr">U.Uso</label>
+        <tabla_ex id="FSMUNIDS">
+          <field id="unicod"/>
+          <field id="uninom"/>
+        </tabla_ex>
+        <help>Codigo Unidad de Medida de Uso</help>
+      </field>
+
+      <field id="creac" deshabilitado="true"  noshow="true">
+        <expression>DATE(STKINSUM.creado)</expression>
+        <label modpos="nobr">Fecha de Creación</label>
+        <help>Fecha de Creación del artículo</help>
+        <tipo>date</tipo>
+      </field>
+      <field id="artiva" noshow="true">
+        <label>Situacion IVA</label>
+        <help>Situacion I.V.A.</help>
+        <options>
+          <option valor="0">No Gravado</option>
+          <option valor="1">Alicuota Total</option>
+          <option valor="2">Alicuota PArcial</option>
+        </options>
+      </field> -->
+<!--
+      <field id="artctb" noshow="true">
+        <label colspan="4">Cuenta Contable</label>
+        <help>Codigo Cuenta Contable</help>
+        <tabla_ex id="CTBCUENT">
+          <field id="ctbcod" >
+            <condicion operador="like">'51%' or ctbcod like '56%' or ctbcod like '71%'</condicion>
+          </field>
+          <field id="ctbnom2" >
+            <expression>CONCAT(CTBCUENT.ctbnom, ' - ', CTBCUENT.ctbcod)</expression>
+          </field>
+          <field id="ctbnom" ></field>
+          <field id="ctbhab" noshow="true">
+            <condicion operador="=">1</condicion>
+          </field>
+          <order>
+            <field id="ctbnom" tabla="CTBCUENT"/>
+          </order>
+        </tabla_ex>
+        <valor>711106</valor>
+      </field>
+      <field id="tipocalculo_costo" noshow="true">
+        <label modpos="nobr" colspan="3">Tipo de Calculo Costo</label>
+        <options>
+          <option valor="0">Automático</option>
+          <option valor="1">Manual</option>
+        </options>
+      </field>
+      <field id="plaubi" noshow="true">
+        <label colspan="10">Ubic.Plano</label>
+        <help></help>
+      </field>
+      <field id="norcod" noshow="true">
+        <label>Cod.Norma</label>
+        <help>Codigo de Norma</help>
+        <tabla_ex id="INSNORMA">
+          <field id="norcod"/>
+          <field id="norabv"/>
+        </tabla_ex>
+      </field>
+      <field id="t_pieza" noshow="true">
+        <label modpos="nobr">t_pieza</label>
+        <help>t-pieza</help>
+        <options>
+          <option valor="0">No</option>
+          <option valor="1">Si</option>
+        </options>
+      </field>
+      <field id="t_plano" noshow="true">
+        <label modpos="nobr" noshow="true">t_plano</label>
+        <help>t-plano</help>
+        <options>
+          <option valor="0">No</option>
+          <option valor="1">Si</option>
+        </options>
+      </field>
+      <field id="t_dispo" noshow="true">
+        <label modpos="nobr">t_dispo</label>
+        <help>t-dispo</help>
+        <options>
+          <option valor="0">No</option>
+          <option valor="1">Si</option>
+        </options>
+      </field>
+-->
+<!--
+      <field id="recLote" noshow="true">
+        <label modpos="nobr">Recepción por Lote</label>
+        <options>
+          <option valor="0">No</option>
+          <option valor="1">Si</option>
+        </options>
+
+      </field>
+      <field id="stock" noshow="true">
+        <label modpos="nobr">Control Stock</label>
+        <options>
+          <option valor="0">No</option>
+          <option valor="1">Si</option>
+        </options>
+
+      </field>
+      <field id="fifo" noshow="true">
+        <label modpos="nobr">FIFO</label>
+        <options>
+          <option valor="0">No</option>
+          <option valor="1">Si</option>
+        </options>
+      </field>
+-->
+      <field id="stklocacion_fija_id" editable="true">
+          <label>Locacion Fija</label>
+          <helper _empty="true" id="STK_LOCACION" type="combo" empty="true">
+            <field id="id_stklocacion"/>
+            <field id="codigo_locacion">
+              <detalle>codigo_locacion</detalle>
+            </field>
+            <field id="stkdeposito_id">
+              <detalle>stkdeposito_id</detalle>
+            </field>
+	    <order>
+                <field id="codigo_locacion" />
+
+	    </order>
+          </helper>
+      </field>
+
+      <field id="tipoconteo_id" editable="true">
+          <label>Tipo conteo</label>
+          <helper empty="true" id="STK_TIPO_CONTEO" type="combo" >
+            <field id="id_tipoconteo"/>
+            <field id="tipo_conteo" />
+          </helper>
+      </field>
+
+      <field id="artmin" editable="true">
+        <label>Stock Seguridad</label>
+        <help>Stock critico en deposito.</help>
+        <jseval campodestino="lote_optimo" actxml="false">Math.pow(((2 * dem_diaria * 365 * valor_oc) / costo / costo_fin), 0.5).toFixed(2)</jseval>
+        <jseval campodestino="artrep" actxml="false">((demprov * dem_diaria) + artmin).toFixed(2)</jseval>
+      </field>
+
+      <field id="dem_diaria" editable="true">
+        <label modpos="nobr">Demanda Diaria</label>
+        <help>demanda diaria</help>
+        <jseval campodestino="lote_optimo" actxml="false">Math.pow(((2 * dem_diaria * 365 * valor_oc) / costo / costo_fin), 0.5).toFixed(2)</jseval>
+        <jseval campodestino="artrep" actxml="false">((demprov * dem_diaria) + artmin).toFixed(2)</jseval>
+      </field>
+
+      <field id="artrep" _deshabilitado="true"  editable="true">
+        <label modpos="nobr">Punto Pedido</label>
+        <help>Stock de Reposicion.</help>
+        <tipo>decimal</tipo>
+      </field>
+
+      <field id="demprov"   editable="true">
+        <label>Lead Time</label>
+        <help>Demora del proveedor en suministrar el artículo</help>
+        <tipo>integer</tipo>
+        <jseval campodestino="lote_optimo" actxml="false">Math.pow(((2 * dem_diaria * 365 * valor_oc) / costo / costo_fin), 0.5).toFixed(2)</jseval>
+        <jseval campodestino="artrep" actxml="false">((demprov * dem_diaria) + artmin).toFixed(2)</jseval>
+      </field>
+
+      <field id="per_revision"  editable="true">
+        <label modpos="nobr">Periodo Revision</label>
+        <help>Periodo de revision</help>
+        <tipo>integer</tipo>
+        <jseval campodestino="lote_optimo" actxml="false">Math.pow(((2 * dem_diaria * 365 * valor_oc) / costo / costo_fin), 0.5).toFixed(2)</jseval>
+        <jseval campodestino="artrep" actxml="false">((demprov * dem_diaria) + artmin).toFixed(2)</jseval>        
+      </field>
+
+      <field id="lote_optimo" _deshabilitado="true" editable="true">
+        <label modpos="nobr">Lote Optimo Pedido</label>
+        <help>Lote Optimo Pedido</help>
+        <tipo>decimal</tipo>
+      </field>
+
+      <field id="herrinventario_id"  editable="true">
+        <label _xml="/ayudas_local/HLPherramientas_inv.xml" modpos="nobr">H.Inventario</label>
+        <helper type="combo" xml="HLPherramientas_inv.xml" dir="/ayudas_local" empty="true"/>
+      </field>
+      <field id="trazable"  editable="true">
+        <label>Trazabilidad</label>
+        <help>Indica si el insumo es o No Trazable</help>
+        <options>
+          <option valor="0">No Trazable</option>
+          <option valor="1">Trazable</option>
+        </options>
+      </field>
+
+      <field id="valor_oc" deshabilitado="true" _noshow="true" local="true" colstyle="display:none;">
+          <label>Valor OC</label>
+          <parametro id="cpsparam.xml" retorna="pardec">
+              <field id="parcla" noshow="true">
+                  <condicion operador="=">'valoc'</condicion>
+              </field>
+          </parametro>
+      </field>
+
+      <field id="costo_fin" deshabilitado="true" _noshow="true" local="true" _colstyle="display:none;">
+          <label>Costo Fin.</label>
+          <parametro id="cpsparam.xml" retorna="pardec">
+              <field id="parcla" noshow="true">
+                  <condicion operador="=">'costfi'</condicion>
+              </field>
+          </parametro>
+      </field>
+
+
+      <field id="costo" >
+        <label >Costo</label>
+        <!-- NO TOCAR, TE MATO -->
+
+        <expression having="false" >(
+        ifnull((select sum(round( (costo_automatico * cantidad) * (1 + recargo / 100) , 2)) from STKPIEZA where idPadre  = STKINSUM.artcod limit 1), 
+        (select ROUND(INSPR.artcos * valcps / valuso, 2) from STKINSPR as INSPR where  INSPR.siscod = STKINSPR.siscod and INSPR.fecult= max(STKINSPR.fecult) and INSPR.artcod = STKINSPR.artcod limit 1)))</expression>
+          
+        <expresion_1 having="false" >(
+        case when (select sum(round( (costo_automatico * cantidad) * (1 + recargo / 100) , 2)) from STKPIEZA where idPadre  = STKINSUM.artcod limit 1) != 0 then 
+                  (select sum(round( (costo_automatico * cantidad) * (1 + recargo / 100) , 2)) from STKPIEZA where idPadre  = STKINSUM.artcod limit 1)
+          else  (select ROUND(INSPR.artcos * valcps / valuso, 2) from STKINSPR as INSPR where INSPR.fecult= max(STKINSPR.fecult) and INSPR.artcod = STKINSPR.artcod and INSPR.siscod = STKINSPR.siscod limit 1) end)</expresion_1>
+
+        <tipo>numeric</tipo>
+      </field>     
+
+
+      <group>
+        <field id="artcod" tabla="STKINSUM"/>
+      </group>
+
+    </table>
+        <join tipo="left">
+    
+      <table id="STKINSPR">
+        <field id="siscod" >
+          <condicion operador="=">'01'</condicion>
+        </field>
+        <field id="artcod" >
+          <condicion operador="=">STKINSUM.artcod</condicion>
+        </field>
+
+    
+      </table>
+    </join>    
+  </form>
+</histrix>

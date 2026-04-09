@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="dashboard">
+
+        <titulo>Chasis</titulo>
+
+        <widget id="chasisIngresoColcar"  width="450px" height="320px" >
+            <title>Ingreso de chasis Colcar</title>
+            <url><![CDATA[histrixLoader.php?xml=ingreso_chasiscolcar_qry.xml&dir=estadisticas]]></url>
+        </widget>
+
+         <widget id="chasisIngresoProd"  width="450px" height="320px" >
+            <title>Colcar a Prod.</title>
+            <url><![CDATA[histrixLoader.php?xml=ingreso_produccioncolcar_qry.xml&dir=estadisticas]]></url>
+        </widget>
+
+        <widget id="chasisIngreso"  width="400px" height="266px">
+            <title>Ingreso de chasis</title>
+        <url><![CDATA[histrixLoader.php?xml=ingreso_chasis_qry.xml&dir=estadisticas]]></url>
+        </widget>
+
+        <widget id="chasisEnPlaya"  width="400px" height="266px">
+            <title>Chasis en playa</title>
+        <url><![CDATA[histrixLoader.php?xml=ingreso_chasis_playa_qry.xml&dir=estadisticas]]></url>
+        </widget>
+</histrix>
+
+

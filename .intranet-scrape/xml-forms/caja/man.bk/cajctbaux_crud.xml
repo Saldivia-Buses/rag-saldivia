@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="crud">
+  <title>Cuentas Auxiliares</title>
+  <obs/>
+  <form>
+    <table id="CAJ_CTBCUENTA_AUX" label="Puestos">
+
+      <filters>
+
+        <field id="rubro_id">
+          <label>Categoria</label>
+          <operador>=</operador>
+        </field>
+
+        <field id="genmoneda_id">
+          <label>Moneda</label>
+          <operador>=</operador>
+        </field>
+      </filters>
+
+      <field id="id_cajctbcuenta" noshow="true"/>
+
+      <field id="codigo">
+        <label>Código</label>
+        <tipo>varchar</tipo>
+      </field>
+
+      <field id="ctbcuenta_id">
+        <label>Cuenta Contable Relacionada</label>
+        <helper type="combo" xml="cuentas_habilitadas_qry.xml" dir="/ayudas" empty="true">
+          <field id="genmoneda_id" />
+        </helper>
+        <size>14</size>
+      </field>
+
+      <field id="imputacion_cuenta">
+        <label>tipo</label>
+        <helper type="combo">
+          <option value="0">Ingresos</option>
+          <option value="1">Egresos</option>
+        </helper>
+      </field>
+
+      <field id="referencia_cuenta">
+        <label>Referencia</label>
+        <size>50</size>
+      </field>
+
+      <field id="rubro_id">
+        <label>Categoria</label>
+        <helper type="combo" id="CAJ_CTBRUBRO_AUX" empty="true">
+            <field id="id_cajctbrubro" />
+            <field id="nombre_ctbrubro" />
+        </helper>
+      </field>
+
+      <field id="genmoneda_id" tabla="CTB_CUENTAS" Formstyle="display:none;">
+        <label>Moneda</label>
+        <helper type="combo" xml="moneda_qry.xml" dir="/ayudas" empty="true" />
+      </field>
+
+      <field id="es_facturable">
+        <label>Es facturable?</label>
+        <tipo>check</tipo>
+      </field>
+
+      <field id="con_dominio">
+        <label>Incluye dominio?</label>
+        <tipo>check</tipo>
+      </field>
+
+      <field id="genregimen_id">
+        <label>Iva</label>
+        <helper type="combo">
+          <option value="0"></option>
+          <option value="1">10.5</option>
+          <option value="2">21.0</option>
+        </helper>
+      </field>
+
+      <field id="importe">
+        <label>Importe</label>
+        <tipo>decimal</tipo>
+      </field>
+
+    </table>
+
+    <join tipo="left">
+      <table id="CTB_CUENTAS">
+        <field id="id_cuenta">
+          <condicion operador="=">CAJ_CTBCUENTA_AUX.ctbcuenta_id</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join>
+        <table id="CTB_EJERCICIOS">
+            <field id="id_ejercicio">
+                <condicion operador="=">CTB_CUENTAS.ejercicio_id</condicion>
+            </field>
+            <field id="activo">
+                <condicion operador="=">1</condicion>
+            </field>
+        </table>
+    </join>
+
+  </form>
+</histrix>

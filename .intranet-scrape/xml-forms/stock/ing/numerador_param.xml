@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" limit="0">
+  <title>numerador</title>
+  <obs />
+  <form>
+    <table id="STK_NUMERADORES">
+
+		<field id="impresion">
+			<expression>ejecuta</expression>
+		</field>
+
+		<field id="subsistema_id"  oculto="true" />
+
+		<field id="puesto"         oculto="true" />
+
+    </table>
+  </form>
+</histrix>

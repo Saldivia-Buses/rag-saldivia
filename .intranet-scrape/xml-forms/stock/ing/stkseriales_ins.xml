@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert">
+	<title>Seriales</title>
+	<obs></obs>
+	<form>
+		<table id="STK_SERIALES" label="Seriales">
+			<field id="stkarticulo_id"	 id_temp="stkarticulo_id" >
+				<tipo>varchar</tipo>
+			</field>
+			<field id="codigo_serie"	 id_temp="codigo_serie" >
+				<tipo>varchar</tipo>
+			</field>
+		</table>
+	</form>
+</histrix>

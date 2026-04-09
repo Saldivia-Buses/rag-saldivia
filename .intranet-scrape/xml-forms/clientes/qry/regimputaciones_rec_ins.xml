@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert">
+  <obs/>
+  <form>
+    <table id="REG_IMPUTACIONES" idCampoCond="graba_recibo">
+      <field id="regmovim_id"            id_temp="id_recibo" />       
+      <field id="regmovim0_id"           lastId="regmovimientos_rec_ins.xml" /> 
+      <field id="subsistema0_id"         id_temp="subsistema_id" />
+      <field id="movimiento_imputacion"  id_temp="importe_mov" />
+    </table>
+  </form>
+</histrix>

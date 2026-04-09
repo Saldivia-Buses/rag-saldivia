@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<histrix tipo="abm" borra="false">
+    <titulo>Análisis de No Conformidad</titulo>
+    <obs></obs>
+    <consulta>
+        <table id="CAL_NOCONFORMIDADES" >
+            <titulo>Estados</titulo>
+            <filters>
+                <field id="estadonconf_id">
+                    <label>Estado</label>
+                    <help>Estado de la No conformidad</help>
+                    <operador>=</operador>
+                </field>
+                <field id="origennconf_id">
+                    <label>Origen</label>
+                    <help>Origen de la No conformidad</help>
+                    <operador>=</operador>
+                </field>
+
+                <field id="rhseccion_id">
+                    <label>Seccion</label>
+                    <help>Seccion de la No conformidad</help>
+                    <operador>=</operador>
+                </field>
+                <field id="fecha_nconf" >
+                    <label >Desde Fecha</label>
+                    <help>Fecha de No conformidad</help>
+                    <valor>today</valor>
+                    <operador>&gt;=</operador>
+                </field>
+                <field id="fecha_nconf" >
+                    <label modpos="nobr">Hasta Fecha</label>
+                    <help>Fecha de No conformidad</help>
+                    <valor>today</valor>
+                    <operador>&lt;=</operador>
+                </field>
+            </filters>
+            <fieldGroup deshabilitado="true" >
+                <field id="id_noconformidad" noshow="true"></field>
+                <field id="estadonconf_id">
+                    <helper xml="calestadosnconf_crud.xml" type="combo" dir="/calidad/man" empty="true"/>
+                    <label>Estado</label>
+                    <help>Estado de la No conformidad</help>
+                </field>
+                <field id="origennconf_id">
+                    <helper xml="calorigennconf_qry.xml" type="combo" dir="/help_local" empty="true"/>
+                    <label>Origen</label>
+                    <help>Origen de la No conformidad</help>
+                </field>
+
+                <field id="rhseccion_id">
+                    <helper xml="rhseccion_qry.xml" type="combo" dir="/help_local" empty="true" />
+                    <label modpos="nobr">Seccion</label>
+                    <help>Seccion de la No conformidad</help>
+                </field>
+                <field id="fecha_nconf" >
+                    <label >Fecha</label>
+                    <help>Fecha de No conformidad</help>
+                    <valor>today</valor>
+                </field>
+                <field id="id_noconformidad" >
+                    <label modpos="nobr">Número</label>
+                    <help>Numero de No conformidad</help>
+                
+                </field>
+                <field id="descripcion_nconf">
+                    <label colspan="3">Descripcion</label>
+                    <help>Descripción de la no conformidad</help>
+                    <size>200</size>
+                </field>
+                <field id="contencion_nconf">
+                    <label colspan="3">Acción de contención</label>
+                    <help>Acción de Contencion ante la no conformidad</help>
+                    <size>200</size>
+                </field>
+
+            </fieldGroup>
+            <fieldGroup>
+                <field id="causa_nconf">
+                    <label colspan="3">Causa Raiz</label>
+                    <help>Causa Raiz de la no conformidad</help>
+                    <size>200</size>
+                </field>
+                <field id="acciones_nconf" local="true">
+                    <label colspan="3">Acciones Realizadas</label>
+                    <help>Acciones Correctivas / Preventivas</help>
+                    <helper xml="calaccionesnconf_crud.xml" type="object" dir="/calidad/ing" >
+                        <parameter source="id_noconformidad" target="noconformidad_id" />
+                    </helper>
+                </field>
+            </fieldGroup>
+        </table>
+    </consulta>
+</histrix>

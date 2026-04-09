@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+	<abm tipo="insert" >
+		<titulo>Adicionales</titulo>
+		<obs></obs>
+		<consulta>
+			<tabla id="COTIZADIC">
+				<campo id="idCotiz" id_padre="idCotiz"> </campo>
+				<campo id="idArticulo" id_temp="artcod"></campo>
+				<campo id="cantidad" id_temp="cantidad"></campo>
+				<campo id="precio" id_temp="Tot">	    </campo>
+			</tabla>
+		</consulta>
+	</abm>

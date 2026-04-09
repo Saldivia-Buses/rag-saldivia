@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="insert" tipoInsert="IGNORE">
+	<title>Articulos por Personal</title>
+	 <obs></obs>
+		<consulta>
+			<table id="PERSONAL_ARTICULOS" idCampoCond="chk_articulo">
+				<field id="idPersona"      	       id_temp="persona_id" />
+				<field id="artcod"                 id_temp="stkinsum_id" />
+				<field id="dias_recambio"          id_temp="dias_recambio" />
+				<field id="observacion"            id_temp="observacion" />
+		    </table>
+		</consulta>
+    </histrix>	

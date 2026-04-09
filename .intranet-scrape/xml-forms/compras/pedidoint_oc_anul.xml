@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix  tipo="update" limit="200" >
+    <title>MARCO PEDIDO CUMPLIDO</title>    
+    <obs></obs>
+    <form >
+        <table id="PEDIDOINT" label="MOVIMIENTOS" idCampoCond="chkanulada">
+		<field id="ocpnro" id_temp="ocpnro" esClave="true"></field>
+		<field id="estado">
+			<valor>2</valor>
+			<tipo>integer</tipo>
+		</field>
+	</table>
+    </form>
+</histrix>

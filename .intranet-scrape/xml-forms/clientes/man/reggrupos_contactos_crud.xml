@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud">
+  <title>Grupos de Contactos</title>
+  <obs></obs>
+  <consulta detalle="regcontactosgr_crud.xml" inline="true">
+    <table id="REG_GRUPOS_CONTACTOS" label="Grupos de Comprobantes">
+	<field id="id_reggrupocon" esClave="true" noshow="true" autoinc="true">
+		<detalle>reggrupocon_id</detalle>
+	</field>
+       
+	<field id="nombre_grupocon" required="true">
+		<label>Grupo</label>
+	</field>
+
+	<field id="contactos" local="true"  _colstyle="display: none;">
+		<helper type="link" xml="regcontactosgr_qry.xml" dir="/clientes/qry" width="300" height="500" title="Lista de E-Mails"  modal="true" >
+			<parameter source="id_reggrupocon" target="reggrupocon_id" />
+		</helper>
+		<label>E-Mails</label>
+		<valor>Contacto</valor>
+	</field>
+ 
+	<order>
+		<field id="nombre_reggrupocon" />
+	</order>
+    </table>
+  </consulta>
+</histrix>  

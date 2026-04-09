@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  Ayuda
+Tarea: Ayuda para la Tabla de Marcas de Medidores
+Autor: d!ego2k
+Fecha: 04/10/10
+*******************************************************************************
+-->
+<histrix tipo="consulta">
+  <title>Marcas de Medidores</title>
+  <obs></obs>
+  <form >
+    <table id="FAC_MEDIDORES_TIPOS" label="Marcas de Medidores">
+
+      <field id="id_facmedidortipo" autoinc="true" noshow="true" />
+   
+      <field id="nombre_tipo">
+        <label>Nombre</label>
+      </field>
+
+      <field id="voltaje">
+        <label>Voltaje</label>
+      </field>
+
+      <field id="amper">
+        <label>Ampers</label>
+      </field>
+
+
+    </table>
+
+  </form>
+
+</histrix>  

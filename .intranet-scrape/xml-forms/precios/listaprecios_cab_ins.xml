@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert"   grabafinal="true">
+        <title>PRECIOS de ADICIONALES</title>
+        <obs/>
+        <form >
+                <table id="LISTAPRECIOSCAB" >
+                        <title></title>
+                        <field id="idLista"             id_cab="idLista"></field>
+                        <field id="nombre"              id_cab="nombre"></field>
+                        <field id="fecha"               id_cab="fecha"></field>
+                        <field id="descripcion"         id_cab="descripcion"></field>
+                        <field id="pie"                id_cab="pie"></field>
+                </table>
+        </form>
+</histrix>
+

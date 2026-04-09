@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="fichaing" preFetch="true" inserta="false" modifica="false" imprime="false">
+  <title>Centro Productivo</title>
+  <obs />
+  <form >
+    <table id="MRP_CENTRO_PRODUCTIVO" label="Centro Productivo">
+
+		<field id="id_centro_productivo" noshow="true" autoinc="true">
+		</field>
+
+
+		<field id="nombre_centroproductivo" deshabilitado="true" noshow="true">
+			<label>Centro Productivo</label>
+			<size>20</size>
+
+		</field>
+		<field id="ordenesP" colspan="4" local="true">
+			<label >Ordenes Pendientes</label>
+			<helper xml="ordenproduccion_qry.xml" dir="/mrp/qry/ordenes_centro/" type="inline" width="80%" title="Ordenes">
+				<parameter source="id_centro_productivo" target="centro_productivo_id" />
+				<parameter source="0" target="mrpestado_id" />				
+			</helper>					
+		</field>
+		<field id="deposito_materiaprima_id" noshow="true">
+			<label>Depósito Materia Prima</label>
+
+		</field>
+		<field id="deposito_destino_id" noshow="true">
+			<label>Depósito Destino</label>
+
+		</field>
+		<field id="origen">
+			<expresion>MP.nombre_deposito</expresion>
+			<helper xml="stock_deposito_centro_qry.xml" dir="/stock/qry" type="link" width="80%">
+				<parameter source="deposito_materiaprima_id" target="stkdeposito_id" />
+			</helper>
+			<helper xml="stock_deposito_centro_qry.xml" dir="/stock/qry" type="link" width="80%">
+				<parameter source="deposito_materiaprima_id" target="stkdeposito_id" />
+			</helper>
+		</field>
+
+
+		<field id="destino" modpos="nobr">
+			<expresion>PROD.nombre_deposito</expresion>
+
+			<helper xml="stock_deposito_centro_qry.xml" dir="/stock/qry" type="link" width="80%">
+				<parameter source="deposito_destino_id" target="stkdeposito_id" />
+			</helper>
+		</field>
+
+		<field id="equipos">
+			<label></label>
+			<helper xml="mrp_centro_equipos_crud.xml" type="link">
+				<parameter source="id_centro_productivo" target="centro_productivo_id" />
+			</helper>
+			<expresion>concat(ifnull((select count(*) from MRP_CENTRO_EQUIPO WHERE centro_productivo_id = id_centro_productivo) , '') , ' Equipos Asignados')</expresion>
+		</field>
+
+		<field id="productos" >
+			<label modpos="nobr"></label>
+			<helper xml="mrp_productos_centro_crud.xml" dir="/mrp/man" type="link">
+				<parameter source="id_centro_productivo" target="centro_productivo_id" />
+			</helper>
+			<expresion>concat(ifnull((select count(*) from MRP_PRODUCTOS_CENTRO WHERE centro_productivo_id = id_centro_productivo) , '') , ' Productos')</expresion>
+		</field>
+
+
+<!--
+		<field id="ordenesC" Formstyle="display:none;" noZero="true">
+			<label>Ordenes Cumplidas</label>
+			<expresion>select count(*) from MRP_ORDEN_PRODUCCION where centro_productivo_id = id_centro_productivo and mrpestado_id = 1</expresion>
+			<helper xml="ordenproduccion_qry.xml" dir="/mrp/qry/ordenes_centro" type="link" width="80%" title="Ordenes">
+				<parameter source="id_centro_productivo" target="centro_productivo_id" />
+				<parameter source="1" target="mrpestado_id" />
+			</helper>					
+		</field>
+-->
+
+    </table>
+    <join>
+    	<table id="STK_DEPOSITOS" as="MP">
+    		<field id="id_stkdeposito">
+    			<condicion operador="=">deposito_materiaprima_id</condicion>
+    		</field>
+    	</table>
+    </join>
+    <join>
+    	<table id="STK_DEPOSITOS" as="PROD">
+    		<field id="id_stkdeposito">
+    			<condicion operador="=">deposito_destino_id</condicion>
+    		</field>
+    	</table>
+    </join>
+
+  </form>
+</histrix>

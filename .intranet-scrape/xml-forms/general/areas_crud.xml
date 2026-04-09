@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="abm">
+  <title>Areas</title>
+  <obs></obs>
+  <form>
+    <table id="GEN_AREAS" label="Áreas">
+      
+      <filters>
+      
+        <field id="area_descripcion" >
+          <operador>like</operador>
+          <label>Areas</label>
+        </field>
+
+      </filters>
+      
+      <field id="id_area" autoinc="true" noshow="true">
+        <label>Código</label>
+      </field>
+      
+      <field id="area_descripcion">
+        <label>Areas</label>
+        <size>25</size>
+      </field>
+
+    <order>
+       <field id="area_descripcion" />
+    </order>
+
+    </table>
+  </form>
+</histrix>  

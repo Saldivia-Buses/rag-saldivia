@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<abm tipo="consulta">
+	<titulo>Minutas</titulo>
+	<obs></obs>
+	<consulta>
+		<tabla id="CTBREGIS" label="Minutas">
+			
+			<campo id="siscod" oculto="true">
+				<label>siscod</label>
+				<help> Cod sistema</help>
+			</campo>
+			<campo id="regfec">
+				<label>Fecha</label>
+				<help>Fecha del Asiento (Movimiento Contable) </help>
+			</campo>			
+			<campo id="regmin" corte="true">
+				<label>Minuta </label>
+				<help>Numero de Asiento </help>
+			</campo>
+			<campo id="conabv" tabla="CTBCONCE">
+				<label>Tipo</label>
+				<help>Tipo de Comprobante</help>
+				<tipo>varchar</tipo>
+			</campo>
+			<campo id="regnro" >
+				<label>Nro</label>
+				<help>Numero de Comprobante</help>
+			</campo>
+			
+			<campo id="ctbcod" >
+				<label>Cuenta</label>
+				<help>Cod. Cuenta</help>
+			</campo>
+			
+			<campo id="ctbnom" tabla="CTBCUENT">
+				<label>Detalle</label>
+				<help>Cuenta Contable</help>
+				<tipo>string</tipo>
+			</campo>
+			
+			<campo id="regdoh" oculto="true">
+				<label>Tipo Mov.</label>
+				<help>Tipo Movimiento</help>
+				<opciones>
+					<opcion valor="1">Debe </opcion>
+					<opcion valor="2">Haber</opcion>
+				</opciones>
+				
+			</campo>
+			<!--
+			<campo id="regtip">
+			<label>Cod.Comp.</label>
+			<help>Codigo de Comprobante </help>
+			</campo>
+			-->
+			<campo id="regref">
+				<label>Referencia</label>
+				<help>Referencia</help>
+			</campo>
+			<campo id="debe" suma="true" >
+				<expresion>regimp * (case when regdoh = 1 then 1 else 0 end)</expresion>
+				
+				<label>Debe</label>
+				<help>Importe del Movimiento en el Debe</help>
+			</campo>
+			
+			<campo id="haber" suma="true" >
+				<expresion>regimp * (case when regdoh = 2 then 1 else 0 end)</expresion>
+				<label>Haber</label>
+				<help>Importe del Movimiento en el Haber</help>
+			</campo>
+			
+			<!--
+			<campo id="regpoa">
+			<label>Estado</label>
+			<help>Estado del Movimiento.Aprobado  o  Provisorio </help>
+			<opciones>
+			<opcion valor="A">Aprobado</opcion>
+			<opcion valor="P">Provisorio</opcion>
+			</opciones>
+			
+			</campo>
+			
+			
+			<campo id="coscod">
+			<label>Centro Costo</label>
+			<help>Codigo de Centro de Costo </help>
+			</campo>
+			<campo id="impcod">
+			<label>Cod.Imput.</label>
+			<help>Codigo de Centro de Imputacion</help>
+			</campo>
+			
+			
+			<campo id="idcos">
+			<label>? </label>
+			<help> </help>
+			</campo>
+			<campo id="idimpu">
+			<label>? </label>
+			<help> </help>
+			</campo>
+			<campo id="regcta">
+			<label>? </label>
+			<help> </help>
+			</campo>
+			<campo id="regfco">
+			<label>Fecha Comprobante </label>
+			<help> </help>
+			</campo>
+			<campo id="regnro">
+			<label>Nro.</label>
+			<help>Numero de Comprobante Correspondiente. </help>
+			</campo>
+			
+			-->
+
+			<!--
+			<campo id="regnpv">
+			<label>Nro Puesto </label>
+			<help> </help>
+			</campo>
+			<campo id="regord">
+			<label>Orden en el Asiento  . </label>
+			<help> </help>
+			</campo>
+			<campo id="regsub">
+			<label>Subdiario </label>
+			<help> </help>
+			</campo>
+			<campo id="reguni">
+			<label>Unidades Fisicas     . </label>
+			<help>Unidades Fisicas. </help>
+			</campo>
+			-->
+			<filtros>
+				<campo id="regfec">
+					<operador>>=</operador>
+					<label>Desde Fecha</label>
+					<valor>today</valor>
+					
+				</campo>
+				<campo id="regfec">
+					<operador>&lt;=</operador>
+					<label>Hasta Fecha</label>
+					<valor>today</valor>
+					
+				</campo>
+				
+			</filtros>
+			<orden>
+				<campo id="regmin"></campo>
+				<campo id="regord"></campo>
+				
+			</orden>
+			
+		</tabla>
+		<join tipo="left">
+			<tabla id="CTBCUENT">
+<!--				<campo id="siscod" oculto="true">
+					<label>siscod</label>
+					<condicion operador="=">CTBREGIS.siscod</condicion>
+					
+				</campo>
+                                               -->
+<!--
+					<campo id="siscod">
+						<condicion operador="=">'10'</condicion>
+					</campo>
+-->				
+				<campo id="ctbcod" oculto="true">
+					<condicion operador="=">CTBREGIS.ctbcod</condicion>
+				</campo>
+				
+				<campo id="ctbnom" oculto="true">
+				</campo>
+			</tabla>
+		</join>
+		<join tipo="left">
+			<tabla id="CTBCONCE">
+				<campo id="siscod" oculto="true">
+					<label>siscod</label>
+					<condicion operador="=">CTBREGIS.siscod</condicion>
+				</campo>
+				
+				<campo id="concod" oculto="true">
+					<condicion operador="=">CTBREGIS.regtip</condicion>
+				</campo>
+			</tabla>
+		</join>		
+		
+	</consulta>
+</abm>

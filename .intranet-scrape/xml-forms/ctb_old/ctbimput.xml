@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm">
+	<title>CENTRO IMPUTACION</title>
+	<obs></obs>
+	<form >
+		<table id="CTBIMPUT" >
+			<title>C.Imputacion</title>
+			<field id="impcod">
+				<label>Codigo</label>
+				<help>Codigo de Imputacion</help>
+			</field>
+			<field id="impdes">
+				<label>Imputacion</label>
+				<help>Centro de Imputacion</help>
+			</field>
+			<field id="ctbcod__1">
+				<label>Debe</label>
+				<help>Debe</help>
+			</field>
+			<field id="ctbcod__2">
+				<label>Haber</label>
+				<help>Haber</help>
+			</field>
+
+			<order>
+				<field id="impcod"></field>
+			</order>
+		</table>
+	</form>	   
+</histrix> 

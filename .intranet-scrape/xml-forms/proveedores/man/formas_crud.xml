@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud">
+    <title>Formas Pago</title>
+     <obs></obs>
+	<form >
+	    <table id="REG_FORMAS" label="Forma de Pago">
+
+			<field id="id_regforma" autoinc="true" noshow="true" />
+
+	        <field id="subsistema_id" oculto="true" valauto="true" />
+
+			<field id="nombre_forma">
+				<label>Nombre</label>
+			</field>
+			
+			<field id="plazo">
+				<label>Plazo</label>
+			</field>
+	    </table>
+	</form>
+</histrix>

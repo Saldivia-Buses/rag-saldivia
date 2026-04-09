@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+
+	Ayuda Puestos de Caja habilitados que no esten cerrados
+
+-->
+<histrix tipo="consulta">
+    <title>Puestos</title>
+    <obs></obs>
+    <form>
+        <table id="CAJ_PUESTOS" label="Puestos">
+
+            <field id="id_cajpuesto">
+                <label>Código</label>
+            </field>
+
+            <field id="descripcion_puesto">
+                <label>Descripcion</label>
+                <detalle>cajpuesto_nombre</detalle>
+            </field>
+
+            <field id="fecha_registro" tabla="CAJ_REGISTROS" />
+
+            <field id="id_cajregistro" tabla="CAJ_REGISTROS">
+                <detalle>id_cajregistro</detalle>
+            </field>
+
+            <group>
+                <field id="id_cajpuesto" />
+                <field id="fecha_registro" />
+            </group>
+
+        </table>
+
+        <join>
+            <table id="CAJ_REGISTROS">
+                <field id="cajpuesto_id">
+                    <condicion operador="=">CAJ_PUESTOS.id_cajpuesto</condicion>
+                </field>
+                <field id="cierre_caja">
+                    <condicion operador="is">NULL or cierre_caja = 0</condicion>
+                </field>
+            </table>
+        </join>
+    
+    </form>
+</histrix>

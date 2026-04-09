@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="consulta">
+	<title>ENTRADA SALIDA STOCK POR CODIGO</title>
+	<obs></obs>
+	<form>
+		<table id="stkinmov" label="ENTRADA SALIDA STOCK">
+			
+			<campo id="barcode">
+				<label>Codigo de Barras</label>
+				<help>Codigo de Barras</help>
+				<condicion operador="!=">''</condicion>
+			</campo>
+			<campo id="nrocha2">
+				<expression>nrocha</expression>
+				<label>Num.</label>
+				<tipo>integer</tipo>
+			</campo>			
+			
+			<campo id="nrocha">
+				<label>Chasis</label>
+				<tipo>integer</tipo>
+				<help>Chasis</help>
+				<tabla_ex id="CHASIS">
+					<campo id="nrocha"></campo>
+					<campo id="chades"></campo>
+				</tabla_ex>				
+			</campo>
+			
+			<campo id="movfec">
+				<label>Fecha Remito </label>
+				<help>Fecha Remito </help>
+			</campo>
+			
+			<campo id="siscod" oculto="true">
+				<label>Codigo Sistema.. </label>
+				<help>
+				</help>
+				<condicion operador="=">'01'</condicion>
+				
+			</campo>
+			
+			<campo id="movref">
+				<label>Referencia . </label>
+				<help>
+				</help>
+				<format>%10s</format>
+			</campo>
+
+			
+			<campo id="artcod">
+				<label>Articulo</label>
+				<help>Codigo de Articulo. </help>
+			</campo>
+			<campo id="artdes" tabla="STKINSUM">
+				<label>Descripcion</label>
+				<help>Codigo de Articulo. </help>
+				<tipo>char</tipo>
+			</campo>
+			
+			<campo id="opecod" oculto="true">
+			</campo>
+			
+			<campo id="opecodEx">
+				<expression>CONCAT(PERSONAL.apellido, ', ', PERSONAL.Nombre)</expression>
+				<label>Operador</label>
+				<help>
+				</help>
+				<tipo>string</tipo>
+				
+			</campo>
+			<filters>
+			<campo id="barcode">
+				<label>Codigo de Barras</label>
+					<operador>=</operador>
+								<tipo>char</tipo>
+				<help>Codigo de Barras</help>
+			</campo>
+				
+			</filters>
+			
+		</table>
+
+		<join tipo="left">
+			<table id="PERSONAL">
+				<campo id="opecod" oculto="true">
+					<condicion operador="=">STKINMOV.opecod and PERSONAL.opecod != 0</condicion>
+				</campo>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="STKINSUM">
+				<campo id="siscod" oculto="true">
+					<condicion operador="=">'01'</condicion>
+				</campo>
+				<campo id="artcod" oculto="true">
+					<condicion operador="=">STKINMOV.artcod</condicion>
+				</campo>
+			</table>
+		</join>
+		
+		
+	</form>
+</histrix>

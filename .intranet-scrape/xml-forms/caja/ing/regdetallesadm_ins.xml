@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert">
+    <title/>
+    <obs/>
+    <form>
+        <table id="REG_DETALLES" idCampoCond="graba_adm">
+            <field id="regmovim_id"      	    lastId="regmovimientosadm_ins.xml" />
+            <field id="descripcion_detalle"     id_padre="referencia_movimiento">
+          	  <tipo>varchar</tipo>
+          	</field>
+            <field id="neto_detalle" 	     	id_padre="neto_movimiento"/>
+            <field id="alicuota_iva" 	     	id_padre="alicuota_iva"/>
+            <field id="iva_detalle"           	id_padre="importe_iva"/>
+            <field id="total_detalle"     	    id_temp="total_imputado"/>
+        </table>
+    </form>
+</histrix>

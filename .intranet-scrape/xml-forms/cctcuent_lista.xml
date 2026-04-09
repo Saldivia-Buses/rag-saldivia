@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="abm" >
+	<title>ABM CUENTA</title>
+	<obs></obs>
+	<form >
+		<table id="CCTCUENT" label="ABM CUENTA">
+			<field id="siscod" oculto="true">
+				<label>Codigo Sistema</label>
+				<help>
+				</help>
+			</field>
+			<field id="baja" oculto="true">
+				<condicion operador="!=">1</condicion>
+			</field>
+
+		<!--	<field id="proxnro" local="true" deshabilitado="true">
+				<label style="color:red;">Proximo Numero Disponible</label>
+			<tabla_ex id="CCTCUENT" >
+					<field id="siscod" noselect="true">
+						<tipo>varchar</tipo>
+					</field>
+					<field id="ctacod1">
+						<expression>max(ctacod) + 1</expression>
+					</field>					
+					<field id="ctacod2">
+						<expression>max(ctacod) + 1</expression>
+					</field>				
+				<field id="ctacod" noselect="true">
+						<condicion operador="&lt;">10000</condicion>
+					</field>							
+					
+				</tabla_ex>				
+			</field>
+
+			-->
+			<field id="ctacod" deshabilitado="true">
+				<!--
+				<ayuda_ex id="CCTCUENT" xml="HLPcctcuent.xml" dir="/help_local">
+					
+					<field id="ctacod">
+						<label>Nro</label>
+					</field>
+					<field id="ctanom">
+						<label>Nombre</label>						
+					</field>
+						
+					<clave>ctacod</clave>
+					<descripcion>ctanom</descripcion>
+				</ayuda_ex>
+				-->
+				
+				<label>Cuenta</label>
+				<help>Código de Cuenta </help>
+			</field>
+
+			<field id="ctanom" deshabilitado="true">
+				<label >Nombre</label>
+				<help>Nombre de Cuenta </help>
+			</field>
+			
+			<field id="ctaobs">
+				<label colspan="5">Obs. </label>
+				<help>Observaciones</help>
+			</field>
+
+			<field id="ctbcod">
+				<label>Cta Contable</label>
+				<help>
+				</help>
+				<helper type="external" id="CTBCUENT" >
+					<field id="ctbcod"></field>
+					<field id="ctbnom">
+						<detalle>ctbnom</detalle>
+					</field>
+					<field id="ctbhab">
+						<condicion operador="=">1</condicion>
+					</field>	
+					<field id="siscod">
+						<condicion operador="=">10</condicion>
+					</field>	
+					<order>
+						<field id="ctbnom"></field>
+					</order>				
+				</helper>
+			</field>	
+
+			<field id="ctbnom" tabla="CTBCUENT" deshabilitado="true">
+				<label modpos="nobr">Nombre cuenta</label>
+				<tipo>varchar</tipo>
+			</field>
+
+			<field id="codigoNumero">
+					<tabla_ex xml="codigonumero.xml" />
+				<tipo>varchar</tipo>
+				<label>Código Nro</label>
+			</field>
+
+			<field id="totatr">
+				<label >No influye en costo</label>
+				<help>No se tiene en cuenta en el armado de costos</help>
+				<tipo>check</tipo>
+			</field>
+
+			<field id="ult" >
+				<label>Última Compra</label>
+				<expression >select max(INSPR.fecult)from STKINSPR as INSPR where  INSPR.ctacod = CCTCUENT.ctacod and INSPR.siscod = '01' limit 1</expression>
+				<tipo>date</tipo>
+			</field>
+
+			<order>
+				<field id="ctanom"></field>
+			</order>	
+
+		</table>
+		<join tipo="left">
+			<table id="CTBCUENT">
+<!--				<field id="siscod" oculto="true">
+					<condicion operador="=">'10'</condicion>
+				</field>
+-->
+				<field id="ctbcod">
+					<condicion operador="=">CCTCUENT.ctbcod</condicion>
+				</field>
+				
+			</table>
+		</join>
+	</form>
+</histrix>

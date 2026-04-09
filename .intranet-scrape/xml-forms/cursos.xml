@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud">
+    <title>Cursos</title>
+    <obs></obs>
+    <title>Cursos</title>
+    <form>
+    <table id="RH_CURSOS">
+
+    <filters>
+        <field id="inicio" deshabilitado="false">
+            <label>Desde</label>
+            <valor eval="true">date("d/m/Y", mktime(0, 0, 0, 1 , 1, date("Y")))</valor>
+            <operador>&gt;=</operador>
+            <tipo>date</tipo>
+        </field>
+        <field id="inicio" deshabilitado="false">
+            <label modpos="nobr">Hasta</label>
+            <valor eval="true">date("d/m/Y", mktime(0, 0, 0, 12 , 31, date("Y")))</valor>
+            <operador>&lt;=</operador>
+            <tipo>date</tipo>
+        </field>
+        <field id="usuario" local="true">
+        <label modpos="nobr">Capacitado</label>
+          <operador>=</operador>
+        </field>
+      
+    </filters>
+      
+        <field id="Id_curso" esClave="true">
+            <label>Código del Curso</label>
+            <help>Código del Curso</help>
+            <detalle>Id_curso</detalle>
+            <helper type="link" xml="capacitaciones_ficha_qry.xml" dir="/personal/qry">
+                <parameter source="Id_curso" target="Id_curso" />
+            </helper>
+        </field>
+
+        <field id="edicion">
+            <label modpos="nobr">Horas</label>
+            <help>Carga horaria</help>
+            <tipo>numeric</tipo>
+        </field>
+
+        <field id="Id_docente">
+            <label>Docente</label>
+            <help>Docente</help>
+            <helper type="combo" id="RH_DOCENTES">
+                <field id="id_docente"/>
+                <field id="nombre"/>
+                <order>
+                    <field id="nombre"/>
+                </order>
+            </helper>
+        </field>
+
+        <field id="id_centro">
+            <label modpos="nobr">Centro</label>
+            <help>Tipo de Capacitación</help>
+            <helper type="combo" id="RH_CENTROEDUC">
+                <field id="id_centro"/>
+                <field id="descripcion"/>
+                <order>
+                    <field id="descripcion"/>
+                </order>
+            </helper>
+        </field>
+
+        <field id="descripcion">
+            <label>Nombre Curso</label>
+            <help>Nombre del Curso</help>
+            <size>100</size>
+        </field>
+
+        <field id="contenido" cellMaxLength="100">
+            <label modpos="nobr">Contenido</label>
+            <help>Contenido del Curso</help>
+            <size>400</size>
+        </field>
+
+        <field id="modalidad">
+            <label>Modalidad</label>
+            <help>Modalidad</help>
+            <size>100</size>
+        </field>
+
+        <field id="observacion">
+            <label modpos="nobr">Observación</label>
+            <help>Observación</help>
+            <size>100</size>
+        </field>
+
+        <field id="inicio" required="true">
+            <label>Inicio</label>
+            <help>Fecha de Finalización</help>
+            <tipo>date</tipo>
+        </field>
+
+        <field id="fin" sincelda="true">
+            <label>Fin</label>
+            <help>Fecha de Finalización</help>
+            <tipo>date</tipo>
+        </field>
+
+        <field id="usuario" noshow="true" autocompletar="true" local="true" _colstyle="display:none;" esClave="true">
+            <label modpos="nobr">Usuario</label>
+            <help>Usuario</help>
+            <helper type="combo" id="PERSONAL" empty="true">
+                <field id="IdPersona"/>
+                <field id="nombres">
+                    <expression>CONCAT(apellido,', ', Nombre)</expression>
+                </field>
+                <field id="fechaEgreso">
+                    <condicion operador="=">'0000-00-00'</condicion>
+                </field>
+                <order>
+                    <field id="nombres"/>
+                </order>
+            </helper>
+        </field>
+
+        <field id="personal_curso" local="true" clasefila="true" _noshow="true">
+            <expression><![CDATA[(select '<b>Presente</b>' from RH_CURSO_REALIZADO where RH_CURSO_REALIZADO.Id_curso = RH_CURSOS.Id_curso and IdPersona = '[__usuario__]' limit 1)]]></expression>
+            <label modpos="nobr">Capacitado</label>
+          <condicion operador="=">'Presente'</condicion>
+        </field>
+
+        <!--<field id="Imprimir" linkint="cursos_ficha.xml" linkdes="Ver Ficha de Capacitacion" local="true">
+          <label modpos="nobr" style="font-weight:bold; height:3em;width:auto;" Formstyle="display:none;">Imprimir</label>
+          <paring destino="Id_curso">Id_curso</paring>
+          <valor>Imprimir</valor>
+        </field>-->
+
+        <field id="cursosrealizados" local="true" colstyle="display:none;">
+            <helper type="object" xml="cursorealizado.xml">
+                <parameter source="Id_curso" target="Id_curso" />
+            </helper>
+            <label>Cursantes</label>
+        </field>
+
+        <group>
+            <field id="Id_curso"/>
+        </group>
+
+    </table>
+
+    </form>
+</histrix>

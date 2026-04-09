@@ -1,0 +1,334 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<histrix tipo="ficha" PDFsincabecera="true"  sololectura="true" autoprint="true" PDFfontSize="8" PDFpageSize="A4" PDForientacion="L" path="fotos/archivos">
+  <title>COMPROBANTES DE TRASFERENCIAS</title>
+  <obs></obs>
+  <form >
+  	    <pdf PDForientacion="P">
+      <code><![CDATA[
+ 
+                $tp = 05;
+                $ap = $pdf->anchoPagina - 2;
+                $mp = ($ap / 2);
+                $lp = $pdf->largoPagina;
+
+                // Frame Principal
+                $pdf->Rect(005, $tp, $ap, 130, 0.1);
+                $pdf->Rect(005, 145, $ap, 140, 0.1);
+               
+                // Nombre Empresa
+                $pdf->Rect(005, $tp, $mp, 025, 0.1);
+			    $pdf->SetFontSize(12);
+                $pdf->text(010, $tp + 05, $_SESSION['properties']['nombre']);
+                $pdf->SetFontSize(6);
+                $pdf->text(050, $tp + 10, $_SESSION['properties']['direccion']);
+	            $pdf->text(052, $tp + 15, 'CUIT: '.$_SESSION['properties']['cuit']);
+                $pdf->SetFontSize(10);
+
+                $pdf->Rect(005, 145, $ap, 030, 0.1);
+                $pdf->SetFontSize(12);
+                $pdf->text(010, $tp + 147, $_SESSION['properties']['nombre']);
+                $pdf->SetFontSize(6);
+                $pdf->text(050, $tp + 153, $_SESSION['properties']['direccion']);
+	            $pdf->text(052, $tp + 157, 'CUIT: '.$_SESSION['properties']['cuit']);
+                $pdf->SetFontSize(10);
+            
+                // Datos Comprobante
+                $pdf->Rect($mp + 5, $tp, $mp, 025, 0.1);
+                $pdf->Rect($mp + 5, 145, $mp, 030, 0.1);
+
+                ///letra
+                $pdf->setFillColor(255,255,255);
+                $pdf->Rect($mp + 1, $tp, 010, 010, 'F');
+                $pdf->Rect($mp + 1, $tp, 010, 010, 0.1);
+
+                $pdf->setFillColor(255,255,255);
+                $pdf->Rect($mp + 1, 145, 010, 010, 'F');
+                $pdf->Rect($mp + 1, 145, 010, 010, 0.1);
+
+                // Cliente
+                $pdf->Rect(005, $tp + 21 , $ap, 20, 0.1);
+                $pdf->Rect(005, 148 + 21 , $ap, 20, 0.1);
+            ]]></code>
+        </pdf>
+
+	    <!--<pdf PDForientacion="P">
+            <code><![CDATA[
+		
+            	$tp = 05;
+            	$ap = $pdf->anchoPagina - 2;
+            	$mp = ($ap / 2);
+            	$lp = 100; // $pdf->largoPagina;
+            	
+				// Frame Principal
+				$pdf->Rect(005, $tp, $ap, 045, 0.1);
+				$pdf->Rect(005, $tp, $ap, 045, 0.1);
+
+				// Nombre Empresa
+//				$pdf->Rect(005, $tp, $mp, 025, 0.1);
+			    $pdf->Rect(104,13, 0, 29, 0.1);
+			    
+                $pdf->SetFontSize(12);
+                $pdf->text(010, $tp + 05, $_SESSION['properties']['nombre']);
+                $pdf->SetFontSize(6);
+                $pdf->text(050, $tp + 10, $_SESSION['properties']['direccion']);
+	            $pdf->text(052, $tp + 15, 'CUIT: '.$_SESSION['properties']['cuit']);
+                $pdf->SetFontSize(10);
+                                                                                                
+				// Datos Comprobante
+//				$pdf->Rect($mp + 5, $tp, $mp, 025, 0.1);
+				
+				///letra
+				$pdf->Rect($mp, $tp, 010, 010, 0.1); 
+
+				// Cliente
+				$pdf->Rect(005, $tp + 21 , $ap, 020, 0.1);
+				
+            ]]></code>
+        </pdf>-->
+
+		    <table id="CAJ_MOVIMIENTOS" label="COMPROBANTES DE TRASFERENCIAS">
+
+			<!-- ENCABEZADO -->
+                        
+            <field id="id_cajmovimiento" esClave="true" noshow="true" print="false"/>
+                      
+			<field id="letra_movimiento" local="true" PDFsize="20">
+				<label posX="98" posY="2" />
+				<valor>X</valor>
+			</field>
+            
+			<field id="descripcion_concepto" tabla="CAJ_CONCEPTOS">
+				<label posX="110" posY="2">Comprobante</label>
+			</field>
+
+			<field id="fecha_movimiento">
+				<label posX="110" posY="+2">Fecha</label>
+				<tipo>date</tipo>
+			</field>
+		
+			<field id="cajpuesto_id">
+				<label posX="110" posY="+2">Puestos</label>
+				<format>%08d</format> 
+		
+			</field>
+
+			<field id="nro_movimiento" sincelda="true" tabla="CAJ_MOVIMIENTOS">
+				<label posX="142" posY="0">Nro</label>
+				<format>%08d</format>				
+			</field>
+						
+
+			<!-- DATOS DEL MOVIMIENTO -->
+
+		    <field id="regcuenta_nombre">
+		        <label posX="5" posY="+5">Cuenta</label>
+		        <expression>concat(REG_CUENTA.nombre_cuenta,' ' ,REG_CUENTA.apellido_cuenta)</expression>
+		    </field>
+
+		    <field id="referencia_movimiento">
+		        <label posX="5" posY="+2">Referencia</label>
+		    </field>
+
+		    <field id="separador" local="true">
+		        <label posX="5" posY="+5" />
+		    </field>
+		    <field id="ctb" noshow="true" local="true" print="false">
+			<expression>case when imprime_ctb = 1 then 'true' else 'false' end</expression>
+		    </field>
+
+			<!-- VALORES RECIBIDOS -->
+			<field id="asiento" local="true" width="100">
+			    <attribute id="print">ctb</attribute>
+				<label posX="5" posY="+2">Detalle Contable</label> 
+				<helper type="object" xml="recibo_cajdetalles_imp.xml" dir="/caja/qry/">
+					<parameter source="id_cajmovimiento" target="cajmovimiento_id" operator="=" />
+				</helper>
+			</field>
+
+			<field id="valores" local="true">
+				<label posX="5" posY="+2">Detalle de valores</label> 
+				<helper type="object" xml="recibo_cajvalores_imp.xml" dir="/caja/qry/">
+					<parameter source="id_cajmovimiento" target="cajmovimiento_id" operator="=" />
+				</helper>
+			</field>
+			<field id="cheques" local="true">
+				<label posX="5" posY="+2" />
+				<helper type="object" xml="recibo_carvalores_imp.xml" dir="/caja/qry/">
+					<parameter source="id_cajmovimiento" target="cajmovimiento_id" operator="=" />
+				</helper>
+			</field>
+
+			<field id="bancos" local="true">
+				<label posX="5" posY="+2" />
+				<helper type="object" xml="recibo_regmovim_imp.xml" dir="/caja/qry/">
+					<parameter source="id_cajmovimiento" target="cajmovimiento_id" operator="=" />
+				</helper>
+			</field>
+
+			<!--<field id="referencia_movimiento">
+				<label posX="5" posY="+14">Observaciones</label>
+			</field>-->
+			
+			<field id="emitido" local="true">
+				<label posX="10" posY="+55">Emitido por:</label>
+				<valor>_________________________</valor>
+			</field>
+
+			<field id="firma" local="true">
+				<label posX="110" posY="0">Firma</label>
+				<valor>_________________________</valor>
+			</field>
+
+			
+<!-- COPIA -->
+
+			<field id="letra_movimiento2" local="true">
+				<label posX="98" posY="142" PDFsize="20"/>
+				<valor>X</valor>
+			</field>
+
+
+			<field id="descripcion_concepto2" >
+				<label posX="110" posY="145">Comprobante</label>
+				<expression>CAJ_CONCEPTOS.descripcion_concepto</expression>
+			</field>
+
+			<field id="fecha_movimiento2">
+				<label posX="110" posY="+2">Fecha</label>
+				<tipo>date</tipo>
+				<expression>CAJ_MOVIMIENTOS.fecha_movimiento</expression>
+			</field>
+		
+			<field id="cajpuesto_id2" >
+				<label posX="110" posY="+2">Puestos</label>
+				<format>%08d</format> 
+		        <expression>CAJ_MOVIMIENTOS.cajpuesto_id</expression> 
+			</field>
+
+			<field id="nro_movimiento2" sincelda="true" >
+				<label posX="142" posY="0">Nro</label>
+				<format>%08d</format>
+				<expression>CAJ_MOVIMIENTOS.nro_movimiento</expression>				
+			</field>
+						
+
+			<!-- DATOS DEL MOVIMIENTO -->
+
+		    <field id="regcuenta_nombre2">
+		        <label posX="5" posY="+5">Cuenta</label>
+		        <expression>concat(REG_CUENTA.nombre_cuenta,' ' ,REG_CUENTA.apellido_cuenta)</expression>
+		    </field>
+
+		    <field id="referencia_movimiento2">
+		        <label posX="5" posY="+2">Referencia</label>
+		        <expression>CAJ_MOVIMIENTOS.referencia_movimiento</expression>
+		    </field>
+
+		    <field id="separador2" local="true">
+		        <label posX="105" posY="+5" />
+		    </field>
+		    <field id="ctb" noshow="true" local="true" print="false">
+			    <expression>case when imprime_ctb = 1 then 'true' else 'false' end</expression>
+		    </field>
+
+			<!-- VALORES RECIBIDOS -->
+			<field id="asiento2" local="true" width="100">
+			    <attribute id="print">ctb</attribute>
+				<label posX="5" posY="+2">Detalle Contable</label> 
+				<helper type="object" xml="recibo_cajdetalles_imp.xml" dir="/caja/qry/">
+					<parameter source="id_cajmovimiento" target="cajmovimiento_id" operator="=" />
+				</helper>
+			</field>
+
+			<field id="valores2" local="true">
+				<label posX="5" posY="+2">Detalle de valores</label> 
+				<helper type="object" xml="recibo_cajvalores_imp.xml" dir="/caja/qry/">
+					<parameter source="id_cajmovimiento" target="cajmovimiento_id" operator="=" />
+				</helper>
+			</field>
+			<field id="cheques2" local="true">
+				<label posX="5" posY="+2" />
+				<helper type="object" xml="recibo_carvalores_imp.xml" dir="/caja/qry/">
+					<parameter source="id_cajmovimiento" target="cajmovimiento_id" operator="=" />
+				</helper>
+			</field>
+
+			<field id="bancos2" local="true">
+				<label posX="5" posY="+2" />
+				<helper type="object" xml="recibo_regmovim_imp.xml" dir="/caja/qry/">
+					<parameter source="id_cajmovimiento" target="cajmovimiento_id" operator="=" />
+				</helper>
+			</field>
+			
+			<field id="emitido2" local="true">
+				<label posX="10" posY="+60">Recibido por:</label>
+				<valor>_________________________</valor>
+			</field>
+
+			<field id="firma2" local="true">
+				<label posX="110" posY="0">Firma</label>
+				<valor>_________________________</valor>
+			</field>
+		</table>
+
+
+		 <join>
+			<table id="CAJ_CONCEPTOS">
+			    <field id="id_cajconcepto">
+					<condicion operador="=">CAJ_MOVIMIENTOS.cajconcepto_id</condicion>
+				</field>
+			</table>
+	    </join>
+
+		 <join tipo="left">
+			<table id="REG_MOVIMIENTOS">
+			    <field id="subsistema_id">
+					<condicion operador="=">CAJ_CONCEPTOS.subsistema_id</condicion>
+   			    </field>
+			    <field id="cajmovimiento_id">
+					<condicion operador="=">CAJ_MOVIMIENTOS.id_cajmovimiento</condicion>
+   			    </field>
+			</table>
+		</join>
+		
+		 <join tipo="left">
+			<table id="REG_CONCEPTOS">
+			    <field id="id_concepto">
+					<condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+   			    </field>
+			</table>
+		</join>
+
+		 <join tipo="left">
+			<table id="REG_CUENTA">
+			    <field id="id_regcuenta">
+					<condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+   			    </field>
+			</table>
+		</join>
+
+		<join tipo="left">
+		  <table id="GEN_LOCALIDADES">
+		    <field id="id_localidad">
+		      <condicion operador="=">REG_CUENTA.localidad_id</condicion>
+		    </field>
+		  </table>
+		</join>
+		
+		<join tipo="left">
+		  <table id="GEN_PROVINCIAS">
+		    <field id="id_provincia">
+		      <condicion operador="=">REG_CUENTA.provincia_id</condicion>
+		    </field>
+		  </table>
+		</join>
+		
+		<join tipo="left">
+		  <table id="GEN_IVA">
+		    <field id="id_iva">
+		      <condicion operador="=">REG_CUENTA.iva_id</condicion>
+		    </field>
+		  </table>
+		</join>
+  </form>
+</histrix>

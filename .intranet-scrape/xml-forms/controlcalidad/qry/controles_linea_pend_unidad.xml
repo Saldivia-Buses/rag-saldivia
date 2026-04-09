@@ -1,0 +1,107 @@
+<histrix tipo="consulta" imprimetanda="true">
+    <title>Controles de calidad</title>
+    <obs/>
+    <form  detalle="retrabajos_ficha_crud.xml">
+        <table id="PROD_CONTROL_MOVIM" label="Retrabajos"  _showCantidad="false" _styleTbody="height:500px; overflow-x:hidden;">
+	    <filters auto="true">
+    		<field id="nrofab_id" _tabla="PROD_CONTROLES">
+		    <label>Coche</label>
+		    <detalle>nrofab_id</detalle>
+		</field>
+
+    		<field id="ctafan" deshabilitado="false">
+    			<label>Cliente</label>
+	    	    <operador>like</operador>		
+		</field>
+
+	    </filters>
+    	    <field id="nrofab_id" _tabla="PROD_CONTROLES">
+		<label>Coche</label>
+		<detalle>nrofab_id</detalle>
+	    </field>
+    	    <field id="ctafan" >
+    	    	<label>Cliente</label>
+		<expression having="false">ctafan</expression>		
+	    </field>
+
+    	    <field id="descripcion" tabla="MOMENTO">
+    	    	<label>Descripción</label>
+		<expression>group_concat(distinct descripcion)</expression>		
+	    </field>
+    	    <field id="seccion_id" tabla="PROD_CONTROLES" noshow="true">
+<!--		    <detalle>seccion_id</detalle> -->
+	    </field>
+    	    <field id="cant" style="width:4em;">
+		<label>Cantidad</label>
+		<expression>count(id_controlmovim)</expression>
+		    <helper xml="retrabajos_ficha_imp.xml" type="link">
+			<parameter source="nrofab_id" target="nrofab_id" />
+		    </helper>
+	    </field>
+
+    	    <field id="controlado"  noshow="true">
+		    <condicion operador="=">0</condicion>
+	    </field>
+
+
+		<field id="no_conforme"  noshow="true">
+			    <condicion operador="=">1</condicion>
+
+				<checklabel> </checklabel>
+				<tipo>check</tipo>
+		</field>
+		<field id="entrega" tabla="ENTREGASCOCHES" noshow="true">
+			<label>Entrega Cliente</label>
+			<tipo>date</tipo>
+			<condicion operador="isnull">true</condicion> 
+		</field>
+
+	    <group>
+		<field id="nrofab_id" />
+	    </group>
+	</table>
+		<join tipo="left">
+		    <table id="PEDCOTIZ">
+			<field id="nrocha">
+			    <condicion operador="=">PROD_CONTROL_MOVIM.nrofab_id</condicion>
+			</field>
+		    </table>
+		</join>
+		<join tipo="left">
+
+            <table id="CCTCUENT">
+                <field id="ctacod">
+                    <condicion operador="=">PEDCOTIZ.ctacod</condicion>
+                </field>
+                <field id="siscod">
+                    <condicion operador="=">'02'</condicion>
+                </field>   
+            </table>
+	    </join>
+		<join tipo="left">
+		    <table id="PROD_CONTROLES">
+			<field id="id_prodcontrol">
+			    <condicion operador="=">prodcontrol_id</condicion>
+			</field>
+		    </table>
+		</join>
+		<join tipo="left">
+		    <table id="MOMENTO">
+			<field id="idMomento">
+			    <condicion operador="=">PROD_CONTROLES.seccion_id</condicion>
+			</field>
+		    </table>
+		</join>
+		<join tipo="left">
+		    <table id="ENTREGASCOCHES">
+				<field id="nrofab">
+					<condicion operador="=">PROD_CONTROL_MOVIM.nrofab_id</condicion>
+				</field>
+				<field id="entrega">
+					<condicion operador="IS NOT NULL"></condicion>
+				</field>
+		    </table>
+		</join>
+
+    </form>
+</histrix>

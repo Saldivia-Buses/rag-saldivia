@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" llenoTemporal="false" graboasiento="true" _editable="true" subtipo="vertical">
+	<title>MOVIMIENTOS BANCARIOS</title>
+	<obs></obs>
+	<form >
+
+		<table id="BCSMOVIM" label="Mov Bancarios">
+
+			<movimientos cabecera="bcsmovim_cab.xml">
+				<relacion id="bcsmovim_ctb_ingmov.xml" /> 
+				<relacion id="reg_movimiento_moneda_ins.xml" />
+					<!-- aca tengo que establecer la condicion para que se haga el insert -->
+			</movimientos>
+
+			<field id="siscod" oculto="true">
+				<label>siscod</label>
+				<help>Cod sistema</help>
+				<parametro id="fsmparam_paralf.xml" retorna="paralf">
+					<field id="parcla" >
+						<condicion operador="=">'sisbcs'</condicion>
+					</field>
+				</parametro>
+			</field>
+
+ 			<field id="bcsfec" oculto="true">
+				<tipo>date</tipo>
+			</field>
+
+			<field id="fecha" ctbfecha="1">
+				<label>Fecha</label>
+				<help>Fecha del Movimiento</help>
+				<tipo>date</tipo>
+				<valor>today</valor>
+			</field>
+
+			<field id="vencimiento" modpos="nobr">
+				<label>Vencimiento</label>
+				<help>Fecha de Vencimiento</help>
+				<tipo>date</tipo>
+				<valor>today</valor>
+			</field>
+
+			<field id="bcsmov" modpos="nobr">
+				<label>Concepto</label>
+				<help>Código de Concepto</help>
+				<helper type="combo" id="BCSCONCE" xml="HLPbcsconce.xml" dir="/help_local" empty="true">
+					<field id="cnbcod"></field>
+					<field id="cnbdes">
+						<detalle>cnbdes</detalle>
+					</field>
+					<field id="cnbabv">
+						<detalle>cnbabv</detalle>
+					</field>
+					<field id="cnbtip">
+						<detalle>cnbtip</detalle>
+					</field>
+
+					<field id="ctbcod__1">
+						<condicion operador="!=">''</condicion>
+						<detalle>ctbcod__1</detalle>
+					</field>
+					<field id="ctbcod__2">
+						<detalle>ctb_cod2</detalle>
+					</field>
+				    <order>
+				    <field id="cnbdes" />
+				    </order>
+				</helper>
+				<tipo>integer</tipo>
+				<valor></valor>
+			</field>
+
+			<field id="cnbdes" deshabilitado="true" modpos="nobr">
+				<label>concepto</label>
+				<tipo>char</tipo>
+			</field>
+
+			<field id="cnbtip" deshabilitado="true" ctbtipo="1" noshow="true" modpos="nobr">
+				<label>cnbtip</label>
+			</field>
+
+			<field id="cnbtipinv"  deshabilitado="true" ctbtipo="2" noshow="true" modpos="nobr">
+				<label>cnbtipinv</label>
+				<if exp="cnbtip==1">
+					<true>2</true>
+					<false>1</false>
+				</if>
+			</field>
+
+			<field id="ctbcod__1" deshabilitado="true" noshow="true" modpos="nobr" ctbcuenta="2">
+				<label>ctb_cod1</label>
+				<tipo>varchar</tipo>
+			</field>
+<!--
+			<field id="ctb_cod2" deshabilitado="true" noshow="true" modpos="nobr">
+				<label>ctb_cod2</label>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="cuentactbmov" deshabilitado="true" ctbcuenta="2" noshow="true" modpos="nobr">
+				<label>CTBCODMOV</label>
+				<if exp="cnbtip==1">
+					<true>ctb_cod1</true>
+					<false>ctb_cod2</false>
+				</if>
+				<tipo>varchar</tipo>
+			</field>
+-->
+			<field id="bcsnro"	ctbregnro="2" modpos="nobr">
+				<label>Número</label>
+				<help>Número de Movimiento</help>
+				<tipo>integer</tipo>
+				<valor>0</valor>
+				<format>%08d</format>
+			</field>
+
+			<field id="monedaori_id" deshabilitado="true" Formstyle="display:none;">
+			    <label>monedassss</label>
+			    <helper id="GEN_MONEDAS" type="combo">
+				<field id="id_moneda" />
+				<field id="descripcion_moneda" />
+			    </helper>
+			    <if exp="true">
+				<true>moneda_id</true>
+				<false></false>
+			    </if>
+			</field>
+
+			<field id="importe_original" local="true">
+			    <label>Importe Moneda Origen</label>
+				<help>Importe del Movimiento expresado en Moneda de Origen</help>
+			</field>
+
+			<field id="bcsimp" ctbimporte="2" modpos="nobr" deshabilitado="true">
+				<label>Importe $</label>
+				<help>Importe del Movimiento en Pesos</help>
+				<tipo>numeric</tipo>
+				<valor>0</valor>
+			    <if exp="true">
+				<true>importe_original * cotizacion</true>
+				<false></false>
+			    </if>
+			</field>
+
+			<field id="bcsimp2" noshow="true" ctbimporte="1" >
+				<label>Importe2</label>
+				<if exp="cnbtip==1">
+					<true>bcsimp</true>
+					<false>bcsimp</false>
+				</if>
+			</field>
+
+			<field id="presentado">
+				<label>Conc.</label>
+				<help>conciliado</help>
+				<tipo>check</tipo>
+				<options>
+					<option valor="1">Conciliados</option>
+					<option valor="0">No conciliado</option>
+<!--					<option valor="3">Todos</option> -->
+				</options>
+				<valor>1</valor>
+				<!--	<preparam operador="!=">true</preparam>			 -->
+			</field>
+
+			<field id="cnbabv" noshow="true">
+				<label>Abv</label>
+				<tipo>char</tipo>
+			</field>
+
+			<field id="referencia"  ctbreferencia="2" deshabilitado="true" noshow="true">
+				<label>Referencia</label>
+				<tipo>char</tipo>
+				<if exp="1==1">
+					<true>'cnbabv'.'-NRO.'.sprintf('%08d', bcsnro)</true>
+					<false>''</false>
+				</if>
+			</field>
+
+			<!-- NUMERADOR INTERNO NOMBRE DE CAMPO RESERVADO-->
+			<field id="_ORDEN" oculto="true">
+				<label>Orden</label>
+			</field>
+
+		<order>
+			<field id="bcsnro"></field>
+		</order>
+
+		</table>
+
+		<join tipo="left">
+			<table id="BCSCONCE">
+				<field id="siscod" oculto="true">
+					<label>BCSCONCE.siscod</label>
+					<condicion operador="=">BCSMOVIM.siscod</condicion>
+				</field>
+				<field id="cnbcod" oculto="true">
+					<condicion operador="=">BCSMOVIM.bcsmov</condicion>
+				</field>
+				<field id="cnbnom" oculto="true">
+				</field>
+			</table>
+		</join>
+
+	</form>
+</histrix>

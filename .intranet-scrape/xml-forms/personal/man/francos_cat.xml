@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm-mini" width="55">
+	<title>CATEGORIAS DE LICENCIAS</title>
+	<obs></obs>
+	<form detalle="francos_cat_tipo.xml">
+		<table id="FRANCOS_CAT" >
+		    <filters auto="true">
+			<field id="tipo">
+				<label>Tipo</label>
+				<operador>=</operador>
+				<valor>0</valor>
+			</field>
+
+		    
+		    </filters>
+			<title>Categorias de Licencias</title>
+			<field id="tipo" colstyle="display:none;">
+				<label>Tipo</label>
+				<options>
+				    <option valor="0">Licencias</option>
+				    <option valor="1">Accidente</option>
+				</options>
+			</field>
+			<field id="id_francocat" noshow="true" esClave="true">
+				<label>Id.Licencia</label>
+				<help>Id de Licencia</help>
+				<detalle>id_francocat</detalle>
+			</field>
+			<field id="idfranco">
+				<label>Cod.Licencia</label>
+				<help>Codigo de Licencia</help>
+			</field>
+			<field id="nombre">
+				<label>Nombre</label>
+				<help>Nombre de Licencia</help>
+			</field>
+			<field id="descripcion">
+				<label>Descripcion</label>
+				<help>Descripcion Horario</help>
+			</field>
+			<field id="sinpaga">
+				<label>S/G de sueldo</label>
+				<help>Sin Goce de sueldo</help>
+				<options>
+				    <option valor="0">Con G/S</option>
+				    <option valor="1">Sin G/S</option>
+
+				</options>
+			</field>
+
+			<field id="descuenta">
+				<label>Descuenta</label>
+				<help>Desceunta</help>
+				<options>
+				    <option valor="0">Si</option>
+				    <option valor="1">No</option>
+				</options>
+			</field>
+
+			<field id="descuenta_grupo">
+				<label>Descuenta Grupo</label>
+				<help>Desceunta Grupo</help>
+				<options>
+				    <option valor="0">Si</option>
+				    <option valor="1">No</option>
+				</options>
+			</field>
+
+			<order>
+				<field id="idfranco"></field>
+			</order>
+		</table>
+	</form>	   
+</histrix> 

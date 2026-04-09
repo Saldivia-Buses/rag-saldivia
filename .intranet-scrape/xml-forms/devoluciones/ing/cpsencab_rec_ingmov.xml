@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="update" grabafinal="true">
+	<title>ABRE ORDEN DE COMPRA</title>
+	<obs></obs>
+	<form  >
+		<table id="CPSENCAB" label="ORDENES DE COMPRA">
+			<field id="ocpfec" id_temp="movfec" esClave="true">
+				<tipo>date</tipo>
+			</field>
+			<field id="ocpnro" id_temp="ocpnro" esClave="true" />
+			<field id="ocpest" id_temp="1">
+			</field>
+		</table>
+	</form>
+</histrix>

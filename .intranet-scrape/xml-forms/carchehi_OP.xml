@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="consulta">
+	<title>CARTERA DE CHEQUES HISTORICA</title>
+	<obs></obs>
+	<form >
+		<table id="CARCHEHI" label="CARTERA DE CHEQUES HISTORICA">
+			<field id="siscod" oculto="true">
+				<label>Codigo Sistema.. </label>
+				<help></help>
+				<condicion operador="=">'05'</condicion>
+			</field>
+                   
+			<field id="carnro">
+				<label>Nro.Cheque </label>
+				<help>Numero de Cheque</help>
+			</field>			
+			<!--                  <field id="cartip">
+			<label>Tipo Cheque </label>
+			<help>[1/Enter] = Al Portador   *   [2] = A la orden </help>
+			</field>
+			-->
+			<field id="carfec">
+				<label>Fec.Cheque</label>
+				<help>Fecha del cheque ingresado. </help>
+			</field>
+			<field id="caralt">
+				<label>Fecha Alta </label>
+				<help>Fecha de Ingreso del cheque en cartera. </help>
+			</field>
+
+			<field id="carbco">
+				<label>Banco</label>
+				<help>Nombre de Banco de Procedencia. </help>
+			</field>
+			<field id="carcui">
+				<label>cuit Librador</label>
+				<help>Cuit del Librador</help>
+			</field>			
+			<field id="carint">
+				<label>Numero</label>
+				<help></help>
+			</field>
+
+			<field id="carimp" suma="true">
+				<label>Importe</label>
+				<help>Importe del cheque. </help>
+			</field>
+
+			<field id="carpag" oculto="true">
+			</field>						
+			<!--
+			<field id="bcsnro">
+			<label>Bol.Deposito </label>
+			<help>Boleta de Deposito. </help>
+			</field>
+			<field id="cajpla">
+			<label>Nro.de Caja. </label>
+			<help> </help>
+			</field>
+			<field id="caracr">
+			<label>F.Acreditacion </label>
+			<help>Fecha de Acreditacion </help>
+			</field>
+			<field id="carccb">
+			<label>Codigo del Banco </label>
+			<help> </help>
+			</field>
+			<field id="carcui">
+			<label>CUIT LIBRADOR </label>
+			<help> </help>
+			</field>
+			<field id="cardes">
+			<label>Plaza                . </label>
+			<help>Nombre de la plaza bancaria. </help>
+			</field>
+			<field id="carmar">
+			<label>Marca </label>
+			<help> </help>
+			</field>
+
+			<field id="carobv">
+			<label>Plaza Bancaria </label>
+			<help>Plaza Bancaria. </help>
+			</field>
+			<field id="carpla">
+			<label>Cod.Plaza            . </label>
+			<help>Codigo de Plaza Bancaria. (Enter : No Ingresa Plaza.) </help>
+			</field>
+			<field id="carrec">
+			<label>Nro Recibo </label>
+			<help> </help>
+			</field>
+			<field id="ccbcod">
+			<label>Codigo Cuenta        . </label>
+			<help>Codigo de Cuenta Bancaria </help>
+			</field>
+			<field id="circod">
+			<label>Cod. Circulo </label>
+			<help> </help>
+			</field>
+			<field id="concod">
+			<label>Codigo  Concepto </label>
+			<help> </help>
+			</field>
+			<field id="movnpv">
+			<label>Nro. Punto Venta </label>
+			<help> </help>
+			</field>
+			<field id="movnro">
+			<label>Nro. Comprobante </label>
+			<help> </help>
+			</field>
+			<field id="opecla">
+			<label>Firma Electronica </label>
+			<help>Firma Electronica </help>
+			</field>
+			<field id="opecod">
+			<label>Cod.Operador </label>
+			<help> </help>
+			</field>
+			<field id="regmin">
+			<label>Numero Asiento       . </label>
+			<help>Numero de Asiento . </help>
+			</field>
+			<field id="succod">
+			<label>Cod. Sucursal </label>
+			<help>Codigo de Sucursal </help>
+			</field>
+			-->
+			<order>
+				<field id="carint"></field>
+			</order>
+		</table>
+		
+		
+	</form>
+</histrix>

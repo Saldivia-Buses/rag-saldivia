@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" PDFfontSize="10"  >
+    <title>PRECIOS POR MARCA Y MODELO</title>
+    <obs/>
+    <pie size="15" align="C" style="B">[__pie__]</pie>
+    <form>
+        <table id="MARCHASIS" >
+            <title>Precios por modelo</title>
+            <filters>
+                <field id="marcod" PDFsize="14" print="false">
+                    <label>Chasis</label>
+                    <operador>=</operador>
+                </field>
+                <field id="idLista" PDFsize="14">
+
+                    <label modpos="nobr">Lista</label>
+                    <help>Lista</help>
+                    <operador>=</operador>
+                    <tipo>integer</tipo>
+
+                </field>
+
+
+            </filters>
+            <field id="idLista" noshow="true" PDFsize="14" tabla="PRECIOMODELO">
+                <tabla_ex id="LISTAPRECIOMODELO">
+                    <field id="idLista" >
+                    </field>
+                    <field id="nom" >
+                        <expression>concat('Nro ',idLista,' - Vigencia Desde: ' , DATE_FORMAT(fecha, '%d/%m/%Y'))</expression>
+                    </field>
+                    <field id="fecha" orden="true" tipoOrden="DESC">
+                    </field>
+
+                    <order>
+                        <field id="fecha"></field>
+                    </order>
+
+                </tabla_ex>
+                <actualiza>
+                    <field destino="act" id="act"/>
+                </actualiza>
+                <label modpos="nobr">Lista</label>
+                <help>Lista</help>
+            </field>
+            <field id="marcod" noshow="true" PDFsize="14" print="false">
+                <tabla_ex id="MARCHASIS">
+                    <field id="marcod" >
+                    </field>
+                    <field id="mardes" >
+                    </field>
+                    <order>
+                        <field id="mardes" >
+                        </field>
+
+                    </order>
+                </tabla_ex>
+            </field>
+
+            <field id="nrocar" noshow="true" tabla="GRUPOPRECIOS">
+            </field>
+            <field id="modcar" tabla="CARROCERIA">
+                <label>Modelo</label>
+                <help>Modelo de Carroceria</help>
+                <tipo>varchar</tipo>
+
+            </field>
+            <field id="desabv">
+                <expression>MODCHASIS.moddes</expression>
+                <label >Chasis</label>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="asientos">
+                <expression>asientos + acompañante</expression>
+                <label style="color:blue; font-size:16px;">Asi</label>
+                <label>Cantidad de Asientos</label>
+            </field>
+            <field id="banbar" tabla="PRECIOMODELO">
+                <label>Baño</label>
+
+                <options>
+                    <option valor="0">--</option>
+                    <option valor="1">Si</option>
+                </options>
+            </field>
+
+            <field id="largo" tabla="PRECIOMODELO">
+                <label>Largo (m)</label>
+                <help>Largo Expresado en Metros</help>
+            </field>
+            <field id="bodega" tabla="PRECIOMODELO">
+                <label>Bodega (m3)</label>
+                <help>Capacidad de Bodega expresado en Metros Cúbicos</help>
+            </field>
+
+            <field id="tipserv" tabla="PRECIOMODELO">
+                <label>Habilitación</label>
+                <label>Tipo de Servicio</label>
+                <tabla_ex id="TIPOSERVICIO">
+                    <field id="tipserv">
+                    </field>
+                    <field id="servdes">
+                    </field>
+                </tabla_ex>
+            </field>
+            <field id="precio" tabla="PRECIOMODELO">
+                <label modpos="nobr" style="color:green; font-size:16px;">Concesionario</label>
+                <help>Precio</help>
+                <tipo>custom_numeric</tipo>
+
+
+            </field>
+            <field id="margen" noshow="true">
+                <expression>margen</expression>
+                <label>% Rec</label>
+                <help>Recargo precio al público</help>
+            </field>
+            <field id="pubPrecio">
+                <expression>round(precio * (1 + margen), 2)</expression>
+                <label modpos="nobr" style="color:red; font-size:16px;">Prec.Público</label>
+                <help>Precio</help>
+                <tipo>custom_numeric</tipo>
+            </field>
+<!--            <field id="difAs" noshow="true">
+                <label >dif</label>
+                <expression>select difAsiento from LISTAPRECIOMODELO where LISTAPRECIOMODELO.idLista = PRECIOMODELO.idLista</expression>
+            </field>
+            <field id="preCAsientos" local="true">
+                    <label modpos="nobr" style="color:green; font-size:16px;">Concesionario </label>
+                    <tipo>custom_numeric</tipo>
+
+                    <if exp="true">
+                            <true>precio + (asientos * difAs)</true>
+                            <false>0</false>
+                    </if>
+            </field>
+
+            <field id="prePAsientos" local="true">
+                    <label modpos="nobr" style="color:green; font-size:16px;">Prec. Público</label>
+                    <if exp="true">
+                            <true>pubPrecio + (asientos * difAs)</true>
+                            <false>0</false>
+                    </if>
+                    <tipo>custom_numeric</tipo>
+
+            </field>
+-->
+            <field id="pie" tabla="LISTAPRECIOMODELO" noshow="true">
+            </field>
+            <field id="idPrecio" noshow="true" tabla="PRECIOMODELO">
+            </field>
+            <field id="nrounico" local="true" noshow="true">
+                <if exp="true">
+                    <true>'nrocar'.'idGrupo'.'asientos'</true>
+                    <false>0</false>
+                </if>
+            </field>
+
+
+            <order>
+                <field id="modcar"></field>
+            
+                <field id="idGrupo"></field>
+
+                <field id="desabv"></field>
+                <field id="asientos"></field>
+            </order>
+
+        </table>
+        <join>
+            <table id="GRUPOPRECIOS">
+                <field id="marcod">
+                    <condicion operador="=">MARCHASIS.marcod</condicion>
+                </field>
+            </table>
+        </join>
+        <join>
+            <table id="CARROCERIA">
+                <field id="nrocar">
+                    <condicion operador="=">GRUPOPRECIOS.nrocar</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join>
+            <table id="MODCHASIS">
+                <field id="marcod">
+                    <condicion operador="=">GRUPOPRECIOS.marcod</condicion>
+                </field>
+                <field id="modcha">
+                    <condicion operador="=">GRUPOPRECIOS.modcha</condicion>
+                </field>
+				
+            </table>
+        </join>
+        <join>
+            <table id="PRECIOMODELO">
+                <field id="idGrupo">
+                    <condicion operador="=">GRUPOPRECIOS.idGrupo</condicion>
+                </field>
+                <field id="nrocar">
+                    <condicion operador="=">GRUPOPRECIOS.nrocar</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="LISTAPRECIOMODELO">
+                <field id="idLista">
+                    <condicion operador="=">PRECIOMODELO.idLista</condicion>
+                </field>
+            </table>
+        </join>
+		
+    </form>
+</histrix>

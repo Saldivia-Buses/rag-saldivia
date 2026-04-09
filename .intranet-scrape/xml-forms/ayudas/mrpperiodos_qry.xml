@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<!-- 
+*******************************************************************************
+Tipo:  Ayuda
+Tarea: Ayuda para la Tabla de Sectores de Articulos
+Autor: d!ego2k
+Fecha: 13/10/10
+*******************************************************************************
+-->
+    <histrix tipo="ayuda" llenoTemporal="true" llenoreferente="true">
+	<title>Periodos</title>
+	 <obs></obs>
+		<form >
+		    <table id="MRP_PERIODOS" label="Periodos">
+				<field id="id_mrpperiodo" esClave="true" noshow="true" />
+				<field id="descripcion_mrpperiodo">
+					<label>Descripcion</label>
+					<detalle>descripcion_mrpperiodo</detalle >
+				</field>
+				<field id="fecini_mrpperiodo" noshow="true">
+					<label>fecini_mrpperiodo</label>
+					<detalle>fecini_mrpperiodo</detalle>
+						
+				</field>
+				<field id="fecfin_mrpperiodo" noshow="true">
+					<label>fecfin_mrpperiodo</label>
+					<detalle>fecfin_mrpperiodo</detalle>
+				</field>
+				<field id="dias_laborables" noshow="true">
+					<label>dias_laborables</label>
+					<detalle>dias_laborables</detalle>
+				</field>
+
+		    </table>
+		</form>
+    </histrix>	

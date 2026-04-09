@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="abm-mini" >
+	<title>Cliente por Unidad</title>
+	<obs></obs>
+	<form >
+		<table id="UNIDADCLIENTE">
+			<title>Unidad Cliente</title>
+			
+			<field id="idUcli" noshow="true" autoinc="true">
+			</field>
+			
+			<field id="nrofab" noshow="true">
+				<label>Num. Fab.</label>
+			</field>
+			<field id="ctacod" >
+				<label>Cta.Cod.</label>
+				<condicion operador="!=">1</condicion>
+				<ayuda_ex xml="HLPcctcuent.xml" dir="/help_local">
+				    <field id="ctacod"></field>
+				    <field id="ctanom">
+					<detalle>ctanom</detalle>
+				    </field>
+				    <field id="siscod">
+					<condicion operador="=">'02'</condicion>
+				    </field>
+				</ayuda_ex>
+			</field>			
+			<field id="ctanom" deshabilitado="true">
+				<expression>CONCAT(CCTCUENT.ctanom, ' ', CCTCUENT.ctafan)</expression>
+				<label>Nombre</label>
+				<size>70</size>
+			</field>
+			<field id="fecha">
+			    <label>Fecha</label>
+			    <valor>today</valor>
+			</field>
+		</table>
+		
+		<join tipo="left">
+			<table id="CCTCUENT">
+			<field id="siscod" oculto="true">
+				<condicion operador="=">'02'</condicion>
+			</field>
+			<field id="ctacod" oculto="true">
+				<condicion operador="=">UNIDADCLIENTE.ctacod</condicion>
+			</field>
+
+			</table>
+		</join>
+		
+	</form>
+</histrix>

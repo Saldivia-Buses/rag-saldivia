@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF8"?>
+<histrix tipo="crud" >
+  <titulo>Artículo por Locación</titulo>
+  <obs/>
+  <form>
+    <table id="STK_ARTICULO_LOCACION">
+      <title>Artículo por locación </title>
+
+      <field id="stklocacion_id"  />
+
+      <field id="codigo_locacion" >
+        <expression>codigo_locacion</expression>
+      </field>
+        
+      <field id="stkarticulo_id">
+        <label>Artículo</label>
+      </field>
+      
+      <field id="stock_actual" >
+      </field>
+    </table>
+
+    <join>
+      <table id="STK_LOCACION">
+        <field id="id_stklocacion">
+          <condicion operador="=">stklocacion_id</condicion>
+        </field>
+      </table>
+    </join>
+
+  </form>
+</histrix>

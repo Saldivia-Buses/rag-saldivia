@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" subtipo="vertical"  borra="false"  imprime="false">
+  <title>Valores</title>
+  <obs></obs>
+  <form >
+    <table id="CAR_VALORES" label="Carga Chequera">
+		    
+                     <field id="id_carvalor" autoinc="true" esClave="true">
+			<label>Int</label>
+		      </field>
+			 <field id="cheque" local="true" noshow="true">
+			      <expresion>CONCAT(carbanco_id,'-',sucursal_banco,'-',carplaza_id)</expresion>
+		             <label>Cheque</label>
+			     <detalle>cheque</detalle>
+		           </field>
+		      <field id="acreditacion_valor">
+                             <label>Acreditacion</label>
+			     <detalle>acreditacion_valor</detalle>
+
+                      </field>         
+		      <field id="nro_valor" >
+			<label>nro Cheque</label>
+			<tipo>integer</tipo>
+			<detalle>nro_valor</detalle>
+		      </field>
+		       
+                       <field id="cuenta_valor" noshow="true">
+                             <label>cuenta</label>
+			     <detalle>cuenta_valor</detalle>
+                        </field>
+                        <field id="carbanco_id" noshow="true" >
+                           <label>idbanco</label>
+			  <tipo>integer</tipo>
+			  <detalle>carbanco_id</detalle>
+                         </field>
+		        <field id="nombre_banco" deshabilitado="true" tabla="CAR_BANCOS">
+                             <label>Banco</label>
+			     <size>25</size>
+			      <detalle>nombre_banco</detalle>
+                       </field>
+		 
+                    
+                    <field id="carplaza_id"  noshow="true">
+                         <label>plaza</label>
+			   <detalle>carplaza_id</detalle>
+                  </field>
+		    <field id="nombre_plaza"  deshabilitado="true" _noshow="true" tabla="CAR_PLAZAS">
+			  <label>Plaza</label>
+			  <detalle>descripcion_plaza</detalle>
+		      </field>
+                       <field id="fecha_valor" noshow="true">
+                       <label modpos="nobr">fecha</label>
+                       </field>
+      
+			
+      
+       <field id="sucursal_banco" noshow="true">
+        <label>sucursal</label>
+	<detalle>sucursal_banco</detalle>
+      </field>
+      <field id="referencia_movimiento" noshow="true">
+	  <expresion>CONCAT('PAGO C/CHQ:' , SUBSTRING(titular_valor, 1, 4),'     ','Nº', nro_valor,'     ','CHQ:',carbanco_id, '-', sucursal_banco, '-', carplaza_id)</expresion>
+       <detalle>referencia_movimiento</detalle>
+      </field>
+      
+       <field id="titular_valor" noshow="true">
+        <label>Paguese a:</label>
+	<size>25</size>
+	 <detalle>titular_valor</detalle>
+      </field>
+        <field id="cuit_valor" noshow="true">
+        <label modpos="nobr">cuit</label>
+      </field>
+       
+     <field id="egreso_valor" noshow="true">
+	<condicion operador="=">'0000-00-00'</condicion>
+	</field>
+       
+       <field id="moneda_id" noshow="true">
+	<tabla_ex xml="monedas_qry.xml" dir="/ayudas"></tabla_ex>
+        <label>La cantidad de:</label>
+      </field>
+	<field id="imputado" noshow="true" local="true">
+	<detalle>importe_valor</detalle>
+      </field>
+      <field id="importe_valor">
+        <label>Importe</label>
+	<tipo>numeric</tipo>
+	<detalle>importe_valor</detalle>
+      </field>
+      
+    </table>
+  <join tipo="left">
+		 <table id="CAR_BANCOS" >
+			 <field id="id_carbanco">
+			<condicion operador="=">CAR_VALORES.carbanco_id</condicion>	
+			</field>
+				
+		</table>
+	</join>	
+ <join tipo="left">
+		 <table id="CAR_PLAZAS" >
+			 <field id="id_carplaza">
+			<condicion operador="=">CAR_VALORES.carplaza_id</condicion>	
+			</field>
+				
+		</table>
+	</join>
+	<join tipo="left">
+		 <table id="CAR_MOVIMIENTOS" >
+			 <field id="carvalor_id">
+				<condicion operador="=">CAR_VALORES.id_carvalor</condicion>	
+			</field>
+		</table>
+	</join>			
+  </form>
+</histrix> 

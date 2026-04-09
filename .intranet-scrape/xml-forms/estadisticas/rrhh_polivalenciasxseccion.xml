@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="chart">
+    <title>Estadisticas Por seccion</title>
+    <obs></obs>
+    <form >
+        <table id="SECCION" label="POLIVALENCIAS">
+     		<grafico id="seccion" >
+                <ancho>400</ancho>
+                <tipo>P</tipo>
+                 <etiquetas>nombre</etiquetas>
+                <datos>polivalencias</datos>
+                <title>Cantidad de Polivalencias</title>
+				<subtitulo>x Sección</subtitulo>
+            </grafico>
+
+			<field id="id_seccion" noshow="true"/>
+
+			<field id="nombre">
+				<label>Seccion</label>
+				<condicion operador="!=">''</condicion>
+			</field>
+
+
+            <field id="polivalencias" tipoOrden="DESC">
+                <expression>(SELECT count(*) FROM RH_POLIVALENCIAS r INNER JOIN PERSONAL p ON r.idPersona = p.idPersona where r.seccion_id = SECCION.id_seccion and p.fechaEgreso = '0000-00-00')</expression>
+                <label>Cantidad</label>
+                <tipo>integer</tipo>
+                <condicion operador="!=">0</condicion>
+            </field>
+
+			<group>
+                <field id="id_seccion"></field>
+			</group>
+
+			<order>
+				<field id="polivalencias"/>
+			</order>
+
+        </table>
+      
+    </form>
+</histrix>

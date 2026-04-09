@@ -1,0 +1,441 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<abm tipo="consulta" autoupdate="120" path="/fotos/coches" _limit="15">
+    <titulo>PROGRAMA DE PRODUCCION</titulo>
+    <obs/>
+    <consulta>
+        <tabla id="TURNOSPRODUCCION" label="Programa de Produccion"  showCantidad="false" _styleTbody="height:500px; overflow-x:hidden;">
+            <!--            <preconsultas>
+                    <xmlfile id="turnosproduccion_pre.xml"/>
+            </preconsultas>
+
+-->
+            <filtros>
+                <!--				<campo  id="fechasal">
+                                        <label>Desde</label>
+                                        <help>Fecha de Ingreso a Linea</help>
+                                        <operador>>=</operador>
+                                        <valor eval="true">date("d/m/Y", mktime(0, 0, 0, date("m")  , date("d")-5, date("Y")))</valor>
+                                </campo> -->
+                <field id="linea_id">
+                    <label>Linea</label>
+                    <operador>=</operador>
+                </field>
+
+                <campo id="sale2" deshabilitado="true" noshow="true">
+                    <label>Desde</label>
+                    <help>Fecha de Ingreso a Linea</help>
+                    <operador>&gt;=</operador>
+                    <valor eval="true">date("d/m/Y", mktime(0, 0, 0, date("m") ,
+                    date("d")-10, date("Y")))</valor>
+
+                </campo>
+            </filtros>
+
+            <campo id="siscli" local="true" oculto="true" >
+                <valor>'02'</valor>
+            </campo>
+            <campo  id="nroturno" autoinc="true" noshow="true"  esclave="true" print="false">
+                <label>Turno</label>
+                <help>Turno</help>
+            </campo>
+
+            <campo esClave="true" id="fechaing" PDFanchofijo="true">
+                <label >Entra</label>
+                <help>Fecha de Ingreso a Linea</help>
+                <!--	<formato>d/m</formato> -->
+
+            </campo>
+            <campo id="offset" noshow="true" deshabilitado="true">
+                <expresion>
+                    select count(*) from TURNOSPRODUCCION as TUR where
+                    TUR.fechaing &gt;= TURNOSPRODUCCION.fechaing and
+                TUR.fechaing &lt;= now()</expresion>
+                <tipo>integer</tipo>
+            </campo>
+            <campo id="cant" local="true" deshabilitado="true" noshow="true">
+                <parametro id="fsmparam_parent.xml" retorna="parent">
+                    <campo id="parcla">
+                        <condicion operador="=" >'posic'</condicion>
+                    </campo>
+                </parametro>
+                <tipo>integer</tipo>
+            </campo>
+
+            <campo id="sale2" esClave="true">
+                <label modpos="nobr" >Sale</label>
+
+                <expresion> select TUR.fechaing from TURNOSPRODUCCION as TUR where
+                TUR.fechaing &gt; TURNOSPRODUCCION.fechaing order by TUR.fechaing ASC limit [__cant__], 1</expresion>
+                <tipo>date</tipo>
+                <preparam campo="sale2" operador="&lt;">true</preparam>
+
+            </campo>
+
+            <field id="linea_id"  noshow="true">
+                <helper type="combo" xml="lineas.xml"/>
+                <label modpos="nobr">Linea</label>
+            </field>
+
+            <!--			<campo id="fechasal" esclave="true" >
+                                <label modpos="nobr">Sale</label>
+                                <help>Fecha de Salida de Linea</help>
+
+                        </campo> -->
+            <campo deshabilitado="true" id="moddes" tabla="MODCHASIS">
+                <!--				<expresion>MODCHASIS.moddes</expresion> -->
+                <expresion>case when MODCHASIS.moddes != '' then MODCHASIS.moddes else TURNOSPRODUCCION.modeloChasis end</expresion>
+
+                <label >Mod</label>
+                <help/>
+                <tipo>varchar</tipo>
+            </campo>
+            <campo deshabilitado="true" id="chasis" tabla="CHASIS" linkint="chasis_cons.xml" linkdes="Ver Datos del Chasis">
+                <expresion>RIGHT(CHASIS.chasis, 6)</expresion>
+                <label>Chasis</label>
+                <help>Numero de Serie del chasis</help>
+                <paring destino="nrocha">nrofab</paring>
+
+            </campo>
+            <campo id="nrofab" linkint="fichaventas.xml" linkdes="Ver Ficha de Ventas">
+                <label modpos="nobr" style="color:#444;font-weight:bold;">Nro.</label>
+                <help>Numero de Fabricacion</help>
+                <ayuda_ex id="CHASIS">
+                    <campo id="nrocha"/>
+                    <campo id="chades"/>
+                </ayuda_ex>
+                <!--<formato><![CDATA[<b>%d</b>]]></formato>
+-->
+                <paring destino="nrocha">nrofab</paring>
+
+            </campo>
+
+            <campo id="fic" local="true" noshow="true" >
+                <valor>'fichaventas_abm.xml'</valor>
+                <tip>varchar</tip>
+            </campo>
+            <campo id="maxfec" l_ocal="true" noshow="true">
+                <label>1</label>
+                <expresion>case when PEDCOTIZ.revfec = DATE(NOW()) then 'color:red;font-weight:bold;' end</expresion>
+                <tipo>varchar</tipo>
+            </campo>
+            <campo id="log" local="true" linkint="log_cons.xml" linkdes="Historial" print="false" noshow="true">
+                <label getStyle="maxfec"  Formstyle="display:none;">Ult.Modif</label>
+                <expresion>PEDCOTIZ.revfec</expresion>
+
+                <tipo>date</tipo>
+                <paring destino="xmlprog" operador="="   >fic</paring>
+                <paring destino="obs"     operador="like">nrofab</paring>
+                <!--				<valor><![CDATA['<img alt="Historial" src="../img/appointment-new.png" />']]></valor> -->
+
+            </campo>
+
+            <campo id="momentos" local="true" deshabilitado="true" print="false" noshow="true" >
+                <label Formstyle="display:none;">Posición</label>
+
+                <tabla_ex id="MOMENTO" xml="momento_posiciones.xml" >
+                </tabla_ex>
+                <if exp="true">
+                    <verdadero>offset</verdadero>
+                    <falso>0</falso>
+                </if>
+
+                <tipo>varchar</tipo>
+            </campo>
+            <campo id="Entrega" noshow="true" print="false">
+                <label>Entrega</label>
+                <expresion>select entrega from ENTREGASCOCHES where ENTREGASCOCHES.nrofab = TURNOSPRODUCCION.nrofab  and ENTREGASCOCHES.entrega IS NOT NULL  limit 1</expresion>
+                <tipo>date</tipo>
+            </campo>
+
+            <campo id="ubicacion" noshow="true">
+                <label >Ubicacion</label>
+                <help>Ubicacion</help>
+            </campo>
+            <campo id="colorEnt" noshow="true" local="true">
+                <if exp="'Entrega' != ''">
+                    <verdadero>'color:green;font-weight:bold;'</verdadero>
+                    <falso>('ubicacion' != '')?'color:blue;font-weight:bold;':''</falso>
+                </if>
+            </campo>
+            <campo id="CANTposic" noshow="true">
+                <expresion>select count(*) from POSICIONESFAB</expresion>
+            </campo>
+
+            <campo id="posent" local="true" print="false" ignoreOption="true" getStyle="colorEnt">
+
+                <label modpos="nobr" Formstyle="display:none;">Posic/Entr.</label>
+                <!-- <atributte id="style">colorEnt</atributte> -->
+                <tabla_ex id="MOMENTO" xml="momento_posiciones.xml" />
+
+                <if exp="'Entrega' != ''">
+                    <verdadero>date(  'd/m/Y', strtotime ( 'Entrega'))</verdadero>
+                    <falso>('ubicacion' != '')?'ubicacion': ((momentos &lt;= CANTposic)?'momentos':'')</falso>
+                </if>
+            </campo>
+
+
+            <campo id="Entregado" _noshow="true" print="false" deshabilitado="false">
+                <label colstyle="display:none;">Entregado</label>
+                <expresion>select count(*) from ENTREGASCOCHES where ENTREGASCOCHES.nrofab = TURNOSPRODUCCION.nrofab  and ENTREGASCOCHES.entrega IS NOT NULL  limit 1</expresion>
+                <tipo>integer</tipo>
+                <opciones>
+                    <opcion valor="0">No</opcion>
+                    <opcion valor="1">SI</opcion>
+                </opciones>
+            </campo>
+
+            <campo deshabilitado="true" id="ctaconces" tabla="CHASIS" noshow="true">
+                <expresion>case when CONCESIONARIO.ctacod >= 0 then CONCESIONARIO.ctacod else 0 end</expresion>
+                <tipo>integer</tipo>
+
+            </campo>
+
+            <campo deshabilitado="true" id="conces" tabla="CHASIS" linkint="cctconta_consulta.xml" linkdes="Ver medios de Contacto">
+                <!--				<expresion>CHASIS.conces</expresion> -->
+                <expresion>case when CHASIS.conces != '' then CHASIS.conces else TURNOSPRODUCCION.idconces end</expresion>
+                -	<tabla_ex vacio="true" xml="concesionario.xml"/>
+                <label>Conc</label>
+                <help>Concesionario</help>
+
+                <paring destino="ctacod">ctaconces</paring>
+                <paring destino="siscod">siscli</paring>
+                <tipo>button</tipo>
+
+            </campo>
+            <campo deshabilitado="true" id="ctacod" tabla="PEDCOTIZ" linkint="cctconta_consulta.xml" linkdes="Ver medios de Contacto">
+                <!--				<expresion>PEDCOTIZ.ctacod</expresion> -->
+                <expresion>case when PEDCOTIZ.ctacod != '' then PEDCOTIZ.ctacod else TURNOSPRODUCCION.ctacod end</expresion>
+
+                <label >Cliente</label>
+                <help>Codigo de Cuenta</help>
+                <tabla_ex condes="true" id="CCTCUENT">
+                    <campo id="ctacod"/>
+                    <campo id="ctafan">
+                        <expresion>LEFT(ctafan, 17)</expresion>
+                    </campo>
+                    <campo id="siscod" oculto="true">
+                        <condicion operador="=">'02'</condicion>
+                    </campo>
+                </tabla_ex>
+                <paring destino="ctacod">ctacod</paring>
+                <paring destino="siscod">siscli</paring>
+                <tipo>button</tipo>
+
+            </campo>
+            <campo deshabilitado="true" id="ctacod2" local="true" linkint="fichas_x_cliente.xml" linkdes="Total de Coches" print="false">
+                <expresion>select count(*) from VUNIDADES as PED where PED.ctacod = PEDCOTIZ.ctacod</expresion>
+                <!--				<expresion>SELECT count(*)  as 'lastcli' FROM PEDCOTIZ as P where ifnull((select U.ctacod from UNIDADCLIENTE AS U where U.nrofab = P.nrocha order by U.fecha DESC limit 1), P.ctacod) = PEDCOTIZ.ctacod</expresion> -->
+
+                <label >Ot.</label>
+                <help>Codigo de Cuenta</help>
+                <paring destino="ctacod">ctacod</paring>
+                <tipo>varchar</tipo>
+            </campo>
+            <campo id="ninterno" tabla="PEDCOTIZ" print="false" noshow="true">
+                <label  >Int.</label>
+                <help></help>
+            </campo>
+
+            <campo deshabilitado="true" id="nrocar" tabla="PEDCOTIZ" noshow="true">
+                <!--				<expresion>PEDCOTIZ.nrocar</expresion> -->
+                <expresion>case when PEDCOTIZ.nrocar != '' then PEDCOTIZ.nrocar else TURNOSPRODUCCION.nrocar end</expresion>
+
+                <label >Mod.</label>
+                <help/>
+                <tabla_ex id="CARROCERIA">
+                    <campo id="nrocar">
+                    </campo>
+                    <campo id="desabv">
+                    </campo>
+
+                    <campo id="siscod" oculto="true">
+                        <condicion operador="=">03</condicion>
+                    </campo>
+                </tabla_ex>
+                <tipo>varchar</tipo>
+            </campo>
+
+            <campo deshabilitado="true" id="cantasi" tabla="PEDCOTIZ" noshow="true">
+                <!--				<expresion>PEDCOTIZ.cantasi</expresion> -->
+                <expresion>case when PEDCOTIZ.cantasi != '' then PEDCOTIZ.cantasi else TURNOSPRODUCCION.cantasi end</expresion>
+
+                <label >A</label>
+                <help/>
+                <tipo>integer</tipo>
+            </campo>
+            <campo id="miniba" deshabilitado="true" noshow="true">
+                <label>Bar</label>
+                <expresion>PEDCOTIZ.miniba</expresion>
+                <!--
+                                <tipo>check</tipo>
+                                -->
+                <options>
+                    <option valor="0"></option>
+                    <option valor="1">No</option>
+                    <option valor="2">Si</option>
+                    <option valor="3">S/D</option>
+                </options>
+            </campo>
+            <campo id="bagno" deshabilitado="true"  noshow="true">
+                <label>B</label>
+                <expresion>PEDCOTIZ.bagno</expresion>
+                <options>
+                    <option valor="0"></option>
+                    <option valor="1">No</option>
+                    <option valor="2">Si</option>
+                    <option valor="3">S/D</option>
+                </options>
+                <tipo>varchar</tipo>
+            </campo>
+            <campo id="cucheta"  noshow="true">
+                <expresion>PEDCOTIZ.cucheta</expresion>
+
+                <label modpos="nobr">Cuch</label>
+                <helper type="combo" xml="prd_helper_propiedades.xml" dir="/produccion" emtpy="true">
+                    <field id="campoficha_id">
+                        <condicion operador="=">'cucheta'</condicion>
+                    </field>
+                </helper>
+            </campo>
+
+            <!--			<campo deshabilitado="true" id="marcod" tabla="CHASIS">
+                                <expresion>CHASIS.marcod</expresion>
+                                <label >Ch.</label>
+                                <help/>
+                                <tabla_ex id="MARCHASIS">
+                                        <campo id="marcod">
+                                        </campo>
+                                        <campo id="desabv">
+                                        </campo>
+
+                                        <campo id="siscod" oculto="true">
+                                                <condicion operador="=">03</condicion>
+                                        </campo>
+                                </tabla_ex>
+                                <tipo>integer</tipo>
+                        </campo> -->
+
+<!--			<campo id="audio">
+                                <expresion>case when PEDCOTIZ.preair = 1 then 'prep' when PEDCOTIZ. </expresion>
+                        </campo> -->
+            <campo id="aire"  noshow="true">
+                <expresion>PEDCOTIZ.marair</expresion>
+                <label>A/A</label>
+                <tabla_ex id="MARCAAIR" vacio="true" indexvacio="0" valorvacio="NO">
+                    <campo id="marair">
+
+                    </campo>
+                    <campo id="desair">
+                        <expresion>LEFT(desair, 4)</expresion>
+                    </campo>
+
+                    <campo id="siscod" oculto="true">
+                        <condicion operador="=">03</condicion>
+                    </campo>
+                </tabla_ex>
+                <tipo>varchar</tipo>
+            </campo>
+            <!--
+                        <campo id="audio">
+                                <label>Audio</label>
+                                <expresion>case when PEDCOTIZ.preaud = 0 then 'NO' when PEDCOTIZ.preaud = 1 then 'prep' when PEDCOTIZ.preaud = 2 then (select left(PROVAUDIOVID.nombre, 5) from PROVAUDIOVID where PROVAUDIOVID.idprov = PEDCOTIZ.prvaudio  ) end </expresion>
+                                <tipo>varchar</tipo>
+                        </campo>
+                        <campo id="video">
+                                <label>Video</label>
+                                <expresion>case when PEDCOTIZ.previd = 0 then 'NO' when PEDCOTIZ.previd = 1 then 'prep' when PEDCOTIZ.previd = 2 then (select left(PROVAUDIOVID.nombre, 5) from PROVAUDIOVID where PROVAUDIOVID.idprov = PEDCOTIZ.prvtv  ) end </expresion>
+                                <tipo>varchar</tipo>
+                        </campo> 						-->
+            <campo id="marasi" tabla="PEDCOTIZ"  noshow="true">
+                <expresion>PEDCOTIZ.marasi</expresion>
+                <label >Marca</label>
+                <help/>
+                <tabla_ex xml="marcaasi.xml">
+
+                    <campo id="marasi">
+                    </campo>
+                    <campo id="asides">
+                        <expresion>LEFT(asides, 4)</expresion>
+
+                    </campo>
+                    <campo id="siscod" oculto="true">
+                        <condicion operador="=">03</condicion>
+                    </campo>
+                </tabla_ex>
+            </campo>
+
+            <!--			<campo id="archivos" linkint="fichafiles2.xml" linkdes="Ver Ficha de Ventas" local="true" print="false">
+                                <label modpos="nobr" style="color:#444;font-weight:bold;"></label>
+                                <paring destino="nrofab">nrofab</paring>
+                                <expresion>case when (select count(*) from FICHAFILES where FICHAFILES.nrofab = TURNOSPRODUCCION.nrofab)  >= 1 then 'Anexos' else '' end</expresion>
+                                <valor>'Anexos'</valor>
+                                <tipo>varchar</tipo>
+                        </campo>				-->
+            <campo id="hi" deshabilitado="true" clasefila="true" noshow="true">
+                <expresion>case when TURNOSPRODUCCION.fechaActualiza = DATE(NOW()) then 'resaltado' else '' end</expresion>
+
+                <tipo>varchar</tipo>
+            </campo>
+            <campo id="corpath" local="true" noshow="true">
+                <if exp="true">
+                    <verdadero>'nrofab/corte'</verdadero>
+                    <falso>''</falso>
+                </if>
+                <tipo>varchar</tipo>
+            </campo>
+
+            <campo id="cortePint" tabla="PEDCOTIZ" path="corpath" download="true" print="false">
+                <label>Corte</label>
+                <tipo>file</tipo>
+            </campo>
+
+
+            <campo id="panpath" local="true=" oculto="true">
+                <valor>../archivo/Panas</valor>
+            </campo>
+
+            <campo id="fotoPana"  tabla="PEDCOTIZ" path="panpath" _noshow="true" print="false"  noshow="true">
+                <label  >Pana</label>
+                <help></help>
+                <tipo>file</tipo>
+                <size>24</size>
+            </campo>
+
+            <orden>
+                <campo id="fechaing"/>
+            </orden>
+        </tabla>
+        <join tipo="left">
+            <tabla id="PEDCOTIZ">
+                <campo id="nrocha">
+                    <condicion operador="=">TURNOSPRODUCCION.nrofab</condicion>
+                </campo>
+            </tabla>
+        </join>
+        <join tipo="left">
+            <tabla id="CHASIS">
+                <campo id="nrocha">
+                    <condicion operador="=">TURNOSPRODUCCION.nrofab</condicion>
+                </campo>
+            </tabla>
+        </join>
+        <join tipo="left">
+            <tabla id="MODCHASIS">
+                <campo id="modcha">
+                    <condicion operador="=">CHASIS.modcod</condicion>
+                </campo>
+                <campo id="marcod">
+                    <condicion operador="=">CHASIS.marcod</condicion>
+                </campo>
+            </tabla>
+        </join>
+        <join tipo="left">
+            <tabla id="CONCESIONARIO">
+                <campo id="idconces">
+                    <condicion operador="=">(case when CHASIS.conces != '' then CHASIS.conces else TURNOSPRODUCCION.idconces end)</condicion>
+                </campo>
+            </tabla>
+        </join>
+
+    </consulta>
+</abm>

@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="crud" _ancho="50" path="fotos/articulos" preloadData="false" inserta="false">
+  <title>Insumos</title>
+  <obs></obs>
+  <form >
+    <table id="STKINSUM" >
+      <title>Insumos</title>
+
+      <filters>
+
+        <field id="artcod" >
+          <label>Cod.</label>
+          <operador>like</operador>
+        </field>
+
+        <field id="artdes">
+          <label modpos="nobr">Artículo</label>
+          <help>Descripción de Artículo</help>
+          <operador>like</operador>
+        </field>     
+
+        <field id="cuenta" local="true">
+          <label modpos="nobr">Cuenta Contable</label>
+          <help>Código Cuenta Contable</help>
+          <operador>=</operador>
+        </field>         
+
+        <field id="artctb">
+          <label modpos="nobr">Cuenta Ctb</label>
+          <operador>=</operador>
+          <valor>0</valor>
+        </field>       
+
+      </filters>
+      
+      <field id="siscod" oculto="true" esClave="true">
+        <label>siscod</label>
+      </field>
+      
+      <field id="artcod" deshabilitado="true" esClave="true">
+        <label>Cod.</label>
+      </field>   
+      
+      <field id="artdes" deshabilitado="true">
+        <label>Artículo</label>
+        <help>Descripción de Artículo</help>
+      </field>
+      <field id="artcos" noshow="true">
+        <label>Costo</label>
+        <help>Precio de Costo</help>
+      </field>
+
+        <field id="cuenta" local="true" autocompletar="true" noshow="true">
+          <label>Nombre Cta Contable</label>
+          <help>Código Cuenta Contable</help>
+          <ayuda_ex id="CTBCUENT" vacio="true">
+            <field id="ctbcod" noshow="true">
+            <detalle>artctb</detalle>
+            </field>
+            <field id="ctbnom" >
+              <expression>CONCAT(ctbnom,' - ',ctbcod)</expression>
+            </field>
+            <field id="ctbhab" noshow="true">
+              <condicion operador="=">1</condicion>
+            </field>
+<!--
+            <field id="siscod" noshow="true">
+              <condicion operador="=">10</condicion>
+            </field>
+    -->        
+            <order>
+              <field id="ctbnom"></field>
+            </order>
+          </ayuda_ex>
+          <operador>=</operador>
+          <valor>0</valor>
+          <size>40</size>
+        </field>         
+      
+      <field id="artctb" >
+        <label>Cuenta Contable</label>
+          <ayuda_ex id="CTBCUENT" vacio="true">
+            <field id="ctbcod" >
+            </field>
+            <field id="ctbnom" >
+              <expression>CONCAT(ctbnom,' - ',ctbcod)</expression>
+              <detalle>ctbnom</detalle>
+            </field>
+            <field id="ctbhab" noshow="true">
+              <condicion operador="=">1</condicion>
+            </field>
+<!--
+            <field id="siscod" noshow="true">
+              <condicion operador="=">10</condicion>
+            </field>
+    -->        
+            <order>
+              <field id="ctbnom"></field>
+            </order>
+          </ayuda_ex>
+      </field>
+
+      <field id="ctbnom" >
+        <label>Cuenta</label>
+        <expression>CTBCUENT.ctbnom</expression>
+      </field>
+      
+      <field id="baja" noshow="true">
+        <label>baja</label>
+        <condicion operador="!=">1</condicion>  
+      </field>
+
+      <field id="t_plano">
+        <label modpos="nobr">T_plano</label>
+        <help>t-plano</help>
+        <options>
+          <option valor="0">No</option>
+          <option valor="1">Si</option>
+        </options>
+      </field>
+      
+      <field id="t_pieza">
+        <label modpos="nobr">T_pieza</label>
+        <help>t-plano</help>
+        <options>
+          <option valor="0">No</option>
+          <option valor="1">Si</option>
+        </options>
+      </field>
+            
+      <field id="fecult" local="true">
+        <expression>SELECT max(fecult) FROM STKINSPR WHERE STKINSPR.artcod = STKINSUM.artcod</expression>
+        <label>Últ.Compra</label>
+      </field>
+      
+      <field id="creado" deshabilitado="true">
+        <label >Creado</label>
+	<expression>date(creado)</expression>
+	<tipo>date</tipo>
+      </field>
+
+      <field id="usuario_id" deshabilitado="true">
+        <label >Usuario</label>
+      	<helper id="HTXUSERS" type="combo" empty="true">
+      	    <field id="Id_usuario" />
+      	    <field id="nom">
+      		<expression>concat(Nombre, ' ',apellido)</expression>
+      	    </field>
+      	</helper>
+      </field>
+     
+      <field id="fotopath" local="true" noshow="true">
+        <if exp="true">
+          <true>'artcod/'</true>
+          <false>''</false>
+        </if>
+        <tipo>varchar</tipo>
+      </field>
+
+      <field id="foto" path="fotopath" download="true" watermark="artcod" noshow="true">
+        <expression>select ARTICULO_FOTO.foto from ARTICULO_FOTO where ARTICULO_FOTO.idArticulo = STKINSUM.artcod and ARTICULO_FOTO.foto != '' order by revision desc limit 1</expression> 
+        <label>Imagen</label>
+        <tipo >file</tipo>
+        <size>40</size>
+      </field>
+    
+      <!--
+      <field id="diapro">
+      <label>Dias</label>
+      <help>Dias de Proceso </help>
+    </field>
+      <field id="artmin">
+      <label>Critico</label>
+      <help>Stock critico en deposito</help>
+    </field>
+      <field id="artrep">
+      <label>Reposic</label>
+      <help>Stock de Reposicion</help>
+    </field>
+      <field id="artiva">
+      <label>Situacion IVA</label>
+      <help>Situacion I.V.A. </help>
+      <options>
+      <option valor="0">No Gravado</option>
+      <option valor="1">Alicuota Total</option>
+      <option valor="2">Alicuota Parcial</option>
+    </options>
+    </field>
+      <field id="artctb">
+      <label>Cuenta Contable</label>
+      <help>Codigo Cuenta Contable </help>
+      <tabla_ex id="CTBCUENT">
+      <clave>ctbcod</clave>
+      <field id="ctbnom"></field>
+    </tabla_ex>
+    </field>
+      
+      -->
+        <group>
+          <field id="artcod" tabla="STKINSUM">
+          </field>
+        </group>
+
+    </table>
+    
+    <join tipo="left">
+    <table id="CTBCUENT">
+	<field id="ctbcod">
+	    <condicion operador="=">STKINSUM.artctb</condicion>
+	</field>
+<!--
+	<field id="siscod">
+	    <condicion operador="=">'10'</condicion>
+	</field>
+-->	
+    </table>
+  </join>
+    
+    <!--        <join tipo="left">
+            <table id="STKINSPR">
+              <field id="artcod" oculto="true">
+                    <condicion operador="=">STKINSUM.artcod</condicion>
+                </field>
+        
+            </table>
+        </join>-->
+    
+  </form>
+</histrix>

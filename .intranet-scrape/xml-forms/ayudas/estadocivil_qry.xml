@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+  <title>Estado Civil</title>
+  <obs></obs>
+  <consulta>
+    <table id="GEN_ESTADOCIVIL" label="Estado Civil">
+      <field id="id_estadocivil" autoinc="true" noshow="true">
+      </field>
+      <field id="nombre_estadocivil">
+        <label>Estado Civil </label>
+        <help>Estado Civil </help>
+      </field>
+    </table>
+  </consulta>
+</histrix>  

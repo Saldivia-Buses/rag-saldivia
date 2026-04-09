@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" preloadData="false">
+  <title>ABM CUENTA</title>
+  <obs></obs>
+  <form >
+    <table id="REG_CUENTA" label="ABM CUENTA">
+      <filters>
+        <field id="nro_cuenta">
+          <label>Cod.Proveedor</label>
+          <operador>=</operador>
+        </field>
+        <field id="nombre_cuenta" />
+        <field id="ctbcod">
+          <label>Cod.Cta.Ctb.</label>
+          <help>Codigo Cuenta Contable</help>
+          <operador>like</operador>
+        </field>
+
+	<field id="baja">
+	    <label>baja</label>
+          <operador>=</operador>
+	</field>
+
+      </filters>
+      <field id="id_regcuenta" noshow="true" />
+      <field id="subsistema_id" oculto="true">
+        <label>Codigo Sistema</label>
+        <help></help>
+      </field>
+      <field id="nro_cuenta">
+        <label>Cod.Proveedor</label>
+        <helper type="external" id="REG_CUENTA">
+          <field id="nro_cuenta" />
+          <field id="nombre_cuenta">
+            <detalle>nombre_cuenta</detalle>
+          </field>
+          <field id="subsistema_id" noshow="true" />
+        </helper>
+      </field>
+      <field id="nombre_cuenta">
+        <label modpos="nobr">Nombre Proveedor</label>
+      </field>
+	<field id="baja" noshow="true">
+	    <label>baja</label>
+	    <tipo>check</tipo>
+	</field>
+      <field id="ctbcod">
+        <helper type="external" id="CTBCUENT">
+          <field id="ctbcod" >
+            <condicion operador="like">'51%' or ctbcod like '56%' or ctbcod like '71%'</condicion>
+          </field>
+          <field id="ctbnom2" >
+            <expression>CONCAT(CTBCUENT.ctbnom, ' - ', CTBCUENT.ctbcod)</expression>
+          </field>
+          <field id="ctbnom" >
+            <detalle>ctbnom</detalle>
+          </field>
+	    <field id="debe">
+		<label>Debe</label>
+		<expression>group_concat((case when doh = 0 then cuenta_id end))</expression>
+	    </field>
+	    <field id="haber">
+		<label>Haber</label>
+		<expression>group_concat((case when doh = 1 then cuenta_id end))</expression>
+	    </field>
+<!--
+          <field id="siscod" oculto="true">
+            <condicion operador="=">'10'</condicion>
+          </field>
+-->
+          <order>
+            <field id="ctbnom" tabla="CTBCUENT"/>
+          </order>
+        </helper>
+        <label>Cod.Cta.Ctb.</label>
+      </field>
+      <field id="ctbnom">
+        <expression having="false">CTB_CUENTAS.nombre_cuenta</expression>
+        <label modpos="nobr">Desc.Cta.Ctb.</label>
+        <size>80</size>
+      </field>
+	<field id="imputarciones">
+	    <label>Imputación</label>
+	    <expression>'Modificar'</expression>
+    	    <helper type="link" xml="cuenta_imputaciones_crud.xml" dir="/proveedores/man/">
+            <parameter target="regcuenta_id" source="id_regcuenta" />
+        </helper>
+	</field>
+
+	    <field id="debe">
+		<label>Debe</label>
+		<expression>group_concat(concat((case when doh = 0 then cuenta_id end), CTB.nombre_cuenta))</expression>
+	    </field>
+	    <field id="haber">
+		<label>Haber</label>
+		<expression>group_concat(concat((case when doh = 1 then cuenta_id end), CTB.nombre_cuenta))</expression>
+	    </field>
+	<group>
+	    <field id="id_regcuenta" />
+	</group>
+    </table>
+    <join tipo="left">
+      <table id="CTB_CUENTAS">
+        <field id="id_cuenta">
+          <condicion operador="=">REG_CUENTA.ctbcod</condicion>
+        </field>
+	<field id="ejercicio_id">
+	    <condicion operador="=">(select max(id_ejercicio) from CTB_EJERCICIOS)</condicion>
+	</field>
+      </table>
+    </join>
+
+    <join tipo="left">
+      <table id="REG_CUENTA_IMPUTACION">
+        <field id="regcuenta_id">
+          <condicion operador="=">id_regcuenta</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join tipo="left">
+      <table id="CTB_CUENTAS" as="CTB">
+        <field id="id_cuenta">
+	    <condicion operador="=">REG_CUENTA_IMPUTACION.cuenta_id</condicion>
+        </field>
+	<field id="ejercicio_id">
+	    <condicion operador="=">(select max(id_ejercicio) from CTB_EJERCICIOS)</condicion>
+	</field>
+      </table>
+    </join>
+
+  </form>
+</histrix>

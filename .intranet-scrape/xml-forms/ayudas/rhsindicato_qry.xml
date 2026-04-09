@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+  <title>Sindicatos</title>
+  <obs></obs>
+  <consulta>
+    <table id="RH_SINDICATO" label="Sindicatos">
+      <field id="id_rhsindicato" autoinc="true" noshow="true">
+      </field>
+      <field id="nombre_sindicato">
+        <label>Sindicato</label>
+        <help>Sindicato</help>
+      </field>
+    </table>
+  </consulta>
+</histrix>  

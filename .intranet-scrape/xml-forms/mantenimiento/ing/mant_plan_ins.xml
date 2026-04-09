@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  CURD
+Tarea: PLAN DE MANTENIMIENTO
+Autor: Lmm
+Fecha: 17/08/11
+*******************************************************************************
+-->
+<histrix tipo="insert">
+    <title>Mantenimiento</title>
+    <obs></obs>
+    <form>
+        <table id="MANT_PLAN" label="Plan de mantenimiento" idCampoCond="grabar_plan">
+            <field id="equipo_id" id_cab="equipo_id" >
+            </field>
+				
+            <field id="accion_id" id_cab="accion_id">
+            </field>
+                                                                      
+            <field id="fecha_accion" id_temp="fecha">
+                <tipo>date</tipo>
+            </field>
+
+        </table>
+    </form>
+</histrix>	

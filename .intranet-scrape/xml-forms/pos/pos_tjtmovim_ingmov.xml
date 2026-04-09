@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert">
+	<title>MOVIMIENTOS TARJETAS</title>
+	<obs/>
+	<consulta>
+		<table id="TJTMOVIM" idCampoCond="tjt_imputar">
+<!-- 			<field id="concod" id_temp="concod"/> -->
+			<field id="concod" >
+				<valor>4</valor>
+			</field>
+			<field id="ctacod" id_padre="ctacod"/>
+			<field id="ctanom" id_padre="ctanom"/>
+			<field id="movfec" id_padre="cajfec"/>
+			<field id="tjtfec" id_padre="cajfec"/>
+			<field id="ctatel" id_temp="ctatel"/>
+			<field id="movnpv" id_temp="movnpv"/>
+
+			<field id="movnro" id_padre="nrorec" >
+<!-- 			<valor>[__movnro__]</valor> -->
+			</field>
+			<field id="movtip" 	id_temp="movtip"/>
+			<field id="cantCuotas"  id_temp="cantCuotas" />
+			<field id="cuotaActual" >
+				<valor>1</valor>
+			</field>
+			<field id="tjtcod"  id_temp="tjtcod"/>
+			<field id="tjtlote" id_temp="tjtlote" />
+			<field id="tjtnro"  id_temp="tjtnro" />
+			<field id="tjtimp"  id_temp="cajimp" />
+			<field id="opecla"  id_temp="opecla" />
+		</table>
+	</consulta>
+</histrix>

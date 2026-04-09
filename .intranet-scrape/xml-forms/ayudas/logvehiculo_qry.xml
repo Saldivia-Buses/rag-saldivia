@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  Ayuda
+Tarea: Ayuda para la Tabla de Vehiculos
+Autor: d!ego2k
+Fecha: 13/08/2012
+*******************************************************************************
+-->
+<histrix tipo="consulta">
+  <title>Archivo de Vehiculos</title>
+  <form >
+    <table id="LOG_VEHICULOS" label="Vehiculos">
+
+      <field id="id_logvehiculo" autoinc="true" noshow="true" />
+   
+      <field id="nombre_vehiculo">
+        <label>Nombre/Marca</label>
+        <expresion>CONCAT(nombre_vehiculo,' (',patente_vehiculo,')')</expresion>
+      </field>
+
+    </table>
+
+  </form>
+
+</histrix>  

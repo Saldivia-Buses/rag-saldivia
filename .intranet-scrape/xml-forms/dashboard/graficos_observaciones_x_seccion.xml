@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="dashboard">
+        <titulo>Medidores de Calidad</titulo>
+
+        <widget id="observaciones_prom_x_seccion"  width="48%" height="400px">
+           <title>Observaciones Promedio por Seccion</title>
+           <url><![CDATA[histrixLoader.php?xml=observaciones_promedio_xseccion.xml&dir=/estadisticas/calidad]]></url>
+        </widget>
+
+        <widget id="observaciones_porcentaje_x_seccion"  width="98%" height="400px">
+           <title>Observaciones % por Seccion Totales</title>
+           <url><![CDATA[histrixLoader.php?xml=observaciones_porcentaje_xseccion.xml&dir=/estadisticas/calidad]]></url>
+        </widget>
+
+        <widget id="observaciones_porcentaje_x_seccion_imputables"  width="98%" height="400px">
+           <title>Observaciones % por Seccion Imputables</title>
+           <url><![CDATA[histrixLoader.php?xml=observaciones_promedio_xseccion_imputables.xml&dir=/estadisticas/calidad]]></url>
+        </widget>
+        
+        <widget id="observaciones"  width="32%" height="400px">
+           <title>Cantidad de Observaciones por seccion</title>
+	       <url><![CDATA[histrixLoader.php?xml=observaciones_calidad.xml&dir=/estadisticas/calidad]]></url>
+        </widget>
+
+</histrix>

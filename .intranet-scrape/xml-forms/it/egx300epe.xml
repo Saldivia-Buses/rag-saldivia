@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--Comentario-->
+<histrix tipo="consulta" paginar="300">
+  <title>Tableros electricos</title>
+  <obs></obs>
+  <form>
+    <table id="EGX300EPE" label="Tableros Electricos">
+     
+      
+      <filters>
+                  <field id="date_time"> 
+                  <label>Fecha</label>
+                  <help>FechaYhora</help>
+                  <operador>=</operador>                  
+                  </field>
+        
+        
+          
+      </filters>       
+      
+      
+           <field id="date_time">
+          <label>Fecha-Hora</label>
+              <tipo>varchar</tipo> 
+             
+                <helper type="link" xml="egx_300_naves.xml" dir="/it" width="600" height="250"  title="Valores">
+                 <parameter source="date_time" target="date_time"  />
+                 
+            </helper>
+             <size>20</size>        
+      </field>
+      
+    
+      <field id="suma" local="true" _suma="true">
+      
+                 <expression> SUM(potencia_activa) </expression>
+                 <label>Total Fabrica</label>
+     
+ 
+      </field>
+     
+        
+      <field id="cosens" local="true"  _suma="true">
+      
+        <expression> potencia_activa/potencia_aparente </expression>
+                 <label>Coseno de fi</label>
+                 <tipo>numeric</tipo>
+      </field>
+      
+     <!-- 
+      <field id="id_nave">
+        <label>Nave </label>
+        
+      </field>
+      
+           <field id="date_time">
+          <label>Fecha-Hora</label>
+      </field>
+      
+      
+        <field id="potencia_aparente">
+          <label>Potencia aparente total (kVA)</label>
+      </field>
+      
+        <field id="potencia_activa">
+          <label>Potencia activa total (kW)</label>
+      </field>
+      
+        <field id="potencia_reactiva">
+          <label>Potencia reactiva total (kVAR)</label>
+          <label></label>
+      </field>
+      
+       <field id="demanda_potencia_activa">
+          <label>Demanda Potencia Activa</label>
+          <label></label>
+      </field>
+      
+       <field id="demanda_potencia_reactiva">
+          <label>Demanda Potencia Reactiva</label>
+          <label></label>
+      </field>
+      
+      
+        <field id="demanda_intensidad1">
+          <label>Intensidad 1</label>
+      </field>
+      
+        <field id="demanda_intensidad2">
+           <label>Intensidad 2</label>
+      </field>
+      
+        <field id="demanda_intensidad3">
+      		 <label>Intensidad 3</label>
+      	</field>
+    
+     
+      -->
+      
+       <group>
+		<field id="date_time">
+		</field>
+      </group>
+    
+      <order>
+       <field id="date_time" tipoOrden="desc"></field>
+      </order>
+   
+          </table>
+  </form>
+</histrix>  
+
+

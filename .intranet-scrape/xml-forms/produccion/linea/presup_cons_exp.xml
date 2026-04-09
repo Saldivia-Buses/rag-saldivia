@@ -1,0 +1,176 @@
+<histrix tipo="consulta" path="fotos/articulos" dataSource="listado_agrupado" >
+  <title>COSTOS</title>
+  <obs></obs>
+  <form  _detalle="cctcuent_x_insumo.xml" inline="true" >
+    <table id="VISTA_STK_COSTOS" label="CONSULTA DE COSTOS" _styleTbody="height:500px; overflow-x: hidden;">
+
+    <filters>
+         
+         <field id="movnro">
+                <label>Presupuesto</label>
+                <operador>=</operador>
+            </field>
+
+    </filters>
+
+    <field id="siscod" esclave="true" noshow="true">
+        <condicion operador="=">'PR'</condicion>
+        <valor>PR</valor>
+    </field> 
+
+    <field id="movcod" noshow="true">
+        <label>movcod</label>
+        <condicion operador="=">1</condicion>
+    </field>
+
+    <field id="movnro" noshow="true">
+        <label>Presupuesto</label>
+        <helper type="combo" id="NOTAENCA">
+            <field id="movnro">
+                <tipo>integer</tipo>
+                <detalle>movnro</detalle>
+            </field>
+            <field id="movref__1">
+                <expression>CONCAT( CONVERT(movnro, CHAR), CONCAT(' - ', movref__1)) </expression>
+            </field>
+            <field id="siscod" oculto="true">
+                <condicion operador="=">'PR'</condicion>
+            </field>
+            <order>
+                <field id="movnro" />
+            </order>
+        </helper>
+    </field>
+
+    <field id="fecha" local="true" noshow="true">
+        <label>Fecha</label>
+        <operador>&lt;=</operador>
+        <valor>today</valor>
+        <tipo>date</tipo>
+    </field>
+    <field id="color" local="true" clasefila="true" noshow="true" >
+	    <label>COLOR</label>
+    </field>
+    <field id="bom" noshow="true">
+        <expression>ifnull((select 'stkpieza_qry.xml' from STKPIEZA where STKPIEZA.idPadre = STKINSUM.artcod limit 1),'')</expression>
+    </field>
+
+    <field id="artcod" esClave="true" linkdir="articulos">
+        <label>Código</label>
+	<helper xml="stkpieza_qry.xml" type="link">
+	    <parameter source="artcod" target="articulo_hijo" />
+	</helper>
+        <paring destino="idPadre">artcod</paring>
+      </field>
+      <field id="artdes" tabla="STKINSUM" >
+        <expression>STKINSUM.artdes</expression>
+        <label>Artículo</label>
+        <tipo>varchar</tipo>
+      </field>
+
+      <field id="cantidad"  >
+	<expression>movpes</expression>
+        <label>Cantidad</label>
+        <tipo>numeric</tipo>
+      </field> 
+
+      <field id="valcps" noshow="true" tabla="STKINSUM">
+      </field>
+
+      <field id="valuso" noshow="true" tabla="STKINSUM">
+      </field>
+
+      <field id="uninom" tabla="FSMUNIDS" deshabilitado="true">
+        <expression>FSMUNIDS.uninom</expression>
+        <label>Unidad</label>
+        <tipo>char</tipo>
+      </field> 
+
+      <field id="costo" >
+        <label >Costo</label>
+        <expression having="false" >(
+        ifnull((select sum(round( (costo_automatico * cantidad) * (1 + recargo / 100) , 2)) from STKPIEZA where idPadre  = STKINSUM.artcod limit 1), 
+        (select ROUND(INSPR.artcos * valcps / valuso, 2) from STKINSPR as INSPR where  INSPR.siscod = STKINSPR.siscod and INSPR.fecult= max(STKINSPR.fecult) and INSPR.artcod = STKINSPR.artcod limit 1)))</expression>
+    	    
+1        <expresion_1 having="false" >(
+        case when (select sum(round( (costo_automatico * cantidad) * (1 + recargo / 100) , 2)) from STKPIEZA where idPadre  = STKINSUM.artcod limit 1) != 0 then 
+                  (select sum(round( (costo_automatico * cantidad) * (1 + recargo / 100) , 2)) from STKPIEZA where idPadre  = STKINSUM.artcod limit 1)
+    	    else  (select ROUND(INSPR.artcos * valcps / valuso, 2) from STKINSPR as INSPR where INSPR.fecult= max(STKINSPR.fecult) and INSPR.artcod = STKINSPR.artcod and INSPR.siscod = STKINSPR.siscod limit 1) end)</expresion_1>
+        <tipo>numeric</tipo>
+      </field>     
+
+      <field id="parcial"  suma="true" local="true">
+        <label>Parcial</label>
+				<if exp="true">
+					<true>costo * cantidad</true>
+					<false></false>
+				</if>
+        <tipo>numeric</tipo>
+      </field> 
+
+      <group>
+        <field id="VISTA_STK_COSTOS.artcod" />
+        <field id="VISTA_STK_COSTOS.movfec" />
+      </group>
+      <order>
+        <field id="artdes"></field>
+        <field id="fecult" />
+        
+      </order>
+    </table>
+    <join tipo="left">
+    
+      <table id="STKINSUM">
+        <field id="siscod" oculto="true">
+          <label>siscod</label>
+          <condicion operador="=">'01'</condicion>
+    
+        </field>
+        <field id="artcod" oculto="true">
+          <condicion operador="=">VISTA_STK_COSTOS.artcod</condicion>
+        </field>
+    
+      </table>
+    </join>
+    <join tipo="left">
+    
+      <table id="CTBCUENT">
+<!--
+        <field id="siscod" oculto="true">
+          <condicion operador="=">'10'</condicion>
+        </field>
+    -->    
+        <field id="ctbcod" oculto="true">
+          <condicion operador="=">STKINSUM.artctb</condicion>
+        </field>
+    
+      </table>
+    </join>        
+    <join tipo="left">
+    
+      <table id="FSMUNIDS">
+        <field id="unicod" oculto="true">
+          <condicion operador="=">STKINSUM.artuni</condicion>
+        </field>
+    
+      </table>
+    </join>    
+    <join tipo="left">
+    
+      <table id="STKINSPR">
+        <field id="siscod" >
+          <condicion operador="=">'01'</condicion>
+        </field>
+        <field id="fecult" >
+          <condicion operador="&lt;=">STR_TO_DATE('[__fecha__]', '%d/%m/%Y')</condicion>
+        </field>        
+        <field id="artcod" >
+          <condicion operador="=">VISTA_STK_COSTOS.artcod</condicion>
+        </field>
+
+    
+      </table>
+    </join>    
+          
+  </form>
+</histrix>

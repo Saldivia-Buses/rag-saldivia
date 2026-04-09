@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ficha" sololectura="true" autoprint="true" >
+	<title>CALCO QR</title>
+	<obs></obs>
+	<form >
+	   <pdf>
+	  <code><![CDATA[
+
+			$pdf->RoundedRect(57,27,82,82, 3);
+		  ]]></code>
+	  </pdf>
+
+		<table id="PEDCOTIZ" >
+		    <title>QR</title>
+
+			<field id="nrocha" noshow="true" print="false">
+				<label>Nro</label>
+			</field>
+			
+            <field id="QR" grafico="barcode" encode="QR" imageHeight="20" imageWidth="80">
+        	  <label posx="50" posy="+7"></label>
+	          <expression>concat('http://www.saldiviabuses.com.ar?unidad=', nrocha)</expression>
+	          <tipo>grafico</tipo>
+            </field>
+            
+
+            <field id="url" >
+        	  <label posx="62" posy="+93"></label>
+	          <expression>concat('http://www.saldiviabuses.com.ar/?unidad=', nrocha)</expression>
+            </field>
+
+
+		</table>
+	</form>	   
+</histrix> 

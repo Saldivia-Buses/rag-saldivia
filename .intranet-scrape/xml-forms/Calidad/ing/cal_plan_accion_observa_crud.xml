@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" borra="false">
+  <title>Secciones</title>
+    <eventos>
+        <event id="insert">close</event>
+        <event id="update">close</event>
+        <event id="insert">refresh</event>
+        <event id="update">refresh</event>
+    </eventos>
+<form>
+    <table id="CAL_PLAN_ACCION_OBSERV" label="Secciones">
+
+      <field id="id_plan_accion_observ" noshow="true" />
+
+      <field id="plan_accion_id" noshow="true" valauto="true">
+      </field>
+
+      <field id="estado_plan_accion_id">
+        <tabla_ex id="CAL_PLAN_ACCION_ESTADO">
+          <field id="id_plan_accion_estado"/>
+          <field id="abrev_estado"/>
+        </tabla_ex>
+        <label>Estado</label>
+        <help>Estado Observacion</help>
+      </field>
+
+    <field id="obervacion_plan_accion">
+        <label>Acciones</label>
+        <help>Acciones Plan Accion</help>
+        <size>100</size>
+        <tipo>varchar</tipo>
+    </field>
+
+    <field id="usuario" noshow="true" deshabilitado="true" Formstyle="display:none;">
+        <label modpos="nobr">Usuario</label>
+        <valor eval="true">$_SESSION['usuario']</valor>
+    </field>
+
+    <field id="userid" >
+        <label>Cargó</label>
+        <expression>concat(HTXUSERS.Nombre,' ', LEFT(HTXUSERS.apellido,4),' ', stamp)</expression>
+    </field>
+
+    </table>
+
+    <join tipo="left">
+      <table id="HTXUSERS">
+        <field id="login">
+          <condicion operador="=">usuario</condicion>
+        </field>
+      </table>
+    </join>
+
+  </form>
+</histrix>

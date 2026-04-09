@@ -1,0 +1,427 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--<histrix tipo="ficha" imprime="true" autoprint="true" sololectura="true"  PDFfontSize="12" > -->
+<histrix tipo="ficha" PDFsincabecera="true"  sololectura="true" autoprint="true" PDFfontSize="8" PDFpageSize="A4" PDForientacion="L" path="fotos/archivos"
+width="80">
+    <title>Calculo</title>
+    <obs></obs>
+<!--  No funciono en la confirmacion  el nro de movimiento para el regmovim     -->
+<!-- busca todas las novedades que no tienen faclote_id o si es ke lo tiene 
+	ke no pertenezca a un lote confirmado y calulea -->
+    <consulta>
+    
+  <pdf  PDForientacion="L">
+            <code><![CDATA[
+                       $pdf->Rect(10,10,$pdf->anchoPagina - 10,215, 0.1);
+//		       $pdf->Rect(10,10,$pdf->anchoPagina / 1.8- 20, 25, 0.1);
+			 ///letra
+                          $pdf->Rect(100,10, 14, 10, 0.1);
+
+
+			/// falta linea divisioria
+			  $pdf->Rect(107,20, 0, 15, 0.1);
+
+		       
+                      //   $pdf->Rect(15,10,$pdf->anchoPagina / 1 - 20, 25, 0.1);
+                       // $pdf->Rect(15,53,$pdf->anchoPagina  - 20, 25, 0.1);
+
+                          $pdf->Rect(10,35,$pdf->anchoPagina  - 10, 25, 0.1);
+
+
+
+// Rectangulo de Datos del cliente
+			   $pdf->Rect(10,35,$pdf->anchoPagina / 1.8- 15.3, 25, 0.1);
+
+
+
+                      //LINEA CHICA    $pdf->Rect(15,105,$pdf->anchoPagina  - 20, 8, 0.1);
+	//		 $pdf->Rect(15,140,$pdf->anchoPagina - 20,125, 0.1);
+	//	         $pdf->Rect(15,140,$pdf->anchoPagina / 1.8- 20, 25, 0.1);
+          //               $pdf->Rect(15,165,$pdf->anchoPagina  - 20, 25, 0.1);
+
+//	Rectangulo pie de pagina
+                          $pdf->Rect(10,225,$pdf->anchoPagina -10, 40, 0.1);
+                        
+                        ]]>
+            </code>
+        </pdf>
+
+
+
+	<table id="REG_MOVIMIENTOS" label="Calculo de Servicios">
+		
+
+		
+<!--  FACLOTES -->
+
+<!--
+
+       <field id="prueba" local="true" imageWidth="50">
+		<valor>'logo.jpg'</valor>
+                <label  posX="8" posY="4"></label>
+		<tipo>file</tipo>
+            </field>
+	    <field id="inscripto" local="true" PDFsize="5" _sincelda="true">
+		<label posX="20" posY="27"></label>
+		<valor>IVA:RESPONSABLE INSCRIPTO
+		</valor>
+	</field>      
+-->
+		<field id="cuit_empresa1" local="true" PDFsize="8">
+			<label posx="60" posY="1" ></label>
+			<valor eval="true">
+				 $_SESSION['properties']['direccion'] . ' ' . $_SESSION['properties']['telefono'] . ' ' 
+				. $_SESSION['properties']['email'] . $_SESSION['properties']['sitio'] 
+			</valor>
+		</field>
+
+<!--	<field id="datos" local="true" PDFsize="12" sincelda="true">
+		<label posX="100" posY="55">aaaaaaa</label>
+		<valor>JALP SECURITY S.R.L.
+		         Córdoba 3153
+		     Tel.(54-341) 4355257
+		     Fax (54-341) 4303500
+		     jalp@jalpsecurity.com.ar
+		     www.jalpsecurity.com.ar 
+		</valor>
+
+	</field>      
+-->
+		<field id="id_faclote"  tabla="FAC_LOTES" _oculto="true" print="false">
+			<label>hola id_faclote</label>
+	                <helper type="external"  xml="faclotes_qry.xml" dir="/ayudas" empty="true"/> 
+		</field>
+
+		<field id="faclote_periodo" tabla="FAC_LOTES" deshabilitado="true" noshow="true" print="false">
+			<label posx="110" posy="8"  PDFsize="12">Periodo</label>
+		</field>
+
+
+		<field id="faclote_fechafac" tabla="FAC_LOTES" deshabilitado="true" noshow="true" print="false">
+			<label posx="110" posy="18"  PDFsize="12">Fec.Fact.</label>
+			<help>Fecha de Factura</help>
+			<tipo>date</tipo>
+		</field>
+
+		<field id="letra_movimiento" _local="true" _print="false">		
+			<label posx="+100" posy="8"  PDFsize="14"></label>
+
+<!--			<valor>A</valor> 
+			<expresion>select letra from GEN_IVA where id_iva = REG_CUENTA.iva_id </expresion> -->
+		</field>
+		
+		<field id="puesto_movimiento" local="true" print="false">
+			<label posx="+140" posy="0"  PDFsize="12"></label>
+			<options>
+				<option valor="0001">0001</option>
+				<option valor="0002">0002</option>
+			</options>
+			<formato>%04d</formato>
+		</field>
+
+		<field id="nro_movimiento" deshabilitado="true" local="true" oculto="true" print="false">
+			<label>Primer de Comprobantes</label>
+			<formato>%08d</formato>
+		</field>
+		<field id="cuota_movimiento" _local="true" print="false">		
+			<label  posx="+160" posy="0"  PDFsize="12"></label>
+			<valor default="true">0</valor>	
+		</field>
+
+		<field id="faclote_fechavto1" tabla="FAC_LOTES" deshabilitado="true" noshow="true" print="false">
+			<label posx="10" posy="+9"  PDFsize="12">Fec.1er.Vto.</label>
+		</field>
+
+
+		<field id="faclote_fechavto2" tabla="FAC_LOTES"  deshabilitado="true" noshow="true" print="false">
+			<tipo>date</tipo>	
+			<label  posx="+75" posy="0"  PDFsize="12" >Fec.2do.Vto.</label>
+			<help>Fecha 2do. Vencimiento</help>
+		</field>
+		<field id="faclote_fechavto3" tabla="FAC_LOTES"  deshabilitado="true" noshow="true" print="false">
+			<tipo>date</tipo>	
+			<label posx="+150" posy="0"  PDFsize="12" >Fec.3er.Vto.</label>
+			<help>Fecha 3er. Vencimiento</help>
+		</field>
+		<field id="faclote_recargo2" tabla="FAC_LOTES"  deshabilitado="true" noshow="true" print="false">
+			<tipo>decimal</tipo>	
+			<label posx="+75" posy="+9"  PDFsize="12">% Recargo 2do. Vto.</label>
+			<help>% Recargo 2do. Vto.</help>
+		</field>
+		<field id="faclote_recargo3" tabla="FAC_LOTES"  deshabilitado="true" noshow="true" print="false">
+			<tipo>decimal</tipo>	
+			<label posx="+150" posy="0"  PDFsize="12" >% Recargo 3er. Vto.</label>
+			<help>% Recargo 3er. Vto.</help>
+		</field>
+		<field id="faclote_fechapxv" tabla="FAC_LOTES"  deshabilitado="true" noshow="true" print="false">
+			<tipo>date</tipo>	
+			<label posx="10" posy="+9"  PDFsize="12" >Fec.Prox.Fact.</label>
+			<help>Fecha de Proxima Factura</help>
+		</field>
+		<field id="faclote_fechadesc" tabla="FAC_LOTES"  deshabilitado="true" noshow="true" print="false">
+			<tipo>date</tipo>	
+			<label posx="+75" posy="0"  PDFsize="12">Fec.Desc.</label>
+			<help>Fecha de Desconexion</help>
+		</field>
+		<field id="faclote_importerec" tabla="FAC_LOTES"  deshabilitado="true" noshow="true" print="false">
+			<tipo>decimal</tipo>	
+			<label posx="150" posy="0"  PDFsize="12">Importe Reconexion</label>
+			<help>Importe Reconexion</help>
+		</field>
+
+
+<!-- FIN  DE FACLOTES -->
+		<field id="descripcion_concepto" tabla="REG_CONCEPTOS" PDFsize="12">
+			<label modpos="nobr"  posx="110" posY="10"></label>
+		</field>
+		<field id="nro_movimiento" PDFsize="10">
+			<label modpos="nobr"  posx="140" posY="10">Nº</label>
+			<expresion>CONCAT(LPAD(puesto_movimiento,4,'0'),'-',LPAD(nro_movimiento,8,'0'))</expresion>
+			<detalle>nro_movimiento2</detalle>
+		</field>
+		<field id="fecha_movimiento" local="true" PDFsize="10">
+			<label modpos="nobr"  posx="110" posY="18" >Fecha</label>
+			<expresion>REG_MOVIMIENTOS.reg_fecha</expresion>
+			<help>Fecha movimiento</help>
+		</field>
+		<field id="nombre_empresa" local="true" PDFsize="5">
+			<label posx="160" posY="16" ></label>
+			<valor eval="true">
+				$_SESSION['properties']['nombre'] 
+			</valor>
+		</field>
+		<field id="cuit_empresa" local="true" PDFsize="5">
+			<label posx="160" posY="19" ></label>
+			<valor eval="true">
+				'CUIT:'. $_SESSION['properties']['cuit']
+			</valor>
+		</field>
+		<field id="IB_empresa" local="true" PDFsize="5">
+			<label posx="160" posY="22" ></label>
+			<valor eval="true">
+				'ING.BRUTOS:'. $_SESSION['properties'][ing_brutos]
+			</valor>
+		</field>
+		<field id="IA_empresa" local="true" PDFsize="5">
+			<label posx="160" posY="25" ></label>
+			<valor eval="true">
+				'INIC.DE ACTIVIDADES:'. $_SESSION['properties'][ini_activ]
+			</valor>
+		</field>
+<!--					
+		<field id="ing_brutos" local="true" PDFsize="8">
+			<label posx="90" posY="21" ></label>
+			<valor>Session Ing.Brutos:021-340019-0</valor>
+		</field>
+		<field id="actividades" local="true" PDFsize="8">
+			<label posx="90" posY="24" ></label>
+			<valor>Session Inicio Act.:03/04/2006</valor>
+		</field>
+
+-->
+		<field id="nombre_cuenta"   local="true" _tabla="REG_CUENTA" deshabilitado="true" sincelda="true">
+			<label colspan="4"  posx="12" posY="31" size="15">Sres:</label>
+			<expresion>REG_CUENTA.nombre_cuenta</expresion>
+		</field>
+
+		<field id="cod_direccion" tabla="REG_CUENTA" deshabilitado="true" sincelda="true">
+			<label colspan="4" posx="12" posY="+1" size="25">Domicilio</label>
+		</field>
+		<field id="localidad_id" tabla="REG_CUENTA" deshabilitado="true" sincelda="true">
+			<label colspan="4" posx="12" posY="+1" size="25">Localidad</label>
+			<expresion>SELECT CONCAT(id_localidad,' ', nombre_localidad) FROM GEN_LOCALIDADES where id_localidad = REG_CUENTA.localidad_id</expresion>
+		</field>
+		<field id="provincia_id" tabla="REG_CUENTA" deshabilitado="true" sincelda="true">
+			<label colspan="4" posx="12" posY="+1" size="25">Provincia</label>
+			<expresion>SELECT nombre_provincia FROM GEN_PROVINCIAS where id_provincia = REG_CUENTA.provincia_id</expresion>
+		</field>
+
+
+		<field id="iva_id" tabla="REG_CUENTA">
+			<tabla_ex xml="/general/iva_crud.xml" vacio="true">
+			</tabla_ex>
+			<label colspan="3" posx="110" posY="31" size="20">IVA</label>
+			<help>categoria de iva de la cuenta</help>
+		</field>
+		<field id="cuit_cuenta" tabla="REG_CUENTA" deshabilitado="true" sincelda="true">
+			<label colspan="3" posx="110" posY="38"  size="20">CUIT</label>
+		</field>
+		<field id="subsistema_id" oculto="true"  tabla="REG_CUENTA"  _print="false"	>
+		</field>
+		<field id="regcuenta_id" deshabilitado="true" noshow="true" break="true"  print="false">
+		</field>
+		<field id="id_regmovim" _oculto="true"  print="false"	>
+			<label>REGMOVIM es este:</label>
+		</field>
+		<field id="novedades" showObjTabla="true" local="true" _pdflineas="false">
+
+			<label posx="10" posy="+9" ></label>
+
+			<label>novedades</label>
+	
+			<helper type="object" xml="imp_factura_det_jalp.xml" >
+				<parameter source="id_regmovim" target="regmovim_id" />
+			</helper>
+		</field> 
+
+		<field id="neto_movimiento"  suma="true" PDFsize="9">
+			<valor default="true">0</valor>
+			<expresion>case when REG_MOVIMIENTOS.letra_movimiento = 'A' then REG_MOVIMIENTOS.neto_movimiento else REG_MOVIMIENTOS.neto_movimiento + REG_MOVIMIENTOS.importe_exento + REG_MOVIMIENTOS.importe_iva end</expresion>				
+			<label posx="160" posy="225" colstyle="align:right;" >Neto</label>	
+		</field> 
+		<field id="importe_exento"  suma="true" PDFsize="9" >
+			<valor default="true">0</valor>
+			<expresion>case when REG_MOVIMIENTOS.letra_movimiento = 'A' then REG_MOVIMIENTOS.importe_exento else '' end</expresion>							
+			<label posx="160" posy="+5" colstyle="align:right;" >Exento</label>	
+		</field> 
+		<field id="alicuota_iva" PDFsize="9">
+			<label posx="120" posy="+5"  >Alicuota</label>
+			<expresion>case when REG_MOVIMIENTOS.letra_movimiento = 'A' then REG_MOVIMIENTOS.alicuota_iva else '' end</expresion>
+			<tipo>numeric</tipo>
+		</field>
+
+		<field id="importe_iva" suma="true"  PDFsize="9" sincelda="true" >
+			<label posx="160" _posy="+5" colstyle="align:right;" >Iva</label>
+			<expresion>case when REG_MOVIMIENTOS.letra_movimiento = 'A' then REG_MOVIMIENTOS.importe_iva else '' end</expresion>
+			<tipo>numeric</tipo>
+		</field>
+		<field id="importe_movimiento" PDFsize="10" suma="true" colstyle="align:right;">
+			<label posx="160" posy="+5"  colstyle="align:right;">Total</label>
+			<tipo>numeric</tipo>
+		</field>
+		<field id="numero_cae" PDFsize="8"  colstyle="align:right;">
+			<label posx="160" posy="265"  colstyle="align:right;">Cae Nro.</label>
+		</field>
+		<field id="fecha_cae" PDFsize="8"  colstyle="align:right;">
+			<label posx="160" posy="270"  colstyle="align:right;">Fecha Vto.</label>
+		</field>
+		<field id="datos" grafico="barcode" PDFsize="10" 
+			imageHeight="25" imageWidth="280" imageScale="1.5">
+			<label posx="30" posy="265"  ></label>
+		<expresion>
+
+<!--RAPIPAGO_DV(concat( '511', lpad(regcuenta_id,8,'0'),
+ lpad(concepto_id,2,0),lpad(puesto_movimiento,2,'0'),lpad(nro_movimiento,7,'0'),lpad(round(round(importe_movimiento,2) * 100,0),8,'0'),substring(faclote_fechavto1,3,2),LPAD(DATEDIFF(faclote_fechavto1,concat(substring(faclote_fechavto1,3,2),'-01-01')),3,0),
+lpad(round(round(importe_movimiento * faclote_recargo2 / 100 ,2) * 100,0),6,'0'),LPAD(DATEDIFF(faclote_fechavto1,faclote_fechavto2), 2,0) ))
+
+
+
+
+Conformacion Codigo de barra rapipago 
+(3)000 		Empresa
+(8)00000000 	Cuenta
+	(2)00 		Concepto
+	(2)00		Puesto
+	(7)0000000	Nro Movimiento
+(8)00000000 	Importe
+(5)00000 	Fecha primer Vto
+(6)000000 	Importe Recargo Segundo Vto 
+(2)00 		Cantidad de Dias de diferencia entre primer y segundo vto.
+
+
+RAPIFACIL_DV(concat( '511', lpad(regcuenta_id,8,'0'),
+ lpad(concepto_id,2,0),lpad(puesto_movimiento,2,'0'),lpad(nro_movimiento,7,'0'),lpad(round(round(importe_movimiento,2) * 100,0),8,'0'),substring(faclote_fechavto1,3,2),LPAD(DATEDIFF(faclote_fechavto1,concat(substring(faclote_fechavto1,3,2),'-01-01')),3,0),
+lpad(round(round(importe_movimiento * faclote_recargo2 / 100 ,2) * 100,0),6,'0'),LPAD(DATEDIFF(faclote_fechavto1,faclote_fechavto2), 2,0) ),"RP")
+
+
+
+
+Conformacion Codigo de barra pagofacil 
+(4)0000 	Empresa
+(8)00000000 	Importe
+(5)00000 	Fecha primer Vto
+
+	(1)0 		Letra
+	(2)00 		Concepto
+	(2)00		Puesto
+	(7)0000000	Nro Movimiento
+	(2)00		Cuota
+(1)0		Moneda
+(6)000000 	Importe Recargo Segundo Vto 
+(2)00 		Cantidad de Dias de diferencia entre primer y segundo vto.
+
+
+kweb maximiliano  - emiliano 
+4952182 hasta las 12.00
+155827088 
+hoy o mañana cuando la tienene la pasa
+
+
+Datos en el txt de cobranza , ya identifica el comprobante y el importe final
+SELECT substring(datos,32,14) as codigo_enviado , 
+substring(datos,25,21)  as codigo_devuelto, 
+substring(datos,32,1) as letra,
+substring(datos,33,2) as concepto,
+substring(datos,35,2) as puesto,
+substring(datos,37,7) as nro_comp,
+substring(datos,44,2) as cuota,
+
+
+substring(datos,49,10)/100 as importe  FROM PAG_DETALLE P LIMIT 0,1000
+
+
+
+-->
+RAPIFACIL_DV(concat('0511', lpad(round(round(importe_movimiento,2) * 100,0),8,'0'),substring(faclote_fechavto1,3,2),LPAD(DATEDIFF(faclote_fechavto1,concat(substring(faclote_fechavto1,3,2),'-01-01')),3,0),case when letra_movimiento = 'A' then 1 else case when letra_movimiento = 'B' then 2 else 3 end end  ,lpad(concepto_id,2,0),
+lpad(puesto_movimiento,2,'0'),lpad(nro_movimiento,7,'0'),lpad(cuota_movimiento,2,'0'),0,lpad(round(REG_VENCIMIENTOS.recargo_vencimiento * 100,0),6,'0'),LPAD(abs(DATEDIFF(faclote_fechavto1,faclote_fechavto2)), 2,0) ),"PF")
+
+			</expresion>
+
+			<tipo>grafico</tipo> 
+		</field>
+
+		<field id="titulo"  local="true" >
+		<label posx="10" posy="220" PDFsize="7">Obs</label>
+		</field>
+		<field id="faclote_leyenda"  tabla="FAC_LOTES" >
+			<label posx="10" posy="225" PDFsize="7" pdfancho="100" ></label>	
+
+			
+		</field> 
+		<group>
+			<field id="regcuenta_id" tabla="REG_MOVIMIENTOS"></field>
+		</group>
+
+        </table>
+
+        <join >
+            <table id="REG_CONCEPTOS">
+                <field id="id_concepto">
+                    <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+                </field>
+            </table>
+        </join>
+        <join >
+            <table id="REG_CUENTA">
+                <field id="id_regcuenta">
+                    <condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+                </field>
+            </table>
+        </join>
+        <join _tipo="left">
+            <table id="FAC_LOTES">
+		<field id="id_faclote">
+                    <condicion operador="=">REG_MOVIMIENTOS.faclote_id</condicion>
+
+		</field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="REG_VENCIMIENTOS">
+		<field id="regmovim_id">
+                    <condicion operador="=">REG_MOVIMIENTOS.id_regmovim</condicion>
+		</field>
+		<field id="numero_vencimiento">
+                    <condicion operador="=">1</condicion>
+		</field>
+            </table>
+        </join>
+
+    </consulta>
+</histrix>
+
+
+
+
+
+
+

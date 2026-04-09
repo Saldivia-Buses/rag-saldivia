@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta"  PDFfontSize="10" showCantidad="false">
+    <title>DETALLE</title>
+    <obs></obs>
+    <form  >
+        <table id="MRP_ORDEN_DETALLE" label="DETALLE">
+            <field id="mrporden_id" oculto="true">
+            </field>
+
+            <field id="stkarticulo_id" deshabilitado="true" esClave="true">
+                <label >Código</label>
+            </field>
+            <field id="nombre_articulo" >
+        	<expresion>CONCAT(codigo_plu,'-', nombre_articulo)</expresion>
+                <label>Producto</label>
+            </field>
+            <field id="minimo_ordendetalle" >
+                <label>Minimo</label>
+            </field>
+            <field id="objetivo_ordendetalle" >
+                <label modpos="nobr">Objetivo</label>
+            </field>
+            <field id="producido_ordendetalle" noZero="true">
+                <label modpos="nobr">Producido</label>
+            </field>
+            <field id="tiempo" noZero="true">
+                <label modpos="nobr">Tiempo</label>
+                <expresion>concat(round(objetivo_ordendetalle / produccion_diaria * 8.5,0), 'hs')</expresion>
+            </field>
+
+            <field id="observaciones_ordendetalle" deshabilitado="true">
+                <label>Observaciones</label>
+            </field>
+        </table>
+
+        <join tipo="left">
+            <table id="STK_ARTICULOS">
+                <field id="id_stkarticulo">
+                    <condicion operador="=">MRP_ORDEN_DETALLE.stkarticulo_id</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" sololectura="true">
+  <title>Detalles</title>
+  <obs/>
+  <consulta>
+    <table id="REG_DETALLES" label="Detalle de Movimientos">
+
+      <field id="regmovim_id" noshow="true" print="false" />
+
+      <field id="cantidad_detalle" pdfwidth="10">
+        <tipo>numeric</tipo>
+        <label>CANTIDAD</label>
+      </field>
+
+      <field id="codigo_detalle" pdfwidth="40">
+        <label>CODIGO</label>
+      </field>
+
+      <field id="descripcion_detalle" pdfwidth="90%">
+        <label>DESCRIPCION</label>
+      </field>
+
+      <field id="precio_venta" pdfwidth="20">
+        <label>P.UNITARIO</label>
+        <expresion>(neto_detalle + iva_detalle)</expresion>
+        <tipo>numeric</tipo>
+      </field>
+
+      <field id="total_detalle" pdfwidth="20">
+        <label>TOTAL</label>
+      </field>
+
+      <field id="orden" esClave="true" noshow="true" print="false" />
+
+      <order>
+        <field id="orden"/>
+      </order>
+            
+    </table>
+  </consulta>
+</histrix>

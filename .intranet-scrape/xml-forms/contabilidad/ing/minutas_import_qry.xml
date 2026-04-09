@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" imprime="false" width="35%">
+	<title>Movimientos</title>
+	<obs></obs>
+	<form detalle="minutas_import_ing.xml">
+		<table id="CTB_MOVIMIENTOS" label="movimientos">
+
+			<filters>
+				<field id="ejercicio_id">
+					<label>Ejercicio</label>
+					<operador>=</operador>
+				</field>
+				<field id="fecha_movimiento">
+					<label>Desde</label>
+					<operador>&gt;=</operador>
+					<valor>today</valor>
+				</field>
+				<field id="fecha_movimiento">
+					<label>Hasta</label>
+					<operador>&lt;=</operador>
+					<valor>today</valor>
+				</field>
+				<field id="concepto_id">
+					<label>Concepto</label>
+					<operador>=</operador>
+				</field>
+			</filters>
+
+			<field id="id_movimiento" noshow="true" autoinc="true"  print="false">
+				<label>Codigo</label>
+				<help>Código de movimiento</help>
+				<detalle>movimiento_id</detalle>
+			</field>
+			<field id="ejercicio_id" oculto="true" print="false">
+				<helper type="combo"  dir="/ayudas" xml="ctbejercicio_qry.xml" empty="true">
+					<field id="comienza">
+						<detalle>comienza</detalle>
+					</field>
+					<field id="finaliza">
+						<detalle>finaliza</detalle>
+					</field>
+				</helper>
+				<label>Ejercicio</label>
+				<help>Ejercicio contable</help>
+			</field>
+			<field id="concepto_id" noshow="true">
+				<helper type="combo" dir="/ayudas" xml="ctbconcepto_qry.xml"></helper>
+				<label>Concepto</label>
+				<help>Código de concepto</help>
+			</field>
+			<field id="fecha_movimiento" _noshow="true" print="false" requiered="true">
+				<label>Fecha</label>
+				<tipo>date</tipo>
+				<help>Fecha movimiento</help>
+				<detalle>fecha_movimiento</detalle>
+			</field>
+
+			<field id="nro_minuta"  colstyle="text-align:center;">
+				<helper type="combo" xml="ctbmovimientos_qry.xml" empty="true"></helper>
+				<label >Minuta</label>
+			</field>
+
+			<field id="referencia">
+				<label>Referencia</label>
+			</field>
+
+			<order>
+				<field id="fecha_movimiento" />
+				<field id="nro_minuta" />
+			</order>
+
+		</table>
+		<join tipo="left">
+			<table id="CTB_EJERCICIOS">
+				<field id="id_ejercicio">
+					<condicion operador="=">CTB_MOVIMIENTOS.ejercicio_id</condicion>
+				</field>
+			</table>
+		</join>
+	</form>
+</histrix>

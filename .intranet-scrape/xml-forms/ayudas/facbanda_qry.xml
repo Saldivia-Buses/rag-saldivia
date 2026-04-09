@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  Ayuda
+Tarea: Ayuda para la Tabla de Bandas
+Autor: d!ego2k
+Fecha: 04/10/10
+*******************************************************************************
+-->
+<histrix tipo="consulta">
+<title>Bandas</title>
+ <obs></obs>
+	<form >
+	    <table id="FAC_BANDAS">
+
+		<field id="id_facbanda" noshow="true" />
+
+		<field id="nombre">
+			<label>Nombre</label>
+		</field>
+
+	    </table>
+	</form>
+</histrix>	

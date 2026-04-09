@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" _imprimetanda="true">
+	<title>RETENCIONES INGRESOS BUROTS</title>
+	<obs></obs>
+	<form  _detalle="retgan_reimp.xml">
+		<table id="CAJMOVIM" label="Retenciones de ingresos brutos" >
+
+			PARA EXPORTAR AL SICORE
+			<field id="codigocomp" local="true" colstyle="display:none;">
+				<valor>06</valor>
+			</field>
+
+			<field id="movfec" tabla="CCTMOVIM">
+				<label>Fecha Comp</label>
+				<expression>date_format(movfec, '%d/%m/%Y')</expression>
+			</field>			
+			<field id="nrocomp" _local="true"  colstyle="display:none;">
+				<label>Num. Ret</label>
+				<help>Numero de la retencion</help>
+
+			    <expresion>concat('0001', LPAD( cajnro,12, '0'))</expresion>
+
+<!--
+				<expression>LPAD('0', 16, 0)</expression>
+-->
+
+			</field>		
+			<field id="importec"  colstyle="display:none;">
+				<label>Imp.Comp</label>
+				<expression>LPAD(REPLACE(round(movimp,2), '.', ''), 16, 0)</expression>
+
+			</field>			
+	
+			<field id="cod_impuesto" local="true"  colstyle="display:none;">
+				<label>Impuesto</label>
+				<valor>217</valor>
+				<formato>%3d</formato>					
+			</field>		
+			<field id="cod_regimen" local="true"  colstyle="display:none;">
+				<label>regimen</label>
+				<valor>217</valor>
+				<formato>%3d</formato>					
+			</field>		
+			<field id="cod_operacion" local="true"  colstyle="display:none;">
+				<label>operacion</label>
+				<valor>1</valor>
+			</field>		
+			<field id="base" colstyle="display:none;" >
+				<label>Base1</label>
+				<expression>LPAD(REPLACE(round(movnet,2), '.', ''), 14, 0)</expression>
+
+			</field>			
+			<field id="movnet" tabla="CCTMOVIM" export="false" >
+				<label>Base</label>
+				<help>Monto imponible del Comprobante</help>
+				<tipo>decimal</tipo>
+
+			</field>			
+			<field id="cajfec" export="false">
+				<label>Fecha Ret.</label>
+			</field>
+			<field id="cajfec2" colstyle="display:none;">
+				<help>Fecha de la Retencion</help>
+				<expression>date_format(cajfec, '%d/%m/%Y')</expression>
+
+				<detalle>cajfec</detalle>
+			</field>			
+			<field id="cod_condicion" local="true" colstyle="display:none;"  >
+				<label>Condicion</label>
+				<valor>01</valor>
+			</field>		
+			<field id="cod_susp" local="true" colstyle="display:none;"  >
+				<label>Suspendidos</label>
+				<valor>0</valor>
+			</field>		
+
+			<field id="cajcta" noshow="true" export="false">
+				<label>Cuenta</label>
+				<help>Codigo de Cuenta</help>
+				<detalle>cajcta</detalle>
+			</field>
+			<field id="num" export="false">
+			    <label>Comprobante</label>
+			    <expresion>concat('OP 0001-', LPAD( cajnro,8, '0'))</expresion>
+			</field>
+
+			<field id="ctanom" tabla="CCTCUENT" export="false">
+				<label>Razón Social</label>
+				<help>Nombre</help>
+			</field>
+			<field id="ctanro" tabla="CCTCUENT" export="false">
+				<label>CUIT</label>
+				<help>Numero Doc</help>
+			</field> 
+
+			<field id="cajnro" noshow="true" export="false">
+			    <label>Nro</label>
+				<detalle>cajnro</detalle>
+			</field>
+			
+<!--			<field id="ctadir">
+				<label>Dir.</label>
+				<help>Direccion</help>
+			</field>
+			<field id="ctaloc">
+				<label>Localidad</label>
+				<help>Localidad</help>
+			</field>
+-->
+			<field id="cajcod" noshow="true" export="false">
+				<condicion operador="=">29</condicion>
+				<detalle>cajcod</detalle>
+			</field>
+			<field id="importeRet" colstyle="display:none">
+				<expression>LPAD(REPLACE(cajimp, '.', ''), 14, 0)</expression>
+			</field>
+			<field id="cajimp" suma="true" export="false">
+				<label>Importe</label>
+				<help>Retencion</help>
+				<condicion operador="!=">0</condicion>
+			</field>	
+			<field id="exclusion"  colstyle="display:none">
+				<label>Exclu</label>
+				<expression>LPAD(0, 3, 0)</expression>
+			    
+			</field>	
+
+			<field id="boletin"  colstyle="display:none">
+				<label>Boletin</label>
+				<expression>date_format(cajfec, '%d/%m/%Y')</expression>
+
+			</field>			
+			<field id="doccodex"  colstyle="display:none">
+				<expression>doccod</expression>
+				<label>CodDocum</label>
+			</field>			
+			<field id="ctanroex"  _colstyle="display:none">
+				<label>Docum</label>
+				<expression>RPAD(ctanro, 20, ' ')</expression>
+
+			</field>
+			<field id="otrosExterior" local="true"  colstyle="display:none">
+			    <valor>0</valor>
+			    <format>%067d</format>
+			</field>
+
+
+			<field id="impresion" local="true" export="false">
+			    <valor>Imprimir</valor>
+			    <helper xml="retgan_reimp.xml" type="link">
+				<parameter source="cajnro"  target="cajnro"/>
+				<parameter source="cajcta" target="cajcta"/>
+				<parameter source="cajfec" target="cajfec"/>
+			    </helper>
+			</field>		
+
+			<filters>
+				<field id="cajfec">
+					<operador>>=</operador>
+					<label>Desde Fecha</label>
+					<valor>today</valor>
+				</field>
+				<field id="cajfec">
+					<operador>&lt;=</operador>
+					<label>Hasta Fecha</label>
+					<valor>today</valor>
+				</field>
+			</filters>			
+			
+			
+		</table>
+		<join tipo="left">
+			<table id="CCTMOVIM">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">'01'</condicion>
+				</field>				
+				<field id="ctacod" >
+					<condicion operador="=">CAJMOVIM.cajcta</condicion>
+				</field>
+				<field id="movnro">
+					<condicion operador="=">CAJMOVIM.cajnro</condicion>
+				</field>
+				<field id="movfec">
+					<condicion operador="=">CAJMOVIM.cajfec</condicion>
+				</field>
+			</table>
+		
+		</join>
+
+		<join tipo="left">
+			<table id="CCTCUENT">
+				<field id="siscod" >
+					<condicion operador="=">CCTMOVIM.siscod</condicion>
+				</field>				
+				<field id="ctacod" >
+					<condicion operador="=">CAJMOVIM.cajcta</condicion>
+				</field>
+			</table>
+		
+		</join>
+	</form>	   
+</histrix> 

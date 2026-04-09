@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="chart" limit="10">
+	<title>Cantidad</title>
+	<obs></obs>
+	<form >
+		<table id="GEN_CALENDAR" >
+			<title>Ranking</title>
+	 
+		   <grafico id="Ranking" >
+			   <ancho>400</ancho>
+			   <tipo>P</tipo>
+			   
+			   <etiquetas>ctafan</etiquetas> 
+			   <datos>demora</datos>
+			   
+			   <title>Ranking de Retraso</title>
+			   <subtitulo>(Suma de días de retraso)</subtitulo>
+		   </grafico>		
+		   
+		    <filters>
+			    <field id="fecha">
+				    <label>Desde</label>
+				    <valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m" ,strtotime('-12 month')) , 1, date("Y") -  1 ))</valor>
+				    <operador>&gt;=</operador>
+			    </field>
+			    <field id="fecha">
+                                    <label>Hasta</label>
+				    <valor eval="true">date('d/m/Y', strtotime('-1 second', strtotime(date('Y-m-01'))))</valor>
+				    <operador>&lt;=</operador>
+			    </field>
+		    </filters> 
+
+			<field id="mes">
+				<expression>month(fecha)</expression>
+				<label>Mes</label>
+				<options>
+					<option valor="1">Ene</option>
+					<option valor="2">Feb</option>
+					<option valor="3">Mar</option>
+					<option valor="4">Abr</option>
+					<option valor="5">May</option>
+					<option valor="6">Jun</option>
+					<option valor="7">Jul</option>
+					<option valor="8">Ago</option>
+					<option valor="9">Sep</option>
+					<option valor="10">Oct</option>
+					<option valor="11">Nov</option>
+					<option valor="12">Dic</option>
+
+				</options>
+       				<tipo>varchar</tipo>
+			</field>
+                    <field id="fecha" oculto="true">
+<!--                        <condicion operador="&gt;="> DATE_FORMAT(date_sub(date(now()) , interval 1 year) ,'%Y-%m-01') and GEN_CALENDAR.fecha &lt;= now()</condicion> -->
+			<tipo>date</tipo>
+                    </field>
+                    <field id="year" oculto="true">
+                        <expression>year(fecha)</expression>
+
+                    </field>
+
+<!--			<field id="demora">
+                             <expression><![CDATA[(select avg(DATEDIFF(OCPRECIB.fecrec, OCPRECIB.fecreq)) from OCPRECIB where year(OCPRECIB.ocpfec) = year(fecha) and month(OCPRECIB.ocpfec) = month(fecha))]]></expression>
+
+				<label>Demoras</label>
+                                <tipo>numeric</tipo>
+			</field> -->
+		<field id="ctacod" tabla="OCPRECIB">
+				<label>Cuenta</label>
+		
+		</field>
+		<field id="ctafan" tabla="CCTCUENT">
+			<label>Nombre</label>
+		
+		</field>
+			
+			<field id="demora" tipoOrden="DESC">
+<!--                             <expression><![CDATA[round(AVG(DATEDIFF(OCPRECIB.fecrec, OCPRECIB.fecreq)), 0)]]></expression>-->
+				<expression><![CDATA[round((DATEDIFF(OCPRECIB.fecrec, OCPRECIB.fecreq)), 0)]]></expression>
+
+				<label>Retrasos</label>
+                                <tipo>numeric</tipo>
+                                <condicion operador="&gt;">30</condicion>
+			</field> 			
+			
+			<group>
+                                <field id="ctacod" tabla="OCPRECIB"></field>
+				
+				
+
+			</group>
+			<order>
+			    <field id="demora"></field>
+			</order>
+		</table>
+		<join tipo="inner">
+		    <table id="OCPRECIB">
+			<field id="ocpfec">
+			    <condicion operador="=">GEN_CALENDAR.fecha</condicion>
+			</field>
+		    </table>
+		</join>
+		<join tipo="inner">
+		    <table id="CCTCUENT">
+			<field id="ctacod">
+			    <condicion operador="=">OCPRECIB.ctacod</condicion>
+			</field>
+			<field id="baja">
+			    <condicion operador="=">0</condicion>
+			</field>
+			
+			
+			<field id="siscod">
+			    <condicion operador="=">'01'</condicion>
+			</field>
+			
+			
+		    </table>
+		</join>
+		
+	</form>	   
+</histrix> 

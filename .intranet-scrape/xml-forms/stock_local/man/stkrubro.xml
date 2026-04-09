@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="abm" widht="50">
+  <title>RUBROS DE STOCK</title>
+  <obs></obs>
+  <form >
+    <table id="STK_RUBROS" label="Rubros">
+      <!-- <field id="siscod" oculto="true">
+        <label>Cod</label>
+        <valor>06</valor>
+      </field> -->
+      
+      <field id="id_stkrubro">
+        <label>Cod.</label>
+        <help>Código de Rubro</help>
+      </field>
+      
+      <field id="nombre_rubro">
+        <label>Rubro</label>
+        <help>Descripción del Rubro</help>
+      </field>
+
+      <field id="sub" obj="stksubru_cons.xml" showObjTabla="true"   local="true" >
+        <label style="color:#444;" Formstyle="display:none;">Trabajos Adicionales</label>
+        <paring destino="stkrubro_id" operador="=">id_stkrubro</paring>
+        <tipo>varchar</tipo>
+      </field>        
+         <order>
+        <field id="id_stkrubro"></field>
+      </order>
+      
+    </table>
+  </form>     
+</histrix>

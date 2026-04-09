@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <abm tipo="cabecera" graba="false">
+       <titulo>CABECERA PEDINT</titulo>
+        <obs></obs>
+               <consulta>
+		  
+                  <tabla id="CABECERA" label="Cabecera de Pedidos Internos" graba="false">
+
+                  <campo id="puesto" deshabilitado="true">
+                      <label>Puesto</label>
+                      <help>Puesto de venta</help>
+		      <tipo>integer</tipo>
+		      <valor>1</valor>
+		      <formato>%04d</formato>
+		  </campo>
+                  <campo id="movnro" deshabilitado="true">
+                      <label modpos="nobr">Numero</label>
+                      <help>Numero Comprobante </help>
+		      <parametro id="fsmparam_parent.xml" retorna="parent">
+		        <campo id="parcla" oculto="true">
+			    <condicion operador="=">'pednro'</condicion>
+			    <valor>'pednro'</valor>
+			</campo>
+		        <campo id="parent" >
+			    <complete>parent + 1</complete>
+			</campo>
+
+		      </parametro>
+
+		      <tipo>integer</tipo>
+		      <formato>%08d</formato>
+
+                  </campo>
+	          <campo id="fecha" deshabilitado="true">
+                      <label>Fecha</label>
+                      <help>Fecha del Comprobante</help>
+		      <tipo>date</tipo>
+		      <valor>today</valor>
+                  </campo>
+                  <campo id="userid" deshabilitado="true"> 
+                      <label>Usuario</label>
+                      <help>Usuario Actual</help>
+		      <valor eval="true">$_SESSION['usuario']</valor>
+		      <tipo>char</tipo>
+		      
+                  </campo>
+                  </tabla>
+               </consulta>
+        </abm>

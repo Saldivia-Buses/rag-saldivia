@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="fichaing" inserta="false" borra="false" modifica="false" imprime="false" tooltip="false" confirma="CONFIRMAR" transaccional="true" log="false" xmlImpresion="/stock/qry/imp_stktransfer.xml">
+   <title>Transferencia entre depósitos</title>
+   <obs/>
+   <confirmacion><![CDATA[¿Confirma el Ingreso?]]></confirmacion>
+   <form>
+	<table id="STK_MOVIMIENTOS" label="Transferencia entre depósitos">
+
+		<validation>
+			<condition><![CDATA['emite_sinstock' > '0' && 'clave_oro' != 'clave_stock']]></condition>
+			<message>Pida clave a un administrador para continuar</message>
+		</validation>		
+
+		<movimientos>
+			<relacion id="stkmovimiento_user_ins.xml"/>
+			<relacion id="stknumerador_upd.xml"/>
+		</movimientos>
+
+		<fieldGroup>
+			<field id="id_stkmovimiento" deshabilitado="true" noshow="true" autoInc="true">
+				<label>Codigo</label>
+				<help>Codigo de movimiento</help>
+			</field>
+	
+			<field id="subsistema_id" valauto="true" local="true" noshow="true" />
+
+			<field id="stkdeposito_origen" local="true" required="true">
+				<label>Origen</label>
+				<helper type="combo" xml="stkdeposito_qry.xml" dir="/ayudas" empty="true"/>
+				<detalle>stkdeposito_origen</detalle>
+				<actualiza>
+					<field id="detalle" destino="deposito_origen" />
+				</actualiza>
+			</field>
+
+			<field id="stkconcepto_origen" sincelda="true" local="true">
+				<label modpos="nobr" />
+				<helper type="combo" xml="stkconcepto_qry.xml" dir="/ayudas">
+					<field id="tipo_concepto">
+						<condicion operador="=">1</condicion>
+					</field>
+				</helper>
+				<detalle>stkconcepto_origen</detalle>
+			</field>
+
+			<field id="fecha_movimiento">
+				<label modpos="nobr">Fecha</label>
+				<help>Fecha movimiento</help>
+				<valor>today</valor>
+				<detalle>fecha_movimiento</detalle>
+			</field>
+
+			<field id="stkdeposito_destino" local="true" required="true">
+				<label>Destino</label>
+				<helper type="combo" xml="stkdeposito_qry.xml" dir="/ayudas" empty="true"/>
+				<detalle>stkdeposito_destino</detalle>
+			</field>
+
+			<field id="stkconcepto_destino" sincelda="true" local="true">
+				<label modpos="nobr"/>
+				<helper type="combo" xml="stkconcepto_qry.xml" dir="/ayudas" _empty="true">
+					<field id="tipo_concepto">
+						<condicion operador="=">0</condicion>
+					</field>
+					<field id="omite_concepto">
+					    <expression>id_stkconcepto</expression>
+					    <condicion operador="=">id_stkconcepto and id_stkconcepto NOT IN (select option_value from HTXOPTIONS where option_name = 'FIELD::stkconcepto_omitirhelper')</condicion>
+					</field>
+				</helper>
+				<detalle>stkconcepto_destino</detalle>
+			</field>
+
+			<field id="puesto_movimiento">
+				<label modpos="nobr">Comprobante</label>
+				<detalle>puesto_movimiento</detalle>
+				<size>4</size>
+			</field>
+
+			<field id="numero_movimiento" sincelda="true">
+				<label modpos="nobr">-</label>                        
+                		<parametro id="numerador_param.xml" retorna="numero">
+					<field id="numero" />
+				</parametro>
+				<format>%08d</format>
+				<detalle>numero_movimiento</detalle>
+				<actualiza>
+					<field id="detalle" destino="nro_movimiento" />
+				</actualiza>
+			</field>
+
+			<field id="para" local="true">
+				<label>Notifica</label>
+				<helper type="combo" id="HTXUSERS" empty="true">
+					<field id="login" />
+					<field id="nombre">
+						<expression>concat(Nombre,' ',Apellido)</expression>
+					</field>
+					<order>
+						<field id="Nombre" />
+					</order>
+				</helper>
+			</field>
+
+			<field id="referencia" maxlength="60">
+				<label modpos="nobr">Referencia</label>
+				<help>Referencia del movimiento</help>
+				<size>60</size>
+			</field>
+
+			<field id="emite_sinstock" local="true" noshow="true">
+				<label>Emite</label>
+				<tipo>numeric</tipo>
+			</field>
+
+			<field id="clave_oro" local="true" noshow="true">
+				<helper type="parameter" id="SIS::02::sin_stock">
+					<label>Clave para facturar sin stock</label>
+					<defaultValue/>
+				</helper>
+			</field>
+
+			<field id="clave_stock" local="true">
+				<label modpos="nobr">Clave Stock</label>
+				<size>30</size>
+				<attribute id="noshow">muestra_fieldclave</attribute>                
+				<tipo Type="password">password</tipo>
+			</field>
+
+			<field id="muestra_fieldclave" local="true" noshow="true">
+				<helper type="parameter" id="SIS::02::oculta_clave_stock">
+					<label>Clave para facturar sin stock</label>
+					<defaultValue>true</defaultValue>
+				</helper>
+			</field>
+
+			<field id="de" local="true" noshow="true">
+				<valor eval="true">$_SESSION['usuario']</valor>
+			</field>
+			
+			<field id="separador" local="true" deshabilitado="true" style="height:5px;" />
+		</fieldGroup>
+
+		<fieldGroup>		
+			<field id="detalle" local="true" colspan="6">
+				<label modpos="force" />
+				<helper type="object" xml="stktransfer_ing.xml" />
+			</field>
+		</fieldGroup>
+
+	</table>    
+   </form>
+</histrix>

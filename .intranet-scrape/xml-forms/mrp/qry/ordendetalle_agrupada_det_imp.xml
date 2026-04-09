@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta"  PDFfontSize="8" showCantidad="false">
+    <title>Histórico</title>
+    <obs></obs>
+    <form  >
+        <table id="MRP_ORDEN_DETALLE" label="DETALLE">
+            <field id="id_mrpordendetalle" noshow="true">
+            </field>
+        <field id="id_detalle_reg" tabla="MRP_DETALLE_REGISTRO" noshow="true">
+        </field>
+        <field id="mrporden_id" oculto="true">
+    		<label>Orden</label>
+        </field>
+
+        <field id="stkarticulo_id" deshabilitado="true" _noshow="true">
+            <label >Código</label>
+        </field>
+        <field id="stkrubro_id"  tabla="STK_ARTICULOS" noshow="true">
+            <label modpos="nobr">Rubro</label>
+            <helper type="combo" xml="stkrubro_qry.xml" dir="/ayudas" empty="true" />
+        </field>
+
+        <field id="nombre_articulo" _noshow="true">
+            <expresion>nombre_articulo</expresion> 
+            <label>Producto</label>
+        </field>        
+	    <field id="id_mrpseccion" tabla="MRP_SECCION" noshow="true" break="true" />
+
+        <field id="id_productpath" tabla="MRP_PRODUCT_PATH" noshow="true"/>
+
+        <field id="pathname">
+            <label>Linea</label>
+            <expresion>path_name</expresion>
+        </field>
+        <field id="idpath" noshow="true">
+            <expression>MRP_ORDEN_PRODUCCION.mrppath_id</expression>
+        </field>
+
+	    <field id="xml_mrpseccion" tabla="MRP_SECCION" noshow="true" />
+    
+    	    <field id="ubicacion" >
+    		<label>ubicacion</label>
+    		<expression>nombre_mrpseccion</expression> 
+
+        		<attribute id="linkint">xml_mrpseccion</attribute>
+        		<attribute id="linkdes">ubicacion</attribute>
+
+        		<helper xml="seccion_corte.xml" dir="/mrp/ing/modificacion/" type="link">
+        		    <parameter source="id_detalle_reg" target="id_detalle_reg" />
+        		</helper>
+
+    	    </field>
+
+<!--
+            <field id="nombre_articulo" noshow="true">
+        	<expresion>CONCAT(ifnull(codigo_plu,''),' ', nombre_articulo)</expresion> 
+                <label>Producto</label>
+            </field>
+-->
+	    <field id="fecha_ingreso" tabla="MRP_DETALLE_REGISTRO">
+		<label>Fecha</label>
+		<tipo>date</tipo>
+	    </field>
+<!--
+            <field id="objetivo_ordendetalle" style="text-align:center;" deshabilitado="true">
+                <label modpos="nobr">Objetivo</label>
+                <tipo>integer</tipo>
+            </field>
+-->
+	    <field id="alto_corte" tabla="MRP_DETALLE_REGISTRO" noZero="true" print="false">
+		<label>Alto</label>
+		<tipo>numeric</tipo>
+	    </field>
+	    <field id="ancho_corte" tabla="MRP_DETALLE_REGISTRO"  noZero="true" print="false">
+		<label>Ancho</label>
+		<tipo>numeric</tipo>
+	    </field>
+
+<!--
+            <field id="producido_ordendetalle" noZero="true">
+                <label modpos="nobr">Producido</label>
+            </field>
+-->
+            <field id="cantidad" noZero="true" style="text-align:center;" _suma="true">
+                <label modpos="nobr">Cantidad</label>
+	        <expression>sum(case when mrpconcepto_id = 1 then MRP_DETALLE_REGISTRO.cantidad end)</expression>
+	        <tipo>integer</tipo>
+            </field>
+
+            <field id="rotur" noZero="true" style="text-align:center;color:red;" suma="true">
+                <label modpos="nobr">Roturas</label>
+	        <expression>sum(case when mrpconcepto_id != 1 then MRP_DETALLE_REGISTRO.cantidad end)</expression>
+	        <tipo>integer</tipo>
+            </field>
+<!--
+            <field id="mrpconcepto_id" noshow="true" tabla="MRP_DETALLE_REGISTRO">
+                <condicion operador="=">1</condicion> 
+            </field>            
+-->
+	    <!--
+            <field id="tiempo" noZero="true">
+                <label modpos="nobr">Tiempo</label>
+                <expresion>concat(round(objetivo_ordendetalle / produccion_diaria * 8.5,0), 'hs')</expresion>
+            </field>
+	    -->
+<!--
+            <field id="observaciones_ordendetalle" deshabilitado="true">
+                <label>Observaciones</label>
+            </field>
+-->
+            <order>
+                <field id="id_mrpseccion" />
+                <field id="fecha_ingreso" />
+                <field id="id_productpath" />
+            </order>
+            <group>
+                <field id="id_detalle_reg" />
+            </group>
+        </table>
+        <join >
+            <table id="MRP_ORDEN_PRODUCCION">
+                <field id="id_mrporden">
+                    <condicion operador="=">MRP_ORDEN_DETALLE.mrporden_id</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="STK_ARTICULOS">
+                <field id="id_stkarticulo">
+                    <condicion operador="=">MRP_ORDEN_DETALLE.stkarticulo_id</condicion>
+                </field>
+            </table>
+        </join>
+        <join >
+            <table id="MRP_DETALLE_REGISTRO">
+                <field id="mrpordendetalle_id">
+                    <condicion operador="=">MRP_ORDEN_DETALLE.id_mrpordendetalle</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="MRP_PRODUCT_PATH">
+                <field id="id_productpath">
+                    <condicion operador="=">MRP_DETALLE_REGISTRO.productpath_id</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="MRP_SECCION">
+                <field id="id_mrpseccion">
+                    <condicion operador="=">MRP_PRODUCT_PATH.mrpseccion_id</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="MRP_PATH">
+                <field id="id_mrppath">
+                    <condicion operador="=">MRP_ORDEN_PRODUCCION.mrppath_id</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

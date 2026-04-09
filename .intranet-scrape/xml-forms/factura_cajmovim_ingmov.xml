@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="insert" grabafinal="true">
+       <title>Mov de caja</title>
+        <obs></obs>
+               <form >
+					<table id="CAJMOVIM" label="MOVIMIENTOS" idCampoCond="grabactdo" CondExp=" == 1">
+						<field id="siscod" >
+							<valor>05</valor>
+						</field>
+						<field id="cajfec" id_cab="movfec">
+						</field>
+						<field id="cajcod" id_cab="cajcod">
+						</field>
+						<field id="cajnro" id_cab="movnro">
+						</field>
+						<field id="cajimp" id_temp="total" >
+						</field>
+						<field id="concod" id_cab="cajcod" >
+						</field> 
+						<field id="regmin" esNroMinuta="true">
+						</field>
+						<field id="cajcta" id_cab="ctacod">
+						</field>
+						<field id="cajnom" id_cab="ctanom">
+						</field>
+						<field id="succod" id_cab="succod">
+						</field>
+						<field id="cajref__1" id_cab="ctanom">
+						</field>
+						<field id="opecla" id_cab="opecla">
+						</field>
+						<field id="opecod" id_cab="opecod">
+						</field>
+						
+					</table>
+               </form>
+        </histrix>

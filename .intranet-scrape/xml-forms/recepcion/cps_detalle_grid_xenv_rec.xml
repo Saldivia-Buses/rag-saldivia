@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="grid" borra="no"  path="fotos/articulos"  imprime="false" deleteRow="false">
+    <title>DETALLE</title>
+    <obs></obs>
+    <form >
+        <table id="STK_ENVIO_DETALLES" label="DETALLE">
+            <movimientos>
+                <relacion id="facremit_xenv_ins.xml" />
+                <relacion id="cpsmovim_xenv_upd.xml" />
+                <relacion id="stkinmov_xenv_ins.xml" />
+                <relacion id="ocprecib_xenv_ins.xml" />
+                <relacion id="movdemerito_xenv_ins.xml" />
+                <relacion id="stkenviodetalles_xenv_upd.xml" />
+            </movimientos>
+<!--
+
+            <movimientos  _cabecera="cps_recepcion_xoc_saldivia_cab.xml">
+
+                    INSERTA EL MOVIMIENTO DEL REMITO        
+//               <relacion id="cps_movimientos_recepcion.xml"></relacion> 
+
+                    MODIFICA EL RENGLON DE LA ORDEN DE COMPRA
+                <relacion id="cps_detalle_ingmov.xml"></relacion>
+                
+                      INGRESA EN STOCK (MODIFICAR PARA QUE TOME EL ID DE LA RECEPCION ) id_cpsdetalle modificado
+                <relacion id="stk_movimientos_ingreso.xml"></relacion>
+
+                <relacion id="ocprecib_ingmov2.xml"></relacion>
+
+
+                <relacion id="movdemeritos_ingmov2.xml"></relacion>
+
+
+                <relacion id="herramientas_ingmov2.xml"></relacion>
+                <relacion id="herramientas_ingmov_close2.xml"></relacion>
+
+        CREA LOS DEMERITOS -  MODIFICAR PARA QUE TOME EL ID DE LA RECEPCION     
+//        <relacion id="movdemeritos_ingmov.xml"></relacion>
+
+//      MODIFICA EL ESTADO DE LA OC. ORIGINAL
+                <relacion id="cps_movimientos_update.xml"></relacion>
+    //
+            </movimientos>
+--> 
+            <field id="id_envdetalle" noshow="true" />
+            <field id="stkenvio_id" noshow="true">
+                <condicion operador="=">-1</condicion>
+            </field>
+            <field id="cpsmovim_id" noshow="true"/>
+            <field id="id_cpsmovim" noshow="true">
+                <expression>CPSMOVIM.id_cpsmovim</expression>
+            </field>
+            <field id="fecreq" tabla="CPSMOVIM" >
+                <label>Requerido</label>
+                <help>Fecha</help>
+                <tipo>date</tipo>
+            </field>
+            <field id="movfec" tabla="CPSMOVIM" noshow="true"/>
+            <field id="ocpnro" tabla="CPSMOVIM" noshow="true"/>
+            <field id="ocpnro2">
+                <expression>CPSMOVIM.ocpnro</expression>
+                <label>O.Compra</label>
+                <helper xml="cpsencab_cabreimp.xml" type="link" width="90%" title="Detalle Orden Compra" dir="/compras">
+                    <parameter source="ocpnro" target="ocpnro" />
+                </helper>
+            </field>
+            <field id="artcod" tabla="CPSMOVIM" _noshow="true">
+                <label>Articulo</label>
+                <help>Codigo de Articulo.</help>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="artdes" tabla="STKINSUM">
+                <label>Insumo</label>
+            </field>
+            <field id="ocpren" noshow="true" tabla="CPSMOVIM"></field>
+            <field id="cantidad">
+                <label>Cantidad</label>
+                <tipo>integer</tipo>
+            </field>
+            <field id="ingresan" editable="true" deshabilitado="false">
+                <jseval campodestino="coddem" actxml="false">(((straFecha( $(\'[name=movfec__1]\').val() ) - straFecha(\'fecreq\') ) / (1000 * 60 * 60 * 24)) &gt;= 15)? 5 : ((((straFecha( $(\'[name=movfec__1]\').val() ) - straFecha(\'fecreq\') ) / (1000 * 60 * 60 * 24)) &gt;= 1)? 100 : 0 )</jseval>
+                <expression>cantidad</expression>
+                <label>Recibe</label>
+                <tipo>integer</tipo>
+            </field>
+            <field id="unicps" tabla="STKINSUM" noshow="true">
+                <label>Unidad</label>
+                <help>Unidad de Compra</help>
+                <helper type="combo" id="FSMUNIDS">
+                    <field id="unicod" clave="true"></field>
+                    <field id="uniabv"></field>
+                </helper>
+            </field>
+            <field id="idPed" tabla="CPSMOVIM" colstyle="display:none;" />
+            <field id="recibido">
+                <label>Recibido</label>
+                <condicion operador="=">0</condicion>
+            </field>
+            <field id="pen_cpsori" editable="true" deshabilitado="true">
+                <label>cpsori</label>
+                <expression>CPSMOVIM.pencps</expression>
+            </field>
+            <field id="pencps" deshabilitado="true" editable="true" tabla="CPSMOVIM" >
+                <label >Pendiente</label>
+                <help>Pendiente (expresado en la unidad de compra)</help>
+                <if exp="ingresan != 0">
+                    <true>pen_cpsori - (ingresan + 0 )</true>
+                    <false>pen_cpsori</false>
+                </if>
+                <condicion operador="&gt;">0</condicion>
+            </field>
+            <field id="coddem" local="true" editable="true">
+                <label modpos="nobr" colspan="3" style="color:red;width:90px;">Demeritos</label>
+                <tabla_ex id="DEMERITO">
+                    <field id="coddem" clave="true"></field>
+                    <field id="desdem"></field>
+                </tabla_ex>
+            </field>
+            <field id="trazable" tabla="STKINSUM" _oculto="true" editable="true">
+                <label>Trazabilidad</label>
+                <help>Insumo Trazable</help>
+                <options>
+                    <option valor="0">No Trazable</option>
+                    <option valor="1">Trazable</option>
+                </options>
+            </field>
+            <field id="sisprv" local="true" noshow="true">
+                <label>sisprv</label>
+                <valor>'01'</valor>
+                <tipo>char</tipo>
+            </field>
+            <field id="movcod" local="true" noshow="true">
+                <label>movcod</label>
+                <if exp="1 == 1">
+                    <true>1</true>
+                    <false>1</false>
+                </if>
+                <tipo>char</tipo>
+            </field>
+            <field id="nrocha" deshabilitado="true" tabla="CPSMOVIM" noshow="true">
+                <label modpos="nobr">Coche</label>
+            </field>
+            <field id="recLote" deshabilitado="true"  tabla="STKINSUM" noshow="true">
+                <label>RecLote</label>
+            </field>
+            <field id="valuso" deshabilitado="true"  tabla="STKINSUM" editable="true" noshow="true">
+                <label>vstock</label>
+                <valor>1</valor>
+            </field>
+            <field id="valcps" deshabilitado="true"  tabla="STKINSUM" editable="true" noshow="true">
+                <label>vCompra</label>
+                <valor>1</valor>
+            </field>
+            <field id="movcps" deshabilitado="true" tabla="CPSMOVIM" noshow="true"></field>
+            <field id="siscod" tabla="CPSMOVIM" noshow="true"></field>
+            <field id="ped" noshow="true">
+                <label modpos="nobr">Fec.Ped.</label>
+                <expression>
+                    case when CPSMOVIM.fecreq !='0000-00-00' then CPSMOVIM.fecreq else movfec end
+                </expression>
+                <tipo>date</tipo>
+            </field>
+            <field id="grabo_deme" local="true" oculto="true">
+                <label>grabo_deme</label>
+                <if exp="ingresan  + 0 >
+                    0 ">
+                    <true>'true'</true>
+                    <false>'false'</false>
+                </if>
+                <tipo>char</tipo>
+            </field>
+            <field id="grabo" local="true" noshow="true">
+                <label>grabo</label>
+                <if exp="ingresan + 0 > 0">
+                    <true>'true'</true>
+                    <false>'false'</false>
+                </if>
+            </field>
+        </table>
+        <join tipo="left">
+            <table id="CPSMOVIM">
+                <field id="id_cpsmovim">
+                    <condicion operador="=">STK_ENVIO_DETALLES.cpsmovim_id</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="STKINSUM">
+                <field id="siscod" oculto="true">
+                    <label>STKINSUM.siscod</label>
+                    <condicion operador="=">'01'</condicion>
+                </field>
+                <field id="artcod" oculto="true">
+                    <condicion operador="=">CPSMOVIM.artcod</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix>

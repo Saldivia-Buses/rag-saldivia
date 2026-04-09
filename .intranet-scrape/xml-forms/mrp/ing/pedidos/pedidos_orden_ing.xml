@@ -1,0 +1,316 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" filter="true" serverSide="true">
+  <title>Cta Ctes</title>
+  <obs/>
+  <form  _detalle="regpendientes_qry.xml" _inline="true" >
+    <table id="REG_MOVIMIENTOS">
+     
+      <!-- CONSULTA -->
+    
+	<filters>
+
+		<field id="fecha_movimiento">
+			<operador>&gt;=</operador>
+			<label>Desde Fecha</label>
+			<help>Fecha movimiento</help>
+		</field>
+		<field id="fecha_movimiento">
+			<operador>&lt;=</operador>
+			<label modpos="nobr">Hasta Fecha</label>
+			<help>Fecha movimiento</help>
+			<valor>today</valor>
+		</field>
+
+		<field id="nro_cuenta">
+			<operador>=</operador>
+			<label>Cliente</label>
+			<help>Cliente</help>
+		</field>
+    		<field id="nro_movimiento"  >
+		    <label modpos="nobr">Numero</label>
+			<operador>=</operador>
+		</field>
+
+		<field id="nombre_articulo">
+		    <label >Artículo</label>
+			<operador>like</operador>
+		</field>
+		<field id="stkrubro_id"   >
+		    <label modpos="nobr">Rubro</label>
+			<operador>=</operador>
+		</field>
+
+<!--
+	    	<field id="pendiente"  deshabilitado="false">
+		    <label modpos="nobr">Estado</label>
+			<operador>=</operador>
+		</field>
+-->
+	</filters> 
+
+	<field id="id_mrporden" noshow="true" tabla="MRP_ORDEN_PRODUCCION" />
+
+	<field id="id_regdetalle" noshow="true" _break="true">
+		<expression>id_regdetalle</expression>
+	</field>
+                       
+	<field id="id_regmovim" noshow="true" _break="true">
+		<detalle>regmovim_id</detalle>
+	</field>
+	
+	<field id="nro_cuenta" tabla="REG_CUENTA"  _nosho2="true">
+		<label>Cod</label>
+		<helper type="external" xml="regcuenta_solamente_nro_qry.xml" dir="/ayudas">
+		    <field id="subsistema_id"></field>
+		    <order>
+		    <field id="nombre_cuenta"></field>
+		    </order>
+		</helper>
+	</field>
+
+	<field id="regcuenta_id" noshow="true">
+		<operador>=</operador>
+		<help>Cliente</help>
+	</field>
+
+	<field id="nombre_cuenta" tabla="REG_CUENTA" break="true">
+		<label>Nombre Cuenta</label>
+	</field>
+
+<!--
+	<field id="descripcion_concepto" tabla="REG_CONCEPTOS" >
+		<label>Concepto</label>
+	</field>
+-->
+	<field id="nro_movimiento" noshow="true" />
+
+	<field id="num_movimiento" style="white-space:nowrap;">
+		<label>Numero</label>
+		<expression>CONCAT(LPAD(REG_MOVIMIENTOS.puesto_movimiento,4,'0'),'-',LPAD(case when REG_MOVIMIENTOS.cajmovimiento_id &gt;
+			 0 then REG_MOVIMIENTOS.cajmovimiento_id else REG_MOVIMIENTOS.nro_movimiento end ,8,'0'))
+		</expression>
+		<helper type="link" dir="/clientes/qry">
+		    <parameter source="id_regmovim" target="id_regmovim" />  
+		</helper>
+	    <attribute id="linkint">imprime_concepto</attribute>
+      </field>
+      
+      
+      <field id="imprime_concepto" noshow="true">
+        <expression>ifnull(ejecuta,'')</expression>
+      </field>
+
+
+	<field id="concepto_id" noshow="true">
+	    <condicion operador="=">18</condicion>
+	</field>
+	
+	<field id="fecha_movimiento">
+		<label>Fecha</label>
+	</field>
+    <field id="pathlength" _print="false">
+		<label>Demora</label>
+		<expression>datediff(now() , min(ifnull(vencimiento_movimiento, fecha_movimiento)))</expression> 
+		<tipo>meter</tipo> 
+    </field>
+
+	<field id="codigo_detalle" tabla="REG_DETALLES" esClave="true"  >	
+		<label>código</label>
+	</field>
+	<field id="nombre_articulo" tabla="STK_ARTICULOS"  style="font-size:0.9em;">
+		<label>Nombre Artículo</label>
+	</field>                         
+	<field id="stkrubro_id"  tabla="STK_ARTICULOS" noshow="true">
+	    <label modpos="nobr">Rubro</label>
+	    <helper type="combo" xml="stkrubro_qry.xml" dir="/ayudas" empty="true" />
+	</field>
+
+	<field id="Pedido" local="true" _noshow="true" suma="true" PDFalign="R">
+		<label>Pedido</label>
+		<expression>round(ifnull(REG_DETALLES.cantidad_detalle,0) , 0)</expression>
+		<tipo>integer</tipo>
+	</field>
+
+	<field id="cantidad_pendiente" tabla="REG_DETALLES" suma="true" PDFalign="R">
+	    <label>pendiente</label>
+
+		<expression>round(REG_DETALLES.cantidad_pendiente, 0)</expression>
+		<tipo>integer</tipo>
+	</field>
+
+<!--
+	<field id="stock" local="true" _noshow="true" noZero="true" style="text-align:right;">
+		<label>Stock</label>
+		<expression>round(cantidad_stock,0)</expression>
+		<tipo>integer</tipo>
+	</field>
+-->
+	<field id="stock2" local="true" _noshow="true" noZero="true" style="text-align:right;">
+		<label>Stock B</label>
+		<expression>round(stk_CantUM1,0)</expression>
+		<!--
+		<expression>select round(stk_CantUM1,0) from Stock where stkart_CodGen = id_stkarticulo limit 1</expression>
+	-->
+		<tipo>integer</tipo>
+	</field>
+<!--
+	<field id="pendiente" print="false" deshabilitado="false" noshow="true">
+		<options>
+		    <option valor="0">Pendiente</option>
+		    <option valor="1">Cumplidas</option>
+		</options>
+		<expression having="false">(case when REG_DETALLES.cantidad_pendiente &gt; 0 then '0' else '1' end)</expression>
+	</field>
+-->
+	<field id="estado" print="false">
+		<label>Estado</label>
+		<expression>case when cantidad_detalle &lt;= stk_CantUM1 then 'Entregar'  end</expression>
+	</field>
+
+<!--
+	<field id="clase" clasefila="true" noshow="true" print="false">
+		<expression>case when cantidad_detalle &lt;= stk_CantUM1 then 'error'  end</expression>
+	</field>
+-->
+	<!--
+	<field id="producir" local="true">
+		<valor>Producir</valor>
+		<attribute id="linkdes">nombre_cuenta</attribute>
+		<helper xml="producir_pedido.xml" type="link">
+			<parameter source="id_regmovim" target="id_regmovim" />
+		</helper>
+	</field>
+	-->
+	<field id="clase2" clasefila="true" noshow="true" print="false">
+		<expression>case when fecha_cierre != '0000-00-00' then 'resaltadoVioleta error'  end</expression>
+	</field>
+
+        <field id="numero_orden" style="color:red;font-weigth:bold;">
+            <expression>concat((case when scv_ID = 0 and mrporden_concepto_id != 1 then 'R' 
+                                     when scv_ID = 0 and mrporden_concepto_id = 1 then 'A' else '' end), numero_orden)</expression>
+             <attribute id="linkdes">numero_orden</attribute>
+            <helper xml="mrpordenproduccion_print.xml" type="link" dir="/mrp/qry/" modal="true" icon="ui-icon-document-b">
+                <parameter source="id_mrporden"  target="id_mrporden" />
+            </helper>
+            <label>Nro</label>
+            <help>Numero de Orden de Fabricación</help>
+        </field>
+
+        <field id="print_etiqueta">
+            <expression>concat((case when scv_ID = 0 and mrporden_concepto_id != 1 then 'R' 
+                                     when scv_ID = 0 and mrporden_concepto_id = 1 then 'A' else '' end), numero_orden)</expression>
+            <attribute id="linkdes">numero_orden</attribute>
+            <helper xml="mrpordenproduccion_etiqueta_print.xml" type="link" dir="/mrp/qry/" modal="true" icon="ui-icon-tag">
+                <parameter source="id_mrporden"  target="id_mrporden" />
+            </helper>
+            <label>Nro</label>
+        </field>
+
+	<order>
+		<field id="nro_cuenta"/>
+		<field id="nro_movimiento"/>
+
+	</order>                              
+	<group>
+		<field id="id_regdetalle" tabla="REG_DETALLES"/>
+	</group>
+	
+
+    </table>
+<!--
+    <join>
+      <table id="HTXOPTIONS">
+        <field id="option_name">
+          <condicion operador="=">'ID_NOTA_PEDIDOS' and REG_MOVIMIENTOS.concepto_id = option_value</condicion>
+        </field>
+      </table>
+    </join>
+-->
+    <join _tipo="left">
+      <table id="REG_DETALLES">
+        <field id="regmovim_id">
+          	<condicion operador="=">REG_MOVIMIENTOS.id_regmovim</condicion>
+        </field>
+	<field id="cantidad_pendiente">
+		<condicion operador="&gt;">0</condicion>
+	</field>
+      </table>
+    </join>
+    <join>
+      <table id="REG_CUENTA">
+        <field id="id_regcuenta">
+          <condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join>
+      <table id="REG_CONCEPTOS">
+        <field id="id_concepto">
+          <condicion operador="=">REG_MOVIMIENTOS.concepto_id and REG_CONCEPTOS.informa_calculo = 1 </condicion>
+        </field>
+      </table>
+    </join>
+
+    <join >
+      <table id="STK_ARTICULOS">
+        <field id="id_stkarticulo">
+          <condicion operador="=">codigo_detalle</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="STK_STOCKACTUAL">
+        <field id="stkarticulo_id">
+          <condicion operador="=">codigo_detalle</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+    	<table id="Stock">
+    		<field id="stkart_CodGen">
+    			<condicion operador="=">id_stkarticulo</condicion>
+
+    		</field>
+    	</table>
+    </join>
+
+    <join tipo="left">
+      <table id="REG_NUMERADORES">
+<!--        <field id="subsistema_id">
+          <condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion>
+        </field>
+-->
+        <field id="regconcepto_id">
+          <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+        </field>
+<!--        <field id="puesto">
+          <condicion operador="=">REG_MOVIMIENTOS.puesto_movimiento</condicion>
+        </field>
+        <field id="letra">
+          <condicion operador="=">REG_MOVIMIENTOS.letra_movimiento</condicion>
+        </field>-->
+      </table>
+    </join>
+    <join tipo="left">
+    	<table id="MRP_IMPUTACION_DETALLE">
+    		<field id="regdetalle_id">
+    			<condicion operador="=">id_regdetalle</condicion>
+    		</field>
+    	</table>
+    </join>
+    <join tipo="left">
+    	<table id="MRP_ORDEN_DETALLE">
+    		<field id="id_mrpordendetalle">
+    			<condicion operador="=">mrpordendetalle_id</condicion>
+    		</field>
+    	</table>
+    </join>
+    <join tipo="left">
+    	<table id="MRP_ORDEN_PRODUCCION">
+    		<field id="id_mrporden">
+    			<condicion operador="=">mrporden_id</condicion>
+    		</field>
+    	</table>
+    </join>
+  </form>
+</histrix>

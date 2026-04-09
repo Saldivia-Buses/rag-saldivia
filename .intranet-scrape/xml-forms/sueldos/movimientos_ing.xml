@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ing" inserta="false" modifica="false">
+    <title>Generacio de Vales</title>
+    <obs></obs>
+    <form >
+        <table id="PERSONAL" label="Movimientos" _styleTbody="height:500px;">
+
+            <movimientos cabecera="movimientos_cab.xml">
+                    <relacion id="movimientos_ingmov.xml">
+                    </relacion>
+            </movimientos>
+
+            <filters>
+
+                <field id="legajo">
+                    <label>Desde Cuenta </label>
+                    <help>Desde Cuenta </help>
+                    <operador>&gt;=</operador>
+                </field>
+
+                <field id="legajo">
+                    <label>Hasta Cuenta </label>
+                    <help>Hasta Cuenta </help>
+                    <operador>&lt;=</operador>
+                </field>
+                
+                <field id="Nombre" tabla="PERSONAL" local="true" deshabilitado="true" >
+                    <label>Nombre</label>
+                </field>
+
+            </filters>
+            
+            <field id="fechaEgreso" oculto="true">
+                <condicion operador="=">'0000-00-00'</condicion>
+            </field>
+
+            <field id="legajo" deshabilitado="true">
+                <label>Legajo</label>
+                <help>Código de Cuenta </help>
+                <ayuda_ex id="PERSONAL">
+                    <field id="legajo">
+                    </field>
+                    <field id="Nombre">
+                        <detalle>Nombre</detalle>
+                    </field>
+                    <order>
+                        <field id="Nombre"></field>
+                    </order>
+								
+                    <filtra>legajo</filtra>
+                </ayuda_ex>
+                <detalle>legajo</detalle>
+            </field>
+
+            <field id="Apellido" tabla="PERSONAL" deshabilitado="true"  >
+                <expression>PERSONAL.apellido</expression>
+                <label>Apellido</label>
+            </field>
+
+            <field id="Nombre" tabla="PERSONAL" deshabilitado="true"  local="true">
+                <expression>PERSONAL.Nombre</expression>
+                <label>Nombre</label>
+            </field>
+
+            <field id="generar" local="true" refresh="true">
+                  <label>Emitir</label>
+                 <tipo>check</tipo>
+                 <valor>1</valor>
+            </field>
+
+            <field id="grabar" local="true" noshow="true">
+                <if exp="generar == 1">
+                    <true>'true'</true>
+                    <false>'false'</false>
+                </if>
+            </field>
+
+            <order>
+                <field id="apellido"></field>
+                <field id="Nombre"></field>
+            </order>
+
+        </table>
+
+    </form>
+</histrix>

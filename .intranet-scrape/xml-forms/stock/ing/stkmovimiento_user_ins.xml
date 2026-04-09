@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert">
+   <title>Ingreso Movimiento</title>
+   <obs></obs>
+   <form>
+	<table id="HTXMESSAGES" idCampoCond="para">
+
+		<field id="para"   id_temp="para"/>
+		<field id="de" 	   id_temp="de"/>
+		<field id="mensaje">
+			<valor>(SELECT CONCAT('Transferencia desde ', (select nombre_deposito from STK_DEPOSITOS where id_stkdeposito = '[__stkdeposito_origen__]'),' a ', (select nombre_deposito from STK_DEPOSITOS where id_stkdeposito = '[__stkdeposito_destino__]'), '\n', (GROUP_CONCAT(round(cantidad), ' - ', nombre_articulo SEPARATOR '\n')))
+			                    FROM STK_MOVIMIENTOS 
+			                    JOIN STK_ARTICULOS ON STK_MOVIMIENTOS.stkarticulo_id = STK_ARTICULOS.id_stkarticulo 
+		                       WHERE STK_MOVIMIENTOS.numero_movimiento = '[__numero_movimiento__]'
+					 AND STK_MOVIMIENTOS.fecha_movimiento = str_to_date('[__fecha_movimiento__]','%d/%m/%Y')
+		                         AND STK_MOVIMIENTOS.stkdeposito_id = '[__stkdeposito_origen__]'
+			                   GROUP BY numero_movimiento limit 1)</valor>
+			<tipo>numeric</tipo>
+		</field>
+		<field id="fecha">
+			<valor>CURDATE()</valor>
+			<tipo>integer</tipo>
+		</field>
+		<field id="hora">
+			<valor>CURTIME()</valor>
+			<tipo>integer</tipo>
+		</field>
+
+		<field id="numero_movimiento" id_temp="numero_movimiento" local="true" />
+		<field id="fecha_movimiento" id_temp="fecha_movimiento" local="true" />
+		<field id="stkdeposito_origen" id_temp="stkdeposito_origen" local="true" />
+		<field id="stkdeposito_destino" id_temp="stkdeposito_destino" local="true" />
+		<field id="id_stkmovimiento" lastId="stkmovimiento_salida_ins.xml" local="true" />
+	</table>
+   </form>
+</histrix>	
+

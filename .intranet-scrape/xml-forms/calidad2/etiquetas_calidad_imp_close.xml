@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="nosql" _sqlhardcoded="true" grabafinal="true" postGrabacion="true">
+			<title>Impresion de etiquetas de calidad</title>
+	<obs></obs>
+	<form >
+		<table id="HTXMENU" label="Etiquetas de Calidad" >
+			<!-- codigo que se ejecuta en cada grabacion -->
+			<ejecuta>
+				<![CDATA[ 
+
+				if (isset($this->Etiquetas)){
+				    $this->Etiquetas->Imprimir('zebra'); 
+				    unset($this->Etiquetas);
+
+				}
+
+				//  $this->Etiquetas->Imprimir('zebra@aries'); 
+
+				]]>
+			</ejecuta>
+			<field id="cantidad" id_temp="cantidad">
+			</field> 
+			
+		</table>
+	</form>
+</histrix>

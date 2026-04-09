@@ -1,0 +1,351 @@
+<?xml version="1.0" encoding="utf-8" ?>
+  <histrix tipo="consulta" pageNumber="numerator" PDForientation="L">
+    <title>IVA VENTAS</title>
+    <form>
+      <table id="IVAVENTAS" label="IVA VENTAS">
+        <!--
+        <field id="_ORDEN" local="true" >
+          <label>Nro</label>
+          <help></help>
+        </field>
+      -->
+
+        <filters>
+<!--          <field id="feciva">
+            <operador>>=</operador>
+            <label>Desde Fecha</label>
+            <valor>today</valor>
+          </field>
+          <field id="feciva">
+            <operador>&lt;=</operador>
+            <label>Hasta Fecha</label>
+            <valor>today</valor>
+          </field> -->
+          <field id="feciva">
+            <operador>&gt;=</operador>
+            <label>Desde Fecha</label>
+            <valor>today</valor>
+          </field>
+
+          <field id="feciva">
+            <operador>&lt;=</operador>
+            <label>Hasta Fecha</label>
+            <valor>today</valor>
+          </field> 
+
+          <field id="nronpv" deshabilitado="false">
+            <operador>=</operador>
+            <label>Punto de Venta</label>
+          </field>
+          
+          <field id="numerator" print="false">
+            <label>Pagina Nro</label>
+          </field>
+
+        </filters>
+
+        <field id="numerator" local="true" noshow="true" print="false"> 
+        </field>
+
+        <field id="fecreg" noshow="true">
+            <label>Registrado</label>
+          </field>  
+
+        <field id="feciva">
+          <label>Fec.</label>
+        </field>
+        
+        <!--                  <field id="comcod">
+        <label>Cod.Comp.D.G.I.. </label>
+        <help>TIPO DE COMPROBANTE SEGUN D.G.I. (RG 3419 - ANEXO VI ). </help>
+        </field>
+        -->
+        
+        <field id="conabv" tabla="CCTCONCE">
+          <label>Conc</label>
+          <tipo>varchar</tipo>
+        </field>
+
+        <field id="codlet">
+          <label>L</label>
+        </field>
+        
+        <field id="nronpv" deshabilitado="false">
+          <label>Npv</label>
+	         <expression having="false">LPAD(IVAVENTAS.nronpv,4,'0')</expression>
+        </field>
+
+        <field id="regmin" tabla="CCTMOVIM" _noshow="true">
+          <label>Minuta</label>
+          <tipo>integer</tipo>
+        </field> 
+
+        <field id="nrocom" linkint="ctbregis2.xml" linkdir="ctb_old">
+          <label>Número</label>
+          <paring destino="regnro">nrocom</paring>          
+          <paring destino="regmin">regmin</paring>
+          <paring destino="regfec">fecreg</paring>
+        </field>
+        
+        <field id="ctacod" oculto="true">
+          <label>Cuenta</label>
+        </field>
+
+        <field id="ctanom">
+          <label>Cliente</label>
+        </field>
+<!--      <field id="tipdoc">
+          <label>Doc</label>
+          <help>Codigo de Documento</help>
+            <tabla_ex id="FSMDOCUM">
+              <field id="doccod"></field>
+              <field id="docnom"></field>
+            </tabla_ex>    
+        </field>
+        -->
+        <field id="nrodoc">
+          <label>CUIT</label>
+        </field>
+<!--        <field id="ivacod">
+          <label>Categoria I.V.A. </label>
+          <tabla_ex id="FSMCTIVA">
+            <field id="ivacod"></field>
+            <field id="ivanom"></field>
+          </tabla_ex>
+        </field>-->
+<!--        <field id="rnicom">
+          <label>R.N.I.</label>
+        </field>
+-->
+
+        <field id="gravado" suma="true">
+            <expression>SUM(impgra * (case when conimp = 1 then 1 else -1 end))</expression>
+            <label>Gravado</label>
+            <tipo>numeric</tipo>          
+        </field>   
+
+        <field id="impali" tabla="IVAIMPORTES" _noshow="true">
+          <label>Alicuota</label>
+        </field>      
+          
+          <field id="impcod" tabla="IVAIMPORTES">
+            <label>Impuesto</label>
+            <tabla_ex id="IVAIMPUESTOS">
+              <field id="impcod">
+              </field>
+              <field id="impnom"></field>
+            </tabla_ex>
+            <tipo>varchar</tipo>
+        </field>
+
+          <!--<field id="impimp" tabla="IVAIMPORTES">
+          <label>Importe</label>
+        </field>
+  -->
+        <field id="Importe"  suma="true">
+            <expression>SUM(impimp * (case when conimp = 1 then 1 else -1 end))</expression>
+          <label>Importe</label>
+          <tipo>numeric</tipo>
+        </field> 
+
+        <field id="execom" suma="true">
+          <label>Exento</label>
+          <tipo>numeric</tipo>
+        </field>
+
+        <field id="Execom" suma="true">
+          <expression>execom * (case when conimp = 1 then 1 else -1 end)</expression>
+          <label>B</label>
+          <tipo>numeric</tipo>
+        </field>
+
+        <field id="NOG" _norepeat="true" suma="true">
+          <label>No Grav.</label>
+                <expression>nogcom * (case when conimp = 1 then 1 else -1 end)</expression>
+          <tipo>numeric</tipo>
+        </field>
+  <!--      
+        <field id="totcom" norepeat="true" suma="true">
+          <label>Total</label>
+        </field>        
+        -->
+        <field id="Total" _norepeat="true" suma="true">
+            <expression>totcom * (case when conimp = 1 then 1 else -1 end)</expression>
+          <tipo>numeric</tipo>
+          <label>Total</label>
+        </field>       
+
+        <field id="asi" suma="true" _noshow="true">
+            <expression>SELECT (CASE WHEN imputacion_concepto  = 0 THEN 1 ELSE -1 END) * SUM(CTBREGIS.regimp) / 2 
+                                FROM CTBREGIS
+                                WHERE CTBREGIS.regfec = IVAVENTAS.fecreg
+                                  AND CTBREGIS.regnro = IVAVENTAS.nrocom 
+                                  AND CTBREGIS.regmin = REG_MOVIMIENTOS.regmin 
+                                  /* AND CTBREGIS.siscod = '10' */ </expression>
+            <label>Asiento</label>
+            <tipo>numeric</tipo>
+        </field>
+
+        <field id="difl" suma="true" local="true" noshow="true">
+            <label>dif</label>
+            <if exp="true" operador="=">
+                <true>round(Total - asi, 2)</true>
+                <false>0</false>
+            </if>
+        </field>
+
+      <field id="total_control" _norepeat="true" suma="true">
+        <expression>(nogcom * (case when conimp = 1 then 1 else -1 end)) + (execom * (case when conimp = 1 then 1 else -1 end)) + SUM(impimp * (case when conimp = 1 then 1 else -1 end)) + SUM(impgra * (case when conimp = 1 then 1 else -1 end))</expression>
+        <label>Sum.Total</label>
+        <tipo>numeric</tipo>
+      </field> 
+
+<!--         <field id="ctr" noshow="true">
+            <expression>SELECT COUNT(*) FROM CTBREGIS
+                        WHERE CTBREGIS.regfec = IVAVENTAS.fecreg
+                          AND CTBREGIS.regnro = IVAVENTAS.nrocom
+                          AND CTBREGIS.regmin = REG_MOVIMIENTOS.regmin
+                          AND CTBREGIS.siscod = '10'
+                          AND CTBREGIS.regdoh = 2
+                          AND CTBREGIS.ctbcod = '112100'</expression>
+            <tipo>integer</tipo>
+        </field> -->
+
+        <field id="_res" local="true" clasefila="true" noshow="true">
+            <if exp="total_control != Total" _operador="=">
+                <true>'resaltado'</true>
+                <false>''</false>
+            </if>
+            <tipo>varchar</tipo>
+        </field>
+
+        <group>
+
+          <field id="feciva" tabla="IVAVENTAS"></field>
+          <field id="nronpv" tabla="IVAVENTAS"></field>
+          <field id="nrocom" tabla="IVAVENTAS"></field>
+          <field id="codcom" tabla="IVAVENTAS"></field>
+          <field id="codlet" tabla="IVAVENTAS"></field>
+          <field id="ctacod" tabla="IVAVENTAS"></field>
+<!--          <field id="impcod" tabla="IVAIMPORTES"></field>
+          <field id="impgra" tabla="IVAIMPORTES"></field> -->
+        </group>
+      <order>
+          <field id="IVAVENTAS.feciva"></field>
+<!--          <field id="IVAVENTAS.nronpv"></field> -->
+          <field id="IVAVENTAS.nrocom"></field>
+<!--          <field id="IVAVENTAS.ivafec"></field> -->
+         <!--  <field id="IVAVENTAS.concod"></field> 
+          <field id="IVAVENTAS.nrocom"></field> -->
+        </order>
+
+      </table>
+    <join tipo="left">
+      <table id="CCTCONCE">
+        <field id="siscod" oculto="true">
+          <condicion operador="=">"02"</condicion>
+        </field>        
+        <field id="concod" >
+          <condicion operador="=">IVAVENTAS.codcom</condicion>
+        </field>
+      </table>
+    </join>            
+      
+    <join tipo="left">
+      <table id="IVAIMPORTES">
+        <field id="tipoiva" oculto="true">
+          <condicion operador="=">2</condicion>
+        </field>
+        <field id="feciva" >
+          <condicion operador="=">IVAVENTAS.fecreg</condicion>
+        </field>
+        <field id="codcom" >
+          <condicion operador="=">IVAVENTAS.codcom</condicion>
+        </field>
+        <field id="codlet" >
+          <condicion operador="=">IVAVENTAS.codlet</condicion>
+        </field>
+        <field id="nronpv" >
+          <condicion operador="=">IVAVENTAS.nronpv</condicion>
+        </field>
+        <field id="nrocom" >
+          <condicion operador="=">IVAVENTAS.nrocom</condicion>
+        </field>
+        <field id="ctacod" >
+          <condicion operador="=">IVAVENTAS.ctacod</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join tipo="left">
+        <table id="REG_CUENTA">
+            <field id="subsistema_id">
+                <condicion operador="=">'02'</condicion>
+            </field>
+            <field id="nro_cuenta">
+                <condicion operador="=">IVAVENTAS.ctacod</condicion>
+            </field>
+        </table>
+    </join>
+
+    <join tipo="left">
+        <table id="REG_MOVIMIENTOS">
+	    <field id="id_regmovim">
+                <condicion operador="=">regmovim_id</condicion>
+    
+	    </field>
+<!--
+            <field id="subsistema_id" oculto="true">
+                <condicion operador="=">'02'</condicion>
+            </field>
+            <field id="concod">
+                <condicion operador="=">IVAVENTAS.codcom</condicion>
+            </field>
+            <field id="regcuenta_id">
+                <condicion operador="=">REG_CUENTA.id_regcuenta</condicion>
+            </field>
+            <field id="nro_movimiento">
+                <condicion operador="=">IVAVENTAS.nrocom</condicion>
+            </field>
+            <field id="puesto_movimiento">
+                <condicion operador="=">IVAVENTAS.nronpv</condicion>
+            </field>
+            <field id="fecha_movimiento">
+                <condicion operador="=">IVAVENTAS.feciva</condicion>
+            </field>
+-->
+        </table>
+    </join>
+
+    <join tipo="left">
+        <table id="REG_CONCEPTOS">
+            <field id="subsistema_id" oculto="true">
+                <condicion operador="=">'02'</condicion>
+            </field>
+            <field id="cod_concepto">
+                <condicion operador="=">IVAVENTAS.codcom</condicion>
+            </field>
+        </table>
+    </join>
+
+    <join tipo="left">
+      <table id="CCTMOVIM">
+        <field id="siscod" oculto="true">
+          <condicion operador="=">"02"</condicion>
+        </field>        
+        <field id="concod" >
+          <condicion operador="=">IVAVENTAS.codcom</condicion>
+        </field>
+        <field id="ctacod" >
+          <condicion operador="=">IVAVENTAS.ctacod</condicion>
+        </field>
+        <field id="movnro" >
+          <condicion operador="=">IVAVENTAS.nrocom</condicion>
+        </field>
+        <field id="movnpv" >
+          <condicion operador="=">IVAVENTAS.nronpv</condicion>
+        </field>
+      </table>
+    </join> 
+    </form>
+  </histrix>

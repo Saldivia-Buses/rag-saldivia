@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ing" deleteRow="false" transacional="true" tooltip="false" inserta="false" modifica="false" confirma="APLICAR" forceReload="true" showCantidad="false" dataTables_info="false">
+	<title>Formas de Cobro/Pago</title>
+	 <obs></obs>
+		<form>
+		    <table id="CAJ_FORMAS_PAGO" label="Formas de Cobro/Pago del Puesto">
+
+				<movimientos>
+					<relacion id="cajconfig_formas_del.xml"/>
+					<relacion id="cajconfig_formas_ins.xml"/>
+				</movimientos>
+						
+				<field id="id_cajformapago" noshow="true" esClave="true"/>
+	
+				<!-- TABLA DE VINCULACION -->
+				<field id="id_cajpuestoforma" tabla="CAJ_PUESTO_FORMAS" noshow="true" />
+				<field id="cajpuesto_id" local="true" esClave="true"    noshow="true" />
+				<field id="cajformapago_id" tabla="CAJ_PUESTO_FORMAS"   noshow="true" />
+				<!-- FIN -->
+
+				<!-- Determina La Grabacion de los Registros Habilitados -->				
+				<field id="habforma" refresh="true" deshabilitado="false">
+				    <expression>case when !isnull(cajformapago_id) then 1 else 0 end</expression>
+				    <tipo>check</tipo>
+				</field>
+				<field id="habilitado" local="true" noshow="true" >
+				    <if exp="'habforma' == 1">
+						<true>'true'</true>
+						<false>'false'</false>
+				    </if>
+				</field>
+            											
+				<field id="descripcion_forma" deshabilitado="true" >
+					<label>Nombre</label>
+				</field>
+                                <field id="color" noshow="true" >
+                            	    <expression> case tipo_forma when 1 then 'color:red;' else 'color:green' end</expression>
+                                </field>
+				<field id="tipo_forma" deshabilitado="true">
+				    <attribute id="style">color</attribute>
+					<helper type="combo">
+						<option value="0">Cobro</option>
+						<option value="1">Pago</option>
+					</helper>
+				</field>
+				
+				
+				<order>
+					<field id="tipo_forma" />
+				</order>
+
+		    </table>		    
+		
+		    <join tipo="left">
+				<table id="CAJ_PUESTO_FORMAS">
+				    <field id="cajformapago_id">
+						<condicion operador="=">id_cajformapago</condicion>
+				    </field>
+					<field id="cajpuesto_id">
+						<condicion operador="=">'[__cajpuesto_id__]'</condicion>
+					</field>
+				</table>
+		    </join>
+		    
+		</form>
+</histrix>    
+

@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" subtipo="vertical" llenoTemporal="false" imprime="false" path="fotos/articulos" >
+	<title>ENTRADA SALIDA STOCK POR CODIGO</title>
+	<obs></obs>
+	<form >
+		<table id="STKINMOV" label="SALIDA DE MATERIALES">
+			<importar xml="piezas_select_cons.xml"  label="Importar Piezas" titulo="Seleccionar Piezas"/>
+			
+			<movimientos cabecera="stkinmovmat_cab.xml">
+				<relacion id="stkinmovmat_auto_ingmov.xml" />
+				<relacion id="fsmparam_nroalm_upd.xml" dir="/almacen/ing"/>
+			</movimientos>
+<!--
+			<validation>
+				<condition><![CDATA[ cantidad_stock < movcant ]]></condition>
+				<message>No hay stock disponible</message>
+			</validation>
+-->
+
+			<field id="siscod" oculto="true">
+				<label>siscod</label>
+				<parametro id="fsmparam_paralf.xml" retorna="paralf">
+					<field id="parcla">
+						<condicion operador="=">'sisstk'</condicion>
+					</field>
+				</parametro>
+			</field>
+			<field id="id_herramienta" local="true" _autoing="true">
+				<label>Código de Barras</label>
+				<size>20</size>
+				<tipo>varchar</tipo>
+				<ayuda_ex id="HERRAMIENTAS" xml="HLPherramientas_bar.xml">
+					<field id="id_herramienta">
+						<label>Cod.</label>
+					</field>
+					<field id="artcod">
+						<label>insumo</label>
+						<detalle>artcod</detalle>
+					</field>	
+					<clave>id_herramienta</clave>
+					<descripcion>nomherr</descripcion>
+									
+				</ayuda_ex>				
+				<help>Ingrese el código de barras para materiales trazables</help>
+			</field>			
+			<field id="artcod" required="true">
+				<label>Código Artículo</label>
+				<help>Código de Artículo</help>
+				<helper type="external" xml="HLPstkinsum_old.xml" dir="/help_local">
+				       <field id="artcod">
+						<label>Cod.</label>
+						<detalle>artcod</detalle>
+					</field>
+					<field id="artdes">
+						<label>Insumo</label>
+						<detalle>artdes</detalle>  
+					</field>
+					<field id="unicps" oculto="true">
+						<detalle>unicps</detalle>
+					</field>
+					<field id="artuni" oculto="true">
+						<detalle>artuni</detalle>
+					</field>
+					<field id="artcos" oculto="true">
+						<detalle>artcos</detalle>
+					</field>
+					<field id="artrub" oculto="true">
+						<detalle>artrub</detalle>
+					</field>
+					<field id="unidef" oculto="true">
+						<detalle>unidef</detalle>
+					</field>
+					<field id="valcps" oculto="true">
+						<detalle>valcps</detalle>
+					</field>
+					<field id="valuso" oculto="true">
+						<detalle>valuso</detalle>
+					</field>
+					<field id="siscod" oculto="true">
+						<condicion operador="=">'01'</condicion>
+					</field>      
+				</helper>
+                <actualiza>
+                    <field id="depcod" destino="stkarticulo_id" />
+                </actualiza>				
+			</field>
+			<field id="artdes" deshabilitado="true" autoing="true" modpos="nobr">
+				<label>Descripción</label>
+				<tipo>varchar</tipo>
+			</field>
+
+            <field id="depcod" local="true"  required="true" colspan="4">
+                <label>Depósito Origen</label>
+                <helper xml="deposito_articulo_qry.xml" dir="/stock_local/qry" type="combo" empty="true">
+	          <field id="cantidad_stock" _oculto="true">
+    		     <expression _having="false" >sum((case when tipo_concepto = 0  then  1 else -1 end) * ifnull(cantidad,0))</expression>
+		         <condicion operador="!=">0</condicion>
+	    	    <detalle>cantidad_stock</detalle>
+	          </field>
+
+		</helper>
+            </field>
+	    <field id="cantidad_stock" deshabilitado="true">
+		<label>Máximo disponible</label>
+	    </field>
+
+            <field id="stkdeposito_id" noshow="true" />
+
+            <field id="stklocacion_id" noshow="true" />
+
+			<field id="movcant" incdec="true" >
+				<label>Cantidad</label>
+				<help>Cantidad</help>
+				<valor>1</valor>
+			</field>
+			<field id="artuni" deshabilitado="true" local="true" >
+				<label>Unidad uso</label>
+				<tabla_ex id="FSMUNIDS">
+					<field id="unicod" clave="true"></field>
+					<field id="uninom"></field>
+				</tabla_ex>				
+				<tipo>integer</tipo>
+				
+			</field>			
+			
+			<field id="unicps" local="true" deshabilitado="true" noshow="true">
+				<label>Unidad Compra</label>
+				<help>Unidad de compra</help>
+				<tabla_ex id="FSMUNIDS">
+					<field id="unicod" clave="true"></field>
+					<field id="uninom"></field>
+				</tabla_ex>
+				<tipo>integer</tipo>
+			</field>
+			<field id="unidef" deshabilitado="true" local="true" noshow="true">
+			</field>
+			<field id="valcps" deshabilitado="true" local="true" noshow="true" >
+				<tipo>numeric</tipo>
+                <valor>1</valor>
+			</field>
+			<field id="_coche" noshow="true">
+				<expression sql="true">select nrocha from STKINMOV as STK left join STKCONCE on STKCONCE.movcod = STK.movcod where STKCONCE.contip = 2 and STK.artcod = '[__artcod__]' and STK.nrocha = ([__nrocha__] + 0) and STK.siscod='01' limit 1</expression>
+				<tipo>integer</tipo>
+			</field>
+			
+			<field id="previos" noshow="true">
+				<label>P</label>
+				<expression sql="true">select round(sum(movcant), 2) from STKINMOV as STK  left join STKCONCE on STKCONCE.movcod = STK.movcod where STKCONCE.contip = 2 and STK.artcod = '[__artcod__]' and STK.nrocha = ([__nrocha__] + 0) and STK.siscod='01'</expression>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="leyenda" local="true" linkint="insumos_x_coche_cons.xml" deshabilitado="true">
+				<if exp="previos + 0 > 0">
+					<true>'Se Retiraron: previos'</true>
+					<false>''</false>
+				</if>
+				<tipo>varchar</tipo>
+				<paring destino="nrocha">_coche</paring>
+				<paring destino="artcod">artcod</paring>
+				
+			</field>
+	                <field id="fotopath" local="true" noshow="true">
+                    	    <if exp="true">
+                                <true>'artcod/'</true>
+                                <false>''</false>
+                            </if>
+                            <tipo>varchar</tipo>
+                        </field>
+                        <field id="foto" path="fotopath" download="true" deshabilitado="true">
+                        <expression sql="true">select ARTICULO_FOTO.foto from ARTICULO_FOTO where ARTICULO_FOTO.idArticulo = '[__artcod__]' order by revision desc limit 1</expression>
+                                <label>Imagen</label>
+                <tipo >file</tipo>
+                <size>40</size>
+                        </field>
+
+			<field id="alerta" local="true" clasefila="true" noshow="true">
+				<if exp="previos + 0 > 0">
+					<true>'resaltado'</true>
+					<false>''</false>
+				</if>
+				<tipo>varchar</tipo>
+			</field>
+			
+			<field id="valuso" deshabilitado="true" local="true" noshow="true">
+				<tipo>numeric</tipo>
+                                <valor>1</valor>
+			</field>
+			<field id="movcps" deshabilitado="true" local="true" noshow="true">
+				<if exp="(unidef + 0) == 1 ">
+					<true>movcant / valuso * valcps</true>
+					<false>movcant * valcps / valuso</false>
+				</if>
+			</field>
+
+			<field id="artcos" deshabilitado="true" local="true" noshow="true">
+			</field>
+			<field id="artrub" deshabilitado="true" local="true" noshow="true">
+			</field>
+			<field id="movref" deshabilitado="true" local="true" _noshow="true">
+				<valor eval="true">date('H:i:s').' Salida por almacén'</valor>
+			</field>			
+		</table>
+	</form>
+</histrix>

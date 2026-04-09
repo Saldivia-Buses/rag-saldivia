@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert" >
+    <title>PEDIDOS</title>
+    <obs></obs>
+    <consulta>
+        <table id="MRP_IMPUTACION_DETALLE" label="ORDEN DE PRODUCCION" >
+            <field id="regdetalle_id" 	  id_temp="id_regdetalle" />
+            <field id="mrpordendetalle_id" 	lastId="mrp_detalle_agrupado_insert.xml"></field> 
+            
+        </table>
+    </consulta>
+</histrix>

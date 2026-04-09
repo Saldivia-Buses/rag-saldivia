@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="ing" importFile="true" inserta="false" modifica="false" llenoTemporal="false" log="false" deleteRow="false">
+    <title>Importar Articulos</title>
+
+    <!-- 
+    COMENTADO HASTA QUE FUNCIONE EL JQUERY AQUI. SE NECESITARIA NOSHOWEAR 
+    EL CAMPO EXISTENCIA E IMPORTACION EN EL FORM
+    <customScript>
+                    $('table[id="importFields"]').on('click', function(){
+                            $('table[id="importFields"] tr').eq(3).hide();
+                            $('table[id="importFields"] tr').eq(4).hide();
+                    });
+    </customScript> -->
+
+     <obs></obs>
+        <form>
+            <table id="STK_ARTICULOS" label="Importar Articulos">
+
+                <movimientos cabecera="stkarticulos_lp_importar_cab.xml">
+                    <relacion id="stkarticulos_lp_importar_ins_his.xml" />
+                    <relacion id="stkarticulos_lp_importar_ins_ld.xml" />
+                </movimientos>
+
+
+                    <field id="id_stkarticulo" style="text-align:center;font-size: 14px;">
+                        <label>ID Articulo</label>
+                        <tipo>varchar</tipo>
+                        <!-- <attribute id="colstyle">color</attribute> -->
+                    </field>
+
+                    <field id="precio_venta"  style="text-align:center;font-size: 14px;">
+                        <label>Precio Venta</label>
+                        <tipo>varchar</tipo>
+                        <!-- <attribute id="colstyle">color</attribute> -->
+                    </field>
+
+                    <field id="existencia" style="text-align:center;font-size: 14px;" import="false"> 
+                        <label>Existencia</label>
+                        <expression sql="true">
+                            SELECT 
+                            if( EXISTS(
+                                        SELECT '1' FROM STK_ARTICULOS WHERE id_stkarticulo =  '[__id_stkarticulo__]'  
+                                ),'&#10004;','&#10006;')
+                        </expression>
+                    </field>
+
+                <field id="importar" noshow="true" import="false"> 
+                        <label>Importar</label>
+                        <expression sql="true">
+                            SELECT 
+                            if( EXISTS(
+                                        SELECT '1' FROM STK_ARTICULOS WHERE id_stkarticulo =  '[__id_stkarticulo__]'  
+                                ),'1','0')
+                        </expression>
+                    </field>
+
+                        <!-- <field id="color" noshow="true" >
+                        <label>Color</label>
+                        <expression sql="true">
+                            SELECT 
+                            if( 
+                                EXISTS(
+                                SELECT 1 FROM STK_ARTICULOS WHERE id_stkarticulo = '[__id_stkarticulo__]'
+                                )
+                                ,''
+                                ,'background-color:lightyellow'
+                            ) 
+                        </expression>
+                    </field> -->
+
+            </table>
+        </form>
+    </histrix>

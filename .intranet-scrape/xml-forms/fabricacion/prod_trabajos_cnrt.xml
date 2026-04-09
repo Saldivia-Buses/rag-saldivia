@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm-mini">
+  <title>Trabajos CNRT Unidades</title>
+  <obs></obs>
+  <form>
+    <table id="PROD_TRABAJOS_CNRT" label="Trabajos CNRT Unidades">
+
+    <field id="id_trabajos_cnrt" noshow="true" esClave="true">
+      <label>Trabajo CNRT</label>
+    </field>
+
+    <field id="nrofab_id" noshow="true">
+      <label>Unidad</label>
+    </field>
+
+    <field id="descrip_trabajo" required="true">
+      <label>Descripción</label>
+      <help>Descripción del trabajo</help>
+      <size>50</size>
+    </field>
+
+    <field id="fecha_trabajo">
+      <label>Fecha</label>
+      <help>Trabajo Fecha</help>
+      <tipo>date</tipo>
+    </field>
+
+    <field id="fecha_inspeccion_cnrt">
+      <label>Inspección</label>
+      <help>Inspección Fecha</help>
+      <tipo>date</tipo>
+    </field>
+
+	<field id="usuario" noshow="true" deshabilitado="true">
+	    <label modpos="nobr">Usuario</label>
+	    <valor eval="true">$_SESSION['usuario']</valor>
+    </field>
+
+	<field id="userid" Formstyle="display:none;">
+	    <label>Cargó</label>
+	    <expression>concat(HTXUSERS.Nombre,' ', HTXUSERS.apellido)</expression>
+	</field>
+
+    <field id="realizo_trabajo_inspeccion">
+      <label>Ok Trabajos P/CNRT</label>
+      <help>CNRT fecha del trabajo</help>
+      <tipo>date</tipo>
+    </field>
+
+    <field id="realizo_trabajo_cliente">
+      <label>Ok Trabajos P/Cliente</label>
+      <help>Cliente fecha del trabajo</help>
+      <tipo>date</tipo>
+    </field>
+
+    <field id="xml_consulta" local="true" noshow="true">
+      <valor>'prod_trabajos_cnrt.xml'</valor>
+    </field>
+
+    <field id="nombre_id_registro" local="true" noshow="true">
+      <valor>'Trabajo CNRT'</valor>
+    </field>
+
+    <field id="log" local="true" linkint="registros_log_qry.xml" linkdir="/calidad/qry/" linkdes="Historial" print="false" >
+          <label>Modificaciones</label>
+          <paring destino="xml_consulta">xml_consulta</paring>   
+          <paring destino="id_registro">id_trabajos_cnrt</paring>   
+          <paring destino="nombre_id_registro">nombre_id_registro</paring>   
+      <expression>'Ver'</expression>  
+    </field>
+
+    </table>
+
+	<join tipo="left">
+	    <table id="HTXUSERS">
+		<field id="login">
+		    <condicion operador="=">usuario</condicion>
+		</field>
+	    </table>
+	</join>
+
+  </form>
+</histrix>

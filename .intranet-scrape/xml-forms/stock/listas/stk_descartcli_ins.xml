@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert" limit="0">
+	<title>Descuentyos Articulos Clientes</title>
+	<obs></obs>
+	<form >
+		<table id="STK_DESCUENTOSARTCLI"			idCampoCond="lapone">
+			<field id="stkarticulo_id" 			id_temp="stkarticulo_id"></field>
+			<field id="regcuenta_id" 			id_temp="regcuenta_id"></field>
+			<field id="porcentaje_desc" 			id_temp="porcentaje_desc"></field>	
+			<field id="porcentaje_desc1"		 	id_temp="porcentaje_desc1"></field>	
+		</table>
+	</form>
+
+</histrix>
+

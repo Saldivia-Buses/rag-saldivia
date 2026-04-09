@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+  <title>Conceptos Contable</title>
+   <obs></obs>
+    <form>
+        <table id="CTB_CONCEPTOS" label="Concepto Contables">
+
+        <field id="id_concepto" autoinc="true" noshow="true">
+      	    <label>Código</label>
+        </field>
+        
+        <field id="nombre_concepto">
+      		<label>Descripcion</label>
+        </field>
+
+        <field id="integrado" noshow="true">
+	      <detalle>ctbintegra</detalle>
+        </field>
+        
+        </table>
+    </form>
+</histrix>  

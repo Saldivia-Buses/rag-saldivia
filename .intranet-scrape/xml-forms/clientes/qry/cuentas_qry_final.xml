@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" >
+    <title>Consulta de Cuentas</title>
+    <obs></obs>
+    <form _detalle="relacion_arbol.xml" >
+
+        <table id="REG_CUENTA" label="Cuentas">
+
+            <filters>
+    	        <field id="nro_cuenta"  noshow="true">
+        		    <label>Nº Cuenta</label>
+    	            <operador>=</operador>
+                </field>
+
+                <field id="nombre_cuenta" deshabilitado="false">
+                    <operador>like</operador>
+                    <label>Nombre</label>
+                </field>
+
+                 <field id="regzona_id">
+                    <label>Zona</label>
+                </field>                   
+               
+            </filters>
+
+    <fieldGroup colstyle="text-align:center;vertical-align:middle; padding: 2px 2px 2px 2px;">
+
+            <field id="nro_cuenta">
+                <label>Nº</label>
+                <helper type="external" xml="regcuenta_relacionescmb_nro.xml" dir="/ayudas" />
+                <size>6</size> 
+            </field>
+
+            <field id="id_regcuenta" noshow="true">
+                <label>ID</label>
+                <detalle>regcuentarelacionada_id</detalle>
+            </field>
+				
+            <field id="nombre_cuenta" linkdes="Datos del Cliente">
+                <label>Nombre</label> 
+                <helper type="link" xml="det_cliente.xml" modal="true">
+                    <parameter source="id_regcuenta" target="id_regcuenta" operator="="/>
+                </helper>               
+                <size>25</size>
+            </field>
+
+            <field id="deuda" linkdes="Cuenta Corriente" local="true">
+                <label>Cuenta</label>                
+                <helper type="link" xml="cc_notas_venta.xml" dir="/clientes/qry" modal="true">
+                    <parameter source="id_regcuenta" target="regcuenta_id" operator="="/>
+                    <parameter source="subsistema_id" target="subsistema_id" operator="="/>
+                </helper>
+                <valor>'Cuenta'</valor>
+            </field>
+
+            <field id="regzona_id">
+                <helper type="combo" id="REG_ZONAS" empty="true">
+                    <field id="id_regzona" />
+                    <field id="nombre_zona" />
+                    <field id="subsistema_id" />
+                </helper>
+                <label>Zona</label>
+            </field>
+
+
+            <field id="cod_direccion" tabla="REG_CUENTA">
+                <label>Direccion</label>
+                <size>25</size>
+            </field>
+
+            <field id="provincia_id" tabla="REG_CUENTA">
+                <label>Provincia</label>
+                <helper type="combo" xml="provincia_qry.xml" dir="/ayudas" empty="true" />
+                <actualiza>
+                    <field id="localidad_id" destino="provincia_id" />
+                </actualiza>
+            </field>
+
+            <field id="localidad_id" tabla="REG_CUENTA">
+                <label>Localidad</label>
+                <helper type="combo" xml="localidad_qry.xml" dir="/ayudas" empty="true" > 
+                    <field id="provincia_id" oculto="true" />
+                </helper>
+            </field>
+
+			<!-- Filtros -->
+
+			<!-- SUBSISTEMA DE LA PERSONA EN CUESTION -->
+            <field id="subsistema_id" noshow="true" valauto="true" >
+            	<label>ss_persona</label>
+                <detalle>subsistema_id</detalle>
+            </field>
+
+            <!-- SUBSISTEMA DEL SUBORDINADO -->
+            <field id="subsistemave_id" local="true" noshow="true" >
+            	<label>ss_subordinado</label>
+            	<detalle>subsistemarelacionada_id</detalle>
+            </field>
+
+            <!-- A PARTIR DEL SUBSISTEMA DEL SUBORDINADO Y EL ID CUENTA, BUSCA LOS SUBORDINADOS -->
+
+        </fieldGroup>
+
+            <group>
+                <field id="nro_cuenta"/>
+            </group>
+
+            <order>
+                <field id="nombre_cuenta" />
+            </order>
+
+        </table>
+
+        <join tipo="left">
+            <table id="REG_CUENTA_RELACIONES">
+                <field id="regcuenta_id">
+                    <condicion operador="=">id_regcuenta</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>	

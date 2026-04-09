@@ -1,0 +1,216 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" preloadData="false" paginar="200">
+    <title>Consulta de Cuentas</title>
+    <obs></obs>                              [M w7
+    <form detalle="detalle_cliente.xml" inline="true">
+
+        <table id="REG_CUENTA" label="Cuentas">
+
+            <filters>
+    	        <field id="nro_cuenta"  noshow="true">
+    		    <label>Cod</label>
+	            <operador>=</operador>
+                </field>
+
+                <field id="nombre_cuenta" deshabilitado="false">
+                    <operador>like</operador>
+                    <label>Nombre</label>
+                </field>
+                <field id="cod_direccion">
+                    <label modpos="nobr">Direccion</label>
+                    <operador>like</operador>
+                </field>
+                <field id="nombre_localidad" deshabilitado="false">
+                    <operador>like</operador>
+                    <label modpos="nobr">Ciudad</label>
+                </field>
+
+                <!--
+                <field id="tel_cuenta" deshabilitado="false">
+                    <operador>=</operador>
+                    <label modpos="nobr">Telefono</label>
+                </field>	
+                -->
+
+                <field id="regzona_id" _noshow="true" >
+                    <label _modpos="nobr">Zona</label>
+                </field>
+                <!--
+                <field id="regcuentarelacionada_id">
+                    <label>Vendedor</label>
+                </field>
+            -->
+                
+            </filters>
+            <field id="nro_cuenta"  _noshow="true">
+                <label>Cod</label>
+                <helper type="external" xml="regcuenta_relacionescmb_nro.xml" dir="/ayudas"  >
+                </helper> 
+                
+                <size>6</size> 
+            </field>
+
+            <field id="id_regcuenta" noshow="true">
+                <label>Número</label>
+                <detalle>regcuenta_id</detalle>
+            </field>
+				
+            <field id="nombre_cuenta" linkdes="Datos del Cliente">
+                <label>Nombre</label>                
+                <helper type="link" xml="det_cliente.xml" modal="true">
+                    <parameter source="id_regcuenta" target="id_regcuenta" operator="="/>
+                </helper>               
+                <size>25</size>
+            </field>
+
+            <field id="deuda" linkdes="Cuenta Corriente" local="true">
+                <label>Deuda</label>                
+                <helper type="link" xml="regdetalles_all_qry.xml" dir="/clientes/qry" modal="true">
+                    <parameter source="id_regcuenta" target="regcuenta_id" operator="="/>
+                    <parameter source="subsistema_id" target="subsistema_id" operator="="/>
+                </helper>
+                
+                <valor>'Deuda'</valor>
+            </field>
+
+            <field id="cod_direccion">
+                <label>Direccion</label>
+                <size>25</size>
+            </field>
+
+            <field id="localidad_id">
+                <label>loc</label>
+            </field>	
+
+            <field id="codigo_postal">
+                <label>cp</label>
+            </field>	
+
+            <field id="nombre_localidad" tabla="GEN_LOCALIDADES">
+                <label>Localidad</label>
+            </field>
+
+            <field id="nombre_provincia" tabla="GEN_PROVINCIAS">
+                <label>Provincia</label>
+            </field>
+
+            <field id="regzona_id">
+                <helper type="combo" id="REG_ZONAS" empty="true">
+                    <field id="id_regzona" />
+                    <field id="nombre_zona" />
+                    <field id="subsistema_id" />
+                </helper>
+                <label  _modpos="nobr">Zona</label>     
+            </field>
+
+            <field id="alta_cuenta">
+                <label>Fecha Alta</label>
+                <tipo>date</tipo>
+            </field>
+
+            <field id="nombre_iva" tabla="GEN_IVA">
+                <label>IVA</label>
+            </field>
+
+            <field id="cuit_cuenta">
+                <label>CUIT/CUIL</label>
+            </field>
+
+			<!-- Filtros -->
+
+            <field id="subsistema_id" noshow="true" >
+                <detalle>subsistema_id</detalle>
+            </field>
+
+
+            <field id="subsistemave_id" local="true" noshow="true" />
+
+            <field id="login" local="true" noshow="true">
+                <label>login</label>
+                <valor eval="true">$_SESSION['idUser']</valor>
+            </field>
+            
+            <field id="usr" noshow="true">
+	        <label>usr</label>
+	        <expression>usuario_id</expression>
+<!--                <expression having="false">usuario_id = [__login__]</expression>     -->
+<!--                <condicion operador="=">true</condicion>   --> 
+            </field>   
+<!--
+        
+            <field id="regcuentarelacionada_id2" >
+                    <expresion>regcuentarelacionada_id</expresion>
+            </field>
+        -->
+            <!--
+            <field id="regcuentarelacionada_id" noshow="true" _local="true" tabla="REG_CUENTA_RELACIONES">
+                <helper type="combo" id="REG_CUENTA" _xml="regcuenta_cmb.xml" dir="/ayudas" empty="true">
+                    <field id="id_regcuenta" autoinc="true" _noshow="true" esClave="true">
+                        <label>Numero Cuenta</label>
+          
+                    </field>
+                    <field id="nombre_cuenta">
+                        <label>Nombre</label>
+                        <detalle>nombre</detalle>
+                    </field>
+                    <field id="subsistema_id" noshow="true">
+                        <condicion operador="=" valorde="subsistemave_id"></condicion>
+                    </field>
+                </helper>
+                <label>Vendedor</label>
+                <help>Seleccione el Vendedor</help>
+            </field>
+            -->
+           
+            <group>
+                <field id="nro_cuenta"/>
+            </group>
+            <order>
+                <field id="nombre_cuenta" />
+            </order>
+
+        </table>
+        <join tipo="left">
+            <table id="REG_CUENTA_RELACIONES">
+                <field id="regcuenta_id">
+                    <condicion operador="=">id_regcuenta</condicion>
+                </field>
+                <field id="subsistemarelacionada_id">
+                    <condicion operador="=">'[__subsistemave_id__]'</condicion>
+                </field>
+            </table>
+        </join>
+	<join tipo="left">
+            <table id="REG_CUENTA_USERS">
+                <field id="regcuenta_id">
+                    <condicion operador="=">REG_CUENTA_RELACIONES.regcuentarelacionada_id</condicion>
+                </field>
+            </table>
+        </join> 
+        <join tipo="left">
+            <table id="GEN_PROVINCIAS">
+                <field id="id_provincia">
+                    <condicion operador="=">REG_CUENTA.provincia_id</condicion>
+                </field>
+            </table>
+        </join>
+
+
+        <join tipo="left">
+            <table id="GEN_LOCALIDADES">
+                <field id="id_localidad">
+                    <condicion operador="=">REG_CUENTA.localidad_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="GEN_IVA">
+                <field id="id_iva">
+                    <condicion operador="=">REG_CUENTA.iva_id</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>	

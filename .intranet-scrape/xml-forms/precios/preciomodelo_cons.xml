@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" class="consultaancha"  PDFfontSize="8.8"  PDForientacion="L" PDFlineColor="0,0,0">
+  <title>PRECIOS POR MODELO</title>
+  <obs/>
+
+   <pie size="14" align="C" style="B" color="#ff0000">[__pie__]</pie>
+  <form >
+               <pdf>
+            <code><![CDATA[
+                      
+                      $pdf->SetFont('helvetica', 'B', 10);
+                      $Y = 26;
+                      $pdf->SetFillColor(240, 240, 240);
+                      
+
+                      $pdf->setXY(153, $Y);
+                      $pdf->Rect(152, $Y ,67, 5,    'DF');
+                      $pdf->SetTextColor(0, 177, 0);
+                      
+	              $pdf->MultiCell(62, 5 , 'MASTER SIT/INTEGRAL TAP.', 'B', 'C', 'DF');
+                      $pdf->SetTextColor(0, 0, 0);
+
+                      $pdf->setXY(220, $Y);
+                      $pdf->Rect(219, $Y ,68, 5,    'DF');
+                      $pdf->SetTextColor(0, 0, 255);
+                      
+                      $pdf->MultiCell(68, 5 , 'FAIC / ASIENTOS ROSARIO', 'B', 'C', 'DF');
+                      $pdf->SetTextColor(0, 0, 0);
+
+                      $pdf->SetFillColor(250, 250, 250);
+                      $pdf->setXY(163, $Y);
+
+            ]]></code>
+          </pdf>
+
+    <table id="PRECIOMODELO" >
+      <title>Precios por modelo</title>
+
+      <filters>
+        <field id="idLista" PDFsize="10">
+        
+          <label modpos="nobr">Lista</label>
+          <help>Lista</help>
+          <operador>=</operador>
+          <tipo>integer</tipo>
+  
+        </field>
+    <!--  <field id="act" local="true" noshow="true">
+        <label modpos="nobr"></label>        
+      </field> -->
+        
+      </filters>
+
+      <field id="nrocar" noshow="true">
+      <tipo>integer</tipo>
+      </field>
+      <field id="idLista" noshow="true" PDFsize="10">
+        <tabla_ex id="LISTAPRECIOMODELO">
+          <field id="idLista" >
+          </field>
+          <field id="nom" >
+            <expression>concat('Nro ',idLista,' - Vigencia Desde: ' , DATE_FORMAT(fecha, '%d/%m/%Y'))</expression>
+          </field>
+          <field id="fecha" orden="true" tipoOrden="DESC">
+          </field>
+          
+          <order>
+            <field id="fecha"></field>
+          </order>
+
+        </tabla_ex>        
+        <actualiza>
+          <field destino="act" id="act"/>
+        </actualiza>        
+        <label modpos="nobr">Lista</label>
+        <help>Lista</help>
+      </field>
+      <field id="pie" tabla="LISTAPRECIOMODELO" noshow="true">
+      </field>      
+      <field id="act" local="true" noshow="true">
+        <label modpos="nobr"></label>
+      </field>
+      <field id="modcar" tabla="CARROCERIA">
+		
+        <help>Modelo de Carroceria</help>
+        <tipo>varchar</tipo>
+
+      </field>
+      <field id="cons2" obj="preciomodelo_cons2.xml" showObjTabla="true"   local="true"  >
+        <paring destino="nrocar" operador="=">nrocar</paring>
+        <paring destino="idLista" operador="=">idLista</paring>
+      </field> 
+  
+
+                
+    
+<!--
+      <field id="marcod" >
+        <label modpos="nobr" >Marca</label>
+        <help>Marca del Chasis</help>
+        <tabla_ex id="MARCHASIS" >
+          <field id="marcod" clave="true">
+            <label>Codigo</label>
+            <help>Codigo de Chasis</help>
+          </field>
+          <field id="mardes">
+          </field>
+          <order>
+            <field id="mardes"></field>
+          </order>
+        </tabla_ex>
+        <actualiza>
+          <field destino="marcod" id="modcha"/>
+        </actualiza>
+      </field>
+      <field id="mardes" tabla="MARCHASIS">
+        <tipo>varchar</tipo>
+      </field>
+      <field id="modcha" >
+        <label modpos="nobr" colstyle="display:none;">Modelo</label>
+        <help>Modelo del Chasis</help>
+        <tabla_ex id="MODCHASIS" vacio="true">
+          <field clave="true" id="modcha">
+            <label>Modelo</label>
+            <help>Codigo del Modelo de Chasis</help>
+          </field>
+          <field id="moddes">
+            <label>Descripcion</label>
+            <help>Descripcion del Modelo</help>
+          </field>
+          <field id="marcod">
+            <label>Marca Chasis</label>
+          </field>
+        </tabla_ex>
+      </field>
+
+      <field id="moddes" tabla="MODCHASIS" >
+        <expression>MODCHASIS.moddes</expression>
+        <label Formstyle="display:none;" modpos="nobr">Modelo de Chasis</label>
+        <tipo>varchar</tipo>
+      </field> 
+      <field id="asientos">
+        <expression>asientos + acompañante</expression>
+        <label style="color:blue; font-size:16px;">Asientos</label>
+        <label>Cantidad de Asientos</label>
+      </field>
+
+      <field id="precio">
+        <label modpos="nobr" style="color:green; font-size:16px;">Precio conces.</label>
+        <help>Precio</help>
+        <tipo>decimal</tipo>
+      </field>
+      <field id="margen" noshow="true">
+        <label>% Rec</label>
+        <help>Recargo precio al público</help>
+      </field>
+      <field id="precio2">
+        <expression>precio * (1 + margen)</expression>
+        <label modpos="nobr" style="color:red; font-size:16px;">Precio público</label>
+        <help>Precio</help>
+      </field> -->
+      <group>
+        <field id="nrocar" tabla="PRECIOMODELO"></field>
+      </group>
+      <order>
+        <field id="modcar"></field>
+      </order>
+    </table>
+    <join tipo="left">
+               <table id="CARROCERIA">
+          <field id="nrocar">
+                 <condicion operador="=">PRECIOMODELO.nrocar</condicion>
+          </field>
+        </table>
+    </join>
+    <join tipo="left">
+               <table id="LISTAPRECIOMODELO">
+          <field id="idLista">
+                 <condicion operador="=">PRECIOMODELO.idLista</condicion>
+          </field>
+        </table>
+    </join>    
+
+
+  </form>
+</histrix>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" >
+    <title>Cuentas</title>
+    <obs></obs>
+
+    <form>
+
+        <table id="REG_CUENTA" label="Cuentas">
+
+                        <field id="prox_nro">
+                            <expression>max(nro_cuenta) + 1</expression>
+                        </field>        
+                        <field id="subsistema_id" >
+                        </field>
+        </table>
+    </form>
+</histrix>

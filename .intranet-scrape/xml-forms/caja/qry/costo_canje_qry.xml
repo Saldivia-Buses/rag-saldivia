@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ficha" inserta="false" modifica="false" borra="false" cancel="false" imprime="false">
+  <title>Canje</title>
+  <obs/>
+  <form>
+    <table id="STK_ARTICULOS" label="Canje">
+      
+      <field id="id_stkarticulo" noshow="true">
+        <condicion operador="=">-1</condicion>
+      </field>
+
+      <field id="codigo_barra">
+        <label>Código</label>
+        <helper type="external" xml="stkarticulos_canje_qry.xml" dir="/ayudas" />
+      </field>
+
+      <field id="nombre_articulo" deshabilitado="true" sincelda="true">
+        <label modpos="nobr" />
+        <size>30</size>
+      </field>
+
+      <field id="cotizacion" local="true" deshabilitado="true">
+        <label modpos="nobr">Cotizacion</label>
+      </field>
+
+      <field id="separator" local="true" deshabilitado="true" style="height:5px;" />
+
+      <field id="precio_canje" local="true" deshabilitado="true" style="font-weight:bold;font-size:15px;">
+        <label>Precio $</label>
+      </field>
+
+    </table>
+
+  </form>
+</histrix>

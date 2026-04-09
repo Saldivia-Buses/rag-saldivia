@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm-mini" subtipo="vertical" imprime="false" export="false" accordion="false">
+  <title>Paletas de Colores</title>
+  <obs></obs>
+  <form detalle="colores_crud.xml">
+    <table id="GEN_PALETAS" label="Paletas de Colores">
+
+        <field id="id_paleta" noshow="true" autoinc="true" esClave="true">
+            <detalle>paleta_id</detalle>
+        </field>
+
+        <field id="nombre_paleta">
+            <label>Paleta</label>
+            <size>40</size>
+        </field>
+
+    </table>
+  </form>
+</histrix>

@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix borra="no" imprime="false" inserta="no" modifica="false" llenoreferente="true" tipo="ing" deleteRow="false">
+    <title>Cotizaciones Aprobadas</title>
+    <obs/>
+    <form >
+        <table id="CPS_DETALLE"  label="Cotizado" idCampoCond="imputar">
+
+            <fieldGroup>
+                <field id="codprv" noshow="true">
+                    <expression having="false">nro_cuenta</expression>
+                </field>
+
+		<field id="ordencompra_id" noshow="true" tabla="CPS_COTIZACION_DETALLE">
+		    <condicion operador="=">0</condicion>
+        		</field>
+                        <field id="id_cpsdetalle" noshow="true" esClave="true"/>
+                        <field id="cpsmovimiento_id" noshow="true"/>
+                        <field id="fecha_cpsdetalle" noshow="true"/>
+                        <field id="regcuenta_id" noshow="true">
+                            <expression>CPS_COTIZACION_DETALLE.regcuenta_id</expression>
+                        </field>
+                        <field id="id_cotiz_detalle" tabla="CPS_COTIZACION_DETALLE" noshow="true" esClave="true" >
+        		    <detalle>id_cotiz_detalle</detalle>
+        		</field>
+                <field id="stkarticulo_id" >
+                    <label>Codigo</label>
+                    <detalle>artcod</detalle>
+                </field>
+                <field id="cpsdetalle" >
+                    <label>Descripcion</label>
+                    <detalle>artdes</detalle>
+                </field>
+                <!--
+                <field id="nombre">
+                    <label>Prov</label>
+                    <expression>nombre_cuenta</expression>
+                </field>
+                -->
+                <field id="fecha_entrega"    tabla="CPS_COTIZACION_DETALLE" _noshow="true">
+                    <label>Entrega</label>
+                    <tipo>date</tipo>
+                    <detalle>fecreq</detalle>
+                </field>
+                <field id="recomendado_fecha" local="true" style="color:green;font-weight:bold;text-shadow:1px 1px 2px #666;">
+
+                    <if exp="menor_fecha == id_cotiz_detalle">
+                            <true>'&lt;&lt;'</true>
+                            <false>''</false>
+                    </if>
+                    
+                </field>                
+                
+                <field id="observaciones" tabla="CPS_COTIZACION_DETALLE">
+                    <label>Obs</label>
+                    <expression>CPS_COTIZACION_DETALLE.observaciones</expression>
+                    <detalle>observaciones</detalle>
+                </field>
+            
+                <field id="cantidad_compra" _suma="true">
+                    <label>Cant</label>
+                    <detalle>movcps</detalle>
+                </field>
+
+                <field deshabilitado="true" id="unidad_compra_id"  tabla="STK_ARTICULOS">
+                    <label Formstyle="display:none;">Unidad de Compra</label>
+                    <help>Unidad de Medida</help>
+                    <tabla_ex id="FSMUNIDS">
+                        <field id="unicod"/>
+                        <field id="uninom"/>
+                        <order>
+                            <field id="uninom"/>
+                        </order>
+                    </tabla_ex>
+                    <detalle>unicps</detalle>
+                </field>
+                <field id="precio_unitario" style="color:blue;">
+                    <label>P.Unitario</label>
+                    <expression>precio_unitario</expression>
+                    <tipo>numeric</tipo>
+                    <detalle>artcos</detalle>
+                </field>
+
+                <field id="bonificacion_1"    tabla="CPS_COTIZACION_DETALLE" noZero="true">
+                    <label>Bonif %1</label>
+                
+                    <tipo>custom_numeric</tipo>
+                    <size>5</size>
+		    <detalle>bonificacion_1</detalle>
+                </field>
+
+                <field id="bonificacion_2" tabla="CPS_COTIZACION_DETALLE"  noZero="true">
+                    <label>Bonif %2</label>
+                    <tipo>custom_numeric</tipo>
+                    <size>5</size>
+		    <detalle>bonificacion_2</detalle>
+                </field>
+
+                <field id="total_cotizacion" style="color:red;" >
+                    <label>Total</label>
+                    <expression>total_cotizacion</expression>
+                    <detalle>Total</detalle>
+                    <tipo>numeric</tipo>
+                </field>
+
+                <field id="comprar"  tabla="CPS_COTIZACION_DETALLE" noshow="true">
+                    <label>Comprar</label>
+                    <condicion operador="=">1</condicion>
+                </field>
+
+                <field id="pedido_id" deshabilitado="true" noshow="true">
+                    <label>Pedido Origen</label>
+                    <detalle>idPed</detalle>
+                </field>
+
+            </fieldGroup>
+
+            
+            <field id="formapago_id"  tabla="CPS_COTIZACION_DETALLE">
+                <label modpos="nobr" >Forma de Pago Preferida</label>
+                <helper id="FORMAPAGO" type="combo" _empty="true">
+                    <field id="formaPago" />
+                    <field id="nombrePago" />
+                </helper>
+                <help>Forma de Pago</help>
+            </field>     
+            VIENE DESDE LA GENERACION DE LA COTIZACION
+
+            <field id="usuario" deshabilitado="true" tabla="PEDIDOINT" >
+                <label Formstyle="display:none;">Usuario</label>
+                <help>Usuario que hace el pedido</help>
+                <tabla_ex id="HTXUSERS">
+                    <field id="login"></field>
+                    <field id="nombre">
+                        <expression>concat(nombre,' ', apellido)</expression>
+                    </field>
+                    <order>
+                        <field id="nombre"></field>
+                    </order>
+                </tabla_ex>
+        		<detalle>usuario</detalle>
+            </field>
+
+            VIENE DESDE LA GENERACION DE LA COTIZACION
+
+            <field id="mensaje" deshabilitado="true" tabla="PEDIDOINT">
+                <label style="color:green;">Msj</label>
+                <tipo>varchar</tipo>
+            </field>
+
+            VIENE DESDE LA GENERACION DE LA COTIZACION
+<!--
+            <field id="idDeposito" deshabilitado="true"  tabla="PEDIDOINT">
+                <label modpos="nobr" colspan="6" Formstyle="display:none;">Lugar Entrega</label>
+                <help>Lugar de Entrega/Descarga</help>
+                <tabla_ex id="DEPOSITO">
+                    <field id="idDeposito"></field>
+                    <field id="direccion"></field>
+                </tabla_ex>
+                <tipo>integer</tipo>
+            </field>
+
+
+        -->
+            <field deshabilitado="true" id="nrofab"  tabla="PEDIDOINT">
+                <label>NroFab</label>
+                <detalle>nrofab</detalle>
+            </field>
+<!--
+            
+            <field id="movref" deshabilitado="true">
+                <label Formstyle="display:none;">Ref.</label>
+                <help>Referencia</help>
+                <size>5</size>
+                <detalle>observaciones</detalle>
+            </field>
+-->
+            <field deshabilitado="true" id="unidad_uso_id"  tabla="STK_ARTICULOS" noshow="true">
+                <label Formstyle="display:none;">Unidad de Medida</label>
+                <help>Unidad de Medida</help>
+                <tabla_ex id="FSMUNIDS">
+                    <field id="unicod"/>
+                    <field id="uninom"/>
+                    <order>
+                        <field id="uninom"/>
+                    </order>
+                </tabla_ex>
+                <detalle>artuni</detalle>
+            </field>
+
+            <field id="valor_compra" noshow="true" tabla="STK_ARTICULOS">
+                <label>valcps</label>
+                <detalle>valcps</detalle>
+            </field>
+            <field id="valor_uso" noshow="true" tabla="STK_ARTICULOS">
+                <label>valuso</label>
+                <detalle>valuso</detalle>
+            </field>
+            <!--
+            <field id="directorio" noshow="true" >
+                <detalle>directorio</detalle>
+            </field>
+            <field id="archivo" noshow="true" >
+                <detalle>archivo</detalle>
+            </field>
+            <field id="pedidopath" noshow="true">
+                <expression>CONCAT('pedidoint/',directorio)</expression>
+                <detalle>pedidopath</detalle>
+            </field>
+    -->
+            <field id="artiva" noshow="true">
+                <expression>
+                    select IVAIMPUESTOS.impali from IVAIMPUESTOS where impcod = ivaregimen_id limit 1
+                </expression>
+                <detalle>alicuota</detalle>
+            </field>
+            <!--
+	<field id="costo_ant" >
+	    <label>Costo Ant.</label>
+	    <expression>round(case when ((select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINSUM.artcod and
+		STKINSPR.siscod='01' order by fecult DESC limit 1,1) ) > 0
+		then ((select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINSUM.artcod and
+		STKINSPR.siscod='01' order by fecult DESC limit 1,1))
+		else 0  end, 2)</expression>
+	    <tipo>decimal</tipo>
+	    <detalle>costo_ant</detalle>
+	</field>
+
+
+        <field id="stkformaemb_id" tabla="STKINSUM" noshow="true">
+            <detalle>stkformaemb_id</detalle>
+        </field>
+    -->
+
+            <field id="imputar" local="true" refresh="true" >
+                <label>imputar</label>
+                <help>Seleccion</help>
+                <tipo>check</tipo>
+                <if exp="codprov == 0">
+                    <true>(imputar == 1)?1:0</true>
+                    <false>(imputar == 0)?0:1</false>
+                </if>
+            </field>
+
+    </table>
+    <join>
+        <table id="CPS_COTIZACION_DETALLE">
+            <field id="cpsdetalle_id">
+                <condicion operador="=">CPS_DETALLE.id_cpsdetalle</condicion>
+            </field>
+        </table>
+
+    </join>
+    <join >
+        <table id="REG_CUENTA">
+            <field id="id_regcuenta">
+                <condicion operador="=">CPS_COTIZACION_DETALLE.regcuenta_id</condicion>
+            </field>
+        </table>
+    </join>
+
+    <join >
+        <table id="STK_ARTICULOS">
+            <field id="id_stkarticulo">
+                <condicion operador="=">stkarticulo_id</condicion>
+            </field>
+            <field id="subsistema_id">
+                <condicion operador="=">'01'</condicion>
+            </field>        
+	</table>
+    </join>
+    <join tipo="left">
+        <table id="PEDIDOINT">
+            <field id="idPed">
+                <condicion operador="=">CPS_DETALLE.pedido_id and idPed != 0</condicion>
+            </field>
+        </table>
+    </join>
+</form>
+</histrix>

@@ -1,0 +1,433 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" subtipo="vertical" imprime="false" llenoreferente="true" _style="height:100%;" barraDrag="false">
+	<title>ENTRADA SALIDA STOCK POR CODIGO</title>
+	<obs></obs>
+	<form  _detalle="normainsumos_factura.xml">
+			<table id="STKINMOV" label="ENTRADA SALIDA STOCK" idCampoCond="selec">
+			<movimientos >
+				<!-- <relacion id="facdetal_ingmov.xml"/> -->
+			<!--	<relacion id="stkinmov_ingmov_facturas.xml"/>				-->
+				<relacion id="factura_facremit_ingmov.xml"/>		CIERRA REMITO		
+				<relacion id="factura_facremimp_ingmov.xml"/>			ingreso facrempimp?	
+
+				
+				<relacion id="factura_stkinspr_ingmov.xml"/>				
+				<relacion id="factura_stkinsum_ingmov.xml"/>	
+				<relacion id="factura_facremimp_update_regid.xml"/>
+				<!--
+				    <relacion id="factura_stkinsum_update.xml" />
+				-->
+			</movimientos>
+
+			<field id="uno" local="true"  noshow="true">
+				<label>Uno</label>
+				<valor>1</valor>
+			</field>
+	
+			<field id="hoy" local="true" oculto="true">
+				<label>ahora</label>
+				<tipo>date</tipo>
+				<valor>today</valor>
+			</field>			
+
+
+			<field id="movnro" deshabilitado="true" noshow="true">
+				<label>Remito</label>
+				<help>Numero de Remito</help>
+				<detalle>movnro</detalle>
+			</field>
+			<field id="nroremito" noshow="true" deshabilitado="true">
+				<expression>STKINMOV.movnro</expression>
+				<tipo>integer</tipo>
+			</field>
+			<field id="movalt" deshabilitado="true" noshow="true">
+			</field>
+			
+			<field id="movfec" deshabilitado="true" noshow="true">
+				<label>Fecha</label>
+				<help>Fecha</help>
+			</field> 
+			<field id="fecharemito" noshow="true" deshabilitado="true">
+				<expression>STKINMOV.movfec</expression>
+				<tipo>date</tipo>
+			</field>
+				
+				
+<!--			<field id="fecult" oculto="true" local="true">
+				<label>Fecha</label>
+				<help>Fecha</help>
+					<tipo>date</tipo>
+					<valor>today</valor>
+				
+			</field>		
+			-->	
+			<field id="usuario" tabla="PEDIDOINT" deshabilitado="true" Formstyle="display:none;" noshow="true" />
+
+			<field id="ctbcentro_id" noshow="true">
+				<label>c.c.</label>
+				<expression>centrocostos_id</expression>
+				<detalle>ctbcentro_id</detalle>
+			</field>
+
+			<field id="pedido_id">
+			    <label>Pedid</label>
+			    <helper type="link" xml="pedidoint_qry.xml" dir="/pedidoint">
+                        	<parameter source="pedido_id" target="idPed" />
+                            </helper>
+			</field>
+
+<!--			<field id="ocpnro" >
+				<label Formstyle="display:none;">O.Com.</label>
+				<help>Orden Compra</help>
+				<detalle>ocpnro</detalle>
+
+			</field>
+-->
+			<field id="ocpnro" linkint="cpsencab_cabreimp.xml" linkdes="Orden de Compra" linkdir="/compras" deshabilitado="true">
+				<label Formstyle="display:none;">Nro Orden Compra</label>
+				<paring destino="ctacod">ctacod</paring>
+				<paring destino="ocpnro">ocpnro</paring>
+				<detalle>ocpnro</detalle>
+			</field>
+
+			<field id="nrocha" deshabilitado="true" >
+				<label Formstyle="display:none;">Coche</label>
+
+			</field>			
+			<field id="siscod" oculto="true">
+				<label>Codigo Sis </label>
+				<help>
+				</help>
+				<condicion operador="=">'01'</condicion>
+				
+			</field>
+			<field id="ctacod" deshabilitado="true" noshow="true">
+				<label>Codigo de Cuenta </label>
+				<help>
+				</help>
+			</field>
+	<!--		<field id="artuni" tabla="STKINSUM" noshow="true">
+				<detalle>artuni</detalle>
+			</field> -->
+			
+			<field id="artcod" tabla="STKINSUM"  deshabilitado="true">
+				<label Formstyle="display:none;">Código</label>
+				<help>Codigo de Articulo. </help>
+				<ayuda_ex id="STKINSUM" xml="HLPstkinsum.xml" dir="/help_local">
+					<field id="artcod" >
+						<label>Cod.</label>
+					</field>
+					<field id="artdes">
+						<label>Insumo</label>
+						<detalle>artdes</detalle>
+					</field>
+					<field id="artcos" oculto="true">
+						<label>costo</label>
+						<detalle>artcos</detalle>
+					</field>
+					<field id="siscod" oculto="true">
+						<condicion operador="=">'01'</condicion>
+					</field>
+					<field id="artctb" oculto="true">
+						<label>ctbs</label>
+						<detalle>artctb</detalle>
+					</field>
+					
+					<clave>artcod</clave>
+					<descripcion>artdes</descripcion>
+				</ayuda_ex>
+				<detalle>artcod</detalle>
+
+			</field>
+			
+			<field id="artdes" tabla="STKINSUM" deshabilitado="true"  noshow="true">
+				<label modpos="nobr" Formstyle="display:none;">artdes</label>
+				<help>
+				</help>
+				<tipo>string</tipo>
+			</field>
+			<field id="descripcion" deshabilitado="true" noshow="true" > 
+				<label modpos="nobr" Formstyle="display:none;">Desc.</label>
+				<help></help>
+				<tipo>varchar</tipo>
+			</field>			
+			<field id="det"  deshabilitado="true">
+				<label modpos="nobr" Formstyle="display:none;">Descripcion</label>
+				<expression>case descripcion when '' then artdes else descripcion end</expression>
+				<tipo>varchar</tipo>
+				
+
+			</field>			
+			<field id="artctb" tabla="STKINSUM" _deshabilitado="true" _noshow="true" colstyle="font-size:9px">
+				<label>Cta.Ctb</label>
+				<help></help>
+				<tipo>string</tipo>
+				
+				<detalle>ctb_comp</detalle>
+        <ayuda_ex id="CTBCUENT" vacio="true">
+          <field id="ctbcod"></field>
+          
+          <field id="ctbnom">
+            <detalle>ctbnom</detalle>
+          </field>
+          <field id="ctbhab">
+            <condicion operador="=">1</condicion>
+          </field>
+<!--          <field id="siscod">
+            <condicion operador="=">'10'</condicion>
+          </field>
+    -->      
+          <order>
+            <field id="ctbnom"></field>
+          </order>
+        </ayuda_ex>
+
+			</field>
+			<field id="ctbnom" tabla="CTBCUENT" colstyle="font-size:9px" deshabilitado="true" Formstyle="display:none;">
+			    <label>Nombre Cta.Ctb</label>
+			    <detalle>ctbnom</detalle>
+			</field>
+
+			<field id="movpori" noshow="true">
+				<expression>(STKINMOV.movcps)</expression>
+				<label>Cant Ori</label>
+				<tipo>numeric</tipo>
+				
+			</field>
+			<!--
+			<field id="movuso" suma="true" deshabilitado="true">
+				<label modpos="nobr" Formstyle="display:none;">Cant uso </label>
+			</field>
+			<field id="artuni" tabla="STKINSUM" deshabilitado="true">
+				<label modpos="nobr" Formstyle="display:none;">Un.</label>
+					<tabla_ex id="FSMUNIDS">
+						<field id="unicod"></field>
+						<field id="uniabv"></field>
+						<order>
+							<field id="uniabv"></field>
+						</order>
+					</tabla_ex>			
+				<detalle>artuni</detalle>
+				<tipo>integer</tipo>
+			</field>
+			-->
+			<field id="movcps" suma="true">
+				<label >Cant Cps </label>
+				<detalle>artcan</detalle>
+			</field>
+			<field id="tipuni" deshabilitado="true">
+			<label modpos="nobr" Formstyle="display:none;">T.Un.</label>
+					<tabla_ex id="FSMUNIDS">
+						<field id="unicod"></field>
+						<field id="uniabv"></field>
+						<order>
+							<field id="uniabv"></field>
+						</order>
+					</tabla_ex>				
+			<help> </help>
+			</field>
+
+
+			<field id="multi" local="true" deshabilitado="true" noshow="true">
+			    <valor>1</valor>
+			    <detalle>multi</detalle>
+			</field>
+			
+			<field id="movp2" local="true" deshabilitado="true" noshow="true">
+				<label modpos="nobr">Cant fin</label>
+				<tipo>numeric</tipo>
+				
+				<if exp="true" operador="=">
+					<true>movpori - movcps</true>
+					<false>0</false>
+				</if>
+				<detalle>movp2</detalle>
+
+			</field>
+			<field id="old_cos" deshabilitado="true" _noshow="true">
+				<label modpos="nobr" >Cos.Ant.</label>
+				<expression>case when ((select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINMOV.artcod and STKINSPR.siscod='01' order by fecult DESC limit 1) * STKINSUM.valcps / STKINSUM.valuso) > 0  then ((select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINMOV.artcod and STKINSPR.siscod='01' order by fecult DESC limit 1) ) else STKINSUM.artcos end</expression>
+				<tipo>numeric</tipo>
+			</field> 
+			
+			<field id="artcos" deshabilitado="false">
+				<label modpos="nobr" >Costo</label>
+				<expression>case when ((select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINMOV.artcod and STKINSPR.siscod='01' order by fecult DESC limit 1) * STKINSUM.valcps / STKINSUM.valuso) > 0  then ((select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINMOV.artcod and STKINSPR.siscod='01' order by fecult DESC limit 1) ) else STKINSUM.artcos end</expression>
+				<detalle>artnet</detalle>
+				<tipo>numeric</tipo>
+			</field> 
+			<field id="costo_oc" deshabilitado="true" style="background-color:pink">
+			    <label modpos="nobr">Costo OC</label>
+			    <expression>CPSMOVIM.artcos</expression>
+			    <tipo>numeric</tipo>
+			</field>
+			<field id="newc" local="true">
+				<label>Nuevo Precio Unitario</label>
+				<jseval campodestino="artcos">(((newc ) -  ( newc ) / 100 * Dto1 ) - ((newc ) -  ( newc ) / 100 * Dto1 ) / 100 * Dto2 ) </jseval>	
+				<jseval campodestino="showtot">((artcos ) * movcps)</jseval>				
+				<tipo>numeric</tipo>
+			</field>
+			<field id="difcosto" clasefila="true" local="true" noshow="true">
+				<if exp="newc > (old_cos * 1.50) ">
+					<true>'error'</true>
+					<false>''</false>
+				</if>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="costo_real" noshow="true" deshabilitado="true" local="true" >
+					<if exp="newc + 0 != 0">
+						<true>newc</true>
+						<false>artcos</false>
+					</if>
+			</field>
+			<field id="Dto1" local="true">
+				<label modpos="nobr">%Dto 1</label>	
+				<tipo>numeric</tipo>
+				<size>8</size>
+				<jseval campodestino="artcos">(((newc ) -  ( newc ) / 100 * Dto1 ) - ((newc ) -  ( newc ) / 100 * Dto1 ) / 100 * Dto2 ) </jseval>
+				<jseval campodestino="showtot">((artcos ) * movcps)</jseval>						
+			</field>
+			<field id="Dto2" local="true">
+				<label modpos="nobr">%Dto 2</label>	
+				<tipo>numeric</tipo>
+				<size>8</size>
+				<jseval campodestino="artcos">(((newc ) -  ( newc ) / 100 * Dto1 ) - ((newc ) -  ( newc ) / 100 * Dto1 ) / 100 * Dto2 ) </jseval>					
+				
+				<jseval campodestino="showtot">((artcos ) * movcps)</jseval>					
+			</field>				
+	<!--		<field id="Dto3" local="true">
+				<label modpos="nobr">%Dto 3</label>	
+				<tipo>numeric</tipo>
+				<size>8</size>
+			</field>					
+		-->	
+				
+			<field id="ivacod" tabla="CCTCUENT" noshow="true">
+				<label modpos="nobr">ivacod</label>
+			</field>
+
+			<field id="exento" suma="true" local="true" deshabilitado="true" noshow="true">
+				<if exp="0ivacod == 6" operador="=">
+					<true>((artcos ) * movcps) </true>
+					<false>0</false>
+				</if>
+				<label modpos="nobr">exento</label>
+				<detalle>exento</detalle>
+
+			</field>
+
+			<field id="total" suma="true" local="true" deshabilitado="true" noshow="true">
+				<if exp="0ivacod != 6" operador="=">
+					<true>((artcos ) * movcps) </true>
+					<false>0</false>
+				</if>
+				<detalle>neto</detalle>
+			</field>
+
+			<field id="showtot" suma="true" local="true" deshabilitado="true">
+				<if exp="true" operador="=">
+					<true>exento + total</true>
+					<false>0</false>
+				</if>
+				<label modpos="nobr">Total</label>
+				<help>Total</help>
+			</field>
+
+			<field id="selec" local="true" refresh="true">
+				<label Formstyle="display:none;">Selec.</label>
+				<help>Seleccion</help>
+				<tipo>check</tipo>  
+				<valor>1</valor>
+			</field>			
+
+			<field id="sel2" local="true" refresh="true" noshow="true">
+				<if exp="selec!=0" operador="=">
+					<true>('artdes' == '' )? 0 : 1</true>
+					<false>0</false>
+				</if>
+				<label>sel2</label>
+				<tipo>check</tipo>  
+			</field>
+
+			<field id="iva"  local="true" noshow="true">
+				<valor>21.00</valor>
+				<detalle>alicuota</detalle>
+				<tipo>decimal</tipo>
+			</field>			
+
+			<field id="cierre" local="true" _suma="true" _acumula="true" noshow="true">
+				<if exp="selec == 1" operador="=">
+					<true>movp2</true>
+					<false>1</false>
+				</if>
+				<tipo>integer</tipo>
+				<label>cierre</label>
+			</field>
+
+		</table>
+		<join tipo="left">
+			<table id="STKINSUM">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">STKINMOV.siscod</condicion>
+				</field>
+				
+				<field id="artdes" oculto="true">
+				</field>
+				
+				<field id="artcod" oculto="true">
+					<condicion operador="=">STKINMOV.artcod</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="CCTCUENT">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">'01'</condicion>
+				</field>
+				<field id="ctacod" oculto="true">
+					<condicion operador="=">STKINMOV.ctacod</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="CTBCUENT">
+				<field id="ctbcod" oculto="true">
+					<condicion operador="=">artctb</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="PEDIDOINT">
+				<field id="idPed" >
+					<condicion operador="=">pedido_id</condicion>
+				</field>
+			</table>
+		</join>
+
+<!--
+		<join tipo="left">
+			<table id="STKINSPR">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">STKINMOV.siscod</condicion>
+				</field>
+				<field id="ctacod" oculto="true">
+					<condicion operador="=">STKINMOV.ctacod</condicion>
+				</field>
+				
+				<field id="artcod" oculto="true">
+					<condicion operador="=">STKINMOV.artcod</condicion>
+				</field>
+				
+			</table>
+		</join>
+-->
+		<join tipo="left">
+                       <table id="CPSMOVIM">
+                               <field id="idPed" >
+                                       <condicion operador="=">PEDIDOINT.idPed</condicion>
+                               </field>
+                       </table>
+               </join>
+
+	</form>
+</histrix>

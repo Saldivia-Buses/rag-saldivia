@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="abm-mini"  borra="true">
+        <title>titulo</title>
+        <obs></obs>
+        <form>
+
+         <table id="hotel_mora.sistema" label="etiqueta">
+           
+              
+             <filters>
+                 
+                 <field id="dateaud">
+               		<label>Desde</label>
+                    <operador>&gt;=</operador>
+                    <valor>today</valor>
+                 </field>
+              
+                 <field id="dateaud">
+               		<label>hasta</label>
+                    <operador>&lt;=</operador>
+                    <valor>today</valor>
+
+                 </field>                    
+               
+               <field id="habitacion" deshabilitado="false" >
+               		<label>Habitacion2</label>
+                    <operador>=</operador>
+                 </field>
+               
+               <field id="numaudit" >
+                       <label>ID_Audit</label>
+                                        <operador>=</operador>
+
+                 </field>
+
+               
+               <!--
+                  <field id="codfunc" deshabilitado="false" >
+               		<label>Funcion</label>
+                    <operador>=</operador>
+                 </field>
+              -->
+              
+            </filters> 
+              
+              <field id="numaudit" >
+                       <label>ID_Audit</label>
+                    
+                 </field>
+
+		 <field id="dateaud" >
+                       <label>Fecha_Audit</label>
+                    
+                 </field>
+              
+              
+		 <field id="timeaud" >
+                       <label>Time_Audit</label>
+                 </field>
+              
+              
+               <field id="datatext" >
+                       <label>Texto</label>
+                       <help>Ayuda contextual</help>
+                        <expression> case when codfunc="72" then "CHECKOUT" else datatext END</expression>
+
+                 </field>
+        
+              
+              
+                	<field id="habitacion">
+                  <label>Habitacion</label>
+                  <expression having="false">substring(datatext,1,2)</expression>
+                  <tipo>integer</tipo>
+              
+              </field>
+              
+              
+              <field id="dateaud1" local="true">
+                		<label>Desde</label>
+              		<expression>dateaud</expression>
+                                    <tipo>date</tipo>
+
+					
+                     
+
+
+              </field>
+              
+              
+              <field id="hasta" local="true">
+                		<label>Hasta</label>
+              		<expression>STR_TO_DATE(SUBSTRING(datatext,LOCATE('(', datatext)+1,10), '%d/%m/%Y')</expression>
+                    <tipo>date</tipo>
+              </field>
+              
+              
+               
+              	<field id="Totaldias" local="true" suma="true">
+             		<label>Dias de Alquiler</label> 
+                  <expression>(datediff (STR_TO_DATE(SUBSTRING(datatext,LOCATE('(', datatext)+1,10), '%d/%m/%Y') ,dateaud)) </expression>
+                      
+              </field>
+            
+              
+              
+              <field id="codusr" noshow="true">
+                <label>Operador</label>
+                <condicion operador="=">"52"</condicion>
+              
+              </field>
+              
+              <field id="codfunc" noshow="true">
+                 <label>Funcion</label>
+                 <condicion operador="in">(71,72) </condicion>
+
+                
+              </field>
+              
+           
+           <field id="mes">
+           <label>Dentro_del_Mes</label>
+           	<options>
+             	<option valor="1">si</option>
+                    	<option valor="0">No</option>
+
+             </options>
+           </field>
+           
+           
+           
+             <field id="borrar2" local="true" refresh="true">
+                    <label>Borrar</label>
+                    <tipo>check</tipo>
+            </field>
+
+            <field id="borrar" local="true" noshow="true">
+                <if exp="'borrar2' == 1">
+                       <true>1</true>
+                       <false>0</false>
+                </if>
+            </field> 
+            
+           <!--   
+              <group>
+                 <field id="habitacion">
+                  
+                
+                </field>
+            
+              </group>
+              
+
+
+SELECT *, (SELECT entrada.timeaud FROM sistema entrada
+WHERE entrada.codfunc = 71
+and substring(entrada.datatext,1,2) = substring(sistema.datatext,1,2)
+and entrada.dateaud = sistema.dateaud
+and sistema.codusr = entrada.codusr
+and entrada.numaudit < sistema.numaudit ORDER BY entrada.numaudit DESC LIMIT 1)
+
+
+/*, (SELECT 'asdsadasd'
+FROM sistema entrada
+WHERE entrada.codfunc = 71 and entrada.dateaud = sistema.dateaud
+and substring(entrada.datatext,1,2) = substring(sistema.datatext,1,2)
+AND timediff(sistema.timeaud, entrada.timeaud) < '00:00:30'
+and entrada.numaudit < sistema.numaudit
+and sistema.codusr = entrada.codusr
+ )*/
+
+FROM `sistema`
+WHERE `codfunc` = '72'
+and dateaud > '2014-11-03'
+
+          -->  
+            </table>
+        </form>
+    </histrix>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

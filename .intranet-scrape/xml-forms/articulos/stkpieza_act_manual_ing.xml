@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="fichaing" inserta="false" modifica="false">
+    <title>Actualización</title>
+    <obs></obs>
+    <form>
+        <table id="STKPIEZA" label="Composicion">
+			<movimientos>
+				<relacion id="stkpieza_act_manual_update.xml" />
+			</movimientos>
+			<field id="id_pieza" noshow="true" />
+			<field id="act" local="true" deshabilitado="true">
+				<label>ACTUALIZAR COSTOS</label>
+				<help>Actualiza los cálculos de costos</help>
+			</field>
+        </table>
+    </form>
+</histrix>	

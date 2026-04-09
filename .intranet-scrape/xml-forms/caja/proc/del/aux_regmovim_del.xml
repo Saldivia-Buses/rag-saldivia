@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="grid">
+  <title>Valores Propios</title>
+  <obs/>
+  <form>
+    <table id="REG_MOVIMIENTOS">
+
+      <movimientos>
+        <relacion id="del_regdetalles.xml"/>
+        <relacion id="del_regmovimientos.xml"/>
+      </movimientos>
+
+      <field id="id_regmovim" esClave="true"/>
+
+      <field id="cajmovimiento_id" esClave="true" noshow="true" print="false">
+        <condicion>-1</condicion>
+      </field>
+
+      <field id="subsistema_id" esClave="true" noshow="true" print="false">
+        <condicion operador="=">04</condicion>
+      </field>
+
+      <field id="vencimiento_movimiento">
+        <label>Fecha</label>
+      </field>
+
+      <field id="nro_comprobante">
+        <label>Número</label>
+        <expression>concat(REG_CONCEPTOS.abreviacion_concepto , ' - ' ,lpad(nro_movimiento,8,'0'))</expression>
+      </field>
+
+      <field id="nombre_cuenta" tabla="REG_CUENTA">
+        <label>Banco</label>
+      </field>
+
+      <field id="nombre_localidad" tabla="GEN_LOCALIDADES">
+        <label>Plaza</label>
+      </field>
+
+      <field id="importe_movimiento">
+        <label>Importe</label>
+        <tipo>numeric</tipo>
+      </field>
+
+    </table>
+
+    <join>
+      <table id="REG_CONCEPTOS">
+        <field id="id_concepto">
+          <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join>
+      <table id="REG_CUENTA">
+        <field id="id_regcuenta">
+          <condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="GEN_LOCALIDADES">
+        <field id="id_localidad">
+          <condicion operador="=">REG_CUENTA.localidad_id</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>

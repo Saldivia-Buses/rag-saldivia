@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+   <histrix tipo="arbol" form="false" imprime="false" _width="40" >
+		<title>FORMACION DE PRODUCTO</title>
+        <obs></obs>
+               <form  detalle="piezas_select_det.xml">
+                  <table id="STKPIEZA" label="Piezas">
+
+                  <field id="idPadre" arbol="padre" esClave="true" noshow="true">
+                      <label>padre</label>
+                      <help>Nombre del Articulo al que pertenece </help>
+<!--		             <condicion operador="=">'801000'</condicion>  -->
+<condicion operador="=">''</condicion>
+                  </field>
+                  <field id="articulo_hijo" arbol="hijo" required="true">
+                      <label>Codigo de Pieza</label>
+                      <help>Codigo del Articulo</help>
+					            <detalle>idPadre</detalle>					  
+		                  <condicion operador="&lt;=">'900000'</condicion>
+					  
+                  </field>
+                  <field id="fecreq" local="true" noshow="true">
+                    <tipo>date</tipo>
+                    <detalle>fecreq</detalle>
+                  </field>
+                  <field id="ctacod" local="true" noshow="true">
+                    <detalle>ctacod</detalle>
+                  </field>
+
+                  <field id="nombre_articulo" tabla="STK_ARTICULOS">
+                      <label>Nombre </label>
+                      <help>Nombre de la Pieza </help>
+					            <tipo>varchar</tipo>
+                  </field>
+		              
+                  
+                  </table>
+					<join tipo="left">
+						<table id="STK_ARTICULOS">
+							<field id="subsistema_id" >
+								<condicion operador="=">'01'</condicion>
+							</field>
+							<field id="id_stkarticulo">
+								<condicion operador="=">STKPIEZA.articulo_hijo</condicion>
+							</field>
+							
+						</table>
+					</join>				   
+               </form>
+        </histrix>

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<histrix tipo="ficha"   path="/fotos/proyectos" sololectura="true" autoprint="true">
+        <title>Proyectos</title>
+        <obs></obs>
+        <form>
+                <table id="PROY_PROYECTO" >
+                    <title>Proyecto</title>
+                        <field id="id_proyecto" autoinc="true" noshow="true">
+                            <label posx="5" posy="20" >Nro Proyecto</label>
+                            <help>Codigo</help>
+                        </field>
+                       <field id="fecha_proyecto">
+                            <label posx="150" posy="0">Fecha</label>
+                            <help>Fecha del Proyecto</help>
+                            <valor>today</valor>
+                        </field>
+
+                       <field id="nombre_proyecto" PDFsize="20">
+                            <label posx="5" posy="+2"></label>
+                            <help>Nombre del Proyecto</help>
+                            <size>30</size>
+                        </field>
+
+                       <field id="descripcion_proyecto">
+                            <label posx="5" posy="+4">Descripción</label>
+                            <help>Descripcion del Proyecto</help>
+                    	    <tipo>editor</tipo>
+                        </field>
+                       <field id="etapas" showObjTabla="true" local="true">
+                    	    <helper xml="proy_detalle_imp.xml" type="object" >
+                    		<parameter source="id_proyecto" target="proyecto_id"  />
+                    	    </helper>
+                            <label posx="5" posy="+4"></label>
+                        </field>
+                       <field id="archivos_proyecto" local="true" path="id_proyecto" >
+	                <expression>CONCAT('/fotos/proyectos/',id_proyecto,'/')  </expression>
+                       
+                            <label posx="5" posy="+2">Archivos</label>
+                            <help>Archivos del Proyecto</help>
+                    	    <tipo>dir</tipo>
+                        </field>
+
+                </table>
+        </form>           
+</histrix>

@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" limit="5">
+	<title>Regimen informativo de Compras y Ventas</title>
+	<obs/>
+	<form detalle="xml_detalle">
+		<table id="HTXMENU" label="Regimen Compras y Ventas">
+			<filters auto="true">
+				<field id="anio">
+					<label>Periodo</label>
+					<operador>=</operador>
+					<valor eval="true">date('Y')</valor>
+				</field>
+				<field id="mes" sincelda="true">
+					<label modpos="nobr">-</label>
+					<operador>=</operador>
+					<valor eval="true">date('m')</valor>
+				</field>
+			</filters>
+			<fieldGroup id="parameters" local="true" noshow="true">
+				<field id="anio">
+					<label>Periodo</label>
+					<helper type="combo" xml="gencalendar_year.xml" dir="/ayudas">
+			            <field id="anio" tipoOrden="DESC">
+			                <expression>YEAR(fecha)</expression>
+			                <condicion operador="&lt;=">YEAR(CURDATE()) + 1</condicion>
+			            </field>
+		            </helper>
+		            <detalle>anio</detalle>
+				</field>
+				<field id="mes" sincelda="true">
+					<label modpos="nobr"> - </label>
+					<helper type="combo">
+						<option value="01">01</option>
+						<option value="02">02</option>
+						<option value="03">03</option>
+						<option value="04">04</option>
+						<option value="05">05</option>
+						<option value="06">06</option>
+						<option value="07">07</option>
+						<option value="08">08</option>
+						<option value="09">09</option>
+						<option value="10">10</option>
+						<option value="11">11</option>
+						<option value="12">12</option>
+		            </helper>
+		            <detalle>mes</detalle>
+				</field>
+				<field id="fecha_desde">
+					<expression>'[__anio__]-[__mes__]-01'</expression>
+					<detalle>fecha_desde</detalle>
+				</field>
+				<field id="fecha_hasta">
+					<expression>CONCAT('[__anio__]-[__mes__]-', DAY(LAST_DAY('[__anio__]-[__mes__]-01')))</expression>
+					<detalle>fecha_hasta</detalle>
+				</field>
+			</fieldGroup>
+
+			<field id="_ORDEN" local="true">
+			</field>
+
+			<field id="xml_detalle" local="true" noshow="true">
+				<label>XML</label>
+				<expression sql="true">
+					SELECT 
+						CASE '[___ORDEN__]'
+							WHEN 1 THEN 'reginfo_cv_cabecera_qry.xml'
+							WHEN 2 THEN 'reginfo_cv_ventas_cbte_qry.xml'
+							WHEN 3 THEN 'reginfo_cv_ventas_alicuotas_qry.xml'
+							WHEN 4 THEN 'reginfo_cv_compras_cbte_qry.xml'
+							WHEN 5 THEN 'reginfo_cv_compras_alicuotas_qry.xml'
+							WHEN 6 THEN 'reginfo_cv_compras_importaciones_qry.xml'
+							WHEN 7 THEN 'reginfo_cv_credito_fiscal_imp_servicios_qry.xml'
+						END
+				</expression>
+			</field>
+
+			<field id="archivo" local="true">
+				<label>Archivo</label>
+				<expression sql="true">
+					SELECT 
+						CASE '[___ORDEN__]'
+							WHEN 1 THEN 'REGINFO_CV_CABECERA'
+							WHEN 2 THEN 'REGINFO_CV_VENTAS_CBTE'
+							WHEN 3 THEN 'REGINFO_CV_VENTAS_ALICUOTAS'
+							WHEN 4 THEN 'REGINFO_CV_COMPRAS_CBTE'
+							WHEN 5 THEN 'REGINFO_CV_COMPRAS_ALICUOTAS'
+							WHEN 6 THEN 'REGINFO_CV_COMPRAS_IMPORTACIONES'
+							WHEN 7 THEN 'REGINFO_CV_CREDITO_FISCAL_IMP_SERVICIOS'
+						END
+				</expression>
+				<detalle>archivo</detalle>
+			</field>
+		</table>
+	</form>
+</histrix>

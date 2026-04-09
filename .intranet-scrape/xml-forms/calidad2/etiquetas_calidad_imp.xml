@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="nosql" sqlhardcoded="true">
+	<title>Impresion de etiquetas de calidad</title>
+	<obs></obs>
+	<form >
+		<table id="HTXMENU" label="Impresion de etiquetas de calidad" >
+			<ejecuta>
+				<![CDATA[
+					if (!isset($this->Etiquetas)){
+					    $this->Etiquetas = new BarcodeEtiq();	
+					    $this->Etiquetas->setFormato= true;
+					}
+
+		$this->Etiquetas->addRenglon("\n");
+		$this->Etiquetas->addRenglon('N'."\n");
+		$this->Etiquetas->addRenglon('D10'."\n"); // Density 10
+		$this->Etiquetas->addRenglon('ZB'."\n");
+		$this->Etiquetas->addRenglon('O'."\n");
+		$this->Etiquetas->addRenglon('q790'."\n");
+		$this->Etiquetas->addRenglon('Q254,19'."\n");
+
+		$this->Etiquetas->addRenglon('A3,4,0,4,1,1,N,"Saldivia"'."\n");
+    	        $this->Etiquetas->addRenglon('A3,30,0,4,1,1,N,"Control de Calidad"'."\n");
+	        $this->Etiquetas->addRenglon('A3,70,0,2,1,1,N,"Nro:..................."'."\n");
+	        $this->Etiquetas->addRenglon('A3,104,0,2,1,1,N,"Fecha control:.................."'."\n");
+	        $this->Etiquetas->addRenglon('A3,138,0,2,1,1,N,"Fecha vencimiento:................"'."\n");
+	        
+
+		$this->Etiquetas->addRenglon('A428,4,0,4,1,1,N,"Saldivia"'."\n");
+    	        $this->Etiquetas->addRenglon('A428,30,0,4,1,1,N,"Control de Calidad"'."\n");
+	        $this->Etiquetas->addRenglon('A428,70,0,2,1,1,N,"Nro:..................."'."\n");
+	        $this->Etiquetas->addRenglon('A428,104,0,2,1,1,N,"Fecha control:.................."'."\n");
+	        $this->Etiquetas->addRenglon('A428,138,0,2,1,1,N,"Fecha venciiento:................"'."\n");
+	        
+
+		$this->Etiquetas->addRenglon('P'."[__cantidad__]\n");
+	        $this->Etiquetas->addRenglon('N'."\n");
+        
+				]]>
+			</ejecuta>
+			<field id="cantidad"	id_temp="cantidad" />
+			
+		</table>
+	</form>
+</histrix>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="grid" >
+	<title/>
+	<obs/>
+	<form>
+		<table id="HTXPRINTERS" >
+			<movimientos>
+				<relacion id="pos_fiscal_imp.xml" /> 
+			</movimientos>
+
+			<field id="idPrinter" />
+
+			<field id="fiscal" local="true" ></field>
+
+			<field id="printerClass">
+				<condicion operador="=">'WSAFIP'</condicion>
+			</field>
+		</table>
+	</form>
+</histrix>

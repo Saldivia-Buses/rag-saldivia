@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="insert">
+	<title>EMISION DE REMITOS</title>
+	<obs></obs>
+	<form >
+		<table id="REMDETAL" label="DETALLE DE LA ORDEN COMPRA">
+			<field id="idRemito"     id_cab="idRemito"></field>			
+<!--			<field id="idRemdet" id_temp="idRemdet"></field>			-->
+			
+			<field id="artcod"       id_temp="artcod"></field>
+
+			<field id="unidadCompra" id_temp="artuni"></field>						
+			<field id="cantCompra"   id_temp="movuso" ></field>			
+
+			<field id="cantUso"   id_temp="cant" ></field>
+			<field id="unidadUso" id_temp="unicps"></field>
+
+			<field id="fecreq" id_temp="fecreq" ></field>			
+			<field id="movref" id_temp="movref" ></field>			
+			<field id="nrofab" id_temp="nrofab"></field>			
+			<field id="idPed"  id_temp="idPed"></field>				
+		</table>
+	</form>
+</histrix>

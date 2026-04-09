@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert">
+    <title/>
+    <obs/>
+    <form>
+        <table id="REG_MOVIMIENTOS" idCampoCond="graba_recibo">
+            <field id="subsistema_id">
+                <valor>01</valor>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="regcuenta_id"     	id_temp="cuenta_proveedor" />
+            <field id="concepto_id"         id_temp="concepto_recibo_prov">   		
+            <!--   <valor>(SELECT regconceptoing_id FROM GEN_SUBSISTEMAS WHERE id_subsistema = '01' LIMIT 1)</valor> -->
+            </field>
+            <field id="fecha_movimiento"     	id_temp="fecha_movimiento"/>
+            <field id="letra_movimiento"        id_temp="letra_mov"/>
+            <field id="puesto_movimiento"     	id_temp="puesto_mov"/>
+            <field id="nro_movimiento" 	     	id_temp="numero_movimiento"/>
+            <field id="reg_fecha" 	            id_temp="fecha_movimiento"/>
+            <field id="vencimiento_movimiento" 	id_temp="vencimiento_movimiento"/>
+            <field id="importe_movimiento"     	id_temp="importe_mov"/>
+            <field id="neto_movimiento"         id_temp="importe_mov"/>
+            <field id="importe_nogravado"       id_temp="importe_mov"/>
+            <field id="iva_id">
+                <valor>(SELECT iva_id FROM REG_CUENTA WHERE id_regcuenta = '[__cuenta_proveedor__]' LIMIT 1)</valor>   
+            </field>
+            <field id="nombre_movimiento"       id_temp="nombre_prov"/>                            
+            <field id="cuit_movimiento"         id_temp="cuit_prov" />              
+            <field id="referencia_movimiento"   id_temp="referencia_mov">
+          		<tipo>varchar</tipo>
+          	</field>
+            <field id="saldo_movimiento"        id_temp="importe_mov"/>            
+        </table>
+    </form>
+</histrix>	

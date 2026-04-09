@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix borra="no" deleteRow="false" imprime="false" inserta="no" log="false" modifica="false" 
+_preFetch="true" procesa="true" tableHeight="auto" tipo="fichaing">
+    <title>Laminado</title>
+    <obs/>
+<!--
+    <events>
+        <event id="procesar">
+            if ($.mobile) {
+                $( ":mobile-pagecontainer" ).pagecontainer(
+                    'change',
+                    $('[data-role="page"][id="Showordenes_x_seccion_movil_xml"]')
+                );
+            }
+        </event>
+    </events>
+-->
+    <form>
+        <table id="MRP_ORDEN_PRODUCCION" label="Laminado">
+<!--            <movimientos>
+                <relacion id="detalle_registro_insert.xml"/> 
+                <relacion id="ingreso_stock_insert.xml"/>
+                <relacion id="marco_orden_cumplida.xml" />
+
+            </movimientos>
+        -->
+            <field id="mrpconcepto_id" local="true" noshow="true" valauto="true">
+                <valor>1</valor>
+            </field>
+            <field id="graba_stock" local="true" noshow="true"/>
+            <field id="stkconcepto_id" noshow="true">
+                <expression>select id_stkconcepto from STK_CONCEPTOS where produccion_concepto = 1 and tipo_concepto = 0 limit 1</expression>
+            </field>
+            <field id="fecha_orden" oculto="true">
+                <label>Fecha</label>
+                <tipo>date</tipo>
+            </field>
+<!--
+            <field id="fecha_ingreso" local="true" deshabilitado="false">
+                <label>Fecha</label>
+		<tipo>date</tipo>
+		<valor>today</valor>
+
+            </field>
+-->
+            <field id="mrpseccion_id" local="true" noshow="true">
+            </field>
+            
+
+            <field deshabilitado="false" editable="true" id="ingreso" local="true" valauto="true">
+                <label>Inicio</label>
+                <tipo>time</tipo>
+                 <valor eval="true">date('H:i')</valor>
+            </field>
+            <field deshabilitado="false" editable="true" id="salida" local="true">
+                <label >Finalización</label>
+                <tipo>time</tipo>
+                 <valor eval="true">date('H:i')</valor>
+            </field>
+            <field deshabilitado="false" editable="true" id="mesa_1" local="true" multiple="true">
+                <label>Mesa 1</label>
+                <helper type="combo" id="REG_CUENTA">
+                    <field id="id_regcuenta">
+                    </field>
+                    <field id="nombre">
+                        <expression>concat(apellido_cuenta, ', ',nombre_cuenta )</expression>
+                    </field>
+                    <field id="subsistema_id">
+                        <condicion operador="=">'RH'</condicion>
+                    </field>
+                    <order>
+                        <field id="nombre" />
+                    </order>*
+                </helper>
+                <tipo>varchar</tipo>
+            </field>
+        
+            <field deshabilitado="false" editable="true" id="mesa_2" local="true" multiple="true">
+                <label>Mesa 2</label>
+                <helper type="combo" id="REG_CUENTA">
+                    <field id="id_regcuenta">
+                    </field>
+                    <field id="nombre">
+                        <expression>concat(apellido_cuenta, ', ',nombre_cuenta )</expression>
+                    </field>
+                    <field id="subsistema_id">
+                        <condicion operador="=">'RH'</condicion>
+                    </field>
+                    <order>
+                        <field id="nombre" />
+                    </order>*
+                </helper>
+                <tipo>varchar</tipo>
+            </field>
+        
+<!--
+            <field deshabilitado="false" editable="true" id="codigo_pvb" local="true">
+                <label>Codigo PVB</label>
+            </field>
+-->
+
+	    <field id="detalle" local="true" colspan="4">
+		<helper xml="carro_detalle_laminado.xml" type="object">
+		    
+		</helper>
+	    </field>
+
+            <field id="observacion" local="true">
+                <label>Observaciones</label>
+                <size>40</size>
+            </field>
+            <field id="productpath_id" local="true" noshow="true"/>
+            <group>
+                <field id="id_mrpordendetalle"/>
+            </group>
+            <order>
+                <field id="fecha_orden"/>
+            </order>
+        </table>
+    </form>
+</histrix>

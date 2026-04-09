@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="nosql"  impresion="cheque.xml" _directprint="cheques">
+	<title>Cheque</title>
+	<obs></obs>
+	<form >
+		<table id="BCSMOVIM" label="Cheque" idCampoCond="grabar">
+			
+			<field id="bcscta" id_temp="bcscta">
+			    <detalle>bcscta</detalle>
+			</field>
+			
+			<field id="bcsmov" id_temp="bcsmov">
+			    <detalle>bcsmov</detalle>
+			</field>
+			<field id="bcsnro" id_temp="bcsnro">
+			    <detalle>bcsnro</detalle>
+			</field>
+            <field id="printer" id_temp="printer">
+                <detalle>printer</detalle>
+<!--                <valor>cheques</valor> -->
+                <setvar>directprint</setvar>
+            </field>
+
+			<field id="Let1" id_temp="Let1">
+			    <detalle>Let1</detalle>
+			</field>
+			<field id="Let2" id_temp="Let2">
+			    <detalle>Let2</detalle>
+			</field>
+
+
+<!--			<field id="bcsfec" id_temp="bcsfec">
+			    <detalle>bcsfec</detalle>
+			</field> -->
+
+		</table>
+		
+	</form>
+</histrix>

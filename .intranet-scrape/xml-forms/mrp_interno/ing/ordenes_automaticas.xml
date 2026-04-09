@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="grid" log="false" paginar="100" path="fotos/coches" _width="50"  process="true"
+          borra="false" inserta="false"
+          >
+    <title>ENTRADA Y SALIDA</title>
+    <obs/>
+    <form  >
+        <table id="PEDCOTIZ" label="Ficha de Ventas">
+
+	    <movimientos>
+		<relacion id="orden_automatica_ins.xml" />
+	    </movimientos>
+
+	    <filters>
+                <field id="nrocha" tabla="PEDCOTIZ" >
+    	            <label >N.Fab.</label>
+		    <operador>=</operador>
+		</field>
+	    </filters>
+
+            <field id="id" noshow="true" deshabilitado="true">
+            </field>
+            <field id="nrocha" tabla="PEDCOTIZ" esClave="true" tipoOrden="DESC" deshabilitado="true">
+                <!--      <expression>LPAD(PEDCOTIZ.nrocha,3,'0')</expression> -->
+                <label size="25" _modpos="nobr" posx="110" posy="0" PDFsize="11">N.Fab.</label>
+                <help>Numero de Fabricacion</help>
+
+            </field>
+            <field id="artcod_id" tabla="HOMOLOGMOD" >
+		    <label>Articulo</label>
+            </field>
+            <field _esClave="true" id="fechaing" _PDFanchofijo="true" tipoOrden="DESC" noshow="true">
+                <expression>case when PEDCOTIZ.ingresoLinea != '0000-00-00' then PEDCOTIZ.ingresoLinea else fechaing end</expression>
+                <label >Entra</label>
+                <tipo>date</tipo>
+                <help>Fecha de Ingreso a Linea</help>
+                <!--  <format>d/m</format> -->
+
+            </field>
+            <field id="ingresoLinea" tipoOrden="DESC">
+                <label>Fecha de Inicio</label>
+                <help>Fecha de ingreso a la línea de producción</help>
+                <tipo>date</tipo>
+            </field>
+            <!-- <field id="sale2" esClave="true" noshow="true">
+                <attribute id="style">colorFecTer</attribute>
+
+                <label modpos="nobr" >Sale</label>
+                <expression>DATE_ADD((case when ingresoLinea != '0000-00-00' then ingresoLinea else fechaing end), INTERVAL 45 DAY)</expression>-->
+
+
+          <field id="fecha_chaperia" tipoOrden="DESC">
+                <label>Fecha Chaperia</label>
+                <tipo>date</tipo>
+            </field>
+
+          
+
+            <field id="terminacion" tipoOrden="DESC">
+                <label>Fecha de Terminación</label>
+                <tipo>date</tipo>
+            </field>
+          
+          
+            
+
+            <field id="terminacionFinal">
+                <label>Aviso Entrega</label>
+                <tipo>date</tipo>
+            </field>
+
+            <field id="mailto"  deshabilitado="true" noshow="true">
+              <expression>select mail from CCTCONTA where siscod = '02' and CCTCONTA.ctacod = PEDCOTIZ.ctacod order by principal DESC limit 1</expression>
+            </field>
+
+            <field id="mailsubj" noshow="true" >
+              <expression>CONCAT('Entrega Unidad ', PEDCOTIZ.nrocha)</expression>
+            </field>
+
+            <field id="mailbody" noshow="true">
+              <expression><![CDATA[CONCAT(
+
+                'Att Sres.n</br>El día ', DATE_FORMAT(PEDCOTIZ.terminacionFinal, '%d/%m/%Y'), ', por la tarde, tendremos terminada la unidad ', PEDCOTIZ.nrocha, ' de ', REG_CUENTA.nombre_cuenta,
+                ', chasis nro. ', RIGHT(CHASIS.chasis, 6), ' concesionario ', (select CONCESIONARIO.nombre from CONCESIONARIO WHERE CHASIS.conces = CONCESIONARIO.idconces), '.</br>La misma es retirada por el concesionario.n</br>Nuestro horario de entrega es de Lunes a Viernes 7 a 16hs.nn</br></br></br>Saludosnn</br></br>', HTXUSERS.apellido, ', ', HTXUSERS.Nombre, '</br>n0341-4921135n</br>Chile 2541 - Villa Gdor. Galvez - Santa Fe - Argentinan</br><a href="www.saldiviabuses.com.ar" >www.saldiviabuses.com.ar</a>'
+
+                )]]>
+              </expression>
+            </field>
+
+              <field id="filtmail" noshow="true">
+                <expression>CONCAT('+"Entrega Unidad" +', PEDCOTIZ.nrocha)</expression>
+              </field>
+
+            <field id="email"  colstyle="width:auto;" deshabilitado="false" local="true" Formstyle="display:none;">
+                <helper type="link" xml="mails_send.xml" dir="/histrix/mensajeria/" title="Entrega Unidad" width="700" height="600">
+                    <parameter source="mailto"  target="para" />
+                    <parameter source="mailsubj" target="subject" />
+                    <parameter source="mailbody" target="mensaje" />
+                </helper>
+                <expression sql="true"><![CDATA[
+                SELECT CONCAT(
+                (SELECT COUNT(*) FROM HTXMAIL WHERE MATCH(subject, body) AGAINST ('[__filtmail__]' IN BOOLEAN MODE) )
+                , ' <img src="../img/mail_generic.png"/>') 
+                ]]></expression>
+            </field>
+            <!-- <field id="fechaing" tabla="TURNOSPRODUCCION" tipoOrden="DESC">
+                                <label>FEcha Ingreso</label>
+                                <tipo>date</tipo>
+                        </field>-->
+          <field id="nomconces" local="true">
+          
+            <label>Concesionario</label>
+            <expression>select CONCESIONARIO.nombre from CONCESIONARIO WHERE CHASIS.conces = CONCESIONARIO.idconces </expression>
+            
+          </field>
+          
+          
+          
+            <field id="nro2" noshow="true">
+                <expression>LPAD(PEDCOTIZ.nrocha,3,'0')</expression>
+            </field>
+
+            <field id="ctacod" deshabilitado="true">
+                <label size="23" posx="6" posy="+1" PDFsize="12" colspan="6">Cliente</label>
+                <help>Codigo de Cuenta</help>
+                <tabla_ex condes="true" id="CCTCUENT">
+                    <field id="ctacod"/>
+                    <field id="ctafan2">
+                        <expression>CCTCUENT.ctafan</expression>
+                    </field>
+                    <field id="siscod" oculto="true">
+                        <condicion operador="=">'02'</condicion>
+                    </field>
+                    <field id="baja" oculto="true">
+                        <condicion operador="=">0</condicion>
+                    </field>
+                    <order>
+                        <field id="ctafan" />
+                    </order>
+                </tabla_ex>
+
+            </field>
+            <!--
+                        <field id="idconta" deshabilitado="true">
+                                <label size="23" posx="6" posy="+1" PDFsize="12" colspan="4" colstyle="display:none;">Contacto</label>
+                                <help>Codigo de Cuenta</help>
+                                <tabla_ex condes="true" id="CCTCONTA" vacio="true">
+                                        <field id="idconta"/>
+                                        <field id="nombre">
+                                                <expression>CONCAT(nombre,'-' , mail, ' - ', Telefono)</expression>
+                                        </field>
+                                        <field id="ctacod" oculto="true" />
+
+                                        <field id="siscod" oculto="true">
+                                                <condicion operador="=">'02'</condicion>
+                                        </field>
+                                </tabla_ex>
+                        </field>
+-->
+            <field id="nrocar" deshabilitado="true">
+                <tabla_ex xml="carroceria.xml">
+                    <field id="siscod" oculto="true">
+                        <condicion operador="=">03</condicion>
+                    </field>
+                </tabla_ex>
+
+                <label size="23" posx="110" posy="0" PDFsize="10">Carroceria</label>
+                <help></help>
+            </field>
+
+      <field id="modcod" tabla="CHASIS">
+        <label>Mod. Chasis</label>
+        <expression> SELECT MODCHASIS.moddes FROM MODCHASIS where CHASIS.marcod=MODCHASIS.marcod AND modcod=MODCHASIS.modcha </expression>
+      <help></help>
+      </field>
+    
+          
+                  
+    <field id="marca" tabla="CHASIS" local="true">
+        <label>Marca. Chasis</label>
+        <expression> select MARCHASIS.mardes from MARCHASIS where CHASIS.marcod=MARCHASIS.marcod</expression>
+      <help></help>
+      </field> 
+    
+       
+<!--
+    <join tipo="LEFT">
+    <table id="MODCHASIS">
+        <field id="id_modelo">
+            <label>Modelo Chasis jp</label>
+            <condicion operador="=">CHASIS.modcod</condicion>
+        </field>
+    </table>
+</join>
+-->
+            <field id="cantasi" deshabilitado="true" >
+                <label  >Asi.</label>
+                <help></help>
+            </field>
+            <field id="marasi" deshabilitado="true">
+                <label size="23" posx="60" posy="0" modpos="nobr" xml="marcaasi.xml" PDFsize="10" colstyle="display:none;" colspan="2">Marca</label>
+                <help></help>
+                <tabla_ex xml="marcaasi.xml">
+                    <field id="siscod" oculto="true">
+                        <condicion operador="=">03</condicion>
+                    </field>
+                </tabla_ex>
+            </field>
+            <field id="tipasi" deshabilitado="true">
+                <tabla_ex xml="tipoasiento.xml" dir="/produccion">
+                    <field id="siscod" oculto="true">
+                        <condicion operador="=">03</condicion>
+                    </field>
+                </tabla_ex>
+                <label size="23" posx="6" posy="+1" PDFsize="10" colstyle="display:none;">Tipo As.</label>
+                <help></help>
+            </field>
+
+            <field id="bagno" deshabilitado="true">
+                <label size="23" posx="6" posy="+1" PDFsize="10" >Baño</label>
+                <help></help>
+                <options>
+                    <option valor="0"></option>
+                    <option valor="1">No</option>
+                    <option valor="2">Si</option>
+                    <option valor="3">S/D</option>
+                </options>
+            </field>
+            <field id="miniba" deshabilitado="true">
+                <label size="23" posx="60" posy="0" modpos="nobr" PDFsize="10" colstyle="display:none;">Minibar</label>
+                <help></help>
+                <!--
+                                <tipo>check</tipo> -->
+                <options>
+                    <option valor="0"></option>
+                    <option valor="1">No</option>
+                    <option valor="2">Si</option>
+                    <option valor="3">S/D</option>
+                </options>
+
+            </field>
+
+            <field id="barcom" deshabilitado="true">
+                <label size="23" posx="110" posy="0"  PDFsize="10" colstyle="display:none;">Bar Completo</label>
+                <help></help>
+                <tipo>check</tipo>
+            </field>
+            <!--               <field id="cant" local="true" deshabilitado="true" noshow="true" print="false">
+                <parametro id="fsmparam_parent.xml" retorna="parent">
+                    <field id="parcla">
+                        <condicion operador="=" >'posic'</condicion>
+                    </field>
+                </parametro>
+                <tipo>integer</tipo>
+            </field>
+                                    <field id="sale2" noshow="true">
+                <label modpos="nobr" >terminado</label>
+
+                <expression>(select TUR.fechaing from TURNOSPRODUCCION as TUR where
+                                        TUR.fechaing &gt; TURNOSPRODUCCION.fechaing order by TUR.fechaing ASC limit [__cant__], 1)
+                </expression>
+                <tipo>date</tipo>
+                <preparam campo="sale2" operador="&lt;">true</preparam>
+
+            </field> -->
+<!--
+                    <field id="cucheta" deshabilitado="true">
+                            <label size="23" colstyle="display:none;">Cucheta</label>
+                            <help></help>
+                            <helper type="combo" xml="prd_helper_propiedades.xml" dir="/produccion" emtpy="true">
+                                <field id="campoficha_id">
+                                    <condicion operador="=">'cucheta'</condicion>
+                                </field>
+                            </helper>
+                    </field>
+
+
+                        <field id="tippin" deshabilitado="true">
+                                <label colspan="3" size="23" posx="6" posy="+1" PDFsize="10" colstyle="display:none;" >Tipo Pint</label>
+                                <help></help>
+                                <size>20</size>
+                        </field>
+-->
+
+            <field id="ninterno" deshabilitado="true">
+                <label  size="23" posx="160" posy="0" PDFsize="10"  colspan="2">Nro Interno</label>
+                <help></help>
+            </field>
+
+            <field id="usuarionow" local="true" noshow="true">
+                <valor eval="true">$_SESSION['idUser']</valor>
+            </field>            
+            <!--<order>
+                                <field id="fechaing" tabla="TURNOSPRODUCCION"/>
+                        </order> -->
+            <order>
+                <field id="fechaing"/>
+                <field id="ingresoLinea"/>
+            </order>
+        </table>
+        
+        <join tipo="left">
+      <table id="CHASIS">
+    <field id="nrocha">
+        <condicion operador="=">PEDCOTIZ.nrocha</condicion>
+    </field>
+      </table>
+      </join>
+        <join >
+          <table id="HOMOLOGMOD">
+            <field id="id_homologacion">
+              <condicion operador="=">homologacion_id</condicion>
+            </field>
+          </table>
+        </join>  
+
+        <join tipo="left">
+            <table id="TURNOSPRODUCCION">
+                <field id="nrofab">
+                  <condicion operador="=">PEDCOTIZ.nrocha</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="REG_CUENTA">
+                <field id="nro_cuenta">
+                  <condicion operador="=">PEDCOTIZ.ctacod</condicion>
+                </field>
+                <field id="subsistema_id">
+                  <condicion operador="=">'02'</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+          <table id="HTXUSERS">
+            <field id="id_usuario">
+              <condicion operador="=">[__usuarionow__]</condicion>
+            </field>
+          </table>
+        </join>  
+    </form>
+</histrix>

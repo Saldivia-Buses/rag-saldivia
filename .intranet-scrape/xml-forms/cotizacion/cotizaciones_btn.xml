@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" noTabs="true">
+    <title>COTIZACION</title>
+    <obs></obs>
+    <form >
+        <table id="COTIZACION" label="COTIZACIONES">
+            <field id="detalles" noshow="true">
+                <expression>(case when ficha_id = 0 then 'cotizacion_imp_SP.xml' else 'cotizacion_imp_acc.xml' end)</expression>
+            </field>
+            <field id="idCotiz"  _linkint="cotizacion_imp_acc.xml" _linktarget="tab">
+        	<helper xml="cotizacion_imp_acc.xml" type="link" dir="/cotizacion">
+        	    <parameter target="ficha_id" source="ficha_id"/>
+        	    <parameter target="idCotiz" source="idCotiz"/>
+        	</helper>
+        	<paring id="idCotiz">idCotiz</paring>
+        	<attribute id="linkint">detalles</attribute> 
+            </field>
+            <field id="ficha_id"  noshow="true" ></field>
+            <field id="nrofab_id" noshow="true" ></field>
+
+        </table>
+
+
+    </form>
+</histrix>

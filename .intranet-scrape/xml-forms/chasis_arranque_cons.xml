@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ficha" sololectura="true" autoprint="true"  pdfsize="09">
+    <title>CHEQUEO DE CHASIS</title>
+    <obs/>
+    <form >
+        <table id="CHASIS" label="Chequeo de Chasis" styleTbody="height:600px;overflow-x:hidden;">
+             <field id="idTaco" oculto="true">
+		   <label>Codigo</label>
+		    <help>Codigo de Tacografo</help>
+	     </field>
+              <field id="marcod" oculto="true">
+                <label>Chasis</label>
+                <help>Marca del Chasis</help>
+            </field>
+               <field id="conces" oculto="true">
+                <label>Concesionario </label>
+                <help>Concesionario</help>
+            </field>
+            <field id="entrada">
+                <label posX="5" posY="+1">Ingreso</label>
+                <help>Fecha de Entrada</help>
+                <tipo>date</tipo>
+                <valor>today</valor>
+            </field>
+            <field id="email" PDFsize="10"  email="to" noshow="true" print="false">
+        	<expression>select CCTCONTA.mail from CCTCUENT left join CCTCONTA on CCTCONTA.siscod = CCTCUENT.siscod and CCTCONTA.ctacod = CCTCUENT.ctacod
+	    	where CCTCUENT.ctacod = PEDCOTIZ.ctacod  and CCTCUENT.siscod = '02' and principal=1	  limit 1 </expression> 
+                <label posX="5" posY="+1">email</label>
+
+            </field>
+
+            <field id="subj" noshow="true" email="subject" print="false" local="true">
+                <expression>concat('Chequeo de Arranque de Chasis Nro: ',CHASIS.chasis)</expression>
+            </field>
+            <field id="Body" noshow="true" email="body" print="false" local="true">
+                <expression>concat('No se pudo comprobar el correcto funcionamiento del chasis Nro. ', CHASIS.chasis,' , por no poder poner en marcha dicha unidad. Por favor brindar una solución a este inconveniente para poder realizar el correspondiente mantenimiento preventivo y carrozado del chasis.')</expression>
+            </field>
+
+<!--            <field id="fechaActualiza" valauto="true" deshabilitado="true"  >
+                <label posX="70" posY="0" modpos="nobr" >Fecha Act.</label>
+                <valor>today</valor>
+                <tipo>date</tipo>
+            </field>
+ -->
+            <field id="nrocha" tipoOrden="DESC" esclave="true" noshow="true">
+                <label posX="70" posY="0">Nro Fab</label>
+                <help>Numero de Fabricación</help>
+                <parametro id="chasis_numerador.xml" retorna="nrocha2">
+                    <field id="nrocha" oculto="true" noselect="true">
+                        <condicion operador="&lt;">900</condicion>
+                    </field>
+                </parametro>
+            </field>
+            <field id="tacografo" local="true">
+                 <label  posX="130" posY="0">Nro Tacografo</label>
+                 <expression>CONCAT(CHASIS.nrotaco ,'  ' ,'(' , TACOGRAFOS.nombre ,')')</expression>
+                <help>Numero de Serie del chasis</help>
+            </field>
+            <field id="moddes" tabla="MODCHASIS" deshabilitado="true" oculto="true">
+              
+                <label modpos="nobr" posX="40" posY="0"></label>
+                <tipo>varchar</tipo>
+            </field>
+
+             <field id="chasis3" local="true">
+                <label posX="5" posY="+1">Chasis</label>
+                <expression>CONCAT(MARCHASIS.desabv , '  ' ,MODCHASIS.moddes ,'  ','(',  CONCESIONARIO.nombre ,')' )</expression>
+               <help>Marca del Chasis</help>
+            </field>
+            
+           
+             <field id="nromotor">
+                <label modpos="nobr" posX="130" posY="0">Numero de Motor</label>
+                <help>Numero de Motor</help>
+            </field>
+            <field id="chasis" >
+                <label colspan="4" posX="70" posY="0">Numero Chasis</label>
+                <help>Numero de Serie del chasis</help>
+            </field>
+
+            <field id="chasisMotor" print="false" noshow="false">
+                <expression>CONCAT(CHASIS.chasis, '  ' ,nromotor)</expression>
+
+            </field>
+
+         
+           
+	   
+<!--            <field id="idMarcaMotor">
+                <label posX="5" posY="+1">Motor</label>
+                <help>Marca del Motor</help>
+                <tabla_ex id="MARCAMOTOR" vacio="true">
+                    <field id="idMarca">
+                        <label>Codigo</label>
+                    </field>
+                    <field id="abrev">
+                        <label>nombre</label>
+                    </field>
+                </tabla_ex>
+            </field>
+			
+        <field id="chequeo">
+                <label posX="70" posY="0">Chequeo</label>
+                <help>Chequeo realizado</help>
+                <tipo>check</tipo>
+            </field> 
+          
+            <field id="idposic" >
+                <expression>TURNOSPRODUCCION.idposic</expression>
+                <tabla_ex xml="posiciones.xml" vacio="true"/>
+                <label  posX="130" posY="0">Pos</label>
+                <help>Posicion en la linea</help>
+                <tipo>integer</tipo>
+            </field>
+            -->
+             
+
+
+<!--            <field id="diasTaco" deshabilitado="true">
+                <label posX="130" posY="0">días</label>
+                <options>
+                    <option valor="1">1</option>
+                    <option valor="7">7</option>
+                </options>
+                <tipo>radio</tipo>
+            </field> -->
+            <field id="chequeo_arranque">
+                <label posX="5" posY="+2" PDFancho="160" >Arranca</label>
+		<expression>case when 1 then 'Si' else 'No' end</expression>
+            </field>
+
+            <field id="chades">
+                <label posX="5" posY="+2" PDFancho="160" >Observaciones</label>
+                <help>Observaciones</help>
+                <size>200</size>
+            </field>
+<!--
+            <field id="fotos" _local="true" imageWidth="155" imageHeight="155" watermark="chasisMotor">
+                <expression>CONCAT('/fotos/coches/',CHASIS.nrocha,'/Chequeo Chasis/')  </expression>
+                <label modpos="nobr" posX="5" posY="+2"></label>
+
+                <tipo>dir</tipo>
+            </field>
+-->
+		
+<!--            <field id="hi" deshabilitado="true" clasefila="true" noshow="true">
+                <expression>case when CHASIS.fechaActualiza = DATE(NOW()) then 'resaltado' else '' end</expression>
+                <tipo>varchar</tipo>
+            </field>
+		-->
+            <order>
+                <field id="nrocha" tabla="CHASIS"/>
+            </order>
+        </table>
+        <join tipo="left">
+            <table id="MODCHASIS">
+                <field id="marcod">
+                    <condicion operador="=">CHASIS.marcod</condicion>
+                </field>
+                <field id="modcha">
+                    <condicion operador="=">CHASIS.modcod</condicion>
+                </field>
+            </table>
+
+        </join>
+            <join tipo="left">
+            <table id="TACOGRAFOS">
+                <field id="idTaco">
+                    <condicion operador="=">CHASIS.idTaco</condicion>
+                </field>
+
+            </table>
+
+        </join>
+          <join tipo="left">
+            <table id="MARCHASIS">
+                <field id="marcod">
+                    <condicion operador="=">CHASIS.marcod</condicion>
+                </field>
+
+            </table>
+
+        </join>
+        <join tipo="left">
+            <table id="TURNOSPRODUCCION">
+                <field id="nrofab">
+                    <condicion operador="=">CHASIS.nrocha</condicion>
+                </field>
+            </table>
+
+        </join>
+        <join tipo="left">
+            <table id="PEDCOTIZ">
+                <field id="nrocha">
+                    <condicion operador="=">CHASIS.nrocha</condicion>
+                </field>
+            </table>
+        </join>
+
+         <join tipo="left">
+            <table id="CONCESIONARIO">
+                <field id="idconces">
+                    <condicion operador="=">CHASIS.conces</condicion>
+                </field>
+            </table>
+
+        </join>
+    </form>
+</histrix>

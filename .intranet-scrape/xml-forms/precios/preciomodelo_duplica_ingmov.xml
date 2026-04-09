@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert"   >
+	<title>PRECIOS POR MODELO</title>
+	<obs/>
+	<form >
+		<table id="PRECIOMODELO" >
+			<title></title>
+			<field id="idLista"  id_cab="idLista"></field>
+			
+			<field id="nrocar"   id_temp="nrocar"></field>
+			<field id="asientos" id_temp="asientos"></field>
+			<field id="precio"   id_temp="prec2"></field>
+			<field id="margen"   id_temp="margen"></field>
+			<field id="banbar"   id_temp="banbar"></field>
+			<field id="largo"    id_temp="largo"></field>
+			<field id="bodega"   id_temp="bodega"></field>
+			<field id="bastidor" id_temp="bastidor"></field>
+			<field id="tipserv"  id_temp="tipserv"></field>
+			<field id="idGrupo"  id_temp="idGrupo"></field>
+		</table>
+	</form>
+</histrix>

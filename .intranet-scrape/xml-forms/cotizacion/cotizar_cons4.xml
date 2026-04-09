@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta"   >
+	<title>PRECIOS POR MODELO</title>
+	<obs/>
+	<form >
+		<table id="PRECIOMODELO" >
+			<title></title>
+			<field id="idLista" noshow="true">
+				<label modpos="nobr">Lista</label>
+				<tipo>integer</tipo>
+			</field>			
+			<field id="nrocar" noshow="true">
+				<tipo>integer</tipo>
+			</field>		
+			<field id="idGrupo" noshow="true">
+				<tipo>integer</tipo>
+			</field>			
+<!--			<field id="marcod" noshow="true">
+			</field>
+			
+			<field id="modcha" noshow="true">
+			</field>	
+	-->		
+	
+			<field id="mardes" style="white-space:nowrap;font-size:14px;" break="true">
+			    <label>Marca Ch.</label>
+		    		<expression>MARCHASIS.mardes</expression>
+			</field>
+			<field id="asientos" noZero="true">
+				<expression>PRECIOMODELO.asientos + acompañante</expression>
+				<label colstyle="width:50px;" style="color:blue; font-size:16px;">Asientos</label>
+				<label>Cantidad de Asientos</label>
+			</field>			
+
+          <field id="homologacion_id" required="true" local="true" noshow="true">
+            <label modpos="nobr">Homologacion</label>
+          </field>
+
+			<field id="tipserv" style="white-space:nowrap;">
+				<label>Tipo</label>
+				<label>Tipo de Servicio</label>
+							<tabla_ex id="TIPOSERVICIO">
+                        <field id="tipserv">
+                        </field>
+                        <field id="servdes">
+                        </field>					
+				</tabla_ex>
+			</field>			
+			<field id="banbar">
+				<label>B/B</label>
+
+				<options>
+					<option valor="0">--</option>
+					<option valor="1">Si</option>					
+				</options>
+			</field>
+			<field id="bastidor">
+				<label>Bastidor</label>
+				<options>
+					<option valor="0">--</option>
+					<option valor="1">Si</option>					
+				</options>
+				<help>Bastidor</help>
+				
+			</field>			
+			<field id="largo">
+				<label>Largo</label>
+				<help>Largo Expresado en Metros</help>
+			</field>						
+			<field id="bodega" noZero="true">
+				<label>Bodega</label>
+				<help>Capacidad de Bodega expresado en Metros Cúbicos</help>
+			</field>	
+			<field id="precio" noZero="true">
+				<label modpos="nobr" style="color:green; font-size:16px;">Concesionario</label>
+				<help>Precio</help>
+				<tipo>numeric</tipo>
+				
+				
+			</field>
+			<field id="margen" noshow="true">
+				<expression>max(margen)</expression>
+				<label>% Rec</label>
+				<help>Recargo precio de Venta</help>
+			</field> 
+			<field id="precio_publico" noZero="true">
+				<expression>max(precio_publico)</expression>
+				<label modpos="nobr" style="color:red; font-size:16px;">Venta</label>
+				<help>Precio</help>
+				<tipo>numeric</tipo>				
+			</field>
+			<field id="idPrecio" noshow="true">
+			</field>
+			<field id="nrounico" local="true" noshow="true">
+				<if exp="true">
+					<true>'nrocar'.'idGrupo'.'asientos'</true>
+					<false>0</false>
+				</if>
+			</field>				
+<!--
+			<field id="Carac" linkdir="cotizacion" linkint="cotizopciones.xml" linkdes="caracteristicas" local="true" print="false">
+				<label>Características</label>
+				<paring destino="idPrecio" operador="="   >nrounico</paring>
+				<valor>'Características'</valor>
+				<tipo>varchar</tipo>
+			</field> 			
+-->
+
+            <field id="prueba" linkdir="cotizacion" style="font-size:16px;width:100%;text-align:left;padding-left:1em;" linktab="true" linkint="cotizacion_con_atributos.xml" linkdes="Generar Cotizacion" print="false">
+                        <expression><![CDATA[IFNULL((SELECT CONCAT( IFNULL(CARROCERIA.desabv,''),' ', IFNULL(MARCHASIS.mardes,''),' ', 
+                                                                    IFNULL(MODCHASIS.desabv,''), ' ', IFNULL(EURO_TIPO.abrev_euro,''), ' - ',
+                                                            /*        IFNULL(HOMOLOGMOD.asientos + acompañante, ' '), ' Asientos ',
+                                                                    (CASE WHEN banbar = 1 THEN 'BB' ELSE ' ' END), '- Largo: ', largo, ' ', 
+*/
+                                                                    trim(referencia), ' ', (case when baja = 1 then '- Baja' else '' end))
+                                                    FROM HOMOLOGMOD H
+                                                        INNER JOIN PROD_MODELO_LCM ON id_modelo_lcm = modelo_lcm_id
+                                                        LEFT JOIN MODCHASIS ON id_modelo = PROD_MODELO_LCM.modelo_id
+                                                        LEFT JOIN MARCHASIS ON MARCHASIS.marcod = MODCHASIS.marcod
+                                                        LEFT JOIN EURO_TIPO ON EURO_TIPO.id_euro = MODCHASIS.euro_id
+                                                        LEFT JOIN CARROCERIA ON PROD_MODELO_LCM.nrocar_id = CARROCERIA.nrocar
+                                                        LEFT JOIN PROD_LCM ON id_lcm = PROD_MODELO_LCM.lcm_id
+                                                    WHERE H.id_homologacion = HOMOLOGMOD.id_homologacion),'')]]></expression>
+                        <paring destino="modcar" operador="=">nrocar</paring>
+                        <paring destino="nrocar" operador="=">nrocar</paring>
+                        <paring destino="homologacion_id" operador="=">id_homologacion</paring>
+                        <paring destino="idGrupo" operador="=">idGrupo</paring>
+                        <paring destino="precio" operador="=">precio</paring>
+                        <paring destino="prePub" operador="=">precio_publico</paring>
+                        <paring destino="idPrecio" operador="=">nrounico</paring>
+                        <paring destino="asientos2" operador="=">asientos</paring>
+                        <tipo>varchar</tipo>
+                        <label>Cotizar</label>
+                    </field>
+			<field id="id_homologacion" tabla="HOMOLOGMOD" noshow="true" />
+
+			<group>
+-				<field id="id_homologacion" />
+				<field id="asientos" tabla="PRECIOMODELO"></field>
+                                <field id="tipserv" tabla="PRECIOMODELO"></field>
+                            	<field id="banbar" tabla="PRECIOMODELO"></field>				
+				<field id="bastidor" tabla="PRECIOMODELO"></field>				
+-
+			</group>  
+			<order>
+				<field id="mardes" />
+			</order>
+		</table>
+		<join tipo="left">
+			<table id="HOMOLOGMOD">
+			    <field id="id_homologacion">
+				<condicion operador="in">([__homologacion_id__])</condicion>
+			    </field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="PROD_MODELO_LCM">
+			    <field id="id_modelo_lcm">
+				<condicion operador="=">modelo_lcm_id</condicion>
+			    </field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="MODCHASIS">
+			    <field id="id_modelo">
+				<condicion operador="=">PROD_MODELO_LCM.modelo_id</condicion>
+			    </field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="MARCHASIS">
+			    <field id="marcod">
+				<condicion operador="=">MODCHASIS.marcod</condicion>
+			    </field>
+			</table>
+		</join>
+
+                                                        LEFT JOIN MARCHASIS ON MARCHASIS.marcod = MODCHASIS.marcod
+
+	</form>
+</histrix>

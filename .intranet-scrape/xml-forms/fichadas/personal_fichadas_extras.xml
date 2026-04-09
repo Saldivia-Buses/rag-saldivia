@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<abm sololectura="true" tipo="ficha" autoprint="true">
+	<titulo>Fichadas</titulo>
+	<obs/>
+	<consulta>
+		<tabla id="PERSONAL" label="Ficha Personal">
+<!--			<campo id="IdPersona">
+				<label posy="+1">Cuenta</label>
+				<help>Codigo de Cuenta</help>
+			</campo> -->
+			<campo id="legajo">
+				<label posy="+1">Legajo</label>
+				<help>Numero de Legajo</help>
+				<valor>0</valor>
+			</campo>
+
+			<campo id="apellido">
+				<label >Apellido</label>
+				<help>Apellido</help>
+				<size>30</size>
+			</campo>
+			<campo id="Nombre">
+				<label modpos="nobr" >Nombre</label>
+				<help>Nombre</help>
+				<size>25</size>
+			</campo>
+			<campo id="CUIL">
+				<label modpos="nobr">C.U.I.L.</label>
+				<help>Numero de Clave Unica de Identificacion Laboral</help>
+			</campo>
+
+<!--			<campo id="fecing">
+				<label>Fecha de Ingreso</label>
+				<help/>
+			</campo> -->
+			<campo id="idJornada" noshow="true" tabla="JORNADAS" oculto="true">
+				<tipo>integer</tipo>
+			</campo>
+			<campo id="nombre2" >
+				<expresion>JORNADAS.nombre</expresion>
+				<label >Horario</label>
+				<help>Horario</help>
+				<tipo>varchar</tipo>
+			</campo>
+
+			<campo id="tarjeta">
+				<label modpos="nobr">Tarjeta</label>
+				<help></help>
+				<valor>0</valor>
+			</campo>
+			<campo id="desdefecha" local="true">
+				<label>Desde Fecha</label>
+				<tipo>date</tipo>
+			</campo>
+			<campo id="hastafecha" local="true">
+				<label>Hasta Fecha</label>
+
+				<tipo>date</tipo>
+			</campo>
+			<campo id="fichadas" local="true" obj="fichadas_impr_extras.xml">
+				<label posy="+30" posx="5" ></label>
+				<paring destino="tarjeta" operador="=">tarjeta</paring>
+				<paring destino="fecha" operador="&gt;=" reemplazo="false">desdefecha</paring>
+				<paring destino="fecha2" operador="&lt;=" reemplazo="false">hastafecha</paring>
+				<paring destino="idJornada" operador="=">idJornada</paring>
+			</campo>
+			<campo id="ocpobs" deshabilitado="true" local="true">
+				<label colspan="4" posx="110" posy="260"  PDFsize="10">Firma y Aclaración:..................................</label>
+
+			</campo>
+
+		</tabla>
+		<join tipo="left">
+			<tabla id="JORNADAS">
+				<campo id="idJornada">
+					<condicion operador="=">PERSONAL.idJornada</condicion>
+				</campo>
+			</tabla>
+		</join>
+	</consulta>
+</abm>

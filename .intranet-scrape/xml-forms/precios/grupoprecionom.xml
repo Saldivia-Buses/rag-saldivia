@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm-mini">
+		<title>Grupos de Precios</title>
+        <obs></obs>
+		<form >
+			<table id="GRUPOPRECIONOM">
+    				<title>Grupo de Precios</title>
+
+				<field id="nrocar">
+					<label>Carroceria</label>
+					<tabla_ex id="CARROCERIA">
+						<field id="nrocar">
+							<label>Codigo</label>
+						</field>
+						<field id="desabv">
+							<label>Modelo</label>
+						</field>
+						<field id="siscod" oculto="true">
+							<condicion operador="=">'03'</condicion>
+						</field>
+					</tabla_ex>
+					<help>Modelo de Carroceria</help>
+					<detalle>nrocar</detalle>
+				</field>
+				
+				<field id="idGrupo">
+					<label>Grupo</label>
+					<help>Grupo</help>
+					<detalle>idGrupo</detalle>
+				</field>
+				
+				<field id="descripcion">
+					<label modpos="nobr">Descripción</label>
+					<help>Descripcion</help>
+				</field>
+				
+				
+			</table>
+		</form>
+</histrix>

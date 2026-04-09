@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="ayuda">
+	<title>CUENTAS</title>
+	<obs></obs>
+	<form >
+		<table id="CCTCONTA" label="Ayuda de Cuenta">
+
+			<field id="idconta" noshow="true">
+				<detalle>idconta</detalle>
+			</field>
+
+			<field id="ctacod" noshow="true">
+				<detalle>ctacod</detalle>
+				<detalle>nro_cuenta</detalle>
+			</field>
+			
+			<field id="nombre">
+				<label>Nombre</label>
+				<detalle>nombre</detalle>
+				<help>Nombre de Cuenta </help>
+			</field>
+		</table>
+		<join tipo="left">
+		    <table id="REG_CUENTA">
+			<field id="nro_cuenta">
+			    <condicion operador="=">CCTCONTA.ctacod</condicion>
+			</field>
+			<field id="subsistema_id">
+			    <condicion operador="=">CCTCONTA.siscod</condicion>
+			</field>
+		    </table>
+		</join>
+	</form>
+</histrix>

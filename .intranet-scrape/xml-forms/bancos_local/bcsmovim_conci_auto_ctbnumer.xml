@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="update">
+	<title>NUMERADOR CONTABLE</title>
+	<obs></obs>
+	<form>
+		<table id="CTBNUMER" label="PARAMETRO" idCampoCond="Grabar">
+			<field id="siscod" esClave="true">
+			    <valor>10</valor>
+			</field>
+			<field id="nummes" id_temp="mes" esClave="true">
+			</field>
+
+			<field id="numapr">
+			    <valor>numapr + 1 </valor>
+			</field>
+		</table>
+	</form>	   
+</histrix> 

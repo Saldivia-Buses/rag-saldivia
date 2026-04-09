@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="grid" imprime="false" inserta="false" deleteRow="false" llenoreferente="true" llenoTemporal="true" importTempTable="TEMPTABLENAME" showCantidad="false" tooltip="false" preFetch="false" preloadData="false">
+    <title>Detalle</title>
+    <obs></obs>
+    <form >
+        <table id="STK_SERIALES" label="movimientos">
+	    <movimientos>
+	    	<relacion id="stkseriales_ins.xml" />
+            </movimientos>
+
+	    <importar xml="stkseriales_ing.xml" label="Ingresar Seriales" titulo="Ingresar Seriales" resume="true"></importar>
+            
+            <field id="stkrubro_id" local="true">
+		<label>Tipo Serie</label>
+		<helper type="combo" xml="cajctbaux_qry.xml" dir="/caja/qry" empty="true" />
+		<condicion operador="=">-1</condicion>
+	    </field>
+
+	    <field id="stkarticulo_id" local="true" noshow="true">
+		<label>Articulo</label>
+	    </field>	
+
+            <field id="codigo_serie" local="true">
+		<label>Nro Serie</label>
+	    </field>
+
+	    <field id="acepta" local="true" noshow="true">
+		<valor>1</valor>
+	    </field>
+
+        </table>        
+    </form>
+</histrix>

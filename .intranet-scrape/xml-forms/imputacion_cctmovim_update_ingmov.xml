@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<abm tipo="update">
+    <titulo>COMPROBANTES</titulo>
+    <obs></obs>
+    <consulta>
+        <tabla id="CCTMOVIM" label="FACTURAS" >
+            <field id="siscod" id_cab="sisprv" esClave="true"></field>
+            <field id="ctacod" id_cab="ctacod" esClave="true"></field>
+            <field id="movfec" id_temp="movfec" esClave="true"></field>
+            <field id="concod" id_temp="concod" esClave="true"></field>
+            <field id="movnpv" id_temp="movnpv" esClave="true"></field>
+            <field id="movnro" id_temp="movnro" esClave="true"></field>
+            <field id="movsal" id_temp="newsaldo"></field>
+            <field id="movicc" id_cab="concodCAB"></field>
+            <field id="movipv" id_cab="movnpvCAB"></field>
+            <field id="movinc" id_cab="movnroCAB"></field>
+<!--						<field id="regmin" >
+						</field>
+						-->
+        </tabla>
+    </consulta>
+</abm>

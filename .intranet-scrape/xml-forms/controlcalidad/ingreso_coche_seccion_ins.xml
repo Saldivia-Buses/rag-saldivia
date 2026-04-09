@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="insert" >
+	<titulo>Control Calidad</titulo>
+	<obs/>
+	<form>
+		<table id="PROD_CONTROL_MOVIM"  idCampoCond="update" _idCampoCond="graba">
+			<sql>
+		
+				call ingresaCocheSeccion('[__nrofab_id__]', '[__seccion_id__]');
+			</sql>			
+		
+			<field id="nrofab_id"	     id_temp="nrofab_id" />
+			<field id="seccion_id"	     id_temp="seccion_id" />
+		</table>
+
+	</form>
+</histrix>

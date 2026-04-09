@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix exportasuma="true" imprime="false" llenoTemporal="false" llenoreferente="true" tipo="ing" subtipo="vertical">
+	<title>INGRESO CHEQUES</title>
+	<obs/>
+	<customScript>
+		$(document).on('change', '.scanner-number', function(){
+			$(this).css({'border':'1px solid red'});
+			var number = $(this).val();
+			if (number != '') {
+				var carnro = number.substring(11, 19);
+				var ccbcod = number.substring(1, 4);
+				var plaza = number.substring(7, 11);			
+				$("#TRFormrecibo_carchequ_ing_xml [name=carnro]").val(carnro); //.prop("disabled", true);
+				$("#TRFormrecibo_carchequ_ing_xml [name=ccbcod]").val(ccbcod); //.prop("disabled", true);
+				$("#TRFormrecibo_carchequ_ing_xml [name=carpla]").val(plaza); //.prop("disabled", true);			
+				$("#TRFormrecibo_carchequ_ing_xml [name=ctanro]").focus().select();
+			}
+			$('a[rel*=lightbox][href]', "#TRFormrecibo_carchequ_ing_xml").lightBox();
+		});
+
+		$(document).bind("DOMSubtreeModified", function() {
+		    $('.scanner-number').change();
+
+		});
+	</customScript>
+	<form >
+		<table id="CARCHEQU" idCampoCond="imputar" label="Ingreso de Cheques">
+			<movimientos>
+				<relacion id="recibo_carchequ_ingmov.xml"/>
+
+				<relacion id="recibo_carnuche_update.xml" />
+			
+				<relacion id="recibo_scanner_cheque_ingmov.xml"/>
+			</movimientos> 
+			<field id="ctacod" deshabilitado="true"  noshow="true">
+				<label>Cuenta</label>
+				<help>Clientes</help>
+				<tipo>integer</tipo>
+			</field>		
+			<field id="barcode_cheque" noshow="true" addClass="scanner-number">
+				<label colspan="3">Scan</label>
+				<size>40</size>
+			</field>
+
+
+
+			<field id="carnro" esClave="true" >
+				<label>Nro. Cheque</label>
+				<help>Numero de Cheque</help>
+			</field>
+	
+			<field id="barcode_front" deshabilitado="true" addClass="scanner-front" local="true" noshow="true">
+				<label modpos="nobr" rowspan="4"></label>
+			</field>	
+			
+	
+
+			<field id="siscar" noshow="true" >
+				<label>siscar</label>
+				<help>Cod sistema</help>
+<!--				<parametro id="fsmparam_paralf.xml" retorna="paralf">
+					<field id="parcla">
+						<condicion operador="=">'siscar'</condicion>
+					</field>
+				</parametro> -->
+				<valor>05</valor>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="ctanro" cuit="true" _modpos="nobr">
+				<label>CUIT</label>
+				<help>C.U.I.T. del Librador</help>
+				<tipo>varchar</tipo>
+			</field>
+
+		
+
+			<field id="carfec">
+				<label>Fec.Cheque</label>
+				<help>Fecha del cheque ingresado.</help>
+				<valor>today</valor>
+			</field>
+			<field id="fecha_emision">
+				<label _modpos="nobr">Fec.Emision</label>
+				<help>Fecha de emision. </help>
+				<tipo>date</tipo>
+			</field>
+
+			<field id="ccbcod">
+				<label>Banco</label>
+				<help>Cuenta Bancaria</help>
+				<ayuda_ex id="CAR_BANCOS" _xml="HLPbcscuent.xml" dir="/help_local"> 
+					<field id="id_carbanco"/>
+					<field id="nombre_banco">
+						<detalle>carbco</detalle>
+					</field>
+				</ayuda_ex>
+				<tipo>integer</tipo>
+			</field>
+			<field id="barcode_back" deshabilitado="true" local="true" addClass="scanner-back" modpos="nobr" rowspan="4" noshow="true">
+				<label ></label>
+			</field>	
+			<field id="carbco" deshabilitado="true"  _modpos="nobr">
+				<label>Nombre Banco</label>
+				<help>Nombre de Banco de Procedencia.</help>
+			</field>
+
+			<field id="carpla">
+				<label _modpos="nobr">Plaza Bancaria</label>
+				<help>Plaza Bancaria</help>
+			</field>
+			<field id="carimp" suma="true" colspan="2">
+				<label>Importe</label>
+				<help>Importe del cheque.</help>
+				<detalle>cajimp</detalle>
+			</field>
+			<field id="carint" deshabilitado="true" noshow="true" >
+				<label>Nro.Int</label>
+				<help></help>
+				<parametro id="carnuche.xml" retorna="carint">
+					<field id="siscod" oculto="true">
+						<condicion operador="=">'05'</condicion>
+						<valor>05</valor>
+					</field>
+<!--					<field id="carint">
+						<complete>carint + 1</complete>
+					</field>	-->				
+				</parametro>
+					
+			</field>
+	
+			<field id="imputar" local="true" noshow="true">
+				<valor>1</valor>
+			</field>
+			<!-- NUMERADOR INTERNO NOMBRE DE CAMPO RESERVADO-->
+		<field id="_ORDEN" noshow="true" deshabilitado="true">
+				<label>Orden</label>
+				<tipo>integer</tipo>
+			</field>
+			<field id="carint2" local="true" deshabilitado="true" _noshow="true">
+				<label>N</label>
+				<if exp="true" operador="=">
+					<true>_ORDEN + carint </true>
+					<false>carint</false>
+				</if>
+				<tipo>integer</tipo>
+			</field>
+			<field id="car3" local="true" deshabilitado="true" noshow="true">
+				<label>car3</label>
+				<if exp="true" operador="=">
+					<true>_ORDEN + carint </true>
+					<false>carint</false>
+				</if>
+				<tipo>integer</tipo>
+			</field>
+			<field id="movnpv" deshabilitado="true" noshow="true">
+			</field>
+
+			<field id="movnroOP" deshabilitado="true" noshow="true">
+				<label>nro</label>
+			</field>
+			<field ctbtipo="2" id="cajtip" local="true" noshow="true">
+				<valor>1</valor>
+				<detalle>cajtip</detalle>
+			</field>
+			<field id="opecla" local="true" noshow="true">
+				<valor eval="true">$_SESSION['usuario']</valor>
+			</field>
+			<field id="cajcod" local="true" noshow="true">
+				<label>cajcod</label>
+				<valor>3</valor>
+				<detalle>cajcod</detalle>
+			</field>			
+			<field id="caralt" noshow="true">
+				<label>Fec.Alta</label>
+				<help>Fecha de alta del cheque </help>
+				<valor>today</valor>
+			</field>
+
+		</table>
+		<join tipo="left">
+			<table id="BCSCONCE">
+				<field id="siscod" oculto="true">
+					<label>BCSCONCE.siscod</label>
+					<condicion operador="=">BCSMOVIM.siscod</condicion>
+				</field>
+				<field id="cnbcod" oculto="true">
+					<condicion operador="=">BCSMOVIM.bcsmov</condicion>
+				</field>
+				<field id="cnbnom" oculto="true"/>
+			</table>
+		</join>
+	</form>
+</histrix>
+

@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" >
+	<title>Eliminacion de Detalles de Movimientos de Caja</title>
+	<obs></obs>
+	<form>
+	<table id="CAJ_TOTALES1">
+		<filters>
+		        <field id="cajpuesto_id"   posX="5"   posY="30">
+			    	<label>Puesto</label>
+				<operador>=</operador>
+		        </field>
+			<field id="desde_fecha_movimiento">
+				<label>Desde</label>
+				<tipo>date</tipo>
+			</field>
+		  
+			<field id="hasta_fecha_movimiento">
+				<label modpos="nobr">Hasta</label>
+				<valor>today</valor>
+				<tipo>date</tipo>
+			</field>
+		</filters>
+	      	<preconsultas>
+			<xmlfile id="totalescaja_pre_qry.xml" />
+	      	</preconsultas>
+                <field id="cajpuesto_id"   noshow="true" posX="5"   posY="30">
+			<label>Puesto</label>
+			<helper type="combo" xml="cajpuesto_qry.xml" dir="/ayudas" _empty="true" /> 
+<!--		si se activa el empty no funciona bien el saldo anterior cuando el puesto esta vacio  -->
+			<preparam campo="cajpuesto_id" operador="=">true</preparam> 
+                </field>
+		<field id="desde_fecha_movimiento" local="true" noshow="true" >
+			<label>Fecha 1</label>
+  			<preparam campo="fecha_movimiento" operador="&lt;">true</preparam>
+			<tipo>date</tipo>
+		</field>
+		<field id="hasta_fecha_movimiento" local="true" noshow="true" >
+			<label>Fecha 2</label>
+			<tipo>date</tipo>
+		</field>
+
+	<field id="condicion" having="false">
+			<expresion>'1'</expresion>
+			<condicion operador="="> '1' and
+(			(fecha_movimiento&gt;= str_to_date('[__desde_fecha_movimiento__]','%d/%m/%YYYY') and '[__desde_fecha_movimiento__]' !='')
+			 and 
+			 (fecha_movimiento &lt;= str_to_date('[__hasta_fecha_movimiento__]','%d/%m/%YYYY') or 
+			'[__hasta_fecha_movimiento__]' ='') ) </condicion>>
+	</field>
+		<field id="fecha_movimiento" noshow="true" >
+			<label>Fecha 3</label>
+		</field>
+		<field id="id_cajconcepto"  tabla="CAJ_CONCEPTOS" noshow="true" >
+			<label>Id_Con</label>
+		</field>
+		<field id="imputacion_concepto"  tabla="CAJ_CONCEPTOS" noshow="true" break="true"/>
+
+		<field id="descripcion_concepto"  tabla="CAJ_CONCEPTOS" >
+			<label>Comp</label>
+		</field>
+		<field id="ing_efectivo" suma="true" >
+			<expresion>sum(ing_efectivo) - sum(egr_efectivo)</expresion>
+			<label>Efectivo</label>
+		</field>
+		<field id="ing_valores" suma="true" >
+			<expresion>sum(ifnull(ing_valores,0) ) </expresion>
+			<label>Valores</label>
+			<tipo>decimal</tipo>
+		</field>
+		<field id="ing_tran" suma="true" >
+			<expresion>sum(ing_tran) * case when imputacion_concepto = 0 then 1 else -1 end</expresion>
+			<label>Ing.Tr.</label>
+		</field>
+		<field id="che_propio" suma="true" >
+			<expresion>sum(che_propio) * case when imputacion_concepto = 0 then 1 else -1 end</expresion>
+			<label>Cheq.Emitidos</label>
+		</field>
+		<field id="ing_sellos" suma="true" >
+			<expresion>sum(ing_sellos) * case when imputacion_concepto = 0 then 1 else -1 end</expresion>
+			<label>Sellos</label>
+		</field>
+		<field id="ing_IIBB" suma="true" >
+			<expresion>sum(ing_IIBB) * case when imputacion_concepto = 0 then 1 else -1 end</expresion>
+			<label>II.BB.</label>
+		</field>
+		<field id="ing_gan" suma="true" >
+			<expresion>sum(ing_gan) * case when imputacion_concepto = 0 then 1 else -1 end</expresion>
+			<label>Gananc.</label>
+		</field>
+		<field id="egr_tran"  suma="true">
+			<expresion>sum(egr_tran) * case when imputacion_concepto = 0 then 1 else -1 end</expresion>
+			<label>Eg.Tr</label>
+		</field>
+		<field id="total"  suma="true">
+			<expresion>sum(total)</expresion>
+			<label>Total</label>
+		</field>
+		<group>
+			<field id="imputacion_concepto"  tabla="CAJ_CONCEPTOS" />
+			<field id="descripcion_concepto"  tabla="CAJ_CONCEPTOS" />
+		</group>
+	</table>
+		<join>
+			<table id="CAJ_CONCEPTOS">
+				<field id="id_cajconcepto">
+					<condicion operador="=">CAJ_TOTALES1.id_cajconcepto and CAJ_CONCEPTOS.imputacion_concepto != 2</condicion>
+				</field>
+			</table>
+		</join>
+	
+	</form>
+
+</histrix>  
+
+

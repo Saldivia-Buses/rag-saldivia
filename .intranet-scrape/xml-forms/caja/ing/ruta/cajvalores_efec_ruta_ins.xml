@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert">
+    <title/>
+    <obs/>
+    <form>
+        <table id="CAJ_VALORES" idCampoCond="total_imputado">
+            <field id="cajmovimiento_id" lastId="cajmovimientos_ruta_ins.xml" />
+            <field id="cajformapago_id" >
+            	<valor>1</valor>
+            </field>
+            <field id="pago_valor"      id_temp="total_imputado" />
+        </table>
+    </form>
+</histrix>

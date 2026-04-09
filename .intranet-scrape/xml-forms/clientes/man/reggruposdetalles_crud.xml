@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm-mini" subtipo="vertical" >
+  <title>Conceptos de Comprobantes Agrupados</title>
+  <obs></obs>
+  <form >
+    <table id="REG_GRUPOS_CONCEPTOS" label="Conceptos de Comprobantes Agrupados">
+	<field id="id_reggrupoconcepto" esClave="true" noshow="true" />
+	<field id="reggrupo_id"   noshow="true" />
+        <field id="subsistema_id" local="true">
+		<label>Modulo</label>
+		<helper type="combo" xml="subsistema_qry.xml" dir="/ayudas" empty="true">
+		</helper>
+		<actualiza>		
+			<field id="regconcepto_id" destino="Subsistema_id"  />
+		</actualiza>
+
+	</field>
+	<field id="regconcepto_id" >
+		<label>Conceptos</label>
+		<helper type="combo" xml="regconcepto_qry.xml" dir="/ayudas" empty="true">
+			<field id="Subsistema_id">
+		 		<expresion>subsistema_id</expresion>
+			</field>
+		</helper>
+	</field>
+    </table>
+  </form>
+</histrix>  

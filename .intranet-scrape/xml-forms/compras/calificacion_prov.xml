@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="consulta" noTabs="true" limit="1" preloadData="false">
+  <title>Proveedores aprobados</title>
+  <obs></obs>
+  <form _detalle="Demeritoxprov.xml" dir="demeritos" _inline="true" _hasDetail="pesoDem">
+    <table _id="REG_CUENTA" id="CCTCUENT" label="Proveedores aprobados">
+
+<!--
+      <field id="subsistema_id" oculto="true">
+        <label>subsistema_id</label>
+        <help>subsistema_id</help>
+        <detalle>siscod</detalle>
+        <condicion operador="=">'01'</condicion>
+      </field>
+    -->
+      <field id="siscod" oculto="true">
+        <label>siscod</label>
+        <help>siscod</help>
+        <detalle>siscod</detalle>
+        <condicion operador="=">'01'</condicion>
+      </field>
+      <field id="baja" oculto="true">
+          <condicion operador="=">0</condicion>
+      </field>
+<!--
+      <field id="id_regcuenta" noshow="true">
+        <label>Codigo de Cuenta </label>
+        <help>Codigo</help>
+        <detalle>regcuenta_id</detalle>
+        <helper type="combo" id="REG_CUENTA" empty="true">
+            <field id="id_regcuenta"></field>
+            <field id="nombre_cuenta"></field>
+            <field id="subsistema_id" oculto="true">
+              <condicion operador="=">'01'</condicion>
+            </field>
+            <order>
+              <field id="nombre_cuenta"></field>
+            </order>
+          </helper>
+      </field>
+
+      <field id="nro_cuenta" _noshow="true">
+        <label>Codigo de Cuenta </label>
+        <help>Codigo</help>
+        <detalle>prvcod</detalle>
+      </field>
+    -->
+      <field id="ctacod" noshow="true">
+        <label>Codigo de Cuenta </label>
+        <help>Codigo</help>
+        <detalle>prvcod</detalle>
+      </field>
+<!--
+      <field id="nombre_cuenta" _noshow="true">
+        <label>Nombre</label>
+        <help>Proveedor </help>
+      </field> 
+        <field id="nombre_fantasia" noshow="true">
+        <label>Nombre fantasia</label>
+        <help>Proveedor </help>
+      </field>
+      -->
+      <field id="ctanom" noshow="true">
+        <label>Nombre</label>
+        <help>Proveedor </help>
+      </field> 
+        <field id="ctafan" noshow="true">
+        <label>Nombre fantasia</label>
+        <help>Proveedor </help>
+      </field>
+
+
+      <field id="calificacion">
+        <label>Calificacion</label> 
+        <expression sql="true">select if(
+                ifnull(round(
+                (select sum(peso) from MOVDEMERITO
+                            left join DEMERITO on DEMERITO.coddem = MOVDEMERITO.coddem
+                            where MOVDEMERITO.prvcod = CUENTA.ctacod
+                            and MOVDEMERITO.demfec &gt;= '2014-02-03' 
+                            and MOVDEMERITO.demfec &gt;= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+                            and MOVDEMERITO.coddem != 0)
+                /
+
+                            (select  count(*)  from OCPRECIB
+                            where OCPRECIB.ctacod  = CUENTA.ctacod
+                            and OCPRECIB.fecrec &gt;= '2014-02-03' 
+                            and OCPRECIB.fecrec &gt;= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)), 2), 0) 
+                            &lt; 6, (IF (ifnull(round(
+                (select sum(peso) from MOVDEMERITO
+                            left join DEMERITO on DEMERITO.coddem = MOVDEMERITO.coddem
+                            where MOVDEMERITO.prvcod = CUENTA.ctacod
+                            and MOVDEMERITO.demfec &gt;= '2014-02-03' 
+                            and MOVDEMERITO.demfec &gt;= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+                            and MOVDEMERITO.coddem != 0)
+                /
+
+                            (select  count(*)  from OCPRECIB
+                            where OCPRECIB.ctacod  = CUENTA.ctacod
+                            and OCPRECIB.fecrec &gt;= '2014-02-03' 
+                            and OCPRECIB.fecrec &gt;= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)), 2), 0) = 0, '-', (IF (ifnull(round(
+                (select sum(peso) from MOVDEMERITO
+                            left join DEMERITO on DEMERITO.coddem = MOVDEMERITO.coddem
+                            where MOVDEMERITO.prvcod = CUENTA.ctacod
+                            and MOVDEMERITO.demfec &gt;= '2014-02-03'  
+                            and MOVDEMERITO.demfec &gt;= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+                            and MOVDEMERITO.coddem != 0)
+                /
+
+                            (select  count(*)  from OCPRECIB
+                            where OCPRECIB.ctacod  = CUENTA.ctacod
+                            and OCPRECIB.fecrec &gt;= '2014-02-03' 
+                            and OCPRECIB.fecrec &gt;= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)), 2), 0) &gt; 4, 'B', 'A')))), (IF (ifnull(round(
+                (select sum(peso) from MOVDEMERITO
+                            left join DEMERITO on DEMERITO.coddem = MOVDEMERITO.coddem
+                            where MOVDEMERITO.prvcod = CUENTA.ctacod
+                            and MOVDEMERITO.demfec &gt;= '2014-02-03'  
+                            and MOVDEMERITO.demfec &gt;= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+                            and MOVDEMERITO.coddem != 0)
+                /
+
+                            (select  count(*)  from OCPRECIB
+                            where OCPRECIB.ctacod  = CUENTA.ctacod
+                            and OCPRECIB.fecrec &gt;= '2014-02-03' 
+                            and OCPRECIB.fecrec &gt;= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)), 2), 0) &gt; 8, 'X', 'C')))
+                          
+                as "calif"
+                 
+                from CCTCUENT as CUENTA
+                where  CUENTA.siscod = '01' and CUENTA.baja = 0 and CUENTA.ctacod = '[__ctacod__]'
+
+        </expression>
+      </field>
+
+    </table>
+  </form>
+</histrix>

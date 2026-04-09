@@ -1,0 +1,231 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+   <histrix tipo="ficha" sololectura="true"  autoprint="true" sinFecha="true">
+       <title></title>
+        <obs></obs>
+               <form >
+
+				   <pdf>
+					  <code><![CDATA[
+
+				//		$pdf->RoundedRect(4,5,$pdf->anchoPagina + 2,270, 5);
+				//		$pdf->RoundedRect(5,175,$pdf->anchoPagina,42, 5);
+				//		$pdf->Line(5,182,$pdf->anchoPagina+5,182);
+				//		$pdf->Line(5,189,$pdf->anchoPagina+5,189);
+					  
+				//		$pdf->Line(5,196,$pdf->anchoPagina+5,196);
+				//		$pdf->Line(5,203,$pdf->anchoPagina+5,203);
+				//		$pdf->Line(5,210,$pdf->anchoPagina+5,210);					  
+				//	    $pdf->Line(($pdf->anchoPagina / 2)+5,175,($pdf->anchoPagina / 2)+5,217);
+					  ]]></code>
+				  </pdf>
+<!-- $pdf->Rect(5,5,$pdf->anchoPagina,15);-->
+
+
+                  <table id="TURNOSPRODUCCION" label="RESPONSABILIDAD CIVIL - R 7.2-09">
+
+
+
+
+		<!--		<field id="cabe1" local="true">
+					<label size="200" posx="55" posy="4" PDFsize="18" PDFnoborder="true">RESPONSABILIDAD CIVIL</label>
+				</field> -->
+
+
+				<field id="recibi" local="true">
+					<label size="145" posx="0" posy="20" PDFsize="12" PDFnoborder="true">Recibí de Carrocerías SALDIVIA, el siguiente ómnibus</label>
+				</field>
+
+            			<field id="mardes">
+					<label size="40" posx="0" posy="+5" PDFsize="12" PDFnoborder="true">Marca:</label>
+				<expression>CHASIS.marcod</expression>
+				<label modpos="nobr" Formstyle="display:none;">Ch.</label>
+				<help/>
+				<tabla_ex id="MARCHASIS">
+					<field id="marcod">
+					</field>
+					<field id="mardes">
+					</field>
+
+					<field id="siscod" oculto="true">
+						<condicion operador="=">03</condicion>
+					</field>
+				</tabla_ex>
+				<tipo>integer</tipo>					
+				</field>
+            			
+				<field id="moddes" tabla="MODCHASIS">
+				<!--<expression>case when MODCHASIS.moddes != '' then MODCHASIS.moddes else TURNOSPRODUCCION.modeloChasis end</expression>-->
+					
+					<label size="40" posx="115" posy="0" PDFsize="12" PDFnoborder="true">Modelo:</label>
+					<tipo>varchar</tipo>
+				</field>
+				<field id="nombre" tabla="MARCAMOTOR">
+                                        <label size="40" posx="0" posy="+4" PDFsize="12" PDFnoborder="true" >Marca Motor:</label>
+                                </field>
+				  
+				<field id="chasis" tabla="CHASIS">
+					<label size="40" posx="115" posy="0" PDFsize="12" PDFnoborder="true">Chasis Nº:</label>
+				</field>
+				
+			        <field id="marcha" local="true">
+                                        <label size="40" posx="0" posy="+4" PDFsize="12" PDFnoborder="true" >Carrocería marca: </label>
+                                        <valor>'SALDIVIA'</valor>
+                                </field>
+                                
+				<field id="nromotor" tabla="CHASIS">
+					<label size="40" posx="115" posy="0" PDFsize="12" PDFnoborder="true" >Motor Nº:</label>
+				</field>
+
+				<field id="modcar" local="true">
+					<label size="40" posx="0" posy="+4" PDFsize="12" PDFnoborder="true" >Modelo carrocería:</label>
+				<expression>case when PEDCOTIZ.nrocar != '' then PEDCOTIZ.nrocar else TURNOSPRODUCCION.nrocar end</expression>
+
+				<tabla_ex id="CARROCERIA">
+					<field id="nrocar">
+					</field>
+					<field id="desabv">
+					</field>
+
+					<field id="siscod" oculto="true">
+						<condicion operador="=">03</condicion>
+					</field>
+				</tabla_ex>
+				<tipo>varchar</tipo>
+
+				</field>
+					  
+				<field id="nrofab"  >
+		                     <label size="40" posx="115" posy="0" PDFsize="12" PDFnoborder="true">Nro de Fabricación:</label>
+				</field> 				
+					  	  
+                <field id="conces_cli" >
+                	<label size="40" posx="0" posy="+4" PDFsize="12" PDFnoborder="true">Cliente/Conces.:</label>
+					<expression>CONCAT(CCTCUENT.ctanom, ' / ', (select CCT1.ctanom FROM CCTCUENT AS CCT1 where CCT1.ctacod = CONCESIONARIO.ctacod and CCT1.siscod = '02'))</expression>
+                </field>
+				<field id="cabe1" local="true">
+					<label size="200" posx="0" posy="+3" PDFsize="12" PDFnoborder="true">Tener en cuenta antes de retirar la unidad:</label>
+				</field>
+				<field id="instructivo_entrega">
+				    <expression>(SELECT paralf FROM FSMPARAM WHERE parcla = 'insent')</expression>
+				    <label posx="5" posy="+2" PDFsize="12" />
+				    <tipo>editor</tipo>
+				</field>
+<!--
+				<field id="cabe2" local="true">
+					<label size="80" posx="55" posy="+266" PDFsize="18" >RECIBO DE AUTOMOTOR</label>
+				</field>-->
+
+					  
+		<!--		<field id="certif" local="true">
+					<label size="40" posx="0" posy="+4" PDFsize="12" PDFnoborder="true" >Certificado de fabricaci�n N�:</label>
+				</field> -->
+
+
+				<field id="corridos" local="true">
+                	<label size="200" posx="0" posy="+107" PDFsize="12" PDFnoborder="true"></label>
+                        <valor><![CDATA[<b>Queda informado mediante la presente, ajustar los bulones de las ruedas tras haber recorrido los primeros 20 kilómetros.</b>
+Mas los elementos que figuran en la correspondiente planilla de chequeo de chasis, confeccionada a la entrada del mismo, en el estado en que se encuentra y a mi entera conformidad, comprobado que la citada unidad se encuentra en perfecto estado para su movilidad y sin deterioro alguno, con una carga inicial de 100lts. combustible y 20lts. Urea YPF Azul 32; tambien verifico el correcto funcionamiento del instrumental, teclas y comando de tablero, iluminacion interior y exterior, como asi tambien la calefaccion; haciéndome responsable civil y criminalmente, a partir de la fecha y hora abajo indicadas, por todo accidente, daño o perjuicio que el mismo pudiera ocasionar, así como las infracciones de cualquier índole que pudiera cometer. Declaro también haber recibido la siguiente documentación: ]]></valor>
+<!--                        
+                        Mas los elementos que figuran en la correspondiente planilla de chequeo de chasis, confeccionada a la entrada del mismo, en el estado en que se encuentra y a mi entera conformidad, comprobado que la citada unidad se encuentra en perfecto estado para su movilidad y sin deterioro alguno, haci�ndome responsable civil y criminalmente, a partir de la fecha y hora abajo indicadas, por todo accidente, da�o o perjuicio que el mismo pudiera ocasionar, as� como las infracciones de cualquier �ndole que pudiera cometer. Declaro tambi�n haber recibido la siguiente documentaci�n:</valor>
+    -->                     <tipo>simpleditor</tipo>
+                </field>
+<!--                <field id="corridos2" local="true">
+                	<label size="200" posx="0" posy="+5" PDFsize="12" PDFnoborder="true">citada unidad se encuentra en perfecto estado para su movilidad y sin deterioro alguno, haci�ndome responsable civil y criminalmente, a partir de la fecha y hora abajo indicadas, por todo accidente, da�o</label>
+                </field>
+                <field id="corridos3" local="true">
+                	<label size="200" posx="0" posy="+5" PDFsize="12" PDFnoborder="true">o perjuicio que el mismo pudiera ocasionar, as� como las infracciones de cualquier �ndole que pudiera cometer. Declaro tambi�n haber recibido la siguiente documentaci�n:</label>
+                </field>
+-->
+
+                <field id="galvez" local="true">
+                	<label size="120" posx="0" posy="+160" PDFsize="12" PDFnoborder="true">Alvear, el ...... de ................. de 20...</label>
+                </field>
+                <field id="horas" local="true">
+                	<label size="117" posx="0" posy="+4" PDFsize="12" PDFnoborder="true">Siendo las ......:...... horas</label>
+                </field>
+                <field id="recibe" local="true">
+                	<label size="117" posx="0" posy="+4" PDFsize="12" PDFnoborder="true">Recibe por: ...................................</label>
+                </field>
+					  
+                <field id="nombre2" local="true">
+                	<label size="117" posx="0" posy="+4" PDFsize="12" PDFnoborder="true">Nombre y Apellido: ...................................</label>
+                </field>
+                <field id="domicilio" local="true">
+                	<label size="117" posx="0" posy="+4" PDFsize="12" PDFnoborder="true">Domicilio: ...................................</label>
+                </field>
+                <field id="dni" local="true">
+                	<label size="117" posx="0" posy="+4" PDFsize="12" PDFnoborder="true">DNI: ...................................</label>
+                </field>
+                <field id="firma" local="true">
+                	<label size="60" posx="+100" posy="0" PDFsize="12" PDFnoborder="true">...................................</label>
+                </field><!--
+                <field id="adiclbl" local="true" >
+                	<label size="60" posx="10" posy="+33" PDFsize="16" >LISTA DE CHEQUEO:</label>
+
+		</field>
+
+                <field id="Adic" local="true" showObjTabla="true">
+                	<label size="60" posx="10" posy="+3" PDFsize="12" _PDFnoborder="true"> </label>
+			<helper type="object" xml="accesorios_coche_check.xml" dir="/produccion/man/">
+			    <parameter source="nrofab" target="nrofab" />
+			    <field id="check" local="true">
+			    <label>Checkeo</label>
+			    </field>
+			</helper>
+                </field>
+                <field id="firma2" local="true">
+                	<label size="60" posx="110" posy="+20" PDFsize="12" PDFnoborder="true">Firma : ...................................</label>
+                </field>-->
+
+                  </table>
+				<join tipo="left">
+					<table id="PEDCOTIZ">
+						<field id="nrocha">
+							<condicion operador="=">TURNOSPRODUCCION.nrofab</condicion>
+						</field>
+					</table>
+				</join>				   
+				<join tipo="left">
+					<table id="CCTCUENT">
+						<field id="ctacod">
+							<condicion operador="=">PEDCOTIZ.ctacod</condicion>
+						</field>
+						<field id="siscod" oculto="true">
+							<condicion operador="=">'02'</condicion>
+						</field>
+						
+					</table>
+				</join>				   
+				<join tipo="left">
+					<table id="CHASIS">
+						<field id="nrocha">
+							<condicion operador="=">TURNOSPRODUCCION.nrofab</condicion>
+						</field>
+					</table>
+				</join>
+				<join tipo="left">
+					<table id="CONCESIONARIO">
+						<field id="idconces">
+							<condicion operador="=">CHASIS.conces</condicion>
+						</field>
+					</table>
+				</join>		
+				<join tipo="left">
+					<table id="MODCHASIS">
+						<field id="modcha">
+							<condicion operador="=">CHASIS.modcod</condicion>
+						</field>
+						<field id="marcod">
+							<condicion operador="=">CHASIS.marcod</condicion>
+						</field>
+					</table>
+				</join>
+					<join tipo="left">
+						<table id="MARCAMOTOR">
+							<field id="idMarca">
+								<condicion operador="=">CHASIS.idMarcaMotor</condicion>
+							</field>
+						</table>
+					</join>				   
+				</form>
+        </histrix>

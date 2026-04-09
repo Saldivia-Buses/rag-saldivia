@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud">
+	<title>PLAZAS BANCARIAS</title>
+	<obs></obs>
+	<form>
+		<table id="CARPLAZA" >
+		    <title>Plazas</title>
+			<field id="carpla">
+				<label>Codigo</label>
+				<help>Codigo de Plaza</help>
+			</field>
+			<field id="cardes">
+				<label>Plaza</label>
+				<help>Plaza Bancaria</help>
+			</field>
+			
+			<field id="prvcod">
+				<label>Provincia</label>
+				<help>Codigo de Provincia</help>
+		            <tabla_ex id="FSMPROVS">
+				<field id="prvcod"></field>
+				<field id="prvnom"></field>
+		            </tabla_ex>
+			</field>
+<!--
+			<field id="carta1">
+				<label>Acred.1</label>
+				<help>Acreditacion 1</help>
+			</field>
+			
+			<field id="carta2">
+				<label>Acred.2</label>
+				<help>Acreditacion 2</help>
+			</field>
+-->			
+
+	    		<order>
+				<field id="carpla"></field>
+			</order>
+			
+		</table>
+	</form>	   
+</histrix>

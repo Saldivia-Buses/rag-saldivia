@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud">
+  <title>Contrapartidas</title>
+   <obs></obs>
+    <form >
+        <table id="CTB_CONTRAPARTIDA" label="Contrapartidas">
+        
+          <field id="id_contrapartida" noshow="true" autoinc="true">
+            <label>id</label>
+          </field>
+
+          <field id="cuenta_id">
+            <helper type="combo" xml="ctbcuenta_qry.xml" dir="/ayudas">
+              <field id="habilitada">
+                <condicion operador="!=">0</condicion>
+              </field>
+            </helper>
+              <label>Cuenta Contable</label>
+              <label>Desde cuenta</label>
+          </field>
+          
+          <field id="cuenta_contrapartida_id">
+            <label>Contrapartida</label>
+            <label>Desde cuenta</label>
+           <helper type="combo" xml="ctbcuenta_qry.xml" dir="/ayudas">
+              <field id="habilitada">
+              <condicion operador="!=">0</condicion>
+              </field>
+            </helper>
+          </field>
+
+        <!-- <field id="nombre_cuenta">
+          <label>Descripcion</label>
+          <help>Comienzo de la cuenta contable</help>
+        </field>-->
+        
+        <order>
+            <field id="cuenta_id"></field>
+        </order>
+        
+        </table>
+    </form>
+    </histrix>

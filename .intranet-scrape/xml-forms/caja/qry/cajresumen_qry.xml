@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ficha" sololectura="true" autoprint="true" PDForientation="L" PDFFontSize="20">
+    <title>Control de Cierre</title>
+    <obs/>
+    <form>
+
+	    <pdf PDForientation="L" />
+	    
+        <table id="CAJ_REGISTROS" title="ARQUEO">
+             <title>Arqueo de Caja</title>
+             <fieldGroup PDFsize="12">
+             
+            <field id="cajpuesto_id" posX="5" posY="+1">
+                <label>Puesto</label>
+                <helper type="combo" xml="cajpuestousers_qry.xml" dir="/ayudas" empty="true" />
+            </field>
+
+            <field id="id_cajregistro" posX="60" posY="0">
+          		<label>Nº</label>
+            </field>
+
+      
+            <field id="fecha_registro" posX="90" posY="0">
+                <label>Fecha</label>
+                <tipo>date</tipo>
+            </field>
+
+            <field id="operador_nombre" posX="150" posY="0">
+                <label>Operador</label>
+            </field>
+
+            <field id="turno_registro" posX="210" posY="0">
+                <label>Turno</label>
+                <helper type="combo">
+                    <option value="1">Mañana</option>
+                    <option value="2">Tarde</option>
+                    <option value="3">Noche</option>
+                </helper>
+            </field>
+             </fieldGroup>
+             
+             <fieldGroup PDFsize="15" _PDFborder="1" pdfancho="40">
+      
+    	    <!-- Datos Arqueo -->
+
+            <field id="apertura_arqueo" tabla="CAJ_ARQUEOS"  posX="5" posY="+5" >
+                <label size="30">Apertura</label>
+                <tipo>decimal</tipo>
+                <size>30</size>
+
+            </field>
+
+            <field id="registrado_arqueo" tabla="CAJ_ARQUEOS"  posX="5" posY="+1" >
+                <label size="30">Registrado</label>
+                <tipo>numeric</tipo>
+                <size>30</size>
+            </field>
+
+            <field id="total_arqueo" tabla="CAJ_ARQUEOS"  posX="5" posY="+1" >
+                <label size="30" style="color:blue;font-size:large;">Total</label>
+                <tipo>numeric</tipo>
+                <size>30</size>
+
+            </field>
+
+            <field id="conteo_arqueo" tabla="CAJ_ARQUEOS"  posX="5" posY="+1">
+                <label  size="30">Recuento</label>
+                <tipo>numeric</tipo>
+                <size>30</size>
+
+            </field>
+
+            <field id="diferencia_arqueo" tabla="CAJ_ARQUEOS"  posX="5" posY="+1" PDFcolor="#ff0000">
+                <label  size="30" style="color:red;font-size:large;">Diferencia</label>
+                <tipo>numeric</tipo>
+                <size>30</size>
+
+            </field>
+                           </fieldGroup>
+             <fieldGroup>
+
+            <!-- Detalle de los Movimientos -->
+            
+            <field id="detalle" local="true" showObjTabla="true" print="true" posX="5" posY="+10">
+          	  <helper type="object" xml="cajmain_grid_qry.xml">
+          		<parameter source="cajpuesto_id" target="cajpuesto_id" />
+          		<parameter source="fecha_registro" target="fecha_movimiento" />
+          	  </helper>
+          	</field>
+
+<!--
+
+        <field id="monedas" local="true" posX="10" posY="+10">
+            <helper type="object" xml="cajmovimientostotal_qry.xml">
+                 <parameter source="cajpuesto_id" target="cajpuesto_id"/>
+                 <parameter source="fecha_registro" target="fecha_desde"/>
+                 <parameter source="fecha_registro" target="fecha_hasta"/>
+            </helper>
+        </field>
+
+        <field id="valores" local="true" posX="10" posY="+10">
+            <helper type="object" xml="cajvaloresseguimientos_qry.xml">
+                 <parameter source="cajpuesto_id" target="cajpuesto_id"/>
+                 <parameter source="fecha_registro" target="fecha_desde"/>
+                 <parameter source="fecha_registro" target="fecha_hasta"/>
+            </helper>
+        </field>
+  
+
+        <field id="CheqEmi" local="true" posX="10" posY="+10">
+            <helper type="object" xml="cajvaloreschequep_qry.xml">
+                 <parameter source="cajpuesto_id" target="cajpuesto_id"/>
+                 <parameter source="fecha_registro" target="fecha_desde"/>
+                 <parameter source="fecha_registro" target="fecha_hasta"/>
+            </helper>
+        </field>
+       
+  -->
+        <field id="asiento" local="true" posX="10" posY="+10">
+            <helper type="object" xml="cajdetalle_qry.xml">
+                 <parameter source="cajpuesto_id" target="cajpuesto_id"/>
+                 <parameter source="fecha_registro" target="fecha_desde"/>
+                 <parameter source="fecha_registro" target="fecha_hasta"/>
+            </helper>
+        </field>
+                           </fieldGroup>
+
+        </table>
+
+        <join>
+            <table id="CAJ_ARQUEOS">
+                <field id="cajregistro_id">
+                    <condicion operador="=">CAJ_REGISTROS.id_cajregistro</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

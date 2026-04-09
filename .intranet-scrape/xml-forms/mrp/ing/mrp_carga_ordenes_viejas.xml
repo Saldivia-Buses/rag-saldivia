@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ficha" modifica="false" borra="false" procesa="false" imprime="false" cancel="false">
+    <title>Carga Ordenes Viejas</title>
+    <obs/>
+    <form>
+        <table id="MRP_ORDEN_PRODUCCION" label="Carga Ordenes Viejas">
+
+            <movimientos>
+                <relacion id="mrp_carga_ordenes_viejas_ins.xml" />
+            </movimientos>
+
+            <field id="id_mrporden" autoinc="true" noshow="true" />
+            <field id="subsistema_id" valauto="true" noshow="true" local="true" />
+            <field id="regcuenta_id" noshow="true" />
+
+            <field id="fecha_orden" required="true">
+                <label>Fecha Orden</label>
+                <tipo>date</tipo>
+            </field>
+
+            <field id="numero_orden" required="true">
+                <label>Nro Orden</label>
+            </field>
+
+            <field id="nro_cuenta" local="true" required="true">
+                <label>Cliente</label>
+                <helper type="external" xml="regcuenta_solamente_nro_qry.xml" dir="/ayudas">
+                    <field id="subsistema_id" oculto="true" />
+                    <field id="nombre_cuenta">
+                        <detalle>nombre_cuenta</detalle>
+                    </field>
+                    <order>
+                        <field id="nombre_cuenta" />
+                    </order>
+                </helper>
+            </field>
+
+            <field id="nombre_cuenta" local="true" deshabilitado="true" sincelda="true">
+                <label modpos="nobr" />
+                <size>30</size>
+            </field>
+
+            <field id="mrporden_concepto_id" required="true">
+                <label>Concepto</label>
+                <helper type="combo" id="MRP_ORDEN_CONCEPTO" empty="true">
+                    <field id="id_mrporden_concepto" />
+                    <field id="abv_ordenconcepto" />
+                </helper>
+            </field>
+
+            <field id="id_stkarticulo" local="true" required="true">
+                <label>Código</label>
+                <helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas">
+                    <field id="nombre_articulo">
+                        <detalle>nombre_articulo</detalle>
+                    </field>
+                    <field id="produccion_diaria">
+                        <detalle>minimo_ordendetalle</detalle>
+                    </field>
+                </helper>
+            </field>
+
+            <field id="nombre_articulo" local="true" deshabilitado="true" sincelda="true">
+                <label modpos="nobr" />
+                <size>30</size>
+            </field>
+
+            <field id="mrppath_id" required="true">
+                <label>Proceso</label>
+                <helper xml="mrp_path_qry.xml" dir="/mrp/qry/" type="combo" empty="true" />
+            </field>
+
+            <field id="cantidad" local="true" required="true">
+                <label>Cantidad</label>
+            </field>
+
+        </table>
+    </form>
+</histrix>

@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="consulta">
+	<title>DETALLE</title>
+	<obs></obs>
+	<form >
+		<table id="FACREMIMP" label="Detalle">
+
+			<field id="ctacod" oculto="true">
+				<label>Nro</label>
+			</field>
+
+			<field id="movfec" oculto="true">
+				<label>fecha movimiento</label>
+			</field>
+
+			<field id="movnro" oculto="true">
+				<label>Nro movimiento</label>
+			</field>
+
+			<field id="movnpv" oculto="true">
+				<label>pto vta</label>
+			</field>
+
+			<field id="remnro" oculto="true">
+				<label>Nro remito</label>
+			</field>
+
+			<field id="artcod" tabla="STKINSUM">
+				<label>Art</label>
+				<size>13</size>
+			</field>
+
+			<field id="artdes" tabla="STKINSUM">
+				<tipo>varchar</tipo>
+				<label>Descripcion</label>
+				<size>70</size>
+			</field>
+			
+			<field id="movcant" tabla="STKINMOV">
+				<label>Cant.</label>
+				<size>3</size>
+
+			</field>
+<!--
+			<field id="unit" local="true">
+				<label>Unit.</label>
+				<expression>artnet / artcan</expression>
+				<tipo>numeric</tipo>
+			</field>
+		
+			<field id="artnet" suma="true">
+				<label>Importe</label>
+				<size>6</size>
+			</field>
+
+-->
+			
+
+		</table>
+
+		<join tipo="left">
+			<table id="FACREMIT">
+				<!--
+				<field id="remnpv">
+					<condicion operador="=">FACREMIMP.remnpv</condicion>
+				</field>
+			-->
+				<field id="remnro">
+					<condicion operador="=">FACREMIMP.remnro</condicion>
+				</field>
+				<field id="ctacod">
+					<condicion operador="=">FACREMIMP.ctacod</condicion>
+				</field>
+			</table>
+		</join>
+
+		<join tipo="left">
+			<table id="STKINMOV">
+				<field id="movnro">
+					<condicion operador="=">FACREMIT.remnro</condicion>
+				</field>
+				<field id="ctacod">
+					<condicion operador="=">FACREMIT.ctacod</condicion>
+				</field>
+			</table>
+		</join>
+
+		<join tipo="left">
+			<table id="STKINSUM">
+				<field id="artcod" oculto="true">
+					<condicion operador="=">STKINMOV.artcod</condicion>
+				</field>
+					 
+				<field id="siscod" oculto="true">
+					<condicion operador="=">STKINMOV.siscod</condicion>
+				</field>
+				<!--
+				<field id="ctacod" oculto="true">
+					<condicion operador="=">FACDETAL.ctacod</condicion>
+				</field>
+-->
+			</table>
+		</join>
+
+	</form>
+</histrix>

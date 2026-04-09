@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" _subtipo="vertical" path="fotos/articulos">
+    <title>Formulas</title>
+    <obs></obs>
+    <form detalle="stkpieza_qry.xml" inline="true" hasDetail="tienehijos">
+        <table id="STKPIEZA" label="Composicion">
+
+            <field id="id_pieza" noshow="true" >
+                <expression>@id_pieza:=id_pieza</expression>
+            </field>
+
+            <field id="idPadre" noshow="true">
+                <label>Id Producto al que pertenece</label>
+                <expression>@idPadre:=idPadre</expression>
+            </field>
+
+            <field id="articulo_hijo" esClave="true">
+                <label>Código</label>
+                <expression>@articulo_hijo:=articulo_hijo</expression>
+                <detalle>idPadre</detalle>
+            </field>
+
+            <field id="fecha" local="true" noshow="true">
+                <label>Fecha</label>
+                <tipo>date</tipo>
+                <valor>today</valor>
+            </field>
+
+            <field id="nom">
+                <expression>nombre_articulo</expression>
+                <label>Producto</label>
+            </field>
+
+            <field id="nota" local="true">
+                <expression>select concat('Homologación ', bom_variacion_id, ' no suma al costo') from STKPIEZA where STKPIEZA.articulo_hijo = @articulo_hijo and STKPIEZA.idPadre = @idPadre and bom_variacion_id != 0 and STKPIEZA.id_pieza = @id_pieza limit 1</expression>
+                <label>Nota</label>
+            </field>
+
+            <field id="cantidad">
+                <label>Cantidad</label>
+            </field>
+
+            <field id="costo_final_func" style="font-weigth:bold;color:blue;" suma="true">
+                <label>Costo Repo.</label>
+		          <expression>if(cantidad >= 0, ifnull(getCostFunc(id_stkarticulo, ifnull(STK_COSTO_REPOSICION.moneda_id, 1), STR_TO_DATE('[__fecha__]', '%d/%m/%Y')  ), 0), ifnull(getCostFunc(id_stkarticulo, ifnull(STK_COSTO_REPOSICION.moneda_id, 1), STR_TO_DATE('[__fecha__]', '%d/%m/%Y')  ), 0) * -1)</expression>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="recargo">
+                <label>% Reca.Comp</label>
+                <tipo>decimal</tipo>
+            </field>
+
+            <field id="regcuenta_id" tabla="STK_COSTO_REPOSICION" noshow="true"/>
+
+    		<field id="costo_logistico">
+    		    <label>% Logístico Región</label>
+    		    <expression>(case when bom_variacion_id = 0 then @costo_logistico:=ifnull(round((select porcentaje_region from REG_CUENTA join LOG_REGION on id_logregion = logregion_id where id_regcuenta = STK_COSTO_REPOSICION.regcuenta_id) , 4),round((select porcentaje_region from REG_CUENTA join LOG_REGION on id_logregion = logregion_id where id_regcuenta = STK_ARTICULOS.regcuenta_id and id_stkarticulo = articulo_hijo) , 4)) else 0 end)</expression>
+                <tipo>numeric</tipo>
+    		</field>
+
+    	    <field id="costo_repo" suma="true">
+        		<label>Total Repo</label>
+        		<expression>(case when bom_variacion_id = 0 then round(cantidad * ifnull(getCostFunc(id_stkarticulo, ifnull(STK_COSTO_REPOSICION.moneda_id, 1), STR_TO_DATE('[__fecha__]', '%d/%m/%Y')  ), 0) * (1 +  STKPIEZA.recargo / 100) , 2) end)</expression>
+                <tipo>decimal</tipo>
+    	    </field>
+
+            <field id="descuento_1" tabla="STK_COSTO_REPOSICION" noZero="true">
+                <label>% Desc 1</label>
+                <tipo>decimal</tipo>
+            </field>
+
+            <field id="descuento_2"   tabla="STK_COSTO_REPOSICION" noZero="true">
+                <label>% Desc 2</label>
+                <tipo>decimal</tipo>
+            </field>
+
+            <field id="costo_final_func_cdesc" style="font-weigth:bold;color:red;" >
+                <label>Costo Repo. c/Desc</label>
+                <expression>(case when bom_variacion_id = 0 then ifnull(getCostConDtoFunc(id_stkarticulo, ifnull(STK_COSTO_REPOSICION.moneda_id, 1), STR_TO_DATE('[__fecha__]', '%d/%m/%Y'),0  ), 0) end)</expression>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="costo_repo_cdesc" suma="true">
+                <label>Total Repo C/Desc</label>
+                <expression>(case when bom_variacion_id = 0 then round(cantidad * ifnull(getCostConDtoFunc(id_stkarticulo, ifnull(STK_COSTO_REPOSICION.moneda_id, 1), STR_TO_DATE('[__fecha__]', '%d/%m/%Y') ,0  ), 0) * (1 +  STKPIEZA.recargo / 100) , 2) end)</expression>
+                <tipo>decimal</tipo>
+            </field>
+
+    		<field id="total_costo_logistico" suma="true">
+    		    <label>Costo Logístico</label>
+    		    <expression>(case when bom_variacion_id = 0 then if(cantidad >= 0, round((@costo_logistico * getCostConDtoFunc(id_stkarticulo, ifnull(STK_COSTO_REPOSICION.moneda_id, 1), STR_TO_DATE('[__fecha__]', '%d/%m/%Y') ,0 )) / 100, 2),     round((@costo_logistico * getCostConDtoFunc(id_stkarticulo, ifnull(STK_COSTO_REPOSICION.moneda_id, 1), STR_TO_DATE('[__fecha__]', '%d/%m/%Y'),0  )) / 100, 2) * -1) end)</expression>
+                <tipo>numeric</tipo>
+    		</field>
+
+
+    		<field id="total2_costo_logistico" suma="true">
+    		    <label>Total Costo Logístico</label>
+<!--    		    <expression>cantidad * if(cantidad >= 0, round((@costo_logistico * getCostConDtoFunc(id_stkarticulo, ifnull(STK_COSTO_REPOSICION.moneda_id, 1), STR_TO_DATE('[__fecha__]', '%d/%m/%Y')  )) / 100, 2),     round((@costo_logistico * getCostConDtoFunc(id_stkarticulo, ifnull(STK_COSTO_REPOSICION.moneda_id, 1), STR_TO_DATE('[__fecha__]', '%d/%m/%Y')  )) / 100, 2) * -1)</expression> -->
+<!--    		    <expression>cantidad * if(cantidad >= 0, round((@costo_logistico * getCostConDtoFunc(id_stkarticulo, ifnull(STK_COSTO_REPOSICION.moneda_id, 1), STR_TO_DATE('[__fecha__]', '%d/%m/%Y')  )) / 100, 2),     round((@costo_logistico * getCostConDtoFunc(id_stkarticulo, ifnull(STK_COSTO_REPOSICION.moneda_id, 1), STR_TO_DATE('[__fecha__]', '%d/%m/%Y')  )) / 100, 2) * -1)</expression> --> 
+<!--                    <expression>round(cantidad * @costo_logistico * ifnull(getCostConDtoFunc(id_stkarticulo, ifnull(STK_COSTO_REPOSICION.moneda_id, 1), STR_TO_DATE('[__fecha__]', '%d/%m/%Y')  ), 0) / 100  , 2)</expression> -->
+                <expression>(case when bom_variacion_id = 0 then round(cantidad * ifnull(getCostConDtoFunc(id_stkarticulo, ifnull(STK_COSTO_REPOSICION.moneda_id, 1), STR_TO_DATE('[__fecha__]', '%d/%m/%Y'),1  ) , 0) * (1 +  STKPIEZA.recargo / 100) , 2) end)</expression>
+
+                <tipo>numeric</tipo>
+    		</field>
+
+            <field id="unidad_compra_id" tabla="STK_ARTICULOS" deshabilitado="true">
+                <label modpos="nobr">Unidad</label>
+                <help>Unidad de Compra</help>
+                <tabla_ex id="FSMUNIDS">
+                    <field id="unicod"></field>
+                    <field id="uninom"></field>
+                </tabla_ex>
+            </field>
+
+            <field id="conversion" local="true"  preventLoop="true">
+                <label>Conv</label>
+                <if exp="valCps == valUso">
+                    <true>valUso</true>
+                    <false>(valCps == 1)?(cantidad * valUso):(cantidad / valCps)</false>
+                </if>
+                <tipo>decimal</tipo>
+                <format>%5.6f</format>
+            </field>
+
+            <field id="unidad_uso_id" tabla="STK_ARTICULOS" deshabilitado="true">
+                <label modpos="nobr">Unid.</label>
+                <help>Unidad de Compra</help>
+                <tabla_ex id="FSMUNIDS">
+                    <field id="unicod"></field>
+                    <field id="uninom"></field>
+                </tabla_ex>
+            </field>
+
+            <field id="unitario"  >
+                <expression>round(costo_automatico, 2)</expression>
+                <label>Precio Unitario</label>
+                <tipo>decimal</tipo>
+            </field>
+
+            <field id="costo_automatico2" suma="true" >
+                <expression>(case when bom_variacion_id = 0 then round(cantidad * ( costo_automatico + ( costo_automatico / 100 * STKPIEZA.recargo)), 2) end)</expression>
+                <label>Costo</label>
+                <tipo>decimal</tipo>
+            </field>
+
+            <field id="fecult"  tipoOrden="DESC">
+                <expression>STK_ARTICULOS.ultima_compra</expression>
+                <label>ult.compra</label>
+                <tipo>date</tipo>
+            </field>            
+
+            <field id="calculo1" suma="true" noshow="true">
+                <label>Calculo(Costo)</label>
+                <expression>(case when bom_variacion_id = 0 then round(CASE WHEN ((@costo * STKPIEZA.cantidad) * (1 + STKPIEZA.recargo / 100)) != 0
+                THEN ((@costo * STKPIEZA.cantidad) * (1 + STKPIEZA.recargo / 100))
+                when STK_ARTICULOS.valor_compra &gt; STK_ARTICULOS.valor_uso then STK_ARTICULOS.costo_calculado * STK_ARTICULOS.valor_compra 
+                    when STK_ARTICULOS.valor_compra &lt; STK_ARTICULOS.valor_uso then STK_ARTICULOS.costo_calculado 
+                    when ( STK_ARTICULOS.costo_calculado * STK_ARTICULOS.valor_compra / STK_ARTICULOS.valor_uso) > 0  then (STK_ARTICULOS.costo_calculado * STK_ARTICULOS.valor_compra / STK_ARTICULOS.valor_uso) 
+                    else STK_ARTICULOS.precio_costo end, 2) end)
+                </expression>
+            </field>
+
+            <field id="calculo2" suma="true"  noshow="true">
+                <label>Calculo(P.Unit.)</label>
+                <expression>(case when bom_variacion_id = 0 then round((costo_automatico * STKPIEZA.cantidad) * (1 + STKPIEZA.recargo / 100) * (STK_ARTICULOS.valor_uso / STK_ARTICULOS.valor_compra), 2) end)</expression>
+            </field>
+
+            <field id="valCps" noshow="true">
+                <expression>valor_compra</expression>
+            </field>
+            
+            <field id="valUso" noshow="true" >
+                <expression>valor_uso</expression>
+            </field>
+
+            <field id="fotopath" local="true" noshow="true">
+                <if exp="true">
+                    <true>'articulo_hijo/'</true>
+                    <false>''</false>
+                </if>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="foto" path="fotopath" _download="true" print="false" download="false" watermark="articulo_hijo">
+                <expression>select ARTICULO_FOTO.foto from ARTICULO_FOTO where ARTICULO_FOTO.idArticulo = id_stkarticulo and ARTICULO_FOTO.foto != '' order by revision desc limit 1</expression> 
+                <label>Imagen</label>
+                <tipo >file</tipo>
+                <size>40</size>
+            </field>
+
+            <field id="tienehijos" noshow="true">
+                <expression>@tienehijos := ifnull((select 1 from STKPIEZA s where s.idPadre = STKPIEZA.articulo_hijo limit 1), 0)</expression>
+            </field>
+	    <field id="bom_variacion_id" noshow="true">
+		<condicion operador="=">0</condicion> 
+	    </field>
+        </table>
+
+        <join>
+            <table id="STK_ARTICULOS" label="Articulos">
+                <field id="id_stkarticulo">
+                    <condicion operador="=">articulo_hijo</condicion>
+                </field>
+                <field id="subsistema_id">
+                    <condicion operador="=">'01'</condicion>
+                </field>
+
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="STK_COSTO_REPOSICION">
+                <field id="stkarticulo_id">
+                    <condicion operador="=">STK_ARTICULOS.id_stkarticulo</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="REG_CUENTA">
+                <field id="id_regcuenta">
+                    <condicion operador="=">STK_COSTO_REPOSICION.regcuenta_id</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="LOG_REGION">
+                <field id="id_logregion">
+                    <condicion operador="=">REG_CUENTA.logregion_id</condicion>
+                </field>
+            </table>
+        </join>    
+</form>
+</histrix>

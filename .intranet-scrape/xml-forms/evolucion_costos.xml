@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="consulta" borra="no" inserta="no" paginar="250" preloadData="false">
+	<title>Insumos</title>
+	<obs></obs>
+	<form  >
+		<table id="STKINSUM">
+			<title>Insumos</title>
+
+			<field id="year" local="true" alias="ye" incdec="true" noshow="true">
+				<label>ye</label>
+				<tipo>integer</tipo>
+
+			</field>
+			<field id="artcod" >
+<!-- 				<ayuda_ex id="STKINSUM"  xml="HLPstkinsum.xml" dir="/help_local"> -->
+				<ayuda_ex id="STKINSUM" >
+					<field id="artcod" >
+						<label>Cod</label>
+					</field>
+					<field id="artdes">
+						<label>Nombre</label>
+						<detalle>artdes</detalle>
+					</field>
+					<field id="siscod" oculto="true">
+						<condicion operador="=">'01'</condicion>
+					</field>					
+			
+				</ayuda_ex>
+				
+				<label>Codigo</label>
+				<detalle>artcod</detalle>
+			</field>
+			<field id="artdes" autocompletar="false">
+				<label>Articulo</label>
+				<help>Descripcion de Articulo</help>
+			</field>
+			<field id="baja" oculto="true">
+				<condicion operador="!=">1</condicion>
+			</field>
+			<field id="Enero">
+				<label>Ene.</label>
+				<expression>select costo_hist from STK_COSTO_HIST where articulo_id = STKINSUM.artcod and periodo_hist = '[__year__]01'</expression>
+<!--				<expression>select artcos from STKINSPR where 1 = month(STKINSPR.fecult) and year(STKINSPR.fecult) = ye and STKINSPR.artcod = STKINSUM.artcod order by STKINSPR.fecult DESC limit 1</expression> -->
+			</field>
+			<field id="Febrero">
+				<label>Feb.</label>
+				<expression>select costo_hist from STK_COSTO_HIST where articulo_id = STKINSUM.artcod and periodo_hist = '[__year__]02'</expression>
+<!--				<expression>select artcos from STKINSPR where 2 = month(STKINSPR.fecult) and year(STKINSPR.fecult) = ye and STKINSPR.artcod = STKINSUM.artcod order by STKINSPR.fecult DESC limit 1</expression> -->
+			</field>			
+			<field id="Marzo">
+				<label>Mar.</label>
+				<expression>select costo_hist from STK_COSTO_HIST where articulo_id = STKINSUM.artcod and periodo_hist = '[__year__]03'</expression>
+<!--				<expression>select artcos from STKINSPR where 3 = month(STKINSPR.fecult) and year(STKINSPR.fecult) = ye and STKINSPR.artcod = STKINSUM.artcod order by STKINSPR.fecult DESC limit 1</expression> -->
+
+			</field>			
+			<field id="Abril">
+				<label>Abr.</label>
+				<expression>select costo_hist from STK_COSTO_HIST where articulo_id = STKINSUM.artcod and periodo_hist = '[__year__]04'</expression>
+<!--				<expression>select artcos from STKINSPR where 4 = month(STKINSPR.fecult) and year(STKINSPR.fecult) = ye and STKINSPR.artcod = STKINSUM.artcod order by STKINSPR.fecult DESC limit 1</expression> -->
+			</field>			
+			<field id="Mayo">
+				<label>May.</label>
+				<expression>select costo_hist from STK_COSTO_HIST where articulo_id = STKINSUM.artcod and periodo_hist = '[__year__]05'</expression>
+<!--				<expression>select artcos from STKINSPR where 5 = month(STKINSPR.fecult) and year(STKINSPR.fecult) = ye and STKINSPR.artcod = STKINSUM.artcod order by STKINSPR.fecult DESC limit 1</expression> -->
+			</field>			
+			<field id="Junio">
+				<label>Jun.</label>
+				<expression>select costo_hist from STK_COSTO_HIST where articulo_id = STKINSUM.artcod and periodo_hist = '[__year__]06'</expression>
+<!--				<expression>select artcos from STKINSPR where 6 = month(STKINSPR.fecult) and year(STKINSPR.fecult) = ye and STKINSPR.artcod = STKINSUM.artcod order by STKINSPR.fecult DESC limit 1</expression> -->
+			</field>			
+			<field id="Julio">
+				<label>Jul.</label>
+				<expression>select costo_hist from STK_COSTO_HIST where articulo_id = STKINSUM.artcod and periodo_hist = '[__year__]07'</expression>
+<!--				<expression>select artcos from STKINSPR where 7 = month(STKINSPR.fecult) and year(STKINSPR.fecult) = ye and STKINSPR.artcod = STKINSUM.artcod order by STKINSPR.fecult DESC limit 1</expression> -->
+			</field>			
+			<field id="Agosto">
+				<label>Ago.</label>
+				<expression>select costo_hist from STK_COSTO_HIST where articulo_id = STKINSUM.artcod and periodo_hist = '[__year__]08'</expression>
+<!--				<expression>select artcos from STKINSPR where 8 = month(STKINSPR.fecult) and year(STKINSPR.fecult) = ye and STKINSPR.artcod = STKINSUM.artcod order by STKINSPR.fecult DESC limit 1</expression> -->
+			</field>			
+			<field id="Septiembre">
+				<label>Sept.</label>
+				<expression>select costo_hist from STK_COSTO_HIST where articulo_id = STKINSUM.artcod and periodo_hist = '[__year__]09'</expression>
+<!--				<expression>select artcos from STKINSPR where 9 = month(STKINSPR.fecult) and year(STKINSPR.fecult) = ye and STKINSPR.artcod = STKINSUM.artcod order by STKINSPR.fecult DESC limit 1</expression> -->
+			</field>			
+			<field id="Octubre">
+				<label>Oct.</label>
+				<expression>select costo_hist from STK_COSTO_HIST where articulo_id = STKINSUM.artcod and periodo_hist = '[__year__]10'</expression>
+<!--				<expression>select artcos from STKINSPR where 10 = month(STKINSPR.fecult) and year(STKINSPR.fecult) = ye and STKINSPR.artcod = STKINSUM.artcod order by STKINSPR.fecult DESC limit 1</expression> -->
+			</field>			
+			<field id="Noviembre">
+				<label>Nov.</label>
+				<expression>select costo_hist from STK_COSTO_HIST where articulo_id = STKINSUM.artcod and periodo_hist = '[__year__]11'</expression>
+<!--				<expression>select artcos from STKINSPR where 11= month(STKINSPR.fecult) and year(STKINSPR.fecult) = ye and STKINSPR.artcod = STKINSUM.artcod order by STKINSPR.fecult DESC limit 1</expression> -->
+			</field>			
+			<field id="Diciembre">
+				<label>Dic.</label>
+				<expression>select costo_hist from STK_COSTO_HIST where articulo_id = STKINSUM.artcod and periodo_hist = '[__year__]12'</expression>
+<!--				<expression >select artcos from STKINSPR where 12 = month(STKINSPR.fecult) and year(STKINSPR.fecult) = ye and STKINSPR.artcod = STKINSUM.artcod order by STKINSPR.fecult DESC limit 1</expression> -->
+			</field>			
+			
+
+	<!--			
+			<field id="artpor">
+				<label>Descuento</label>
+				<help>Porcentaje de Descuento</help>
+			</field>
+			
+			<field id="valcps">
+				<label>Val.Compra</label>
+				<help>Valor de Compra </help>
+				
+			</field>
+			
+			<field id="unicps">
+				<label>Unidad</label>
+				<help>Unidad de Compra </help>
+				<tabla_ex id="FSMUNIDS">
+					<field id="unicod"></field>
+					<field id="uninom"></field>
+				</tabla_ex>
+			</field>
+			<field id="valuso">
+				<label>Val.Uso</label>
+				<help>Valor de Uso </help>
+				
+			</field>
+			
+			<field id="artuni">
+				<label>U.Uso</label>
+				
+				<help>Unidad de Uso </help>
+				<tabla_ex id="FSMUNIDS">
+					<field id="unicod"></field>
+					<field id="uninom"></field>
+				</tabla_ex>
+			</field>
+			
+			<field id="calculo">
+				<label>Calculo</label>
+				<expression>artcos * valcps / valuso</expression>
+				<help>Calculo</help>
+			</field>
+			-->
+		<!--	
+			<field id="fecult" local="true">
+				<expression>max(STKINSPR.fecult)</expression>
+				<label>Ult</label>
+			</field> -->
+<!--			
+			<field id="artcos">
+				<label>Costo</label>
+				<help>Precio de Costo</help>
+			</field>			
+				-->
+			
+			<field id="siscod" oculto="true">
+				<label>siscod</label>
+			</field>			
+			<group>
+				<field id="artcod" tabla="STKINSUM">
+				</field>
+			</group>
+			<order>
+				<field id="artdes" tabla="STKINSUM">
+				</field>
+
+			</order>			
+			<filters>
+			<field id="year" local="true" incdec="true"  required="true">
+				<label>Año</label>
+				<tipo>integer</tipo>
+				<maxsize>4</maxsize>
+				<size>4</size>
+                <valor eval="true">date("Y")</valor>  
+				<operador>=</operador>
+			</field>
+				
+				<field id="artcod" deshabilitado="false" >
+					<ayuda_ex id="STKINSUM">
+						<clave>artcod</clave>
+						<descripcion>artdes</descripcion>
+					</ayuda_ex>
+					
+					<label>Cod.</label>
+					<operador  modificador="left">=</operador>					
+				</field>			
+				<field id="artdes" >
+					<label>Articulo</label>
+					<help>Descripcion de Articulo. (ENTER = Retorna a ingreso de codigo).
+						</help>
+					<operador>like</operador>
+				</field>				
+			</filters>			
+		</table>
+<!--		<join tipo="left">
+			<table id="STKINSPR">
+			<field id="siscod" oculto="true">
+				<condicion operador="=">STKINSUM.siscod</condicion>
+			</field>
+			<field id="artcod" oculto="true">
+				<condicion operador="=">STKINSUM.artcod</condicion>
+			</field>
+				
+			</table>
+		</join>		-->
+	</form>
+</histrix>

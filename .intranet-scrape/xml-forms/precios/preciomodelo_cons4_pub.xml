@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini"   >
+	<title>PRECIOS POR MODELO</title>
+	<obs/>
+	<form >
+		<table id="PRECIOMODELO" >
+			<title></title>
+			<field id="idLista" noshow="true">
+				<label modpos="nobr">Lista</label>
+			</field>			
+			<field id="nrocar" noshow="true">
+			</field>		
+			<field id="idGrupo" noshow="true">
+			</field>			
+<!--			<field id="marcod" noshow="true">
+			</field>
+			
+			<field id="modcha" noshow="true">
+			</field>	
+	-->		
+		
+
+			<field id="asientos">
+				<expression>asientos + acompañante</expression>
+				<label colstyle="width:50px;" style="color:blue; font-size:16px;">Asi</label>
+				<label>Cantidad de Asientos</label>
+			</field>
+			<field id="tipserv">
+				<label>Tipo</label>
+				<label>Tipo de Servicio</label>
+							<tabla_ex id="TIPOSERVICIO">
+                        <field id="tipserv">
+                        </field>
+                        <field id="servdes">
+                        </field>					
+				</tabla_ex>
+			</field>			
+			<field id="banbar">
+				<label>B/B</label>
+
+				<options>
+					<option valor="0">--</option>
+					<option valor="1">Si</option>					
+				</options>
+			</field>
+			<field id="bastidor">
+				<label>Bastidor</label>
+				<options>
+					<option valor="0">--</option>
+					<option valor="1">Si</option>					
+				</options>
+				<help>Bastidor</help>
+				
+			</field>			
+			<field id="largo">
+				<label>Largo</label>
+				<help>Largo Expresado en Metros</help>
+			</field>						
+			<field id="bodega">
+				<label>Bodega</label>
+				<help>Capacidad de Bodega expresado en Metros Cúbicos</help>
+			</field>	
+			<field id="precio" noshow="true">
+				<label modpos="nobr" style="color:green; font-size:16px;">Concesionario</label>
+				<help>Precio</help>
+				<tipo>numeric</tipo>
+				
+				
+			</field>
+			<field id="margen" noshow="true">
+				<expression>max(margen)</expression>
+				<label>% Rec</label>
+				<help>Recargo precio al público</help>
+			</field> 
+			<field id="precio2">
+				<expression>max(precio * (1 + margen))</expression>
+				<label modpos="nobr" style="color:red; font-size:16px;">Público</label>
+				<help>Precio</help>
+			</field> 
+			
+			<group>
+				<field id="asientos" tabla="PRECIOMODELO"></field>
+				<field id="banbar" tabla="PRECIOMODELO"></field>				
+				<field id="bastidor" tabla="PRECIOMODELO"></field>				
+			</group> 
+		</table>
+	</form>
+</histrix>

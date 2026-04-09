@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="fichaing" preFetch="true" inserta="false" borra="false" modifica="false" procesa="true" imprime="false">
+    <title>Cantidad Pendiente</title>
+    <obs></obs>
+    <eventos>
+        <event id="procesar">close</event>
+        <event id="procesar">refresh</event>
+    </eventos>
+    <form>
+        <table id="REG_DETALLES" label="Cantidad Pendiente">
+
+            <movimientos>
+                <relacion id="regpendientes_upd.xml" />
+            </movimientos>
+
+            <field id="id_regdetalle" deshabilitado="true" valauto="true" noshow="true" />
+
+            <field id="cantidad_pendiente">
+                <label>Cantidad Pendiente</label>
+                <tipo>enclosed_integer</tipo>
+            </field>
+
+        </table>
+    </form>
+</histrix>

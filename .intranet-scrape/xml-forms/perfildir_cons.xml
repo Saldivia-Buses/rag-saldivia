@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+	<histrix tipo="consulta">
+		<title>Perfiles</title>
+		<obs></obs>
+		<form >
+			<table id="HTXUSERS" label="Directorios del Usuario">
+				<field id="nom" local="true" noselect="true" noshow="true">
+					<valor eval="true">$_SESSION['usuario']</valor>
+					<tipo>varchar</tipo>
+				</field>
+				<field deshabilitado="true" id="login" noshow="true">
+				
+					<help></help>
+					<size>10</size>
+					<tipo>varchar</tipo>
+					<valor eval="true">strtolower ( $_SESSION['usuario'])</valor>
+					<condicion operador="=" valorde="nom"></condicion>
+				</field>
+				<field id="access" tabla="HTXPROFILEDIR" noshow="true">
+					<label>Permisos</label>
+					<options>
+						<option valor="rwd">Completo</option>
+						<option valor="rd">Solo Lectura</option>
+						
+					</options>
+					<help>Permisos</help>
+				</field>
+
+								
+				<field id="dir" tabla="HTXPROFILEDIR" _path="path" >
+					<attribute id="access">access</attribute>
+					<label>Directorio</label>
+					<help></help>
+					<tipo>file</tipo>
+				</field>
+				<order>
+					<field  id="dir"></field>
+				</order>
+			</table>
+			<join tipo="left">
+				<table id="HTXPROFILEDIR" label="Perfiles">
+					<field id="idPerfil">
+						<condicion operador="=">HTXUSERS.Id_perfil</condicion>
+                    </field>
+				</table>
+				
+			</join>
+			
+		</form>
+	</histrix>

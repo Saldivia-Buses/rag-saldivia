@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm">
+	<title>Control de Costos</title>
+	<obs/>
+	<form >
+		<table id="CONTROLCOSTOS">
+			<title>Articulos Controlados</title>
+			<field id="artcod">
+				<label>Codigo</label>
+				<help>Codigo de Articulo</help>
+			</field>
+			
+			<field id="fecha">
+				<label>Fecha</label>
+				<help>Fecha de Control</help>
+			</field>
+			<field id="Id_usuario">
+				<label>Controlado por</label>
+				<help>Usuario</help>
+			</field>
+		
+		</table>
+		<join tipo="left">
+			<table id="STKINSUM">
+				<field id="artcod">
+					<condicion operador="=">CONTROLCOSTOS.artcod</condicion>
+				</field>
+			</table>
+		</join>
+
+
+	</form>
+</histrix>

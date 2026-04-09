@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="update">
+	<title>Eliminacion de Detalles de Movimientos de Caja</title>
+	<obs></obs>
+	<form>
+		<table id="REG_DETALLES" >
+		    <field id="id_regdetalle" esClave="true" id_temp="id_regdetalle"/>
+		    <field id="porcentaje_desc0" id_temp="porcentaje_desc0" />
+		    <field id="porcentaje_desc1" id_temp="porcentaje_desc1" />
+		</table>
+	</form>
+</histrix>  
+

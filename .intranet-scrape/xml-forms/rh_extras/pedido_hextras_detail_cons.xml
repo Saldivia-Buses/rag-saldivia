@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+	<histrix tipo="liveGrid" _preloadData="false" deleteRow="false" inserta="false">
+		<title>Autorización de Horas Extras</title>
+		<obs></obs>
+		<form>
+			<table id="RH_AUTH_EXTRAS_DETAIL" label="Horas Extras">
+            
+            <filters>
+
+				<field id="desdeFecha">
+					<operador>&gt;=</operador>
+					<label>Desde Fecha</label>
+                    <valor eval="true">date("d/m/Y", mktime(0, 0, 0, date("m"), 01, date("Y")))</valor>
+				</field>
+
+				<field id="desdeFecha">
+					<operador>&lt;=</operador>
+					<label modpos="nobr">Hasta Fecha</label>
+            		<valor eval="true">date("d/m/Y", mktime(0, 0, 0, date("m"), date("d"), date("Y")))</valor>
+				</field>
+
+				<field id="seccion_id">
+					<operador>=</operador>
+					<label modpos="nobr">Seccion</label>
+				</field>
+
+				<field id="seccion_productiva">
+					<operador>=</operador>
+					<label modpos="nobr">Productivas</label>
+				</field>
+			</filters>
+
+			<field id="id_auth_detail" noshow="true" esClave="true" />
+
+			<field id="auth_id"  noshow="true" />
+
+			<field id="login_auth" deshabilitado="true" noshow="true" tabla="RH_AUTH_EXTRAS">
+				<label>Usuario</label>
+				<valor eval="true">$_SESSION['usuario']</valor>
+			</field>
+			
+			<field id="id_auth" deshabilitado="true" noshow="true" tabla="RH_AUTH_EXTRAS">
+			    <label modpos="nobr">Número</label>
+			</field>			
+					
+			<field id="legajo"  >
+			    <label>Legajo</label>
+			</field>
+			<field id="apellido" tabla="PERSONAL">
+			    <label>Apellido</label>
+			</field>
+			
+			<field id="Nombre" tabla="PERSONAL">
+			    <label>Nombre</label>
+			</field>
+
+			<field id="cantidad_hs" _editable="true" suma="true">
+			    <label>Cantidad hs</label>
+			</field>
+
+			<field id="seccion_id" _editable="true">
+				<label>Tarea a realizar</label>		
+					<tabla_ex id="SECCION" vacio="true">
+						<field id="id_seccion"></field>
+						<field id="nombre"></field>
+						<field id="activa">
+							<condicion operador="=">1</condicion>
+						</field>
+						<order>
+								<field id="nombre"></field>
+						</order>
+					</tabla_ex>
+            </field>
+
+  		<field id="seccion_productiva" tabla="SECCION">
+    		<label>Productiva</label>
+    		<help>Productiva</help>
+    		<options>
+        		<option valor=""></option>
+        		<option valor="0">Si</option>
+        		<option valor="1">No</option>           
+    		</options>
+  		</field>
+
+		<field id="userid" tabla="RH_AUTH_EXTRAS">
+		    <label>Solicitó</label>
+		    <expression>concat(HTXUSERS.Nombre,' ', HTXUSERS.apellido)</expression>
+		</field>
+
+		<field id="fecha_auth" noshow="true" tabla="RH_AUTH_EXTRAS">
+		    <label modpos="nobr">Fecha</label>
+		    <tipo>date</tipo>			    
+		</field>
+
+		<field id="desdeFecha" editable="true">
+		    <label modpos="nobr">FechaD</label>
+		    <tipo>date</tipo>			    
+		</field>
+
+		<field id="motivo_auth" tabla="RH_AUTH_EXTRAS">
+		    <label>Motivo</label>
+		    <size>100</size>
+		</field>
+		
+			</table>
+			<join>
+			    <table id="RH_AUTH_EXTRAS">
+				<field id="id_auth">
+				    <condicion>RH_AUTH_EXTRAS_DETAIL.auth_id</condicion>
+				</field>
+			    </table>
+			</join>
+			<join>
+			    <table id="PERSONAL">
+				<field id="legajo">
+				    <condicion>RH_AUTH_EXTRAS_DETAIL.legajo</condicion>
+				</field>
+			    </table>
+			</join>
+			<join>
+			    <table id="SECCION">
+				<field id="id_seccion">
+				    <condicion>RH_AUTH_EXTRAS_DETAIL.seccion_id</condicion>
+				</field>
+			    </table>
+			</join>
+			<join tipo="left">
+			    <table id="HTXUSERS">
+				<field id="login">
+				    <condicion operador="=">login_auth</condicion>
+				</field>
+		    </table>
+		</join>
+		</form>
+	</histrix>

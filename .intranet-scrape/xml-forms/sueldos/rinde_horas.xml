@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" class="consultaing2" preloadData="false">
+    <title>Rendicion de Horas</title>
+    <obs/>
+    <form >
+        <table id="PERSONAL" label="Rendición de Horas" >
+
+            <filters>
+                <field id="desde" local="true">
+                    <label>Desde</label>
+                    <tipo>date</tipo>
+                    <valor>today</valor>
+                    <operador>&gt;=</operador>
+                </field>
+                <field id="hasta" local="true">
+                    <label>Hasta</label>
+                    <tipo>date</tipo>
+                    <valor>today</valor>
+                    <operador>&lt;=</operador>
+                </field>
+
+                <field id="legajo">
+                    <label>Leg.</label>
+                    <tipo>integer</tipo>
+                        <operador>=</operador>
+                </field>            
+            </filters>
+
+            <field id="idPersona" esClave="true" noshow="true"/>
+
+            <field id="desde" local="true"  noshow="true">
+                <label>Desde</label>
+                <tipo>date</tipo>
+            </field>
+
+            <field id="hasta" local="true"  noshow="true">
+                <label>Hasta</label>
+                <tipo>date</tipo>
+            </field>
+      
+            <field id="fechaEgreso" oculto="true">
+                <label>Egreso</label>
+                <tipo>date</tipo>
+                <condicion operador="=">'0000-00-00'</condicion>
+            </field>
+
+            <field id="IdSindicato">
+                <label>Sind.</label>
+                <help>Codigo de Sindicato</help>
+                <detalle>IdSindicato</detalle>
+                <tabla_ex id="SINDICATO">
+                    <field id="IdSindicato"></field>
+                    <field id="Nombre"></field>
+                    <order>
+                        <field id="Nombre"></field>
+                    </order>
+
+                    <filtra>IdSindicato</filtra>
+                </tabla_ex>
+            </field>
+
+            <field id="nom">
+                <expression>concat(PERSONAL.apellido, ', ', PERSONAL.nombre)</expression>
+                <label>Apellido</label>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="apellido" noshow="true">
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="tarjeta" noshow="true">
+                <label>Tarjeta</label>
+            </field>
+
+            <field id="idJornada" noshow="true">
+                <label>Jornada</label>
+            </field>
+
+            <field id="legajo">
+                <label>Leg.</label>
+                <tipo>integer</tipo>
+            </field>
+
+            <field id="eventual" noshow="true">
+                <condicion operador="=">0</condicion>
+            </field>
+      
+            <field id="fecing">
+                <label>Ingreso</label>
+                <tipo>date</tipo>
+            </field>
+
+            <field id="CUIL">
+                <label>CUIL</label>
+                <tipo>integer</tipo>
+            </field>
+      
+            <field id="IdCateg2">
+                <label style="width:200px;" modpos="nobr">Categ.</label>
+                <expression><![CDATA[(select descripcion from CATEGHISTORIA 
+                                     left join CATPERSONAL 
+                                     on CATPERSONAL.IdSindicato = CATEGHISTORIA.idSindicato 
+                                     and CATPERSONAL.IdCateg = CATEGHISTORIA.IdCateg 
+                                     where CATEGHISTORIA.IdPersona = PERSONAL.IdPersona 
+                                    and  CATEGHISTORIA.fechaDesde <= str_to_date('[__hasta__]', '%d/%m/%Y')
+                                    order by CATEGHISTORIA.fechaDesde desc limit 1)]]>
+                </expression>
+            </field>
+                    
+            <field id="tipoliq" >
+                <expression>select tipoliq FROM CONCEPCONV inner join CONVENIOS on CONVENIOS.idSindicato= CONCEPCONV.IdSindicato  where CONCEPCONV.IdSindicato = PERSONAL.IdSindicato and CONCEPCONV.IdCateg = PERSONAL.IdCateg limit 1</expression>
+                <tabla_ex id="CONCEPLIQU">
+                    <field id="tipoLiq"/>
+                    <field id="Nombre"/>
+                </tabla_ex>
+                <label>Tipo Liq.</label>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="val">
+                <label>importe</label>
+                <expression><![CDATA[select importe FROM CONCEPCONV inner join CONVENIOS on CONVENIOS.idSindicato= CONCEPCONV.IdSindicato  where CONCEPCONV.IdSindicato = PERSONAL.IdSindicato and CONCEPCONV.desfec <= hasta and CONCEPCONV.IdCateg = (select CATEGHISTORIA.idCateg from CATEGHISTORIA left join CATPERSONAL on CATPERSONAL.IdSindicato = CATEGHISTORIA.idSindicato and CATPERSONAL.IdCateg = CATEGHISTORIA.IdCateg where CATEGHISTORIA.IdPersona = PERSONAL.IdPersona  and CATEGHISTORIA.fechaDesde <= STR_TO_DATE('[__desde__]', '%d/%m/%Y') order by CATEGHISTORIA.fechaDesde desc limit 1)  order by CONCEPCONV.desfec DESC limit 1]]>
+                </expression>
+                <tipo>decimal</tipo>
+            </field>
+
+            <field id="trabajadas" noshow="true">
+                <label>Horas</label>
+                <expression sql="true"><![CDATA[
+                    select SEC_TO_TIME(sum(FF.minutos)) from 
+                    (select F1.fecha,
+               
+@egr:= CONVERT((SELECT H.egreso from HORARIOHIST as H  where H.desdeFecha <= F1.fecha and H.dia = DAYOFWEEK(F1.fecha) order by H.desdeFecha DESC limit 1), CHAR) as "egr",
+@ing:= CONVERT((SELECT H.ingreso from HORARIOHIST as H where H.desdeFecha <= F1.fecha and H.dia = DAYOFWEEK(F1.fecha) order by H.desdeFecha DESC limit 1), CHAR) as "ing",
+
+@h1:= CONVERT((select H1.hora from FICHADAS as H1 left join FERIADOS ON FERIADOS.idFeriado = H1.fecha where H1.tarjeta = (SELECT TJT.tarjeta from PERSONAL_TARJETA as TJT where TJT.idPersona = [__idPersona__]  and TJT.fechaDesde <= F1.fecha order by fechaDesde DESC limit 1) and H1.fecha = F1.fecha and H1.borrado = 0 order by H1.hora  limit 0, 1), CHAR) as "h1",
+@h2:= CONVERT((select H1.hora from FICHADAS as H1 left join FERIADOS ON FERIADOS.idFeriado = H1.fecha where H1.tarjeta = (SELECT TJT.tarjeta from PERSONAL_TARJETA as TJT where TJT.idPersona = [__idPersona__]  and TJT.fechaDesde <= F1.fecha order by fechaDesde DESC limit 1) and H1.fecha = F1.fecha and H1.borrado = 0 order by H1.hora  limit 1, 1), CHAR) as "h2",
+@h3:= CONVERT((select H1.hora from FICHADAS as H1 left join FERIADOS ON FERIADOS.idFeriado = H1.fecha where H1.tarjeta = (SELECT TJT.tarjeta from PERSONAL_TARJETA as TJT where TJT.idPersona = [__idPersona__]  and TJT.fechaDesde <= F1.fecha order by fechaDesde DESC limit 1) and H1.fecha = F1.fecha and H1.borrado = 0 order by H1.hora  limit 2, 1), CHAR) as "h3",
+@h4:= CONVERT((select H1.hora from FICHADAS as H1 left join FERIADOS ON FERIADOS.idFeriado = H1.fecha where H1.tarjeta = (SELECT TJT.tarjeta from PERSONAL_TARJETA as TJT where TJT.idPersona = [__idPersona__]  and TJT.fechaDesde <= F1.fecha order by fechaDesde DESC limit 1) and H1.fecha = F1.fecha and H1.borrado = 0 order by H1.hora  limit 3, 1), CHAR) as "h4",
+
+ifnull( time_to_sec( timediff( case  when @egr = @ing then @egr 
+             when @h2 > @egr then @egr else @h2 end , 
+                    case when @egr = @ing then @ing
+                       when @h1 < @ing then @ing else @h1 end )), 0)
++
+ifnull( time_to_sec( timediff( case  when @h4 > @egr then @egr else @h4 end , 
+             case when @h4 < @ing then @ing else @h3 end )), 0)
+
+as "minutos"
+
+                   
+             from GEN_CALENDAR as F1 left join FERIADOS ON FERIADOS.idFeriado = F1.fecha
+        where
+                          F1.fecha  >= '[__desde__]' and
+                          F1.fecha  <= '[__hasta__]' and
+        isnUll(FERIADOS.idFeriado)) as FF ]]>
+                </expression>
+                <tipo>time</tipo>
+            </field>
+
+            <field id="trabajadas2" noshow="true">
+                <label>Horas22</label>
+                <expression sql="true"><![CDATA[
+                    select SEC_TO_TIME(sum(case when FF.minutos_trabajados <= FF.minutos_proyeccion then FF.minutos_trabajados else FF.minutos_proyeccion end)) from 
+                    (select F1.fecha,
+               
+@egr:= CONVERT((SELECT H.egreso from HORARIOHIST as H  where H.desdeFecha <= F1.fecha and H.dia = DAYOFWEEK(F1.fecha) order by H.desdeFecha DESC limit 1), CHAR) as "egr",
+@ing:= CONVERT((SELECT H.ingreso from HORARIOHIST as H where H.desdeFecha <= F1.fecha and H.dia = DAYOFWEEK(F1.fecha) order by H.desdeFecha DESC limit 1), CHAR) as "ing",
+
+@h1:= CONVERT((select H1.crc from FICHADAS as H1 left join FERIADOS ON FERIADOS.idFeriado = H1.fecha where H1.tarjeta = (SELECT TJT.tarjeta from PERSONAL_TARJETA as TJT where TJT.idPersona = [__idPersona__]  and TJT.fechaDesde <= F1.fecha order by fechaDesde DESC limit 1) and H1.fecha = F1.fecha and H1.borrado = 0 order by H1.crc  limit 0, 1), CHAR) as "h1",
+@h2:= CONVERT((select H1.crc from FICHADAS as H1 left join FERIADOS ON FERIADOS.idFeriado = H1.fecha where H1.tarjeta = (SELECT TJT.tarjeta from PERSONAL_TARJETA as TJT where TJT.idPersona = [__idPersona__]  and TJT.fechaDesde <= F1.fecha order by fechaDesde DESC limit 1) and H1.fecha = F1.fecha and H1.borrado = 0 order by H1.crc  limit 1, 1), CHAR) as "h2",
+@h3:= CONVERT((select H1.crc from FICHADAS as H1 left join FERIADOS ON FERIADOS.idFeriado = H1.fecha where H1.tarjeta = (SELECT TJT.tarjeta from PERSONAL_TARJETA as TJT where TJT.idPersona = [__idPersona__]  and TJT.fechaDesde <= F1.fecha order by fechaDesde DESC limit 1) and H1.fecha = F1.fecha and H1.borrado = 0 order by H1.crc  limit 2, 1), CHAR) as "h3",
+@h4:= CONVERT((select H1.crc from FICHADAS as H1 left join FERIADOS ON FERIADOS.idFeriado = H1.fecha where H1.tarjeta = (SELECT TJT.tarjeta from PERSONAL_TARJETA as TJT where TJT.idPersona = [__idPersona__]  and TJT.fechaDesde <= F1.fecha order by fechaDesde DESC limit 1) and H1.fecha = F1.fecha and H1.borrado = 0 order by H1.crc  limit 3, 1), CHAR) as "h4",
+
+ifnull( time_to_sec( timediff( @h2, @h1 ) ), 0)
++
+ifnull( time_to_sec( timediff( @h4 , @h3 )), 0)
+
+as "minutos_trabajados",
+
+ifnull( time_to_sec( timediff( @egr, @ing ) ), 0)
+
+as "minutos_proyeccion"
+                   
+             from GEN_CALENDAR as F1 left join FERIADOS ON FERIADOS.idFeriado = F1.fecha
+        where
+                          F1.fecha  >= '[__desde__]' and
+                          F1.fecha  <= '[__hasta__]' and
+        isnUll(FERIADOS.idFeriado)) as FF ]]>
+                        </expression>
+                <tipo>time</tipo>
+            </field>
+
+            <field id="HorasTrab" local="true" suma="true" noshow="true">
+                <label>HorasViejas</label>
+                <if exp="tipoliq + 0 == 1">
+                    <true>'trabajadas'</true>
+                    <false>''</false>
+                </if>
+                <tipo>time</tipo>
+            </field>
+
+            <field id="HorasTrabNew" local="true" suma="true">
+                <label>Horas Nuevas</label>
+                <if exp="tipoliq + 0 == 1">
+                    <true>'trabajadas2'</true>
+                    <false>''</false>
+                </if>
+                <tipo>time</tipo>
+            </field>
+
+            <field id="Feriados">
+                <label>Feriados</label>
+                <expression sql="true"><![CDATA[select SEC_TO_TIME(sum(TIME_TO_SEC(FERIADOS.horas))) from FERIADOS where FERIADOS.idFeriado >= '[__desde__]' and FERIADOS.idFeriado <= '[__hasta__]' ]]>
+                </expression>
+                <tipo>time</tipo>
+            </field>
+
+            <field id="horasLicencia" suma="true">
+               <expression><![CDATA[(
+                            SELECT 
+                                   (SEC_TO_TIME(sum(
+                                        case when FRANCOS_PER.horas = 0 then (SELECT TIME_TO_SEC(TIMEDIFF(H.egreso, H.ingreso))
+                                            FROM HORARIOHIST AS H
+                                            WHERE H.desdeFecha <= GEN_CALENDAR.fecha
+                                            AND H.dia = DAYOFWEEK(GEN_CALENDAR.fecha)
+                                            ORDER BY H.desdeFecha DESC LIMIT 1) else TIME_TO_SEC(FRANCOS_PER.horas) end))) 
+                            FROM GEN_CALENDAR
+                            LEFT JOIN FRANCOS_PER ON (FRANCOS_PER.fechaInicio <= GEN_CALENDAR.fecha)
+                            AND (FRANCOS_PER.fechaFin >= GEN_CALENDAR.fecha
+                                 OR FRANCOS_PER.fechaFin = '0000-00-00')
+                            LEFT JOIN FRANCOS_CAT ON (FRANCOS_CAT.idfranco = FRANCOS_PER.idfranco)
+                            AND (FRANCOS_CAT.tipo = FRANCOS_PER.tipo)
+                            LEFT JOIN FERIADOS ON (FERIADOS.idFeriado = GEN_CALENDAR.fecha)
+                            WHERE ((FRANCOS_PER.legajo = PERSONAL.legajo))
+                                AND ((fecha >= STR_TO_DATE('[__desde__]', '%d/%m/%Y')))
+                                AND ((GEN_CALENDAR.fecha <= STR_TO_DATE('[__hasta__]', '%d/%m/%Y')))
+                                AND ((isnull(FERIADOS.idFeriado)))
+
+                            )]]>
+              </expression>
+              <label>Hora Lic.</label>
+                <tipo>time</tipo>
+            </field>
+
+            <field id="totales" local="true" suma="true">
+                <label>Totales</label>
+                <expression sql="true">SELECT ADDTIME(
+    IF('[__trabajadas2__]' = '' OR '[__trabajadas2__]' IS NULL, '00:00:00', '[__trabajadas2__]'), IF('[__horasLicencia__]' = '' OR '[__horasLicencia__]' IS NULL, '00:00:00', '[__horasLicencia__]'))</expression>
+               <tipo>time</tipo>
+            </field>
+
+            <field id="otros" obj="fichadas_enfermedad_cons2.xml" showObjTabla="true"   local="true">
+                <paring destino="legajo">legajo</paring>
+                <paring destino="legajo2">legajo</paring>
+                <paring destino="desdefecha" operador="&gt;=" >desde</paring>
+                <paring destino="hastafecha" operador="&lt;=" >hasta</paring>
+                <paring destino="fecha2" operador="&gt;=" >desde</paring>
+                <paring destino="fecha" operador="&lt;=" >hasta</paring>
+            </field>
+            
+          
+          <field id="cambioCateg" clasefila="true" noshow="true">
+              <expression sql="true" ><![CDATA[ (select 'resaltado' from CATEGHISTORIA where CATEGHISTORIA.fechaDesde >= '[__desde__]' and CATEGHISTORIA.fechaDesde <= '[__hasta__]' and  CATEGHISTORIA.IdPersona = '[__idPersona__]' limit 1)]]></expression>
+            
+          </field>
+            <order>
+                <field id="legajo"></field>
+            </order>
+            <group>
+                <field id="legajo" />
+
+            </group>
+        </table>
+
+
+        <join tipo="left">
+            <table id="CATPERSONAL">
+                <field id="idSindicato">
+                    <condicion operador="=">PERSONAL.idSindicato</condicion>
+                </field>
+                <field id="idCateg">
+                    <condicion operador="=">PERSONAL.idCateg</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="FAMILIA">
+                <field id="idPersona">
+                    <condicion operador="=">PERSONAL.idPersona</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix>

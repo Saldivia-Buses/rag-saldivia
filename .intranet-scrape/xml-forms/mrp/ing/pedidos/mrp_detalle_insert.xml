@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert">
+    <title>DETALLE ORDEN PRODUCCION</title>
+    <obs></obs>
+    <form >
+        <table id="MRP_ORDEN_DETALLE" label="MOVIMIENTOS" >
+            <field id="mrporden_id" 	lastId="mrp_orden_insert.xml"></field>
+            <field id="stkarticulo_id" 		id_temp="codigo_detalle"></field>
+            <field id="minimo_ordendetalle"	id_temp="Pedido"></field>
+            <field id="objetivo_ordendetalle"	id_temp="Pedido"></field>
+
+        </table>
+    </form>
+</histrix>

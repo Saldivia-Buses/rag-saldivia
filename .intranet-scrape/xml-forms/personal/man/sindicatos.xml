@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="abm">
+	<title>SINDICATOS</title>
+	<obs></obs>
+	<form >
+		<table id="SINDICATO" >
+		    <title>Sindicatos</title>
+			<field id="IdSindicato">
+				<label>Cod.</label>
+				<help>Código de Sindicato</help>
+			</field>
+			<field id="Nombre">
+				<label>Nombre</label>
+				<help>Nombre del Sindicato</help>
+			</field>			
+			<field id="descripcion">
+				<label>Descripción</label>
+				<help>Descripción del Sindicato</help>
+			</field>
+			<order>
+				<field id="IdSindicato"></field>
+			</order>
+		</table>
+	</form>	   
+</histrix> 

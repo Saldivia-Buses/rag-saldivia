@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" preloadData="false">
+<!--<histrix tipo="ing" inserta="false" modifica="false" borra="false" deleteRow="false" tooltip="false" showCantidad="false" subtipo="vertical">-->
+    <title>Impresion x Periodo</title>
+    <obs></obs>
+    <form>
+        <table id="ASIENTO_GENERAL" label="Impresion x Periodo">
+
+            <filters>
+                <field id="mes" deshabilitado="false">
+                    <label>Periodo</label>
+                    <operador>=</operador>
+                    <size>2</size>
+                    <valor eval="true">date("m")</valor>
+                </field>
+                <field id="anio" sincelda="true">
+                    <label modpos="nobr" />
+                    <operador>=</operador>
+                    <size>4</size>
+                    <valor eval="true">date("Y")</valor>
+                </field>
+                <field id="proximo_asiento">
+                    <label>Prox.Minuta</label>
+                    <operador>=</operador>
+                    <valor>1</valor>
+                </field>
+            </filters>
+
+            <field id="id_movimiento" noshow="true" break="true">
+                <expression>IFNULL(id_movimiento, tipo)</expression>
+            </field>
+
+            <field id="leyenda" local="true" noshow="true">
+                <expression>CONCAT('Libro diario desde ', '01/', LPAD(mes,2,0), '/', anio, ' al ', DATE_FORMAT(LAST_DAY(CONCAT(anio,'-',mes,'-','01')), '%d/%m/%Y'))</expression>
+                <setvar>nombre_div</setvar>
+                <setvar>titulo_div</setvar>
+            </field>
+
+            <field id="cuenta" suma="true" acumula="true" repeat="false" retroalimenta="true" noshow="true">
+                <expression>1</expression>
+            </field>
+
+            <field id="proximo_asiento" local="true" noshow="true" required="true" print="false" />
+
+            <field id="tipo" noshow="true" />
+
+            <field id="_BREAK" local="true" noshow="true" />
+
+            <field id="_ORDEN" local="true" noshow="true" />
+
+            <field id="anio" noshow="true" required="true" print="false">
+                <tipo>integer</tipo>
+                <size>4</size>
+            </field>
+
+            <field id="mes" noshow="true" required="true" print="false">
+                <tipo>integer</tipo>
+                <size>2</size>
+            </field>
+
+            <field id="fecha_movimiento">
+                <label>FECHA</label>
+                <expression>CASE WHEN tipo = 1 THEN DATE_FORMAT(fecha_movimiento, '%d/%m/%Y') ELSE CONCAT(LPAD(mes, 2, 0),'/',anio) END</expression>
+            </field>
+
+            <field id="nro_asiento" local="true">
+                <label>ASTO</label>
+                <if exp="true">
+                    <true>_BREAK + proximo_asiento</true>
+                    <false></false>
+                </if>
+            </field>
+
+            <field id="nro_minuta">
+                <label>REG</label>
+            </field>
+
+            <field id="id_cuenta">
+              <label>CUENTA</label>
+            </field>
+  
+            <field id="nombre_cuenta">
+              <label>NOMBRE CUENTA</label>
+            </field>
+
+            <field id="debe" suma="true" noZero="true">
+              <label>DEBE</label>
+              <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="haber" suma="true"  noZero="true">
+              <label>HABER</label>
+              <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="referencia">
+                <label>REFERENCIA</label>
+                <expression>UPPER(referencia)</expression>
+            </field>
+
+            <order>
+                <field id="tipo" />
+                <field id="fecha_movimiento" />
+                <field id="id_movimiento" />
+
+                <field id="haber" />
+                <field id="id_cuenta" />
+            </order>
+
+            <group>
+                <field id="tipo" />
+                <field id="fecha_movimiento" />
+                <field id="id_movimiento" />
+
+                <field id="haber" />
+                <field id="id_cuenta" />
+            </group>
+
+        </table>
+    </form>
+</histrix>

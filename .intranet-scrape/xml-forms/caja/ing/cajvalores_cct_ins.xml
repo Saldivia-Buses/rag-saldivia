@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert">
+  <title>Grabación de Forma de Cobro-Pago</title>
+  <obs/>
+  <form>
+    <table id="CAJ_VALORES" idCampoCond="cocina_cajvalores">
+      <field id="cajmovimiento_id" lastId="cajmovimientos_ins.xml"/>
+      <field id="cajformapago_id" id_temp="cajformapago_id"/>
+    </table>
+  </form>
+</histrix>

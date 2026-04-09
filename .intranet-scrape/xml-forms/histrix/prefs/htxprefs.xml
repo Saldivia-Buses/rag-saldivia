@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+	<histrix tipo="ficha" preFetch="true" borra="false" onDuplicateKey="true" imprime="false" >
+		<title>Preferencias</title>
+		<obs></obs>
+		<form >
+			<table id="HTXPREFS" label="Preferencias">
+				
+				<field id="_usu" deshabilitado="true" local="true" noselect="true" noshow="true">
+					<valor eval="true">$_SESSION['usuario']</valor>
+				</field>
+				
+				<field id="login" deshabilitado="true" noshow="true">
+					<condicion operador="=" valorde="_usu">_usu</condicion> 
+					<valor eval="true">"'".$_SESSION['usuario']."'"</valor> 
+				</field>
+				
+				<field id="font">
+				    <helper type="combo" >
+
+					<option value=""></option>
+
+					<option value="Times, 'Times New Roman', Georgia, serif">Serif</option>
+					<option value="'Lucida Grande',Verdana, Arial, Helvetica, sans-serif">Sans-Serif</option>
+					<option value="'Lucida Console', Courier, monospace">Monospace</option>
+					<option value="cursive">Cursiva</option>
+					<option value="fantasy">Fantasia</option>
+				    </helper>
+					<label>Fuente</label>
+					<help>Tipografia a utilizar</help>
+				</field>
+				
+				<field id="fontSize">
+					<label>Tamaño Fuente</label>
+				</field>
+				<!--
+				<field id="idTheme" local="true">
+					<label>Tema a Utilizar</label>
+					<table_ex id="HTXTHEME" empty="true">
+						<field id="idTheme" _noshow="true" />
+						
+						<field id="themeName" >
+						    <label>Nombre</label>
+						</field>
+						
+						<field id="fontColor" color="true">
+							<label>Color Fuente</label>
+							<detalle>fontColor</detalle>
+						</field>
+						
+						<field id="fontSelectColor" color="true">
+							<label>Color Fuente Seleccionada</label>
+							<detalle>fontSelectColor</detalle>
+						</field>
+						
+						<field id="backgroundColor" color="true">
+							<label>Color de fondo</label>
+							<detalle>backgroundColor</detalle>
+						</field>
+						
+						<field id="gradientLight" color="true">
+							<label>Inicio Degradado</label>
+							<detalle>gradientLight</detalle>
+						</field>
+						<field id="gradientDark" color="true">
+							<label>Fin Degradado</label>
+							<detalle>gradientDark</detalle>
+						</field>
+						<field id="gradientSelect" color="true">
+							<label>Degradado Seleccionado</label>
+							<detalle>gradientSelect</detalle>
+						</field>
+					</table_ex>
+				</field>
+				-->
+				<field id="fontColor" color="true">
+					<label>Color Fuente</label>
+				</field>
+				<field id="fontSelectColor" color="true">
+					<label>Color Fuente Seleccionada</label>
+				</field>
+				<field id="backgroundColor" color="true">
+					<label>Color de fondo</label>
+				</field>
+				<field id="gradientLight" color="true">
+					<label>Inicio Degradado</label>
+				</field>
+				<field id="gradientDark" color="true">
+					<label>Fin Degradado</label>
+				</field>
+				<field id="gradientSelect" color="true">
+					<label>Degradado Seleccionado</label>
+				</field>
+
+			</table>
+		</form>
+	</histrix>

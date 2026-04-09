@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm" subtipo="vertical" _width="20">
+<title>Seccion</title>
+<obs></obs>
+<form _detalle="producto_atributos.xml" >
+    <table id="PRODUCTO_SECCION">
+        <title>Seccion</title>
+
+           
+        <field id="id_prdseccion" autoinc="true" noshow="true">
+            <label>Codigo</label>
+            <detalle>prdseccion_id</detalle>
+        </field>
+        <field id="orden_seccion">
+            <label>Orden</label>
+            <help>Orden de impresión</help>
+        </field>
+
+        <field id="nombre_seccion">
+            <label _modpos="nobr">Nombre Sección</label>
+            <help>Nombre de la Sección</help>
+        </field>
+
+        <field id="activa_seccion">
+            <label _modpos="nobr">Activa Sección</label>
+            <help>Activa Sección</help>
+            <options>
+                <option valor="0">Si</option>
+                <option valor="1">No</option>           
+            </options>
+        </field>
+        <order>
+            
+            <field id="orden_seccion" />
+            <field id="nombre_seccion" />
+
+        </order>
+    </table>
+</form>	   
+</histrix>

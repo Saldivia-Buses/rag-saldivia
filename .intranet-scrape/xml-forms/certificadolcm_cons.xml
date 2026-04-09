@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="consulta">
+	<title>Entregas</title>
+	<obs/>
+	<form >
+		<table id="CERTIFICADOLCM">
+			<title>Certificado LCM</title>
+			<field id="nrofab" oculto="true">
+				<label >Nro.Fab.</label>
+				<help>Número de Fabricación</help>
+			</field>
+
+			<field id="fecha" >
+				<label>Fecha</label>
+				<valor>today</valor>
+			</field>
+			<field id="nrocert" >
+				<label>Nro.Cert.</label>
+			</field>			
+<!--			<field id="observ">
+				<label>Observaciones</label>
+				<help>Observaciones del Certificado</help>
+			</field>
+			<field id="datosEntrega">
+				<label>Datos de Entrega</label>
+				<help>Observaciones con respecto a la Entrega del certificado</help>
+			</field> -->
+		</table>
+
+	</form>
+</histrix>

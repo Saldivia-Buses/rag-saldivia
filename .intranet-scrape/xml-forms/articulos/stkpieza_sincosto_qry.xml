@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" _subtipo="vertical" path="fotos/articulos">
+    <title>Formulas</title>
+    <obs></obs>
+    <form detalle="stkpieza_sincosto_qry.xml" inline="true" hasDetail="tienehijos">
+        <table id="STKPIEZA" label="Composicion">
+
+            <field id="id_pieza" noshow="true" ></field>
+
+            <field id="idPadre" noshow="true">
+                <label>Id Producto al que pertenece</label>
+            </field>
+
+            <field id="articulo_hijo" esClave="true">
+                <label>Código</label>
+                <detalle>idPadre</detalle>
+            </field>
+
+            <field id="fecha" local="true" noshow="true">
+                <label>Fecha</label>
+                <tipo>date</tipo>
+                <valor>today</valor>
+            </field>
+
+            <field id="nom">
+                <expression>artdes</expression>
+                <label>Producto</label>
+            </field>
+
+            <field id="cantidad">
+                <label>Cantidad</label>
+            </field>
+	    <field id="bom_variacion_id">
+                <label>Arbol</label>
+		<condicion operador="=">0</condicion>
+            </field>
+
+            <field id="unicps" tabla="STKINSUM" deshabilitado="true">
+                <label modpos="nobr">Unidad</label>
+                <help>Unidad de Compra</help>
+                <tabla_ex id="FSMUNIDS">
+                    <field id="unicod"></field>
+                    <field id="uninom"></field>
+                </tabla_ex>
+            </field>
+
+            <field id="conversion" local="true"  preventLoop="true">
+                <label>Conv</label>
+                <if exp="valCps == valUso">
+                    <true>valUso</true>
+                    <false>(valCps == 1)?(cantidad * valUso):(cantidad / valCps)</false>
+                </if>
+                <tipo>decimal</tipo>
+                <format>%5.6f</format>
+            </field>
+
+            <field id="artuni" tabla="STKINSUM" deshabilitado="true">
+                <label modpos="nobr">Unid.</label>
+                <help>Unidad de Compra</help>
+                <tabla_ex id="FSMUNIDS">
+                    <field id="unicod"></field>
+                    <field id="uninom"></field>
+                </tabla_ex>
+            </field>
+
+            <field id="valCps" noshow="true">
+            <expression>valcps</expression>
+            </field>
+            
+            <field id="valUso" noshow="true" >
+            <expression>valuso</expression>
+            </field>
+
+            <field id="posicionfab_alarma_id" noZero="true" tabla="STKINSUM">
+              <label modpos="nobr">Inicio Fabri.</label>
+              <helper xml="posicionesfab_qry.xml" type="combo" dir="/produccion" empty="true">
+                <field id="linea_id" tabla="MOMENTO" oculto="true">
+                  <condicion operador="=">1</condicion>
+                </field>
+              </helper>
+            </field>
+
+            <field id="posicionfab_entrega_id" noZero="true" tabla="STKINSUM">
+              <label modpos="nobr">Momento Entrega</label>
+              <helper xml="posicionesfab_qry.xml" type="combo" dir="/produccion" empty="true">
+                <field id="linea_id" tabla="MOMENTO" oculto="true">
+                  <condicion operador="=">1</condicion>
+                </field>
+              </helper>
+            </field>
+
+            <field id="posicionfab_id" noZero="true" tabla="STKINSUM">
+              <label modpos="nobr">Destino Estac.</label>
+              <helper xml="posicionesfab_qry.xml" type="combo" dir="/produccion" empty="true">
+                <field id="linea_id" tabla="MOMENTO" oculto="true">
+                  <condicion operador="=">1</condicion>
+                </field>
+              </helper>
+            </field>
+
+        <field id="fotopath" local="true" noshow="true">
+            <if exp="true">
+                <true>'articulo_hijo/'</true>
+                <false>''</false>
+            </if>
+            <tipo>varchar</tipo>
+        </field>
+
+        <field id="foto" path="fotopath" download="false" watermark="articulo_hijo">
+            <expression>select ARTICULO_FOTO.foto from ARTICULO_FOTO where ARTICULO_FOTO.idArticulo = STKINSUM.artcod and ARTICULO_FOTO.foto != '' order by revision desc limit 1</expression> 
+            <label>Imagen</label>
+            <tipo >file</tipo>
+            <size>40</size>
+        </field>
+
+        <field id="tienehijos" noshow="true">
+            <expression>
+                @tienehijos := ifnull((select 1 from STKPIEZA s where s.idPadre = STKPIEZA.articulo_hijo limit 1), 0)
+            </expression>
+        </field>
+    </table>
+    <join>
+        <table id="STKINSUM" label="Articulos">
+            <field id="artcod">
+                <condicion operador="=">articulo_hijo</condicion>
+            </field>
+            <field id="siscod">
+                <condicion operador="=">'01'</condicion>
+            </field>
+        </table>
+    </join>
+
+</form>
+</histrix>

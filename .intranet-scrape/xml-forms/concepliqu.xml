@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm">
+	<title>CONCEPTOS DE CONVENIOS</title>
+	<obs></obs>
+	<form >
+		<table id="CONCEPLIQU" >
+		    <title>Conceptos de Convenios</title>
+			<field id="tipoLiq">
+				<label>Cod.</label>
+				<help>Tipo de Convenio</help>
+			</field>
+			<field id="nombre">
+				<label>Nombre</label>
+				<help>Nombre Tipo</help>
+			</field>			
+			<field id="descripcion">
+				<label>Descripcion</label>
+				<help>Descripcion Tipo Convenio</help>
+			</field>
+			<order>
+				<field id="tipoLiq"></field>
+			</order>
+		</table>
+	</form>	   
+</histrix> 

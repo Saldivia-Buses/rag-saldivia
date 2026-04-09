@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="chart">
+	<title>Combustible por día</title>
+	<obs></obs>
+	<form >
+		<table id="GEN_CALENDAR" >
+			<title>Velocidad x Fecha</title>
+
+			<grafico id="gps_combustible" >
+				<ancho>6000</ancho>
+				<alto>200</alto>
+				<tipo>L</tipo>
+				<etiquetas>gps_time</etiquetas>
+				<serie>gps_speed</serie>
+				<title>Velocidad x Fecha</title>
+			</grafico>		
+
+			<filters>
+				<field id="fecha">
+					<label>Desde</label>
+					<valor>today</valor>
+					<operador>&gt;=</operador>
+				</field>
+				<field id="fecha">
+					<label>Hasta</label>
+					<valor>today</valor>
+					<operador>&lt;=</operador>
+				</field>
+	            <field id="gps_time" deshabilitado="false">
+	              <label>HDesde</label>
+	              <operador>&gt;=</operador>
+	              <valor eval="true">date('H:i:s', time() - 60 * 60)</valor>
+	            </field>
+	            <field id="gps_time" deshabilitado="false">
+	              <label>HHasta</label>
+	              <operador>&lt;=</operador>
+	              <valor eval="true">date('H:i:s')</valor>
+	            </field>
+  			</filters>
+
+			<field id="mes" oculto="true">
+				<expression>month(GEN_CALENDAR.fecha)</expression>
+				<label>Mes</label>
+				<options>
+					<option valor="1">Ene</option>
+					<option valor="2">Feb</option>
+					<option valor="3">Mar</option>
+					<option valor="4">Abr</option>
+					<option valor="5">May</option>
+					<option valor="6">Jun</option>
+					<option valor="7">Jul</option>
+					<option valor="8">Ago</option>
+					<option valor="9">Sep</option>
+					<option valor="10">Oct</option>
+					<option valor="11">Nov</option>
+					<option valor="12">Dic</option>
+				</options>
+				<tipo>varchar</tipo>
+			</field>
+
+			<field id="fecha" oculto="true">
+			<!--	<condicion operador="&gt;="> DATE_FORMAT(date_sub(date(now()) , interval 1 year) ,'%Y-%m-01') and GEN_CALENDAR.fecha &lt;= now()</condicion>-->
+				<tipo>date</tipo>
+			</field>
+			
+			<field id="year" oculto="true">
+				<expression>year(GEN_CALENDAR.fecha)</expression>
+			</field>
+
+			<field id="gps_time" oculto="true">
+				<expression having="false">GPS_TACOEXTEND.gps_time</expression>
+				<tipo>time</tipo>
+			</field>
+
+			<field id="hora">
+				<expression>HOUR( gps_time ) </expression>
+			</field>
+			<field id="minutos">
+				<expression>MINUTE( gps_time ) </expression>
+			</field>
+		        <field id="segundos">
+				<expression>SECOND( gps_time ) </expression>
+			</field>
+
+
+
+			<field id="gps_in0" >
+				<expression>ROUND(((REPLACE(GPS_TACOEXTEND.gps_in0, ',', '.')) * 130), 0)</expression>
+				<label>Combustible</label>
+				<tipo>decimal</tipo>
+			</field>
+			<field id="gps_speed" >
+				<expression>GPS_TACOEXTEND.gps_speed</expression>
+				<label>Velocidad</label>
+				<!--<tipo>decimal</tipo>-->
+			</field>
+			<field id="gps_direction" >
+				<expression>GPS_TACOEXTEND.gps_direction</expression>
+				<label>Direccion</label>
+			</field>
+			<group>
+				
+			<!--	 <field id="hora" />
+				<field id="minutos" /> 
+			-->	
+				<fiel id="segundos"/>  
+			</group>
+
+	
+		</table>
+		<join tipo="inner">
+			<table id="GPS_TACOEXTEND">
+				<field id="gps_date">
+					<condicion operador="=">GEN_CALENDAR.fecha</condicion>
+				</field>
+			</table>
+		</join>	
+
+	</form>	   
+</histrix> 

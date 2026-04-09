@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" subtipo="vertical" exportasuma="true" imprime="false" llenoTemporal="false" llenoreferente="true" resume="true">
+    <title>Movimientos en Cuenta Corriente</title>
+    <form>
+        <table id="REG_MOVIMIENTOS" label="Movimientos en Cuenta Corriente">
+
+            <movimientos>
+                <relacion id="regmovimientos_cobro_ins.xml"/>
+                <relacion id="cajdetalle_reg_ins.xml"/>
+            </movimientos>
+
+            <validation>
+                <condition><![CDATA[modulocontable + 0 == 1 && ctbcuenta_reg_id + 0 == 0 && regcuenta_id + 0 != 0]]></condition>
+                <message>Debe asignar una cuenta contable para la cuenta del banco</message>
+            </validation>
+
+            <field id="id_regmovim" esClave="true" noshow="true">
+                <condicion operador="=">-1</condicion>
+            </field>
+
+            <fieldGroup noshow="true" valauto="true">
+                <field id="cajformapago_id" local="true" esClave="true">
+                    <detalle>cajformapago_id</detalle>
+                </field>
+                <field id="subsistema_forma_id" local="true" />
+                <field id="regconcepto_forma_id" local="true" />
+                <field id="moneda_id" local="true" />
+                <field id="fecha_movimiento" />
+                <field id="imputacion_concepto" >
+                    <label>IC</label>
+                </field>
+            </fieldGroup>
+
+            <field id="regcuenta_id" validRow="true">
+                <label>Cuenta</label>
+                <helper type="combo" xml="regcuenta_cmb.xml" dir="/ayudas" empty="true">
+                    <field id="subsistema_id">
+                        <condicion operador="=" valorde="subsistema_forma_id" />
+                    </field>
+                    <field id="moneda_id">
+                        <condicion operador="=" valorde="moneda_id" />
+                    </field>
+                    <field id="imputacion_concepto" local="true" valauto="true">
+                        <condicion operador="=" valorde="imputacion_concepto" />
+                    </field>
+                    <field id="ctbcuenta_reg_id">
+                        <expression>IFNULL((SELECT cuenta_id
+                                                FROM REG_CUENTA_IMPUTACION
+                                                WHERE REG_CUENTA_IMPUTACION.regcuenta_id = REG_CUENTA.id_regcuenta
+                                                  AND REG_CUENTA_IMPUTACION.doh = (CASE WHEN '[__imputacion_concepto__]' = 0 THEN 0 ELSE 1 END)
+                                                LIMIT 1), IFNULL(GEN_SUBSISTEMAS.cuenta_debe_id, 0))</expression>
+                        <detalle>ctbcuenta_reg_id</detalle>
+                    </field>
+                </helper>
+                <!--anulo esto, no existe chequera
+                <actualiza>
+                    <field destino="regcuenta_id" id="chequera"/>
+                </actualiza>-->
+            </field>
+
+            <field id="puesto_movimiento" _validRow="true" errorMessage="Debe Ingresar un Lote">
+                <label>Lote/Terminal</label>
+                <valor>0</valor>
+                <jseval>puesto_movimiento + 0 != 0</jseval>
+            </field>
+
+            <field id="nro_movimiento">
+                <label>Número</label>
+            </field>
+
+            <field id="cuota_movimiento">
+                <label>Cuotas</label>
+                <size>3</size>
+            </field>
+
+            <field id="vencimiento_movimiento">
+                <label>Fecha</label>
+                <valor>today</valor>
+                <tipo>date</tipo>
+            </field>
+
+            <field id="importe_movimiento" suma="true">
+                <label>Importe</label>
+                <tipo>numeric</tipo>
+                <size>20</size>
+                <detalle>pago_valor</detalle>
+            </field>
+
+            <!-- CONTABLE -->
+            <fieldGroup>
+                <if>if(strpos($_SESSION['properties']['modulos'],'contabilidad') != false) return true;</if>
+
+                <field id="modulocontable" local="true" noshow="true">
+                    <valor eval="true">(strpos($_SESSION['properties']['modulos'],'contabilidad') != false ? 1 : 0  )</valor>
+                </field>
+
+                <field id="ctbcuenta_reg_id" noshow="true" validRow="true">
+                    <label>Cuenta Contable</label>
+                </field>
+
+                <field id="validacuenta" noshow="true" local="true">
+                    <if exp="'ctbcuenta_reg_id' != ''">
+                        <true>'true'</true>
+                        <false>'false'</false>
+                    </if>
+                </field>
+
+                <field id="ctbcuenta_reg_doh" noshow="true">
+                    <if exp="true">
+                        <true>imputacion_concepto</true>
+                        <false>0</false>
+                    </if>
+                </field>
+            </fieldGroup>
+
+        </table>
+
+        <join>
+            <table id="GEN_SUBSISTEMAS">
+                <field id="id_subsistema">
+                    <condicion operador="=">'[__subsistema_forma_id__]'</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

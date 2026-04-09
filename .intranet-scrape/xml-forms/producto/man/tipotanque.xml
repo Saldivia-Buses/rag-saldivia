@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm">
+	<title>TIPOS DE TANQUE</title>
+	<obs></obs>
+	<form >
+		<table id="TIPOTANQUE" label="Tanque">
+
+			<field id="id_tanque" autoinc="true" esClave="true">
+				<label>Codigo</label>
+				<help>Codigo de Cortina</help>
+			</field>
+			<field id="tanque_descripcion" _editable="true">
+				<label>Cortina</label>
+				<help>Tipo de Cortina</help>
+				<size>50</size>
+			</field>
+    			<order>
+				<field id="id_tanque"></field>
+			</order>
+		</table>
+	</form>	   
+</histrix> 

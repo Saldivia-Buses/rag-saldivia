@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="grid" showCantidad="false" tooltip="false" deleteRow="false" imprime="false">
+    <title>Consulta Valores</title>
+    <obs/>
+    <form>
+        <table id="CAR_MOVIMIENTOS">
+
+            <fieldGroup id="DEBUG">
+                <field id="fecha_desde" noshow="true" local="true"/>
+                <field id="fecha_hasta" noshow="true" local="true"/>
+                <field id="cajpuesto_id" noshow="true" tabla="CAJ_MOVIMIENTOS" />
+                <field id="cajconcepto_id1" local="true" noshow="true"/>
+            </fieldGroup>
+
+            <field id="fecha_movimiento" noshow="true" tabla="CAR_MOVIMIENTOS">
+                <condicion operador="&gt;=">'[__fecha_desde__]' and (CAR_MOVIMIENTOS.fecha_movimiento &lt;= '[__fecha_hasta__]' or '[__fecha_hasta__]' = '')</condicion>
+            </field>
+			
+            <field id="cajconcepto_id" noshow="true" tabla="CAJ_MOVIMIENTOS">
+                <condicion operador="=">'[__cajconcepto_id1__]' or '[__cajconcepto_id1__]' = ''</condicion>
+            </field>
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			<!-- DETALLES DE MOVIMIENTOS -->
+			
+            <field id="carvalor_id" tdWidth="100">
+                <label>Nº Interno</label>
+                <format>%010d</format>
+                <size>100</size>
+            </field>
+
+            <field id="fecha_valor" tabla="CAR_VALORES">
+                <label>Fecha</label>
+                <tipo>date</tipo>
+            </field>
+			
+            <field id="acreditacion_valor" tabla="CAR_VALORES">
+                <label>Acreditacion</label>
+                <tipo>date</tipo>
+            </field>
+			
+            <field id="egreso_valor" tabla="CAR_VALORES">
+                <label>Egreso</label>
+                <tipo>date</tipo>
+            </field>			
+			
+            <field id="nro_valor" tabla="CAR_VALORES">
+                <label>Número</label>
+                <format>%012d</format>
+            </field>
+			
+            <field id="nombre_banco" tabla="CAR_BANCOS" tdWidth="200">
+                <label>Banco</label>
+                <size>200</size>
+            </field>
+			
+            <field id="nombre_plaza" tabla="CAR_PLAZAS" tdWidth="200">
+                <label>Plaza</label>
+                <size>200</size>
+            </field>
+			
+            <field id="saldo" suma="true" noZero="true">
+                <label>Saldo</label>
+                <expression>
+					(case when CAR_MOVIMIENTOS.tipo_movimiento = 0 then CAR_VALORES.importe_valor else 0 end) - 
+					(case when CAR_MOVIMIENTOS.tipo_movimiento = 1 then CAR_VALORES.importe_valor else 0 end)
+				</expression>
+                <tipo>numeric</tipo>
+            </field>
+			
+			<!--
+            <field id="debe" suma="true" noZero="true">
+                <label>Debe</label>
+                <expression>(case when CAR_MOVIMIENTOS.tipo_movimiento = 0 then CAR_VALORES.importe_valor else 0 end)</expression>
+                <tipo>numeric</tipo>
+            </field>
+			
+            <field id="haber" suma="true" noZero="true">
+                <label>Egreso</label>
+                <expression>(case when CAR_MOVIMIENTOS.tipo_movimiento = 1 then CAR_VALORES.importe_valor else 0 end)</expression>
+                <tipo>numeric</tipo>
+            </field>
+			-->
+			
+            <field id="referencia_movimiento" tdWidth="400">
+                <label>Referencia</label>
+				<expression>IF(CAR_MOVIMIENTOS.referencia_movimiento != '', CAR_MOVIMIENTOS.referencia_movimiento, CAR_VALORES.titular_valor)</expression>
+            </field>
+
+            <order>
+                <field id="fecha_movimiento" tabla="CAR_MOVIMIENTOS"/>
+            </order>
+			
+        </table>
+
+        <join>
+            <table id="CAR_VALORES">
+                <field id="id_carvalor">
+                    <condicion operador="=">CAR_MOVIMIENTOS.carvalor_id</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="CAR_BANCOS">
+                <field id="id_carbanco">
+                    <condicion operador="=">CAR_VALORES.carbanco_id</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="CAR_PLAZAS">
+                <field id="id_carplaza">
+                    <condicion operador="=">CAR_VALORES.carplaza_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join>
+            <table id="CAJ_MOVIMIENTOS">
+                <field id="id_cajmovimiento">
+                    <condicion operador="=">CAR_MOVIMIENTOS.cajmovimiento_id</condicion>
+                </field>
+            </table>
+        </join>
+        <join>
+            <table id="CAJ_CONCEPTOS">
+                <field id="id_cajconcepto">
+                    <condicion operador="=">CAJ_MOVIMIENTOS.cajconcepto_id</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix>    
+

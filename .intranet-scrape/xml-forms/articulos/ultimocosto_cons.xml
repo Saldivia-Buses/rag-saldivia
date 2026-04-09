@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta"  imprime="false" llenoTemporal="false" paginar="7">
+	<title>Última Compra del Insumo</title>
+	<obs></obs>
+	<form  >
+		<table id="STKINSPR" styleTbody="height:100px;">
+			<title>Última Compra del Insumo</title>
+			
+			<field id="siscod" oculto="true">
+				<label>siscod</label>
+			</field>
+			
+			<field id="artcod" deshabilitado="true" esclave="true" oculto="true">
+				<label>Art.</label>
+			</field>
+			<field id="ctacod" esclave="true">
+				<label>Prov.</label>
+			</field>
+			<field id="ctanom" deshabilitado="true" tabla="CCTCUENT">
+				<expression>CCTCUENT.ctanom</expression>
+				<label>Nombre</label>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="artcos" >
+				<label>Costo</label>
+			</field>
+			<field id="fecult"  esclae="true" tipoOrden="DESC">
+				<label>Ingreso</label>
+			</field>
+			<field id="fecfac" >
+				<label>Factura</label>
+			</field>			
+	<!--		<field id="movfec" >
+				<label>fec.Remito</label>
+			</field>			
+			<field id="movnro" >
+				<label>Pv.Rem</label>
+			</field>			
+			<field id="movnro" >
+				<label>Remito</label>
+			</field>			-->
+			
+			<order>
+				<field id="fecult" />
+			</order>
+		</table>
+		<join tipo="left">
+			<table id="CCTCUENT">
+			<field id="siscod" oculto="true">
+				<condicion operador="=">STKINSPR.siscod</condicion>
+			</field>
+			<field id="ctacod" oculto="true">
+				<condicion operador="=">STKINSPR.ctacod</condicion>
+			</field>
+				
+			</table>
+		</join>
+	</form>
+</histrix>

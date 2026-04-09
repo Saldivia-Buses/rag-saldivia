@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm">
+	<title>creo comp. interno</title>
+	<obs/>
+	<form >
+		<table id="CCTMOVIM" label="FACTURAS">
+			<field id="siscod" id_cab="siscli"/>
+			<field id="ctacod" id_cab="cta_des"></field>
+			<field id="ctanom" id_cab="cta_nomdes"></field>
+			<field id="movfec" id_cab="movfec"></field>
+			<field id="regfec" id_cab="hoy"></field>
+			<field id="concod" id_cab="concod2"></field>
+			<field id="movnpv" id_cab="movnpv"></field>
+			<field id="movnro" id_cab="movnro"></field>
+			<field id="movimp" id_temp="movimp"></field>
+			<field id="movcta" id_temp="movcta"></field>
+			<field id="succod" id_temp="succod"></field>
+			<field id="movvto" id_temp="movvto"></field>
+			<field id="movsal" id_temp="movsal"></field>
+			<field id="zoncod" id_temp="zoncod"></field>
+			<field id="movlet" id_temp="movlet"></field> 
+			<field id="opecla" id_cab="opecla"></field>
+			<field esNroMinuta="true" id="regmin"></field>
+		</table>
+	</form>
+</histrix>

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" subtipo="vertical" preloadData="false" logReference="logregcuenta">
+  <title>Relaciones</title>
+  <obs/>
+  <form>
+    <table id="REG_CUENTA_RELACIONES" label="Relaciones">
+      <field id="id_regcuentarelacion" autoinc="true" noshow="true" />
+      <field id="regcuenta_id" noshow="true" valauto="true" />
+      <field id="logregcuenta" noshow="true">
+        <expression>CONCAT('IdRegCuenta: ', REG_CUENTA_RELACIONES.regcuenta_id)</expression>
+      </field>
+      <field id="fecha_vigencia" valauto="true">
+        <label>Desde Fecha</label>
+        <help>Fecha</help>
+        <valor>today</valor>
+        <tipo>date</tipo>
+      </field>
+      <field id="tiporelacion_id" >
+        <label>Tipo Relación</label>
+        <helper type="combo" xml="tipos_relaciones_qry.xml" dir="/ayudas" />
+      </field>
+      <field id="regcuentarelacionada_id" noshow="true" />
+      <field id="subsistemarelacionada_id" noshow="true">
+        <label>ssrel</label>
+      </field>
+      <field id="nombre_cuenta" _noshow="true" tabla="REG_CUENTA" autocompletar="true">
+        <helper type="external" id="REG_CUENTA" dir="/ayudas" empty="true">
+          <field id="id_regcuenta" noshow="true">
+            <label>Número Cuenta</label>
+            <detalle>regcuentarelacionada_id</detalle>
+          </field>
+          <field id="descripcion">
+            <expression>CONCAT('(', id_regcuenta, ') ', nombre_cuenta)</expression>
+            <label>Nombre</label>
+          </field>
+          <field id="nombre_cuenta" noshow="true">
+           <!-- <detalle>nombre_cuenta</detalle> -->
+          </field>
+          <field id="subsistema_id" noshow="true">
+            <detalle>subsistemarelacionada_id</detalle>
+            <condicion operador="=">'02'</condicion>
+            <label>ss</label>
+          </field>
+          <field id="baja" oculto="true">
+            <condicion operador="!=">1</condicion>
+          </field>
+        </helper>
+        <label>Cuenta</label>
+        <help>Seleccione una cuenta</help>
+        <size>50</size>
+      </field>
+      <field id="observacion">
+        <label>Observación</label>
+        <tipo>varchar</tipo>
+        <size>100</size>
+      </field>
+    </table>
+    <join tipo="left">
+      <table id="REG_CUENTA">
+        <field id="id_regcuenta">
+          <condicion operador="=">REG_CUENTA_RELACIONES.regcuentarelacionada_id</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>

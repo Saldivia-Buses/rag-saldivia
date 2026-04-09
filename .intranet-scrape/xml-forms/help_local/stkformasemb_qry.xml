@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  Ayuda
+Tarea: Ayuda para la Tabla de Formas de embalaje de Articulos
+Autor: d!ego2k
+Fecha: 13/10/10
+*******************************************************************************
+-->
+    <histrix tipo="consulta">
+	<title>Formas de Embalaje</title>
+	 <obs></obs>
+		<form >
+		    <table id="STK_FORMAS_EMB" label="Formas de embalaje">
+				<field id="id_stkformaemb" esClave="true" noshow="true" />
+
+				<field id="descripcion_formaemb">
+					<label>Descripción</label>
+				</field>
+
+                <order>
+                  <field id="descripcion_formaemb" />
+                </order>
+		    </table>
+		</form>
+    </histrix>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" _autoprint="true" PDFfontSize="10.4">
+    <title>Valores por grupos</title>
+    <obs></obs>
+    <form >
+        <table id="RH_EVALUACION_GRUPOS" >
+            <title>Grupos</title>
+
+            <field id="id_rhevaluaciongrupo" noshow="true"/>
+
+
+            <field id="nombre_grupo">
+                <expression>CONCAT(id_rhevaluaciongrupo, ') ', nombre_grupo)</expression>
+                <label>Grupo</label>
+            </field>
+
+            <field id="descripcion" obj="evaluacion_valores.xml" local="true" showObjTabla="true">
+                <paring destino="rhevaluaciongrupo_id" >id_rhevaluaciongrupo</paring>
+                <label>Valores</label>
+            </field>
+
+        </table>
+    </form>
+</histrix> 

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="update">
+    <title>ORDENES DE PRODUCCION</title>
+    <obs></obs>
+    <form  >
+	        
+	<table id="MRP_DETALLE_REGISTRO" label="Registro de produccion" idCampoCond="id_detalle_reg">
+
+
+
+            <field id="id_detalle_reg" 		id_temp="id_detalle_reg"	esClave="true" />
+            <field id="mrpordendetalle_id" id_temp="id_mrpordendetalle" />
+            <field id="carro_horno" 	   id_temp="carro_horno" />
+
+            <field id="cantidad" id_temp="cantidad" />
+
+            <field id="ingreso"  id_temp="ingreso"  >
+        		<tipo>time</tipo>
+	        </field>
+            <field id="salida"   id_temp="salida"  >
+	    		<tipo>time</tipo>
+	        </field>
+
+            <field id="mrpseccion_id" id_temp="mrpseccion_id"  />
+
+
+            <field id="precamara_in"  id_temp="precamara_in"  />
+            <field id="precamara_out" id_temp="precamara_out"  />
+
+            <field id="camara_in"   id_temp="camara_in" />
+            <field id="camara_out"  id_temp="camara_out"  />
+            <field id="observacion" id_temp="observacion" />
+        </table>
+    </form>
+</histrix>

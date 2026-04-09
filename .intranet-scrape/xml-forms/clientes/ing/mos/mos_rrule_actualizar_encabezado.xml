@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="update" limit="0">
+	<title></title>
+	<obs></obs>
+	<form>
+		<table id="REG_MOVIMIENTOS"  idCampoCond="facturar">
+			<field id="id_regmovim" esClave="true" lastId="mos_rrule_movimientos_ins.xml" />
+			<field id="neto_movimiento">
+				<valor>(SELECT (case when '[__bonificaciones_movimiento__]' = 0 or '[__bonificaciones_movimiento__]' = '' or '[__bonificaciones_movimiento__]' IS NULL then SUM(REG_DETALLES.neto_detalle) else SUM(REG_DETALLES.neto_detalle - (REG_DETALLES.neto_detalle * ('[__bonificaciones_movimiento__]' / 100))) end) FROM REG_DETALLES WHERE regmovim_id = id_regmovim )</valor>
+				<tipo>integer</tipo>
+			</field>
+			<field id="bonificaciones_movimiento" id_temp="bonificaciones_movimiento" />
+			<field id="importe_iva">
+				<valor>(SELECT (case when '[__bonificaciones_movimiento__]' = 0 or '[__bonificaciones_movimiento__]' = '' or '[__bonificaciones_movimiento__]' IS NULL then SUM(REG_DETALLES.iva_detalle) else SUM(REG_DETALLES.iva_detalle - (REG_DETALLES.iva_detalle * ('[__bonificaciones_movimiento__]' / 100))) end) FROM REG_DETALLES WHERE regmovim_id = id_regmovim )</valor>
+				<tipo>integer</tipo>
+			</field>
+			<field id="importe_movimiento">
+				<valor> neto_movimiento + importe_iva </valor>
+				<tipo>integer</tipo>
+			</field>
+			<field id="saldo_movimiento">
+				<valor> neto_movimiento + importe_iva </valor>
+				<tipo>integer</tipo>
+			</field>
+		</table>
+	</form>
+</histrix>

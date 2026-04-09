@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="consulta" imprime="false" preloadData="false" width="35%">
+	<title>ABM CUENTA</title>
+	<obs></obs>
+	<form  detalle="cctconta_abmmini.xml">
+		<table id="REG_CUENTA" label="CONTACTOS" >
+			<filters>
+				<field id="nombre_cuenta" deshabilitado="false">
+					<label>Nombre</label>
+					<operador>like</operador>
+				</field>
+			</filters>
+			<field id="id_regcuenta" noshow="true" />
+			<field id="subsistema_id" noshow="true">
+				<label>Codigo Sistema</label>
+				<help></help>
+				<detalle>siscod</detalle>
+				<condicion operador="IN">('01', '02')</condicion>
+			</field>
+			<field id="baja" noshow="true">
+				<condicion operador="=">0</condicion>
+			</field>
+			<field id="nro_cuenta">
+				<label>Cuenta</label>
+				<help>Codigo de Cuenta</help>
+				<detalle>ctacod</detalle>
+			</field>
+			<field id="nombre_cuenta">
+				<expression>CONCAT(nombre_cuenta, ' (',nombre_fantasia, ')')</expression>
+				<label>Nombre</label>
+				<size>30</size>
+			</field>
+			<field id="cli_prov">
+				<label>Cliente/Prov</label>
+				<expression>GEN_SUBSISTEMAS.identificacion</expression>
+			</field>
+			<order>
+				<field id="nombre_cuenta" />
+			</order>
+		</table>
+		<join tipo="left">
+		    <table id="GEN_SUBSISTEMAS">
+			<field id="id_subsistema">
+			    <condicion operador="=">REG_CUENTA.subsistema_id</condicion>
+			</field>
+		    </table>
+		</join>
+	</form>
+</histrix>

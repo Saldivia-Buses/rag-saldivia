@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="grid" subtipo="vertical" inserta="false" borra="false" modifica="false" imprime="false" deleteRow="false" exportasuma="true" 
+llenoreferente="true" llenotemporal="true">
+  <title>Detalle</title>
+  <obs/>
+  <form>
+	<table id="REG_DETALLES" label="Resumen de Cuenta">
+
+		<fieldGroup>
+			<field id="id_regdetalle" noshow="true" />				
+
+			<field id="regmovim_id" noshow="true" />
+
+			<field id="aumento" local="true" noshow="true" />
+
+			<field id="codigo_detalle">
+				<label>Cod.Serv.</label>
+			</field>
+
+			<field id="nombre_articulo" tabla="STK_ARTICULOS">
+				<label>Servicio</label>
+			</field>
+
+			<field id="neto_detalle">
+				<label>Neto</label>
+			</field>
+
+			<field id="iva_detalle">
+				<label>IVA</label>
+			</field>
+
+			<field id="total_detalle">
+				<label>Total</label>
+			</field>
+
+			<field id="alicuota" noshow="true">
+				<expression>concat('1.', LPAD((alicuota_iva * 10),3,0))</expression>
+			</field>
+
+			<field id="importe_aumento" local="true" suma="true">
+				<label>Total C/Aumento</label>
+				<if exp="true">
+					<true>(total_detalle + ((total_detalle * aumento) / 100))</true>
+					<false>0</false>
+				</if>
+				<tipo>numeric</tipo>
+			</field>
+
+			<field id="total_aumento" local="true" suma="true">
+				<label>Total C/Aumento Red.</label>
+				<if exp="true">
+					<true>round((total_detalle + ((total_detalle * aumento) / 100)) / 50, 0)  * 50</true>
+					<false>0</false>
+				</if>
+				<tipo>numeric</tipo>
+			</field>
+
+
+		</fieldGroup>
+
+	</table>
+
+	<join>
+		<tabla id="STK_ARTICULOS">
+			<field id="id_stkarticulo">
+				<condicion operador="=">REG_DETALLES.codigo_detalle</condicion>
+			</field>
+		</tabla>
+	</join>
+
+   </form>
+</histrix>

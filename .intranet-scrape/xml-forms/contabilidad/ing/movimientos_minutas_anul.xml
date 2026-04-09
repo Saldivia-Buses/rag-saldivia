@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="fichaing" inserta="false" modifica="false" borra="false" confirma="ANULAR" transaccional="true" preFetch="true">
+	<title>Anulación de minutas</title>
+	<obs></obs>
+	<confirmacion>
+		<![CDATA[¿Desea confirmar la anulación?]]>
+	</confirmacion>
+	<eventos>
+		<event id="procesar">refresh</event>
+		<event id="procesar">close</event>
+	</eventos>
+	<form>
+		<table id="CTB_MOVIMIENTOS" label="Anulación de Minuta" >
+			<movimientos>
+				<relacion id="movimientos_minutas_anul_upd.xml" />
+			</movimientos>
+			<field id="id_movimiento" esClave="true" noshow="true"/>
+			<field id="ejercicio_id" noshow="true" />
+			<field id="nro_minuta" deshabilitado="true">
+				<label>Nro</label>
+			</field>
+			<field id="fecha_movimiento" deshabilitado="true">
+				<label>Fecha</label>
+				<tipo>date</tipo>
+			</field>
+			<field id="referencia" deshabilitado="true">
+				<label>Referencia</label>
+			</field>
+
+			<field id="zero" local="true" noshow="true">
+				<valor>0</valor>
+			</field>
+			<field id="detalles" local="true">
+			    <helper type="object" xml="minuta_detalle_qry.xml" dir="/contabilidad/qry">
+				<parameter source="id_movimiento" target="movimiento_id" />
+				<parameter source="ejercicio_id" target="ejercicio_id" />
+			    </helper>
+			    <label>Detalle</label>
+			</field>
+		</table>
+	</form>
+</histrix>

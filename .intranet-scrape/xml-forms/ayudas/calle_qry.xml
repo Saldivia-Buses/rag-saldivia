@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm-mini" subtipo="vertical">
+  <title>Calles</title>
+  <obs></obs>
+  <form >
+	<table id="GEN_CALLES" label="Calles">
+
+		<field id="id_calle" autoinc="true" noshow="true">
+			<label>Código</label>
+		</field>
+
+		<field id="nombre_calle">
+			<label>Nombre</label>
+		</field>
+	
+		<field id="localidad_id" noshow="true">
+			<label>Localidad</label>
+		</field>
+		<order>
+			<field id="nombre_calle"/>
+		</order>
+
+    </table>
+  </form>
+</histrix>  

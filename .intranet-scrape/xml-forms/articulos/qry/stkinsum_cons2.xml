@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<abm tipo="consulta" borra="no" inserta="no">
+	<titulo>Insumos</titulo>
+	<obs></obs>
+	<consulta detalle="stkinmov_art.xml" dir="/stock_local">
+		<tabla id="STKINSUM" >
+			<titulo>Insumos</titulo>
+			
+			<campo id="siscod" oculto="true">
+				<label>siscod</label>
+				<detalle>artcod</detalle>
+
+			</campo>
+			
+			<campo id="artcod" >
+		
+				<label>Cod.</label>
+				<detalle>artcod</detalle>
+				
+			</campo>
+			<campo id="artdes" deshabilitado="true">
+				<label>Articulo</label>
+				<help>Descripcion de Articulo. (ENTER = Retorna a ingreso de codigo).
+					</help>
+			</campo>
+    			
+			<campo id="artctb">
+    			    <label>Cuenta Contable</label>
+				<help>Codigo Cuenta Contable </help>
+				<tabla_ex id="CTBCUENT">
+					<clave>ctbcod</clave>
+					<campo id="ctbnom"></campo>
+				</tabla_ex>
+			</campo>
+			<filtros>
+				<campo id="artcod">
+					<operador>=</operador>
+					<label>Desde Insumo</label>
+					<valor>0</valor>
+				</campo>
+			</filtros>
+						
+			
+		</tabla>
+	</consulta>
+</abm>

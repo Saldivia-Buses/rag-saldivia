@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="chart" limit="10">
+    <title>Cantidad</title>
+    <obs/>
+    <form>
+        <table id="PROD_CONTROL_MOVIM">
+
+            <grafico id="internos" pareto="true">
+                <ancho>400</ancho>
+                <tipo>C</tipo>
+                <title>Observaciones Herreria</title>
+                <etiquetas>nombre_control</etiquetas>
+                <serie>cantidad</serie>
+            </grafico>
+
+            <filters>
+                <field id="fecha_control">
+                    <label>Desde</label>
+<!--                    <valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m" ,strtotime('-1 month')) , 1, date("Y") ))</valor>-->
+<valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m") , date("d"), (date("Y") - 1)))</valor>
+                    <operador>&gt;=</operador>
+                </field>
+                <field id="fecha_control">
+                    <label>Hasta</label>
+<!--                    <valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m" ,strtotime('-0 month')) , 1, date("Y") ) - 1)</valor>-->
+<valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m") , date("d"), date("Y")))</valor>
+                    <operador>&lt;=</operador>
+                </field>
+            </filters>
+
+            <field id="id_prodcontrol" noshow="true" tabla="PROD_CONTROLES" />
+
+            <field id="fecha_control" noshow="true">
+                <tipo>date</tipo>
+            </field>
+
+            <field id="nombre_control" tabla="PROD_CONTROLES">
+                <label>Nombre Control</label>
+            </field>
+
+            <field id="seccion_id" tabla="MOMENTO" noshow="true">
+                <condicion operador="=">1</condicion>
+            </field>
+
+            <field id="no_conforme" noshow="true">
+                <condicion operador="=">1</condicion>
+            </field>
+
+            <field id="cantidad" tipoOrden="DESC">
+                <expression><![CDATA[COUNT(*)]]></expression>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <group>
+                <field id="id_prodcontrol" />
+            </group>
+
+            <order>
+                <field id="cantidad" tipoOrden="DESC" />
+            </order>
+
+        </table>
+
+        <join tipo="left">
+            <table id="PROD_CONTROLES">
+                <field id="id_prodcontrol">
+                    <condicion operador="=">PROD_CONTROL_MOVIM.prodcontrol_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="MOMENTO">
+                <field id="idMomento">
+                    <condicion operador="=">PROD_CONTROLES.seccion_id</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

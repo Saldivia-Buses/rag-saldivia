@@ -1,0 +1,241 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+	<histrix tipo="consulta">
+		<title>IVA VENTAS</title>
+		<obs></obs>
+		<form >
+			<table id="IVAVENTAS" label="IVA VENTAS">
+		   <grafico id="ventas" >
+			   <ancho>500</ancho>
+			   <tipo>P</tipo>
+                                                                                                                                                              
+			   
+			   <etiquetas>prvcod</etiquetas> 
+  			   <datos>gr</datos>
+			   <title>Ventas</title>
+			   <subtitulo>Por Provincia</subtitulo>
+		   </grafico>					
+<!--				<field id="fecreg" noshow="true">
+					<label>Registrado</label>
+					<help>
+					</help>
+				</field>		-->
+<!--				<field id="fecreg">
+					<label>Fecha</label>
+					<help>
+					</help>
+				</field>	-->			
+				<field id="feciva" noshow="true">
+					<label>Fec.</label>
+					<help>
+					</help>
+				</field>
+
+				
+				<!--                  <field id="comcod">
+				<label>Cod.Comp.D.G.I.. </label>
+				<help>TIPO DE COMPROBANTE SEGUN D.G.I. (RG 3419 - ANEXO VI ). </help>
+				</field>
+				-->
+				
+<!--
+				
+				<field id="conabv" tabla="CCTCONCE">
+					<label>Conc</label>
+					<tipo>varchar</tipo>
+				</field>
+
+				<field id="codlet">
+					<label>L</label>
+					<help>
+					</help>
+				</field>
+				
+				<field id="nronpv">
+					<label>Npv</label>
+					<help>
+					</help>
+					<format>%04d</format>
+				</field>
+				<field id="regmin" tabla="CCTMOVIM" noshow="true">
+					<label>regmin</label>
+					<tipo>integer</tipo>
+					<valor>0</valor>
+				</field>				
+				<field id="nrocom" linkint="ctbregis2.xml">
+					<label>Numero</label>
+					<help>
+					</help>
+					<format>%010d</format>
+					<paring destino="regmin">regmin</paring>
+					<paring destino="regfec">fecreg</paring>
+					
+				</field>
+				-->
+				<field id="ctacod" oculto="true">
+					<label>Cuenta</label>
+					<help>
+					</help>
+				</field>
+
+
+				<field id="prvcod" tabla="CCTCUENT">
+					<label>Provincia</label>
+					<tabla_ex id="FSMPROVS">
+						<field id="prvcod"></field>
+						<field id="prvnom"></field>
+					</tabla_ex>		
+					<tipo>varchar</tipo>
+				</field>
+<!--				<field id="ivacod">
+					<label>Categoria I.V.A. </label>
+					<help>
+					</help>
+					<tabla_ex id="FSMCTIVA">
+						<field id="ivacod"></field>
+						<field id="ivanom"></field>
+					</tabla_ex>
+				</field>-->
+
+<!--				<field id="rnicom">
+					<label>R.N.I.</label>
+				</field>
+-->
+
+
+		<!--		<field id="gravado" suma="true">
+			      <expression>impgra * (case when conimp = 1 then 1 else -1 end)</expression>
+					<label>Gravado</label>
+				</field>					-->
+<!--  				<field id="impcod" tabla="IVAIMPORTES">
+					<label>Impuesto</label>
+					<tabla_ex id="IVAIMPUESTOS">
+						<field id="impcod"></field>
+						<field id="impnom"></field>
+					</tabla_ex>
+					  <tipo>varchar</tipo>
+				</field> -->
+<!--  				<field id="impali" tabla="IVAIMPORTES">
+					<label>Alicuota</label>
+				</field> 
+  				<field id="impimp" tabla="IVAIMPORTES">
+					<label>Importe</label>
+				</field>
+	-->
+<!--				<field id="Importe"  suma="true">
+			      <expression>impimp * (case when conimp = 1 then 1 else -1 end)</expression>
+					<label>Importe</label>
+				</field>				-->
+				<!--<field id="execom" norepeat="true">
+					<label>Exento</label>
+				</field>
+
+				<field id="nogcom" norepeat="true">
+					<label>No Grav.</label>
+				</field> -->
+	<!--			
+				<field id="totcom" norepeat="true" suma="true">
+					<label>Total</label>
+				</field>				
+				-->
+				<field id="Total"  suma="true">
+			      <expression>sum(totcom * (case when conimp = 1 then 1 else -1 end))</expression>
+					<label>Total</label>
+				</field>
+				<field id="gr" >
+			      <expression>sum(totcom * (case when conimp = 1 then 1 else -1 end))</expression>
+					<label>Grafico</label>
+					<tipo>grafico</tipo>
+				</field>							
+				<filters>
+
+					<field id="feciva">
+						<operador>>=</operador>
+						<label>Desde Fecha</label>
+						<valor>today</valor>
+					</field>
+					<field id="feciva">
+						<operador>&lt;=</operador>
+						<label>Hasta Fecha</label>
+						<valor>today</valor>
+						
+					</field> 
+				</filters>
+				<group>
+					<field id="prvcod" tabla="CCTCUENT"></field>
+
+				</group>
+
+			</table>
+<!--			
+		<join tipo="right ">
+
+			<table id="IVAIMPORTES">
+				<field id="tipoiva" oculto="true">
+					<condicion operador="=">2</condicion>
+				</field>
+				<field id="codcom" >
+					<condicion operador="=">IVAVENTAS.codcom</condicion>
+				</field>
+				<field id="codlet" >
+					<condicion operador="=">IVAVENTAS.codlet</condicion>
+				</field>
+				<field id="nronpv" >
+					<condicion operador="=">IVAVENTAS.nronpv</condicion>
+				</field>
+				<field id="nrocom" >
+					<condicion operador="=">IVAVENTAS.nrocom</condicion>
+				</field>
+				<field id="ctacod" >
+					<condicion operador="=">IVAVENTAS.ctacod</condicion>
+				</field>
+				
+			</table>
+		</join>			
+		<join tipo="left">
+
+			<table id="CCTMOVIM">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">'02'</condicion>
+				</field>				
+				<field id="concod" >
+					<condicion operador="=">IVAVENTAS.codcom</condicion>
+				</field>
+				<field id="ctacod" >
+					<condicion operador="=">IVAVENTAS.ctacod</condicion>
+				</field>
+				<field id="movnro" >
+					<condicion operador="=">IVAVENTAS.nrocom</condicion>
+				</field>
+				<field id="movnpv" >
+					<condicion operador="=">IVAVENTAS.nronpv</condicion>
+				</field>
+
+			</table>
+		</join>		-->
+			
+		<join tipo="left">
+
+			<table id="CCTCUENT">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">'02'</condicion>
+				</field>				
+				<field id="ctacod" >
+					<condicion operador="=">IVAVENTAS.ctacod</condicion>
+				</field>
+			</table>
+		</join>						
+		<join tipo="left">
+
+			<table id="CCTCONCE">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">'02'</condicion>
+				</field>				
+				<field id="concod" >
+					<condicion operador="=">IVAVENTAS.codcom</condicion>
+				</field>
+			</table>
+		</join>			
+	
+						
+		</form>
+	</histrix>

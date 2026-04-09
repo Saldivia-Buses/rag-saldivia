@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<abm tipo="consulta"   >
+	<titulo>PRECIOS POR MODELO</titulo>
+	<obs/>
+	<consulta>
+		<tabla id="PRECIOMODELO" >
+			<titulo></titulo>
+			<campo id="asientos">
+				<expresion>asientos + acompañante</expresion>
+				<label colstyle="width:50px;" style="color:blue; font-size:16px;">Asi</label>
+				<label>Cantidad de Asientos</label>
+			</campo>
+			<campo id="desc">
+				<label>Descripcion</label>
+				<expresion>CONCAT(asientos + acompañante, ' Asientos, ', TIPOSERVICIO.servdes, (case when banbar then ' B/B ' else ' ---- ' end), (case when bastidor then ' Con Bastidor ' else ' Con Bastidor ' end), 'Largo:', largo, ' Bodega: ',bodega ,' $ ',precio)</expresion>
+			</campo>
+			
+			<campo id="idLista" oculto="true">
+				<label modpos="nobr">Lista</label>
+				<condicion operador="=">(select max(LISTAPRECIOMODELO.idLista) from LISTAPRECIOMODELO)</condicion>
+			</campo>			
+			<campo id="nrocar" noshow="true">
+			</campo>		
+			<campo id="migrupo" oculto="true">
+				<expresion having="false">idGrupo</expresion>
+			</campo>			
+
+			<campo id="precio">
+				<label modpos="nobr" style="color:green; font-size:16px;">Concesionario</label>
+				<help>Precio</help>
+				<tipo>numeric</tipo>
+			</campo>
+
+			<campo id="precio2">
+				<expresion>ROUND(max(precio * (1 + margen)), 2)</expresion>
+				<label modpos="nobr" style="color:red; font-size:16px;">Venta</label>
+				<help>Precio</help>
+			</campo> 
+			<campo id="ref" >
+				<label>ref</label>
+				<expresion>CONCAT(asientos + acompañante, ' Asientos, ', TIPOSERVICIO.servdes, (case when banbar then ' B/B ' else ' ---- ' end), (case when bastidor then ' Con Bastidor ' else ' Con Bastidor ' end), 'Largo:', largo, ' Bodega: ',bodega )</expresion>
+			</campo>		
+			<campo id="id_Precio" noshow="true">
+				<expresion>idPrecio</expresion>
+			</campo>
+			<group>
+				<campo id="asientos" tabla="PRECIOMODELO"></campo>
+				<campo id="banbar" tabla="PRECIOMODELO"></campo>				
+				<campo id="bastidor" tabla="PRECIOMODELO"></campo>				
+			</group> 
+		</tabla>
+		<join>
+			<table id="TIPOSERVICIO">
+				<campo id="tipserv">
+					<condicion operador="=">PRECIOMODELO.tipserv</condicion>
+				</campo>
+			</table>
+		</join>
+	</consulta>
+</abm>

@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+    <title>Fabricado/Roturas por Producto</title>
+    <obs></obs>
+    <form>
+        <table id="MRP_DETALLE_REGISTRO" label="Fabricado/Roturas por Producto">
+
+            <filters>
+                <field id="fecha_desde">
+                    <label>Desde Fecha</label>
+                    <help>Fecha de Orden de Carga</help>
+                    <operador>=</operador>
+                    <valor eval="true">date("d/m/Y", mktime(0, 0, 0, date("m"), 1, date("Y")))</valor>
+                </field>
+                <field id="fecha_hasta">
+                    <label modpos="nobr">Hasta Fecha</label>
+                    <help>Fecha de Orden de Carga</help>
+                    <operador>=</operador>
+                    <valor>today</valor>
+                </field>
+                <field id="stkrubro_id">
+                    <label modpos="nobr">Rubro</label>
+                    <operador>=</operador>
+                    <valor>2</valor>
+                </field>
+                <field id="id" deshabilitado="false">
+                    <label modpos="nobr">Cod.Art.</label>
+                    <operador>like</operador>
+                </field>
+                <field id="producto" deshabilitado="false">
+                    <label modpos="nobr">Articulo</label>
+                    <operador>like</operador>
+                </field>
+            </filters>
+
+            <field id="fecha_desde" local="true" _noshow="true">
+                <label>Desde</label>
+                <tipo>date</tipo>
+            </field>
+
+            <field id="fecha_hasta" local="true" _noshow="true">
+                <label>Hasta</label>
+                <tipo>date</tipo>
+            </field>
+
+            <field id="fecha_ingreso" tabla="MRP_DETALLE_REGISTRO" noshow="true">
+                <condicion operador="&gt;=">STR_TO_DATE('[__fecha_desde__]', '%d/%m/%Y') AND MRP_DETALLE_REGISTRO.fecha_ingreso &lt;= STR_TO_DATE('[__fecha_hasta__]', '%d/%m/%Y')</condicion>
+            </field>
+
+            <field id="id">
+                <label>Codigo</label>
+                <expresion having="false">concat(left(id_stkarticulo, 1),'/', substr(id_stkarticulo, 2,4),'-' , substr(id_stkarticulo, 6,4) )</expresion>
+            </field>
+
+            <field id="cod_producto" noshow="true">
+                <label>Codigo</label>
+                <expresion having="false">concat(left(id_stkarticulo, 1),'/', substr(id_stkarticulo, 2,4),'-' , substr(id_stkarticulo, 6,4),' ',nombre_articulo)</expresion>
+            </field>
+
+            <field id="producto" export="false">
+                <label>Producto</label>
+                <expresion>nombre_articulo</expresion>
+            </field>
+
+             <field id="stkrubro_id"  tabla="STK_ARTICULOS" multiple="true">
+                <label modpos="nobr">Rubro</label>
+                <helper type="combo" xml="stkrubro_qry.xml" dir="/ayudas" empty="true" />
+            </field>
+
+            <field id="fabricado" suma="true">
+                <label>Fabricado</label>
+                <expression >SUM(CASE WHEN MRP_DETALLE_REGISTRO.mrpconcepto_id = 1 AND MRP_DETALLE_REGISTRO.mrpseccion_id = 4 THEN MRP_DETALLE_REGISTRO.cantidad ELSE 0 END)</expression>
+                <condicion operador="!=">0</condicion>
+                <tipo>integer</tipo>
+            </field>
+
+            <field id="roturas" suma="true">
+                <label>Rot/Rech</label>
+                <expression>SUM(CASE WHEN MRP_DETALLE_REGISTRO.mrpconcepto_id != 1 THEN MRP_DETALLE_REGISTRO.cantidad ELSE 0 END)</expression>
+                <condicion operador="!=">0</condicion>
+                <tipo>integer</tipo>
+            </field>
+
+            <field id="porcentaje" tipoOrden="DESC" suma="true">
+                <label>Porcentaje</label>
+                <expression>ROUND(((SUM(CASE WHEN MRP_DETALLE_REGISTRO.mrpconcepto_id != 1 THEN MRP_DETALLE_REGISTRO.cantidad ELSE 0 END)) / (SUM(CASE WHEN MRP_DETALLE_REGISTRO.mrpseccion_id = 4 THEN MRP_DETALLE_REGISTRO.cantidad ELSE 0 END))) * 100, 2)</expression>
+                <tipo>numeric</tipo>
+            </field>
+            <field id="porc" local="true" max="100">
+                <if exp="true">
+                    <true>porcentaje</true>
+                    <false></false>
+                </if>
+                <tipo>meter</tipo>
+            </field>
+
+            <group>
+                <field id="id" />
+            </group>
+
+            <order>
+                <field id="porcentaje" tipoOrden="DESC" />
+            </order>
+
+        </table>
+
+        <join tipo="left">
+            <table id="MRP_ORDEN_DETALLE">
+                <field id="id_mrpordendetalle">
+                    <condicion operador="=">mrpordendetalle_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="MRP_ORDEN_PRODUCCION">
+                <field id="id_mrporden">
+                    <condicion operador="=">mrporden_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="REG_CUENTA">
+                <field id="id_regcuenta">
+                    <condicion operador="=">regcuenta_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="MRP_PRODUCT_PATH">
+                <field id="id_productpath">
+                    <condicion operador="=">MRP_DETALLE_REGISTRO.productpath_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="MRP_SECCION">
+                <field id="id_mrpseccion">
+                    <condicion operador="=">MRP_PRODUCT_PATH.mrpseccion_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="MRP_CONCEPTOS">
+                <field id="id_mrpconcepto">
+                    <condicion operador="=">mrpconcepto_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="inner">
+            <table id="STK_ARTICULOS">
+                <field id="id_stkarticulo">
+                    <condicion  operador="=">MRP_ORDEN_DETALLE.stkarticulo_id</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix>

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="abm">
+       <title>Mov CHEQUES</title>
+        <obs></obs>
+               <form >
+					<table id="CARCHEHI" label="CHEQUES">
+						<field id="siscod" id_temp="siscar">
+						</field>
+						<field id="carint" id_temp="carint">
+						</field>
+						<field id="carfec" id_temp="carfec">
+						</field>
+						<field id="ctacod" id_temp="ctacod">
+						</field>
+						<field id="carimp" id_temp="carimp">
+						</field>
+						<field id="cartip" id_temp="cartip">
+						</field>
+						<field id="caralt" id_temp="caralt">
+						</field>
+						<field id="carnro" id_temp="carnro">
+						</field>
+						<field id="ccbcod" id_temp="ccbcod">
+						</field>
+						<field id="carbco" id_temp="carbco">
+						</field>
+						<field id="carpla" id_temp="carpla">
+						</field>
+						<field id="carobv" id_temp="carobv">
+						</field>
+						<field id="movnpv" id_temp="movnpv">
+						</field>
+						<field id="movnro" id_temp="movnro">
+						</field>
+						<field id="concod" id_temp="concod">
+						</field>
+						<field id="carrec" id_temp="carrec">
+						</field>
+						<field id="bcsnro" id_temp="bcsnro">
+						</field>
+						<field id="regmin" id_temp="regmin">
+						</field>
+						<field id="opecla" id_temp="opecla">
+						</field>
+						<field id="caracr" id_temp="caracr">
+						</field>
+						<field id="cardes" id_temp="cardes">
+						</field>
+						<field id="succod" id_temp="succod">
+						</field>
+						<field id="carmar" id_temp="carmar">
+						</field>
+						<field id="carcui" id_temp="carcui">
+						</field>
+
+						<field id="caring" id_cab="fecha">
+						</field>
+						<field id="carccb" id_cab="bcscta">
+						</field>
+						<field id="procod" id_cab="ctacod">
+						</field>
+
+						
+					</table>
+               </form>
+        </histrix>

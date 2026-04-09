@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="update" >
+	<title>Actualizacion Movimientos</title>
+	<obs></obs>
+	<consulta>
+		<table id="CTB_MOVIMIENTOS" idCampoCond="actualizar">
+			<field id="id_movimiento" esClave="true" lastId="movimientos_minutas_ins.xml"/>
+			<field id="fecha_modificacion" id_temp="fecha_modificacion" />
+			<field id="fecha_movimiento" id_temp="fecha_movimiento" />
+			<field id="usuario_modificacion" id_temp="usuario_modificacion" />
+			<field id="referencia" id_temp="referencia_minuta" />
+			<field id="nro_minuta" id_temp="numero_minuta" />
+		</table>
+	</consulta>
+</histrix>

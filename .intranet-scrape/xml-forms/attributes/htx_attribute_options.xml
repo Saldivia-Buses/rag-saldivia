@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm-mini" subtipo="vertical">
+<title>Atributos</title>
+<obs></obs>
+<form >
+    <table id="HTX_ATTRIBUTE_OPTIONS">
+        <title>Options</title>
+        <field id="id_attriboption" autoinc="true" noshow="true">
+        </field>
+
+        <field id="attribute_id" oculto="true">
+        </field>
+
+        <field id="option_value">
+            <label >Valor de la opción</label>
+            <help>posible valor de la opción</help>
+            <size>10</size>
+        </field>
+        
+        <field id="option_name">
+            <label _modpos="nobr">Descripción de la opción</label>
+            <help>Descripción de la opción</help>
+            <size>40</size>
+        </field>
+
+    </table>
+</form>	   
+</histrix>

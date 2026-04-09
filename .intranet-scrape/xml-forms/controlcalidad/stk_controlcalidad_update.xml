@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="update" >
+	<titulo>Control Calidad</titulo>
+	<obs/>
+	<form>
+		<table id="STKINSPEC" idCampoCond="update">
+
+			<field id="id_norma_inspec"   id_temp="id_norma_inspec" esClave="true"/>	
+
+			<field id="id_recepcion_inspec">
+				<valor>0</valor>
+				<tipo>integer</tipo>
+			</field>
+<!--
+			<field id="ocpnro_inspec">
+				<valor>0</valor>
+				<tipo>integer</tipo>
+			</field>
+-->
+		</table>
+	</form>
+</histrix>

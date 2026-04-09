@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+   <histrix tipo="consulta">
+       <title>Cuenta Corriente</title>
+        <obs></obs>
+	<form>
+		<table id="CPSMOVIM" label="Movimientos">
+				
+    		<field id="ocpnro" noshow="true">
+			<label>Numero</label>
+			<help> Numero Comprobante</help>
+			<format>%09d</format>							
+		</field>
+
+		<field id="artcod">
+		    <label>Codigo</label>
+		</field>
+
+		<field id="detalle">
+		    <label>Detalle</label>
+		<tipo>varchar</tipo>
+
+		</field>
+
+      <field id="movcps">
+        <label>Pedido</label>
+        <help>Pedido (expresado en la unidad de compra)</help>
+      </field>
+
+      <field id="pencps" tabla="CPSMOVIM" >
+        <label>Pend.cps</label>
+        <help>Pendiente (expresado en la unidad de compra)</help>
+        <tipo>decimal</tipo>
+      </field>	
+      
+		</table>
+	</form>
+</histrix>

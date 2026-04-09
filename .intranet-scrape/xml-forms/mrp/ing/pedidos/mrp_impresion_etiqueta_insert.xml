@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="nosql" xmlImpresion="/mrp/qry/mrpordenproduccion_etiqueta_print.xml">
+    <title>Impresion</title>
+    <obs/>
+    <form>
+        <tabla id="MRP_ORDEN_PRODUCCION" idCampoCond="grabar">
+
+            <field id="xmlImpresion" id_temp="impresion_etiqueta" local="true">
+                <setvar>xmlImpresion</setvar>
+            </field>
+
+            <field id="id_mrporden" lastId="mrp_orden_insert.xml">
+                <detalle>id_mrporden</detalle>
+            </field>
+
+        </tabla>
+    </form>
+</histrix>

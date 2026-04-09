@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" subtipo="vertical" preloadData="false" >
+  <title>Descuentos por Artículo</title>
+  <obs/>
+  <form>
+    <table id="STK_DESCUENTOSARTCLI" label="Descuentos por Artículo">
+
+      <field id="id_descuentoartcli" autoinc="true" noshow="true" />
+      <field id="subsistema_id" local="true" noshow="true" />
+           <!--
+      <field id="regcuenta_id"  noshow="true" />
+      <field id="stkarticulo_id">
+        <helper type="combo" xml="stkarticulo_autocomplete_qry.xml" dir="/ayudas" empty="true" />           
+	</field>
+	-->
+      <field id="regcuenta_id"  oculto="true">
+<!--        <helper type="combo" xml="regcuenta_cmb.xml" dir="/ayudas" empty="true"/>  -->
+        <label>Clientes</label>
+      </field>
+
+      <field id="stkarticulo_id">
+       <!--  <helper type="external" xml="stkarticulo_mos.xml" dir="/ayudas" />           -->
+         <helper type="external" xml="stkarticulo_qry2.xml" dir="/ayudas" empty="true"/> 
+        <label>Producto</label>
+        <tipo>varchar</tipo>
+      </field>
+
+      <field id="porcentaje_desc">
+        <label>Descuento 1</label>
+        <tipo>numeric</tipo>
+      </field>
+      <field id="porcentaje_desc1">
+        <label>Descuento 2</label>
+        <tipo>numeric</tipo>
+      </field>
+    </table>
+  </form>
+</histrix>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="grid">
+  <title>Valores de Terceros a borrar</title>
+  <obs/>
+  <form>
+
+    <table id="CAR_MOVIMIENTOS">
+
+      <movimientos>
+        <relacion id="del_carvalores.xml"/>
+        <relacion id="up_carvalores.xml"/>
+      </movimientos>
+
+      <field id="cajmovimiento_id" esClave="true" noshow="true">
+        <condicion operador="=">-1</condicion>
+      </field>
+
+      <field id="carvalor_id" esClave="true" autoinc="true"/>
+
+      <field id="debeactualizar">
+        <expression>( case when tipo_movimiento =  1 then 'true' else 'false' end)</expression>
+      </field>
+
+      <field id="debeborrar">
+        <expression>( case when tipo_movimiento =  0 then 'true' else 'false' end)</expression>
+      </field>
+
+    </table>
+
+  </form>
+
+</histrix>
+

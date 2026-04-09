@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="abm" >
+    <title>DETALLE</title>
+    <obs></obs>
+    <form  >
+        <table id="STK_ENVIO_DETALLES" label="DETALLE">
+	    <field id="id_envdetalle" />
+	    <field id="stkenvio_id" />
+	    <field id="cpsmovim_id" />
+	    <field id="cantidad" />
+	</table>
+    </form>
+</histrix>

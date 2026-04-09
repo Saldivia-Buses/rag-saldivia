@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="crud" path="fotos/accesorios" inserta="false" borra="false">
+    <title>Accesorios por coche</title>
+    <obs/>
+    <form >
+        <table id="ACCESORIOS_COCHE" label="Accesorios Estandar" style__Tbody="height:100px;overflow-x:hidden;">
+	<fieldGroup deshabilitado="true">
+            <field id="id_accesorio" noshow="true" esClave="true" autoinc="true">
+            </field>
+            <field id="cotizacion_id" _culto="true" _linkmodal="true" noZero="true">
+        	<label>Cotización</label>
+	        <helper type="link" xml="cotizacion_imp_acc.xml" dir="cotizacion" >
+    		    <parameter source="cotizacion_id" target="idCotiz"/>
+	    	    <parameter source="nrocha" target="nrofab_id"/>
+<!--    		    <parameter source="nrocha" target="nrofab"/> -->
+<!--	    	    <parameter source="ctacod" target="ctacod"/>
+    		    <parameter source="ctafan" target="ctanom"/> -->
+        	    <parameter source="ficha_id" target="ficha_id"/>
+	        </helper> 
+            
+            </field>
+            <field id="ficha_id" oculto="true" >
+            </field>
+
+            <field id="fecha" noshow="true">
+                <label>fecha</label>
+                <tipo>date</tipo>
+                <valor>today</valor>
+            </field>
+            <field id="artcod" deshabilitado="true" >
+                <label>Cod.</label>
+                <valor default="true">0</valor>
+            </field>
+
+            <field id="artdes" autocompletar="true" >
+
+                <label>Accesorios</label>
+                <size>70</size>
+            </field>
+            <field id="fotopath" local="true" noshow="true">
+                <if exp="true">
+                    <true>'artcod/'</true>
+                    <false>''</false>
+                </if>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="foto" path="fotopath" download="true">
+                <expression>select ARTICULO_FOTO.foto from ARTICULO_FOTO where ARTICULO_FOTO.idArticulo = STKINSUM.artcod and ARTICULO_FOTO.foto != '' order by revision desc limit 1</expression> 
+                <label>Imagen</label>
+                <tipo >file</tipo>
+                <size>40</size>
+            </field>
+
+            <field id="cantidad" noZero="true" noEmpty="true">
+                <label>Cant</label>
+                <tipo>integer</tipo>
+            </field>
+            <field id="precio_unitario"  noZero="true">
+                <label>P.Unit</label>
+                <tipo>numeric</tipo>
+            </field>
+
+<!--
+            <field id="precio_adicional"  suma="true">
+                <label>Sub Total </label>
+
+                <tipo>numeric</tipo>
+            </field>  -->
+	    
+	</fieldGroup>
+    <fieldGroup>
+        <field id="estado">
+			<label>Estado</label>
+			<options>
+				<option valor="0">Pendiente</option>
+				<option valor="1">Aprobado</option>
+				<option valor="2">Anulado</option>
+<!--                 <option valor="3">Facturado</option>
+ -->			</options>
+			<condicion operador="!=">4 and NOT (estado = 0 and ((cantidad * precio_unitario) = 0 or isnull(cantidad * precio_unitario)))</condicion>
+		</field>
+            <field id="total" suma="true" noZero="true">
+                <label>Sub Total </label>
+				<expression>case when ((cantidad != 0 and estado != 2) and (cantidad != 0 and estado != 3)) then cantidad * precio_unitario end </expression>
+                <tipo>numeric</tipo>
+            </field>
+
+        <field id="fc_estado_acc_id" _noZero="true" deshabilitado="false">
+            <label>Estado FC</label>
+            <helper type="combo" xml="accesorios_estado_fc_crud.xml" empty="true" />
+            <if exp="precio_unitario == 0">
+                <true>''</true>
+                <false>'fc_estado_acc_id'</false>
+            </if>
+        </field>
+
+		<field id="observaciones" >
+		    <label>Observaciones</label>
+		    <size>200</size>
+		</field>
+
+	</fieldGroup>
+        </table>
+        <join tipo="left">
+            <table id="STKINSUM">
+                <field id="artcod">
+                    <condicion operador="=">ACCESORIOS_COCHE.artcod</condicion>
+                </field>
+                <field id="siscod">
+                    <condicion operador="=">'02'</condicion>
+                </field>
+
+            </table>
+        </join>
+    </form>
+</histrix>

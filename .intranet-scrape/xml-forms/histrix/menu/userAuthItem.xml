@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" subtipo="vertical" imprime="false" export="false">
+    <title>Permisos por Usuario</title>
+    <obs></obs>
+    <form>
+        <table id="HTXUSER_AUTH" label="Permisos por Usuario">
+            <field id="menu_id" oculto="true" esClave="true" deshabilitado="true" >
+            </field>
+            <field id="login" _editable="true" esClave="true">
+                <label>Usuario</label>
+                <help>
+                </help>
+                <tabla_ex id="HTXUSERS">
+                    <field id="login"></field>
+                    <field id="nombres">
+                        <expression>concat(nombre, ' ',Apellido)</expression>
+                    </field>
+                    <field id="baja">
+                        <condicion operador="=">0</condicion>
+                    </field>
+                    <order>
+                        <field id="nombres" tipoOrden="DESC" />
+                    </order>
+                </tabla_ex>
+            </field>
+            <field id="deny" >
+        	<label modpos="nobr">Permisos</label>
+        	<options>
+        	    <option valor="0">Permitir</option>
+        	    <option valor="1">Denegar</option>
+        	</options>
+        	<tipo>radio</tipo>
+        	
+            </field>
+
+        </table>
+    </form>
+</histrix>

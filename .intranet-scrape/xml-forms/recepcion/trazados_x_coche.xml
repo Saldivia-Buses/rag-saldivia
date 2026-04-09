@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" PDForientacion="L">
+	<title>Insumos Trazados</title>
+	<obs/>
+	<form >
+		<table id="STKINMOV" label="ENTRADA SALIDA STOCK">
+
+			<field id="nrocha">
+				<label>Num.Fabric</label>
+				<tipo>integer</tipo>
+				<help>Nro de Fabricación</help>
+				<preparam operador="=">true</preparam>
+			</field>
+			
+			<field id="movfec">
+				<label>Fecha Salida</label>
+				<help>Fecha Salida</help>
+			</field>
+
+			
+			<field id="siscod" oculto="true">
+				<label>Codigo Sistema.. </label>
+				<help>
+				</help>
+				<condicion operador="=">'01' and LENGTH(barcode) > 7</condicion>
+				
+			</field>
+			<!--
+			<field id="movref">
+				<label>Referencia . </label>
+				<help>
+				</help>
+				<format>%10s</format>
+			</field>
+			-->
+			<field id="artcod">
+				<label>Artículo</label>
+				<help>Código de Artículo</help>
+			</field>
+
+			<field id="artdes" tabla="STKINSUM">
+				<label>Descripción</label>
+				<tipo>varchar</tipo>
+			</field>
+
+			<field id="opecod" oculto="true">
+			</field>
+
+			<field id="barcode">
+				<label>Número de Serie</label>
+				<help>Número de Serie</help>
+			</field>
+
+			<field id="ctafan" tabla="CCTCUENT"> 
+				<label>Prov</label>
+				<tipo>varchar</tipo>
+			</field>
+<!--			<field id="nrofac" tabla="FACDETAL">
+			    <label>Factura</label>
+			    <help>Factura</help>
+			</field>					
+			-->
+							
+<!--			<field id="ocpnro" tabla="HERRAMIENTAS"> 
+				<label>O.Compra</label>
+			</field>						
+			<field id="ocpfec" tabla="HERRAMIENTAS">
+				<label>Fec O.C.</label>
+				<tipo>date</tipo>
+			</field>			-->			
+			<field id="remito"> 
+				<expression>case when HERRAMIENTAS.remnro = 0 then (select FACREMIT.remnro from FACREMIT where FACREMIT.ocpnro = HERRAMIENTAS.ocpnro and FACREMIT.ocpfec = HERRAMIENTAS.ocpfec limit 1) else HERRAMIENTAS.remnro end </expression>
+				<label>Remito</label>
+				<tipo>integer</tipo>
+			</field>		
+
+			<field id="nrofac" _tabla="FACDETAL">
+				<expression sql="true">select FACDETAL.nrofac from FACDETAL where FACDETAL.remnro = ([__remito__] + 0) limit 1 </expression>
+				<tipo>integer</tipo>
+			    <label>Factura</label>
+			    <help>Factura</help>
+			</field>					
+			
+			<field id="remfec" tabla="HERRAMIENTAS">
+				<label>Fec Rem</label>
+				<tipo>date</tipo>
+			</field>						
+
+			<group>
+				<field id="artcod" tabla="HERRAMIENTAS"/>	
+				<field id="barcode"/>	
+				<field id="remito"/>
+			</group>
+				
+			<order>
+				<field id="artdes"/>
+			</order>
+		</table>
+		
+		<join tipo="left">
+			<table id="STKINSUM">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">'01'</condicion>
+				</field>
+				<field id="artcod" oculto="true">
+					<condicion operador="=">STKINMOV.artcod</condicion>
+				</field>
+			</table>
+		</join>
+
+		<join tipo="left">
+			<table id="HERRAMIENTAS">
+				<field id="artcod" >
+					<condicion operador="=">STKINMOV.artcod</condicion>
+				</field>
+				<field id="grucod" >
+					<condicion operador="=">2</condicion>
+				</field>
+				<field id="id_herramienta" >
+					<condicion operador="=">STKINMOV.barcode</condicion>
+				</field>
+			</table>
+		</join>
+
+		<join tipo="left">
+			<table id="CCTCUENT">
+				<field id="ctacod" >
+					<condicion operador="=">HERRAMIENTAS.ctacod</condicion>
+				</field>
+				<field id="siscod" >
+					<condicion operador="=">'01'</condicion>
+				</field>
+			</table>
+		</join>		
+<!--		<join tipo="left">
+			<table id="FACDETAL">
+			    <field id="remnro" >
+				    <condicion operador="=">(case when HERRAMIENTAS.remnro = 0 then (select FACREMIT.remnro from FACREMIT where FACREMIT.ocpnro = HERRAMIENTAS.ocpnro and FACREMIT.ocpfec = HERRAMIENTAS.ocpfec limit 1) else HERRAMIENTAS.remnro end)</condicion>
+			    </field>
+			</table>
+		</join> -->
+	</form>
+</histrix>

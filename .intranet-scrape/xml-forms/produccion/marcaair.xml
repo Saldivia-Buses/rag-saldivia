@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm">
+	<title>MARCAS DE AIRE ACONDICIONADO</title>
+	<obs></obs>
+	<form >
+		<table id="MARCAAIR">
+			<title>Marcas Aire</title>
+
+			<field id="marair">
+				<label>Codigo</label>
+				<help>Codigo de Aire</help>
+			</field>
+			<field id="desair">
+				<label>Marca</label>
+				<help>Marca de Aire Acondicionado</help>
+			</field>
+			<field id="siscod" oculto="true">
+				<label>Cod</label>
+			</field>			
+    			<order>
+				<field id="marair"></field>
+			</order>
+		</table>
+	</form>	   
+</histrix> 

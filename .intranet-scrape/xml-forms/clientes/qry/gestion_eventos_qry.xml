@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" serverSide="true" path="cuentas" PDForientation="L">
+	<title>Control de Accesos</title>
+	<obs></obs>
+	<form>
+	    <table id="REG_CUENTA_EVENTOS" label="Control de Accesos">
+
+	    	<filters>
+	    		<field id="fecha_ingreso">
+	    			<label>Desde Ingeso</label>
+	    			<valor>today</valor>
+	    			<operador>&gt;=</operador>
+	    		</field>
+	    		<field id="fecha_ingreso">
+	    			<label modpos="nobr">Hasta Ingeso</label>
+	    			<valor>today</valor>
+	    			<operador>&lt;=</operador>
+	    		</field>
+	    	</filters>
+
+			<field id="id_regcuentaevento" esClave="true" noshow="true" />
+
+			<field id="fecha_ingreso" colstyle="text-align:center;">
+				<label>Fecha Ingreso</label>				
+				<tipo>date</tipo>
+			</field>
+
+			<field id="hora_ingreso" colstyle="text-align:center;">
+				<label>Hora de Ingreso</label>				
+				<tipo>time</tipo>
+			</field>	
+
+			<field id="fecha_egreso" colstyle="text-align:center;">
+				<label>Fecha Egreso</label>				
+				<tipo>date</tipo>
+			</field>
+
+			<field id="hora_egreso" colstyle="text-align:center;">
+				<label>Hora de Egreso</label>
+				<tipo>time</tipo>
+			</field>
+
+			<field id="regevento_id" noshow="true" />
+
+			<field id="nombre_evento" tabla="REG_EVENTOS" colstyle="text-align:center;">
+				<label>Evento</label>
+			</field>
+
+			<field id="regcuenta_id" noshow="true" />
+
+			<field id="nombre_cuenta_madre" colstyle="text-align:center;">
+				<label>Cuenta Principal</label>
+				<expression>REG_CUENTA_MADRE.nombre_cuenta</expression>
+			</field>
+			
+			<field id="regcuentarelacionada_id" noshow="true" />
+			
+			<field id="nro_documento" tabla="REG_CUENTA" colstyle="text-align:center;">
+				<label>Documento Acceso</label>
+				<tipo>enclosed_integer</tipo>
+			</field>
+
+			<field id="nombre_cuenta" tabla="REG_CUENTA" colstyle="text-align:center;">
+				<label>Cuenta Acceso</label>
+			</field>
+
+			<field id="imagen_cuenta" path="regcuentarelacionada_id" tabla="REG_CUENTA" colstyle="text-align:center;" print="false">
+				<label>Imagen Acceso</label>
+	        	<tipo Type="Image">file</tipo>
+	        	<size>80</size>
+			</field>
+
+			<order>
+				<field id="fecha_ingreso" />
+				<field id="hora_ingreso" />
+			</order>
+
+	    </table>
+
+	    <join>
+	    	<table id="REG_EVENTOS">
+	    		<field id="id_regevento">
+	    			<condicion operador="=">REG_CUENTA_EVENTOS.regevento_id</condicion>
+	    		</field>
+	    	</table>
+	    </join>
+
+	    <join>
+	    	<table id="REG_CUENTA" as="REG_CUENTA_MADRE">
+	    		<field id="id_regcuenta">
+	    			<condicion operador="=">REG_CUENTA_EVENTOS.regcuenta_id</condicion>
+	    		</field>
+	    	</table>
+	    </join>
+
+	    <join>
+	    	<table id="REG_CUENTA">
+	    		<field id="id_regcuenta">
+	    			<condicion operador="=">REG_CUENTA_EVENTOS.regcuentarelacionada_id</condicion>
+	    		</field>
+	    	</table>
+	    </join>
+
+	</form>
+</histrix>	

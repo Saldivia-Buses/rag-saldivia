@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud">
+  <title>Variaciones</title>
+  <obs></obs>
+  <form>
+    <table id="STK_BOM_VARIACIONES" label="Paletas de Colores">
+        <field id="id_bom_variacion" noshow="true" autoinc="true" >
+            <label>id</label>
+        </field>
+        <field id="nombre_variacion" >
+            <label>variación</label>
+        </field>
+        <field id="arma">
+            <label>Arma</label>
+        </field>
+
+        <field id="modelo">
+            <label>modelo</label>
+        </field>
+
+        <field id="certificado">
+            <label>certificado</label>
+        </field>
+
+        <field id="espesor">
+            <label>espesor</label>
+        </field>
+
+        <field id="peso">
+            <label>peso kg/m2</label>
+        </field>
+        <field id="composicion">
+            <label>Composicion Modelo</label>
+
+            <expression>'Composicion'</expression>
+            <attribute id="linkdes">nombre_variacion</attribute>
+            <helper xml="stk_bom_modelo_crud.xml" type="link" dir="/stock/man/">
+                <parameter source="X" target="stkarticulopadre_id" />
+                <parameter source="id_bom_variacion" target="bom_variacion_id" />
+            </helper>
+        </field>
+        <field id="cantidad" noZero="true" style="text-align:right;">
+            <label>Componentes</label>
+            <expression>select count(*) from STK_BOM WHERE bom_variacion_id = id_bom_variacion and stkarticulopadre_id = 'X'</expression>
+            <tipo>integer</tipo>
+        </field>        
+        
+    </table>
+  </form>
+</histrix>

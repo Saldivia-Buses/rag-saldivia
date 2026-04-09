@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+	<histrix tipo="consulta" paginar="200" width="60%">
+		<title>CONTACTOS</title>
+		<obs></obs>
+		<form detalle="cctconta_det.xml">
+		    <table id="REG_CUENTA" label="Contactos">
+			<filters auto="true">
+			    <field id="regcategoria_id">
+				<label>Categoría</label>
+				<operador>=</operador>
+			    </field>
+			</filters>
+
+			<field id="id_regcuenta" noshow="true" />
+
+			<field id="subsistema_id" noshow="true">
+				<label>Codigo Sistema </label>
+				<help>
+				</help>
+				<detalle>siscod</detalle>
+			</field>
+			<field id="regcategoria_id" noshow="true">
+			    <label>Cat</label>
+			    <helper type="combo" id="CCTCATGS">
+				<field id="catcod"></field>
+				<field id="catnom"></field>
+				<field id="siscod" oculto="true">
+				</field>
+			    </helper>
+			    <help>
+			    </help>
+			</field>
+			<field id="baja" oculto="true">
+				<help>
+				</help>
+				<condicion operador="=">0</condicion>
+			</field>				
+			<field id="nro_cuenta" >
+				<label>Cuenta</label>
+				<detalle>ctacod</detalle>
+			</field>
+		<!--	<field id="ctanom">
+				<label>Cuenta </label>
+				<help>Nombre del contacto</help>
+			</field> -->
+			<field id="nombre_fantasia" ldifName="o">
+				<label modpos="nobr">Nom.Fantasía</label>
+				<help>Nombre de fantasía</help>
+				<tipo>varchar</tipo>
+			</field>
+		
+			<field id="localidad_nombre" colstyle="display:none;">
+				<label modpos="nobr">Localidad </label>
+				<help>
+				</help>
+			</field>
+			
+			<field id="provincia_id" colstyle="display:none;">
+				<label modpos="nobr">Provincia</label>
+				<help modpos="nobr">
+				</help>
+				<helper type="combo" id="FSMPROVS">
+					<field id="prvcod"></field>
+					<field id="prvnom"></field>
+				</helper>
+			</field>
+		
+			<field id="tel_cuenta" ldifName="telephoneNumber" colstyle="display:none;">
+				<label modpos="nobr">Tel.</label>
+				<help>Teléfono Principal</help>
+			</field>
+
+			<field id="contactos" local="true" showObjTabla="true" >
+			    <helper type="object" xml="cctconta_obj.xml">
+				<parameter source="subsistema_id" target="siscod" />
+				<parameter source="nro_cuenta" target="ctacod" />
+			    </helper>
+			</field>
+		</table>
+	</form>
+</histrix>

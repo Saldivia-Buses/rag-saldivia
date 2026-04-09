@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" path="fotos/articulos" preloadData="false">
+    <title>Articulos y mat primas</title>
+    <obs></obs>
+    <form >
+        <table id="STK_BOM" label="Materia prima">
+
+            <filters>
+                <field id="stkarticulopadre_id" deshabilitado="false">
+                    <label>Art.</label>
+                    <operador modificador="left">=</operador>
+                </field>
+
+                <field id="stkarticulohijo_id" deshabilitado="false">
+                    <operador modificador="left">=</operador>
+                    <label>Mat. prima</label>
+                </field>
+            <!--
+                <field id="nombre_articulo1" fullSearch="true" autocompletar="true">
+                    <label>Articulo</label>
+                    <help>Descripcion de Articulo</help>
+                    <operador>like</operador>
+                </field>
+                -->
+            </filters>
+        
+            <field id="id_stkbom" autoinc="true" noshow="true" />
+          
+            
+            <field id="stkarticulopadre_id" _oculto="true">
+                <label>Art</label>
+                <help>Articulo Padre</help>
+                <helper type="external" xml="stkarticulo_pos.xml" dir="/ayudas">
+                    <field id="wstklista_id" local="true" />
+                </helper>
+            </field>
+
+            <field id="nombre_articulo1" fullSearch="true">
+                <expression>(select nombre_articulo from STK_ARTICULOS where stkarticulopadre_id = STK_ARTICULOS.id_stkarticulo)</expression>
+                <label>Nombre Art</label>
+                <help>Articulo Padre</help>
+            </field>
+          <!--
+            <field id="codigo_barra" tabla="STK_ARTICULOS">
+            <label>Codigo de Barra</label>
+                <helper type="external" xml="stkarticulo_pos.xml" dir="/ayudas">
+                    <field id="wstklista_id" local="true" />
+                </helper>
+            </field>
+            -->
+
+            <field  id="stkarticulohijo_id" >
+                <label>Mat prima</label>
+                <helper type="external" xml="stkarticulo_pos.xml" dir="/ayudas">
+                    <field id="wstklista_id" local="true" />
+                </helper>
+                <help>Articulo Hijo</help>
+                <size>12</size>
+            </field>
+
+            <field  id="nombre_articulo2" >
+        	<expression>nombre_articulo</expression>
+                <label>Nombre Mat prima</label>
+                <help>Articulo Hijo</help>
+            </field>
+
+            <field  id="cantidad" >
+                <label>Cantidad</label>
+                <help>Cantidad</help>
+                <tipo>float</tipo> 
+            </field>
+<!--
+            <field id="costo_bom" suma="true">
+        	<label>Costo</label>
+        	<expression>round(cantidad * precio_costo, 2)</expression>
+            </field>
+-->
+
+            <order>
+                <field id="nombre_articulo2" />
+            </order>
+
+        </table>
+        <join tipo="left">
+    	    <table id="STK_ARTICULOS">
+        	    <field id="id_stkarticulo">
+	        	    <condicion operador="=">stkarticulohijo_id</condicion>
+        	    </field>
+    	    </table>
+        </join>
+    </form>
+</histrix>

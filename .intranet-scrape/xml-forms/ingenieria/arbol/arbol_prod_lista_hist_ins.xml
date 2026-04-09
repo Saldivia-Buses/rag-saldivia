@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert">
+    <titulo>Histórico Arbol Producto Lista</titulo>
+    <obs/>
+    <form>
+        <table id="STK_BOM_HIST">
+
+			<field id="id_stkbomhist" 			esClave="true"/>
+			<field id="pieza_id"				id_temp="id_stkbom" />
+			<field id="bom_variacion_id"		id_temp="bom_variacion_id" />
+			<field id="fecha_costo"         	id_temp="fecha_costo" />
+			<field id="stkarticulohijo_id"		id_temp="stkarticulohijo_id" />
+			<field id="stkarticulohijo_string"	id_temp="stkarticulohijo_string" />
+			<field id="posicionfab_id"			id_temp="posicionfab_id" />
+			<field id="tipocalculo_costo"		id_temp="tipocalculo_costo" />
+			<field id="regcuenta_id"			id_temp="id_regcuenta" />
+			<field id="cuenta_id"				id_temp="ctbcuenta_id" />
+			<field id="cantidad"				id_temp="cantidad" />
+			<field id="unidad_compra"			id_temp="unidad_compra" />
+			<field id="unidad_uso"				id_temp="unidad_uso" />
+			<field id="multiplo"				id_temp="multiplo" />
+			<field id="unitario" 				id_temp="unitario" />
+			<field id="recargo"					id_temp="recargo" />
+			<field id="porcentaje_region"       id_temp="porcentaje_region" />
+			<field id="sumaitems"          		id_temp="sumaitems" />
+			<field id="sumaitems_clog"			id_temp="sumaitems_clog" />
+			<field id="level_0"          	 	id_temp="level_0" />
+			<field id="level_1"      			id_temp="level_1" />
+			<field id="level_2"          		id_temp="level_2" />
+			<field id="level_3"          		id_temp="level_3" />
+			<field id="level_4"         		id_temp="level_4" />
+			<field id="level_5"         		id_temp="level_5" />
+			<field id="level_6"          		id_temp="level_6" />
+			<field id="level_7"          		id_temp="level_7" />
+			<field id="piezas"          		id_temp="piezas" />
+
+        </table>
+
+    </form>
+</histrix>

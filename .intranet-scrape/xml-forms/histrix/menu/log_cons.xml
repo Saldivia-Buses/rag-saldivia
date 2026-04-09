@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" paginar="100">
+	<title>HISTORICO</title>
+	<obs></obs>
+	<form>
+		<table id="HTXLOG" label="Historico">
+
+			<filters>
+			  
+				<field id="fecha">
+				  <label>Fecha</label>
+				</field>
+				<field id="tipo">
+				  <label>Tipo</label>
+				</field>
+				<field id="campo">
+				  <label>Campo</label>
+				  <operador>like</operador>
+				</field>
+				<field id="obs">
+				  <label modpos="nobr">Condición</label>
+				  <operador>like</operador>
+				</field>
+			</filters>
+
+			<field id="xmlprog" oculto="true" />
+
+			<field id="fecha" tipoOrden="DESC">
+				<label>fecha</label>
+			</field>
+			
+			<field id="hora">
+				<expression>SUBSTRING(hora, 12, 8)</expression>
+			</field>
+			
+			<field id="user">
+				<label>usuario</label>
+				<expression>CONCAT(HTXUSERS.Nombre, ', ', HTXUSERS.apellido)</expression>
+				<tipo>varchar</tipo>
+			</field>
+			
+			<field id="tipo">
+				<label>Acción</label>
+				<options>
+				    <option valor="" />
+					<option valor="INSERT"> Insertó </option>
+					<option valor="UPDATE"> Modificó </option>
+					<option valor="DELETE"> Borró </option>
+				</options>
+			</field>
+			
+			<field id="idEvento" noshow="true" />
+			
+			<field id="campo" noshow="true" />
+
+			<field id="acc">
+<!--			<expression>case when tipo="UPDATE" then CONCAT('el campo "', campo, '" de "', valorViejo, '" a ' , valorNuevo ) else CONCAT('donde ', obs) end</expression> -->
+				<expression>case when tipo="UPDATE" then CONCAT('el campo "', campo, '" a ' , valorNuevoTxt ) else CONCAT('donde ', obs) end</expression> 
+				<tipo>varchar</tipo>
+				<size>200</size>
+			</field>			
+
+			<field id="obs">
+			  <label>Condición</label>
+			  <size>200</size>
+			</field>
+
+			<order>
+				<field id="fecha"></field>
+			</order>
+		</table>
+		<join tipo="left">
+			<table id="HTXUSERS">
+				<field id="login">
+					<condicion operador="=">HTXLOG.usuario</condicion>
+				</field>
+			</table>
+			
+		</join>
+	</form>	   
+</histrix> 

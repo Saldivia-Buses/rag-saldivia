@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ayuda" >
+    <title>Usuarios</title>
+    <obs></obs>
+    <form  >
+        <table id="HTXUSERS" >
+	  
+	     <field id="id_usuario" autoinc="true" _noshow="true" esClave="true">
+                <label>Numero usuario</label>
+		<detalle>id_usuario</detalle>
+            </field>
+            <field id="nombre">
+                <label>Nombre</label>
+                <detalle>nombre</detalle>
+                <expression>CONCAT(apellido,', ', nombre)</expression>
+            </field>
+            
+            <order>
+            <field id="nombre" />
+            </order>
+	</table>
+    </form>
+</histrix>
+

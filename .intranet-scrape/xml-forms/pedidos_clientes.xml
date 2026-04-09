@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<abm tipo="consulta" borra="no" inserta="no" paginar="250" >
+	<titulo>Insumos</titulo>
+	<obs></obs>
+	<consulta detalle="historia_x_pedido.xml">
+		<tabla id="PEDIDOSCLI" styleTbody="height:500px;overflow-x:hidden;">
+			<titulo>Pedidos</titulo>
+			
+			<campo id="idPedido" >
+				<ayuda_ex id="PEDIDOSCLI" xml="HLPpedidoscli.xml" dir="/help_local">
+					<clave>idPedido</clave>
+					<descripcion>descripcion</descripcion>
+					<campo id="idLibro">
+						<label>Libro</label>
+					</campo>
+					<campo id="artdes">
+						<label>Nombre</label>
+						<detalle>artdes</detalle>
+					</campo>
+				</ayuda_ex>
+				
+				<label>Cod.</label>
+				<detalle>artcod</detalle>
+			</campo>
+			<campo id="artdes" >
+				<label>Articulo</label>
+				<help>Descripcion de Articulo. (ENTER = Retorna a ingreso de codigo).
+					</help>
+			</campo>
+			<campo id="baja" oculto="true">
+				<condicion operador="!=">1</condicion>
+			</campo>
+			<group>
+				<campo id="artcod" tabla="STKINSUM">
+				</campo>
+			</group>			
+			<filtros>
+				<campo id="artcod" deshabilitado="false">
+					<ayuda_ex id="STKINSUM">
+						<clave>artcod</clave>
+						<descripcion>artdes</descripcion>
+					</ayuda_ex>
+					
+					<label>Cod.</label>
+					<operador>like</operador>					
+				</campo>			
+				<campo id="artdes" >
+					<label>Articulo</label>
+					<help>Descripcion de Articulo. (ENTER = Retorna a ingreso de codigo).
+						</help>
+					<operador>like</operador>
+				</campo>				
+			</filtros>			
+		</tabla>
+		<join tipo="left">
+			<tabla id="STKINMOV">
+			<campo id="siscod" oculto="true">
+				<condicion operador="=">STKINSUM.siscod</condicion>
+			</campo>
+			<campo id="artcod" oculto="true">
+				<condicion operador="=">STKINSUM.artcod</condicion>
+			</campo>
+				
+			</tabla>
+		</join>		
+	</consulta>
+</abm>

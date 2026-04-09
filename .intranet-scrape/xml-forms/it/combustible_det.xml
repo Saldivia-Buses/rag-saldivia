@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="consulta">
+        <title>titulo</title>
+        <obs></obs>
+        <form >
+            <table id="COMBUSTIBLE" label="etiqueta">
+                
+              <field id="usuario" autocompletar="true" >
+                <label>Usuario </label>
+                <help>Buscar operario</help>
+                <ayuda_ex id="FSMOPERA" xml="HLPpersonal_ope.xml" dir="/help_local">
+
+                  <field id="opecod"> <!-- campos a agregar al contenedor Filtro -->
+	                 <detalle>usuario</detalle>
+                  </field>
+	     
+                  <field id="nombres">
+      	            <expression>CONCAT(apellido,', ', Nombre)</expression>
+      	            <detalle>nombre</detalle>
+                  </field>
+                </ayuda_ex>     
+                <valor default="true"></valor>
+              	<size>30</size>
+              </field>  
+
+              <field id="nombre">
+                 <label>Nombre</label>
+              </field>   
+              
+              <field id="fecha">
+                <label>Fecha</label>
+              </field>
+            
+              <field id="hora" type="hora">
+                <label>Hora</label>
+              </field>
+
+              <field id="nrofab_id" noZero="true">
+                <label>Unidad</label>
+                <tipo>integer</tipo>
+              </field>
+
+              <field id="unidad">
+                <label>Descripción</label>
+              </field>
+
+              <field id="egreso_litros" suma="true">
+                <label>Litros</label>
+                <attribute id="style">valida_color</attribute>
+              </field>
+
+              <field id="id" noshow="true" />
+                <group>
+                  <field id="id" />
+                </group>
+
+            </table>
+        </form>
+    </histrix>
+

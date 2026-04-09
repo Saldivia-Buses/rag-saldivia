@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="abm" borra="no">
+       <title>Normas de Recepcin de Materiales</title>
+        <obs></obs>
+               <form >
+                  <table id="NORMINSP" label="Normas de Recepcion de Materiales">
+                  <field id="nronor" noshow="true">
+                      <label>Norma </label>
+                      <help>Norma a Revisar</help>
+                  </field>
+                  <field id="desnor">
+                      <label>Descripcion</label>
+                      <help>Descripcion de la norma</help>
+                  </field>
+                  <field id="activo_norma">
+                    <label>Activo </label>
+                    <help>Activo Norma</help>
+                    <options>
+                        <option valor="0">Si</option>
+                        <option valor="1">No</option>           
+                    </options>
+                  </field>
+                  <field id="siscod" oculto="true">
+                      <label>Codigo Sistema.. </label>
+                      <help> </help>
+                      <valor>'01'</valor>
+                  </field>
+                  <order>
+                    <field id="desnor" />
+                  </order>
+                  </table>
+               </form>
+        </histrix>

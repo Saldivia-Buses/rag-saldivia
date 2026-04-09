@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert" sqlhardcoded="true">
+  <title />
+  <form>
+	<table id="REG_DETALLES" idCampoCond="facturar">
+    	    
+		<sql><![CDATA[ call generaComprobante( [__id_regmovim__], [__regmovimiento_dup.xml__], [__stkdeposito_id__], [__stkconcepto_id__] ); ]]></sql>
+
+		<field id="regmovim_id"        id_temp="id_regmovim" />
+		<field id="stkdeposito_id"     id_temp="stkdeposito_id" />
+		<field id="stkconcepto_id"     id_temp="stkconcepto_id" />
+		<field id="idregmovim"         lastId="regmovimiento_dup.xml" />
+            
+        </table>
+    </form>
+</histrix>

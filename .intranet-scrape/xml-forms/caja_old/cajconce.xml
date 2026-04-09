@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="crud">
+	<title>CONCEPTOS DE CAJA</title>
+	<obs></obs>
+	<form>
+		<table id="CAJCONCE" >
+		    <title>Conceptos</title>
+			<campo id="siscod" oculto="true">
+				<label>Cod</label>
+			</campo>
+			
+			<campo id="cajcod">
+				<label>Codigo</label>
+				<help>Codigo de Concepto</help>
+			</campo>
+			
+			<campo id="cajdes">
+				<label>Descripcion</label>
+				<help>Descripcion del Concepto</help>
+			</campo>
+			
+			<campo id="cajabv">
+				<label>Abrev.</label>
+				<help>Abreviatura a Utilizar</help>
+
+			</campo>
+			
+			<campo id="cajtip">
+				<label>Imputacion</label>
+				<help>Imputacion Debo o Haber</help>
+				<options>
+				    <option valor="1">Debe </option>
+				    <option valor="2">Haber</option>
+				</options>
+				
+			</campo>
+			
+			<campo id="ctbcod__1">
+				<label>Cuenta Debe</label>
+				<help>Cuentas contables a Imputar</help>
+			</campo>
+			<campo id="ctbcod__2">
+				<label>Cuenta Haber</label>
+				<help>Cuentas contables a Imputar</help>
+			</campo>			
+			<campo id="cajres">
+				<label>Resume en</label>
+				<help>Imputacion Efectivo o Cheque</help>
+				<options>
+				    <option valor="1">Efectivo</option>
+				    <option valor="2">Cheque</option>
+				    <option valor="3">Tarjeta</option>
+				    <option valor="4">Cred.</option>
+				    <option valor="5">Bancos</option>
+
+				</options>
+				
+			</campo>
+
+			<campo id="cajdet">
+				<label>Detalle</label>
+				<help>Detalla los Valores</help>
+				<options>
+				    <option valor="1">Detalla</option>
+				    <option valor="2">No Detalla</option>
+				</options>
+				
+			</campo>
+
+			<campo id="cajnom">
+				<label>Nombre</label>
+				<help>Nombre</help>
+			</campo>
+			<campo id="crocod">
+				<label>Columna</label>
+				<help>Codigo de Columna</help>
+			</campo>
+			<campo id="impcod">
+				<label>Ctro.Imput</label>
+				<help>Codigo de Centro de Imputacion</help>
+			</campo>
+
+
+			<campo id="cajint">
+				<label>Integra</label>
+				<help>Integra</help>
+				<options>
+				    <option valor="1">Integra</option>
+				    <option valor="0">No Integra</option>
+				</options>
+				
+			</campo>
+
+			<campo id="tjtcod">
+				<label>Cod.Tarj.</label>
+				<help>Codigo de Tarjeta</help>
+			</campo>
+			<campo id="cnbcod">
+				<label>Con.Banco</label>
+				<help>Concepto de Banco</help>
+			</campo>
+
+
+	    		<order>
+				<campo id="cajcod"></campo>
+			</order>
+			
+		</table>
+	</form>	   
+</histrix>

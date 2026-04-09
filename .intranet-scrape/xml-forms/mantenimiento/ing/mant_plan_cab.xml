@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  CURD
+Tarea: PLAN DE MANTENIMIENTO
+Autor: Lmm
+Fecha: 17/08/11
+*******************************************************************************
+-->
+<histrix tipo="cabecera">
+    <title>Mantenimiento</title>
+    <obs></obs>
+    <form>
+        <table id="MANT_PLAN" label="Plan de mantenimiento">
+            
+            <field id="id_plan"   noshow="true" />
+				
+            <field id="equipo_id" noshow="true" >
+            </field>
+				
+            <field id="equipo_nombre" local="true" deshabilitado="true">
+        	<label colspan="10">Nombre</label>
+        	<size>50</size>
+            </field>
+            <field id="accion_id" local="true">
+                <helper type="combo" xml="mant_acciones_crud.xml" dir="/mantenimiento/man/" />
+                <label colspan="12">Accion</label>
+            </field>
+				
+            <field id="equipo_id" noshow="true" local="true">
+            </field>
+				
+                                                                      
+                                                                      
+	    <field id="lun" local="true">
+		<label>Lunes</label>
+		<tipo>check</tipo>
+	    </field>            
+	    <field id="mar" local="true">
+		<label modpos="nobr">Martes</label>
+		<tipo>check</tipo>
+	    </field>            
+	    <field id="mie" local="true">
+		<label modpos="nobr">Miercoles</label>
+		<tipo>check</tipo>
+	    </field>            
+	    <field id="jue" local="true">
+		<label modpos="nobr">Jueves</label>
+		<tipo>check</tipo>
+	    </field>            
+	    <field id="vie" local="true">
+		<label modpos="nobr">Viernes</label>
+		<tipo>check</tipo>   
+	    </field>            
+	    <field id="sab" local="true">
+		<label modpos="nobr">Sabado</label>
+		<tipo>check</tipo>   
+	    </field>            
+	    <field id="dom" local="true">
+		<label modpos="nobr">Domingo</label>
+		<tipo>check</tipo>   
+	    </field>            
+                                             <!--
+
+	    <field id="sem1" local="true">
+		<label>Semana 1</label>
+		<tipo>check</tipo>
+	    </field>            
+	    <field id="sem2" local="true">
+		<label modpos="nobr">Semana 2</label>
+		<tipo>check</tipo>
+	    </field>            
+	    <field id="sem3" local="true">
+		<label modpos="nobr">Semana 3</label>
+		<tipo>check</tipo>
+	    </field>            
+	    <field id="sem4" local="true">
+		<label modpos="nobr">Semana 4</label>
+		<tipo>check</tipo>
+	    </field>            
+	    <field id="sem5" local="true">
+		<label modpos="nobr">Semana 5</label>
+		<tipo>check</tipo>
+	    </field>            
+	    -->
+
+        </table>
+    </form>
+</histrix>	

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<abm  tipo="insert">
+	<titulo>Notificaciones</titulo>
+	<obs/>
+	<consulta>
+		<tabla id="HTXMESSAGES" label="Mensajes" idCampoCond="grabo">
+
+            <titulo>Notificaciones</titulo>
+			<campo id="de" id_cab="de" />
+			<campo id="para" id_temp="login" />
+			
+			<campo id="mensaje" id_cab="contenido" />
+			<campo id="fecha" id_cab="fecha" />			
+			<campo id="hora" id_cab="hora" />			
+		</tabla>
+	</consulta>
+</abm>

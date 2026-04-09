@@ -1,0 +1,521 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" PDForientacion="L" preloadData="false" paginar="2000">
+
+  <title>ORDENES DE COMPRA</title>
+  <obs></obs>
+  <form  _detalle="cpsmovim.xml" _inline="true">
+    <table id="CPSENCAB" label="ORDENES DE COMPRA">
+
+      <filters>
+        
+        <field id="ctanom" local="true" deshabilitado="false">
+            <expression>CONCAT(ctanom, ' (',ctafan, ')')</expression>
+            <label >Proveedor</label>
+            <help>Nombre</help>
+            <operador>like</operador>
+        </field>
+
+        <field id="ocpfec">
+          <operador>&gt;=</operador>
+          <label>Desde Fecha</label>
+        </field>
+        
+        <field id="ocpfec">
+          <operador>&lt;=</operador>
+          <label modpos="nobr">Hasta Fecha</label>
+        </field>
+
+         <field id="usuario" _deshabilitado="false" _empty="true">
+            <label modpos="nobr">Usuario</label>
+            <operador>=</operador>
+        </field>
+
+        <field id="fecreq" tabla="CPSMOVIM">
+          <label >Requerido Desde</label>
+          <valor>today</valor>
+          <tipo>date</tipo>
+          <operador>&gt;=</operador>
+        </field>
+
+        <field id="fecreq" tabla="CPSMOVIM">
+          <label modpos="nobr">Requerido hasta</label>
+          <valor>today</valor>
+          <tipo>date</tipo>
+          <operador>&lt;=</operador>
+        </field>    
+
+      <field id="abierta" _noshow="true" tabla="CPS_ESTADOS">
+        <label _modpos="nobr">Estado</label>
+        <help>Estado Actual</help>
+        <options>
+          <option valor=""></option>
+          <option valor="0">Cerradas</option>
+          <option valor="1">Abiertas</option>
+        </options>
+        <valor>1</valor>
+      </field> 
+
+        <field id="ocpest" copia="ocpest2">
+          <operador>=</operador>
+          <label>Estado</label>
+        </field> 
+
+      <field id="ocpnro" >
+        <label modpos="nobr">O.Compra</label>
+          <operador>=</operador>
+      </field>
+
+        <field id="calc_estado" deshabilitado="false">
+          <label modpos="nobr">Estado Art.</label>
+          <operador>=</operador>
+          <valor>1</valor>
+        </field>
+
+        <field id="nrocha" tabla="CPSMOVIM">
+          <label>Nro Fabricación</label>
+          <operador>=</operador>
+        </field>
+
+        <field id="observaciones" tabla="CPSMOVIM">
+          <label>Observaciones</label>
+          <operador>like</operador>
+	<size>20</size>
+        </field>
+
+        <field id="artcod">
+          <label>Cod.</label>
+          <operador>like</operador>
+        </field>
+        <field id="artctb">
+          <label>Cuenta contable</label>
+          <operador>like</operador>
+        </field>
+
+        <field id="detalle" tabla="CPSMOVIM">
+          <label modpos="nobr">Detalle</label>
+          <operador>like</operador>
+	<size>20</size>
+        </field>     
+        
+      </filters>
+
+      <field id="siscod" oculto="true">
+        <label>Codigo Sistema</label>
+        <help></help>
+        <detalle>siscod</detalle>
+      </field>
+
+      <field id="id_cpsmovim" tabla="CPSMOVIM" noshow="true" />
+
+      <field id="ocpnro2" tipoOrden="DESC" noshow="true">
+        <expression>CPSENCAB.ocpnro</expression>
+      </field>
+      
+      <field id="idPed" deshabilitado="true" _noshow="true">
+        <expression>CPSMOVIM.idPed</expression>
+        <label style="width:auto;">Nº Ped.</label>
+        <helper type="link" xml="pedidoint_qry.xml" dir="/pedidoint">
+            <parameter source="idPed" target="idPed" />
+        </helper>
+      </field>
+
+        <field id="fechaemi" tabla="PEDIDOINT">
+            <label modpos="nobr">Fec.Pedido</label>
+        <tipo>date</tipo>
+         </field>
+
+       <field id="usuario" tabla="PEDIDOINT" _deshabilitado="false" empty="true">
+          <label modpos="nobr">Usuario</label>
+          <helper type="combo" id="HTXUSERS" empty="true">
+            <field id="login"></field>
+            <field id="nombre">
+              <expression>concat(Nombre, ' ', apellido)</expression>
+            </field>
+            <order>
+              <field id="nombre"></field>
+            </order>
+          </helper>   
+        </field>  
+
+      <field id="ocpnro" linkint="cpsencab_marco_cum2.xml" linkdes="Marcar Como Cumplida">
+        <paring destino="ocpnro">ocpnro</paring>
+        <label>Nº OC</label>
+        <help>Número de Orden de Compra. </help>
+        <detalle>ocpnro</detalle>
+      </field>
+
+      <field id="ocpfec">
+        <label _modpos="nobr">Emisión OC</label>
+        <help>Fecha de Emisión</help>
+        <detalle>ocpfec</detalle>
+                <detalle>movfec</detalle>
+      </field>
+
+      <field id="subjectpr" noshow="true">
+          <expression>CONCAT('Orden de Compra Nro ',CPSENCAB.ocpnro)</expression>
+      </field>
+
+      <field id="enviado" local="true" showObjTabla="true" export="false">
+            <label _style="width:auto;">Emails</label>
+            <helper type="object" xml="cpsencab_detallada_emails_grid.xml" _dir="/compras">
+                <parameter source="subjectpr" target="subject" operator="="/>
+            </helper>
+      </field>
+
+      <field id="nrocha" tabla="CPSMOVIM">
+        <label>Nº Fab.</label>
+        <tipo>integer</tipo>
+      </field>
+      
+      <field id="ctacod" noshow="true">
+        <help>Codigo de Cuenta PROVEEDOR. </help>
+        </field>
+        
+      <field id="ctanom" tabla="CCTCUENT" autocompletar="true">
+        <ayuda_ex id="CCTCUENT">
+            <field id="ctacod" noshow="true">
+                <detalle>ctacod</detalle>
+            </field>
+            <field id="nombre" >
+                <expression having="false">CONCAT(CCTCUENT.ctanom, ' (',CCTCUENT.ctafan, ')')</expression>
+            </field>
+            <field id="siscod" oculto="true">
+                <condicion operador="=">'01'</condicion>
+            </field>
+            <field id="baja" oculto="true">
+                <condicion operador="!=">1</condicion>
+            </field>
+        </ayuda_ex>
+        <tipo>varchar</tipo>
+        <label>Proveedor</label>
+                <expression having="false">CONCAT(ctanom, ' (',ctafan, ')')</expression>
+        <size>50</size>
+      </field> 
+              
+      <field id="ocpest" _noshow="true" _local="true">
+        <label _modpos="nobr">Estado</label>
+        <help>Estado Actual</help>
+        <options>
+          <option valor=""></option>
+          <option valor="0">No Autorizada</option>
+          <option valor="1">Pendiente</option>
+          <option valor="2">Cumplida</option>
+          <option valor="3">Parcial</option>
+          <option valor="4">Anulada</option>
+        </options>
+      </field> 
+  
+      <field id="abierta" _noshow="true" tabla="CPS_ESTADOS">
+        <label _modpos="nobr">Abiertas / Cerradas</label>
+        <help>Estado Actual</help>
+        <options>
+          <option valor=""></option>
+          <option valor="0">Cerradas</option>
+          <option valor="1">Abiertas</option>
+        </options>
+      </field> 
+  
+<!--
+      <field id="calc_estado">
+        <expression having="false">(CPSMOVIM.movcps &gt; CPSMOVIM.pencps) * IF(cumplido, 0, 1)</expression>
+
+        <options>
+          <option valor="1">Pendiente</option>
+          <option valor="0">Cumplida</option>
+
+        </options>
+        <label>Estado Art.</label>
+      </field>
+-->
+   <field id="calc_estado">
+        <expression having="false">(CASE WHEN CPSENCAB.ocpest IN (0, 4, 2) THEN CPSENCAB.ocpest ELSE
+                      (CASE WHEN CPSENCAB.ocpest IN (1, 3) and ((CPSMOVIM.movcps - CPSMOVIM.pencps) &lt; CPSMOVIM.movcps and cumplido = 0)
+                      THEN 1 ELSE 2 END)
+                    END)
+        </expression>
+        <options>
+          <option valor=""></option>
+          <option valor="0">No Autorizada</option>
+          <option valor="1">Pendiente</option>
+          <option valor="2">Cumplida</option>
+          <option valor="3">Parcial</option>
+          <option valor="4">Anulada</option>
+        </options>
+        <label>Estado Art.</label>
+      </field>
+
+      <field id="artcod" deshabilitado="true" tabla="CPSMOVIM" esClave="true">
+        <label>Art.</label>
+        <ayuda_ex id="STKINSUM" xml="HLPstkinsum.xml" dir="/help_local">
+            <field id="artcod">
+              <label>Cod.</label>
+              <detalle>artcod</detalle>
+            </field>
+            <field id="artdes">
+              <label>Insumo</label>
+              <detalle>detalle</detalle>
+            </field>
+            <field id="unicps" oculto="true">
+              <detalle>unimed</detalle>
+            </field>
+            <field id="artuni" oculto="true">
+              <detalle>artuni</detalle>
+            </field>
+            <field id="siscod" oculto="true">
+              <condicion operador="=">'01'</condicion>
+            </field>
+            <clave>artcod</clave>
+            <descripcion>artdes</descripcion>
+          </ayuda_ex>
+        <help>Código de Artículo</help>
+        <tipo>varchar</tipo>
+      </field>
+      
+      <field id="artctb"  tabla="STKINSUM" >
+	    <label>ctb</label>
+	</field>
+      <field id="detalle" deshabilitado="true" tabla="CPSMOVIM">
+        <label>Detalle</label>
+        <help>Detalle de línea de la Orden de Compra para Art S.C. </help>
+        <tipo>varchar</tipo>
+        <size>60</size>
+      </field>
+
+      <field id="observaciones" tabla="CPSMOVIM">
+        <label modpos="nobr">Observaciones</label>
+        <tipo>varchar</tipo>
+        <size>60</size>
+      </field>
+
+      <field id="mensaje" tabla="PEDIDOINT">
+          <label modpos="nobr">Msj</label>
+          <tipo>varchar</tipo>
+      </field>
+
+      <field id="obs2" obj="remitos_x_oc.xml" local="true" showObjTabla="true" export="false">
+<!--        <paring destino="ctacod" operador="=">ctacod</paring> -->
+        <paring destino="ocpnro" operador="=">ocpnro</paring>
+        <paring destino="artcod" operador="=">artcod</paring>
+<!--        <paring destino="fecreq" operador="=">fecreq</paring>
+        <paring destino="idPed" operador="=">idPed</paring>
+-->
+        <label modpos="nobr">Recepción</label>
+        <tipo>varchar</tipo>
+      </field>
+
+      <field id="recepcion_historia" local="true" noshow="true">
+        <valor>'display:true;'</valor>
+      </field>
+
+      <field id="obs3" linkint="remitos_x_oc.xml" local="true">
+          <helper type="link" xml="remitos_x_oc.xml" title="Recep Hist." width="600" height="600">
+              <parameter source="ocpnro"  target="ocpnro" />
+              <parameter source="artcod"  target="artcod" />
+              <parameter source="ctacod"  target="ctacod" />
+              <parameter source="recepcion_historia"  target="recepcion_historia" />
+          </helper>
+        <label modpos="nobr">Recep Hist.</label>
+        <expression>'Recep Hist.'</expression>
+        <tipo>varchar</tipo>
+      </field> 
+
+      <field id="fecreq" tabla="CPSMOVIM">
+        <label _modpos="nobr">Requerido</label>
+        <tipo>date</tipo>
+      </field>      
+      <!-- <field id="movcps" deshabilitado="true" tabla="CPSMOVIM">
+        <label>Pedido</label>
+        <help>Pedido (expresado en la unidad de compra)</help>
+      </field> -->
+
+      <field id="movcps" deshabilitado="true" tabla="CPSMOVIM">
+        <expression>round(CPSMOVIM.movcps, 2)</expression>
+        <label>Ped.cps</label>
+        <help>Pedido (expresado en la unidad de compra)</help>
+        <tipo>decimal</tipo>
+      </field>
+
+      <field id="mov_pen2" deshabilitado="true" >
+        <expression>round(CPSMOVIM.movcps - CPSMOVIM.pencps ,  2)</expression>
+        <label>Rec</label>
+        <help>Recibido (expresado en la unidad de compra)</help>
+        <tipo>decimal</tipo>
+      </field>
+
+      <field id="pencps" tabla="CPSMOVIM" >
+        <label>Pend.cps</label>
+        <help>Pendiente (expresado en la unidad de compra)</help>
+        <tipo>decimal</tipo>
+      </field>
+
+      <field id="artuni_exp3" deshabilitado="true">
+        <expression>STKINSUM.unicps</expression>
+        <label>U.Cps</label>
+        <help>Unidad de Compra</help>
+        <tabla_ex id="FSMUNIDS">
+          <field id="unicod" clave="true"></field>
+          <field id="uniabv"></field>
+        </tabla_ex>
+        <tipo>varchar</tipo>
+      </field>     
+
+      <field id="abreviatura_moneda" tabla="GEN_MONEDAS"/>
+
+      <field id="unitario" deshabilitado="true" >
+        <expression>(CPSMOVIM.importe_total - importe_iva) / CPSMOVIM.movcps</expression>
+        <label>Unitario</label>
+        <tipo>decimal</tipo>
+      </field>
+      <field id="importe_iva" deshabilitado="true" >
+        <expression>CPSMOVIM.importe_iva</expression>
+        <label>IVA</label>
+        <tipo>decimal</tipo>
+      </field>
+      <field id="importe_total" deshabilitado="true"  suma="true">
+        <expression>CPSMOVIM.importe_total - importe_iva</expression>
+        <label>Neto</label>
+        <tipo>decimal</tipo>
+      </field>
+
+      <field id="mailto"  deshabilitado="true" noshow="true">
+            <expression>select
+              ifnull(
+              (select group_concat(mail SEPARATOR '; ') 
+                from CCTCONTA 
+                where CCTCONTA.ctacod = CPSENCAB.ctacod and CCTCONTA.siscod = '01' and mail != '' and compras = 1), 
+              (select group_concat(mail SEPARATOR '; ') 
+                from CCTCONTA 
+                where CCTCONTA.ctacod = CPSENCAB.ctacod and CCTCONTA.siscod = '01' and mail != '' and principal = 1))</expression>
+      </field>
+
+      <field id="mailsubj" noshow="true" >
+          <expression>REPLACE(CONCAT('+Reclamo OC+', CPSMOVIM.ocpnro, '+', CPSMOVIM.detalle), "'", "")</expression>
+      </field>
+
+      <field id="mailbody" noshow="true">
+          <expression><![CDATA[CONCAT('Sr. proveedor le recordamos que tiene pendiente ', ROUND(CPSMOVIM.pencps, 2), ' ', (SELECT uniabv FROM FSMUNIDS WHERE unicod = STKINSUM.unicps), ' de ', CPSMOVIM.detalle, (CASE WHEN CPSMOVIM.observaciones != '' THEN CONCAT(' (', CPSMOVIM.observaciones, ')') ELSE '' END), ' correspondiente a la Orden de Compra Nº ', CPSENCAB.ocpnro, ' cuya fecha requerida era ', DATE_FORMAT(CPSMOVIM.fecreq, '%d/%m/%Y'), '.n</br>Solicitamos que nos responda este mail con la fecha de entrega de lo pendiente.nn</br></br>Saludos atte.n</br>', HTXUSERS.apellido, ', ', HTXUSERS.Nombre )]]>
+          </expression>
+      </field>
+
+      <field id="usuarionow" local="true" noshow="true">
+        <valor eval="true">$_SESSION['idUser']</valor>
+      </field>
+
+      <field id="filtmail" noshow="true">
+          <expression>REPLACE(CONCAT('+Reclamo OC+', CPSMOVIM.ocpnro, '+', CPSMOVIM.detalle), "'", "")</expression>
+      </field>
+
+      <field id="email"  colstyle="width:auto;" deshabilitado="false" local="true" Formstyle="display:none;" export="false">
+          <helper type="link" xml="mails_send.xml" dir="/histrix/mensajeria/" title="Reclamo de artículo" width="700" height="600">
+              <parameter source="mailto"  target="para" />
+              <parameter source="mailsubj" target="subject" />
+              <parameter source="mailbody" target="mensaje" />
+          </helper>
+          <expression sql="true"><![CDATA[
+               SELECT CONCAT('', ' <img src="../img/mail_generic.png"/>') 
+            ]]></expression>
+      </field>
+
+      <field id="filtmail_param" noshow="true">
+        <expression>CPSMOVIM.ocpnro</expression>
+      </field>
+
+      <field id="Emails" _showTablaObj="true" local="true" Formstyle="display:none;">
+          <helper type="link" xml="email_subj_qry.xml" dir="/email">
+              <parameter target="subject" source="filtmail_param" operator="like"/>
+          </helper>
+          <label>Mails</label>
+          <help></help>
+         <expression sql="true"><![CDATA[
+          SELECT CONCAT(
+          (SELECT COUNT(*)  FROM HTXMAIL WHERE MATCH(subject) AGAINST ('[__filtmail_param__]' IN BOOLEAN MODE)),' Env.')]]></expression>
+      </field>
+
+      <field id="resaltanegativos" clasefila="true" local="true" noshow="true">
+        <if exp="pencps &lt; 0">
+          <true>'resaltado'</true>
+          <false>''</false>
+        </if>
+      </field>    
+
+      <order>
+        <field id="ocpnro2"/>
+      </order>
+      
+    </table>
+    <join tipo="estado">
+      <table id="CPS_ESTADOS">
+        <field id="id_cpsestado" >
+          <condicion operador="=">CPSENCAB.ocpest</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="CPSMOVIM">
+        <field id="siscod" oculto="true">
+          <condicion operador="=">CPSENCAB.siscod</condicion>
+        </field>
+        <field id="ocpnro" oculto="true">
+          <condicion operador="=">CPSENCAB.ocpnro</condicion>
+        </field>
+        <field id="movfec" oculto="true">
+          <condicion operador="=">CPSENCAB.ocpfec</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join tipo="left">
+      <table id="PEDIDOINT">
+        <field id="idPed" oculto="true">
+          <condicion operador="=">CPSMOVIM.idPed</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join tipo="left">
+      <table id="STKINSUM">
+        <field id="siscod" oculto="true">
+          <label>STKINSUM.siscod</label>
+          <condicion operador="=">'01'</condicion>
+        </field>
+        <field id="artcod" oculto="true">
+          <condicion operador="=">CPSMOVIM.artcod</condicion>
+        </field>
+        <field id="artuni" oculto="true">
+        </field>
+        <field id="unicps" oculto="true">
+        </field>
+      </table>
+    </join>
+
+    <join tipo="left">
+      <table id="CCTCUENT">
+        <field id="siscod" oculto="true">
+          <condicion operador="=">'01'</condicion>
+        </field>
+        <field id="ctacod" oculto="true">
+          <condicion operador="=">CPSENCAB.ctacod</condicion>
+        </field>
+        
+<!--        <field id="pencps" oculto="true">
+          <condicion operador="!=">0</condicion>
+        </field> -->
+        CONCAT('Orden de Compra Nro ',CPSENCAB.ocpnro)
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="HTXUSERS">
+        <field id="id_usuario">
+          <condicion operador="=">[__usuarionow__]</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+        <table id="GEN_MONEDAS">
+            <field id="id_moneda" >
+                <condicion operador="=">CPSMOVIM.moneda_id</condicion>
+            </field>
+        </table>
+    </join>   
+  </form>
+</histrix>

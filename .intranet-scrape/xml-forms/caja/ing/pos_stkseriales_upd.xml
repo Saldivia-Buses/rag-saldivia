@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert" postGrabacion="true">
+	<title>Seriales</title>
+	<obs></obs>
+	<form>
+		<table id="STK_SERIALES" label="Seriales" idCampoCond="graba_serial">
+			<field id="stkarticulo_id"	            id_temp="id_stkserial" />
+			<field id="codigo_serie"                id_temp="codigo_serie" />
+			<field id="stkmovimiento_destino_id"	 lastId="pos_stkmovimientos_ins.xml" />
+		</table>
+	</form>
+</histrix>                                                    

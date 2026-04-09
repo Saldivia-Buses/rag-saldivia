@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" subtipo="vertical"  >
+  <title>HOMOLOGACION POR MODELO</title>
+  <obs/>
+  <form >
+    <table id="HOMOLOGMOD">
+      <title>Homologaciones por modelo</title>
+      <field id="id_homologacion" noshow="true" autoinc="true">
+
+      </field>
+      
+      <field id="Descripcion">
+        <label>Descripcion</label>
+        <expresion>CONCAT(CARROCERIA.modcar,' ',MODCHASIS.desabv, ' (',HOMOLOGMOD.asientos ,') ' ,' ', largo,'mts ', servdes)</expresion>
+      </field>
+      
+      <field id="baja" oculto="true">
+
+                 <condicion operador="=">0</condicion>
+      </field>
+
+      <field id="secciones" local="true" showObjTabla="true" linkint="prd_condiciones_crud.xml" showValor="true">
+          <paring destino="homologacion_id">id_homologacion</paring>
+      	<helper type="object" xml="prd_condiciones_qry.xml">
+      	    <parameter source="id_homologacion" target="homologacion_id" /> -
+      	</helper>
+        <valor>'Cargar'</valor>
+      </field>
+
+<!--
+      <field id="procesos" local="true" showObjTabla="true">
+	<helper type="object" xml="procesos_qry.xml">
+	    <parameter source="id_homologacion" target="homologacion_id" />
+	</helper>
+      </field>
+    -->
+    </table>
+    <join tipo="left">
+               <table id="CARROCERIA">
+          <field id="nrocar">
+                 <condicion operador="=">HOMOLOGMOD.nrocar</condicion>
+          </field>
+        </table>
+    </join>
+    <join tipo="left">
+               <table id="TIPOSERVICIO">
+          <field id="tipserv">
+                 <condicion operador="=">HOMOLOGMOD.tipserv</condicion>
+          </field>
+        </table>
+    </join>    
+    <join tipo="left">
+      <table id="MARCHASIS">
+        <field id="marcod">
+          <condicion operador="=">HOMOLOGMOD.marcod</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="MODCHASIS">
+        <field id="modcha">
+          <condicion operador="=">HOMOLOGMOD.modcha</condicion>
+        </field>
+        <field id="marcod">
+          <condicion operador="=">HOMOLOGMOD.marcod</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>

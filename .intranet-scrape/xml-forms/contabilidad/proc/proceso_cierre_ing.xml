@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ing" llenoTemporal="false"  confirma="GENERAR" inserta="false"  modifica="false" borra="false" imprime="false" conBusqueda="true">
+  <title>Proceso de cierre</title>
+  <obs></obs>
+  <consulta >
+    <table id="CTB_EJERCICIOS" label="Recibo de ingreso">
+      			
+              <movimientos cabecera="proceso_cierre_header.xml">
+		 <relacion id="cierre_ins.xml"/>
+		
+	      </movimientos>
+	     
+		     <filters>
+		        <field id="id_ejercicio" deshabilitado="true">
+		            <operador>=</operador>
+		        </field>
+      
+            	    </filters>
+
+                    <field id="id_ejercicio" noshow="true"></field>
+		    <field id="respuesta" obj="asiento_contable_cierre_qry.xml" showObjTabla="true"  showValor="true" local="true">
+                         <label Formstyle="display:none;">CIERRE</label>
+                	 <paring destino ="ejercicio_id">id_ejercicio</paring>
+            	    </field>
+		<!-- <field id="respuesta2" obj="asiento_apertura_qry.xml" showObjTabla="true"  showValor="true" local="true">
+                         <label Formstyle="display:none;">APERTURA</label>
+                	 <paring destino ="ejercicio_id">id_ejercicio</paring>
+            	    </field>
+		 <field id="respuesta3" obj="asiento_refundicion_qry.xml" showObjTabla="true"  showValor="true" local="true">
+                         <label Formstyle="display:none;">REFUNDICION</label>
+                	 <paring destino ="ejercicio_id">id_ejercicio</paring>
+            	    </field>-->
+                <field id="referencia" local="true" noshow="true">
+		   <valor>'CIERRE EJERCICIO'</valor>
+		</field>
+		<field id="concepto_id" local="true" noshow="true">
+		    <valor>1</valor>
+		</field>
+		<field id="fecha_movimiento" local="true" noshow="true">
+		   <valor>today</valor>
+		   <tipo>date</tipo>
+		</field>
+  
+
+
+</table>
+</consulta>
+</histrix>

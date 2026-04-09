@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  CRUD
+Tarea: Carga precios x Lista
+*******************************************************************************
+-->
+<histrix tipo="horizontalGrid" subtipo="vertical"  imprime="false">
+    <title>Maestro de Listas de Precios de Productos</title>
+    <obs></obs>
+    <form >
+
+        <table id="STK_LISTAS" label="Maestro de Precios de Productos">
+
+            <field id="id_stklista" autoinc="true" esClave="true" noshow="true" >	    
+                <detalle>stklista_id</detalle>
+            </field>
+
+            <field id="porcentaje_desc" >
+            </field>
+                          <!--
+            <field id="porcentaje_desc1">
+            </field>
+
+-->
+        </table>
+    </form>
+</histrix>
+

@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="fichaing" inserta="false" borra="false" modifica="false" imprime="false" tooltip="false" confirma="CONFIRMAR" transaccional="true" processFirst="true" log="false">
+  <title />
+  <obs></obs>
+  <confirmacion><![CDATA[¿Confirma el Asiento?]]></confirmacion>
+  <form>
+	<table id="STK_MOVIMIENTOS">
+
+		<cierraproceso id="asiento_contable_header.xml" dir="/stock/ing/" condition="modulocontable">
+			<paring destino="fecha_movimiento">fecha_movimiento</paring>
+			<paring destino="referencia">referencia</paring>
+		</cierraproceso>
+
+		<movimientos>
+			<relacion id="htxoptions_upd.xml" />
+		</movimientos>
+
+		<fieldGroup>
+			<field id="id_stkmovimiento" noshow="true">
+				<condicion operador="=">-1</condicion>
+			</field>
+
+			<field id="separador1" local="true" style="height:5px;" deshabilitado="true" />
+
+			<field id="fecha_movimiento">
+				<label>Fecha Movimiento</label>
+				<valor>today</valor>
+				<tipo>date</tipo>
+			</field>
+
+			<field id="referencia">
+				<label modpos="nobr">Referencia</label>
+				<tipo>varchar</tipo>
+				<size>70</size>
+			</field>
+
+			<field id="separador2" local="true" style="height:5px;" deshabilitado="true" />
+
+			<field id="htxoption_name" local="true" noshow="true">
+				<valor>SIS::lastId_asiento_contable</valor>
+			</field>
+		</fieldGroup>
+
+		<fieldGroup>		
+			<field id="detalle" local="true" colspan="6">
+				<label modpos="force" />
+				<helper type="object" xml="asiento_costo_grid.xml" />
+			</field>
+		</fieldGroup>
+
+		<fieldGroup local="true" noshow="true">
+			<field id="modulocontable">
+				<label>Contabilidad</label>
+				<valor eval="true">(strpos($_SESSION['properties']['modulos'],'contabilidad') != false ? 1 : 0  )</valor>
+			</field>
+
+			<field id="ctbcuenta_id">
+				<label>Cta.Contable</label>
+				<helper type="parameter" id="SIS::cuenta_asiento_venta">
+					<label>Cuenta contable para asiento de stock de la venta</label>
+					<defaultValue>'1.1.04.01'</defaultValue>
+				</helper>
+			</field>
+
+			<field id="ctbcuenta_doh">
+				<valor>0</valor>
+			</field>
+	
+			<field id="importe">
+				<tipo>numeric</tipo>
+			</field>
+		</fieldGroup>
+
+	</table>
+
+	<tempTable id="TEMPTABLENAME">
+		<row>
+			<field id="cuenta_id">ctbcuenta_id</field>
+			<field id="doh">ctbcuenta_doh</field>
+			<field id="importe">importe</field>
+		</row>
+	</tempTable>
+  </form>
+</histrix>

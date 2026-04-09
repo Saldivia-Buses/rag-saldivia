@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm" width="45%">
+  <title>Categorias de IIBB</title>
+  <obs></obs>
+  <consulta>
+    <table id="GEN_IIBB" label="Categorias de IIBB">
+      <filtros>
+        <field id="nombre_iibb">
+          <label>Nombre categoria</label>
+          <operador>like</operador>
+        </field>
+      </filtros>  
+      <field id="id_iibb" autoinc="true" noshow="true">
+        <label>Código </label>
+        <help>Código de IIBB</help>
+      </field> 
+      <field id="abreviacion_iibb">
+        <label>Abrev.</label>
+        <help>Nombre abreviado de la categoria de IIBB</help>
+      </field>
+      <field id="nombre_iibb" colstyle="display:none;">
+        <label>Nombre </label>
+        <help>Nombre de la categoria de IIBB</help>
+      </field>
+      <field id="iibb_regimen_id">
+        <label>Regimen</label>
+        <helper type="combo" xml="iibb_regimenes_crud.xml" />
+      </field>
+      <field id="alicuota">
+        <label>Alicuota %</label>
+      </field>
+      <field id="provincia_id">
+        <helper type="combo" xml="provincia_qry.xml" dir="/ayudas" />
+        <label>Provincia</label>
+      </field>
+    </table>
+  </consulta>
+</histrix>  

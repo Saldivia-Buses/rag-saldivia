@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<abm autoupdate="5" class="consultaancha" modifica="false" paginar="25" tipo="abm-mini" imprime="false">
+	<titulo>CHAT</titulo>
+	<obs/>
+	<consulta>
+		<tabla id="CHATLOG" label="Chat" styleTbody="height:425px;overflow-x:hidden;">
+			<campo autoinc="true" id="orden" noshow="true" tipoOrden="DESC">
+				<label>Orden</label>
+			</campo>
+			<campo deshabilitado="true" id="hora">
+				<label>Hora</label>
+				<valor>now()</valor>
+			</campo>
+			<campo deshabilitado="true" id="nick">
+				<label>Nombre</label>
+				<help></help>
+				<size>10</size>
+				<tabla_ex id="HTXUSERS">
+					<campo id="login" />
+					<campo id="nombre" >
+						<expresion>CONCAT(nombre, ' ', apellido)</expresion>
+					</campo>
+					
+				</tabla_ex>
+				<valor eval="true">$_SESSION['usuario']</valor>
+			</campo>
+			<campo id="texto">
+				<label>Texto</label>
+				<help>Ingrese el Texto</help>
+				<size>80</size>
+			</campo>
+			<orden>
+				<campo id="orden"/>
+			</orden>
+		</tabla>
+	</consulta>
+</abm>

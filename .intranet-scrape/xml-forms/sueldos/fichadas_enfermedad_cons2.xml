@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" >
+	<title>Francos</title>
+	<obs/>
+	<form >
+		<table id="GEN_CALENDAR" label="Fichadas del Reloj" >
+			
+
+            <field id="legajo" oculto="true" tabla="FRANCOS_PER">
+			    <label>Legajo</label>
+                
+			</field>
+            <field id="fecha2" noshow="true">
+                    <expression having="false">fecha</expression>
+                    <label>fecha2</label>
+                    <tipo>date</tipo>
+            </field>
+            <field id="fecha"  noshow="true">
+                    <label>fecha</label>
+            </field>
+            <field id="sinpaga"  noshow="true">
+		<expression>FRANCOS_CAT.sinpaga</expression>
+		<condicion operador="=">0</condicion>
+		
+            </field>
+
+			<field id="nombre2">
+                <expression>case when FRANCOS_PER.tipo = 0 then CONCAT('Licencia: ', FRANCOS_CAT.nombre) else CONCAT('Accid.: ', FRANCOS_CAT.nombre) end</expression>
+			    >
+                <tipo>varchar</tipo>
+			</field>
+
+            <field id="idFeriado">
+		<expression having="false">FERIADOS.idFeriado</expression>
+		<condicion operador="isnull">''</condicion>
+	    </field>
+
+            <field id="idfranco" tabla="FRANCOS_PER" noshow="true"></field>
+            <field id="tipo" tabla="FRANCOS_PER" noshow="true"></field>
+            <field id="horas" tabla="FRANCOS_PER" noshow="true"></field>
+            <field id="Horas_totales" _noshow="true">
+	                <expression><![CDATA[ 
+                            SEC_TO_TIME(sum( case when FRANCOS_PER.horas = 0 then 
+
+                                        (select TIME_TO_SEC(TIMEDIFF(H.egreso, H.ingreso)) from HORARIOHIST as H where H.desdeFecha <= GEN_CALENDAR.fecha and H.dia = DAYOFWEEK(GEN_CALENDAR.fecha) order by H.desdeFecha DESC limit 1)
+
+                                        else TIME_TO_SEC(FRANCOS_PER.horas) end
+                                ))
+                                ]]></expression>
+    		        <tipo>varchar</tipo>
+    			<condicion operador="!=">''</condicion>
+    			<size>8</size>
+			</field>
+           <group>
+                <field id="idfranco"></field>
+                <field id="tipo"></field>
+
+            </group>  
+			<order>
+				<field id="fecha" />
+			</order> -->
+		</table>
+		<join tipo="left">
+			<table id="FRANCOS_PER">
+				<field id="fechaInicio">
+					<condicion operador="&lt;=">GEN_CALENDAR.fecha</condicion>
+				</field>
+				<field id="fechaFin">
+					<condicion operador="&gt;=">GEN_CALENDAR.fecha or FRANCOS_PER.fechaFin = '0000-00-00'</condicion>
+				</field>
+			</table>
+		</join>
+    	<join tipo="left">
+			<table id="FRANCOS_CAT">
+				<field id="idfranco">
+					<condicion operador="=">FRANCOS_PER.idfranco</condicion>
+				</field>
+				<field id="tipo">
+					<condicion operador="=">FRANCOS_PER.tipo</condicion>
+				</field>
+
+			</table>
+		</join>
+    	<join tipo="left">
+			<table id="FERIADOS">
+				<field id="idFeriado">
+					<condicion operador="=">GEN_CALENDAR.fecha</condicion>
+				</field>
+			</table>
+		</join>
+		
+		
+	</form>
+</histrix>

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" subtipo="vertical" path="/archivo/htxtickets/">
+  <title>Reporte de Pedidos</title>
+  <obs/>
+  <form >
+    <table id="HTXTICKETS" label="CONSULTA DE PEDIDOS DE SOPORTE">
+      <filters>
+        <field id="CUMP" deshabilitado="false">
+          <label>Cumplido</label>
+          <operador>=</operador>
+        </field>
+      </filters>
+      <field id="id_ticket" deshabilitado="true" tipoOrden="DESC">
+        <label>Nro Pedido</label>
+        <help>Numero de Pedido</help>
+      </field>
+      <field id="login_ticket" deshabilitado="true">
+        <label modpos="nobr" Formstyle="display:none;">De</label>
+        <help>Quien realizo el pedido</help>
+        <tabla_ex id="HTXUSERS">
+          <field id="login"/>
+          <field id="nombre"/>
+          <order>
+            <field id="idUsuario"/>
+          </order>
+        </tabla_ex>
+      </field>
+      <field id="fecha_ticket" tipoOrden="DESC" deshabilitado="true">
+        <order>
+          <field id="fecha"/>
+        </order>
+        <label modpos="nobr">Fecha</label>
+        <help>Fecha de Movimiento  </help>
+      </field>
+      <field id="libro_ticket" deshabilitado="true">
+        <label style="color:green">Pedido</label>
+        <tipo>varchar</tipo>
+        <size>250</size>
+      </field>
+      <field id="observaciones_ticket">
+        <label>Observaciones </label>
+        <tipo>varchar</tipo>
+        <size>240</size>
+      </field>
+      <field id="fotos" local="true" imageWidth="165" path="id_ticket">
+        <expresion>CONCAT('/archivo/htxtickets/',id_ticket,'/')  </expresion>
+        <label modpos="nobr" posX="5" posY="+2" formStyle="display:none;">Dir</label>
+        <tipo>dir</tipo>
+      </field>
+      <field id="tktprioridad_id" deshabilitado="true">
+        <label Formstyle="display:none;">Prioridad</label>
+        <helper type="combo">
+          <option value="1">Baja</option>
+          <option value="2">Media</option>
+          <option value="3">Alta</option>
+          <option value="4">Urgente</option>
+        </helper>
+      </field>
+      <field id="cumplido">
+        <label>Cumplido</label>
+        <help>Fecha de Cumplido</help>
+      </field>
+      <field id="CUMP" noshow="true">
+        <expresion>case when cumplido ='0000-00-00' then 1 else 0 end</expresion>
+        <options>
+          <option valor="">Todos</option>
+          <option valor="0">Cumplidos</option>
+          <option valor="1">Pendientes</option>
+        </options>
+      </field>
+      <field id="pend" clasefila="true" noshow="true">
+        <expresion>CASE WHEN cumplido ='0000-00-00' THEN 'resaltado' else '' end</expresion>
+        <tipo>varchar</tipo>
+      </field>
+      <order>
+        <field id="id_ticket"/>
+        <field id="fecha_ticket"/>
+        <field id="cumplido"/>
+      </order>
+    </table>
+  </form>
+</histrix>

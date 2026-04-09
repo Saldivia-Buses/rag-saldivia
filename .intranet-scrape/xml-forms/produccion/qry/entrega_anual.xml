@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="card" grid="10%,190px" inserta="false" imprime="false">
+  <title>GEN_CALENDARIO</title>
+  <obs/>
+  <form>
+    <table id="GEN_CALENDAR">
+      <title>CALENDARIO</title>
+      <filters>
+        <field id="_year" deshabilitado="false">
+          <label>year</label>
+          <operador>=</operador>
+          <valor eval="true">date('Y')</valor>
+        </field>
+        <field id="linea_id" deshabilitado="false">
+          <label>Linea</label>
+          <operador>=</operador>
+        </field>
+        
+        
+      </filters>
+
+        <field id="linea_id" deshabilitado="false" local="true" noshow="true">
+          <label>Linea</label>
+            <helper type="combo" xml="lineas.xml" dir="/produccion"/>
+        </field>
+
+      <field id="_year" noshow="true" incdec="true">
+        <expression having="false">YEAR(fecha)</expression>
+        <tipo>integer</tipo>
+      </field>
+      <field id="mes" noshow="true">
+        <expression having="false">MONTH(fecha)</expression>
+        <tipo>varchar</tipo>
+      </field>
+      <field id="semana" noshow="true">
+        <expression>WEEK(fecha, 1)</expression>
+      </field>
+      
+      <field id="dia" style="background-color:#eee;padding:2px;">
+        <expression>concat( WEEK(fecha,1), ' ',
+        (case 
+	      when month(fecha) = 1 then 'Enero'
+        when month(fecha) = 2 then 'Febrero'
+        when month(fecha) = 3 then 'Marzo'
+        when month(fecha) = 4 then 'Abril'
+        when month(fecha) = 5 then 'Mayo'
+	      when month(fecha) = 6 then 'Junio'
+        when month(fecha) = 7 then 'Julio'
+        when month(fecha) = 8 then 'Agosto'
+        when month(fecha) = 9 then 'Septiembre'
+        when month(fecha) = 10 then 'Octubre'
+        when month(fecha) = 11 then 'Noviembre'
+        when month(fecha) = 12 then 'Diciembre'
+	    end                                
+        )
+      , ' '    ,day(min(fecha)), ' al ',day(max(fecha)))</expression>
+      </field>
+	<field id="coches" local="true" showObjTabla="true" style="width:100%">
+	    <helper xml="coches_semana.xml" type="object" >
+		<parameter source="semana" target="semana" />
+		<parameter source="_year" target="_year" />
+
+		<parameter source="linea_id" target="linea_id" />
+		
+		
+	    </helper>
+	</field>      
+      <group>
+        <field id="WEEK(fecha, 1)"/>
+      </group>
+    </table>
+  </form>
+</histrix>
+                                      

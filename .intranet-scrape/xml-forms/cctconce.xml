@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="crud">
+	<title>CONCEPTOS </title>
+	<obs></obs>
+	<form >
+		<table id="CCTCONCE">
+			<title>Conceptos</title>
+			<field id="concod">
+				<label>Cod.</label>
+				<help>Codigo de Concepto</help>
+			</field>
+			<field id="condes">
+				<label>Descripcion</label>
+				<help>Descripcion del Concepto</help>
+			</field>
+			<field id="conabv">
+				<label>Abrev.</label>
+				<help>Abreviatura a Utilizar</help>
+			</field>
+			
+			<field id="conimp">
+				<label>Imputacion</label>
+				<help>Imputacion contable</help>
+				<options>
+					<option valor="1">Debe</option>
+					<option valor="2">Haber</option>
+				</options>
+			</field>
+<!--
+			<field id="concfm">
+				<label>Cod.F.M</label>
+				<help>Codigo de Concepto Ficha Maestra</help>
+				
+			</field>
+			-->
+<!--			<field id="coniva">
+				<label>coniva</label>
+				<help>Registracion IVA</help>
+			</field>
+			-->
+			<field id="comcod">
+				<label>Tipo</label>
+				<help>TIPO DE COMPROBANTE SEGUN D.G.I. (RG 3419 - ANEXO VI ).</help>
+			</field>
+			<!--			<field id="ctbcod">
+			<label>Cta.Contable</label>
+			<help>Cuenta Contable a imputar</help>
+			
+			</field>
+			
+			<field id="movcod">
+			<label>Cod.Stock</label>
+			<help>Codigo movimiento Stock</help>
+			</field>
+			-->
+			<field id="siscod" oculto="true">
+				<label>Cod</label>
+			</field>
+
+			<order>
+				<field id="concod"></field>
+			</order>
+		</table>
+	</form>
+</histrix>

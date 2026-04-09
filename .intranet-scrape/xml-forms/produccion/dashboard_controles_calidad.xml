@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="dashboard">
+    <titulo>Indicadores de Gestion</titulo>
+
+        <widget id="barras" width="48%" height="300px">            
+            <url><![CDATA[histrixLoader.php?xml=prod_horas_retrabo_grafico.xml&dir=produccion/]]></url>
+        </widget>
+
+        <widget id="torta" width="48%" height="300px">
+            <url><![CDATA[histrixLoader.php?xml=prod_cant_retrabajos_tipos.xml&dir=produccion/]]></url>
+        </widget>
+
+</histrix> 

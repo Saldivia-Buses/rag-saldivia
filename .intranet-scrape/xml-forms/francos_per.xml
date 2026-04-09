@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<abm tipo="abm">
+	<titulo>AUSENTISMO</titulo>
+	<obs/>
+	<consulta>
+		<tabla id="FRANCOS_PER" label="Licencias del Personal">
+			<filtro_ex>
+				    <label>Operario</label>
+				    <tabla_ex id="PERSONAL">
+						<campo id="legajo"></campo>
+						<campo id="nom">
+						    <expresion>CONCAT(PERSONAL.apellido , ' , ' , PERSONAL.nombre)</expresion>
+						</campo>
+						<campo id="Apellido"></campo>
+
+					<filtra>legajo</filtra>
+					<orden>
+						<campo id="Apellido"></campo>
+					</orden>
+		    		</tabla_ex>
+			</filtro_ex>
+	<!--		<filtros>
+				<campo id="legajo">
+					<label>Legajo</label>
+					<help>Legajo Personal</help>
+					<ayuda_ex id="PERSONAL" xml="HLPpersonal.xml" dir="/help_local">
+						<campo id="legajo"></campo>
+						<campo id="apellido">
+							<detalle>apellido</detalle>
+						</campo>
+						<campo id="nombre">
+							<detalle>nombre</detalle>
+						</campo>
+					</ayuda_ex>
+				</campo>
+
+			</filtros>-->
+			<campo id="id" esClave="true" autoinc="true" noshow="true">
+			</campo>
+			
+			<campo id="legajo" >
+				<label>Legajo</label>
+				<help>Legajo Personal</help>
+				<ayuda_ex id="PERSONAL" xml="HLPpersonal.xml" dir="/help_local">
+					<campo id="legajo"></campo>
+					<campo id="apellido">
+						<detalle>apellido</detalle>
+					</campo>
+					<campo id="nombre">
+						<detalle>nombre</detalle>
+					</campo>
+				</ayuda_ex>
+			</campo>
+			<campo deshabilitado="true" id="apellido" tabla="PERSONAL">
+				<expresion>PERSONAL.apellido</expresion>
+				<label>Apellido</label>
+				<tipo>varchar</tipo>
+			</campo>
+			<campo deshabilitado="true" id="nombre" tabla="PERSONAL">
+				<expresion>PERSONAL.nombre</expresion>
+				<label>Nombre</label>
+				<tipo>varchar</tipo>
+			</campo>
+			<campo id="idfranco">
+				<tabla_ex id="FRANCOS_CAT">
+					<campo id="idfranco"/>
+					<campo id="nombre"/>
+                   <campo id="tipo">
+                         <condicion operador="=">0</condicion>
+                    </campo>
+
+				</tabla_ex>
+				<label>Cod.</label>
+				<help>Codigo de Licencia</help>
+			</campo>
+			<campo id="fechainicio">
+				<label>Fecha Inicio</label>
+				<help>Fecha Inicio</help>
+			</campo>
+			<campo id="fechafin">
+				<label>Fecha Fin</label>
+				<help>Fecha Fin</help>
+			</campo>
+			<campo id="observaciones">
+				<label>Observaciones</label>
+				<help>Observaciones</help>
+				<size>200</size>
+			</campo>
+			<!--
+			<filtros>
+				<campo id="IdSindicato">
+					<label>sindicato</label>
+					<tabla_ex id="SINDICATO">
+						<campo id="IdSindicato"/>
+						<campo id="Nombre"/>
+					</tabla_ex>
+					<help>Sindicato</help>
+					<operador>=</operador>
+					<valor>1</valor>
+				<actualiza>
+
+					<campo destino="IdSindicato" id="Id_area"/>
+					<campo destino="IdSindicato" id="IdCateg"/>
+
+				</actualiza>
+				</campo>
+				<campo id="Id_area">
+					<label>Area</label>
+					<tabla_ex id="AREASSIND">
+						<campo id="Id_area"/>
+						<campo id="descripcion"/>
+						<campo id="IdSindicato">
+
+						</campo>
+					</tabla_ex>
+
+					<operador>=</operador>
+				<actualiza>
+					<campo destino="Id_area" id="IdCateg"/>
+				</actualiza>
+				</campo>
+			<campo id="IdCateg" >
+				<label>Categoria</label>
+				<tabla_ex id="CATPERSONAL">
+					<campo id="IdCateg"/>
+					<campo id="descripcion"/>
+						<campo id="IdSindicato" />
+						<campo id="Id_area"/>
+				</tabla_ex>
+			</campo>
+				<campo id="IdConvenio">
+					<label>Convenio</label>
+					<tabla_ex id="CONVENIOS">
+
+						<campo id="IdConvenio"/>
+						<campo id="Nombre"/>
+					</tabla_ex>
+					<operador>=</operador>
+					<valor>1</valor>
+				</campo>
+			</filtros> -->
+		</tabla>
+		<join tipo="left">
+			<tabla id="PERSONAL">
+				<campo id="legajo">
+					<condicion operador="=">FRANCOS_PER.legajo</condicion>
+				</campo>
+			</tabla>
+		</join>
+	</consulta>
+</abm>
+

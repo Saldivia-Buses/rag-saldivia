@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud" subtipo="vertical">
+<title>Grupos de Atributos</title>
+<obs></obs>
+<form detalle="stkatributo_opciones_abm.xml" inline="true" hasDetail="tipo">
+    <table id="STK_ATRIBUTOS">
+
+        <field id="id_stkatributo" esClave="true" autoinc="true" noshow="true">
+            <detalle>stkatributo_id</detalle>
+        </field>
+        <field id="stkgrupoatrib_id" valauto="true" noshow="true"/>
+        <field id="tipo" noshow="true">
+            <expression>IF(tipo_atributo = 2, 1, 0)</expression>
+        </field>
+
+        <field id="nombre_atributo">
+            <label>Nombre atrib.</label>
+            <tipo>varchar</tipo>
+        </field>
+
+        <field id="tipo_atributo">
+            <label>Tipo Atrib.</label>
+            <options>
+                <option value="1">Texto</option>
+                <option value="2">Desplegable</option>
+                <option value="3">Tilde/Check</option>
+            </options>
+        </field>
+
+        <field id="orden_atributo">
+            <label>Orden</label>
+            <tipo>integer</tipo>
+        </field>
+
+        <field id="deshabilitado_atributo">
+            <label sincelda="true" modpos="nobr">Deshabilitado</label>
+            <tipo>check</tipo>
+        </field>
+
+        <orden>
+            <field id="orden_atributo"/>
+        </orden>
+
+    </table>
+</form>	   
+</histrix>

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert">
+    <title>DETALLE ORDEN PRODUCCION</title>
+    <obs></obs>
+    <form >
+        <table id="STK_MOVIMIENTOS" label="MOVIMIENTOS" idCampoCond="guardar_perdidas">
+
+            <field id="stkarticulo_id"     id_temp="id_stkarticulo" />
+
+            <field id="fecha_movimiento"   id_padre="fecha_orden" />
+
+            <field id="cantidad"       id_temp="perdida"/>
+
+            <field id="letra_movimiento" >
+                <tipo>varchar</tipo>
+                <valor>''</valor>
+            </field>
+
+            <field id="stkconcepto_id" >
+                <tipo>integer</tipo>
+                <valor>9</valor>
+            </field>
+
+            <field id="stkdeposito_id" >
+                <tipo>integer</tipo>
+                <valor>1</valor>
+            </field>
+
+            <field id="alta_movimiento"    id_padre="fecha_orden" />
+
+            <field id="referencia"     id_temp="referencia" >
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="unidad_id"      id_temp="unidad_id"/>
+
+            <field id="numero_movimiento"      id_temp="id_mrporden"/>
+
+            <field id="puesto_movimiento"      >
+                <valor>0</valor>
+            </field>
+
+            <field id="ordendetalle_id"    id_temp="id_mrpordendetalle" />
+            
+            <field id="user_id"    id_temp="user_id" />
+          
+            <field id="cajmovimiento_id" >
+                <valor>0</valor>
+            </field>
+
+        </table>
+    </form>
+</histrix>

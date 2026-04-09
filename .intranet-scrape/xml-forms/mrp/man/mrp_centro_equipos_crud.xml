@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud" >
+  <title>Maquinas y Herramientras</title>
+  <obs />
+  <form >
+    <table id="MRP_CENTRO_EQUIPO" label="productos">
+
+		<field id="id_centro_equipo" noshow="true" autoinc="true">
+		</field>
+
+		<field id="centro_productivo_id" oculto="true">
+			<label>Centro Productivo</label>
+		</field>
+
+		<field id="equipo_id">
+			<label>Equipo Asignado</label>
+			<helper xml="mrp_equipos_permitidos_qry.xml" dir="/mrp/qry/" type="combo">
+			</helper>
+		</field>
+
+		<field id="desde_fecha">
+			<label>Desde</label>
+			<tipo>date</tipo>
+		</field>
+
+
+    </table>
+  </form>
+</histrix>

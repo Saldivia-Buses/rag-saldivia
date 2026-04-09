@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert">
+    <title>DETALLE ORDEN PRODUCCION</title>
+    <obs></obs>
+    <form >
+        <table id="STKINMOV" label="MOVIMIENTOS" >
+
+            <field id="siscod" 	   _id_temp="stkarticulo_id" >
+        	<valor>'01'</valor>
+            </field>
+
+            <field id="artcod" 	   id_temp="stkarticulo_id" />
+            <field id="movcod" 	   id_cab="stkconcepto_id" />
+            <field id="depcod" 	   id_cab="stkdeposito_id" />
+            
+            <field id="movfec"   id_cab="fecha_cierre" />
+            <field id="movalt"    id_cab="fecha_cierre" />
+            <field id="descripcion"	   id_temp="observaciones_ordendetalle" />
+
+            <field id="tipuni" 	   id_temp="unidad_id"/>
+
+            <field id="movcant" 	   id_temp="producido_ordendetalle"/>
+            <field id="movuso" 	   id_temp="producido_ordendetalle"/>
+
+            <field id="movnro" id_temp="ordendetalle_id" />
+        </table>
+    </form>
+</histrix>

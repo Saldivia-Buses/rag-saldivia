@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8" ?>
+   <histrix tipo="consulta">
+       <title>SUBRUBROS</title>
+        <obs></obs>
+               <form >
+                  <table id="STK_SUBRUBROS" label="SUBRUBROS">
+
+                  <field id="subsistema_id" oculto="true">
+                    <label>Cod</label>
+                     <valor>06</valor>
+                  </field>
+
+                  <field id="stkrubro_id" oculto="true">
+                      <label>Rubro</label>
+                      <help>Codigo de Rubro del Articulo</help>
+            		      <tabla_ex id="STK_RUBROS">
+            		        <field id="id_stkrubro"></field>
+            		        <field id="nombre_rubro"></field>
+            		      </tabla_ex>
+		      
+                  </field>
+                  <field id="id_stksubrubro">
+                      <label>Código</label>
+                      <help>Código de Grupo </help>
+                  </field>
+<!--                  <field id="siscod" oculto="true">
+                      <label>Codigo Sistema.. </label>
+                      <help> </help>
+                  </field>
+		  -->
+                  <field id="nombre_subrubro">
+                      <label>Grupo</label>
+                      <help>Descripción </help>
+                  </field>
+<!--                  <field id="ctbcod">
+                      <label>Cuenta Contable</label>
+                      <help>Cuenta contable</help>
+				<tabla_ex id="CTBCUENT">
+					<field id="ctbcod"></field>
+					
+					<field id="ctbnom">
+	
+					</field>
+					<field id="ctbhab">
+						<condicion operador="=">1</condicion>
+					</field>
+					
+					<order>
+						<field id="ctbnom"></field>
+					</order>
+				</tabla_ex>                      
+                  </field> -->
+<!--                  <field id="subnro">
+                      <label>Prox.Numero </label>
+                      <help>Proximo numero correlativo para generacion de codigo de articul </help>
+                  </field> -->
+                  </table>
+               </form>
+        </histrix>

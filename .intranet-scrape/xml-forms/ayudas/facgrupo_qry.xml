@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  Ayuda
+Tarea: Ayuda para la Tabla de Grupos de Servicios
+Autor: d!ego2k
+Fecha: 05/05/2011
+*******************************************************************************
+-->
+    <histrix tipo="consulta">
+	<title>Grupos</title>
+	 <obs></obs>
+		<form >
+		    <table id="FAC_SERVICIO_GRUPOS">
+
+			<field id="id_facgrupo" noshow="true" />
+
+			<field id="nombre_grupo">
+				<label>Descripcion</label>
+			</field>
+
+		    </table>
+		</form>
+    </histrix>

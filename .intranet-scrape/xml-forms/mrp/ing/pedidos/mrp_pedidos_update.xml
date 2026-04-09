@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="update" >
+    <title>PEDIDOS</title>
+    <obs></obs>
+    <consulta>
+        <table id="REG_MOVIMIENTOS" label="ORDEN DE PRODUCCION" >
+            <field id="id_regmovim" 	  id_temp="id_regmovim" esClave="true"/>
+            <field id="mar_movimiento" >
+            	<valor>1</valor>
+            </field>
+        
+        </table>
+    </consulta>
+</histrix>

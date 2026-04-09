@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" preloadData="false">
+  <title>Ficha Kardex</title>
+  <obs/>
+  <form>
+    <table id="STK_MOVIMIENTOS" label="Ficha Kardex">
+
+      <preconsultas>
+            <xmlfile id="fichakardex_pre_qry.xml"/>
+      </preconsultas>
+
+		<filters>
+
+				<field id="stkarticulo_id">
+					<operador>=</operador>
+					<label>Código*</label>
+				</field>
+
+				<field id="nombre_articulo" deshabilitado="true" modpos="nobr">
+					<label>Artículo</label>
+				</field>
+
+				<field id="stkdeposito_id" >
+					<operador>=</operador>
+					<label modpos="nobr">Depósito*</label>
+				</field>
+
+				<field id="desde_fecha">
+					<label>Desde Fecha*</label>
+					<operador>&gt;</operador>
+				</field>
+
+				<field id="hasta_fecha" modpos="nobr">
+					<label>Hasta Fecha</label>
+					<operador>&lt;</operador>
+					<valor>today</valor>
+				</field>
+
+				<field id="stkrubro_id"  modpos="nobr">
+					<label>Rubro</label>
+				</field>
+
+		</filters>
+
+		<fieldGroup>
+
+			<field id="id_regmovim" tabla="REG_MOVIMIENTOS" noshow="true" />
+
+			<field id="id_stkmovimiento" table="STK_MOVIMIENTOS" noshow="true"/>
+
+	        <field id="numero_movimiento" noshow="true" />			<!--AGREGADO ESTO PARA INSUMAS -->
+
+	        <field id="puesto_movimiento" noshow="true" />			<!--AGREGADO ESTO PARA INSUMAS -->
+
+	        <field id="stkrubro_id" tabla="STK_ARTICULOS" noshow="true">
+			    <helper type="combo" xml="stkrubro_qry.xml" dir="/ayudas" empty="true"/>
+		    </field>
+
+			<field id="desde_fecha" local="true" noshow="true" >
+				<preparam campo="desde_fecha" operador="=">true</preparam>
+				<tipo>date</tipo>
+			</field>
+
+			<field id="hasta_fecha" local="true" noshow="true">
+				<tipo>date</tipo>
+			</field>
+
+			<field id="imprime_concepto1" noshow="true">
+				<expression>
+				CASE WHEN IFNULL(REG_NUMERADORES.ejecuta,'') = '' THEN trim(CAJ_CONCEPTOS.imprime_concepto) ELSE trim(REG_NUMERADORES.ejecuta) END
+				</expression>
+			</field>
+
+			<field id="tipo_concepto" clasefila="true" noshow="true">
+				<expression>CASE WHEN STK_CONCEPTOS.tipo_concepto = 0 THEN 'resaltadoVioleta' else '' END</expression>
+			</field>
+
+		</fieldGroup>
+
+
+		<fieldGroup style="padding:2px 2px 2px 2px;vertical-align:middle;text-align:center;">
+							
+				<field id="fecha_movimiento">
+			        <label>Fecha</label>
+			        <tipo>date</tipo>
+					<condicion operador="&gt;=">ifnull(STR_TO_DATE('[__desde_fecha__]', '%d/%m/%Y'),'0000-00-00') and STK_MOVIMIENTOS.fecha_movimiento &lt;= STR_TO_DATE('[__hasta_fecha__]', '%d/%m/%Y')</condicion>
+				</field>
+
+				<field id="stkdeposito_id">
+			        <label>Depósito</label>
+			        <helper type="combo" xml="stkdeposito_qry.xml" dir="/ayudas" empty="true"/>
+			        <preparam campo="stkdeposito_id" operador="=">true</preparam>
+				</field>
+
+				<!--<field id="deposito_origen">  AGREGADO ESTO PARA INSUMAS 
+					<label>Deposito II</label>
+					<expression sql="true">
+						SELECT CASE WHEN stkconcepto_id = 14 THEN concat(nombre_deposito,' (Origen)')
+                                    WHEN stkconcepto_id = 15 THEN concat(nombre_deposito,' (Destino)')
+      								ELSE '' END
+                          		FROM STK_MOVIMIENTOS
+                                JOIN STK_DEPOSITOS ON STK_DEPOSITOS.id_stkdeposito = STK_MOVIMIENTOS.stkdeposito_id
+                                WHERE	numero_movimiento = '[__numero_movimiento__]' and fecha_movimiento = '[__fecha_movimiento__]'  and
+                                        puesto_movimiento = '[__puesto_movimiento__]' and stkdeposito_id != '[__stkdeposito_id__]'</expression>
+				</field>-->
+
+				<field id="stkarticulo_id">
+					<label>Código</label>
+					<helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas">
+						<field id="wstklista_id" local="true">
+							<valor>1</valor>
+						</field>
+					</helper>
+					<preparam campo="stkarticulo_id" operador="=">true</preparam>
+				</field>
+
+				<field id="nombre_articulo" tabla="STK_ARTICULOS" _local="true" noselect="true" modpos="nobr" colspan="3">
+					<label>Nombre</label>
+					<size>40</size>
+				</field>
+
+				<field id="nombre_concepto" tabla="STK_CONCEPTOS">
+					<label>Concepto</label>
+				</field>
+
+				<field id="comp_stock" _local="true">
+					<label>Nro. Comp. Stock</label>
+					<expression>CONCAT(LPAD(STK_MOVIMIENTOS.puesto_movimiento,4,0),'-', LPAD(STK_MOVIMIENTOS.numero_movimiento,8,0) )</expression>
+				</field>
+
+				<field id="nro_comprobante" _local="true">
+					<label>Nro. Comprobante</label>
+					<expression> CONCAT(REG_MOVIMIENTOS.letra_movimiento,' ',LPAD(REG_MOVIMIENTOS.puesto_movimiento,4,'0'),'-',LPAD(REG_MOVIMIENTOS.nro_movimiento  ,8,'0'))</expression>
+					<helper type="link" _dir="/caja/qry">
+						<parameter source="id_regmovim" target="id_regmovim"/>
+					</helper>
+					<attribute id="linkint">imprime_concepto1</attribute>
+				</field>
+		
+		</fieldGroup>
+
+		<fieldGroup style="padding:2px 2px 2px 2px;vertical-align:middle;">
+		
+				<field id="ingresos" local="true" noZero="true" suma="true">
+					<label modpos="nobr">Ingresos</label>
+					<expression>CASE WHEN STK_CONCEPTOS.tipo_concepto = 0 THEN cantidad ELSE '' END</expression>
+				</field>
+
+				<field id="egresos" local="true" noZero="true" suma="true">
+					<label modpos="nobr">Egresos</label>
+					<expression>CASE WHEN STK_CONCEPTOS.tipo_concepto = 1 THEN cantidad ELSE '' END</expression>
+				</field>
+
+				<field id="cantidad" local="true" suma="true" acumula="true">
+					<expression>CASE WHEN STK_CONCEPTOS.tipo_concepto = 0 THEN round(STK_MOVIMIENTOS.cantidad,2) ELSE -( round(STK_MOVIMIENTOS.cantidad,2)) END</expression>
+					<label>Stock</label>
+				</field>
+
+				<field id="referencia" deshabilitado="true">
+					<label>Ref</label>
+				</field>
+
+				<field id="cpsdetalle_id" noshow="true"/>
+
+		</fieldGroup>
+
+		<fieldGroup >
+			<if> if (strpos($_SESSION['properties']['modulos'],'compras') !== false) return true;</if>
+
+			<field id="observaciones" tabla="CPS_DETALLE">
+				<label>O.C. Obs</label>
+			</field>
+		</fieldGroup>
+
+		<order>
+			<field id="fecha_movimiento" table="STK_MOVIMIENTOS"/>
+			<field id="stkdeposito_id"/>
+			<field id="id_stkmovimiento" table="STK_MOVIMIENTOS"/>
+
+		</order>
+
+		<group>
+			<field id="id_stkmovimiento" table="STK_MOVIMIENTOS"/>
+		</group>
+
+    </table>
+
+    <join tipo="left">
+      <table id="STK_ARTICULOS">
+        <field id="id_stkarticulo">
+          <condicion operador="=">STK_MOVIMIENTOS.stkarticulo_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="STK_CONCEPTOS">
+        <field id="id_stkconcepto">
+          <condicion operador="=">STK_MOVIMIENTOS.stkconcepto_id</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join tipo="LEFT">
+      <table id="REG_DETALLES">
+        <field id="id_regdetalle">
+          <condicion operador="=">STK_MOVIMIENTOS.regdetalle_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="LEFT">
+      <table id="REG_MOVIMIENTOS">
+        <field id="id_regmovim">
+          <condicion operador="=">REG_DETALLES.regmovim_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="REG_CONCEPTOS">
+        <field id="id_concepto">
+          <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join tipo="left">
+      <table id="CAJ_MOVIMIENTOS">
+        <field id="id_cajmovimiento">
+          <condicion operador="=">REG_MOVIMIENTOS.cajmovimiento_id</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join tipo="left">
+      <table id="CAJ_CONCEPTOS">
+        <field id="id_cajconcepto">
+          <condicion operador="=">CAJ_MOVIMIENTOS.cajconcepto_id</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join tipo="left">
+      <table id="REG_NUMERADORES">
+        <field id="subsistema_id">
+          <condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion>
+        </field>
+        <field id="regconcepto_id">
+          <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+        </field>
+        <field id="puesto">
+          <condicion operador="=">REG_MOVIMIENTOS.puesto_movimiento</condicion>
+        </field>
+        <field id="letra">
+          <condicion operador="=">REG_MOVIMIENTOS.letra_movimiento</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join tipo="left">
+      <table id="CPS_DETALLE">
+        <field id="id_cpsdetalle">
+          <condicion operador="=">STK_MOVIMIENTOS.cpsdetalle_id</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud" borra="no" path="fotos/epp">
+  <title>Elemento Proteccion Personal</title>
+  <obs></obs>
+  <form>
+    <table id="CAL_ELEMENTO_PROT_PERSO" label="EPP">
+      <field id="id_elemento_proteccion" noshow="true" esClave="true">
+        <label>Codigo</label>
+        <help>Código del elemento</help>
+      </field>
+      <field id="nombre_elemento">
+        <label>Nombre </label>
+        <help>Nombre del elemento</help>
+        <size>30</size>
+      </field>
+      <field id="abrev_elemento">
+        <label>Abreviacion </label>
+        <help>Abreviacion del elemento</help>
+        <size>30</size>
+      </field>
+      <field id="foto_elemento" foto="true" path="id_elemento_proteccion">
+        <label>Foto</label>
+        <help>Foto del elemento</help>
+        <size>30</size>
+        <tipo Type="Image">file</tipo>
+      </field>      
+      <field id="activo">
+        <label>Activo </label>
+        <help>Activo elemento</help>
+        <options>
+        <option valor="1">Si</option>
+        <option valor="0">No</option>
+      </options>
+      </field>
+    </table>
+  </form>
+</histrix>  

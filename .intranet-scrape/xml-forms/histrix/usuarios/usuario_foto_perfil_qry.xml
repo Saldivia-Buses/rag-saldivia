@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" path="/fotos/personal/">
+  <title>Usuarios</title>
+  <obs/>
+  <form  >
+    <table id="HTXUSERS" label="Usuarios">
+
+      <field id="Id_usuario" noshow="true" >
+        <label>ID Usuario</label>
+        <help></help>
+      </field>
+
+      <field id="fotos" imageWidth="60" path="IdPersona">
+        <expression>CONCAT('/fotos/personal/',PERSONAL.IdPersona,'/',PERSONAL.foto)</expression>
+        <label>Foto</label>
+        <tipo>dir</tipo>
+      </field>
+
+      <field id="IdPersona" noshow="true" >
+        <label>ID Usuario</label>
+      </field>
+
+      <field id="legajo" noshow="true">
+        <label>legajo</label>
+      </field> 
+
+      <field id="legajo" noshow="true">
+        <label>legajo</label>
+      </field> 
+
+    </table>
+
+      <join tipo="left">
+        <table id="PERSONAL">
+          <field id="legajo">
+              <condicion operador="=">HTXUSERS.legajo</condicion>
+          </field>
+        </table>
+    </join>
+
+  </form>
+</histrix>

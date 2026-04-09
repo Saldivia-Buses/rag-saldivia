@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" exportasuma="true">
+	<title />
+	<obs />
+	<form>
+		<table id="REG_DETALLES" label="Detalle de Movimientos" styleTbody="height:150px;overflow-x:hidden;" PDFnoborder="true" >
+
+			<field id="id_regdetalle" noshow="true" print="false"/>
+
+			<field id="muestra_iva" noshow="true" local="true" print="false" valauto="true" />
+
+			<field id="NoMuestra_iva" noshow="true" local="true" print="false">
+				<if exp="muestra_iva">
+				<true>'false'</true>
+				<false>'true'</false>
+				</if>		
+			</field>				
+
+			<field id="regmovim_id" noshow="true" />
+
+			<field id="orden" noshow="true" />
+
+			<fieldGroup>
+			
+
+				<field id="codigo_detalle" PDFcolWidth="15">
+					<label size="35">Código</label>
+				</field>
+				
+				<field id="descripcion_detalle">
+					<label size="120">Descripción</label>
+				</field>
+
+				<field id="cantidad" PDFcolWidth="25" PDFalign="R">
+					<label size="20">Cantidad</label>
+					<expression>CONCAT(
+							TRUNCATE(REG_DETALLES.cantidad_detalle, 0), ' (', 
+							(CASE WHEN MOD((REG_DETALLES.cantidad_detalle / STK_ARTICULOS.cantidad_pack), 1) != 0 THEN
+								ROUND(REG_DETALLES.cantidad_detalle / STK_ARTICULOS.cantidad_pack, 2)
+							ELSE ROUND(REG_DETALLES.cantidad_detalle / STK_ARTICULOS.cantidad_pack, 0)
+							END),
+							' CAJ)'
+							)
+					</expression>
+				</field>
+
+				<field id="alicuota_iva" PDFcolWidth="15" noshow="true">
+					<label size="30" >Alicuota</label>
+					<tipo>numeric</tipo>
+				</field>
+
+				<field id="precio_venta" PDFcolWidth="25">
+		        	<label modpos="nobr" size="20">P.Lista</label>
+		        	<expresion>(IF('[__muestra_iva__]' = 'true', REG_DETALLES.precio_venta, REG_DETALLES.precio_venta * (1 + REG_DETALLES.alicuota_iva / 100)))</expresion>
+					<tipo>numeric</tipo>
+				</field>
+				<field id="porcentaje_desc0" PDFsize="8" PDFlineas="false">
+			        <label modpos="nobr" size="20">Dto.1</label>
+				    <tipo>numeric</tipo>
+				</field>
+				<field id="porcentaje_desc1" PDFsize="8" PDFlineas="false">
+			        <label modpos="nobr" size="20">Dto.2</label>
+				    <tipo>numeric</tipo>
+				</field>
+				<field id="dto_general">
+					<label>Dto.Gral.</label>
+					<expression>SELECT bonificaciones_movimiento FROM REG_MOVIMIENTOS WHERE id_regmovim = REG_DETALLES.regmovim_id</expression>
+					<tipo>numeric</tipo>
+				</field>
+				<field id="precio_final">
+					<label>P.Final</label>
+					<expression>ROUND(((IF('[__muestra_iva__]' = 'true', REG_DETALLES.precio_venta, REG_DETALLES.precio_venta * (1 + REG_DETALLES.alicuota_iva / 100))) * (1 - porcentaje_desc0 / 100) * (1 - porcentaje_desc1 / 100) * (1 - (SELECT bonificaciones_movimiento FROM REG_MOVIMIENTOS WHERE id_regmovim = REG_DETALLES.regmovim_id) / 100)), 2)</expression>
+					<tipo>decimal</tipo>
+				</field>
+
+
+
+			<!--
+			<field id="subtot">
+			    <label modpos="nobr" size="20">Subtotal</label>
+		        <expresion>(IF('[__muestra_iva__]' = 'true', REG_DETALLES.precio_venta, REG_DETALLES.precio_venta * (1 + REG_DETALLES.alicuota_iva / 100)) * cantidad_detalle)</expresion>
+			    <tipo>numeric</tipo>
+			</field>-->
+
+
+
+			<field id="total_detalle"  total="true" PDFsize="8" PDFlineas="false" PDFnoborder="true">
+				<expression>ROUND((total_detalle * (1 - ((SELECT bonificaciones_movimiento FROM REG_MOVIMIENTOS WHERE id_regmovim = REG_DETALLES.regmovim_id) / 100))), 2)</expression>
+   				<attribute id="print">NoMuestra_iva</attribute>
+			    <label size="25">Total.</label>
+			    <tipo>decimal</tipo>	
+				<detalle>SubTotal</detalle>
+			</field>
+
+			<field id="neto_detalle"  total="true" PDFsize="8" PDFlineas="false" PDFnoborder="true">
+			    <expression>ROUND((neto_detalle * (1 - ((SELECT bonificaciones_movimiento FROM REG_MOVIMIENTOS WHERE id_regmovim = REG_DETALLES.regmovim_id) / 100))), 2)</expression>
+   				<attribute id="print">muestra_iva</attribute>		
+			    <label size="25">Total</label>
+			    <tipo>decimal</tipo>	
+				<detalle>SubTotal</detalle>
+			</field>
+
+			</fieldGroup>
+			
+			<order>
+				<field id="orden"/>
+			</order>
+			
+			<group>
+			  <field id="id_regdetalle" />
+			</group>
+		</table>
+			<join tipo="left">
+				<table id="STK_ARTICULOS">
+					<field id="id_stkarticulo">
+						<condicion operador="=">REG_DETALLES.codigo_detalle</condicion>
+					</field>
+				</table>
+			</join>
+	</form>
+</histrix>	

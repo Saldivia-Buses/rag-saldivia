@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm">
+  <title>Comprobante</title>
+  <obs></obs>
+  <consulta>
+    <table id="GEN_COMPROBANTES" label="Comprobantes Afip">
+	
+        
+		<field id="id_codigo">
+			<label>Código</label>
+		</field>
+
+		<field id="descripcion">
+			<label>Descripción</label>
+		</field>
+
+
+
+    </table>
+  </consulta>
+</histrix>  

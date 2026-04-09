@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="delete"  >
+        <title>Control de Cambios</title>
+        <obs></obs>
+        <form >
+                <table id="PROD_AVISOS_HOMOLOGACION" >
+		    <field id="prodaviso_id"    id_temp="prodaviso_id" esClave="true"/>
+		    <field id="homologacion_id" id_temp="id_homologacion" esclave="true" />
+                </table>
+        </form>           
+</histrix>

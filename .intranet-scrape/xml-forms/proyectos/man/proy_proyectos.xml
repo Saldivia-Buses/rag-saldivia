@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<histrix tipo="crud"   path="/fotos/proyectos" modal="true">
+        <title>Proyectos</title>
+        <obs></obs>
+        <form>
+                <table id="PROY_PROYECTO" >
+                    <title>Proyecto</title>
+
+                        <filters auto="true">
+
+                            <field id="responsable_proyecto"  deshabilitado="false">   
+                                <label>Responsable</label>
+                                <operador>=</operador>
+
+                            </field>                               
+                            <field id="finalizado" deshabilitado="false">
+                                <label>Buscar proyectos finalizados</label>
+                                <operador>=</operador>
+                                <valor>0</valor> 
+                            </field>
+                        </filters>
+
+                        <field id="id_proyecto" autoinc="true" _noshow="true" deshabilitado="true">
+                	   
+                            <label>Nro</label>
+                            <help>Código</help>
+                            <valor>0</valor>
+                        </field>
+
+                        <field id="print"  deshabilitado="true" formStyle="display:none;">
+                    	    <expression>'Imprimir'</expression>
+                    	    <helper xml="proy_proyecto_imp.xml" type="link" dir="/proyectos/qry/">
+                    		<parameter source="id_proyecto" target="id_proyecto" />
+                    	    </helper>
+                            <valor>0</valor>
+                        </field>
+                       <field id="fecha_proyecto" _valauto="true" required="true">
+                            <label _modpos="nobr">Fecha</label>
+                            <help>Fecha del Proyecto</help>
+                            <valor>today</valor>
+                        </field>
+                        <field id="fechafin_tentativa" colstyle="display:none">
+                            <label modpos="nobr">Objetivo de finalizacion</label>
+                            <help>Fecha objetivo del finalizacion del Proyecto</help>
+                            <tipo>date</tipo>
+                        </field>                        
+                        <field id="fechafin_proyecto" colstyle="display:none">
+                            <label >Fecha verificacion</label>
+                            <help>Fecha de finalizacion del Proyecto</help>
+                            <tipo>date</tipo>
+                        </field>
+                        <field id="fechavalidacion_proyecto"   colstyle="display:none">
+                            <label modpos="nobr">Fecha Validación</label>
+                            <help>Fecha de validación del Proyecto</help>
+                            <tipo>date</tipo>
+                        </field>
+
+                        <field id="responsable_proyecto"  deshabilitado="false" required="true">   
+                            <helper type="combo" id="HTXUSERS" empty="true">
+                                <field id="Id_usuario"/>
+                                <field id="nombre">
+                                    <expression>CONCAT(apellido, ' ', Nombre)</expression>
+                                </field>
+                                <field id="baja">
+                                    <condicion operador="=">0</condicion>
+                                </field>
+                                <order>
+                                    <field id="nombre"/>
+                                </order>
+                            </helper>
+                            <label>Responsable</label>
+                        </field>   
+                       <field id="nombre_proyecto">
+                            <label colspan="3">Título</label>
+                            <help>Título del Proyecto</help>
+                            <size>40</size>
+                        </field>
+
+                        <field id="finalizado" deshabilitado="false" noshow="true">
+                                <label>Finalizo</label>
+                                <expression>case when fechafin_proyecto = '0000-00-00' then 0 else 1 end</expression>
+                                <tipo>check</tipo>
+                            </field>
+
+                       <field id="descripcion_proyecto" colstyle="display:none;">
+                            <label colspan="6">descripcion</label>
+                            <help>Descripcion del Proyecto</help>
+                    	    <tipo>simpleditor</tipo>
+                        </field>                  
+
+                       <field id="archivos_proyecto" local="true" path="id_proyecto"  >
+	                       <expression>CONCAT('/fotos/proyectos/',id_proyecto,'/')  </expression>
+                       
+                            <label >Archivos</label>
+                            <help>Archivos del Proyecto</help>
+                    	    <tipo>dir</tipo>
+			                <size>40</size>
+                        </field>
+                       
+                       <field id="etapas"  local="true" noshow="true"  >
+                    	    <helper xml="proy_detalle_in.xml" type="object" >
+                    		<parameter source="id_proyecto" target="proyecto_id"  />
+                    	    </helper>
+                            <label colspan="4">Etapas</label>
+                        </field>
+                    
+                    
+                       <field id="etapasqry" showObjTabla="true" local="true" noshow="true" 
+                        Formstyle="display:none;">
+                    	    <helper xml="proy_detalle_in_qry.xml" type="object" >
+                    		<parameter source="id_proyecto" target="proyecto_id"  />
+                    	    </helper>
+                        </field>
+                    
+                </table>
+                <join tipo="left">
+                    <table id="HTXUSERS">
+                    <field id="Id_usuario">
+                        <condicion operador="=">PROY_PROYECTO.responsable_proyecto</condicion>
+                    </field>
+                    </table>
+                </join>
+        </form>           
+</histrix>

@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF8"?>
+<histrix tipo="crud" >
+  <titulo>Artículo por Locación</titulo>
+  <obs/>
+  <form>
+    <table id="STK_ARTICULO_LOCACION">
+      <title>Artículo por locación </title>
+      <field id="id_articulo_locacion" noshow="true" autoinc="true" />
+
+      <field id="stklocacion_id" oculto="true" />
+      
+    <field id="stkarticulo_id">
+      <label>Artículo</label>
+      <helper id="STK_ARTICULOS" type="external">
+        <field id="id_stkarticulo">
+        </field>
+        <field id="nombre_articulo" >
+          <detalle>nombre_articulo</detalle>
+        </field>
+
+      </helper>
+	<actualiza>
+	    <field id="articulopack_id" detalle="stkarticulo_id" />
+	</actualiza>
+    </field>
+    <!--
+    <field id="subsistema_id" tabla="STK_ARTICULOS" >
+    </field> 
+  -->
+    <field id="nombre_articulo" tabla="STK_ARTICULOS" deshabilitado="true">
+      <label>Nombre</label>
+	<size>40</size>
+
+    </field>
+    
+    <field id="stock_actual" deshabilitado="true" style="color:red" suma="true">
+	<label>Stock Actual</label>
+	<condicion operador="!=">0</condicion>
+    </field>
+
+    <field id="stock_minimo">
+      <label>Mínimo</label>
+    </field>
+    <field id="stock_maximo">
+      <label>Máximo</label>
+    </field>
+
+    <field id="frecuencia">
+      <label>Frecuencia aprovisionamiento</label>
+	<tipo>rrule</tipo>
+    </field>
+
+    <field id="codigo_locacion" noshow="true">
+      <expression>codigo_locacion</expression>
+    </field>
+
+    <field id="deposito_origen_id">
+	<label>Depósito Origen</label>
+	<helper id="STK_DEPOSITOS"  type="combo">
+	    <field id="id_stkdeposito" />
+	    <field id="nombre_deposito" />
+	</helper>
+	<actualiza>
+	    <field id="locacion_origen_id" destino="stkdeposito_id" />
+	</actualiza>
+    </field>
+
+    <field id="locacion_origen_id">
+	<label>Locación Origen</label>
+	<helper id="STK_LOCACION"  type="combo" empty="true">
+	    <field id="id_stklocacion" />
+	    <field id="codigo_locacion" />
+	    <field id="stkdeposito_id" >
+<!--		<condicion operador="=">0</condicion> -->
+	    </field>
+	</helper>
+	
+    </field>
+
+    <field id="stkcarro_id">
+	<label>Carro Aprovisionamiento</label>
+	<helper xml="stk_carro_crud.xml" _id="STK_CARRO"  type="combo" empty="true">
+	</helper>
+	
+    </field>
+
+
+    <field id="etiqueta" local="true" Formstyle="display:none;">
+      <label>etiqueta</label>
+      <helper xml="stkarticulo_etiqueta_qr.xml" dir="/stock/qry/" type="link">
+        <parameter source="stkarticulo_id" target="id_stkarticulo" />
+        <parameter source="stklocacion_id" target="stklocacion_id" />
+        <parameter source="codigo_locacion" target="codigo_locacion" />
+      </helper>
+      <valor>'Imprimir Etiqueta'</valor>
+    </field>
+<!--
+    <field id="agregar_pack" local="true" Formstyle="display:none;">
+	<label>Nuevo Pack</label>
+      <helper xml="stk_articulo_pack_crud.xml" type="link" >
+	<parameter source="stkarticulo_id" target="stkarticulo_id" />
+      </helper>
+	<valor>'+'</valor>
+
+    </field>
+-->
+<!--
+    <field id="articulopack_id">
+      <label>Standard Pack</label>
+      <helper xml="stk_articulo_pack_crud.xml" type="combo">
+	<field id="stkarticulo_id">
+	    <condicion operador="=">0</condicion>
+	</field>
+      </helper>
+
+    </field>
+-->
+    </table>
+    <join>
+      <table id="STK_LOCACION">
+        <field id="id_stklocacion">
+          <condicion operador="=">stklocacion_id</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join>
+      <table id="STK_ARTICULOS">
+        <field id="id_stkarticulo">
+          <condicion operador="=">stkarticulo_id</condicion>
+        </field>
+      </table>
+    </join>
+<!--
+    <join tipo="left">
+      <table id="STK_ARTICULOS" as="STKA">
+        <field id="id_stkarticulo">
+          <condicion operador="=">contenedor_stkarticulo_id</condicion>
+        </field>
+      </table>
+    </join>
+-->
+
+  </form>
+</histrix>

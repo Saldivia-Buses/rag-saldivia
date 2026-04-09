@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="insert">
+       <title>FACDETAL</title>
+        <obs></obs>
+           <form >	
+				<table id="FACDETAL" label="FACDETAL" idCampoCond="grdet">
+					<field id="id_detal" lastId="factura_facdetal_ingmov.xml" />
+	                <sql>
+	                UPDATE `FACDETAL` SET regmovim_id = (SELECT id_regmovim FROM REG_MOVIMIENTOS rm WHERE rm.nro_movimiento = FACDETAL.nrofac and rm.puesto_movimiento = FACDETAL.nropue and rm.concod = FACDETAL.concod and rm.fecha_movimiento = FACDETAL.regfec and rm.nro_cuenta = FACDETAL.ctacod limit 1) WHERE id_detal = [__factura_facdetal_ingmov.xml__]
+	                </sql>
+				</table>
+           </form>
+    </histrix>

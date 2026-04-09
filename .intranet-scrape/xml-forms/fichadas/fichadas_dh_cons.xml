@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="consulta" conBusqueda="true" imprimetanda="true">
+	<title>FICHA PERSONAL</title>
+	<obs></obs>
+	<form  detalle="personal_fichadas_abm.xml" >
+		<table id="PERSONAL" label="Ficha Personal">
+			<filters>
+				<field id="desdefecha">
+					<operador>&gt;=</operador>
+					<label>Desde Fecha</label>
+					<valor>today</valor>
+				</field>
+				<field id="hastafecha">
+					<operador>&lt;=</operador>
+					<label>Hasta Fecha</label>
+					<valor>today</valor>					
+				</field>
+				<field id="id_seccion">
+				    <label>Seccion</label>
+	                            <tabla_ex id="SECCION">
+        	                        <field id="id_seccion"></field>
+            	                        <field id="nombre"></field>
+                                        <order>
+                		            <field id="nombre"></field>
+                    	                </order>
+                                    </tabla_ex>
+					<operador>=</operador>
+                                    
+	                          </field>
+			</filters>
+			<field id="idPersona" noshow="true">
+				<detalle>idPersona</detalle>
+			</field>
+				<field id="id_seccion" noshow="true">
+				    <label>Seccion</label>
+	                            <tabla_ex id="SECCION">
+        	                        <field id="id_seccion"></field>
+            	                        <field id="nombre"></field>
+                                        <order>
+                		            <field id="nombre"></field>
+                    	                </order>
+                                    </tabla_ex>
+                                    
+	                          </field>
+			
+			<field id="legajo">
+				<detalle>legajo</detalle>
+				<label modpos="nobr">Legajo</label>
+			</field>
+			<field id="apellido">
+				<label modpos="nobr" colspan="6">Apellido</label>
+				<help>Apellido</help>
+			</field>
+			<field id="Nombre">
+				<label modpos="nobr">Nombre</label>
+				<help>Nombre</help>
+			</field>
+			<field id="mitarjeta">
+				<expression>select PERSONAL_TARJETA.tarjeta FROM PERSONAL_TARJETA where PERSONAL_TARJETA.idPersona = PERSONAL.idPersona and STR_TO_DATE('[__hastafecha__]', '%d/%m/%Y') > PERSONAL_TARJETA.fechaDesde order by PERSONAL_TARJETA.fechaDesde DESC limit 1 </expression>
+				<label >Tarjeta</label>
+				<help>Tarjeta</help>
+<!--				<detalle>tarjeta</detalle> -->
+				<tipo>varchar</tipo>
+			</field>
+			
+			<field id="fechaEgreso" noshow="true">
+				<label >Baja</label>
+				<help>Baja</help>
+				<condicion operador="=">"0000-00-00"</condicion>
+			</field>
+
+			<field id="desdefecha" local="true" noshow="true">
+				<tipo>date</tipo>
+				<detalle>desdefecha</detalle>
+				<label>Desde Fecha</label>
+			</field>
+			<field id="hastafecha" local="true"  noshow="true">
+				<tipo>date</tipo>
+				<detalle>hastafecha</detalle>
+				<label>Hasta Fecha</label>
+			</field>
+			
+			<field id="idJornada" noshow="true">
+			</field>
+			
+            <field id="trabajadas" _noshow="true" suma="true">
+                <label>Horas</label>
+                <expression sql="true"><![CDATA[
+                    select SEC_TO_TIME(sum(FF.minutos)) from 
+                    (select F1.fecha,
+               
+@egr:= (SELECT H.egreso from HORARIOHIST as H  where H.desdeFecha <= F1.fecha and H.dia = DAYOFWEEK(F1.fecha) order by H.desdeFecha DESC limit 1) as "egr",
+@ing:= (SELECT H.ingreso from HORARIOHIST as H where H.desdeFecha <= F1.fecha and H.dia = DAYOFWEEK(F1.fecha) order by H.desdeFecha DESC limit 1) as "ing",
+
+@h1:= (select H1.hora from FICHADAS as H1 left join FERIADOS ON FERIADOS.idFeriado = H1.fecha where H1.tarjeta = (SELECT TJT.tarjeta from PERSONAL_TARJETA as TJT where TJT.idPersona = [__idPersona__]  and TJT.fechaDesde <= F1.fecha order by fechaDesde DESC limit 1) and H1.fecha = F1.fecha and H1.borrado = 0 order by H1.hora  limit 0, 1) as "h1",
+@h2:= (select H1.hora from FICHADAS as H1 left join FERIADOS ON FERIADOS.idFeriado = H1.fecha where H1.tarjeta = (SELECT TJT.tarjeta from PERSONAL_TARJETA as TJT where TJT.idPersona = [__idPersona__]  and TJT.fechaDesde <= F1.fecha order by fechaDesde DESC limit 1) and H1.fecha = F1.fecha and H1.borrado = 0 order by H1.hora  limit 1, 1) as "h2",
+@h3:= (select H1.hora from FICHADAS as H1 left join FERIADOS ON FERIADOS.idFeriado = H1.fecha where H1.tarjeta = (SELECT TJT.tarjeta from PERSONAL_TARJETA as TJT where TJT.idPersona = [__idPersona__]  and TJT.fechaDesde <= F1.fecha order by fechaDesde DESC limit 1) and H1.fecha = F1.fecha and H1.borrado = 0 order by H1.hora  limit 2, 1) as "h3",
+@h4:= (select H1.hora from FICHADAS as H1 left join FERIADOS ON FERIADOS.idFeriado = H1.fecha where H1.tarjeta = (SELECT TJT.tarjeta from PERSONAL_TARJETA as TJT where TJT.idPersona = [__idPersona__]  and TJT.fechaDesde <= F1.fecha order by fechaDesde DESC limit 1) and H1.fecha = F1.fecha and H1.borrado = 0 order by H1.hora  limit 3, 1) as "h4",
+
+ifnull( time_to_sec( timediff( case when @h2 > @egr then @egr else @h2 end , case when @h1 < @ing then @ing else @h1 end )), 0)
++
+ifnull( time_to_sec( timediff( case when @h4 > @egr then @egr else @h4 end , case when @h4 < @ing then @ing else @h3 end )), 0)
+
+as "minutos"
+
+                   
+             from GEN_CALENDAR as F1 left join FERIADOS ON FERIADOS.idFeriado = F1.fecha
+        where
+                          F1.fecha  >= '[__desdefecha__]' and
+                          F1.fecha  <= '[__hastafecha__]' and
+        isnUll(FERIADOS.idFeriado)) as FF ]]>
+                </expression>
+                <tipo>time</tipo>
+            </field>
+
+
+            <field id="proyeccion" _noshow="true" suma="true">
+                <label>Proyeccion</label>
+                <expression sql="true"><![CDATA[
+                    select SEC_TO_TIME(sum(FF.minutos)) from 
+                    (select F1.fecha,
+               
+@egr2:= (SELECT H.egresoPremio  from HORARIOHIST as H  where H.horario = [__idJornada__] and H.desdeFecha <= F1.fecha and H.dia = DAYOFWEEK(F1.fecha) order by H.desdeFecha DESC limit 1) as "egr",
+@ing2:= (SELECT H.ingresoPremio from HORARIOHIST as H  where H.horario = [__idJornada__] and H.desdeFecha <= F1.fecha and H.dia = DAYOFWEEK(F1.fecha) order by H.desdeFecha DESC limit 1) as "ing",
+
+ifnull( time_to_sec( timediff( @egr2 , @ing2 )), 0)
+
+as "minutos"
+
+                   
+             from GEN_CALENDAR as F1 left join FERIADOS ON FERIADOS.idFeriado = F1.fecha
+        where
+                          F1.fecha  >= '[__desdefecha__]' and
+                          F1.fecha  <= '[__hastafecha__]' and
+        isnUll(FERIADOS.idFeriado)) as FF ]]>
+                </expression>
+                <tipo>time</tipo>
+            </field>
+
+
+						
+			<order>
+				<field id="apellido"></field>
+			</order>
+		</table>
+	</form>
+</histrix>

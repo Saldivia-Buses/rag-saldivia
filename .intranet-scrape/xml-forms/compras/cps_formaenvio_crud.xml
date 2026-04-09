@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud">
+  <title>Forma Envio</title>
+  <obs></obs>
+  <form>
+    <table id="CPS_FORMAENVIO" label="Forma Envio">
+      <field id="id_cpsformaenvio" noshow="true">
+        <label>Codigo</label>
+        <help>Código Forma Envio</help>
+      </field>
+      <field id="nombre_cpsformaenvio">
+        <label>Nombre </label>
+        <help>Nombre Forma Envio</help>
+        <size>50</size>
+      </field>
+      <field id="abrev_cpsformaenvio">
+        <label>Abreviacion </label>
+        <help>Abreviacion Forma Envio</help>
+        <size>30</size>
+      </field>
+      <field id="activo_cpsformaenvio">
+        <label>Activo </label>
+        <help>Activo Forma Envio</help>
+        <options>
+        <option valor="1">Si</option>
+        <option valor="0">No</option>
+      </options>
+      </field>
+    </table>
+  </form>
+</histrix>  

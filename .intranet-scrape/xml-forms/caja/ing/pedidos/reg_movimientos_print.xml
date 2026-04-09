@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="nosql" _sqlhardcoded="true" 
+    xmlImpresion="/clientes/qry/imp_factura_plataforma.xml" 
+
+>
+    <title/>
+    <obs/>
+    <form>
+        <table id="REG_MOVIMIENTOS" idCampoCond="grabar">
+            <field id="xmlImpresion" local="true" id_temp="xmlImpresion">
+	       	    <setvar>xmlImpresion</setvar>
+	        </field>
+			<field id="printerName"      		id_temp="printer" local="true">
+			    <setvar>directprint</setvar>
+            </field>
+			<field id="printer2"      		id_temp="printer" local="true">
+			    <setvar>printer</setvar>
+            </field>
+        
+            <field id="id_regmovim"      	lastId="reg_movimientos_ins.xml">
+          	  <detalle>id_regmovim</detalle>
+            </field>
+        </table>
+    </form>
+</histrix>	

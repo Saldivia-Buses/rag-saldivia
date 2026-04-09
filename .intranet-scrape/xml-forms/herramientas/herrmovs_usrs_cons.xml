@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="consulta" preloadData="false">
+	<title>Movimiento de Herramientas por USUARIO</title>
+	<obs></obs>
+	<form >
+		<table id="HERRMOVS" label="MOVIMIENTOS">
+			<filters>
+				<field id="usuario">
+				<label modpos="nobr">Operario</label>
+					<operador>=</operador>
+                    <size>50</size>
+                </field>
+    			<field id="id_seccion" deshabilitado="false">
+					<label modpos="nobr">Seccion</label>
+					<operador>=</operador>
+	    		</field>
+				<field id="nombre_usuario" local="true" deshabilitado="true">
+				<label _modpos="nobr">Nombre</label>
+					<operador>=</operador>
+                    <size>200</size>
+				</field>
+	
+			</filters>
+
+			<field id="id_herrmovs" noshow="true">
+				<label>Nro.</label>
+				<tipo>varchar</tipo>
+				<help>Nro. de movimiento</help>
+			</field>
+
+			<field id="Nombre" tabla="PERSONAL">
+                <expression>CONCAT(PERSONAL.apellido,', ', PERSONAL.Nombre)</expression> 
+				<label>Nombre</label>
+			</field>
+
+		      <field id="fechaEgreso" oculto="true" tabla="PERSONAL">
+		        <label>Egreso</label>
+		        <condicion operador="=">"0000-00-00"</condicion>  
+		      </field>
+
+      		<field id="id_seccion">
+				 <expression having="false">(select SECCION.id_seccion from SECCIONHISTORIA
+				   left join SECCION on SECCION.id_seccion = SECCIONHISTORIA.id_seccion
+				   where SECCIONHISTORIA.IdPersona = PERSONAL.IdPersona
+					and SECCIONHISTORIA.fechaDesde &lt;= date(now())
+				   order by SECCIONHISTORIA.fechaDesde desc limit 1)
+				 </expression>
+		          <helper type="combo" id="SECCION" empty="true">
+		            <field id="id_seccion"></field>
+		            <field id="nombre"></field>
+				    <field id="activa">
+						<condicion operador="=">1</condicion>
+				    </field>
+				    <order>
+				    	<field id="nombre" />
+				    </order>
+		          </helper>
+			      <label>Seccion</label>
+			      <help>Seccion</help>
+      		</field>
+
+			<field id="id_herr">
+				<label>Cod.</label>
+				<expression>id_herramienta</expression>
+				<tipo>varchar</tipo>
+				<format>(%s)</format>
+				<help>Cod. de Herramienta</help>
+			</field>
+			
+          <field id="id_herramienta">
+				<label>Herramienta</label>
+				<help>Herramienta </help>
+			
+            <tabla_ex id="HERRAMIENTAS">
+			
+              <field id="id_herramienta"></field>
+					<field id="nomherr"></field>
+					<field id="grucod" oculto="true">
+						<condicion operador="!=">2</condicion>
+					</field>
+
+										<order>
+						<field id="nomherr"></field>
+					</order>
+				</tabla_ex>
+				
+			</field>
+
+			
+	    		<field id="movher">
+				<label>Movimiento </label>
+				<help>Tipo de Movimiento de la Herramienta. </help>
+				<tabla_ex id="CONCHERR">
+					<field id="movher"></field>
+					<field id="movnom"></field>
+				</tabla_ex>
+				
+			</field>
+						
+			<field id="movfec" tipo="date">
+                 <tipo>date</tipo>
+				<label>Fecha Movimiento </label>
+				<help>Fecha de Movimiento de la Herramienta. </help>
+			</field>
+
+		
+          <field id="usuario" noshow="true" autocompletar="true">
+				<label>Usuario </label>
+				<help>Usuario </help>
+				   <ayuda_ex id="FSMOPERA" xml="HLPpersonal_ope.xml" dir="/help_local">
+					<!-- campos a agregar al contenedor Filtro-->
+					  <field id="opecod">
+						  <detalle>usuario</detalle>
+
+					  </field>
+                        <field id="nombres">
+                            <expression>CONCAT(apellido,', ', Nombre)</expression> 
+                            <detalle>nombre_usuario</detalle>
+                            <size>80</size>
+                        </field>
+
+				    </ayuda_ex>	
+				<valor default="true">0</valor>
+			    <size>50</size>
+          </field>
+
+			<field id="nombre_usuario" local="true" noshow="true">
+				<label>Apellido</label>
+			</field>
+
+			<order>
+				<field id="Nombre" />
+				<field id="movfec" tipo="numeric" tipoOrden="DESC" ></field>
+			</order>
+			
+		</table>
+
+    <join tipo="left">
+      <table id="PERSONAL">
+        <field id="opecod">
+          <condicion operador="=">HERRMOVS.usuario</condicion>
+        </field>
+       </table>
+    </join>
+
+	</form>
+</histrix>

@@ -1,0 +1,289 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" subtipo="vertical"  imprime="false" transaccional="true" limit="1000">
+	<title>PRECIOS POR MODELO</title>
+	<obs/>
+	<form >
+		<table id="LISTAPRECIOSDET" styleTbody="height:250px;">
+			<movimientos cabecera="listapreciosdet_duplica_cab.xml">
+			  <relacion id="listaprecios_cab_ins.xml"></relacion>	
+                          <relacion id="listapreciosdet_duplica_ingmov.xml">
+				</relacion>
+			</movimientos>
+			<title>Precios por modelo</title>
+			<filters>
+			    <field id="idLista">
+				<label>Lista</label>
+				<operador>=</operador>
+			    </field>
+			    <field id="moneda_id" modpos="nobr">
+				<valor>4</valor>
+				<operador>=</operador>
+			    </field>
+			</filters>
+<!--
+			<filtro_ex>
+				<tabla_ex id="LISTAPRECIOSCAB" vacio="true">
+					<field id="idLista">
+					</field>
+					<field id="nom">
+						<expression>concat(' ADICIONALES ', idLista ,' Vigencia desde: ',DATE_FORMAT(fecha, '%d/%m/%Y'))</expression>
+					</field>
+					<field id="idLista" >
+					</field>
+					<field id="fecha" tipoOrden="ASC" _oculto="true">
+					</field>
+					
+					
+					<order>
+						<field id="fecha"></field>
+					</order>
+					<filtra>idLista</filtra>
+				</tabla_ex>
+					<label modpos="nobr">Lista de Origen</label>
+					<help>Lista</help>
+
+			</filtro_ex>
+-->
+			    <field id="moneda_id" local="true">
+				<helper type="combo" xml="/ayudas/monedas_qry.xml" />
+				
+			    </field>
+			<field id="idLista" _noshow="true">
+				<helper type="combo" id="LISTAPRECIOSCAB">
+					<field id="idLista">
+					</field>
+					<field id="nom">
+						<expression>concat(' ADICIONALES ', idLista ,' Vigencia desde: ',DATE_FORMAT(fecha, '%d/%m/%Y'))</expression>
+					</field>
+					<field id="idLista" >
+					</field>
+					<field id="fecha" tipoOrden="ASC" _oculto="true">
+					</field>
+					
+					
+					<order orderType="DESC">
+						<field id="fecha"></field>
+					</order>
+
+				</helper>
+<!--
+				<tabla_ex id="LISTAPRECIOSDET">
+					<field id="idLista">
+					</field>
+					<field id="nom">
+						<expression>concat(nombre,'ADICIONALES')</expression>
+					</field>					
+				</tabla_ex>
+				-->
+
+				<label modpos="nobr">Lista</label>
+				<help>Lista</help>
+			</field>
+
+				<field id="idArticulo" deshabilitado="true">
+					<label>articulo</label>
+					<help>Articulo</help>
+
+				</field>
+
+				<field id="artsup" deshabilitado="true">
+					<expression>STK_ARTICULOS.artsup</expression>
+					<label>Repuesto</label>
+				</field>
+
+				<field id="articulo_hijo" deshabilitado="true">
+					<expression>articulo_hijo</expression>
+					<label>hijo</label>
+				</field>
+
+			   <field id="des" modpos="nobr" colspan="4">
+				   <expression>STK_ARTICULOS.nombre_articulo</expression>
+				   <tipo>varchar</tipo>
+				   <label>Descripcion</label>
+			   </field>
+<!--
+		        <field id="cosT" noZero="true" >
+			        <label >Costo.</label>
+			         NO TOCAR, TE MATO 
+    				<expression having="false" >
+						( case when artsup != '' and (select sum(round( (costo_automatico * cantidad) * (1 + recargo / 100) , 2)) from STKPIEZA where idPadre  = STKINSUM.artsup limit 1) != 0 then 
+					    (select sum(round( (costo_automatico * cantidad) * (1 + recargo / 100) , 2)) from STKPIEZA where idPadre  = STKINSUM.artsup) end )</expression>
+					<tipo>numeric</tipo>
+ 			    </field>
+-->
+
+        	<field id="cotizacion" sincelda="true" modpos="nobr" noshow="true">
+          	  	<label>Cotizacion</label>
+          	  	<expression>@cotiz:=(select cotizacion_genmonedahis from GEN_MONEDA_HIS where GEN_MONEDA_HIS.moneda_id = STK_COSTO_REPOSICION.moneda_id order by fecha_genmonedahis DESC limit 1)</expression>
+      		</field>
+
+        	<field id="cotiz_dolar" modpos="nobr">
+          	  	<label>Dolar Hoy</label>
+			<tipo>custom_numeric</tipo>
+
+          	  	<expression>(select cotizacion_genmonedahis from GEN_MONEDA_HIS where GEN_MONEDA_HIS.moneda_id = '[__moneda_id__]' order by fecha_genmonedahis DESC limit 1)</expression>
+      		</field>
+        	<field id="costo_final_func" modpos="nobr">
+            	<label>Costo Repo.</label>
+
+            	<expression>ifnull(getCostConDtoFunc(STK_ARTICULOS.artsup, ifnull(STK_COSTO_REPOSICION.moneda_id, 1), date(now()), 0  ), 0) * (case when (select count(*) from STKPIEZA where IdPadre = STK_ARTICULOS.artsup) then 1 else (STK_ARTICULOS.valor_compra / STK_ARTICULOS.valor_uso) end)</expression> 
+			<tipo>custom_numeric</tipo>
+        	</field>
+		<field id="logistico" noshow="true">
+    		    <label>% Logístico Región</label>
+    		    <expression>max(porcentaje_region)</expression>
+			<tipo>custom_numeric</tipo>
+
+		</field>
+
+<!--
+    		<field id="costo_logistico">
+    		    <label>% Logístico Región</label>
+    		    <expression>((case when bom_variacion_id = 0 then @costo_logistico:=ifnull(round((select porcentaje_region from REG_CUENTA join LOG_REGION on id_logregion = logregion_id where id_regcuenta = STK_COSTO_REPOSICION.regcuenta_id) , 4),round((select porcentaje_region from REG_CUENTA join LOG_REGION on id_logregion = logregion_id where id_regcuenta = STK_ARTICULOS.regcuenta_id and id_stkarticulo = articulo_hijo) , 4)) else 0 end))</expression>
+                <tipo>numeric</tipo>
+    		</field>
+-->
+
+		<field id="total_costo_log" local="true" style="font-weigth:bold;color:blue;" deshabilitado="true" modpos="nobr">
+			<label>costo Logistico</label>
+			<if exp="true">
+			    <true>round(costo_final_func / 100 * logistico, 3)</true>
+			    <false>0</false>
+			</if>
+			<tipo>custom_numeric</tipo>
+		</field>
+
+
+
+		<field id="precio_dolarizado" local="true" style="font-weigth:bold;color:blue;" deshabilitado="true" modpos="nobr">
+			<label>Precio en U$S</label>
+			<if exp="true">
+			    <true>round((costo_final_func + total_costo_log)/ cotiz_dolar, 3)</true>
+			    <false>0</false>
+			</if>
+			<tipo>custom_numeric</tipo>
+		</field>
+
+
+		<field id="precio_mas_21" local="true" style="font-weigth:bold;color:blue;" deshabilitado="true" modpos="nobr">
+			<label>+21%</label>
+			<if exp="true">
+			    <true>round(precio_dolarizado * 1.21, 3)</true>
+			    <false>0</false>
+			</if>
+			<tipo>custom_numeric</tipo>
+		</field>
+		<field id="precio_mas_25" local="true" style="font-weigth:bold;color:blue;" deshabilitado="true" modpos="nobr">
+			<label>+25%</label>
+			<if exp="true">
+			    <true>round(precio_mas_21 * 1.25, 3)</true>
+			    <false>0</false>
+			</if>
+			<tipo>custom_numeric</tipo>
+		</field>
+
+			<field id="precio1">
+				<label  style="color:green; font-size:16px;">Precio</label>
+				<help>Precio</help>
+				<tipo>decimal</tipo>
+			</field>
+			<field id="margen">
+				<label modpos="nobr">% RecAnt</label>
+				<help>Recargo precio al público anterior</help>
+			</field>
+			<field id="precio2" noshow="true">
+				<expression>precio1 * (1 + margen)</expression>
+				<label modpos="nobr" style="color:red; font-size:16px;">Precio público</label>
+				<help>Precio</help>
+			</field>
+			<field id="prec2" local="true" _noshow="true">
+				<label modpos="nobr" style="color:red; font-size:16px;">Nuevo Precio</label>
+				<if exp="true">
+					<true>precio1 + precio1 / 100 *  aumento</true>
+					<false>0</false>
+				</if>
+				<tipo>numeric</tipo>
+				<help>Nuevo Precio</help>
+			</field>
+
+				<field id="vigencia">
+					<label>vigencia</label>
+					<valor>today</valor>
+				</field>
+			    <field id="obs" colspan="4" modpos="nobr">
+					<label>Obervaciones</label>
+					<help>Observaciones</help>
+					<size>15</size>
+				</field>
+
+				<group>
+					<field id="idArticulo"></field>
+				</group>
+
+				<order>
+					<field id="des"></field>
+				</order>
+
+		</table>
+		<join tipo="left">
+			<table id="STK_ARTICULOS">
+				<field id="id_stkarticulo">
+				<condicion operador="=">LISTAPRECIOSDET.idArticulo</condicion>
+					</field>
+				<field id="subsistema_id" oculto="true">
+				<condicion operador="=">'02'</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="STK_COSTO_REPOSICION">
+				<field id="stkarticulo_id">
+				<condicion operador="=">artsup</condicion>
+					</field>
+
+			</table>
+		</join>	
+        <join tipo="left">
+
+		<table id="STKPIEZA">
+                    <field id="IdPadre">
+	                <condicion operador="=">artsup</condicion>
+    	            </field>
+		    
+		</table>
+		</join>	
+		<join tipo="left">
+			<table id="STK_COSTO_REPOSICION" as="REPO">
+				<field id="stkarticulo_id">
+				<condicion operador="=">articulo_hijo</condicion>
+					</field>
+
+			</table>
+		</join>	
+		<join tipo="left">
+			<table id="STK_ARTICULOS" as="STK_ART">
+				<field id="id_stkarticulo">
+				<condicion operador="=">articulo_hijo</condicion>
+					</field>
+				<field id="subsistema_id" oculto="true">
+				<condicion operador="=">'02'</condicion>
+				</field>
+			</table>
+		</join>
+
+        <join tipo="left">
+            <table id="REG_CUENTA">
+                <field id="id_regcuenta">
+                    <condicion operador="=">REPO.regcuenta_id</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="LOG_REGION">
+                <field id="id_logregion">
+                    <condicion operador="=">REG_CUENTA.logregion_id</condicion>
+                </field>
+            </table>
+        </join>    
+</form>
+</histrix>

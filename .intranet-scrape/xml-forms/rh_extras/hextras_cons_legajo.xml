@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" class="consultaancha">
+    <title>Horas Extras</title>
+    <obs/>
+    <form  _detalle="recibo_premio.xml">
+        <table id="FICHADADIA" label="calculo de Extras" >
+                <field id="tarjeta" >
+                    <label>tarjeta</label>
+                </field>
+                <field id="legajo" >
+                    <label>Legajo</label>
+                </field>                
+                <field id="fecha" >
+            
+                    <label>Fecha</label>
+                    
+                </field>
+
+                
+                <field id="fechadesde" noshow="true">
+                  <expression>fecha</expression>
+                  <operador>&gt;=</operador>
+                  <condicion operador="&gt;="></condicion>
+                </field>
+                
+                <field id="fechahasta" noshow="true">
+                  <expression>fecha</expression>
+                  <operador>&lt;=</operador>
+                  <condicion operador="&lt;="></condicion>
+                </field>
+                
+                <field id="h1" >
+                    <label>H1</label>
+                </field>
+                <field id="h2" >
+                    <label>H2</label>
+                </field>
+                <field id="h3" >
+                    <label>H3</label>
+                </field>
+                <field id="h4" >
+                    <label>H4</label>
+                </field>
+                <field id="hingreso" >
+                    <label>Ingreso</label>
+                </field>
+                <field id="hegreso" >
+                    <label>Egreso</label>
+                </field>
+                <field id="corresponde_extras" noshow="true">
+                  <label>Xtras</label>
+                  <expression><![CDATA[select count(*) from RH_AUTH_EXTRAS_DETAIL AS RH 
+                          where RH.legajo = FICHADADIA.legajo and 
+                          RH.desdeFecha <= FICHADADIA.fecha and 
+                          RH.hastaFecha >= FICHADADIA.fecha limit 1]]></expression>
+                </field>
+                <field id="horas_reales">
+                  <label>Horas Reales</label>
+                  <expression>ADDTIME(timediff(h2, h1) , ifnull(timediff(h4,h3),0))</expression>
+                </field>
+                <field id="extrasB" noshow="true">
+                  <label>extras Brutas1</label>
+                  <expression>TIMEDIFF( ADDTIME(timediff(h2, h1) , ifnull(timediff(h4,h3),0)) , TIMEDIFF(hegreso, hingreso))</expression>
+                </field>
+                
+                <field id="hora_sal" noshow="true">
+                  <label>Hora_sal</label>
+                  <expression><![CDATA[@horasal:= (case when !isnull(h4) then h4 else h2 end)]]></expression>
+                </field>
+                <field id="entrada_trunca"  noshow="true">
+                  <label>Entrada trunca</label>
+                  <expression><![CDATA[@entrada_trunca:= (case when TIMEDIFF(h1, CONCAT(substring(h1, 1, 2),':00:00') ) > '00:05:00' then CONCAT(substring(h1, 1, 2) + 1 ,':00:00') 
+                    else CONCAT(substring(h1, 1, 2),':00:00')  end)]]></expression>
+                </field>
+                <field id="difsalida"  noshow="true">
+                  <label>Dif. salida</label>
+                  <expression><![CDATA[@difsalida:=  TIMEDIFF(@horasal, CONCAT(substring(@horasal, 1, 2),':00:00') )]]></expression>
+                </field>
+                
+                <field id="salida_trunca"  noshow="true"> 
+                  <label>salida trunca</label>
+                  <expression><![CDATA[@salida_trunca:= (case when @difsalida  >= '00:30:00' && @difsalida <= '00:55:00' 
+                      then CONCAT(substring(@horasal, 1, 2) ,':30:00') 
+              when @difsalida < '00:30:00' then CONCAT(substring(@horasal, 1, 2) ,':00:00') 
+            when @difsalida > '00:55:00' then CONCAT(substring(@horasal, 1, 2) + 1 ,':00:00') 
+              end)]]></expression>
+                </field>                
+                
+                <field id="madrugo"  noshow="true">
+              <label>Madrugo</label>
+                  <expression>case when TIMEDIFF(hingreso, h1) > '00:55:00'       then 1 else 0 end </expression>
+                </field>
+                <field id="quedo"  noshow="true">
+              <label>quedo</label>
+                  <expression>case when TIMEDIFF(@horasal, hegreso) > '01:00:00' then 1 else 0 end</expression>
+                </field>
+                
+
+                <field id="htrabaj" suma="true">
+                  <label>trabajadas</label>
+                  <expression>(case when !isnull(h3) then ( 
+                 ADDTIME( TIMEDIFF( @salida_trunca , h3 ) ,  TIMEDIFF( h2, @entrada_trunca) )
+                    ) else   
+                      TIMEDIFF( @salida_trunca, @entrada_trunca ) 
+                    end)</expression>
+                <tipo>hora</tipo>
+                
+                </field>
+
+                <field id="horaMinima" suma="true">
+                  <label>Jornada</label>
+                  <expression>TIMEDIFF(hegreso, hingreso)</expression>
+                  <tipo>hora</tipo>
+                </field>
+                <field id="hextras50" suma="true">
+                  <label>Extras 50</label>
+                  <expression><![CDATA[CASE when (TIME_TO_SEC(TIMEDIFF( TIMEDIFF(@salida_trunca, @entrada_trunca) , TIMEDIFF(hegreso, hingreso))) / 3600) > 0 and
+                          (TIME_TO_SEC(TIMEDIFF( TIMEDIFF(@salida_trunca, @entrada_trunca) , TIMEDIFF(hegreso, hingreso))) / 3600) <= FICHADADIA.max_extras_50 
+                          
+                         then (TIME_TO_SEC(TIMEDIFF( TIMEDIFF(@salida_trunca, @entrada_trunca) , TIMEDIFF(hegreso, hingreso))) / 3600) 
+              when (TIME_TO_SEC(TIMEDIFF( TIMEDIFF(@salida_trunca, @entrada_trunca) , TIMEDIFF(hegreso, hingreso))) / 3600) > FICHADADIA.max_extras_50 
+                then FICHADADIA.max_extras_50 else 0 end ]]></expression>    
+                    <tipo>numeric</tipo>
+
+                </field>
+                <field id="hextras100" suma="true">
+                  <label>Extras 100</label>
+                  <expression><![CDATA[CASE when (TIME_TO_SEC(TIMEDIFF( TIMEDIFF(@salida_trunca, @entrada_trunca) , TIMEDIFF(hegreso, hingreso))) / 3600) > FICHADADIA.max_extras_50 
+                         then (TIME_TO_SEC(TIMEDIFF( TIMEDIFF(@salida_trunca, @entrada_trunca) , TIMEDIFF(hegreso, hingreso))) / 3600) - FICHADADIA.max_extras_50  else 0 end ]]></expression>    
+                    <tipo>numeric</tipo>
+
+                </field>
+                
+                
+          <field id="valorh" noshow="true">
+                    <label>Valor hora</label>
+                    <expression><![CDATA[select importe FROM CONCEPCONV inner join CONVENIOS on CONVENIOS.idSindicato= CONCEPCONV.IdSindicato  where CONCEPCONV.IdSindicato = PERSONAL.IdSindicato and CONCEPCONV.desfec <= FICHADADIA.fecha and CONCEPCONV.IdCateg = (select CATEGHISTORIA.idCateg from CATEGHISTORIA left join CATPERSONAL on CATPERSONAL.IdSindicato = CATEGHISTORIA.idSindicato and CATPERSONAL.IdCateg = CATEGHISTORIA.IdCateg where CATEGHISTORIA.IdPersona = PERSONAL.IdPersona and CATEGHISTORIA.fechaDesde <= FICHADADIA.fecha order by CATEGHISTORIA.fechaDesde DESC limit 1)  order by CONCEPCONV.desfec DESC limit 1]]></expression>
+
+                    <tipo>numeric</tipo>
+                </field>
+                                                                                                        
+            <field id="tipoliq" noshow="true">
+                <expression>select tipoliq FROM CONCEPCONV inner join CONVENIOS on CONVENIOS.idSindicato= CONCEPCONV.IdSindicato  where CONCEPCONV.IdSindicato = PERSONAL.IdSindicato and CONCEPCONV.IdCateg = PERSONAL.IdCateg limit 1</expression>
+
+                <label>Tipo Liq.</label>
+                <tipo>varchar</tipo>
+            </field>
+
+                
+                
+                <field id="class" clasefila="true" local="true" noshow="true">
+                  <if exp="corresponde_extras != 0">
+                <true>'resaltado'</true>
+                <false>''</false>
+                  </if>
+                </field>
+                
+                <field id="divisorHora" local="true" noshow="true">
+                  <if exp="tipoliq + 0  != 1">
+                <true>200</true>
+                <false>1</false>
+                  </if>
+                  
+                </field>
+                <field id="valorHora2" local="true">
+                  <label>Valor Hora</label>
+                  <if exp="true">
+                <true>round(valorh / divisorHora, 2)</true>
+                <false>0</false>
+                  </if>
+                  <tipo>numeric</tipo>
+                </field>                
+          <field id="pesos50" local="true" suma="true"> 
+              <label>Importe 50</label>
+              <if exp="hextras50 + 0 &gt; 0">
+            <true>(hextras50 > 0.5)? hextras50 * ((valorHora2 + 0 ) * 1.5) : (((valorHora2 + 0 ) * 1.5) / 2 ) </true>
+            <false>0</false>
+              </if>
+              <tipo>numeric</tipo>
+          </field>                
+          <field id="pesos100" local="true" suma="true"> 
+              <label>Importe 100</label>
+              <if exp="hextras100 + 0 &gt; 0">
+            <true>(hextras100 > 0.5)? hextras100 * ((valorHora2 + 0 ) * 2) : (((valorHora2 + 0) * 2) / 2 ) </true>
+            <false>0</false>
+              </if>
+              <tipo>numeric</tipo>
+          </field>                
+
+          
+          
+          <order>
+              <field id="fecha" />
+          </order>
+        </table>
+        <join tipo="inner">
+          <table id="PERSONAL">
+        <field id="legajo">
+            <condicion operador="=">FICHADADIA.legajo</condicion>
+        </field>
+        
+        
+          </table>
+        </join>
+
+
+    </form>
+</histrix>

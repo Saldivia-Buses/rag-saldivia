@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta"   >
+    <title>Entregas</title>
+    <obs/>
+    <form >
+        <table id="PROD_ESTADOSLINEA">
+            <title>Placas Prov. por Coche</title>
+            <field id="id_estado" deshabilitado="true" noshow="true" esClave="true" autoinc="true">
+            </field>
+            <field id="nrofab_id"  linkdes="Ver Orden de Fabricación" >
+		<helper type="link" xml="fichaventas.xml" dir="/produccion" >
+            	    <parameter source="nrofab_id" target="nrocha"></parameter>
+		</helper>
+                <label  style="width:auto;text-align:center;color:#444;font-size:14px;">Nro.</label>
+                <help>Numero de Fabricacion</help>
+            </field>
+            <field deshabilitado="false" id="ctacod" tabla="PEDCOTIZ" linkint="cctcuent_consulta.xml" linkdes="Ver medios de Contacto" vacio="true">
+                <label modpos="nobr" >Cliente</label>
+                <help>Codigo de Cuenta</help>
+                <tabla_ex condes="true" id="CCTCUENT" vacio="true">
+                    <field id="ctacod"/>
+                    <field id="ctanom">
+                        <expresion>LEFT(ctanom, 25)</expresion>
+                    </field>
+                    <field id="siscod" oculto="true">
+                        <condicion operador="=">'02'</condicion>
+                    </field>
+                </tabla_ex>
+                    <operador>=</operador>
+                    <valor>''</valor>
+                </field>
+
+            <field id="seccion_id" noshow="true" >
+            </field>
+
+            <field id="fecha_entrada"  noshow="true">
+                <label></label>
+		<tipo>varchar</tipo>
+            </field>
+            <field id="fecha_salida"  PDFcolWidth="15"   noshow="true">
+                <label></label>
+				
+		<tipo>varchar</tipo>
+
+            </field>
+            <field id="Entrega" noshow="true" print="false">
+                <label>PreEntrega</label>
+                <expresion having="false">ifnull((select entrega from ENTREGASCOCHES where ENTREGASCOCHES.nrofab = nrofab_id  and ENTREGASCOCHES.entrega IS NOT NULL  limit 1), '')</expresion>
+                <tipo>date</tipo>
+                <condicion operador="=">''</condicion>
+            </field>
+            
+            <field id="maxstate" noshow="true">
+        	    <expresion having="false">( select max(orden) from PROD_ESTADOSLINEA as PRD left join MOMENTO on MOMENTO.idMomento = PRD.seccion_id where PRD.nrofab_id = PROD_ESTADOSLINEA.nrofab_id)</expresion>
+        	    <condicion operador="=">orden</condicion>
+            </field>
+            
+	    <field id="estado"  max="100"  tipoOrden="DESC">
+        	<label>Estado</label>
+                <tipo>grafico</tipo>
+            </field>
+            <field id="mover" local="true"    print="false" >
+		<helper type="link" width="500px" height="400px" reposition="true"
+		xml="estadoslinea_abm.xml" dir="produccion/">
+            	    <parameter source="nrofab_id" target="nrofab_id" operador="=" />
+
+		</helper>
+                <valor>'Mover'</valor>
+                <tipo>varchar</tipo>
+            </field>
+
+            <order>
+                <field id="estado" />
+            </order>
+        </table>
+        <join tipo="left">
+    	    <table id="MOMENTO">
+    		<field id="idMomento">
+    		<condicion operador="=">seccion_id</condicion>
+    	    </field>
+    	    </table>
+
+	</join>
+        
+        <join tipo="left">
+    	    <table id="PEDCOTIZ">
+    		<field id="nrocha">
+    		<condicion operador="=">nrofab_id</condicion>
+    	    </field>
+    	    </table>
+
+	</join>
+    </form>
+</histrix>

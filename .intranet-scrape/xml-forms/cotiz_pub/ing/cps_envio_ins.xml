@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="insert" >
+    <title>MAILS</title>
+    <obs/>
+    <form >
+        <table id="CPS_ENVIOS" label="envia el Correo" idCampoCond="emitir">
+
+
+            <field id="regcuenta_id"           id_temp="id_regcuenta" />
+            <field id="email_id"               lastId="envio_mail_op.xml" />
+            <field id="email"                  id_temp="para"    >
+		<tipo>varchar</tipo>
+	    </field>
+        </table>
+    </form>
+</histrix>

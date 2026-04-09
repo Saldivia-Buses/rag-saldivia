@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="update" limit="99">
+  <title>Movimientos</title>
+  <obs/>
+  <form>
+    <table id="STK_MOVIMIENTOS" idCampoCond="pedidos">
+
+        <field id="stkarticulo_id"    id_temp="stkarticulo_id" esClave="true" />
+
+        <field id="stkconcepto_id"  id_temp="stkconcepto_id"  esClave="true"/>     
+
+        <field id="fecha_movimiento"  id_temp="fecha_movimiento" esClave="true"/> 
+
+        <field id="cpsdetalle_id">
+          <tipo>integer</tipo>
+          <valor>1</valor>
+        </field>
+
+        <field id="fecha_reposicion">
+          <tipo>date</tipo>
+          <valor>today</valor>
+        </field>
+
+    </table>
+  </form>
+</histrix>

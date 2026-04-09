@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="insert" grabafinal="true">
+	<title>Ingreso Remito</title>
+	 <obs></obs>
+		<consulta>
+		     <table id="REG_MOVIMIENTOS">
+			<field id="subsistema_id"               id_temp="remito"/>
+			<field id="regcuenta_id"     		id_cab="regcuenta_id"/>
+			<field id="referencia_movimiento"       id_cab="referencia_movimiento"/>
+			<field id="concepto_id"      		id_cab="concepto_id"/>
+			<field id="puesto_movimiento"     	id_cab="puesto_remito"/>			
+			<field id="cuota"     	                id_cab="cuota_movimiento"/>	
+			<field id="letra_movimiento"      	id_cab="letra_movimiento" />			
+			<field id="vencimiento_movimiento" 	id_cab="vencimiento_movimiento"/>	
+			<field id="reg_fecha" 	     		id_cab="reg_fecha"/>
+			<field id="fpv_movimiento" 	     	id_cab="fpv_movimiento"/>
+			
+			<field id="nro_movimiento" 	    	id_cab="movimiento_remito"/>
+		    </table>
+		</consulta>
+    </histrix>	

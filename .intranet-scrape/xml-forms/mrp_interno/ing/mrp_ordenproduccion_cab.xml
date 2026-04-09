@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="cabecera" >
+    <title>ORDEN DE COMPRA</title>
+    <form>
+        <table id="MRP_ORDEN_PRODUCCION" label="ORDEN DE COMPRA" >
+            <field id="fecha_orden" >
+                <label modpos="nobr">Fecha</label>
+                <help >Fecha de Orden de Producción</help>
+                <valor>today</valor>
+                <tipo>date</tipo>
+            </field>
+
+            <field id="id_mrporden">
+                    <label modpos="nobr">Nro</label>
+                    <expression sql="true">select ifnull(max(id_mrporden) + 1 , 1) from MRP_ORDEN_PRODUCCION</expression>
+                    <detalle>id_mrporden</detalle>
+            </field>
+<!--
+            <field id="rhpersonal_id" >
+        	<helper type="combo" xml="rhpersonal_qry.xml" dir="/ayudas_local" empty="true"/>
+                <label modpos="nobr">Empleado</label>
+                
+                <help >Empleado responsable de la Orden de Producción</help>
+                <actualiza>
+                    <field id="codemp"></field>
+                </actualiza>
+            </field>
+    
+            <field id="codemp" local="true" noshow="true">
+            </field>
+            -->
+    	    <field id="seccion_id">
+		<label modpos="nobr">Seccion</label>
+		<helper id="MOMENTO" type="combo" empty="true">
+		    <field id="idMomento" />
+		    <field id="descripcion" />
+            <field id="linea_id">
+                <condicion operador="=">1</condicion>
+            </field>
+		</helper>
+    	</field >
+
+            <field id="codprv" esClave="true">
+                <label modpos="nobr">Cod.Prov</label>
+                <help>Codigo de Proveedor </help>
+                <ayuda_ex id="CCTCUENT" _xml="HLPcctcuent.xml" dir="/help_local">
+                    <field id="ctacod">
+                        <label>Nro</label>
+                    </field>
+                    <field id="ctanom2">
+                        <label>Nombre</label>
+                        <expression having="false">CONCAT(ctanom,' - ', ctafan)</expression>
+                        <detalle>ctanom</detalle>
+                    </field>
+                    <field id="siscod" oculto="true">
+                        <label>siscod</label>
+                        <valor>'01'</valor>
+                        <condicion operador="=">'01'</condicion>
+                    </field>
+
+                    <field id="baja" noshow="true">
+
+                        <label>baja</label>
+                        <condicion operador="!=">1</condicion>
+                    </field>
+
+                </ayuda_ex>
+                <tipo>decimal</tipo>
+                <jseval actxml="true" campodestino="codprv">codprv</jseval>
+
+            </field>
+            <field id="ctanom" deshabilitado="true">
+                <label modpos="nobr">Nombre</label>
+                <help></help>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="mrporden_id" noshow="true">
+        	<expression sql="true">select max(id_mrporden) + 1 from MRP_ORDEN_PRODUCCION</expression>
+        	<detalle>id_mrporden</detalle>
+            </field>
+
+            <field id="orden_comentarios">
+                <label colspan="6">Comentarios</label>
+                <help>Comentarios</help>
+                <size>100</size>
+            </field>
+            <field id="mrpestado_id" oculto="true">
+                <label>Estado </label>
+                <help>Estado Actual</help>
+                <options>
+                    <option valor="0">Pendiente</option>
+                    <option valor="1">Cumplida</option>
+                </options>
+                <valor>1</valor>
+            </field>
+        </table>
+    </form>
+</histrix>

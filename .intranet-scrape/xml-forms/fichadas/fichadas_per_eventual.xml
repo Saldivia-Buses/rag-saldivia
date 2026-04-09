@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" path="/fotos/personal/">
+	<title>FICHADADIAEVENTUAL</title>
+	<obs/>
+	<form detalle="fichadas_dia_abm.xml" inline="true">
+			<table id="PERSONAL" label="FICHADADIA del Reloj" styleTbody="height:300px;overflow-x:hidden;">
+			
+			<filters>
+
+				<field id="fechaini">
+					<operador>&gt;=</operador>
+					<label>Desde Fecha</label>
+					<valor>today</valor>
+				</field>
+
+				<field id="fechafin">
+					<operador>&lt;=</operador>
+					<label>Hasta Fecha</label>
+					<valor>today</valor>					
+				</field>
+			
+			</filters>			
+
+			<field id="tarjeta">
+				<label>tarjeta</label>
+				<detalle>tarjeta</detalle>
+			</field>
+			
+			<field id="apellido">
+				<label>Apellido</label>
+				<tipo>varchar</tipo>
+			</field>	
+								
+			<field id="nombre">
+				<label>Nombre</label>
+				<tipo>varchar</tipo>
+			</field>
+
+			<field id="id_seccion" tabla="SECCION">
+				<label>Sección</label>
+				<expression>SECCION.nombre</expression>
+			</field>
+
+			<field id="fechaini"  local="true" noshow="true" >
+				<tipo>date</tipo>
+			</field>
+
+			<field id="fechafin"  local="true" noshow="true">
+				<tipo>date</tipo>
+			</field>
+
+			<field id="fecha" tabla="FICHADADIA">
+				<label>Fecha</label>
+				<detalle>fecha</detalle>
+				<tipo>date</tipo>
+			</field>
+
+			<field id="h1" tabla="FICHADADIA">
+				<label>Hora Ent</label>
+				<tipo>varchar</tipo>
+			</field>
+
+			<field id="h2" tabla="FICHADADIA">
+				<label>Hora Sal</label>
+				<tipo>varchar</tipo>
+				<expression>CASE WHEN h1 = h2 THEN h3 ELSE h2 END</expression>
+			</field>
+
+			<field id="h3" tabla="FICHADADIA">
+				<label>Hora Ent 2</label>
+				<tipo>varchar</tipo>
+				<expression>CASE WHEN h1 = h2 THEN h4 ELSE h3 END</expression>
+			</field>
+
+			<field id="h4" tabla="FICHADADIA">
+				<label>Hora Sal 2</label>
+				<tipo>varchar</tipo>
+			</field>
+			
+			<field id="Horas" suma="true">
+				
+				<expression>(CASE WHEN FICHADADIA.h1 = FICHADADIA.h2 THEN (SEC_TO_TIME(ifnull(TIME_TO_SEC(TIMEDIFF(h3, h2)),0) +  ifnull(TIME_TO_SEC(TIMEDIFF(h4, h3)),0))) ELSE (SEC_TO_TIME(ifnull(TIME_TO_SEC(TIMEDIFF(h2, h1)),0) +  ifnull(TIME_TO_SEC(TIMEDIFF(h4, h3)),0))) END)</expression>
+				<label>Horas Trabajadas</label>
+				<tipo>time</tipo>
+				
+			</field>
+
+			<field id="horaslic" local="true" suma="true" tabla="FICHADADIA">
+				<label>No Trabajadas</label>
+			</field>
+			
+			<field id="legajo" tabla="PERSONAL">		
+				<label>Legajo</label>
+			</field>
+
+            <field id="fotos" local="true" imageWidth="60" path="IdPersona">
+                <expression>CONCAT('/fotos/personal/',IdPersona,'/')  </expression>
+                <label  posX="5" posY="+2" formStyle="display:none;">Foto</label>
+                <tipo>dir</tipo>
+            </field>
+			
+			<field id="eventual" noshow="true">
+                <condicion operador="=">'1'</condicion>
+            </field>
+
+            <field id="fechaEgreso" noshow="true">
+                <condicion operador="=">'0000-00-00'</condicion>
+            </field>
+
+            <order ordenaTemporal="true">
+				<field id="fecha" />
+			</order>
+
+		</table>
+
+		<join tipo="left">
+			<table id="FICHADADIA">
+				<field id="tarjeta">
+					<condicion operador="=">PERSONAL.tarjeta and fecha &gt;= str_to_date('[__fechaini__]', '%d/%m/%Y')  and fecha &lt;= str_to_date('[__fechafin__]', '%d/%m/%Y')</condicion>
+				</field>
+			</table>
+		</join>
+
+		<join tipo="left">
+			<table id="SECCION">
+				<field id="id_seccion">
+					<condicion operador="=">PERSONAL.id_seccion</condicion>
+				</field>
+			</table>
+		</join>
+	</form>
+</histrix>

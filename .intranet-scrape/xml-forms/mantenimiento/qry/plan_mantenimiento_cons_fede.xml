@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!-- Tarea: PLAN DE MANTENIMIENTO
+Autor: FmM
+Fecha: 17/08/11 -->
+
+<histrix tipo="calendar" calendarAspectRatio="2.3" sidePanel="false" inserta="false">
+    <title>Mantenimiento</title>
+    <obs></obs>
+       
+        <form _detalle="plan_evento_crud.xml">
+
+        <table id="MANT_PLAN_EVENTOS" label="Plan de mantenimiento" >
+
+	        <validation>
+	            <condition><![CDATA[estado == 0]]></condition>
+	            <message>Indique un estado para el evento</message>
+	        </validation>
+
+
+	        <validation>
+	            <condition><![CDATA[observaciones == '']]></condition>
+	            <message>Ingrese una observacion del evento</message>
+	        </validation>
+
+        <filters>
+
+                    <field id="tipoequipo_id" modpos="nobr">
+                        <label>Tipo</label>
+                        <help>Tipo</help>
+                        <operador>=</operador>
+                    </field>
+
+                    <field id="separador" modpos="nobr" deshabilitado="true" />
+
+                    <field id="equipo_id" modpos="nobr" >
+                        <label>Equipo</label>
+                        <operador>=</operador>
+                    </field>
+
+                    <field id="separador" modpos="nobr" deshabilitado="true" />
+
+                    <field id="estado_filtro" modpos="nobr" deshabilitado="false">
+                        <label>Estado</label>
+                        <operador>=</operador>
+                    </field>
+
+                    <field id="accion_id" >
+                        <label >Accion</label>
+                        <operador>=</operador>
+                    </field>
+
+					<field id="fecha_accion" grupo="Impresion">
+					    <label>Desde</label>
+					    <operador>&gt;=</operador>
+					</field>
+					<field id="fecha_accion" grupo="Impresion">
+					    <label modpos="nobr">Hasta</label>
+					    <operador>&lt;=</operador>
+					</field>
+
+        </filters>
+
+                <field id="separador" local="true" deshabilitado="true">
+                    <size>1</size>
+                </field>
+
+                <field id="id_planevento" calendarId="true" autoinc="true"  noshow="true" >
+                </field>
+
+                ESTO ES PARA PODER EDITAR EL EVENTO DEL CALENDAR SIN EL FORM DETALLE
+                    <field id="edit" calendarEditable="true" local="true" noshow="true">
+                   <valor>1</valor>
+                </field> 
+
+        
+        <fieldGroup style="padding:2px 2px 2px 2px;">
+
+                <field id="fecha_accion" calendarStartDate="true" deshabilitado="true">
+                   <label>Fecha</label>
+                   <tipo>date</tipo>
+                </field>
+
+                <field id="tipoequipo_id" tabla="MANT_EQUIPOS" deshabilitado="true">
+                    <helper type="combo" xml="mant_tipo_equipo_crud.xml" dir="/mantenimiento/man/" empty="true"/>
+                    <label>Tipo</label>
+                </field>
+
+                <field id="equipo_id" deshabilitado="true" >
+                    <label>Equipo</label>
+                    <helper type="combo" id="MANT_EQUIPOS" empty="true">
+                        <field id="id_equipo"/>
+                        <field id="nombre_equipo">
+                            <expresion>concat(nombre_equipo, ' - ', articulo_id)</expresion>
+                        </field>
+                    </helper>
+                </field>
+
+                <field id="accion_id" style="width:400px;padding:2px 2px 2px 2px;" deshabilitado="true">
+                    <label>Acción</label>
+                    <helper type="combo" id="MANT_ACCIONES" empty="true">
+                        <field id="id_accion"/>
+                        <field id="nombre_accion"/>
+                        <order>
+                            <field id="nombre_accion"/>
+                        </order>
+                    </helper>
+                </field>
+
+                <field id="estado_filtro" noshow="true">
+                    <label>Estado</label>
+                    <expression>MANT_PLAN_EVENTOS.estado</expression>
+                    <helper type="combo" id="MANTENIMIENTO_ESTADOS" empty="true">
+                        <field id="id_estado" />
+                        <field id="estado"/>
+                        <field id="tipo_estado" >
+                            <condicion operador="=">0</condicion>
+                        </field>
+                    </helper>
+                </field>
+
+
+                <field id="estado" >
+                    <label>Estado</label>
+                    <helper type="combo" id="MANTENIMIENTO_ESTADOS" empty="true">
+                        <field id="id_estado" >
+                        </field>
+                        <field id="estado"/>
+                        <field id="tipo_estado" >
+                            <condicion operador="=">0</condicion>
+                        </field>
+                    </helper>
+                </field>
+
+                <field id="observaciones">
+                    <label>Observaciones</label>
+                    <size>150</size>
+                </field>
+
+                <!-- <field id="rrule" calendarRecurringRule="true">
+                	<label>Repetir</label>
+                	<tipo>rrule</tipo>
+                </field> -->
+               
+                <field id="nombre_descriptivo" local="true"  calendarSubject="true" deshabilitado="false" tabla="MANT_EQUIPOS" Formstyle="display:none;" print="false"> 
+                    <expresion>
+                    CONCAT( MANT_EQUIPOS.nombre_equipo , ' - ', ifnull(MANT_ACCIONES.nombre_accion,''), ': ', ifnull(MANT_PLAN_EVENTOS.observaciones,'')  )
+                    </expresion>
+                </field>
+
+            </fieldGroup>
+
+                    <field id="color" calendarColor="true" noshow="true">
+                        <expression>(case when estado = 1 and plan_id != 0 then '#FF0000'
+                                          when estado = 1 and plan_id = 0 then '#ffaa00'
+                                          when estado = 2 and plan_id != 0 then '#006600' 
+                                          when estado = 2 and plan_id = 0 then '#70C2C1'  
+                                          <!-- when estado = 3 then '#ffaa00' -->
+                                          else '' end)</expression>
+                    </field>
+
+                    <field id="login" noshow="true">
+                                <label>usuario</label>
+                                <valor eval="true">$_SESSION['usuario']</valor>
+                    </field>
+
+        </table>
+
+        <join tipo="left">
+            <table id="MANT_ACCIONES">
+    		    <field id="id_accion" >
+                    <condicion operador="=">accion_id</condicion>
+    		    </field>
+        	</table>
+        </join>
+
+        <join tipo="left">
+            <table id="MANT_EQUIPOS">
+                <field id="id_equipo" >
+                    <condicion operador="=">equipo_id</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>	

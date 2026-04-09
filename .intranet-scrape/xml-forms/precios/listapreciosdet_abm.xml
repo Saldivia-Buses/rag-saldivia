@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<abm tipo="abm-mini">
+	<titulo>LISTAS DE PRECIOS</titulo>
+	<obs></obs>
+	<consulta>
+		<tabla id="LISTAPRECIOSDET" >
+		    <titulo>Listas de precios</titulo>
+			   <filtro_ex>
+				   <tabla_ex id="LISTAPRECIOSCAB">
+					   <campo id="idLista">
+						   
+					   </campo>
+					   <campo id="nombre"></campo>
+					<filtra>idLista</filtra>				   
+					   
+				   </tabla_ex>
+				   
+			   </filtro_ex>
+
+				<campo id="idLista" >
+					
+					<label>Lista</label>
+					<help>Lista</help>
+					<valor>1</valor>
+				</campo>
+				<campo id="idArticulo" deshabilitado="true">
+					<label>articulo</label>
+					<help>Articulo</help>
+					
+				</campo>
+			   <campo id="des">
+				   <expresion>STKINSUM.artdes</expresion>
+				   <tipo>varchar</tipo>
+				   <label>Descripcion</label>
+			   </campo>
+
+				<campo id="precio1">
+					<label>Precio</label>
+					<help>Precio de Venta</help>
+					
+				</campo>
+				<campo id="vigencia">
+					<label>vigencia</label>
+					<valor>today</valor>
+				</campo>	    	
+			    <campo id="obs">
+					<label>Obervaciones</label>
+					<help>Observaciones</help>
+				</campo>			
+			<orden>
+				<campo id="vigencia"></campo>
+			</orden>
+			
+		</tabla>
+		<join tipo="left">
+			<tabla id="STKINSUM">
+				<campo id="artcod">
+				<condicion operador="=">LISTAPRECIOSDET.idArticulo</condicion>
+					</campo>
+				<campo id="siscod" oculto="true">
+				<condicion operador="=">'02'</condicion>
+				</campo>				
+			</tabla>
+		</join>
+	</consulta>	   
+</abm>

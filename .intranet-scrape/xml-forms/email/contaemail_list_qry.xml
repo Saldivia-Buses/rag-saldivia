@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="consulta" limit="100">
+    <title>MAILS</title>
+    <obs/>
+    <form >
+        <table id="CCTCONTA" label="enviar Correo" styleTbody="height:325px;overflow-x:hidden;">
+    	    <field id="ctacod" oculto="true">
+    		<condicion operador="=">-1</condicion>
+    		
+    	    </field>
+    	    <field id="siscod" oculto="true"></field>
+            <field  id="idMail" noshow="true" tipoOrden="DESC" tabla="HTXMAIL">
+                <label>id</label>
+            </field>
+            <field id="fecha"  deshabilitado="true" tabla="HTXMAIL">
+                <label>Fecha</label>
+                <valor>today</valor>
+                <tipo>date</tipo>
+            </field>
+            <field  id="hora"  deshabilitado="true" tabla="HTXMAIL">
+                <label modpos="nobr">Hora</label>
+                <valor eval="true">date('H:i:s')</valor>
+                <tipo>varchar</tipo>
+            </field>
+            <field deshabilitado="true" id="fromMail"  tabla="HTXMAIL">
+                <label>de</label>
+                <help></help>
+            </field>
+            <field id="to_email" tabla="HTXMAIL">
+                <label colspan="4">Para</label>
+                <size>60</size>
+            </field>
+            <field id="subject" tabla="HTXMAIL">
+                <label colspan="4">Asunto</label>
+                <tipo>varchar</tipo>
+                <size>60</size>
+                <helper type="link" xml="email_qry.xml" dir="/histrix/mensajeria/">
+            	    <parameter target="idMail" source="idMail" />
+                </helper>
+            </field>
+<!--            <field id="checkAdjunto" >
+                 <label colspan="4">Adjunto</label>
+                <tipo>check</tipo>
+            </field> -->
+<!--            <field id="fileAttach" tabla="HTXMAIL">
+                <label colspan="4">Adjuntos</label>
+                <size>50</size>
+            </field>
+
+            <field id="body" tabla="HTXMAIL">
+                <label colspan="3">mensaje</label>
+                <help>Texto del mensaje</help>
+                <size>200</size>
+            </field> -->
+            <order>
+        	<field id="idMail" tabla="HTXMAIL"/>
+            </order>
+        </table>
+        
+        <join>
+    	    <table id="HTXMAIL">
+    		<field id="to_email">
+        		<condicion operador="=">CCTCONTA.mail and to_email != ''</condicion>
+    		</field>
+    	    </table>
+        </join>
+    </form>
+</histrix>

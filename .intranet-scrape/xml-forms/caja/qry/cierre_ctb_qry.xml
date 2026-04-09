@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+  <title>Movimientos</title>
+  <obs/>
+  <form detalle="cierre_ctb_detalle_qry.xml" inline="true">
+    <table id="CTB_MOVIMIENTOS" label="movimientos">
+      <filters>
+        <field id="ejercicio_id">
+          <label>Ejercicio</label>
+          <help>Ejercicio contable</help>
+          <operador>=</operador>
+        </field>
+        <field id="concepto_id">
+          <operador>=</operador>
+          <label modpos="nobr">Tipo de concepto</label>
+          <help>Concepto elegido</help>
+        </field>
+        <field id="fecha_mov1" deshabilitado="false">
+          <valor>today</valor>
+          <operador>&gt;=</operador>
+          <label>Desde Fecha</label>
+          <help>Fecha movimiento</help>
+        </field>
+        <field id="fecha_mov2" deshabilitado="false">
+          <valor>today</valor>
+          <operador>&lt;=</operador>
+          <label modpos="nobr">hasta Fecha</label>
+          <help>Fecha movimiento</help>
+        </field>
+        <field id="nro_minuta1" deshabilitado="false">
+          <valor/>
+          <operador>&gt;=</operador>
+          <label>Desde minuta</label>
+          <help>Ingrese desde que minuta buscar</help>
+        </field>
+        <field id="nro_minuta2" deshabilitado="false">
+          <valor/>
+          <operador>&lt;=</operador>
+          <label modpos="nobr">hasta minuta</label>
+          <help>Ingrese hasta que minuta buscar</help>
+        </field>
+        <field id="tstcuenta">
+          <label>Cta</label>
+          <operador>=</operador>
+        </field>
+      </filters>
+      <field id="nro_minuta" noshow="false">
+        <label>Nº Minuta</label>
+        <help>Numero de la minuta</help>
+      </field>
+      <field id="cajregistro_id">
+        <detalle>cajregistro_id</detalle>
+        <label>Nº Registro</label>
+      </field>
+      <field id="id_movimiento" noshow="true">
+        <label>Codigo</label>
+        <help>Código de movimiento</help>
+      </field>
+      <field id="concepto_id" noshow="true">
+        <helper type="combo" xml="/contabilidad/man/ctbconceptos_crud.xml" empty="true"></helper>
+        <label>Concepto</label>
+        <help>Código de concepto</help>
+      </field>
+      <field id="fecha_movimiento" tabla="CTB_MOVIMIENTOS">
+        <label>Fecha</label>
+        <help>Fecha movimiento</help>
+      </field>
+      <field id="referencia">
+        <label>referencia</label>
+        <helper type="link" xml="minuta_detalle_qry.xml"  dir="contabilidad/qry" title="Asiento Integrado" >
+          <parameter source="id_movimiento" target="movimiento_id" />
+          <parameter source="ejercicio_id" target="ejercicio_id" />
+        </helper>
+        <help>Referencia del movimiento</help>
+        <condicion operador="LIKE">'%CIERRE DE CAJA%'</condicion>
+      </field>
+      <field id="debe">
+        <expression>sum(case when doh = 0 then importe else 0 end)</expression>
+        <label>Debe</label>
+        <tipo>numeric</tipo>
+      </field>
+      <field id="haber">
+        <expression>sum(case when doh = 1 then importe else 0 end)</expression>
+        <label>Haber</label>
+        <tipo>numeric</tipo>
+      </field>
+      <field id="diferencia">
+        <expression>
+          sum( round(importe, 2) * (case when doh = 1 then 1 else -1 end))
+        </expression>
+        <label>Diferencia</label>
+        <tipo>numeric</tipo>
+      </field>
+      <field id="resaltado" clasefila="true" noshow="true">
+        <label>res</label>
+        <expression>
+          case when abs(sum( round(importe, 2) * (case when doh = 1 then 1 else -1 end))) != 0 then 'resaltado' else '' end
+        </expression>
+      </field>
+      <field id="ejercicio_id" noshow="true">
+        <helper type="combo" xml="/contabilidad/man/ctbejercicios_crud.xml">
+          <field id="activo" tipoOrden="DESC"/>
+          <field id="fecha_mov1">
+            <expression>DATE_FORMAT(comienza, '%d/%m/%Y')</expression>
+            <tipo>date</tipo>
+            <detalle>ejercicio_id</detalle>
+          </field>
+          <field id="fecha_mov2">
+            <expression>DATE_FORMAT(finaliza, '%d/%m/%Y')</expression>
+            <tipo>date</tipo>
+          </field>
+          <field id="finaliza"></field>
+        </helper>
+        <label>Ejercicio</label>
+        <help>Ejercicio contable</help>
+        <detalle>ejercicio_id</detalle>
+      </field>
+      <field id="nombre_concepto" tabla="CTB_CONCEPTOS" colstyle="Display:none;" print="false">
+        <label>Concepto</label>
+        <help>Codigo de concepto</help>
+      </field>
+      <field id="nro_minuta2" noshow="true">
+        <expression having="false">nro_minuta</expression>
+        <help>numero de minuta</help>
+      </field>
+      <field id="nro_minuta1" noshow="true">
+        <expression having="false">nro_minuta</expression>
+        <help>numero de minuta</help>
+      </field>
+      <field id="fecha_mov1" noshow="true">
+        <expression having="false">CTB_MOVIMIENTOS.fecha_movimiento</expression>
+        <help>Fecha movimiento</help>
+        <tipo>date</tipo>
+      </field>
+      <field id="fecha_mov2" noshow="true">
+        <expression having="false">CTB_MOVIMIENTOS.fecha_movimiento</expression>
+        <help>Fecha movimiento</help>
+        <tipo>date</tipo>
+      </field>
+      <field id="tstcuenta" local="true" noshow="true">
+        <detalle>tstcuenta</detalle>
+      </field>
+      <field id="test" noshow="true">
+        <expression having="false">CASE WHEN '[__tstcuenta__]' = '' THEN '1' ELSE
+         (SELECT 1 FROM CTB_DETALLES cd WHERE cd.cuenta_id = '[__tstcuenta__]' and cd.movimiento_id = CTB_MOVIMIENTOS.id_movimiento LIMIT 1) END</expression>
+        <condicion operador="=">1</condicion>
+      </field>
+      <order>
+        <field id="fecha_movimiento" tabla="CTB_MOVIMIENTOS"/>
+      </order>
+      <group>
+        <field id="id_movimiento"/>
+      </group>
+    </table>
+    <join >
+      <table id="CTB_CONCEPTOS">
+        <field id="id_concepto">
+          <condicion operador="=">concepto_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join >
+      <table id="CTB_DETALLES">
+        <field id="movimiento_id">
+          <condicion operador="=">id_movimiento</condicion>
+        </field>
+      </table>
+    </join>
+    <join >
+      <table id="CTB_CUENTAS">
+        <field id="id_cuenta">
+          <condicion operador="=">CTB_DETALLES.cuenta_id</condicion>
+        </field>
+        <field id="ejercicio_id">
+          <condicion operador="=">CTB_MOVIMIENTOS.ejercicio_id</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>

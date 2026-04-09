@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+   <histrix tipo="insert">
+       <title>Minuta</title>
+        <obs></obs>
+               <form >
+		<table id="CTBREGIS" label="Minuta" idCampoCond="pagarRI">
+			<field id="siscod" >
+			    <valor>'22'</valor>
+			</field>
+			<field id="ctbcod" >
+				<valor>'215001'</valor>
+			</field>
+			<field id="regfec" id_padre="movfec">
+			</field>
+			<field id="regmin" >
+			    <valor>(select numapr from CTBNUMER where siscod = '10' and nummes = substring('[__movfec__]',4,2))</valor>
+			</field>
+			<field id="ctanom"  id_temp="ctanom" local="true"/>
+
+			<field id="regref" >
+				<valor>concat('O.P.: ',(select lpad(parent, 12, '0') from CAJPARAM where parcla = 'nropag' limit 1),' - [__ctanom__]')</valor>
+				<tipo>integer</tipo>
+			</field>
+			<field id="regdoh" id_temp="regdoh">
+				<valor>2</valor>
+			</field>
+			<field id="regimp" id_temp="RI" >
+			</field>
+			<field id="regnro" >
+				<valor>(select parent from CAJPARAM where parcla = 'nropag' limit 1)</valor>				
+			</field>
+			<field id="regpoa" >
+			    <valor>'A'</valor>
+			</field>
+			<field id="regord" >
+			    <valor>4</valor>
+			</field>
+		</table>
+           </form>
+    </histrix>

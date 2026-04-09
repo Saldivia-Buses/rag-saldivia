@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  CURD
+Tarea: Tabla de TIpo de Marcas
+Autor: Lmm
+Fecha: 17/08/11
+*******************************************************************************
+-->
+    <histrix tipo="crud">
+	<title>Tipo de marcas</title>
+	 <obs></obs>
+		<form>
+		    <table id="MANT_MARCAS" label="Tipo">
+				<field id="id_mantmarca" esClave="true" noshow="true" />
+
+				<field id="nombre_mantmarca">
+					<label>Nombre de la Marca</label>
+					<help>Nombre</help>
+					<size>50</size>
+				</field>
+				
+				<field id="abreviatura_mantmarca">
+					<label>Abreviatura</label>
+					<help>Abreviatura</help>
+					<size>50</size>
+				</field>
+		    </table>
+		</form>
+    </histrix>	

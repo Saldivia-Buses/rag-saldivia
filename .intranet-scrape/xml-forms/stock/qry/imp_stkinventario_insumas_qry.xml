@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ficha" sololectura="true" autoprint="true" PDFfontSize="11" preFetch="true" PDForientation="L">
+  <title>Control de Inventario</title>
+  <obs></obs>
+  <form >
+    <table id="STK_INVENTARIOS" label="Control de Inventario">
+      <field id="id_stkinventario" print="false" />
+      <field id="fecha_inventario">
+        <label posx="5" posy="20">Fecha</label>
+        <tipo>date</tipo>
+      </field>
+      <field id="nro_inventario" PDFsize="26" PDFbold="true">
+        <label posx="240" posy="20" size="15">Nº</label>
+      </field>
+      <field id="usuario_id" print="false"></field>
+      <field id="usuario">
+        <label posx="5" posy="+2">Usuario</label>
+        <expression>CONCAT(apellido, ', ', Nombre)</expression>
+      </field>
+      <field id="stkdeposito_id">
+        <label posx="5" posy="+2">Depósito</label>
+        <helper type="combo" xml="stkdeposito_qry.xml" dir="/ayudas" empty="true"/>
+      </field>
+      <field id="detalles" local="true" showObjTabla="true">
+        <helper type="object" xml="imp_stkinvdetalle_insumas_qry.xml">
+          <parameter source="id_stkinventario" target="stkinventario_id" />
+        </helper>
+        <label posx="5" posy="+4"/>
+      </field>
+    </table>
+    <join tipo="left">
+      <table id="HTXUSERS">
+        <field id="id_usuario">
+          <condicion operador="=">STK_INVENTARIOS.usuario_id</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>

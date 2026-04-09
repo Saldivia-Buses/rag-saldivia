@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm">
+	<title>MOTIVOSEGRESO</title>
+	<obs></obs>
+	<form >
+		<table id="MOTIVOSEGRESO" >
+			<title>Motivos de Egreso</title>
+			<field id="idMotivo" >
+				<label>Codigo</label>
+				<help>Codigo de Motivo</help>
+
+			</field>
+			<field id="descripcion">
+				<label>Descripción</label>
+				<help>Motivo de Egreso</help>
+			</field>
+		</table>
+	</form>	   
+</histrix> 

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+	<histrix tipo="crud" >
+		<title>Preferencias</title>
+		<obs></obs>
+		<consulta>
+			<table id="HTXOPTIONS" label="OPCIONES">
+				<field id="id_option" deshabilitado="true"  noshow="true" autoinc="true">
+				</field>
+				<field id="login"  _noshow="true" _oculto="true" noshow="true" valauto="true">
+					<condicion operador="=" ></condicion>  
+					<size>10</size>
+				</field>
+				<field id="gral" noshow="true">
+				    <condicion operador="=">'SIS'</condicion>
+				    <expresion having="false">substring(option_name, 1, 3)</expresion>
+				</field>
+				<field id="option_name" _editable="true" noshow="true" >
+					<label>Nombre</label>
+					<help>Nombre de la opcion</help>
+					
+				</field>
+
+				<field id="option_description" _editable="true" deshabiltiado="true">
+					<label>Descripción</label>
+					<help>Descripcion</help>
+				</field>
+				<field id="option_value" _editable="true">
+					<label>Valor</label>
+					<size>255</size>
+				</field>
+			</table>
+		</consulta>
+	</histrix>

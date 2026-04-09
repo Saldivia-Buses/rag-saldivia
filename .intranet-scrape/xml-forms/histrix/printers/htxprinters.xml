@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud">
+    <title>Impresoras</title>
+    <obs></obs>
+    <form >
+        <table id="HTXPRINTERS" label="Impresoras">
+            <field id="idPrinter" _editable="true" esClave="true">
+                <label>Nombre</label>
+                <help>Nombre de la Impresora instalada</help>
+            </field>
+
+            <field id="description" _editable="true">
+                <label>Descripción</label>
+                <help>Descripción de la Impresora</help>
+                <size>80</size>
+            </field>
+            <field id="printerClass" _editable="true">
+                <label>Tipo</label>
+                <help>printerClass utilizado en impresion GS ghostcript (ej. ibmpro)</help>
+            </field>
+            <field id="systemName" _editable="true">
+                <label>Nombre Impresora</label>
+                <help>Nombre de la Impresora</help>
+            </field>
+            <field id="outputFormat" _editable="true">
+                <label>formato de Salida</label>
+                <options>
+                    <option valor="pdf">PDF</option>
+                    <option valor="txt">Texto</option>
+                    <option valor="dotPrinter">Matricial</option>
+                </options>
+                <help>Formato</help>
+            </field>
+        </table>
+    </form>
+</histrix>

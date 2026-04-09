@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" borra="no" inserta="no" modifica="false" noform="true" form="false" imprime="false" log="false" transaccional="true">
+	<title>Movimientos Bancarios</title>
+	<obs></obs>
+	<form >
+		<table id="BCS_IMPORTACION" label="Movimientos Bancarios">
+		
+			<movimientos>
+				<relacion id="bcsmovim_conci_bcsmov_ins.xml"></relacion>
+				<relacion id="bcsmovim_conci_auto_debe_ins.xml"></relacion>
+				<relacion id="bcsmovim_conci_auto_haber_ins.xml"></relacion>
+				<relacion id="bcsmovim_conci_auto_ctbnumer.xml"></relacion>
+				<relacion id="bcsmovim_importacion_auto_mov_ins.xml"></relacion>
+
+				<relacion id="bcsmovim_conci_auto_ins.xml"></relacion>
+				<relacion id="bcsmovim_importacion_auto_ins.xml"></relacion>
+
+				<relacion id="bcsmovim_borrar_auto_ins.xml"></relacion>
+
+			</movimientos>
+
+			<filters>
+			    <field id="nro_cuenta">
+				<label>CUENTA</label>
+				<tabla_ex id="BCSCUENT">
+					<field id="ccbcod"></field>
+					<field id="ccbnom"></field>
+					<order>
+							<field id="ccbcod"></field>
+					</order>
+				</tabla_ex>
+				<operador>=</operador>				
+			    </field>
+
+			    <field id="fecha_movimiento">
+					<operador>>=</operador>
+					<label>Desde Fecha </label>
+					<valor>today</valor>
+			    </field>
+			    <field id="fecha_movimiento">
+				<operador>&lt;=</operador>
+				<label>Hasta Fecha</label>
+				<valor>today</valor>
+			    </field>
+
+
+			</filters>
+			<field id="id_importacion" _noshow="true" esClave="true"/>
+
+			<field id="nro_cuenta" noshow="true">
+				<label>Codigo Cuenta</label>
+				<tabla_ex id="BCSCUENT">
+					<field id="ccbcod"></field>
+					<field id="ccbnom"></field> -
+					<field id="siscod" oculto="true"></field>
+					<order>
+							<field id="ccbcod"></field>
+					</order>
+					<filtra>bcscta</filtra>
+				</tabla_ex>				
+				<help>Codigo de Cuenta Bancaria </help>
+				<preparam operador="=">true</preparam>	
+			</field>
+			
+			<field id="cod_movimiento" noshow="true">
+			</field>
+							
+			<field id="fecha_movimiento" >
+				<label>Fecha</label>
+				
+			</field>
+			<field id="procesado" noshow="true">
+			    <condicion operador="=">0</condicion>
+			</field>
+			
+
+			<field id="nombre_concepto" >
+				<label>Concepto</label>
+				
+			</field>
+			<field id="nro_movimiento" noZero="true">
+				<helper xml="bcsmovim_imp.xml" type="link">
+				    <parameter source="id_regmovim" target="id_bcsmovim" />
+				</helper>
+				<label>Numero</label>
+				<help>Numero de Movimiento </help>				
+			</field>
+			
+		
+			<field id="debito" noZero="true">
+				<label>Debitos</label>
+			</field>
+
+			<field id="credito" noZero="true">
+				<label>Créditos</label>
+			</field>
+			
+
+			<field id="id_regmovim" noshow="true">
+				<label>nroimp</label>
+				    right(RM.nro_movimiento, length(BCS_IMPORTACION.nro_movimiento)) = BCS_IMPORTACION.nro_movimiento 
+
+				<expression>@regmovim:=ifnull((case when BCS_IMPORTACION.nro_movimiento > 0 then (select id_regmovim from REG_MOVIMIENTOS RM where 
+				    RM.importe_movimiento = debito + credito and 
+				    RM.subsistema_id= '04' and
+				    RM.nro_cuenta = BCS_IMPORTACION.nro_cuenta and
+				    RM.nro_movimiento like concat('%',BCS_IMPORTACION.nro_movimiento) and BCS_IMPORTACION.nro_movimiento > 1
+
+				    limit 1) 
+				    when !isnull(id_concepto) then (select id_regmovim from REG_MOVIMIENTOS RM where 
+				    RM.importe_movimiento = debito + credito and 
+				    RM.fecha_movimiento = BCS_IMPORTACION.fecha_movimiento and 
+				    RM.concepto_id =  id_concepto and
+				    RM.subsistema_id= '04' and
+				    RM.nro_cuenta = BCS_IMPORTACION.nro_cuenta
+				    limit 1)
+				    end),0)</expression>
+<!--				<expression>@regmovim:=ifnull((case when BCS_IMPORTACION.nro_movimiento > 0 then (select id_regmovim from REG_MOVIMIENTOS RM where 
+				    RM.importe_movimiento = debito + credito and 
+				    RM.subsistema_id= '04' and
+				    RM.nro_cuenta = BCS_IMPORTACION.nro_cuenta and
+				    RM.nro_movimiento like concat('%',BCS_IMPORTACION.nro_movimiento)
+
+				    limit 1) else (select id_regmovim from REG_MOVIMIENTOS RM where 
+				    RM.importe_movimiento = debito + credito and 
+				    RM.fecha_movimiento = BCS_IMPORTACION.fecha_movimiento and 
+				    RM.subsistema_id= '04' and
+				    RM.nro_cuenta = BCS_IMPORTACION.nro_cuenta
+				    limit 1) end),0)</expression> -->
+			</field>
+			<field id="conci" clasefila="true" noshow="true" local="true">
+			    <if exp="'id_regmovim' != '0'">
+				<true>'resaltado'</true>
+				<false>''</false>
+			    </if>
+			</field>
+			<field id="importefinal" noshow="true">
+			    <expression>debito + credito</expression>
+			</field>
+
+			<field id="cod_concepto" noshow="true">
+				<expression>REG_CONCEPTOS.cod_concepto</expression>
+			</field>
+			<field id="mes" noshow="true">
+			    <expression>month(fecha_movimiento)</expression>
+			</field>
+
+
+    			<field id="ctbhaber" noshow="true">
+			    <expression>case when debito = 0 then REG_CONCEPTOS.ctbcuenta_id else BCSCUENT.ctbcod end</expression>
+			</field>
+    			<field id="ctbdebe" noshow="true">
+			    <expression>case when debito != 0 then REG_CONCEPTOS.ctbcuenta_id else BCSCUENT.ctbcod end</expression>
+			</field>
+
+			<field id="desc_concepto">
+				<label>Ingreso</label>
+				<expression>REG_CONCEPTOS.descripcion_concepto</expression>
+			</field>
+			<field id="conciliable" noshow="true">
+				
+				<expression>case when @regmovim != 0 then 'false' else 'true' end</expression>
+			</field>
+
+			<field id="Conciliar"  local="true" _refresh="true">
+			    <label>Conciliar</label>
+			    <attribute id="deshabilitado">conciliable</attribute>
+			    <expression>case when @regmovim != 0 then 1 else 0 end</expression>
+<!--
+			    <if exp="'id_regmovim' != '0'">
+				<true>1</true>
+				<false>0</false>
+			    </if> -->
+			    <valor>0</valor>
+			    <tipo>check</tipo>
+			</field>
+
+			<field id="insertable" noshow="true">
+				
+				<expression>case when @regmovim = 0 and !isnull(id_concepto) then 'false' else 'true' end</expression>
+			</field>
+			<field id="Grabar" local="true">
+				<attribute id="deshabilitado">insertable</attribute>
+				<label>inserta</label>
+				<tipo>check</tipo>
+			</field>			
+			<field id="Borrar" local="true">
+				
+				<label>Borrar</label>
+				<tipo>check</tipo>
+			</field>			
+
+		</table>
+		<join tipo="left">
+			<table id="BCSCUENT">
+				<field id="ccbcod">
+					<condicion operador="=">BCS_IMPORTACION.nro_cuenta</condicion>
+				</field>
+
+			</table>
+		</join>
+
+		<join tipo="left">
+			<table id="BCS_CONCEPTO_IMP">
+				<field id="nro_cuenta">
+					<condicion operador="=">BCS_IMPORTACION.nro_cuenta</condicion>
+				</field>
+
+				<field id="nombre_concepto">
+					<condicion operador="=">BCS_IMPORTACION.nombre_concepto</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="REG_CONCEPTOS">
+				<field id="id_concepto">
+				    <condicion operador="=">(case when debito != 0 then BCS_CONCEPTO_IMP.regconceptohaber_id else BCS_CONCEPTO_IMP.regconceptodebe_id end)</condicion>
+				</field>
+			</table>
+		</join>
+
+		
+	</form>
+</histrix>

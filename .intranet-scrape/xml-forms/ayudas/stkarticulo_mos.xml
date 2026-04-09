@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="UTF-8"   ?>
+<histrix tipo="consulta" >
+    <title>Articulos</title>
+    <obs></obs>
+    <form >
+        <table id="STK_ARTICULOS" label="Articulos" >
+
+            <field id="id_stkarticulo" >
+            </field>
+
+            <field id="nombre_articulo" >
+                <label>Nombre</label>
+				<detalle>descripcion_detalle</detalle> 
+            </field>
+
+            <field id="wstklista_id" 	 local="true" 	noshow="true">
+            </field>
+			
+            <field id="fecha_movimiento" local="true" >
+                <tipo>date</tipo>
+            </field>
+
+            <field id="stkdeposito_id"   local="true"   noshow="true"/>
+            <field id="wstklista_id" 	 local="true" 	noshow="true" />
+            <field id="regcuenta_id" 	local="true"  	noshow="true"/>
+
+            <field id="cuentadebe_id" noshow="true" >
+                <detalle>ctbcuenta_stk_id</detalle>
+            </field>
+            <field id="alicuota_iva"  local="true" noshow="true">
+                <expression>alicuota</expression>
+                <label>alicuota_iva</label>
+                <detalle>alicuota_iva</detalle>
+            </field>
+
+            <field id="porcentaje_desc" tabla="STK_LISTADETALLE" noshow="true" >
+                <tipo>numeric</tipo>
+                <expression>
+					(
+					case when STK_DESCUENTOSARTCLI.porcentaje_desc != 0 
+					then STK_DESCUENTOSARTCLI.porcentaje_desc 
+					else 
+						case when STK_DESCUENTOSRUBROSCLI.porcentaje_desc_rub != 0 
+						then STK_DESCUENTOSRUBROSCLI.porcentaje_desc_rub 
+						else 
+
+							case when STK_DESCUENTOSLISTASCLI.porcentaje_desc != 0 
+							then STK_DESCUENTOSLISTASCLI.porcentaje_desc 
+
+								else 0.00 
+								
+							end
+						end
+					end )  
+                </expression>
+                SACO 
+                            /* else
+                                 case when STK_LISTAS.porcentaje_desc != 0 
+                                then STK_LISTAS.porcentaje_desc */
+
+                <label>Descuentos</label>
+                <detalle>porcentaje_desc0</detalle>
+                <detalle>porcentaje_auxdesc0</detalle>
+				
+                <format>%01.2f</format>
+                <valor default="true">0.00</valor>
+
+            </field>
+            <field id="sub-total00" local="true" noshow="true" >
+                <if exp="true">
+                    <true>((stklistadetalle_precioventa + 0 ) - ((stklistadetalle_precioventa + 0 )  * (porcentaje_desc0 + 0 ) / 100 ))</true>
+                    <false>0</false>
+                </if>
+                <tipo>numeric</tipo>
+                <detalle>subtotal0</detalle>
+            </field>
+            
+            <field id="porcentaje_desc1" tabla="STK_LISTADETALLE" noshow="true" >
+                <expression>(
+					case when STK_DESCUENTOSARTCLI.porcentaje_desc1 != 0 
+					then STK_DESCUENTOSARTCLI.porcentaje_desc1 
+					else 
+						case when STK_DESCUENTOSRUBROSCLI.porcentaje_desc_rub1 != 0 
+						then STK_DESCUENTOSRUBROSCLI.porcentaje_desc_rub1 
+						else 
+
+							case when STK_DESCUENTOSLISTASCLI.porcentaje_desc1 != 0 
+							then STK_DESCUENTOSLISTASCLI.porcentaje_desc1 
+	
+									else 0.00 
+								
+							end
+						end
+					end ) 
+                </expression>
+SACO                        /*else
+                                case when STK_LISTAS.porcentaje_desc1 != 0 
+                                    then STK_LISTAS.porcentaje_desc1 
+                                    */
+
+
+                <label>Descuentos 1</label>
+                <detalle>porcentaje_desc1</detalle>
+                <detalle>porcentaje_auxdesc1</detalle>
+                <format>%01.2f</format>
+            </field>
+            
+            <field id="precio_venta" noshow="true" >
+                <expression>@PVTA := (case when '[__wstklista_id__]' = '' then 0 else (case when isnull(stklistadetalle_precioventa) then 0 else stklistadetalle_precioventa end)  end)</expression>
+                <label>precio de lista</label>
+                <detalle>precio_venta</detalle>
+                <tipo>numeric</tipo>
+                <format>%01.2f</format>
+            </field>
+
+	<!-- TOTALIZADORES CALCULADOS PARA BAJARLOS CON LA BUSQUEDA PARA QUE PUEDA CARGAR EL ARTICULO COMO BAJA EN LA FACTURACION -->
+            <field id="sub-total01" local="true" noshow="true" >
+                <if exp="true">
+                    <true>((sub-total00 + 0 ) - ((sub-total00 + 0 )  * (porcentaje_desc1 + 0 ) / 100 ))</true>
+                    <false>0</false>
+                </if>
+                <tipo>numeric</tipo>
+                <detalle>subtotal</detalle>
+                <detalle>neto_detalle</detalle>
+                <format>%01.2f</format>
+            </field>
+
+
+            <field id="iva_detalle" local="true" noshow="true" >
+                <if exp="true">
+                    <true>((sub-total01 + 0 )  * (alicuota_iva + 0 ) / 100 ) </true>
+                    <false>0</false>
+                </if>
+                <tipo>numeric</tipo>
+                <detalle>iva_detalle</detalle>
+            </field>
+ 
+            <field id="valorfinal" local="true" noshow="true" >
+                <tipo>numeric</tipo>
+                <if exp="true">
+                    <true>sub-total01 + iva_detalle</true>
+                    <false>0</false>
+                </if>
+                <detalle>total_detalle</detalle>
+            </field>
+            
+            <field id="venta_final" local="true">
+                <label>Prec.Final</label>
+                <tipo>numeric</tipo>
+                <expression>@PVTA * ( 1 + (alicuota / 100))</expression>
+                <detalle>venta_final</detalle>
+                <format>%01.2f</format>
+            </field>
+            
+   <!-- DETALLE DE MOVIMIENTO DE STOCK -->
+
+            <field id="unidad_uso_id" noshow="true">
+                <detalle>stkunidad_id</detalle>
+            </field>
+            <field id="stkrubro_id" noshow="true">
+                <detalle>stkrubro_id</detalle>
+            </field>
+            <field id="stkfamilia_id" noshow="true">
+                <detalle>stkfamilia_id</detalle>
+            </field>
+            <field id="stksector_id" noshow="true">
+                <detalle>stksector_id</detalle>
+            </field>
+            <field id="stklistadetalle_costo" tabla="STK_LISTADETALLE" noshow="true">
+                <detalle>precio_costo</detalle>
+            </field>
+            <field id="genmoneda_venta_id" noshow="true" >
+                <label>GMVTA</label>
+                <detalle>genmoneda_venta_id</detalle>
+            </field>
+            
+            <field id="cantidad_pallet" noshow="true">
+                <detalle>cantidad_pallet</detalle>
+            </field>
+            
+            <field id="cantidad_pack" noshow="true">
+          	    <detalle>cantidad_pack</detalle>
+            </field>
+            
+            <field id="no_dto_global" noshow="true">
+                <detalle>no_dto_global</detalle>
+            </field>
+            
+
+            <field id="mi_Cotizacion" local="true" deshabilitado="true" noshow="true">
+                <label>Cot</label>
+                <expression><![CDATA[ifnull(( Select  GEN_MONEDA_HIS.cotizacion_genmonedahis FROM GEN_MONEDA_HIS WHERE GEN_MONEDA_HIS.moneda_id = STK_ARTICULOS.genmoneda_venta_id order by fecha_genmonedahis desc       limit 1), 1)]]></expression>
+                <detalle>mi_Cotizacion</detalle>
+            </field>
+
+            <!-- CONTROL DE STOCK --> 
+			
+            <field id="wcontrolstk"  local="true"  noshow="true">
+                <label>Controla Stock</label>
+                <tipo>integer</tipo>
+                <valor default="true">0</valor>
+            </field>
+
+            <field id="cantidadStk" style="color:blue">
+                <label>Stock</label>
+                <tipo>decimal</tipo>
+                <expression>@stock := ifnull((SELECT sum(cantidad_stock) FROM STK_STOCKACTUAL SA WHERE SA.stkarticulo_id= STK_ARTICULOS.id_stkarticulo and
+							((SA.stkdeposito_id = '[__stkdeposito_id__]' and '[__stkdeposito_id__]' != '' )  or  '[__stkdeposito_id__]' = ''  )),0)
+                </expression>
+                <detalle>cantidadStk</detalle>
+            </field>
+
+	    <!-- TODO: SACAR ESTE CAMPO DE MIERDA QUE HACE QUE UN CONTROL DE STOCK SOLAMENTE PARA EL CODIGO, horrible -->
+
+            <field id="MId_stkarticulo" local="true">
+                <expression>(case when @stock  &lt;= 0 &amp;&amp; [__wcontrolstk__] = 0 then ''	else id_stkarticulo end)</expression>
+                <detalle>stkarticulo_id</detalle>
+            </field>
+		
+            <field id="vigencia" noshow="true">
+          	  <expression having="false">IF( STK_ARTICULOS.vigencia_desde != '0000-00-00' AND STK_ARTICULOS.vigencia_hasta != '0000-00-00',
+          				                     IF(NOT str_to_date('[__fecha_movimiento__]','%d/%m/%Y') BETWEEN STK_ARTICULOS.vigencia_desde AND STK_ARTICULOS.vigencia_hasta, 1, 0), 0)</expression>
+          	  <condicion operador="=">0</condicion>
+            </field>
+            
+            <field id="dto_porcentaje" noshow="true">
+          	  <expression having="false">IF(STK_LISTADETALLE.dto_fechadesde != '0000-00-00' AND STK_LISTADETALLE.dto_fechahasta != '0000-00-00',
+          				                     IF(str_to_date('[__fecha_movimiento__]','%d/%m/%Y') BETWEEN STK_LISTADETALLE.dto_fechadesde AND STK_LISTADETALLE.dto_fechahasta, STK_LISTADETALLE.dto_porcentaje, 0), 0)</expression>
+          	  <detalle>dto_porcentaje</detalle>
+            </field>
+            
+            <field id="dto_cantidad" noshow="true">
+          	  <expression>STK_LISTADETALLE.dto_cantidad</expression>
+          	  <detalle>dto_cantidad</detalle>
+            </field>
+            
+            
+        </table>
+
+        <join tipo="LEFT">
+            <table id="GEN_IVA_ALICUOTAS">
+                <field id="iva_regimen_id">
+                    <condicion operador="=">STK_ARTICULOS.ivaregimen_id</condicion>
+                </field>
+                <field id="iva_id" >
+                    <condicion operador="=">'5'</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="LEFT">
+            <table id="STK_LISTADETALLE">
+                <field id="stkarticulo_id">
+                    <condicion operador="=">STK_ARTICULOS.id_stkarticulo</condicion>
+                </field>
+                <field id="stklista_id">
+                    <condicion operador="=" >'[__wstklista_id__]' or '[__wstklista_id__]' = '' </condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="LEFT">
+            <table id="STK_LISTAS">
+                <field id="id_stklista">
+                    <condicion operador="=">STK_LISTADETALLE.stklista_id</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="LEFT">
+            <table id="STK_DESCUENTOSLISTASCLI">
+                <field id="stklista_id">
+                    <condicion operador="=">STK_LISTADETALLE.stklista_id</condicion>
+                </field>
+                <field id="regcuenta_id">
+                    <condicion operador="=" >'[__regcuenta_id__]' </condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="LEFT">
+            <table id="STK_DESCUENTOSARTCLI">
+                <field id="stkarticulo_id">
+                    <condicion operador="=">STK_ARTICULOS.id_stkarticulo</condicion>
+                </field>
+                <field id="regcuenta_id">
+                    <condicion operador="=" >'[__regcuenta_id__]' </condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="LEFT">
+            <table id="STK_DESCUENTOSRUBROSCLI">
+                <field id="stkrubro_id">
+                    <condicion operador="=">STK_ARTICULOS.stkrubro_id</condicion>
+                </field>
+                <field id="regcuenta_id">
+                    <condicion operador="=" >'[__regcuenta_id__]' </condicion>
+                </field>
+            </table>
+        </join>
+		
+    </form>
+</histrix>  

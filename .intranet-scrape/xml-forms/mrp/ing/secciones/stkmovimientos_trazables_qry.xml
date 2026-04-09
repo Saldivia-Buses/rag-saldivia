@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="crud" log="false" procesa="false">
+  <title>Ingreso Movimientos Stock</title>
+  <obs/>
+  <form>
+    <table id="STK_MOVIMIENTOS" label="Ingreso de movimientos">
+
+
+      <field id="serial" tabla="STK_MOVIMIENTO_TRAZ" colspan="4">
+        <label>Número de Serie</label>
+        <size>35</size>
+      </field>
+
+      <field id="serial2">
+          <expression>serial</expression>
+      </field>
+
+      <field id="id_stkmovimiento" deshabilitado="true" noshow="true" autoInc="true">
+        <label>Codigo</label>
+        <help>Codigo de movimiento</help>
+      </field>
+
+      <field id="regcuenta_id" _noshow="true">
+        <label>Proveedor</label>
+        <helper type="combo" xml="regcuenta_solamente_qry.xml" dir="/ayudas" empty="true">
+            <field id="subsistema_id" noshow="true">
+                <condicion operador="=">'01'</condicion>
+            </field>
+            <order>
+              <field id="nombre_cuenta" />
+            </order>
+        </helper>
+        
+      </field>
+        
+      <field id="stkdeposito_id"  oculto="true">
+        <label>Deposito</label>
+        
+      </field>
+
+      <field id="fecha_hasta"  tabla="STK_MOVIMIENTO_TRAZ" modpos="nobr">
+        <label>Fecha Final</label>
+        <tipo>date</tipo>
+        <condicion operador="=">0000-00-00</condicion>        
+      </field>
+
+    </table>
+    <join _tipo="left">
+      <table id="STK_MOVIMIENTO_TRAZ">
+        <field id="stkmovimiento_id">
+          <condicion operador="=">id_stkmovimiento</condicion>
+        </field>
+      </table>
+    </join>
+
+  </form>
+</histrix>

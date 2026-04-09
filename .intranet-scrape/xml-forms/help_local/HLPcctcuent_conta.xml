@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<abm tipo="ayuda">
+	<titulo>CUENTAS</titulo>
+	<obs/>
+	<consulta>
+		<tabla id="CCTCUENT" label="Ayuda de Cuenta">
+			<campo id="siscod" oculto="true">
+				<label>Codigo Sistema</label>
+			</campo>
+			<campo id="baja" oculto="true">
+			    <condicion operador="=">0</condicion>
+			</campo>
+			<campo id="ctacod" noshow="true">
+				<detalle>ctacod</detalle>
+			</campo>
+			
+			<campo id="ctanom">
+				<tipo>varchar</tipo>
+			</campo>
+			<group>
+				<campo id="siscod" tabla="CCTCUENT"/>
+				<campo id="ctacod" tabla="CCTCUENT"/>
+				<campo id="ctanom" tabla="CCTCUENT"/>
+				<!--<campo id="year"/>
+				<campo id="mes"/>				-->
+			</group>
+			<orden>
+				<campo id="CCTCUENT.ctanom"/>
+			</orden>
+		</tabla>
+		<join tipo="left">
+			<tabla id="CCTCONTA">
+				<campo id="siscod" >
+					<label>CCTMOVIM.siscod</label>
+					<condicion operador="=">CCTCUENT.siscod</condicion>
+				</campo>
+				<campo id="ctacod" >
+					<condicion operador="=">CCTCUENT.ctacod</condicion>
+				</campo>
+				<campo id="principal">
+					<condicion operador="=">1</condicion>
+				</campo>
+				
+			</tabla>
+		</join>
+	</consulta>
+</abm>

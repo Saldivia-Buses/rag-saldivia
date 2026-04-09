@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm" limit="1">
+  <title>Actividades</title>
+  <obs></obs>
+  <consulta>
+    <table id="CAJ_ARQUEOS">
+
+	<field id="id_algoquecontar" noshow="true">
+		<expresion>''</expresion>
+	</field>
+	<field id="importe_arqueo">
+		<label>Importe</label>
+		<expresion>concat(CAJ_REGISTROS.fecha_registro,' turno ',
+case when turno_registro = 1 then 'Mañana'
+ when turno_registro = 2 then 'Tarde'
+ when turno_registro = 3 then 'Noche' end ,
+ ' Saldo al cierre $', CAJ_ARQUEOS.total_arqueo)</expresion>
+	</field>
+	<field id="fecha_de_la_caja" local="true" noshow="true" >
+		<tipo>date</tipo>
+		<valor default="true">today</valor>
+
+	</field>
+	<field id="WFecha_Reg" noshow="true"   tipoOrden="DESC" >
+		<expresion>CAJ_REGISTROS.fecha_registro</expresion>
+		<condicion operador="&lt;=">str_to_date('[__fecha_de_la_caja__]','%d/%m/%YYYY')  and '[__Wactualice__]' != '-1' </condicion>
+		<tipo>date</tipo>
+	</field>
+	<field id="cajpuesto_id" esClave="true" tabla="CAJ_REGISTROS">
+		<condicion operador="=">'[__Wactualice__]'</condicion>
+	</field>
+	<field id="Wactualice" local="true"> <!-- Utilizado para saber cuando se selecciono un puesto de cobranza-->
+		<valor default="true">-1</valor>
+	</field>
+	<field id="turno_registro" tabla="CAJ_REGISTROS" noshow="true"   tipoOrden="DESC"/>
+	<order>
+		<field id="WFecha_Reg" >
+			<expresion>CAJ_REGISTROS.fecha_registro</expresion>
+		</field>
+		<field id="turno_registro" />
+
+	</order>
+
+    </table>
+	<join>
+		<table id="CAJ_REGISTROS">
+			<field id="id_cajregistro">
+				<condicion operador="=">CAJ_ARQUEOS.cajregistro_id</condicion>
+			</field>
+		</table>
+	</join>
+
+  </consulta>
+</histrix>  

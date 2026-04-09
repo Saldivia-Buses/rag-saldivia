@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  CRUD
+Tarea: Tabla de Depositos por Punto de Venta
+Autor: d!ego2k
+Fecha: 10/08/11
+*******************************************************************************
+-->
+<histrix tipo="crud">
+    <title>Depósitos por Punto de venta</title>
+    <obs></obs>
+    <form>
+        <table id="STK_DEPOSITO_POS" label="Depósitos por Punto de venta">
+            <field id="id_stkdepositopos" esClave="true" noshow="true" />
+
+            <field id="regnumerador_id">
+                <label>Punto de Venta</label>
+                <helper type="combo" xml="regnumeradores_qry.xml" dir="/ayudas">
+                </helper>
+            </field>                 
+
+            <field id="stkdeposito_id">
+                <label>Deposito</label>
+                <helper type="combo" xml="stkdepositos_crud.xml" />
+            </field>
+
+            <field id="stklista_id">
+                <label>Lista Predeterminada</label>
+                <helper type="combo" xml="stklista_qry.xml" dir="/ayudas" />
+            </field>
+            
+        </table>
+    </form>
+</histrix>	

@@ -1,0 +1,262 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix exportasuma="true" subtipo="vertical" imprime="false" llenoTemporal="false" llenoreferente="true" tipo="ing" autoUpdateRow="false">
+    <title>MOVIMIENTOS BANCARIOS</title>
+    <obs/>
+<!--
+    <customScript>
+$('[name="idChequera"]').change();
+    </customScript>
+-->
+    <form  >
+        <table id="BCSMOVIM" idCampoCond="imputar" label="Mov Bancarios"  >
+            <movimientos _cabecera="ordenpago_propios_auto_cab.xml">
+                <relacion id="ordenpago_propios_auto_ingmov.xml"></relacion>
+                <relacion id="ordenpago_propios_auto_numchequera_ingmov.xml"></relacion>
+
+            </movimientos>
+            <field id="sisbcs" local="true" noshow="true">
+                <label>sisbcs</label>
+                <help>Cod sistema</help>
+                <parametro id="fsmparam_paralf.xml" retorna="paralf">
+                    <field id="parcla">
+                        <condicion operador="=">'sisbcs'</condicion>
+                    </field>
+                </parametro>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="_ORDEN" oculto="true" >
+                <label>Orden</label>
+            </field>
+            
+            <field id="idChequera" _deshabilitado="true" _noshow="true">
+                    <help>Codigo de Concepto</help>
+		    <label>chequera</label>
+                    <helper type="combo"  id="CHEQUERAS" empty="true">
+                            <field id="idChequera"/>
+			    <field id="nombre">
+				    <expression>select ccbnom FROM BCSCUENT where BCSCUENT.ccbcod = CHEQUERAS.ccbcod</expression>
+			    </field>
+			    <field id="ctbcod">
+				    <expression>select ctbcod FROM BCSCUENT where BCSCUENT.ccbcod = CHEQUERAS.ccbcod</expression>
+			    </field>
+			    <field id="bcscta">
+				<expression>ccbcod</expression>
+			    </field>
+                            <field id="nroCheque">
+				<detalle>chequera</detalle>
+                            </field>
+                            <field id="chequera">
+				<expression>nroCheque</expression>
+				<detalle>chequera</detalle>
+                            </field>
+			    <field id="printer">
+				<detalle>printer</detalle>
+			    </field>
+                            <field id="tipo_chequera">
+                                <condicion condicion="=">1</condicion>
+                                <expression>CHEQUERAS.tipo</expression>
+                            </field>
+                    </helper>
+                    <tipo>integer</tipo>
+            </field>
+		<field id="printer" local="true" deshabilitado="true" _noshow="true">
+                    <label modpos="nobr">Impresora</label>
+		</field>
+            <field id="chequera" deshabilitado="true" _noshow="true">
+                    <label modpos="nobr">Chequera</label>
+                    <help>Codigo de Concepto</help>
+		    <!--
+                    <tabla_ex id="CHEQUERAS">
+                            <field id="nroCheque"/>
+                            <field id="nroCheque">
+                                <expression>nroCheque</expression>
+                            </field>
+                            <field id="tipo">
+                                <condicion condicion="=">1</condicion>
+                            </field>
+                    </tabla_ex>
+-->
+                    <tipo>integer</tipo>
+            </field>
+            <field id="bcscta" deshabilitado="true" _noshow="true">
+                    <label modpos="nobr">Banco</label>
+<!--
+                    <tabla_ex id="CHEQUERAS">
+                            <field id="ccbcod"/>
+                            <field id="nroCheque">
+                                <expression>nroCheque</expression>
+                            </field>
+			    <field id="printer" />
+                            <field id="tipo">
+                                <condicion condicion="=">1</condicion>
+                            </field>
+                    </tabla_ex>
+-->
+                    <tipo>integer</tipo>
+            </field>
+
+			<field id="ctbcod"  _noshow="true" deshabilitado="true">
+			    <label modpos="nobr">CtaCtb</label>
+				<detalle>caj_ctb</detalle>
+<!--
+				<tabla_ex id="BCSCUENT">
+					<field id="ctbcod"/>
+					<field id="ccbnom" />
+					<field id="ccbcod">
+					    
+					    <condicion operador="in">(select CHEQUERAS.ccbcod from CHEQUERAS where tipo = 1)</condicion>
+					</field>
+				</tabla_ex>
+-->
+			</field>
+
+            <field id="bcsmov" noshow="true" >
+                    <!--				<label>Concepto</label>
+                    <help>Codigo de Concepto</help>
+                    <tabla_ex id="BCSCONCE">
+                            <field id="cnbcod"></field>
+                            <field id="cnbdes"></field>
+                    </tabla_ex>
+                    <tipo>integer</tipo>
+                    -->
+                <valor>2</valor>
+            </field>
+            <field id="bcsnro" deshabilitado="true" >
+                <label Formstyle="display:none;">Numero</label>
+                <help>Numero de Movimiento</help>
+                <tipo>integer</tipo>
+                <valor>0</valor>
+                <if exp="true">
+                    <true>chequera + (_ORDEN + 0)</true>
+                    <false>'0'</false>
+                </if>
+                <format>%08d</format>
+            </field>
+            <field id="proxnum" deshabilitado="true" noshow="true" >
+                <tipo>integer</tipo>
+                <valor>0</valor>
+                <if exp="true">
+                    <true>bcsnro + 1</true>
+                    <false>'0'</false>
+                </if>
+            </field>
+
+
+            <field id="bcsfec" esClave="false">
+                <label>Fecha</label>
+                <valor>today</valor>
+
+            </field>
+            <field id="bcsfev" >
+                <label modpos="nobr">Vto.</label>
+                <valor>today</valor>
+                <jseval actxml="false">straFecha(\'bcsfec\') &lt; straFecha(\'bcsfev\')</jseval>
+            </field>
+            <field id="bcsimp" suma="true" >
+                <label modpos="nobr">Importe</label>
+                <help>Importe del Movimiento</help>
+                <valor default="true">0</valor>
+                <detalle>cajimp</detalle>
+				<tipo>varchar</tipo>
+            </field>
+            <field id="tipo" >
+                <label _modpos="nobr" colspan="4">Tipo de Cheque</label>
+                <valor>0</valor>
+                <options>
+                    <option valor="0">A la orden</option>
+                    <option valor="1">No a la orden</option>
+                    <option valor="2">Al portador</option>
+                </options>
+                <tipo>radio</tipo>
+
+            </field>
+            <field id="IMPORTE" aletras="true" deshabilitado="true" noshow="true">
+                <if exp="true">
+                    <true>bcsimp</true>
+                    <false>'0'</false>
+                </if>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="Let1" local="true" deshabilitado="true" noshow="true">
+                <if exp="true">
+                    <true>urlencode(substrWords( 'IMPORTE.-', 0, 7))</true>
+                    <!--<true>substr('bcsimp', 0 ,40)</true> -->
+                    <false>'0'</false>
+                </if>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="Let2" local="true" deshabilitado="true" noshow="true">
+                <if exp="true">
+                    <true>urlencode(substrWords('IMPORTE.-', 7 ))</true>
+                    <false>'0'</false>
+                </if>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="cajcod" local="true" noshow="true">
+                <label>cajcod</label>
+                <valor>8</valor>
+                <detalle>cajcod</detalle>
+            </field>
+            <field id="imputar" local="true" noshow="true">
+                <valor>1</valor>
+            </field>
+			<!-- NUMERADOR INTERNO NOMBRE DE CAMPO RESERVADO-->
+
+            <field id="movnroOP" noshow="true" local="true">
+				
+            </field>
+
+
+
+
+
+            <field id="ctacod" oculto="true">
+            </field>
+            <field id="ctanom" noshow="true" local="true">
+                <tipo>varchar</tipo>
+            </field>
+
+            <field deshabilitado="true" id="referencia" local="true" noshow="true">
+                <label>Referencia</label>
+<!--				<if exp="true" operador="=">
+					<true>"'O.P.:[__movnroOP__] - ctanom'"</true>
+					<false>'test'</false>
+				</if> -->
+                <valor>O.P.:[__movnroOP__] - [__ctanom__]</valor>
+                <tipo>varchar</tipo>
+            </field>
+            <field ctbtipo="2" id="cajtip" local="true" noshow="true">
+                <valor>2</valor>
+                <detalle>cajtip</detalle>
+            </field>
+            <field id="opecla" local="true" noshow="true">
+                <valor eval="true">$_SESSION['usuario']</valor>
+            </field>
+			<!--
+			<filters>
+				<field id="regfec">
+					<operador>=</operador>
+					<label>Fecha</label>
+					<valor>today</valor>
+				</field>
+			</filters>
+				-->
+            <order>
+                <field id="bcsnro"/>
+            </order>
+        </table>
+        <join tipo="left">
+            <table id="BCSCONCE">
+                <field id="siscod" oculto="true">
+                    <label>BCSCONCE.siscod</label>
+                    <condicion operador="=">BCSMOVIM.siscod</condicion>
+                </field>
+                <field id="cnbcod">
+                    <condicion operador="=">BCSMOVIM.bcsmov</condicion>
+                </field>
+                <field id="cnbnom"></field>
+            </table>
+        </join>
+    </form>
+</histrix>

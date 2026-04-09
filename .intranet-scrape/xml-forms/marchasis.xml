@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm">
+	<title>ABM MARCAS DE CHASIS</title>
+	<obs></obs>
+	<form >
+		<table id="MARCHASIS" label="Marcas de Chasis">
+
+			<field id="marcod" clave="true">
+				<label>Codigo</label>
+				<help>Codigo de Chasis</help>
+			</field>
+			<field id="mardes">
+				<label>Marca</label>
+				<help>Marca del Chasis</help>
+
+			</field>
+			<field id="desabv">
+				<label>Abrev.</label>
+				<help>Abreviatura a Utilizar</help>
+			</field>
+			<field id="siscod" oculto="true" >
+				<label>Cod</label>
+			</field>			
+			<clave>
+    			    <field id="siscod" oculto="true">
+			    </field>
+			    <field id="marcod">
+			    </field>
+			</clave>
+    			<order>
+				<field id="marcod"></field>
+				<field id="mardes"></field>
+			</order>
+		</table>
+	</form>	   
+</histrix> 

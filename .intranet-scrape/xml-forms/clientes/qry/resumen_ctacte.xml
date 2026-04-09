@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" preloadData="false">
+  <title>Resumen de Cta Cte</title>
+  <obs/>
+  <form >
+    <table id="REG_CUENTA" label="Resumen de Cta Cte">
+
+      <filters>
+	<field id="fecha_movimiento" print="false">
+		<label>Desde</label>
+		<operador>&gt;=</operador>
+		<valor eval="true">date("d/m/Y", mktime(0, 0, 0, date("m"), 1, date("Y")))</valor>
+	</field>
+	<field id="fecha_movimiento" print="false">
+		<label modpos="nobr">Hasta</label>
+		<operador>&lt;=</operador>
+		<valor>today</valor>
+	</field>
+        <field id="nro_cuenta" print="false">
+          <label>Cliente</label>
+          <operador>=</operador>
+        </field>
+        <field id="regcuenta_nombre" deshabilitado="true" print="false">
+          <label modpos="nobr"/>
+        </field>
+
+	<field id="administracion" print="false" deshabilitado="false">
+	    <label colspan="4">Cuenta Agrupadora</label>
+	    <operador>like</operador>
+	</field>
+
+	<field id="omitirpend" print="false">
+          <label>Omitir Pendiente</label>
+          <operador>=</operador>
+          <valor>0</valor>
+        </field>
+      </filters>
+
+      <field id="id_regcuenta" noshow="true" />
+
+
+      <field id="subsistema_id" valauto="true" noshow="true">
+        <detalle>subsistema_id</detalle>
+      </field>
+
+      <field id="administracion" break="true">
+	<expression>ADMIN.nombre_cuenta</expression>
+        <label>Cuenta Agrupadora</label>
+	<size>80</size>
+      </field>
+
+      <field id="nro_cuenta" _break="true">
+        <label>Nro Cuenta</label>
+        <helper type="external" xml="regcuenta_relacionescmb_nro.xml" dir="/ayudas" empty="true" />
+        <size>11</size>
+      </field>
+
+      <field id="regcuenta_nombre" deshabilitado="true" local="true" noshow="true" tabla="REG_MOVIMIENTOS">
+        <size>50</size>
+      </field>
+
+      <field id="nombre_cuenta">
+        <label Formstyle="display:none;">Cliente</label>
+      </field>
+
+      <field id="fecha_movimiento" tabla="REG_MOVIMIENTOS">
+        <label>Fec.Mov.</label>
+        <help>Fecha movimiento</help>
+        <tipo>date</tipo>
+      </field>
+
+      <field id="descripcion_concepto" tabla="REG_CONCEPTOS">
+        <label modpos="nobr">Comprobante</label>
+      </field>
+
+      <!--
+      <field id="imprime_concepto1" noshow="true">
+        <expresion>
+          case when isnull(CAJ_CONCEPTOS.imprime_concepto) then trim(REG_NUMERADORES.ejecuta) else trim(CAJ_CONCEPTOS.imprime_concepto) end
+        </expresion>
+      </field>
+      -->
+      <field id="imprime_concepto1" noshow="true">
+        <expresion>
+          CASE WHEN IFNULL(REG_NUMERADORES.ejecuta,'') = '' THEN trim(CAJ_CONCEPTOS.imprime_concepto) ELSE trim(REG_NUMERADORES.ejecuta) END
+        </expresion>
+      </field>
+
+      <field id="nro_movimiento">
+        <label Formstyle="display:none;">Nro. Comp.</label>
+        <expresion>CONCAT(REG_MOVIMIENTOS.letra_movimiento,' ',LPAD(REG_MOVIMIENTOS.puesto_movimiento,4,'0'),'-',LPAD(REG_MOVIMIENTOS.nro_movimiento  ,8,'0'))</expresion>
+        <helper type="link" _dir="/caja/qry">
+          <parameter source="id_regmovim" target="id_regmovim"/>
+        </helper>
+        <attribute id="linkint">imprime_concepto1</attribute>
+      </field>
+
+      <field id="importe_movimiento" tabla="REG_MOVIMIENTOS">
+        <label Formstyle="display:none;">Imp. Orig.</label>
+        <expresion>(case when REG_CONCEPTOS.imputacion_concepto = 0 then REG_MOVIMIENTOS.importe_movimiento else REG_MOVIMIENTOS.importe_movimiento * (-1 )  end)</expresion>
+      </field>
+
+      <field id="saldo_movimiento" _noshow="true" suma="true" tabla="REG_MOVIMIENTOS">
+        <label>Pendiente</label>
+        <!--<condicion operador="!=">0</condicion>-->
+        <tipo>numeric</tipo>
+      </field>
+
+        <field id="omitirpend" local="true" noshow="true">
+          <tipo>check</tipo>
+          <valor>1</valor>
+        </field>
+
+        <field id="filtro" noshow="true">
+          <expresion><![CDATA[ (case when [__omitirpend__] = 0 AND REG_MOVIMIENTOS.saldo_movimiento = 0 THEN 0 ELSE 1 END) ]]></expresion>
+          <condicion operador="=">1</condicion>
+        </field>
+
+<!--
+      <field id="acumulado" suma="true" acumula="true" _local="true" print="false">
+        <label>Acumulado</label>
+        <expresion>(case when REG_CONCEPTOS.imputacion_concepto = 0 then REG_MOVIMIENTOS.importe_movimiento else 0 end) - (case when REG_CONCEPTOS.imputacion_concepto = 1 then REG_MOVIMIENTOS.importe_movimiento else 0 end)</expresion>
+        <tipo>numeric</tipo>
+      </field>
+-->
+
+      <field id="id_regmovim" tabla="REG_MOVIMIENTOS" noshow="true" />
+
+      <order>
+        <field id="administracion" />
+        <field id="nombre_cuenta" />
+        <field id="fecha_movimiento" tabla="REG_MOVIMIENTOS"/>
+      </order>
+
+      <group>
+        <field id="id_regmovim" tabla="REG_MOVIMIENTOS" />
+      </group>
+
+    </table>
+
+    <join tipo="left">
+      <table id="REG_MOVIMIENTOS">
+        <field id="regcuenta_id">
+          <condicion operador="=">REG_CUENTA.id_regcuenta</condicion>
+        </field>
+      </table>
+    </join>
+
+	<join tipo="left">
+		<table id="REG_CUENTA_RELACIONES">
+			<field id="regcuenta_id">
+				<condicion operador="=">id_regcuenta</condicion>
+			</field> 
+		</table>
+	</join>
+
+	<join tipo="left">
+		<table id="REG_CUENTA" as="ADMIN">
+			<field id="id_regcuenta">
+				<condicion operador="=">REG_CUENTA_RELACIONES.regcuentarelacionada_id</condicion>
+			</field> 
+		</table>
+	</join>
+
+
+    <join>
+      <table id="REG_CONCEPTOS">
+        <field id="id_concepto">
+          <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+        </field>
+        <field id="informa_calculo">
+          <condicion operador="=">0</condicion>
+        </field>
+        <field id="tipo_concepto">
+          <condicion operador="=">1</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="CAJ_CONCEPTOS">
+        <field id="regconcepto_id">
+          <condicion operador="=">REG_CONCEPTOS.id_concepto</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="REG_NUMERADORES">
+        <field id="regconcepto_id">
+          <condicion operador="=">REG_CONCEPTOS.id_concepto</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>

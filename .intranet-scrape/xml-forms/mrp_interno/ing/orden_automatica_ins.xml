@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="nosql">
+    <title>ORDEN PRODUCCION</title>
+    <obs></obs>
+    <form >
+        <table id="MRP_ORDEN_DETALLE" label="MOVIMIENTOS" >
+            <ejecuta>
+                OrdenProduccion::creoOrdenSeccion('nrocha', 4);
+
+            </ejecuta>
+
+            <field id="nrocha" 	id_temp="nrocha"></field>
+        </table>
+    </form>
+</histrix>

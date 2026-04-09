@@ -1,0 +1,455 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  _notifica="true" _width="60" email="chasis_cons.xml" _limit="2" paginar="300" path="fotos/archivo/Coches" tipo="crud" procesa="false" _serverSide="true">
+    <title>NUMEROS DE FABRICACION</title>
+    <obs/>
+        <customScript>
+              $('[instance="[__instance__]"]').on('keyup', '[name="chasis"]', function(){
+                var context = $(this).closest('[instance]');
+                $('[name="repetido"]', context).text('').val('');
+		});
+
+              $('[instance="[__instance__]"]').on('change', '[name="chasis"], [name="modcod"], [name="texto_notificacion"], [name="nrocha"]', function(){
+                $('[name="repetido"]', context).text('').val('');
+
+                var context = $(this).closest('[instance]');
+                var nrocha = $(' [name="nrocha"]', context).val();
+                var notif = $(' [name="texto_notificacion"]', context).val();
+                
+                $('[name="chasis"]', context).attr('valid', 'true').removeClass('error');
+
+                var texto = 'Notificación cambio en Unidad: '+nrocha + ' ' + notif;
+                $('[name="mensaje"]', context).text(texto).val(texto);
+
+
+            });
+
+            $('[instance="[__instance__]"]').on('change blur', ':input', function(){
+                var context = $(this).closest('[instance]');
+                $('[name="chasis"]', context).attr('valid', 'true').removeClass('error');
+            });
+
+
+
+        </customScript>    
+    <form>
+        <table id="CHASIS" label="Lista Chequeo de chasis" styleTbody="height:600px;overflow-x:hidden;">
+            
+
+            <movimientos>
+                <relacion id="notifica_modchasis_ins.xml" />
+            </movimientos>
+
+            <filters>
+                <field id="chasis">
+                    <label>Número de Chasis</label>
+                    <help>Número de Serie del chasis</help>
+                    <operador>like</operador>
+                </field>
+                <field id="nrocha">
+                    <label modpos="nobr">Nro Fab</label>
+                    <operador>=</operador>
+                </field>
+                <field deshabilitado="false" id="modcod">
+                    <label modpos="nobr">Mod Chasis</label>
+                    <operador>=</operador>
+                </field>
+            </filters>
+
+            <field id="entrada">
+                <label>Ingreso</label>
+                <help>Fecha de Entrada</help>
+                <tipo>date</tipo>
+                <valor>today</valor>
+                <actualiza>
+                    <field id="modcod" destino="fecha" />
+                </actualiza>
+            </field>
+            <field _PDFanchofijo="true" esClave="true" id="fechaing" update="false" modpos="nobr">
+                <attribute id="style">colorFec</attribute>
+                <expression having="false">(case when PEDCOTIZ.ingresoLinea != '0000-00-00' then PEDCOTIZ.ingresoLinea else fechaing end)</expression>
+                <label>Inicio</label>
+                <tipo>date</tipo>
+                <help>Fecha de Ingreso a Linea</help>
+<!--                <format>d/m</format> -->
+                <!--                <condicion operador="&lt;">ADDDATE(CURDATE(),INTERVAL 35 DAY)</condicion>-->
+            </field>
+            <field id="colorFec" oculto="true">
+                <expression>case when PEDCOTIZ.ingresoLinea != '0000-00-00' then 'color:green;font-size:11px;' else '' end</expression>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="devolucion">
+                <label>Fecha de Devolución</label>
+                <tipo>date</tipo>
+            </field>
+            <field id="sinchequeo" noshow="true">
+                <expression>case when isnull(TURNOSPRODUCCION.nroturno) and CHASIS.chequeo = 0 then 'resaltadoRojo' else '' end</expression>
+                <!--
+                <expression>case when ( select count(*) from TURNOSPRODUCCION where TURNOSPRODUCCION.nrofab = CHASIS.nrocha ) = 0 and 
+                (CHASIS.chequeo = 0 ) then 'resaltadoRojo' else '' end</expression>-->
+                <tipo>varchar</tipo>
+                <label>resR</label>
+            </field>
+            <field id="conchequeo" noshow="true" tipoOrden="DESC">
+                <expression>case when isnull(TURNOSPRODUCCION.nroturno) and CHASIS.chequeo = 1 and datediff(date(now()) , entrada) &gt;=60 then 'grisado2' 
+              when isnull(TURNOSPRODUCCION.nroturno) and CHASIS.chequeo = 1 and datediff(date(now()) , entrada) &lt;60 then '.'
+            else '' end</expression>
+                <!--
+                <expression>case when ( select count(*) from TURNOSPRODUCCION where TURNOSPRODUCCION.nrofab = CHASIS.nrocha ) = 0 and 
+                chequeo = 1 then 'grisado2' else '' end</expression>-->
+                <tipo>varchar</tipo>
+                <label>resV</label>
+            </field>
+            <field _esclave="true" id="nrocha" tabla="CHASIS" tipoOrden="DESC">
+                <label>Nro Fab</label>
+                <help>Numero de Fabricación</help>
+                <parametro id="chasis_numerador.xml" retorna="nrocha2">
+                    <field id="nrocha" noselect="true" oculto="true">
+                        <condicion operador="&lt;">9900</condicion>
+                    </field>
+                </parametro>
+                <condicion operador="&lt;=">9900</condicion>
+            </field>
+            <field id="conces">
+                <helper type="combo" xml="concesionario.xml" dir="/produccion" />
+                <label>Conces. </label>
+                <help>Concesionario</help>
+            </field>
+            <field  id="ctacod" colstyle="display:none;">
+                <!-- <expression>ifnull(PEDCOTIZ.ctacod, TURNOSPRODUCCION.ctacod)</expression> -->
+                <tabla_ex id="CCTCUENT" vacio="true">
+                    <field id="ctacod"/>
+                    <field id="ctafan"/>
+                    <field id="siscod">
+                        <condicion operador="=">'02'</condicion>
+                    </field>
+                </tabla_ex>
+                <label>Cliente</label>
+            </field>
+            <field  id="cliente">
+                <expression>ifnull(ifnull(PEDCOTIZ.ctacod, TURNOSPRODUCCION.ctacod), CHASIS.ctacod)</expression> -->
+                <tabla_ex id="CCTCUENT" vacio="true">
+                    <field id="ctacod"/>
+                    <field id="ctafan"/>
+                    <field id="siscod">
+                        <condicion operador="=">'02'</condicion>
+                    </field>
+                </tabla_ex>
+                <label>Cliente</label>
+            </field>            
+            <field id="marcod">
+                <label>Marca</label>
+                <help>Marca del Chasis</help>
+                <tabla_ex empty="true" id="MARCHASIS">
+                    <field clave="true" id="marcod">
+                        <label>Código</label>
+                        <help>Coódigo de Chasis</help>
+                    </field>
+                    <field id="desabv">
+                        <label>Abrev.</label>
+                        <help>Abreviatura a Utilizar</help>
+                    </field>
+                    <field id="marca_activo">
+                        <condicion operador="=">0</condicion>
+                    </field>
+                </tabla_ex>
+                <actualiza>
+                    <field destino="marcod" id="modcod"/>
+                    <field destino="chasis_marcod" id="avisos" />
+                </actualiza>
+            </field>
+            <field id="modcod">
+                <label colstyle="display:none;">Modelo</label>
+                <help>Modelo del Chasis</help>
+                <helper  id="MODCHASIS" type="combo" empty="true">
+                    <field clave="true" id="modcha">
+                        <label>Modelo</label>
+                        <help>Código del Modelo de Chasis</help>
+                    </field>
+                    <field id="moddes">
+                        <label>Descripción</label>
+                        <help>Descripción del Modelo</help>
+                        <expression>CONCAT(MODCHASIS.moddes, ' ', (case when MODCHASIS.euro_id = 1 then 'E3' when MODCHASIS.euro_id = 2 then 'E5' else '' end))</expression>
+                    </field>
+                    <field id="marcod" oculto="true">
+                        <label>Marca Chasis</label>
+                    </field>
+                    <field _oculto="true" id="idMarcaMotor">
+                        <expression>marca_motor_id</expression>
+                        <label>Marca Motor</label>
+                        <detalle>idMarcaMotor</detalle>
+                    </field>
+                    <field id="chasis_activo">
+                        <condicion operador="=">0</condicion>
+                    </field>
+
+                    <field id="notificar">
+                        <detalle>notificar</detalle>
+                        <expression>ifnull((select notifica from MODCHASIS_CAMBIOS where modelo_id = id_modelo and fecha_cambio &lt;= now() and notifica = 1 limit 1),0)</expression>
+                    </field>
+                    <field id="texto_notificacion">
+                        <detalle>mensaje</detalle>
+                        <expression>ifnull((select group_concat('Se notifica el ingreso de un chasis ', moddes, ' con cambios: ' ,texto_notificacion separator '  -  ') from MODCHASIS_CAMBIOS where modelo_id = id_modelo and fecha_cambio &lt;= now() and notifica = 1), '')</expression>
+                    </field>                    
+                    <field id="para">
+                        <detalle>destinatarios</detalle>
+                        <expression>ifnull((select group_concat(email separator '; ') from MODCHASIS_CAMBIOS 
+                            left join HTXUSERS on login in ('anabelena', 'lucasr', 'williamsa', 'juan', 'christiang', 'martinm', 'rolando', 'fvaschetti')
+                            where modelo_id = id_modelo and fecha_cambio &lt;= now() and notifica = 1), '')</expression>n>
+                    </field>                    
+                </helper>
+            </field>
+            <field id="notificar" local="true" noshow="true">
+            </field>
+            <field id="para" local="true" noshow="true" deshabilitado="true">
+                <label>Destinatarios</label>
+                <size>60</size>
+            </field>
+
+            <field id="texto_notificacion" local="true" deshabilitado="true" noshow="true">
+            </field>
+
+            <field id="mensaje" local="true" _style="color:red;" deshabilitado="true" _colstyle="display:none;" noshow="true">
+                <label>Notificación</label>
+                <size>200</size>
+            </field>
+
+            <field Formstyle="display:none;" deshabilitado="true" id="moddes" tabla="MODCHASIS">
+                <expression>MODCHASIS.moddes</expression>
+                <label modpos="nobr">Mod</label>
+                <tipo>varchar</tipo>
+            </field>
+            <field Formstyle="display:none;" deshabilitado="true" id="abrev_euro" tabla="EURO_TIPO">
+                <label>Euro</label>
+                <tipo>varchar</tipo>
+            </field>
+            <field Formstyle="display:none;" deshabilitado="true" id="vds_chasis" tabla="MODCHASIS">
+                <label>VDS Chasis</label>
+                <tipo>varchar</tipo>
+            </field>
+            <field colstyle="width:auto;" deshabilitado="false" id="chasis" valid="true" _autocompletar="true">
+                <label>Número de Chasis</label>
+                <help>Numero de Serie del chasis</help>
+                <helper xml="chasis_exists.xml" type="external" title="Ver Datos del chasis">
+                    <!--
+                    <field id="nrocha" >
+                        <detalle>nrocha</detalle>
+                    </field>
+                -->
+                    <field id="repetido" >
+                        <detalle>repetido</detalle>
+                        <expression>concat('CHASIS YA EXISTENTE: ', nrocha)</expression>
+                    </field>
+                    
+                </helper>                            
+            </field>
+            <field id="repetido" deshabilitado="true" local="true" style="color:red;width:20em;font-size:1.5em;font-weigth:bold;">
+                <label>Mensaje</label>
+                <size>60</size>
+            </field>
+
+            <field id="linkchasis">
+                <expression>CHASIS.chasis</expression>
+                <helper xml="chasis_cons.xml" type="link" title="Ver Datos del chasis">
+                    <parameter source="nrocha" target="nrocha"/>
+                </helper>
+            </field>
+            <!--
+            <field id="avisos" _colstyle="display:none;" local="true" _showObjTabla="true">
+
+                <helper type="object" xml="prod_avisos_chasis_qry.xml" dir="/controlcambios/">
+                    <parameter source="marcod" target="chasis_marcod" ></parameter>
+                </helper>
+            </field>
+            -->
+            <field id="rfid_tarjeta">
+                <label>Rfid</label>
+                <help>Tarjeta Rfid</help>
+                <expression>rfid_tarjeta_id</expression>
+                <helper empty="true" id="RFID_TARJETAS" type="combo">
+                    <field id="id_rfid_tarjeta"/>
+                    <field id="numero_rfid"/>
+                </helper>
+            </field>
+            <field colstyle="display:none;" id="rfid_tarjeta_id" sincelda="true">
+                <label modpos="nobr">Disponibles</label>
+                <help>Tarjeta Rfid Disponibles</help>
+                <helper empty="true" id="RFID_TARJETAS" type="combo">
+                    <field id="id_rfid_tarjeta">
+                        <condicion operador="NOT IN">(SELECT CH.rfid_tarjeta_id FROM CHASIS CH WHERE CH.rfid_tarjeta_id IS NOT NULL)</condicion>
+                    </field>
+                    <field id="numero_rfid"/>
+                    <field id="activo">
+                        <condicion operador="=">1</condicion>
+                    </field>
+                </helper>
+            </field>
+            <field Formstyle="display:none;" colstyle="width:auto;" deshabilitado="false" id="email" linkdes="Ver Datos del Chasis" linkint="chasis_cons.xml" local="true">
+                <label>email</label>
+                <expression>
+                    <![CDATA['<img src="../img/mail_generic.png"/>']]>
+                </expression>
+                <help>Numero de Serie del chasis</help>
+                <paring destino="nrocha">nrocha</paring>
+                <paring destino="autoprint">false</paring>
+                <paring destino="automail">true</paring>
+            </field>
+            <field _showTablaObj="true" id="Emails" local="true">
+                <helper dir="/email" type="link" xml="email_subj_qry.xml">
+                    <parameter operator="like" source="chasis" target="subject"/>
+                </helper>
+                <label>Correos</label>
+                <help/>
+                <expression sql="true">
+<!--                    <![CDATA[select (case when count(*) != 0 then  concat(count(*),' Enviados') end) from HTXMAIL where MATCH(subject, body) AGAINST ( '[__chasis__]' ) ]]> -->
+                    <![CDATA[select (case when count(*) != 0 then  concat(count(*),' Enviados') end) from HTXMAIL where MATCH(subject, body) AGAINST ( replace(replace('"[__chasis__]"', '++',' '), '+', '') IN BOOLEAN MODE) ]]>
+<!--                    <![CDATA[(select (case when count(*) != 0 then  concat(count(*),' Enviados') end) from HTXMAIL where  subject like replace(replace('%[__chasis__]%', '++',' '), '+', '') AND '[__chasis__]' != '' )   ]]>  -->
+                </expression>
+            </field>
+            <!--                              
+            <field id="email" local="true" Formstyle="display:none"><label >email</label><paring destino="nrocha">nrocha</paring><jsfunction event="onclick">Histrix.imprimirpdf('chasis_cons.xml', 'SEND', null, 'send' , null);</jsfunction><valor><![CDATA['<img src="../img/mail_generic.png"/>']]></valor><tipo>button</tipo></field>-->
+            <field _deshabilitado="true" id="idMarcaMotor">
+                <label>Marca Motor</label>
+                <help>Marca del Motor</help>
+                <tabla_ex id="MARCAMOTOR" vacio="true">
+                    <field clave="true" id="idMarca">
+                        <label>Codigo</label>
+                    </field>
+                    <field id="abrev">
+                        <label>nombre</label>
+                    </field>
+                </tabla_ex>
+            </field>
+            <field id="nromotor">
+                <label colspan="4">Número de Motor</label>
+                <help>Numero de Motor</help>
+            </field>
+            <field id="chequeo">
+                <label>Chequeo</label>
+                <help>Chequeo realizado</help>
+                <tipo>check</tipo>
+            </field>
+            <field id="chequeo_arranque">
+                <label>Arranca</label>
+                <tipo>check</tipo>
+            </field>
+            <field Formstyle="display:none;" colstyle="width:auto;" deshabilitado="false" id="email_arranque" linkdes="Chequeo de Arranque del Chasis" linkint="chasis_arranque_cons.xml" local="true">
+                <label>email A.</label>
+                <expression>
+                    <![CDATA[case when chequeo_arranque = 0 then '<img src="../img/mail_generic.png"/>' end]]>
+                </expression>&gt;
+                <help>Numero de Serie del chasis</help>
+                <paring destino="nrocha">nrocha</paring>
+                <paring destino="autoprint">false</paring>
+                <paring destino="automail">true</paring></field>
+            <field id="idposic" noshow="true">
+                <expression>TURNOSPRODUCCION.idposic</expression>
+                <tabla_ex vacio="true" xml="posiciones.xml"/>
+                <label>Pos</label>
+                <help>Posicion en la linea</help>
+                <tipo>integer</tipo>
+            </field>
+            <field id="idTaco">
+                <tabla_ex dir="/produccion" vacio="true" xml="tacografos.xml"/>
+                <label>Marca Tacógrafo</label>
+                <help>Marca de tacógrafo</help>
+            </field>
+            <field id="nroTaco">
+                <label>Número Tacógrafo</label>
+                <help>Número de tacógrafo</help>
+            </field>
+            <field id="diasTaco">
+                <label>días</label>
+                <options>
+                    <option valor="1">1</option>
+                    <option valor="7">7</option>
+                </options>
+                <tipo>radio</tipo>
+            </field>
+            <field cellMaxLength="50" id="chades">
+                <label>Observaciones</label>
+                <help>Descripción</help>
+                <size>100</size>
+            </field>
+            <field deshabilitado="true" id="fechaActualiza" noshow="true" valauto="true">
+                <label colstyle="display:none" modpos="nobr">Fecha Act.</label>
+                <valor>today</valor>
+                <tipo>date</tipo>
+            </field>
+            <field _noselect="true" id="chapath" local="true" noshow="true">
+                <if exp="true">
+                    <true>'nrocha/Chequeo Chasis'</true>
+                    <false>''</false>
+                </if>
+                <tipo>varchar</tipo>
+            </field>
+            <field _deshabilitado="true" browse="true" colstyle="display:none;" id="archivo" local="true" maxWidth="1024" path="chapath">
+                <label _Formstyle="display:none;">Fotos</label>
+                <help/>
+                <tipo>file</tipo>
+                <size>10</size>
+            </field>
+            <field deshabilitado="true" id="hi" noshow="true">
+                <expression>case when CHASIS.fechaActualiza = DATE(NOW()) then 'resaltado' else '' end</expression>
+                <tipo>varchar</tipo>
+            </field>
+            <field Formstyle="display:none;" PDFcolWidth="11" _foto="true" _imageWidth="165" deshabilitado="true" id="fotos" style="white-space:nowrap;" watermark="chasis">
+                <expression>CONCAT('/fotos/archivo/Coches/',CHASIS.nrocha,'/Chequeo Chasis/')  </expression>
+                <label>Imágenes</label>
+                <tipo>dir</tipo>
+            </field>
+            <field clasefila="true" deshabilitado="true" id="h2" local="true" noshow="true">
+                <if exp="'hi' == 'resaltado'">
+                    <true>('sinchequeo' != '')?'sinchequeo':'hi'</true>
+                    <false>'sinchequeo'</false>
+                </if>
+            </field>
+            <field clasefila="true" deshabilitado="true" id="h3" local="true" noshow="true">
+                <if exp="'hi' == 'resaltado'">
+                    <true>('conchequeo' != '')?'conchequeo':'hi'</true>
+                    <false>'conchequeo'</false>
+                </if>
+            </field>
+	    <field id="referencia_factura">
+	    <label>Referencia Facturación</label>
+		<size>300</size>
+		<tipo>varchar</tipo>
+	    </field>
+            <order>
+                <!--<field id="devolucion"/>
+                <field id="conchequeo"/>-->
+                <field id="nrocha" tabla="CHASIS"/>
+            </order>
+        </table>
+        <join tipo="left">
+            <table id="MODCHASIS">
+                <field id="marcod">
+                    <condicion operador="=">CHASIS.marcod</condicion>
+                </field>
+                <field id="modcha">
+                    <condicion operador="=">CHASIS.modcod</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="TURNOSPRODUCCION">
+                <field id="nrofab">
+                    <condicion operador="=">CHASIS.nrocha</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="PEDCOTIZ">
+                <field id="nrocha">
+                    <condicion operador="=">CHASIS.nrocha</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="EURO_TIPO">
+                <field id="id_euro">
+                    <condicion operador="=">MODCHASIS.euro_id</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix>

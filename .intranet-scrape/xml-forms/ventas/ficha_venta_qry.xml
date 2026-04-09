@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  sololectura="true" tipo="ficha" autoprint="true" path="fotos"   limit="1">
+    <title>FICHA DE VENTA</title>
+    <obs/>
+  
+<form >
+        <table id="PEDCOTIZ" label="Ficha De Venta">
+            <field id="id" noshow="true" oculto="true">
+
+
+            </field>
+                <field id="marcadeagua" local="true" PDFbold="true" PDFitalic="true" PDFrotate="-45">
+		    <expression>CASE WHEN IFNULL(estado_ficha,0) != 1 THEN 'BORRADOR' ELSE '' END</expression>
+		    <label posx="30" posy="1" PDFcolor="#E3E3E3" PDFsize="105" size="400" PDFrestorePosition="true"/>
+		    <size>200</size>
+	        </field>
+
+            <field id="ctacod">
+                <label colspan="6" _size="15" posx="5" posy="17" PDFsize="12" _PDFbold="true" _PDFcolor="0000ff" PDFrestorePosition="true"></label>
+                <help>Codigo de Cuenta</help>
+               <expression>CONCAT((CASE WHEN CCTCUENT.ctafan = '' THEN '' ELSE CCTCUENT.ctafan END), '/', (CASE WHEN LEFT(CCTCONTA.nombre, 23) IS NULL THEN '' ELSE LEFT(CCTCONTA.nombre, 23) END))</expression> 
+            </field>
+
+            <field id="pedfec">
+                <label size="24" posx="115" posy="0" PDFsize="10">Fecha</label>
+                <tipo>date</tipo>
+            </field>
+           
+
+
+	    <field id="homologacion_id">
+		<label posx="5" posy="22" PDFsize="10"></label>
+		<helper type="combo" xml="combo_homologacion_modelo_qry.xml" dir="/fabricacion">
+		</helper>
+	    </field>
+	                
+             <field id="revfec" >
+                <label size="24" modpos="nobr" posx="115" posy="0" PDFsize="10">Modificado</label>
+            </field>
+
+            <field id="nrocha" esclave="true" PDFbold="true" PDFscaleX="120">
+                <label size="50" modpos="nobr" posx="135" posy="20" PDFsize="38" ></label>
+                <help>Numero de Fabricacion</help>
+            </field>
+             <field id="entrega_probable" >
+                <label size="50" modpos="nobr" posx="5" posy="+1" PDFsize="10">Fecha Probable de entrega</label>
+		<expression>date_format(entrega_probable, "%d/%m/%Y")</expression>
+            </field>
+            <field id="fprod"  PDFbold="true" PDFscaleX="120" PDFcolor="#FF2222">
+                <label size="160" modpos="nobr" posx="5" posy="+1" _PDFsize="38" ></label>
+		<expression>select paralf from FSMPARAM where parcla = 'fprod' limit 1</expression>
+            </field>
+	    
+	    
+<!--	    <field id="aviso_moneda"  style="font-weight:bold;" lblsize="90"  PDFbold="true" PDFsize="10"   PDFcolor="FFFFFF" PDFbackgroundColor="555555">
+            	<label size="190" modpos="nobr" posx="5" posy="+2" _PDFsize="38" ></label>
+		<expression> 'Los valores están expresados en dólares estadounidenses (USD).'</expression>
+	    </field>
+	    <field id="tipo_cambio" style="font-weight:bold;" lblsize="90"  PDFbold="true" PDFsize="8.8"   PDFcolor="FFFFFF" PDFbackgroundColor="555555">
+		<label size="190" modpos="nobr" posx="5" posy="+0" _PDFsize="38" PDFcolor="FFFFFF" PDFbackgroundColor="555555"></label>
+		<expression> 'El importe se convertirá al tipo de cambio vendedor del Banco de La Nación Argentina del día que se realice el efectivo pago.' </expression>
+	    </field> -->
+
+        <field id="tiene_adicionales_pend" _noshow="true" local="true" PDFbold="true" _PDFitalic="true" _PDFrotate="-5">
+            <expression>CASE WHEN (select count(*) from ACCESORIOS_COCHE where ACCESORIOS_COCHE.estado = 0 and ACCESORIOS_COCHE.ficha_id = PEDCOTIZ.id) = 0 THEN '' ELSE 'Los Accesorios PENDIENTES de aprobación no se realizarán' END</expression>
+            <label posx="36" posy="+1" PDFcolor="#FF2222" PDFsize="12" _PDFrestorePosition="true"/>
+        </field>
+
+        <field id="test" local="true" >
+    	   <label posx="5" posy="+1"></label>
+    	   <helper type="object" xml="ficha_venta_seccion_qry.xml" dir="/ventas">
+    	       <parameter source="id" target="producto_id" />
+    	   </helper>
+        </field>
+	
+	
+
+        </table>
+	<join tipo="left">
+            <table id="CCTCUENT">
+                <field id="siscod" oculto="true">
+                    <condicion operador="=">'02'</condicion>
+                </field>
+
+                <field id="ctacod">
+                    <condicion operador="=">PEDCOTIZ.ctacod</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="CCTCONTA">
+                <field id="siscod" oculto="true">
+                    <condicion operador="=">CCTCUENT.siscod</condicion>
+                </field>
+
+                <field id="ctacod">
+                    <condicion operador="=">PEDCOTIZ.ctacod</condicion>
+                </field>
+                <field id="idconta">
+                    <condicion operador="=">PEDCOTIZ.idconta</condicion>
+                </field>
+
+            </table>
+        </join>
+
+    </form>
+</histrix>

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" inserta="false" modifica="false" llenoTemporal="true"  imprime="false"  transaccional="true" confirma="BORRAR" deleteRow="false" >
+  <title>Movimientos</title>
+  <obs/>
+    <form>  
+     
+    <table id="REG_IMPUTACIONES" label="Resumen de Cuenta">
+    <validation>
+       <condition><![CDATA[ esadmin != 1 ]]></condition>
+       <message>No tiene permiso para realizar la operación</message>
+     </validation>
+	<movimientos>  
+	  <relacion id="regimputaciones_del.xml" />
+	<!--  02/03/2015 PABLO - AHORA ESTO SE HACE EN EL TRIGGER DEL REG_IMPUTACIONES 
+	  <relacion id="regmovimiento_up.xml" />
+	  <relacion id="regmovimiento_up_orig.xml" />	-->  
+	</movimientos>
+
+      <field id="id_regimput" esClave="true" noshow="true"/>
+
+
+
+	  <field id="subsistema0_id" noshow="true" />
+	  
+	  <field id="nro1">
+		<label>OP</label>
+		<expression>SELECT CONCAT(REG_MOVIMIENTOS.letra_movimiento,' ',LPAD(REG_MOVIMIENTOS.puesto_movimiento,4,'0'),'-',LPAD(REG_MOVIMIENTOS.nro_movimiento  ,8,'0')) FROM REG_MOVIMIENTOS WHERE id_regmovim = REG_IMPUTACIONES.regmovim_id</expression>
+	  </field>
+	  
+	  <field id="nro2">
+		<label>Factura</label>
+		<expression>SELECT CONCAT(REG_MOVIMIENTOS.letra_movimiento,' ',LPAD(REG_MOVIMIENTOS.puesto_movimiento,4,'0'),'-',LPAD(REG_MOVIMIENTOS.nro_movimiento  ,8,'0')) FROM REG_MOVIMIENTOS WHERE id_regmovim = REG_IMPUTACIONES.regmovim0_id</expression>
+	  </field>
+
+	  <field id="movimiento_imputacion">
+		<label>Importe</label>
+	  </field>
+
+	  <field id="imputacionescaj" noshow="true">
+		<expression>REG_IMPUTACIONES.regmovim0_id</expression>
+	  </field>
+      <field id="regmovim0_id" noshow="true" />
+
+	  <field id="xsaldo_movimiento" noshow="true">
+	  	<label>saldo fac</label>
+		<expression>(SELECT saldo_movimiento FROM REG_MOVIMIENTOS WHERE id_regmovim = REG_IMPUTACIONES.regmovim0_id) + REG_IMPUTACIONES.movimiento_imputacion</expression>
+	  </field>
+      <field id="regmovim_id" noshow="true" />
+
+	  <field id="xsaldo_movimiento0" noshow="true">
+	  	<label>Sal orig</label>
+		<expression>(SELECT saldo_movimiento FROM REG_MOVIMIENTOS WHERE id_regmovim = REG_IMPUTACIONES.regmovim_id)</expression>
+	  </field>	  	  
+	  <field id="xsaldo_movimiento_orig" noshow="true">
+	  	<label>Saldo orig</label>
+		<expression>(SELECT saldo_movimiento FROM REG_MOVIMIENTOS WHERE id_regmovim = REG_IMPUTACIONES.regmovim_id) - REG_IMPUTACIONES.movimiento_imputacion</expression>
+	  </field>	  
+	 
+	  <field id="esadmin" local="true" noshow="true">
+		<valor eval="true">$_SESSION['administrator']</valor>
+	  </field> 
+      
+    </table>
+  </form>
+</histrix>

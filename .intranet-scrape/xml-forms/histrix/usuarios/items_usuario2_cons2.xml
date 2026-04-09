@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="grid" imprime="false" showCantidad="false" deleteRow="false" procesa="false" inserta="false">
+	<title>Usuarios</title>
+	<obs/>
+	<form detalle="items_usuario2_cons.xml" inline="true" hasDetail="hasdet">
+		<table id="HTXMENU" label="Usuarios">
+
+			<field id="Id_menu" noshow="true" ></field>
+
+			<field id="hasdet" noshow="true" >
+				<expresion>case when hijo != '' then 1 else 0 end</expresion>
+			</field>
+			<field id="hasdet2" noshow="true" >
+				<expresion>case when hijo != '' then 'true' else 'false' end</expresion>
+			</field>
+
+			<field id="tipodato" noshow="true" >
+				<expresion>case when hijo = '' then 'check' else 'varchar' end</expresion>
+			</field>
+			<field id="hijo" noshow="true" >
+				<detalle>Id_menu</detalle>
+
+			</field>
+
+			<field id="parametros" noshow="true" ></field>
+			<field id="menuId" noshow="true" _esClave="true"></field>
+			<field id="login" local="true" noshow="true" >
+				<label>login</label>
+				<detalle>login</detalle>
+				<help></help>
+			</field>
+			<field id="autorizado" refresh="true">
+				<attribute id="deshabilitado">hasdet2</attribute>
+				<attribute id="TipoDato">tipodato</attribute>
+
+				<expresion>
+					case when hijo = '' then (select 1 from HTXPROFILE_AUTH H where H.menuId = HTXMENU.menuId and H.Id_perfil = [__Id_perfil__] limit 1) else '' end
+				</expresion>
+				<tipo>check</tipo>
+			</field>
+			<field id="clasef"  local="true" noshow="true">
+				<if exp="'autorizado' == '0' &amp;&amp; 'parametros' != ''">
+					<true>'color:grey;'</true>
+					<false>('parametros' == '')?'font-weight:bold;':''</false>
+
+				</if>
+
+			</field>
+
+			<field id="titulo" noshow="true" >
+				<tipo>varchar</tipo>
+			</field>
+			<field id="tit2" local="true">
+				<attribute id="style">clasef</attribute>
+
+				<tipo>varchar</tipo>
+				<if exp="true">
+					<true>ucfirst(strtolower('titulo'))</true>
+					<false>''</false>
+
+				</if>
+
+			</field>
+
+			<field id="Id_perfil" local="true" noshow="true" esClave="true">
+				<detalle>Id_perfil</detalle>
+			</field>
+
+			<field id="m1" local="true" noshow="true">
+				<valor>Id_menu</valor>
+			</field>
+			<field id="m2" local="true" noshow="true">
+				<valor>menuId</valor>
+			</field>
+
+			<field id="p1" local="true" noshow="true">
+				<valor>Id_perfil</valor>
+			</field>
+			<field id="insdel" noshow="true" local="true" >
+				<label>test</label>
+				<if exp="'autorizado' == '1'">
+					<true>
+						'insert ignore into HTXPROFILE_AUTH set m1 = menuId, m2 = menuId,  p1 = Id_perfil'
+					</true>
+					<false>
+						'delete from HTXPROFILE_AUTH where m2 = menuId and  p1 = Id_perfil and hasdet = 0 limit 1'
+					</false>
+
+				</if>
+			</field>
+
+			<!-- 			<field id="delete">
+			-->
+			<!-- 			    <expresion sql="true">
+			delete from HTXPROFILE_AUTH where menuId = [__menuId__] and  Id_perfil = [__Id_perfil__] limit 1;
+		</expresion>
+		-->
+		<!-- 			</field>
+		-->
+		<field id="INS" noshow="true">
+			<!-- 				<attribute id="Expresion">insdel</attribute>
+		-->
+		<expresion sql="true">[__insdel__]</expresion>
+		<!-- 			    <expresion sql="true">
+		insert ignore into HTXPROFILE_AUTH set menuId = [__menuId__],  Id_perfil = [__Id_perfil__];
+	</expresion>
+	-->
+</field>
+
+<field id="orden" noshow="true" tabla="HTXMENU"></field>
+
+<group>
+	<field id="menuId"/>
+</group>
+<order>
+	<field id="orden" tabla="HTXMENU"></field>
+
+</order>
+
+</table>
+<!--
+		<join tipo="left">
+<table id="HTXPROFILE_AUTH">
+<field id="menuId">
+	<condicion operador="=">HTXMENU.menuId</condicion>
+</field>
+
+</table>
+</join>
+-->
+<!--
+		<join tipo="left">
+<table id="HTXNOTIFUSER">
+<field id="Id_menu">
+<condicion operador="=">HTXPROFILE_AUTH.menuId</condicion>
+</field>
+<field id="orden">
+<condicion operador="=">HTXPROFILE_AUTH.orden</condicion>
+</field>
+<field id="login">
+<condicion operador="=">'[__login__]'</condicion>
+</field>
+
+</table>
+</join>
+-->
+</form>
+</histrix>
+

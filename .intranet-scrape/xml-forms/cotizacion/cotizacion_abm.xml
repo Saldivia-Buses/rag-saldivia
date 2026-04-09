@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ficha" preFetch="true" borra="false" inserta="false">
+    <title>COTIZACION</title>
+    <obs></obs>
+    <form  >
+        <table id="COTIZACION" label="COTIZACIONES">
+            <validation>
+                <condition>('ctanom' == '0')</condition>
+                <message>Debe Ingresar el Nombre.</message>
+            </validation>
+            <validation >
+                <condition>(homologacion_id == 0)</condition>
+                <message>Debe Seleccionar una Homologacion</message>
+            </validation>
+            <field id="idLista" >
+          <label>Lista</label>
+            </field>
+
+            <field id="idCotiz" deshabilitado="true" esClave="true" valauto="true">
+                <label modpos="nobr" style="font-size:15px; color:green;font-weight:bold;">Nro Cotiz.</label>
+            </field>
+
+            <field id="ctacod" required="false" _autocompletar="true" _noshow="true" _deshabilitado="true" valid="true">
+                <label _modpos="nobr">Cliente</label>
+                <help>Código de Cuenta </help>
+                <actualiza>
+                    <field destino="ctacod" id="contactos"/>
+                </actualiza>
+                 <ayuda_ex id="CCTCUENT" _condes="true" _xml="HLPcctcuent_conta.xml" dir="/help_local">
+                      <field id="ctacod" >
+                        <label>cuenta</label>
+                   </field>
+
+  
+                    <field id="nombre">
+                      <expression>ctanom</expression>
+                        <tipo>varchar</tipo>
+                      <detalle>ctanom</detalle>
+                    </field>
+                  
+                    <field id="siscod" oculto="true" >
+                        <condicion operador="=">'02'</condicion>
+                    </field>
+                    <field id="baja" oculto="true" >
+                        <condicion operador="=">0</condicion>
+                    </field>                   
+                    <field id="ctatel" class="informal">
+                        <detalle>ctatel</detalle>
+                    </field>
+
+                    <clave>ctacod</clave>
+                    <descripcion>ctanom</descripcion>
+                    <order>
+                        <field id="ctanom"></field>
+                    </order>
+                </ayuda_ex>              
+                <detalle>ctacod</detalle>
+            </field>
+
+            <field id="ctanom" _deshabilitado="true">
+                <label modpos="nobr">Nombre</label>
+            </field>
+
+            <field id="fecha" _deshabilitado="true">
+                <label _modpos="nobr">Fecha</label>
+                <help>Fecha de Cotizaci</help>
+            </field>
+            <!-- <field id="ctacon">
+                <label colspan="2">Contactos</label>
+                <tabla_ex id="CCTCONTA" vacio="true">
+                    <field id="idconta"></field>
+                    <field id="nombre" >
+                        <expression>CCTCONTA.nombre</expression>
+                        <tipo>varchar</tipo>
+                    </field>
+
+                    <field id="ctamail" >
+                        <expression>CCTCONTA.mail</expression>
+                        <tipo>varchar</tipo>
+                    </field>
+                    <field id="ctatel" >
+                        <expression>CCTCONTA.Telefono</expression>
+                        <tipo>varchar</tipo>
+                    </field>
+                    <field id="ctacon" >
+                        <expression>CCTCONTA.nombre</expression>
+                        <tipo>varchar</tipo>
+                    </field>
+                    <field id="ctacod">
+                        <condicion operador="=">0</condicion>
+                    </field>
+                    <order>
+                        <field id="nombre"></field>
+                    </order>
+                </tabla_ex>
+                <size>20</size>
+            </field>
+            <field id="ctatel">
+                <label modpos="nobr" >Tel?no</label>
+                <size>20</size>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="ctacon" >
+                <label colspan="2">Contacto</label>
+                <size>20</size>
+            </field>
+            <field id="ctamail" >
+                <label modpos="nobr" >e-mail</label>
+                <size>20</size>
+
+            </field> -->
+            <field id="idGrupo" deshabilitado="true" noshow="true" >
+                <label _modpos="nobr">idGrupo</label>
+
+            </field>
+
+          <field id="homologacion_id" required="true">
+            <label colstyle="display:none;" colspan="3">Homologación</label>
+            <helper type="combo" xml="combo_homologacion_modelo.xml" dir="/fabricacion" empty="true">
+              <field id="nrocar" oculto="true" />
+            </helper>
+          </field>
+	    <field id="moneda_id">
+		<label>Moneda</label>
+                <helper id="GEN_MONEDAS" type="combo">
+                    <field id="id_moneda"></field>
+                    <field id="descripcion_moneda"></field>
+                </helper>		
+	    </field>
+            <field id="showPrecioCon" >
+                <label>Concesionario</label>
+                <tipo>check</tipo>
+            </field>
+            <field id="precioCon" _sincelda="true">
+                <label  modpos="nobr" ></label>
+                <tipo>decimal</tipo>
+                <size>20</size>
+            </field>
+            <field id="showPrecioPub" >
+                <label>Venta</label>
+                <tipo>check</tipo>
+            </field>
+            <field id="precioPub" _sincelda="true">
+                <label  modpos="nobr" ></label>
+                <tipo>decimal</tipo>
+                <size>20</size>
+            </field>
+            <field id="plazo">
+                <label _modpos="nobr" colspan="4">Plazo de entrega</label>
+                <tipo>varchar</tipo>
+                <size>50</size>
+                <valor>45 días a partir de entrada a producción</valor>
+            </field>
+            <field id="leyenda_precio">
+                <label colspan="4">Leyenda precio</label>
+                <size>40</size>
+            </field>
+            <field id="pie">
+                   <label colspan="4">Pie</label>
+                   <size>200</size>
+                   <tipo>varchar</tipo>
+            </field>
+            <field id="formaPago">
+                <label _modpos="nobr" colspan="3">Forma de Pago</label>
+                <tipo>varchar</tipo>
+                <size>120</size>
+                <valor>A PROCESO</valor>
+            </field>
+
+<!--            <field id="adic" local="true" obj="cotizopmovim_abm.xml">
+                <label colspan="8">Accesorios</label>
+                <paring destino="idCotiz">idCotiz</paring>
+            </field>
+            <field id="accesorios" local="true" obj="cotiz_accesorios_coche.xml">
+              <label colspan="8">Otros</label>
+                    <paring destino="cotizacion_id">idCotiz</paring>
+            </field>
+                                                                   
+            <field id="otros" local="true" obj="cotizotros_abm.xml">
+                <label colspan="8">Otros</label>
+                <paring destino="idCotiz">idCotiz</paring>
+            </field>
+ -->
+        </table>
+    </form>
+</histrix>

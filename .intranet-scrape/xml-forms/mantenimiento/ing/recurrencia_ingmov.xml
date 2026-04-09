@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert">
+  <title />
+  <obs/>
+  <form>
+    <table id="MANT_PLAN_EVENTOS" label="Horas Recurrentes">
+      
+      <field id="plan_id" id_temp="plan_id" />
+
+      <field id="id_planevento" id_temp="id_planevento" />
+
+      <field id="fecha_accion" id_temp="fecha" />
+      
+      <field id="equipo_id" id_temp="equipo_id" />
+
+      <field id="accion_id" id_temp="accion_id" />
+
+      <field id="observaciones" id_temp="observaciones" />
+      
+      <field id="estado" id_temp="estado" />
+
+      <field id="login" id_temp="login" />
+
+    </table>
+  </form>
+</histrix>

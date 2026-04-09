@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud" >
+  <title>Linea de Producción</title>
+  <obs />
+  <form >
+    <table id="MRP_PRODUCT_PATH" label="Lineas de producción">
+
+		<field id="id_productpath" _noshow="true" autoinc="true" deshabilitado="true">
+		</field>
+		<field id="mrppath_id" oculto="true">
+		</field>
+		<field id="stkrubro_id" oculto="true">
+		</field>
+
+		<field id="mrpseccion_id">
+			<label>Sección</label>
+			<helper xml="mrp_seccion_crud.xml" type="combo"  />
+<!--			<actualiza>
+				<field id="parent_productpath_id"></field>
+			</actualiza> -->
+		</field>
+		<field id="parent_productpath_id2" >
+			<expression>parent_productpath_id</expression>
+		</field>
+		<field id="parent_productpath_id" _colstyle="display:none;" empty="true">
+			<label>Paso Anterior</label>
+			<helper xml="mrp_product_path_qry.xml" dir="/mrp/qry/" type="combo">
+				<parameter source="mrppath_id" target="mrppath_id" />
+				<order>
+					<field id="id_productpath">
+					</field>
+				</order>
+			</helper>
+		</field>
+
+		<field id="mrporden" tabla="MRP_SECCION" noshow="true">
+			<expression>mrporden</expression>
+		</field>
+		<!--
+		<field id="repetitions" noZero="true">
+			<label>Repeticiones</label>
+
+		</field>
+		<field id="repeat_productpath_id">
+			<label>Repetir desde</label>
+			<helper xml="mrp_product_path_qry.xml" dir="/mrp/qry/" type="combo" empty="true">
+				<parameter source="stkrubro_id" target="stkrubro_id" />
+			</helper>
+		</field>
+	-->
+	     <order>
+			
+			<field id="id_productpath" />
+		 </order>
+    </table>
+    <join>
+    	<table id="MRP_SECCION">
+    		<field id="id_mrpseccion">
+    			<condicion operador="=">mrpseccion_id</condicion>
+    		</field>
+    	</table>
+    </join>
+
+  </form>
+</histrix>

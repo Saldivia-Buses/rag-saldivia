@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="dashboard">
+        <titulo>Medidores de Calidad</titulo>
+
+        <widget id="observaciones_prom_x_modelo"  width="98%" height="400px">
+           <title>(Observaciones por Modelo / Cant. Coches)</title>
+           <url><![CDATA[histrixLoader.php?xml=observaciones_promedio_xmodelo.xml&dir=/estadisticas/calidad]]></url>
+        </widget>
+
+        <widget id="observaciones_prom_x_modelo_porcentaje"  width="98%" height="400px">
+           <title>(Observaciones / Controles realizados) por Modelo %</title>
+           <url><![CDATA[histrixLoader.php?xml=observaciones_promedio_xmodelo_porcentaje.xml&dir=/estadisticas/calidad]]></url>
+        </widget>
+
+        <widget id="modelosdefectos"  width="48%" height="400px">
+           <title>(Observaciones / Controles realizados) por Modelo Terminados %</title>
+	       <url><![CDATA[histrixLoader.php?xml=modelosdefectos_calidad.xml&dir=/estadisticas/calidad]]></url>
+        </widget>
+
+</histrix>

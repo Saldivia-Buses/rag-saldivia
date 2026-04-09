@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<abm tipo="ayuda">
+	<titulo>CUENTAS DE OBLIGACION</titulo>
+	<obs></obs>
+	<consulta>
+		<tabla id="OBLCUENT" label="Ayuda de Cuenta">
+			<campo id="siscod" oculto="true">
+				<label>Codigo Sistema</label>
+			</campo>
+			<campo id="ctacod" clave="true">
+				<label>Cuenta</label>
+				<help>Codigo de Cuenta </help>
+			</campo>
+			<campo id="ctanom">
+				<label>Nombre</label>
+				<help>Nombre de Cuenta </help>
+			</campo>
+			<campo id="baja" noshow="true">
+					<label>baja</label>						
+					<condicion operador="!=">1</condicion>
+			</campo>				
+			<!--<campo id="movsal">
+				<expresion>sum(CCTMOVIM.movsal)</expresion>
+				<label>Saldo</label>
+			</campo>
+			<group>
+				<campo id="siscod" tabla="CCTCUENT"></campo>
+				<campo id="ctacod" tabla="CCTCUENT"></campo>
+				<campo id="ctanom" tabla="CCTCUENT"></campo>
+
+			</group>			-->
+			<orden>
+				<campo id="OBLCUENT.ctanom" ></campo>
+			</orden>			
+		</tabla>
+
+	</consulta>
+</abm>

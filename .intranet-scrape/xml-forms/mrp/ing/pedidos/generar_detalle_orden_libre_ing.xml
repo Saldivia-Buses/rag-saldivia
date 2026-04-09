@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" preloadData="false" procesa="false" tooltip="false" showCantidad="false" updateTotals="true" subtipo="vertical" unserializeParent="false" preventDuplication="true">
+	<title/>
+	<obs/>
+	<form>
+		<table id="STK_ARTICULOS">
+
+			<movimientos>
+				<relacion id="mrp_detalle_agrupado_insert.xml" />
+			</movimientos>
+
+			<validation>
+				<condition><![CDATA[id_stkarticulo == '']]></condition>
+				<message>Ingrese un articulo</message>
+			</validation>
+
+			<validation>
+				<condition><![CDATA[producir + 0 == 0]]></condition>
+				<message>La cantidad no puede ser 0</message>
+			</validation>
+
+			<field id="id_stkarticulo" esClave="true" style="white-space:nowrap">
+				<label>articulo</label>
+				<helper xml="stkarticulo_qry.xml" dir="/ayudas/" type="external">
+					<field id="alto" oculto="true">
+						<detalle>alto</detalle>
+					</field>
+					<field id="ancho" oculto="true">
+						<detalle>ancho</detalle>
+					</field>
+				</helper>
+				<detalle>codigo_detalle</detalle>
+			</field>
+
+			<field id="nombre_articulo" local="true" sincelda="true" colspan="4">
+				<label modpos="nobr">Descripcion Art.</label>
+				<size>70</size>
+			</field>
+
+			<field id="stkrubro_id" _noshow="true">
+				<label>Rubro</label>
+				<helper xml="stkrubro_qry.xml" dir="/ayudas/" type="combo" />
+				<!--<actualiza>
+					<field id="mrppath_id" destino="stkrubro_id" />
+				</actualiza>-->
+			</field>
+
+			<!--<field id="mrppath_id">
+				<label>Proceso</label>
+				<helper xml="mrp_path_qry.xml" dir="/mrp/qry/" type="combo" />
+			</field>-->
+
+			<field id="producir" local="true" _editable="true" deshabilitado="false" style="color:red;font-weight:bold;" suma="true">
+				<label>A Producir</label>
+				<jseval>producir &gt; 0</jseval>
+				<tipo>integer</tipo>
+				<jseval fielddestino="cantidad_total" total="true">producir</jseval>
+			</field>
+
+			<field id="alto" local="true">
+				<label>Alto</label>
+				<tipo>varchar</tipo>
+			</field>
+
+			<field id="ancho" local="true">
+				<label>Ancho</label>
+				<tipo>varchar</tipo>
+			</field>
+
+			<field id="orden_comentarios" local="true">
+				<label>comentarios</label>
+				<size>100</size>
+			</field>
+
+			<field id="grabar" local="true" noshow="true" valauto="true">
+				<label>confirmar</label>
+				<valor>1</valor>
+			</field>		
+
+			<group>
+				<field id="id_stkarticulo" />
+			</group>
+
+		</table>
+	</form>
+</histrix>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+	<histrix tipo="insert"  tipoInsert="IGNORE">
+		<title>Grabación de Imputaciones</title>
+		<obs/>
+			<form>
+				<table id="REG_IMPUTACIONESDETALLES" 		idCampoCond="id_pedidosregdetalle">
+					<field id="regdetallefac_id"          	lastId="mos_regdetalles_ins.xml" />
+					<field id="regdetalleped_id"	 		id_temp="id_pedidosregdetalle" />
+					<field id="cantidad_imputada" 			id_temp="cantidad_detalle" />
+				</table>
+			</form>
+</histrix>

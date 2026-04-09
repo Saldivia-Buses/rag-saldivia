@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+  <title>PERSONAL POR SECCION</title>
+  <obs/>
+  <form detalle="salida_seguridad.xml">
+    <table id="PERSONAL" label="Personal por Seccion" _styleTbody="height:300px; overflow-x:hidden;">
+     <filters auto="true">
+        <field id="opecod" >
+	    <label>Operario</label>
+		<operador>=</operador>
+	</field>
+
+	    <field id="nomAp" deshabilitado="false">
+		<label>Nombre</label>
+		<operador>like</operador>
+	    </field>
+      </filters>
+    
+
+        <field id="opecod" >
+	    <label>Operario</label>
+	    <condicion operador="!=">0</condicion>
+	    <size>4</size>
+	    <detalle>opecod</detalle>
+	</field>
+
+      <field id="apellido" noshow="true">
+        </field>
+      
+      <field id="nomAp" deshabilitado="false">
+        <label>Apellido y Nombres</label>
+        <expression having="false">CONCAT(apellido,', ', PERSONAL.Nombre)</expression>
+        <tipo>varchar</tipo>
+	<detalle>nombre</detalle>
+	<size>30</size>
+      </field>
+      <field id="id_seccion" >
+ <expression having="false">(select left(SECCION.nombre, 10) from SECCIONHISTORIA
+   left join SECCION on SECCION.id_seccion = SECCIONHISTORIA.id_seccion
+   where SECCIONHISTORIA.IdPersona = PERSONAL.IdPersona
+	and SECCIONHISTORIA.fechaDesde &lt;= date(now())
+   order by SECCIONHISTORIA.fechaDesde desc limit 1)
+ </expression>
+
+        <label>Seccion</label>
+        <help>Seccion</help>
+      </field>
+      <field id="fechaEgreso" oculto="true">
+        <label>Egreso</label>
+        <condicion operador="=">"0000-00-00"</condicion>
+      </field>
+
+	<field id="idPuesto" noshow="true" >
+	    <detalle>idPuesto</detalle>
+	</field>
+	<field id="legajo" noshow="true" >
+	    <detalle>legajo</detalle>
+	</field>
+<!--
+	<field id="seguridad" print="false" local="true">
+	    <helper xml="salida_seguridad.xml" type="link" dir="/personal/ing" modal="true" title="asignar elementos">
+		<parameter source="idPuesto" target="idPuesto" />
+		<parameter source="legajo" target="legajo" />
+		<parameter source="nomAp" target="nombre" />
+	    </helper>
+	    <valor>'Seguridad'</valor>
+	</field>
+    -->  
+      <order>
+        <field id="apellido"></field>
+      </order>      
+    </table>
+    <join tipo="left">
+      <table id="CATPERSONAL">
+        <field id="idSindicato">
+          <condicion operador="=">PERSONAL.idSindicato</condicion>
+        </field>
+        <field id="idCateg">
+          <condicion operador="=">PERSONAL.idCateg</condicion>
+        </field>
+      </table>   
+    </join>
+    <join tipo="left">
+      <table id="CIUO">
+        <field id="idPuesto">
+          <condicion operador="=">PERSONAL.idPuesto</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>

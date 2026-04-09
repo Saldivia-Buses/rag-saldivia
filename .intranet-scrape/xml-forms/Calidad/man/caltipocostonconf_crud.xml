@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<histrix tipo="abm">
+        <title>Tipos costos de No Conformidad</title>
+        <obs></obs>
+        <form>
+                <table id="CAL_TIPOCOSTO_NCONF" >
+                    
+                        <field id="id_tipocosto_nconf" autoinc="true" noshow="true" esClave="true">
+                                <label>Cod</label>
+                                <help>Codigo</help>
+                        </field>
+                       <field id="nombre_costonconf">
+                                <label>Tipo Costo</label>
+                                <help>Tipo de costo de la No conformidad</help>
+                        </field>
+                </table>
+        </form>           
+</histrix>

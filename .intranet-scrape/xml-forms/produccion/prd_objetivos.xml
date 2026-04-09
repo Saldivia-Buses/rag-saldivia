@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm">
+	<title>Objetivos Produccion</title>
+	<obs></obs>
+	<form >
+		<table id="PROD_OBJETIVO" >
+			<title>Objetivos Produccion</title>
+			<field id="fechadesde_prodobjetivo">
+				<label>Fecha desde</label>
+				<help>Fecha desde que debe cumplirse el objetivo</help>
+				<tipo>date</tipo>
+			</field>
+			<field id="fechahasta_prodobjetivo">
+				<label>Fecha hasta</label>
+				<help>Fecha hasta que debe cumplirse el objetivo</help>
+				<tipo>date</tipo>
+			</field>
+			<field id="fechahasta_prodobjetivo">
+				<label>Fecha hasta</label>
+				<help>Fecha hasta que debe cumplirse el objetivo</help>
+				<tipo>date</tipo>
+			</field>
+            <field id="nrocar_id">
+                <label>Mod.Carroceria</label>
+                <help>Modelo Carroceria</help>
+                <tabla_ex id="CARROCERIA" _vacio="true">
+                    <field id="nrocar" clave="true">
+                        <label>Codigo</label>
+                    </field>
+                    <field id="desabv">
+                        <label>Abrev.</label>
+                    </field>
+                <field id="vigente">
+                    <condicion operador="=">1</condicion>
+                </field>
+                <order>
+                    <field id="desabv" />
+                </order>
+                </tabla_ex>
+            </field>
+
+			<field id="cantidad_prodobjetivo">
+				<label>Fecha hasta</label>
+				<help>Fecha hasta que debe cumplirse el objetivo</help>
+				<tipo>integer</tipo>
+			</field>
+
+			<field id="cantidad_prodobjetivo">
+				<label>Cantidad</label>
+				<help>Cantidad unidades objetivo</help>
+				<tipo>integer</tipo>
+			</field>
+
+			<field id="user_id" noshow="true" deshabilitado="true" _Formstyle="display:none;">
+            	<label>Cargo Usuario</label>
+            	<valor eval="true">$_SESSION['usuario']</valor>
+            </field>
+
+			<order>
+				<field id="fechadesde_prodobjetivo" />
+			</order>	
+			
+		</table>
+		<join tipo="left">
+		    <table id="HTXUSERS">
+			<field id="login">
+			    <condicion operador="=">user_id</condicion>
+			</field>
+		    </table>
+		</join>
+	</form>	   
+</histrix> 

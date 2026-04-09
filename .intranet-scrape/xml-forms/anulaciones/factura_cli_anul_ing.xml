@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="ing"  inserta="false" modifica="false" llenoTemporal="true"  imprime="false"  transaccional="true" >
+	<title>FACTURA</title>
+	<obs/>
+	<form >
+		<table id="CCTMOVIM" label="FACTURA" idCampoCond="anular">
+
+
+			
+			<movimientos > 
+
+<!-- marco FACTURA -->	<relacion id="factura_cli_anul_cctmovim_update_ingmov.xml" />
+<!-- marco CTBREGIS -->	<relacion id="factura_cli_anul_ctbregis_update_ingmov.xml" />
+				
+<!-- marco ivacompras -->	<relacion id="factura_cli_anul_ivaventas_update_ingmov.xml" />
+<!-- marco ivaimportes -->	<relacion id="factura_cli_anul_ivaimportes_delete_ingmov.xml" />
+<!-- marco CCTENCAB -->	<relacion id="factura_cli_anul_cctencab_update_ingmov.xml" />
+				
+				
+				
+			</movimientos> 
+
+			<field id="siscod" oculto="true" >
+				<label>Cod.</label>
+				<help/>
+			</field>			
+
+			<field id="ctacod" deshabilitado="true" noshow="true">
+				<label>Cta</label>
+			</field>
+
+			
+			<field id="concod"  deshabilitado="true" tabla="CCTCONCE" noshow="true">
+				<label>conc</label>
+				<help>Tipo de Comprobante</help>
+
+			</field>
+			<field id="condes" oculto="true" tabla="CCTCONCE">
+				<label>Tipo</label>
+				<help>Tipo de Comprobante</help>
+			</field>
+			<field id="movfec" deshabilitado="true">
+				<label >Fecha</label>
+				<help></help>
+
+			</field>
+			<field id="movnpv" deshabilitado="true">
+				<label modpos="nobr">npv</label>
+				<help>Comprobante</help>
+				<format>%04d</format>
+			</field>
+			<field id="movnro" deshabilitado="true">
+				<label modpos="nobr"/>
+				<help>Numero</help>
+				<format>%012d</format>
+			</field>
+			<field id="regmin" deshabilitado="true">
+				<label modpos="nobr">Minuta</label>
+				<help>Minuta</help>
+			</field>
+			<field id="regfec" deshabilitado="true" _noshow="true">
+				<label modpos="nobr">Fecha Minuta</label>
+			</field>
+			
+			<field id="movimp" deshabilitado="true">
+				<label PDFsize="12" posx="130" posy="+1">Total Pago</label>
+				<help></help>
+				<format>%01.2f</format>
+				
+			</field>
+			
+			<field id="movsal" suma="true"  ctbimporte="1" calcsuma="true" deshabilitado="true">
+				<label>saldo</label>
+				<help></help>
+			</field>
+
+			
+		</table>
+		<join tipo="left">
+			<table id="CCTCONCE">
+				<field id="siscod" oculto="true">
+					<label>cctcuent.siscod</label>
+					<condicion operador="=">CCTMOVIM.siscod</condicion>
+				</field>
+				<field id="concod" oculto="true">
+					<condicion operador="=">CCTMOVIM.concod</condicion>
+				</field>
+				<field id="condes" oculto="true"></field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="CCTCUENT">
+				<field id="siscod" oculto="true">
+					<label>cctcuent.siscod</label>
+					<condicion operador="=">CCTMOVIM.siscod</condicion>
+				</field>
+				<field id="ctacod" oculto="true">
+					<condicion operador="=">CCTMOVIM.ctacod</condicion>
+				</field>
+			</table>
+		</join>
+
+	</form>
+</histrix>

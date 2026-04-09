@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix _treeGrid="true" imprime="true" path="fotos/articulos" tipo="arbol">
+    <title>Arbol Producto</title>
+    <obs/>
+    <form>
+        <table id="STK_BOM" label="Materia prima">
+            <field autoinc="true" id="id_stkbom" noshow="true" esClave="true"/>
+
+            <field arbol="padre" colstyle="display:none;" id="stkarticulopadre_id" required="true" valauto="true">
+                <label>Padre</label>
+            </field>
+
+            <field id="homologacion_id" local="true" oculto="true"/>
+
+            <field id="bom_variacion_id" colstyle="display:none;">
+                <label>Homologación</label>
+                <helper empty="true" type="combo" xml="combo_homologacion_modelo.xml"> 
+                    <field id="artcod_id">
+                        <condicion operador="!=">''</condicion>
+                    </field>
+                </helper>
+            </field>    
+
+            <field arbol="hijo" id="stkarticulohijo_id" style="color:red;width:5em;">
+                <label>Artículo</label>
+                <helper _xml="stkarticulo_mos.xml" dir="/ayudas" id="STK_ARTICULOS" type="external">
+                    <field id="id_stkarticulo" noshow="true"/>
+                    <field id="nombre_articulo">
+                        <label>Nombre</label>
+                        <detalle>nombre_articulo2</detalle>
+                    </field>
+                    <field id="baja_articulo">
+                        <condicion operador="=">0</condicion>
+                    </field>
+                    <field id="wstklista_id" local="true"/>
+                </helper>
+                <help>Articulo Hijo</help>
+                <size>12</size>
+            </field>
+
+            <field id="nombre_articulo2" style="width:30em; overflow:hidden;">
+                <expression>REPLACE(REPLACE(nombre_articulo, '\r', ''), '\n', '')</expression>
+                <label>Nombre</label>
+                <help>Articulo Hijo</help>
+            </field>
+
+            <field id="bom_variacion_id2" noshow="true">
+                <expression having="false">bom_variacion_id</expression>
+                <condicion operador="=">0 or bom_variacion_id = '[__homologacion_id__]'</condicion>
+            </field>
+
+            <field id="clase" clasefila="true" noshow="true">
+                <expression>(case when id_homologacion &gt; 0 then ' resaltado ' end)</expression>
+            </field>
+
+            <field id="Descripcion" style="width:8em;">
+                <label>Descripción</label>
+                <expression>concat('(', ifnull(concat('&lt;b style="color:red;" &gt;',id_homologacion, '&lt;/b&gt;'), 'Estandar'),')')</expression>
+            </field>           
+  
+            <field colstyle="text-align:right; width:5em;" id="cantidad">
+                <label>Cantidad</label>
+                <help>Cantidad</help>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="posicionfab_id">
+                <label>Posición</label>
+                <helper type="combo" id="POSICIONESFAB">
+                    <field id="id_posicionfab"/>
+                    <field id="nombre"/>
+                    <field id="pertenece_linea">
+                        <condicion operador="=">1</condicion>
+                    </field>
+                </helper> 
+            </field> 
+
+            <order>
+                <field id="stkarticulohijo_id"/>
+            </order>
+
+        </table>
+
+        <join tipo="left">
+            <table id="HOMOLOGMOD">
+                <field id="id_homologacion">
+                    <condicion operador="=">bom_variacion_id</condicion>
+                </field>
+            </table>
+        </join>       
+        <join tipo="left">
+            <table id="STK_ARTICULOS">
+                <field id="id_stkarticulo">
+                    <condicion operador="=">stkarticulohijo_id</condicion>
+                </field>
+                <field id="subsistema_id">
+                    <condicion operador="=">'01'</condicion>
+                </field>                
+            </table>
+        </join>
+        
+    <join tipo="left">
+               <table id="CARROCERIA">
+          <field id="nrocar">
+                 <condicion operador="=">HOMOLOGMOD.nrocar</condicion>
+          </field>
+        </table>
+    </join>
+    <join tipo="left">
+      <table id="MARCHASIS">
+        <field id="marcod">
+          <condicion operador="=">HOMOLOGMOD.marcod</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="MODCHASIS">
+        <field id="modcha">
+          <condicion operador="=">HOMOLOGMOD.modcha</condicion>
+        </field>
+        <field id="marcod">
+          <condicion operador="=">HOMOLOGMOD.marcod</condicion>
+        </field>
+      </table>
+    </join> 
+    </form>
+</histrix>

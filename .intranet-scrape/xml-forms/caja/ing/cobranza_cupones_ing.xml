@@ -1,0 +1,321 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="fichaing" inserta="false" borra="false" modifica="false" imprime="false" log="false" transaccional="true" tooltip="false" confirma="GRABAR">
+  <title/>
+  <obs/>
+  <form>
+    <tempTable id="WASIENTOS">
+      <row>
+        <field id="cuenta_id">ctbcuenta_gas</field>
+        <field id="doh">ctbcuenta_doh</field>
+        <field id="importe">neto_movimiento</field>
+      </row>
+      <row>
+        <field id="cuenta_id">ctbcuenta_gan</field>
+        <field id="doh">ctbcuenta_doh</field>
+        <field id="importe">importe_exento</field>
+      </row>
+      <row>
+        <field id="cuenta_id">ctbcuenta_id</field>
+        <field id="doh">ctbcuenta_doh</field>
+        <field id="importe">importe_nogravado</field>
+      </row>
+      <row>
+        <field id="cuenta_id">ctbcuenta_ibr</field>
+        <field id="doh">ctbcuenta_doh</field>
+        <field id="importe">importe_ibr</field>
+      </row>
+    </tempTable>
+    <table id="REG_MOVIMIENTOS" label="Depositos">
+
+      <validation>
+        <condition><![CDATA[regcuenta_id + 0 == '0']]></condition>
+        <message>Debe Ingresar una Cuenta</message>
+      </validation>
+
+      <validation>
+        <condition><![CDATA[importe_movimiento == 0]]></condition>
+        <message>Debe Ingresar un Importe de Movimiento</message>
+      </validation>
+
+      <validation>
+        <condition><![CDATA[neto_movimiento == 0]]></condition>
+        <message>Debe Ingresar Aranceles y Costos Financieros</message>
+      </validation>
+
+      <validation>
+        <condition><![CDATA[importe_iva == 0]]></condition>
+        <message>Debe Ingresar Iva</message>
+      </validation>
+
+      <validation>
+        <condition><![CDATA[importe_ibr == 0]]></condition>
+        <message>Debe Ingresar un Importe de IIBB</message>
+      </validation>
+
+      <validation>
+        <condition><![CDATA[importe_nogravado == 0]]></condition>
+        <message>Debe Ingresar un Importe a Ingresar</message>
+      </validation>
+
+      <validation>
+        <condition><![CDATA[diferencia != 0]]></condition>
+        <message>La diferencia debe ser 0</message>
+      </validation>
+
+      <cierraproceso id="cajmovimientos_ing.xml">
+        <paring destino="moneda_id">moneda_id</paring>
+        <paring destino="cajpuesto_id">cajpuesto_id</paring>
+        <paring destino="cajconcepto_id">cajconcepto_id</paring>
+        <paring destino="cajregistro_id">cajregistro_id</paring>
+        <paring destino="importe_movimiento">importe_movimiento</paring>
+        <paring destino="fecha_movimiento">fecha_movimiento</paring>
+        <paring destino="referencia_movimiento">referencia_movimiento</paring>
+        <paring destino="nro_movimiento">nro_movimiento</paring>
+        <paring destino="imputacion_concepto">imputacion_concepto</paring>
+      </cierraproceso>
+
+		<movimientos>
+			<relacion id="cobranza_cupones_ins.xml"/>
+			<!--relacion id="impresion_caja.xml"/ -->
+			<relacion id="actualizo_cajnumerador.xml"/>
+		</movimientos>
+      
+
+
+		<fieldGroup noshow="true">
+
+			<field id="id_regmovim" deshabilitado="true" >
+				<label>id_regmovim</label>
+				<condicion operador="=">-1</condicion>
+			</field>
+
+		</fieldGroup>
+
+		<fieldGroup noshow="true" local="true" deshabilitado="true">
+
+			<field id="cajpuesto_id" >
+				<label>cajpuesto_id</label>
+			</field>
+
+			<field id="cajconcepto_id" >
+				<label>cajconcepto_id</label>
+			</field>
+
+			<field id="fecha_movimiento" >
+				<label>fecha_movimiento</label>
+			</field>
+
+			<field id="subsistema_id" >
+				<label>subsistema_id</label>
+			</field>
+
+			<field id="regconcepto_id" >
+				<label>regconcepto_id</label>
+			</field>
+
+			<field id="imputacion_concepto" >
+				<label>imputacion_concepto</label>
+				<actualiza>
+					<field id="detalle_iva" destino="imputacion_concepto"/>
+				</actualiza>
+			</field>
+
+			<field id="ctbcuenta_doh" >
+				<label>ctbcuenta_doh</label>
+				<if exp="imputacion_concepto+0 == 0">
+					<true>'1'</true>
+					<false>'0'</false>
+				</if>
+			</field>
+
+			<field id="tipoimpre_concepto" >
+				<label>tipoimpre_concepto</label>
+			</field>
+
+			<field id="imprime_concepto" >
+				<label>imprime_concepto</label>
+			</field>
+
+			<field id="muestracheck" local="true" noshow="true">
+				<label>muestracheck</label>
+				<if exp="tipoimpre_concepto != 2">
+					<true>'display:none;'</true>
+					<false>''</false>
+				</if>
+			</field>
+
+			<field id="CHKimprime" local="true">
+				<label style="font-size: medium; align: right;" >Imprime Comprobante</label>
+				<attribute id="style">muestracheck</attribute>
+				<tipo>check</tipo>
+			</field>
+
+			<field id="impresion" local="true" deshabilitado="true">
+				<label>Programa de Impresion</label>
+				<if exp="CHKimprime=='1' || tipoimpre_concepto=='1'">
+					<true>'imprime_concepto'</true>
+				<false>''</false>
+				</if>
+			</field>
+
+			<field id="cajregistro_id" >
+				<label>cajregistro_id</label>
+			</field>
+
+			<field id="moneda_id" >
+				<label>Moneda</label>
+				<valor>1</valor>
+			</field>
+
+			<field id="regcuenta_ivaid" >
+				<label>regcuenta_ivaid</label>
+			</field>
+
+			<field id="ctbcuenta_id" >
+				<label>ctbcuenta_id</label>
+			</field>
+
+			<field id="ctbcuenta_ibr" >
+				<label>ctbcuenta_ibr</label>
+				<helper type="parameter" id="SIS::01:cuenta_contable_percepcion_iibb">
+					<label>Cuenta Contable para percepciones de ingresos brutos</label>
+					<defaultValue/>
+				</helper>
+			</field>
+
+			<field id="ctbcuenta_gan" >
+				<label>ctbcuenta_gan</label>
+				<helper type="parameter" id="SIS::01:cuenta_contable_percepcion_gan">
+					<label>Cuenta Contable para percepciones de ganancia</label>
+					<defaultValue/>
+				</helper>
+			</field>
+
+			<field id="ctbcuenta_gas" >
+				<label>ctbcuenta_gas</label>
+				<helper type="parameter" id="SIS::01:cuenta_contable_gastos">
+					<label>Cuenta Contable para intereses y gastos bancarios</label>
+					<defaultValue/>
+				</helper>
+			</field>
+
+		</fieldGroup>
+		
+
+		<fieldGroup style="padding:2px 2px 2px 2px;vertical-align:middle;font-size:medium;">
+
+			<field id="regcuenta_id" local="true" >
+				<label>Cuenta</label>
+				<helper type="combo" xml="regcuenta_cmb.xml" dir="/ayudas" empty="true"/>
+				<size>6</size>
+			</field>
+
+			<!-- SE COMENTO ESTO PORQUE NO SE GUARDA NI SE USA PARA NADA EN NIGUN LADO
+			<field id="regcuenta_nombre" local="true" deshabilitado="true" sincelda="true">
+				<label modpos="nobr">nombre</label>
+			</field>-->
+
+			<field id="nro_movimiento" deshabilitado="true" modpos="nobr" style="padding:2px 2px 2px 2px;vertical-align:middle;font-size:large;">
+				<label>Nº Comprobante</label>
+				<parametro id="cajnumerador_param.xml" retorna="numero">
+					<field id="numero" />
+				</parametro>
+				<format>%08d</format>
+				<size>8</size>
+				<detalle>nro_movimiento</detalle>
+			</field>
+
+			<field id="referencia_movimiento" maxlength="144">
+				<label>Referencia</label>
+				<tipo>varchar</tipo>
+				<size>144</size>
+			</field>
+
+			<field id="vencimiento_movimiento" modpos="nobr">
+				<label>Fecha de acreditacion</label>
+				<valor>today</valor>
+			</field>
+
+			
+
+			<field id="importe_nogravado" >
+				<label>A Ingresar</label>
+				<tipo>numeric</tipo>
+				<size>15</size>
+				<jseval campodestino="importe_gravado" actxml="true">( importe_movimiento - ((importe_exento + 0) + (importe_nogravado + 0) + (importe_ibr + 0))).toFixed(3)</jseval>
+				<jsfunction event="onchange">if( this.value.search(',') != ('-1') ){ alert('No se admiten comas, utilice punto como separador de decimales.'); this.value = '';};</jsfunction>
+			</field>
+
+			<field id="importe_exento" >
+				<label>Ganancias</label>
+				<tipo>numeric</tipo>
+				<size>15</size>
+				<jseval campodestino="importe_gravado" actxml="true">( importe_movimiento - ((importe_exento + 0) + (importe_nogravado + 0) + (importe_ibr + 0))).toFixed(3)</jseval>
+				<jsfunction event="onchange">if( this.value.search(',') != ('-1') ){ alert('No se admiten comas, utilice punto como separador de decimales.'); this.value = '';};</jsfunction>
+			</field>
+
+			<field id="importe_ibr" > 
+				<label>Importe IIBB</label>
+				<tipo>numeric</tipo>
+				<size>15</size>
+				<jseval campodestino="importe_gravado" actxml="true">( importe_movimiento - ((importe_exento + 0 ) + (importe_nogravado + 0) + (importe_ibr + 0))).toFixed(3)</jseval>
+				<jsfunction event="onchange">if( this.value.search(',') != ('-1') ){ alert('No se admiten comas, utilice punto como separador de decimales.'); this.value = '';};</jsfunction>
+			</field>
+
+
+<!-- REVISAR DE AQUI EN ADELANTE PORQUE PASA MAL LOS MONTOS CUANDO NO SE INGRESA PRIMERO EL IMPORTE DE LOS ARANCELES Y EL IVA -->
+<!-- VALIDAR QUE NO INGRESEN COMAS POR PUNTOS PORQUE ROMPE TODO, Y SOLO TOMA LO QUE ESTA DETRAS DE LA COMA -->
+
+			<field id="detalle_iva" local="true" showTabla="true" style="width:150px;padding:2px 2px 2px 2px;vertical-align:middle;font-size:medium;">
+				<label modpos="force" colspan="10">Aranceles y Servicios de Costo Financiero </label>
+				<helper type="object" xml="cobranza_cupones_grid.xml">
+					<parameter source="importe_gravado" target="importe_gravado"/>
+				</helper>
+			</field>
+
+			<field id="importe_movimiento"  >
+				<label>Importe Total</label>
+				<jseval campodestino="importe_gravado" actxml="true">( importe_movimiento - ((importe_exento + 0) + (importe_nogravado + 0) + (importe_ibr + 0))).toFixed(3)</jseval>
+				<tipo>numeric</tipo>
+				<size>15</size>
+				<jsfunction event="onchange">if( this.value.search(',') != ('-1') ){ alert('No se admiten comas, utilice punto como separador de decimales.'); this.value = '';};</jsfunction>
+			</field>
+
+			<field id="importe_gravado" local="true" deshabilitado="true">
+				<label>gravado </label>
+				<jseval campodestino="diferencia" actxml="false">(importe_gravado + 0 - gravado_movimiento + 0).toFixed(3)</jseval>
+				<tipo>numeric</tipo>
+			</field>
+
+			<field id="gravado_movimiento" local="true" deshabilitado="true">
+				<label>gravado mov</label>
+				<jseval campodestino="diferencia" actxml="false">(gravado_movimiento + 0 - importe_gravado + 0).toFixed(3)</jseval>
+				<tipo>numeric</tipo>
+			</field>
+
+			<field id="diferencia" deshabilitado="true" local="true">
+				<label style="color:red;padding:2px 2px 2px 2px;vertical-align:middle;font-size:medium;">Diferencia</label>
+				<tipo>numeric</tipo>
+			</field>
+
+			<field id="neto_movimiento" deshabilitado="true">
+				<label>neto</label>
+				<tipo>numeric</tipo>
+			</field>
+
+			<field id="importe_iva" deshabilitado="true">
+				<label>iva</label>
+				<tipo>numeric</tipo>
+			</field>
+
+			<field id="importe_percepcion" deshabilitado="true">
+				<label>percepcion</label>
+				<tipo>numeric</tipo>
+			</field>
+
+		</fieldGroup>
+
+
+    </table>
+  </form>
+</histrix>

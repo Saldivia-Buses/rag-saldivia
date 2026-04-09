@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="update" >
+    <title>CHEQUES PROPIOS</title>
+    <obs/>
+    <form >
+        <table id="CHEQUERAS" label="MOVIMIENTOS">
+            <field id="idChequera" esClave="true" id_temp="idChequera">
+            </field>
+            <field id="nroCheque" id_temp="proxnum">
+            </field>
+        </table>
+
+    </form>
+</histrix>

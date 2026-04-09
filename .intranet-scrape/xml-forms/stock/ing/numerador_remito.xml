@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<abm tipo="consulta">
+	<titulo>NUMERADOR</titulo>
+	<obs></obs>
+	<consulta>
+		<tabla id="REG_NUMERADORES" label="NUMERADOR">
+			<campo id="numero">
+				<expresion>LPAD((max(numero) + 1),8 , 0) </expresion>
+				<label>Entero</label>
+			</campo>
+			<campo id="puesto">
+				<expresion>LPAD(puesto ,4 , 0) </expresion>
+				<label>puesto_movimiento</label>
+			</campo>
+			<campo id="subsistema_id">
+			   <condicion operador="=">'97'</condicion>
+			</campo>
+			
+			<group><field id="id_regnumerador"/></group>
+		</tabla>
+	</consulta>	   
+</abm> 

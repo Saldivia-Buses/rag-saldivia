@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" dataSource="HtxMailgunEvents" filter="true" >
+  <title>Estadisticas</title>
+  <obs/>
+  <form >
+    <table id="Eventos">
+	<movimientos>
+	    <relacion id="events_ins.xml" />
+	</movimientos>
+
+      <field id="id" noshow="true" />
+
+      <field id="timestamp">
+        <label>time</label>
+      </field>
+
+      <field id="event">
+        <label>event</label>
+        <helper type="combo" >
+          <option value=""></option>
+          <option value="opened">Abierto</option>
+          <option value="delivered">Enviado</option>
+          <option value="accepted">Aceptado</option>
+          <option value="rejected">Rechazado</option>
+
+          <option value="failed">Fallo</option>
+          <option value="unsubscribed">Desuscripto</option>
+          <option value="complained">Reportado como Spam</option>
+
+        </helper>
+      </field>
+
+
+
+      <field id="sender">
+        <label>Sender</label>
+      </field>
+      <field id="from">
+        <label>From</label>
+      </field>
+      <field id="targets" noshow="true">
+        <label>targets</label>
+      </field>
+      <field id="recipient">
+        <label>recipient</label>
+      </field>
+      <field id="subject">
+        <label>subject</label>
+      </field>
+      <field id="log_level">
+        <label>log-level</label>
+      </field>
+      <field id="item" noshow="true"  >
+        <label>item</label>
+      </field>
+
+      <field id="domain" noshow="true" local="true">
+            <label>Domain</label>
+	    <valor>saldiviabuses.com.ar</valor>
+<!--            <valor eval="true">$_SESSION['properties']['domain']</valor> -->
+      </field>
+
+    </table>
+  </form>
+</histrix>

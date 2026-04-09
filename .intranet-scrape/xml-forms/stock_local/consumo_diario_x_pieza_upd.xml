@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="update">
+	<title>Ingreso Consumo diario por pieza</title>
+	 <obs></obs>
+		<form >
+		    <table id="STK_ARTICULOS">
+
+				<field id="id_stkarticulo"  id_temp="stkarticulo_id" esClave="true"/>
+
+				<field id="dem_diaria"         	id_temp="total"/>
+
+				<field id="stock_reposicion" 	id_temp="stock_reposicion"/>	
+
+		    </table>
+
+		</form>
+    </histrix>	
+
+

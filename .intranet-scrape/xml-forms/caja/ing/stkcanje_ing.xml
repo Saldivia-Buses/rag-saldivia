@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="fichaing" inserta="false" borra="false" modifica="false" imprime="false" tooltip="false" confirma="GRABAR" transaccional="true" limit="1">
+  <title>Canje</title>
+  <obs/>
+  <form>
+    <table id="CAJ_MOVIMIENTOS" label="Canje">
+
+      <!-- -->
+
+      <cierraproceso id="cajmovimientos_ing.xml">
+        <paring destino="imputacion_concepto">imputacion_concepto</paring>
+        <paring destino="moneda_id">moneda_id</paring>
+        <paring destino="cajpuesto_id">cajpuesto_id</paring>
+        <paring destino="cajconcepto_id">cajconcepto_id</paring>
+        <paring destino="cajregistro_id">cajregistro_id</paring>
+        <paring destino="importe_movimiento">importe_movimiento</paring>
+        <paring destino="fecha_movimiento">fecha_movimiento</paring>
+        <paring destino="referencia_movimiento">referencia_movimiento</paring>
+        <paring destino="puesto_movimiento">puesto_movimiento</paring>
+        <paring destino="nro_movimiento">nro_movimiento</paring>
+        <paring destino="ctbcuenta_reg_id">ctbcuenta_reg_id</paring>
+        <paring destino="ctbcuenta_reg_doh">ctbcuenta_reg_doh</paring>
+        <paring destino="stkdeposito_id">stkdeposito_id</paring>
+        <paring destino="limite_credito">limite_credito</paring>
+      </cierraproceso>
+
+      <!-- -->
+      
+      <movimientos>
+         <relacion id="stkcanje_ser.xml" />
+      </movimientos>
+
+      <validation>
+            <condition><![CDATA['error' > '0' && 'clave_oro' != 'clave_stock']]></condition>
+            <message>Pida clave a un administrador para facturar sin stock</message>
+      </validation>
+
+      <fieldGroup id="DEBUG" local="true" noshow="true">
+        <field id="cajpuesto_id"/>
+        <field id="cajconcepto_id"/>
+        <field id="stkconcepto_id"/>
+        <field id="cajregistro_id"/>
+        <field id="fecha_movimiento">
+          <detalle>fecha_movimiento</detalle>
+        </field>
+        <field id="imputacion_concepto"/>
+        <field id="subsistema_id"/>
+        <field id="moneda_id">
+          <valor>1</valor>
+        </field>
+        <field id="ctbcuenta_reg_id">
+          <valor>'4.1.01.01'</valor>
+          <tipo>varchar</tipo>
+        </field>
+        <field id="ctbcuenta_reg_doh">
+          <valor>1</valor>
+        </field>
+      </fieldGroup>
+
+      <field id="nro_movimiento" deshabilitado="true">
+        <label>Nº Comprobante</label>
+        <parametro id="cajnumerador_param.xml" retorna="numero">
+          <field id="numero">
+            <complete>numero + 1</complete>
+          </field>
+        </parametro>
+        <formato>%08d</formato>
+        <size>8</size>
+        <detalle>nro_movimiento</detalle>
+      </field>
+
+      <field id="referencia_movimiento" maxlength="144">
+        <label>Referencia</label>
+        <tipo>varchar</tipo>
+        <size>144</size>
+      </field>
+
+      <field id="importe_movimiento">
+        <size>20</size>
+        <label>Importe a Ingersar</label>
+        <tipo>numeric</tipo>
+      </field>
+
+      <field id="clave_stock" local="true">
+        <label modpos="nobr">Clave Stock</label>
+        <size>30</size>
+        <attribute id="noshow">muestra_fieldclave</attribute>
+        <tipo Type="password">password</tipo>
+      </field>
+
+      <field id="stkdeposito_id" local="true" noshow="true">
+        <expresion>SELECT stkdeposito_id FROM STK_DEPOSITO_POS JOIN CAJ_PUESTO_NPV ON CAJ_PUESTO_NPV.regnumerador_id = STK_DEPOSITO_POS.regnumerador_id WHERE CAJ_PUESTO_NPV.cajpuesto_id = '[__cajpuesto_id__]' LIMIT 1</expresion>
+      </field>
+
+      <field id="salida" local="true">
+        <label modpos="force" colspan="4">Egreso</label>
+        <helper type="object" xml="stkcanje_grid.xml">
+            <parameter target="stkdeposito_id" source="stkdeposito_id" />
+        </helper>
+      </field>
+
+      <field id="cons_codbar_art" local="true">
+        <helper type="external" id="STK_ARTICULOS">
+          <field id="codigo_barra" />
+          <field id="nombre_articulo" >
+            <detalle>cons_nombre_art</detalle>
+          </field>
+          <field id="costo" noshow="true">
+            <expression>ROUND(precio_costo / 2)</expression>
+            <detalle>cons_costo</detalle>
+          </field>
+          <field id="stkrubro_id" oculto="true">
+            <condicion operador="in">(16,11,26,27)</condicion>
+          </field>
+        </helper>
+        <label>Código</label>
+      </field>
+      <field id="cons_nombre_art" local="true" deshabilitado="true">
+        <label>Nombre</label>
+        <size>50</size>
+      </field>
+      <field id="cons_costo" local="true" deshabilitado="true" style="font-size: 15px;" >
+        <label>Precio</label>
+      </field>
+      <field id="error" local="true" deshabilitado="true" Formstyle="display:none;">
+        <label>err</label>
+      </field>
+
+      <field id="clave_oro" local="true" noshow="true">
+          <helper type="parameter" id="SIS::02::sin_stock">
+            <label>Clave para facturar sin stock</label>
+            <defaultValue/>
+          </helper>
+      </field>
+
+      <field id="muestra_fieldclave" local="true" noshow="true">
+        <helper type="parameter" id="SIS::02::oculta_clave_stock">
+            <label>Clave para facturar sin stock</label>
+            <defaultValue>true</defaultValue>
+        </helper>
+      </field>
+    </table>
+  </form>
+</histrix>

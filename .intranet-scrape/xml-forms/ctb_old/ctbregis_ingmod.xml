@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<histrix tipo="abm-mini" >
+	<title>ASIENTO CONTABLE</title>
+	<obs></obs>
+	<form >
+		
+		<table id="CTBREGIS" label="minutas">
+
+			<field id="regmin" oculto="true">
+				<label>regmin</label>
+			</field>
+
+			<field id="siscod" _oculto="true" valauto="true" noshow="true">
+				<label>siscod</label>
+				<help> Cod sistema</help>
+<!--
+				<parametro id="fsmparam_paralf.xml" retorna="paralf">
+					<field id="parcla" >
+						<condicion operador="=">'sisctb'</condicion>
+					</field>
+				</parametro>	
+-->
+			</field>
+
+			<field id="idcos" _tabla="CTB_DETALLES">
+				<label>Centro de costos</label>
+				<helper id="CTB_CENTROS"  type="combo" empty="true" >
+					<field id="id_ctbcentro" />
+					<field id="centro">
+						<expression>concat(referencia_centro,' ', nombre_centro)</expression>
+					</field> 
+				</helper>
+				<detalle>idcos</detalle>
+			</field>
+			
+			<field id="regfec">
+				<label>Fecha</label>
+				<help>Fecha del Asiento (Movimiento Contable) </help>
+			</field>
+			
+			<field id="nroctb">
+				<expression>CTBREGIS.ctbcod</expression>
+			</field>
+
+			<field id="ctbcod">
+				<label>Cuenta</label>
+				<help>Codigo de Cuenta Contable</help>
+				<tabla_ex id="CTBCUENT">
+					<field id="ctbcod"></field>
+					<field id="ctbnom"></field>
+					<field id="ctbhab">
+						<condicion operador="=">1</condicion>
+					</field>
+				</tabla_ex>
+				<tipo>varchar</tipo>
+			</field>
+			
+			<field id="regdoh"  >
+				<label>regdoh</label>
+				<help>Imputacion</help>
+				<options>
+					<option valor="1">Debe</option>
+					<option valor="2">Haber</option>
+				</options>
+				<tipo>integer</tipo>
+			</field>
+
+			<field id="regimp" >
+				<label>Importe</label>
+			</field>				
+
+			<field id="regimp1" suma="true" deshabilitado="true" local="true">
+				<label>Debe</label>
+				<help>Importe del Movimiento en el Debe</help>
+				<if exp="regdoh == 1">
+					<true>regimp</true>
+					<false>0</false>
+				</if>				
+			</field>
+
+			<field id="regimp2" suma="true" local="true" deshabilitado="true">
+				<label>Haber</label>
+				<help>Importe del Movimiento en el Haber</help>
+				<if exp="regdoh != 1">
+					<true>regimp</true>
+					<false>0</false>
+				</if>			
+			</field>
+
+			<!-- NUMERADOR INTERNO NOMBRE DE CAMPO RESERVADO-->
+			<field id="_ORDEN" oculto="true" local="true">
+				<label>Orden</label>
+			</field>
+
+			<order>
+				<field id="regmin"></field>
+				<field id="regord"></field>
+			</order>
+		</table>
+		
+		<join tipo="left">
+			<table id="CTBCUENT">
+				<field id="ctbcod" oculto="true">
+					<condicion operador="=">CTBREGIS.ctbcod</condicion>
+				</field>
+			</table>
+		</join>
+
+		<!-- <join tipo="left">
+            <table id="CTB_DETALLES">
+                <field id="ctbregis_id">
+                    <condicion operador="=">CTBREGIS.id_ctbregis</condicion>
+                </field>
+            </table>
+        </join> -->
+	</form>
+</histrix>

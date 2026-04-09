@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm-mini" PDForientacion="L" borra="false" path="fotos/personal">
+    <title>Plan Accion Total</title>
+    <obs></obs>
+    <form>
+    <table id="CAL_PLAN_ACCION_ACCION" label="Plan Accion Total">
+
+    <field id="id_plan_accion_accion" esClave="true" noshow="true">
+        <label>Nro Accion</label>
+    </field>
+
+    <field id="plan_accion_id" noshow="true">
+        <label>Nro Plan</label>
+    </field>
+
+    <field id="acciones_planaccion">
+        <label>Acciones</label>
+        <help>Acciones Plan</help>
+        <size>100</size>
+        <tipo>varchar</tipo>
+        <attribute id="colstyle">pend</attribute>        
+    </field>
+
+    <field id="lidera_planaccion" print="true">
+        <label>Lide.</label>
+        <help>Lidera el Plan</help>
+        <helper type="combo" id="HTXUSERS" empty="true">
+            <field id="id_usuario"/>
+            <field id="nombre">
+                <expression>CONCAT(Nombre, LEFT(apellido,4))</expression>
+            </field>
+            <field id="baja">
+                <condicion operador="=">0</condicion>
+            </field>
+            <field id="Id_perfil">
+                <condicion operador="!=">14</condicion>
+            </field>
+            <order>
+                <field id="nombre"/>
+            </order>
+        </helper>
+        <attribute id="colstyle">pend</attribute>        
+    </field>
+
+    <field id="foto_lidera_planaccion" Formstyle="display:none" local="true" print="false">
+        <label>Lide.</label>
+        <expression>case when LIDER.legajo_personal = '' or LIDER.legajo_personal = 0 then CONCAT('/fotos/usuarios/',LIDER.Id_usuario, '/') else
+            CONCAT('/fotos/personal/', (SELECT IdPersona FROM HTXUSERS HU
+                                    JOIN PERSONAL PER ON PER.legajo = HU.legajo_personal
+                                    WHERE IFNULL(HU.legajo_personal, 0) != 0 AND HU.Id_usuario = CAL_PLAN_ACCION_ACCION.lidera_planaccion), '/') end</expression>
+        <tipo>dir</tipo>
+        <size>50</size>
+        <attribute id="colstyle">pend</attribute>        
+    </field>
+
+    <field id="inicio_planaccion" required="true">
+        <label>Inicio</label>
+        <help>Fecha Inicio</help>
+        <tipo>date</tipo>
+        <attribute id="colstyle">pend</attribute>        
+    </field>
+
+    <field id="objetivo_planaccion" required="true">
+        <label>Obj.</label>
+        <help>Fecha Objetivo</help>
+        <tipo>date</tipo>
+        <attribute id="colstyle">pend</attribute>        
+    </field>
+
+    <field id="cierre_planaccion">
+        <label>Cierre</label>
+        <help>Fecha Cierre</help>
+        <tipo>date</tipo>
+        <attribute id="colstyle">pend</attribute>        
+    </field>			                                      
+
+<!--     <field id="cerrada" noshow="true" clasefila="true">
+        <label>Cerrada</label>
+        <help>Cerrada</help>
+        <expression>case when cierre_planaccion = '0000-00-00' then 0 else 'grisado' end</expression>
+    </field>
+ -->
+     <field id="ultima_observacion" local="true" Formstyle="display:none;">
+        <label>Ult. Observ</label>
+        <help>Observaciones del Plan</help>
+        <expression>SELECT CONCAT(e.abrev_estado," - " , p.obervacion_plan_accion)  
+        FROM CAL_PLAN_ACCION_OBSERV p LEFT JOIN CAL_PLAN_ACCION_ESTADO e ON e.id_plan_accion_estado = p.estado_plan_accion_id 
+        WHERE p.plan_accion_id = id_plan_accion_accion 
+        ORDER BY stamp DESC limit 1</expression>
+        <attribute id="colstyle">pend</attribute>        
+    </field>
+
+    <field id="observaciones" local="true" linkint="cal_plan_accion_observa_crud.xml" _obj="cal_plan_accion_observa_crud.xml" dir="/calidad/ing/" _showObjTabla="true" Formstyle="display:none;" print="false">
+        <paring destino="plan_accion_id" operador="=">id_plan_accion_accion</paring>
+        <label Formstyle="display:none;">Estado</label>
+        <help>Cargar Estado del Plan</help>
+        <expression>'>>>>>'</expression>
+        <attribute id="linkdes">descripcion_planaccion</attribute>
+        <attribute id="colstyle">pend</attribute>        
+    </field>
+
+    <field id="creador_planaccion_accion" noshow="true" deshabilitado="true">
+        <label modpos="nobr">Usuario</label>
+        <valor eval="true">$_SESSION['idUser']</valor>
+    </field>
+
+    <field id="userid" noshow="true">
+        <label>Creó Plan Accion</label>
+        <expression>concat(HTXUSERS.Nombre,' ', LEFT(HTXUSERS.apellido, 1),' ', stamp)</expression>
+        <label>Creó Plan Accion</label>
+        <size>40</size>
+        <attribute id="colstyle">pend</attribute>        
+    </field>
+<!--
+    <field id="stamp" noshow="true">
+        <expression>CAL_PLAN_ACCION_ACCION.stamp</expression>
+        <label>Hora Creacion</label>
+    </field>
+-->
+      <field id="pend" local="true" noshow="true" >
+        <expression>case when cierre_planaccion != '0000-00-00' then 'background-color: #A9F5A9;' else (case when objetivo_planaccion &lt; CURDATE() then 'background-color: #F5A9A9;' else '' end) end</expression>
+        <tipo>varchar</tipo>
+      </field>
+
+</table>
+
+    <join tipo="inner">
+      <table id="HTXUSERS">
+        <field id="Id_usuario">
+          <condicion operador="=">creador_planaccion_accion</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join tipo="left">
+      <table id="HTXUSERS" as="LIDER">
+        <field id="Id_usuario">
+          <condicion operador="=">lidera_planaccion</condicion>
+        </field>
+      </table>
+    </join>
+</form>
+</histrix>	

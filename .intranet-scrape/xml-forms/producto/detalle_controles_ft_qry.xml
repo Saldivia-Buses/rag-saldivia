@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+  <title>Controles realizados</title>
+  <obs></obs>
+  <form>
+  	<table id="PROD_CONTROLES"  label="Controles realizados">
+
+  		<field id ="id_prodcontrol" noshow="true"/>
+
+		<field id="seccion_id"  modpos="nobr" valauto="true">	
+			<label>Sección</label>
+			<helper id="MOMENTO" type="combo">
+                <field id="idMomento" />
+                <field id="descripcion" />
+			</helper>
+		</field>
+
+		<field id="nombre_control"  modpos="nobr">
+			<label>Nombre del Control</label>
+		</field>
+
+		<field id="obs_control"  modpos="nobr">
+			<label>Observaciones</label>
+		</field>
+
+		<field id="ver_ft" noshow="true">
+			<condicion operador="=">1</condicion>
+		</field>
+
+		<field id="homologacion_id" noshow="true" tabla="PROD_CONTROL_HOMOLOG"/>
+
+	</table>
+		<join>
+			<table id="PROD_CONTROL_HOMOLOG">
+				<field id="prodcontrol_id">
+					<condicion operador="=">PROD_CONTROLES.id_prodcontrol</condicion>
+				</field>
+			</table>
+		</join>
+</form>
+</histrix>
+

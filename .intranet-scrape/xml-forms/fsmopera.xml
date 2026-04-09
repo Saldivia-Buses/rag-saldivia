@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm">
+	<title>OPERARIOS</title>
+	<obs></obs>
+	<form >
+		<table id="FSMOPERA" >
+			<title>Operarios</title>
+			<field id="opecod">
+				<label>Codigo</label>
+				<help>Codigo del Operario</help>
+			</field>
+			<field id="legajo" >
+				<label>Legajo</label>
+				<help>Numero de Legajo</help>
+			</field>
+			<field id="openom">
+				<label>Nombre</label>
+				<help>Nombre del Operario</help>
+			</field>
+		<!--	<field id="apellido" tabla="PERSONAL" deshabilitado="true" local="true">
+				<label>Apellido</label>
+				<help>Apellido del Operario</help>
+				<tipo>varchar</tipo>
+			</field> -->
+
+			<field id="opepue">
+				<label>Puesto</label>
+				<help>Puesto de Trabajo</help>
+			</field>
+			<field id="baja">
+				<label >Estado</label>
+				<help>Cuenta Activa - De Baja</help>
+				<options>
+					<option valor="1">Baja</option>
+					<option valor="0">Activo</option>
+
+				</options>
+			</field>
+
+<!-- 			<order>
+				<field id="opecod" ></field>
+			</order> -->
+		</table>
+<!--		<join tipo="right">
+			<table id="PERSONAL">
+			<field id="legajo" oculto="true">
+				<condicion operador="=">FSMOPERA.legajo</condicion>
+			</field>
+
+			</table>
+		</join> -->
+	</form>
+</histrix>

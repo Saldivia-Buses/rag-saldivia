@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<abm tipo="ficha" conBusqueda="true">
+	<titulo>ABM CUENTA OBLIGACION</titulo>
+	<obs></obs>
+	<consulta>
+		<tabla id="OBLCUENT" label="ABM CUENTA OBLIGACIONES">
+			<campo id="siscod" oculto="true">
+				<label>Codigo Sistema</label>
+				<help></help>
+			</campo>
+			<campo id="proxnro" local="true" deshabilitado="true">
+				<label style="color:red;">Proximo Numero Disponible</label>
+			<tabla_ex id="OBLCUENT" >
+					<campo id="siscod" noselect="true">
+						<tipo>varchar</tipo>
+					</campo>
+					<campo id="ctacod1">
+						<expresion>max(ctacod) + 1</expresion>
+					</campo>
+					<campo id="ctacod2">
+						<expresion>max(ctacod) + 1</expresion>
+					</campo>
+				<campo id="ctacod" noselect="true">
+						<condicion operador="&lt;">10000</condicion>
+					</campo>
+
+				</tabla_ex>
+
+			</campo>
+					<campo id="baja">
+				<label style="background-color:#7ff67f; color:white; font-size:15px" modpos="nobr">Estado</label>
+				<help>Cuenta Activa - De Baja</help>
+				<opciones>
+					<opcion valor="1">Baja</opcion>
+					<opcion valor="0">Activo</opcion>
+
+				</opciones>
+			</campo>
+			<campo id="ctacod" clave="true" esClave="true">
+				<!--
+				<ayuda_ex id="CCTCUENT" xml="HLPcctcuent.xml" dir="/help_local">
+
+					<campo id="ctacod">
+						<label>Nro</label>
+					</campo>
+					<campo id="ctanom">
+						<label>Nombre</label>
+					</campo>
+
+					<clave>ctacod</clave>
+					<descripcion>ctanom</descripcion>
+				</ayuda_ex>
+				-->
+
+				<label>Cuenta</label>
+				<help>Codigo de Cuenta </help>
+			</campo>
+			<campo id="ctanom">
+				<label modpos="nobr">Nombre</label>
+				<help>Nombre de Cuenta </help>
+			</campo>
+
+			<campo id="ctafan">
+				<label modpos="nobr">Nom.Fantasia </label>
+				<help>Nombre de fantasia. </help>
+			</campo>
+			<campo id="ctadir">
+				<label colspan="5">Direccion </label>
+				<help>
+				</help>
+			</campo>
+			<campo id="ctapos">
+				<label>Codigo Postal</label>
+				<help>
+				</help>
+			</campo>
+			<campo id="ctaloc">
+				<label modpos="nobr">Localidad </label>
+				<help>
+				</help>
+			</campo>
+
+
+			<campo id="prvcod">
+				<label modpos="nobr">Provincia </label>
+				<help modpos="nobr">
+				</help>
+				<tabla_ex id="FSMPROVS">
+					<campo id="prvcod"></campo>
+					<campo id="prvnom"></campo>
+				</tabla_ex>
+
+			</campo>
+
+
+
+			<campo id="ctatel">
+				<label>Telefono</label>
+				<help>
+				</help>
+			</campo>
+			<campo id="ctafax">
+				<label modpos="nobr">Fax</label>
+				<help>
+				</help>
+			</campo>
+
+			<campo id="entdir">
+				<label colspan="5" style="color:blue;">Direccion de Envio</label>
+				<help>
+				</help>
+			</campo>
+			<campo id="entpos">
+				<label style="color:blue;">Codigo Postal de Envio</label>
+				<help>
+				</help>
+			</campo>
+			<campo id="entloc">
+				<label modpos="nobr" style="color:blue;">Localidad de Envio</label>
+				<help>
+				</help>
+			</campo>
+
+			<campo id="ivacod">
+				<label>Categoria I.V.A. </label>
+				<help>
+				</help>
+				<tabla_ex id="FSMCTIVA">
+					<campo id="ivacod"></campo>
+					<campo id="ivanom"></campo>
+				</tabla_ex>
+			</campo>
+			<campo id="ctadgr">
+				<label modpos="nobr">D.G.R.</label>
+				<help> Inscripcion en DGR</help>
+<!--				<opciones>
+					<opcion valor="1">Inscripto</opcion>
+					<opcion valor="0">No Inscripto</opcion>
+				</opciones>
+				-->
+
+			</campo>
+
+			<campo id="doccod">
+				<label>Documento</label>
+				<help>
+				</help>
+				<tabla_ex id="FSMDOCUM">
+					<campo id="doccod"></campo>
+					<campo id="docnom"></campo>
+				</tabla_ex>
+			</campo>
+			<campo id="ctanro">
+				<label modpos="nobr">Numero</label>
+				<help>
+				</help>
+			</campo>
+			<campo id="zoncod">
+				<label>Codigo de Zona</label>
+				<help>
+				</help>
+			</campo>
+			<campo id="catcod">
+				<label>Codigo Categoria </label>
+				<help>
+				</help>
+				<tabla_ex id="CCTCATGS">
+					<campo id="catcod"></campo>
+					<campo id="catnom"></campo>
+				</tabla_ex>
+
+			</campo>
+			<campo id="ctbcod">
+				<label modpos="nobr">Cuenta Contable</label>
+				<help>
+				</help>
+				<tabla_ex id="CTBCUENT" vacio="true">
+					<campo id="ctbcod"></campo>
+					<campo id="ctbnom"></campo>
+					<campo id="ctbhab">
+						<condicion operador="=">1</condicion>
+					</campo>
+					<!--
+					<campo id="siscod">
+						<condicion operador="=">'10'</condicion>
+					</campo>
+					    -->
+					<orden>
+						<campo id="ctbnom"></campo>
+					</orden>
+				</tabla_ex>
+
+			</campo>
+
+			<campo id="vtacod">
+				<label>Codigo </label>
+				<help>
+				</help>
+				<tabla_ex id="FACCONDI">
+					<campo id="vtacod"></campo>
+					<campo id="condes"></campo>
+				</tabla_ex>
+			</campo>
+			<campo id="ctagan">
+				<label>Ganancias</label>
+				<help>Categoria de Ganancias</help>
+				<tabla_ex id="REG_CATEGORIAS">
+					<field id="id_regcategoria"></field>
+					<field id="nombre_categoria"></field>
+					<field id="tipo_categoria">
+					    <condicion operador="=">'ganancias'</condicion>
+					</field>
+				</tabla_ex>
+			</campo>
+			<campo id="ctainb">
+				<label modpos="nobr">Ing.Brutos</label>
+				<help>Categoria Ingresos Brutos</help>
+				<tabla_ex id="REG_CATEGORIAS">
+					<field id="id_regcategoria"></field>
+					<field id="nombre_categoria"></field>
+					<field id="tipo_categoria">
+					    <condicion operador="=">'ingbrutos'</condicion>
+					</field>
+				</tabla_ex>
+
+			</campo>
+			<campo id="ctanib">
+				<label modpos="nobr">Nro.Ing.Brutos.</label>
+				<help>Numero de Ingresos Brutos</help>
+			</campo>
+			<!--<campo id="rg1598">
+				<label>Ing.Brutos Res.1598</label>
+				<help>Tipo de Inscripcion en Ing.Brutos Res. 1598</help>
+				<opciones>
+					<opcion valor="1">Convenio Multilateral</opcion>
+					<opcion valor="2">Comun</opcion>
+					<opcion valor="3">No Inscripto</opcion>
+					<opcion valor="4">Exento</opcion>
+				</opciones>
+			</campo>-->
+			<campo id="por1598">
+				<label modpos="nobr">Porcentaje Retencion</label>
+				<help>Porcentaje de Retencion</help>
+				<formato>%01.2f</formato>
+			</campo>
+			<campo id="ctacai">
+				<label>Nro.CAI</label>
+				<help>Numero de CAI</help>
+			</campo>
+			<campo id="caivto">
+				<label modpos="nobr">Vto.Cai </label>
+				<help>Vencimiento de CAI</help>
+			</campo>
+			<campo id="ctaobs">
+				<label colspan="5">Obs. </label>
+				<help>Observaciones</help>
+			</campo>
+			<campo id="totatr">
+				<label >No influye en costo</label>
+				<help>No se tiene en cuenta en el armado de costos</help>
+				<tipo>check</tipo>
+			</campo>
+		</tabla>
+	</consulta>
+</abm>

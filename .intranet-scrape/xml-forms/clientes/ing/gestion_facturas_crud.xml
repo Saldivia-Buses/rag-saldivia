@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+	<histrix tipo="crud">
+	<title>Gestion Envios</title>
+	<obs></obs>
+	<form>
+		<table id="REG_MOVIMIENTO_ENVIOS">
+			
+			<field id="id_regmovim_envio" noshow="true" autoinc="true" />
+
+			<field id="regmovim_id" noshow="true" valauto="true" />
+
+			<field id="fecha">
+				<label>Fecha</label>
+				<tipo>date</tipo>
+				<valor default="true">today</valor>	
+			</field>
+
+			<field id="hora">
+				<label>Hora</label>
+				<tipo>time</tipo>
+			</field>
+
+			<field id="formaenvio_id" required="true">
+				<label>Forma Envio</label>
+				<helper type="combo" id="GEN_FORMA_ENVIOS" empty="true">			
+					<field id="id_formaenvio" />
+					<field id="nombre" />
+				</helper>
+			</field>
+
+			<field id="observaciones">
+				<label>Observaciones</label>
+			</field>
+
+		</table>
+	</form>
+</histrix>	
+
+

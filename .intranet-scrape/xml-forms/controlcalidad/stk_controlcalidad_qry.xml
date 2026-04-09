@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="consulta" deleteRow="false" inserta="false" path="/fotos/archivo/Coches/" tableHeight="600">
+	<title>Control Calidad</title>
+	<obs/>
+		
+        <customScript><![CDATA[
+
+
+			window.setTimeout(function(){
+        		$('[campo="no_conformidad"] > div').css({'border':'0px'});
+			}, 1000);
+
+
+			$('td[campo="observacion_inspec"] input', $('td[campo="no_conforme"] input:checkbox:checked').closest('tr')).show();
+
+			$('td[campo="no_conformidad"] input', $('td[campo="no_conforme"] input:checkbox:checked').closest('tr')).show();
+
+
+        	$('td[campo="conforme"] input:checkbox').change(function(){
+        		var tr = $(this).closest('tr');
+        		
+				$('[campo="no_conformidad"]', tr).show();
+
+				$('[campo="no_conformidad"]', tr).each(function(){
+				    	if ($(this).val() == '') 
+						$(this).hide();
+				});
+
+        		if ($(this).prop('checked')){
+   
+	        		$(tr).css({'background-color':'greenyellow'});
+
+    	    		var $noconf = $('td[campo="no_conforme"] input:checkbox', tr).prop('checked', !$(this).prop('checked'));
+
+					try {
+					    $noconf.checkboxradio("refresh");
+					} catch (err){$('[name="controlcausal_id"]', tr)
+				    	// no es movil
+					}
+
+        		} else {
+        			tr.css({'background-color':'transparent'});
+        		}
+        	});
+
+
+        	$('td[campo="no_conforme"] input:checkbox').change(function(){
+        		var tr = $(this).closest('tr');
+				
+
+        		if ($(this).prop('checked')){
+        			$('[name="observacion_inspec"]', tr).show();
+        			$('[campo="no_conformidad"]', tr).show();
+	        		
+
+	        		tr.css({'background-color':'transparent'});
+	        		var $conf = $('td[campo="conforme"] input:checkbox', tr).prop('checked', !$(this).prop('checked'));
+
+				try {
+				    $conf.checkboxradio("refresh");
+				} catch (err){ tr.css({'background-color':'transparent'});
+				    // no es movil
+				}
+
+
+        		} else {
+        			$('td[campo="observacion_inspec"] input', tr).hide();
+        			$('td[campo="no_conformidad"] input', tr).hide();
+        		}
+        	});        	
+
+
+				$('td[campo="conforme"] input:checkbox, td[campo="no_conforme"] input:checkbox', tr).closest('td').css({'background-color':'transparent'});
+        		} else {
+	        		var $conf = $('td[campo="conforme"] input:checkbox, td[campo="no_conforme"] input:checkbox', tr).prop('checked', $(this).prop('checked')).prop('disabled',false).checkboxradio("refresh");
+
+				try {
+				    $conf.checkboxradio("refresh");
+				} catch (err){
+				    // no es movil
+				}
+
+				tr.css({'background-color':'transparent' ,  'text-decoration':'none'});
+        		//	$('td[campo="observacion_inspec"] input', tr).show();
+        		}
+        	});        	
+
+			
+        	]]>
+        </customScript>
+	<form>
+
+		<table id="STKINSPEC_MOVIM" tableHeight="400">
+
+		<title>Control de Calidad Materiales</title>
+
+	      <filters auto="true">
+	        <field id="artcod" >
+	          <label>Articulo</label>
+	          <operador>=</operador>
+	        </field>
+
+	       	<field id="nronor" >
+	          <label modpos="nobr">Control</label>
+	          <operador>=</operador>
+	        </field>
+
+            <field id="fecha_inspec" deshabilitado="false">
+                <label modpos="nobr">Desde Inspec</label>
+            <operador>&gt;=</operador>
+            <valor>today</valor>
+            </field>
+
+
+            <field id="fecha_inspec" deshabilitado="false">
+                <label modpos="nobr">Hasta Inspec</label>
+            <operador>&lt;=</operador>
+            <valor>today</valor>
+            </field>
+
+	      </filters>
+
+			<field id="id_norma_inspec_movim" noshow="true"/>
+
+			<field id="id_recepcion" noshow="true"/>
+
+			<field id="artcod" tabla="STKINSPEC">
+				<label>Cod</label>
+				<helper type="external" xml="HLPstkinsum.xml" dir="/help_local"  >
+		          <field id="artcod" >
+		            <label>Cod</label>
+		          </field>
+		          <field id="artdes" >
+		            <label>Nombre</label>
+		            <detalle>nombre_articulo</detalle>
+		          </field>
+		        </helper>
+			</field>
+
+			<field id="nombre_articulo">
+				<label>Nombre</label>
+				<expression>select nombre_articulo from STK_ARTICULOS where id_stkarticulo = STKINSPEC.artcod limit 1</expression>
+			</field>
+
+			<field id="id_regcuenta" noshow="true">
+				<label>id.Cta</label>
+				<expression><![CDATA[select REG_CUENTA.id_regcuenta from REG_CUENTA 
+					join OCPRECIB on OCPRECIB.ctacod = REG_CUENTA.nro_cuenta
+					join STKINSPEC_MOVIM STKI on OCPRECIB.id_recepcion = STKI.id_recepcion
+					where OCPRECIB.id_recepcion = STKINSPEC_MOVIM.id_recepcion and
+					REG_CUENTA.subsistema_id = '01' 
+					limit 1]]></expression>
+			</field>
+
+			<field id="ctacod" tabla="OCPRECIB">
+				<label>Cod.Cta</label>
+			</field>
+
+			<field id="ctanom">
+				<label>Nombre.Cta</label>
+				<expression><![CDATA[select REG_CUENTA.nombre_cuenta from REG_CUENTA 
+					join OCPRECIB on OCPRECIB.ctacod = REG_CUENTA.nro_cuenta
+					join STKINSPEC_MOVIM STKI on OCPRECIB.id_recepcion = STKI.id_recepcion
+					where OCPRECIB.id_recepcion = STKINSPEC_MOVIM.id_recepcion and
+					REG_CUENTA.subsistema_id = '01' 
+					limit 1]]></expression>
+			</field>
+
+			<field id="ocpnro" >
+				<label>O.Compra</label>
+			</field>
+
+			<field id="fecha_inspec">
+				<label>Fecha</label>
+			    <tipo>date</tipo>
+			</field>
+
+			<field id="hora_inspec">
+				<label>Hora</label>
+			</field>				
+
+			<field id="nronor" tabla="NORMINSP">
+				<label>Control</label>
+				<tabla_ex id="NORMINSP" vacio="true">
+					<field id="nronor"></field>
+					<field id="desnor"></field>
+				</tabla_ex>
+			</field>
+
+			<field id="observacion_inspec">
+				<label>Observ.</label>
+			</field>
+
+			<field id="conforme" tabla="STKINSPEC_MOVIM" deshabilitado="true"
+				colstyle="background-color:greenyellow;text-align:center;" PDFcolWidth="10" labelStyle="width:8px;font-size:8px;" tdWidth="5px">
+    			<checklabel> </checklabel>
+				<tipo>check</tipo>
+				<attribute id="style">muestraconforme</attribute>			
+			</field>
+
+			<field id="no_conforme" tabla="STKINSPEC_MOVIM" deshabilitado="true"
+			colstyle="background-color:pink;text-align:center;" labelStyle="width:8px;font-size:8px;" tdWidth="5px" PDFcolWidth="10">
+				<checklabel> </checklabel>
+				<tipo>check</tipo>
+			</field> 
+
+		</table>
+
+		<join tipo="left">
+		    <table id="STKINSPEC">
+			<field id="id_norma_inspec">
+			    <condicion operador="=">STKINSPEC_MOVIM.id_norma_inspec</condicion>
+			</field>
+		    </table>
+		</join>
+
+		<join tipo="left">
+		    <table id="OCPRECIB">
+			<field id="id_recepcion">
+			    <condicion operador="=">STKINSPEC_MOVIM.id_recepcion</condicion>
+			</field>
+		    </table>
+		</join>
+
+		<join tipo="left">
+		    <table id="NORMINSP">
+			<field id="nronor">
+			    <condicion operador="=">STKINSPEC.nronor</condicion>
+			</field>
+		    </table>
+		</join>
+
+	</form>
+</histrix>

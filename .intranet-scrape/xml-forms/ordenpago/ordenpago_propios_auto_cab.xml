@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<abm tipo="cabecera">
+	<titulo>MOVIMIENTOS BANCARIOS</titulo>
+	<obs/>
+	<consulta>
+		<tabla id="BCSMOVIM"  label="Mov Bancarios">
+			<campo id="sisbcs" local="true" noshow="true">
+				<label>sisbcs</label>
+				<help>Cod sistema</help>
+				<parametro id="fsmparam_paralf.xml" retorna="paralf">
+					<campo id="parcla">
+						<condicion operador="=">'sisbcs'</condicion>
+					</campo>
+				</parametro>
+				<tipo>varchar</tipo>
+			</campo>
+			<campo id="bcsmov" noshow="true">
+				<!--				<label>Concepto</label>
+				<help>Codigo de Concepto</help>
+				<tabla_ex id="BCSCONCE">
+					<campo id="cnbcod"></campo>
+					<campo id="cnbdes"></campo>
+				</tabla_ex>
+				<tipo>integer</tipo>
+				-->
+				<valor>2</valor>
+			</campo>
+			<campo id="chequera">
+				<label>Chequera</label>
+				<help>Codigo de Concepto</help>
+				<tabla_ex id="CHEQUERAS">
+					<campo id="idChequera"/>
+					<campo id="nroCheque"/>
+                                        <campo id="tipo">
+                                            <condicion condicion="=">1</condicion>
+                                        </campo>
+				</tabla_ex>
+				<tipo>integer</tipo>
+			</campo>
+			<campo id="bcscta">
+				<label modpos="nobr">Cuenta</label>
+				<help>Codigo de Concepto</help>
+				<tabla_ex id="BCSCUENT">
+					<campo id="ccbcod"/>
+					<campo id="ccbnom"/>
+				</tabla_ex>
+				<tipo>integer</tipo>
+			</campo>
+			<campo id="ctanom" noshow="true" local="true">
+				<tipo>varchar</tipo>
+			</campo>
+
+			<campo deshabilitado="true" id="referencia" local="true" noshow="true">
+				<label>Referencia</label>
+<!--				<if exp="true" operador="=">
+					<verdadero>"'O.P.:[__movnroOP__] - ctanom'"</verdadero>
+					<falso>'test'</falso>
+				</if> -->
+			<valor>O.P.:[__movnroOP__] - [__ctanom__]</valor>				
+				<tipo>varchar</tipo>
+			</campo>
+			<campo ctbtipo="2" id="cajtip" local="true" noshow="true">
+				<valor>2</valor>
+				<detalle>cajtip</detalle>
+			</campo>
+			<campo id="opecla" local="true" noshow="true">
+				<valor eval="true">$_SESSION['usuario']</valor>
+			</campo>			
+			<!--
+			<filtros>
+				<campo id="regfec">
+					<operador>=</operador>
+					<label>Fecha</label>
+					<valor>today</valor>
+				</campo>
+			</filtros>
+				-->
+			<orden>
+				<campo id="bcsnro"/>
+			</orden>
+		</tabla>
+		<join tipo="left">
+			<tabla id="BCSCONCE">
+				<campo id="siscod" oculto="true">
+					<label>BCSCONCE.siscod</label>
+					<condicion operador="=">BCSMOVIM.siscod</condicion>
+				</campo>
+				<campo id="cnbcod" oculto="true">
+					<condicion operador="=">BCSMOVIM.bcsmov</condicion>
+				</campo>
+				<campo id="cnbnom" oculto="true"></campo>
+			</tabla>
+		</join>
+	</consulta>
+</abm>

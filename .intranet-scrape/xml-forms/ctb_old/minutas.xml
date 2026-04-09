@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="consulta">
+	<title>Minutas</title>
+	<obs></obs>
+	<form  detalle="ctbregis2.xml">
+		<table id="CTBREGIS" label="Minutas">
+			
+<!--
+						<field id="siscod" oculto="true">
+				<label>siscod</label>
+				<help> Cod sistema</help>
+				<detalle>siscod</detalle>
+			</field>
+			-->
+			<field id="regmin">
+				<label>Minuta </label>
+				<help>Numero de Asiento </help>
+				<detalle>regmin</detalle>
+				
+			</field>
+			<field id="regfec">
+				<label>Fecha</label>
+				<help>Fecha del Asiento (Movimiento Contable) </help>
+				<detalle>regfec</detalle>
+			</field>
+			<field id="regref">
+				<label>Referencia</label>
+				<help>Referencia</help>
+			</field>
+			<field id="regimp2">
+				<expresion>sum(regimp) / 2</expresion>
+				<label>Imp</label>
+			</field>			
+			<!--  <field id="regnpv">
+			<label>Nro Puesto </label>
+			<help> </help>
+			</field>
+			<field id="regord">
+			<label>Orden en el Asiento  . </label>
+			<help> </help>
+			</field>
+			<field id="regsub">
+			<label>Subdiario </label>
+			<help> </help>
+			</field>
+			<field id="reguni">
+			<label>Unidades Fisicas     . </label>
+			<help>Unidades Fisicas. </help>
+			</field>
+			-->
+			<filters>
+				<field id="regfec">
+					<operador>=</operador>
+					<label>Fecha</label>
+					<valor>today</valor>
+					
+				</field>
+			</filters>
+			<order>
+				<field id="regmin"></field>
+			</order>
+			<group>
+				<field id="regmin"></field>
+				<field id="regfec"></field>
+				<!--<field id="regref"></field> -->
+				
+			</group>
+			
+		</table>
+	</form>
+</histrix>

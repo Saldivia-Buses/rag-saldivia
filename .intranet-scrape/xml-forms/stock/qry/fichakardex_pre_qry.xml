@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" preloadData="false">
+  <title>Ficha Kardex</title>
+  <obs/>
+  <form>
+    <table id="STK_MOVIMIENTOS" label="Ficha Kardex">
+
+
+      <field id="stkrubro_id" tabla="STK_ARTICULOS" noshow="true">
+        <label>Rubros</label>
+        <helper type="combo" xml="stkrubro_qry.xml" dir="/ayudas" empty="true" />
+      </field>
+      <field id="desde_fecha" local="true" noshow="true">
+        <tipo>date</tipo>
+      </field>
+
+      <field id="hasta_fecha" local="true" noshow="true">
+        <tipo>date</tipo>
+      </field>
+      <field id="fecha_movimiento" _break="true">
+        <label>Fecha</label>
+        <help>Fecha movimiento</help>
+        <tipo>date</tipo>
+        <condicion operador="&lt;">('[__desde_fecha__]') </condicion>
+      </field>
+
+      <field id="stkdeposito_id" _break="true" >
+        <label>Depósito</label>
+        <helper type="combo" xml="stkdeposito_qry.xml" dir="/ayudas" empty="true" />
+        <expression>''</expression>
+      </field>
+
+      <field id="stkarticulo_id">
+
+          <label>Código</label>
+          <helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas">
+              <field id="wstklista_id" local="true">
+                 <valor>1</valor>
+               </field>
+          </helper>
+          <expression>''</expression>
+      </field>
+     
+      <field id="nombre_articulo" oculto="true" local="true" noselect="true">
+        <label colspan="5">Nombre Artículos</label>
+        <label modpos="nobr">Nombre</label>
+
+        <size>40</size>
+      </field>
+    <!--
+      <field id="descripcion_detalle">
+        <expression>STK_ARTICULOS.nombre_articulo</expression>
+        <help>Referencia del movimiento</help>
+      </field>
+        -->
+      <field id="nombre_concepto" local="true">
+        <label>Concepto</label>
+        <valor>STOCK ANTERIOR</valor>
+      </field>
+      
+      <field id="comprobante" local="true">
+        <label>Comprobante</label>
+      </field>
+
+      <field id="ingresos" local="true" noZero="true" suma="true">
+        <label modpos="nobr">Ingresos</label>
+        <expression>''</expression>
+      </field>
+
+      <field id="egresos" local="true" noZero="true" suma="true">
+        <label modpos="nobr">Egresos</label>
+        <expression>''</expression>
+      </field>
+
+      <field id="cantidad" local="true" suma="true" _acumula="true">
+        <expression>sum(CASE WHEN STK_CONCEPTOS.tipo_concepto = 0 THEN round(STK_MOVIMIENTOS.cantidad,2) ELSE -( round(STK_MOVIMIENTOS.cantidad,2)) END)</expression>
+        <label>Stock</label>
+      </field>
+
+      <field id="tipo_concepto" clasefila="true" noshow="true">
+        <expression>CASE WHEN STK_CONCEPTOS.tipo_concepto = 0 THEN 'resaltadoVioleta' else '' END</expression>
+      </field>
+
+        <field id="referencia" deshabilitado="true" >
+    	    <label>Ref</label>
+        </field>
+                  
+        <field id="color" clasefila="true" local="true" noshow="true">
+          <valor>resaltado</valor>
+        </field>
+      <order>
+        <field id="fecha_movimiento" table="STK_MOVIMIENTOS" />
+        <field id="stkdeposito_id" />
+      </order>
+      
+
+
+
+    </table>
+    <join tipo="left">
+      <table id="STK_ARTICULOS">
+        <field id="id_stkarticulo">
+          <condicion operador="=">STK_MOVIMIENTOS.stkarticulo_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="STK_CONCEPTOS">
+        <field id="id_stkconcepto">
+          <condicion operador="=">STK_MOVIMIENTOS.stkconcepto_id</condicion>
+        </field>
+      </table>
+    </join>
+<!--
+    <join tipo="LEFT">
+      <table id="REG_DETALLES">
+        <field id="id_regdetalle">
+          <condicion operador="=">STK_MOVIMIENTOS.regdetalle_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="LEFT">
+      <table id="REG_MOVIMIENTOS">
+        <field id="id_regmovim">
+          <condicion operador="=">REG_DETALLES.regmovim_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="LEFT">
+      <table id="REG_CONCEPTOS">
+        <field id="id_concepto">
+          <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+        </field>
+      </table>
+    </join>
+-->	
+  </form>
+</histrix>

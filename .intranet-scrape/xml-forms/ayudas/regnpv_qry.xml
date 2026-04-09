@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ayuda">
+  <title>Numeradores</title>
+  <obs></obs>
+	<form >
+	<table id="REG_NUMERADORES" label="Nombre">
+<!--		<field id="subsistema_id" elClave="true" oculto="true" noshow="true"/> -->
+		<field id="puesto"  noshow="true" />
+		<field id="mipuesto" >
+			<expresion>puesto</expresion>
+  			<label>npv</label>
+		</field>
+		<group>
+			<field id="puesto" />
+		</group>
+	</table>
+	</form>
+</histrix>

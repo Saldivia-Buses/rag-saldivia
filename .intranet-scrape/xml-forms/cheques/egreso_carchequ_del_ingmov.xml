@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="delete">
+       <title>BORRA EL MOV</title>
+        <obs></obs>
+               <form >
+					<table id="CARCHEQU" label="CHEQUE">
+						<field id="siscod" id_temp="siscar">
+						</field>
+						<field id="carint" id_temp="carint">
+						</field>
+					</table>
+               </form>
+        </histrix>

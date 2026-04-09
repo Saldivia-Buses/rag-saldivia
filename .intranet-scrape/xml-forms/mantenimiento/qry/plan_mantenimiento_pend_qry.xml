@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" _subtipo="vertical" inserta="false" modifica="false" borra="false"
+ tooltip="false" PDForientation="L">
+    <title>Mantenimiento</title>
+    <obs></obs>
+    <form>
+        <table id="MANT_PLAN" label="Plan de mantenimiento">
+		<filters>
+            <field id="nombre_equipo" deshabilitado="false">
+                <label>Nombre</label>
+                <help>Nombre</help>
+                <operador>like</operador>
+            </field>
+	    <field id="desde_fecha">
+		<label>Desde</label>
+		<valor eval="true">date('01/01/Y')</valor>
+	    </field>
+	    <field id="hasta_fecha">
+		<label>Hasta</label> 
+		<valor>today</valor>
+	    </field>
+ 		<field id="tipoequipo_id" >
+                <label>Tipo</label>
+                <help>Tipo</help>
+                <operador>=</operador>
+				<valor>1</valor>
+            </field>
+			<field id="deposito_id">
+				<label modpos="nobr">Depósito</label>
+				<helper type="combo" id="DEPOSITO">
+					<field id="idDeposito">
+						<label>Cod</label>
+						<help>Codigo</help>
+					</field>
+					<field id="direccion">
+						<label>Direccion</label>
+						<help>Direccion</help>
+					</field>
+				</helper>
+                <operador>=</operador>
+			</field>
+		</filters>
+		
+		
+	   	<field id="rrule" _noshow="true" />
+	   	<field id="id_plan" _noshow="true" calendarId="true" print="false">
+			<detalle>plan_id</detalle>
+	   	
+	   	</field>
+		<field id="desde_fecha" local="true" required="true">
+		    <label>Desde</label>
+		    <tipo>date</tipo>
+		    <valor>today</valor>
+		</field>
+		<field id="hasta_fecha" local="true" required="true">
+		    <label>Hasta</label>
+		    <tipo>date</tipo>
+		    <valor>today</valor>
+		</field>
+	        <field id="fecha_accion" deshabilitado="true">
+			<label>Fecha</label>
+			<help>Fecha de la acción</help>
+			<tipo>date</tipo>
+		</field>
+		
+		<field id="nombre_equipo"> 
+		    <expression>MANT_EQUIPOS.nombre_equipo</expression>
+			<label >Equipo</label>
+			<size>60</size>
+		</field>
+
+    		<field id="numero_serie" tabla="MANT_EQUIPOS">
+			<label>Nro Serie</label>
+		</field>
+		
+		<field id="tipoequipo_id" tabla="MANT_EQUIPOS" noshow="true">
+			<helper type="combo" id="MANT_TIPO_EQUIPO" empty="true">
+				<field id="id_tipo_equipo"/>
+				<field id="nombre_tipoequipo"/>
+			</helper>
+			<label>Tipo</label>
+		</field>
+	
+		<field id="deposito_id" tabla="MANT_EQUIPOS" noshow="true">
+			<label>Depósito</label>
+			<helper type="combo" id="DEPOSITO" empty="true">
+				<field id="idDeposito">
+					<label>Cod</label>
+					<help>Codigo</help>
+
+				</field>
+				<field id="direccion">
+					<label>Direccion</label>
+					<help>Direccion</help>
+				</field>
+			</helper>
+		</field>
+		<field id="accion_id" deshabilitado="true">
+
+			<helper type="combo" id="MANT_ACCIONES" empty="true">
+				<field id="id_accion"/>
+				<field id="nombre_accion"/>
+			</helper>
+			<label>Acción</label>
+			<detalle>accion_id</detalle>
+		</field>
+	
+		<!--
+		<field id="login" deshabilitado="true" valauto="true" _noshow="true">
+		    <label>Usuario </label>
+			<tabla_ex id="HTXUSERS">
+				<field id="login"></field>
+				<field id="nombre"></field>
+				<order>
+					<field id="nombre"></field>
+				</order>
+			</tabla_ex>
+		    <help>Usuario que hace el pedido</help>
+		    <valor eval="true">$_SESSION['usuario']</valor>
+      	</field>
+      	    -->
+      	    <!--
+		<field id="eventos" local="true">
+		    <helper type="object" xml="plan_evento_crud.xml">
+			<parameter source="id_plan" target="plan_id"/>
+			<parameter source="accion_id" target="accion_id"/>
+			
+
+			<parameter source="fecha_accion" target="fecha_accion"/>
+		    </helper>	
+		    <label>Evento</label>
+		</field> -->
+		<field id="corresponde" local="true" validRow="true" _noshow="true">
+		    <label>Fecha Recurrencia</label>
+		        <if exp="true">
+			    <true>UI_calendar::getRRuleDate( 'desde_fecha' , 'hasta_fecha', 'rrule')</true>
+			    <false>''</false>
+			</if>
+			<tipo>date</tipo>
+		</field>
+	    </table>
+	    
+	    <join tipo="left">
+	        <table id="MANT_EQUIPOS">
+            	    <field id="id_equipo">
+                	<condicion operador="=">equipo_id</condicion>
+                    </field>
+
+        	</table>
+            </join>
+
+	    <join tipo="left">
+
+                <table id="MANT_ACCIONES">
+            	    <field id="id_accion">
+                	<condicion operador="=">accion_id</condicion>
+                    </field>
+    	        </table>
+
+	    </join> 
+            
+    </form>
+</histrix>

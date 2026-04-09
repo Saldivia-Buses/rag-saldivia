@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+   <histrix tipo="consulta" exportasuma="true" PDFlineColor="255,255,255" PDFfontSize="10">
+   <title>Consumos</title>
+   <obs></obs>
+   <form>
+	<table id="FAC_MEDIDORES_HIST" label="Consumos" styleTbody="height:150px;overflow-x:hidden;" PDFnoborder="true">
+
+		<field id="id_facmedidorhist" noshow="true" />
+
+		<field id="regmovim_id" noshow="true">
+			<condicion operador="=">-1</condicion>
+		</field>
+
+                <field id="periodo" noshow="true" />
+                <field id="facbanda_id" noshow="true" />
+                <field id="facservicio_id" noshow="true" />
+                <field id="facususer_id" noshow="true" />
+
+		<field id="medicion_ant" local="true">
+		    <label>Medicion Per. Anterior</label>
+                    <expression sql="true">select estado from FAC_MEDIDORES_HIST 
+                                                where facususer_id = '[__facususer_id__]' and 
+                                                      facservicio_id = '[__facservicio_id__]' and 
+                                                      facbanda_id = '[__facbanda_id__]' and 
+                                                      periodo &lt; '[__periodo__]' 
+                                                order by periodo DESC limit 1</expression>
+                    <tipo>numeric</tipo>
+		</field>
+
+                <field id="estado">
+                    <label>Medicion Per. Actual</label>
+                    <tipo>numeric</tipo>
+                </field>
+
+		<field id="consumido">
+                    <label>Consumido Per. Actual</label>
+                    <tipo>numeric</tipo>
+		</field>
+
+	</table>
+
+	<join>
+		<table id="FAC_SERVICIOS">
+			<field id="id_facservicio">
+				<condicion operador="=">facservicio_id</condicion>
+			</field>
+			<field id="tipo_servicio">
+				<condicion operador="=">1</condicion>
+			</field>
+		</table>
+	</join>
+
+   </form>
+</histrix>	
+

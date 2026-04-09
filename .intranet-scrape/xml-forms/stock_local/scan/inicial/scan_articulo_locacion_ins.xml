@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="insert" tipoInsert="IGNORE">
+	<title>Ingreso Movimiento</title>
+	 <obs></obs>
+		<form >
+		    <table id="STK_ARTICULO_LOCACION" >
+				<field id="stkarticulo_id"         id_temp="stkarticulo_id"/>
+				<field id="deposito_origen_id" 	  	   id_temp="stkdeposito_id"/>
+				<field id="stklocacion_id" 	  	   id_temp="stklocacion_id"/>
+		    </table>
+		</form>
+    </histrix>	
+
+

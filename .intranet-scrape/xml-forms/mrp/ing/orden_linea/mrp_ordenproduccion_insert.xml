@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert" grabaFinal="true">
+    <title>ORDEN DE COMPRA</title>
+    <obs></obs>
+    <consulta>
+        <table id="MRP_ORDEN_PRODUCCION" label="ORDEN DE PRODUCCION" >
+            <field id="fecha_orden" 	  id_cab="fecha_orden" />
+            <field id="rhpersonal_id" 	  id_cab="rhpersonal_id" />
+            <field id="regcuenta_id" 	  id_cab="regcuenta_id" />
+            <field id="orden_comentarios" id_cab="orden_comentarios" />
+
+        </table>
+    </consulta>
+</histrix>

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="consulta">
+	<title>Encuesta</title>
+	<obs></obs>
+	<form  >
+		<table id="ENCUESTA_CLIENTE" >
+			<title>Encuesta</title>
+		   <grafico id="Resultados" >
+			   <ancho>600</ancho>
+			   <tipo>P</tipo>
+			   
+			   <etiquetas>idEncuesta</etiquetas> 
+			   <serie>Excelente</serie>
+			   <serie>MuyBueno</serie>
+			   <serie>Bueno</serie>
+			   <serie>Regular</serie>
+			   <serie>Malo</serie>
+			   
+			   <title>Ordenes de Compra</title>
+			   <subtitulo>Estado Anual</subtitulo>
+		   </grafico>	
+            <filters>
+                <field id="idEncuesta" autoinc="true" noshow="true">
+                    <tabla_ex xml="encuesta.xml">
+                    </tabla_ex>
+                    <label>Cod</label>
+                    <help>Codigo de Encuesta</help>
+                    <detalle>idEncuesta</detalle>
+                    <operador>=</operador>
+                </field>
+
+            </filters>
+			<field id="numero" noshow="true" >
+                <detalle>numero</detalle>
+             </field>
+			<field id="idEncuesta" autoinc="true" noshow="true">
+                    <tabla_ex xml="encuesta.xml"></tabla_ex>
+				<label>Cod</label>
+				<help>Codigo de Encuesta</help>
+				<detalle>idEncuesta</detalle>
+			</field>
+
+			<field id="idPregunta" tabla="ENCUESTA_CLIENTE_ITEM" >
+				<tabla_ex id="ENCUESTA_PREGUNTA">
+					<field id="idPregunta"></field>
+					<field id="pregunta"></field>
+				</tabla_ex>
+				<label>Cod</label>
+				<help>Codigo de Pregunta</help>
+
+			</field>
+			<field id="Malo" suma="true">
+                <label>Malo</label>
+                <expression>sum(case when valor = 1 then  1 else 0 end)</expression>
+            </field>
+			<field id="Regular" suma="true">
+                <label>Regular</label>
+                <expression>sum(case when valor = 2 then  1 else 0 end)</expression>
+            </field>
+			<field id="Bueno" suma="true">
+                <label>Bueno</label>
+                <expression>sum(case when valor = 3 then  1 else 0 end)</expression>
+            </field>
+			<field id="MuyBueno" suma="true">
+                <label>Muy Bueno</label>
+                <expression>sum(case when valor = 4 then  1 else 0 end)</expression>
+            </field>
+			<field id="Excelente" suma="true">
+                <label>Excelente</label>
+                <expression>sum(case when valor = 5 then  1 else 0 end)</expression>
+            </field>
+            <group>
+                <field id="idPregunta"></field>
+            </group>
+			
+		</table>
+
+        <join tipo="left">
+            <table id="ENCUESTA_CLIENTE_ITEM">
+                <field id="numero">
+                    <condicion operador="=">ENCUESTA_CLIENTE.numero</condicion>
+                </field>
+
+            </table>
+        </join>
+	</form>	   
+</histrix> 

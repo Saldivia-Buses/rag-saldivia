@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="grid"  deleteRow="false" imprime="false" procesa="true" inserta="false">
+	<title>Control Calidad</title>
+	<obs/>
+	<form>
+		<table id="PROD_CONTROL_HOMOLOG">
+			<movimientos>
+		    	<relacion id="prod_control_homolog_del.xml" />
+				<relacion id="prod_control_homolog_ins.xml" />
+		    </movimientos>
+			<titulo>Controles</titulo>
+			<filters auto="true">
+
+			<field id="homologacion_id">
+				<label modpos="nobr">Homolog.Origen</label>
+				<operador>=</operador>
+			</field>
+
+			<field id="seccion_id">
+				<label _modpos="nobr">Seccion</label>
+				<operador>=</operador>
+			</field>
+
+			</filters>
+
+			<field id="prodcontrol_id" noshow="true">
+				<label>Ctrl</label>
+				<detalle>id_prodcontrol</detalle>
+			</field>
+
+			<field id="id_prodcontrol" noshow="true">
+				<label>ProdControl</label>
+				<expression>PROD_CONTROL_HOMOLOG.prodcontrol_id</expression>
+			</field>
+
+			<field id="graba_homologacion" noshow="true" local="true">
+				<label>Homologacion</label>
+			</field>
+
+			<field id="id_homologacion" noshow="true" local="true">
+			    <if exp="true">
+				<true>graba_homologacion</true>
+				<false>'0'</false>
+			    </if>
+			</field>
+
+        <field id="homologacion_id" noshow="true" _local="true">
+          <label>Descripcion</label>
+          <helper type="combo" xml="combo_homologacion_modelo.xml" dir="/fabricacion">
+          	      <field id="baja" noshow="true">
+        			<condicion operador="=">0</condicion>
+      			  </field>
+          </helper>
+
+       </field>
+
+		  <field id="controlo" editable="true" deshabilitado="false" local="true">
+		  		<label>Controla</label>
+		  		<tipo>check</tipo>
+		  		<valor>1</valor>
+		  </field>
+
+	      <field id="homologacion_id_destino" local="true" _noshow="true">
+	      	<label>Hom.Dest</label>
+	      </field>
+
+			<field id="modelo_control" tabla="PROD_CONTROLES">
+				<label>Mod</label>
+				<size>10</size>
+			</field>
+
+			<field id="orden_control" tabla="PROD_CONTROLES" noshow="true">
+				<label>Orden</label>
+				<size>3</size>
+			</field>
+			<field id="linea_id" tabla="PROD_CONTROLES" colstyle="display:none;" local="true" noshow="true">
+                <helper type="combo" xml="lineas.xml" dir="/produccion" empty="true"/>
+                <label >Linea</label>
+			    <actualiza>
+				<field id="seccion_id" destino="linea_id" /> 
+			    </actualiza>    
+	        </field>
+
+			<field id="seccion_id" tabla="PROD_CONTROLES">
+				<label>Seccion</label>
+					<helper id="MOMENTO" type="combo" empty="true">
+                    <field id="idMomento" />
+                    <field id="descripcion" />
+					<field id="linea_id" oculto="true">
+                		<condicion operador="=">1</condicion>
+                	</field>
+					</helper>
+			</field>
+
+
+			<field id="habilitado" tabla="PROD_CONTROLES" noshow="true">
+				<label>Habilitado</label>
+				<options>
+				    <option valor="0">Si</option>
+				    <option valor="1">No</option>
+                </options>
+                <tipo>radio</tipo>
+			</field>
+
+			<field id="critico" tabla="PROD_CONTROLES">
+				<label>Critico</label>
+				<options>
+				    <option valor="1">Si</option>
+				    <option valor="0">No</option>
+                                </options>
+                		<tipo>radio</tipo>
+			</field>
+
+			<field id="legajo_defecto" tabla="PROD_CONTROLES" noshow="true">
+				<label>Personal</label>
+				<help>Personal por defecto</help>
+			</field>
+
+			<field id="nombre_control" tabla="PROD_CONTROLES">
+				<label>Control</label>
+				<size>30</size>
+			</field>
+			<field id="obs_control" tabla="PROD_CONTROLES" noshow="true">
+				<label>Observacion</label>
+				<size>30</size>
+			</field>
+			<order>
+				<field id="seccion_id" tabla="PROD_CONTROLES"/>
+				<field id="modelo_control" tabla="PROD_CONTROLES"/>
+				<field id="orden_control" tabla="PROD_CONTROLES"/>
+			</order>
+		</table>
+		<join tipo="left">
+		    <table id="PROD_CONTROLES">
+			<field id="id_prodcontrol">
+			    <condicion operador="=">PROD_CONTROL_HOMOLOG.prodcontrol_id</condicion>	
+			</field>
+		    </table>
+		</join>
+	</form>
+</histrix>

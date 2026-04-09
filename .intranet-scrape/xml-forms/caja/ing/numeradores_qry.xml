@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" inserta="false">
+  <title>Numeradores</title>
+  <obs></obs>
+  <form >
+    <table id="REG_NUMERADORES" label="Numeradores">
+
+        <field id="subsistema_id" oculto="true" />
+
+		<field id="puesto" _oculto="true" deshabilitado="true">
+			<label>Punto de Venta</label>
+			<formato>%04d</formato>
+		</field>
+	
+       <field id="regconcepto_id" deshabilitado="true" >
+      </field>
+      
+      <field id="letra">
+      </field>
+
+		<field id="numero" >
+			<label>Numero</label>
+			<size>8</size>
+			<formato>%08d</formato>
+		</field>
+		<field id="modif" local="true">
+		    
+		</field>
+
+
+		<order>
+			<field id="puesto" />
+			<field id="regconcepto_id" />			
+			<field id="letra" />			
+		</order>
+    </table>
+  </form>
+</histrix>  

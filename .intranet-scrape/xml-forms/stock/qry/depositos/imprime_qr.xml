@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"   ?>
+<histrix tipo="nosql"  impresion="articulo_locacion_qr.xml" printer="zebralocacion">
+    <title>Articulos</title>
+    <obs/>
+    <form>
+        <table id="STK_ARTICULOS" label="Articulos">
+            <fieldGroup style="text-align:center; padding:2px 2px 2px 2px; vertical-align:middle;">
+
+                <field  id="id_stkarticulo" id_temp="stkarticulo_id">
+		    <detalle>id_stkarticulo</detalle>
+		</field>
+
+                <field id="stklocacion_id" id_temp="stklocacion_id">
+		    <detalle>stklocacion_id</detalle>
+
+                </field>
+
+
+                <field id="codigo_locacion" id_temp="codigo_locacion">
+		    <detalle>codigo_locacion</detalle>
+
+                </field>
+
+
+            </fieldGroup>
+
+        </table>
+    </form>
+</histrix>

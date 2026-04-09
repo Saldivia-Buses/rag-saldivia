@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="grid"  inserta="false" modifica="false" deleteRow="false" imprime="false" log="false" transaccional="true" procesa="true"
+tableHeight="40em">
+  <title>Cta Ctes</title>
+  <obs/>
+  <form>
+
+    <table id="REG_MOVIMIENTOS" height="50em;">
+     
+	<movimientos>
+	    <relacion id="reg_movimientos_autorizo.xml" />  AUTORIZO REG_MOVIMIENTO
+		<relacion id="del_np.xml"/>
+		<relacion id="del_np_det.xml"/>
+		<relacion id="upd_np.xml"/>
+	</movimientos>     
+    
+	<filters>                                     
+		<field id="nro_cuenta">
+			<operador>=</operador>
+			<label>Cliente</label>
+			<help>Cliente</help>
+		</field>
+		<field id="regzona_id">
+		  <operador>=</operador>
+		  <label>Zona</label>
+		</field>
+		
+		<field id="regcuentavendedor_id"> 
+			<label>Vendedor</label>
+			<help>Vendedor</help>
+			<operador>=</operador>                  
+		</field> 
+	</filters> 
+
+
+	<field id="id_regmovim" esClave="true" noshow="true">
+		<!--<detalle>regmovim_id</detalle>-->
+		<actualiza>
+			<field id="regmovim_id" destino="regmovim_id" xml="autorizar_pedidos_detalle.xml" />
+		</actualiza>
+	</field>
+	
+	<field id="fecha_movimiento">
+	  <label>fecha</label>
+	</field>
+
+	<field id="nro_cuenta" tabla="REG_CUENTA">
+		<label>Cliente</label>
+		<helper type="external" xml="regcuenta_solamente_nro_qry.xml" dir="/ayudas">
+		    <field id="subsistema_id"></field>
+		    <order>
+		    <field id="nombre_cuenta"></field>
+		    </order>
+		</helper>
+	</field>
+	
+	<field id="regzona_id" tabla="REG_CUENTA">
+	  <label>Zona</label>
+	  <helper type="combo" xml="regzonas_qry.xml" dir="/ayudas" empty="true" />
+	</field>
+	
+	<field id="mar_movimiento" noshow="true">
+	    <condicion operador="=">0</condicion>
+	</field>
+	
+	<field id="regcuenta_id" noshow="true">
+		<operador>=</operador>
+		<help>Cliente</help>
+	</field>
+	
+	<field id="nombre_cuenta" tabla="REG_CUENTA ">
+		<label>Nombre Cuenta</label>
+	</field>
+	
+	<field id="subsistemave_id" local="true" noshow="true" valauto="true">
+	    <valor>22</valor>
+	</field>
+                 
+	<field id="regcuentavendedor_id" _noshow="true">
+		<label>Vendedor</label>
+		<helper type="combo" xml="regcuenta_solamente_qry.xml" dir="/ayudas" empty="true">
+                  <field id="subsistema_id">
+                        <condicion operador="=" valorde="subsistemave_id">'[__subsistemave_id__]' </condicion>
+                  </field>
+                  <order>
+                    <field id="nombre_cuenta"></field>
+                  </order>
+              </helper>
+	</field> 
+
+<!--
+	<field id="descripcion_concepto" tabla="REG_CONCEPTOS" >
+		<label>Concepto</label>
+	</field>
+-->
+	<field id="letra_movimiento" noshow="true"/>
+
+
+	<field id="nro_pedido">
+        <expresion>CONCAT(REG_MOVIMIENTOS.letra_movimiento,' ',LPAD(REG_MOVIMIENTOS.puesto_movimiento,4,'0'),'-',LPAD(REG_MOVIMIENTOS.nro_movimiento,8,'0'))</expresion>
+        <label>Numero</label>
+        <helper type="link" dir="/clientes/qry">
+	     <parameter source="id_regmovim" target="id_regmovim" />
+	    </helper>   
+	    <attribute id="linkint">imprime_concepto</attribute>
+    </field>
+
+    <field id="imprime_concepto" noshow="true">
+        <expresion>ifnull(ejecuta,'')</expresion>
+    </field>
+      
+
+
+	<field id="referencia_movimiento" cellMaxLength="10">
+	  <label>Referencia</label>
+	  
+	</field>
+
+	<field id="_ORDEN" local="true" noshow="true">
+	</field>
+	             
+    
+	<field id="Pedido" local="true" noshow="true" >
+		<label>Pedido</label>
+		<expresion>sum(ifnull(REG_DETALLES.cantidad_detalle,0) )</expresion>
+		<tipo>numeric</tipo>
+	</field>
+	<!--
+	<field id="facturado" local="true" suma="true" noshow="true">
+		<label>Facturado</label>
+		<expresion>ifnull((select sum(ifnull(cantidad_imputada,0)) 
+				from REG_MOVIMIENTOS RM001
+				JOIN REG_DETALLES RD1 ON RM001.id_regmovim = RD1.regmovim_id  
+				JOIN REG_IMPUTACIONESDETALLES RI3 on RI3.regdetalleped_id = RD1.id_regdetalle
+				where RM001.id_regmovim = REG_MOVIMIENTOS.id_regmovim),0) 
+		</expresion> 
+		<tipo>numeric</tipo>
+	</field>
+	-->
+<!--	<field id="muestra_pendientes" _noshow="true">
+		<label>Pendientes</label>
+		<expresion> 	sum(ifnull(REG_DETALLES.cantidad_detalle,0) ) -
+				ifnull((select sum(cantidad_imputada) from REG_MOVIMIENTOS RM003
+				JOIN REG_DETALLES RD2 ON RM003.id_regmovim = RD2.regmovim_id  
+				JOIN REG_IMPUTACIONESDETALLES RI1 on RI1.regdetalleped_id = RD2.id_regdetalle
+				where RM003.id_regmovim = REG_MOVIMIENTOS.id_regmovim),0)
+		</expresion>
+
+		<tipo>numeric</tipo>
+			
+	</field>
+	-->
+	<field id="Pendientes" noshow="true">
+		<label>Pendientes</label>
+<!--sum(ifnull(REG_DETALLES.cantidad_detalle,0) )  -->
+		<expresion _having="false"> 	sum(ifnull(REG_DETALLES.cantidad_detalle,0) ) -
+				ifnull((select sum(cantidad_imputada) from REG_MOVIMIENTOS RM003
+				JOIN REG_DETALLES RD2 ON RM003.id_regmovim = RD2.regmovim_id  
+				JOIN REG_IMPUTACIONESDETALLES RI1 on RI1.regdetalleped_id = RD2.id_regdetalle
+				where RM003.id_regmovim = REG_MOVIMIENTOS.id_regmovim),0)
+		</expresion>
+
+		<tipo>numeric</tipo>		
+	</field>
+
+<!--
+	<field id="porcentaje_desc1" tabla="REG_DETALLES" noshow="true" >
+	    <condicion operador="!=">0</condicion> 
+	</field>
+	-->
+	<field id="codigo_detalle" tabla="REG_DETALLES" noshow="true" />
+
+	<field id="neto_movimiento" 			noshow="true" />
+	<field id="importe_iva" 				noshow="true" />
+	<field id="importe_movimiento" 			noshow="true" />
+	<field id="alicuota_iva" 				noshow="true" /> 	
+	<!--<field id="tabla_detalle" 	noshow="true" />	-->
+        
+	<field id="cantidad" noshow="true">
+	  <label>Cantidad</label>
+	  <expresion>sum(cantidad_detalle)</expresion>
+	  <tipo>numeric</tipo>
+	</field>                              
+
+	<field id="bonifMax">
+	  <label>Max</label>
+	  <expresion _having="false">@maxbon:=ifnull((select porcentaje_descuento0 from STK_DESCUENTOSVOLUMEN where sum(cantidad_detalle) >= desde_cantidad and sum(cantidad_detalle) &lt;= hasta_cantidad 
+	  and REG_MOVIMIENTOS.stklista_id = STK_DESCUENTOSVOLUMEN.stklista_id limit 1) ,0) </expresion>
+	  <tipo>numeric</tipo>
+	</field> 
+	
+	<field id="old_bonificacion" noshow="true">
+		<expression>REG_MOVIMIENTOS.bonificaciones_movimiento</expression>
+	</field>
+
+	<field id="bonificaciones_movimiento" noZero="true" editable="true">
+	  <label>Bonificacion</label>
+	  <expression>bonificaciones_movimiento</expression>
+	  <jseval campodestino="modifico">(old_bonificacion != bonificaciones_movimiento)? \'true\' : \'false\'</jseval>
+	</field>                              
+
+	<field id="leyenda" local="true">
+	  <label>Motivo</label> 
+	  <if exp="bonifMax + 0 &lt; bonificaciones_movimiento + 0">
+		<true>'Bonificacion Excedida'</true>
+		<false>'Mercaderia Sin cargo'</false>
+	  </if>
+	</field>
+
+	<field id="detalle_np" ventint="true" resume="true" local="true" showObjTabla="true">
+	<!--	<valor>autorizar_pedidos_detalle.xml</valor> -->
+		<helper xml="autorizar_pedidos_detalle.xml" type="object">
+		    <parameter source="id_regmovim" target="regmovim_id" />
+		</helper>
+		<label>Detalles</label>
+<!--        <importar label="DETALLE">
+          <field id="id_regmovim" />
+          <field id="bonificacion_movimiento" />
+        </importar>
+-->
+    </field>
+	
+	<field id="observaciones" local="true" tdWidth="50" print="false" >
+		<helper type="link" xml="regmovim_obs_qry.xml" dir="/proveedores/qry" width="600px" height="600px" title="Observaciones"  >
+			<parameter source="id_regmovim" target="regmovim_id" operator="="/>      
+			<parameter source="referencia_movimiento" target="obsmov" operator="="/>      
+		</helper>
+		<label>Observacion</label>
+		<valor>+</valor>
+		<attribute id="style">tieneObs</attribute>
+	</field>
+	<field id="tieneObs" noshow="true">
+		<expresion>
+			IFNULL((SELECT 'color:red;font-weight:bold;width:2em;' FROM REG_MOVIMIENTO_OBS WHERE REG_MOVIMIENTO_OBS.regmovim_id = REG_MOVIMIENTOS.id_regmovim limit 1), 'width:2em;')
+		</expresion>
+	</field>
+	<field id="modifico" local="true" editable="true" noshow="true" />      
+	<field id="autorizo" local="true" editable="true">
+		<label>autorizar</label>
+		<tipo>check</tipo>
+		<valor>0</valor>
+	</field>
+	<field id="borro" local="true" editable="true">
+		<label>Borrar</label>
+		<tipo>check</tipo>
+		<valor>0</valor>
+	</field>
+	<group>
+		<field id="id_regmovim" tabla="REG_MOVIMIENTOS"/>
+	</group>
+	
+
+    </table>
+    <join>
+      <table id="HTXOPTIONS">
+        <field id="option_name">
+          <condicion operador="=">'ID_NOTA_PEDIDOS' and REG_MOVIMIENTOS.concepto_id = option_value</condicion>
+        </field>
+      </table>
+    </join>
+    <join>
+      <table id="REG_CUENTA">
+        <field id="id_regcuenta">
+          <condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+        </field>
+      </table>
+    </join>
+	<join tipo="left">
+		<tabla id="GEN_SUBSISTEMAS">
+			<field id="id_subsistema">
+				  <condicion operador="=">REG_CUENTA.subsistema_id</condicion>
+			</field>
+		</tabla>
+	</join>    
+    <join>
+      <table id="REG_CONCEPTOS">
+        <field id="id_concepto">
+          <condicion operador="=">REG_MOVIMIENTOS.concepto_id and REG_CONCEPTOS.informa_calculo = 1 </condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="REG_DETALLES">
+        <field id="regmovim_id">
+          <condicion operador="=">REG_MOVIMIENTOS.id_regmovim</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join tipo="left">
+      <table id="REG_NUMERADORES">
+        <field id="subsistema_id">
+          <condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion>
+        </field>
+        <field id="regconcepto_id">
+          <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+        </field>
+        <field id="puesto">
+          <condicion operador="=">REG_MOVIMIENTOS.puesto_movimiento</condicion>
+        </field>
+        <field id="letra">
+          <condicion operador="=">REG_MOVIMIENTOS.letra_movimiento</condicion>
+        </field>
+      </table>
+    </join>
+
+
+  </form>
+</histrix>

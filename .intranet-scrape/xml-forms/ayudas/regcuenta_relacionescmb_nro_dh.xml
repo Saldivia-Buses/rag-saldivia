@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta"  >
+  <title>Cuentas</title>
+  <obs/>
+  <form>
+	<table id="REG_CUENTA" label="Cuentas">
+
+		<field id="nro_cuenta">
+			<label>Nro</label>
+		</field>
+
+		<field id="nombre_cuenta">
+			<label>Nombre</label>
+			<expression>concat(case when isnull(apellido_cuenta) then '' else apellido_cuenta end, nombre_cuenta)</expression>
+			<detalle>regcuenta_nombre</detalle>
+		</field>
+
+		<field id="id_regcuenta">
+			<label>Nro Int</label>
+			<detalle>regcuenta_id</detalle>
+		</field>
+
+		<field id="abreviacion_iva" tabla="GEN_IVA">
+			<label>Cat.Iva</label>
+			<detalle>regcuenta_iva</detalle>
+		</field>
+		<field id="cuit_cuenta">
+			<label>CUIT</label>
+			<detalle>regcuenta_cuit</detalle>
+		</field>
+		<field id="cod_direccion">
+			<label>Direccion</label>
+			<detalle>regcuenta_direccion</detalle>
+			<detalle>direccion</detalle>
+		</field>
+		<field id="cp" tabla="GEN_LOCALIDADES">
+			<label>CP</label>
+			<detalle>regcuenta_cp</detalle>
+		</field>     
+		<field id="nombre_localidad" tabla="GEN_LOCALIDADES">
+			<label>Localidad</label>
+			<detalle>regcuenta_localidad</detalle>
+		</field>
+		<field id="nombre_provincia" tabla="GEN_PROVINCIAS">
+			<label>Provincia</label>
+			<detalle>regcuenta_provincia</detalle>
+		</field>
+		<field id="nro_cuenta" esClave="true">
+			<detalle>regcuenta_nro</detalle>
+		</field>      
+		<field id="iva_id" noshow="true">
+			<detalle>regcuenta_ivaid</detalle>
+		</field>
+		<field id="letra" local="true" noshow="true">
+            <valor>X</valor>
+            <detalle>regcuenta_ivaletra</detalle>
+		</field>
+		<field id="percepcion" noshow="true">
+			<detalle>regcuenta_percepcion</detalle>
+		</field>
+		<field id="tel_cuenta" noshow="true">
+			<detalle>regcuenta_telefono</detalle>
+		</field>
+		<field id="stklista_id" noshow="true">
+			<label>lista</label>
+			<detalle>wstklista_id</detalle>
+		</field>
+		<field id="subsistema_id" noshow="true"/>
+		
+		<field id="imputacion_concepto" local="true" valauto="true" noshow="true">
+			<condicion operador="=" valorde="imputacion_concepto" />            
+		</field>
+		<field id="ctbcuenta_id" local="true" noshow="true">
+			<expression>ifnull((SELECT cuenta_id FROM REG_CUENTA_IMPUTACION
+			WHERE REG_CUENTA_IMPUTACION.regcuenta_id = REG_CUENTA.id_regcuenta
+			AND REG_CUENTA_IMPUTACION.doh = (CASE WHEN '[__imputacion_concepto__]' = 0 THEN 0 ELSE 1 END)
+			LIMIT 1), GEN_SUBSISTEMAS.cuenta_debe_id ) 
+			</expression>
+			<detalle>ctbcuenta_id</detalle> 
+		</field>
+		<field id="ctbcuenta_iva_id"  noshow="true">
+			<expression>(SELECT cuenta_debito_id FROM GEN_IVA_ALICUOTAS where GEN_IVA_ALICUOTAS.iva_id = REG_CUENTA.iva_id LIMIT 1)</expression>
+			<detalle>ctbcuenta_iva_id</detalle> 
+		</field>
+
+		<field id="subsistemavendedor_id" noshow="true" local="true" />
+		<field id="subsistematransporte_id" noshow="true" local="true" />
+		<field id="regforma_id" noshow="true" >
+			<detalle>regforma_id</detalle>
+		</field>
+		<field id="imputa_pago" noshow="true" tabla="REG_FORMAS">
+			<detalle>imputa_pago</detalle>
+		</field>
+<!--
+		<field id="regcuentavendedor_id" noshow="true">
+			<expression> select REG_CUENTA_RELACIONES.regcuentarelacionada_id from REG_CUENTA_RELACIONES 
+					WHERE 	REG_CUENTA_RELACIONES.regcuenta_id = REG_CUENTA.id_regcuenta AND 
+						REG_CUENTA_RELACIONES.fecha_vigencia &lt;= STR_TO_DATE('[__fecha_movimiento__]','%d/%m/%y')  AND
+						REG_CUENTA_RELACIONES.subsistemarelacionada_id = '[__subsistemavendedor_id__]' 
+						ORDER BY fecha_vigencia DESC LIMIT 1 </expression>
+			<detalle>regcuentavendedor_id</detalle>
+		</field>
+		
+		// saco transporte de aca 
+		<field id="regcuentatransporte_id" _noshow="true">
+			<expression> select REG_CUENTA_RELACIONES1.regcuentarelacionada_id from REG_CUENTA_RELACIONES as REG_CUENTA_RELACIONES1
+					WHERE 	REG_CUENTA_RELACIONES1.regcuenta_id = REG_CUENTA.id_regcuenta AND 
+						REG_CUENTA_RELACIONES1.fecha_vigencia &lt;= STR_TO_DATE( '[__fecha_movimiento__]','%d/%m/%y')  AND
+						REG_CUENTA_RELACIONES1.subsistemarelacionada_id = '[__subsistematransporte_id__]' 
+						ORDER BY REG_CUENTA_RELACIONES1.fecha_vigencia DESC LIMIT 1 </expression>
+			<detalle>regcuentatransporte_id</detalle>
+		</field>
+		-->
+		<field id="regcuentavendedor_id" noshow="true">
+			<expression> select REG_CUENTA_RELACIONES.regcuentarelacionada_id from REG_CUENTA_RELACIONES 
+					WHERE 	REG_CUENTA_RELACIONES.regcuenta_id = REG_CUENTA.id_regcuenta AND 
+						REG_CUENTA_RELACIONES.fecha_vigencia &lt;= date(now())  AND
+						REG_CUENTA_RELACIONES.subsistemarelacionada_id = '[__subsistemavendedor_id__]' 
+						ORDER BY fecha_vigencia DESC LIMIT 1 </expression>
+			<detalle>regcuentavendedor_id</detalle>
+		</field>
+		
+		// saco transporte de aca 
+		<field id="regcuentatransporte_id" noshow="true">
+			<expression> select REG_CUENTA_RELACIONES1.regcuentarelacionada_id from REG_CUENTA_RELACIONES as REG_CUENTA_RELACIONES1
+					WHERE 	REG_CUENTA_RELACIONES1.regcuenta_id = REG_CUENTA.id_regcuenta AND 
+						REG_CUENTA_RELACIONES1.fecha_vigencia &lt;= date(now())  AND
+						REG_CUENTA_RELACIONES1.subsistemarelacionada_id = '[__subsistematransporte_id__]' 
+						ORDER BY REG_CUENTA_RELACIONES1.fecha_vigencia DESC LIMIT 1 </expression>
+			<detalle>regcuentatransporte_id</detalle>
+			<label>tra</label>
+		</field>		
+		<field id="limite_credito"  noshow="true">
+			<tipo>numeric</tipo>
+			<detalle>limite_credito</detalle>
+	                <format>%15.2f</format>
+		</field>
+
+		<field id="cons_pendiente" local="true" noshow="true">
+			<expression>Select sum(case when imputacion_concepto = 0 then 1 else -1 end * saldo_movimiento) from REG_MOVIMIENTOS  as Pend
+			JOIN REG_CONCEPTOS  c1 ON c1.id_concepto = Pend.concepto_id
+			where Pend.subsistema_id = REG_CUENTA.subsistema_id and c1.informa_calculo = 0
+			and Pend.regcuenta_id = REG_CUENTA.id_regcuenta
+			group by id_regcuenta</expression>
+			<detalle>cons_pendiente</detalle>
+			<tipo>numeric</tipo>
+	                <format>%15.2f</format>
+		</field>
+		<!--
+		<field id="vendedor" noshow="true">
+		    <expression>select regcuentarelacionada_id from REG_CUENTA_RELACIONES where regcuenta_id = id_regcuenta and subsistemarelacionada_id = '[__subsistemavendedor_id__]'</expression>
+		</field>
+		    -->
+		<field id="diferencia" local="true" deshabilitado="true" noshow="true">
+			<label modpos="nobr" style="color:blue"	>Dif.</label>
+			<expression>Select REG_CUENTA.limite_credito - sum(case when imputacion_concepto = 0 then 1 else -1 end * saldo_movimiento) 
+			from REG_MOVIMIENTOS  as Pend
+			JOIN REG_CONCEPTOS  c1 ON c1.id_concepto = Pend.concepto_id
+			where Pend.subsistema_id = REG_CUENTA.subsistema_id and c1.informa_calculo = 0
+			and Pend.regcuenta_id = REG_CUENTA.id_regcuenta
+			group by id_regcuenta</expression>
+			<tipo>numeric</tipo>
+			<detalle>diferencia</detalle>
+	                <format>%15.2f</format>
+
+		</field>
+		<order>
+			<field id="nombre_cuenta">
+				<expression>concat(case when isnull(apellido_cuenta) then '' else apellido_cuenta end, nombre_cuenta)</expression>
+			</field>
+		</order>
+	</table>
+	<join tipo="left">
+		<table id="GEN_PROVINCIAS">
+			<field id="id_provincia">
+				  <condicion operador="=">REG_CUENTA.provincia_id</condicion>
+			</field>
+		</table>
+	</join>
+
+	<join tipo="left">
+		<table id="GEN_LOCALIDADES">
+			<field id="id_localidad">
+				<condicion operador="=">REG_CUENTA.localidad_id</condicion>
+			</field>
+		</table>
+	</join>
+	<join tipo="left">
+		<table id="GEN_IVA">
+			<field id="id_iva">
+				  <condicion operador="=">REG_CUENTA.iva_id</condicion>
+			</field>
+		</table>
+	</join>
+	<join tipo="left">
+		<table id="GEN_SUBSISTEMAS">
+			<field id="id_subsistema">
+				  <condicion operador="=">REG_CUENTA.subsistema_id</condicion>
+			</field>
+		</table>
+	</join>
+	<join tipo="left">
+		<table id="REG_FORMAS">
+			<field id="id_regforma">
+				  <condicion operador="=">REG_CUENTA.regforma_id</condicion>
+			</field>
+		</table>
+	</join>
+  </form>
+</histrix>
+

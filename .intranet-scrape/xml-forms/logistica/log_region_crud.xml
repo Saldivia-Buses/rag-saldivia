@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud">
+	<titulo>REGION LOGISTICA</titulo>
+	<obs></obs>
+	<form>
+		<table id="LOG_REGION" label="Region logística">
+			<field id="id_logregion" noshow="true">
+				<label>Id</label>
+			</field>
+			<field id="nombre_region" required="true">
+				<label>Región</label>
+				<size>50</size>
+			</field>
+			<field id="porcentaje_region" required="true">
+				<label>% Costo</label>
+			</field>
+			<field id="cuenta_importacion" required="true">
+				<label>Cuenta contable</label>
+			</field>
+		</table>
+	</form>	   
+</histrix> 

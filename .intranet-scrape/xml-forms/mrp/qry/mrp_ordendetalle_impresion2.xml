@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+    <title>DETALLE ORDEN PRODUCCION</title>
+    <obs></obs>
+    <form>
+        <table id="STK_BOM" label="Materia Prima">
+            <field id="stkarticulopadre_id" noshow="true" >
+                <label>Padre</label> 
+            </field>
+
+            <field id="stkarticulohijo_id" _noshow="true">
+                <expresion>CONCAT(stkarticulohijo_id,'-', STK_ARTICULOS.nombre_articulo)</expresion>
+            </field>            
+        </table>
+        <join tipo="inner">
+            <table id="STK_ARTICULOS">
+                <field id="id_stkarticulo">
+                    <condicion operador="=">STK_BOM.stkarticulohijo_id</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix>

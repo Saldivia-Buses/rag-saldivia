@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" _logReference="nom" >
+  <title>Licencias</title>
+  <obs/>
+  <form >
+    <table id="FRANCOS_PER" label="Licencias" styleTbody="height:10em;">
+
+      <filters>
+        <field id="legajo" deshabilitado="false">
+          <label>Legajo</label>
+          <operador>=</operador>
+          <detalle>legajo</detalle>
+        </field>
+        <field id="nomapp" local="true" deshabilitado="true">
+          <label>Nombre y Apellido</label>
+        </field>                
+        <field id="fechainicio">
+          <label>Desde</label>
+          <help>Fecha</help>
+          <operador>&gt;=</operador>
+          <valor>today</valor>
+        </field>
+        <field id="fechafin">
+          <label modpos="nobr">Hasta</label>
+          <help>Hasta Fecha</help>
+          <operador>&lt;=</operador>
+          <valor>today</valor>
+        </field>
+      </filters>
+
+      <field id="id" deshabilitado="true" noshow="true" esClave="true" autoinc="true">
+      </field>
+      <field id="IdPersona" deshabilitado="true" oculto="true">
+        <label>Pers</label>
+        <!--  <condicion operador="=">0</condicion>-->
+      </field> 
+      <field id="tipo" deshabilitado="true" oculto="true">
+        <label>tipo</label>
+        <condicion operador="=">0</condicion>      
+      </field>
+      
+      <field id="legajo" _esClave="true" deshabilitado="false" autocompletar="true" oculto="true" >
+        <label>legajo</label>
+        <size>50</size>
+        <tipo>varchar</tipo>
+        <helper type="external" id="PERSONAL" _xml="HLPpersonal.xml" _dir="/help_local">
+          <field id="legajo" esClave="true">
+            <label>Legajo</label>
+            <detalle>legajo</detalle>
+          </field>
+          <field id="nomapp">
+            <label>Nombre y Apellido</label>
+            <expression having="false">CONCAT(apellido, ' ', Nombre)</expression>
+            <detalle>nomapp</detalle>
+          </field>
+          <field id="IdPersona" noshow="true">
+            <label>Nro persona</label>
+            <detalle>IdPersona</detalle>
+          </field>
+          <field id="fechaEgreso" noshow="true">
+            <condicion operador="=">'0000-00-00'</condicion>
+          </field>
+          
+        </helper>
+        <!--        <condicion operador="=">''</condicion>   -->
+      </field>
+      <field id="nomapp" local="true" noshow="true">
+        <label>Nombre y Apellido</label>
+        <size>80</size>
+      </field>                
+      
+      <field id="apellido" tabla="PERSONAL" _noshow="true" deshabilitado="true">
+        <label>Apellido</label>
+      </field>
+      
+      <field id="Nombre"  tabla="PERSONAL" _noshow="true" deshabilitado="true">
+        <label>Nombre</label>
+      </field> 
+
+      <field id="nro" local="true" noshow="true" deshabilitado="true">
+      </field>
+      
+      <field id="idfranco">
+        <tabla_ex id="FRANCOS_CAT">
+          <field id="idfranco"/>
+          <field id="nombre"/>
+        </tabla_ex>
+        <label>Cod.</label>
+        <help>Código de Licencia</help>
+      </field>
+
+      <field id="fechainicio">
+        <label>Desde</label>
+        <help>Fecha</help>
+      </field>
+      <field id="fechafin">
+        <label>Hasta</label>
+        <help>Hasta Fecha</help>
+        <tipo>date</tipo>
+      </field> 
+      <field id="horas">
+        <label>Horas</label>
+        <help>Horas</help>
+        <tipo>varchar</tipo> 
+        <size>8</size>       
+      </field>
+      
+      <!--
+      <filters>
+      <field id="IdSindicato">
+      <label>sindicato</label>
+      <tabla_ex id="SINDICATO">
+      <field id="IdSindicato"/>
+      <field id="Nombre"/>
+    </tabla_ex>
+      <help>Sindicato</help>
+      <operador>=</operador>
+      <valor>1</valor>
+      <actualiza>
+      
+      <field destino="IdSindicato" id="Id_area"/>
+      <field destino="IdSindicato" id="IdCateg"/>          
+      
+    </actualiza>
+    </field>
+      <field id="Id_area">
+      <label>Area</label>
+      <tabla_ex id="AREASSIND">
+      <field id="Id_area"/>
+      <field id="descripcion"/>
+      <field id="IdSindicato">
+      
+    </field>
+    </tabla_ex>
+      
+      <operador>=</operador>
+      <actualiza>
+      <field destino="Id_area" id="IdCateg"/>
+    </actualiza>        
+    </field>
+      <field id="IdCateg" >
+      <label>Categoria</label>
+      <tabla_ex id="CATPERSONAL">
+      <field id="IdCateg"/>
+      <field id="descripcion"/>
+      <field id="IdSindicato" />  
+      <field id="Id_area"/>                    
+    </tabla_ex>
+    </field>         
+      <field id="IdConvenio">
+      <label>Convenio</label>
+      <tabla_ex id="CONVENIOS">
+      
+      <field id="IdConvenio"/>
+      <field id="Nombre"/>
+    </tabla_ex>
+      <operador>=</operador>          
+      <valor>1</valor>
+    </field>  
+    </filters> -->
+    </table>
+    <join tipo="left">
+      <table id="PERSONAL">
+        <field id="IdPersona">
+          <condicion operador="=">FRANCOS_PER.IdPersona</condicion>
+        </field>
+        <field id="legajo">
+          <condicion operador="=">FRANCOS_PER.legajo</condicion>
+        </field>
+        
+        
+      </table>
+    </join>        
+  </form>
+</histrix>
+

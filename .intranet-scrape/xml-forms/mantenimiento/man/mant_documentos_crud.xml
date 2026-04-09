@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  CRUD
+Tarea: Tabla de Documentos del vehiculo
+Autor: 
+Fecha: 24/08/12
+*******************************************************************************
+-->
+    <histrix tipo="abm">
+	<title>Documentos</title>
+	 <obs></obs>
+		<form>
+		    <table id="MANT_DOCUMENTOS" label="Documentos">
+				<field id="id_mantdocumento" esClave="true" autoinc="true" noshow="true" />
+
+				<field id="nombre_documento">
+					<label>Documento</label>
+					<help>Nombre del documento</help>
+				</field>
+
+				<field id="abreviatura">
+					<label>Abrev.</label>
+					<help>Abreviatura del documento</help>
+				</field>
+				
+		    </table>
+		</form>
+    </histrix>	

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="ayuda">
+	<title>CUENTAS</title>
+	<obs></obs>
+	<consulta>
+		<table id="CCTCUENT" label="Ayuda de Cuenta">
+
+			<field id="ctacod" >
+				<label>Cuenta</label>
+				<help>Codigo de Cuenta </help>
+			</field>
+			
+			<field id="ctanom" >
+				<label>Nombre</label>
+				<help>Nombre de Cuenta </help>
+			</field>
+			<field id="baja" noshow="true">
+					<label>baja</label>						
+					<condicion operador="!=">1</condicion>
+			</field>				
+			<field id="identificacion" tabla="GEN_SUBSISTEMAS">
+				<label>Sistema</label>
+			</field>						
+			<order>
+				<field id="CCTCUENT.ctanom" ></field>
+			</order>			
+		</table>
+		<join tipo="left">
+		    <table id="GEN_SUBSISTEMAS">
+			<field id="id_subsistema">
+			    <condicion operador="=">CCTCUENT.siscod</condicion>
+			</field>
+		    </table>
+		</join>
+	</consulta>
+</histrix>

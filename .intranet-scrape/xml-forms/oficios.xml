@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="crud">
+	<title>OFICIOS</title>
+	<obs/>
+	<form >
+		<table id="RH_OFICIOS" label="Oficios">
+			<field id="idOficio" autoinc="true" noshow="true">
+				<label>Cod.Oficio</label>
+				<help>Codigo de Oficio</help>
+			</field>
+
+			<field id="nombre">
+				<label>Nombre</label>
+				<help>Nombre del Oficio</help>
+			</field>
+			<field id="descripcion">
+				<label>Descripcion</label>
+				<help>Descripcion del Accidente</help>
+			</field>
+			<field id="tarea">
+				<label>Tarea del Oficio</label>
+				<help>Tarea del Oficio</help>
+				<tipo>varchar</tipo>
+				<size>200</size>
+			</field>
+		</table>
+
+	</form>
+</histrix>

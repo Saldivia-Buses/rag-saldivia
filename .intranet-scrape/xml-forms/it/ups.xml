@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="consulta">
+        <title>titulo</title>
+        <obs></obs>
+        <form>
+            <table id="ASTERIX_CDR" label="etiqueta">
+                 <field id="src" >
+                       <label>Origen</label>
+                       <help>Origen LLamada</help>
+                       <condicion operador="=">100</condicion>                 
+              
+              </field>
+
+                 <field id="dst">
+                 <label>Destino</label>
+                </field>
+
+
+
+
+
+            </table>
+        </form>
+    </histrix>
+

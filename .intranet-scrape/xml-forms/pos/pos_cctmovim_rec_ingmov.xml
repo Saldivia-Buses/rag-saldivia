@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="insert" grabafinal="true" postGrabacion="true">
+       <title>recibos</title>
+        <obs></obs>
+               <consulta>
+					<table id="CCTMOVIM" label="recibo" idCampoCond="imputado">
+						<field id="siscod" id_padre="siscli">
+							<valor>'02'</valor>
+						</field>
+						<field id="concod" id_padre="conpag">
+    						    <valor>4</valor>
+						</field>
+
+						<field id="succod" >
+							<valor>1</valor>
+						</field>
+						<field id="movnpv" id_padre="movnpv"></field>
+						<field id="movnro" id_padre="nrorec"></field>
+						<field id="movimp" id_temp="imputado"></field>
+						<field id="opecla" id_padre="opecla"></field>
+						<field id="ctacod" id_padre="ctacod"></field>
+						<field id="ctanom" id_padre="ctanom"></field>
+						<field id="movfec" id_padre="movfec"></field>
+						<field id="regfec" id_padre="movfec" ></field>
+						<field id="movlet" id_padre="movlet"></field>
+					</table>
+               </consulta>
+        </histrix>

@@ -1,0 +1,521 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="crud" subtipo="vertical"  path="fotos/homologaciones/">
+  <title>HOMOLOGACION POR MODELO</title>
+  <obs/>
+  <form >
+    <table id="HOMOLOGMOD">
+      <title>Homologaciones por modelo</title>
+      <filters auto="true">  
+    
+        <field id="id_homologacion">
+    	    <label modpos="nobr" >ID</label>
+    	    <operador>=</operador>
+        </field>
+
+        <field id="marcod">
+    	    <label modpos="nobr" >Marca</label>
+    	    <operador>=</operador>
+        </field>
+
+      <field id="baja">
+          <operador>=</operador>
+          <label modpos="nobr">Estado</label>
+          <valor>0</valor>
+      </field>
+
+      <field id="nrocar">
+          <operador>=</operador>
+          <label modpos="nobr">Modelo</label>
+      </field>
+
+      <field id="banbar">
+          <operador>=</operador>
+          <label modpos="nobr">Baño</label>
+      </field>
+
+      </filters>
+      <field id="id_homologacion" _noshow="true" deshabilitado="true" autoinc="true" >
+          <label>Hom.</label>
+      </field>
+
+      <field id="artcod_id" colstyle="display:none"> 
+	<label _modpos="nobr">Artículo</label>
+                <ayuda_ex id="STKINSUM" xml="HLPstkinsum.xml" dir="/help_local">
+                    <field id="artcod" >
+                        <label>Cod.</label>
+                    </field>
+                    <field id="artdes">
+                	<expression>concat(artcod,' - ',artdes)</expression>
+                        <label>Insumo</label>
+                        <detalle>artdes</detalle>
+                    </field>
+		</ayuda_ex>
+    </field>
+
+
+      <field id="baja">
+        <label modpos="nobr" colstyle="display:none;">Estado</label>
+        <options>
+          <option valor="0">Activo</option>
+          <option valor="1">No Activo</option>          
+        </options>
+      </field>
+
+      <field id="Atrib" local="true" Formstyle="display:none;">
+	    <valor>'Atrib'</valor>
+            <helper type="link" xml="htx_table_attributes.xml" dir="/attributes" >
+		    <parameter source="id_homologacion" target="record_id" />
+		    <parameter target="table_name" source="HOMOLOGMOD" />
+	    </helper>
+	    
+	</field>
+      
+      <field id="modelo_lcm_id" required="true">
+            <label modpos="nobr">Carrocería Chasis LCM MaxAsientos</label>
+            <helper type="combo" xml="prod_modelo_lcm_qry.xml" empty="true">
+                  <field id="marcod">
+                        <expression>marcod</expression>
+                        <detalle>marcod</detalle>
+                  </field>
+                  <field id="nrocar">
+                        <expression>nrocar_id</expression>
+                  </field>
+                  <field id="lcm">
+                        <expression>numero_lcm</expression>
+                  </field>
+             </helper>
+      </field>
+
+      <field id="nroc2" noshow="true">
+        <expression>HOMOLOGMOD.nrocar</expression>
+        <tipo>integer</tipo>
+      </field>
+      <field id="modc2" noshow="true">
+        <expression>HOMOLOGMOD.modcha</expression>
+      </field>
+
+      <field id="nrocar" deshabilitado="true">
+        <label colstyle="display:none;">Carrocería</label>
+        <tabla_ex id="CARROCERIA" vacio="true">
+          <field id="nrocar">
+            <label>Código</label>
+          </field>
+          <field id="desabv">
+            <label>Modelo</label>
+          </field>
+	    <field id="vigente">
+		<condicion operador="=">1</condicion>
+	    </field>
+          <order>
+            <field id="desabv" />
+          </order>          
+        </tabla_ex>
+      </field>
+
+      <field id="marcod" sincelda="true" deshabilitado="true">
+        <label modpos="nobr" colstyle="display:none;">Marca</label>
+        <help>Marca del Chasis</help>
+        <helper type="combo" id="MARCHASIS" empty="true">
+          <field id="marcod" clave="true" />
+          <field id="mardes"/>
+          <order>
+            <field id="mardes" tipoOrden="DESC" />
+          </order>
+        </helper>
+                <actualiza>
+                    <field destino="modelo_id" id="modcod"/>
+                </actualiza>
+         
+      </field>
+
+      <field id="modelo_id" deshabilitado="true">
+        <label modpos="nobr" colstyle="display:none;">Modelo</label>
+        <help>Modelo del Chasis</help>
+        <tabla_ex id="MODCHASIS" vacio="true">
+          <field clave="true" id="id_modelo">
+            <label>Modelo</label>
+            <help>Codigo del Modelo de Chasis</help>
+          </field>
+          <field id="moddes">
+              <label>Descripción</label>
+              <help>Descripción del Modelo</help>
+              <expression>CONCAT(MODCHASIS.desabv, ' ', (case when MODCHASIS.euro_id = 1 then 'E3' else (case when MODCHASIS.euro_id = 2 then 'E5' else '' end) end))</expression>
+          </field>
+          <field id="marcod" oculto="true">
+            <label>Marca Chasis</label>
+          </field>
+          <field id="modcha">
+            <detalle>modcha</detalle>
+          </field>
+        </tabla_ex>
+      </field>
+
+      <field id="modcha" colstyle="display:none;" Formstyle="display:none;">
+          <label modpos="nobr">Chasis</label>
+      </field>
+
+      <field id="lcm"  linkdes="Fotos" linkdir="/fabricacion/" deshabilitado="true" noshow="true">
+        <label modpos="nobr">L.C.M. Nro</label>
+        <help>Número de Licencia de Configuración de Modelo</help>
+        <paring destino="lcm" >lcm</paring>
+      </field>
+
+      <field id="asientos" required="true">
+        <label>Asientos</label>
+        <help>Cantidad de Asientos</help>
+      </field>
+
+      <field id="asientos_plantabaja" noZero="true">
+        <label modpos="nobr">As.PB</label>
+        <label>Cantidad de Asientos Planta Baja</label>
+      </field>
+
+       <field id="acompañante">
+        <label modpos="nobr">Acomp.</label>
+        <help>Acompañante</help>
+        <options>
+            <option valor="1">Integrado</option>
+            <option valor="0">En Cabina</option>
+            <option valor=""></option>
+        </options>
+      </field>
+
+       <field id="guia" sincelda="true">
+        <label modpos="nobr">guía</label>
+        <help>Guía</help>
+        <options>
+            <option valor=""></option>
+            <option valor="0">No</option>
+            <option valor="1">Si</option>
+        </options>
+      </field>
+
+       <field id="auxiliar" sincelda="true">
+        <label modpos="nobr">Camarera</label>
+        <help>Auxiliar</help>
+        <options>
+            <option valor=""></option>
+            <option valor="0">No</option>
+            <option valor="1">Si</option>
+        </options>
+      </field>
+
+
+       <field id="banbar">
+        <label>B/B</label>
+        <help>Bar y Baño</help>
+        <options>
+            <option valor=""></option>
+            <option valor="0">No</option>
+            <option valor="1">Si</option>
+        </options>
+      </field>
+      <field id="tipserv" sincelda="true">
+        <label  modpos="nobr">Tipo Serv.</label>
+        <help>Tipo de Servicio</help>
+        <tabla_ex id="TIPOSERVICIO">
+                        <field id="tipserv">
+                        </field>
+                        <field id="servdes">
+                        </field>          
+        </tabla_ex>
+      </field>
+      <field id="plano">
+        <label modpos="nobr">Plano Nro</label>
+        <help>Número de Plano</help>
+      </field>  
+      <field id="expte">
+        <label modpos="nobr" >Expte Nro</label>
+        <help>Número de Expediente</help>
+      </field>
+      <field id="dispos">
+        <label _modpos="nobr">Disposición</label>
+        <help>Disposición</help>
+      </field>
+      
+      
+      
+      <field id="fechaAprob">
+        <label modpos="nobr">Fecha Aprob.</label>
+        <help>Fecha de Aprobación</help>
+      </field>
+      
+       <field id="fechaVto">
+        <label modpos="nobr">Fecha Vto.</label>
+        <help>Fecha de Vencimiento</help>
+         <tipo>date</tipo>
+          
+      </field>
+      
+      <field id="tara" noZero="true">
+        <label >Tara</label>
+        <help>Tara</help>
+      </field>
+      <field id="bruto"  noZero="true">
+        <label modpos="nobr">Peso Bruto</label>
+        <help>Peso Bruto</help>
+      </field>
+      <field id="admisible">
+        <label modpos="nobr">Peso Adm (Ton)</label>
+        <help>Peso Máximo Admisible en toneladas</help>
+        <size>2</size>
+      </field>      
+
+
+      <field id="idLargo" deshabilitado="true" _required="true" noshow="true">
+  <label>Largo (int)</label>
+  <helper type="combo" id="TIPOLARGO">
+      <field id="idLargo" />
+      <field id="desc">
+    <expression>CONCAT(desde, '-', hasta)</expression>
+      </field>
+  </helper>
+      </field>
+
+
+      <field id="largo" required="true">
+        <label modpos="nobr">Largo</label>
+        <help>Largo en metros</help>
+      </field>
+      <field id="bodega">
+        <label modpos="nobr">Bodega</label>
+        <help>Capacidad de bodega en m3</help>
+      </field>      
+      
+      <field id="capacidad_combustible">
+        <label modpos="nobr">Capac. Combust.</label>
+        <help>Capacidad de combustible en Lts.</help>
+        <tipo>decimal</tipo>
+      </field> 
+<!--    
+      <field id="inti">
+        <label >Expte. I.N.T.I.</label>
+        <help>Número de Expediente del I.N.T.I.</help>        
+      </field>
+      
+      <field id="industria">
+        <label modpos="nobr">Expte. Industria</label>
+        <help>Número de Expediente de Secretaría de Industria</help>
+      </field>
+     
+      <field id="expediente_lcm_id" colstyle="display:none;" deshabilitado="true">
+	<label>LCM</label>
+	<helper xml="prod_lcm_qry.xml" type="combo" >
+	</helper>
+      </field>
+
+      <field id="linkexp" Formstyle="display:none;">
+	    <label>Exp.LCM</label>
+		<expression>expediente_lcm_id</expression>
+	<helper xml="prod_lcm_crud.xml" type="link" width="85%" title="LCM">
+	    <parameter source="expediente_lcm_id" target="expediente_lcm" />
+	</helper>
+      </field>
+
+      <field id="hasLCM" noshow="true">
+        <expression>select (case when count(*) >= 1 then 'imp_lcm.xml'  else '' end) from LCMFOTOS where LCMFOTOS.lcm = HOMOLOGMOD.lcm</expression>
+      </field>
+
+      <field id="wmi" local="true">
+        <valor>'8A9'</valor>
+        <tipo>varchar</tipo>
+      </field> 
+
+      <field id="vds" local="true">
+        <label >vds</label>
+        <expression>concat('8A9',MODCHASIS.codigo , CARROCERIA.codvds , LPAD(admisible, 2,'0'))</expression>
+        <tipo>varchar</tipo>
+      </field>
+
+
+      <field id="vin">
+        <label modpos="nobr">Nro VIN</label>
+        <help>Número de VIN</help>        
+      </field> 
+
+
+-->
+      <field id="obs">
+        <label _modpos="nobr">Obs.</label>
+        <help>Observaciones</help>
+      </field>
+      <field id="referencia">
+        <label modpos="nobr">Referencia</label>
+        <help>Datos extras salen en el Nombre</help>
+        <size>30</size>
+      </field>
+<!--
+       <field id="fotos" obj="lcm_file.xml" showInForm="false" showObjTabla="false" showValor="true" linkint="lcm_file.xml" linkdes="LCM" local="true" >
+        <label style="color:#444; ">Doc. Lcm</label>
+        <paring destino="homologacion_id" >id_homologacion</paring>
+        <valor>'LCM'</valor>
+        <tipo>varchar</tipo>
+      </field>      
+-->
+                                
+
+      <field id="certif" deshabilitado="true" local="true" linkint="certmodelo_presentacion.xml" linkdes="Certificado Modelo Presentacion" Formstyle="display:none;" >
+        <expression>'Cert.Mod.Pres.'</expression>
+        <label>Cert.Mod. Presentación</label>
+        <tipo>varchar</tipo>
+        <valor>"Imprimir Cert.Mod.Presentación"</valor>
+        <paring destino="id_homologacion" >id_homologacion</paring>
+      </field>
+
+      <field id="fotos_modelo"   linkdes="Fotos"  >
+        <label style="color:#444; ">Fotos Patent.</label>
+
+	<helper  type="link" xml="homolfotos.xml" dir="/fabricacion" >
+	    <parameter source="id_homologacion" target="homologacion_id" />
+	</helper>
+        <expression>select (case when count(*) != 0 then CONCAT(count(*) , ' Fotos') else 'CARGAR' end ) from HOMOLFOTOS where HOMOLFOTOS.homologacion_id = HOMOLOGMOD.id_homologacion</expression>
+            <tipo>varchar</tipo>
+      </field>
+
+      <field id="chasis_plano">
+        <label>Plano Chasis</label>
+      </field>
+      <field id="chasis_expte">
+        <label modpos="nobr">Expte Chasis</label>
+      </field>
+      <field id="chasis_disposicion">
+        <label modpos="nobr">Dispoc Chasis</label>
+      </field>          
+      <field id="chasis_eje_delantero" colstyle="display:none;">
+        <label _modpos="nobr">Chasis Eje Del.</label>
+      </field>                
+      <field id="chasis_eje_trasero" colstyle="display:none;">
+        <label modpos="nobr">Chasis Eje Tras.</label>
+      </field>                
+      <field id="chasis_modificacion" colstyle="display:none;">
+        <label modpos="nobr">Chasis Modif</label>
+      </field>                
+      <field id="proximo_codigo" noshow="true">
+        <expression>(select max(id_stkarticulo)  + 1 from STK_ARTICULOS where stkrubro_id = 9 and stksubrubro_id = 0 and ncm != '' and id_stkarticulo like '900%')</expression>
+      </field>	
+
+      <field id="nombre_comercial" noshow="true" >
+          <expression> (case when desc_comercial != '' then desc_comercial else 
+CONCAT(ifnull(CARROCERIA.desabv, ''),'-',
+       ifnull(MARCHASIS.desabv, ''),'-',
+       ifnull(MODCHASIS.desabv, ''), '-'  , ifnull( (case when CARROCERIA.doble_piso = 1 then (CONCAT(HOMOLOGMOD.asientos, '+', HOMOLOGMOD.asientos_plantabaja)) else (HOMOLOGMOD.asientos + HOMOLOGMOD.acompañante) end), ''),
+ ifnull((case when banbar = 1 then 'BB' end), ''),'-', round(largo / (case when largo &gt; 100 then 1000 else 1 end), 1)   ) end)</expression>
+        
+      </field>      
+
+      <field id="faltacodigo" noshow="true" clasefila="true" local="true">
+        <expression>(case when codigo_comercial = '' then 'stkarticulo_comercial_new.xml' end)</expression>
+      </field>
+
+      <field id="crear_codigo" Formstyle="display:none;">
+          <expression>(case when codigo_comercial = '' then 'Crear Código Comercial' else codigo_comercial end)</expression>
+          <attribute id="linkint">faltacodigo</attribute>
+          <helper type="link" xml="stkarticulo_comercial_new.xml" dir="/stock/man/">
+	      <parameter source="id_homologacion" target="id_homologacion" />
+              <parameter source="nombre_comercial" target="nombre_articulo" />
+              <parameter source="proximo_codigo"   target="id_stkarticulo" />
+              <parameter source="87.07.90.90"      target="ncm" />
+              <parameter source="1"      target="gravado" />
+              <parameter source="2"      target="ivaregimen_id" />
+              <parameter source="9"      target="stkrubro_id" />
+              <parameter source="0"      target="stksubrubro_id" />
+              <parameter source="2"      target="unidad_id" />
+              <parameter source="2"      target="unidad_uso_id" />
+              
+
+          </helper>
+      </field>
+
+      <field id="color" noshow="true" clasefila="true" local="true">
+        <expression>(case when codigo_comercial = '' then 'error' end)</expression>
+      </field>
+
+      <field id="codigo_comercial" colstyle="display:none;">
+        <label _modpos="nobr">Código Comercial</label>
+        <helper type="external" id="STK_ARTICULOS" _xml="HLPstkinsum.xml"  >
+          <field id="id_stkarticulo" >
+            <label>Cod.</label>
+          </field>
+          <field id="nombre_articulo">
+            <label>Insumo</label>
+          </field>
+        <field id="stkrubro_id">
+          <condicion operador="=">9</condicion>    
+        </field>
+        <field id="stksubrubro_id">
+        <condicion operador="=">0</condicion>    
+        </field>
+        </helper>
+
+	<size>25</size>
+      </field>                
+      <field id="desc_comercial">
+        <label modpos="nobr">Descripción Comercial</label>
+	<size>30</size>
+      </field>         
+
+      <field id="hi" deshabilitado="true" clasefila="true" noshow="true" local="true">
+        <if exp="baja == 1">
+          <true>'grisado'</true>
+          <false>''</false>
+          
+        </if>
+        <tipo>varchar</tipo>
+              
+      </field>        
+    <field id="planospdf" local="true" path="id_homologacion" _imageWidth="165"> 
+	<label>Planos Adj.</label>
+        <expression>CONCAT('/fotos/homologaciones/',id_homologacion,'/')  </expression>
+	<tipo>dir</tipo>
+    </field>  
+
+    <field id="xml_consulta" local="true" noshow="true">
+      <valor>'homologacion_modelo.xml'</valor>
+    </field>
+
+    <field id="nombre_id_registro" local="true" noshow="true">
+      <valor>'Hom.'</valor>
+    </field>
+
+    <field id="log" local="true" linkint="registros_log_qry.xml" linkdir="/calidad/qry/" linkdes="Historial" print="false" >
+          <label>Hist</label>
+          <paring destino="xml_consulta">xml_consulta</paring>   
+          <paring destino="id_registro">id_homologacion</paring>   
+          <paring destino="nombre_id_registro">nombre_id_registro</paring>   
+      <expression>'Hist.'</expression>  
+    </field>      
+      <order>
+        <field id="baja"></field>
+        <field id="nrocar" tabla="HOMOLOGMOD"></field>
+        <field id="moddes" tabla="MODCHASIS"></field>
+        <field id="asientos" ></field>
+
+      </order>
+    </table>
+    <join tipo="left">
+       <table id="CARROCERIA">
+          <field id="nrocar">
+                 <condicion operador="=">HOMOLOGMOD.nrocar</condicion>
+          </field>
+        </table>
+    </join>
+    <join tipo="left">
+      <table id="MARCHASIS">
+        <field id="marcod">
+          <condicion operador="=">HOMOLOGMOD.marcod</condicion>
+        </field>
+      </table>
+    </join>    
+    <join tipo="left">
+      <table id="MODCHASIS">
+        <field id="modcha">
+          <condicion operador="=">HOMOLOGMOD.modcha</condicion>
+        </field>
+        <field id="marcod">
+          <condicion operador="=">HOMOLOGMOD.marcod</condicion>
+        </field>
+      </table>
+    </join>
+    
+  </form>
+</histrix>

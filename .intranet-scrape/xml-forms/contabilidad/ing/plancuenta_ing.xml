@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="fichaing" inserta="false" modifica="false" borra="false" procesa="true" imprime="false">
+    <title>Plan de Cuentas</title>
+    <obs></obs>
+    <confirmacion><![CDATA[¿Desea Inicializar el Plan de Cuentas?]]></confirmacion>
+    <form>
+        <table id="CTB_CUENTAS" label="Plan de Cuentas">
+
+            <movimientos>
+                <relacion id="plancuenta_ins.xml" />
+            </movimientos>
+
+            <field id="ejercicio_origen_id" local="true" noshow="true" />
+
+            <field id="ejercicio_destino_id" local="true" noshow="true" />
+
+        </table>
+
+    </form>
+</histrix>

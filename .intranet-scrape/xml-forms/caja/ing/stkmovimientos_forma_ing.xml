@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" subtipo="vertical" exportasuma="true" imprime="false" llenoTemporal="false" llenoreferente="true" tooltip="false">
+    <title>Movimientos de Stock</title>
+    <form>
+
+        <table id="STK_MOVIMIENTOS" label="Movimientos de Stock">
+
+            <movimientos>
+                <relacion id="stkmovimientos_forma_ins.xml"/>
+            </movimientos>
+
+            <field id="id_stkmovimiento" esClave="true" noshow="true">
+                <condicion operador="=">-1</condicion>
+            </field>
+
+            <fieldGroup noshow="true" valauto="true">
+                <field id="cajformapago_id" local="true" esClave="true">
+                    <detalle>cajformapago_id</detalle>
+                </field>
+                <field id="subsistema_forma_id" local="true" />
+                <field id="regconcepto_forma_id" local="true" />
+                <field id="stkconcepto_forma_id" local="true" />
+                <field id="moneda_id" local="true" />
+                <field id="fecha_movimiento" />
+                <field id="puesto_movimiento" />
+                <field id="nro_movimiento" local="true" />
+            </fieldGroup>
+
+            <field id="codigo_barra" deshabilitado="false" esClave="true" required="true">
+                <label>Cod. Barra</label>
+                <helper type="external" xml="stkarticulo_pos.xml" dir="/ayudas">
+                    <field id="wstklista_id" local="true" noshow="true">
+                        <label>Lista</label>
+                        <valor>1</valor>
+                    </field>
+                </helper>
+                <size>15</size>
+            </field>
+
+            <field id="descripcion_detalle" deshabilitado="true" sincelda="true">
+                <label modpos="nobr" />
+                <size>30</size>
+            </field>
+
+            <field id="stkdeposito_id">
+                <label modpos="nobr">Depósito</label> 
+                <helper type="combo" xml="stkdepositopos_qry.xml" dir="/ayudas" />
+            </field>
+
+            <field id="cantidad" required="true">
+                <label>Cantidad</label>
+                <tipo>integer</tipo>
+                <valor>1</valor>
+                <size>4</size>
+            </field>
+
+            <!-- PRECIOS -->
+
+            <field id="precio_venta" local="true" esClave="true" required="true">
+                <label modpos="nobr">Precio</label>
+                <tipo>numeric</tipo>
+                <size>20</size>
+                <jseval campodestino="precio_total">precio_venta * cantidad</jseval>
+            </field>
+
+            <field id="precio_total" suma="true" deshabilitado="true">
+                <label modpos="nobr">Total</label>
+                <tipo>decimal</tipo>
+                <detalle>pago_valor</detalle>
+            </field>           
+                
+            <!-- MOVIMIENTOS DE STOCK -->
+            
+            <fieldGroup local="true" noshow="true">
+                <field id="stkarticulo_id"/>
+                <field id="stkunidad_id"/>
+                <field id="stksector_id"/>
+                <field id="stkfamilia_id"/>
+                <field id="stkrubro_id"/>
+                <field id="precio_costo"/>
+            </fieldGroup>
+
+        </table>
+    </form>
+</histrix>

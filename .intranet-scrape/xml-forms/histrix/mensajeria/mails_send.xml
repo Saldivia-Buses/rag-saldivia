@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="fichaing" class="consultaancha" imprime="false" tabindex="1000" borra="false" tooltip="false" inserta="false" modifica="false" path="../tmp" btnconfirma="ENVIAR" hasFieldset="false" preFetch="false">
+	<title>Enviar Correo</title>
+	<obs/>
+	
+	<eventos>
+		<event id="procesar">close</event>
+	</eventos>
+	
+	<form>
+		<table id="HTXMAIL" label="enviar Correo" styleTbody="height:325px;overflow-x:hidden;">
+			
+			<movimientos>
+				<relacion id="mails_send_ingmov.xml"/>
+			</movimientos>
+    
+			<validation>
+			    <condition><![CDATA[para == '' ]]></condition>
+			    <message>Debe ingresar un destinatario</message>
+			</validation>
+			
+			<field autoinc="true" id="idMail" noshow="true" tipoOrden="DESC" />
+
+			<field id="nom" local="true" noselect="true" noshow="true">
+				<valor eval="true">$_SESSION['usuario']</valor>
+				<tipo>varchar</tipo>
+			</field>
+			
+			
+			
+			<field id="fromName" deshabilitado="true" valoropcion="true" noshow="true">
+				<size>10</size>
+				<tabla_ex id="HTXUSERS">
+					<field id="login2">
+						<expression>LCASE(login)</expression>
+					</field>
+					<field id="email">
+						<expression>concat(Nombre,' ' ,apellido)</expression>
+					</field>
+				</tabla_ex>
+				<tipo>varchar</tipo>
+				<valor eval="true">strtolower ( $_SESSION['usuario'])</valor>
+				<condicion operador="=" valorde="nom"/>
+			</field>
+			
+			<field id="de" deshabilitado="true" valoropcion="true">
+				<label>de</label>
+				<size>10</size>
+				<tabla_ex id="HTXUSERS">
+					<field id="login2">
+						<expression>LCASE(login)</expression>
+					</field>
+					<field id="email">
+						<expression>LCASE(email)</expression>
+					</field>
+				</tabla_ex>
+				<tipo>varchar</tipo>
+				<valor eval="true">strtolower( $_SESSION['usuario'] )</valor>
+				<condicion operador="=" valorde="nom"/>
+			</field>
+			
+
+			
+			<field id="FFfecha" valauto="true" deshabilitado="true">
+				<label modpos="nobr">Fecha</label>
+				<valor>today</valor>
+				<tipo>date</tipo>
+			</field>
+			
+			<field id="HHhora" valauto="true" deshabilitado="true" sincelda="true" oculto="true">
+				<label modpos="nobr">Hora</label>
+				<valor eval="true">date('H:i:s')</valor>
+				<tipo>varchar</tipo>
+			</field>
+
+			<field id="para" autocompletar="true" validar="false">
+				<label colspan="4">Para</label>
+				<helper xml="htxaddressbook_qry.xml" type="external">
+					<field id="value">
+						<expression having="false">trim(value)</expression>
+						<label>email</label>
+						<detalle>para</detalle>
+					</field>
+					<field id="vcard_type" noshow="true">
+						<condicion operador="like">'%EMAIL%'</condicion>
+					</field>
+				</helper>
+				<size>55</size>
+			</field>
+		
+			<field id="cc_email" autocompletar="true" validar="false">
+				<label colspan="4">CC</label>
+				<helper id="HTXADDRESSBOOK" type="external">
+					<field id="name1">
+						<label>Nombre</label>
+						<expression>concat(first_name, ' ', last_name,' ',value)</expression>
+					</field>
+					<field id="value">
+						<expression having="false">trim(value)</expression>
+						<label>email</label>
+						<detalle>cc_email</detalle>
+					</field>
+					<field id="vcard_type" noshow="true">
+						<condicion operador="like">'%EMAIL%'</condicion>
+					</field>
+				</helper>
+				<size>55</size>
+			</field>
+			
+			<field id="subject">
+				<label colspan="4">Asunto</label>
+				<tipo>varchar</tipo>
+				<size>55</size>
+			</field>
+			
+			<!-- <field id="checkAdjunto" ><label colspan="4">Adjunto</label><tipo>check</tipo></field> -->
+			
+			<field id="adjunto" local="true" deshabilitado="true" noselect="true" imagen="true" hidden="true">
+				<label colspan="4">Adjuntos</label>
+				<tipo>file</tipo>
+				<size>50</size>
+			</field>
+			
+			<field id="separator1" local="true" deshabilitado="true">
+				<label colspan="3">.</label>
+				<size>1</size>
+			</field>
+			
+			<field id="chk_adj" local="true" sincelda="true">
+				<label modpos="nobr">Enviar Adjuntos</label>
+				<tipo>check</tipo>
+				<valor>1</valor>
+			</field>
+			
+			<field id="chkFadj" local="true" sincelda="true">
+				<label modpos="nobr">Adjuntar Fotos Internas</label>
+				<tipo>check</tipo>
+				<valor>1</valor>
+			</field>
+			
+
+			<field id="filesArray" local="true" deshabilitado="true" noselect="true" imagen="true" hidden="true" sincelda="true" oculto="true">
+				<label modpos="nobr"/>
+				<tipo>file</tipo>
+				<size>50</size>
+			</field>
+			
+			<field id="mensaje" deshabilitado="false" local="true">
+				<label colspan="3">mensaje</label>
+				<help>Texto del mensaje</help>
+				<tipo>simpleditor</tipo>
+				<size>300</size>
+					
+			</field>
+			
+			<field id="separator2" local="true" deshabilitado="true">
+				<label colspan="3">.</label>
+				<size>1</size>
+			</field>
+			
+			<field id="chk_enviarmecopia" local="true" sincelda="true">
+				<label modpos="nobr">Enviarme una copia</label>
+				<tipo>check</tipo>
+				<valor>0</valor>
+			</field>
+
+			<order>
+				<field id="idMensaje"/>
+			</order>
+			
+		</table>
+
+	</form>
+</histrix>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud">
+  <title>Provincias</title>
+  <obs></obs>
+  <form>
+    <table id="GEN_PROVINCIAS" label="Provincias">
+      <field id="id_provincia" autoinc="true" noshow="true">
+        <label>Código </label>
+        <help>Código de provincia </help>
+      </field>
+     <!--  <field id="nacionalidad_id">
+        <helper type="combo" xml="pais_qry.xml" dir="/ayudas" />
+        <label>Pais</label>
+      </field> -->
+
+      <field id="nacionalidad_id" required="true" style="padding:2px 2px 2px 2px;width:250px;vertical-align:middle;">
+          <label >País</label>
+          <helper id="GEN_NACIONALIDADES" type="combo" empty="true">
+              <field id="id_nacionalidad" >
+                <condicion operador="=">14 OR id_nacionalidad = 16</condicion>
+              </field>
+              <field id="pais" />
+            <order>
+                    <field id="pais" />
+            </order>
+          </helper>
+          <actualiza>
+                <field id="provincia_id" destino="nacionalidad_id"/>
+            </actualiza>
+        </field>  
+
+      <field id="nombre_provincia" required="true">
+        <label>Nombre </label>
+        <help>Nombre de la provincia</help>
+        <size>15</size>
+      </field>
+      <field id="abreviacion_provincia">
+        <label>Abreviación</label>
+        <help>Nombre abreviado de la provincia</help>
+      </field>
+      <order>
+        <field id="nacionalidad_id" />
+        <field id="nombre_provincia" />
+      </order>
+    </table>
+  </form>
+</histrix>  
+
+          
+
+        <!-- <field id="provincia_id" sincelda="true" style="padding:2px 2px 2px 2px;width:250px;vertical-align:middle;">
+              <label modpos="nobr">Provincia</label>
+              <helper id="GEN_PROVINCIAS" type="combo" empty="true">
+              <field id="id_provincia" />
+              <field id="nombre_provincia" />
+              <field id="nacionalidad_id" oculto="true"/>
+            <order>
+                    <field id="nombre_provincia" />
+            </order>
+          </helper>
+              <actualiza>
+                <field id="localidad_id" destino="provincia_id"/>
+              </actualiza>
+          </field> -->

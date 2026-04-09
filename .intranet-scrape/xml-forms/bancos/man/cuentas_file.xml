@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ficha" imprime="false" conBusqueda="true">
+  <title>Ficha Bancos</title>
+  <obs/>
+  <form>
+    <table id="REG_CUENTA" label="Cuentas Bancarias">
+
+      <field id="id_regcuenta" noshow="true" autoinc="true" print="false"/>
+
+      <field id="subsistema_id" esClave="true" oculto="true" valauto="true" />
+
+      <field id="nro_cuenta" esClave="true">
+          <label colspan="8">Número</label>
+          <help>Numero de la Cuenta</help>
+      </field>
+            
+      <field id="prox_nro" local="true" deshabilitado="true" sincelda="true" valauto="true">
+          <label modpos="nobr" style="color:red;">  Proximo Nº</label>
+          <helper type="combo" id="REG_CUENTA" >
+                <field id="nro_cuenta1">
+                    <expression>max(nro_cuenta) + 1</expression>
+                </field>          
+                <field id="nro_cuenta2">
+                    <expression>max(nro_cuenta) + 1</expression>
+        	    </field>        
+                <field id="subsistema_id"/>
+    	  </helper>
+      </field>
+
+      <field id="nombre_cuenta">
+        <label>Nombre</label>
+        <help>Nombre de la cuenta</help>
+      </field>
+
+      <!-- Provincia / Localidad -->
+
+      <field id="provincia_id">
+        <label colspan="6">Provincia</label>
+        <tabla_ex xml="provincia_qry.xml" dir="/ayudas" vacio="true"/>
+        <actualiza>
+          <field id="localidad_id" destino="provincia_id"/>
+        </actualiza>
+      </field>
+      
+      <field id="localidad_id">
+        <label colspan="6">Localidad</label>
+        <tabla_ex xml="localidad_qry.xml" dir="/ayudas" vacio="true">
+          <field id="provincia_id" oculto="true">
+            <condicion operador="=">-1</condicion>
+          </field>
+        </tabla_ex>
+      </field>
+
+      <!-- Dirección -->
+
+      <field id="cod_direccion">
+        <label>Calle</label>
+        <size>40</size>
+      </field>
+      <field id="bis_direccion" sincelda="true">
+        <label modpos="nobr">Bis</label>
+        <tipo>check</tipo>
+      </field>
+      <field id="nro_direccion">
+        <label modpos="nobr">Nº</label>
+        <size>10</size>
+      </field>
+      <field id="abreviacion_direccion">
+        <label modpos="nobr">Piso/Dpto</label>
+        <size>15</size>
+      </field>
+      
+      <!-- Fiscales -->
+
+      <field id="iva_id">
+          <tabla_ex xml="iva_qry.xml" dir="/ayudas" vacio="true" />
+          <label>Cat. IVA</label>
+          <help>Categoria de IVA</help>
+      </field>
+
+      <field id="cuit_cuenta">
+          <label modpos="nobr">Nº CUIT</label>
+          <help>Número de CUIT</help>
+      </field>
+
+      <field id="tipo_documento_id">
+        <tabla_ex xml="tipos_documento_qry.xml" dir="/ayudas" vacio="true"/>
+        <label>Documento</label>
+      </field>
+
+      <field id="nro_ingbrutos">
+          <label modpos="nobr">Nº IBR</label>
+          <help>Numero de ingresos brutos de la cuenta</help>
+      </field>
+
+      <field id="percepcion">
+          <label modpos="nobr">Agente Percepcion</label>
+          <tipo>check</tipo>
+      </field>
+
+      <!-- Otros Datos -->
+
+      <field id="ref_cuenta">
+        <label colspan="6">CBU</label>
+        <help>Número de CBU</help>
+        <size>20</size>
+      </field>
+
+      <field id="moneda_id">
+        <label colspan="6">Moneda</label>
+        <tabla_ex xml="moneda_qry.xml" dir="/ayudas"/>
+      </field>
+
+      <field id="alta_cuenta">
+        <label colspan="6">Fecha de Alta</label>
+        <tipo>date</tipo>
+        <valor>today</valor>
+      </field>
+
+      <field id="baja_cuenta">
+        <label colspan="6">Fecha de Baja</label>
+        <tipo>date</tipo>
+      </field>
+
+      <field id="limite_credito">
+        <label colspan="6">Limite de sobre giro</label>
+		<tipo>numeric</tipo>
+      </field>
+      
+      <!-- Tablas Relacionadas -->
+      
+      <fieldGroup>
+    	<field id="contacto" obj="cuenta_contactos_crud.xml" local="true">
+      	  <paring destino="regcuenta_id">id_regcuenta</paring>
+    	</field>
+
+    	<field id="chequera" obj="cuenta_chequeras_crud.xml" local="true">
+      	  <paring destino="regcuenta_id">id_regcuenta</paring>
+    	</field>
+      </fieldGroup>
+      
+      <fieldGroup>
+        <if> if (strpos($_SESSION['properties']['modulos'],'contabilidad') != false) return true; </if>                
+    	<field id="contable" obj="cuenta_imputaciones_crud.xml" local="true">
+      	  <paring destino="regcuenta_id">id_regcuenta</paring>
+    	</field>
+	  </fieldGroup>
+
+    </table>
+  </form>
+</histrix>

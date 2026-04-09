@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="crud" >
+    <title>ORDENES DE PRODUCCION</title>
+    <obs></obs>
+    <form  >
+	<table id="MRP_SECCION_REGISTRO" label="Producido" >
+        <filters>
+            <field id="fecha_registro" valauto="true" >
+                <label>Fecha</label>
+                <valor>today</valor>
+                <operador>=</operador>
+            </field>
+
+        </filters>
+            <field id="id_seccion_registro"  autoinc="true" noshow="true" esClave="true"/>
+    		<field id="mrpseccion_id"  noshow="true" oculto="true">
+    		</field>                 
+            <field id="fecha_registro" valauto="true" >
+                <label>Fecha</label>
+                <valor>today</valor>
+            </field>
+            <field id="hora_registro"  >
+                <label>Hora</label>
+                <valor eval="true">date('H:i')</valor>
+                <help>Hora</help> 
+            </field>
+            <field id="observacion_registro">
+                <label>Observación</label>
+                <help>Observación</help> 
+                <size>60</size>
+            </field>
+            <field id="temperatura_registro" >
+                <label>Temperatura</label>
+		        <help>Temperatura</help> 
+                <tipo>decimal</tipo>
+            </field>
+            <field id="presion_registro" >
+                <label>Presión</label>
+        		<help>Presión</help>
+                <tipo>decimal</tipo>
+            </field>
+            <field id="user_id" noshow="true">
+                    <valor eval="true">$_SESSION['idUser']</valor>
+            </field>
+        </table>
+    </form>
+</histrix>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert">
+    <title/>
+    <obs/>
+    <form>
+        <table id="CAJ_VALORES"  >
+            <field id="cajmovimiento_id"            lastId="cajmovimientos_ins.xml" />
+            <field id="cajformapago_id"                 id_temp="cajformapago_id" />
+            <field id="pago_valor"                      id_temp="importe_movimiento" />
+            <field id="pago_vuelto"                     id_temp="pago_vuelto" >
+                <tipo>decimal</tipo>
+                <valor>0</valor>
+            </field>
+        </table>
+    </form>
+</histrix>

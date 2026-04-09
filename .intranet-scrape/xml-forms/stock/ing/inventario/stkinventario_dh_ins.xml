@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="insert" _grabafinal="true"  xmlImpresion="/stock/qry/imp_stkinventario_dh_qry.xml">
+	<title>Ingreso Movimiento</title>
+	 <obs></obs>
+		<form>
+		    <table id="STK_INVENTARIOS">
+				<field id="nro_inventario"         id_temp="numero_movimiento" >
+					<detalle>nro_inventario</detalle>
+				</field>
+				<field id="fecha_inventario"       id_temp="fecha_inventario" />
+				<field id="usuario_id" 	           id_temp="usuario_id"/>
+		    </table>
+		</form>
+    </histrix>	

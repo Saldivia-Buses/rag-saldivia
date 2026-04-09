@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ing" _limit="10" inserta="false" modifica="false" imprime="false" log="false">
+	<title>Envio masivo</title>
+	<obs></obs>
+	<form >
+		<table id="REG_CUENTA" label="Posiciones">
+
+		    <movimientos>
+			    <relacion id="news_send.xml" />
+		    </movimientos>
+
+			<filters>
+			    <field id="subsistema_id">
+				<label>Sistema</label>
+				<operador>=</operador>
+			    </field>
+
+	  		    <field id="nombre_cuenta" >
+				    <label>Nombre</label>
+				<operador>like</operador>
+			    </field>
+
+			<field id="id_mail">
+				<label>Mail</label>
+			    <operador>=</operador>
+			</field>
+
+	  		    <field id="fecha_mov" >
+				    <label>Fecha</label>
+				    <valor>today</valor>
+			    </field>
+
+	  		    <field id="Saldo" deshabilitado="false">
+				    <label>Saldo mayor a</label>
+				    <operador>&gt;=</operador>
+			    </field>
+
+	  		    <field id="Saldo" deshabilitado="false" >
+				    <label>Saldo menor a</label>
+				    <operador>&lt;=</operador>
+				</field>
+
+			</filters>
+
+	  		    <field id="fecha_mov" local="true">
+				    <label>Fecha</label>
+				    <tipo>date</tipo>
+			    </field>
+			    
+
+			<field id="subsistema_id">
+				<label>sistemas</label>
+				<options>
+				    <option valor="02">clientes</option>
+				    <option valor="01">Proveedores</option>
+				</options>
+			</field>
+			<field id="id_mail" tabla="GEN_MAILS">
+				<label>NewsPe</label>
+				<helper id="GEN_MAILS" type="combo">
+				    <field id="id_mail" />
+				    <field id="title_mail" />
+				    <order>
+						<field id="id_mail" />
+					</order>
+				</helper>
+			</field>
+
+  		    <field id="nombre_cuenta" >
+		    <label>Nombre</label>
+		    </field>
+
+  		    <field id="subject_mail" tabla="GEN_MAILS" >
+		    <label>Subj</label>
+		    </field>
+		
+
+		<field id="baja" noshow="true">
+			    <condicion operador="=">0</condicion>
+			</field>
+
+			<field id="para">
+<!--			<expression having="false">ifnull((select mail from CCTCONTA where siscod = subsistema_id and ctacod = nro_cuenta and principal = 1 limit 1),'')</expression>
+-->
+<expression>'luis@estudiogenus.com'</expression>
+			    <condicion operador="like">'%@%'</condicion>
+				<label>email</label>
+			</field>
+
+
+			<field id="Saldo" _show="true">
+			    <expression having="false">(select sum(movimp * (case when conimp = 1 then 1 else 0 end)) - sum(movimp * (case when conimp = 2 then 1 else 0 end)) from CCTMOVIM JOIN CCTCONCE on CCTCONCE.siscod = CCTMOVIM.siscod and CCTCONCE.concod = CCTMOVIM.concod where CCTMOVIM.siscod = subsistema_id and ctacod = nro_cuenta and movfec &lt;= str_to_date('[__fecha_mov__]', '%d/%m/%Y')) </expression>
+				<label>Saldo</label>
+				<tipo>numeric</tipo>
+			</field>
+
+			<field id="mensaje" noshow="true">
+			    <expression>replace( replace( replace(body_mail, 
+'[__nombre__]', concat(nombre_cuenta, ', ', apellido_cuenta) ), '_SALDO_', 
+(select sum(movimp * (case when conimp = 1 then 1 else 0 end)) - sum(movimp * (case when conimp = 2 then 1 else 0 end)) from CCTMOVIM JOIN CCTCONCE on CCTCONCE.siscod = CCTMOVIM.siscod and CCTCONCE.concod = CCTMOVIM.concod where CCTMOVIM.siscod = subsistema_id and ctacod = nro_cuenta and movfec &lt;= str_to_date('[__fecha_mov__]', '%d/%m/%Y'))
+ ), 'fecha_mov', '[__fecha_mov__]')   </expression>
+				<label>Texto</label>
+			</field>
+		    <!--
+			<group>
+			    <field id="id_regcuenta" />
+			</group>
+-->
+			<order>
+				<field id="nombre_cuenta" />
+			</order>
+		</table>
+<!--
+		    <join tipo="left">
+			    <table id="CCTMOVIM">
+			    <field id="ctacod">
+				<condicion operador="=">nro_cuenta</condicion>
+			    </field>
+			    <field id="siscod">
+				<condicion operador="=">subsistema_id</condicion>
+			    </field>
+
+			</table>
+		    </join>
+	    
+		<join tipo="left">
+			<table id="CCTCONCE">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">CCTMOVIM.siscod</condicion>
+				</field>
+				<field id="concod" oculto="true">
+					<condicion operador="=">CCTMOVIM.concod</condicion>
+				</field>
+			</table>
+		</join>	
+-->					   
+		    <join tipo="left">
+			    <table id="GEN_MAILS">
+			    <field id="id_mail">
+				<condicion operador="!=">0</condicion>
+			    </field>
+
+			</table>
+		    </join>
+
+	</form>	   
+</histrix> 

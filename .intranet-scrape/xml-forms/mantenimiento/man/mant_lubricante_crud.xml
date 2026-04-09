@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  CRUD
+Tarea: Tabla de Lubricantes
+Autor: 
+Fecha: 29/08/12
+*******************************************************************************
+-->
+    <histrix tipo="abm">
+	<title>Tipo de Lubricante</title>
+	 <obs></obs>
+		<form>
+		    <table id="MANT_LUBRICANTES" label="Tipo Lubricante">
+				<field id="id_mantlubricante" esClave="true" autoinc="true" noshow="true" />
+
+				<field id="descripcion">
+					<label>Lubricante</label>
+					<help>descripcion del lubricante</help>
+					<size>50</size>
+				</field>
+
+				<field id="precio_unitario">
+					<label>Precio unitario</label>
+					<help>Precio unitario del lubricante</help>
+				</field>
+
+		    </table>
+		</form>
+    </histrix>	

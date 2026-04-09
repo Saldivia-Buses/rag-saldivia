@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm-mini" subtipo="vertical" log="true" logReference="log_reference">
+    <title>Composición</title>
+    <obs></obs>
+    <form>
+        <table id="STKPIEZA" label="Composicion">
+            <field id="id_pieza" esClave="true" noshow="true" />
+
+            <field id="idPadre" oculto="true">
+                <label>Padre</label>
+		        <condicion operador="=">0</condicion>
+            </field>
+            <field id="idPadre2" oculto="true">
+                <label>Padre</label>
+		          <expression having="false">idPadre</expression>
+		          <condicion operador="!=">''</condicion>
+            </field>
+            <field id="bom_variacion_id" oculto="true">
+                <condicion operador="=">0</condicion>
+            </field>
+
+     	    <field id="log_reference" local="true" noshow="true">
+                <expression>CONCAT('Hijo: ', articulo_hijo, ' Padre: ', idPadre)</expression>
+    	    </field>
+   
+          <field id="tienehijos" noshow="true">
+            <expression>@tienehijos := ifnull((select 1 from STKPIEZA where STKPIEZA.idPadre = STK_ARTICULOS.id_stkarticulo limit 1), 0)</expression>
+          </field>
+	
+          <field id="bom" noshow="true" local="true">
+            <if exp="tienehijos">
+        	    <true>'stkpieza_qry.xml'</true>
+        	    <false>''</false>
+            </if>
+    <!--     <expression>ifnull((select 'stkpieza_qry.xml' from STKPIEZA where STKPIEZA.idPadre = STK_ARTICULOS.id_stkarticulo limit 1),'')</expression> -->
+          </field>
+
+            <field id="articulo_hijo" linkint="" linkdir="articulos" linkdes="Composición" required="true">
+		<attribute id="linkint">bom</attribute>
+               <paring destino="idPadre">articulo_hijo</paring>
+				<helper type="external" xml="stkarticulo_autocomplete_qry.xml" dir="/help_local">
+					<field id="artdes">
+						<detalle>nom</detalle>
+					</field>
+					<field id="valcps">
+						<detalle>valCps</detalle>
+					</field>
+					<field id="valuso">
+						<detalle>valUso</detalle>
+					</field>
+					<field id="unicps">
+						<detalle>unicps</detalle>
+					</field>
+					<field id="artuni">
+						<detalle>artuni</detalle>
+					</field>
+				</helper>
+                <label>Artículo</label>
+                <help>Artículo</help>
+            </field>
+
+            <field id="nom">
+        		<expression>nombre_articulo</expression>
+                <label colspan="4">Producto</label>
+				<size>70</size>
+            </field>
+
+            <field id="valCps" noshow="true">
+        	<expression>valor_compra</expression>
+            </field>
+            
+            <field id="valUso" noshow="true" >
+        	<expression>valor_uso</expression>
+            </field>
+            
+            <field id="cantidad"  preventLoop="true" suma="true">
+                <label>Cantidad</label>
+                <jseval campodestino="conversion" actxml="false">(valCps == 1)?(cantidad * valUso ):(cantidad / valCps)</jseval>
+<!--		<tipo>float</tipo>                 -->
+                <tipo>custom_numeric</tipo>
+
+            </field>
+    	    <field id="unidad_compra_id" tabla="STK_ARTICULOS" deshabilitado="true">
+		<label modpos="nobr">Unidad</label>
+		<help>Unidad de Compra </help>
+		<tabla_ex id="FSMUNIDS">
+			<field id="unicod"></field>
+			<field id="uninom"></field>
+		</tabla_ex>
+	    </field>
+            <field id="conversion" local="true"  preventLoop="true">
+                <label>Uso</label>
+                <if exp="valCps == valUso">
+            	    <true>valUso</true>
+            	    <false>(valCps == 1)?(cantidad * valUso):(cantidad / valCps)</false>	                	    
+                </if>
+                
+                <jseval campodestino="cantidad" actxml="false">(valCps == 1)?(conversion / valUso):(conversion * valCps)</jseval>
+                
+                <tipo>custom_numeric</tipo>
+            </field>
+
+    	    <field id="unidad_uso_id" tabla="STK_ARTICULOS" deshabilitado="true">
+		<label modpos="nobr">Unid.</label>
+		<help>Unidad de Compra </help>
+		<tabla_ex id="FSMUNIDS">
+			<field id="unicod"></field>
+			<field id="uninom"></field>
+		</tabla_ex>
+	    </field>
+
+<!--            <field id="unitario"  >
+        <expression> round(case WHEN (select sum(round( (SP.costo_automatico * SP.cantidad) * (1 + SP.recargo / 100) , 2)) from STKPIEZA as SP where SP.idPadre  = STK_ARTICULOS.id_stkarticulo limit 1) != 0 then 
+    				   	      (select sum(round( (SP.costo_automatico * SP.cantidad) * (1 + SP.recargo / 100) , 2)) from STKPIEZA AS SP where SP.idPadre  = STK_ARTICULOS.id_stkarticulo limit 1)
+                              else costo_automatico end, 2) </expression>
+
+                <label>Precio Unitario</label>
+                <tipo>decimal</tipo>
+            </field>-->
+
+<!--	    <field id="unitario"  >
+                <expression>round(costo_automatico, 2)</expression>
+                <label>Precio Unitario</label>
+                <tipo>decimal</tipo>
+            </field>
+-->
+	    <field id="unitario">
+		<label>Unitario</label>
+		<expression>ifnull(getCostFunc(STK_ARTICULOS.id_stkarticulo, ifnull(STK_COSTO_REPOSICION.moneda_id, 1), now()  ), 0) </expression>
+                <tipo>decimal</tipo>
+	    </field>
+
+            <field id="recargo" noZero="true" >
+                <label>% Recargo</label>
+                <tipo>decimal</tipo>
+            </field>
+    
+
+                                                 <!--
+            <field id="costo_autom2" suma="true" noshow="true">
+                <tipo>decimal</tipo>
+
+    	    <expression>cantidad * (round(case when valcps &gt; valuso then costo_calculado + ( costo_calculado / 100 * STKPIEZA.recargo) 
+    			          when (  costo_calculado * STK_ARTICULOS.valcps / STK_ARTICULOS.valuso) > 0  
+    			          then (  costo_calculado * STK_ARTICULOS.valcps / STK_ARTICULOS.valuso) + 
+    			               ( (costo_calculado * STK_ARTICULOS.valcps / STK_ARTICULOS.valuso) / 100 * STKPIEZA.recargo)
+    				  else STK_ARTICULOS.artcos end, 2))</expression>
+            </field>
+                                                     -->
+	    <!--
+            <field id="costo_automatico2" suma="true" noshow="true">
+                <tipo>decimal</tipo>
+        <expression> round(case WHEN (select sum(round( (SP.costo_automatico * SP.cantidad) * (1 + SP.recargo / 100) , 2)) from STKPIEZA as SP where SP.idPadre  = STK_ARTICULOS.id_stkarticulo limit 1) != 0 then 
+    				   	      (select sum(round( (SP.costo_automatico * SP.cantidad) * (1 + SP.recargo / 100) , 2)) from STKPIEZA AS SP where SP.idPadre  = STK_ARTICULOS.id_stkarticulo limit 1)
+                              else costo_automatico end, 2) </expression>
+
+
+            </field>-->
+        <field id="costo_automatico2" suma="true" local="true">
+		<if exp="true">
+		    <true>round(cantidad * ( unitario +  ( unitario / 100 * recargo)), 2)</true>
+		    <false>0</false>
+		</if>
+<!--
+                <expression>
+                    round(cantidad * ( costo_automatico + ( costo_automatico / 100 * STKPIEZA.recargo)), 2)
+                </expression>
+-->
+            <label>Costo</label>
+            <tipo>custom_numeric</tipo>
+        </field>
+
+            <field id="costo_rec" suma="true" local="true" noshow="true">
+		<if exp="true">
+		    <true>costo_automatico2 * (1 + recargo / 100)</true>
+		    <false>0</false>
+		</if>
+                <tipo>numeric</tipo>
+            </field>
+            
+            <field id="costo_automatico3" suma="true" local="true" deshabilitado="true" noshow="true">
+		<if exp="costo_rec != 0">
+		    <true>costo_rec * cantidad</true>
+		    <false>0</false>
+		</if>
+                <label>Costo</label>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="posicionfab_alarma_id" noZero="true" tabla="STK_ARTICULOS" deshabilitado="true">
+              <label modpos="nobr">Inicio Fabri.</label>
+              <helper xml="posicionesfab_qry.xml" type="combo" dir="/produccion" empty="true">
+                <field id="linea_id" tabla="MOMENTO" oculto="true">
+                  <condicion operador="=">1</condicion>
+                </field>
+              </helper>
+            </field>
+
+            <field id="posicionfab_entrega_id" noZero="true" tabla="STK_ARTICULOS" deshabilitado="true">
+              <label modpos="nobr">Momento Entrega</label>
+              <helper xml="posicionesfab_qry.xml" type="combo" dir="/produccion" empty="true">
+                <field id="linea_id" tabla="MOMENTO" oculto="true">
+                  <condicion operador="=">1</condicion>
+                </field>
+              </helper>
+            </field>
+
+            <field id="posicionfab_id" noZero="true" tabla="STK_ARTICULOS" deshabilitado="true">
+              <label modpos="nobr">Destino Estac.</label>
+              <helper xml="posicionesfab_qry.xml" type="combo" dir="/produccion" empty="true">
+                <field id="linea_id" tabla="MOMENTO" oculto="true">
+                  <condicion operador="=">1</condicion>
+                </field>
+              </helper>
+            </field>
+        </table>
+        <join>
+            <table id="STK_ARTICULOS" label="Articulos">
+                <field id="id_stkarticulo">
+                    <condicion operador="=">articulo_hijo</condicion>
+                </field>
+                <field id="subsistema_id">
+                    <condicion operador="=">'01'</condicion>
+                </field>
+                
+                
+            </table>
+            
+        </join>
+	<join tipo="left">
+	    <table id="STK_COSTO_REPOSICION">
+		<field id="stkarticulo_id">
+                    <condicion operador="=">articulo_hijo</condicion>
+		</field>
+	    </table>
+	</join>
+    </form>
+</histrix>	

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm">
+  <title>Tipos de relaciones</title>
+  <obs></obs>
+  <form>
+    <table id="GEN_TIPO_RELACIONES" label="Tipos de relaciones">
+      <field id="id_tiporelacion" autoinc="true" noshow="true">
+        <label>Codigo</label>
+        <help>Código de tipo de relación</help>
+      </field>
+      <field id="nombre_tiporelacion">
+        <label>Nombre</label>
+        <help>Nombre de tipo de relación</help>
+        <size>20</size>
+      </field>
+      <order>
+        <field id="nombre_tiporelacion" />
+      </order>
+    </table>
+  </form>
+</histrix>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+	<histrix tipo="ficha" preFetch="true" inserta="false" borra="false" imprime="false" cancel="false">
+		<title>Preferencias</title>
+		<obs></obs>
+		<form>
+			<table id="HTXOPTIONS" label="OPCIONES">
+				<field id="id_option" deshabilitado="true"  noshow="true" autoinc="true" />
+
+				<field id="option_name" noshow="true" >
+				    <condicion operador="=">'SIS::01::periodo_iva_cps'</condicion>
+				    <valor>SIS::01::periodo_iva_cps</valor>
+				    <label>Nombre</label>
+				    <help>Nombre de la opcion</help>
+				</field>
+
+				<field id="option_description" deshabilitado="true" noshow="true" />
+
+				<field id="text" deshabilitado="true" local="true">
+					<label>.</label>
+					<help>Descripcion</help>
+					<valor>Período Habilitado IVA Compras.</valor>
+					<size>60</size>
+				</field>
+
+				<field id="option_value" _editable="true">
+					<label>Período</label>
+					<size>8</size>
+					
+				</field>
+			</table>
+		</form>
+	</histrix>

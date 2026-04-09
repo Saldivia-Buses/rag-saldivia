@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="insert" sqlhardcoded="true">
+	<title/>
+	 <obs/>
+		<form >
+			<table id="CTBREGIS" idCampoCond="acontado">
+				<sql>
+					UPDATE CTBREGIS
+						SET ctbcod = '111102'
+					WHERE /* siscod = '10' and */ regmin = [__regmin__] and regnro = [__old_nro_movimiento__] and ctbcod = '211100'
+				</sql>
+
+				<field id="regmin"      		id_temp="regmin" />
+				<field id="regfec"     			id_temp="reg_fecha" />
+				<field id="old_nro_movimiento"  id_temp="old_nro_movimiento" local="true"/>
+				<field id="razon_cambio_imp"  	id_temp="razon_cambio_imp" local="true" />
+				<field id="regref"  			id_temp="regref" />
+				<field id="regnro"				id_temp="nro_movimiento" />
+
+			</table>
+		</form>
+    </histrix>

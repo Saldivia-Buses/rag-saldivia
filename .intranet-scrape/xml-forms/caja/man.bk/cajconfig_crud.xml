@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta"  width="20" showCantidad="false">
+  <title>Configuracion del Puesto</title>
+  <obs />
+  <form detalle="cajconfig_grid.xml">
+    <table id="CAJ_PUESTOS">
+
+		<field id="id_cajpuesto" noshow="true">
+			<detalle>cajpuesto_id</detalle>
+		</field>
+
+		<field id="descripcion_puesto">
+			<label>Puesto</label>
+		</field>
+	
+    </table>
+  </form>
+</histrix>

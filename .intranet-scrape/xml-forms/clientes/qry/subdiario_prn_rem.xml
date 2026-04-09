@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="nosql" xmlImpresion="">
+  <title/>
+  <obs/>
+  <form>
+    <table id="REG_MOVIMIENTOS">
+
+      <field id="id_regmovim" id_temp="id_remito">
+        <detalle>id_regmovim</detalle>
+        <detalle>regmovim_id</detalle>
+      </field>
+      
+      <field id="imprime_concepto" id_temp="imprime_concepto2" local="true">
+        <setvar>xmlImpresion</setvar>
+      </field>
+        
+      <field id="printer" id_temp="printer" local="true">
+    	<setvar>printer</setvar>
+    	<detalle>printer</detalle>
+      </field>
+
+      <field id="printer2" id_temp="printer" local="true">
+    	<setvar>directprint</setvar>
+    	<detalle>printer</detalle>
+      </field>
+
+      
+    </table>
+  </form>
+</histrix>

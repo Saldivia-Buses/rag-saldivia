@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+*******************************************************************************
+Tipo:  CRUD
+Tarea: Tabla de Existencias por Deposito
+Autor: d!ego2k
+Fecha: 17/08/11
+*******************************************************************************
+-->
+<histrix tipo="list" subtipo="vertical" tooltip="false" showCant="false">
+    <title>Articulo Existencia</title>
+    <obs></obs>
+    <form >
+        <table id="STK_ARTICULO_EXISTENCIAS" label="Articulo Existencia">
+
+            <field id="id_stkarticuloex" noshow="true" autoinc="true" esClave="true"/>
+
+            <field id="stkarticulo_id" oculto="true" />
+
+            <field id="stkdeposito_id">
+                <label>Deposito</label>
+                <helper type="combo" xml="stkdeposito_qry.xml" dir="/ayudas" _empty="true" />
+            </field>
+
+            <field id="stock_minimo">
+                <label>Minimo</label>
+            </field>
+
+            <field id="stock_reposicion">
+                <label>Reposicion</label>
+            </field>
+
+        </table>
+    </form>
+</histrix>

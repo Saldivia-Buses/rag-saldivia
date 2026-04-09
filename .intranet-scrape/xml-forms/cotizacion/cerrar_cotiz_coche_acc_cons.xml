@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" _conBusqueda="true" width="30" paginar="100"> 
+    <title>COTIZACION</title>
+    <obs></obs>
+    <form  detalle="cerrar_cotiz_coche_acc_ing.xml">
+        <table id="COTIZACION" label="COTIZACIONES">
+            <field id="idCotiz" autoinc="true" tipoOrden="DESC">
+                <label>Nro Cotiz.</label>
+                <help>Número de Cotización</help>
+                <detalle>idCotiz</detalle>
+                <detalle>cotizacion_id</detalle>
+
+            </field>
+            <field id="ficha_id"  noshow="true">
+                <label>id.</label>
+                <tipo>integer</tipo>
+                <condicion operador="!=">0</condicion>
+                <detalle>ficha_id</detalle>
+            </field>
+            <field id="tieneFicha" noshow="true">
+                    <expression>(case when COTIZACION.ficha_id != 0 then 'fichaventas.xml' else '' end)</expression>
+                </field>
+
+            <field id="nrofab" linkint="fichaventas.xml" linkdes="Ver Ficha de Ventas" >
+                <expression>select PEDCOTIZ.nrocha from PEDCOTIZ where PEDCOTIZ.id = COTIZACION.ficha_id</expression>
+                <attribute id="linkint">tieneFicha</attribute>
+                <label modpos="nobr" style="text-align:center;color:#444;font-size:14px;">Nro.</label>
+                <help>Número de Fabricación</help>
+                <paring destino="nrocha">nrofab</paring>
+                <paring destino="showprecios">1</paring>
+                <detalle>nrocha</detalle>
+                <detalle>nrofab_id</detalle>
+            </field>
+
+            <field id="fecha">
+                <label modpos="nobr">Fecha</label>
+                <help>Fecha de Cotización</help>
+                <valor>today</valor>
+                <detalle>fecha</detalle>
+            </field>
+            <field id="ctanom" >
+                <label>Nombre</label>
+                <tipo>varchar</tipo>
+                <detalle>ctanom</detalle>
+            </field>
+
+            <field id="ctacon" >
+                <label>Contacto</label>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="ctafan" tabla="CCTCUENT" noshow="true">
+                <label>Emp</label>
+                <tipo>varchar</tipo>
+
+            </field>
+
+            <field id="mardes" tabla="MARCHASIS" PDFsize="12">
+                <expression>MODCHASIS.moddes</expression>
+                <label size="22" posx="5" posy="+2">Chasis</label>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="modas" >
+                <label >Carrocería</label>
+                <expression>CONCAT(CARROCERIA.modcar, ' (',COTIZACION.asientos, ' As)')</expression>
+            </field>
+
+            <field id="aprob">
+                <label>estado</label>
+        	   <expression>max(estado)</expression>
+            </field>
+
+            <field id="clase" clasefila="true" noshow="true">
+        	   <expression>case when max(estado) = 0 then 'error' else 'grisado' end</expression>
+            </field>
+
+            <field id="idLista"  >
+                <label>Lista</label>
+            </field>
+
+            <order>
+                <field id="idCotiz" tabla="COTIZACION"></field>
+            </order>
+
+            <group>
+                <field id="idCotiz" tabla="COTIZACION"></field>
+            </group>
+
+        </table>
+
+        <join tipo="left">
+            <table id="ACCESORIOS_COCHE">
+                <field id="cotizacion_id">
+                    <condicion operador="=">idCotiz</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="CARROCERIA">
+                <field id="siscod" oculto="true">
+                    <condicion operador="=">'03'</condicion>
+                </field>
+                <field id="nrocar">
+                    <condicion operador="=">COTIZACION.modcar</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="MODCHASIS">
+                <field id="siscod" oculto="true">
+                    <condicion operador="=">'03'</condicion>
+                </field>
+                <field id="marcod">
+                    <condicion operador="=">COTIZACION.marcod</condicion>
+                </field>
+                <field id="modcha">
+                    <condicion operador="=">COTIZACION.modcha</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="CCTCUENT">
+                <field id="ctacod">
+                    <condicion operador="=">COTIZACION.ctacod</condicion>
+                </field>
+                <field id="siscod">
+                    <condicion operador="=">'02'</condicion>
+                </field>
+
+
+            </table>
+        </join>
+
+
+    </form>
+</histrix>

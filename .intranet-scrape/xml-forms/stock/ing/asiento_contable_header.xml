@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="fichaing" class="consultaancha" marginTabs="true" inserta="false" modifica="false" tooltip="false" importTempTable="TEMPTABLENAME" llenoTemporal="TEMPTABLENAME" updateTempTable="false">
+   <title>Asiento Contable</title>
+   <obs/>
+   <form>
+	<table id="CTB_MOVIMIENTOS" label="Minuta">
+
+		<validation>
+			<condition><![CDATA[ 'ejercicio_id' + 0 == 0 ]]></condition>
+			<message>Falta Ejercicio</message>
+		</validation>
+
+		<validation>
+			<condition><![CDATA[ 'validacionFecha' == 1 ]]></condition>
+			<message>La fecha ingresada no pertenece al Ejercicio</message>
+		</validation>
+
+		<validation>
+			<condition><![CDATA[difasiento + 0 != 0]]></condition>
+			<message>Asiento Desbalanceado</message>
+		</validation>
+
+		<movimientos>
+			<relacion id="ctbmovimiento_ins.xml" /> 
+		</movimientos>
+
+		<field id="id_movimiento" noshow="true">
+			<condicion operador="=">-1</condicion>
+		</field>
+	      
+		<field id="nro_minuta" noshow="true" />
+
+		<field id="fecha_movimiento" deshabilitado="true">
+			<label modpos="nobr" colspan="4">Fecha</label>
+			<jseval fielddestino="validacionFecha">((Date.parse(\'fecha_movimiento\'.substring(6,10) + \'-\' + \'fecha_movimiento\'.substring(3, 5) + \'-\' + \'fecha_movimiento\'.substring(0, 2)) &lt; Date.parse(\'comienza\')) || (Date.parse(\'fecha_movimiento\'.substring(6,10) + \'-\' + \'fecha_movimiento\'.substring(3, 5) + \'-\' + \'fecha_movimiento\'.substring(0, 2)) &gt; Date.parse(\'finaliza\')))?1:0</jseval>
+		</field>
+
+	      	<field id="concepto_id">
+			<helper type="combo" xml="ctbconcepto_qry.xml" dir="/ayudas" />
+			<label colspan="4">Concepto</label>
+			<help>Código de concepto</help>
+			<detalle>concepto_id</detalle>
+		</field>
+
+		<field id="referencia" valauto="true">
+			<label>Referencia</label>
+		</field>
+
+		<field id="ejercicio_id" _noshow="true">
+			<helper type="combo" xml="ctbejercicio_qry.xml" dir="/ayudas">
+				<field id="comienza">
+	    				<condicion operador="&lt;=" valorde="fecha_movimiento">date(now())</condicion>
+	    	    		</field>
+	    	   	 	<field id="finaliza">
+	    				<condicion operador="&gt;=" valorde="fecha_movimiento">date(now())</condicion>
+				</field>
+			</helper>
+			<label colspan="4">Ejercicio</label>
+			<help>Ejercicio contable</help>
+			<detalle>ejercicio_id</detalle>
+		</field>
+
+		<field id="fecha_modificacion" noshow="true">
+			<expresion>NOW()</expresion>
+		</field>
+
+		<field id="validacionFecha" local="true" noshow="true" />
+
+		<field id="usuario_modificacion" noshow="true">
+			<valor eval="true">$_SESSION['usuario']</valor>
+		</field>
+
+		<field id="difasiento" local="true" noshow="true" />
+
+		<field id="detalle" local="true">
+			<label colspan="4"/>
+			<helper type="object" xml="asiento_contable_crud.xml" />
+		</field>
+
+	</table>
+
+   </form>
+</histrix>

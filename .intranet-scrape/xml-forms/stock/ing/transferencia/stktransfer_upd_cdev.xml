@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="update">
+  <title>Ingreso Movimiento</title>
+  <obs/>
+  <form>
+    <table id="STK_MOVIMIENTOS" >
+      
+      <field id="id_stkmovimiento" id_temp="id_stkmovimiento" esClave="true" />
+      <field id="cantidad"         id_temp="cantidad" />
+      <field id="pendiente">
+        <valor>0</valor>
+        <tipo>integer</tipo>
+      </field>
+      
+    </table>
+  </form>
+</histrix>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="delete">
+	<title>Ingreso de Movimientos</title>
+	 <obs></obs>
+		<form>
+		    <table id="CTB_MOVIMIENTOS" idCampoCond="elimina">
+				<field id="id_movimiento" id_temp="id_movimiento" esClave="true" />	
+		    </table>
+		</form>
+</histrix>	
+
+
+
+

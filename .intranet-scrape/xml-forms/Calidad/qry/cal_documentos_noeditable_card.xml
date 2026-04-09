@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud" path="/ISO9000" inserta="false" modifica="false">
+  <title>MANUAL DE CALIDAD</title>
+  <obs></obs>
+  <form >
+    <table id="CAL_DOCUMENTOS" label="Documentacion">
+
+      <filters auto="true">
+        <field id="tipodocumento_id">
+          <helper xml="cal_tipo_documento.xml" type="combo" dir="/calidad/ing" />
+          <label>Tipo</label>
+          <help>Tipoo de Documento</help>
+          <operador>=</operador>
+        </field>
+      </filters>
+
+      <field id="id_documento" noshow="true" autoinc="true" />
+
+      <field id="codigo_documento" noshow="true"/>
+
+      <field id="nombre_documento" noshow="true"/>
+
+      <field id="revision_documento" noshow="true"/>
+
+      <field id="vigencia_documento" noshow="true">
+        <condicion operador="!=">'0000-00-00'</condicion>
+      </field>
+
+      <field id="tipodocumento_id" noshow="true">
+        <helper xml="cal_tipo_documento.xml" type="combo" dir="/calidad/ing" _empty="true" />
+        <label>Tipo</label>
+        <help>Tipoo de Documento</help>
+      </field>   
+
+      <field id="descripcion_documento" style="font-weight:bold;font-size:17px;">
+        <label>Descripción doc</label>
+        <expression>CONCAT (codigo_documento, ' ', nombre_documento, ' - ', DATE_FORMAT(vigencia_documento, '%d/%m/%Y'))</expression>
+        <helper type="link" xml="cal_documentos_ficha.xml" dir="/calidad/qry">
+            <parameter source="id_documento" target="id_documento" />
+        </helper>
+      </field>
+
+      <field id="archivo_documentoOtros" open="true" _print="false">
+        <expression>case when archivo_documento = '' then '' else archivo_documento end</expression>
+        <help>Archivo del Documento</help>
+        <tipo>file</tipo>
+        <size>100</size>
+      </field>
+
+      <field id="ver_documento" local="true" linkWidth="95%" linkHeight="95%" style="font-size:17px;color:blue;font-weight:bold">
+        <expression>case when (select count(*) from CAL_DOCUMENTOS_PASOS where documento_id =  id_documento) != 0 then 'Detalle' else '' end</expression>
+        <helper type="link" xml="cal_documentos_edicion_pasos_qry.xml" dir="/calidad/qry/">
+          <parameter source="id_documento" target="documento_id" />
+          <parameter source="codigo_documento" target="codigo_documento" />
+          <parameter source="nombre_documento" target="nombre_documento" />
+          <parameter source="vigencia_documento" target="vigencia_documento" />
+        </helper>
+        <label>Editar</label>
+        <help>Editar Documento</help>
+        <attribute id="linkdes">nombre_documento</attribute>
+      </field>   
+
+      <order>
+        <field id="descripcion_documento" style="font-weight:bold;">
+          <label>descripcion doc</label>
+          <expression>CONCAT (codigo_documento, ' ', nombre_documento, ' - ', DATE_FORMAT(vigencia_documento, '%d/%m/%Y'))</expression>
+        </field>
+      </order>
+
+    </table>
+  </form>
+</histrix>
+

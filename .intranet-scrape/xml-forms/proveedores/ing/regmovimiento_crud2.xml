@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="ficha" preFetch="true" inserta="false" borra="false" limit="1">
+	<title>Modificacion de Movimientos</title>
+	 <obs></obs>
+		<form >
+		     <table id="REG_MOVIMIENTOS">
+			<field id="id_regmovim" noshow="true" esClave="true" deshabilitado="true" />
+			<field id="regcuenta_id" noshow="true" />
+			<field id="nro_cuenta" tabla="REG_CUENTA" deshabilitado="true">
+			    <label>Cod</label>
+			</field>
+			<field id="fecha_movimiento" >
+			    <label>fecha</label>
+			</field>
+			<field id="vencimiento_movimiento" >
+			    <label modpos="nobr">Vencimiento</label>
+			</field>
+
+			<field id="cuit_movimiento">
+			   <label modpos="nobr">CUIT</label>
+			</field>
+
+			
+			<field id="letra_movimiento"   >
+			    <label>letra</label>
+			</field>
+
+			<field id="puesto_movimiento"  >
+			    <label modpos="nobr">Puesto</label>
+			    <size>4</size>
+			</field>
+
+			<field id="nro_movimiento"   >
+			    <label modpos="nobr">Numero</label>
+			</field>
+			<field id="referencia_movimiento"   >
+			    <label colspan="5">Referencia</label>
+			</field>
+			<field id="importe_movimiento"   >
+			    <label>Importe</label>
+			</field>
+			<field id="saldo_movimiento"   >
+			    <label>Saldo</label>
+			</field>
+
+
+		    </table>
+		    <join>
+			<table id="REG_CUENTA">
+			    <field id="id_regcuenta">
+				<condicion operador="=">regcuenta_id</condicion>
+			    </field>
+			</table>
+		    </join>
+		</form>
+    </histrix>	
+
+
+

@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix llenoTemporal="false" tipo="ing"  editable="true" imprime="false" graboasiento="true" muestraasiento="true" transaccional="true" confirma="EMITIR FACTURA" 
+impresion="factura_reimp.xml" _directprint="true" barraDrag="false">
+	<!--comando de impresion -->
+	<print>gs  -q -dBATCH -dNOPAUSE -dQUIET -sDEVICE=ibmpro -dNOPLATFONTS -sOutputFile=%pipe%"lpr -PEPSONFX"</print>
+	<title>Punto de Venta</title>
+	<obs/>
+	<form >
+		<table id="FACDETAL" label="Ingreso de Facturas"
+			>
+<!--			<cierraproceso id="pos_cobranza.xml">
+				<paring destino="total">total</paring>
+				<paring destino="ctacod">ctacod</paring>
+				<paring destino="ctacte">ctacte</paring>
+
+				<paring destino="ctanom">ctanom</paring>
+				<paring destino="nrorec">movnro</paring>
+				<paring destino="ctanro">ctanro</paring>
+				<paring destino="movnro">movnro</paring>
+
+				<paring destino="concod">concod</paring>
+
+				<paring destino="movlet">movlet</paring>
+				<paring destino="movfec">movfec</paring>
+			</cierraproceso> -->
+			<movimientos cabecera="pos_comprobantes_cab.xml">
+				<relacion id="pos_cctmovim_ingmov.xml"/>
+				<relacion id="pos_cctencab_ingmov.xml"/> 				
+				<relacion id="pos_ivaventas_ingmov.xml"/>
+				<relacion id="pos_ivaimportes_ingmov.xml"/>
+
+				<relacion id="pos_facdetal_ingmov.xml"/>
+			</movimientos>
+			<field id="nrocha" conLabel="true" esClave="true" required="true" deshabilitado="false">
+				<label style="font-size:12px;color:red;">Nro Unidad</label>
+				<help>Ingrese Nro de Coche</help>
+				<ayuda_ex id="PEDCOTIZ" xml="HLPcoche.xml"  dir="/help_local">
+					<field id="nrocha"  esClave="true" >
+						<label >Nro</label>					
+					</field>
+					<field id="Carroceria">
+						<expression>CONCAT(PEDCOTIZ.nrocha, 
+						' - CARROCERIA MARCA SALDIVIA, ', 
+						'A',
+              			(case when CARROCERIA.doble_piso = 1 then (CONCAT(asientos, '+', asientos_plantabaja)) else (asientos) end),
+						 ' - ', 
+						ifNULL(MARCHASIS.mardes, 'FALTA MARCA DE CHASIS'), ' ', 
+						ifnull(MODCHASIS.moddes, 'FALTA MODELO CHASIS'), '  Nro: ', 
+						ifnull(CHASIS.chasis, 'FALTA NRO CHASIS!'), ' Motor: ',
+						ifnull(MARCAMOTOR.nombre, 'FALTA MARCA DE MOTOR'), ' Nro: ', 
+						ifnull(nromotor, 'FALTA NUMERO DE MOTOR'))</expression>						<label>Carroceria</label>
+						<tipo>varchar</tipo>
+						<detalle>coche</detalle>
+					</field>					
+					<field id="ctbcar" local="true" noshow="true">
+						<valor>'611101'</valor>
+						<detalle>ctb_comp</detalle>
+					</field>
+					<clave>nrocha</clave>
+					<descripcion>Carroceria</descripcion>
+
+				</ayuda_ex>
+				<!-- <valor default="true">Ingrese Nro de Coche</valor> -->
+
+				<tipo>varchar</tipo>
+				<size>20</size>
+			</field>
+			<field id="coche" deshabilitado="true">
+				<label modpos="nobr" style="font-weight:bold;font-size:12px;color:green;">Coche</label>
+				<tipo>varchar</tipo>
+				<size>90</size>
+				<help>Numero de unidad</help>
+			</field>
+			<field id="ctb_comp" local="true" ctbcuenta="1">
+				<label >Cuenta Contable</label>
+				<tabla_ex id="CTBCUENT">
+					<field id="ctbcod"></field>
+					
+					<field id="ctbnom"></field>
+					<field id="ctbhab">
+						<condicion operador="=">1</condicion>
+					</field>
+<!--
+					<field id="siscod">
+						<condicion operador="=">'10'</condicion>
+					</field>
+-->
+					
+					<order>
+						<field id="ctbnom"></field>
+					</order>
+				</tabla_ex>	
+				<tipo>varchar</tipo>		
+			</field>		
+			<field id="cant" local="true" conLabel="true" required="true">
+				<label style="font-size:15px;">Cantidad</label>
+				<tipo>integer</tipo>
+				<valor _default="true">1</valor>
+				<help>Cantidad</help>
+				<size>2</size>
+
+			</field>
+
+			<field id="precio"  local="true" esClave="true" ctbimporte="1">
+				<label>Precio</label>
+				<tipo>numeric</tipo>
+				<size>15</size>
+				<help>Precio Unitario</help>
+			</field>
+			<field id="base"  local="true" noshow="true">
+			    <if exp="true">
+				<true>precio</true>
+				<false>0</false>
+			    </if>
+			
+			</field>
+
+			<field id="alicuota" local="true">
+				<label>Alícuota</label>
+				<tabla_ex id="IVAIMPUESTOS">
+					<field id="impali"></field>
+					<field id="impnom"></field>
+					<field id="impcod">
+						<condicion operador="&lt;">4</condicion>
+					</field>					
+				</tabla_ex>
+				<tipo>decimal</tipo>
+				<valor>10.50</valor>
+				<jseval campodestino="iva">precio * alicuota / 100</jseval>
+				<help>Alícuota de IVA</help>
+			</field>
+			<field id="impcod" deshabilitado="true" noshow="true">
+				<label>impcod</label>
+				<valor>2</valor>
+			</field>
+			<field  id="iva" ctbimporte="3" suma="true" local="true">
+				<label modpos="nobr">I.V.A.</label>
+				<if exp="iva == 0" operador="=">
+					<true>round(precio,2 ) * alicuota / 100</true>
+					<false>iva</false>
+				</if> 
+				<tipo>numeric</tipo>
+				<help>I.V.A.</help>				
+			</field>			
+
+
+
+			<field id="total" local="true" deshabilitado="true" suma="true" ctbimporte="2"	>
+				<label modpos="nobr"	colstyle="font-weight:bold;font-size:22px;color:red;">Total</label>
+				<if exp="true" operador="=">
+					<true>round((cant * (precio + iva)) , 2)</true>
+					<false>0</false>
+				</if>
+				<tipo>numeric</tipo> 
+			</field>
+			<field id="saldo" local="true" noshow="true" deshabilitado="true">
+				<label>sal</label>
+				<if exp="true" operador="=">
+					<true>total</true>
+					<false>0</false>
+				</if>
+				<tipo>numeric</tipo>
+			</field>
+
+		</table>
+	
+	</form>
+</histrix>

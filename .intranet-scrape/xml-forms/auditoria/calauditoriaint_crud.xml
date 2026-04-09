@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="crud" borra="false">
+    <title>Completar Auditoría</title>
+    <obs/>
+    <form >
+        <table id="CAL_AUDITORIA_INT" label="Documentos">
+
+			<filters>
+				<field id="realizada">
+					<label>Estado</label>
+				</field>
+			</filters>
+     		<field id="id_auditoriaint" _noshow="true" deshabilitado="true"  tipoOrden="DESC">
+				<detalle>id_auditoriaint</detalle>
+				<label>Nro</label>
+			</field>
+
+			<field id="documento_id" colstyle="display:none;">
+				<helper type="external" id="CAL_DOCUMENTOS">
+					<field id="id_documento">
+						
+					</field>
+					<field id="nombre_documento">
+						<label>Nombre</label>
+						<detalle>nombre_documento</detalle>
+					</field>
+				</helper>
+				<label>Nro Proc.</label>
+			</field>
+		
+			<field id="fecha_auditoriaint">
+				<label>Fecha</label>
+			</field>
+
+			<field id="codigo_documento" tabla="CAL_DOCUMENTOS" deshabilitado="true" linkint="">
+				<attribute id="linkint">archivo_documento</attribute>
+				<label>Código</label>
+			</field>
+
+			<field id="nombre_documento" tabla="CAL_DOCUMENTOS" deshabilitado="true">
+				<label _modpos="nobr">Proceso</label>
+				<size>50</size>
+			</field>
+
+			<field id="puntuacionanterior" colstyle="display:none;" deshabilitado="true">
+				<expression>(SELECT CONCAT('(', cap.puntaje, ') ', cap.valoracion) 
+
+					FROM CAL_AUDITORIA_INT cai 
+
+					LEFT JOIN CAL_AUDITORIA_PUNTUACION cap ON cai.auditoriaintpunt_id = cap.id_auditoriaintpunt 
+					
+					WHERE cai.documento_id = CAL_AUDITORIA_INT.documento_id 
+
+					and cai.fecha_auditoriaint &lt; CAL_AUDITORIA_INT.fecha_auditoriaint
+
+					order by cai.fecha_auditoriaint desc
+
+					 LIMIT 1)
+				</expression>
+				<label colspan="3" _modpos="nobr">Puntuacion ant.</label>
+				<size>85</size>
+			</field>
+
+			<field id="codigo_auditorint">
+				<helper type="combo" id="HTXUSERS">
+					<field id="id_usuario"/>
+					<field id="auditor">
+						<expression>CONCAT(apellido, ' ', Nombre)</expression>
+					</field>
+					<order>
+						<field id="auditor"/>
+					</order>
+				</helper>
+				<label>Auditor</label>
+			</field>
+
+			<field id="realizada">
+				<helper type="combo">
+					<option value=""></option>
+					<option value="0">Pendiente</option>
+					<option value="1">Realizada</option>
+				</helper>
+				<valor>0</valor>
+				<label>Estado</label>
+			</field>
+
+			<field id="auditoriaintpunt_id" colstyle="display:none;">
+				<helper type="combo" id="CAL_AUDITORIA_PUNTUACION">
+					<field id="id_auditoriaintpunt"/>
+					<field id="val">
+						<expression>CONCAT('(', puntaje, ') ', valoracion)</expression>
+					</field>
+				</helper>
+				<label>Puntuación</label>
+			</field>
+
+
+			<field id="areas" local="true" obj="calauditoriaint_areas_crud.xml" colstyle="display:none;">
+                <label colspan="10"/>
+                <paring destino="auditoriaint_id">id_auditoriaint</paring>
+            </field>
+
+			<field id="personas" local="true" obj="calauditoriaint_personas_crud.xml" colstyle="display:none;">
+                <label colspan="10"/>
+                <paring destino="auditoriaint_id">id_auditoriaint</paring>
+            </field>
+
+			<field id="observaciones" local="true" obj="calauditoriaint_obs_crud.xml" colstyle="display:none;">
+                <label colspan="10"/>
+                <paring destino="auditoriaint_id">id_auditoriaint</paring>
+            </field>
+			
+			<field id="colorCerradas" deshabilitado="true" clasefila="true" noshow="true" local="true">
+                <if exp="'realizada' == '1'">
+                    <true>'grisado2'</true>
+                    <false>''</false>
+                </if>
+            </field>
+			<order>
+				<field id="id_auditoriaint"/>
+			</order>
+        </table>
+		<join tipo="left">
+			<table id="CAL_DOCUMENTOS">
+				<field id="id_documento">
+					<condicion operador="=">CAL_AUDITORIA_INT.documento_id</condicion>
+				</field>
+			</table>
+		</join>
+    </form>
+</histrix>

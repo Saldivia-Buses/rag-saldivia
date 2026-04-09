@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert" tipoInsert="ignore">
+	<title>Grabación Usuarios Habilitados por Puesto</title>
+	<obs />
+	<form>
+		<table id="CAJ_PUESTO_USERS" idCampoCond="habilitado">
+			<field id="cajpuesto_id"    id_temp="cajpuesto_id" />
+			<field id="usuario_id"	    id_temp="Id_usuario" />
+		</table>
+	</form>
+</histrix>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="cabecera" >
+    <title>Controles Calidad</title>
+    <obs/>
+    <form>
+        <table id="PROD_CONTROL_MOVIM" label="Controles Calidad">
+
+                <field id="new_fecha_control" local="true">
+                    <label>Nueva Fecha</label>
+                    <tipo>varchar</tipo>
+                    <help>0000-00-00</help>
+                </field>
+        
+                <field id="new_hora_control" local="true">
+                    <label modpos="nobr">Nueva Hora/Fecha</label>
+                    <tipo>varchar</tipo>
+                    <size>20</size>
+                    <help>0000-00-00 00:00:00</help>
+                </field>
+        </table>
+    </form>
+</histrix>

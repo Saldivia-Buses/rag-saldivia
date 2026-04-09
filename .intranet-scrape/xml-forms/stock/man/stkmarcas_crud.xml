@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+*******************************************************************************
+Tipo:  CRUD
+Tarea: Tabla de Marcas de Articulos
+Autor: d!ego2k
+Fecha: 21/12/2011
+*******************************************************************************
+-->
+<histrix tipo="abm">
+    <title>Marcas</title>
+    <obs></obs>
+    <form>
+        <table id="STK_MARCAS" label="Marcas">
+            <field id="id_stkmarca" esClave="true" noshow="true" />
+
+            <field id="nombre_marca">
+                <label>Nombre</label>
+            </field>
+
+        </table>
+    </form>
+</histrix>	

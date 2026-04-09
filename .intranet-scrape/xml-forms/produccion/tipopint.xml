@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<abm tipo="abm">
+	<titulo>TIPO DE PINTURA</titulo>
+	<obs></obs>
+	<consulta>
+		<tabla id="TIPOPINT" label="Pinturas">
+			<campo id="siscod" oculto="true">
+				<label>Cod</label>
+			</campo>
+			<campo id="tippin">
+				<label>Codigo</label>
+				<help>Codigo de Pintura</help>
+			</campo>
+			<campo id="pindes">
+				<label>Pintura</label>
+				<help>Tipo de Pintura</help>
+			</campo>
+			<campo id="pinabv">
+				<label>Abrev.</label>
+				<help>Abreviatura a Utilizar</help>
+			</campo>
+    			<orden>
+				<campo id="tippin"></campo>
+			</orden>
+		</tabla>
+	</consulta>	   
+</abm> 

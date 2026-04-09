@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="cabecera" >
+	<title>Movimientos</title>
+	 <obs></obs>
+		<consulta>
+		    <table id="CTB_MOVIMIENTOS" label="movimientos">
+				<field id="id_movimiento" deshabilitado="true" autoinc="true" noshow="true">
+				</field>
+				<field id="concepto_id" >
+					<helper type="combo" dir="/ayudas" xml="ctbconcepto_qry.xml">
+					</helper>
+					<label>Concepto</label>
+					<help>Código de concepto</help>
+					<detalle>concepto_id</detalle>
+				</field>
+
+				<field id="nro_minuta" _noshow="true" deshabilitado="true">
+				    <label modpos="nobr">Numero</label>
+				    <help>Numero de la minuta</help>
+				    <detalle>nro_minuta</detalle>
+				</field>
+	
+				<field id="fecha_movimiento1" local="true" _deshabilitado="true">
+					<label>Fecha</label>
+					<tipo>date</tipo>
+					<help>Fecha movimiento</help>
+					<detalle>fecha_movimiento</detalle>
+				</field>
+
+				<field id="fecha_movimiento" noshow="true">
+					<tipo>date</tipo>
+				</field>
+
+
+
+				<field id="referencia1" local="true">
+					<label>Referencia</label>
+					<detalle>referencia</detalle>
+					<size>40</size>
+      				</field>
+				<field id="referencia" noshow="true">
+					<help>Referencia del movimiento</help>
+					<tipo>varchar</tipo>
+					<size>150</size>
+				</field>
+				
+				<field id="ejercicio_id" noshow="true">
+				            <label modpos="nobr">ejercicio</label>
+                         <condicion operador="=">(select id_ejercicio from CTB_EJERCICIOS where activo = 1 ORDER BY id_ejercicio DESC LIMIT 1)</condicion>
+			 		</field>
+				<field id="zero" deshabilitado="true" noshow="true" local="true">
+					<valor>0</valor>
+				</field>
+				<field id="nro_viejo" deshabilitado="true" noshow="true" local="true">
+				</field>
+				<!--<field id="fecha_modificacion" noshow="true">
+				<expresion>NOW()</expresion>
+				</field>-->
+				<field id="usuario_modificacion" noshow="true">
+					<valor eval="true">$_SESSION['usuario']</valor>
+				</field>
+				
+		 
+		    </table>  
+		</consulta>
+    </histrix>	

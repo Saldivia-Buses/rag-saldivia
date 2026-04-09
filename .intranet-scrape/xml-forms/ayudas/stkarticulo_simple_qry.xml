@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ayuda" >
+    <title>Articulos</title>
+    <obs></obs>
+    <form >
+        <table id="STK_ARTICULOS" label="Articulos" >
+
+			<field id="id_stkarticulo"   >
+				<label>Codigo auto de Articulo</label>
+				<detalle>stkarticulo_id</detalle>
+			</field>
+			<field id="nombre_articulo">
+				<label>Nombre</label>
+				<detalle>nombre_articulo</detalle>
+			</field>
+
+			<field id="stkrubro_id" noshow="true">
+				<label>Rubro</label>
+				<detalle>stkrubro_id</detalle>
+			</field>
+
+			<field id="stkfamilia_id" noshow="true">
+				<label>Familia</label>
+				<detalle>stkfamilia_id</detalle>
+			</field>
+
+
+			<!-- Precios -->
+
+			<field id="valor_compra" noshow="true">
+				<label>V.Compra</label>
+				<detalle>stkvalor_compra</detalle>
+			</field>
+			<field id="valor_uso" noshow="true">
+				<label>V.Uso</label>
+				<detalle>stkvalor_uso</detalle>
+			</field>
+			<field id="unidad_compra_id" noshow="true">
+				<label>U.Compra</label>
+				<detalle>stkunidad_compra_id</detalle>
+			</field>
+			<field id="unidad_uso_id" noshow="true">
+				<label>U.Uso</label>
+				<detalle>stkunidad_id</detalle>
+			</field>
+			<field id="precio_costo" noshow="true">
+				<label>Costo</label>
+				<detalle>precio_costo</detalle>
+			</field>
+
+			<field id="precio_lista" noshow="true">
+				<label>Lista</label>
+			</field>
+
+			<field id="precio_venta" _noshow="true">
+				<label>Venta</label>
+				<detalle>precio_venta</detalle>
+			</field>
+
+			<field id="precio_promedio" noshow="true">
+				<label>PPP</label>
+				<detalle>precio_promedio</detalle>
+			</field>
+			<field id="unidad_id" noshow="true">
+				<detalle>unidad_id</detalle>
+			</field>
+			<field id="cuentadebe_id" noshow="true">
+				<detalle>cuenta_id</detalle>
+			</field>
+		</table>
+    </form>
+</histrix>  

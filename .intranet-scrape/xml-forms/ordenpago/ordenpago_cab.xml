@@ -1,0 +1,397 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="cabecera">
+	<title>Orden de pago</title>
+	<obs/>
+	<form >
+		<table id="CCTMOVIM" label="ORDEN DE PAGO">
+			<field id="siscod" oculto="true" >
+				<label>Cod.</label>
+				<help/>
+				<valor>01</valor>
+				<!-- <condicion operador="=">'01'</condicion> -->
+			</field>
+			<field id="sisprv" oculto="true" local="true">
+				<label>sisprv</label>
+				<help/>
+				<valor>01</valor>
+				<!-- <condicion operador="=">'01'</condicion> -->
+			</field>			
+			<field id="ctacod">
+				<label xml="cctcuent.xml">Proveedor</label>
+				<help>Codigo de Proveedor</help>
+				<ayuda_ex id="CCTCUENT" xml="HLPcctcuent_saldo.xml" dir="/help_local">
+					<field id="ctacod">
+						<label>Nro</label>
+					</field>
+					<field id="ctanom">
+						<label>Nombre</label>
+						<detalle>ctanom</detalle>
+
+					</field>
+						<field  id="movnroOP" _local="true" >
+								<detalle>movnroOP</detalle>
+							<help>Numero</help>
+							<expression>(select parent from CAJPARAM where parcla = 'nropag' limit 1)</expression>
+						</field>
+
+					<field id="siscod" oculto="true">
+						<label>siscod</label>
+						<condicion operador="=">'01'</condicion>
+					</field>
+					<field id="ctacod2" noshow="true">
+						<expression having="false">CCTCUENT.ctacod</expression>
+						<condicion operador="!=">0</condicion>
+					</field>
+					<field id="movsal">
+						<expression>sum(CCTMOVIM.movsal)</expression>
+						<label>Saldo</label>
+						<detalle>saldoPR</detalle>
+					</field>
+						<field id="ctbpro" noshow="true">
+						    <expression>IFNULL(
+	(select RI.cuenta_id from REG_CUENTA_IMPUTACION RI where RI.regcuenta_id = id_regcuenta and RI.doh = 0 and RI.cuenta_id != '' limit 1), 
+	(select paralf from FSMPARAM where parcla = 'ctbpro' limit 1))</expression>
+						    <detalle>ctbpro</detalle>
+						</field>
+						<field id="ctanro" noshow="true">
+							<detalle>ctanro</detalle>
+						</field>
+						<field id="ctadir" noshow="true">
+							<detalle>ctadir</detalle>
+						</field>
+						<field id="ctaloc" noshow="true">
+							<detalle>ctaloc</detalle>
+						</field>
+						<field id="ctanib" noshow="true">
+							<detalle>ctanib</detalle>
+						</field>
+						<field id="ctagan" noshow="true">
+							<detalle>ctagan</detalle>
+						</field>
+						
+						<field id="por1598" _noshow="true">
+							<detalle>por1598</detalle>
+						</field>
+						<field id="acupag" noshow="true">
+							<expression>sum( distinct acupag)</expression>
+							<label>acupag</label>
+							<detalle>netoacum</detalle>
+						</field>						
+						<field id="acuret" noshow="true">
+							<expression>sum(distinct acuret)</expression>
+							<label>acuret</label>
+							<detalle>acuret</detalle>
+							
+						</field>							
+						
+
+						<field id="formaPago" noshow="true">
+						    <detalle>formaPago</detalle>
+						</field>
+						<field id="vtacod" noshow="true">
+						    <detalle>vtacod</detalle>
+						</field>
+						<field id="minimoret" noshow="true">
+							<expression>select tabmin from RETTABLA where RETTABLA.ctagan = CCTCUENT.ctagan and RETTABLA.retcod = CCTCUENT.catganancias_id</expression>
+							<detalle>minimoret</detalle>
+						</field>
+						<field id="catganancias_id" noshow="true">
+							<detalle>catganancias_id</detalle>
+						</field>
+						<field id="porret" noshow="true">
+							<expression>ifnull((select tabpor / 100 from RETTABLA where RETTABLA.ctagan = CCTCUENT.ctagan and RETTABLA.retcod = CCTCUENT.catganancias_id),0)</expression>
+							<detalle>porretgan</detalle>
+						</field>						
+						
+					<clave>ctacod</clave>
+					<descripcion>ctanom</descripcion>
+				</ayuda_ex>
+				<tipo>decimal</tipo>
+				<!--				<detalle>ctacod</detalle> -->
+
+			</field>
+			<field id="catganancias_id" noshow="true" modpos="nobr" />
+			<field id="minimoret" 		noshow="true" modpos="nobr"/>
+			<field id="porretgan" 		noshow="true" modpos="nobr"/>
+			<field id="sisctb" oculto="true" local="true">
+				<label>sisctb</label>
+				<parametro id="fsmparam_paralf.xml" retorna="paralf">
+					<field id="parcla">
+						<condicion operador="=">'sisctb'</condicion>
+					</field>
+				</parametro>
+			</field>
+			<field id="sisret" oculto="true" local="true">
+				<label>sisret</label>
+				<parametro id="fsmparam_paralf.xml" retorna="paralf">
+					<field id="parcla">
+						<condicion operador="=">'sisret'</condicion>
+					</field>
+				</parametro>
+			</field>			
+			<field ctbcuenta="1" id="ctbpro"  local="true" noshow="true">
+				<label>ctb proveedores</label>
+				<!--
+				<parametro id="ctbparam_paralf.xml" retorna="paralf">
+					<field id="siscod" oculto="true">
+						<condicion operador="=" valorde="sisctb"/>
+					</field>
+					<field id="parcla">
+						<condicion operador="=">'ctbpro'</condicion>
+					</field>
+				</parametro>
+				-->
+			</field>
+		
+			<field deshabilitado="true" id="ctanom" >
+				<label colspan="4" modpos="nobr">Señores</label>
+				<help>Nombre</help>
+				<tipo>character</tipo>
+				<size>30</size>
+			</field>
+
+			<field ctbfecha="1" id="movfec">
+				<label modpos="nobr">Fecha</label>
+				<help/>
+				<valor>today</valor>
+				<detalle>cajfec</detalle>
+				<detalle>movfec</detalle>
+			</field>
+			<!--
+                  <field id="ctadir" tabla="CCTCUENT">
+                      <label  >Domicilio</label>
+                      <help>Domicilio</help>
+					  <tipo>varchar</tipo>					  
+                  </field>					  -->
+			<field id="concod" oculto="true">
+				<label modpos="nobr">concod</label>
+				<help/>
+				<valor>4</valor>
+			</field>
+			<field ctbtipo="1" id="movcta" oculto="true">
+				<label modpos="nobr">movcta</label>
+				<help/>
+				<valor>1</valor>
+			</field>
+			<field id="zoncod" oculto="true">
+				<label modpos="nobr">zoncod</label>
+				<valor>0</valor>
+			</field>
+			<field deshabilitado="true" id="movnpv" style="width:4em;">
+				<label modpos="nobr">Orden de Pago</label>
+				<help>Comprobante</help>
+				<format>%04d</format>
+				<detalle>movnpv</detalle>
+
+			</field>
+			<field id="siscaj" oculto="true">
+				<label>siscaj</label>
+				<parametro id="fsmparam_paralf.xml" retorna="paralf">
+					<field id="parcla">
+						<condicion operador="=">'siscaj'</condicion>
+					</field>
+				</parametro>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="year" oculto="true">
+				<label>año</label>
+				<valor eval="true">date('Y')</valor>
+			</field>
+			<field id="mes" oculto="true">
+				<label>mes</label>
+				<valor eval="true">date('m')</valor>
+			</field>
+			
+			<field ctbregnro="1" deshabilitado="true" id="movnroOP" local="true" >
+				<label modpos="nobr">Numero</label>
+				<help>Numero</help>
+				<parametro id="cajparam_parent.xml" retorna="parent">
+					<!--					<field id="siscod" oculto="true">
+						<condicion operador="=" valorde="siscaj"/>
+							<tipo>varchar</tipo>
+							<valor>'05'</valor>
+					</field> -->
+					<field id="parcla" oculto="true">
+						<condicion operador="=">'nropag'</condicion>
+					</field>re
+					<field id="parent">
+						<complete>parent + 1</complete>
+					</field>
+				</parametro>
+				<tipo>integer</tipo>
+				<format>%012d</format>
+				<detalle>movnro</detalle>
+				<detalle>cajnro</detalle>
+				<detalle>carpag</detalle>
+				<detalle>nropag</detalle>
+				<detalle>nrocom</detalle>
+				<detalle>carrec</detalle>
+				<detalle>referencia</detalle>
+			</field>
+			<field id="formaPago" tabla="CCTCUENT" deshabilitado="true"> 
+			    <label style="color:black; background-color:yellow;" colspan="2">PAGAR CON</label>
+			    <tabla_ex id="FORMAPAGO">
+				<field id="formaPago"></field>
+				<field id="nombrePago"></field>
+			    </tabla_ex>
+			</field>
+			
+			<field id="vtacod" tabla="CCTCUENT" deshabilitado="true">
+			    <label style="background-color:yellow;" modpos="nobr" colspan="2"></label>
+			    <tabla_ex id="FACCONDI">
+				<field id="vtacod"></field>
+				<field id="condes"></field>
+			    </tabla_ex>
+			</field>
+			
+
+			<field id="fpago" local="true" obj="ordenpago_cajmovim_ing.xml">
+				<label rowspan="3" colspan="7">forma de pago</label>
+			</field>
+			
+			<field deshabilitado="true" id="saldoPR">
+				<label modpos="nobr">Saldo</label>
+				<tipo>numeric</tipo>
+			</field>
+			<field id="netoacum" deshabilitado="true">
+				<label modpos="nobr">Neto Acumulado</label>
+				<valor>0</valor>
+
+			</field>				
+			<field id="acuret" deshabilitado="true" tabla="RETACUMU">
+				<label modpos="nobr">Ret. Acumu.</label>
+				<valor>0</valor>
+
+			</field>				
+			
+			<field id="movref__1" >
+				<label colspan="5" _modpos="nobr">Ref</label>
+			</field>
+			<field id="ctanro" deshabilitado="true" noshow="true">
+				<label>cuit</label>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="ctadir" deshabilitado="true" noshow="true">
+				<label modpos="nobr">dir</label>			
+				<tipo>varchar</tipo>
+			</field>		
+			<field id="ctaloc" deshabilitado="true" noshow="true">
+				<label modpos="nobr">loc</label>			
+				<tipo>varchar</tipo>			
+			</field>			
+			<field id="ctanib" deshabilitado="true" noshow="true">
+				<label modpos="nobr">nib</label>			
+				<tipo>varchar</tipo>			
+			</field>					
+
+			<field id="ctagan" local="true" deshabilitado="true" >
+				<label modpos="nobr">Ganancias</label>
+
+            				<tabla_ex id="REG_CATEGORIAS" _vacio="true">
+            					<field id="id_regcategoria"></field>
+            					<field id="nombre_categoria"></field>
+<!--
+            					<field id="tipo_categoria">
+            					    <condicion operador="=">'ganancias'</condicion>
+            					</field>
+-->
+            				</tabla_ex> 
+
+			</field>	
+			<field id="nroret"  deshabilitado="true"  style="width:5em;">
+				<label modpos="nobr">nro IIBB</label>			
+				<expression>select max(nroret) + 1 from RET1598</expression>
+				<parametro id="numerador_ret1598.xml" retorna="parent">
+				</parametro>			
+				<tipo>integer</tipo>
+				
+			</field>
+			<field id="nrogan"  deshabilitado="true" noshow="true">
+				<label modpos="nobr">nro Gan</label>			
+				<expression sql="true">select max(gannro) + 1 from RETGANAN</expression>
+			<!-- <parametro id="numerador_retganan.xml" retorna="Entero"></parametro> -->
+				<tipo>integer</tipo>
+				
+			</field>
+			<field id="ivanro"  deshabilitado="true" noshow="true">
+				<label modpos="nobr">nro Iva</label>			
+				<expression sql="true">select max(ivanro) + 1 from RETIVA</expression>
+			<!-- <parametro id="numerador_retganan.xml" retorna="Entero"></parametro> -->
+				<tipo>integer</tipo>
+				
+			</field>									
+<!--			<field id="nroret" local="true" deshabilitado="true" >
+				<label>nroRet</label>
+				<parametro id="retparam_parent.xml" retorna="parent">
+
+					<field id="parcla" oculto="true">
+						<condicion operador="=">'ib1598'</condicion>
+					</field>
+					<field id="parent">
+						<complete>parent + 1</complete>
+				</field>
+				</parametro>			
+				<tipo>integer</tipo>
+			</field>				-->
+			<field id="por1598" local="true" deshabilitado="true" noshow="true">
+				<label modpos="nobr">por1598</label>			
+				<tipo>decimal</tipo>
+				<valor>0</valor>			
+			</field>			
+			<field id="opecla" local="true" oculto="true">
+				<label>Usuario</label>
+				<valor eval="true">$_SESSION['usuario']</valor>
+			</field>
+			<!--
+                  <field id="ctaloc" tabla="CCTCUENT">
+                      <label  >Localidad</label>
+                      <help>Localidad</help>
+					  <tipo>varchar</tipo>
+                  </field>					  
+                  <field id="prvcod" tabla="CCTCUENT">
+                      <label  modpos="nobr"></label>
+                      <help>Provincia</help>
+					  <tabla_ex id="FSMPROVS">
+						  <field id="prvcod"></field>
+						  <field id="prvnom"></field>
+					  </tabla_ex>
+					  <tipo>varchar</tipo>
+                  </field>					  	
+                  <field id="ctanro" tabla="CCTCUENT">
+                      <label  >Cuit</label>
+                      <help>Cuit</help>
+					  <tipo>varchar</tipo>
+                  </field>					  					  				  
+                  <field id="ivacod" tabla="CCTCUENT" >
+                      <label  modpos="nobr">Iva</label>
+                      <help>Nombre</help>
+					  <tabla_ex id="FSMCTIVA">
+						  <field id="ivacod"></field>
+						  <field id="ivanom"></field>
+					  </tabla_ex>
+					  <tipo>varchar</tipo>					  
+                  </field>
+				<field id="regmin" oculto="true">
+					<label>minuta</label>
+					<detalle>regmin</detalle>
+				</field>
+	              <field id="movimp" suma="true">
+	                  <label posx="130" posy="+1"  PDFsize="12">Total Pago</label>
+	                  <help> </help>
+					  <format>%01.2f</format>
+	              </field>
+-->
+		</table>
+		<join tipo="left">
+			<table id="CCTCUENT">
+				<field id="siscod" oculto="true">
+					<label>cctcuent.siscod</label>
+					<condicion operador="=">CCTMOVIM.siscod</condicion>
+				</field>
+				<field id="ctacod" oculto="true">
+					<condicion operador="=">CCTMOVIM.ctacod</condicion>
+				</field>
+			</table>
+		</join>
+	</form>
+</histrix>

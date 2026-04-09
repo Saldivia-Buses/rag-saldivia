@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="consulta">
+	<title>ENTRADA SALIDA STOCK POR CODIGO</title>
+	<obs></obs>
+	<form >
+		<table id="STKINMOV" label="ENTRADA SALIDA STOCK">
+			
+			<field id="nrocha">
+				<label>Num.Fabric</label>
+				<tipo>integer</tipo>
+				<help>Nro de Fabricacion</help>
+			</field>
+			
+			<field id="movfec" noselect="true">
+				<label>Fecha Remito </label>
+				<help>Fecha Remito </help>
+			</field>
+			
+			<field id="siscod" oculto="true">
+				<label>Codigo Sistema.. </label>
+				<help>
+				</help>
+				<condicion operador="=">'01'</condicion>
+				
+			</field>
+			
+			<field id="movref" noselect="true">
+				<label>Referencia . </label>
+				<help>
+				</help>
+				<format>%10s</format>
+			</field>
+
+			
+			<field id="artcod" noselect="true">
+				<label>Articulo</label>
+				<help>Codigo de Articulo. </help>
+			</field>
+
+			<field id="Entrada" suma="true">
+				<expression>sum(movuso * (case when contip = '1' then 1 else 0 end))</expression>
+				<label>Entrada</label>
+				<help></help>
+			</field>
+			<field id="Salida" suma="true">
+				<expression>sum(movuso * (case when contip = '2' then 1 else 0 end))</expression>
+				<label>Salida</label>
+				<help></help>
+			</field>			
+			<field id="opecod" oculto="true">
+			</field>
+			
+			<field id="opecodEx" noselect="true">
+				<expression>CONCAT(PERSONAL.apellido, ', ', PERSONAL.Nombre)</expression>
+				<label>Operador</label>
+				<help>
+				</help>
+				<tipo>string</tipo>
+				
+			</field>
+
+			<group>
+				<field id="nrocha" />
+			</group>			
+		</table>
+		  <join tipo="left">
+		    <table id="STKCONCE">
+			<field id="siscod" oculto="true">
+			    <condicion operador="=">'06'</condicion>
+
+			</field>
+			<field id="movcod" oculto="true">
+			    <condicion operador="=">STKINMOV.movcod</condicion>
+			</field>
+	    		<field id="contip" oculto="true"></field>
+	    		<field id="conabv" oculto="true"></field>
+			
+		    </table>
+		  </join>
+		<join tipo="left">
+			<table id="PERSONAL">
+				<field id="opecod" oculto="true">
+					<condicion operador="=">STKINMOV.opecod and PERSONAL.opecod != 0</condicion>
+				</field>
+			</table>
+		</join>
+		
+	</form>
+</histrix>

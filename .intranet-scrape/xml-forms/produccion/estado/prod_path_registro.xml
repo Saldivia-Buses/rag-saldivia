@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="crud" inserta="false">
+    <title>Actualiza seccion</title>
+    <form>
+        <table id="PROD_PATH_REGISTRO">
+	    <field id="id_path_registro" esClave="true" noshow="true" />
+            <field id="productpath_id"  noshow="true" />
+            <field id="ingreso_usuario_id"  noshow="true"/>
+	    <field id="posicion">
+		<label>Podicion</label>
+		<expression>nombre</expression>
+	    </field>
+            <field id="hora_registro">
+		<label>Ingreso</label>
+            </field>
+            <field id="hora_salida">
+		<label>Salida</label>
+            </field>
+            <field id="nrofab_id" oculto="true" />
+	    <order>
+            <field id="hora_registro">
+            </field>
+
+	    </order>
+        </table>
+	<join>
+	    <table id="PROD_PRODUCT_PATH">
+		<field id="id_productpath">
+		    <condicion operador="=">productpath_id</condicion>
+		</field>
+	    </table>
+	</join>
+	<join>
+	    <table id="POSICIONESFAB">
+		<field id="id_posicionfab">
+		    <condicion operador="=">posicionfab_id</condicion>
+		</field>
+	    </table>
+	</join>
+
+    </form>
+</histrix>

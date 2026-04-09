@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  CRUD
+Tarea: Tabla de Depositos por Punto de Venta
+Autor: d!ego2k
+Fecha: 10/08/11
+*******************************************************************************
+-->
+<histrix tipo="consulta">
+    <title>Depositos POS</title>
+    <obs></obs>
+    <form>
+        <table id="STK_DEPOSITO_POS" label="Deposito">
+            <field id="stkdeposito_id">
+                <label>Deposito</label>
+            </field>
+            <field id="nombre">
+                <expression>nombre_deposito</expression>
+            </field>
+            <field id="regnumerador_id" noshow="true">
+            </field>                 
+
+            <field id="id_cajpuestonpv" tabla="CAJ_PUESTO_NPV"   noshow="true" />
+            <field id="cajpuesto_id"    tabla="CAJ_PUESTO_NPV"   noshow="true" />
+            <field id="regnumerador_id" tabla="CAJ_PUESTO_NPV"   noshow="true" />
+            <field id="puesto"    tabla="REG_NUMERADORES"   noshow="true" />
+
+            
+        </table>
+
+        <join _tipo="left">
+            <table id="REG_NUMERADORES">
+                <field id="id_regnumerador">
+                    <condicion operador="=">regnumerador_id</condicion>
+                </field>
+    		
+            </table>
+        </join>
+        <join _tipo="left">
+            <table id="CAJ_PUESTO_NPV">
+                <field id="regnumerador_id">
+                    <condicion operador="=">id_regnumerador</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join _tipo="left">
+            <table id="STK_DEPOSITOS">
+                <field id="id_stkdeposito">
+                    <condicion operador="=">stkdeposito_id</condicion>
+                </field>
+    		
+            </table>
+        </join>
+    </form>
+</histrix>	

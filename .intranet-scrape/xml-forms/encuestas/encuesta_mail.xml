@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="nosql" log="false">
+	<title>evento</title>
+	<obs/>
+	<form  >
+		<table id="PARAVENTO" label="Eventos">
+
+
+
+
+			<field id="contacto"  id_temp="contacto">
+			</field>
+			<field id="destino" id_temp="destino" >
+			</field>
+            <field id="cliente" id_temp="cliente" local="true">
+			</field>
+
+            <field id="url" id_temp="url" local="true">
+			</field>
+			<field id="__mail" id_cab="__mail" >
+			</field>
+			<field id="idEncuesta" id_cab="idEncuesta">
+			</field>
+			
+
+			<field id="clave" id_cab="clave">
+			</field>
+
+			<ejecuta>
+				<![CDATA[
+					$dest['contacto'] = "contacto";
+					$dest['EMAIL'] = "destino";
+					$this->addDest($dest);
+					$this->sendMail("__mail", "clave" ,  "idEncuesta", "titulo", $arrayTT[0]);
+                    unset($this->destinatarios);
+                    
+                    loger("destino", "envio.log");
+					
+				]]>
+			</ejecuta>
+			
+			
+		</table>
+	</form>
+</histrix>

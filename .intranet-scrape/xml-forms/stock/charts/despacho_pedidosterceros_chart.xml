@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="chart">
+	<title>Pedidos despachados por Terceros</title>
+	<obs/>
+	<form  >
+		<table id="GEN_CALENDAR">
+			<grafico id="DespachadosTerceros" >
+				<ancho>400</ancho>
+				<tipo>L</tipo>
+				<etiquetas>mes</etiquetas>
+				<serie>despachados_terceros</serie>
+				<title>Pedidos</title>
+			</grafico>
+			<filters>
+				<field id="fecha">
+					<operador>&gt;=</operador>
+					<label>Desde Fecha</label>
+					<help>Fecha movimiento</help>
+					<valor eval="true">date('01/01/Y')</valor>
+				</field>
+				<field id="fecha">
+					<operador>&lt;=</operador>
+					<label _modpos="nobr">Hasta Fecha</label>
+					<help>Fecha movimiento</help>
+					<valor>today</valor>
+				</field>
+			</filters>
+			<field id="mes" oculto="true">
+				<expression>month(GEN_CALENDAR.fecha)</expression>
+				<label>Mes</label>
+				<options>
+					<option valor="1">Ene</option>
+					<option valor="2">Feb</option>
+					<option valor="3">Mar</option>
+					<option valor="4">Abr</option>
+					<option valor="5">May</option>
+					<option valor="6">Jun</option>
+					<option valor="7">Jul</option>
+					<option valor="8">Ago</option>
+					<option valor="9">Sep</option>
+					<option valor="10">Oct</option>
+					<option valor="11">Nov</option>
+					<option valor="12">Dic</option>
+				</options>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="fecha" oculto="true">
+				<tipo>date</tipo>
+			</field>
+			<field id="year" oculto="true">
+				<expression>year(GEN_CALENDAR.fecha)</expression>
+			</field>
+			<field id="despachados_terceros">
+				<label>Pedidos</label>
+				<expression>
+					<![CDATA[
+					ROUND(
+				(SELECT  count(*) from REG_MOVIMIENTOS   JOIN REG_CONCEPTOS on ( REG_CONCEPTOS.id_concepto = REG_MOVIMIENTOS.concepto_id )  
+					where ( ( REG_MOVIMIENTOS.fecha_movimiento >= GEN_CALENDAR.fecha 
+						and REG_MOVIMIENTOS.fecha_movimiento <= LAST_DAY(GEN_CALENDAR.fecha) ) ) 
+					and ( ( REG_MOVIMIENTOS.concepto_id = 47 ) ) 
+					and ( ( REG_MOVIMIENTOS.puesto_movimiento = 2 ) ) and  REG_MOVIMIENTOS.subsistema_id = '02' 
+					and REG_MOVIMIENTOS.regcuentatransporte_id not in (12430, 12424, 12459, 12768) and REG_MOVIMIENTOS.regestado_id = 11)
+				/
+				(select workdaydiff(GEN_CALENDAR.fecha,LAST_DAY(GEN_CALENDAR.fecha) )), 2)
+				]]></expression>
+						<tipo>numeric</tipo>
+					</field>
+					<group>
+						<field id="year" />
+						<field id="mes" />
+					</group>
+				</table>
+			</form>
+		</histrix>

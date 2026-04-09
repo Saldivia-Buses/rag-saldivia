@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="insert">
+    <title>MOVIMIENTOS DE STOCK</title>
+    <obs></obs>
+    <form >
+        <table id="STKINMOV" label="MOVIMIENTOS" idCampoCond="graba">
+						
+            <field id="siscod" >
+		    <valor>01</valor>
+            </field>
+            <field id="movfec" id_cab="movfec" />
+            <field id="movcod" id_cab="movcod" />
+            <field id="movref" id_cab="movref" />
+            <field id="movalt" id_cab="movfec" />
+            <field id="facfec" id_cab="movfec" />
+            <field id="opecod" id_temp="opecod" />
+
+            <field id="artcod" id_temp="artcod" />
+            <field id="movcant" id_temp="movcant" />
+    	    <field id="opecla" id_temp="opecla" />
+            <field id="movuso" id_temp="movcant" />
+            <field id="movcps" id_temp="movcant" />
+	
+            <field id="depcod"  id_temp="dep_id" />
+            <field id="stklocacion_id" id_temp="loc_id" />
+
+						
+        </table>
+    </form>
+</histrix>

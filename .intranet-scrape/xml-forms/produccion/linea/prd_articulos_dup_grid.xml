@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="grid" deleteRow="false">
+  <title>Procesos de Produccion</title>
+  <obs/>
+  <form >
+    <table id="STK_ARTICULO_PROCESO">
+      <movimientos >
+        <relacion id="prod_articulos_dup_ins.xml"></relacion>
+      </movimientos>
+
+        <field id="id_artproceso" noshow="true">
+          <label>id</label>
+        </field>
+
+        <field id="stkarticulo_id" />
+        <field id="cantidad" />
+
+        <field id="homologacion_id"  noshow="true" esClave="true" >
+          <label>Modelo</label>
+          <condicion operador="=">-1</condicion>
+        </field>
+
+        <field id="proceso_id" />
+
+        <field id="max_id" noshow="true">
+          <expression>SELECT MAX(pp.id_proceso) + 1 FROM PROD_PROCESOS pp</expression>
+        </field>
+
+        <field id="primer_id" noshow="true">
+          <expression>SELECT MIN(pp.id_proceso) FROM PROD_PROCESOS pp WHERE pp.homologacion_id = STK_ARTICULO_PROCESO.homologacion_id</expression>
+        </field>
+
+        <field id="new_proceso_id" local="true" noshow="true">
+          <if exp="true">
+            <true>max_id - primer_id + proceso_id</true>
+            <false>max_id - primer_id + proceso_id</false>
+          </if>
+        </field>
+
+        <field id="new_homologacion_id"  local="true" noshow="true">
+          <label>Homologacion Nueva</label>
+        </field>
+
+      <order>
+        <field id="id_artproceso" />
+      </order>
+    </table>
+  </form>
+</histrix>

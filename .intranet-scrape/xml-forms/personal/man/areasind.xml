@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="abm">
+	<title>Areas por Sindicatos</title>
+	<obs></obs>
+	<form >
+		<table id="AREASSIND" >
+		    <title>Sindicatos</title>
+
+			<filters>
+				<field id="IdSindicato">
+					<label>Sindicato</label>
+					<operador>=</operador>
+				</field>
+			</filters>
+
+			<field id="IdSindicato" noshow="true">
+				<label>Cod.</label>
+				<help>Código de Sindicato</help>
+				<helper type="combo" id="SINDICATO">
+					<!-- campos a agregar al contenedor Filtro-->
+					<field id="IdSindicato"></field>
+					<field id="Nombre"></field>
+					<order>
+						<field id="IdSindicato"></field>
+					</order>
+				</helper>
+
+			</field>
+		        <field id="Id_area">
+				<label>Área</label>
+				<help>Código de Área</help>
+			</field>
+			<field id="nombre">
+				<label>Nombre</label>
+				<help>Nombre del Área</help>
+			</field>			
+			<field id="descripcion">
+				<label>Descripción</label>
+				<help>Descripción del Área</help>
+			</field>
+			<order>
+				<field id="IdSindicato"></field>
+			</order>
+		</table>
+	</form>	   
+</histrix> 

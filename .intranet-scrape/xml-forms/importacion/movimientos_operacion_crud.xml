@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm-mini"  subtipo="vertical" _inserta="false" _llenoTemporal="true" _modifica="false" deleteRow="false" path="carpetas_importacion/">
+    <title>Operaciones</title>
+    <obs></obs>
+    <form >
+		<table id="REG_MOVIMIENTO_OPERACION" >
+			<field id="regcuenta_id" local="true"  colstyle="display:none;">
+				<label>Cuenta</label>
+		        <helper type="combo" id="REG_CUENTA" empty="true">
+		            <field id="id_regcuenta"></field>
+		            <field id="nombre_cuenta"></field>
+		            <field id="subsistema_id" oculto="true">
+		              <condicion operador="=">'01'</condicion>
+		            </field>
+		            <field id="baja">
+		            	<condicion operador="=">0</condicion>
+		            </field>
+
+		          </helper>
+		          <actualiza>
+		          	<field id="nro_movimiento" destino="regcuenta_id" />
+		          </actualiza>				
+			</field>
+			<field id="nombre_cuenta" tabla="REG_CUENTA" deshabilitado="true" Formstyle="display:none;">
+				<label>Nombre</label>
+			</field>
+			<field id="referencia_movimiento" tabla="REG_MOVIMIENTOS" deshabilitado="true" Formstyle="display:none;">
+				<label>Ref</label>
+			</field>
+
+		  	<field id="nro_carpeta" local="true" valauto="true" noshow="true" />
+
+		  	<field id="operacion_imp_id" oculto="true">
+		  	</field>
+
+		  	<field id="id_movimiento_operacion" noshow="true"  autoinc="true"/>
+
+		  	<field id="regmovim_id" noshow="true">
+		  		<label>regmovim</label>
+		  	</field>
+
+			<field id="descripcion_concepto"  tabla="REG_CONCEPTOS" deshabilitado="true" Formstyle="display:none;">
+				<label>Tipo</label>
+				<help>Tipo de Comprobante</help>
+				<tipo>varchar</tipo>
+			</field>		  
+			<field id="puesto_movimiento" tabla="REG_MOVIMIENTOS" deshabilitado="true" Formstyle="display:none;">
+				<label modpos="nobr">Numero</label>
+				<help>Comprobante</help>
+				<formato>%04d</formato>
+				
+			</field>
+			<field id="nro_movimiento" tabla="REG_MOVIMIENTOS" >
+				<label >Número</label>
+		  		<helper xml="regmovimientos_select.xml" type="external">
+		  			<parameter source="regcuenta_id" target="regcuenta_id" />
+		  		</helper>				
+				<help>Numero Comprobante</help>
+
+				
+			</field>
+
+
+			<field id="Pago_movimiento" tabla="REG_MOVIMIENTOS" deshabilitado="true" suma="true" noZero="true" Formstyle="display:none;">
+				<expression>(case when imputacion_concepto != 1 then importe_movimiento else 0 end)</expression>
+				<label PDFsize="12" posx="130" posy="+1">Debe</label>
+				<help></help>
+				<tipo>custom_numeric</tipo>
+				
+			</field>			
+			<field id="importe_movimiento" tabla="REG_MOVIMIENTOS" deshabilitado="true" suma="true" noZero="true" Formstyle="display:none;">
+				<expression>(case when imputacion_concepto = 1 then importe_movimiento else 0 end)</expression>
+				<label PDFsize="12" posx="130" posy="+1">Haber</label>
+				<help></help>
+				<tipo>custom_numeric</tipo>
+				
+			</field>			
+			<field id="saldo_movimiento" tabla="REG_MOVIMIENTOS" deshabilitado="true" suma="true" Formstyle="display:none;">
+				<label PDFsize="12" posx="130" posy="+1">Saldo Comprobante</label>
+				<help></help>
+				<tipo>custom_numeric</tipo>
+				
+			</field>
+
+			<!--
+			<field id="referencia_movimiento" tabla="REG_MOVIMIENTOS" >
+				<label>Referencia</label>
+				<help></help>
+			</field>
+		-->
+		  	<field id="file"  path="nro_carpeta" foto="true">
+		  		<label>Comprobante</label>
+		  		<tipo>file</tipo>
+		  		<tipo Type="Image">file</tipo>
+		  		<size>40</size>
+		  	</field>
+<!--
+		  	<field id="observacion_movimiento_operacion">
+		  		<label>Observaciones</label>
+		  	</field>
+-->
+		</table>
+		<join >
+			<table id="REG_MOVIMIENTOS">
+				<field id="id_regmovim">
+					<condicion operacion="=">regmovim_id</condicion>
+				</field>
+			</table>
+		</join>		
+		<join >
+			<table id="REG_CUENTA">
+				<field id="id_regcuenta">
+					<condicion operacion="=">regcuenta_id</condicion>
+				</field>
+			</table>
+		</join>
+		<join >
+			<table id="REG_CONCEPTOS">
+				<field id="id_concepto" oculto="true">
+					<condicion operador="=">concepto_id</condicion>
+				</field>
+				<!--
+				<field id="imputacion_concepto">
+
+					<condicion operador="=">1</condicion>
+				</field>
+			-->
+			</table>
+		</join>		
+		</form>
+	</histrix>

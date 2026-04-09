@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ficha" preFetch="true" path="fotos/cheques" autoprint="true">
+	<title>CHEQUES RECIBIDO</title>
+	<obs></obs>
+	<form >
+	<!-- detalle="cctmovim_OP.xml" -->
+		<table id="CARCHE_UNIFICADA" label="CHEQUES RECIBIDO">
+
+		<field id="carint" noshow="true" print="false">
+		</field>
+
+
+	    <field id="carref" noshow="true" print="false">
+
+	    </field>
+	    <field id="img" local="true" print="false">
+    		<if exp="true">
+    			<true>str_replace(['=','^'], '', 'carref')</true>
+    			<false>''</false>
+    		</if>
+
+	    </field>
+
+	    <field id="label1" local="true"   posX="5" posY="+5">
+	    	<valor>'Anverso:'</valor>
+	    </field>
+    	<field id="frente" local="true" posX="5" posY="+5" imageWidth="170">
+    		<if exp="true">
+    			<true>'img_front.jpg'</true>
+    			<false>''</false>
+    		</if>
+    		<tipo>file</tipo>
+    		<size>100</size>
+    	</field>
+
+	    <field id="label2" local="true"   posX="5" posY="+80">
+	    	<valor>'Reverso:'</valor>
+	    </field>
+
+    	<field id="atras" local="true" posX="5" posY="+5" imageWidth="170">
+    		<if exp="true">
+    			<true>'img_back.jpg'</true>
+    			<false>''</false>
+    		</if>
+    		<tipo>file</tipo>
+    		<size>100</size>
+    	</field>
+
+		</table>
+	</form>
+</histrix>

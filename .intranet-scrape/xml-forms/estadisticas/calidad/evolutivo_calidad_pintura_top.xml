@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="chart">
+    <title>Pintura Top 10 Evolutivo</title>
+    <obs />
+    <form>
+        <table id="PROD_CONTROL_MOVIM">
+
+            <grafico id="calidad">
+                <ancho>500</ancho>
+                <tipo>L</tipo>
+                <title>Pintura Top 10 Evolutivo</title>
+                <etiquetas>periodo</etiquetas>
+                <serie>top_1</serie>
+                <serie>top_2</serie>
+                <serie>top_3</serie>
+                <serie>top_4</serie>
+                <serie>top_5</serie>
+                <serie>top_6</serie>
+                <serie>top_7</serie>
+                <serie>top_8</serie>
+                <serie>top_9</serie>
+                <serie>top_10</serie>
+            </grafico>
+
+            <filters>
+                <field id="fecha_control">
+                    <label>Desde</label>
+                    <valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m" ,strtotime('-12 month')) , 1, date("Y") -  1 ))</valor>
+                    <operador>&gt;=</operador>
+                </field>
+
+                <field id="fecha_control">
+                    <label modpos="nobr">Hasta</label>
+                    <valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m" ,strtotime('-0 month')) , 1, date("Y") ) - 1)</valor>
+                    <operador>&lt;=</operador>
+                </field>
+            </filters>
+
+            <field id="fecha_control" noshow="true" />
+
+            <field id="year" oculto="true" noshow="true">
+                <label>Año</label>
+                <expression>YEAR(PROD_CONTROL_MOVIM.fecha_control)</expression>
+            </field>
+
+            <field id="mes" noshow="true">
+                <label>Mes</label>
+                <expression>MONTH(PROD_CONTROL_MOVIM.fecha_control)</expression>
+            </field>
+
+            <field id="periodo">
+                <label>Periodo</label>
+                <expression>UPPER(CONCAT((CASE MONTH(PROD_CONTROL_MOVIM.fecha_control)
+                    WHEN 1 THEN 'Ene'
+                    WHEN 2 THEN 'Feb'
+                    WHEN 3 THEN 'Mar'
+                    WHEN 4 THEN 'Abr'
+                    WHEN 5 THEN 'May'
+                    WHEN 6 THEN 'Jun'
+                    WHEN 7 THEN 'Jul'
+                    WHEN 8 THEN 'Ago'
+                    WHEN 9 THEN 'Sep'
+                    WHEN 10 THEN 'Oct'
+                    WHEN 11 THEN 'Nov'
+                    WHEN 12 THEN 'Dic' END), "'", RIGHT(YEAR(PROD_CONTROL_MOVIM.fecha_control), 2)))</expression>
+            </field>
+
+            <field id="top_1">
+                <label>Top 1</label>
+                <expression>SUM(CASE WHEN PROD_CONTROLES.id_prodcontrol = (SELECT PC.id_prodcontrol FROM PROD_CONTROL_MOVIM PCM
+                JOIN PROD_CONTROLES PC ON PC.id_prodcontrol = PCM.prodcontrol_id
+                WHERE PCM.fecha_control &gt;= (LAST_DAY(CURDATE() - INTERVAL 2 MONTH) + INTERVAL 1 DAY)
+                  AND PCM.fecha_control &lt;= (LAST_DAY(DATE_ADD(CURDATE(), INTERVAL -1 MONTH)))
+                  AND PC.seccion_id = 4
+                  AND PCM.no_conforme = 1
+                GROUP BY PC.id_prodcontrol
+                ORDER BY COUNT(*) DESC LIMIT 0,1) THEN 1 ELSE 0 END)</expression>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="top_2">
+                <label>Top 2</label>
+                <expression>SUM(CASE WHEN PROD_CONTROLES.id_prodcontrol = (SELECT PC.id_prodcontrol FROM PROD_CONTROL_MOVIM PCM
+                JOIN PROD_CONTROLES PC ON PC.id_prodcontrol = PCM.prodcontrol_id
+                WHERE PCM.fecha_control &gt;= (LAST_DAY(CURDATE() - INTERVAL 2 MONTH) + INTERVAL 1 DAY)
+                  AND PCM.fecha_control &lt;= (LAST_DAY(DATE_ADD(CURDATE(), INTERVAL -1 MONTH)))
+                  AND PC.seccion_id = 4
+                  AND PCM.no_conforme = 1
+                GROUP BY PC.id_prodcontrol
+                ORDER BY COUNT(*) DESC LIMIT 1,1) THEN 1 ELSE 0 END)</expression>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="top_3">
+                <label>Top 3</label>
+                <expression>SUM(CASE WHEN PROD_CONTROLES.id_prodcontrol = (SELECT PC.id_prodcontrol FROM PROD_CONTROL_MOVIM PCM
+                JOIN PROD_CONTROLES PC ON PC.id_prodcontrol = PCM.prodcontrol_id
+                WHERE PCM.fecha_control &gt;= (LAST_DAY(CURDATE() - INTERVAL 2 MONTH) + INTERVAL 1 DAY)
+                  AND PCM.fecha_control &lt;= (LAST_DAY(DATE_ADD(CURDATE(), INTERVAL -1 MONTH)))
+                  AND PC.seccion_id = 4
+                  AND PCM.no_conforme = 1
+                GROUP BY PC.id_prodcontrol
+                ORDER BY COUNT(*) DESC LIMIT 2,1) THEN 1 ELSE 0 END)</expression>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="top_4">
+                <label>Top 4</label>
+                <expression>SUM(CASE WHEN PROD_CONTROLES.id_prodcontrol = (SELECT PC.id_prodcontrol FROM PROD_CONTROL_MOVIM PCM
+                JOIN PROD_CONTROLES PC ON PC.id_prodcontrol = PCM.prodcontrol_id
+                WHERE PCM.fecha_control &gt;= (LAST_DAY(CURDATE() - INTERVAL 2 MONTH) + INTERVAL 1 DAY)
+                  AND PCM.fecha_control &lt;= (LAST_DAY(DATE_ADD(CURDATE(), INTERVAL -1 MONTH)))
+                  AND PC.seccion_id = 4
+                  AND PCM.no_conforme = 1
+                GROUP BY PC.id_prodcontrol
+                ORDER BY COUNT(*) DESC LIMIT 3,1) THEN 1 ELSE 0 END)</expression>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="top_5">
+                <label>Top 5</label>
+                <expression>SUM(CASE WHEN PROD_CONTROLES.id_prodcontrol = (SELECT PC.id_prodcontrol FROM PROD_CONTROL_MOVIM PCM
+                JOIN PROD_CONTROLES PC ON PC.id_prodcontrol = PCM.prodcontrol_id
+                WHERE PCM.fecha_control &gt;= (LAST_DAY(CURDATE() - INTERVAL 2 MONTH) + INTERVAL 1 DAY)
+                  AND PCM.fecha_control &lt;= (LAST_DAY(DATE_ADD(CURDATE(), INTERVAL -1 MONTH)))
+                  AND PC.seccion_id = 4
+                  AND PCM.no_conforme = 1
+                GROUP BY PC.id_prodcontrol
+                ORDER BY COUNT(*) DESC LIMIT 4,1) THEN 1 ELSE 0 END)</expression>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="top_6">
+                <label>Top 6</label>
+                <expression>SUM(CASE WHEN PROD_CONTROLES.id_prodcontrol = (SELECT PC.id_prodcontrol FROM PROD_CONTROL_MOVIM PCM
+                JOIN PROD_CONTROLES PC ON PC.id_prodcontrol = PCM.prodcontrol_id
+                WHERE PCM.fecha_control &gt;= (LAST_DAY(CURDATE() - INTERVAL 2 MONTH) + INTERVAL 1 DAY)
+                  AND PCM.fecha_control &lt;= (LAST_DAY(DATE_ADD(CURDATE(), INTERVAL -1 MONTH)))
+                  AND PC.seccion_id = 4
+                  AND PCM.no_conforme = 1
+                GROUP BY PC.id_prodcontrol
+                ORDER BY COUNT(*) DESC LIMIT 5,1) THEN 1 ELSE 0 END)</expression>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="top_7">
+                <label>Top 7</label>
+                <expression>SUM(CASE WHEN PROD_CONTROLES.id_prodcontrol = (SELECT PC.id_prodcontrol FROM PROD_CONTROL_MOVIM PCM
+                JOIN PROD_CONTROLES PC ON PC.id_prodcontrol = PCM.prodcontrol_id
+                WHERE PCM.fecha_control &gt;= (LAST_DAY(CURDATE() - INTERVAL 2 MONTH) + INTERVAL 1 DAY)
+                  AND PCM.fecha_control &lt;= (LAST_DAY(DATE_ADD(CURDATE(), INTERVAL -1 MONTH)))
+                  AND PC.seccion_id = 4
+                  AND PCM.no_conforme = 1
+                GROUP BY PC.id_prodcontrol
+                ORDER BY COUNT(*) DESC LIMIT 6,1) THEN 1 ELSE 0 END)</expression>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="top_8">
+                <label>Top 8</label>
+                <expression>SUM(CASE WHEN PROD_CONTROLES.id_prodcontrol = (SELECT PC.id_prodcontrol FROM PROD_CONTROL_MOVIM PCM
+                JOIN PROD_CONTROLES PC ON PC.id_prodcontrol = PCM.prodcontrol_id
+                WHERE PCM.fecha_control &gt;= (LAST_DAY(CURDATE() - INTERVAL 2 MONTH) + INTERVAL 1 DAY)
+                  AND PCM.fecha_control &lt;= (LAST_DAY(DATE_ADD(CURDATE(), INTERVAL -1 MONTH)))
+                  AND PC.seccion_id = 4
+                  AND PCM.no_conforme = 1
+                GROUP BY PC.id_prodcontrol
+                ORDER BY COUNT(*) DESC LIMIT 7,1) THEN 1 ELSE 0 END)</expression>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="top_9">
+                <label>Top 9</label>
+                <expression>SUM(CASE WHEN PROD_CONTROLES.id_prodcontrol = (SELECT PC.id_prodcontrol FROM PROD_CONTROL_MOVIM PCM
+                JOIN PROD_CONTROLES PC ON PC.id_prodcontrol = PCM.prodcontrol_id
+                WHERE PCM.fecha_control &gt;= (LAST_DAY(CURDATE() - INTERVAL 2 MONTH) + INTERVAL 1 DAY)
+                  AND PCM.fecha_control &lt;= (LAST_DAY(DATE_ADD(CURDATE(), INTERVAL -1 MONTH)))
+                  AND PC.seccion_id = 4
+                  AND PCM.no_conforme = 1
+                GROUP BY PC.id_prodcontrol
+                ORDER BY COUNT(*) DESC LIMIT 8,1) THEN 1 ELSE 0 END)</expression>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="top_10">
+                <label>Top 10</label>
+                <expression>SUM(CASE WHEN PROD_CONTROLES.id_prodcontrol = (SELECT PC.id_prodcontrol FROM PROD_CONTROL_MOVIM PCM
+                JOIN PROD_CONTROLES PC ON PC.id_prodcontrol = PCM.prodcontrol_id
+                WHERE PCM.fecha_control &gt;= (LAST_DAY(CURDATE() - INTERVAL 2 MONTH) + INTERVAL 1 DAY)
+                  AND PCM.fecha_control &lt;= (LAST_DAY(DATE_ADD(CURDATE(), INTERVAL -1 MONTH)))
+                  AND PC.seccion_id = 4
+                  AND PCM.no_conforme = 1
+                GROUP BY PC.id_prodcontrol
+                ORDER BY COUNT(*) DESC LIMIT 9,1) THEN 1 ELSE 0 END)</expression>
+                <tipo>custom_numeric</tipo>
+            </field>
+                                          
+            <field id="no_conforme" noshow="true">
+                <condicion operador="=">1</condicion>
+            </field>
+
+            <field id="seccion_id" tabla="PROD_CONTROLES">
+                <condicion operador="=">4</condicion>
+            </field>
+
+            <group>
+                <field id="year" />
+                <field id="mes" />
+            </group>
+
+            <order>
+                <field id="fecha_control" />
+            </order>
+
+        </table>
+
+        <join>
+            <table id="PROD_CONTROLES">
+                <field id="id_prodcontrol">
+                    <condicion operador="=">PROD_CONTROL_MOVIM.prodcontrol_id</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+  <title>LISTADO MAESTRO DE DOCUMENTACION</title>
+  <obs></obs>
+  <form detalle="cal_documentos_edicion_pasos_crud.xml">
+    <table id="CAL_DOCUMENTOS_PASOS" label="Documentacion">
+
+    <field id="documento_id" noshow="true">
+      <label>Documento</label>
+      <detalle>documento_id</detalle>
+    </field>
+
+    <field id="codigo_documento" local="true" deshabilitado="true">
+      <label>Codigo</label>
+    </field>
+
+    <field id="nombre_documento" local="true" deshabilitado="true">
+      <label>Nombre</label>
+    </field>
+
+    <field id="revision_documento">
+      <label>Revision</label>
+      <help>Revision</help>
+      <size>5</size>
+      <detalle>revision_documento</detalle>
+    </field>
+
+    <group>
+      <field id="revision_documento" />
+    </group>
+
+    </table>
+  </form>
+</histrix>

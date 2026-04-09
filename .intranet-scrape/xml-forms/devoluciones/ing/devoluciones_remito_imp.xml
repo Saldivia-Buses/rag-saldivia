@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<histrix tipo="ficha" preFetch="true" autoprint="true">
+	<title>Devolución de Materiales</title>
+	<obs></obs>
+	<form  inline="true">
+		<table id="DEVREMITO" >
+			<title>Remito de Devolución</title>
+			
+
+			<field id="id_devremito" posX="5" posY="+1" PDFfontSize="12">
+				<label>Nro de devolución</label>
+			</field>
+
+			<field id="fecha_devolucion" posX="120" posY="0">
+				<label>Fecha</label>
+				<tipo>date</tipo>
+			</field>
+			<field id="nro_remito" posX="5" posY="+1">
+				<label>Nro</label>
+			</field>
+			<field id="nro_cuenta" tabla="REG_CUENTA" posX="5" posY="+1">
+
+				<label>Cta.</label>
+			</field>
+			<field id="nombre_cuenta" tabla="REG_CUENTA" posX="50" posY="0">
+				<label>Nombre</label>
+			</field>
+			<field id="ocpnro"  noZero="true" posX="5" posY="+4">
+				<label>Nº Orden de Compra</label>
+			</field>
+			<field id="ocpfec" posX="50" posY="0">
+				<label>Fecha Orden de compra</label>
+				<tipo>date</tipo>
+			</field>
+			
+			<field id="demerito_abreviacion" tabla="CPS_DEMERITOS" posX="5" posY="+1">
+				<label>Demérito</label>
+			</field>
+
+			<field id="artcod" posX="5" posY="+8">
+				<label>Cod.</label>
+				<detalle>artcod</detalle>
+			</field>
+			<field id="nombre_articulo" tabla="STK_ARTICULOS" posX="5" posY="+1">
+
+				<label>Artículo</label>
+				<detalle>nombre_articulo</detalle>
+			</field>
+			<field id="cantidad" posX="5" posY="+1">
+				<label>Cantidad</label>
+			</field>
+			<field id="observacion" posX="5" posY="+4">
+				<label>Observación</label>
+			</field>
+
+
+
+    <field id="firma" local="true">
+        <label posx="5" posy="+20">Firma</label>
+        <expression>concat('........................................................................................') </expression>
+    </field>
+    <field id="fir_cli" local="true">
+        <label posx="50" posy="0">Firma y sello del Cliente</label>
+        <expression>concat('..........................................................') </expression>
+    </field>
+    <field id="Aclaracion" local="true">
+        <label posx="130" posy="0">Aclaracion de Firma</label>
+        <expression>concat('.................................................................') </expression>
+    </field>
+<!--
+			<field id="cierre"  posX="5" posY="+1">
+				<label>Estado</label>
+				<helper type="combo">
+					<option value=""></option>
+					<option value="0">Abierta</option>
+					<option value="1">Cerrada</option>
+				</helper>
+				<tipo>varchar</tipo>
+			</field>
+-->
+		</table>
+		<join tipo="left">
+			<table id="STK_ARTICULOS">
+				<field id="id_stkarticulo">
+					<condicion operador="=">DEVREMITO.artcod</condicion>
+				</field>
+				<field id="subsistema_id">
+					<condicion operador="=">'01'</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="REG_CUENTA">
+				<field id="id_regcuenta">
+					<condicion operador="=">DEVREMITO.regcuenta_id</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="CPS_DEMERITOS">
+				<field id="id_demerito">
+					<condicion operador="=">DEVREMITO.demerito_id</condicion>
+				</field>
+			</table>
+		</join>
+		<!--
+		<join tipo="left">
+			<table id="HTXUSERS">
+				<field id="login">
+					<condicion operador="=">DEVREMITO.login_id</condicion>
+				</field>
+			</table>
+		</join>
+		-->
+	</form>
+</histrix>

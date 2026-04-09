@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8" ?>
+   <histrix tipo="ing" llenoTemporal="false">
+       <title>ENTRADA SALIDA STOCK POR CODIGO</title>
+        <obs></obs>
+               <form>
+					<table id="stkinmov" label="ENTRADA SALIDA STOCK">
+						<movimientos cabecera="stkinmov_cab.xml">
+							<relacion id="stkinmov_ingmov.xml">
+							</relacion> 
+						</movimientos> 
+						<field id="siscod" oculto="true">
+							<label>siscod</label>
+							<parametro id="fsmparam_paralf.xml" retorna="paralf">
+								<field id="parcla">
+									<condicion operador="=">'sisstk'</condicion>
+								</field>
+							</parametro>
+						</field>
+						<field id="movcod">
+							<label>Concepto</label>
+							<help>Código de Concepto</help>
+							<tabla_ex id="STKCONCE">
+								<field id="movcod"></field>
+								<field id="conabv"></field>
+							</tabla_ex>
+							<tipo>integer</tipo>
+							<valor>1</valor>
+						</field>
+						<field id="movcant">
+							<label>Cantidad</label>
+							<help>Cantidad</help>
+						</field>
+						<field id="movpre">
+							<label>Precio unitario</label>
+							<help>Precio Unitario</help>
+						</field>
+						<field id="movimp" local="true" deshabilitado="true">
+							<label>Importe</label>
+							<help>Importe Total</help>
+						<if exp="movcant != 0">
+							<true>movcant * movpre</true>
+							<false>movcant * movpre</false>
+						</if>							
+						</field>
+						<field id="movref">
+							<label>Referencia</label>
+							<help>Referencia del movimiento</help>
+							<format>%10s</format>
+						</field>
+					</table>
+						<join tipo="left">
+							<table id="STKCONCE">
+								<field id="siscod" oculto="true">
+									<condicion operador="=">'06'</condicion>
+								</field>
+								<field id="movcod" oculto="true">
+									<condicion operador="=">
+										STKINMOV.movcod</condicion>
+								</field>
+								<field id="contip" oculto="true"></field>
+								<field id="conabv" oculto="true"></field>
+							</table>
+						</join>
+              </form>
+        </histrix>

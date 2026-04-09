@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+    <title>Resumen por Centro</title>
+    <obs/>
+    <form>
+        <table id="CTB_MOVIMIENTOS" label="Resumen por Centro">
+
+            <filters>
+                <field id="ejercicio_id">
+                    <label>Ejercicio</label>
+                    <operador>=</operador>
+                </field>
+                <field id="centro" deshabilitado="false">
+                    <label modpos="nobr">Centro</label>
+                    <operador>=</operador>
+                </field>
+                <field id="fecha_movimiento">
+                    <label>Desde Fecha</label>
+                    <operador>&gt;=</operador>
+                </field>
+                <field id="fecha_movimiento">
+                    <label modpos="nobr">Hasta Fecha</label>
+                    <operador>&lt;=</operador>
+                    <valor>today</valor>
+                </field>
+            </filters>
+
+            <field id="centro" break="true">
+                <label>Centro</label>
+                <expression>IFNULL(CTB_DETALLES.ctbcentro_id, 0)</expression>
+                <helper type="combo" id="CTB_CENTROS" empty="true">
+                    <field id="id_ctbcentro" />
+                    <field id="nombre_centro" />
+                    <order>
+                        <field id="nombre_centro" />
+                    </order>
+                </helper>
+                <condicion operador="!=">0</condicion>
+            </field>
+
+            <field id="cuenta_id" tabla="CTB_DETALLES">
+                <label>Cuenta</label>
+            </field>
+
+            <field id="nombre_cuenta" tabla="CTB_CUENTAS">
+                <label>Nombre</label>
+            </field>
+
+            <field id="saldo" suma="true" noZero="true">
+                <label>Saldo</label>
+                <expresion>SUM(CASE WHEN CTB_DETALLES.doh = 0 THEN CTB_DETALLES.importe ELSE (CTB_DETALLES.importe * -1) END)</expresion>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="ejercicio_id" noshow="true">
+                <label>Ejercicio</label>
+                <helper type="combo" xml="ctbejercicios_crud.xml" dir="/contabilidad/man/" />
+            </field>
+
+            <field id="fecha_movimiento" noshow="true">
+                <tipo>date</tipo>
+            </field>
+
+            <group>
+                <field id="centro" />
+                <field id="cuenta_id" />
+            </group>
+
+        </table>
+
+        <join>
+            <table id="CTB_CONCEPTOS">
+                <field id="id_concepto">
+                    <condicion operador="=">CTB_MOVIMIENTOS.concepto_id</condicion>
+                </field>
+                <field id="integrado">
+                    <condicion operador="=">1</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join>
+            <table id="CTB_DETALLES">
+                <field id="movimiento_id">
+                    <condicion operador="=">CTB_MOVIMIENTOS.id_movimiento</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join>
+            <table id="CTB_CUENTAS">
+                <field id="id_cuenta">
+                    <condicion operador="=">CTB_DETALLES.cuenta_id</condicion>
+                </field>
+                <field id="ejercicio_id">
+                    <condicion operador="=">CTB_MOVIMIENTOS.ejercicio_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join>
+            <table id="CTB_CENTROS">
+                <field id="id_ctbcentro">
+                    <condicion operador="=">CTB_DETALLES.ctbcentro_id</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

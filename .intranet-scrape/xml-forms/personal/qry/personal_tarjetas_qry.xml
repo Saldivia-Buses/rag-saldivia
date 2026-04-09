@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="consulta"  >
+    <title>FICHA PERSONAL</title>
+    <obs/>
+    <form >
+        <table id="PERSONAL" label="Ficha Personal">
+<!--              <field id="Nombre" noshow="true">
+                <label>Nombre</label>
+                <help>Nombre</help>
+                <size>25</size>
+            </field>
+            <field id="apellido"  noshow="true">
+                <label modpos="nobr">Apellido</label>
+                <help>Apellido</help>
+                <size>30</size>
+            </field> -->
+             <field id="completo" local="true" >
+                <label>Nombre y Apellido</label>
+                 <expression>CONCAT(apellido,', ' ,Nombre)</expression>
+
+            </field>
+
+            <field id="tjt">
+                <label>Tarjeta</label>
+        	<expression>select PTJT.tarjeta FROM PERSONAL_TARJETA as PTJT where PTJT.idPersona = PERSONAL.IdPersona order by PTJT.fechaDesde DESC limit 1</expression>
+            </field>
+
+            <field deshabilitado="true" id="IdPersona" noshow="true">
+
+                <label>Cuenta</label>
+                <help>Codigo de Cuenta</help>
+                <valor>0</valor>
+            </field>
+            <field id="legajo">
+                <label>Legajo</label>
+                <help>Número de Legajo</help>
+
+            </field>
+          
+            <field id="DNI">
+                <label modpos="nobr">D.N.I.</label>
+                <help>Número de Documento Nacional de Identidad</help>
+            </field>
+            <field id="fecing">
+                <label>Fecha de Ingreso</label>
+                <help/>
+            </field>
+            <field id="fechaEgreso" noshow="true" >
+                <label modpos="nobr">Fecha de Egreso</label>
+                <condicion operador="=">'0000-00-00'</condicion>
+            </field>
+        </table>
+    </form>
+</histrix>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

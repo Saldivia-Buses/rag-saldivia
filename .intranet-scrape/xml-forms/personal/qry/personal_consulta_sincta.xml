@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+  <title>Personal Sin Cta</title>
+  <obs></obs>
+  <form  >
+    <table id="PERSONAL" label="Personal Sin Cta Bco">
+     
+    <fieldGroup export="false" noshow="true">
+      <field id="idPersona" noshow="true">
+        <label modpos="nobr">pers</label>
+      </field>
+      <field id="titulo_exp" noshow="true">
+	<expression>CONCAT('Personal_sin_cta_bco_', CURDATE())</expression>
+	<setvar>titulo</setvar>
+      </field>
+            <field id="tipoliq" noshow="true">
+                <expression>select tipoliq FROM CONCEPCONV inner join CONVENIOS on CONVENIOS.idSindicato= CONCEPCONV.IdSindicato  where CONCEPCONV.IdSindicato = PERSONAL.IdSindicato and CONCEPCONV.IdCateg = PERSONAL.IdCateg limit 1</expression>
+
+                <!--<tabla_ex id="CONCEPLIQU">
+                    <field id="tipoLiq"/>
+                    <field id="Nombre"/>
+                </tabla_ex> -->
+                <label>Tipo Liq.</label>
+                <tipo>varchar</tipo>
+            </field>      
+      <field id="importe" noshow="true">
+        <label>importe</label>
+        <expression><![CDATA[select importe FROM CONCEPCONV inner join CONVENIOS on CONVENIOS.idSindicato= CONCEPCONV.IdSindicato  where CONCEPCONV.IdSindicato = PERSONAL.IdSindicato and CONCEPCONV.desfec <= now() and CONCEPCONV.IdCateg = (select CATEGHISTORIA.idCateg from CATEGHISTORIA left join CATPERSONAL on CATPERSONAL.IdSindicato = CATEGHISTORIA.idSindicato and CATPERSONAL.IdCateg = CATEGHISTORIA.IdCateg where CATEGHISTORIA.IdPersona = PERSONAL.IdPersona order by CATEGHISTORIA.fechaDesde desc limit 1)  order by CONCEPCONV.desfec DESC limit 1]]>
+        </expression>
+        <tipo>decimal</tipo>
+      </field>
+      <field id="bruto" local="true" PDFcolWidth="11">
+        <label style="width:70px; text-align:center;">Bruto</label>
+        <if exp="'tipoliq' == '1'">
+          <true>importe * 196</true>
+          <false>importe</false>
+        </if>
+        <tipo>numeric</tipo>
+      </field>
+      <field id="fechaEgreso" oculto="true">
+        <condicion operador="=">'0000-00-00'</condicion>
+      </field>
+      <field id="cta_bancaria" noshow="true">
+	<condicion operador="=">''</condicion>
+      </field>
+    </fieldGroup>
+    <fieldGroup _noshow="true">
+	<field id="TipoDocumento">
+	    <expression>CONCAT(' ', LPAD(1, 2, '0'))</expression>
+	    <label>TipoDocumento</label>
+	    <tipo>varchar</tipo>
+	    <size>10</size>
+	</field>
+	<field id="NroDocumento">
+	    <expression>DNI</expression>
+	    <label>NroDocumento</label>
+	</field>
+	<field id="EApellido">
+	    <expression>apellido</expression>
+	    <label>Apellido</label>
+	</field>
+	<field id="ENombre">
+	    <expression>PERSONAL.Nombre</expression>
+	    <label>Nombre</label>
+	</field>
+	<field id="IngresMensNetos" local="true">
+            <if exp="'tipoliq' == '1'">
+	      <true>importe * 196</true>
+    	      <false>importe</false>
+            </if>
+    	    <tipo>numeric</tipo>
+	    <label>Ingres. Mens. Netos</label>
+	</field>
+	<field id="ESexo">
+	    <expression>(CASE sexo WHEN 1 THEN 'M' WHEN 2 THEN 'F' END)</expression>
+	    <label>Sexo</label>
+	</field>
+	<field id="FechaNacim">
+	    <expression>nacimiento</expression>
+	    <label>FechaNacim.</label>
+	    <tipo>date</tipo>
+	</field>
+	<field id="EstadoCivil">
+	    <expression>LEFT(CIVIL.descripcion, 1)</expression>
+	    <label>EstadoCivil</label>
+	</field>
+	<field id="Nacionalidad">
+	    <expression>LOWER(NACIONALIDAD.descripcion)</expression>
+	    <label>Nacionalidad</label>
+	</field>
+	<field id="NroCuilCuit">
+	    <expression>CONCAT(REPLACE(REPLACE(CUIL, '-', ''), ' ', ''))</expression>
+	    <label>NroCuil/Cuit</label>
+	    <tipo>varchar</tipo>
+	</field>
+	<field id="ECalle">
+	    <expression>calle</expression>
+	    <label>Calle</label>
+	</field>
+	<field id="ENro">
+	    <expression>numero</expression>
+	    <label>Nro</label>
+	</field>
+	<field id="EPiso">
+	    <expression>piso</expression>
+	    <label>Piso</label>
+	</field>
+	<field id="EDpto">
+	    <expression>depto</expression>
+	    <label>Dpto</label>
+	</field>
+	<field id="Localidad">
+	    <expression>LOCALIDADES.nombre</expression>
+	    <label>Localidad</label>
+	</field>codigopostal
+	<field id="CodPostal">
+	    <expression>LOCALIDADES.codigopostal</expression>
+	    <label>Cod Postal</label>
+	</field>
+	<field id="EProvincia">
+	    <expression>PERSONAL.idProvincia</expression>
+	    <label>Provincia</label>
+	</field>
+	<field id="CodAreaTelParticular">
+	    <expression>''</expression>
+	    <label>Cod Area Tel Particular</label>
+	</field>
+	<field id="NroTelefonoParticular">
+	    <expression>REPLACE(REPLACE(telefono, '-', ''), ' ', '')</expression>
+	    <label>NroTelefono Particular</label>
+	</field>
+	<field id="PrefijoCelular">
+	    <expression>''</expression>
+	    <label>Prefijo Celular</label>
+	</field>
+	<field id="CodAreaTelCelular">
+	    <expression>''</expression>
+	    <label>Cod Area Tel Celular</label>
+	</field>
+	<field id="Nrotelefonocelular">
+	    <expression>REPLACE(REPLACE(celular, '-', ''), ' ', '')</expression>
+	    <label>Nro telefono celular</label>
+	    <tipo>varchar</tipo>
+	</field>
+	<field id="FechaIngreso">
+	    <expression>fecing</expression>
+	    <label>Fecha Ingreso</label>
+	    <tipo>date</tipo>
+	</field>
+	<field id="Filialderadicaciondecuenta">
+	    <expression>'276'</expression>
+	    <label>Filial de radicación de cuenta</label>
+	</field>
+    </fieldGroup>
+      <order>
+        <field id="apellido"></field>
+        <field id="Nombre" tabla="PERSONAL"></field>
+        
+      </order>
+    </table>
+    <join tipo="left">
+      <table id="CATPERSONAL">
+        <field id="idSindicato">
+          <condicion operador="=">PERSONAL.idSindicato</condicion>
+        </field>
+        <field id="idCateg">
+          <condicion operador="=">PERSONAL.idCateg</condicion>
+        </field>
+      </table>
+    </join>    
+    <join tipo="left">
+      <table id="FSMPROVS">
+        <field id="prvcod" >
+          <condicion operador="=">PERSONAL.idProvincia</condicion>
+        </field>
+      </table>
+    </join>    
+    
+    <join tipo="left">
+      <table id="LOCALIDADES" vacio="true">
+        <field id="idLocalidad" >
+          <condicion operador="=">PERSONAL.localidad</condicion>
+        </field>
+        <field id="idProvincia" >
+          <condicion operador="=">PERSONAL.idProvincia</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="CIVIL">
+        <field id="estadocivil" >
+          <condicion operador="=">PERSONAL.estadocivil</condicion>
+        </field>
+      </table>
+    </join>
+     <join tipo="left">
+      <table id="NACIONALIDAD">
+        <field id="nacionalidad" >
+          <condicion operador="=">PERSONAL.nacionalidad</condicion>
+        </field>
+      </table>
+    </join>
+ 
+  </form>
+</histrix>

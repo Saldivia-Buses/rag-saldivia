@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="insert" imprime="false" evento="procesar">
+    <title>MAILS</title>
+    <obs/>
+    <form >
+        <table id="HTXMESSAGES" label="Marca Leidos"  idCampoCond="emitir">
+            <field id="de"  >
+                <valor eval="true">$_SESSION['usuario']</valor>         
+            </field>
+            <field id="para"  id_temp="para_msg">
+
+            </field>
+            <field id="mensaje"  id_temp="mensaje" ></field>
+
+            <field id="hora"     >
+                <tipo>integer</tipo>
+                <valor>curtime()</valor>         
+            </field>            
+            <field id="fecha"     >
+                <tipo>integer</tipo>
+                <valor>curdate()</valor>         
+            </field>
+            <field id="title" id_temp="subject">
+            </field>
+        </table>        
+    </form>
+</histrix>

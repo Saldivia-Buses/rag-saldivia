@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta"  PDFfontSize="10" showCantidad="false">
+    <title>Referencia Comercial</title>
+    <obs></obs>
+    <form>
+        <table id="REG_CUENTA_RELACIONES" label="DETALLE">
+
+            <field id="id_regcuentarelacion" noshow="true"/>
+
+ 			<field id="regcuenta_id" noshow="true"/>
+
+ 			<field id="regcuentarelacionada_id" noshow="true"/>
+
+            <field id="subsistemarelacionada_id" noshow="true">
+                    <condicion operador="=">'GR'</condicion>
+             </field> 
+
+            <field id="nombre_cuenta" tabla="REG_CUENTA">
+                <label >Nombre</label>
+            </field>
+
+            <field id="nombre_localidad" tabla="GEN_LOCALIDADES">
+                <label>Direccion</label>
+            </field>
+
+            <field id="	fecha_vigencia">
+                <label>Comienzo Relacion</label>
+            </field>
+
+            <field id="contacto" local="true">
+				<expresion>SELECT rcc.valor FROM REG_CUENTAS_CONTACTOS rcc WHERE rcc.regcuenta_id = REG_CUENTA_RELACIONES.regcuentarelacionada_id LIMIT 1</expresion>
+                <label>Contacto</label>
+            </field>
+        </table>
+       
+        <join tipo="left">
+            <table id="REG_CUENTAS_CONTACTOS">
+                <field id="regcuenta_id">
+                    <condicion operador="=">REG_CUENTA_RELACIONES.regcuentarelacionada_id</condicion>
+                </field> 
+            </table>
+        </join>
+ 
+        <join tipo="left">
+            <table id="REG_CUENTA">
+                <field id="id_regcuenta">
+                    <condicion operador="=">REG_CUENTA_RELACIONES.regcuentarelacionada_id</condicion>
+                </field>
+            </table>
+        </join>
+		<join tipo="left">
+		    <table id="GEN_LOCALIDADES">
+				<field id="id_localidad">
+					<condicion operador="=">REG_CUENTA.localidad_id</condicion>
+				</field>
+		    </table>
+		</join>
+		<join tipo="left">
+		    <table id="GEN_PROVINCIAS">
+				<field id="id_provincia">
+					<condicion operador="=">GEN_LOCALIDADES.provincia_id</condicion>
+				</field>
+		    </table>
+		</join>    
+    </form>
+</histrix>

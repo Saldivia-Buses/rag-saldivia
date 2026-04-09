@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+  <title />
+  <obs />
+  <form>
+    <table id="CTB_MOVIMIENTOS" label="Imp. Libro diario">
+
+        <field id="id_movimiento" noshow="true" print="false" />
+
+        <field id="nroprox_hoja" local="true" noshow="true" />
+
+        <field id="regmovim_id" noshow="true" print="false" tabla="CTB_MOVIMIENTOS">
+            <condicion operador="=">0 or CTB_MOVIMIENTOS.regmovim_id IS NULL</condicion>
+        </field>
+
+        <field id="ejercicio_id" noshow="true" print="false" tabla="CTB_MOVIMIENTOS">
+            <label>Ejercicio</label>
+        </field>
+
+        <field id="concepto_id" noshow="true" print="false" tabla="CTB_MOVIMIENTOS">
+            <label>Concepto</label>
+        </field>
+
+        <field id="desde_fecha" noshow="true" local="true" print="false">
+            <label>Desde</label>
+            <tipo>date</tipo>
+        </field>
+
+        <field id="hasta_fecha" noshow="true" local="true" print="false">
+            <label>Hasta</label>
+            <tipo>date</tipo>
+        </field>
+
+        <field id="fecha_movimiento" tabla="CTB_MOVIMIENTOS" PDFcolWidth="17">
+            <label>Fecha</label>
+            <condicion operador="&gt;=">str_to_date('[__desde_fecha__]','%d/%m/%Y') and CTB_MOVIMIENTOS.fecha_movimiento &lt;= str_to_date('[__hasta_fecha__]','%d/%m/%Y')</condicion>
+            <tipo>date</tipo>
+        </field>
+
+        <field id="_ORDEN" local="true" noshow="true" />
+
+        <field id="nro_minuta" PDFcolWidth="13" local="true" PDFalign="C">
+            <label>Nro</label>
+            <if exp="true">
+                <true>_ORDEN - 1 + nroprox_hoja</true>
+                <false></false>
+            </if>
+        </field>
+
+        <field id="referencia" tabla="CTB_MOVIMIENTOS" repeat="false" noshow="true">
+            <label>Detalle del Movimiento</label>
+            <condicion operador="=">CTB_MOVIMIENTOS.referencia and CTB_MOVIMIENTOS.referencia not like '%CIERRE DE CAJA%' and CTB_MOVIMIENTOS.referencia != 'CIERRE EJERCICIO' and CTB_MOVIMIENTOS.referencia != 'REFUNDICION EJERCICIO'</condicion>
+        </field>
+
+        <field id="oculta_referencia" local="true" noshow="true" />
+
+        <field id="tipo" local="true" PDFcolWidth="15">
+            <label>Tipo</label>
+            <valor>Manuales</valor>
+            <attribute id="print">oculta_referencia</attribute>
+        </field>
+
+        <field id="detalle" local="true">
+          <helper xml="detalles_minutas_imp.xml" type="object">
+            <parameter source="id_movimiento"  target="movimiento_id" />
+            <parameter source="ejercicio_id" target="ejercicio_id" />
+          </helper>
+        </field>
+
+        <order>
+            <field id="fecha_movimiento" />
+        </order>
+
+    </table>
+  </form>
+</histrix>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="abm-mini" subtipo="vertical" imprime="false">
+	<title>Notificaciones por usuario</title>
+	<obs></obs>
+	<form>
+		<table id="HTXNOTIFUSER" label="Notificaciones por usuario">
+
+                        <field id="id_notification" noshow="true" autoinc="true">
+			</field>
+
+			<field id="menuId" _oculto="true">
+			</field>
+<!--
+			<field id="Id_menu" oculto="true">
+			</field>
+			<field id="orden" oculto="true">
+				<label>orden</label>
+				<help></help>
+			</field>
+			-->
+			<field id="login">
+				<label>Usuario a Notificar</label>
+				<tabla_ex id="HTXUSERS">
+					<!-- campos a agregar al contenedor Filtro-->
+					<field id="login"></field>
+					<field id="not">
+						<expression>CONCAT(apellido, ', ', nombre)</expression>
+					</field>
+					<order>
+						<field id="not"></field>
+					</order>
+				</tabla_ex>
+			</field>
+		</table>
+	</form>
+</histrix>

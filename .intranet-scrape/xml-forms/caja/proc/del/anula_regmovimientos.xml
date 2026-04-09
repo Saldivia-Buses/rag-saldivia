@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="update" limit="0">
+    <title/>
+    <obs/>
+    <form>
+        <table id="REG_MOVIMIENTOS">
+            
+            <field id="id_regmovim" id_temp="id_regmovim"  esClave="true" />
+
+	    	<field id="neto_movimiento">
+	    		<tipo>numeric</tipo>
+	    		<valor>0</valor>
+	    	</field>
+
+			<field id="importe_iva">
+				<tipo>numeric</tipo>
+				<valor>0</valor>
+	    	</field>
+
+			<field id="importe_exento">
+				<tipo>numeric</tipo>
+				<valor>0</valor>
+	    	</field>
+
+	    	<field id="importe_bon">
+	    		<tipo>numeric</tipo>
+				<valor>0</valor>
+	    	</field>
+
+			<field id="importe_periodo">
+				<tipo>numeric</tipo>
+				<valor>0</valor>
+	    	</field>
+
+	        <field id="importe_percepcion">
+	        	<tipo>numeric</tipo>
+				<valor>0</valor>
+	    	</field>
+
+			<field id="alicuota_iva">
+				<tipo>numeric</tipo>
+				<valor>0</valor>
+	    	</field>
+	    	
+			<field id="alicuota_percepcion">
+				<tipo>numeric</tipo>
+				<valor>0</valor>
+	    	</field>
+
+
+			<field id="importe_movimiento" >
+				<tipo>numeric</tipo>
+				<valor>0</valor>
+			</field>
+
+			<field id="saldo_movimiento" >
+				<tipo>numeric</tipo>
+				<valor>0</valor>
+			</field>
+
+			<field id="bonificaciones_movimiento" >
+				<tipo>numeric</tipo>
+				<valor>0</valor>
+			</field>
+
+			<field id="numero_cae">
+				<tipo>numeric</tipo>
+				<valor>0</valor>
+			</field>
+
+
+
+        </table>
+    </form>
+</histrix>

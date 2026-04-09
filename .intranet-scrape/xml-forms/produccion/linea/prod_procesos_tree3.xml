@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="arbol" _form="false" _inserta="false">
+    <title>Procesos de Produccion</title>
+    <obs/>
+    <form detalle="materiales_proceso_qry.xml" inline="true">
+        <table id="PROD_PROCESOS">
+            <title>Arbol de procesos</title>
+
+            <field id="homologacion_id"  noshow="true">
+                <label>Modelo</label>
+                <detalle>homologacion_id</detalle>
+            </field>
+
+            <field id="titulo" local="true"  oculto="true">
+                <setvar>titulo_div</setvar>
+                <setvar>titulo</setvar>
+            </field>
+
+            <field id="perfilactual" local="true" noshow="true" print="false">
+                <valor eval="true">$_SESSION['profile']</valor>
+            </field>
+
+            <field id="perfiles_habilitados" local="true" noshow="true" print="false">
+                <parametro id="fsmparam_paralf.xml" retorna="paralf">
+                    <field id="parcla">
+                        <condicion operador="=">'proper'</condicion>
+                    </field>
+                </parametro>
+            </field>
+
+            <field id="puedeEditar" noshow="true" print="false">
+                <expression>CASE WHEN [__perfilactual__] IN [__perfiles_habilitados__] THEN 'true' ELSE 'true' END</expression>
+                <setvar>form</setvar>
+                <setvar>inserta</setvar>
+            </field>
+
+            <field id="id_proceso" esClave="true" autoinc="true" noshow="true" arbol="hijo" _deshabilitado="true">
+                <label>Codigo</label>
+                <detalle>proceso_id</detalle>
+            </field>
+
+            <field id="procesopadre_id" arbol="padre" colstyle="display:none;" deshabilitado="false">
+                <helper type="combo" xml="procesos_qry.xml" empty="true">
+                    <field id="homologacion_id">
+                        <condicion operador="=" valorde="homologacion_id"></condicion>
+                    </field>
+                </helper>
+                <label>Codigo padre</label>
+                <expression>case when procesopadre_id is null then '0' else procesopadre_id end</expression> 
+                <condicion operador="=">'0'</condicion>
+            </field>
+
+            <field id="orden_proceso" colstyle="display:none;">
+                <label>Orden</label>
+                <tipo>integer</tipo>
+            </field>
+
+            <field id="nombre_proceso">
+                <label>Proceso</label>
+                <help>nombre del proceso</help>
+                <size>38</size>
+            </field>
+
+            <field id="descripcion_proceso">
+                <label>descripcion</label>
+                <help>Descripcion del proceso</help>
+                <size>300</size>
+            </field>
+
+            <field id="hasdet" noshow="true">
+                <expression>(case when (select count(*) from PROD_PROCESOS PR where PR.procesopadre_id =  PROD_PROCESOS.id_proceso  ) != 0 then '' else ifnull((select count(*) from STK_ARTICULO_PROCESO where STK_ARTICULO_PROCESO.proceso_id = PROD_PROCESOS.id_proceso and STK_ARTICULO_PROCESO.homologacion_id = PROD_PROCESOS.homologacion_id), '+') end )</expression>
+            </field>
+
+            <field id="cargarmat" print="false">
+                <attribute id="linkdes">descripcion_proceso</attribute>
+                <helper type="link" xml="materiales_proceso_ing.xml" modal="true" width="95%" height="95%" linkdes="Composicion del proceso">
+                    <parameter source="id_proceso" target="proceso_id" />
+                    <parameter source="homologacion_id" target="homologacion_id" />
+                </helper>
+                <expression>CASE WHEN (CASE WHEN [__perfilactual__] IN [__perfiles_habilitados__] THEN 'true' ELSE 'true' END)= 'true' THEN (case when (select count(*) from PROD_PROCESOS PR where PR.procesopadre_id =  PROD_PROCESOS.id_proceso  ) != 0 then '' else concat(ifnull((select count(*) from STK_ARTICULO_PROCESO where STK_ARTICULO_PROCESO.proceso_id = PROD_PROCESOS.id_proceso and STK_ARTICULO_PROCESO.homologacion_id = PROD_PROCESOS.homologacion_id), '+'), ' Articulos') end ) ELSE '' END</expression>
+            </field>
+
+            <order>
+                <field id="orden_proceso" />
+            </order>
+
+        </table>
+    </form>
+</histrix>

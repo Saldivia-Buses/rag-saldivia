@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="insert" tipoInsert="REPLACE" >
+	<title>Importar Articulos</title>
+	 <obs></obs>
+		<consulta>
+		    <table id= "STK_LISTADETALLE" label="Articulos" idCampoCond="importar" >
+
+					<field id="stkarticulo_id" 					id_temp="id_stkarticulo" />
+
+					<field id="stklistadetalle_precioventa" 	id_temp="precio_venta" />
+	
+					<field id="stklista_id" 						id_cab="stklista_id" />
+
+					<field id="dto_fechadesde" 						id_cab="dto_fechadesde" />
+
+					<field id="dto_fechahasta" 						id_cab="dto_fechahasta" />
+
+					<field id="stklistadetalle_rentabilidad">
+						<valor>0.000</valor>
+					</field>
+					
+					<field id="stklistadetalle_costo">
+						<valor>0.000</valor>
+					</field>
+
+					<field id="dto_porcentaje">
+						<valor>0.000</valor>
+					</field>
+
+					<field id="dto_cantidad">
+						<valor>0</valor>
+					</field>
+
+		    </table>
+		</consulta>
+    </histrix>

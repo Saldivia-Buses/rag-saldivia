@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert">
+   <title/>
+   <obs/>
+   <form>
+	<table id="REG_MOVIMIENTOS">
+
+		<sql>UPDATE REG_MOVIMIENTOS 
+			SET neto_movimiento = (select sum(neto_detalle) from REG_DETALLES where regmovim_id = [__regmovim_id__]),
+			    importe_iva = (select sum(iva_detalle) from REG_DETALLES where regmovim_id = [__regmovim_id__]),
+			    importe_movimiento = (select sum(total_detalle) from REG_DETALLES where regmovim_id = [__regmovim_id__])
+			WHERE id_regmovim = [__regmovim_id__]</sql>
+
+		<field id="regmovim_id" id_temp="regmovim_id" esClave="true" />
+
+	</table>
+   </form>
+</histrix>

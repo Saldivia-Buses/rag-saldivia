@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud" inserta="false">
+	<title>CONCEPTOS BANCARIOS IMPORTACION</title>
+	<obs></obs>
+	<form >
+		<table id="BCS_CONCEPTO_IMP" >
+		    <title>Conceptos de importación</title>
+			
+			<filters>
+			    <field id="nro_cuenta">
+				<label>CUENTA</label>
+				<operador>=</operador>				
+			    </field>
+			</filters>
+			<field id="id_concepto_imp" autoinc="true" noshow="true"/>
+
+			<field id="nro_cuenta" noshow="true">
+				<label>Cuenta</label>
+				<tabla_ex id="BCSCUENT">
+					<field id="ccbcod"></field>
+					<field id="ccbnom"></field>
+					<order>
+							<field id="ccbcod"></field>
+					</order>
+				</tabla_ex>
+
+				<help>Codigo de Concepto</help>
+			</field>
+
+			<field id="cod_concepto" noshow="true">
+				<label>Cod.</label>
+				<help>Codigo de Concepto</help>
+			</field>
+			
+			<field id="nombre_concepto" deshabilitado="true">
+				<label>Descripcion</label>
+				<help>Descripcion del Concepto</help>
+			</field>
+			
+			<field id="regconceptodebe_id" noZero="true">
+				<label>Acreditación</label>
+				<helper type="combo" id="REG_CONCEPTOS" empty="true">
+					<field id="id_concepto"></field>
+					<field id="descripcion_concepto"></field>
+					<field id="subsistema_id">
+					    <condicion operador="=">'04'</condicion>
+					</field>
+					<field id="imputacion_concepto">
+					    <condicion operador="=">0</condicion>
+					</field>
+					<order>
+							<field id="descripcion_concepto"></field>
+					</order>
+				</helper> 
+
+			</field>
+			
+			<field id="regconceptohaber_id"  noZero="true">
+				<label>Débitos</label>
+				<helper type="combo" id="REG_CONCEPTOS" empty="true">
+					<field id="id_concepto"></field>
+					<field id="descripcion_concepto"></field>
+					<field id="subsistema_id">
+					    <condicion operador="=">'04'</condicion>
+					</field>
+					<field id="imputacion_concepto">
+					    <condicion operador="=">1</condicion>
+					</field>
+					<order>
+							<field id="descripcion_concepto"></field>
+					</order>
+				</helper>
+
+			</field>
+	    		<order>
+				<field id="nombre_concepto"></field>
+			</order>
+			
+		</table>
+	</form>	   
+</histrix>

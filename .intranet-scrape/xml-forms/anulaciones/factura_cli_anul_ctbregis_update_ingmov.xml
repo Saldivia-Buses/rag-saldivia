@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="update" limit="0">
+       <title>COMPROBANTES</title>
+        <obs></obs>
+               <form >
+					<table id="CTBREGIS" label="ANULACION ASIENTO" >
+						<field id="siscod" esClave="true">
+							<valor>22</valor>
+						</field>
+						<field id="regnro" id_temp="movnro" esClave="true">
+						</field>
+						<field id="regfec" id_temp="regfec" esClave="true">
+						</field>
+						
+						<field id="regmin" id_temp="regmin" esClave="true">
+						</field>
+						
+						<field id="regimp" >
+							<valor>0</valor>
+						</field>
+						<field id="regref" >
+							<valor>'ANULADA'</valor>
+						</field>
+						
+					</table>
+               </form>
+        </histrix>

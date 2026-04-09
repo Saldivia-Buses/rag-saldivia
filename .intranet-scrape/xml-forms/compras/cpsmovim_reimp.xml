@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" path="fotos/" PDFfontSize="7">
+    <title>DETALLE</title>
+    <obs></obs>
+    <form  >
+        <table id="CPSMOVIM" label="DETALLE">
+            <!--<movimientos cabecera="cpsencab_cabreimp.xml">
+                        </movimientos>
+                                -->
+
+            <field id="siscod" oculto="true">
+                <label>Codigo</label>
+                <help></help>
+                <condicion operador='='>''</condicion>
+
+            </field>
+            <field id="movfec" oculto="true">
+            </field>
+            <field id="ocpnro" oculto="true">
+                <label>Nro </label>
+                <help>Numero de Orden de Compra</help>
+            </field>
+
+
+            <field id="artcod" deshabilitado="true" esClave="false">
+                <label>Cod.</label>
+                <help>Codigo de Articulo</help>
+                <detalle>artcod</detalle>
+            </field>
+            <field id="detalle" deshabilitado="true">
+                <label>Artículo</label>
+                <help>Detalle de linea de la Orden de Compra para Art S.C. </help>
+		<tipo>varchar</tipo>
+            </field>
+            <field id="observaciones" deshabilitado="true">
+                <label></label>
+            </field>
+            <field id="movuso" deshabilitado="true" noshow="true">
+                <label>_Cant.</label>
+                <help>Pedido (expresado en la unidad de Uso)</help>
+                <tipo>numeric</tipo>
+            </field>
+            <field id="artuni" deshabilitado="true" tabla="STKINSUM" noshow="true">
+                <label>Unidad</label>
+                <help>Unidad de Compra</help>
+                <expression>select uniabv from FSMUNIDS where FSMUNIDS.unicod = STKINSUM.artuni</expression>
+                <!--				<tabla_ex id="FSMUNIDS">
+
+                                        <field id="unicod" clave="true"></field>
+                                        <field id="uniabv"></field>
+                                </tabla_ex>
+                                        <valor>2</valor>
+                                -->
+                <tipo>varchar</tipo>
+            </field>
+            <field id="pedido" local="true" noshow="true">
+
+                <if exp="true">
+                    <true>round(movuso,2).' artuni'</true>
+                    <false>''</false>
+                </if>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="movcps" deshabilitado="true" noshow="true">
+                <label>C.Cpra.</label>
+                <help>Pedido (expresado en la unidad de compra)</help>
+                <tipo>numeric</tipo>
+
+            </field>
+            <field id="unicps" deshabilitado="true" tabla="STKINSUM" noshow="true">
+                <label>U.Cpra</label>
+                <help>Unidad de Compra</help>
+                <expression>select uniabv from FSMUNIDS where FSMUNIDS.unicod = STKINSUM.unicps</expression>
+                <!--
+                                <tabla_ex id="FSMUNIDS">
+
+                                        <field id="unicod" clave="true"></field>
+                                        <field id="uniabv"></field>
+                                </tabla_ex>
+                                        <valor>2</valor>
+                                <tipo>integer</tipo>				-->
+                <tipo>varchar</tipo>
+            </field>
+            <field id="Pedido2" local="true" noshow="true">
+                <label>Convers.</label>
+                <if exp="true">
+                    <true>round(movcps,2).' unicps'</true>
+                    <false>''</false>
+                </if>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="_ped3" local="true">
+                <label>Cant.</label>
+                <if exp="'Pedido2' == 'pedido'">
+                    <true>'pedido'</true>
+                    <false>'pedido (Pedido2)'</false>
+                </if>
+                <tipo>varchar</tipo>
+            </field><!--
+            <field id="stkformaemb_id" noZero="true" tabla="STKINSUM">
+                <helper type="combo" xml="stkformasemb_qry.xml" dir="/ayudas_local"/>
+                <label>F.Embalaje</label>
+            </field>-->
+
+            <field id="fecreq" local="true" deshabilitado="true" >
+                <expression>CPSMOVIM.fecreq</expression>
+                <label>F.Entrega</label>
+                <tipo>date</tipo>
+            </field>
+            <field id="nrocha"   esClave="false">
+                <label>N.Fab</label>
+                <tipo>varchar</tipo>
+                <size>5</size>
+            </field>
+	    <field id="tiene_adjunto">
+		<label>Adj</label>
+		<expression>CASE WHEN PEDIDOINT.archivo != '' THEN 'SI' ELSE '' END</expression>
+	    </field>
+
+        <field id="abreviatura_moneda" tabla="GEN_MONEDAS">
+              <label></label>
+        </field>
+
+        <field id="artcos" noZero="true">
+               <label>Precio</label>
+        </field>
+
+        <field id="bonificacion_1" noZero="true" tabla="CPSMOVIM">
+                <label>%1</label>
+		<tipo>decimal</tipo>
+            </field>
+            <field id="bonificacion_2" noZero="true">
+                <label>%2</label>
+		<tipo>decimal</tipo>
+            </field>
+
+	    <field id="neto" local="true" suma="true"  PDFcolWidth="25">
+		<label>Neto</label>
+		<if exp="true">
+		    <true>round(((artcos * movcps ) - ((artcos * movcps) / 100 * bonificacion_1)) - (((artcos * movcps ) - ((artcos * movcps) / 100 * bonificacion_1)) / 100 * bonificacion_2) , 2)</true>
+		    <false>0</false>
+		</if>
+		<tipo>decimal</tipo>
+	    </field>
+
+            <field id="importe_iva" suma="true" _noZero="true" PDFcolWidth="20"  >
+                <label>Iva</label>
+                <tipo>decimal</tipo>
+            </field>
+            <field id="importe_total" suma="true" _noZero="true" PDFcolWidth="25" >
+                <label>Total</label>
+                <tipo>decimal</tipo>
+            </field>
+
+
+
+            <field id="fotopath" local="true" noshow="true">
+                <if exp="true">
+                    <true>'/articulos/artcod/'</true>
+                    <false>''</false>
+                </if> 
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="foto" path="fotopath" download="true" print="false" watermark="artcod">
+                <expression>select ARTICULO_FOTO.foto from ARTICULO_FOTO where ARTICULO_FOTO.idArticulo = STKINSUM.artcod and ARTICULO_FOTO.foto != '' order by revision desc limit 1</expression> 
+                <label>Imagen</label>
+                <tipo >file</tipo>
+                <size>40</size>
+            </field>
+            <field id="pedidopath" noshow="true">
+                <expression>CONCAT('pedidoint/',directorio)</expression>
+                <detalle>pedidopath</detalle>
+            </field>
+            <field id="archivo" path="pedidopath" download="true" print="false" _watermark="artcod" tabla="PEDIDOINT">
+                <label>Adjunto</label>
+                <tipo >file</tipo>
+                <size>40</size>
+            </field>
+            <order>
+                <field id="fecreq"></field>
+            </order>
+        </table>
+        <join tipo="left">
+            <table id="PEDIDOINT">
+                <field id="idPed" >
+                    <condicion operador="=">CPSMOVIM.idPed</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="STKINSUM">
+                <field id="siscod" >
+                    <condicion operador="=">'01'</condicion>
+                </field>
+                <field id="artcod">
+                    <condicion operador="=">CPSMOVIM.artcod</condicion>
+                </field>
+                <field id="artuni">
+                </field>
+                <field id="unicps">
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="GEN_MONEDAS">
+                <field id="id_moneda" >
+                    <condicion operador="=">CPSMOVIM.moneda_id</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

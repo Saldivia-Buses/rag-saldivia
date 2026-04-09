@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="arbol" >
+		<title>ORGANIGRAMA</title>
+        <obs></obs>
+               <consulta>
+                  <table id="ORGANIGRAMA" label="Organigrama">
+
+                  <field id="idPadre" arbol="padre" _esClave="true"  >
+                      <label colstyle="display:none;" >padre</label>
+                      <help>Nivel Superior</help>
+						<tabla_ex id="SECCION" vacio="true">
+							<field id="id_seccion">
+							</field>
+							<field id="nombre">
+							</field>
+						</tabla_ex> 					  
+					  <tipo>varchar</tipo>
+
+				  </field>
+                  <field id="id_seccion" esClave="true" arbol="hijo" >
+                      <label>Seccion</label>
+                      <help>Codigo del Articulo</help>
+						<ayuda_ex id="SECCION" >
+							<field id="id_seccion">
+							</field>
+							<field id="nombre">
+								<detalle>nombre</detalle>
+							</field>
+						</ayuda_ex> 					  
+					  <clave>id_seccion</clave>
+					  <descripcion>nombre</descripcion>
+					  <tipo>varchar</tipo>
+                  </field>
+                  <field id="nombre" nodeTitle="true">
+					  <expresion>SECCION.nombre</expresion>
+					  <label modpos="nobr"></label>
+					  <tipo>varchar</tipo>
+                  </field>					  
+                  <field id="color" color="true" textColor="true">
+					  <label>Color</label>
+					  <tipo>varchar</tipo>
+                  </field>					  					  
+					  
+                  <field id="idUsuario" >
+                      <label colstyle="display:none;">Usuario</label>
+                      <help>Codigo del Articulo</help>
+						<ayuda_ex id="HTXUSERS" >
+							<field id="login">
+							</field>
+							<field id="nom">
+					              <expresion having="false">CONCAT(HTXUSERS.nombre,' ', HTXUSERS.Apellido)</expresion>
+								<tipo>varchar</tipo>
+								<detalle>nom</detalle>
+							</field>
+						</ayuda_ex> 
+					  <clave>login</clave>					  
+					  <descripcion>nom</descripcion>
+					  <tipo>varchar</tipo>
+                  </field>					  
+				  <field id="nom" nodeText="true">
+					  <label>Nombre</label>
+					  <expresion>CONCAT(HTXUSERS.nombre,' ', HTXUSERS.Apellido)</expresion>
+					  <tipo>varchar</tipo>
+				  </field>
+				</table>
+				<join tipo="left">
+					<table id="SECCION">
+						<field id="id_seccion">
+							<condicion operador="=">ORGANIGRAMA.id_seccion</condicion>
+						</field>
+					</table>
+				</join>
+				<join tipo="left">
+					<table id="HTXUSERS">
+						<field id="login">
+							<condicion operador="=">ORGANIGRAMA.idUsuario</condicion>
+						</field>
+					</table>
+				</join>				   
+               </consulta>
+        </histrix>

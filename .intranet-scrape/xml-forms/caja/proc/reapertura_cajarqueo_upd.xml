@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="update">
+    <title/>
+    <obs/>
+    <form>
+        <table id="CAJ_ARQUEOS">
+            <field id="id_cajarqueo" id_temp="id_cajarqueo" esClave="true"/>
+			<field id="apertura_arqueo" >
+				<valor>0</valor>
+			</field>
+			<field id="registrado_arqueo" >
+				<valor>0</valor>
+			</field>
+			<field id="total_arqueo">
+				<valor>0</valor>
+			</field>
+			<field id="conteo_arqueo">
+				<valor>0</valor>
+			</field>
+			<field id="diferencia_arqueo">
+				<valor>0</valor>
+			</field>
+        </table>
+    </form>
+</histrix>

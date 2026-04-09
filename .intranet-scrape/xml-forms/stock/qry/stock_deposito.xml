@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" preloadData="false">
+  <title>Ficha Kardex</title>
+  <obs/>
+  <form>
+    <table id="STK_MOVIMIENTOS" label="movimientos">
+      <filtros>
+	<field id="stkarticulo_id" noshow="true"/>
+        <field id="nombre_articulo" tabla="STK_ARTICULOS" deshabilitado="true"/>
+
+        <field id="stkdeposito_id">
+          <operador>=</operador>
+          <label>Deposito</label>
+        </field>
+      </filtros>
+
+      <field id="stkarticulo_id" noshow="true">
+        <label>Articulo</label>
+        <helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas">
+          <field id="wstklista_id" local="true">
+            <valor>1</valor>
+          </field>
+        </helper>                
+
+      </field>
+
+      <field id="nombre_articulo" tabla="STK_ARTICULOS" _noshow="true">
+        <label modpos="nobr">Nombre</label>
+        <help>Referencia del movimiento</help>
+      </field>
+      <field id="stkdeposito_id">
+        <label>Deposito</label>
+        <helper type="combo" xml="stkdeposito_qry.xml" dir="/ayudas" empty="true" />
+      </field>
+
+      <field id="comprobante" local="true">
+        <label>Comprobante</label>
+        <expresion>CONCAT(REG_CONCEPTOS.abreviacion_concepto, ' ',(LPAD(REG_MOVIMIENTOS.puesto_movimiento,4,0)),'-',(LPAD(REG_MOVIMIENTOS.nro_movimiento,8,0)))</expresion>
+      </field>
+      <field id="fecha_movimiento">
+        <label>Fecha</label>
+        <help>Fecha movimiento</help>
+        <tipo>date</tipo>
+      </field>
+      <field id="stkconcepto_id">
+        <helper type="combo" xml="stkconcepto_qry.xml" dir="/ayudas" empty="true">
+        </helper>
+        <label>Concepto</label>
+        <help>Código de concepto</help>
+        <detalle>concepto_id</detalle>
+      </field>
+
+      <field id="ingresos" local="true">
+        <label modpos="nobr">Ingresos</label>
+        <expresion>CASE WHEN STK_CONCEPTOS.tipo_concepto = 0 THEN cantidad ELSE '' END</expresion>
+      </field>
+      <field id="egresos" local="true">
+        <label modpos="nobr">Egresos</label>
+        <expresion>CASE WHEN STK_CONCEPTOS.tipo_concepto = 1 THEN cantidad ELSE '' END</expresion>
+      </field>
+      <field id="cantidad" local="true" suma="true">
+        <expresion>CASE WHEN STK_CONCEPTOS.tipo_concepto = 0 THEN STK_MOVIMIENTOS.cantidad ELSE -(STK_MOVIMIENTOS.cantidad) END</expresion>
+        <label>Stock</label>
+        <tipo>numeric</tipo>
+      </field>
+
+      <field id="tipo_concepto" clasefila="true" noshow="true">
+        <expresion>CASE WHEN STK_CONCEPTOS.tipo_concepto = 0 THEN 'resaltado' else '' END</expresion>
+      </field>
+      
+      <order>
+        <field id="fecha_movimiento" tabla="STK_MOVIMIENTOS"/>
+      </order>
+      
+    </table>
+    <join tipo="left">
+      <table id="STK_ARTICULOS">
+        <field id="id_stkarticulo">
+          <condicion operador="=">STK_MOVIMIENTOS.stkarticulo_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="inner">
+      <table id="STK_CONCEPTOS">
+        <field id="id_stkconcepto">
+          <condicion operador="=">STK_MOVIMIENTOS.stkconcepto_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="LEFT">
+      <table id="REG_DETALLES">
+        <field id="id_regdetalle">
+          <condicion operador="=">STK_MOVIMIENTOS.regdetalle_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="LEFT">
+      <table id="REG_MOVIMIENTOS">
+        <field id="id_regmovim">
+          <condicion operador="=">REG_DETALLES.regmovim_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="LEFT">
+      <table id="REG_CONCEPTOS">
+        <field id="id_concepto">
+          <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+        </field>
+      </table>
+    </join>
+	
+  </form>
+</histrix>

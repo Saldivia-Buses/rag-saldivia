@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert" >
+    <title/>
+    <obs/>
+    <form >
+        <table id="CTB_DETALLES" idCampoCond="graba_ctb">
+            <field id="cuenta_id"       id_temp="ctbcuenta_stk_id"/>
+            <field id="doh"             id_temp="ctbcuenta_stk_doh"/>
+            <field id="importe"         id_temp="neto_detalle"/>
+            <field id="orden"           id_temp="orden_ctb"/>
+            <field id="movimiento_id"   lastId="mos_ctbmovimientos_ins.xml"/>
+        </table>
+    </form>
+</histrix>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm">
+    <title>CREACION DE PERIODOS DE PRODUCCION</title>
+    <obs></obs>
+    <form>
+        <table id="MRP_PERIODOS" label="PERIODOS DE PRODUCCION">
+            <filters>
+            </filters>
+
+            <field id="id_mrpperiodo" deshabilitado="true" autoinc="true" noshow="true">
+            </field>
+            <field id="descripcion_mrpperiodo" >
+		<label>Descripcion</label>
+            </field>
+            <field id="fecini_mrpperiodo" >
+		<label>Fecha Inicial</label>
+            </field>
+            <field id="fecfin_mrpperiodo" >
+		<label>Fecha_Final</label>
+            </field>
+            <field id="dias_laborables" >
+		<label>C.D.L.</label>
+		<help>Cant. Dias Laborables</help>
+		<size>2</size>
+            </field>
+
+                
+                
+            <order>
+                <field id="fecini_mrpperiodo"></field>
+            </order>
+        </table>
+
+    </form>
+</histrix>

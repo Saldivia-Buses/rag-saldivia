@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ficha" sololectura="true" autoprint="true" PDFsincabecera="true" >
+    <title>Calculo de Premios</title>
+    <obs/>
+    <form >
+
+       <pdf>
+          <code><![CDATA[
+            if ($lineCounter == 5){
+                $pdf->AliasNbPages();
+                $pdf->AddPage();
+                $lineCounter=1;
+                $pdf->SetXY(10,10);
+                $pdf->maxY=0;
+            }
+            $pdf->SetDrawColor(0, 0, 0);
+            $pdf->Line(150,$pdf->getY(),150,$pdf->getY() + 65);
+        /*    $pdf->RoundedRect(124,$pdf->getY() + 1,20,5, 2);*/
+            $pdf->Rect(-1,$pdf->getY(),$pdf->anchoPagina + 10 ,65, 1);
+
+
+            /*
+            $pdf->RoundedRect(5,160,$pdf->anchoPagina,42, 5);
+            $pdf->Line(5,167,$pdf->anchoPagina+5,167);
+            $pdf->Line(5,174,$pdf->anchoPagina+5,174);
+
+            $pdf->Line(5,181,$pdf->anchoPagina+5,181);
+            $pdf->Line(5,188,$pdf->anchoPagina+5,188);
+            $pdf->Line(5,195,$pdf->anchoPagina+5,195);
+            $pdf->Line(($pdf->anchoPagina / 2)+5,160,($pdf->anchoPagina / 2)+5,202);
+            */
+          ]]></code>
+      </pdf>
+
+        <table id="PERSONAL" label="calculo de premios" >
+            <field id="fecha" local="true">
+                <label posx="120" posy="+10" PDFnolabel="true">Fecha</label>
+                <valor>today</valor>
+                <tipo>date</tipo>
+            </field>
+            <field id="legajo" print="false">
+                <label posx="5" posy="0" PDFlabel="false">Leg.</label>
+                <tipo>integer</tipo>
+                <condicion operador="!=">0</condicion>
+            </field>
+            <field id="murabito" local="true">
+                <label posx="5" posy="+1.5"></label>
+            </field>
+
+            <field id="trabajadas" local="true">
+            <attribute id="print">displayhs</attribute>
+                <label posx="+155" posy="0" size="15" PDFnoborder="true">Hs</label>
+                <tipo>decimal</tipo>
+            </field>
+
+            <field id="Adicional" local="true">
+                <label posx="+185" posy="0" size="15" PDFnolabel="true"></label>
+                <tipo>decimal</tipo>
+            </field>
+
+
+            <!--<field id="recibi" local="true">
+                <label posx="5" posy="+1" >La suma de Pesos </label>
+                <tipo aletras="true">varchar</tipo>
+            </field>-->    
+	    <field id="recib" local="true">
+                <label posx="5" posy="+1" ></label>
+            </field>
+
+            <field id="h50" local="true">
+                <label posx="+155" posy="0" size="15" PDFnoborder="true">Hs 50%</label>
+                <tipo >decimal</tipo>
+            </field>
+            <field id="total50" local="true">
+                <label posx="+185" posy="0" size="15" PDFnolabel="true"></label>
+                <tipo >decimal</tipo>
+                
+            </field>
+
+            <field id="displayhs" local="true" print="false">
+		<if exp="Adicional &gt; 0">
+		    <true>false</true>
+		    <false>false</false>
+		</if>
+            </field>
+
+            <field id="h100" local="true">
+                <label posx="155" posy="+1" size="15" PDFnoborder="true">Hs 100%</label>
+                <tipo >decimal</tipo>
+            </field>
+            <field id="total100" local="true">
+                <label posx="185" posy="0" size="15" PDFnolabel="true"></label>
+                <tipo >decimal</tipo>
+            </field>
+
+            <field id="Dtitle" local="true">
+                <label posx="155" posy="+1" size="18" PDFnoborder="true">Descuentos</label>
+            </field>
+            <field id="DESC" local="true">
+                <label posx="185" posy="0" size="15" PDFnolabel="true"></label>
+                <tipo >decimal</tipo>
+            </field>
+            <field id="sumahs" local="true">
+                <label posx="155" posy="+1" size="15" PDFnoborder="true">Total Hs:</label>
+                <tipo >decimal</tipo>
+            </field>
+
+            <field id="fpremio" local="true">
+                <label posx="155" posy="+1" size="12" PDFnoborder="true">Premio</label>
+                <tipo>decimal</tipo>
+            </field>
+
+            <field id="faltas" local="true">
+                <label posx="155" posy="+1" size="12" PDFnoborder="true">Faltas</label>
+                <tipo >integer</tipo>
+            </field>
+
+            <field id="descuentos" local="true">
+        	<label posx="155" posy="+1" size="12" PDFnoborder="true">Adic.</label>
+                <tipo >decimal</tipo>
+            </field>
+
+            <field id="sumapremios" local="true">
+                <label posx="155" posy="+1" size="20" PDFnoborder="true">Total Premio:</label>
+                <tipo >decimal</tipo>
+            </field>
+
+			<field id="total1" local="true">
+                <label posx="5" posy="0" PDFnoborder="true">Total:</label>
+                <tipo >decimal</tipo>
+            </field>
+
+            <field id="nom">
+                <expression>concat(PERSONAL.apellido, ', ', PERSONAL.nombre)</expression>
+                <label posx="70" posy="+2" PDFnoborder="true">Firma</label>
+                <tipo>varchar</tipo>
+            </field>
+
+			<field id="total2" local="true">
+                <label posx="155" posy="0" PDFnoborder="true">Total: </label>
+                <tipo >decimal</tipo>
+            </field>
+
+        </table>
+    </form>
+</histrix>

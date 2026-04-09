@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" subtipo="vertical" _inserta="false" imprime="false" path="fotos/archivo/Modelos">
+  <title>PRECIOS POR MODELO</title>
+  <obs/>
+  <form >
+    <table id="PRECIOMODELO" styleTbody="height:400px;">
+      <title>Precios por modelo</title>
+      <movimientos>
+        <relacion id="preciomodelo_upd.xml" />
+        <relacion id="preciomodelo_ins.xml" />
+      </movimientos>
+
+      <filters>
+
+        <field id="idLista" PDFsize="10">
+          <label modpos="nobr">Lista</label>
+          <help>Lista</help>
+          <operador>=</operador>
+          <tipo>integer</tipo>
+        </field>
+        
+      </filters>
+
+      <field id="idPrecio" esClave="true" noshow="true"/>
+
+        <field id="actualiza" local="true" noshow="true">
+            <if exp="idPrecio + 0 != 0">
+                <true>'1'</true>
+                <false>'0'</false>
+            </if>
+        </field>
+
+        <field id="inserta" local="true" noshow="true">
+            <if exp="idPrecio + 0 == 0">
+                <true>'1'</true>
+                <false>'0'</false>
+            </if>
+        </field>
+      
+      <field id="idLista" noshow="true" PDFsize="10" tabla="PRECIOMODELO">
+        <tabla_ex id="LISTAPRECIOMODELO">
+          <field id="idLista" >
+          </field>
+          <field id="nom" >
+            <expression>concat('Nro ',idLista,' - Vigencia Desde: ' , DATE_FORMAT(fecha, '%d/%m/%Y'))</expression>
+          </field>
+          <field id="fecha" orden="true" tipoOrden="DESC">
+          </field>         
+          <order>
+            <field id="fecha"></field>
+          </order>
+        </tabla_ex>        
+        <label modpos="nobr">Lista</label>
+        <help>Lista</help>
+      </field>
+
+
+      <field id="nrocar" noshow="true">
+        <label modpos="nobr">Carroceria</label>
+      </field>
+      <field id="idGrupo" noshow="true">
+        <label modpos="nobr">Grupo</label>
+      </field>
+      <field id="asientos">
+        <label>Asientos</label>
+        <label>Cantidad de Asientos</label>
+      </field>
+      <field id="tipserv">
+        <label modpos="nobr">Tipo</label>
+        <label>Tipo de Servicio</label>
+        <tabla_ex id="TIPOSERVICIO">
+          <field id="tipserv"></field>
+          <field id="servdes"></field>
+        </tabla_ex>
+      </field>
+      <field id="banbar">
+        <label modpos="nobr">Baño Mbar</label>
+        <help>Baño / Minibar</help>
+        <options>
+          <option valor="0">--</option>
+          <option valor="1">Si</option>
+        </options>
+      </field>
+      <field id="bastidor">
+        <label modpos="nobr">Bastidor</label>
+        <options>
+          <option valor="0">--</option>
+          <option valor="1">Si</option>
+        </options>
+        <help>Bastidor</help>
+      </field>
+      <field id="largo">
+        <label>Largo (m3)</label>
+        <help>Largo Expresado en Metros</help>
+      </field>
+      <field id="bodega">
+        <label modpos="nobr">Bodega (m3)</label>
+        <help>Capacidad de Bodega expresado en Metros Cúbicos</help>
+      </field>
+      <field id="idLargo">
+	<label modpos="nobr">Largo (int)</label>
+	<helper type="combo" id="TIPOLARGO">
+	    <field id="idLargo" />
+	    <field id="desc">
+		<expression>CONCAT('De ', desde, ' a ', hasta,'m')</expression>
+	    </field>
+	</helper>
+      </field>
+      <field id="precio">
+        <label style="color:green; font-size:16px;">Precio conces.</label>
+        <help>Precio</help>
+        <tipo>decimal</tipo>
+      </field>
+      <field id="margen" preventLoop="true">
+        <label>% Rec</label>
+        <help>Recargo precio al público</help>
+        <valor>0.035</valor>
+        <jseval fielddestino="precio_publico">precio * (1 + margen)</jseval>
+      </field>
+      <field id="precio_publico" preventLoop="true">
+        <label modpos="nobr" style="color:red; font-size:16px;">Público</label>
+        <help>Precio</help>
+        <tipo>decimal</tipo>
+        <jseval fielddestino="margen">(precio_publico / precio) -1</jseval>
+      </field>
+      <field id="margen_1" preventLoop="true">
+        <label>% Rec1</label>
+        <help>Recargo precio al público</help>
+        <valor>0.035</valor>
+        <jseval fielddestino="precio_1">precio * (1 + margen_1)</jseval>
+      </field>
+      <field id="precio_1" preventLoop="true">
+        <label modpos="nobr" style="color:red; font-size:16px;">Conc.1</label>
+        <help>Precio</help>
+        <tipo>decimal</tipo>
+        <jseval fielddestino="margen_1">(precio_1 / precio) -1</jseval>
+      </field>
+      <field id="margen_2" preventLoop="true">
+        <label>% Rec2</label>
+        <help>Recargo precio al público</help>
+        <valor>0.035</valor>
+        <jseval fielddestino="precio_2">precio * (1 + margen_2)</jseval>
+      </field>
+      <field id="precio_2" preventLoop="true">
+        <label modpos="nobr" style="color:red; font-size:16px;">Conc.2</label>
+        <help>Precio</help>
+        <tipo>decimal</tipo>
+        <jseval fielddestino="margen_2">(precio_2 / precio) -1</jseval>
+      </field>
+      <field id="margen_3" preventLoop="true">
+        <label>% Rec3</label>
+        <help>Recargo precio al público</help>
+        <valor>0.035</valor>
+        <jseval fielddestino="precio_3">precio * (1 + margen_3)</jseval>
+      </field>
+      <field id="precio_3" preventLoop="true">
+        <label modpos="nobr" style="color:red; font-size:16px;">Conc.3</label>
+        <help>Precio</help>
+        <tipo>decimal</tipo>
+        <jseval fielddestino="margen_3">(precio_3 / precio) -1</jseval>
+      </field>
+      <field id="chapath" local="true" noshow="true" _noselect="true">
+        <if exp="true">
+          <true>'nrocar/idGrupo/asientos/'</true>
+          <false>''</false>
+        </if>
+        <tipo>varchar</tipo>
+      </field>
+      <field id="archivo"  local="true" _browse="true" _deshabilitado="true" path="chapath">
+        <label _Formstyle="display:none;">Fotos</label>
+        <help></help>
+        <tipo>file</tipo>
+        <size>10</size>
+      </field>
+      <order>
+        <field id="nrocar" tabla="PRECIOMODELO"></field>
+        <field id="idGrupo" tabla="PRECIOMODELO"></field>
+        <field id="asientos" tabla="PRECIOMODELO"></field>
+      </order>
+    </table>
+    <join tipo="left">
+      <table id="CARROCERIA">
+        <field id="nrocar">
+          <condicion operador="=">PRECIOMODELO.nrocar</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>

@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="consulta"  PDForientation="L">
+    <title>Fileteado</title>
+    <obs/>
+    <form>
+        <table id="MRP_ORDEN_PRODUCCION" label="Fileteado">
+
+	    <filters>
+                <field id="fecha_ingreso">
+	               <label>Desde</label>
+		          <operador>&gt;=</operador>
+                  <valor>today</valor>
+                </field>
+                <field id="fecha_ingreso">
+	              <label>Hasta</label>
+		          <operador>&lt;=</operador>
+                  <valor>today</valor>
+                </field>
+	    </filters>
+
+            <field id="fecha_orden" >
+                <label>Fecha</label>
+            </field>
+
+
+            <field id="id_mrporden" noshow="true" />
+
+            <field id="numero_orden" style="color:#b32600;font-weight:bold;">
+              <label>Orden</label>
+            </field>
+
+
+            <field id="fecha_ingreso"  deshabilitado="false"  tabla="MRP_DETALLE_REGISTRO">
+                <label>Carga</label>
+		<tipo>date</tipo>
+            </field>
+
+            <field id="id_mrpordendetalle" noshow="true" tabla="MRP_ORDEN_DETALLE"/>
+
+            <field id="mrpseccion_id"    tabla="MRP_DETALLE_REGISTRO" noshow="true">
+	    </field>
+
+            <field id="stkarticulo_id" _noshow="true" tabla="MRP_ORDEN_DETALLE">
+                <label>Código</label>
+                <size>12</size>
+            </field>
+
+            <field id="nombre_articulo"  tabla="STK_ARTICULOS">
+                <label>Artículo</label>
+                <size>30</size>
+            </field>
+
+            <field id="id_detalle_reg" tabla="MRP_DETALLE_REGISTRO" noshow="true"/>
+
+    	    <field id="xml_mrpseccion" tabla="MRP_SECCION" noshow="true" />
+    	    <field id="titulo" noshow="true">
+        		<expression>concat(numero_orden,' ',nombre_mrpseccion)</expression> 
+    	    </field>
+
+            <field id="cantidad" tabla="MRP_DETALLE_REGISTRO" style="text-align:right;color:green;font-weight:bold;">
+    	           	<expression>sum((case when mrpconcepto_id = 1 then cantidad else 0 end))</expression> 
+                    <label>Cantidad</label>
+        		<tipo>integer</tipo>
+
+        		<attribute id="linkint">xml_mrpseccion</attribute>
+        		<attribute id="linkdes">titulo</attribute>
+
+        		<helper xml="seccion_corte.xml" dir="/mrp/ing/modificacion/" type="link">
+        		    <parameter source="id_detalle_reg" target="id_detalle_reg" />
+        		</helper>
+
+            </field>
+
+
+            <field id="roturas" noZero="true" style="color:red;font-weight:bold;">
+    		  <expression>sum((case when mrpconcepto_id != 1 then cantidad else 0 end))</expression> 
+                <label>Roturas</label>
+    	       	<tipo>integer</tipo>
+            </field>
+            <field id="ingreso"  tabla="MRP_DETALLE_REGISTRO">
+                <label>Inicio</label>
+                <tipo>time</tipo>
+            </field>
+
+            <field id="salida" tabla="MRP_DETALLE_REGISTRO">
+                <label>Fin</label>
+                <tipo>time</tipo>
+            </field>
+
+            <field id="observacion" tabla="MRP_DETALLE_REGISTRO">
+                <label>Observaciones</label>
+                <size>40</size>
+            </field>
+            <group>
+                <field id="id_detalle_reg"/>
+            </group>
+            <order>
+                <field id="fecha_orden"/>
+            </order>
+        </table>
+        <join tipo="left">
+            <table id="MRP_ORDEN_DETALLE">
+                <field id="mrporden_id">
+                    <condicion operador="=">MRP_ORDEN_PRODUCCION.id_mrporden</condicion>
+                </field>
+            </table>
+        </join>
+        <join>
+	    <table id="MRP_DETALLE_REGISTRO">
+		<field id="mrpordendetalle_id">
+		    <condicion operador="=">id_mrpordendetalle</condicion>
+		</field>
+		<field id="mrpseccion_id">
+		    <condicion operador="=">6</condicion>
+		</field>
+	    </table>
+	</join>
+        <join tipo="inner">
+            <table id="STK_ARTICULOS">
+                <field id="id_stkarticulo">
+                    <condicion operador="=">MRP_ORDEN_DETALLE.stkarticulo_id</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="MRP_SECCION">
+                <field id="id_mrpseccion">
+                    <condicion operador="=">MRP_DETALLE_REGISTRO.mrpseccion_id</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

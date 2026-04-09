@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="consulta" subtipo="vertical" dataSource="treeview_menu" imprime="false" showCantidad="false" deleteRow="false" procesa="false" inserta="false">
+	<title>Usuarios</title>
+	<obs/>
+	<customScript>
+	//	$('tr.strike').hide();
+	</customScript>
+	<form >
+		<table id="HTXMENU" label="Usuarios">
+		<filters auto="true">
+			<field id="toggle">
+				
+				
+				<valor>'Mostrar/Ocultar Items Deshabilitados'</valor>
+			</field>
+		</filters>
+			
+		<field id="menuId" noshow="true" esClave="true">
+		</field>
+		<field id="toggle" local="true" noshow="true">
+				<valor>'Ocultar Deshabilitado'</valor>
+				<tipo>button</tipo>
+				<jsfunction event="onclick">$('tr.strike').toggle()</jsfunction>
+		</field>
+		<field id="loginauth" local="true" noshow="true">
+			<label>login auth</label>
+		</field>
+
+		<field id="profileauth" local="true" noshow="true">
+			<label>profile auth</label>
+		</field>
+
+      <field id="Id_perfil" noshow="true" local="true">
+      </field> 
+
+		<field id="login" local="true" noshow="true" >
+			<label>login</label>
+			
+			<help></help>
+		</field>
+		<!--
+		<field id="prev">
+			<expression>(select MEN.titulo from HTXMENU as MEN where MEN.hijo = HTXMENU.Id_menu limit 1)</expression>
+		</field>
+		-->
+		
+		<field id="full" local="true" >
+				<label>Programa</label>
+		</field>
+
+		<field id="disabled" local="true" noshow="true">
+			<label>disabled</label>
+		</field>
+
+		<field id="habilitar" local="true" refresh="true">
+			<label>habilitar</label>
+			<tipo>check</tipo>
+		</field>
+
+<!--
+		<field id="titulo" tabla="HTXMENU">
+			<label >Titulo</label>
+			<help>Cartel con se muestra el item para su seleccion.</help>
+			<tipo>varchar</tipo>
+		</field>
+	-->
+		<field id="clase" clasefila="true" local="true" noshow="true">
+		</field>
+
+
+		<field id="Id_perfil" local="true" noshow="true" esClave="true">
+			<detalle>Id_perfil</detalle>
+		</field>
+
+		<field id="l1" local="true" noshow="true">
+			<valor>login</valor>
+		</field>
+		<field id="l2" local="true" noshow="true">
+			<valor>menu_id</valor>
+		</field>
+		<field id="l2" local="true" noshow="true">
+			<valor>deny</valor>
+		</field>
+		<field id="m1" local="true" noshow="true">
+			<valor>Id_menu</valor>
+		</field>
+		<field id="m2" local="true" noshow="true">
+			<valor>menuId</valor>
+		</field>
+
+		<field id="p1" local="true" noshow="true">
+			<valor>Id_perfil</valor>
+		</field>
+
+
+
+		<field id="insdel" noshow="true" local="true" >
+			<label>test</label>
+			<if exp="'habilitar' == '1'">
+				<true>
+					( 'loginauth' == '1' || profileauth == 0 )?'replace into HTXUSER_AUTH set l1 = \'login\', l2 = menuId,  l3 = 0':'';
+				</true>
+				<false>
+					(profileauth &gt; 0 &amp;&amp; 'loginauth' != '1')?'replace into HTXUSER_AUTH set l1 = \'login\', l2 = menuId,  l3 = 1':''
+				</false>
+			</if>
+		</field>
+		
+		<field id="INS" noshow="true">
+			<expresion sql="true">[__insdel__]</expresion>
+		</field>
+
+		<!--
+		<field id="parametros" _noshow="true">
+			<condicion operador="!=">''</condicion>
+
+		</field>
+	-->
+<!--
+		<field id="Id_perfil" noshow="true" esClave="true">
+			<label>Perfil</label>
+			<help>Perfil de Acceso</help>
+		</field>
+	-->
+
+	<order>
+		<field id="prev" ></field>
+		<field id="titulo" tabla="HTXMENU"></field>
+		<field id="orden" tabla="HTXMENU"></field>
+	</order>
+
+</table>
+<!--
+<join _tipo="left">
+	<table id="HTXMENU">
+		<field id="menuId">
+			<condicion operador="=">HTXPROFILE_AUTH.menuId</condicion>
+		</field>
+
+	</table>
+</join>
+-->
+</form>
+</histrix>

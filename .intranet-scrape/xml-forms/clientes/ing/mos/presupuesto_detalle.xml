@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="ing" imprime="false" llenoreferente="true"  style="height:100%" modifica="false" inserta="false" deleteRow="false" procesa="true"> 
+    <title>Presupuesto</title>
+    <obs/>
+    <form>
+      <table id="REG_DETALLES"  label="Presupuesto" idCampoCond="selec">
+
+        <field id="id_regdetalle" noshow="true">
+          <detalle>id_regdetalle</detalle>
+        </field>
+
+        <field id="regmovim_id" noshow="true" /> 
+
+	<field id="imputacion_concepto" local="true" noshow="true" />
+
+	<field id="iva_debe" noshow="true">
+	    <expression>case when '[__imputacion_concepto__]' = 1 then iva_detalle else 0 end</expression>
+	    <detalle>iva_debe</detalle>
+	</field>
+
+	<field id="iva_haber" noshow="true">
+	    <expression>case when '[__imputacion_concepto__]' = 0 then iva_detalle else 0 end</expression>
+	    <detalle>iva_haber</detalle>
+	</field>
+
+	<field id="neto_debe" noshow="true">
+	    <expression>case when '[__imputacion_concepto__]' = 1 then neto_detalle else 0 end</expression>
+	    <detalle>neto_debe</detalle>
+	</field>
+
+	<field id="neto_haber" noshow="true">
+	    <expression>case when '[__imputacion_concepto__]' = 0 then neto_detalle else 0 end</expression>
+	    <detalle>neto_haber</detalle>
+	</field>
+
+        <field id="codigo_detalle">
+          <label>Codigo</label>
+          <detalle>codigo_detalle</detalle>
+        </field>
+
+	<field id="ctbcuenta_stk_iva_id" noshow="true">
+		<expression>GEN_IVA_ALICUOTAS.cuenta_debito_id</expression>
+		<detalle>ctbcuenta_stk_iva_id</detalle>
+	</field>
+
+	<field id="ctbcuenta_stk_id" noshow="true">
+		<expression>IF( IFNULL(STK_ARTICULOS.cuentadebe_id,'') = '', STK_RUBROS.ctbcuentarubro_id, STK_ARTICULOS.cuentadebe_id)</expression>
+                <detalle>ctbcuenta_stk_id</detalle>
+        </field>
+        
+        <field id="descripcion_detalle">
+          <label>Descripcion</label>
+          <detalle>descripcion_detalle</detalle>
+        </field>
+
+        <field id="cantidad_detalle">
+          <label>Cantidad</label>
+          <tipo>numeric</tipo>
+          <detalle>cantidad_detalle</detalle>
+        </field>
+        
+        <field id="precio_venta">
+          <label>Precio</label>
+          <tipo>numeric</tipo>
+          <detalle>precio_venta</detalle>
+        </field>
+				
+	<field id="neto_detalle" suma="true">
+		<label>Subtotal</label>
+		<tipo>decimal</tipo>
+          <detalle>neto_detalle</detalle>
+	</field>
+				
+	<field id="alicuota_iva">
+		<label>Alic.</label>
+		<tipo>decimal</tipo>
+          	<detalle>alicuota_iva</detalle>
+	</field>
+				
+	<field id="iva_detalle" suma="true">
+		<label>IVA</label>
+		<valor default="true">0.00</valor>
+		<tipo>decimal</tipo>
+	        <detalle>iva_detalle</detalle>
+	</field>
+
+	<field id="rni_detalle" noshow="true">
+		<valor default="true">0.00</valor>
+		<tipo>decimal</tipo>
+	        <detalle>rni_detalle</detalle>
+	</field>
+	
+	<field id="exento_detalle" noshow="true">
+		<valor default="true">0.00</valor>
+		<tipo>decimal</tipo>
+	        <detalle>exento_detalle</detalle>
+	</field>
+			
+	<field id="total_percepcion" noshow="true">
+		<valor default="true">0.00</valor>
+		<tipo>decimal</tipo>
+	        <detalle>total_percepcion</detalle>
+	</field>
+
+	<field id="per_detalle" noshow="true">
+		<valor default="true">0.00</valor>
+		<tipo>decimal</tipo>
+	        <detalle>per_detalle</detalle>
+	</field>
+
+	<field id="porcentaje_desc0" noshow="true">
+		<valor default="true">0.00</valor>
+		<tipo>decimal</tipo>
+	        <detalle>porcentaje_desc0</detalle>
+	</field>
+
+	<field id="porcentaje_desc1" noshow="true">
+		<valor default="true">0.00</valor>
+		<tipo>decimal</tipo>
+	        <detalle>porcentaje_desc1</detalle>
+	</field>
+
+	<field id="bonificacion_1" noshow="true">
+		<valor default="true">0.00</valor>
+		<tipo>decimal</tipo>
+	        <detalle>bonificacion_1</detalle>
+	</field>
+
+	<field id="bonificacion_2" noshow="true">
+		<valor default="true">0.00</valor>
+		<tipo>decimal</tipo>
+	        <detalle>bonificacion_2</detalle>
+	</field>
+	
+	<field id="codigo_serie" noshow="true">
+		<valor default="true">0.00</valor>
+		<tipo>decimal</tipo>
+	        <detalle>codigo_serie</detalle>
+	</field>
+	
+	<field id="nro_partida" noshow="true">
+		<valor default="true">0.00</valor>
+		<tipo>decimal</tipo>
+	        <detalle>nro_partida</detalle>
+	</field>
+
+	<field id="total_detalle" suma="true" deshabilitado="true">
+		<label>Total</label>
+		<tipo>decimal</tipo>
+		<detalle>total_detalle</detalle>
+	</field>
+
+        <field id="selec" local="true" refresh="true">
+          <label Formstyle="display:none;">Selec.</label>
+          <help>Seleccion</help>
+          <tipo>check</tipo>
+          <valor>1</valor>
+        </field>
+        
+        <order>
+          <field id="orden"/>
+        </order>
+
+        <group>
+          <field id="id_regdetalle" />
+        </group>
+
+      </table>
+
+      	<join tipo="LEFT">
+            <table id="STK_ARTICULOS">
+                <field id="id_stkarticulo">
+                    <condicion operador="=">REG_DETALLES.codigo_detalle</condicion>
+                </field>
+            </table>
+        </join>
+
+	<join tipo="LEFT">
+            <table id="STK_RUBROS">
+                <field id="id_stkrubro">
+                    <condicion operador="=">STK_ARTICULOS.stkrubro_id</condicion>
+                </field>
+            </table>
+        </join>	
+
+	<join tipo="LEFT">
+            <table id="GEN_IVA_ALICUOTAS">
+                <field id="iva_regimen_id">
+                    <condicion operador="=">STK_ARTICULOS.ivaregimen_id</condicion>
+                </field>
+                <field id="iva_id" >
+                    <condicion operador="=">'1'</condicion>
+                </field>
+            </table>
+        </join>
+      
+  </form>
+</histrix>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm">
+	<title>POSICION DEL AIRE ACONDICIONADO</title>
+	<obs></obs>
+	<form >
+		<table id="POSICAIR" label="Posiciones">
+
+			<field id="posair">
+				<label>Codigo</label>
+				<help>Codigo de Posicion</help>
+			</field>
+			<field id="posdes">
+				<label>Posicion</label>
+				<help>Posicion del Aire Acondicionado</help>
+			</field>
+			<field id="siscod" oculto="true">
+				<label>Cod</label>
+			</field>
+    			<order>
+				<field id="posair"></field>
+			</order>
+		</table>
+	</form>	   
+</histrix> 

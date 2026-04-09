@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="update" _grabafinal="true">
+	<title>Modificación de Movimientos</title>
+	 <obs></obs>
+		<form >
+		     <table id="CCTIMPUT" >
+				<field id="regmovim_id" id_temp="id_regmovim" esClave="true" />
+				<field id="concod" id_temp="concod" />
+				<field id="ctacod" id_temp="nro_cuenta" />
+				<field id="movlet" id_temp="letra_movimiento" />
+				<field id="movnpv" id_temp="puesto_movimiento" />
+				<field id="movfec" id_temp="fecha_movimiento" />
+				<field id="movnro" id_temp="nro_movimiento" />
+				<field id="movimp" id_temp="importe_movimiento" />
+		    </table>
+		</form>
+    </histrix>	
+
+
+

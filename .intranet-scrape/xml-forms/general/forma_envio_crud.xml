@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="crud">
+  <title>Forma de envío</title>
+  <obs/>
+  <form >
+    <table id="GEN_FORMA_ENVIO" label="Empresas de Telefonía">
+      <field id="id_formaenvio" noshow="true" />
+
+      <field id="nombre_formaenvio" >
+        <label>Forma de Envio</label>
+      </field>
+
+      <field id="sigla_formaenvio" >
+        <label>Sigla</label>
+      </field>
+    </table>
+  </form>
+</histrix>

@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="grid" subtipo="vertical" inserta="false" borra="false" modifica="false" imprime="false" deleteRow="false" exportasuma="true" llenoreferente="true" llenotemporal="true">
+  <title>Comprobantes a Imputar</title>
+  <obs/>
+  <form>
+    <table id="REG_MOVIMIENTOS">
+	
+      <movimientos>
+        <relacion id="regimputaciones_ins.xml"/>
+      </movimientos>
+
+      <field id="id_regmovim" esClave="true" noshow="true" />
+
+      <field id="subsistema_id" noshow="true"/>
+
+      <field id="regcuenta_id" noshow="true">
+        <condicion operador="=">-1</condicion>
+      </field>
+
+      <field id="fecha" >
+        <label>Fecha</label>
+        <tipo>date</tipo>
+	<expression>fecha_movimiento</expression>
+      </field>
+
+
+      <field id="vencimiento_movimiento">
+        <label>Vto</label>
+        <tipo>date</tipo>
+      </field>
+
+      <field id="comprobante">
+        <label>Comprobante</label>
+        <expression>CONCAT(REG_CONCEPTOS.abreviacion_concepto,' ',LPAD(REG_MOVIMIENTOS.puesto_movimiento,4,0),'-',LPAD(REG_MOVIMIENTOS.nro_movimiento,8,0))</expression>
+      </field>
+
+      <field id="cuota_movimiento">
+        <label>Cta</label>
+      </field>
+	<!-- Segun la imputacion del comprobante principal varia la imputacion de los comprobantes detalles esto es para que las facturas simpre salgan en positivo y los
+recibos u O.Pago como las Nc de clientes y proveedores salgan en negativo -->
+      <field id="imputacion_concepto_comprobante_llama" local="true" noshow="true" />
+
+      <field id="importe_original">
+      	<expression>importe_movimiento</expression>
+      	<tipo>numeric</tipo>
+      	<label>Importe Original</label>
+      </field>
+
+
+
+      <field id="saldo_movimiento" suma="true">
+        <label>Saldo</label>
+	<expression>(case when '[__imputacion_concepto_comprobante_llama__]' = '0' then -1 else 1 end *  case when imputacion_concepto = 1 then 1 else -1 end) *  saldo_movimiento</expression>
+        <condicion operador="&gt;">0</condicion>
+      </field>
+
+      <field id="Imputado" local="true" refresh="true">
+        <label>Imputar</label>
+        <tipo>check</tipo>       
+      </field>
+
+      <field id="habil" local="true" noshow="true">
+        <if exp="Imputado == 1">
+            <true>'true'</true>
+            <false>'false'</false>
+        </if>
+      </field>
+
+      <field id="neto_movimiento" _noshow="true" >
+        <label>neto</label>
+      </field>
+
+      <field id="total_imputado" local="true" suma="true" editable="true">
+	    <attribute id="editable">habil</attribute>
+      	<label>Total Imputado</label>
+        <if exp="Imputado == 1">
+		    <true>(total_imputado != 0)?total_imputado:saldo_movimiento</true>
+		    <false>0</false>
+        </if> 
+        <jseval >total_imputado &lt;= saldo_movimiento</jseval>
+        <jseval campodestino="neto_proporcional" > (total_imputado / importe_original  * neto_movimiento).toFixed(2)</jseval>
+	      <jseval campodestino="importe_imputado" total="true">total_imputado</jseval>
+
+        
+        <detalle>importe_imputado</detalle>
+	      <tipo>numeric</tipo>
+      </field>
+
+
+      <field id="neto_proporcional" noshow="true" suma="true" local="true" editable="true" deshabilitado="true">
+        <label>neto Prop</label>
+        <if exp="true">
+          <true>round(total_imputado / importe_original  * neto_movimiento,2)</true>
+          <false>0</false>
+        </if>         
+          <jseval campodestino="total_neto" total="true">neto_proporcional</jseval>
+
+      </field>
+
+
+
+	<order>
+	    <field id="fecha_movimiento" tabla="REG_MOVIMIENTOS"/>
+	    <field id="nro_movimiento" tabla="REG_MOVIMIENTOS"/>
+	</order>
+
+
+    </table>
+    <join>
+      <table id="REG_CONCEPTOS">
+        <field id="subsistema_id">
+          <condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion>
+        </field>
+        <field id="id_concepto">
+          <condicion operador="=">REG_MOVIMIENTOS.concepto_id </condicion>
+        </field>
+
+        <field id="imputacion_concepto">
+    <!--      <condicion operador="=">0</condicion> -->
+        </field>
+
+        <field id="informa_calculo">
+          <condicion operador="=">0</condicion>
+        </field>
+
+      </table>
+    </join>
+
+    
+
+  </form>
+</histrix>

@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ficha" sololectura="true" autoprint="true" preFetch="true" path="/fotos/firmas/">
+	<title>Impuesto a los Ganancias</title>
+	<obs></obs>
+	<form >
+		<table id="CAJMOVIM" label="Retenciones de Ganancias">
+<!--			<field id="nroret" deshabilitado="true">
+				<label posx="13" posy="22" >Constancia de Retencion Nro</label>
+				<help>Numero de la retencion</help>
+				<format>%08d</format>
+			</field>			-->
+			<field id="cajfec" deshabilitado="true">
+				<label posx="100" posy="+4" >Fecha</label>
+				<help>Fecha de la Retencion</help>
+			</field>	
+			<field id="lin1" local="true">
+			    <label posx="5" posy="+2" size="200">Datos del Agente de Retencion</label>
+1			</field>
+			<field id="agente" local="true">
+			    <label posx="5" posy="+2" size="30">Nombre Agente</label>
+			    <expression>select paralf from FSMPARAM where FSMPARAM.parcla = 'empnom' limit 1</expression>
+			</field>
+			<field id="agentecuit" local="true">
+			    <label posx="5" posy="+2" size="30">C.U.I.T.:</label>
+			    <expression>select paralf from FSMPARAM where FSMPARAM.parcla = 'cuiemp' limit 1</expression>
+			</field>
+			<field id="agentedomi" local="true">
+			    <label posx="5" posy="+2" size="30">Domicilio:</label>
+			    <expression>select group_concat(paralf, ' ') from FSMPARAM where FSMPARAM.parcla in ('empdir', 'emploc', 'emppro')</expression>
+			</field>
+
+			<field id="lin2" local="true">
+			    <label posx="5" posy="+4" size="200">Datos del Sujeto Retenido</label>
+			</field>
+
+<!--		
+			<field id="nroag" local="true" deshabilitado="true">
+				<label posx="13" posy="27" >Ag.Ret.IIBB Nro</label>
+				<valor>'450-002395-0'</valor>
+				<tipo>varchar</tipo>
+			</field>	-->
+			<field id="cajcta" deshabilitado="true" noshow="true" print="false">
+				<label  >Cuenta</label>
+				<help>Codigo de Cuenta</help>
+			</field>
+			<field id="ctanom" tabla="CCTCUENT" deshabilitado="true">
+				<label colspan="2"   posx="5" posy="+2" size="30">Nombre</label>
+				<help>Nombre</help>
+			</field>
+			
+			<field id="ctanro" tabla="CCTCUENT">
+				<label colspan="2" posx="5" posy="+2" size="30">C.U.I.T. Nro</label>
+				<help>Numero Doc</help>
+			</field> 
+
+
+			<field id="ctadir" tabla="CCTCUENT">
+				<label colspan="2" posx="5" posy="+2" size="30">Direccion</label>
+				<help>Direccion</help>
+			</field>
+			<field id="ctaloc" tabla="CCTCUENT">
+				<label colspan="2" posx="5" posy="+2" size="30">Localidad</label>
+				<help>Localidad</help>
+			</field>
+
+
+			<field id="lin3" local="true">
+			    <label posx="5" posy="+4" size="200">Datos de la Retencion</label>
+			</field>
+			<field id="imp" local="true">
+			    <label posx="5" posy="+2" size="30">Impuesto</label>
+			    <valor>Impuesto a las Ganancias</valor>
+			</field>
+			<field id="catgan" local="true">
+			    <label posx="5" posy="+2" size="30">Regimen</label>
+			    <valor>217</valor>
+			</field>	
+			<field id="num">
+			    <label posx="5" posy="+2" size="30">Comprobante</label>
+			    <expression>concat('OP 0001-', LPAD( cajnro,8, '0'))</expression>
+			</field>
+			<field id="movnet" tabla="CCTMOVIM">
+				<label posx="5" posy="+2" size="30">Monto Comprobante</label>
+				<help>Monto imponible del Comprobante</help>
+				<tipo>decimal</tipo>
+			</field>			
+			<field id="cajimp" _tabla="CCTMOVIM">
+				<label posx="5" posy="+2" size="30">Importe Retencion</label>
+				<help>Importe de la Operacion</help>
+				<tipo >decimal</tipo>
+			</field>		
+
+<field id="firma1" _local="true" >
+    <expression>'firma831.jpg'</expression>
+    <label posx="80" posy="+2" PDFnoborder="true" PDFsize="15"></label>
+<tipo>file</tipo>
+    <size>50</size>
+</field>
+
+
+
+<!--
+			<field id="ctanib" tabla="CCTCUENT" deshabilitado="true">
+				<label colspan="2">Nro de Ingresos brutos</label>
+				<help>Numero de Ingresos brutos</help>
+				<format></format>
+			</field>
+			<field id="codcomp">
+				<label>Comp.</label>
+				<help>Codigo de Comprobante</help>
+			</field>
+			<field id="codnpv">
+				<label>Npv</label>
+				<help>Pnto de Venta</help>
+			</field>	
+			-->		
+<!--			<field id="sep" local="true">	
+				<label posx="+1">Conceptos</label>
+				<valor>Conceptos de retención Impuesto a los Ingresoso Brutos</valor>
+				<tipo>varchar</tipo>
+			</field>	-->
+
+			<field id="cajnro" print="false" noshow="true">
+				<label>Corresponde a Orden de Pago Nro</label>
+				<format>%08d</format>				 
+			</field>	
+<!--			
+			<field id="compfec">
+				<label>Fecha</label>
+				<help>Fecha del Comprobante</help>
+			</field>	-->
+			<!--
+			<field id="alicuota">
+				<label>Alicuota</label>
+				<help>Alicuota</help>
+			</field>			
+-->
+			<field id="cajcod" oculto="true">
+				<label>Comp.</label>
+				<condicion operador="=">29</condicion>
+			</field>
+<!--			<field id="cajimp" suma="true" deshabilitado="true">
+				<label>Importe Retencion</label>
+				<help>Retencion</help>
+			</field>			-->
+<!--
+			<field id="cajimp2">
+				<expression>cajimp</expression>
+				<label >Son Pesos </label>
+				<tipo aletras="true" >numeric</tipo>
+				<size>100</size>
+				<tipo>varchar</tipo>
+			</field>			
+
+			<field id="obs" >
+				<expression>month(cajfec)</expression>
+				<options>
+					<option valor="1">Enero</option>
+					<option valor="2">Febrero</option>
+					<option valor="3">Marzo</option>
+					<option valor="4">Abril</option>
+					<option valor="5">Mayo</option>
+					<option valor="6">Junio</option>
+					<option valor="7">Julio</option>
+					<option valor="8">Agosto</option>
+					<option valor="9">Septiempre</option>
+					<option valor="10">Octubre</option>
+					<option valor="11">Noviembre</option>
+					<option valor="12">Diciembre</option>
+					
+				</options> 
+				<label>Expedido en</label>
+				<prefijo> V.G.GALVEZ, siendo ingresado en la declaración jurada del prído </prefijo>
+				<tipo>varchar</tipo>
+			</field>	 		
+-->
+		</table>
+		<join tipo="left">
+			<table id="CCTCUENT">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">'01'</condicion>
+				</field>				
+				<field id="ctacod" >
+					<condicion operador="=">CAJMOVIM.cajcta</condicion>
+				</field>
+			</table>
+		
+		</join>
+		<join tipo="left">
+			<table id="CCTMOVIM">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">'01'</condicion>
+				</field>				
+				<field id="ctacod" >
+					<condicion operador="=">CAJMOVIM.cajcta</condicion>
+				</field>
+				<field id="movnro">
+					<condicion operador="=">CAJMOVIM.cajnro</condicion>
+				</field>
+				<field id="movfec">
+					<condicion operador="=">CAJMOVIM.cajfec</condicion>
+				</field>
+			</table>
+		
+		</join>
+	</form>	   
+</histrix> 

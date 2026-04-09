@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="grid" preloadData="false" paginar="200" borra="false" deleteRow="false" procesa="true" inserta="false" _confirma="Guardar Cambios" imprime="false ">
+  <title>Stock mínimo y de reposición</title>
+  <obs/>
+  <form>
+    <table id="STK_ARTICULOS" label="Stock mínimo y de reposición">
+      <movimientos>
+        <relacion id="stockminrep_minimos_ins.xml"> </relacion>
+      </movimientos>
+      
+      <filters>
+        <!-- <field id="stock" deshabilitado="false">
+          <label>Stock</label>
+          <operador>=</operador>
+        </field> -->
+      
+        <field id="id_stkarticulo">
+          <label>Codigo</label>
+          <help>Código de movimiento</help>
+          <operador>=</operador>
+        </field>
+
+        <field id="separador" modpos="nobr" deshabilitado="true" editable="false" />
+      
+        <field id="stkdeposito_id">
+          <operador>=</operador>
+          <label modpos="nobr">Deposito</label>
+        </field>
+
+        <field id="separador" modpos="nobr" deshabilitado="true" editable="false" />
+      
+        <field id="sinmov" deshabilitado="false"  modpos="nobr">
+          <label>Meses Inmovilizado</label>
+          <operador>&gt;=</operador>
+	        <!--  items_usuar -->
+        </field>
+
+        <field id="separador" modpos="nobr" deshabilitado="true" editable="false" />
+      
+        <field id="sinstock">
+          <label modpos="nobr">Sin Stock</label>
+          <tipo>check</tipo>
+        </field>
+
+        <field id="separador" modpos="nobr" deshabilitado="true" editable="false" />
+      
+        <field id="areponer">
+          <label modpos="nobr">A reponer</label>
+          <tipo>check</tipo>
+        </field>
+      
+
+        <field id="regcuenta_id">
+          <label>Proveedor</label>
+          <operador>=</operador>
+        </field>
+
+      </filters>
+
+        <field id="separador" local="true" deshabilitado="true" noshow="true">
+          <size>1</size>
+        </field>
+
+
+
+
+
+      <field id="regcuenta_id" tabla="STK_ARTICULO_PROVEEDOR">
+        <label>Proveedor</label>
+        <helper id="REG_CUENTA" _xml="REG_CUENTA.xml" type="external">
+          <field id="id_regcuenta">
+                </field>
+          <field id="nombre_cuenta">
+                </field>
+          <field id="subsistema_id" oculto="true">
+            <condicion operador="=">'01'</condicion>
+          </field>
+        </helper>
+        <tipo>varchar</tipo>
+      </field>
+
+      <field id="nombre_cuenta" tabla="REG_CUENTA">
+        <label>Prov</label>
+      </field>
+
+      <field id="id_stkarticulo" esClave="true" colstyle="text-align:left;">
+        <label>Codigo</label>
+        <help>Código de movimiento</help>
+        <tipo>varchar</tipo>
+      </field>
+
+
+      <field id="nombre_articulo" >
+        <expression>nombre_articulo</expression>
+        <label modpos="nobr">Nombre</label>
+      </field>
+
+
+      <field id="stkdeposito_id" _noshow="true" tabla=" STK_MOVIMIENTOS" esClave="true">
+        <label>Deposito</label>
+        <helper type="combo" xml="stkdeposito_qry.xml" dir="/ayudas" empty="true" _multiple="true"/>
+      </field>
+
+
+      <field id="fecha_movimiento">
+        <expression>DATE(STK_MOVIMIENTOS.fecha_movimiento)</expression>
+        <label>Ultimo movimiento</label>
+        <tipo>date</tipo>
+      </field>
+
+      <field id="sinmov">
+        <expression>round(datediff(now(), STK_MOVIMIENTOS.fecha_movimiento) / 30, 0)</expression>
+        <label>Inmovilizado</label>
+        <tipo>integer</tipo>
+      </field>
+
+
+
+
+      <field id="sinstock" local="true" noshow="true">
+        <label>Sin Stock</label>
+        <tipo>check</tipo>
+      </field>
+
+      <field id="areponer" local="true" noshow="true">
+        <tipo>check</tipo>
+      </field>
+
+
+      <field id="precio_costo" tabla="STK_ARTICULOS">
+        <label modpos="nobr">Precio</label>
+        <tipo>decimal</tipo>
+      </field>
+
+      <field id="stock_minimo" noZero="true" editable="true" tabla="STK_ARTICULO_EXISTENCIAS">
+        <label>Stock Minimo</label>
+        <tipo>numeric</tipo>
+      </field>
+
+      <field id="stock_reposicion" noZero="true" editable="true" local="true" tabla="STK_ARTICULO_EXISTENCIAS">
+        <label>Stock Reposicion</label>
+        <tipo>numeric</tipo>
+      </field>
+
+      <field id="cantidad_stock" suma="true" noZero="true" >
+        	<expression>sum(CASE WHEN STK_CONCEPTOS.tipo_concepto = 0 THEN STK_MOVIMIENTOS.cantidad ELSE (STK_MOVIMIENTOS.cantidad * (-1)) END)</expression>
+        <label>Actual</label>
+        <tipo>numeric</tipo>
+      </field>
+
+      <field id="tot_reponer" noshow="true">
+          <expression having="false">
+            case when '[__areponer__]' = '1' and (STK_ARTICULO_EXISTENCIAS.stock_minimo &gt; '[__cantidad_stock__]') then 1 when '[__areponer__]' = '0' then 1 else 0 end
+          </expression>
+	         <condicion operador="=">1</condicion>
+      </field>
+    
+      <field id="compra_minima" tabla="STK_ARTICULO_PROVEEDOR">
+        <label>Compra Minima</label>
+        <tipo>decimal</tipo>
+      </field>
+
+      <field id="reponer" local="true" suma="true" noZero="true">
+        <label>A reponer</label>
+        <tipo>numeric</tipo>
+        <if exp="cantidad_stock &lt; stock_minimo">
+          <true>stock_minimo - cantidad_stock</true>
+          <false>0</false>
+        </if>
+      </field>
+
+      <field id="importe_reponer" local="true" suma="true" noZero="true">
+        <label>Total</label>
+        <tipo>numeric</tipo>
+        <if exp="true">
+          <true>reponer * precio_costo</true>
+          <false>0</false>
+        </if>
+      </field>
+
+      <field id="stock" noshow="true" local="true">
+        <helper type="combo" empty="true">
+          <option value=""/>
+          <option value="0">minimo</option>
+          <option value="1">reposicion</option>
+        </helper>
+        <expression>'[__cantidad_stock__]' &lt; '[__stock__]'</expression>
+      </field>
+
+      <field id="comprado" _noZero="true">
+        <label>Comprado</label>
+          <helper type="link" xml="cps_movimientos_x_artic2.xml" dir="/compras/qry/" modal="true">
+            <parameter source="id_stkarticulo" target="stkarticulo_id" />
+            <parameter source="1" target="cpsestado_id" />
+          </helper>
+          <expression sql="true">
+            SELECT sum(pendiente_compra) 
+            FROM CPS_DETALLE 
+            LEFT JOIN CPS_MOVIMIENTOS ON CPS_DETALLE.cpsmovimiento_id = CPS_MOVIMIENTOS.id_cpsmovimiento 
+            LEFT JOIN STK_MOVIMIENTOS ON STK_MOVIMIENTOS.cpsmovimiento_id = CPS_MOVIMIENTOS.id_cpsmovimiento 
+                                          AND STK_MOVIMIENTOS.stkdeposito_id = '[__stkdeposito_id__]'
+                                          AND STK_MOVIMIENTOS.stkarticulo_id = '[__id_stkarticulo__]'   
+            WHERE CPS_DETALLE.stkarticulo_id = '[__id_stkarticulo__]'
+            AND CPS_MOVIMIENTOS.cpsestado_id = 1
+          </expression>        
+          <tipo>numeric</tipo>
+      </field>
+
+      <field id="baja_articulo" noshow="true">
+        <condicion operador="!=">1</condicion>
+      </field>
+
+      <group>
+        <field id="id_stkarticulo" tabla="STK_ARTICULOS"/>
+        <field id="stkdeposito_id" tabla=" STK_MOVIMIENTOS"/>
+      </group>
+    </table>
+    
+    <join tipo="left">
+      <table id=" STK_MOVIMIENTOS">
+        <field id="stkarticulo_id">
+          <condicion operador="=">STK_ARTICULOS.id_stkarticulo</condicion>
+        </field>      
+      </table>
+    </join>
+    
+    <join tipo="left">
+      <table id="STK_BOM">
+        <field id="stkarticulopadre_id">
+          <condicion operador="=">STK_ARTICULOS.id_stkarticulo</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join tipo="left">
+      <table id="STK_ARTICULO_EXISTENCIAS">
+        <field id="stkarticulo_id">
+          <condicion operador="=">STK_ARTICULOS.id_stkarticulo</condicion>
+        </field>
+        <field id="stkdeposito_id">
+          <condicion operador="="> STK_MOVIMIENTOS.stkdeposito_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="STK_ARTICULO_PROVEEDOR">
+        <field id="stkarticulo_id">
+          <condicion operador="=">STK_ARTICULOS.id_stkarticulo</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="REG_CUENTA">
+        <field id="id_regcuenta">
+          <condicion operador="=">STK_ARTICULO_PROVEEDOR.regcuenta_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="STK_CONCEPTOS">
+        <field id="id_stkconcepto">
+          <condicion operador="=">STK_MOVIMIENTOS.stkconcepto_id</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>

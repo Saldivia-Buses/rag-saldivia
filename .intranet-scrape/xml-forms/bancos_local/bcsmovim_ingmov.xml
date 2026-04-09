@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="abm">
+       <title>Mov Bancario</title>
+        <obs></obs>
+               <form >
+					<table id="BCSMOVIM" label="MOVIMIENTOS">
+						<field id="siscod" id_cab="siscod">
+						</field>
+						<field id="bcscta" id_cab="bcscta">
+						</field>
+						<field id="bcsfec" id_cab="bcsfec">
+						</field>
+						<field id="bcsfev" id_temp="bcsfev">
+						</field>
+						<field id="bcsmov" id_temp="bcsmov">
+						</field>
+						<field id="bcsnro" id_temp="bcsnro">
+						</field>
+						<field id="bcsimp" id_temp="bcsimp">
+						</field>
+						<field id="presentado" id_temp="presentado">
+						</field>
+						<field id="regmin" esNroMinuta="true">
+						</field>
+						<field id="acreditado" id_temp="bcsfev">
+						</field>
+
+						<field id="bcsref__1" id_cab="bcsref__1">
+						</field>
+					</table>
+               </form>
+        </histrix>

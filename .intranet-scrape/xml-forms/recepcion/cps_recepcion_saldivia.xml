@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="fichaing" inserta="false" modifica="false" imprime="false" _transaccional="true" _log="false">
+	<title>Recepción de Compras</title>
+	<obs></obs>
+<customScript>
+<![CDATA[
+	$('div[instance="[__instance__]"]').on('change','[campo="grabar"] :input', function(){
+		$row = $(this).closest('tr');
+		$table = $row.closest('table');
+
+		var items=[];
+		$('tbody tr td:nth-child(6)', $table).each( function(){
+			$mirow = $(this).closest('tr');
+			var graba  = $('[campo="grabar"] :input', $mirow ).is(':checked');
+			var valor  = $('[campo="coddem"]', $mirow ).attr('valor');
+			if (graba) {
+			items.push( valor );
+			}
+		});
+		console.log(items);
+		$masterrow = $row.closest('td').closest('tr');
+		$(':input[name="demeritos"]', $masterrow ).val(items);
+	});
+
+	$('div[instance="[__instance__]"]').on('change focus',':input[name="ingresan"], :input[name="marcar"]', function(){
+		$('div[instance="[__instance__]"] [campo="grabar"] :input').change();
+	});
+
+	$('div[instance="[__instance__]"]').on('focus', ':input', function(){
+		$("input.date:enabled").datepicker();
+
+	});
+
+    
+    
+    $('div[instance="[__instance__]"]').on('change', '[name="vencimiento"]', function() {
+        
+        var $row = $(this).closest('[o]');
+        var dias_fifo = parseInt(($('[name="dias_fifo"]', $row).val() || 0));
+		if (dias_fifo != 0) {
+			var fecha = $(this).val();
+			var recepcion = straFecha($('[instance="[__instance__]"] [name="movfec__1"]').val() );
+			var d = straFecha(fecha) ; 
+
+			d.setDate(d.getDate() - dias_fifo); 
+			//$('[name="limite_fifo"]', $row).val(d.toLocaleDateString('en-GB'));
+
+			if (d <= recepcion) {
+				alert('FUERA DE FECHA DE VENCIMIENTO');
+			}
+
+			if (fecha != '') {
+				$('[name="ingresan"], [name="marcar"], [name="Unidades"]' , $row).removeAttr('disabled').removeAttr('readonly');
+			}
+			if (fecha == '') {
+				$('[name="ingresan"], [name="marcar"], [name="Unidades"]', $row).removeAttr('disabled').removeAttr('readonly').val('');
+			}			
+		}
+
+
+    });
+function esperarFilasYAplicar() {
+    loger('espero a que se llene');
+    const interval = setInterval(function () {
+        const $tabla = $('[instance="[__instance__]"] table[xml="cps_detalle_grid_rec.xml"]');
+        const $filas = $tabla.find("tbody tr");
+        const $marcar = $tabla.find('[name="marcar"]');
+
+        loger("filas detectadas: " + $filas.length + ", marcar: " + $marcar.length);
+
+        if ($filas.length > 0 && $marcar.length > 0) {
+            clearInterval(interval);
+            loger('se lleno con filas y marcar');
+
+            $tabla.find('[campo="habilita_inspec"]').each(function (index, element) {
+                loger('encuentro habilitado');
+                const $habil = $(element);
+				var valor =  $habil.attr('valor');
+                loger('valor habilitado ' + $habil.attr('valor'));
+
+                const $tr = $habil.closest('tr');
+				if (valor == 'true') {
+					$('[name="marcar"], [name="ingresan"] , [name="Unidades"] ', $tr).prop("disabled", true).attr("disabled", "disabled");
+
+				} else {
+					$('[name="marcar"], [name="ingresan"] , [name="Unidades"] ', $tr).prop("disabled", false).removeAttr("disabled");
+				
+				}
+                
+            });
+        }
+    }, 500);
+};
+
+
+esperarFilasYAplicar();
+]]></customScript>
+
+	<form >
+
+		<table id="CPSENCAB" label="Recepción de Compras" >
+
+			<movimientos>
+
+				<relacion id="cps_movimientos_recepcion.xml" />       
+				<relacion id="cpsencab_rec_ingmov2.xml"></relacion> 
+
+				<relacion id="cpsencab_forzar_cumplida.xml"></relacion>  CAMBOP ESTADO COMPRA
+
+			</movimientos>
+
+			<validation _optional="true">
+				<condition >
+					<![CDATA[remnro + 0 == 0]]>
+				</condition>
+				<message>Número de Remito en cero</message>
+			</validation>
+
+			<field id="ocpnro"  _deshabilitado="true">
+				<helper id="CPSENCAB" type="external">
+					<field id="ocpnro" />
+
+					<field id="ocprnro2">
+						<expression>ocpnro</expression>
+					</field>
+
+					<field id="ctacod">
+						<label>Prov</label>
+						<detalle>ctacod</detalle>
+					</field>
+					<field id="ocpfeccha">
+						<expression>date_format(ocpfec, "%d/%m/%Y")</expression>
+						<label>Fecha</label>
+						<detalle>ocpfec</detalle>
+						<detalle>movfec</detalle>
+						<tipo>date</tipo>
+					</field>
+
+					<field id="remfec" noshow="true">
+						<expression>(SELECT date_format(remfec, "%d/%m/%Y") FROM FACREMIT WHERE ctacod = CPSENCAB.ctacod ORDER BY remfec DESC LIMIT 1)</expression>
+						<detalle>remfec</detalle>
+						<label>RemFec</label>
+					</field>
+					<field id="ocpest" noshow="true">
+						<detalle>ocpest</detalle>
+					</field>
+				</helper>
+				<label _modpos="nobr">O.Compra</label>
+				<help>Número de Orden de Compra</help>
+				<actualiza>
+					<field id="materiales" destino="ocpnro" />
+					<field id="pedidos" destino="ocpnro" />
+				</actualiza>
+			</field>
+
+			<field id="ocpfec"  deshabilitado="true">
+				<label modpos="nobr">Fecha O.C.</label>
+				<help>Fecha O.C.</help>
+			</field>
+
+			<field id="ocpest" deshabilitado="true" sincelda="true">
+				<label modpos="nobr">Estado O.C.</label>
+		        <options>
+		          <option valor=""></option>
+		          <option valor="0">No Autorizada</option>
+		          <option valor="1">Pendiente</option>
+		          <option valor="2">Cumplida</option>
+		          <option valor="3">Parcial</option>
+		          <option valor="4">Anulada</option>
+		        </options>
+			</field>
+
+			<field id="ctacod" _oculto="true" public="true">
+				<label>Proveedor</label>
+				<ayuda_ex id="CCTCUENT" _xml="HLPcctcuent.xml">
+					<field id="ctacod">
+						<label>Nro</label>
+					</field>
+					<field id="nombre">
+						<expression>ctanom</expression>
+						<label>Nombre</label>
+						<detalle>ctanom</detalle>
+						<tipo>varchar</tipo>
+					</field>
+					<field id="siscod" oculto="true">
+						<label>siscod</label>
+						<condicion operador="=">'01'</condicion>
+					</field>
+					<clave>ctacod</clave>
+					<descripcion>nombre</descripcion>
+				</ayuda_ex>
+				<help>Código de Cuenta</help>
+			</field>
+
+			<field id="ctanom" local="true" deshabilitado="true" _sincelda="true">
+				<label modpos="nobr" colspan="4"></label>
+				<help>Nombre del proveedor</help>
+				<size>30</size>
+			</field>
+
+			<field id="dos" local="true" oculto="true">
+				<valor>2</valor>
+			</field>
+			<field id="remfec" local="true">
+				<label >Fecha Remito</label>
+				<help>Fecha de Remito</help>
+				<valor>today</valor>
+				<tipo>date</tipo>
+			</field>
+			<field id="remnpv" local="true" required="true">
+				<label modpos="nobr">Remito</label>
+				<help>Punto de Venta</help>
+<!--				<valor default="true">0</valor>-->
+			</field>
+			<field id="remnro" min="1" local="true" sincelda="true" required="true">
+				<label modpos="nobr">-</label>
+				<help>Número de Remito</help>
+				<detalle>movnro</detalle>
+<!--				<valor default="true">0</valor> -->
+			</field>
+			<field id="movfec__1" local="true">
+				<label>Fecha Recepción</label>
+				<help>Fecha de Recepción</help>
+				<tipo>date</tipo>
+				<valor>today</valor>
+			</field>
+			<field id="forzarCump" local="true" _refresh="true">
+				<label modpos="nobr">Marcar Como Cumplidas</label>
+				<valor>0</valor>
+				<tipo>check</tipo>
+			</field>
+			<field id="ocpobs" deshabilitado="true" sincelda="true">
+				<label modpos="nobr"/>
+				<size>100</size>
+			</field>
+
+			<field id="materiales" showObjTabla="true" local="true">
+				<helper type="object" xml="cps_detalle_grid_rec.xml">
+<!--						<parameter source="ocpnro" target="ocpnro" />
+						<parameter source="ctacod" target="ctacod" />				-->						
+				</helper>
+				<label colspan="6">recepción</label>
+			</field>
+
+			<field id="cerrar" local="true" noshow="true">
+				<label>Cerrar</label>
+				<valor>1</valor>
+			</field>
+			<!--
+			<field id="cargada" deshabilitado="true" local="true">
+			<label>T</label>
+			</field>
+			-->
+			<field id="cumplida" local="true" noshow="true" editable="true" >
+				<if exp="cerrar == 0 || 'forzarCump' == '1' ">
+					<true>1</true>
+					<false>0</false>
+				</if>
+			</field>
+
+		</table>
+
+	</form>
+</histrix>

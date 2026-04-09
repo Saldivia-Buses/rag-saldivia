@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert">
+    <title>Mantenimiento</title>
+    <obs></obs>
+    <form>
+        <table id="MANT_PLAN_EVENTOS">
+
+            <field id="plan_id"		lastId="mant_plan_ins.xml" />
+            <field id="fecha_accion"	id_temp="fecha_accion">
+                <tipo>date</tipo>
+            </field>
+            <field id="accion_id"	id_temp="accion_id" />
+            <field id="login"		id_temp="login" />
+            <field id="observaciones"	id_temp="observaciones" />
+
+        </table>
+    </form>
+</histrix>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+	<abm tipo="consulta" imprime="false" >
+		<titulo>OTROS</titulo>
+		<obs></obs>
+	    <eventos>
+		    <event id="procesar">close</event>
+	    </eventos>		
+		<consulta>
+			<tabla id="COTIZOTROS">
+	
+				<titulo>OTROS</titulo>
+				<field id="idCotiz" noshow="true" deshabilitado="true"  >
+				</field>
+				
+				
+				<field id="idSeccion" _deshabilitado="true" >
+					<tabla_ex id="COTIZSECCION">
+						<field id="idSeccion" ></field>
+						<field id="nombre" ></field>						
+					</tabla_ex>
+					<tipo>varchar</tipo>
+					<label >Opcionales</label>
+					<valor>22</valor>
+				</field>
+				<field id="descripcion" forceSize="true" >
+					<label>Descripción</label>
+					<size>500</size>
+
+				</field>
+			</tabla>
+		</consulta>
+	</abm>

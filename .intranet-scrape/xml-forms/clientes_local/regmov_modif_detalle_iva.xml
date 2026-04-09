@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="grid"  imprime="false"  inserta="false"  modifica="false" transaccional="true" borra="false" deleteRow="false">
+  <title>Detalle</title>
+  <obs/>
+  <form>
+    <table id="IVAIMPORTES" label="Ingreso de Movimientos" >
+     
+      <movimientos>
+        <relacion id="regmov_det_iva_upd.xml"/>
+      </movimientos>
+
+      <field id="id_ivaimporte" noshow="true"/>
+
+      <field id="tipoiva" noshow="true">
+        <valor default="true">2</valor>
+      </field>
+
+      <field id="ctacod" noshow="true">
+        <label>Cuenta</label></field>
+
+      <field id="codcom" noshow="true">
+        <label>Concepto cod</label></field>
+
+      <field id="codlet" noshow="true">
+        <label>Letra</label>
+        <tipo>varchar</tipo>
+      </field>
+
+      <field id="nronpv" noshow="true">
+        <label>P.V.</label>
+        <size>4</size>
+        <tipo>integer</tipo>
+      </field>
+
+      <field id="nrocom" noshow="true">
+        <label>Nro.</label>
+        <size>8</size>
+        <tipo>integer</tipo>
+      </field>
+
+      <field id="feciva" noshow="true">
+        <label>Registración</label>
+        <help>Fecha de Registración Contable</help>
+        <tipo>date</tipo>
+      </field>
+
+      <field id="ivacv_id" noshow="true"/>
+
+      <field id="impali" editable="true">
+        <label>Alícuota</label>
+<!--         <options>
+          <option value="21.00">21.00 %</option>
+          <option value="27.00">27.00 %</option>
+          <option value="10.50">10.50 %</option>
+          <option value="0.00">0 %</option>
+        </options>  -->
+        <tipo>decimal</tipo>
+        <jseval campodestino="impcod">(impali == 21.00 ? 1: (impali == 27.00 ? 3 : (impali == 10.50 ? 2 : 9)))</jseval>
+      </field>
+
+      <field id="impgra">
+        <label>Neto Gravado</label>
+        <tipo>integer</tipo>
+      </field>
+
+      <field id="impimp" >
+        <label>IVA</label>
+        <tipo>integer</tipo>
+      </field>
+
+      <field id="impcod" editable="true" deshabilitado="false" noshow="true"/>
+
+      <field id="razon_cambio_imp" local="true" noshow="true">
+        <label>Razon</label>
+      </field>
+     
+    </table>
+
+   
+
+  </form>
+</histrix>

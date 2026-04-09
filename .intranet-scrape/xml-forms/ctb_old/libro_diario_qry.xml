@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" PDFlineColor="255,255,255" PDFfontSize="11">
+    <title>Movimientos</title>
+    <obs/>
+    <form>
+        <table id="CTB_MOVIMIENTOS" label="Libro diario">
+
+            <filters>
+                <field id="ejercicio_id">
+                    <label>Ejercicio</label>
+                    <operador>=</operador>
+                </field>
+<!--
+                <field id="concepto_id">
+                    <label modpos="nobr">Tipo de concepto</label>
+                    <operador>=</operador>
+                </field>
+-->
+                <field id="fecha_movimiento" deshabilitado="false">
+                    <label>Desde fecha</label>
+                    <valor>today</valor>
+                    <operador>&gt;=</operador>
+                </field>
+                <field id="fecha_movimiento" deshabilitado="false">
+                    <label modpos="nobr">Hasta fecha</label>
+                    <valor>today</valor>
+                    <operador>&lt;=</operador>
+                </field>
+          <field id="ctbcentro_id"  modpos="nobr" deshabilitado="false" noshow="true">
+	    <label>Centro de costos</label>
+	  </field>
+            </filters>
+
+            <field id="id_movimiento" noshow="true" print="false" />
+
+            <field id="fecha_movimiento" _noshow="true">
+                <label>Fecha</label>
+                <help>Fecha movimiento</help>
+                <detalle>fecha_movimiento</detalle>
+                <tipo>date</tipo>
+            </field>
+
+            <field id="nro_minuta" _noshow="true" print="false" break="true">
+                <label>Minuta</label>
+                <help>Numero de la minuta</help>
+                <size>4</size>
+            </field>
+
+            <field id="referencia" _noshow="true" print="false">
+                <label>Referencia</label>
+                <help>Numero de la minuta</help>
+                <expression>concat(
+                                    REG_CONCEPTOS.abreviacion_concepto, ' ', 
+                                    lpad(REG_MOVIMIENTOS.puesto_movimiento, 4,'0'), '-' , 
+                                    lpad(REG_MOVIMIENTOS.nro_movimiento, 8, '0'), ' ',
+                                    REG_MOVIMIENTOS.nombre_movimiento
+                                    )</expression>
+                <size>4</size>
+            </field>
+
+            <field id="concepto_id" noshow="true" print="false">
+                <helper type="combo" xml="ctbconcepto_qry.xml" dir="/ayudas" />
+                <label>Concepto</label>
+                <help>Código de concepto</help>
+                <detalle>concepto_id</detalle>
+            </field>
+
+            <field id="ejercicio_id" noshow="true">
+                <helper type="combo" xml="ctbejercicios_crud.xml" dir="/contabilidad/man/">
+                    <field id="activo" tipoOrden="DESC" />
+                    <field id="fecha_mov1">
+                        <expresion>DATE_FORMAT(comienza, '%d/%m/%Y')</expresion>
+                        <tipo>date</tipo>
+                        <detalle>ejercicio_id</detalle>
+                    </field>
+                    <field id="fecha_mov2">
+                        <expresion>DATE_FORMAT(finaliza, '%d/%m/%Y')</expresion>
+                        <tipo>date</tipo>
+                    </field>
+                    <field id="finaliza" />
+                </helper>
+                <label>Ejercicio</label>
+                <help>Ejercicio contable</help>
+                <detalle>ejercicio_id</detalle>
+            </field>
+            
+            <field id="id_cuenta" _PDFcolWidth="120px">
+                <expression>case when CTB_MOVIMIENTOS.nro_minuta = nro_minuta then CTB_CUENTAS.id_cuenta end</expression>
+                <label>Nro. Cuenta</label>
+            </field>
+
+            <field id="nombre_cuenta" _PDFcolWidth="120px">
+                <expression>case when CTB_MOVIMIENTOS.nro_minuta = nro_minuta then CTB_CUENTAS.nombre_cuenta end</expression>
+                <label>Cuenta</label>
+            </field>
+          <field id="ctbcentro_id" modpos="nobr" _required="true" _noshow="true" tabla="CTB_DETALLES">
+	    <expression having="false">CTB_DETALLES.ctbcentro_id</expression>
+	    <label>Centro de costos</label>
+            <helper id="CTB_CENTROS"  type="combo" empty="true" multiple="true">
+<!--	    <option value="0">Sin Asignar</option> -->
+              <field id="id_ctbcentro" />
+              <field id="centro">
+                <expression>concat(referencia_centro,' ', nombre_centro)</expression>
+              </field> 
+            </helper>
+          </field>
+
+            <field id="debe" tdWidth="180" _suma="true" _PDFcolWidth="40px" noZero="true">
+                <expresion>sum(case when doh = 0 then importe else 0 end)</expresion>
+                <label>Debe</label>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="haber" _tdWidth="180" _suma="true" _PDFcolWidth="40px" noZero="true">
+                <expresion>sum(case when doh = 1 then importe else 0 end)</expresion>
+                <label>Haber</label>
+                <tipo>numeric</tipo>
+            </field> 
+
+            <field id="doh" tabla="CTB_DETALLES" noshow="true" />
+
+            <field id="orden" tabla="CTB_DETALLES" noshow="true" />
+
+            <order>
+                <field id="nro_minuta" />
+                <field id="doh" />
+                <field id="orden" />
+
+            </order>
+
+            <group>
+                <field id="fecha_movimiento" />
+                <field id="nro_minuta"/>
+                <field id="id_cuenta" />
+            </group>
+
+        </table>
+
+        <join tipo="inner">
+            <table id="CTB_CONCEPTOS">
+                <field id="id_concepto">
+                    <condicion operador="=">concepto_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="CTB_DETALLES">
+                <field id="movimiento_id">
+                    <condicion operador="=">id_movimiento</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="CTBREGIS">
+                <field id="id_ctbregis">
+                    <condicion operador="=">CTB_DETALLES.ctbregis_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="CTB_CUENTAS">
+                <field id="id_cuenta">
+                    <condicion operador="=">cuenta_id</condicion>
+                </field>
+                <field id="ejercicio_id">
+                    <condicion operador="=">CTB_MOVIMIENTOS.ejercicio_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="CTBCUENT">
+                <field id="ctbcod" oculto="true">
+                    <condicion operador="=">CTBREGIS.ctbcod</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join>
+            <table id="REG_MOVIMIENTOS">
+                <field id="id_regmovim" >
+                    <condicion operador="=">CTB_MOVIMIENTOS.regmovim_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join>
+            <table id="REG_CONCEPTOS">
+                <field id="id_concepto" oculto="true">
+                    <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

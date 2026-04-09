@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="nosql">
+    <title>Impresion Etiqueta</title>
+    <obs/>
+    <form>
+
+        <table id="STK_ARTICULOS">
+
+          <!-- codigo que se ejecuta en cada grabacion -->
+
+          <ejecuta>
+          <![CDATA[
+
+            $this->Etiquetas = new BarcodeEtiq("codest", 
+                                               "artcod", 
+                                               "nomherr", 
+                                               "ctacod", 
+                                               "ctanom", 
+                                               "ocpnro", 
+                                               "ocpfec",
+                                               "id_herramienta", 
+                                               "remfec",
+                                               "remnro",
+                                               "remnpv",
+                                               "recLote");
+
+            $this->Etiquetas->setFormato = true;
+
+            $this->Etiquetas->addRenglon(''         . "\n");
+            $this->Etiquetas->addRenglon('N'        . "\n");
+            $this->Etiquetas->addRenglon('ZB'       . "\n");
+            $this->Etiquetas->addRenglon('q240,019' . "\n");
+            $this->Etiquetas->addRenglon('Q831'     . "\n");
+            $this->Etiquetas->addRenglon('R255,8'   . "\n");
+            $this->Etiquetas->addRenglon(''         . "\n");
+            $this->Etiquetas->addRenglon('A12,0,0,1,1,1,N,"nombre_articulo"'     . "\n");
+            $this->Etiquetas->addRenglon('B12,19,0,2,3,5,145,B,"id_stkarticulo"' . "\n");
+            $this->Etiquetas->addRenglon(''         . "\n");
+            $this->Etiquetas->addRenglon('P1'       . "\n");
+            $this->Etiquetas->addRenglon('N'        . "\n");
+
+            $this->Etiquetas->Imprimir('ZEBRA');
+          ]]>
+          </ejecuta>
+          
+          <field id="id_stkarticulo"   id_temp="id_stkarticulo"/>
+          <field id="nombre_articulo"  id_temp="nombre_articulo" />
+        </table>
+    </form>
+</histrix>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert" processFirst="true">
+    <titulo>Atributos</titulo>
+    <obs/>
+    <form>
+        <table id="STK_ARTICULO_PROCESO_HIST">
+
+            <field id="fecha"		id_temp="fecha" />
+            <field id="homologacion_id"	id_temp="homologacion_id" />
+
+        </table>
+
+    </form>
+</histrix>

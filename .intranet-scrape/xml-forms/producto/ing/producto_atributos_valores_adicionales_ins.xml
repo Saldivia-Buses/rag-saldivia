@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert">
+    <title>Adicionales</title>
+    <obs></obs>
+    <form>
+        <table id="ACCESORIOS_COCHE" idCampoCond="graba_adicional">
+
+            <field id="cotizacion_id"		lastId="cotizacion_con_atributos_ins.xml" />
+            <field id="artcod"			id_temp="stkarticulo_id" />
+            <field id="fecha"			id_temp="fecha_adicional" />
+            <field id="precio_adicional"	id_temp="precio_adicional" />
+            <field id="artdes"			id_temp="nombre_adicional" />
+            <field id="nrofab"			id_temp="nrofab" />
+            <field id="cantidad"        id_temp="cantidad" />
+
+        </table>
+    </form>
+</histrix>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="nosql" autoprint="true">
+	<title>Recibo</title>
+	<obs/>
+	<form>
+		<tabla id="HTXMENU">
+			<field id="impresion" id_temp="impresion">
+				<setvar>xmlImpresion</setvar>
+			</field>
+			<field id="id_stkinventario"  lastId="stkinventario_insumas_ins.xml" >
+				<detalle>id_stkinventario</detalle>
+			</field>
+		</tabla>
+	</form>
+</histrix>

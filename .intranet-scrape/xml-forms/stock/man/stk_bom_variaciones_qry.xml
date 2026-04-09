@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+  <title>Variaciones</title>
+  <obs></obs>
+  <form>
+    <table id="STK_BOM_VARIACIONES" label="Paletas de Colores">
+        <field id="id_bom_variacion" noshow="true" autoinc="true" >
+            <label>id</label>
+        </field>
+        <field id="nombre_variacion" >
+            <label>variación</label>
+        </field>
+        <field id="peso">
+            <label>peso kg/m2</label>
+        </field>   
+        
+        
+    </table>
+  </form>
+</histrix>

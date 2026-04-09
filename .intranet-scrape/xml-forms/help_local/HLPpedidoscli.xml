@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<abm tipo="ayuda" >
+	<titulo>Pedidos de Clientes</titulo>
+	<obs></obs>
+	<consulta>
+		<tabla id="PEDIDOSCLI">
+			<titulo>Pedidos de Clientes</titulo>
+			
+			<campo id="idPedido" deshabilitado="true">
+				<label>Cod.</label>
+			</campo>
+			<campo id="idLibro" deshabilitado="true">
+				<label>Libro</label>
+				<help>Libro</help>
+			</campo>
+						
+			
+			<orden>
+				<campo id="idPedido"></campo>
+			</orden>
+		</tabla>
+	</consulta>
+</abm>

@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta"  >
+    <title>Detalle</title>
+    <obs/>
+    <form>
+        <table id="FACDETAL" label="DETALLE"
+			styleTbody="height:200px;overflow-x:hidden;">
+
+           <field id="nrofac" noshow="true" />
+           <field id="nropue" noshow="true" />
+           <field id="concod" noshow="true" />
+           <field id="siscod" noshow="true" />
+           <field id="ctacod" noshow="true" />
+           <field id="movfec" noshow="true" />
+           <field id="usuario_ventas" noshow="true" local="true"/>
+           
+           <field id="artcan" >
+                <label style="font-size:12px;">Cant</label>
+                <tipo>integer</tipo>
+                <help>Cantidad</help>
+                <size>2</size>
+                <expression>case when artnet = 0 then '' else artcan end</expression>
+            </field>
+            <field id="detalle">
+                <label style="font-size:12px;">Descripcion</label>
+                
+                <size>80</size>
+
+                        <tipo>simpleditor</tipo>
+            </field>
+
+	    <field id="abreviatura_moneda" local="true" noshow="true" print="false" />
+
+            <field id="artnet"  _local="true" esClave="false" ctbimporte="1" _print="false" noZero="true" PDFcolWidth="35">
+                <label>Importe</label>
+                <size>20</size>
+                <help>Precio Unitario</help>
+		<attribute id="prefijo">abreviatura_moneda</attribute>
+
+                <prefijo>$ </prefijo>
+                <tipo>decimal</tipo>
+                <attribute id="oculto">usuario_ventas</attribute> 
+            </field>
+            
+            <field id="artali" _local="true" print="false">
+                <label>Alicuota</label>
+                <tabla_ex id="IVAIMPUESTOS">
+                    <field id="impali"></field>
+                    <field id="impnom"></field>
+                    <field id="impcod">
+                        <condicion operador="&lt;">4</condicion>
+                    </field>
+                </tabla_ex>
+                <tipo>decimal</tipo>
+                <valor>10.50</valor>
+                
+                <help>Alicuota de IVA</help>
+            </field>
+            <field id="impcod" deshabilitado="true" noshow="true" local="true" print="false">
+                <label>impcod</label>
+                <valor>2</valor>
+            </field> 
+            <field  id="artiva" print="false">
+                <label modpos="nobr">I.V.A.</label>
+               
+                <tipo>numeric</tipo>
+                <help>I.V.A.</help>
+            </field>
+
+            <field id="subtot" local="true" print="false">
+                <label>Subtotal</label>
+                <if exp="true">
+                    <true>artnet + artiva</true>
+                    <false></false>
+                </if>
+		<attribute id="prefijo">abreviatura_moneda</attribute>
+                <tipo>decimal</tipo>
+            </field>
+
+
+            <field id="arttot"   suma="true" ctbimporte="2"  print="false"	>
+                <label modpos="nobr"	colstyle="font-weight:bold;font-size:22px;color:red;">Total</label>
+
+
+            </field>
+	   <field id="siscod" noshow="true" print="false">
+		<condicion operador="=">'03'</condicion>
+	   </field>
+
+        </table>
+	 
+    </form>
+</histrix>

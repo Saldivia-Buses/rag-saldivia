@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ayuda" >
+    <title>Articulos</title>
+    <obs></obs>
+    <form >
+        <table id="STK_ARTICULOS" label="Articulos" >
+
+			<field id="id_stkarticulo"   >
+				<label>Codigo auto de Articulo</label>
+				<detalle>stkarticulo_id</detalle>
+			</field>
+			<field id="nombre_articulo">
+				<label>Nombre</label>
+				<detalle>nombre_articulo2</detalle>
+			</field>
+			
+			<order>
+			  <field id="nombre_articulo" />
+			</order>
+		</table>
+    </form>
+</histrix>  

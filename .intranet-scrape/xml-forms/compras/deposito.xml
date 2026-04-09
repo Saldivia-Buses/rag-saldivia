@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<histrix tipo="abm-mini"  path="fotos/depositos" >
+  <title>Depositos</title>
+  <obs></obs>
+  <form>
+    <table id="DEPOSITO" >
+      <title>Depositos</title>
+      <field id="idDeposito">
+        <label>Cod</label>
+<help>Codigo</help>
+      </field>
+      <field id="direccion">
+        <label>Direccion</label>
+        <help>Direccion</help>
+      </field>
+      <field id="nombre" _editable="true">
+        <label>Nombre</label>
+        <help>Nombre del deposito</help>
+      </field>
+      
+      <field id="foto" foto="true" >
+        <label >Foto</label>
+        <tipo Type="Image">file</tipo>
+        <size>60</size>
+      </field>
+    </table>
+  </form>           
+</histrix>

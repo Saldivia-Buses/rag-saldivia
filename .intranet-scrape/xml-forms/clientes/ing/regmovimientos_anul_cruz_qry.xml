@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta"  preloadData="false" width="40%">
+  <title>Cta Ctes</title>
+  <obs/>
+  <form  detalle="fac_provee_anu.xml" >
+
+    <table id="REG_MOVIMIENTOS" label="Cta Cte Proveedores">
+      <filters>
+
+        <field id="fecha_movimiento">
+    	    <label>Desde</label>
+	        <operador>&gt;=</operador>
+        </field>
+  
+        <field id="fecha_movimiento">
+    	    <label>Hasta</label>
+	        <operador>&lt;=</operador>
+            <valor>today</valor>
+        </field>
+
+	<field id="nro_cuenta" colstyle="display: none;">
+	    <label>Cuenta</label>
+	    <operador>=</operador>
+        </field>
+        
+        <field id="nombre" deshabilitado="true">
+			<label modpos="nobr" />
+    	    <size>70</size>
+    	</field>
+
+       <field id="concepto_id">      
+        <label>Concepto</label>      
+      </field>
+
+		<field id="nro_movimiento">
+			<label>Nro. Movimiento</label>
+			<operador>=</operador>
+		</field>
+<!--
+        <field id="tipo" deshabilitado="false">
+          <operador>=</operador>
+          <label>Tipo</label>
+          <valor>2</valor>
+        </field>
+-->        
+      </filters>
+      
+      <!-- CONSULTA -->
+      
+      <field id="id_regmovim" noshow="true" esClave="true">
+        <detalle>id_regmovim</detalle>
+      </field>
+      
+      <field id="concepto_id">
+        <helper id="REG_CONCEPTOS" type="combo" _xml="regconcepto_qry.xml" _dir="/ayudas" empty="true">      
+          
+          <field id="id_concepto" esClave="true" noshow="true">
+             <condicion operador="=">13 or id_concepto = 14 or id_concepto = 15</condicion>
+          </field>
+
+          <field id="descripcion_concepto">
+            <label>Nombre</label>
+          </field>
+
+          <field id="subsistema_id" noshow="true" />
+
+          <field id="imputacion_concepto" noshow="true" />
+
+          <field id="tipo_concepto" noshow="true" />
+
+          <field id="ctbcuenta_concepto_id" noshow="true">
+            <expression>ctbcuenta_id</expression>
+          </field>
+         </helper>        
+      </field>
+        
+      <field id="movimiento">
+          <expresion>CONCAT(REG_MOVIMIENTOS.letra_movimiento,' ',LPAD(REG_MOVIMIENTOS.puesto_movimiento,4,'0'),'-',LPAD(REG_MOVIMIENTOS.nro_movimiento  ,8,'0'))
+	  </expresion>
+	  <label>Nro.Mov.</label>
+	</field>
+		
+		<field id="nro_movimiento" colstyle="display:none;" />
+      
+    <field id="nro_cuenta" noshow="true" tabla="REG_CUENTA">
+	     <helper type="external" xml="regcuenta_solamente_nro_qry.xml" dir="/ayudas" empty="true" />      
+	  </field>      
+    
+    <field id="regcuenta_id" noshow="true"/>    
+      
+    <field id="nombre" local="true" noshow="true" />
+
+    <field id="referencia_movimiento"  >
+        <label>Referencia</label>
+    </field>
+    
+    <field id="fecha_movimiento" >
+        <label>Fecha</label>
+        <tipo>date</tipo>
+    </field>
+
+    <field id="subsistema_id" oculto="true">
+        <detalle>subsistema_id</detalle>
+    </field>
+            
+    <field id="importe_movimiento" suma="true">
+        <label>Importe</label>
+        <tipo>numeric</tipo>
+    </field>
+      
+    <field id="saldo_movimiento" suma="true">
+        <label>Pendiente</label>
+        <tipo>numeric</tipo>
+    </field> 
+
+    <order>
+    </order>
+
+  </table>
+  <join>
+	 <table id="REG_CUENTA">
+	   <field id="id_regcuenta">
+	     <condicion operador="=">regcuenta_id</condicion>
+	   </field>
+	 </table>
+  </join>
+  </form>
+</histrix>

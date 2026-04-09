@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" class="consultaancha">
+	<title>Trabajos Adicionales por coche</title>
+	<obs/>
+	<form >
+		<table id="TRABAJOS_COCHE">
+			<title>Trabajos</title>
+			<field id="nrofab" oculto="true">
+				<label>Nro de Fabricación</label>
+				<help>Número de Fabricación</help>
+			</field>
+			<field id="idTrabajo">
+				<label>Codigo</label>
+				<help>codigo de Trabajo</help>
+				<tabla_ex xml="trabajo.xml" dir="/produccion/man"></tabla_ex>
+			</field>
+			<field id="fechaTrabajo">
+				<label>Fecha</label>
+				<help>Fecha de realización del trabajo</help>
+			</field>
+			
+			<field id="fechaPago">
+				<label>Pago</label>
+				<help>Fecha de Pago del trabajo</help>
+			</field>			
+			<field id="realizador">
+				<label>Realizador</label>
+				<help>Realizadores del trabajo</help>
+				<size>40</size>
+			</field>
+			
+			<field id="importe">
+				<label>Importe</label>
+				<help>Importe del trabajo</help>
+			</field>			
+		</table>
+		
+	</form>
+</histrix>

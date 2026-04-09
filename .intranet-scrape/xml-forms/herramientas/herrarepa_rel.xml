@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+	<abm tipo="abm-mini" >
+		<titulo>Relacion Herramientas</titulo>
+		<obs></obs>
+		<consulta>
+			<tabla id="HERRAREPA" label="Relacion Reparaciones">
+				<campo id="id_herramienta" oculto="true">
+					<label>Articulo</label>
+					<help>Codigo de Articulo</help>
+					<valor>0</valor>
+					<condicion operador="!=">''</condicion>
+				</campo>
+				<campo id="codigoReparacion">
+					<tabla_ex id="CONCHERR">
+						<campo id="movher" clave="true"></campo>
+						<campo id="movnom"></campo>
+					</tabla_ex>
+					<label>Norma </label>
+					<help>
+					</help>
+				</campo>
+			</tabla>
+		</consulta>
+	</abm>

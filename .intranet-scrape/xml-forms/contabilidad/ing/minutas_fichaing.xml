@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="fichaing" _class="consultaancha" inserta="false" modifica="false"  _llenoreferente="true" _llenotemporal="true">
+    <title>Movimientos</title>
+    <obs></obs>
+    <form>
+        <table id="CTB_MOVIMIENTOS" label="movimientos">
+
+            <validation>
+                <condition><![CDATA[ 'ejercicio_id' + 0 == 0 ]]></condition>
+                <message>Falta Ejercicio</message>
+            </validation>
+
+            <validation>
+                <condition><![CDATA[ 'validacionFecha' == 1 ]]>	</condition>
+                <message>La fecha ingresada no pertenece al Ejercicio</message>
+            </validation>
+
+            <validation>
+                <condition><![CDATA[ DEB + 0 != HAB + 0]]></condition>
+                <message>Minuta Desbalanceada</message>
+            </validation>
+
+            <validation>
+                <condition><![CDATA[ cantidad + 0 < 1]]></condition>
+                <message>Ingrese Detalle de la Minuta</message>
+            </validation>
+
+            <movimientos>
+                <relacion id="movimientos_minutas_del.xml" />
+                <relacion id="movimientos_minutas_upd.xml" />
+                <relacion id="movimientos_regmovim_upd.xml" />
+                <relacion id="movimientos_minutas_ins.xml" />
+            </movimientos>
+
+            <field id="id_movimiento" noshow="true" autoinc="true" print="false">
+                <label>Codigo</label>
+                <help>Código de movimiento</help>
+                <actualiza>
+                    <field id="detalles" destino="movimiento_id" />
+                </actualiza>
+            </field>
+
+            <field id="ejercicio_id" rememberValue="true">
+                <helper type="combo" dir="/ayudas" xml="ctbejercicio_qry.xml">
+                    <field id="comienza">
+                        <detalle>comienza</detalle>
+                    </field>
+                    <field id="finaliza">
+                        <detalle>finaliza</detalle>
+                    </field>
+                    <field id="ejercicio" noshow="true">
+                        <expression>id_ejercicio</expression>
+                        <detalle>ejercicio</detalle>
+                    </field>
+                </helper>
+                <label>Ejercicio</label>
+                <help>Ejercicio contable</help>
+                <actualiza>
+                    <field id="nro_minuta" destino="ejercicio_id" />
+                    <field id="proxnro_minuta" destino="ejercicio_id" />
+                    <!--<field id="cuenta_id" destino="ejercicio_id" xml="detalles_minutas_grid.xml" />-->
+                </actualiza>
+            </field>
+
+            <field id="concepto_id" print="false" rememberValue="true">
+                <helper type="combo" dir="/ayudas" xml="ctbconcepto_qry.xml" />
+                <label>Concepto</label>
+                <help>Código de concepto</help>
+                <actualiza>
+                    <field id="nro_minuta" destino="concepto_id" />
+                </actualiza>
+            </field>
+
+            <field id="fecha_movimiento" print="false" required="true">
+                <label>Fecha</label>
+                <tipo>date</tipo>
+                <help>Fecha movimiento</help>
+                <actualiza>
+                    <field id="nro_minuta" destino="fechatest" />
+                </actualiza>
+                <jseval fielddestino="validacionFecha">((Date.parse(\'fecha_movimiento\'.substring(6,10) + \'-\' + \'fecha_movimiento\'.substring(3, 5) + \'-\' + \'fecha_movimiento\'.substring(0, 2)) &lt; Date.parse(\'comienza\')) || (Date.parse(\'fecha_movimiento\'.substring(6,10) + \'-\' + \'fecha_movimiento\'.substring(3, 5) + \'-\' + \'fecha_movimiento\'.substring(0, 2)) &gt; Date.parse(\'finaliza\')))?1:0</jseval>
+            </field>
+
+            <field id="comienza" local="true" valauto="true" noshow="true">
+                <label>Inicio Ej</label>
+            </field>
+
+            <field id="finaliza" local="true" valauto="true" noshow="true">
+                <label>Fin Ej</label>
+            </field>
+
+            <field id="validacionFecha" local="true" noshow="true" />
+
+            <field id="nro_minuta">
+                <helper type="combo" xml="ctbmovimientos_qry.xml" empty="true">
+                    <field id="numero_minuta" colstyle="display:none;">
+                        <expression>nro_minuta</expression>
+                        <detalle>numero_minuta</detalle>
+                    </field>
+                </helper>
+                <label>Minuta</label>
+                <jseval fielddestino="actualizar">(nro_minuta != 0)?1:0</jseval> 
+                <actualiza>
+                    <field id="detalles" destino="movimiento_id" />
+                </actualiza>
+            </field>
+
+            <field id="numero_minuta" local="true" noshow="true" />
+
+            <field id="ejercicio" local="true" colstyle="display:none;" Formstyle="display:none;">
+                <actualiza>
+                    <field id="detalles" destino="ejercicio" />
+                </actualiza>
+            </field>
+
+            <field id="referencia_minuta" local="true">
+                <label>Referencia</label>
+                <help>Referencia del movimiento</help>
+                <size>40</size>
+            </field>
+
+            <field id="regmovim_id" noshow="true" deshabilitado="true" />
+
+            <field id="fecha_modificacion" valauto="true" noshow="true">
+                <valor eval="true">date('Y-m-d H:i:s')</valor>
+            </field>
+
+            <field id="usuario_modificacion" noshow="true" valauto="true" print="false">
+                <valor eval="true">$_SESSION['usuario']</valor>
+            </field>
+
+            <field id="actualizar" local="true" noshow="true">
+                <if exp="nro_minuta != 0">
+                    <true>1</true>
+                    <false>0</false>
+                </if>
+            </field>
+
+            <field id="actualizar_reg" local="true" noshow="true">
+                <if exp="nro_minuta != 0 &amp;&amp; regmovim_id != 0">
+                    <true>1</true>
+                    <false>0</false>
+                </if>
+            </field>
+
+            <field id="DEB" deshabilitado="true" local="true">
+                <label>Debe</label>
+                <tipo>custom_numeric</tipo>
+                <jseval campodestino="diferencia">(((DEB).toFixed(2)) - ((HAB).toFixed(2)))</jseval>
+            </field>
+
+            <field id="HAB" deshabilitado="true" local="true" sincelda="true">
+                <label modpos="nobr"> - Hab</label>
+                <tipo>custom_numeric</tipo>
+                <jseval campodestino="diferencia">(((DEB).toFixed(2)) - ((HAB).toFixed(2)))</jseval>
+            </field>
+
+            <field id="diferencia" local="true" deshabilitado="true" sincelda="true">
+                <label modpos="nobr">=</label>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="cantidad" deshabilitado="true" local="true" noshow="true">
+                <label>Registros</label>
+            </field>
+
+            <field id="detalles" local="true">
+                <helper type="object" xml="detalles_minutas_grid.xml" />
+                <label colspan="4">Detalle</label>
+            </field>
+
+        </table>
+
+    </form>
+</histrix>

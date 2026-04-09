@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>                     
+<histrix tipo="grid" _editable="true" showProcessButton="true" deleteRow="false" path="fotos/coches" 
+ procesa="true" inserta="false" imprime="false">
+<title>Atributos</title>
+<obs></obs>
+    <eventos>
+      <event id="procesar">close</event>
+      <event id="procesar">refresh</event>
+    </eventos>
+<form >
+    <table id="HTX_ATTRIBUTES">
+    
+    
+    <movimientos>
+        <relacion id="htx_table_attributes_ins.xml" />
+<!--
+        <relacion id="producto_atributos_valores_adicionales_ins.xml" />
+        <relacion id="producto_atributos_valores_htxlog_ins.xml" />
+-->
+    </movimientos>
+    
+
+    <field id="record_id" local="true" noshow="true" oculto="true">
+    </field>
+
+    <field id="table_name" noshow="true">
+    </field>
+
+        
+    <field id="id_attribute" autoinc="true" noshow="true" _deshabilitado="true">
+        
+<!--            <valor>0</valor>  -->
+    </field>
+    
+
+    <field id="attribute_order" deshabilitado="true" noshow="true">
+        <label>orden</label>
+    </field>
+    
+    <field id="attribute_type" noshow="true">
+        <label >Tipo</label>
+        <help>tipo del atributo</help>
+    </field>
+
+    
+
+    <field id="attribute_name">
+        <label _modpos="nobr" class="ui-widget-content">Atributo</label>
+        <help>Nombre del atributo</help>
+    </field>        
+
+    <field id="attribute_value" tabla="HTX_TABLE_ATTRIBUTE" _local="true" editable="true" refresh="true">
+
+        <attribute id="TipoDato">attribute_type</attribute>
+<!--        <attribute id="attributes">parametros</attribute> -->
+
+
+        <helper xml="htx_attribute_options_qry.xml" type="combo" empty="true">
+        <parameter source="id_attribute" target="attribute_id"/> 
+        
+        </helper>
+    </field>
+
+    <field id="graba_log" local="true" refresh="true" noshow="true">
+        <if exp="valor_viejo != attribute_value">
+            <true>'1'</true>
+            <false>'0'</false>
+        </if>
+    </field>
+
+    <field id="atributo_default" noshow="true">
+        <expression>IFNULL(HTX_TABLE_ATTRIBUTE.attribute_value, 0)</expression>
+    </field>
+
+    <field id="graba_adicional" local="true" refresh="true" noshow="true">
+        <if exp="valor_atributo == 1 &amp;&amp; estandar_adicional == 1 &amp;&amp; atributo_default == 0">
+            <true>'1'</true>
+            <false>'0'</false>
+        </if>
+    </field>
+
+
+
+    </table>
+
+    <join tipo="left">
+    <table id="HTX_TABLE_ATTRIBUTE">
+        <field id="attribute_id">
+        <condicion operador="=">id_attribute</condicion>
+        </field>
+        <field id="record_id">
+        <condicion operador="=">'[__record_id__]'</condicion>
+        </field>
+        <field id="table_name">
+        <condicion operador="=">HTX_ATTRIBUTES.table_name</condicion>
+        </field>
+    </table>
+    </join>
+
+</form>    
+</histrix>

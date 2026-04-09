@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="grid" imprime="false" inserta="false" deleteRow="false" llenoreferente="true" llenoTemporal="true" importTempTable="WASIENTOS" showCantidad="false" tooltip="false">
+  <title>Detalle</title>
+  <obs/>
+  <form>
+    <tempTable id="WASIENTOS">
+      <row>
+        <field id="cuenta_id">cuenta_haber_id</field>
+        <field id="doh">cuenta_haber_doh</field>
+        <field id="importe">iva_detalle</field>
+      </row>
+      <row>
+        <field id="cuenta_id">cuenta_percepcion_iva_id</field>
+        <field id="doh">"cuenta_haber_doh</field>
+        <field id="importe">per_detalle</field>
+      </row>
+    </tempTable>
+
+    <table id="GEN_IVA_ALICUOTAS" label="movimientos" idCampoCond="grabar">
+
+      <movimientos>
+          <relacion id="cobranza_cupones_iva_ins.xml"/>
+      </movimientos>
+
+      <field id="_ORDEN" esClave="true" deshabilitado="true" noshow="true" local="true"/>
+
+      <field id="iva_id" oculto="true">
+          <condicion operador="=">1</condicion>
+      </field>
+
+      <field id="cantidad_detalle" noshow="true" local="true">
+          <valor>1</valor>
+      </field>
+
+      <!-- *********************************************************************** -->
+
+      <field id="neto_detalle" local="true" suma="true" editable="true">
+        <label modpos="nobr">Neto</label>
+        <tipo>numeric</tipo>
+        <jseval campodestino="iva_detalle" actxml="false">(neto_detalle * (alicuota / 100)).toFixed(2)</jseval>
+        <jseval campodestino="per_detalle" actxml="false">(neto_detalle * (alicuota_percepcion / 100 )).toFixed(2)</jseval>
+        <jseval campodestino="total_detalle" actxml="false">(neto_detalle + iva_detalle + per_detalle ).toFixed(2)</jseval>
+        <jseval campodestino="neto_movimiento" total="true" actxml="false">neto_detalle</jseval>
+        <jsfunction event="onchange">if( this.value.search(',') != ('-1') ){ alert('No se admiten comas, utilice punto como separador de decimales.'); this.value = '';};</jsfunction>
+      </field>
+
+      <field id="alicuota" esClave="true" editable="true">
+        <label modpos="nobr">Alicuota</label>
+        <detalle>iva</detalle>
+        <tipo>numeric</tipo>
+      </field>
+
+      <field id="iva_detalle" local="true" suma="true" editable="true">
+        <label modpos="nobr">iva</label>
+        <tipo>numeric</tipo>
+        <jseval campodestino="total_detalle" actxml="false">(neto_detalle + iva_detalle + per_detalle ).toFixed(2)</jseval>
+        <jseval campodestino="importe_iva" total="true" actxml="false">iva_detalle</jseval>
+        <jsfunction event="onchange">if( this.value.search(',') != ('-1') ){ alert('No se admiten comas, utilice punto como separador de decimales.'); this.value = '';};</jsfunction>
+      </field>
+
+      <field id="per_detalle" local="true" suma="true" editable="true">
+        <label modpos="nobr">Percepcion</label>
+        <tipo>numeric</tipo>
+        <jseval campodestino="total_detalle" actxml="false">(neto_detalle + iva_detalle + per_detalle ).toFixed(2)</jseval>
+        <jseval campodestino="importe_percepcion" total="true" actxml="false">per_detalle</jseval>
+        <jsfunction event="onchange">if( this.value.search(',') != ('-1') ){ alert('No se admiten comas, utilice punto como separador de decimales.'); this.value = '';};</jsfunction>
+      </field>
+
+      <field id="total_detalle" local="true" suma="true" editable="true">
+        <label modpos="nobr">Total</label>
+        <tipo>numeric</tipo>
+        <jseval campodestino="gravado_movimiento" total="true" actxml="true">total_detalle</jseval>
+        <jsfunction event="onchange">if( this.value.search(',') != ('-1') ){ alert('No se admiten comas, utilice punto como separador de decimales.'); this.value = '';};</jsfunction>
+      </field>
+
+      <!-- *********************************************************************** -->
+
+      <fieldGroup id="DEBUG" noshow="true">
+      
+        <field id="imputacion_concepto" local="true" />
+
+        <field id="cuenta_percepcion_iva_id">
+          <label>cuenta_perc_iva</label>
+        </field>
+
+        <field id="cuenta_haber_id">
+          <label>cuenta_iva</label>
+        </field>
+
+        <field id="cuenta_debe_id" local="true">
+          <label>cuenta_debe</label>
+          <expression>IF(alicuota = 21,'[__ctbcuenta_ara__]','[__ctbcuenta_gas__]')</expression>
+        </field>
+
+        <field id="cuenta_debe_doh" local="true">
+          <if exp="imputacion_concepto+0 == 0">
+            <true>'1'</true>
+            <false>'0'</false>
+          </if>
+        </field>
+
+        <field id="cuenta_haber_doh" local="true">
+          <if exp="imputacion_concepto+0 == 0">
+            <true>'1'</true>
+            <false>'0'</false>
+          </if>
+        </field>
+
+        <field id="ctbcuenta_gas" local="true">
+          <helper type="parameter" id="SIS::01:cuenta_contable_gastos">
+            <label>Cuenta Contable para intereses y gastos bancarios</label>
+            <defaultValue/>
+          </helper>
+        </field>
+
+        <field id="ctbcuenta_ara" local="true">
+          <helper type="parameter" id="SIS::01:cuenta_contable_aranceles">
+            <label>Cuenta Contable para Aranceles</label>
+            <defaultValue/>
+          </helper>
+        </field>
+
+        <field id="grabar" local="true" noshow="true">
+          <if exp="iva_detalle != 0">
+            <true>1</true>
+            <false>0</false>
+          </if>
+        </field>
+
+      </fieldGroup>        
+      
+    </table>
+  </form>
+</histrix>

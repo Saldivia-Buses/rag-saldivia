@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="update" limit="100">
+	<title>UPDATE CAR_VALORES</title>
+	<obs></obs>
+	<consulta>
+		<table id="CAR_VALORES" idCampoCond="total_imputado">
+			<field id="id_carvalor"   id_temp="id_carvalor" esClave="true"/>
+			<field id="egreso_valor"  id_cab="fecha_valor"/>
+		</table>
+	</consulta>
+</histrix>	

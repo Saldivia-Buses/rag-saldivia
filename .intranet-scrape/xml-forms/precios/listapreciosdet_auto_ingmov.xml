@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert"   >
+	<title>PRECIOS de ADICIONALES</title>
+	<obs/>
+	<form >
+		<table id="STK_LISTADETALLE" >
+			<title></title>
+			<field id="stklista_id"         lastId="listaprecios_auto_cab_ins.xml" ></field>
+			<field id="nombre" 		id_temp="nombre"></field>
+			<field id="stkarticulo_id" 	id_temp="stkarticulo_id"></field>
+			<field id="stklistadetalle_precioventa" 	id_temp="precio2"></field>
+			<field id="stklistadetalle_precioventa_2" 	id_temp="precio2"></field>
+<!--			<field id="stklistadetalle_rentabilidad"	 	id_cab="aumento"></field> -->
+			<field id="vigencia" 		id_padre="fecha"></field>
+			<field id="obervaciones" 	id_padre="obs"></field>
+			<field id="moneda_id" 		id_temp="moneda_id"></field>
+			<field id="cotizacion" 		id_temp="cotizacion"></field>
+		</table>
+	</form>
+</histrix>

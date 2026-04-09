@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<histrix tipo="crud" _imprime="false"  deleteRow="false"  procesa="true" modifica="true" inserta="true" editable="false" borra="false" >
+    <title>Mantenimiento</title>
+    <obs></obs>
+
+    <form>
+		<table id="MANT_PLAN_EVENTOS" label="Mantenimiento Correctivo">
+
+       <validation>
+            <condition><![CDATA[fecha_accion == '' ]]></condition>
+            <message>Seleccione una fecha</message>
+        </validation>
+
+        <validation>
+            <condition><![CDATA[estado == '' ]]></condition>
+            <message>Indique un estado</message>
+        </validation>
+
+        <validation>
+            <condition><![CDATA[observaciones == '' ]]></condition>
+            <message>Indique una observacion sobre el evento</message>
+        </validation>
+ 
+                 <field id="plan_id" valauto="true" noshow="true">
+                    <label>IDPLAN</label>
+                </field>
+
+                <field id="id_planevento" autoinc="true" noshow="true">
+                    <label>IDPLANEVENTO</label>
+                </field>
+                
+        <fieldGroup style="padding:2px 2px 2px 2px;" colstyle="text-align:center;" >
+
+
+               <field id="fecha_accion" _valauto="true">
+                    <label>Fecha</label>
+                    <tipo>date</tipo>
+                    <valor>today</valor>    
+                </field>
+
+                
+                <field id="equipo_id" deshabilitado="true" >
+                    <label>Equipo</label>
+                   <helper type="combo" id="MANT_EQUIPOS">
+                        <field id="id_equipo"/>
+                        <field id="nombre_equipo"/>
+                    </helper>
+                </field>
+                
+               <field id="accion_id" deshabilitado="true" style="padding:2px 2px 2px 2px;width:400px;" colstyle="text-align:center;width:auto;padding:2px 2px 2px 2px;" >
+                    <helper type="combo" id="MANT_ACCIONES" empty="true">
+                        <field id="id_accion"/>
+                        <field id="nombre_accion"/>
+                    </helper>
+                    <label>Acción</label>
+                </field>
+
+                <field id="estado">
+                    <label>Estado</label>
+                    <helper type="combo" id="MANTENIMIENTO_ESTADOS" empty="true">
+                        <field id="id_estado" />
+                        <field id="estado" />
+                          <field id="tipo_estado" >
+                              <condicion operador="=">0</condicion>
+                          </field>
+                    </helper>
+                </field>
+
+                <field id="observaciones" colstyle="text-align:left;padding:2px 2px 2px 2px;">
+                    <label>Observaciones</label>
+                    <size>100</size>
+                </field>
+                    
+         <!--        <field id="articulos_usados" local="true" Formstyle="display:none">
+                    <label>Cargar</label>
+                    <helper xml="man_articulos_stk.xml" type="link" >
+                         <parameter source="equipo_id" target="equipo_id" />
+                          <parameter source="id_planevento" target="movnro" /> 
+                    </helper>
+                    <valor>+</valor>
+                </field> -->
+
+
+        </fieldGroup>
+
+                <field id="login" noshow="true">
+                    <label>usuario</label>
+                    <valor eval="true">$_SESSION['usuario']</valor>
+                </field>
+
+              <order>
+                    <field id="fecha_accion" />
+                </order>
+
+          	</table>
+
+<!--         	    <join tipo="left">
+        	        <table id="MANT_PLAN_EVENTOS">
+                  	    <field id="plan_id">
+                            <condicion operador="=">MANT_PLAN.id_plan</condicion>
+                        </field>
+              		</table>
+    			</join> -->
+    
+      </form>
+
+</histrix>	

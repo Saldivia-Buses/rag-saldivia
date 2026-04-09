@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<abm tipo="ing">
+	<titulo>Pedidos Internos</titulo>
+	<obs></obs>
+	<consulta>
+		
+		<tabla id="PEDIDOINT" label="Pedidos Internos">
+			<movimientos cabecera="cab_ingpedint.xml">
+				<relacion id="ingpedint2.xml"></relacion>
+				<relacion id="stkmovim2.xml"></relacion>
+			</movimientos>
+			
+			<campo id="nrofab">
+				<label>Nro Fab.</label>
+				<help>Numero de Fabricacion </help>
+				<tabla_ex id="CHASIS">
+					<campo id="nrocha" muestra="true"></campo>
+					<campo id="chades"></campo>
+					<orden>
+						<campo id="nrocha"></campo>
+					</orden>
+				</tabla_ex>
+			</campo>
+			<campo id="artcod">
+				<ayuda_ex id="STKINSUM" condes="true">
+					<clave>artcod</clave>
+					<campo id="artdes"></campo>
+					<campo id="artcod" oculto="true"></campo>
+					<campo id="siscod" oculto="true">
+						<condicion operador="=">'01'</condicion>
+					</campo>
+					
+				</ayuda_ex>
+				
+				<label>Articulo</label>
+				<help>Codigo de Articulo. </help>
+				<!-- eventos que se disparan al actualizar el campo
+				COMO MIERDA LO HAGO???
+				<evento>
+				<valor id="">
+				</evento>
+				-->
+			</campo>
+			<campo id="codprv">
+				<label>Prov.</label>
+				<help>Codigo de Proveedor</help>
+				<ayuda_ex id="CCTCUENT" condes="true">
+					<clave>ctacod</clave>
+					<campo id="ctanom"></campo>
+					<campo id="ctacod" oculto="true"></campo>
+					<campo id="siscod" oculto="true">
+						<condicion operador="=">'01'</condicion>
+					</campo>
+				</ayuda_ex>
+			</campo>
+			<campo id="cant">
+				<label>Cant.</label>
+				<help>Cantidad</help>
+			</campo>
+			<campo id="unimed">
+				<label>Unidad</label>
+				<help>Unidad de Medida </help>
+				<tabla_ex id="FSMUNIDS">
+					<campo id="unicod"></campo>
+					<campo id="uninom"></campo>
+					<orden>
+						<campo id="uninom"></campo>
+					</orden>
+				</tabla_ex>
+			</campo>
+			<campo id="fecreq">
+				<label>Fec.Req.</label>
+				<help>Fecha deRequerimiento </help>
+				<valor>today</valor>
+			</campo>
+			<campo id="movref">
+				<label>Ref.</label>
+				<help>Referencia </help>
+			</campo>
+			
+			<!-- NUMERADOR INTERNO NOMBRE DE CAMPO RESERVADO-->
+			<campo id="_ORDEN" oculto="true">
+				<label>Orden</label>
+			</campo>
+		</tabla>
+	</consulta>
+</abm>

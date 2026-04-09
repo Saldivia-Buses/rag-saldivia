@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ficha" limit="1" sololectura="true" imprime="true" inserta="false" modifica="false" borra="false" tooltip="false">
+    <title>Consulta Detallada</title>
+    <obs/>
+    <form >
+        <table id="HTXMENU" label="Detalle de Movimientos">
+
+            <fieldGroup id="DEBUG" noshow="true" local="true" print="false">
+                <field id="fecha_desde" />
+                <field id="fecha_hasta" />
+                <field id="cajpuesto_id" />
+                <field id="cajconcepto_id1" />
+            </fieldGroup>
+
+            <field id="detalle" local="true" posX="10" posY="+10">
+                <helper type="object" xml="cajmovimientoscomp_qry.xml">
+                    <parameter source="cajconcepto_id1" target="cajconcepto_id1"/>
+                    <parameter source="cajpuesto_id" target="cajpuesto_id"/>
+                    <parameter source="fecha_desde" target="fecha_desde"/>
+                    <parameter source="fecha_hasta" target="fecha_hasta"/>
+                </helper>
+            </field>
+
+            <field id="totales" local="true" posX="10" posY="+10">
+                <helper type="object" xml="cajmovimientosformas_qry.xml">
+                    <parameter source="cajconcepto_id1" target="cajconcepto_id1"/>
+                    <parameter source="cajpuesto_id" target="cajpuesto_id"/>
+                    <parameter source="fecha_desde" target="fecha_desde"/>
+                    <parameter source="fecha_hasta" target="fecha_hasta"/>
+                </helper>
+            </field>
+
+            <field id="valores" local="true" posX="10" posY="+10">
+                <helper type="object" xml="cajmovimientosvalores_qry.xml">
+                    <parameter source="cajconcepto_id1" target="cajconcepto_id1"/>
+                    <parameter source="cajpuesto_id" target="cajpuesto_id"/>
+                    <parameter source="fecha_desde" target="fecha_desde"/>
+                    <parameter source="fecha_hasta" target="fecha_hasta"/>
+                </helper>
+            </field>
+
+        </table>
+
+
+    </form>
+</histrix>

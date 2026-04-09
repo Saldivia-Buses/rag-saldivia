@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="cabecera" _class="consultaancha">
+	<title>Movimientos</title>
+	 <obs></obs>
+		<consulta >
+		    <table id="CTB_MOVIMIENTOS" label="movimientos">
+				<field id="id_movimiento" noshow="true" autoinc="true"  print="false">
+					<label>Codigo</label>
+					<help>Código de movimiento</help>
+				</field>
+				<field id="concepto_id" print="false">
+					<helper type="combo" dir="/ayudas" xml="ctbconcepto_qry.xml">
+					</helper>
+					<label>Concepto</label>
+					<help>Código de concepto</help>
+				</field>
+				<field id="nro_minuta" deshabilitado="true">
+				    <label modpos="nobr">Minuta</label>
+				    <detalle>nro_minuta</detalle>
+				</field>
+			<!--	<field id="fecha_movimiento1" local="true" deshabilitado="true">
+					<label>Fecha</label>
+					<tipo>date</tipo>
+					<help>Fecha movimiento</help>
+				</field>-->
+
+				<field id="fecha_movimiento" _noshow="true" print="false" requiered="true">
+					<label>Fecha</label>
+					<tipo>date</tipo>
+					<help>Fecha movimiento</help>
+				</field>
+
+
+				<field id="referencia1" _noshow="true" local="true">
+					<label>Referencia</label>
+					<detalle>referencia</detalle>
+					<size>40</size>
+      				</field>
+				<field id="referencia" noshow="true" print="false">
+					<help>Referencia del movimiento</help>
+					<size>40</size>
+				</field>
+				
+				
+				
+				<field id="ejercicio_id" _noshow="true" deshabilitado="true" print="false">
+					<tabla_ex xml="contabilidad/man/ctbejercicios_crud.xml">
+					    <field id="activo" tipoOrden="DESC" limit="1"/>
+					</tabla_ex>
+					 <condicion operador="=">(select id_ejercicio from CTB_EJERCICIOS where activo = 1 ORDER BY id_ejercicio DESC LIMIT 1)</condicion>
+					<label>Ejercicio</label>
+					<help>Ejercicio contable</help>
+
+				</field>
+				
+				  <!-- <ayuda_ex id="CTB_MOVIMIENTOS">
+					<field id="nro_minuta">
+				            <label modpos="nobr">Nro minuta</label>
+					</field>
+					
+					<field id="referencia" >
+				            <label modpos="nobr">referencia</label>
+					     <detalle>referencia</detalle>
+					</field>
+					<field id="ejercicio_id" noshow="true">
+				            <label modpos="nobr">ejercicio</label>
+                       <condicion operador="=">(select id_ejercicio from CTB_EJERCICIOS where activo = 1)</condicion>
+					</field>
+					<field id="concepto_id" noshow="true">
+				            <label modpos="nobr">concepto</label>
+                                             <condicion operador="!=">0</condicion>
+					</field>
+					<field id="fecha_movimiento">
+					<label>Fecha</label>
+					<expresion>date_format(fecha_movimiento, '%d/%m/%Y')</expresion>
+					 <detalle>fecha_movimiento</detalle>
+				        </field>
+					<field id="id_movimiento" _esClave="true" oculto="true" >
+				            <label modpos="nobr">id_mov</label>	
+					    <detalle>id_movimiento</detalle>
+					</field>
+				    </ayuda_ex>
+		         <jseval campodestino="movimiento_id" actxml="detalles_minutas_ing.xml">id_movimiento</jseval>
+        	        <jsfunction event="onchange">filtracampos('FFormdetalles_minutas_ing_xml' ,'detalles_minutas_ing.xml');</jsfunction>
+
+				-->
+				<!--
+				<field id="fecha_modificacion" _noshow="true">
+				<valor eval="true">date('Y-m-d H:i:s')</valor>
+				</field> -->
+				<field id="zero" deshabilitado="true" noshow="true" local="true" print="false">
+					<valor>0</valor>
+				</field>
+				<field id="usuario_modificacion" noshow="true" print="false">
+					<valor eval="true">$_SESSION['usuario']</valor>
+				</field>
+
+	    	    </table>
+
+		</consulta>
+    </histrix>	

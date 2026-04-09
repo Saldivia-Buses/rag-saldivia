@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+	<histrix  tipo="cabecera" graba="false" >
+		<title>FACTURAS</title>
+		<obs></obs>
+		<form >
+			<table id="CCTMOVIM" label="Cabecera del comprobante">
+
+				<field id="siscod"   oculto="true">
+					<label>siscod</label>
+					<valor>'01'</valor>
+				</field>
+	
+				<field id="ctacod" deshabilitado="true">
+					<label>Proveedor</label>
+					<help>Código de Proveedor </help>
+				</field>
+
+				<field id="ctanom" deshabilitado="true">
+					<label colspan="3" modpos="nobr" nolabel="true">Nombre</label>
+					<help></help>
+<!-- 					<tipo>varchar</tipo>
+ -->				</field>
+
+				<field id="movfec" deshabilitado="true"  >
+					<label modpos="nobr">Fecha</label>
+				</field>
+
+				<field id="movnpv" deshabilitado="true">
+					<label modpos="nobr">Puesto</label>
+					<format>%04d</format>
+				</field>
+
+				<field id="movnro" deshabilitado="true"  >
+					<label modpos="nobr">Nro</label>
+					<format>%08d</format>
+				</field>
+
+			</table>
+		</form>
+	</histrix>

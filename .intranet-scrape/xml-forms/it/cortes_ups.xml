@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud">
+  <title>IT Correos</title>
+  <obs></obs>
+  <form>
+    <table id="UPS" label="Estado de UPS" limit="1">
+      
+ 	   <field id="id">
+       <label>id</label>
+      
+       </field>
+
+       <field id="estado" >
+        <label>Cantidad de Cortes</label>
+         <expression>COUNT(estado) </expression>
+        <size>24</size>
+      </field> 
+      
+      
+   
+
+     <field id="mensaje">
+      <label>Mensaje</label>
+      <size>24</size>
+     </field>
+      
+      <group>
+      	<field id="estado"></field>
+      
+      </group>
+
+<!--
+  
+      <order>
+      <field id="itdevicetype_id">
+        <label>Tipo</label>
+        
+        <helper type="combo" id="ITDEVICETYPE">
+           
+          <field id="id_itdevicetype" />
+          <field id="nombre_devicetype" />
+        
+        </helper>
+      
+      </field>
+      </order>
+-->
+
+
+          </table>
+  </form>
+</histrix>  

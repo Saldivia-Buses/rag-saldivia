@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+   <abm tipo="abm">
+       <titulo>Cuenta Corriente</titulo>
+        <obs></obs>
+				<consulta>
+					<tabla id="CCTMOVIM" label="Movimientos">
+						
+						<campo id="siscod" oculto="true">
+							<label>Cod.</label>
+						</campo>
+						<campo id="ctacod">
+							<label>Cuenta</label>
+							<help>Codigo de Cuenta </help>
+		
+						</campo>
+						<campo id="ctanom" tabla="CCTCUENT">
+							<label>Nom</label>
+						</campo>								
+
+							<campo id="concod"></campo>
+							
+						<campo id="movnpv">
+							<label>P.V.</label>
+							<help> Punto Venta</help>
+							<formato>%04d</formato>
+						</campo>
+						<campo id="movnro">
+							<label>Numero</label>
+							<help> Numero Comprobante</help>
+							<formato>%12d</formato>
+							
+						</campo>
+						
+						<campo id="concepto">
+							<expresion>condes</expresion>
+							<label>Cod.Concepto</label>
+							<help>
+							</help>
+							<tipo>string</tipo>
+							<!--		      <tabla_ex id="CCTCONCE">
+							
+							<campo id="concod"></campo>
+							<campo id="condes"></campo>
+							</tabla_ex>
+							-->
+						</campo>
+						
+						<campo id="movfec">
+							<label>Fecha </label>
+							<help>
+							</help>
+						</campo>
+						
+						<!--          <campo id="movvto">
+						<label>Venc. </label>
+						<help> </help>
+						</campo>
+						-->
+						<campo id="movimp">
+							<label>Importe</label>
+							<help>
+							</help>
+						</campo>
+						
+						<campo id="movsal" suma="true">
+							<label>Saldo</label>
+							<help>
+							</help>
+						</campo>
+					</tabla>
+					
+					<join tipo="left">
+						<tabla id="CCTCONCE">
+							<campo id="siscod" oculto="true">
+								<label>cctcuent.siscod</label>
+								<condicion operador="=">
+									CCTMOVIM.siscod</condicion>
+							</campo>
+							
+							<campo id="concod" oculto="true">
+								<condicion operador="=">
+									CCTMOVIM.concod</condicion>
+							</campo>
+							
+							<campo id="condes" oculto="true">
+							</campo>
+							
+						</tabla>
+					</join>
+					<join tipo="left">
+						<tabla id="CCTCUENT">
+							<campo id="siscod" oculto="true">
+								<label>cctcuent.siscod</label>
+								<condicion operador="=">
+									CCTMOVIM.siscod</condicion>
+							</campo>
+							
+							<campo id="ctacod" oculto="true">
+								<condicion operador="=">CCTMOVIM.ctacod</condicion>
+							</campo>
+							
+							
+						</tabla>
+					</join>					
+				</consulta>
+        </abm>

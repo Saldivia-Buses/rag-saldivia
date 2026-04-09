@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<abm tipo="consulta">
+	<titulo>RETENCIONES</titulo>
+	<obs></obs>
+	<consulta>
+		<tabla id="RETACUMU" label="RETENCION">
+			<campo id="acupag">
+				<expresion>sum(acupag)</expresion>
+				<label>acupag</label>
+			</campo>
+			<campo id="acufec">
+				<label>acufec</label>
+			</campo>			
+			<campo id="year1" noselect="true">
+				<expresion>year(acufec)</expresion>
+				<condicion operador="=">year(now())</condicion>
+			</campo>			
+
+			<campo id="mes" noselect="true">
+				<expresion>month(acufec)</expresion>
+				<condicion operador="=">month(now())</condicion>
+			</campo>			
+		<group>
+			<campo id="year(acufec)"></campo>
+			<campo id="month(acufec)"></campo>
+
+		</group>
+
+		</tabla>
+	</consulta>	   
+</abm> 

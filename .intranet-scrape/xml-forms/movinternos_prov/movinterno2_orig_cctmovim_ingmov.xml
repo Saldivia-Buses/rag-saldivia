@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm">
+	<title>creorecibo</title>
+	<obs/>
+	<form >
+		<table id="CCTMOVIM" label="FACTURAS">
+			<field id="siscod" id_cab="sispro"></field>
+			<field id="ctacod" id_cab="ctacod"></field>
+			<field id="ctanom" id_cab="ctanom"></field>
+			<field id="movfec" id_cab="movfec"></field>
+			<field id="regfec" id_cab="hoy"></field>
+			<field id="concod" id_cab="concod"></field>
+			<field id="movnpv" id_cab="movnpv"></field>
+			<field id="movnro" id_cab="movnro"></field>
+
+			<field id="movimp" id_temp="movimp"></field>
+			<field id="movcta" id_cab="movcta"></field>
+			<field id="succod" id_cab="movcta"></field>
+			<field id="movvto" id_cab="movfec"></field>
+			<field id="zoncod" id_cab="zoncod"></field>
+			<!--						<field id="movlet" id_cab="movlet">
+						</field> -->
+			<field id="opecla" id_cab="opecla"></field>
+			<field esNroMinuta="true" id="regmin"></field>
+		</table>
+	</form>
+</histrix>

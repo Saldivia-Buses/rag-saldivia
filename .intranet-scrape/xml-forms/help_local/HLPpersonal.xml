@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="no"?>
+<histrix tipo="ayuda">
+  <title>Personal</title>
+  <obs/>
+  <form >
+    <table id="PERSONAL">
+
+      <title>Personal</title>
+
+      <field id="legajo">
+        <label>Legajo</label>
+        <help>Numero de Legajo de Personal</help>
+      </field>
+
+      <field id="nombres">
+        <expression>CONCAT(apellido,', ', Nombre)</expression>
+      </field>
+
+      <field id="apellido">
+        <label>Apellido</label>
+        <help>Apellido del Personal</help>
+      </field>
+
+      <field id="Nombre">
+        <label>Nombre</label>
+        <help>Nombre del Personal</help>
+      </field>
+
+      <field id="fechaEgreso" oculto="true">
+        <condicion operador="=">'0000-00-00'</condicion>
+      </field>
+
+      <order>
+          <field id="apellido"></field>
+      </order>
+    </table>
+  </form>
+</histrix>

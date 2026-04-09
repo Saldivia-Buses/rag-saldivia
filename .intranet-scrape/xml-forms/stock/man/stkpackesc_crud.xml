@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF8"?>
+<histrix tipo="abm-mini" subtipo="vertical" imprime="false">
+  <titulo>Packs</titulo>
+  <obs/>
+  <form>
+    <table id="STK_PACK_ESC">
+      <field id="id_stkpackesc" noshow="true">
+		<label>Código</label>
+	  </field>
+
+	  <field id="stkpack_id" noshow="true">
+	  </field>
+
+	  <field id="valor_inf">
+		<label>Valor Inferior</label>
+		<tipo>integer</tipo>
+	  </field>
+
+	  <field id="valor_sup">
+		<label>Valor Superior</label>
+		<tipo>integer</tipo>
+	  </field>
+
+	  <field id="porcentaje">
+		<label>Porcentaje (%)</label>
+		<tipo>decimal</tipo>
+	  </field>
+
+	  <field id="stklista_id">
+		<helper type="combo" xml="stklista_qry.xml" dir="/ayudas"/>
+        <label>Lista</label>
+      </field>
+
+    </table>
+  </form>
+</histrix>

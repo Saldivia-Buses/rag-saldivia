@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="consulta" _preloadData="false" _paginar="200" PDFfontSize="7" PDFlines="false">
+    <title>MOVIMIENTOS</title>
+    <obs></obs>
+	<form>
+		<table id="REG_MOVIMIENTOS" label="MOVIMIENTOS">
+	      <filters>
+			<field id="fecha_movimiento">
+				<label>Desde Fecha</label>
+				<valor>today</valor>
+				<operador>&gt;=</operador>
+			</field>
+			<field id="fecha_movimiento" >
+				<label modpos="nobr">Hasta Fecha</label>
+				<valor>today</valor>
+				<operador>&lt;=</operador>
+			</field>
+
+			<field id="nro_cuenta" tabla="REG_CUENTA">
+			    <label>Cliente</label>
+			</field> 
+
+			<field id="puesto_movimiento" >
+				<label modpos="nobr">Puesto</label>
+				<operador>=</operador>
+			</field>  
+			
+			<field id="nro_movimiento" >
+				<label modpos="nobr">Numero</label>
+				<operador>=</operador>
+			</field>  
+			<field id="regcuenta_idv" deshabilitado="false">
+				<label>Vendedor</label>
+			    <operador>=</operador>
+			</field>
+
+			<field id="saldo_movimiento">
+				<label>Desde saldo</label>
+				<operador>&gt;=</operador>
+			</field>
+			<field id="saldo_movimiento">
+				<label modpos="nobr">Hasta saldo</label>
+				<operador>&lt;=</operador>
+			</field>
+			
+			<field id="concepto_id">
+				<label>Comprobante</label>
+				<operador>=</operador>
+			</field>
+
+	      </filters>
+
+		      <field id="subsistema_id" oculto="true">
+			    <tipo>varchar</tipo>
+		      </field>
+			<field id="subsistema_idv" local="true" oculto="true">
+				<label>ss</label>
+			</field>
+	      
+			<field id="regcuenta_idv"  deshabilitado="false" print="false" >
+				<expresion having="false">regcuentarelacionada_id</expresion>
+				<label>Vendedor</label>
+				
+				<helper type="combo" xml="regcuenta_solamente_qry.xml" dir="/ayudas" empty="true" >
+					<field id="subsistema_id"  >
+						<condicion operador="=" valorde="subsistema_idv">'[__subsistema_idv__]'</condicion>
+					</field>
+				</helper> 
+			</field>                
+			<field id="puesto_movimiento" noshow="true" />
+
+			<field id="nro_movimiento" noshow="true">
+				<label modpos="nobr">Nro.Comp.</label>
+			</field>  
+
+      <field id="tipo" valauto="true" local="true" />
+
+      <field id="regcuenta_id" valauto="true" noshow="true">
+      </field>
+      
+      <field id="id_regmovim" _noshow="true">
+    	<detalle>regmovim_id</detalle>
+      </field>
+      <field id="nro_cuenta" tabla="REG_CUENTA">
+        <label>cod</label>
+      </field>
+
+      <field id="nombre_cuenta" >
+        <expresion>REG_CUENTA.nombre_cuenta</expresion>
+        <setvar>nombre_div</setvar>
+      </field>
+
+	<field id="cajmovimiento_id" noshow="true" /> 
+
+	<field id="xml_llamar"  local="true" noshow="true">
+		<if exp="cajmovimiento_id + 0 != 0">
+		  <true>'cajmovimiento_ficha.xml'</true>
+
+<!--		  <true>'cajmovimiento_qry.xml'</true> -->
+		  <false>''</false>
+		</if>
+	</field>
+    <field id="imprime_concepto1" noshow="true">
+	  <expresion>case when isnull(CAJ_CONCEPTOS.imprime_concepto) then trim(REG_NUMERADORES.ejecuta) else trim(CAJ_CONCEPTOS.imprime_concepto) end</expresion>
+	</field>
+	
+      <field id="fecha_movimiento">
+        <label>Fec.Mov.</label>
+        <help>Fecha movimiento</help>
+        <tipo>date</tipo>
+      </field>
+
+      <field id="abreviacion_concepto" tabla="REG_CONCEPTOS">
+        <label>Comp</label>
+      </field>
+	  
+	  <field id="concepto_id"  noshow="true">
+	  <helper type="combo" id="REG_CONCEPTOS" empty="true">
+			<field id="id_concepto" />
+			<field id="abreviacion_concepto" />
+			<field id="subsistema_id">
+				<condicion operador="=">02</condicion>
+			</field>
+		</helper>
+	  </field>
+
+      <field id="numero_movimiento" tdWidth="150" linkdes="Detalle del Comprobante" linkmodal="true" style="text-align: center">
+        <label>Numero</label>
+        <expresion>CONCAT(REG_MOVIMIENTOS.letra_movimiento,' ',LPAD(REG_MOVIMIENTOS.puesto_movimiento,4,'0'),'-',LPAD(REG_MOVIMIENTOS.nro_movimiento  ,8,'0'))</expresion>
+	  	<helper type="link" _dir="/caja/qry" >
+			<parameter source="id_regmovim" target="id_regmovim" />
+	  	</helper>
+	  	<attribute id="linkint">imprime_concepto1</attribute>
+      </field>
+            
+	  <!-- Cambiar de Acuerdo a como se quiere visualizar las imputaciones de CtaCte -->
+
+      <field id="imputacion_concepto" noshow="true">
+    	<expresion>CASE WHEN REG_CONCEPTOS.imputacion_concepto = 1 THEN 1 ELSE 0 END</expresion>  
+      </field>
+      
+      <!-- Importes -->
+
+      <field id="debe" suma="true" noZero="true">
+        <label>debe</label>
+        <expresion>(case when REG_CONCEPTOS.imputacion_concepto = 0 then REG_MOVIMIENTOS.importe_movimiento else 0  end)</expresion>
+      	<tipo>numeric</tipo>
+      </field>
+
+      <field id="haber" suma="true" noZero="true">
+        <label>haber</label>
+        <expresion>(case when REG_CONCEPTOS.imputacion_concepto = 1 then REG_MOVIMIENTOS.importe_movimiento else 0 end)</expresion>
+        <tipo>numeric</tipo>
+      </field>
+
+	  <field id="acumulado" suma="true" acumula="true" _local="true">
+		<label>Acumulado</label> 
+		  <expresion>(case when REG_CONCEPTOS.imputacion_concepto = 0 then REG_MOVIMIENTOS.importe_movimiento else 0  end) - (case when REG_CONCEPTOS.imputacion_concepto = 1 then REG_MOVIMIENTOS.importe_movimiento else 0 end)</expresion>
+		<tipo>numeric</tipo>
+	  </field>
+
+      <field id="saldo_movimiento" suma="true" _noZero="true">
+        <label>Pendiente</label> 
+		<tipo>numeric</tipo>
+	  </field>
+      
+    <field id="saldo" suma="true" noshow="true">
+    	<label>Pend</label>
+    	<tipo>numeric</tipo>
+    	<expresion>saldo_movimiento</expresion>
+    	<condicion operador="!=">0</condicion>
+    </field>  
+
+      <!-- Funciones -->
+      
+      <field id="eliminacion" tdWidth="20" linkdir="/caja/proc/del/" local="true" print="false" linkdes="Detalle del Comprobante">
+		<attribute id="linkint">xml_llamar</attribute>
+	    <label>Detalle</label>
+	    <if exp="'xml_llamar' != ''">
+  	  	  <true>'>>'</true>
+  	  	  <false>''</false>
+	    </if>
+	    <paring destino="id_regmovimheader">id_regmovim</paring>
+	    <paring destino="id_cajmovmiento">cajmovimiento_id</paring>
+	  </field>
+
+	  <field id="referencia_movimiento" noshow="true" />
+<!--
+      <field id="modificacion" local="true" tdWidth="50" print="false">
+            <helper type="link" xml="regmovimiento_crud.xml" dir="/clientes/ing" width="600px" height="350px" title="Modificar Comprobante">
+	      <parameter source="id_regmovim" target="id_regmovim" />
+    	    </helper>        
+        <label>Mod</label>
+	    <valor>Modificar</valor>
+      </field>
+-->
+
+	  <field id="modificacion" local="true" tdWidth="50" print="false">
+            <helper type="link" xml="regmovimiento_crud2.xml" dir="/clientes/ing" width="600px" height="350px" title="Modificar Comprobante">
+	      <parameter source="id_regmovim" target="id_regmovim" />
+    	    </helper>        
+        <label>Mod</label>
+		<valor>Mod</valor>
+      </field>
+
+      <field id="tieneObs" noshow="true">
+  	    <expresion>SELECT 'color:red;font-weight:bold;' FROM REG_MOVIMIENTO_OBS WHERE REG_MOVIMIENTO_OBS.regmovim_id = REG_MOVIMIENTOS.id_regmovim limit 1</expresion>
+  	  </field>
+
+  	  <!-- Fin -->
+
+	<order>
+		<!--
+		<field id="fecha_movimiento" table="REG_MOVIMIENTOS" />
+		<field id="imputacion_concepto"/>
+		<field id="nro_movimiento" table="REG_MOVIMIENTOS" />
+	-->
+		<field id="saldo_movimiento" table="REG_MOVIMIENTOS" />
+
+	</order>
+
+	<group>
+		<field id="id_regmovim" tabla="REG_MOVIMIENTOS"/>
+	</group>
+    </table>
+    
+    
+    <join tipo="left">
+      <table id="REG_CUENTA">
+        <field id="id_regcuenta">
+          <condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+        </field>
+      </table>
+    </join>
+	<join tipo="left">
+		<table id="REG_CUENTA_RELACIONES">
+			<field id="regcuenta_id">
+			  <condicion operador="=">id_regcuenta</condicion>
+			</field>
+			<field id="subsistemarelacionada_id">
+			  <condicion operador="=">[__subsistema_idv__]</condicion>
+			</field>
+		</table>
+	</join>
+
+    <join>
+      <table id="REG_CONCEPTOS">
+        <field id="id_concepto">
+          <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+        </field>
+        <field id="informa_calculo">
+          <condicion operador="=">0</condicion>
+        </field>
+
+      </table>
+    </join>
+  
+   <join tipo="left">
+      <table id="CAJ_CONCEPTOS">
+        <field id="regconcepto_id">
+          <condicion operador="=">REG_CONCEPTOS.id_concepto</condicion>
+        </field>
+      </table>
+    </join>
+   <join tipo="left">
+      <table id="REG_NUMERADORES">
+        <field id="regconcepto_id">
+          <condicion operador="=">REG_CONCEPTOS.id_concepto</condicion>
+        </field>
+      </table>
+    </join> 
+
+
+  </form>
+</histrix>

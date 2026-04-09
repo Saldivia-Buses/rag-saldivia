@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix	tipo="fichaing" 
+			inserta="false" 
+			borra="false" 
+			modifica="false" 
+			imprime="false" 
+			tooltip="false"
+			confirma="ELIMINAR COMPROBANTE" 
+			_form="false" 
+			transaccional="true" 
+			preFetch="true" 
+			preloadData="true"
+			procesa="false">
+    <title>Eliminacion Comprobantes</title>
+    <obs/>
+    <eventos>
+      <event id="procesar">close</event>
+    </eventos>
+    <form>
+
+	<table id="REG_MOVIMIENTOS">
+
+		<validation>
+			<condition><![CDATA[puedeborrar == 0]]></condition>
+			<message>El comprobante esta imputado a otro comprobante, Verifique</message>
+		</validation>
+
+		<validation>
+			<condition><![CDATA[borra_comp_autorizado == 1]]></condition>
+			<message>No puede eliminar un comprobante autorizado</message>
+		</validation>
+
+		<!-- Proceso de eliminarcion -->      
+
+		<movimientos>
+			<relacion id="del_ctbmovimientos.xml" />
+            <relacion id="del_stkmovimientosreg.xml" />
+			<relacion id="del_regdetalles.xml" />
+			<relacion id="del_regmovimientos.xml" />
+		</movimientos>
+		
+		<field id="id_regmovim" esClave="true" noshow="true" />
+
+		<field id="puedeborrar" noshow="true">
+			<expression> case when (select count(*) from REG_IMPUTACIONES where regmovim0_id = REG_MOVIMIENTOS.id_regmovim ) &gt; 0 then 0 else 1 end</expression>
+		</field>
+
+		<field id="borra_comp_autorizado" noshow="true">
+          <expression>IF(REG_NUMERADORES.fiscal = 1 AND REG_NUMERADORES.printer = 'WSAFIP' AND IFNULL(REG_MOVIMIENTOS.numero_cae + 0, 0) != 0, '1', '0')</expression>
+        </field>
+
+		<field id="procesa" local="true" noshow="true">
+		    <setvar>procesa</setvar>
+		    <if exp="'param_procesa' == '0'">
+			<true>'false'</true>
+			<false>'true'</false>
+		    </if>
+		</field>
+
+		<!-- Si se envía valor 0 a esta variable, no aparece el botón "Anular", por defecto SI aparece -->
+
+		<field id="param_procesa" local="true" noshow="true" />
+
+		<!-- Comienzo -->
+
+		<field id="subsistema_id" noshow="true" />
+
+		<field id="fecha_movimiento" deshabilitado="true">
+			<label>Fecha</label>
+			<tipo>date</tipo>
+		</field>
+
+		<field id="descripcion_concepto" tabla="REG_CONCEPTOS" deshabilitado="true">
+			<label>Comprobante</label>
+		</field>
+
+		<field id="nro_movimiento" deshabilitado="true" >
+			<label modpos="nobr" >Numero</label>
+			<expression>CONCAT(REG_MOVIMIENTOS.letra_movimiento,' ', LPAD(REG_MOVIMIENTOS.puesto_movimiento,4,'0'),'-', LPAD(REG_MOVIMIENTOS.nro_movimiento ,8,'0'))</expression>
+		    <size>40</size>    
+		    <tipo>varchar</tipo>
+		</field>
+
+		<field id="nombre_cuenta" deshabilitado="true">
+			<expression>CASE REG_MOVIMIENTOS.nombre_movimiento WHEN '' THEN REG_CUENTA.nombre_cuenta ELSE REG_MOVIMIENTOS.nombre_movimiento END</expression>
+			<label>Cuenta</label>
+			<size>30</size>
+		</field>
+
+		<field id="cuit_cuenta" tabla="REG_CUENTA" deshabilitado="true" >
+			<label>CUIT</label>
+		</field>
+
+		<field id="cod_direccion" tabla="REG_CUENTA" deshabilitado="true"  >
+			<label modpos="nobr">Dirección</label>
+		</field>
+
+		<field id="localidad_id" tabla="REG_CUENTA" deshabilitado="true"  >
+			<label _modpos="nobr">Localidad</label>
+			<expression>SELECT CONCAT(id_localidad,' ', nombre_localidad) FROM GEN_LOCALIDADES where id_localidad = REG_CUENTA.localidad_id limit 1</expression>
+			<size>30</size>
+		</field>
+
+		<field id="provincia_id" tabla="REG_CUENTA" deshabilitado="true"  >
+			<label _modpos="nobr">Provincia</label>
+			<expression>SELECT nombre_provincia FROM GEN_PROVINCIAS where id_provincia = REG_CUENTA.provincia_id limit 1</expression>
+			<size>20</size>
+		</field>
+
+		<field id="vencimiento_movimiento" deshabilitado="true">
+			<label  modpos="nobr">Vencimiento</label>
+		</field>
+
+		<field id="detdalles" local="true">
+			<label colspan="15">Detalle</label>
+			<helper type="object" xml="factura_detalle_qry.xml" dir="/caja/qry">
+				<parameter source="id_regmovim" target="regmovim_id" operator="="/>	
+				<parameter source="subsistema_id" target="subsistema_id" operator="="/>	
+			</helper>
+		</field>
+
+		<field id="articulos" local="true">
+			<label colspan="15">Movimientos</label>
+			<helper type="object" xml="factura_articulos_qry.xml" dir="/caja/qry">
+				<parameter source="id_regmovim" target="regmovimiento_id" operator="="/>
+			</helper>
+		</field>
+
+		<!-- OCULTA EL CAMPO OTROS DETALLES SOLO DISPONIBLE PARA INSUMAS 1:oculto 0:muestra	-->
+
+		<field id="muestraod" local="true" noshow="true">
+              <helper type="parameter" id="SIS::01::oculta_imputaciones">
+                <label>Oculta otros detalles</label>
+                <defaultValue>1</defaultValue>
+              </helper>
+        </field>
+
+		<field id="otrosdetalles" local="true">
+			<attribute id="oculto">muestraod</attribute>
+			<label colspan="15">Otros Detalles</label>
+			<helper type="object" xml="factura_detalle_qry_new.xml" dir="/caja/qry">
+				<parameter source="id_regmovim" target="regmovim_id" operator="="/>	
+			</helper>
+		</field>
+
+		<!-- OCULTA EL CAMPO OTROS DETALLES SOLO DISPONIBLE PARA INSUMAS -->
+
+        <!-- Importes -->
+
+		<field id="neto_movimiento" deshabilitado="true">
+			<label>Neto</label>
+			<tipo>numeric</tipo>
+		</field>
+
+		<field id="total_iva" deshabilitado="true">
+			<label>IVA</label>
+			<expression>SUM(REG_DETALLES.iva_detalle)</expression>
+                        <size>10</size>
+			<tipo>numeric</tipo>
+		</field>
+
+		<field id="importe_exento" deshabilitado="true">
+			<label>Exento</label>
+			<tipo>numeric</tipo>
+		</field>           
+
+                <field id="importe_percepcion" deshabilitado="true">
+                    <label>Percepcion Gan</label>
+                    <tipo>numeric</tipo>
+                </field>
+
+                <field id="importe_ibr" deshabilitado="true">
+                    <label>Percepcion IIBB</label>
+                    <tipo>numeric</tipo>
+                </field>
+
+		<field id="importe_movimiento" deshabilitado="true">
+			<label>Total</label>
+			<tipo>numeric</tipo>
+		</field>
+
+		<field id="fecha_cae" deshabilitado="true">
+			<label modpos="nobr">Fecha CAI:</label>
+		</field>
+
+		<group>
+			<field id="id_regmovim" />
+		</group>
+    </table>
+
+	<join tipo="left">
+		<table id="REG_CONCEPTOS">
+		    <field id="id_concepto">
+			<condicion operador="=">concepto_id</condicion>
+		    </field>
+		</table>
+	</join>
+
+	<join tipo="left">
+		<table id="REG_CUENTA">
+			<field id="id_regcuenta">
+				<condicion operador="=">regcuenta_id</condicion>
+			</field>
+		</table>
+	</join>
+
+	<join tipo="left">
+		<table id="REG_DETALLES">
+			<field id="regmovim_id">
+				<condicion operador="=">id_regmovim</condicion>
+			</field>
+		</table>
+	</join>
+
+    <join tipo="left">
+      <table id="REG_NUMERADORES">
+        <field id="subsistema_id">
+          <condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion>
+        </field>
+        <field id="regconcepto_id">
+          <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+        </field>
+        <field id="puesto">
+          <condicion operador="=">REG_MOVIMIENTOS.puesto_movimiento</condicion>
+        </field>
+        <field id="letra">
+          <condicion operador="=">REG_MOVIMIENTOS.letra_movimiento</condicion>
+        </field>
+      </table>
+    </join>
+
+  </form>
+</histrix>

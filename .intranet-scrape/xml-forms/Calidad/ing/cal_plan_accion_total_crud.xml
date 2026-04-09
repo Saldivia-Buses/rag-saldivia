@@ -1,0 +1,345 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud" PDForientacion="L" borra="false" path="fotos/plan_accion_total/">
+    <title>Plan Accion Total</title>
+    <obs></obs>
+    <!--<customScript><![CDATA[
+        window.setTimeout(function(){
+            $('#TablaInternacal_plan_accion_total_crud_xml .inlineImg').css({'border-radius':'50px'});
+        }, 1000);
+    ]]></customScript>-->
+    <form detalle="cal_plan_accion_acciones_crud.xml" inline="true">
+    <table id="CAL_PLAN_ACCION_TOTAL" label="Plan Accion Total">
+    <filters _auto="true">
+        <field id="periodo" mask="99/9999" deshabilitado="false">
+            <label>Periodo</label>
+            <valor eval="true">date("m/Y")</valor> 
+            <tipo>varchar</tipo>
+            <operador>=</operador>
+        </field>
+        <field id="origen_planaccion">
+            <label modpos="nobr">Origen</label>
+            <help>Origen</help>
+            <operador>=</operador>
+        </field>			
+
+        <field id="plan_accion_tema_id">
+            <label modpos="nobr">Tema</label>
+            <help>Tema</help>
+            <operador>=</operador>
+        </field>
+
+        <field id="responsable_planaccion" required="true">
+            <label modpos="nobr">Responsable</label>
+            <help>Responsable</help>
+            <operador>=</operador>
+        </field>
+
+        <field id="lidera_planaccion">
+            <label modpos="nobr">Lidera</label>
+            <help>Lidera</help>
+            <operador>=</operador>
+        </field>
+
+        <field id="seccion_id">
+            <label modpos="nobr">Sección Impacto</label>
+            <help>Sección Impacto</help>
+            <operador>=</operador>
+        </field>
+
+        <field id="cerrada" deshabilitado="false">
+            <label modpos="nobr">Cerradas</label>
+            <help>Ver Cerradas</help>
+            <operador>=</operador>
+<!--            <valor>0</valor> -->
+        </field>
+
+        <field id="estado_planaccion" deshabilitado="false">
+            <label modpos="nobr">Estado</label>
+            <help>Ver Estado</help>
+            <operador>=</operador>
+            <valor>0</valor>
+        </field>
+
+    </filters>
+
+    <field id="id_plan_accion" esClave="true" Formstyle="display:none;">
+        <label>Nro</label>
+        <helper type="link" xml="cal_plan_accion_total_ficha.xml" dir="/calidad/qry">
+            <parameter source="id_plan_accion" target="id_plan_accion" />
+        </helper>
+        <detalle>plan_accion_id</detalle>
+    </field>
+
+    <field id="origen_planaccion" noZero="true">
+        <helper xml="calorigennconf_crud.xml" type="combo" dir="/calidad/man/" empty="true">
+            <field id="activo">
+                <condicion operador="=">1</condicion>
+            </field>
+            <field id="origen_nconf">
+                <expression>LEFT(origen_nconf,15)</expression>
+            </field>            
+        </helper>
+        <label>Origen</label>
+        <help>Origen del Plan</help>
+    </field>
+
+    <field id="plan_accion_tema_id" noZero="true">
+        <helper xml="tema_planaccion_crud.xml" type="combo" dir="/calidad/man/" empty="true">
+            <field id="activo">
+                <condicion operador="=">1</condicion>
+            </field>
+            <field id="nombre_plan_accion_tema">
+                <expression>LEFT(nombre_plan_accion_tema,15)</expression>
+            </field>            
+        </helper>
+        <label>Tema</label>
+        <help>Tema del Plan</help>
+    </field>
+
+    <field id="descripcion_planaccion">
+        <label>Asunto</label>
+        <help>Asunto Plan</help>
+        <size>100</size>
+        <tipo>varchar</tipo>
+    </field>
+
+    <field id="usuario_logueado" local="true" noshow="true">
+        <valor eval="true">$_SESSION['idUser']</valor>
+        <label>Usuario</label>
+    </field>
+
+    <field id="valido_usuario_logueado" local="true" noshow="true" _bloqueafila="true">
+        <expression>case when '[__usuario_logueado__]' = responsable_planaccion then '0' else '1' end</expression>
+    </field>
+
+    <field id="responsable_planaccion" colstyle="display:none">
+        <label>Resp.</label>
+        <help>Responsable del Plan</help>
+        <helper type="combo" id="HTXUSERS" empty="true">
+            <field id="id_usuario"/>
+            <field id="nombre">
+                <expression>CONCAT(Nombre, LEFT(apellido,4))</expression>
+            </field>
+            <field id="baja">
+                <condicion operador="=">0</condicion>
+            </field>
+            <field id="Id_perfil">
+                <condicion operador="!=">14</condicion>
+            </field>
+            <order>
+                <field id="nombre"/>
+            </order>
+        </helper>
+    </field>
+
+    <field id="foto_responsable_planaccion" Formstyle="display:none" local="true">
+        <label>Resp.</label>
+        <expression>case when RESPONSABLE.legajo_personal = '' or RESPONSABLE.legajo_personal = 0 then CONCAT('/fotos/usuarios/',RESPONSABLE.Id_usuario, '/') else
+            CONCAT('/fotos/personal/', (SELECT IdPersona FROM HTXUSERS HU
+                                    JOIN PERSONAL PER ON PER.legajo = HU.legajo_personal
+                                    WHERE IFNULL(HU.legajo_personal, 0) != 0 AND HU.Id_usuario = CAL_PLAN_ACCION_TOTAL.responsable_planaccion), '/') end</expression>
+    <tipo>dir</tipo>
+        <size>50</size>
+    </field>
+
+    <field id="lidera_planaccion" noshow="true" tabla="CAL_PLAN_ACCION_ACCION">
+        <label>Lide.</label>
+        <help>Lidera el Plan</help>
+        <helper type="combo" id="HTXUSERS" empty="true">
+            <field id="id_usuario"/>
+            <field id="nombre">
+                <expression>CONCAT(Nombre, LEFT(apellido,4))</expression>
+            </field>
+            <field id="baja">
+                <condicion operador="=">0</condicion>
+            </field>
+            <field id="Id_perfil">
+                <condicion operador="!=">14</condicion>
+            </field>
+            <order>
+                <field id="nombre"/>
+            </order>
+        </helper>
+    </field>
+
+    <field id="seccion_id">
+        <helper xml="rhseccion_qry.xml" type="combo" dir="/ayudas" empty="true">
+            <field id="id_rhseccion" />
+            <field id="nombre_seccion">
+                <expression>LEFT(nombre_seccion,18)</expression>
+            </field>
+            <field id="linea_id">
+                <condicion operador="=">1</condicion>
+            </field>
+            <field id="activa">
+                <condicion operador="=">1</condicion>
+            </field>
+        </helper>
+        <label>Sección Impacto</label>
+        <help>Sección Impacto del Plan</help>
+    </field>
+
+    <field id="inicio_planaccion" required="true">
+        <label>Fecha Inicio</label>
+        <help>Inicio</help>
+        <tipo>date</tipo>
+    </field>
+
+    <field id="objetivo_planaccion" required="true">
+        <label>Fecha Obj.</label>
+        <help>Objetivo</help>
+        <tipo>date</tipo>
+    </field>
+    <field id="color" clasefila="true" noshow="true">
+        <expression>(case when CAL_PLAN_ACCION_TOTAL.cierre_planaccion != '0000-00-00' then 'resaltadoVerde' when CAL_PLAN_ACCION_TOTAL.objetivo_planaccion &lt; date(now()) and ifnull(CAL_PLAN_ACCION_TOTAL.cierre_planaccion, '0000-00-00') = '0000-00-00' then 'resaltadoRojo' end)</expression>
+    </field>
+    <field id="cierre_planaccion" print="false">
+        <label>Fecha Cierre</label>
+        <help>Cierre</help>
+        <tipo>date</tipo>
+    </field>			                                      
+
+    <field id="cerrada" noshow="true">
+        <label>Cerrada</label>
+        <help>Cerrada</help>
+        <expression>case when CAL_PLAN_ACCION_TOTAL.cierre_planaccion = '0000-00-00' then 0 else 1 end</expression>
+        <options>
+            <option valor="">Todas</option>
+            <option valor="1">Si</option>
+            <option valor="0">No</option>
+        </options>
+    </field>
+
+    <field id="linkint1" noshow="true">
+        <expression>CASE WHEN noconformidad_planaccion = 0 THEN 'noconformidad_ing.xml' ELSE 'noconformidad_ficha.xml' END</expression>
+    </field>
+
+    <field id="linkdir1" noshow="true">
+        <expression>CASE WHEN noconformidad_planaccion = 0 THEN '/calidad/ing' ELSE '/calidad/qry' END</expression>
+    </field>
+
+    <field id="desc1" noshow="true">
+        <expression>CASE WHEN noconformidad_planaccion = 0 THEN noconformidad_planaccion ELSE CONCAT("'", descripcion_planaccion, "'") END</expression>
+    </field>
+
+    <field id="noconformidad_planaccion" colstyle="display:none" noZero="true">
+        <label>No Confomidad</label>
+        <help>Num. No Conformidad</help>
+        <size>18</size>
+    </field>
+
+    <field id="id_auditoriaobs" noshow="true" local="true">
+        <valor>0</valor>
+    </field>
+
+    <field id="noconformidad_plan_accion" linkint="" linkdir="" print="false" deshabilitado="false" Formstyle="display:none">
+        <paring destino="id_noconformidad">noconformidad_planaccion</paring>
+        <label>No Confo.</label>
+        <attribute id="linkint">linkint1</attribute>
+        <attribute id="linkdir">linkdir1</attribute>
+        <expression>CASE WHEN noconformidad_planaccion = 0 THEN '---' ELSE CONCAT('Nº ', noconformidad_planaccion) END</expression>
+    </field>
+<!--
+    <field id="ahorrotiempo_planaccion" noZero="true">
+        <label>Ahorro Tiempo</label>
+        <help>Ahorro Tiempo</help>
+        <tipo>time</tipo>
+    </field>
+
+    <field id="ahorropesos_planaccion" noZero="true">
+        <label>Ahorro Pesos</label>
+        <help>Ahorro Pesos</help>
+        <tipo>numeric</tipo>
+        <size>17</size>
+    </field>
+-->
+        <field id="fotos" local="true" foto="true" path="id_plan_accion">
+            <label>Fotos</label>
+            <tipo>dir</tipo>
+        </field>
+
+    <field id="estado_planaccion" colstyle="display:none">
+        <label>Estado</label>
+        <help>Estado</help>
+        <options>
+            <option valor="0">Activo</option>
+            <option valor="1">Borrador</option>
+            <option valor="2">Anulado</option>
+        </options>
+    </field>
+
+    <field id="creador_planaccion" noshow="true" deshabilitado="true">
+        <label modpos="nobr">Usuario</label>
+        <valor eval="true">$_SESSION['usuario']</valor>
+    </field>
+
+    <field id="userid" colstyle="display:none;">
+        <label>Creó Plan Acción</label>
+        <expression>concat(HTXUSERS.Nombre,' ', LEFT(HTXUSERS.apellido, 1),' ', CAL_PLAN_ACCION_TOTAL.stamp)</expression>
+        <label>Creó Plan Accion</label>
+        <size>40</size>
+    </field>
+
+    <field id="xml_consulta" local="true" noshow="true">
+      <valor>'cal_plan_accion_total_crud.xml'</valor>
+    </field>
+
+    <field id="nombre_id_registro" local="true" noshow="true">
+      <valor>'Nro'</valor>
+    </field>
+<!--
+    <field id="log" local="true" linkint="registros_log_qry.xml" linkdir="/calidad/qry/" linkdes="Historial" print="false" >
+          <label>Hist</label>
+          <paring destino="xml_consulta">xml_consulta</paring>   
+          <paring destino="id_registro">id_plan_accion</paring>   
+          <paring destino="nombre_id_registro">nombre_id_registro</paring>   
+      <expression>'Hist.'</expression>  
+    </field>
+-->
+    <field id="stamp" noshow="true">
+        <expression>CAL_PLAN_ACCION_TOTAL.stamp</expression>
+        <label>Hora Creación</label>
+    </field>
+
+    <field id="periodo"  mask='99/9999'  deshabilitado="true" noshow="true">
+        <label>Periodo</label>
+        <expression _having="false">concat(lpad(month(ifnull(max(CAL_PLAN_ACCION_ACCION.stamp), CAL_PLAN_ACCION_TOTAL.stamp)), 2, '0'),'/',year(ifnull(max(CAL_PLAN_ACCION_ACCION.stamp), CAL_PLAN_ACCION_TOTAL.stamp)))</expression>
+        <tipo>varchar</tipo>
+    </field>
+
+    <order>
+<!--        <field id="id_plan_accion" orderType="DESC"/> -->
+    <field id="inicio_planaccion"  orderType="DESC" />
+    </order>
+
+    <group>
+        <field id="id_plan_accion" />
+    </group>
+</table>
+
+    <join tipo="left">
+      <table id="HTXUSERS">
+        <field id="login">
+          <condicion operador="=">creador_planaccion</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join tipo="left">
+      <table id="HTXUSERS" as="RESPONSABLE">
+        <field id="Id_usuario">
+          <condicion operador="=">responsable_planaccion</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join tipo="left">
+      <table id="CAL_PLAN_ACCION_ACCION">
+        <field id="plan_accion_id">
+          <condicion operador="=">id_plan_accion</condicion>
+        </field>
+      </table>
+    </join>
+
+</form>
+</histrix>	

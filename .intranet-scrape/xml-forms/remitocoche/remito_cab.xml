@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+	<histrix  tipo="fichaing" 
+		inserta="false"
+		modifica="false"
+		imprime="false"
+		impresion="remito_reimp.xml"
+		>
+		<title>REMITOS</title>
+		<obs></obs>
+		<form >
+			<table id="REMITO" label="Cabecera del comprobante">
+			<movimientos >
+				<relacion id="remito_ingmov.xml"/>
+			</movimientos>
+
+			<field id="ctacod" required="true" >
+					<label xml="cctcuent.xml" colspan="4">Cliente</label>
+					<help>Código de Proveedor </help>
+					<ayuda_ex id="CCTCUENT" xml="HLPcctcuent.xml" dir="/help_local">
+						<field id="siscod" oculto="true">
+							<label>siscod</label>
+							<condicion operador="=">'02'</condicion>
+						</field>
+						<field id="ctacod">
+							<label>Nro</label>
+						</field>
+						<field id="ctanom">
+							<label>Nombre</label>
+							<detalle>ctanom</detalle>
+						</field>
+						<field id="ivacod">
+							<detalle>ivacod</detalle>
+						</field>
+<!--						<field id="zoncod">
+							<detalle>zoncod</detalle>
+						</field>
+						-->
+						<field id="ivacod2">
+							<expression>(case when ivacod = 1 or ivacod = 2 then 'A' else 'B' end)</expression>
+							<detalle>movlet</detalle>
+						</field>
+						<field id="doccod">
+							<detalle>doccod</detalle>
+						</field>
+						<field id="ctanro">
+							<detalle>ctanro</detalle>
+						</field>
+						<clave>ctacod</clave>
+						<descripcion>ctanom</descripcion>
+					</ayuda_ex>
+					<tipo>integer</tipo>
+					<!-- <jseval>ctacod != \'\'</jseval> -->
+					<detalle>ctacod</detalle>
+				</field>
+
+				<field id="ctanom" deshabilitado="true" sincelda="true">
+					<label colspan="3" modpos="nobr" ></label>
+					<help></help>
+					<tipo>varchar</tipo>
+				</field>
+
+				<field id="fecha" copio="movvto" _deshabilitado="true">
+					<label modpos="nobr">Fecha</label>
+					<help>Fecha de Emisión </help>
+					<valor>today</valor>
+					<detalle>fecha</detalle>
+				</field>
+
+				<field id="puesto" _deshabilitado="true">
+					<label modpos="nobr">Número</label>
+					<format>%04d</format>
+					<valor>4</valor>
+				</field>
+
+				<field id="numero" ctbregnro="1" deshabilitado="false" sincelda="true" copia="nrorec">
+					<label modpos="nobr" >- </label>
+					<format>%08d</format>
+					<parametro id="numeradorremito.xml" retorna="num">
+							<field id="num">
+				                <expression>max(numero) + 1</expression>								
+							</field>
+	 				</parametro> 
+					<detalle>numero</detalle>
+				</field>
+
+			<field id="nrofab"  esClave="true" required="true" deshabilitado="false">
+				<label style="font-size:12px;color:red;">Nro Unidad</label>
+				<help>Ingrese Nro de Coche</help>
+				<helper type="external" id="PEDCOTIZ" xml="HLPcoche.xml" dir="/help_local" empty="true">
+					<field id="nrocha"  esClave="true" >
+						<label >Nro</label>					
+					</field>
+					<field id="Carroceria">
+						<expression>CONCAT(PEDCOTIZ.nrocha, ' - CARROCERIA MARCA SALDIVIA, ', 'A',
+              			(case when CARROCERIA.doble_piso = 1 then (CONCAT(asientos, '+', asientos_plantabaja)) else (asientos) end),
+						 ' - ', ifnull(MARCHASIS.mardes, 'FALTA MARCA DE CHASIS'), ' ', IFNULL(MODCHASIS.moddes, 'FALTA MODELO CHASIS'), '  Nro: ', CHASIS.chasis, 'Motor: ',IFNULL(MARCAMOTOR.nombre,'FALTA MARCA DE MOTOR'), ' Nro: ', nromotor)</expression>
+						<label>Carroceria</label>
+						<tipo>varchar</tipo>
+						<detalle>coche</detalle>
+					</field>					
+					<field id="ctbcar" local="true" noshow="true">
+						<valor>'611101'</valor>
+						<detalle>ctb_comp</detalle>
+					</field>
+					<clave>nrocha</clave>
+					<descripcion>Carroceria</descripcion>
+				</helper><!-- 
+				<valor default="true">Ingrese Nro de Coche</valor> -->
+				<tipo>varchar</tipo>
+				<size>20</size>
+			</field>
+
+			<field id="coche" deshabilitado="true">
+				<label modpos="nobr" style="font-weight:bold;font-size:12px;color:green;"></label>
+				<tipo>varchar</tipo>
+				<size>150</size>
+				<help>Número de unidad</help>
+			</field>
+
+			</table>
+		</form>
+	</histrix>

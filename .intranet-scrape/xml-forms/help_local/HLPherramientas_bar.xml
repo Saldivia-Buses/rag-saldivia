@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ayuda">
+	<title>Insumos</title>
+	<obs/>
+	<form >
+		<table id="HERRAMIENTAS">
+
+			<field id="id_herramienta">
+				<label>Herramienta</label>
+				<help>Identificacion</help>
+				<tipo>character</tipo>
+			</field>
+			<field id="artcod" >
+				<label>Articulo</label>
+				<help>Codigo de Articulo</help>
+				<tipo>character</tipo>
+				<format>%20.20s</format>
+			</field>
+
+			<field id="nomherr">
+				<label>Nombre</label>
+				<help>Nombre de la Herramienta.</help>
+			</field>
+			<field id="grucod" oculto="true">
+				<label>grupo</label>
+				<help>grupo</help>
+				<condicion operador="=">2 or grucod = 0</condicion>
+			</field>
+		</table>
+	</form>
+</histrix>

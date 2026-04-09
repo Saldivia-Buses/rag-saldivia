@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm">
+	<title>TIPO DE ESPEJO</title>
+	<obs></obs>
+	<form>
+		<table id="TIPOESPJ" label="Espejos">
+
+			<campo id="tipesp">
+				<label>Codigo</label>
+				<help>Codigo de Espejo</help>
+			</campo>
+			<campo id="espdes">
+				<label>Espejo</label>
+				<help>Tipo de Espejo</help>
+			</campo>
+			<campo id="siscod" oculto="true">
+				<label>Cod</label>
+			</campo>			
+			<campo id="espabv">
+				<label>Abrev.</label>
+				<help>Abreviatura a Utilizar</help>
+			</campo>
+    			<order>
+				<campo id="tipesp"></campo>
+			</order>
+		</table>
+	</form>	   
+</histrix> 

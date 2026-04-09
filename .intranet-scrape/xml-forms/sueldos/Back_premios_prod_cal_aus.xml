@@ -1,0 +1,567 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" imprimetanda="true"  pageBreak="false" PDFsincabecera="true" _limit="15" width="60%" preloadData="false">
+    <title>Calculo de Premios</title>
+    <obs/>
+    <form  detalle="recibo_premio_prod_cal_aus.xml">
+        <table id="PERSONAL" label="calculo de premios" >
+            <filters>
+                <field id="desde" local="true">
+                    <label>Desde</label>
+                    <tipo>date</tipo>
+                    <valor eval="true">date("d/m/Y", mktime(0, 0, 0, date("m"), 01, date("Y")))</valor>
+                    <operador>&gt;=</operador>
+                </field>
+                <field id="hasta" local="true">
+                    <label>Hasta</label>
+                    <tipo>date</tipo>
+                    <valor eval="true">date("d/m/Y", mktime(0, 0, 0, date("m"), date("d")-1, date("Y")))</valor>
+                </field>
+                <field id="linea_id" deshabilitado="true">
+                    <label>Linea</label>
+                    <operador>=</operador>
+                    <valor>1</valor>
+          </field>
+      <field id="des2" tabla="SECCION" deshabilitado="false">
+        <label colspan="4">Sección</label>
+<tabla_ex id="SECCION" vacio="true">
+    <field id="id_seccion"></field>
+    <field id="nombre"></field>
+</tabla_ex>
+                    <operador>=</operador>
+
+      </field>
+                                                                                            
+            </filters>
+      <field id="des2" tabla="SECCION">
+ <expression>select SECCION.id_seccion from SECCIONHISTORIA left join SECCION on SECCION.id_seccion = SECCIONHISTORIA.id_seccion 
+where SECCIONHISTORIA.IdPersona = PERSONAL.IdPersona order by SECCIONHISTORIA.fechaDesde desc limit 1</expression>
+        <label colspan="4">Sección</label>
+        <tipo>varchar</tipo>
+<tabla_ex id="SECCION" vacio="true">
+    <field id="id_seccion"></field>
+    <field id="nombre"></field>
+</tabla_ex>
+
+      </field>
+                                                                                                        
+            <field id="desde" local="true"  noshow="true">
+                <label>Desde</label>
+                <tipo>date</tipo>
+            </field>
+            <field id="hasta" local="true"  noshow="true">
+                <label>Hasta</label>
+                <tipo>date</tipo>
+            </field>
+
+            <field id="fechaEgreso" oculto="true">
+                <label>Egreso</label>
+                <tipo>date</tipo>
+                <condicion operador="=">'0000-00-00'</condicion>
+            </field>
+
+            <field id="IdSindicato" noshow="true">
+                <label>Sind.</label>
+                <help>Codigo de Sindicato</help>
+                <detalle>IdSindicato</detalle>
+                <tabla_ex id="SINDICATO">
+                    <field id="IdSindicato"></field>
+                    <field id="Nombre"></field>
+                    <order>
+                        <field id="Nombre"></field>
+                    </order>
+
+                    <filtra>IdSindicato</filtra>
+                </tabla_ex>
+            </field>
+            <field id="nom">
+                <expression>concat(PERSONAL.apellido, ', ', PERSONAL.nombre)</expression>
+                <label>Apellido</label>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="apellido" noshow="true">
+                <tipo>varchar</tipo>
+            </field>
+            <field id="tarjeta" noshow="true">
+      
+                <label>Tarjeta</label>
+                <detalle>tarjeta</detalle>
+            </field>
+            <field id="idJornada" noshow="true">
+                <label>Jornada</label>
+            </field>
+            <field id="legajo">
+                <label>Leg.</label>
+                <tipo>integer</tipo>
+                <condicion operador="!=">0</condicion>
+                <detalle>legajo</detalle>
+            </field>
+            <field id="idPersona" noshow="true">
+            </field>
+
+      <field id="linea_id" deshabilitado="true" noshow="true">
+                    <helper type="combo" xml="lineas.xml" empty="true" dir="/produccion"/>
+
+        <label modpos="nobr">Linea</label>
+        <expression>select SECCION.linea_id from SECCIONHISTORIA left join SECCION on SECCION.id_seccion = SECCIONHISTORIA.id_seccion where SECCIONHISTORIA.IdPersona = PERSONAL.IdPersona order by SECCIONHISTORIA.fechaDesde desc limit 1</expression>
+      </field>
+
+            <field id="fecing" noshow="true">
+                <label>Ingreso</label>
+                <tipo>date</tipo>
+            </field>
+            <field id="CUIL" noshow="true">
+                <label>CUIL</label>
+                <tipo>varchar</tipo>
+            </field>
+      
+            <field id="IdCateg2" noshow="true">
+                <label style="width:200px;" modpos="nobr">Categ.</label>
+              <expression><![CDATA[(select descripcion from CATEGHISTORIA 
+                                     left join CATPERSONAL 
+                                     on CATPERSONAL.IdSindicato = CATEGHISTORIA.idSindicato 
+                                     and CATPERSONAL.IdCateg = CATEGHISTORIA.IdCateg 
+                                     where CATEGHISTORIA.IdPersona = PERSONAL.IdPersona 
+and  CATEGHISTORIA.fechaDesde <= STR_TO_DATE('[__hasta__]', '%d/%m/%Y')
+/*CONCAT(RIGHT(REPLACE('[__hasta__]', '/', ''), 4), SUBSTRING(REPLACE('[__hasta__]', '/', ''), 3, 2), LEFT(REPLACE('[__hasta__]', '/', ''), 2))  */
+order by CATEGHISTORIA.fechaDesde desc limit 1)]]>
+              </expression>
+            </field>
+                    
+            <field id="tipoliq" noshow="true">
+                <expression>select tipoliq FROM CONCEPCONV inner join CONVENIOS on CONVENIOS.idSindicato= CONCEPCONV.IdSindicato  where CONCEPCONV.IdSindicato = PERSONAL.IdSindicato and CONCEPCONV.IdCateg = (select CATEGHISTORIA.IdCateg from CATEGHISTORIA left join CATPERSONAL on CATPERSONAL.IdSindicato = CATEGHISTORIA.idSindicato and CATPERSONAL.IdCateg = CATEGHISTORIA.IdCateg where CATEGHISTORIA.IdPersona = PERSONAL.IdPersona order by CATEGHISTORIA.fechaDesde desc limit 1) limit 1</expression>
+
+                <tabla_ex id="CONCEPLIQU">
+                    <field id="tipoLiq"/>
+                    <field id="Nombre"/>
+                </tabla_ex>
+                <label>Tipo Liq.</label>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="val" noshow="true">
+                <label>importe</label>
+                <expression><![CDATA[select importe FROM CONCEPCONV inner join CONVENIOS on CONVENIOS.idSindicato= CONCEPCONV.IdSindicato  where CONCEPCONV.IdSindicato = PERSONAL.IdSindicato and CONCEPCONV.desfec <= hasta and CONCEPCONV.IdCateg = (select CATEGHISTORIA.idCateg from CATEGHISTORIA left join CATPERSONAL on CATPERSONAL.IdSindicato = CATEGHISTORIA.idSindicato and CATPERSONAL.IdCateg = CATEGHISTORIA.IdCateg where CATEGHISTORIA.IdPersona = PERSONAL.IdPersona order by CATEGHISTORIA.fechaDesde desc limit 1)  order by CONCEPCONV.desfec DESC limit 1]]></expression>
+                <tipo>decimal</tipo>
+            </field>
+            <field id="impPremio" noshow="true">
+                <label>Premio</label>
+                <expression><![CDATA[select ifnull(premio,0) FROM CONCEPCONV inner join CONVENIOS on CONVENIOS.idSindicato= CONCEPCONV.IdSindicato  where CONCEPCONV.IdSindicato = PERSONAL.IdSindicato and CONCEPCONV.desfec <= hasta and CONCEPCONV.IdCateg = (select CATEGHISTORIA.IdCateg from CATEGHISTORIA left join CATPERSONAL on CATPERSONAL.IdSindicato = CATEGHISTORIA.idSindicato and CATPERSONAL.IdCateg = CATEGHISTORIA.IdCateg where CATEGHISTORIA.IdPersona = PERSONAL.IdPersona order by CATEGHISTORIA.fechaDesde desc limit 1)  order by CONCEPCONV.desfec DESC limit 1]]>
+                </expression>
+                <tipo>decimal</tipo>
+
+            </field>
+            <field id="cPremio" noshow="true">
+                <label>cobra Premio</label>
+                <condicion operador="=">1 or cPremio = 2</condicion>
+            </field>
+
+<field id="moment" noshow="true">
+<expression>(select SECCION.idMomento FROM SECCIONHISTORIA left join SECCION on SECCION.id_seccion = SECCIONHISTORIA.id_seccion 
+where SECCIONHISTORIA.IdPersona = PERSONAL.IdPersona order by SECCIONHISTORIA.fechaDesde desc limit 1)</expression>
+    </field>
+	    <field id="coches">
+                <label>Coches</label>
+		<expression><![CDATA[
+		CASE (select SECCION.linea_id from SECCIONHISTORIA left join SECCION on SECCION.id_seccion = SECCIONHISTORIA.id_seccion 
+where SECCIONHISTORIA.IdPersona = PERSONAL.IdPersona order by SECCIONHISTORIA.fechaDesde desc limit 1) 
+WHEN 1  THEN 
+/*(SELECT COUNT(*) FROM PEDCOTIZ where terminacionFinal >= STR_TO_DATE('[__desde__]', '%d/%m/%Y') and  terminacionFinal <= STR_TO_DATE('[__hasta__]', '%d/%m/%Y')) */
+
+(CASE WHEN (select SECCION.idMomento FROM SECCIONHISTORIA left join SECCION on SECCION.id_seccion = SECCIONHISTORIA.id_seccion 
+	    where SECCIONHISTORIA.IdPersona = PERSONAL.IdPersona order by SECCIONHISTORIA.fechaDesde desc limit 1) != 6
+THEN
+
+(select COUNT(*) from PROD_CONTROLES join PROD_CONTROL_MOVIM on id_prodcontrol = prodcontrol_id
+join TURNOSPRODUCCION TUR on TUR.nrofab = nrofab_id and TUR.linea_id != 2
+where fecha_control >= STR_TO_DATE('[__desde__]', '%d/%m/%Y')
+and  fecha_control <= STR_TO_DATE('[__hasta__]', '%d/%m/%Y')
+and  seccion_id = (select SECCION.idMomento FROM SECCIONHISTORIA left join SECCION on SECCION.id_seccion = SECCIONHISTORIA.id_seccion 
+where SECCIONHISTORIA.IdPersona = PERSONAL.IdPersona order by SECCIONHISTORIA.fechaDesde desc limit 1)
+and orden_control = 999
+and seccion_id != 6
+)
+
+ELSE
+
+(((select COUNT(*) from PROD_CONTROLES join PROD_CONTROL_MOVIM on id_prodcontrol = prodcontrol_id join TURNOSPRODUCCION TUR on TUR.nrofab = nrofab_id and TUR.linea_id != 2
+where fecha_control >= STR_TO_DATE('[__desde__]', '%d/%m/%Y') and  fecha_control <= STR_TO_DATE('[__hasta__]', '%d/%m/%Y') and orden_control = 999 and seccion_id = 2)+
+(select COUNT(*) from PROD_CONTROLES join PROD_CONTROL_MOVIM on id_prodcontrol = prodcontrol_id join TURNOSPRODUCCION TUR on TUR.nrofab = nrofab_id and TUR.linea_id != 2
+where fecha_control >= STR_TO_DATE('[__desde__]', '%d/%m/%Y') and  fecha_control <= STR_TO_DATE('[__hasta__]', '%d/%m/%Y') and orden_control = 999 and seccion_id = 3)+
+(select COUNT(*) from PROD_CONTROLES join PROD_CONTROL_MOVIM on id_prodcontrol = prodcontrol_id join TURNOSPRODUCCION TUR on TUR.nrofab = nrofab_id and TUR.linea_id != 2
+where fecha_control >= STR_TO_DATE('[__desde__]', '%d/%m/%Y') and  fecha_control <= STR_TO_DATE('[__hasta__]', '%d/%m/%Y') and orden_control = 999 and seccion_id = 5)+
+(select COUNT(*) from PROD_CONTROLES join PROD_CONTROL_MOVIM on id_prodcontrol = prodcontrol_id join TURNOSPRODUCCION TUR on TUR.nrofab = nrofab_id and TUR.linea_id != 2
+where fecha_control >= STR_TO_DATE('[__desde__]', '%d/%m/%Y') and  fecha_control <= STR_TO_DATE('[__hasta__]', '%d/%m/%Y') and orden_control = 999 and seccion_id = 23)) / 4)
+
+
+END)
+
+
+
+
+/* Herreria2 Chaperia3 Terminacion5 PLastico6*/
+
+
+WHEN 3  THEN (select COUNT(*) from PROD_CONTROLES join PROD_CONTROL_MOVIM on id_prodcontrol = prodcontrol_id
+join TURNOSPRODUCCION TUR on TUR.nrofab = nrofab_id and TUR.linea_id != 2
+where fecha_control >= STR_TO_DATE('[__desde__]', '%d/%m/%Y')
+and  fecha_control <= STR_TO_DATE('[__hasta__]', '%d/%m/%Y')
+and  seccion_id = 2
+and orden_control = 999
+)
+WHEN 5  THEN (select COUNT(*) from PROD_CONTROLES join PROD_CONTROL_MOVIM on id_prodcontrol = prodcontrol_id
+join TURNOSPRODUCCION TUR on TUR.nrofab = nrofab_id and TUR.linea_id != 2
+where fecha_control >= STR_TO_DATE('[__desde__]', '%d/%m/%Y')
+and  fecha_control <= STR_TO_DATE('[__hasta__]', '%d/%m/%Y')
+and  seccion_id = 3
+and orden_control = 999
+)
+END
+]]>
+</expression>
+    <tipo>numeric</tipo>
+    </field>
+
+            <field id="Faltas">
+        <label>Faltas</label>
+        <expression sql="true">
+<![CDATA[
+                    select sum(FF.faltas) from
+                    (select C1.fecha,
+@hing:= (SELECT H.ingresoPremio from HORARIOHIST as H  where H.desdeFecha <= C1.fecha and H.dia = DAYOFWEEK(C1.fecha) order by H.desdeFecha DESC limit 1) as "hing",
+@hegr:= (SELECT H.egresoPremio  from HORARIOHIST as H  where H.desdeFecha <= C1.fecha and H.dia = DAYOFWEEK(C1.fecha) order by H.desdeFecha DESC limit 1) as "hegr",
+
+@h1:=(select H1.crc from FICHADAS as H1 where H1.tarjeta = (SELECT TJT.tarjeta from PERSONAL_TARJETA as TJT where TJT.idPersona = [__idPersona__]  and TJT.fechaDesde <= C1.fecha order by fechaDesde DESC limit 1) and H1.fecha = C1.fecha and H1.borrado = 0 order by hora limit 0, 1) as "h1",
+@h2:=(select H1.crc from FICHADAS as H1 where H1.tarjeta = (SELECT TJT.tarjeta from PERSONAL_TARJETA as TJT where TJT.idPersona = [__idPersona__]  and TJT.fechaDesde <= C1.fecha order by fechaDesde DESC limit 1) and H1.fecha = C1.fecha and H1.borrado = 0 order by hora limit 1, 1) as "h2",
+@h3:=(select H1.crc from FICHADAS as H1 where H1.tarjeta = (SELECT TJT.tarjeta from PERSONAL_TARJETA as TJT where TJT.idPersona = [__idPersona__]  and TJT.fechaDesde <= C1.fecha order by fechaDesde DESC limit 1)  and H1.fecha = C1.fecha and H1.borrado = 0 order by hora limit 2, 1) as "h3",
+@h4:=(select H1.crc from FICHADAS as H1 where H1.tarjeta = (SELECT TJT.tarjeta from PERSONAL_TARJETA as TJT where TJT.idPersona = [__idPersona__]  and TJT.fechaDesde <= C1.fecha order by fechaDesde DESC limit 1) and H1.fecha = C1.fecha and H1.borrado = 0 order by hora limit 3, 1) as "h4",
+
+@trabaj:=(ifnull(time_to_sec(timediff(@h2, @h1)), 0)+
+         ifnull(time_to_sec(timediff(@h4, @h3)), 0)) / 3600,
+
+@ideal:=ifnull(time_to_sec(timediff(@hegr, @hing)),0) / 3600,
+ifnull((case when @trabaj >= @ideal then 0 when (@trabaj >= 2 and @trabaj < @ideal) then 0.5 when (@trabaj < 2 ) then 1 end), 0) as "faltas"
+
+                    from GEN_CALENDAR as C1 left join FERIADOS ON FERIADOS.idFeriado = C1.fecha
+        where
+                          C1.fecha  >= '[__desde__]' and
+                          C1.fecha  <= '[__hasta__]' and
+        isnUll(FERIADOS.idFeriado)) as FF  ]]>
+                </expression>
+                <detalle>faltas</detalle>
+                <tipo>numeric</tipo>
+
+      </field>
+
+      <field id="lnip" local="true" noZero="true" _noshow="true">
+            <expression sql="true"><![CDATA[select count(*) from FRANCOS_PER F
+                            join PERSONAL P on F.IdPersona = P.IdPersona
+                            join CALENDAR ON CALENDAR.fecha >= F.fechainicio and CALENDAR.fecha <= (case    when F.fechafin = '0000-00-00' then '[__hasta__]' else F.fechafin end)
+                            join FRANCOS_CAT FC on FC.idfranco = F.idfranco and FC.tipo = F.tipo
+                            where F.IdPersona = '[__idPersona__]' and
+                                  FC.descuenta = 1 and
+                                  CALENDAR.fecha >= '[__desde__]' and 
+                                  CALENDAR.fecha <= '[__hasta__]' and
+                                  dayofweek(CALENDAR.fecha) NOT IN (1,7) and 
+                                  CALENDAR.fecha NOT IN (select idFeriado from FERIADOS)]]></expression>
+        <label>No.Imp.Per</label>
+        <tipo>decimal</tipo>
+        <help>licencias_no_imputables_personal</help>
+        </field>
+
+            <field id="porcfaltas">
+                <label>%faltas</label>
+                <expression sql="true">select case when '[__Faltas__]' = '' then 0 else (select FALTAS.porcentaje from FALTAS where FALTAS.faltas = TRUNCATE(([__Faltas__] + 0) - ([__lnip__] + 0), 0)) end</expression>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="monto" noshow="true">
+                <label>montoPre</label>
+                <expression sql="true"><![CDATA[select ifnull(montoPremio,0) from PREMIOS where cantidad = '[__coches__]' ]]></expression>
+                <tipo>decimal</tipo>
+                
+            </field>
+
+            <field id="finalPremio" local="true">
+                <label>Produc</label>
+                <if exp="cPremio + 0  == 1">
+                    <true>(((monto + 0 ) * porcfaltas / 100)  * (impPremio + 0))</true>
+                    <false>(((monto + 0 ) * porcfaltas / 100)  * (impPremio + 0)) / 2</false>
+                </if>
+                <tipo>decimal</tipo>
+                <detalle>fpremio</detalle>
+            </field>
+
+            <field id="monto_premiocalidad" noshow="true">
+                <label>Monto Premio Calidad</label>
+                <expression sql="true"><![CDATA[select ifnull(monto_premiocalidad,0) from PREMIO_CALIDAD where cantidad_premiocalidad = '[__coches__]' ]]></expression>
+                <tipo>decimal</tipo>
+                
+            </field>
+
+<field id="idMomentoCalidad" noshow="true">
+            <label>Seccion.Calidad</label>
+            <expression>case when (select idMomentoCalidad FROM SECCION where SECCION.id_seccion = PERSONAL.id_seccion LIMIT 1) != 0 then (select idMomentoCalidad FROM SECCION where SECCION.id_seccion = PERSONAL.id_seccion LIMIT 1) else '' end</expression>
+            <helper type="combo" id="MOMENTO" empty="true">
+                <field id="idMomento" />
+                <field id="descripcion" />
+                <field id="linea_id" oculto="true">
+                </field>
+                <order>
+                <field id="descripcion" />
+                </order>
+            </helper>
+            </field>
+
+        <!-- 6 es la seccion de entrega que se usa para los que son promedio, tambien se divide por 6 que e sal cantidad de secciones a la cuales s elles controla calidad-->
+            <field id="cant_cntrl_homolog" noZero="true" noshow="true">
+            <label>Cant.Cntrl</label> 
+            <expression>case when (select idMomentoCalidad FROM SECCION where SECCION.id_seccion = PERSONAL.id_seccion LIMIT 1) = 6 then (
+        select count(*)
+        from PROD_CONTROL_MOVIM 
+        left join PROD_CONTROLES on id_prodcontrol = prodcontrol_id 
+        where fecha_control &gt;= str_to_date('[__desde__]', '%d/%m/%Y') 
+        and fecha_control &lt;= str_to_date('[__hasta__]', '%d/%m/%Y')
+        and PROD_CONTROLES.seccion_id != 6 <!-- control entrega-->
+        and PROD_CONTROLES.seccion_id != 15 <!-- control recepcion-->
+        and PROD_CONTROLES.seccion_id != 0 <!-- control final-->
+        and PROD_CONTROLES.seccion_id != 25 <!-- control setup-->
+        and no_aplica = 0 )/6 
+        when (select idMomentoCalidad FROM SECCION where SECCION.id_seccion = PERSONAL.id_seccion LIMIT 1) != 0 then (
+        select count(*)
+        from PROD_CONTROL_MOVIM 
+        left join PROD_CONTROLES on id_prodcontrol = prodcontrol_id 
+        where fecha_control &gt;= str_to_date('[__desde__]', '%d/%m/%Y') 
+        and fecha_control &lt;= str_to_date('[__hasta__]', '%d/%m/%Y')
+        and PROD_CONTROLES.seccion_id = idMomentoCalidad
+        and no_aplica = 0) end</expression>
+                <tipo>numeric</tipo>    
+            </field>
+
+            <field id="cant_cntrl_obs_homolog" _noZero="true" noshow="true">
+            <label>Cant.Cntrl.Obs</label>
+            <expression>case when (select idMomentoCalidad FROM SECCION where SECCION.id_seccion = PERSONAL.id_seccion LIMIT 1) = 6 then (
+        select count(*)
+        from PROD_CONTROL_MOVIM 
+        left join PROD_CONTROLES on id_prodcontrol = prodcontrol_id 
+        where fecha_control &gt;= str_to_date('[__desde__]', '%d/%m/%Y') 
+        and fecha_control &lt;= str_to_date('[__hasta__]', '%d/%m/%Y')
+        and PROD_CONTROLES.seccion_id != 6 <!-- control entrega-->
+        and PROD_CONTROLES.seccion_id != 15 <!-- control recepcion-->
+        and PROD_CONTROLES.seccion_id != 0 <!-- control final-->
+        and PROD_CONTROLES.seccion_id != 25 <!-- control setup-->
+        and no_conforme = 1
+        and (controlcausal_id = 2 or controlcausal_id = 3))/6 
+        when (select idMomentoCalidad FROM SECCION where SECCION.id_seccion = PERSONAL.id_seccion LIMIT 1) != 0 then (
+        select count(*)
+        from PROD_CONTROL_MOVIM 
+        left join PROD_CONTROLES on id_prodcontrol = prodcontrol_id 
+        where fecha_control &gt;= str_to_date('[__desde__]', '%d/%m/%Y') 
+        and fecha_control &lt;= str_to_date('[__hasta__]', '%d/%m/%Y')
+        and PROD_CONTROLES.seccion_id = idMomentoCalidad
+        and no_conforme = 1
+        and (controlcausal_id = 2 or controlcausal_id = 3)) end</expression>
+        <tipo>numeric</tipo>  
+            </field>
+            <field id="objetivo_mensual" noshow="true">
+            <label>%Obj.Men</label>
+            <expression>select ROUND(option_value + 0, 2) FROM HTXOPTIONS where option_description = 'Objetivo grafico % Defectos por Mes'</expression>
+            <tipo>decimal</tipo>
+            </field>
+
+            <field id="porcentaje_obser" noZero="true" local="true">
+                <label>%calidad</label>
+                <if exp="true">
+                    <true>ROUND((cant_cntrl_obs_homolog/cant_cntrl_homolog)*100, 2)</true>
+                    <false>'0'</false>
+                </if>
+                <tipo>decimal</tipo>  
+            </field>
+
+            <field id="final_premiocalidad" local="true">
+                <label>Calid</label>
+                <if exp="porcentaje_obser + 0 &lt;= objetivo_mensual + 0 &amp;&amp; porcentaje_obser + 0 &gt; 0">
+                    <true>(((monto_premiocalidad + 0 ) * porcfaltas / 100) * (impPremio + 0))</true>
+                    <false>'0'</false>
+                </if>
+                <tipo>decimal</tipo>
+                <detalle>final_premiocalidad</detalle>
+            </field>
+
+
+            <field id="trabajadas" noshow="true">
+                <label>Horas</label>
+                <expression sql="true"><![CDATA[
+                    select 
+                    
+                    (concat(CAST(FLOOR((sum(FF.minutos)/3600)) as char),':', 
+                      LPAD(CAST(FLOOR((sum(FF.minutos)%3600)/60)AS CHAR),2,'0'),':', 
+                      LPAD(CAST((sum(FF.minutos)%60) AS CHAR),2,'0')) + 0)
+                    from 
+                    (select F1.fecha,
+                               
+                @egr:= (SELECT H.egreso from HORARIOHIST as H  where H.desdeFecha <= F1.fecha and H.dia = DAYOFWEEK(F1.fecha) order by H.desdeFecha DESC limit 1) as "egr",
+                @ing:= (SELECT H.ingreso from HORARIOHIST as H where H.desdeFecha <= F1.fecha and H.dia = DAYOFWEEK(F1.fecha) order by H.desdeFecha DESC limit 1) as "ing",
+
+                @h1:= (select H1.hora from FICHADAS as H1 left join FERIADOS ON FERIADOS.idFeriado = H1.fecha where H1.tarjeta = (SELECT TJT.tarjeta from PERSONAL_TARJETA as TJT where TJT.idPersona = PERSONAL.idPersona  and TJT.fechaDesde <= F1.fecha order by fechaDesde DESC limit 1) and H1.fecha = F1.fecha and H1.borrado = 0 order by H1.hora  limit 0, 1) as "h1",
+                @h2:= (select H1.hora from FICHADAS as H1 left join FERIADOS ON FERIADOS.idFeriado = H1.fecha where H1.tarjeta = (SELECT TJT.tarjeta from PERSONAL_TARJETA as TJT where TJT.idPersona = PERSONAL.idPersona  and TJT.fechaDesde <= F1.fecha order by fechaDesde DESC limit 1) and H1.fecha = F1.fecha and H1.borrado = 0 order by H1.hora  limit 1, 1) as "h2",
+                @h3:= (select H1.hora from FICHADAS as H1 left join FERIADOS ON FERIADOS.idFeriado = H1.fecha where H1.tarjeta = (SELECT TJT.tarjeta from PERSONAL_TARJETA as TJT where TJT.idPersona = PERSONAL.idPersona  and TJT.fechaDesde <= F1.fecha order by fechaDesde DESC limit 1) and H1.fecha = F1.fecha and H1.borrado = 0 order by H1.hora  limit 2, 1) as "h3",
+                @h4:= (select H1.hora from FICHADAS as H1 left join FERIADOS ON FERIADOS.idFeriado = H1.fecha where H1.tarjeta = (SELECT TJT.tarjeta from PERSONAL_TARJETA as TJT where TJT.idPersona = PERSONAL.idPersona  and TJT.fechaDesde <= F1.fecha order by fechaDesde DESC limit 1) and H1.fecha = F1.fecha and H1.borrado = 0 order by H1.hora  limit 3, 1) as "h4",
+
+                ifnull( time_to_sec( timediff( case when @h2 > @egr then @egr else @h2 end , case when @h1 < @ing then @ing else @h1 end )), 0)
+                +
+                ifnull( time_to_sec( timediff( case when @h4 > @egr then @egr else @h4 end , case when @h4 < @ing then @ing else @h3 end )), 0)
+
+                as "minutos"
+
+                    from 
+             GEN_CALENDAR as F1 
+             left join PERSONAL on
+                    PERSONAL.id_seccion = [__des2__] and
+                    PERSONAL.fechaEgreso = '0000-00-00' 
+             
+             left join FERIADOS ON FERIADOS.idFeriado = F1.fecha
+        where
+                          F1.fecha  >= '[__desde__]' and
+                          F1.fecha  <= '[__hasta__]' and
+        isnUll(FERIADOS.idFeriado)) as FF ]]>
+                </expression>
+            </field>
+
+      <field id="licencias_no_imputables" local="true" noZero="true" noshow="true">
+            <expression sql="true"><![CDATA[select count(*)*9 from FRANCOS_PER F
+                            join PERSONAL P on F.IdPersona = P.IdPersona and P.fechaEgreso = "0000-00-00"
+                            join CALENDAR ON CALENDAR.fecha >= F.fechainicio and CALENDAR.fecha <= (case    when F.fechafin = '0000-00-00' then '[__hasta__]' else F.fechafin end)
+                            join FRANCOS_CAT FC on FC.idfranco = F.idfranco 
+                            where P.id_seccion = '[__des2__]' and
+                                  FC.descuenta_grupo = 1 and
+                                  CALENDAR.fecha >= '[__desde__]' and 
+                                  CALENDAR.fecha <= '[__hasta__]' and
+                                  dayofweek(CALENDAR.fecha) NOT IN (1,7) and 
+                                  CALENDAR.fecha NOT IN (select idFeriado from FERIADOS)]]></expression>
+        <label>No.Imp</label>
+        <tipo>decimal</tipo>
+        </field>
+
+            <field id="proyeccion" noshow="true">
+                <label>Proyeccion</label>
+                <expression sql="true"><![CDATA[
+
+                    select
+                    (concat(CAST(FLOOR((sum(FF.minutos)/3600)) as char),':', 
+                      LPAD(CAST(FLOOR((sum(FF.minutos)%3600)/60)AS CHAR),2,'0'),':', 
+                      LPAD(CAST((sum(FF.minutos)%60) AS CHAR),2,'0')) + 0)
+                     from 
+                    
+                (select F1.fecha,
+                               
+                @egr2:= (SELECT H.egresoPremio  from HORARIOHIST as H  where H.desdeFecha <= F1.fecha and H.dia = DAYOFWEEK(F1.fecha) order by H.desdeFecha DESC limit 1) as "egr",
+                @ing2:= (SELECT H.ingresoPremio from HORARIOHIST as H  where H.desdeFecha <= F1.fecha and H.dia = DAYOFWEEK(F1.fecha) order by H.desdeFecha DESC limit 1) as "ing",
+
+                ifnull( time_to_sec( timediff( @egr2 , @ing2 )), 0)
+
+                as "minutos"
+
+                                   
+                             from GEN_CALENDAR as F1 
+                        join PERSONAL P on id_seccion = [__des2__] and
+                         P.fechaEgreso = "0000-00-00"
+                    left join FERIADOS ON FERIADOS.idFeriado = F1.fecha
+                        where
+                                          F1.fecha  >= (select (case when fechaDesde < '[__desde__]' then '[__desde__]' else fechaDesde end) from SECCIONHISTORIA where fechaDesde <= '[__hasta__]' and SECCIONHISTORIA.IdPersona = P.IdPersona order by fechaDesde DESC limit 1) and
+                                          F1.fecha  <= (select (case when fechaEgreso = '0000-00-00' then '[__hasta__]' else fechaEgreso end) from PERSONAL where PERSONAL.IdPersona = P.IdPersona) and
+                        isnUll(FERIADOS.idFeriado)) as FF ]]>
+                </expression>
+            </field>
+
+            <field id="porcentaje_faltas" noZero="true" noshow="true">
+                <label>Hs.Restantes</label>
+                <expression sql="true">select (('[__proyeccion__]' + 0) - ('[__trabajadas__]' + 0))</expression>
+                <tipo>decimal</tipo>
+            </field>
+
+            <field id="objetivo_mensual_ausentismo" noshow="true">
+            <label>%Obj.Men</label>
+            <expression>select ROUND(option_value + 0, 2) FROM HTXOPTIONS where option_description = 'Objetivo grafico Cantidad de Inasistencias x Mes' limit 1</expression>
+            <tipo>decimal</tipo>
+            </field>
+
+            <field id="monto_premioausentismo" noshow="true">
+                <label>Monto Premio Calidad</label>
+                <expression sql="true"><![CDATA[select ifnull(monto_premioausentismo,0) from PREMIO_AUSENTISMO where cantidad_premioausentismo = '[__coches__]' ]]></expression>
+                <tipo>decimal</tipo>
+                
+            </field>
+
+            <field id="porcentaje_ausentismo" noZero="true">
+                <label>%Aus.</label>
+                <expression sql="true">select case when ('[__porcfaltas__]' + 0) = 100 then '0' else ( ROUND(((('[__proyeccion__]' + 0) - ('[__trabajadas__]' + 0) - ('[__licencias_no_imputables__]' + 0)) / ('[__proyeccion__]' + 0)) * 100, 2)) end</expression>
+                <tipo>decimal</tipo>  
+            </field>
+          
+         
+            <field id="final_premioausentismo" local="true">
+                <label>Ausen</label>
+                <if exp="porcentaje_ausentismo + 0 &lt;= objetivo_mensual_ausentismo + 0">
+                    <true>(((monto_premioausentismo + 0 ) * porcfaltas / 100) * (impPremio + 0))</true>
+                    <false>'0'</false>
+                </if>
+                <tipo>decimal</tipo>
+                <detalle>final_premioausentismo</detalle>
+            </field>
+
+            <field id="descuentos">
+                <label>Desc</label>
+                <expression sql="true" ><![CDATA[ select sum(RHD.importe * RHMOTIVODESC.imputacion) from  RHDESCUENTOS as RHD left join RHMOTIVODESC on RHMOTIVODESC.idMotivoDesc = RHD.idMotivoDesc where RHD.fecha >= '[__desde__]' and RHD.fecha <= '[__hasta__]' and RHD.legajo = [__legajo__] and RHD.sobre_extras = 0 ]]></expression>
+                <detalle>descuentos</detalle>
+                <tipo>numeric</tipo>
+    
+            </field>
+            <field id="totalpremio" local="true">
+                <label>Total</label>
+                <if exp="((finalPremio + 0 ) * porcfaltas / 100) + (descuentos + 0 ) + 0 &gt; 0">
+                    <true>round((finalPremio + 0 ) + (final_premiocalidad + 0) + (final_premioausentismo + 0) + (descuentos + 0),0)</true>
+                    <false>round((finalPremio + 0 ) + (final_premiocalidad + 0) + (final_premioausentismo + 0) + (descuentos + 0),0)</false>
+                </if>
+                <tipo>numeric</tipo>
+                <detalle>total</detalle>
+                <detalle>suma</detalle>
+                <detalle>recibi</detalle>
+            </field>
+
+
+            <field id="Feriados" noshow="true">
+                <label>Feriados</label>
+                <expression sql="true"><![CDATA[select SEC_TO_TIME(sum(TIME_TO_SEC(FERIADOS.horas))) from FERIADOS where FERIADOS.idFeriado >= '[__desde__]' and FERIADOS.idFeriado <= '[__hasta__]' ]]>
+                </expression>
+                <tipo>time</tipo>
+            </field>
+
+            <order>
+                <field id="nom"></field>
+            </order>
+            <group>
+                <field id="legajo" />
+
+            </group>
+        </table>
+
+
+        <join tipo="left">
+            <table id="CATPERSONAL">
+                <field id="idSindicato">
+                    <condicion operador="=">PERSONAL.idSindicato</condicion>
+                </field>
+                <field id="idCateg">
+                    <condicion operador="=">PERSONAL.idCateg</condicion>
+                </field>
+            </table>
+        </join>
+<!--         <join tipo="left">
+            <table id="FAMILIA">
+                <field id="idPersona">
+                    <condicion operador="=">PERSONAL.idPersona</condicion>
+                </field>
+            </table>
+        </join> -->
+    </form>
+</histrix>

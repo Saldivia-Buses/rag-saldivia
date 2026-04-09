@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" inserta="no" paginar="50">
+    <title>Consulta de Objetivos</title>
+    <obs></obs>
+    <form  detalle="objetivos_emp_qry.xml">
+        <table id="MRP_ORDEN_PRODUCCION" label="Consulta de Objetivos">
+            <filters>
+              <field id="fecha_orden" >
+                <label>Desde Fecha</label>
+                <help>Fecha de Orden de Fabricación</help>
+    <valor eval="true">date('d/m/Y', mktime(0, 0
+    , 0, date("m" ) , 1, date("Y") ))</valor>
+                <operador>&gt;=</operador>
+              </field>
+              <field id="fecha_orden" >
+                <label>Hasta Fecha</label>
+                <help>Fecha de Orden de Fabricación</help>
+                <valor>today</valor>
+                <operador>&lt;=</operador>
+              </field>
+            </filters>
+
+             <field id="minfecha" noshow="true" >
+                <expresion>min(fecha_orden)</expresion>
+                <detalle>minfecha</detalle>
+             </field>
+             <field id="maxfecha" noshow="true" >
+                <expresion>max(fecha_orden)</expresion>
+                <detalle>maxfecha</detalle>
+
+             </field>
+
+             <field id="fecha_orden" noshow="true" >
+                <label>Fecha</label>
+                <help>Fecha de Orden de Fabricación</help>
+             </field>
+
+             <field id="rhpersonal_id" >
+                <detalle>rhpersonal_id</detalle>
+        	<helper type="combo" xml="rhpersonal_qry.xml" dir="/ayudas" empty="true"/>
+                <label posx="80" posy="0" PDFsize="16" >Empleado</label>
+                
+                <help >Empleado responsable de la Orden de Producción</help>
+            </field>
+
+            <field id="cant" suma="true">
+        	<label>Cantidad</label>
+        	<expresion>count(*)</expresion>
+        	<detalle>cantidad</detalle>
+            </field>
+                <field id="mrpestado_id" noshow="true">
+                    <label>Estado </label>
+                    <help>Estado Actual</help>
+
+                    <operador>=</operador>
+                    <valor>1</valor>
+                </field>
+
+	    <group>
+                <field id="rhpersonal_id"></field>
+
+	    </group>
+            <order>
+                <field id="fecha_orden"></field>
+            </order>
+        </table>
+
+
+
+    </form>
+</histrix>

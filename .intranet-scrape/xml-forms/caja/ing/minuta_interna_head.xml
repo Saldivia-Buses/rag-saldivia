@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="cabecera">
+    <title>Movimientos</title>
+    <obs />
+    <form>
+      <table id="CAJ_MOVIMIENTOS">
+
+	<fieldGroup id="DEBUG" local="true" noshow="true">
+		<field id="cajpuesto_id" />
+		<field id="cajconcepto_id" />
+		<field id="cajregistro_id" />
+		<field id="fecha_movimiento" />
+		<field id="imputacion_concepto" />
+		<field id="subsistema_id" />
+		<field id="moneda_id"><valor>1</valor></field>
+	</fieldGroup>
+
+	<field id="id_cajmovimiento" noshow="true">
+	    <condicion operador="=">-1</condicion>
+	</field>
+      
+	<field id="nro_movimiento" local="true">
+	    <label>Número</label>
+	    <valor>0</valor>
+	</field>
+
+         <field id="referencia_movimiento" local="true" maxlength="150">
+            <label colspan="6">Referencia</label>
+            <tipo>varchar</tipo>
+            <size>150</size>
+        </field>
+
+
+      </table>
+    </form>
+</histrix>	

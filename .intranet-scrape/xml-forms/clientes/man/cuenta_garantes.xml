@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ficha" imprime="false" conBusqueda="true" log="false">
+<title>Garantes</title>
+  <obs></obs>
+	<form >
+		<table id="REG_CUENTA" label="Garantes"> 
+			<field id="id_regcuenta" esClave="true" noshow="true" />
+
+			<field id="subsistema_id" oculto="true">
+				<condicion operador="=">'GR'</condicion>
+			</field>
+
+			<field id="nombre_cuenta">
+				<label>Nombre</label>
+			</field>
+			
+			<field id="cod_direccion">
+				<label>Dirección</label>
+			</field>
+
+			<field id="provincia_id">
+                <label colspan="9">Provincia</label>
+                <tabla_ex xml="provincia_qry.xml" dir="/ayudas" vacio="true" />
+                <actualiza>
+	                <field id="localidad_id" destino="provincia_id" />
+                </actualiza>
+            </field>
+
+			<field id="localidad_id">
+                <label colspan="9">Localidad</label>
+                <helper type="combo" xml="localidad_qry.xml" dir="/ayudas" empty="true" > 
+				<field id="provincia_id">
+			    <condicion operador="=">-1</condicion>
+				</field>
+                </helper>
+            </field>
+      
+          <field id="contacto" obj="cuenta_contactos_crud.xml" local="true" >
+            <paring destino="regcuenta_id">id_regcuenta</paring>
+          </field>
+ 
+		</table>
+ 		<join tipo="left">
+            <table id="GEN_LOCALIDADES">
+                <field id="id_localidad">
+                    <condicion operador="=">REG_CUENTA.localidad_id</condicion>
+                </field>
+            </table>
+        </join>
+	</form>
+</histrix>
+
+

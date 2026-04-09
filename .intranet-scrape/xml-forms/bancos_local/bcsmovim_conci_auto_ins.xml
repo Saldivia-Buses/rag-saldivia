@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="update">
+	<title>Movimientos Bancarios</title>
+	<obs></obs>
+	<form >
+		<table id="REG_MOVIMIENTOS" label="Movimientos Bancarios" idCampoCond="Conciliar">
+
+			<field id="id_regmovim" id_temp="id_regmovim" esClave="true">
+			</field>
+
+			<field id="conciliado" id_temp="fecha_movimiento">
+			</field>
+			<field id="presentado" >
+				<valor>1</valor>
+			</field>
+			
+		</table>
+	</form>
+</histrix>

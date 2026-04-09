@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" borra="no" inserta="no" _paginar="250" path="fotos/articulos" preloadData="false">
+    <title>Insumos</title>
+    <obs></obs>
+    <form>
+        <table id="STKINSUM" >
+            <title>Insumos</title>
+
+             <filters>
+                <field id="artcod" deshabilitado="false">
+                    <ayuda_ex id="STKINSUM">
+                        <clave>artcod</clave>
+                        <descripcion>artdes</descripcion>
+                        <operador>like</operador>
+                    </ayuda_ex>
+          
+                    <label>Cod.</label>
+                    <operador  modificador="left">=</operador>
+                </field>
+
+                <field id="fabricacion_propia" deshabilitado="false">
+                        <operador>=</operador>
+                        <label modpos="nobr">Fab.Propia</label>
+                </field> 
+
+                <field id="artdes" >
+                    <label>Artículo</label>
+                    <help>Descripción de Artículo.</help>
+                    <operador>like</operador>
+                </field> 
+              
+            </filters>
+
+         <field id="bom" noshow="true">
+	     <expression>ifnull((select 'stkpieza_sincosto_qry.xml' from STKPIEZA where STKPIEZA.idPadre = STKINSUM.artcod limit 1),'')</expression>
+          </field>
+
+            <field id="artcod" linkdir="articulos">
+                <attribute id="linkint">bom</attribute>
+                <paring destino="idPadre">artcod</paring>
+                <attribute id="linkdes">artdes</attribute>
+            
+                <ayuda_ex id="STKINSUM"  xml="HLPstkinsum.xml" dir="/help_local">
+                    <field id="artcod" _oculto="true">
+                        <label>Cod</label>
+                    </field>
+                    <field id="artdes">
+                        <label>Nombre</label>
+                        <detalle>artdes</detalle>
+                    </field>
+                    <field id="siscod" oculto="true">
+                        <condicion operador="=">'01'</condicion>
+                    </field>
+      
+                </ayuda_ex>
+        
+                <label>Cod.</label>
+                <detalle>artcod</detalle>
+            </field>
+            <field id="artdes" autocompletar="true">
+                <label>Artículo</label>
+                <help>Descripción de Artículo (ENTER = Retorna a ingreso de código).
+                </help>
+                <ayuda_ex id="STKINSUM" >
+                    <field id="artcod" noshow="true">
+                        <label>cod</label>
+                        <detalle>artcod</detalle>
+                    </field>
+
+                    <field id="artdes">
+                        <label>Nombre</label>
+                        <detalle>artdes</detalle>
+                    </field>
+        
+                    <field id="siscod" oculto="true">
+                        <condicion operador="=">'01'</condicion>
+                    </field>
+      
+                </ayuda_ex>
+
+            </field>
+            <field id="valcps">
+                <label>Val.Compra</label>
+                <help>Valor de Compra </help>        
+            </field>
+      
+            <field id="unicps">
+                <label modpos="nobr">Unidad</label>
+                <help>Unidad de Compra </help>
+                <tabla_ex id="FSMUNIDS">
+                    <field id="unicod"></field>
+                    <field id="uninom"></field>
+                </tabla_ex>
+            </field>
+            <field id="valuso">
+                <label>Val.Uso</label>
+                <help>Valor de Uso </help>    
+            </field>
+      
+            <field id="artuni">
+                <label modpos="nobr">U.Uso</label>
+        
+                <help>Unidad de Uso </help>
+                <tabla_ex id="FSMUNIDS">
+                    <field id="unicod"></field>
+                    <field id="uninom"></field>
+                </tabla_ex>
+            </field>
+            
+            <field id="fecvenc">
+                <label>Fec.Vto</label>
+            </field>
+	    
+	    <field id="ext_plano" disabled="true">
+                <label modpos="nobr" style="text-align:center;">Ext. plano</label>
+                <help>Extensión plano</help>
+                <options>
+                  <option valor="0">No</option>
+                  <option valor="1">Si</option>
+                </options>
+                                <tipo>check</tipo>
+            </field>
+
+      <field id="fabricacion_propia" disabled="true">
+        <label>Fab.Prop</label>
+        <help>Indica si el insumo se fabrica internamente</help>
+        <options>
+          <option valor=""></option>
+          <option valor="0">No</option>
+          <option valor="1">Si</option>
+        </options>
+                <tipo>check</tipo>
+      </field>
+
+            <field id="baja" oculto="true">
+                <condicion operador="!=">1</condicion>
+            </field>
+     
+      
+      <field id="valcps">
+        <label>Val.Compra</label>
+        <help>Valor de Compra </help>
+        
+      </field>
+      
+      <field id="unicps">
+        <label>Unidad</label>
+        <help>Unidad de Compra </help>
+        <tabla_ex id="FSMUNIDS">
+          <field id="unicod"></field>
+          <field id="uninom"></field>
+        </tabla_ex>
+      </field>
+      <field id="valuso">
+        <label>Val.Uso</label>
+        <help>Valor de Uso </help>
+        
+      </field>
+      
+      <field id="artuni">
+        <label>U.Uso</label>
+        
+        <help>Unidad de Uso </help>
+        <tabla_ex id="FSMUNIDS">
+          <field id="unicod"></field>
+          <field id="uninom"></field>
+        </tabla_ex>
+      </field>
+         
+            <field id="siscod" oculto="true">
+                <label>siscod</label>
+            </field>
+	    <field id="stock">
+		<label>Stock</label>
+		<expression>sum((case when suma_total = 1 then cantidad_stock else 0 end))</expression>
+
+		<helper xml="stock_deposito_actual.xml" dir="/stock/qry/" type="link" title="Stock Actual">
+		    <parameter source="artcod" target="stkarticulo_id"/>
+		</helper>
+		<tipo>decimal</tipo>
+	    </field>
+
+                      
+		    <field id="t_pieza" disabled="true">
+				<label modpos="nobr" style="text-align:center;">t_pieza</label>
+				<help>t-pieza</help>
+				<options>
+				  <option valor="0">No</option>
+				  <option valor="1">Si</option>
+				</options>
+                <tipo>check</tipo>
+		  	</field>
+	    <field id="creado">
+		<label>Fec. Creación</label>
+		<tipo>date</tipo>
+	    </field>
+            <field id="Nombre" tabla="HTXUSERS">
+		<label>Creó</label>
+		<expression>CONCAT(apellido,' ',Nombre)</expression>
+	    </field>
+
+            <field id="fotopath" local="true" noshow="true">
+                <if exp="true">
+                    <true>'artcod/'</true>
+                    <false>''</false>
+                </if>
+                <tipo>varchar</tipo>
+            </field>
+
+      <field id="foto" path="fotopath" foto="true" _download="true" watermark="artcod">
+                <expression>select ARTICULO_FOTO.foto from ARTICULO_FOTO where ARTICULO_FOTO.idArticulo = STKINSUM.artcod and ARTICULO_FOTO.foto != '' order by revision desc limit 1</expression> 
+                <label>Imagen</label>
+                <tipo >file</tipo>
+                <size>40</size>
+            </field>
+          
+            <group>
+                <field id="artcod" tabla="STKINSUM">
+                </field>
+            </group>
+            <order>
+                <field id="artdes" tabla="STKINSUM">
+                </field>
+
+            </order>
+           
+      <group>
+        <field id="artcod" tabla="STKINSUM"></field>
+      </group>
+
+        </table>
+    <join tipo="left">
+	<table id="STK_STOCKACTUAL">
+	    <field id="stkarticulo_id">
+		<condicion operador="=">STKINSUM.artcod</condicion>
+	    </field>
+	</table>
+    </join>
+    <join tipo="left">
+	<table id="STK_DEPOSITOS">
+	    <field id="id_stkdeposito">
+		<condicion operador="=">STK_STOCKACTUAL.stkdeposito_id</condicion>
+	    </field>
+	</table>
+    </join>
+    <join tipo="left">
+	<table id="HTXUSERS">
+	    <field id="Id_usuario">
+		<condicion operador="=">STKINSUM.usuario_id</condicion>
+	    </field>
+	</table>
+    </join>
+
+    </form>
+</histrix>

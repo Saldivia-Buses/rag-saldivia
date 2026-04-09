@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="update">
+	<title>Movimientos Bancarios</title>
+	<obs></obs>
+	<form >
+		<table id="BCSMOVIM" label="Movimientos Bancarios" _idCampoCond="presentado">
+
+			<field id="id_bcsmovim" id_temp="id_bcsmovim" esClave="true">
+			</field>
+<!--
+			<field id="siscod" id_temp="siscod">
+			</field>
+-			<field id="bcscta" id_temp="bcscta">
+			</field>
+			<field id="bcsfec" id_temp="bcsfec">
+			</field> 
+			<field id="bcsmov" id_temp="bcsmov">
+			</field> 
+			<field id="bcsnro" id_temp="bcsnro">
+			</field>
+			-->
+			<field id="conciliado" >
+			    <tipo>integer</tipo>
+			    <valor>date(now())</valor>
+			</field>
+			<field id="presentado" id_temp="presentado">
+			</field>
+			
+		</table>
+	</form>
+</histrix>

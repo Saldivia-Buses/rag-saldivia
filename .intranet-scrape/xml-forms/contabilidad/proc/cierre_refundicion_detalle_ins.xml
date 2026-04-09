@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="insert">
+	<title>Ingreso de Detalle</title>
+	 <obs></obs>
+		<consulta>
+		    <table id="CTB_DETALLES">
+			<field id="movimiento_id"  lastId="cierre_refundicion_ins.xml" />
+			<field id="cuenta_id"      id_temp="id_cuenta" />
+			<field id="doh" 	   id_temp="doh"/>
+			<field id="importe" 	   id_temp="importe"/>
+			<field id="referencia" 	   id_temp="referencia"/>
+			<field id="orden" 	   id_temp="_ORDEN"/>
+		    </table>
+		</consulta>
+    </histrix>	

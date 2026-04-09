@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<histrix tipo="consulta" _limit="100" _paginar="200">
+  <title>Aperturas Hotel Mora</title>
+  <obs></obs>
+  <form>
+    <table id="hotel_mora.aperturas" label="Aperturas">
+
+   <!--
+
+           <filters>
+             
+                 <field id="dateope">
+               		<label>Desde</label>
+                    <operador>&gt;=</operador>
+                    <valor>today</valor>
+                    
+                 </field>
+              
+                 <field id="dateope">
+               		<label>hasta</label>
+                    <operador>&lt;=</operador>
+                    <valor>today</valor>
+
+                 </field>        
+               
+               <field id="codoor" deshabilitado="false" >
+               		<label>Habitacion2</label>
+                    <operador>=</operador>
+                 </field>
+                
+            </filters> 
+      -->
+      
+      
+      
+      
+
+       <field id="numaper">
+        </field>
+    
+
+      <field id="dateope">
+	      <label>Frcha Audit.</label>
+
+      </field>   
+        <field id="dateope1">
+	      <label>Fecha Audit1.</label>
+
+      </field>   
+      
+      
+      <field id="dateope" _local="true">
+	      <label>Hasta</label>
+
+      </field>   
+
+
+      <field id="timeope">
+	      <label>Hora Audit.</label>
+      </field>  
+      
+      <field id="codoor">
+	      <label>Puerta</label>
+      </field>
+      
+       
+      <field id="ncopy">
+	      <label>Copias</label>
+      </field>
+      
+      <field id="codusr">
+      	<label>Usuario</label>
+      
+        
+        <expression>case 
+          
+          when codusr="52" then "Gerente"
+          when codusr="53" then "Mucama1"
+          when codusr="54" then "Mucama2"
+          when codusr="55" then "Recepcion1"
+          when codusr="56" then "Recepcion2"
+          when codusr="57" then "Mantenimiento1"     
+          when codusr="58" then "Sereno"
+          when codusr="59" then "Jonda"
+             
+          else
+             "Cliente"
+             
+ 			END
+         
+         </expression>  
+
+      </field>
+    
+   </table>
+  </form>
+</histrix>  
+

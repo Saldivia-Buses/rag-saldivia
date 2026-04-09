@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+	<title>Detalles de partida</title>
+	<obs></obs>
+	<form>
+		<table id="STK_PARTIDA_DETALLES" label="Detalles de partidas">
+		    <filters>
+			<field id="fecha_vencimiento">
+				<label>Desde</label>
+				<operador>&gt;=</operador>
+				<valor eval="true">date('d/m/Y', mktime(0, 0, 0, 1 , 1, date("Y")-1))</valor>
+			</field>
+			<field id="fecha_vencimiento">
+				<label>Hasta</label>
+				<operador>&lt;=</operador>
+				<valor eval="true">date('d/m/Y', mktime(0, 0, 0, 12 , 31, date("Y")+1))</valor>
+			</field>
+			<field id="tiene_pendiente" deshabilitado="false">
+			    <label>Con Pendiente</label>
+			    <operador>=</operador>
+			    <valor>1</valor>
+			</field>
+		    </filters>
+			<field id="id_stkpartida_detalle" noshow="true" />
+			<field id="stkpartida_id" noshow="true" />
+			<field id="stkarticulo_id">
+				<label>Cod.</label>
+			</field>
+			<field id="nombre_articulo" tabla="STK_ARTICULOS">
+				<label>Articulo</label>
+			</field>
+			<field id="cantidad">
+				<label>Cantidad</label>
+				<condicion operador="&gt;">pendiente</condicion>
+			</field>
+			<field id="pendiente">
+				<label>Pendiente</label>
+			</field>
+    			<field id="permiso" local="true" noshow="true">
+			  <valor eval="true">$_SESSION['administrator']</valor>
+			</field>
+                        <field id="cantidad_stock" noshow="true">
+                    	    <expression>SUM(STK_STOCKACTUAL.cantidad_stock)</expression>
+                        </field>
+
+                        <field id="total_procesado" local="true" noshow="true">
+                            <if exp="cantidad_stock != 0">
+                                <true>'SI'</true>
+				<false>'0'</false>
+                            </if>
+                        </field>
+                        <field id="total_display" local="true">
+                            <label>Stock</label>
+                            <if exp="permiso == 1">
+                                <true>cantidad_stock</true>
+				<false>total_procesado</false>
+                            </if>
+                            <tipo>numeric</tipo>
+			</field>
+
+			<field id="tiene_pendiente" noshow="true">
+			    <expression having="false">(CASE WHEN pendiente = 0 THEN 0 ELSE 1 END)</expression>
+			    <helper type="combo">
+				<option value=""></option>
+				<option value="0">NO</option>
+				<option value="1">SI</option>
+			    </helper>
+			</field>
+				
+			<field id="fecha_vencimiento">
+				<label>Vencimiento</label>
+				<tipo>date</tipo>
+			</field>
+			<field id="resaltado" clasefila="true" noshow="true">
+			    <expression>CASE WHEN fecha_vencimiento &lt;= CURDATE() THEN 'resaltadoRojo' END</expression>
+			</field>
+			<order>
+			    <field id="fecha_vencimiento" />
+			</order>
+    			<group>
+			    <field id="id_stkpartida_detalle"/>
+			</group>
+		</table>
+		<join tipo="inner">
+			<table id="STK_ARTICULOS">
+				<field id="id_stkarticulo">
+					<condicion operador="=">STK_PARTIDA_DETALLES.stkarticulo_id</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="STK_STOCKACTUAL">
+				<field id="stkarticulo_id">
+					<condicion operador="=">STK_PARTIDA_DETALLES.stkarticulo_id</condicion>
+				</field>
+			</table>
+		</join>
+	</form>
+</histrix>

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" inserta="no" paginar="50">
+    <title>REIMPRESION DE ORDENES DE PRODUCCION</title>
+    <obs></obs>
+    <form  detalle="ordenproduccion_imp.xml">
+	
+        <table id="MRP_ORDEN_PRODUCCION" label="ORDENES DE COMPRA">
+            <filters>
+                <field id="mrpestado_id" >
+                    <label>Estado </label>
+                    <help>Estado Actual</help>
+                    <options>
+                        <option valor="0">Pendiente</option>
+                        <option valor="1">Cumplida</option>
+                       <option valor="2">Anulada</option>
+                    </options>
+                    <operador>=</operador>
+                    <valor>0</valor>
+                </field>
+
+
+            </filters>
+
+            <field id="fecha_orden" >
+                <label>Fecha</label>
+                <help>Fecha de Orden de Fabricación</help>
+            </field>
+            <field id="id_mrporden" >
+                <label>Nro</label>
+                <help>Numero de Orden de Fabricación</help>
+                <detalle>id_mrporden</detalle>
+            </field>
+            
+  	   <field id="rhpersonal_id" >
+		<label>Empleado</label>
+        	<helper type="combo" xml="rhpersonal_qry.xml" dir="/ayudas" empty="true"/>		
+	    </field>
+
+           <field id="mrpestado_id" >
+                    <label>Estado </label>
+                    <help>Estado Actual</help>
+                    <options>
+                        <option valor="0">Pendiente</option>
+                        <option valor="1">Cumplida</option>
+                         <option valor="2">Anulada</option>
+                    </options>
+                    <operador>=</operador>
+                    <valor>0</valor>
+           </field>
+
+            <order>
+                <field id="fecha_orden"></field>
+            </order>
+        </table>
+
+
+    </form>
+</histrix>

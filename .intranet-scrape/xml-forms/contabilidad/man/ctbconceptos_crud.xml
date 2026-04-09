@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="crud">
+	<title>Conceptos</title>
+	 <obs></obs>
+		<consulta>
+		    <table id="CTB_CONCEPTOS" label="conceptos">
+				<filtros>
+				    <field id="nombre_concepto">
+					<label>Nombre </label>
+					<help>Nombre del concepto</help>
+					<operador>like</operador>
+				</field>
+				</filtros>
+				<field id="id_concepto" autoinc="true" noshow="true">
+					<label>Codigo</label>
+					<help>Codigo de concepto</help>
+				</field>
+				<field id="nombre_concepto">
+					<label>Nombre </label>
+					<help>Nombre del concepto</help>
+					<size>25</size>
+				</field>
+				<field id="abreviacion_concepto">
+					<label>abreviacion</label>
+					<help>abreviacion del concepto</help>
+				</field>
+				 <field id="integrado">
+					<label>integra</label>
+					<help>integra</help>
+					<tipo>check</tipo>
+				</field>
+		    </table>
+		</consulta>
+    </histrix>	

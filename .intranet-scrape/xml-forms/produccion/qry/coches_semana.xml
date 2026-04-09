@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" styleTable="width:100%;" >
+    <title>Compromiso Entrega</title>
+    <obs/>
+    <form  >
+        <table id="TURNOSPRODUCCION" label="Entregas"  _showCantidad="false" _styleTbody="height:500px; overflow-x:hidden;">
+
+            <fieldGroup>
+            <field id="tieneFicha" noshow="true">
+                <expression>case when PEDCOTIZ.nrocha != 0 and estado_ficha != 0 then 'fichaventas.xml' else '' end</expression>
+            </field>
+            <field id="linea_id" noshow="true">
+            </field>
+            <field id="nrofab" linkint="fichaventas.xml" linkdes="Ver Orden de Fabricación" PDFcolWidth="10" resize="false">
+                
+                <attribute id="linkint">tieneFicha</attribute>
+                <label  style="width:auto;text-align:center;color:#444;font-size:14px;">Nro.</label>
+                <help>Numero de Fabricacion</help>
+                <ayuda_ex id="CHASIS">
+                    <field id="nrocha"/>
+                    <field id="chades"/>
+                </ayuda_ex>
+                <paring destino="nrocha">nrofab</paring>
+                <detalle>nrocha</detalle>
+                <condicion operador="!=">0</condicion>
+            </field>
+            
+                <field  id="cliente" _tabla="PEDCOTIZ" >
+                    <expression>@cliente:= (case when !isnull(PEDCOTIZ.ctacod) then PEDCOTIZ.ctacod else TURNOSPRODUCCION.ctacod end)</expression> 
+                    <label >cliente</label>
+                    <help>Codigo de Cuenta</help>
+                    <tabla_ex condes="true" id="CCTCUENT">
+                        <field id="ctacod"/>
+                        <field id="ctafan">
+                        </field>
+                        <field id="siscod" oculto="true">
+                            <condicion operador="=">'02'</condicion>
+                        </field>
+                    </tabla_ex>
+
+                </field>
+
+
+<!--                
+                <field id="ninterno" tabla="PEDCOTIZ">
+                    <expression>PEDCOTIZ.ninterno</expression>
+                    <label>Int.</label>
+                </field>
+            -->
+                <field id="fechaing2" _PDFanchofijo="true" oculto="true">
+                    <expression>fechaing</expression>
+                </field>
+
+                <field id="_year"  noshow="true">
+            	    <expression having="false">year((case when terminacion != '0000-00-00' then terminacion else DATE_ADD((case when ingresoLinea != '0000-00-00' then ingresoLinea else fechaing end), INTERVAL 45 DAY) end)) </expression>
+                </field>
+        
+                <field id="semana" esClave="true" noshow="true">
+                    <expression having="false">week((case when terminacion != '0000-00-00' then terminacion else DATE_ADD((case when ingresoLinea != '0000-00-00' then ingresoLinea else fechaing end), INTERVAL 45 DAY) end) , 1)</expression>
+                    <tipo>date</tipo>
+                </field>
+            </fieldGroup  >
+        </table>
+        <join tipo="left">
+            <table id="PEDCOTIZ">
+                <field id="nrocha">
+                    <condicion operador="=">TURNOSPRODUCCION.nrofab and PEDCOTIZ.nrocha != 0 and estado_ficha != 0</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="CCTCUENT">
+                <field id="siscod">
+                <condicion operador="=">'02'</condicion>
+                </field>
+
+                <field id="ctacod">
+                    <condicion operador="=">TURNOSPRODUCCION.ctacod</condicion>
+                </field>
+            </table>
+        </join>
+
+       
+    </form>
+</histrix>

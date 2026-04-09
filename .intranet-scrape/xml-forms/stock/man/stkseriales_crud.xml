@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud" paginar="100" inserta="false" crea="false">
+	<title>Seriales</title>
+	<obs></obs>
+	<form>
+		<table id="STK_SERIALES" label="Seriales">
+			<filters>
+				<field id="stkarticulo_id">
+					<label>Artículo</label>
+					<operador>=</operador>
+				</field>
+				<field id="nombre_articulo" deshabilitado="true">
+					<label modpos="nobr">Nombre Articulo</label>
+					<help>Nombre de Articulo a buscar</help>
+				</field>
+			</filters>
+			<field id="id_stkserial" noshow="true" />
+			<field id="stkarticulo_id">
+				<label>Artículo</label>
+				<helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas" />
+				<tipo>varchar</tipo>
+				<size>25</size>
+			</field>
+			<field id="nombre_articulo" tabla="STK_ARTICULOS" _noselect="true">
+				<label modpos="nobr">Nombre</label>
+				<size>100</size>
+			</field>
+			<field id="codigo_serie" >
+				<label colspan="4">Serie</label>
+				<tipo>varchar</tipo>
+				<size>80</size>
+			</field>
+		</table>
+		<join>
+			<table id="STK_ARTICULOS">
+				<field id="id_stkarticulo">
+					<condicion operador="=">STK_SERIALES.stkarticulo_id</condicion>
+				</field>
+			</table>
+		</join>
+	</form>
+</histrix>

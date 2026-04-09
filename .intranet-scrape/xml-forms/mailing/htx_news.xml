@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="crud" >
+	<title>Mail</title>
+	<obs/>
+	<form>
+		<table id="GEN_MAILS" label="Mails">
+			<field id="id_mail" autoinc="true" noshow="true">
+			</field>
+			
+			<field id="title_mail">
+				<label>Titulo</label>
+				<help>Titulo de la noticia</help>
+			</field>
+			
+			<field id="date_mail" tipoOrden="DESC">
+				<label>Fecha</label>
+				<help>Fecha</help>
+				<valor>today</valor>
+			</field>
+			
+			<field id="subject_mail">
+				<label>Asunto</label>
+<!--				<tipo>simpleditor</tipo> -->
+			</field>
+
+			<field id="body_mail">
+				<label>Texto</label>
+				<help>Texto del email</help>
+				<size>200</size>
+				<tipo>simpleditor</tipo>
+			</field>
+			
+		</table>
+	</form>
+</histrix>

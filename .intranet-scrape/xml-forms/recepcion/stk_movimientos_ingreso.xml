@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+   <histrix tipo="abm">
+       <title>MOVIMIENTOS DE STOCK</title>
+        <obs></obs>
+               <form >
+					<table id="STKINMOV" label="MOVIMIENTOS" idCampoCond="grabo">
+						
+						<field id="siscod" id_temp="sisprv">
+						</field>				
+						<field id="artcod" id_temp="artcod" >
+							<label>artcod</label>
+						</field>
+						<field id="movcod" id_temp="movcod">
+						</field>
+						<field id="movnpv" id_padre="remnpv">
+						</field>
+						<field id="movnro" id_padre="remnro">
+						</field>
+						<field id="movalt" id_padre="remfec">
+						</field>
+						<field id="movfec" id_padre="movfec__1">
+						</field>
+						
+						
+						<field id="ctacod" id_padre="ctacod">
+						</field>
+						<field id="nrocha" id_temp="nrocha">
+						</field>
+						<field id="movcant" id_temp="Unidades">
+							<label>Unidades</label>
+						</field>
+						<field id="movpen" id_temp="Unidades">
+						</field>						
+						<field id="movuso" id_temp="Unidades">
+							<label>Unidades</label>
+
+						</field>
+						<field id="tipuni" id_temp="artuni_exp3">
+						</field>
+
+						<field id="movcps" id_temp="ingresan">
+						</field>
+						<field id="ocpnro" id_temp="ocpnro">
+						</field>
+						<field id="descripcion" id_temp="detalle">
+						</field>
+						<field id="pedido_id" id_temp="idPed" >
+						</field>
+
+						<field id="depcod" id_temp="depcod">
+						</field>
+						<field id="vencimiento_art" id_temp="vencimiento" >
+						</field>
+						<field id="user_id">
+							<valor eval="true">$_SESSION['idUser']</valor>
+						</field>
+						
+					</table>
+               </form>
+        </histrix>

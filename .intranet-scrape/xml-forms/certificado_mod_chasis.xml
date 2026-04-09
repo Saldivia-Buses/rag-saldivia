@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+   <histrix tipo="ficha" sololectura="true"  autoprint="true" PDFsincabecera="true" PDFconpie="true" bottomMargin="-30" >
+       <title></title>
+        <obs></obs>
+	   
+               <consulta>
+				   <pdf>
+					  <code><![CDATA[
+					  $pdf->DashedRect(5,265,$pdf->anchoPagina,265, 0.1, 70);					  
+					  
+/*					  $pdf->DashedRect(5,280,$pdf->anchoPagina,280, 0.1, 70);*/
+					  
+//					  $pdf->RoundedRect(8,35,47,5, 2);
+					  
+					  
+/*					  $pdf->DashedRect(120,215,180,215, 0.1, 40);
+
+
+					  $pdf->DashedRect(32,222,100,222, 0.1, 40);
+					  $pdf->DashedRect(32,235,100,235, 0.1, 40);
+ 					  $pdf->DashedRect(32,247,100,247, 0.1, 40);
+  */
+
+					  
+					  ]]></code>
+				  </pdf>
+
+                <table id="CERTFABRICACION" label="CERTIFICADO">
+
+
+<!--			    <field id="lcm" _tabla="HOMOLOGMOD">
+					<label size="20" posx="18" posy="30" PDFnoborder="true" PDFsize="10">L.C.M. nro:</label>
+				</field>					  -->
+				<field id="nrofab" >
+		                         <label size="10" posx="166" posy="30" PDFsize="10" PDFnoborder="true">Nro:</label>
+				
+				</field> 
+				<field id="year1" >
+                     <label size="6" posx="185" posy="0" PDFsize="10" PDFnoborder="true">A-</label>
+					 <expresion>DATE_FORMAT(fechaCert, '%y')</expresion>
+				</field> 
+				<field id="fechaCert" >
+                     <label size="13" posx="162	" posy="35" PDFsize="10" PDFnoborder="true">Fecha:</label>
+					<tipo>date</tipo>
+				</field> 					  
+				<field id="cabe2" local="true">
+					<label size="117" posx="45" posy="+6" PDFsize="14" >CERTIFICADO DE MODIFICACION DE CHASIS</label>
+				</field>
+			    <field id="certif" local="true">
+					<label size="180" posx="18" posy="+5" PDFnolabel="true" PDFsize="12"></label>
+					<valor>'CERTIFICO QUE EL CHASIS DEL VEHICULO IDENTIFICADO EN EL PRESENTE HA SIDO MODIFICADO POR'</valor>
+					<tipo>varchar</tipo>
+				</field>
+			    <field id="mcm" local="true">
+					<label size="300" posx="65" posy="+1" PDFnolabel="true" PDFsize="13"></label>
+					<valor>'MARIA CARMEN MURABITO. marca Saldivia'</valor>
+					<tipo>varchar</tipo>
+				</field> 					  
+			    <field id="insc" local="true">
+					<label size="177" posx="18" posy="+1" PDFnolabel="true" PDFsize="11"></label>
+					<valor>'INSCRIPTO EN EL REGISTRO NACIONAL DE FABRICANTES DE CARROCERIAS Y TALLERES POR RESOLUCION S.S.T. 932-99 DE ACUERDO CON LO EXIGIDO POR EL MANUAL DE ESPECIFICACIONES S.E.T.O.P. Nro 606/75 INSCRIPTO EN EL LISTADO DE FABRICAS TERMINALES DE CARROCERIAS BAJO NOTA DTR Nro 32170 EXPTE Nro 37874 Y EL PLANO '</valor>
+					<tipo>varchar</tipo>
+				</field>					  
+			    <field id="chasis_plano" tabla="HOMOLOGMOD">
+					<label size="40" posx="18" posy="+1" PDFnolabel="true" PDFsize="11"></label>
+					<tipo>varchar</tipo>
+				</field>					  
+			    <field id="chasis_expte" tabla="HOMOLOGMOD">
+					<label posx="40" size="37" posy="0" PDFnoborder="true" PDFsize="11">DEL EXPEDIENTE</label>
+					<tipo>varchar</tipo>
+				</field>					  
+			    <field id="chasis_disposicion" tabla="HOMOLOGMOD">
+					<label posx="107" posy="0" PDFnoborder="true" PDFsize="11">APROBADO POR DISPOSICION</label>
+					<tipo>varchar</tipo>
+				</field>					  
+					  
+				<field id="ident" local="true">
+					<label size="67" posx="65" posy="+10" PDFsize="12" >IDENTIFICACION DE VEHICULO</label>
+				</field>					  
+
+
+                <field id="mardes">
+					<label size="40" posx="18" posy="+5" PDFsize="12" PDFnoborder="true">CHASIS MARCA:</label>
+				<expresion>CHASIS.marcod</expresion>
+				<label modpos="nobr" Formstyle="display:none;">Ch.</label>
+				<help/>
+				<tabla_ex id="MARCHASIS">
+					<field id="marcod">
+					</field>
+					<field id="mardes">
+					</field>
+
+					<field id="siscod" oculto="true">
+						<condicion operador="=">03</condicion>
+					</field>
+				</tabla_ex>
+				<tipo>integer</tipo>					
+				</field>
+				<field id="chasis" tabla="CHASIS">
+					<label size="10" posx="120" posy="0" PDFsize="12" PDFnoborder="true">Nº:</label>
+				</field>					  
+				<field id="nombre" tabla="MARCAMOTOR">
+					<label size="40" posx="18" posy="+2" PDFsize="11" PDFnoborder="true" >MOTOR MARCA:</label>
+				</field>
+				<field id="nromotor" tabla="CHASIS">
+					<label size="10" posx="120" posy="0" PDFsize="12" PDFnoborder="true" >Nº: </label>
+				</field>
+
+                <field id="moddes">
+					<label size="40" posx="18" posy="+2" PDFsize="11" PDFnoborder="true">CHASIS MODELO:</label>
+					<expresion>MODCHASIS.moddes</expresion>
+				</field>
+
+				<field id="marcha" local="true">
+					<label size="70" posx="18" posy="+10" PDFsize="11" PDFnoborder="true" >CARROCERÍA MARCA: </label>
+					<valor>'SALDIVIA'</valor>
+				</field>
+				<field id="nrovin" local="true" noselect="true" print="false">
+					<label size="10" posx="120" posy="0" PDFsize="12" PDFnoborder="true" >N°:  </label>
+					<tipo>varchar</tipo>
+				</field>				<field id="yearModelo" >
+                     <label size="12" posx="120" posy="0" PDFsize="11" PDFnoborder="true">AÑO:</label>
+					 <expresion>DATE_FORMAT(fechaCert, '%Y')</expresion>
+				</field> 					    
+				<field id="chasis_modificacion" tabla="HOMOLOGMOD" >
+					<label size="60" posx="18" posy="+2" PDFancho="110" PDFsize="11" PDFnoborder="true" >MODIFICACION REALIZADA:</label>
+					<tipo>varchar</tipo>
+				</field>
+
+				<field id="ident2" local="true">
+					<label size="110" posx="55" posy="+10" PDFsize="12" >PESOS MAXIMOS ADMISIBLES DEL CHASIS</label>
+				</field>					  
+
+				<field id="chasis_eje_delandero" tabla="HOMOLOGMOD">
+					<expresion>concat(HOMOLOGMOD.chasis_eje_delantero, ' Kgs')</expresion>
+					
+					<label size="40" posx="18" posy="+4" PDFsize="11" PDFnoborder="true" >EJE DELANTERO:</label>
+				</field>
+				<field id="chasis_eje_trasero" tabla="HOMOLOGMOD">
+					<expresion>concat(HOMOLOGMOD.chasis_eje_trasero, ' Kgs')</expresion>
+					
+					<label size="40" posx="18" posy="+2" PDFsize="11" PDFnoborder="true" >EJE TRASERO:</label>
+				</field>
+				<field id="chasis_eje_TOTAL" tabla="HOMOLOGMOD">
+					<expresion>concat(( HOMOLOGMOD.chasis_eje_delantero + HOMOLOGMOD.chasis_eje_trasero) , ' Kgs')</expresion>
+					
+					<label size="40" posx="18" posy="+2" PDFsize="11" PDFnoborder="true" >TOTAL:</label>
+				</field>
+				
+				<!--
+ 				<field id="firma" local="true">
+					<label size="60" posx="18" posy="+30" PDFsize="12" PDFnoborder="true" >Firma:</label>
+				</field>
+					  
+				<field id="aclaracion" local="true">
+					<label size="60" posx="18" posy="+6" PDFsize="12" PDFnoborder="true" >Aclaracion:</label>
+				</field> 
+				-->
+				 <!--<field id="beto1" local="true">
+					<label size="60" posx="130" posy="+35" PDFsize="12" PDFnoborder="true" >Hugo Leibovich</label>
+				</field> 				
+				<field id="beto2" local="true">
+					<label size="60" posx="130" posy="+3" PDFsize="12" PDFnoborder="true" >ICIE: 2-0371-8</label>
+				</field> 				
+				   
+				<field id="dni" local="true">
+					<label size="60" posx="18" posy="+2" PDFsize="12" PDFnoborder="true" >Nro.Doc:</label>
+				</field>
+				-->
+				  				<field id="ctafan" tabla="CCTCUENT">
+					<label  posx="180" posy="256" PDFsize="3" ></label>
+
+				</field>
+
+				
+					  
+                  </table>
+					<join tipo="left">
+						<table id="PEDCOTIZ">
+							<field id="nrocha">
+								<condicion operador="=">CERTFABRICACION.nrofab</condicion>
+							</field>
+						</table>
+					</join>				   
+					<join tipo="left">
+						<table id="CCTCUENT">
+							<field id="ctacod">
+								<condicion operador="=">PEDCOTIZ.ctacod</condicion>
+							</field>
+							<field id="siscod">
+								<condicion operador="=">'02'</condicion>
+							</field>
+						</table>
+					</join>				   
+				   
+			       	<join tipo="left">
+						<table id="CHASIS">
+							<field id="nrocha">
+								<condicion operador="=">CERTFABRICACION.nrofab</condicion>
+							</field>
+						</table>
+					</join>
+		
+				<join tipo="left">
+					<table id="MODCHASIS">
+						<field id="modcha">
+							<condicion operador="=">CHASIS.modcod</condicion>
+						</field>
+						<field id="marcod">
+							<condicion operador="=">CHASIS.marcod</condicion>
+						</field>
+					</table>
+				</join>
+							
+			    <join tipo="left">
+			        <table id="HOMOLOGMOD">
+			            <field id="id_homologacion">
+			              <condicion operador="=">PEDCOTIZ.homologacion_id</condicion>
+			            </field>
+			        </table>     
+			    </join>					   
+					<join tipo="left">
+						<table id="MARCAMOTOR">
+							<field id="idMarca">
+								<condicion operador="=">CHASIS.idMarcaMotor</condicion>
+							</field>
+						</table>
+					</join>				   
+				</consulta>
+        </histrix>

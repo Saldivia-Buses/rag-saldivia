@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+  <title>Contacto Vcard</title>
+  <obs></obs>
+  <form>
+    <table id="GEN_TIPO_CONTACTOS">
+      <field id="vcard_type1" >
+        <expression>vcard_type</expression>
+        <label>Codigo</label>
+      </field>
+      <field id="vcard_type">
+        <label>Vcard</label>
+      </field>
+    </table>
+  </form>
+</histrix>  

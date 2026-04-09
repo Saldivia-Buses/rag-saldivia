@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud">
+	<title>LISTAS DE PRECIOS</title>
+	<obs></obs>
+	<form >
+		<table id="LISTAPRECIOMODELO" >
+		    <title>Listas de precios</title>
+				<field id="idLista" tipoOrden="DESC">
+					<label>Lista</label>
+				</field>
+				<field id="fecha">
+					<label>Fecha</label>
+				</field>
+			
+				<field id="nombre">
+					<label>Nombre</label>
+				</field>
+				<field id="descripcion">
+					<label>Descripción</label>
+				</field>
+				<field id="pie">
+					<label>Pie</label>
+					<size>100</size>
+				</field>		
+<!--	
+				<field id="difAsiento">
+					<label>Diferencia Asiento (con IVA)</label>
+				</field>	    	
+-->
+				<field id="asiento_propio">
+					<label>Asiento Propio (con IVA)</label>
+				</field>	    	
+				<field id="asiento_semicama">
+					<label>Asiento Propio Semicama (con IVA)</label>
+				</field>	    	
+				<field id="asiento_otros1">
+					<label>Asiento Master Sit (con IVA)</label>
+				</field>	    	
+				<field id="asiento_otros2">
+					<label>Asiento FAIC (con IVA)</label>
+				</field>	    	
+			<order>
+				<field id="idLista"></field>
+			</order>
+			
+		</table>
+	</form>	   
+</histrix>

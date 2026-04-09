@@ -1,0 +1,480 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" subtipo="vertical" procesa="true" inserta="false" borra="false" imprime="false" deleteRow="false" processFirst="true" noForm="true" modifica="false" transaccional="true" log="false" preloadData="false" paginar="100">
+
+	<title>Facturación Recurrente</title>
+	
+	<confirmacion><![CDATA[¿Confirma la operación?]]></confirmacion>
+	
+	<form>
+
+	<table id="REG_MOVIMIENTOS">
+
+	<validation>
+		<condition><![CDATA[fecha_movimiento == 0]]></condition>
+		<message>Debe especificar un valor para el campo Fecha de Emision.</message>
+	</validation>
+	<validation>
+		<condition><![CDATA[vencimiento_movimiento == 0]]></condition>
+		<message>Debe especificar un valor para el campo Fecha de vencimiento.</message>
+	</validation>
+	<validation>
+		<condition><![CDATA[regconcepto_id == 0]]></condition>
+		<message>Debe especificar un valor para el campo Concepto.</message>
+	</validation>
+	<validation>
+		<condition><![CDATA[puesto_movimiento == 0]]></condition>
+		<message>Debe especificar un valor para el campo Punto de venta.</message>
+	</validation>
+	<validation>
+		<condition><![CDATA[stkdeposito_id == 0]]></condition>
+		<message>Debe especificar un valor para el campo Depósito.</message>
+	</validation>	
+
+	<movimientos cabecera="mos_rrule_cab.xml">
+			<relacion id="mos_rrule_movimientos_ins.xml" />
+			<relacion id="mos_rrule_detalle_dup.xml" />
+			<relacion id="mos_rrule_incremento_fijo_upd.xml" />
+			<relacion id="mos_rrule_actualizar_encabezado.xml" />
+			<relacion id="mos_rrule_minuta_dup.xml" />
+			<relacion id="mos_rrule_marmovimiento.xml" />
+			<relacion id="mos_rrule_numerador_upd.xml" />
+			<relacion id="mos_rrule_upd.xml" />
+			<relacion id="mos_rrule_fiscal.xml" />
+			<relacion id="mos_rrule_print.xml" />
+	</movimientos>
+		
+	<filters>		
+		<field id="puesto_movimiento" _required="true">
+			<label>Punto de Venta</label>
+			<operador>=</operador>
+		</field>		
+		<field id="busca_puesto" _required="true" deshabilitado="false">
+			<label>Mov. desde</label>
+			<operador>=</operador>
+		</field>			
+		<field id="desde_fecha" _required="true">
+			<label>Desde</label>
+			<valor eval="true">date('d/m/Y',strtotime('last monday',strtotime('tomorrow')))</valor>
+		</field>	
+            	<field id="hasta_fecha" _required="true">
+			<label modpos="nobr">Hasta</label>
+			<valor eval="true">date('d/m/Y',strtotime('next friday'))</valor>
+		</field>	
+		<field id="nro_cuenta">
+			<label>Cliente</label>
+			<operador>=</operador>
+		</field>
+		<field id="administracion" print="false" deshabilitado="false">
+			<label colspan="4">Administracion</label>
+			<operador>like</operador>
+		</field>
+		<!--<field id="porcentaje_incremento" print="false" deshabilitado="false">
+			<label>Porcentaje</label>
+			<valor>0</valor>
+			<operador>=</operador>
+		</field>-->
+		<field id="pendientes">
+			<label modpos="nobr">Pendientes</label>
+			<operador>=</operador>
+		</field>
+	</filters>
+
+	<fieldGroup noshow="true">
+		<field id="id_regmovim">
+			<detalle>regmovim_id</detalle>
+		</field>
+		<field id="regconcepto_id" local="true">
+			<expression>REG_MOVIMIENTOS.concepto_id</expression>
+		</field>
+		<field id="desde_fecha" local="true" required="true">
+			<label>desde</label>
+			<tipo>date</tipo>
+			<valor>today</valor>
+		</field>
+		<field id="hasta_fecha" local="true" required="true">
+			<label>Hasta</label>
+			<tipo>date</tipo>
+			<valor>today</valor>
+		</field>
+	</fieldGroup>
+
+	<fieldGroup>
+		<field id="nro_cuenta" tabla="REG_CUENTA">
+        		<label>Nº Cuenta</label>
+        		<helper type="external" xml="regcuenta_solamente_nro_qry.xml" dir="/ayudas">
+            		    <field id="subsistema_id"></field>
+            		    <order>
+                		<field id="nombre_cuenta"></field>
+            		    </order>
+        		</helper>
+<!--			<attribute id="colstyle">stylefila</attribute>-->
+    		</field>
+
+		<field id="nombre_movimiento">
+			<expression>case when REG_CUENTA.nombre_fantasia IS NULL or REG_CUENTA.nombre_fantasia = '' then REG_CUENTA.nombre_cuenta else REG_CUENTA.nombre_fantasia end</expression>
+			<label>Cuenta</label>
+<!--			<attribute id="colstyle">stylefila</attribute>-->
+		</field>
+
+		<field id="administracion">
+			<expression>case when ADMIN.nombre_fantasia IS NULL or ADMIN.nombre_fantasia = '' then ADMIN.nombre_cuenta else ADMIN.nombre_fantasia end</expression>
+			<label>Administracion</label>
+			<size>80</size>
+<!--			<attribute id="colstyle">stylefila</attribute>-->
+		</field>
+
+		<field id="vencimiento_mov" noshow="true">
+			<expression having="false">vencimiento_movimiento</expression>
+			<tipo>date</tipo>
+		</field>
+
+		<field id="vencimiento_movimiento" noshow="true">
+			<label>Vto</label>
+			<expression>date_add(now(), INTERVAL ifnull(REG_FORMAS.plazo, 0 ) DAY)</expression>
+			<tipo>date</tipo>
+		</field>
+
+		<field id="regcuentavendedor_id" noshow="true">
+			<label>Vendedor</label>
+			<helper type="combo" xml="regcuenta_solamente_qry.xml" dir="/ayudas" empty="true">
+				<field id="subsistema_id">
+					<condicion operador="=" valorde="subsistemave_id">'[__subsistemave_id__]' </condicion>
+				</field>
+			</helper>
+		</field>
+					
+		<field id="descripcion_concepto" tabla="REG_CONCEPTOS" noshow="true">
+			<label>Concepto</label>
+		</field>
+
+		<field id="letra_movimiento" noshow="true">
+			<expression>GEN_IVA.letra</expression>
+		</field>
+
+		<field id="busca_puesto" noshow="true" required="true">
+			<label modpos="nobr">Punto de venta</label>
+			<helper type="combo" id="REG_NUMERADORES" empty="true">
+				<field id="puesto" />
+					<field id="nombre_puesto">
+					<expression>LPAD(puesto,4,'0')</expression>
+				</field>
+			</helper>
+			<expression having="false">REG_MOVIMIENTOS.puesto_movimiento</expression>
+		</field>
+			
+		<field id="puesto_movimiento" local="true" noshow="true" required="true">
+			<label modpos="nobr">Punto de venta</label>
+			<helper type="combo" id="REG_NUMERADORES" empty="true">
+				<field id="puesto" />
+				<field id="nombre_puesto">
+					<expression>LPAD(puesto,4,'0')</expression>
+				</field>
+			</helper>
+		</field>
+			
+		<field id="nro_movimiento">
+			<expression>CONCAT(REG_CONCEPTOS.abreviacion_concepto,' ',REG_MOVIMIENTOS.letra_movimiento,' ',LPAD(REG_MOVIMIENTOS.puesto_movimiento,4,'0'),'-',LPAD(REG_MOVIMIENTOS.nro_movimiento,8,'0'))</expression>
+			<label>Nro. Comprobante</label>
+			<helper type="link" dir="/clientes/qry" title="Nota de pedido">
+				<parameter source="id_regmovim" target="id_regmovim" />
+			</helper>
+			<attribute id="linkint">imprime_concepto</attribute>
+<!--			<attribute id="colstyle">stylefila</attribute>-->
+		</field>
+
+		<field id="importe_movimiento">
+			<label>Imp. Orig.</label>
+<!--			<attribute id="colstyle">stylefila</attribute>-->
+		</field>
+
+		<field id="importe_actualizar" editable="true" local="true" valauto="true" refresh="true">
+		    <label>Imp. Nuevo.</label>
+		    <tipo>numeric</tipo>
+		</field>
+
+		<field id="importe_actualizado" local="true" editable="true" deshabilitado="true" noshow="true">
+		    <if exp="importe_actualizar + 0 == 0">
+			<true>importe_movimiento</true>
+			<false>importe_actualizar</false>
+		    </if>
+		</field>
+
+		<field id="importe_fijo" editable="true" local="true" colstyle="display:none;">
+		    <if exp="true">
+			<true>'importe_actualizar'</true>
+			<false>'0'</false>
+		    </if>
+		</field>
+
+		<field id="importe_iva" noshow="true" />
+
+		<field id="porcentaje_incremento" noshow="true" local="true">
+			<detalle>porcentaje_incremento</detalle>
+		</field>
+
+		<!--<field id="importe_recalculado">
+			<label>Importe</label>
+			<expression>
+				CASE WHEN '[__porcentaje_incremento__]' &gt; 0 THEN
+					( round(round(importe_movimiento) / 10) * 10 ) *
+					'[__porcentaje_incremento__]' / 100 +
+					( round(round(importe_movimiento) / 10) * 10 )
+				ELSE 	
+					( round(round(importe_movimiento) / 10) * 10 )
+				END
+			</expression>
+			<tipo>numeric</tipo>
+			<attribute id="colstyle">stylefila</attribute>
+		</field>-->
+		
+		<field id="alicuota" noshow="true" tabla="GEN_IVA_ALICUOTAS"/>						
+		
+		<field id="neto_old"  noshow="true">
+			<label>Neto Old</label>
+			<expression>neto_movimiento</expression>
+		</field>
+
+		<field id="neto_movimiento"  noshow="true">
+			<label>neto nuevo</label>
+		</field>											
+
+		<field id="estado_cuenta" noshow="true" style="text-align: right;">
+			<label>Estado Cuenta</label>
+			<expression having="false">IF( (VW_SALDOS.limite_credito > 0) and (VW_SALDOS.saldo_valores + VW_SALDOS.saldo_cuenta + importe_movimiento > VW_SALDOS.limite_credito ), 'CREDITO EXCEDIDO', (VW_SALDOS.saldo_valores + VW_SALDOS.saldo_cuenta))</expression>
+		</field>
+			
+		<field id="rrule" noshow="true">
+			<expression having="false">REG_MOVIMIENTO_RRULES.rrule</expression>
+			<condicion operador="!=">''</condicion>
+		</field>
+
+		<field id="fecha_orig" noshow="true">
+			<label>Fecha Original</label>
+			<expression>REG_MOVIMIENTOS.fecha_movimiento</expression>
+			<tipo>date</tipo>
+		</field>	
+
+		<field id="fecha" noshow="true">
+			<label>U. Emitida</label>
+			<expression>REG_MOVIMIENTO_RRULES.fecha_movimiento</expression>
+			<tipo>date</tipo>
+<!--			<attribute id="colstyle">stylefila</attribute>-->
+		</field>
+
+		<field id="fecha_ultima_emitida">
+			<label>U. Emitida</label>
+			<expression>REG_MOVIMIENTOS.fecha_movimiento</expression>
+			<tipo>date</tipo>
+<!--			<attribute id="colstyle">stylefila</attribute>-->
+		</field>
+
+		<field id="mes_emitida" noshow="true">
+			<label>Mes Emitida</label>
+			<expression>month(REG_MOVIMIENTOS.fecha_movimiento)</expression>
+			<condicion operador="!=">(case when '[__pendientes__]' = 1 then month(now()) else '' end)</condicion>
+		</field>
+
+		<field id="pendientes" local="true" noshow="true">
+			<label>Facturas</label>
+			<helper type="combo">
+				<option value="1">Pendiente</option>
+				<option value="2">Todas</option>
+			</helper>
+		</field>
+	
+		<field id="novedades_movimiento">
+			<label>Aumento Ant.</label>	
+			<expression>case when novedades_movimiento &gt; 0 then concat(novedades_movimiento,'%') else '' end</expression>
+<!--			<attribute id="colstyle">stylefila</attribute>-->
+		</field>
+
+		<field id="editar_rrule" local="true">
+			<helper type="link" xml="mos_rrule_crud.xml">
+				<parameter source="id_regmovimrrule" target="id_regmovimrrule" />
+			</helper>
+			<label>Editar</label>
+			<valor>Editar</valor>
+<!--			<attribute id="colstyle">stylefila</attribute>-->
+		</field>
+			
+		<field id="facturar" local="true" editable="true" refresh="true" deshabilitado="false">
+			<valor>0</valor>
+			<tipo>check</tipo>
+		</field>
+
+		<!--<field id="stylefila" local="true" noshow="true">
+			<expression>case when mar_movimiento = 1 then 'color:red;font-weight:bold;' else '' end</expression>
+		</field>-->
+
+		<field id="corresponde" local="true" validRow="true" noshow="true">
+			<label>Fecha Recurrencia</label>
+			<if exp="true">
+				<true>\Histrix\View\Calendar::getRRuleDate( 'desde_fecha' , 'hasta_fecha', 'rrule','fecha_orig')</true>
+				<false>''</false>
+			</if>
+			<tipo>date</tipo>
+		</field>
+
+		<field id="id_regmovimrrule" noshow="true">
+			<expression>REG_MOVIMIENTO_RRULES.id_regmovimrrule</expression>
+		</field>
+
+	</fieldGroup>
+		
+	<fieldGroup id="DatosImpresion" noshow="true">
+		
+		<field id="imprime_concepto">
+			<expression sql="true">select ejecuta from REG_NUMERADORES where puesto = '[__puesto_movimiento__]' and REG_NUMERADORES.letra = '[__letra_movimiento__]' and REG_NUMERADORES.regconcepto_id = '[__codigo_concepto_factura__]' limit 1</expression>
+		</field>
+
+		<field id="xmlImpresion" local="true">
+			<expression sql="true">select ejecuta from REG_NUMERADORES where puesto = '[__puesto_movimiento__]' and REG_NUMERADORES.letra = '[__letra_movimiento__]' and REG_NUMERADORES.regconcepto_id = '[__codigo_concepto_factura__]' limit 1</expression>
+		</field>
+
+		<field id="printer" local="true">
+			<expression sql="true">select IF(fiscal = 1 AND printer = 'WSAFIP', '', printer) from REG_NUMERADORES where puesto = '[__puesto_movimiento__]' and REG_NUMERADORES.letra = '[__letra_movimiento__]' and REG_NUMERADORES.regconcepto_id = '[__codigo_concepto_factura__]' limit 1</expression>
+		</field>
+			
+		<field id="fiscal" local="true">
+			<expression sql="true">select fiscal from REG_NUMERADORES where puesto = '[__puesto_movimiento__]' and REG_NUMERADORES.letra = '[__letra_movimiento__]' and REG_NUMERADORES.regconcepto_id = '[__codigo_concepto_factura__]' limit 1</expression>
+		</field>
+
+	</fieldGroup>
+
+	<fieldGroup id="DatosFactura" noshow="true">
+		<field id="_ORDEN" local="true" />
+		<field id="regcuenta_id" />
+		<field id="subsistema_id" />
+		<field id="subsistemave_id" local="true" valauto="true" />
+		<field id="subsistematr_id" local="true" valauto="true" />		
+		<field id="mar_movimiento" /> 
+		<field id="stklista_id" />
+		<field id="alicuota_iva" />
+		<field id="importe_bon" />
+		<field id="importe_exento" />
+		<field id="importe_periodo" />
+		<field id="importe_percepcion" />
+		<field id="importe_ibr" />
+		<field id="importe_nogravado" />
+		<field id="alicuota_percepcion" />
+		<field id="regcuentatransporte_id" />
+		<field id="regforma_id" />
+		<field id="cantidad_bultos" />
+		<field id="domicilio_movimiento" />
+		<field id="iva_id" />
+		<field id="cuit_movimiento" />
+		<field id="referencia_movimiento" />
+		<field id="tiposervicio_afip"  />
+		<field id="regcuentagrupo_id"  />
+		<field id="bonificaciones_movimiento"  />
+	</fieldGroup>
+
+	<group>
+		<field id="id_regmovim" tabla="REG_MOVIMIENTOS"/>
+	</group>
+
+	<order>
+    		<field id="nro_cuenta"/>
+    	</order>
+	
+	</table>
+
+	<join>
+		<table id="REG_MOVIMIENTO_RRULES">
+			<field id="regmovim_id">
+				<condicion operador="=">REG_MOVIMIENTOS.id_regmovim</condicion>
+			</field>
+		</table>
+	</join>
+	
+	<join>
+		<table id="REG_CUENTA">
+			<field id="id_regcuenta">
+				<condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+			</field>
+		</table>
+	</join>
+
+	<join tipo="left">
+		<table id="REG_CUENTA_RELACIONES">
+			<field id="regcuenta_id">
+				<condicion operador="=">id_regcuenta</condicion>
+			</field> 
+		</table>
+	</join>
+
+	<join tipo="left">
+		<table id="REG_CUENTA" as="ADMIN">
+			<field id="id_regcuenta">
+				<condicion operador="=">REG_CUENTA_RELACIONES.regcuentarelacionada_id</condicion>
+			</field> 
+		</table>
+	</join>
+
+	<join tipo="left">
+		<table id="REG_FORMAS">
+			<field id="id_regforma">
+				<condicion operador="=">REG_CUENTA.regforma_id</condicion>
+			</field>
+		</table>
+	</join>
+
+	<join tipo="left">
+		<table id="GEN_SUBSISTEMAS">
+			<field id="id_subsistema">
+				<condicion operador="=">REG_CUENTA.subsistema_id</condicion>
+			</field>
+		</table>
+	</join>
+
+	<join tipo="left">
+		<table id="REG_CONCEPTOS">
+			<field id="id_concepto">
+				<condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+			</field>
+		</table>
+	</join>
+	
+	<join tipo="left">
+		<table id="REG_NUMERADORES">
+			<field id="subsistema_id">
+				<condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion>
+			</field>
+			<field id="regconcepto_id">
+				<condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+			</field>
+			<field id="puesto">
+				<condicion operador="=">REG_MOVIMIENTOS.puesto_movimiento</condicion>
+			</field>
+			<field id="letra">
+				<condicion operador="=">REG_MOVIMIENTOS.letra_movimiento</condicion>
+			</field>
+		</table>
+	</join>
+
+	<join tipo="left">
+		<table id="VW_SALDOS">
+			<field id="id_regcuenta">
+				<condicion operador="=">REG_CUENTA.id_regcuenta</condicion>
+			</field>
+		</table>
+	</join>
+
+	<join tipo="left">
+		<table id="GEN_IVA">
+			<field id="id_iva">
+				<condicion operador="=">REG_CUENTA.iva_id</condicion>
+			</field>
+		</table>
+	</join>
+
+	<join tipo="left">
+        	<table id="GEN_IVA_ALICUOTAS">
+			<field id="iva_id">
+				<condicion operador="=">GEN_IVA.id_iva</condicion>
+			</field>
+		</table>
+	</join>
+
+	</form>
+</histrix>

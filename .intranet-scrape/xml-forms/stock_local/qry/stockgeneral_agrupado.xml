@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" _paginar="200">
+  <title>Consulta general</title>
+  <obs/>
+  <form>
+    <table id="STK_MOVIMIENTOS" label="Consulta general">
+   
+      <filters>
+
+          <field id="id_stkarticulo" tabla="STK_ARTICULOS" >
+            <label>Código Artículo</label>
+            <operador>=</operador>
+          </field>
+
+          <field id="nombre_articulo" tabla="STK_ARTICULOS" deshabilitado="true"/>
+
+          <field id="stkconcepto_id">
+            <operador>=</operador>
+            <label>Concepto</label>
+            <help>Concepto elegido</help>
+          </field>
+
+          <field id="stkrubro_id">
+            <operador>=</operador>
+            <label modpos="nobr">Rubro</label>
+          </field>
+
+          <field id="stksubrubro_id">
+            <operador>=</operador>
+            <label modpos="nobr">Sub Rubro</label>
+          </field>
+
+          <field id="stkdeposito_id">
+            <operador>=</operador>
+            <label modpos="nobr">Depósito</label>
+          </field>
+
+          <field id="fecha_mov1" deshabilitado="false">
+            <valor>today</valor>
+            <operador>&gt;=</operador>
+            <label>Desde Fecha</label>
+            <help>Fecha movimiento</help>
+          </field>
+
+          <field id="fecha_mov2" deshabilitado="false">
+            <valor>today</valor>
+            <operador>&lt;=</operador>
+            <label modpos="nobr">Hasta Fecha</label>
+            <help>Fecha movimiento</help>
+          </field>
+
+
+      </filters>
+
+      <fieldGroup >
+
+            <field id="id_stkmovimiento" noshow="true" />
+
+            <field id="id_stkarticulo" tabla="STK_ARTICULOS" esClave="true">
+              <label>Código Artículo</label>
+              <helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas">
+                <field id="wstklista_id" local="true">
+                  <valor>1</valor>
+                </field>
+              </helper>
+              <apreparam campo="id_stkarticulo" operador="=">true</apreparam>
+            </field>
+
+            <field id="nombre_articulo" tabla="STK_ARTICULOS">
+              <label modpos="nobr">Nombre</label>
+              <help>Referencia del movimiento</help>
+            </field>
+
+            <field id="stkconcepto_id" noshow="true">
+              <helper type="combo" xml="stkconcepto_qry.xml" dir="/ayudas" empty="true"></helper>
+              <label>Concepto</label>
+              <help>Código de concepto</help>
+              <detalle>concepto_id</detalle>
+            </field>
+
+            <field id="nombre_concepto" tabla="STK_CONCEPTOS" print="false">
+              <label>Concepto</label>
+              <help>Código de concepto</help>
+            </field>
+
+            <field id="entrada" local="true" suma="true" noZero="true">
+              <label>Entrada</label>
+              <expression>sum(CASE WHEN STK_CONCEPTOS.tipo_concepto = 0 THEN cantidad ELSE 0 END)</expression>
+              <tipo>numeric</tipo>
+            </field>
+
+            <field id="salida" local="true" suma="true" noZero="true">
+              <label>Salida</label>
+              <expression>sum(CASE WHEN STK_CONCEPTOS.tipo_concepto = 1 THEN cantidad ELSE 0 END)</expression>
+              <tipo>numeric</tipo>
+            </field>
+<!--
+            <field id="precio_total" suma="true" noZero="true">
+              <label>Importe</label>
+		
+              <tipo>numeric</tipo>
+            </field>
+-->
+            <field id="stkdeposito_id">
+              <label>Depósito</label>
+              <helper type="combo" xml="stkdeposito_qry.xml" dir="/ayudas" empty="true"></helper>
+            </field>
+
+            <field id="stkrubro_id" noshow="true" tabla="STK_ARTICULOS">
+              <label>Rubro</label>
+              <helper type="combo" xml="stkrubro_qry.xml" dir="/ayudas" empty="true"></helper>
+              <actualiza>
+                <field destino="stkrubro_id" id="stksubrubro_id"/>
+              </actualiza>
+              <apreparam campo="stkrubro_id" operador="=">true</apreparam>
+            </field>
+
+            <field id="stksubrubro_id" tabla="STK_ARTICULOS">
+              <label modpos="nobr">SubRubro</label>
+              <helper type="combo" xml="stksubrubro_qry.xml" dir="/ayudas" empty="true" />
+              <apreparam campo="subrubro_id" operador="=">true</apreparam>
+            </field>
+
+            <field id="fecha_movimiento" noshow="true">
+              <label>Fecha</label>
+              <help>Fecha movimiento</help>
+              <tipo>date</tipo>
+            </field>
+
+
+            <field id="fecha_mov1" noshow="true">
+              <expression having="false">fecha_movimiento</expression>
+              <help>Fecha movimiento</help>
+              <apreparam campo="fecha_movimiento" operador="&gt;=">true</apreparam>
+              <tipo>date</tipo>
+            </field>
+
+            <field id="fecha_mov2" noshow="true">
+              <expression having="false">fecha_movimiento</expression>
+              <help>Fecha movimiento</help>
+              <apreparam campo="fecha_movimiento" operador="&lt;=">true</apreparam>
+              <tipo>date</tipo>
+            </field>
+
+            <field id="color" local="true" clasefila="true" noshow="true"/>
+
+            <field id="recibido_compra" local="true" noshow="true"></field>
+	    
+	    <field id="subsistema_id" noshow="true">
+		<condicion operador="!=">50</condicion>
+	    </field>
+
+      </fieldGroup>
+	<order>
+	    <field id="stkarticulo_id" />
+	</order>
+
+      <group>
+        <field id="stkarticulo_id"/>
+      </group>
+
+    </table>
+
+    <join tipo="left">
+      <table id="STK_CONCEPTOS">
+        <field id="id_stkconcepto">
+          <condicion operador="=">STK_MOVIMIENTOS.stkconcepto_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="STK_ARTICULOS">
+        <field id="id_stkarticulo">
+          <condicion operador="=">STK_MOVIMIENTOS.stkarticulo_id</condicion>
+        </field>
+      </table>
+    </join>
+
+
+  </form>
+</histrix>

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert" grabafinal="true">
+   <title/>
+   <obs/>
+   <form>
+       <table id="MRP_FORECAST">
+           <sql> 
+		Select MRP_FORECAST_FN ('[__id_stkarticulo__]', '[__xmrpperiodo_id__]','[__mes_forecast__]',2,'[__year_forecast__]',[__zzCalculo__])
+           </sql>
+
+                <field id="id_stkarticulo" id_temp="id_stkarticulo" />
+                <field id="xmrpperiodo_id" id_temp="xmrpperiodo_id"/>
+                <field id="mes_forecast"   id_temp="mes_forecast"/>
+                <field id="year_forecast"  id_temp="year_forecast"/>
+                <field id="zzCalculo"      id_temp="zzCalculo"/>
+                <field id="minimo"         id_temp="minimo"/>
+                <field id="stock"          id_temp="stock"/>
+
+<!--
+		call MRP_FORECAST_SP ('[__id_stkarticulo__]', '[__xmrpperiodo_id__]','[__mes_forecast__]',2,'[__year_forecast__]',[__zzCalculo__])
+
+		REPLACE INTO MRP_FORECAST (stkarticulo_id,mrpperiodo_id,mes_forecast,tipo_forecast,year_forecast,cantidad_forecast)
+		  SELECT STK_BOM.stkarticulohijo_id , '[__xmrpperiodo_id__]' , '[__mes_forecast__]', 2, '[__year_forecast__]' ,  (([__zzCalculo__] * STK_BOM.cantidad) + ([__minimo__] + 0 )) - ([__stock__] + 0)  from  STK_BOM 
+		where STK_BOM.stkarticulopadre_id = '[__id_stkarticulo__]'  and  [__zzCalculo__] > 0
+		group by stkarticulohijo_id
+
+
+
+
+		values  SELECT STK_ARTICULOS.stkarticulohijo_id , '[__xmrpperiodo_id__]' , '[__mes_forecast__]', 2, '[__year_forecast__]' , ([__zzCalculo__] * STK_BOM.cantidad) + ([__minimo__] + 0 ) - ([__stock__] + 0))  from  STK_BOM where STK_BOM.stkarticulopadre_id = '[__id_stkarticulo__]'  group by stkarticulohijo_id
+
+
+		SET
+                stkarticulo_id = '[__id_stkarticulo__]' ,
+		mrpperiodo_id  = '[__xmrpperiodo_id__]' ,
+		mes_forecast   = '[__mes_forecast__]' ,
+		tipo_forecast   = '2' ,
+		year_forecast  = '[__year_forecast__]' ,
+		cantidad_forecast = cantidad_forecast + 
+		(( SELECT [__zzCalculo__] * STK_BOM.cantidad  from  STK_BOM where STK_BOM.stkarticulopadre_id = '[__id_stkarticulo__]'  )
+
+-->
+       </table>
+   </form>
+</histrix>

@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="calendar" imprime="false" inserta="false" modifica="false" sidePanel="false" calendarAspectRatio="2">
+    <title>Calendario Vencimientos</title>
+    <obs/>
+    <form>
+        <table id="REG_MOVIMIENTOS" label="Calendario Vencimientos">
+
+        	<filters>
+        		<field id="fecha_movimiento">
+        			<label>Desde</label>
+        			<operador>&gt;=</operador>
+        			<valor>today</valor>
+        			<tipo>date</tipo>
+        		</field>
+        		<field id="fecha_movimiento">
+        			<label modpos="nobr">Hasta</label>
+        			<operador>&lt;=</operador>
+        			<valor>today</valor>
+        			<tipo>date</tipo>
+        		</field>
+        		<field id="regcuenta_id">
+        			<label>Proveedor</label>
+        			<operador>=</operador>
+        		</field>
+
+           	</filters>
+
+        	<field id="id_regmovim" calendarId="true" />
+
+	        <field id="fecha_movimiento">
+	        	<tipo>date</tipo>
+	        </field>
+
+	        <field id="vencimiento_movimiento" calendarStartDate="true">
+	        	<tipo>date</tipo>
+	        </field>
+
+	        <field id="fecha" local="true">
+	        	<valor>today</valor>
+	        	<tipo>date</tipo>
+	        </field>
+
+	        <field id="color" calendarColor="true">
+	        	<expression>case when vencimiento_movimiento &gt;= str_to_date('[__fecha__]', '%d/%m/%Y') then '#088A08' else '#DF0101' end</expression>
+	        </field>
+
+	        <field id="regcuenta_id">
+	        	<helper type="combo" id="REG_CUENTA" empty="true">
+	        		<field id="id_regcuenta" />
+	        		<field id="nombre_cuenta" />
+	        		<field id="subsistema_id">
+	        			<condicion operador="=">'01'</condicion>
+	        		</field>
+	        	</helper>
+	        </field>
+
+	        <field id="subsistema_id" noshow="true">
+	        	<condicion operador="=">'01'</condicion>
+	        </field>
+
+			<field id="desc" calendarSubject="true">
+				<expression>concat('NRO MOVIM: ', nro_movimiento ,' - ', nombre_movimiento , ' - $', saldo_movimiento)</expression>
+			</field>
+
+			<field id="concepto_id" noshow="true">
+				<label>Concepto</label>
+<!--				<condicion operador="=">'64'</condicion> -->
+			</field>
+
+			<field id="descripcion_concepto" tabla="REG_CONCEPTOS">
+				<label>Concepto</label>
+			</field>
+
+			<field id="nombre_movimiento">
+				<label>Proveedor</label>
+			</field>
+
+			<field id="nro_movimiento">
+				<label>Nro Movimiento</label>
+			</field>
+
+			<field id="importe_movimiento">
+				<label>Importe</label>
+			</field>
+
+			<field id="saldo_movimiento">
+				<label>Saldo</label>
+				<condicion operador="!=">0</condicion>
+			</field>
+
+        </table>
+
+        <join tipo="left">
+        	<tabla id="REG_CONCEPTOS">
+        		<field id="id_concepto">
+        			<condicion operador="=">concepto_id</condicion>
+        		</field>
+        	</tabla>
+        </join>
+
+    </form>
+</histrix>

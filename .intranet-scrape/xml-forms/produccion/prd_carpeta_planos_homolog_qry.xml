@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<histrix tipo="consulta" class="consultaancha" path="fotos/articulos">
+    <title>Planos</title>
+    <obs></obs>
+    <form >
+        <table id="PRD_CARPETA_PLANOS" label="Planos">
+            <field id="homologacion_id" noshow="true" _local="true"></field>
+            <field id="nrocar_id" noshow="true" _local="true"></field>
+
+        <field id="nombre" noshow="true">
+            <expression>artdes</expression>
+        </field>
+
+        <field id="stkarticulo_id" noshow="true">
+        </field>
+
+        <field id="fotopath" local="true" noshow="true">
+            <if exp="true">
+                <true>'stkarticulo_id/'</true>
+                <false>''</false>
+            </if>
+            <tipo>varchar</tipo>
+        </field>
+ 
+        <field id="foto" path="fotopath" open="true" print="false" _download="true">
+                <expression>select ARTICULO_FOTO.foto from ARTICULO_FOTO where ARTICULO_FOTO.idArticulo = stkarticulo_id order by revision desc limit 1</expression>
+                <label>Imagen</label>
+                <tipo >file</tipo>
+                <size>32</size>  
+        </field>
+
+
+        </table>
+    <join tipo="left">
+        <table id="STKINSUM">
+            <field id="artcod">
+                <condicion operador="=">PRD_CARPETA_PLANOS.stkarticulo_id</condicion>
+            </field>
+            <field id="siscod">
+                <condicion operador="=">'01'</condicion>
+            </field>
+        </table>
+    </join> 
+
+</form>
+</histrix>

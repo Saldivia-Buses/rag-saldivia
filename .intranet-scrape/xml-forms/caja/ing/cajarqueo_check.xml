@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="grid" procesa="true" deleteRow="false" inserta="false">
+    <title>Control de Arqueos</title>
+    <obs/>
+    <form>
+
+        <table id="CAJ_ARQUEOS">
+        
+            <movimientos>
+                <relacion id="cajarqueo_check_ins.xml" />
+                <relacion id="cajarqueo_check_det.xml" />
+                <relacion id="cajarqueo_check_upd.xml" />
+            </movimientos>
+          
+
+            <fieldGroup id="parametros_ingreso" local="true" noshow="true">
+                <field id="moneda_id"/>
+                <field id="cajpuesto_id"/>
+                <field id="cajconcepto_id"/>
+                <field id="imputacion_concepto"/>
+                <field id="fecha_movimiento" />
+                <field id="cajregistro_id" />
+
+                <field id="nuevo_estado">
+                  <valor>5</valor>
+                </field>
+            </fieldGroup>
+
+
+           <fieldGroup>
+           
+            <field id="fecha_registro" tabla="CAJ_REGISTROS" _noshow="true">
+                <label>Fecha</label>
+                <tipo>date</tipo>
+                <operador>&lt;=</operador>
+            </field>
+                       
+            <field id="descripcion_puesto" tabla="CAJ_PUESTOS">
+                <label>Puesto</label>
+            </field>
+           
+            <field id="referencia_movimiento" noshow="true">
+                <expression>CONCAT('Rendicion de Arqueo | P: ', CAJ_PUESTOS.descripcion_puesto, ' (', CAJ_PUESTOS.id_cajpuesto, ') | F: ', CAJ_REGISTROS.fecha_registro)</expression>
+            </field>
+
+            <field id="operador_nombre" tabla="CAJ_REGISTROS">
+                <label>Operador</label>
+            </field>
+
+            <field id="turno_registro" tabla="CAJ_REGISTROS">
+                <label>Turno</label>
+                <helper type="combo">
+                    <option value="1">Mañana</option>
+                    <option value="2">Tarde</option>
+                    <option value="3">Noche</option>
+                </helper>
+            </field>
+
+		    <field id="cierre_caja" tabla="CAJ_REGISTROS" noshow="true">
+  		  	    <condicion operador="=">1</condicion>
+			</field>
+            
+
+
+
+
+
+
+
+            
+            <!-- DETALLE DEL ARQUEO -->
+            
+            <field id="id_cajregistroarqueo" noshow="true">
+              <expresion>CAJ_ARQUEOS.cajregistro_id</expresion>
+            </field>
+            
+            <field id="id_cajarqueo" noshow="true">
+                <label>ID Arqueo</label>
+            </field>
+
+            <field id="apertura_arqueo">
+                <label>Apertura</label>
+            </field>
+
+            <field id="registrado_arqueo">
+                <label>Registrado</label>
+            </field>
+
+            <field id="total_arqueo">
+                <label style="color: black;font-size: 1.3em;">Total</label>
+            </field>
+
+            <field id="conteo_arqueo">
+                <label>Recuento</label>
+            </field>
+
+            <field id="diferencia_arqueo">
+                <label style="color:red;font-size: large;">Diferencia</label>
+            </field>
+            
+            
+            <field id="cajformapagodif_id" tabla="CAJ_PUESTOS" noshow="true" />
+
+            <field id="importe_movimiento" suma="true">
+              <label style="color: blue;font-size:large;">Ingresa</label>
+              <expresion>(SELECT SUM(valor) FROM CAJ_ARQUEO_CONTEOS WHERE cajformapago_id = CAJ_PUESTOS.cajformapagodif_id AND cajarqueo_id = CAJ_ARQUEOS.id_cajarqueo) - CAJ_ARQUEOS.apertura_arqueo</expresion>
+              <tipo>numeric</tipo>
+            </field>
+            
+            <field id="confirmar" local="true">
+              <label>Confirmar</label>
+              <tipo>check</tipo>
+            </field>
+
+            
+          </fieldGroup>
+    
+        </table>
+
+        
+        <join>
+            <table id="CAJ_REGISTROS">
+                <field id="id_cajregistro">
+                    <condicion operador="=">CAJ_ARQUEOS.cajregistro_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join>
+            <table id="CAJ_PUESTOS">
+                <field id="id_cajpuesto">
+                  <condicion operador="=">CAJ_ARQUEOS.cajpuesto_id</condicion>
+                </field>
+                
+                <field id="cajpuesto_id">
+                  <condicion operador="=">'[__cajpuesto_id__]'</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert">
+    <title>Actualiza seccion</title>
+    <form>
+        <table id="PROD_PATH_REGISTRO" idCampoCond="inserta_seccion">
+
+            <field id="productpath_id" id_temp="parent_seccion_prox" />
+            <field id="ingreso_usuario_id" id_temp="usuario_id" />
+            <field id="hora_registro">
+                <valor>NOW()</valor>
+                <tipo>integer</tipo>
+            </field>
+            <field id="nrofab_id" id_temp="nrofab_id" />
+            <field id="generar_pedidos" id_temp="generar_pedidos" local="true" />
+
+        </table>
+    </form>
+</histrix>

@@ -1,0 +1,357 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="grid" deleteRow="false" imprime="false" procesa="true" inserta="false" path="/fotos/archivo/Coches/" tableHeight="600">
+	<title>Control Calidad</title>
+	<obs/>
+	
+        <eventos>
+               <event id="procesar">if ($.mobile) { $.mobile.navigate(document.referrer);$.mobile.navigate(document.referrer); }</event>
+        </eventos>	
+        <customScript><![CDATA[
+
+        	window.setTimeout(function(){
+        		$('[campo="observacion_control"] > div').css({'border':'0px'});
+			}, 1000);
+
+
+    		$('td[campo="conforme"] input:checkbox:checked').closest('tr').css({'background-color':'greenyellow'});
+
+			$('td[campo="observacion_control"] input', $('td[campo="no_conforme"] input:checkbox:checked').closest('tr')).show();
+
+			//$('td[campo="observacion_control"] input', $('td[campo="conforme"] input:checkbox:checked').closest('tr')).show();
+
+        	// refresh update check
+			$('[campo] :input:checkbox').change(function(){
+					var tr = $(this).closest('tr');
+
+					$('td[campo="update"] input', tr).val('1');
+			});
+			$('[campo="controlcausal_id"]').change(function(){
+					var tr = $(this).closest('tr');
+
+					$('td[campo="update"] input', tr).val('1');
+			});
+			$('[campo="legajo_personal"]').change(function(){
+					var tr = $(this).closest('tr');
+
+					$('td[campo="update"] input', tr).val('1');
+			});
+
+        	$('td[campo="conforme"] input:checkbox').change(function(){
+        		var tr = $(this).closest('tr');
+        		
+        		$('[name="observacion_control"]', tr).show();
+				$('[name="observacion_control"]', tr).each(function(){
+				    	if ($(this).val() == '') 
+						$(this).hide();
+				});
+
+/*        		$('[campo="controlcausal_id"]', tr).show();
+				$('[campo="controlcausal_id"]', tr).each(function(){
+				    	if ($(this).val() == '') 
+						$(this).hide();
+				});*/
+        		if ($(this).prop('checked')){
+   
+	        		$(tr).css({'background-color':'greenyellow'});
+
+    	    		var $noconf = $('td[campo="no_conforme"] input:checkbox', tr).prop('checked', !$(this).prop('checked'));
+
+					try {
+					    $noconf.checkboxradio("refresh");
+					} catch (err){$('[name="controlcausal_id"]', tr)
+				    	// no es movil
+					}
+
+        		} else {
+        			tr.css({'background-color':'transparent'});
+        		}
+        	});
+
+
+        	$('td[campo="no_conforme"] input:checkbox').change(function(){
+        		var tr = $(this).closest('tr');
+				
+
+        		if ($(this).prop('checked')){
+        			$('[name="observacion_control"]', tr).show();
+//				$('[campo="controlcausal_id"]', tr).show();
+	        		
+
+	        		tr.css({'background-color':'transparent'});
+	        		var $conf = $('td[campo="conforme"] input:checkbox', tr).prop('checked', !$(this).prop('checked'));
+
+				try {
+				    $conf.checkboxradio("refresh");
+				} catch (err){
+				    // no es movil
+				}
+
+
+        		} else {
+        			$('td[campo="observacion_control"] input', tr).hide();
+//				$('td[campo="controlcausal_id"]', tr).hide();
+        		}
+        	});        	
+
+
+
+        	$('td[campo="no_aplica"] input:checkbox').change(function(){
+        		var tr = $(this).closest('tr');
+        		if ($(this).prop('checked')){
+        		//	$('[name="observacion_control"]', tr).hide();
+				        		
+
+	        		tr.css({'background-color':'#ddd',  'text-decoration':'line-through'});
+	        		var $conf = $('td[campo="conforme"] input:checkbox, td[campo="no_conforme"] input:checkbox', tr).prop('checked', !$(this).prop('checked')).prop('disabled',true);
+				try {
+				    $conf.checkboxradio("refresh");
+				} catch (err){
+				    // no es movil
+				}
+
+
+				$('td[campo="conforme"] input:checkbox, td[campo="no_conforme"] input:checkbox', tr).closest('td').css({'background-color':'transparent'});
+        		} else {
+	        		tr.css({'background-color':'inherit',  'text-decoration':'none'});
+
+	        		var $conf = $('td[campo="conforme"] input:checkbox, td[campo="no_conforme"] input:checkbox', tr).prop('checked', $(this).prop('checked')).prop('disabled',false).checkboxradio("refresh");
+
+				try {
+				    $conf.checkboxradio("refresh");
+				} catch (err){
+				    // no es movil
+				}
+
+				tr.css({'background-color':'transparent' ,  'text-decoration':'none'});
+        		//	$('td[campo="observacion_control"] input', tr).show();
+        		}
+        	});        	
+
+
+			$('[name="observacion_control"]').each(function(){
+				if ($(this).val() == '') 
+					$(this).hide();
+			});
+/*			$('[campo="controlcausal_id"]').each(function(){
+				if ($(this).val() == '') 
+					$(this).hide();
+			});
+*/
+        	]]>
+        </customScript>
+	<form>
+	<preconsultas>
+		<xmlfile id="controlcalidad/qry/controles_linea_pend.xml"/>
+	</preconsultas>   
+		
+		<table id="PROD_CONTROLES" tableHeight="400">
+		    <movimientos>
+		    	<relacion id="prod_controlmovim_update.xml" /> 
+				<relacion id="prod_controlmovim_ins_movil.xml" />
+				<!--
+					por trigger
+				<relacion id="ingreso_coche_seccion_ins.xml" /> 
+			-->
+
+		    </movimientos>
+
+			<title>Control de Calidad</title>
+			<field id="habilitado" oculto="true">
+			    <condicion operador="=">0</condicion>
+			</field>
+			<field id="id_prodcontrol" noshow="true" esClave="true"
+>
+			</field>
+			
+			<field id="nrofab_id" noshow="true" local="true" >
+			</field>
+
+			<field id="tit" noshow="true">
+			    <expression>concat('([__nrofab_id__]) ',descripcion)</expression>
+			<setvar>titulo</setvar>
+			</field>
+
+			<field id="homologacion_id" noshow="true" tabla="PROD_CONTROL_HOMOLOG" />
+
+			<field id="id_controlmovim" noshow="true">
+			    <expression>id_controlmovim</expression>
+			</field>
+
+			<field id="seccion_id" noshow="true" />
+            <field id="descripcion" repeat="false" style="font-size:0.7em;" tabla="MOMENTO" />
+			<field id="modelo_control" noshow="true" _break="true"/>
+			<field id="orden_control" noshow="true" />
+<field id="modelo_control2" _noshow="true" repeat="false" _getStyle="style_noconforme" style="font-size:0.7em;" tdWidth="80px">
+    <expression>modelo_control</expression>
+</field>
+
+
+			<field id="nombre_control"  _style="font-size:0.7em;" noshow="true" >
+				
+			</field>
+			<field id="critico" tabla="PROD_CONTROLES" noshow="true">
+		    <label>c</label>
+			    <condicion operador="=">1</condicion>
+
+		</field>
+
+			<field id="fotopath" noshow="true" >
+			    <expression>concat([__nrofab_id__],'/controlcalidad/',id_prodcontrol)</expression>
+			</field>
+
+
+			<field id="observacion_control" tabla="PROD_CONTROL_MOVIM" style="font-size:0.9em;" editable="true" conLabel="true" >
+				<attribute id="Etiqueta">nombre_control</attribute>
+				<size>14</size> 
+				<help>Observaciones</help>
+			</field>
+			<field id="controlcausal_id" noshow="true" tabla="PROD_CONTROL_MOVIM" style="font-size:0.8em;">
+				<label modpos="nobr">  </label>
+				<helper type="combo" id="PROD_CONTROL_CAUSAL" empty="true">
+				    <field id="id_controlcausal" />
+				    <field id="nombre_controlcausal" />
+				    <field id="habilitado_controlcausal" noshow="true">
+					<condicion operador="=">1</condicion>
+				    </field>
+				</helper>
+				<size>5</size>
+			</field>
+		<field id="horas_retrabajo" noshow="true" tabla="PROD_CONTROL_MOVIM" editable="true" style="width:4em;font-size:0.8em;">
+		    <help>Horas retrabajo</help>
+		    <size>30</size>
+		</field>
+	
+		
+		<field id="muestralegajo" local="true" noshow="true">
+		    <if exp="critico == 1">
+			<true>'background-color:pink;text-align:center;'</true>
+			<false>'display:none;'</false>
+		    </if>
+		</field>
+
+		<field id="legajo_personal" local="true" editable="true" deshabilitado="false" getStyle="muestralegajo" noshow="true">
+		    <help>Legajo Asignado</help>
+		    <size>5</size>
+		    <expression>IF(PROD_CONTROL_MOVIM.legajo_personal = 0, PROD_CONTROLES.legajo_defecto, PROD_CONTROL_MOVIM.legajo_personal)</expression>
+		</field>
+<!--
+	        <field id="foto" noshow="true">
+		<helper type="link" xml="prod_control_foto.xml">
+		    <parameter source="id_controlmovim" target="id_controlmovim" />
+		    <parameter source="fotopath" target="fotopath" />
+		</helper>
+		<expression>case when isnull(id_controlmovim) then '' else (case when foto != '' then '1 Foto' else 'Foto' end) end</expression>
+			
+
+	    </field> -->
+		<field id="fotolink" noshow="true">
+			<expression>case when isnull(id_controlmovim) then 'prod_control_foto_sinficha.xml' else 'prod_control_foto.xml' end</expression>
+		</field>
+		<field id="foto1">
+			<label>Foto</label>
+			<attribute id="linkint">fotolink</attribute>
+			<helper type="link" xml="prod_control_foto_sinficha.xml">
+				<parameter source="id_controlmovim" target="id_controlmovim" />
+				<parameter source="fotopath" target="fotopath" />
+				<parameter source="fotopath" target="uid" />
+
+			</helper>
+			<expression>(case when foto != '' then '1 Foto' else 'Foto' end)</expression>
+			<!-- <expression>case when isnull(id_controlmovim) then '' else (case when foto != '' then '1 Foto' else 'Foto' end) end</expression> -->
+		</field>		
+
+			<field id="muestracontrol" local="true" noshow="true">
+				<if exp="no_conforme != 1">
+					<true>'display:none;'</true>
+					<false>'background-color:red;text-align:center;'</false>
+				</if>
+			</field>
+
+			<field id="muestraconforme" local="true" noshow="true">
+				<if exp="no_conforme == 1">
+					<true>'display:none;'</true>
+					<false>'background-color:pink;text-align:center;'</false>
+				</if>
+			</field>
+
+			<field id="conforme"   tabla="PROD_CONTROL_MOVIM" _local="true" 
+				colstyle="background-color:greenyellow;text-align:center;" PDFcolWidth="10" labelStyle="width:8px;font-size:8px;" tdWidth="5px">
+    			<checklabel> </checklabel>
+				<tipo>check</tipo>
+				<attribute id="style">muestraconforme</attribute>			
+
+			</field>
+
+			<field id="controlado" tabla="PROD_CONTROL_MOVIM" noshow="true" PDFcolWidth="10" labelStyle="width:1em;font-size:8px">
+				<attribute id="style">muestracontrol</attribute>			
+				<checklabel>Aprob</checklabel>
+				<tipo>check</tipo>
+
+			</field>
+
+
+			<field id="no_conforme" noshow="true" tabla="PROD_CONTROL_MOVIM" _inputstyle="width:2em;height:2em;" _local="true"
+			colstyle="background-color:pink;text-align:center;" labelStyle="width:8px;font-size:8px;" tdWidth="5px" PDFcolWidth="10">
+				<checklabel> </checklabel>
+				<tipo>check</tipo>
+			</field>
+			<field id="no_aplica" _noshow="true" tabla="PROD_CONTROL_MOVIM" labelStyle="width:8px;font-size:8px;" inputstyle="width:2em;height:2em;" _local="true" colstyle="background-color:#bbb;text-align:center;" PDFcolWidth="10" tdWidth="5px">
+				<checklabel> </checklabel>
+				<tipo>check</tipo>
+
+			</field>
+
+
+			<field id="update" noshow="true" local="true" colstyle="display:none;" editable="true">
+				
+
+			</field>
+
+			<field id="graba" local="true" noshow="true">
+			    <label>g</label>
+			    <if exp="'id_controlmovim' > '0'">
+				<true>0</true>
+				<false>1</false>
+			    </if>
+			</field>
+			<field id="user_id" local="true" noshow="true">
+			    <valor eval="true">$_SESSION['usuario']</valor>
+			</field>
+
+			<order>
+                <field id="orden_control"/>
+            </order>
+
+		</table>
+		<join tipo="left">
+		    <table id="MOMENTO">
+			<field id="idMomento">
+			    <condicion operador="=">PROD_CONTROLES.seccion_id</condicion>
+			</field>
+		    </table>
+		</join>
+
+        <join tipo="left">
+            <table id="PROD_CONTROL_HOMOLOG">
+                <field id="prodcontrol_id">
+                    <condicion operador="=">id_prodcontrol</condicion>
+                </field>
+                <field id="homologacion_id">
+                    <condicion operador="=">[__homologacion_id__]</condicion>
+                </field>
+            </table>
+        </join>
+
+		<join tipo="left">
+		    <table id="PROD_CONTROL_MOVIM">
+			<field id="nrofab_id">
+			    <condicion operador="=">'[__nrofab_id__]'</condicion>
+			</field>
+			<field id="prodcontrol_id">
+			    <condicion operador="=">id_prodcontrol</condicion>
+			</field>
+		    </table>
+		</join>
+
+	</form>
+</histrix>

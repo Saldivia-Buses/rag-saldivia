@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--Comentario-->
+<histrix tipo="consulta">
+  <title>Numero de Internos</title>
+  <obs></obs>
+  <form>
+    <table id="HTXUSERS" label="NUMERO DE INTERNOS" limit="1">
+      
+
+
+       <field id="nombre" >
+        <label>Nombre</label>
+        <size>24</size>
+      </field> 
+
+     <field id="apellido">
+      <label>Apellido</label>
+      <size>24</size>
+     </field>
+
+     <field id="interno">
+       <label>Nº de Interno</label>
+       <size>24</size>
+     </field>
+      
+      <field id="telefono">
+       <label>Telefono</label>
+       <size>24</size>
+     </field>
+
+
+    <field id="baja" noshow="true">
+      <label></label>
+      <condicion operador="!=">1 </condicion>
+    </field>
+
+     <order>
+	<field id="apellido" typeOrder="ASC">
+
+      </field>
+    </order>
+
+          </table>
+  </form>
+</histrix>  
+

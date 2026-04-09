@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="consulta" preloadData="false">
+	<title>Cantidad</title>
+	<obs></obs>
+	<form>
+		<table id="PROD_CONTROLES">
+		   <title>CANTIDAD DE OBSERVACIONES</title>
+
+		   	<filters>
+		   		<field id="fecha_desde">
+		   			<label>Desde</label>
+		   			<operador>=</operador>
+		   			<valor eval="true">date("d/m/Y", mktime(0, 0, 0, date("m"), 1  , date("Y")))</valor>
+		   		</field>
+		   		<field id="fecha_hasta">
+		   			<label modpos="nobr">Hasta</label>
+		   			<operador>=</operador>
+		   			<valor>today</valor>
+		   		</field>
+		   		<field id="idMomento">
+		   			<label modpos="nobr">Seccion</label>
+		   			<operador>=</operador>
+		   		</field>
+		   		<field id="nrofab_id">
+		   			<label modpos="nobr">Unidad</label>
+		   			<operador>=</operador>
+		   		</field>
+		   	</filters>
+
+		    <field id="id_prodcontrol" noshow="true" />
+
+		    <field id="fecha_desde" local="true" noshow="true">
+		    	<tipo>date</tipo>
+		    </field>
+		    
+		    <field id="fecha_hasta" local="true" noshow="true">
+		    	<tipo>date</tipo>
+		    </field>
+
+		    <field id="nrofab_id" tabla="PROD_CONTROL_MOVIM">
+		    	<label>Unidad</label>
+		    </field>
+
+		    <field id="chasis_carroceria">
+		    	<label>Modelo</label>
+				<expression>CONCAT(CARROCERIA.desabv, ' - ', MODCHASIS.desabv,' - ', LEFT(ctafan, 10))</expression>
+		    </field>
+
+		    <field id="fecha_control" tabla="PROD_CONTROL_MOVIM" noshow="true">
+		    	<tipo>date</tipo>
+		    	<condicion operador="&gt;=">str_to_date('[__fecha_desde__]', '%d/%m/%Y') and fecha_control &lt;= str_to_date('[__fecha_hasta__]', '%d/%m/%Y')</condicion>
+		    </field>
+
+		    <field id="hora_control" tabla="PROD_CONTROL_MOVIM" noshow="true">
+		    	<label>Hora</label>
+		    </field>
+
+		    <field id="orden_control" noshow="true">
+		    	<condicion operador="=">1 or id_prodcontrol = 388</condicion>
+		    </field>
+
+		    <field id="fecingreso" local="true" _noshow="true">
+		    	<label>Fecha Ingreso</label>
+			<expression sql="true">SELECT CAST('[__ingreso__]' as date)</expression>
+			<tipo>date</tipo>
+		    </field>
+
+		    <field id="hsingreso" local="true" _noshow="true">
+		    	<label>Hora Ingreso</label>
+			<expression sql="true">SELECT CAST('[__ingreso__]' as time)</expression>
+			<tipo>time</tipo>
+		    </field>
+
+		    <field id="ingreso" local="true" noshow="true">
+		    	<label>Hora Ingreso</label>
+            	<expression><![CDATA[SELECT hora_control
+							FROM PROD_CONTROL_MOVIM PCM
+							INNER JOIN PROD_CONTROLES AS PC ON id_prodcontrol = prodcontrol_id
+							WHERE PCM.nrofab_id = PROD_CONTROL_MOVIM.nrofab_id AND (orden_control = 1 OR id_prodcontrol = 388)
+							AND PC.seccion_id = PROD_CONTROLES.seccion_id limit 1]]>
+				</expression>
+            </field>
+
+            <field id="ingresofe" local="true" noshow="true">
+		    	<label>Ingreso Fecha</label>
+            	<expression><![CDATA[SELECT fecha_control
+							FROM PROD_CONTROL_MOVIM PCM
+							INNER JOIN PROD_CONTROLES AS PC ON id_prodcontrol = prodcontrol_id
+							WHERE PCM.nrofab_id = PROD_CONTROL_MOVIM.nrofab_id AND (orden_control = 1 OR id_prodcontrol = 388)
+							AND PC.seccion_id = PROD_CONTROLES.seccion_id limit 1]]>
+				</expression>
+				<tipo>date</tipo>
+            </field>
+
+		    <field id="fecliberacion" local="true" _noshow="true">
+		    	<label>Fecha Liberacion</label>
+			<expression sql="true">SELECT CAST('[__liberacion__]' as date)</expression>
+			<tipo>date</tipo>
+		    </field>
+
+		    <field id="hsliberacion" local="true" _noshow="true">
+		    	<label>Hora Liberacion</label>
+			<expression sql="true">SELECT CAST('[__liberacion__]' as time)</expression>
+			<tipo>time</tipo>
+		    </field>
+
+
+		    <field id="liberacion" local="true" noshow="true">
+		    	<label>Hora Liberacion</label>
+            	<expression><![CDATA[SELECT hora_control
+							FROM PROD_CONTROL_MOVIM PCM
+							INNER JOIN PROD_CONTROLES AS PC ON id_prodcontrol = prodcontrol_id
+							WHERE PCM.nrofab_id = PROD_CONTROL_MOVIM.nrofab_id AND (orden_control = 999 OR id_prodcontrol = 388)
+							AND PC.seccion_id = PROD_CONTROLES.seccion_id limit 1]]>
+				</expression>
+            </field>
+
+            <field id="liberacionfe" local="true" noshow="true">
+		    	<label>Liberacion Fecha</label>
+            	<expression><![CDATA[SELECT fecha_control
+							FROM PROD_CONTROL_MOVIM PCM
+							INNER JOIN PROD_CONTROLES AS PC ON id_prodcontrol = prodcontrol_id
+							WHERE PCM.nrofab_id = PROD_CONTROL_MOVIM.nrofab_id AND (orden_control = 999 OR id_prodcontrol = 388)
+							AND PC.seccion_id = PROD_CONTROLES.seccion_id limit 1]]>
+				</expression>
+				<tipo>date</tipo>
+            </field>
+
+<!-- AUTOR: Maxi Santecchia
+     FECHA: 27/10/2016
+     LEYENDA: Basta de Despidos-->
+
+            <field id="calc_tiempo">
+                <label>Días Produccion</label>
+                <expression sql="true">SELECT (count(*) + 1) 
+                                            FROM GEN_CALENDAR GC
+                                                WHERE DAYOFWEEK(GC.fecha) NOT IN (1,7) and
+                                                      GC.fecha &gt;= '[__ingreso__]' and
+                                                      GC.fecha &lt;= (case when '[__liberacion__]' = '' then NOW() else '[__liberacion__]' end) and
+                                                      GC.fecha NOT IN (select idFeriado from FERIADOS)</expression>
+            </field>
+
+            <field id="orden" tabla="MOMENTO" noshow="true" />
+
+            <field id="dias_entre_secciones">
+                <label>Días Entre Secciones</label>
+                <expression sql="true">SELECT (case when '[__liberacion__]' = '' then '' else (IF((count(*) + 1) = 1, 0, (count(*) + 1))) end)
+                                            FROM GEN_CALENDAR GC
+                                                WHERE DAYOFWEEK(GC.fecha) NOT IN (1,7) and
+                                                      GC.fecha &gt;= '[__liberacion__]' and
+                                                      GC.fecha &lt;= IFNULL((
+SELECT hora_control
+    FROM PROD_CONTROL_MOVIM PCM
+    INNER JOIN PROD_CONTROLES AS PC ON id_prodcontrol = prodcontrol_id
+          JOIN MOMENTO ON MOMENTO.idMomento = PC.seccion_id
+    WHERE (orden_control = 1 OR id_prodcontrol = 388) AND 
+          PC.seccion_id = PC.seccion_id AND 
+          MOMENTO.orden &gt; '[__orden__]' AND
+          PCM.nrofab_id = '[__nrofab_id__]' 
+    ORDER BY MOMENTO.orden limit 1
+
+), NOW())and
+                                                      GC.fecha NOT IN (select idFeriado from FERIADOS)</expression>
+            </field>
+
+            <field id="color_seccion" noshow="true">
+                <expression>
+                	case when PROD_CONTROLES.seccion_id= 2 then 'color:#FF0000;font-weight:bold'
+                		 when PROD_CONTROLES.seccion_id= 3 then 'color:#0B610B;font-weight:bold'
+                		 when PROD_CONTROLES.seccion_id= 4 then 'color:#DF7401;font-weight:bold'
+                		 when PROD_CONTROLES.seccion_id= 5 then 'color:#8000FF;font-weight:bold'
+                		 when PROD_CONTROLES.seccion_id= 6 then 'color:#2E9AFE;font-weight:bold'
+                		 when PROD_CONTROLES.seccion_id= 8 then 'color:#585858;font-weight:bold'
+                		 when PROD_CONTROLES.seccion_id= 15 then 'color:#2E2EFE;font-weight:bold'
+                		 when PROD_CONTROLES.seccion_id= 23 then 'color:#3F33FE;font-weight:bold'
+                		 when PROD_CONTROLES.seccion_id= 25 then 'color:#868A08;font-weight:bold'
+                	end
+                </expression>
+			</field>
+			
+	        <field id="nombre_control" noshow="true">
+		       	<condicion operador="!=">''</condicion>
+		       	<label>Control</label>
+		    </field>
+
+            <field id="idMomento" tabla="MOMENTO" _noshow="true">
+		    	<helper type="combo" id="MOMENTO" empty="true">
+		    		<field id="idMomento">
+		    		<condicion operador="=">15 or idMomento = 25 or idMomento = 2 or idMomento = 3 or idMomento = 4 or idMomento = 5 or idMomento = 6</condicion>
+		    		</field>		
+		    		<field id="descripcion" />
+		    		<field id="linea_id">
+		    			<condicion operador="=">1</condicion>
+		    		</field>
+		    	</helper>            	
+		    	<label>Seccion</label>
+		    	<attribute id="style">color_seccion</attribute>
+		    </field>
+
+            <field id="seccion_id" noshow="true">
+		    	<condicion operador="=">15 or idMomento = 25 or idMomento = 2 or idMomento = 3 or idMomento = 4 or idMomento = 5 or idMomento = 6</condicion>
+		    	<label>Seccion</label>
+		    </field>
+<!-- 		    <group>
+		    	<field id="nrofab_id" />
+		    </group> -->
+
+			<order>
+				<field id="hora_control" tipoOrden="ASC" />
+				<field id="idMomento" tipoOrden="ASC" />
+				<field id="nrofab_id" tipoOrden="ASC" />
+			</order>
+		
+		</table>
+		
+		<join tipo="left">
+            <table id="PROD_CONTROL_MOVIM">
+                <field id="prodcontrol_id">
+                    <condicion operador="=">PROD_CONTROLES.id_prodcontrol</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join>
+            <table id="MOMENTO">
+                <field id="idMomento">
+                    <condicion operador="=">PROD_CONTROLES.seccion_id</condicion>
+                </field>
+            </table>
+        </join>
+		<join tipo="left">
+		    <table id="PEDCOTIZ">
+			<field id="nrocha">
+			    <condicion operador="=">PROD_CONTROL_MOVIM.nrofab_id</condicion>
+			</field>
+		    </table>
+		</join>
+		<join tipo="left">
+            <table id="CCTCUENT">
+                <field id="ctacod">
+                    <condicion operador="=">PEDCOTIZ.ctacod</condicion>
+                </field>
+                <field id="siscod">
+                    <condicion operador="=">'02'</condicion>
+                </field>   
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="CHASIS">
+                <field id="nrocha">
+                    <condicion operador="=">PEDCOTIZ.nrocha</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="MODCHASIS">
+                <field id="modcha">
+                    <condicion operador="=">CHASIS.modcod</condicion>
+                </field>
+                <field id="marcod">
+                    <condicion operador="=">CHASIS.marcod</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="CARROCERIA">
+                <field id="nrocar">
+                    <condicion operador="=">PEDCOTIZ.nrocar</condicion>
+                </field>
+            </table>
+        </join>	</form>
+</histrix>

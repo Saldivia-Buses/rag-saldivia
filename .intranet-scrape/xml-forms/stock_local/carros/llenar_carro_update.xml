@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF8"?>
+<histrix tipo="update" >
+  <titulo>Artículo por Locación</titulo>
+  <obs/>
+  <form>
+    <table id="STK_ARTICULO_CARRO" idCampoCond="grabar">
+      <field id="id_stkarticulocarro" esClave="true" id_temp="id_stkarticulocarro" />
+      <field id="cantidad_actual" id_temp="cantidad_carro" />
+    </table>
+  </form>
+</histrix>

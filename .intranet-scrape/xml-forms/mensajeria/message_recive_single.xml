@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="fichaing"   borra="no" inserta="no"  noform="true" imprime="false" close="true"
+    confirma="OK"
+    preFetch="true">
+    <title>Mensajes</title>
+    <obs/>
+    <eventos>
+        <event id="procesar">close</event>
+    </eventos>
+    <form >
+        <table id="HTXMESSAGES" label="Mensajes recibidos" _styleTbody="height:250px;" >
+            <movimientos>
+                <relacion id="message_recive_single_mov.xml"></relacion>
+            </movimientos>
+            <field  id="idMensaje" noshow="true" deshabilitado="true">
+                <label>id</label>
+            </field>
+<!--            <field id="idxmluid" local="true" noshow="true">
+                <setvar>idxmluid</setvar>
+            </field>
+-->
+            <field  id="_origen" noshow="true">
+                <expresion>de</expresion>
+            </field>
+
+            <field deshabilitado="true" id="_de" rss="author">
+                <expresion>CONCAT(nombre, ' ', apellido)</expresion>
+                <label >de</label>
+                <help></help>
+                <size>20</size>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="fecha" deshabilitado="true">
+                <label modpos="nobr">Fecha</label>
+            </field>
+<!--           <field id="hora" deshabilitado="true" >
+                <label modpos="nobr" >-</label>
+            </field>
+-->
+            <field id="email" deshabilitado="true"  noshow="true">
+                <expresion>HTXUSERS.email</expresion>
+            </field>
+            <field id="__message" _noshow="true" enablecopy="true" cols="47">
+                <expresion>mensaje</expresion>
+                <label colspan="6" style="width:100%;background-color:#eee;" ></label>
+                <size>350</size>
+            </field>
+            <field id="msg2" deshabilitado="true"  _local="true" noshow="true">
+                <expresion>CONCAT('\n\nMensaje Original:\n>>', trim(mensaje))</expresion>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="estado" local="true" colspan="2">
+                <options>
+                    <option valor="1">Marcar como Leido</option>
+                    <option valor="2">Recordatorio</option>
+                </options>
+                <tipo>radio</tipo>
+                <valor>1</valor>
+            </field>
+            <field id="responder" local="true" 
+        	linkint="mensajes_reply.xml" linkdes="Responder este Mensaje" 
+        	_noselect="true"
+                linkWidth="500px"
+                linkHeight="310px"
+                display="toolbar"
+                >
+                <label modpos="nobr" colspan="4" style="padding:0px 10px;text-align:right;"  ></label>
+                <tipo>varchar</tipo>
+                <valor><![CDATA['<img src=&quot;../img/mail_generic.png&quot;/> Responder']]></valor>
+                <valor>Responder</valor>
+                <paring destino="para" operador="=">_origen</paring>
+                <paring destino="email" >email</paring>
+                <paring destino="idHilo" >idMensaje</paring>
+                <paring destino="mensaje" >msg2</paring>
+                
+                
+            </field>
+
+        </table>
+        <join tipo="left">
+            <table id="HTXUSERS">
+                <field id="login">
+                    <condicion operador="=">de</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix>

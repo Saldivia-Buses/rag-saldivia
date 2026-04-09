@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="consulta">
+    <title>Precios Proveedores</title>
+    <obs></obs>
+    <form >
+        <table id="STKINSPR" label="Precios Proveedores">
+	     <field id="ctacod"  esClave="true">
+                <label modpos="nobr">Proveedor</label>
+                <size>20</size>
+            </field>
+	     <field id="ctanom"  tabla="CCTCUENT">
+                <label modpos="nobr">Nombre</label>
+                <tipo>varchar</tipo>
+                <size>20</size>
+            </field>
+            <field id="artcod"  esClave="true">
+                <label>Codigo Articulo</label>
+                <help>Codigo de Articulo</help>
+                <ayuda_ex id="STKINSUM" xml="HLPstkinsum.xml" dir="/help_local">
+                    <field id="artcod"  >
+                        <label>Cod.</label>
+                    </field>
+                    <field id="artdes">
+                        <label>Insumo</label>
+                        <detalle>artdes</detalle>
+                    </field>
+                    <field id="artpor" oculto="true">
+                        <label>Porcent</label>
+                        <detalle>artpor</detalle>
+                    </field>
+                    <field id="artcos" oculto="true">
+                        <label>costo</label>
+                        <detalle>artcos</detalle>
+                    </field>
+                    <field id="unicps" oculto="true">
+                        <detalle>unicps</detalle>
+                    </field>
+                    <field id="valcps" >
+                        <detalle>valcps</detalle>
+                    </field>
+                    <field id="valuso" >
+                        <detalle>valuso</detalle>
+                    </field>
+                    <field id="artuni" oculto="true">
+                        <detalle>artuni</detalle>
+                    </field>
+                    <field id="siscod" oculto="true">
+                        <condicion operador="=">'01'</condicion>
+                    </field>
+                    <clave>artcod</clave>
+                    <descripcion>artdes</descripcion>
+                </ayuda_ex>
+            </field>
+	     
+           <field id="artdes"  tabla="STKINSUM">
+                <label modpos="nobr">Descripcion</label>
+                <tipo>varchar</tipo>
+                <size>20</size>
+            </field>
+            <field id="artcos" >
+                <label modpos="nobr">precio</label>
+<expresion>select PR.artcos from STKINSPR as PR where PR.artcod = STKINSPR.artcod and PR.ctacod= STKINSPR.ctacod order by PR.fecult DESC limit 1 </expresion>
+                <valor>numeric</valor>
+            </field>
+
+            <field id="fecult" >
+                <label modpos="nobr">Fecha Compra</label>
+		<expresion>select PR.fecult from STKINSPR as PR where PR.artcod = STKINSPR.artcod and PR.ctacod= STKINSPR.ctacod order by PR.fecult DESC limit 1 </expresion>
+		<tipo>date</tipo>
+            </field>
+            
+        
+           <group>
+                <field id="ctacod" tabla="STKINSPR"></field>
+            </group>
+        </table>
+	 <join tipo="left">
+            <table id="STKINSUM">
+                <field id="siscod" oculto="true">
+                    <label>STKINSUM.siscod</label>
+                    <condicion operador="=">'01'</condicion>
+                </field>
+                <field id="artcod" oculto="true">
+                    <condicion operador="=">STKINSPR.artcod</condicion>
+                </field>
+                <field id="artuni" oculto="true">
+                </field>
+                <field id="unicps" oculto="true">
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="CCTCUENT">
+                <field id="siscod" oculto="true">
+                    <label>STKINSUM.siscod</label>
+                    <condicion operador="=">'01'</condicion>
+                </field>
+                <field id="ctacod" oculto="true">
+                    <condicion operador="=">STKINSPR.ctacod</condicion>
+                </field>
+            </table>
+        </join>
+	 
+    </form>
+</histrix>

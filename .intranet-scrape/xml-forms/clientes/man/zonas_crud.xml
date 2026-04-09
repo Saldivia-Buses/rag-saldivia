@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="abm-mini" subtipo="vertical">
+		<title>Zonas</title>
+		<obs></obs>
+		<form detalle="localidadesxzona_crud.xml">
+		    <table id="REG_ZONAS" label="Zonas">
+
+				<field id="id_regzona" autoinc="true" noshow="true" esClave="true">
+					<detalle>regzona_id</detalle>
+				</field>
+
+				<field id="nombre_zona">
+					<label>Nombre</label>
+					<!--<size>45</size>-->
+				</field>
+
+				<field id="abreviatura_zona">
+					<label>Abreviatura</label>
+				</field>
+
+                <field id="provincia_id">
+                    <helper type="combo" xml="provincia_qry.xml" dir="/ayudas" />
+                    <label>Provincia</label>
+                    <detalle>provincia_id</detalle>
+                </field>
+                
+				<field id="subsistema_id" noshow="true" valauto="true"/>
+
+		    </table>
+		</form>
+    </histrix>

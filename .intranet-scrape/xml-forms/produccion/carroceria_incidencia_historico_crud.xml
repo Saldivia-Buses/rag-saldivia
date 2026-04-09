@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="crud">
+	<title>Por ciento incidencia por modelo</title>
+	 <obs></obs>
+		<form >
+		    <table id="CARROCERIA_INCIDENCIA_HISTORICO" label="Por ciento incidencia por modelo">
+				<field id="id_incidencia" noshow="true"/>
+ 
+				<field id="nrocar" oculto="true"/>
+ 
+				<field id="fecha" >
+					<label>Fecha</label>
+					<tipo>date</tipo>
+				</field>
+
+		      	<field id="porciento_incidencia">
+		  	    	<label>% Incidencia</label>
+		  	    	<tipo>numeric</tipo>
+		      	</field>
+		      	<order>
+		      		<field id="fecha" orderType="DESC"/>
+		      	</order>
+		    </table>
+		</form>
+    </histrix>

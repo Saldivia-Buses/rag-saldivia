@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+  <title/>
+  <obs/>
+  <form>
+    <table id="CAJ_NUMERADORES">
+		<field id="subsistema_id" esClave="true" oculto="true">
+		    <condicion operador="=">'03'</condicion>
+		</field>
+
+		<field id="cajpuesto_id" esClave="true">
+			<expression>IFNULL(cajpuesto_id, 0)</expression>
+		    <condicion operador="=">0</condicion>
+		</field>
+
+		<field id="cajconcepto_id" esClave="true"/>
+
+		<field id="printer" oculto="true"/>
+
+		<field id="numero" />
+    </table>
+  </form>
+</histrix>

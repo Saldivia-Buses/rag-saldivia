@@ -1,0 +1,95 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="grid" procesa="true" deleteRow="false" transacional="true" tooltip="false" inserta="false" dataTable_info="false"
+	modifica="false" confirma="APLICAR" _forceReload="true" showCantidad="false" imprime="false">
+	<title>Usuarios para el Puesto</title>
+	 <obs></obs>
+		<form>
+		    <table id="HTXUSERS" label="Usuarios para el Puesto">
+
+				<movimientos>
+					<relacion id="cajconfig_users_del.xml"/>
+					<relacion id="cajconfig_users_ins.xml"/>
+				</movimientos>
+						
+				<field id="Id_usuario" noshow="true" esClave="true" />
+
+				<!-- TABLA DE VINCULACION -->
+				<field id="id_cajpuestouser" tabla="CAJ_PUESTO_USERS" noshow="true" />
+				<field id="cajpuesto_id" local="true" esClave="true"  noshow="true" />
+				<field id="usuario_id" tabla="CAJ_PUESTO_USERS"       noshow="true" />
+				<!-- FIN -->				
+				
+				<field id="login" deshabilitado="true" noshow="true">
+				</field>
+
+				<!-- Determina La Grabacion de los Registros Habilitados -->				
+				<field id="usrhab" refresh="true" deshabilitado="false">
+				    <expression>case when isnull(id_cajpuestouser) then 0 else 1 end</expression>
+				    <tipo>check</tipo>
+				</field>
+
+<!--
+				<field id="anterior" noshow="true">
+				    <expression>case when isnull(id_cajpuestouser) then 0 else 1 end</expression>
+				</field>
+-->				
+				<field id="habilitado" noshow="true" local="true">
+				    <if exp="'usrhab'== 1">
+						<true>'true'</true>
+						<false>'false'</false>
+				    </if>
+				</field>
+				
+
+				<!-- Determina La Grabacion de los Registros Previamente Habilitados al Ingreso del Formulario -->			
+<!--				<field id="borrado" noshow="true" local="true">
+				    <if exp="'usrhab' != 'anterior'">
+						<true>1</true>
+						<false>0</false>
+				    </if>
+				</field>
+-->				
+
+				<field id="nombre" deshabilitado="true" >
+					<label>Nombre</label>
+				</field>
+
+				<field id="Apellido" deshabilitado="true" >
+					<label>Apellido</label>
+				</field>
+				<field id="baja" noshow="true" >
+				    <condicion operador="=">0</condicion>
+				</field>
+				
+				<field id="perfil" deshabilitado="true">
+				  <label>Perfil</label>
+				  <expression>HTXPROFILES.nombre</expression>
+				</field>
+				
+				<order>
+				  <field id="perfil" />
+				</order>
+
+		    </table>
+		    
+		    <join>
+				<table id="HTXPROFILES">
+			        <field id="Id_perfil">
+			          <condicion operador="=">HTXUSERS.Id_perfil</condicion>
+			        </field>
+                </table>
+		    </join>
+            
+		    <join tipo="left">
+				<table id="CAJ_PUESTO_USERS">
+			        <field id="usuario_id">
+						<condicion operador="=">Id_usuario</condicion>
+				    </field>
+					<field id="cajpuesto_id">
+						<condicion operador="=">'[__cajpuesto_id__]'</condicion>
+					</field>
+				</table>
+		    </join>
+		    
+		</form>
+</histrix>

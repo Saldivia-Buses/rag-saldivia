@@ -1,0 +1,444 @@
+<histrix tipo="cards" _autoupdate="240" path="/fotos/coches" >
+    <title>PROGRAMA DE PRODUCCION</title>
+    <obs/>
+    <form  detalle="detalleUnidad.xml" inline="true">
+        <table id="TURNOSPRODUCCION" label="Programa de Produccion"  _showCantidad="false" _styleTbody="height:500px; overflow-x:hidden;">
+            <filters>
+                <field id="linea_id">
+                    <label>Linea</label>
+                    <operador>=</operador>
+                </field>
+                <field id="sale2" deshabilitado="false">
+                    <label>Desde</label>
+                    <help>Fecha de Ingreso a Linea</help>
+                    <operador>&gt;=</operador>
+                    <valor eval="true">date("d/m/Y", mktime(0, 0, 0, date("m"), date("d")-10, date("Y")))
+                    </valor>
+                </field>
+            </filters>
+            
+            <field id="siscli" local="true" oculto="true" >
+                <valor>'02'</valor>
+            </field>
+            <field id="idCotiz" oculto="true">
+                <detalle>idCotiz</detalle>
+            </field>
+            
+<!--            <field  id="nroturno"  noshow="true"  esclave="true" print="false">
+                <label>Turno</label>
+                <help>Turno</help>
+            </field> -->
+            
+            
+            <field id="colorFec"  oculto="true">
+                <expresion>case when PEDCOTIZ.ingresoLinea != '0000-00-00' then 'color:green;font-size:11px;' else '' end</expresion>
+                <tipo>varchar</tipo>
+            </field>
+            
+            <field id="linea_id" oculto="true">
+                <helper type="combo" xml="lineas.xml"/>
+                <preparam campo="linea_id" operador="=">true</preparam>
+            </field>
+            
+            <field id="fechaing2" _PDFanchofijo="true" oculto="true">
+                <expresion>fechaing</expresion>
+            </field>          
+            
+            <field id="fechaing"  esClave="true" _PDFanchofijo="true">
+                <attribute id="style">colorFec</attribute>
+                <expresion having="false">(case when PEDCOTIZ.ingresoLinea != '0000-00-00' then PEDCOTIZ.ingresoLinea else fechaing end)</expresion>
+                <label >Entra</label>
+                <tipo>date</tipo>
+                <help>Fecha de Ingreso a Linea</help>
+                <formato>d/m</formato> 
+                <condicion operador="&lt;">ADDDATE(CURDATE(),INTERVAL 35 DAY)</condicion>
+            </field>
+                              
+            <field id="controlcalidad" local="true"  obj="controlcalidad/controlcalidad_coche_Horiz_cons.xml" showObjTabla="true"  print="false">
+                <paring destino="nrofab" operador="=">nrofab</paring>
+                <paring destino="linea_id" operador="=">linea_id</paring> 
+                <tipo>varchar</tipo>
+                <label>Controles de Calidad</label>
+            </field>
+                                  
+            
+            <field id="offset" noshow="true" deshabilitado="true">
+                <expresion>
+                    select count(*) from TURNOSPRODUCCION as TUR where 
+                    TUR.linea_id = TURNOSPRODUCCION.linea_id and 
+                    TUR.fechaing &gt;= TURNOSPRODUCCION.fechaing and 
+                    TUR.fechaing &lt;= now()
+                </expresion>
+                <tipo>integer</tipo>
+            </field>
+            
+            <field id="colorFecTer"  oculto="true">
+                <expresion>case when PEDCOTIZ.terminacion != '0000-00-00' then 'color:green; font-size:11px;font-weight:bold;' else 'color:#B32600; font-weight:bold;' end</expresion>
+                <tipo>varchar</tipo>
+            </field>
+            
+            <field id="sale2" esClave="true" noshow="true">
+                <label modpos="nobr" >terminado</label>
+                <expresion having="false">DATE_ADD((case when ingresoLinea != '0000-00-00' then ingresoLinea else fechaing end), INTERVAL 45 DAY)</expresion>-->
+                <tipo>date</tipo>
+                <preparam campo="sale2" operador="&lt;">true</preparam>
+            </field>
+            
+        
+            <field id="fechaTerminacion" local="true" >
+                <label modpos="nobr">Pre Ent</label>
+                <attribute id="style">colorFecTer</attribute>
+
+                <expresion>(case when PEDCOTIZ.terminacion != '0000-00-00' then PEDCOTIZ.terminacion else (DATE_ADD((case when ingresoLinea != '0000-00-00' then ingresoLinea else fechaing end), INTERVAL 45 DAY)) end)</expresion>
+                <help>Fecha de Salida de Linea</help>
+                <tipo>date</tipo>
+                <formato>d/m</formato> 
+                
+            </field>
+             
+            <field deshabilitado="true" id="moddes" tabla="MODCHASIS">
+                <expresion>case when MODCHASIS.moddes != '' then MODCHASIS.moddes else TURNOSPRODUCCION.modeloChasis end</expresion>
+                <label >Mod</label>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="chasis_entrada" noshow="true">
+                <expresion>CONCAT('Fecha de entrada del Chasis: ', date_format(CHASIS.entrada, '%d/%m/%Y'))</expresion>
+                <tipo>date</tipo>
+            </field>
+            
+            <field deshabilitado="true" id="chasis" tabla="CHASIS" linkint="chasis_cons.xml" linkdes="Ver Datos del Chasis">
+                <expresion>RIGHT(CHASIS.chasis, 6)</expresion>
+                <label>Chasis</label>
+                <help>Numero de Serie del chasis</help>
+                <paring destino="nrocha">nrofab</paring>
+                <attribute id="tooltip">chasis_entrada</attribute>        
+            </field>
+            <field id="tieneFicha" noshow="true">
+                <expresion>case when PEDCOTIZ.nrocha != 0 and PEDCOTIZ.nrocar != 0 and PEDCOTIZ.cantasi != 0 then 'fichaventas.xml' else '' end</expresion>
+            </field>
+            
+            
+            <field id="nrofab" linkint="fichaventas.xml" linkdes="Ver Ficha de Ventas" >
+                
+                <attribute id="linkint">tieneFicha</attribute>
+                <label modpos="nobr" style="text-align:center;color:#444;font-size:14px;">Nro.</label>
+                <help>Numero de Fabricacion</help>
+                <ayuda_ex id="CHASIS">
+                    <field id="nrocha"/>
+                    <field id="chades"/>
+                </ayuda_ex>
+                <paring destino="nrocha">nrofab</paring>
+                <detalle>nrocha</detalle>
+            </field>
+            <field id="max_fec" noshow="true">
+        	    <expresion>  GREATEST( PEDCOTIZ.revfec ,
+                    (select max(ACC.fecha) from PEDCOTIZ AS PED1 left join ACCESORIOS_COCHE as ACC on ACC.ficha_id = PED1.id where PED1.id = PEDCOTIZ.id ))</expresion>
+            </field>
+            <field id="today" noshow="true" print="false">
+        	<expresion>DATE(NOW())</expresion>
+            </field>
+            <field id="ayer"  noshow="true" print="false">
+        	<expresion>DATE_SUB(curdate(), INTERVAL 1 DAY)</expresion>
+            </field>
+            
+            <field id="maxfec" local="true" noshow="true" print="false">
+                <label>1</label>
+                <if exp="'max_fec' == 'today'">
+            	    <true>'font-size:17px;color:red;font-weight:bold;text-decoration: blink;animation: blink 1s steps(5, start) infinite;-webkit-animation: blink 1s steps(5, start) infinite;'</true>
+            	    <false>('max_fec'=='ayer')?'font-size:17px;color:blue;font-weight:bold;':'font-size:11px;color:green;font-weight:bold;'</false>
+                </if>
+                 
+                <tipo>varchar</tipo>
+                
+            </field>
+            <!--
+            <field id="obser2" noshow="true" print="false">
+                <label>test</label>
+                <expresion><![CDATA[case when @maxrev = DATE(NOW()) then (select group_concat((case when tipo="UPDATE" then CONCAT('', campo, ': ' , valorNuevoTxt ) else CONCAT(' ', REPLACE(REPLACE( obs , ', ', '. '), ': ', ':' )) end)) from HTXLOG where ( HTXLOG.xmlprog = 'Fichaventas_abm.xml' or  HTXLOG.xmlprog = 'accesorios_coche.xml') and HTXLOG.obs like concat('%',nrofab,'%') limit 3) else ' '  end]]></expresion>
+            </field>
+                -->
+            <field id="nroF" noshow="true">
+                <expresion>CONCAT(nrofab,',')</expresion>
+            </field>
+            
+            <field id="log" local="true" linkint="turnos_log_msg_cons.xml" linkdir="menu" linkdes="Historial" print="false" >
+                <label getStyle="maxfec"  Formstyle="display:none;">Ult.Modif</label>
+                <attribute id="tooltip">obser2</attribute> 
+                <if exp="'max_fec' == 'today'">
+            	    <true>'HOY'</true>
+            	    <false>('max_fec'=='ayer')?'Ayer': (('max_fec' != '')?date('d/m', strtotime('max_fec')):'')</false>
+                </if>                
+                <!--
+                <expresion>case when @maxrev = DATE(NOW()) then 'HOY' 
+                    when @maxrev = DATE_SUB(curdate(), INTERVAL 1 DAY) then 'Ayer' 
+                    else date_format(@maxrev, '%d/%m') end
+                </expresion> -->
+                <paring destino="num"    >nroF</paring>
+                
+            </field>
+    
+            <field id="momentos" local="true" deshabilitado="true" print="false" noshow="true" >
+                <label Formstyle="display:none;">Posición</label>
+                
+                <tabla_ex id="MOMENTO" xml="momento_posiciones.xml" >
+                </tabla_ex>
+                <if exp="true">
+                    <true>offset</true>
+                    <false>0</false>
+                </if>
+                
+                <tipo>varchar</tipo>
+            </field>
+            <field id="Entrega" noshow="true" print="false">
+                <label>PreEntrega</label>
+                <expresion>select entrega from ENTREGASCOCHES where ENTREGASCOCHES.nrofab = TURNOSPRODUCCION.nrofab  and ENTREGASCOCHES.entrega IS NOT NULL  limit 1</expresion>
+                <tipo>date</tipo>
+                
+            </field>
+            
+            <field id="colorEnt" noshow="true" local="true">
+                <if exp="'Entrega' != ''">
+                    <true>'color:green;font-weight:bold;'</true>
+                    <false>('ubicacion' != '')?'color:blue;font-weight:bold;':''</false>
+                </if>
+            </field>
+            <field id="CANTposic" noshow="true" >
+
+            	                <expresion>select count(*) from POSICIONESFAB</expresion> 
+
+            </field>
+            
+            <field id="posent" local="true" print="false" ignoreOption="true" getStyle="colorEnt">
+                
+                <label modpos="nobr" Formstyle="display:none;">Posic/Entr.</label>
+                <tabla_ex id="MOMENTO" xml="momento_posiciones.xml" />
+                <if exp="'Entrega' != ''">
+                    <true>date(  'd/m/Y', strtotime ( 'Entrega'))</true>
+                    <false>('ubicacion' != '')?'ubicacion': ((momentos &lt;= CANTposic)?'momentos':'')</false>
+                </if>
+            </field>
+            
+            
+            
+            <field deshabilitado="true" id="ctaconces"  noshow="true">
+                <expresion>case when CONCESIONARIO.ctacod >= 0 then CONCESIONARIO.ctacod else 0 end</expresion>
+                <tipo>integer</tipo>
+                
+            </field>
+            
+            <field deshabilitado="true" id="conces" tabla="CHASIS" linkint="cctconta_consulta.xml" linkdes="Ver medios de Contacto">
+<!--                <expresion>case when CHASIS.conces != '' then CHASIS.conces else TURNOSPRODUCCION.idconces end</expresion>
+                <tabla_ex vacio="true" xml="concesionario.xml"/> -->
+            	<expresion>CONCESIONARIO.nombre</expresion>
+                <label>Conc</label>
+                <help>Concesionario</help>
+                
+                <paring destino="ctacod">ctaconces</paring>
+                <paring destino="siscod">siscli</paring>
+            </field>
+            <field id="ctacod" noshow="true">
+                <expresion>case when PEDCOTIZ.ctacod != '' then PEDCOTIZ.ctacod else TURNOSPRODUCCION.ctacod end</expresion>
+            </field>
+            <field deshabilitado="true" id="ctafan" tabla="PEDCOTIZ" linkint="cctconta_consulta.xml" linkdes="Ver medios de Contacto">
+                <expresion>LEFT(ctafan, 17)</expresion>
+                <label >Cliente</label>
+                <help>Codigo de Cuenta</help>
+                <paring destino="ctacod">ctacod</paring>
+                <paring destino="siscod">siscli</paring>
+            </field>
+            
+            <field deshabilitado="true" id="nrocar" tabla="PEDCOTIZ">
+                <expresion>case when PEDCOTIZ.nrocar != '' then PEDCOTIZ.nrocar else TURNOSPRODUCCION.nrocar end</expresion>
+                
+                <label >Mod.</label>
+                <help/>
+                <tabla_ex id="CARROCERIA">
+                    <field id="nrocar">
+                    </field>
+                    <field id="desabv">
+                    </field>
+                    
+                    <field id="siscod" oculto="true">
+                        <condicion operador="=">03</condicion>
+                    </field>
+                </tabla_ex>
+                <tipo>varchar</tipo>
+            </field>
+            
+            <field deshabilitado="true" id="cantasi" tabla="PEDCOTIZ">
+                <expresion>case when PEDCOTIZ.cantasi != '' then PEDCOTIZ.cantasi else TURNOSPRODUCCION.cantasi end</expresion>
+                <label >Asi</label>
+                <tipo>integer</tipo>
+            </field>
+            <field id="miniba" deshabilitado="true" >
+                <label>Bar</label>
+                <expresion>PEDCOTIZ.miniba</expresion>
+                <options>
+                    <option valor="0"></option>
+                    <option valor="1">No</option>
+                    <option valor="2">Si</option>
+                    <option valor="3">S/D</option>
+                </options>
+            </field>
+            
+            <field id="bagno" deshabilitado="true">
+                <label>B</label>
+                <expresion>PEDCOTIZ.bagno</expresion>
+                <options>
+                    <option valor="0"></option>
+                    <option valor="1">No</option>
+                    <option valor="2">Si</option>
+                    <option valor="3">S/D</option>
+                </options>
+                <tipo>varchar</tipo>
+            </field>
+            <!--
+            <field id="cucheta">
+                <expresion>PEDCOTIZ.cucheta</expresion>
+                
+                <label modpos="nobr">Cuch</label>
+                <helper type="combo" xml="prd_helper_propiedades.xml" dir="/produccion" emtpy="true">
+                    <field id="campoficha_id">
+                        <condicion operador="=">'cucheta'</condicion>
+                    </field>
+                </helper>
+            </field>
+            <field id="aire">
+                <expresion>PEDCOTIZ.marair</expresion>
+                <label>A/A</label>
+                <tabla_ex id="MARCAAIR" vacio="true" indexvacio="0" valorvacio="NO">
+                    <field id="marair">
+                        
+                    </field>
+                    <field id="desair">
+                        <expresion>LEFT(desair, 4)</expresion>
+                    </field>
+                    
+                    <field id="siscod" oculto="true">
+                        <condicion operador="=">03</condicion>
+                    </field>
+                </tabla_ex>
+                <tipo>varchar</tipo>
+            </field>
+
+            
+            <field id="asientos" noshow="true">
+                <expresion>@asiento:=(SELECT SUM(round(pencps ,  2)) from CPSENCAB left JOIN CPSMOVIM on 
+                    ( CPSMOVIM.siscod = CPSENCAB.siscod ) and 
+                    CPSMOVIM.ocpnro = CPSENCAB.ocpnro  
+                    where 
+                    CPSENCAB.ocpest != 4 and
+                    CPSMOVIM.nrocha = TURNOSPRODUCCION.nrofab and 
+                    CPSENCAB.ctacod = (select MARCAASI.ctacod 
+                    from  MARCAASI where marasi = PEDCOTIZ.marasi ))
+                </expresion>
+            </field>
+            <field id="pedido" noshow="true">
+                <expresion>@pedido:=(SELECT SUM(round(movcps ,  2)) from CPSENCAB left JOIN CPSMOVIM on 
+                    ( CPSMOVIM.siscod = CPSENCAB.siscod ) and 
+                    CPSMOVIM.ocpnro = CPSENCAB.ocpnro  
+                    where 
+                    CPSENCAB.ocpest != 4 and
+                    CPSMOVIM.nrocha = TURNOSPRODUCCION.nrofab and 
+                    CPSENCAB.ctacod = (select MARCAASI.ctacod 
+                    from  MARCAASI where marasi = PEDCOTIZ.marasi ))
+                </expresion>
+            </field>
+            <field id="cumplidas" noshow="true">
+                <expresion>@cumplida:=(SELECT CPSENCAB.ocpest from CPSENCAB left JOIN CPSMOVIM on 
+                    ( CPSMOVIM.siscod = CPSENCAB.siscod ) and 
+                    CPSMOVIM.ocpnro = CPSENCAB.ocpnro  
+                    where 
+                    
+                    CPSENCAB.ocpest = 2 and
+                    CPSMOVIM.nrocha = TURNOSPRODUCCION.nrofab and 
+                    CPSENCAB.ctacod = (select MARCAASI.ctacod 
+                    from  MARCAASI where marasi = PEDCOTIZ.marasi ) limit 1)
+                </expresion>
+            </field>
+            <field id="faltante" noshow="true">
+                <expresion>(CASE WHEN @asiento = @pedido THEN 'color:red;' 
+                    when @cumplida = 2 or @asiento &lt;= 0 THEN 'color:green;'
+                    when @asiento &gt;= 1 and @asiento &lt; @pedido THEN 'color:orange;'
+                    when @asiento &lt;= 0 THEN 'color:green;' 	
+                    ELSE  
+                    ' ' END)
+                </expresion>
+            </field>
+            
+            <field id="marasi" tabla="PEDCOTIZ">
+                <expresion>PEDCOTIZ.marasi</expresion>
+                <attribute id="style">faltante</attribute>
+                <label >Marca</label>
+                <help/>
+                <tabla_ex id="MARCAASI" _xml="marcaasi.xml">
+                    
+                    <field id="marasi">
+                    </field>
+                    <field id="asides">
+                        <expresion>LEFT(asides, 4)</expresion>
+                    </field>
+                    <field id="siscod" oculto="true">
+                        <condicion operador="=">03</condicion>
+                    </field>
+                </tabla_ex>
+            </field>
+
+            <field id="hi" deshabilitado="true" clasefila="true" noshow="true">
+                <expresion>case when TURNOSPRODUCCION.fechaActualiza = DATE(NOW()) then 'resaltado' else '' end</expresion>
+                <tipo>varchar</tipo>
+            </field>
+                -->
+            <order>
+                <field id="terminado"/>
+                <field id="fechaing2"/>
+            </order>
+        </table>
+        <join tipo="left">
+            <table id="PEDCOTIZ">
+                <field id="nrocha">
+                    <condicion operador="=">TURNOSPRODUCCION.nrofab and PEDCOTIZ.nrocha != 0</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="CCTCUENT">
+                <field id="ctacod">
+                    <condicion operador="=">(case when PEDCOTIZ.ctacod != 0 then PEDCOTIZ.ctacod else TURNOSPRODUCCION.ctacod end)</condicion>
+                </field>
+                <field id="siscod">
+                    <condicion operador="=">'02'</condicion>
+                </field>
+                
+                
+            </table>
+        </join>
+        
+        
+        <join tipo="left">
+            <table id="CHASIS">
+                <field id="nrocha">
+                    <condicion operador="=">TURNOSPRODUCCION.nrofab and CHASIS.nrocha != 0</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="MODCHASIS">
+                <field id="modcha">
+                    <condicion operador="=">CHASIS.modcod</condicion>
+                </field>
+                <field id="marcod">
+                    <condicion operador="=">CHASIS.marcod</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="CONCESIONARIO">
+                <field id="idconces">
+                    <condicion operador="=">(case when CHASIS.conces != '' then CHASIS.conces else TURNOSPRODUCCION.idconces end)</condicion>
+                </field>
+            </table>
+        </join>
+        
+    </form>
+</histrix>

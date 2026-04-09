@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" subtipo="vertical" paginar="200">
+    <title>Insumos</title>
+    <obs></obs>
+    <form detalle="stkpieza_crud.xml">
+        <table id="STKINSUM" label="Insumos">
+
+		<filters>
+			<field id="artcod">
+			    <label>Cod.</label>
+			    <operador>=</operador>
+			</field>
+			<field id="artdes">
+				<label>Insumo</label>
+				<operador>like</operador>
+			</field>
+			<field id="artrub">
+				<label>Rubro</label>
+				<operador>=</operador>
+			</field>
+		</filters>
+
+        	<field id="siscod" oculto="true">
+			<label>Codigo Sistema</label>
+			<valor>'01'</valor>
+		</field>
+
+		<field  esClave="true" id="artcod">
+		        <label>Código Artículo</label>
+			<detalle>idPadre</detalle>
+			<helper type="external" xml="HLPstkinsum.xml" dir="/help_local">
+			    <field id="artcod">
+				<label>Cod</label>
+			    </field>
+			    <field id="artdes">
+				<label>Nombre</label>
+				<detalle>artdes2</detalle>
+			    </field>
+			</helper>
+		</field>
+
+		<field id="artdes">
+		        <label>Descripción</label>
+			<tipo>varchar</tipo>
+			<size>35</size>
+	        </field>
+		
+		<field id="artrub">
+		        <label>Rubro</label>
+		        <helper type="combo" id="STKRUBRO" empty="true">
+				<field id="artrub"/>
+				<field id="rubnom" />
+			</helper>
+		</field>
+
+		<field id="baja" noshow="true">
+			<label style="color:red;">Condicion</label>
+			<options>
+				<option valor="0">Activo</option>
+				<option valor="1">Baja</option>
+			</options>
+			<valor>0</valor>
+			<tipo>integer</tipo>
+		</field>
+
+        </table>
+    </form>
+</histrix>	

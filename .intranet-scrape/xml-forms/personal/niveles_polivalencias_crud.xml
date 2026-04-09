@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm">
+  <title>Niveles de polivalencias</title>
+  <obs></obs>
+  <form>
+    <table id="RH_POLIVALENCIA_NIVELES" label="Niveles de polivalencias">
+      <field id="id_rhpolnivel">
+		<label>Código</label>
+		<help>Código de el nivel de polivalencia</help>
+      </field>
+	
+      <field id="descripcion">
+	<label>Descripcion</label>
+	<help>Nombre del nivel de polivalencia</help>
+      </field>
+    </table>
+  </form>
+</histrix>  

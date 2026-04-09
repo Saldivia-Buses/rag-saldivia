@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert">
+    <title>MOVIMIENTOS DE STOCK</title>
+    <obs></obs>
+    <form >
+        <table id="STK_MOVIMIENTOS" label="MOVIMIENTOS">
+            <field id="subsistema_id"     id_cab="sisprv" oculto="true" />
+            <field id="nrocha"            id_cab="nrocha"  />
+            <field id="fecha_movimiento"  id_cab="movfec"  />
+            <field id="stkconcepto_id"    id_cab="movcod"  />
+            <field id="numero_movimiento" id_cab="movnro"  />
+            <field id="ctacod"            id_cab="ctacod"  />
+            <field id="alta_movimiento"   id_cab="movfec"  />
+            <field id="opecod"            id_cab="opecod"  />
+            <field id="opecla"            id_cab="opecla"  />
+
+            <field id="stkarticulo_id"    id_temp="artcod" />
+            <field id="stkdeposito_id"    id_temp="stkdeposito_id" />
+            <field id="stklocacion_id"    id_temp="stklocacion_id" />
+            <field id="cantidad"          id_temp="movcant" />
+            <field id="referencia"        id_temp="movref"  />
+            <field id="movuso"            id_temp="movcant" />
+            <field id="movcps"            id_temp="movcps"  />
+            <field id="precio_costo"      id_temp="artcos"  />
+            <field id="tipuni"            id_temp="artuni"  />
+            <field id="stkrubro_id"       id_temp="artrub"  />
+            <field id="barcode"           id_temp="id_herramienta" />
+        </table>
+    </form>
+</histrix>

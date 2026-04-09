@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix path="fotos/usuarios" tipo="ficha" onDuplicateKey="true" imprime="false" borra="false" preFetch="true">
+	<title>Usuarios</title>
+	<obs/>
+	<form>
+		<table id="HTXUSERS" label="Usuarios">
+			<field id="Id_usuario" esClave="true" noshow="true" autoinc="true">
+				<label>ID Usuario</label>
+				<help/>
+			</field>
+			<field id="login" deshabilitado="true">
+				<label colspan="3">Login</label>
+				<help>Login de entrada al sistema</help>
+			</field>
+			<field id="Nombre">
+				<label colspan="3">Nombre</label>
+				<size>40</size>
+				<help/>
+			</field>
+			<field id="apellido">
+				<label colspan="3">Apellido</label>
+				<size>40</size>
+				<help/>
+			</field>
+			<field foto="true" id="foto" path="Id_usuario">
+				<label modpos="nobr" rowspan="4">Foto</label>
+				<tipo Type="Image">file</tipo>
+				<size>40</size>
+			</field>
+			<field id="pass">
+				<label colspan="3">password</label>
+				<help>Password de entrada al sistema</help>
+				<tipo Type="password">varchar</tipo>
+				<size>40</size>
+			</field>
+			<field id="telefono">
+				<label>Teléfono</label>
+				<size>40</size>
+			</field>
+			<field id="interno">
+				<label>Interno</label>
+				<size>40</size>
+			</field>
+			
+			
+			
+			<field id="email">
+				<label colspan="3">E-mail</label>
+				<help>Su Dirección de correo Electrónico</help>
+				<size>40</size>
+				<tipo>email</tipo>
+			</field>
+			
+			<field id="emailUser">
+				<label colspan="3">Usuario e-mail</label>
+				<size>40</size>
+				<help>Usuario de su cuenta de e-mail</help>
+			</field>
+			<field id="emailPass" export="false">
+				<label colspan="3">Clave e-mail</label>
+				<help>Clave de su cuenta de e-mail</help>
+				<tipo _Type="password" _encode="encrypt">password</tipo>
+				<size>40</size>
+			</field>
+
+			<field id="emailSignature" export="false">
+				<label colspan="3">Firma</label>
+				<help>Firma para el insertar en el correo saliente</help>
+				<tipo>simpleditor</tipo>
+			</field>
+			
+			<!--
+      <field id="theme" addClass="selectmenu">
+        <label colspan="3">Tema</label>
+        <help>Seleccionar tema</help>
+        <helper type="combo" id="HTXOPTIONS" empty="true">
+          <field id="option_value">
+                    </field>
+          <field id="option_description">
+                    </field>
+          <field id="option_name">
+            <condicion operador="like">'THEMES::ui%'</condicion>
+          </field>
+          <order>
+            <field id="option_description" />
+          </order>
+        </helper>
+        <jsfunction event="onchange">$('link[theme]').attr('href', '../css/'+ this.value + '/htxtheme.css');</jsfunction>
+      </field>
+-->
+		</table>
+	</form>
+</histrix>

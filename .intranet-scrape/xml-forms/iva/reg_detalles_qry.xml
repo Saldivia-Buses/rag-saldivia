@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" class="consultaancha">
+	<title>Detalles</title>
+	<obs/>
+	<form>
+		<table id="REG_DETALLES" label="Detalle de Movimientos">
+
+			<field id="id_regdetalle" noshow="true" />
+			<field id="regmovim_id" noshow="true" />
+
+			<fieldGroup noZero="true" tdWidth="80px" colstyle="text-align:center;">
+				<field id="neto_detalle">
+					<label>neto</label>
+					<tipo>custom_numeric</tipo>
+					<expression>SUM(REG_DETALLES.neto_detalle)</expression>
+				</field>
+
+				<field id="alicuota_iva" noshow="true" />
+
+				<field id="alicuota">
+					<label>alicuota</label>
+					<expression>CONCAT(alicuota_iva,'%')</expression>
+				</field>
+
+				<field id="iva_detalle">
+					<label>iva</label>
+					<expression>SUM(REG_DETALLES.iva_detalle)</expression>
+					<tipo>custom_numeric</tipo>
+				</field>
+
+				<field id="total_percepcion">
+					<label>Percep</label>
+					<expression>SUM(REG_DETALLES.total_percepcion)</expression>
+					<tipo>custom_numeric</tipo>
+				</field>
+
+				<field id="total_detalle" noshow="true">
+					<label>total</label>
+					<expression>SUM(REG_DETALLES.total_detalle)</expression>
+					<tipo>custom_numeric</tipo>
+				</field>
+			</fieldGroup>
+
+			<group>
+			    <field id="alicuota_iva" />
+			</group>
+
+		</table>
+	</form>
+</histrix>	

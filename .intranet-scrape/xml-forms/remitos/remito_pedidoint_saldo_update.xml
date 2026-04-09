@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+	<histrix tipo="update" >
+		<title>Pedidos Internos</title>
+		<obs></obs>
+		<form >
+			<table id="PEDIDOINT" label="Cierro Movimientos" >
+				<field id="idPed" 	id_temp="idPed" esClave="true"></field>
+<!--				<field esclave="true" id="tipocomp" 	id_temp="tipocomp"></field>
+				<field esclave="true" id="fechaemi" 	id_temp="fechaemi"></field>
+				<field esclave="true" id="puesto" 		id_temp="puesto"></field>
+				<field esclave="true" id="nrocom" 		id_temp="nrocom"></field>
+				<field esclave="true" id="renglon" 		id_temp="renglon"></field>
+				<field esclave="true" id="artcod" 		id_temp="artcod"></field>
+				<field esclave="true" id="fecreq"	 	id_temp="fecreq"></field>
+				<field esclave="true" id="nrofab"	 	id_temp="nrofab"></field>
+				<field esclave="true" id="codprv"	 	id_temp="codprv"></field>
+	-->
+		        <field id="pencps" id_temp="pendienteCompra"></field>
+		        <field id="penuso" id_temp="pendienteUso"></field>				
+		        <field id="estado" >
+					<valor>1</valor>
+				</field>				
+				<field id="confirmado"	 id_temp="confirmado"	>
+				</field>
+			</table>
+		</form>
+	</histrix>

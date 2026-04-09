@@ -1,0 +1,292 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ing" process="true" inserta="false" modifica="false" deleteRow="false" _autoprint="true" _serverSide="true">
+    <title>Plan Accion Total</title>
+    <obs></obs>
+    <form>
+    <table id="CAL_PLAN_ACCION_TOTAL" label="Plan Accion Total">
+
+    <movimientos>
+        <relacion id="envio_mail_masivo.xml"/>
+    </movimientos>
+
+    <filters _auto="true">
+
+        <field id="objetivo_fecha">
+            <operador>&lt;=</operador>
+            <label modpos="nobr">Obje hasta</label>
+            <valor>today</valor>    
+        </field>
+
+        <field id="origen_planaccion">
+            <label modpos="nobr">Origen</label>
+            <help>Origen</help>
+            <operador>=</operador>
+        </field>            
+
+        <field id="plan_accion_tema_id">
+            <label modpos="nobr">Tema</label>
+            <help>Tema</help>
+            <operador>=</operador>
+        </field>
+
+        <field id="responsable_planaccion">
+            <label modpos="nobr">Responsable</label>
+            <help>Responsable</help>
+            <operador>=</operador>
+        </field>
+
+        <field id="lidera_planaccion">
+            <label modpos="nobr">Lidera</label>
+            <help>Lidera</help>
+            <operador>=</operador>
+        </field>
+
+    </filters>
+
+
+    <field id="id_plan_accion_accion" esClave="true" noshow="true" tabla="CAL_PLAN_ACCION_ACCION">
+        <label>Nro Accion</label>
+    </field>
+
+    <field id="id_plan_accion" _noshow="true">
+        <label>Nro Plan</label>
+    </field>
+
+    <field id="objetivo_fecha" local="true" noshow="true">
+        <tipo>date</tipo>
+        <label>Objetivo Fecha</label>
+    </field>
+
+    <field id="origen_planaccion" noZero="true" tabla="CAL_PLAN_ACCION_TOTAL">
+        <helper xml="calorigennconf_crud.xml" type="combo" dir="/calidad/man/" empty="true">
+            <field id="activo">
+                <condicion operador="=">1</condicion>
+            </field>
+            <field id="origen_nconf">
+                <expression>LEFT(origen_nconf,15)</expression>
+            </field>            
+        </helper>
+        <label>Origen</label>
+        <help>Origen del Plan Accion</help>
+    </field>
+
+    <field id="plan_accion_tema_id" noZero="true" tabla="CAL_PLAN_ACCION_TOTAL">
+        <helper xml="tema_planaccion_crud.xml" type="combo" dir="/calidad/man/" empty="true">
+            <field id="activo">
+                <condicion operador="=">1</condicion>
+            </field>
+            <field id="nombre_plan_accion_tema">
+                <expression>LEFT(nombre_plan_accion_tema,15)</expression>
+            </field>            
+        </helper>
+        <label>Tema</label>
+        <help>Tema del Plan Accion</help>
+    </field>
+
+    <field id="descripcion_planaccion" tabla="CAL_PLAN_ACCION_TOTAL">
+        <label>Plan</label>
+        <help>Descripcion Plan Accion</help>
+        <size>100</size>
+        <tipo>varchar</tipo>
+    </field>
+
+    <field id="acciones_planaccion" tabla="CAL_PLAN_ACCION_ACCION">
+        <label>Acciones</label>
+        <help>Acciones Plan Accion</help>
+        <size>100</size>
+        <tipo>varchar</tipo>
+    </field>
+
+    <field id="responsable_planaccion" tabla="CAL_PLAN_ACCION_TOTAL">
+        <label>Resp.</label>
+        <help>Responsable del Plan de Acción</help>
+        <helper type="combo" id="HTXUSERS" empty="true">
+            <field id="id_usuario"/>
+            <field id="nombre">
+                <expression>CONCAT(Nombre, LEFT(apellido,4))</expression>
+            </field>
+            <field id="baja">
+                <condicion operador="=">0</condicion>
+            </field>
+            <field id="Id_perfil">
+                <condicion operador="!=">14</condicion>
+            </field>
+            <order>
+                <field id="nombre"/>
+            </order>
+        </helper>
+    </field>
+
+    <field id="lidera_planaccion" _colstyle="display:none" tabla="CAL_PLAN_ACCION_ACCION">
+        <label>Lide.</label>
+        <help>Lidera el Plan de Acción</help>
+        <helper type="combo" id="HTXUSERS" empty="true">
+            <field id="id_usuario"/>
+            <field id="nombre">
+                <expression>CONCAT(Nombre, LEFT(apellido,4))</expression>
+            </field>
+            <field id="baja">
+                <condicion operador="=">0</condicion>
+            </field>
+            <field id="Id_perfil">
+                <condicion operador="!=">14</condicion>
+            </field>
+            <order>
+                <field id="nombre"/>
+            </order>
+        </helper>
+    </field>
+
+<!--     <field id="foto_lidera_planaccion" Formstyle="display:none" local="true">
+        <label>Lide.</label>
+        <expression>CONCAT('/fotos/personal/', (SELECT IdPersona FROM HTXUSERS HU
+                                    JOIN PERSONAL PER ON PER.legajo = HU.legajo_personal
+                                    WHERE IFNULL(HU.legajo_personal, 0) != 0 AND HU.Id_usuario = CAL_PLAN_ACCION_ACCION.lidera_planaccion), '/')</expression>
+        <tipo>dir</tipo>
+        <size>50</size>
+    </field> -->
+
+    <field id="seccion_id" tabla="CAL_PLAN_ACCION_TOTAL">
+        <helper xml="rhseccion_qry.xml" type="combo" dir="/ayudas" empty="true">
+            <field id="id_rhseccion" />
+            <field id="nombre_seccion">
+                <expression>LEFT(nombre_seccion,18)</expression>
+            </field>
+        </helper>
+        <label>Seccion Impacto</label>
+        <help>Seccion Impacto del Plan de Acción</help>
+    </field>
+
+    <field id="inicio_planaccion1">
+        <label>Inicio Plan</label>
+        <expression>CAL_PLAN_ACCION_TOTAL.inicio_planaccion</expression>
+        <help>Cierre</help>
+        <tipo>date</tipo>
+    </field>
+
+    <field id="inicio_planaccion" tabla="CAL_PLAN_ACCION_ACCION">
+        <label>Inicio Accion</label>
+        <help>Inicio</help>
+        <tipo>date</tipo>
+    </field>
+
+    <field id="objetivo_planaccion1">
+        <label>Obj. Plan</label>
+        <expression>CAL_PLAN_ACCION_TOTAL.objetivo_planaccion</expression>
+        <help>Objetivo</help>
+        <tipo>date</tipo>
+    </field>
+
+    <field id="objetivo_planaccion" tabla="CAL_PLAN_ACCION_ACCION">
+        <label>Obj. Accion</label>
+        <help>Objetivo</help>
+        <tipo>date</tipo>
+    </field>
+
+    <field id="cierre_planaccion1">
+        <label>Cierre Plan</label>
+        <expression>CAL_PLAN_ACCION_TOTAL.cierre_planaccion</expression>
+        <help>Cierre</help>
+        <tipo>date</tipo>
+    </field>
+
+    <field id="cierre_planaccion" tabla="CAL_PLAN_ACCION_ACCION">
+        <label>Cierre Accion</label>
+        <help>Cierre</help>
+        <tipo>date</tipo>
+    </field>
+
+    <field id="plan_vencido" tabla="CAL_PLAN_ACCION_TOTAL" noshow="true">
+        <label>Estado</label>
+        <help>Estado</help>
+        <expression>case 
+            when CAL_PLAN_ACCION_ACCION.objetivo_planaccion &lt;= str_to_date('[__objetivo_fecha__]', '%d/%m/%Y') and CAL_PLAN_ACCION_ACCION.cierre_planaccion = '0000-00-00' then 0
+            when CAL_PLAN_ACCION_TOTAL.objetivo_planaccion &lt;= str_to_date('[__objetivo_fecha__]', '%d/%m/%Y') and CAL_PLAN_ACCION_TOTAL.cierre_planaccion = '0000-00-00' then 0
+            end</expression>
+        <condicion operador="=">0</condicion>
+    </field>			                                      
+
+    <field id="estado_planaccion" tabla="CAL_PLAN_ACCION_TOTAL" noshow="true">
+        <label>Estado</label>
+        <help>Estado</help>
+        <condicion operador="=">0</condicion>
+    </field>
+
+
+    <field id="ultima_observacion" local="true" Formstyle="display:none;">
+        <label>Ult. Observ</label>
+        <help>Observaciones del Plan de Accion</help>
+        <expression>SELECT CONCAT(e.abrev_estado," - " , p.obervacion_plan_accion)  
+        FROM CAL_PLAN_ACCION_OBSERV p LEFT JOIN CAL_PLAN_ACCION_ESTADO e ON e.id_plan_accion_estado = p.estado_plan_accion_id 
+        WHERE p.plan_accion_id = id_plan_accion_accion 
+        ORDER BY stamp DESC limit 1</expression>
+    </field>
+
+<!--datos envio mail-->
+
+    <field id="usuarionow" local="true" noshow="true">
+        <valor eval="true">$_SESSION['idUser']</valor>
+    </field>
+
+    <field id="de" valoropcion="true" noshow="true">
+      <label>de</label>
+      <expression>select email from HTXUSERS where Id_usuario = '[__usuarionow__]'</expression>
+    </field>
+
+    <field id="subject" noshow="true" email="subject" print="false">
+        <expression>CONCAT('Recordatorio Plan Accion Nro: ',id_plan_accion)</expression>
+    </field>
+    
+    <field id="mensaje" noshow="true">
+        <expression><![CDATA[CONCAT('Mediante el presente recordamos que tiene la siguiente tarea atrasada:',
+        '<p> Origen: ', case when CAL_PLAN_ACCION_TOTAL.origen_planaccion = 0 then '-' else (select origen_nconf from CAL_ORIGEN_NCONF where CAL_PLAN_ACCION_TOTAL.origen_planaccion = id_origennconf) end, '</p>',
+        '<p> Tema: ', case when CAL_PLAN_ACCION_TOTAL.plan_accion_tema_id = 0 then '-' else (select nombre_plan_accion_tema from CAL_PLAN_ACCION_TEMA where CAL_PLAN_ACCION_TOTAL.plan_accion_tema_id = id_plan_accion_tema) end, '</p>',
+        '<p> Descripcion: ', CAL_PLAN_ACCION_TOTAL.descripcion_planaccion, ' con fecha objetivo ', DATE_FORMAT(CAL_PLAN_ACCION_TOTAL.objetivo_planaccion, '%d/%m/%Y'), '</p>',
+        '<p> Acciones: ', IFNULL(CAL_PLAN_ACCION_ACCION.acciones_planaccion, '-'), '</p>',
+        '<p> Fecha: ', IFNULL(DATE_FORMAT(CAL_PLAN_ACCION_ACCION.objetivo_planaccion, '%d/%m/%Y'), '-'),'</p>',
+
+        '<p></br>Saludos atte</p>
+        <p>',HTXUSERS.apellido, ', ', HTXUSERS.Nombre,'</p>' )]]></expression>
+    </field>
+
+    <field id="para" _noshow="true">
+        <label>Para</label>
+        <expression>case when IFNULL(CAL_PLAN_ACCION_ACCION.lidera_planaccion, 0) = 0 or CAL_PLAN_ACCION_ACCION.cierre_planaccion != '0000-00-00' then (select email from HTXUSERS where Id_usuario = CAL_PLAN_ACCION_TOTAL.responsable_planaccion) else (select email from HTXUSERS where Id_usuario = CAL_PLAN_ACCION_ACCION.lidera_planaccion) end</expression>
+    </field>       
+
+    <field id="Emails" local="true">
+      <helper type="link" xml="email_subj_qry.xml" dir="/email">
+          <parameter target="subject" source="subject" operator="="/>
+      </helper>
+      <label>Mails</label>
+     <expression sql="true"><![CDATA[
+      SELECT CONCAT(
+      (SELECT COUNT(*) FROM HTXMAIL WHERE subject = '[__subject__]'),' Env.')]]></expression>
+    </field>
+
+    <field id="emitir" local="true">
+        <label>Enviar</label>
+        <tipo>check</tipo>
+        <valor>1</valor>
+    </field>
+
+</table>
+
+    <join tipo="left">
+      <table id="HTXUSERS">
+        <field id="id_usuario">
+          <condicion operador="=">[__usuarionow__]</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join tipo="left">
+      <table id="CAL_PLAN_ACCION_ACCION">
+        <field id="plan_accion_id">
+          <condicion operador="=">id_plan_accion</condicion>
+        </field>
+      </table>
+    </join>
+
+</form>
+</histrix>	

@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="consulta" path="fotos/articulos" _autoprint="true" PDFlines="false">
+    <title>FORMACION DE PRODUCTO</title>
+    <obs></obs>
+    <form >
+        <table id="STKPIEZA" label="Piezas">
+    	    <fieldGroup>
+        	<field id="id_pieza" esClave="true" autoinc="true" noshow="true" />
+        	<field id="idPadre" arbol="padre" esClave="true" required="false" >
+                	<label colstyle="display:none;" >padre</label>
+	            <help>Nombre del Articulo al que pertenece </help>
+    	            <ayuda_ex id="STKINSUM" xml="HLPstkinsum.xml" dir="/help_local">
+    		        <field id="artcod">
+            	            <label>Cod.</label>
+                        </field>
+	                <field id="artdes">
+        	            <label>Insumo</label>
+            	            <detalle>artdes</detalle>
+                	</field>
+                        <field id="siscod" oculto="true">
+	                    <condicion operador="=">'01'</condicion>
+    	                </field>
+        	        <clave>artcod</clave>
+            	        <descripcion>artdes</descripcion>
+                    </ayuda_ex>
+	        </field>
+            
+                <field id="articulo_hijo" arbol="hijo" esClave="true" >
+	            <label>Codigo de Pieza</label>
+    	            <help>Codigo del Articulo</help>
+    		    <ayuda_ex id="STKINSUM" xml="HLPstkinsum.xml" dir="/help_local">
+	                <field id="artcod">
+    	                    <label>Cod.</label>
+        	        </field>
+                        <field id="artdes">
+	                    <label>Insumo</label>
+    	                <detalle>artdes</detalle>
+    	                </field>
+                        <field id="siscod" oculto="true">
+	                    <condicion operador="=">'01'</condicion>
+    	                </field>
+        	        <clave>artcod</clave>
+            	        <descripcion>artdes</descripcion>
+                    </ayuda_ex>
+                <detalle>idPadre</detalle>
+	        </field>
+
+        	<field id="artcod"  tabla="STKINSUM" noshow="true">
+		    <condicion operador="like">'311%'</condicion>
+		    <tipo>varchar</tipo>
+		</field>
+
+        	<field id="artdes"  tabla="STKINSUM" >
+            	    <expression>artdes</expression>
+        	    <label modpos="nobr">Articulo </label>
+            	    <tipo>varchar</tipo>
+            	    <size>50</size>
+        	</field>
+		
+
+
+
+        	<field id="cantidad">
+            	    <label>Cantidad</label>
+        	</field>
+        	<field id="check" local="true">
+            	    <label>hecho</label>
+		    <tipo>check</tipo>
+        	</field>
+
+    	    </fieldGroup>
+
+
+
+        </table>
+        <join tipo="left">
+            <table id="STKINSUM">
+                <field id="siscod" >
+                    <condicion operador="=">'01'</condicion>
+                </field>
+                <field id="artcod">
+                    <condicion operador="=">STKPIEZA.articulo_hijo</condicion>
+                </field>
+
+            </table>
+        </join>
+
+    </form>
+</histrix>
+

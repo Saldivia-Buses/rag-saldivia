@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="delete" >
+	<title>Actualizacion Movimientos</title>
+	<obs></obs>
+	<consulta>
+		<table id="CTB_MOVIMIENTOS" >
+			<field id="id_movimiento" esClave="true" id_temp="id_movimiento" />
+		</table>
+	</consulta>
+</histrix>

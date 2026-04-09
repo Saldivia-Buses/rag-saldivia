@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm">
+	<title>PARAMETROS DEL SISTEMA BANCARIO</title>
+	<obs></obs>
+	<form >
+		<table id="FSMPARAM" >
+		    <title>Parametros Bancarios</title>
+			<field id="parcla">
+				<label>Clave</label>
+				<help>Nombre del Parametro</help>
+
+			</field>
+			<field id="partip">
+				<label>Tipo</label>
+				<help>Tipo de Parametro</help>
+				<options>
+				    <option valor="1">Descriptivo</option>
+				    <option valor="2">Porcentaje</option>
+				    <option valor="3">Decimal</option>
+				    <option valor="4">Entero</option>
+				    <option valor="5">Opcion</option>
+				    
+				</options>
+			</field>
+
+			<field id="parde1">
+				<label>Descripcion</label>
+				<help>Descripcion del Parametro </help>
+			</field>
+			<field id="paralf">
+				<label>Alfabetico</label>
+				<help>Valor alfabetico</help>
+
+			</field>
+			<field id="parpor">
+				<label>Porcentaje</label>
+				<help>Valor Porcentual</help>
+
+			</field>
+			<field id="pardec">
+				<label>Decimal</label>
+				<help>Valor Decimal</help>
+				
+			</field>
+			<field id="parent">
+				<label>Entero</label>
+				<help>Valor Entero</help>
+
+			</field>
+			<field id="paropc">
+				<label>Opcion</label>
+				<help>Valor Logico</help>
+				
+			</field>
+ 					
+			<order>
+				<field id="parcla"></field>
+			</order>
+			
+		</table>
+	</form>	   
+</histrix> 

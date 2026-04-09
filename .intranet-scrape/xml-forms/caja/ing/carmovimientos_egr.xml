@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert">
+  <title>Graba Movimiento Cheques</title>
+  <obs/>
+  <form>
+    <table id="CAR_MOVIMIENTOS" idCampoCond="total_imputado">
+      <field id="tipo_movimiento"       id_temp="tipo_movimiento"/>
+      <field id="fecha_movimiento"      id_temp="fecha_movimiento"/>
+      <field id="referencia_movimiento" id_temp="referencia_movimiento"/>
+      <field id="carvalor_id"           id_temp="id_carvalor"/>
+      <field id="regcuenta_id"          id_temp="regcuenta_id" />
+      <field id="cajmovimiento_id"       lastId="cajmovimientos_ins.xml"/>
+    </table>
+  </form>
+</histrix>

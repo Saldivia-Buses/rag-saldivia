@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="dashboard">
+        <titulo>Medidores de Calidad</titulo>
+
+        <widget id="Evolucion3"  width="98%" height="400px">
+           <title>Observaciones Pintura</title>
+           <url><![CDATA[histrixLoader.php?xml=evolutivo_calidad_pintura.xml&dir=/estadisticas/calidad]]></url>
+        </widget>
+
+        <widget id="Evolucion3_top"  width="65%" height="400px">
+           <title>Pintura Top 10 Evolutivo</title>
+           <url><![CDATA[histrixLoader.php?xml=evolutivo_calidad_pintura_top.xml&dir=/estadisticas/calidad]]></url>
+        </widget>
+
+        <widget id="Evolucion3_top_causas"  width="32%" height="400px">
+           <title>Pintura Top 10 Causas</title>
+           <url><![CDATA[histrixLoader.php?xml=evolutivo_calidad_pintura_top_causas.xml&dir=/estadisticas/calidad]]></url>
+        </widget>
+
+</histrix>

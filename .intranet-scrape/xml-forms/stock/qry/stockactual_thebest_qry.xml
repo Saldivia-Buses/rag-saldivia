@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" borra="no" inserta="no" _imprime="false" preloadData="false">
+  <title>Stock Actualizado</title>
+  <obs/>
+  <form>
+    <table id="STK_ARTICULOS" label="Stock Actualizado">
+
+      <field id="id_stkarticulo" noshow="true" />
+
+      <field id="codigo_barra">
+        <label>Codigo de Barra</label>
+        <helper type="external" xml="stkarticulo_pos.xml" dir="/ayudas">
+          <field id="wstklista_id" local="true">
+            <valor>1</valor>
+          </field>
+        </helper>
+      </field>
+      
+      <field id="stkfamilia_id" noshow="true">
+        <helper type="combo" xml="stkfamilia_qry.xml" dir="/ayudas" empty="true"/>
+      </field>
+      <field id="stkrubro_id">
+        <label>Rubro</label>
+        <helper type="combo" xml="stkrubro_qry.xml" dir="/ayudas" _empty="true" multiple="true"/>
+      </field>
+
+       <field id="corte_marca" noshow="true">
+         <expression>case when '[__filtro_agrupador__]' = 0 then 'false' else 'true' end</expression>
+        </field>
+                
+        <field id="nombre_marca" tabla="STK_MARCAS" break="true">
+          <label>Marca</label>
+              <attribute id="break">corte_marca</attribute>
+            </field>
+      
+        <field id="stkmarca_id" noshow="true" multiple="true">
+              <helper type="combo" xml="stkmarca_qry.xml" dir="/ayudas" empty="true"/>
+        </field>
+
+        <field id="filtro_agrupador" local="true" noshow="true">
+     54                 <label>Ordena Por</label>
+     55                 <options>
+     56                     <option valor="0">Rubro</option>
+     57                     <option valor="1">Marca</option>
+     58                 </options>
+     59             </field>
+     60 
+
+
+      
+      <field id="nombre_articulo">
+        <label>Articulo</label>
+      </field>
+      <field id="nombre_rubro" tabla="STK_RUBROS" noshow="true"/>
+
+      <field id="Deposito1" local="true" suma="true" noZero="true">
+        <label>Deposito</label>
+        <tipo>numeric</tipo>
+        <expresion>sum(case when tipo_concepto = 0 then 1 else -1 end * case when stkdeposito_id = 1 then ifnull(STK_MOVIMIENTOS.cantidad,0) else 0 end )</expresion>
+      </field>
+      <field id="Rosario" local="true" suma="true" noZero="true">
+        <label>Rosario</label>
+        <tipo>numeric</tipo>
+        <expresion>sum(case when tipo_concepto = 0 then 1 else -1 end * case when stkdeposito_id = 2 then ifnull(STK_MOVIMIENTOS.cantidad,0) else 0 end )</expresion>
+      </field>
+      <field id="San_Martin" local="true" suma="true" noZero="true">
+        <label>San Martin</label>
+        <tipo>numeric</tipo>
+        <expresion>sum(case when tipo_concepto = 0 then 1 else -1 end * case when stkdeposito_id = 4 then ifnull(STK_MOVIMIENTOS.cantidad,0) else 0 end )</expresion>
+      </field>
+      <field id="Paseo" local="true" suma="true" noZero="true">
+        <label>Paseo</label>
+        <tipo>numeric</tipo>
+        <expresion>sum(case when tipo_concepto = 0 then 1 else -1 end * case when stkdeposito_id = 5 then ifnull(STK_MOVIMIENTOS.cantidad,0) else 0 end )</expresion>
+      </field>
+      <field id="Mendoza" local="true" suma="true" noZero="true">
+        <label>Mendoza</label>
+        <tipo>numeric</tipo>
+        <expresion>sum(case when tipo_concepto = 0 then 1 else -1 end * case when stkdeposito_id = 6 then ifnull(STK_MOVIMIENTOS.cantidad,0) else 0 end )</expresion>
+      </field>
+      <field id="Alto" local="true" suma="true" noZero="true">
+        <label>Alto</label>
+        <tipo>numeric</tipo>
+        <expresion>sum(case when tipo_concepto = 0 then 1 else -1 end * case when stkdeposito_id = 9 then ifnull(STK_MOVIMIENTOS.cantidad,0) else 0 end )</expresion>
+      </field>
+      <field id="Produccion" local="true" suma="true" noZero="true">
+        <label>Produccion</label>
+        <tipo>numeric</tipo>
+        <expresion>sum(case when tipo_concepto = 0 then 1 else -1 end * case when stkdeposito_id = 7 then ifnull(STK_MOVIMIENTOS.cantidad,0) else 0 end )</expresion>
+      </field>
+      <field id="Taller" local="true" suma="true" noZero="true">
+        <label>Taller</label>
+        <tipo>numeric</tipo>
+        <expresion>sum(case when tipo_concepto = 0 then 1 else -1 end * case when stkdeposito_id = 8 then ifnull(STK_MOVIMIENTOS.cantidad,0) else 0 end )</expresion>
+      </field>
+        <field id="SantaFe" local="true" suma="true" noZero="true">
+        <label>Santa Fe</label>
+        <tipo>numeric</tipo>
+        <expresion>sum(case when tipo_concepto = 0 then 1 else -1 end * case when stkdeposito_id = 10 then ifnull(STK_MOVIMIENTOS.cantidad,0) else 0 end )</expresion>
+      </field>
+
+      
+      
+      <field id="permiso" local="true" noshow="true">
+        <valor eval="true">$_SESSION['administrator']</valor>
+      </field>
+      <field id="total_stk" noshow="true">
+        <expresion>sum(case when tipo_concepto = 0 then 1 else -1 end * ifnull(STK_MOVIMIENTOS.cantidad,0) )</expresion>
+        <tipo>numeric</tipo>
+      </field>
+      <field id="total_procesado" local="true" noshow="true">
+        <if exp="total_stk != 0">
+          <true>'SI'</true>
+          <false>'0'</false>
+        </if>
+      </field>
+      <field id="total_display" local="true" style="font-weight:bold; font-size:14px; text-align:right;" suma="true" tdWidth="80px" noZero="true">
+        <label>Total</label>
+        <if exp="0permiso == 1">
+          <true>total_stk</true>
+          <false>total_procesado</false>
+        </if>
+        <tipo>numeric</tipo>
+      </field>
+      <field id="pinta" local="true" clasefila="true" oculto="true">
+        <if exp="total_stk &lt; 0">
+          <true>'resaltado'</true>
+          <false>''</false>
+        </if>
+      </field>
+
+        <field id="fecha_movimiento_hasta" local="true" noshow="true">
+          <tipo>date</tipo>
+        </field>
+
+        <field id="baja_articulo" noshow="true">
+          <condicion operador="!=">1</condicion>
+        </field>
+      <filters>
+        <field id="fecha_movimiento_hasta">
+          <label>Hasta</label>
+          <operador>&lt;=</operador>
+          <valor>today</valor>
+          <tipo>date</tipo>
+        </field>
+        <field id="stkfamilia_id">
+          <operador>=</operador>
+          <label modpos="nobr">Familia</label>
+        </field>
+        <field id="stkrubro_id">
+          <operador>in</operador>
+          <label modpos="nobr">Rubro</label>
+        </field>
+        <field id="codigo_barra" tabla="STK_ARTICULOS">
+          <operador>=</operador>
+          <label>Codigo de barra</label>
+        </field>
+        <field id="nombre_articulo">
+          <label modpos="nobr">Articulo</label>
+          <operador>like</operador>
+        </field>
+        <field id="total_stk" deshabilitado="false">
+          <operador>&gt;=</operador>
+          <label>Cantidad</label>
+        </field>
+      </filters>
+ 
+      <group>
+        <field id="id_stkarticulo" />
+      </group>
+
+      <order>       
+        <field id="nombre_rubro" tabla="STK_RUBROS"/>
+        <field id="nombre_articulo" tabla="STK_ARTICULOS"/>
+      </order>
+      
+    </table>
+
+    <join tipo="left">
+      <table id="STK_MOVIMIENTOS">
+        <field id="stkarticulo_id">
+          <condicion operador="=">STK_ARTICULOS.id_stkarticulo</condicion>
+        </field>
+        <field id="fecha_movimiento">
+          <condicion operador="&lt;=">STR_TO_DATE('[__fecha_movimiento_hasta__]', '%d/%m/%Y')</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="STK_CONCEPTOS">
+        <field id="id_stkconcepto">
+          <condicion operador="=">STK_MOVIMIENTOS.stkconcepto_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="STK_DEPOSITOS">
+        <field id="id_stkdeposito">
+          <condicion operador="=">STK_MOVIMIENTOS.stkdeposito_id</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join tipo="left">
+      <table id="STK_RUBROS">
+        <field id="id_stkrubro">
+          <condicion operador="=">STK_ARTICULOS.stkrubro_id</condicion>
+        </field>
+      </table>
+    </join>
+
+  </form>
+</histrix>

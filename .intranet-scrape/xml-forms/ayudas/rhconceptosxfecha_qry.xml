@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+  <title>Conceptos</title>
+  <obs></obs>
+  <consulta>
+	<table id="RH_CONCEPTOS" label="Conceptos">
+		<field id="id_rhconcepto" autoinc="true" noshow="true">
+			<label>Codigo</label>
+			<help>Código Concepto</help>
+		</field>
+		<field id="descripcion_concepto">
+			<label>Nombre </label>
+			<help>Nombre de Concepto </help>
+			<size>15</size>
+		</field>
+	</table>
+	<join>
+		<table id="RH_CONCEPTO_TIPOS">
+			<field id="rhconcepto_id">
+				<condicion operador="=">RH_CONCEPTOS.id_rhconcepto</condicion>
+			</field>
+		</table>
+	</join> 
+	 <join>
+		<table id="RH_LOTES">
+		        <field id="fecha_lote" >
+	        	<condicion operador="&lt;=">RH_CONCEPTOS.concepto_fechafin or RH_CONCEPTOS.concepto_fechafin is null or 
+						RH_CONCEPTOS.concepto_fechafin = '0000-00-00'</condicion>
+	        	</field>
+		        <field id="fecha_lote" >
+	        	<condicion operador="&gt;=">RH_CONCEPTOS.concepto_fechaini or RH_CONCEPTOS.concepto_fechaini is null or 
+						RH_CONCEPTOS.concepto_fechaini = '0000-00-00'</condicion>
+	        	</field>
+		</table>
+	</join> 
+  </consulta>
+</histrix>  

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm-mini" class="consultaancha">
+	<title>Item de la Encuesta</title>
+	<obs></obs>
+	<form >
+		<table id="ENCUESTA_ITEM">
+			<title>Item de la Encuesta</title>
+			<field id="idItem" autoinc="true" esClave="true" noshow="true">
+			</field>
+			
+			<field id="idEncuesta" oculto="true">
+				<label>Encuesta</label>
+				<help>Codigo de Encuesta</help>
+			</field>
+
+			<field id="idPregunta" >
+				<tabla_ex id="ENCUESTA_PREGUNTA">
+					<field id="idPregunta"></field>
+					<field id="pregunta"></field>					
+				</tabla_ex>
+				<label>Cod</label>
+				<help>Codigo de Pregunta</help>
+				
+			</field>
+			<field id="orden">
+				<label>Orden</label>
+			</field>
+			<order>
+				<field id="orden"></field>
+			</order>						
+
+		</table>
+	</form>	   
+</histrix> 

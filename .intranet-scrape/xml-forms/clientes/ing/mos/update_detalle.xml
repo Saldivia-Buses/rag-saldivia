@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="update">
+    <title></title>
+    <obs></obs>
+    <form>
+        <table id="REG_DETALLES" idCampoCond="actualizar">
+
+		<sql>UPDATE REG_DETALLES 
+			SET total_detalle = (round( (total_detalle + ((total_detalle * '[__aumento__]') / 100)) / 50, 0) * 50), 
+			    iva_detalle = ((total_detalle - (total_detalle  / (concat('1.', LPAD((alicuota_iva * 10),3,0)))))),
+			    neto_detalle = (total_detalle - iva_detalle),
+			    precio_venta = (total_detalle - iva_detalle)
+		     WHERE regmovim_id = '[__id_regmovim__]';
+
+
+		     UPDATE REG_MOVIMIENTOS
+			SET neto_movimiento = (select sum(neto_detalle) from REG_DETALLES WHERE regmovim_id = '[__id_regmovim__]'), 
+			    importe_iva = (select sum(iva_detalle) from REG_DETALLES WHERE regmovim_id = '[__id_regmovim__]'), 
+			    importe_movimiento = (select sum(total_detalle) from REG_DETALLES WHERE regmovim_id = '[__id_regmovim__]'),
+			    fpv_movimiento = '[__fecha__]',
+			    pun_movimiento = '[__importe_movimiento__]',
+			    rec_movimiento = '[__aumento__]'
+		     WHERE id_regmovim = '[__id_regmovim__]';</sql>
+            
+		<field id="id_regmovim" id_temp="id_regmovim" />
+		<field id="aumento" id_temp="aumento" />
+            
+		<field id="importe_movimiento" id_temp="importe_movimiento" />
+		<field id="aumento" id_temp="aumento" />
+		<field id="fecha" id_temp="fecha" />
+
+        </table>
+    </form>
+</histrix>
+

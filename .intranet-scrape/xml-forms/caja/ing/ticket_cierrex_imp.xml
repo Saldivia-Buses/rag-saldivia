@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="fichaing" noForm="true" procesa="false">
+	<title/>
+    <obs/>
+    <form>
+        <table id="HTXMENU">
+		
+		    <field id="printer_fiscal_pos" local="true" noshow="true" />
+			
+		    <field id="anulacion" local="true">
+				<label>Resultado</label>
+				<if exp="true">
+				<true><![CDATA[ function() {
+				$printer = 'printer_fiscal_pos';
+				ob_start();
+				$calculo = new EmiteFiscal();
+				$calculo->setPrinter($printer);
+				if (! $calculo->cierrex() ) echo $calculo->error_message;
+				$salida = ob_get_contents();
+				ob_end_clean();
+				return $salida;
+                } ]]></true>
+                <false>0</false>
+                </if>
+				<size>128</size>
+            </field>
+		    
+        </table>
+    </form>
+</histrix>

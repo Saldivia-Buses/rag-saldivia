@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert" >
+    <title>Imputaciones</title>
+    <obs></obs>
+	<form>
+		<table id="REG_IMPUTACIONES" label="Movimientos">
+			<field id="regmovim0_id"  			id_temp="id_regmovim"></field>
+			<field id="regmovim_id" 			lastId="reg_movimientos_ins.xml"></field>
+			<field id="movimiento_imputacion"		id_temp="wimporte"></field>
+		</table>
+	</form>
+</histrix>
+<!-- 
+regmovim0_id factura
+regmovim_id Recibo
+movimiento_imputacion importe 
+-->

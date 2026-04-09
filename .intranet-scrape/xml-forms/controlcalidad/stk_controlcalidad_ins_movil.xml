@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="insert" _replaceInto="true" tipoInsert="REPLACE">
+	<titulo>Control Calidad</titulo>
+	<obs/>
+	<form>
+		<table id="STKINSPEC_MOVIM"  idCampoCond="update">
+			
+			<field id="id_norma_inspec"  id_temp="id_norma_inspec" />		
+			<field id="conforme"         id_temp="conforme" />
+			<field id="stkarticulo_id"   id_temp="artcod" />
+
+			<field id="no_conforme"      id_temp="no_conforme" />
+			<field id="controlado"       id_temp="controlado"/>
+			<field id="observacion_inspec"    id_temp="observacion_inspec"/>
+			<field id="user_id"    id_temp="user_id"/>
+			<field id="ocpnro"    id_temp="ocpnro"/>
+			<field id="id_recepcion"    id_temp="id_recepcion_inspec"/>
+			<field id="fecha_inspec"    id_temp="fecha_inspec"/>
+
+		</table>
+
+	</form>
+</histrix>

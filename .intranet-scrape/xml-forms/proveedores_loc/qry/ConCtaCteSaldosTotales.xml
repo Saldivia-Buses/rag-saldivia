@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+   <histrix tipo="consulta">
+       <title>Cuenta Corriente</title>
+        <obs></obs>
+               <form >
+                  <table id="REG_MOVIMIENTOS" label="Movimientos">
+
+                  <filters>
+
+                    <field id="fecha_movimiento" >
+                      <label>Hasta Fecha</label>
+                      <operador>&lt;=</operador>
+                  </field>
+
+                  </filters>
+
+                  <field id="subsistema_id" oculto="true">
+                      <label>Cod.</label>
+                      <help> </help>
+
+                  </field>
+
+                  <field id="regcuenta_id" break="true" noshow="true">
+                      <label>Cod.</label>
+                      <help>Codigo de Cuenta </help>
+                  </field>
+                  <field id="nombre">
+		      <expression>nombre_cuenta</expression>
+                      <label>Nombre</label>
+                      <help> </help>
+                  </field>
+
+                  <field id="puesto_movimiento">
+                      <label>P.V.</label>
+                      <help> Punto Venta</help>
+		      <format>%04d</format>
+                  </field>
+                  <field id="nro_movimiento">
+                      <label>Número</label>
+                      <help> Número Comprobante</help>
+		      <format>%012d</format>
+
+                  </field>
+
+		
+                  <field id="concepto">
+		      <expression>REG_CONCEPTOS.descripcion_concepto</expression>
+                      <label>Cod.Concepto</label>
+                      <help> </help>
+		      <tipo>string</tipo>
+                  </field>
+
+                  <field id="fecha_movimiento">
+                      <label>Fecha </label>
+                      <help> </help>
+                  </field>
+
+                  <field id="vencimiento_movimiento">
+                      <label>Venc. </label>
+                      <help> </help>
+                  </field>
+
+                  <field id="importe_movimiento" suma="true">
+                      <label>Importe</label>
+                      <expression>round(importe_movimiento, 2)</expression>
+                      <help> </help>
+                  </field>
+
+                  <field id="saldo_movimiento" suma="true">
+                      <label>Saldo</label>
+                      <help> </help>
+                      <expression>round(saldo_movimiento, 2)</expression>
+		      <condicion operador="!=">0</condicion>
+                  </field>
+
+                  </table>
+		  <join >
+		    <table id="REG_CUENTA">
+			<field id="id_regcuenta">
+			    <condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+			</field>
+		    </table>
+		  </join>
+		  <join tipo="left">
+		    <table id="REG_CONCEPTOS">
+			<field id="id_concepto">
+			    <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+			</field>
+		    </table>
+		  </join>
+               </form>
+        </histrix>

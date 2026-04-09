@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="consulta" >
+    <title>COTIZADO</title>
+    <obs/>
+    <form detalle="cotizaciones_contestadas.xml">
+        <table id="CPS_MOVIMIENTOS" >
+        	<filters>
+			    <field id="cpsfecha">
+			    	<label>Desde</label>
+			    	<operador>&gt;=</operador>
+			    	<valor>today</valor>
+			    </field>
+			    <field id="cpsfecha">
+			    	<label>Hasta</label>
+			    	<operador>&lt;=</operador>
+					<valor>today</valor>			    	
+			    </field>
+
+        	</filters>
+		    <field id="cpsfecha">
+		    	<label>Fecha</label>
+		    </field>
+		    <field id="cierre" noshow="true">
+		    	<condicion operador="=">0000-00-00</condicion>
+		    </field>
+		    <field id="id_cpsmovimiento" >
+		    	<label>Cotización</label>
+		    	<helper xml="cotizacion_imp.xml" type="link">
+		    		<parameter source="id_cpsmovimiento" target="id_cpsmovimiento" />
+		    	</helper>
+		    	<detalle>id_cpsmovimiento</detalle>
+		    </field>
+
+		    <field id="cpsestado_id"  noshow="true"/>
+<!--
+		    <field id="respuetas">
+		    	<expression>(select count(distinct regcuenta_id) from CPS_DETALLE join  CPS_COTIZACION_DETALLE on CPS_DETALLE.id_cpsdetalle = CPS_COTIZACION_DETALLE.cpsdetalle_id where CPS_DETALLE.cpsmovimiento_id = CPS_MOVIMIENTOS.id_cpsmovimiento)</expression>
+		    </field> -->
+		    <field id="email">
+		    	<label>Respuestas</label>
+		    	<expression>concat((select count(distinct regcuenta_id) from CPS_DETALLE join  CPS_COTIZACION_DETALLE on CPS_DETALLE.id_cpsdetalle = CPS_COTIZACION_DETALLE.cpsdetalle_id where CPS_DETALLE.cpsmovimiento_id = CPS_MOVIMIENTOS.id_cpsmovimiento),'/',count(email))</expression>
+		    </field>
+
+		    <group>
+		    	<field id="id_cpsmovimiento" />
+		    </group>
+		    <order>
+		    	<field id="id_cpsmovimiento" orderType="DESC" />
+		    </order>
+        </table>
+        <join>
+        	<table id="CPS_ENVIOS">
+        		<field id="cpsmovimiento_id">
+        			<condicion operador="=">id_cpsmovimiento</condicion>
+        		</field>
+        	</table>
+        </join>
+    </form>
+</histrix>

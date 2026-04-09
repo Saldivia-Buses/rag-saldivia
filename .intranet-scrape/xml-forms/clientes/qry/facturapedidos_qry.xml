@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+  <title>FACTURA</title>
+  <obs>Este formulario sirve desde la facturacion como desde la NP o remitos es llamado desde seguimientosnp_qry y reg_movimientos_seg_qry</obs>
+  <consulta>
+     <table id="REG_DETALLES" label="FACTURA">
+
+	    <field id="regmovim_id"  noshow="true" esClave="true" >
+		<label>MovimientoNº</label>
+		<help>Codigo de movimiento</help>
+	    </field>
+
+	    <field id="codigo_detalle" >
+		<label>Codigo</label>
+		<help>Codigo de movimiento</help>
+	    </field>
+	    
+	    <field id="descripcion_detalle" >
+		<label>Descripcion</label>
+		<help>Descripcion del producto</help>
+	    </field>
+	    
+	    <field id="nro_movi">
+		<label>Comprobante</label>
+		<expresion>(SELECT CONCAT(RC.abreviacion_concepto , ' ' ,RM1.letra_movimiento, ' ' , LPAD(RM1.puesto_movimiento,4,0), ' ' , 
+				LPAD(RM1.nro_movimiento,8,0) )
+				from REG_MOVIMIENTOS RM1 
+				join REG_DETALLES RD1 on RD1.regmovim_id = RM1.id_regmovim  
+				join REG_CONCEPTOS RC ON RM1.concepto_id = RC.id_concepto 
+				where 	
+<!-- REG_IMPUTACIONESDETALLES.regdetalleped_id = RD1.id_regdetalle and  -->
+					RD1.id_regdetalle = REG_IMPUTACIONESDETALLES.regdetallefac_id
+				group by RM1.nro_movimiento)
+		</expresion>
+<!--		<expresion>(SELECT CONCAT(RC.abreviacion_concepto , ' ' ,RM1.letra_movimiento, ' ' , LPAD(RM1.puesto_movimiento,4,0), ' ' , 
+				LPAD(RM1.nro_movimiento,8,0)) 
+				from REG_MOVIMIENTOS RM1 
+				join REG_DETALLES RD1 on (RD1.regmovim_id = RM1.id_regmovim) 
+				join REG_CONCEPTOS RC ON RM1.concepto_id = RC.id_concepto 
+
+				where 	(REG_IMPUTACIONESDETALLES.regdetallefac_id = RD1.id_regdetalle and 
+					REG_IMPUTACIONESDETALLES.regdetalleped_id = REG_DETALLES.id_regdetalle and 
+					REG_MOVIMIENTOS.concepto_id in (select option_value from HTXOPTIONS where option_name in ('ID_NOTA_PEDIDOS', 'ID_REMITOS'))) or
+
+				 	(REG_IMPUTACIONESDETALLES.regdetalleped_id = RD1.id_regdetalle and 
+					REG_IMPUTACIONESDETALLES.regdetallefac_id = REG_DETALLES.id_regdetalle and 
+					REG_MOVIMIENTOS.concepto_id = (select option_value from HTXOPTIONS where option_name = 'ID_FACTURAS'))
+				group by RM1.nro_movimiento)
+		</expresion>
+-->
+	    </field>
+
+
+	    <field id="cantidad_detalle">
+		<label>Cantidad Comp.</label>
+	    </field>
+	    <field id="cantidad_imputada" tabla="REG_IMPUTACIONESDETALLES">
+		<label>Cantidad Facturada</label>
+		<tipo>numeric</tipo>
+	    </field>
+
+	    <field id="regdetalleped_id" tabla="REG_IMPUTACIONESDETALLES" noshow="true">
+		<condicion operador="&gt;">0</condicion>
+	    </field>
+
+    </table>
+        <join>
+            <table id="REG_MOVIMIENTOS">
+             <field id="id_regmovim">
+            	 <condicion operador="=">REG_DETALLES.regmovim_id</condicion>
+             </field>
+            </table>
+        </join>
+        <join _tipo="left">
+            <table id="REG_IMPUTACIONESDETALLES">
+             <field id="regdetalleped_id">
+			<condicion operador="=">REG_DETALLES.id_regdetalle</condicion>
+             </field>
+            </table>
+        </join> 
+<!--        <join _tipo="left">
+            <table id="REG_IMPUTACIONESDETALLES">
+             <field id="xx">
+			<expresion>1</expresion>
+			<condicion operador="=">1 and ((REG_IMPUTACIONESDETALLES.regdetallefac_id = REG_DETALLES.id_regdetalle and REG_MOVIMIENTOS.concepto_id = (select option_value from HTXOPTIONS where option_name = 'ID_FACTURAS')) or (REG_IMPUTACIONESDETALLES.regdetalleped_id = REG_DETALLES.id_regdetalle and REG_MOVIMIENTOS.concepto_id in (select option_value from HTXOPTIONS where option_name in ('ID_NOTA_PEDIDOS', 'ID_REMITOS'))))</condicion>
+             </field>
+            </table>
+        </join> 
+-->
+
+  </consulta>
+</histrix>  

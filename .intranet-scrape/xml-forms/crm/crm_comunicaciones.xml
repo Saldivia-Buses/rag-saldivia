@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<histrix tipo="abm-mini" subtipo="vertical" path="/fotos/archivo/Comunicaciones/">
+    <title>Comunicaciones</title>
+    <consulta>
+        <table id="CRM_COMUNICACIONES">
+            <title>Comunicaciones</title>
+	      
+            <field id="id_comunicacion" deshabilitado="true" autoinc="true" tipoOrden="DESC" _noshow="true">
+                <label Formstyle="display:none;">Nro</label>
+            </field>
+            <field id="login" deshabilitado="true">
+                <label Formstyle="display:none;">Usuario </label>
+                <help>Usuario que hace el pedido</help>
+                <tabla_ex id="HTXUSERS">
+                    <field id="login"></field>
+                    <field id="nombre"></field>
+                    <order>
+                        <field id="nombre"></field>
+                    </order>
+                </tabla_ex>
+                <valor eval="true">$_SESSION['usuario']</valor>
+            </field>
+
+            <field id="yo" local="true"  noshow="true">
+      
+                <valor eval="true">"'".$_SESSION['usuario']."'"</valor>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="editable" local="true" bloqueafila="true" noshow="true" >
+                <label>Editable</label>
+                <if exp="'yo'=='login'">
+                    <true>"0"</true>
+                    <false>"1"</false>
+                </if>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="tipo">
+                <label>Tipo</label>
+                <options>
+                    <option valor="">Todos</option>
+                    <option valor="0">Sugerencia</option>
+                    <option valor="1">No Conformidad</option>
+                </options>
+            </field>
+
+            <field id="Est2" oculto="true">
+                <expresion>(select case when count(*) != 0 then 'Cerrado' end from CRM_COMUNIC_EVENTOS where CRM_COMUNIC_EVENTOS.comunicacion_id = CRM_COMUNICACIONES.id_comunicacion and cierre = 1)</expresion>
+
+            </field>
+            <field id="cantRest" clasefila="true" oculto="true" tipoOrden="DESC">
+            <expresion>(select case when count(*) = 0 then 'resaltado' end from CRM_COMUNIC_EVENTOS where CRM_COMUNIC_EVENTOS.comunicacion_id = CRM_COMUNICACIONES.id_comunicacion)</expresion>
+            </field>
+
+            <field id="fecha" deshabilitado="true" esclave="true" valauto="true" tipoOrden="DESC">
+                <label modpos="nobr">Fecha</label>
+                <help>Fecha</help>
+                <valor>today</valor>
+            </field>
+            <field id="nrofab">
+                <label modpos="nobr">Nro Fab.</label>
+                <help>Nro. Fab</help>
+            </field>
+            <field id="comunicacion" _deshabilitado="true" cellMaxLength="100">
+                <label rowspan="3" modpos="nobr" >Pedido</label>
+                <help>Descripcion</help>
+                <size>200</size>
+               <tipo>simpleditor</tipo>
+            </field>
+            <field id="comunicacion2"   deshabilitado="false" noshow="true" _cellMaxLength="100" local="true">
+                <label colspan="6">Comunicacion2</label>
+ 		<expresion having="true">CRM_COMUNICACIONES.comunicacion</expresion>
+	 	<tipo>varchar</tipo>
+ 		<size>50</size>
+              </field>
+            
+            <field id="origen" _deshabilitado="true" autocompletar="true" searchRecord="false">
+                <label colspan="5" >Origen</label>
+                <help>Origen </help>
+                <size>59</size>
+                <ayuda_ex id="CCTCUENT" condes="true" xml="HLPcctcuent_conta_cot.xml" dir="/help_local">
+                    <field id="ctacod" noshow="true">
+                    </field>
+
+                    <field id="ctanom2">
+                        <expresion having="false">CONCAT(ctanom, ' - ' , ctafan)</expresion>
+                        <tipo>varchar</tipo>
+                    </field>
+                    <field id="siscod" oculto="true" >
+                        <condicion operador="=">'02'</condicion>
+                    </field>
+                    <field id="ctatel" class="informal" noshow="true">
+                        <detalle>ctatel</detalle>
+                    </field>
+
+                    <clave>ctanom</clave>
+                    <descripcion>ctanom</descripcion>
+                    <order>
+                        <field id="ctanom"></field>
+                    </order>
+                </ayuda_ex>
+
+                
+            </field>
+
+
+ 
+
+            <field id="fotos" _local="true" imageWidth="165" watermark="chasis"  path="id_comunicacion">
+                <expresion>CONCAT('/fotos/archivo/Comunicaciones/',id_comunicacion,'/')  </expresion>
+                <label  posX="5" posY="+2" formStyle="display:none;">Dir</label>
+
+                <tipo>dir</tipo>
+            </field>
+      
+            <field id="respuesta" obj="crm_comun_eventos_cons.xml" showObjTabla="true"  showValor="true" linkint="crm_comun_eventos.xml" local="true">
+                <label Formstyle="display:none;">Respuesta</label>
+                <paring destino="comunicacion_id">id_comunicacion</paring>
+                <valor>'Respuesta'</valor>
+            </field>
+
+            <field id="claseCierre" clasefila="true" noshow="true">
+                <expresion>select case when count(*) != 0 then 'resaltadoVioleta' end from CRM_COMUNIC_EVENTOS where CRM_COMUNIC_EVENTOS.comunicacion_id = CRM_COMUNICACIONES.id_comunicacion and cierre = 1</expresion>
+
+            </field>
+            <field id="Est" >
+                <label Formstyle="display:none;">Estado</label>
+                <expresion>select case when count(*) != 0 then 'Cerrado' end from CRM_COMUNIC_EVENTOS where CRM_COMUNIC_EVENTOS.comunicacion_id = CRM_COMUNICACIONES.id_comunicacion and cierre = 1</expresion>
+            </field>
+
+            <field id="fechault" tipoOrden="DESC" oculto="true">
+                <expresion>ifnull((select max(CRM_COMUNIC_EVENTOS.fecha)   from CRM_COMUNIC_EVENTOS where CRM_COMUNIC_EVENTOS.comunicacion_id = CRM_COMUNICACIONES.id_comunicacion), CRM_COMUNICACIONES.fecha)</expresion>
+                <tipo>date</tipo>
+            </field>
+            
+            
+
+            
+
+
+      <order>
+	  <field id="fechault" ></field> 
+	  <!--
+          <field id="cantRest" ></field>
+          <field id="fecha" ></field>
+-->
+        </order>
+         <filters>
+                 <field id="tipo" deshabilitado="false">
+                     <label>Tipo</label>
+                     <operador>=</operador>
+                <options>
+                    <option valor="">Todos</option>
+                    <option valor="0">Sugerencia</option>
+                    <option valor="1">No Conformidad</option>
+                </options>
+                     
+                     
+		    </field>
+                  <!--<field id="comunicacion2" deshabilitado="false">
+                      <label>Pedido</label>
+                      <operador>like</operador>
+                  </field>-->
+        </filters>
+           
+      
+        </table>
+    </consulta>
+</histrix>

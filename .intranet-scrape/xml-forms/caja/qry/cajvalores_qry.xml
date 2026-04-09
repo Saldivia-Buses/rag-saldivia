@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" showCantidad="false" tooltip="false">
+  <title>Consulta Valores</title>
+  <obs/>
+  <form>
+    <table id="CAJ_VALORES">
+
+      <field id="cajmovimiento_id" noshow="true" />
+
+      <field id="cajformapago_id" noshow="true" />
+
+      <field id="descripcion_forma"         tdWidth="200px" PDFcolWidth="120"  tabla="CAJ_FORMAS_PAGO"/>
+
+      <field id="pago_ingreso"  noZero="true" tdWidth="50px" PDFcolWidth="20">
+        <expression>
+          IF(CAJ_FORMAS_PAGO.tipo_forma = 0, (pago_valor - pago_vuelto), 0)
+        </expression>
+        <tipo>numeric</tipo>
+      </field>
+
+      <field id="pago_egreso"   noZero="true" tdWidth="50px" PDFcolWidth="20">
+        <expression>
+          IF(CAJ_FORMAS_PAGO.tipo_forma = 1, (IF(CAJ_VALORES.pago_vuelto &gt; CAJ_VALORES.pago_valor, ABS(CAJ_VALORES.pago_valor - CAJ_VALORES.pago_vuelto), CAJ_VALORES.pago_valor - CAJ_VALORES.pago_vuelto)), 0)
+        </expression>
+        <tipo>numeric</tipo>
+      </field>
+      
+    </table>
+
+    <join>
+      <table id="CAJ_FORMAS_PAGO">
+        <field id="id_cajformapago">
+            <condicion operador="=">cajformapago_id</condicion>
+        </field>
+      </table>
+    </join>
+    
+  </form>
+</histrix>    

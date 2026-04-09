@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="liveGrid" >
+    <title>Accesorios por coche</title>
+    <obs/>
+    <form >
+        <table id="ACCESORIOS_COCHE" label="Accesorios Estandar" styleTbody="height:80px;overflow-x:hidden;">
+            <field id="id_accesorio" noshow="true" esClave="true" autoinc="true">
+            </field>
+            <field id="cotizacion_id" oculto="true" >
+            </field>
+            <field id="ficha_id" oculto="true" >
+            </field>
+
+            <field id="fecha" editable="true" >
+                <label>fecha</label>
+                <tipo>date</tipo>
+                <valor>today</valor>
+            </field>
+            <field id="artcod" deshabilitado="true" editable="true">
+                <valor default="true">0</valor>
+            </field>
+			 
+            <field id="artdes" autocompletar="true" editable="true">
+                <ayuda_ex id="STKINSUM" >
+
+                    <field id="artcod" noshow="true">
+                        <detalle>artcod</detalle>
+                    </field>
+                    <field id="artdes" >
+                        <label>Descripcion</label>
+                        <detalle>artdes</detalle>
+                    </field>
+                    <field id="Precio" class="informal" noshow="true" >
+                        <label>Precio</label>
+                        <expression having="false">concat( (select precio1 from LISTAPRECIOSDET as PREC where PREC.idArticulo = STKINSUM.artcod order by idLista DESC limit 1) )</expression>
+                        <detalle>precio_adicional</detalle>
+                    </field>
+                    <field id="siscod" oculto="true" >
+                        <condicion operador="=">'02'</condicion>
+                    </field>
+                    <clave>artcod</clave>
+                    <descripcion>artdes2</descripcion>
+                </ayuda_ex>
+                <label>Accesorio</label>
+                <size>70</size>
+            </field>
+            <field id="cantidad" editable="true">
+        	<label modpos="nobr">Cant</label>
+        	<size>2</size>
+        	<valor>1</valor>
+            </field>
+            
+            <field id="precio_adicional" editable="true" >
+                  <label>Precio </label>
+            </field>
+
+            <field id="estado" editable="true" >
+                <options>
+                    <option valor="0">A Confirmar</option>
+                    <option valor="1">Confirmado</option>
+                    <option valor="2">Rechazado</option>
+                </options>
+            </field>
+
+			 
+			 
+        </table>
+        <join tipo="left">
+            <table id="STKINSUM">
+                <field id="artcod">
+                    <condicion operador="=">ACCESORIOS_COCHE.artcod</condicion>
+                </field>
+                <field id="siscod">
+                    <condicion operador="=">'02'</condicion>
+                </field>
+	    	    
+            </table>
+        </join>
+    </form>
+</histrix>

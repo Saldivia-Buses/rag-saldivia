@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="ing" class="consultaancha" inserta="false" modifica="true" borra="false" imprime="false">
+	<title>Detalles</title>
+	 <obs></obs>
+		<consulta>
+		    <table id="CTB_DETALLES" label="Detalle de la Minuta" >
+				<movimientos cabecera="movimientos_duplicar_header.xml">
+				    <relacion id="detalles_movimientos_ins.xml"></relacion> 
+				    <relacion id="detalles_detalles_ins.xml"></relacion> 
+				</movimientos>
+				  <field id="movimiento_id" noshow="true">
+				</field> 
+				<field id="ejercicio_id" tabla="CTB_CUENTAS" noshow="true">
+				</field> 	
+				<field id="cuenta_id" >
+					<ayuda_ex xml="cuentas_help.xml">
+          				</ayuda_ex> 
+					<label>Cuenta </label>
+					<help>Cuenta contable en la que se hace el detalle</help>
+				</field>
+				<field id="nombre_cuenta" tabla="CTB_CUENTAS" deshabilitado="true">
+				    <label>Nombre</label>
+				</field>
+				<field id="doh" noshow="true">
+				</field>
+				<field id="importe" noshow="true">
+				</field>
+				<field id="debe" suma="true" noZero="true">
+					<expresion>case when doh = 0 then importe end</expresion>
+					<label>Debe</label>
+					<tipo>numeric</tipo>
+				</field>
+				<field id="haber" suma="true" noZero="true">
+					<expresion>case when doh = 1 then importe end</expresion>
+				
+					<label>Haber</label>
+					<tipo>numeric</tipo>
+					
+				</field>
+				<field id="referencia" deshabilitado="true">
+					<label>Referencia</label>
+					<help>Referencia</help>
+				</field>			
+				<field id="id_detalle" oculto="true">
+				</field>		
+				<field id="actual" local="true" noshow="true">
+				</field>
+				<field id="idmov" local="true" noshow="true">
+				</field>											
+				<field id="coinciden" local="true" noshow="true" clasefila="true">
+					
+					<if exp="'actual' == 'cuenta_id'">
+						<true>('idmov' == 'id_detalle')?'resaltadoVioleta':'resaltado'</true>
+						<false>''</false>
+					</if>
+				</field>				
+				
+		    </table>
+		    <join tipo="left">
+			<table id="CTB_CUENTAS">
+			    <field id="id_cuenta">
+				<condicion operador="=">CTB_DETALLES.cuenta_id</condicion>
+			    </field>
+			    
+			    
+			</table>
+		    </join>
+		</consulta>
+    </histrix>	

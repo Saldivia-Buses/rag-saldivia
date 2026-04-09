@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="ing" preloadData="false" imprime="false" inserta="false" modifica="false" confirma="IMPRIMIR ETIQUETAS">
+  <title>Insumos</title>
+  <obs></obs>
+
+  <form>
+
+    <table id="STKINSUM" styleTbody="height:500px;overflow-x:hidden;">
+      <title>Insumos</title>
+
+		<movimientos >
+			<relacion id="stkinsum_etiquetas_imp.xml"></relacion>
+			<relacion id="stkinsum_etiquetas_close.xml"></relacion>
+		</movimientos>
+
+      <filters> 
+        <field id="artcod" deshabilitado="false">
+          <ayuda_ex id="STKINSUM">
+            <clave>artcod</clave>
+            <descripcion>artdes</descripcion>
+          </ayuda_ex>
+          <label>Cod.</label>
+          <operador  modificador="left">=</operador>          
+        </field>      
+        <field id="artdes" fullSearch="true" deshabilitado="false">
+          <label>Articulo</label>
+          <help>Descripcion de Articulo</help>
+          <operador>like</operador>
+        </field>        
+	<field id="copias">
+	    <label>Cant. Copias</label>
+	    <valor>1</valor>
+	</field>
+      </filters>
+
+      <field id="artcod" esclave="false" PDFcolor="000000" linkint="" linkdir="articulos">
+            <attribute id="linkint">bom</attribute>
+               <paring destino="idPadre">artcod</paring>
+               <detalle>idPadre</detalle>
+        <ayuda_ex id="STKINSUM" >
+          <field id="artcod" >
+            <label>Cod</label>
+          </field>
+          <field id="artdes" >
+            <label>Nombre</label>
+            <detalle>artdes</detalle>
+          </field>
+          <field id="siscod" oculto="true">
+            <condicion operador="=">'01'</condicion>
+          </field>          
+      
+        </ayuda_ex>
+      
+        <label>Cod.</label>
+        <detalle>artcod</detalle>
+      </field>
+
+      <field id="artdes" autocompletar="false" fullSearch="true" deshabilitado="false">
+        <label>Articulo</label>
+        <help>Descripcion de Articulo</help>
+      </field>
+
+      <field id="artdes2" noshow="true">
+        <expression>REPLACE(artdes, '"', '')</expression>
+      </field>
+      	
+      <field id="valcps">
+        <label>Val.Compra</label>
+        <help>Valor de Compra </help>
+      </field>
+      
+      <field id="unicps">
+        <label modpos="nobr">Unidad</label>
+        <help>Unidad de Compra </help><!--
+        <tabla_ex id="FSMUNIDS">
+          <field id="unicod"></field>
+          <field id="uniabv"></field>
+        </tabla_ex>-->
+		<expression>SELECT uniabv FROM FSMUNIDS WHERE unicod = STKINSUM.unicps</expression>
+      </field>
+
+      <field id="valuso">
+        <label>Val.Uso</label>
+        <help>Valor de Uso </help>
+      </field>
+      
+      <field id="artuni">
+        <label modpos="nobr">U.Uso</label>
+        <help>Unidad de Uso </help><!--
+        <tabla_ex id="FSMUNIDS">
+          <field id="unicod"></field>
+          <field id="uniabv">
+			<detalle>uniabv</detalle>
+		  </field>
+        </tabla_ex>-->
+		<expression>SELECT uniabv FROM FSMUNIDS WHERE unicod = STKINSUM.artuni</expression>
+      </field>
+
+	  <field id="_ORDEN" local="true" noshow="true" />
+
+	  <field id="copias" local="true">
+	  	<label>Cant. Copias</label>
+	  </field>
+
+	  <field id="fifo" noshow="true">
+		<label>FIFO</label>
+	  </field>
+
+	<field id="abrev_herr" tabla="HERR_INVENTARIO">
+	    <label>H.Inventario</label>
+	</field>
+
+      <field id="baja" oculto="true">
+        <condicion operador="!=">1</condicion>
+      </field>
+
+      <field id="siscod" oculto="true">
+      </field>      
+
+
+      <group>
+        <field id="artcod" tabla="STKINSUM"></field>
+      </group>
+	  <order>
+            <field id="fecult" tabla="STKINSPR"></field>
+          </order>   
+    </table>
+    <join tipo="left">
+      <table id="CTBCUENT">
+<!--          <field id="siscod" >
+            <condicion operador="=">'10'</condicion>
+          </field>
+-->
+          <field id="ctbcod" >
+	    <condicion operador="=">STKINSUM.artctb</condicion>
+          </field>
+          <field id="ctbhab">
+            <condicion operador="=">1</condicion>
+          </field>
+
+      </table>
+    </join>    
+                    <!--
+    <join tipo="left">
+      <table id="ARTICULO_FOTO">
+      <field id="idArticulo" >
+        <condicion operador="=">STKINSUM.artcod</condicion>
+      </field>
+      </table>
+    </join>    
+                 -->
+    <join tipo="left">
+      <table id="STKINSPR">
+      <field id="siscod">
+        <condicion operador="=">STKINSUM.siscod</condicion>
+      </field>
+      <field id="artcod">
+        <condicion operador="=">STKINSUM.artcod</condicion>
+      </field>
+        
+      </table>
+    </join>
+    <join tipo="left">
+	<table id="HERR_INVENTARIO">
+	    <field id="id_herrinventario">
+		<condicion operador="=">STKINSUM.herrinventario_id</condicion>
+	    </field>
+	</table>
+    </join>
+  </form>
+</histrix>

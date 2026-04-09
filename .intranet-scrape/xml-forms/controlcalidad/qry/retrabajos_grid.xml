@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="grid"  deleteRow="false"  path="/fotos/archivo/coches/" _autoprint="true" imprime="false">
+	<title>Control Calidad</title>
+	<obs/>
+	<form>
+		
+		<table id="PROD_CONTROLES">
+			<filters auto="true">
+				<field id="seccion_id">
+					<label>sección</label>
+				</field>
+			</filters>
+			<movimientos>
+			    <relacion id="retrabajos_ins.xml" />
+			</movimientos>
+			<title>Control de Calidad</title>
+			<field id="habilitado" oculto="true">
+			    <condicion operador="=">0</condicion>
+			</field>
+			<field id="id_prodcontrol" noshow="true" esClave="true">
+			</field>
+			
+			<field id="nrofab_id" noshow="true" tabla="PROD_CONTROL_MOVIM">
+				<label>coche</label>
+			</field>
+
+			<field id="tit" break="true">
+			    <expression>concat(descripcion)</expression>
+			</field>
+<!--
+			<field id="homologacion_id" noshow="true" tabla="PROD_CONTROL_HOMOLOG" />
+-->
+			<field id="id_controlmovim" noshow="true">
+			    <expression>id_controlmovim</expression>
+			</field>
+
+			<field id="seccion_id" noshow="true" >
+					<helper id="MOMENTO" type="combo" empty="true">
+                    <field id="idMomento" />
+                    <field id="descripcion" />
+					<field id="linea_id" oculto="true">
+                		<condicion operador="=">1</condicion>
+                	</field>
+					</helper>			
+			</field>
+			<field id="modelo_control" noshow="true" _break="true" />
+			<field id="modelo_control2" _noshow="true" repeat="false">
+			    <expression>modelo_control</expression>
+			</field>
+			<field id="orden_control" noshow="true" />
+
+			<!--
+			<field id="tipo_control" >
+				<label>Tipo</label>
+				<options>
+				    <option valor="0"></option>
+				    <option valor="1">Externa</option>
+				    <option valor="2">Interna</option>
+
+                                </options>
+			</field>
+-->
+			<field id="nombre_obs" PDFsize="10">
+			    <label>Control</label>
+			    <expression><![CDATA[CONCAT(nombre_control,
+			    (CASE WHEN PROD_CONTROL_CAUSAL.nombre_controlcausal != '' THEN CONCAT(' - ', PROD_CONTROL_CAUSAL.nombre_controlcausal)
+			    ELSE ''
+			    END),
+			    (CASE WHEN PROD_CONTROL_MOVIM.observacion_control != '' THEN CONCAT(' - ', PROD_CONTROL_MOVIM.observacion_control)
+			    ELSE ''
+			    END))]]></expression>
+			</field>
+			
+<!--
+
+			<field id="fot" path="fotos" local="true" _editable="true">	
+			    <tipo>file</tipo>
+			</field>
+-->		    
+<!--<tipo>file</tipo> -->
+<!--
+			<field id="muestracontrol" local="true" noshow="true">
+				<if exp="no_conforme != 1">
+					<true>'display:none;'</true>
+					<false>'background-color:red;text-align:center;'</false>
+				</if>
+			</field>
+
+			<field id="muestraconforme" local="true" noshow="true">
+				<if exp="no_conforme == 1">
+					<true>'display:none;'</true>
+					<false>'background-color:pink;text-align:center;'</false>
+				</if>
+			</field>
+-->
+
+<!--
+			<field id="conforme"   tabla="PROD_CONTROL_MOVIM" _local="true"  deshabilitado="true"
+				colstyle="background-color:greenyellow;text-align:center;" noshow="true">
+    				<label>si</label>
+				<tipo>check</tipo>
+			</field>
+-->
+
+
+			<field id="no_conforme"   tabla="PROD_CONTROL_MOVIM" _inputstyle="width:2em;height:2em;" _local="true"
+			colstyle="background-color:pink;text-align:center;" deshabilitado="true" noshow="true">
+				<label>no</label>
+				<tipo>check</tipo>
+				<condicion operador="=">1</condicion>
+			</field>
+
+			<field id="controlado"   tabla="PROD_CONTROL_MOVIM"  deshabilitado="true" _PDFcolWidth="10" noshow="true">
+				<label/>
+				<checklabel>Aprob</checklabel>
+
+				<tipo>check</tipo>
+				<condicion operador="=">0</condicion>
+
+			</field>
+
+			<field id="conforme"  noshow="true" tabla="PROD_CONTROL_MOVIM">
+			    <condicion operador="=">0</condicion>
+			</field>
+
+			<field id="userid" >
+			    <label>Controló</label>
+			    <expression>CONCAT(Nombre, ' - ', date_format(date(hora_control), '%d/%m/%y'))</expression>
+			</field> 
+			<field id="hecho" noshow="true">
+			    <expression> (case when ifnull(id_retrabajo, 0)  != 0 then 'true' else 'false' end)</expression>
+			</field>
+			<field id="hecho2" _noshow="true" style="color:red;">
+			    <expression> (case when ifnull(id_retrabajo, 0)  != 0 then 'Realizado' else '' end)</expression>
+			</field>
+
+
+			<field id="realizado" local="true" editable="true" deshabilitado="false">
+			    <label>Realizado</label>
+			    <attribute id="deshabilitado">hecho</attribute>
+<!--			    <expression> (case when ifnull(id_retrabajo, 0)  != 0 then 1 else 0 end)</expression> -->
+
+			    <tipo>check</tipo>
+			</field>
+
+			<field id="obs_retrabajo" tabla="PROD_CONTROL_RETRABAJO" editable="true" style="border-bottom:1px solid #ddd;">
+			    <label>Observaciones</label>
+			    
+			</field>
+			<!--
+			<field id="tiempo" local="true"  PDFcolWidth="20">
+			    <label>Tiempo</label>
+			</field> -->
+		<order>
+			<field id="seccion_id"  />
+			<field id="orden_control"  />
+			<field id="id_prdcontrol"  />
+
+		</order>
+		<group>
+		    <field id="id_prodcontrol" />
+		</group>
+
+		</table>
+		<join tipo="left">
+		    <table id="MOMENTO">
+			<field id="idMomento">
+			    <condicion operador="=">PROD_CONTROLES.seccion_id</condicion>
+			</field>
+		    </table>
+		</join>
+
+		<join tipo="left">
+		    <table id="PROD_CONTROL_MOVIM">
+			<field id="prodcontrol_id">
+			    <condicion operador="=">id_prodcontrol</condicion>
+			</field>
+		    </table>
+		</join>
+		<join tipo="left">
+		    <table id="PROD_CONTROL_CAUSAL">
+			<field id="id_controlcausal">
+			    <condicion operador="=">PROD_CONTROL_MOVIM.controlcausal_id</condicion>
+			</field>
+		    </table>
+		</join>
+		<join tipo="left">
+		    <table id="PROD_CONTROL_RETRABAJO">
+			<field id="controlmovim_id">
+			    <condicion operador="=">PROD_CONTROL_MOVIM.id_controlmovim</condicion>
+			</field>
+		    </table>
+		</join>
+		<join tipo="left">
+		    <table id="HTXUSERS">
+			<field id="login">
+			    <condicion operador="=">PROD_CONTROL_MOVIM.user_id</condicion>
+			</field>
+		    </table>
+		</join>
+
+<!--
+		<join tipo="left">
+			<table id="PROD_CONTROL_HOMOLOG">
+					<field id="prodcontrol_id">
+						<condicion operador="=">id_prodcontrol</condicion>
+					</field>
+
+					<field id="homologacion_id">
+						<condicion operador="=">[__homologacion_id__]</condicion>
+					</field>		
+								
+			</table>
+		</join>
+-->
+
+	</form>
+</histrix>

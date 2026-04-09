@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8" ?>                     
+<histrix tipo="list" _editable="true" sololectura="true"  PDFlines="false"
+ path="fotos/coches" 
+ 
+ >
+<title>Atributos</title>
+<obs></obs>
+<form >
+    <table id="PRODUCTO_ATRIBUTOS">
+    
+	
+        <title>Seccion</title>
+
+	<fieldGroup style="font-size:15px">
+ <field id="activo" oculto="true">
+<!--            <condicion operador="=">1</condicion>
+ -->    </field>
+
+    <field id="producto_id" local="true" noshow="true">
+        <detalle>producto_id</detalle>
+    </field>
+
+    <field id="producto" noshow="true">
+        <expression>IFNULL(PRODUCTO_ATRIB_VALORES.producto_id, 0)</expression>
+        <condicion operador="=">'[__producto_id__]'</condicion>
+    </field>
+
+    <field id="cotizacion_id" local="true" noshow="true">
+        <detalle>cotizacion_id</detalle>
+    </field>
+    
+    <field id="nrofab" noshow="true" local="true">
+    </field>
+    <field id="pathcorte" local="true" noshow="true">
+        <if exp="true">
+        <true>'nrofab/corte/'</true>
+        <false>''</false>
+        </if>
+    </field>
+    
+        <field id="id_prdatributo" autoinc="true" noshow="true">
+            <detalle>prdatributo_id</detalle>
+        </field>
+        <field id="orden_atributo" noshow="true">
+            <label>oden</label>
+        </field>
+        
+        <field id="imprime_etiqueta" noshow="true" print="false">
+            <expression>case when print_label = 1 then 'true' else 'false' end</expression>
+        </field>
+        <field id="imprime_valor" noshow="true" print="false">
+            <expression>case when print_value = 1 then 'true' else 'false' end</expression>
+        </field>
+
+        <field id="imprime_descripcion" noshow="true" print="false">
+            <expression>case when '[__cotizacion_id__]' != 0 then 'true' else 'false' end</expression>
+        </field>
+
+        <field id="nombre_atributo" >
+            <attribute id="print">imprime_etiqueta</attribute>
+            <help>Nombre del atributo</help>
+        </field>
+        <field id="descrip_cotizacion" >
+            <attribute id="print">imprime_descripcion</attribute>
+            <help>Nombre del atributo</help>
+        </field>
+        <field id="tipo_atributo" noshow="true">
+            <label >Tipo</label>
+            <help>tipo del atributo</help>
+            <condicion operador="!=">''</condicion>
+        </field>
+        <field id="prdseccion_id" oculto="true">
+        </field>
+        <field id="helper_xml" noshow="true">
+            <expression>case when helper_xml != '' then helper_xml else 'producto_atrib_opciones_qry.xml' end</expression>
+            <label>xml</label>
+            <size>10</size>
+
+        </field>
+        <field id="helper_dir" noshow="true">
+            <expression>case when helper_dir != '' then helper_xml else '/producto' end</expression>
+
+            <label>dir</label>
+            <size>10</size>
+
+        </field>
+        
+        <field id="parametros" noshow="true" >
+        <label>param</label>
+        </field>
+
+    <field id="valor_atributo" tabla="PRODUCTO_ATRIB_VALORES" _local="true" deshabilitado="true" editable="true" _showObjTabla="true" _esTabla="true">
+            <attribute id="print">imprime_valor</attribute>
+
+        <attribute id="TipoDato">tipo_atributo</attribute>
+
+        <attribute id="attributes">parametros</attribute>
+
+        <attribute id="helperXml">helper_xml</attribute>
+        <attribute id="helperDir">helper_dir</attribute>
+        <helper xml="producto_atrib_opciones_qry.xml" type="combo" empty="false">
+        <parameter source="id_prdatributo" target="prdatributo_id"/> 
+        <parameter source="producto_id" target="producto_id"/>   
+        </helper>
+<!--         <expression>case when PRODUCTO_ATRIB_VALORES.valor_atributo = 1 then 'Si' else (
+                    case when PRODUCTO_ATRIB_VALORES.valor_atributo = 0 then 'No' else PRODUCTO_ATRIB_VALORES.valor_atributo end) end</expression>
+ -->        <condicion operador="!=">'NULL' and PRODUCTO_ATRIB_VALORES.valor_atributo != '0' and PRODUCTO_ATRIB_VALORES.valor_atributo != '' or PRODUCTO_ATRIBUTOS.id_prdatributo = '69'</condicion>
+    </field>
+<!--    <field id="valor_opcion" local="true" editable="true" />
+-->
+
+	</fieldGroup>	
+        <order> 
+            <field id="orden_atributo" />
+        </order>
+
+    </table>
+    <join tipo="left">
+    <table id="PRODUCTO_ATRIB_VALORES">
+        <field id="prdatributo_id">
+        <condicion operador="=">id_prdatributo</condicion>
+        </field>
+<!--         <field id="producto_id">
+            <condicion operador="=">'[__producto_id__]'</condicion>
+        </field>
+ -->        <field id="cotizacion_id">
+            <condicion operador="=">'[__cotizacion_id__]'</condicion>
+        </field>
+    </table>
+    </join>
+</form>    
+</histrix>

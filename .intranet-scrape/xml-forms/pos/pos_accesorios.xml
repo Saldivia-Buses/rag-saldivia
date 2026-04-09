@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix subtipo="vertical" llenoTemporal="false" tipo="ing"  _editable="true" imprime="false"  graboasiento="true" muestraasiento="true" transaccional="true" confirma="EMITIR FACTURA"
+         path="/fotos/accesorios"
+         _impresion="factura_reimptpl.xml" barraDrag="false">
+    <!--comando de impresion -->
+
+    <title>Punto de Venta</title>
+    <obs/>
+    <form>
+        <table id="FACDETAL" label="Ingreso de Facturas"
+               styleTbody="height:150px;overflow-x:hidden;">
+            <!--
+            <cierraproceso id="pos_cobranza.xml">
+                <paring destino="total">total</paring>
+                <paring destino="ctacod">ctacod</paring>
+                <paring destino="ctacte">ctacte</paring>
+                <paring destino="deuda">deuda</paring>
+                <paring destino="saldomax">saldomax</paring>
+                <paring destino="cobrador">zoncod</paring>
+
+                <paring destino="ctanom">ctanom</paring>
+                <paring destino="nrorec">movnro</paring>
+                <paring destino="ctanro">ctanro</paring>
+                <paring destino="movnro">movnro</paring>
+
+                <paring destino="concod">concod</paring>
+
+                <paring destino="movlet">movlet</paring>
+                <paring destino="movfec">movfec</paring>
+            </cierraproceso>
+            -->
+
+            <movimientos cabecera="pos_accesorios_cab.xml">
+
+
+                <relacion id="pos_ivaventas_ingmov.xml"/>
+                <relacion id="pos_ivaimportes_ingmov.xml"/>
+
+                <relacion id="pos_facdetal_acc_ingmov.xml"/>
+                <relacion id="pos_cctmovim_acc_ingmov.xml"/>
+                <!--                 <relacion id="pos_stkinmov_update.xml"/>
+ -->
+
+                        <!-- IMPRESION -->
+
+            </movimientos>
+
+            <importar xml="seleccionar_accesorios_unidad.xml"  label="Accesorios x unidad" titulo="Accesorios x unidad" >
+                <field id="nrofab">nrofab</field>
+            </importar>
+
+            <importar xml="seleccionar_accesorios.xml"  label="Seleccionar Accesorios" titulo="Seleccionar Accesorios" >
+                <field id="ctacod">ctacod</field>
+            </importar>
+
+            <field id="idMov" local="true" deshabilitado="true" noshow="true" esClave="true">
+            </field>
+
+            <field id="orden" noshow="true" deshabilitado="true" >
+            </field>
+
+            <field id="artcod" deshabilitado="true" esClave="true">
+                <label style="font-size:15px;" colspan="8" modpos="nobr" >Artículo</label>
+                <help>Código de Artículo</help>
+                <!--
+                <ayuda_ex id="STKINSUM"  >
+                    <field id="artcod" esClave="true" >
+                        <label>Cod.</label>
+                    </field>
+                    <field id="artdes">
+                        <label>Descripción</label>
+                        <detalle>artdes</detalle>
+                    </field>
+                    <field id="siscod" esClave="true" noshow="true">
+                        <condicion operador="=">02</condicion>
+                    </field>
+                    <field id="Precio" class="informal" noshow="true" >
+                        <label>Precio</label>
+                        <expression having="false">concat( (select precio1 from LISTAPRECIOSDET as PREC where PREC.idArticulo = STKINSUM.artcod order by idLista DESC limit 1) )</expression>
+                        <detalle>precio</detalle>
+                    </field>
+
+                    <clave>codart</clave>
+                    <descripcion>descripcion</descripcion>
+                </ayuda_ex>
+                -->
+
+            </field>
+            <field id="artctb" local="true" ctbcuenta="1" noshow="true" valauto="true">
+                <valor>611102</valor>
+                <detalle>artctb</detalle>
+            </field>
+            <field id="artdes" autocompletar="true" _editable="true" validar="false">
+                <ayuda_ex id="STKINSUM" >
+
+                    <field id="artcod" noshow="true">
+                        <detalle>artcod</detalle>
+                    </field>
+                    <field id="artdes" >
+                        <label>Descripcion</label>
+                        <detalle>artdes</detalle>
+                    </field>
+
+                    <field id="Precio" class="informal" noshow="true" >
+                        <label>Precio</label>
+                        <expression having="false">concat( (select precio1 from LISTAPRECIOSDET as PREC where PREC.idArticulo = STKINSUM.artcod order by idLista DESC limit 1) )</expression>
+                        <detalle>precio</detalle>
+                    </field>
+                    <field id="siscod" oculto="true" >
+                        <condicion operador="=">'02'</condicion>
+                    </field>
+                    <clave>artcod</clave>
+                    <descripcion>artdes2</descripcion>
+                </ayuda_ex>
+                <label style="font-size:15px;" >Descripción</label>
+                <size>70</size>
+            </field>
+
+            <field id="fotopath" local="true" noshow="true">
+                <if exp="true">
+                    <true>'artcod/'</true>
+                    <false>''</false>
+                </if>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="foto" path="fotopath" _download="true" deshabilitado="true">
+                <expression sql="true">select ARTICULO_FOTO.foto from ARTICULO_FOTO where ARTICULO_FOTO.idArticulo = '[__artcod__]' order by revision desc limit 1</expression>
+                <label>Imagen</label>
+                <tipo >file</tipo>
+                <size>80</size>
+            </field>
+            <field id="alicuota" local="true">
+                <label modpos="nobr">Alícuota</label>
+                <tabla_ex id="IVAIMPUESTOS">
+                    <field id="impali"></field>
+                    <field id="impnom"></field>
+                    <field id="impcod">
+                        <condicion operador="&lt;">4</condicion>
+                    </field>
+                </tabla_ex>
+                <tipo>decimal</tipo>
+                <valor>21</valor>
+                <jseval campodestino="iva">precio * alicuota / 100</jseval>
+                <help>Alicuota de IVA</help>
+            </field>
+
+
+            <field id="cant" local="true" _conLabel="true" required="true" suma="true">
+                <label style="font-size:15px;">Cantidad</label>
+                <tipo>integer</tipo>
+                <valor default="true">1</valor>
+                <help>Cantidad</help>
+                <size>4</size>
+                <jseval campodestino="iva" actxml="false">(cant * precio) * alicuota / 100 </jseval>
+                <jseval campodestino="base" actxml="false">(cant * precio)</jseval>
+                <jseval campodestino="totSflete" actxml="false">iva+base</jseval>
+            </field>
+            <field id="movsal" noshow="true">
+                <label>movsal</label>
+            </field>
+
+            <field id="newsaldo" noshow="true" local="true">
+
+                <if exp="true">
+                    <true>0movsal - 0cant</true>
+                    <false>0</false>
+                </if>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="precio" _deshabilitado="true" local="true" _esClave="true">
+                <label modpos="nobr">Precio</label>
+                <tipo>numeric</tipo>
+                <jseval campodestino="iva" actxml="false">(cant * precio ) * alicuota / 100</jseval>
+                <jseval campodestino="base" actxml="false">(cant * precio)</jseval>
+                <jseval campodestino="totSflete" actxml="false">iva + base</jseval>
+				<size>15</size>
+            </field>
+            <field id="punit" local="true" deshabilitado="true" _autoing="true">
+                <label modpos="nobr">PU</label>
+
+                <if exp="true" operador="=">
+                    <true>round(round(precio,2) + (round(precio,2) / 100 *
+                        alicuota), 2)
+                    </true>
+                    <false>0</false>
+                </if>
+                <tipo>numeric</tipo>
+
+            </field>
+
+            <field id="base" local="true" deshabilitado="true" suma="true" noshow="true">
+                <if exp="true" operador="=">
+                    <true>round(( cant * precio ) - (( cant * precio ) * desc1 / 100 ), 2)</true>
+                    <false>0</false>
+                </if>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="neto" local="true" deshabilitado="true" suma="true" _autoing="true" ctbimporte="1">
+                <label _modpos="nobr">neto</label>
+                <if exp="(alicuota + 0) &gt; 0 " operador="=">
+                    <true>base</true>
+                    <false>0</false>
+                </if>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="iva" local="true"  ctbimporte="3" deshabilitado="true" _autoing="true" noshow="true">
+                <label modpos="nobr">Iva</label>
+                <if exp="true" >
+                    <true>round( neto * alicuota / 100 , 2)</true>
+                    <false>0</false>
+                </if>
+                <tipo>numeric</tipo>
+            </field>
+            <field id="total" ctbimporte="2" suma="true" local="true" deshabilitado="true" _autoing="true" >
+                <label modpos="nobr" colstyle="font-weight:bold;font-size:22px;color:red;">Total</label>
+                <if exp="true" operador="=">
+                    <true>base + iva</true>
+                    <false>0</false>
+                </if>
+                <tipo>numeric</tipo>
+            </field>
+            <field id="nogravado" local="true" noshow="true" deshabilitado="true" suma="true">
+                <label>nog</label>
+                <if exp="(alicuota + 0) == 0" operador="=">
+                    <true>total</true>
+                    <false>0</false>
+                </if>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="saldo" local="true" noshow="true" deshabilitado="true">
+                <label>sal</label>
+                <if exp="true" operador="=">
+                    <true>total</true>
+                    <false>0</false>
+                </if>
+                <tipo>numeric</tipo>
+            </field>
+            <field id="impcod" local="true" noshow="true" deshabilitado="true">
+                <if exp="true" operador="=">
+                    <true>1</true>
+                    <false>0</false>
+                </if>
+            </field>
+        </table>
+    </form>
+</histrix>

@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+  <title/>
+  <obs/>
+  <form >
+
+    <table id="REG_MOVIMIENTOS">
+
+      <field id="subsistema_id" noshow="true" />
+      <field id="regcuenta_id" noshow="true" />
+      <field id="desde" local="true" noshow="true"/>
+      <field id="id_regmovim" noshow="true" />
+
+      <field id="arrastrasaldo" noshow="true" local="true"/>
+
+      <!-- Se agrega fecha preconsulta para que no muestre -->
+      <field id="fecha_preconsulta" >
+        <expression having="false">fecha_movimiento</expression>
+        <condicion operador="&lt;">'[__desde__]'</condicion>
+      </field>
+
+      <field id="abreviacion_concepto" local="true">
+        <label>Comp</label>
+        <expression>'SALDO ANTERIOR'</expression>
+      </field>
+
+      <field id="nro_movimiento">
+        <label>Numero</label>
+        <expression>''</expression>
+      </field>
+
+      <field id="importe_movimiento">
+        <tipo>numeric</tipo>
+      </field>
+
+      <field id="imputacion_concepto" local="true" noshow="true" >
+        <valor>0</valor>
+      </field>
+
+      <field id="acumulado">
+        <expression>
+          sum(case when REG_CONCEPTOS.imputacion_concepto = 0 then REG_MOVIMIENTOS.importe_movimiento else 0 end)
+                 - sum(case when REG_CONCEPTOS.imputacion_concepto = 1 then REG_MOVIMIENTOS.importe_movimiento else 0 end)
+        </expression>
+        <tipo>numeric</tipo>
+      </field>
+
+      <field id="saldo_movimiento">
+        <expression>sum(REG_MOVIMIENTOS.saldo_movimiento)</expression>
+        <tipo>numeric</tipo>
+      </field>
+
+      <field id="color" local="true" clasefila="true" oculto="true">
+        <valor>resaltado</valor>
+      </field>
+
+      <group>
+        <field id="regcuenta_id" />
+      </group>
+
+    </table>
+
+    <join>
+      <table id="REG_CONCEPTOS">
+        <field id="id_concepto">
+          <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+        </field>
+      </table>
+    </join>
+
+  </form>
+</histrix>

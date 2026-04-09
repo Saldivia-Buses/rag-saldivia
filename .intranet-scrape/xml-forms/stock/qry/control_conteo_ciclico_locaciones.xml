@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+  <title>CONTEO CICLICO</title>
+  <obs></obs>
+  <form>
+  	<table id="STK_STOCKACTUAL"  label="CONTEO CICLICO">
+
+  		<field id ="stkarticulo_id" noshow="true" valauto="true"/>
+
+  		<field id="stkdeposito_id" noshow="true" modpos="nobr">
+			<condicion operador="=">32</condicion>
+		</field>
+
+  		<field id="nombre_deposito" modpos="nobr">
+			<label>Depósito</label>
+			<expression>select nombre_deposito from STK_DEPOSITOS where id_stkdeposito = STK_STOCKACTUAL.stkdeposito_id</expression>
+		</field>
+
+		<field id="stklocacion_id" modpos="nobr" local="true" noshow="true">
+			<valor>0</valor>
+		</field>
+
+		<field id="codigo_locacion" modpos="nobr" local="true">
+			<label>Locación en sistema</label>
+			<valor>''</valor>
+		</field>
+
+		<field id="cantidad_stock" modpos="nobr">
+			<label>Cantidad en sistema</label>
+			<condicion operador = "&gt;">0</condicion>
+		</field>	
+
+		<field id="locacion_real" modpos="nobr" local="true">
+			<label>Locación real</label>
+		</field>
+
+		<field id="cantidad_real" modpos="nobr" local="true">
+			<label>Cantidad real</label>
+		</field>
+
+		<group>
+			<field id="stkdeposito_id"/>
+			<field id="stklocacion_id"/>
+		</group>
+
+	</table>
+		<join>
+			<table id="STK_ARTICULOS">
+				<field id="id_stkarticulo">
+					<condicion operador="=">STK_STOCKACTUAL.stkarticulo_id</condicion>
+				</field>
+			</table>
+		</join>
+		<join>
+			<table id="STK_ARTICULO_LOCACION">
+				<field id="stkarticulo_id">
+					<condicion operador="=">STK_STOCKACTUAL.stkarticulo_id</condicion>
+				</field>
+			</table>
+		</join>
+
+		<join>
+			<table id="STK_LOCACION">
+				<field id="id_stklocacion">
+					<condicion operador="=">STK_ARTICULO_LOCACION.stklocacion_id</condicion>
+				</field>
+			</table>
+		</join>
+
+		<join>
+			<table id="STK_DEPOSITOS">
+				<field id="id_stkdeposito">
+					<condicion operador="=">STK_LOCACION.stkdeposito_id</condicion>
+				</field>
+				<field id="suma_total">
+				    <condicion operador="=">1</condicion>
+				</field>
+			</table>
+		</join>
+
+</form>
+
+UNION
+
+  <form>
+  	<table id="STK_STOCKACTUAL"  label="CONTEO CICLICO">
+
+  		<field id ="stkarticulo_id" noshow="true" valauto="true"/>
+
+  		<field id="stkdeposito_id" noshow="true" modpos="nobr">
+			<condicion operador="IN">(33,35)</condicion>
+		</field>
+
+  		<field id="nombre_deposito" modpos="nobr" tabla="STK_DEPOSITOS">
+			<label>Depósito</label>
+		</field>
+
+		<field id="stklocacion_id" modpos="nobr" tabla="STK_ARTICULO_LOCACION" noshow="true"/>
+
+		<field id="codigo_locacion" modpos="nobr" tabla="STK_LOCACION">
+			<label>Locación en sistema</label>
+		</field>
+
+		<field id="stock_actual" modpos="nobr" tabla="STK_ARTICULO_LOCACION">
+			<label>Cantidad en sistema</label>
+			<condicion operador="!=">0 or STK_ARTICULO_LOCACION.stklocacion_id= STK_ARTICULOS.stklocacion_fija_id</condicion>
+		</field>	
+
+		<field id="locacion_real" modpos="nobr" local="true">
+			<label>Locación real</label>
+		</field>
+
+		<field id="cantidad_real" modpos="nobr" local="true">
+			<label>Cantidad real</label>
+		</field>
+
+		<group>
+			<field id="stkdeposito_id"/>
+			<field id="stklocacion_id"/>
+		</group>
+	</table>
+		<join>
+			<table id="STK_ARTICULOS">
+				<field id="id_stkarticulo">
+					<condicion operador="=">STK_STOCKACTUAL.stkarticulo_id</condicion>
+				</field>
+			</table>
+		</join>
+		<join>
+			<table id="STK_ARTICULO_LOCACION">
+				<field id="stkarticulo_id">
+					<condicion operador="=">STK_STOCKACTUAL.stkarticulo_id</condicion>
+				</field>
+			</table>
+		</join>
+
+		<join>
+			<table id="STK_LOCACION">
+				<field id="id_stklocacion">
+					<condicion operador="=">STK_ARTICULO_LOCACION.stklocacion_id</condicion>
+				</field>
+			</table>
+		</join>
+
+		<join>
+			<table id="STK_DEPOSITOS">
+				<field id="id_stkdeposito">
+					<condicion operador="=">STK_LOCACION.stkdeposito_id</condicion>
+				</field>
+				<field id="suma_total">
+				    <condicion operador="=">1</condicion>
+				</field>
+			</table>
+		</join>
+</form>
+</histrix>

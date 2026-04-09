@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="crud" dataSource="HtxMailgunTemplates" >
+  <title>Eventos</title>
+  <obs/>
+  <form >
+    <table id="domains">
+      <field id="name" esClave="true">
+        <label>Nombre</label>
+        <size>30</size>
+      </field>
+
+      <field id="description" _required="true">
+        <label>Descripcion</label>
+        <size>80</size>
+      </field>
+
+
+    </table>
+  </form>
+</histrix>

@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud" >
+  <title>Centro Productivo</title>
+  <obs />
+  <form >
+    <table id="MRP_CENTRO_PRODUCTIVO" label="Centro Productivo">
+    	<filters auto="true">
+			<field id="seccion_id"  >
+				<label>Sección</label>
+				<operador>=</operador>
+			</field>
+    	</filters>
+
+		<field id="id_centro_productivo" noshow="true" autoinc="true">
+		</field>
+
+		<field id="nombre_centroproductivo">
+			<label>Centro Productivo</label>
+
+		</field>
+		<field id="form">
+			<helper xml="mrp_centro_productivo_form.xml" dir="/mrp/qry/" type="link" icon="ui-icon-zoomin" text="false">
+				<parameter source="id_centro_productivo" target="id_centro_productivo" />
+			</helper>
+			<expression>'Ficha'</expression>
+		</field>
+
+		<field id="seccion_id" _required="true">
+			<label>Sección</label>
+			<helper id="SECCION" type="combo" empty="true">
+				<field id="id_seccion" />
+				<field id="nombre" />
+			</helper>
+
+		</field>
+
+
+		<field id="deposito_materiaprima_id" _colstyle="display:none;">
+			<label>Depósito Materia Prima</label>
+			<helper xml="stkdeposito_qry.xml" dir="/ayudas" type="combo">
+
+			</helper>
+
+		</field>
+
+		<field id="Materiaprima" Formstyle="display:none;">
+			<helper xml="stock_deposito_centro_qry.xml" dir="/stock/qry" type="link" width="80%" icon="ui-icon-zoomin" text="false">
+				<parameter source="deposito_materiaprima_id" target="stkdeposito_id" />
+			</helper>
+			<expression>'Stock'</expression>
+    
+		</field>
+
+		<field id="deposito_destino_id">
+			<label>Depósito Destino</label>
+			<helper xml="stkdeposito_qry.xml" dir="/ayudas" type="combo">
+			</helper>
+
+		</field>
+
+		<field id="destino" Formstyle="display:none;">
+			<helper xml="stock_deposito_centro_qry.xml" dir="/stock/qry" type="link" width="80%" icon="ui-icon-zoomin" text="false">
+				<parameter source="deposito_destino_id" target="stkdeposito_id" />
+			</helper>
+			<expression>'Stock'</expression>
+    
+		</field>
+
+
+		<field id="equipos" Formstyle="display:none;">
+			<label>Máquinas y Herramientas</label>
+			<helper xml="mrp_centro_equipos_crud.xml" type="link">
+				<parameter source="id_centro_productivo" target="centro_productivo_id" />
+			</helper>
+			<expresion>concat(ifnull((select count(*) from MRP_CENTRO_EQUIPO WHERE centro_productivo_id = id_centro_productivo) , '') , ' Equipos')</expresion>
+		</field>
+
+		<field id="productos" Formstyle="display:none;">
+			<label>Productos</label>
+			<helper xml="mrp_productos_centro_crud.xml" type="link">
+				<parameter source="id_centro_productivo" target="centro_productivo_id" />
+			</helper>
+			<expresion>concat(ifnull((select count(*) from MRP_PRODUCTOS_CENTRO WHERE centro_productivo_id = id_centro_productivo) , '') , ' Productos')</expresion>
+		</field>
+
+		<field id="generar_orden" Formstyle="display:none;">
+			<label>Generar Orden</label>
+			<helper xml="mrp_ordenproduccion_ing.xml" dir="/mrp/ing/orden_centro_prod" type="link" width="80%">
+				<parameter source="id_centro_productivo" target="centro_productivo_id" />
+			</helper>
+			<expresion>'Generar Orden'</expresion>			
+		</field>
+
+		<field id="ordenesP" Formstyle="display:none;" noZero="true">
+			<label>Órdenes Pendientes</label>
+			<expresion>select count(*) from MRP_ORDEN_PRODUCCION where centro_productivo_id = id_centro_productivo and mrpestado_id = 0</expresion>
+			<helper xml="ordenproduccion_qry.xml" dir="/mrp/qry/ordenes_centro" type="link" width="80%" title="Ordenes">
+				<parameter source="id_centro_productivo" target="centro_productivo_id" />
+				<parameter source="0" target="mrpestado_id" />				
+			</helper>					
+		</field>
+
+		<field id="ordenesC" Formstyle="display:none;" noZero="true">
+			<label>Órdenes Cumplidas</label>
+			<expresion>select count(*) from MRP_ORDEN_PRODUCCION where centro_productivo_id = id_centro_productivo and mrpestado_id = 1</expresion>
+			<helper xml="ordenproduccion_qry.xml" dir="/mrp/qry/ordenes_centro" type="link" width="80%" title="Ordenes">
+				<parameter source="id_centro_productivo" target="centro_productivo_id" />
+				<parameter source="1" target="mrpestado_id" />
+			</helper>					
+		</field>
+
+
+    </table>
+  </form>
+</histrix>

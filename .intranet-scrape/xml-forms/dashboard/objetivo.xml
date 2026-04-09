@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+	<histrix tipo="liveGrid" deleteRow="false">
+		<title>Objetivos</title>
+		<obs></obs>
+
+		<form>
+
+			<table id="HTXOPTIONS" label="OPCIONES">
+				<field id="id_option" deshabilitado="true"  noshow="true" autoinc="true">
+				</field>
+				<field id="option_name" _editable="true" _noshow="true" >
+					<label>Nombre</label>
+					<help>Nombre de la opcion</help>
+					<condicion operador="like">'CHART%'</condicion>
+				</field>
+
+				<field id="option_description" _editable="true" deshabilitado="true">
+					<label>Descripción</label>
+					<help>Descripcion</help>
+				</field>
+				<field id="option_value" editable="true" >
+					<label>Valor</label>
+					<size>10</size>
+					
+				</field>
+			</table>
+		</form>
+	</histrix>

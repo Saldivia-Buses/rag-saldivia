@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<abm tipo="ayuda" >
+	<titulo>SECCION</titulo>
+	<obs></obs>
+	<consulta>
+		<tabla id="SECCION">
+			<titulo>SECCION</titulo>
+				<campo id="id_seccion" clave="true"></campo>
+				<campo id="nombre"></campo>
+				<orden>
+					<campo id="nombre"></campo>
+				</orden>
+			
+				    </tabla>
+	</consulta>
+</abm>

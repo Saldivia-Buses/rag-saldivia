@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="consulta">
+	<title>Cuentas Contables Habilitadas</title>
+	 <obs></obs>
+	  <form>
+
+		<table id="CTB_CUENTAS" label="Cuentas Habilitadas">
+
+			<field id="id_cuenta">
+			    <detalle>ctbcuenta_id</detalle>
+			</field>
+			
+			<field id="nombre_cuenta">
+			    <detalle>nombre_cuenta</detalle>
+			</field>
+			
+			<field id="habilitada" noshow="true">
+				<condicion operador="=">1</condicion>
+			</field>
+<!--			
+			<field id="ejercicio_id" noshow="true">
+				<condicion operador="=">(select id_ejercicio from CTB_EJERCICIOS where activo = 1 limit 1)</condicion>
+			</field>
+-->				
+			<field id="tipo_id" noshow="true" />
+		
+			<order>
+				<field id="nombre_cuenta" />
+			</order>
+	    </table>
+
+	    <join>
+		    <table id="CTB_TIPOS">
+		    	<field id="id_tipo">
+		    		<condicion operador="=">CTB_CUENTAS.tipo_id</condicion>
+		    	</field>
+		    </table>
+	    </join>
+
+	</form>
+   </histrix>	

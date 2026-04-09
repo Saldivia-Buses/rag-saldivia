@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<histrix tipo="ing" conBusqueda="true" >
+  <title>FICHA PERSONAL</title>
+  <obs></obs>
+  <form  _detalle="rhdescuentos.xml">
+    <table id="PERSONAL" label="Ficha Personal">
+                        <movimientos cabecera="descuentos_cab.xml">
+                            <relacion id="descuentos_ingmov.xml"></relacion> 
+                        </movimientos>
+                        <filters>
+                            <field id="id_seccion" deshabilitado="false">
+                                    <label modpos="nobr">Sección</label>
+                                    <operador>=</operador>
+                            </field>
+                            <field id="cpremio" deshabilitado="false">
+                                    <label modpos="nobr">Premio</label>
+                                    <operador>=</operador>
+                            </field>
+
+                        </filters>
+
+      <field id="cpremio" noshow="true" empty="true">
+            <label modpos="nobr">Premio</label>
+            <options>
+        	<option valor="">Todos</option>
+        	<option valor="0">Sin Premio</option>
+        	<option valor="1">Con Premio</option>
+            </options>
+      </field>
+
+      <field id="idPersona" noshow="true">
+        <label modpos="nobr">pers</label>
+      </field>
+
+      <field id="legajo" deshabilitado="true">
+        <label modpos="nobr">Legajo</label>
+        <detalle>legajo</detalle>
+      </field>
+      <field id="apellido" deshabilitado="true">
+        <label modpos="nobr" colspan="6">Apellido</label>
+        <help>Apellido</help>
+      </field>
+      <field id="Nombre" deshabilitado="true">
+        <label modpos="nobr">Nombre</label>
+        <help>Nombre</help>
+      </field>
+      <field id="CUIL" deshabilitado="true">
+        <label modpos="nobr" >C.U.I.L.</label>
+        <help>Número de Clave Única de Identificación Laboral</help>
+      </field>
+      <field id="id_seccion" deshabilitado="true">
+        <label modpos="nobr">Sección</label>
+                                <tabla_ex id="SECCION" vacio="true">
+                                    <field id="id_seccion"></field>
+                                    <field id="nombre"></field>
+                                </tabla_ex>
+        <expression>select id_seccion from SECCIONHISTORIA where SECCIONHISTORIA.IdPersona = PERSONAL.IdPersona order by SECCIONHISTORIA.fechaDesde desc limit 1</expression>
+      </field>
+                        <field id="cargar" local="true" _refresh="true" >
+                            <tipo>check</tipo>
+                        </field>
+                        <field id="grabar" local="true" noshow="true">
+                            <if exp="cargar + 0 == 1">
+                                <true>'true'</true>
+                                <false>'false'</false>
+                            </if>
+                        </field>
+
+
+
+      <field id="fechaEgreso" oculto="true">
+        <label>Egreso</label>
+        <condicion operador="=">"0000-00-00"</condicion> 
+       </field>
+      <!--  <field id="cpremio" oculto="true" > 
+        <label>Premio</label>
+        <condicion operador="=">1</condicion>
+      </field> -->
+
+      <order>
+      <field id="fecing"></field>
+
+      </order>
+    </table>
+  </form>
+</histrix>

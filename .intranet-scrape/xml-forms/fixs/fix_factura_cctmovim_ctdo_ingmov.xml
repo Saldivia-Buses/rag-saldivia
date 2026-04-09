@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+	<histrix tipo="insert" >
+		<title>FACTURA</title>
+		<obs></obs>
+			<form >
+				<table id="CCTMOVIM" label="FACTURAS" idCampoCond="buscoop" >
+					<field id="siscod" id_temp="siscod"></field>
+					<field id="ctacod" id_temp="ctacod"></field>
+					<field id="ctanom" id_temp="ctanom"></field>
+					<field id="movfec" id_temp="movfec"></field>
+					<field id="concod" >
+						<valor>4</valor>
+					</field>
+					<field id="movnpv" id_temp="movnpv"></field>
+					<field id="movnro" id_temp="movnro"></field>
+					<field id="movimp" id_temp="movimp"></field>
+					<field id="movcta" id_temp="movcta"></field>
+					<field id="succod" id_temp="movcta"></field>
+					<field id="movvto" id_temp="movvto"></field>
+					<field id="zoncod" id_temp="zoncod"></field>
+					<field id="movlet" id_temp="movlet"></field>
+					<field id="opecla" id_temp="opecla"></field>
+					<field id="regfec" id_temp="regfec" ></field>
+					<field id="movref__1" id_temp="movref__1">
+					    <valor>'Factura Contado'</valor>
+					</field>
+					<field id="regmin" id_temp="regmin"></field>
+				</table>
+			</form>
+	</histrix>

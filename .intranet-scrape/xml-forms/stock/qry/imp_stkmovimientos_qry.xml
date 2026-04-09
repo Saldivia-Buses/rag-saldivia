@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ficha" sololectura="true" autoprint="true" limit="1">
+  <title>Movimiento de stock</title>
+  <obs></obs>
+  <form>
+	<table id="STK_MOVIMIENTOS" label="Movimiento manual de stock">
+
+		<field id="stktransaccion_id" print="false">
+		  <label>transID</label>
+		</field>
+
+		<field id="regcuenta_id">
+			<helper type="combo" id="REG_CUENTA">
+				<field id="id_regcuenta" />
+				<field id="nombre_cuenta" />
+			</helper>
+			<label posx="5" posy="17">Cuenta</label>
+		</field>
+
+		<field id="fecha_movimiento">
+			<label modpos="nobr" posx="110" posY="0">Fecha</label>
+			<tipo>date</tipo>
+		</field>
+
+		<field id="stkdeposito_id">
+			<helper type="combo" id="STK_DEPOSITOS">
+				<field id="id_stkdeposito" />
+				<field id="nombre_deposito" />
+			</helper>
+			<label posx="5" posy="+2">Depósito</label>
+		</field>
+
+		<field id="numero_movimiento">
+			<label modpos="nobr" posx="110" posY="0" PDFsize="20">Nº</label>
+		</field>
+
+		<field id="stkconcepto_id" >
+			<label modpos="nobr"  posx="5" posy="+2">Comprobante</label>
+			<helper type="combo" id="STK_CONCEPTOS">
+				<field id="id_stkconcepto" />
+				<field id="nombre_concepto" />
+			</helper>
+		</field>
+
+
+		<field id="detalles" local="true" >
+			<label posx="9" posy="+2"></label>
+			<helper type="object" xml="imp_stkmovimientos_detalle_qry.xml" dir="/stock/qry" >
+			<parameter source="numero_movimiento" 	target="numero_movimiento" />
+			<parameter source="stkconcepto_id" 		target="stkconcepto_id" />
+			<parameter source="fecha_movimiento" 	target="fecha_movimiento" />
+			</helper>
+		</field>
+              
+
+		<group>
+			<field id="stktransaccion_id" />
+			<field id="numero_movimiento"/>
+			<field id="stkconcepto_id" />     
+			<field id="fecha_movimiento"  />
+		</group>
+
+    </table>
+  </form>
+</histrix>  

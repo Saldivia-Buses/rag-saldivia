@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm-mini" subtipo="vertical">
+	<title>Hallazgos</title>
+	<obs></obs>
+	<form >
+		<table id="CAL_AUDITORIA_OBS">
+		    <title>Hallazgos</title>
+
+		
+			<field id="id_auditoriaobs" autoinc="true" esClave="true" noshow="true">
+				<label>Codigo</label>
+			</field>
+
+			<field id="auditoriaint_id" oculto="true" valauto="true"/>
+
+			<field id="id_noconformidad" oculto="true" local="true"/>
+
+			<field id="fecha_auditoriaint" tabla="CAL_AUDITORIA_INT" Formstyle="display:none;">
+				<expression>select fecha_auditoriaint from CAL_AUDITORIA_INT where CAL_AUDITORIA_INT.id_auditoriaint = auditoriaint_id</expression>
+				<label>Fecha</label>
+				<tipo>date</tipo>
+			</field>
+
+          	<field id="log" local="true" linkint="calauditoriaint_imp.xml" Formstyle="display:none;">
+				<label>Audit.</label>
+                <paring destino="id_auditoriaint">auditoriaint_id</paring>
+                <expression>auditoriaint_id</expression>     
+            </field>
+
+
+			<field id="observacion">
+				<label modpos="nobr">Hallazgos</label>
+				<help>Escriba aquí el texto del hallazgo</help>
+				<size>150</size>
+			</field>
+
+
+			<field id="linkint1" noshow="true">
+				<expression>CASE WHEN CAL_NOCONFORMIDADES.id_noconformidad IS NULL THEN 'noconformidad_ing.xml' ELSE 'noconformidad_ficha.xml' END</expression>
+			</field>
+
+			<field id="linkdir1" noshow="true">
+				<expression>CASE WHEN CAL_NOCONFORMIDADES.id_noconformidad IS NULL THEN '/calidad/ing' ELSE '/calidad/qry' END</expression>
+			</field>
+
+			<field id="desc1" noshow="true">
+				<expression>CASE WHEN CAL_NOCONFORMIDADES.id_noconformidad IS NULL THEN CAL_AUDITORIA_OBS.observacion ELSE CONCAT("'", CAL_NOCONFORMIDADES.descripcion_nconf, "'") END</expression>
+			</field>
+
+			<field id="nconnf" local="true" linkint="" linkdir="" _print="false">	
+				<paring destino="id_noconformidad">id_noconformidad</paring>
+				<paring destino="auditoriaobs_id">id_auditoriaobs</paring>
+				<paring destino="descripcion_nconf">desc1</paring>
+				<label Formstyle="display:none;" >Plan de Accion</label>
+				<attribute id="linkint">linkint1</attribute>
+				<attribute id="linkdir">linkdir1</attribute>
+				<expression>CASE WHEN CAL_NOCONFORMIDADES.id_noconformidad IS NULL THEN '---' ELSE CONCAT('Nº ', CAL_NOCONFORMIDADES.id_noconformidad) END</expression>
+			</field>
+
+			<field id="hallazgotipo_id" _editable="true" print="false">
+			    <label>Tipo</label>
+				<helper type="combo" id="CAL_AUDITORIA_TIPO_HALLAZGO" empty="true">		
+					<field id="id_tipohallazgo"/>
+					<field id="nombre_tipohallazgo"/>
+					<order>
+						<field id="nombre_tipohallazgo"/>
+					</order>
+				</helper>
+			</field>
+
+			<field id="respauditoriaint_id" _editable="true" print="false">
+			    <label>responsable</label>
+				<helper type="combo" id="HTXUSERS" empty="true">		
+					<field id="id_usuario"/>
+					<field id="nombre">
+						<expression>CONCAT(apellido, ' ', nombre)</expression>
+					</field>
+					<field id="baja">
+						<condicion operador="=">0</condicion>
+					</field>
+					<order>
+						<field id="nombre"/>
+					</order>
+				</helper>
+			</field>
+			<field id="realizada" _editable="true" print="false">
+				<label>Aprobado</label>
+				<helper type="combo">
+				    <option value="0">No</option>
+				    <option value="1">Si</option>
+				</helper>
+			</field>
+
+		</table>
+		<join tipo="left">
+			<table id="CAL_NOCONFORMIDADES">
+				<field id="auditoriaobs_id">
+					<condicion operador="=">CAL_AUDITORIA_OBS.id_auditoriaobs</condicion>
+				</field>
+			</table>
+		</join>
+	</form>
+</histrix>

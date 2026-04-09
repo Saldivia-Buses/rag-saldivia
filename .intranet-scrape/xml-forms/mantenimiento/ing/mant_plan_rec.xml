@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<histrix tipo="ing" inserta="false" modifica="false" imprime="false">
+    <title>Mantenimiento</title>
+    <obs></obs>
+    <form>
+    <table id="GEN_CALENDAR" label="Plan de mantenimiento recurrente" >
+
+        <movimientos>
+              <relacion id="recurrencia_ingmov.xml" />
+        </movimientos>
+
+
+            <validation>
+                <condition><![CDATA[fecha_accion == '']]></condition>
+                <message>Debe seleccionar una fecha</message>
+            </validation>
+
+            <validation>
+                <condition><![CDATA[equipo_id == '']]></condition>
+                <message>Debe seleccionar un equipo</message>
+            </validation>
+
+            <validation>
+                <condition><![CDATA[plan_id == '']]></condition>
+                <message>Debe seleccionar un plan</message>
+            </validation>
+
+            <validation>
+                <condition><![CDATA[estado == '']]></condition>
+                <message>Debe seleccionar un estado</message>
+            </validation>
+
+            <validation>
+                <condition><![CDATA[accion_id == '']]></condition>
+                <message>Debe seleccionar una accion</message>
+            </validation>
+
+            <validation optional="true">
+                <condition><![CDATA[observaciones == '']]></condition>
+                <message>Se va a guardar sin observaciones. Desea continuar?</message>
+            </validation>
+
+    <filters>
+
+        <field id="fecha">
+          <label>Desde</label>
+          <operador>&gt;=</operador>
+          <valor>today</valor>
+        </field>
+        
+        <field id="fecha" modpos="nobr">
+          <label>Hasta</label>
+          <operador>&lt;=</operador>
+          <valor>today</valor>
+        </field>  
+
+        <field id="dias" deshabilitado="false" modpos="nobr">  
+          <label>Dias</label>
+          <operador>=</operador>
+        </field>
+
+        <field id="tipoequipo_id" deshabilitado="false">
+            <label>Tipo</label>
+            <operador>=</operador>
+        </field>
+
+        <field id="equipo_id" deshabilitado="false" required="true"  modpos="nobr">  
+          <label>Equipo</label>
+          <operador>=</operador>
+        </field> 
+
+
+        <field id="plan_id" deshabilitado="false" required="true" _colspan="9" _modpos="nobr">  
+          <label>Plan</label>
+          <operador>=</operador>
+        </field> 
+
+
+        <field id="estado" deshabilitado="false" required="true" modpos="nobr">  
+          <label>Estado</label>
+          <operador>=</operador>
+        </field> 
+
+
+        <field id="accion_id" deshabilitado="false" required="true" _modpos="nobr" >  
+          <label>Accion</label>
+          <operador>=</operador>
+        </field> 
+
+        <field id="observaciones" deshabilitado="false" required="true"  modpos="nobr" colspan="9">  
+          <label>Observaciones</label>
+          <operador>=</operador>
+        </field> 
+
+    </filters>
+
+
+    
+<fieldGroup style="text-align:center;padding:4px 4px 4px 4px;">
+
+            <field id="fecha">
+                <label>Fecha</label>
+                <tipo>date</tipo>
+            </field>
+
+            <field id="dias" deshabilitado="false" multiple="true">
+                <label>Dia</label> 
+                <expression having="false">dayofweek(fecha)</expression>
+                <helper type="combo" multiple="true" empty="true">
+                  <option value="2">Lunes</option>
+                  <option value="3">Martes</option>
+                  <option value="4">Miercoles</option>
+                  <option value="5">Jueves</option>
+                  <option value="6">Viernes</option>
+                  <option value="7">Sabado</option>
+                  <option value="1">Domingo</option>
+                </helper>
+            </field>  
+
+            <field id="id_planevento" autoinc="true" local="true" noshow="true">
+                <label>ID EVENTO</label>
+            </field>
+
+            <field id="tipoequipo_id" local="true" noshow="true">
+                <helper type="combo" xml="mant_tipo_equipo_crud.xml" dir="/mantenimiento/man" empty="true"/>
+                <label>Tipo</label>
+                <actualiza>
+                    <field id="equipo_id" destino="tipoequipo_id" />
+                </actualiza>
+            </field>
+
+            <field id="equipo_id" local="true">
+                <label>Equipo</label>
+                <helper type="combo" id="MANT_EQUIPOS" empty="true">
+                    <field id="id_equipo" noshow="true" />
+                    <field id="nombre_equipo">
+                        <expresion>concat(nombre_equipo, ' - ', articulo_id)</expresion>
+                    </field>
+                    <field id="tipoequipo_id" oculto="true" />
+                    <order>
+                        <field id="nombre_equipo"/>
+                    </order>
+                </helper>
+
+                    <actualiza>
+                        <field id="plan_id" destino="equipo_id" />
+                    </actualiza>
+
+            </field>
+
+            <field id="plan_id" local="true">
+                <label>ID PLAN</label>
+                  <helper type="combo" id="MANT_PLAN" empty="true">
+                    <field id="id_plan" noshow="true" />
+                    <field id="observaciones" />
+                    <field id="equipo_id" oculto="true" />
+                </helper>
+            </field>
+
+            <field id="accion_id" local="true" >
+                <helper type="combo" id="MANT_ACCIONES" empty="true" >
+                    <field id="id_accion" noshow="true">
+                        <detalle>accion_id</detalle>
+                    </field>
+                    <field id="nombre_accion">
+                        <detalle>nombre_accion</detalle>
+                    </field>
+                </helper>
+                <label>Accion</label>
+            </field>
+
+            <field id="estado" local="true" >
+                <label>Estado</label>
+                <helper type="combo" id="MANTENIMIENTO_ESTADOS" empty="true">
+                    <field id="id_estado" />
+                    <field id="estado" />
+                    <field id="tipo_estado">
+                        <condicion operador="=">0</condicion>
+                    </field>
+                </helper>
+            </field>
+
+            <field id="observaciones" local="true" estado="true">
+                <label>Observaciones</label>
+                <size>200</size>
+            </field>
+
+</fieldGroup>
+
+            <field id="login" local="true" noshow="true">
+                <label>Usuario</label>
+                <valor eval="true">$_SESSION['idUser']</valor>
+            </field>
+
+            <group>
+                <field id="fecha"/> 
+            </group>
+
+    </table>
+  
+            <join tipo="left">
+                <table id="MANT_PLAN_EVENTOS">
+                    <field id="equipo_id">
+                       <condicion operador="=">'[__equipo_id__]'</condicion>
+                    </field>
+                </table>
+            </join>
+
+    </form>
+
+</histrix>  

@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="grid" _subtipo="vertical" inserta="false" borra="false" modifica="false" imprime="false" deleteRow="false" _preloadData="false">
+  <title/>
+  <obs/>
+  <form >
+    <table id="REG_DETALLES">
+     <!--
+      <movimientos cabecera="regdet_fact_cab.xml">
+      </movimientos>
+   -->
+
+      <field id="id_regdetalle" noshow="true" />
+      
+      <field id="regmovim_id" noshow="true"/>
+<!--
+      <field id="fecha_movimiento" tabla="REG_MOVIMIENTOS">
+        <label>Fecha</label>
+        <tipo>date</tipo>
+      </field>
+
+      <field id="nro_movimiento" tdWith="150" style="text-align: center">
+        <label>Numero</label>
+        <expresion>CONCAT(letra_movimiento,' ',LPAD(puesto_movimiento,4,'0'),'-',LPAD(nro_movimiento,8,'0'))</expresion>
+      </field>
+
+      <field id="importe_movimiento" tabla="REG_MOVIMIENTOS">
+        <label>Importe</label>
+        <tipo>numeric</tipo>
+      </field>
+
+-->
+      <field id="codigo_detalle">
+        <label>Cod</label>
+      </field>
+
+      <field id="descripcion_detalle">
+        <label>Descripcion</label>
+      </field>
+
+      <field id="cantidad_detalle">
+        <label>Cantidad</label>
+      </field>
+
+      <field id="cant_devuelta" local="true" editable="true" style="color:green;font-weight:bold;">
+        <label>Devuelve</label>
+        <help>Cantidad devuelta</help>
+        <valor default="true">0</valor>
+      </field>
+<!--
+      <field id="precio_venta">
+        <label>Precio</label>
+      </field>
+
+      <field id="total_linea" local="true">
+        <label>Total detalle</label>
+        <expresion>cantidad_detalle * precio_venta</expresion>
+      </field>
+-->
+
+      <field id="regincidencia_id" editable="true" local="true">      
+        <label>Incidencia</label>
+        <helper type="combo" xml="incidencias_crud.xml" dir="/clientes/man/">
+        </helper>
+      </field>
+
+      <field id="observacion" local="true" editable="true">
+        <label>Obs</label>
+        <help>Estado de la mercaderia</help>
+      </field>
+
+      <group>
+        
+        <field id="regmovim_id" />
+        <field id="id_regdetalle" />
+      </group>
+
+    </table>
+
+    <join>
+      <table id="REG_MOVIMIENTOS">
+        <field id="id_regmovim">
+          <condicion operador="=">regmovim_id</condicion>
+        </field>
+      </table>
+    </join>
+   <!-- 
+    <join>
+      <table id="REG_INCIDENCIAS">
+        <field id="id_regincidencia">
+          <condicion operador="=">REG_DETALLES.regincidencia_id</condicion>
+        </field>
+      </table>
+    </join>
+    -->
+
+
+  </form>
+</histrix>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="abm-mini">
+	<title>Encuesta</title>
+	<obs></obs>
+	<form  detalle="encuesta_item.xml">
+		<table id="ENCUESTA" >
+			<title>Encuesta</title>
+
+			<field id="idEncuesta" autoinc="true" noshow="true">
+				<label>Cod</label>
+				<help>Codigo de Encuesta</help>
+				<detalle>idEncuesta</detalle>
+			</field>
+			<field id="descripcion">
+				<label>Descripción</label>
+				<help>Descripción de la Encuesta</help>
+				<size>30</size>
+			</field>
+			<field id="fecha" tipoOrden="DESC">
+				<label>Fecha</label>
+				<help>Fecha de la Encuesta</help>
+			</field>			
+			<order>
+			    <field id="fecha"></field>
+			</order>
+		</table>
+	</form>	   
+</histrix> 

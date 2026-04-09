@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" >
+    <title>Detalle de Comprobante</title>
+    <obs></obs>
+    <form>
+	<table id="REG_IMPUTACIONES" style="align:left">
+
+		<field id="referencia_movimiento" tabla="REG_MOVIMIENTOS">
+			<label>Descripcion</label>
+			<expression>CONCAT('Oblea ', REG_MOVIMIENTOS.referencia_movimiento)</expression>
+		</field>
+
+		<field id="id_regimput" noshow="true"/>
+
+		<field id="regmovim_id" noshow="true"/>
+
+		<field id="regmovim0_id" noshow="true"/>
+
+		<field id="movimiento_imputacion" suma="true" _noshow="true">
+			<label>Importe</label>
+		</field>
+       
+    </table>
+
+    <join tipo="left">
+		<table id="REG_MOVIMIENTOS">
+			<field id="id_regmovim">
+				<condicion operador="=">regmovim0_id</condicion>
+			</field>
+		</table>
+	</join>
+    </form>
+</histrix>

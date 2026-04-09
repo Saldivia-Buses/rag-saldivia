@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" logReference="nom" limit="100">
+	<title>Licencias</title>
+	<obs/>
+	<form >
+		<table id="FRANCOS_PER" label="Licencias" styleTbody="height:10em;">
+		    <field id="id" deshabilitado="true" noshow="true" esClave="true" autoinc="true">
+		    </field>
+
+		    <field id="IdPersona" deshabilitado="true" oculto="true">
+				<label>Pers</label>
+                                <!--<condicion operador="=">0</condicion>-->
+				
+			</field> 
+		    <field id="tipo" deshabilitado="true" oculto="true">
+				<label>tipo</label>
+				<condicion operador="=">0</condicion>				
+			</field>
+			
+		    <field id="legajo" deshabilitado="true" oculto="true">
+				<label>leg</label>
+<!--				<condicion operador="=">''</condicion>	 -->
+			</field> 
+
+			<field id="nom" local="true" noshow="true">
+			</field> 
+			<field id="app" local="true" noshow="true">
+			</field> 
+			
+			<field id="apellido_nombre" noshow="true">
+			   <expression>CONCAT('[__nom__]',' ', '[__app__]')</expression>
+			</field>
+			<field id="idfranco">
+				<tabla_ex id="FRANCOS_CAT">
+					<field id="idfranco"/>
+					<field id="nombre"/>
+					<field id="tipo">
+						<condicion operador="=">0</condicion>
+					</field>
+					<order>
+						<field id="nombre"/>
+					</order>
+				</tabla_ex>
+				<label>Cod.</label>
+				<help>Codigo de Licencia</help>
+			</field>
+			<field id="fechainicio">
+				<label>Desde</label>
+				<help>Fecha</help>
+			</field>
+			<field id="fechafin">
+				<label>Hasta</label>
+				<help>Hasta Fecha</help>
+			</field> 
+			<field id="horas">
+				<label>Horas</label>
+		        <help>Horas</help>
+		        <tipo>varchar</tipo> 
+		        <size>8</size>       
+			</field>
+			<field id="faltas">
+				<!--<expression><![CDATA[DATEDIFF(fechafin, fechainicio)+1]]></expression>-->
+				<expression><![CDATA[select count(*) from CALENDAR 
+							where CALENDAR.fecha >= FRANCOS_PER.fechainicio and 
+							      CALENDAR.fecha <= (case when FRANCOS_PER.fechafin = '0000-00-00' then NOW() else FRANCOS_PER.fechafin end) and 
+							      dayofweek(fecha) NOT IN (1,7) and
+							      fecha NOT IN (select idFeriado from FERIADOS)]]></expression>
+				<label>Faltas</label>
+				<tipo>numeric</tipo>
+			</field>
+
+		<order>
+			<field id="fechainicio" tipoOrden="DESC"/>
+		</order>
+
+		</table>
+	</form>
+</histrix>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="delete" limit="1">
+	<title></title>
+	<obs></obs>
+	<form >
+		<table id="CAL_NOCONFORMIDADES" 	idCampoCond="borra_nc">
+
+			<field id="id_noconformidad" 		id_temp="id_noconformidad" 		esClave="true" />
+			
+		</table>
+	</form>
+</histrix>

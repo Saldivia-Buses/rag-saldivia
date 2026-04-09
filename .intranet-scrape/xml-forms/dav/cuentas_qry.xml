@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" limit="500" preloadData="false">
+	<title>Consulta de Proveedores</title>
+	 <obs></obs>
+		<form _detalle="cuenta_contactos_qry.xml" inline="true">
+
+		    <table id="REG_CUENTA" label="Consulta de Proveedores">
+
+				<filters>					
+					<field id="nombre_cuenta" deshabilitado="false">
+						<operador>like</operador>
+						<label>Titular</label>
+					</field> 
+					<field id="cod_direccion">
+					   <label>Direccion</label>
+					   <operador>like</operador>
+				       </field>
+					<field id="nombre_localidad" deshabilitado="false">
+						<operador>like</operador>
+						<label>Ciudad</label>
+					</field>
+					<field id="nombre_provincia" deshabilitado="false">
+						<operador>like</operador>
+						<label>provincia</label>
+					</field>
+				</filters>
+
+				<field id="baja" noshow="true">
+				    <condicion operador="=">0</condicion>
+				</field>
+
+				<field id="id_regcuenta" noshow="true">
+				    <detalle>regcuenta_id</detalle>
+				</field>
+<field id="act" local="true" noshow="true">
+    <if exp="true">
+        <true>Histrix_vCard::addFromREGCUENTA('id_regcuenta')</true>
+        <false>''</false>
+    </if>
+</field>
+
+				<field id="nro_cuenta" _noshow="true">
+					<label>Número</label>
+				</field>
+
+				<field id="nombre_cuenta">
+					<label>Nombre</label>
+					<size>25</size>
+				</field>
+
+				<field id="cod_direccion">
+					<label>Direccion</label>
+					<size>25</size>
+				</field>
+                                <field id="codigo_postal">
+                            	    <label>cp</label>
+                                </field>
+				<field id="nombre_localidad" tabla="GEN_LOCALIDADES">
+					<label>Localidad</label>
+				</field>
+
+				<field id="nombre_provincia" tabla="GEN_PROVINCIAS">
+					<label>Provincia</label>
+				</field>
+
+
+                
+				<field id="alta_cuenta">
+					<label>Fecha Alta</label>
+					<tipo>date</tipo>
+				</field>
+
+				<field id="subsistema_id" noshow="true">
+					<detalle>subsistema_id</detalle>
+				</field> 
+
+		    </table>
+
+			<join tipo="left">
+				<table id="GEN_PROVINCIAS">
+					<field id="id_provincia">
+						<condicion operador="=">provincia_id</condicion>
+					</field>
+				</table>
+			</join>
+
+
+			<join tipo="left">
+				<table id="GEN_LOCALIDADES">
+					<field id="id_localidad">
+						<condicion operador="=">localidad_id</condicion>
+					</field>
+				</table>
+			</join>
+
+
+		</form>
+    </histrix>	

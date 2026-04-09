@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix path="fotos/usuarios" tipo="crud" borra="false">
+  <title>Usuarios</title>
+  <obs/>
+  <form>
+    <table id="HTXUSERS" label="Usuarios">
+	<filters>
+      <field id="baja">
+        <label>Estado</label>
+	       <operador>=</operador>
+         <valor>0</valor>
+      </field>
+
+      <field id="Id_perfil">
+        <label modpos="nobr">Perfil</label>
+	      <operador>=</operador>
+      </field>
+
+      <field id="seccion_id">
+        <label modpos="nobr">Seccion</label>
+        <operador>=</operador>
+      </field>
+	</filters>
+
+      <field id="Id_usuario" esClave="true" deshabilitado="true" autoinc="true">
+        <label>ID Usuario</label>
+        <help/>
+      </field>
+
+      <field id="Nombre">
+        <label >Nombre</label>
+        <help/>
+      </field>
+
+      <field id="apellido">
+        <label>Apellido</label>
+        <help/>
+      </field>
+
+      <field id="login">
+        <label>Login</label>
+        <help>Login de entrada al sistema</help>
+      </field>
+
+      <field id="pass" print="false" export="false"  colstyle="display:none;">
+        <label >password</label>
+        <help>Password de entrada al sistema</help>
+        <tipo Type="password">password</tipo>
+      </field>
+
+      <field id="telefono">
+        <label>Teléfono</label>
+      </field>
+
+      <field id="interno" noZero="true">
+        <label >Nro Interno</label>
+      </field>
+
+      <field id="email" >
+        <label>email</label>
+        <help>Dirección de correo Electrónico</help>
+        <size>60</size>
+        <tipo>email</tipo>
+      </field>
+
+      <field id="Id_perfil">
+        <label>Perfil</label>
+        <help>Perfil de Acceso</help>
+        <helper id="HTXPROFILES" type="combo" empty="true">
+          <field id="Id_Perfil"/>
+          <field id="nombre"/>
+        </helper>
+      </field>      
+
+      <field id="seccion_id">
+        <label>Seccion</label>
+        <help>Seccion</help>
+            <helper type="combo" id="SECCION" empty="true">
+                <field id="id_seccion" />
+                <field id="nombre" />
+                <field id="linea_id" oculto="true">
+                  <valor>1</valor>
+                </field>
+                <field id="activa">
+                  <condicion operador="=">1</condicion>
+                </field>
+                <order>
+              <field id="nombre" />
+                </order>
+            </helper>
+            </field>
+      <field id="emailUser">
+        <label>Usuario e-mail</label>
+        <help>Login de entrada al Correo</help>
+        <size>50</size>
+      </field>
+
+      <field id="emailPass" print="false" export="false" colstyle="display:none;">
+        <label>Password de e-mail</label>
+        <help>Password de entrada al Correo</help>
+        <tipo _Type="password">password</tipo>
+	      <size>20</size>
+      </field>
+
+      <field id="editor">
+        <label>Editor</label>
+        <options>
+          <option valor="0">No</option>
+          <option valor="1">Si</option>
+        </options>
+        <tipo>radio</tipo>
+        <help/>
+      </field>
+
+      <field id="admin">
+        <label>Administrador</label>
+        <options>
+          <option valor="0">No</option>
+          <option valor="1">Si</option>
+        </options>
+        <tipo>radio</tipo>
+        <help/>
+      </field>
+
+      <field id="minHour">
+        <label>Hora Ingreso</label>
+        <help>Hora de inicio de habilitación de uso del sistema</help>
+      </field>
+
+      <field id="maxHour">
+        <label>Hora Salida</label>
+        <help>Hora de finalización de habilitación de uso del sistema</help>
+      </field>
+
+      <field id="baja" empty="true">
+        <label>Estado</label>
+        <options>
+          <option valor="0">Activo</option>
+          <option valor="1">Inactivo</option>
+          <option valor=""></option>
+        </options>
+        <help/>
+      </field>
+
+      <field id="legajo_personal">
+        <label>Legajo</label>
+        <help>Legajo para linkear con empleado</help>
+      </field>
+
+      <field foto="true" id="foto" path="Id_usuario" _noshow="true">
+        <label >Foto</label>
+        <help/>
+        <tipo Type="Image">file</tipo>
+        <size>10</size>
+      </field>
+
+      <field id="classe" clasefila="true" local="true" noshow="true">
+        <if exp="baja == 1">
+          <true>'grisado'</true>
+          <false>''</false>
+        </if>
+      </field>
+
+      <order>
+        <field id="apellido"/>
+      </order>
+
+    </table>
+  </form>
+</histrix>

@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+	<title>Minutas</title>
+	<obs></obs>
+	<form >
+		<table id="CTBREGIS" label="Minutas">
+			
+			<field id="siscod" oculto="true">
+				<label>siscod</label>
+				<help> Cod sistema</help>
+<!--				<condicion operador="=">'10'</condicion> -->
+			</field>
+<!--
+			<field id="ctanom" tabla="CCTMOVIM">
+				<label>Nom</label>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="regnro" >
+				<label>Numero Comp.</label>
+			</field>
+	-->					
+			<field id="regmin" noshow="true" >
+				<label>Minuta </label>
+				<help>Numero de Asiento </help>
+			</field>
+			<field id="ctbcod"  >
+				<label>Cta</label>
+			</field>			
+			<field id="cuenta">
+				<expression>ctbnom</expression>
+				<label>Cuenta</label>
+				
+				<help>Codigo de Cuenta Contable</help>
+	
+				<tipo>string</tipo>
+			</field>
+			
+			<field id="regdoh" oculto="true">
+				<label>Tipo Mov.</label>
+				<help>Tipo Movimiento</help>
+				<options>
+					<option valor="1">Debe </option>
+					<option valor="2">Haber</option>
+				</options>
+				
+			</field>
+			<!--
+			<field id="regtip">
+			<label>Cod.Comp.</labe
+			<help>Codigo de Comprobante </help>
+			</field>
+			-->
+			<!--
+			<field id="regref">
+				<label>Referencia</label>
+				<help>Referencia</help>
+			</field>
+		-->
+			<field id="debe" suma="true"  noZero="true">
+				<expression>regimp * (case when regdoh = 1 then 1 else 0 end)</expression>
+				
+				<label>Debe</label>
+				<help>Importe del Movimiento en el Debe</help>
+				<tipo>custom_numeric</tipo>
+			</field>
+			
+			<field id="haber" suma="true" noZero="true">
+				<expression>regimp * (case when regdoh = 2 then 1 else 0 end)</expression>
+				<label>Haber</label>
+				<help>Importe del Movimiento en el Haber</help>
+				<tipo>custom_numeric</tipo>
+			</field>
+			
+			<!--
+			<field id="regpoa">
+			<label>Estado</label>
+			<help>Estado del Movimiento.Aprobado  o  Provisorio </help>
+			<options>
+			<option valor="A">Aprobado</option>
+			<option valor="P">Provisorio</option>
+			</options>
+			
+			</field>
+			
+			
+			<field id="coscod">
+			<label>Centro Costo</label>
+			<help>Codigo de Centro de Costo </help>
+			</field>
+			<field id="impcod">
+			<label>Cod.Imput.</label>
+			<help>Codigo de Centro de Imputacion</help>
+			</field>
+			
+			
+			<field id="idcos">
+			<label>? </label>
+			<help> </help>
+			</field>
+			<field id="idimpu">
+			<label>? </label>
+			<help> </help>
+			</field>
+			<field id="regcta">
+			<label>? </label>
+			<help> </help>
+			</field>
+			<field id="regfco">
+			<label>Fecha Comprobante </label>
+			<help> </help>
+			</field>
+			<field id="regnro">
+			<label>Nro.</label>
+			<help>Numero de Comprobante Correspondiente. </help>
+			</field>
+			
+			-->
+			<field id="regfec" oculto="true">
+				<label>Fecha</label>
+				<help>Fecha del Asiento (Movimiento Contable) </help>
+			</field>
+			<!--
+			<field id="regnpv">
+			<label>Nro Puesto </label>
+			<help> </help>
+			</field>
+			<field id="regord">
+			<label>Orden en el Asiento  . </label>
+			<help> </help>
+			</field>
+			<field id="regsub">
+			<label>Subdiario </label>
+			<help> </help>
+			</field>
+			<field id="reguni">
+			<label>Unidades Fisicas     . </label>
+			<help>Unidades Fisicas. </help>
+			</field>
+			-->
+			
+			<order>
+				<field id="regmin" tabla="CTBREGIS"></field>
+				<field id="regord"></field>
+				
+			</order>
+			
+		</table>
+		<join tipo="left">
+			<table id="CTBCUENT">
+<!--				<field id="siscod" oculto="true">
+					<label>cctcuent.siscod</label>
+					<condicion operador="=">CTBREGIS.siscod</condicion>
+					
+				</field> -->
+				
+				<field id="ctbcod" >
+					<condicion operador="=">CTBREGIS.ctbcod</condicion>
+				</field>
+
+			</table>
+		</join>
+		<!--
+		<join tipo="left">
+			<table id="CCTMOVIM">
+				<field id="movnro" >
+					<condicion operador="=">CTBREGIS.regnro</condicion>
+				</field>
+				
+				<field id="regmin" >
+					<condicion operador="=">CTBREGIS.regmin</condicion>
+				</field>
+			</table>
+		</join>		
+		-->
+	</form>
+</histrix>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="update" grabaFinal="true">
+    <title>ORDEN DE COMPRA</title>
+    <obs></obs>
+    <form>
+        <table id="MRP_ORDEN_PRODUCCION" label="ORDEN DE PRODUCCION" >
+
+            <field id="id_mrporden" 	  id_cab="id_mrporden" esClave="true"/>
+
+            <field id="orden_comentarios" id_cab="orden_comentarios" />
+            <field id="fecha_cierre" id_cab="fecha_cierre" />
+            <field id="mrpestado_id"  id_cab="mrpestado">
+        	<valor>1</valor>
+            </field>
+            <field id="login_id"  id_cab="login_id">
+            </field>
+
+        </table>
+    </form>
+</histrix>

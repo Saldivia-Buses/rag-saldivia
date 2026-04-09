@@ -1,0 +1,238 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" _limit="5">
+    <title>Desempeño</title>
+    <obs></obs>
+    <form>
+        <table id="PERSONAL" >
+            <title>Desempeño de personal</title>
+		<filters>
+
+            <field id="legajo" deshabilitado="false">
+                <label>Legajo</label>
+                <operador>=</operador>
+            </field>
+	
+		    <field id="id_seccion">
+    			<label>Sección</label>
+    			<operador>=</operador>
+		    </field>
+           
+		</filters>
+
+	    <field id="idPersona" esClave="true" noshow="true"/>
+	    
+        <field id="legajo" deshabilitado="true" >
+            <label modpos="nobr" posX="+100" posY="0" size="18">Legajo</label>
+        </field>
+	
+	    <field id="fecing">
+		  <label>Fecha Ing.</label>
+	    </field>
+			
+	    <field id="fechaEgreso" noshow="true">
+    		<label>Fecha Egr.</label>
+    		<condicion operador="=">'0000-00-00'</condicion>
+	    </field>
+
+			           <!--
+            <field id="Faltas">
+        <label>Faltas</label>
+        <expression sql="true">
+<![CDATA[
+                    select sum(FF.faltas) from
+                    (select C1.fecha,
+@hing:= (SELECT H.ingresoPremio from HORARIOHIST as H  where H.desdeFecha <= C1.fecha and H.dia = DAYOFWEEK(C1.fecha) order by H.desdeFecha DESC limit 1) as "hing",
+@hegr:= (SELECT H.egresoPremio  from HORARIOHIST as H  where H.desdeFecha <= C1.fecha and H.dia = DAYOFWEEK(C1.fecha) order by H.desdeFecha DESC limit 1) as "hegr",
+
+@h1:=(select H1.crc from FICHADAS as H1 where H1.tarjeta = (SELECT TJT.tarjeta from PERSONAL_TARJETA as TJT where TJT.idPersona = [__idPersona__]  and TJT.fechaDesde <= C1.fecha order by fechaDesde DESC limit 1) and H1.fecha = C1.fecha and H1.borrado = 0 order by hora limit 0, 1) as "h1",
+@h2:=(select H1.crc from FICHADAS as H1 where H1.tarjeta = (SELECT TJT.tarjeta from PERSONAL_TARJETA as TJT where TJT.idPersona = [__idPersona__]  and TJT.fechaDesde <= C1.fecha order by fechaDesde DESC limit 1) and H1.fecha = C1.fecha and H1.borrado = 0 order by hora limit 1, 1) as "h2",
+@h3:=(select H1.crc from FICHADAS as H1 where H1.tarjeta = (SELECT TJT.tarjeta from PERSONAL_TARJETA as TJT where TJT.idPersona = [__idPersona__]  and TJT.fechaDesde <= C1.fecha order by fechaDesde DESC limit 1)  and H1.fecha = C1.fecha and H1.borrado = 0 order by hora limit 2, 1) as "h3",
+@h4:=(select H1.crc from FICHADAS as H1 where H1.tarjeta = (SELECT TJT.tarjeta from PERSONAL_TARJETA as TJT where TJT.idPersona = [__idPersona__]  and TJT.fechaDesde <= C1.fecha order by fechaDesde DESC limit 1) and H1.fecha = C1.fecha and H1.borrado = 0 order by hora limit 3, 1) as "h4",
+
+@trabaj:=(ifnull(time_to_sec(timediff(@h2, @h1)), 0)+
+         ifnull(time_to_sec(timediff(@h4, @h3)), 0)) / 3600,
+
+@ideal:=ifnull(time_to_sec(timediff(@hegr, @hing)),0) / 3600,
+ifnull((case when @trabaj >= @ideal then 0 when (@trabaj >= 2 and @trabaj < @ideal) then 0.5 when (@trabaj < 2 ) then 1 end), 0) as "faltas"
+
+                    from GEN_CALENDAR as C1 left join FERIADOS ON FERIADOS.idFeriado = C1.fecha
+        where
+                          C1.fecha  >= '[__desde__]' and
+                          C1.fecha  <= '[__hasta__]' and
+        isnUll(FERIADOS.idFeriado)) as FF  ]]>
+                </expression>
+                <tipo>numeric</tipo>
+
+      </field>
+                             -->
+		<field id="desde" local="true" noshow="true">
+			<valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m" ,strtotime('-6 month')) , date("d"), date("Y") -  1 ))</valor>
+			<label>desde</label>
+			<tipo>date</tipo>
+		</field>
+		<field id="hasta" local="true" noshow="true">
+			<valor>today</valor>
+			<label>hasta</label>
+			<tipo>date</tipo>
+		</field>
+<!--
+		<field id="idSupervisor" tabla="SECCION">
+			<helper id="PERSONAL" type="combo">
+				<field id="idPersona"/>
+				<field id="nom">
+		    		    <expression>CONCAT(PERSONAL.apellido, ' ', PERSONAL.Nombre)</expression>
+				</field>
+			</helper>
+			<label>Supervisor</label>
+		</field>
+-->
+        
+        <field id="idSupervisor" _nodeText="true" tabla="SECCION">
+                <label>Supervisor</label>
+
+                        <tabla_ex id="PERSONAL" xml="HLPpersonal.xml" vacio="true" dir="/help_local">
+                            <field id="legajo">
+                                <condicion operador="!=">0</condicion>
+                            </field>
+                        </tabla_ex>
+        </field>
+<!--
+            <field id="rhpersona_id" noshow="true" tabla="RH_EVALUACIONES" print="false"/>
+-->
+            <field id="evaluado">
+                <expression>CONCAT(PERSONAL.apellido, ' ', PERSONAL.Nombre)</expression>
+                <label colspan="2" posX="+5" posY="+1" size="18">Evaluado</label>
+            </field>
+
+            <field id="alias" >
+		<label>Alias</label>
+	    </field>
+
+	    <field id="fotos" local="true" imageWidth="60" path="idPersona">
+		<expression>CONCAT('/fotos/personal/', PERSONAL.idPersona,'/')  </expression>
+		<label  posX="5" posY="+2" formStyle="display:none;">Foto</label>
+		<tipo>dir</tipo>
+		<size>60</size>
+	    </field>
+
+            <field id="id_seccion" deshabilitado="true">
+                <helper type="combo" id="SECCION" empty="true">
+                    <field id="id_seccion"/>
+                    <field id="nombre"/>
+		    <field id="activa" noshow="true">
+			<condicion operador="=">1</condicion>
+		    </field>
+                </helper>
+                <label posX="+5" posY="+2" size="18">Sección</label>
+            </field>
+         <!--
+	
+    	<field id="fec_evaluacion" tabla="RH_EVALUACIONES">
+    	    <label>Fec Evaluacion</label>
+        </field>   
+     -->
+	    <field id="id_rhevaluacion"  noshow="true" _tabla="RH_EVALUACIONES">
+		
+            <expression having="false">SELECT id_rhevaluacion FROM RH_EVALUACIONES rh WHERE rh.rhpersona_id = PERSONAL.idPersona order by rh.fec_evaluacion DESC limit 1</expression>
+       		<label>idrhevaluacion</label>
+	    </field>		
+
+                	    
+	    <field id="desem" _noshow="true" max="1" >
+            <!--
+		<expression>TRUNCATE(desempenio / (select sum(peso) * 5 from RH_EVALUACION_RESPUESTAS LEFT JOIN RH_EVALUACION_GRUPOS reg ON RH_EVALUACION_RESPUESTAS .rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo where RH_EVALUACION_RESPUESTAS.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion), 2)</expression>
+    -->
+        <expression>TRUNCATE((SELECT desempenio FROM RH_EVALUACIONES rh WHERE rh.rhpersona_id = PERSONAL.idPersona order by rh.fec_evaluacion DESC limit 1) / (select sum(peso) * 5 from RH_EVALUACION_RESPUESTAS LEFT JOIN RH_EVALUACION_GRUPOS reg ON RH_EVALUACION_RESPUESTAS .rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo where RH_EVALUACION_RESPUESTAS.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion), 2)</expression> 
+		<tipo>grafico</tipo>
+	    </field>			
+	    <field id="desempe2" >
+            <!--
+		  <expression>TRUNCATE(desempenio / (select sum(peso) * 5 from RH_EVALUACION_RESPUESTAS LEFT JOIN RH_EVALUACION_GRUPOS reg ON RH_EVALUACION_RESPUESTAS .rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo where RH_EVALUACION_RESPUESTAS.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion), 2)</expression>
+       
+            <expression>TRUNCATE((SELECT desempenio FROM RH_EVALUACIONES rh WHERE rh.rhpersona_id = RH_EVALUACIONES.rhpersona_id order by rh.fec_evaluacion DESC limit 1) / (select sum(peso) * 5 from RH_EVALUACION_RESPUESTAS LEFT JOIN RH_EVALUACION_GRUPOS reg ON RH_EVALUACION_RESPUESTAS .rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo where RH_EVALUACION_RESPUESTAS.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion), 2)</expression> 
+        -->
+            <expression>TRUNCATE((SELECT desempenio FROM RH_EVALUACIONES rh WHERE rh.rhpersona_id = PERSONAL.idPersona order by rh.fec_evaluacion DESC limit 1) / (select sum(peso) * 5 from RH_EVALUACION_RESPUESTAS LEFT JOIN RH_EVALUACION_GRUPOS reg ON RH_EVALUACION_RESPUESTAS .rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo where RH_EVALUACION_RESPUESTAS.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion), 2)</expression> 
+		  <label>Desempeño</label>
+	    </field>			
+
+           <field id="desempenio2">
+            <!--
+		<expression>CASE
+		  WHEN ((SELECT desempenio FROM RH_EVALUACIONES rh WHERE rh.rhpersona_id = RH_EVALUACIONES.rhpersona_id order by rh.fec_evaluacion DESC limit 1) / (select sum(peso) * 5 from RH_EVALUACION_RESPUESTAS LEFT JOIN RH_EVALUACION_GRUPOS reg ON RH_EVALUACION_RESPUESTAS .rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo where RH_EVALUACION_RESPUESTAS.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion)) &lt;= 0.4 THEN 'REPROBADO' 
+		  WHEN ((SELECT desempenio FROM RH_EVALUACIONES rh WHERE rh.rhpersona_id = RH_EVALUACIONES.rhpersona_id order by rh.fec_evaluacion DESC limit 1) / (select sum(peso) * 5 from RH_EVALUACION_RESPUESTAS LEFT JOIN RH_EVALUACION_GRUPOS reg ON RH_EVALUACION_RESPUESTAS .rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo where RH_EVALUACION_RESPUESTAS.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion)) &gt; 0.4 and (desempenio / (select sum(peso) * 5 from RH_EVALUACION_RESPUESTAS LEFT JOIN RH_EVALUACION_GRUPOS reg ON RH_EVALUACION_RESPUESTAS .rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo where RH_EVALUACION_RESPUESTAS.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion)) &lt;= 0.6 THEN 'REGULAR' 
+		  WHEN ((SELECT desempenio FROM RH_EVALUACIONES rh WHERE rh.rhpersona_id = RH_EVALUACIONES.rhpersona_id order by rh.fec_evaluacion DESC limit 1) / (select sum(peso) * 5 from RH_EVALUACION_RESPUESTAS LEFT JOIN RH_EVALUACION_GRUPOS reg ON RH_EVALUACION_RESPUESTAS .rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo where RH_EVALUACION_RESPUESTAS.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion)) &gt; 0.6 and (desempenio / (select sum(peso) * 5 from RH_EVALUACION_RESPUESTAS LEFT JOIN RH_EVALUACION_GRUPOS reg ON RH_EVALUACION_RESPUESTAS .rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo where RH_EVALUACION_RESPUESTAS.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion)) &lt;= 0.7 THEN 'ACEPTABLE' 
+		  WHEN ((SELECT desempenio FROM RH_EVALUACIONES rh WHERE rh.rhpersona_id = RH_EVALUACIONES.rhpersona_id order by rh.fec_evaluacion DESC limit 1) / (select sum(peso) * 5 from RH_EVALUACION_RESPUESTAS LEFT JOIN RH_EVALUACION_GRUPOS reg ON RH_EVALUACION_RESPUESTAS .rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo where RH_EVALUACION_RESPUESTAS.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion)) &gt; 0.7 and (desempenio / (select sum(peso) * 5 from RH_EVALUACION_RESPUESTAS LEFT JOIN RH_EVALUACION_GRUPOS reg ON RH_EVALUACION_RESPUESTAS .rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo where RH_EVALUACION_RESPUESTAS.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion)) &lt;= 0.8 THEN 'BUENO' 
+		  WHEN ((SELECT desempenio FROM RH_EVALUACIONES rh WHERE rh.rhpersona_id = RH_EVALUACIONES.rhpersona_id order by rh.fec_evaluacion DESC limit 1) / (select sum(peso) * 5 from RH_EVALUACION_RESPUESTAS LEFT JOIN RH_EVALUACION_GRUPOS reg ON RH_EVALUACION_RESPUESTAS .rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo where RH_EVALUACION_RESPUESTAS.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion)) &gt; 0.8 THEN 'EXCELENTE' 
+		END
+		</expression>
+		-->
+        <expression>CASE
+          WHEN ((SELECT desempenio FROM RH_EVALUACIONES rh WHERE rh.rhpersona_id = PERSONAL.idPersona order by rh.fec_evaluacion DESC limit 1) / (select sum(peso) * 5 from RH_EVALUACION_RESPUESTAS LEFT JOIN RH_EVALUACION_GRUPOS reg ON RH_EVALUACION_RESPUESTAS .rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo where RH_EVALUACION_RESPUESTAS.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion)) &lt;= 0.4 THEN 'REPROBADO' 
+
+          WHEN (((SELECT desempenio FROM RH_EVALUACIONES rh WHERE rh.rhpersona_id = PERSONAL.idPersona order by rh.fec_evaluacion DESC limit 1) / (select sum(peso) * 5 from RH_EVALUACION_RESPUESTAS LEFT JOIN RH_EVALUACION_GRUPOS reg ON RH_EVALUACION_RESPUESTAS .rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo where RH_EVALUACION_RESPUESTAS.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion)) &gt; 0.4 and 
+          ((SELECT desempenio FROM RH_EVALUACIONES rh WHERE rh.rhpersona_id = PERSONAL.idPersona order by rh.fec_evaluacion DESC limit 1) / (select sum(peso) * 5 from RH_EVALUACION_RESPUESTAS LEFT JOIN RH_EVALUACION_GRUPOS reg ON RH_EVALUACION_RESPUESTAS .rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo where RH_EVALUACION_RESPUESTAS.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion)) &lt;= 0.6) THEN 'REGULAR' 
+
+          WHEN (((SELECT desempenio FROM RH_EVALUACIONES rh WHERE rh.rhpersona_id = PERSONAL.idPersona order by rh.fec_evaluacion DESC limit 1) / (select sum(peso) * 5 from RH_EVALUACION_RESPUESTAS LEFT JOIN RH_EVALUACION_GRUPOS reg ON RH_EVALUACION_RESPUESTAS .rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo where RH_EVALUACION_RESPUESTAS.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion)) &gt; 0.6 and 
+          ((SELECT desempenio FROM RH_EVALUACIONES rh WHERE rh.rhpersona_id = PERSONAL.idPersona order by rh.fec_evaluacion DESC limit 1) / (select sum(peso) * 5 from RH_EVALUACION_RESPUESTAS LEFT JOIN RH_EVALUACION_GRUPOS reg ON RH_EVALUACION_RESPUESTAS .rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo where RH_EVALUACION_RESPUESTAS.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion)) &lt;= 0.7) THEN 'ACEPTABLE' 
+
+          WHEN (((SELECT desempenio FROM RH_EVALUACIONES rh WHERE rh.rhpersona_id = PERSONAL.idPersona order by rh.fec_evaluacion DESC limit 1) / (select sum(peso) * 5 from RH_EVALUACION_RESPUESTAS LEFT JOIN RH_EVALUACION_GRUPOS reg ON RH_EVALUACION_RESPUESTAS .rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo where RH_EVALUACION_RESPUESTAS.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion)) &gt; 0.7 and 
+          ((SELECT desempenio FROM RH_EVALUACIONES rh WHERE rh.rhpersona_id = PERSONAL.idPersona order by rh.fec_evaluacion DESC limit 1) / (select sum(peso) * 5 from RH_EVALUACION_RESPUESTAS LEFT JOIN RH_EVALUACION_GRUPOS reg ON RH_EVALUACION_RESPUESTAS .rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo where RH_EVALUACION_RESPUESTAS.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion)) &lt;= 0.8) THEN 'BUENO' 
+
+          WHEN ((SELECT desempenio FROM RH_EVALUACIONES rh WHERE rh.rhpersona_id = PERSONAL.idPersona order by rh.fec_evaluacion DESC limit 1) / (select sum(peso) * 5 from RH_EVALUACION_RESPUESTAS LEFT JOIN RH_EVALUACION_GRUPOS reg ON RH_EVALUACION_RESPUESTAS .rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo where RH_EVALUACION_RESPUESTAS.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion)) &gt; 0.8 THEN 'EXCELENTE' 
+        END
+        </expression>
+		<helper type="link" xml="evaluaciones_det.xml" _dir="/rh_evaluaciones">
+		    <parameter source="id_rhevaluacion" target="id_rhevaluacion" operador="="/>
+		    <parameter source="legajo" target="legajo" operador="=" />
+		    <parameter source="evaluado" target="evaluado" operador="=" />
+		    <parameter source="id_seccion" target="id_seccion" operador="=" />
+            
+		</helper>
+                <label colspan="2" posX="+5" posY="+2" PDFancho="160" size="35">Calificación</label>
+            </field>
+            
+            <field id="hiSinEv" local="true" clasefila="true" noshow="true">
+                <!--
+        	<expression>CASE WHEN RH_EVALUACIONES.id_rhevaluacion is null THEN 'resaltadoVioleta' ELSE '' END</expression>
+        -->
+            <expression>CASE WHEN (SELECT id_rhevaluacion FROM RH_EVALUACIONES rh WHERE rh.rhpersona_id = PERSONAL.idPersona order by rh.fec_evaluacion DESC limit 1)  is null THEN 'resaltadoVioleta' ELSE '' END</expression>
+    	    </field>
+<!--
+    	<group>
+    		<field id="idPersona" />
+    	</group>
+-->
+	    <order>
+	        <field id="evaluado"/>
+		      <!-- <field id="fec_evaluacion" /> -->
+	    </order>
+        </table>
+        
+        <join tipo="left">
+            <table id="RH_EVALUACIONES">
+                <field id="rhpersona_id">
+                    <condicion operador="=">idPersona</condicion>
+                </field>
+            </table>
+        </join>
+	
+        <join tipo="left">
+            <table id="SECCIONHISTORIA">
+                <field id="idPersona">
+                    <condicion operador="=">PERSONAL.idPersona</condicion>
+                </field>
+                <field id="id_seccion">
+                    <condicion operador="=">PERSONAL.id_seccion</condicion>
+                </field>
+            </table>
+        </join>
+        
+        <join tipo="left">
+            <table id="SECCION">
+                <field id="id_seccion">
+                    <condicion operador="=">SECCIONHISTORIA.id_seccion</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix> 

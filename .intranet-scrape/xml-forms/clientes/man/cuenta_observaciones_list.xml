@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="list" subtipo="vertical">
+  <title>Observaciones</title>
+  <obs/>
+  <form>
+    <table id="REG_CUENTA_OBSERVACIONES" label="Observaciones">
+
+      <field id="id_regobservacion" autoinc="true" noshow="true"/>
+
+      <field id="regcuenta_id" noshow="true" valauto="true">
+        <condicion operador="=">-1</condicion>
+      </field>
+
+      <field id="fecha_observacion" _noshow="true">
+        <label>Desde Fecha</label>
+        <help>Fecha</help>
+        <valor>today</valor>
+        <tipo>date</tipo>
+      </field>
+
+      <field id="texto_observacion" _noshow="true">
+        <label>Observación</label>
+        <help>Observación</help>
+        <size>200</size>
+      </field>
+    </table>
+  </form>
+</histrix>

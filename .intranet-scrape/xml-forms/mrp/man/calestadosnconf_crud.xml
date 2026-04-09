@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<histrix tipo="abm"   >
+        <titulo>Estados No Conformidad</titulo>
+        <obs></obs>
+        <consulta>
+                <table id="CAL_ESTADOS_NCONF" >
+                    <titulo>Estados</titulo>
+                        <field id="id_estadonconf" autoinc="true" noshow="true">
+                                <label>Cod</label>
+                                <help>Codigo</help>
+                        </field>
+                       <field id="nombre_estadonconf">
+                                <label>estado</label>
+                                <help>Estado de la No conformidad</help>
+                        </field>
+                       <field id="tipo_estadonconf">
+                                <label>Tipo</label>
+                                <help>Estado de la No conformidad</help>
+                                <options>
+                                    <option valor="0">Abierto</option>
+                                    <option valor="1">Cerrado</option>
+                                </options>
+                        </field>
+                </table>
+        </consulta>           
+</histrix>

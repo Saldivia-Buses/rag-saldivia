@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" subtipo="vertical">
+    <title>Carga de Chequera</title>
+    <obs/>
+    <form>
+        <table id="REG_CHEQUERAS" label="Carga de Chequeras">
+
+            <field id="id_regchequera" noshow="true" autoinc="true" esClave="true"/>
+
+            <field id="regcuenta_id" noshow="true"/>
+
+            <field id="subsistema_id" noshow="true" valauto="true">
+                <valor>'04'</valor>
+                <condicion operador="=">'04'</condicion>
+            </field>
+            <field id="chequera">
+                <label>Nº Chequera</label>
+                <help>Corresponde al Nro. de Chequera</help>
+                <size>10</size>
+            </field>
+
+            <field id="tipo">
+                <label>Tipo</label>
+                <help>Corresponde al Tipo de Chequera</help>
+                <options>
+                    <option valor="0">Normal</option>
+                    <option valor="1">Diferido</option>
+                </options>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="numero">
+                <label>Numero de Cheque</label>
+                <help>Corresponde al próximo Nro. de Cheque</help>
+            </field>
+
+            <field id="imprime">
+                <label>Imprime chequera</label>
+                <help>Elige si se imprime en el formulario de cheques</help>
+                <options>
+                    <option valor="1">SI</option>
+                    <option valor="0">NO</option>
+                </options>
+            </field>
+
+        </table>
+
+        <join>
+            <table id="REG_CUENTA">
+                <field id="id_regcuenta">
+                    <condicion operador="=">REG_CHEQUERAS.regcuenta_id</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

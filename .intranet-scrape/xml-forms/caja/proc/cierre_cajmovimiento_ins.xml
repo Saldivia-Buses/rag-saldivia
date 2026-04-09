@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert" grabaFinal="true">
+  <title>Grabacion Movimiento de Caja</title>
+  <obs/>
+  <form>
+    <table id="CAJ_MOVIMIENTOS" idCampoCond="graba_caj">
+      <field id="cajconcepto_id" id_cab="cajconcepto_cierre_id"/>
+      <field id="fecha_movimiento" id_temp="fecha_movimiento">
+        <tipo>date</tipo>
+      </field>
+      <field id="hora_movimiento">
+        <expression>NOW()</expression>
+        <tipo>integer</tipo>
+      </field>
+      <field id="referencia_movimiento" id_temp="referencia_movimiento"/>
+      <field id="cajpuesto_id" id_temp="cajpuesto_superior_id"/>
+      <field id="usuario_id" id_temp="usuario_id"/>
+    </table>
+  </form>
+</histrix>

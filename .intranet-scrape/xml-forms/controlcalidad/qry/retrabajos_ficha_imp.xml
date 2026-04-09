@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="ficha" path="/fotos/archivo/coches/" autoprint="true" PDForientation="L" preFetch="true">
+	<title>Control Calidad</title>
+	<obs/>
+	<form>
+		<table id="PROD_CONTROL_MOVIM">
+		<title>Control de Calidad</title>
+		    <field id="id_controlmovim" esClave="true" noshow="true" print="false"/>
+		    <field id="nrofab_id" PDFsize="18" PDFbold="true" print="false">
+			<label posx="5" posy="+5">Unidad</label>
+		    </field>
+		    <field id="titulo_pdf" print="false">
+			<label posx="5" posy="+2">Unidad</label>
+			<!--<expression>CONCAT('Unidad Nº ', nrofab_id,' ',' [__nombre__])</expression> -->
+
+						<expression>CONCAT('Unidad: ' , nrofab_id, ' - ',  LEFT(ifnull(nombre_cuenta, ''), 20))</expression>
+			<setvar>titulo</setvar>
+			<setvar>tituloDIV</setvar>
+		    </field>
+
+		    <field id="detalle" local="true" showObjTabla="true" PDFsize="13">
+			<helper type="object" xml="retrabajos.xml" dir="/controlcalidad/qry">
+			    <parameter source="nrofab_id" target="nrofab_id" />
+			</helper>
+			<label posx="5" posy="+2"/>
+		    </field>
+-
+		<group>
+		    <field id="nrofab_id" />
+		</group>
+		</table>
+		<join tipo="left">
+		    <table id="PEDCOTIZ">
+			<field id="nrocha">
+			    <condicion operador="=">PROD_CONTROL_MOVIM.nrofab_id</condicion>
+			</field>
+		    </table>
+		</join>
+		<join tipo="left">
+            <table id="REG_CUENTA">
+                <field id="nro_cuenta">
+                    <condicion operador="=">PEDCOTIZ.ctacod</condicion>
+                </field>
+                <field id="subsistema_id">
+                    <condicion operador="=">'02'</condicion>
+                </field>   
+            </table>
+</join>
+        <join tipo="left">
+            <table id="CHASIS">
+                <field id="nrocha">
+                    <condicion operador="=">PEDCOTIZ.nrocha</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="MODCHASIS">
+                <field id="modcha">
+                    <condicion operador="=">CHASIS.modcod</condicion>
+                </field>
+                <field id="marcod">
+                    <condicion operador="=">CHASIS.marcod</condicion>
+                </field>
+            </table>
+        </join>
+	</form>
+</histrix>

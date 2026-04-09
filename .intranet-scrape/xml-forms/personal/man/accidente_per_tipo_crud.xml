@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<histrix tipo="abm-mini" borra="false">
+<title>Tipo de Accidentes</title>
+<obs></obs>
+<eventos>
+    <event id="update">close</event>
+    <event id="delete">close</event>
+    <event id="insert">close</event>
+    <event id="update">reload</event>
+    <event id="delete">reload</event>
+    <event id="insert">reload</event>
+</eventos>
+<form>
+    <table id="FRANCOS_CAT_TIPO" >
+    <title>Tipo de Accidentes</title>
+    
+        <field id="id_franco_tipo" autoinc="true" noshow="true" deshabilitado="true">
+            <label>Cod</label>
+            <help>Codigo</help>
+        </field>
+        <field id="nombre_tipo">
+            <label>Nombre</label>
+            <help>Nombre</help>
+        </field>
+
+            <field id="id_francocat">
+                <tabla_ex id="FRANCOS_CAT">
+                    <field id="id_francocat"/>
+                    <field id="nombre"/>
+                    <field id="tipo">
+                        <condicion operador="=">1</condicion>
+                    </field>
+                </tabla_ex>
+            </field>
+
+        <order>
+            <field id="nombre_tipo"/>
+        </order>
+</table>
+</form>           
+</histrix>

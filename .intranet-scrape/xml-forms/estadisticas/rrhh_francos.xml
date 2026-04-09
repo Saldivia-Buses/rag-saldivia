@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="chart">
+	<title>ESTADISTICAS DE FRANCOS</title>
+	<obs></obs>
+	<form >
+		<table id="GEN_CALENDAR" label="ESTAD FRANCOS">
+		   <grafico id="Francos" >
+			   <ancho>400</ancho>
+			   <tipo>P</tipo>
+
+			   <etiquetas>franco</etiquetas>
+			   <datos>cantfrancos</datos>
+			   <title>Cantidad de francos Ult. Año</title>
+			   <!--   <subtitulo>Cant. Acc / Hs Trabajadas x 1.000.000</subtitulo> -->
+		   </grafico>	
+
+		    <filters>
+			    <field id="fecha">
+				    <label>Desde</label>
+				    <valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m" ,strtotime('-12 month')) , 1, date("Y") -  1 ))</valor>
+				    <operador>&gt;=</operador>
+			    </field>
+			    <field id="fecha">
+                    <label>Hasta</label>
+				    <valor eval="true">date('d/m/Y', strtotime('-1 second', strtotime(date('Y-m-01'))))</valor>
+				    <operador>&lt;=</operador>
+			    </field>
+		    </filters> 
+			
+			<field id="mes">
+				<expression>month(GEN_CALENDAR.fecha)</expression>
+				<label>Mes</label>
+				<options>
+					<option valor="1">Ene</option>
+					<option valor="2">Feb</option>
+					<option valor="3">Mar</option>
+					<option valor="4">Abr</option>
+					<option valor="5">May</option>
+					<option valor="6">Jun</option>
+					<option valor="7">Jul</option>
+					<option valor="8">Ago</option>
+					<option valor="9">Sep</option>
+					<option valor="10">Oct</option>
+					<option valor="11">Nov</option>
+					<option valor="12">Dic</option>
+
+				</options>
+       			<tipo>varchar</tipo>
+			</field>
+
+            <field id="fecha" oculto="true">
+        <!--             <condicion operador="&gt;="> DATE_FORMAT(date_sub(date(now()) , interval 1 year) ,'%Y-%m-01') and GEN_CALENDAR.fecha &lt;= now()</condicion>
+        --> 
+       			<tipo>date</tipo>
+            </field>
+
+            <field id="year" _oculto="true">
+                <expression>year(GEN_CALENDAR.fecha)</expression>
+            </field>
+
+			<field id="cantfrancos">
+				<!-- <expression>COUNT(*)</expression> -->
+				<!-- <expression>round(SUM(DATEDIFF(fechafin, fechainicio) + 1), 0)</expression>  -->
+				<!--funcion calcula dias hábiles -->
+				<expression>round(SUM(workdaydiff(fechafin, fechainicio)), 0)</expression> 
+				<label>Cantidad</label> 
+				<help></help>
+				<tipo>integer</tipo>
+			</field>
+
+			<field id="idfranco" tabla="FRANCOS_PER" />
+
+			<field id="franco">
+				<expression>FRANCOS_CAT.nombre</expression>
+			</field>
+
+			<group>
+				<!--
+				<field id="year"></field>
+				<field id="mes"></field>
+			-->
+				<field id="idfranco"></field>
+				<field id="tipo" tabla="FRANCOS_PER"></field>
+			</group>
+			<order>
+				<field id="cantfrancos" _tabla="FRANCOS_CAT" tipoOrden="DESC"/>
+			</order>
+		</table>
+
+		<join _tipo="left">
+			<table id="FRANCOS_PER">
+				<field id="fechainicio">
+					<condicion operador="=">GEN_CALENDAR.fecha</condicion>
+				</field>
+			</table>
+		</join>
+
+		<join _tipo="left">
+			<table id="FRANCOS_CAT">
+				<field id="idfranco">
+					<condicion operador="=">FRANCOS_PER.idfranco</condicion>
+				</field>
+				<field id="tipo">
+					<condicion operador="=">FRANCOS_PER.tipo</condicion>
+				</field>
+				
+			</table>
+		</join>
+
+	</form>
+</histrix>

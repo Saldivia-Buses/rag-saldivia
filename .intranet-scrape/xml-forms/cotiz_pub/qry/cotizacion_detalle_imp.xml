@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" tableHeight="auto">
+	<title>detalle cotización</title>
+	<obs/>
+	<form>
+		<table id="CPS_DETALLE" idCampoCond="grabo" label="MOVIMIENTOS" >
+			<fieldGroup>
+				<field id="id_cpsdetalle" noshow="true"/>
+				<field id="cpsmovimiento_id" noshow="true"/>
+				<field id="fecha_cpsdetalle" noshow="true"/>
+				<field id="stkarticulo_id" >
+					<label>Codigo</label>
+				</field>
+				<field id="cpsdetalle" style="font-size:20px">
+					<label>Descripcion</label>
+				</field>
+				
+				<field id="observaciones">
+					<label>Obs</label>
+				</field>
+	            <field id="fecha_requerido">
+	                <label modpos="nobr">Requerido</label>
+	                <help>Fecha de Entrega</help>
+	                <tipo>date</tipo>
+	            </field>
+			
+				<field id="cantidad_compra" >
+					<label>Cantidad</label>
+				</field>
+				
+				<field id="costo_unitario" preventLoop="true" style="font-size:20px">
+					<label>P.Unitario</label>
+					<jseval campodestino="importe_total">cantidad_compra * costo_unitario</jseval>
+					<valor default="true">0.00000</valor>
+				</field>
+					<!--
+				<field id="importe_total" colstyle="font-size:20px" suma="true">
+					<label>Importe</label>
+					<jseval campodestino="costo_unitario">importe_total / cantidad_compra </jseval>
+					<jseval total="true" campodestino="total_cotizado">importe_total</jseval>
+					<tipo>custom_numeric</tipo>
+					<valor default="true">0.000</valor>
+				</field>
+			-->
+
+			</fieldGroup>
+		</table>
+	</form>
+</histrix>

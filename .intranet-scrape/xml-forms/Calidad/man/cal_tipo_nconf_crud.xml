@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm-mini">
+  <title>TIPO DE  DOCUMENTACION</title>
+  <obs></obs>
+  <form >
+    <table id="CAL_TIPO_NCONF" label="Tipo Documento">
+      <field id="id_tiponconf" noshow="true" autoinc="true" />
+      <field id="nombre_tiponconf">
+        <label>Descripcion</label>
+        <help>Tipo de No conformidad</help>
+      </field>
+    </table>
+  </form>
+</histrix>

@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<histrix tipo="consulta">
+	<title>Devolución de Materiales</title>
+	<obs></obs>
+	<form detalle="devoluciones_recepcion_ing.xml" inline="true">
+		<table id="DEVREMITO" >
+			<title>Estados</title>
+			<filters>
+				<field id="fecha_devolucion">
+					<label>Desde</label>
+					<operador>&gt;=</operador>
+					<valor>today</valor>
+				</field>
+				<field id="fecha_devolucion">
+					<label modpos="nobr">Hasta</label>
+					<operador>&lt;=</operador>
+					<valor>today</valor>
+				</field>
+				<field id="nro_cuenta">
+					<label>Cta.</label>
+					<operador>=</operador>
+				</field>
+				<field id="nombre_cta" deshabilitado="true">
+					<label modpos="nobr">Nombre</label>
+				</field>
+				<field id="cierre">
+					<label>Estado</label>
+				</field>
+			</filters>
+			<fieldGroup noshow="true">
+				<field id="style">
+					<expression>
+						CASE WHEN cierre = 0 THEN 'text-align:center;font-size:14px;color:red;' ELSE 'text-align:center;font-size:14px;color:green;' END
+					</expression>
+				</field>
+			</fieldGroup>
+			<field id="id_devremito" style="width:10em;">
+				<detalle>devremito_id</detalle>
+				<label>Devolución</label>
+				<helper xml="devoluciones_remito_imp.xml" type="link">
+					<parameter source="id_devremito" target="id_devremito"/>
+				</helper>
+
+			</field>
+			<field id="fecha_devolucion">
+				<label>Fecha</label>
+				<tipo>date</tipo>
+			</field>
+			<field id="nro_remito">
+				<label>Remito</label>
+			</field>
+			<field id="nro_cuenta" tabla="REG_CUENTA">
+			    <helper type="external" id="REG_CUENTA">
+	                        <field id="nro_cuenta">
+				    <detalle>nro_cuenta</detalle>
+				</field>
+				<field id="NOM">
+				    <expression having="false">CONCAT(nombre_fantasia, ' (',  nombre_cuenta,')')</expression>
+				    <label>Nombre</label>
+				    <detalle>nombre_cta</detalle>
+				</field>
+				<field id="subsistema_id" oculto="true">
+					<condicion operador="=">'01'</condicion>
+				</field>
+				<field id="baja">
+				    <condicion operador="=">0</condicion>
+				</field>
+				<order>
+				    <field id="nombre_cuenta"></field>
+				</order>
+		                </helper>
+				<label>Cta.</label>
+				<detalle>nro_cuenta</detalle>
+			</field>
+			<field id="nombre_cta" local="true" noshow="true">
+				<size>60</size>
+			</field>
+			<field id="nombre_cuenta" tabla="REG_CUENTA">
+				<label>Nombre</label>
+			</field>
+			<field id="artcod">
+				<label>Cod.</label>
+				<detalle>artcod</detalle>
+			</field>
+			<field id="nombre_articulo" tabla="STK_ARTICULOS">
+				<expression>REPLACE(STK_ARTICULOS.nombre_articulo, '"', "''")</expression>
+				<label>Artículo</label>
+				<detalle>nombre_articulo</detalle>
+			</field>
+			<field id="cantidad">
+				<label>Cantidad</label>
+			</field>
+			<field id="observacion">
+				<label>Observación</label>
+			</field>
+			<field id="ocpnro" style="text-align:center;width:5em;color:#444;font-size:14px;" noZero="true">
+				<label>Nº OC</label>
+				<helper type="link" xml="cpsencab_cabreimp.xml" dir="/compras">
+					<parameter source="ocpnro" target="ocpnro" />
+					<parameter source="ocpfec" target="ocpfec" />
+				</helper>
+			</field>
+			<field id="ocpfec">
+				<label>Fecha OC</label>
+			</field>
+			<field id="noconformidad_id" noZero="true" style="text-align:center;width:5em;color:#444;font-size:14px;">
+				<label _style="text-align:center;color:#444;font-size:14px;">N.Conf.</label>
+				<helper type="link" xml="noconformidad_ficha.xml" dir="/calidad/qry">
+					<parameter source="noconformidad_id" target="id_noconformidad" />
+				</helper>
+			</field>
+			<field id="demerito_abreviacion" tabla="CPS_DEMERITOS">
+				<label>Demérito</label>
+			</field>
+			<field id="login" tabla="HTXUSERS">
+				<label>Usuario</label>
+			</field>
+			<field id="cierre" getStyle="style" editable="true" refresh="true">
+				<label>Estado</label>
+				<helper type="combo">
+					<option value=""></option>
+					<option value="0">Abierta</option>
+					<option value="1">Cerrada</option>
+				</helper>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="m1" local="true" noshow="true">
+				<valor>cierre</valor>
+			</field>
+			<field id="m2" local="true" noshow="true">
+				<valor>id_devremito</valor>
+			</field>
+			<field id="insdel" noshow="true" local="true" >
+				<label>test</label>
+				<if exp="'cierre' == '1'">
+					<true>'UPDATE DEVREMITO SET m1 = cierre WHERE m2 = id_devremito'</true>
+					<false>'UPDATE DEVREMITO SET m1 = cierre WHERE m2 = id_devremito'</false>
+				</if>
+			</field>
+			<field id="INS" noshow="true">
+				<expression sql="true">[__insdel__]</expression>
+			</field>
+		</table>
+		<join tipo="left">
+			<table id="STK_ARTICULOS">
+				<field id="id_stkarticulo">
+					<condicion operador="=">DEVREMITO.artcod</condicion>
+				</field>
+				<field id="subsistema_id">
+					<condicion operador="=">'01'</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="REG_CUENTA">
+				<field id="id_regcuenta">
+					<condicion operador="=">DEVREMITO.regcuenta_id</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="CPS_DEMERITOS">
+				<field id="id_demerito">
+					<condicion operador="=">DEVREMITO.demerito_id</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="HTXUSERS">
+				<field id="login">
+					<condicion operador="=">DEVREMITO.login_id</condicion>
+				</field>
+			</table>
+		</join>
+	</form>
+</histrix>

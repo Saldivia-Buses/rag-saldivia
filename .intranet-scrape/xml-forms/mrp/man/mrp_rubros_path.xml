@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="list" imprime="false" export="false">
+  <title>Lineas por rubro</title>
+  <obs />
+  <form detalle="mrp_product_path_crud.xml">
+    <table id="MRP_PATH" label="Lineas por Rubro">
+    	<filters auto="true">
+			<field id="stkrubro_id" >
+			    <label>Rubro</label>
+			    <operador>=</operador>
+			</field>
+
+    	</filters>
+		<field id="stkrubro_id"  >
+		    <label>Rubro</label>
+		    <helper xml="stkrubro_qry.xml" dir="/ayudas/" type="combo">
+		    </helper>
+		    <detalle>stkrubro_id</detalle>
+		</field>
+		<field id="id_mrppath" noshow="true" autoinc="true">
+		    <detalle>mrppath_id</detalle>
+		</field>
+
+		<field id="path_name">
+			<label>Proceso</label>
+		</field>
+	
+    </table>
+  </form>
+</histrix>

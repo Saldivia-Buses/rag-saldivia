@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta"   >
+	<title>PRECIOS POR MODELO</title>
+	<obs/>
+	<form >
+		<table id="GRUPOPRECIOS" >
+			<title>Precios por modelo</title>
+			<field id="idGrupoPrecio">
+				<condicion operador=""></condicion>
+			</field>			
+			<field id="desabv">
+				<expression>concat(MARCHASIS.desabv,' ', MODCHASIS.moddes)</expression>
+				<label colstyle="width:100px;">Chasis</label>
+				<tipo>varchar</tipo>
+			</field>			
+			<field id="marcod">
+			</field>
+			<field id="modcha">
+			</field>
+			
+			<field id="nrocar" >
+			</field>		
+			<field id="idGrupo">
+				
+			</field>
+			
+<!--			<field id="cons3" obj="preciomodelo_cons4.xml" showObjTabla="true"   local="true" dir="/precios">
+				<paring destino="idLista" operador="=">idLista</paring>
+				<paring destino="nrocar" operador="=">nrocar</paring>
+			</field>						-->
+			<order>
+				<field id="idGrupo"></field>
+				
+			</order>
+
+		</table>
+		<join>
+			<table id="MARCHASIS">
+				<field id="marcod">
+					<condicion operador="=">GRUPOPRECIOS.marcod</condicion>
+				</field>
+			</table>
+		</join>	
+		<join>
+			<table id="MODCHASIS">
+				<field id="marcod">
+					<condicion operador="=">GRUPOPRECIOS.marcod</condicion>
+				</field>
+				<field id="modcha">
+					<condicion operador="=">GRUPOPRECIOS.modcha</condicion>
+				</field>
+				
+			</table>
+		</join>	
+
+		
+	</form>
+</histrix>

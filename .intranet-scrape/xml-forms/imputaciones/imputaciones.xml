@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8"?>
+<histrix tipo="abm-mini" subtipo="vertical" _tooltip="false">
+	<title>IMPUTACIONES</title>
+	<obs></obs>
+	<form >
+<!--	<form >-->
+		<table id="CCTIMPUT" label="Imputaciones">
+			<field id="siscod" oculto="true">
+			</field>
+
+			<field id="ctacod" _noshow="true">
+				<label>Cuenta</label>
+			</field>
+
+			<field id="movlet">
+				<label>Letra</label>
+			</field>
+			<field id="concod" >
+				<label>Conc</label>
+			    <helper type="combo" id="CCTCONCE" empty="true">
+				<field id="concod">
+				 <label>Con</label>
+				</field>
+				<field id="conabv">	
+				    <label>nombre</label>	
+				</field>
+				<field id="siscod" noshow="true">
+				    <condicion operador="=">'02'</condicion>	
+				</field>
+				
+			    </helper>
+				
+			</field>			
+			
+                        <field id="movnpv">
+	                     <label>Puesto factura</label>
+			</field>
+			<field id="movnro">
+			      <label>Nro de Factura</label>	
+			</field>
+			<field id="movfec" >
+				<label>Fecha Comp</label>
+				<tipo>date</tipo>
+			</field>
+			
+
+			<field id="movife">
+				<label>Fecha Imputación</label>
+				<tipo>date</tipo>
+			</field>
+			<field id="movicc">
+			     <label>Cod.Imputación</label>
+			    <helper type="combo" id="CCTCONCE" empty="true">
+				<field id="concod">
+				 <label>Con</label>
+				</field>
+				<field id="conabv">	
+				    <label>nombre</label>	
+				</field>
+				<field id="siscod" noshow="true">
+				    <condicion operador="=">'02'</condicion>	
+				</field>
+				
+			    </helper>
+			     
+			</field>
+
+			<field id="movipv" >
+				<label>Puesto Imputación</label>
+			</field>
+                        
+			
+			<field id="movinc">
+				<label>Nro. Imputación</label>
+			</field>
+			<field id="movsal">
+				<label>Saldo</label>
+				<tipo>decimal</tipo>
+			</field>
+
+			<field id="movimp" suma="true">
+				<label>Imputado</label>
+				<tipo>decimal</tipo>
+			</field>
+			
+		</table>
+		
+		<join tipo="left">
+			<table id="CCTMOVIM">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">CCTIMPUT.siscod</condicion>
+					
+				</field>
+				<field id="ctacod" oculto="true">
+					<condicion operador="=">CCTIMPUT.ctacod</condicion>
+				</field>
+				<field id="movnpv" oculto="true">
+					<condicion operador="=">CCTIMPUT.movipv</condicion>
+				</field>	
+				<field id="movnro" oculto="true">
+					<condicion operador="=">CCTIMPUT.movinc</condicion>
+				</field>				
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="CCTCONCE">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">CCTIMPUT.siscod</condicion>
+					
+				</field>
+				<field id="concod" oculto="true">
+					<condicion operador="=">CCTIMPUT.movicc</condicion>
+				</field>
+			</table>
+		</join>		
+		
+	</form>
+</histrix>

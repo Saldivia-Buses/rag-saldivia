@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert" >
+    <title>IVA VENTAS</title>
+    <obs></obs>
+    <form>
+        <table id="IVAVENTAS" label="IVA VENTAS">
+            <field id="feciva" id_temp="feciva"></field>
+            <field id="fecreg" id_temp="fecreg"></field>
+            <field id="ctacod" id_temp="ctacod"></field>
+            <field id="ctanom" id_temp="ctanom"></field>
+            <field id="codcom" id_temp="codcom"></field>
+            <field id="codlet" id_temp="codlet"></field>
+            <field id="nronpv" id_temp="nronpv"></field>
+            <field id="nrocom" id_temp="nrocom"></field>
+            <field id="nrodoc" id_temp="nrodoc"></field>
+            <field id="totcom" id_temp="totcom"></field>
+        </table>
+    </form>
+</histrix>
