@@ -95,10 +95,15 @@ func (e *Executor) Execute(ctx context.Context, jwt, toolName string, params jso
 }
 
 // ExecuteConfirmed runs a tool that was previously pending confirmation.
+// The tool MUST have RequiresConfirmation=true — this prevents bypassing
+// the confirmation step by calling ExecuteConfirmed directly on any tool.
 func (e *Executor) ExecuteConfirmed(ctx context.Context, jwt, toolName string, params json.RawMessage) (*Result, error) {
 	def, ok := e.tools[toolName]
 	if !ok {
 		return &Result{Status: "error", Error: fmt.Sprintf("unknown tool: %q", toolName)}, nil
+	}
+	if !def.RequiresConfirmation {
+		return &Result{Status: "error", Error: fmt.Sprintf("tool %q does not require confirmation", toolName)}, nil
 	}
 	if toolName == "search_documents" && e.grpcSearch != nil {
 		return e.grpcSearch.Execute(ctx, jwt, params)
