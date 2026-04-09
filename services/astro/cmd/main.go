@@ -16,6 +16,8 @@ import (
 
 	"github.com/Camionerou/rag-saldivia/pkg/config"
 	"github.com/Camionerou/rag-saldivia/pkg/health"
+	"github.com/Camionerou/rag-saldivia/pkg/build"
+	"github.com/Camionerou/rag-saldivia/pkg/database"
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	"github.com/Camionerou/rag-saldivia/pkg/llm"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
@@ -80,7 +82,7 @@ func main() {
 
 	var pool *pgxpool.Pool
 	if dbURL != "" {
-		pool, err = pgxpool.New(ctx, dbURL)
+		pool, err = database.NewPool(ctx, dbURL)
 		if err != nil {
 			slog.Error("database connection failed", "error", err)
 			os.Exit(1)
@@ -118,6 +120,7 @@ func main() {
 		hc.Add("redis", func(ctx context.Context) error { return blacklist.Ping(ctx) })
 	}
 	r.Get("/health", hc.Handler())
+	r.Get("/v1/info", build.Handler("sda-astro"))
 
 	// Read endpoints: FailOpen true (available during Redis outage)
 	authRead := sdamw.AuthWithConfig(publicKey, sdamw.AuthConfig{
