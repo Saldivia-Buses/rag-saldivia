@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
 	"log/slog"
 	"net/http"
 
@@ -11,6 +10,7 @@ import (
 	"github.com/nats-io/nats.go"
 
 	"github.com/Camionerou/rag-saldivia/pkg/audit"
+	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/pkg/remote"
 	"github.com/Camionerou/rag-saldivia/services/bigbrother/internal/inventory"
 	"github.com/Camionerou/rag-saldivia/services/bigbrother/internal/service"
@@ -50,30 +50,46 @@ func (h *Devices) SetCredentialService(credSvc *service.CredentialService) {
 }
 
 // Routes returns the chi router for BigBrother endpoints.
+// RBAC enforced per endpoint group via RequirePermission middleware.
 func (h *Devices) Routes() chi.Router {
 	r := chi.NewRouter()
 
-	// Device endpoints
-	r.Get("/devices", h.ListDevices)
-	r.Get("/devices/{id}", h.GetDevice)
+	// Read endpoints — bigbrother.read
+	r.Group(func(r chi.Router) {
+		r.Use(sdamw.RequirePermission("bigbrother.read"))
+		r.Get("/devices", h.ListDevices)
+		r.Get("/devices/{id}", h.GetDevice)
+		r.Get("/topology", h.GetTopology)
+		r.Get("/events", h.ListEvents)
+		r.Get("/stats", h.GetStats)
+	})
 
-	// PLC register endpoints
-	r.Get("/devices/{id}/registers", h.control.ListRegisters)
-	r.Post("/devices/{id}/registers/{addr}", h.control.WriteRegister)
-	r.Post("/devices/{id}/registers/{addr}/approve", h.control.ApproveWrite)
+	// PLC read — bigbrother.plc.read
+	r.Group(func(r chi.Router) {
+		r.Use(sdamw.RequirePermission("bigbrother.plc.read"))
+		r.Get("/devices/{id}/registers", h.control.ListRegisters)
+	})
 
-	// Remote exec
-	r.Post("/devices/{id}/exec", h.ExecCommand)
+	// PLC write — bigbrother.plc.write
+	r.Group(func(r chi.Router) {
+		r.Use(sdamw.RequirePermission("bigbrother.plc.write"))
+		r.Post("/devices/{id}/registers/{addr}", h.control.WriteRegister)
+	})
 
-	// Credentials (admin only)
-	r.Post("/credentials", h.StoreCredential)
-	r.Get("/credentials", h.ListCredentials)
-	r.Delete("/credentials/{id}", h.DeleteCredential)
+	// Remote exec — bigbrother.exec
+	r.Group(func(r chi.Router) {
+		r.Use(sdamw.RequirePermission("bigbrother.exec"))
+		r.Post("/devices/{id}/exec", h.ExecCommand)
+	})
 
-	// Topology + events + stats
-	r.Get("/topology", h.GetTopology)
-	r.Get("/events", h.ListEvents)
-	r.Get("/stats", h.GetStats)
+	// Admin endpoints — bigbrother.admin
+	r.Group(func(r chi.Router) {
+		r.Use(sdamw.RequirePermission("bigbrother.admin"))
+		r.Post("/devices/{id}/registers/{addr}/approve", h.control.ApproveWrite)
+		r.Post("/credentials", h.StoreCredential)
+		r.Get("/credentials", h.ListCredentials)
+		r.Delete("/credentials/{id}", h.DeleteCredential)
+	})
 
 	return r
 }
@@ -105,7 +121,8 @@ func (h *Devices) ExecCommand(w http.ResponseWriter, r *http.Request) {
 		UserAgent: r.UserAgent(),
 	})
 	if err != nil {
-		http.Error(w, fmt.Sprintf(`{"error":%q}`, err.Error()), http.StatusBadRequest)
+		slog.Error("exec failed", "error", err, "device", deviceID, "command", body.Command)
+		http.Error(w, `{"error":"command execution failed"}`, http.StatusBadRequest)
 		return
 	}
 

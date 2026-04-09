@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"fmt"
-	"log/slog"
 	"time"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -122,19 +121,18 @@ func (s *CredentialService) List(ctx context.Context) ([]CredentialMeta, error) 
 // Decrypt retrieves and decrypts a credential. Rate-limited via Redis.
 // Caller is responsible for zeroing the returned plaintext after use.
 func (s *CredentialService) Decrypt(ctx context.Context, credID, userID string) ([]byte, error) {
-	// Rate limit: max 10 decrypts per minute per user (Redis-backed)
+	// Rate limit: max 10 decrypts per minute per user (Redis-backed, fail-closed)
 	if s.rdb != nil {
 		key := fmt.Sprintf("sda:bb:decrypt_rate:%s", userID)
 		count, err := s.rdb.Incr(ctx, key).Result()
 		if err != nil {
-			slog.Warn("redis rate limit check failed", "error", err)
-		} else {
-			if count == 1 {
-				s.rdb.Expire(ctx, key, time.Minute)
-			}
-			if count > 10 {
-				return nil, fmt.Errorf("decrypt rate limit exceeded: max 10 per minute")
-			}
+			return nil, fmt.Errorf("decrypt rate limit check failed (fail-closed): %w", err)
+		}
+		if count == 1 {
+			s.rdb.Expire(ctx, key, time.Minute)
+		}
+		if count > 10 {
+			return nil, fmt.Errorf("decrypt rate limit exceeded: max 10 per minute")
 		}
 	}
 

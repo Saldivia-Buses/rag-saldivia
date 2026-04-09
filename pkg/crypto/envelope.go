@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strings"
 )
 
 var (
@@ -44,9 +43,10 @@ func NewEncryptor(kekPath string) (*Encryptor, error) {
 	if err != nil {
 		return nil, fmt.Errorf("read KEK: %w", err)
 	}
-	raw = []byte(strings.TrimRight(string(raw), "\n\r"))
+	// KEK must be exactly 32 raw bytes. No trimming — file must not have
+	// trailing newlines. Generate with: openssl rand 32 > kek-file
 	if len(raw) != 32 {
-		return nil, fmt.Errorf("%w: got %d bytes", ErrInvalidKEK, len(raw))
+		return nil, fmt.Errorf("%w: got %d bytes (file must be exactly 32 raw bytes, no trailing newline)", ErrInvalidKEK, len(raw))
 	}
 	kek := make([]byte, 32)
 	copy(kek, raw)

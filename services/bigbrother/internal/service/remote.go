@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -82,7 +83,12 @@ func (s *RemoteService) Exec(ctx context.Context, req ExecRequest) (*ExecRespons
 	output := fmt.Sprintf("[stub] would execute %q on %s (%s)", cmdStr, ip, deviceType)
 	output = remote.SanitizeOutput(output)
 
-	// Record event
+	// Record event (use json.Marshal to prevent injection)
+	eventDetails, _ := json.Marshal(map[string]any{
+		"command":   string(req.Command),
+		"exit_code": 0,
+		"user_id":   req.UserID,
+	})
 	s.db.Exec(ctx,
 		`INSERT INTO bb_events (tenant_id, device_id, event_type, details)
 		 VALUES (
@@ -90,8 +96,7 @@ func (s *RemoteService) Exec(ctx context.Context, req ExecRequest) (*ExecRespons
 			$2, 'exec_completed',
 			$3::jsonb
 		 )`,
-		s.tenantSlug, req.DeviceID,
-		fmt.Sprintf(`{"command":"%s","exit_code":0,"user_id":"%s"}`, req.Command, req.UserID))
+		s.tenantSlug, req.DeviceID, string(eventDetails))
 
 	return &ExecResponse{
 		Output:   output,

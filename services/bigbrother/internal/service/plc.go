@@ -7,11 +7,9 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/nats-io/nats.go"
 
-	"github.com/Camionerou/rag-saldivia/pkg/approval"
 	"github.com/Camionerou/rag-saldivia/pkg/audit"
 	"github.com/Camionerou/rag-saldivia/pkg/plc"
 )
@@ -141,8 +139,8 @@ func (s *PLCService) WriteRegister(ctx context.Context, req WriteRegisterRequest
 	// For now, update the register value in DB
 	_, err = s.db.Exec(ctx,
 		`UPDATE bb_plc_registers SET last_value = $1, last_value_numeric = $2, last_read = now()
-		 WHERE id = $3`,
-		fmt.Sprintf("%v", req.Value), req.Value, regID)
+		 WHERE id = $3 AND tenant_id = (SELECT id FROM tenants WHERE slug = $4 LIMIT 1)`,
+		fmt.Sprintf("%v", req.Value), req.Value, regID, s.tenantSlug)
 	if err != nil {
 		return nil, fmt.Errorf("update register value: %w", err)
 	}
@@ -172,15 +170,17 @@ func (s *PLCService) createPendingWrite(ctx context.Context, req WriteRegisterRe
 		return nil, fmt.Errorf("create pending write: %w", err)
 	}
 
-	// Audit the request
-	s.audit.Write(ctx, audit.Entry{
+	// Fail-closed audit for critical write request
+	if err := s.audit.WriteStrict(ctx, audit.Entry{
 		TenantID: s.tenantSlug,
 		UserID:   req.UserID,
 		Action:   "bigbrother.plc.write.requested",
 		Resource: fmt.Sprintf("device:%s/register:%s", req.DeviceID, req.Address),
 		Details:  map[string]any{"request_id": requestID, "value": req.Value},
 		IP:       req.IP,
-	})
+	}); err != nil {
+		return nil, fmt.Errorf("audit failed, critical write request aborted: %w", err)
+	}
 
 	// Notify via NATS
 	s.publishEvent("plc.approval_requested", map[string]any{
@@ -200,26 +200,24 @@ func (s *PLCService) createPendingWrite(ctx context.Context, req WriteRegisterRe
 }
 
 // ApproveWrite approves a pending critical write. The approver must be different
-// from the requestor. Uses atomic UPDATE to prevent concurrent approvals.
+// from the requestor. Self-approve and expiry are enforced at the SQL level
+// (no TOCTOU race). Uses atomic UPDATE to prevent concurrent approvals.
 func (s *PLCService) ApproveWrite(ctx context.Context, requestID, approverID, ip, userAgent string) (*WriteRegisterResult, error) {
 	var deviceID, address, value, requestorID string
 	err := s.db.QueryRow(ctx,
 		`UPDATE bb_pending_writes
 		 SET approved_by = $1, approved_at = now(), status = 'approved'
-		 WHERE id = $2 AND status = 'pending' AND approved_by IS NULL
+		 WHERE id = $2
+		   AND status = 'pending'
+		   AND approved_by IS NULL
+		   AND requestor_id != $1
+		   AND expires_at > now()
 		   AND tenant_id = (SELECT id FROM tenants WHERE slug = $3 LIMIT 1)
 		 RETURNING device_id, register_addr, value, requestor_id`,
 		approverID, requestID, s.tenantSlug,
 	).Scan(&deviceID, &address, &value, &requestorID)
 	if err != nil {
-		return &WriteRegisterResult{Status: "rejected", Message: "pending write not found, expired, or already approved"}, nil
-	}
-
-	// Self-approve check
-	if requestorID == approverID {
-		// Revert the approval
-		s.db.Exec(ctx, `UPDATE bb_pending_writes SET approved_by = NULL, approved_at = NULL, status = 'pending' WHERE id = $1`, requestID)
-		return &WriteRegisterResult{Status: "rejected", Message: approval.ErrSelfApprove.Error()}, nil
+		return &WriteRegisterResult{Status: "rejected", Message: "not found, expired, self-approve, or already handled"}, nil
 	}
 
 	// Fail-closed audit for both users
@@ -263,6 +261,3 @@ func (s *PLCService) publishEvent(eventType string, details map[string]any) {
 		slog.Error("publish NATS event failed", "subject", subject, "error", err)
 	}
 }
-
-// Ensure uuid import is used (for approval package reference)
-var _ = uuid.Nil
