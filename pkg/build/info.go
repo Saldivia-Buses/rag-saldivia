@@ -6,8 +6,10 @@ package build
 import (
 	"encoding/json"
 	"net/http"
+	"os"
 	"runtime"
 	"runtime/debug"
+	"strings"
 )
 
 // Set via -ldflags:
@@ -47,6 +49,21 @@ func init() {
 	if BuildTime == "" {
 		BuildTime = "unknown"
 	}
+}
+
+// ReadVersionFile reads a VERSION file and returns its content as a trimmed string.
+// Returns "dev" if the file doesn't exist or is empty. Useful as fallback
+// when ldflags aren't set (e.g., `go run` during development).
+func ReadVersionFile(path string) string {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return Version // fall back to ldflags value or "dev"
+	}
+	v := strings.TrimSpace(string(data))
+	if v == "" {
+		return "dev"
+	}
+	return v
 }
 
 // Info returns build information as a map.

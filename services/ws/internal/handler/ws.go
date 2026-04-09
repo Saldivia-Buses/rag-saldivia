@@ -11,6 +11,7 @@ import (
 	"github.com/coder/websocket"
 
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
+	"github.com/Camionerou/rag-saldivia/pkg/security"
 	"github.com/Camionerou/rag-saldivia/services/ws/internal/hub"
 )
 
@@ -18,13 +19,14 @@ import (
 type WS struct {
 	hub       *hub.Hub
 	publicKey ed25519.PublicKey
+	blacklist *security.TokenBlacklist
 	origins   []string // allowed origins (e.g., "*.sda.app", "localhost:*")
 }
 
-// NewWS creates a WebSocket handler.
-func NewWS(h *hub.Hub, publicKey ed25519.PublicKey) *WS {
+// NewWS creates a WebSocket handler. Blacklist can be nil (revocation disabled).
+func NewWS(h *hub.Hub, publicKey ed25519.PublicKey, bl *security.TokenBlacklist) *WS {
 	origins := parseOrigins(os.Getenv("WS_ALLOWED_ORIGINS"))
-	return &WS{hub: h, publicKey: publicKey, origins: origins}
+	return &WS{hub: h, publicKey: publicKey, blacklist: bl, origins: origins}
 }
 
 // Upgrade handles GET /ws — upgrades HTTP to WebSocket.
@@ -42,6 +44,14 @@ func (h *WS) Upgrade(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, "invalid token", http.StatusUnauthorized)
 		return
+	}
+
+	// Check token blacklist (revoked tokens from logout/password change)
+	if h.blacklist != nil && claims.ID != "" {
+		if revoked, _ := h.blacklist.IsRevoked(r.Context(), claims.ID); revoked {
+			http.Error(w, "token revoked", http.StatusUnauthorized)
+			return
+		}
 	}
 
 	// Accept WebSocket connection with origin check

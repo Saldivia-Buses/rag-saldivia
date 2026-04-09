@@ -6,51 +6,29 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 
 	"github.com/Camionerou/rag-saldivia/pkg/config"
 	"github.com/Camionerou/rag-saldivia/pkg/guardrails"
 	"github.com/Camionerou/rag-saldivia/pkg/health"
-	"github.com/Camionerou/rag-saldivia/pkg/build"
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
-	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
-	"github.com/Camionerou/rag-saldivia/pkg/security"
-	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
-	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
-	"github.com/Camionerou/rag-saldivia/services/agent/internal/handler"
 	agentllm "github.com/Camionerou/rag-saldivia/pkg/llm"
+	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
+	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
+	"github.com/Camionerou/rag-saldivia/pkg/security"
+	"github.com/Camionerou/rag-saldivia/pkg/server"
+	"github.com/Camionerou/rag-saldivia/services/agent/internal/handler"
 	"github.com/Camionerou/rag-saldivia/services/agent/internal/service"
 	"github.com/Camionerou/rag-saldivia/services/agent/internal/tools"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 func main() {
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
-	slog.SetDefault(logger)
+	app := server.New("sda-agent", server.WithPort("AGENT_PORT", "8004"))
+	ctx := app.Context()
 
-	port := config.Env("AGENT_PORT", "8004")
 	publicKey := sdajwt.MustLoadPublicKey("JWT_PUBLIC_KEY")
-
-	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-	defer cancel()
-
-	otelShutdown, err := sdaotel.Setup(ctx, sdaotel.Config{
-		ServiceName:    "sda-agent",
-		ServiceVersion: "0.1.0",
-		Endpoint:       config.Env("OTEL_EXPORTER_OTLP_ENDPOINT", "localhost:4317"),
-		Insecure:       true,
-	})
-	if err != nil {
-		slog.Warn("otel init failed", "error", err)
-	} else {
-		defer otelShutdown(context.Background())
-	}
 
 	// Token blacklist (shared Redis)
 	blacklist := security.InitBlacklist(ctx, config.Env("REDIS_URL", "localhost:6379"))
@@ -61,7 +39,7 @@ func main() {
 	if err != nil {
 		slog.Warn("nats connect failed, trace publishing disabled", "error", err)
 	} else {
-		defer nc.Drain()
+		app.OnShutdown(func() { nc.Drain() })
 		slog.Info("connected to nats", "url", config.RedactURL(natsURL))
 	}
 	tracePublisher := service.NewTracePublisher(nc)
@@ -120,7 +98,7 @@ func main() {
 			slog.Warn("grpc search client failed, using http fallback", "error", err)
 		} else {
 			executor.SetGRPCSearch(grpcClient)
-			defer grpcClient.Close()
+			app.OnShutdown(func() { grpcClient.Close() })
 			slog.Info("search via grpc", "target", searchGRPC)
 		}
 	}
@@ -144,17 +122,12 @@ func main() {
 		MaxLoopIterations:   10,
 		Temperature:         0.2,
 		MaxTokens:           8192,
-		GuardrailsConfig: guardrails.DefaultInputConfig(10000),
+		GuardrailsConfig:    guardrails.DefaultInputConfig(10000),
 	})
 
 	agentHandler := handler.New(agentSvc)
 
-	r := chi.NewRouter()
-	r.Use(middleware.RequestID)
-	r.Use(middleware.RealIP)
-	r.Use(middleware.Recoverer)
-	r.Use(middleware.Timeout(90 * time.Second))
-	r.Use(sdamw.SecureHeaders())
+	r := app.Router()
 
 	hc := health.New("agent")
 	if nc != nil {
@@ -169,7 +142,6 @@ func main() {
 		hc.Add("redis", func(ctx context.Context) error { return blacklist.Ping(ctx) })
 	}
 	r.Get("/health", hc.Handler())
-	r.Get("/v1/info", build.Handler("sda-agent"))
 
 	aiRL := sdamw.RateLimit(sdamw.RateLimitConfig{Requests: 30, Window: time.Minute, KeyFunc: sdamw.ByUser})
 
@@ -179,31 +151,5 @@ func main() {
 		r.Mount("/v1/agent", agentHandler.Routes())
 	})
 
-	srv := &http.Server{
-		Addr:         ":" + port,
-		Handler:      otelhttp.NewHandler(r, "sda-agent"),
-		ReadTimeout:  10 * time.Second,
-		ReadHeaderTimeout: 10 * time.Second,
-		WriteTimeout: 5 * time.Minute, // long for LLM streaming, but prevents indefinite slowloris
-		IdleTimeout:  120 * time.Second,
-	}
-
-	go func() {
-		slog.Info("agent runtime starting", "port", port, "model", llmModel)
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			slog.Error("server error", "error", err)
-			os.Exit(1)
-		}
-	}()
-
-	<-ctx.Done()
-	slog.Info("agent runtime shutting down")
-	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer shutdownCancel()
-	if err := srv.Shutdown(shutdownCtx); err != nil {
-		slog.Error("shutdown error", "error", err)
-	}
+	app.Run()
 }
-
-
-
