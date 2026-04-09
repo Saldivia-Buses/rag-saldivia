@@ -18,8 +18,10 @@ import (
 	"github.com/redis/go-redis/v9"
 
 	"github.com/Camionerou/rag-saldivia/pkg/audit"
+	"github.com/Camionerou/rag-saldivia/pkg/build"
 	"github.com/Camionerou/rag-saldivia/pkg/config"
 	"github.com/Camionerou/rag-saldivia/pkg/crypto"
+	"github.com/Camionerou/rag-saldivia/pkg/database"
 	"github.com/Camionerou/rag-saldivia/pkg/health"
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
@@ -65,7 +67,7 @@ func main() {
 	blacklist := security.InitBlacklist(ctx, redisURL)
 
 	// Connect to tenant database (single pool — RBAC via JWT, no platform queries)
-	tenantPool, err := pgxpool.New(ctx, tenantDBURL)
+	tenantPool, err := database.NewPool(ctx, tenantDBURL)
 	if err != nil {
 		slog.Error("failed to connect to tenant database", "error", err)
 		os.Exit(1)
@@ -154,6 +156,7 @@ func main() {
 	publicKey := sdajwt.MustLoadPublicKey("JWT_PUBLIC_KEY")
 
 	r.Get("/health", hc.Handler())
+	r.Get("/v1/info", build.Handler("sda-bigbrother"))
 
 	// All BigBrother routes: FailOpen=false (security > availability)
 	devicesHandler := handler.NewDevices(tenantPool, nc, auditWriter, tenantSlug)
