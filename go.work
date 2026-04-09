@@ -6,6 +6,7 @@ use (
 	./services/agent
 	./services/astro
 	./services/auth
+	./services/bigbrother
 	./services/chat
 	./services/feedback
 	./services/ingest
