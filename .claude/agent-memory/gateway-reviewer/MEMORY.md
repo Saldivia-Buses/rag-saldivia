@@ -33,3 +33,4 @@
 - [PR #102 Plan 10 Phase 6](project_pr102_plan10_phase6.md) -- Chat gRPC server + WS Hub mutations, CAMBIOS REQUERIDOS: gRPC error leak to browser, JWT expiry unhandled, UserID fallback escalation, role not validated
 - [2.0.3 Branch Review](project_pr_2.0.3_review.md) -- Health/OTel/MCP/alerts/dashboards, CAMBIOS REQUERIDOS: JSON injection, db_query bypass, no deploy confirmation
 - [PR #126 Astro Plan 12](project_pr126_astro_plan12.md) -- 10k LOC astro expansion, BLOQUEADO: sqlc not generated (won't compile), ctx.Brief typo, user isolation gap in GetMessages
+- [PR #131 Plan 16 Polish](project_pr131_plan16_polish.md) -- pkg/server bootstrap + 12 main.go migrations, blockers: Timeout kills WS/SSE, compose broken, agent modules missing

@@ -19,7 +19,7 @@ import (
 )
 
 func main() {
-	app := server.New("sda-ws", server.WithPort("WS_PORT", "8002"))
+	app := server.New("sda-ws", server.WithPort("WS_PORT", "8002"), server.WithTimeout(0))
 	ctx := app.Context()
 
 	publicKey := sdajwt.MustLoadPublicKey("JWT_PUBLIC_KEY")

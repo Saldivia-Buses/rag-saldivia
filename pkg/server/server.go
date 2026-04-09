@@ -42,6 +42,7 @@ import (
 type App struct {
 	name    string
 	port    string
+	timeout time.Duration // 0 = no timeout middleware (for WebSocket/SSE)
 	router  chi.Router
 	ctx     context.Context
 	cancel  context.CancelFunc
@@ -58,6 +59,14 @@ func WithPort(envVar, defaultPort string) Option {
 	}
 }
 
+// WithTimeout sets the request timeout. Default is 30s.
+// Use 0 to disable the timeout middleware (required for WebSocket and SSE services).
+func WithTimeout(d time.Duration) Option {
+	return func(a *App) {
+		a.timeout = d
+	}
+}
+
 // New creates a new App with logger, signal context, OTel, and chi router.
 // The router comes pre-wired with: RequestID, RealIP, Recoverer, SecureHeaders, Timeout(30s).
 func New(name string, opts ...Option) *App {
@@ -69,10 +78,11 @@ func New(name string, opts ...Option) *App {
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 
 	app := &App{
-		name:   name,
-		port:   "8080",
-		ctx:    ctx,
-		cancel: cancel,
+		name:    name,
+		port:    "8080",
+		timeout: 30 * time.Second,
+		ctx:     ctx,
+		cancel:  cancel,
 	}
 
 	for _, opt := range opts {
@@ -99,7 +109,9 @@ func New(name string, opts ...Option) *App {
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Recoverer)
 	r.Use(sdamw.SecureHeaders())
-	r.Use(middleware.Timeout(30 * time.Second))
+	if app.timeout > 0 {
+		r.Use(middleware.Timeout(app.timeout))
+	}
 
 	// /v1/info endpoint
 	r.Get("/v1/info", build.Handler(name))
@@ -135,52 +147,29 @@ func (a *App) OnShutdown(fn func()) {
 
 // Run starts the HTTP server and blocks until SIGINT/SIGTERM.
 // Performs graceful shutdown with 30s timeout, then runs cleanup functions.
+// WriteTimeout defaults to 30s. Use WithWriteTimeout(0) for WebSocket services.
 func (a *App) Run() {
-	srv := &http.Server{
-		Addr:              ":" + a.port,
-		Handler:           otelhttp.NewHandler(a.router, a.name),
-		ReadTimeout:       10 * time.Second,
-		ReadHeaderTimeout: 10 * time.Second,
-		WriteTimeout:      30 * time.Second,
-		IdleTimeout:       60 * time.Second,
-	}
-
-	go func() {
-		slog.Info(a.name+" starting", "port", a.port)
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			slog.Error("server error", "error", err)
-			os.Exit(1)
-		}
-	}()
-
-	<-a.ctx.Done()
-	slog.Info(a.name + " shutting down")
-
-	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer shutdownCancel()
-	defer a.cancel()
-
-	if err := srv.Shutdown(shutdownCtx); err != nil {
-		slog.Error("shutdown error", "error", err)
-	}
-
-	// Run cleanup in reverse order
-	for i := len(a.cleanup) - 1; i >= 0; i-- {
-		a.cleanup[i]()
-	}
-
-	slog.Info(a.name + " stopped")
+	a.run(30*time.Second, 60*time.Second)
 }
 
-// RunWithWriteTimeout is like Run but allows custom WriteTimeout (for WebSocket services).
+// RunWithWriteTimeout is like Run but allows custom WriteTimeout.
+// Use 0 for WebSocket services (long-lived connections).
 func (a *App) RunWithWriteTimeout(writeTimeout time.Duration) {
+	idleTimeout := 60 * time.Second
+	if writeTimeout == 0 {
+		idleTimeout = 120 * time.Second
+	}
+	a.run(writeTimeout, idleTimeout)
+}
+
+func (a *App) run(writeTimeout, idleTimeout time.Duration) {
 	srv := &http.Server{
 		Addr:              ":" + a.port,
 		Handler:           otelhttp.NewHandler(a.router, a.name),
 		ReadTimeout:       10 * time.Second,
 		ReadHeaderTimeout: 10 * time.Second,
 		WriteTimeout:      writeTimeout,
-		IdleTimeout:       120 * time.Second,
+		IdleTimeout:       idleTimeout,
 	}
 
 	go func() {

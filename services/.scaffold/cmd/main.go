@@ -1,26 +1,16 @@
 package main
 
 import (
-	"context"
-	"log/slog"
-	"os"
-	"os/signal"
-	"syscall"
+	"github.com/Camionerou/rag-saldivia/pkg/server"
 )
 
 func main() {
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-		Level: slog.LevelInfo,
-	}))
-	slog.SetDefault(logger)
+	app := server.New("sda-scaffold", server.WithPort("SCAFFOLD_PORT", "8099"))
+	_ = app.Context()
 
-	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-	defer cancel()
+	// TODO: initialize dependencies (DB, NATS, Redis)
+	// TODO: create handlers, register routes on app.Router()
+	// TODO: add health checks: r.Get("/health", hc.Handler())
 
-	slog.Info("scaffold service starting")
-
-	// TODO: initialize dependencies, start HTTP/gRPC server
-
-	<-ctx.Done()
-	slog.Info("scaffold service shutting down")
+	app.Run()
 }

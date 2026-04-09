@@ -14,6 +14,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/agent ./cmd/...
 
 FROM gcr.io/distroless/static-debian12
 COPY --from=builder /bin/agent /agent
+COPY --from=builder /app/modules /modules
 USER nonroot:nonroot
 EXPOSE 8004
 ENTRYPOINT ["/agent"]

@@ -29,7 +29,7 @@ import (
 )
 
 func main() {
-	app := server.New("sda-astro", server.WithPort("ASTRO_PORT", "8011"))
+	app := server.New("sda-astro", server.WithPort("ASTRO_PORT", "8011"), server.WithTimeout(0))
 	ctx := app.Context()
 
 	ephePath := config.Env("EPHE_PATH", "/ephe")
@@ -49,7 +49,7 @@ func main() {
 		slog.Warn("nats connect failed, event publishing disabled", "error", err)
 	} else {
 		app.OnShutdown(func() { nc.Drain() })
-		slog.Info("connected to nats", "url", natsURL)
+		slog.Info("connected to nats", "url", config.RedactURL(natsURL))
 	}
 	tracePublisher := traces.NewPublisher(nc)
 	tenantSlug := config.Env("TENANT_SLUG", "saldivia")

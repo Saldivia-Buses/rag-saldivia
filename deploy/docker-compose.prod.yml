@@ -268,7 +268,6 @@ services:
       NATS_URL: nats://ws:${WS_NATS_PASS}@nats:4222
       WS_ALLOWED_ORIGINS: "https://*.${SDA_DOMAIN:-sda.app}"
       CHAT_GRPC_URL: chat:50052
-      REDIS_URL: redis:6379
     secrets:
       - jwt_public_key
     healthcheck:
@@ -313,9 +312,9 @@ services:
       TENANT_SLUG: ${SDA_TENANT_SLUG:-dev}
     secrets:
       - jwt_public_key
+      - db_tenant_template_url
     expose:
       - "50052"  # gRPC — internal only for ws mutations
-      - db_tenant_template_url
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8003/health || exit 1"]
       interval: 10s
@@ -361,6 +360,7 @@ services:
       NOTIFICATION_SERVICE_URL: http://notification:8005
       ASTRO_SERVICE_URL: http://astro:8011
       LLM_API_KEY: ${LLM_API_KEY:-}
+      MODULES_DIR: /modules
       <<: *jwt-public
     secrets:
       - jwt_public_key
