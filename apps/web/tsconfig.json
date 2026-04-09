@@ -30,5 +30,17 @@
     ".next/dev/types/**/*.ts",
     "**/*.mts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    "src/components/shadcnblocks",
+    "src/components/reactbits",
+    "src/components/tailgrids",
+    "src/components/fluid",
+    "src/components/ai-elements",
+    "src/components/supabase",
+    "src/components/magicui",
+    "src/components/iconiq",
+    "src/components/abui",
+    "src/__tests__"
+  ]
 }
