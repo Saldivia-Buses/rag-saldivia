@@ -26,6 +26,8 @@ secrets:
     file: ./secrets/encryption-master-key
   db_platform_password:
     file: ./secrets/db-platform-password
+  bb_kek:
+    file: ./secrets/bb-kek
 
 x-service-defaults: &service-defaults
   restart: unless-stopped
@@ -189,6 +191,7 @@ services:
       TRACES_NATS_PASS: ${TRACES_NATS_PASS}
       PLATFORM_NATS_PASS: ${PLATFORM_NATS_PASS}
       EXTRACTOR_NATS_PASS: ${EXTRACTOR_NATS_PASS}
+      BIGBROTHER_NATS_PASS: ${BIGBROTHER_NATS_PASS}
     volumes:
       - nats_data:/data
       - ./nats/nats-server.conf:/etc/nats/nats-server.conf:ro
@@ -663,6 +666,65 @@ services:
         reservations:
           memory: 128M
 
+  # ── BigBrother (Plan 15 — network intelligence, EXCEPTION: Alpine + CAP_NET_RAW) ──
+
+  bigbrother:
+    <<: *service-defaults
+    image: ghcr.io/camionerou/sda-bigbrother:${BIGBROTHER_VERSION:-latest}
+    build:
+      context: ..
+      dockerfile: services/bigbrother/Dockerfile
+    depends_on:
+      postgres-platform:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    cap_drop: [ALL]
+    cap_add: [NET_RAW]
+    read_only: true
+    tmpfs:
+      - /tmp:size=100M,noexec,nosuid,nodev
+    security_opt:
+      - "seccomp:deploy/seccomp/bigbrother.json"
+      - no-new-privileges:true
+    environment:
+      BIGBROTHER_PORT: "8012"
+      REDIS_URL: redis:6379
+      NATS_URL: nats://bigbrother:${BIGBROTHER_NATS_PASS}@nats:4222
+      TENANT_SLUG: ${SDA_TENANT_SLUG:-dev}
+      SCAN_MODE: "passive"
+      EVENT_RETENTION_DAYS: "90"
+      <<: *jwt-public
+    secrets:
+      - jwt_public_key
+      - db_tenant_template_url
+      - bb_kek
+    healthcheck:
+      test: ["CMD", "/healthcheck"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - frontend
+      - backend
+      - data
+      - lan
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.bigbrother.rule=PathPrefix(`/v1/bigbrother`)"
+      - "traefik.http.routers.bigbrother.entrypoints=websecure"
+      - "traefik.http.services.bigbrother.loadbalancer.server.port=8012"
+      - "traefik.docker.network=frontend"
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+          cpus: "1.0"
+        reservations:
+          memory: 128M
+
   # ── Self-Healing ────────────────────────────────────────────────────
   # Autoheal monitors Docker health checks and restarts unhealthy containers.
   # Docker restart policies only restart EXITED containers, not UNHEALTHY ones.
@@ -686,6 +748,13 @@ networks:
   frontend:    # traefik ↔ Go services
   backend:     # Go services ↔ NATS
   data:        # Go services ↔ PostgreSQL, Redis
+  lan:         # macvlan for BigBrother physical LAN access
+    driver: macvlan
+    driver_opts:
+      parent: ${LAN_INTERFACE:-eth0}
+    ipam:
+      config:
+        - subnet: ${LAN_SUBNET:-192.168.1.0/24}
 
 volumes:
   postgres_platform_data:
