@@ -86,12 +86,14 @@ services/                    ← Go microservicios
   notification/              ← In-app + email
   platform/                  ← Control de tenants (platform admins)
   ingest/                    ← Pipeline de documentos + tree generation
+  bigbrother/                ← Network intelligence (ARP scan, PLC, SSH/WinRM, EXCEPTION: Alpine)
   rag/                       ← [DEPRECATED — replaced by agent/]
   .scaffold/                 ← Template para make new-service
 
 modules/                     ← Tool manifests por modulo (YAML)
   fleet/                     ← Transporte/Logistica tools
   astro/                     ← Astrologia tools (54 tools)
+  bigbrother/                ← Red & Dispositivos (5 tools)
 
 pkg/                         ← Go packages compartidos
   jwt/                       ← JWT validation local
@@ -105,10 +107,14 @@ pkg/                         ← Go packages compartidos
   security/                  ← Rate limiting, brute force
   config/                    ← Config loading
   llm/                       ← LLM client (OpenAI-compatible)
-  audit/                     ← Immutable audit log writer
+  audit/                     ← Immutable audit log writer (+ StrictLogger for fail-closed)
   health/                    ← Health check helpers
   otel/                      ← OpenTelemetry setup
   grpc/                      ← gRPC server helpers
+  crypto/                    ← AES-256-GCM encryption + envelope encryption (KEK/DEK + AAD)
+  plc/                       ← Modbus TCP + OPC-UA clients + safety tier types
+  approval/                  ← Generic two-person approval pattern
+  remote/                    ← SSH + WinRM clients + command allowlist
 
 proto/                       ← Protobuf (gRPC contracts)
 
