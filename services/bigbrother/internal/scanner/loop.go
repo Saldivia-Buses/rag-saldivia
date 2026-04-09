@@ -25,6 +25,7 @@ type Loop struct {
 	mode      atomic.Value // ScanMode
 	onResult  func(ctx context.Context, devices []Device) // callback to persist results
 	modeCh    chan ScanMode                                // runtime mode changes
+	triggerCh chan struct{}                                // manual scan trigger
 	alive     atomic.Bool
 	stopCh    chan struct{}
 }
@@ -32,10 +33,11 @@ type Loop struct {
 // NewLoop creates a discovery loop with the given scanner and result callback.
 func NewLoop(scanner NetworkScanner, mode ScanMode, onResult func(ctx context.Context, devices []Device)) *Loop {
 	l := &Loop{
-		scanner:  scanner,
-		onResult: onResult,
-		modeCh:   make(chan ScanMode, 1),
-		stopCh:   make(chan struct{}),
+		scanner:   scanner,
+		onResult:  onResult,
+		modeCh:    make(chan ScanMode, 1),
+		triggerCh: make(chan struct{}, 1),
+		stopCh:    make(chan struct{}),
 	}
 	l.mode.Store(mode)
 	return l
@@ -67,6 +69,15 @@ func (l *Loop) SetMode(mode ScanMode) {
 	}
 }
 
+// Trigger forces an immediate scan cycle regardless of mode or interval.
+func (l *Loop) Trigger() {
+	select {
+	case l.triggerCh <- struct{}{}:
+	default:
+		// Already triggered, pending
+	}
+}
+
 // Mode returns the current scan mode.
 func (l *Loop) Mode() ScanMode {
 	return l.mode.Load().(ScanMode)
@@ -76,7 +87,7 @@ func (l *Loop) run(ctx context.Context) {
 	defer l.alive.Store(false)
 
 	// Run initial scan immediately
-	l.doScan(ctx)
+	l.doScan(ctx, false)
 
 	for {
 		interval := l.interval()
@@ -91,18 +102,19 @@ func (l *Loop) run(ctx context.Context) {
 		case newMode := <-l.modeCh:
 			slog.Info("scanner mode changed", "from", l.Mode(), "to", newMode)
 			l.mode.Store(newMode)
-			// Re-scan immediately with new mode
-			l.doScan(ctx)
+			l.doScan(ctx, false)
+		case <-l.triggerCh:
+			slog.Info("manual scan triggered")
+			l.doScan(ctx, true) // force=true bypasses passive mode check
 		case <-time.After(interval):
-			l.doScan(ctx)
+			l.doScan(ctx, false)
 		}
 	}
 }
 
-func (l *Loop) doScan(ctx context.Context) {
+func (l *Loop) doScan(ctx context.Context, force bool) {
 	mode := l.Mode()
-	if mode == ModePassive {
-		// Passive mode: no active scanning, just log
+	if mode == ModePassive && !force {
 		slog.Debug("scanner in passive mode, skipping active scan")
 		return
 	}

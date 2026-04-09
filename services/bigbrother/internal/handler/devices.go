@@ -326,18 +326,17 @@ func (h *Devices) GetStats(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(stats)
 }
 
-// TriggerScan triggers a manual scan cycle.
+// TriggerScan triggers an immediate manual scan cycle.
 func (h *Devices) TriggerScan(w http.ResponseWriter, r *http.Request) {
 	if h.scanLoop == nil {
 		http.Error(w, `{"error":"scanner not configured"}`, http.StatusNotImplemented)
 		return
 	}
-	// Change mode to active temporarily if in passive, then let the loop handle it
+	h.scanLoop.Trigger()
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]any{
-		"status":  "scan_triggered",
-		"mode":    string(h.scanLoop.Mode()),
-		"message": "next scan cycle will run immediately",
+		"status": "scan_triggered",
+		"mode":   string(h.scanLoop.Mode()),
 	})
 }
 

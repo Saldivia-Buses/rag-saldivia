@@ -1,20 +1,20 @@
 ---
-name: Plan 15 BigBrother post-fix audit (second pass)
-description: Second security audit of Plan 15 (BigBrother network intelligence service) after first-round fixes applied. 3 critical, 5 high, 9 medium, 4 low findings. NOT APTO -- critical fixes needed before implementation.
+name: Plan 15 BigBrother final audit (post-fix re-review)
+description: Third security audit of Plan 15 (BigBrother) after all fixes applied. All 15 prior findings fixed correctly. 3 new LOW findings only. APPROVE.
 type: project
 ---
 
-Plan 15 BigBrother second-pass audit 2026-04-09 after first-round fixes (C1-C4, B1-B3, H1-H5, D1-D7, M1-M8, S1-S7, L3).
+Plan 15 BigBrother re-review 2026-04-09 after fix commits applied (PR #129, 17 commits).
 
-Key findings:
-- C5: Docker Compose network config contradicts Security section (3 networks in compose vs 4 in spec, missing `frontend`, Traefik label references missing network)
-- C6: ExecuteConfirmed() bug in agent is NOT just a BigBrother issue -- it affects ALL confirmed tools platform-wide, and plan only "notes" it instead of blocking on it
-- C7: bb_pending_writes has no STATUS column and no concurrent request guard -- two admins can race to create pending writes for the same register simultaneously
+All 15 prior findings (C1, C2, H1, H3, M1, M4, L1, L2, B1, B4, B5, M3, M7, M8, S2) verified as correctly fixed.
 
-Other critical gaps:
-- 5 HIGH: tmpfs noexec missing, WinRM no cert validation, SFTP symlink traversal, in-memory rate limit for decrypt, audit_log missing tenant_id filter
-- 9 MEDIUM: OPC-UA cert not persisted, libcap installed twice, nmap CVE pinning not enforced at runtime, Modbus TCP no auth, etc.
+3 new LOW findings:
+- N1: TriggerScan endpoint is a no-op (returns success but never triggers scan)
+- N2: credential Store/Delete use non-strict audit (should be WriteStrict)
+- N3: requestID query param not validated as UUID (PostgreSQL rejects anyway)
 
-**Why:** Second-pass audit catches gaps in the FIXES themselves. The first audit found design holes; this one validates the patches.
+Verdict: APPROVE. None block merge or production.
 
-**How to apply:** C5-C7 must be fixed in the plan text before implementation. All HIGH findings should have implementation notes added. MEDIUM can be addressed during implementation.
+**Why:** Final validation pass after applying security and gateway review fixes. Clean bill of health on tenant isolation, RBAC, TOCTOU, SQL injection, and info leak vectors.
+
+**How to apply:** N1-N3 are backlog items, not blockers. Can be addressed in a follow-up PR.
