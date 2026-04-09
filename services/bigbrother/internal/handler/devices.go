@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"net/http"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/nats-io/nats.go"
 
 	"github.com/Camionerou/rag-saldivia/pkg/audit"
+	"github.com/Camionerou/rag-saldivia/pkg/remote"
 	"github.com/Camionerou/rag-saldivia/services/bigbrother/internal/service"
 )
 
@@ -20,11 +22,15 @@ type Devices struct {
 	audit       *audit.Writer
 	tenantSlug  string
 	control     *Control
+	credentials *Credentials
+	remoteSvc   *service.RemoteService
 }
 
 // NewDevices creates a new BigBrother handler.
 func NewDevices(db *pgxpool.Pool, nc *nats.Conn, auditWriter *audit.Writer, tenantSlug string) *Devices {
 	plcSvc := service.NewPLCService(db, nc, auditWriter, tenantSlug)
+	// CredentialService and RemoteService are initialized later when Encryptor is available.
+	// For now they are nil — endpoints will return 501 until configured.
 	return &Devices{
 		db:         db,
 		nc:         nc,
@@ -32,6 +38,12 @@ func NewDevices(db *pgxpool.Pool, nc *nats.Conn, auditWriter *audit.Writer, tena
 		tenantSlug: tenantSlug,
 		control:    NewControl(plcSvc),
 	}
+}
+
+// SetCredentialService configures the credential service (requires Encryptor).
+func (h *Devices) SetCredentialService(credSvc *service.CredentialService) {
+	h.credentials = NewCredentials(credSvc)
+	h.remoteSvc = service.NewRemoteService(h.db, credSvc, h.audit, h.tenantSlug)
 }
 
 // Routes returns the chi router for BigBrother endpoints.
@@ -47,11 +59,81 @@ func (h *Devices) Routes() chi.Router {
 	r.Post("/devices/{id}/registers/{addr}", h.control.WriteRegister)
 	r.Post("/devices/{id}/registers/{addr}/approve", h.control.ApproveWrite)
 
+	// Remote exec
+	r.Post("/devices/{id}/exec", h.ExecCommand)
+
+	// Credentials (admin only)
+	r.Post("/credentials", h.StoreCredential)
+	r.Get("/credentials", h.ListCredentials)
+	r.Delete("/credentials/{id}", h.DeleteCredential)
+
 	// Events + stats
 	r.Get("/events", h.ListEvents)
 	r.Get("/stats", h.GetStats)
 
 	return r
+}
+
+// ExecCommand handles remote command execution.
+func (h *Devices) ExecCommand(w http.ResponseWriter, r *http.Request) {
+	if h.remoteSvc == nil {
+		http.Error(w, `{"error":"remote exec not configured"}`, http.StatusNotImplemented)
+		return
+	}
+
+	deviceID := chi.URLParam(r, "id")
+	r.Body = http.MaxBytesReader(w, r.Body, 1024)
+
+	var body struct {
+		Command string `json:"command"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		return
+	}
+
+	userID := r.Header.Get("X-User-ID")
+	result, err := h.remoteSvc.Exec(r.Context(), service.ExecRequest{
+		DeviceID:  deviceID,
+		Command:   remote.CommandType(body.Command),
+		UserID:    userID,
+		IP:        r.RemoteAddr,
+		UserAgent: r.UserAgent(),
+	})
+	if err != nil {
+		http.Error(w, fmt.Sprintf(`{"error":%q}`, err.Error()), http.StatusBadRequest)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(result)
+}
+
+// StoreCredential handles credential creation.
+func (h *Devices) StoreCredential(w http.ResponseWriter, r *http.Request) {
+	if h.credentials == nil {
+		http.Error(w, `{"error":"credentials not configured"}`, http.StatusNotImplemented)
+		return
+	}
+	h.credentials.Store(w, r)
+}
+
+// ListCredentials handles credential listing (metadata only).
+func (h *Devices) ListCredentials(w http.ResponseWriter, r *http.Request) {
+	if h.credentials == nil {
+		http.Error(w, `{"error":"credentials not configured"}`, http.StatusNotImplemented)
+		return
+	}
+	h.credentials.List(w, r)
+}
+
+// DeleteCredential handles credential deletion.
+func (h *Devices) DeleteCredential(w http.ResponseWriter, r *http.Request) {
+	if h.credentials == nil {
+		http.Error(w, `{"error":"credentials not configured"}`, http.StatusNotImplemented)
+		return
+	}
+	h.credentials.Delete(w, r)
 }
 
 // ListDevices returns all devices with optional filters.
