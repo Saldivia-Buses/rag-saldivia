@@ -85,6 +85,7 @@ services/                    ← Go microservicios
   extractor/                 ← Document extraction (Python, OCR + vision)
   notification/              ← In-app + email
   platform/                  ← Control de tenants (platform admins)
+  feedback/                  ← User feedback collection + aggregation
   ingest/                    ← Pipeline de documentos + tree generation
   bigbrother/                ← Network intelligence (ARP scan, PLC, SSH/WinRM, EXCEPTION: Alpine)
   rag/                       ← [DEPRECATED — replaced by agent/]
@@ -111,10 +112,16 @@ pkg/                         ← Go packages compartidos
   health/                    ← Health check helpers
   otel/                      ← OpenTelemetry setup
   grpc/                      ← gRPC server helpers
+  build/                     ← Version + build info endpoint
+  server/                    ← Service bootstrap (logger, OTel, router, graceful shutdown)
+  database/                  ← PostgreSQL pool wrapper
   crypto/                    ← AES-256-GCM encryption + envelope encryption (KEK/DEK + AAD)
   plc/                       ← Modbus TCP + OPC-UA clients + safety tier types
   approval/                  ← Generic two-person approval pattern
   remote/                    ← SSH + WinRM clients + command allowlist
+  pagination/                ← API pagination helpers
+  metrics/                   ← Business-level OTel metrics (counters, gauges, histograms)
+  cache/                     ← Redis JSON cache with graceful degradation
 
 proto/                       ← Protobuf (gRPC contracts)
 

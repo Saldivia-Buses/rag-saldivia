@@ -265,6 +265,8 @@ services:
     environment:
       <<: *env-common
       WS_PORT: "8002"
+      REDIS_URL: redis:6379
+      CHAT_GRPC_URL: chat:50052
       # DEV ONLY — production must use explicit origins
       WS_ALLOWED_ORIGINS: "http://localhost:3000,http://localhost:80"
     ports:
@@ -285,6 +287,8 @@ services:
     environment:
       <<: *env-common
       CHAT_PORT: "8003"
+      CHAT_GRPC_PORT: "50052"
+      REDIS_URL: redis:6379
       TENANT_SLUG: ${SDA_TENANT_SLUG:-dev}
     ports:
       - "8003:8003"
@@ -308,6 +312,9 @@ services:
       SEARCH_SERVICE_URL: http://host.docker.internal:8010
       INGEST_SERVICE_URL: http://host.docker.internal:8007
       NOTIFICATION_SERVICE_URL: http://host.docker.internal:8005
+      ASTRO_SERVICE_URL: http://host.docker.internal:8011
+      LLM_API_KEY: ${LLM_API_KEY:-}
+      SEARCH_GRPC_URL: search:50051
     ports:
       - "8004:8004"
     labels:
@@ -408,6 +415,92 @@ services:
       - "traefik.http.routers.astro-docker.entrypoints=web"
       - "traefik.http.routers.astro-docker.priority=100"
       - "traefik.http.services.astro-docker.loadbalancer.server.port=8011"
+
+  search:
+    <<: *service-defaults
+    profiles: [full]
+    build:
+      context: ..
+      dockerfile: services/search/Dockerfile
+    environment:
+      <<: *env-common
+      SEARCH_PORT: "8010"
+      SEARCH_GRPC_PORT: "50051"
+      REDIS_URL: redis:6379
+      SGLANG_LLM_URL: ${SGLANG_LLM_URL:-}
+      SGLANG_LLM_MODEL: ${SGLANG_LLM_MODEL:-}
+    ports:
+      - "8010:8010"
+    expose:
+      - "50051"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.search-docker.rule=PathPrefix(`/v1/search`)"
+      - "traefik.http.routers.search-docker.entrypoints=web"
+      - "traefik.http.routers.search-docker.priority=100"
+      - "traefik.http.services.search-docker.loadbalancer.server.port=8010"
+
+  traces:
+    <<: *service-defaults
+    profiles: [full]
+    build:
+      context: ..
+      dockerfile: services/traces/Dockerfile
+    environment:
+      <<: *env-common
+      TRACES_PORT: "8009"
+      POSTGRES_PLATFORM_URL: postgres://sda:sda_dev@postgres:5432/sda_platform?sslmode=disable
+      REDIS_URL: redis:6379
+    ports:
+      - "8009:8009"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traces-docker.rule=PathPrefix(`/v1/traces`)"
+      - "traefik.http.routers.traces-docker.entrypoints=web"
+      - "traefik.http.routers.traces-docker.priority=100"
+      - "traefik.http.services.traces-docker.loadbalancer.server.port=8009"
+
+  feedback:
+    <<: *service-defaults
+    profiles: [full]
+    build:
+      context: ..
+      dockerfile: services/feedback/Dockerfile
+    environment:
+      <<: *env-common
+      FEEDBACK_PORT: "8008"
+      POSTGRES_PLATFORM_URL: postgres://sda:sda_dev@postgres:5432/sda_platform?sslmode=disable
+      REDIS_URL: redis:6379
+    ports:
+      - "8008:8008"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.feedback-docker.rule=PathPrefix(`/v1/feedback`)"
+      - "traefik.http.routers.feedback-docker.entrypoints=web"
+      - "traefik.http.routers.feedback-docker.priority=100"
+      - "traefik.http.services.feedback-docker.loadbalancer.server.port=8008"
+
+  bigbrother:
+    <<: *service-defaults
+    profiles: [full]
+    build:
+      context: ..
+      dockerfile: services/bigbrother/Dockerfile
+    environment:
+      <<: *env-common
+      BIGBROTHER_PORT: "8012"
+      SCAN_MODE: passive
+      TENANT_SLUG: ${SDA_TENANT_SLUG:-dev}
+      EVENT_RETENTION_DAYS: "90"
+      REDIS_URL: redis:6379
+    ports:
+      - "8012:8012"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.bigbrother-docker.rule=PathPrefix(`/v1/bigbrother`)"
+      - "traefik.http.routers.bigbrother-docker.entrypoints=web"
+      - "traefik.http.routers.bigbrother-docker.priority=100"
+      - "traefik.http.services.bigbrother-docker.loadbalancer.server.port=8012"
 
 volumes:
   postgres_data:
