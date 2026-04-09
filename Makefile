@@ -137,7 +137,7 @@ deploy-gen: ## Generate Traefik/Cloudflare configs from templates + .env
 deploy-preflight: ## Run pre-deploy validation checks
 	@bash $(DEPLOY_DIR)/scripts/preflight.sh
 
-deploy-dev: deploy-gen ## Start development stack
+deploy-dev: ## Start development stack (no gen — dev uses Docker Compose env substitution)
 	docker compose -f $(DEPLOY_DIR)/docker-compose.dev.yml up -d
 
 deploy-prod: deploy-preflight deploy-gen ## Start production stack

@@ -14,6 +14,13 @@ tunnel: sda
 credentials-file: /etc/cloudflared/credentials.json
 
 ingress:
+  # Platform admin subdomain (specific rules BEFORE wildcards)
+  - hostname: platform.$SDA_DOMAIN
+    service: http://traefik:80
+    originRequest:
+      noTLSVerify: true
+      connectTimeout: 10s
+
   # WebSocket traffic — needs special handling
   - hostname: "*.$SDA_DOMAIN"
     path: /ws
@@ -21,7 +28,6 @@ ingress:
     originRequest:
       noTLSVerify: true
       connectTimeout: 10s
-      # WebSocket support
       httpHostHeader: ""
 
   # All other traffic → Traefik
@@ -30,10 +36,6 @@ ingress:
     originRequest:
       noTLSVerify: true
       connectTimeout: 10s
-
-  # Platform admin subdomain
-  - hostname: platform.$SDA_DOMAIN
-    service: http://traefik:80
 
   # Catch-all (required by cloudflared)
   - service: http_status:404

@@ -33,20 +33,15 @@ route:
       repeat_interval: 4h
 
 receivers:
+  # Default: null receiver (no configs = silently drops alerts).
+  # To enable notifications, uncomment webhook_configs below.
   - name: 'default'
-    webhook_configs:
-      - url: 'http://host.docker.internal:9999/dev-null'
-        send_resolved: true
-    # Uncomment and set SDA_ALERT_WEBHOOK in .env for real notifications:
     # webhook_configs:
     #   - url: '${SDA_ALERT_WEBHOOK}'
     #     send_resolved: true
 
+  # Critical: uncomment for production notifications.
   - name: 'critical'
-    webhook_configs:
-      - url: 'http://host.docker.internal:9999/dev-null'
-        send_resolved: true
-    # Uncomment for real critical notifications:
     # webhook_configs:
     #   - url: '${SDA_ALERT_WEBHOOK}'
     #     send_resolved: true

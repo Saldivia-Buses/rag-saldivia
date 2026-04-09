@@ -21,8 +21,10 @@ certificatesResolvers:
         provider: cloudflare
 
 providers:
-  file:
-    directory: /etc/traefik/dynamic
+  # Docker labels are the sole source of routing in production.
+  # File provider removed (C5/C6 fix): Docker labels on each service define
+  # routers with correct entryPoints (websecure) and TLS config.
+  # The dynamic/prod.yml.tmpl is kept for reference but not loaded.
   docker:
     exposedByDefault: false
 
