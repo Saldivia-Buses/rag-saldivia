@@ -104,9 +104,8 @@ func (s *ARPScanner) Scan(ctx context.Context) ([]Device, error) {
 		}
 		seen[key] = true
 
-		senderIP := pkt.SenderIP.As16()
 		devices = append(devices, Device{
-			IP:  net.IP(senderIP[:]),
+			IP:  net.IP(pkt.SenderIP.AsSlice()),
 			MAC: pkt.SenderHardwareAddr,
 		})
 	}

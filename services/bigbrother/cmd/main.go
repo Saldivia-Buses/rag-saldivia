@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -14,9 +15,11 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/nats-io/nats.go"
+	"github.com/redis/go-redis/v9"
 
 	"github.com/Camionerou/rag-saldivia/pkg/audit"
 	"github.com/Camionerou/rag-saldivia/pkg/config"
+	"github.com/Camionerou/rag-saldivia/pkg/crypto"
 	"github.com/Camionerou/rag-saldivia/pkg/health"
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
@@ -24,6 +27,8 @@ import (
 	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
 	"github.com/Camionerou/rag-saldivia/pkg/security"
 	"github.com/Camionerou/rag-saldivia/services/bigbrother/internal/handler"
+	"github.com/Camionerou/rag-saldivia/services/bigbrother/internal/scanner"
+	"github.com/Camionerou/rag-saldivia/services/bigbrother/internal/service"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
@@ -56,7 +61,8 @@ func main() {
 	}
 
 	// Token blacklist (shared Redis)
-	blacklist := security.InitBlacklist(ctx, config.Env("REDIS_URL", "localhost:6379"))
+	redisURL := config.Env("REDIS_URL", "localhost:6379")
+	blacklist := security.InitBlacklist(ctx, redisURL)
 
 	// Connect to tenant database (single pool — RBAC via JWT, no platform queries)
 	tenantPool, err := pgxpool.New(ctx, tenantDBURL)
@@ -86,12 +92,50 @@ func main() {
 	// Tenant slug for NATS subjects
 	tenantSlug := config.Env("TENANT_SLUG", "dev")
 
+	// Scanner — use StubScanner in dev (WSL2), ARPScanner on physical NIC
+	scanMode := scanner.ScanMode(config.Env("SCAN_MODE", "passive"))
+	var netScanner scanner.NetworkScanner
+	lanIface := config.Env("LAN_INTERFACE", "")
+	if lanIface != "" {
+		arpScanner, err := scanner.NewARPScanner(lanIface, 10*time.Second)
+		if err != nil {
+			slog.Warn("ARP scanner init failed, using stub", "interface", lanIface, "error", err)
+			netScanner = scanner.NewStubScanner()
+		} else {
+			netScanner = arpScanner
+		}
+	} else {
+		slog.Info("no LAN_INTERFACE set, using stub scanner")
+		netScanner = scanner.NewStubScanner()
+	}
+
+	scannerSvc := service.NewScanner(tenantPool, nc, tenantSlug)
+	scanLoop := scanner.NewLoop(netScanner, scanMode, scannerSvc.ProcessResults)
+	scanLoop.Start(ctx)
+	defer scanLoop.Stop()
+
+	// Envelope encryption (KEK from Docker secret)
+	kekPath := config.Env("BB_KEK_PATH", "/run/secrets/bb_kek")
+	encryptor, err := crypto.NewEncryptor(kekPath)
+	if err != nil {
+		slog.Warn("KEK not available, credential endpoints disabled", "path", kekPath, "error", err)
+	}
+
+	// Redis client for rate limiting
+	rdb := redis.NewClient(&redis.Options{Addr: redisURL})
+
 	// Health checker
 	hc := health.New("bigbrother")
 	hc.Add("postgres-tenant", func(ctx context.Context) error { return tenantPool.Ping(ctx) })
 	hc.Add("nats", func(ctx context.Context) error {
 		if !nc.IsConnected() {
 			return fmt.Errorf("nats disconnected")
+		}
+		return nil
+	})
+	hc.Add("scanner", func(_ context.Context) error {
+		if !scanLoop.IsAlive() {
+			return fmt.Errorf("scanner goroutine dead")
 		}
 		return nil
 	})
@@ -113,6 +157,17 @@ func main() {
 
 	// All BigBrother routes: FailOpen=false (security > availability)
 	devicesHandler := handler.NewDevices(tenantPool, nc, auditWriter, tenantSlug)
+
+	// Wire credential service if KEK is available
+	if encryptor != nil {
+		credSvc := service.NewCredentialService(tenantPool, encryptor, auditWriter, rdb, tenantSlug)
+		devicesHandler.SetCredentialService(credSvc)
+		slog.Info("credential vault enabled")
+	}
+
+	// Wire scan loop reference for scan endpoints
+	devicesHandler.SetScanLoop(scanLoop)
+
 	r.Group(func(r chi.Router) {
 		r.Use(sdamw.AuthWithConfig(publicKey, sdamw.AuthConfig{
 			Blacklist: blacklist,
@@ -120,6 +175,10 @@ func main() {
 		}))
 		r.Mount("/v1/bigbrother", devicesHandler.Routes())
 	})
+
+	// Event retention cleanup goroutine
+	retentionDays, _ := strconv.Atoi(config.Env("EVENT_RETENTION_DAYS", "90"))
+	go runCleanup(ctx, tenantPool, tenantSlug, retentionDays)
 
 	// Server
 	srv := &http.Server{
@@ -150,4 +209,50 @@ func main() {
 		slog.Error("shutdown error", "error", err)
 	}
 	slog.Info("bigbrother service stopped")
+}
+
+// runCleanup periodically deletes old events and expired pending writes.
+func runCleanup(ctx context.Context, db *pgxpool.Pool, tenantSlug string, retentionDays int) {
+	ticker := time.NewTicker(1 * time.Hour)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			cutoff := time.Now().AddDate(0, 0, -retentionDays)
+
+			// Batched event deletion (1000 at a time)
+			for {
+				tag, err := db.Exec(ctx,
+					`DELETE FROM bb_events WHERE id IN (
+						SELECT id FROM bb_events
+						WHERE tenant_id = (SELECT id FROM tenants WHERE slug = $1 LIMIT 1)
+						  AND created_at < $2
+						LIMIT 1000
+					)`, tenantSlug, cutoff)
+				if err != nil {
+					slog.Error("event cleanup failed", "error", err)
+					break
+				}
+				if tag.RowsAffected() == 0 {
+					break
+				}
+				slog.Info("events cleaned up", "deleted", tag.RowsAffected())
+				time.Sleep(100 * time.Millisecond) // prevent lock contention
+			}
+
+			// Expire pending writes
+			tag, err := db.Exec(ctx,
+				`UPDATE bb_pending_writes SET status = 'expired'
+				 WHERE tenant_id = (SELECT id FROM tenants WHERE slug = $1 LIMIT 1)
+				   AND status = 'pending' AND expires_at < now()`, tenantSlug)
+			if err != nil {
+				slog.Error("pending writes cleanup failed", "error", err)
+			} else if tag.RowsAffected() > 0 {
+				slog.Info("pending writes expired", "count", tag.RowsAffected())
+			}
+		}
+	}
 }

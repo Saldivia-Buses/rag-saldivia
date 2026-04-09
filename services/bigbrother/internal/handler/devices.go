@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"net/http"
 
@@ -13,6 +14,7 @@ import (
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/pkg/remote"
 	"github.com/Camionerou/rag-saldivia/services/bigbrother/internal/inventory"
+	"github.com/Camionerou/rag-saldivia/services/bigbrother/internal/scanner"
 	"github.com/Camionerou/rag-saldivia/services/bigbrother/internal/service"
 )
 
@@ -26,6 +28,7 @@ type Devices struct {
 	credentials *Credentials
 	remoteSvc   *service.RemoteService
 	documenter  *inventory.Documenter
+	scanLoop    *scanner.Loop
 }
 
 // NewDevices creates a new BigBrother handler.
@@ -47,6 +50,11 @@ func NewDevices(db *pgxpool.Pool, nc *nats.Conn, auditWriter *audit.Writer, tena
 func (h *Devices) SetCredentialService(credSvc *service.CredentialService) {
 	h.credentials = NewCredentials(credSvc)
 	h.remoteSvc = service.NewRemoteService(h.db, credSvc, h.audit, h.tenantSlug)
+}
+
+// SetScanLoop configures the scanner loop reference for scan control endpoints.
+func (h *Devices) SetScanLoop(loop *scanner.Loop) {
+	h.scanLoop = loop
 }
 
 // Routes returns the chi router for BigBrother endpoints.
@@ -89,6 +97,8 @@ func (h *Devices) Routes() chi.Router {
 		r.Post("/credentials", h.StoreCredential)
 		r.Get("/credentials", h.ListCredentials)
 		r.Delete("/credentials/{id}", h.DeleteCredential)
+		r.Post("/scan", h.TriggerScan)
+		r.Post("/scan/mode", h.SetScanMode)
 	})
 
 	return r
@@ -163,15 +173,29 @@ func (h *Devices) ListDevices(w http.ResponseWriter, r *http.Request) {
 	status := r.URL.Query().Get("status")
 	search := r.URL.Query().Get("search")
 
-	// TODO: implement with sqlc repository
-	_ = deviceType
-	_ = status
-	_ = search
+	query := `SELECT id, ip, mac, hostname, vendor, device_type, os, model, location, status, first_seen, last_seen
+		 FROM bb_devices WHERE tenant_id = (SELECT id FROM tenants WHERE slug = $1 LIMIT 1)`
+	args := []any{h.tenantSlug}
+	argN := 2
 
-	rows, err := h.db.Query(r.Context(),
-		`SELECT id, ip, mac, hostname, vendor, device_type, os, model, location, status, first_seen, last_seen
-		 FROM bb_devices WHERE tenant_id = (SELECT id FROM tenants WHERE slug = $1 LIMIT 1)
-		 ORDER BY last_seen DESC LIMIT 100`, h.tenantSlug)
+	if deviceType != "" {
+		query += fmt.Sprintf(` AND device_type = $%d`, argN)
+		args = append(args, deviceType)
+		argN++
+	}
+	if status != "" {
+		query += fmt.Sprintf(` AND status = $%d`, argN)
+		args = append(args, status)
+		argN++
+	}
+	if search != "" {
+		query += fmt.Sprintf(` AND (hostname ILIKE $%d OR ip::TEXT ILIKE $%d OR vendor ILIKE $%d OR model ILIKE $%d)`, argN, argN, argN, argN)
+		args = append(args, "%"+search+"%")
+		argN++
+	}
+	query += ` ORDER BY last_seen DESC LIMIT 100`
+
+	rows, err := h.db.Query(r.Context(), query, args...)
 	if err != nil {
 		slog.Error("list devices failed", "error", err)
 		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
@@ -300,4 +324,49 @@ func (h *Devices) GetStats(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(stats)
+}
+
+// TriggerScan triggers a manual scan cycle.
+func (h *Devices) TriggerScan(w http.ResponseWriter, r *http.Request) {
+	if h.scanLoop == nil {
+		http.Error(w, `{"error":"scanner not configured"}`, http.StatusNotImplemented)
+		return
+	}
+	// Change mode to active temporarily if in passive, then let the loop handle it
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]any{
+		"status":  "scan_triggered",
+		"mode":    string(h.scanLoop.Mode()),
+		"message": "next scan cycle will run immediately",
+	})
+}
+
+// SetScanMode changes the scan mode at runtime.
+func (h *Devices) SetScanMode(w http.ResponseWriter, r *http.Request) {
+	if h.scanLoop == nil {
+		http.Error(w, `{"error":"scanner not configured"}`, http.StatusNotImplemented)
+		return
+	}
+
+	r.Body = http.MaxBytesReader(w, r.Body, 1024)
+	var body struct {
+		Mode string `json:"mode"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
+		return
+	}
+
+	mode := scanner.ScanMode(body.Mode)
+	switch mode {
+	case scanner.ModePassive, scanner.ModeActive, scanner.ModeFull:
+		h.scanLoop.SetMode(mode)
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(map[string]any{
+			"status": "mode_changed",
+			"mode":   body.Mode,
+		})
+	default:
+		http.Error(w, `{"error":"invalid mode, must be: passive, active, full"}`, http.StatusBadRequest)
+	}
 }

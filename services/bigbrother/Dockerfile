@@ -8,7 +8,7 @@ COPY services/bigbrother/ ./services/bigbrother/
 
 WORKDIR /app/services/bigbrother
 RUN go mod download
-RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/bigbrother ./cmd/bigbrother/
+RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/bigbrother ./cmd/
 RUN CGO_ENABLED=0 GOOS=linux go build -o /bin/healthcheck ./cmd/healthcheck/
 
 # Alpine (NOT distroless) — needs nmap binary

@@ -1,5 +1,7 @@
 package inventory
 
+import "fmt"
+
 // Differ detects changes between scan cycles.
 // Used to generate change events and update documentation.
 
@@ -47,5 +49,5 @@ func DiffPorts(old, new []PortDoc) []Change {
 }
 
 func portKey(p PortDoc) string {
-	return p.Protocol + ":" + string(rune(p.Port)) + "/" + p.State
+	return fmt.Sprintf("%s:%d/%s", p.Protocol, p.Port, p.State)
 }
