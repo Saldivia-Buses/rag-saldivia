@@ -10,6 +10,7 @@ import (
 	"github.com/nats-io/nats.go"
 
 	"github.com/Camionerou/rag-saldivia/pkg/audit"
+	"github.com/Camionerou/rag-saldivia/services/bigbrother/internal/service"
 )
 
 // Devices handles all BigBrother HTTP endpoints.
@@ -18,15 +19,18 @@ type Devices struct {
 	nc          *nats.Conn
 	audit       *audit.Writer
 	tenantSlug  string
+	control     *Control
 }
 
 // NewDevices creates a new BigBrother handler.
-func NewDevices(db *pgxpool.Pool, nc *nats.Conn, audit *audit.Writer, tenantSlug string) *Devices {
+func NewDevices(db *pgxpool.Pool, nc *nats.Conn, auditWriter *audit.Writer, tenantSlug string) *Devices {
+	plcSvc := service.NewPLCService(db, nc, auditWriter, tenantSlug)
 	return &Devices{
 		db:         db,
 		nc:         nc,
-		audit:      audit,
+		audit:      auditWriter,
 		tenantSlug: tenantSlug,
+		control:    NewControl(plcSvc),
 	}
 }
 
@@ -34,8 +38,16 @@ func NewDevices(db *pgxpool.Pool, nc *nats.Conn, audit *audit.Writer, tenantSlug
 func (h *Devices) Routes() chi.Router {
 	r := chi.NewRouter()
 
+	// Device endpoints
 	r.Get("/devices", h.ListDevices)
 	r.Get("/devices/{id}", h.GetDevice)
+
+	// PLC register endpoints
+	r.Get("/devices/{id}/registers", h.control.ListRegisters)
+	r.Post("/devices/{id}/registers/{addr}", h.control.WriteRegister)
+	r.Post("/devices/{id}/registers/{addr}/approve", h.control.ApproveWrite)
+
+	// Events + stats
 	r.Get("/events", h.ListEvents)
 	r.Get("/stats", h.GetStats)
 
