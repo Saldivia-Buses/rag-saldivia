@@ -72,3 +72,36 @@ groups:
         annotations:
           summary: "Prometheus storage above 8GB"
           description: "Current storage: {{ $value | printf \"%.1f\" }}GB"
+
+  - name: sda-infrastructure-health
+    rules:
+      # Container restarted recently (possible crash loop)
+      - alert: ContainerRestarted
+        expr: |
+          increase(container_restart_count[10m]) > 2
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container {{ $labels.name }} restarted {{ $value }} times in 10m"
+
+      # High memory usage (> 90% of limit)
+      - alert: ContainerMemoryHigh
+        expr: |
+          (container_memory_usage_bytes / container_spec_memory_limit_bytes) > 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Container {{ $labels.name }} memory usage above 90%"
+          description: "Using {{ $value | humanizePercentage }} of memory limit."
+
+      # Disk space running low (< 10% free)
+      - alert: DiskSpaceLow
+        expr: |
+          (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) < 0.1
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Disk space below 10% on root filesystem"
