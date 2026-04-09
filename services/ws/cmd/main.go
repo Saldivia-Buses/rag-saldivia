@@ -57,7 +57,7 @@ func main() {
 	}
 
 	// Handlers
-	wsHandler := handler.NewWS(h, publicKey)
+	wsHandler := handler.NewWS(h, publicKey, blacklist)
 
 	// Router
 	r := app.Router()

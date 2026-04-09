@@ -245,5 +245,7 @@ func main() {
 		}()
 	}
 
-	app.Run()
+	// SSE + LLM streaming can run for minutes — no HTTP-level WriteTimeout.
+	// Per-route chi timeouts (5min read, 2min business, 30s write) still enforce limits.
+	app.RunWithWriteTimeout(0)
 }
