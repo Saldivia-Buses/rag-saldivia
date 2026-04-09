@@ -14,11 +14,12 @@ import (
 	"crypto/ed25519"
 	"fmt"
 
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/nats-io/nats.go"
 
 	"github.com/Camionerou/rag-saldivia/pkg/config"
 	"github.com/Camionerou/rag-saldivia/pkg/health"
+	"github.com/Camionerou/rag-saldivia/pkg/build"
+	"github.com/Camionerou/rag-saldivia/pkg/database"
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
@@ -90,7 +91,7 @@ func main() {
 
 	if platformDBURL != "" {
 		// Multi-tenant: resolve tenant DB per request from platform DB
-		platformPool, err := pgxpool.New(ctx, platformDBURL)
+		platformPool, err := database.NewPool(ctx, platformDBURL)
 		if err != nil {
 			slog.Error("failed to connect to platform database", "error", err)
 			os.Exit(1)
@@ -110,7 +111,7 @@ func main() {
 		slog.Info("auth service starting in multi-tenant mode")
 	} else if tenantDBURL != "" {
 		// Single-tenant: direct connection (dev mode)
-		pool, err := pgxpool.New(ctx, tenantDBURL)
+		pool, err := database.NewPool(ctx, tenantDBURL)
 		if err != nil {
 			slog.Error("failed to connect to database", "error", err)
 			os.Exit(1)
@@ -148,6 +149,7 @@ func main() {
 	mfaRL := sdamw.RateLimit(sdamw.RateLimitConfig{Requests: 5, Window: time.Minute, KeyFunc: sdamw.ByIP})
 
 	r.Get("/health", hc.Handler())
+	r.Get("/v1/info", build.Handler("sda-auth"))
 	r.With(loginRL).Post("/v1/auth/login", authHandler.Login)
 	r.With(refreshRL).Post("/v1/auth/refresh", authHandler.Refresh)
 	r.Post("/v1/auth/logout", authHandler.Logout)

@@ -1,0 +1,79 @@
+module: bigbrother
+name: "Red & Dispositivos"
+
+tools:
+  - id: list_devices
+    service: bigbrother
+    endpoint: GET /v1/bigbrother/devices
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Lista dispositivos de la red filtrable por tipo (plc, workstation, server, switch, printer, camera) y estado (online, offline). ADVERTENCIA: output contiene IPs y datos internos de red."
+    parameters:
+      type: object
+      properties:
+        device_type:
+          type: string
+          description: "Filtrar por tipo: plc, workstation, server, switch, printer, camera, ap, phone, iot, unknown"
+        status:
+          type: string
+          description: "Filtrar por estado: online, offline, degraded, new"
+        search:
+          type: string
+          description: "Buscar por hostname, IP, vendor o modelo"
+
+  - id: device_info
+    service: bigbrother
+    endpoint: GET /v1/bigbrother/devices/{id}
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Detalle completo de un dispositivo: puertos, servicios, OS, hardware, software instalado, registros PLC."
+    parameters:
+      type: object
+      properties:
+        id:
+          type: string
+          description: "ID del dispositivo"
+      required: [id]
+
+  - id: read_plc_registers
+    service: bigbrother
+    endpoint: GET /v1/bigbrother/devices/{id}/registers
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Lee registros PLC (Modbus/OPC-UA) de un dispositivo. Retorna nombre, direccion, valor actual, tipo de dato. Solo lectura."
+    parameters:
+      type: object
+      properties:
+        id:
+          type: string
+          description: "ID del dispositivo PLC"
+      required: [id]
+
+  - id: execute_command
+    service: bigbrother
+    endpoint: POST /v1/bigbrother/devices/{id}/exec
+    protocol: http
+    type: action
+    requires_confirmation: true
+    description: "Ejecuta un comando predefinido en una computadora remota. Solo comandos de la allowlist (system_info, disk_usage, memory, processes, software, network, uptime). Output puede contener datos sensibles de la red interna."
+    parameters:
+      type: object
+      properties:
+        id:
+          type: string
+          description: "ID del dispositivo"
+        command:
+          type: string
+          description: "system_info, disk_usage, memory, processes, software, network, uptime"
+      required: [id, command]
+
+  - id: network_stats
+    service: bigbrother
+    endpoint: GET /v1/bigbrother/stats
+    protocol: http
+    type: read
+    requires_confirmation: false
+    description: "Resumen de la red: cantidad de dispositivos por tipo, cuantos online/offline, ultimo scan."

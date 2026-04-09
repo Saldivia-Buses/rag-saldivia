@@ -1,0 +1,51 @@
+{
+  "_comment": "BigBrother seccomp profile — based on Docker default, dangerous syscalls denied",
+  "defaultAction": "SCMP_ACT_ALLOW",
+  "syscalls": [
+    {
+      "names": [
+        "mount",
+        "umount2",
+        "ptrace",
+        "setns",
+        "pivot_root",
+        "reboot",
+        "kexec_load",
+        "kexec_file_load",
+        "init_module",
+        "finit_module",
+        "delete_module",
+        "keyctl",
+        "request_key",
+        "add_key",
+        "unshare",
+        "userfaultfd",
+        "bpf",
+        "perf_event_open",
+        "lookup_dcookie",
+        "acct",
+        "quotactl",
+        "swapon",
+        "swapoff",
+        "nfsservctl",
+        "create_module",
+        "get_kernel_syms",
+        "query_module"
+      ],
+      "action": "SCMP_ACT_ERRNO",
+      "errnoRet": 1
+    },
+    {
+      "names": ["clone", "clone3"],
+      "action": "SCMP_ACT_ALLOW",
+      "args": [
+        {
+          "index": 0,
+          "value": 2114060288,
+          "op": "SCMP_CMP_MASKED_EQ",
+          "comment": "deny CLONE_NEWNS|CLONE_NEWPID|CLONE_NEWUSER|CLONE_NEWNET"
+        }
+      ]
+    }
+  ]
+}

@@ -72,3 +72,29 @@ groups:
         annotations:
           summary: "Prometheus storage above 8GB"
           description: "Current storage: {{ $value | printf \"%.1f\" }}GB"
+
+  # Infrastructure alerts — require cAdvisor + node-exporter (add later).
+  # Uncomment when these exporters are deployed:
+  #
+  # - name: sda-infrastructure-health
+  #   rules:
+  #     - alert: ContainerRestarted
+  #       expr: increase(container_restart_count[10m]) > 2
+  #       for: 1m
+  #       labels: { severity: warning }
+  #       annotations:
+  #         summary: "Container {{ $labels.name }} restarted {{ $value }} times in 10m"
+  #
+  #     - alert: ContainerMemoryHigh
+  #       expr: (container_memory_usage_bytes / container_spec_memory_limit_bytes) > 0.9
+  #       for: 5m
+  #       labels: { severity: warning }
+  #       annotations:
+  #         summary: "Container {{ $labels.name }} memory above 90%"
+  #
+  #     - alert: DiskSpaceLow
+  #       expr: (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) < 0.1
+  #       for: 5m
+  #       labels: { severity: critical }
+  #       annotations:
+  #         summary: "Disk space below 10%"

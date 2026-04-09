@@ -24,6 +24,10 @@ secrets:
     file: ./secrets/redis-password
   encryption_master_key:
     file: ./secrets/encryption-master-key
+  db_platform_password:
+    file: ./secrets/db-platform-password
+  bb_kek:
+    file: ./secrets/bb-kek
 
 x-service-defaults: &service-defaults
   restart: unless-stopped
@@ -35,6 +39,9 @@ x-service-defaults: &service-defaults
 
 x-jwt-public: &jwt-public
   JWT_PUBLIC_KEY_FILE: /run/secrets/jwt_public_key
+
+x-redis: &redis-url
+  REDIS_URL: "redis:6379"
 
 services:
 
@@ -125,6 +132,8 @@ services:
     environment:
       POSTGRES_USER: sda
       POSTGRES_PASSWORD_FILE: /run/secrets/db_platform_password
+    secrets:
+      - db_platform_password
     volumes:
       - postgres_platform_data:/var/lib/postgresql/data
       - ./postgres-init.sql:/docker-entrypoint-initdb.d/init.sql:ro
@@ -182,6 +191,7 @@ services:
       TRACES_NATS_PASS: ${TRACES_NATS_PASS}
       PLATFORM_NATS_PASS: ${PLATFORM_NATS_PASS}
       EXTRACTOR_NATS_PASS: ${EXTRACTOR_NATS_PASS}
+      BIGBROTHER_NATS_PASS: ${BIGBROTHER_NATS_PASS}
     volumes:
       - nats_data:/data
       - ./nats/nats-server.conf:/etc/nats/nats-server.conf:ro
@@ -206,10 +216,16 @@ services:
     build:
       context: ..
       dockerfile: services/auth/Dockerfile
+    depends_on:
+      postgres-platform:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       AUTH_PORT: "8001"
+      REDIS_URL: redis:6379
       NATS_URL: nats://auth:${AUTH_NATS_PASS}@nats:4222
-      TENANT_SLUG: dev
+      TENANT_SLUG: ${SDA_TENANT_SLUG:-dev}
     secrets:
       - jwt_private_key
       - jwt_public_key
@@ -240,10 +256,16 @@ services:
     build:
       context: ..
       dockerfile: services/ws/Dockerfile
+    depends_on:
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
     environment:
       WS_PORT: "8002"
+      REDIS_URL: redis:6379
       NATS_URL: nats://ws:${WS_NATS_PASS}@nats:4222
-      WS_ALLOWED_ORIGINS: "https://*.sda.app"
+      WS_ALLOWED_ORIGINS: "https://*.${SDA_DOMAIN:-sda.app}"
     secrets:
       - jwt_public_key
     healthcheck:
@@ -262,8 +284,10 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256M
+          memory: 512M
           cpus: "1.0"
+        reservations:
+          memory: 128M
 
   chat:
     <<: *service-defaults
@@ -271,10 +295,18 @@ services:
     build:
       context: ..
       dockerfile: services/chat/Dockerfile
+    depends_on:
+      postgres-platform:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
     environment:
       CHAT_PORT: "8003"
+      REDIS_URL: redis:6379
       NATS_URL: nats://chat:${CHAT_NATS_PASS}@nats:4222
-      TENANT_SLUG: dev
+      TENANT_SLUG: ${SDA_TENANT_SLUG:-dev}
     secrets:
       - jwt_public_key
       - db_tenant_template_url
@@ -304,8 +336,16 @@ services:
     build:
       context: ..
       dockerfile: services/agent/Dockerfile
+    depends_on:
+      postgres-platform:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
     environment:
       AGENT_PORT: "8004"
+      REDIS_URL: redis:6379
       NATS_URL: nats://agent:${AGENT_NATS_PASS}@nats:4222
       SGLANG_LLM_URL: ${SGLANG_LLM_URL:-http://host.docker.internal:8102}
       SGLANG_LLM_MODEL: ${SGLANG_LLM_MODEL:-}
@@ -332,8 +372,10 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256M
-          cpus: "1.0"
+          memory: 512M
+          cpus: "2.0"
+        reservations:
+          memory: 128M
 
   search:
     <<: *service-defaults
@@ -341,8 +383,12 @@ services:
     build:
       context: ..
       dockerfile: services/search/Dockerfile
+    depends_on:
+      postgres-platform:
+        condition: service_healthy
     environment:
       SEARCH_PORT: "8010"
+      REDIS_URL: redis:6379
       SEARCH_GRPC_PORT: "50051"
       SGLANG_LLM_URL: ${SGLANG_LLM_URL:-http://host.docker.internal:8102}
       SGLANG_LLM_MODEL: ${SGLANG_LLM_MODEL:-}
@@ -378,8 +424,14 @@ services:
     build:
       context: ..
       dockerfile: services/traces/Dockerfile
+    depends_on:
+      postgres-platform:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
     environment:
       TRACES_PORT: "8009"
+      REDIS_URL: redis:6379
       NATS_URL: nats://traces:${TRACES_NATS_PASS}@nats:4222
       <<: *jwt-public
     secrets:
@@ -411,12 +463,18 @@ services:
     build:
       context: ..
       dockerfile: services/notification/Dockerfile
+    depends_on:
+      postgres-platform:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
     environment:
       NOTIFICATION_PORT: "8005"
+      REDIS_URL: redis:6379
       NATS_URL: nats://notification:${NOTIF_NATS_PASS}@nats:4222
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT:-587}
-      SMTP_FROM: ${SMTP_FROM:-noreply@sda.app}
+      SMTP_FROM: ${SMTP_FROM:-noreply@${SDA_DOMAIN:-sda.app}}
     secrets:
       - jwt_public_key
       - db_tenant_template_url
@@ -446,8 +504,12 @@ services:
     build:
       context: ..
       dockerfile: services/platform/Dockerfile
+    depends_on:
+      postgres-platform:
+        condition: service_healthy
     environment:
       PLATFORM_PORT: "8006"
+      REDIS_URL: redis:6379
       PLATFORM_TENANT_SLUG: platform
       NATS_URL: nats://platform:${PLATFORM_NATS_PASS}@nats:4222
       <<: *jwt-public
@@ -465,7 +527,7 @@ services:
       - data
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.platform.rule=Host(`platform.sda.app`) && PathPrefix(`/v1/platform`)"
+      - "traefik.http.routers.platform.rule=Host(`platform.${SDA_DOMAIN:-sda.app}`) && PathPrefix(`/v1/platform`)"
       - "traefik.http.routers.platform.entrypoints=websecure"
       - "traefik.http.services.platform.loadbalancer.server.port=8006"
     deploy:
@@ -480,8 +542,14 @@ services:
     build:
       context: ..
       dockerfile: services/ingest/Dockerfile
+    depends_on:
+      postgres-platform:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
     environment:
       INGEST_PORT: "8007"
+      REDIS_URL: redis:6379
       NATS_URL: nats://ingest:${INGEST_NATS_PASS}@nats:4222
       RAG_SERVER_URL: ${RAG_SERVER_URL:-http://host.docker.internal:8081}
       INGEST_STAGING_DIR: /tmp/ingest-staging
@@ -514,8 +582,14 @@ services:
     build:
       context: ..
       dockerfile: services/feedback/Dockerfile
+    depends_on:
+      postgres-platform:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
     environment:
       FEEDBACK_PORT: "8008"
+      REDIS_URL: redis:6379
       NATS_URL: nats://feedback:${FEEDBACK_NATS_PASS}@nats:4222
     secrets:
       - jwt_public_key
@@ -527,6 +601,7 @@ services:
       timeout: 5s
       retries: 3
     networks:
+      - frontend
       - backend
       - data
     labels:
@@ -534,16 +609,152 @@ services:
       - "traefik.http.routers.feedback.rule=PathPrefix(`/v1/feedback`) || PathPrefix(`/v1/platform/feedback`)"
       - "traefik.http.routers.feedback.entrypoints=websecure"
       - "traefik.http.services.feedback.loadbalancer.server.port=8008"
+      - "traefik.docker.network=frontend"
     deploy:
       resources:
         limits:
           memory: 128M
           cpus: "1.0"
 
+  # ── Astro (Plan 13 — astrological intelligence engine, CGO) ────────
+  astro:
+    <<: *service-defaults
+    image: ghcr.io/camionerou/sda-astro:${ASTRO_VERSION:-latest}
+    build:
+      context: ..
+      dockerfile: services/astro/Dockerfile
+    depends_on:
+      postgres-platform:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    environment:
+      ASTRO_PORT: "8011"
+      REDIS_URL: redis:6379
+      NATS_URL: nats://astro:${ASTRO_NATS_PASS:-astro}@nats:4222
+      TENANT_SLUG: ${SDA_TENANT_SLUG:-dev}
+      SGLANG_LLM_URL: ${SGLANG_LLM_URL:-http://host.docker.internal:8102}
+      SGLANG_LLM_MODEL: ${SGLANG_LLM_MODEL:-}
+      EPHE_PATH: /ephe
+      <<: *jwt-public
+    secrets:
+      - jwt_public_key
+      - db_tenant_template_url
+    volumes:
+      - ${EPHE_DATA_PATH:-./ephe}:/ephe:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8011/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - frontend
+      - backend
+      - data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.astro.rule=PathPrefix(`/v1/astro`)"
+      - "traefik.http.routers.astro.entrypoints=websecure"
+      - "traefik.http.services.astro.loadbalancer.server.port=8011"
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "2.0"
+        reservations:
+          memory: 128M
+
+  # ── BigBrother (Plan 15 — network intelligence, EXCEPTION: Alpine + CAP_NET_RAW) ──
+
+  bigbrother:
+    <<: *service-defaults
+    image: ghcr.io/camionerou/sda-bigbrother:${BIGBROTHER_VERSION:-latest}
+    build:
+      context: ..
+      dockerfile: services/bigbrother/Dockerfile
+    depends_on:
+      postgres-platform:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    cap_drop: [ALL]
+    cap_add: [NET_RAW]
+    read_only: true
+    tmpfs:
+      - /tmp:size=100M,noexec,nosuid,nodev
+    security_opt:
+      - "seccomp:deploy/seccomp/bigbrother.json"
+      - no-new-privileges:true
+    environment:
+      BIGBROTHER_PORT: "8012"
+      REDIS_URL: redis:6379
+      NATS_URL: nats://bigbrother:${BIGBROTHER_NATS_PASS}@nats:4222
+      TENANT_SLUG: ${SDA_TENANT_SLUG:-dev}
+      SCAN_MODE: "passive"
+      EVENT_RETENTION_DAYS: "90"
+      <<: *jwt-public
+    secrets:
+      - jwt_public_key
+      - db_tenant_template_url
+      - bb_kek
+    healthcheck:
+      test: ["CMD", "/healthcheck"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - frontend
+      - backend
+      - data
+      - lan
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.bigbrother.rule=PathPrefix(`/v1/bigbrother`)"
+      - "traefik.http.routers.bigbrother.entrypoints=websecure"
+      - "traefik.http.services.bigbrother.loadbalancer.server.port=8012"
+      - "traefik.docker.network=frontend"
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+          cpus: "1.0"
+        reservations:
+          memory: 128M
+
+  # ── Self-Healing ────────────────────────────────────────────────────
+  # Autoheal monitors Docker health checks and restarts unhealthy containers.
+  # Docker restart policies only restart EXITED containers, not UNHEALTHY ones.
+  autoheal:
+    image: willfarrell/autoheal
+    restart: unless-stopped
+    environment:
+      AUTOHEAL_CONTAINER_LABEL: all
+      AUTOHEAL_INTERVAL: 30        # check every 30s
+      AUTOHEAL_START_PERIOD: 60    # grace period on startup
+      AUTOHEAL_DEFAULT_STOP_TIMEOUT: 10
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    deploy:
+      resources:
+        limits:
+          memory: 32M
+          cpus: "0.1"
+
 networks:
   frontend:    # traefik ↔ Go services
   backend:     # Go services ↔ NATS
   data:        # Go services ↔ PostgreSQL, Redis
+  lan:         # macvlan for BigBrother physical LAN access
+    driver: macvlan
+    driver_opts:
+      parent: ${LAN_INTERFACE:-eth0}
+    ipam:
+      config:
+        - subnet: ${LAN_SUBNET:-192.168.1.0/24}
 
 volumes:
   postgres_platform_data:

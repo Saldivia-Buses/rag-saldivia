@@ -7,19 +7,28 @@ import (
 
 // Intent is the parsed query intent.
 type Intent struct {
-	PrimaryDomain   string   // domain ID (e.g., "carrera")
+	PrimaryDomain    string   // domain ID (e.g., "carrera")
 	SecondaryDomains []string // additional domains detected
-	Confidence      float64  // 0.0-1.0
-	MatchedKeywords []string // which keywords triggered
-	FocusPoints     []string // planets/houses mentioned
+	Confidence       float64  // 0.0-1.0
+	MatchedKeywords  []string // which keywords triggered
+	FocusPoints      []string // planets/houses mentioned
 }
 
-// intentRule maps keywords to a domain with priority.
-type intentRule struct {
-	domain  string
-	weight  float64
-	keywords []string
-	patterns []*regexp.Regexp
+// IntentParser detects user intent from a query string.
+// Implementations: KeywordParser (regex), UtteranceRouter (TF-IDF).
+// Future: EmbeddingRouter (external service), LLMRouter (via pkg/llm).
+type IntentParser interface {
+	Parse(query string) *Intent
+}
+
+// KeywordParser implements IntentParser using keyword matching.
+type KeywordParser struct {
+	registry *DomainRegistry
+}
+
+// NewKeywordParser creates a keyword-based intent parser.
+func NewKeywordParser(registry *DomainRegistry) *KeywordParser {
+	return &KeywordParser{registry: registry}
 }
 
 // focusPatterns detect planet/house mentions in queries.
@@ -29,9 +38,19 @@ var focusPatterns = []*regexp.Regexp{
 	regexp.MustCompile(`(?i)\b(asc|ascendente|mc|medio cielo)\b`),
 }
 
-// ParseIntent analyzes a query and returns the detected intent.
-// Uses keyword matching with Spanish astrological vocabulary.
+// Parse implements IntentParser for KeywordParser.
+func (p *KeywordParser) Parse(query string) *Intent {
+	return parseIntentKeyword(query, p.registry)
+}
+
+// ParseIntent is the backward-compatible entry point.
+// Delegates to keyword-based parsing.
 func ParseIntent(query string, registry *DomainRegistry) *Intent {
+	return parseIntentKeyword(query, registry)
+}
+
+// parseIntentKeyword analyzes a query using keyword matching.
+func parseIntentKeyword(query string, registry *DomainRegistry) *Intent {
 	lower := strings.ToLower(query)
 	intent := &Intent{
 		Confidence: 0.5,

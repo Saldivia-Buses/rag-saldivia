@@ -16,6 +16,7 @@ import (
 
 	"github.com/Camionerou/rag-saldivia/pkg/config"
 	"github.com/Camionerou/rag-saldivia/pkg/health"
+	"github.com/Camionerou/rag-saldivia/pkg/build"
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
@@ -97,6 +98,7 @@ func main() {
 	})
 	hc.AddExtra(func() (string, any) { return "clients", h.ClientCount() })
 	r.Get("/health", hc.Handler())
+	r.Get("/v1/info", build.Handler("sda-ws"))
 
 	// Server
 	srv := &http.Server{

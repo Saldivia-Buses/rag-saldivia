@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/Camionerou/rag-saldivia/services/astro/internal/business"
 	astrocontext "github.com/Camionerou/rag-saldivia/services/astro/internal/context"
 )
 
@@ -98,12 +99,26 @@ func BuildIntelligenceBrief(fullCtx *astrocontext.FullContext, domain *ResolvedD
 	}
 
 	// Section 4: The actual computed brief (from context builder)
-	// This is the full brief with all technique sections
 	if fullCtx.Brief != "" {
 		b.WriteString(fullCtx.Brief)
 	}
 
-	// Section 4: Precautions
+	// Section 4b: Enterprise brief layer (Plan 13 Fase 10)
+	// When domain is "empresa" or a child of empresa, inject corporate houses,
+	// cash flow, risk alerts, and Mercury Rx as an additional layer.
+	if isEnterpriseDomain(domain) && fullCtx.Chart != nil {
+		enterpriseBrief := business.BuildEnterpriseBrief(
+			"", // base brief already included above
+			fullCtx.Chart,
+			fullCtx.Year,
+		)
+		if enterpriseBrief != "" {
+			b.WriteString("\n")
+			b.WriteString(enterpriseBrief)
+		}
+	}
+
+	// Section 5: Precautions
 	if len(domain.Precautions) > 0 {
 		b.WriteString("\n## PRECAUCIONES\n\n")
 		for _, p := range domain.Precautions {
@@ -112,4 +127,14 @@ func BuildIntelligenceBrief(fullCtx *astrocontext.FullContext, domain *ResolvedD
 	}
 
 	return b.String()
+}
+
+// isEnterpriseDomain checks if the domain is "empresa" or inherits from it.
+func isEnterpriseDomain(domain *ResolvedDomain) bool {
+	for _, ancestor := range domain.InheritedFrom {
+		if ancestor == "empresa" {
+			return true
+		}
+	}
+	return false
 }

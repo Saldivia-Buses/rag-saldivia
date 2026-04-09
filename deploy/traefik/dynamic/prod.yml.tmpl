@@ -2,7 +2,7 @@
 # Extracts tenant slug from subdomain and injects as headers.
 # Traffic arrives via Cloudflare Tunnel → Traefik → services.
 #
-# Subdomain routing: {slug}.sda.app → X-Tenant-Slug: {slug}
+# Subdomain routing: {slug}.$SDA_DOMAIN → X-Tenant-Slug: {slug}
 # Services run as Docker containers on the same network.
 
 http:
@@ -63,9 +63,16 @@ http:
       entryPoints: [web]
       middlewares: [strip-spoofed-headers, tenant-from-subdomain, rate-limit, cors]
 
-    # Platform — admin-only (platform.sda.app)
+    # Astro — astrological intelligence engine
+    astro:
+      rule: "PathPrefix(`/v1/astro`)"
+      service: astro
+      entryPoints: [web]
+      middlewares: [strip-spoofed-headers, tenant-from-subdomain, rate-limit, cors]
+
+    # Platform — admin-only (platform.$SDA_DOMAIN)
     platform:
-      rule: "Host(`platform.sda.app`) && PathPrefix(`/v1/platform`)"
+      rule: "Host(`platform.$SDA_DOMAIN`) && PathPrefix(`/v1/platform`)"
       service: platform
       entryPoints: [web]
       middlewares: [rate-limit, cors]
@@ -118,6 +125,10 @@ http:
       loadBalancer:
         servers:
           - url: "http://ingest:8007"
+    astro:
+      loadBalancer:
+        servers:
+          - url: "http://astro:8011"
 
   middlewares:
     # Strip client-spoofed tenant headers before processing
@@ -128,14 +139,14 @@ http:
           X-Tenant-ID: ""
 
     # Extract tenant slug from subdomain via regex.
-    # saldivia.sda.app → X-Tenant-Slug: saldivia
+    # saldivia.$SDA_DOMAIN → X-Tenant-Slug: saldivia
     # Only allows valid slugs: lowercase alphanumeric + hyphens, max 63 chars
     tenant-from-subdomain:
       plugin:
         rewriteHeaders:
           rewrites:
             - header: "Host"
-              regex: "^([a-z0-9][a-z0-9-]{0,62})\\.sda\\.app$"
+              regex: "^([a-z0-9][a-z0-9-]{0,62})\\.$SDA_DOMAIN_ESCAPED$"
               replacement: "$1"
               targetHeader: "X-Tenant-Slug"
 
@@ -161,6 +172,6 @@ http:
           - Content-Type
           - X-Tenant-Slug
         accessControlAllowOriginListRegex:
-          - "^https://[a-z0-9-]+\\.sda\\.app$"
+          - "$SDA_CORS_REGEX"
         accessControlMaxAge: 3600
         accessControlAllowCredentials: true

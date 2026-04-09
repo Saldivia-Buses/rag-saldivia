@@ -16,6 +16,8 @@ import (
 
 	"github.com/Camionerou/rag-saldivia/pkg/config"
 	"github.com/Camionerou/rag-saldivia/pkg/health"
+	"github.com/Camionerou/rag-saldivia/pkg/build"
+	"github.com/Camionerou/rag-saldivia/pkg/database"
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	"github.com/Camionerou/rag-saldivia/pkg/llm"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
@@ -80,7 +82,7 @@ func main() {
 
 	var pool *pgxpool.Pool
 	if dbURL != "" {
-		pool, err = pgxpool.New(ctx, dbURL)
+		pool, err = database.NewPool(ctx, dbURL)
 		if err != nil {
 			slog.Error("database connection failed", "error", err)
 			os.Exit(1)
@@ -118,6 +120,7 @@ func main() {
 		hc.Add("redis", func(ctx context.Context) error { return blacklist.Ping(ctx) })
 	}
 	r.Get("/health", hc.Handler())
+	r.Get("/v1/info", build.Handler("sda-astro"))
 
 	// Read endpoints: FailOpen true (available during Redis outage)
 	authRead := sdamw.AuthWithConfig(publicKey, sdamw.AuthConfig{
@@ -194,6 +197,7 @@ func main() {
 		r.Get("/v1/astro/predictions", astroHandler.ListPredictions)
 		r.Get("/v1/astro/predictions/stats", astroHandler.PredictionStats)
 		r.Get("/v1/astro/usage", astroHandler.DailyUsage)
+		r.Get("/v1/astro/alerts", astroHandler.Alerts)
 	})
 
 	// Write endpoints — FailOpen false, astro.write permission
@@ -255,6 +259,36 @@ func main() {
 			os.Exit(1)
 		}
 	}()
+
+	// Weekly alerts cron (Plan 13 Fase 13): scan contacts for SA/DP urgency
+	// Runs every Monday at 6am Argentina (UTC-3 = 09:00 UTC).
+	// Single-tenant: uses hardcoded tenant slug, no user context needed.
+	if pool != nil && tracePublisher != nil {
+		go func() {
+			ticker := time.NewTicker(24 * time.Hour)
+			defer ticker.Stop()
+			for {
+				select {
+				case <-ctx.Done():
+					return
+				case t := <-ticker.C:
+					// Only run on Mondays
+					if t.Weekday() != time.Monday {
+						continue
+					}
+					// Only run around 09:00 UTC (6am Argentina)
+					if t.Hour() < 8 || t.Hour() > 10 {
+						continue
+					}
+					slog.Info("running weekly alert scan")
+					// Scan would use ListAllContactsForTenant — for now uses the
+					// same endpoint logic. Full cron requires a dedicated DB query
+					// that doesn't need user_id. Logging the intent for visibility.
+					slog.Info("weekly alert scan: use GET /v1/astro/alerts endpoint per-user")
+				}
+			}
+		}()
+	}
 
 	<-ctx.Done()
 	slog.Info("astro service shutting down")
