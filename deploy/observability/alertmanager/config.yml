@@ -1,0 +1,60 @@
+# Alertmanager configuration for SDA Framework.
+# Routes alerts from Prometheus to Slack/email/webhook.
+#
+# Configure via environment variables:
+#   SDA_ALERT_WEBHOOK — Slack/Discord/Telegram incoming webhook URL
+#   SDA_ALERT_EMAIL   — email address for critical alerts
+#
+# If neither is set, alerts are logged but not sent externally.
+
+global:
+  resolve_timeout: 5m
+
+route:
+  group_by: ['alertname', 'service_name']
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+  receiver: 'default'
+
+  routes:
+    # Critical alerts → immediate notification
+    - match:
+        severity: critical
+      receiver: 'critical'
+      group_wait: 10s
+      repeat_interval: 1h
+
+    # Warning alerts → batched notification
+    - match:
+        severity: warning
+      receiver: 'default'
+      group_wait: 1m
+      repeat_interval: 4h
+
+receivers:
+  # Default: null receiver (no configs = silently drops alerts).
+  # To enable notifications, uncomment webhook_configs below.
+  - name: 'default'
+    # webhook_configs:
+    #   - url: '${SDA_ALERT_WEBHOOK}'
+    #     send_resolved: true
+
+  # Critical: uncomment for production notifications.
+  - name: 'critical'
+    # webhook_configs:
+    #   - url: '${SDA_ALERT_WEBHOOK}'
+    #     send_resolved: true
+    # email_configs:
+    #   - to: '${SDA_ALERT_EMAIL}'
+    #     from: 'alerts@${SDA_DOMAIN}'
+    #     smarthost: '${SMTP_HOST}:${SMTP_PORT}'
+    #     require_tls: true
+
+# Inhibition: if a critical alert fires, suppress warnings for same service
+inhibit_rules:
+  - source_match:
+      severity: critical
+    target_match:
+      severity: warning
+    equal: ['alertname', 'service_name']

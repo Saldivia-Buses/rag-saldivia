@@ -164,7 +164,7 @@ services:
     volumes:
       - model_cache:/root/.cache/huggingface
     environment:
-      - CUDA_VISIBLE_DEVICES=0
+      - CUDA_VISIBLE_DEVICES=${SDA_GPU_DEVICES:-0}
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:8000/health"]
       interval: 10s
@@ -198,7 +198,7 @@ services:
     volumes:
       - model_cache:/root/.cache/huggingface
     environment:
-      - CUDA_VISIBLE_DEVICES=0
+      - CUDA_VISIBLE_DEVICES=${SDA_GPU_DEVICES:-0}
     healthcheck:
       test: ["CMD", "curl", "-sf", "http://localhost:8000/health"]
       interval: 10s
@@ -246,7 +246,7 @@ services:
     environment:
       <<: *env-common
       AUTH_PORT: "8001"
-      TENANT_SLUG: dev
+      TENANT_SLUG: ${SDA_TENANT_SLUG:-dev}
     ports:
       - "8001:8001"
     labels:
@@ -285,7 +285,7 @@ services:
     environment:
       <<: *env-common
       CHAT_PORT: "8003"
-      TENANT_SLUG: dev
+      TENANT_SLUG: ${SDA_TENANT_SLUG:-dev}
     ports:
       - "8003:8003"
     labels:
@@ -328,7 +328,7 @@ services:
       NOTIFICATION_PORT: "8005"
       SMTP_HOST: mailpit
       SMTP_PORT: "1025"
-      SMTP_FROM: noreply@sda.local
+      SMTP_FROM: noreply@${SDA_DOMAIN:-localhost}
     ports:
       - "8005:8005"
     depends_on:

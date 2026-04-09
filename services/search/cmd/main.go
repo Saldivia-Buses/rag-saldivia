@@ -12,12 +12,13 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/jackc/pgx/v5/pgxpool"
 
 	searchv1 "github.com/Camionerou/rag-saldivia/gen/go/search/v1"
 	"github.com/Camionerou/rag-saldivia/pkg/audit"
 	"github.com/Camionerou/rag-saldivia/pkg/config"
 	"github.com/Camionerou/rag-saldivia/pkg/health"
+	"github.com/Camionerou/rag-saldivia/pkg/build"
+	"github.com/Camionerou/rag-saldivia/pkg/database"
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	sdagrpc "github.com/Camionerou/rag-saldivia/pkg/grpc"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
@@ -55,7 +56,7 @@ func main() {
 	blacklist := security.InitBlacklist(ctx, config.Env("REDIS_URL", "localhost:6379"))
 
 	// Connect to tenant DB (read document_pages, document_trees)
-	pool, err := pgxpool.New(ctx, tenantDBURL)
+	pool, err := database.NewPool(ctx, tenantDBURL)
 	if err != nil {
 		slog.Error("failed to connect to tenant db", "error", err)
 		os.Exit(1)
@@ -83,6 +84,7 @@ func main() {
 		hc.Add("redis", func(ctx context.Context) error { return blacklist.Ping(ctx) })
 	}
 	r.Get("/health", hc.Handler())
+	r.Get("/v1/info", build.Handler("sda-search"))
 
 	searchRL := sdamw.RateLimit(sdamw.RateLimitConfig{Requests: 30, Window: time.Minute, KeyFunc: sdamw.ByUser})
 

@@ -1,9 +1,9 @@
 # Cloudflare Tunnel configuration for SDA Framework.
-# Routes *.sda.app traffic to the local Traefik gateway.
+# Routes *.$SDA_DOMAIN traffic to the local Traefik gateway.
 #
 # Setup:
 #   1. cloudflared tunnel create sda
-#   2. cloudflared tunnel route dns sda "*.sda.app"
+#   2. cloudflared tunnel route dns sda "*.$SDA_DOMAIN"
 #   3. Copy credentials JSON to deploy/secrets/cloudflared-credentials.json
 #   4. cloudflared tunnel --config deploy/cloudflare/config.yml run sda
 #
@@ -14,26 +14,28 @@ tunnel: sda
 credentials-file: /etc/cloudflared/credentials.json
 
 ingress:
+  # Platform admin subdomain (specific rules BEFORE wildcards)
+  - hostname: platform.$SDA_DOMAIN
+    service: http://traefik:80
+    originRequest:
+      noTLSVerify: true
+      connectTimeout: 10s
+
   # WebSocket traffic — needs special handling
-  - hostname: "*.sda.app"
+  - hostname: "*.$SDA_DOMAIN"
     path: /ws
     service: http://traefik:80
     originRequest:
       noTLSVerify: true
       connectTimeout: 10s
-      # WebSocket support
       httpHostHeader: ""
 
   # All other traffic → Traefik
-  - hostname: "*.sda.app"
+  - hostname: "*.$SDA_DOMAIN"
     service: http://traefik:80
     originRequest:
       noTLSVerify: true
       connectTimeout: 10s
-
-  # Platform admin subdomain
-  - hostname: platform.sda.app
-    service: http://traefik:80
 
   # Catch-all (required by cloudflared)
   - service: http_status:404

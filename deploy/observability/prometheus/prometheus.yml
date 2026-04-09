@@ -5,5 +5,11 @@ global:
 rule_files:
   - /etc/prometheus/alerts.yml
 
+# Alertmanager routing — fire alerts to alertmanager service
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ['alertmanager:9093']
+
 # Prometheus remote write receiver is enabled via --web.enable-remote-write-receiver
 # OTel Collector sends metrics here

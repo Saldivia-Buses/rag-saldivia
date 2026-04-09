@@ -13,7 +13,6 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/nats-io/nats.go"
 
 	chatv1 "github.com/Camionerou/rag-saldivia/gen/go/chat/v1"
@@ -21,6 +20,8 @@ import (
 	"github.com/Camionerou/rag-saldivia/pkg/config"
 	sdagrpc "github.com/Camionerou/rag-saldivia/pkg/grpc"
 	"github.com/Camionerou/rag-saldivia/pkg/health"
+	"github.com/Camionerou/rag-saldivia/pkg/build"
+	"github.com/Camionerou/rag-saldivia/pkg/database"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/pkg/security"
 	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
@@ -64,7 +65,7 @@ func main() {
 	// Token blacklist (shared Redis)
 	blacklist := security.InitBlacklist(ctx, config.Env("REDIS_URL", "localhost:6379"))
 
-	pool, err := pgxpool.New(ctx, dbURL)
+	pool, err := database.NewPool(ctx, dbURL)
 	if err != nil {
 		slog.Error("failed to connect to database", "error", err)
 		os.Exit(1)
@@ -105,6 +106,7 @@ func main() {
 	r.Use(middleware.Timeout(30 * time.Second))
 
 	r.Get("/health", hc.Handler())
+	r.Get("/v1/info", build.Handler("sda-chat"))
 
 	// All chat routes require authentication
 	r.Group(func(r chi.Router) {

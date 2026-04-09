@@ -12,10 +12,11 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/jackc/pgx/v5/pgxpool"
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	"github.com/Camionerou/rag-saldivia/pkg/config"
 	"github.com/Camionerou/rag-saldivia/pkg/health"
+	"github.com/Camionerou/rag-saldivia/pkg/build"
+	"github.com/Camionerou/rag-saldivia/pkg/database"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
 	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
@@ -54,7 +55,7 @@ func main() {
 		defer otelShutdown(context.Background())
 	}
 
-	pool, err := pgxpool.New(ctx, dbURL)
+	pool, err := database.NewPool(ctx, dbURL)
 	if err != nil {
 		slog.Error("failed to connect to platform database", "error", err)
 		os.Exit(1)
@@ -101,6 +102,7 @@ func main() {
 	r.Use(middleware.Timeout(30 * time.Second))
 
 	r.Get("/health", hc.Handler())
+	r.Get("/v1/info", build.Handler("sda-platform"))
 	r.Mount("/v1/platform", platformHandler.Routes())
 
 	srv := &http.Server{

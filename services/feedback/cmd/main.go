@@ -12,12 +12,13 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/nats-io/nats.go"
 
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	"github.com/Camionerou/rag-saldivia/pkg/config"
 	"github.com/Camionerou/rag-saldivia/pkg/health"
+	"github.com/Camionerou/rag-saldivia/pkg/build"
+	"github.com/Camionerou/rag-saldivia/pkg/database"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/pkg/security"
 	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
@@ -64,7 +65,7 @@ func main() {
 	blacklist := security.InitBlacklist(ctx, config.Env("REDIS_URL", "localhost:6379"))
 
 	// Connect to tenant database
-	tenantPool, err := pgxpool.New(ctx, tenantDBURL)
+	tenantPool, err := database.NewPool(ctx, tenantDBURL)
 	if err != nil {
 		slog.Error("failed to connect to tenant database", "error", err)
 		os.Exit(1)
@@ -76,7 +77,7 @@ func main() {
 	}
 
 	// Connect to platform database
-	platformPool, err := pgxpool.New(ctx, platformDBURL)
+	platformPool, err := database.NewPool(ctx, platformDBURL)
 	if err != nil {
 		slog.Error("failed to connect to platform database", "error", err)
 		os.Exit(1)
@@ -146,6 +147,7 @@ func main() {
 	publicKey := sdajwt.MustLoadPublicKey("JWT_PUBLIC_KEY")
 
 	r.Get("/health", hc.Handler())
+	r.Get("/v1/info", build.Handler("sda-feedback"))
 
 	// Tenant-scoped feedback endpoints (require auth)
 	feedbackHandler := handler.NewFeedback(feedbackSvc.Repo(), platformPool)

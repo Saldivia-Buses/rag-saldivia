@@ -17,6 +17,7 @@ import (
 	"github.com/Camionerou/rag-saldivia/pkg/config"
 	"github.com/Camionerou/rag-saldivia/pkg/guardrails"
 	"github.com/Camionerou/rag-saldivia/pkg/health"
+	"github.com/Camionerou/rag-saldivia/pkg/build"
 	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/pkg/security"
@@ -168,6 +169,7 @@ func main() {
 		hc.Add("redis", func(ctx context.Context) error { return blacklist.Ping(ctx) })
 	}
 	r.Get("/health", hc.Handler())
+	r.Get("/v1/info", build.Handler("sda-agent"))
 
 	aiRL := sdamw.RateLimit(sdamw.RateLimitConfig{Requests: 30, Window: time.Minute, KeyFunc: sdamw.ByUser})
 

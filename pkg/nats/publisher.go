@@ -4,6 +4,7 @@
 package natspub
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log/slog"
@@ -72,8 +73,18 @@ type EventPublisher interface {
 	Broadcast(tenantSlug, channel string, data any) error
 }
 
-// Ensure Publisher implements EventPublisher at compile time.
+// ContextAwarePublisher extends EventPublisher with OpenTelemetry trace propagation.
+// Services should migrate to this interface to enable cross-service trace linking.
+// The active span's trace context is injected into NATS message headers.
+type ContextAwarePublisher interface {
+	EventPublisher
+	NotifyCtx(ctx context.Context, tenantSlug string, evt any) error
+	BroadcastCtx(ctx context.Context, tenantSlug, channel string, data any) error
+}
+
+// Ensure Publisher implements both interfaces at compile time.
 var _ EventPublisher = (*Publisher)(nil)
+var _ ContextAwarePublisher = (*Publisher)(nil)
 
 // Publisher wraps a NATS connection for publishing typed events.
 type Publisher struct {
@@ -89,6 +100,11 @@ func New(nc *nats.Conn) *Publisher {
 // Subject format: tenant.{slug}.notify.{eventType}
 // evt can be an Event struct or any map/struct with a "type" field.
 func (p *Publisher) Notify(tenantSlug string, evt any) error {
+	return p.NotifyCtx(context.Background(), tenantSlug, evt)
+}
+
+// NotifyCtx publishes with OpenTelemetry trace context propagation.
+func (p *Publisher) NotifyCtx(ctx context.Context, tenantSlug string, evt any) error {
 	if !IsValidSubjectToken(tenantSlug) {
 		return fmt.Errorf("invalid tenant slug for NATS subject: %q", tenantSlug)
 	}
@@ -121,7 +137,11 @@ func (p *Publisher) Notify(tenantSlug string, evt any) error {
 	}
 
 	subject := "tenant." + tenantSlug + ".notify." + eventType
-	if err := p.nc.Publish(subject, data); err != nil {
+
+	// Publish with trace context in NATS headers
+	msg := &nats.Msg{Subject: subject, Data: data, Header: nats.Header{}}
+	InjectTraceContext(ctx, msg)
+	if err := p.nc.PublishMsg(msg); err != nil {
 		return fmt.Errorf("publish %s: %w", subject, err)
 	}
 	return nil
@@ -132,6 +152,11 @@ func (p *Publisher) Notify(tenantSlug string, evt any) error {
 // to be persisted as notifications (e.g., session list updates, typing indicators).
 // Subject format: tenant.{slug}.{channel}
 func (p *Publisher) Broadcast(tenantSlug, channel string, data any) error {
+	return p.BroadcastCtx(context.Background(), tenantSlug, channel, data)
+}
+
+// BroadcastCtx publishes with OpenTelemetry trace context propagation.
+func (p *Publisher) BroadcastCtx(ctx context.Context, tenantSlug, channel string, data any) error {
 	if !IsValidSubjectToken(tenantSlug) {
 		return fmt.Errorf("invalid tenant slug for NATS subject: %q", tenantSlug)
 	}
@@ -149,7 +174,11 @@ func (p *Publisher) Broadcast(tenantSlug, channel string, data any) error {
 	}
 
 	subject := "tenant." + tenantSlug + "." + channel
-	if err := p.nc.Publish(subject, payload); err != nil {
+
+	// Publish with trace context in NATS headers
+	msg := &nats.Msg{Subject: subject, Data: payload, Header: nats.Header{}}
+	InjectTraceContext(ctx, msg)
+	if err := p.nc.PublishMsg(msg); err != nil {
 		return fmt.Errorf("broadcast %s: %w", subject, err)
 	}
 	return nil

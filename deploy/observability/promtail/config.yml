@@ -1,0 +1,65 @@
+# Promtail configuration for SDA Framework.
+# Auto-discovers Docker containers and ships their logs to Loki.
+#
+# Uses docker_sd_configs for automatic container detection.
+# Labels extracted: container name, compose service, compose project.
+
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+
+positions:
+  filename: /tmp/positions.yaml
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+
+scrape_configs:
+  - job_name: docker
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 10s
+        filters:
+          - name: status
+            values: ["running"]
+
+    relabel_configs:
+      # Extract container name
+      - source_labels: ['__meta_docker_container_name']
+        regex: '/(.*)'
+        target_label: 'container'
+
+      # Extract compose service name
+      - source_labels: ['__meta_docker_container_label_com_docker_compose_service']
+        target_label: 'service'
+
+      # Extract compose project
+      - source_labels: ['__meta_docker_container_label_com_docker_compose_project']
+        target_label: 'project'
+
+      # Only scrape containers with logs (skip utility containers)
+      - source_labels: ['__meta_docker_container_label_com_docker_compose_service']
+        regex: '.+'
+        action: keep
+
+    pipeline_stages:
+      # Parse JSON log lines (all SDA services use slog JSON handler)
+      - json:
+          expressions:
+            level: level
+            msg: msg
+            service: service
+            trace_id: trace_id
+            error: error
+
+      # Add extracted fields as labels
+      - labels:
+          level:
+          service:
+
+      # Timestamp from the JSON log
+      - timestamp:
+          source: time
+          format: RFC3339Nano
+          fallback_formats:
+            - '2006-01-02T15:04:05.999999999Z07:00'
