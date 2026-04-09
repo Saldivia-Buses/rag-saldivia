@@ -1,0 +1,78 @@
+{
+  "uid": "sda-database-performance",
+  "title": "SDA Database Performance",
+  "tags": ["sda", "plan14", "database"],
+  "timezone": "browser",
+  "refresh": "30s",
+  "time": { "from": "now-1h", "to": "now" },
+  "editable": true,
+  "schemaVersion": 39,
+  "annotations": {
+    "list": [
+      {
+        "datasource": { "type": "datasource", "uid": "-- Grafana --" },
+        "enable": true,
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Query Latency (from Tempo traces)",
+      "description": "Requires otelpgx tracing enabled in services. Shows SQL query duration from trace spans.",
+      "type": "timeseries",
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 0 },
+      "datasource": { "type": "tempo", "uid": "tempo" },
+      "targets": [
+        {
+          "queryType": "traceqlmetrics",
+          "query": "{ span.db.system = \"postgresql\" } | rate()",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s" } }
+    },
+    {
+      "id": 2,
+      "title": "Slow Queries (> 100ms)",
+      "description": "SQL queries taking more than 100ms. Requires otelpgx tracing.",
+      "type": "table",
+      "gridPos": { "h": 10, "w": 24, "x": 0, "y": 10 },
+      "datasource": { "type": "tempo", "uid": "tempo" },
+      "targets": [
+        {
+          "queryType": "traceql",
+          "query": "{ span.db.system = \"postgresql\" && duration > 100ms } | select(span.db.statement, duration, span.service.name)",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "HTTP Request Latency by Service (P50/P95/P99)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 20 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum by (service_name, le) (rate(http_server_request_duration_seconds_bucket[5m])))",
+          "legendFormat": "{{ service_name }} P50",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum by (service_name, le) (rate(http_server_request_duration_seconds_bucket[5m])))",
+          "legendFormat": "{{ service_name }} P95",
+          "refId": "B"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum by (service_name, le) (rate(http_server_request_duration_seconds_bucket[5m])))",
+          "legendFormat": "{{ service_name }} P99",
+          "refId": "C"
+        }
+      ],
+      "fieldConfig": { "defaults": { "unit": "s" } }
+    }
+  ]
+}

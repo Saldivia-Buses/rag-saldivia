@@ -1,0 +1,106 @@
+{
+  "uid": "sda-business-overview",
+  "title": "SDA Business Overview",
+  "tags": ["sda", "plan14", "business"],
+  "timezone": "browser",
+  "refresh": "1m",
+  "time": { "from": "now-24h", "to": "now" },
+  "editable": true,
+  "schemaVersion": 39,
+  "panels": [
+    {
+      "id": 1,
+      "title": "Queries Today",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "sum(increase(sda_queries_total[24h]))", "refId": "A" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short", "thresholds": { "steps": [{ "color": "blue", "value": 0 }] } } }
+    },
+    {
+      "id": 2,
+      "title": "Documents Ingested Today",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "sum(increase(sda_documents_ingested_total[24h]))", "refId": "A" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short", "thresholds": { "steps": [{ "color": "green", "value": 0 }] } } }
+    },
+    {
+      "id": 3,
+      "title": "Tool Calls Today",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "sum(increase(sda_tool_calls_total[24h]))", "refId": "A" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short", "thresholds": { "steps": [{ "color": "purple", "value": 0 }] } } }
+    },
+    {
+      "id": 4,
+      "title": "Active WS Connections",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        { "expr": "sum(sda_ws_connections_active)", "refId": "A" }
+      ],
+      "fieldConfig": { "defaults": { "unit": "short", "thresholds": { "steps": [{ "color": "orange", "value": 0 }] } } }
+    },
+    {
+      "id": 5,
+      "title": "Queries Over Time (by service)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 4 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "sum by (service) (rate(sda_queries_total[5m])) * 300",
+          "legendFormat": "{{ service }}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": { "defaults": { "custom": { "fillOpacity": 20, "stacking": { "mode": "normal" } } } }
+    },
+    {
+      "id": 6,
+      "title": "Login Activity",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 4 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "sum by (result) (rate(sda_auth_logins_total[5m])) * 300",
+          "legendFormat": "{{ result }}",
+          "refId": "A"
+        }
+      ],
+      "fieldConfig": {
+        "overrides": [
+          { "matcher": { "id": "byName", "options": "failed" }, "properties": [{ "id": "color", "value": { "fixedColor": "red", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "success" }, "properties": [{ "id": "color", "value": { "fixedColor": "green", "mode": "fixed" } }] },
+          { "matcher": { "id": "byName", "options": "locked" }, "properties": [{ "id": "color", "value": { "fixedColor": "orange", "mode": "fixed" } }] }
+        ]
+      }
+    },
+    {
+      "id": 7,
+      "title": "NATS Messages Published",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 24, "x": 0, "y": 12 },
+      "datasource": { "type": "prometheus", "uid": "prometheus" },
+      "targets": [
+        {
+          "expr": "sum by (subject_prefix) (rate(sda_nats_messages_total[5m])) * 300",
+          "legendFormat": "{{ subject_prefix }}",
+          "refId": "A"
+        }
+      ]
+    }
+  ]
+}
