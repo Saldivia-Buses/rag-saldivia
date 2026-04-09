@@ -12,6 +12,7 @@ import (
 
 	"github.com/Camionerou/rag-saldivia/pkg/audit"
 	"github.com/Camionerou/rag-saldivia/pkg/remote"
+	"github.com/Camionerou/rag-saldivia/services/bigbrother/internal/inventory"
 	"github.com/Camionerou/rag-saldivia/services/bigbrother/internal/service"
 )
 
@@ -24,6 +25,7 @@ type Devices struct {
 	control     *Control
 	credentials *Credentials
 	remoteSvc   *service.RemoteService
+	documenter  *inventory.Documenter
 }
 
 // NewDevices creates a new BigBrother handler.
@@ -37,6 +39,7 @@ func NewDevices(db *pgxpool.Pool, nc *nats.Conn, auditWriter *audit.Writer, tena
 		audit:      auditWriter,
 		tenantSlug: tenantSlug,
 		control:    NewControl(plcSvc),
+		documenter: inventory.NewDocumenter(db, tenantSlug),
 	}
 }
 
@@ -67,7 +70,8 @@ func (h *Devices) Routes() chi.Router {
 	r.Get("/credentials", h.ListCredentials)
 	r.Delete("/credentials/{id}", h.DeleteCredential)
 
-	// Events + stats
+	// Topology + events + stats
+	r.Get("/topology", h.GetTopology)
 	r.Get("/events", h.ListEvents)
 	r.Get("/stats", h.GetStats)
 
@@ -195,7 +199,7 @@ func (h *Devices) ListDevices(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// GetDevice returns a single device by ID.
+// GetDevice returns full device documentation.
 func (h *Devices) GetDevice(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	if id == "" {
@@ -203,31 +207,80 @@ func (h *Devices) GetDevice(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: implement full device detail with ports, capabilities, PLC registers
+	doc, err := h.documenter.GenerateDoc(r.Context(), id)
+	if err != nil {
+		slog.Error("get device failed", "error", err, "id", id)
+		http.Error(w, `{"error":"device not found"}`, http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(doc)
+}
+
+// GetTopology returns the network map.
+func (h *Devices) GetTopology(w http.ResponseWriter, r *http.Request) {
+	entries, err := h.documenter.GetTopology(r.Context())
+	if err != nil {
+		slog.Error("get topology failed", "error", err)
+		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]any{
-		"id":     id,
-		"status": "stub — implement with sqlc repository",
+		"devices": entries,
+		"total":   len(entries),
 	})
 }
 
 // ListEvents returns the event timeline.
 func (h *Devices) ListEvents(w http.ResponseWriter, r *http.Request) {
+	rows, err := h.db.Query(r.Context(),
+		`SELECT id, device_id, event_type, details, created_at FROM bb_events
+		 WHERE tenant_id = (SELECT id FROM tenants WHERE slug = $1 LIMIT 1)
+		 ORDER BY created_at DESC LIMIT 100`, h.tenantSlug)
+	if err != nil {
+		slog.Error("list events failed", "error", err)
+		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	type event struct {
+		ID        string `json:"id"`
+		DeviceID  *string `json:"device_id,omitempty"`
+		EventType string `json:"event_type"`
+		Details   []byte `json:"details"`
+		CreatedAt string `json:"created_at"`
+	}
+
+	var events []event
+	for rows.Next() {
+		var e event
+		rows.Scan(&e.ID, &e.DeviceID, &e.EventType, &e.Details, &e.CreatedAt)
+		events = append(events, e)
+	}
+	if events == nil {
+		events = []event{}
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]any{
-		"events": []any{},
-		"total":  0,
+		"events": events,
+		"total":  len(events),
 	})
 }
 
 // GetStats returns network summary stats.
 func (h *Devices) GetStats(w http.ResponseWriter, r *http.Request) {
+	stats, err := h.documenter.GetStats(r.Context())
+	if err != nil {
+		slog.Error("get stats failed", "error", err)
+		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]any{
-		"total_devices": 0,
-		"online":        0,
-		"offline":       0,
-		"by_type":       map[string]int{},
-		"last_scan":     nil,
-	})
+	json.NewEncoder(w).Encode(stats)
 }
