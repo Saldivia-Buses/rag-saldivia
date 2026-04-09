@@ -4,6 +4,8 @@ WORKDIR /app
 
 COPY go.work go.work.sum ./
 COPY pkg/ ./pkg/
+COPY gen/ ./gen/
+COPY modules/ ./modules/
 COPY services/agent/ ./services/agent/
 
 WORKDIR /app/services/agent

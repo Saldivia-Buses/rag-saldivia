@@ -191,6 +191,7 @@ services:
       TRACES_NATS_PASS: ${TRACES_NATS_PASS}
       PLATFORM_NATS_PASS: ${PLATFORM_NATS_PASS}
       EXTRACTOR_NATS_PASS: ${EXTRACTOR_NATS_PASS}
+      ASTRO_NATS_PASS: ${ASTRO_NATS_PASS}
       BIGBROTHER_NATS_PASS: ${BIGBROTHER_NATS_PASS}
     volumes:
       - nats_data:/data
@@ -266,6 +267,8 @@ services:
       REDIS_URL: redis:6379
       NATS_URL: nats://ws:${WS_NATS_PASS}@nats:4222
       WS_ALLOWED_ORIGINS: "https://*.${SDA_DOMAIN:-sda.app}"
+      CHAT_GRPC_URL: chat:50052
+      REDIS_URL: redis:6379
     secrets:
       - jwt_public_key
     healthcheck:
@@ -304,11 +307,14 @@ services:
         condition: service_healthy
     environment:
       CHAT_PORT: "8003"
+      CHAT_GRPC_PORT: "50052"
       REDIS_URL: redis:6379
       NATS_URL: nats://chat:${CHAT_NATS_PASS}@nats:4222
       TENANT_SLUG: ${SDA_TENANT_SLUG:-dev}
     secrets:
       - jwt_public_key
+    expose:
+      - "50052"  # gRPC — internal only for ws mutations
       - db_tenant_template_url
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8003/health || exit 1"]
@@ -353,6 +359,8 @@ services:
       SEARCH_GRPC_URL: search:50051
       INGEST_SERVICE_URL: http://ingest:8007
       NOTIFICATION_SERVICE_URL: http://notification:8005
+      ASTRO_SERVICE_URL: http://astro:8011
+      LLM_API_KEY: ${LLM_API_KEY:-}
       <<: *jwt-public
     secrets:
       - jwt_public_key
@@ -638,6 +646,7 @@ services:
       SGLANG_LLM_URL: ${SGLANG_LLM_URL:-http://host.docker.internal:8102}
       SGLANG_LLM_MODEL: ${SGLANG_LLM_MODEL:-}
       EPHE_PATH: /ephe
+      LLM_API_KEY: ${LLM_API_KEY:-}
       <<: *jwt-public
     secrets:
       - jwt_public_key
@@ -665,6 +674,35 @@ services:
           cpus: "2.0"
         reservations:
           memory: 128M
+
+  # ── Extractor (Python OCR + Vision pipeline) ──────────────────────────
+
+  extractor:
+    <<: *service-defaults
+    image: ghcr.io/camionerou/sda-extractor:${EXTRACTOR_VERSION:-latest}
+    build:
+      context: ..
+      dockerfile: services/extractor/Dockerfile
+    depends_on:
+      nats:
+        condition: service_healthy
+    environment:
+      EXTRACTOR_PORT: "8090"
+      NATS_URL: nats://extractor:${EXTRACTOR_NATS_PASS}@nats:4222
+      SGLANG_OCR_URL: ${SGLANG_OCR_URL:-http://host.docker.internal:8100}
+      SGLANG_VISION_URL: ${SGLANG_VISION_URL:-http://host.docker.internal:8101}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8090/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - backend
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: "1.0"
 
   # ── BigBrother (Plan 15 — network intelligence, EXCEPTION: Alpine + CAP_NET_RAW) ──
 

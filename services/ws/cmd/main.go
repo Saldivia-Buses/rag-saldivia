@@ -21,6 +21,7 @@ import (
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
 	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
+	"github.com/Camionerou/rag-saldivia/pkg/security"
 	"github.com/Camionerou/rag-saldivia/services/ws/internal/handler"
 	"github.com/Camionerou/rag-saldivia/services/ws/internal/hub"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
@@ -49,6 +50,9 @@ func main() {
 	} else {
 		defer otelShutdown(context.Background())
 	}
+
+	// Token blacklist (shared Redis)
+	blacklist := security.InitBlacklist(ctx, config.Env("REDIS_URL", "localhost:6379"))
 
 	// Connect to NATS
 	nc, err := natspub.Connect(natsURL)
@@ -96,6 +100,9 @@ func main() {
 		}
 		return nil
 	})
+	if blacklist != nil {
+		hc.Add("redis", func(ctx context.Context) error { return blacklist.Ping(ctx) })
+	}
 	hc.AddExtra(func() (string, any) { return "clients", h.ClientCount() })
 	r.Get("/health", hc.Handler())
 	r.Get("/v1/info", build.Handler("sda-ws"))

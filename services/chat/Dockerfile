@@ -5,6 +5,7 @@ WORKDIR /app
 # Copy workspace files for module resolution
 COPY go.work go.work.sum ./
 COPY pkg/ ./pkg/
+COPY gen/ ./gen/
 COPY services/chat/ ./services/chat/
 
 WORKDIR /app/services/chat
