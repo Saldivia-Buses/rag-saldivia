@@ -206,6 +206,11 @@ services:
     build:
       context: ..
       dockerfile: services/auth/Dockerfile
+    depends_on:
+      postgres-platform:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       AUTH_PORT: "8001"
       NATS_URL: nats://auth:${AUTH_NATS_PASS}@nats:4222
@@ -240,6 +245,11 @@ services:
     build:
       context: ..
       dockerfile: services/ws/Dockerfile
+    depends_on:
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
     environment:
       WS_PORT: "8002"
       NATS_URL: nats://ws:${WS_NATS_PASS}@nats:4222
@@ -262,8 +272,10 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256M
+          memory: 512M
           cpus: "1.0"
+        reservations:
+          memory: 128M
 
   chat:
     <<: *service-defaults
@@ -271,6 +283,13 @@ services:
     build:
       context: ..
       dockerfile: services/chat/Dockerfile
+    depends_on:
+      postgres-platform:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
     environment:
       CHAT_PORT: "8003"
       NATS_URL: nats://chat:${CHAT_NATS_PASS}@nats:4222
@@ -304,6 +323,13 @@ services:
     build:
       context: ..
       dockerfile: services/agent/Dockerfile
+    depends_on:
+      postgres-platform:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
     environment:
       AGENT_PORT: "8004"
       NATS_URL: nats://agent:${AGENT_NATS_PASS}@nats:4222
@@ -332,8 +358,10 @@ services:
     deploy:
       resources:
         limits:
-          memory: 256M
-          cpus: "1.0"
+          memory: 512M
+          cpus: "2.0"
+        reservations:
+          memory: 128M
 
   search:
     <<: *service-defaults
@@ -341,6 +369,9 @@ services:
     build:
       context: ..
       dockerfile: services/search/Dockerfile
+    depends_on:
+      postgres-platform:
+        condition: service_healthy
     environment:
       SEARCH_PORT: "8010"
       SEARCH_GRPC_PORT: "50051"
@@ -378,6 +409,11 @@ services:
     build:
       context: ..
       dockerfile: services/traces/Dockerfile
+    depends_on:
+      postgres-platform:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
     environment:
       TRACES_PORT: "8009"
       NATS_URL: nats://traces:${TRACES_NATS_PASS}@nats:4222
@@ -411,6 +447,11 @@ services:
     build:
       context: ..
       dockerfile: services/notification/Dockerfile
+    depends_on:
+      postgres-platform:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
     environment:
       NOTIFICATION_PORT: "8005"
       NATS_URL: nats://notification:${NOTIF_NATS_PASS}@nats:4222
@@ -446,6 +487,9 @@ services:
     build:
       context: ..
       dockerfile: services/platform/Dockerfile
+    depends_on:
+      postgres-platform:
+        condition: service_healthy
     environment:
       PLATFORM_PORT: "8006"
       PLATFORM_TENANT_SLUG: platform
@@ -480,6 +524,11 @@ services:
     build:
       context: ..
       dockerfile: services/ingest/Dockerfile
+    depends_on:
+      postgres-platform:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
     environment:
       INGEST_PORT: "8007"
       NATS_URL: nats://ingest:${INGEST_NATS_PASS}@nats:4222
@@ -514,6 +563,11 @@ services:
     build:
       context: ..
       dockerfile: services/feedback/Dockerfile
+    depends_on:
+      postgres-platform:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
     environment:
       FEEDBACK_PORT: "8008"
       NATS_URL: nats://feedback:${FEEDBACK_NATS_PASS}@nats:4222
@@ -539,6 +593,25 @@ services:
         limits:
           memory: 128M
           cpus: "1.0"
+
+  # ── Self-Healing ────────────────────────────────────────────────────
+  # Autoheal monitors Docker health checks and restarts unhealthy containers.
+  # Docker restart policies only restart EXITED containers, not UNHEALTHY ones.
+  autoheal:
+    image: willfarrell/autoheal
+    restart: unless-stopped
+    environment:
+      AUTOHEAL_CONTAINER_LABEL: all
+      AUTOHEAL_INTERVAL: 30        # check every 30s
+      AUTOHEAL_START_PERIOD: 60    # grace period on startup
+      AUTOHEAL_DEFAULT_STOP_TIMEOUT: 10
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    deploy:
+      resources:
+        limits:
+          memory: 32M
+          cpus: "0.1"
 
 networks:
   frontend:    # traefik ↔ Go services
