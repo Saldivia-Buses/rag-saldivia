@@ -15,7 +15,7 @@ entryPoints:
 certificatesResolvers:
   cloudflare:
     acme:
-      email: admin@sda.app
+      email: $SDA_ACME_EMAIL
       storage: /etc/traefik/acme/acme.json
       dnsChallenge:
         provider: cloudflare

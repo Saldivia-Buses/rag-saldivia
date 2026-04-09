@@ -131,7 +131,23 @@ migrate-seed: migrate seed ## Run migrations + seed in one step
 
 # ── Deploy ───────────────────────────────────────────────────────────────
 
-deploy: ## Deploy all services to production
+deploy-gen: ## Generate Traefik/Cloudflare configs from templates + .env
+	@bash $(DEPLOY_DIR)/scripts/gen-config.sh
+
+deploy-preflight: ## Run pre-deploy validation checks
+	@bash $(DEPLOY_DIR)/scripts/preflight.sh
+
+deploy-dev: deploy-gen ## Start development stack
+	docker compose -f $(DEPLOY_DIR)/docker-compose.dev.yml up -d
+
+deploy-prod: deploy-preflight deploy-gen ## Start production stack
+	docker compose -f $(DEPLOY_DIR)/docker-compose.prod.yml up -d
+
+deploy-stop: ## Stop all running services
+	docker compose -f $(DEPLOY_DIR)/docker-compose.prod.yml down 2>/dev/null || true
+	docker compose -f $(DEPLOY_DIR)/docker-compose.dev.yml down 2>/dev/null || true
+
+deploy: ## Deploy all services to production (legacy — use deploy-prod)
 	$(GOBIN)/sda deploy --all
 
 deploy-%: ## Deploy a specific service

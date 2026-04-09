@@ -11,6 +11,12 @@
 *.pem
 deploy/secrets/dynamic/
 config/*.env.*
+deploy/.env
+
+# --- Generated configs (from .tmpl templates via gen-config.sh) ---
+deploy/traefik/traefik.prod.yml
+deploy/traefik/dynamic/prod.yml
+deploy/cloudflare/config.yml
 
 # --- Go ---
 # Binaries

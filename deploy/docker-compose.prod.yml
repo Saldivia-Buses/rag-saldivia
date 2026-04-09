@@ -209,7 +209,7 @@ services:
     environment:
       AUTH_PORT: "8001"
       NATS_URL: nats://auth:${AUTH_NATS_PASS}@nats:4222
-      TENANT_SLUG: dev
+      TENANT_SLUG: ${SDA_TENANT_SLUG:-dev}
     secrets:
       - jwt_private_key
       - jwt_public_key
@@ -243,7 +243,7 @@ services:
     environment:
       WS_PORT: "8002"
       NATS_URL: nats://ws:${WS_NATS_PASS}@nats:4222
-      WS_ALLOWED_ORIGINS: "https://*.sda.app"
+      WS_ALLOWED_ORIGINS: "https://*.${SDA_DOMAIN:-sda.app}"
     secrets:
       - jwt_public_key
     healthcheck:
@@ -274,7 +274,7 @@ services:
     environment:
       CHAT_PORT: "8003"
       NATS_URL: nats://chat:${CHAT_NATS_PASS}@nats:4222
-      TENANT_SLUG: dev
+      TENANT_SLUG: ${SDA_TENANT_SLUG:-dev}
     secrets:
       - jwt_public_key
       - db_tenant_template_url
@@ -416,7 +416,7 @@ services:
       NATS_URL: nats://notification:${NOTIF_NATS_PASS}@nats:4222
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT:-587}
-      SMTP_FROM: ${SMTP_FROM:-noreply@sda.app}
+      SMTP_FROM: ${SMTP_FROM:-noreply@${SDA_DOMAIN:-sda.app}}
     secrets:
       - jwt_public_key
       - db_tenant_template_url
@@ -465,7 +465,7 @@ services:
       - data
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.platform.rule=Host(`platform.sda.app`) && PathPrefix(`/v1/platform`)"
+      - "traefik.http.routers.platform.rule=Host(`platform.${SDA_DOMAIN:-sda.app}`) && PathPrefix(`/v1/platform`)"
       - "traefik.http.routers.platform.entrypoints=websecure"
       - "traefik.http.services.platform.loadbalancer.server.port=8006"
     deploy:
