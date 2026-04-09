@@ -4,35 +4,28 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"net/http"
 	"os"
-	"os/signal"
-	"syscall"
 	"time"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 	"github.com/nats-io/nats.go"
 
-	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	"github.com/Camionerou/rag-saldivia/pkg/config"
-	"github.com/Camionerou/rag-saldivia/pkg/health"
-	"github.com/Camionerou/rag-saldivia/pkg/build"
 	"github.com/Camionerou/rag-saldivia/pkg/database"
+	"github.com/Camionerou/rag-saldivia/pkg/health"
+	sdajwt "github.com/Camionerou/rag-saldivia/pkg/jwt"
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
-	"github.com/Camionerou/rag-saldivia/pkg/security"
 	natspub "github.com/Camionerou/rag-saldivia/pkg/nats"
-	sdaotel "github.com/Camionerou/rag-saldivia/pkg/otel"
+	"github.com/Camionerou/rag-saldivia/pkg/security"
+	"github.com/Camionerou/rag-saldivia/pkg/server"
 	"github.com/Camionerou/rag-saldivia/services/ingest/internal/handler"
 	"github.com/Camionerou/rag-saldivia/services/ingest/internal/service"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 )
 
 func main() {
-	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: slog.LevelInfo}))
-	slog.SetDefault(logger)
+	app := server.New("sda-ingest", server.WithPort("INGEST_PORT", "8007"))
+	ctx := app.Context()
 
-	port := config.Env("INGEST_PORT", "8007")
 	dbURL := config.Env("POSTGRES_TENANT_URL", "")
 	natsURL := config.Env("NATS_URL", nats.DefaultURL)
 	blueprintURL := config.Env("RAG_SERVER_URL", "http://localhost:8081")
@@ -44,22 +37,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
-	defer cancel()
-
-	// Initialize OpenTelemetry
-	otelShutdown, err := sdaotel.Setup(ctx, sdaotel.Config{
-		ServiceName:    "sda-ingest",
-		ServiceVersion: "1.0.0",
-		Endpoint:       config.Env("OTEL_EXPORTER_OTLP_ENDPOINT", "localhost:4317"),
-		Insecure:       true,
-	})
-	if err != nil {
-		slog.Warn("otel init failed, traces disabled", "error", err)
-	} else {
-		defer otelShutdown(context.Background())
-	}
-
 	// Token blacklist (shared Redis)
 	blacklist := security.InitBlacklist(ctx, config.Env("REDIS_URL", "localhost:6379"))
 
@@ -69,7 +46,7 @@ func main() {
 		slog.Error("failed to connect to database", "error", err)
 		os.Exit(1)
 	}
-	defer pool.Close()
+	app.OnShutdown(pool.Close)
 
 	// NATS (required for async pipeline)
 	nc, err := natspub.Connect(natsURL)
@@ -77,7 +54,7 @@ func main() {
 		slog.Error("failed to connect to NATS", "error", err, "url", config.RedactURL(natsURL))
 		os.Exit(1)
 	}
-	defer nc.Drain()
+	app.OnShutdown(func() { nc.Drain() })
 	slog.Info("connected to NATS", "url", config.RedactURL(natsURL))
 
 	publisher := natspub.New(nc)
@@ -96,7 +73,7 @@ func main() {
 		slog.Error("failed to start ingest worker", "error", err)
 		os.Exit(1)
 	}
-	defer worker.Stop()
+	app.OnShutdown(worker.Stop)
 
 	// Health checker
 	hc := health.New("ingest")
@@ -114,16 +91,10 @@ func main() {
 	// HTTP
 	ingestHandler := handler.NewIngest(ingestSvc)
 
-	r := chi.NewRouter()
-	r.Use(middleware.RequestID)
-	r.Use(middleware.RealIP)
-	r.Use(middleware.Recoverer)
-	r.Use(sdamw.SecureHeaders())
-	r.Use(middleware.Timeout(60 * time.Second))
+	r := app.Router()
 
 	// Health check outside auth middleware (monitoring needs unauthenticated access)
 	r.Get("/health", hc.Handler())
-	r.Get("/v1/info", build.Handler("sda-ingest"))
 
 	// Protected routes
 	r.Group(func(r chi.Router) {
@@ -131,33 +102,5 @@ func main() {
 		r.Mount("/v1/ingest", ingestHandler.Routes())
 	})
 
-	srv := &http.Server{
-		Addr:         ":" + port,
-		Handler:      otelhttp.NewHandler(r, "sda-ingest"),
-		ReadTimeout:  120 * time.Second, // large uploads
-		ReadHeaderTimeout: 10 * time.Second,
-		WriteTimeout: 60 * time.Second,
-		IdleTimeout:  60 * time.Second,
-	}
-
-	go func() {
-		slog.Info("ingest service starting", "port", port, "blueprint", blueprintURL)
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			slog.Error("server error", "error", err)
-			os.Exit(1)
-		}
-	}()
-
-	<-ctx.Done()
-	slog.Info("ingest service shutting down")
-
-	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 30*time.Second)
-	defer shutdownCancel()
-	if err := srv.Shutdown(shutdownCtx); err != nil {
-		slog.Error("shutdown error", "error", err)
-	}
-	slog.Info("ingest service stopped")
+	app.Run()
 }
-
-
-
