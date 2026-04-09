@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="cabecera" graba="false">
+	<title>CABECERA GENERACION DE PLAN DE CUENTAS</title>
+	<obs></obs>
+	<form >
+		
+		<table id="CTBCUENT" label="Generacion Plan de Cuentas" graba="false">
+			<field id="siscodnew"  >
+				<label>Nuevo Ejercicio</label>
+				<help>Nuevo Ejercicio a generar</help>
+			</field>			
+		</table>
+	</form>
+</histrix>

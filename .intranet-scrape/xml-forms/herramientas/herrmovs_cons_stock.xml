@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="consulta">
+    <title>Herramientas en Stock</title>
+    <obs></obs>
+    <form>
+        <table id="HERRMOVS" label="MOVIMIENTOS">            
+
+        <field id="id_equipo" tabla="MANT_EQUIPOS">
+            <label>Herramienta</label>
+            <!--<helper type="external" id="MANT_EQUIPOS">
+                <field id="numero_serie" tabla="MANT_EQUIPOS">
+                    <detalle>id_herramienta</detalle>
+                    <condicion operador="!=">0</condicion>
+                </field>
+                <field id="nombre_equipo" tabla="MANT_EQUIPOS">
+                    <detalle>nomherr</detalle>
+                </field>
+                <field id="tipoequipo_id" noshow="true" tabla="MANT_EQUIPOS">
+                    <condicion operador="=">3</condicion>
+                </field>
+            </helper>-->
+        </field>
+
+        <field id="nombre_equipo" tabla="MANT_EQUIPOS">
+            <label>Nombre</label>
+        </field>
+
+        <field id="id_herramienta">
+            <label>Nro Serie</label>
+        </field>
+		
+        <field id="movfec">
+            <label>Fecha Movimiento</label>
+            <tipo>date</tipo>
+	    <condicion operador="!=">'0000-00-00'</condicion>
+        </field>
+
+	<field id="filtro">
+	    <expression><![CDATA[(select HM.movfec from HERRMOVS HM where HM.id_herramienta = HERRMOVS.id_herramienta and HM.movher = '2' order by HM.movfec DESC limit 1)]]></expression>
+	    <condicion operador="!=">'' and filtro = HERRMOVS.movfec</condicion>
+	</field>
+
+        <field id="movher">
+            <label>Codigo Movimiento</label>
+            <tabla_ex id="CONCHERR">
+                <field id="movher"></field>
+                <field id="movnom"></field>
+            </tabla_ex>
+	    <condicion operador="=">2</condicion>
+        </field>
+			
+        <field id="usuario">
+            <label>Usuario</label>
+    	   	<helper type="combo" id="FSMOPERA" xml="HLPpersonal_ope.xml" dir="/help_local">
+    			<field id="opecod">
+    			  <detalle>usuario</detalle>
+    			</field>
+    			<field id="nombres">
+    			    <expression>CONCAT(apellido,', ', Nombre)</expression>
+    			    <detalle>nombre</detalle>
+    			</field>
+    		</helper>        		
+        </field>        
+				
+        <order>
+            <field id="movfec" tipoOrden="DESC" />
+        </order>
+
+        <!--<group>
+            <field id="id_herramienta" />
+        </group>-->
+			
+        </table>
+        
+        <join tipo="left">
+            <table id="MANT_EQUIPOS">
+                <field id="numero_serie">
+                    <condicion operador="=">HERRMOVS.id_herramienta</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="CONCHERR">
+                <field id="movher">
+                    <condicion operador="=">HERRMOVS.movher</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

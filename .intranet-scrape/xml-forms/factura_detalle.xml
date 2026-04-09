@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="consulta">
+	<title>DETALLE</title>
+	<obs></obs>
+	<form >
+		<table id="FACDETAL" label="Detalle">
+
+
+			<field id="artcod" >
+				<label>Art</label>
+				<size>13</size>
+			</field>
+			<field id="artdes" tabla="STKINSUM">
+				<tipo>varchar</tipo>
+				<label>Descripcion</label>
+				<size>70</size>
+			</field>
+			<field id="artcan">
+				<label>Cant.</label>
+				<size>3</size>
+
+			</field>
+
+			<field id="unit" local="true">
+				<label>Unit.</label>
+				<expression>artnet / artcan</expression>
+				<tipo>numeric</tipo>
+			</field>
+			<field id="artnet" suma="true">
+				<label>Importe</label>
+				<size>6</size>
+			</field>
+
+<!-- 			<field id="descuentoUno">
+				<label>Desc</label>
+				<expression>concat('-%',descuentoUno)</expression>
+				<tipo>varchar</tipo>
+
+			</field>
+			<field id="artcom">
+				<label>Importe</label>
+			</field>-->
+			<field id="nrofac" oculto="true">
+				<label>Nro</label>
+			</field>
+			<field id="ctacod" oculto="true">
+				<label>Nro</label>
+			</field>
+			<field id="siscod" oculto="true">
+				<label>siscod</label>
+			</field>
+<!-- 		<field id="movlet" oculto="true">
+				<label>let</label>
+			</field>-->
+
+		</table>
+		<join tipo="left">
+			<table id="STKINSUM">
+				<field id="artcod" oculto="true">
+					<condicion operador="=">FACDETAL.artcod</condicion>
+				</field>
+					<!-- 
+				<field id="siscod" oculto="true">
+					<condicion operador="=">FACDETAL.siscod</condicion>
+				</field>
+				<field id="ctacod" oculto="true">
+					<condicion operador="=">FACDETAL.ctacod</condicion>
+				</field>
+-->
+			</table>
+		</join>
+
+	</form>
+</histrix>

@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" _ancho="40" imprimetanda="true"  pageBreak="false"  PDFsincabecera="true">
+    <title>Cuenta Corriente</title>
+    <obs></obs>
+    <form  detalle="rh_vale.xml">
+        <table id="RH_MOVIMIENTOS" label="Movimientos" _styleTbody="height:500px;" >
+
+            <filters>
+                <field id="legajo">
+                    <label>Cod.</label>
+                    <help>Codigo de Cuenta </help>
+                    <ayuda_ex id="PERSONAL">
+                        <field id="legajo"></field>
+                        <field id="Nombre"></field>
+                        <field id="siscod" oculto="true"></field>
+                        <field id="baja">
+                            <condicion operador="=">0</condicion>
+                        </field>
+
+                        <order>
+                            <field id="Nombre"></field>
+                        </order>
+                                
+                        <filtra>legajo</filtra>
+                    </ayuda_ex>
+                    <detalle>legajo</detalle>
+                    <operador>=</operador>
+                </field>
+                <field id="Nombre" tabla="PERSONAL" local="true" deshabilitado="true" >
+                    <label>Nombre</label>
+                </field>
+                <field id="fecha">
+                    <operador>&gt;=</operador>
+                    <label>Desde Fecha</label>
+                    <valor>today</valor>
+                                
+                </field>
+                <field id="fecha">
+                    <operador>&lt;=</operador>
+                    <label>Hasta Fecha</label>
+                    <valor>today</valor>
+                                
+                </field>
+            </filters>
+						
+            <field id="legajo">
+                <label>Legajo</label>
+                <help>Código de Cuenta </help>
+                <ayuda_ex id="PERSONAL">
+                    <field id="legajo">
+                        <detalle>legajo</detalle>
+                    </field>
+                    <field id="Nombre">
+                        <detalle>Nombre</detalle>
+                    </field>
+                    <order>
+                        <field id="Nombre"></field>
+                    </order>
+								
+                    <filtra>legajo</filtra>
+                </ayuda_ex>
+                <detalle>legajo</detalle>
+            </field>
+            <field id="Apellido" tabla="PERSONAL" deshabilitado="true"  >
+                <expression>PERSONAL.apellido</expression>
+                <label>Apellido</label>
+            </field>
+
+            <field id="Nombre" tabla="PERSONAL" deshabilitado="true"  local="true">
+                <expression>PERSONAL.Nombre</expression>
+                <label>Nombre</label>
+                <size>50</size>
+            </field>
+            <field id="id_movimiento" noshow="true">
+                <detalle>id_movimiento</detalle>
+            </field>
+
+            <field id="concepto_id" noshow="true">
+                <label>concepto_id</label>
+                <detalle>concepto_id</detalle>
+            </field>
+
+						
+            <field id="concepto" >
+                <expression>nombre_concepto</expression>
+                <label>Concepto</label>
+                <tipo>varchar</tipo>
+							
+            </field>
+  
+						
+            <field id="fecha">
+                <label>Fecha </label>
+                <help>
+                </help>
+            </field>
+						
+						<!--          <field id="movvto">
+						<label>Venc. </label>
+						<help> </help>
+						</field>
+						-->
+            <field id="Debe" suma="true">
+                <expression>importe * (case when imputacion = 1 then 1 else 0 end)</expression>
+                <label>Debe</label>
+                <help>
+                </help>
+            </field>
+						
+            <field id="Haber" suma="true" >
+                <expression>importe * (case when imputacion = -1 then 1 else 0 end)</expression>
+                <label>Haber</label>
+                <help>
+                </help>
+	
+            </field>
+            
+            <order>
+                <field id="fecha"></field>
+            </order>
+        </table>
+        <join tipo="left">
+            <table id="PERSONAL">
+                <field id="legajo" >
+                    <condicion operador="=">RH_MOVIMIENTOS.legajo</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="RH_CONCEPTOS">
+                <field id="id_concepto" oculto="true">
+                    <condicion operador="=">RH_MOVIMIENTOS.concepto_id</condicion>
+                </field>
+							
+                <field id="condes" oculto="true">
+                </field>
+							
+            </table>
+        </join>
+    </form>
+</histrix>

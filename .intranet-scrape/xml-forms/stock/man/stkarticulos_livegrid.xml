@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud"   logReference="nombre_articulo" borra="false" paginar="200">
+    <title>Articulos</title>
+    <obs></obs>
+    <form >
+        <table id="STK_ARTICULOS" label="Articulos" >
+
+	        <filters>
+                <field id="id_stkarticulo"   esClave="true"  >
+                    <label>Codigo auto de Articulo</label>
+		            <operador>like</operador>
+                </field>
+                <field id="nombre_articulo">
+                    <label colspan="5">Nombre</label>
+		            <operador>like</operador>
+                </field>
+	        </filters>
+	    
+            <field id="id_stkarticulo"   esClave="true"  >
+        	    <helper xml="fichakardex_qry.xml" dir="/stock/qry" type="link">
+        	        <parameter source="id_articulo" target="stkarticulo_id" />
+        	    </helper>
+                <label>Codigo auto de Articulo</label>
+                <actualiza>
+                    <field id="formula" destino="stkarticulopadre_id" actxml="stkformula_crud.xml"/>
+                </actualiza>
+                <detalle>stkarticulopadre_id</detalle>
+            </field>
+
+            <field id="nombre_articulo">
+                <label colspan="5">Nombre</label>
+            </field>
+
+            <field id="stock_minimo" colstyle="display:none;" >
+                <label>Mínimo</label>
+                <help>Stock Mínimo</help>
+                <tipo>decimal</tipo>
+            </field>
+
+            <field id="stock_reposicion" colstyle="display:none;" >
+                <label modpos="nobr">Reposición</label>
+                <help>Stock de Reposición</help>
+                <tipo>decimal</tipo>
+            </field>
+            <field id="stock_maximo" >
+                <label  modpos="nobr">Máximo</label>
+                <help>Stock Máximo</help>
+                <tipo>decimal</tipo>
+            </field>
+            <field id="produccion_diaria" >
+                <label >Produccion Diaria</label>
+                <help>Producción Diaria</help>
+            </field>
+            <field id="lead_time" >
+                <label >Lead Time</label>
+                <help>Tiempo de Reposición</help>
+            </field>
+            <field id="embalaje" >
+                <label modpos="nobr">Embalaje</label>
+                <help>Embalaje estandar</help>
+            </field>
+
+			<!-- Precios -->
+
+            <field id="precio_costo" colstyle="display:none;" >
+                <label>Precio de Costo</label>
+                <help>Precio de Costo</help>
+                <tipo>decimal</tipo>
+            </field>
+            
+            <field id="precio_costo" colstyle="display:none;" >
+                <label>Costo</label>
+                <help>Precio de Costo</help>
+                <tipo>decimal</tipo>
+            </field>
+
+            <field id="precio_origen" colstyle="display:none;" >
+                <label modpos="nobr">Costo Original</label>
+                <help>Precio de Costo en moneda original</help>
+                <tipo>decimal</tipo>
+            </field>
+
+            <field id="genmoneda_origen_id" colstyle="display:none;" sincelda="true">
+                <label modpos="nobr"> Moneda</label>
+                <helper type="combo" xml="moneda_qry.xml" dir="/ayudas" empty="true" />
+            </field>
+            
+            <field id="precio_promedio" colstyle="display:none;" deshabilitado="true" >
+                <label modpos="nobr">PPP</label>
+                <help>Precio Promedio Ponderado</help>
+                <tipo>decimal</tipo>
+            </field>
+
+        </table>
+    </form>
+</histrix>

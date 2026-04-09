@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  Ayuda
+Tarea: Ayuda para la Tabla de Servicios Tecnicos de alarmas
+Autor: d!ego2k
+Fecha: 27/08/10
+*******************************************************************************
+-->
+<histrix tipo="consulta">
+	<title>Servicios</title>
+	<obs></obs>
+	<form >	    
+
+		<table id="ALA_SERVOPCIONAL" label="Servicios">
+
+			<field id="id_alaseropcional"  esClave="true" >
+				<detalle>alaseropcional_id</detalle>
+			</field>
+
+			<field id="nombre_alaseropcional" />
+		</table>
+	</form>
+	
+</histrix>	

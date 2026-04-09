@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8" ?>
+   <histrix tipo="crud">
+       <title>TABLA DE RETENCIONES</title>
+        <obs></obs>
+               <form>
+                  <table id="RETTABLA" label="Retenciones">
+
+          		  <filters auto="true">
+                  <field id="retcod">
+          		      <label>Categoría</label>
+            			 <operador>=</operador>
+          		    </field>
+          		  </filters>
+
+                  <field id="id_rettabla" autoinc="true" noshow="true">
+                  </field>
+                  <field id="retcod" noshow="true">
+                      <label>Cod.Concepto </label>
+                      <help>Código de Concepto </help>
+                        <tabla_ex id="RETCONCE">
+                          <!-- fields a agregar al contenedor Filtro-->
+                          <field id="retcod"></field>
+                          <field id="retdes"></field>
+                          <filtra>retdes</filtra>
+                        </tabla_ex>
+
+                  </field>
+                  <field id="ctagan">
+                      <label>Categ.Gcias.</label>
+                      <help>Categoría de Ganancias</help>
+            				<tabla_ex id="REG_CATEGORIAS">
+            					<field id="id_regcategoria"></field>
+            					<field id="nombre_categoria"></field>
+            					<field id="tipo_categoria">
+            					    <condicion operador="=">'ganancias'</condicion>
+            					</field>
+            				</tabla_ex>                      
+                  </field>
+
+                  <field id="tabcal">
+                      <label>Cálculo</label>
+                      <help>[P]=Cálculo por Porcentajes / [E]=Cálculo por Escalas </help>
+                			<options>
+             		    	    <option valor="1">Porcentaje</option>
+                			    <option valor="0">Escala</option>
+                			</options>
+                  </field>
+                  <field id="cargoesc">
+                    <helper xml="retescal_crud.xml" type="link">
+                      <parameter target="rettabla_id" source="id_rettabla" />
+                    </helper>
+                    <expression> case when tabcal = 0 then 'Escalones' end</expression>
+
+                  </field>
+
+<!--
+                  <field id="tabmes">
+                      <label>Mes Retencion</label>
+                      <help>Mes de la Retencion. </help>
+                  </field>
+-->
+                  <field id="tabmin">
+                      <label>Monto mínimo</label>
+                      <help>Monto mínimo sujeto a retención</help>
+                  </field>
+                  <field id="tabpor">
+                      <label>Porc.Retención </label>
+                      <help>Porcentaje a aplicar en la retención</help>
+                  </field>
+                  </table>
+               </form>
+        </histrix>

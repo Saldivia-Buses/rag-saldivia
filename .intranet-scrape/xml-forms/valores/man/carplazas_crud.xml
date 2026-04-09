@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="crud" filter="true">
+	<title>Plazas</title>
+	 <obs></obs>
+		<consulta>
+		    <table id="CAR_PLAZAS" label="Plazas">
+				<field id="id_carplaza" style="text-align:center;">
+					<label>Codigo</label>
+					<help>Codigo de la plaza</help>
+				</field>
+				<field id="nombre_plaza" >
+					<label>Nombre</label>
+					<help>Nombre de la plaza</help>
+				</field>
+		    </table>
+		</consulta>
+    </histrix>	

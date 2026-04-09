@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud" >
+  <title>Conceptos de Producción</title>
+  <obs />
+  <form >
+    <table id="MRP_CONCEPTOS" label="Conceptos de Producción">
+
+		<field id="id_mrpconcepto" noshow="true" autoinc="true">
+		</field>
+
+		<field id="nombre_mrpconcepto">
+			<label>Concepto</label>
+			<tipo>varchar</tipo>
+			<size>30</size>
+		</field>
+		<order>
+			<field id="nombre_mrpconcepto" />
+		</order>
+    </table>
+  </form>
+</histrix>

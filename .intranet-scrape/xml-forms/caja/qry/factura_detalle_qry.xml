@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" >
+    <title>Detalle de Comprobante</title>
+    <obs></obs>
+    <form>
+	<table id="REG_DETALLES" >
+
+		<field id="regmovim_id" noshow="true">
+              <condicion operador="=">-1</condicion>
+        </field>
+
+		<field id="id_regdetalle" oculto="true" />
+		
+        <fieldGroup>
+		  <field id="cantidad_detalle">
+			<label>Cantidad</label>
+			<tipo>numeric</tipo>
+		  </field>
+		  <field id="descripcion_detalle">
+			<label>Descripcion</label>
+		  </field>
+		  <field id="precio_venta">
+			<label>P.Unitario</label>
+			<tipo>numeric</tipo>
+		  </field>
+		</fieldGroup>
+		
+		<fieldGroup>
+		  <if>return (strpos($_SESSION['properties']['modulos'],'iva') == true);</if>
+		  
+		  <field id="neto_detalle" suma="true">
+			<label>Neto</label>
+			<tipo>numeric</tipo>
+		  </field>
+
+
+		  <field id="alicuota_iva">
+		        <tipo>numeric</tipo>
+		        <label>Alicuota</label>
+		  </field>
+
+		  <field id="iva_detalle" suma="true">
+		        <tipo>numeric</tipo>
+		        <label>Iva</label>
+		  </field>
+
+        </fieldGroup>
+        
+        <fieldGroup>
+		  <field id="total_detalle" suma="true">
+			<label>Importe Total</label>
+			<tipo>numeric</tipo>
+		  </field>
+        </fieldGroup>
+        
+       </table>
+    </form>
+</histrix>

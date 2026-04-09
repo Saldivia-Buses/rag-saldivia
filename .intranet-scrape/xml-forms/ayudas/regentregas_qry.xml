@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+  <title>Contacto</title>
+  <obs></obs>
+	<consulta>
+		<table id="REG_VS_ENTREGAS" label="Tipo Contacto">
+			<field id="direccionent1" >
+				<expresion>direccionent</expresion>
+				<label>lugar</label>
+			</field>
+			<field id="direccionent" >
+				<label>Direccion</label>
+			</field>
+			<field id="clientetransporte" noshow="true"> <!-- Codigo de los clientes asignado al transporte -->
+				<label>Cliente que tiene asignado a un transporte</label>
+			</field>
+			<field id="cod_regcuenta" noshow="true">
+			</field>		
+			<field id="tipo" noshow="true">
+				<label>Tipo</label> <!--  T Direccion de Transporte   C Direccion de Cliente Contacto  D Direccion de Cliente-->
+				<condicion operador="!=">1 and 	('[__regcuenta_id_dom__]' != '' and  cod_regcuenta = '[__regcuenta_id_dom__]'  ) or
+								('[__regcuenta_id_dom__]' = '' and  tipo = 'T'  ) </condicion>
+
+			</field>		
+			<field id="regcuenta_id_dom" noshow="true" local="true">
+			    <condicion operador="=">-1</condicion>			
+			</field>
+		</table>
+	</consulta>
+</histrix>  

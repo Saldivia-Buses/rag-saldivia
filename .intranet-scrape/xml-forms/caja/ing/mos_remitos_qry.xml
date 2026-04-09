@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="ing" subtipo="vertical" inserta="false" borra="false" modifica="false" imprime="false" _exportasuma="true" deleteRow="false" llenoreferente="true" tooltip="false" confirma="CONFIRMAR" preloadData="false" preFetch="false">
+	<title>Sucursal</title>
+	 <obs></obs>
+	 <form >
+	 	<table id="PAC_CUENTAS" idCampoCond="imputar">
+		<filters>
+			<field id="rhobrasocial_id"  noshow="true" />			
+		</filters>
+
+
+			<field id="codigo_detalle" esClave="true" _noshow="true">
+				<expresion>id_paciente</expresion>
+				<detalle>codigo_detalle</detalle>
+			</field>
+
+			<field id="descripcion_detalle" noshow="true">
+				<expresion><![CDATA[
+				CONCAT(        
+				CASE when (PAC_CUENTAS.rhobrasocial_id = '402006') THEN 'PRESTADOR 41550<br>' ELSE '' END, 
+				'POR ATENCION EN <b>', ifnull(PAC_PRESTACIONES.descripcion_prest, 'CENTRO DE DIA '), '</b>',
+				' ---  <b>', ifnull(PAC_JORNADAS.nombre_jornada,'___________'), '</b>','CATEGORIA <b>', ifnull(PAC_SUCURSALES.categoria, 'A'), '</b>',
+				CASE WHEN (PAC_CUENTAS.dependencia = 1) THEN ' CON DEPENDENCIA' ELSE '' END, '<br>',
+				'AFILIADO <b>',nombre_paciente,',',apellido_paciente, '</b> --- ' , 
+				case when not isnull(nro_certif) then concat(' --- CERT. DE DISCAP. Nro ', nro_certif ) else  ''  end , 
+				' Nº DNI: <b>',nro_documento, '</b>','Nº AFILIADO: <b>',nro_obrasocial, '</b><br>',
+				'ARANCELES SEGUN LEY Nº 24901, DECRETO Nº 1193', ' --- ',
+				'RESOLUCION MINISTERIAL Nº 1534/2011')
+				]]></expresion>
+				<detalle>descripcion_detalle</detalle>
+			</field>				
+			<field id="cantidad_detalle" noshow="true">
+				<expresion>1</expresion>
+				<tipo>numeric</tipo>
+				<detalle>cantidad_detalle</detalle>
+			</field>
+			<field id="importe_detalle" noshow="true">
+				<expresion>
+				(CASE WHEN ifnull(PAC_SUCURSALES.categoria,'A') = 'A' THEN 
+				    CASE when (PAC_CUENTAS.rhobrasocial_id != '402006') THEN
+					4920.42
+				    ELSE
+					4132.58
+				    END
+				ELSE 
+				    4132.58
+				END) 
+				*
+				(CASE WHEN (PAC_CUENTAS.dependencia = 2 or PAC_CUENTAS.dependencia = 4 ) THEN
+				    1.35
+				ELSE
+				    1
+				END)
+				</expresion>
+				<detalle>neto_detalle</detalle>
+				<tipo>numeric</tipo>
+			</field>
+			
+			<field id="nombre_apellido">
+				<expresion>CONCAT(apellido_paciente,',',nombre_paciente)</expresion>
+			</field>
+			
+			<field id="fecha_egreso" noshow="true">
+				<condicion operador="=">'0000-00-00'</condicion>
+			</field>
+
+			<field id="imputar" local="true" refresh="true">
+				<label>Imputar</label>
+				<tipo>check</tipo>
+			</field>
+			<field id="fecha_movimiento" local="true" noshow="true" />			
+
+			<field id="rhobrasocial_id"  noshow="true"  >			
+				<helper type="combo" dir="/ayudas/" xml="rhosocialpac_qry.xml" vacio="true" empty="true" >
+				</helper>
+				<valor>-1</valor>
+			</field>
+
+		<order>
+		    <field id="nombre_apellido"/>
+		</order>
+      
+         </table>
+         
+         <join tipo="left">
+		     <table id="PAC_PRESTACIONES">
+		     	<field id="id_pacprest">
+			     	<condicion operador="=">pacprest_id</condicion>
+				</field>
+		     </table>
+         </join>
+         <join tipo="left">
+		     <table id="PAC_SUCURSALES">
+		     	<field id="id_pacsucursal">
+		     		<condicion operador="=">pacsucursal_id</condicion>
+			     </field>
+		     </table>        
+         </join>
+         <join tipo="left">
+		     <table id="PAC_JORNADAS">
+		     	<field id="id_pacjornada">
+		     		<condicion operador="=">pacjornada_id</condicion>
+			     </field>
+		     </table>        
+         </join>
+	 <join tipo="left" > 
+ 		<table id="PAC_CERTIFDIS">
+			 <field id="paciente_id">  
+		     		<condicion operador="=">PAC_CUENTAS.id_paciente  
+ and PAC_CERTIFDIS.fecha_emision &lt;= '[__fecha_movimiento__]'  and PAC_CERTIFDIS.fecha_vencimiento &gt; '[__fecha_movimiento__]'
+ </condicion>
+
+			 </field>
+
+		</table>
+	 </join>
+         
+	 </form>
+    </histrix>	

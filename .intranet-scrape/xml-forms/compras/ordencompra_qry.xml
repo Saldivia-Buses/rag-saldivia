@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" PDForientacion="L" preloadData="true" path="fotos/articulos">
+	<title>ORDENES DE COMPRA</title>
+	<obs></obs>
+	<form>
+		<table id="CPSENCAB" label="ORDENES DE COMPRA">
+			<field id="color" local="true" clasefila="true" noshow="true">
+			    <expression><![CDATA[(CASE WHEN ROUND(pencps, 2)> 0  THEN  'resaltado'  ELSE '0' END)]]></expression>
+			  </field>
+			<field id="siscod" oculto="true">
+				<label>Codigo Sistema</label>
+				<help></help>
+				<detalle>siscod</detalle>
+			</field>
+			<field id="ocpnro2" tipoOrden="DESC" noshow="true">
+				<expression>CPSENCAB.ocpnro</expression>
+			</field>
+			
+			<field id="ocpnro" esClave="true">
+				<label>Nº</label>
+				<help>Número de Orden de Compra</help>
+				<detalle>ocpnro</detalle>
+			</field>
+			<field id="nrocha" tabla="CPSMOVIM" esClave="true" noshow="true">
+				<label>Nro</label>
+				<tipo>integer</tipo>
+			</field>
+			
+			<field id="ocpfec">
+				<label _modpos="nobr">Emisión</label>
+				<help>Fecha de Emisión</help>
+			</field>
+			
+			
+			
+			<field id="ctacod" noshow="true">
+				<label>ctacod</label>
+				<help>Codigo de Cuenta PROVEEDOR. </help>
+				<!--<tabla_ex id="CCTCUENT">
+					<field id="ctacod" clave="true" muestra="false"></field>
+					  <field id="ctafan">
+						<expression>LEFT(ctafan, 17)</expression>
+					    </field>
+					<field id="siscod" oculto="true">
+						<condicion operador="=">'01'</condicion>
+					</field>
+					<field id="baja">
+						<condicion operador="!=">1</condicion>
+					</field>
+					<order>
+						<field id="ctafan"></field>
+					</order>
+					
+				</tabla_ex>-->
+				</field>
+			                <field id="ctafan" tabla="CCTCUENT">
+						<label>Proveedor</label>
+						<expression>LEFT(CCTCUENT.ctafan, 17)</expression>
+					    </field>
+			<field id="ocpest" noshow="true">
+		
+				<label _modpos="nobr">Estado</label>
+				<help>Estado Actual</help>
+                <options>
+                    <option valor="0">No Autorizada</option>
+                    <option valor="1">Pendiente</option>
+		    <option valor="2">Cumplida</option>
+                    <option valor="3">Parcial</option>
+                    <option valor="4">Anulada</option>
+                </options>
+			</field> 
+
+			
+			<field id="artcod" deshabilitado="true" tabla="CPSMOVIM">
+				<label>Art.</label>
+				<help>Coódigo de Artículo</help>
+				<tipo>varchar</tipo>
+			</field>
+			
+			<field id="detalle" deshabilitado="true" tabla="CPSMOVIM">
+				<label>Detalle</label>
+				<help>Detalle de línea de la Orden de Compra para Art S.C. </help>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="observaciones" tabla="CPSMOVIM">
+				<label modpos="nobr">Observaciones</label>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="obser" obj="remitos_x_oc.xml" local="true" showObjTabla="true">
+				<paring destino="ctacod" operador="=">ctacod</paring>
+				<paring destino="ocpnro" operador="=">ocpnro</paring>
+				<paring destino="artcod" operador="=">artcod</paring>
+				<label modpos="nobr">Recepción</label>
+				<tipo>varchar</tipo>
+			</field>			
+			<field id="fecreq" tabla="CPSMOVIM" >
+				<label _modpos="nobr">Requerido</label>
+				<tipo>date</tipo>
+			</field>			
+			<field id="movcps" deshabilitado="true" tabla="CPSMOVIM">
+				<label>Pedido</label>
+				<help>Pedido (expresado en la unidad de compra)</help>
+				
+			</field>
+			
+			<field id="movcps" deshabilitado="true" tabla="CPSMOVIM">
+				<expression>round(movcps, 2)</expression>
+				<label>Ped.cps</label>
+				<help>Pedido (expresado en la unidad de compra)</help>
+				<tipo>decimal</tipo>
+				
+
+			</field>
+			<field id="mov_pen2" deshabilitado="true" >
+				<expression>round(movcps - pencps ,  2)</expression>
+				<label>Rec</label>
+				<help>Recibido (expresado en la unidad de compra)</help>
+				<tipo>decimal</tipo>
+			</field>
+			<field id="pencps" tabla="CPSMOVIM">
+				<label>Pend.cps</label>
+				<help>Pendiente (expresado en la unidad de compra)</help>
+				<expression>ROUND(pencps, 2)</expression>
+				<!--<condicion operador=">=">0</condicion> -->
+				<tipo>decimal</tipo>
+				
+			</field>
+			<field id="artuni_exp3" deshabilitado="true">
+				<expression>STKINSUM.unicps</expression>
+				<label>U.Cps</label>
+				<help>Unidad de Compra</help>
+				<tabla_ex id="FSMUNIDS">
+
+					<field id="unicod" clave="true"></field>
+					<field id="uniabv"></field>
+				</tabla_ex>
+				<tipo>varchar</tipo>
+			</field>			
+			
+            <field id="fotopath" local="true" noshow="true">
+                <if exp="true">
+                    <true>'artcod/'</true>
+                    <false>''</false>
+                </if>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="foto" path="fotopath" download="true">
+          		<expression>select ARTICULO_FOTO.foto from ARTICULO_FOTO where ARTICULO_FOTO.idArticulo = STKINSUM.artcod and ARTICULO_FOTO.foto != '' order by revision desc limit 1</expression> 
+                <label>Imagen</label>
+                <tipo >file</tipo>
+                <size>40</size>
+            </field>
+
+			<order>
+			   <field id="ctafan" tabla="CCTCUENT"/>
+			</order>
+							
+		</table>
+		<join tipo="left">
+			<table id="CPSMOVIM">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">CPSENCAB.siscod</condicion>
+				</field>
+				<field id="ocpnro" oculto="true">
+					<condicion operador="=">CPSENCAB.ocpnro</condicion>
+				</field>
+<!--				<field id="pencps" oculto="true">
+					<condicion operador="!=">0</condicion>
+				</field> -->
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="CCTCUENT">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">'01'</condicion>
+				</field>
+				<field id="ctacod" oculto="true">
+					<condicion operador="=">CPSENCAB.ctacod</condicion>
+				</field>
+				<field id="baja">
+						<condicion operador="!=">1</condicion>
+				</field>
+				
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="STKINSUM">
+				<field id="siscod" oculto="true">
+					<label>STKINSUM.siscod</label>
+					<condicion operador="=">'01'</condicion>
+				</field>
+				<field id="artcod" oculto="true">
+					<condicion operador="=">CPSMOVIM.artcod</condicion>
+				</field>
+				<field id="artuni" oculto="true">
+				</field>
+				<field id="unicps" oculto="true">
+				</field>
+			</table>
+		</join>
+	</form>
+</histrix>

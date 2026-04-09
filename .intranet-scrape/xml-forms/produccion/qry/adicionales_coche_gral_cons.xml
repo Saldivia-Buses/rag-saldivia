@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+	<title>Autorización Adicionales por choche</title>
+	<obs/>
+	<form >
+         <table id="ADICIONAL_COCHE" label="Autorizar Adicionales " >		
+			 <field id="id" >
+				 <label>Nro</label>
+				
+			 </field>
+			 <field id="nrofab" >
+				 <label>NroFab</label>
+				 <condicion operador="=">0</condicion>
+	 
+			 </field>
+			 <field id="idAdicional" >
+				 <label>Cod.</label>
+				 <help>Código de Adicionales</help>
+			 </field>
+			 <field id="descripcion">
+				 <label>Descripción</label>
+				 <help>Descripción del Adicional</help>
+				 <size>80</size>
+			 </field>
+			 <field id="alta" deshabilitado="true">
+				 <label>Alta</label>
+				 <valor>today</valor>
+				 <help>fecha de Alta</help>
+			 </field> 
+
+			 
+			 <field id="aut2" conLabel="true">
+				 <label>Ing.</label>
+				 <tipo>integer</tipo>
+				 <options>
+					 <option valor="0">Pend</option>
+					 <option valor="1">SI</option>
+					 <option valor="2">NO</option>
+				 </options>
+
+			 </field>		
+			 <field id="fechaval2" deshabilitado="true">
+				 <label>Fecha.</label>
+									 
+			 </field> 
+			 <field id="aut1" conLabel="true">
+				 <label>Ventas</label>
+				 <tipo>integer</tipo>
+				 <options>
+					 <option valor="0">Pend</option>
+					 <option valor="1">SI</option>
+					 <option valor="2">NO</option>
+				 </options>
+			 </field>		 
+			 <field id="sino">
+				 <label>Aut. </label>
+				 <expression>case when aut1 =1 and aut2 = 1 then 'SI' when aut1 = 0 and aut2=0 then 'Pend' else 'NO' end</expression>
+				 <tipo>varchar</tipo>
+			 </field>
+<!--			 <field id="fechaval1">
+				 <label>Fecha</label>
+			 </field>			 
+			 -->
+				<field id="idMomento">
+				 <label>Sección</label>
+				 <tabla_ex id="MOMENTO">
+					 <field id="idMomento">
+					 </field>
+					 <field id="descripcion">
+					 </field>
+					 
+				 </tabla_ex>
+			 </field>
+			 <!--
+			 <field id="observaciones">
+				 <label>Observaciones</label>
+				 
+			 </field> -->
+		<!--	 <field id="tachado"   clasefila="true">
+				 <expression>case when aut1 = 2 or aut2 = 2 then 'tachado' end</expression>
+				 <tipo>varchar</tipo>
+			 </field> -->
+
+	      </table>
+	</form>
+</histrix>

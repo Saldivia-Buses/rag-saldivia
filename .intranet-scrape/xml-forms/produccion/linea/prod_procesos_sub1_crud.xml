@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="liveGrid" insert="false" >
+	<title>Procesos de Produccion</title>
+	<obs/>
+	<form detalle="hijo" inline="true">
+		<table id="PROD_PROCESOS">
+			<title>Condiciones</title>
+		        <field id="homologacion_id"  _noshow="true" valauto="true" >
+		            <label>Modelo</label>
+		            <detalle>homologacion_id</detalle>
+			</field>
+                        <field id="hijo" local="true" noshow="true">
+                        ..  <expresion>ifnull((select 'pro_procesos_sub1_crud.xml' from PROD_PROCESOS where procesopadre_id = id_proceso limit 1), 'materiales_proceso_crud.xml')</expresion>
+<!--                    	    <expresion>ifnull((select 'materiales_proceso_crud.xml' from STK_ARTICULO_PROCESO where proceso_id = id_proceso limit 1),'prod_procesos_sub1_crud.xml')</expresion> -->
+                        </field>
+			<field id="id_proceso" esclave="true" autoinc="true" noshow="true" >
+				<label>Codigo</label>
+				<detalle>proceso_id</detalle> 
+				<detalle>procesopadre_id</detalle>
+
+			</field>
+			<field id="procesopadre_id"  noshow="true">
+				<label>Codigo padre</label>       
+			</field>
+			
+			<field id="nombre_proceso" editable="true">
+				<label>Proceso</label>
+				<help>nombre del proceso</help>
+				<size>20</size>
+			</field>
+			<field id="descripcion_proceso" editable="true">
+				<label>descripcion</label>
+				<help>Descripción del proceso</help>
+				<size>20</size>
+
+			</field>
+			<!--
+            <field id="stkdeposito_id">
+                <label >Deposito </label>
+                <helper type="combo"  xml="deposito.xml" dir="/compras">
+                </helper>
+            </field>
+
+-->
+		</table>
+	</form>
+</histrix>

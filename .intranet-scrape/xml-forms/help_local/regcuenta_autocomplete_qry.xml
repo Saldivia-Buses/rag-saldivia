@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="ayuda">
+	<title>CUENTAS</title>
+	<obs></obs>
+	<form >
+		<table id="CCTCUENT" label="Ayuda de Cuenta">
+
+			<field id="ctacod" _noshow="true">
+				<label>Cuenta</label>
+				<help>Codigo de Cuenta </help>
+				<detalle>regcuenta_id</detalle>
+			</field>
+			
+			<field id="ctanom" _noshow="true">
+				<label>Nombre</label>
+				<detalle>ctanom</detalle>
+				<help>Nombre de Cuenta </help>
+			</field>
+
+			<field id="ctafan" _noshow="true">
+				<label>Nombre 2</label>
+				<help>Nombre de fantasía</help>
+			</field>
+
+			<field id="ctanomfan" noshow="true">
+				<expression>(case when ctafan != '' then ctafan else CCTCUENT.ctanom end)</expression>
+			</field>
+			<field id="baja" noshow="true">
+					<label>baja</label>						
+					<condicion operador="!=">1</condicion>
+			</field>				
+			<field id="siscod" tipoOrden="DESC" >
+				<label>Codigo Sistema</label>
+				<detalle>subsistema_id</detalle>
+		
+			
+			</field>	<!--		
+			<field id="ctacod2" noshow="true">
+			    <expression>ctacod</expression>
+				<detalle>regcuenta_id</detalle>
+
+			</field>-->
+			
+			<field id="sisnom" >
+			    <expression>identificacion</expression>
+			</field>			
+
+			<order>
+				<field id="CCTCUENT.ctanom" ></field>
+			</order>			
+
+			<order>
+				<field id="CCTCUENT.ctanom" ></field>
+				<field id="siscod" ></field>
+			</order>			
+		</table>
+		<join tipo="left">
+		    <table id="GEN_SUBSISTEMAS">
+			<field id="id_subsistema">
+			    <condicion operador="=">CCTCUENT.siscod</condicion>
+			</field>
+		    </table>
+		</join>
+	</form>
+</histrix>

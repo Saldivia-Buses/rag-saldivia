@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="crud">
+       <title>TABLA DE RETENCIONES</title>
+        <obs></obs>
+               <form>
+                  <table id="RET_TABLA_RETENCIONES" label="Retenciones">
+
+          		  <filters auto="true">
+                  <field id="retconcepto_id">
+          		      <label>Categoria</label>
+            			 <operador>=</operador>
+          		    </field>
+          		  </filters>
+
+                  <field id="id_rettabla" autoinc="true" noshow="true">
+                  </field>
+                  <field id="retconcepto_id" noshow="true">
+                      <label>Cod.Concepto </label>
+                      <help>Codigo de Concepto </help>
+                        <tabla_ex id="RET_CONCEPTOS">
+                          <!-- fields a agregar al contenedor Filtro-->
+                          <field id="id_retconcepto"></field>
+                          <field id="nombre_retconcepto"></field>
+                        </tabla_ex>
+
+                  </field>
+                  <field id="regcategoria_id">
+                      <label>Categ.Gcias.</label>
+                      <help>Categoria de Ganancias</help>
+            				<tabla_ex id="REG_CATEGORIAS">
+            					<field id="id_regcategoria"></field>
+            					<field id="nombre_categoria"></field>
+            					<field id="tipo_categoria">
+            					    <condicion operador="=">'ganancias'</condicion>
+            					</field>
+            				</tabla_ex>                      
+                  </field>
+
+                  <field id="tipo_calculo">
+                      <label>Calculo</label>
+    			<options>
+ 		    	    <option valor="1">Porcentaje</option>
+    			    <option valor="0">Escala</option>
+    			</options>
+                  </field>
+                  <field id="cargoesc">
+                    <helper xml="retescal_crud.xml" type="link">
+                      <parameter target="rettabla_id" source="id_rettabla" />
+                    </helper>
+                    <expression> case when tipo_calculo = 0 then 'Escalones' end</expression>
+
+                  </field>
+
+<!--
+                  <field id="tabmes">
+                      <label>Mes Retencion</label>
+                      <help>Mes de la Retencion. </help>
+                  </field>
+-->
+                  <field id="minimo_retencion">
+                      <label>Monto minimo</label>
+                      <help>Monto minimo sujeto a retencion. </help>
+                  </field>
+                  <field id="porcentaje_retencion">
+                      <label>Porc.Retencion </label>
+                      <help>Porcentaje a aplicar en la retencion. </help>
+                  </field>
+                  </table>
+               </form>
+        </histrix>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="insert" log="false">
+	<title>Ingreso Movimiento</title>
+	 <obs></obs>
+		<form>
+		    <table id="STK_MOVIMIENTOS" idCampoCond="grabar">
+
+			<field id="stkconcepto_id" 	   id_temp="concepNuevo"/>
+			<field id="stkarticulo_id"         id_temp="id_stkarticulo"/>
+			<field id="cantidad" 	           id_temp="absNueva"/>
+			
+			<field id="regcuenta_id"           id_temp="regcuenta_id"/>
+			<field id="stkdeposito_id"         id_temp="stkdeposito_id" />
+			<field id="stksector_id" 	   id_temp="stksector_id"/>
+			<field id="stkfamilia_id" 	   id_temp="stkfamilia_id"/>
+			<field id="stkrubro_id" 	   id_temp="stkrubro_id"/>
+
+			<field id="fecha_movimiento" 	   id_temp="fecha_movimiento"/>
+			<field id="alta_movimiento" 	   id_temp="alta_movimiento"/>
+			<field id="puesto_movimiento" 	   id_temp="puesto_movimiento"/>
+			<field id="numero_movimiento" 	   id_temp="numero_movimiento"/>
+			<field id="orden_movimiento" 	   id_temp="_ORDEN"/>
+			<field id="unidad_id" 	           id_temp="unidad_id"/>
+
+			<field id="precio_costo" 	   id_temp="precio_costo"/>
+			<field id="precio_venta" 	   id_temp="precio_venta"/>
+			<field id="precio_promedio"        id_temp="precio_promedio"/>
+			<field id="precio_total" 	   id_temp="precio_total"/>
+			<field id="referencia" 	           id_temp="referencia"/>
+
+			<field id="cantidad" 	           id_temp="absNueva">
+			  <tipo>varchar</tipo>
+			</field>
+			
+		    </table>
+		</form>
+    </histrix>	
+
+

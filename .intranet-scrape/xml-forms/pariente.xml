@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm">
+	<title>PARENTESCOS</title>
+	<obs></obs>
+	<form >
+		<table id="PARIENTE" >
+		    <title>Parentescos</title>
+			<field id="pariente">
+				<label>Cod.</label>
+				<help>Codigo de Parentesco</help>
+			</field>
+			<field id="descripcion">
+				<label>Descripcion</label>
+				<help>Descripcion del Parentesco</help>
+			</field>
+			<order>
+				<field id="pariente"></field>
+			</order>
+		</table>
+	</form>	   
+</histrix> 

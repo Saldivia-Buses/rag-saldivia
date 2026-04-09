@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="consulta">
+    <title>CONSULTA DE INVENTARIO</title>
+        <obs></obs>
+        <form >
+          <table id="INVENTARIO" label="INVENTARIO">
+      <filters>
+      <field id="lugarInventario">
+        <tabla_ex id="LUGARESINV">
+          <field id="nroLugar"></field>
+          <field id="nombreLugar"></field>
+          <order>
+            <field id="nombreLugar"></field>
+          </order>
+        </tabla_ex>
+        <label>Lugar</label>
+        <help>Lugar</help>
+        <operador>=</operador>
+
+      </field>
+      <field id="nroInventario">
+        <tabla_ex id="INVTABLA">
+          <field id="nroInventario"></field>
+          <field id="nombre"></field>
+          <field id="fecha"></field>
+          <order>
+            <field id="fecha"></field>
+          </order>
+        </tabla_ex>
+        <label modpos="nobr">Inventario</label>
+        <help>Inventario</help>
+        <operador>=</operador>
+        
+      </field>
+            <field id="artcod" esClave="true">
+              <label>Cod.</label>
+            </field>
+      
+      
+      </filters>
+      <field id="nroInventario">
+        <tabla_ex id="INVTABLA">
+          <field id="nroInventario"></field>
+          <field id="nombre"></field>
+          <field id="fecha"></field>
+          <order>
+            <field id="fecha"></field>
+          </order>
+        </tabla_ex>
+        <label >Inventario</label>
+        <help>Inventario</help>
+        <operador>=</operador>
+        
+      </field>
+
+      <field id="lugarInventario">
+        <tabla_ex id="LUGARESINV">
+          <field id="nroLugar"></field>
+          <field id="nombreLugar"></field>
+          <order>
+            <field id="nombreLugar"></field>
+          </order>
+        </tabla_ex>
+        <label>Lugar</label>
+        <help>Lugar</help>
+        <operador>=</operador>
+
+      </field>
+          
+            <field id="fecha2" >
+              <expression>INVTABLA.fecha</expression>
+              <label>Fecha</label>
+              <tipo>date</tipo>
+            </field>
+            <field id="fecha" >
+              <label>Carga</label>
+              <tipo>date</tipo>
+            </field>
+            
+            
+            <field id="artcod" esClave="true" PDFbold="true">
+              <label>Cod.</label>
+            </field>
+            <field id="artdes" tabla="STKINSUM">
+              <label>descripcion</label>
+              <tipo>varchar</tipo>
+            </field>
+            <field id="cantidad" esClave="true" PDFbold="true">
+              <label>Cantidad</label>
+              <expression>sum(cantidad)</expression>
+            </field>
+            <field id="unidad">
+              <label modpos="nobr">Unidad </label>
+              <help>Unidad de uso</help>
+              <tabla_ex id="FSMUNIDS">
+                <field id="unicod" clave="true"></field>
+                <field id="uninom"></field>
+              </tabla_ex>
+              
+            </field>
+            <field id="costo">
+              <label>Costo</label>
+              <expression>case when ((select STKINSPR.artcos from
+                STKINSPR where STKINSPR.artcod = INVENTARIO.artcod
+                and STKINSPR.siscod='01' order by fecult DESC limit 1) *
+                STKINSUM.valcps / STKINSUM.valuso) > 0 then ((select
+                STKINSPR.artcos from STKINSPR where STKINSPR.artcod =
+                INVENTARIO.artcod and STKINSPR.siscod='01' order by
+                fecult DESC limit 1) * STKINSUM.valcps /
+                STKINSUM.valuso) else STKINSUM.artcos
+                end</expression>
+            </field>
+            <field id="total" suma="true">
+              <label>Total</label>
+              <expression>(case when ((select STKINSPR.artcos from
+                STKINSPR where STKINSPR.artcod = INVENTARIO.artcod
+                and STKINSPR.siscod='01' order by fecult DESC limit 1) *
+                STKINSUM.valcps / STKINSUM.valuso) > 0 then ((select
+                STKINSPR.artcos from STKINSPR where STKINSPR.artcod =
+                INVENTARIO.artcod and STKINSPR.siscod='01' order by
+                fecult DESC limit 1) * STKINSUM.valcps /
+                STKINSUM.valuso) else STKINSUM.artcos end) * cantidad
+                </expression>
+            </field>
+            
+            <group>
+              <field id="nroInventario" tabla="INVENTARIO"></field>
+              <field id="artcod" tabla="INVENTARIO"></field>
+            </group>
+            
+          </table>
+          <join tipo="left">
+            <table id="STKINSUM">
+              <field id="siscod" oculto="true">
+                <condicion operador="=">'01'</condicion>
+              </field>
+              
+              <field id="artcod">
+                <condicion operador="=">
+                  INVENTARIO.artcod</condicion>
+              </field>
+            </table>
+          </join>
+          <join tipo="left">
+            <table id="INVTABLA">
+              <field id="nroInventario">
+                <condicion operador="=">
+                  INVENTARIO.nroInventario</condicion>
+              </field>
+            </table>
+          </join>
+        </form>
+        </histrix>

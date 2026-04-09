@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud"  path="Manual de Usuario" >
+  <title>MANUAL DE USUARIO</title>
+  <obs></obs>
+  <form >
+    <table id="CARROCERIA_DOCUMENTOS" label="Manual de Usuario">
+      <filters _auto="true">
+      <field id="nrocar">
+        <label>Carrocería</label>
+        <help>Tipoo de carrocería</help>
+        <operador>=</operador>
+        <valor>0</valor>
+      </field>
+
+      <field id="nombre_documento">
+        <label>Nombre</label>
+        <operador>like</operador>
+      </field>
+    </filters>
+    <field id="id_cardocumento" noshow="true" autoinc="true" />
+    <field id="nrocar">
+      <helper type="combo" id="CARROCERIA">
+        <field id="nrocar" />
+
+        <field id="desc">
+          <expression>CONCAT(modcar, ' - ', descar)</expression>
+        </field>
+        <field id="siscod">
+          <detalle>siscod</detalle>
+        </field>
+        <field id="vigente" noshow="true">
+          <condicion operador="=">1</condicion>
+        </field>
+        <order>
+          <field id="desc" />
+        </order>
+      </helper>
+      <label>Carrocería</label>
+      <help>Tipo de carrocería</help>
+    </field>
+    <field id="siscod" noshow="true"/>
+    <field id="codigo_documento">
+      <label>Código</label>
+      <help>Código de Documento</help>
+    </field>
+    <field id="nombre_documento">
+      <label>Nombre</label>
+      <help>Nombre de Documento</help>
+      <size>50</size>
+    </field>
+    <field id="vigencia_documento">
+      <label>Vigencia</label>
+      <help>Vigencia de Documento</help>
+    </field>
+    <field id="emisor_documento" noshow="true">
+      <label>Emisor</label>
+      <help>Emisor de Documento</help>
+      <size>60</size>
+    </field>
+    <field id="distribuidor_documento" noshow="true">
+      <label>Distribucion</label>
+      <help>Distribuidor del Documento</help>
+      <size>60</size>
+    </field>
+    <field id="conservacion_documento">
+      <label>Conservación</label>
+      <help>Conservación de Documento</help>
+      <size>60</size>
+    </field>
+    <field id="guarda_documento">
+      <label>Guarda</label>
+      <help>Guarda de Documento</help>
+    </field>
+    <field id="revision_documento">
+      <label>Revisión</label>
+      <help>Revisión de Documento</help>
+    </field>
+    <field id="orden_documento">
+      <label>Orden</label>
+      <help>Orden de Documento</help>
+    </field>
+    <field id="archivo_documento" _path="codigo_documento" open="true" print="false">
+      <label>Archivo</label>
+      <help>Archivo del Documento</help>
+      <tipo>file</tipo>
+      <size>20</size>
+    </field>
+    <order>
+      <field id="orden_documento">
+       <!--  <label>código</label>
+        <help>código de Documento</help> -->
+      </field>
+    </order>
+  </table>
+</form>
+</histrix>

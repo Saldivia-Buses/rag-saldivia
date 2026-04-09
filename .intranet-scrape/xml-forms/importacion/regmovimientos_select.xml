@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta"  _limit="100">
+	<!-- <referentes>ordenpago_cajmovim_ing.xml</referentes> -->
+	<title>Orden de pago</title>
+	<obs/>
+	<form >
+		<table id="REG_MOVIMIENTOS" label="ORDEN DE PAGO" _idCampoCond="imputar" >
+
+			<field id="nro_movimiento">
+				<label>Número</label>
+			</field>
+
+			<field id="regmovim_id" noshow="true">
+				<expression>id_regmovim</expression>
+				<detalle>regmovim_id</detalle>
+			</field>
+
+			<field id="subsistema_id" oculto="true">
+				<condicion operador="=">'01'</condicion>
+			</field>
+
+			<field id="regcuenta_id" oculto="true">
+			</field>
+
+			<field id="operacion_imp_id" oculto="true" local="true">
+				<detalle>operacion_imp_id</detalle>
+			</field>
+
+			<field id="fecha_movimiento" deshabilitado="true">
+				<label modpos="nobr">Fecha</label>
+			</field>
+
+			<field id="abreviacion_concepto"  tabla="REG_CONCEPTOS" deshabilitado="true">
+				<label>Tipo</label>
+				<help>Tipo de Comprobante</help>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="puesto_movimiento" deshabilitado="true">
+				<label modpos="nobr">Puesto</label>
+				<help>Comprobante</help>
+				<formato>%04d</formato>
+				<detalle>puesto_movimiento</detalle>				
+			</field>
+			<field id="nro_movimiento2" deshabilitado="true">
+				<expression>nro_movimiento</expression>
+				<label>Número</label>
+			</field>
+			<field id="importe_movimiento" deshabilitado="true">
+				<label PDFsize="12" posx="130" posy="+1">Total</label>
+				<help></help>
+				<detalle>importe_movimiento</detalle>
+			</field>
+			<field id="saldo_movimiento" deshabilitado="true">
+				<label>saldo</label>
+				<help></help>
+
+				
+			</field>
+	<!--		
+			<field id="imputar" local="true"  refresh="true">
+				<label>imputar</label>
+				<help>Seleccion</help>
+				<tipo>check</tipo>  
+			</field>			
+-->
+
+		</table>
+		<join >
+			<table id="REG_CONCEPTOS">
+				<field id="id_concepto" oculto="true">
+					<condicion operador="=">concepto_id</condicion>
+				</field>
+				<!--
+				<field id="imputacion_concepto">
+					<condicion operador="=">1</condicion>
+				</field>
+			-->
+			</table>
+		</join>
+
+	</form>
+</histrix>

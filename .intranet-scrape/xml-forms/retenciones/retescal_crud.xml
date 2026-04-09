@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+   <histrix tipo="crud">
+       <titulo>TABLA DE ESCALONES</titulo>
+        <obs></obs>
+               <form>
+                  <table id="RETESCAL" label="Escalones de Retenciones">
+
+
+                    <field id="rettabla_id" oculto="true">
+                    </field>
+
+
+                    <field id="id_retescal" noshow="true" autoinc="true"/>
+
+
+                    <field id="escmin">
+                        <label>Mínimo</label>
+                    </field>
+
+                    <field id="escmax">
+                        <label>Maximo</label>
+                    </field>
+                    <field id="escfij">
+                        <label>Fijo</label>
+                    </field>                    
+                    <field id="escpor">
+                        <label>Porcentaje</label>
+                    </field>                    
+                    <order>
+                      <field id="escmin" />
+                      <field id="escmax" />
+                    </order>
+
+                  </table>
+
+               </form>
+        </histrix>

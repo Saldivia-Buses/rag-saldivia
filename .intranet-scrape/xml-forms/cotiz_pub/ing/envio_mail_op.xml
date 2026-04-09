@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="insert" imprime="false" _evento="procesar">
+    <title>MAILS</title>
+    <obs/>
+    <form >
+        <table id="HTXMAIL" label="envia el Correo" idCampoCond="emitir">
+
+<ejecuta>
+                <![CDATA[
+                
+        if (class_exists('Histrix_Mail')){
+                loger('ENVIO MAIL V2');
+
+            $htxmailer = new Histrix_Mail($_SESSION['emailUser'], $_SESSION['emailPass']);
+
+            $params = array('from'=> 'fromMail',
+                    'message'=> "body",
+                    'subj'=> "subject",
+                    'cc' => 'cc_email',
+                    'sendCopy' => '0');
+
+            if ('chk_adj' != '0'){
+                $params['attach'] = "fileAttach";
+                $params['attachArray'] = 'filesArray';
+            }
+
+
+            $htxmailer->send('to_email', $params);
+
+
+        } else {
+        loger('ENVIO MAIL V1');
+                    $db = $_SESSION["db"];
+                    $database = Cache::getCache('datosbase'.$db);
+
+                    require_once '../lib/Swift4/swift_required.php';
+
+                    $smtpServerString = $_SESSION['smtpServer'];
+				  
+					$smtp = explode(':',$smtpServerString);
+					$smtpServer = $smtp[0];
+					$smtpPort   = $smtp[1];
+					
+                  	  
+//                    $user       = $_SESSION['emailUser'];
+//                    $pass       = $_SESSION['emailPass'];
+                    $user       = $database->smtpUser;
+                    $pass       = $database->smtpPassword;
+
+                    if ($smtpPort == '') 
+                  	  $smtpPort = 465;
+					
+					if ($smtpPort == 465){
+						$protocol = "ssl";
+					}
+					
+                    $transport = Swift_SmtpTransport::newInstance($smtpServer, $smtpPort, $protocol)
+                    ->setUsername($user)
+                    ->setPassword($pass)
+                    ;
+                    //Create the Mailer using your created Transport
+                    $mailer = Swift_Mailer::newInstance($transport);
+
+                    //Create a message
+                    $message = Swift_Message::newInstance("subject")
+                    ->setFrom( trim("fromMail") )
+                    ->setBody("body", "text/html");
+		    $headers = $message->getHeaders();
+		    $headers->addTextHeader('X-SMTPAPI', '{"category": "saldivia"}');
+		    $headers->addTextHeader('X-MSMail-Priority', 'High');
+		    $headers->addTextHeader('X-Priority', '1');
+		    $headers->addTextHeader('Importance', 'High');
+
+		    $toemail_dest = str_replace(',' , ';',"to_email");
+		    $ccemail_dest = str_replace(',' , ';',"cc_email");
+
+                    if ($toemail_dest != '')
+                    {
+                        $email_destination = explode(';' , $toemail_dest );
+			$email_destination=array_map('trim',$email_destination);
+
+			$message->setTo($email_destination);
+			/*
+                        foreach($email_destination as $index => $dest_email)
+                            $message->setTo(trim($dest_email));
+			*/
+                    }
+
+                    if ($ccemail_dest != '')
+                    {
+                        $cc_destination = explode(';' , $ccemail_dest );
+			$cc_destination=array_map('trim',$cc_destination);
+                        $message->setCc($cc_destination);
+			/*
+                        foreach($cc_destination as $index => $copy_email)
+                            $message->setCc(trim($copy_email));
+			*/
+                    }
+
+                    if ('fileAttach' != '' )
+                    {
+                        $dirname = '../database/'.$_SESSION['datapath'].'tmp/';
+                        $message->attach(Swift_Attachment::fromPath($dirname."fileAttach"));
+                    }
+
+                    if ('filesArray' != '')
+                    {
+                        $fileList = unserialize(stripslashes('filesArray'));
+                        foreach($fileList as $fileName => $watermark)
+                        {
+                            if ($watermark != '') 
+                                 $custName = $watermark.'_'.basename($fileName);
+                            else 
+                                 $custName = basename($fileName);
+
+                            loger($fileName, 'e-mails.log');
+                            $message->attach( Swift_Attachment::fromPath($fileName)->setFilename($custName));
+                        }
+                    }
+                    $message->setReadReceiptTo('fromMail');
+	   try {
+                    //Pass a variable name TO the send() method
+                    if (!$mailer->send($message, $failures))
+                    {
+                        echo "Failures:";
+                        $log = print_r($failures);
+                        loger($log, 'Mail_errors.log');
+                    }
+
+                    // COPY TO SENT FOLDER
+                    $server = $database->imapServer;
+                    $txtmessage = $message->toString();
+
+                if ($server == 'imap.gmail.com')
+                {
+                    $user       = $_SESSION['emailUser'];
+                    $pass       = $_SESSION['emailPass'];
+		    $serverImap = '{imap.gmail.com:993/ssl}';
+		    $stream = imap_open( $serverImap, $user, $pass);
+		    $imap_result = imap_append($stream, '{imap.gmail.com:993/ssl}[Gmail]/Enviados', $txtmessage);
+		    loger(imap_errors(), 'imap.log');
+
+                }
+                else
+                {
+                    $user       = $_SESSION['emailUser'];
+                    $pass       = $_SESSION['emailPass'];
+
+		    $serverImap = "{".$server."}";
+		    $stream = imap_open( $serverImap."INBOX", $user, $pass);
+		    @imap_createmailbox($stream, $serverImap."INBOX.Sent");
+		    @imap_append($stream, $serverImap."INBOX.Sent", $txtmessage);
+                }
+        } catch (Exception $ex){
+		$error = $ex->getMEssage();
+//                echo "<script type="text/javascript">alert('<b>Error de Envio $error</b>');</script>";
+    		  die('<div class="error">Error de Envio:'. $error.'</div>');
+	}
+
+    }
+]]></ejecuta>
+
+            <field id="emitir"       id_temp="emitir" local="true"></field>            
+            <field id="idMail"       id_temp="idMail"></field>
+            <field id="fecha"        _id_temp="fecha" >
+		<tipo>integer</tipo>
+		<valor>curdate()</valor>
+	    </field>
+            <field id="hora"         _id_temp="hora"  >
+		<tipo>integer</tipo>
+		<valor>curtime()</valor>
+
+</field>
+       <!-- <field id="nom"          id_temp="nom"   ></field> -->
+            <field id="to_email"     id_temp="para"    ></field>
+            <field id="cc_email"     id_temp="cc_email"    ></field>
+            <field id="fromMail"     _id_temp="de"    >
+		<valor>info@saldiviabuses.com.ar</valor>
+	</field>
+            <field id="fileAttach"   id_temp="adjunto" ></field>
+       <!-- <field id="checkAdjunto" id_temp="checkAdjunto" local="true" ></field> -->
+            <field id="filesArray"   id_temp="filesArray" local="true" ></field>
+            <field id="subject"      id_temp="subject" ></field>
+            <field id="body"         id_temp="mensaje"></field>
+        </table>
+    </form>
+</histrix>

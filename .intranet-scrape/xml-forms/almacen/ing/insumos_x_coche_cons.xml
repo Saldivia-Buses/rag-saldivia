@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="consulta" imprime="false">
+	<title>Insumos por coche</title>
+	<obs></obs>
+	<form >
+		<table id="STKINMOV" label="SALIDA DE MATERIALES">
+			<field id="siscod" oculto="true">
+				<label>siscod</label>
+				<parametro id="fsmparam_paralf.xml" retorna="paralf">
+					<field id="parcla">
+						<condicion operador="=">'sisstk'</condicion>
+					</field>
+				</parametro>
+			</field>
+			<field id="nrocha">
+				<label>Coche</label>
+			</field>
+			<field id="movfec">
+				<label>Fecha</label>
+			</field>
+			<field id="openom" >
+                <expression>CONCAT(PERSONAL.apellido,', ', PERSONAL.Nombre)</expression>
+				<label modpos="nobr"></label>
+				<tipo>varchar</tipo>
+			</field>			
+			<field id="artcod">
+				<label>Art.</label>
+			</field>
+			<field id="artdes" deshabilitado="true" tabla="STKINSUM">
+				<label>Descripcion</label>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="movcant" incdec="true">
+				<label>Cantidad</label>
+				<help>Cantidad</help>
+				<valor>1</valor>
+			</field>
+			<field id="tipuni" deshabilitado="true" >
+				<label>Unidad uso</label>
+				<tabla_ex id="FSMUNIDS">
+					<field id="unicod" clave="true"></field>
+					<field id="uninom"></field>
+				</tabla_ex>				
+				<tipo>varchar</tipo>
+				
+			</field>			
+			
+			<field id="unicps" local="true" deshabilitado="true" noshow="true">
+				<label>Unidad Compra</label>
+				<help>Unidad de compra</help>
+				<tabla_ex id="FSMUNIDS">
+					<field id="unicod" clave="true"></field>
+					<field id="uninom"></field>
+				</tabla_ex>
+				<tipo>integer</tipo>
+			</field>
+			<field id="contip" tabla="STKCONCE">
+				<condicion operador="=">2</condicion>
+			</field>
+			<field id="unidef" deshabilitado="true" local="true" noshow="true">
+			</field>
+			<field id="valcps" deshabilitado="true" local="true" noshow="true">
+				<tipo>numeric</tipo>
+			</field>
+			<field id="valuso" deshabilitado="true" local="true" noshow="true">
+				<tipo>numeric</tipo>
+			</field>
+			<field id="movcps" deshabilitado="true" local="true" noshow="true">
+				<if exp="unidef == 1 ">
+					<true>movcant / valuso * valcps</true>
+					<false>movcant * valcps / valuso</false>
+				</if>
+			</field>
+			<field id="movref">
+				<label>Referencia</label>
+				
+			</field>
+		</table>
+		<join tipo="inner">
+				<table id="STKCONCE" >
+					<field id="movcod">
+						<condicion operador="=">STKINMOV.movcod</condicion>
+					</field>
+					<field id="contip">
+						<condicion operador="=">2</condicion>
+					</field>
+					
+				</table>
+		</join>		
+		<join tipo="left">
+				<table id="PERSONAL" >
+					<field id="opecod">
+						<condicion operador="=">STKINMOV.opecod and PERSONAL.opecod != 0</condicion>
+					</field>
+				</table>
+		</join>
+		<join tipo="left">
+				<table id="STKINSUM" >
+					<field id="artcod">
+						<condicion operador="=">STKINMOV.artcod</condicion>
+					</field>
+					<field id="siscod" oculto="true">
+						<condicion operador="=">STKINMOV.siscod</condicion>
+					</field>
+					
+				</table>
+		</join>
+		
+	</form>
+</histrix>

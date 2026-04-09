@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ing" preloadData="false" procesa="false" llenoreferente="true" llenotemporal="true" tooltip="false" showCantidad="false" updateTotals="true" >
+
+    <title>Detalle</title>
+    <obs></obs>
+    <consulta>
+        <table id="REG_DETALLES" label="movimientos">
+
+            <movimientos>
+                <relacion id="mos_regdetalles_crecer_ins.xml"/>
+            </movimientos>
+
+
+            <field id="id_regdetalle" noshow="true" esClave="true" />
+
+            <field id="fecha_movimiento" local="true" noshow="true" />
+            
+            <field id="orden" esClave="true" noshow="true">
+                <if exp="true">
+                    <true>_ORDEN + 0</true>
+                    <false>0</false>
+                </if>
+            </field>
+			
+            <field id="codigo_detalle" esClave="true" deshabilitado="true" noshow="true">
+                <label>Cod.</label>
+            </field>
+
+            <field id="descripcion_detalle" >
+                <label>Descripción</label>
+-                <tipo>simpleditor</tipo> 
+            </field>
+
+            <field id="cantidad_detalle">
+                <label>Cant.</label>
+                <tipo>numeric</tipo>
+                <size>10</size>
+                <valor dafault="true">1</valor>
+                <jseval campodestino="total_detalle">cantidad_detalle * neto_detalle</jseval>
+            </field>
+
+            <field id="neto_detalle" local="true">
+                <label Formstyle="width: 100px;">Importe Unit.</label>
+                <tipo>numeric</tipo>
+                <jseval campodestino="total_detalle">cantidad_detalle * neto_detalle</jseval>
+            </field>
+
+            <field id="total_detalle" suma="true" deshabilitado="true">
+                <label Formstyle="width: 100px;">Total </label>
+                <tipo>numeric</tipo>
+                <if exp="true">
+                    <true>cantidad_detalle * neto_detalle</true>
+                    <false>0</false>
+                </if>
+                <jseval campodestino="importe_movimiento" total="true">total_detalle</jseval>
+                <detalle>importe_movimiento</detalle>
+            </field>
+            <!--
+            <importar xml="mos_remitos_qry.xml" label="Importar" titlo="Seleccione" >
+			  <field id="fecha_movimiento">fecha_movimiento</field>
+		</importar>
+	    -->
+           <field id="neto_movimiento"  local="true" suma="true" _deshabilitado="true">
+                <label modpos="nobr">Neto</label>              
+                <jseval fielddestino="importe_iva" actxml="false"> ( (precio_venta * cantidad_detalle)  * (alicuota / 100)) </jseval>
+                <jseval fielddestino="suma"  actxml="false"> ( importe_iva +  neto_movimiento )</jseval>
+                <jseval fielddestino="neto_movimiento" actxml="false">(precio_venta * cantidad_detalle)</jseval>	
+            </field>
+
+            <field id="alicuota" local="true">
+                <label  modpos="nobr">Alicuota</label>
+                <tabla_ex id="GEN_IVA_ALICUOTAS" _vacio="true">
+                    <field id="alicuota">
+                    </field>
+                    <field id="alicuota2">
+                        <expresion>alicuota</expresion>
+                        <label>Alicuota</label>
+                    </field>
+                    <field id="iva_id" oculto="true">
+                        <condicion operador="=">1</condicion>
+                    </field>
+                </tabla_ex>
+            </field>
+   
+            <field id="importe_iva" local="true"   suma="true" deshabilitado="true">
+                <label>iva</label>
+                <help>Porcentaje de Iva Calculado por El neto</help>
+                <jseval fielddestino="suma"      actxml="false"> ( importe_iva + neto_movimiento )</jseval>
+                <jseval campodestino="iva_movimiento"  total="true">importe_iva</jseval>
+                <jseval fielddestino="importe_IVA"    actxml="false"> ((neto_movimiento)  * ( alicuota / 100))</jseval>
+            </field>
+                 
+            <field id="suma" local="true"  suma="true"  _acumula="true" deshabilitado="true">
+                <label>Total</label>
+                <help>Total</help>
+                <jseval fielddestino="neto_movimiento"    actxml="false"> (( suma  )  / ( 1 + ( alicuota / 100)) )  </jseval>
+                <jseval fielddestino="importe_IVA"        actxml="false"> (neto_movimiento  * (alicuota / 100)) </jseval>
+            </field>
+
+
+			
+	     <!-- MOVIMIENTOS DE STOCK 
+
+	     <fieldGroup id="stock" local="true" noshow="true">
+		     <field id="stkarticulo_id"  />
+			 <field id="unidad_id" local="true" noshow="true" />
+			 <field id="stksector_id" local="true" noshow="true" />
+			 <field id="stkfamilia_id" local="true" noshow="true" />
+			 <field id="stkrubro_id" local="true" noshow="true" />
+			 <field id="precio_costo" local="true" noshow="true" />
+			 <field id="stkconcepto_id" local="true" noshow="true" />
+		</fieldGroup>
+		
+		-->
+		
+        </table>
+    </consulta>
+</histrix>  

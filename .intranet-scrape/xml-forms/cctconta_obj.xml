@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+	<histrix tipo="abm-mini" subtipo="vertical">
+		<title>CONTACTOS</title>
+		<obs></obs>
+		<form >
+		    <table id="CCTCONTA" label="Contactos">
+			<field id="idconta" noshow="true" />
+			<field id="cargo">
+				<label>Cargo</label>
+				<help>Cargo </help>
+				<helper type="combo" id="CARGOS">
+					<field id="cargo" ></field>
+					<field id="nombre"></field>
+				</helper>
+				<tipo>varchar</tipo>
+			</field> 
+			<field id="nombre">
+				<label>Nombre</label>
+				<help>Nombre del contacto</help>
+				<tipo>character</tipo>			
+						
+			</field>
+							
+			<field id="mail" print="false" ldifName="mail">
+				<label>Mail </label>
+				<help>	</help>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="Telefono" ldifName="mobile">
+				<label>Teléfono </label>
+				<help></help>
+				<tipo>character</tipo>
+			</field>
+			<field id="principal" tipoOrden="DESC" noshow="true"/>
+			
+			<field id="ctacod" noshow="true" />
+			<field id="siscod" noshow="true" />
+			<order>
+			    <field id="principal" />
+			</order>
+		</table>
+	</form>
+</histrix>

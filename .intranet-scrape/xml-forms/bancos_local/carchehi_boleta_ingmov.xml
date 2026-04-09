@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="abm">
+       <title>Mov CHEQUES</title>
+        <obs></obs>
+               <form >
+					<table id="CARCHEHI" label="CHEQUES">
+						<field id="siscod" id_cab="siscar">
+						</field>
+						<field id="carfec" id_temp="carfec">
+						</field>
+						<field id="carint" id_temp="carint">
+						</field>
+						<field id="ctacod" id_temp="ctacod">
+						</field>
+						<field id="carbco" id_temp="carbco">
+						</field>
+						<field id="carpla" id_temp="carpla">
+						</field>
+						<field id="carimp" id_temp="carimp">
+						</field>
+						<field id="caralt" id_temp="hoy">
+						</field>
+						<field id="cardes" id_cab="ccbnom">
+						</field>
+						<field id="movnro" id_cab="nroboleta">
+						</field>
+						<field id="regmin" esNroMinuta="true">
+						</field>
+						<field id="succod" id_temp="succod">
+						</field>
+						<field id="carnro" id_temp="carnro">
+						</field>
+						<field id="cartip" id_temp="cartip">
+						</field>
+						<field id="carobv" id_temp="carobv">
+						</field>
+						<field id="caring" id_temp="caralt">
+						</field>
+						<field id="carccb" id_temp="ccbcod">
+						</field>
+						<field id="carcui" id_temp="carcui">
+						</field>
+						<field id="carref" id_temp="cardes">
+						</field>
+						<field id="carrec" id_temp="carrec">
+						</field>
+						<field id="ccbcod" id_cab="bcscta">
+						</field>
+						
+						
+						
+					</table>
+               </form>
+        </histrix>

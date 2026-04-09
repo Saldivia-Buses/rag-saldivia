@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" _imprimetanda="true">
+	<title>RETENCIONES Ganancias</title>
+	<obs></obs>
+	<form  _detalle="retgan_reimp.xml">
+		<table id="RETGANAN" label="Retenciones de Ganancias" >
+
+			<filters>
+				<field id="ganfec">
+					<operador>&gt;=</operador>
+					<label>Desde Fecha</label>
+					<valor>today</valor>
+				</field>
+				<field id="ganfec">
+					<operador>&lt;=</operador>
+					<label>Hasta Fecha</label>
+					<valor>today</valor>
+				</field>
+			</filters>	
+
+			PARA EXPORTAR AL SICORE
+			<field id="codigocomp" local="true" colstyle="display:none;">
+				<valor>06</valor>
+			</field>
+
+			<field id="movfec" tabla="CCTMOVIM">
+				<label>Fecha Comp</label>
+				<expression>date_format(movfec, '%d/%m/%Y')</expression>
+			</field>			
+			<field id="nrocomp" _local="true"  _colstyle="display:none;">
+				<label>Num. Ret</label>
+				<help>Número de la retención</help>
+
+			    <expression>concat('0001', LPAD( gannro,11, '0'))</expression>
+			    <helper xml="retgan_reimp_2.xml" type="link" dir="/retenciones" title="Retencion Ganancias">
+					<parameter source="gannro"  target="gannro"/>
+					<parameter source="ctacod" target="ctacod"/>
+					<parameter source="ganfec" target="ganfec"/>
+			    </helper>
+<!--
+				<expression>LPAD('0', 16, 0)</expression>
+-->
+
+			</field>		
+			<field id="importec"  colstyle="display:none;">
+				<label>Imp.Comp</label>
+<!--				<expression>LPAD(REPLACE(round(movimp,2), '.', ''), 15, 0)</expression> -->
+				<expression>LPAD(movimp, 17, 0)</expression>
+
+			</field>			
+	
+			<field id="cod_impuesto" local="true"  colstyle="display:none;">
+				<label>Impuesto</label>
+				<valor>217</valor>
+				<format>%3d</format>					
+			</field>		
+			<field id="cod_regimen" local="true"  _colstyle="display:none;">
+				<expression>sicore</expression>
+				<label>Régimen</label>
+<!--				<valor>078</valor> -->
+				<format>%3d</format>					
+			</field>		
+			<field id="cod_operacion" local="true"  colstyle="display:none;">
+				<label>Operación</label>
+				<valor>1</valor>
+			</field>		
+			<field id="base" colstyle="display:none;" >
+				<label>Base1</label>
+				<expression>LPAD(CCTMOVIM.movnet, 14, 0)</expression>
+
+			</field>			
+			<field id="movnet" tabla="CCTMOVIM" export="false" >
+				<label>Base</label>
+				<help>Monto imponible del Comprobante</help>
+				<tipo>decimal</tipo>
+
+			</field>			
+			<field id="ganfec" export="false">
+				<label>Fecha Ret.</label>
+			</field>
+			<field id="ganfec2" colstyle="display:none;">
+				<help>Fecha de la Retención</help>
+				<expression>date_format(ganfec, '%d/%m/%Y')</expression>
+
+				<detalle>ganfec</detalle>
+			</field>			
+			<field id="cod_condicion" local="true" colstyle="display:none;"  >
+				<label>Condición</label>
+				<valor>01</valor>
+			</field>		
+			<field id="cod_susp" local="true" colstyle="display:none;"  >
+				<label>Suspendidos</label>
+				<valor>0</valor>
+			</field>		
+
+			<field id="ctacod" noshow="true" export="false">
+				<label>Cuenta</label>
+				<help>Codigo de Cuenta</help>
+				<detalle>ctacod</detalle>
+			</field>
+			<field id="num" export="false">
+			    <label>Comprobante</label>
+			    <expression>concat('OP 0001-', LPAD( CCTMOVIM.movnro,8, '0'))</expression>
+			</field>
+
+			<field id="ctanom" tabla="CCTCUENT" export="false">
+				<label>Razón Social</label>
+				<help>Nombre</help>
+			</field>
+			<field id="ctanro" tabla="CCTCUENT" export="false">
+				<label>CUIT</label>
+				<help>Número Doc</help>
+			</field> 
+
+			<field id="movnro" noshow="true" export="false">
+			    <label>Nro</label>
+				<detalle>movnro</detalle>
+			</field>
+			
+<!--			<field id="ctadir">
+				<label>Dir.</label>
+				<help>Direccion</help>
+			</field>
+			<field id="ctaloc">
+				<label>Localidad</label>
+				<help>Localidad</help>
+			</field>
+-->
+			<field id="gannro" noshow="true" export="false" />
+			<field id="concod" noshow="true" export="false">
+				<condicion operador="=">2</condicion>
+				<detalle>concod</detalle>
+			</field>
+			<field id="importeRet" colstyle="display:none">
+				<expression>LPAD(gantot, 14, 0)</expression>
+			</field>
+			<field id="gantot" suma="true" export="false">
+				<label>Importe</label>
+				<help>Retención</help>
+				<condicion operador="!=">0</condicion>
+			</field>	
+			<field id="exclusion"  colstyle="display:none">
+				<label>Exclu</label>
+				<expression>LPAD(0, 6, 0)</expression>
+			    
+			</field>	
+
+			<field id="boletin"  colstyle="display:none">
+				<label>Boletín</label>
+				<expression>date_format(ganfec, '%d/%m/%Y')</expression>
+
+			</field>			
+			<field id="doccodex"  colstyle="display:none">
+				<expression>doccod</expression>
+				<label>CodDocum</label>
+			</field>			
+			<field id="ctanroex"  colstyle="display:none">
+				<expression>LPAD(CCTCUENT.ctanro, 20, '0')</expression>
+
+			</field>
+			<field id="ctbcod"  export="false">
+				<label>Nombre Cta</label>
+			<expression>ctbnom</expression>
+			</field>
+			<field id="otrosExterior" local="true"  colstyle="display:none">
+				<expression>LPAD(gannro, 14, '0')</expression>
+
+			</field>
+			
+		</table>
+		<join tipo="left">
+			<table id="CCTMOVIM">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">'01'</condicion>
+				</field>				
+				<field id="ctacod" >
+					<condicion operador="=">RETGANAN.ctacod</condicion>
+				</field>
+				<field id="movnro">
+					<condicion operador="=">RETGANAN.movnro</condicion>
+				</field>
+<!-- 				<field id="movfec">
+					<condicion operador="=">RETGANAN.ganfec</condicion>
+				</field>
+ -->			</table>
+		
+		</join>
+
+		<join tipo="left">
+			<table id="CCTCUENT">
+				<field id="siscod" >
+					<condicion operador="=">CCTMOVIM.siscod</condicion>
+				</field>				
+				<field id="ctacod" >
+					<condicion operador="=">RETGANAN.ctacod</condicion>
+				</field>
+			</table>
+		
+		</join>
+		<join tipo="left">
+			<table id="RETCONCE">
+				<field id="retcod" >
+					<condicion operador="=">RETGANAN.catganancias_id</condicion>
+				</field>				
+			</table>
+		
+		</join>
+
+		<join tipo="left">
+			<table id="CTBCUENT">
+<!--				<field id="siscod" >
+					<condicion operador="=">10</condicion>
+				</field>				
+-->
+				<field id="ctbcod" >
+					<condicion operador="=">CCTCUENT.ctbcod</condicion>
+				</field>
+			</table>
+		
+		</join>
+
+	</form>	   
+</histrix> 

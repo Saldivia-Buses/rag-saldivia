@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="chart">
+	<title>Frecuencia Accidentes</title>
+	<obs></obs>
+	<form>
+		<table id="GEN_CALENDAR" label="ESTAD INASISTENCIAS">
+
+			<grafico id="Inasistencias" >
+				<ancho>400</ancho>
+				<tipo>L</tipo>
+				<etiquetas>mes</etiquetas>
+				<serie>calculo</serie>
+				<serie>accidentes_total</serie>
+				<title>Frecuencia (Accidentes * 200000)/Cant.Hs</title>
+			</grafico>		
+
+			<filters>
+				<field id="fecha">
+					<label>Desde</label>
+					<valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m" ,strtotime('-12 month')) , 1, date("Y") -  1 ))</valor>
+					<operador>&gt;=</operador>
+				</field>
+
+				<field id="fecha">
+					<label>Hasta</label>
+					<valor eval="true">date('d/m/Y', strtotime('-1 second', strtotime(date('Y-m-01'))))</valor>
+					<operador>&lt;=</operador>
+				</field>
+			</filters> 
+
+			<field id="mes">
+				<expression>month(GEN_CALENDAR.fecha)</expression>
+				<label>Mes</label>
+				<options>
+					<option valor="1">Ene</option>
+					<option valor="2">Feb</option>
+					<option valor="3">Mar</option>
+					<option valor="4">Abr</option>
+					<option valor="5">May</option>
+					<option valor="6">Jun</option>
+					<option valor="7">Jul</option>
+					<option valor="8">Ago</option>
+					<option valor="9">Sep</option>
+					<option valor="10">Oct</option>
+					<option valor="11">Nov</option>
+					<option valor="12">Dic</option>
+
+				</options>
+       			<tipo>varchar</tipo>
+			</field>
+                
+            <field id="fecha" oculto="true">
+				<tipo>date</tipo>
+            </field>
+
+            <field id="year" oculto="true">
+                <expression>year(GEN_CALENDAR.fecha)</expression>
+            </field>
+
+			<field id="accidentes_total">
+				<expression>select count(*) from FRANCOS_PER where tipo = 1 and month(fechainicio) = month(GEN_CALENDAR.fecha) and year(fechainicio) = year(GEN_CALENDAR.fecha)</expression>
+				<label>Accidentes</label>
+				<help></help>
+				<tipo>integer</tipo>
+			</field>
+
+            <field id="hnorm" _noshow="true">
+                <label>Horas</label>
+                <expression><![CDATA[
+                    ROUND(sum(
+ifnull( time_to_sec( timediff( case when FICHADADIA.h2 > hegreso then hegreso else FICHADADIA.h2 end , case when FICHADADIA.h1 < hingreso then hingreso else FICHADADIA.h1 end )), 0)
++
+ifnull( time_to_sec( timediff( case when FICHADADIA.h4 > hegreso then hegreso else FICHADADIA.h4 end , case when FICHADADIA.h4 < hingreso then hingreso else FICHADADIA.h3 end )), 0)
+) / 3600, 0) ]]>
+                </expression>
+            </field>
+
+            <field id="calculo" local="true">
+            	<if exp="true">
+            		<true>ROUND(((accidentes_total * 200000) / hnorm), 2)</true>
+            		<false>0</false>
+            	</if>
+            	<tipo>custom_numeric</tipo>
+				<label>Indice Frecuencia</label>
+            </field>
+            
+			<group>
+				<field id="year"></field>
+				<field id="mes"></field>			
+			</group>
+
+		</table>
+
+        <join tipo="left">
+            <table id="FICHADADIA">
+                <field id="fecha">
+                    <condicion operador="=">GEN_CALENDAR.fecha</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="PERSONAL">
+                <field id="legajo">
+                    <condicion operador="=">FICHADADIA.legajo</condicion>
+                </field>
+            </table>
+        </join>
+
+	</form>
+</histrix>

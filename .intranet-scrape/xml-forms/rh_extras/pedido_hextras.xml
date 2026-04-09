@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+	<histrix  tipo="ing"  noform="true" modifica="false" inserta="false" imprime="false" borra="false" transaccional="true" preloadData="false">
+		<title>Autorización de ?oras Extras</title>
+		<obs></obs>
+		<form >
+			<table id="PERSONAL" label="Horas Extras">
+			<movimientos cabecera="pedido_hextras_cab.xml" >
+			    <relacion id="rh_auth_extras_ingmov.xml" />
+			    <relacion id="rh_auth_extras_detail_ingmov.xml" />
+			    
+			    
+			</movimientos>
+			<filters>
+			
+				<field id="id_seccion">
+					<label>Seccion</label>
+					<operador>=</operador>
+				</field>
+			</filters>
+		
+			<field id="legajo" deshabilitado="true">		
+			    <condicion operador="=">0</condicion>
+			</field>
+			
+			<field id="legajo"  deshabilitado="true">
+			    <label>Legajo</label>
+			</field>
+			<field id="apellido" deshabilitado="true">
+			    <label>Apellido</label>
+			</field>
+			
+			<field id="Nombre" deshabilitado="true">
+			    <label>Nombre</label>
+			</field>
+			<field id="grabar" local="true" refresh="true">
+			    <tipo>check</tipo>
+			    <valor>0</valor>
+			</field>
+
+			<field id="fechaEgreso" noshow="true">		
+			    <condicion operador="=">'0000-00-00'</condicion>
+			</field>
+
+			<field id="cantidad_hs" deshabilitado="false" local="true" editable="true" refresh="true">
+			    <label>Cantidad hs</label>
+			</field>
+
+			<field id="id_seccion" deshabilitado="false" _local="true" editable="true" refresh="true">		
+					<tabla_ex id="SECCION">
+						<field id="id_seccion"></field>
+						<field id="nombre"></field>
+						<field id="activa">
+							<condicion operador="=">1</condicion>
+						</field>						<order>
+								<field id="nombre"></field>
+						</order>
+					</tabla_ex>
+			</field>
+						
+			</table>
+		</form>
+	</histrix>

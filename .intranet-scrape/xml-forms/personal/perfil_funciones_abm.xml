@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm">
+	<title>Funciones Perfiles</title>
+	<obs/>
+	<form>
+		<table id="RH_PERFIL_FUNCION" title="Funciones Perfiles">
+		    <field id="id_perfilfuncion" noshow="true" />
+		    <field id="desc_perfilfuncion">
+				<label>Descripcion</label>
+                <help>Descripción de la funcion</help>
+                <size>300</size>				
+		    </field>
+	    
+		</table>
+	</form>
+	
+</histrix>

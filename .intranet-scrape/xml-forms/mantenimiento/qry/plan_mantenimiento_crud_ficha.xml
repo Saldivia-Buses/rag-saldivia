@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="fichaing" inserta="false" procesa="true" cancel="false" borra="false" modifica="false" imprime="false">
+    <title>Mantenimiento</title>
+    <obs/>
+    <eventos>
+        <event id="procesar">close</event>
+        <event id="procesar">refresh</event>
+    </eventos>
+    <form>
+        <table id="MANT_PLAN_EVENTOS" label="Plan de mantenimiento">
+
+            <field id="id_planevento" noshow="true" autoinc="true" />
+
+            <field id="plan_id" noshow="true" />
+
+            <field id="accion_id" noshow="true" />
+
+            <field id="fecha_accion" noshow="true">
+                <tipo>date</tipo>
+            </field>
+
+            <field id="login" valauto="true" noshow="true">
+                <valor eval="true">$_SESSION['usuario']</valor>
+            </field>
+
+            <field id="observaciones">
+                <label>Observaciones</label>
+                <size>200</size>
+            </field>
+
+        </table>
+    </form>
+</histrix>

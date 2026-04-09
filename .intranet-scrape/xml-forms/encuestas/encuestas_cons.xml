@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" imprime="true" >
+    <title>Consulta de Satisfacción</title>
+    <obs></obs>
+    <form detalle="encuestas_det.xml">
+        <table id="ENCUESTA_CLIENTE" >
+            <title>Encuestas</title>
+            <filters>
+
+                <field id="fecha">
+                    <label>Desde</label>
+<!--                    <valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m" ,strtotime('-1 month')) , 1, date("Y") - 1))</valor>-->
+                    <operador>&gt;=</operador>
+                </field>
+
+                <field id="fecha">
+                    <label>Hasta</label>
+                    <valor>today</valor>
+                    <operador>&lt;=</operador>
+                </field>
+				
+				<field id="idEncuesta">
+					<label>Encuesta</label>
+				</field>
+				
+            </filters>
+            
+            <field id="numero" autoinc="true" noshow="true">
+     			<detalle>numero</detalle>
+            </field>
+			<field id="idEncuesta" noshow="true">
+		    	<label modpos="nobr">Envia Encuesta</label>
+		    	<help></help>
+				<tabla_ex id="ENCUESTA" vacio="true">
+					
+						<field id="idEncuesta" >
+	<!--					<condicion operador="=">2</condicion>-->
+						</field>
+	
+						<field id="descripcion" ></field>
+						<field id="fecha2" tipoOrden="DESC">
+						<expression>fecha</expression>
+							<tipo>date</tipo>
+						</field>
+						<order>
+						<field id="fecha2" />
+						</order>
+					
+				</tabla_ex>
+			</field>
+            <field id="fecha" >
+                <label>Fecha de Encuesta</label>
+                <tipo>date</tipo>
+            </field>
+
+            <field id="ctacod">
+				<helper type="combo" id="CCTCUENT">
+					<field id="ctacod"/>
+					<field id="ctanom"/>
+					<field id="siscod">
+						<condicion operador="=">'02'</condicion>
+					</field>
+				</helper>
+                <label>Cliente</label>
+                <detalle>ctacod</detalle>
+            </field>
+        </table>   
+    </form>
+</histrix> 

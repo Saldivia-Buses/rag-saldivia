@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" path="fotos/homologaciones/">
+	<title>Fotos</title>
+	<obs/>
+	<form >
+         <table id="HOMOLOG_FOTOS_PROD" label="Fotos Modelo" >		
+
+        <filters auto="true">
+
+			<field id="prdatributo_id">
+				<label modpos="nobr">Atributo</label>
+				<operador>=</operador>
+			</field>
+
+		</filters>
+
+			 <field id="homologacion_id" oculto="true" >
+				 <label>id</label>
+			 </field>
+
+			 <field id="producto_id" oculto="true" local="true">
+				 <label>id producto</label>
+			 </field>
+
+		<field id="prdatributo_id" noZero="true">
+			<label>Atributo</label>
+        	<helper type="combo" xml="atributos_homologacion_qry.xml" dir="/producto" empty="true">
+                 <parameter source="homologacion_id" target="homologacion_id"/>
+                 <parameter source="producto_id" target="producto_id"/>
+            </helper>
+		</field>
+
+			<field  id="homolog_foto_prod" path="homologacion_id">
+				<label>Foto</label>
+				<tipo>file</tipo>
+				<size>50</size>
+			</field>
+			<field id="usuario" noshow="true" deshabilitado="true">
+            	<label modpos="nobr">Usuario</label>
+            	<valor eval="true">$_SESSION['usuario']</valor>
+            </field>
+
+			<field id="userid" >
+		    <label>Cargó</label>
+		    <expression>concat(HTXUSERS.Nombre,' ', HTXUSERS.apellido,' ', stamp)</expression>
+			</field>		 
+      </table>
+
+		<join tipo="left">
+		    <table id="HTXUSERS">
+			<field id="login">
+			    <condicion operador="=">usuario</condicion>
+			</field>
+		    </table>
+		</join>
+
+	</form>
+</histrix>

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" subtipo="vertical" _preloadData="false" paginar="20" imprime="false">
+    <title>Monedas Cotizacion</title>
+	<obs/>
+
+	<form>
+
+		<table id="GEN_MONEDA_HIS" label="Cotizaciones" >
+			<filters>
+				<field id="tipo_cotizacion" >
+				    <label modpos="nobr">Tipo</label>
+				<operador>=</operador>
+					<valor>0</valor>
+				</field>
+
+			</filters>
+			<field id="id_genmonedahis" autoinc="true" noshow="true" />
+		    
+			<field id="tipo_cotizacion" _editable="true" noshow="true" valauto="true">
+		            <label modpos="nobr">Tipo</label>
+			    <helper type="combo">
+				<option value="">Oficial</option>
+				<option value="1" >Reportes</option>
+				<option value="2" >Presupuesto</option>
+			    </helper>
+			</field>
+		
+			<field id="moneda_id" esClave="true" oculto="true" _noshow="true" />
+
+			<field id="fecha_genmonedahis" _editable="true">
+				<label >Desde Fecha</label>
+				<help>Fecha</help>
+				<valor>today</valor>
+				<tipo>date</tipo>
+			</field>
+
+			<field id="cotizacion_genmonedahis" _editable="true" style="padding-right:2em">
+				<label _modpos="nobr">Cotizacion</label>
+				<help>Cotizacion de la moneda a la fecha</help>
+			</field>
+			<order>
+			    <field id="fecha_genmonedahis" orderType="DESC"/>
+
+			</order>
+
+		</table>
+
+	</form>
+</histrix>

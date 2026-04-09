@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ayuda">
+	<title>CUENTAS</title>
+	<obs/>
+	<form>
+		<table id="CCTCUENT" label="Ayuda de Cuenta">
+			<field id="siscod" oculto="true">
+				<label>Codigo Sistema</label>
+			</field>
+
+			<field id="ctacod" _noshow="true">
+				<detalle>ctacod</detalle>
+			</field>
+			
+			<field id="ctanom2">
+                <expression having="false">concat(CCTCUENT.ctanom, ' - ', CCTCUENT.ctafan)</expression>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="baja" oculto="true">
+			    <condicion operador="=">0</condicion>
+			</field>
+			<group>
+				<field id="siscod" tabla="CCTCUENT"/>
+				<field id="ctacod" tabla="CCTCUENT"/>
+				<field id="ctanom" tabla="CCTCUENT"/>
+				<!--<field id="year"/>
+				<field id="mes"/>				-->
+			</group>
+			<order>
+				<field id="CCTCUENT.ctanom"/>
+			</order>
+		</table>
+		<join tipo="left">
+			<table id="CCTCONTA">
+				<field id="siscod" >
+					<label>CCTMOVIM.siscod</label>
+					<condicion operador="=">CCTCUENT.siscod</condicion>
+				</field>
+				<field id="ctacod" >
+					<condicion operador="=">CCTCUENT.ctacod</condicion>
+				</field>
+				<field id="principal">
+					<condicion operador="=">1</condicion>
+				</field>
+				
+			</table>
+		</join>
+	</form>
+</histrix>

@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="abm">
+       <title>PEDIDO COTIZACION</title>
+        <obs></obs>
+               <form >
+					<table id="PEDCOTIZ" label="?">
+						<field id="pednro" deshabilitado="true">
+							<label>Pedido</label>
+							<parametro id="fsmparam_parent.xml" retorna="parent">
+								<field id="parcla" oculto="true">
+									<condicion operador="=">'nrocot'</condicion>
+									<valor>'nrocot'</valor>
+								</field>
+								<field id="parent">
+									<complete>parent + 1</complete>
+								</field>								
+							</parametro>
+							<help>Numero de Pedido de Cotizacion</help>
+						</field>
+						<field id="pedfec">
+							<label>Fecha</label>
+							<help>Fecha de Pedido </help>
+							<valor>today</valor>
+						</field>
+						
+						<field id="nrocha">
+							<label>Fabricacion</label>
+							<help>Numero de Fabricacion </help>
+						</field>
+						<field id="ctacod">
+							<label>Cuenta </label>
+							<help>Codigo de Cuenta </help>
+							<tabla_ex id="CCTCUENT" condes="true">
+								<field id="ctacod"></field>
+								<field id="ctanom"></field>
+								<field id="siscod" oculto="true">
+									<condicion operador="=">'02'</condicion>
+								</field>
+							</tabla_ex>
+						</field>
+						
+						<!--                  <field id="arruga">
+						<label>Arrugado </label>
+						<help> </help>
+						</field>
+						<field id="barcom">
+						<label>Bar Completo </label>
+						<help> </help>
+						</field>
+						<field id="cabeza">
+						<label>Cabezales </label>
+						<help> </help>
+						</field>
+						<field id="calcom">
+						<label>Calef.Comun </label>
+						<help> </help>
+						</field>
+						<field id="calefn">
+						<label>Calefaccion </label>
+						<help> </help>
+						</field>
+						<field id="calobs">
+						<label>Obs.Calef. </label>
+						<help> </help>
+						</field>
+						<field id="calweb">
+						<label>Calef.Webasto </label>
+						<help> </help>
+						</field>
+						<field id="camare">
+						<label>Camarera </label>
+						<help> </help>
+						</field>
+						<field id="cantasi">
+						<label>Cant.Asientos </label>
+						<help> </help>
+						</field>
+						<field id="canttv">
+						<label>Cant.TV </label>
+						<help> </help>
+						</field>
+						<field id="cartel">
+						<label>Cartel Ruta </label>
+						<help> </help>
+						</field>
+						<field id="cerrad">
+						<label>Cerradura </label>
+						<help> </help>
+						</field>
+						<field id="colair">
+						<label>Coloca </label>
+						<help> </help>
+						</field>
+						<field id="colaud">
+						<label>Coloca Audio </label>
+						<help> </help>
+						</field>
+						<field id="colcor">
+						<label>Color cortina </label>
+						<help> </help>
+						</field>
+						<field id="colint">
+						<label>Color </label>
+						<help> </help>
+						</field>
+						<field id="colvid">
+						<label>Coloca Video </label>
+						<help> </help>
+						</field>
+						<field id="conaac">
+						<label>Con Aire </label>
+						<help> </help>
+						</field>
+						<field id="contacto">
+						<label>Contacto </label>
+						<help> </help>
+						</field>
+						<field id="cortina">
+						<label>Cortina </label>
+						<help> </help>
+						</field>
+						<field id="ctepin">
+						<label>Corte </label>
+						<help> </help>
+						</field>
+						<field id="electr">
+						<label>Electr. </label>
+						<help> </help>
+						</field>
+						<field id="email">
+						<label>? </label>
+						<help> </help>
+						</field>
+						<field id="equipa">
+						<label>Equipam. </label>
+						<help> </help>
+						</field>
+						<field id="habili">
+						<label>Habilitacion </label>
+						<help> </help>
+						</field>
+						<field id="marair">
+						<label>Marca A/Ac. </label>
+						<help> </help>
+						</field>
+						<field id="marasi">
+						<label>Marca Asientos </label>
+						<help> </help>
+						</field>
+						<field id="marcha">
+						<label>Chasis Marca </label>
+						<help> </help>
+						</field>
+						<field id="maresp">
+						<label>Marca Espejo </label>
+						<help> </help>
+						</field>
+						<field id="microf">
+						<label>Microfono </label>
+						<help> </help>
+						</field>
+						<field id="miniba">
+						<label>Minibar </label>
+						<help> </help>
+						</field>
+						<field id="modair">
+						<label>Modelo A/Ac </label>
+						<help> </help>
+						</field>
+						<field id="modcha">
+						<label>Modelo Chasis </label>
+						<help> </help>
+						</field>
+						<field id="nroasi">
+						<label>Nro Asiento </label>
+						<help> </help>
+						</field>
+						<field id="nrocar">
+						<label>Nro Carroceria </label>
+						<help> </help>
+						</field>
+						<field id="obsesp">
+						<label>Observ.Esp. </label>
+						<help> </help>
+						</field>
+						<field id="paqluz">
+						<label>Luces PP </label>
+						<help> </help>
+						</field>
+						<field id="piston">
+						<label>Pistones </label>
+						<help> </help>
+						</field>
+						<field id="porpaq">
+						<label>Porta Paquete </label>
+						<help> </help>
+						</field>
+						<field id="posair">
+						<label>Posicion </label>
+						<help> </help>
+						</field>
+						<field id="preair">
+						<label>Prepara A/Ac. </label>
+						<help> </help>
+						</field>
+						<field id="preaud">
+						<label>Prepara Audio </label>
+						<help> </help>
+						</field>
+						<field id="previd">
+						<label>Prepara Video </label>
+						<help> </help>
+						</field>
+						<field id="prvcod">
+						<label>Provincia </label>
+						<help> </help>
+						</field>
+						<field id="ptabga">
+						<label>Puerta Bodega </label>
+						<help> </help>
+						</field>
+						<field id="reloj">
+						<label>Reloj </label>
+						<help> </help>
+						</field>
+						<field id="revfec">
+						<label>RevFec </label>
+						<help> </help>
+						</field>
+						<field id="revnro">
+						<label>Rev. </label>
+						<help> </help>
+						</field>
+						<field id="siscod" oculto="true">
+						<label>Codigo Sistema.. </label>
+						<help> </help>
+						</field>
+						<field id="telnro">
+						<label>Telefono </label>
+						<help> </help>
+						</field>
+						<field id="tipasi">
+						<label>Tipo Asiento </label>
+						<help> </help>
+						</field>
+						<field id="tipcal">
+						<label>Tipo Calef. </label>
+						<help> </help>
+						</field>
+						<field id="tipcor">
+						<label>Tipo Cortina </label>
+						<help> </help>
+						</field>
+						<field id="tipesp">
+						<label>Tipo Espejo </label>
+						<help> </help>
+						</field>
+						<field id="tiphab">
+						<label>Tipo Habil </label>
+						<help> </help>
+						</field>
+						<field id="tippin">
+						<label>Tipo Pint </label>
+						<help> </help>
+						</field>
+						<field id="tippta">
+						<label>Tipo puerta </label>
+						<help> </help>
+						</field>
+						<field id="tipvtn">
+						<label>Tipo Ventana </label>
+						<help> </help>
+						</field>
+						<field id="trabas">
+						<label>Trabas Neumat </label>
+						<help> </help>
+						</field>
+
+						
+						-->
+					</table>
+               </form>
+        </histrix>

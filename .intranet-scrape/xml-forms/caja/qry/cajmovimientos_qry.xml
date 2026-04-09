@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" showCantidad="false" tooltip="false">
+	<title>Consulta Detallada</title>
+	<obs/>
+	<form>
+		<table id="CAJ_MOVIMIENTOS">
+
+			<fieldGroup id="DEBUG" noshow="true">
+				<field id="cajpuesto_id"/>
+				<field id="cajconcepto_id"/>
+				<field id="fecha_desde" local="true"/>
+				<field id="fecha_hasta" local="true"/>
+			</fieldGroup>
+
+			<field id="id_cajmovimiento" noshow="true">
+				<detalle>id_cajmovimiento</detalle>
+			</field>
+
+			<field id="fecha_movimiento">
+				<label>Fecha</label>
+				<condicion operador="&gt;=">'[__fecha_desde__]' and (CAJ_MOVIMIENTOS.fecha_movimiento &lt;= '[__fecha_hasta__]' or '[__fecha_hasta__]' = '')</condicion>
+			</field>
+
+			<field id="nro_comp" tdWidth="200px" PDFcolWidth="100">
+				<expression>CONCAT(CAJ_CONCEPTOS.abreviatura_concepto,' ' ,lpad(ifnull(REG_MOVIMIENTOS.puesto_movimiento,0),4,'0'),'-',lpad(CAJ_MOVIMIENTOS.nro_movimiento,8,'0'))</expression>
+				<helper type="link" dir="/caja/proc/del" xml="cajmovimiento_ficha.xml" title="Detalle del Comprobante" modal="true">
+					<parameter source="id_cajmovimiento" target="id_cajmovimiento" operador="="/>           
+				</helper>
+			</field>
+
+			<field id="nombre_cuenta">
+				<label>Referencia</label>
+				<expression>IFNULL( (SELECT rc.nombre_cuenta
+												   FROM REG_MOVIMIENTOS rm 
+												   JOIN REG_CUENTA rc on rc.id_regcuenta = rm.regcuenta_id
+												  WHERE rm.cajmovimiento_id = CAJ_MOVIMIENTOS.id_cajmovimiento 
+													AND rm.subsistema_id = CAJ_CONCEPTOS.subsistema_id LIMIT 1), CAJ_MOVIMIENTOS.referencia_movimiento)</expression>
+			</field>
+
+			<field id="importe_movimiento" tdWidth="100px" PDFcolWidth="20">
+				<label>Importe</label>
+			</field>
+
+			<field id="detalle_valores" local="true" showObjTabla="true" tdWidth="700px"  PDFcolWidth="650">
+				<label>Detalle de Valores</label>
+				<helper type="object" xml="cajvalores_qry.xml">
+					<parameter source="id_cajmovimiento" target="cajmovimiento_id"/>
+					<parameter source="id_cajmovimiento" target="id_cajmovimiento"/>
+				</helper>
+			</field>
+
+			<field id="id_regmovim" tabla="REG_MOVIMIENTOS" noshow="true"/>
+
+			<field id="imprimir" local="true" linkint="" print="false" style="width:auto;">
+				<helper type="link" icon="../img/printer_ico.png" title="Imprimir">
+<!--					<parameter source="id_regmovim" target="id_regmovim"/>-->
+<parameter source="id_cajmovimiento" target="id_cajmovimiento" />
+				</helper>
+				<attribute id="linkint">imprime_concepto</attribute>
+				<valor>' '</valor>
+			</field>
+
+			<field id="imprime_concepto" tabla="CAJ_CONCEPTOS" noshow="true" />
+
+			<group>
+				<field id="cajpuesto_id"/>
+				<field id="cajconcepto_id"/>
+				<field id="fecha_movimiento"/>
+				<field id="id_cajmovimiento"/>
+			</group>
+		</table>
+		
+		<join>
+			<table id="CAJ_CONCEPTOS">
+				<field id="id_cajconcepto">
+					<condicion operador="=">CAJ_MOVIMIENTOS.cajconcepto_id</condicion>
+				</field>
+			</table>
+		</join>
+
+		<join>
+			<table id="CAJ_PUESTOS">
+				<field id="id_cajpuesto">
+					<condicion operador="=">CAJ_MOVIMIENTOS.cajpuesto_id</condicion>
+				</field>
+			</table>
+		</join>
+
+		<join tipo="LEFT">
+			<table id="REG_MOVIMIENTOS">
+				<field id="cajmovimiento_id">
+					<condicion operador="=">CAJ_MOVIMIENTOS.id_cajmovimiento</condicion>
+				</field>
+				
+				<!-- El filtro es para que no traiga los movimientos bancarios -->
+				<field id="cajvalor_id">
+					<condicion operador="=">0 or isnull(REG_MOVIMIENTOS.cajvalor_id)</condicion>
+				</field>
+			</table>
+		</join>
+
+
+
+	</form>
+</histrix>

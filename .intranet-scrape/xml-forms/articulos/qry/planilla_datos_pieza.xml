@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ficha" preFetch="true" sololectura="true" borra="false" inserta="false" modifica="false" procesa="false"   path="/fotos/articulos/" autoprint="true">
+<obs/>
+  <form>
+    <table id="STK_ARTICULOS" title="DATOS POR PIEZA - ABASTECIMIENTO Y GESTIÓN DE INVENTARIO">
+	<title>Abastecimiento y gestión de inventario</title>
+
+      <field id="id_stkarticulo" deshabilitado="true" esClave="true" posX="5" posY="+2" lblsize="60">
+        <label>Código</label>
+      </field>
+
+
+
+
+      <field id="nombre_articulo" deshabilitado="true"  posX="5" posY="+2" colspan="4" cols="80" pdfancho="135" lblsize="60">
+	<label>Descripción</label>
+      </field>
+
+      <field id="fotopath" local="true" noshow="true" print="false">
+        <if exp="true">
+          <true>'id_stkarticulo/'</true>
+          <false>''</false>
+        </if>
+        <tipo>varchar</tipo>
+      </field>    
+      <field id="tipoconteo_id" deshabilitado="true"  posX="5" posY="+2" lblsize="60">
+          <label>Clasificación</label>
+          <helper empty="true" id="STK_TIPO_CONTEO" type="combo" >
+            <field id="id_tipoconteo"/>
+            <field id="tipo_conteo" />
+          </helper>
+      </field>
+
+
+   <field id="foto" path="fotopath" _open="true"  download="false" _viewer="true" rowspan="8" modpos="nobr" posX="80" posY="+2" print="false">
+          <expression>select ARTICULO_FOTO.foto from ARTICULO_FOTO where ARTICULO_FOTO.idArticulo = id_stkarticulo and ARTICULO_FOTO.foto != '' order by revision desc limit 1</expression>
+          <size>150</size>
+	<tipo Type="Image">file</tipo>
+
+      </field>
+
+   <field id="foto2" _path="fotopath"  posX="125" posY="+2" imageWidth="70"  print="true" imagen="true">
+          <expression>select concat(id_stkarticulo,'/',ARTICULO_FOTO.foto) from ARTICULO_FOTO where ARTICULO_FOTO.idArticulo = id_stkarticulo and ARTICULO_FOTO.foto != '' order by revision desc limit 1</expression>
+	<tipo Type="Image">file</tipo> 
+      </field>
+
+
+	<field id="dep"  posX="5" posY="+2" lblsize="60">
+	    <label>Depósito de origen</label>
+	    <expression>(select nombre_deposito from STK_DEPOSITOS join STK_LOCACION ON stkdeposito_id = id_stkdeposito where id_stklocacion = stklocacion_fija_id limit 1)</expression>
+	    <size>30</size>
+	</field>
+
+      <field id="stklocacion_fija_id"  posX="5" posY="+2" lblsize="60" >
+        <label>Locación Fija</label>
+        <helper _empty="true" id="STK_LOCACION" type="combo" empty="true">
+          <field id="id_stklocacion"/>
+          <field id="codigo_locacion">
+            <detalle>codigo_locacion</detalle>
+          </field>
+          <field id="stkdeposito_id">
+            <detalle>stkdeposito_id</detalle>
+          </field>
+          <order>
+            <field id="codigo_locacion" />
+          </order>
+        </helper>
+      </field>
+	
+<!--
+        <field id="dep_uso_1" local="true"  posX="5" posY="+2" lblsize="60" >
+	    <label>Depósito de uso n° 1</label>
+	</field>
+        <field id="locacion_uso_1" local="true"  posX="5" posY="+2" lblsize="60" >
+	    <label>Locación de uso n° 1</label>
+	</field>
+        <field id="forma_abastecimiento_1" local="true"  posX="5" posY="+2" lblsize="60" >
+	    <label>Forma de abastecimiento al punto de uso n° 1</label>
+	</field>
+        <field id="dep_uso_2" local="true"  posX="5" posY="+2" lblsize="60" >
+	    <label>Depósito de uso n° 2</label>
+	</field>
+        <field id="locacion_uso_2" local="true"  posX="5" posY="+2" lblsize="60" >
+	    <label>Locación de uso n° 2</label>
+	</field>
+        <field id="forma_abastecimiento_2" local="true"  posX="5" posY="+2" lblsize="60" >
+	    <label>Forma de abastecimiento al punto de uso n° 2</label>
+	</field>
+        <field id="gestion_inv"   posX="5" posY="+2" lblsize="60" >
+	    <label>Gestión de inventario</label>
+	    <expression>(case when stock_reposicion != 0 then 'SI' else 'NO' end)</expression>
+	</field>
+-->
+      <field id="stock_reposicion" _deshabilitado="true"  posX="5" posY="+2" lblsize="60" >
+        <label >Punto Pedido</label>
+        <help>Stock de Reposición.</help>
+        <tipo>decimal</tipo>
+      </field>
+
+      <field id="lote_optimo" deshabilitado="false"  posX="5" posY="+2" lblsize="60" >
+        <label >Lote Óptimo Pedido</label>
+        <help>Lote Óptimo Pedido</help>
+      </field>
+
+    <field id="stock_minimo"  posX="5" posY="+2" lblsize="60" >
+        <label>Stock mínimo</label>
+        <help>Stock mínimo</help>
+      </field>
+
+      <field id="stock_seguridad"  deshabilitado="false"  posX="5" posY="+2" lblsize="60" >
+        <label>Stock Seguridad</label>
+        <help>Stock crítico en depósito</help>
+        <expression>round((select sum(porcentaje_opcion) + 10 from STK_ATRIBUTO_OPCIONES inner join STK_ATRIBUTOS on stkatributo_id = id_stkatributo
+            inner join STK_ATRIBUTOS_GRUPOS on id_stkgrupoatrib = stkgrupoatrib_id  inner join STK_ATRIBUTO_VALORES on
+            STK_ATRIBUTO_VALORES.stkatributo_id = STK_ATRIBUTO_OPCIONES.stkatributo_id and valor_atributo = id_atribopciones
+            where  STK_ATRIBUTO_VALORES.stkarticulo_id = id_stkarticulo and id_stkgrupoatrib = 1) /100 * demprov * dem_diaria, 0)</expression>
+      </field>
+
+
+     <field id="trazable"  posX="5" posY="+2" lblsize="60" >
+        <label>Trazabilidad</label>
+        <help>Indica si el insumo es o No Trazable</help>
+        <options>
+          <option valor="0">No Trazable</option>
+          <option valor="1">Trazable</option>
+        </options>
+      </field>
+	
+    
+
+      <field id="uso" local="true"   posX="5" posY="+4" lblsize="60" PDFwidth="120">
+        <helper xml="stkarticulo_uso_qry.xml" type="object" label="Locaciones de uso">
+          <parameter source="id_stkarticulo" target="stkarticulo_id" />
+        </helper>
+      </field>    
+
+	<!--        
+    
+      <field id="grilla" local="true" colspan="7">
+        <label>Características</label>
+        <helper dir="/stock/ing/" type="object" xml="producto_atributos_valores.xml" >
+          <parameter source="1" target="id_stkgrupoatrib" />
+          <parameter source="id_stkarticulo" target="stkarticulo_id" />
+        </helper>
+      </field>    
+-->
+    </table>
+
+  </form>
+</histrix>

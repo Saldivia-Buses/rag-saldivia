@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" log="false">
+    <title>Detalle Pedido</title>
+    <obs></obs>
+    <form>
+    
+    <table id="REG_MOVIMIENTOS">
+            
+        <field id="id_stkarticulo" tabla="STK_ARTICULOS" noshow="true" />
+        
+     
+          <field id="fecha_movimiento"  >
+              <label>Fecha</label>
+          </field>
+   
+        <field id="subsistemavendedor_id" local="true" valauto="true" noshow="true"/>   
+        
+		<field id="regcuentavendedor_id">
+			<label >Vendedor</label>
+			<helper type="combo" xml="regcuenta_simple_qry.xml" dir="/ayudas" _empty="true">
+		        <field id="id_regcuenta" />
+		        <field id="nombre_cuenta" />
+            </helper>
+        </field>
+        <field id="nombre_cuenta" tabla="REG_CUENTA">
+			<label>Cliente</label>
+        </field>
+            <field id="descripcion_concepto" tabla="REG_CONCEPTOS">
+                 <label>Concepto</label>
+            </field>  
+           <field id="nro_movimiento">
+            <label>Nro</label>
+            <expresion>CONCAT(REG_MOVIMIENTOS.letra_movimiento,' ',LPAD(REG_MOVIMIENTOS.puesto_movimiento,4,'0'),'-',LPAD(case when REG_MOVIMIENTOS.cajmovimiento_id &gt; 0 then REG_MOVIMIENTOS.cajmovimiento_id else REG_MOVIMIENTOS.nro_movimiento end ,8,'0'))</expresion>
+        </field>       
+        <field id="cantidad_detalle" total="true" suma="true">
+			<label>cantidad</label>
+			<expresion>sum(REG_DETALLES.cantidad_detalle)</expresion>
+			<tipo>decimal</tipo>			
+		</field>
+
+    <group>
+        <field id="nro_movimiento" />
+        <field id="descripcion_concepto" tabla="REG_CONCEPTOS" /> 
+    </group>
+    
+    </table>
+   <join>
+        <table id="REG_DETALLES">
+            <field id="regmovim_id" >
+                <condicion operador="=">REG_MOVIMIENTOS.id_regmovim</condicion>
+            </field>
+        </table>
+    </join>
+    <join>
+        <table id="REG_CUENTA">
+            <field id="id_regcuenta" >
+                <condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+            </field>
+        </table>
+    </join>
+    <join>
+        <table id="STK_ARTICULOS">
+            <field id="id_stkarticulo" >
+                <condicion operador="=">REG_DETALLES.codigo_detalle</condicion>
+            </field>
+        </table>
+    </join>      
+    <join>
+        <table id="REG_CONCEPTOS">
+            <field id="id_concepto" >
+                <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+            </field>
+        </table>
+    </join>
+    <join>
+          <table id="HTXOPTIONS">
+            <field id="option_value">
+              <condicion operador="=">REG_CONCEPTOS.id_concepto and option_name = 'ID_NOTA_PEDIDOS'</condicion>
+            </field>
+          </table>
+     </join>
+    
+    </form>
+</histrix>

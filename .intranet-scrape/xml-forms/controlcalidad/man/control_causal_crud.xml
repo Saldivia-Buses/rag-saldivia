@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="crud" >
+	<titulo>Causal Control</titulo>
+	<obs/>
+	<form >
+		<table id="PROD_CONTROL_CAUSAL">
+		    <field id="id_controlcausal" noshow="true" autoinc="true">
+	            </field>
+		    <field id="nombre_controlcausal" >
+			<label>Causa</label>
+	            </field>
+		    <field id="abrev_controlcausal" >
+			<label>Abreviacion</label>
+	            </field>
+		    <field id="habilitado_controlcausal" >
+			<label>Habilitado</label>
+			<tipo>check</tipo>
+	            </field>
+		    <field id="orden_controlcausal" >
+			<label>Orden</label>
+	            </field>
+		</table>
+
+	</form>
+</histrix>

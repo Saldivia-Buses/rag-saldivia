@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="fichaing" inserta="false" modifica="false" imprime="false" _transaccional="true" log="false">
+	<title>Recepcion de Compras</title>
+	<obs></obs>
+	<form >
+		<table id="STK_ENVIOS" label="Recepción de Compras" ><!--
+			<movimientos>
+				<relacion id="cps_movimientos_recepcion.xml" />
+				<relacion id="cpsencab_rec_ingmov2.xml"></relacion>
+			</movimientos>-->
+			<validation>
+				<condition >
+					<![CDATA[nro_envio + 0 == 0]]>
+				</condition>
+				<message>Numero de Envio en cero</message>
+			</validation>
+			<field id="id_stkenvio" noshow="true">
+				<actualiza>
+					<field id="materiales" destino="stkenvio_id" />
+				</actualiza>
+			</field>
+			<field id="subsistema_id" noshow="true" />
+			<field id="puesto_envio" deshabilitado="true" style="font-weight:bold;">
+				<label>Nº Envio</label>
+				<tipo>numeric</tipo>
+				<size>10</size>
+			</field>
+			<field id="nro_envio" sincelda="true" style="font-weight:bold;">
+				<helper type="external" dir="/help_local" xml="HLPstk_envios.xml" />
+				<label modpos="nobr">-</label>
+				<tipo>numeric</tipo>
+				<size>14</size>
+			</field>
+			<field id="fecha_envio" deshabilitado="true">
+				<label modpos="nobr">Fecha</label>
+				<tipo>date</tipo>
+			</field>
+			<field id="regcuenta_id" deshabilitado="true">
+				<label modpos="nobr">Proveedor</label>
+				<helper type="combo" xml="regcuenta_cmb.xml" dir="/ayudas" empty="true">
+					<field id="id_regcuenta">
+						<valor>-1</valor>
+					</field>
+					<field id="nombre_cuenta">
+						<expression>CONCAT('(', nro_cuenta, ') ', nombre_cuenta)</expression>
+					</field>
+				</helper>
+			</field>
+			<field id="puesto_remito" deshabilitado="true">
+				<label>Remito</label>
+				<tipo>numeric</tipo>
+				<size>10</size>
+			</field>
+			<field id="nro_remito" sincelda="true" deshabilitado="true">
+				<label modpos="nobr">-</label>
+				<tipo>numeric</tipo>
+				<size>14</size>
+			</field>
+			<field id="fecha_remito" deshabilitado="true">
+				<label modpos="nobr">Fecha Remito</label>
+				<tipo>date</tipo>
+			</field>
+			<field id="movfec__1" local="true">
+				<label>Fecha Recepcion</label>
+				<tipo>date</tipo>
+				<valor>today</valor>
+			</field>
+			<field id="nro_cuenta" local="true" noshow="true"/>
+			<field id="observaciones" deshabilitado="true">
+				<label modpos="nobr">observaciones</label>
+				<size>90</size>
+			</field>
+			<field id="materiales" showObjTabla="true" local="true">
+				<helper type="object" xml="cps_detalle_grid_xenv_rec.xml"></helper>
+				<label colspan="6">recepción</label>
+			</field>
+		</table>
+	</form>
+</histrix>

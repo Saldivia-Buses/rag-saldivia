@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF8"?>
+<histrix tipo="grid" subtipo="vertical">
+	<title>Movimientos materiales de seguridad</title>
+
+	<form >
+		<table id="STKINMOV" label="Movimientos de salida materiales seguridad">
+		
+			<field id="_ORDEN" local="true" />
+			<field id="producto">
+				<label>Producto</label>
+				<expression>SUBSTRING_INDEX(STKINSUM.artdes, ' ', 1)</expression>
+			</field>
+			<field id="tipomodelo">
+				<label>Tipo//Modelo</label><!--
+				<expression>SUBSTRING(SUBSTRING_INDEX(STKINSUM.artdes, ' ', 2), LOCATE(' ', STKINSUM.artdes))</expression>-->
+				<expression>REPLACE(REPLACE(STKINSUM.artdes, SUBSTRING_INDEX(STKINSUM.artdes, ' ', 1), ''), SUBSTRING_INDEX(STKINSUM.artdes, ' ', -1), '')</expression>
+			</field>
+			<field id="marca">
+				<label>Marca</label><!--
+				<expression>SUBSTRING(STKINSUM.artdes, LOCATE(' ', STKINSUM.artdes, LOCATE(' ', STKINSUM.artdes) + 1) )</expression>-->
+				<expression>SUBSTRING_INDEX(STKINSUM.artdes, ' ', -1)</expression>
+			</field>
+			<field id="certificacion">
+				<label>Cert</label>
+				<expression>IF(STKINSUM.norcod = 0, 'NO', 'SI')</expression>
+			</field>
+			<field id="movcant">
+				<label>Cantidad</label>
+			</field>
+			<field id="movfec">
+				<label>Fecha entrega</label>
+				<condicion operador="&gt;=">'[__fecha_desde__]' and STKINMOV.movfec &lt;= '[__fecha_hasta__]'</condicion>
+			</field>
+			<field id="firma" local="true">
+				<label>Firma del trabajador</label>
+			</field>
+
+			<field id="opecod" noshow="true">
+				<label>ope</label>
+			</field>
+			<field id="fecha_desde" local="true" noshow="true">
+				<label>d</label>
+				<tipo>date</tipo>
+			</field>
+			<field id="fecha_hasta" local="true" noshow="true">
+				<label>h</label>
+				<tipo>date</tipo>
+			</field>
+			<field id="siscod" noshow="true">
+				<condicion operador="=">'01'</condicion>
+			</field>
+			<field id="movcod" noshow="true">
+			</field>
+
+		</table>
+
+		<!-- <join >
+			<table id="PERSONAL_ARTICULOS">
+				<field id="artcod">
+					<condicion operador="=">STKINMOV.artcod</condicion>
+				</field>
+			</table>
+		</join> -->
+
+		<join >
+			<table id="STKINSUM">
+				<field id="artcod">
+					<condicion operador="=">STKINMOV.artcod</condicion>
+				</field>
+				<field id="siscod">
+					<condicion operador="=">STKINMOV.siscod</condicion>
+				</field>
+			</table>
+		</join>
+	</form>
+</histrix>

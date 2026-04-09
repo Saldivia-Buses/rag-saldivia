@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="consulta"  borra="true">
+        <title>titulo</title>
+        <obs></obs>
+        <form detalle="mora_aperturas.xml" inline="true">
+<!-- detalle="mora_aperturas.xml" inline="true" -->
+         <table id="hotel_mora.sistema" label="etiqueta">
+                         
+             <filters>
+                 
+                 <field id="dateaud">
+               		<label>Desde</label>
+                    <operador>&gt;=</operador>
+                    <valor>today</valor>
+                    
+                 </field>
+              
+                 <field id="dateaud">
+               		<label>hasta</label>
+                    <operador>&lt;=</operador>
+                    <valor>today</valor>
+
+                 </field>    
+               
+               
+               <field id="habitacion" deshabilitado="false" >
+               		<label>Habitacion2</label>
+                    <operador>=</operador>
+                 </field>
+               
+               <!--
+                  <field id="codfunc" deshabilitado="false" >
+               		<label>Funcion</label>
+                    <operador>=</operador>
+                 </field>
+              -->
+              
+            </filters> 
+              
+              <field id="numaudit" >
+                       <label>ID_Audit</label>
+                    
+                 </field>
+
+		 <field id="dateaud" >
+                       <label>Fecha_Audit</label>
+                        <tipo>date</tipo>
+           <detalle>dateope</detalle>
+
+                    
+                 </field>
+              
+              
+		 <field id="timeaud" >
+                       <label>Time_Audit</label>
+                 </field>
+              
+              
+               <field id="datatext" >
+                       <label>Texto</label>
+                       <help>Ayuda contextual</help>
+                        <expression> case when codfunc="72" then "CHECKOUT" else datatext END</expression>
+                 </field>
+        
+              
+              
+                	<field id="habitacion">
+                  <label>Habitacion</label>
+                  <expression having="false">substring(datatext,1,2)</expression>
+                  <tipo>integer</tipo>
+                      <detalle>codoor</detalle>
+              				
+
+              
+              </field>
+              
+              
+              <field id="dateaud1" local="true">
+                <label>Desde</label>
+              	<expression>dateaud</expression>
+                <tipo>date</tipo>              
+                
+              </field>
+              
+              
+              <field id="hasta2" _local="true">
+                	<label>Hasta</label>
+              		<expression>STR_TO_DATE(SUBSTRING(datatext,LOCATE('(', datatext)+1,10), '%d/%m/%Y')</expression>
+                    <tipo>date</tipo>
+
+                <detalle>dateope1</detalle>
+              </field>
+              
+              
+               
+              <field id="Totaldias" local="true" suma="true">
+             		<label>Dias de Alquiler</label> 
+                  	<expression>(datediff (STR_TO_DATE(SUBSTRING(datatext,LOCATE('(', datatext)+1,10), '%d/%m/%Y') ,dateaud)) </expression>                    
+              </field>
+         
+            <field id="mes" _noshow="true">
+           		<label>mes_encurso</label>
+            <!--    <condicion operador="!=">"0"</condicion>
+           --></field>
+           
+           
+              <field id="aperturas_sum" local="true">
+               <label>Aperturas</label>
+                      
+       	   <helper type="link" xml="mora_aperturas.xml" dir="/it" width="600" height="250"  title="Aperturas">
+                 <parameter source="dateaud" target="dateope" operator="&gt;=" />
+                 <parameter source="hasta2" target="dateope1" operator="&lt;=" />
+    	         <parameter source="habitacion" target="codoor"  />
+           </helper>
+                
+                <!--<expression>select count(*) from hotel_mora.aperturas where dateaud = ( '[__dateaud1__]' ) ]</expression> -->
+                  
+
+      <expression sql="true"><![CDATA[ select count(*) from hotel_mora.aperturas where dateope1 >= ( '[__dateaud1__]' ) and dateope <= ( '[__hasta2__]' ) and codoor=( '[__habitacion__]' ) ]]></expression>
+  
+                
+              </field>
+           
+<field id="clientes" local="true">
+ <label>Clientes</label>
+ <expression sql="true"><![CDATA[ select count(*) from hotel_mora.aperturas where dateope1 >= ( '[__dateaud1__]' ) and dateope <= ( '[__hasta2__]' ) and codoor=( '[__habitacion__]' ) and codusr != 53 and codusr != 54 and codusr != 55 and codusr != 56 and codusr != 57 and codusr != 58 and codusr != 59  ]]></expression>
+          
+           
+ </field>
+           
+           
+           
+<field id="mucamas" local="true">
+ <label>Mucamas</label>
+ <expression sql="true"><![CDATA[ select count(*) from hotel_mora.aperturas where dateope1 >= ( '[__dateaud1__]' ) and dateope <= ( '[__hasta2__]' ) and codoor=( '[__habitacion__]' ) and (codusr=53 or codusr=54)  ]]></expression>
+          
+           
+ </field>
+           
+           
+           
+<field id="Recepcion" local="true">
+ <label>Recep</label>
+ <expression sql="true"><![CDATA[ select count(*) from hotel_mora.aperturas where dateope1 >= ( '[__dateaud1__]' ) and dateope <= ( '[__hasta2__]' ) and codoor=( '[__habitacion__]' ) and (codusr=55 or codusr=56)  ]]></expression>
+          
+           
+ </field>  
+
+           
+<field id="Mantenimiento" local="true">
+ <label>Mant</label>
+ <expression sql="true"><![CDATA[ select count(*) from hotel_mora.aperturas where dateope1 >= ( '[__dateaud1__]' ) and dateope <= ( '[__hasta2__]' ) and codoor=( '[__habitacion__]' ) and codusr=57  ]]></expression>
+          
+           
+ </field> 
+
+
+
+           
+<field id="sereno" local="true">
+ <label>sereno</label>
+ <expression sql="true"><![CDATA[ select count(*) from hotel_mora.aperturas where dateope1 >= ( '[__dateaud1__]' ) and dateope <= ( '[__hasta2__]' ) and codoor=( '[__habitacion__]' ) and codusr=58  ]]></expression>
+          
+           
+ </field>            
+           
+<field id="Gerente" local="true">
+ <label>Gerente</label>
+ <expression sql="true"><![CDATA[ select count(*) from hotel_mora.aperturas where dateope1 >= ( '[__dateaud1__]' ) and dateope <= ( '[__hasta2__]' ) and codoor=( '[__habitacion__]' ) and codusr=52  ]]></expression>
+          
+           
+ </field>          
+           
+           
+           
+                       
+               
+              <field id="codusr" noshow="true">
+                <label>Operador</label>
+                <condicion operador="=">"52"</condicion>
+              
+              </field>
+              
+              <field id="codfunc" noshow="true">
+                 <label>Funcion</label>
+                 <condicion operador="in">(71,72) </condicion>
+
+                
+              </field>
+              
+              
+   
+            </table>
+        </form>
+    </histrix>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

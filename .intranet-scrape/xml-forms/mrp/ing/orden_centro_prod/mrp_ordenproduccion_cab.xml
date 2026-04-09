@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="cabecera" >
+    <title>ORDEN DE COMPRA</title>
+    <consulta>
+        <table id="MRP_ORDEN_PRODUCCION" label="ORDEN DE COMPRA" >
+
+            <field id="centro_productivo_id" noshow="true" />
+            <!--
+            <field id="regcuenta_id" local="true" noshow="true">
+                <label>Cuenta</label>
+                <helper type="external" xml="regcuenta_relacionescmb.xml" dir="/ayudas" _empty="true" >
+                </helper>               
+                <size>6</size> 
+                <detalle>regcuenta_id</detalle>
+                
+            </field>
+
+
+            <field id="nro_cuenta" local="true" required="true" min="1">
+                <label>Cod</label>
+                <helper type="external" xml="regcuenta_relacionescmb_nro.xml" dir="/ayudas" _empty="true" >
+                 
+                </helper>               
+                <size>6</size> 
+            </field>
+
+            <field id="regcuenta_nombre" local="true" deshabilitado="true" sincelda="true">
+
+                <label modpos="nobr" _colspan="3"></label>
+                <size>25</size>
+            </field>
+    -->
+            <field id="fecha_orden" >
+                <label modpos="nobr">Fecha</label>
+                <help >Fecha de Orden de Producción</help>
+                <valor>today</valor>
+                <tipo>date</tipo>
+            </field>
+            <field id="id_mrporden">
+                    <label modpos="nobr">Nro</label>
+                    <expresion sql="true">select ifnull((select max(id_mrporden) + 1 from MRP_ORDEN_PRODUCCION),1)</expresion>
+                    <detalle>id_mrporden</detalle>
+            </field>
+<!--
+            <field id="rhpersonal_id" >
+        	<helper type="combo" xml="rhpersonal_qry.xml" dir="/ayudas" empty="true"/>
+                <label modpos="nobr">Empleado</label>
+                
+                <help >Empleado responsable de la Orden de Producción</help>
+                <actualiza>
+                    <field id="codemp"></field>
+                </actualiza>
+            </field>
+        -->
+            <field id="codemp" local="true" noshow="true">
+            </field>
+            <field id="mrporden_id" noshow="true">
+        	<expresion sql="true">select ifnull((select max(id_mrporden) + 1 from MRP_ORDEN_PRODUCCION),1)</expresion>
+        	<detalle>id_mrporden</detalle>
+            </field>
+
+
+
+<!--
+            <field id="orden_comentarios">
+                <label colspan="5">Comentarios</label>
+                <help>Comentarios</help>
+                <size>250</size>
+            </field>
+        -->
+            <field id="mrpestado_id" oculto="true">
+                <label>Estado </label>
+                <help>Estado Actual</help>
+                <options>
+                    <option valor="0">Pendiente</option>
+                    <option valor="1">Cumplida</option>
+                </options>
+                <valor>1</valor>
+            </field>
+        </table>
+    </consulta>
+</histrix>

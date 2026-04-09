@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="ing" importFile="true" inserta="false" modifica="false" llenoTemporal="false" _log="false" _deleteRow="false">
+    <title>Importar Articulos</title>
+    <obs></obs>
+    <form>
+        <table id="STK_ARTICULOS" label="Importar Articulos">
+
+            <movimientos cabecera="stkarticulos_importar_cab.xml">
+                <relacion id="stkarticulos_importar_ins.xml" />
+                <relacion id="stkarticulos_importar_prov.xml" />
+            </movimientos>
+
+        <fieldGroup colstyle="text-align:center;font-size: 14px;font-color:cadetblue !important; ">
+
+                <field id="id_stkarticulo" >
+                    <label>ID Articulo</label>
+                    <tipo>varchar</tipo>
+                </field>
+
+                <field id="existencia" local="true" import="false">  
+                    <label>Existe</label>
+                    <expression sql="true">
+                        SELECT 
+                        if( EXISTS( SELECT '1' FROM STK_ARTICULOS WHERE id_stkarticulo =  '[__id_stkarticulo__]' ),'&#10004;','&#10006;')
+                    </expression>
+                </field> 
+
+                <field id="nombre_articulo">
+                    <label>Nombre</label>
+                    <tipo>varchar</tipo>
+                </field>
+
+                <field id="alto"  >
+                   <label>Alto</label>
+                </field>
+
+                 <field id="ancho"  >
+                   <label>Ancho</label>
+                </field>
+                
+                <field id="profundidad"  >
+                    <label>Profundidad</label>
+                </field>
+
+            <!-- RUBRO -->
+
+                <field id="stkrubro_id">
+                    <label>Rubro</label>
+                    <tipo>varchar</tipo>
+                </field>
+                
+                <field id="importa_rubro" import="false" local="true" noshow="true">
+                    <label>Rubro</label>
+                    <expression sql="true">SELECT id_stkrubro FROM `STK_RUBROS` WHERE `nombre_rubro` = '[__stkrubro_id__]'</expression>
+                </field>
+
+                <field id="existencia_rubro" local="true" import="false"> 
+                    <label>Existe</label>
+                    <expression sql="true">
+                        SELECT 
+                        if( EXISTS( SELECT '1' FROM STK_RUBROS WHERE nombre_rubro =  '[__stkrubro_id__]' ),'&#10004;','&#10006;')
+                    </expression>
+                </field>
+
+            <!-- FAMILIA -->
+
+                <field id="stkfamilia_id" >
+                    <label>Familia</label>
+                    <tipo>varchar</tipo>
+                </field>
+
+                <field id="importa_familia" import="false" local="true" noshow="true">
+                    <label>FAMILIA</label>
+                    <expression sql="true">SELECT id_stkfamilia FROM `STK_FAMILIAS` WHERE `nombre_familia` = '[__stkfamilia_id__]'</expression>
+                </field>
+
+                <field id="existencia_familia" local="true" import="false"> 
+                    <label>Existe</label>
+                    <expression sql="true">
+                        SELECT 
+                        if( EXISTS( SELECT '1' FROM STK_FAMILIAS WHERE nombre_familia =  '[__stkfamilia_id__]' ),'&#10004;','&#10006;')
+                    </expression>
+                </field>
+
+            <!-- MARCA -->
+
+                <field id="stkmarca_id">
+                    <label>Marca</label>
+                    <tipo>varchar</tipo>
+                </field>
+
+                <field id="importa_marca" import="false" local="true" noshow="true">
+                    <label>MARCA</label>
+                    <expression sql="true">SELECT id_stkmarca FROM `STK_MARCAS` WHERE `nombre_marca` = '[__stkmarca_id__]'</expression>
+                </field>
+
+                <field id="existencia_marca" local="true" import="false"> 
+                    <label>Existe</label>
+                    <expression sql="true">
+                        SELECT 
+                        if( EXISTS( SELECT '1' FROM STK_MARCAS WHERE nombre_marca =  '[__stkmarca_id__]' ),'&#10004;','&#10006;')
+                    </expression>
+                </field>
+
+
+                <!-- <field id="precio_venta"  >
+                    <label>Precio Venta</label>
+                    <tipo>varchar</tipo>
+                </field> -->
+
+
+            <!-- EXISTENCIA -->          
+                
+
+
+                <field id="existencia_categoria" local="true" import="false"> 
+                    <label>Importar</label>
+                    <expression sql="true">
+                        SELECT 
+                        if( 
+                        EXISTS( SELECT '1' FROM STK_FAMILIAS WHERE nombre_familia =  '[__stkfamilia_id__]' ) 
+                        and 
+                        EXISTS( SELECT '1' FROM STK_RUBROS WHERE nombre_rubro =  '[__stkrubro_id__]' ) 
+                        and 
+                        EXISTS( SELECT '1' FROM STK_MARCAS WHERE nombre_marca =  '[__stkmarca_id__]' 
+                        ),if( EXISTS( SELECT '1' FROM STK_ARTICULOS WHERE id_stkarticulo =  '[__id_stkarticulo__]' ),'&#10006;','&#10004;'),'&#10006;')
+                    </expression>
+                </field>
+
+                <field id="importar" noshow="true" import="false" local="true"> 
+                    <label>Importa</label>
+                    <expression sql="true">
+                        SELECT 
+                        if( 
+                        EXISTS( SELECT '1' FROM STK_FAMILIAS WHERE nombre_familia =  '[__stkfamilia_id__]' ) 
+                        and 
+                        EXISTS( SELECT '1' FROM STK_RUBROS WHERE nombre_rubro =  '[__stkrubro_id__]' ) 
+                        and 
+                        EXISTS( SELECT '1' FROM STK_MARCAS WHERE nombre_marca =  '[__stkmarca_id__]' 
+                        ),if( EXISTS( SELECT '1' FROM STK_ARTICULOS WHERE id_stkarticulo =  '[__id_stkarticulo__]' ),'0','1'),'0')
+                    </expression>
+                </field>
+
+        </fieldGroup>
+
+        </table>
+    </form>
+</histrix>

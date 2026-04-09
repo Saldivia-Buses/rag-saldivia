@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" sololectura="true" preloadData="false" paginar="20">
+  <title>CONSULTA PROVEEDORES</title>
+  <obs></obs>
+  <form  detalle="cctconta.xml" inline="true">
+    <table id="CCTCUENT" >
+      
+      <title>Proveedores</title>
+
+      <field id="siscod" esClave="true" oculto="true">
+        <label>Cod</label>
+        <detalle>siscod</detalle>        
+      </field>
+
+      <field id="ctacod">
+        <label>Código</label>
+        <detalle>ctacod</detalle>  
+      </field>
+
+      <field id="ctafnom" noshow="true">
+        <expression>CONCAT(ctanom, ctafan)</expression>
+          <size>60</size>
+      </field>
+      
+      <field id="ctanom">
+        <label colspan="8">Razón Social</label>
+      </field>
+
+      <field id="ctafan" >
+          <label>Nombre Fantasía</label>
+          <help>Nombre</help>
+       <detalle>ctafan</detalle>          
+      </field>
+
+      <field id="ult" >
+        <label>Última Compra</label>
+        <expression>(select max(fecult) FROM STKINSPR where STKINSPR.ctacod =  CCTCUENT.ctacod and STKINSPR.siscod = CCTCUENT.siscod)</expression>
+        <tipo>date</tipo>
+      </field>      
+<!--      <field id="ul2" local="true">
+        <if exp="ult ==''">
+          <true>'0000-00-00'</true>
+          <false>ult</false>
+        </if>
+        <tipo>varchar</tipo>
+        
+      </field> -->
+      <field id="ctanro">
+        <label  modpos="nobr">CUIT</label>
+      </field>
+
+	<field id="ctadir">
+		<label colspan="4">Dirección</label>
+		<size>50</size>
+	</field>
+
+      <field id="ctapos">
+        <label modpos="nobr">Código Postal</label>
+        <help>
+        </help>
+      </field>
+      <field id="ctaloc">
+        <label >Localidad </label>
+        <help>
+        </help>
+      </field>
+      <field id="prvcod">
+        <label modpos="nobr">Provincia </label>
+        <help >
+        </help>
+        <tabla_ex id="FSMPROVS">
+          <field id="prvcod"></field>
+          <field id="prvnom"></field>
+        </tabla_ex>
+        
+      </field>      
+
+
+      <field id="ctatel">
+        <label>Teléfono</label>
+        <size>40</size>
+      </field>
+
+		<field id="ctatel2" noshow="true">
+			<expression>REPLACE(REPLACE(MID(ctatel, LOCATE(' ', ctatel) + 1), '-', ''), ' ', '')</expression>
+			<label>ctatel2</label>
+		</field>
+		<field id="ctatel5" noshow="true" local="true">
+				<expression><![CDATA[@ctatel5:= (select REPLACE(
+concat( 
+'(', 
+IFNULL(( case when ctatel != '' then concat('\'', replace(ctatel,' ',''), '\',') else '' end ) , "''"),
+IFNULL(group_concat(replace(concat('\'', replace(movil,'15',''),'\''), ' ','')), "''"),
+',', 
+IFNULL(group_concat(replace(concat('\'', movil,'\''), ' ','')), "''"),
+',' , 
+IFNULL(group_concat(replace(concat('\'', Telefono,'\''), ' ','')), "''"),
+ ')'
+) 
+, '-', '')
+from CCTCONTA where CCTCONTA.ctacod = CCTCUENT.ctacod and CCTCONTA.siscod = CCTCUENT.siscod and (Telefono != '' or movil != ''))]]></expression>
+		<label>ctatell5</label>
+		</field>
+      <field id="ctafax">
+        <label modpos="nobr">Fax.</label>
+      </field>      
+      <field id="horario">
+        <label>Horario</label>
+        <size>60</size>
+      </field>      
+      <field id="baja" oculto="true">
+        <condicion operador="!=">1</condicion>
+
+      </field>      
+		<field id="cont" noshow="true" deshabilitado="false">
+		    <expression>select group_CONCAT(nombre) from CCTCONTA where CCTCONTA.siscod = CCTCUENT.siscod and CCTCONTA.ctacod = CCTCUENT.ctacod</expression>
+		    <label>Contacto</label>
+		</field>
+		<field id="Telef2" noshow="true" deshabilitado="false" >
+		    <label>Telef.</label>
+		    <expression having="false">concat(ctatel,(select group_CONCAT(Telefono , movil) from CCTCONTA where CCTCONTA.siscod = CCTCUENT.siscod and CCTCONTA.ctacod = CCTCUENT.ctacod))</expression>
+		</field>
+      <field id="entdir">
+        <label>Dir.Envío</label>
+      </field>
+      <field id="entpos">
+        <label>Cod.Pos.Envío</label>
+      </field>
+      <field id="entloc">
+        <label modpos="nobr">Loc.Envío</label>
+      </field>      
+<!-- 
+		<field id="camp" noshow="true">
+			<expression>@camp:= (REPLACE(REPLACE(@ctatel5, '(', ''), ')', ''))</expression>
+		</field>
+
+		<field id="llamadas" local="true" linkdes="Ultimas llamadas">
+		    <label modpos="nobr">Llamadas</label>
+		    <helper type="link" xml="tel_log_cdr_xcuenta_qry.xml" dir="/tel">
+		    	<parameter source="ctatel5" target="tels" operator="="/>
+		    </helper>
+			<expression sql="true"><![CDATA[SELECT MAX(DATE(calldate)) FROM ASTERIX_CDR WHERE src != '' and (src IN ([__camp__]) or dst IN ([__camp__])) and src NOT IN (998, 999)]]></expression>
+		</field>
+
+		<field id="lastDate">
+			<expression>SELECT MAX(DATE(calldate)) FROM ASTERIX_CDR WHERE src IN ('[__ctatel5__]') or dst IN ('[__ctatel5__]')</expression>
+			<label>Fecha Ult. Llamada</label>
+		</field>
+		-->
+
+	<field id="id_regcuenta" noshow="true" />
+
+	<field id="stksubrubro_id" local="true" noshow="true">
+	    <label>Sub Rubro</label>
+	    <helper type="combo" id="STK_SUBRUBROS" empty="true">
+    		<field id="id_stksubrubro"/>
+    		<field id="subnom">
+		    <expression>CONCAT(id_stksubrubro, '-', nombre_subrubro)</expression>
+    		</field>
+    		<field id="stkrubro_id" oculto="true">
+    		    <condicion operador="=">1</condicion>
+    		</field>
+	    </helper>
+	</field>
+
+	<field id="subrubros" noshow="true">
+	    <expression>(CASE WHEN '[__stksubrubro_id__]' = '' THEN 1 ELSE 
+	    (CASE WHEN '[__stksubrubro_id__]' IN ( SELECT stksubrubro_id FROM REG_CUENTA_RUBROS WHERE regcuenta_id = CCTCUENT.id_regcuenta) THEN 1 ELSE 0 END)
+	    END)
+	    </expression>
+	    <condicion operador="=">1</condicion>
+	</field>
+      <order>
+
+        <field id="ctanom"></field>
+      </order>
+      <filters>
+      
+        <field id="ctacod" _deshabilitado="true">
+          <ayuda_ex id="CCTCUENT">
+            <clave>ctacod</clave>
+            <descripcion>ctanom</descripcion>
+          </ayuda_ex>
+          
+          <label>Cod.</label>
+          <operador>=</operador>          
+        </field>      
+      <field id="ctafnom" deshabilitado="false">
+          <label>Nombre / Razón Social</label>
+          <help>Nombre</help>
+          <operador>like</operador>
+          <size>30</size>
+      
+      </field>
+                                 <!--
+        <field id="ctanom" >
+          <label>Nombre</label>
+          <help>Nombre</help>
+          <operador>like</operador>
+        </field>
+	<field id="ctafan" deshabilitado="false">
+          <label>Razon</label>
+          <help>Nombre</help>
+          <operador>like</operador>
+        </field>
+        -->
+        <field id="ctadir" grupo="Ubicacion">
+          <label>Dirección</label>
+          <help>Dirección</help>
+          <operador>like</operador>
+        </field>  
+        <field id="ctaloc" grupo="Ubicacion">
+          <label>Localidad</label>
+          <help>Localidad</help>
+          <operador>like</operador>
+        </field>      
+                        <field id="cont" noshow="false" deshabilitado="false" local="true">
+                    <label>Contacto</label>
+                    <expression>(select group_CONCAT(nombre) from CCTCONTA where CCTCONTA.siscod = CCTCUENT.siscod and CCTCONTA.ctacod = CCTCUENT.ctacod)</expression>
+                    <operador>like</operador>
+
+                </field>
+                <field id="Telef2" noshow="false" deshabilitado="false" local="true">
+                    <label>Teléf.</label>
+                    <operador>like</operador>
+
+                </field>
+<!--
+	<field id="stkrubro_id" deshabilitado="true" valauto="true">
+	    <label>Rubro</label>
+            <helper type="combo" id="STK_RUBROS">
+	      <field id="id_stkrubro"/>
+	      <field id="rubnom">
+    		<expression>CONCAT(id_stkrubro, '-', nombre_rubro)</expression>
+              </field>
+            </helper>
+	    <valor>1</valor>
+        <actualiza>
+          <field id="stksubrubro_id" destino="stkrubro_id"/>
+        </actualiza>
+	</field>-->
+	<field id="stksubrubro_id" local="true" noshow="true">
+	    <label>Sub Rubro</label>
+	</field>
+
+<!--      <field id="prvcod" grupo="Ubicacion">
+        <label modpos="nobr">Provincia </label>
+        <help >
+        </help>
+        <tabla_ex id="FSMPROVS">
+          <field id="prvcod"></field>
+          <field id="prvnom"></field>
+        </tabla_ex>
+          <operador>=</operador>
+        
+      </field>  -->  
+      </filters>  
+    </table>
+  </form>     
+</histrix> 

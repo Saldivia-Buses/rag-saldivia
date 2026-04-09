@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm-mini" subtipo="vertical" width="50%">
+	<title>CERTIFICADOS LCM INDUSTRIA</title>
+	<obs></obs>
+	<form detalle="lcm_file.xml">
+		<table id="PROD_LCM" >
+			<field id="id_lcm" autoinc="true" noshow="true">
+			</field>
+			<field id="expediente_lcm">
+				<label>Expediente</label>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="Numero_lcm">
+				<label>Número LCM</label>
+			    <detalle>lcm</detalle>
+			    <size>30</size>
+			</field>
+			<field id="numero_lca">
+				<label>Número LCA</label>
+			    <size>15</size>
+			</field>
+			<field id="emision_lcm">
+				<label>Emisión</label>
+			</field>
+			<field id="vigencia_lcm">
+				<label>Vigencia hasta</label>
+			</field>
+
+			<field id="folio_lcm">
+				<label>Folio</label>
+			</field>			
+			<field id="peso_lcm">
+				<label>Peso</label>
+			</field>
+			<field id="Tara_lcm">
+				<label>Tara</label>
+			</field>
+			<field id="max_asientos_lcm">
+				<label>Cant.Max.As</label>
+			</field>
+
+			<field id="hi" deshabilitado="true" clasefila="true" noshow="true" local="true">
+        		<if exp="vigencia_lcm != '0000-00-00'">
+          			<true>'grisado'</true>
+          			<false>''</false>
+          		</if>
+          		<tipo>varchar</tipo>
+          	</field> 
+
+			<order>
+				<field id="vigencia_lcm" />
+				<field id="emision_lcm" tipoOrden="DESC"/>
+			</order>
+		</table>
+	</form>	   
+</histrix> 

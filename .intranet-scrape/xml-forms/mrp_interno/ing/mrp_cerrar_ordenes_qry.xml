@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" width="25" borra="false">
+    <title>REIMPRESION DE ORDENES DE PRODUCCION</title>
+    <obs></obs>
+    <form  detalle="mrp_cerrarorden_ing.xml">
+        <table id="MRP_ORDEN_PRODUCCION" label="ORDENES DE COMPRA">
+            <validation>
+                <condition><![CDATA[id_mrporden + 0 == 0]]></condition>
+                <message>No se pueden crear, solo modificar</message>
+            </validation>
+            <filters>
+                <field id="mrpestado_id" >
+                    <label>Estado </label>
+                    <help>Estado Actual</help>
+                    <options>
+                        <option valor="0">Pendiente</option>
+                        <option valor="1">Cumplida</option>
+                    </options>
+                    <operador>=</operador>
+                    <valor>0</valor>
+                </field>
+            </filters>
+
+            <field id="id_mrporden" Formstyle="display:none;" esClave="true">
+                <label>Nro</label>
+                <help>Numero de Orden de Fabricación</help>
+                <detalle>id_mrporden</detalle>
+                <detalle>mrporden_id</detalle>
+            </field>
+
+            <field id="fecha_orden" Formstyle="display:none;">
+                <label>Fecha</label>
+                <help>Fecha de Orden de Fabricación</help>
+            </field>
+            <field id="hoy" noshow="true">
+                <expression>now()</expression>
+                <detalle>fecha_cierre</detalle>
+            </field>
+
+            <field id="codprv" colstyle="display:none;" noZero="true">
+                <label modpos="nobr">Cod.Prov</label>
+                <help>Cod.Proveedor</help>
+                <helper id="CCTCUENT" type="external">
+                    <field id="ctacod" />
+                    <field id="ctafan">
+                        <detalle>ctafan</detalle>
+                    </field>
+                    <field id="siscod" oculto="true">
+                        <condicion operador="=">'01'</condicion>
+                    </field>
+                    <field id="baja" noshow="true">
+                        <condicion operador="!=">1</condicion>
+                    </field>
+                </helper>
+            </field>
+
+            <field id="ctafan">
+                <label modpos="nobr">Prov</label>
+                <expression><![CDATA[IFNULL((select ctafan from CCTCUENT where ctacod = codprv and siscod ='01' ),'')]]></expression>                
+            </field>
+
+                <field id="mrpestado_id" noshow="true">
+                    <label>Estado </label>
+                    <help>Estado Actual</help>
+                    <options>
+                        <option valor="0">Pendiente</option>
+                        <option valor="1">Cumplida</option>
+                    </options>
+                    <operador>=</operador>
+                    <valor>0</valor>
+                </field>
+
+            <order>
+                <field id="fecha_orden"></field>
+            </order>
+        </table>
+	<!--
+
+	<join>
+	    <table id="RH_PERSONAL">
+		<field id="id_rhpersonal">
+		    <condicion operador="=">rhpersonal_id</condicion>
+		</field>
+	    </table>
+	</join>
+            -->
+
+    </form>
+</histrix>

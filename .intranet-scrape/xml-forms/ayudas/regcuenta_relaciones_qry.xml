@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<histrix tipo="ayuda" limit="0">
+  <title>Cuentas Relacionadas</title>
+  <obs/>
+  <form>
+    <table id="REG_CUENTA_RELACIONES">
+
+	<field id="regcuentarelacionada_id" autoinc="true" noshow="true" esClave="true">
+		<label>Numero Cuenta</label>
+		<detalle>regcuentarelacion_id</detalle>
+	</field>
+
+	<field id="nombre_cuenta" tabla="REG_CUENTA">
+		<label>Nombre</label>
+		<detalle>nombre</detalle>
+	</field>
+
+	<field id="fecha_vigencia" tipoOrden="desc" />
+	<field id="subsistemarelacionada_id" tipoOrden="desc" />
+
+	<order>
+		<field id="fecha_vigencia" tabla="REG_CUENTA_RELACIONES" />
+	</order>
+    </table>
+
+    <join>
+      <table id="REG_CUENTA">
+        <field id="id_regcuenta">
+          <condicion operador="=">REG_CUENTA_RELACIONES.regcuentarelacionada_id</condicion>
+        </field>
+      </table>
+    </join>
+
+  </form>
+</histrix>
+

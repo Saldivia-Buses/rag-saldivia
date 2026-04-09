@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<histrix tipo="consulta" log="false">
+    <title>Consulta Por deposito</title>
+    <obs></obs>
+    <form>
+        <table id="STK_MOVIMIENTOS" >
+            
+         <field id="stkarticulo_id" oculto="true" />            
+            
+            
+            <field id="nombre_articulo" tabla="STK_ARTICULOS">
+                    <label>Articulo</label>
+                    <help>Descripcion de Articulo</help>
+            </field>
+             <field id="nombre_deposito" tabla="STK_DEPOSITOS">
+                <label>Nombre del Deposito</label>
+             </field>
+           <field id="contador">
+              <label>Cantidad</label>
+              <expression>sum(case when tipo_concepto=0 then 1 else -1 end * cantidad) </expression>
+           </field>
+                 
+            <group>
+                <field id="stkdeposito_id"/>
+            </group>
+         
+        </table>
+       
+        <join tipo="left">
+            <table id="STK_DEPOSITOS">
+                <field id="id_stkdeposito">
+                    <condicion operador="=">STK_MOVIMIENTOS.stkdeposito_id</condicion>
+                </field>
+            </table>
+        </join>
+        
+         <join tipo="left">
+            <table id="STK_ARTICULOS">
+                <field id="id_stkarticulo">
+                    <condicion operador="=">STK_MOVIMIENTOS.stkarticulo_id</condicion>
+                </field>
+        
+            </table>
+        </join>
+        
+        <join tipo="left" >
+            <table id="STK_CONCEPTOS">
+                <field id="id_stkconcepto">
+                    <condicion operador="=">STK_MOVIMIENTOS.stkconcepto_id</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix>

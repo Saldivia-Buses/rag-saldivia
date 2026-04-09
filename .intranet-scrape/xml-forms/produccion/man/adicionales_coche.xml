@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini">
+	<title>Pedidos a Cotizar</title>
+	<obs/>
+	<form >
+         <table id="ADICIONAL_COCHE" label="Pedidos a Cotizar" style__Tbody="height:100px;overflow-x:hidden;">		
+			 <field id="id" autoinc="true" noshow="true" esClave="true">
+				 <label>id</label>
+				
+			 </field>
+			 <field id="nrofab" oculto="true" esClave="true">
+				 <label>Nro</label>
+				 <condicion operador="=">0</condicion>
+	 
+			 </field>
+			 <field id="idAdicional">
+				 <label>Cod.</label>
+				 <help>Codigo de Adicionales</help>
+				 
+			 </field>
+			 <field id="descripcion">
+				 <label>Descripción</label>
+				 <help>Descripción del Adicional</help>
+				 <size>80</size>
+				 
+			 </field>
+			 <field id="alta" deshabilitado="true">
+				 <label>Alta</label>
+				 <valor>today</valor>
+				 <help>fecha de Alta</help>
+			 </field>
+
+	      </table>
+	</form>
+</histrix>

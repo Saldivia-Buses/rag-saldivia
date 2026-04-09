@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  Ayuda
+Tarea: Ayuda para la Tabla de momedas
+Autor: d!ego2k
+Fecha: 27/08/10
+*******************************************************************************
+-->
+    <histrix tipo="consulta">
+	<title>Monedas</title>
+	 <obs></obs>
+		<form >
+		    <table id="GEN_MONEDAS" label="Monedas">
+
+			<field id="id_moneda" noshow="true" />
+
+			<field id="descripcion_moneda">
+				<label>Descripcion</label>
+			</field>
+			
+			<field id="abreviatura_moneda" />
+
+		    </table>
+
+			<join tipo="LEFT">	
+				<table id="GEN_MONEDA_HIS">
+					<field id="moneda_id"> 
+						<condicion operador="=">GEN_MONEDAS.id_moneda</condicion>
+					</field>	
+				</table>
+			</join>
+		</form>
+    </histrix>	

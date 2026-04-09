@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm-mini" subtipo="vertical">
+<title>Atributos</title>
+<obs></obs>
+<form >
+    <table id="PRODUCTO_ATRIB_OPCIONES">
+        <title>Seccion</title>
+
+        <field id="id_atribopcion" autoinc="true" noshow="true">
+        </field>
+        <field id="prdatributo_id" oculto="true">
+        </field>
+        
+        <field id="nombre_opcion">
+            <label _modpos="nobr">Descripción de la opción</label>
+            <help>Descripción de la opción</help>
+            <size>40</size>
+        </field>
+        <field id="valor_opcion">
+            <label >Valor de la opción</label>
+            <help>posible valor de la opción</help>
+            <size>10</size>
+        </field>
+
+    </table>
+</form>	   
+</histrix>

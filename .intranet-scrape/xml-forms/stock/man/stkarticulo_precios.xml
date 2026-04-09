@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud" subtipo="vertical" tooltip="false" showCant="false">
+    <title>Articulo Precio</title>
+    <obs></obs>
+    <form >
+        <table id="STK_LISTADETALLE" label="Articulo Precio">
+
+            <fieldGroup style="padding:2px 2px 2px 2px;vertical-align:middle;">
+
+                    <field id="id_stklistadetalle" noshow="true" autoinc="true" esClave="true"/>
+                    
+                    <field id="stkarticulo_id" noshow="true" valauto="true" />
+
+                    <field id="stklista_id">
+                        <label>Lista</label>
+                        <helper type="combo" xml="stklista_qry.xml" dir="/ayudas" />
+                        <valor>1</valor>
+                    </field>
+ 
+                    <field id="stklistadetalle_precioventa" modpos="nobr">
+                        <label>Precio Vta.</label>
+                    </field>
+
+                    <field id="dto_porcentaje" modpos="nobr">
+                        <label>Dto. Prom. %</label>
+                    </field>
+
+                    <field id="dto_cantidad" modpos="nobr"> 
+                        <label>Unid.Minimas</label>
+                    </field>
+
+                    <field id="dto_fechadesde" _modpos="nobr">
+                        <label>Fec.Vigencia Desde</label>
+                        <tipo>date</tipo>
+                    </field>
+
+                    <field id="dto_fechahasta" modpos="nobr">
+                        <label>Fec.Vigencia Hasta</label>
+                        <tipo>date</tipo>
+                    </field>
+
+            </fieldGroup>
+
+        </table>
+    </form>
+</histrix>

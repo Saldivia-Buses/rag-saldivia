@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm">
+	<title>CONCEPTOS</title>
+	<obs></obs>
+	<form >
+		<table id="RH_CONCEPTOS" >
+		    <title>Conceptos</title>
+			<field id="id_concepto" autoinc="true" noshow="true">
+				<label>id</label>
+			</field>
+			
+			<field id="nombre_concepto">
+				<label>Nombre</label>
+				<help>Nombre del Concepto</help>
+			</field>
+			<field id="abreviatura_concepto">
+				<label>Abreviatura</label>
+				<help>Abreviatura del Concepto</help>
+			</field>
+			
+			
+			<field id="imputacion">
+				<label>Suma/Resta</label>
+                <options>
+                    <option valor="-1">Resta</option>
+                    <option valor="1">Suma</option>
+                </options>
+				<help>Descripcion del Motivo</help>
+			</field>
+			<field id="formulario">
+                  <label>Formulario</label>
+            </field>
+
+			
+		</table>
+	</form>	   
+</histrix>

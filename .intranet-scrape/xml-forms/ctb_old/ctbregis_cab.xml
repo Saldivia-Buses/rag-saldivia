@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<histrix tipo="cabecera" graba="false">
+	<title>CABECERA ASIENTOS</title>
+	<obs></obs>
+	<form >
+		
+		<table id="ASIENTOS" label="Cabecera de ASIENTOS" graba="false">
+
+			<field id="siscod">
+				<label>Ejercicio</label>
+				
+                <helper type="combo" xml="ctbejercicios_crud.xml" dir="/contabilidad/man/">
+                    <field id="activo"  />
+                    <field id="fecha_mov1" tipoOrden="DESC">
+                        <expresion>DATE_FORMAT(comienza, '%d/%m/%Y')</expresion>
+                        <tipo>date</tipo>
+                    </field>
+                    <field id="fecha_mov2">
+                        <expresion>DATE_FORMAT(finaliza, '%d/%m/%Y')</expresion>
+                        <tipo>date</tipo>
+                    </field>
+                    <field id="finaliza" />
+                    <order>
+                    	<field id="fecha_mov1" orderType="DESC" />
+                    </order>
+                </helper>
+                <!--
+                <actualiza>
+                	<field id="regmin" destino="siscod" />
+                </actualiza>
+            -->
+                <valor>22</valor>
+            </field>
+
+			<field id="regpoa">
+				<label>Tipo</label>
+				<help>Tipo de Asiento</help>
+				<options>
+					<option valor="A">Aprobado</option>
+					<option valor="P">Provisorio</option>
+				</options>
+			</field>
+
+			<field id="regfec">
+				<label modpos="nobr">Fecha</label>
+				<help>Fecha del Asiento</help>
+				<tipo>date</tipo>
+				<valor>today</valor>
+			</field>
+
+			<field id="regmin" _deshabilitado="true">
+				<label modpos="nobr">Nro Min</label>
+				<help>Numero de Minuta</help>
+				<parametro id="ctbnumer_par.xml" retorna="numapr">
+					<field id="nummes" oculto="true">
+						<condicion operador="=">0</condicion>
+					</field>
+					<field id="numapr">
+						<complete>numapr + 1</complete>
+					</field>
+					<field id="siscod" oculto="true">
+						<condicion operador="=" _valorde="siscod" >'22'</condicion>
+					</field>
+				</parametro>
+				<tipo>integer</tipo>
+				
+			</field>
+			
+			<field id="regtip">
+				<label>Tipo</label>
+				<help>Tipo de Comprobante</help>
+				<tabla_ex id="CTBCONCE">
+					<field id="concod"></field>
+					<field id="condes"></field>
+				</tabla_ex>
+				<tipo>integer</tipo>
+				<valor>1</valor>
+			</field>
+
+			<field id="regnro">
+				<label>Número</label>
+				<help>Numero de Comprobante Asociado a Otros Sistemas</help>
+				<tipo>integer</tipo>
+				<valor>0</valor>
+				<format>%08d</format>
+			</field>
+			
+			<field id="userid" deshabilitado="true">
+				<label>Usuario</label>
+				<help>Usuario Actual</help>
+				<valor eval="true">$_SESSION['usuario']</valor>
+				<tipo>char</tipo>
+			</field>
+		</table>
+	</form>
+</histrix>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="card"  PDFfontSize="10" showCantidad="false" grid="47%,300px" modifica="false" inserta="false" procesa="false"
+    imprime="false">
+    <title>DETALLE</title>
+    <obs></obs>
+    <form  >
+        <table id="MRP_SECCION" label="DETALLE">
+            <field id="id_mrpseccion" noshow="true">
+            </field>
+
+            <field id="nombre_mrpseccion" style="vertical-align: top; padding:10px; font-size:1.2em;">
+                <label>Sección</label>
+            </field>
+            <field id="ordenes" local="true" showObjTabla="true">
+                <helper xml="ordenes_x_seccion_qry.xml" type="object">
+                    <parameter source="id_mrpseccion" target="mrpseccion_id" />
+                </helper>
+            </field>
+
+            <field id="mrporden" noshow="true">
+            </field>
+            <order>
+                <field id="mrporden" />
+            </order>
+
+        </table>
+    </form>
+</histrix>

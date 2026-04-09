@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="consulta" exportasuma="true" PDFlineColor="255,255,255" PDFfont="Courier">
+	<title>Detalles</title>
+	 <obs></obs>
+		<form >
+		    <table id="REG_DETALLES" label="Detalle de Movimientos" styleTbody="height:150px;overflow-x:hidden;" PDFnoborder="true" >
+
+			<field id="muestra_iva" noshow="true" local="true" print="false" valauto="true" />
+
+			<field id="NoMuestra_iva" noshow="true" local="true" print="false">
+				<if exp="muestra_iva">
+				<true>'false'</true>
+				<false>'true'</false>
+				</if>		
+			</field>				
+
+			<field id="regmovim_id" noshow="true" PDFlineas="false"/>
+
+			<field id="orden" noshow="true" PDFlineas="false"/>
+
+			<field id="codigo_detalle" PDFsize="9"  PDFnoborder="true">
+		        <label size="30">Código</label>
+			</field>
+			
+			<field id="descripcion_detalle" _PDFsize="9" PDFlineas="false" PDFcolWidth="10" PDFalign="J">
+		        <label modpos="nobr" _size="80">Descripción</label>
+		        <expresion><![CDATA[
+
+		        CONCAT( descripcion_detalle, 
+		         IFNULL( (SELECT GROUP_CONCAT( CONCAT('<br>*', RPAD(descripcion_detallecmb, 39,' '), ' x ', cantidad_detallecmb) SEPARATOR '' )
+		           FROM REG_DETALLE_COMBOS 
+		          WHERE REG_DETALLE_COMBOS.regdetalle_id = REG_DETALLES.id_regdetalle
+		            AND REG_DETALLE_COMBOS.cantidad_detallecmb != 0), '') 
+		          )
+		        ]]></expresion>
+		  	     <tipo>simpleditor</tipo> 
+			</field>
+
+			<field id="cantidad_detalle" PDFsize="9" PDFlineas="false">
+		        <label modpos="nobr" size="20">Cant.</label>
+			    <tipo>numeric</tipo>
+			</field>
+
+			<field id="precio_venta" PDFsize="9" PDFlineas="false">
+		        <label modpos="nobr" size="20">Precio</label>
+		        <expresion>(IF('[__muestra_iva__]' = 'true', precio_venta, precio_venta * 1.21))</expresion>
+			    <tipo>numeric</tipo>
+			</field>
+
+			<field id="subtot">
+			    <label modpos="nobr" size="20">Subtotal</label>
+		        <expresion>(IF('[__muestra_iva__]' = 'true', precio_venta, precio_venta * 1.21) * cantidad_detalle)</expresion>
+			    <tipo>numeric</tipo>
+			</field>
+
+			<field id="porcentaje_desc0" PDFsize="9" PDFlineas="false">
+		        <label modpos="nobr" size="20">Desc. %</label>
+			    <tipo>numeric</tipo>
+			</field>
+			<field id="porcentaje_desc1" PDFsize="9" PDFlineas="false">
+		        <label modpos="nobr" size="20">Desc. Adc %</label>
+			    <tipo>numeric</tipo>
+			</field>
+
+			<field id="total_detalle"  total="true" PDFsize="9" PDFlineas="false" PDFnoborder="true">
+   				<attribute id="print">NoMuestra_iva</attribute>		
+			    <label size="25">Total.</label>
+			    <tipo>numeric</tipo>	
+				<detalle>SubTotal</detalle>
+			</field>
+
+			<field id="neto_detalle"  total="true" PDFsize="9" PDFlineas="false" PDFnoborder="true">
+   				<attribute id="print">muestra_iva</attribute>		
+			    <label size="25">Total</label>
+			    <tipo>numeric</tipo>	
+				<detalle>SubTotal</detalle>
+			</field>
+			<order>
+			    <field id="orden"/>
+			</order>
+			<group>
+			  <field id="id_regdetalle" />
+			</group>
+		    </table>
+		</form>
+    </histrix>	
+

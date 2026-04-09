@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="ing" inserta="false" modifica="false" form="false" path="fotos/pedidoint/">
+	<title>Pedidos Internos</title>
+	<obs/>
+	<form >
+		<table id="PEDIDOINT"  label="Pedidos Internos">
+			<movimientos>
+				<relacion id="pedidoint_admin_ingmov.xml"></relacion>
+				<relacion id="pedidoint_delete.xml"></relacion>
+			</movimientos>
+			<field id="idPed"  deshabilitado="true" esClave="true" noshow="true">
+				<tipo>integer</tipo>
+				<label>idPed</label>
+			</field>			
+			<field deshabilitado="true" id="fechaemi" _noshow="true" tipoOrden="DESC">
+			    <label>Fecha</label>
+			</field>
+			
+			<field id="directorio" deshabilitado="true" noshow="true">
+			</field>			
+			
+			
+			<field id="usuario" deshabilitado="true" >
+				<label>Usuario</label>
+				<tabla_ex id="HTXUSERS">
+					<field id="login"></field>
+					<field id="nombre">
+						<expression>concat(nombre,' ', apellido)</expression>
+					</field>
+					<order>
+						<field id="nombre"></field>
+					</order>
+				</tabla_ex>				
+			</field>					
+			<field id="nrocom" deshabilitado="true" style="text-align:center">
+				<label>Nro Ped.</label>
+			</field>			
+
+			<field id="estado" noshow="true">
+				<condicion operador="=">0</condicion>
+			</field>
+			<field id="idDeposito" deshabilitado="true">
+				<label modpos="nobr" colspan="6" Formstyle="display:none;">Lugar Entrega </label>
+				<help>Lugar de Entrega/Descarga</help>
+				<tabla_ex id="DEPOSITO">
+					<field id="idDeposito">
+					</field>
+					<field id="direccion">
+					</field>
+				</tabla_ex>			
+				<tipo>integer</tipo>	
+			</field>					
+			<field deshabilitado="true" id="nrofab">
+				<label>Nro Fab.</label>
+				<help>Numero de Fabricacion</help>
+				<tabla_ex id="CHASIS">
+					<field id="nrocha" muestra="true"/>
+					<field id="chades"/>
+					<order>
+						<field id="nrocha"/>
+					</order>
+				</tabla_ex>
+			</field>
+			<field deshabilitado="true" id="nrofab">
+				<label>NroFab</label>
+				<detalle>nrofab</detalle>
+			</field>
+			<field deshabilitado="true" id="artcod">
+				<label>Codigo Articulo .</label>
+				<help>Codigo de Articulo.</help>
+				<detalle>artcod</detalle>
+			</field>
+			<field id="pendientesenoc" local="true" linkdes="Artículos Pendientes">
+			    <helper type="link" xml="cpsencab_x_artic2.xml" dir="/compras">
+				<parameter source="artcod" target="artcod" operator="=" />
+			    </helper>
+			    <label style="color:red;">En OC</label>
+			    <expression>SELECT 'Pendientes' FROM CPSENCAB inner JOIN CPSMOVIM on  ( CPSMOVIM.ocpnro = CPSENCAB.ocpnro ) WHERE CPSMOVIM.artcod = PEDIDOINT.artcod 
+			    and CPSENCAB.ocpest = '1' and movcps > (movcps - pencps) and (movcps - pencps) > 0 GROUP BY CPSENCAB.ocpnro LIMIT 1</expression>
+			</field>
+			
+			<field deshabilitado="true" id="artdes" tabla="STKINSUM">
+				<label>Descripcion</label>
+				<tipo>varchar</tipo>
+				<detalle>artdes</detalle>
+			</field>
+			<field id="movref" deshabilitado="true">
+				<label Formstyle="display:none;">Ref.</label>
+				<help>Referencia </help>
+				<size>5</size>
+				<detalle>observaciones</detalle>
+			</field> 
+
+            <field id="codprv" esClave="true">
+                <label>Proveedor</label>
+                <helper id="CCTCUENT" type="combo">
+                    <field id="ctacod">
+                        <label>Nro</label>
+                    </field>
+                    <field id="ctanom">
+                        <label>Nombre</label>
+                        <detalle>ctanom</detalle>
+                    </field>
+					<field id="siscod">
+						<condicion operador="=">'01'</condicion>
+					</field>
+				</helper>
+            </field>
+
+            <field id="mensaje" deshabilitado="true">
+				<label style="color:green;" Formstyle="display:none;" modpos="nobr">Msj</label>
+				<tipo>varchar</tipo>
+			</field>			
+			<!-- COMPRAS -->
+			<field deshabilitado="true" id="movuso">
+				<label>Cant.Cps</label>
+			</field>
+			<field id="pencps" deshabilitado="true">
+				<label>Pend.Cps</label>
+			</field>			
+			
+			<field deshabilitado="true" id="artuni">
+				<label Formstyle="display:none;">Unidad Compras</label>
+				<help>Unidad de Medida</help>
+				<tabla_ex id="FSMUNIDS">
+					<field id="unicod"/>
+					<field id="uninom"/>
+					<order>
+						<field id="uninom"/>
+					</order>
+				</tabla_ex>
+			</field>
+			
+			<!-- USO -->
+			<field deshabilitado="true" id="cant">
+				<label>Cantidad</label>
+				<help>Cantidad</help>
+				<detalle>movcps</detalle>
+			</field>
+			<field id="penuso" deshabilitado="true">
+				<label>Pend.Uso</label>
+			</field>
+
+			<field deshabilitado="true" id="unimed">
+				<label Formstyle="display:none;">Unidad de Medida</label>
+				<help>Unidad de Medida</help>
+				<tabla_ex id="FSMUNIDS">
+					<field id="unicod"/>
+					<field id="uninom"/>
+					<order>
+						<field id="uninom"/>
+					</order>
+				</tabla_ex>
+				<detalle>unicps</detalle>
+			</field>
+
+			<field deshabilitado="true" id="fecreq">
+				<label>Fec.Req.</label>
+				<help>Fecha deRequerimiento</help>
+				<detalle>fecreq</detalle>
+			</field>
+
+			<field id="confirmado" noshow="true">
+				<condicion operador="=">0</condicion>
+			</field>
+	                <field id="archivo" path="directorio" download="true" >
+                            <label>Adjunto</label>
+                            <tipo >file</tipo>
+                            <size>40</size>
+                        </field> 
+                                                                        
+			<field id="traspaso" local="true" refresh="true" noshow="true">
+				<label>Salida</label>
+				<tipo>check</tipo>
+			</field>
+			<field id="confirmar" local="true" refresh="true">
+				<label>a Compras</label>
+				<tipo>check</tipo>
+			</field>
+			<field id="borrar2" local="true" refresh="true">
+                    <label>Borrar</label>
+                    <tipo>check</tipo>
+            </field>
+
+            <field id="borrar" local="true" noshow="true">
+                <if exp="'borrar2' == 1">
+                       <true>1</true>
+                       <false>0</false>
+                </if>
+            </field>
+			<field id="aremito" local="true" deshabilitado="true" noshow="true">
+				<if exp="traspaso==1">
+					<true>2</true>
+					<false>confirmar</false>
+				</if>
+				<tipo>integer</tipo>
+			</field>
+				
+        <order>
+			<field id="estado" ></field>			
+			<field id="fechaemi"></field>
+			
+		</order>
+
+		</table>
+		<join tipo="left">
+			<table id="STKINSUM">
+				<field id="siscod" oculto="true">
+					<label>STKINSUM.siscod</label>
+					<condicion operador="=">'01'</condicion>
+				</field>
+				<field id="artcod" oculto="true">
+					<condicion operador="=">PEDIDOINT.artcod</condicion>
+				</field>
+				<field id="artuni" oculto="true"></field>
+				<field id="unicps" oculto="true"></field>
+			</table>
+		</join>
+	</form>
+</histrix>

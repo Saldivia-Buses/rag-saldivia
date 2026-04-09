@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+	<histrix tipo="insert" >
+		<title>CONTACTOS</title>
+		<obs></obs>
+		<form>
+			<table id="CCTCONTA" label="Contactos">
+				<field id="siscod" id_temp="siscod">
+				</field>
+				<field id="ctacod" id_temp="ctacod">
+				</field>
+				<field id="nombre" id_temp="nombre">
+				</field>
+				<field id="cargo" id_temp="cargo">
+				</field>
+				<field id="Telefono" id_temp="Telefono">
+				</field>
+			</table>
+		</form>
+	</histrix>

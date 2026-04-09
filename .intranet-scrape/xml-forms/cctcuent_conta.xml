@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<histrix tipo="consulta">
+	<title>ABM CUENTA</title>
+	<obs></obs>
+	<form  detalle="cctconta.xml" inline="true">
+		<table id="CCTCUENT" label="CONTACTOS" >
+
+			<filters>
+				<field id="catcod">
+					<label>Código Categoría</label>
+					<operador>=</operador>
+				</field>
+			</filters>
+
+			<field id="siscod" noshow="true">
+				<label>Código Sistema</label>
+				<detalle>siscod</detalle>
+
+			</field>
+			<field id="baja" oculto="true">
+				<condicion operador="=">0</condicion>
+			</field>
+			
+			<field id="ctacod" clave="true">
+				<label>Cuenta</label>
+				<help>Código de Cuenta </help>
+				<detalle>ctacod</detalle>
+			</field>
+			<field id="ctanom" deshabilitado="false">
+				<expression>CONCAT(ctanom, ' (',ctafan, ')')</expression>
+				<label  colspan="8">Nombre</label>
+			</field>			
+<!--			<field id="ctanom">
+				<label modpos="nobr">Nombre</label>
+				<help>Nombre de Cuenta </help>
+			</field> -->
+<!--			<field id="ctafan">
+				<label modpos="nobr">Nom.Fantasia </label>
+				<help>Nombre de fantasia. </help>
+			</field>
+	-->
+			<field id="ctadir">
+				<label colspan="5">Dirección </label>
+			</field>
+			<field id="catcod" noshow="true">
+				<label>Código Categoría </label>
+				<tabla_ex id="CCTCATGS">
+					<field id="catcod"></field>
+					<field id="catnom"></field>
+				</tabla_ex>
+			</field>
+			<field id="conmail" >
+				<label>Mails</label>
+				<expression>select count(*) from CCTCONTA where CCTCONTA.ctacod = CCTCUENT.ctacod and CCTCONTA.siscod = CCTCUENT.siscod and CCTCONTA.mail != ''</expression>
+				<tipo>integer</tipo>
+			</field>			
+			<field deshabilitado="true" id="ctacod2" local="true" linkint="fichas_x_cliente.xml" linkdes="Total de Coches" print="false">
+				<expression>select count(*) from PEDCOTIZ as PED where PED.ctacod = CCTCUENT.ctacod</expression>
+
+				<label >Ot.</label>
+				<help>Código de Cuenta</help>
+				<paring destino="ctacod">ctacod</paring>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="ultcomp" tipoOrden="DESC">
+				<expression>(select max(pedfec) from PEDCOTIZ as PED where PED.ctacod = CCTCUENT.ctacod)</expression>
+
+				<label>Última compra</label>
+				<tipo>date</tipo>
+			</field>				
+			<field id="falta" clasefila="true" local="true" noshow="true">
+				<label>M</label>
+				<if exp="conmail == 0" operador="=">
+					<true>'resaltadoVioleta'</true>
+					<false>''</false>
+				</if>				
+			</field>	
+			<order>
+				<field id="ctafan" />
+			</order>		
+			
+		</table>
+	</form>
+</histrix>

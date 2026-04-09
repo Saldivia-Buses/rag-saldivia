@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="grid" showCantidad="false" tooltip="false" deleteRow="false" imprime="false">
+    <title/>
+    <obs/>
+    <form>
+        <table id="CAJ_MOVIMIENTOS">
+
+            <fieldGroup id="DEBUG">
+                <field id="fecha_desde" noshow="true" local="true"/>
+                <field id="fecha_hasta" noshow="true" local="true"/>
+                <field id="cajpuesto_id" noshow="true" tabla="CAJ_MOVIMIENTOS" />
+                <field id="cajconcepto_id1" local="true" noshow="true"/>
+            </fieldGroup>
+
+            <field id="cajconcepto_id" noshow="true" tabla="CAJ_MOVIMIENTOS">
+                <condicion operador="=">'[__cajconcepto_id1__]' or '[__cajconcepto_id1__]' = ''</condicion>
+            </field>
+			
+            <field id="fecha_movimiento" noshow="true" tabla="CAJ_MOVIMIENTOS">
+                <condicion operador="&gt;=">'[__fecha_desde__]' and (CAJ_MOVIMIENTOS.fecha_movimiento &lt;= '[__fecha_hasta__]' or '[__fecha_hasta__]' = '')</condicion>
+            </field>
+
+            <!-- DETALLE -->
+
+            <field id="descripcion_forma"  tabla="CAJ_FORMAS_PAGO" style="width:56%">
+                <label>Tipo</label>
+            </field>
+		        
+            <field id="debe" total="true" suma="true" style="width:14.5%" noZero="true">
+				<expression>SUM( IF(CAJ_FORMAS_PAGO.tipo_forma = 0, (pago_valor - pago_vuelto), 0) )</expression>
+                <label>Ingresos</label>
+                <tipo>numeric</tipo>
+            </field>
+            <field id="haber" total="true" suma="true" style="width:14.5%" noZero="true">
+				<expression>SUM( IF(CAJ_FORMAS_PAGO.tipo_forma = 1, (IF(CAJ_VALORES.pago_vuelto &gt; CAJ_VALORES.pago_valor, ABS(CAJ_VALORES.pago_valor - CAJ_VALORES.pago_vuelto), CAJ_VALORES.pago_valor - CAJ_VALORES.pago_vuelto)), 0) )</expression>
+                <label>Egresos</label>
+                <tipo>numeric</tipo>
+            </field>
+            <field id="acumulado" suma="true" _acumula="true" local="true" style="width:14.5%">
+                <label>Total</label>
+                <if exp="true">
+                    <true>(debe + 0) - (haber + 0)</true>
+                    <false>0</false>
+                </if>
+                <tipo>numeric</tipo>
+            </field>
+
+            <group>
+                <field id="descripcion_forma"  tabla="CAJ_FORMAS_PAGO" />
+            </group>
+        </table>
+
+
+        <join>
+            <table id="CAJ_CONCEPTOS">
+                <field id="id_cajconcepto">
+                    <condicion operador="=">CAJ_MOVIMIENTOS.cajconcepto_id</condicion>
+                </field>
+            </table>
+        </join>
+        <join>
+            <table id="CAJ_VALORES">
+                <field id="cajmovimiento_id">
+                    <condicion operador="=">CAJ_MOVIMIENTOS.id_cajmovimiento</condicion>
+                </field>
+            </table>
+        </join>
+        <join>
+            <table id="CAJ_FORMAS_PAGO">
+                <field id="id_cajformapago">
+                    <condicion operador="=">CAJ_VALORES.cajformapago_id</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix>

@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="consulta" _imprime="false">
+  <title>ARTICULOS POR SECTOR</title>
+  <obs></obs>
+  <form >
+    <table id="STK_ARTICULO_PROCESO" label="Rubros" >
+      <field id="proceso_id"  oculto="true">
+        <label>Cod.</label>
+      </field>
+	<field id="nombre_proceso" tabla="PROD_PROCESOS">
+	    <label>Proceso</label>
+		<help>nombre del proceso</help>
+
+		<size>60</size>
+	</field>
+
+      <field id="homologacion_id" oculto="true">
+        <label>Homol</label>
+      </field>
+      <field id="stkarticulo_id" esClave="true">
+        <label>Art.</label>
+        <help>Codigo de Articulo</help>
+        <ayuda_ex id="STKINSUM" xml="HLPstkinsum.xml" dir="/ayudas_local" >
+          <field id="artcod" >
+            <label>Cod.</label>
+          </field>
+          <field id="artdes">
+            <label>Insumo</label>
+            <detalle>artdes</detalle>
+          </field>
+        </ayuda_ex>
+      </field>
+      <field id="artdes">
+        <expression>artdes</expression>
+        <label>Descripcion</label>
+      </field>
+    
+      <field id="cantidad" required="true">
+        <label>Cant.</label>
+		<expression>cantidad</expression>
+	    <tipo>decimal</tipo>
+      </field>
+      <field id="artuni" deshabilitado="true" tabla="STKINSUM">
+        <label modpos="nobr" >Unidad</label>
+        <help>Unidad de Stock</help>
+        <tabla_ex id="FSMUNIDS">
+          <field id="unicod" clave="true"></field>
+          <field id="uninom"></field>
+        </tabla_ex>
+        <tipo>integer</tipo>
+      </field>
+      <field id="costo" >
+        <label style="font-weight:bold;">Costo.</label>
+        <!-- NO TOCAR, TE MATO -->
+        <expression having="false" >
+          ( case when (select sum(round( (costo_automatico * cantidad) * (1 + recargo / 100) , 2)) from STKPIEZA where idPadre  = STKINSUM.artcod limit 1) != 0 then 
+            (select sum(round( (costo_automatico  * cantidad) * (1 + recargo / 100) , 2)) from STKPIEZA where idPadre  = STKINSUM.artcod limit 1)
+              else  STKINSUM.costo_calculado * valcps / valuso  end)
+        </expression>
+        <tipo>numeric</tipo>
+      </field>
+      <field id="parcial"  suma="true" local="true">
+        <label modpos="nobr" Formstyle="display:none;">Parcial</label>
+        <if exp="true">
+          <true>(costo + 0) * cantidad</true>
+          <false></false>
+        </if>
+        <tipo>numeric</tipo>
+      </field>
+      <field id="cos2to" noshow="true">
+        <label>Costo Ant</label>
+        <expression _sql="true">
+          <![CDATA[ select round(STKINS.artcos * STKINSUM.valcps / STKINSUM.valuso, 2) from STKINSPR as STKINS where STKINS.artcod = STKINSUM.artcod and STKINS.fecult < STKINSUM.ultima_compra  and STKINS.siscod='01' order by fecult DESC limit 1 ]]></expression>
+      </field>
+      <field id="inc" local="true" noZero="true">
+        <label>% Inc.</label>
+        <if exp="0cos2to &lt; 0costo &amp;&amp; 0cos2to != 0">
+          <true>round((0costo - 0cos2to) / 0cos2to * 100, 2)</true>
+          <false>0</false>
+        </if>
+        <tipo>decimal</tipo>
+      </field>
+      <field id="fecult"  tipoOrden="DESC">
+        <expression>STKINSUM.ultima_compra</expression>
+        <label modpos="nobr" Formstyle="display:none;">ult.compra</label>
+        <tipo>date</tipo>
+      </field><!--
+      <field id="ultsalida" >
+        <label Formstyle="display:none;">Ultima Salida</label>
+        <expression>
+          select max(STK.movfec) from STKINMOV as STK where STK.artcod = STKINSUM.artcod and STK.siscod = '01' and STK.movcod = 10
+        </expression>
+        <tipo>date</tipo>
+      </field>
+      <field id="ctacod"  >
+        <expression>
+          (select ctacod from STKINSPR where STKINSPR.artcod = STKINSUM.artcod and STKINSPR.siscod='01' order by fecult DESC limit 1)
+        </expression>
+        <label colspan="4" modpos="nobr" Formstyle="display:none;">Proveedor</label>
+        <tipo>integer</tipo>
+        <tabla_ex id="CCTCUENT">
+          <field id="ctacod" />
+          <field id="ctafan" />
+          <field id="siscod" oculto="true">
+            <condicion operador="=">'01'</condicion>
+          </field>
+        </tabla_ex>
+      </field>-->
+    </table>
+    <join tipo="left">
+      <table id="STKINSUM">
+        <field id="artcod">
+          <condicion operador="=">stkarticulo_id</condicion>
+        </field>
+        <field id="siscod">
+          <condicion operador="=">'01'</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+		<table id="PROD_PROCESOS">
+			<field id="id_proceso" >
+				<condicion operador="=">proceso_id</condicion>
+			</field>
+			
+<!--			<field id="homologacion_id" noshow="true">
+				<label>homol</label>
+			</field>
+-->
+		</table>
+
+    </join>
+  </form>
+</histrix>

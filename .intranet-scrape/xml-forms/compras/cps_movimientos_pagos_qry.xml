@@ -1,0 +1,79 @@
+<?xml version="1.0"  encoding="UTF-8" ?>                 
+   <histrix tipo="consulta" limit="5">
+   <title>MOVIMIENTOS</title>
+    <obs></obs>
+      <form>
+      <table id="OCPRECIB" label="MOVIMIENTOS">
+	<field id="id_recepcion" noshow="true"/>
+	<field id="ocpnro" noshow="true"/>
+	<field id="ctacod" noshow="true"/>
+	<field id="artcod" noshow="true"/>
+	<field id="idPed" noshow="true"/>
+
+	<field id="regmovim_id" tabla="FACREMIMP" noshow="true"/>
+
+	<field id="movnro" tabla="FACREMIMP" noshow="true"/>
+
+	<field id="movnpv" tabla="FACREMIMP" noshow="true"/>
+
+	<field id="movfec" tabla="FACREMIMP" noshow="true"/>
+
+        <field id="nro_movimiento" tabla="PAGOS">
+            <label>Numero</label>
+            <help>Numero Comprobante</help>
+            <format>%12d</format>
+        </field>
+
+        <field id="fecha_movimiento" tabla="PAGOS">
+            <label>Fecha </label>
+	    <tipo>date</tipo>
+        </field>
+
+        <field id="reg_fecha" tabla="PAGOS">
+            <label>Registración</label>
+            <help></help>
+            <tipo>date</tipo>
+        </field>
+
+	<field id="importe_movimiento" tabla="PAGOS">
+	    <label>Importe</label>
+	</field>
+
+	<group>
+	    <field id="id_regmovim" tabla="PAGOS" />
+	</group>
+
+
+  </table>
+
+    <join tipo="left">
+      <table id="FACREMIMP">
+        <field id="remnro">
+          <condicion operador="=">OCPRECIB.nrorec</condicion>
+        </field>
+        <field id="remfec">
+          <condicion operador="=">OCPRECIB.fecrec</condicion>
+        </field>
+        <field id="ctacod">
+          <condicion operador="=">OCPRECIB.ctacod</condicion>
+        </field>
+      </table>
+    </join>
+
+
+    <join tipo="left">
+      <table id="CCTIMPUT">
+        <field id="regmovim_id">
+          <condicion operador="=">FACREMIMP.regmovim_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="REG_MOVIMIENTOS" as="PAGOS">
+        <field id="id_regmovim">
+          <condicion operador="=">CCTIMPUT.regmovim0_id</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>

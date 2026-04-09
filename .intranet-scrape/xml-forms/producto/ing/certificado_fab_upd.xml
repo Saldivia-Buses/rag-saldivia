@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="update" _limit="0">
+	<title>Actualizar certificado fabricación</title>
+	<obs></obs>
+	<form >
+		<table id="CERTFABRICACION">
+			<field id="nrofab" 			        id_temp="nrocha" esClave="true"/>
+			<field id="lcm" 		        	id_temp="lcm" />
+			<field id="plano" 		        	id_temp="plano" />
+			<field id="expte" 		        	id_temp="expte" />
+			<field id="disposicion" 		        	id_temp="dispos" />
+
+		</table>
+	</form>
+
+</histrix>

@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" paginar="100" preloadData="false">
+  <title>Cta Ctes</title>
+  <obs/>
+  <form  detalle="regdetalles_qry.xml" idCampoCond="omitir">
+
+    <table id="REG_CUENTA" label="Cta Cte Proveedores">
+      <filters>
+
+        <field id="fecha_movimiento_desde">
+          <label>Desde</label>
+          <operador>&gt;=</operador>
+        </field>
+
+        <field id="fecha_movimiento_hasta">
+          <label>Hasta</label>
+          <operador>&lt;=</operador>
+          <valor>today</valor>
+        </field>
+
+        <field id="nro_cuenta" >
+          <operador>=</operador>
+          <label>Cuenta</label>
+        </field>
+
+        <field id="omitir">
+          <label>Omitir Sin Pendiente</label>
+          <valor>0</valor>
+        </field>
+
+        <field id="arrastrasaldo">
+          <label>Con arrastre</label>
+          <valor>1</valor>
+        </field>
+
+        <field id="solo_diferencia">
+          <label>Solo Diferencias</label>
+          <valor>0</valor>
+        </field>
+      </filters>
+<fieldGroup>
+     <!-- CONSULTA -->
+      <field id="nro_cuenta" noshow="true" esClave="true" colstyle="display:none;">
+        <label>Nro</label>
+        <helper type="external" xml="regcuenta_solamente_nro_qry.xml" dir="/ayudas" empty="true" />
+      </field>
+
+      <field id="id_regcuenta" noshow="true">
+        <detalle>regcuenta_id</detalle>
+      </field>
+
+      <field id="fecha_movimiento_desde" local="true" noshow="true">
+        <tipo>date</tipo>
+        <detalle>desde</detalle>
+      </field>
+
+      <field id="fecha_movimiento_hasta" local="true" noshow="true">
+        <tipo>date</tipo>
+        <detalle>hasta</detalle>
+      </field>
+
+    <field id="fecha_movimiento" tabla="REG_MOVIMIENTOS" noshow="true">
+        <condicion operador="&lt;=">
+(CASE WHEN '[__fecha_movimiento_hasta__]' != '' THEN STR_TO_DATE('[__fecha_movimiento_hasta__]','%d/%m/%Y') ELSE '9999-12-31' END) AND REG_MOVIMIENTOS.fecha_movimiento &gt;= (CASE WHEN '[__arrastrasaldo__]'= 0 THEN STR_TO_DATE('[__fecha_movimiento_desde__]','%d/%m/%Y') ELSE '0000-00-00' END)
+        </condicion>
+        <tipo>date</tipo>
+      </field>
+
+
+      <field id="subsistema_id" oculto="true">
+        <detalle>subsistema_id</detalle>
+      </field>
+
+      <field id="subsistemavendedor_id" oculto="true" local="true" valauto="true" />
+
+      <field id="nombre_cuenta">
+        <label>Nombre Cuenta</label>
+      </field>
+
+    <field id="acumulado" suma="true" noZero="true">
+        <expresion>
+          SUM(CASE WHEN REG_CONCEPTOS.imputacion_concepto = 0  then REG_MOVIMIENTOS.importe_movimiento else 0 END)
+             - SUM(CASE WHEN REG_CONCEPTOS.imputacion_concepto = 1  then REG_MOVIMIENTOS.importe_movimiento else 0 END)
+        </expresion>
+        <label>Acumulado</label>
+        <tipo>custom_numeric</tipo>
+      </field>
+
+      <field id="saldo_movimiento" suma="true" noZero="true">
+        <label>Pendiente</label>
+        <expresion>SUM(REG_MOVIMIENTOS.saldo_movimiento)</expresion>
+        <tipo>custom_numeric</tipo>
+      </field>
+        
+      <field id="filtro" noshow="true">
+        <expresion>
+          (case when [__omitir__] = 1 AND SUM(REG_MOVIMIENTOS.saldo_movimiento) = 0 THEN 0 ELSE 1 END)
+        </expresion>
+        <condicion operador="=">1</condicion>
+      </field>
+        
+      <field id="color" local="true" clasefila="true" noshow="true">
+        <label>color</label>
+        <if exp="saldo_movimiento != acumulado">
+          <true>'resaltadoRojo'</true>
+          <false>''</false>
+        </if>
+      </field>
+        
+      <field id="omitir" noshow="true" local="true">
+        <tipo>check</tipo>
+        <valor>0</valor>
+      </field>
+        
+      <field id="filtr2" noshow="true">
+        <expression>CASE WHEN [__solo_diferencia__] = 1 AND (SUM(CASE WHEN REG_CONCEPTOS.imputacion_concepto = 0
+then REG_MOVIMIENTOS.importe_movimiento else 0 END) - SUM(CASE WHEN REG_CONCEPTOS.imputacion_concepto = 1
+then REG_MOVIMIENTOS.importe_movimiento else 0 END)) = SUM(REG_MOVIMIENTOS.saldo_movimiento) THEN 0 ELSE 1 END</expression>
+        <condicion operador="=">1</condicion>
+      </field>
+
+
+    <field id="arrastrasaldo" noshow="true" local="true">
+        <tipo>check</tipo>
+      </field>
+        
+      <field id="solo_diferencia" local="true" noshow="true">
+        <label>Solo Diferencias</label>
+        <tipo>check</tipo>
+        <valor>0</valor>
+      </field>
+
+      <field id="arrastraCheck" noshow="true" local="true">
+        <if exp="arrastrasaldo + 0 != 0 &amp;&amp; 'fecha_movimiento_desde' != ''">
+          <true>'1'</true>
+          <false>''</false>
+        </if>
+        <detalle>arrastrasaldo</detalle>
+      </field>
+
+        <field id="login" local="true" noshow="true">
+            <label>login</label>
+            <valor eval="true">$_SESSION['idUser']</valor>
+        </field>
+</fieldGroup>
+<fieldGroup>
+    <if>return (strpos($_SESSION['properties']['modulos'],'vendedores') !== false);</if>
+
+        <field id="filtro_perfil" noshow="true">
+            <eval> if ($_SESSION['administrator'] != 1) return true; </eval>
+            <expression having="false">'[__login__]'</expression>
+            <condicion operador="=">'[__login__]' AND find_in_set('[__login__]', (ifnull((SELECT CONCAT(IFNULL(RCU_SUP.usuario_id,0),',',IFNULL(RCU.usuario_id,0)) FROM REG_CUENTA_RELACIONES RCR
+			JOIN REG_CUENTA_USERS RCU on RCU.regcuenta_id = RCR.regcuentarelacionada_id
+			LEFT JOIN REG_CUENTA_RELACIONES RCR_SUP on RCR_SUP.regcuenta_id = RCR.regcuentarelacionada_id
+			LEFT JOIN REG_CUENTA_USERS RCU_SUP on RCU_SUP.regcuenta_id = RCR_SUP.regcuentarelacionada_id
+			WHERE RCR.regcuenta_id = REG_CUENTA.id_regcuenta
+			  AND RCR.subsistemarelacionada_id = '[__subsistemavendedor_id__]'
+			ORDER BY RCR.fecha_vigencia DESC LIMIT 1), 0 )))</condicion>
+         </field>
+</fieldGroup>
+      <group>
+        <field id="id_regcuenta"/>
+      </group>
+
+      <order>
+        <field id="nombre_cuenta"/>
+      </order>
+        
+    </table>
+        
+    <join tipo="left">
+      <table id="REG_MOVIMIENTOS">
+        <field id="subsistema_id">
+          <condicion operador="=">REG_CUENTA.subsistema_id</condicion>
+        </field>
+        <field id="regcuenta_id">
+          <condicion operador="=">REG_CUENTA.id_regcuenta</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join _tipo="left">
+      <table id="REG_CONCEPTOS">
+        <field id="id_concepto">
+          <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+        </field>
+        <field id="informa_calculo">
+          <condicion operador="=">0</condicion>
+        </field>
+
+      </table>
+    </join>
+      
+  </form>
+</histrix>

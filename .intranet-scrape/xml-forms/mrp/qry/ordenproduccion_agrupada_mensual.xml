@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" inserta="false" modifica="false" borra="false" deleteRow="false" procesa="false" tableHeight="100%">
+  <title />
+  <obs></obs>
+  <form>
+    <table id="MRP_ORDEN_PRODUCCION">
+
+        <field id="fecha_desde_ingreso" local="true" noshow="true">
+            <label>Desde</label>
+            <tipo>date</tipo>
+        </field>
+
+        <field id="fecha_hasta_ingreso" local="true" noshow="true">
+            <label>Hasta</label>
+            <tipo>date</tipo>
+        </field>
+
+        <field id="fecha_ingreso"  tabla="MRP_DETALLE_REGISTRO" break="true">
+            <label>Fecha produccion</label>
+            <tipo>date</tipo>
+            <condicion operador="&gt;=">STR_TO_DATE('[__fecha_desde_ingreso__]', '%d/%m/%Y') AND MRP_DETALLE_REGISTRO.fecha_ingreso &lt;= STR_TO_DATE('[__fecha_hasta_ingreso__]', '%d/%m/%Y')</condicion>
+        </field>
+
+        <field id="scvtco_Cod" noshow="true">
+            <label>Cod</label>
+        </field>
+
+        <field id="rubro" local="true" noshow="true">
+            <valor>0</valor>
+        </field>
+
+        <field id="stkrubro_id" tabla="STK_ARTICULOS">
+            <label modpos="nobr">Rubro</label>
+            <helper type="combo" xml="stkrubro_qry.xml" dir="/ayudas" empty="true" />
+            <condicion operador="=">(CASE WHEN IFNULL('[__rubro__]', '') = '' OR '[__rubro__]' = 0 THEN STK_ARTICULOS.stkrubro_id ELSE '[__rubro__]' END)</condicion>
+        </field>
+
+        <field id="corte" style="text-align:right;" suma="true" noZero="true">
+            <label>Corte</label>
+            <expresion>sum((case when mrpseccion_id = 1 and mrpconcepto_id = 1 then cantidad else 0 end))</expresion>
+            <attribute id="linkdes">numero_porden</attribute>
+            <helper xml="ordendetalle_agrupada_det_qry.xml" type="link">
+                <parameter target="id_mrpseccion" source="1" />
+                <parameter target="fecha_ingreso" source="fecha_ingreso" />
+                <parameter target="stkrubro_id" source="stkrubro_id" />
+            </helper>
+        </field>
+
+        <field id="roturasc" style="text-align:right;color:red;" suma="true" noZero="true">
+            <label>Rot.</label>
+            <expresion>sum((case when mrpseccion_id = 1 and mrpconcepto_id != 1 then cantidad else 0 end))</expresion>
+        </field>
+
+        <field id="fileteado" style="text-align:right;" suma="true" noZero="true">
+            <label>Filet</label>
+            <expresion>sum((case when mrpseccion_id = 6 and mrpconcepto_id = 1 then cantidad else 0 end))</expresion>
+            <attribute id="linkdes">numero_porden</attribute>
+            <helper xml="ordendetalle_agrupada_det_qry.xml" type="link" noZero="true">
+                <parameter target="id_mrpseccion" source="6" />
+                <parameter target="fecha_ingreso" source="fecha_ingreso" />
+                <parameter target="stkrubro_id" source="stkrubro_id" />
+            </helper>
+        </field>
+
+        <field id="roturasFilet" style="text-align:right;color:red;" suma="true" noZero="true">
+            <label>Rot.</label>
+            <expresion>sum((case when mrpseccion_id = 6 and mrpconcepto_id != 1 then cantidad else 0 end))</expresion>
+        </field>
+
+        <field id="serig" style="text-align:right;" suma="true" noZero="true">
+            <label>Serig</label>
+            <expresion>sum((case when mrpseccion_id = 5 and mrpconcepto_id = 1 then cantidad else 0 end))</expresion>
+            <attribute id="linkdes">numero_porden</attribute>
+            <helper xml="ordendetalle_agrupada_det_qry.xml" type="link" noZero="true">
+                <parameter target="id_mrpseccion" source="5" />
+                <parameter target="fecha_ingreso" source="fecha_ingreso" />
+                <parameter target="stkrubro_id" source="stkrubro_id" />
+            </helper>
+        </field>
+
+        <field id="roturasSerig" style="text-align:right;color:red;" suma="true" noZero="true">
+            <label>Rot.</label>
+            <expresion>sum((case when mrpseccion_id = 5 and mrpconcepto_id != 1 then cantidad else 0 end))</expresion>
+        </field>
+
+        <field id="horno" style="text-align:right;" suma="true" noZero="true">
+            <label>Horno</label>
+            <expresion>sum((case when mrpseccion_id = 2 and mrpconcepto_id = 1 then cantidad else 0 end))</expresion>
+            <attribute id="linkdes">numero_porden</attribute>
+            <helper xml="ordendetalle_agrupada_det_qry.xml" type="link">
+                <parameter target="id_mrpseccion" source="2" />
+                <parameter target="fecha_ingreso" source="fecha_ingreso" />
+                <parameter target="stkrubro_id" source="stkrubro_id" />
+            </helper>
+        </field>
+
+        <field id="cantHorno" style="text-align:right;color:red;" suma="true" noZero="true" noshow="true">
+            <expresion>sum((case when mrpseccion_id = 2 then cantidad else 0 end))</expresion>
+            <jseval campodestino="total_horno" actxml="false" total="true">cantHorno.toFixed(2)</jseval>
+        </field>
+
+        <field id="roturasHorno" style="text-align:right;color:red;" suma="true" noZero="true">
+            <label>Rot.</label>
+            <expresion>sum((case when mrpseccion_id = 2 and mrpconcepto_id != 1 then cantidad else 0 end))</expresion>
+            <jseval campodestino="total_roturas_horno" actxml="false" total="true">roturasHorno.toFixed(2)</jseval>
+        </field>
+
+        <field id="porcentaje_horno" style="text-align: center;" noZero="true">
+            <label>%</label>
+            <expression>ROUND(( (sum((case when mrpseccion_id = 2 and mrpconcepto_id != 1 then cantidad else 0 end))) / (sum((case when mrpseccion_id = 2 then cantidad else 0 end)))) * 100, 2)</expression>
+        </field>
+
+        <field id="hornob" style="text-align:right;" suma="true" noZero="true">
+            <label>Horno Blind</label>
+            <expresion>sum((case when mrpseccion_id = 7 and mrpconcepto_id = 1 then cantidad else 0 end))</expresion>
+            <attribute id="linkdes">numero_porden</attribute>
+            <helper xml="ordendetalle_agrupada_det_qry.xml" type="link">
+                <parameter target="id_mrpseccion" source="7" />
+                <parameter target="fecha_ingreso" source="fecha_ingreso" />
+                <parameter target="stkrubro_id" source="stkrubro_id" />
+            </helper>
+        </field>
+
+        <field id="roturasHornoB" style="text-align:right;color:red;" suma="true" noZero="true">
+            <label>Rot.</label>
+            <expresion>sum((case when mrpseccion_id = 7 and mrpconcepto_id != 1 then cantidad else 0 end))</expresion>
+        </field>
+
+        <field id="laminado" style="text-align:right;" suma="true" noZero="true">
+            <label>Lamin</label>
+            <expresion>sum((case when mrpseccion_id = 3 and mrpconcepto_id = 1 then cantidad else 0 end))</expresion>
+            <attribute id="linkdes">numero_porden</attribute>
+            <helper xml="ordendetalle_agrupada_det_qry.xml" type="link">
+                <parameter target="id_mrpseccion" source="3" />
+                <parameter target="fecha_ingreso" source="fecha_ingreso" />
+                <parameter target="stkrubro_id" source="stkrubro_id" />
+            </helper>
+        </field>
+
+        <field id="cantLaminado" style="text-align:right;color:red;" suma="true" noZero="true" noshow="true">
+            <expresion>sum((case when mrpseccion_id = 3 then cantidad else 0 end))</expresion>
+            <jseval campodestino="total_laminado" actxml="false" total="true">cantLaminado.toFixed(2)</jseval>
+        </field>
+
+        <field id="roturasLaminado" style="text-align:right;color:red;" suma="true" noZero="true">
+            <label>Rot.</label>
+            <expresion>sum((case when mrpseccion_id = 3 and mrpconcepto_id != 1 then cantidad else 0 end))</expresion>
+            <jseval campodestino="total_roturas_laminado" actxml="false" total="true">roturasLaminado.toFixed(2)</jseval>
+        </field>
+
+        <field id="porcentaje_laminado" style="text-align: center;">
+            <label>%</label>
+            <expression>ROUND(((sum((case when mrpseccion_id = 3 and mrpconcepto_id != 1 then cantidad else 0 end))) / (sum((case when mrpseccion_id = 3 then cantidad else 0 end)))) * 100, 2)</expression>
+        </field>
+
+        <field id="autoclave" style="text-align:right;" suma="true" noZero="true">
+            <label>Auto</label>
+            <expresion>sum((case when mrpseccion_id = 4 and mrpconcepto_id = 1 then cantidad else 0 end))</expresion>
+            <attribute id="linkdes">numero_porden</attribute>
+            <helper xml="ordendetalle_agrupada_det_qry.xml" type="link">
+                <parameter target="id_mrpseccion" source="4" />
+                <parameter target="fecha_ingreso" source="fecha_ingreso" />
+                <parameter target="stkrubro_id" source="stkrubro_id" />
+            </helper>
+        </field>
+
+        <field id="cantAutoclave" style="text-align:right;color:red;" suma="true" noZero="true" noshow="true">
+            <expresion>sum((case when mrpseccion_id = 4 then cantidad else 0 end))</expresion>
+            <jseval campodestino="total_autoclave" actxml="false" total="true">cantAutoclave.toFixed(2)</jseval>
+        </field>
+
+        <field id="roturasAutoclave" style="text-align:right;color:red;" suma="true" noZero="true">
+            <label>Rot.</label>
+            <expresion>sum((case when mrpseccion_id = 4 and mrpconcepto_id != 1 then cantidad else 0 end))</expresion>
+            <jseval campodestino="total_roturas_autoclave" actxml="false" total="true">roturasAutoclave.toFixed(2)</jseval>
+        </field>
+
+        <field id="porcentaje_autoclave" style="text-align: center;">
+            <label>%</label>
+            <expression>ROUND(((sum((case when mrpseccion_id = 4 and mrpconcepto_id != 1 then cantidad else 0 end))) / (sum((case when mrpseccion_id = 4 then cantidad else 0 end)))) * 100, 2)</expression>
+        </field>
+
+        <field id="roturas" style="text-align:right;color:red;" suma="true" noZero="true">
+            <label>Total Roturas</label>
+            <expresion>sum((case when mrpconcepto_id != 1 then cantidad else 0 end))</expresion>
+        </field>
+
+        <field id="p" noshow="true">
+            <expression>group_concat(distinct id_mrpordendetalle)</expression>
+        </field>
+
+        <field id="producido" suma="true" noZero="true">
+            <label>Terminado</label>
+            <expression sql="true">(select sum(STK_MOVIMIENTOS.cantidad) from STK_MOVIMIENTOS where
+                                        STK_MOVIMIENTOS.stkconcepto_id = 90 and
+                                        STK_MOVIMIENTOS.fecha_movimiento = '[__fecha_ingreso__]' and
+                                        STK_MOVIMIENTOS.ordendetalle_id in ([__p__])
+                                        )</expression>
+            <tipo>integer</tipo>
+        </field>
+
+        <group>
+            <field id="fecha_ingreso"></field>
+            <field id="stkrubro_id"></field>
+        </group>
+
+    </table>
+
+    <join tipo="left">
+        <table id="MRP_ORDEN_CONCEPTO">
+            <field id="id_mrporden_concepto">
+                <condicion operador="=">mrporden_concepto_id</condicion>
+            </field>
+        </table>
+    </join>
+
+    <join tipo="left">
+        <table id="REG_CUENTA">
+            <field id="id_regcuenta">
+                <condicion operador="=">regcuenta_id</condicion>
+            </field>
+        </table>
+    </join>
+
+    <join tipo="inner">
+        <table id="MRP_ORDEN_DETALLE">
+            <field id="mrporden_id">
+                <condicion operador="=">MRP_ORDEN_PRODUCCION.id_mrporden</condicion>
+            </field>
+        </table>
+    </join>
+
+    <join tipo="inner">
+        <table id="MRP_DETALLE_REGISTRO">
+            <field id="mrpordendetalle_id">
+                <condicion operador="=">id_mrpordendetalle</condicion>
+            </field>
+        </table>
+    </join>
+
+    <join tipo="inner">
+        <table id="STK_ARTICULOS">
+            <field id="id_stkarticulo">
+                <condicion operador="=">MRP_ORDEN_DETALLE.stkarticulo_id</condicion>
+            </field>
+        </table>
+    </join>
+
+  </form>
+</histrix>

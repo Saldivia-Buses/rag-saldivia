@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert" >
+    <title>Movimientos</title>
+    <obs></obs>
+
+	<form>
+		<table id="REG_MOVIMIENTOS" label="Movimientos">
+			<field id="regcuenta_id"  			id_temp="regcuenta_id"></field>
+			<field id="fecha_movimiento" 			id_temp="wfechacob"></field>
+			<field id="vencimiento_movimiento"		id_temp="wfechacob"></field>
+			<field id="reg_fecha"	 			id_temp="wfechacob"></field>
+			<field id="concepto_id" 			id_temp="regconceptoing_id"></field>
+			<field id="subsistema_id"			id_temp="wsubsistema_id"></field>
+			<field id="puesto_movimiento" 			id_temp="puesto_movimiento"></field>
+			<field id="cuota"		 		id_temp="cuota"></field>
+			<field id="letra_movimiento" 			id_temp="letra_movimiento"></field>
+			<field id="importe_periodo"	 		id_temp="wimporte"></field>
+			<field id="saldo_movimiento" 			id_temp="wsaldo"></field>
+			<field id="neto_movimiento"	 		id_temp="wimporte"></field>
+			<field id="importe_movimiento" 			id_temp="wimporte"></field>
+			<field id="nro_movimiento"			id_temp="nro_movimiento"/>
+		</table>
+	</form>
+</histrix>
+
+
+
+
+<!--
+ `REG_MOVIMIENTOS` (
+  `id_regmovim` int(11) NOT NULL AUTO_INCREMENT,				yata	
+  `subsistema_id` varchar(12) CHARACTER SET utf8 NOT NULL,			subsistema_id viene calculo_ing	
+  `regcuenta_id` varchar(30) CHARACTER SET utf8 NOT NULL,			regcuenta_id  viene calculo_ing	
+  `referencia_movimiento` varchar(128) CHARACTER SET latin1 NOT NULL,		???????
+  `concepto_id` int(11) NOT NULL,						concepto Factura viene calculo_ing	
+  `puesto_movimiento` int(11) NOT NULL,						npv viene calculo_ing	
+  `cuota` int(11) NOT NULL,							??
+  `letra_movimiento` varchar(1) CHARACTER SET latin1 NOT NULL,			letra viene calculo_ing	
+  `vencimiento_movimiento` date NOT NULL,					vencimiento_movimiento solicita en 											cabecera	
+
+  `reg_periodo` varchar(6) CHARACTER SET latin1 NOT NULL,			periodo viene calculo_ing		
+  `fecha_movimiento` date NOT NULL,							fecha_movimieto viene calculo_ing		
+  `neto_movimiento` decimal(10,2) NOT NULL,					suma los netos con iva
+  `importe_iva` decimal(10,2) NOT NULL,						suma de importe_iva
+  `impmi` decimal(10,2) NOT NULL,						suma ??????
+  `impexe` decimal(10,2) NOT NULL,						suma exentos
+  `importe_periodo` decimal(10,2) NOT NULL,					total del comprobante ?????
+  `alicuota_iva` decimal(10,2) NOT NULL,					alicuota del servicio 
+  `alirni` decimal(10,2) NOT NULL,						alicuota del servicio	
+  `saldo_movimiento` decimal(10,2) NOT NULL,					total del comprobante
+  `importe_movimiento` decimal(10,2) NOT NULL,					total del comprobante
+  `pag_movimiento` varchar(2) CHARACTER SET latin1 NOT NULL,			NULL
+  `mar_movimiento` tinyint(4) NOT NULL,						NULL
+  `rec_movimiento` decimal(10,2) NOT NULL,					NULL
+  `pun_movimiento` decimal(10,2) NOT NULL,					NULL
+  `novedades_movimiento` decimal(10,2) NOT NULL,				????
+  `bonificaciones_movimiento` decimal(10,2) NOT NULL,				?????
+  `fpv_movimiento` date NOT NULL,						????
+  `cajmovimiento_id` int(11) NOT NULL,						NULL
+  `nro_movimiento` int(11) NOT NULL,						Nro de Comprobante viene de cabecera
+  `cuenta_movimiento` int(11) NOT NULL,						??????
+  `cajmovim_id` int(11) NOT NULL,						??????	
+  `fecha_cae` date NOT NULL DEFAULT '0000-00-00',				??????
+  `CAE_I` int(15) NOT NULL,							??????
+-->

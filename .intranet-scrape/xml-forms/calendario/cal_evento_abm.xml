@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm-mini">
+	<title>Eventos de Calendario</title>
+	<obs></obs>
+	<form>
+		<table id="CAL_EVENTO" >
+			<title>Eventos</title>
+			<campo id="idEvento">
+				<label>id</label>
+				<tabla_ex xml="eventos.xml"></tabla_ex>
+			</campo>
+			<campo id="descripcion">
+				<label>Descripción</label>
+				<help>Descripción del Evento</help>
+				<size>40</size>
+			</campo>
+			<campo id="fecha" deshabilitado="true">
+				<label>Fecha</label>
+			</campo>
+			<campo id="time">
+				<label>Hora</label>
+			</campo>
+			<campo id="login" deshabilitado="true">
+				<label>login</label>
+				<valor eval="true">$_SESSION['usuario']</valor>
+			</campo>
+			
+			
+		</table>
+	</form>	   
+</histrix> 

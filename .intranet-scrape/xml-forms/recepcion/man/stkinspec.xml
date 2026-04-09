@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+	<histrix tipo="abm-mini" >
+		<title>Inspeccion de Recepcion</title>
+		<obs></obs>
+		<form >
+			<table id="STKINSPEC" label="Inspeccion de Recepcion">
+				<field id="id_norma_inspec" noshow="true" autoinc="true">
+				</field>
+			
+				<field id="artcod" oculto="true">
+					<label>Articulo</label>
+					<help>Codigo de Articulo</help>
+				</field>
+				<field id="nronor" >
+					<tabla_ex id="NORMINSP">
+						<field id="nronor"></field>
+						<field id="desnor"></field>
+               		<order>
+                    	<field id="desnor" />
+                  	</order>
+	                <field id="activo_norma">
+	                    <condicion operador="=">0</condicion>
+	                </field>
+					</tabla_ex>
+					<label>Norma.</label>
+
+	            </field>
+
+				<field id="inspec_entre_recep">
+					<label>Frecuencia</label>
+					<help>Frecuencia del control</help>
+					<tipo>integer</tipo>
+				</field>
+
+				<field id="frecuencia">
+					<label>Descripcion</label>
+					<help>Descripcion del control</help>
+				</field>
+
+			</table>
+		</form>
+	</histrix>

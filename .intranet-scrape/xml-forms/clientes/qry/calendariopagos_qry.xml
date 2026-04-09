@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<histrix tipo="calendar" imprime="false" sidePanel="false" calendarAspectRatio="1.7" export="false" preloadData="true" preFetch="true" procesa="false" modifica="true" borra="true">
+
+    <title>Pagos</title>
+    <obs/>
+
+    <form>
+        <table id="REG_MOVIMIENTOS" >
+            
+            <filters>
+                <field id="fecha_movimiento">
+                    <label>Desde</label>
+                    <operador>&gt;=</operador>
+                    <valor>today</valor>
+                    <tipo>date</tipo>
+                </field>
+                <field id="fecha_movimiento">
+                    <label modpos="nobr">Hasta</label>
+                    <operador>&lt;=</operador>
+                    <valor>today</valor>
+                    <tipo>date</tipo>
+                </field>       
+            </filters>
+                        
+                      
+            <field id="id_regmovim" calendarId="true"></field>  
+
+            <field id="prueba" calendarSubject="true">
+                <expression>
+                    CONCAT(letra_movimiento,' ',
+                           LPAD(puesto_movimiento,4,'0'),'-',
+                           LPAD(nro_movimiento  ,8,'0'),
+                           ' - $', saldo_movimiento
+                           )
+                    
+                </expression>
+            </field>               
+
+            <field id="regcuenta_id"></field>   
+            <field id="id_regforma" tabla="REG_FORMAS"></field> 
+
+            <!--<field id="nombre_movimiento"></field>   -->
+
+            <field id="letra_movimiento"></field>
+
+            <field id="nombre_forma" tabla="REG_FORMAS" noshow="true"></field>
+
+            <field id="plazo" tabla="REG_FORMAS" noshow="true"></field>   
+
+            <field id="fecha_hoy" local="true">
+                <tipo>date</tipo>
+                <valor>today</valor>
+                <!--<expression>
+                    date_format(NOW() , '%Y-%m-%d')
+                </expression>-->
+            </field>        
+
+            <field id="plazo_vencimiento"  _noshow="true" calendarStartDate="true">
+                <expression>
+                    ( case when id_regforma = 3 then 
+                        (date_add(fecha_movimiento, interval REG_FORMAS.plazo day )) 
+                           when id_regforma = 4 then  
+                        (date_add(fecha_movimiento, interval REG_FORMAS.plazo day ))
+                           when id_regforma = 7 then  
+                        (date_add(fecha_movimiento, interval REG_FORMAS.plazo day ))
+                           when id_regforma = 8 then  
+                        (date_add(fecha_movimiento, interval REG_FORMAS.plazo day ))
+                    else
+                        fecha_movimiento    
+                    end )
+                </expression>
+                <tipo>date</tipo>
+            </field>
+
+                                                
+            <field id="fecha_movimiento" noshow="true">
+                <label>Fecha</label>
+                <tipo>date</tipo>
+            </field> 
+
+
+            <field id="color" calendarColor="true">
+                <attribute id="style">estilo</attribute>
+                <expression>
+                    case when (case when id_regforma = 3 then (date_add(fecha_movimiento, interval     REG_FORMAS.plazo day )) 
+                                    when id_regforma = 4 then (date_add(fecha_movimiento, interval REG_FORMAS.plazo day ))
+                                    when id_regforma = 7 then (date_add(fecha_movimiento, interval REG_FORMAS.plazo day ))
+                                    when id_regforma = 8 then (date_add(fecha_movimiento, interval REG_FORMAS.plazo day )) else fecha_movimiento end) &gt; str_to_date('[__fecha_hoy__]','%d/%m/%Y') then '#6B9614'
+                         when (case when id_regforma = 3 then (date_add(fecha_movimiento, interval REG_FORMAS.plazo day )) 
+                                    when id_regforma = 4 then (date_add(fecha_movimiento, interval REG_FORMAS.plazo day ))
+                                    when id_regforma = 7 then (date_add(fecha_movimiento, interval REG_FORMAS.plazo day ))
+                                    when id_regforma = 8 then (date_add(fecha_movimiento, interval REG_FORMAS.plazo day )) else fecha_movimiento end) &lt; str_to_date('[__fecha_hoy__]','%d/%m/%Y') then '#E2170F'
+                         when (case when id_regforma = 3 then (date_add(fecha_movimiento, interval REG_FORMAS.plazo day )) 
+                                    when id_regforma = 4 then (date_add(fecha_movimiento, interval REG_FORMAS.plazo day ))
+                                    when id_regforma = 7 then (date_add(fecha_movimiento, interval REG_FORMAS.plazo day ))
+                                    when id_regforma = 8 then (date_add(fecha_movimiento, interval REG_FORMAS.plazo day )) else fecha_movimiento end) = str_to_date('[__fecha_hoy__]','%d/%m/%Y') then '#F5E630'
+                    end          
+                </expression>
+            </field>
+
+            <group>
+                <field id="regcuenta_id"></field>   
+                <field id="fecha_movimiento"></field>  
+            </group>                
+        </table>
+
+        
+
+
+        <join>
+            <table id="REG_CUENTA">   
+                <field id="id_regcuenta">
+                    <condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+                </field>
+            </table>
+        </join>   
+
+        <join>
+            <table id="REG_FORMAS">   
+                <field id="id_regforma">
+                    <condicion operador="=">REG_CUENTA.regforma_id</condicion>
+                </field>
+            </table>
+        </join>    
+
+    </form>
+</histrix>

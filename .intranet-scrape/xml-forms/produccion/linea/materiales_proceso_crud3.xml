@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm-mini" >
+  <title>ARTICULOS POR SECTOR</title>
+  <obs></obs>
+  <form >
+    <table id="STK_ARTICULO_PROCESO" label="Rubros" >
+
+      <field id="proceso_id"  oculto="true">
+        <label>Cod.</label>
+      </field>
+
+      <field id="homologacion_id" noshow="true">
+        <label>Homol</label>
+      </field>
+
+      <field id="stkarticulo_id" esClave="true">
+        <label>Art.</label>
+                <help>Codigo de Articulo</help>
+                <ayuda_ex id="STKINSUM" xml="HLPstkinsum.xml" dir="/ayudas_local">
+                    <field id="artcod" >
+                        <label>Cod.</label>
+                    </field>
+                    <field id="artdes">
+                        <label>Insumo</label>
+                        <detalle>artdes</detalle>
+                    </field>
+	    </ayuda_ex>    
+     </field>
+      <field id="artdes">
+        <expresion>artdes</expresion>
+        <label>Descripcion</label>
+      </field>
+      <field id="cantidad">
+        <label>Cant.</label>
+      </field>
+      
+      
+    </table>
+    <join tipo="left">
+	<table id="STKINSUM">
+	    <field id="artcod">
+		<condicion operador="=">stkarticulo_id</condicion>
+	    </field>
+	</table>
+    </join>
+  </form>     
+</histrix>

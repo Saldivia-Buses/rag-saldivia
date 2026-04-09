@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm">
+	<title>ESTUDIOS</title>
+	<obs></obs>
+	<form >
+		<table id="ESTUDIOS" >
+		    <title>Estudios</title>
+			<field id="tipoestudio">
+				<label>Cod.</label>
+				<help>Codigo de Estudio</help>
+			</field>
+			<field id="descripcion">
+				<label>Descripcion</label>
+				<help>Descripcion del Estudio</help>
+			</field>
+			<order>
+				<field id="tipoestudio"></field>
+			</order>
+		</table>
+	</form>	   
+</histrix> 

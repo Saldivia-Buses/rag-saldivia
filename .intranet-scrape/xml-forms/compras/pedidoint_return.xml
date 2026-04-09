@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+	<histrix tipo="update" >
+		<title>Pedidos Internos</title>
+		<obs></obs>
+		<form >
+			<table id="PEDIDOINT" idCampoCond="borrar" >
+				<field esClave="true" id="idPed" id_temp="idPed"></field>
+				<field id="estado">
+				    <valor>0</valor>
+				</field>
+				<field id="confirmado">
+				    <valor>1</valor>
+				</field>
+			</table>
+		</form>
+	</histrix>

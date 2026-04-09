@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="chart">
+	<title>Resumen contable por grupo</title>
+	<obs></obs>
+	<form >
+		<table id="GEN_CALENDAR" >
+			<title>GASTOS</title>
+		   <grafico id="Gastos" >
+			   <ancho>400</ancho>
+			   <tipo>L</tipo>
+
+			   <etiquetas>mes</etiquetas>
+			   <serie>efec</serie>
+			   <title>Gastos Grupo N°11 x Coche x Mes</title>
+			   <subtitulo></subtitulo>
+		   </grafico>
+		    <filters>
+			    <field id="fecha">
+				    <label>Desde</label>
+				    <valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m" ,strtotime('-12 month')) , 1, date("Y") -  1 ))</valor>
+				    <operador>&gt;=</operador>
+			    </field>
+			    <field id="fecha">
+                                    <label>Hasta</label>
+				    <valor eval="true">date('d/m/Y', strtotime('-1 second', strtotime(date('Y-m-01'))))</valor>
+				    <operador>&lt;=</operador>
+			    </field>
+		    </filters>
+			<field id="mes">
+				<expression>month(fecha)</expression>
+				<label>Mes</label>
+				<options>
+					<option valor="1">Ene</option>
+					<option valor="2">Feb</option>
+					<option valor="3">Mar</option>
+					<option valor="4">Abr</option>
+					<option valor="5">May</option>
+					<option valor="6">Jun</option>
+					<option valor="7">Jul</option>
+					<option valor="8">Ago</option>
+					<option valor="9">Sep</option>
+					<option valor="10">Oct</option>
+					<option valor="11">Nov</option>
+					<option valor="12">Dic</option>
+				</options>
+       				<tipo>varchar</tipo>
+			</field>
+                    <field id="fecha" oculto="true">
+                <!--<condicion operador="&gt;="> DATE_FORMAT(date_sub(date(now()) , interval 1 year) ,'%Y-%m-01') and GEN_CALENDAR.fecha &lt;= now()</condicion> -->
+
+                   <!--     <condicion operador="&gt;="> date_sub(date(now()) , interval 1 year) and GEN_CALENDAR.fecha &lt;= now()</condicion> -->
+                    </field>
+                    <field id="year" _oculto="true">
+                        <expression>year(fecha)</expression>
+                    </field>
+                    <field id="prov" alias="prov" noshow="true">
+				<label>prov</label>
+				<expression having="false">ifnull((select CCTCUENT.totatr from IVACOMPRAS left join CCTCUENT on CCTCUENT.siscod = '01' and CCTCUENT.ctacod = IVACOMPRAS.ctacod where IVACOMPRAS.fecreg = CTBREGIS.regfec and IVACOMPRAS.nrocom = CTBREGIS.regnro limit 1), 0)</expression>
+				<tipo>integer</tipo>
+				<condicion operador="!=" >1 </condicion>
+			</field>
+			<field id="coches">
+                             <expression><![CDATA[(select count(*) from PEDCOTIZ where
+                                month(PEDCOTIZ.terminacion) = month(GEN_CALENDAR.fecha) and
+                                year(PEDCOTIZ.terminacion) = year(GEN_CALENDAR.fecha))]]></expression>
+				<label>Coches</label>
+                                <tipo>numeric</tipo>
+			</field>
+			<field id="gastos">
+				<expression>sum(regimp * (case when regdoh = 1 then 1 else 0 end)) - sum(regimp * (case when regdoh = 2 then 1 else 0 end))</expression>
+				<label>Gastos</label>
+                                <tipo>numeric</tipo>
+			</field>
+                        <field id="efec" local="true">
+                            <label>Gastos coche</label>
+                            <if exp="true">
+                                <true>round(gastos / coches, 2)</true>
+                                <false>0</false>
+                            </if>
+			    <tipo>numeric</tipo>
+                        </field>
+                        <field id="idGrupo" noshow="true" tabla="CTBGRPCONT">
+                                <condicion operador="=">11</condicion>
+                        </field>
+			<group>
+                                <field id="year"></field>
+				<field id="mes"></field>
+			</group>
+		</table>
+                <join tipo="left">
+                    <table id="CTBREGIS" >
+                        <field id="siscod">
+                            <condicion operador="=">'10'</condicion>
+                        </field>
+                        <field id="regfec">
+                            <condicion operador="=">GEN_CALENDAR.fecha</condicion>
+                        </field>
+
+                     </table>
+                </join>
+                <join tipo="inner">
+                    <table id="CTBGRPCONT" >
+                        <field id="ctbcod">
+                            <condicion operador="=">CTBREGIS.ctbcod</condicion>
+                        </field>
+                     </table>
+                </join>
+		<join tipo="left">
+			<table id="CTBCUENT">
+<!--
+				<field id="siscod" oculto="true">
+					<condicion operador="=">CTBREGIS.siscod</condicion>
+				</field>
+-->
+				<field id="ctbcod" oculto="true">
+					<condicion operador="=">CTBGRPCONT.ctbcod</condicion>
+				</field>
+
+			</table>
+		</join>
+	</form>
+</histrix>

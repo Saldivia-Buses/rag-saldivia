@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" >
+  <title>Cta Ctes</title>
+  <obs/>
+  <form>
+    <table id="REG_CUENTA" label="Cta Cte Proveedores">
+		<field id="id_regcuenta">
+			<label>Cod.</label>
+			<valor>6250</valor>
+		</field>
+		<field id="nombre_cuenta">
+			<label>Cta</label>
+		</field><!--
+		<field id="movs" local="true">
+			<helper type="object" xml="">
+			</helper>
+			<label> </label>
+		</field>-->
+		<field id="cant_obs">
+			<expresion>SELECT COUNT(*) FROM REG_MOVIMIENTO_OBS rmo LEFT JOIN  REG_MOVIMIENTOS rm ON rmo.regmovim_id = rm.id_regmovim WHERE rm.regcuenta_id = REG_CUENTA.id_regcuenta</expresion>
+			<label>Cant</label>
+		</field>
+    </table><!--
+    </join>
+    <join tipo="left">
+      <table id="REG_IMPUTACIONES">
+        <field id="regmovim0_id">
+          <condicion operador="=">REG_MOVIMIENTOS.id_regmovim</condicion>
+        </field>
+        <field id="subsistema0_id">
+          <condicion operador="=">'REG_MOVIMIENTOS.subsistema_id'</condicion> 
+        </field>
+      </table>
+    </join>-->
+  </form>
+</histrix>

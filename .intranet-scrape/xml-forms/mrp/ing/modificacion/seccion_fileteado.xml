@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  imprime="false" inserta="no" tipo="ficha" preFetch="true">
+    <title>Serigrafía</title>
+    <obs/>
+    <form>
+        <table id="MRP_DETALLE_REGISTRO" label="Serigrafía">
+            <movimientos>
+                <relacion id="marco_cumplida.xml" />
+            </movimientos>
+
+             <field id="id_mrpordendetalle" noshow="true">
+                <expression>mrpordendetalle_id</expression>
+             </field>
+
+            <field id="fecha_ingreso" >
+                <label>Fecha</label>
+		<tipo>date</tipo>
+		
+            </field>
+
+            <field id="id_detalle_reg" noshow="true"/>
+
+            <field id="cantidad" >
+                <label>Cantidad</label>
+            </field>
+
+            <field  id="ingreso" >
+                <label>Inicio</label>
+                <tipo>time</tipo>
+            </field>
+            <field id="salida" >
+                <label>Finalización</label>
+                <tipo>time</tipo>
+            </field>
+            <field id="observacion" >
+                <label>Observaciones</label>
+                <size>40</size>
+            </field>
+        </table>
+    </form>
+</histrix>

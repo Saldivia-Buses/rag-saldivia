@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="crud">
+	<title>Perfiles de puesto</title>
+	<obs/>
+	<form>
+		<table id="RH_PERFIL_PUESTO" title="Perfiles de puesto">
+
+		    <field id="id_perfilpuesto">
+                <label>Cod</label>
+				<helper type="link" xml="perfil_puesto_ficha.xml" dir="/personal/qry">
+				    <parameter source="id_perfilpuesto" target="id_perfilpuesto" />		
+				</helper>
+                <help>Número de Perfil</help>
+                <detalle>id_perfilpuesto</detalle>
+            </field>
+
+		    <field id="nombre_perfilpuesto">
+				<label modpos="nobr">Nombre</label>
+                <help>Nombre del puesto</help>
+                <size>50</size>				
+		    </field>
+
+			<field id="seccion_perfilpuesto">
+            		    <tabla_ex id="SECCION" vacio="true">
+                		<field id="id_seccion"></field>
+                		<field id="nombre"></field>
+                		<field id="activa">
+							<condicion operador="=">1</condicion>
+                		</field>
+                		<order>
+                				<field id="nombre" />
+                		</order>
+            		    </tabla_ex>
+			    <label>Sección</label>
+			</field>
+
+			<field id="puestosup_perfilpuesto">
+            		    <tabla_ex id="RH_PERFIL_PUESTO" vacio="true">
+                		<field id="id_perfilpuesto"></field>
+                		<field id="nombre_perfilpuesto"></field>
+                		<field id="activo_perfilpuesto">
+							<condicion operador="=">1</condicion>
+                		</field>
+                		<order>
+                				<field id="nombre_perfilpuesto" />
+                		</order>
+            		    </tabla_ex>
+			    <label modpos="nobr">Puesto Reporta</label>
+			</field>
+
+		    <field id="mision_perfilpuesto">
+				<label>Misión</label>
+                <help>Misión del puesto</help>
+                <size>300</size>				
+		    </field>
+
+		    <field id="condiciones_perfilpuesto">
+				<label modpos="nobr">Condiciones</label>
+                <help>Condiciones de Trabajo</help>
+                <size>300</size>				
+		    </field>
+	    
+		    <field id="formacion_perfilpuesto">
+				<label>Formación</label>
+                <help>Formación Requerida</help>
+                <size>100</size>				
+		    </field>
+
+		    <field id="requisitos_perfilpuesto">
+				<label modpos="nobr">Requisitos</label>
+                <help>Requisitos del puesto</help>
+                <size>100</size>				
+		    </field>
+
+		    <field id="software_perfilpuesto">
+				<label>Software</label>
+                <help>Manejo de Software</help>
+                <size>100</size>				
+		    </field>
+
+		    <field id="idiomas_perfilpuesto">
+				<label modpos="nobr">Idiomas</label>
+                <help>Idiomas necesarios</help>
+                <size>50</size>				
+		    </field>
+
+		    <field id="conocimientos_perfilpuesto">
+				<label >Conocimientos</label>
+                <help>Conocimientos específicos</help>
+                <size>100</size>				
+		    </field>
+
+		    <field id="experiencia_perfilpuesto">
+				<label modpos="nobr">Experiencia</label>
+                <help>Experiencia Laboral</help>
+                <size>100</size>				
+		    </field>
+
+			<field id="funciones" local="true">
+			<label>Funciones</label>
+			<helper type="object" xml="perfil_responsabilidades_abm.xml">
+			    <parameter source="id_perfilpuesto" target="perfilpuesto_id" />
+			</helper>
+		    </field>
+
+			<field id="competencias" local="true">
+			<label>Competencias</label>
+			<helper type="object" xml="perfil_competencias_perfil.xml">
+			    <parameter source="id_perfilpuesto" target="perfilpuesto_id" />
+			</helper>
+		    </field>
+
+		</table>
+	</form>
+	
+</histrix>

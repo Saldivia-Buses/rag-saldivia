@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="exec" >
+       <title>CIERRE</title>
+        <obs></obs>
+               <form >
+		<table id="FACDETAL" label="Detalle">
+			<ejecuta><![CDATA[
+                           exec('../cgi-bin/getfichadas 1> /tmp/fichadas.log 2> /tmp/error_fichadas.log &');
+						 ]]></ejecuta>
+				<field id="tipo" id_temp="tipo" local="true">
+				</field>
+			</table>
+
+               </form>
+        </histrix>

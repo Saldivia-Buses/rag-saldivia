@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" inserta="false" modifica="false" deleteRow="false" imprime="false" log="false" procesa="true" confirma="AUTORIZAR" transaccional="true" tableHeight="40em">
+  <title>Movimientos</title>
+  <obs/>
+  <form>
+	<table id="REG_MOVIMIENTOS" label="Resumen de Cuenta" tableHeight="40em">
+
+		<movimientos>
+			<relacion id="regmovimiento_dup.xml" />		   DUPLICO REG_MOVIMIENTOS
+			<relacion id="regdetalle_dup.xml" />		   DUPLICO REG_DETALLES
+			<relacion id="regnumerador_upd.xml" />		   ACTUALIZO REG_NUMERADORES
+			<relacion id="genera_asiento.xml" />		   GRABO ASIENTO
+			<relacion id="regmovim_update.xml" />		   ACTUALIZO FACTURA MODELO
+			<relacion id="regmovimiento_autorizar.xml" />	   AUTORIZACION AFIP
+			<relacion id="regmovimiento_del.xml" />		   ELIMINO MOVIMIENTO
+		</movimientos>
+
+		<filters>
+			<field id="nro_cuenta">
+				<operador>=</operador>
+				<label>Cuenta</label>
+			</field>
+			<field id="nombre" sincelda="true" deshabilitado="true" modpos="nobr" />
+			<field id="filtro_pend" deshabilitado="false">
+			    <operador>=</operador>
+			    <valor>1</valor>
+			    <label>Estado</label>
+			</field>
+		</filters>
+
+		<fieldGroup id="entorno" noshow="true">
+			<field id="id_regmovim" />
+			<field id="subsistema_id" valauto="true" />
+			<field id="subsistema_fiscal" valauto="true" local="true" />
+			<field id="regcuenta_id" valauto="true" />
+			<field id="concepto_id" />
+			<field id="letra_movimiento" />
+			<field id="puesto_movimiento" />
+			<field id="ejecuta" tabla="REG_NUMERADORES" />
+			<field id="nombre_movimiento" noshow="true" />
+		</fieldGroup>
+
+		<fieldGroup>
+			<field id="fecha_movimiento" editable="true" local="true" valauto="true">
+				<label>Fec.Mov.</label>
+				<valor>today</valor>
+				<tipo>date</tipo>
+			</field>
+
+			<field id="nombre_cuenta" tabla="REG_CUENTA">
+				<label>Cuenta</label>
+				<attribute id="colstyle">marcar</attribute>
+			</field>
+
+			<field id="nombre" local="true" noshow="true">
+			    <size>100</size>
+			</field>
+
+			<field id="nro_cuenta" noshow="true" tabla="REG_CUENTA">
+			    <label>Nro</label>
+			    <helper type="external" xml="regcuenta_solamente_nro_qry.xml" dir="/ayudas" empty="true">
+				<field id="subsistema_id" oculto="true">
+					<condicion operador="=">'02'</condicion>
+				</field>
+			    </helper>
+			</field>
+
+			<field id="id_regcuenta" noshow="true" tabla="REG_CUENTA">
+			    <detalle>regcuenta_id</detalle>
+			</field>
+
+			<field id="nro_movimiento" linkdes="Detalle del Comprobante" linkmodal="true" style="text-align:center;width:12em;">
+				<label>Numero</label>
+				<expresion>CONCAT(REG_CONCEPTOS.abreviacion_concepto,' ',REG_MOVIMIENTOS.letra_movimiento,' ',LPAD(REG_MOVIMIENTOS.puesto_movimiento,4,'0'),'-',LPAD(REG_MOVIMIENTOS.nro_movimiento  ,8,'0'))</expresion>
+				<helper type="link">
+					<parameter source="id_regmovim" target="id_regmovim" />
+				</helper>
+				<attribute id="linkint">ejecuta</attribute>
+				<attribute id="colstyle">marcar</attribute>
+			</field>   
+
+			<field id="conciliado">
+				<label>U.Emitida</label>
+				<tipo>date</tipo>
+				<attribute id="colstyle">marcar</attribute>
+			</field>
+
+			<field id="marcar" noshow="true">
+				<expression>case when ifnull(month(conciliado),0) &gt;= month(now()) then 'background-color:#FCC2C2;' else '' end</expression>
+			</field>
+
+			<field id="filtro_pend" noshow="true">
+				<expression>case when ifnull(month(conciliado),0) &gt;= month(now()) then '2' else '1' end</expression>
+				<options>
+				    <option valor="">Todas</option>
+				    <option valor="1">Pendientes</option>
+				    <option valor="2">Emitidas</option>
+				</options>
+			</field>
+
+			<field id="novedades_movimiento" noZero="true">
+				<label>U.Importe</label>
+				<tipo>decimal</tipo>
+				<attribute id="colstyle">marcar</attribute>
+			</field>
+
+			<field id="neto_movimiento" suma="true" noZero="true">
+				<label>Neto</label>
+				<tipo>numeric</tipo>
+			</field>		
+	
+			<field id="importe_iva" suma="true" noZero="true">
+				<label>IVA</label>
+				<tipo>numeric</tipo>
+			</field>
+
+			<field id="importe_movimiento" suma="true" noZero="true">
+				<label>Total</label>
+				<tipo>numeric</tipo>
+			</field>
+
+			<field id="fiscal" noshow="true" tabla="REG_NUMERADORES" />
+		</fieldGroup>
+
+		<fieldGroup>
+			<if> if ($_SESSION['administrator'] == '1') return true; </if>
+
+			<field id="tilde_fact" local="true" refresh="true">
+				<label>Facturar</label>
+				<tipo>check</tipo>
+				<attribute id="colstyle">marcar</attribute>
+			</field>
+
+			<field id="facturar" local="true" colstyle="display:none;">
+				<if exp="tilde_fact == 1">
+					<true>'1'</true>
+					<false>'0'</false>
+				</if>
+			</field>
+
+			<field id="tilde_del" local="true" refresh="true">
+				<label>Eliminar</label>
+				<tipo>check</tipo>
+				<attribute id="colstyle">marcar</attribute>
+			</field>
+
+			<field id="borrar" local="true" colstyle="display:none;">
+				<if exp="tilde_del == 1">
+					<true>'1'</true>
+					<false>'0'</false>
+				</if>
+			</field>
+		</fieldGroup>
+
+		<fieldGroup>
+			<if> if ($_SESSION['administrator'] == '1') return true; </if>
+			<field id="mod_cabecera" local="true" print="false" style="text-align:center;width:4em;">
+				<helper type="link" xml="regmovimiento_crud2.xml" dir="/clientes/ing" width="700px" height="450px" title="Modificar Comprobante">
+					<parameter source="id_regmovim" target="id_regmovim" />
+				</helper>        
+				<label>Mod.Cabecera</label>
+				<valor>Mod</valor>
+				<attribute id="colstyle">marcar</attribute>
+			</field>
+			<field id="mod_detalle" local="true" print="false" style="text-align:center;width:4em;">
+				<helper type="link" xml="regdetalles_crud.xml" dir="/clientes/ing/mos" width="1000px" height="500px" title="Modificar Comprobante">
+					<parameter source="id_regmovim" target="regmovim_id" />
+				</helper>        
+				<label>Mod.Detalle</label>
+				<valor>Mod</valor>
+				<attribute id="colstyle">marcar</attribute>
+			</field>
+		</fieldGroup>
+
+		<fieldGroup id="campos_ins" noshow="true">
+			<field id="regcuentavendedor_id" />
+			<field id="reg_periodo" />
+			<field id="stklista_id" />
+			<field id="alicuota_iva" />
+			<field id="importe_bon" />
+			<field id="importe_exento" />
+			<field id="importe_periodo" />
+			<field id="importe_percepcion" />
+			<field id="importe_ibr" />
+			<field id="importe_nogravado" />
+			<field id="bonificaciones_movimiento" />
+			<field id="alicuota_percepcion" />
+			<field id="regcuentatransporte_id" />
+			<field id="regforma_id" />
+			<field id="cantidad_bultos" />
+			<field id="domicilio_movimiento" />
+			<field id="iva_id" />
+			<field id="cuit_movimiento" />
+			<field id="referencia_movimiento" />
+			<field id="dni_movimiento" />
+			<field id="genlocalidad_id" />
+			<field id="tiposervicio_afip" />
+			<field id="stkdeposito_id" local="true">
+				<valor>1</valor>
+			</field>
+			<field id="stkconcepto_id" local="true">
+				<helper type="parameter" id="SIS::02:stock_codigo_concepto_venta">
+					<label>Codigo de concepto de para venta</label>
+					<defaultValue>2</defaultValue>
+				</helper>
+			</field>
+		</fieldGroup>
+
+		<order>
+			<field id="nombre_cuenta" table="REG_CUENTA" />
+			<field id="nro_movimiento" table="REG_MOVIMIENTOS" />
+		</order>
+
+		<group>
+			<field id="id_regmovim" tabla="REG_MOVIMIENTOS" />
+		</group>
+	</table>
+
+	<join tipo="left">
+		<table id="REG_CUENTA">
+			<field id="id_regcuenta">
+				<condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+			</field>
+		</table>
+	</join>
+
+	<join>
+		<table id="REG_CONCEPTOS">
+			<field id="id_concepto">
+				<condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+			</field>
+			<field id="informa_calculo">
+				<condicion operador="=">0</condicion>
+			</field>
+		</table>
+	</join>
+
+	<join tipo="left">
+		<table id="REG_NUMERADORES">
+			<field id="subsistema_id">
+				<condicion operador="=">'[__subsistema_fiscal__]'</condicion>
+			</field>
+			<field id="regconcepto_id">
+				<condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+			</field>
+			<field id="puesto">
+				<condicion operador="=">REG_MOVIMIENTOS.puesto_movimiento</condicion>
+			</field>
+			<field id="letra">
+				<condicion operador="=">REG_MOVIMIENTOS.letra_movimiento</condicion>
+			</field>
+		</table>
+	</join>
+   </form>
+</histrix>

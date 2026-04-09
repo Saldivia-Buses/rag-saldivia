@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="nosql"  xmlImpresion="retgan_reimp_2.xml"  dirImpresion="/retenciones">
+	<title>RETENCIONES</title>
+	<obs/>
+	<form >
+		<table id="RETGANAN" label="retenciones" idCampoCond="pagarRR">
+
+            <field id="printer" id_padre="printer_orden" local="true" >
+                <detalle>printer</detalle>
+                <detalle>directprint</detalle>
+                <setvar>directprint</setvar>
+            </field> 
+			<field id="id_retganan" lastId="ordenpago_lote_retimpgan.xml">
+				<detalle>id_retganan</detalle>
+			</field>
+		</table>
+	</form>
+</histrix>

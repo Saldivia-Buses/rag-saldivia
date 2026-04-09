@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" margintabs="true" PDForientacion="L">
+   <title>Subdiario Facturacion</title>
+   <obs/>
+   <form>
+	<table id="REG_MOVIMIENTOS" label="Subdiario Facturacion">
+
+		<filters>
+			<field id="fecha_movimiento">
+				<label>Desde</label>
+				<valor>today</valor>
+				<operador>&gt;=</operador>
+			</field>
+			<field id="fecha_movimiento">
+				<label modpos="nobr">Hasta</label>
+				<valor>today</valor>
+				<operador>&lt;=</operador>
+			</field>				
+			<field id="puesto_movimiento">
+				<label modpos="nobr">Desde Puesto</label>
+				<operador>=</operador>
+			</field>
+			<field id="stkrubro_id">
+				<label>Rubro</label>
+				<operador>=</operador>
+			</field>
+			<field id="id_stkarticulo">
+				<label modpos="nobr">Articulo</label>
+				<operador>=</operador>
+			</field>
+		</filters>
+
+			<field id="id_regmovim" esClave="true" noshow="true" />
+			<field id="subsistema_id" noshow="true" />
+			<field id="letra_movimiento" noshow="true" />
+			<field id="regcuenta_id" noshow="true" />			
+			<field id="concepto_id" noshow="true" />
+
+			<field id="fecha_movimiento" break="true">
+				<label>Fecha</label>
+				<tipo>date</tipo>
+			</field>
+
+			<field id="puesto_movimiento" break="true">
+				<label>Nro.Puesto</label>
+				<helper type="combo" xml="regnpv_qry.xml" dir="/ayudas" empty="true">
+					<field id="puesto" noshow="true" />
+					<field id="mipuesto">
+						<expression>concat(lpad(puesto,4,'0'), (case when fiscal = 1 then ' - Fiscal' else '' end))</expression>
+					</field>		
+					<field id="subsistema_id" elClave="true" oculto="true" noshow="true"/>
+				</helper>
+			</field>
+
+			<field id="descripcion_puesto" tabla="CAJ_PUESTOS">
+				<label>Puesto</label>
+			</field>
+
+			<field id="codigo_detalle" tabla="REG_DETALLES" noshow="true" />
+
+			<field id="id_stkarticulo" tabla="STK_ARTICULOS" noshow="true">
+				<helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas" />
+			</field>
+
+			<field id="codigo_articulo">
+				<label>Codigo</label>
+				<expression>STK_ARTICULOS.id_stkarticulo</expression>
+			</field>
+
+			<field id="nombre_articulo" tabla="STK_ARTICULOS">
+				<label>Articulo</label>
+			</field> 
+
+			<field id="stkrubro_id" multiple="true" tabla="STK_ARTICULOS">
+        			<label>Rubro</label>
+			        <helper type="combo" xml="stkrubro_qry.xml" dir="/ayudas" empty="true" />
+			</field>
+
+			<field id="cantidad" suma="true">
+				<label>Cantidad</label>
+				<expression>sum((case when imputacion_concepto = 1 then (cantidad_detalle * -1) else cantidad_detalle end))</expression>
+				<tipo>numeric</tipo>
+			</field>
+
+			<field id="neto_detalle" suma="true" noZero="true">
+				<label>Imp. Gravado</label>
+				<expression>sum((case when imputacion_concepto = 1 then (neto_detalle * -1) else neto_detalle end))</expression>
+				<tipo>numeric</tipo>
+			</field>
+
+			<field id="iva_detalle" local="true" suma="true"  noZero="true">
+				<label>IVA</label>
+				<expression>sum((case when imputacion_concepto = 1 then (iva_detalle * -1) else iva_detalle end))</expression>
+				<tipo>numeric</tipo>
+			</field>
+
+			<field id="total_detalle" suma="true" noZero="true">
+				<label>Total</label>
+				<expression>sum((case when imputacion_concepto = 1 then (total_detalle * -1) else total_detalle end))</expression>
+				<tipo>numeric</tipo>
+			</field>
+
+			<group>
+				<field id="fecha_movimiento" />
+				<field id="puesto_movimiento" />
+				<field id="id_stkarticulo" />
+			</group>
+
+			<order>
+				<field id="puesto_movimiento" />
+				<field id="nombre_articulo" />
+			</order>
+		</table>
+
+		<join>
+			<table id="GEN_SUBSISTEMAS">
+				<field id="id_subsistema">
+					<condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion>
+				</field>			
+				<field id="iva_subsistema">
+					<condicion operador="=">1</condicion>
+				</field>				
+			</table>
+		</join>
+
+		<join>
+			<table id="REG_CONCEPTOS">
+				<field id="id_concepto">
+					<condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+				</field>
+				<field id="tipo_concepto">
+					<condicion operador="=">1</condicion>
+				</field>
+			</table>
+		</join>
+
+		<join tipo="left">
+			<table id="REG_DETALLES">
+				<field id="regmovim_id">
+					<condicion operador="=">REG_MOVIMIENTOS.id_regmovim</condicion>
+				</field>
+			</table>
+		</join>
+
+		<join tipo="left">
+			<table id="STK_ARTICULOS">
+				<field id="codigo_barra">
+					<condicion operador="=">REG_DETALLES.codigo_detalle</condicion>
+				</field>
+			</table>
+		</join>
+
+		<join tipo="left">
+			<table id="REG_NUMERADORES">
+				<field id="subsistema_id">
+					<condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion>
+				</field>
+				<field id="regconcepto_id">
+					<condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+				</field>
+				<field id="puesto">
+					<condicion operador="=">REG_MOVIMIENTOS.puesto_movimiento</condicion>
+				</field>
+				<field id="letra">
+					<condicion operador="=">REG_MOVIMIENTOS.letra_movimiento</condicion>
+				</field>
+			</table>
+		</join>
+
+		<join tipo="left">
+			<table id="CAJ_PUESTO_NPV">
+				<field id="regnumerador_id">
+					<condicion operador="=">REG_NUMERADORES.id_regnumerador</condicion>
+				</field>
+			</table>
+		</join>
+
+
+		<join tipo="left">
+			<table id="CAJ_PUESTOS">
+				<field id="id_cajpuesto">
+					<condicion operador="=">CAJ_PUESTO_NPV.cajpuesto_id</condicion>
+				</field>
+			</table>
+		</join>
+	</form>
+</histrix>

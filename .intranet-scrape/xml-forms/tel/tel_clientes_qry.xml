@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" >
+	<title>CONSULTA DE LLAMADAS</title>
+	<consulta>
+		<table id="CCTCONTA">
+		      <field id="ctacod">
+			    <label>cod</label>
+			</field>
+                         <field id="Telefono">
+			    <label>telefono</label>
+			</field>
+			<field id="nombre">
+			    <label>Nombre</label>
+			</field>
+                       
+		</table>
+                <join tipo="left">
+                    <table id="CCTCUENT">
+                        <field id="siscod">
+                            <condicion operador="=">'02'</condicion>
+                        </field>
+                         <field id="ctacod">
+                            <condicion operador="=">CCTCONTA.ctacod</condicion>
+                        </field>
+                    </table>
+
+                </join>
+	</consulta>
+</histrix>

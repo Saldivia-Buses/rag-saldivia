@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" deleteRow="false" transacional="true" tooltip="false" inserta="false" modifica="false" confirma="APLICAR" forceReload="true" showCantidad="false">
+    <title>Puntos de Venta por Puesto</title>
+    <obs></obs>
+    <form>
+        <table id="REG_NUMERADORES" label="P.V. para el Puesto">
+                                
+            <field id="puesto">
+                <label>P.Venta</label>
+            </field>
+            <field id="nombre_puesto">
+                <expression>LPAD(puesto,4,'0')</expression>
+            </field>				
+
+            <field id="letra" />                                
+                                
+				<!-- TABLA DE VINCULACION -->
+            <field id="id_cajpuestonpv" tabla="CAJ_PUESTO_NPV"   noshow="true" />
+            <field id="cajpuesto_id"    tabla="CAJ_PUESTO_NPV"   noshow="true" />
+            <field id="regnumerador_id" tabla="CAJ_PUESTO_NPV"   noshow="true" />
+            <field id="id_regnumerador" noshow="true" />
+            <field id="regconcepto_id" noshow="true" />
+            <field id="fiscal" noshow="true" />
+
+            <order>
+                <field id="nombre_puesto" tipoOrden="DESC"/>
+                <field id="fiscal" />
+            </order>
+
+        </table>
+        <join tipo="left">
+            <table id="CAJ_PUESTO_NPV">
+                <field id="regnumerador_id">
+                    <condicion operador="=">id_regnumerador</condicion>
+                </field>
+                <!--
+                <field id="cajpuesto_id">
+                    <condicion operador="=">'[__cajpuesto_id__]'</condicion>
+                </field> -->
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="REG_CONCEPTOS">
+                <field id="id_concepto">
+                    <condicion operador="=">regconcepto_id</condicion>
+                </field>
+                <field id="subsistema_id">
+                    <condicion operador="=">'02'</condicion>
+                </field>
+            </table>
+        </join>
+		    
+    </form>
+</histrix>

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<histrix tipo="consulta" >
+	<title>Insumos</title>
+	<obs></obs>
+	<form  detalle="articulo_foto_abm.xml" _dir="/articulos/">
+		<table id="STKINSUM" >
+			<title>Insumos</title>
+
+			<filters>
+				<field id="artcod">
+					<operador>=</operador>
+					<label>Desde Insumo</label>
+					<valor>0</valor>
+				</field>
+
+				<field id="baja">
+					<operador>=</operador>
+                    <label>Estado</label>
+					<valor>0</valor>
+				</field>
+
+                <field id="artdes" deshabilitado="true">
+                    <label>Artículo</label>
+                    <help>Descripción de Artículo (ENTER = Retorna a ingreso de código).</help>
+                </field>
+
+			</filters>
+			
+			<field id="siscod" oculto="true">
+				<label>siscod</label>
+				<detalle>siscod</detalle>
+
+			</field>
+			
+			<field id="artcod" autocompletar="true">
+				<ayuda_ex id="STKINSUM">
+					<clave>artcod</clave>
+					<descripcion>artdes</descripcion>
+					<field id="artcod" noshow="true">
+						<label>Cod</label>
+                        <detalle>artcod</detalle>
+					</field>
+					<field id="artdes">
+						<label>Nombre</label>
+						<detalle>artdes</detalle>
+					</field>
+                    <field id="siscod" oculto="true">
+					</field>
+                    <order>
+                        <field id="artdes"></field>
+                    </order>
+				</ayuda_ex>
+				<label>Cod.</label>
+				<detalle>idArticulo</detalle>
+				
+			</field>
+			<field id="artdes" deshabilitado="true">
+				<label>Artículo</label>
+				<help>Descripción de Artículo</help>
+			</field>
+
+			<field id="baja">
+				<label>Estado</label>
+				<help>Estado</help>
+				<options>
+				  <option valor=""></option>
+				  <option valor="0">Activo</option>
+				  <option valor="1">Baja</option>
+				</options>
+			</field>
+
+			<field id="clase" noshow="true" clasefila="true">
+				<expression>case when baja = 0 then '' else 'resaltadoRojo' end</expression>
+			</field>
+			
+		</table>
+	</form>
+</histrix>

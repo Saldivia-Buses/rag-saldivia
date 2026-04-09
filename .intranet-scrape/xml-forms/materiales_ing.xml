@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="ing" llenoTemporal="false" path="fotos/articulos">
+	<title>ENTRADA SALIDA STOCK POR CODIGO</title>
+	<obs></obs>
+	<form >
+		<table id="stkinmov" label="ENTRADA SALIDA STOCK">
+			<movimientos cabecera="materiales_cab.xml">
+					<relacion id="materiales_ingmov.xml"></relacion> 
+			</movimientos>
+			
+			<field id="siscod" oculto="true">
+				<label>siscod</label>
+				<parametro id="fsmparam_paralf.xml" retorna="paralf">
+					<field id="parcla">
+						<condicion operador="=">'sisstk'</condicion>
+					</field>
+				</parametro>
+			</field>
+			<field id="artcod">
+				<label>Codigo Articulo</label>
+				<help>Codigo de Articulo</help>
+				<ayuda_ex id="STKINSUM" xml="HLPstkinsum.xml" dir="/help_local">
+					<field id="artcod">
+						<label>Cod.</label>
+						<detalle>artcod</detalle>
+					</field>
+					<field id="artdes">
+						<label>Insumo</label>
+						<detalle>artdes</detalle>
+					</field>
+					<field id="unicps" oculto="true">
+						<detalle>unicps</detalle>
+					</field>
+					<field id="artuni" oculto="true">
+						<detalle>artuni</detalle>
+					</field>
+					<field id="artcos" oculto="true">
+						<detalle>artcos</detalle>
+					</field>
+					<field id="artrub" oculto="true">
+						<detalle>artrub</detalle>
+					</field>
+					<field id="unidef" oculto="true">
+						<detalle>unidef</detalle>
+					</field>
+					<field id="valcps" oculto="true">
+						<detalle>valcps</detalle>
+					</field>
+					<field id="valuso" oculto="true">
+						<detalle>valuso</detalle>
+					</field>
+					<field id="siscod" oculto="true">
+						<condicion operador="=">'01'</condicion>
+					</field>
+			<field id="foto" path="fotopath" download="true" >
+          		<expression>select ARTICULO_FOTO.foto from ARTICULO_FOTO where ARTICULO_FOTO.idArticulo = STKINSUM.artcod and ARTICULO_FOTO.foto != '' order by revision desc limit 1</expression> 
+				<label>Imagen</label>
+                <tipo >file</tipo>
+                <size>40</size>
+                <detalle>foto</detalle>
+			</field>
+					<clave>artcod</clave>
+					<descripcion>artdes</descripcion>
+				</ayuda_ex>
+			</field>
+			<field id="artdes" deshabilitado="true">
+				<label>Descripcion</label>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="movcant" incdec="true">
+				<label>Cantidad</label>
+				<help>Cantidad</help>
+				<valor>1</valor>
+			</field>			
+			
+		
+			<field id="unicps" local="true" deshabilitado="true">
+				<label>Unidad </label>
+				<help>Unidad de uso</help>
+				<tabla_ex id="FSMUNIDS">
+					<field id="unicod" clave="true"></field>
+					<field id="uninom"></field>
+				</tabla_ex>
+				<tipo>integer</tipo>
+			</field>
+			<field id="unidef" deshabilitado="true" local="true" noshow="true">
+			</field>
+			<field id="valcps" deshabilitado="true" local="true" noshow="true">
+				<tipo>numeric</tipo>
+			</field>
+			<field id="valuso" deshabilitado="true" local="true" noshow="true">
+				<tipo>numeric</tipo>
+			</field>
+<!--			<field id="movcps" deshabilitado="true" local="true" noshow="true">
+				<if exp="unidef == 1">
+					<true>movcant / valuso * valcps</true>
+					<false>movcant * valcps / valuso</false>
+				</if>
+			</field>
+			-->
+			<field id="movref" oculto="true">
+				<valor>Entrada Manual por Compras sin Orden</valor>
+			</field>
+			
+			<field id="artuni" deshabilitado="true" local="true" noshow="true">
+				<valor>1</valor>
+			</field>
+			<field id="artcos" deshabilitado="true" local="true" noshow="true">
+			</field>
+			<field id="artrub" deshabilitado="true" local="true" noshow="true">
+			</field>
+            <field id="fotopath" local="true" noshow="true">
+				<if exp="true">
+					<true>'artcod/'</true>
+					<false>''</false>
+				</if>
+				<tipo>varchar</tipo>
+			</field>
+
+			<field id="foto" path="fotopath" download="true" deshabilitado="true">
+          		<expression>select ARTICULO_FOTO.foto from ARTICULO_FOTO where ARTICULO_FOTO.idArticulo = STKINSUM.artcod and ARTICULO_FOTO.foto != '' order by revision desc limit 1</expression> 
+				<label>Imagen</label>
+                <tipo >file</tipo>
+                <size>40</size>
+			</field>
+			<field id="_ORDEN" oculto="true">
+				<label>Orden</label>
+			</field>
+		</table>
+		<join tipo="left">
+			<table id="STKCONCE">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">'06'</condicion>
+				</field>
+				<field id="movcod" oculto="true">
+					<condicion operador="=">STKINMOV.movcod</condicion>
+				</field>
+				<field id="contip" oculto="true"></field>
+				<field id="conabv" oculto="true"></field>
+			</table>
+		</join>
+	</form>
+</histrix>

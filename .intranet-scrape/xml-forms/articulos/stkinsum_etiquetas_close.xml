@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="nosql" grabafinal="true" postGrabacion="true">
+  <title>Insumos</title>
+  <obs></obs>
+
+  <form>
+
+    <table id="STKINSUM" styleTbody="height:500px;overflow-x:hidden;">
+      <title>Insumos</title>
+		<ejecuta>
+   				<![CDATA[ 
+				
+				    $this->Etiquetas->Imprimir('zebralocacion'); 
+
+				]]>
+		</ejecuta>
+
+		  <field id="artcod" id_temp="artcod">      </field>
+		  <field id="artdes" id_temp="artdes2">      </field>
+		  <field id="valcps" id_temp="valcps">      </field>
+		  <field id="unicps" id_temp="unicps">      </field>
+		  <field id="valuso" id_temp="valuso">      </field>
+		  <field id="artuni" id_temp="artuni">      </field>
+		  <field id="orden"	 id_temp="_ORDEN">      </field>
+		  <field id="copias" id_temp="copias">		</field>
+
+    </table>
+
+
+  </form>
+</histrix>

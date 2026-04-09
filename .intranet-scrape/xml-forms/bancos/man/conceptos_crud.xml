@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="crud">
+  <title>Conceptos</title>
+  <obs/>
+  <form>
+    <table id="REG_CONCEPTOS" label="Conceptos">
+
+      <field id="id_concepto" autoinc="true" noshow="true" deshabilitado="true"/>
+
+      <fieldGroup>
+        <field id="descripcion_concepto">
+          <label>Descripción</label>
+        </field>
+        <field id="abreviacion_concepto">
+          <label>Abreviación</label>
+        </field>
+        <field id="imputacion_concepto">
+          <label>Imputación</label>
+          <help>Imputación del Concepto</help>
+          <options>
+            <option valor="0">Debe</option>
+            <option valor="1">Haber</option>
+          </options>
+        </field>
+      </fieldGroup>
+
+      <field id="cod_concepto">
+          <label>Código Concepto</label>
+<!--           <condicion operador="not in">(select cod_concepto from REG_CONCEPTOS)</condicion>
+ -->        </field>
+
+      <fieldGroup>
+        <if> if (strpos($_SESSION['properties']['modulos'],'iva') != false) return true; </if>
+        <field id="tipo_concepto">
+          <label>Libro IVA</label>
+          <help>Registración de los comprobantes en Libro de IVA</help>
+          <tipo>check</tipo>
+        </field>
+      </fieldGroup>
+
+      <fieldGroup>
+        <if> if (strpos($_SESSION['properties']['modulos'],'contabilidad') != false) return true; </if>
+        <field id="ctbcuenta_id">
+          <label>Cuentas</label>
+          <helper type="combo" xml="cuentas_habilitadas_qry.xml" dir="/ayudas" empty="true"/>
+        </field>
+      </fieldGroup>
+
+      <field id="subsistema_id" oculto="true" valauto="true"/>
+
+    </table>
+  </form>
+</histrix>

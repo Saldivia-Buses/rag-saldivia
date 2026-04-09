@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ficha" template="etiqueta_desc_cb.tpl" limit="1" sololectura="true" autoprint="true" printer="etiquetas">
+    <title>Impresion Etiqueta</title>
+        <obs/>
+	<form>
+	    <table id="REG_MOVIMIENTOS" >
+    <!--    	<field id="regcuenta_id" />      -->
+                <field id="nombre_cuenta"       local="true"/>
+                <field id="domicilio"           local="true"/>
+                <field id="localidad"           local="true"/>
+                <field id="nro_movimiento"      local="true"/>
+                <field id="nombre_transporte"   local="true"/>
+                <field id="cantidad_bultos"     _local="true"/>
+                <field id="cantidad_copias"     local="true"/>
+
+            </table>
+         </form>
+</histrix>

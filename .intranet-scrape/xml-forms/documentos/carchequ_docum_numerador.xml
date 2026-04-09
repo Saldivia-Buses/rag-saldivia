@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="consulta">
+	<title>NUMERADOR CHEQUES</title>
+	<obs></obs>
+	<form >
+		<table id="CARCHEHI" label="PARAMETRO">
+			<field id="carint">
+				<expression>max(carint) + 1 + (SELECT count(*) from CARCHEQU where CARCHEQU.siscod = '15')</expression>
+				<label>Numero</label>
+			</field>
+
+		</table>
+		<join>
+		</join>
+	</form>	   
+</histrix> 

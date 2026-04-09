@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" >
+    <title>Cierre de Puesto de Caja</title>
+    <obs></obs>
+    <form>
+        <table id="CAJ_DETALLES" label="Consulta de integraciones contables">
+            <field id="id_cajdetalle" noshow="true" />
+            <field id="cajmovimiento_id" noshow="true" />
+            <field id="cuenta_id"  esClave="true">
+                <label>Cuenta</label>
+            </field>
+            <field id="nombre_cuenta" tabla="CTB_CUENTAS">
+                <label>Nombre</label>
+            </field>
+            <field id="debe" noZero="true" suma="true">
+                >
+                <expresion>
+                    (CASE WHEN CAJ_DETALLES.doh = 0 THEN CAJ_DETALLES.importe_detalle ELSE 0 END)
+                </expresion>
+                <label>Debe.</label>
+                <formato>%0.2f</formato>
+            </field>
+            <field id="haber" noZero="true" suma="true">
+                <expresion>
+                    (CASE WHEN CAJ_DETALLES.doh != 0  THEN CAJ_DETALLES.importe_detalle ELSE 0 END)
+                </expresion>
+                <label>Haber.</label>
+                <formato>%0.2f</formato>
+            </field>
+            <field id="importe_detalle"  Formstyle="display:none;" colstyle="display:none;">
+                <condicion operador="!=">0</condicion>
+            </field>
+            <order>
+                <field id="doh" />
+                <field id="cuenta_id" />
+                <field id="cajmovimiento_id" />
+            </order>
+        </table>
+        <join tipo="left">
+            <table id="CTB_CUENTAS">
+                <field id="id_cuenta">
+                    <condicion operador="=">cuenta_id</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix>

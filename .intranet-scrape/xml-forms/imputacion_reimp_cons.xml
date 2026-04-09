@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<abm tipo="consulta">
+	<titulo>IMPUTACIONES</titulo>
+	<obs></obs>
+	<consulta>
+<!--	<consulta>-->
+		<tabla id="CCTIMPUT" label="Imputaciones">
+			<campo id="nroimp" noshow="true">
+				
+			</campo>
+			<campo id="fecha" noshow="true">
+				
+			</campo>			
+			<campo id="movife">
+				<label>Fecha</label>
+				<tipo>date</tipo>
+			</campo>
+			
+			<campo id="condes" tabla="CCTCONCE">
+				<label>Tipo</label>
+				<tipo>character</tipo>
+			</campo>
+			<campo id="movlet" noshow="true">
+				<label>Letra</label>
+			</campo>
+			<campo id="concod" noshow="true">
+			</campo>
+
+			<campo id="movnpv" noshow="true">
+	
+			</campo>
+
+
+			<campo id="movnro" noshow="true">
+				
+			</campo>
+			<campo id="movipv" >
+				<label>Npv</label>
+			</campo>
+
+			<campo id="movinc">
+				<label>Nro</label>
+			</campo>			
+			<campo id="movimp2" >
+				<expresion>CCTIMPUT.movimp</expresion>
+				<label>Imputado</label>
+				<tipo>decimal</tipo>
+			</campo>
+			<campo id="movimp" tabla="CCTMOVIM">
+				<label >Comp</label>
+			</campo>
+				
+	
+						<campo id="siscod" oculto="true">
+				<label>Codigo Sistema.</label>
+				<help>
+				</help>
+			</campo>
+
+			<campo id="ctacod" oculto="true">
+				<label>codigo </label>
+			</campo>
+
+
+			
+		</tabla>
+		
+		<join tipo="left">
+			<tabla id="CCTMOVIM">
+				<campo id="siscod" oculto="true">
+					<condicion operador="=">CCTIMPUT.siscod</condicion>
+					
+				</campo>
+				<campo id="ctacod" oculto="true">
+					<condicion operador="=">CCTIMPUT.ctacod</condicion>
+				</campo>
+				<campo id="movnpv" oculto="true">
+					<condicion operador="=">CCTIMPUT.movipv</condicion>
+				</campo>	
+				<campo id="movnro" oculto="true">
+					<condicion operador="=">CCTIMPUT.movinc</condicion>
+				</campo>				
+			</tabla>
+		</join>
+		<join tipo="left">
+			<tabla id="CCTCONCE">
+				<campo id="siscod" oculto="true">
+					<condicion operador="=">CCTIMPUT.siscod</condicion>
+					
+				</campo>
+				<campo id="concod" oculto="true">
+					<condicion operador="=">CCTIMPUT.movicc</condicion>
+				</campo>
+			</tabla>
+		</join>		
+		
+	</consulta>
+</abm>

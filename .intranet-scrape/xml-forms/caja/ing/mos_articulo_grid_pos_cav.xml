@@ -1,0 +1,273 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" preloadData="false" llenoTemporal="false" procesa="false" tooltip="false" showCantidad="false" updateTotals="true" subtipo="vertical" unserializeParent="false" preventDuplication="true">
+  <title>Detalle</title>
+  <obs/>
+  <form >
+    <table id="REG_DETALLES" label="movimientos">
+    <movimientos>
+        <relacion id="mos_regdetalles_ins_cav.xml"/>
+        <relacion id="regimputaciondetalles_ins_cav.xml"/>  // Imputacion entre la Np y la Factura    
+        <relacion id="mos_regdetalles_rem_ins_cav.xml"/>
+        <relacion id="regimputaciondetallesrem_ins_cav.xml"/>  // Imputacion entre el Remito y la Factura
+        <relacion id="mos_stkmovimientos_rem_ins_cav.xml"/>
+        <relacion id="mos_stkmovimientos_ins_cav.xml"/>
+        <relacion id="mos_ctbdetalle_con.xml" />
+        <relacion id="mos_ctbdetalle_iva.xml" />
+  </movimientos>
+  
+  <fieldGroup colstyle="text-align:center; vertical-align:middle;" Formstyle="text-align:left;vertical-align:middle;">
+    
+ <!--      <field id="cmb_marca" local="true" noshow="true">
+        <helper type="parameter" id="SIS::02:cmb_marca" >
+            <label>Oculta combo de marcas en programa de facturación</label>
+            <defaultValue>true</defaultValue>
+        </helper>
+      </field>
+      
+      <field id="filtro_familia" local="true" colstyle="display:none;" modpos="nobr">
+        <label>Familia</label>
+        <attribute id="noshow">cmb_marca</attribute>
+        <helper type="combo" xml="stkfamilia_qry.xml" dir="/ayudas" empty="true"/>
+        <actualiza>
+            <field id="codigo_detalle" destino="stkfamilia_id" />
+        </actualiza>
+      </field>
+      
+      <field id="filtro_rubro" local="true" colstyle="display:none;" modpos="nobr">
+        <label>Rubro</label>
+        <attribute id="noshow">cmb_marca</attribute>
+        <helper type="combo" xml="stkrubro_qry.xml" dir="/ayudas" empty="true"/>
+        <actualiza>
+            <field id="codigo_detalle" destino="stkrubro_id" />
+        </actualiza>
+      </field>
+
+      <field id="filtro_marca" local="true" colstyle="display:none;" modpos="nobr">
+        <label>Marca</label>
+        <attribute id="noshow">cmb_marca</attribute>
+        <helper type="combo" xml="stkmarca_qry.xml" dir="/ayudas" empty="true"/>
+        <actualiza>
+            <field id="codigo_detalle" destino="stkmarca_id" />
+        </actualiza>
+      </field> -->
+
+
+        <field id="porcentaje_desc0" noshow="true">
+          <valor default="true">0.00</valor>
+          <tipo>decimal</tipo>
+        </field>
+        
+        <field id="porcentaje_desc1" noshow="true" >
+          <tipo>decimal</tipo>
+          <valor default="true">0.00</valor>
+        </field>
+
+        <field id="codigo_detalle" deshabilitado="false" esClave="true" valid="true">
+          <label >Codigo</label>
+          <helper type="external" xml="stkarticulo_cav.xml" dir="/ayudas">
+              <field id="wstklista_id"      local="true" noshow="true" />
+          </helper>
+          <size>12</size>
+        </field>
+      
+        <field id="descripcion_detalle" deshabilitado="true" activador="libre" modpos="nobr" >
+          <label>Descripción</label>
+          <size>50</size>
+        </field>
+
+        <field id="libre" activa="true" local="true" colstyle="display:none;" modpos="nobr" sincelda="true">
+          <label>libre</label>
+          <tipo>check</tipo>
+        </field>
+
+        <field id="precio_venta" local="true" deshabilitado="true" modpos="nobr">
+          <label>Precio U.</label>
+          <tipo>decimal</tipo>
+          <valor default="true">0.00</valor>
+        </field>
+
+        <field id="cantidad_detalle" replace="true" _modpos="nobr">
+          <label>Cantidad</label>
+          <tipo>decimal</tipo>
+          <valor dafault="true">1.00</valor> 
+          <jseval fielddestino="neto_detalle" actxml="false" suma="true"> ( precio_venta * cantidad_detalle ).toFixed(2)</jseval> 
+          <jseval fielddestino="iva_detalle" actxml="false" suma="true">( ( precio_venta * cantidad_detalle ) * ( iva_alicuota / 100 ) ).toFixed(2)</jseval> 
+          <jseval fielddestino="total_detalle" actxml="false" suma="true">
+             (( precio_venta * cantidad_detalle ) + ( ( precio_venta * cantidad_detalle ) * ( iva_alicuota / 100 ) )  ).toFixed(2)
+          </jseval> 
+        </field>
+       
+        <field id="neto_detalle" local="true" modpos="nobr" deshabilitado="true" suma="true">
+          <label>Neto</label>
+          <tipo>decimal</tipo>
+          <!-- <valor default="true">0.00</valor> -->
+          <jseval fielddestino="subtotal_movimiento" total="true">neto_detalle</jseval> 
+        </field>
+
+
+    <!-- ID_IVA_ALICUOTA  id del iva de articulo       IVA_ALICUOTA porcentaje de iva en numeros     IVA DETALLE iva discriminado del precio del producto -->
+
+
+<field id="separator11" local="true" modpos="nobr" deshabilitado="true"/>
+
+      <field id="id_iva_alicuota" esClave="true"  local="true" required="true" deshabilitado="true" modpos="nobr">
+        <label>Alicuota Iva</label>
+        <helper type="combo" xml="genalicuotas_qry_cav.xml" dir="/ayudas" empty="true" />
+      </field>
+
+      <field id="iva_alicuota"  local="true" deshabilitado="true" noshow="true">
+        <label>Iva</label>
+      </field>
+
+      <field id="iva_detalle" suma="true" deshabilitado="true" _modpos="nobr">
+        <label>Iva Detalle</label>
+        <tipo>numeric</tipo>
+          <jseval fielddestino="importe_IVA" total="true">iva_detalle</jseval> 
+          <jseval fielddestino="mi_importe_iva" total="true">iva_detalle</jseval>    
+      </field>
+
+    <!-- FIN DETALLE DE IVA -->
+
+
+    <field id="total_detalle" suma="true" modpos="nobr">
+      <label>Total</label>
+      <tipo>decimal</tipo>
+      <valor default="true">0.00</valor>
+
+      <jseval fielddestino="neto_detalle" actxml="false" suma="true"> ( total_detalle / (1 + (iva_alicuota/100)) ).toFixed(2) </jseval>
+      <jseval fielddestino="iva_detalle" actxml="false" suma="true">( ( total_detalle / (1 + (iva_alicuota/100)) ) * (iva_alicuota/100) ).toFixed(2)</jseval>
+
+
+      <jseval fielddestino="importe_movimiento" total="true">total_detalle</jseval> 
+      <detalle>importe_movimiento</detalle>
+    </field>
+   
+  </fieldGroup>
+
+    <field id="id_regdetalle" autoinc="true" esClave="true" noshow="true"/>
+
+    <field id="id_pedidosregdetalle" esClave="true" noshow="true" local="true">
+      <label>Notas de Pedidos</label>
+    </field>
+
+    <field id="NOTAS" deshabilitado="true" noshow="true" local="true">
+      <label>Notas</label>
+    </field>
+
+    <field id="graba_ctb" local="true" noshow="true">
+        <valor eval="true"><![CDATA[ strpos($_SESSION['properties']['modulos'],'contabilidad') != false ? '1' : '0' ]]>
+        </valor>
+    </field>
+
+    <field id="stkconcepto_id" local="true" noshow="true">
+      <expresion>(SELECT option_value FROM HTXOPTIONS where option_name = 'ID_STKREMITOS')</expresion>
+      <detalle>stkconcepto_id</detalle>
+    </field>
+                                       
+    <field id="grabastk" local="true" noshow="true" valauto="true">
+        <valor>true</valor>
+    </field>
+
+    <field id="emite_det_remito" local="true" noshow="true" >
+        <label>emite</label>                     
+        <if exp="true">
+      <true>'emiteremito'</true>
+      <false>''</false>
+        </if>
+    </field>
+    
+    <field id="NOEmite_det_remito" local="true" noshow="true" >
+      <label>no emite</label>
+        <if exp="'emiteremito' == 'false'">
+      <true>'true'</true>
+      <false>'false'</false>
+        </if>
+    </field>
+                                                       
+  <fieldGroup noshow="true"  local="true"  _style="display: none;">
+
+      <!-- CONTABLE -->
+      
+    <field id="imputacion_concepto" />
+    
+    <field id="ctbcuenta_stk_id"/>
+    
+    <fieldGroup >
+
+        <if>return (strpos($_SESSION['properties']['modulos'],'contabilidad') !== false);</if>
+
+          <field id="testctb" local="true" noshow="false" colstyle="color:red;text-decoration:blink;" Formstyle="display:none;">
+             <if exp="'ctbcuenta_stk_id' == ''">
+                 <true>'Falta Cuenta CTB de Articulo'</true>
+                <false>''</false>
+             </if>
+          </field>
+
+    </fieldGroup>
+
+    <field id="ctbcuenta_stk_doh">
+      <if exp="imputacion_concepto == 0">
+          <true>'1'</true>
+          <false>'0'</false>
+      </if>
+    </field>
+                                         
+    <field id="ctbcuenta_iva_id">
+    </field>                       
+
+    <field id="ctbcuenta_iva_doh">
+      <if exp="imputacion_concepto == 0">
+          <true>'1'</true>
+          <false>'0'</false>
+      </if>
+    </field>
+    
+          <!-- Otros Datos  -->
+    <field id="orden" deshabilitado="true" oculto="true">
+      <label>Orden</label>
+      <size>35</size>
+    </field>
+
+  </fieldGroup>
+
+  <fieldGroup local="true" noshow="true">
+  
+    <field id="wcontrolstk" deshabilitado="true" >
+      <label>sssss</label>
+      <valor default="true">0</valor>
+    </field>
+
+    <field id="stkunidad_id"/>
+    <field id="stksector_id"/>
+    <field id="stkfamilia_id"/>
+    <field id="stkrubro_id"/>
+    <field id="precio_costo"/>
+    <field id="referencia">
+      <valor>'SALIDA POR VENTA'</valor>
+    </field>
+   
+    <field id="stkdeposito_id" _deshabilitado="true" >
+      <detalle>stkdeposito_id</detalle>
+      <label>dep</label>
+    </field>
+
+  </fieldGroup>
+
+    <importar xml="mos_remitos_art_qry.xml" label="Remitos" title="Seleccione" reemplazar="true" >
+    <field id="fecha_movimiento">fecha_movimiento</field>
+    <field id="regcuenta_id">regcuenta_id</field>
+    <field id="id_stklista">id_stklista</field>
+    <field id="regmovim_id">id_pedidos</field>
+    <field id="subsistemav_id" >subsistemav_id</field>
+    <field id="pedido_regmovim">pedido_regmovim</field>
+    <field id="imp_wcontrolstk">imp_wcontrolstk</field>
+     
+  </importar>
+
+       MOVIMIENTOS DE STOCK
+
+      <field id="stkact" local="true" noshow="true"></field>
+  
+    </table>
+  </form>
+</histrix>

@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm-mini" subtipo="vertical">
+    <title>Formulas</title>
+    <obs></obs>
+    <form>
+        <table id="STKPIEZA" label="Composicion">
+            <field id="id_pieza" esClave="true" noshow="true" />
+
+            <field id="idPadre" oculto="true">
+                <label>Id Producto al que pertenece</label>
+            </field>
+
+	    <field id="act" local="true" noshow="true">
+		<if exp="true">
+		    <true>Articulo::updateArbol('idPadre')</true>
+		    <false>''</false>
+		</if>
+	    </field>
+   
+      <field id="tienehijos" noshow="true">
+        <expression>@tienehijos := ifnull((select 1 from STKPIEZA where STKPIEZA.idPadre = STKINSUM.artcod limit 1), 0)</expression>
+      </field>
+	
+      <field id="bom" noshow="true" local="true">
+        <if exp="tienehijos">
+    	    <true>'stkpieza_sincosto_qry.xml'</true>
+    	    <false>''</false>
+        </if>
+      </field>
+
+            <field id="articulo_hijo" linkint="" linkdir="articulos" linkdes="Composición">
+		<attribute id="linkint">bom</attribute>
+               <paring destino="idPadre">articulo_hijo</paring>
+				<helper type="external" xml="stkarticulo_autocomplete_qry.xml" dir="/help_local">
+					<field id="artdes">
+						<detalle>nom</detalle>
+					</field>
+					<field id="valcps">
+						<detalle>valCps</detalle>
+					</field>
+					<field id="valuso">
+						<detalle>valUso</detalle>
+					</field>
+					<field id="unicps">
+						<detalle>unicps</detalle>
+					</field>
+					<field id="artuni">
+						<detalle>artuni</detalle>
+					</field>
+				</helper>
+                <label>Código</label>
+            </field>
+
+            <field id="nom">
+        		<expression>artdes</expression>
+                <label colspan="4">Producto</label>
+				<size>70</size>
+            </field>
+
+            <field id="valCps" noshow="true">
+        	<expression>valcps</expression>
+            </field>
+            
+            <field id="valUso" noshow="true" >
+        	<expression>valuso</expression>
+            </field>
+            
+            <field id="cantidad"  preventLoop="true" suma="true">
+                <label>Cantidad</label>
+                <jseval campodestino="conversion" actxml="false">(valCps == 1)?(cantidad * valUso ):(cantidad / valCps)</jseval>
+<!--		<tipo>float</tipo>                 -->
+                <tipo>custom_numeric</tipo>
+
+            </field>
+ 
+ 
+
+    	    <field id="artuni" tabla="STKINSUM" deshabilitado="true">
+		<label modpos="nobr">Unid.</label>
+		<help>Unidad de Compra </help>
+		<tabla_ex id="FSMUNIDS">
+			<field id="unicod"></field>
+			<field id="uninom"></field>
+		</tabla_ex>
+	    </field>
+
+        </table>
+        <join>
+            <table id="STKINSUM" label="Articulos">
+                <field id="artcod">
+                    <condicion operador="=">articulo_hijo</condicion>
+                </field>
+                <field id="siscod">
+                    <condicion operador="=">'01'</condicion>
+                </field>
+                
+                
+            </table>
+            
+        </join>
+    </form>
+</histrix>	

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="insert" _xmlImpresion="retgan_reimp.xml">
+       <title>COMPROBANTES</title>
+        <obs></obs>
+               <form >
+					<table id="CAJMOVIM" label="movimientos de caja" idCampoCond="cajimp">
+						<field id="siscod" id_padre="siscaj"></field>
+						<field id="cajfec" id_padre="movfec">
+							<detalle>cajfec</detalle>
+						</field>
+						<field id="succod" >
+							<valor>1</valor>
+						</field>
+<!--						<field id="cajnpv" id_padre=""></field> -->
+						<field id="cajcod" id_temp="cajcod" ></field>
+						<field id="cajnro" id_padre="movnroOP">
+							<detalle>cajnro</detalle>
+						</field>
+						<field id="cajimp" id_temp="cajimp"></field>
+						<field id="concod" >
+							<valor>45</valor>
+							<detalle>concod</detalle>
+						</field>
+						<field id="opecla" id_padre="opecla"></field>
+						<field id="cajcta" id_padre="ctacod">
+								<detalle>cajcta</detalle>
+						</field>
+						<field id="cajnom" id_padre="ctanom"></field>
+					<!--	<field id="cajref" id_padre="cajref"></field> -->
+						
+<!--						<field id="regmin" esNroMinuta="true">
+						</field> -->
+						
+					</table>
+               </form>
+        </histrix>

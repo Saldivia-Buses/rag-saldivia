@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="update" >
+	<title>ENTRADA SALIDA STOCK POR CODIGO</title>
+	<obs></obs>
+	<consulta>
+		<table id="STKINMOV" label="ENTRADA SALIDA STOCK" >
+			<field id="siscod" id_temp="siscod" esClave="true">
+			</field>
+			<field id="artcod"  id_temp="artcod" esClave="true">
+			</field>
+			<field id="ctacod" id_temp="ctacod" esClave="true">
+			</field>
+			<field id="hora" id_temp="hora" esClave="true">
+			</field>			
+			<field id="movsal" id_temp="movsal">
+			</field>
+
+		</table>
+
+
+	</consulta>
+</histrix>

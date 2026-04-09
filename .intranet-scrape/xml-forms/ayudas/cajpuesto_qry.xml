@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+
+	Ayuda Puestos de Caja
+
+-->
+<histrix tipo="consulta">
+  <title>Puestos</title>
+  <obs></obs>
+  <form>
+    <table id="CAJ_PUESTOS" label="Puestos" >
+      
+      <field id="id_cajpuesto">
+        <label>Código</label>
+      </field>
+
+      <field id="descripcion_puesto">
+        <label>Descripcion</label>
+        <detalle>cajpuesto_nombre</detalle>
+      </field>
+
+      <field id="porcentaje_comision">
+        <label>Porc. Comision</label>
+        <detalle>cajpuesto_comision</detalle>
+      </field>
+
+      <field id="suma_fija">
+        <label>Suma fija</label>
+        <detalle>cajpuesto_sumafija</detalle>
+      </field>
+
+      <field id="puesto_central">
+        <label>Puesto Central</label>
+		<detalle>cajpuesto_central</detalle>
+      </field>
+
+      <field id="cajpuesto_superior_id">
+        <label>Superior</label>
+        <detalle>cajpuesto_superior_id</detalle>
+        <expression>cajpuesto_id</expression>
+	  </field>
+    </table>
+  </form>
+</histrix>

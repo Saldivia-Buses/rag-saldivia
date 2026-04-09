@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="chart">
+    <title>Terminacion Top 10 Causas</title>
+    <obs />
+    <form>
+        <table id="PROD_CONTROL_MOVIM">
+
+            <grafico id="calidad">
+                <ancho>500</ancho>
+                <tipo>P</tipo>
+                <title>Elija una Observacion</title>
+                <etiquetas>nombre_controlcausal</etiquetas>
+                <datos>cantidad</datos>
+            </grafico>
+
+            <filters auto="true">
+                <field id="fecha_control">
+                    <label>Desde</label>
+<!--                    <valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m" ,strtotime('-1 month')) , 1, date("Y") ))</valor>-->
+<valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m") , date("d"), (date("Y") - 1)))</valor>
+                    <operador>&gt;=</operador>
+                </field>
+
+                <field id="fecha_control">
+                    <label modpos="nobr">Hasta</label>
+<!--                    <valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m" ,strtotime('-0 month')) , 1, date("Y") ) - 1)</valor>-->
+<valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m") , date("d"), date("Y")))</valor>
+                    <operador>&lt;=</operador>
+                </field>
+
+                <field id="prodcontrol_id" colspan="4">
+                    <label>Control</label>
+                    <operador>=</operador>
+                </field>
+            </filters>
+
+            <field id="fecha_control" noshow="true" />
+
+            <field id="year" oculto="true" noshow="true">
+                <label>Año</label>
+                <expression>YEAR(PROD_CONTROL_MOVIM.fecha_control)</expression>
+            </field>
+
+            <field id="mes" noshow="true">
+                <label>Mes</label>
+                <expression>MONTH(PROD_CONTROL_MOVIM.fecha_control)</expression>
+            </field>
+
+            <field id="periodo">
+                <label>Periodo</label>
+                <expression>UPPER(CONCAT((CASE MONTH(PROD_CONTROL_MOVIM.fecha_control)
+                    WHEN 1 THEN 'Ene'
+                    WHEN 2 THEN 'Feb'
+                    WHEN 3 THEN 'Mar'
+                    WHEN 4 THEN 'Abr'
+                    WHEN 5 THEN 'May'
+                    WHEN 6 THEN 'Jun'
+                    WHEN 7 THEN 'Jul'
+                    WHEN 8 THEN 'Ago'
+                    WHEN 9 THEN 'Sep'
+                    WHEN 10 THEN 'Oct'
+                    WHEN 11 THEN 'Nov'
+                    WHEN 12 THEN 'Dic' END), "'", RIGHT(YEAR(PROD_CONTROL_MOVIM.fecha_control), 2)))</expression>
+            </field>
+
+            <field id="cantidad">
+                <label>Cantidad</label>
+                <expression>COUNT(*)</expression>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="prodcontrol_id">
+                <label>Control</label>
+                <helper type="combo" id="PROD_CONTROLES" _empty="true">
+                    <field id="id_prodcontrol">
+                        <condicion operador="=">PROD_CONTROLES.id_prodcontrol AND FIND_IN_SET(PROD_CONTROLES.id_prodcontrol, (SELECT GROUP_CONCAT(DISTINCT PC.id_prodcontrol ORDER BY PC.nombre_control SEPARATOR ',') FROM PROD_CONTROLES PC
+                        JOIN PROD_CONTROL_MOVIM PCM ON PCM.prodcontrol_id = PC.id_prodcontrol
+                        AND PCM.fecha_control &gt;= (LAST_DAY(CURDATE() - INTERVAL 2 MONTH) + INTERVAL 1 DAY)
+                        AND PCM.fecha_control &lt;= (LAST_DAY(DATE_ADD(CURDATE(), INTERVAL -1 MONTH)))
+                        AND PCM.no_conforme = '1'
+                        WHERE PC.seccion_id = '5'))</condicion>
+                    </field>
+                    <field id="nombre_control">
+                        <expression>CONCAT(SUBSTRING(nombre_control, 1, 40),'...')</expression>
+                    </field>
+                </helper>
+            </field>
+
+            <field id="nombre_control" tabla="PROD_CONTROLES">
+                <label>Control</label>
+            </field>
+
+            <field id="controlcausal_id">
+                <label>Causal</label>
+            </field>
+
+            <field id="nombre_controlcausal" tabla="PROD_CONTROL_CAUSAL">
+                <label>Causal</label>
+            </field>
+
+            <field id="no_conforme" noshow="true">
+                <condicion operador="=">1</condicion>
+            </field>
+
+            <field id="seccion_id" tabla="PROD_CONTROLES">
+                <condicion operador="=">5</condicion>
+            </field>
+
+            <group>
+                <field id="year" />
+                <field id="mes" />
+                <field id="controlcausal_id" />
+            </group>
+
+            <order>
+                <field id="cantidad" tipoOrden="DESC"/>
+            </order>
+
+        </table>
+
+        <join>
+            <table id="PROD_CONTROLES">
+                <field id="id_prodcontrol">
+                    <condicion operador="=">PROD_CONTROL_MOVIM.prodcontrol_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join>
+            <table id="PROD_CONTROL_CAUSAL">
+                <field id="id_controlcausal">
+                    <condicion operador="=">PROD_CONTROL_MOVIM.controlcausal_id</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="consulta">
+  <title>Remitos de Envios a Clientes</title>
+  <obs></obs>
+  <form  detalle="stkinmov_remito.xml" dir="/stock_local">
+    <table id="FACREMIT" label="Remitos de Envios a Clientes">
+      <field id="cierre" >
+        <label>Estado </label>
+        <help>
+        </help>
+        <options>
+          <option valor="1">Cerrado</option>
+          <option valor="0">Abierto</option>
+        </options>
+        
+      </field>
+      <field id="ctacod">
+        <label>Cuenta </label>
+        <help>Codigo de Cuenta. [F2] = Ayuda. </help>
+        <detalle>ctacod</detalle>
+        
+      </field>
+
+      <field id="remfec">
+        <label>Fecha</label>
+        <help>Fecha de Remito</help>
+        <detalle>movfec</detalle>
+        
+      </field>
+      <field id="remnpv">
+        <label>NPV</label>
+        <help>Punto de Venta</help>
+        <format>%04d</format>
+      </field>
+      <field id="remnro">
+        <label>Numero</label>
+        <help>Numero de Remito</help>
+        <detalle>movnro</detalle>
+        <format>%010d</format>
+      </field>
+
+      <group>
+        <field id="ctacod"/>
+        <field id="remnro"/>
+        <field id="remnpv"/>     
+        <field id="remfec"/>            
+      </group>
+      <filters>
+        
+        <field id="remfec">
+          <operador>>=</operador>
+          <label>Desde Fecha de Remito</label>
+          
+          <valor>today</valor>
+        </field>
+        <field id="remfec">
+          <operador>&lt;=</operador>
+          
+          <label>Hasta Fecha de Remito</label>
+          <valor>today</valor>
+          
+        </field>
+        <field id="cierre">
+          <label>Estado</label>
+          <operador>=</operador>
+          <valor>0</valor>
+        </field>
+
+        <field id="ctacod">
+              <label>Cod.</label>
+              <help>Codigo de Cuenta </help>
+              <detalle>ctacod</detalle>
+              <operador>=</operador>
+        </field>
+
+      </filters>
+      
+    </table>
+  </form>
+</histrix>

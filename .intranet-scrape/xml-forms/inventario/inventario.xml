@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" subtipo="vertical">
+	<title>Inventario</title>
+	<obs/>
+	<form >
+		<table id="INVENTARIO" >
+			<title>Inventario</title>
+			<filters>
+			<field id="lugarInventario" >
+				<tabla_ex id="LUGARESINV">
+					<field id="nroLugar"></field>
+					<field id="nombreLugar"></field>
+					<order>
+						<field id="nombreLugar"></field>
+					</order>
+				</tabla_ex>
+				<label>Lugar</label>
+				<help>Lugar</help>
+				<operador>=</operador>
+
+			</field>
+			<field id="nroInventario" >
+				<tabla_ex id="INVTABLA">
+					<field id="nroInventario"></field>
+					<field id="nombre"></field>
+					<field id="fecha"></field>
+					<order>
+						<field id="fecha"></field>
+					</order>
+				</tabla_ex>
+				<label modpos="nobr">Inventario</label>
+				<help>Inventario</help>
+				<operador>=</operador>
+				
+			</field>
+			
+			</filters>
+			<field id="fecha">
+				<label>Fecha</label>
+				<help>Fecha</help>
+				<valor>today</valor>
+			</field>
+			<field id="login" deshabilitado="true" noshow="true">
+				<label modpos="nobr">Usuario</label>
+				<help>Usuario </help>
+				<tabla_ex id="HTXUSERS">
+					<field id="login"></field>
+					<field id="nombre"></field>
+					<order>
+						<field id="nombre"></field>
+					</order>
+				</tabla_ex>
+				<valor eval="true">$_SESSION['usuario']</valor>
+				
+			</field>
+			<field id="lugarInventario" noshow="true" valauto="true">
+				<tabla_ex id="LUGARESINV">
+					<field id="nroLugar"></field>
+					<field id="nombreLugar"></field>
+					<order>
+						<field id="nombreLugar"></field>
+					</order>
+				</tabla_ex>
+				<label>Lugar</label>
+				<help>Lugar</help>
+			</field>
+			<field id="nroInventario" noshow="true" valauto="true">
+				<tabla_ex id="INVTABLA">
+					<field id="nroInventario"></field>
+					<field id="nombre"></field>
+					<field id="fecha"></field>
+					<order>
+						<field id="fecha"></field>
+					</order>
+				</tabla_ex>
+				<label modpos="nobr">Inventario</label>
+				<help>Inventario</help>
+			</field>
+			<field id="artcod">
+				<label>Codigo Articulo</label>
+				<help>Codigo de Articulo</help>
+				<ayuda_ex id="STKINSUM" xml="HLPstkinsum.xml" dir="/help_local">
+					<field id="artcod">
+						<label>Cod.</label>
+						<detalle>artcod</detalle>
+					</field>
+					<field id="artdes">
+						<label>Insumo</label>
+						<detalle>artdes</detalle>
+					</field>
+					<field id="unicps" oculto="true">
+						<detalle>unicps</detalle>
+					</field>
+					<field id="artuni" oculto="true">
+						<detalle>unidad</detalle>
+					</field>
+					<field id="artcos" oculto="true">
+						<detalle>artcos</detalle>
+					</field>
+					<field id="artrub" oculto="true">
+						<detalle>artrub</detalle>
+					</field>
+					<field id="unidef" oculto="true">
+						<detalle>unidef</detalle>
+					</field>
+					<field id="valcps" oculto="true">
+						<detalle>valcps</detalle>
+					</field>
+					<field id="valuso" oculto="true">
+						<detalle>valuso</detalle>
+					</field>
+					<field id="siscod" oculto="true">
+						<condicion operador="=">'01'</condicion>
+					</field>
+					<clave>artcod</clave>
+					<descripcion>artdes</descripcion>
+				</ayuda_ex>
+			</field>
+			<field id="artdes" local="true" deshabilitado="true" sincelda="true">
+				<expression>STKINSUM.artdes</expression>
+				<label modpos="nobr"></label>
+				<size>80</size>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="cantidad" required="true">
+				<label>Cantidad</label>
+				<help>Cantidad</help>
+				<valor>1</valor>
+			</field>
+			<field id="unidad">
+				<label modpos="nobr">Unidad </label>
+				<help>Unidad de uso</help>
+				<tabla_ex id="FSMUNIDS">
+					<field id="unicod" clave="true"></field>
+					<field id="uninom"></field>
+				</tabla_ex>
+				
+			</field>
+			<!--			<field id="idTipoStock" >
+			<label>Stock</label>
+			<tabla_ex xml="tipostock.xml" >
+			</tabla_ex>
+			<size>10</size>
+			<tipo>integer</tipo>
+			<valor>3</valor>
+			</field> -->
+		</table>
+		<join tipo="left">
+			<table id="STKINSUM">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">'01'</condicion>
+				</field>
+				
+				<field id="artcod">
+					<condicion operador="=">INVENTARIO.artcod</condicion>
+				</field>
+			</table>
+		</join>
+		
+	</form>
+</histrix>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm-mini" subtipo="vertical">
+    <title>Datos Técnicos</title>
+    <obs></obs>
+    <form>
+        <table id="STKINSUM_DATOS_TECNICOS" label="Datos Técnicos">
+            <field id="id_datotec" esClave="true" noshow="true" />
+            <field id="idArticulo" valauto="true" noshow="true" />
+            <field id="descripcion">
+                <label>Descripción</label>
+                <size>300</size>
+            </field>
+        </table>
+    </form>
+</histrix>

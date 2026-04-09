@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta"  >
+	<title>CERTIFICADOS LCM INDUSTRIA</title>
+	<obs></obs>
+	<form >
+		<table id="PROD_LCM" >
+			<field id="expediente_lcm">
+				<label>Expediente</label>
+				<tipo>varchar</tipo>
+				<condicion operador="!=">0</condicion>
+			</field>
+
+			<field id="descripcion">
+			    <expression>group_concat(Numero_lcm )</expression>
+			</field>
+
+			<field id="Numero_lcm">
+			    
+				<label>Numero LCM</label>
+			</field>
+			<field id="emision_lcm">
+				<label>Emision</label>
+			</field>
+			<field id="folio_lcm">
+				<label>Folio</label>
+			</field>			
+			<field id="peso_lcm">
+				<label>Peso</label>
+			</field>
+			<field id="Tara_lcm">
+				<label>Tara</label>
+			</field>
+			<group>
+			    <field id="expediente_lcm" />
+			</group>
+			<order>
+			    <field id="Numero_lcm" />
+
+			</order>
+		</table>
+		
+	</form>	   
+</histrix> 

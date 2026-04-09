@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="update" >
+    <title>MARCAR OC</title>
+    <obs></obs>
+    <form  >
+        <table id="CPSENCAB" label="ORDENES DE COMPRA">
+            <field id="ocpfec" id_temp="ocpfec" esClave="false" />
+            <field id="ctacod" id_temp="ctacod" esClave="true" />
+            <field id="ocpnro" id_temp="ocpnro" esClave="true" />
+            <field id="ocpobs" id_temp="ocpobs" />
+	    <field id="fpago"  id_temp="fpago" />
+	    <field id="cpsformaenvio_id"  id_temp="cpsformaenvio_id" />
+	    <field id="ocpest" id_temp="new_estado" />
+	    <field id="movimientos" id_temp="movimientos" local="true" />
+        </table>
+    </form>
+</histrix>

@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="grid" showCantidad="false" tooltip="false" deleteRow="false" imprime="false">
+    <title>Consulta Valores</title>
+    <obs/>
+    <form>
+        <table id="REG_MOVIMIENTOS">
+
+            <fieldGroup id="DEBUG">
+                <field id="fecha_desde" noshow="true" local="true"/>
+                <field id="fecha_hasta" noshow="true" local="true"/>
+                <field id="cajpuesto_id" noshow="true" tabla="CAJ_MOVIMIENTOS" />
+                <field id="cajconcepto_id1" local="true" noshow="true"/>
+            </fieldGroup>
+
+            <field id="fecha_movimiento" noshow="true" tabla="CAJ_MOVIMIENTOS">
+                <condicion operador="&gt;=">'[__fecha_desde__]' and (CAJ_MOVIMIENTOS.fecha_movimiento &lt;= '[__fecha_hasta__]' or '[__fecha_hasta__]' = '')</condicion>
+            </field>
+
+            <field id="cajconcepto_id" noshow="true" tabla="CAJ_MOVIMIENTOS">
+                <condicion operador="=">'[__cajconcepto_id1__]' or '[__cajconcepto_id1__]' = ''</condicion>
+            </field>
+
+            <field id="cajvalor_id" noshow="true">
+                <condicion operador="!=">0</condicion>
+            </field>
+            
+            <field id="cajmovimiento_id" noshow="true" />
+
+            <field id="subsistema_id" noshow="true">
+                <condicion operador="=">'04'</condicion>
+            </field>
+
+			<!-- DETALLES DE MOVIMIENTOS -->
+
+            <field id="id_regmovim" tdWidth="100">
+                <label>Nº Interno</label>
+                <format>%010d</format>
+                <size>100</size>
+            </field>
+
+            <field id="fec_mov">
+                <label>Fecha</label>
+                <expression>REG_MOVIMIENTOS.fecha_movimiento</expression>
+                <tipo>date</tipo>
+            </field>
+
+            <field id="vencimiento_movimiento">
+                <label>Acreditacion</label>
+            </field>
+
+            <field id="reg_fecha">
+                <label>Conciliado</label>
+                <tipo>date</tipo>
+            </field>
+			
+            <field id="nro_movimiento">
+                <label>Número</label>
+                <format>%012d</format>
+            </field>
+			
+            <field id="nombre_cuenta" tabla="REG_CUENTA" tdWidth="200">
+                <label>Banco</label>
+                <size>200</size>
+            </field>
+			
+            <field id="descripcion_concepto" tabla="REG_CONCEPTOS" tdWidth="200">
+                <label>Concepto</label>
+                <size>200</size>
+            </field>
+			
+            <field id="saldo" suma="true" noZero="true">
+                <label>Saldo</label>
+                <expression>
+					(case when imputacion_concepto = 0 then REG_MOVIMIENTOS.importe_movimiento else 0 end) -
+					(case when imputacion_concepto = 1 then REG_MOVIMIENTOS.importe_movimiento else 0 end)</expression>
+                <tipo>numeric</tipo>
+            </field>
+			
+			<!--
+            <field id="debe" suma="true" noZero="true">
+                <label>Ingreso</label>
+                <expression>(case when imputacion_concepto = 1 then REG_MOVIMIENTOS.importe_movimiento else 0 end)</expression>
+                <tipo>numeric</tipo>
+			</field>
+            <field id="haber" suma="true" noZero="true">
+                <label>Egreso</label>
+                <expression>(case when imputacion_concepto = 1 then REG_MOVIMIENTOS.importe_movimiento else 0 end)</expression>
+                <tipo>numeric</tipo>
+            </field>
+			-->
+			
+            <field id="referencia_movimiento" tdWidth="400">
+                <label>Referencia</label>
+            </field>
+
+			<!-- FIN -->
+
+            <order>
+                <field id="vencimiento_movimiento"/>
+                <field id="nombre_cuenta" tabla="REG_CUENTA"/>
+            </order>
+
+        </table>
+        <join>
+            <table id="CAJ_MOVIMIENTOS">
+                <field id="id_cajmovimiento">
+                    <condicion operador="=">REG_MOVIMIENTOS.cajmovimiento_id</condicion>
+                </field>
+            </table>
+        </join>
+        <join>
+            <table id="REG_CONCEPTOS">
+                <field id="id_concepto">
+                    <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="LEFT">
+            <table id="REG_CUENTA">
+                <field id="id_regcuenta">
+                    <condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+                </field>
+            </table>
+        </join>
+		<!--
+        <join tipo="LEFT">
+            <table id="GEN_LOCALIDADES">
+                <field id="id_localidad">
+                    <condicion operador="=">REG_CUENTA.localidad_id</condicion>
+                </field>
+            </table>
+        </join>
+		-->
+    </form>
+</histrix>

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert">
+    <title>Adicionales</title>
+    <obs></obs>
+    <form>
+        <table id="HTXLOG" idCampoCond="graba_log">
+
+            <field id="fecha"		id_temp="fecha_adicional" />
+            <field id="campo"		id_temp="nombre_atributo" />
+            <field id="tipo">
+                <valor>'UPDATE'</valor>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="valorViejo"	id_temp="valor_viejo" />
+            <field id="valorNuevo"	id_temp="valor_atributo" />
+
+            <field id="valor_atributo"	id_temp="valor_atributo" local="true" />
+            <field id="nrofab"		id_temp="nrofab" local="true" />
+            <field id="id_prdatributo"	id_temp="id_prdatributo" local="true" />
+
+            <field id="usuario">
+                <valor eval="true">$_SESSION['usuario']</valor>
+            </field>
+            <field id="obs">
+                <valor>CONCAT(' N.Fab.: ', '[__nrofab__]', ',')</valor>
+                <tipo>integer</tipo>
+            </field>
+            <field id="valorNuevoTxt">
+                <valor>IFNULL((SELECT nombre_opcion FROM PRODUCTO_ATRIB_OPCIONES WHERE prdatributo_id = '[__id_prdatributo__]' AND valor_opcion = '[__valor_atributo__]'),(CASE WHEN '[__valor_atributo__]' = 0 THEN 'NO' WHEN '[__valor_atributo__]' = 1 THEN 'SI' ELSE '[__valor_atributo__]' END))</valor>
+                <tipo>integer</tipo>
+            </field>
+            <field id="xmlprog">
+                <valor>'producto_atributos_valores.xml'</valor>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="xmldir">
+                <valor>'/producto'</valor>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="nombre">
+                <valor>'Cambio Atributo Ficha'</valor>
+                <tipo>varchar</tipo>
+            </field>
+        </table>
+    </form>
+</histrix>

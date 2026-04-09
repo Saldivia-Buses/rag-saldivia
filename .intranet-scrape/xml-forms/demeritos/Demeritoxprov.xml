@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+	<histrix tipo="consulta">
+		<title>Movs. Demeritos</title>
+		<obs></obs>
+		<form >
+			<table id="MOVDEMERITO" label="Movimientos de Demeritos">
+<!--				<filtro_ex>
+					<label>CUENTA</label>
+					<tabla_ex id="CCTCUENT">
+						<field id="ctacod"></field>
+						<field id="ctanom"></field>
+						<field id="siscod" oculto="true"></field>
+						
+						<filtra>prvcod</filtra>
+						<order>
+						  <field id="ctanom"></field>
+						</order>
+					</tabla_ex>
+				</filtro_ex> -->
+				<field id="prvcod" noshow="true">
+					<label>Cod Cuenta</label>
+					<help>Cuenta</help>
+				</field>				
+				<field id="demfec" tipoOrden="DESC">
+					<label>Fecha</label>
+					<help>Fecha Demerito</help>
+					<!-- tomo la fecha desde que se grabaron bien los demeritos -->
+					<condicion operador="&gt;=">DATE_SUB(CURDATE(), INTERVAL 6 MONTH) and demfec &gt;= '2014-02-03'</condicion>
+				</field>
+				<field id="coddem" noshow="true">
+					<label>Cod</label>
+					<help>Codigo Demerito</help>
+					<condicion operador="!=">0</condicion>
+				</field>
+				<field id="desdem" tabla="DEMERITO">
+					<label>Demerito</label>
+					<help>Demerito</help>
+					<tipo>char</tipo>
+				</field>
+				
+				<field id="peso" suma="true" tabla="DEMERITO">
+					<label>Importancia</label>
+					<tipo>integer</tipo>
+				</field>
+				                           <!--
+				<field id="puesto">
+					<label>Puesto</label>
+				</field>
+				                        -->
+				<field id="nrocomp">
+					<label>Comprobante Nro</label>
+					<help>Numero de Comprobante</help>
+				</field>
+				<field id="ocpnro">
+				    <label>Orden de Compra</label>
+				    <expression>select ocpnro from FACREMIT where FACREMIT.ctacod = prvcod and remnro = nrocomp limit 1</expression>
+				    <helper type="link" xml="cpsencab_cabreimp.xml" dir="/compras">
+
+					<parameter target="ctacod" source="prvcod"/>
+
+					<parameter target="ocpnro" source="ocpnro"/>
+					<parameter target="movfec" source="movfec"/>
+					
+					
+				    </helper>
+				</field>
+				
+				<field id="movfec">
+					<label>Fecha OC</label>
+					<help>
+					</help>
+				</field>
+				
+				<field id="artcod">
+					<label>Articulo</label>
+					<help>
+					</help>
+				</field>
+				<field id="artdes" tabla="STKINSUM">
+					<label>Descripcion</label>
+					<help>Descripcion</help>
+					<tipo>char</tipo>
+				</field>	
+				<order>		
+				    <field id="demfec">
+				    </field>
+				</order>	
+				
+			</table>
+			<join tipo="left">
+				<table id="DEMERITO">
+					<field id="coddem" oculto="true">
+						<condicion operador="=">MOVDEMERITO.coddem</condicion>
+					</field>
+				</table>
+			</join>					
+			<join tipo="left">
+				<table id="STKINSUM">
+				<field id="siscod" oculto="true">
+					<label>STKINSUM.siscod</label>
+					<condicion operador="=">'01'</condicion>
+				</field>					
+					<field id="artcod" oculto="true">
+						<condicion operador="=">MOVDEMERITO.artcod</condicion>
+					</field>
+				</table>
+			</join>					
+			
+		</form>
+	</histrix>

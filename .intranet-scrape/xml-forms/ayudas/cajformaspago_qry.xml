@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="consulta">
+  <title>Formas de pago</title>
+   <obs></obs>
+    <form>
+        <table id="CAJ_FORMAS_PAGO" label="Formas de pago">
+        <field id="id_cajformapago" autoinc="true" noshow="true">
+      <label>Cod forma de pago</label>
+      <help>Código de concepto</help>
+        </field>
+        <field id="descripcion_forma">
+            <label>Descripcion</label>
+              <help>Descripcion del concepto</help>
+               <size>20</size>
+        </field>
+        </table>
+    </form>
+    </histrix>  

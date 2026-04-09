@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ficha" _PDFsincabecera="true" sololectura="true" autoprint="true" _PDFfontSize="12">
+  <title>Transferencia entre Depósitos</title>
+  <obs/>
+  <form>
+    <table id="STK_MOVIMIENTOS" label="Transferencia entre Depósitos">
+      <!--
+	  <field id="regcuenta_id">
+		<helper type="combo" id="REG_CUENTA">
+			<field id="id_regcuenta" />
+			<field id="nombre_cuenta" />
+		</helper>
+		<label posx="5" posy="17">Cuenta</label>
+	  </field>
+-->
+      <field id="stkdeposito_origen" local="true">
+        <label posx="5" posy="17">Origen</label>
+        <helper type="combo" xml="stkdeposito_qry.xml" dir="/ayudas" _empty="true"/>
+      </field>
+      <field id="stkconcepto_origen" sincelda="true" local="true">
+        <label modpos="nobr" posx="60" posy="0"/>
+        <helper type="combo" xml="stkconcepto_qry.xml" dir="/ayudas" _empty="true">
+          <field id="tipo_concepto">
+            <condicion operador="=">1</condicion>
+          </field>
+        </helper>
+      </field>
+      <field id="stkdeposito_destino" local="true">
+        <label posx="5" posy="+2">Destino</label>
+        <helper type="combo" xml="stkdeposito_qry.xml" dir="/ayudas" _empty="true"/>
+      </field>
+      <field id="stkconcepto_destino" sincelda="true" local="true">
+        <label modpos="nobr" posx="60" posy="0"/>
+        <helper type="combo" xml="stkconcepto_qry.xml" dir="/ayudas" _empty="true">
+          <field id="tipo_concepto">
+            <condicion operador="=">0</condicion>
+          </field>
+        </helper>
+      </field>
+      <field id="fecha_movimiento" valauto="true">
+        <label modpos="nobr" posx="5" posY="+2">Fecha</label>
+        <help>Fecha movimiento</help>
+      </field>
+      <field id="numero_movimiento">
+        <label modpos="nobr" posx="110" posY="0" PDFsize="15">Nº</label>
+      </field>
+      <field id="detalles" local="true" _pdfwidth="180">
+        <helper type="object" xml="imp_stkmovimientos_detalle_qry.xml" dir="/stock/qry">
+          <parameter source="numero_movimiento" target="numero_movimiento"/>
+          <parameter source="stkconcepto_origen" target="stkconcepto_id"/>
+          <!--			<parameter source="regcuenta_id" target="regcuenta_id" />-->
+          <parameter source="fecha_movimiento" target="fecha_movimiento"/>
+        </helper>
+        <label posx="9" posy="+2"/>
+      </field>
+      <group>
+        <field id="numero_movimiento"/>
+        <!--	<field id="stkconcepto_id" />     -->
+        <!--		<field id="regcuenta_id"  />-->
+        <field id="fecha_movimiento"/>
+      </group>
+    </table>
+  </form>
+</histrix>

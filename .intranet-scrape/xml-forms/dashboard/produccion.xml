@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="dashboard">
+
+        <titulo>Medidores de Producción</titulo>
+ 
+        <widget id="tiempos"  width="400px" height="266px" >
+            <title>Tiempos de terminación</title>
+	    <url><![CDATA[histrixLoader.php?xml=produccion_tiempos_fabricacion.xml&dir=estadisticas]]></url>
+        </widget>
+        <widget id="tiempos_muertos"  width="400px" height="266px" >
+            <title>Tiempos muertos</title>
+	    <url><![CDATA[histrixLoader.php?xml=produccion_tiempos_muertos.xml&dir=estadisticas]]></url>
+        </widget>
+        <widget id="tiempos_entrega"  width="400px" height="266px" >
+            <title>Tiempos de entrega</title>
+        <url><![CDATA[histrixLoader.php?xml=produccion_tiempos_entrega.xml&dir=estadisticas]]></url>
+        </widget>
+        <widget id="Coches"  width="400px"  height="266px">
+            <title>Coches</title>
+	    <url><![CDATA[histrixLoader.php?xml=evolutivo_coches.xml&dir=estadisticas]]></url>
+        </widget> 
+
+		<widget id="ModelosXChasis" width="400px" height="266px">
+	  	  <title>Modelos de Chasis</title>
+	    <url><![CDATA[histrixLoader.php?xml=produccion_xmodchasis.xml&dir=estadisticas]]></url>  
+		</widget>      
+		<widget id="MarcasXChasis" width="400px" height="266px">
+	  	  <title>Marcas de Chasis</title>
+	    <url><![CDATA[histrixLoader.php?xml=produccion_xmarchasis.xml&dir=estadisticas]]></url>  
+		</widget>  
+		<widget id="MarcasXAsiento" width="400px" height="266px">
+	  	  <title>Marcas de Asientos</title>
+	    <url><![CDATA[histrixLoader.php?xml=produccion_xmarasiento.xml&dir=estadisticas]]></url>  
+		</widget>  
+
+           <widget id="MarcasAA" width="400px" height="266px">
+                  <title>Marcas de AA</title>
+            <url><![CDATA[histrixLoader.php?xml=produccion_xmarAA.xml&dir=estadisticas]]></url>
+                </widget>
+
+        <widget id="CarroceriaXChasis" width="400px" height="266px">
+          <title>Modelos de Carrocería</title>
+            <url><![CDATA[histrixLoader.php?xml=produccion_xcarroceria.xml&dir=estadisticas]]></url>  
+        </widget>  
+        <widget id="Entregas"  width="400px" height="266px">
+            <title>Entregas</title>
+	    <url><![CDATA[histrixLoader.php?xml=evolutivo_controlcalidad.xml&dir=estadisticas]]></url>
+        </widget>
+        <widget id="CochesPers"  width="400px" height="266px">
+            <title>Coches / Personal</title>
+	    <url><![CDATA[histrixLoader.php?xml=evolutivo_coches_personal.xml&dir=estadisticas]]></url>
+        </widget> 
+        <widget id="cambios"  width="400px" height="266px" >
+            <title>Cambios</title>
+	    <url><![CDATA[histrixLoader.php?xml=produccion_cambios.xml&dir=estadisticas]]></url>
+        </widget>
+	
+</histrix>
+
+

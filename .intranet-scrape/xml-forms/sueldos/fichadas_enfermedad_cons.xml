@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<abm tipo="consulta">
+	<titulo>Francos</titulo>
+	<obs/>
+	<consulta>
+		<tabla id="FRANCOS_PER" label="Fichadas del Reloj" >
+			<campo id="legajo" oculto="true">
+			    <label>Legajo</label>
+			</campo>
+<!--			<campo id="fecha" tabla="GEN_CALENDAR" oculto="true">
+			    <label>Fecha</label>
+                <tipo>date</tipo>
+			</campo> -->
+            <campo id="idfranco" oculto="true"  ></campo>
+			<campo id="nombre" tabla="FRANCOS_CAT">
+			    <label>Motivo</label>
+                <tipo>varchar</tipo>
+			</campo>
+			<campo id="fechaInicio" oculto="true">
+			    <label>Ini</label>
+                <tipo>date</tipo>
+			</campo>
+
+			<campo id="fechaFin" oculto="true">
+			    <label>Fin</label>
+                <tipo>date</tipo>
+			</campo>
+			<campo id="Horas" >
+	                <expresion><![CDATA[ 
+                            SEC_TO_TIME(sum(
+
+                                        (select TIME_TO_SEC(TIMEDIFF(H.egreso, H.ingreso)) from HORARIOHIST as H where H.desdeFecha <= GEN_CALENDAR.fecha and H.dia = DAYOFWEEK(GEN_CALENDAR.fecha) order by H.desdeFecha DESC limit 1)
+                                ))
+                                ]]></expresion>
+    		        <tipo>varchar</tipo>
+			<condicion operador="!=">''</condicion>
+			</campo>
+
+            <group>
+                <campo id="idfranco"></campo>
+            </group>
+			<orden>
+				<campo id="fecha" />
+			</orden>
+		</tabla>
+		<join tipo="left">
+			<tabla id="FRANCOS_CAT">
+				<campo id="idfranco">
+					<condicion operador="=">FRANCOS_PER.idfranco</condicion>
+				</campo>
+			</tabla>
+		</join>
+
+		<join tipo="right">
+			<tabla id="GEN_CALENDAR">
+				<campo id="fecha">
+					<condicion operador="&gt;=">FRANCOS_PER.fechaInicio and GEN_CALENDAR.fecha &lt;= FRANCOS_PER.fechaFin</condicion>
+				</campo>
+			</tabla>
+		</join>
+
+	</consulta>
+</abm>

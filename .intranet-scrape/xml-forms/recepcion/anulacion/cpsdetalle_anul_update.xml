@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="update" limit="1">
+    <title>Anular recepcion Orden de compra</title>
+    <obs></obs>
+    <form  >
+	<table id="CPSMOVIM" label="RECIBIDOS" idCampoCond="borro">
+		<field id="ocpnro" id_temp="ocpnro" esClave="true"/>
+		<field id="artcod" id_temp="artcod" esClave="true"/>
+		<field id="fecreq" id_temp="fecreq" esClave="true"/>
+<!--
+		<field id="idPed"  id_temp="idPed"  esClave="true"/>
+-->				
+		<field id="pencps" id_temp="quedaranpendientes" />			
+	</table>
+    </form>
+</histrix>

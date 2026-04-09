@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ayuda">
+	<title>Insumos</title>
+	<obs/>
+	<form >
+		<table id="HERRAMIENTAS">
+
+			<field id="id_herramienta">
+				<label>Herramienta</label>
+				<help>Identificacion</help>
+				<tipo>character</tipo>
+			</field>
+			<field id="artcod" >
+				<label>Articulo</label>
+				<help>Codigo de Articulo</help>
+				<tipo>character</tipo>
+				<format>%20.20s</format>
+				<detalle>artcod</detalle>
+			</field>
+
+			<field id="nomherr">
+				<label>Nombre</label>
+				<help>Nombre de la Herramienta.</help>
+			</field>
+			<field id="grucod" oculto="true">
+				<label>grupo</label>
+				<help>grupo</help>
+				<condicion operador="=">2 or grucod=0</condicion>
+			</field>
+					<field id="artdes" tabla="STKINSUM">
+						<label>Insumo</label>
+						<detalle>artdes</detalle>
+					</field>
+					<field id="unicps" tabla="STKINSUM" oculto="true">
+						<detalle>unicps</detalle>
+					</field>
+					<field id="artuni" oculto="true" tabla="STKINSUM">
+						<detalle>artuni</detalle>
+					</field>
+					<field id="artcos" oculto="true" tabla="STKINSUM">
+						<detalle>artcos</detalle>
+					</field>
+					<field id="artrub" oculto="true" tabla="STKINSUM">
+						<detalle>artrub</detalle>
+					</field>
+					<field id="unidef" oculto="true" tabla="STKINSUM">
+						<detalle>unidef</detalle>
+					</field>
+					<field id="valcps" oculto="true" tabla="STKINSUM">
+						<detalle>valcps</detalle>
+					</field>
+					<field id="valuso" oculto="true" tabla="STKINSUM">
+						<detalle>valuso</detalle>
+					</field>
+					<field id="siscod" oculto="true" tabla="STKINSUM">
+						<condicion operador="=">'01'</condicion>
+					</field>
+			
+		</table>
+		<join tipo="left">
+		    <table id="STKINSUM">
+			<field id="artcod">
+			    <condicion operdor="=">HERRAMIENTAS.artcod</condicion>
+			</field>
+		    </table>
+		</join>
+	</form>
+</histrix>

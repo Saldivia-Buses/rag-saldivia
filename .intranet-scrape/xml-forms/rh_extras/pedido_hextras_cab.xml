@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+	<histrix  tipo="cabecera" graba="false" >
+		<title>Autorización de Horas Extras</title>
+		<obs></obs>
+		<form >
+			<table id="RH_AUTH_EXTRAS" label="Horas Extras">
+			<field id="login_auth">
+			    <label modpos="nobr">Autoriza</label>
+                <tabla_ex id="HTXUSERS">
+                    <field id="login"></field>
+                    <field id="nombres">
+                        <expression>concat(nombre, ' ',Apellido)</expression>
+                    </field>
+                    <field id="baja">
+                        <condicion operador="=">0</condicion>
+                    </field>
+                    <order>
+                        <field id="nombres" tipoOrden="DESC" />
+                    </order>
+                </tabla_ex>
+				<valor eval="true">$_SESSION['usuario']</valor>
+   			</field>
+			<field id="id_auth" deshabilitado="true" noshow="true">
+			    <tabla_ex id="RH_AUTH_EXTRAS">
+				<field id="id">
+				    <expression>max(id_auth) + 1</expression>
+				</field>
+				<field id="id2">
+				    <expression>max(id_auth) + 1</expression>
+				</field>
+				
+				
+			    </tabla_ex>
+			    <label modpos="nobr">id</label>
+			</field>			
+			<field id="fecha_auth" deshabilitado="true" noshow="true">
+			    <label modpos="nobr">Fecha</label>
+			    <valor>today</valor>
+			</field>
+			
+			<field id="desdeFecha" local="true">
+			    <label modpos="nobr">Fecha</label>
+                <valor eval="true">date("d/m/Y", mktime(0, 0, 0, date("m"), date("d")-1, date("Y")))</valor>
+			    <tipo>date</tipo>
+			</field>		
+			<field id="hastaFecha" local="true" noshow="true">
+			    <label modpos="nobr">Hasta Fecha</label>
+			    <tipo>date</tipo>
+			</field>		
+				
+				
+			<field id="motivo_auth" >
+			    <label modpos="nobr">Motivo</label>
+			    <size>100</size>
+			</field>
+			
+			
+			
+			</table>
+		</form>
+	</histrix>

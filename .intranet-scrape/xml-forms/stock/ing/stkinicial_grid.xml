@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="grid" imprime="false" preloadData="false" _limit="50">
+    <title>Articulos</title>
+    <obs></obs>
+    <form >
+        <table id="STK_ARTICULOS" label="Articulos" idCampoCond="grabar">
+
+            <movimientos>
+                <relacion id="stkmovimientos_ins.xml"/>
+            </movimientos>
+                        
+            <filters>
+                <field id="stksector_id" deshabilitado="true">
+                    <operador>=</operador>
+                </field>
+		      
+            </filters>
+      
+     
+
+
+
+            <field id="id_stkarticulo" _esClave="true">
+                <label>Cod. Articulo</label>
+<!--				<detalle>codigo_plu</detalle> -->
+            </field>
+
+            <field id="nombre_articulo">
+                <label>Descripcion</label>
+                <detalle>nombre_articulo</detalle>
+            </field>
+
+            <field id="fecha_movimiento" noshow="true" local="true">
+                <label>fecha</label>
+                <valor>today</valor>
+                <tipo>date</tipo>
+            </field>
+            
+            <field id="stkrubro_id" noshow="true">
+                <label>Rubro</label>
+            </field>
+            <field id="_ORDEN" local="true" noshow="true">
+                <label>Orden</label>
+            </field>
+            <field id="stkconcepto_id"  local="true" _noshow="true">
+                <label>concepto</label>
+            </field>
+            <field id="stkfamilia_id" noshow="true">
+                <label>Familia</label>
+            </field>
+
+            <field id="stksector_id" noshow="true">
+                <label>Sector</label>
+            </field>
+            <field id="stock" local="true" suma="true">
+                <label>stock</label>
+                <help>Precio de Lista</help>
+                <expresion>SELECT SUM(CASE WHEN STK_CONCEPTOS.tipo_concepto = 0 THEN cantidad ELSE -(cantidad) END) FROM STK_MOVIMIENTOS INNER JOIN STK_CONCEPTOS ON STK_CONCEPTOS.id_stkconcepto = STK_MOVIMIENTOS.stkconcepto_id WHERE STK_MOVIMIENTOS.stkarticulo_id = STK_ARTICULOS.id_stkarticulo </expresion>
+            </field>
+                        
+            
+           <!-- <field id="fecha_movimiento" local="true">
+                <label modpos="nobr">Fecha</label>
+                <help>Fecha movimiento</help>
+                <tipo>date</tipo>
+                <valor>today</valor>
+            </field>-->
+            <field id="referencia" local="true">
+                <label>Referencia</label>
+                <tipo>varchar</tipo>
+                <valor>INGRESO DE STOCK INICIAL</valor>
+            </field>
+            <field id="cantidad" local="true" editable="true" suma="true">
+                <label>Ajuste</label>
+<!--				<jseval campodestino="grabar">(cantidad &gt; 0)?1:0</jseval>-->
+            </field>
+
+            <field id="precio_costo" noshow="true">
+                <label>Costo</label>
+                <help>Precio de Costo</help>
+                <detalle>precio_costo</detalle>
+            </field>
+
+            <field id="precio_lista" noshow="true">
+                <label>Lista</label>
+                <help>Precio de Lista</help>
+            </field>
+
+            <field id="precio_venta" noshow="true">
+                <label>Venta</label>
+                <help>Precio de Venta</help>
+                <detalle>precio_venta</detalle>
+            </field>
+
+            <field id="precio_promedio" noshow="true">
+                <label>PPP</label>
+                <help>Precio Promedio Ponderado</help>
+                <detalle>precio_promedio</detalle>
+            </field>
+            <field id="unidad_id" _noshow="true" >
+                <detalle>unidad_id</detalle>
+            </field>
+
+            <field id="stkarticulo_id" autoinc="true" noshow="true" print="false">
+                <expresion>STK_ARTICULOS.id_stkarticulo</expresion>
+            </field>
+            <field id="grabar" local="true" noshow="true" print="false">
+                <if exp="cantidad + 0 != 0">
+                    <true>1</true>
+                    <false>1</false>
+                </if>
+            </field>
+        </table>
+    </form>
+</histrix>  

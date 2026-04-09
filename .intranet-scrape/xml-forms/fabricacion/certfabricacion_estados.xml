@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ficha"  class="consultaancha" subtipo="vertical" borra="false" preFetch="true" limit="1" imprime="false">
+	<title>CERTIFICADOS FABRICACION</title>
+	<obs></obs>
+	<form >
+		<table id="CERTFABRICACION" >
+		    <title>Carrocerias</title>
+			<field id="certestado_id">
+			    <label>Estado</label>
+			    <helper xml="cert_estados.xml" type="combo" />
+			</field>
+			<field id="nrofab" linkint="fichaventas.xml" linkdes="Ver Ficha de Ventas" tipoOrden="DESC" deshabilitado="true">
+				<label>Nro Fab</label>
+				<help>Código de Fabricación</help>
+				<paring destino="nrocha">nrofab</paring>
+			</field>
+			<field id="fechaCert"  deshabilitado="true">
+				<label>Certificado</label>
+				<help>Fecha del Certificado de Fabricación</help>
+				<valor>today</valor>
+			</field>
+			<field id="nrovin"   deshabilitado="true">
+				<size>30</size>
+				<label>Número de VIN</label>
+			</field>			
+		        <field id="plano"  deshabilitado="true">
+    			      <label modpos="nobr">Plano Nro</label>
+              	<help>Número de Plano</help>
+            </field>  
+            <field id="expte"  deshabilitado="true">
+                  <label _modpos="nobr">Expte Nro</label>
+                  <help>Número de Expediente</help>
+            </field>
+         
+               
+              <field id="disposicion" deshabilitado="true">
+                  <label _modpos="nobr">Disposición</label>
+<!--                              <expresion>HOMOLOGMOD.dispos</expresion> -->
+            </field>
+            <field id="certobservacion">
+            	<label>Observaciones</label>
+            	<size>300</size>
+            </field>
+		</table>
+		<join tipo="left">
+                    <table id="PEDCOTIZ">
+			<field id="nrocha">
+			    <condicion operador="=">CERTFABRICACION.nrofab</condicion>
+			</field>
+		    </table> 		
+		</join>
+	</form>	   
+</histrix> 

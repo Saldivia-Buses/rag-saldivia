@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix borra="no" imprime="false" inserta="no" modifica="false" llenoreferente="true" tipo="ing" >
+    <title>Pedidos Internos</title>
+    <obs/>
+    <form >
+        <table id="PEDIDOINT"  label="Pedidos Internos" idCampoCond="imputar">
+            <!--<movimientos>
+                <relacion id="pedidoint_update.xml"/>
+            </movimientos>-->
+            <field id="idPed" deshabilitado="true">
+                <label>id</label>
+                <detalle>idPed</detalle>
+            </field>
+            <field deshabilitado="true" id="codprv" noshow="true">
+                <label>Cod.Proveedor</label>
+                <help>Código de Proveedor</help>
+                <valor>0</valor>
+            </field>
+            <field id="usuario" deshabilitado="true">
+                <label Formstyle="display:none;">Usuario</label>
+                <help>Usuario que hace el pedido</help>
+                <tabla_ex id="HTXUSERS">
+                    <field id="login"></field>
+                    <field id="nombre">
+                        <expression>concat(nombre,' ', apellido)</expression>
+                    </field>
+                    <order>
+                        <field id="nombre"></field>
+                    </order>
+                </tabla_ex>
+		<detalle>usuario</detalle>
+            </field>
+            <field id="mensaje" deshabilitado="true">
+                <label style="color:green;">Mensaje Interno</label>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="idDeposito" deshabilitado="true">
+                <label modpos="nobr" colspan="6" Formstyle="display:none;">Lugar Entrega</label>
+                <help>Lugar de Entrega/Descarga</help>
+                <tabla_ex id="DEPOSITO">
+                    <field id="idDeposito"></field>
+                    <field id="direccion"></field>
+                </tabla_ex>
+                <tipo>integer</tipo>
+            </field>
+            <field deshabilitado="true" id="nrofab">
+                <label>Nro Fab.</label>
+                <help>Número de Fabricación</help>
+                <tabla_ex id="CHASIS">
+                    <field id="nrocha" muestra="true"/>
+                    <field id="chades"/>
+                    <order>
+                        <field id="nrocha"/>
+                    </order>
+                </tabla_ex>
+            </field>
+            <field deshabilitado="true" id="nrofab">
+                <label>NroFab</label>
+                <detalle>nrofab</detalle>
+            </field>
+            <field deshabilitado="true" id="artcod2">
+                <expression>trim(PEDIDOINT.artcod)</expression>
+                <label>Código Artículo</label>
+                <help>Código de Artículo</help>
+                <detalle>artcod</detalle>
+            </field>
+            <field deshabilitado="true" id="artdes" tabla="STKINSUM">
+                <label>Descripción</label>
+                <tipo>varchar</tipo>
+                <detalle>artdes</detalle>
+            </field>
+            <field id="movref" deshabilitado="true">
+                <label Formstyle="display:none;">Ref.</label>
+                <help>Referencia</help>
+                <size>5</size>
+                <detalle>observaciones</detalle>
+            </field>
+
+	    <field id="nombre_centro" deshabilitado="true" tabla="CTB_CENTROS">
+              <label modpos="nobr">C.Costos</label>
+              <help>Centro de costos</help>
+            <detalle>nombre_centro</detalle>
+          </field>
+
+<!--          <field id="cpsproyecto_id" deshabilitado="true">
+              <label modpos="nobr">Proyecto</label>
+              <help>Proyecto de Compras</help>
+              <tabla_ex id="CPS_PROYECTO" vacio="true">
+                  <field id="id_cpsproyecto" />
+                  <field id="abrev_cpsproyecto"/>
+                  <order>
+                      <field id="id_cpsproyecto" />
+                  </order>
+              </tabla_ex>
+              <detalle>cpsproyecto_id</detalle>
+          </field> -->
+
+            <field deshabilitado="true" id="cant">
+                <label>Cantidad</label>
+                <help>Cantidad</help>
+                <detalle>movcps</detalle>
+            </field>
+            <field deshabilitado="true" id="unicps">
+                <label Formstyle="display:none;">Unidad de Compra</label>
+                <help>Unidad de Medida</help>
+                <tabla_ex id="FSMUNIDS">
+                    <field id="unicod"/>
+                    <field id="uninom"/>
+                    <order>
+                        <field id="uninom"/>
+                    </order>
+                </tabla_ex>
+                <detalle>unicps</detalle>
+            </field>
+            <field deshabilitado="true" id="artuni">
+                <label Formstyle="display:none;">Unidad de Medida</label>
+                <help>Unidad de Medida</help>
+                <tabla_ex id="FSMUNIDS">
+                    <field id="unicod"/>
+                    <field id="uninom"/>
+                    <order>
+                        <field id="uninom"/>
+                    </order>
+                </tabla_ex>
+                <detalle>artuni</detalle>
+            </field>
+            <field deshabilitado="true" id="codprv">
+                <label>Cod.Proveedor</label>
+                <help>Código de Proveedor</help>
+            </field>
+            <field deshabilitado="true" id="estado" noshow="true">
+                <label>Estado</label>
+                <help>Estado</help>
+                <condicion operador="=">0 </condicion>
+            </field>
+            <field id="dias" local="true" deshabilitado="true">
+                <label>Días</label>
+                <help>Demora del proveedor en suministrar el artículo</help>
+                <tipo>integer</tipo>
+            </field>
+            <field deshabilitado="true" id="fecreq">
+                <label>Fec.Req.</label>
+                <help>Fecha de Requerimiento</help>
+                <detalle>fecreq</detalle>
+            </field>
+            <field id="imputar" local="true" refresh="true" >
+                <label>imputar</label>
+                <help>Selección</help>
+                <tipo>check</tipo>
+                <if exp="codprov == 0">
+                    <true>(imputar == 1)?1:0</true>
+                    <false>(imputar == 0)?0:1</false>
+                </if>
+            </field>
+            <field id="valcps" noshow="true" tabla="STKINSUM">
+                <label>valcps</label>
+                <detalle>valcps</detalle>
+            </field>
+            <field id="valuso" noshow="true" tabla="STKINSUM">
+                <label>valuso</label>
+                <detalle>valuso</detalle>
+            </field>
+            <field id="imput2" local="true"  noshow="true">
+                <tipo>varchar</tipo>
+                <if exp="imputar == 1" operador="=">
+                    <true>'true'</true>
+                    <false>'false'</false>
+                </if>
+            </field>
+            <field id="directorio" noshow="true" >
+                <detalle>directorio</detalle>
+            </field>
+            <field id="archivo" noshow="true" >
+                <detalle>archivo</detalle>
+            </field>
+            <field deshabilitado="true" id="tipocomp" noshow="true">
+                <label>Tipo Comp</label>
+                <help>Tipo Comprobante</help>
+            </field>
+            <field deshabilitado="true" id="fechaemi" noshow="true">
+                <label>Emision</label>
+                <help>Fecha de Emision</help>
+            </field>
+            <field deshabilitado="true" id="puesto" noshow="true">
+                <label>Puesto</label>
+                <help>Puesto de Venta</help>
+            </field>
+            <field deshabilitado="true" id="nrocom" noshow="true">
+                <label>Nro.Comp.</label>
+                <help>Numero de Comprobante.</help>
+            </field>
+            <field id="pedidopath" noshow="true">
+                <expression>CONCAT('pedidoint/',directorio)</expression>
+                <detalle>pedidopath</detalle>
+            </field>
+            <field id="renglon" noshow="true">
+                <label>Renglon</label>
+            </field>
+            <field id="uno" local="true" noshow="true">
+                <valor>1</valor>
+            </field>
+            <field id="artiva" oculto="true">
+                <expression>
+                    select IVAIMPUESTOS.impali from IVAIMPUESTOS where impcod = artiva limit 1
+                </expression>
+                <detalle>alicuota</detalle>
+            </field>
+               <field id="cotizacion" >
+                    <label>Cotización</label>
+                    <expression>@cotiz:=(select cotizacion_genmonedahis from GEN_MONEDA_HIS where GEN_MONEDA_HIS.moneda_id = STK_COSTO_REPOSICION.moneda_id order by fecha_genmonedahis DESC limit 1)</expression>
+                    <tipo>numeric</tipo>
+                </field>
+                <field id="moneda_id" tabla="STK_COSTO_REPOSICION">
+                    <label>Moneda</label>
+                    <helper type="combo" xml="moneda_qry.xml" dir="/ayudas" empty="true" />
+                    <detalle>moneda_id</detalle>
+                </field>
+
+            <field id="costo" >
+                <label>Costo</label>
+                <expression>round(costo_proveedor + (costo_proveedor / 100 * gasto_importacion)  + (flete_local_ars / @cotiz), 2) </expression>
+
+               <!--  <expression>select (round(((costo_proveedor + (costo_proveedor / 100 * gasto_importacion)) 
+                        - (costo_proveedor / 100 * descuento_1)) - (((costo_proveedor + (costo_proveedor / 100 * gasto_importacion)) 
+                        - (costo_proveedor / 100 * descuento_1)) / 100 * descuento_2)  + flete_local_ars, 2))
+                        from STK_COSTO_REPOSICION where stkarticulo_id = trim(PEDIDOINT.artcod)
+                    </expression> -->
+
+                <!-- <expression>select ifnull(getCostFunc(STK_COSTO_REPOSICION.stkarticulo_id, ifnull(STK_COSTO_REPOSICION.moneda_id, 1), STR_TO_DATE('[__fecha__]', '%d/%m/%Y')  ), 0) from STK_COSTO_REPOSICION where stkarticulo_id = trim(PEDIDOINT.artcod)</expression> -->
+                
+            <tipo>decimal</tipo>
+            <detalle>artcos</detalle>
+        </field>
+
+        <field id="fecha" local="true" noshow="true">
+            <label>Fecha</label>
+            <valor>today</valor>
+            <tipo>date</tipo>
+            <detalle>fecha</detalle>
+        </field>
+<!-- 	<field id="costo_ant" >
+	    <label>Costo Ant.</label>
+	    <expression>round(case when ((select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINSUM.artcod and
+		STKINSPR.siscod='01' order by fecult DESC limit 1,1) ) > 0
+		then ((select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINSUM.artcod and
+		STKINSPR.siscod='01' order by fecult DESC limit 1,1))
+		else 0  end, 2)</expression>
+	    <tipo>decimal</tipo>
+	    <detalle>costo_ant</detalle>
+	</field> -->
+
+        <field id="alerta" style="color:red;">
+            <expression>
+                select 'YA EXISTEN ORDENES PENDIENTES' from CPSMOVIM inner join CPSENCAB on CPSENCAB.ocpnro = CPSMOVIM.ocpnro 
+        where CPSMOVIM.artcod = PEDIDOINT.artcod and 
+              CPSMOVIM.nrocha = PEDIDOINT.nrofab and 
+              CPSMOVIM.pencps != 0 and 
+              CPSENCAB.ocpest = 1 limit 1
+            </expression>
+        </field>
+        <field id="stkformaemb_id" tabla="STKINSUM" noshow="true">
+            <detalle>stkformaemb_id</detalle>
+        </field>
+        <field id="confirmado" oculto="true">
+            <condicion operador="=">1 </condicion>
+        </field>
+
+        <field id="descuento_1" tabla="STK_COSTO_REPOSICION" noshow="true">
+            <label>Descuento 1</label>
+            <help>1er Descuento del proveedor</help>
+            <detalle>bonificacion_1</detalle>
+        </field>
+
+        <field id="descuento_2" tabla="STK_COSTO_REPOSICION" noshow="true">
+            <label>Descuento 2</label>
+            <help>2do Descuento del proveedor</help>
+            <detalle>bonificacion_2</detalle>
+        </field>
+
+    </table>
+    <join tipo="left">
+        <table id="STKINSUM">
+            <field id="siscod" oculto="true">
+                <label>STKINSUM.siscod</label>
+                <condicion operador="=">'01'</condicion>
+            </field>
+            <field id="artcod" oculto="true">
+                <condicion operador="=">trim(PEDIDOINT.artcod)</condicion>
+            </field>
+            <field id="artuni" oculto="true"></field>
+            <field id="unicps" oculto="true"></field>
+        </table>
+    </join>
+       <join tipo="left">
+        <table id="STK_COSTO_REPOSICION">
+            <field id="stkarticulo_id" >
+                <condicion operador="=">trim(PEDIDOINT.artcod)</condicion>
+            </field>
+        </table>
+    </join>
+    <join tipo="left">
+	<table id="CTB_CENTROS">
+            <field id="id_ctbcentro" >
+                <condicion operador="=">trim(PEDIDOINT.centrocostos_id)</condicion>
+            </field>
+        </table>
+    </join>
+</form>
+</histrix>

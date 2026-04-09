@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="grid" >
+	<title/>
+	<obs/>
+	<form>
+		<table id="REG_NUMERADORES" >
+			<movimientos>
+				<relacion id="mos_fiscal_imp.xml" /> 
+			</movimientos>
+
+			<field id="id_regnumerador" />
+
+			<field id="puesto" />
+
+			<field id="regconcepto_id" />
+
+			<field id="letra" />
+
+			<field id="fiscal">
+			    <condicion operador="=">-1</condicion>
+			</field>
+
+			<field id="printer" />
+		</table>
+	</form>
+</histrix>

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud">
+    <title>Numeradores</title>
+    <obs></obs>
+    <form >
+        <table id="CAJ_NUMERADORES" label="Numeradores">
+
+            <field id="id_cajnumerador" esClave="true" noshow="true" />
+
+            <field id="subsistema_id" noshow="true" valauto="true">
+                <valor>'03'</valor>
+            </field>            
+	                                
+            <field id="cajconcepto_id" esClave="true">
+                <helper type="combo" xml="cajconceptos_qry.xml" dir="/ayudas">
+                    <field id="ejecuta_concepto">
+                        <condicion operador="!=">''</condicion>
+                    </field>
+                    <!--
+                    <field id="imputacion_concepto">
+                        <condicion operador="&lt;">2</condicion>
+                    </field>
+                -->
+                    <field id="alta_concepto"><condicion operador="=">1</condicion></field>
+                    <field id="subsistema_id" oculto="true" />
+                    <order>
+                        <field id="imputacion_concepto" />
+                        <field id="descripcion_concepto" />
+                    </order>
+                </helper>
+                <label>Concepto</label>
+            </field>                 
+
+            <field id="numero">
+                <label>Numero</label>
+                <size>8</size>
+                <format>%08d</format>
+            </field>
+
+            <field id="cajpuesto_id" _noshow="true">
+                <helper type="combo" xml="cajpuesto_qry.xml" dir="/ayudas" />
+                <label>Puesto</label>
+            </field>
+            <!--
+            <field id="ejecuta" noshow="true">
+                <label>Ejecuta</label>
+                <size>60</size>
+            </field>
+            <field id="printer" noshow="true">
+                <label>Printer</label>
+            </field>
+                                     -->
+            <order>
+                <field id="cajpuesto_id" />
+                <field id="cajconcepto_id" />			
+            </order>
+        </table>
+    </form>
+</histrix>  

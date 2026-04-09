@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="consulta">
+    <titulo>DETALLE FACTURA</titulo>
+    <obs></obs>
+    <form>
+        <tabla id="FACDETAL">
+            <titulo>Detalle comprobante</titulo>
+            <field id="ctacod">
+                <label>Cta</label>
+            </field>
+            <field id="regfec">
+                <label>Fecha</label>
+            </field>
+
+            <field id="nropue">
+                <label>Npv</label>
+            </field>
+            <field id="nrofac">
+                <label>Numero</label>
+            </field>
+            <field id="artdes" tabla="STKINSUM">
+                <label>Articulo</label>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="artcan">
+                <label>Cantidad</label>
+            </field>
+            <field id="artnet">
+                <label>Importe</label>
+            </field>
+
+            <field id="total" suma="true">
+                <label>NETO</label>
+                <expresion> artcan * artnet</expresion>
+            </field>
+
+
+        </tabla>
+        <join tipo="left">
+            <tabla id="STKINSUM">
+                <field id="artcod">
+                    <condicion operador="=">FACDETAL.artcod</condicion>
+                </field>
+                <field id="siscod" oculto="true">
+                    <condicion operador="=">01</condicion>
+                </field>
+
+            </tabla>
+        </join>
+
+
+    </form>
+</histrix>

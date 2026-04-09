@@ -1,0 +1,301 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="fichaing" inserta="false" borra="false" modifica="false" imprime="false" log="false" transaccional="true" tooltip="false" confirma="CONTINUAR" preFetch="false" preloadData="false">
+    <title>Movimiento Bancario</title>
+    <obs></obs>
+    <form>    	
+        <table id="REG_MOVIMIENTOS" label="Movimiento Bancario">	  		
+            <validation>
+                <condition><![CDATA[regcuenta_id + 0 == '0']]></condition>
+                <message>Debe Ingresar una Cuenta</message>
+            </validation>
+
+            <validation>
+                <condition><![CDATA[regconcepto_id + 0 == '0']]></condition>
+                <message>Debe Ingresar un Concepto</message>
+            </validation>
+			
+            <validation>
+                <condition><![CDATA[importe_movimiento + 0 == 0]]></condition>
+                <message>Debe Ingresar un Importe de Movimiento</message>
+            </validation>
+
+            <movimientos>
+                <relacion id="cajmovimientos_ins.xml"/> 
+
+                <relacion id="cajdetalle_reg_ins.xml"/> 
+                <relacion id="cajdetalle_iva_ins.xml"/> 
+                <relacion id="cajdetalle_per_ins.xml"/>
+                <relacion id="cajdetalle_con_ins.xml"/>
+
+                <relacion id="regmovimientos_ins.xml"/>
+                <relacion id="regdetalles_ins.xml"/> 
+
+                <relacion id="impresion_caja.xml"/>
+            </movimientos>                     
+
+            
+
+            <field id="id_regmovim" noshow="true">
+                <condicion operador="=">-1</condicion>
+            </field>	      		  			  
+
+            <fieldGroup id="parametros_ingreso" local="true" noshow="true">		
+                <field id="cajpuesto_id" />
+                <field id="cajconcepto_id" />
+                <field id="cajregistro_id" />
+                <field id="fecha_movimiento" />
+                <field id="subsistema_id" />
+                <field id="imputacion_concepto" />
+                <field id="imprime_concepto" />
+                <field id="tipoimpre_concepto" />
+            </fieldGroup>
+          
+			<fieldGroup>
+				<field id="descripcion_concepto" style="background-color:#000;color:#fff;padding-top:5px;padding-bottom:5px;text-align:center;" deshabilitado="true" colspan="12" noshow="true">  
+					<attribute id="noshow">oculta_titulos</attribute>      
+		          <expression sql="true">
+		            SELECT descripcion_concepto FROM CAJ_CONCEPTOS WHERE id_cajconcepto = [__cajconcepto_id__]
+		          </expression> 
+		          <size>40</size>
+        		</field>
+				<field id="oculta_titulos" local="true" noshow="true">
+				  <helper type="parameter" id="SIS::02::oculta_titulos">
+				      <label>Oculta titulos identificadores en programas de caja</label>
+				      <defaultValue>false</defaultValue>
+				  </helper>
+				</field>
+				<field id="moneda_id" local="true">
+					<label>Moneda</label>
+					<helper type="combo" xml="moneda_qry.xml" dir="/ayudas" />
+				</field>
+
+				<field id="regcuenta_id">
+					<label>Cuenta</label>
+					<helper type="combo" xml="regcuenta_cmb.xml" dir="/ayudas" empty="true" />
+					<size>6</size>        
+				</field>
+                                <field id="regcuenta_cuit" local="true" noshow="true">
+                                    <label>Cuit</label>
+                                </field>
+				<field id="regcuenta_nombre" local="true" deshabilitado="true">
+					<label>Nombre</label>
+					<size>60</size>
+				</field>
+				
+				<field id="nro_movimiento" deshabilitado="true">
+					<label>Nº Comprobante</label>	
+					<parametro id="cajnumerador_param.xml" retorna="numero">
+						<field id="numero">
+							<complete>numero + 1</complete>
+						</field>
+					</parametro>
+					<format>%08d</format>
+					<size>8</size>
+					<detalle>nro_movimiento</detalle>
+				</field>
+				
+				<field id="referencia_movimiento">
+					<label>Referencia</label>            
+					<tipo>varchar</tipo>
+					<size>144</size>
+				</field>
+				
+				<field id="vencimiento_movimiento">
+					<label>Fecha de Acreditacion</label>
+					<valor>today</valor>
+				</field>
+
+				<field id="regconcepto_id" local="true">
+					<label>Concepto</label>
+					<helper type="combo" xml="regconcepto_qry.xml" dir="/ayudas" empty="true" />
+				</field>
+
+			</fieldGroup>
+            
+			<fieldGroup>
+				<if>if (strpos($_SESSION['properties']['modulos'],'iva') != false) return true;</if>
+				
+				<!-- DETALLE CALCULO DE IVA -->
+				
+				<field id="importe_exento">
+					<label>Importe Exento</label>
+					<tipo>numeric</tipo>
+					<size>10</size>
+
+					<jseval campodestino="importe_movimiento">neto_movimiento + importe_iva + importe_exento + importe_percepcion</jseval>
+					<jseval campodestino="importe_concepto"  >neto_movimiento + importe_exento</jseval>
+				</field>
+						   
+				<field id="neto_movimiento">
+					<label>Importe Neto</label>
+					<tipo>numeric</tipo>
+					<size>10</size>
+
+					<jseval campodestino="importe_iva"       >neto_movimiento * (alicuota_iva / 100) </jseval>
+					<jseval campodestino="importe_movimiento">neto_movimiento + importe_iva + importe_exento + importe_percepcion</jseval>
+					<jseval campodestino="importe_concepto"  >neto_movimiento + importe_exento</jseval>
+				</field>      
+						   
+				<field id="alicuota_iva">
+					<helper type="combo" xml="genalicuotas_qry.xml" dir="/ayudas" empty="true" />               
+					<label>Alicuota</label>
+					<tipo>numeric</tipo>
+					
+					<jseval campodestino="importe_iva"       >neto_movimiento * (alicuota_iva / 100)</jseval>
+					<jseval campodestino="importe_movimiento">neto_movimiento + importe_iva + importe_exento + importe_percepcion</jseval>
+					<jseval campodestino="importe_concepto"  >neto_movimiento + importe_exento</jseval>
+				</field>
+				
+				<field id="importe_iva" preventLoop="true">
+					<label>Iva</label>
+					<tipo>numeric</tipo>
+					<size>10</size>
+					<jseval campodestino="importe_movimiento">neto_movimiento + importe_iva + importe_exento + importe_percepcion</jseval>
+					<jseval campodestino="importe_concepto"  >neto_movimiento + importe_exento</jseval>				
+				</field>
+
+				<field id="importe_percepcion" _preventLoop="true">
+					<label>Percepcion</label>
+					<tipo>numeric</tipo>
+					<size>10</size>
+					<jseval campodestino="importe_movimiento">neto_movimiento + importe_iva + importe_exento + importe_percepcion</jseval>
+					<jseval campodestino="importe_concepto"  >neto_movimiento + importe_exento</jseval>				
+				</field>
+
+				<field id="importe_concepto" local="true" noshow="true">
+					<tipo>numeric</tipo>
+					<size>10</size>             
+				</field>
+				
+				<!-- FIN CALCULO DE IVA -->
+				
+				<field id="importe_movimiento" deshabilitado="true">
+					<label style="font-size: xx-large;">Total</label>
+					<tipo>numeric</tipo>
+					<size>10</size>
+				</field>				
+
+			</fieldGroup>
+		
+			<fieldGroup>
+				<if>if (strpos($_SESSION['properties']['modulos'],'iva') === false) return true;</if>
+				<field id="importe_movimiento">
+					<label style="font-size: xx-large;">Total</label>
+					<tipo>numeric</tipo>
+					<size>10</size>
+				</field>
+			</fieldGroup>
+			
+
+			<fieldGroup>
+				<if>if (strpos($_SESSION['properties']['modulos'],'contabilidad') != false) return true;</if>
+				
+				<validation>
+					<condition><![CDATA['ctbcuenta_id' + 0 == 0]]>
+					</condition>
+					<message>Debe Ingresar una Cuenta Contable de la Cuenta</message>
+				</validation>
+
+				<validation>
+					<condition><![CDATA['ctbcuenta_concepto_id' + 0 == 0]]>
+					</condition>
+					<message>Debe Ingresar una Cuenta Contable para el Concepto</message>
+				</validation>
+
+				<validation>
+					<condition><![CDATA['ctbcuenta_iva_id' + 0 == 0 && 'importe_iva' + 0 != 0 ]]></condition>
+					<message>Debe Ingresar una Cuenta Contable de IVA</message>
+				</validation>
+			
+				<!-- CONTABILIZACION DEL MOVIMIENTO -->
+				<field id="ctbcuenta_id" local="true" noshow="true">
+					<actualiza>
+						<field id="ctbcuenta_reg_id"/>
+					</actualiza>
+				</field>
+
+				<field id="ctbcuenta_reg_id" local="true" noshow="true">
+					<if exp="true">
+						<true>'ctbcuenta_id'</true>
+						<false>''</false>
+					</if>
+				</field>
+				
+				<field id="ctbcuenta_reg_doh" local="true" noshow="true">
+					<if exp="true">
+						<true>imputacion_concepto</true>
+						<false>0</false>
+					</if>
+				</field>
+				
+				<!-- CONTABILIZACION DEL IVA -->
+				<field id="ctbcuenta_iva_id" local="true" noshow="true">
+					<label>Cuenta Contable Iva</label>
+				</field>           
+
+				<field id="ctbcuenta_iva_doh" local="true" noshow="true">
+					<if exp="imputacion_concepto == 0">
+						<true>1</true>
+						<false>0</false>
+					</if>
+				</field>
+
+				<!-- CONTABILIZACION DEL CONCEPTO -->
+				<field id="ctbcuenta_concepto_id" local="true">
+					<label>Cuenta Contable</label>
+					<helper type="external" xml="cuentas_habilitadas_qry.xml" dir="/ayudas" />
+				</field>
+
+				<field id="ctbcuenta_concepto_doh" local="true" noshow="true">
+					<if exp="imputacion_concepto + 0 == 0">
+						<true>1</true>
+						<false>0</false>
+					</if>
+				</field>			
+
+		        <field id="ctbcuenta_per_id" local="true" noshow="true">
+		          <helper type="parameter" id="SIS::04:cuenta_contable_percepcion_bco">
+		            <label>Cuenta Contable para percepciones de bancos</label>
+		            <defaultValue/>
+		          </helper>
+		        </field>
+
+				<field id="ctbcuenta_per_doh" local="true" noshow="true">
+					<if exp="imputacion_concepto == 0">
+						<true>1</true>
+						<false>0</false>
+					</if>
+				</field>
+
+			</fieldGroup>
+			
+			<fieldGroup local="true">
+				<field id="imputado" noshow="true">
+					<valor>1</valor>
+				</field>
+				
+				<field id="muestracheck" noshow="true">
+					<if exp="tipoimpre_concepto != 2">
+						<true>'display:none;'</true>
+						<false>''</false>
+					</if>
+				</field>
+
+				<field id="CHKimprime">
+					<attribute id="style">muestracheck</attribute>
+					<label style="font-size: medium; align: right;" _modpos="nobr">Imprime Comprobante</label>
+					<tipo>check</tipo>
+				</field>
+
+				<field id="impresion" noshow="true" deshabilitado="true">
+					<label>Programa de Impresion</label>
+					<if exp="CHKimprime=='1' || tipoimpre_concepto=='1'">
+						<true>'imprime_concepto'</true>
+						<false>''</false>
+					</if> 
+				</field>	
+			</fieldGroup>
+			
+        </table>
+    </form>
+</histrix>  

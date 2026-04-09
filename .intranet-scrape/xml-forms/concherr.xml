@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8" ?>
+   <histrix tipo="abm">
+       <title>Conceptos de Mov. de Herramientas</title>
+        <obs></obs>
+           <form>
+              <table id="CONCHERR" label="Conceptos Mov. Herram.">
+
+          		  <filters>
+                  <field id="gruher">
+          		      <label>Grupo</label>
+                    <operador>=</operador>
+                  </field>          		    
+          		  </filters>
+
+                <field id="gruher">
+                  <label>Grupo</label>
+                  <help>Grupo al que pertenece el Movimiento</help>
+                  <helper type="combo" id="GRUPOHERR">
+                    <field id="gruher"></field>
+                    <field id="grunom"></field>
+                  </helper>
+                </field>
+
+                <field id="movher">
+                    <label>Cod. Mov.</label>
+                    <help>Código de Movimiento de la Herramienta</help>
+                </field>
+
+                <field id="movnom">
+                    <label>Nombre Mov.</label>
+                    <help>Nombre del Movimiento de Herramientas</help>
+                </field>
+
+                <field id="movtip">
+                    <label>Tipo Movimiento </label>
+                    <help>Tipo de Movimiento</help>
+                </field>
+
+              </table>
+           </form>
+      </histrix>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="update" grabafinal="true">
+	<title>Ingreso Movimiento</title>
+	 <obs></obs>
+		<form>
+		    <table id="STK_INVENTARIOS">
+				<field id="id_stkinventario"       id_temp="id_stkinventario" esClave="true"/>
+				<field id="cerrado"				   id_temp="cerrado" />
+		    </table>
+		</form>
+    </histrix>	

@@ -1,0 +1,144 @@
+<histrix tipo="consulta" path="fotos/articulos" dataSource="listado_expandido" preloadData="false" filter="true">
+  <title>COSTOS</title>
+  <obs></obs>
+  <form  >
+    <table id="VISTA_STK_COSTOS" label="CONSULTA DE COSTOS" _styleTbody="height:500px; overflow-x: hidden;">
+
+    <filters auto="true">
+          <field id="movnro" >
+          <label>Presupuesto</label>
+          <condicion>=</condicion>
+      </field>
+  
+    </filters>
+  
+    <field id="siscod"  noshow="true">
+        <condicion operador="=">'PR'</condicion>
+        <valor>PR</valor>
+    </field> 
+
+    <field id="movcod" noshow="true">
+        <label>movcod</label>
+        <condicion operador="=">1</condicion>
+    </field>
+
+    <field id="movnro" noshow="true" >
+        <helper id="NOTAENCA" type="combo">
+            <field id="movnro">
+                <tipo>integer</tipo>
+            </field>
+            <field id="movref__1">
+                <expression>CONCAT( CONVERT(movnro, CHAR), CONCAT(' - ', movref__1)) </expression>
+            </field>
+            <field id="siscod" oculto="true">
+                <condicion operador="=">'PR'</condicion>
+            </field>
+            <order>
+                <field id="movnro" />
+            </order>
+            <filtra>movnro</filtra>
+        </helper>      
+        <label>Numero</label>
+        <!--<valor>1</valor> 
+        <condicion operador="=">1</condicion>-->
+    </field>
+<!--
+    <field id="fecha" local="true" noshow="true">
+        <label>Fecha</label>
+        <operador>&lt;=</operador>
+        <valor>today</valor>
+        <tipo>date</tipo>
+    </field>
+  -->
+<!--
+    <field id="bom" noshow="true">
+        <expression>ifnull((select 'stkpieza_qry.xml' from STKPIEZA where STKPIEZA.idPadre = STKINSUM.artcod limit 1),'')</expression>
+    </field>
+-->
+    <field id="id_arbol" local="true" esClave="true" export="true">
+	     <label>id</label>
+    </field>
+    <field id="artcod" _esClave="true" linkdir="articulos" _noshow="true" export="true">
+      <label>codigo</label>
+<!--
+    	<helper xml="stkpieza_qry.xml" type="link">
+    	    <parameter source="artcod" target="articulo_hijo" />
+    	</helper>
+-->
+    </field>
+
+      <field id="artdes" tabla="STKINSUM" >
+        <expression>STKINSUM.artdes</expression>
+        <label>Articulo</label>
+        <tipo>varchar</tipo>
+      </field>
+
+      <field id="ctbcod" _print="false" tabla="CTBCUENT">
+        <label>Nro Cta</label>
+        <tipo>varchar</tipo>
+      </field>
+
+      <field id="ctbnom" tabla="CTBCUENT" _print="false">
+        <expression>ctbnom</expression>
+        <label>CtaCtb</label>
+        <tipo>varchar</tipo>
+      </field>
+      <field id="multiplo"  >
+        <label>Mult</label>
+      </field>
+      <field id="cantidad"  >
+	       <expression>movpes</expression>
+        <label>Cantidad</label>
+        <tipo>numeric</tipo>
+      </field> 
+
+      <field id="valcps" noshow="true" tabla="STKINSUM">
+      </field>
+
+      <field id="valuso" noshow="true" tabla="STKINSUM">
+      </field>
+
+      <field id="uninom" tabla="FSMUNIDS" deshabilitado="true">
+        <expression>FSMUNIDS.uninom</expression>
+        <label>Unidad</label>
+        <tipo>char</tipo>
+      </field> 
+
+
+      <field id="costo" noZero="true">
+        <label >Costo</label>
+
+        <tipo>numeric</tipo>
+      </field>     
+
+ 
+      <field id="parcial"  suma="true" local="true" noZero="true">
+        <label>Parcial</label>
+ 
+
+				<if exp="true">
+					<true>costo * cantidad</true>
+					<false></false>
+				</if>
+        <tipo>numeric</tipo>
+      </field> 
+
+      <field id="costo_repo" noZero="true" style="color:blue;">
+        <label >Costo Repo</label>
+
+        <tipo>numeric</tipo>
+      </field>     
+
+      <field id="total_repo" noZero="true" style="color:blue;" suma="true">
+        <label >Total Repo</label>
+
+        <tipo>numeric</tipo>
+      </field>     
+    <field id="color" local="true" clasefila="true" noshow="true" >
+	    <label>COLOR</label>
+    </field>
+
+    </table>
+          
+  </form>
+</histrix>

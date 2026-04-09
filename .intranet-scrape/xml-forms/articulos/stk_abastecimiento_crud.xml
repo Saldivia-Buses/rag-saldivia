@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="crud">
+  <title>Formas de Abastecimiento</title>
+  <obs/>
+  <form >
+    <table id="STK_ABASTECIMIENTO" label="Formas de abastecimiento">
+      <field id="id_abastecimiento" noshow="true" />
+      <field id="forma_abastecimiento">
+        <label>Descripción</label>
+        <size>90</size>
+      </field>
+    </table>
+  </form>
+</histrix>

@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="consulta"  path="fotos/pedidoint">
+    <title>Pedidos Internos</title>
+    <obs></obs>
+    <form >
+        <table id="PEDIDOINT" label="Detalle de insumos pedidos">
+            <field id="sistemp" local="true" oculto="true">
+                <label>sistemp</label>
+                <valor>'50'</valor>
+            </field>
+            <field id="idPed" oculto="true" />
+            <field id="usuario">
+                <label modpos="nobr">Usuario</label>
+	    </field>
+            
+            <field id="fechaemi">
+                <label modpos="nobr">Fec.Pedido</label>
+	    </field>
+            <field id="fecreq" >
+                <label modpos="nobr">Fec.Requerido</label>
+                <help>Fecha de Requerimiento </help>
+                <valor eval="true">date("d/m/Y", mktime(0, 0, 0, date("m")  , date("d")+2, date("Y")))</valor>
+                <jseval actxml="false">straFecha(\'hoy\') &lt;= aFecha(\'fecreq\')</jseval>
+            </field>
+            <field id="artcod" _esClave="true">
+
+                <label>Articulo</label>
+                <help>Codigo de Articulo. </help>
+
+            </field>
+            <field id="artdes" deshabilitado="true" tabla="STKINSUM">
+                <label modpos="nobr">Descripcion</label>
+                <tipo>varchar</tipo>
+                <size>80</size>
+            </field>
+            <field id="cant" incdec="true" _local="true" suma="true" preventLoop="true">
+                <label>Cantidad </label>
+                <help>Cantidad </help>.
+                <tipo>decimal</tipo>
+                <valor>1</valor>
+                <jseval campodestino="conversion">(valuso == 1)?(cant * valcps):(cant / valuso)</jseval>
+            </field>
+
+            <field id="unicps"  deshabilitado="true">
+                <label modpos="nobr">U.Compra</label>
+                <help>Unidad de Medida </help>
+                <tabla_ex id="FSMUNIDS">
+                    <field id="unicod"></field>
+                    <field id="uninom"></field>
+                    <order>
+                        <field id="uninom"></field>
+                    </order>
+                </tabla_ex>
+            </field>
+
+            <field id="artuni" deshabilitado="true" noshow="true">
+                <label modpos="nobr">Unidad de Medida </label>
+                <help>Unidad de Medida </help>
+                <tabla_ex id="FSMUNIDS">
+                    <field id="unicod"></field>
+                    <field id="uninom"></field>
+                    <order>
+                        <field id="uninom"></field>
+                    </order>
+                </tabla_ex>
+            </field>
+
+            <field id="valuso" deshabilitado="true" _noshow="true" tabla="STKINSUM" noshow="true">
+                <label>valor de uso</label>
+            </field>
+            <field id="valcps" deshabilitado="true" _noshow="true" tabla="STKINSUM" noshow="true">
+                <label>valor Compra</label>
+            </field>
+            <field id="conversion" local="true" suma="true"  preventLoop="true" noshow="true">
+                <label>Conv</label>
+                <if exp="valcps == 1" operador="=">
+                    <true> cant / valuso</true>
+                    <false>cant * valcps</false>
+                </if>
+
+            </field>
+
+
+
+            <field id="movref">
+                <label colspan="4">Ref.</label>
+                <help>Referencia </help>
+                <size>200</size>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="mensaje">
+                <label colspan="4">Mensaje Interno</label>
+                <size>200</size>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="fotopath" local="true" noshow="true">
+                <if exp="true">
+                    <true>'../articulos/artcod/'</true>
+                    <false>''</false>
+                </if>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="pedidopath" local="true" noshow="true">
+            <expression>directorio</expression>
+            <!--
+                <parametro id="fsmparam_parent.xml" retorna="parent">
+                        <field id="parcla" oculto="true">
+                                <condicion operador="=">'pednro'</condicion>
+                        </field>
+                        <field id="parent">
+                        </field>
+                </parametro> -->
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="archivo" path="pedidopath" download="true" >
+                <label>Adjunto</label>
+                <tipo >file</tipo>
+                <size>40</size>
+            </field>
+
+            <field id="foto" path="fotopath" download="true" deshabilitado="true">
+                <expression >select ARTICULO_FOTO.foto from ARTICULO_FOTO where ARTICULO_FOTO.idArticulo = PEDIDOINT.artcod order by revision desc limit 1</expression>
+                <label>Imagen</label>
+                <tipo >file</tipo>
+                <size>40</size>
+            </field>
+
+        </table>
+        <join tipo="left">
+    	    <table id="STKINSUM">
+    		<field id="artcod">
+    		    <condicion operador="=">PEDIDOINT.artcod</condicion>
+    		</field>
+    		<field id="siscod">
+    		    <condicion operador="=">'01'</condicion>
+    		</field>
+    	    </table>
+        </join>
+        
+    </form>
+</histrix>

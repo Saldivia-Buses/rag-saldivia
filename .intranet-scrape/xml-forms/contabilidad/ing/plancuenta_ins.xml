@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert">
+    <title />
+    <form>
+        <table id="CTB_CUENTAS">
+
+            <sql>INSERT IGNORE INTO CTB_CUENTAS (id_cuenta, nombre_cuenta, cuenta_superior_id, habilitada, tipo_saldo, codigo_resultados, tipo_id, ejercicio_id, ctbcentro_id, genmoneda_id)
+                 SELECT id_cuenta, nombre_cuenta, cuenta_superior_id, habilitada, tipo_saldo, codigo_resultados, tipo_id, '[__ejecicio_destino_id__]', ctbcentro_id, genmoneda_id FROM CTB_CUENTAS WHERE CTB_CUENTAS.ejercicio_id = '[__ejercicio_origen_id__]'</sql>
+
+            <field id="ejercicio_destino_id"	id_temp="ejecicio_destino_id" local="true" />
+            <field id="ejercicio_origen_id"	id_temp="ejecicio_origen_id" local="true" />
+
+        </table>
+    </form>
+</histrix>

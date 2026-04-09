@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" >
+	<title>CERTIFICADOS FABRICACION</title>
+	<obs></obs>
+	<form >
+		<table id="CHASIS" >
+		    <title>Carrocerias</title>
+			<field id="nrocha">
+				<label>Nro Fab</label>
+			</field>
+			<field id="nro_fab">
+				<expression>nrocha</expression>
+				<label>NroFab</label>
+				<tipo>integer</tipo>
+				
+			</field>			
+<!--			<field id="nvin"  >
+				<label>nvin</label>
+				<expression>concat('8A9',MODCHASIS.codigo , CARROCERIA.codvds , HOMOLOGMOD.admisible,RIGHT(DATE_FORMAT(now(), '%y'), 1),'A127')</expression>
+				<tipo>varchar</tipo>
+			</field> -->
+			<field id="v2"  >
+<!--				<expression>concat('8A9',MODCHASIS.codigo , CARROCERIA.codvds , HOMOLOGMOD.admisible,RIGHT(DATE_FORMAT(now(), '%y'), 1),'A127',(select LPAD(max(substring(nrovin, 15,3)) + 1,3,'0')  from CERTFABRICACION where substring(nrovin, 1 ,14) = concat('8A9',MODCHASIS.codigo , CARROCERIA.codvds , HOMOLOGMOD.admisible,RIGHT(DATE_FORMAT(now(), '%y'), 1),'A127')))</expression>-->
+					<expression>concat('8A9',MODCHASIS.codigo , CARROCERIA.codvds , LPAD(HOMOLOGMOD.admisible, 2, '0' ),  (SELECT code from VINYEAR where VINYEAR.year = YEAR(now())),'A127',(select LPAD(max(substring(nrovin, 15,3)) + 1,3,'0')  from CERTFABRICACION where substring(nrovin, 1 ,14) = concat('8A9',MODCHASIS.codigo , CARROCERIA.codvds , HOMOLOGMOD.admisible, (SELECT code from VINYEAR where VINYEAR.year = YEAR(now())),'A127')))</expression>
+
+				<tipo>integer</tipo>
+			</field>
+	
+    			<order>
+				<field id="nrocha"></field>
+			</order>
+		</table>
+		<join tipo="left">
+               <table id="PEDCOTIZ">
+					<field id="nrocha">
+					       <condicion operador="=">CHASIS.nrocha</condicion>
+					</field>
+				</table>		
+		</join>
+    
+		<join tipo="left">
+               <table id="HOMOLOGMOD">
+				    	<field id="id_homologacion">
+					    <condicion operador="=">PEDCOTIZ.homologacion_id</condicion>
+				        	</field>
+
+				</table>		
+		</join>			
+		<join tipo="left">
+               <table id="CARROCERIA">
+					<field id="nrocar">
+					       <condicion operador="=">HOMOLOGMOD.nrocar</condicion>
+					</field>
+				</table>		
+		</join>		
+		<join tipo="left">
+			<table id="MARCHASIS">
+				<field id="marcod">
+					<condicion operador="=">CHASIS.marcod</condicion>
+				</field>
+			</table>
+		</join>		
+		<join tipo="left">
+			<table id="MODCHASIS">
+				<field id="modcha">
+					<condicion operador="=">CHASIS.modcha</condicion>
+				</field>
+				<field id="marcod">
+					<condicion operador="=">CHASIS.marcod</condicion>
+				</field>
+			</table>
+		</join>		
+	</form>	   
+</histrix> 

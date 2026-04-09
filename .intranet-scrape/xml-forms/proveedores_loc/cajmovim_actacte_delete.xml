@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="delete">
+       <title>Mov de caja</title>
+        <obs></obs>
+               <form >
+					<table id="CAJMOVIM" label="MOVIMIENTOS" idCampoCond="actacte">
+						
+						<field id="siscod" id_temp="siscaj" esClave="true" />
+						<field id="cajfec" id_temp="fecha_movimiento" esClave="true" />
+						<field id="cajcod" id_temp="cajcod" esClave="true" />
+						<field id="cajnro" id_temp="nro_movimiento" esClave="true" />
+						<field id="concod" id_temp="cajcod" esClave="true" /> 
+						<field id="cajcta" id_temp="nro_cuenta" esClave="true" />
+						
+					</table>
+               </form>
+        </histrix>

@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+  <title>balance general</title>
+  <obs/>
+  <consulta _detalle="movimientos_lib_mayor_qry.xml">
+    <table id="CTB_CUENTAS" label="Balance comparativo">
+      <filters>
+        <field id="fecha_movimiento1d" >
+          <label>Periodo Desde</label>
+          <operador>&gt;</operador>
+          <valor>today</valor>
+        </field>
+        <field id="fecha_movimiento1h">
+          <label modpos="nobr">Hasta</label>
+          <operador>&lt;</operador>
+          <valor>today</valor>
+        </field>
+        <field id="fecha_movimiento2d" >
+          <label>Periodo Desde</label>
+          <operador>&gt;</operador>
+          <valor>today</valor>
+        </field>
+        <field id="fecha_movimiento2h">
+          <label modpos="nobr">Hasta</label>
+          <operador>&lt;</operador>
+          <valor>today</valor>
+        </field>
+        <field id="ejercicio_id">
+          <label>Ejercicio</label>
+          <operador>=</operador>
+        </field>
+      </filters>
+      <field id="id_cuenta" autoinc="true" noshow="false" arbol="hijo">
+        <helper type="external" xml="cuentas_help.xml" dir="/contabilidad/ing"></helper>
+        <label>Cuenta</label>
+        <help>Codigo de cuenta</help>
+        <detalle>cuenta_id</detalle>
+        <condicion operador="!=">0</condicion>
+      </field>
+      <field id="id_cuenta2" noshow="true" local="true">
+        <expresion having="false">id_cuenta</expresion>
+        <helper type="external" xml="cuentas_help.xml" dir="/contabilidad/ing"></helper>
+        <label>Cuenta 2</label>
+        <help>Codigo de cuenta</help>
+      </field>
+      <field id="nombre_cuenta">
+        <label>Descripcion</label>
+        <help>Comienzo de la cuenta contable</help>
+      </field>
+      <field id="tipo_id" colstyle="display:none;">
+        <helper type="combo" xml="ctbtipos_crud.xml" dir="/contabilidad/man" ></helper>
+        <label>Tipo de cuenta</label>
+        <help>Tipo de cuenta contable</help>
+      </field>
+      <field id="cuenta_superior_id" colstyle="display:none;" arbol="padre">
+        <label>Cuenta superior</label>
+        <help>Cuenta superior a esta cuenta contable</help>
+        <valor>0</valor>
+      </field>
+      <field id="tipo_saldo" colstyle="display:none;" noshow="false">
+        <options>
+          <option valor="0">Deudor</option>
+          <option valor="1">Acreedor</option>
+        </options>
+        <label>Tipo saldo</label>
+        <help>Tipo de salgo de la cuenta debe o haber</help>
+      </field>
+      <field id="periodo1" local="true" suma="true">
+        <label>Periodo 1</label>
+        <expresion>
+          <![CDATA[select sum((CASE WHEN CTB_MOVIMIENTOS.fecha_movimiento <= STR_TO_DATE('[__fecha_movimiento1h__]', '%d/%m/%Y') and CTB_MOVIMIENTOS.fecha_movimiento >= STR_TO_DATE('[__fecha_movimiento1d__]', '%d/%m/%Y') then round(importe, 2) END) * (case when doh = 1 then 1 else -1 end)) as periodo1]]>
+        </expresion>
+        <tipo>numeric</tipo>
+      </field>
+      <field id="periodo2" local="true" suma="true">
+        <label>Periodo 2</label>
+        <expresion>
+          <![CDATA[select sum((CASE WHEN CTB_MOVIMIENTOS.fecha_movimiento <= STR_TO_DATE('[__fecha_movimiento2h__]', '%d/%m/%Y') and CTB_MOVIMIENTOS.fecha_movimiento >= STR_TO_DATE('[__fecha_movimiento2d__]', '%d/%m/%Y') then round(importe, 2) END) * (case when doh = 1 then 1 else -1 end)) as periodo2]]>
+        </expresion>
+        <tipo>numeric</tipo>
+      </field>
+      <field id="periodo3" local="true">
+        <label>Periodo 3</label>
+      </field>
+      <field id="periodo4" local="true">
+        <label>Periodo 4</label>
+      </field>
+      <field id="ejercicio_id" colstyle="display:none;">
+        <helper type="combo" xml="ctbejercicio_qry.xml" dir="/ayudas">
+          <field id="activo" tipoOrden="DESC"/>
+        </helper>
+        <label>Ejercicio</label>
+        <help>Ejercicio al que pertenece la cuenta</help>
+        <detalle>ejercicio_id</detalle>
+      </field>
+      <field id="fecha_movimiento1d" local="true" noshow="true">
+        <label>Periodo 1 Desde</label>
+        <tipo>date</tipo>
+      </field>
+      <field id="fecha_movimiento1h" local="true" noshow="true">
+        <label>Periodo 1 Hasta</label>
+        <tipo>date</tipo>
+      </field>
+      <field id="fecha_movimiento2d" local="true" noshow="true">
+        <label>Periodo 2 Desde</label>
+        <tipo>date</tipo>
+      </field>
+      <field id="fecha_movimiento2h" local="true" noshow="true">
+        <label>Periodo 2 Hasta</label>
+        <tipo>date</tipo>
+      </field>
+      <group>
+        <field id="id_cuenta"/>
+      </group>
+    </table>
+    <join tipo="left">
+      <table id="CTB_MOVIMIENTOS">
+        <field id="ejercicio_id">
+          <condicion operador="=">CTB_CUENTAS.ejercicio_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="inner">
+      <table id="CTB_CONCEPTOS">
+        <field id="id_concepto">
+          <condicion operador="=">concepto_id</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join tipo="left">
+      <table id="CTB_DETALLES">
+        <field id="movimiento_id">
+          <condicion operador="=">CTB_MOVIMIENTOS.id_movimiento</condicion>
+        </field>
+        <field id="cuenta_id">
+          <condicion operador="=">id_cuenta</condicion>
+        </field>
+      </table>
+    </join>
+  </consulta>
+</histrix>

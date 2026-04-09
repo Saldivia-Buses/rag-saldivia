@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="nosql" >
+	<title/>
+    <obs/>
+    <form>
+        <table id="REG_MOVIMIENTOS">
+		    <ejecuta>
+
+			    <![CDATA[ if( 'fiscal' == '1' ) {
+				    try 
+					{
+
+						$calculo = new EmiteFiscal();
+						$calculo->setHomo( $_SESSION['properties']['wsafiphomo'] );
+						$calculo->imprimir('id_regmovim');
+						$Nheader = 'Factura Electrónica Emitida';
+						$Ntext   = 'nombre_movimiento';
+
+						$code    = array('0' =>"Histrix.notification('id_regmovim', {icon:'mail_send.png',title:'$Nheader',text:'$Ntext' })");
+						echo Html::scriptTag($code);
+ 
+
+				    } 
+					catch(Exception $e)
+					{
+						loger($e->getMessage(), 'webservice.log');
+						_rollback_transaction('',false);
+                       
+                       $Nheader = 'Factura Electrónica nombre_movimiento';
+                       $Ntext   = 'Error: '.trim(addslashes($e->getMessage()));
+                       $code    = array('0'=>"Histrix.notification('id_regmovim', {icon:'mail_send.png',title:'$Nheader',text:\"$Ntext\"})");
+                       echo Html::scriptTag($code);
+						
+						ob_get_clean();
+						header('HTTP/1.1 500 Bad Request', $e->getMessage());
+						die($e->getMessage());
+				    }
+				
+				} else {
+
+				}]]>
+		    </ejecuta>
+			<field id="id_regmovim" lastId="pos_regmovimientos_ins.xml"/>
+		   	<field id="fiscal" id_temp="fiscal" />
+        </table>
+    </form>
+</histrix>

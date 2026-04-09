@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="UTF8"?>
+<histrix tipo="grid" subtipo="vertical" deleteRow="false" imprime="false" path="fotos/articulos" _preloadData="false" process="true" inserta="false">
+	<title>Puestos de Trabajo</title>
+	<customScript>
+	    $('select:visible').change();
+	</customScript>
+	<form>
+
+		<table id="PERSONAL_ARTICULOS" label="Secciones">
+
+			<movimientos cabecera="seguridad_articulos_cab.xml">
+				<relacion id="seguridad_articulos_ins.xml" />
+			</movimientos>
+
+			<fieldGroup>
+				<if> return ($_SESSION['mobile'] !== 'true' ? true : false); </if>
+				<field id="id_personalart" noshow="true">
+					<label>Cod</label>
+					<help>Codigo</help>
+				</field>
+				<!-- <field id="fotopath" local="true" noshow="true">
+					<if exp="true">
+						<true>'artcod/'</true>
+						<false>''</false>
+					</if>
+					<tipo>varchar</tipo>
+				</field>
+			</fieldGroup>
+
+			<fieldGroup>
+                <if> return ($_SESSION['mobile'] !== 'true' ? true : false); </if> 
+				<field id="foto" path="fotopath" download="true" watermark="artcod">
+					<expression><![CDATA[SELECT AF.foto FROM ARTICULO_FOTO AF WHERE AF.idArticulo = PERSONAL_ARTICULOS.artcod AND AF.foto != '' LIMIT 1]]></expression> 
+					<label>Imagen</label>
+					<tipo>file</tipo>
+					<size>40</size> 
+				</field> -->
+			</fieldGroup> 
+
+			<fieldGroup>
+				<field id="id_stkarticulo" tabla="STK_ARTICULOS" deshabilitado="true">
+					<label modpos="nobr">Cod.</label>
+					<size>8</size>
+				</field>
+
+				<field id="nombre_articulo" tabla="STK_ARTICULOS" deshabilitado="true">
+					<label modpos="nobr">Descrip.</label>
+					<size>40</size>
+				</field>
+
+<!--                <field id="stock_actual">
+					<label>Stock -fija</label>
+				    <expression>select stock_actual from STK_ARTICULO_LOCACION left join STK_LOCACION on stklocacion_id = id_stklocacion where stkarticulo_id = artcod and stklocacion_id = stklocacion_fija_id</expression>
+			    </field>
+-->
+
+<!--
+                <field id="depcod" local="true" _noshow="true" editable="true">
+	                <label>Depósito Origen</label>
+	                <helper xml="deposito_articulo_qry.xml" dir="/stock_local/qry" type="combo" _empty="true">
+	                	<parameter source="artcod" target="stkarticulo_id" />
+	                	<field id="stkarticulo_id" oculto="true">
+							<condicion operador="=" valorde="artcod"></condicion>
+	                	</field>
+	            	</helper>
+	            </field>
+-->
+
+                <field id="dias_recambio">
+					<label>Recambio</label>
+					<tipo>integer</tipo>
+				</field>
+
+				<field id="ultima">
+					<label>Última</label>
+					<expression>@ultima:=(SELECT fecha_movimiento FROM STK_MOVIMIENTOS WHERE STK_MOVIMIENTOS.stkarticulo_id = STK_ARTICULOS.id_stkarticulo AND STK_MOVIMIENTOS.subsistema_id = '01' AND STK_MOVIMIENTOS.opecod = PERSONAL.opecod ORDER BY fecha_movimiento desc LIMIT 1)</expression>
+					<tipo>date</tipo>
+				</field>
+
+				<field id="transcurrido" _style="text-align:right;padding-right:5px;" noshow="true">
+					<label>Transcurrido</label>
+					<expression>@transcurrido:=IFNULL( DATEDIFF(NOW(), @ultima), dias_recambio)</expression>
+				</field>
+<!-- variante con var 25 seg y sin var repitiendo la consulta 27 seg alla -->				
+ 				<field id="faltan" local="true">
+					<label>Faltan (días)</label>
+					<expression>case when (dias_recambio - @transcurrido) &gt; 0 then (dias_recambio - @transcurrido) else '' end</expression>
+					<!-- <if exp="dias_recambio &gt;= transcurrido)">
+						<true>dias_recambio - transcurrido . ' días'</true>
+						<false>''</false>
+					</if> -->
+				</field>
+			
+			<!--<fieldGroup>
+                <if> return ($_SESSION['mobile'] !== 'true' ? true : false); </if> 
+                <field id="observacion">
+					<label>Observación</label>
+				</field>
+			</fieldGroup> -->
+<!--            	<field id="stkdeposito_id" noshow="true" tabla="STK_STOCKACTUAL">
+			<condicion operador="=">40 or STK_STOCKACTUAL.stkdeposito_id = 33</condicion>
+            	</field>
+-->
+            	<field id="stklocacion_id" noshow="true" >
+           			<expression>SELECT stklocacion_fija_id FROM STK_ARTICULOS where id_stkarticulo = artcod</expression>
+				</field>
+           		
+                <field id="movcant" local="true" noshow="true">
+					<label>Cant</label>
+					<valor>1</valor>
+				</field>
+
+				<field id="opecla" local="true" noshow="true">
+					<valor eval="true">$_SESSION['usuario']</valor>
+				</field>
+
+				<field id="nopermito_grabar" local="true" noshow="true">
+				    <if exp=" (dias_recambio &gt; transcurrido) ">
+						<true>'true'</true>
+						<false>'false'</false>
+				    </if>
+				</field>
+
+				<field id="graba" local="true">
+					<attribute id="deshabilitado">nopermito_grabar</attribute>
+					<label>Todos</label>
+					<tipo>check</tipo>
+				</field>
+
+				<field id="color" clasefila="true" noshow="true" local="true">
+					<if exp="'nopermito_grabar' == 'false'">
+						<true>'resaltadoVioleta'</true>
+						<false>''</false>
+					</if>
+				</field>
+				<field id="opecod" noshow="true" valauto="true" tabla="PERSONAL">
+					<label>OpeCod</label>
+				</field>
+
+                <field id="IdPersona" noshow="true" _valauto="true">
+					<label>Cuenta</label>
+				</field>
+			
+                <field id="artcod" noshow="true">
+					<label>Artículo</label>
+					<tipo>varchar</tipo>
+				</field>
+		<field id="dep_id" local="true" noshow="true">
+					<label>Dep</label>
+					<valor>40</valor>
+				</field>	
+		<field id="loc_id" local="true" noshow="true">
+					<label>Loc</label>
+					<valor>1779</valor>
+				</field>	
+			</fieldGroup>
+		
+		</table>
+
+		<join>
+			<table id="STK_ARTICULOS">
+				<field id="id_stkarticulo">
+					<condicion operador="=">PERSONAL_ARTICULOS.artcod</condicion>
+				</field>
+				<field id="subsistema_id">
+					<condicion operador="=">'01'</condicion>
+				</field>
+			</table>
+		</join>
+
+		<join>
+			<table id="PERSONAL">
+				<field id="IdPersona">
+					<condicion operador="=">PERSONAL_ARTICULOS.IdPersona</condicion>
+				</field>
+			</table>
+		</join>
+
+<!--		<join>
+            <table id="STK_STOCKACTUAL">
+                <field id="stkarticulo_id">
+                    <condicion operador="=">STK_ARTICULOS.id_stkarticulo</condicion>
+                </field>
+            </table>
+        </join>  
+-->
+	</form>
+</histrix>

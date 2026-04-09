@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" preloadData="false" imprimetanda="true" pageBreak="false" PDFsincabecera="true" _imprime="false">
+  <titulo>Artículo por Locación</titulo>
+  <obs/>
+  <form detalle="stkarticulo_locacion_etiqueta.xml">
+    <table id="STK_ARTICULO_LOCACION">
+      <title>Artículo por locación </title>
+    	<filters auto="true">
+        <field id="stkdeposito_id"  tabla="STK_LOCACION" >
+          <label>Depósito</label>
+          <operador>=</operador>
+        </field>    
+        <field id="codigo_locacion" tabla="STK_LOCACION" >
+        	<label>Código Locación</label>
+        	<operador>like</operador>
+        </field>
+
+        <field id="stkarticulo_id">
+          <label>Artículo</label>
+          <helper id="STK_ARTICULOS" type="external">
+            <field id="id_stkarticulo">
+            </field>
+            <field id="nombre_articulo" >
+              <detalle>nombre_articulo</detalle>
+            </field>
+
+          </helper>
+        	<operador>=</operador>
+        </field>
+    	    
+    	</filters>
+      <field id="id_articulo_locacion" noshow="true" autoinc="true" >
+        <detalle>id_articulo_locacion</detalle>
+      </field>
+
+      <field id="stklocacion_id" noshow="true" _oculto="true" />
+      
+      <field id="stkdeposito_id"  tabla="STK_LOCACION" noshow="true">
+        <helper id="STK_DEPOSITOS" type="combo">
+            <field id="id_stkdeposito" />
+            <field id="nombre_deposito" />
+        </helper>
+      </field>
+
+    <field id="codigo_locacion" tabla="STK_LOCACION" noshow="true">
+	     <label>Código Locación</label>
+    </field>
+
+    <field id="nombre_locacion" tabla="STK_LOCACION" noshow="true">
+    	<label>Locación</label>
+    </field>
+
+    <field id="stkarticulo_id" posX="10" PDFsize="40" PDFnolabel="true">
+      <label>Artículo</label>
+      <helper id="STK_ARTICULOS" type="external">
+        <field id="id_stkarticulo">
+        </field>
+        <field id="nombre_articulo" >
+          <detalle>nombre_articulo</detalle>
+        </field>
+      </helper>
+    </field>
+
+    <field id="nombre_articulo" tabla="STK_ARTICULOS" deshabilitado="true" posY="+0.1" posX="20" PDFsize="30" pdfancho="197" PDFnolabel="true" >
+      <label>Nombre</label>
+      <expression>left(nombre_articulo, 40)</expression>
+    </field>
+
+    <order>
+	<field id="codigo_locacion" />
+    </order>
+    </table>
+    <join>
+      <table id="STK_LOCACION">
+        <field id="id_stklocacion">
+          <condicion operador="=">stklocacion_id</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join>
+      <table id="STK_ARTICULOS">
+        <field id="id_stkarticulo">
+          <condicion operador="=">stkarticulo_id</condicion>
+        </field>
+      </table>
+    </join>
+
+  </form>
+</histrix>

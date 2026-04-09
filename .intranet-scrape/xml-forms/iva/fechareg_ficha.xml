@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="fichaing" preFetch="true" inserta="false" borra="false" limit="1" modifica="false">
+    <title>Modificacion de Movimientos</title>
+    <obs></obs>
+    <eventos>
+        <event id="procesar">close</event>
+    </eventos>
+    <form>
+        <table id="REG_MOVIMIENTOS">
+
+            <movimientos>
+                <relacion id="regmovimiento_upd.xml" />
+                <relacion id="ctbmovimiento_upd.xml" />
+            </movimientos>
+
+            <field id="id_regmovim" noshow="true" esClave="true" deshabilitado="true" />
+
+            <field id="fecha_movimiento" deshabilitado="true">
+                <label>Fecha Movimiento</label>
+                <tipo>date</tipo>
+            </field>
+
+            <field id="nombre_cuenta" tabla="REG_CUENTA" deshabilitado="true">
+                <label>Cuenta</label>
+            </field>
+
+            <field id="numero_comprobante">
+                <label>Nro Comprobante</label>
+                <expression>CONCAT(REG_CONCEPTOS.abreviacion_concepto,' ',REG_MOVIMIENTOS.letra_movimiento,' ',LPAD(REG_MOVIMIENTOS.puesto_movimiento,4,0),'-',LPAD(REG_MOVIMIENTOS.nro_movimiento,8,0))</expression>
+                <size>30</size>
+            </field>
+
+            <field id="importe_movimiento" deshabilitado="true">
+                <label>Importe</label>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="reg_fecha">
+                <label>Fecha Registracion</label>
+                <tipo>date</tipo>
+            </field>
+
+            <field id="id_movimiento" tabla="CTB_MOVIMIENTOS" noshow="true" />
+
+            <field id="modifica_asiento" noshow="true">
+                <expression>ifnull(CTB_MOVIMIENTOS.id_movimiento, 0)</expression>
+            </field>
+
+            <field id="usuario_modificacion" noshow="true" valauto="true" local="true">
+                <valor eval="true">$_SESSION['usuario']</valor>
+            </field>
+
+            <field id="separador" local="true" style="height: 3px;" deshabilitado="true" />
+
+        </table>
+
+        <join>
+            <table id="CTB_MOVIMIENTOS">
+                <field id="regmovim_id">
+                    <condicion operador="=">REG_MOVIMIENTOS.id_regmovim</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join>
+            <table id="REG_CONCEPTOS">
+                <field id="id_concepto">
+                    <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join>
+            <table id="REG_CUENTA">
+                <field id="id_regcuenta">
+                    <condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

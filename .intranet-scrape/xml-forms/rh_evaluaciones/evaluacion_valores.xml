@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+    <title>Valores por grupos</title>
+    <obs></obs>
+    <form>
+        <table id="RH_EVALUACION_VALORES" >
+            <title>Valores por grupos</title>
+            
+			<field id="rhevaluaciongrupo_id" esClave="true" noshow="true"/>      
+
+            <field id="inf">
+                <expression>CONCAT(valor, '- ', nombre_valor, ': ', desc_valor)</expression>
+            </field>
+        
+       </table>
+    </form>
+</histrix> 

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ing" procesa="false" exportasuma="true" llenoreferente="true" llenotemporal="true" tooltip="false" showCantidad="false" updateTotals="true">
+    <title>Detalle</title>
+    <obs></obs>
+    <form>
+        <table id="CAJ_DETALLES">
+
+            <movimientos>
+                <relacion id="cajdetalle_ins.xml" />
+            </movimientos>
+
+        <fieldGroup noshow="true">
+
+            <field id="id_cajdetalle" oculto="true">
+                <condicion operador="=">-1</condicion>
+            </field>
+
+            <field id="ctbcuenta_detalle" local="true" />
+
+            <field id="ctbcuenta_referencia" local="true" />
+
+            <field id="imputacion_concepto" local="true" valauto="true">
+                <tipo>integer</tipo>
+                <actualiza>
+                    <field id="ctbcuenta" destino="imputacion_cuenta" oculto="true"/>
+                </actualiza>
+            </field>
+
+        </fieldGroup>
+
+        <fieldGroup style="vertical-align:middle;padding:2px 2px 2px 2px;">
+
+            <field id="ctbcuenta" local="true" required="true">
+                <label>Cuenta</label>
+                <helper type="combo" xml="ctbcuentas_aux_qry.xml" dir="/ayudas" empty="true">
+                    <field id="imputacion_cuenta" oculto="true" >
+                        <condicion operador="=">1</condicion>
+                        <!-- fijo provisoriamente xq no trae el valor de la imputacion por defecto ( 1 )-->
+                    </field>
+                </helper>
+                <size>14</size>
+            </field>
+
+            <field id="doh_detalle" local="true" noshow="true">
+                <if exp="imputacion_concepto == 0">
+                    <true>1</true>
+                    <false>0</false>
+                </if>
+            </field>
+
+            <field id="importe_detalle" suma="true">
+                <label>Importe</label>
+                <jseval campodestino="importe_movimiento" total="true" actxml="false">importe_detalle</jseval>
+                <detalle>importe_movimiento</detalle>
+                <jseval>importe_detalle</jseval>
+                <tipo>custom_numeric</tipo>
+                <size>20</size>
+            </field>
+
+        </fieldGroup>
+
+
+        </table>
+    </form>
+</histrix>

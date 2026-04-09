@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+	<histrix tipo="abm" >
+		<title>PIE</title>
+		<obs></obs>
+		<form >
+			<table id="COTIZPIE"	>
+				<title>PIE DE LA COTIZACION</title>
+				<field id="idPie" autoinc="true" noshow="true">
+					<label>id</label>
+
+				</field>
+				<field id="orden">
+					<label>Orden</label>
+				</field>				
+				<field id="texto">
+					<label>Texto del Pie</label>
+					<size>100</size>
+
+				</field>
+				<order>
+					<field id="orden"></field>
+				</order>
+
+				
+			</table>
+		</form>
+	</histrix>

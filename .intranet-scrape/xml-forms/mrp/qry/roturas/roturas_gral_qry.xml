@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="dashboard">
+    <titulo>Estadistica de Roturas</titulo>
+
+    <widget id="roturas_producto"  width="48%" height="50%">
+        <title>Roturas por Producto</title>
+        <url><![CDATA[histrixLoader.php?xml=roturas_producto_graph.xml&dir=/mrp/qry/roturas/]]></url>
+    </widget>
+
+    <widget id="roturas_seccion"  width="48%">
+        <title>Roturas por Seccion</title>
+        <url><![CDATA[histrixLoader.php?xml=roturas_seccion_graph.xml&dir=/mrp/qry/roturas/]]></url>
+    </widget>
+
+    <widget id="consulta"  width="97%" height="50%">
+        <title>Distribucion Detallada</title>
+        <url><![CDATA[histrixLoader.php?xml=roturas_producto_seccion_qry.xml&dir=/mrp/qry/roturas/]]></url>
+    </widget>
+
+    <widget id="fabricado_perdida" width="97%" height="50%">
+        <title>Fabricado / Perdida por Producto</title>
+        <url><![CDATA[histrixLoader.php?xml=fab_per_producto_graph.xml&dir=/mrp/qry/roturas/]]></url>
+    </widget>
+
+</histrix>
+
+
+

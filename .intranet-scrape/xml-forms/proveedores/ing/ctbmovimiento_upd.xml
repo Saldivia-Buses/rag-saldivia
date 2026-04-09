@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="update" >
+  <title>Asiento Contable</title>
+  <obs/>
+  <form >
+    <table id="CTB_MOVIMIENTOS">
+      <field id="id_movimiento"	 esClave="true"	lastId="ctbmovimiento_ins.xml"/>
+      <field id="regmovim_id" 			lastId="regmovimiento_ins.xml"/>
+    </table>
+  </form>
+</histrix>

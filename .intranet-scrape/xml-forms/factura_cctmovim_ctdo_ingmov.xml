@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+	<histrix tipo="insert" grabafinal="true">
+		<title>FACTURA</title>
+		<obs></obs>
+			<form >
+				<table id="REG_MOVIMIENTOS" label="FACTURAS" idCampoCond="grabactdo" CondExp=" == 1">
+
+					<field id="subsistema_id" id_cab="siscod" ></field>
+					<field id="nro_cuenta" id_cab="ctacod"></field>
+					<field id="regcuenta_id" id_cab="regcuenta_id"></field>
+					<field id="nombre_movimiento" id_cab="ctanom">
+					</field>
+					<field id="catganancias_id" id_cab="catganancias_id">
+					</field>
+					<field id="fecha_movimiento" id_cab="movfec">
+					</field>
+					<field id="concod" id_cab="conpag">
+					</field>
+					<field id="puesto_movimiento" id_cab="movnpv">
+					</field>
+					<field id="nro_movimiento" id_cab="movnro">
+					</field>
+					<field id="importe_movimiento" id_temp="total">
+					</field>
+					<field id="neto_movimiento" id_temp="neto"></field>						
+					<field id="codigo_numero" id_cab="codigoNumero">
+					</field>
+					<field id="referencia_movimiento" id_cab="referencia_movimiento">
+					</field>
+
+					<field id="cuota_movimiento" id_cab="movcta">
+					</field>
+					<field id="succod" id_cab="movcta">
+					</field>
+					<field id="vencimiento_movimiento" id_cab="movvto">
+					</field>
+
+					<field id="zoncod" id_cab="zoncod">
+					</field>
+					<field id="letra_movimiento" id_cab="movlet">
+					</field>
+					<field id="login" id_cab="opecla">
+					</field>
+					<field id="regmin" esNroMinuta="true">
+					</field> 
+					<field id="reg_fecha" id_cab="hoy" >
+					</field>
+					<field id="descuento_1" id_cab="descuento1"></field>
+					<field id="descuento_2" id_cab="descuento2"></field>						
+					<field id="mar_movimiento" id_cab="segmto"></field>
+					<field id="importe_iva" id_temp="iva" />
+
+
+					<field id="referencia_movimiento" id_cab="pagref"></field>
+					<field id="regmin" esNroMinuta="true">
+						</field>
+
+				</table>
+			</form>
+	</histrix>

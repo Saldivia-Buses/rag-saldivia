@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="chart">
+    <title>Consulta de Producción</title>
+    <obs/>
+    <form>
+        <table id="MRP_DETALLE_REGISTRO" label="Consulta de Producción">
+            
+            <grafico id="produccion_seccion">
+                <ancho>400</ancho>
+                <tipo>C</tipo>
+                <etiquetas>nombre_mrpseccion</etiquetas>
+                <serie>cantidad</serie>
+                
+                <title>Produccion por sección</title>
+            </grafico>
+        
+            <filters>
+                <field id="fecha_registro" deshabilitado="false">
+                    <label>Desde</label>
+                    <valor eval="true">date('d/m/Y', mktime(0, 0, 0, date(&quot;m&quot; ) , 1, date(&quot;Y&quot;)  ))</valor>
+                    <operador>&gt;=</operador>
+                </field>
+                <field id="fecha_registro" deshabilitado="false">
+                    <label>Hasta</label>
+                    <valor>today</valor>
+                    <operador>&lt;=</operador>
+                </field>
+            </filters>
+            <field id="fecha_registro" noshow="true" >
+                <expresion having="false">date(fecha_carga)</expresion>
+                <label>año</label>
+                <tipo>date</tipo>
+            </field>
+            <field id="mrpseccion_id">
+                <label>Seccion</label>
+            </field>            
+            <field id="nombre_mrpseccion" tabla="MRP_SECCION">
+            </field>
+
+            <field id="cantidad">
+                <label>cantidad</label>
+                <expresion>round(sum(cantidad ),0)</expresion>
+                <tipo>numeric</tipo>
+            </field>
+            <field id="mrpconcepto_id">
+                <condicion operador="=">1</condicion>
+            </field>
+            <group>
+                <field id="mrpseccion_id"/>
+            </group>
+        </table>
+        <join tipo="left">
+            <table id="MRP_SECCION">
+                <field id="id_mrpseccion">
+                    <condicion operador="=">mrpseccion_id</condicion>
+                </field>
+            </table>
+        </join>        
+    </form>
+</histrix>

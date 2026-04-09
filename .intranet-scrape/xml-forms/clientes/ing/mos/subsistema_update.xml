@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="update">
+    <title />
+    <form>
+        <table id="REG_MOVIMIENTOS" idCampoCond="facturar">
+            <field id="id_regmovim"  	id_temp="id_regmovim" esClave="true" />
+            <field id="subsistema_id"	id_temp="subsistema_fiscal" />
+        </table>
+    </form>
+</histrix>

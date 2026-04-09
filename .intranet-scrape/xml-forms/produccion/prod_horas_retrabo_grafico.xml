@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="chart">
+    <title></title>
+    <obs/>
+    <form>
+    <table id="PROD_CONTROL_MOVIM">
+
+		<grafico id="Ventas">
+			
+			<tipo>C</tipo>
+
+			<etiquetas>modelo_control</etiquetas> 
+			<serie>cantidad_retrabajo</serie>
+
+			<title>Cantidad de horas de retrabajo</title>
+			<subtitulo></subtitulo>
+		</grafico>
+
+    	<filters>
+    		<field id="fecha_control" deshabilitado="false">
+          		<label>Fecha Desde</label>
+          		<operador>&gt;=</operador>
+        	</field> 
+
+    		<field id="fecha_control" deshabilitado="false">
+          		<label modpos="nobr">Fecha Hasta</label>
+          		<operador>&lt;=</operador>
+        	</field>
+    	</filters>
+
+    	<field id="nombre_control" tabla="PROD_CONTROLES">
+    		<label>Nombre Control</label>
+    	</field>
+
+    	<field id="modelo_control" tabla="PROD_CONTROLES">
+    		<label>Modelo Control</label>
+    	</field>
+
+        <field id="fecha_control">
+        	<label>Fecha control</label>
+        	<tipo>date</tipo>
+        </field>
+
+        <field id="horas_retrabajo">
+        	<label>Horas Retrabajo</label>
+        	<condicion operador="&gt;">0</condicion>
+        </field>
+
+		<field id="cantidad_retrabajo">
+        	<label>Horas Retrabajo</label>
+        	<expression>SUM(horas_retrabajo)</expression>
+        </field>
+
+        <group>        	
+        	<field id="modelo_control"/>
+        </group>
+
+    </table>
+
+	<join tipo="left">
+		<table id="PROD_CONTROLES" >
+			<field id="id_prodcontrol">
+				<condicion operador="=">PROD_CONTROL_MOVIM.prodcontrol_id</condicion>	
+			</field>
+		</table>
+	</join>
+
+	</form>
+</histrix>

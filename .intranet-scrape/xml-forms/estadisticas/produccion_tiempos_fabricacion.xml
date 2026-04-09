@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="chart">
+	<title>CAMBIOS COCHES</title>
+	<obs></obs>
+	<form >
+		<table id="GEN_CALENDAR" >
+			<title>Coches</title>
+	 
+		   <grafico id="Tiempo" >
+			   <ancho>400</ancho>
+			   <tipo>L</tipo>
+			   <objective>25</objective>
+			   <etiquetas>mes</etiquetas> 
+<!--			   <serie>cambios</serie> -->
+			   <serie>tiempo</serie>
+			   
+			   <title>Tiempo Promedio entre ingreso y terminacion</title>
+			   <subtitulo></subtitulo>
+		   </grafico>		
+		    <filters>
+			    <field id="fecha">
+				    <label>Desde</label>
+				    <valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m" ,strtotime('-6 month')) , 1, date("Y") -  1 ))</valor>
+				    <operador>&gt;=</operador>
+			    </field>
+			    <field id="fecha">
+                    <label>Hasta</label>
+				    <valor eval="true">date('d/m/Y', strtotime('-1 second', strtotime(date('Y-m-01'))))</valor>
+				    <operador>&lt;=</operador>
+			    </field>
+		    </filters> 
+
+			<field id="mes">
+				<expression>month(fecha)</expression>
+				<label>Mes</label>
+				<options>
+					<option valor="1">Ene</option>
+					<option valor="2">Feb</option>
+					<option valor="3">Mar</option>
+					<option valor="4">Abr</option>
+					<option valor="5">May</option>
+					<option valor="6">Jun</option>
+					<option valor="7">Jul</option>
+					<option valor="8">Ago</option>
+					<option valor="9">Sep</option>
+					<option valor="10">Oct</option>
+					<option valor="11">Nov</option>
+					<option valor="12">Dic</option>
+
+				</options>
+       				<tipo>varchar</tipo>
+			</field>
+                    <field id="fecha" oculto="true">
+<!--                        <condicion operador="&gt;="> DATE_FORMAT(date_sub(date(now()) , interval 1 year) ,'%Y-%m-01') and GEN_CALENDAR.fecha &lt;= now()</condicion> -->
+			<tipo>date</tipo>
+                    </field>
+                    <field id="year" oculto="true">
+                        <expression>year(fecha)</expression>
+
+                    </field>
+<!--			<field id="cambios">
+                             <expression><![CDATA[select count(*) from PEDCOTIZ inner join ACCESORIOS_COCHE on ACCESORIOS_COCHE.ficha_id = PEDCOTIZ.id  where 
+			    			  year(PEDCOTIZ.terminacion) = year(GEN_CALENDAR.fecha) and month(PEDCOTIZ.terminacion) = month(GEN_CALENDAR.fecha)]]></expression>
+
+				<label>Cambios</label>
+                                <tipo>numeric</tipo>
+			</field> -->
+			<field id="tiempo">
+<!--                             <expression><![CDATA[select ROUND(AVG(DATEDIFF((case when terminacion = '0000-00-00' then fechasal else terminacion end) , 
+			    					     (case when (ingresoLinea = '0000-00-00' or month(GEN_CALENDAR.fecha) = 1) then fechaing else ingresoLinea end)
+
+)) , 0) 
+			    from PEDCOTIZ inner join TURNOSPRODUCCION on TURNOSPRODUCCION.nrofab = PEDCOTIZ.nrocha WHERE 
+			    year(PEDCOTIZ.terminacion) = year(GEN_CALENDAR.fecha) and month(PEDCOTIZ.terminacion) = month(GEN_CALENDAR.fecha)
+			    ]]></expression>
+			    -->
+                             <!--<expression><![CDATA[round(avg((select DATEDIFF((case when terminacion = '0000-00-00' then fechasal else terminacion end) , 
+			    					     (case when (ingresoLinea = '0000-00-00' or month(GEN_CALENDAR.fecha) = 1) then fechaing else ingresoLinea end)
+
+ )
+			    from PEDCOTIZ inner join TURNOSPRODUCCION on TURNOSPRODUCCION.nrofab = PEDCOTIZ.nrocha WHERE 
+			    PEDCOTIZ.terminacion = GEN_CALENDAR.fecha limit 1)), 0)
+			    ]]></expression>-->
+			    <expression><![CDATA[
+					SELECT round(avg(DATEDIFF(terminacion, ingresoLinea)) , 0)
+					FROM PEDCOTIZ
+					WHERE year(PEDCOTIZ.terminacion) = year(GEN_CALENDAR.fecha)
+					    AND month(PEDCOTIZ.terminacion) = month(GEN_CALENDAR.fecha)
+					    AND terminacion != '0000-00-00'
+					    AND ingresoLinea != '0000-00-00'
+			    ]]></expression>
+
+				<label>Dias</label>
+                <tipo>numeric</tipo>
+			</field>
+			
+			<group>
+                <field id="year"></field>
+				<field id="mes"></field>
+			</group>
+		</table>
+		
+	</form>	   
+</histrix> 

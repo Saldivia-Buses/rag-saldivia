@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="update">
+    <title>COMPROBANTES</title>
+    <obs></obs>
+    <form>
+        <table id="REG_MOVIMIENTOS" label="FACTURAS">
+            <campo id="subsistema_id" id_cab="siscod" esClave="true">
+            </campo>
+            <campo id="nro_cuenta" id_cab="ctacod" esClave="true">
+            </campo>
+            <campo id="fecha_movimiento" id_temp="movfec" esClave="true">
+            </campo>
+            <campo id="concod" id_temp="concod" esClave="true">
+            </campo>
+            <campo id="puesto_movimiento" id_temp="movnpv" esClave="true">
+            </campo>
+            <campo id="nro_movimiento" id_temp="movnro" esClave="true">
+            </campo>
+            <campo id="saldo_movimiento" id_temp="newsaldo">
+            </campo>
+
+            <campo id="movicc" id_cab="concod">
+            </campo>
+            <campo id="movipv" id_cab="movnpv">
+            </campo>
+            <campo id="movinc" id_cab="movnroOP">
+            </campo>
+<!--						<campo id="regmin" > 
+						</campo> 
+						
+						-->
+						
+        </table>
+    </form>
+</histrix>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert" evento="insert" log="false">
+  <title>Ingreso Movimientos Stock</title>
+  <obs/>
+  <form>
+    <table id="STK_MOVIMIENTO_TRAZ" label="Ingreso de movimientos">
+
+      <field id="stkmovimiento_id" 
+        
+        lastId="stkmovimientos_trazables_corte_ing.xml" >
+      </field>
+    
+
+      <field id="stkarticulo_id"  id_temp="stkarticulo_id" />
+        
+      <field id="serial" id_temp="serial">
+      </field>
+
+      <field id="fecha_desde" id_temp="fecha_desde">
+      </field>
+
+      <field id="fecha_hasta"  id_temp="fecha_hasta">
+      </field>
+
+      <field id="observaciones" id_temp="observaciones">
+      </field>
+
+      <field id="cantidad" id_temp="cantidad">
+      </field>
+
+    </table>
+  </form>
+</histrix>

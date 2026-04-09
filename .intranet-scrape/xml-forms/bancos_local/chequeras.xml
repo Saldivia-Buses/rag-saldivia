@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="crud">
+  <title>Cuentas Bancarias</title>
+  <obs/>
+  <form >
+    <table id="REG_CHEQUERAS" >
+      <title>Chequeras</title>
+
+    <filters auto="true">
+        <field id="ccbcod">
+            <label modpos="nobr">Banco</label>
+            <help>Buscar</help>
+            <operador>=</operador>
+        </field>                               
+    </filters>
+
+
+      <field id="id_regchequera" deshabilitado="true" noshow="true" esClave="true">
+        <label>Numero Chequera</label>
+        <help>Nro Chequera</help>
+      </field>
+
+      <field id="ccbcod" _oculto="true">
+        <label>Banco</label>
+        <help>Codigo de Cuenta Bancaria</help>
+       		<tabla_ex id="BCSCUENT">
+      			<field id="ccbcod"></field>
+      			<field id="ccbnom"></field>
+      			<filtra>ccbcod</filtra>
+          </tabla_ex>
+      </field>
+
+      <field id="nro_cuenta">
+        <label>Cuenta Bancaria</label>
+        <help>Cuenta Bancaria</help>
+      </field>
+
+      <field id="tipo">
+       <label>Tipo</label>
+        <help>Tipo de Chequera</help>
+        <options>
+        	<option valor="0">Manual</option>
+        	<option valor="1">Automático</option>
+        </options>
+      </field>     
+      <field id="numero_inicio">
+        <label>Nro.Inicio</label>
+        <help>NroInicio</help>
+      </field>
+      <field id="numero_fin">
+        <label>Nro.Fin</label>
+        <help>NroFin</help>
+      </field>
+
+
+      <field id="fecha_inicio">
+        <label>Fecha Inicio</label>
+        <help>Fecha Inicio</help>
+      </field>
+      <field id="fecha_fin">
+        <label>Fecha Fin</label>
+        <help>Fecha Fin</help>
+      </field>
+      <field id="numero">
+        <label>Numero Actual</label>
+        <help>Número de cheque Actual</help>
+      </field>
+
+      <field id="printer">
+        <label>Impresora</label>
+        <help>Impresora</help>
+      </field>
+  
+
+    </table>
+  </form>
+</histrix>

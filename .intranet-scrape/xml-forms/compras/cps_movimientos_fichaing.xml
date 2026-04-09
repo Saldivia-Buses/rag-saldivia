@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="fichaing" borra="false" modifica="false" imprime="false" cancel="false" inserta="false" preFetch="true" log="false">
+    <title>ORDEN DE COMPRA</title>
+    <obs></obs>
+    <customScript>
+	$('.delrow', '#Formcps_movimientos_fichaing_xml').hide();
+    </customScript>
+    <eventos>
+   	<event id="procesar">close</event>
+   </eventos>
+    <form>
+        
+        <table id="CPSENCAB" label="ORDEN DE COMPRA">
+	    <movimientos>
+		<relacion id="cps_movimientos_upd.xml" />
+		<relacion id="cps_htxlog_ins.xml" />
+	    </movimientos>
+
+            <field id="ctacod"  deshabilitado="true" noshow="true" print="false">
+                <label size="23" posx="6" posy="24" PDFsize="11">Prv</label>
+                <help>Codigo de Cuenta</help>
+            </field>
+
+            <field id="ctanom" tabla="CCTCUENT" >
+                <expression>concat('(',CCTCUENT.ctacod, ') ',CCTCUENT.ctanom)</expression>
+                <label size="23" posx="6" posy="+1" PDFsize="11" rowspan="2">Proveedor</label>
+                <help>Nombre del proveedor</help>
+                <tipo>varchar</tipo>
+		<size>50</size>
+            </field>
+           
+            <field id="ocpnro" deshabilitado="true" print="false" esClave="true">
+                <label _size="27" _posx="130" _posy="+1"  _PDFsize="11">Numero O.C.</label>
+                <help>Numero de Orden de Compra</help>
+            </field>
+
+            <field id="ocpfec" _deshabilitado="true" esClave="true">
+                <label>Fecha O.C</label>
+                <help>Fecha O.C.</help>
+		<tipo>date</tipo>
+            </field>
+
+	    <field id="fpago">
+		<label >Forma de Pago</label>
+		<helper type="combo" xml="HLPformapago_qry.xml" dir="/ayudas_local" empty="true"/>
+	    </field>
+	
+	    <field id="cpsformaenvio_id">
+		<label >Forma de Envío</label>
+		<helper type="combo" xml="HLPcpsformaenvio_qry.xml" dir="/ayudas_local" empty="true"/>
+	    </field>
+
+	    <field id="totalimp" local="true" noshow="true">
+		<expression>SELECT SUM(importe_total) FROM CPSMOVIM WHERE ocpnro = CPSENCAB.ocpnro AND movfec = CPSENCAB.ocpfec</expression>
+		<label>Totali</label>
+	    </field>
+	    <field id="new_total" local="true" refresh="true" noshow="true">
+		<label>Totaln</label>
+		<tipo>numeric</tipo>
+	    </field>
+	    <field id="old_estado" noshow="true">
+		<expression>CPSENCAB.ocpest</expression>
+	    </field>
+            <field id="importe_auditoria" _deshabilitado="true" noshow="true" local="true">
+                <label modpos="nobr">auditoria</label>
+                <parametro id="cpsparam.xml" retorna="pardec">
+                    <field id="parcla" oculto="true">
+                        <condicion operador="=">'impaud'</condicion>
+                    </field>
+                </parametro>
+            </field>
+            <field id="dolar_auditoria" deshabilitado="true" _noshow="true" local="true">
+                <label modpos="nobr" sincelda="true">auditoría dolar</label>
+                <parametro id="cpsparam.xml" retorna="pardec">
+                    <field id="parcla" oculto="true">
+                        <condicion operador="=">'usaud'</condicion>
+                    </field>
+                </parametro>
+            </field>             
+            
+            <field id="moneda_id" noshow="true">
+                <expression>(select moneda_id from CPSMOVIM where CPSMOVIM.ocpnro = CPSENCAB.ocpnro and CPSMOVIM.movfec = CPSENCAB.ocpfec LIMIT 1)</expression>
+
+            </field>
+
+	    <field id="new_estado" local="true" noshow="true">
+		<if exp="'new_total' == 'totalimp' || 'old_estado' == '2'">
+		    <true>'old_estado'</true>
+		    <false>(new_total + 0 != totalimp + 0)?((new_total + 0 &gt; ( (moneda_id + 0 == 1)?importe_auditoria + 0:dolar_auditoria  + 0 ) + 0)?0:1):'old_estado'</false>
+		</if>
+	    </field>
+            <field id="ocpobs">
+                <label  colspan="4" posx="6" posy="+1"  PDFsize="10" >Observaciones</label>
+                <help>Observaciones</help>
+                <tipo>varchar</tipo>
+		<size>100</size>
+            </field>
+
+            <field id="movimientos" local="true">
+                <label colspan="4" posx="6" posy="+6" PDFsize="8"></label>
+                <help>Nombre del proveedor</help>
+		<helper type="object" xml="cpsmovim_ing.xml" dir="/compras">
+		    <parameter source="ocpnro" target="ocpnro" />
+		    <parameter source="ocpfec" target="movfec" />
+		</helper>
+            </field>
+
+            <field id="estado">
+                <label posx="10" posy="130" PDFsize="52" PDFbold="true" PDFrotate="-10"></label>
+                   <expression>(case when ocpest = 0 then 'ORDEN DE COMPRA\n\n\n\n   NO AUTORIZADA' else '' end)</expression>
+            </field>
+
+	    <field id="xml_rev" local="true" noshow="true">
+		<valor>'cps_movimientos_fichaing.xml'</valor>
+		<tipo>varchar</tipo>
+	    </field>
+	    <field id="nombre_rev" local="true" noshow="true">
+		<valor>'ORDEN DE COMPRA'</valor>
+		<tipo>varchar</tipo>
+	    </field>
+	    <field id="hora_rev" local="true" noshow="true">
+		<label></label>
+		<valor eval="true">date("Y-m-d H:i:s")</valor>
+		<tipo>varchar</tipo>
+	    </field>
+	    <field id="fecha_rev" local="true" noshow="true">
+		<label></label>
+		<valor>today</valor>
+		<tipo>date</tipo>
+	    </field>
+	    <field id="usuario_rev" local="true" noshow="true">
+		<label modpos="nobr"/>
+		<valor eval="true">$_SESSION['usuario']</valor>
+	    </field>
+
+	    <field id="obs_rev" local="true" style="font-weight:bold;">
+		<label>Revision</label>
+		<size>80</size>
+	    </field>
+
+	    <field id="separador01" local="true" deshabilitado="true">
+	    </field>
+        </table>
+        <join tipo="left">
+            <table id="CCTCUENT">
+                <field id="siscod" oculto="true">
+                    <label>CCTCUENT.siscod</label>
+                    <condicion operador="=">'01'</condicion>
+                </field>
+                <field id="ctacod" oculto="true">
+                    <condicion operador="=">CPSENCAB.ctacod</condicion>
+                </field>
+            </table>
+        </join>
+   <!--     <join tipo="left">
+            <table id="CCTCONTA">
+                <field id="siscod">
+                    <label>cctcuent.siscod</label>
+                    <condicion operador="=">'01'</condicion>
+                </field>
+
+                <field id="ctacod" >
+                    <condicion operador="=">CPSENCAB.ctacod</condicion>
+                </field>
+
+            </table>
+        </join>
+-->
+    </form>
+</histrix>

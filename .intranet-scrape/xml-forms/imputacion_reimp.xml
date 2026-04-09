@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<abm tipo="ficha" sololectura="true">
+	<titulo>IMPUTACIONES</titulo>
+	<obs></obs>
+	<consulta>
+<!--	<consulta>-->
+		<tabla id="CCTIMPUT" label="Imputaciones">
+			<campo id="siscod" oculto="true">
+				<label>Codigo Sistema.</label>
+			</campo>
+
+			<campo id="ctacod" >
+				<label posx="6" posy="+4" >Cliente </label>
+			</campo>
+			<campo id="nroimp" >
+				<label posx="96" posy="0">Numero Imputacion</label>
+			</campo>
+			
+			<campo id="ctanom" tabla="CCTCUENT">
+				<label posx="6" posy="+4" >Nombre </label>
+			</campo>
+			<campo id="fecha" >
+				<label posx="6" posy="+2">Fecha</label>
+			</campo>			
+			<campo id="Imputaciones" local="true" obj="imputacion_reimp_cons.xml">
+				<label colspan="4" posx="6" posy="+4" PDFsize="8"></label>
+				<paring destino="ctacod">ctacod</paring>
+				<paring destino="nroimp">nroimp</paring>
+				<paring destino="fecha">fecha</paring>				
+			</campo>			
+			
+		</tabla>
+		
+		<join tipo="left">
+			<tabla id="CCTCUENT">
+				<campo id="siscod" oculto="true">
+					<condicion operador="=">CCTIMPUT.siscod</condicion>
+					
+				</campo>
+				<campo id="ctacod" oculto="true">
+					<condicion operador="=">CCTIMPUT.ctacod</condicion>
+				</campo>
+			</tabla>
+		</join>
+	</consulta>
+</abm>

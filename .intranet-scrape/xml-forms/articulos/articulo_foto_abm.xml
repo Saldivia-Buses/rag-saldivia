@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+  <histrix tipo="abm-mini" path="fotos/articulos" subtipo="vertical" log="true" logReference="idArticulo">
+    <title>Documento por Articulo</title>
+    <obs></obs>
+    <form >
+      <table id="ARTICULO_FOTO" label="Articulo Documento">
+
+      <field id="idFoto" noshow="true" esClave="true" log="false">
+          <label>Documento</label>
+          <help>Documento</help>
+        </field>        
+
+        <field id="idArticulo" oculto="true">
+          <label>Articulo</label>
+          <help>Codigo de Articulo</help>
+        </field>
+
+        <field id="_ORDEN" local="true" deshabilitado="true" noshow="true">
+        </field>
+
+        <field id="foto" foto="true" path="idArticulo">
+            <label>Documento</label>
+            <help>Documento del Artículo</help>
+            <size>50</size>
+            <tipo Type="Image">file</tipo>
+        </field>
+
+      <field id="revision">
+          <label modpos="nobr">Revisión</label>
+          <help>Revisión</help>
+          <valor>00</valor>
+          <tipo>integer</tipo>
+      </field>
+
+      <field id="vigencia_desde">
+          <label modpos="nobr">Vig.Desde</label>
+          <help>Vig.Desde</help>
+          <tipo>date</tipo>
+          <valor>today</valor>
+      </field>
+
+      <field id="modificacion">
+          <label modpos="nobr">Modificación</label>
+          <help>Modificación</help>
+          <size>200</size>
+      </field>
+
+  <field id="secciones" local="true" _cellMaxLength="50" Formstyle="display:none;">
+    <helper type="link" xml="prod_planos_distribucion.xml" dir="/fabricacion/">
+        <parameter source="idFoto" target="foto_id" />
+    </helper>
+    <label>Distribución</label>
+    <help>Distribución donde se publica</help>
+    <expression>SELECT IFNULL(GROUP_CONCAT(" " , concat(Nombre, ' ', apellido)), 'Distribución')  
+        FROM PRD_PLANOS_DISTRIBUCION pd LEFT JOIN HTXUSERS H ON pd.usuario_entregado = H.Id_usuario 
+        WHERE pd.foto_id = idFoto</expression>
+    </field>
+
+      <field id="usuario" noshow="true" deshabilitado="true">
+              <label modpos="nobr">Usuario</label>
+              <valor eval="true">$_SESSION['usuario']</valor>
+      </field>
+
+      <field id="userid" >
+        <label>Cargó</label>
+        <expression>concat(HTXUSERS.Nombre,' ', HTXUSERS.apellido,' ', stamp)</expression>
+        <size>25</size>
+      </field>
+
+        <field id="mailto"  deshabilitado="true" noshow="true">
+          <expression>CONCAT('martinm@saldiviabuses.com.ar', ';', 'diegov@saldiviabuses.com.ar')</expression>
+        </field>
+
+          <field id="mailsubj" noshow="true" >
+            <expression>CONCAT('Modificacion Plano ', idArticulo, ' Rev ', revision)</expression>
+          </field>
+
+          <field id="mailbody" noshow="true">
+            <expression><![CDATA[CONCAT(
+
+              'Att Sres.</br>Las modificaciones fueron las siguientes:
+              </br>', ARTICULO_FOTO.modificacion,' </br></br>
+              Por favor comunicar a quien corresponda.</br>Saludos</br></br>', HTXUSERS.apellido, ', ', HTXUSERS.Nombre, '</br>0341-4921135</br>Ruta 21 KM 7 PIA LOTE 0004 7 - Alvear (2126) - Santa Fe - Argentina</br><a href="www.saldiviabuses.com.ar" >www.saldiviabuses.com.ar</a>'
+
+              )]]>
+            </expression>
+          </field>
+
+            <field id="filtmail" noshow="true">
+              <expression>CONCAT('+"Modificacion Plano" +', idArticulo)</expression>
+            </field>
+
+          <field id="email" colstyle="width:auto;" deshabilitado="false" local="true" Formstyle="display:none;">
+              <helper type="link" xml="mails_send.xml" dir="/histrix/mensajeria/" title="Entrega Unidad" width="700" height="600">
+                  <parameter source="mailto"  target="para" />
+                  <parameter source="mailsubj" target="subject" />
+                  <parameter source="mailbody" target="mensaje" />
+              </helper>
+              <expression><![CDATA['<img src="../img/mail_generic.png"/>']]></expression>
+          </field>
+          
+          <field id="filtmail_param" noshow="true">
+              <expression>CONCAT('Modificacion Plano ', idArticulo)</expression>
+          </field>
+          
+          <field id="Emails" _showTablaObj="true" local="true">
+              <helper type="link" xml="email_subj_qry.xml" dir="/email">
+                  <parameter target="subject" source="filtmail_param" operator="like"/>
+              </helper>
+              <label>Correos</label>
+              <help></help>
+             <expression sql="true"><![CDATA[
+              SELECT CONCAT(
+              (SELECT COUNT(*)  FROM HTXMAIL WHERE MATCH(subject) AGAINST ('[__filtmail__]' IN BOOLEAN MODE)),' Env.')]]></expression>
+          </field>
+
+      <order>
+        <field id="revision" tipoOrden="DESC"/>
+      </order>
+
+      </table>
+
+    <join tipo="left">
+        <table id="HTXUSERS">
+          <field id="login">
+            <condicion operador="=">usuario</condicion>
+          </field>
+        </table>
+    </join>
+
+</form>
+</histrix>

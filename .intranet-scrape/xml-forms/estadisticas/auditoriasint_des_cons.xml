@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="chart">
+	<title>Puntuaciones de Auditorías</title>
+	<obs></obs>
+	<form >
+		<table id="GEN_CALENDAR" >
+			<title>Puntuaciónd de auditoría</title>
+
+			<grafico id="Resultados encuestas" >
+				<ancho>400</ancho>
+				<tipo>L</tipo>
+				<etiquetas>mes</etiquetas> 
+				<serie>promedio</serie>
+<!--				<serie>cantidad</serie>      -->
+				<title>Tendencia de puntaje x Mes</title>
+			</grafico>		
+
+			<filters>
+				<field id="fecha">
+					<label>Desde</label>
+					<valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m" ,strtotime('-12 month')) , 1, date("Y") -  1 ))</valor>
+					<operador>&gt;=</operador>
+				</field>
+				<field id="fecha">
+					<label>Hasta</label>
+					<valor eval="true">date('d/m/Y', strtotime('-1 second', strtotime(date('Y-m-01'))))</valor>
+					<operador>&lt;=</operador>
+				</field>
+  			</filters>
+
+			<field id="mes" oculto="true">
+				<expression>month(GEN_CALENDAR.fecha)</expression>
+				<label>Mes</label>
+				<options>
+					<option valor="1">Ene</option>
+					<option valor="2">Feb</option>
+					<option valor="3">Mar</option>
+					<option valor="4">Abr</option>
+					<option valor="5">May</option>
+					<option valor="6">Jun</option>
+					<option valor="7">Jul</option>
+					<option valor="8">Ago</option>
+					<option valor="9">Sep</option>
+					<option valor="10">Oct</option>
+					<option valor="11">Nov</option>
+					<option valor="12">Dic</option>
+				</options>
+				<tipo>varchar</tipo>
+			</field>
+
+			<field id="fecha" oculto="true">
+			<!--	<condicion operador="&gt;="> DATE_FORMAT(date_sub(date(now()) , interval 1 year) ,'%Y-%m-01') and GEN_CALENDAR.fecha &lt;= now()</condicion>-->
+				<tipo>date</tipo>
+			</field>
+			
+			<field id="year" oculto="true">
+				<expression>year(GEN_CALENDAR.fecha)</expression>
+			</field><!--
+
+			<field id="idPregunta" tabla="ENCUESTA_CLIENTE_ITEM">
+				<helper type="combo" id="ENCUESTA_PREGUNTA" empty="true">
+					<field id="idPregunta"/>
+					<field id="pregunta"/>
+				</helper>
+				<label>Pregunta</label>
+
+			</field>
+
+			<field id="auditoriaintpunt_id" tabla="CAL_AUDITORIA_INT">
+				<helper type="combo" id="CAL_AUDITORIA_PUNTUACION" empty="true">
+					<field id="id_auditoriaintpunt"/>
+					<field id="val">
+						<expression>CONCAT('[', puntaje, ']')</expression>
+					</field>
+				</helper>
+				<label>Puntuación</label>
+				<condicion operador="IS NOT">NULL</condicion>
+			</field>
+-->
+			<field id="promedio">
+				<expression>IFNULL(ROUND(AVG(CAL_AUDITORIA_PUNTUACION.puntaje), 2), 0)</expression>
+				<label>Puntuación promedio</label>
+			</field>
+
+			
+			<field id="cantidad">
+				<expression>COUNT(CAL_AUDITORIA_INT.id_auditoriaint)</expression>
+				<label>Cantidad de realizadas</label>
+			</field>
+
+			<group>
+				<field id="year" />
+				<field id="mes" />
+			</group>
+			<order>
+				<field id="auditoriaintpunt_id" tabla="CAL_AUDITORIA_INT"/>
+			</order>
+		
+		</table>
+	
+		<join tipo="left">
+			<table id="CAL_AUDITORIA_INT">
+				<field id="fecha_auditoriaint">
+					<condicion operador="=">GEN_CALENDAR.fecha</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="CAL_AUDITORIA_PUNTUACION">
+				<field id="id_auditoriaintpunt">
+					<condicion operador="=">CAL_AUDITORIA_INT.auditoriaintpunt_id</condicion>
+				</field>
+			</table>
+		</join>
+	</form>	   
+</histrix> 

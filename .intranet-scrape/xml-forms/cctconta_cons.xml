@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+	<histrix tipo="consulta">
+		<title>CONTACTOS</title>
+		<obs></obs>
+		<form >
+			<table id="CCTCUENT" label="Contactos">
+
+			 <filters>
+				    <field id="catcod">
+				    	<label>Categoría</label>
+				    	<operador>=</operador>
+				    </field>
+			  </filters>
+
+				<field id="siscod" oculto="true">
+					<label>Codigo Sistema </label>
+				</field>
+				<field id="catcod" noshow="true">
+					<label>Categoría</label>
+					<helper type="combo" id="CCTCATGS">
+						<field id="catcod"></field>
+						<field id="catnom"></field>
+						<field id="siscod" oculto="true"/>
+					</helper>
+				</field>
+				<field id="baja" oculto="true">
+					<condicion operador="=">0</condicion>
+				</field>				
+				<field id="ctacod" >
+					<label>Cuenta</label>
+				</field>
+			<!--	<field id="ctanom">
+					<label>Cuenta </label>
+					<help>Nombre del contacto</help>
+				</field> -->
+				<field id="ctafan" ldifName="o">
+					<label modpos="nobr">Nom.Fantasía</label>
+					<help>Nombre de fantasía</help>
+					<tipo>varchar</tipo>
+				</field>
+							<field id="ctaloc">
+				<label modpos="nobr">Localidad </label>
+			</field>
+			
+			<field id="prvcod">
+				<label modpos="nobr">Provincia </label>
+				<help modpos="nobr">
+				</help>
+				<tabla_ex id="FSMPROVS">
+					<field id="prvcod"></field>
+					<field id="prvnom"></field>
+				</tabla_ex>
+				
+			</field>
+			
+				
+				<field id="ctatel" ldifName="telephoneNumber">
+					<label modpos="nobr">Tel.</label>
+					<help>Teléfono Principal</help>
+				</field>			
+				<field id="cargo" tabla="CCTCONTA">
+					<label>Cargo </label>
+					<help>Cargo </help>
+					<tabla_ex id="CARGOS">
+						
+						<field id="cargo" clave="true"></field>
+						<field id="nombre"></field>
+					</tabla_ex>
+					<tipo>varchar</tipo>
+				</field> 
+				<field id="nombre" tabla="CCTCONTA" >
+					<label>Nombre </label>
+					<help>Nombre del contacto</help>
+					<tipo>character</tipo>			
+							
+				</field>
+				<field id="cn" ldifName="cn" local="true" noshow="true">
+					<expression>case when nombre != '' then nombre else ctafan end</expression>
+					
+					<tipo>varchar</tipo>
+				</field>
+
+
+				<field id="sn" ldifName="sn" local="true" noshow="true">
+					<expression>case when nombre != '' then nombre else ctafan end</expression>
+					
+					<tipo>varchar</tipo>
+				</field>				
+				
+				<field id="hascum" noshow="true">
+				    <expression>case when fecha_cump != '0000-00-00' then 1 else 2 end</expression>
+				</field>
+
+				<field id="CUMPLEE" noshow="true" clasefila="true">
+				    <expression>case when fecha_cump = date(now()) then 'error' end</expression>
+				</field>
+				<field id="dif" >
+    				    <label>Cumpleaños</label>
+				
+				    <expression having="false">case when fecha_cump != '0000-00-00' then STR_TO_DATE(concat(day(fecha_cump),',', MONTH(fecha_cump),',', YEAR(NOW())), '%d,%m,%Y') end</expression>
+				    <tipo>date</tipo>
+				</field>
+
+				<field id="dif2" >
+    				    <label>Días</label>
+				
+				    <expression having="false">(case when fecha_cump != '0000-00-00' and 
+					STR_TO_DATE(concat(day(fecha_cump),',', MONTH(fecha_cump),',', YEAR(NOW())), '%d,%m,%Y') &gt;= date(now())
+				    then 
+				    datediff(STR_TO_DATE(concat(day(fecha_cump),',', MONTH(fecha_cump),',', YEAR(NOW())), '%d,%m,%Y') , date(now()))
+				    
+				    end)</expression>
+				</field>
+				<field id="fecha_cump" noshow="true">
+				    <expression>fecha_cump</expression>
+				</field>
+								
+				<field id="mail" tabla="CCTCONTA" print="false" ldifName="mail">
+					<label>Mail </label>
+					<help>	</help>
+					<tipo>character</tipo>
+				</field>
+				<field id="Telefono" tabla="CCTCONTA" ldifName="mobile">
+					<label>Teléfono </label>
+					<help></help>
+					<tipo>character</tipo>
+
+				</field>
+				<field id="movil" tabla="CCTCONTA">
+					<label>Celular</label>
+				</field>
+				
+				<order>
+				    <field id="hascum" />
+				
+				    <field id="dif2" />
+				    <field id="fecha_cump" />
+
+				</order>
+					
+			</table>
+                  <join tipo="left">
+                    <table id="CCTCONTA">
+                        <field id="siscod" oculto="true">
+                            <condicion operador="=">CCTCUENT.siscod</condicion>
+
+                        </field>
+                        <field id="ctacod" oculto="true">
+                            <condicion operador="=">CCTCUENT.ctacod</condicion>
+                        </field>
+
+                    </table>
+                  </join>
+		
+		</form>
+	</histrix>

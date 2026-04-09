@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="fichaing" inserta="false" modifica="false">
+  <title>Generar Inventario</title>
+  <obs/>
+  <form>
+    <table id="STK_INVENTARIOS" label="Generar Inventario">
+      <validation>
+        <condition>
+          <![CDATA[ 'stkdeposito_id' == 0 ]]>
+        </condition>
+        <message>Debe Ingresar un Depósito</message>
+      </validation>
+      <movimientos>
+        <relacion id="stkinventario_insumas_ins.xml" />
+        <relacion id="stkinventarionum_insumas_upd.xml" />
+        <relacion id="stkinventario_insumas_print.xml" />
+      </movimientos>
+      <field id="id_stkinventario" noshow="true" autoinc="true"/>
+      <field id="nro_inventario" print="false" deshabilitado="true">
+        <helper type="parameter" id="ID_CTRL_INVENTARIO" >
+          <label>Numerador de Control de Inventario</label>
+        </helper>
+        <label>Control de Inventario Nº</label>
+      </field>
+      <field id="impresion" local="true" noshow="true">
+        <helper type="parameter" id="XML_IMP_CTRL_INVENTARIO" >
+          <label>XML de Impresión</label>
+          <defaultValue>/stock/qry/imp_stkinventario_insumas_qry.xml</defaultValue>
+        </helper>
+      </field>
+      <field id="fecha_inventario" deshabilitado="true" print="false">
+        <label modpos="nobr">fecha</label>
+        <valor>today</valor>
+        <tipo>date</tipo>
+      </field>
+      <field id="nextnro" noshow="true" print="false">
+        <expression sql="true">
+          (SELECT option_value + 1 FROM HTXOPTIONS where option_name = 'ID_CTRL_INVENTARIO')
+        </expression>
+      </field>
+      <field id="opname" local="true" noshow="true" print="false">
+        <valor>ID_CTRL_INVENTARIO</valor>
+      </field>
+      <field id="usuario_id" noshow="true" print="false">
+        <valor eval="true">$_SESSION['idUser']</valor>
+      </field>
+      <field id="stkdeposito_id" local="true">
+        <label>Depósito</label>
+        <helper type="combo" xml="stkdeposito_qry.xml" dir="/ayudas" empty="true"/>
+        <actualiza>
+          <field id="stkarticulo_id" destino="stkdeposito_id" xml="stkinventario_generar_insumas_ing.xml" />
+        </actualiza>
+      </field>
+      <field id="stkinventariodetalles" local="true">
+        <helper type="object" xml="stkinventario_generar_insumas_ing.xml" ></helper>
+        <label  colspan="4"/>
+      </field>
+    </table>
+  </form>
+</histrix>

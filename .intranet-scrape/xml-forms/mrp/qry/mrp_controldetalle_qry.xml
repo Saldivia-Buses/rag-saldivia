@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+    <title>DETALLE ORDEN PRODUCCION</title>
+    <obs></obs>
+    <form >
+        <table id="MRP_CONTROL_DETALLE" label="CONTROLES CALIDAD" >
+
+            <field id="id_mrpcontroldetalle"     noshow="true" esClave="true"/>
+
+            <field id="mrpordendetalle_id"   noshow="true" />
+            
+            <field id="mrpcontrol_id"  noshow="true"></field>
+    
+            <field id="nombre_control" PDFcolWidth="35px">
+            	<expresion>nombre_control</expresion>
+            	<label>Control</label>
+            </field>
+
+            <field id="peso_control" style="text-align:center;width:40px;" PDFcolWidth="12px">
+            	<expresion>peso_control</expresion>
+            	<label>Valor</label>
+            </field>
+
+            <field id="control_estado" tabla="MRP_CONTROL_DETALLE" style="text-align:center;width:30px;" PDFcolWidth="8px">
+            	<label>S</label>
+            	<tipo>check</tipo>
+            </field>
+
+            <field id="control_observacion" tabla="MRP_CONTROL_DETALLE" >
+        	       <label>observacion</label>
+            </field>
+
+        </table>
+
+
+        <join tipo="left">
+    	    <table id="MRP_CONTROLES">
+        		<field id="id_mrpcontrol">
+        		    <condicion  operador="=">mrpcontrol_id</condicion>
+        		</field>
+    	    </table>
+    	    
+        </join>
+    </form>
+</histrix>

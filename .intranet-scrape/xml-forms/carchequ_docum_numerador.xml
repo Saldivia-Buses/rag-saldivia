@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<abm tipo="consulta">
+	<titulo>NUMERADOR CHEQUES</titulo>
+	<obs></obs>
+	<consulta>
+		<tabla id="CARCHEHI" label="PARAMETRO">
+			<campo id="carint">
+				<expresion>GREATEST(max(carint) , ifnull((SELECT max(carint) from CARCHEQU where CARCHEQU.siscod = '15'), 0)) </expresion>
+				<label>Numero</label>
+			</campo>
+
+		</tabla>
+		<join>
+		</join>
+	</consulta>	   
+</abm> 

@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="arbol">
+	<title>MENU DEL SISTEMA</title>
+	<obs>
+		Mediante este módulo se administran las opciones del menú del sistema
+	</obs>
+	<form _detalle="profileAuthItem.xml" inline="true">
+		<table id="HTXMENU" label="MENU">
+<!--			<filters>
+				<field id="Id_menu" arbol="padre"  esClave="true">
+					<label >Menu</label>
+					<help>Nombre del menu a que el item pertenece</help>
+				</field>
+
+			</filters>
+-->
+			<field id="menuId"  noshow="true">
+				<detalle>menuId</detalle>
+			</field>
+
+		<field id="orden" esClave="true" tdWidth="10em">
+			<label>Orden</label>
+			<help>Da el orden del item dentro del menu. Usar numeros separados</help>
+			<detalle>orden</detalle>
+		</field>
+
+			<field id="Id_menu" arbol="padre"  esClave="true" tdWidth="10em">
+				<label >Menu</label>
+				<help>Nombre del menu a que el item pertenece</help>
+				<valor>phpmen</valor>
+				<!--
+				<helper xml="menu_fathers.xml" type="combo" empty="true" ></helper>
+			-->
+			<condicion operador="!=">''</condicion>
+			<detalle>Id_menu</detalle>
+		</field>
+
+		<field id="titulo">
+			<label style="color:#444;font-weight:bold;">Titulo</label>
+			<help>Cartel con se muestra el item para su seleccion.</help>
+		</field>
+
+		<field id="hijo" arbol="hijo">
+			<label colstyle="display:none;">Menu a que el item llama</label>
+			<help>Nombre del menu a que el item llama (puede no hacerlo)</help>
+		</field>
+
+		<field id="ejecuta" >
+			<label  colstyle="display:none;">Comando o Programa a ejecutar</label>
+			<help>Que es lo que ejecuta este item (programa o comando)</help>
+		</field>
+		<field id="parametros">
+			<label  colstyle="display:none;">Parametros</label>
+			<help></help>
+		</field>
+		<field id="_notif" local="true" linkint="htxnotifuser.xml" linkdes="Usuarios a Notificar Cambios" deshabilitado="true">
+			<label Formstyle="display:none;"></label>
+			<!--				<paring destino="Id_menu">Id_menu</paring>
+		<paring destino="orden">orden</paring>
+		-->
+		<paring destino="menuId">menuId</paring>
+
+		<if exp="strlen('ejecuta') >
+			0">
+			<true>'Notifica'</true>
+			<false>''</false>
+		</if>
+		</field>
+		<field id="menu_separator">
+			<label  colstyle="display:none;">Separador</label>
+			<tipo>check</tipo>
+		</field>
+<field id="mobile_version">
+    <label  colstyle="display:none;">Movil</label>
+    <help>Permite versión movil</help>
+    <tipo>check</tipo>
+</field>
+
+	<order>
+		<field id="orden"></field>
+	</order>
+</table>
+</form>
+</histrix>

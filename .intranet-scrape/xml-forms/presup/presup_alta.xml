@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<histrix tipo="abm-mini" paginar="40" _imprime="false">
+  <title>MODIFICACION</title>
+  <obs></obs>
+  <form  _detalle="presup_mod.xml">
+    <table id="NOTAENCA" label="MODIFICACION DE COSTOS" >
+
+      <field id="siscod" oculto="true">
+        <!--<condicion operador="=">'PR'</condicion>-->
+        <detalle>siscod</detalle>
+      </field>
+
+      <field id="movcod" oculto="true" esclave="true" local="true">
+        <label>movcod</label>
+        <condicion operador="=">1</condicion>
+        <valor>1</valor>
+        <detalle>movcod</detalle>
+      </field>        
+  
+      <field id="movnro" esClave="true">
+        <label>Número</label>
+        <tipo>integer</tipo>
+        <detalle>movnro</detalle>
+      </field>
+      
+      <field id="movref__1">
+        <label>Referencia</label>  
+        <size>30</size>          
+      </field>
+      
+      <field id="Modificar"  linktab="true" linkint="presup_mod2.xml" linkdes="Modificar" local="true" print="false"  Formstyle="display:none;">
+        <label>Modificar</label>
+        <paring destino="movnro"   operador="="   >movnro</paring>
+        <paring destino="siscod"   operador="="   >siscod</paring>
+        <paring destino="movcod"   operador="="   >1</paring>
+        <valor>'Modificar'</valor>
+        <tipo>varchar</tipo>
+        <attribute id="linkdes">movref__1</attribute>
+      </field>
+      
+      <order>
+        <field id="movnro"></field>
+      </order>
+
+    </table>
+  </form>
+</histrix>

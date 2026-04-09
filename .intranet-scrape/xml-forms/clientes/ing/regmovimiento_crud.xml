@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ficha" preFetch="true" inserta="false" borra="false" limit="1">
+	<title>Modificacion de Movimientos</title>
+	<obs></obs>
+	<eventos>
+		<event id="update">close</event>
+		<event id="update">reload</event>
+	</eventos>
+	<form>
+		<table id="REG_MOVIMIENTOS">
+
+			<field id="id_regmovim" noshow="true" esClave="true" deshabilitado="true" />
+
+			<field id="regcuenta_id" noshow="true" />
+
+	        <field id="habilita_edicion" noshow="true">
+	          <expression>IF(REG_NUMERADORES.fiscal = 1 AND REG_NUMERADORES.printer = 'WSAFIP' AND IFNULL(REG_MOVIMIENTOS.numero_cae + 0, 0) != 0, 'true', 'false')</expression>	          
+	        </field>  				
+
+			<field id="nro_cuenta" tabla="REG_CUENTA" deshabilitado="true">
+				<label>Cod.Cta.</label>
+			</field>
+
+			<field id="nombre_movimiento">
+				<label>Nombre y Apellido</label>
+				<size>60</size>
+				<attribute id="deshabilitado">habilita_edicion</attribute>
+			</field>
+
+			<field id="cuit_movimiento">
+				<label>CUIL/T</label>
+				<attribute id="deshabilitado">habilita_edicion</attribute>
+			</field>
+
+			<field id="iva_id">
+				<label>Categoria</label>
+				<helper type="combo" xml="iva_qry.xml" dir="/ayudas">
+					<field id="letra_movimiento">
+						<expression>letra</expression>
+						<detalle>letra_movimiento</detalle>
+					</field>
+				</helper>
+				<attribute id="deshabilitado">habilita_edicion</attribute>
+			</field>
+
+			<field id="tiposervicio_afip">
+				<label>Tipo</label>
+				<helper type="combo">
+					<option value="">Todos</option>
+					<option value="1">Bienes</option>
+					<option value="2">Servicios</option>
+					<option value="3">Bienes/Servicios</option>
+				</helper>
+				<attribute id="deshabilitado">habilita_edicion</attribute>
+			</field>
+
+			<field id="fecha_movimiento">
+				<label>Fecha</label>
+				<attribute id="deshabilitado">habilita_edicion</attribute>
+			</field>
+
+			<field id="vencimiento_movimiento">
+				<label>Vencimiento</label>
+				<attribute id="deshabilitado">habilita_edicion</attribute>
+			</field>
+
+			<field id="reg_fecha" deshabilitado="true">
+				<label>Registración</label>
+			</field>
+
+			<field id="letra_movimiento">
+				<label>Movimiento</label>
+				<helper type="combo" empty="true">
+					<option value="A">A</option>
+					<option value="B">B</option>
+					<option value="C">C</option>
+					<option value="M">M</option>
+					<option value="X">X</option>
+					<option value="R">R</option>
+				</helper>
+				<attribute id="deshabilitado">habilita_edicion</attribute>
+			</field>
+
+			<field id="puesto_movimiento" sincelda="true">
+				<label modpos="nobr"> </label>
+				<size>4</size>
+				<formato>%04d</formato>
+				<attribute id="deshabilitado">habilita_edicion</attribute>
+			</field>
+
+			<field id="nro_movimiento" sincelda="true">
+				<label modpos="nobr">-</label>
+				<size>8</size>
+				<formato>%08d</formato>
+				<attribute id="deshabilitado">habilita_edicion</attribute>
+			</field>
+
+			<field id="referencia_movimiento">
+				<label colspan="5">Referencia</label>
+				<size>255</size>
+				<attribute id="deshabilitado">habilita_edicion</attribute>
+			</field>
+
+			<field id="importe_movimiento" deshabilitado="true">
+				<label>Importe</label>
+			</field>
+
+			<field id="saldo_movimiento">
+				<label>Saldo</label>
+			</field>
+
+		</table>
+
+		<join>
+			<table id="REG_CUENTA">
+				<field id="id_regcuenta">
+					<condicion operador="=">regcuenta_id</condicion>
+				</field>
+			</table>
+		</join>
+
+		<join tipo="left">
+			<table id="REG_NUMERADORES">
+				<field id="subsistema_id">
+					<condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion>
+				</field>
+				<field id="regconcepto_id">
+					<condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+				</field>
+				<field id="puesto">
+					<condicion operador="=">REG_MOVIMIENTOS.puesto_movimiento</condicion>
+				</field>
+				<field id="letra">
+					<condicion operador="=">REG_MOVIMIENTOS.letra_movimiento</condicion>
+				</field>
+			</table>
+		</join>
+
+	</form>
+</histrix>	

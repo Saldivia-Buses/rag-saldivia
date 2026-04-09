@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" margintabs="true" PDForientacion="L" _limit="1">
+	<title>IVA VENTAS</title>
+	<obs/>
+	<form detalle="iva_ventas_completo_qry.xml">
+		<table id="REG_MOVIMIENTOS" label="IVA VENTAS" _styleTbody="height:300px;overflow-x:hidden;">
+			
+	<field id="id_regmovim" esClave="true" noshow="true" />
+
+	<field id="fecha_movimiento" noshow="true">
+					<label>Fecha</label>
+					<help></help>
+					<condicion operador="&gt;=">STR_TO_DATE('[__fecha_movimientodesde__]', '%d/%m/%Y') and fecha_movimiento &lt;= STR_TO_DATE('[__fecha_movimientohasta__]', '%d/%m/%Y')</condicion>
+	</field>
+ 
+	<field id="fecha_movimientodesde" local="true" noshow="true">
+					<label>Fechad</label>
+					<help></help>
+					<tipo>date</tipo>
+					<detalle>fecha_desde</detalle>
+	</field>
+ 
+
+	<field id="fecha_movimientohasta" local="true" noshow="true">
+					<label>Fechah</label>
+					<help></help>
+					<tipo>date</tipo>
+					<detalle>fecha_hasta</detalle>
+	</field>
+<!--
+	<field id="IVA" local="true">
+		<valor>IVA VENTAS</valor>
+	</field>>
+-->
+
+<!--
+	<field id="puesto_movimientodesde" local="true" noshow="true">
+					<label>Puestod</label>
+					<help></help>
+					<detalle>puesto_desde</detalle>
+	</field>
+ 
+
+	<field id="puesto_movimientohasta" local="true" noshow="true">
+					<label>Puestoh</label>
+					<help></help>
+					<detalle>puesto_hasta</detalle>
+	</field>
+	-->
+
+	<field id="puesto_movimiento" oculto="true">
+				<label>Puesto1</label>
+				<help></help>
+	</field>
+
+	<field id="puesto_movimiento" _noshow="true">
+				<label>Puesto</label>
+				<help></help>
+				<detalle>puesto_mov</detalle>
+	</field>
+
+	<!--
+			
+	<field id="provincia_id" tabla="REG_CUENTA" colstyle="display:none;">
+				<label>Provincia</label>
+				<helper type="combo" xml="provincia_qry.xml" dir="/ayudas" empty="true"/>
+				<tipo>varchar</tipo>
+	</field>
+
+	<group>
+			<field id="id_regmovim"></field>
+	</group>
+	-->
+	
+	<group>
+			<field id="puesto_movimiento"></field>
+	</group>
+
+	<order>
+				<!--<field id="REG_MOVIMIENTOS.reg_fecha" /> -->
+				<field id="REG_MOVIMIENTOS.fecha_movimiento" />
+				<field id="REG_MOVIMIENTOS.puesto_movimiento" />
+				<field id="REG_MOVIMIENTOS.nro_movimiento" />
+	</order>
+	
+	<filters>
+				<field id="fecha_movimientodesde">
+					<label>Desde Fecha</label>
+					<valor>today</valor>
+					<operador>&gt;=</operador>
+				</field>
+				<field id="fecha_movimientohasta">
+					<label modpos="nobr">Hasta Fecha</label>
+					<valor>today</valor>
+					<operador>&lt;=</operador>
+				</field>
+	 			<!--
+	 			<field id="puesto_movimiento">
+					<operador>&gt;=</operador>
+					<label>Desde Puesto</label>
+				</field>
+				<field id="puesto_movimiento">
+					<operador>&lt;=</operador>
+					<label modpos="nobr">Hasta Puesto</label>
+				</field>
+			-->
+<!--			
+
+			<field id="puesto_movimientodesde">
+				<operador>&gt;=</operador>
+				<label>Desde Puesto</label>
+			</field>
+			<field id="puesto_movimientohasta">
+				<operador>&lt;=</operador>
+				<label modpos="nobr">Hasta Puesto</label>
+			</field> -->
+<!--
+	 <field id="concepto_id">
+					<operador>=</operador>
+					<label>Comprobante</label>
+				</field>
+			<field id="provincia_id">
+					<operador>=</operador>
+					<label modpos="nobr">Provincia</label>
+				</field>
+-->
+	</filters>
+
+	</table>
+	
+		 <join tipo="left">
+		 <table id="REG_CONCEPTOS">
+				<field id="id_concepto">
+					<condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+				</field>
+		 </table>
+		</join>
+		
+		<join tipo="left">
+			<table id="REG_CUENTA">
+				<field id="id_regcuenta">
+					<condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+				</field>
+		 
+			</table>
+
+			<table id="REG_DETALLES">
+				<field id="regmovim_id">
+					<condicion operador="=">REG_MOVIMIENTOS.id_regmovim</condicion>
+				</field>
+			</table>
+		</join>
+	 
+	
+	</form>
+</histrix>

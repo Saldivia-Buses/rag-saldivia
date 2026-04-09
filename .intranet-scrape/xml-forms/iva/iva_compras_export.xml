@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" margintabs="true" PDForientation="L">
+	<title>IVA COMPRAS</title>
+	<obs/>
+	<form >
+		<table id="REG_MOVIMIENTOS" label="IVA COMPRAS">
+			
+			<field id="id_regmovim" esClave="true" noshow="true" />
+			
+			<field id="reg_fecha">
+				<label>Fecha Reg.</label>
+			</field>
+			
+			<field id="fecha_movimiento">
+				<label>Fecha Comp.</label>
+			</field>
+			
+			<field id="tipo_concepto" tabla="REG_CONCEPTOS" noshow="true">
+				<condicion operador="=">1</condicion>
+			</field>
+			
+			<field id="abreviacion_concepto" tabla="REG_CONCEPTOS">
+				<label>Compr.</label>
+			</field>
+
+			<field id="letra_movimiento">
+				<label>Letra</label>
+                        </field>
+
+			<field id="puesto">
+				<expression>LPAD(puesto_movimiento,4,'0')</expression>
+				<label>Puesto</label>
+		        </field>
+
+			<field id="numero">
+				<expression>LPAD(nro_movimiento,8,'0')</expression>
+				<label>Número</label>
+		        </field>
+			
+			<field id="nombre_cuenta">
+				<expression>(case when REG_MOVIMIENTOS.nombre_movimiento != '' then REG_MOVIMIENTOS.nombre_movimiento else REG_CUENTA.nombre_cuenta end)</expression>
+				<label>Razon Social</label>
+			</field>
+			
+			<field id="iva_id">
+				<expression>(case when REG_MOVIMIENTOS.iva_id != 0 then REG_MOVIMIENTOS.iva_id else REG_CUENTA.iva_id end)</expression>
+				<label>Categoria</label>
+				<tabla_ex id="GEN_IVA">
+					<field id="id_iva"/>
+					<field id="abreviacion_iva"/>
+				</tabla_ex>
+			</field>
+			
+			<field id="cuit_cuenta">
+				<expression>(case when REG_MOVIMIENTOS.cuit_movimiento != '' then REPLACE(REG_MOVIMIENTOS.cuit_movimiento,'-','') else REPLACE(REG_CUENTA.cuit_cuenta,'-','') end)</expression>
+				<label>CUIT</label>
+			</field>
+			
+			<field id="neto_movimiento" suma="true" noZero="true">
+				<expression>(case when neto_movimiento != importe_movimiento then neto_movimiento else importe_movimiento end) * (case when imputacion_concepto = 0 then -1 else 1 end)</expression>
+				<label>Neto </label>
+				<tipo>numeric</tipo>
+			</field>
+				
+
+<field id="importe_iva_10" local="true" _norepeat="true" suma="true"  _local="true" noZero="true">
+        <label>IVA 10,5%</label>
+        <expression sql="true">
+		select (iva_detalle * (case when '[__imputacion_concepto__]' = 1 then -1 else 1 end)) from REG_DETALLES where alicuota_iva = '10.50' and regmovim_id = '[__id_regmovim__]'
+        </expression>
+        <tipo>numeric</tipo>
+      </field>
+
+      <field id="importe_iva_21" local="true" _norepeat="true" suma="true"  _local="true" noZero="true">
+        <label>IVA 21%</label>
+        <expression sql="true">
+		select (iva_detalle * (case when '[__imputacion_concepto__]' = 1 then -1 else 1 end)) from REG_DETALLES where alicuota_iva = '21.00' and regmovim_id = '[__id_regmovim__]'
+        </expression>
+        <tipo>numeric</tipo>
+      </field>
+
+      <field id="importe_iva_27" local="true" _norepeat="true" suma="true"  _local="true" noZero="true">
+        <label>IVA 27%</label>
+        <expression sql="true">
+		select (iva_detalle * (case when '[__imputacion_concepto__]' = 1 then -1 else 1 end)) from REG_DETALLES where alicuota_iva = '27.00' and regmovim_id = '[__id_regmovim__]'
+        </expression>
+        <tipo>numeric</tipo>
+      </field>
+
+			<field id="importe_percepcion" suma="true"  noZero="true">
+				<label>Percepcion</label>
+				<expression>(REG_DETALLES.total_percepcion) * (case when imputacion_concepto = 0 then -1 else 1 end)</expression>
+				<tipo>numeric</tipo>
+			</field>
+			<field id="importe_ibr" suma="true" noZero="true">
+				<expression>REG_MOVIMIENTOS.importe_ibr * (case when imputacion_concepto = 0 then -1 else 1 end)</expression>
+				<label>Ing.Brutos</label>
+				<tipo>numeric</tipo>
+			</field>
+			<field id="monot_movimiento" suma="true" noZero="true">
+				<expression>(case when REG_MOVIMIENTOS.iva_id = 6 then importe_nogravado + importe_exento + neto_movimiento end) * (case when imputacion_concepto = 0 then -1 else 1 end)</expression>
+				<label>Monotributo</label>
+				<tipo>numeric</tipo>
+			</field>
+			<field id="importe_exento" suma="true" noZero="true">
+				<expression>(case when REG_MOVIMIENTOS.iva_id != 6 then importe_exento end) * (case when imputacion_concepto = 0 then -1 else 1 end)</expression>
+				<label>Exento</label>
+				<tipo>numeric</tipo>
+			</field>
+			<field id="importe_nogravado" suma="true" noZero="true">
+				<expression>(case when REG_MOVIMIENTOS.iva_id != 6 then importe_nogravado end) * (case when imputacion_concepto = 0 then -1 else 1 end)</expression>
+				<label>No gravado</label>
+				<tipo>numeric</tipo>
+			</field>
+			
+			<field id="importe_movimiento" suma="true" >
+				<expression>importe_movimiento * (case when imputacion_concepto = 0 then -1 else 1 end)</expression>
+				<label>Total</label>
+				<tipo>numeric</tipo>
+			</field>
+			
+		
+			<field id="tiposervicio_afip">
+				<label>Tipo</label>
+				<helper type="combo">
+					<option value="">Todos</option>
+					<option value="1">Bienes</option>
+					<option value="2">Servicios</option>
+					<option value="3">Bienes/Servicios</option>
+				</helper>
+			</field>
+
+			<field id="asiento" print="false">
+				<label>Asiento</label>
+				<helper type="link" xml="minuta_ficha_qry.xml" dir="/contabilidad/qry" title="Asiento contable">
+					<parameter source="id_regmovim" target="regmovim_id" />
+				</helper>
+				<expression>(SELECT nro_minuta FROM CTB_MOVIMIENTOS WHERE regmovim_id = REG_MOVIMIENTOS.id_regmovim LIMIT 1)</expression>
+			</field>
+			
+			<field id="provincia_id" tabla="REG_CUENTA">
+				<label>Provincia</label>
+				<helper type="combo" xml="provincia_qry.xml" dir="/ayudas" empty="true"/>
+				<tipo>varchar</tipo>
+			</field>
+					
+			<field id="titulo" local="true" oculto="true" print="false">
+				<valor>Libro IVA Compras</valor>
+				<setvar>titulo_div</setvar>
+			</field>
+			
+			<field id="tip_fecha" local="true" oculto="true" print="false">
+				<label></label>
+				<helper type="combo">
+					<option value="0">Registracion</option>
+					<option value="1">Comprobante</option>
+				</helper>
+			</field>
+			
+			<field id="filtro_fecha" noshow="true" print="false">
+				<expression>IF('[__tip_fecha__]' = 0, reg_fecha, fecha_movimiento)</expression>
+				<tipo>date</tipo>
+			</field>
+			
+
+			
+			<group>
+				<field id="id_regmovim"/>
+			</group>
+			
+			<order>
+				<field id="filtro_fecha" />
+				<field id="puesto_movimiento" />
+				<field id="letra_movimiento" />
+				<field id="nro_movimiento" />
+			</order>
+			
+			<filters>
+				<field id="tip_fecha">
+					<operador>=</operador>
+					<label>Filtrar Fecha por</label>
+				</field>
+				<field id="filtro_fecha" deshabilitado="false">
+					<operador>&gt;=</operador>
+					<label  modpos="nobr">Desde Fecha</label>
+					<valor>today</valor>
+				</field>
+				<field id="filtro_fecha" deshabilitado="false">
+					<operador>&lt;=</operador>
+					<label modpos="nobr">Hasta Fecha</label>
+					<valor>today</valor>
+				</field>
+				
+				<field id="tiposervicio_afip">
+					<label>Tipo</label>
+					<operador>=</operador>
+				</field>
+				
+				<field id="provincia_id">
+					<operador>=</operador>
+					<label modpos="nobr">Provincia</label>
+				</field>
+			</filters>
+		</table>
+		
+		<join>
+			<table id="GEN_SUBSISTEMAS">
+				<field id="id_subsistema">
+					<condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion>
+				</field>
+				<field id="iva_subsistema">
+					<condicion operador="=">2</condicion>
+				</field>
+			</table>
+		</join>
+		
+		<join>
+			<table id="REG_CONCEPTOS">
+				<field id="id_concepto">
+					<condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+				</field>
+			</table>
+		</join>
+		
+		<join tipo="left">
+			<table id="REG_CUENTA">
+				<field id="id_regcuenta">
+					<condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+				</field>
+			</table>
+		</join>
+		
+		<join tipo="left">
+			<table id="REG_DETALLES">
+				<field id="regmovim_id">
+					<condicion operador="=">REG_MOVIMIENTOS.id_regmovim</condicion>
+				</field>
+			</table>
+		</join>
+  <join tipo="left">
+    <table id="GEN_IVA_ALICUOTAS">
+      <field id="iva_id">
+        <condicion operador="=">REG_MOVIMIENTOS.iva_id</condicion>
+      </field>
+    </table>
+  </join>
+	</form>
+</histrix>
+

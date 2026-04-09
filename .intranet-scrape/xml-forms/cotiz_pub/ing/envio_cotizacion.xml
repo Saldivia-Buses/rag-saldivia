@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+	<histrix tipo="grid" filter="true" deleteRow="false" inserta="false" modifica="false" procesa="true">
+		<title>Envio cotizacion</title>
+		<obs></obs>
+		<form >
+ 			<table id="REG_CUENTA" >
+				<movimientos>
+					<relacion id="generate_token.xml" />
+					<relacion id="envio_mail_op.xml"/> 
+					<relacion id="cps_envio_ins.xml"/> 
+				</movimientos> 				
+			    <filters>
+			        <field id="todo" deshabilitado="false">
+		            	<label>Filtro</label>
+					    <operador>like</operador>
+					</field>
+			    </filters>
+
+	  			<fieldGroup>
+
+			     	<field id="id_regcuenta" noshow="true" esClave="true">
+		                <label>Numero Cuenta</label>
+						<detalle>regcuenta_id</detalle>
+		            </field>
+		            <field id="nombre_cuenta">
+		                <label>Nombre</label>
+		                <detalle>nombre</detalle><!--
+		                <condicion operador="like">'%me%'</condicion> -->
+		            </field>
+		            <field id="todo" noshow="true">
+		            	<expression>concat(REG_CUENTA.nombre_cuenta, CTB_CUENTAS.nombre_cuenta)</expression>
+		            	<size>70</size>
+		            </field>
+		            <field id="tel_cuenta">
+		                <label>Teléfono</label>
+		                <detalle>tel_cuenta</detalle>
+		            </field>
+		            <field id="subject" noshow="true">
+		            	<expression>'Solicitud de Cotización de Materiales'</expression>
+		            </field>		            
+		            <field id="expires" noshow="true" >
+		            	<expression>now() + INTERVAL 10 DAY</expression>
+		            </field>
+		            <field id="TOKEN" local="true" noshow="true" >
+		            	<if exp="true">
+		            		<true>md5('para expires')</true>
+		            		<false>''</false>
+		            	</if>
+		            </field>		            
+
+		            <field id="resource" local="true" noshow="true">
+		            	<valor>'/proveedores_pub/cotizaciones/cps_cotizaciones_ing.xml'</valor>
+		            </field>
+		            <field id="mensaje" noshow="true" local="true">
+		            	<if exp="true">
+		            		<true><![CDATA['Estimado proveedor,<br>
+Por medio del presente le solicitamos tenga a bien cotizarnos el listado de items adjuntos.<br>
+Agradeceremos nos confirme precio, y disponibilidad.
+<br>
+<br><b>Acceso a la cotización:</b>  <a href="http://autogestion.saldiviabuses.com.ar/?db=saldiviagps&token=TOKEN" target="_blank" >Click Para ingresar</a>']]></true>
+		            		<false>''</false>
+		            	</if>
+		            	
+		            </field>
+
+		            <field id="nombre_cuenta2" >
+		            	<label>Cuenta Contable</label>
+		            	<expression>CTB_CUENTAS.nombre_cuenta</expression>
+		            </field>
+
+
+		            <field id="subsistema_id" noshow="true"  >
+		                <label>subsistema</label>
+		                <condicion operador="=">'01'</condicion>
+		            </field>
+
+
+			<field id="para" >
+				<label>destino</label>
+
+					    <expression>CONCAT(/*REG_CUENTA.email_cuenta,*/ ifnull((select group_concat(mail SEPARATOR '; ') from CCTCONTA where CCTCONTA.ctacod = REG_CUENTA.nro_cuenta and CCTCONTA.siscod = REG_CUENTA.subsistema_id and mail != '' and principal = 1),''))</expression>
+					    <condicion operador="like">'%@%'</condicion>
+			</field>
+		            <field id="emitir" local="true">
+		            	<label>Enviar</label>
+		            	<tipo>check</tipo>
+		            </field>
+	            </fieldGroup>
+	            <group>
+	            	<field id="id_regcuenta" />
+	            </group>
+				<order>
+					<field id="nombre_cuenta" tabla="REG_CUENTA" />
+				</order>
+			</table>
+			<join tipo="left">
+				<table id="CTB_CUENTAS">
+					<field id="id_cuenta">
+						<condicion operador="=">ctbcod</condicion>
+					</field>
+				</table>
+			</join>
+		</form>
+	</histrix>

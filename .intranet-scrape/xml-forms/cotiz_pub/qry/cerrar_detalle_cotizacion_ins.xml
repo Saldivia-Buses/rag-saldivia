@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="update" >
+	<title>detalle cotización</title>
+	<obs/>
+	<form>
+		<table id="CPS_COTIZACION_DETALLE" idCampoCond="comprar"  >
+				<field id="id_cotiz_detalle" id_temp="id_cotiz_detalle" esClave="true"/>
+
+				<field id="comprar" id_temp="comprar">
+				</field>
+
+		</table>
+
+	</form>
+</histrix>

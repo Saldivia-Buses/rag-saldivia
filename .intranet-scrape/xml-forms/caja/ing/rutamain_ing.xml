@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" width="18" showCantidad="false" imprime="false">
+  <title>Ingreso de Movimientos</title>
+  <obs/>
+
+  <form detalle="recibo_ing.xml">
+
+    <table id="REG_CUENTA">
+
+
+      <filters>     
+       
+        <field id="fecha_registro">
+	  	  <label>fecha</label>
+	  	  <tipo>date</tipo>
+      	  <operador>=</operador>
+      	  <valor>today</valor>
+        </field>
+        
+        <field id="regzona_id">
+      	    <label>Zona</label>
+        </field>
+
+      </filters>
+      
+     <!-- ************************************************************** -->
+
+      <field id="fecha_registro" local="true">
+	    <label colstyle="display:none;">fecha</label>
+		<tipo>date</tipo>
+	    <detalle>fecha_movimiento</detalle>
+        <detalle>fecha_registro</detalle>
+        <preparam campo="fecha_registro" operador="=">true</preparam>
+      </field>
+
+      <field id="cajpuesto_id" tabla="CAJ_PUESTO_CONCEPTOS" noshow="true">
+        <!-- <helper type="combo" xml="cajpuestousers_qry.xml" dir="/ayudas" /> -->
+		<!-- <preparam campo="cajpuesto_id" operador="=">true</preparam> -->
+
+        <detalle>cajpuesto_id</detalle>        
+        <condicion operador="=">3</condicion>
+      </field>
+
+     <!-- ************************************************************** -->
+
+      <!--
+      
+      <field id="estilo" local="true" noshow="true">
+        <if exp="imputacion_concepto+0 == 0">
+    	    <true>'padding: 10px; font-size:large;  font-weight: bold; color: #444;'</true>
+    	    <false>'padding: 10px; font-size:large; font-weight: bold; color: red;'</false>
+        </if>
+      </field>
+      
+      <field id="descripcion_concepto" Class="boton" tabla="CAJ_CONCEPTOS">
+    	<attribute id="style">estilo</attribute>
+      </field>
+      -->
+      
+      <field id="id_regcuenta" noshow="true">
+    	<detalle>regcuenta_id</detalle>
+    	<detalle>id_regcuenta</detalle>
+      </field>
+
+	  <field id="regzona_id" tabla="REG_CUENTA" noshow="true">
+	     <helper type="combo" xml="regzonas_qry.xml" dir="/ayudas" empty="true"/>
+	  </field>
+      
+      <field id="nro_cuenta" />
+      
+      <field id="nombre_cuenta" />
+      
+      <field id="saldo_movimiento">
+      	<expresion having="false"> SELECT SUM(saldo_movimiento) 
+					  	             FROM REG_MOVIMIENTOS 
+					  	            WHERE REG_MOVIMIENTOS.subsistema_id = REG_CUENTA.subsistema_id 
+					  	              AND REG_MOVIMIENTOS.regcuenta_id = REG_CUENTA.id_regcuenta 
+      	</expresion>
+		<tipo>numeric</tipo>
+		<condicion operador="!=">0</condicion>
+      </field>
+      
+      
+     <!-- ************************************************************** -->
+      
+      <fieldGroup id="concepto_config" noshow="true">
+
+        <!--
+        <field id="id_cajregistro"  tabla="CAJ_REGISTROS">
+          <detalle>cajregistro_id</detalle>
+        </field>
+        -->
+        
+        <field id="id_cajconcepto" tabla="CAJ_CONCEPTOS">
+          <detalle>cajconcepto_id</detalle>
+        </field>
+        <field id="subsistema_id">
+          <detalle>subsistema_id</detalle>
+          <condicion operador="=">'02'</condicion>
+        </field>
+        <field id="imputacion_concepto" tabla="CAJ_CONCEPTOS">
+          <detalle>imputacion_concepto</detalle>
+        </field>
+        <field id="regconcepto_id" tabla="CAJ_CONCEPTOS">
+          <detalle>regconcepto_id</detalle>
+        </field>
+        <field id="imprime_concepto" tabla="CAJ_CONCEPTOS">
+          <detalle>imprime_concepto</detalle>
+        </field>
+      </fieldGroup>
+     
+      <order>
+        <field id="nombre_cuenta"/>
+      </order>
+      
+    </table>
+
+
+    <join>
+      <table id="CAJ_CONCEPTOS">
+		<field id="id_cajconcepto">
+    	  <condicion operador="=">18</condicion>
+    	</field>
+        <field id="alta_concepto">
+          <condicion operador="!=">0</condicion>
+        </field>
+	  </table>
+	</join>
+
+	<join>
+      <table id="CAJ_PUESTO_CONCEPTOS">
+        <field id="cajconcepto_id">
+          <condicion operador="=">CAJ_CONCEPTOS.id_cajconcepto</condicion>
+        </field>
+      </table>
+    </join>
+
+<!--
+    <join>
+      <table id="CAJ_REGISTROS">
+        <field id="cajpuesto_id">
+          <condicion operador="=">CAJ_PUESTO_CONCEPTOS.cajpuesto_id</condicion>
+        </field>
+
+        <field id="cierre_caja">
+      	  <condicion operador="!=">1</condicion>
+        </field>
+
+      </table>
+    </join>
+-->
+
+  </form>
+</histrix>

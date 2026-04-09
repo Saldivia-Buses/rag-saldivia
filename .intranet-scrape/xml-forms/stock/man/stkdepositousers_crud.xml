@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="grid" deleteRow="false" procesa="true" inserta="false">
+    <title>Depósitos por Usuarios</title>
+    <obs></obs>
+    <form>
+        <table id="HTXUSERS" label="Depósitos por Usuarios">
+
+            <movimientos>
+		<relacion id="stkdepositousers_ins.xml" />
+            </movimientos>
+
+            <field id="Id_usuario" esClave="true" noshow="true" />
+
+            <field id="stkdeposito_id" local="true" valauto="true" noshow="true" />
+
+            <field id="nombre">
+                <label>Usuario</label>
+                <expression>concat(Nombre,' ',apellido)</expression>
+            </field>
+
+            <field id="graba" local="true" refresh="true">
+                <label>Habilitado</label>
+                <tipo>check</tipo>
+                <expression><![CDATA[ifnull((select '1' from STK_DEPOSITO_USERS where usuario_id = HTXUSERS.Id_usuario and stkdeposito_id = '[__stkdeposito_id__]'), '0')]]></expression>
+            </field>
+
+            <field id="update" local="true" noshow="true">
+                <label>Graba</label>
+                <if exp="graba == 1">
+                    <true>'1'</true>
+                    <false>'0'</false>
+                </if>
+            </field>
+
+        </table>
+    </form>
+</histrix>

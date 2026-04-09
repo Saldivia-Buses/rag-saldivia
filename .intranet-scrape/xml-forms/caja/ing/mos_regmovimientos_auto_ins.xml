@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="insert"  
+xmlImpresion="/clientes/qry/imp_facturainsumas_qry.xml" 
+    	>
+	<title>Movimientos en Cuentas Corrientes</title>
+	 <obs></obs>
+		<form>
+		    <table id="REG_MOVIMIENTOS">
+		    
+                <field id="impresion" local="true" id_temp="impresion">
+            	    <setvar>xmlImpresion</setvar>
+                </field>
+				<field id="printerName"      		id_temp="printerNameFac" local="true">
+				    <setvar>printer</setvar>
+                                </field>
+				<field id="printerName2"      		id_temp="printerNameFac" local="true">
+				    <setvar>directprint</setvar>
+                                </field>
+                                		    	
+				<field id="subsistema_id"      		id_temp="subsistema_id" >
+                                        <detalle>subsistema_id</detalle>
+                                    </field>
+				<field id="regcuenta_id"     		id_temp="regcuenta_id" >
+                                    <detalle>regcuenta_id</detalle>
+                                    </field>
+				<field id="concepto_id"      		id_temp="regconcepto_id">
+                                    <detalle>concepto_id</detalle>
+                                    </field>
+
+				<field id="fecha_movimiento"     	id_temp="fecha_movimiento"/>
+				<field id="letra_movimiento"     	id_temp="regcuenta_ivaletra"/>
+				<field id="puesto_movimiento"     	id_temp="puesto_movimiento"/>
+<!--				<field id="nro_movimiento" 	     	id_temp="cambio"/>		-->
+				<field id="nro_movimiento" 	     	id_temp="nro_movimiento">		
+                                    <detalle>nro_movimiento</detalle>
+                                </field>
+				<field id="reg_fecha" 	                id_temp="reg_fecha"/>				
+				<field id="vencimiento_movimiento" 	id_temp="vencimiento_movimiento"/>	
+				<field id="bonificaciones_movimiento" 	id_temp="bonificaciones_movimiento"/>
+
+				<field id="neto_movimiento"             id_temp="neto_movimiento"/>
+				<field id="importe_iva"           	id_temp="importe_IVA"/>
+				<field id="importe_exento"     		id_temp="importe_exento"/>
+				<field id="alicuota_iva" 	     	id_temp="alicuota_iva"/>
+
+				<field id="importe_movimiento"     	id_temp="importe_movimiento" >
+				    <tipo>custom_numeric</tipo>
+				</field>
+				
+				<field id="saldo_movimiento"     	id_temp="importe_movimiento" >	
+				    <tipo>custom_numeric</tipo>
+				</field>	
+
+				<field id="referencia_movimiento"   id_temp="referencia_movimiento"/>
+
+				<field id="cajmovimiento_id" 	     lastId="cajmovimientos_ins.xml"/>
+		    </table>
+		</form>
+    </histrix>	

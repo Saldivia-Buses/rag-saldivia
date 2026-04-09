@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="fichaing" inserta="false" borra="false" modifica="false" imprime="false" log="false" transaccional="true" tooltip="false" confirma="GRABAR">
+  <title>Orden de Pago</title>
+  <obs/>
+  <eventos>
+    <event id="procesar">refresh</event>
+    <event id="procesar">close</event>
+  </eventos>
+  <form>
+    <table id="REG_MOVIMIENTOS" label="ORDEN DE PAGO">
+      <validation>
+        <condition><![CDATA['regcuenta_nombre' + 0 == 0]]></condition>
+        <message>Debe Ingresar una Cuenta</message>
+      </validation>
+      <validation>
+        <condition><![CDATA['nro_movimiento' + 0 == 0]]></condition>
+        <message>Debe Ingresar un Nro de Recibo</message>
+      </validation>
+      <validation optional="true">
+        <condition><![CDATA['importe_imputado' + 0 == 0]]></condition>
+        <message>No ha seleccionado ningún comprobante para imputar</message>
+      </validation>
+      <validation>
+        <condition><![CDATA[importe_movimiento + 0 == 0]]></condition>
+        <message>Debe Imputar un Comprobante</message>
+      </validation>
+      <validation>
+        <condition><![CDATA[muestra_anticipo + 0 < 0]]></condition>
+        <message>El anticipo no puede ser un numero negativo</message>
+      </validation>
+      <cierraproceso id="cajmovimientos_ing.xml">
+        <paring destino="imputacion_concepto">imputacion_concepto</paring>
+        <paring destino="moneda_id">moneda_id</paring>
+        <paring destino="cajpuesto_id">cajpuesto_id</paring>
+        <paring destino="cajconcepto_id">cajconcepto_id</paring>
+        <paring destino="cajregistro_id">cajregistro_id</paring>
+        <paring destino="importe_movimiento">importe_movimiento</paring>
+        <paring destino="fecha_movimiento">fecha_movimiento</paring>
+        <paring destino="referencia_movimiento">referencia_movimiento</paring>
+        <paring destino="nro_movimiento">nro_movimiento</paring>
+        <paring destino="ctbcuenta_reg_id">ctbcuenta_id</paring>
+        <paring destino="ctbcuenta_reg_doh">ctbcuenta_reg_doh</paring>
+        <!-- Paso Subsistema y Cuenta para Recibos -->
+        <paring destino="subsistema_id">subsistema_id</paring>
+        <paring destino="regcuenta_id">regcuenta_id</paring>
+
+        <paring destino="retencion_ganancias">retenciones_calculadas</paring>
+        <paring destino="retencion_iibb">iibb</paring>
+
+      </cierraproceso>
+      <movimientos>
+        <relacion id="regmovimientos_ins.xml"/>
+        <relacion id="regdetalles_ins.xml"/>
+        <relacion id="impresion_caja.xml"/>
+        <relacion id="cajnumeradores_upd.xml" />
+      </movimientos>
+
+      <fieldGroup id="DEBUG" local="true" noshow="true">
+        <field id="cajpuesto_id"/>
+        <field id="cajconcepto_id" >
+	</field>
+        <field id="cajregistro_id"/>
+        <field id="fecha_movimiento"/>
+        <field id="subsistema_id">
+          <tipo>varchar</tipo>
+        </field>
+        <field id="regconcepto_id"/>
+        <field id="tipoimpre_concepto"/>
+        <field id="imputacion_concepto"/>
+        <field id="imprime_concepto"/>
+        <field id="ctbcuenta_id"/>
+        <field id="ctbcuenta_reg_doh">
+          <if exp="imputacion_concepto == 0">
+            <true>1</true>
+            <false>0</false>
+          </if>
+        </field>
+      </fieldGroup>
+
+
+    <fieldGroup>
+      <field id="moneda_id" local="true" noshow="true">
+        <valor>1</valor>
+      </field>
+      <field id="saldo_a_cct" local="true" noshow="true">
+        <valor>1</valor>
+      </field>
+      <field id="id_regmovim" noshow="true">
+        <condicion operador="=">-1</condicion>
+      </field>
+
+	
+      <field id="regcuenta_id" noshow="true">
+        <label>Cuenta</label>
+        <helper type="external" xml="regcuenta_cmb.xml" dir="/ayudas" empty="true">
+          <field id="letra" local="true">
+            <valor>'X'</valor>
+          </field>
+        </helper>
+        <size>6</size>
+        <actualiza>
+          <field id="imputaciones" destino="regcuenta_id"/>
+        </actualiza>
+      </field>
+      <field id="nro_cuenta" local="true">
+        <label colspan="6">Cod</label>
+        <helper type="external" xml="regcuenta_relacionescmb_nro.xml" dir="/ayudas">
+          <field id="letra" local="true">
+            <valor>'X'</valor>
+          </field>
+
+          // CALCULO SALDO CUENTA
+
+          <field id="categoria_ganancia" noshow="true">
+            <detalle>categoria_ganancia</detalle>
+          </field>
+          <field id="catganancias_id" noshow="true">
+            <detalle>catganancias_id</detalle>
+          </field>
+        <field id="acu_pago" noshow="true">
+              <expression>select sum(pago_acumulado) from RET_ACUMULADO where regcuenta_id = id_regcuenta and year_acumulado= year(now()) and mes_acumulado = month(now())</expression>
+            <detalle>netoacum</detalle>
+          </field>
+
+          <field id="acu_retenciones" noshow="true">
+              <expression>select sum(retenciones_acumulado) from RET_ACUMULADO where regcuenta_id = id_regcuenta and year_acumulado= year(now()) and mes_acumulado = month(now())</expression>
+            <detalle>acu_retenciones</detalle>
+          </field>
+            INGRESOS BRUTOS
+            <field id="porcentaje_rg1598" noshow="true">
+              <detalle>porcentaje_rg1598</detalle>
+            </field>
+
+
+        </helper>
+        <size>6</size>
+      </field>
+      <field id="regcuenta_nombre" local="true" deshabilitado="true" sincelda="true">
+        <label colspan="4" modpos="nobr">Nombre</label>
+        <size>60</size>
+      </field>
+      <field id="regcuenta_ivaletra" local="true" deshabilitado="true" noshow="true">
+        <label _modpos="nobr" style="font-size: large;">Letra</label>
+        <valor>X</valor>
+        <size>1</size>
+        <detalle>letra_movimimento</detalle>
+      </field>
+      <field id="puesto_movimiento" _deshabilitado="true">
+        <label>puesto</label>
+        <helper type="combo" xml="npv_x_puesto_qry.xml"/>
+        <size>4</size>
+        <detalle>puesto_movimiento</detalle>
+      </field>
+      <field id="nro_movimiento" deshabilitado="true">
+        <label modpos="nobr" sincelda="true">Nº</label>
+        <parametro id="cajnumerador_param.xml" retorna="numero">
+          <field id="numero">
+<!--            <complete>numero + 1</complete> -->
+          </field>
+        </parametro>
+        <format>%08d</format>
+        <size>8</size>
+        <detalle>nro_movimiento</detalle>
+      </field>
+      <field id="referencia_movimiento" maxlength="144">
+        <label colspan="4">Referencia</label>
+        <tipo>varchar</tipo>
+        <size>144</size>
+      </field>
+      <field id="vencimiento_movimiento" noshow="true">
+        <valor>today</valor>
+      </field>
+    </fieldGroup>
+    <fieldGroup deshabilitado="true">
+      // RETENCIONES
+
+      <field id="categoria_ganancia" local="true" noshow="true">
+        <valor>0</valor>
+        <actualiza >
+          <field id="retenciones_calculadas" destino="categoria_ganancia"></field>
+        </actualiza>        
+      </field>
+      <field id="catganancias_id"    local="true" noshow="true">
+        <valor>0</valor>
+        <actualiza >
+          <field id="retenciones_calculadas" destino="catganancias_id"></field>
+        </actualiza>                
+      </field>
+
+      <field id="netoacum" deshabilitado="true" local="true">
+        <label modpos="nobr">Neto Acumulado</label>
+      </field>        
+
+      <field id="acu_retenciones" deshabilitado="true" local="true">
+        <label >Retencionaes Acumuladas</label>
+        <valor>0</valor>
+        <actualiza >
+          <field id="retenciones_calculadas" destino="acu_retenciones"></field>
+        </actualiza>        
+      </field>        
+
+
+
+      <field id="total_neto" local="true" _deshabilitado="true" >
+        <label>Neto comprobantes</label>
+        <jseval campodestino="suma_netos">total_neto + netoacum</jseval>
+        <jseval campodestino="iibb">(total_neto &gt; min_ib)?(total_neto * porcentaje_rg1598 / 100).toFixed(2):0</jseval>
+        <tipo>numeric</tipo>
+      </field>
+
+      <field id="suma_netos"    local="true">
+        <label>Suma Netos</label>
+        <actualiza >
+          <field id="retenciones_calculadas" destino="suma_netos"></field>
+        </actualiza> 
+        <valor>0</valor>
+        <tipo>numeric</tipo>
+      </field>
+
+
+      <field id="retenciones_calculadas" local="true">
+        <label>Retenciones de Ganancias</label>
+        
+        <parametro  retorna="ganancias">
+          <field id="categoria_ganancia" noselect="true" local="true">
+            <valor>0</valor>
+          </field>
+          <field id="catganancias_id" noselect="true" local="true">
+            <valor>0</valor>
+          </field>          
+          <field id="suma_netos" noselect="true" local="true">
+            <valor>0</valor>
+          </field>          
+          <field id="acu_retenciones" noselect="true" local="true">
+            <valor>0</valor>
+          </field>                    
+          <field id="ganancias">
+            <expression >retencionGanancias([__categoria_ganancia__], [__catganancias_id__], [__suma_netos__], [__acu_retenciones__])</expression>
+            <tipo>numeric</tipo>
+          </field>
+        </parametro>
+      
+        <!--
+          <expression sql="true">select retencionGanancias([__categoria_ganancia__], [__catganancias_id__], [__suma_netos__], [__acu_retenciones__])</expression>
+        -->
+        <tipo>numeric</tipo>
+      </field>
+
+    </fieldGroup>
+
+    <fieldGroup>
+      //INGRESOS BRUTOS
+
+      <field id="porcentaje_rg1598" noshow="true" local="true" />
+
+      <field id="min_ib" noshow="true" local="true">
+        <valor>2000</valor>
+      </field>
+
+      <field id="iibb" local="true" deshabilitado="true" >
+        <label>Ing.Brutos</label>
+        <tipo>numeric</tipo>
+        <valor>0</valor>
+      </field>  
+
+    </fieldGroup>
+
+    <fieldGroup>
+
+
+      <field id="imputaciones" local="true">
+        <label colspan="10"/>
+        <helper type="object" xml="regimputaciones_conretenciones_grid.xml">
+          <parameter source="imputacion_concepto" target="imputacion_concepto_comprobante_llama"/>
+        </helper>
+      </field>
+    </fieldGroup>
+    <fieldGroup>
+
+      <field id="importe_imputado" local="true" deshabilitado="true">
+        <label style="font-size: large; text-align: right;">Imputado</label>
+        <jseval campodestino="importe_movimiento">importe_imputado</jseval>
+        <tipo>numeric</tipo>
+        <valor>0</valor>
+        <size>20</size>
+      </field>
+
+      <field id="muestra_anticipo" local="true" deshabilitado="true">
+        <label style="font-size: large; text-align: right;">Anticipo</label>
+        <tipo>numeric</tipo>
+        <valor>0</valor>
+        <size>20</size>
+      </field>
+      
+      <field id="importe_anticipo" local="true" noshow="true" />
+
+      <field id="importe_movimiento" _deshabilitado="true">
+        <label style="font-size: xx-large; text-align: right;">Total</label>
+        <jseval campodestino="muestra_anticipo">(importe_movimiento - importe_imputado) * (imputacion_concepto == 0 ?  1 : 1)</jseval>
+        <jseval campodestino="importe_anticipo">(importe_movimiento - importe_imputado) * (imputacion_concepto == 0 ? -1 : 1)</jseval>
+        <tipo>numeric</tipo>
+        <valor>0</valor>
+        <size>20</size>
+      </field>
+
+
+
+      <field id="muestracheck" local="true" noshow="true">
+        <if exp="tipoimpre_concepto != 2">
+          <true>'display:none;'</true>
+          <false>''</false>
+        </if>
+      </field>
+      <field id="CHKimprime" local="true">
+        <attribute id="style">muestracheck</attribute>
+        <label style="font-size: medium; align: right;" _modpos="nobr">Imprime Comprobante</label>
+        <tipo>check</tipo>
+      </field>
+      <field id="impresion" local="true" noshow="true" deshabilitado="true">
+        <label>Programa de Impresion</label>
+        <if exp="CHKimprime=='1' || tipoimpre_concepto=='1'">
+          <true>'imprime_concepto'</true>
+          <false>''</false>
+        </if>
+      </field>
+     </fieldGroup>
+    </table>
+  </form>
+</histrix>

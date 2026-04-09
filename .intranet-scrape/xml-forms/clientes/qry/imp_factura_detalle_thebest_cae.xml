@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" exportasuma="true">
+	<title />
+	<obs />
+	<form>
+		<table id="REG_DETALLES" label="Detalle de Movimientos" styleTbody="height:150px;overflow-x:hidden;" PDFnoborder="true" >
+
+			<field id="muestra_iva" noshow="true" local="true" print="false" valauto="true" />
+
+			<field id="NoMuestra_iva" noshow="true" local="true" print="false">
+				<if exp="muestra_iva">
+				<true>'false'</true>
+				<false>'true'</false>
+				</if>		
+			</field>				
+
+			<field id="regmovim_id" noshow="true" />
+
+			<field id="orden" noshow="true" />
+
+			<fieldGroup>
+			
+
+				<field id="codigo_detalle" PDFcolWidth="30">
+					<label size="30">Codigo</label>
+				</field>
+				
+				<field id="descripcion_detalle">
+					<label size="120">Descripcion</label>
+				</field>
+
+				<field id="codigo_serie" PDFcolWidth="30">
+					<label size="20" >Despacho</label>
+				</field>
+
+				<field id="cantidad_detalle" PDFcolWidth="15" PDFalign="R">
+					<label size="15">Cantidad</label>
+					<tipo>numeric</tipo>
+				</field>
+				
+				<field id="alicuota_iva" PDFcolWidth="15">
+					<label size="15" >Alicuota</label>
+					<tipo>numeric</tipo>
+				</field>
+
+				<field id="precio_venta" PDFcolWidth="15">
+					<label size="15">Precio Unit.</label>
+					<expresion having="false">
+						case when '[__muestra_iva__]' = 'true' THEN
+							precio_venta
+						else
+							precio_venta * ( 1 + (alicuota_iva / 100) )
+						end
+					</expresion>
+					<tipo>numeric</tipo>
+				</field>
+
+				<field id="neto_detalle" PDFcolWidth="25" total="true" PDFsum="true" suma="true">
+					<label size="25">Subtotal</label>
+					<tipo>numeric</tipo>
+					<detalle>SubTotal</detalle>
+					<expresion having="false">IF('[__muestra_iva__]' = 'true', neto_detalle,  total_detalle)</expresion>
+				</field>
+
+			</fieldGroup>
+			
+			<order>
+				<field id="orden"/>
+			</order>
+			
+			<group>
+			  <field id="id_regdetalle" />
+			</group>
+		</table>
+	</form>
+</histrix>	

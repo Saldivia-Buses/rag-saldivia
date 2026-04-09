@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="consulta">
+	<title>ENTRADA SALIDA STOCK POR CODIGO</title>
+	<obs></obs>
+	<form >
+		<table id="STKINMOV" label="ENTRADA SALIDA STOCK">
+			
+			<field id="movfec">
+				<label>Fecha Remito </label>
+				<help>Fecha Remito </help>
+			</field>
+			<field id="ocpnro">
+				<label>O.Compra</label>
+				<help>Orden Compra</help>
+			</field>
+			
+			<field id="siscod" oculto="true">
+				<label>Codigo Sistema.. </label>
+				<help>
+				</help>
+				<condicion operador="=">'01'</condicion>
+				
+			</field>
+			<field id="ctacod" oculto="true">
+				<label>Codigo de Cuenta </label>
+				<help>
+				</help>
+			</field>
+			<field id="artcod" tabla="STKINSUM">
+				<label>Codigo Articulo</label>
+				<help>Codigo de Articulo. </help>
+			</field>
+			
+			<field id="artdes" tabla="STKINSUM">
+				<label>Descripcion</label>
+				<help>
+				</help>
+				<tipo>string</tipo>
+			</field>
+			
+			<field id="movuso" suma="true">
+				<label>Cantidad </label>
+				<help>
+				</help>
+			</field>
+			
+			<!--		  
+			<field id="artrub">
+			<label>Codigo Rubro </label>
+			<help>Codigo de Rubro Articulo  *  AYUDA = [TAB] </help>
+			</field>
+			<field id="barcode">
+			<label>Codigo Barras </label>
+			<help> </help>
+			</field>
+			
+			<field id="depcod">
+			<label>Cod.Deposito         . </label>
+			<help>Codigo de Deposito. </help>
+			</field>
+			<field id="facfec">
+			<label>Fecha Factura </label>
+			<help>Fecha de Factura </help>
+			</field>
+			<field id="movalt">
+			<label>Fec.Alta Mov.        . </label>
+			<help>Fecha de Alta de Movimiento. </help>
+			</field>
+			<field id="movbon">
+			<label>Bonificacion         . </label>
+			<help> </help>
+			</field>
+			<field id="movcant">
+			<label>Cantidad             . </label>
+			<help>Cantidad involucrada en movimiento. </help>
+			</field>
+			<field id="movcli">
+			<label>Cod.Cliente          . </label>
+			<help>Codigo de Cliente. </help>
+			</field>
+			<field id="movcos">
+			<label>Costo Articulo        . </label>
+			<help> </help>
+			</field>
+			<field id="movcps">
+			<label>? </label>
+			<help> </help>
+			</field>
+			<field id="movimp">
+			<label>Importe Total        . </label>
+			<help>Importe Total Operacion. </help>
+			</field>
+			<field id="movnpv">
+			<label>Nro. Punto Venta </label>
+			<help> </help>
+			</field>
+			-->
+			<field id="movnro" oculto="true">
+				<label>Nro.Remito </label>
+				<help>Numero de Remito. </help>
+			</field>
+			<!--
+			<field id="movpen">
+			<label>Pend. Fact. </label>
+			<help>Cantidad pendiente de Facturacion </help>
+			</field>
+			<field id="movpes">
+			<label>Peso Total            . </label>
+			<help> </help>
+			</field>
+			<field id="movpor">
+			<label>Porc descuento </label>
+			<help>Porcentaje de descuento </help>
+			</field>
+			<field id="movpre">
+			<label>Precio Venta </label>
+			<help>Precio de Venta. </help>
+			</field>
+			<field id="movtco">
+			<label>Tipo Comision        . </label>
+			<help>[1] Fija   *   [2] Especial   *   [3] Comun </help>
+			</field>
+			<field id="movven">
+			<label>Nro.Factura          . </label>
+			<help>Numero de Factura </help>
+			</field>
+			<field id="nrocha">
+			<label>Numero Chasis </label>
+			<help> </help>
+			</field>
+			<field id="ocpnro">
+			<label>Nro.Compra </label>
+			<help>Numero de Compra </help>
+			</field>
+			<field id="opecla">
+			<label>Firma Electronica </label>
+			<help>Firma Electronica </help>
+			</field>
+			<field id="opecod">
+			<label>Cod.Operador         . </label>
+			<help> </help>
+			</field>
+			<field id="regmin">
+			<label>Numero Asiento       . </label>
+			<help>Numero de Asiento . </help>
+			</field>
+			<field id="siscod" oculto="true">
+			<label>Codigo Sistema.. </label>
+			<help> </help>
+			</field>
+			<field id="succod">
+			<label>Cod. Sucursal </label>
+			<help>Codigo de Sucursal </help>
+			</field>
+			<field id="tipuni">
+			<label>Tipo Unidad           . </label>
+			<help> </help>
+			</field>
+			<field id="titcod">
+			<label>Cod.Lista Precio     . </label>
+			<help>Codigo Lista de Precio. </help>
+			</field>
+			<field id="zoncod">
+			<label>Codigo de Zona.. </label>
+			<help> </help>
+			</field>
+			-->
+			
+		</table>
+		<join tipo="left">
+			<table id="STKINSUM">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">STKINMOV.siscod</condicion>
+				</field>
+				
+				<field id="artdes" oculto="true">
+				</field>
+				
+				<field id="artcod" oculto="true">
+					<condicion operador="=">STKINMOV.artcod</condicion>
+				</field>
+			</table>
+		</join>
+		
+	</form>
+</histrix>

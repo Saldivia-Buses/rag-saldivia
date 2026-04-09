@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="delete" limit="1">
+    <title/>
+    <obs/>
+    <form>
+        <table id="REG_MOVIMIENTOS">
+            <field id="id_regmovim" id_temp="id_regmovim"  esClave="true" />
+        </table>
+    </form>
+</histrix>

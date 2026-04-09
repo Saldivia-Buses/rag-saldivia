@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud"  path="/fotos/cambiochasis/">
+	<title>CAMBIOS EN MODELOS DE CHASIS</title>
+	<obs></obs>
+	<form >
+		<table id="MODCHASIS_CAMBIOS" >
+			<title>Cambios en Modelos</title>
+			
+			<field id="id_cambio_chasis" noshow="true" autoinc="true" />
+			<field id="modelo_id" oculto="true" />			
+
+			<field id="fecha_cambio">
+				<label>Fecha Cambio</label>
+				<valor>today</valor>
+				<tipo>date</tipo>
+			</field>
+
+			<field id="descripcion_cambio">
+				<label>Descripción</label>
+				<size>400</size>
+				<tipo>varchar</tipo>
+			</field>
+				<tipo>varchar</tipo>
+
+			<field id="texto_notificacion">
+				<label>Texo a Notificar</label>
+				<size>200</size>
+				<tipo>varchar</tipo>
+			</field>
+
+			<field id="notifica">
+				<label>Notificar</label>
+				<tipo>check</tipo>
+			</field>
+
+            <field id="pathdet" local="true" noshow="true" deshabilitado="true">
+                <if exp="true">
+                    <true>'id_cambio_chasis/'</true>
+                    <false>''</false>
+                </if>
+                <label>pathdet</label>
+            </field>
+
+            <field id="directorio"  path="pathdet" >
+              <expression>CONCAT('/fotos/cambiochasis/', id_cambio_chasis, '/' )</expression>
+                    <label>Archivos</label>
+                    <help>Archivos del cambio</help>
+                    <tipo>dir</tipo>
+		    <size>50</size>
+            </field>
+			<order>
+				<field id="fecha_cambio" orderType="DESC"></field>
+			</order>
+		</table>
+	</form>	   
+</histrix> 

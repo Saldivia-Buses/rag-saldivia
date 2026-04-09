@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<abm tipo="ing" subtipo="vertical" >
+	<titulo>Fichadas</titulo>
+	<obs/>
+	<consulta>
+		<tabla id="FICHADAS" label="Fichadas del Reloj" styleTbody="height:200px;overflow-x:hidden;">
+			<campo id="archivo" local="true">
+				<label>Archivo a Importar</label>
+				<tipo >file</tipo>
+			</campo>
+<!--
+			<campo id="tarjeta" deshabilitado="true" >
+				<label>Tarjeta</label>
+			</campo>
+			<campo id="fecha">
+				<label>Fecha</label>
+			</campo>
+			<campo id="Hora">
+				<label>Hora</label>
+			</campo>
+			<campo id="reloj">
+				<label>Reloj</label>
+			</campo>
+			<campo id="codigo">
+				<label>Codigo</label>
+			</campo>
+			-->
+		</tabla>
+	</consulta>
+</abm>

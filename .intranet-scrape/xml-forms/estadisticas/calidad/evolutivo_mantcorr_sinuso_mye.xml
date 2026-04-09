@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="chart" _limit="10">
+	<title>Cantidad</title>
+	<obs></obs>
+	<form >
+		<table id="MANT_PLAN" >
+		    <title>OBSERVACIONES POR UNIDAD</title>
+		   	
+		   	<grafico id="internos" pareto="true">
+			   <ancho>400</ancho>
+			   <tipo>L</tipo>
+			   <etiquetas>mes</etiquetas>
+			   <serie>horas</serie>
+			   <subtitulo></subtitulo>
+		   	</grafico>
+		    
+		    <filters>
+			    <field id="fecha_iniciotarea">
+				    <label>Desde</label>
+				    <valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m" ,strtotime('-12 month')) , 1, date("Y") -  1 ))</valor>
+				    <operador>&gt;=</operador>
+			    </field>
+			    <field id="fecha_iniciotarea">
+                    <label>Hasta</label>
+				    <valor eval="true">date('d/m/Y', strtotime('-1 second', strtotime(date('Y-m-01'))))</valor>
+				    <operador>&lt;=</operador>
+			    </field>
+		    </filters> 
+            <field id="id_plan" noshow="true" />            
+            <field id="fecha_iniciotarea"></field>
+
+            <field id="year" oculto="true">
+                <expression>year(fecha_iniciotarea)</expression>
+            </field>
+
+	    <field id="mes">
+		<expression>month(fecha_iniciotarea)</expression>
+		<label>Mes</label>
+		<options>
+		    <option valor="1">Ene</option>
+		    <option valor="2">Feb</option>
+		    <option valor="3">Mar</option>
+		    <option valor="4">Abr</option>
+		    <option valor="5">May</option>
+		    <option valor="6">Jun</option>
+		    <option valor="7">Jul</option>
+		    <option valor="8">Ago</option>
+		    <option valor="9">Sep</option>
+		    <option valor="10">Oct</option>
+		    <option valor="11">Nov</option>
+		    <option valor="12">Dic</option>
+		</options>
+		<tipo>varchar</tipo>
+	    </field>
+
+	    <field id="tipoequipo_id" tabla="MANT_EQUIPOS">
+		<condicion operador="=">1</condicion>
+	    </field>
+
+	    <field id="horas">
+		<label>Horas</label>
+		<expression>ROUND(
+((SUM(CASE WHEN (accion_id = 52 and hora_accion != '00:00:00' and hora_salida != '00:00:00' and fecha_accion = fecha_salida) 
+THEN time_to_sec(timediff(hora_salida, hora_accion)) else 
+
+(
+CASE WHEN (accion_id = 52 and hora_accion != '00:00:00' and hora_salida != '00:00:00' and fecha_accion &lt; fecha_salida)
+THEN (timediff((SELECT egreso FROM HORARIOHIST WHERE dia = DAYOFWEEK(fecha_accion) ORDER BY desdeFecha DESC LIMIT 1), hora_accion) +
+     timediff(hora_salida, (SELECT ingreso FROM HORARIOHIST WHERE dia = DAYOFWEEK(fecha_salida) ORDER BY desdeFecha DESC LIMIT 1)))
+     
+ELSE 0 END
+)
+
+ END)) / 3600), 2)</expression>
+	    </field>
+	    <group>
+        	<field id="year"></field>
+		<field id="mes"></field>
+	    </group>
+            </table>
+	    <join tipo="left">
+		<table id="MANT_EQUIPOS">
+		    <field id="id_equipo">
+			<condicion operador="=">MANT_PLAN.equipo_id</condicion>
+		    </field>
+		</table>
+	    </join>
+	</form>
+</histrix>

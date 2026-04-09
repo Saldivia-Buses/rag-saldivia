@@ -1,0 +1,118 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<histrix tipo="cabecera" llenaTemporal="false">
+    <title>COTIZACION</title>
+    <obs></obs>
+    <form>
+        <table id="COTIZACION" label="COTIZACION">
+
+            <field id="ficha_id"  deshabilitado="true" local="true" noshow="true">
+            </field>
+
+            <field id="nrofab_id"  deshabilitado="true" local="true">
+                <label style="font-size:15px; color:green;font-weight:bold;">Nro Fab.</label>
+            </field>
+
+
+            <field id="idCotiz" _autoinc="true" deshabilitado="true" _noshow="true" local="true">
+                <label modpos="nobr" style="font-size:15px; color:green;font-weight:bold;">Nro Cotiz.</label>
+                <parametro id="cotizacion_numero.xml" retorna="idCotiz" ></parametro>
+                <tipo>varchar</tipo>
+
+                <help>Numero de Cotizacion</help>
+                <detalle>idCotiz</detalle>
+            </field>
+            <field id="fecha"  deshabilitado="true" local="true">
+                <label modpos="nobr" >Fecha</label>
+                <valor>today</valor>
+            </field>
+            <field id="ctacod"  deshabilitado="true" local="true">
+                <label >Cliente </label>
+                <help>Codigo de Cuenta </help>
+                <detalle>ctacod</detalle>
+                <tipo>integer</tipo>
+            </field>
+
+            <field id="ctanom" deshabilitado="true">
+                <label  modpos="nobr" colspan="4">Nombre</label>
+                <size>60</size>
+                <expression sql="true">select ctanom from CCTCUENT where CCTCUENT.ctacod = '[__ctacod__]' and siscod = '02'</expression>
+            </field>
+            <field id="idconta" local="true" >
+                <label size="23" posx="6" posy="+1" PDFsize="12" colspan="5" colstyle="display:none;" >Contacto</label>
+                <help>Codigo de Cuenta</help>
+                <tabla_ex condes="true" id="CCTCONTA" vacio="true">
+                    <field id="idconta"/>
+                    <field id="nombre">
+                        <expression>CONCAT(nombre,'-' , mail, ' - ', Telefono)</expression>
+                    </field>
+                    <field id="ctamail" noshow="true">
+                            <expression>mail</expression>
+                    </field>
+                    <field id="ctatel" noshow="true">
+                            <expression>Telefono</expression>
+                    </field>
+                    <field id="ctacon" noshow="true" >
+                        <expression>nombre</expression>
+                    </field>
+                    <field id="ctacod" oculto="true" />
+                    
+                    <field id="siscod" oculto="true">
+                        <condicion operador="=">'02'</condicion>
+                    </field>
+                </tabla_ex>
+            </field>
+            <field id="ctacon" noshow="true" />
+
+            <field id="ctamail" _local="true">
+                <label  colspan="4">email</label>
+                <size>60</size>
+
+            </field>
+            <field id="subject" _local="true" deshabilitado="false">
+                <label  colspan="4">Asunto</label>
+                <size>60</size>
+                <expression sql="true"><![CDATA[select 'Cotizaci&oacute;n de Accesorios Unidad: [__nrofab_id__]']]></expression>>
+                <detalle>subj</detalle>
+            </field>
+            <field id="observacion_cotizacion" local="true">
+                <label colspan="6">Observaciones</label>
+                <valor>'En caso de aceptar la presente, solicitamos responder con un nuevo mail expresando su conformidad.
+En caso de aceptar parcialmente, rogamos explicitar los códigos correspondientes.
+Los trabajos solo se realizarán a partir de su respuesta por este medio.'</valor>
+                <size>300</size>
+            </field>
+            <field id="pie">
+                <label rowspan="2" colspan="6">Pie</label>
+                <valor><![CDATA[Los Precios NO INCLUYEN IVA]]></valor>
+                <size>80</size>
+            </field>
+            <!--
+            <field id="fecha" deshabilitado="true">
+                <label modpos="nobr">Fecha</label>
+                <help>Fecha de Cotización</help>
+                <tipo>date</tipo>
+                <valor>today</valor>
+            </field>
+            <field id="ctacod">
+                <label PDFsize="12" posx="6" posy="+1" size="23">Cliente</label>
+                <help>Codigo de Cuenta</help>
+                <tabla_ex condes="true" id="CCTCUENT">
+                    <field id="ctacod"/>
+                    <field id="ctafan"/>
+                    <field id="siscod" oculto="true">
+                        <condicion operador="=">'02'</condicion>
+                    </field>
+                </tabla_ex>
+                <detalle>ctacod</detalle>
+            </field>-->
+
+<!--            
+            <field id="accesorios" local="true" obj="cotiz_accesorios_coche.xml">
+                <label colspan="7"></label>
+                <paring destino="cotizacion_id">idCotiz</paring>
+            </field>
+            -->
+        </table>
+
+    </form>
+</histrix>

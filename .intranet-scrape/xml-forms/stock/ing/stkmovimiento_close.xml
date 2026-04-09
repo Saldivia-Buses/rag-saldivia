@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="insert" _log="false" _grabafinal="true">
+	<title>Cierra Movimiento</title>
+	 <obs></obs>
+		<form>
+		    <table id="STK_MOVIMIENTOS" >
+		      <field id="impresion" local="true" id_cab="impresion">
+				<setvar>xmlImpresion</setvar>
+		      </field>
+
+		      <field id="numero_movimiento" local="true" id_cab="numero_movimiento">
+				<detalle>numero_movimiento</detalle>
+		      </field>
+		      <field id="stkconcepto_id" local="true" id_cab="stkconcepto_id">
+				<detalle>stkconcepto_id</detalle>
+		      </field>
+		      <field id="regcuenta_id" local="true" id_cab="regcuenta_id">
+				<detalle>regcuenta_id</detalle>
+		      </field><!--
+		      <field id="fecha_movimiento" local="true" id_cab="fecha_movimiento">
+				<detalle>fecha_movimiento</detalle> 
+				<tipo>date</tipo>
+		      </field>-->						<!--Debería mandar la fecha también ?-->
+		    </table>
+		</form>
+    </histrix>	
+

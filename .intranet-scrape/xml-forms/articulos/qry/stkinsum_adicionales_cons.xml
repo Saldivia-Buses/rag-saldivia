@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" path="fotos/accesorios">
+  <title>Insumos</title>
+  <obs></obs>
+  <form  >
+    <table id="STKINSUM" >
+      <title>Insumos</title>
+      
+      <field id="siscod" oculto="true">
+        <label>siscod</label>
+        <condicion operador="=">'02'</condicion>
+        <valor>'02'</valor>
+      </field>
+      
+      <field id="artcod" >
+        
+        <label>Cod.</label>
+        <detalle>artcod</detalle>
+        
+      </field>
+      <field id="artdes" deshabilitado="true">
+        <label>Artículo</label>
+        <help>Descripción de Artículo</help>
+      </field>
+      <field id="fotopath" local="true" noshow="true">
+        <if exp="true">
+          <true>'artcod/'</true>
+          <false>''</false>
+        </if>
+        <tipo>varchar</tipo>
+      </field>
+      
+      <field id="foto" path="fotopath" download="true">
+        <expression>select ARTICULO_FOTO.foto from ARTICULO_FOTO where ARTICULO_FOTO.idArticulo = STKINSUM.artcod and ARTICULO_FOTO.foto != '' order by revision desc limit 1</expression> 
+        <label>Imagen</label>
+        <tipo >file</tipo>
+        <size>40</size>
+      </field>    
+      <order>
+        <field id="artdes"/>
+      </order>
+      
+    </table>
+  </form>
+</histrix>

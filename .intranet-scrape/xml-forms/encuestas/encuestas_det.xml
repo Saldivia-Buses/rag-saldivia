@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ficha" imprime="true" inserta="false" modifica="false" borra="false" PDFfontSize="10" autoprint="true">
+    <title>Evaluación</title>
+    <obs></obs>
+    <form>
+        <table id="ENCUESTA_CLIENTE" >
+            <title>Encuesta de satisfacción de clientes</title>
+
+            <field id="numero" autoinc="true" noshow="true" print="false"/>
+
+            <field id="ctacod" noshow="true" print="false"/>
+
+            <field id="ctanom" tabla="CCTCUENT">
+                <label colspan="2" posX="+5" posY="+1" size="18">Cliente</label>
+            </field>
+
+            <field id="fecha" deshabilitado="true">
+                <label posX="100" posY="0" size="18">Fecha   </label>
+            </field>
+			
+			<field id="idEncuesta">
+				<helper type="combo" id="ENCUESTA">
+					<field id="idEncuesta"/>
+					<field id="descripcion"/>
+				</helper>
+				<label posx="+5" posy="+1" size="18">Encuesta</label>
+			</field>
+
+            <field id="resultados" local="true" showObjTabla="true">
+                <helper type="object" xml="encuestas_res.xml">
+                    <parameter source="numero" target="numero"/>
+                </helper>
+                <label posX="+5" posY="+8" PDFwidth="185"></label>
+            </field>
+
+            <field id="sugerencia">
+                <label colspan="2" posX="+5" posY="+10" PDFancho="160" size="22">Sugerencia</label>
+            </field>
+
+            <field id="comentario">
+                <label colspan="2" posX="+5" posY="+2" PDFancho="160" size="22">Comentario</label>
+            </field>
+        </table>
+        <join tipo="left">
+            <table id="CCTCUENT">
+                <field id="ctacod">
+                    <condicion operador="=">ENCUESTA_CLIENTE.ctacod</condicion>
+                </field>
+				<field id="siscod">
+						<condicion operador="=">'02'</condicion>
+				</field>
+            </table>
+        </join>
+	
+    </form>
+</histrix> 

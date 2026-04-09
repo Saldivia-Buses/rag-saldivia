@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="list" 
+	_limit="15"
+ deleteRow="false" imprime="false" procesa="true" inserta="false" width="15em">
+	<title>Control Calidad</title>
+	<obs/>
+	<!--
+        <eventos>
+
+                <event id="insert">close</event>
+                
+                <event id="procesar">close</event>
+                
+                <event id="procesar">refresh</event>
+        </eventos>	
+        -->
+	<form detalle="valida_momento">
+		<table id="PROD_CONTROLES">
+			<title>Controles</title>
+			<field id="habilitado" oculto="true">
+			    <condicion operador="=">0</condicion>
+			</field>
+			<field id="id_prodcontrol" noshow="true">
+			</field>
+			<field id="nrofab_id" noshow="true" local="true" >
+				<detalle>nrofab_id</detalle>
+			</field>
+
+			<field id="homologacion_id" noshow="true" tabla="PROD_CONTROL_HOMOLOG" >
+				<detalle>homologacion_id</detalle>
+			</field>
+
+			<field id="id_controlmovim" noshow="true">
+			    <expression>id_controlmovim</expression>
+			</field>
+
+			<field id="seccion_id" noshow="true" >
+				<detalle>seccion_id</detalle>
+			</field>
+			<field id="descripcion" tabla="MOMENTO" />
+			<field id="mal" noshow="true" >
+				<expression>case when sum(conforme + no_aplica) != count(*) then 'color:red;' when sum(conforme + no_aplica) = count(*) then 'color:green;' else '' end</expression>
+			</field>
+			<field id="cantok" Class="ui-li-count" _noshow="true">
+				<attribute id="style">mal</attribute>
+				<expression>concat(sum(conforme + controlado + no_aplica),'/', count(*) )</expression>
+			</field>
+
+			<field id="valida_momento" noshow="true">
+				<expression>
+					(
+						IF(idMomento = 5 OR idMomento = 6, 'prod_control_movim_movil_seccion.xml', 'prod_control_movim_movil.xml')
+					)
+				</expression>
+			</field>
+
+			<group>
+			    <field id="seccion_id" />
+			</group>
+		</table>
+		<join tipo="left">
+		    <table id="MOMENTO">
+			<field id="idMomento">
+			    <condicion operador="=">PROD_CONTROLES.seccion_id</condicion>
+			</field>
+		    </table>
+		</join>
+
+		<join tipo="left">
+			<table id="PROD_CONTROL_HOMOLOG">
+					<field id="prodcontrol_id">
+						<condicion operador="=">id_prodcontrol</condicion>
+					</field>
+					<field id="homologacion_id">
+						<condicion operador="=">[__homologacion_id__]</condicion>
+					</field>		
+					
+			</table>
+		</join>
+
+		<join tipo="left">
+		    <table id="PROD_CONTROL_MOVIM">
+			<field id="nrofab_id">
+			    <condicion operador="=">[__nrofab_id__]</condicion>
+			</field>
+			<field id="prodcontrol_id">
+			    <condicion operador="=">id_prodcontrol</condicion>
+			</field>
+		    </table>
+		</join>
+
+	</form>
+</histrix>

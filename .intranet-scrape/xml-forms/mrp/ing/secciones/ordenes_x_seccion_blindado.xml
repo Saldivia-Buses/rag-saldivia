@@ -1,0 +1,332 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" filter="true" >
+    <title>ORDENES DE PRODUCCION</title>
+    <obs></obs>
+    <form  _detalle="link">
+	        
+	<table id="MRP_ORDEN_PRODUCCION" label="Ordenes de Producción" >
+
+
+	    <fieldGroup _style="font-size:0.8em">
+<!--
+            <field id="oculta_blindado" local="true" noshow="true">
+                <helper type="parameter" id="SIS::mrp:oculta_blindado">
+                    <label>Perfil que no puede ver vidrios blindados en operacion de laminado</label>
+                    <defaultValue>14</defaultValue>
+                </helper>
+            </field>
+-->
+            <field id="perfil" local="true" noshow="true">
+                <valor eval="true">$_SESSION['profile']</valor>
+            </field>
+
+            <field id="rubro" noshow="true">
+                <label>rub</label>
+		<expression>STK_ARTICULOS.stkrubro_id</expression>
+		<condicion operador="=">4</condicion>
+            </field>
+
+            <field id="fecha_orden" noshow="true">
+                <label>Fecha</label>
+                <condicion operador="&lt;=">date(now())</condicion>
+            </field>
+
+            <field id="fecha_cierre" noshow="true">
+                <condicion operador="=">'0000-00-00'</condicion>
+            </field>
+
+            <field id="id_mrpordendetalle" noshow="true" tabla="MRP_ORDEN_DETALLE">
+                <detalle>id_mrpordendetalle</detalle>
+                <detalle>mrpordendetalle_id</detalle>
+	        </field>
+
+
+            <field id="proxima_seccion" noshow="true">
+                <label>Proxima Sección</label>
+                <helper xml="mrp_seccion_crud.xml" dir="/mrp/man/" type="combo"  />
+
+                // SELECCIONO PROXIMA SECCION
+                <expression>(select PP2.mrpseccion_id from MRP_PRODUCT_PATH PP2 where PP2.parent_productpath_id = MRP_PRODUCT_PATH.id_productpath limit 1)</expression>
+            </field>  
+
+            <field id="abv_ordenconcepto" tabla="MRP_ORDEN_CONCEPTO">
+                <label>Con</label>
+            </field>
+
+            <field id="productpath_id" noshow="true">
+                <expression>MRP_PRODUCT_PATH.id_productpath</expression>
+            </field>
+
+            <field id="next_productpath_id" noshow="true">
+                <expression>select MP.id_productpath from MRP_PRODUCT_PATH MP where MP.parent_productpath_id = MRP_PRODUCT_PATH.id_productpath</expression>
+            </field>
+            <field id="next_2_productpath_id" noshow="true">
+                <expression>select MPP.id_productpath from MRP_PRODUCT_PATH MPP where MPP.parent_productpath_id = (select MPP.id_productpath from MRP_PRODUCT_PATH MPP where MPP.parent_productpath_id = MRP_PRODUCT_PATH.id_productpath)</expression>
+            </field>            
+
+            <field id="parent_productpath_id" noshow="true">
+                <expression>MRP_PRODUCT_PATH.parent_productpath_id</expression>
+            </field>
+
+    		<field id="mrpseccion_id" local="true" noshow="true">
+                <detalle>mrpseccion_id</detalle>
+    		</field>                 
+
+            <field id="id_mrporden" noshow="true">
+                <detalle>mrporden_id</detalle>
+            </field>
+            <field id="numero_orden" style="background-color:gray;color:white;font-weight:bold;">                
+                <label>Nro</label>
+                <help>Numero de Orden de Fabricación</help>
+            </field>
+	    <field id="origen" style="background-color:#ccc;color:green;font-weight:bold;">
+		<expression>select MRP.numero_orden from MRP_ORDEN_PRODUCCION MRP where MRP.id_mrporden = MRP_ORDEN_PRODUCCION.mrporden_relacionada_id limit 1</expression>
+	    </field>
+    		<field id="seccion_anterior" noshow="true">
+    		    <!--<expression having="false">(case when id_mrpseccion = 1 or MRP_PRODUCT_PATH.parent_productpath_id = 0 then 1 else (ifnull((select sum(cantidad) from MRP_DETALLE_REGISTRO AS DR where mrpordendetalle_id = id_mrpordendetalle and DR.productpath_id = MRP_PRODUCT_PATH.parent_productpath_id and DR.mrpconcepto_id = 1), 0) ) end)</expression>-->
+                <expression having="false">(CASE WHEN id_mrpseccion = 1 OR MRP_PRODUCT_PATH.parent_productpath_id = 0 THEN 1 ELSE (IFNULL((SELECT SUM(cantidad) FROM MRP_DETALLE_REGISTRO AS DR
+                                                                                                                                                WHERE DR.mrpordendetalle_id = id_mrpordendetalle
+                                                                                                                                                  AND FIND_IN_SET(DR.productpath_id, (SELECT GROUP_CONCAT(MRP_PP.parent_productpath_id SEPARATOR ',')
+                                                                                                                                                                                        FROM MRP_PRODUCT_PATH MRP_PP
+                                                                                                                                                                                        WHERE MRP_PP.mrpseccion_id = '[__mrpseccion_id__]'
+                                                                                                                                                                                          AND MRP_PP.stkrubro_id = STK_ARTICULOS.stkrubro_id))
+                                                                                                                                                                                          AND DR.mrpconcepto_id = 1), 0)) END)</expression>
+
+                <condicion operador="!=">0</condicion> 
+    		</field>
+
+            // ESTE CAMPO DETERMINA SI SE GRABA EL STOCK
+            <field id="graba_stock" noshow="true">
+                <label>graba Stock</label>
+                <expression>0 = (select count(*) from MRP_PRODUCT_PATH MPP where MPP.parent_productpath_id = MRP_PRODUCT_PATH.id_productpath and MPP.stkrubro_id = STK_ARTICULOS.stkrubro_id)</expression>
+                <detalle>graba_stock</detalle>
+            </field>
+
+        	<field id="stkarticulo_id" tabla="MRP_ORDEN_DETALLE" noshow="true">
+        		<label>Código</label>
+        	</field>                 
+
+        	<field id="nombre_articulo" tabla="STK_ARTICULOS" style="font-size:1.2em">
+                <expression>concat(stkarticulo_id,' ',nombre_articulo)</expression>
+           		<label>Artículo</label>
+
+        	</field>
+            <field id="par">
+                <label>par</label>
+                <expression>concat((case when macho = 1 then 'Macho' else '' end), ' ',(case when hembra = 1 then 'Hembra' else '' end) ) </expression>
+            </field>
+            <field id="stkrubro_id"  tabla="STK_ARTICULOS" >
+                <label modpos="nobr">Rubro</label>
+                <helper type="combo" xml="stkrubro_qry.xml" dir="/ayudas" empty="true" />
+            </field>
+
+            <field id="xml_mrpseccion" tabla="MRP_SECCION" noshow="true" />
+    	    <field id="link" local="true" noshow="true">
+        		<if exp="true">
+        		    <true>'xml_mrpseccion'</true>
+        		    <false>''</false>
+        		</if>
+
+<!--        		<if exp="_ORDEN == 0 || mrpseccion_id == 1">
+        		    <true>'xml_mrpseccion'</true>
+        		    <false>''</false>
+        		</if>
+-->
+    	    </field>
+
+    	    <field id="objetivo_ordendetalle" noshow="true">
+        		  <label>Total</label>
+        		  <expresion>objetivo_ordendetalle</expresion>
+    		      <tipo>integer</tipo>
+    	    </field>
+
+
+            <field id="hechos" suma="true" noshow="true">
+
+                <label>Recibidos</label>
+                <expression>(select sum(MDR.cantidad) FROM MRP_DETALLE_REGISTRO MDR where MDR.productpath_id =  MRP_PRODUCT_PATH.parent_productpath_id and  MDR.mrpordendetalle_id = id_mrpordendetalle and MDR.mrpconcepto_id = 1)</expression>
+                <tipo>integer</tipo>
+            </field>
+            <field id="ant" noshow="true">
+                <label>ant</label>
+                <expresion>parent_productpath_id</expresion>
+            </field>
+            <field id="act" noshow="true">
+                <label>act</label>
+                <expresion>id_productpath</expresion>
+            </field>            
+     	    <field id="objetivo_real" _suma="true" _noshow="true">
+        		<label>Obj</label>
+
+                <expression>round(ifnull((select sum(MDR.cantidad) FROM MRP_DETALLE_REGISTRO MDR where MDR.productpath_id =  MRP_PRODUCT_PATH.parent_productpath_id and  MDR.mrpordendetalle_id = id_mrpordendetalle and MDR.mrpconcepto_id = 1), objetivo_ordendetalle ), 0)</expression>
+
+                <condicion operador="&gt;">ifnull(sum(cantidad ), 0)</condicion>      
+
+
+                <detalle>objetivo_ordendetalle</detalle>
+                <tipo>integer</tipo>
+    	    </field>                 
+
+            <field id="linkrech" noshow="true" local="true">
+                <if exp="_ORDEN == 0 || mrpseccion_id == 1">
+                    <true>'rechazo_seccion.xml'</true>
+                    <false>'rechazo_seccion.xml'</false>
+                </if>                
+            </field>
+	    <field id="title" noshow="true">
+		<expression>concat('Cargar Produccion Orden: ', id_mrporden)</expression>
+	    </field>
+            <field id="pendiente" inputstyle="color:red;font-weight:bold;width:50%;border:1px solid red;font-size:1.2em;">
+                <label>Pend</label>
+                <expression>round(ifnull((select sum((case when MDR.mrpconcepto_id = 1 then cantidad else 0 end)) FROM MRP_DETALLE_REGISTRO MDR where MDR.productpath_id =  MRP_PRODUCT_PATH.parent_productpath_id and  MDR.mrpordendetalle_id = id_mrpordendetalle), objetivo_ordendetalle ) - ifnull( sum(cantidad ) ,0),0) </expression>
+                <attribute id="linkint">link</attribute>
+                <attribute id="linkdes">title</attribute>
+                <helper   type="link" title="Cargar Producción">
+                    <parameter source="id_mrpordendetalle" target="id_mrpordendetalle" />
+                    <parameter source="id_mrpordendetalle" target="mrpordendetalle_id" />
+                    <parameter source="id_mrporden" target="id_mrporden" />
+                    <parameter source="mrpseccion_id" target="mrpseccion_id" />
+                    <parameter source="productpath_id" target="productpath_id" />
+                    <parameter source="objetivo_real" target="objetivo_ordendetalle" />
+                    <parameter source="graba_stock" target="graba_stock" />
+                    <parameter source="nombre_articulo" target="nombre_articulo" />
+                    <parameter source="pendiente" target="pendiente" />
+                    <parameter source="pendiente" target="cantidad" />
+                </helper>
+
+                <tipo>integer</tipo>
+
+            </field>
+            <field id="cantidad" _editable="true" deshabilitado="false" tabla="MRP_DETALLE_REGISTRO" >
+                <label>Cant.</label>
+                <expression>sum((case when mrpconcepto_id = 1 then cantidad else 0 end))</expression>                
+                <tipo>integer</tipo>
+            </field>
+
+            <field id="Rechazar" inputstyle="border-radius:50%;border:1px solid #ccc;">
+                <label>Rech</label>
+                <expression>ifnull(sum((case when mrpconcepto_id = 2 then cantidad else 0 end)),'R')</expression>
+                <attribute id="linkint">linkrech</attribute>
+                <helper type="link" title="Rechazo">
+                    <parameter source="id_mrpordendetalle" target="id_mrpordendetalle" />
+                    <parameter source="id_mrpordendetalle" target="mrpordendetalle_id" />
+                    <parameter source="id_mrporden" target="id_mrporden" />
+                    <parameter source="mrpseccion_id" target="mrpseccion_id" />
+                    <parameter source="productpath_id" target="productpath_id" />
+                    <parameter source="objetivo_real" target="objetivo_ordendetalle" />
+                    <parameter source="graba_stock" target="graba_stock" />
+                    <parameter source="nombre_articulo" target="nombre_articulo" />
+                </helper>
+
+            </field>
+
+            <field id="linkrot" noshow="true" local="true">
+                <if exp="_ORDEN == 0 || mrpseccion_id == 1">
+                    <true>'roturas_seccion.xml'</true>
+                    <false>'roturas_seccion.xml'</false>
+                </if>                
+            </field>
+            <field id="Roturas" inputstyle="border-radius:50%;border:1px solid #ccc;">
+                <label>Rotos</label>
+                <expression>ifnull(sum((case when mrpconcepto_id = 3 then cantidad else 0 end)),'X')</expression>
+                <attribute id="linkint">linkrot</attribute>
+                <helper   type="link" title="Roturas">
+                    <parameter source="id_mrpordendetalle" target="id_mrpordendetalle" />
+                    <parameter source="id_mrpordendetalle" target="mrpordendetalle_id" />
+                    <parameter source="id_mrporden" target="id_mrporden" />
+                    <parameter source="mrpseccion_id" target="mrpseccion_id" />
+                    <parameter source="productpath_id" target="productpath_id" />
+                    <parameter source="objetivo_real" target="objetivo_ordendetalle" />
+                    <parameter source="graba_stock" target="graba_stock" />
+                    <parameter source="nombre_articulo" target="nombre_articulo" />
+                </helper>
+
+                
+            </field>
+
+            <field id="id_detalle_reg" noshow="true" tabla="MRP_DETALLE_REGISTRO">
+            </field>
+<!--
+    	    <field id="fecha_carga"    noshow="true" tabla="MRP_DETALLE_REGISTRO">
+    		  <expression>ifnull(date(fecha_carga), date(now()))</expression>
+    		  <condicion operador="=">date(now())</condicion> 
+    	    </field>
+-->
+<!--
+            <field id="peso_mrpprioridad" tabla="MRP_PRIORIDAD" noshow="true">
+            </field>
+-->
+	    </fieldGroup>
+            <group>
+                <field id="id_mrpordendetalle"></field>
+                <field id="id_productpath"></field>
+<!--                <field id="id_detalle_reg"></field>  -->
+            </group>
+            <order>
+<!--                <field id="peso_mrpprioridad" orderType="DESC"></field> -->
+                <field id="fecha_orden"></field>
+                <field id="id_mrporden"></field>
+            </order>
+        </table>
+
+        <join tipo="inner">
+    	    <table id="MRP_ORDEN_DETALLE">
+                <field id="mrporden_id">
+            	    <condicion operador="=">MRP_ORDEN_PRODUCCION.id_mrporden</condicion>
+                </field>
+    	    </table>
+        </join>
+<!--
+        <join tipo="left">
+            <table id="MRP_PRIORIDAD">
+                <field id="id_mrpprioridad">
+                    <condicion operador="=">MRP_ORDEN_PRODUCCION.mrpprioridad_id</condicion>
+                </field>
+            </table>
+        </join>        
+    -->
+        <join tipo="left">
+            <table id="MRP_SECCION">
+                <field id="id_mrpseccion">
+                    <condicion operador="=">[__mrpseccion_id__]</condicion>
+                </field>
+            </table>
+        </join>           
+        <join tipo="inner">
+    	    <table id="STK_ARTICULOS">
+        		<field id="id_stkarticulo">
+        		    <condicion  operador="=">MRP_ORDEN_DETALLE.stkarticulo_id</condicion>
+        		</field>
+    	    </table>
+        </join>
+        
+        <join tipo="left">
+    	    <table id="MRP_PRODUCT_PATH">
+                <field id="mrppath_id">
+                    <condicion operador="=">MRP_ORDEN_PRODUCCION.mrppath_id</condicion>
+                </field>                
+                <field id="mrpseccion_id">
+            	    <condicion operador="=">id_mrpseccion</condicion>
+                </field>
+    	    </table>
+        </join>
+        <join tipo="left">
+            <table id="MRP_DETALLE_REGISTRO">
+                <field id="mrpordendetalle_id">
+                    <condicion operador="=">id_mrpordendetalle</condicion>
+                </field>
+                <field id="productpath_id">
+                      <condicion operador="=">MRP_PRODUCT_PATH.id_productpath</condicion>
+                </field>                 
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="MRP_ORDEN_CONCEPTO">
+                <field id="id_mrporden_concepto">
+                    <condicion operador="=">mrporden_concepto_id</condicion>
+                </field>
+            </table>
+        </join>     
+    </form>
+</histrix>
+

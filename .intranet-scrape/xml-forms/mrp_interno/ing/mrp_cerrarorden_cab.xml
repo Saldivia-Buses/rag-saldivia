@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="cabecera" >
+    <title>ORDEN DE PRODUCCION</title>
+    <form>
+        <table id="MRP_ORDEN_PRODUCCION" label="ORDEN DE COMPRA" >
+
+            <field id="id_mrporden" deshabilitado="true">
+        	<label>Numero</label>
+            </field>
+            <field id="login_id" local="true" deshabilitado="true" noshow="true">
+		<valor eval="true">$_SESSION['usuario']</valor>
+	    </field>
+
+            <field id="fecha_orden" deshabilitado="true">
+                <label modpos="nobr">Fecha</label>
+                <help >Fecha de Orden de Producción</help>
+                <tipo>date</tipo>
+            </field>
+
+            <field id="fecha_cierre" local="true">
+                <label modpos="nobr">Fecha Cierre</label>
+                <help >Fecha de Cierre</help>
+                <valor>today</valor>
+                <tipo>date</tipo>
+            </field>
+            <!--
+            <field id="rhpersonal_id"  deshabilitado="true">
+        	<helper type="combo" xml="rhpersonal_qry.xml" dir="/ayudas_local" empty="true"/>
+                <label modpos="nobr">Empleado</label>
+                
+                <help >Empleado responsable de la Orden de Producción</help>
+            </field>
+               -->
+            <field id="orden_comentarios">
+                <label colspan="6">Comentarios</label>
+                <help>Comentarios</help>
+                <size>60</size>
+            </field>
+            <field id="stkdeposito_id" local="true" deshabilitado="true">
+                <label  colspan="6">Deposito</label>
+                <help>Lugar de Entrega/Descarga</help>
+                <helper type="combo"  xml="deposito.xml" _dir="/stock/man/" >
+                </helper>
+            </field>
+            
+            <field id="mrpestado"  local="true" oculto="true">
+        	<valor>1</valor>
+                <label>Estado </label>
+            </field>
+            <field id="stkconcepto_id"  local="true" noshow="true">
+        	<expression>select movcod FROM STKCONCE where contip = 1 and produccion_concepto = 1 limit 1</expression>
+            </field>
+            <field id="stkconcepto_consumido_id"  local="true" noshow="true">
+        	<expression>select movcod FROM STKCONCE where contip = 2 and produccion_concepto = 1 limit 1</expression>
+            </field>
+
+        </table>
+    </form>
+</histrix>

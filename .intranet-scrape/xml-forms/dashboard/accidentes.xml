@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="dashboard">
+    <titulo>Accidentes</titulo>
+
+        <widget id="accidentes"  width="98%" height="300px">
+            <title>Accidentes Totales</title>
+            <url><![CDATA[histrixLoader.php?xml=rrhh_accidentes.xml&dir=estadisticas]]></url>
+        </widget>
+
+        <widget id="accidentes_tipo"  width="48%" height="300px">
+            <title>Accidentes Tipo</title>
+            <url><![CDATA[histrixLoader.php?xml=rrhh_accidentes_tipo.xml&dir=estadisticas/accidentes]]></url>
+        </widget>
+
+        <widget id="accidentes_tipo_evolutivo"  width="48%" height="300px">
+            <title>Accidentes Tipo Evolutivo</title>
+            <url><![CDATA[histrixLoader.php?xml=rrhh_accidentes_tipo_evolutivo.xml&dir=estadisticas/accidentes]]></url>
+        </widget>
+
+        <widget id="accidentes_initinere_tipo" width="48%" height="300px">
+            <title>Accidentes Initinere</title>
+            <url><![CDATA[histrixLoader.php?xml=rrhh_accidentes_initinere_tipo.xml&dir=estadisticas/accidentes]]></url>
+        </widget>
+
+        <widget id="accidentes_initinere_tipo_evolutivo" width="48%" height="300px">
+            <title>Accidentes Initinere Evolutivo</title>
+            <url><![CDATA[histrixLoader.php?xml=rrhh_accidentes_initinere_tipo_evolutivo.xml&dir=estadisticas/accidentes]]></url>
+        </widget>
+
+        <widget id="accidentes_seccion" width="48%" height="300px">
+            <title>Accidentes Seccion</title>
+            <url><![CDATA[histrixLoader.php?xml=rrhh_accidentes_seccion.xml&dir=estadisticas/accidentes]]></url>
+        </widget>
+
+        <widget id="accidentes_seccion_evolutivo" width="48%" height="300px">
+            <title>Accidentes Seccion Evolutivo</title>
+            <url><![CDATA[histrixLoader.php?xml=rrhh_accidentes_seccion_evolutivo.xml&dir=estadisticas/accidentes]]></url>
+        </widget>
+
+        <widget id="accidentes_partes_cuerpo" width="48%" height="300px">
+            <title>Accidentes Partes Cuerpo</title>
+            <url><![CDATA[histrixLoader.php?xml=rrhh_accidentes_partes_cuerpo.xml&dir=estadisticas/accidentes]]></url>
+        </widget>
+
+        <widget id="accidentes_partes_cuerpo_evolutivo" width="48%" height="300px">
+            <title>Accidentes Partes Cuerpo Evolutivo</title>
+            <url><![CDATA[histrixLoader.php?xml=rrhh_accidentes_partes_cuerpo_evolutivo.xml&dir=estadisticas/accidentes]]></url>
+        </widget>
+
+        <widget id="accidentes_frecuencias" width="48%" height="300px">
+            <title>Accidentes Frecuencia</title>
+            <url><![CDATA[histrixLoader.php?xml=rrhh_accidentes_frecuencias.xml&dir=estadisticas/accidentes]]></url>
+        </widget>
+
+        <widget id="accidentes_gravedad" width="48%" height="300px">
+            <title>Accidentes Gravedad</title>
+            <url><![CDATA[histrixLoader.php?xml=rrhh_accidentes_gravedad.xml&dir=estadisticas/accidentes]]></url>
+        </widget>
+
+        <!--<widget id="accidentes_incidencias" width="48%" height="300px">
+            <title>Accidentes Incidencias</title>
+            <url><![CDATA[histrixLoader.php?xml=rrhh_accidentes_incidencias.xml&dir=estadisticas/accidentes]]></url>
+        </widget>
+
+        <widget id="accidentes_duracion_bajas" width="48%" height="300px">
+            <title>Accidentes Duracion Promedio Bajas</title>
+            <url><![CDATA[histrixLoader.php?xml=rrhh_accidentes_duracion_bajas.xml&dir=estadisticas/accidentes]]></url>
+        </widget>-->
+
+</histrix>

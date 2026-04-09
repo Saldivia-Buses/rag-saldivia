@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="update"> 
+  	<title/>
+  	<obs/>
+  	<form>
+    	<table id="REG_MOVIMIENTOS" idCampoCond="graba_recibo">			
+  			<field id="id_regmovim" 	id_temp="id_recibo" esClave="true" />	
+        <field id="saldo_movimiento" >
+            <valor>0</valor>
+            <tipo>numeric></tipo>
+        </field>
+      </table>
+   	</form>
+</histrix>

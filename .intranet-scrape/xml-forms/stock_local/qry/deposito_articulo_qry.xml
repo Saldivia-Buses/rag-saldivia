@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" >
+  <title>Stock Actualizado</title>
+  <obs/>
+  <form>
+    <table id="STK_MOVIMIENTOS" label="Stock Actualizado">
+
+      <field id="id" >
+        <expression>concat(STK_MOVIMIENTOS.stkdeposito_id,'_', stklocacion_id)</expression>
+      </field>
+<!--
+      <field id="detalle" local="true">
+        <if exp="true">
+          <true>'aaa'</true>
+          <false></false>
+        </if>
+      </field>
+-->
+      <field id="nombre_depositos" _oculto="true">
+          <expression><![CDATA[concat( ifnull(nombre_deposito, ''),' ' ,ifnull(codigo_locacion,' '), (case when stklocacion_fija_id = id_stklocacion then ' (Fija) ' else '' end),'  (',round(sum((case when tipo_concepto = 0  then  1 else -1 end) * ifnull(cantidad,0)), 2),')')]]></expression>
+      </field>
+	<field id="nombre_deposito" oculto="true" tabla="STK_DEPOSITOS"/>
+
+      <field id="cantidad_stock" _oculto="true">
+         <expression _having="false" >sum((case when tipo_concepto = 0  then  1 else -1 end) * ifnull(cantidad,0))</expression>
+         <condicion operador="!=">0</condicion>
+      </field>
+
+      <field id="stkdeposito_id" >
+        <detalle>stkdeposito_id</detalle>
+      </field>
+
+      <field id="stklocacion_id" >
+        <detalle>stklocacion_id</detalle>
+      </field>
+
+      <field id="stkarticulo_id" >
+        <condicion operador="=">-1</condicion>
+      </field>
+
+      <group>
+         <field id="stkdeposito_id" tabla="STK_MOVIMIENTOS" />
+         <field id="stklocacion_id" />
+      </group>
+
+      <order>
+          <field id="nombre_deposito" tabla="STK_DEPOSITOS" />
+
+      </order>
+
+    </table>
+
+    <!--
+    <table id="STK_STOCKACTUAL" label="Stock Actualizado">
+
+      <field id="stkdeposito_id" >
+      </field>
+      <field id="nombre_deposito" >
+          <expression>concat(nombre_deposito, ' - (', cantidad_stock, ')')</expression>
+      </field>
+      <field id="cantidad_stock">
+         <condicion operador="!=">0</condicion>
+      </field>
+      <field id="stkarticulo_id" >
+      </field>      
+    </table>
+  -->
+    <join>
+      <table id="STK_ARTICULOS">
+        <field id="id_stkarticulo">
+          <condicion operador="=">stkarticulo_id</condicion>
+        </field>
+<!--
+        <field id="subsistema_id">
+          <condicion operador="=">'01'</condicion>
+        </field>
+-->
+      </table>
+    </join>
+    <join>
+      <table id="STK_CONCEPTOS">
+        <field id="id_stkconcepto">
+          <condicion operador="=">stkconcepto_id</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join>
+      <table id="STK_DEPOSITOS">
+        <field id="id_stkdeposito">
+          <condicion operador="=">STK_MOVIMIENTOS.stkdeposito_id</condicion>
+        </field>
+        <field id="suma_total">
+          <condicion operador="=">1</condicion>
+        </field>        
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="STK_LOCACION">
+        <field id="stkdeposito_id">
+          <condicion operador="=">STK_MOVIMIENTOS.stkdeposito_id</condicion>
+        </field>
+        <field id="id_stklocacion">
+          <condicion operador="=">stklocacion_id</condicion>
+        </field>        
+      </table>
+    </join>    
+  </form>
+</histrix>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+	<histrix tipo="update" >
+		<title>Pedidos Internos</title>
+		<obs></obs>
+		<form >
+			<table id="CPS_COTIZACION_DETALLE" label="Cierro Movimientos" idCampoCond="id_cotiz_detalle" >
+				<field esClave="true" id="id_cotiz_detalle" id_temp="id_cotiz_detalle"></field>
+				<field id="ordencompra_id"	 	id_cab="ocpnro" />
+
+			</table>
+		</form>
+	</histrix>

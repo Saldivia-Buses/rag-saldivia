@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8" ?>
+   <histrix tipo="abm" paginar="100" ancho="50">
+       <title>MOVIMIENTOS DE DEMERITO</title>
+        <obs></obs>
+               <form >
+                  <table id="MOVDEMERITO" label="MOVIMIENTOS DE DEMERITOS">
+
+		<filters>
+		    <field id="prvcod">
+			<label>Código Proveedor</label>
+			<operador>=</operador>
+		    </field>
+		</filters>
+                  <field id="demfec" tipoOrden="DESC">
+                      <label>Fecha </label>
+                      <help> </help>
+                  </field>
+
+                  <field id="prvcod">
+                      <label>Código de Cuenta </label>
+                      <help>Código de Proveedor </help>
+		    <tabla_ex id="CCTCUENT">
+			<!-- campos a agregar al contenedor Filtro-->
+			<field id="ctacod"></field>
+			<field id="ctanom"></field>
+			<field id="siscod" oculto="true">
+			    <condicion operador="=">'01'</condicion>
+			</field>
+
+			<filtra>ctacod</filtra>
+		    </tabla_ex>
+
+                  </field>
+
+                  <field id="coddem">
+                      <label>Código </label>
+                      <help> </help>
+		    <tabla_ex id="DEMERITO">
+			<!-- campos a agregar al contenedor Filtro-->
+			<field id="coddem"></field>
+			<field id="desdem"></field>
+			<filtra>coddem</filtra>
+		    </tabla_ex>
+                     <condicion operador="!=">0</condicion>
+                  </field>
+                  <field id="movfec">
+                      <label>Fecha OC</label>
+                      <help>Fecha Movimiento Factura. </help>
+                  </field>
+                  <!--
+                  <field id="tipocomp">
+                      <label>Tipo Comprobante </label>
+                      <help>Tipo de Comprobante </help>
+                  </field>
+                  -->
+                  <field id="puesto">
+                      <label>puesto </label>
+                      <help>Puesto de Comprobante </help>
+                  </field>
+
+                  <field id="nrocomp">
+                      <label>Número </label>
+                      <help>Número de Comprobante </help>
+                  </field>
+                  <field id="artcod">
+                      <label>Código Artículo</label>
+                      <help> </help>
+	    <!--
+		    <tabla_ex id="STKINSUM">
+			<field id="artcod"></field>
+			<field id="artdes"></field>
+			<field id="siscod" oculto="true">
+			    <condicion operador="=">'01'</condicion>
+			</field>
+
+			<filtra>artcod</filtra>
+		    </tabla_ex>
+-->
+
+                  </field>
+                  <order>
+                    <field id="demfec" />
+                  </order>
+
+                  </table>
+               </form>
+        </histrix>

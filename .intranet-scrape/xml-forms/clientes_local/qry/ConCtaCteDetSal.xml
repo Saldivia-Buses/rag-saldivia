@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8" ?>
+   <histrix tipo="consulta">
+       <title>Cuenta Corriente</title>
+        <obs></obs>
+               <form >
+                  <table id="CCTMOVIM" label="Movimientos">
+
+                  <field id="siscod" oculto="true">
+                      <label>Cod.</label>
+                  </field>
+
+                  <field id="ctacod">
+                      <label>Cod.</label>
+                      <help>Código de Cuenta </help>
+                  </field>
+
+                  <field id="movnpv">
+                      <label>P.V.</label>
+                      <help> Punto Venta</help>
+		      <format>%04d</format>
+                  </field>
+
+                  <field id="movnro">
+                      <label>Número</label>
+                      <help>Número Comprobante</help>
+		      <format>%012d</format>
+                  </field>
+
+                  <field id="concepto">
+		      <expression>CCTCONCE.condes</expression>
+                      <label>Cod.Concepto</label>
+		      <tipo>varchar</tipo>
+                  </field>
+
+                  <field id="movfec">
+                      <label>Fecha </label>
+                  </field>
+
+                  <field id="movvto">
+                      <label>Venc. </label>
+                  </field>
+
+                  <field id="movimp" suma="true">
+                      <label>Importe</label>
+                      <expression>round(movimp, 2)</expression>
+                  </field>
+
+                  <field id="movsal" suma="true">
+                      <label>Saldo</label>
+                      <expression>round(movsal, 2)</expression>
+		      <condicion operador="!=">0</condicion>
+                  </field>
+
+                  </table>
+		  <join tipo="left">
+		    <table id="CCTCONCE">
+			<field id="siscod" oculto="true">
+			    <label>cctcuent.siscod</label>
+			    <condicion operador="=">CCTMOVIM.siscod</condicion>
+			</field>
+
+			<field id="concod" oculto="true">
+			    <condicion operador="=">CCTMOVIM.concod</condicion>
+			</field>
+
+			<field id="condes" oculto="true">
+			</field>
+		    </table>
+		  </join>
+               </form>
+        </histrix>

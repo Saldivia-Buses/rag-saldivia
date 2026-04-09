@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="abm">
+       <title>Estados de Observacion (Recepcion)</title>
+        <obs></obs>
+               <form >
+                  <table id="ESTADOBS" label="Estados de Observacion">
+                  <field id="codest">
+                      <label>Codigo Estado </label>
+                      <help> </help>
+                  </field>
+                  <field id="nomest">
+                      <label>Nombre Estado </label>
+                      <help> </help>
+                  </field>
+                  <field id="siscod" oculto="true">
+                      <label>Codigo Sistema.. </label>
+                      <help> </help>
+                  </field>
+                  </table>
+               </form>
+        </histrix>

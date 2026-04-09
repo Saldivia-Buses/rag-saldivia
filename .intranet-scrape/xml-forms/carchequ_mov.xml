@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <abm tipo="consulta">
+       <titulo>Movimientos Bancarios</titulo>
+        <obs></obs>
+               <consulta>
+                  <tabla id="CARCHEQU" label="Chequeras">
+
+		  <filtro_ex>
+		    <label>CUENTA</label>
+		    <tabla_ex id="BCSCUENT">
+				<campo id="ccbcod"></campo>
+				<campo id="ccbnom"></campo>
+-				<campo id="siscod" oculto="true"></campo>
+
+				<filtra>ccbcod</filtra>
+		    </tabla_ex>
+		  </filtro_ex>
+
+                  <campo id="ccbcod">
+                      <label>Codigo Cuenta</label>
+                      <help>Codigo de Cuenta Bancaria </help>
+                  </campo>
+
+                  <campo id="siscod" oculto="true">
+                      <label>Codigo Sistema.</label>
+                      <help> </help>
+                  </campo>
+
+                  <campo id="carfec">
+                      <label>Acreditacion </label>
+                      <help>Fecha de Acreditacion</help>
+                  </campo>
+
+				<campo id="carimp">
+            		<label>Importe</label>
+        	        <help>Importe del Cheque</help>
+				    <tipo>string</tipo>
+				</campo>
+
+<!--
+		<filtros>
+			<campo id="bcsfec">
+			    <operador>>=</operador>
+			    <label>Desde Fecha Movimiento</label>
+			    <valor>today</valor>
+			</campo>
+			<campo id="bcsfec">
+			    <operador>&lt;=</operador>
+			    <label>Hasta Fecha Movimiento</label>
+			    <valor>today</valor>
+
+			</campo>
+		  </filtros>
+-->
+	    	<orden>
+				<campo id="bcsfec"></campo>
+			</orden>
+
+
+		</tabla>
+
+	</consulta>
+</abm>

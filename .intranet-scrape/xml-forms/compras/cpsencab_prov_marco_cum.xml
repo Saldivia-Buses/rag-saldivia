@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+    <title>ORDENES DE COMPRA</title>
+    <obs></obs>
+    <form  >
+        <table id="CCTCUENT" >
+
+            <field id="ctacod"></field>
+            <field id="NOM">
+                <expression>CONCAT(left( ctafan,18) , ' (', left( ctanom, 18),')')</expression>
+                <label>Nombre</label>
+
+            </field>
+
+            <!--			<field id="ctanom"></field> -->
+            <field id="siscod" oculto="true">
+                <condicion operador="=">'01'</condicion>
+            </field>
+
+            <field id="ctafan" noshow="true"></field>
+            <field id="baja" noshow="true">
+                <condicion operador="!=">1</condicion>
+            </field>
+<!--            <field id="ocpest" tabla="CPSENCAB">
+                <condicion operador="!=">2 and ocpest != 4</condicion>
+            </field> -->
+
+            <group>
+                <field id="ctacod" tabla="CCTCUENT"></field>
+            </group>
+
+            <order>
+                <field id="ctafan"></field>
+            </order>
+
+        </table>
+    <!--    <join tipo="inner">
+            <table id="CPSENCAB">
+                <field id="ctacod" oculto="true">
+                    <condicion operador="=">CCTCUENT.ctacod</condicion>
+                </field>
+                <field id="siscod" oculto="true">
+                    <condicion operador="=">''</condicion>
+                </field>
+
+
+            </table>
+        </join>-->
+
+
+    </form>
+</histrix>

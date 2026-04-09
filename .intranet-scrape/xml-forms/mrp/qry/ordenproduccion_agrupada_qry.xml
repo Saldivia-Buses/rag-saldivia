@@ -1,0 +1,340 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" inserta="no" _paginar="250" filter="true" PDForientation="L" serverSide="true">
+    <title>ORDENES DE PRODUCCION</title>
+    <obs></obs>
+    <form  _detalle="ordendetalle_agrupada_det_qry.xml" _inline="true">
+	        
+	<table id="MRP_ORDEN_PRODUCCION" label="Consulta de Ordenes de Producción">
+            <filters>
+                <field id="fecha_orden">
+                    <label>Desde Fecha</label>
+                    <help>Fecha de Orden de Fabricación</help>
+                    <operador>&gt;=</operador>
+                </field>
+                <field id="fecha_orden">
+                    <label modpos="nobr">Hasta Fecha</label>
+                    <help>Fecha de Orden de Fabricación</help>
+        		    <valor>today</valor>
+                    <operador>&lt;=</operador>
+                </field>
+		<field id="nro_cuenta">
+			<operador>=</operador>
+			<label>Cliente</label>
+			<help>Cliente</help>
+		</field>
+
+                <field id="mrpestado_id" deshabilitado="false" >
+                    <label modpos="nobr">Estado</label>
+                    <help>Estado Actual</help>
+                    <operador>=</operador>
+		              <valor>0</valor>
+                </field>
+                <field id="mrporden_concepto_id">
+                    <label modpos="nobr">Concepto</label>
+                    <operador>=</operador>
+                </field>
+                <field id="todo" deshabilitado="false">
+            	    <label>Nro de Orden</label>
+            	    <operador>like</operador>
+        	   </field>
+                <field id="id"  modpos="nobr" deshabilitado="false">
+                    <label>Codigo Prod</label>
+                	<operador>like</operador>
+		        </field>
+            	<field id="producto"  deshabilitado="false" >
+                	    <label modpos="nobr">Descrp. Prod</label>
+                	    <operador>like</operador>
+            	</field>                
+                <field id="stkrubro_id"   >
+                    <label modpos="nobr">Rubro</label>
+                    <operador>=</operador>
+                </field>                 
+            	<field id="empezada"  deshabilitado="false" >
+                	    <label modpos="nobr">Proceso</label>
+                	    <operador>=</operador>
+                        
+            	</field>                 
+            </filters>
+
+            <field id="fecha_orden" _noshow="true" style="font-size:x-small;">
+                <label>Fecha</label>
+                <help>Fecha de Orden de Fabricación</help>
+            </field>
+
+            <field id="id_mrporden" noshow="true" >
+                <detalle>mrporden_id</detalle>
+            </field>
+
+            <field id="mrporden_concepto_id" noshow="true">
+                <helper type="combo" id="MRP_ORDEN_CONCEPTO" empty="true">
+                    <field id="id_mrporden_concepto" />
+                    <field id="abv_ordenconcepto" />
+                </helper>
+            </field>
+<!--
+            <field id="abv_ordenconcepto" tabla="MRP_ORDEN_CONCEPTO">
+                <label>Con</label>
+            </field>
+        -->
+	    <field id="colorestado" noshow="true">
+		    <label>dias</label>
+	    <expression>case when DATEDIFF(now(), fecha_orden) &gt; 10 then 'background-color:red;' when DATEDIFF(now(), fecha_orden) &gt; 3 then 'background-color:yellow' end </expression>
+	    </field>
+	<field id="nro_cuenta" tabla="REG_CUENTA" break="true" noshow="true">
+		<label>Cod</label>
+		<helper type="external" xml="regcuenta_solamente_nro_qry.xml" dir="/ayudas">
+		    <field id="subsistema_id"></field>
+		    <order>
+		    <field id="nombre_cuenta"></field>
+		    </order>
+		</helper>
+	</field>
+	<field id="nombre_cuenta" tabla="REG_CUENTA" break="true" _nosho2="true" style="font-size:x-small">
+		<label>Cliente</label>
+	</field>
+        <field id="numero_orden">
+            <attribute id="style">colorestado</attribute>
+            <expression>concat((case when scv_ID = 0 and mrporden_concepto_id != 1 then 'R' 
+                                     when scv_ID = 0 and mrporden_concepto_id = 1 then 'A' else '' end), numero_orden)</expression>
+        	<helper xml="mrpordenproduccion_print.xml" _xml="ordenproduccion_seccion_imp.xml" type="link" modal="true">
+        	    <parameter source="id_mrporden"  target="id_mrporden" />
+        	</helper>
+            <label>Nro</label>
+            <help>Numero de Orden de Fabricación</help>
+                
+        </field>
+        <field id="original" noshow="true">
+            <expression>@origen:= (case when mrporden_relacionada_id != 0 then fnRootNode(id_mrporden) else id_mrporden end)</expression>
+        </field>
+	    <field id="origenlink" style="color:green;font-weight:bold;">
+                <label>Origen</label>
+            	<helper xml="ordenproduccion_seccion_imp.xml" type="link" modal="true">
+            	    <parameter source="original"  target="id_mrporden" />
+            	</helper>
+
+		      <expression>case when @origen != id_mrporden then (select MRP.numero_orden from MRP_ORDEN_PRODUCCION MRP where MRP.id_mrporden = @origen limit 1) end</expression>
+	    </field>
+	    <field id="todo" noshow="true">
+		<expression>concat(ifnull((select MRP.numero_orden from MRP_ORDEN_PRODUCCION MRP where MRP.id_mrporden = MRP_ORDEN_PRODUCCION.mrporden_relacionada_id limit 1),''), ' ',numero_orden)</expression>
+
+	    </field>
+
+              <field id="scvtco_Cod" noshow="true">
+                <label>Cod</label>
+              </field>
+            <!--
+	    <field id="idr">
+		<expression>group_concat(id_mrpordendetalle)</expression>
+	    </field>
+-->
+            <field id="path_name" >
+                <helper type="link" xml="ordendetalle_agrupada_det_qry.xml" width="80%">
+                    <parameter source="id_mrporden" target="mrporden_id" />
+                </helper>
+                <label>Proceso</label>
+                <expression>path_name</expression>
+            </field>
+
+            <field id="id" _noshow="true" _style="white-space:nowrap">
+                <label>Codigo</label>
+                <expresion>group_concat(distinct concat(left(id_stkarticulo, 1),'/', substr(id_stkarticulo, 2,4),'-' ,
+                    substr(id_stkarticulo, 6,4) ) SEPARATOR ' ')</expresion>
+            </field>                 
+
+    	    <field id="producto" export="false" style="font-size:x-small">
+    		<label>Producto</label>
+    		<expresion>group_concat(distinct nombre_articulo )</expresion>
+    	    </field>             
+            <field id="stkrubro_id"  tabla="STK_ARTICULOS" noshow="true">
+                <label modpos="nobr">Rubro</label>
+                <helper type="combo" xml="stkrubro_qry.xml" dir="/ayudas" empty="true" />
+            </field>
+                
+    	    <field id="cantidad_detalle" suma="true" style="color:blue;text-align:right;">
+    		<label>Cant</label>
+        		<expresion>sum(objetivo_ordendetalle)</expresion>
+	   	        <tipo>integer</tipo>
+    	    </field>
+    	    <field id="empezada" noshow="true">
+                    <expresion>ifnull((select case when count(*) > 0 then 1 end from MRP_DETALLE_REGISTRO MDR where MDR.mrpordendetalle_id = id_mrpordendetalle), 0)</expresion>
+    		<helper type="combo">
+    		    <option value="">Todas</option>
+    		    <option value="0">NO empezada</option>
+    		    <option value="1">En proceso</option>
+    		</helper>
+    	    </field>
+    	    <field id="corte" style="text-align:right;font-size:x-small;font-weight:bold;">
+    		<label>Corte</label>
+                    <expresion>sum( (select sum(MDR.cantidad) from MRP_DETALLE_REGISTRO MDR where MDR.mrpordendetalle_id = id_mrpordendetalle and mrpconcepto_id = 1 and mrpseccion_id = 1))</expresion>
+    		  <attribute id="linkdes">numero_orden</attribute>
+    		<helper xml="ordendetalle_agrupada_det_qry.xml" type="link" width="80%">
+    		    <parameter target="id_mrpseccion" source="1" />
+    		    <parameter target="mrporden_id" source="id_mrporden" />
+    		</helper>
+    	    </field>
+    	    <field id="fileteado" style="text-align:right;">
+    		<label>Filet</label>
+                    <expresion>sum( (select sum(MDR.cantidad) from MRP_DETALLE_REGISTRO MDR where MDR.mrpordendetalle_id = id_mrpordendetalle and mrpconcepto_id = 1 and mrpseccion_id = 6))</expresion>
+    		<attribute id="linkdes">numero_orden</attribute>
+    		<helper xml="ordendetalle_agrupada_det_qry.xml" type="link" width="80%">
+    		    <parameter target="id_mrpseccion" source="6" />
+    		    <parameter target="mrporden_id" source="id_mrporden" />
+    		</helper>
+    	    </field>
+    	    <field id="serig" style="text-align:right;">
+    		<label>Serig</label>
+                    <expresion>sum( (select sum(MDR.cantidad) from MRP_DETALLE_REGISTRO MDR where MDR.mrpordendetalle_id = id_mrpordendetalle and mrpconcepto_id = 1 and mrpseccion_id = 5))</expresion>
+    		<attribute id="linkdes">numero_orden</attribute>
+    		<helper xml="ordendetalle_agrupada_det_qry.xml" type="link" width="80%">
+    		    <parameter target="id_mrpseccion" source="5" />
+    		    <parameter target="mrporden_id" source="id_mrporden" />
+    		</helper>
+    	    </field>
+    	    <field id="horno" style="text-align:right;">
+    		<label>Horno</label>
+                    <expresion>sum( (select sum(MDR.cantidad) from MRP_DETALLE_REGISTRO MDR where MDR.mrpordendetalle_id = id_mrpordendetalle and mrpconcepto_id = 1 and mrpseccion_id = 2))</expresion>
+        		<attribute id="linkdes">numero_orden</attribute>
+        		<helper xml="ordendetalle_agrupada_det_qry.xml" type="link" width="80%">
+        		    <parameter target="id_mrpseccion" source="2" />
+        		    <parameter target="mrporden_id" source="id_mrporden" />
+        		</helper>
+    	    </field>
+            <field id="hornob" style="text-align:right;">
+            <label>Horno Blind</label>
+                    <expresion>sum( (select sum(MDR.cantidad) from MRP_DETALLE_REGISTRO MDR where MDR.mrpordendetalle_id = id_mrpordendetalle and mrpconcepto_id = 1 and mrpseccion_id = 7))</expresion>
+                <attribute id="linkdes">numero_orden</attribute>
+                <helper xml="ordendetalle_agrupada_det_qry.xml" type="link" width="80%">
+                    <parameter target="id_mrpseccion" source="7" />
+                    <parameter target="mrporden_id" source="id_mrporden" />
+                </helper>
+            </field>            
+    	    <field id="laminado" style="text-align:right;">
+    		<label>Lamin</label>
+                    <expresion>sum( (select sum(MDR.cantidad) from MRP_DETALLE_REGISTRO MDR where MDR.mrpordendetalle_id = id_mrpordendetalle and mrpconcepto_id = 1 and mrpseccion_id = 3))</expresion>
+        		<attribute id="linkdes">numero_orden</attribute>
+        		<helper xml="ordendetalle_agrupada_det_qry.xml" type="link" width="80%">
+        		    <parameter target="id_mrpseccion" source="3" />
+        		    <parameter target="mrporden_id" source="id_mrporden" />
+        		</helper>
+    	    </field>
+    	    <field id="autoclave" style="text-align:right;">
+    		<label>Auto</label>
+                    <expresion>sum( (select sum(MDR.cantidad) from MRP_DETALLE_REGISTRO MDR where MDR.mrpordendetalle_id = id_mrpordendetalle and mrpconcepto_id = 1 and mrpseccion_id = 4))</expresion>
+        		<attribute id="linkdes">numero_orden</attribute>
+        		<helper xml="ordendetalle_agrupada_det_qry.xml" type="link" width="80%">
+        		    <parameter target="id_mrpseccion" source="4" />
+        		    <parameter target="mrporden_id" source="id_mrporden" />
+        		</helper>
+    	    </field>
+                <field id="roturas"  style="text-align:right;color:red;" width="80%">
+                    <label>Rotos</label>
+                <helper xml="ordendetalle_roturas_qry.xml" type="link" width="80%">
+                    <parameter target="mrporden_id" source="id_mrporden" />
+                </helper>
+
+                    <expresion>sum((select sum(MDR.cantidad) from MRP_DETALLE_REGISTRO MDR where MDR.mrpordendetalle_id = id_mrpordendetalle and mrpconcepto_id != 1))</expresion>
+                </field>                 
+                <field id="producido" suma="true" noZero="true" style="text-align:right;" width="80%">
+                    <label>Term.</label>
+                    <expresion>select sum(STK_MOVIMIENTOS.cantidad) from STK_MOVIMIENTOS where STK_MOVIMIENTOS.stkarticulo_id = MRP_ORDEN_DETALLE.stkarticulo_id AND STK_MOVIMIENTOS.ordendetalle_id = MRP_ORDEN_DETALLE.id_mrpordendetalle</expresion>
+                    <tipo>integer</tipo>
+                </field>
+    	    <field id="pendiente" local="true" style="color:green;text-align:right;" suma="true">
+        		<label>Pend.</label>
+        		<if exp="true">
+        			<true>cantidad_detalle - ((producido  + 0)+ (roturas + 0))</true>
+        			<false>0</false>
+        		</if>
+    	    </field>
+            <field id="reabrir" local="true" print="false">
+                <expression>case when fecha_cierre != '0000-00-00' then '>>' end</expression>
+                <helper xml="reabrir_orden.xml" type="link" dir="/mrp/ing/anulacion/" title="Reabrir Orden">
+                    <parameter source="id_mrporden" target="id_mrporden" />
+                </helper>
+                <label>Reabrir</label>
+            </field>
+            <field id="cerar" local="true" print="false" style="width:1.1em;">
+                <expression>case when fecha_cierre = '0000-00-00' then 'X' end</expression>
+                <helper xml="anular_orden.xml" type="link" dir="/mrp/ing/anulacion/" title="Anular Orden" _icon="ui-icon-close" _text="false">
+                    <parameter source="id_mrporden" target="id_mrporden" />
+                </helper>
+                <label>Anular</label>
+            </field>
+            <!--
+            <field id="fecha_cierre" >
+		          <label>Cierre</label>
+            </field>
+        -->
+
+            <field id="mrpestado_id" noshow="true">
+                <label>Estado </label>
+                <help>Estado Actual</help>
+                    <options>
+			            <option valor="">Todos</option>
+                        <option valor="0">Pendiente</option>
+                        <option valor="1">Cerrada</option>
+                    </options>
+
+                <expresion having="false">(case when fecha_cierre = '0000-00-00' then 0 else 1 end)</expresion>
+            </field>
+            <group>
+                <field id="id_mrporden"></field>
+            </group>
+            <order>
+                <field id="id_mrporden"></field>
+                <field id="fecha_orden"></field>
+            </order>
+        </table>
+        <join tipo="left">
+            <table id="REG_CUENTA">
+                <field id="id_regcuenta">
+                    <condicion operador="=">regcuenta_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+    	    <table id="MRP_ORDEN_DETALLE">
+                <field id="mrporden_id">
+            	    <condicion operador="=">MRP_ORDEN_PRODUCCION.id_mrporden</condicion>
+                </field>
+    	    </table>
+        </join>
+        <join tipo="inner">
+    	    <table id="STK_ARTICULOS">
+        		<field id="id_stkarticulo">
+        		    <condicion  operador="=">MRP_ORDEN_DETALLE.stkarticulo_id</condicion>
+        		</field>
+    	    </table>
+    	    
+        </join>
+        <join tipo="left">
+            <table id="MRP_ORDEN_CONCEPTO">
+                <field id="id_mrporden_concepto">
+                    <condicion operador="=">mrporden_concepto_id</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="MRP_PATH">
+                <field id="id_mrppath">
+                    <condicion operador="=">MRP_ORDEN_PRODUCCION.mrppath_id</condicion>
+                </field>
+            </table>
+        </join>        
+        <!--
+        <join tipo="left">
+            <table id="STK_MOVIMIENTOS">
+                <field id="stkarticulo_id">
+                    <condicion  operador="=">MRP_ORDEN_DETALLE.stkarticulo_id</condicion>
+                </field>
+                <field id="ordendetalle_id">
+                    <condicion  operador="=">MRP_ORDEN_DETALLE.id_mrpordendetalle</condicion>
+                </field>
+
+            </table>
+            
+        </join>        
+    -->
+    </form>
+</histrix>

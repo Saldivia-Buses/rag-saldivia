@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="grid" subtipo="vertical" inserta="false" borra="false" modifica="false" imprime="false" deleteRow="false" exportasuma="true" llenoreferente="true" llenotemporal="true">
+  <title>Comprobantes a Imputar</title>
+  <obs/>
+  <form>
+    <table id="REG_MOVIMIENTOS">
+	
+	<movimientos>
+		<relacion id="regimputaciones_ins.xml"/>
+	</movimientos>
+
+	<field id="id_regmovim" esClave="true" noshow="true" />
+
+	<field id="subsistema_id" noshow="true"/>
+
+	<field id="regcuenta_id" noshow="true">
+	      <condicion operador="=">-1</condicion>
+	</field>
+
+      	<field id="fecha" >
+	      	<label>Fecha</label>
+	      	<tipo>date</tipo>
+		<expresion>fecha_movimiento</expresion>
+      	</field>
+
+
+	<field id="vencimiento_movimiento">
+		<label>Vto</label>
+		<tipo>date</tipo>
+	</field>
+
+	<field id="comprobante">
+		<label>Comprobante</label>
+		<expresion>CONCAT(REG_CONCEPTOS.abreviacion_concepto,' ',LPAD(REG_MOVIMIENTOS.puesto_movimiento,4,0),'-',LPAD(REG_MOVIMIENTOS.nro_movimiento,8,0))</expresion>
+	</field>
+
+	<field id="cuota_movimiento">
+		<label>Cta</label>
+	</field>
+	<!-- Segun la imputacion del comprobante principal varia la imputacion de los comprobantes detalles esto es para que las facturas simpre salgan en positivo y los
+recibos u O.Pago como las Nc de clientes y proveedores salgan en negativo -->
+	<field id="imputacion_concepto_comprobante_llama" local="true" />
+	<field id="saldo_movimiento" >
+		<label>Saldo</label>
+		<expresion>(case when [__imputacion_concepto_comprobante_llama__] = 0 then -1 else 1 end *  case when imputacion_concepto = 1 then 1 else -1 end) *  saldo_movimiento</expresion>
+		<condicion operador="&gt;">0</condicion>
+	</field>
+
+	<field id="imputado" local="true" refresh="true">
+		<label>Imputar</label>
+		<tipo>check</tipo>       
+	</field>
+
+	<field id="total_imputado" local="true" suma="true" editable="true" noshow="true">
+		<expresion>(case when [__imputacion_concepto_comprobante_llama__] = 0 then -1 else 1 end *  case when imputacion_concepto = 1 then 1 else -1 end) *  saldo_movimiento </expresion>
+		<label>Total Imputado</label>
+		<if exp="imputado != ''">
+		    <true>saldo_movimiento</true>
+		    <false>0</false>
+		</if>
+		<jseval campodestino="importe_movimiento" total="true">total_imputado</jseval>
+		<detalle>importe_movimiento</detalle>
+		<tipo>numeric</tipo>
+	</field>
+
+    </table>
+
+    <join>
+      <table id="REG_CONCEPTOS">
+        <field id="subsistema_id">
+          <condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion>
+        </field>
+        <field id="id_concepto">
+          <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>

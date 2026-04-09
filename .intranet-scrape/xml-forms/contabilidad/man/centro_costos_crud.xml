@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud" filter="true">
+  <title>Centros de Costos</title>
+  <obs></obs>
+  <form>
+    <table id="CTB_CENTROS_COSTOS" label="Centros">
+
+      <!--  <filters>
+             <field id="descripcion_centro">
+               <label>Centro</label>
+               <help>Nombre del centro</help>
+              <operador>like</operador>
+              </field>
+      </filters>-->
+      
+      <field id="id_centrocosto" autoinc="true" _noshow="true" esClave="true">
+        <label>Código</label>
+        <help>Código de tipo de cuenta</help>
+      </field>
+      
+      <field id="descripcion_centro">
+        <label>Centro</label>
+        <help>Nombre del centro</help>
+        <size>30</size>
+      </field>
+      
+       <field id="referencia_centro">
+        <label>referencia</label>
+        <help>referencia centro</help>
+        <size>15</size>
+      </field>
+    </table>
+  </form>
+</histrix>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+  <title>Categorias</title>
+  <obs></obs>
+  <consulta>
+    <table id="RH_CATEGORIAS" label="Categorias">
+	<field id="id_rhcategoria" autoinc="true" noshow="true" />
+
+	<field id="nombre_categoria">
+        	<label>Categoria</label>
+        	<help>Categoria</help>
+	</field>
+
+<!--	<field id="rhconvenio_id" >
+	        <label>Convenio</label>
+        	<help>Convenio</help>
+	</field>
+-->
+    </table>
+  </consulta>
+</histrix>  

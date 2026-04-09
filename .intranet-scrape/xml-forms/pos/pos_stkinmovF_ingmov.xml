@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="insert" >
+       <title>detalle</title>
+        <obs></obs>
+               <consulta>
+					<table id="STKINMOV" label="detalle" idCampoCond="graboF">
+						<field id="siscod" id_cab="siscli">
+						</field>
+						<field id="artcod" id_temp="libro">
+						</field>
+						<field id="barcode" id_temp="libro">
+						</field>
+						<field id="ctacod" id_cab="ctacod">
+						</field>
+						<field id="facfec" id_cab="movfec">
+						</field>
+						<field id="movfec" id_cab="movfec">
+						</field>
+						<field id="movcod" >
+							<valor>2</valor>
+						</field>
+						<field id="movnpv" id_cab="movnpv">
+						</field>
+						<field id="movnro" id_cab="movnro">
+						</field>
+						<field id="movcant" id_temp="quedanF">
+						</field>						
+						<field id="idTipoStock">
+							<valor>3</valor>
+						</field>							
+						<field id="movimp" id_temp="total">
+						</field>						
+
+<!--						<field id="regmin" esNroMinuta="true">
+						</field> 
+						-->
+					</table>
+               </consulta>
+        </histrix>

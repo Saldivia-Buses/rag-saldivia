@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm" width="70" paginar="1000">
+  <title>LOCALIDADES</title>
+    <obs/>
+  <form >
+    <table id="LOCALIDADES" label="Localidades">
+
+      <field id="idLocalidad" autoinc="true" esclave="true" deshabilitado="true">
+        <label>Cod.Localidad</label>
+        <help>Codigo de Localidad</help>
+      </field>
+      <field id="nombre">
+        <label>Nombre Localidad</label>
+        <help>Nombre de la Localidad</help>
+      </field>
+      <field id="codigopostal">
+        <label>Codigo Postal</label>
+        <help>Codigo Postal</help>
+      </field>
+      <field id="idProvincia">
+        <label>Provincia</label>
+        <help>Provincia de la Localidad</help>
+      </field><!--
+	  <field id="abrev">
+		<label>Abreviatura</label>
+		<help>Abreviatura de la Localidad</help>
+	  </field>-->
+    </table>
+
+  </form>
+</histrix>

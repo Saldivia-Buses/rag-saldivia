@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" margintabs="true">
+  <title>IVA COMPRAS</title>
+  <obs/>
+  <consulta>
+    <table id="REG_MOVIMIENTOS" label="Total por categoria" styleTbody="height:300px;overflow-x:hidden;">
+      <field id="reg_fecha" oculto="true">
+        <label>Registrado</label>
+        <help></help>
+      </field>
+      <field id="reg_fecha" noshow="true">
+        <label modpos="nobr">Fecha</label>
+        <help></help>
+      </field>
+    
+    
+      <field id="id_regmovim" esClave="true" noshow="true">
+        <label>movimiento</label>
+        
+      </field>
+     
+      <field id="subsistema_id" noshow="true">
+	<label>subsistema</label>
+	<condicion operador="=">'01'</condicion>
+      </field>
+
+
+      <field id="regcuenta_id" noshow="true">
+        <label>Cta</label>
+      </field>
+       
+     <field id="iva_id" tabla="REG_CUENTA">
+        <label>iva</label>
+	<tabla_ex id="GEN_IVA">
+	   <field id="id_iva"/>
+	    <field id="nombre_iva"/>
+	</tabla_ex>
+      </field>
+   <!--  <field id="alicuota_iva" tabla="REG_DETALLES">
+        <label>Alicuota</label>
+	<expresion>CONCAT(REG_DETALLES.alicuota_iva, '%')</expresion>
+	<tabla_ex id="GEN_IVA">
+	   <field id="id_iva"/>
+	    <field id="abreviacion_iva"/>
+	</tabla_ex>
+      </field>
+     
+    --> 
+	 <field id="neto_movimiento" suma="true" >
+         <label>Imp. Gravado</label>
+    <expresion>CASE WHEN concepto_id= 3 or concepto_id=2 THEN SUM(neto_movimiento * -1) else SUM(neto_movimiento) END</expresion>
+	 <tipo>numeric</tipo>
+      </field>
+     
+      <field id="importe_iva" local="true" retroalimenta="true" suma="true"  _local="true">
+          <label>IVA</label>
+	  <expresion>SUM(REG_DETALLES.iva_detalle)</expresion>
+	  <tipo>numeric</tipo>
+      </field>
+     
+     
+    
+      <field id="percepcion" local="true" _norepeat="true" suma="true"  _local="true">
+        <label>Percepcion</label>
+	<expresion>SUM(REG_DETALLES.total_percepcion)</expresion>
+	<tipo>numeric</tipo>
+      </field>
+     
+    
+                                                                <!--
+      <field id="impmi" norepeat="true" suma="true">
+	<expresion>CASE WHEN concepto_id= 3 or concepto_id=2 THEN impmi * -1 else impmi END</expresion>
+        <label>Importe Monotributo</label>
+        <tipo>numeric</tipo>
+        
+      </field>
+      
+      -->
+      
+       <field id="impexe" norepeat="true" suma="true">
+	<expresion>CASE WHEN concepto_id= 3 or concepto_id=2 THEN importe_exento * -1 else importe_exento END</expresion>
+        <label>Importe Exento</label>
+        <tipo>numeric</tipo>
+      </field>
+      <field id="importe_movimiento" _norepeat="true" suma="true"  _local="true">
+       <expresion>SUM(REG_DETALLES.total_detalle)</expresion>
+        <label>Importe Total</label>
+	<tipo>numeric</tipo>
+      </field>
+
+        <group>
+	     <field id="iva_id" tabla="REG_CUENTA"/> 
+	   
+        </group>
+            
+ <!--     <group>
+        <field id="fecreg" tabla="IVACOMPRAS"></field>
+        <field id="feciva" tabla="IVACOMPRAS"></field>
+        <field id="conabv" tabla="CCTCONCE"></field>
+        <field id="codlet" tabla="IVACOMPRAS"></field>
+        <field id="nronpv" tabla="IVACOMPRAS"></field>
+        <field id="nrocom" tabla="IVACOMPRAS"></field>
+        <field id="ctacod" tabla="IVACOMPRAS"></field>
+        <field id="ctanom" tabla="IVACOMPRAS"></field>
+        <field id="nrodoc" tabla="IVACOMPRAS"></field>
+        <field id="execom" tabla="IVACOMPRAS"></field>
+        <field id="nogcom" tabla="IVACOMPRAS"></field>
+      <field id="total" >
+          <expresion>(totcom * (case when conimp = 1 then -1 else 1 end))</expresion>
+        </field> 
+      </group>-->
+     
+    
+      <filters>
+        <field id="reg_fecha">
+          <operador>&gt;=</operador>
+          <label>Desde Fecha</label>
+          <valor>today</valor>
+        </field>
+        <field id="reg_fecha">
+          <operador>&lt;=</operador>
+          <label>Hasta Fecha</label>
+          <valor>today</valor>
+        </field>
+      </filters>
+    </table>
+  
+         <join tipo="left">
+	   <tabla id="REG_CONCEPTOS">
+	      <field id="id_concepto">
+		<condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+	      </field>
+	   </tabla>
+	</join>
+		
+
+	
+	
+        <join tipo="left">
+	   <tabla id="REG_CUENTA">
+	      <field id="id_regcuenta">
+		<condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+	      </field>
+	   </tabla>
+          </join>
+	 <join>
+	   <tabla id="REG_DETALLES">
+	      <field id="regmovim_id">
+		<condicion operador="=">REG_MOVIMIENTOS.id_regmovim</condicion>
+	      </field>
+	   </tabla>
+	</join>
+   
+  </consulta>
+</histrix>

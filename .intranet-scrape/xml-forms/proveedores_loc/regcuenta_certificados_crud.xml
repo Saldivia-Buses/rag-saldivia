@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="abm-mini" path="fotos/proveedores/" paginar="100">
+  <title>ABM CERTIFICADOS</title>
+  <obs></obs>
+  <form >
+    <table id="REG_CUENTA_CERTIFICADOS">
+	<field id="id_regcuentacert" noshow="true" />
+	<field id="regcuenta_id" noshow="true" valauto="true"/>
+	<field id="certpath" local="true" noshow="true">
+	</field>
+	<field id="archivo" path="certpath">
+	    <label>Archivo</label>
+	    <tipo>file</tipo>
+	    <size>30</size>
+	</field>
+	<field id="fecha_vencimiento">
+	    <tipo>date</tipo>
+	</field>
+    </table>
+  </form>
+</histrix>

@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" paginar="200" preloadData="false">
+  <title>Stock Unificado</title>
+  <obs/>
+  <form>
+    <table id="cruzandina.STK_UNIFICADO" label="Stock Unificado">
+
+    	<filters>
+    		<field id="stkarticulo_id">
+    			<label>Cod. Artículo</label>
+    			<operador>like</operador>
+    		</field>
+
+    		<field id="stkrubro_id">
+    			<label modpos="nobr">Rubro</label>
+    			<operador>=</operador>
+    		</field>
+
+    		<field id="nombre_articulo">
+    			<label>Nombre Artículo</label>
+    			<operador>like</operador>
+    		</field>
+
+    		<field id="stkdeposito_id">
+    			<label modpos="nobr">Deposito</label>
+    			<operador>=</operador>
+    		</field>
+    	</filters>
+
+    	<field id="base" noshow="true">
+    		<label>Base</label>
+    	</field>
+
+    	<field id="stkarticulo_id">
+    		<label>Cod. Artículo</label>
+    		<size>30</size>
+    	</field>
+
+    	<field id="nombre_articulo" tabla="STK_ARTICULOS">
+    		<label>Nombre Artículo</label>
+    		<size>30</size>
+    	</field>
+
+    	<field id="stkrubro_id" tabla="STK_ARTICULOS">
+    		<label>Rubro</label>
+    		<helper type="combo" id="STK_RUBROS" empty="true">
+    			<field id="id_stkrubro" esClave="true" noshow="true"/>
+    			<field id="nombre_rubro"/>
+    		</helper>
+    	</field>
+
+    	<field id="stkdeposito_id">
+    		<label>Depósito</label>
+    		<helper type="combo" id="STK_DEPOSITOS" empty="true">
+    			<field id="id_stkdeposito" esClave="true" noshow="true"/>
+    			<field id="nombre_deposito"/>
+    		</helper>
+    	</field>
+
+    	<field id="stk_actual">
+    		<expression>SUM(stk_actual)</expression>
+    		<label>Existencias</label>
+    	</field>
+
+    	<order>
+    		<field id="base"/>
+    	</order>
+
+    	<group>
+    		<field id="stkarticulo_id"/>    		
+    	</group>
+
+ 	</table>
+
+ 	<join>
+      <table id="STK_ARTICULOS">
+        <field id="id_stkarticulo">
+          <condicion operador="=">cruzandina_z.STK_UNIFICADO.stkarticulo_id</condicion>
+        </field>
+      </table>
+    </join>
+
+  </form>
+</histrix>

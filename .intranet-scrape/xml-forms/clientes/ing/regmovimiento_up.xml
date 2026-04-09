@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="update" >
+	<title>Ingreso de Movimientos</title>
+	<obs></obs>
+	<form >
+		<table id="REG_MOVIMIENTOS">
+			<field id="id_regmovim"      	esClave="true"		id_temp="imputacionescaj" />
+			<field id="saldo_movimiento"      			id_temp="xsaldo_movimiento" />
+			<field id="imputacionesfac" id_temp="imputacionesfac" local="true" />
+		</table>
+	</form>
+</histrix>

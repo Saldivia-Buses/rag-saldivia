@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" autoupdate="180">
+    <title>CONSULTA DE LLAMADAS</title>
+    <consulta>
+        <table id="TEL_LOG">
+            <filters>
+                <field id="fecha">
+                    <label>Desde Fecha</label>
+                    <operador>&gt;=</operador>
+                    <valor>today</valor>
+          
+                </field>
+                <field id="fecha">
+                    <label modpos="nobr">Hasta Fecha</label>
+                    <operador>&lt;=</operador>
+                    <valor>today</valor>
+          
+                </field>
+                <field id="extension">
+                    <label>Extensión</label>
+                    <operador>=</operador>
+                </field>
+                <field id="numero" deshabilitado="false">
+                    <label>Telefono</label>
+                    <operador>like</operador>
+                </field>
+        
+            </filters>
+            <title>Llamadas</title>
+      
+            <field id="id_log" oculto="true" tipoOrden="DESC">
+            </field>
+            <field id="fecha">
+                <label>Fecha</label>
+                <tipo>date</tipo>
+            </field>
+      <!-- <field id="fecha1" noshow="true" local="true">
+      <condicion operador="&gt;">fecha</condicion>
+      <tipo>date</tipo>
+    </field>
+      <field id="fecha2" noshow="true"  local="true">
+      <condicion operador="&lt;">fecha</condicion>
+      <tipo>date</tipo>
+    </field>-->
+            <field id="hora">
+                <label>hora</label>
+            </field>
+            <field id="marca" noshow="true">
+                <label>marca</label>
+            </field>
+            <field id="linea">
+                <label>Linea</label>
+            </field>
+            <field id="tipo" noshow="true" local="true">
+        
+                <options>
+                    <option valor="">Todos</option>
+                    <option valor="entrantes">Entrantes</option>
+                    <option valor="salientes">Salientes</option>
+                </options>
+            </field>
+            <field id="extension">
+                <label>extensión</label>
+                <condicion operador="!=">0</condicion>
+            </field>
+            <field id="Nom">
+                <label>Nombre</label>
+                <expresion>CONCAT(Nombre, ' ', apellido)</expresion>
+            </field>
+            <field id="largo" noshow="true">
+                <expresion having="false"><![CDATA[length(case when LOCATE('<', numero) = 0 then trim(numero) else  SUBSTRING(trim(numero), 7) end)]]>
+                </expresion>
+                <condicion operador="&gt;">4</condicion>
+            </field>
+
+            <field id="numero" noshow="true">
+                <label>Telefono</label>
+                <expresion><![CDATA[(case when LOCATE('<', numero) = 0 then trim(numero) else  SUBSTRING(trim(numero), 7) end)]]>
+                </expresion>
+            </field>
+            <field id="entrantes">
+                <label>Entrantes</label>
+                <expresion><![CDATA[(case when LOCATE('<', numero) != 0 then SUBSTRING(trim(numero), 7) end)]]>
+                </expresion>
+        
+            </field>
+            <field id="duracionEntrantes" suma="true">
+                <label>Tiempo </label>
+                <expresion><![CDATA[(case when LOCATE('<', numero) != 0 then trim(duracion) end)]]>
+                </expresion>
+                <tipo>time</tipo>
+            </field>
+      
+            <field id="salientes" >
+                <label>Salientes</label>
+                <expresion><![CDATA[(case when LOCATE('<', numero) = 0 then trim(numero) end)]]>
+                </expresion>
+            </field>
+<!--      <field id="destcctnom" noshow="true">
+        
+        <expresion><![CDATA[@fan1 := (SELECT group_concat( ctafan separator '<br>')  FROM CCTCUENT  where
+                        ((replace(ctatel, ' ','') like CONCAT('%' ,trim(entrantes) ,'%') and trim( entrantes) != '' ) or
+                         (replace(ctatel, ' ','') like CONCAT('%' ,trim(salientes) ,'%') and trim( salientes) != '' ) ) and
+                        baja = 0 and length(concat(trim(salientes), trim(entrantes))) > 3 )]]></expresion>
+      </field> -->
+            <field id="destcctnom" noshow="true">
+        
+                <expresion><![CDATA[@fan1 := (SELECT group_concat( ctafan separator '<br>')  FROM CCTCUENT  where
+                        (concat(replace(ctatel, ' ',''), replace(ctafax, ' ',''))  like CONCAT('%' ,right(trim(numero), 6) ,'%') and trim(numero) != '' )  and
+                        baja = 0 and length(trim(numero)) > 3 )]]>
+                </expresion>
+            </field>
+            <field id="personal" noshow="true">
+                <expresion><![CDATA[@pers := (SELECT CONCAT(Nombre, ' ', apellido) from PERSONAL where
+                        (replace(PERSONAL.telefono, ' ','') like CONCAT('%' ,trim(entrantes) ,'%') and trim( entrantes) != '' )  or
+                        (replace(PERSONAL.telefono, ' ','') like CONCAT('%' ,trim(salientes) ,'%') and trim( salientes) != '' ) OR
+                        (replace(PERSONAL.celular, ' ','') like CONCAT('%' ,trim(entrantes) ,'%') and trim( entrantes) != '' )  or
+                        (replace(PERSONAL.celular, ' ','') like CONCAT('%' ,trim(salientes) ,'%') and trim( salientes) != '' )                        
+                        limit 1)
+                        ]]>
+                </expresion>
+            </field>
+            <field id="addPhone"  linkint="tel_add_phone.xml" linkWidth="400px" linkHeight="250px" linkReposition="true" linkdes="Telefóno" local="true">
+                <label>+</label>
+                <if exp="trim('nombreEmp') == ''">
+                    <true><![CDATA['<img src="../img/list-add.png">']]></true>
+                    <false>''</false>
+                </if>
+                <!--<expresion><![CDATA[case when trim( concat(ifnull(@fan1, ''),
+    						   ifnull(@fan2, ''),
+    						   ifnull(@emp , ''),
+    						   ifnull(@pers, '')  )) = '' then '<img src=\"../img/list-add.png\">' else  concat(@fan1, @fan2, @emp , @pers) end]]>
+                </expresion>         -->
+                <paring destino="Telefono">numero</paring>
+            </field>
+            <field id="empresa" noshow="true">
+        
+                <expresion>@fan2:=  (SELECT CCTCUENT.ctafan  FROM CCTCONTA
+          left join CCTCUENT on CCTCUENT.siscod = CCTCONTA.siscod and CCTCUENT.ctacod = CCTCONTA.ctacod
+          
+          WHERE 
+          (replace(CONCAT(Telefono,'.',movil), ' ','') like CONCAT('%' ,trim(entrantes) ,'%') and trim( entrantes) != '' )  or  
+          (replace(CONCAT(Telefono,'.',movil), ' ','') like CONCAT('%' ,trim(salientes) ,'%') and trim( salientes) != '' ) or
+          (replace(CONCAT(Telefono,'.',movil), ' ','') like CONCAT('%' ,right(trim(entrantes), 6 ) ,'%') and trim( entrantes) != '' ) or
+          (replace(CONCAT(Telefono,'.',movil), ' ','') like CONCAT('%' ,right(trim(salientes), 6 ) ,'%') and trim( salientes) != '' ) or
+          (replace(CONCAT(Telefono,'.',movil), '-','') like CONCAT('%' ,trim(entrantes) ,'%') and trim( entrantes) != '' )  or  
+          (replace(CONCAT(Telefono,'.',movil), '-','') like CONCAT('%' ,trim(salientes) ,'%') and trim( salientes) != '' ) or
+          (replace(CONCAT(Telefono,'.',movil), '-','') like CONCAT('%' ,right(trim(entrantes), 6 ) ,'%') and trim( entrantes) != '' ) or
+          (replace(CONCAT(Telefono,'.',movil), '-','') like CONCAT('%' ,right(trim(salientes), 6 ) ,'%') and trim( salientes) != '' )
+          group by CCTCONTA.siscod, CCTCONTA.ctacod limit 1)
+          
+                </expresion>
+		
+            </field>
+            <field id="empleado" noshow="true">
+                <expresion><![CDATA[@emp := (SELECT CONCAT(Nombre, ' ', apellido) from HTXUSERS where
+                        (replace(HTXUSERS.telefono, ' ','') like CONCAT('%' ,trim(entrantes) ,'%') and trim( entrantes) != '' )  or
+                        (replace(HTXUSERS.telefono, ' ','') like CONCAT('%' ,trim(salientes) ,'%') and trim( salientes) != '' ) limit 1)
+                        ]]>
+                </expresion>
+        
+            </field>
+            <field id="nombreEmp">
+                <label>Empresa</label>
+                <expresion>case when @fan1  != ''  then @fan1
+          when  @fan2 != '' then @fan2 
+          when  @emp != '' then @emp 
+          when  @pers != '' then @pers 
+          end
+                </expresion>
+            </field>
+      
+            <field id="destnom">
+                <label>Nombres</label>
+        
+                <expresion><![CDATA[SELECT group_concat( nombre separator '<br>')  FROM CCTCONTA WHERE
+                        (replace(CONCAT(Telefono,'.',movil), ' ','') like CONCAT('%' ,trim(entrantes) ,'%') and trim( entrantes) != '' )  or  
+                        (replace(CONCAT(Telefono,'.',movil), ' ','') like CONCAT('%' ,trim(salientes) ,'%') and trim( salientes) != '' ) or
+                        (replace(CONCAT(Telefono,'.',movil), ' ','') like CONCAT('%' ,right(trim(entrantes), 7 ) ,'%') and trim( entrantes) != '' ) or
+                        (replace(CONCAT(Telefono,'.',movil), ' ','') like CONCAT('%' ,right(trim(salientes), 7 ) ,'%') and trim( salientes) != '' ) or
+                        (replace(CONCAT(Telefono,'.',movil), '-','') like CONCAT('%' ,trim(entrantes) ,'%') and trim( entrantes) != '' )  or  
+                        (replace(CONCAT(Telefono,'.',movil), '-','') like CONCAT('%' ,trim(salientes) ,'%') and trim( salientes) != '' ) or
+                        (replace(CONCAT(Telefono,'.',movil), '-','') like CONCAT('%' ,right(trim(entrantes), 7 ) ,'%') and trim( entrantes) != '' ) or
+                        (replace(CONCAT(Telefono,'.',movil), '-','') like CONCAT('%' ,right(trim(salientes), 7 ) ,'%') and trim( salientes) != '' )                         
+                        ]]>
+                </expresion>
+            </field>
+            <field id="clase" noshow="true" clasefila="true">
+                <expresion><![CDATA[(case when LOCATE('<', numero) = 0 then 'resaltadoVioleta' else '' end)]]>
+                </expresion>
+            </field>
+      
+      
+            <field id="DuracionSalientes" suma="true">
+                <label>Tiempo</label>
+                <expresion><![CDATA[(case when LOCATE('<', numero) = 0 then trim(duracion) end)]]>
+                </expresion>
+                <tipo>time</tipo>
+            </field>
+       		 <field id="msg2" noshow="true" local="true">
+         <expresion><![CDATA[CONCAT(' NUMERO TEL:  ',numero,' EMPRESA:  ','[__empresa__]',' EMPLEADO:  ',Nombre, '  ', apellido , ' FECHA:  ', fecha ,' HORA:  ', hora)]]>
+                	</expresion>
+            	 </field>
+      	     <field id="responder" local="true" print="false"  linkint="mensajes_reply.xml" linkdir="histrix/mensajeria" linkdes="Enviar este Mensaje">
+       		 <label Formstyle="display:none;">Enviar</label>
+       		 <tipo>varchar</tipo>
+		<valor><![CDATA['<img alt="../img/mail_generic.png" src="../img/mail_generic.png"/>']]></valor>
+		<paring destino="idHilo" >0</paring>
+		<paring destino="mensaje" operador="=">msg2</paring>          
+	      </field>      
+            <order>
+                <field id="id_log"></field>
+            </order>
+      
+        </table>
+        <join tipo="left">
+            <table id="HTXUSERS">
+                <field id="interno">
+                    <condicion operador="=">extension and interno != 0</condicion>
+                </field>
+            </table>
+        </join>
+    </consulta>
+</histrix>

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" preloadData="false" procesa="false" llenoreferente="true" tooltip="false" showCantidad="false" updateTotals="true">
+  <title>Ingreso Movimientos Stock</title>
+  <obs/>
+  <consulta>
+    <table id="STK_MOVIMIENTOS" label="Ingreso Movimientos Stock">
+
+
+      <movimientos>
+        <relacion id="stkcanje_ins.xml" />
+      </movimientos>
+
+      <field id="id_stkmovimiento" deshabilitado="true" noshow="true" autoInc="true">
+        <condicion operador="=">-1</condicion>
+      </field>
+
+      <field id="codigo_barra" tabla="STK_ARTICULOS" local="true" esClave="true">
+        <label>Codigo de Barra</label>
+        <help>Articulo a buscar</help>
+        <helper type="external" xml="stkarticulo_pos.xml" dir="/ayudas">
+          <field id="wstklista_id" local="true">
+            <valor>1</valor>
+          </field>
+        </helper>                
+      </field>   
+
+      <field id="descripcion_detalle" local="true" colStyle="display:none;" deshabilitado="true">
+        <label>Descripcion</label>
+      </field>
+
+      <field id="cantidad" suma="true">
+        <label>Cantidad</label>
+        <tipo>decimal</tipo>
+        <jseval>cantidad!=0</jseval>
+      </field>
+
+      <field id="stock_act" deshabilitado="true">
+        <label>Stock Actual</label>
+        <expression sql="true">select cantidad_stock FROM STK_STOCKACTUAL where stkarticulo_id = '[__stkarticulo_id__]' and stkdeposito_id = '[__stkdeposito_id__]' limit 1</expression>
+        <tipo>decimal</tipo>
+      </field>
+
+      <field id="clas" clasefila="true" noshow="true" deshabilitado="true">
+        <if exp="cantidad &gt; stock_act">
+            <true>'error'</true>
+            <false>''</false>
+        </if>
+      </field>
+
+      <field id="nostock" colstyle="display:none;" Formstyle="display:none;" suma="true" deshabilitado="true" local="true">
+        <if exp="cantidad &gt; stock_act">
+            <true>1</true>
+            <false>0</false>
+        </if>
+        <label modpos="nobr"></label>
+        <jseval suma="true" total="true" fielddestino="error" actxml="false">nostock</jseval>
+        <tipo>integer</tipo>
+      </field>
+      <fieldGroup noshow="true">
+        <field id="stkarticulo_id" />
+        <field id="stkfamilia_id" />
+        <field id="stkrubro_id" />
+        <field id="stkconcepto_id" />
+        <field id="stkdeposito_id" local="true" />
+        <field id="unidad_id">
+          <tipo>decimal</tipo>
+        </field>
+      </fieldGroup>
+
+    </table>
+    
+  </consulta>
+</histrix>

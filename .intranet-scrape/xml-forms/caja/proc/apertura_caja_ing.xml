@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="fichaing" borra="no" imprime="false" inserta="false" modifica="false" preFetch="true" >
+	<title>Apertura de Caja</title>
+	<obs />
+	<form>
+		
+		<table id="CAJ_REGISTROS" label="Apertura de Caja">
+
+			<validation>
+	            <condition><![CDATA[ cajas_abiertas != '' ]]></condition>
+	            <message>Tiene cajas abiertas</message>
+            </validation>
+
+            <movimientos>
+          	  <relacion id="apertura_caja_ins.xml"/>
+          	</movimientos>
+
+			<field id="id_cajregistro" autoinc="true" esClave="true" noshow="true" />
+
+			<field id="cajpuesto_id" deshabilitado="true">
+				<label>Puesto</label>
+				<helper type="combo" xml="cajpuestousers_qry.xml" dir="/ayudas" _empty="true" />
+				<detalle>WCAJ_PUESTO</detalle>
+			</field>
+
+			<field id="fecha_registro" deshabilitado="true" tipOrden="DESC">
+				<label>Fecha</label>
+				<help>Fecha de la Caja</help>
+				<tipo>date</tipo>       
+			</field>
+
+			<field id="apertura_caja" deshabilitado="true" >
+				<label>Hora</label>
+				<tipo>time</tipo>
+				<valor eval="true">date("G:H:s")</valor>
+			</field>
+
+			<field id="operador_nombre" deshabilitado="true">
+				<label>Operador</label>
+				<valor eval="true">$_SESSION['usuario']</valor>
+			</field>
+
+			<field id="turno_registro">
+				<label>Turno</label>
+				<helper type="combo">
+				   <option value="1">Mañana</option>
+				   <option value="2">Tarde</option>
+				   <option value="3">Noche</option>
+				</helper>
+		    </field>
+		    <field id="saldo_anterior">
+			<expression sql="true">SELECT ROUND(CA.conteo_arqueo, 2)
+						FROM CAJ_REGISTROS CR
+						JOIN CAJ_ARQUEOS CA ON CA.cajregistro_id = CR.id_cajregistro
+						WHERE CR.fecha_registro &lt;= DATE(NOW())
+						  AND CR.cajpuesto_id = '[__cajpuesto_id__]'
+						  AND CR.cierre_caja != '0'
+						ORDER BY CR.fecha_registro DESC LIMIT 1</expression>
+			<label>Cierre Anterior</label>
+			<tipo>numeric</tipo>
+		    </field>
+
+		    <field id="apertura_recuento">
+		        <label>Saldo de Apertura</label>
+		        <tipo>numeric</tipo>
+		        <valor>0</valor>
+		        <size>20</size>
+		    </field>
+
+			<field id="cajas_abiertas" local="true" _noshow="true" _showObjTabla="true">
+				<label>Cajas Abiertas</label>
+				<helper type="combo" id="CAJ_REGISTROS" empty="true">
+				  <field id="id_cajregistro" />
+				  <field id="fecha" tipOrden="ASC">
+					<expression having="false">fecha_registro</expression>
+					              <tipo>date</tipo>
+				  </field>
+				  
+				  <field id="cajpuesto_id" />
+				  <field id="cierre_caja">
+					<condicion operador="=">0</condicion>
+				  </field>
+				  <order>
+				    <field id="fecha"></field>
+				  </order>
+				</helper>
+				<tipo>varchar</tipo>
+			</field>
+        </table>
+
+		<order>
+		  <field id="fecha_registro" />
+		</order>
+
+    <join>
+      <table id="CAJ_PUESTO_USERS">
+        <field id="cajpuesto_id">
+          <condicion operador="=">CAJ_REGISTROS.cajpuesto_id</condicion>
+        </field>
+            <field id="usuario_id">
+              <condicion operador="=">'[__Id_usuario__]'</condicion>
+            </field>
+      </table>
+    </join>
+	</form>
+</histrix>

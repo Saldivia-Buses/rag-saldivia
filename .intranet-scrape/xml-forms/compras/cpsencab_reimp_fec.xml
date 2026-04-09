@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<abm tipo="consulta" inserta="no">
+	<titulo>REIMPRESION DE ORDENES DE COMPRA</titulo>
+	<obs></obs>
+	<consulta detalle="cpsencab_cabreimp.xml">
+		<tabla id="CPSENCAB" label="ORDENES DE COMPRA">
+			
+			<campo id="siscod" oculto="true">
+				<label>Codigo Sistema.. </label>
+				<help>
+				</help>
+				<detalle>CPSMOVIM.siscod</detalle>
+			</campo>
+			
+			<!--                  <campo id="garnro">
+			<label>Doc.Garantes </label>
+			<help> </help>
+			</campo>
+			<campo id="movpor">
+			<label>Porc descuento </label>
+			<help>Porcentaje de descuento </help>
+			</campo>
+			<campo id="ocpbon">
+			<label>Bonificaciones </label>
+			<help>Bonificaciones esperadas para esta compra. </help>
+			</campo>
+			<campo id="ocpent">
+			<label>Lugar Entrega </label>
+			<help>Lugar de Entrega/Descarga. </help>
+			</campo>
+			-->
+			<campo id="ocpfec">
+				<label>Fecha</label>
+				<help>Fecha de Orden de Compra. </help>
+				<valor>today</valor>
+				<detalle>ocpfec</detalle>				
+			</campo>
+			<campo id="ocpnro">
+				<label>Nro</label>
+				<help>Numero de Orden de Compra. </help>
+				<detalle>ocpnro</detalle>
+			</campo>
+			<campo id="ctacod" oculto="true">
+				<detalle>ctacod</detalle>
+			</campo>
+			
+			<!--
+			<campo id="ctanom" tabla="CCTCUENT">
+				
+			</campo>
+				-->
+			
+			<!--                  <campo id="ctacod2">
+			<expresion>ctanom</expresion>
+			<label>Proveedor </label>
+			<help>Codigo de Cuenta PROVEEDOR. </help>
+			<tipo>string</tipo>
+			
+			</campo>
+			-->
+			
+			<campo id="ocpfen">
+				<label>Entrega</label>
+				<help>Fecha de Entrega </help>
+				<detalle>fecreq</detalle>				
+			</campo>
+<!--			<campo id="ocpimp" suma="true">
+				<label>Monto </label>
+				<help> Monto de la Orden de compra</help>
+			</campo>
+			-->
+			<campo id="ocpest" oculto="true">
+				<label>Estado </label>
+				<help>Estado Actual</help>
+                <options>
+                    <option valor="0">No Autorizada</option>
+                    <option valor="1">Pendiente</option>
+		    <option valor="2">Cumplida</option>
+                    <option valor="3">Parcial</option>
+                    <option valor="4">Anulada</option>
+                </options>
+
+				<condicion operador="!=">2</condicion>
+				
+			</campo>
+
+		<!--
+			<campo id="ocpest" >
+				<label>Estado</label>
+				<condicion operador="!=">2</condicion>
+				
+			</campo>
+			
+			<campo id="ocpobs">
+			<label>Observaciones </label>
+			<help>Observaciones. </help>
+			</campo>
+			<campo id="opecla">
+			<label>Firma Electronica </label>
+			<help>Firma Electronica </help>
+			</campo>
+			<campo id="seccod">
+			<label>Cod.Seccion </label>
+			<help>Codigo de Seccion. </help>
+			</campo>
+			
+			<campo id="succod">
+			<label>Cod. Sucursal </label>
+			<help>Codigo de Sucursal </help>
+			</campo>
+			<campo id="tracod">
+			<label>Nombre Transporte </label>
+			<help> </help>
+			</campo>
+			-->
+			
+			<filtros>
+			<campo id="ocpfec"> 
+			<operador>>=</operador>
+			<label>Desde Fecha</label>
+							<valor>today</valor>
+			</campo>  
+			<campo id="ocpfec">
+			<operador>&lt;=</operador>
+			<label>Hasta Fecha</label>
+				<valor>today</valor>
+			</campo>
+
+			
+			</filtros>
+			
+			<orden>
+				<campo id="ocpfec"></campo>
+			</orden>			
+		</tabla>
+		
+		
+		<join tipo="left">
+		
+			<tabla id="CCTCUENT">
+				<campo id="siscod" oculto="true">
+					<label>cctcuent.siscoc</label>
+					<condicion operador="=">'01'</condicion>
+		
+				</campo>
+		
+				<campo id="ctacod" oculto="true">
+					<condicion operador="=">CPSENCAB.ctacod</condicion>
+				</campo>
+		
+				<campo id="ctanom" oculto="true">
+				</campo>
+			</tabla>
+		</join>
+		
+		
+	</consulta>
+</abm>

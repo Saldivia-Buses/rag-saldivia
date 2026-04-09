@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix modifica="true"  tabindex="1000" tipo="abm-mini" borra="true" subtipo="vertical" imprime="false">
+	<title>Entregas</title>
+	<obs/>
+	<form>
+		<table id="REG_MOVIMIENTO_OBS" _label="OBSERVACIONES">	
+			<field id="obsmov" local="true" deshabilitado="true">
+				<label colstyle="display:none">Referencia</label>
+				<size>120</size>
+			</field>
+			<field id="fec_observacion">
+				<label>Fecha</label>
+				<help>Fecha de la observación</help>
+				<tipo>date</tipo>
+				<valor>today</valor>
+			</field>
+			<field id="hora_observacion">
+				<label>Hora</label>
+				<help>Hora de la observación</help>
+				<tipo>hora</tipo>
+				<valor eval="true">date("H:i:s")</valor>
+			</field>
+			
+			<field id="gencontacto_id">
+				<helper type="combo" id="GEN_TIPO_CONTACTOS" empty="true">
+					<field id="id_contacto"/>
+					<field id="tipo_contacto"/>
+				</helper>
+				<label>Tipo Contacto</label>
+			</field>
+			<field id="observacion">
+				<label>Observación</label>
+				<help>Observación</help>
+				<size>300</size>
+			</field>
+			<field id="fecha_produccion">
+				<label>Fecha prevista</label>
+				<tipo>date</tipo>
+			</field>
+			<!--
+			<field id="regmovim_id" noshow="true" valauto="true" />
+		-->
+			<field id="codigo_detalle" noshow="true" valauto="true" />
+			
+			<field id="tabla_origen" noshow="true" valauto="true" />
+			
+			<field id="login" _local="true" noshow="true">
+				<valor eval="true">$_SESSION['usuario']</valor>
+				<label Formstyle="display:none;">Usuario</label>
+				<tipo>varchar</tipo>
+			</field>     
+
+			<group>
+				<field id="codigo_detalle" />
+			</group>
+
+		</table>
+	</form>
+</histrix>

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" subtipo="vertical" preloadData="false">
+  <title>Descuentos por Artículo</title>
+  <obs/>
+  <form>
+    <table id="STK_DESCUENTOSRUBROSCLI" label="Descuentos por Rubros">
+
+      <field id="id_stkdescrubcli" autoinc="true" noshow="true" />
+      <field id="subsistema_id" local="true" noshow="true" />
+
+      <field id="regcuenta_id"  oculto="true">
+   <!--     <helper type="combo" xml="regcuenta_cmb.xml" dir="/ayudas" empty="true"/> -->
+        <label>Clientes</label>
+      </field>
+
+      <field id="stkrubro_id">
+        <helper type="combo" xml="stkrubro_qry.xml" dir="/ayudas" empty="true"/>
+        <label>Rubros</label>
+        <tipo>integer</tipo>
+      </field>
+
+      <field id="porcentaje_desc_rub">
+        <label>Descuento</label>
+        <tipo>numeric</tipo>
+	<size>10</size>
+      </field>
+       <field id="porcentaje_desc_rub1">
+        <label>Descuento1</label>
+        <tipo>numeric</tipo>
+	<size>10</size>
+      </field>
+   
+<filters>
+      <field id="regcuenta_id"  >
+        <helper type="combo" xml="regcuenta_cmb.xml" dir="/ayudas" empty="true"/>
+        <label>Clientes</label>
+      </field>
+
+      <field id="stkrubro_id">
+        <helper type="combo" xml="stkrubro_qry.xml" dir="/ayudas" empty="true"/>
+        <label>Producto</label>
+      </field>
+</filters>
+
+    </table>
+
+
+
+  </form>
+</histrix>

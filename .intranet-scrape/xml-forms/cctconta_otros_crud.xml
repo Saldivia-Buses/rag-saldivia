@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm"  _ldap="true" width="55" >
+    <title>CONTACTOS</title>
+    <obs></obs>
+    <form >
+        <table id="CCTCONTA" label="Contactos">
+            <filters>
+                <field id="nombre">
+                    <label>Contacto</label>
+                    <operador>like</operador>
+                </field>
+            </filters>
+            <field id="siscod" oculto="true">
+                <label>Codigo Sistema </label>
+                 <valor>98</valor>
+                <help>
+                </help>
+            </field>
+            <field id="idconta" autoinc="true" noshow="true">
+                <label>id</label>
+                <help>
+                </help>
+            </field>
+            <field id="ctacod" oculto="true">
+                <label>Cuenta</label>
+                <help>
+                </help>
+            </field>
+            <field id="nombre" ldifName="cn,sn">
+                <label>Nombre </label>
+                <help>Nombre del contacto</help>
+                 <size>18</size>
+            </field>
+            <field id="ctafan" local="true" deshabilitado="true" ldifName="o" noshow="true">
+                    
+            </field>
+            <field id="cargo">
+
+                <label>Cargo </label>
+                <help>Cargo </help>
+                <tabla_ex id="CARGOS">
+            
+                    <field id="cargo" clave="true"></field>
+                    <field id="nombre"></field>
+                    <order>
+                        <field id="nombre"></field>
+                    </order>
+                </tabla_ex>
+            </field>
+                <!--
+                <field id="cn" ldifName="cn" local="true" _noshow="true">
+                        <expresion>case when nombre != '' then nombre else ctafan end</expresion>
+
+                        <tipo>varchar</tipo>
+                </field>
+                <field id="sn" ldifName="sn" local="true" _noshow="true">
+                        <expresion>case when nombre != '' then nombre else ctafan end</expresion>
+
+                        <tipo>varchar</tipo>
+                </field> -->
+
+        
+
+            <field id="Telefono" ldifName="mobile">
+                <label>Telefono </label>
+                <help></help>
+                <size>12</size>
+            </field>
+            <field id="interno" ldifName="mobile">
+                <label>Interno </label>
+                <size>3</size>
+            </field>
+
+            <field id="movil" >
+                <label>Celular</label>
+                <size>12</size>
+            </field>
+            <field id="mail" ldifName="mail" ldifKey="true">
+                <label>Mail </label>
+                <help>
+                </help>
+                <size>30</size>
+                <tipo>email</tipo>
+            </field>
+        
+            <field id="notas">
+                <label>Notas </label>
+                <help></help>
+            </field>
+            <field id="principal">
+                <label>Principal</label>
+                <tipo>check</tipo>
+                <help></help>
+                                        
+            </field>
+        </table>
+    </form>
+</histrix>

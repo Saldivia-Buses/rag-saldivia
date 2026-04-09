@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+	<title>OFICIOS POR CATEGORIA</title>
+	<obs/>
+	<form >
+		<table id="RH_CONVOFICIO" label="Oficios por Categoria">
+
+			<field id="IdSindicato" oculto="true">
+				<label>Sindicato</label>
+				<tabla_ex id="SINDICATO">
+					<field id="IdSindicato"/>
+					<field id="Nombre"/>
+				</tabla_ex>
+				<help>Sindicato</help>
+				<actualiza>
+					<field destino="IdSindicato" id="IdCateg"/>
+				</actualiza>
+			</field>
+	<!--		<field id="Id_area" oculto="true">
+				<label>Area</label>
+				<tabla_ex id="AREASSIND">
+					<field id="Id_area"/>
+					<field id="descripcion"/>
+					<field id="IdSindicato">
+						<condicion operador="=">1</condicion>
+					</field>
+				</tabla_ex>
+				<actualiza>
+					<field destino="Id_area" id="IdCateg"/>
+				</actualiza>
+				<operador>=</operador>
+				<valor>1</valor>
+			</field> -->
+			<field id="IdCateg" oculto="true" >
+				<label style="font-size:15px;color:green;">Categoria</label>
+				<tabla_ex id="CATPERSONAL">
+					<field id="IdCateg"/>
+					<field id="descripcion"/>
+					<field id="IdSindicato">
+						
+					</field>
+<!--					<field id="Id_area">
+						<condicion operador="=">1</condicion>
+					</field> -->
+				</tabla_ex>
+<!--				<actualiza>
+					<field destino="IdCateg" id="IdConvenio"/>
+				</actualiza> -->
+			
+			</field>
+			<field id="actividad" tabla="CATPERSONAL">
+				<label>Desc.Categ-</label>
+				<tipo>varchar</tipo>
+			</field>
+		<!--	<field id="IdConvenio" oculto="true">
+				<label>Convenio</label>
+				<tabla_ex id="CONVENIOS">
+					<field id="IdConvenio"/>
+					<field id="descripcion"/>
+					<field id="IdSindicato">
+						<condicion operador="=">1</condicion>
+					</field>
+				</tabla_ex>
+				<valor>1</valor>
+			</field> -->
+			<field id="idOficio" >
+				<label style="color:red;font-weight:bold;">Oficio</label>
+				<tabla_ex id="RH_OFICIOS">
+					<field id="idOficio"/>
+					<field id="descripcion"/>
+				</tabla_ex>
+	
+				
+			</field>
+			<field id="tareas">
+				<label style="font-size:15px;">Tareas</label>
+				<help>Tareas</help>
+				<size>250</size>
+				<tipo>varchar</tipo>
+			</field>
+			<filters>
+				<field id="IdSindicato">
+					<label>Sindicato</label>
+					<tabla_ex id="SINDICATO">
+						<field id="IdSindicato"/>
+						<field id="Nombre"/>
+					</tabla_ex>
+					<help>Sindicato</help>
+					<operador>=</operador>
+					<valor>2</valor>
+					<actualiza>
+						<field destino="IdSindicato" id="IdCateg"/>
+					
+					</actualiza>					
+				</field>
+				<field id="IdCateg">
+					<label>Categoria</label>
+					<tabla_ex id="CATPERSONAL">
+						<field id="IdCateg"/>
+						<field id="descripcion"/>
+						<field id="IdSindicato"/>
+					<!--	<field id="Id_area"/> -->
+					</tabla_ex>
+					<operador>=</operador>
+				</field>
+
+
+			</filters>
+		</table>
+		<join>
+			<table id="CATPERSONAL">
+				<field id="IdSindicato">
+					<condicion operador="=">RH_CONVOFICIO.IdSindicato</condicion>
+				</field>				
+				<field id="IdCateg">
+					<condicion operador="=">RH_CONVOFICIO.IdCateg</condicion>
+				</field>
+			</table>
+		</join>
+	</form>
+</histrix>

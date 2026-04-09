@@ -1,0 +1,111 @@
+<?xml version="1.0"  encoding="UTF-8" ?>                 
+  <histrix tipo="calendar" imprime="false" inserta="false" modifica="false" detailDir="/compras/calendario" sidePanel="false" calendarAspectRatio="2">
+   <title>MOVIMIENTOS</title>
+    <obs></obs>
+      <form detalle="cpsencab_cabreimp_detalle.xml">
+    
+      <table id="CPSMOVIM" label="MOVIMIENTOS">
+
+      <field id="id_cpsmovim" calendarId="true" />
+      
+      <field id="artcod">
+        <label>Cod. Articulo</label>
+      </field>
+      
+      <field id="detalle">
+        <label>Detalle</label>
+      </field>
+
+      <field id="pencps" noZero="true" _suma="true" style="font-weight:bold">
+        <label>Pendiente</label>
+        <condicion operador="&gt;">'0.00'</condicion>
+        <help>Pendiente (expresado en la unidad de compra)</help>
+      </field>
+
+      <field id="fecreq" tabla="CPSMOVIM" calendarStartDate="true">
+        <label>Fecha Requerimiento</label>
+        <tipo>date</tipo>
+        <condicion operador="!=">'0000-00-00'</condicion>
+      </field>
+
+      <field id="fecha" local="true">
+        <valor>today</valor>
+        <tipo>date</tipo>
+      </field>
+
+      <field id="color" calendarColor="true">
+        <expression>case when CPSMOVIM.fecreq &gt;= str_to_date('[__fecha__]', '%d/%m/%Y') then '#088A08' else '#DF0101' end</expression>
+      </field>
+
+      <field id="desc" calendarSubject="true">
+        <expression>concat(CPSMOVIM.detalle ,' - Pendientes: ', ROUND(CPSMOVIM.pencps,2))</expression>
+      </field>
+
+      <field id="ocpnro">
+        <label>Nro OC</label>
+        <helper xml="cpsencab_cabreimp.xml" type="link" title="Detalle Orden Compra">
+          <parameter source="ocpnro" target="ocpnro" />
+        </helper>
+        <detalle>ocpnro</detalle>
+      </field>
+
+      <field id="movest" noshow="true" />
+      
+      <field id="titulo" noshow="true">
+        <expression>concat('Orden de Compra: ',CPSMOVIM.ocpnro)</expression>
+      </field>
+
+      <field id="ctacod" noshow="true" tabla="CPSENCAB">
+        <label>Proveedor</label>
+        <help>Codigo de Cuenta PROVEEDOR</help>
+        <tipo>integer</tipo>
+        <detalle>ctacod</detalle>
+      </field>
+
+      <field id="ocpest" noshow="true" tabla="CPSENCAB">
+        <label>Estado Orden</label>
+        <condicion operador="=">3 or ocpest = 1</condicion>
+      </field>
+
+      <order>
+        <field id="fecreq" tipoOrden="DESC" />
+      </order>
+    
+    </table>
+
+    <join tipo="left">
+      <table id="CPSENCAB">
+        <field id="siscod" oculto="true">
+          <condicion operador="=">CPSMOVIM.siscod</condicion>
+        </field>
+        <field id="ocpnro" oculto="true">
+          <condicion operador="=">CPSMOVIM.ocpnro</condicion>
+        </field>
+        <field id="ocpfec" oculto="true">
+          <condicion operador="=">CPSMOVIM.movfec</condicion>
+        </field>
+      </table>
+    </join>
+    
+    <join tipo="left">
+      <table id="PEDIDOINT">
+        <field id="idPed">
+          <condicion operador="=">CPSMOVIM.idPed</condicion>
+        </field>
+      </table>
+    </join>
+    
+    <!--<join>
+      <table id="STKINSUM">
+        <field id="siscod" oculto="true">
+          <label>STKINSUM.siscod</label>
+          <condicion operador="=">'01'</condicion>
+        </field>
+        <field id="artcod" oculto="true">
+          <condicion operador="=">CPSMOVIM.artcod</condicion>
+        </field>
+      </table>
+    </join>-->
+   
+  </form>
+</histrix>

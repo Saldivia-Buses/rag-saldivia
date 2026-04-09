@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="exec" >
+       <title>CIERRE</title>
+        <obs></obs>
+               <form >
+		<table id="PAG_DETALLE" label="Detalle">
+			<field id="subsistema_id" valauto="true">
+				<label>Subsist</label>
+			</field>
+			<ejecuta><![CDATA[
+			   $localpath = '../database/'.$_SESSION['db'].'/files/';
+                           exec($localpath.'getpagofacil.sh '.$localpath.'PAG_DETALLE.txt 1> /tmp/getpagofacil.log 2> /tmp/error_getpagofacil.log');
+						 ]]></ejecuta>
+				<field id="id_pagdetalle" id_temp="id_pagdetalle" local="true">
+				</field>
+			</table>
+               </form>
+        </histrix>
+
+

@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ing" preloadData="false" subtipo="vertical" imprime="false" inserta="false" borra="false" modifica="false" llenoreferente="true" llenoTemporal="true" importTempTable="TEMPTABLENAME">
+	<title>Seriales</title>
+	<obs></obs>
+	<form>
+	<table id="GEN_CALENDAR" label="Seriales">
+		<movimientos>
+			<relacion id="stkseriales_ins.xml" />
+		</movimientos>
+	
+		<filters>
+			<field id="stkarticulo_id">
+				<label>Cod. Art.</label>
+			</field>
+			<field id="nombre_articulo" local="true" deshabilitado="true">
+				<label modpos="nobr">Nombre Articulo</label>
+			</field>
+			<field id="stkrubro_id">
+				<label>Tipo</label>
+			</field>
+			<field id="desde">
+				<label>Desde</label>
+			</field>
+			<field id="hasta">
+				<label>Hasta</label>
+			</field>
+			<field id="cantidad" deshabilitado="true">
+				<label modpos="nobr">Cantidad</label>
+				<valor>1</valor>
+			</field>
+		</filters>
+
+		<field id="_ORDEN" local="true" noshow="true" />
+
+		<fieldGroup _noshow="true">
+			<field id="stkarticulo_id" local="true">
+				<label>Articulo</label>
+				<helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas" />
+				<detalle>stkarticulo_id</detalle>
+			</field>
+
+			<field id="nombre_articulo" local="true">
+				<label>Nombre</label>
+				<size>40</size>
+			</field>				
+
+			<field id="stkrubro_id" deshabilitado="true" local="true" noshow="true">
+				<label>Tipo</label>
+		                <helper type="combo" xml="cajctbaux_qry.xml" dir="/caja/qry" empty="true">
+		                    <field id="rubro_id" noshow="true">   
+					<condicion operador="=">1</condicion>
+                                    </field>
+				    <field id="con_dominio" noshow="true">   
+					<condicion operador="=">0</condicion>
+                                    </field>
+                		</helper>
+				<detalle>stkrubro_id</detalle>
+			</field>
+
+			<field id="desde" local="true" noshow="true">
+				<label>Desde</label>
+				<jseval fielddestino="cantidad">(hasta >= desde)?(hasta - desde + 1):1</jseval>
+				<detalle>desde_oblea</detalle>
+			</field>
+
+			<field id="hasta" local="true" noshow="true">
+				<label>Hasta</label>
+				<jseval fielddestino="cantidad">(hasta >= desde)?(hasta - desde + 1):1</jseval>
+				<detalle>hasta_oblea</detalle>
+			</field>
+
+			<field id="numorden" local="true" noshow="true">
+				<if exp="true">
+					<true>_ORDEN - 1</true>
+					<false>0</false>
+				</if>
+			</field>
+
+			<field id="cantidad" local="true" noshow="true">
+				<setvar>limit</setvar>
+				<label>cant</label>
+			</field>
+		</fieldGroup>
+
+		<field id="codigo_serie" local="true">
+			<label>Serie</label>
+			<if exp="true">
+				<true>(desde + numorden)</true>
+				<false>0</false>
+			</if>
+			<detalle>codigo_serie</detalle>
+		</field>
+		
+		<field id="acepta" local="true" noshow="true">
+		      <valor>1</valor>
+		</field>
+
+	</table>
+
+</form>
+</histrix>

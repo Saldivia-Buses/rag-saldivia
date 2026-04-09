@@ -1,0 +1,350 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ficha" PDFsincabecera="true"  sololectura="true" autoprint="true" PDFfontSize="8" _copies="2" PDFpageSize="Legal">
+	<title>FACTURA</title>
+	<obs/>
+	<form >
+
+		<pdf PDForientacion="P">
+			<code>
+				<![CDATA[ ]]>
+			</code>
+		</pdf>
+
+		<table id="REG_MOVIMIENTOS" label="FACTURA">
+
+			<field id="id_regmovim" noshow="false" esClave="true" print="false" />
+			<!-- field id="id_regcuenta" noshow="true" print="false" tabla="REG_CUENTA" deshabilitado="true"  PDFnoborder="true" style="text-align:right;" / -->
+			<field id="subsistema_id" noshow="true" print="false" />
+			<field id="concepto_id" noshow="true" print="false" />
+			<field id="regcuenta_id" noshow="true" print="false" />
+
+			
+			<fieldGroup id="cabecera1" deshabilitado="true" PDFnoborder="true">
+				
+				<field id="fecha_movimiento" PDFnolabel="true" PDFsize="8">
+					<label posx="145" posY="18" />
+				</field>
+				
+				<field id="nro_Movimiento" PDFsize="8" PDFnolabel="true">
+					<label posx="155" posY="+4" />
+					<expresion>CONCAT(LPAD(puesto_movimiento,4,'0'),' - ',LPAD(nro_movimiento,8,'0'))</expresion>
+				</field>
+			
+				<field id="nombre_cuenta" tabla="REG_CUENTA" PDFbold="true" pdfancho="120">
+					<label posx="14" posY="+10" />
+					<expression>LEFT(REG_CUENTA.nombre_cuenta, 120)</expression>
+				</field>
+
+					<field id="nro_cuenta" tabla="REG_CUENTA" PDFnolabel="true">
+						<label posx="100" posY="0" />
+					</field>
+
+					<field id="iva_id" tabla="REG_CUENTA">
+						<label posx="125" posY="0" size="20">I.V.A.:</label>				
+						<helper type="combo" xml="iva_qry.xml" dir="/ayudas" empty="true" />
+					</field>
+
+				<field id="cod_direccion" tabla="REG_CUENTA" pdfancho="120" PDFnolabel="true">
+					<label posx="14" posY="+0.5" />
+					<expression>LEFT(CONCAT(cod_direccion, ' ', (CASE WHEN nro_direccion = 0 OR nro_direccion is null THEN '' ELSE nro_direccion END)), 120)</expression>
+				</field>
+				
+					<field id="cuit_cuenta" pdfancho="80">
+						<label posx="125" posY="0" size="20">C.U.I.T.:</label>
+						<expression>REG_CUENTA.cuit_cuenta</expression>
+					</field>
+				
+				<field id="localidad" pdfancho="120" PDFnolabel="true">
+					<expression>LEFT(CONCAT(LOCALIDAD_CUENTA.cp, ' ', LOCALIDAD_CUENTA.nombre_localidad), 110)</expression>
+					<label posx="14" posY="+0.5" />
+				</field>
+				
+					<field id="regforma_id">
+						<label posx="125" posY="0" size="20">Forma pago:</label>				
+						<helper type="combo" id="REG_FORMAS" >
+							<field id="id_regforma"/>
+							<field id="nombre_forma"/>
+						</helper>
+					</field>
+				
+				<field id="provincia" pdfancho="120" PDFnolabel="true">
+					<expression>LEFT(PROVINCIA_CUENTA.nombre_provincia, 110)</expression>
+					<label posx="14" posY="+0.5" />
+				</field>
+
+					<field id="reg_periodo">
+						<label posx="125" posY="0" size="20" pdfancho="80">Período:</label>
+						<attribute id="print">muestra_periodo</attribute>
+					</field>
+
+					<field id="vencimiento_movimiento" PDFbold="true">
+						<label posx="125" posY="+0.5" size="20">Vencimiento</label>
+						<attribute id="print">muestra_vencimiento</attribute>
+					</field>
+					
+			</fieldGroup>
+			
+			<fieldGroup id="cuerpo1" PDFnolabel="true" PDFlineas="false">
+				
+				<field id="detalles" local="true" pdfwidth="200">
+					<label posx="1" posy="90" />
+					<helper xml="imp_factura_detalle_genus_2_qry.xml" type="object" dir="/clientes/qry">
+						<parameter source="id_regmovim" target="regmovim_id"/>
+						<parameter source="subsistema_id" target="subsistema_id"/>
+						<parameter source="muestra_iva" target="muestra_iva"/>
+					</helper>
+				</field>
+				
+			</fieldGroup>
+			
+			<fieldGroup id="talon1" deshabilitado="true" PDFnoborder="true" PDFsize="12">
+				
+				<field id="referencia_facturacion" local="true" maxsize="250" maxlength="250" PDFnolabel="true" PDFsize="8" pdfancho="120" PDFbold="true">
+					<label posx="20" posY="128" />
+					<helper type="parameter" id="SIS::02:refrerencia_facturacion" >
+						<label>Referencia Para Facturacion</label>
+						<defaultValue></defaultValue>
+					</helper>
+					<size>250</size>
+				</field>	
+				
+				<field id="bonificaciones_movimiento" noZero="true" pdfancho="25">
+					<label posx="120" posY="0" size="24">Descuento %</label>
+					<tipo>numeric</tipo>
+					<attribute id="print">muestra_dto</attribute>
+				</field>
+				
+				<field id="importe_bon">
+					<label posx="167" posY="0" size="24" pdfancho="25" />
+					<tipo>numeric</tipo>
+					<expresion>case when letra_movimiento = 'A' or letra_movimiento = 'a' then importe_bon else importe_bon * 1.21 end </expresion>
+					<attribute id="print">muestra_dto</attribute>
+				</field>
+
+				<field id="neto_movimiento">
+					<label posx="150" posY="140" size="24" pdfancho="25">NETO:</label>
+					<tipo>numeric</tipo>
+					<attribute id="print">muestra_iva</attribute>
+				</field>
+				
+				<field id="total_iva">
+					<label posx="150" posY="145" size="24" pdfancho="25" >IVA:</label>
+					<expression>importe_iva</expression>
+					<tipo>numeric</tipo>
+					<attribute id="print">muestra_iva</attribute>
+				</field>
+
+				<field id="referencia_movimiento" PDFsize="8" pdfancho="120">
+					<label posx="20" posY="145" />
+				</field>
+
+				<field id="importe_movimiento" pdfancho="25" PDFbold="true">
+					<label posx="174" posY="155" />
+				</field>
+
+			</fieldGroup>
+			
+
+<!-- COPIA -->
+
+			<fieldGroup id="cabecera2" deshabilitado="true" PDFnoborder="true">
+			
+				<field id="fecha_movimiento2" PDFnolabel="true" PDFsize="8">
+					<label posx="145" posY="195" />
+					<expression>fecha_movimiento</expression>
+					<tipo>date</tipo>
+				</field>
+				
+				<field id="nro_Movimiento2" PDFsize="8" PDFnolabel="true">
+					<label posx="155" posY="+4" />
+					<expresion>CONCAT(LPAD(puesto_movimiento,4,'0'),' - ',LPAD(nro_movimiento,8,'0'))</expresion>
+				</field>
+			
+				<field id="nombre_cuenta2" PDFbold="true" pdfancho="120">
+					<label posx="14" posY="+10" />
+					<expression>LEFT(REG_CUENTA.nombre_cuenta, 120)</expression>
+				</field>
+
+					<field id="nro_cuenta2" PDFnolabel="true">
+						<label posx="100" posY="0" />
+						<expression>REG_CUENTA.nro_cuenta</expression>
+					</field>
+
+					<field id="iva_id2">
+						<label posx="125" posY="0" size="20">I.V.A.:</label>				
+						<helper type="combo" xml="iva_qry.xml" dir="/ayudas" empty="true" />
+						<expression>REG_CUENTA.iva_id</expression>
+					</field>
+
+				<field id="cod_direccion2" pdfancho="120" PDFnolabel="true">
+					<label posx="14" posY="+0.5" />
+					<expression>LEFT(CONCAT(cod_direccion, ' ', (CASE WHEN nro_direccion = 0 OR nro_direccion is null THEN '' ELSE nro_direccion END)), 120)</expression>
+				</field>
+				
+					<field id="cuit_cuenta2" pdfancho="80">
+						<label posx="125" posY="0" size="20">C.U.I.T.:</label>
+						<expression>REG_CUENTA.cuit_cuenta</expression>
+					</field>
+				
+				<field id="localidad2" pdfancho="120" PDFnolabel="true">
+					<label posx="14" posY="+0.5" />
+					<expression>LEFT(CONCAT(LOCALIDAD_CUENTA.cp, ' ', LOCALIDAD_CUENTA.nombre_localidad), 110)</expression>
+				</field>
+				
+					<field id="regforma_id2">
+						<label posx="125" posY="0" size="20">Forma pago:</label>				
+						<helper type="combo" id="REG_FORMAS" >
+							<field id="id_regforma"/>
+							<field id="nombre_forma"/>
+						</helper>
+						<expression>REG_MOVIMIENTOS.regforma_id</expression>
+					</field>
+				
+				<field id="provincia2" pdfancho="120" PDFnolabel="true">
+					<label posx="14" posY="+0.5" />
+					<expression>LEFT(PROVINCIA_CUENTA.nombre_provincia, 110)</expression>
+				</field>
+
+					<field id="reg_periodo2">
+						<label posx="125" posY="0" size="20" pdfancho="80">Período:</label>
+						<expression>reg_periodo</expression>
+						<attribute id="print">muestra_periodo</attribute>
+					</field>
+
+					<field id="vencimiento_movimiento2" PDFbold="true">
+						<label posx="125" posY="+0.5" size="20">Vencimiento</label>
+						<expression>vencimiento_movimiento</expression>
+						<attribute id="print">muestra_vencimiento</attribute>
+						<tipo>date</tipo>
+					</field>
+					
+			</fieldGroup>
+
+			<fieldGroup id="cuerpo2" PDFnolabel="true" PDFlineas="false">
+				
+				<field id="detalle2" local="true" pdfwidth="200">
+					<label posx="1" posy="265" />
+					<helper xml="imp_factura_detalle_genus_2_qry.xml" type="object" dir="/clientes/qry">
+						<parameter source="id_regmovim" target="regmovim_id"/>
+						<parameter source="subsistema_id" target="subsistema_id"/>
+						<parameter source="muestra_iva" target="muestra_iva"/>
+					</helper>
+				</field>
+				
+			</fieldGroup>
+
+			<fieldGroup id="talon2" deshabilitado="true" PDFnoborder="true" PDFsize="12">
+			
+				<field id="referencia_facturacion2" local="true" maxsize="250" maxlength="250" PDFnolabel="false" PDFsize="8" pdfancho="120" PDFbold="true">
+					<label posx="20" posY="300" />
+					<helper type="parameter" id="SIS::02:refrerencia_facturacion" >
+						<label>Referencia Para Facturacion</label>
+						<defaultValue></defaultValue>
+					</helper>
+					<size>250</size>
+				</field>
+				<field id="bonificaciones_movimiento2" noZero="true" pdfancho="25">
+					<label posx="120" posY="0" size="24">Descuento %</label>
+					<expression>bonificaciones_movimiento</expression>
+					<tipo>numeric</tipo>
+					<attribute id="print">muestra_dto</attribute>
+				</field>
+				<field id="importe_bon2">
+					<label posx="167" posY="0" size="24" pdfancho="25" />
+					<expresion>case when letra_movimiento = 'A' or letra_movimiento = 'a' then importe_bon else importe_bon * 1.21 end </expresion>
+					<tipo>numeric</tipo>
+					<attribute id="print">muestra_dto</attribute>
+				</field>
+				<field id="neto_movimiento2">
+					<label posx="150" posY="315" size="24" pdfancho="25">NETO:</label>
+					<expression>neto_movimiento</expression>
+					<tipo>numeric</tipo>
+					<attribute id="print">muestra_iva</attribute>
+				</field>
+				<field id="total_iva2">
+					<label posx="150" posY="320" size="24" pdfancho="25" >IVA:</label>
+					<expression>importe_iva</expression>
+					<tipo>numeric</tipo>
+					<attribute id="print">muestra_iva</attribute>
+				</field>
+				<field id="importe_movimiento2" pdfancho="25" PDFbold="true" PDFnolabel="false">
+					<label posx="174" posY="330" /> 
+					<expression>importe_movimiento</expression>
+					<tipo>numeric</tipo>
+				</field>
+
+			</fieldGroup>
+		
+		
+			<fieldGroup>
+			
+				<!--
+				<field id="marca_agua" local="true" PDFbold="true" PDFitalic="true" PDFrotate="-30">
+					<label posx="10" posY="20" PDFcolor="#E3E3E3" PDFrestorePosition="true" PDFsize="90" size="400" />
+					<expression>'DUPLICADO'</expression>
+				</field>
+				-->
+				<field id="muestra_iva" noshow="true" local="true" print="false">
+					<expresion>case when letra_movimiento = 'A' or letra_movimiento = 'a'  then 'true' else 'false' end </expresion>
+				</field>	
+
+				<field id="nomuestra_iva" noshow="true" local="true" print="false">
+					<expresion>case when letra_movimiento = 'A' or letra_movimiento = 'a'  then 'false' else 'true' end </expresion>
+				</field>	
+
+				<field id="muestra_dto" noshow="true" local="true" print="false">
+					<expresion>IF(importe_bon != 0,'true','false')</expresion>
+				</field>
+
+				<field id="muestra_vencimiento" local="true" noshow="true" print="false">
+					<expression>IF(vencimiento_movimiento != '','true','false')</expression>
+				</field>
+
+				<field id="muestra_periodo" local="true" noshow="true" print="false">
+					<expression>IF(reg_periodo != '','true','false')</expression>
+				</field>
+				
+			</fieldGroup>
+
+			
+			
+			
+			
+		
+			<group>
+				<field id="id_regmovim"/>
+			</group>
+
+		</table>
+
+		<join tipo="left">
+			<table id="REG_CONCEPTOS">
+				<field id="id_concepto">
+					<condicion operador="=">concepto_id</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="REG_CUENTA">
+				<field id="id_regcuenta">
+					<condicion operador="=">regcuenta_id</condicion>
+				</field>
+			</table>
+		</join> 
+		
+		<join tipo="left">
+			<table id="GEN_LOCALIDADES" as="LOCALIDAD_CUENTA">
+				<field id="id_localidad">
+					<condicion operador="=">REG_CUENTA.localidad_id</condicion>
+				</field>
+			</table>
+		</join> 
+		<join tipo="left">
+			<table id="GEN_PROVINCIAS" as="PROVINCIA_CUENTA">
+				<field id="id_provincia">
+					<condicion operador="=">REG_CUENTA.provincia_id</condicion>
+				</field>
+			</table>
+		</join> 
+	</form>
+</histrix>  

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<histrix tipo="abm-mini" log="true" >
+    <title>Acciones de No Conformidades</title>
+    <obs></obs>
+    <form >
+        <table id="CAL_ACCIONES_NCONF" >
+            <title>Acciones Preventivas</title>
+            <field id="id_accionnconf" autoinc="true" noshow="true">
+                <label>Cod.</label>
+                <help>Codigo</help>
+            </field>
+            <field id="noconformidad_id" oculto="true">
+                <valor>-1</valor>
+
+            </field>
+	    <field id="creacion">
+		<expresion>CONCAT(fecha_accionnconf, ' / ', (SELECT CONCAT(apellido, ' ', nombre) FROM HTXUSERS WHERE id_usuario = CAL_ACCIONES_NCONF.login))</expresion>
+		<label _Formstyle="display:none;">Creación</label>
+	    </field>
+	    <field id="fecha_accionnconf" noshow="true" valauto="true">
+                <label _Formstyle="display:none;">Fecha</label>
+                <valor>today</valor>
+                <tipo>date</tipo>
+            </field>
+
+            <field id="descripcion_accionnconf">
+                <label>Acción a Realizar</label>
+                <size>100</size>
+            </field>
+			
+			<field id="tipo_accionnconf" noshow="true" valauto="true">
+				<label>Tipo de Acción</label>
+				<options>
+					<option valor="1">Análisis</option>
+					<option valor="2">Preventiva</option>
+					<option valor="3">Correctiva</option>		
+				</options>
+				<valor>2</valor>
+			</field>
+
+           
+            <field id="resp_rhpersonal_id" >
+                <helper type="combo" id="HTXUSERS" empty="true">
+					<field id="id_usuario"/>
+					<field id="nombre">
+						<expresion>CONCAT(apellido, ' ', Nombre)</expresion>
+					</field>
+					<field id="baja">
+						<condicion operador="=">0</condicion>
+					</field>
+					<order>
+						<field id="nombre"/>
+					</order>
+                </helper>
+                <label modpos="nobr">Responsable</label>
+                <help >Empleado responsable de la Acción</help>
+<!--				<jseval>resp_rhpersonal_id != 0</jseval>-->
+            </field>
+			
+	    <field id="login" noZero="true" noshow="true" valauto="true">
+		<label Formstyle="display:none;">Creada por</label>
+		<helper type="combo" id="HTXUSERS" empty="true">
+		    <field id="id_usuario"/>
+		    <field id="nombre">
+			<expresion>CONCAT(apellido, ' ', Nombre)</expresion>
+		    </field>
+		<order>
+						<field id="nombre"/>
+					</order>
+                </helper>
+				<valor eval="true">$_SESSION['idUser']</valor>
+			</field>			
+        </table>
+    </form>
+</histrix>

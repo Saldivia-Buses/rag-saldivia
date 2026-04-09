@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="consulta">
+	<title>IMPUTACIONES</title>
+	<obs></obs>
+	<form >
+		<table id="CCTIMPUT" label="Imputaciones">
+			
+
+			<field id="movfec2">
+				<expression>movfec</expression>				
+				<label>Fecha</label>
+				<tipo>date</tipo>
+			</field>
+			
+			<field id="condes" tabla="CCTCONCE">
+				<label>Tipo</label>
+				<tipo>character</tipo>
+			</field>
+			
+			<field id="movlet">
+				<label>Letra</label>
+			</field>
+
+			<field id="movnpv2">
+				<expression>movnpv</expression>				
+				<label>Npv</label>
+				<tipo>decimal</tipo>				
+				<format>%04d</format>
+			</field>
+
+			<field id="movipv" noshow="true">
+				<expression>movipv</expression>				
+				<label>Npv</label>
+				<tipo>decimal</tipo>				
+				<format>%04d</format>
+			</field>
+
+			<field id="movnroex">
+				<expression>movnro</expression>
+				<label>Nrosss</label>
+				<tipo>decimal</tipo>				
+				<format>%010d</format>
+			</field>
+			<field id="movimp">
+				<label>Imputado</label>
+			</field>
+				
+			<field id="movinc" oculto="true">
+				<label>Movimiento</label>
+			</field>
+						<field id="siscod" oculto="true">
+				<label>Codigo Sistema.</label>
+				<help>
+				</help>
+			</field>
+
+			<field id="ctacod" oculto="true">
+				<label>codigo </label>
+			</field>
+
+			<order>
+				<field id="movinc"></field>
+			</order>
+			
+		</table>
+		
+		<join tipo="left">
+			<table id="CCTCONCE">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">CCTIMPUT.siscod</condicion>
+					
+				</field>
+				<field id="concod" oculto="true">
+					<condicion operador="=">CCTIMPUT.concod</condicion>
+				</field>
+			</table>
+		</join>
+		
+		
+	</form>
+</histrix>

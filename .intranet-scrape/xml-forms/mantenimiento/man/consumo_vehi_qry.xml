@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="consulta"  >
+<title>CONSUMO</title>
+<obs/>
+	<form >
+        <table id="MANT_VIAJES_VEHICULO" label="viajes">
+			
+		<!-- <field id="tjt">
+	    	<expression>select PTJT.tarjeta FROM PERSONAL_TARJETA as PTJT where PTJT.idPersona = PERSONAL.IdPersona order by PTJT.fechaDesde DESC limit 1</expression>
+        </field> -->
+
+        <filters auto="true">
+        
+            <field id="mantvehiculo_id" _tabla="MANT_VEHICULOS">
+                <label>Vehi</label>
+	            <operador>=</operador>
+        	</field>
+
+        </filters>
+
+            <field id="id_mantviajesvehiculo" noshow="true">
+                <label>id viaje</label>
+            </field>
+
+            <field id="mantvehiculo_id">
+                <helper type="combo" id="MANT_VEHICULOS" _xml="mant_vehiculos_crud.xml" empty="true">
+                        <field id="id_mantvehiculo" />
+                        <field id="descripcion_vehiculo" />
+                        <order>
+                            <field id="descripcion_vehiculo" />
+                        </order>
+                    <!--<field id="id_mantvehiculo">
+                        <label>vehiculo</label>
+                        <help>vehiculo</help>
+                    </field>
+                    <field id="descripcion_vehiculo">
+                        <label>Descripcion</label>
+                        <help>Descripcion</help>
+                    </field> -->
+                </helper>
+                <label>Vehiculo</label>
+            </field>
+           
+			<!-- <field id="diferencia" local="true">
+                <label>diferencia kms</label>
+                <expression>km_final - km_inicial</expression>
+            </field>
+ 
+            <field id="total" local="true" suma="true" acumula="true">
+                <label>s</label>
+                <expression>km_final - km_inicial</expression>
+            </field> -->
+
+            <field id="suma">
+                <label>Total</label>
+                <expression><![CDATA[sum( km_final - km_inicial )]]>
+                </expression>
+            </field>    
+            
+            <group>
+                <field id="mantvehiculo_id" />
+            </group>
+      
+        </table>
+
+        <join tipo="left">
+            <table id="MANT_VEHICULOS">
+                <field id="id_mantvehiculo">
+                    <condicion operador="=">MANT_VIAJES_VEHICULO.mantvehiculo_id</condicion>    
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="abm">
+       <title>Duplico plan de cuentas</title>
+        <obs></obs>
+				<form >
+					<table id="CTBNUMER" label="CTBCUENT">
+						<field id="siscod" id_cab="siscodnew">
+						</field>
+						<field id="nummes" id_temp="nummes">
+						</field>
+						<field id="numapr" id_temp="prox">
+						</field>
+						<field id="numpro" id_temp="prox">
+						</field>
+					</table>
+				</form>
+        </histrix>

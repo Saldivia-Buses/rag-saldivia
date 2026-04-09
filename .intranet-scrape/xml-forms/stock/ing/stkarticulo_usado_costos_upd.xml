@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="update" limit="1">
+	<title>Modificación de costos</title>
+	<obs></obs>
+	<form >
+		<table id="STK_ARTICULOS">
+			<field id="codigo_barra" 			        id_temp="codigo_ubarra" esClave="true"/>
+			<field id="precio_costo" 		        	id_temp="nuevo_costo_usado" />
+		</table>
+	</form>
+
+</histrix>
+

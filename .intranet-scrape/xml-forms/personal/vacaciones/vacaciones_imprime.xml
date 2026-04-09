@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="ficha" sololectura="true"  autoprint="true" sinFecha="true" sinNumero="true">
+       <title></title>
+        <obs></obs>
+               <form >
+
+				   <pdf>
+					  <code><![CDATA[
+
+						$pdf->RoundedRect(4,5,$pdf->anchoPagina + 2,270, 5);
+
+
+
+					  ]]></code>
+				  </pdf>
+				  <!--
+				  $pdf->RoundedRect(5,155,$pdf->anchoPagina,42, 5);
+						$pdf->Line(5,162,$pdf->anchoPagina+5,162);
+						$pdf->Line(5,169,$pdf->anchoPagina+5,169);
+				  $pdf->Line(5,176,$pdf->anchoPagina+5,176);
+						$pdf->Line(5,183,$pdf->anchoPagina+5,183);
+						$pdf->Line(5,190,$pdf->anchoPagina+5,190);
+					    $pdf->Line(($pdf->anchoPagina / 2)+5,155,($pdf->anchoPagina / 2)+5,197);-->
+<!-- $pdf->Rect(5,5,$pdf->anchoPagina,15);-->
+
+
+                  <table id="PERSONAL" label="VACACIONES PERSONAL">
+
+
+
+
+				<!-- <field id="cabe1" local="true">
+					<label size="200" posx="55" posy="4" PDFsize="18" PDFnoborder="true">RESPONSABILIDAD CIVIL</label>
+				</field> -->
+
+				<field id="pervac" local="true">
+					<label size="105" posx="55" posy="+6" PDFsize="13" PDFnoborder="true">NOTIFICACION DE VACACIONES - PERIODO </label>
+					<tipo>varchar</tipo>
+				</field>
+				<field id="legajo" oculto="true">
+				</field>
+
+				<field id="Apellido">
+                     <label size="40" posx="0" posy="+4" PDFsize="12" PDFnoborder="true">Estimado Sr.:</label>
+				</field>
+				<field id="coma" local="true">
+                     <label size="1" posx="74" posy="0" PDFsize="12" PDFnoborder="true">,</label>
+				</field>
+				<field id="nombre">
+                     <label size="50" posx="76" posy="0" PDFsize="12" PDFnoborder="true"></label>
+				</field>
+				<field id="cumplimiento" local="true">
+					<label size="207" posx="0" posy="+3" PDFsize="12" PDFnoborder="true">Comunicámosle que el período de descanso anual comienza el</label>
+				</field>
+<!--				<field id="vacs" local="true">
+                     <label size="55" posx="+0" posy="+1" PDFsize="12" PDFnoborder="true">que le corresponde es de</label>
+                     <tipo>integer</tipo>
+				</field>-->
+				<field id="comvac" local="true">
+					<label size="8" posx="+120" posy="0" PDFsize="12" PDFnoborder="true">día</label>
+					<tipo>date</tipo>
+				</field>
+				<field id="finvac" local="true">
+					<label size="30" posx="+150" posy="0" PDFsize="12" PDFnoborder="true">y finaliza el dia</label>
+<!--					<expresion > select ADDDATE(comvac,vacs)</expresion> -->
+					<tipo>date</tipo>
+				</field>
+				<field id="inclusive" local="true">
+					<label size="120" posx="0" posy="+1" PDFsize="12" PDFnoborder="true">inclusive. Por lo tanto queda Ud. debidamente notificado.-</label>
+				</field>
+
+				<field id="puntosfirma1" local="true">
+					<label size="50" posx="+20" posy="+20" PDFsize="12" PDFnoborder="true">....................................</label>
+				</field>
+				<field id="puntosfirma2" local="true">
+					<label size="50" posx="+120" posy="0" PDFsize="12" PDFnoborder="true">...................................</label>
+				</field>
+				<field id="firma1" local="true">
+					<label size="50" posx="+33" posy="+1" PDFsize="12" PDFnoborder="true">Firma</label>
+				</field>
+				<field id="firma2" local="true">
+					<label size="50" posx="+133" posy="0" PDFsize="12" PDFnoborder="true">Aclaración</label>
+				</field>
+<!--				<field id="FechaFirma" local="true" _print="false" _noshow="true">
+				</field>     -->
+				
+				<field id="FechaFirma" local="true">
+
+	                         <label size="50" posx="5" posy="+20" PDFsize="12" PDFnoborder="true">Alvear</label>
+<!--                    			<if exp="true">
+                    			    <true>'Villa Gdor. Galvez, '. DateTime::createFromFormat("j/m/Y", "FechaFirma")->format('d - m - Y')</true>
+                    			    <false>''</false>
+                    			</if>                -->
+				</field>
+
+				<field id="pie" local="true">
+                     <label size="40" posx="0" posy="+40" PDFsize="12" PDFnoborder="true">Sres.</label>
+				</field>
+				<field id="pie2" local="true">
+                     <label size="70" posx="0" posy="+1" PDFsize="12" PDFnoborder="true">María Carmen Murabito</label>
+				</field>
+				<field id="pie3" local="true">
+                     <label size="40" posx="0" posy="+1" PDFsize="12" PDFnoborder="true">Presente</label>
+				</field>
+				<field id="pie4" local="true">
+                     <label size="60" posx="0" posy="+4" PDFsize="12" PDFnoborder="true">De mi consideración:</label>
+				</field>
+				<field id="pie5" local="true">
+                     <label size="200" posx="0" posy="+1" PDFsize="12" PDFnoborder="true">Certifico haber gozado el período de vacaciones oportunamente otorgado, reintegrándome de conformidad a mis tareas habituales.-</label>
+				</field>
+				<field id="pie6" local="true">
+                     <label size="40" posx="0" posy="+5" PDFsize="12" PDFnoborder="true">Saludo a Ud. atte.-</label>
+				</field>
+				<field id="pie7" local="true">
+                     <label size="60" posx="+120" posy="+20" PDFsize="12" PDFnoborder="true">...............................................</label>
+				</field>
+				<field id="pie8" local="true">
+                     <label size="40" posx="+133" posy="+2" PDFsize="12" PDFnoborder="true">Firma del Empleado</label>
+				</field>
+				<!--
+				<field id="pie9" local="true">
+                     <label size="90" posx="0" posy="+4" PDFsize="12" PDFnoborder="true">Villa Gdor. Galvez, .........................................</label>
+				</field>
+                                    -->
+
+
+<!--
+				<field id="impvac">
+					<label size="60" posx="+0" posy="+1" PDFsize="12" PDFnoborder="true">Impresion</label>
+					<tipo>varchar</tipo>
+				</field>
+-->
+<!--
+                <field id="mardes">
+					<label size="40" posx="0" posy="+5" PDFsize="12" PDFnoborder="true">Marca:</label>
+				<expresion>CHASIS.marcod</expresion>
+				<label modpos="nobr" Formstyle="display:none;">Ch.</label>
+				<help/>
+				<tabla_ex id="MARCHASIS">
+					<field id="marcod">
+					</field>
+					<field id="mardes">
+					</field>
+
+					<field id="siscod" oculto="true">
+						<condicion operador="=">03</condicion>
+					</field>
+				</tabla_ex>
+				<tipo>integer</tipo>
+				</field>
+                <field id="moddes" tabla="MODCHASIS">
+
+					<label size="40" posx="0" posy="+5" PDFsize="12" PDFnoborder="true">Modelo:</label>
+					<tipo>varchar</tipo>
+				</field>
+
+				<field id="chasis" tabla="CHASIS">
+					<label size="40" posx="0" posy="+4" PDFsize="12" PDFnoborder="true">Chasis Nº:</label>
+				</field>
+				<field id="nombre" tabla="MARCAMOTOR">
+					<label size="40" posx="0" posy="+4" PDFsize="12" PDFnoborder="true" >Marca Motor:</label>
+				</field>
+				<field id="nromotor" tabla="CHASIS">
+					<label size="40" posx="0" posy="+4" PDFsize="12" PDFnoborder="true" >Motor Nº:</label>
+				</field>
+				<field id="marcha" local="true">
+					<label size="40" posx="0" posy="+4" PDFsize="12" PDFnoborder="true" >Carrocería marca: </label>
+					<valor>'SALDIVIA'</valor>
+				</field>
+				<field id="modcar" local="true">
+					<label size="40" posx="0" posy="+4" PDFsize="12" PDFnoborder="true" >Modelo carrocería:</label>
+				<expresion>case when PEDCOTIZ.nrocar != '' then PEDCOTIZ.nrocar else TURNOSPRODUCCION.nrocar end</expresion>
+
+				<tabla_ex id="CARROCERIA">
+					<field id="nrocar">
+					</field>
+					<field id="desabv">
+					</field>
+
+					<field id="siscod" oculto="true">
+						<condicion operador="=">03</condicion>
+					</field>
+				</tabla_ex>
+				<tipo>varchar</tipo>
+
+				</field>
+
+				<field id="nrofab"  >
+                     <label size="40" posx="0" posy="+4" PDFsize="12" PDFnoborder="true">Nro de Fabricación:</label>
+				</field>
+
+
+				<field id="corridos" local="true">
+                	<label size="200" posx="0" posy="+5" PDFsize="12" PDFnoborder="true">Mas los elementos que figuran en la correspondiente planilla de chequeo de chasis, confeccionada a la entrada del mismo, en el estado en que se encuentra y a mi entera conformidad, comprobado que la</label>
+                </field>
+                <field id="corridos2" local="true">
+                	<label size="200" posx="0" posy="+2" PDFsize="12" PDFnoborder="true">citada unidad se encuentra en perfecto estado para su movilidad y sin deterioro alguno, haciéndome responsable civil y criminalmente, a partir de la fecha y hora abajo indicadas, por todo accidente, daño</label>
+                </field>
+                <field id="corridos3" local="true">
+                	<label size="200" posx="0" posy="+2" PDFsize="12" PDFnoborder="true">o perjuicio que el mismo pudiera ocasionar, así como las infracciones de cualquier índole que pudiera cometer. Declaro también haber recibido la siguiente documentación:</label>
+                </field>
+
+
+                <field id="galvez" local="true">
+                	<label size="120" posx="0" posy="+56" PDFsize="12" PDFnoborder="true">Villa Gobernador Galvez, el ...... de ................. de 20...</label>
+                </field>
+                <field id="horas" local="true">
+                	<label size="117" posx="0" posy="+5" PDFsize="12" PDFnoborder="true">Siendo las ......:...... horas</label>
+                </field>
+                <field id="nombre2" local="true">
+                	<label size="117" posx="0" posy="+5" PDFsize="12" PDFnoborder="true">Nombre y Apellido: ...................................</label>
+                </field>
+                <field id="domicilio" local="true">
+                	<label size="117" posx="0" posy="+5" PDFsize="12" PDFnoborder="true">Domicilio: ...................................</label>
+                </field>
+                <field id="dni" local="true">
+                	<label size="117" posx="0" posy="+5" PDFsize="12" PDFnoborder="true">DNI: ...................................</label>
+                </field>
+                <field id="firma" local="true">
+                	<label size="60" posx="+100" posy="+5" PDFsize="12" PDFnoborder="true">...................................</label>
+                </field>
+                -->
+            </table>
+
+	<!--		<join tipo="left">
+					<table id="PEDCOTIZ">
+						<field id="nrocha">
+							<condicion operador="=">PERSONAL.legajo</condicion>
+						</field>
+					</table>
+				</join>
+               	<join tipo="left">
+					<table id="CHASIS">
+						<field id="nrocha">
+							<condicion operador="=">TURNOSPRODUCCION.nrofab</condicion>
+						</field>
+					</table>
+				</join>
+
+				<join tipo="left">
+					<table id="MODCHASIS">
+						<field id="modcha">
+							<condicion operador="=">CHASIS.modcod</condicion>
+						</field>
+						<field id="marcod">
+							<condicion operador="=">CHASIS.marcod</condicion>
+						</field>
+					</table>
+				</join>
+
+				<join tipo="left">
+					<table id="MARCAMOTOR">
+						<field id="idMarca">
+							<condicion operador="=">CHASIS.idMarcaMotor</condicion>
+						</field>
+					</table>
+				</join> -->
+
+			</form>
+        </histrix>

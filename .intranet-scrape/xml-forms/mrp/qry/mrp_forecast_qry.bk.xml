@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" PDForientacion="L" subtipo="vertical">
+    <title>Forecast Articulos</title>
+    <obs></obs>
+    <form >
+        <table id="MRP_FORECAST" label="Forecast">
+            <filters>
+                <field id="year_forecast">
+                    <label>año</label>
+                    <operador>=</operador>
+                    <valor eval="true">date("Y")</valor>
+                </field>
+                <field id="stkarticulo_id" esClave="true">
+                    <label>Código</label>
+                    <help>Codigo de Articulo</help>
+                    <helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas">
+                    <field id="nombre_articulo">
+                        <detalle>nombre_articulo</detalle>
+                    </field>
+                    <field id="produccion_diaria">
+                        <detalle>minimo_ordendetalle</detalle>
+                    </field>
+                    
+                </helper>
+		</field>
+                <field id="nombre" deshabilitado="false">
+                    <expresion>nombre_articulo</expresion>
+                    <label modpos="nobr">Articulo</label>
+                    <help>Codigo de Articulo</help>
+                    <operador>like</operador>
+                </field>
+                <field id="tipo_forecast" _noshow="true">
+                    <label modpos="nobr">Tipo</label>     
+                    <options>
+                        <option valor="1">Venta</option>
+                        <option valor="2">Producción</option>
+                    </options>
+                    <operador>=</operador>
+
+                </field>
+		    
+            </filters>
+			
+            <fieldGroup>
+                <field id="stkarticulo_id" esClave="true">
+                    <label>Código</label>
+                    <help>Codigo de Articulo</help>
+                    <helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas">
+                        <field id="nombre_articulo">
+	                    <detalle>nombre_articulo</detalle>
+    	                </field>
+        	        <field id="produccion_diaria">
+            	            <detalle>minimo_ordendetalle</detalle>
+            	        </field>
+            	    </helper>
+                </field>
+
+                <field id="nombre" deshabilitado="true">
+                    <expresion>nombre_articulo</expresion>
+                    <label modpos="nobr">Articulo</label>
+                    <help>Codigo de Articulo</help>
+                    <helper type="link" xml="mrp_forecast_ins.xml" >
+                        <parameter source="stkarticulo_id" target="stkarticulo_id" />
+                        <parameter source="year_forecast"  target="year_forecast" />
+                        <parameter source="tipo_forecast"  target="tipo_forecast" />
+                    </helper>                                        
+                </field>
+                <field id="mes_forecast" colstyle="display:none;">
+                <label>Mes</label>
+                <options>
+                    <option valor="1">Enero</option>
+                    <option valor="2">Febrero</option>
+                    <option valor="3">Marzo</option>
+                    <option valor="4">Abril</option>                                        
+                    <option valor="5">Mayo</option>
+                    <option valor="6">Junio</option>
+                    <option valor="7">Julio</option>
+                    <option valor="8">Agosto</option>                                        
+                    <option valor="9">Septiembre</option>
+                    <option valor="10">Octubre</option>
+                    <option valor="11">Noviembre</option>
+                    <option valor="12">Diciembre</option>                                    
+                </options>                            
+            </field>
+            
+            <field id="bom" noshow="true">
+        	<expresion having="false">(select count(*) from STK_BOM where STK_BOM.stkarticulopadre_id = STK_ARTICULOS.id_stkarticulo)</expresion>
+        	<condicion operador="!=">0</condicion>
+            </field>
+			
+            <field id="cantidad_forecast" colstyle="display:none;">
+                <label modpos="nobr">Cantidad</label>
+            </field>
+
+                <field id="year_forecast" required="true" _noshow="true" valauto="true" colstyle="display:none;">
+                    <label>año</label>     
+                </field>
+
+                <field id="tipo_forecast" _noshow="true" colstyle="display:none;">
+                    <label>Tipo</label>     
+                    <options>
+                        <option valor="1">Venta</option>
+                        <option valor="2">Producción</option>
+                        <option valor="3">Compras</option>
+
+                    </options>
+                </field>
+            </fieldGroup>
+
+            <fieldGroup noZero="true" Formstyle="display:none;">
+                <field id="total" noZero="false" tipoOrden="DESC">
+                    <label>Total</label>
+                    <expresion>sum(cantidad_forecast)</expresion>
+                    <tipo>grafico</tipo>
+                </field>
+                <field id="Enero">
+                                                                                   
+                    <label>Enero</label>
+                    <expresion>sum((case when mes_forecast = 1 then round( cantidad_forecast )end))</expresion>
+                    <tipo>integer</tipo>
+                </field>
+                <field id="Febrero">
+                    <label>Febrero</label>
+                    <expresion>sum((case when mes_forecast = 2 then round( cantidad_forecast )end))</expresion>
+                    <tipo>integer</tipo>
+                </field>
+                <field id="Marzo">
+                    <label>Marzo</label>
+                    <expresion>sum((case when mes_forecast = 3 then round( cantidad_forecast )end))</expresion>
+                    <tipo>integer</tipo>
+                </field>
+                <field id="Abril">
+                    <label>Abril</label>
+                    <expresion>sum((case when mes_forecast = 4 then round( cantidad_forecast )end))</expresion>
+                    <tipo>integer</tipo>
+                </field>
+                <field id="Mayo">
+                    <label>Mayo</label>
+                    <expresion>sum((case when mes_forecast = 5 then round( cantidad_forecast )end))</expresion>
+                    <tipo>integer</tipo>
+                </field>
+                <field id="Junio">
+                    <label>Junio</label>
+                    <expresion>sum((case when mes_forecast = 6 then round( cantidad_forecast )end))</expresion>
+                    <tipo>integer</tipo>
+                </field>
+                <field id="Julio">
+                    <label>Julio</label>
+                    <expresion>sum((case when mes_forecast = 7 then round( cantidad_forecast )end))</expresion>
+                    <tipo>integer</tipo>
+                </field>
+                <field id="Agosto">
+                    <label>Agosto</label>
+                    <expresion>sum((case when mes_forecast = 8 then round( cantidad_forecast )end))</expresion>
+                    <tipo>integer</tipo>
+                </field>
+                <field id="Septiembre">
+                    <label>Septiembre</label>
+                    <tipo>integer</tipo>
+                    <expresion>sum((case when mes_forecast = 9 then round( cantidad_forecast )end))</expresion>
+                </field>
+                <field id="Octubre">
+                    <label>Octubre</label>
+                    <expresion>sum((case when mes_forecast = 10 then round( cantidad_forecast )end))</expresion>
+                    <tipo>integer</tipo>
+                </field>
+                <field id="Noviembre">
+                    <label>Noviembre</label>
+                    <expresion>sum((case when mes_forecast = 11 then round( cantidad_forecast )end))</expresion>
+                    <tipo>integer</tipo>
+                </field>
+                <field id="Diciembre">
+                    <label>Diciembre</label>
+                    <expresion>sum((case when mes_forecast = 12 then round( cantidad_forecast )end))</expresion>
+                    <tipo>integer</tipo>
+                </field>
+            </fieldGroup>
+            <group>
+                <field id="stkarticulo_id"></field>
+            </group>
+        </table>
+        <join tipo="right">
+            <table id="STK_ARTICULOS">
+                <field id="id_stkarticulo">
+                    <condicion operador="=">stkarticulo_id</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix>

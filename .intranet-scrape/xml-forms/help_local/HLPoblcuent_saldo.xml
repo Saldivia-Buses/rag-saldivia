@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ayuda">
+	<title>CUENTAS DE OBLIGACIONES</title>
+	<obs/>
+	<form >
+		<table id="OBLCUENT" label="Ayuda de Cuenta">
+			<field id="siscod" oculto="true">
+				<label>Codigo Sistema</label>
+			</field>
+			<field clave="true" id="ctacod">
+				<label>Cuenta</label>
+				<help>Codigo de Cuenta</help>
+			</field>
+			<field id="ctanom">
+				<label>Nombre</label>
+				<help>Nombre de Cuenta</help>
+			</field>
+			<field id="movsal">
+				<expression>sum(OBLMOVIM.movsal)</expression>
+				<label>Saldo</label>
+			</field>
+				<field id="acupag" noshow="true">
+					<expression>sum(distinct RETACUMU.acupag)</expression>
+					<label>acupag</label>
+				</field>
+			<field id="acuret" noshow="true">
+				<expression>sum(distinct acuret)</expression>
+				<label modpos="nobr">Ret. Acumu.</label>
+			</field>
+				<field id="acufec" tabla="RETACUMU" noshow="true">
+					<label>acufec</label>
+					<tipo>date</tipo>
+
+				</field>
+
+			<group>
+				<field id="siscod" tabla="OBLCUENT"/>
+				<field id="ctacod" tabla="OBLCUENT"/>
+				<field id="ctanom" tabla="OBLCUENT"/>
+				<!--<field id="year"/>
+				<field id="mes"/>				-->
+			</group>
+			<order>
+				<field id="OBLCUENT.ctanom"/>
+			</order>
+		</table>
+		<join tipo="right">
+			<table id="RETACUMU" label="RETENCION">
+				<field id="siscod" oculto="true">
+					<label></label>
+					<condicion operador="=">'10'</condicion>
+				</field>
+				<field id="ctacod" oculto="true">
+					<condicion operador="=">OBLCUENT.ctacod</condicion>
+				</field>
+				<field id="year"  tabla="RETACUMU">
+					<condicion operador="=">year(now())</condicion>
+				</field>
+				<field id="mes"  tabla="RETACUMU">
+					<condicion operador="=">month(now())</condicion>
+				</field>
+
+			</table>
+		</join>
+
+		<join tipo="left">
+			<table id="OBLMOVIM">
+				<field id="siscod" oculto="true">
+					<label>OBLMOVIM.siscod</label>
+					<condicion operador="=">OBLCUENT.siscod</condicion>
+				</field>
+				<field id="ctacod" oculto="true">
+					<condicion operador="=">RETACUMU.ctacod</condicion>
+				</field>
+				<field id="movsal">
+					<condicion operador="!=">0</condicion>
+				</field>
+			</table>
+		</join>
+	</form>
+</histrix>

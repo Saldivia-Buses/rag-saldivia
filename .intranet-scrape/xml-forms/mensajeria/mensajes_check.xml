@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta"  borra="no" inserta="no"  noform="true" imprime="false" >
+	<title>MEnsajes</title>
+	<obs/>
+	<form >
+		<table id="HTXMESSAGES" label="Mensajes recibidos" styleTbody="height:425px;" >
+			<field autoinc="true" id="idMensaje" noshow="true" tipoOrden="DESC">
+				<label>id</label>
+			</field>
+			<field deshabilitado="true" id="fecha">
+				<label Formstyle="display:none;">Fecha</label>
+				<valor>today</valor>
+			</field>
+			<field deshabilitado="true" id="hora">
+				<label Formstyle="display:none;">Hora</label>
+				<valor>now()</valor>
+			</field>
+			<field id="nom" local="true"  noselect="true" noshow="true">
+				<valor eval="true">$_SESSION['usuario']</valor>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="para" deshabilitado="true" noshow="true">
+				<label Formstyle="display:none;">Para</label>
+<!--				<tabla_ex id="HTXUSERS">
+					<field id="login" />
+					<field id="nombre" >
+						<expresion>CONCAT(nombre, ' ', apellido)</expresion>
+					</field>
+				</tabla_ex>	 -->
+				<valor eval="true">$_SESSION['usuario']</valor>
+				<condicion operador="=" valorde="nom" ></condicion>
+			</field> 
+			<field id="mensaje" deshabilitado="true">
+				<label Formstyle="display:none;">mensaje</label>
+				<help>Texto del mensaje</help>
+			</field>
+			<field id="idEvento" noshow="true">
+				<condicion operador="=">'' or isnull(idEvento)</condicion>
+			</field>
+			<field id="leido" >
+				<label Formstyle="display:none;">leido</label>
+				<tipo>check</tipo>
+				<condicion operador="=">0</condicion>
+			</field>
+			<order>
+				<field id="idMensaje"/>
+			</order>
+		</table>
+	</form>
+</histrix>

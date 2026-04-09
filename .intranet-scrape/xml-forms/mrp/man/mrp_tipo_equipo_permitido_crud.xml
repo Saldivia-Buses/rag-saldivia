@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud" >
+  <title>Tipo de equipo permitido</title>
+  <obs />
+  <form >
+    <table id="MRP_TIPO_EQUIPO_PERMITIDO" label="Tipo de equipo permitido en produccion">
+
+		<field id="id_tipo_equipo_permitido" noshow="true" autoinc="true">
+		</field>
+
+		<field id="tipo_equipo_id">
+			<label>Tipo Equipo</label>
+            <helper type="combo" xml="mant_tipo_equipo_crud.xml" dir="/mantenimiento/man/" empty="true"/>			
+		</field>
+    </table>
+  </form>
+</histrix>

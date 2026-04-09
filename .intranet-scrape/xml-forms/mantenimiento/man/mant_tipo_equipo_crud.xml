@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  CURD
+Tarea: Tabla de TIpo de Equipamiento
+Autor: Lmm
+Fecha: 17/08/11
+*******************************************************************************
+-->
+    <histrix tipo="abm">
+	<title>Tipo de Equipos</title>
+	 <obs></obs>
+		<form>
+		    <table id="MANT_TIPO_EQUIPO" label="Tipo">
+				<field id="id_tipo_equipo" esClave="true" noshow="true" />
+
+				<field id="nombre_tipoequipo">
+					<label>Tipo de equipamient</label>
+					<help>Nombre</help>
+					<size>50</size>
+				</field>
+		    </table>
+		</form>
+    </histrix>	

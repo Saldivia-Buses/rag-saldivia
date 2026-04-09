@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" preloadData="false" paginar="100">
+  <title>Existencias</title>
+  <obs/>
+  <form>
+    <table id="STK_ARTICULOS">
+      
+      <filters>   
+
+        <field id="id_stkarticulo">
+          <label>Codigo</label>
+          <operador>like</operador>
+        </field>
+
+        <field id="nombre_articulo" deshabilitado="false">
+          <label>Nombre</label>
+          <operador>like</operador>
+        </field>
+
+        <field id="stklista_id" deshabilitado="false">
+          <label>Lista Precio</label>
+          <operador>=</operador>
+        </field>
+
+      </filters>
+
+      <field id="id_stkarticulo" esClave="true" colstyle="text-align:left;">
+        <label>Codigo</label>
+        <tipo>varchar</tipo>
+      </field>
+
+      <field id="nombre_articulo" >
+        <expression>nombre_articulo</expression>
+        <label>Nombre</label>
+      </field>
+
+      <field id="cantidad_stock" tabla="STK_STOCKACTUAL">
+        <label>Actual</label>
+        <tipo>numeric</tipo>
+      </field>
+
+      <field id="stklista_id" tabla="STK_LISTADETALLE" noshow="true"> 
+        <label>Lista Precio</label>
+        <helper type="combo" id="STK_LISTAS" empty="true">
+          <field id="id_stklista" esClave="true"/>
+          <field id="stklista_nombre"/>
+        </helper>
+      </field>
+
+      <field id="stklistadetalle_precioventa" tabla="STK_LISTADETALLE">
+        <label>Precio Venta</label>
+        <tipo>numeric</tipo>
+      </field>
+
+      <group>
+        <field id="id_stkarticulo" tabla="STK_ARTICULOS"/>
+        <field id="stkdeposito_id" tabla="STK_STOCKACTUAL"/>
+      </group>
+    </table>
+    
+    <join tipo="left">
+      <table id="STK_STOCKACTUAL">
+        <field id="stkarticulo_id">
+          <condicion operador="=">STK_ARTICULOS.id_stkarticulo</condicion>
+        </field>      
+      </table>
+    </join>
+
+    <join tipo="left">
+      <table id="STK_ARTICULO_EXISTENCIAS">
+        <field id="stkarticulo_id">
+          <condicion operador="=">STK_ARTICULOS.id_stkarticulo</condicion>
+        </field>
+        <field id="stkdeposito_id">
+          <condicion operador="=">STK_STOCKACTUAL.stkdeposito_id</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join tipo="left">
+      <table id="STK_LISTADETALLE">
+        <field id="stkarticulo_id">
+          <condicion operador="=">STK_ARTICULOS.id_stkarticulo</condicion>
+        </field>      
+      </table>
+    </join>
+
+  </form>
+</histrix>

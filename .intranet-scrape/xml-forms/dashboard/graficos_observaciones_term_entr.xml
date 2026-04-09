@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="dashboard">
+        <titulo>Medidores de Calidad</titulo>
+
+<!-- estas son las anteriores a marzo 2019 -->
+        <widget id="observaciones_prom_x_seccion1"  width="48%" height="400px">
+           <title>Observaciones Terminacion</title>
+           <url><![CDATA[histrixLoader.php?xml=observaciones_x_seccion_origen.xml&dir=/estadisticas/calidad&seccion_id=5]]></url>
+        </widget>
+
+         <widget id="observaciones_prom_x_seccion2"  width="48%" height="400px">
+           <title>Observaciones PDI</title>
+           <url><![CDATA[histrixLoader.php?xml=observaciones_x_seccion_origen2.xml&dir=/estadisticas/calidad&seccion_id=6]]></url>
+        </widget>
+
+<!-- estas son las que pidió William desde abril 2019 -->
+        <widget id="observaciones_prom_x_seccion_terminadas"  width="48%" height="400px">
+           <title>Observaciones Promedio x Sección Terminación</title>
+           <url><![CDATA[histrixLoader.php?xml=observaciones_x_seccion_origen_terminacion.xml&dir=/estadisticas/calidad&seccion_id=5]]></url>
+        </widget>
+
+        <widget id="consulta_observaciones_prom_x_seccion_terminadas"  width="48%" height="400px">
+           <title>Consulta Observaciones Promedio x Sección Terminación</title>
+           <url><![CDATA[histrixLoader.php?xml=observaciones_x_seccion_origen_terminacion_qry.xml&dir=/estadisticas/calidad&seccion_id=5]]></url>
+        </widget>
+
+        <widget id="observaciones_prom_x_seccion_entregadas"  width="48%" height="400px">
+           <title>Observaciones Promedio x Sección Entregada</title>
+           <url><![CDATA[histrixLoader.php?xml=observaciones_x_seccion_origen_entregada.xml&dir=/estadisticas/calidad&seccion_id=6]]></url>
+        </widget>
+        
+        <widget id="consulta_observaciones_prom_x_seccion_entregadas"  width="48%" height="400px">
+           <title>Consulta Observaciones Promedio x Sección Entregada</title>
+           <url><![CDATA[histrixLoader.php?xml=observaciones_x_seccion_origen_entregada_qry.xml&dir=/estadisticas/calidad&seccion_id=6]]></url>
+        </widget>
+
+</histrix>

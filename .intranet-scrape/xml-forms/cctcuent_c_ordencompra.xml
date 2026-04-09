@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="consulta" >
+	<title>CUENTAS</title>
+	<obs></obs>
+	<form >
+		<table id="CCTCUENT" label="CUENTAS">
+			<field id="ctacod" >
+				<label>Cuenta</label>
+				<help>Codigo de Cuenta </help>
+			</field>
+			<field id="ctanom" >
+				<label>Cuenta</label>
+				<help>Codigo de Cuenta </help>
+			</field>			
+			<field id="siscod" oculto="true">
+				<condicion operador="=">'01'</condicion>
+				<valor>01</valor>
+			</field>
+			<group>
+				<field id="CCTCUENT.ctacod"></field>
+			</group>
+		</table>
+		<join tipo="inner">
+			<table id="CPSENCAB">
+				<field id="ctacod" oculto="true">
+					<condicion operador="=">CCTCUENT.ctacod</condicion>
+				</field>				
+			</table>
+		</join>
+	</form>
+</histrix>

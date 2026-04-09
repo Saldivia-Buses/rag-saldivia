@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="insert">
+    <title>MOVIMIENTOS DE STOCK</title>
+    <obs></obs>
+    <form >
+        <table id="DEVREMITO" label="MOVIMIENTOS">
+            <field id="nro_remito" id_temp="remdev" />
+            <field id="fecha_devolucion" id_temp="fecdev" />
+            <field id="cantidad" id_temp="cantidadDevuelta" />
+            <field id="ocpnro" id_temp="ocpnro" />
+            <field id="ocpfec" id_temp="movfec" />
+            <field id="artcod" id_temp="artcod" />
+            <field id="regcuenta_id" id_temp="regcuenta_id" />
+	        <field id="observacion" id_temp="observacion" />
+            <field id="demerito_id" id_temp="codigodem" />
+            <field id="login_id" id_temp="opecla" />
+            <field id="cierre" id_temp="cero" />
+        </table>
+    </form>
+</histrix>

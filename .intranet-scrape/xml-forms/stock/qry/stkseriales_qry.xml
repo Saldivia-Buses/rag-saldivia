@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" paginar="100" inserta="false" crea="false">
+	<title>Seriales</title>
+	<obs></obs>
+	<form>
+		<table id="STK_SERIALES" label="Seriales">
+			<filters>
+				<field id="stkarticulo_id">
+					<label>Artículo</label>
+					<operador>=</operador>
+				</field>
+				<field id="nombre_articulo" deshabilitado="true">
+					<label modpos="nobr">Nombre Articulo</label>
+					<help>Nombre de Articulo a buscar</help>
+				</field>
+			</filters>
+			<field id="stkarticulo_id">
+				<label>Artículo</label>
+				<helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas" />
+				<tipo>varchar</tipo>
+				<size>25</size>
+			</field>
+			<field id="nombre_articulo" tabla="STK_ARTICULOS" _noselect="true">
+				<label modpos="nobr">Nombre</label>
+				<size>100</size>
+			</field>
+			<field id="codigo_serie" >
+				<label colspan="4">Serie</label>
+				<tipo>varchar</tipo>
+				<size>80</size>
+			</field>
+			<field id="cpsmovimiento_id" tabla="stkorigen" noshow="true" />
+			<field id="link_cps" local="true">
+				<label>Movimiento Origen</label>
+				<helper type="link" xml="ordencompra_imp.xml" dir="/compras/qry">
+					<parameter source="cpsmovimiento_id" target="id_cpsmovimiento" />
+				</helper>
+				<expresion>CONCAT('O.C: ', CPS_MOVIMIENTOS.id_cpsmovimiento)</expresion>
+			</field>
+			<field id="cajmovimiento_id" tabla="stkdestino" noshow="true" />
+			<field id="link_caj" local="true">
+				<label>Movimiento Destino</label>
+				<helper type="link" xml="cajmovimiento_ficha.xml" dir="/caja/proc/del">
+					<parameter source="cajmovimiento_id" target="id_cajmovimiento" />
+				</helper>
+				<expression>CONCAT('Fc.: 0000-',lpad(CAJ_MOVIMIENTOS.nro_movimiento,8,'0'))</expression>
+			</field>
+		</table>
+		<join>
+			<table id="STK_ARTICULOS">
+				<field id="id_stkarticulo">
+					<condicion operador="=">STK_SERIALES.stkarticulo_id</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="STK_MOVIMIENTOS" as="stkorigen">
+				<field id="id_stkmovimiento">
+					<condicion operador="=">STK_SERIALES.stkmovimiento_origen_id</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="STK_MOVIMIENTOS" as="stkdestino">
+				<field id="id_stkmovimiento">
+					<condicion operador="=">STK_SERIALES.stkmovimiento_destino_id</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="CPS_MOVIMIENTOS">
+				<field id="id_cpsmovimiento">
+					<condicion operador="=">stkorigen.cpsmovimiento_id</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="CAJ_MOVIMIENTOS">
+				<field id="id_cajmovimiento">
+					<condicion operador="=">stkdestino.cajmovimiento_id</condicion>
+				</field>
+			</table>
+		</join>
+	</form>
+</histrix>

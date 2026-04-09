@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="cabecera">
+	<title>DESCUENTO</title>
+	<obs></obs>
+	<form >
+		<table id="RHDESCUENTOS" >
+		    <title>Descuentos</title>
+<!--			<field id="idDesc" autoinc="true" _oculto="true" noshow="true">
+			</field>
+			<field id="legajo" oculto="true">
+			    <label>Legajo</label>
+			    <help>Legajo</help>
+			</field>
+			-->
+			<field id="fecha">
+			    <label>Fecha</label>
+			    <help>Fecha del Descuento</help>
+			    <valor>today</valor>
+			</field>
+			
+			<field id="IdMotivoDesc" >
+			    <tabla_ex id="RHMOTIVODESC">
+				<field id="idMotivoDesc"></field>
+				<field id="motivo"></field>
+				
+				
+			    </tabla_ex>
+				<label>Motivo</label>
+				<help>Motivo del Descuento</help>
+			</field>
+			<field id="sobre_extras">
+				<label>s/Extras</label>
+				<help>El descuento se aplicara sobre las horas extras</help>
+                                <tipo>check</tipo>
+			</field>
+			<field id="Importe">
+				<label>Importe</label>
+				<help>Importe</help>
+			</field>
+			
+		</table>
+	</form>	   
+</histrix>

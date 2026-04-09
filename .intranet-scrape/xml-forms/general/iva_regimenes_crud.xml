@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm">
+  <title>Regímenes de IVA </title>
+  <obs></obs>
+  <consulta>
+    <table id="GEN_IVA_REGIMENES" label="Regímenes de IVA">
+      <filtros>
+        <field id="nombre_iva_regimen">
+          <label>Nombre Regimen</label>
+          <operador>like</operador>
+        </field>
+      </filtros> 
+      <field id="id_iva_regimen" autoinc="true" noshow="true">
+        <label>Código </label>
+        <help>Código del régimen de IVA</help>
+      </field>
+      <field id="nombre_iva_regimen">
+        <label>Nombre </label>
+        <help>Nombre del régimen de IVA</help>
+        <size>15</size>
+      </field>
+    </table>
+  </consulta>
+</histrix>  

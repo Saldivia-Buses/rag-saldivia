@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="update">
+	<title>Eliminacion de Detalles de Movimientos de Caja</title>
+	<obs></obs>
+	<form>
+		<table id="REG_MOVIMIENTOS" idCampoCond="modifico">
+		    <field id="id_regmovim" esClave="true" id_temp="id_regmovim"/>
+		    <field id="bonificaciones_movimiento" id_temp="bonificaciones_movimiento" />
+		</table>
+	</form>
+</histrix>  
+

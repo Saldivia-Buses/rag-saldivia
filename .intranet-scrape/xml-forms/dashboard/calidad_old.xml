@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="dashboard">
+        <titulo>Medidores de Calidad</titulo>
+	<widget id="Coches"  width="400px" height="266px">
+            <title>Cantidad Mensual de Coches</title>
+	    <url><![CDATA[histrixLoader.php?xml=evolutivo_coches.xml&dir=estadisticas]]></url>
+        </widget> 
+        <widget id="observaciones"  width="400px" height="266px">
+            <title>Cantidad de Observaciones por seccion</title>
+	    <url><![CDATA[histrixLoader.php?xml=observaciones_calidad.xml&dir=estadisticas]]></url>
+        </widget>
+
+        <widget id="Evolucion2"  width="400px" height="266px">
+            <title>Observaciones Herreria</title>
+	    <url><![CDATA[histrixLoader.php?xml=evolutivo_calidad2.xml&dir=estadisticas&idSeccion=2]]></url>
+        </widget>
+
+        <widget id="Evolucion3"  width="400px" height="266px">
+            <title>Observaciones Chaperia</title>
+	    <url><![CDATA[histrixLoader.php?xml=evolutivo_calidad3.xml&dir=estadisticas&idSeccion=3]]></url>
+        </widget>
+        <widget id="Evolucion4"  width="400px" height="266px">
+            <title>Observaciones Pintura</title>
+	    <url><![CDATA[histrixLoader.php?xml=evolutivo_calidad4.xml&dir=estadisticas&idSeccion=4]]></url>
+        </widget>
+        
+        <widget id="Evolucion8"  width="400px" height="266px">
+            <title>Observaciones Electricidad</title>
+	    <url><![CDATA[histrixLoader.php?xml=evolutivo_calidad8.xml&dir=estadisticas&idSeccion=8]]></url>
+        </widget>
+        <widget id="Evolucion5"  width="400px" height="266px">
+            <title>Observaciones Terminacion</title>
+	    <url><![CDATA[histrixLoader.php?xml=evolutivo_calidad5.xml&dir=estadisticas&idSeccion=5]]></url>
+        </widget>
+        
+         <widget id="acumulado"  width="400px" height="266px">
+            <title>Observaciones En todas las Areas</title>
+	    <url><![CDATA[histrixLoader.php?xml=evolutivo_secciones.xml&dir=estadisticas]]></url>
+        </widget>
+
+                
+<!--        <widget id="Demora"  width="400px">
+            <title>Promedio de Demora</title>
+	    <url><![CDATA[histrixLoader.php?xml=compras_demora.xml&dir=estadisticas]]></url>
+        </widget>
+        <widget id="Tareas"  width="400px" >
+            <title>Tareas realizadas</title>
+	    <url><![CDATA[histrixLoader.php?xml=postventa_tareas.xml&dir=estadisticas]]></url>
+        </widget> -->
+</histrix>
+
+

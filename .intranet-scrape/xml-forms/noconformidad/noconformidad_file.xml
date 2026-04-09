@@ -1,0 +1,281 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  sololectura="true" tipo="ficha" autoprint="true"  _path="/fotos/coches" preFetch="true">
+    <title>Informe de No conformidad</title>
+    <form  >
+        <table id="INFCONFORMIDAD" label="Informe de No conformidad">
+
+	     <field id="fecha_conformidad">
+                <label size="24" posx="5" posy="+0.2" PDFsize="10">Fecha</label>
+                <help>Numero de Fabricacion</help>
+		<valor>today</valor>
+            </field>
+	     <field id="id_conformidad" esClave="true" print="false">
+		  <label>Id_Conformidad</label>
+            </field>	
+            <field id="nro_conformidad">
+		  <label posx="100" size="24"  PDFsize="10">Numero</label>
+            </field>				
+		<field id="dat103" local="true">
+			<label   pdffill="200"  size="200" posx="5" posy="+3" PDFsize="10">ORIGEN DE LA NO CONFORMIDAD</label>
+		</field>	
+	    <field id="prueba6" local="true">
+		  <label posx="5" posy="+0.3"  PDFsize="10" size="25"  >Recepcion</label>
+		  <tipo>check</tipo>
+            </field>
+	     <field id="prueba5" local="true">
+		<label posx="65" _posy="+0.5"  PDFsize="10" size="25" >Fabricacion</label>
+		  <tipo>check</tipo>
+	     </field>
+
+	     <field id="prueba4" local="true">
+		<label posx="135" _posy="+0.5"  PDFsize="10" size="25" >Final</label>
+		  <tipo>check</tipo>
+	     </field>
+             <field id="prueba3" local="true">
+		<label posx="5" posy="+0.5"  PDFsize="10" size="25" >Direccion</label>
+		  <tipo>check</tipo>
+	     </field>
+             <field id="prueba2" local="true">
+		<label posx="65" _posy="+0.1"  PDFsize="10" size="25"  >Auditoria</label>
+		  <tipo>check</tipo>
+	     </field>
+             <field id="prueba" local="true">
+		<label posx="135" _posy="+0.1"  PDFsize="10" size="25"  >Cliente</label>
+		<tipo>check</tipo>
+	     </field>
+	                <field id="dat00" local="true">
+				<label  size="150" posx="5" posy="+1" PDFsize="10" pdffill="150">1.</label>
+			</field>				
+			<field id="dat" local="true">
+				<label  pdffill="130"  size="130" posx="70" posy="0" PDFsize="10">DATOS DEL PRODUCTO NO CONFORME</label>
+			</field>						
+
+              <field id="proveedor" colstyle="display:none;" _PDFbox="true" >
+	    	<label posx="5" posy="+0.8"  PDFsize="10" size="25">Proveedor</label>
+		<size>20</size>
+            </field>
+	     <field id="orden_compra" _PDFbox="true">
+	    	<label posx="65" PDFsize="10" size="25" >O.Compra</label>
+		<size>20</size>
+            </field>
+	    <field id="sector" _PDFbox="true">
+	    	<label posx="135" PDFsize="10"  size="25" >Sector</label>
+		<size>20</size>
+            </field>
+	     <field id="material">
+	    	<label posx="5" posy="+0.8"  PDFsize="10" size="25" >Material</label>
+		<size>20</size>
+            </field>
+	   
+	     <field id="producto">
+	    	<label posx="65" PDFsize="10">Producto</label>
+		<size>20</size>
+            </field>
+	    
+	    <field id="cliente">
+	    	<label posx="135" PDFsize="10" size="25" >Cliente</label>
+		<size>20</size>
+            </field>
+            <!-- <field id="origen_conformidad" colstyle="Display:none;" print="false">
+		<helper type="combo">
+			<option value=""></option>
+			<option value="1">Recepcion</option>
+			<option value="2">Fabricacion</option>
+			<option value="3">Final</option>
+			<option value="4">Direccion</option>
+			<option value="5">Auditoria</option>
+			<option value="6">Cliente</option>
+		</helper>
+		<label>Origen de la no Conformidad</label>
+            </field>-->
+             
+	    <field id="documento_conformidad">
+	    	<label  posx="5" posy="+1"  PDFsize="10" >Otros Documentos</label>
+            </field>
+	    <field id="dat011" local="true">
+			<label  size="150" posx="5" posy="+1" PDFsize="10" pdffill="150">2.</label>
+		</field>				
+		<field id="dat1" local="true">
+			<label   pdffill="130"  size="130" posx="70" posy="0" PDFsize="10">DESCRIPCION DE LA NO CONFORMIDAD</label>
+		</field>						
+
+	     <field id="descripcion_conformidad">
+		<label size="150" posx="5" posy="+0.5"></label>
+            </field>
+
+
+	      <field id="dat012" local="true">
+			<label  size="150" posx="5" posy="+1" PDFsize="10" pdffill="150">3.</label>
+		</field>				
+		<field id="titulo" local="true">
+			<label  pdffill="130" size="130" posx="70" _posy="0" PDFsize="10">DISPOSICION DE LA NO CONFORMIDAD</label>
+		</field>	
+	   <field id="sector_id"  colstyle="display:none;">
+		<label  size="25" posx="5" posy="+0.5">Dirigida a:</label>
+		<helper type="combo" id="SECCION">
+			<field id="id_seccion"/>
+			<field id="nombre"/>
+		</helper>
+	    	
+            </field>
+	    <field id="real1" colstyle="display:none;" local="true">
+		<label size="25" posx="5" posy="+0.5">Real</label>
+		<tipo>check</tipo>
+	    </field>
+	     <field id="real2" colstyle="display:none;" local="true">
+		<label size="25" posx="5" posy="+0.5">Reproceso o Reparacion</label>
+		<tipo>check</tipo>
+	    </field>
+	   <field id="real3" colstyle="display:none;" local="true">
+		<label size="25" posx="65" _posy="+0.5">Reclasificacion</label>
+		<tipo>check</tipo>
+	    </field>
+	     <field id="real4" colstyle="display:none;" local="true">
+		<label size="25" posx="125" _posy="+0.5">Desecho</label>
+		<tipo>check</tipo>
+	    </field>
+	     <field id="potencial1" colstyle="display:none;" local="true">
+		<label size="25" posx="5" posy="+0.5">Potencial</label>
+		<tipo>check</tipo>
+	    </field>
+	    
+	  <!-- <field id="real" colstyle="display:none;">
+		<label size="25" posx="5" posy="+0.5">Reales</label>
+		<helper type="combo">
+			<option value=""></option>
+			<option value="1">Reproceso o Reparacion</option>
+			<option value="2">Reclasificacion</option>
+			<option value="3">Desecho</option>
+		</helper>
+	    	
+            </field>
+	    <field id="potencial" colstyle="display:none;">
+		<label size="25" posx="65" _posy="+0.5">Potencial</label>
+		<helper type="combo">
+			<option value=""></option>
+			<option value="1">Reciclado</option>
+			<option value="2">Devolucion</option>
+			<option value="3">Permiso de Desviacion</option>
+		</helper>
+	    	
+            </field>-->
+	    <field id="potencial2" colstyle="display:none;" local="true">
+		<label size="25" posx="5" posy="+0.5">Reciclado</label>
+		<tipo>check</tipo>
+	    </field>
+	   <field id="potencial3" colstyle="display:none;" local="true">
+		<label size="25" posx="65" _posy="+0.5">Devolucion</label>
+		<tipo>check</tipo>
+	    </field>
+	     <field id="potencial4" colstyle="display:none;" local="true">
+		<label size="25" posx="125" _posy="+0.5">Permiso de Desviacion</label>
+		<tipo>check</tipo>
+	    </field>
+	    <field id="causa_conformidad" colstyle="Display:none;">
+		<helper type="combo">
+			<option value=""></option>
+			<option value="1">Mano de Obra</option>
+			<option value="2">Diseño de Produccion</option>
+			<option value="3">Materiales</option>
+			<option value="4">Maquinaria</option>
+			<option value="5">Dispositivos</option>
+			<option value="6">Metodos</option>
+		</helper>
+		<label size="25" posx="5" posy="+0.5">Caracteristicas Conformidad</label>
+            </field>
+	     <field id="detalle_disposicion">
+		<label  size="25" posx="5" posy="+0.5">Detalle de la Disposicion</label>
+		<size>150</size>
+            </field>
+	    <field id="dat016" local="true" PDFnolabel="true">
+			<label  size="150" posx="5" posy="+1" PDFsize="10"></label>
+			<valor>Responsable de Cumplir la Disposicion:</valor>
+		</field>
+
+	        <field id="dat019" local="true" PDFnolabel="true">
+			<label  size="150" posx="5" posy="+5" PDFsize="10"></label>
+			<valor>Nombre y Apellido.....................................</valor>
+		</field>
+		  <field id="firma" local="true" PDFnolabel="true">
+			<label  size="150" posx="85" _posy="+1" PDFsize="10"></label>
+			<valor>Firma.....................................</valor>
+		  </field>
+		    <field id="fecha" local="true" PDFnolabel="true">
+			<label  size="150" posx="139" _posy="+1" PDFsize="10"></label>
+			<valor>Fecha.....................................</valor>
+		  </field>
+	        <field id="dat014" local="true">
+			<label  size="150" posx="5" posy="+5" PDFsize="10" pdffill="150">4.</label>
+		</field>				
+		<field id="dat4" local="true">
+			<label   pdffill="130"  size="130" posx="70" posy="0" PDFsize="10">CORRESPONDE REALIZAR ACCION</label>
+		</field>	
+	     <field id="accion"  colstyle="display:none;">
+		<label posx="5" posy="+2">Corresponde Realizar Accion</label>
+		<helper type="combo">
+			<option value=""></option>
+			<option value="1">SI</option>
+			<option value="2">NO</option>
+		</helper>
+            </field>
+	     <field id="tipo_accion"  colstyle="display:none;">
+		<label posx="65" >Tipo de Accion</label>
+		<helper type="combo">
+			<option value="0"></option>
+			<option value="1">Correctiva</option>
+			<option value="2">Preventiva</option>
+		</helper>
+            </field>
+	     <field id="detalle_accion"  colstyle="display:none;">
+		<label posx="5" posy="+4">Detalle</label>
+		<tipo>simpleditor</tipo>
+            </field>
+	   <field id="dat021" local="true" PDFnolabel="true">
+			<label  size="150" posx="5" posy="+1" PDFsize="10"></label>
+			<valor>Responsable:</valor>
+		</field>
+
+	        <field id="dat022" local="true" PDFnolabel="true">
+			<label  size="150" posx="5" posy="+5" PDFsize="10"></label>
+			<valor>Nombre y Apellido.....................................</valor>
+		</field>
+		  <field id="firma2" local="true" PDFnolabel="true">
+			<label  size="150" posx="85" _posy="+1" PDFsize="10"></label>
+			<valor>Firma.....................................</valor>
+		  </field>
+		    <field id="fecha3" local="true" PDFnolabel="true">
+			<label  size="150" posx="139" _posy="+1" PDFsize="10"></label>
+			<valor>Fecha.....................................</valor>
+		  </field>
+	       <field id="dat015" local="true">
+			<label  size="150" posx="5" posy="+1" PDFsize="10" pdffill="150">5.</label>
+		</field>				
+		<field id="dat5" local="true">
+			<label   pdffill="130"  size="130" posx="70" posy="0" PDFsize="10">ACCION CUMPLIDA CIERRE</label>
+		</field>
+		<field id="cierre"  colstyle="display:none;">
+		<label posx="5" posy="+5">Cierre</label>
+			<helper type="combo">
+				<option value=""></option>
+				<option value="1">SI</option>
+				<option value="2">NO</option>
+			</helper>
+            	</field>
+		<field id="evaluacion_efectividad"  colstyle="display:none;">
+		    <label posx="35" _posy="+2">Evaluacion de Efectividad</label>
+                </field>
+		  <field id="fecha4" local="true" PDFnolabel="true">
+			<label  size="150" posx="85" _posy="+1" PDFsize="10"></label>
+			<valor>Fecha.....................................</valor>
+		  </field>
+		  <field id="firma4" local="true" PDFnolabel="true">
+			<label  size="150" posx="140" _posy="+1" PDFsize="10"></label>
+			<valor>Firma.....................................</valor>
+		  </field>
+		     <field id="observacion_cierre"  colstyle="display:none;">
+		<label posx="5" posy="+4">Observaciones</label>
+		<tipo>simpleditor</tipo>
+            </field>	
+</table>           
+</form>
+</histrix>

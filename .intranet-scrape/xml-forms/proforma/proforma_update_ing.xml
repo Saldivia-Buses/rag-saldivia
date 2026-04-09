@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" confirma="MODIFICAR PROFORMA" impresion="proforma_imp.xml" subtipo="vertical" imprime="false">	
+    <title>Detalle</title>
+    <obs/>
+    <form>
+        <table id="FACDETAL" label="Detalle" styleTbody="height:200px;overflow-x:hidden;">
+
+            <movimientos cabecera="proforma_update_header.xml">
+                <relacion id="proforma_facdetal_update_ins.xml" />
+                <relacion id="proforma_cctmovim_update_ins.xml" />
+            </movimientos>
+
+            <field id="concod" oculto="true" />
+            <field id="ctacod" oculto="true" />
+            <field id="nrofac" oculto="true" />
+            <field id="id_detal" noshow="true" />
+
+            <field id="detalle">
+                <label rowspan="3">Descripción</label>
+                <size>80</size>
+                <tipo>simpleditor</tipo>
+            </field>
+
+           <field id="artcan" required="true">
+                <label modpos="nobr">Cantidad</label>
+                <tipo>integer</tipo>
+                <valor>1</valor>
+                <help>Cantidad</help>
+                <size>2</size>
+                <jseval campodestino="artnet">artcom * cant</jseval>
+                <jseval campodestino="artiva">artnet * artali / 100</jseval>
+                <jseval campodestino="arttot">artnet + artiva</jseval>
+            </field>
+
+            <field id="artcom" esClave="true" ctbimporte="1">
+                <label modpos="nobr">Precio</label>
+                <tipo>decimal</tipo>
+                <size>15</size>
+                <help>Precio Unitario</help>
+                <jseval campodestino="artnet">artcom * artcan</jseval>
+                <jseval campodestino="artiva">artnet * artali / 100</jseval>
+                <jseval campodestino="arttot">artnet + artiva</jseval>                
+            </field>
+
+            <field id="artali">
+                <label>Alícuota</label>
+                <tabla_ex id="IVAIMPUESTOS">
+                    <field id="impali"></field>
+                    <field id="impnom"></field>
+                    <field id="impcod">
+                        <condicion operador="&lt;">4</condicion>
+                    </field>
+                </tabla_ex>
+                <tipo>decimal</tipo>
+                <valor>10.50</valor>                
+                <help>Alicuota de IVA</help>
+            </field>
+
+            <field  id="artiva" ctbimporte="3" suma="true" local="true">
+                <label modpos="nobr">I.V.A.</label>
+                <if exp="artiva == 0" operador="=">
+                    <true>round(artcom, 2 ) * artali / 100</true>
+                    <false>artiva</false>
+                </if>
+                <tipo>decimal</tipo>
+                <help>I.V.A.</help>
+            </field>
+
+            <field id="artnet" suma="true">
+                <label>Subarttot</label>
+                <jseval campodestino="artnet">artcom * artcan</jseval>
+                <jseval campodestino="artiva">artnet * artali / 100</jseval>
+                <jseval campodestino="arttot">artnet + artiva</jseval>
+                <tipo>decimal</tipo>
+            </field>
+
+            <field id="arttot" suma="true" ctbimporte="2">
+                <label modpos="nobr" colstyle="font-weight:bold;font-size:22px;color:red;">Total</label>
+                <tipo>decimal</tipo>
+                <jseval campodestino="TOTAL" arttot="true">cajimp</jseval>
+            </field>
+
+            <!--<field id="total_redondeado" local="true" suma="true" noshow="true">
+                <label modpos="nobr" colstyle="font-weight:bold;font-size:22px;color:red;">Total</label>
+                <if exp="true">
+                    <true>ROUND((ROUND((arttot),0) / 10),0) * 10</true>
+                    <false></false>
+                </if>
+                <tipo>numeric</tipo>
+                <jseval campodestino="TOTAL" total="true">cajimp</jseval>
+            </field>
+
+            <field id="subtot_final" local="true" suma="true" noshow="true">
+                <label>Subtotal</label>
+                <if exp="true">
+                    <true>ROUND((total_redondeado / ('1.'.STR_REPLACE('.','',artali))) ,2)</true>
+                    <false></false>
+                </if>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field  id="iva_final" suma="true" local="true" noshow="true">
+                <label modpos="nobr">I.V.A.</label>
+                <if exp="true">
+                    <true>ROUND(((subtot_final * artali) / 100), 2)</true>
+                    <false>iva</false>
+                </if>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="precio_final" local="true" noshow="true">
+                <label>Precio</label>
+                <if exp="true">
+                    <true>ROUND((subtot_final / artcan), 2)</true>
+                    <false></false>
+                </if>
+                <tipo>numeric</tipo>
+            </field>
+-->
+
+        </table>	
+    </form>
+</histrix>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm-mini">
+	<title>GRUPOS DE CUENTAS</title>
+	<obs></obs>
+	<form  detalle="ctbgrpcont.xml">
+		<table id="CTBGRUPO" >
+		    <title>Grupos de Cuentas</title>
+			<field id="idGrupo" autoinc="true" _noshow="true" deshabilitado="true">
+				<label>id</label>
+				<detalle>idGrupo</detalle>
+			</field>
+			
+			<field id="nombre">
+				<label>nombre</label>
+				<help>Nombre del Grupo </help>
+			</field>
+			
+			<field id="descripcion">
+				<label>Descripcion</label>
+				<help>Descripcion del Grupo</help>
+			</field>
+		</table>
+	</form>	   
+</histrix>

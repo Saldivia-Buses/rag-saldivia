@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="arbol" _ancho="50" path="../files" _limit="10">
+	<title>MENU DEL SISTEMA</title>
+	<obs>Mediante este módulo se administran las opciones del menú del sistema</obs>
+	<form  detalle="profileAuthItem.xml" inline="true">
+		<table id="HTXMENU" label="MENU">
+		    <filters>
+			<field id="Id_menu" arbol="padre"  esClave="true">
+				<label >Menu </label>
+				<help>Nombre del menu a que el item pertenece </help>
+			</field>
+			
+		    </filters>
+			
+			<field id="orden" esClave="true" tdWidth="3em">
+				<label>Orden </label>
+				<help>Da el orden del item dentro del menu. Usar numeros separados </help>
+				<detalle>orden</detalle>
+			</field>
+			
+			<field id="menuId"  noshow="true">
+				<detalle>menuId</detalle>
+			</field>
+			
+			<field id="Id_menu" arbol="padre"  esClave="true" tdWidth="10em">
+				<label >Menu </label>
+				<help>Nombre del menu a que el item pertenece </help>
+				<valor>phpmen</valor>
+				<condicion operador="!=">''</condicion>
+				<detalle>Id_menu</detalle>
+			</field>
+			
+			<field id="titulo">
+				<label style="color:#444;font-weight:bold;">Titulo </label>
+				<help>Cartel con se muestra el item para su seleccion. </help>
+			</field>
+
+			<field id="extrafield_1">
+				<label style="color:#444;">Extra 1</label>
+				<help>Datos Adicionales</help>
+			</field>
+			
+			<field id="helplink_1" colstyle="display:none;">
+				<label >Archivo 1</label>
+				<help>Archivo de ayuda</help>
+                                <tipo>file</tipo>
+			</field>
+
+			<field id="extrafield_2" >
+				<label style="color:#444;">Extra 2</label>
+				<help>Datos Adicionales</help>
+			</field>
+
+			<field id="helplink_2" colstyle="display:none;">
+				<label >Archivo 2</label>
+				<help>Archivo de ayuda</help>
+                                <tipo>file</tipo>
+			</field>
+
+						
+			<field id="hijo" arbol="hijo">
+				<label colstyle="display:none;">Menu a que el item llama </label>
+				<help>Nombre del menu a que el item llama (puede no hacerlo) </help>
+			</field>
+			
+			<field id="ejecuta" >
+				<label  colstyle="display:none;">Comando o Programa a ejecutar </label>
+				<help>Que es lo que ejecuta este item (programa o comando) </help>
+			</field>
+			<field id="parametros">
+				<label  colstyle="display:none;">Parametros</label>
+				<help></help>
+              	<size>100</size>
+              	<tipo>varchar</tipo>
+			</field>
+
+		<field id="mobile_version">
+			<label  colstyle="display:none;">Movil</label>
+			<help>Permite versión movil</help>
+			<tipo>check</tipo>
+		</field>
+
+			<field id="_notif" local="true" linkint="htxnotifuser.xml" linkdes="Usuarios a Notificar Cambios" deshabilitado="true">
+				<label Formstyle="display:none;"></label>
+				<paring destino="menuId">menuId</paring>
+				<if exp="strlen('ejecuta') > 0">
+					<true>'Notifica'</true>
+					<false>''</false>
+				</if>
+			</field>
+
+			<order>
+				<field id="orden"></field>
+			</order>
+		</table>
+	</form>
+</histrix>

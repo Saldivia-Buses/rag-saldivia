@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ayuda" preloadData="false" preFetch="false" >
+  <title>Pedidos Pendientes</title>
+  <obs></obs>
+  <form >
+	<table id="REG_MOVIMIENTOS" label="Pedidos">
+		<field id="id_regmovim" autoinc="true" noshow="true" />
+
+
+		<field id="comprobante"  >
+			<label>Comprobante</label>
+			<expresion>(concat(fecha_movimiento,' ',descripcion_concepto ,' ',LPAD(REG_MOVIMIENTOS.nro_movimiento,8,'0')))</expresion>
+		</field>
+		<field id="concepto_id" noshow="true" esClave="true">
+
+		</field>
+
+		<field id="domicilio_movimiento" >
+			<detalle>domicilio_movimiento</detalle>
+		</field>
+		
+<!--		<field id="regcuenta_id" noshow="true" esClave="true"/> -->
+                <field id="regcuenta_id_ped" noshow="true" esClave="true">
+                	<expresion>regcuenta_id</expresion>
+                </field>
+		<field id="regcuentatransporte_id" noshow="true" esClave="true">
+			<detalle>regcuentatransporte_id</detalle>
+		</field>
+		<field id="regcuentavendedor_id" noshow="true" esClave="true">
+			<detalle>regcuentavendedor_id</detalle>
+		</field>
+
+		<field id="cantidadStk" >
+			<label>Stock</label>
+			<tipo>numeric</tipo>			
+			<expresion>SELECT case when isnull(cantidad) then 0 else  sum(cantidad * case when tipo_concepto  =  0 then 1 else -1 end)  end
+			FROM STK_ARTICULOS
+			LEFT JOIN STK_MOVIMIENTOS  	ON STK_MOVIMIENTOS.stkarticulo_id = STK_ARTICULOS.id_stkarticulo
+			LEFT JOIN STK_CONCEPTOS 	ON STK_MOVIMIENTOS.stkconcepto_id = STK_CONCEPTOS.id_stkconcepto
+			join REG_DETALLES rd ON STK_ARTICULOS.id_stkarticulo = rd.codigo_detalle
+			WHERE rd.regmovim_id = REG_MOVIMIENTOS.id_regmovim and rd.codigo_detalle= REG_DETALLES.codigo_detalle
+			GROUP BY codigo_detalle,rd.regmovim_id
+			order by case when isnull(cantidad) then 0 else  sum(cantidad * case when tipo_concepto  =  0 then 1 else -1 end)  end desc	limit 1
+			</expresion>
+		</field>
+		<field id="pendientes" oculto="true">
+			<label>Pendientes</label>
+			<expresion having="false">case when isnull(REG_DETALLES.cantidad_detalle) then 0 else REG_DETALLES.cantidad_detalle end - ifnull((SELECT sum(cantidad_imputada)
+			FROM REG_IMPUTACIONESDETALLES where regdetalleped_id= REG_DETALLES.id_regdetalle),0)</expresion> 
+			<condicion operador="&gt;">0</condicion> 
+		</field>
+		<field id="wcontrolstk" noshow="true"/> 
+		<field id="paraelhaving" noshow="true"> <!-- Fuerza el havin -->
+			<expresion>1</expresion>
+			<condicion operador="=">1 and (( Stock &gt; 0 and ('[__wcontrolstk__]' = '0' or '[__wcontrolstk__]' = '' ))
+						or ('[__wcontrolstk__]' = '1')) 
+			</condicion>   			
+		</field>
+		<group>
+			<field id="id_regmovim"  />
+			<field id="codigo_detalle"  />
+			<field id="comprobante"  >
+				<expresion>(concat(fecha_movimiento,' ',descripcion_concepto ,' ',LPAD(REG_MOVIMIENTOS.nro_movimiento,8,'0')))</expresion>
+			</field>
+			<field id="el_concepto_id" >
+				<expresion>concepto_id</expresion>
+				<condicion operador="=">(select option_value from HTXOPTIONS where option_name = 'ID_NOTA_PEDIDOS')</condicion>
+			</field>
+			<field id="domicilio_movimiento" />
+			<field id="regcuenta_id" />
+			<field id="regcuentatransporte_id" />
+			<field id="regcuentavendedor_id" />
+		</group>
+	</table>
+	<join>
+		<table id="REG_CONCEPTOS">  
+			<field id="id_concepto">
+				<condicion operador="=">REG_MOVIMIENTOS.concepto_id  and REG_CONCEPTOS.informa_calculo =1 and
+REG_CONCEPTOS.id_concepto in (select option_value from HTXOPTIONS where option_name = 'ID_NOTA_PEDIDOS') </condicion>
+			</field>
+		</table>
+	</join>
+	<join>
+		<table id="REG_DETALLES">  
+			<field id="regmovim_id">
+				<condicion operador="=">REG_MOVIMIENTOS.id_regmovim</condicion>
+			</field>
+		</table>
+	</join>
+
+  </form>
+</histrix>

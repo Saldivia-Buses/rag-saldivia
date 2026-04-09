@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="chart">
+	<title>Ultimo Año Accidentes</title>
+	<obs></obs>
+	<form >
+		<table id="FRANCOS_PER" >
+		    <title>Top 10 Ultimo Año Accidentes</title>
+		   	
+		   	<grafico id="internos" _pareto="true">
+			   <ancho>400</ancho>
+			   <tipo>P</tipo>
+	           <title>Ultimo Año Accidentes</title>
+			   <etiquetas>nombre_tipo</etiquetas>
+			   <datos>cantidad</datos>
+			   <subtitulo></subtitulo>
+		   	</grafico>
+		    
+		    <filters>
+			    <field id="fechainicio">
+				    <label>Desde</label>
+				    <valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m" ,strtotime('-1 month')) , 1, date("Y")-1 ))</valor>
+				    <operador>&gt;=</operador>
+			    </field>
+			    <field id="fechainicio">
+                                    <label>Hasta</label>
+				    <valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m" ,strtotime('-0 month')) , 1, date("Y") ) - 1)</valor>
+
+				    <operador>&lt;=</operador>
+			    </field>
+			</filters>
+            
+            <field id="fechainicio" />
+
+			<field id="year" oculto="true">
+				<expression>year(fechainicio)</expression>
+			</field>
+
+			<field id="mes">
+				<expression>month(fechainicio)</expression>
+				<label>Mes</label>
+			</field>
+
+            <field id="tipo">
+            	<condicion operador="=">1</condicion>
+            </field>
+
+            <field id="idfranco">
+            	<condicion operador="=">2</condicion>
+            </field>
+
+            <field id="id" noshow="true"/> 
+
+            <field id="franco_tipo_id">
+            	<condicion operador="!=">0</condicion>
+            </field>
+
+            <field id="nombre_tipo" tabla="FRANCOS_CAT_TIPO">
+            	<label>Nombre Tipo</label>
+            	<expression>LEFT(FRANCOS_CAT_TIPO.nombre_tipo,10)</expression>
+            </field>
+
+			<field id="cantidad" tipoOrden="DESC">
+				<expression>COUNT(*)</expression>
+				<label>Cantidad</label>
+				<tipo>numeric</tipo>
+			</field>
+
+			<group>
+				<field id="franco_tipo_id"/>
+			</group>
+
+			<order>
+                <field id="cantidad" tipoOrden="DESC"></field>
+			</order>
+
+		</table>
+	
+		<join>
+            <table id="FRANCOS_CAT_TIPO">
+	            <field id="id_franco_tipo">
+                    <condicion operador="=">FRANCOS_PER.franco_tipo_id</condicion>
+                </field>
+            </table>
+        </join>
+
+	</form>
+</histrix>

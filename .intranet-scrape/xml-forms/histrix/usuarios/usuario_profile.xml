@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="consulta" imprime="false" export="false">
+	<title>Usuarios</title>
+	<obs/>
+	<form  >
+		<table id="HTXUSERS" label="Usuarios">
+			<field id="Id_usuario" noshow="true" >
+				<label>ID Usuario</label>
+				<help></help>
+			</field>
+			<field id="baja" noshow="true" >
+			    <condicion operador="=">0</condicion>
+			</field>
+			
+			<!--
+			<field id="Nombre">
+				<help></help>
+			</field>
+			<field id="apellido">
+				<help></help>
+			</field>
+			-->
+			<field id="nombres">
+			    <expresion>concat(ifnull(Nombre,''), ' ', ifnull(apellido,'') )</expresion>
+			</field>
+			<field id="Id_perfil" noshow="true">
+				<label>Perfil</label>
+				<help>Perfil de Acceso</help>
+				<detalle>Id_perfil</detalle>
+			</field> 
+			<order>
+			    <field id="apellido" />
+			</order>
+		</table>
+	</form>
+</histrix>

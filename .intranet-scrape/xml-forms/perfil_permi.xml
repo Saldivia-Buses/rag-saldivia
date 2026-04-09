@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<abm tipo="abm">
+	<titulo>Perfil_Permi</titulo>
+	<obs></obs>
+	<consulta>
+		<tabla id="HTXPROFILE_AUTH" label="Perfil_Permi">
+			<filtro_ex>
+				<label>Marcas de Chasis</label>
+				<tabla_ex id="HTXPROFILES">
+					<!-- campos a agregar al contenedor Filtro-->
+					<campo id="Id_perfil"></campo>
+					<campo id="nombre"></campo>
+					<!-- Campo que se filtra (clave del filtro)-->
+					<filtra>Id_perfil</filtra>
+				</tabla_ex>
+			</filtro_ex>
+			<campo id="Id_menu">
+				<label>Id_Menu</label>
+				<help>Item del menu al que se tiene acceso</help>
+				<ayuda_ex id="HTXMENU" xml="HLPmenues.xml" dir="/help_local">
+					<!-- campos a agregar al contenedor Filtro-->
+					<campo id="Id_menu"></campo>
+					<campo id="titulo">
+						<detalle>titulo</detalle>
+					</campo>
+					<campo id="menuId">
+						<detalle>menuId</detalle>
+					</campo>
+					
+					<campo id="ejecuta">
+						<condicion operador="!=">''</condicion>
+					</campo>
+				</ayuda_ex>
+			</campo>
+			<campo id="menuId" noshow="true">
+				<label>Id</label>
+				<help></help>
+			</campo>
+			<campo id="titulo" tabla="HTXMENU" deshabilitado="true">
+				<expresion>titulo</expresion>
+				<label>Titulo</label>
+				<help></help>
+				<tipo>char</tipo>
+			</campo>
+			
+			<campo id="Id_perfil">
+				<label>ID Perfil </label>
+				<help>
+				</help>
+			</campo>
+		</tabla>
+		<join tipo="left">
+			<tabla id="HTXMENU">
+				<campo id="menuId" oculto="true">
+					<condicion operador="=">HTXPROFILE_AUTH.menuId</condicion>
+				</campo>
+			</tabla>
+		</join>
+	</consulta>
+</abm>

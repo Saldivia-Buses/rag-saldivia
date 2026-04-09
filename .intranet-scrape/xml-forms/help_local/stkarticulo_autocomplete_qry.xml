@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="ayuda"  path="fotos/articulos">
+	<title>Insumos</title>
+	<obs></obs>
+	<form >
+		<table id="STKINSUM" >
+			<title>Insumos</title>
+			
+			<field id="artcod" _noshow="true">
+				<label>Cod.</label>
+				<detalle>stkarticulo_id</detalle>
+			</field>
+			<field id="artdes" deshabilitado="true">
+				<label>Insumo</label>
+				<help>Descripcion</help>
+				<detalle>stkarticulo_nombre</detalle>
+			</field>
+
+			<field id="baja" oculto="true">
+				<label>baja</label>
+				<condicion operador="!=">1</condicion>
+			</field>			
+			<field id="siscod" oculto="true">
+				<label>siscod</label>
+				<condicion operador="=">'01'</condicion>
+			</field>
+			<field id="valcps" oculto="true"/>
+			<field id="valuso" oculto="true"/>
+			<order>
+				<field id="artdes"></field>
+			</order>
+		</table>
+	</form>
+</histrix>

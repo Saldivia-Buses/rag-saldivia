@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" path="/ISO9000/Instrucciones De Trabajos/Pasos">
+    <title />
+    <obs/>
+    <form>
+        <table id="CAL_DOCUMENTOS_PASOS">
+
+            <field id="ordenpaso" noshow="true" print="false">
+                <label>Paso</label>
+                <help>Paso</help>
+                <size>5</size>
+            </field>
+
+            <field id="id_documento_pasos" noshow="true" esClave="true">
+                <label>Documento</label>
+            </field>
+	    <field id="tipodocumento_id" tabla="CAL_DOCUMENTOS" noshow="true" >
+		    <label>tipo</label>
+	    </field>
+
+            <field id="documento_id" noshow="true">
+                <label>Documento</label>
+            </field>
+
+            <field id="vigencia_documento" noshow="true" local="true">
+                <label>Vigencia</label>
+            </field>
+
+            <field id="foto" path="trabajo_instructivo_id" PDFcolWidth="150" imageWidth="50" imageHeight="70">
+                <tipo>file</tipo>
+                <!--<attribute id="PDFbackgroundColor">clase</attribute>-->
+            </field>
+
+            <field id="descripcion" PDFbold="true" style="font-weight:bold !important; vertical-align: middle;">
+-                <attribute id="PDFbackgroundColor">clase</attribute> 
+            </field>
+
+            <field id="clase" local="true" noshow="true">
+                <expression>case when ( tipodocumento_id != 10 and round(ordenpaso,0) = 1) then '#A9F5A9' when (tipodocumento_id != 10 and round(ordenpaso,0) != 1) then '#F5A9A9' when tipodocumento_id = 10 then ''  end</expression>
+	    </field>
+
+            <order>
+                <field id="ordenpaso" />
+            </order>
+
+        </table>
+	<join tipo="left">
+	    <table id="CAL_DOCUMENTOS">
+		<field id="id_documento">
+		    <condicion operador="=">documento_id</condicion>
+		</field>
+	    </table>
+	</join>
+    </form>
+</histrix>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<histrix tipo="abm-mini"  log="true" subtipo="vertical">
+    <title>Costos de No Conformidades</title>
+    <obs></obs>
+    <form >
+        <table id="CAL_COSTO_XNCONF">
+            <title>Costos de No Conformidades</title>
+
+            <field id="id_costonconf" autoinc="true" noshow="true">
+                <label>Cod.</label>
+                <help>Codigo</help>
+            </field>
+
+            <field id="noconformidad_id" oculto="true">
+                <valor>-1</valor>
+			</field>
+
+			<field id="tipocostonconf_id">
+				<helper type="combo" id="CAL_TIPOCOSTO_NCONF" empty="true">
+					<field id="id_tipocosto_nconf" />
+					<field id="nombre_costonconf" />
+				</helper>
+				<label>Tipo Costo</label>
+			</field>
+
+			<field id="costo_nconf" suma="true">
+				<label modpos="nobr">Costo</label>
+			</field> 
+			
+        </table>
+    </form>
+</histrix>

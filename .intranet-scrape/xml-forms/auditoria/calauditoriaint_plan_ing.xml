@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" subtipo="vertical" PDForientacion="L" PDFfontSize="8">
+    <title>Plan de Auditoría Interna</title>
+    <obs/>	
+    <eventos>
+        <event id="update">close</event>
+        <event id="update">refresh</event>
+        <event id="insert">close</event>
+        <event id="insert">refresh</event>        
+        <event id="delete">close</event>
+        <event id="delete">refresh</event>
+    </eventos>
+    <form >
+    <table id="CAL_AUDITORIA_INT" label="Auditoría Interna">
+
+     		<field id="id_auditoriaint" autoinc="true" noshow="true"/>
+
+			<field id="documento_id">
+				<helper type="external" id="CAL_DOCUMENTOS">
+					<field id="id_documento">
+						
+					</field>
+					<field id="nombre_documento">
+						<detalle>nombre_documento</detalle>
+					</field>
+					<field id="codigo_documento">
+						<detalle>codigo_documento</detalle>
+					</field>
+				</helper>
+				<label>Proceso</label>
+			</field>
+
+			<field id="codigo_documento" tabla="CAL_DOCUMENTOS" deshabilitado="true">
+				<label modpos="nobr">Codigo</label>
+			</field>
+
+			<field id="nombre_documento" tabla="CAL_DOCUMENTOS" deshabilitado="true">
+				<label modpos="nobr">Proceso</label>
+				<size>90</size>
+			</field>
+
+			<field id="fecha_auditoriaint">
+				<label>Fecha</label>
+				<valor>today</valor>
+				<tipo>date</tipo>
+			</field>
+
+			<field id="codigo_auditorint">
+				<helper type="combo" id="HTXUSERS">
+					<field id="id_usuario"/>
+					<field id="auditor">
+						<expression>CONCAT(apellido, ' ', Nombre)</expression>
+					</field>
+					<order>
+						<field id="auditor"/>
+					</order>
+				</helper>
+				<label>Auditor</label>
+				<valor>112</valor>
+			</field>
+
+			<field id="realizada">
+				<options>
+					<option valor="0">Pendiente</option>
+					<option valor="1">Realizada</option>
+				</options>
+				<label>Estado</label>
+				<condicion operador="=">0</condicion>
+			</field>
+
+			<order>
+				<field id="codigo_documento" tabla="CAL_DOCUMENTOS"/>
+			</order>
+       </table>
+	   <join tipo="inner">
+			<table id="CAL_DOCUMENTOS">
+				<field id="id_documento">
+					<condicion operador="=">CAL_AUDITORIA_INT.documento_id</condicion>
+				</field>
+			</table>
+	   </join>
+
+    </form>
+</histrix>
+

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud" >
+  <title>Controles de Calidad de Producción</title>
+  <obs />
+  <form >
+    <table id="MRP_SECCION" label="Controles de Calidad de Producción">
+
+		<field id="id_mrpseccion" noshow="true" autoinc="true">
+		</field>
+
+		<field id="nombre_mrpseccion">
+			<label>Sección</label>
+		</field>
+		<field id="xml_mrpseccion">
+			<label>Programa</label>
+		</field>	
+		<field id="mrporden">
+			<label>Orden</label>
+		</field>	
+		<order>
+			<field id="mrporden" />
+		</order>
+    </table>
+  </form>
+</histrix>

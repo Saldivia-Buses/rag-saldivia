@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ficha" sololectura="true" autoprint="true">
+    <title>ORDEN DE PRODUCCION</title>
+    <obs></obs>
+    <form>        
+        <table id="MRP_ORDEN_PRODUCCION" label="ORDEN DE PRODUCCION">                     
+
+            <field id="mrpestado_id" PDFnoborder="true">
+                <label posx="5" posy="+2" size="20" PDFsize="10">Estado:</label>
+                <options>
+                    <option valor="0">En Proceso</option>
+                    <option valor="1">Cumplida</option>
+                    <option valor="2">Anulada</option>
+                </options>
+            </field>
+
+            <field id="id_mrpordendetalle" tabla="MRP_ORDEN_DETALLE" oculto="true" />
+
+
+            <field id="id_mrporden" deshabilitado="true" PDFnoborder="true">
+                <label posx="150" posy="0" size="20" PDFsize="10">Orden Nro:</label>
+            </field>
+
+            <field id="rhpersonal_id" PDFnoborder="true">
+                <helper type="combo" xml="rhpersonal_qry.xml" dir="/ayudas" empty="true" />
+                <label posx="5" posy="+2" size="20" PDFsize="10">Empleado:</label>  
+            </field>
+          
+            <field id="fecha_orden" deshabilitado="true" PDFnoborder="true">
+                <label posx="150" posy="0" size="20" PDFsize="10">Fecha:</label>
+            </field>
+
+   
+            
+            <field id="produccion_titulo" local="true" PDFbold="true" PDFnoborder="true" PDFnolabel="true">
+                <label PDFsize="12" posx="75" posy="+2" />
+                <valor>ARTICULO A PRODUCIR</valor>
+            </field>
+
+            <field id="movimientos" local="true" obj="mrp_ordendetalle_impresion.xml" pdfwidth="200">
+                <label colspan="4" posx="5" posy="+3" PDFsize="10"></label>
+                <paring destino="mrporden_id">id_mrporden</paring>
+            </field>
+
+            <field id="composicion_articulo" local="true" PDFbold="true" PDFnoborder="true" PDFnolabel="true">
+                <label PDFsize="10" posx="1" posy="+5" />
+                <valor>COMPOSICION: </valor>
+            </field>
+
+             <!-- esto es para imprimir el detalle de los articulos usados con la perdida  -->
+            <field id="stkarticulo_id"  tabla="MRP_ORDEN_DETALLE" oculto="true">
+                <label>Articulo</label>
+            </field>
+
+            <field id="objetivo_ordendetalle" tabla="MRP_ORDEN_DETALLE" oculto="true" >
+                <label>Objetivo</label>
+            </field>
+
+
+            <!-- esto es para imprimir el detalle de los articulos usados con la perdida y demas -->
+            <field id="detalle_articulos" local="true" obj="mrp_bom_qry_impresion.xml" pdfwidth="200">
+                <label colspan="4" posx="5" posy="+5" PDFsize="10"></label>
+                <paring destino="stkarticulopadre_id">stkarticulo_id</paring>
+                <paring destino="WCantidad1">objetivo_ordendetalle</paring>
+                <paring destino="id_mrpordendetalle">id_mrpordendetalle</paring>
+            </field>
+
+
+            <field id="muestra_obs" print="false" noshow="true">
+                <expression>case when orden_comentarios = '' or orden_comentarios IS NULL then 'false' else 'true' end</expression>
+            </field>
+
+            <field id="orden_comentarios" deshabilitado="true" pdfancho="170" PDFnoborder="true">
+                <label colspan="4" posx="5" posy="+3">Comentarios</label>
+                <tipo>varchar</tipo>
+                <attribute id="print">muestra_obs</attribute>
+            </field>
+
+            <field id="firma_empleado" local="true" PDFnoborder="true">
+            	<label PDFsize="10" size="20" posx="5" posy="+15">Empleado:</label>
+            	<valor>.........................................................</valor>
+            </field>
+
+            <field id="firma_encargado" local="true" PDFnoborder="true">
+            	<label PDFsize="10" size="30" posx="105" posy="0">Enc. Produccion:</label>
+                <valor>.........................................................</valor>
+            </field>
+                        
+    	    <field id="titcontrol" local="true" PDFbold="true" PDFnoborder="true" PDFnolabel="true">
+    		    <label PDFsize="12" posx="75" posy="+5" />
+                <valor>CONTROL DE CALIDAD</valor>
+    	    </field>
+                
+            <field id="control_calidad" local="true" obj="mrp_ordendetalle_art_impresion.xml" pdfwidth="200">
+                <label colspan="4" posx="5" posy="+3" PDFsize="8" PDFlineas="false"></label>
+                <paring destino="mrporden_id">id_mrporden</paring>
+            </field>
+            
+            <field id="indice" PDFnoborder="true">
+            	<label posx="5" posy="+2" size="30" PDFsize="10">Indice de Calidad</label>
+            	<expression>select sum(peso_control) * (case when mrpestado_id = 1 then 0 else 1 end) from MRP_ORDEN_DETALLE
+                    left join MRP_CONTROL_DETALLE on MRP_CONTROL_DETALLE.mrpordendetalle_id = MRP_ORDEN_DETALLE.id_mrpordendetalle
+                    left join MRP_CONTROLES on MRP_CONTROLES.id_mrpcontrol = MRP_CONTROL_DETALLE.mrpcontrol_id 
+                    where   MRP_ORDEN_DETALLE.mrporden_id = MRP_ORDEN_PRODUCCION.id_mrporden 
+                </expression>
+            </field>      
+
+    	    <field id="trazabilidad" local="true" PDFbold="true" PDFnoborder="true" PDFnolabel="true">
+    		  <label PDFsize="12" posx="80" posy="+5" />
+              <valor>TRAZABILIDAD</valor>
+    	    </field>
+                
+            <field id="trzobj" local="true" obj="mrp_ordendetalle_trz_impresion.xml" pdfwidth="200">
+                <label colspan="4" posx="5" posy="+3" PDFsize="8"></label>
+                <paring destino="mrporden_id">id_mrporden</paring>
+            </field>
+
+        </table>
+
+        <join>
+            <table id="MRP_ORDEN_DETALLE">
+                <field id="mrporden_id" >
+                    <condicion operador="=">MRP_ORDEN_PRODUCCION.id_mrporden</condicion>
+                </field>
+            </table>
+        </join>
+
+
+
+
+    </form>
+</histrix>

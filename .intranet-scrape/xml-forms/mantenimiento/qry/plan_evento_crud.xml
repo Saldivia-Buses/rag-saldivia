@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  CURD
+Tarea: EVENTOS DEL PLAN DE MANTENIMIENTO
+Autor: Lmm
+Fecha: 17/08/11
+*******************************************************************************
+-->
+<histrix tipo="abm-mini" subtipo="vertical" tooltip="false" imprime="false">
+    <title>Mantenimiento</title>
+    <obs></obs>
+     <eventos>
+                 <event id="insert">close</event>
+                <event id="update">close</event>
+                <event id="delete">close</event>
+                <event id="insert">$('.fullcalendar').fullCalendar( 'refetchEvents' );</event>
+                <event id="update">$('.fullcalendar').fullCalendar( 'refetchEvents' );</event>
+                <event id="delete">$('.fullcalendar').fullCalendar( 'refetchEvents' );</event>
+
+    </eventos> 
+                                    
+    <form>
+        <table id="MANT_PLAN_EVENTOS" label="Plan de mantenimiento">
+	   	<field id="plan_id" oculto="true"/>
+    		<field id="fecha_accion" _deshabilitado="true" >
+			<label>Fecha</label>
+			<tipo>date</tipo>
+		</field>
+<!-- </field id="nombre_accion" autocompletar="true" local="true">
+			<helper type="external" id="MANT_ACCIONES" empty="true">
+				<field id="id_accion">
+				    <detalle>id_accion</detalle>
+				</field>
+				<field id="nombre_accion">
+				    <detalle>nombre_accion</detalle>
+
+				</field>
+
+			</helper>
+			<size>60</size>
+		</field>
+		
+-->
+		<field id="accion_id" deshabilitado="true">
+			<label>Acción</label>		
+		
+			<helper type="combo" id="MANT_ACCIONES" empty="true">
+				<field id="id_accion">
+				    <detalle>id_accion</detalle>
+				</field>
+				<field id="nombre_accion">
+<expression>left(nombre_accion,100)</expression>
+				    <detalle>nombre_accion</detalle>
+
+				</field>
+
+			</helper>
+		
+		</field>
+		<field id="login" deshabilitado="true" noshow="true">
+		    <label>Usuario </label>
+			<tabla_ex id="HTXUSERS">
+				<field id="login"></field>
+				<field id="nombre"></field>
+				<order>
+					<field id="nombre"></field>
+				</order>
+			</tabla_ex>
+		    <help>Usuario que hace el pedido</help>
+		    <valor eval="true">$_SESSION['usuario']</valor>
+          	</field>
+		<field id="observaciones" >
+			<label>Observaciones</label>
+			<size>60</size>
+		</field>
+<!-- 
+		<field id="equipo_id" local="true" noshow="true">
+		    <label>equipo</label>
+		</field>
+
+			<field linktab="true" id="correciones" _local="true" linkdes="Mantemiento Correctivo" _noZero="true" _tdWidth="10" Formstyle="display:none;">
+          		<label>Correctivo</label>
+			    <expression>'Agregar Correctivo'</expression>
+				<helper type="link" xml="mant_correc_herr.xml" dir="/mantenimiento/man" modal="true" linktab="true">
+				<parameter source="equipo_id" target="equipo_id" />
+				<parameter source="cincuentaydos" target="accion_id" />
+			    </helper>
+			</field>
+
+			<field id="cincuentaydos" noshow="true" local="true">
+				<valor>52</valor>
+			</field> -->
+
+		<order>
+			<field id="fecha_accion"/>
+		</order>
+
+	    </table>
+    </form>
+</histrix>	

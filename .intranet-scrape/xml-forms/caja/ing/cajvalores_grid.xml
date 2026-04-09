@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="grid" subtipo="vertical"  inserta="false" borra="false" imprime="false" deleteRow="false">
+<title>Detalle de Valores</title>
+  <obs/>
+
+	<customScript>
+	    $('#cajvalores_grid_xml tr[o]').each(
+		function(){
+		    var default_field = $('[name="default_field_value"]', $(this)).val();
+		    if (default_field != ''){
+			var $field = $('[name="'+default_field+'"]');
+			$('[name="pago_valor"]',$(this)).val($field.val()).attr('disabled','disabled').css({'color':'gray', 'font-weight':'bold'});
+		    }
+
+		}
+	    );
+
+	</customScript>
+
+  <form >
+    <!-- FORMAS DE PAGO DISPONIBLES PARA ESTE PUESTO -->
+    <table id="CAJ_PUESTO_FORMAS" label="Detalle de Valores">
+
+      <movimientos>
+        <relacion id="cajvalores_ins.xml"/>
+        <relacion id="cajdetalle_ins.xml"/>
+	   <!-- 	GRABO RETENCIONES DE GANANCIAS
+        <relacion id="regmovimientos_retenciones_ins.xml"/>
+     	GRABO RETENCIONES IIBB
+        -->
+      </movimientos>
+
+      <field id="cajpuesto_id" esClave="true" noshow="true"/>
+
+      <field id="cajformapago_id" esClave="true" noshow="true"/>
+   
+      <fieldGroup id="DEBUG" local="true" noshow="true">
+        <field id="moneda_id"/>
+        <field id="cajconcepto_id"/>
+    		<field id="imputacion_concepto" valauto="true">
+    			<label>IC</label>
+    		</field>
+        <field id="fecha_movimiento"/>
+        <field id="referencia_movimiento"/>
+        <field id="puesto_movimiento"/>
+        <field id="nro_movimiento"/>
+        <field id="importe_movimiento"/>
+        <field id="stkdeposito_id"/>
+		    <field id="regcuentapadre_id"/>
+      </fieldGroup>
+
+      <field id="descripcion_forma" tabla="CAJ_FORMAS_PAGO" deshabilitado="true">
+        <label>Forma De Pago</label>
+        <help>Descripcion de la forma de pago</help>
+        <size>20</size>
+      </field>
+
+      <!-- IMPORTES -->
+
+      <field id="habilita_valor" local="true" noshow="true">
+        <expression>case when CAJ_FORMAS_PAGO.ejecuta_forma != '' then 0 else 1 end</expression>
+        <tipo>numeric</tipo>
+      </field>
+			
+      <field id="habilita_vuelto" local="true" noshow="true">
+        <expression>case when CAJ_FORMAS_PAGO.vuelto_forma != 0 then 1 else 0 end</expression>
+        <tipo>numeric</tipo>
+      </field>
+
+
+
+      <field id="pago_valor" local="true" editable="true" suma="true" replace="true" >
+        <label Formstyle="width:100%;color:red;">Importe</label>
+        <tipo>numeric</tipo>
+        <habilita>habilita_valor</habilita>
+        <jseval campodestino="imputado" total="true">pago_valor</jseval>
+      </field>
+			
+      <field id="pago_vuelto" local="true" editable="true" suma="true">
+        <label Formstyle="width:100%;color:red;">Vuelto</label>
+        <jseval campodestino="vuelto" total="true">pago_vuelto</jseval>
+        <tipo>numeric</tipo>
+        <habilita>habilita_vuelto</habilita>
+      </field>
+
+      <!-- DETALLE CONTABLE -->
+     
+      <fieldGroup id="detalle_contable" local="true" noshow="true">
+        <field id="ctbcuenta_detalle" >
+          <expression>CAJ_FORMAS_PAGO.ctbcuenta_forma_id</expression>
+        </field>
+        <field id="doh_detalle">
+          <expression>CAJ_FORMAS_PAGO.tipo_forma</expression>
+        </field>
+        <field id="importe_detalle">
+          <if exp="true">
+            <true>pago_valor - pago_vuelto</true>
+            <false>0</false>
+          </if>
+        </field>
+        <field id="ctbcuenta_reg_doh">
+	   <if exp="true">
+		<true>imputacion_concepto</true>
+		<false>0</false>
+	   </if>
+        </field>
+
+	<!-- ************************************************************************************************
+	ATENCION: LA FINALIDAD DE ESTA PIEZA MAESTRA DE CODIGO ES PARA QUE GRABE LA PARTIDA CONTABLE
+		  SOLAMENTE EN LOS CASOS QUE CORRESPONDA
+		  ESTO NO SE PUEDE TOCAR BAJO NINGUNA CIRCUNSTANCIA 
+		  SINO HACETE CARGO 
+	************************************************************************************************ -->
+
+	<field id="grabar_ctb">
+	  <label>grabactb</label>
+          <if exp="true">
+            <true>(((pago_valor + pago_vuelto) + 0) * ejecuta_cct + 0) == 0 ? 0 : 1</true>
+            <false>0</false>
+          </if>
+	</field>
+        <field id="ejecuta_cct">
+    	<label>ejec</label>
+	 <expression>CASE WHEN ifnull(CAJ_FORMAS_PAGO.subsistema_forma_id,'') = '' THEN 1 ELSE 0 END</expression>
+        </field>
+
+	<!-- ************************************************************************************************ -->
+
+      </fieldGroup>
+
+      <field id="tipo_movimiento" local="true" noshow="true">
+	<valor>[__imputacion_concepto__]</valor>
+      </field> 
+
+      <!-- Boton Importacion / Detalle de Valores -->
+
+ <field id="subsistema_forma_id" tabla="CAJ_FORMAS_PAGO" noshow="true" />
+
+<field id="regconcepto_forma_id" tabla="CAJ_FORMAS_PAGO" noshow="true" />
+
+      <field id="stkconcepto_forma_id" tabla="CAJ_FORMAS_PAGO" noshow="true" />
+
+      <field id="ejecuta_forma" tabla="CAJ_FORMAS_PAGO" ventint="true" linkdes="CARGAR" resume="true">
+        <label>Detalle</label>
+        <tipo>varchar</tipo>
+        <importar label="DETALLE">
+          <field id="moneda_id">moneda_id</field>
+          <field id="cajformapago_id">cajformapago_id</field>
+          <field id="tipo_movimiento">tipo_movimiento</field> 
+          <field id="imputacion_concepto">imputacion_concepto</field>
+          <field id="ctbcuenta_reg_doh">imputacion_concepto</field>
+          <field id="importe_movimiento">importe_movimiento</field>
+          <field id="fecha_movimiento">fecha_movimiento</field>
+          <field id="puesto_movimiento">puesto_movimiento</field>
+          <field id="nro_movimiento">nro_movimiento</field>
+          <field id="referencia_movimiento">referencia_movimiento</field>
+          <field id="subsistema_forma_id">subsistema_forma_id</field>
+          <field id="regconcepto_forma_id">regconcepto_forma_id</field>
+          <field id="stkconcepto_forma_id">stkconcepto_forma_id</field>
+          <field id="stkdeposito_id">stkdeposito_id</field>
+		      <field id="regcuentapadre_id">regcuentapadre_id</field>
+        </importar>
+      </field>
+
+      <field id="grabar" local="true" noshow="true">
+        <if exp="((pago_valor + 0) != 0) || ((pago_vuelto + 0) != 0)">
+          <true>1</true>
+          <false>0</false>
+        </if>
+      </field>
+
+
+
+      <field id="habilitado" noshow="true">
+	<expression having="false">(select count(*) FROM CAJ_CONCEPTO_FORMAS where CAJ_CONCEPTO_FORMAS.cajconcepto_id = '[__cajconcepto_id__]')</expression>
+	 <condicion operador="=">0 or ((select count(*) FROM CAJ_CONCEPTO_FORMAS where CAJ_CONCEPTO_FORMAS.cajconcepto_id = '[__cajconcepto_id__]') > 0 and id_cajconforma > 0)</condicion>  
+      </field>
+    
+	    
+			<!-- VALOR POR DEFECTO -->
+			<field id="default_field_value" tabla="CAJ_FORMAS_PAGO" editable="true" deshabilitado="true" noshow="true"/>
+   
+      <order>
+        <field id="orden_forma" tabla="CAJ_FORMAS_PAGO"/>
+      </order>
+
+    </table>
+
+    <join>
+      <table id="CAJ_CONCEPTOS">
+        <field id="id_cajconcepto">
+          <condicion operador="=">'[__cajconcepto_id__]'</condicion>
+        </field>
+      </table>
+    </join>
+
+    <!-- DESCRIPCION FORMA DE PAGO -->
+
+    <join>
+      <table id="CAJ_FORMAS_PAGO">
+        <field id="id_cajformapago">
+          <condicion operador="=">CAJ_PUESTO_FORMAS.cajformapago_id</condicion>
+        </field>
+        <field id="tipo_forma">
+          <condicion operador="=">'[__imputacion_concepto__]'</condicion>
+        </field>
+        <field id="moneda_id">
+          <condicion operador="=">'[__moneda_id__]'</condicion>
+        </field>
+      </table>
+    </join>
+
+    <!--  
+          FORMAS DE PAGO DISPONIBLES PARA ESTE CONCEPTO 
+          (Left ya que si no hay definida una en particular traigo todas las asociadas al puesto)		
+    -->
+
+    <join tipo="left">
+      <table id="CAJ_CONCEPTO_FORMAS">
+        <field id="cajconcepto_id">
+          <condicion operador="=">CAJ_CONCEPTOS.id_cajconcepto</condicion>
+        </field>
+        <field id="cajformapago_id">
+          <condicion operador="=">CAJ_FORMAS_PAGO.id_cajformapago </condicion>
+        </field>       
+      </table>
+    </join>
+
+  </form>
+</histrix>

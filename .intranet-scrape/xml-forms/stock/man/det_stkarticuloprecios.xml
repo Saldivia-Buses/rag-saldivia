@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+*******************************************************************************
+Tipo:  CRUD
+Tarea: Tabla de Precio por Lista
+Autor: d!ego2k
+Fecha: 28/08/12
+*******************************************************************************
+-->
+<histrix tipo="consulta" subtipo="vertical" tooltip="false" showCant="false">
+    <title>Articulo Precio</title>
+    <obs></obs>
+    <form >
+        <table id="STK_LISTADETALLE" label="Articulo Precio">
+
+            <field id="id_stklistadetalle" noshow="true" autoinc="true" esClave="true"/>
+
+            <field id="stkarticulo_id" noshow="true" />
+
+            <field id="stklista_id">
+                <label>Lista</label>
+                <helper type="combo" xml="stklista_qry.xml" dir="/ayudas" />
+            </field>
+
+            <field id="stklistadetalle_precioventa">
+                <label>P.Vta</label>
+            </field>
+
+        </table>
+    </form>
+</histrix>

@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="grid"  graboasiento="false" tooltip="false" muestraasiento="false" imprime="false"  inserta="false" modifica="false" llenoreferente="true" procesa="false">
+	<title>Movimientos de Caja</title>
+	<obs/>
+	<consulta>
+		<table id="CAJCONCE" label="Formas de pago" styleTbody="height:12em;overflow-x:hidden;margin-right:10px;">
+			<movimientos >
+				<relacion id="pos_cajmovim_ingmov.xml"></relacion>
+				<relacion id="pos_tjtmovim_ingmov.xml"></relacion>
+				<relacion id="pos_plusmovim_canje_ingmov.xml"></relacion>
+
+			</movimientos>
+			<field id="siscod" oculto="true" esClave="false">
+				<condicion operador="=" >'05'</condicion>
+			</field>
+			<field id="siscaj" oculto="true" local="true">
+				<valor>05</valor>
+			</field>
+			<field id="cajcod" deshabilitado="true" noshow="true" esClave="true">
+				<label>Cod</label>
+			</field>
+			<field id="cajtip" oculto="true">
+				<condicion operador="=">1</condicion>
+			</field>
+			<field id="cobra" oculto="true">
+				<condicion operador="=">1</condicion>
+			</field>
+			<field id="cajnom" deshabilitado="true">
+			<label>Concepto</label>
+			</field>
+			<field id="ctbcod__1" noshow="true" ctbcuenta="2" >
+			</field>
+			<field id="habil"  noshow="true" local="true">
+				<expresion>case when cajcod = 1 or cajcod = 2 then 1 else 0 end</expresion>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="TJTHAB" noshow="true" local="true">
+				<expresion>case when cajcod = 2 then 1 else 0 end</expresion>
+				<tipo>varchar</tipo>
+			</field>
+
+
+			<field id="tjtcod" local="true" editable="true">
+				<label>Tarjeta</label>
+				<help>Nombre Tarjeta</help>
+				<tabla_ex id="TJTTARJE">
+					<field id="tjtcod"/>
+					<field id="tjtnom"/>
+				</tabla_ex>
+
+				<valor>1</valor>
+				<tipo>integer</tipo>
+				<habilita>TJTHAB</habilita>
+				<conditionalDisplay>TJTHAB</conditionalDisplay>
+			</field>
+			<field id="tjtlote" local="true" editable="true">
+				<label style="width:100%;">Lote</label>
+				<size>4</size>
+				<habilita>TJTHAB</habilita>
+				<conditionalDisplay>TJTHAB</conditionalDisplay>
+
+			</field>
+			<field id="tjtnro" local="true" editable="true">
+				<label _style="width:100%;">Cupón</label>
+				<size>8</size>
+				<habilita>TJTHAB</habilita>
+				<conditionalDisplay>TJTHAB</conditionalDisplay>
+
+			</field>
+			<field id="cajimp" local="true" suma="true" ctbimporte="2" editable="true" >
+				<label Formstyle="width:100%;color:red;" colstyle="color:red;font-size:16px;" >Importe</label>
+				<help>Importe</help>
+				<tipo>numeric</tipo>
+				<valor default="true">0</valor>
+				<habilita>habil</habilita>
+				<jseval campodestino="imputado" total="true">cajimp</jseval>
+			</field>
+			<field id="puntos" local="true" >
+				<label>puntos</label>
+				<tipo>integer</tipo>
+			</field>
+
+			<field id="saldo" local="true" noshow="true">
+				<label>Saldo</label>
+				<if exp="true">
+					<verdadero>total - cajimp</verdadero>
+					<falso>0</falso>
+				</if>
+			</field>
+			<field id="detalleXml" ventint="true" linkdes="CARGAR">
+				<label>Detalle</label>
+				<tipo>varchar</tipo>
+ 				<importar label="Cargar">
+					<field id="concod"></field>
+					<field id="ctacod"></field>
+					<field id="ctanro"></field>
+					<field id="recnro"></field>
+				</importar>
+			</field>
+			<field id="caj_imputar" deshabilitado="true" local="true" noshow="true">
+				<if exp="cajimp > 0" operador="=">
+					<verdadero>1</verdadero>
+					<falso>0</falso>
+				</if>
+				<valor>0</valor>
+			</field>
+<!--			<field id="tjt_imputar" deshabilitado="true" local="true" noshow="true">
+				<if exp="cajimp + TJTHAB > 2" operador="=">
+					<verdadero>true</verdadero>
+					<falso>false</falso>
+				</if>
+				<valor>0</valor>
+				<tipo>integer</tipo>
+			</field>-->
+            <field id="plus_imputar" deshabilitado="true" local="true" noshow="true">
+                    <if exp="0puntos > 0" >
+                            <verdadero>1</verdadero>
+                            <falso>0</falso>
+                    </if>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="tjt_imputar" deshabilitado="true" local="true" noshow="true">
+                    <if exp="0TJTHAB > 0" >
+                            <verdadero>(cajimp > 0)?1:0</verdadero>
+                            <falso>0</falso>
+                    </if>
+                <tipo>varchar</tipo>
+            </field>
+		</table>
+	</consulta>
+</histrix>

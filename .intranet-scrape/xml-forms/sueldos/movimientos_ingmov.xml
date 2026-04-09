@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ing">
+    <title>Cuenta Corriente</title>
+    <obs></obs>
+    <form >
+        <table id="RH_MOVIMIENTOS" label="Movimientos" idCampoCond="grabar">
+            <field id="legajo" id_temp="legajo"></field>
+            <field id="concepto_id" id_cab="concepto_id"></field>
+             <field id="fecha"   id_cab="fecha"></field>
+             <field id="importe" id_cab="importe"></field>
+        </table>
+    </form>
+</histrix>

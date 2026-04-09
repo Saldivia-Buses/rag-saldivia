@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud" path="ISO9000" inserta="false" modifica="false">
+  <title>MANUAL DE CALIDAD</title>
+  <obs></obs>
+  <form >
+    <table id="CAL_DOCUMENTOS" label="Documentacion">
+      <filters>
+        <field id="tipodocumento_id">
+          <helper xml="cal_tipo_documento.xml" type="combo" dir="/calidad/ing" />
+          <label>Tipo</label>
+          <help>Tipoo de Documento</help>
+          <operador>=</operador>
+        </field>
+
+      </filters>
+
+      <field id="id_documento" noshow="true" autoinc="true" />
+
+      <field id="tipodocumento_id" noshow="true">
+        <helper xml="cal_tipo_documento.xml" type="combo" dir="/calidad/ing" _empty="true" />
+        <label>Tipo</label>
+        <help>Tipoo de Documento</help>
+      </field>
+<!--
+      <field id="codigo_documento">
+        <label modpos="nobr">código</label>
+        <help>código de Documento</help>
+      </field>
+      <field id="nombre_documento" style="font-weight:bold;">
+        <label modpos="nobr">Nombre</label>
+        <help>Nombre de Documento</help>
+      </field>
+      <field id="vigencia_documento">
+        <label modpos="nobr">vigencia</label>
+        <help>vigencia de Documento</help>
+      </field>
+      <field id="emisor_documento">
+        <label modpos="nobr">emisor</label>
+        <help>emisor de Documento</help>
+        <size>60</size>
+      </field>
+      <field id="distribuidor_documento">
+        <label modpos="nobr">Distribucion</label>
+        <help>Distribuidor del Documento</help>
+        <size>60</size>
+      </field>
+      <field id="conservacion_documento">
+        <label modpos="nobr">conservacion</label>
+        <help>conservacion de Documento</help>
+        <size>60</size>
+      </field>
+
+      <field id="guarda_documento">
+        <label modpos="nobr">Guarda</label>
+        <help>Guarda de Documento</help>
+      </field>
+
+      <field id="revision_documento">
+        <label modpos="nobr">Revisión</label>
+        <help>Revisión de Documento</help>
+      </field>
+    -->
+      
+
+      <field id="descripcion_documento" style="font-weight:bold;">
+        <label>descripcion doc</label>
+        <expression>CONCAT (codigo_documento, ' ', nombre_documento, ' - ', vigencia_documento)</expression>
+      </field>
+<!--
+      <field id="attOpen" _noshow="true">
+        <expression>CASE WHEN tipodocumento_id != 1 THEN 'true' ELSE 'false' END </expression>
+      </field>
+
+      <field id="attViewer" _noshow="true">
+        <expression>CASE WHEN tipodocumento_id != 1 THEN 'false' ELSE 'true' END </expression>
+      </field>
+-->
+
+      <field id="archivo_documentoProc" _path="codigo_documento" _open="true" viewer="true" print="false">
+        <!--
+        <attribute id="open">attOpen</attribute>
+        <attribute id="viewer">attViewer</attribute>
+      -->
+        <expression>case when tipodocumento_id = 1 then archivo_documento else '' end</expression>
+
+        <help>Archivo del Documento</help>
+        
+        <tipo>file</tipo>
+        <size>100</size>
+      </field>
+
+      <field id="archivo_documentoOtros" open="true" _print="false">
+        <!--
+        <attribute id="open">attOpen</attribute>
+        <attribute id="viewer">attViewer</attribute>
+      -->
+        <expression>case when tipodocumento_id != 1 then archivo_documento else '' end</expression>
+        <help>Archivo del Documento</help>
+        
+        <tipo>file</tipo>
+        <size>100</size>
+      </field>
+      
+
+      <order>
+        <field id="descripcion_documento" style="font-weight:bold;">
+        <label>descripcion doc</label>
+        <expression>CONCAT (codigo_documento, ' ', nombre_documento, ' - ', vigencia_documento)</expression>
+      </field>
+      </order>
+
+    </table>
+  </form>
+</histrix>
+

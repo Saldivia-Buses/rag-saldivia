@@ -1,0 +1,209 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" _grid="50%, 5em" imprime="false">
+    <title>Plan Accion Total</title>
+    <obs></obs>
+<form>
+    <table id="CAL_PLAN_ACCION_TOTAL" label="Plan Accion Total">
+
+    <field id="id_plan_accion" esClave="true" noshow="true">
+        <label>Nro</label>
+        <detalle>plan_accion_id</detalle>
+    </field>
+
+    <field id="seccion_id" noshow="true">
+        <helper xml="rhseccion_qry.xml" type="combo" dir="/ayudas" empty="true">
+            <field id="id_rhseccion" />
+            <field id="nombre_seccion">
+                <expression>LEFT(nombre_seccion,18)</expression>
+            </field>
+            <field id="activa">
+                <condicion operador="=">1</condicion>
+            </field>
+            <field id="linea_id">
+                <condicion operador="=">1</condicion>
+            </field>
+        </helper>
+        <label>Seccion Impacto</label>
+        <help>Seccion Impacto del Plan de Acción</help>
+    </field>
+
+    <field id="origen_planaccion" noZero="true" noshow="true">
+        <helper xml="calorigennconf_crud.xml" type="combo" dir="/calidad/man/" empty="true">
+            <field id="activo">
+                <condicion operador="=">1</condicion>
+            </field>
+            <field id="origen_nconf">
+                <expression>LEFT(origen_nconf,15)</expression>
+            </field>            
+        </helper>
+        <label>Origen</label>
+        <help>Origen del Plan Accion</help>
+    </field>
+
+    <field id="plan_accion_tema_id" noZero="true">
+        <helper xml="tema_planaccion_crud.xml" type="combo" dir="/calidad/man/" empty="true">
+            <field id="activo">
+                <condicion operador="=">1</condicion>
+            </field>
+            <field id="nombre_plan_accion_tema">
+                <expression>LEFT(nombre_plan_accion_tema,15)</expression>
+            </field>            
+        </helper>
+        <label>Tema</label>
+        <help>Tema del Plan Accion</help>
+    </field>
+
+    <field id="descripcion_planaccion" local="true">
+        <label>Asunto</label>
+        <help>Asunto Plan Accion</help>
+        <tipo>varchar</tipo>
+    </field>
+
+    <field id="responsable_planaccion" colstyle="display:none" local="true">
+        <label>Resp.</label>
+        <help>Responsable del Plan de Acción</help>
+        <helper type="combo" id="HTXUSERS" empty="true">
+            <field id="id_usuario"/>
+            <field id="nombre">
+                <expression>CONCAT(Nombre, LEFT(apellido,4))</expression>
+            </field>
+            <field id="baja">
+                <condicion operador="=">0</condicion>
+            </field>
+            <field id="Id_perfil">
+                <condicion operador="!=">14</condicion>
+            </field>
+            <order>
+                <field id="nombre"/>
+            </order>
+        </helper>
+    </field>
+
+    <field id="foto_responsable_planaccion" local="true">
+        <label>Resp.</label>
+    </field>
+
+    <field id="cerrada" noshow="true">
+        <label>Cerrada</label>
+        <help>Cerrada</help>
+        <expression>case when CAL_PLAN_ACCION_TOTAL.cierre_planaccion = '0000-00-00' then 0 else 1 end</expression>
+        <options>
+            <option valor="1">Si</option>
+            <option valor="0">No</option>
+        </options>
+<!--         <condicion operador="=">0</condicion>
+ -->    </field>
+
+    <field id="estado_planaccion" noshow="true">
+        <label>Estado</label>
+        <help>Estado</help>
+        <options>
+            <option valor="0">Activo</option>
+            <option valor="1">Borrador</option>
+            <option valor="2">Anulado</option>
+        </options>
+        <condicion operador="=">0</condicion>
+    </field>
+
+    <field id="max_fecha_acciones_plan" local="true" noshow="true">
+        <!--<expression>@max_fecha_acciones:=(select MAX(PAA.objetivo_planaccion) 
+            FROM CAL_PLAN_ACCION_TOTAL PAT 
+            JOIN CAL_PLAN_ACCION_ACCION PAA on PAA.plan_accion_id = PAT.id_plan_accion
+            where PAT.origen_planaccion = origen_planaccion
+                and PAT.seccion_id = seccion_id
+                and PAT.cierre_planaccion = '0000-00-00')</expression>-->
+        <tipo>date</tipo>
+    </field>
+
+    <field id="cantidad_acciones_plan" noshow="true">
+        <expression>@cant_acciones:=(select count(*) 
+            FROM CAL_PLAN_ACCION_TOTAL PAT 
+            JOIN CAL_PLAN_ACCION_ACCION PAA on PAA.plan_accion_id = PAT.id_plan_accion
+            where PAT.origen_planaccion = origen_planaccion
+                and PAT.seccion_id = seccion_id
+                and PAT.cierre_planaccion = '0000-00-00')</expression>
+    </field>
+
+    <field id="cantidad_acciones_cerradas_plan" noshow="true">
+        <expression>@cant_acciones_cerradas:=(select count(*) 
+            FROM CAL_PLAN_ACCION_TOTAL PAT 
+            JOIN CAL_PLAN_ACCION_ACCION PAA on PAA.plan_accion_id = PAT.id_plan_accion
+            where PAA.cierre_planaccion != '0000-00-00'
+                and PAT.origen_planaccion = origen_planaccion
+                and PAT.seccion_id = seccion_id
+                and PAT.cierre_planaccion = '0000-00-00')</expression>
+    </field>
+
+    <field id="avance_acciones_plan" noshow="true">
+        <expression>@avance_acciones_plan:=(round((@cant_acciones_cerradas/@cant_acciones)*100,2))</expression>
+    </field>
+
+    <field id="tareas_vencidas_acciones_plan" noshow="true">
+        <expression>@tareas_vencidas:=(select sum(case when PAA.objetivo_planaccion &lt; CURDATE() then 1 else 0 end) 
+            FROM CAL_PLAN_ACCION_TOTAL PAT 
+            JOIN CAL_PLAN_ACCION_ACCION PAA on PAA.plan_accion_id = PAT.id_plan_accion
+            where PAA.cierre_planaccion = '0000-00-00'
+                and PAT.origen_planaccion = origen_planaccion
+                and PAT.seccion_id = seccion_id
+                and PAT.cierre_planaccion = '0000-00-00')</expression>
+    </field>
+    <field id="conlink" local="true" noshow="true">
+	<valor></valor>
+    </field>
+
+    <field id="detalle_plan_accion">
+        <attribute id="style">color</attribute>        
+        <label style="text-align:center;font-size:50px;">Detalle</label>
+        <expression>case when @cant_acciones = 0 then '0 %' else concat(round(@avance_acciones_plan), '%') end</expression>
+    </field>
+
+    <field id="color" noshow="true">
+        <expression>'text-shadow:black 0 0 3px;margin-top:-1em;font-size:x-large;font-weight:bold; color:white;text-align:center;'</expression>                    
+    </field>
+
+    <group>
+        <field id="seccion_id" />
+    </group>
+
+    <order>
+        <field id="cerrada" tipoOrden="ASC"/>
+        <field id="max_fecha_acciones_plan" tipoOrden="ASC"/>
+        <field id="avance_acciones_plan" tipoOrden="ASC"/>
+    </order>
+
+</table>
+
+    <join tipo="left">
+      <table id="HTXUSERS" as="RESPONSABLE">
+        <field id="Id_usuario">
+          <condicion operador="=">responsable_planaccion</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join tipo="left">
+      <table id="CAL_PLAN_ACCION_ACCION">
+        <field id="plan_accion_id">
+          <condicion operador="=">id_plan_accion</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join tipo="left">
+      <table id="CAL_ORIGEN_NCONF">
+        <field id="id_origennconf">
+          <condicion operador="=">origen_planaccion</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join tipo="left">
+      <table id="SECCION">
+        <field id="id_seccion">
+          <condicion operador="=">CAL_PLAN_ACCION_TOTAL.seccion_id</condicion>
+        </field>
+      </table>
+    </join>
+
+</form>
+</histrix>  

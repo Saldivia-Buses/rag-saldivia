@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="crud" >
+  <title>Subsistemas</title>
+  <obs/>
+  <form >
+    <table id="GEN_SUBSISTEMAS" label="Subsistemas">
+
+      <fieldGroup>
+
+        <field id="id_subsistema">
+          <label>Código </label>
+          <help>Código de subsistema </help>
+          <actualiza>
+            <field id="regconceptoing_id" destino="subsistema_id"/>
+            <field id="regconceptoegr_id" destino="subsistema_id"/>
+          </actualiza>
+        </field>
+
+        <field id="abreviacion_subsistema">
+          <label>Abreviación</label>
+          <help>Nombre abreviado del subsistema</help>
+        </field>
+
+        <field id="nombre_subsistema">
+          <label>Nombre</label>
+          <help>Nombre del subsistema</help>
+        </field>
+
+        <field id="regconceptoing_id">
+          <helper type="combo" xml="regconcepto_qry.xml" dir="/ayudas" empty="true">
+            <field id="imputacion_concepto">
+              <condicion operador="=">1</condicion>
+            </field>
+          </helper>
+          <label>Cod.Cpto.Rec.Ingreso</label>
+          <help>Codigo de Concepto recibo de Ingreso</help>
+        </field>
+
+        <field id="regconceptoegr_id">
+          <helper type="combo" xml="regconcepto_qry.xml" dir="/ayudas" empty="true">
+            <field id="imputacion_concepto">
+              <condicion operador="=">0</condicion>
+            </field>
+          </helper>
+          <label>Cod.Cpto.Rec.Egreso</label>
+          <help>Codigo de Concepto Recibo de Egreso</help>
+        </field>
+      </fieldGroup>
+
+      <!-- DATOS CONTABLES ************************************************* -->
+
+      <fieldGroup>
+        <if> if (strpos($_SESSION['properties']['modulos'],'contabilidad') != false) return true; </if>
+        <field id="cuenta_debe_id">
+          <helper type="combo" xml="cuentas_habilitadas_qry.xml" dir="/ayudas" empty="true"/>
+          <label>Cta. Ctb. Debe</label>
+        </field>
+        <field id="cuenta_haber_id">
+          <helper type="combo" xml="cuentas_habilitadas_qry.xml" dir="/ayudas" empty="true"/>
+          <label>Cta. Ctb. Haber</label>
+        </field>
+        <field id="cuenta_anticipo_id">
+          <helper type="combo" xml="cuentas_habilitadas_qry.xml" dir="/ayudas" empty="true"/>
+          <label>Cta. Ctb. Anticipos</label>
+        </field>
+
+      </fieldGroup>
+
+      <fieldGroup>
+        <if> if (strpos($_SESSION['properties']['modulos'],'iva') != false) return true; </if>
+        <field id="iva_subsistema">
+          <label>Libro de IVA</label>
+          <helper type="combo">
+        	<option value="0">Ninguno</option>
+        	<option value="1">VENTAS</option>
+        	<option value="2">COMPRAS</option>
+          </helper>
+        </field>
+      </fieldGroup>
+
+    </table>
+  </form>
+</histrix>

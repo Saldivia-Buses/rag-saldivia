@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="abm">
+	<title>Preguntas</title>
+	<obs></obs>
+	<form >
+		<table id="ENCUESTA_PREGUNTA">
+			<title>Preguntas</title>
+
+			<field id="idPregunta" autoinc="true" _noshow="true" deshabilitado="true">
+				<label>Cod</label>
+				<help>Código de Pregunta</help>
+			</field>
+
+			<field id="pregunta">
+				<label>Pregunta</label>
+				<help>Pregunta a realizar en la encuesta</help>
+			</field>
+
+			<order>
+				<field id="idPregunta"/>
+			</order>
+		</table>
+	</form>	   
+</histrix> 

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm">
+	<title>UNIDADES DE MEDIDA</title>
+	<obs></obs>
+	<form >
+		<table id="FSMUNIDS" >
+		    <title>Unidades</title>
+			<field id="unicod">
+				<label>Cod.</label>
+				<help>Codigo de Unidad</help>
+			</field>
+			<field id="uninom">
+				<label>Unidad</label>
+				<help>Nombre de la Unidad</help>
+			</field>
+			<field id="uniabv">
+				<label>Abrev.</label>
+				<help>Abreviatura de la Unidad</help>
+			</field>
+<!--			<field id="uniope">
+				<label>Operacion</label>
+				<help>Operacion a Realizar</help>
+				<options tipo="radiobutton">
+				    <option valor="1">Multiplica</option>
+				    <option valor="2">Divide</option>
+				</options>
+			</field>
+-->			
+			<order>
+				<field id="unicod"></field>
+			</order>
+		</table>
+	</form>	   
+</histrix> 

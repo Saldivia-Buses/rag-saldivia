@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="no"?>
+<histrix tipo="abm">
+  <title>Cuentas Bancarias</title>
+  <obs/>
+  <form >
+    <table id="BCSCUENT" >
+      <title>Cuentas Bancarias</title>
+
+      <field id="siscod" oculto="true">
+        <label>Cod</label>
+      </field>
+      <field id="ccbcod" noshow="true">
+        <label>Codigo</label>
+        <help>Codigo de Cuenta Bancaria</help>
+      </field>
+      <field id="ccbnom" deshabilitado="true">
+        <label>Entidad</label>
+        <help>Nombre de la Entidad Bancaria</help>
+      </field>
+      <field id="cajcod_ing">
+        <label>Concepto Ingreso</label>
+        <helper type="combo" id="CAJCONCE" empty="true">
+          <field id="cajcod"></field>
+          <field id="cajdes"></field>
+          <field id="cajtip" noshow="true">
+            <condicion operador="=" >1</condicion>
+          </field>          
+          <order>
+            <field id="cajcod"></field>
+          </order>
+        </helper> 
+      </field>
+    </table>
+  </form>
+</histrix>

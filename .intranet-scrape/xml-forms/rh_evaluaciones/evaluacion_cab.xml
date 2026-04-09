@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="fichaing" inserta="false" borra="false" modifica="false" imprime="false" log="false" transaccional="true" tooltip="false">
+    <title>Evaluación</title>
+    <obs></obs>
+    <form>
+        <table id="RH_EVALUACIONES">
+
+            <movimientos>
+                <relacion id="evaluacion_ins.xml"/>
+            </movimientos>
+
+            <field id="id_rhevaluacion" autoinc="true" noshow="true" >
+                <condicion operador="=">0</condicion>
+            </field>
+
+            <field id="rhpersona_id" noshow="true" />
+
+            <field id="legajo" tabla="PERSONAL" deshabilitado="true">
+                <label>Legajo</label>
+            </field>
+
+            <field id="evaluado">
+                <expression>CONCAT(PERSONAL.apellido, ' ', PERSONAL.Nombre)</expression>
+                <label modpos="nobr">Evaluado</label>
+                <size>50</size>
+            </field>
+
+            <field id="id_seccion" tabla="PERSONAL" deshabilitado="true">
+                <helper type="combo" id="SECCION">
+                    <field id="id_seccion"/>
+                    <field id="nombre"/>
+                    <field id="activa" noshow="true">
+                        <condicion operador="=">1</condicion>
+                    </field>
+                </helper>
+                <label>Puesto</label>
+            </field>
+
+            <field id="fec_evaluacion">
+                <label modpos="nobr">Fecha Evaluación</label>
+                <valor>today</valor>
+            </field>
+
+            <field id="evaluador_id" deshabilitado="false">
+                <helper type="combo" id="PERSONAL" empty="true">
+                    <field id="idPersona">
+                        <condicion operador="IN(">SELECT PERSONAL.idPersona FROM SECCION LEFT JOIN PERSONAL ON SECCION.idSupervisor = PERSONAL.legajo)</condicion>
+                    </field>
+                    <field id="nombre">
+                        <expression>CONCAT(apellido, ' ', Nombre)</expression>
+                    </field>
+                    <field id="fechaEgreso">
+                        <condicion operador="=">'0000-00-00'</condicion>
+                    </field>
+                    <order>
+                        <field id="nombre"/>
+                    </order>
+                </helper>
+                <label>Evaluador</label>
+                <valor>0</valor>
+            </field>
+
+            <field id="tipo_evaluacion">
+                <label modpos="nobr">Tipo</label>
+                <options>
+                    <option valor="1">Evaluación</option>
+                    <option valor="2">Sondeo</option>
+                </options>
+                <actualiza>
+                    <field id="detalle" destino="tipo_evaluacion" />
+                </actualiza>
+            </field>
+
+            <field id="revisor_id">
+                <helper type="combo" id="PERSONAL" empty="true">
+                    <field id="idPersona">
+                        <condicion operador="IN(">SELECT PERSONAL.idPersona FROM SECCION LEFT JOIN PERSONAL ON SECCION.idSupervisor = PERSONAL.legajo)</condicion>
+                    </field>
+                    <field id="nombre">
+                        <expression>CONCAT(apellido, ' ', Nombre)</expression>
+                    </field>
+                    <field id="fechaEgreso">
+                        <condicion operador="=">'0000-00-00'</condicion>
+                    </field>
+                    <order>
+                        <field id="nombre"/>
+                    </order>
+                </helper>
+                <label>Revisor</label>
+                <valor>376</valor>
+            </field>
+
+            <field id="puntos_fuertes">
+                <label>Puntos fuertes</label>
+                <size>200</size>
+            </field>
+
+            <field id="puntos_a_mejorar">
+                <label modpos="nobr">Puntos a mejorar</label>
+                <size>200</size>
+            </field>
+
+            <field id="conclusiones">
+                <label>Conclusiones</label>
+                <size>200</size>
+            </field>
+
+            <field id="descargo_evaluado">
+                <label modpos="nobr">Descargo del evaluado</label>
+                <size>200</size>
+            </field>
+
+            <field id="separador_1" local="true" colspan="8" deshabilitado="true" style="height:2px;" />
+
+            <field id="detalle" local="true" colspan="8">
+                <helper type="object" xml="evaluacion_ing.xml" />
+            </field>
+
+            <field id="aporte_acumulado" local="true" noshow="true">
+                <label>Aporte</label>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+        </table>
+
+        <join tipo="left">
+            <table id="PERSONAL">
+                <field id="idPersona">
+                    <condicion operador="=">RH_EVALUACIONES.rhpersona_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="RH_EVALUACION_RESPUESTAS">
+                <field id="rhevaluacion_id">
+                    <condicion operador="=">RH_EVALUACIONES.id_rhevaluacion</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

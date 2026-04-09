@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="delete">
+       <title>retenciones 1598</title>
+        <obs></obs>
+               <form >
+					<table id="RET1598" label="ANULACION ORDEN DE PAGO" >
+
+						<field id="ctacod" id_temp="ctacod" esClave="true">
+						</field>
+						<field id="compfec" id_temp="movife" esClave="true">
+						</field>
+						
+						<field id="compnro" id_temp="movinc" esClave="true">
+						</field>
+						<field id="codnpv" id_temp="movipv" esClave="true">
+						</field>
+						
+						<field id="codcomp" id_temp="movicc" esClave="true">
+						</field>
+						
+						
+					</table>
+               </form>
+        </histrix>

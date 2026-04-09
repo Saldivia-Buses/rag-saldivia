@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="ing">
+	<title>Plan de Cuentas</title>
+	<obs></obs>
+	<form >
+		<table id="CTBCUENT" >
+			<movimientos cabecera="ctbcuent_duplica_cab.xml">
+				<relacion id="ctbcuent_duplica_ingmov.xml">
+					<!-- aca tengo que establecer la condicion para que se haga el insert -->
+				</relacion>
+			</movimientos>
+						
+			<title>Plan de cuentas</title>
+			<field id="siscod"  deshabilitado="true">
+			</field>
+			<field id="ctbcod"  deshabilitado="true">
+				<label>Codigo</label>
+				<help>Codigo de Cuenta Contable</help>
+			</field>
+			<field id="ctbnom" deshabilitado="true">
+				<label>Nombre</label>
+				<help>Nombre de la Cuenta</help>
+			</field>
+			<field id="ctbsup"  deshabilitado="true">
+				<label>Cta. Nivel Sup.</label>
+				<help>Codigo de Cuenta de Nivel Superior</help>
+			</field>
+			<field id="ctbtip"  deshabilitado="true">
+				<label>ctbtip</label>
+			</field>
+			<field id="ctbhab" deshabilitado="true">
+				<label>Habil.</label>
+				<help>Cuenta Habilitada o Deshabilitada</help>
+				<options>
+				    <option valor="1">Habilitada</option>
+				    <option valor="2">Deshabilitada</option>
+				</options>
+			</field>
+			<field id="ctbniv"  deshabilitado="true">
+				<label>ctbniv</label>
+			</field>
+			<field id="ctbsub"  deshabilitado="true">
+				<label>ctbsub</label>
+			</field>
+		</table>
+	</form>	   
+</histrix> 

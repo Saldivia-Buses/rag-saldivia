@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="consulta">
+	<title>IVAPERIODO</title>
+	<obs></obs>
+	<form >
+		<table id="IVAPERIODO" >
+			<title>Tabla de Periodos</title>
+			<field id="maxfecha">
+				<expression>max(LAST_DAY(concat(year,'-',mes,'-01')))</expression>
+			</field>
+			<field id="minfecha">
+				<expression>min(date(concat(year,'-',mes,'-01')))</expression>
+			</field>			
+<!--			<field id="tipoiva" noselect="true">
+				<label>Tipo</label>
+				<help>Tipo de Iva</help>
+			</field> -->
+			<field id="year" noselect="true">
+				<label>Año</label>
+				<help>Año</help>
+			</field>
+			<field id="mes" noselect="true">
+				<label>Mes</label>
+				<help>Mes</help>
+		
+			</field>
+			<!--
+			<field id="estado" noselect="true">
+				<label>estado</label>
+				<help>estado</help>
+			</field> -->
+			<group>
+				<field id="tipoiva"></field>
+			</group> 
+			
+			
+		</table>
+	</form>	   
+</histrix> 

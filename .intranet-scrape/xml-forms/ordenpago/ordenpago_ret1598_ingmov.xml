@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert" grabafinal="true" xmlImpresion="ret1598_reimp.xml" dirImpresion="/retenciones">
+	<title>RETENCIONES</title>
+	<obs/>
+	<form >
+		<table id="RET1598" label="retenciones" idCampoCond="RI" CondExp=" &gt; 0">
+			<field id="compnro"  id_cab="movnroOP"  >
+				<detalle>compnro</detalle>
+			</field>
+			<field id="codcomp"  id_cab="concod" >
+				
+			</field>
+			<field id="codnpv"   id_cab="movnpv"  >
+				
+			</field>
+			<field id="compfec"  id_cab="movfec"  >
+
+			</field>
+			<field id="ctacod"   id_cab="ctacod"  >
+				<detalle>ctacod</detalle>
+			</field>
+			<field id="ctadir"   id_cab="ctadir"  >
+				
+			</field>
+			<field id="ctaloc"   id_cab="ctaloc"  >
+				
+			</field>
+			<field id="ctanib"   id_cab="ctanib"  >
+				
+			</field>
+			<field id="ctanom"   id_cab="ctanom"  >
+				
+			</field>
+			<field id="ctanro"   id_cab="ctanro"  >
+				
+			</field>
+			<field id="fecret"   id_cab="movfec"  >
+
+			</field>
+			<field id="nroret"   id_cab="nroret"  >
+				<detalle>nroret</detalle>
+			</field>
+			<field id="totcomp"  id_temp="movimp2" >
+			</field>
+			<field id="totimpon" id_temp="Impgraprop">
+			</field>
+			<field id="alicuota" id_cab="por1598" >
+			</field>
+			<field id="totret"   id_temp="R_I2"  >
+
+			</field>
+		</table>
+	</form>
+</histrix>

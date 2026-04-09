@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert">
+  <title>Asiento Detalle</title>
+  <obs/>
+  <consulta>
+    <table id="CTB_DETALLES" idCampoCond="grabar">
+      <field id="movimiento_id" lastId="ctbmovimiento_ins.xml"/>
+      <field id="referencia" id_temp="referencia"/>
+      <field id="cuenta_id" id_temp="cuenta_id"/>
+      <field id="orden" id_temp="_ORDEN"/>
+      <field id="importe" id_temp="importe"/>
+      <field id="doh" id_temp="doh"/>
+    </table>
+  </consulta>
+</histrix>

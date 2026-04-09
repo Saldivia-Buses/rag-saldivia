@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" limit="1">
+  <title />
+  <obs />
+  <form>
+    <table id="CTB_DETALLES" label="Imp. Libro diario">
+
+        <field id="id_detalle" noshow="true" print="false" />
+
+        <field id="nroprox_hoja" noshow="true" local="true" />
+
+        <field id="movimiento_id" noshow="true" print="false" />
+
+        <field id="subsistema_id" noshow="true" tabla="REG_MOVIMIENTOS" />
+
+        <field id="ejercicio_id" noshow="true" print="false" tabla="CTB_MOVIMIENTOS">
+            <label>Ejercicio</label>
+        </field>
+
+        <field id="concepto_id" noshow="true" print="false" tabla="CTB_MOVIMIENTOS">
+            <label>Concepto</label>
+        </field>
+
+        <field id="desde_fecha" noshow="true" local="true" print="false">
+            <label>Desde</label>
+            <tipo>date</tipo>
+        </field>
+
+        <field id="hasta_fecha" noshow="true" local="true" print="false">
+            <label>Hasta</label>
+            <tipo>date</tipo>
+        </field>
+
+        <field id="fecha_movimiento" tabla="CTB_MOVIMIENTOS" noshow="true">
+            <label>Fecha</label>
+            <condicion operador="&gt;=">str_to_date('[__desde_fecha__]','%d/%m/%Y') and CTB_MOVIMIENTOS.fecha_movimiento &lt;= str_to_date('[__hasta_fecha__]','%d/%m/%Y')</condicion>
+            <tipo>date</tipo>
+        </field>
+
+        <field id="fecha_imp" repeat="false" PDFcolWidth="17">
+            <label>Fecha</label>
+            <expression sql="true"><![CDATA[select fecha_movimiento 
+                                    from CTB_MOVIMIENTOS 
+                                    where fecha_movimiento >= '[__desde_fecha__]' and 
+                                          fecha_movimiento <= '[__hasta_fecha__]' and 
+                                          ejercicio_id = '[__ejercicio_id__]' and 
+                                          concepto_id = '[__concepto_id__]' and 
+                                          referencia NOT LIKE '%CIERRE DE CAJA%' and
+                                          referencia != 'CIERRE EJERCICIO' and
+                                          referencia != 'REFUNDICION EJERCICIO' and
+                                          regmovim_id IS  NULL
+                                    order by CTB_MOVIMIENTOS.fecha_movimiento DESC 
+                                    limit 1]]></expression>
+            <tipo>date</tipo>
+        </field>
+
+        <field id="count_asientos" PDFcolWidth="13" PDFalign="C">
+            <label>Nro</label>
+            <expression sql="true"><![CDATA[select (count(*) + 1 + '[__nroprox_hoja__]')
+                                                from CTB_MOVIMIENTOS
+                                                where concepto_id = '[__concepto_id__]' and
+                                                      ejercicio_id = '[__ejercicio_id__]' and
+                                                      fecha_movimiento >= '[__desde_fecha__]' and
+                                                      fecha_movimiento <= '[__hasta_fecha__]' and
+                                                      regmovim_id IS NULL and
+                                                      referencia not like '%CIERRE DE CAJA%' and
+                                                      referencia != 'CIERRE EJERCICIO' and
+                                                      referencia != 'REFUNDICION EJERCICIO']]></expression>
+        </field>
+
+        <field id="cuenta_id" noshow="true" />
+
+        <field id="oculta_referencia" local="true" noshow="true" />
+        
+        <field id="tipo" local="true" PDFcolWidth="15">
+            <label>Tipo</label>
+            <valor>Ventas</valor>            
+            <attribute id="print">oculta_referencia</attribute>
+        </field>
+
+        <field id="detalle" local="true">
+          <helper xml="det_ventas_imp.xml" type="object">
+            <parameter source="subsistema_id"  target="subsistema_id" />
+            <parameter source="ejercicio_id" target="ejercicio_id" />
+            <parameter source="concepto_id" target="concepto_id" />
+            <parameter source="fecha_desde" target="fecha_desde" />
+            <parameter source="fecha_hasta" target="fecha_hasta" />
+          </helper>
+        </field>
+
+        <group>
+            <field id="subsistema_id" tabla="REG_MOVIMIENTOS" />
+            <field id="cuenta_id" />
+            <field id="doh" />
+        </group>
+
+        <order>
+            <field id="doh" />
+        </order>
+
+    </table>
+
+    <join>
+        <table id="CTB_MOVIMIENTOS">
+            <field id="id_movimiento">
+                <condicion operador="=">CTB_DETALLES.movimiento_id</condicion>
+            </field>
+        </table>
+    </join>
+
+    <join>
+        <table id="REG_MOVIMIENTOS">
+            <field id="id_regmovim">
+                <condicion operador="=">CTB_MOVIMIENTOS.regmovim_id</condicion>
+            </field>
+            <field id="subsistema_id">
+                <condicion operador="=">'02'</condicion>
+            </field>
+        </table>
+    </join>
+
+  </form>
+</histrix>

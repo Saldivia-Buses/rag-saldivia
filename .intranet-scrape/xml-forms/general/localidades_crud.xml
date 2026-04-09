@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="crud" _paginar="200" preloadData="false">
+	<title>Localidades</title>
+	 <obs></obs>
+		<form >
+		    <table id="GEN_LOCALIDADES" label="Localidades">
+
+				<filters>
+
+					<field id="nacionalidad_id">
+						<label>País</label>
+						<operador>=</operador>
+					</field>
+
+					<field id="provincia_id">
+						<label modpos="nobr">Provincia</label>
+						<operador>=</operador>
+					</field>
+
+					<field id="nombre_localidad">
+						<label modpos="nobr">Localidad</label>
+						<operador>like</operador>
+					</field>
+					<field id="cp">
+						<label modpos="nobr">C.Postal</label>
+						<operador>=</operador>
+					</field>
+
+				</filters>	
+
+				<field id="nacionalidad_id" _required="true" local="true" style="padding:2px 2px 2px 2px;width:250px;vertical-align:middle;">
+				    <label >País</label>
+				    <helper id="GEN_NACIONALIDADES" type="combo" empty="true">
+				        <field id="id_nacionalidad" >
+				        	<condicion operador="=">14 OR id_nacionalidad = 16</condicion>
+				        </field>
+				        <field id="pais" />
+							<order>
+			           			<field id="pais" />
+							</order>
+			    	</helper>
+			    	<actualiza>
+	            		<field id="provincia_id" destino="nacionalidad_id"/>
+	         		</actualiza>
+			    </field>    
+
+			    <field id="provincia_id" _sincelda="true" style="padding:2px 2px 2px 2px;width:250px;vertical-align:middle;">
+	          		<label>Provincia</label>
+	          		<helper id="GEN_PROVINCIAS" type="combo" empty="true">
+				        <field id="id_provincia" />
+				        <field id="nombre_provincia" />
+				        <field id="nacionalidad_id" oculto="true"/>
+							<order>
+			           			<field id="nombre_provincia" />
+							</order>
+			    	</helper>
+	          		<actualiza>
+	            		<field id="id_localidad" destino="provincia_id"/>
+	          		</actualiza>
+	        	</field>
+
+				<field id="nombre_localidad">
+					<label>Localidad</label>
+					<help>Nombre de la localidad</help>
+					<size>25</size>
+				</field> 
+
+				<field id="cp">
+					<label>Código Postal</label>
+					<help>Código Postal</help>
+				</field>
+
+				<field id="ddn">
+					<label>Prefijo DDN</label>
+					<help>Prefijo de la localidad</help>
+				</field>
+
+				<order>
+					<field id="nombre_localidad" />
+				</order>
+		    </table>
+		</form>
+    </histrix>	

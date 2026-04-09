@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="chart">
+    <title>Observaciones % x Seccion Totales</title>
+    <obs />
+    <form>
+        <table id="PROD_CONTROL_MOVIM">
+
+            <grafico id="calidad">
+                <ancho>500</ancho>
+                <tipo>L</tipo>
+                <title>Observaciones % x Seccion Totales</title>
+                <etiquetas>periodo</etiquetas>-->
+                <serie>cantidad_recepcion</serie>
+                <serie>cantidad_setup</serie>
+                <serie>cantidad_herreria</serie>
+                <!--<serie>cantidad_accesorios</serie>-->
+                <serie>cantidad_chaperia</serie>
+                <serie>cantidad_plasticos</serie>
+                <serie>cantidad_pintura</serie>
+                <serie>cantidad_terminacion</serie>
+                <serie>cantidad_entrega</serie>
+            </grafico>
+
+            <filters>
+                <field id="fecha_control">
+                    <label>Desde</label>
+                    <valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m" ,strtotime('-12 month')) , 1, date("Y") -  1 ))</valor>
+                    <operador>&gt;=</operador>
+                </field>
+
+                <field id="fecha_control">
+                    <label>Hasta</label>
+                    <valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m" ,strtotime('-0 month')) , 1, date("Y") ) - 1)</valor>
+                    <operador>&lt;=</operador>
+                </field>
+            </filters>
+
+            <field id="fecha_control" noshow="true" />
+
+            <field id="year" oculto="true" noshow="true">
+                <label>Año</label>
+                <expression>YEAR(PROD_CONTROL_MOVIM.fecha_control)</expression>
+            </field>
+
+            <field id="mes" noshow="true">
+                <label>Mes</label>
+                <expression>MONTH(PROD_CONTROL_MOVIM.fecha_control)</expression>
+            </field>
+
+            <field id="periodo">
+                <label>Periodo</label>
+                <expression>UPPER(CONCAT((CASE MONTH(PROD_CONTROL_MOVIM.fecha_control) 
+                    WHEN 1 THEN 'Ene'
+                    WHEN 2 THEN 'Feb'
+                    WHEN 3 THEN 'Mar'
+                    WHEN 4 THEN 'Abr'
+                    WHEN 5 THEN 'May'
+                    WHEN 6 THEN 'Jun'
+                    WHEN 7 THEN 'Jul'
+                    WHEN 8 THEN 'Ago'
+                    WHEN 9 THEN 'Sep'
+                    WHEN 10 THEN 'Oct'
+                    WHEN 11 THEN 'Nov'
+                    WHEN 12 THEN 'Dic' END), "'", RIGHT(YEAR(PROD_CONTROL_MOVIM.fecha_control), 2)))</expression>
+            </field>
+
+            <field id="cantidad_chaperia">
+                <label>Chaperia</label>
+                <expression>((SUM(CASE WHEN PROD_CONTROLES.seccion_id = '3' AND PROD_CONTROL_MOVIM.no_conforme = 1 THEN 1 ELSE 0 END) / SUM(CASE WHEN PROD_CONTROLES.seccion_id = '3' and PROD_CONTROL_MOVIM.no_aplica = 0 THEN 1 ELSE 0 END)) * 100)</expression>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="cantidad_terminacion">
+                <label>Terminacion</label>
+                <expression>((SUM(CASE WHEN PROD_CONTROLES.seccion_id = '5' AND PROD_CONTROL_MOVIM.no_conforme = 1 THEN 1 ELSE 0 END) / SUM(CASE WHEN PROD_CONTROLES.seccion_id = '5' and PROD_CONTROL_MOVIM.no_aplica = 0 THEN 1 ELSE 0 END)) * 100)</expression>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="cantidad_recepcion">
+                <label>Recepcion</label>
+                <expression>((SUM(CASE WHEN PROD_CONTROLES.seccion_id = '15' AND PROD_CONTROL_MOVIM.no_conforme = 1 THEN 1 ELSE 0 END) / SUM(CASE WHEN PROD_CONTROLES.seccion_id = '15' and PROD_CONTROL_MOVIM.no_aplica = 0 THEN 1 ELSE 0 END)) * 100)</expression>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="cantidad_pintura">
+                <label>Pintura</label>
+                <expression>((SUM(CASE WHEN PROD_CONTROLES.seccion_id = '4' AND PROD_CONTROL_MOVIM.no_conforme = 1 THEN 1 ELSE 0 END) / SUM(CASE WHEN PROD_CONTROLES.seccion_id = '4' and PROD_CONTROL_MOVIM.no_aplica = 0 THEN 1 ELSE 0 END)) * 100)</expression>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="cantidad_entrega">
+                <label>Entrega</label>
+                <expression>((SUM(CASE WHEN PROD_CONTROLES.seccion_id = '6' AND PROD_CONTROL_MOVIM.no_conforme = 1 THEN 1 ELSE 0 END) / SUM(CASE WHEN PROD_CONTROLES.seccion_id = '6' and PROD_CONTROL_MOVIM.no_aplica = 0 THEN 1 ELSE 0 END)) * 100)</expression>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="cantidad_herreria">
+                <label>Herreria</label>
+                <expression>((SUM(CASE WHEN PROD_CONTROLES.seccion_id = '2' AND PROD_CONTROL_MOVIM.no_conforme = 1 THEN 1 ELSE 0 END) / SUM(CASE WHEN PROD_CONTROLES.seccion_id = '2' and PROD_CONTROL_MOVIM.no_aplica = 0 THEN 1 ELSE 0 END)) * 100)</expression>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="cantidad_setup">
+                <label>Setup</label>
+                <expression>((SUM(CASE WHEN PROD_CONTROLES.seccion_id = '25' AND PROD_CONTROL_MOVIM.no_conforme = 1 THEN 1 ELSE 0 END) / SUM(CASE WHEN PROD_CONTROLES.seccion_id = '25' and PROD_CONTROL_MOVIM.no_aplica = 0 THEN 1 ELSE 0 END)) * 100)</expression>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="cantidad_plasticos">
+                <label>Plasticos</label>
+                <expression>((SUM(CASE WHEN PROD_CONTROLES.seccion_id = '23' AND PROD_CONTROL_MOVIM.no_conforme = 1 THEN 1 ELSE 0 END) / SUM(CASE WHEN PROD_CONTROLES.seccion_id = '23' and PROD_CONTROL_MOVIM.no_aplica = 0 THEN 1 ELSE 0 END)) * 100)</expression>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <!--<field id="cantidad_accesorios">
+                <label>Accesorios</label>
+                <expression>((SUM(CASE WHEN PROD_CONTROLES.seccion_id = '33' AND PROD_CONTROL_MOVIM.no_conforme = 1 THEN 1 ELSE 0 END) / SUM(CASE WHEN PROD_CONTROLES.seccion_id = '33' THEN 1 ELSE 0 END)) * 100)</expression>
+                <tipo>custom_numeric</tipo>
+            </field>-->
+
+            <group>
+                <field id="year" />
+                <field id="mes" />
+            </group>
+
+            <order>
+                <field id="fecha_control" />
+            </order>
+
+        </table>
+
+        <join>
+            <table id="PROD_CONTROLES">
+                <field id="id_prodcontrol">
+                    <condicion operador="=">PROD_CONTROL_MOVIM.prodcontrol_id</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

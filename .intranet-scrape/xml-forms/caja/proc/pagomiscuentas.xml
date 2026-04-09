@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   
+<histrix tipo="consulta" >
+       <title>CIERRE</title>
+        <obs></obs>
+               <form >
+		<table id="REG_MOVIMIENTOS" label="Detalle">
+			<field id="registro">
+				<label>regitro</label>
+				<expresion>5</expresion>
+			</field>
+			<field id="regcuenta">
+				<label>cuenta</label>
+				<expresion>lpad(regcuenta_id,19,'0')</expresion>
+			</field>
+			<field id="comprobante">
+				<label>comprobante</label>
+				<expresion>concat(lpad(concepto_id,5,'0') ,letra_movimiento, lpad(puesto_movimiento,4,'0'), lpad(nro_movimiento,8,'0'), 
+				lpad(cuota_movimiento,2,'0'))
+				</expresion>
+			</field>
+			<field id="moneda">
+				<label>moneda</label>
+				<expresion>0</expresion>
+			</field>
+			<field id="impvto1">
+				<label>impvto1</label>
+				<expresion>
+ifnull((select  concat(replace(fecha_vencimiento ,'-','') , lpad(round(ifnull(total_vencimiento,0) * 100 ,0),11,'0'))		from REG_VENCIMIENTOS where REG_VENCIMIENTOS.regmovim_id = REG_MOVIMIENTOS.id_regmovim and REG_VENCIMIENTOS.numero_vencimiento =  1 ),lpad('0',19,'0'))				</expresion>
+			</field>
+			<field id="impvto2" tabla="REG_MOVIMIENTOS">
+				<label>impvto2</label>
+				<expresion>
+ifnull((select  concat(replace(fecha_vencimiento ,'-','') , lpad(round(ifnull(total_vencimiento,0) * 100 ,0),11,'0'))		from REG_VENCIMIENTOS where REG_VENCIMIENTOS.regmovim_id = REG_MOVIMIENTOS.id_regmovim and REG_VENCIMIENTOS.numero_vencimiento =  2 ),lpad('0',19,'0'))
+				</expresion>
+			</field>
+			<field id="impvto3" >
+				<label>impvto3</label>
+				<expresion>ifnull((select  concat(replace(fecha_vencimiento ,'-','') , lpad(round(ifnull(total_vencimiento,0) * 100 ,0),11,'0'))		from REG_VENCIMIENTOS where REG_VENCIMIENTOS.regmovim_id = REG_MOVIMIENTOS.id_regmovim and REG_VENCIMIENTOS.numero_vencimiento =  3 ),lpad('0',19,'0'))
+				</expresion>
+			</field>
+
+			<field id="filler">
+				<label>filler</label>
+				<expresion>lpad('0',19,'0')</expresion>
+			</field>
+ 
+			<field id="referenciaant" >
+				<label>referenciaAnt</label>
+				<expresion>lpad(regcuenta_id,19,'0')</expresion>
+			</field>
+			<field id="referencia_l">
+				<label>referencia_l</label>
+				<expresion>rpad(ifnull(referencia_movimiento,''),40,'-')</expresion>
+			</field>
+			<field id="referencia_c">
+				<label>referencia_c</label>
+				<expresion>rpad(ifnull(referencia_movimiento,''),15,'-')</expresion>
+			</field>
+			<field id="cod_barra" >
+				<label>cod_barra</label>
+					<expresion>rpad(ifnull(barcode_movimiento,''),60,'-')</expresion>
+			</field>
+			<field id="filler1" >
+				<label>filler1</label>
+				<expresion>rpad('0',29,'0')</expresion>
+			</field>
+			<field id="concepto_id" noshow="true">
+				<label>concepto</label>
+				<condicion operador="=">13</condicion>
+			</field>
+			<field id="saldo_movimiento" noshow="true">
+				<label>Saldos</label>
+				<condicion operador="!=">0</condicion>
+			</field>
+			
+		</table>
+		<join>
+			<table id="REG_VENCIMIENTOS">
+				<field id="regmovim_id">
+				    <condicion operador="=">id_regmovim</condicion>
+				</field>
+			</table>
+		</join>
+		</form>
+
+        </histrix>
+
+

@@ -1,0 +1,447 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<histrix tipo="crud" log="true" borra="false" path="/archivos/noconformidades/" inserta="false">
+    <title>Análisis de No Conformidad</title>
+    <obs></obs>
+    <form >
+        <table id="CAL_NOCONFORMIDADES" >
+            <title>Estados</title>
+            <filters>
+        <!--
+                <field id="origennconf_id">
+                    <label>Origen</label>
+                    <help>Origen de la No conformidad</help>
+                    <operador>=</operador>
+                </field>
+
+                <field id="rhseccion_id">
+                    <label>Seccion</label>
+                    <help>Seccion de la No conformidad</help>
+                    <operador>=</operador>
+                </field>                 
+                <field id="fecha_nconf" >
+                    <label >Desde Fecha</label>
+                    <help>Fecha de No conformidad</help>
+                    <operador>&gt;=</operador>
+                </field>
+                <field id="fecha_nconf" >
+                    <label modpos="nobr">Hasta Fecha</label>
+                    <help>Fecha de No conformidad</help>
+                    <operador>&lt;=</operador>
+                </field>
+			-->	
+                <field id="estadonconf_id">
+                    <label>Estado</label>
+                    <help>Estado de la No conformidad</help>
+                    <operador>=</operador>
+                    <valor>5</valor>
+                </field>				
+				<field id="filt_resp" deshabilitado="false" sincelda="true">
+					<label modpos="nobr">Responsable</label>
+                </field>
+		<field id="descripcion_nconf">
+					<label colspan="8">Descripcion</label>
+		    <operador>like</operador>
+		</field>
+
+            </filters>
+            <fieldGroup deshabilitado="true" >
+				
+                <field id="id_noconformidad" tipoOrden="DESC">
+					<helper type="link" xml="noconformidad_ficha.xml" dir="/calidad/qry">
+						<parameter source="id_noconformidad" target="id_noconformidad" />		
+					</helper>
+                    <label modpos="nobr" style="text-align:center;color:#444;font-size:14px;" Formstyle="display:none;">Nro</label>
+                    <help>Numero de No conformidad</help>
+                </field>
+
+
+				<field id="nronconf" colstyle="display:none;">
+					<expression>CAL_NOCONFORMIDADES.id_noconformidad</expression>
+                    <label modpos="nobr" style="font-size:18px;">Nro </label>
+				</field>
+
+				
+				<field id="fecha_nconf" tipoOrden="DESC">
+                    <label >Fecha</label>
+                    <help>Fecha de No conformidad</help>
+                    <valor>today</valor>
+                </field>
+
+				<field id="descripcion_nconf" _cellMaxLength="120"  deshabilitado="false">
+                    <label colspan="3">Descripcion</label>
+                    <help>Descripción de la no conformidad</help>
+                    <size>200</size>
+					<tipo>varchar</tipo>
+                </field>
+
+				<field id="origennconf_id" noZero="true">
+                    <helper xml="calorigennconf_qry.xml" type="combo" dir="/ayudas" empty="true"/>
+                    <label>Origen</label>
+                    <help>Origen de la No conformidad</help>
+                </field>
+
+				<field id="rhseccion_id" noZero="true">
+                    <helper xml="rhseccion_qry.xml" type="combo" dir="/ayudas" empty="true" />
+                    <label modpos="nobr">Seccion</label>
+                    <help>Seccion de la No conformidad</help>
+                </field>
+
+		      	<field id="log" local="true" linkint="nconf_log.xml" linkdes="Historial" print="false" >
+		            <label getStyle="maxfec"  Formstyle="display:none;">Ult.Modif</label>
+		            <if exp="'max_fec' == 'today'">
+		              <true>'HOY'</true>
+		              <false>('max_fec'=='ayer')?'Ayer': (('max_fec' != '')?date('d/m', strtotime('max_fec')):'')</false>
+		            </if>                
+		            <paring destino="num">id_noconformidad</paring>
+		        </field>
+				
+				<field id="max_fec" noshow="true" tipoOrden="DESC">
+		          <expression>(SELECT MAX(fecha) from HTXLOG  where ( HTXLOG.xmlprog = 'analisis_nconf.xml' or HTXLOG.xmlprog = 'calaccionesnconf1_crud.xml' or HTXLOG.xmlprog = 'calaccionesnconf2_crud.xml' or HTXLOG.xmlprog = 'calaccionesnconf3_crud.xml')
+		                and ( HTXLOG.obs like CONCAT('%Nro: ', CAL_NOCONFORMIDADES.id_noconformidad, ',%') or  HTXLOG.obs like concat('% noconformidad_id: ', CAL_NOCONFORMIDADES.id_noconformidad,',%')))</expression>
+		        </field>
+
+		        <field id="maxfec" local="true" noshow="true" print="false">
+		            <label>1</label>
+		            <if exp="'max_fec' == 'today'">
+		              <true>'font-size:17px;color:red;font-weight:bold;text-decoration: blink;'</true>
+		              <false>('max_fec'=='ayer')?'font-size:17px;color:blue;font-weight:bold;':'font-size:11px;color:green;font-weight:bold;'</false>
+		            </if>
+		            <tipo>varchar</tipo>
+		        </field>
+
+		        <field id="today" noshow="true" print="false">
+		      		<expression>DATE(NOW())</expression>
+		        </field>
+		        <field id="ayer"  noshow="true" print="false">
+		     		<expression>DATE_SUB(curdate(), INTERVAL 1 DAY)</expression>
+		        </field>				
+								
+				<field id="regcuenta_id" deshabilitado="false" _noshow="true">
+					<helper type="external" id="REG_CUENTA">
+						<field id="id_regcuenta" />
+						<field id="nombre_cuenta" >
+                    		<expression>(case when nombre_fantasia != '' then nombre_fantasia else nombre_cuenta end) </expression> 
+							<detalle>nombre_cuenta</detalle>
+						</field>
+						<field id="subsistema_id">
+							<condicion operador="IN">('01', '02')</condicion>
+						</field>
+						<field id="baja">
+						    <condicion operador="=">0</condicion>
+						</field>
+					</helper>
+					<label>ctaid</label>
+
+                </field> 
+
+				<field id="subsistema_id" deshabilitado="true" noshow="true" colstyle="display:none;">
+					<options>
+						<option valor=""></option>
+						<option valor="01">Proveedor</option>
+						<option valor="02">Cliente</option>
+					</options>
+					<label>Sistema</label>
+					<size>4</size>
+<!--					<actualiza>
+						<field id="regcuenta_id" destino="siscod"/>
+					</actualiza>                                   -->
+                </field>
+
+
+		<field id="nombre_cuenta" deshabilitado="false" autocompletar="true" local="true" >
+
+                    <label colspan="3" >Cliente/Prov</label>
+                    <expression>(case when REG_CUENTA.nombre_fantasia != '' then REG_CUENTA.nombre_fantasia else REG_CUENTA.nombre_cuenta end) </expression> 
+
+<!--                    <expression>(select (case when ctafan != '' then ctafan else CCTCUENT.ctanom end) from CCTCUENT where ctacod = regcuenta_id and siscod = subsistema_id)</expression> -->
+<!--                        <helper type="external" id="CCTCUENT" _xml="HLPcctcuent.xml" _dir="/ayudas" empty="true">
+						    <field id="ctacod" noshow="true">
+							<detalle>regcuenta_id</detalle>
+						    </field>
+
+							<field id="nombre">
+								<expression having="false">(case when ctafan != '' then ctafan else CCTCUENT.ctanom end)</expression>
+								<detalle>nombre_cuenta</detalle>
+							</field>
+							<field id="ctacod" noshow="true">
+							<detalle>regcuenta_id</detalle>
+							</field>
+							<field id="siscod" noshow="true">
+								<detalle>subsistema_id</detalle>
+<<<<<<< HEAD
+							</field>
+
+						<order>
+						<field id="ctafan"/>
+						</order>
+					</helper>   
+					<size>40</size>               
+				</field> 
+=======
+						    </field>
+
+						    <field id="cod" _noshow="true">
+							    <expression>(case when '01' then 'Proveedor' else 'Cliente' end)</expression>
+						    </field>
+						    
+			    <order>
+				<field id="ctafan"/>
+			    </order>
+			</helper>   
+			-->
+			<size>40</size>               
+                </field> 
+
+
+
+				
+				<field id="stkarticulo_id" noZero="true">
+                    <label colspan="3">Artículo</label>
+					<helper type="combo" xml="stkarticulo_autocomplete_qry.xml" dir="/ayudas" empty="true">
+					</helper>                     
+                </field>
+
+		<field id="login_id" colstyle="display:none;">
+		    <expression>CONCAT(creador.apellido, ' ', creador.Nombre)</expression>
+		    <label>Creador</label>
+                </field>
+
+				<field id="responsables">
+		    <expression><![CDATA[
+		    IFNULL((CASE WHEN 
+		    (SELECT  
+		    REPLACE(GROUP_CONCAT(DISTINCT CONCAT(h.apellido, ' ', LEFT(h.Nombre, 1), '.')), ",", "</br>") 
+		    FROM CAL_ACCIONES_NCONF can LEFT JOIN HTXUSERS h ON can.resp_rhpersonal_id = h.id_usuario 
+		    WHERE can.noconformidad_id = CAL_NOCONFORMIDADES.id_noconformidad)
+		    
+		    LIKE   CONCAT('%',responsable.apellido, ' ', LEFT(responsable.Nombre, 1), '.', '%') 
+		    
+		    THEN
+		     
+		     ( REPLACE(
+		     
+		     (SELECT  
+		    REPLACE(GROUP_CONCAT(DISTINCT CONCAT(h.apellido, ' ', LEFT(h.Nombre, 1), '.')), ",", "</br>") 
+		    FROM CAL_ACCIONES_NCONF can LEFT JOIN HTXUSERS h ON can.resp_rhpersonal_id = h.id_usuario 
+		    WHERE can.noconformidad_id = CAL_NOCONFORMIDADES.id_noconformidad), CONCAT(responsable.apellido, ' ', LEFT(responsable.Nombre, 1), '.'),
+		    CONCAT('<i><b>', responsable.apellido, ' ', LEFT(responsable.Nombre, 1), '.', '</b></i>')
+		    
+		    )               )
+		    
+		    ELSE
+		    
+		    (SELECT DISTINCT CONCAT('<i><b>', CONCAT(responsable.apellido, ' ', LEFT(responsable.Nombre, 1), '.'), '</b></i>', "</br>", 
+		    REPLACE(GROUP_CONCAT(DISTINCT CONCAT(h.apellido, ' ', LEFT(h.Nombre, 1), '.')), ",", "</br>")) 
+		    FROM CAL_ACCIONES_NCONF can LEFT JOIN HTXUSERS h ON can.resp_rhpersonal_id = h.id_usuario 
+		    WHERE can.noconformidad_id = CAL_NOCONFORMIDADES.id_noconformidad)
+		    
+		    END), CONCAT('<i><b>', responsable.apellido, ' ', LEFT(responsable.Nombre, 1), '.', '</b></i>'))
+		    
+		    ]]></expression>
+					<label Formstyle="display:none;">Responsables</label>
+		    <tipo>editor</tipo>
+				</field>
+				
+				<field id="responsablesnum" noshow="true">
+					<expression><![CDATA[(SELECT GROUP_CONCAT(DISTINCT h.id_usuario) FROM CAL_ACCIONES_NCONF can LEFT JOIN HTXUSERS h ON can.resp_rhpersonal_id = h.id_usuario WHERE can.noconformidad_id = CAL_NOCONFORMIDADES.id_noconformidad)]]></expression>
+					<label>Ids Resp.</label>
+				</field>
+
+				<field id="filt_resp" local="true" noshow="true" sincelda="true">
+                	<helper type="combo" id="HTXUSERS" empty="true">
+						<field id="id_usuario"/>
+						<field id="nombre">
+							<expression>CONCAT(apellido, ' ', Nombre)</expression>
+						</field>
+						<field id="baja">
+							<condicion operador="=">0</condicion>
+						</field>
+						<order>
+							<field id="nombre"/>
+						</order>
+		            </helper>
+				</field>
+				
+				<field id="test" noshow="true">
+					<expression having="false">'[__filt_resp__]' IN (SELECT HTXUSERS.id_usuario FROM CAL_ACCIONES_NCONF can LEFT JOIN HTXUSERS ON can.resp_rhpersonal_id = HTXUSERS.id_usuario WHERE can.noconformidad_id = CAL_NOCONFORMIDADES.id_noconformidad) or '[__filt_resp__]' = CAL_NOCONFORMIDADES.responsable_nconf</expression>
+				</field>
+
+				<field id="test2" local="true" validRow="true" noshow="true">
+					<if exp="filt_resp + 0">
+						<true>test</true>
+						<false>1</false>
+					</if>
+				</field>
+<!--
+				<field id="hoy" local="true">
+					<valor>today</valor>
+					<tipo>date</tipo>
+				</field>
+-->
+
+                <field id="estadonconf_id" deshabilitado="false">
+                    <helper xml="calestadosnconf_crud.xml" type="combo" dir="/calidad/man" empty="true"/>
+                    <label>Estado</label>
+                    <help>Estado de la No conformidad</help>
+		    		<jseval campodestino="fecha_cierrenconf">(estadonconf_id == 7) ? 'format_today' : ''</jseval>
+                </field>
+		<field id="eficaz" colstyle="display:none;" style="width:20px;height:20px;" deshabilitado="false" sincelda="true">
+		    <label modpos="nobr">Eficaz</label>
+		    <tipo>check</tipo>
+                </field>
+                
+				<field id="format_today" local="true" noshow="true">
+					<expression>DATE_FORMAT(NOW(), '%d/%m/%Y')</expression>
+				</field>
+<!--
+                <field id="regcuenta_id" deshabilitado="false" >
+                    <label colspan="3">Cuenta</label>
+                        <helper type="external" xml="regcuenta_autocomplete_qry.xml" dir="/ayudas" empty="true">
+-->
+				
+				<field id="fecha_cierrenconf" colstyle="display:none;" _valauto="true" deshabilitado="false">
+					<label modpos="nobr">Fecha de cierre</label>
+					<tipo>date</tipo>	
+				</field>
+
+<!--		        <field id="responsable_nconf" _local="true" deshabilitado="false">   
+		            <helper type="combo" id="HTXUSERS" empty="true">
+						<field id="id_usuario"/>
+						<field id="nombre">
+							<expression>CONCAT(apellido, ' ', Nombre)</expression>
+						</field>
+						<field id="baja">
+							<condicion operador="=">0</condicion>
+						</field>
+						<order>
+							<field id="nombre"/>
+						</order>
+		            </helper>                                                             -->
+		        <field id="nombre_usuario" oculto="true">
+		    	    <expression>CONCAT(responsable.apellido, ' ', LEFT(responsable.Nombre, 1), '.')</expression>
+		            <label >Responsable</label>
+		            <help >Empleado responsable de la Acción</help>
+		        </field>
+				                <field id="contencion_nconf" colstyle="display:none;" deshabilitado="false" cols="80">
+                    <label colspan="3">Acción de contención</label>
+                    <help>Acción de Contencion ante la no conformidad</help>
+                    <size>200</size>
+                </field>
+            </fieldGroup>
+            <fieldGroup>
+			
+                <field id="causa_nconf" colstyle="display:none;" cols="80">
+                    <label colspan="3">Causa Raiz</label>
+                    <help>Causa Raiz de la no conformidad</help>
+                    <size>200</size>
+                </field>
+
+                <field id="pathnc" noshow="true">
+                	<expression>id_noconformidad</expression>
+                </field>
+
+                <field id="archivos" path="pathnc" local="true">
+            	    <expression>concat('/archivos/noconformidades/', id_noconformidad)</expression>
+                    <label colspan="3">Documentacion adjunta</label>
+                    <help>Archivos adjuntos</help>
+                    <size>20</size>
+                    <tipo>dir</tipo>
+                </field>
+				
+				<field id="uno" local="true" oculto="true">
+					<valor>1</valor>
+				</field>
+				<field id="dos" local="true" oculto="true">
+					<valor>2</valor>
+				</field>
+                <field id="tres" local="true" oculto="true">
+					<valor>3</valor>
+				</field>        
+
+				<field id="acciones_inmediatas" local="true" colstyle="display:none;">
+                    <label colspan="3">Acciones Inmediatas</label>
+                    <help>Acciones Inmediatas</help>
+                    <helper xml="calaccionesnconf3_crud.xml" type="object" dir="/calidad/ing" >
+                        <parameter source="id_noconformidad" target="noconformidad_id"/>
+                    	<parameter source="tres" target="tipo_accionnconf" />     
+                    </helper>
+                </field>
+
+                <field id="causas_raiz" local="true" colstyle="display:none;" >
+                    <label colspan="3">Análisis del problema</label>
+                    <help>Análisis del problema</help>
+                    <helper xml="calaccionesnconf1_crud.xml" type="object" dir="/calidad/ing" >
+                        <parameter source="id_noconformidad" target="noconformidad_id"/>
+                        <parameter source="uno" target="tipo_accionnconf" />     
+                    </helper>
+                </field>
+              <field id="costo_nconf" sincelda="true" deshabilitado="false" colstyle="display:none;" >
+					<label modpos="nobr">Costo No Conformidad</label>
+					<tipo>numeric</tipo>
+				</field>
+
+                <field id="acciones_correprev" local="true" colstyle="display:none;" >
+                    <label colspan="3">Acciones Correctivas y Preventivas</label>
+                    <help>Acciones Correctivas y Preventivas</help>
+                    <helper xml="calaccionesnconf2_crud.xml" type="object" dir="/calidad/ing" >
+	    		        <parameter source="id_noconformidad" target="noconformidad_id"/>
+                        <parameter source="dos" target="tipo_accionnconf" />
+                    </helper>
+                </field>
+
+                <field id="costos" local="true" colstyle="display:none;" >
+                    <label colspan="3">Costos No Conf</label>
+                    <help>Costos de no conformidades</help>
+                    <helper xml="calcostosnconf_crud.xml" type="object" dir="/calidad/ing" >
+                        <parameter source="id_noconformidad" target="noconformidad_id"/>
+                    </helper>
+                </field>
+                
+                <field id="tipo_estadonconf" noshow="true" tabla="CAL_ESTADOS_NCONF">
+                  <!--  <condicion operador="=">0</condicion>-->
+                </field>
+				
+				<field id="auditoriaobs_id" oculto="true"/>
+            </fieldGroup>
+			
+			<field id="colorCerradas" deshabilitado="true" clasefila="true" noshow="true" local="true">
+                <if exp="'estadonconf_id' == '7'">
+                    <true>'grisado2'</true>
+                    <false>''</false>
+                </if>
+            </field>
+	    <order>
+		 <field id="fecha_nconf" />
+	    </order>
+	    
+        </table>
+        <join tipo="inner">
+        	<table id="CAL_ESTADOS_NCONF">
+        	    <field id="id_estadonconf">
+        		<condicion operador="=">CAL_NOCONFORMIDADES.estadonconf_id</condicion>
+        	    </field>
+        	</table>
+        </join>
+        <join tipo="left">
+        	<table id="REG_CUENTA">
+        	    <field id="id_regcuenta">
+        		<condicion operador="=">CAL_NOCONFORMIDADES.regcuenta_id</condicion>
+        	    </field>
+        	</table>
+        </join>
+        <join tipo="left">
+    	    <table id="HTXUSERS" as="responsable">
+    		<field id="id_usuario">
+    		    <condicion operador="=">CAL_NOCONFORMIDADES.responsable_nconf</condicion>
+    		</field>
+    	    </table>
+    	</join>
+        <join tipo="left">
+    	    <table id="HTXUSERS" as="creador">
+    		<field id="login">
+    		    <condicion operador="=">CAL_NOCONFORMIDADES.login_id</condicion>
+        	    </field>
+        	</table>
+        </join>
+    </form>
+</histrix>

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" >
+  <title>HOMOLOGACION POR MODELO</title>
+  <obs/>
+  <form >
+    <table id="HOMOLOGMOD">
+      <title>Homologaciones por modelo</title>
+
+      <field id="id_homologacion" />
+
+      <field id="texto_homolog">
+        <expression>CONCAT(CARROCERIA.modcar, ' - ', MARCHASIS.desabv, ' - ', MODCHASIS.moddes, ' - ', asientos, (CASE banbar WHEN 1 THEN '- B/B' ELSE '' END))</expression>
+      </field>
+
+      <field id="modcha" />
+      
+      <field id="moddes" tabla="MODCHASIS" />
+      
+      <field id="marcod" noshow="true" />
+      
+      <field id="nrocar" noshow="true" >
+<!--        <condicion operador="=">-1</condicion>      -->
+      </field>
+      
+      <field id="baja" noshow="true" >
+<!--         <condicion operador="=">0</condicion>
+ -->      </field>
+
+      <field id="tiene_proc" noshow="true">
+        <expression>(SELECT 1 FROM PROD_PROCESOS WHERE homologacion_id = HOMOLOGMOD.id_homologacion LIMIT 1)</expression>
+        <condicion operador="=">1</condicion>
+      </field>
+
+      <order>
+        <field id="modcar" tabla="CARROCERIA" noshow="true" />
+        <field id="mardes" />
+        <field id="moddes" tabla="MODCHASIS" />
+        <field id="asientos" />
+        <field id="banbar" />
+      </order>
+
+    </table>
+	  <join tipo="left">
+      <table id="CARROCERIA">
+		    <field id="nrocar">
+		      <condicion operador="=">HOMOLOGMOD.nrocar</condicion>
+		    </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="MARCHASIS">
+        <field id="marcod">
+          <condicion operador="=">HOMOLOGMOD.marcod</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="MODCHASIS">
+        <field id="id_modelo">
+          <condicion operador="=">HOMOLOGMOD.modelo_id</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>

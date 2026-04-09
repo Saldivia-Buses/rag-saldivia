@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <abm tipo="consulta">
+       <titulo>IVA VENTASS</titulo>
+        <obs></obs>
+               <consulta>
+                  <tabla id="ivavents" label="IVA VENTAS">
+                  <campo id="ivvfec">
+                      <label>Fecha</label>
+                      <help> </help>
+                  </campo>
+
+<!--                  <campo id="comcod">
+                      <label>Cod.Comp.D.G.I.. </label>
+                      <help>TIPO DE COMPROBANTE SEGUN D.G.I. (RG 3419 - ANEXO VI ). </help>
+                  </campo>
+  -->
+		  
+                  <campo id="concod">
+                      <label>Conc.</label>
+                      <help> </help>
+                      <tabla_ex id="CCTCONCE">
+						<campo id="concod"></campo>
+	    				<campo id="conabv"></campo>
+						<campo id="siscod" oculto="true">
+						    <condicion operador="=">'01'</condicion>
+						</campo>
+		    		  </tabla_ex>
+                  </campo>
+
+
+                  <!-- <campo id="coscod">
+                      <label>Cod.Centro </label>
+                      <help>Codigo de Centro de Costo. [F2] = Ayuda. </help>
+                  </campo>
+		  -->
+                  <campo id="ivvlet">
+                      <label>L</label>
+                      <help> </help>
+                  </campo>
+		  
+                  <campo id="ivvnpv">
+                      <label>Nro PV</label>
+                      <help> </help>
+		      <formato>%04d</formato>
+                  </campo>
+                  <campo id="ivvnro">
+                      <label>Numero</label>
+                      <help> </help>
+		      <formato>%010d</formato>
+
+                  </campo>
+
+                  <campo id="ctacod">
+                      <label>Cuenta</label>
+                      <help> </help>
+                  </campo>
+                  <campo id="ctanom">
+                      <label>Nombre</label>
+                      <help> </help>
+                  </campo>
+	<!--
+                  <campo id="doccod">
+                      <label>Codigo Documento </label>
+                      <help> </help>
+                  </campo>
+		  -->
+
+                  <campo id="ctanro">
+                      <label>C.U.I.T.</label>
+                      <help>C.U.I.T.</help>
+                  </campo>
+                  <campo id="ivacod">
+                      <label>Categoria I.V.A. </label>
+                      <help> </help>
+                      <tabla_ex id="FSMCTIVA">
+			<campo id="ivacod"></campo>
+	    		<campo id="ivanom"></campo>
+		      </tabla_ex>
+
+                  </campo>
+<!--                  <campo id="ivv063">
+                      <label>Perc25063 </label>
+                      <help> </help>
+                  </campo>
+		  -->
+                  <campo id="ivvali">
+                      <label>Alicuota</label>
+                      <help>% Alicuota de IVA </help>
+		      <formato>%%%01.2f</formato>
+                  </campo>
+    <!--
+                  <campo id="ivvcam">
+                      <label>Tipo de Cambio </label>
+                      <help> </help>
+                  </campo>
+                  <campo id="ivvcim">
+                      <label>Cod.Cta.Imputac. </label>
+                      <help> </help>
+                  </campo>
+                  <campo id="ivvexe">
+                      <label>Imp. Exento..... </label>
+                      <help> </help>
+                  </campo>
+	  -->
+                  <campo id="gravado">
+		      <expresion>cast(PRO_ELEMENT(ivvgra, 1, 1) as numeric(10,2) ) + cast(PRO_ELEMENT(ivvgra, 2, 2) as numeric(10,2)) +  cast(PRO_ELEMENT(ivvgra, 3, 3) as numeric(10,2))   </expresion>
+                      <label>ImpGravado </label>
+                      <help>Importe Gravado </help>
+                  </campo>
+
+<!--
+                  <campo id="ivviim">
+                      <label>Importe </label>
+                      <help> </help>
+                  </campo>
+
+-->
+<!--
+                  <campo id="ivviix">
+                      <label>Imp.Imput.Mon.Ex </label>
+                      <help> </help>
+                  </campo>
+-->		  
+                  <campo id="ivvnog">
+                      <label>No Gravado </label>
+                      <help> </help>
+                  </campo>
+
+<!--                  <campo id="ivvint">
+                      <label>Imp.Internos </label>
+                      <help> </help>
+                  </campo>
+		  -->
+                  <campo id="iva">
+		      <expresion>cast(PRO_ELEMENT(ivviva, 1, 1) as numeric(10,2) ) + cast(PRO_ELEMENT(ivviva, 2, 2) as numeric(10,2)) +  cast(PRO_ELEMENT(ivviva, 3, 3) as numeric(10,2))   </expresion>
+
+                      <label>I.V.A. </label>
+                      <help>Importe de I.V.A. </help>
+                  </campo>
+<!--
+                  <campo id="ivvlis">
+                      <label>Fecha Imputacion </label>
+                      <help>Fecha de Imputacion para tener en cuenta en Liquidacion COMPRAS </help>
+                  </campo>
+                  <campo id="ivvman">
+                      <label>Codigo Moneda </label>
+                      <help> </help>
+                  </campo>
+-->		  
+
+
+<!--
+                  <campo id="ivvre1">
+                      <label>Imp.Percepcion </label>
+                      <help>Importe Percepcion </help>
+                  </campo>
+                  <campo id="ivvre2">
+                      <label>Imp.Percepion 2 </label>
+                      <help> </help>
+                  </campo>
+                  <campo id="ivvre3">
+                      <label>Imp.Percepcion 3 </label>
+                      <help> </help>
+                  </campo>
+                  <campo id="ivvre4">
+                      <label>Imp.Percepcion 4 </label>
+                      <help>Importe Percepcion Ingresos Brutos </help>
+                  </campo>
+                  <campo id="ivvreg">
+                      <label>Fec.Registracion     . </label>
+                      <help>Fecha de Registracion. </help>
+                  </campo>
+-->		  
+                  <campo id="ivvrni">
+                      <label>I.V.A. R.N.I. </label>
+                      <help>Importe IVA RNI </help>
+                  </campo>
+                  <campo id="ivvtot">
+                      <label>Imp.Tot.Operac.. </label>
+                      <help> </help>
+                  </campo>
+<!--
+                  <campo id="ivvuni">
+                      <label>Unidades Fisicas </label>
+                      <help> </help>
+                  </campo>
+                  <campo id="prvcod">
+                      <label>Codigo Provincia </label>
+                      <help> </help>
+                  </campo>
+                  <campo id="regmin">
+                      <label>Numero Asiento       . </label>
+                      <help>Numero de Asiento . </help>
+                  </campo>
+-->
+                  <campo id="siscod" oculto="true">
+                      <label>Codigo Sistema.. </label>
+                      <help> </help>
+                  </campo>
+<!--                  <campo id="succod">
+                      <label>Cod. Sucursal </label>
+                      <help>Codigo de Sucursal </help>
+                  </campo>
+		  -->
+		  
+		  <filtros>
+			<campo id="ivvfec"> 
+			    <operador>>=</operador>
+			    <label>Desde Fecha</label>
+			    <valor>today</valor>    
+			</campo>  
+			<campo id="ivvfec"> 
+			    <operador>&lt;=</operador>
+			    <label>Hasta Fecha</label>
+			    <valor>today</valor>    
+
+			</campo>
+		  </filtros>
+
+		  
+		  
+                  </tabla>
+               </consulta>
+        </abm>

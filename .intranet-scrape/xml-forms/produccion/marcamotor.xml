@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm">
+	<title>MARCAS DE MOTOR</title>
+	<obs></obs>
+	<form >
+		<table id="MARCAMOTOR">
+			<title>Marcas de Motores</title>
+
+			<field id="idMarca">
+				<label>Codigo</label>
+				<help>Codigo de Marca</help>
+			</field>
+			<field id="nombre">
+				<label>Marca</label>
+				<help>Marca del Motor</help>
+			</field>
+			<field id="abrev">
+				<label>Abreviatura</label>
+			</field>			
+    			<order>
+				<field id="idMarca"></field>
+			</order>
+		</table>
+	</form>	   
+</histrix> 

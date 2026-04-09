@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ayuda">
+  <title>Lotes de Facturacion</title>
+  <obs/>
+  <consulta>
+    <table id="FAC_LOTES">
+
+      <field id="id_faclote" autoinc="true" esClave="true">
+        <label>Codigo</label>
+      </field>
+
+      <field id="lote">
+        <expresion>CONCAT( FAC_SERVICIO_GRUPOS.nombre_grupo, ' ', FAC_LOTES.faclote_periodo )</expresion>
+      </field>
+
+      <field id="faclote_confirmado">
+        <label>Confirmado</label>
+        <condicion operador="=">0</condicion>
+      </field>
+    </table>
+    <join>
+      <table id="FAC_SERVICIO_GRUPOS">
+        <field id="id_facgrupo">
+          <condicion operador="=">FAC_LOTES.facgrupo_id</condicion>
+        </field>
+      </table>
+    </join>
+  </consulta>
+</histrix>

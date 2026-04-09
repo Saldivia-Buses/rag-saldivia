@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="crud">
+	<title>Zonas</title>
+	 <obs></obs>
+		<form>
+		    <table id="REG_ZONAS" label="Zonas">
+
+				<field id="id_regzona" autoinc="true" noshow="true" />
+
+				<field id="nombre_zona">
+					<label>Nombre</label>
+				</field>
+
+				<field id="abreviatura_zona">
+					<label>Abreviatura</label>
+				</field>
+
+				<field id="subsistema_id" noshow="true" valauto="true">
+					<valor>01</valor>
+				</field>
+
+		    </table>
+		</form>
+    </histrix>

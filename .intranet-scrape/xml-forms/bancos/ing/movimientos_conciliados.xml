@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" borra="no" inserta="no" noform="true">
+	<title>Movimientos Bancarios</title>
+	<obs></obs>
+	<form >
+		<table id="REG_MOVIMIENTOS" label="Movimientos Bancarios">
+			<!--<preconsultas>
+				<xmlfile id="bcsmovim_conci_pre2.xml"/>	 
+				<xmlfile id="bcsmovim_conci_pre.xml"/>
+			
+			</preconsultas>			
+			<movimientos>
+				<relacion id="bcsmovim_movcon.xml"></relacion>
+			</movimientos>-->
+			
+
+			
+			<field id="regcuenta_id" Formstyle="display:none;">
+				<label>Codigo Cuenta</label>
+				<tabla_ex id="REG_CUENTA">
+					<field id="id_regcuenta"></field>
+					<field id="nombre_cuenta"></field> -
+					<field id="subsistema_id" noshow="true">
+					    <condicion operador="=">'04'</condicion>
+				        </field>
+					
+					<filtra>bcscta</filtra>
+				</tabla_ex>				
+				<help>Codigo de Cuenta Bancaria </help>
+				<preparam operador="=">true</preparam>	
+			</field>
+			
+			<field id="subsistema_id" oculto="true">
+				<label>Codigo Sistema.</label>
+				<help>
+				</help>
+			</field>
+
+			<field id="id_regmovim" oculto="true">
+				<label>Movimiento</label>
+			</field>
+							
+			<!--<field id="vencimiento_movimiento" oculto="true">
+				<label>Acreditacion2 </label>
+				<help>Fecha de Acreditacion</help>
+			</field>-->
+			<field id="bcsfevpre" local="true" noshow="true" deshabilitado="true">
+				<label>test</label>
+				<preparam campo="bcsfev" operador="&lt;">true</preparam>							
+			
+			</field>			
+			<field id="vencimiento_movimiento" Formstyle="display:none;">
+				<label>Acreditac.</label>
+				<help>Fecha del Acreditacion</help>
+				<tipo>date</tipo>
+			</field>
+		
+			
+			<field id="nro_movimiento" deshabilitado="true" Formstyle="display:none;">
+				<label>Nro. Movimiento</label>
+				<help>Numero de Movimiento </help>
+				<formato>%010d</formato>
+				
+			</field>
+			<field id="descripcion_concepto" tabla="REG_CONCEPTOS">
+				<label>Tipo</label>
+				<help>Codigo de tipo de Movimiento </help>
+				
+				<!--                      <tabla_ex id="BCSCONCE">
+				<field id="cnbcod"></field>
+				<field id="cnbabv"></field>
+				</tabla_ex>
+				-->
+				<tipo>string</tipo>
+			</field>
+			<field id="referencia_movimiento" local="true">
+				<!-- <expresion>PRO_ELEMENT(bcsref, 1, 1) </expresion> -->
+				<tipo>char</tipo>
+				<label>Referencia</label>
+				<help>Referencia Adicional. </help>
+				<valor>'CONCILIADOS'</valor>
+			</field>
+			
+			<field id="debe" suma="true" Formstyle="display:none;">
+	<expresion>REG_MOVIMIENTOS.importe_movimiento * (case when REG_CONCEPTOS.imputacion_concepto = '1' then 1 else 0 end)</expresion>
+				
+				<label>Debe</label>
+				<help>Importe del Movimiento en el Debe</help>
+			</field>
+			
+			<field id="haber" suma="true" Formstyle="display:none;">
+			<expresion>REG_MOVIMIENTOS.importe_movimiento * (case when REG_CONCEPTOS.imputacion_concepto = '2' then 1 else 0 end)</expresion>
+				
+				<label>Haber</label>
+				<help>Importe del Movimiento en el Haber</help>
+			</field>
+			<field id="diferencia" local="true" suma="true" acumula="true">
+					<label>Saldo</label>
+					<if exp="1 == 1">
+					<true>debe - haber</true>
+					<false>debe - haber</false>
+				</if>
+				
+			</field>
+			<!--
+			<field id="bcsimp">
+			<label>Importe              . </label>
+			<help>Importe total del movimiento </help>
+			</field>
+			-->
+			<field id="reg_fecha" Formstyle="display:none;">
+				<label>Fecha Mov.</label>
+				<help>Fecha del Movimiento</help>
+				<tipo>date</tipo>
+			</field>
+			<field id="fecha_mov1" noshow="true" >
+				<expresion having="false">reg_fecha</expresion>
+				<label>Fecha Mov1</label>
+				<help>Fecha del Movimiento</help>
+				<tipo>date</tipo>
+			</field>
+			<field id="fecha_mov2" noshow="true">
+				<expresion having="false">reg_fecha</expresion>
+				<label>Fecha Mov2</label>
+				<help>Fecha del Movimiento</help>
+				<tipo>date</tipo>
+			</field>
+			<!--        <field id="regmin" deshabilitado="true">
+			<label>Asiento</label>
+			<help>Numero de Asiento</help>
+			</field>-->
+			<field id="conciliado">
+				<label>Conc.</label>
+				<help>conciliado</help>
+				<condicion operador="!=">'0000-00-00'</condicion>
+				<!--	<preparam operador="!=">true</preparam>			 -->
+
+			</field>
+			<field id="grabar" noshow="true">
+				<expresion>'true'</expresion>
+				<tipo>char</tipo>
+			</field>
+			<group>
+				<field id="regcuenta_id" />
+			</group>
+			<order>
+				<field id="reg_fecha"></field>
+			</order>
+			
+		</table>
+		
+		<join tipo="left">
+			<table id="REG_CONCEPTOS">
+				<field id="subsistema_id" oculto="true">
+					<condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion>
+				</field>
+				
+				<field id="id_concepto" oculto="true">
+					<condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+				</field>
+			</table>
+		</join>
+		
+	</form>
+</histrix>

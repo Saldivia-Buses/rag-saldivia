@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" borra="no" inserta="no" paginar="250" path="fotos/articulos" _preloadData="false">
+    <title>Insumos</title>
+    <obs></obs>
+    <form  _detalle="reg_cuenta_x_articulo.xml" _inline="true" _hasDetail="hasdet">
+        <table id="STK_ARTICULOS" styleTbody="height:500px;overflow-x:hidden;" >
+            <title>Consulta Artículos que superan el maximo</title>
+            <filters>
+                <field id="stkrubro_id"   >
+                    <label modpos="nobr">Rubro</label>
+                </field>
+                <!--
+                <field id="stkmarca_id">
+                  <label modpos="nobr">Marca</label>
+                </field>
+           
+                
+                <field id="prov" deshabilitado="false">
+                    <label>proveedor</label>
+                    <operador>=</operador>
+        	    </field>
+           
+               
+        	    <field id="no_listar">
+        	        <label>Estado</label>
+        	        <operador>=</operador>
+        	    </field>
+            -->
+            </filters>
+
+            <field id="id_stkarticulo"  PDFcolor="000000" esClave="true" style="font-weight:bold;">
+                <helper type="link" xml="fichakardex_qry.xml" >
+                    <parameter source="id_stkarticulo" target="stkarticulo_id" />
+                </helper>
+                <ayuda_ex id="STK_ARTICULOS" >
+                    <field id="id_stkarticulo" >
+                        <label>Cod</label>
+                    </field>
+                    <field id="nombre_articulo" >
+                        <label>Nombre</label>
+                        <detalle>nombre_articulo</detalle>
+                    </field>
+                    <field id="subsistema_id" oculto="true">
+                        <condicion operador="=">'01'</condicion>
+                    </field>
+                </ayuda_ex>
+                <label>Cod.</label>
+                <detalle>id_stkarticulo</detalle>
+            </field>
+            <field id="stkrubro_id"   noshow="true">
+                <label modpos="nobr">Rubro</label>
+                <helper type="combo" xml="stkrubro_qry.xml" dir="/ayudas" empty="true" />
+            </field>
+
+            <field id="nombre_articulo" _autocompletar="false" fullSearch="true">
+                <label>Articulo</label>
+                <help>Descripcion de Articulo. (ENTER = Retorna a ingreso de codigo).
+                </help>
+            </field>
+          <!--
+            <field id="stkmarca_id" _noshow="true">
+                <label>Marca</label>
+                <helper type="combo" xml="stkmarca_qry.xml" dir="/ayudas" empty="true" />
+            </field>
+        -->
+
+            <field id="baja_articulo" oculto="true">
+                <condicion operador="!=">1</condicion>
+            </field>
+
+
+            <field id="stock">
+                <label style="font-weight:bold;">Stock Actual</label>
+                <expression having="false">(SELECT sum( STK_MOVIMIENTOS.cantidad * (CASE WHEN STK_CONCEPTOS.tipo_concepto = 1 THEN -1 ELSE 1 END ))
+      FROM STK_MOVIMIENTOS LEFT JOIN STK_CONCEPTOS ON STK_CONCEPTOS.id_stkconcepto = STK_MOVIMIENTOS.stkconcepto_id
+      WHERE STK_MOVIMIENTOS.stkarticulo_id = STK_ARTICULOS.id_stkarticulo)
+                </expression>
+                <condicion operador="&gt;">STK_ARTICULOS.stock_maximo</condicion>
+               <!-- <tipo>numeric</tipo> -->
+               <tipo>decimal</tipo>
+            </field>
+            <field id="stock_maximo">
+                <label>Stock Maximo</label>
+                <condicion operador="!=">0</condicion>
+                <tipo>decimal</tipo>
+            </field>
+
+            <field id="supera" local="true" noshow="true">
+                <label>Mayor</label>
+                <if exp="(stock + 0) &gt; stock_maximo">
+                    <true>1</true>
+                    <false>0</false>
+                </if>
+               
+            </field>
+
+<!--
+            <field id="fotopath" local="true" noshow="true">
+                <if exp="true">
+                    <true>'id_stkarticulo/'</true>
+                    <false>''</false>
+                </if>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="foto" path="fotopath" download="true" watermark="id_stkarticulo">
+                <expression>select STK_ARTICULO_FOTO.foto from STK_ARTICULO_FOTO where STK_ARTICULO_FOTO.stkarticulo_id = STK_ARTICULOS.id_stkarticulo  and STK_ARTICULO_FOTO.foto != '' limit 1</expression>
+                <label>Imagen</label>
+                <tipo>file</tipo>
+                <size>40</size>
+            </field>
+
+            <field id="no_listar" noshow="true">
+                
+                <helper type="combo">
+                    <option value="0">Listables</option>
+                    <option value="1">No Listables</option>
+                    <option value="">Todos</option>
+                </helper>
+            </field>
+            -->
+            <!--
+            <field id="galeria" path="fotopath">
+                <helper type="link" xml="stkarticulo_foto_qry.xml">
+                    <parameter target="stkarticulo_id" source="id_stkarticulo"/>
+                </helper>
+                <label>Gal</label>
+                <expression>select count(STK_ARTICULO_FOTO.foto) from STK_ARTICULO_FOTO where STK_ARTICULO_FOTO.stkarticulo_id = STK_ARTICULOS.id_stkarticulo  and STK_ARTICULO_FOTO.foto != ''</expression>
+            </field>
+            -->
+<!--
+            <field id="hasdet" noshow="true">
+                <expression>count(STK_HIST_COSTOS.id_stkarticulo)</expression>
+            </field>
+            -->
+ 
+
+      <!--
+            <field id="subsistema_id" oculto="true">
+                <label>subsistema_id</label>
+            </field> -->
+
+            <group>
+                <field id="id_stkarticulo" tabla="STK_ARTICULOS"/>
+            </group>
+
+            <filters>
+                <field id="id_stkarticulo" deshabilitado="false">
+                    <ayuda_ex id="STK_ARTICULOS">
+                        <clave>id_stkarticulo</clave>
+                        <descripcion>nombre_articulo</descripcion>
+                    </ayuda_ex>
+                    <label>Cod.</label>
+                    <operador modificador="left">=</operador>
+                </field>
+                <field id="nombre_articulo" fullSearch="true">
+                    <label>Articulo</label>
+                    <help>Descripcion de Articulo</help>
+                    <operador>like</operador>
+                </field>
+            </filters>
+            <!--
+            <field id="respuesta" obj="articulo_proveedor_qry.xml" showObjTabla="true"  showValor="true"  local="true" >
+                <label >Proveedor</label>
+                <paring destino="stkarticulo_id">id_stkarticulo</paring>
+
+            </field>
+            -->
+
+        </table>
+    <!--
+        <join tipo="left">
+            <table id="STK_ARTICULO_FOTO">
+                <field id="stkarticulo_id" >
+                    <condicion operador="=">STK_ARTICULOS.id_stkarticulo</condicion>
+                </field>
+            </table>
+        </join> 
+    
+
+        <join tipo="left">
+            <table id="STK_HIST_COSTOS">
+                <field id="stkarticulo_id">
+                    <condicion operador="=">STK_ARTICULOS.id_stkarticulo</condicion>
+                </field>
+            </table>
+        </join>
+    -->
+    </form>
+</histrix>

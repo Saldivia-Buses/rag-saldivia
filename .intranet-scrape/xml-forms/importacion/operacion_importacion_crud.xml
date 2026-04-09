@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm-mini"  subtipo="vertical">
+    <title>Operaciones</title>
+    <obs></obs>
+    <form _detalle="movimientos_operacion_crud.xml">
+		<table id="REG_OPERACION_IMPORTACION" >
+
+		  	<field id="id_operacion_imp" noshow="true" autoinc="true">
+		  		<detalle>operacion_imp_id</detalle>
+		  	</field>
+		  	
+		  	<field id="nro_carpeta" local="true" oculto="true" />
+
+		  	<field id="regcuenta_id" local="true" oculto="true" >
+		  		<detalle>regcuenta_id</detalle>
+		  	</field>
+		  	<field id="carpeta_imp_id" oculto="true" />
+
+
+		  	<field id="nro_simi">
+		  		<label>Nro SIMI</label>
+				<tipo>varchar</tipo>
+		  	</field>
+		  	<field id="nro_oficializacion" >
+		  		<label>Nro Oficiaclización</label>
+		  		<size>40</size>
+	  		</field>
+	  		<field id="comprobantes" local="true">
+	  			<expression>'comprobantes'</expression>
+	  			<helper xml="movimientos_operacion_crud.xml" type="link" width="98%">
+	  				<parameter source="regcuenta_id" 	 target="regcuenta_id" />
+	  				<parameter source="id_operacion_imp" target="operacion_imp_id" />
+	  				<parameter source="nro_carpeta" 	 target="nro_carpeta" />	  				
+	  			</helper>
+	  		</field>
+
+		</table>
+		</form>
+	</histrix>

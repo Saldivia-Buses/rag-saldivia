@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" showCantidad="false" preloadData="false">
+  <title>Resumen de Movimientos</title>
+  <obs/>
+  <form >
+    
+    <table id="CAJ_MOVIMIENTOS" label="Movimientos">
+      
+      <filters>
+        <field id="fecha_movimiento">
+          <label>Desde</label>
+          <operador>&gt;=</operador>
+          <valor>today</valor>
+          <tipo>date</tipo>
+        </field>
+        
+        <field id="fecha_movimiento">
+          <label>Hasta</label>
+          <operador>&lt;=</operador>
+          <valor>today</valor>
+          <tipo>date</tipo>
+        </field>
+        
+        <field id="cajconcepto_id">
+          <label>Descripción</label>
+          <operador>=</operador>
+        </field>
+        
+        <field id="cajpuesto_id">
+          <label>Puesto</label>
+          <operador>=</operador>          
+        </field>
+        <field id="cajformapago_id">
+          <label>Concepto</label>
+          <operador>=</operador>          
+        </field>
+        
+      </filters>
+      
+      <field id="id_cajmovimiento" esClave="true" noshow="true" />
+                                                    
+        <field id="cajformapago_id" tabla="CAJ_VALORES">
+          <label>Concepto</label>
+	    <helper type="combo" xml="cajformaspago_qry.xml" dir="/ayudas">
+	    </helper>
+        </field>
+      
+      <field id="cajpuesto_id" noshow="true">
+        <helper type="combo" xml="cajpuestousers_qry.xml" dir="/ayudas" empty="true" />
+      </field>
+      
+      <field id="cajconcepto_id" noshow="true">
+        <helper type="combo" id="CAJ_CONCEPTOS" empty="true">
+          <field id="id_cajconcepto" />
+          <field id="descripcion_concepto" />
+        </helper>
+        
+      </field>
+      <field id="fecha_movimiento" _noshow="true">
+        <field>fecha</field>
+      </field>
+      
+      <field id="descripcion_concepto" deshabilitado="false">
+        <label>Descripcion</label>
+        <expresion>CAJ_CONCEPTOS.abreviatura_concepto</expresion>
+      </field>
+      <field id="nro_comp" _tdWidth="200px" _PDFcolWidth="100" linkdes="Detalle de Comprobante">
+        <expresion>CONCAT(' 0000-',lpad(CAJ_MOVIMIENTOS.nro_movimiento,8,'0'))</expresion>
+        <helper type="link" dir="/caja/proc/del" xml="cajmovimiento_ficha.xml" >
+          <parameter source="id_cajmovimiento" target="id_cajmovimiento" operador="="/>
+        </helper>
+      </field>
+      
+      <field id="regcuenta_id">
+        <expresion>IFNULL((SELECT regcuenta_id FROM REG_MOVIMIENTOS rm WHERE rm.cajmovimiento_id = CAJ_MOVIMIENTOS.id_cajmovimiento and rm.subsistema_id = CAJ_CONCEPTOS.subsistema_id LIMIT 1), referencia_movimiento)</expresion>
+        <helper type="combo" id="REG_CUENTA">
+          <field id="id_regcuenta" />
+          <field id="nombre_cuenta" />
+        </helper>
+        <label>Cuenta</label>
+      </field>           
+      <field id="cuit_cuenta" tabla="REG_CUENTA">
+        <label>CUIT</label>
+        <expresion>IFNULL((SELECT cuit_cuenta FROM REG_MOVIMIENTOS rm join REG_CUENTA ON REG_CUENTA.id_regcuenta = regcuenta_id WHERE rm.cajmovimiento_id = CAJ_MOVIMIENTOS.id_cajmovimiento and rm.subsistema_id = CAJ_CONCEPTOS.subsistema_id LIMIT 1), referencia_movimiento)</expresion>
+      </field>      
+      <field id="pago_valor" suma="true" noZero="true" tabla="CAJ_VALORES">
+        <label>importe</label>
+      </field>                
+      
+      
+      
+      <!-- CTACTE 
+      <field id="ctacte" noZero="true" suma="true">
+        <expresion><![CDATA[CASE WHEN IFNULL(cajformapago_id, 0) < 1 THEN CAJ_MOVIMIENTOS.importe_movimiento ELSE 0 END]]></expresion>
+        <label>CTA. CTE.</label>
+        <tipo>numeric</tipo>
+      </field>
+      
+      <field id="imprimir" local="true" linkint="" print="false" tdWidth="50px">
+        <helper type="link">
+          <parameter source="id_cajmovimiento" target="id_cajmovimiento"/>
+          <parameter source="id_cajmovimiento" target="cajmovimiento_id"/>
+        </helper>
+        <attribute id="linkint">imprime_concepto</attribute>
+        <valor>IMPRIMIR</valor>
+      </field>
+      
+      <field id="imprime_concepto" tabla="CAJ_CONCEPTOS" noshow="true"/>
+                  -->
+      
+      <group>
+        <field id="id_cajmovimiento" />
+      </group>            
+      
+      
+    </table>
+   <!--
+    <join tipo="left">
+      <table id="REG_MOVIMIENTOSCUENTA">
+        <field id="id_regcuenta">
+          <condicion operador="=">regcuenta_id</condicion>
+        </field>
+      </table>
+    </join>                  
+
+    <join tipo="left">
+      <table id="REG_CUENTA">
+        <field id="id_regcuenta">
+          <condicion operador="=">regcuenta_id</condicion>
+        </field>
+      </table>
+    </join>                  
+-->    
+    <join >
+      <table id="CAJ_CONCEPTOS">
+        <field id="id_cajconcepto">
+          <condicion operador="=">CAJ_MOVIMIENTOS.cajconcepto_id</condicion>
+        </field>
+      </table>
+    </join>                  
+    
+    <join tipo="left">
+      <table id="CAJ_VALORES">
+        <field id="cajmovimiento_id">
+          <condicion operador="=">CAJ_MOVIMIENTOS.id_cajmovimiento</condicion>
+        </field>
+      </table>
+    </join>
+    
+    
+    
+  </form>
+</histrix>

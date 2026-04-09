@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="crud">
+	<title>Sección Calidad</title>
+	 <obs></obs>
+		<form >
+		    <table id="MRP_SECCION_CALIDAD" label="Sección Calidad">
+
+				<filters>
+
+					<field id="nombre_seccion_calidad">
+						<label>Nombre Sección</label>
+						<operador>like</operador>
+					</field>
+
+				</filters>	
+
+				<field id="id_seccion_calidad" esClave="true" noshow="true" />
+
+				<field id="nombre_seccion_calidad">
+					<label>Nombre Sección</label>
+					<!--helper type="combo" xml="seccion_carga_qry.xml" dir="/ayudas" empty="true"/-->
+				</field>
+
+		    </table>
+		</form>
+    </histrix>	

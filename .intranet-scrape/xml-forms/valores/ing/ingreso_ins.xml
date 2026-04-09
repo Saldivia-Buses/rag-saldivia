@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="insert">
+	<title>INSERT CAR_VALORES</title>
+	 <obs></obs>
+		<consulta>
+		    <table id="CAR_VALORES">
+				<field id="carbanco_id" 	id_temp="carbanco_id"/>
+				<field id="sucursal_banco" 	id_temp="sucursal_banco"/>
+				<field id="carplaza_id" 	id_temp="carplaza_id"/>
+				<field id="cuenta_valor" 	id_temp="cuenta_valor" >
+					<tipo>varchar</tipo>
+				</field>
+				<field id="nro_valor" 		id_temp="nro_valor" />
+				<field id="titular_valor" 	id_temp="titular_valor" />
+				<field id="cuit_valor" 		id_temp="cuit_valor" />
+				<field id="fecha_valor" 	id_temp="fecha_valor" />
+				<field id="acreditacion_valor"  id_temp="acreditacion_valor" />
+				<field id="importe_valor" 	id_temp="importe_valor"/>
+				<field id="moneda_id" 		id_temp="moneda_id"/>
+				<field id="regcuenta_id" 	id_temp="regcuenta_id"/>
+		    </table>
+		</consulta>
+    </histrix>	

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="update" esClave="true">
+    
+    <obs/>
+    <form >
+        <table id="CPS_MOVIMIENTOS" >
+
+		    <field id="id_cpsmovimiento" id_temp="id_cpsmovimiento" />
+	
+		    <field id="cierre"  >
+		    	<valor>now()</valor>
+		    	<tipo>integer</tipo>
+		    	
+		    </field>
+
+        </table>
+    </form>
+</histrix>

@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ficha" conBusqueda="true">
+	<title>Pedidos de Clientes</title>
+	<form >
+		<table id="PEDIDOSCLI">
+			<title>Pedidos de Clientes</title>
+			<field id="proxnro" local="true" deshabilitado="true">
+				<label style="color:red;">Numero</label>
+				<tabla_ex id="PEDIDOSCLI" >
+					<field id="pedido1">
+						<expresion>max(idPedido) + 1</expresion>
+					</field>					
+					<field id="pedido2">
+						<expresion>max(idPedido) + 1</expresion>
+					</field>				
+				<field id="idPedido" noselect="true">
+						<condicion operador="&lt;">10000</condicion>
+					</field>							
+					
+				</tabla_ex>				
+				<actualiza destino="idPedido" id="idPedido"></actualiza>
+			</field>			
+			
+			<field id="idPedido" esclave="true" deshabilitado="true" noshow="true">
+				<label>Nro Pedido</label>
+				<help>Numero de Pedido</help>
+				<detalle>idPedido</detalle>
+			</field>
+
+			<field id="login" deshabilitado="true">
+				<label>De Usuario </label>
+				<help>Usuario que hace el pedido</help>
+				<tabla_ex id="HTXUSERS">
+					<field id="login"></field>
+					<field id="nombre"></field>
+					<order>
+						<field id="nombre"></field>
+					</order>
+				</tabla_ex>
+				<valor eval="true">$_SESSION['usuario']</valor>
+				
+			</field>
+			<field id="idCliente" >
+				<label>A </label>
+				<help>A quien le hago el pedido</help>
+				<tabla_ex id="HTXUSERS">
+					<field id="login"></field>
+					<field id="nombre"></field>
+					<order>
+						<field id="nombre"></field>
+					</order>
+				</tabla_ex>
+			</field>		
+
+			<field id="nomCliente" autocompletar="true">
+				<expresion>CCTCUENT.ctanom</expresion>
+				<label modpos="nobr">Nombre</label>
+				<size>80</size>
+				<tipo>varchar</tipo>
+			</field>			
+			<field id="idEstado">
+				<tabla_ex id="ESTADOSPEDIDOS" xml="estadospedidos.xml" />
+				<label>Estado Pedido</label>
+				<help>Estado del Pedido</help>
+			</field>
+
+			<field id="libro" autocompletar="true">
+				<label colspan="4">Pedido</label>
+<!--				<ayuda_ex id="LIBROS"  >
+					<field id="titulo"></field>
+				</ayuda_ex>	-->			
+				<help>Encabezado del Pedido</help>
+			</field>
+
+
+			<field id="fecha">
+				<label>Fecha</label>
+				<help>Fecha</help>
+				<valor>today</valor>
+			</field>
+			
+			
+<!--			<field id="cantidad">
+				<label>Cantidad</label>
+				<help>Cantidad</help>
+			</field>-->
+			<field id="observaciones">
+				<label colspan="4">Observaciones</label>
+				<help>Descripcion y Observaciones del Pedido</help>
+			</field>
+
+<!--			<field id="tematica" obj="librotematica.xml" local="true">
+				<label>Tematicas</label>
+				<paring destino="idLibro">idLibro</paring>
+				<detalle>idLibro</detalle>
+			</field>
+-->			
+			
+		</table>
+		<join>
+			<table id="CCTCUENT">
+				<field id="ctacod">
+					<condicion operador="=">idCliente</condicion>
+				</field>
+			</table>
+			
+		</join>
+	</form>
+</histrix>

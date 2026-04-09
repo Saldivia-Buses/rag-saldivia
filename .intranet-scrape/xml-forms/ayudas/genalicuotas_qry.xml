@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" >
+    <title>alicuotas</title>
+    <obs></obs>
+    <form>
+        <table id="GEN_IVA_ALICUOTAS" >
+	  
+            <field id="alicuota" esClave="true" />
+	     
+            <field id="nombre_alicuota">
+                <expression>alicuota</expression>
+            </field>
+	     
+            <field id="ctbcuenta_iva_id" local="true">
+                <expression>(CASE WHEN '[__imputacion_concepto__]' = 0 THEN cuenta_haber_id ELSE cuenta_debito_id END)</expression>
+                <detalle>ctbcuenta_iva_id</detalle>
+            </field>
+            
+            <field id="ctbcuenta_percepcion_id">
+                <expression>cuenta_percepcion_id</expression>
+                <detalle>ctbcuenta_percepcion_id</detalle>
+            </field>
+		
+            <field id="ctbcuenta_percepcion_iva_id">
+                <expression>cuenta_percepcion_iva_id</expression>
+                <detalle>ctbcuenta_percepcion_iva_id</detalle>
+            </field>
+
+            <field id="iva_id" noshow="true">
+                <condicion operador="=">1</condicion>
+            </field>
+         
+            <group>
+                <field id="alicuota" />
+            </group>
+				
+        </table>
+    </form>
+</histrix>
+
+

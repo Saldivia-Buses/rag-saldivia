@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" _paginar="50">
+	<title>MEnsajes</title>
+	<obs/>
+	<consulta>
+		<table id="HTXMESSAGES" label="Mensajes recibidos" >
+
+			<field id="idMensaje" noshow="true" tipoOrden="DESC">
+				<label>id</label>
+			</field>
+			<field id="fecha" deshabilitado="true" >
+				<label Formstyle="display:none;">Fecha</label>
+				<valor>today</valor>
+			</field>
+			<field  id="hora" deshabilitado="true" >
+				<label Formstyle="display:none;">Hora</label>
+			</field>
+			<field id="de2" deshabilitado="true" >
+				<label>de</label>
+				<expresion>de</expresion>			
+				<tipo>varchar</tipo>	
+			</field>
+			<field id="para2" deshabilitado="true">
+				<label>para</label>
+				
+				<expresion>para</expresion>
+				<tipo>varchar</tipo>	
+			</field>
+		
+			<field id="mensaje" deshabilitado="true">
+				<expresion>case when isnull((select obs from HTXLOG where HTXLOG.idEvento = HTXMESSAGES.idEvento and HTXMESSAGES.idEvento != '' and (tipo = 'UPDATE' or tipo = 'DELETE') limit 1)) then mensaje else CONCAT(mensaje, ' (',(select obs from HTXLOG where HTXLOG.idEvento = HTXMESSAGES.idEvento and (tipo = 'UPDATE' or tipo = 'DELETE') limit 1),')') end </expresion>
+				<label Formstyle="display:none;"
+					colstyle="color:#444;font-size:15px;">mensaje</label>
+				<help>Texto del mensaje</help>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="msg2" deshabilitado="true"  local="true" noshow="true">
+				<if exp="true">
+					<verdadero>str_replace('%0A', '%0A>>', urlencode('>>mensaje'))</verdadero>
+					<falso>''</falso>
+				</if>
+				<tipo>varchar</tipo>
+			</field>			
+			
+			<field id="idEvento" noshow="true"></field>
+			<field id="det" print="false" local="true" linkint="log_msg_cons.xml" linkdes="Detalle">
+                <label>Detalles</label>				
+				<paring destino="idEvento" operador="=">idEvento</paring>
+				<tipo>varchar</tipo>
+				<if exp="strlen('idEvento') != 0">
+					<verdadero>'Detalle'</verdadero>
+					<falso>''</falso>
+				</if>
+			</field>					
+			<field id="responder" local="true" print="false"  linkint="mensajes_reply.xml" linkdes="Responder este Mensaje">
+				<label Formstyle="display:none;">Responder</label>
+				<tipo>varchar</tipo>
+				<valor><![CDATA['<img alt="../img/mail_generic.png" src="../img/mail_generic.png"/>']]></valor>
+				<paring destino="para" operador="=">de</paring>
+				<paring destino="idHilo" >idMensaje</paring>
+				<paring destino="mensaje" operador="=">msg2</paring>					
+			</field>			
+			<field id="leido">
+				<label Formstyle="display:none;">leido</label>
+				<opciones>
+					<opcion valor="0">No</opcion>
+					<opcion valor="1">Si</opcion>
+				</opciones>
+				<tipo>radio</tipo>
+				
+			</field>
+			
+			<order>
+				<field id="idMensaje"/>
+			</order>
+		</table>
+	</consulta>
+</histrix>

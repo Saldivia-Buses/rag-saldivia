@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  CRUD
+Tarea: Carga Listas de Precios
+Autor: d!ego2k
+Fecha: 21/12/11
+*******************************************************************************
+-->
+<histrix tipo="abm-mini" subtipo="vertical"  imprime="false">
+    <title>Maestro de Listas de Precios de Productos</title>
+    <obs></obs>
+    <form detalle="stklistadetalle_crud.xml">
+
+        <table id="STK_LISTAS" label="Maestro de Precios de Productos">
+
+            <field id="id_stklista" autoinc="true" esClave="true" noshow="true" >	    
+                <detalle>stklista_id</detalle>
+            </field>
+
+            <field id="stklista_nombre">
+                <label>Descripcion</label>
+                <size>20</size>
+            </field>
+            
+            <field id="porcentaje_desc">
+                <label>Descuento (%)</label>
+            </field>
+
+            <field id="porcentaje_desc1">
+                <label>Descuento Adc. (%)</label>
+            </field>
+            
+            <field id="rentabilidad_auto">
+                <label>Rentabilidad (%)</label>
+                <tipo>decimal</tipo>
+            </field>
+
+            <field id="rangos" local="true" Formstyle="display: none;">
+          	  <helper xml="stk_descvolumen_crud.xml" type="link" width="400px" height="400px">
+          		<parameter source="id_stklista" target="stklista_id" />
+          	  </helper>
+          	  <valor>'Descuento por volumen'</valor>
+            </field>
+
+        </table>
+    </form>
+</histrix>
+

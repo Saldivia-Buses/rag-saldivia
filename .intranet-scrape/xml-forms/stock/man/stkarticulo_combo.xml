@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini">
+  <title>Combo de Artículos</title>
+  <obs/>
+  <form>
+    <table id="STK_ARTICULO_COMBO" label="Combo de Articulos">
+
+      <field id="id_stkarticulocmb" autoinc="true" noshow="true"/>
+
+      <field id="stkarticulo_id" noshow="true" valauto="true"/>
+
+      <field id="stkarticulocombo_id">
+        <label>Articulo</label>
+        <helper type="external" id="STK_ARTICULOS">
+      	  <field id="id_Stkarticulo">
+      		<label>Código</label>
+      	  </field>
+      	  <field id="nombre_articulo">
+      	    <label>Nombre</label>
+      		<detalle>nombre_articulo_combo</detalle>
+      	  </field>
+        </helper>
+        <help>Articulo</help>
+        <size>12</size>
+      </field>
+
+      <field id="nombre_articulo_combo">
+    	<expresion>STK_ARTICULOS.nombre_articulo</expresion>
+        <label>Artículo</label>
+        <size>80</size>
+      </field>
+
+      <field id="cantidad">
+        <label>Cantidad</label>
+        <help>Cantidad</help>
+      </field>
+    </table>
+
+    <join tipo="left">
+      <table id="STK_ARTICULOS">
+        <field id="id_stkarticulo">
+          <condicion operador="=">stkarticulocombo_id</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:         CRUD
+Tarea:        CRUD para la Tabla de Forma de envíos
+Descripcion:  Asocia la forma de envío con el movimiento
+Autor:        Juan Gabriel Cabral
+Fecha:        10/11/2015
+*******************************************************************************
+-->
+<histrix tipo="crud">
+	<title>Formas de envíos</title>
+	<obs></obs>
+	<form>
+		<table id="GEN_FORMA_ENVIOS" label="Formas de envíos">						
+										
+			<field id="id_formaenvio" noshow="true" autoinc="true" />
+
+                	<field id="nombre">
+				<label>Nombre</label>
+			</field>
+						
+		</table>
+	</form>
+</histrix>

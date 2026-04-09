@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="insert">
+	<title>Ingreso Movimiento</title>
+	 <obs></obs>
+		<form >
+		    <table id="STK_MOVIMIENTOS">
+
+				<field id="regdetalle_id"			lastId="mos_regdetalles_ins_cav.xml" />
+				<field id="stkarticulo_id"         	id_temp="codigo_detalle"/>
+				<field id="stkconcepto_id" 	    	id_padre="stkconcepto_id"/>
+
+				<field id="regcuenta_id"           	id_padre="regcuenta_id"/>
+				<field id="fecha_movimiento" 	   	id_padre="fecha_movimiento"/>
+				<field id="alta_movimiento" 	   	id_padre="fecha_movimiento"/>
+
+				<field id="puesto_movimiento" 	   	id_padre="puesto_movimiento"/>
+				<field id="numero_movimiento" 	   	id_padre="nro_movimiento"/>
+			
+				<field id="orden_movimiento" 	   	id_temp="_ORDEN"/>
+				<field id="cantidad" 	       		id_temp="cantidad_detalle"/>
+				<field id="precio_costo"       		id_temp="precio_costo"/>
+				<field id="precio_venta" 	   		id_temp="precio_vta"/>
+				<field id="precio_total"       		id_temp="total_detalle"/>
+				<field id="referencia" 	       		id_temp="descripcion_detalle"/>
+				<field id="unidad_id" 	       		id_temp="stkunidad_id"/>
+				
+				<field id="stkdeposito_id" 	  	 	id_padre="Stkdeposito_id" />
+				<field id="stklista_id"       		id_padre="wstklista_id"/>
+
+				<field id="stkfamilia_id" 	  	 	id_temp="stkfamilia_id"/>
+				<field id="stkrubro_id" 	  	 	id_temp="stkrubro_id"/>
+				<field id="cajmovimiento_id"   lastId="cajmovimientos_ins.xml" />
+				
+				<field id="base">
+				    <valor eval="true">$_SESSION['db']</valor>
+				</field>
+        
+                <field id="regmovimiento_id" lastId="mos_regmovimientos_ins.xml" />
+
+		    </table>
+		</form>
+    </histrix>	
+
+

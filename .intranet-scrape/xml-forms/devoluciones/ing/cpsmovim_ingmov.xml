@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+	<histrix tipo="update" >
+		<title>MOVIMIENTOS DE orden compras</title>
+		<obs></obs>
+		<form >
+			<table id="CPSMOVIM" label="MOVIMIENTOS">
+				
+				<field id="artcod" id_temp="artcod" esClave="true" />
+				<field id="ocpnro" id_temp="ocpnro" esClave="true" />
+				<!--  VER COMO GRABAR ESTO
+				<field id="penuso" id_temp="penuso">
+					<label>Pend</label>
+				</field>
+				-->
+				<field id="pencps" id_temp="newpencps">
+				</field>
+
+
+			</table>
+		</form>
+	</histrix>

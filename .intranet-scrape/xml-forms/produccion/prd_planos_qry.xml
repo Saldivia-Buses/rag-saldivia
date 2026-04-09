@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" class="consultaancha" path="planos/coches/">
+    <title>Planos</title>
+    <obs></obs>
+    <form >
+        <table id="PRD_PLANOS" label="Planos">
+            <field id="nrofab" oculto="true"></field>
+            <field id="seccion_id" oculto="true">
+            </field>
+        <field id="nombre" noshow="true">
+            <expression>file</expression>
+        </field>             
+		<field  id="file" path="nrofab" open="true" _print="false" _download="false" width="15" height="46">
+			<tipo>file</tipo>
+                <size>32</size>  
+                <condicion operador="!=">''</condicion>
+		</field> 	      
+        <field id="descripcion" >
+            <label>Descripción</label>
+            <help>Descripción</help>
+            <tipo>varchar</tipo>
+        </field>
+
+        <field id="revision">
+            <label>Revision</label>
+            <help>Revision</help>
+            <tipo>integer</tipo>
+            <valor>00</valor>
+            <size>1</size>
+        </field>
+
+      <field id="userid" >
+        <label>Cargó</label>
+        <expression>concat(IFNULL(HTXUSERS.Nombre, ''),' ', IFNULL(HTXUSERS.apellido,''),' ', stamp)</expression>
+        <size>25</size>
+      </field>
+	    
+        <group>
+		  <field id="file" />
+	    </group>
+        
+    </table>
+
+        <join tipo="left">
+            <table id="HTXUSERS">
+            <field id="login">
+                <condicion operador="=">usuario</condicion>
+            </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

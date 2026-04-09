@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Esta grabación tiene como objetivo grabar la partida contable
+	referida a la cuenta de disponibilidades
+-->
+<histrix tipo="insert">
+  <title>Grabación detalle Movimiento de Caja</title>
+  <obs/>
+  <form>
+    <table id="CAJ_DETALLES">
+      <field id="cajmovimiento_id" lastId="minuta_interna_ins.xml"/>
+      <field id="cuenta_id"       id_temp="ctbcuenta_detalle"/>
+      <field id="doh"             id_temp="doh_detalle"><tipo>varchar</tipo></field>     
+      <field id="importe_detalle" id_temp="importe_detalle"/>
+    </table>
+  </form>
+</histrix>

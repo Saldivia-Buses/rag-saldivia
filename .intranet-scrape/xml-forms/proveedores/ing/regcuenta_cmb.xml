@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+  <title>Movimientos</title>
+  <obs/>
+  <form>
+    <table id="REG_CUENTA" label="Proveedores">
+
+      <field id="id_regcuenta" esClave="true">
+          <detalle>regcuenta_id</detalle>
+      </field>
+
+      <field id="subsistema_id" oculto="true" />
+      
+      <field id="nombre_cuenta">
+        <label>Nombre</label>
+        <detalle>nombre</detalle>
+      </field>
+      <field id="abreviacion_iva" tabla="GEN_IVA">
+        <detalle>nombre_iva</detalle>
+      </field>
+      <field id="cuit_cuenta">
+        <detalle>cuit_cuenta</detalle>
+      </field>
+      <field id="cod_direccion">
+        <label>Direccion</label>
+        <detalle>direccion</detalle>
+      </field>
+      <field id="nombre_localidad" tabla="GEN_LOCALIDADES">
+        <label>Localidad</label>
+        <detalle>localidad</detalle>
+      </field>
+      <field id="nombre_provincia" tabla="GEN_PROVINCIAS">
+        <label>Provincia</label>
+        <detalle>provincia</detalle>
+      </field>
+
+      <field id="cuenta_prov_debe">
+        <expresion>
+                          ifnull((SELECT cuenta_id
+                             FROM REG_CUENTA_IMPUTACION
+                            WHERE REG_CUENTA_IMPUTACION.regcuenta_id = REG_CUENTA.id_regcuenta
+                              AND REG_CUENTA_IMPUTACION.doh = (CASE WHEN '0' = 0 THEN 0 ELSE 1 END)
+                                  LIMIT 1), GEN_SUBSISTEMAS.cuenta_debe_id ) 
+        </expresion>
+        <detalle>cuenta_prov_debe</detalle>
+      </field>
+
+      <field id="cuenta_prov_haber">
+        <expresion>
+                          ifnull((SELECT cuenta_id
+                             FROM REG_CUENTA_IMPUTACION
+                            WHERE REG_CUENTA_IMPUTACION.regcuenta_id = REG_CUENTA.id_regcuenta
+                              AND REG_CUENTA_IMPUTACION.doh = (CASE WHEN '0' = 0 THEN 1 ELSE 0 END)
+                                  LIMIT 1) , GEN_SUBSISTEMAS.cuenta_haber_id ) 
+        </expresion>
+        <detalle>cuenta_prov_haber</detalle>
+      </field>
+
+      <field id="iva_id" noshow="true">
+          <detalle>iva_id</detalle>
+          <detalle>regcuenta_ivaid</detalle>
+      </field>
+      
+      <field id="letra" noshow="true">
+    	<expresion>CASE WHEN iva_id = 1 THEN 'A' ELSE 'C' END</expresion>
+    	<detalle>letra_movimiento</detalle>
+  	  </field>
+  	  
+  	  <field id="muestragrilla" noshow="true">
+		<expresion>CASE WHEN iva_id = 1 THEN 0 ELSE 1 END</expresion>
+    	<detalle>test</detalle>
+  	  </field>  	   
+  	  
+      <field id="percepcion" noshow="true">
+          <detalle>percepcion</detalle>
+      </field>
+      <field id="tel_cuenta" noshow="true">
+          <detalle>telefono</detalle>
+      </field>
+
+	<group>
+	    <field id="id_regcuenta"></field>
+	</group>
+
+	<order>
+	    <field id="nombre_cuenta"></field>
+	</order>
+	
+    </table>
+
+    <join tipo="left">
+      <table id="GEN_LOCALIDADES">
+        <field id="id_localidad">
+          <condicion operador="=">REG_CUENTA.localidad_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="GEN_PROVINCIAS">
+        <field id="id_provincia">
+          <condicion operador="=">REG_CUENTA.provincia_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <tabla id="GEN_IVA">
+        <field id="id_iva">
+          <condicion operador="=">REG_CUENTA.iva_id</condicion>
+        </field>
+      </tabla>
+    </join>
+    <join>
+      <tabla id="GEN_SUBSISTEMAS">
+        <field id="id_subsistema">
+          <condicion operador="=">REG_CUENTA.subsistema_id</condicion>
+        </field>
+      </tabla>
+    </join> 
+
+  </form>
+</histrix>

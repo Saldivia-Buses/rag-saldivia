@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+   <histrix tipo="insert">
+       <title>Minuta</title>
+        <obs></obs>
+               <form >
+		<table id="CTBREGIS" label="Minuta" idCampoCond="Grabar">
+			<field id="siscod" >
+			    <valor>'22'</valor>
+			</field>
+			<field id="ctbcod" id_temp="ctbhaber">
+			</field>
+			<field id="regfec" id_temp="fecha_movimiento">
+			</field>
+			<field id="regmin" >
+			    <valor>(select numapr from CTBNUMER where siscod = '10' and nummes = substring('[__fecha_movimiento__]',4,2))</valor>
+			</field>
+			<field id="regref" >
+				<valor>'Asiento Automático'</valor>
+			</field>
+			<field id="regdoh" id_temp="regdoh">
+				<valor>2</valor>
+			</field>
+			<field id="regimp" id_temp="importefinal" >
+			</field>
+			<field id="regnro" id_temp="nro_movimiento">
+			</field>
+			<field id="regpoa" >
+			    <valor>'A'</valor>
+			</field>
+			<field id="regord" >
+			    <valor>1</valor>
+			</field>
+		</table>
+           </form>
+    </histrix>

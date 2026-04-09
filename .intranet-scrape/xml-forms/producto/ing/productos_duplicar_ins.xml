@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert" >
+    <title>CONSULTA DE PEDIDOS DE FABRICACION</title>
+    <form  >
+    
+        <table id="PEDCOTIZ" label="Pedido de Fabricacion" idCampoCond="marco">
+    	    <sql>
+    	    create temporary table temp_orden as select * from PEDCOTIZ WHERE PEDCOTIZ.id = [__id__];
+
+            update  temp_orden set id=0 , ingresoLinea = '0000-00-00', terminacion = '0000-00-00', terminacionFinal = '0000-00-00', pedfec = CURDATE(), nrocha = '[__descripcion_producto_nuevo__]' , login = '[__login__]', estado_ficha = 0;
+    
+	    insert into PEDCOTIZ select * from temp_orden ;
+
+    	    drop temporary table temp_orden;
+
+	    SET @id_pedcotiz := LAST_INSERT_ID();
+
+	    INSERT INTO PRODUCTO_ATRIB_VALORES (producto_id, prdatributo_id, valor_atributo, cantidad_atributo, cotizacion_id)
+				    SELECT @id_pedcotiz, prdatributo_id, valor_atributo, cantidad_atributo, cotizacion_id FROM PRODUCTO_ATRIB_VALORES WHERE producto_id = [__id__];
+
+            insert into ACCESORIOS_COCHE (ficha_id, artcod, artdes, fecha, estado, precio_adicional, cantidad, prdseccion_id, muestra_fv, muestra_ft)
+                          select @id_pedcotiz, ACC.artcod,ACC.artdes, CURDATE(), ACC.estado, ACC.precio_adicional, ACC.cantidad, ACC.prdseccion_id, ACC.muestra_fv, ACC.muestra_ft
+                                        from ACCESORIOS_COCHE as ACC where ACC.ficha_id = [__id__];
+
+            </sql>
+    	    <field id="id" id_temp="id" />
+            <field id="login" id_temp="login" />
+            <field id="descripcion_producto_nuevo" id_temp="descripcion_producto_nuevo" local="true"/>
+        </table>
+        
+    </form>
+</histrix>

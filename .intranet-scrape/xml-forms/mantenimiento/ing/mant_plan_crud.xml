@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+*******************************************************************************
+Tipo:  CURD
+Tarea: PLAN DE MANTENIMIENTO
+Autor: Lmm
+Fecha: 17/08/11
+****************************************************************************
+-->
+
+<histrix tipo="crud">
+    <title>Mantenimiento</title>
+    <obs></obs>
+    <form>
+        <table id="MANT_PLAN" label="Plan de mantenimiento">
+       
+            <field id="id_plan" esClave="true" noshow="true" />
+            
+            <field id="equipo_id" >
+                <helper type="combo" xml="mant_equipos_crud.xml" dir="/mantenimiento/man/" />
+                <label>Nombre</label>
+            </field>
+            
+            <field id="accion_id" >
+                <helper type="combo" xml="mant_acciones_crud.xml" dir="/mantenimiento/man/"/>
+                <label>Accion</label>
+            </field>
+            
+            <field id="fecha_inicio">
+                <label>Fecha Inicio</label>
+                <help>Fecha de inicio</help>
+                <tipo>date</tipo>
+            </field>
+
+            <field id="periodicidad">
+                <label>Periodicidad</label>
+                <help>Periodicidad</help>
+            </field>
+         
+        </table>
+    </form>
+</histrix>

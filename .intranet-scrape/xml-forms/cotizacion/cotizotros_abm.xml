@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+	<histrix tipo="abm-mini" imprime="false" >
+		<title>OTROS</title>
+		<obs></obs>
+	    <eventos>
+		    <event id="procesar">close</event>
+	    </eventos>		
+		<form>
+			<table id="COTIZOTROS"	styleTbody="height:150px;">
+	
+				<title>OTROS</title>
+				<campo id="idCotiz" noshow="true" deshabilitado="true" esClave="true" >
+				</campo>
+				<campo id="idMovim" noshow="true" deshabilitado="true" esClave="true" autoinc="true">
+				</campo>				
+				
+				<campo id="idSeccion" _deshabilitado="true"  >
+					<tabla_ex id="COTIZSECCION">
+						<campo id="idSeccion" ></campo>
+						<campo id="nombre" ></campo>						
+					</tabla_ex>
+					<tipo>varchar</tipo>
+					<label >Seccion</label>
+					<valor>22</valor>
+				</campo>
+				<campo id="descripcion" forceSize="true" >
+					<label>Descripción</label>
+					<size>50</size>
+
+				</campo>
+			</table>
+		</form>
+	</histrix>

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="crud">
+	<title>Conceptos</title>
+	 <obs></obs>
+		<form>
+		    <table id="REG_CONCEPTOS" label="Conceptos">
+
+				<field id="id_concepto" autoinc="true" noshow="true" />
+			   
+				<field id="descripcion_concepto">
+					<label>Descripcion</label>
+				</field>
+			 
+				<field id="abreviacion_concepto">
+					<label>Abreviación</label>
+				</field>
+
+				<field id="imputacion_concepto">
+					<label>Imputacion</label>
+					<help>Imputación del Concepto</help>
+					<options>
+						  <option valor="0">Debe</option>
+						  <option valor="1">Haber</option>
+					</options>
+				</field>
+
+				<field id="tipo_concepto">
+					<label>Libro IVA</label>
+					<help>Registración de los comprobantes en Libro de IVA</help>
+					<tipo>check</tipo>
+				</field>
+
+				<field id="subsistema_id" oculto="true" valauto="true">
+					<condicion operador="=">'[__subsistema_id__]'</condicion>
+				</field>
+
+		    </table>
+		</form>
+    </histrix>	

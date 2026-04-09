@@ -1,0 +1,318 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" subtipo="vertical"  path="fotos/homologaciones/">
+  <title>HOMOLOGACION POR MODELO</title>
+  <obs/>
+  <form >
+    <table id="HOMOLOGMOD">
+      <title>Homologaciones por modelo</title>
+      <filters auto="true">  
+
+      <field id="nrocar">
+          <operador>=</operador>
+          <label modpos="nobr">Modelo</label>
+      </field>
+
+        <field id="marcod">
+    	    <label modpos="nobr" >Marca</label>
+    	    <operador>=</operador>
+        </field>
+
+      <field id="banbar">
+          <operador>=</operador>
+          <label modpos="nobr">Baño</label>
+      </field>
+
+      <field id="baja">
+          <operador>=</operador>
+          <label modpos="nobr">Estado</label>
+          <valor>0</valor>
+      </field>
+
+      </filters>
+      <field id="id_homologacion" _noshow="true" deshabilitado="true" autoinc="true" >
+          <label>Hom.</label>
+      </field>
+
+
+      <field id="baja">
+        <label modpos="nobr" colstyle="display:none;">Estado</label>
+        <options>
+          <option valor="0">Activo</option>
+          <option valor="1">No Activo</option>          
+        </options>
+      </field>
+ 
+      
+      
+      <field id="modelo_lcm_id" required="true">
+            <label modpos="nobr">Carroceria.Chasis.LCM.MaxAsientos</label>
+            <helper type="combo" xml="prod_modelo_lcm_qry.xml" empty="true">
+                  <field id="marcod">
+                        <expression>marcod</expression>
+                        <detalle>marcod</detalle>
+                  </field>
+                  <field id="nrocar">
+                        <expression>nrocar_id</expression>
+                  </field>
+                  <field id="lcm">
+                        <expression>numero_lcm</expression>
+                  </field>
+             </helper>
+      </field>
+
+      <field id="nroc2" noshow="true">
+        <expression>HOMOLOGMOD.nrocar</expression>
+        <tipo>integer</tipo>
+      </field>
+      <field id="modc2" noshow="true">
+        <expression>HOMOLOGMOD.modcha</expression>
+      </field>
+
+      <field id="nrocar" deshabilitado="true">
+        <label colstyle="display:none;">Carroceria</label>
+        <tabla_ex id="CARROCERIA" vacio="true">
+          <field id="nrocar">
+            <label>Codigo</label>
+          </field>
+          <field id="desabv">
+            <label>Modelo</label>
+          </field>
+          <field id="vigente">
+              <condicion operador="=">1</condicion>
+          </field>
+          <order>
+            <field id="desabv" />
+          </order>          
+        </tabla_ex>
+      </field>
+
+      <field id="marcod" sincelda="true" deshabilitado="true">
+        <label modpos="nobr" colstyle="display:none;">Marca</label>
+        <help>Marca del Chasis</help>
+        <helper type="combo" id="MARCHASIS" empty="true">
+          <field id="marcod" clave="true" />
+          <field id="mardes"/>
+          <order>
+            <field id="mardes" tipoOrden="DESC" />
+          </order>
+        </helper>
+                <actualiza>
+                    <field destino="modelo_id" id="modcod"/>
+                </actualiza>
+         
+      </field>
+
+      <field id="modelo_id" deshabilitado="true">
+        <label modpos="nobr" colstyle="display:none;">Modelo</label>
+        <help>Modelo del Chasis</help>
+        <tabla_ex id="MODCHASIS" vacio="true">
+          <field clave="true" id="id_modelo">
+            <label>Modelo</label>
+            <help>Codigo del Modelo de Chasis</help>
+          </field>
+          <field id="moddes">
+              <label>Descripcion</label>
+              <help>Descripcion del Modelo</help>
+              <expression>CONCAT(MODCHASIS.desabv, ' ', (case when MODCHASIS.euro_id = 1 then 'E3' else (case when MODCHASIS.euro_id = 2 then 'E5' else '' end) end))</expression>
+          </field>
+          <field id="marcod" oculto="true">
+            <label>Marca Chasis</label>
+          </field>
+          <field id="modcha">
+            <detalle>modcha</detalle>
+          </field>
+        </tabla_ex>
+      </field>
+
+	<field id="modcha" colstyle="display:none;" Formstyle="display:none;">
+	    <label modpos="nobr">Chasis</label>
+	</field>
+
+      <field id="asientos" required="true">
+        <label modpos="nobr">Asientos</label>
+        <label>Cantidad de Asientos</label>
+      </field>
+
+      <field id="asientos_plantabaja" noZero="true">
+        <label modpos="nobr">As.PB</label>
+        <label>Cantidad de Asientos Planta Baja</label>
+      </field>
+
+       <field id="acompañante">
+        <label modpos="nobr">Acomp.</label>
+        <help>Acompañante</help>
+        <options>
+            <option valor="1">Integrado</option>
+            <option valor="0">En Cabina</option>
+            <option valor=""></option>
+        </options>
+      </field>
+
+       <field id="auxiliar" sincelda="true">
+        <label modpos="nobr">Auxi.</label>
+        <help>Auxiliar</help>
+        <options>
+            <option valor=""></option>
+            <option valor="0">No</option>
+            <option valor="1">Si</option>
+        </options>
+      </field>
+
+       <field id="banbar">
+        <label >B/B</label>
+        <help>Bar y Baño</help>
+        <options>
+            <option valor=""></option>
+            <option valor="0">No</option>
+            <option valor="1">Si</option>
+        </options>
+      </field>
+      <field id="tipserv" noshow="true">
+        <label  modpos="nobr">Tipo Serv.</label>
+        <help>Tipo de Servicio</help>
+        <tabla_ex id="TIPOSERVICIO">
+                        <field id="tipserv">
+                        </field>
+                        <field id="servdes">
+                        </field>          
+        </tabla_ex>
+      </field>
+      <field id="plano">
+        <label modpos="nobr">Plano Nro</label>
+        <help>Numero de Plano</help>
+      </field>  
+      <field id="expte">
+        <label modpos="nobr" >Expte Nro</label>
+        <help>Numero de Expediente</help>
+      </field>
+      <field id="dispos">
+        <label _modpos="nobr">Disposición</label>
+        <help>Disposición</help>
+      </field>
+      
+      
+      
+      <field id="fechaAprob">
+        <label modpos="nobr">Fecha Aprob.</label>
+        <help>Fecha de Aprobación</help>
+      </field>
+      
+       <field id="fechaVto">
+        <label modpos="nobr">Fecha Vto.</label>
+        <help>Fecha de Vencimiento</help>
+         <tipo>date</tipo>
+          
+      </field>
+      
+      <field id="tara">
+        <label >Tara</label>
+        <help>Tara</help>
+      </field>
+      <field id="bruto">
+        <label modpos="nobr">Peso Bruto</label>
+        <help>Peso Bruto</help>
+      </field>
+      <field id="admisible">
+        <label modpos="nobr">Peso Adm (Ton)</label>
+        <help>Peso Máximo Admisible en toneladas</help>
+        <size>2</size>
+      </field>      
+
+
+      <field id="idLargo" deshabilitado="true" required="true" noshow="true">
+  <label>Largo (int)</label>
+  <helper type="combo" id="TIPOLARGO">
+      <field id="idLargo" />
+      <field id="desc">
+    <expression>CONCAT(desde, '-', hasta)</expression>
+      </field>
+  </helper>
+      </field>
+
+
+      <field id="largo" required="true">
+        <label modpos="nobr">Largo</label>
+        <help>Largo en metros</help>
+      </field>
+      <field id="bodega">
+        <label modpos="nobr">Bodega</label>
+        <help>Capacidad de bodega en m3</help>
+      </field>      
+      
+      <field id="capacidad_combustible">
+        <label modpos="nobr">Capac. Combust.</label>
+        <help>Capacidad de combustible en Lts.</help>
+        <tipo>decimal</tipo>
+      </field> 
+
+      <field id="obs">
+        <label _modpos="nobr">Obs.</label>
+        <help>Observaciones</help>
+      </field>
+      <field id="referencia">
+        <label modpos="nobr">Referencia</label>
+        <help>Datos extras salen en el Nombre</help>
+        <size>30</size>
+      </field>
+                                  
+       <field id="carpeta_planos" local="true" linkint="prod_carpeta_planos_crud.xml" linkdir="fabricacion" linkdes="Carpeta Planos" linkWidth="90%" Formstyle="display:none;">
+          <label modpos="nobr">PL STD</label>
+          <paring destino="homologacion_id">id_homologacion</paring>
+          <expression>select CONCAT(count(*), ' PL') FROM PRD_CARPETA_PLANOS where PRD_CARPETA_PLANOS.homologacion_id = id_homologacion</expression>
+      </field>
+
+
+      <field id="fotos_produccion" obj="homol_fotos_prod.xml" showInForm="false" showObjTabla="false" showValor="true" linkint="homol_fotos_prod.xml" linkdes="Fotos" local="true" >
+        <label>Fotos Produ</label>
+        <paring destino="homologacion_id" operador="=">id_homologacion</paring>
+        <expression>select (case when count(*) != 0 then CONCAT(count(*) , ' Fotos') else '0 Fotos' end ) from HOMOLOG_FOTOS_PROD where HOMOLOG_FOTOS_PROD.homologacion_id = HOMOLOGMOD.id_homologacion</expression>
+        <valor>'Fotos Produc'</valor>
+        <tipo>varchar</tipo>
+      </field>          
+
+
+      <field id="hi" deshabilitado="true" clasefila="true" noshow="true" local="true">
+        <if exp="baja == 1">
+          <true>'grisado'</true>
+          <false>''</false>
+          
+        </if>
+        <tipo>varchar</tipo>
+              
+      </field>        
+     
+      <order>
+        <field id="baja"></field>
+        <field id="nrocar" tabla="HOMOLOGMOD"></field>
+        <field id="moddes" tabla="MODCHASIS"></field>
+        <field id="asientos" ></field>
+
+      </order>
+    </table>
+    <join tipo="left">
+               <table id="CARROCERIA">
+          <field id="nrocar">
+                 <condicion operador="=">HOMOLOGMOD.nrocar</condicion>
+          </field>
+        </table>    
+    </join>    
+    <join tipo="left">
+      <table id="MARCHASIS">
+        <field id="marcod">
+          <condicion operador="=">HOMOLOGMOD.marcod</condicion>
+        </field>
+      </table>
+    </join>    
+    <join tipo="left">
+      <table id="MODCHASIS">
+        <field id="modcha">
+          <condicion operador="=">HOMOLOGMOD.modcha</condicion>
+        </field>
+        <field id="marcod">
+          <condicion operador="=">HOMOLOGMOD.marcod</condicion>
+        </field>
+      </table>
+    </join>
+    
+  </form>
+</histrix>

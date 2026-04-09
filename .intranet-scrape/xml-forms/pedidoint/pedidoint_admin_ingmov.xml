@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="update" >
+	<title>Pedidos Internos</title>
+	<obs/>
+	<form >
+		<table id="PEDIDOINT"  label="Pedidos Internos">
+			<field id="idPed" id_temp="idPed" esClave="true"></field>			
+			<field id="confirmado" id_temp="aremito">
+			</field>
+		</table>
+	</form>
+</histrix>

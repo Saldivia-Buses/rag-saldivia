@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="ficha" sololectura="true" autoprint="true">
+	<title>REMITOS</title>
+	<obs></obs>
+	<form >
+		   <pdf>
+			  <code><![CDATA[
+			  $pdf->DashedRect(110,240,$pdf->anchoPagina,240, 0.1, 50);
+			  
+			  
+			  ]]></code>
+		  </pdf>		
+		<table id="REMITOINT" label="REMITO INTERNO" graba="false">
+
+			<field id="idRemito" deshabilitado="true">
+				<label modpos="nobr" posx="6" posy="+1" PDFsize="14">Remito Numero</label>
+				<help>Numero de Remito</help>
+				<format>%08d</format>
+			</field>			
+			<field id="fecha" deshabilitado="true">
+				<label modpos="nobr" posx="140" posy="0" PDFsize="14">Fecha</label>
+				<valor>today</valor>				
+			</field>
+			<field id="idDepositoOrig">
+				<label posx="6" posy="+2" PDFsize="10">Origen</label>
+				<tabla_ex id="DEPOSITO">
+					<field id="idDeposito">
+					</field>
+					<field id="direccion">
+					</field>
+				</tabla_ex>							
+			</field>
+			<field id="idDepositoDest">
+				<label posx="6" posy="+1" PDFsize="10">Destino</label>
+				<tabla_ex id="DEPOSITO">
+					<field id="idDeposito">
+					</field>
+					<field id="direccion">
+					</field>
+				</tabla_ex>							
+			</field>
+			<field id="login" deshabilitado="true" oculto="true">
+				<valor eval="true">$_SESSION['usuario']</valor>
+			</field>
+			-<field id="movimientos" local="true" obj="remdetal_impresion.xml">
+				<label colspan="4" posx="9" posy="+8" PDFsize="8">DETALLE</label>
+				<paring destino="idRemito">idRemito</paring>
+			</field> 
+				<field id="firma" local="true">
+					<label size="60" posx="135" posy="240" PDFsize="12" PDFnoborder="true" >Recibi Conforme</label>
+				</field>		</table>
+	</form>
+</histrix>

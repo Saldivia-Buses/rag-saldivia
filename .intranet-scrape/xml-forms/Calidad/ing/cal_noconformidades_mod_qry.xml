@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<histrix tipo="consulta" width="35%">
+    <title>Ingreso de No Conformidad</title>
+    <obs></obs>
+    <form _detalle="cal_noconformidades_mod_ficha.xml">
+        <table id="CAL_NOCONFORMIDADES" >
+        <validation>
+                <condition><![CDATA[ resp_rhpersonal_id == 0 ]]></condition>
+                <message>Ingrese un Responsable</message>
+            </validation>
+
+            <title>Estados</title>
+            <filters>
+                <field id="tiponconf_id">
+                    <label>Tipo No conformidad</label>
+                    <help>Tipo No conformidad</help>
+                    <operador>=</operador>
+                </field>
+                <field id="estadonconf_id">
+                    <label modpos="nobr">Estado</label>
+                    <help>Estado de la No conformidad</help>
+                                        <operador>=</operador>
+                </field>
+                <field id="origennconf_id">
+                    <label modpos="nobr">Origen</label>
+                    <help>Origen de la No conformidad</help>
+                    <operador>=</operador>
+                </field>
+
+                <field id="rhseccion_id">
+                    <label modpos="nobr">Seccion</label>
+                    <help>Seccion de la No conformidad</help>
+                                        <operador>=</operador>
+                </field>
+
+   		       <field id="responsable_nconf">
+                    <label>Resp</label>
+                    <help>Responsable</help>
+                    <operador>=</operador>
+                </field>
+              
+                <field id="fecha_nconf" >
+                    <label modpos="nobr">Desde Fecha</label>
+                    <help>Fecha de No conformidad</help>
+                    <operador>&gt;=</operador>
+                </field>
+                <field id="fecha_nconf" >
+                    <label modpos="nobr">Hasta Fecha</label>
+                    <help>Fecha de No conformidad</help>
+                    <valor>today</valor>
+                    <operador>&lt;=</operador>
+                </field>
+		<field id="descripcion_nconf">
+		    <label colspan="6" modpos="nobr">Descripcion</label>
+		    <operador>like</operador>
+		</field>
+
+            </filters>
+
+            <field id="responsable_nconf" noshow="true">
+                <helper type="combo" id="HTXUSERS" empty="true">
+			<field id="id_usuario"/>
+			<field id="nombre">
+				<expression>CONCAT(apellido, ' ', Nombre)</expression>
+			</field>
+			<field id="baja">
+				<condicion operador="=">0</condicion>
+			</field>
+			<order>
+				<field id="nombre"/>
+			</order>
+                </helper>
+                <label >Responsable</label>
+                <help >Empleado responsable de la Acción</help>
+            </field>
+            
+            <field id="tiponconf_id" noshow="true">
+                <helper xml="cal_tipo_nconf_crud.xml" type="combo" dir="/calidad/man" empty="true"/>
+                <label _colspan="6">Tipo</label>
+                <help>Tipo de No conformidad</help>
+            </field>
+
+            <field id="id_noconformidad" tipoOrden="DESC" >
+                <label >Número</label>
+		<helper type="link" xml="noconformidad_ficha.xml" dir="/calidad/qry">
+		    <parameter source="id_noconformidad" target="id_noconformidad" />		
+		</helper>
+                <help>Numero de No conformidad</help>
+                <detalle>id_noconformidad</detalle>
+            </field>
+            <field id="fecha_nconf" tipoOrden="DESC" >
+                <label >Fecha</label>
+                <help>Fecha de No conformidad</help>
+                <valor>today</valor>
+            </field>
+            <field id="estadonconf_id">
+                <helper xml="calestadosnconf_crud.xml" type="combo" dir="/calidad/man" _empty="true"/>
+                <label>Estado</label>
+                <help>Estado de la No conformidad</help>
+            </field>
+  
+            <field id="origennconf_id" noshow="true">
+                <helper xml="calorigennconf_qry.xml" type="combo" dir="/help_local" empty="true"/>
+                <label>Origen</label>
+                <help>Origen de la No conformidad</help>
+            </field>
+            <field id="descripcion_nconf" cellMaxLength="200">
+                <label colspan="6">Descripcion</label>
+                <help>Descripción de la no conformidad</help>
+            </field>
+            <field id="rhseccion_id" noshow="true">
+                <helper xml="rhseccion_qry.xml" type="combo" dir="/help_local" empty="true" />
+                <label>Seccion</label>
+                <help>Seccion de la No conformidad</help>
+            </field>
+ 
+        <field id="nombre_cuenta" deshabilitado="false" autocompletar="true" local="true">
+            <expression>(case when REG_CUENTA.id_regcuenta = '0' then '' else REG_CUENTA.nombre_cuenta end) </expression> 
+            <label >Cliente/Prov</label>
+            <size>60</size>               
+        </field>
+
+	    <field id="log" local="true" linkint="nconf_log.xml" linkdes="Historial" print="false" >
+	        <label getStyle="maxfec"  Formstyle="display:none;">Ult.Modif</label>
+	        <if exp="'max_fec' == 'today'">
+	             <true>'HOY'</true>
+	             <false>('max_fec'=='ayer')?'Ayer': (('max_fec' != '')?date('d/m', strtotime('max_fec')):'')</false>
+	        </if>                
+	        <paring destino="num">id_noconformidad</paring>
+	    </field>
+		<field id="max_fec" noshow="true" tipoOrden="DESC">
+	          <expression>(SELECT MAX(fecha) from HTXLOG  where ( HTXLOG.xmlprog = 'analisis_nconf.xml' or HTXLOG.xmlprog = 'calaccionesnconf1_crud.xml' or HTXLOG.xmlprog = 'calaccionesnconf2_crud.xml' or HTXLOG.xmlprog = 'calaccionesnconf3_crud.xml')
+	                and ( HTXLOG.obs like CONCAT('%Nro: ', CAL_NOCONFORMIDADES.id_noconformidad, ',%') or  HTXLOG.obs like concat('% noconformidad_id: ', CAL_NOCONFORMIDADES.id_noconformidad,',%')))</expression>
+	        </field>
+
+	        <field id="maxfec" local="true" noshow="true" print="false">
+	            <label>1</label>
+	            <if exp="'max_fec' == 'today'">
+	              <true>'font-size:17px;color:red;font-weight:bold;text-decoration: blink;'</true>
+	              <false>('max_fec'=='ayer')?'font-size:17px;color:blue;font-weight:bold;':'font-size:11px;color:green;font-weight:bold;'</false>
+	            </if>
+	            <tipo>varchar</tipo>
+	        </field>
+
+	        <field id="today" noshow="true" print="false">
+	    	<expression>DATE(NOW())</expression>
+	        </field>
+	        <field id="ayer"  noshow="true" print="false">
+	    	<expression>DATE_SUB(curdate(), INTERVAL 1 DAY)</expression>
+	        </field>
+
+	        <field id="login_id">
+		<expression>CONCAT(HTXUSERS.Nombre, ' ', HTXUSERS.apellido)</expression>  
+                <label>Usuario</label>
+             </field>
+	    <field id="fotos" _local="true" foto="true" >
+		<expression>CONCAT('../xml/archivos/noconformidades/', id_noconformidad,'/')  </expression>
+		<label >Fotos</label>
+		<tipo>dir</tipo>
+		<detalle>fotos</detalle>
+	    </field>
+
+        <field id="editar" local="true" linkWidth="95%" linkHeight="95%">
+            <label>Editar</label>
+            <valor>>>>></valor>
+            <attribute id="linkdes">id_noconformidad</attribute>
+            <helper type="link" xml="cal_noconformidades_mod_ficha.xml" dir="" title="Editar">
+                <parameter source="id_noconformidad" target="id_noconformidad"/>
+            </helper>          
+        </field>
+
+	    <order>
+		<field id="id_noconformidad"/>
+	    </order>			
+        </table>
+	<join tipo="left">
+	    <table id="HTXUSERS">
+		<field id="login">
+		    <condicion operador="=">CAL_NOCONFORMIDADES.login_id</condicion>
+		</field>
+	    </table>
+	</join>
+
+        <join tipo="left">
+            <table id="REG_CUENTA">
+            <field id="id_regcuenta">
+            <condicion operador="=">CAL_NOCONFORMIDADES.regcuenta_id</condicion>
+        </field>
+        </table>
+        </join>
+            
+    </form>
+</histrix>

@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+   <histrix tipo="consulta">
+       <title>Minutas</title>
+        <obs></obs>
+               <form  >
+                  <table id="CTBREGIS" label="Minutas" >
+              		  <filters>
+
+                      <field id="siscod" >
+                        <label>Ejercicio</label>
+                        <operador>=</operador>
+                      </field>
+
+                      <field id="idcos">
+                        <label>Centro de costos</label>
+                      </field>
+
+                			<field id="regfec"  >
+                			    <operador>&gt;=</operador>
+                			    <label modpos="nobr">Desde Fecha</label>
+                			    <valor>today</valor>
+                			</field>  
+
+                			<field id="regfec"  >
+                			    <operador>&lt;=</operador>
+                			    <label modpos="nobr">Hasta Fecha</label>
+                			    <valor>today</valor>
+                			</field>  
+
+                			<field id="ctbcod">
+                				<operador>=</operador>
+                				<label modpos="nobr">Cuenta</label>
+                			</field>
+              			
+              		  </filters>
+              <!--
+              		  <filtro_ex>
+              		    <label>CUENTA</label>
+              		    <tabla_ex id="CTBCUENT">
+              			<field id="ctbcod"></field>
+              			<field id="ctbnom"></field>
+              -			<field id="siscod" oculto="true"></field> 
+              -			<field id="ctbhab">
+              			<condicion operador="=">1</condicion>
+              			</field> 
+              			<order>
+              				<field id="ctbnom"></field>
+              			
+              			</order>
+              			<filtra>ctbcod</filtra>
+              		    </tabla_ex>
+              		  </filtro_ex>
+              -->
+                  <!-- <field id="siscod" oculto="true">
+                      <label>siscod</label>
+                      <help> Cod sistema</help>
+		      <detalle>siscod</detalle>
+                  </field> -->
+
+                  <field id="siscod" noshow="true">
+                    <preparam campo="siscod" operador="=">true</preparam>
+                      <helper type="combo" xml="ctbejercicios_crud.xml" dir="/contabilidad/man/">
+                          <field id="activo" tipoOrden="DESC" />
+                          <field id="fecha_mov1">
+                              <expresion>DATE_FORMAT(comienza, '%d/%m/%Y')</expresion>
+                              <tipo>date</tipo>
+                          </field>
+                          <field id="fecha_mov2">
+                              <expresion>DATE_FORMAT(finaliza, '%d/%m/%Y')</expresion>
+                              <tipo>date</tipo>
+                          </field>
+                          <field id="finaliza" />
+                      </helper>
+                  </field>
+
+                  <field id="idcos" modpos="nobr" _tabla="CTB_DETALLES">
+                    <!-- <expression having="false">CTB_DETALLES.ctbcentro_id</expression> -->
+                    <label>Centro de costos</label>
+                    <helper id="CTB_CENTROS"  type="combo" empty="true" _multiple="true">
+                      <field id="id_ctbcentro" />
+                      <field id="centro">
+                        <expression>concat(referencia_centro,' ', nombre_centro)</expression>
+                      </field> 
+                    </helper>
+                  </field>
+
+                  <field id="ctbcod" noshow="true">
+              					<helper type="external" id="CTBCUENT">
+              						<field id="ctbcod"></field>
+              						<field id="ctbnom"></field>
+              						<field id="ctbhab">
+              						<condicion operador="=">1</condicion>
+              						</field> 
+              						<order>
+              							<field id="ctbnom"></field>
+              						</order>
+              					</helper>
+                      <help> Cuenta</help>
+		      
+                  </field>
+
+                  <field id="regfec" PDFwidth="4" tdWidth="4" noResize="true">
+                      <label>Fecha</label>
+                      <help>Fecha del Asiento (Movimiento Contable) </help>
+                      <detalle>regfec</detalle>
+
+                  </field>
+                  <field id="regmin" noshow="true">
+                      
+                      <help>Numero de Asiento </help>
+		                  <detalle>regmin</detalle>
+
+                  </field>
+                  <field id="datos">
+                    <label>Minuta </label>
+                    <expression>concat(regmin,' - comp: ', regnro, ' ', regref)</expression>
+                  </field>
+                  <!--
+                  <field id="regnro" >
+                    <label>Nro</label>
+                  </field>
+
+                  <field id="regref">
+                      <label>Ref</label>
+                      <help>Referencia</help>
+                  </field>
+-->
+                  <field id="minuta" showObjTabla="true" local="true">
+                    <label>Detalle</label>
+                    <helper xml="detalle_minuta.xml" type="object">
+                      <parameter source="regmin" target="regmin" />
+                      <parameter source="regfec" target="regfec" />
+                      <parameter source="siscod" target="siscod" />
+                    </helper>
+                  </field>
+
+
+                  <field id="cuenta" noshow="true">
+		                <expression>ctbnom</expression>
+                      <label>Cuenta</label>
+                      <help>Codigo de Cuenta Contable</help>
+		                  <tipo>string</tipo>
+                  </field>
+
+		<!--
+                  <field id="regtip">
+                      <label>Cod.Comp.</label>
+                      <help>Codigo de Comprobante </help>
+                  </field>
+		  -->
+                  <!--
+                  <field id="debe" suma="true">
+		      <expression>regimp * (case when regdoh = 1 then 1 else 0 end)</expression>
+
+                      <label>Debe</label>
+                      <help>Importe del Movimiento en el Debe</help>
+                  </field>
+
+                  <field id="haber" suma="true">
+		                <expression>regimp * (case when regdoh = 2 then 1 else 0 end)</expression>
+                      <label>Haber</label>
+                      <help>Importe del Movimiento en el Haber</help>
+                  </field>
+-->
+<!--
+                  <field id="regpoa">
+                      <label>Estado</label>
+                      <help>Estado del Movimiento.Aprobado  o  Provisorio </help>
+                			<options>
+                			    <option valor="A">Aprobado</option>
+                			    <option valor="P">Provisorio</option>
+                			</options>
+                  </field>
+	    
+                  <field id="coscod">
+                      <label>Centro Costo</label>
+                      <help>Codigo de Centro de Costo </help>
+                  </field>
+                  <field id="impcod">
+                      <label>Cod.Imput.</label>
+                      <help>Codigo de Centro de Imputacion</help>
+                  </field>
+
+                  <field id="idcos">
+                      <label>? </label>
+                      <help> </help>
+                  </field>
+                  <field id="idimpu">
+                      <label>? </label>
+                      <help> </help>
+                  </field>
+                  <field id="regcta">
+                      <label>? </label>
+                      <help> </help>
+                  </field>
+                  <field id="regfco">
+                      <label>Fecha Comprobante </label>
+                      <help> </help>
+                  </field>
+                  <field id="regnro">
+                      <label>Nro.</label>
+                      <help>Numero de Comprobante Correspondiente. </help>
+                  </field>
+		  -->
+<!--
+                  <field id="regnpv">
+                      <label>Nro Puesto </label>
+                      <help> </help>
+                  </field>
+                  <field id="regord">
+                      <label>Orden en el Asiento  . </label>
+                      <help> </help>
+                  </field>
+                  <field id="regsub">
+                      <label>Subdiario </label>
+                      <help> </help>
+                  </field>
+                  <field id="reguni">
+                      <label>Unidades Fisicas     . </label>
+                      <help>Unidades Fisicas. </help>
+                  </field>
+		  -->
+		  <order>
+                      <field id="regmin"></field>
+                      <field id="regord"></field>
+
+		  </order>
+			  
+      </table>
+
+		  <join tipo="left">
+		    <table id="CTBCUENT">
+    			<field id="ctbcod" oculto="true">
+    			    <condicion operador="=">CTBREGIS.ctbcod</condicion>
+    			</field>
+		    </table>
+		  </join>
+
+      <!-- <join tipo="left">
+            <table id="CTB_DETALLES">
+                <field id="ctbregis_id">
+                    <condicion operador="=">CTBREGIS.id_ctbregis</condicion>
+                </field>
+            </table>
+        </join> -->
+
+       </form>
+</histrix>

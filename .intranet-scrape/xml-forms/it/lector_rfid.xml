@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud"  paginar="100">
+  <title>rFid</title>
+  <obs></obs>
+  <form>
+    
+ <table id="PROD_PATH_RFID_REGISTRO" label="rFid">
+
+      <field id="id">
+        <label>id</label>
+      </field>
+
+      <field id="hora_registro">
+        <label>Hora</label>
+      </field>      
+
+      <field id="numero_rfid" style="text-align:center">
+        <label>Tarjeta</label>
+        <tipo>integer</tipo>
+      </field>
+
+      <field id="nrocha" style="text-align:center" tabla="CHASIS" noZero="true">
+        <label>Unidad</label>
+        <tipo>integer</tipo>
+      </field>
+
+      <field id="descripcion" tabla="MOMENTO">
+        <label>Seccion</label>
+      </field>
+ 
+      <field id="lector">
+        <label>Lector</label>
+      </field>
+   
+   	  <field id="puerto">
+        <label>Puerto Lector</label>
+      </field>
+
+      <order>
+        <field id="fecha" tipoOrden="DESC" />
+      </order>
+
+    </table>
+
+    <join tipo="left">
+        <table id="RFID_TARJETAS">
+            <field id="numero_rfid">
+                <condicion operador="=">PROD_PATH_RFID_REGISTRO.numero_rfid</condicion>
+            </field>
+        </table>
+    </join>    
+    <join tipo="left">
+        <table id="CHASIS">
+            <field id="rfid_tarjeta_id">
+                <condicion operador="=">RFID_TARJETAS.id_rfid_tarjeta</condicion>
+            </field>
+        </table>
+    </join>
+
+    <join tipo="left">
+        <table id="RFID_CONTROLADOR">
+            <field id="controlador_rfid">
+                <condicion operador="=">PROD_PATH_RFID_REGISTRO.lector</condicion>
+            </field>
+            <field id="puerto_controlador_rfid">
+                <condicion operador="=">PROD_PATH_RFID_REGISTRO.puerto</condicion>
+            </field>                           
+        </table>
+    </join>
+
+    <join tipo="left">
+        <table id="MOMENTO">
+            <field id="idMomento">
+                <condicion operador="=">RFID_CONTROLADOR.seccion_id</condicion>
+            </field>
+        </table>
+    </join>
+
+  </form>
+</histrix>  

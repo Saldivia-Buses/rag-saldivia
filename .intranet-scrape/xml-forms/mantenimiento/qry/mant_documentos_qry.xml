@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  Ayuda
+Tarea: Ayuda para la Tabla de Documentos
+Autor:
+Fecha: 27/08/10
+
+*******************************************************************************
+-->
+<histrix tipo="consulta">
+	<title>Documentacion</title>
+	<obs></obs>
+	<form >	    
+		<table id="MANT_DOCUMENTOS" label="Documentos">
+
+		  <field id="id_mantdocumento" autoinc="true" _noshow="true">
+			<label>ID documento</label>
+		  </field>
+
+		  <field id="nombre_documento">
+			<label>Nombre</label>
+			<help>Nombre del documento</help>
+		  </field>
+		</table>
+	</form>
+
+</histrix>	

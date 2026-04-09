@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="abm">
+	<title>TIPOS DE ASIENTOS</title>
+	<obs></obs>
+	<form >
+		<table id="TIPOASIENTO" label="Asientos">
+
+			<field id="tipasi">
+				<label>Codigo</label>
+				<help>Codigo de Asiento</help>
+			</field>
+			<field id="asides">
+				<label>Asiento</label>
+				<help>tipo de Asiento</help>
+			</field>
+			<field id="siscod" oculto="true">
+				<label>Cod</label>
+			</field>			
+    			<order>
+				<field id="tipasi"></field>
+			</order>
+		</table>
+	</form>	   
+</histrix> 

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="ficha" preFetch="true" borra="false" inserta="false" imprime="false">
+    <title>FICHA DE VENTAS</title>
+    <obs/>
+    <pie>Nota: Planilla confeccionada en función de especificaciones del cliente y características standard del producto. La misma debe ser devuelta vía fax con el conforme correspondiente u observaciones, caso contrario la unidad se fabricará bajo las características aquí mencionadas. Los adicionales que no fueran expresamente aceptados NO se realizarán. Fax: 0341-4921135 - Opción 1</pie>
+    <form >
+        <table id="PEDCOTIZ" label="Ficha de Ventas">
+            <field id="id" noshow="true" oculto="true">
+
+            </field>
+            <field id="pedfec" deshabilitado="true">
+                <label size="24" posx="5" posy="+0.2" PDFsize="10">Fecha</label>
+                <!--				<valor>today</valor> -->
+                <tipo>date</tipo>
+            </field>
+           
+            <field id="nrocha" esclave="true" PDFbold="true" PDFscaleX="120" deshabilitado="true">
+                <label size="50" modpos="nobr" posx="135" posy="+2" PDFsize="38" ></label>
+                <help>Numero de Fabricacion</help>
+            </field>
+
+	    <field id="marcado_pendientes" >
+		<label>Marcar Como pendiente</label>
+		<helper type="combo">
+		    <option value="0">No</option>
+		    <option value="1">Si</option>
+		</helper>
+	    </field>
+            
+            </table>
+    </form>
+</histrix>

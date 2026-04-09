@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" sololectura="true" _paginar="100">
+  <title>CONSULTA Clientes</title>
+  <obs></obs>
+  <form  detalle="cctconta.xml" inline="true">
+    <table id="CCTCUENT" >
+
+	<filters>
+	    <field id="fecha">
+		<label>Desde</label>
+		<operador>&gt;=</operador>
+	    </field>
+	    <field id="fecha">
+		<label>Hasta</label>
+		<operador>&lt;=</operador>
+	    </field>
+
+	</filters>
+
+      <title>Clientes</title>
+      <field id="siscod" oculto="true">
+        <label>Cod</label>
+        <condicion operador="=">'02'</condicion>
+        <valor>'02'</valor>
+        <detalle>siscod</detalle>
+      </field>
+
+    <field id="fecha" tabla="VUNIDADES" noshow="true">
+	<tipo>date</tipo>
+    </field>
+
+      <field id="ctacod">
+        <label>Código</label>
+        <detalle>ctacod</detalle>
+    <condicion operador="NOT IN">(SELECT ctacod FROM CONCESIONARIO)</condicion>
+      </field>
+<!--
+      <field id="pricomp">
+        <expression>(select MIN(ingresoLinea) from PEDCOTIZ as PED where PED.ctacod = CCTCUENT.ctacod AND PED.ingresoLinea != '0000-00-00')</expression>
+        <label >Primera compra</label>
+        <tipo>date</tipo>
+      </field>
+
+      <field id="ultcomp" tipoOrden="DESC">
+        <expression having="false">(select max(ingresolinea) from PEDCOTIZ as PED where PED.ctacod = CCTCUENT.ctacod)</expression>
+        <label >Ultima compra</label>
+        <tipo>date</tipo>
+      </field>
+-->
+	<field id="minfecha" _noshow="true">
+        <label >Primera compra</label>
+
+	    <expression>min(VUNIDADES.fecha)</expression>
+	    <tipo>date</tipo>
+	</field>
+	<field id="maxfecha" _noshow="true">
+        <label>Última compra</label>
+
+	    <expression>max(VUNIDADES.fecha)</expression>
+            <tipo>date</tipo>
+	</field>
+
+      <field id="ctafan" deshabilitado="false">
+    <!--    <expression>CONCAT(ctanom, ' (',ctafan, ')')</expression>-->
+        <label  colspan="8">Nombre</label>
+    
+  </field>
+
+       <field deshabilitado="true" id="ctacod2" local="true"  print="false" validRow="true" suma="true">
+<!--        <expression>select count(*) from PEDCOTIZ as PED where PED.ctacod = CCTCUENT.ctacod</expression> -->
+<!--        <expression>select count(*) from VUNIDADES as PED where PED.ctacod = CCTCUENT.ctacod</expression> -->
+	    <expression>count(nrofab)</expression>
+
+        <label >Coches</label>
+        <help>Código de Cuenta</help>
+        <paring destino="ctacod">ctacod</paring>
+	<helper xml="fichas_x_cliente_rango.xml" title="Coches Comprados" type="link">
+	    <parameter source="ctacod" target="ctacod" />
+	    <parameter source="minfecha" target="fechamin" operador="&gt;=" />
+	    <parameter source="maxfecha" target="fechamax" operador="&lt;=" />
+	</helper>
+        <tipo>varchar</tipo>
+      </field> 
+      
+       <field deshabilitado="true" id="graf"  print="false" color1="00ff00" color2="005500">
+<!--        <expression>select count(*) from VUNIDADES as PED where PED.ctacod = CCTCUENT.ctacod</expression> -->
+	    <expression>count(nrofab)</expression>
+        <label >Cant</label>
+        <tipo>grafico</tipo>
+      </field>
+
+<!--
+    <field id="promedioxanio" tipoOrden="DESC">
+    <label>Prom.</label>
+    <help>Promedio de coches comprados por año</help>
+    <expression>ROUND((select count(*) from VUNIDADES as PED where PED.ctacod = CCTCUENT.ctacod) / ((YEAR(CURDATE()) - YEAR((select MIN(ingresoLinea) from PEDCOTIZ as PED where PED.ctacod = CCTCUENT.ctacod AND PED.ingresoLinea != '0000-00-00')) )) , 1)</expression>
+    </field>
+-->
+    <field id="promedioxanio2" tipoOrden="DESC">
+    <label>Prom.</label>
+    <help>Promedio de coches comprados por año</help>
+    <expression>ROUND(count(nrofab) / ((YEAR(max(fecha)) - YEAR(min(fecha)))), 1)</expression>
+    </field>
+
+  
+
+    <field id="intervalo_old">
+      <label>int1</label>
+      <expression>
+ROUND(/**Intervalo**/((((YEAR((select max(pedfec) from PEDCOTIZ as PED where PED.ctacod = CCTCUENT.ctacod)) - YEAR((select MIN(pedfec) from PEDCOTIZ as PED where PED.ctacod = CCTCUENT.ctacod)) )) )), 1)+1</expression>
+    </field>
+
+    <field id="intervalo">
+      <label>int1</label>
+      <expression>
+ROUND((YEAR(max(fecha)) - YEAR(MIN(fecha))  ), 1)+1</expression>
+    </field>
+
+    <field id="valorcl" tipoOrden="DESC">
+      <label>Valor</label>
+      <expression having="false">ROUND(
+
+/** Promedio x año **/
+        (select count(*) from VUNIDADES as PED where PED.ctacod = CCTCUENT.ctacod) / ((YEAR((select max(terminacion) from PEDCOTIZ as PED where PED.ctacod = CCTCUENT.ctacod)) - YEAR((select MIN(ingresoLinea) from PEDCOTIZ as PED where PED.ctacod = CCTCUENT.ctacod AND PED.ingresoLinea != '0000-00-00'))))
+
++
+
+/** cantidad total **/
+        (((select count(*) from VUNIDADES as PED where PED.ctacod = CCTCUENT.ctacod)) /2)
+        
++
+       
+/**Intervalo**/
+        ((((YEAR((select max(pedfec) from PEDCOTIZ as PED where PED.ctacod = CCTCUENT.ctacod)) - YEAR((select MIN(pedfec) from PEDCOTIZ as PED where PED.ctacod = CCTCUENT.ctacod)) ))+1 /2))
+
+-
+        
+/** Años sin comprar **/
+        (((YEAR(CURDATE()) - YEAR((select max(terminacion) from PEDCOTIZ as PED where PED.ctacod = CCTCUENT.ctacod))))*4)
+        
+, 1)      </expression>
+    </field>
+
+      <field id="ctaloc">
+        <label >Localidad</label>
+        <help>
+        </help>
+      </field>
+      <field id="prvcod">
+        <label modpos="nobr">Provincia</label>
+        <help >
+        </help>
+        <tabla_ex id="FSMPROVS" vacio="true">
+          <field id="prvcod"></field>
+          <field id="prvnom"></field>
+        </tabla_ex>
+        
+      </field>
+	<group>
+	    <field id="ctacod" tabla="CCTCUENT"/>
+	</group>
+      <order>
+
+        <field id="valorcl"></field>
+      </order>
+    </table>
+    <join>
+	<table id="VUNIDADES">
+	    <field id="ctacod">
+		<condicion operador="=">CCTCUENT.ctacod</condicion>
+	    </field>
+	</table>
+    </join>
+		<join tipo="left">
+			<table id="PEDCOTIZ">
+				<field id="nrocha">
+					<condicion operador="=">VUNIDADES.nrofab</condicion>
+				</field>
+			</table>
+		</join>
+  </form>
+</histrix>

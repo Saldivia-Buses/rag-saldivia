@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" _ancho="50" path="../files">
+	<title>MENU DEL SISTEMA</title>
+	<obs>Mediante este módulo se administran las opciones del menú del sistema</obs>
+	<form >
+		<table id="HTXMENU" label="MENU">
+		    <filters>
+			<field id="Id_menu" fullSearch="true">
+				<label >Menu </label>
+				<help>Nombre del menu a que el item pertenece </help>
+				<operador>like</operador>
+			</field>
+			
+		    </filters>
+			<field id="menuId"  noshow="true" fullSearch="true">
+			</field>
+			<field id="orden" >
+				<label>Orden </label>
+				<help>Da el orden del item dentro del menu. Usar numeros separados </help>
+			</field>
+			
+
+			
+			<field id="Id_menu">
+				<label >Menu </label>
+				<help>Nombre del menu a que el item pertenece </help>
+				<valor>phpmen</valor>
+				<condicion operador="!=">''</condicion>
+			</field>
+			
+			<field id="titulo">
+				<label style="color:#444;font-weight:bold;">Titulo </label>
+				<help>Cartel con se muestra el item para su seleccion. </help>
+			</field>
+
+			<field id="hijo" arbol="hijo" _noshow="true">
+				<label>Hijo</label>
+				<help>Nombre del menu a que el item llama (puede no hacerlo) </help>
+			</field>
+			
+			<field id="ejecuta" >
+				<label  colstyle="display:none;">Comando o Programa a ejecutar </label>
+				<help>Que es lo que ejecuta este item (programa o comando) </help>
+			</field>
+			<field id="parametros">
+				<label  colstyle="display:none;">Parametros</label>
+				<help></help>
+			</field>
+
+			<order>
+				<field id="orden"></field>
+			</order>
+		</table>
+	</form>
+</histrix>

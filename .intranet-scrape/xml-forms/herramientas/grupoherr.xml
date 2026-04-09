@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="abm">
+       <title>Grupos de Movimiento de Herramientas</title>
+        <obs></obs>
+               <form >
+                  <table id="GRUPOHERR" label="Grupo de Herramientas">
+                  <field id="gruher">
+                      <label>Grupo</label>
+                      <help>Grupo al que pertenece el Movimiento. </help>
+                  </field>
+                  <field id="grunom">
+                      <label>Nombre Grupo</label>
+                      <help>Nombre del Grupo</help>
+                  </field>
+                  </table>
+               </form>
+        </histrix>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="ayuda" >
+	<title>MENUES</title>
+	<obs></obs>
+	<form>
+		<table id="HTXMENU">
+			<title>MENUES</title>
+				<campo id="menuId">
+					<label>Menu</label>
+				</campo>
+				<campo id="titulo">
+						<detalle>titulo</detalle>
+				</campo>
+		</table>
+	</form>
+</histrix>

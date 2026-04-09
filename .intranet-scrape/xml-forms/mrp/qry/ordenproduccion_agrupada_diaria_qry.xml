@@ -1,0 +1,316 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" inserta="no" paginar="500" filter="true" PDForientation="L">
+    <title>ORDENES DE PRODUCCION</title>
+    <obs></obs>
+    <form  detalle="ordendetalle_agrupada_det_qry.xml" inline="true">
+	        
+	<table id="MRP_ORDEN_PRODUCCION" label="Consulta de Ordenes de Producción">
+            <filters>
+<!--
+                <field id="fecha_orden">
+                    <label>Desde Fecha</label>
+                    <help>Fecha de Orden de Fabricación</help>
+                    <operador>&gt;=</operador>
+                </field>
+                <field id="fecha_orden">
+                    <label modpos="nobr">Hasta Fecha</label>
+                    <help>Fecha de Orden de Fabricación</help>
+                    <operador>&lt;=</operador>
+                </field>
+                <field id="mrpestado_id" deshabilitado="false" >
+                    <label modpos="nobr">Estado</label>
+                    <help>Estado Actual</help>
+                    <operador>=</operador>
+		              <valor>0</valor>
+                </field>
+                <field id="numero_orden">
+            	    <label>Nro de Orden</label>
+            	    <operador>=</operador>
+        	   </field>
+            	<field id="producto"  deshabilitado="false" >
+                	    <label modpos="nobr">Producto</label>
+                	    <operador>like</operador>
+            	</field>                
+-->
+                <field id="stkrubro_id"   >
+
+                    <label modpos="nobr">Rubro</label>
+                    <operador>=</operador>
+                </field>                 
+<!--
+            	<field id="empezada"  deshabilitado="false" >
+                	    <label modpos="nobr">Proceso</label>
+                	    <operador>=</operador>
+            	</field>          
+-->
+               <field id="fecha_ingreso" _noshow="true">
+                <label>Fecha produccion</label>
+                        <operador>=</operador>
+                        <valor>today</valor>
+
+                </field>
+            </filters>
+               <field id="fecha_ingreso" noshow="true" tabla="MRP_DETALLE_REGISTRO">
+                    <label>Fecha produccion</label>
+                        <tipo>date</tipo>
+                </field>
+
+            <field id="fecha_orden" _noshow="true">
+                <label>Fecha</label>
+                <help>Fecha de Orden de Fabricación</help>
+            </field>
+
+            <field id="id_mrporden" noshow="true" >
+                <detalle>mrporden_id</detalle>
+            </field>
+            <!--
+            <field id="abv_ordenconcepto" tabla="MRP_ORDEN_CONCEPTO">
+                <label>Con</label>
+            </field>
+        -->
+	    <field id="colorestado" noshow="true">
+		    <label>dias</label>
+	    <expression>case when DATEDIFF(now(), fecha_orden) &gt; 10 then 'background-color:red;' when DATEDIFF(now(), fecha_orden) &gt; 3 then 'background-color:yellow' end </expression>
+	    </field>
+
+            <field id="numero_orden">
+<expression>concat((case when scv_ID = 0 and mrporden_concepto_id != 1 then 'R' 
+                                     when scv_ID = 0 and mrporden_concepto_id = 1 then 'A' else '' end), numero_orden)</expression>                
+		<attribute id="style">colorestado</attribute>
+            	<helper xml="ordenproduccion_seccion_imp.xml" type="link" modal="true">
+            	    <parameter source="id_mrporden"  target="id_mrporden" />
+            	</helper>
+                <label>Nro</label>
+                <help>Numero de Orden de Fabricación</help>
+                
+            </field>
+	    <field id="origen" style="background-color:#ccc;color:green;font-weight:bold;">
+            	<helper xml="ordenproduccion_seccion_imp.xml" type="link" modal="true">
+            	    <parameter source="id_mrporden"  target="id_mrporden" />
+            	</helper>
+
+		<expression>select MRP.numero_orden from MRP_ORDEN_PRODUCCION MRP where MRP.id_mrporden = MRP_ORDEN_PRODUCCION.mrporden_relacionada_id limit 1</expression>
+	    </field>
+
+              <field id="scvtco_Cod" noshow="true">
+                <label>Cod</label>
+              </field>
+            <!--
+	    <field id="idr">
+		<expression>group_concat(id_mrpordendetalle)</expression>
+	    </field>
+-->
+            <field id="id" _noshow="true" style="white-space:nowrap">
+                <label>Codigo</label>
+                <expresion>group_concat(distinct concat(left(id_stkarticulo, 1),'/', substr(id_stkarticulo, 2,4),'-' ,
+                    substr(id_stkarticulo, 6,4) ))</expresion>
+            </field>                 
+
+    	    <field id="producto" export="false">
+    		<label>Producto</label>
+    		<expresion>group_concat(distinct nombre_articulo )</expresion>
+    	    </field>             
+            <field id="stkrubro_id"  tabla="STK_ARTICULOS" noshow="true" multiple="true">
+                <label modpos="nobr">Rubro</label>
+                <helper type="combo" xml="stkrubro_qry.xml" dir="/ayudas" empty="true" />
+            </field>
+                
+    	    <field id="cantidad_detalle" suma="true" style="color:blue;">
+    		<label>Cant.Inicial</label>
+        		<expresion>select sum(MRD.objetivo_ordendetalle) FROM MRP_ORDEN_DETALLE MRD where MRD.mrporden_id = MRP_ORDEN_PRODUCCION.id_mrporden</expresion>
+	   	        <tipo>integer</tipo>
+    	    </field>
+    	    <field id="empezada" noshow="true">
+                    <expresion>ifnull((select case when count(*) > 0 then 1 end from MRP_DETALLE_REGISTRO MDR where  MDR.mrpordendetalle_id = id_mrpordendetalle and MRP_DETALLE_REGISTRO.fecha_ingreso = MDR.fecha_ingreso), 0)</expresion>
+    		<helper type="combo">
+    		    <option value="">Todas</option>
+    		    <option value="0">NO empezada</option>
+    		    <option value="1">En proceso</option>
+    		</helper>
+    	    </field>
+    	    <field id="corte" style="text-align:right;" suma="true" noZero="true">
+    		<label>Corte</label>
+		    <!--
+                    <expresion>(select sum(MDR.cantidad) from MRP_DETALLE_REGISTRO MDR where MDR.mrpordendetalle_id = id_mrpordendetalle and mrpconcepto_id = 1 and MRP_DETALLE_REGISTRO.fecha_ingreso = MDR.fecha_ingreso and mrpseccion_id = 1)</expresion>
+-->
+                    <expresion>sum(case when mrpseccion_id = 1 and mrpconcepto_id = 1 then cantidad else 0 end)</expresion>
+
+    		  <attribute id="linkdes">numero_porden</attribute>
+    		<helper xml="ordendetalle_agrupada_det_qry.xml" type="link">
+    		    <parameter target="id_mrpseccion" source="1" />
+    		    <parameter target="mrporden_id" source="id_mrporden" />
+    		</helper>
+    	    </field>
+    	    <field id="fileteado" style="text-align:right;" suma="true"  noZero="true">
+    		<label>Filet</label>
+<!--                    <expresion>(select sum(MDR.cantidad) from MRP_DETALLE_REGISTRO MDR where MDR.mrpordendetalle_id = id_mrpordendetalle and mrpconcepto_id = 1 and mrpseccion_id = 6 and MRP_DETALLE_REGISTRO.fecha_ingreso = MDR.fecha_ingreso)</expresion> -->
+                    <expresion>sum(case when mrpseccion_id = 6 and mrpconcepto_id = 1 then cantidad else 0 end)</expresion>
+
+    		<attribute id="linkdes">numero_porden</attribute>
+    		<helper xml="ordendetalle_agrupada_det_qry.xml" type="link">
+    		    <parameter target="id_mrpseccion" source="6" />
+    		    <parameter target="mrporden_id" source="id_mrporden" />
+    		</helper>
+    	    </field>
+    	    <field id="serig" style="text-align:right;" suma="true"  noZero="true">
+    		<label>Serig</label>
+<!--                    <expresion>(select sum(MDR.cantidad) from MRP_DETALLE_REGISTRO MDR where MDR.mrpordendetalle_id = id_mrpordendetalle and mrpconcepto_id = 1 and MRP_DETALLE_REGISTRO.fecha_ingreso = MDR.fecha_ingreso and mrpseccion_id = 5)</expresion> -->
+                    <expresion>sum(case when mrpseccion_id = 5 and mrpconcepto_id = 1 then cantidad else 0 end)</expresion>
+    		<attribute id="linkdes">numero_porden</attribute>
+    		<helper xml="ordendetalle_agrupada_det_qry.xml" type="link">
+    		    <parameter target="id_mrpseccion" source="5" />
+    		    <parameter target="mrporden_id" source="id_mrporden" />
+    		</helper>
+    	    </field>
+    	    <field id="horno" style="text-align:right;" suma="true"  noZero="true">
+    		<label>Horno</label>
+<!--                    <expresion>(select sum(MDR.cantidad) from MRP_DETALLE_REGISTRO MDR where MDR.mrpordendetalle_id = id_mrpordendetalle and mrpconcepto_id = 1 and MRP_DETALLE_REGISTRO.fecha_ingreso = MDR.fecha_ingreso and mrpseccion_id = 2)</expresion> -->
+                    <expresion>sum(case when mrpseccion_id = 2 and mrpconcepto_id = 1 then cantidad else 0 end)</expresion>
+        		<attribute id="linkdes">numero_porden</attribute>
+        		<helper xml="ordendetalle_agrupada_det_qry.xml" type="link">
+        		    <parameter target="id_mrpseccion" source="2" />
+        		    <parameter target="mrporden_id" source="id_mrporden" />
+        		</helper>
+    	    </field>
+            <field id="hornob" style="text-align:right;" suma="true"  noZero="true">
+            <label>Horno Blind</label>
+<!--                <expresion>(select sum(MDR.cantidad) from MRP_DETALLE_REGISTRO MDR where MDR.mrpordendetalle_id = id_mrpordendetalle and mrpconcepto_id = 1 and MRP_DETALLE_REGISTRO.fecha_ingreso = MDR.fecha_ingreso and mrpseccion_id = 7)</expresion> -->
+                    <expresion>sum(case when mrpseccion_id = 7 and mrpconcepto_id = 1 then cantidad else 0 end)</expresion>
+
+                <attribute id="linkdes">numero_porden</attribute>
+                <helper xml="ordendetalle_agrupada_det_qry.xml" type="link">
+                    <parameter target="id_mrpseccion" source="7" />
+                    <parameter target="mrporden_id" source="id_mrporden" />
+                </helper>
+            </field>            
+    	    <field id="laminado" style="text-align:right;" suma="true"  noZero="true">
+    		<label>Lamin</label>
+<!--                    <expresion>(select sum(MDR.cantidad) from MRP_DETALLE_REGISTRO MDR where MDR.mrpordendetalle_id = id_mrpordendetalle and mrpconcepto_id = 1 and MRP_DETALLE_REGISTRO.fecha_ingreso = MDR.fecha_ingreso and mrpseccion_id = 3)</expresion> -->
+                    <expresion>sum(case when mrpseccion_id = 3 and mrpconcepto_id = 1 then cantidad else 0 end)</expresion>
+        		<attribute id="linkdes">numero_porden</attribute>
+        		<helper xml="ordendetalle_agrupada_det_qry.xml" type="link">
+        		    <parameter target="id_mrpseccion" source="3" />
+        		    <parameter target="mrporden_id" source="id_mrporden" />
+        		</helper>
+    	    </field>
+    	    <field id="autoclave" style="text-align:right;" suma="true"  noZero="true">
+    		<label>Auto</label>
+<!--                    <expresion> (select sum(MDR.cantidad) from MRP_DETALLE_REGISTRO MDR where MDR.mrpordendetalle_id = id_mrpordendetalle and mrpconcepto_id = 1 and MRP_DETALLE_REGISTRO.fecha_ingreso = MDR.fecha_ingreso and mrpseccion_id = 4)</expresion> -->
+                    <expresion>sum(case when mrpseccion_id = 4 and mrpconcepto_id = 1 then cantidad else 0 end)</expresion>
+        		<attribute id="linkdes">numero_porden</attribute>
+        		<helper xml="ordendetalle_agrupada_det_qry.xml" type="link">
+        		    <parameter target="id_mrpseccion" source="4" />
+        		    <parameter target="mrporden_id" source="id_mrporden" />
+        		</helper>
+    	    </field>
+                <field id="roturas"  style="text-align:right;color:red;" suma="true"  noZero="true">
+                    <label>Roturas</label >
+<!--                <expresion>sum((select sum(MDR.cantidad) from MRP_DETALLE_REGISTRO MDR where MDR.mrpordendetalle_id = id_mrpordendetalle and MRP_DETALLE_REGISTRO.fecha_ingreso = MDR.fecha_ingreso and mrpconcepto_id != 1))</expresion> -->
+                    <expresion>sum(case when  mrpconcepto_id !=1 then cantidad else 0 end)</expresion>
+
+                </field>                 
+                <field id="producido" suma="true" noZero="true">
+                    <label>Terminado</label>
+                    <expresion>select sum(STK_MOVIMIENTOS.cantidad) from STK_MOVIMIENTOS JOIN STK_CONCEPTOS on stkconcepto_id = id_stkconcepto where 
+                        STK_CONCEPTOS.produccion_concepto = 1 and
+                        STK_MOVIMIENTOS.stkarticulo_id = MRP_ORDEN_DETALLE.stkarticulo_id AND 
+                        STK_MOVIMIENTOS.fecha_movimiento = fecha_ingreso and
+
+                        STK_MOVIMIENTOS.ordendetalle_id = MRP_ORDEN_DETALLE.id_mrpordendetalle</expresion>
+                    <tipo>integer</tipo>
+                </field>
+    	    <field id="pendiente" local="true" style="color:green;text-align:right;" suma="true">
+        		<label>Pendiente</label>
+        		<if exp="true">
+        			<true>cantidad_detalle - ((producido  + 0)+ (roturas + 0))</true>
+        			<false>0</false>
+        		</if>
+    	    </field>
+<!--
+            <field id="cerar" local="true" print="false">
+                <expression>case when fecha_cierre = '0000-00-00' then 'X' end</expression>
+                <helper xml="anular_orden.xml" type="link" dir="/mrp/ing/anulacion/" title="Anular Orden" _icon="ui-icon-close" _text="false">
+                    <parameter source="id_mrporden" target="id_mrporden" />
+                </helper>
+                <label>Anular</label>
+            </field>
+-->
+            <!--
+            <field id="fecha_cierre" >
+		          <label>Cierre</label>
+            </field>
+        -->
+
+            <field id="mrpestado_id" noshow="true">
+                <label>Estado </label>
+                <help>Estado Actual</help>
+                    <options>
+			            <option valor="">Todos</option>
+                        <option valor="0">Pendiente</option>
+                        <option valor="1">Cerrada</option>
+                    </options>
+
+                <expresion having="false">(case when fecha_cierre = '0000-00-00' then 0 else 1 end)</expresion>
+            </field>
+            <group>
+                <field id="id_mrporden"></field>
+            </group>
+            <order>
+                <field id="id_mrporden"></field>
+                <field id="fecha_orden"></field>
+            </order>
+        </table>
+        <join tipo="left">
+            <table id="MRP_ORDEN_CONCEPTO">
+                <field id="id_mrporden_concepto">
+                    <condicion operador="=">mrporden_concepto_id</condicion>
+                </field>
+            </table>
+        </join>                
+        <join tipo="left">
+            <table id="REG_CUENTA">
+                <field id="id_regcuenta">
+                    <condicion operador="=">regcuenta_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="MRP_ORDEN_DETALLE">
+                <field id="mrporden_id">
+                    <condicion operador="=">MRP_ORDEN_PRODUCCION.id_mrporden</condicion>
+                </field>
+            </table>
+        </join>        
+        <join tipo="inner">
+            <table id="MRP_DETALLE_REGISTRO">
+                <field id="mrpordendetalle_id">
+                    <condicion operador="=">id_mrpordendetalle</condicion>
+                </field>
+            </table>
+        </join>        
+        <join tipo="left">
+    	    <table id="STK_ARTICULOS">
+        		<field id="id_stkarticulo">
+        		    <condicion  operador="=">MRP_ORDEN_DETALLE.stkarticulo_id</condicion>
+        		</field>
+    	    </table>
+    	    
+        </join>
+
+        <!--
+        <join tipo="left">
+            <table id="STK_MOVIMIENTOS">
+                <field id="stkarticulo_id">
+                    <condicion  operador="=">MRP_ORDEN_DETALLE.stkarticulo_id</condicion>
+                </field>
+                <field id="ordendetalle_id">
+                    <condicion  operador="=">MRP_ORDEN_DETALLE.id_mrpordendetalle</condicion>
+                </field>
+
+            </table>
+            
+        </join>        
+    -->
+    </form>
+</histrix>

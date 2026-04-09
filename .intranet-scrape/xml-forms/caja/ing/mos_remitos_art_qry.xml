@@ -1,0 +1,433 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="grid" subtipo="vertical" procesa="true" inserta="false" _borra="false" _modifica="false" imprime="false"  deleteRow="false" llenoreferente="true" tooltip="false" confirma="CONFIRMAR" llenotemporal="true" >
+	<title>Sucursal</title>
+	 <obs></obs>
+	 <form >
+
+	 	<table id="REG_MOVIMIENTOS" idCampoCond="imputar">
+			<fieldGroup>
+                                        <!--
+				<field id="fecha_movimiento" _esClave="false">
+					<label>fecha</label>
+				</field>
+                                            -->
+				<field id="vencimiento_movimiento" >
+					<label>Entrega</label>
+				</field>
+				
+                                    
+				<field id="Nro" local="true" noshow="true">
+					<label>Nro</label>
+					<expression>concat(LPAD(REG_MOVIMIENTOS.nro_movimiento,8,'0'))</expression>
+					<detalle>NOTAS</detalle>
+				</field>
+				<field id="comprobante" local="true" >
+				
+					<label>Comprob</label>
+					<!--
+					<expression>concat(fecha_movimiento,' ',abreviacion_concepto ,' ',LPAD(REG_MOVIMIENTOS.nro_movimiento,6,'0'))</expression>
+					-->
+					<expression>concat(abreviacion_concepto ,' ',LPAD(REG_MOVIMIENTOS.nro_movimiento,6,'0'))</expression>
+
+				</field>
+				<field id="codigo_detalle" _noshow="true" esClave="true">
+					<label>Cod</label>
+					<tipo>varchar</tipo>
+					<expression>id_stkarticulo</expression>
+					<detalle>codigo_detalle</detalle>
+				</field>
+				<field id="descripcion_detalle" tabla="REG_DETALLES">
+					<label>Nombre</label>
+					<detalle>descripcion_detalle</detalle>
+				</field>
+				<field id="micantidad_detalle" >
+					<expression>REG_DETALLES.cantidad_detalle</expression>
+					<label modpos="nobr">cantidad</label>
+					<tipo>decimal</tipo>
+				</field>
+					<field id="alicuota_iva" _oculto="true">
+					<label modpos="nobr">Alicuota</label>
+					<detalle>alicuota_iva</detalle>
+				</field>
+
+				<field id="precioventa"  >
+					<label colstyle="display: none;">precio de lista</label>
+					<expression> 
+						case when '[__id_stklista__]' = '' then 0.00 else stklistadetalle_precioventa end	
+					</expression>
+					<detalle>precio_venta</detalle>
+					<tipo>numeric</tipo>
+				</field>
+				<field id="imp_cotizacion" local="true" _deshabilitado="true" noshow="true">
+					<label>Cot</label>
+					<expression>GEN_FN_COTIZACION(STK_ARTICULOS.genmoneda_venta_id,curdate())</expression>					
+					<tipo>decimal</tipo>   
+		  			<format>%01.2f</format>
+					<detalle>mi_Cotizacion</detalle>
+				</field>		
+				<!--
+				<field id="precio_otr_mon" local="true" deshabilitado="true" _oculto="true" noZero="true">
+					<label colstyle="color:green;">Mon.Ext.</label>
+					<tipo>decimal</tipo>   
+					<if exp="true">
+					<true>precioventa / imp_cotizacion</true>
+					<false></false>
+					</if>
+				  	<format>%-01.2f</format>
+					<detalle>precio_otr_mon</detalle>
+				</field>				
+				-->
+				<field id="porcentaje_desc" tabla="STK_LISTADETALLE">
+						<label colstyle="display: none;">Descuentos</label>
+						<tipo>numeric</tipo>
+						<expression>  
+						(case when STK_DESCUENTOSARTCLI.porcentaje_desc != 0 
+						then STK_DESCUENTOSARTCLI.porcentaje_desc 
+						else 
+							case when STK_DESCUENTOSRUBROSCLI.porcentaje_desc_rub != 0 
+							then STK_DESCUENTOSRUBROSCLI.porcentaje_desc_rub 
+							else 
+								case when STK_DESCUENTOSLISTASCLI.porcentaje_desc != 0 
+								then STK_DESCUENTOSLISTASCLI.porcentaje_desc 
+								else
+									case when STK_LISTAS.porcentaje_desc != 0 
+									then STK_LISTAS.porcentaje_desc 
+									else 0.00 
+									end
+								end
+							end
+						end )  
+					</expression>
+					<detalle>porcentaje_desc</detalle>
+				</field>
+				<field id="sub-total0" local="true" >
+					<label modpos="nobr" colstyle="display: none;">Sub Total</label>
+					<tipo>numeric</tipo>
+					<if exp="true">
+						<true>((precioventa + 0 ) - ((precioventa + 0 )  * (porcentaje_desc + 0 ) / 100 ))</true>
+						<false>0</false>
+					</if>
+					<detalle>sub-total0</detalle>
+				</field>			 
+				<field id="porcentaje_desc1">
+					<label colstyle="display: none;">Descuentos 1</label>
+					<tipo>numeric</tipo>
+					<expression>(
+						case when STK_DESCUENTOSARTCLI.porcentaje_desc1 != 0 
+						then STK_DESCUENTOSARTCLI.porcentaje_desc1 
+						else 
+							case when STK_DESCUENTOSRUBROSCLI.porcentaje_desc_rub1 != 0 
+							then STK_DESCUENTOSRUBROSCLI.porcentaje_desc_rub1 
+							else 
+
+								case when STK_DESCUENTOSLISTASCLI.porcentaje_desc1 != 0 
+								then STK_DESCUENTOSLISTASCLI.porcentaje_desc1 
+								else
+									case when STK_LISTAS.porcentaje_desc1 != 0 
+										then STK_LISTAS.porcentaje_desc1 
+										else 0.00 
+									end
+								end
+							end
+						end ) 
+					</expression>
+					<detalle>porcentaje_desc1</detalle>
+				</field>
+		<!-- TOTALIZADORES CALCULADOS PARA BAJARLOS CON LA BUSQUEDA PARA QUE PUEDA CARGAR EL ARTICULO COMO BAJA EN LA FACTURACION -->
+				<field id="sub-total1" local="true">
+	 			        <label modpos="nobr" colstyle="display: none;">Sub Total1</label>
+					<tipo>numeric</tipo>
+					<if exp="true">
+						<true>((sub-total0 + 0 ) - ((sub-total0 + 0 )  * (porcentaje_desc1 + 0 ) / 100 ))</true>
+						<false>0</false>
+					</if>
+					<detalle>sub-total1</detalle>
+				</field>			
+				<field id="neto_detalle"  deshabilitado="true" tabla="REG_DETALLES" >
+					<label colstyle="display: none;">Neto</label>
+					<tipo>numeric</tipo>
+					<if exp="true">
+						<true>((sub-total1 + 0 ) * micantidad_detalle)</true>
+						<false>0</false>
+					</if>
+					<detalle>neto_detalle</detalle>
+				</field>			
+				<field id="alicuota_iva"  local="true"  >
+					<label colstyle="display: none;">alicuota_iva</label>
+					<tipo>numeric</tipo>
+					<expression>alicuota</expression>
+					<detalle>alicuota_iva</detalle>
+				</field>
+				<field id="iva_detalle" local="true">
+					<label modpos="nobr" colstyle="display: none;">Iva</label>
+					<tipo>numeric</tipo>
+					<if exp="true">
+						<true>((sub-total1 + 0 )  * (alicuota_iva + 0 ) / 100 ) </true>
+						<false>0</false>
+					</if>
+					<detalle>iva_detalle</detalle>
+				</field>			 
+				<field id="total_detalle" local="true">
+					<label modpos="nobr" colstyle="display: none;">total final</label>
+					<tipo>numeric</tipo>
+					<if exp="true">
+						<true>sub-total1 + iva_detalle</true>
+						<false>0</false>
+					</if>
+					<detalle>total_detalle</detalle>
+				</field>	
+
+
+				<field id="id_regmovim" tabla="REG_DETALLES" noshow="true"/>
+			</fieldGroup>
+				<field id="imp_wcontrolstk"  local="true" noshow="true">
+					<label>Controla Stock</label>
+					<tipo>integer</tipo>
+				</field>
+				<field id="regcuenta_id"    noshow="true">
+					<label>la cuenta</label>
+				</field>
+			<fieldGroup  noshow="true">
+				<field id="id_stklista"  local="true">
+					<label>Parametro Lista</label>
+				</field>
+				<field id="regmovim_id" tabla="REG_DETALLES" noshow="true"  >
+					<label>id de movimiento</label>
+				</field>
+				<field id="subsistema_id"  >
+					<label>el subsistema</label>
+				</field>
+				<field id="concepto_id"  >
+					<label>Cod Concepto</label>
+				</field>
+			</fieldGroup>
+<!--			<fieldGroup> -->
+				<field id="cantidad_imputada" noZero="true">
+					<label>Facturado</label>
+					<expression>SELECT sum(cantidad_imputada) FROM REG_IMPUTACIONESDETALLES where regdetalleped_id = REG_DETALLES.id_regdetalle and REG_IMPUTACIONESDETALLES.regdetallefac_id != 0</expression>
+					<tipo>numeric</tipo>
+				</field>			
+				<field id="cantidadStk" style="color:blue">
+					<label>Stock</label>
+					<tipo>numeric</tipo>	
+					<expression>ifnull((SELECT sum(cantidad_stock) FROM STK_STOCKACTUAL SA WHERE SA.stkarticulo_id= REG_DETALLES.codigo_detalle), 0)</expression>
+					<!--
+					<expression>SELECT case when isnull(cantidad) then 0 else  sum(cantidad * case when tipo_concepto  =  0 then 1 else -1 end)  end
+							FROM STK_ARTICULOS
+							LEFT JOIN STK_MOVIMIENTOS  	ON STK_MOVIMIENTOS.stkarticulo_id = STK_ARTICULOS.id_stkarticulo
+							LEFT JOIN STK_CONCEPTOS 	ON STK_MOVIMIENTOS.stkconcepto_id = STK_CONCEPTOS.id_stkconcepto
+							WHERE STK_ARTICULOS.id_stkarticulo = REG_DETALLES.codigo_detalle
+							GROUP BY stkarticulo_id
+					</expression>-->
+					<detalle>cantidadStk</detalle>
+				</field>
+				<field id="xxx"  noshow="true" local="true" >
+					<if exp="cantidadStk&lt;=0 &amp;&amp; imp_wcontrolstk==0">
+						<true>'false'</true>
+						<false>'true'</false>
+					</if>
+				</field>
+				<field id="xxx1"  noshow="true" local="true">
+					<if exp="cantidadStk&lt;=0 &amp;&amp; imp_wcontrolstk==0">
+						<true>'true'</true>
+						<false>'false'</false>
+					</if>
+				</field>
+				<field id="colores"  noshow="true" local="true">
+					<if exp="cantidadStk&lt;=0 &amp;&amp; imp_wcontrolstk==1">
+						<true>'color:red;'</true>
+						<false>'color:green;'</false>
+					</if>
+				</field>
+
+				<field id="cantidadpendiente" _local="true"  deshabilitado="false"  >
+					<label>Pendiente</label>
+					<tipo>decimal</tipo>			
+					<expression>REG_DETALLES.cantidad_detalle - IFNULL((SELECT sum(cantidad_imputada) FROM REG_IMPUTACIONESDETALLES where regdetalleped_id = REG_DETALLES.id_regdetalle AND REG_IMPUTACIONESDETALLES.regdetallefac_id != 0) , 0)</expression>
+    <!--
+					<if exp="true">
+						<true>(micantidad_detalle + 0) - (cantidad_imputada + 0)</true> 
+						<false>0</false> 
+					</if>
+        -->
+					<condicion operador="!=">0</condicion>  
+		  			<format>%01.2f</format>
+				</field>
+				<field id="referencia_movimiento" >
+					<label modpos="nobr" >Obs</label>
+				</field>	
+				<field id="grabastk" noshow="true" local="true">
+				    <detalle>grabastk</detalle>
+				    <valor>'false'</valor>
+				</field>	
+
+				<field id="mar_movimiento" noshow="true">
+				    <condicion operador="=">0</condicion>
+				</field>	
+
+				<field id="cantidadimp" local="true"  editable="true" deshabilitado="false"  _refresh="false" suma="true">
+					<attribute id="editable">xxx</attribute>
+					<attribute id="style">colores</attribute>   	 
+					<label colstyle="width:auto;">Imputable</label>
+					<size>40</size>
+					<tipo>numeric</tipo>			
+					<if  exp=" cantidadpendiente + 0 &lt;= cantidadStk + 0 ">
+			<true> (cantidadimp != (cantidadpendiente + 0) &amp;&amp; cantidadimp == 0)?(cantidadpendiente + 0):(cantidadimp + 0)</true>
+			<false>(cantidadimp != (cantidadStk       + 0) &amp;&amp; cantidadimp == 0)?(((cantidadStk + 0 &gt;= 0)?(cantidadStk + 0) : 0 )):(cantidadimp + 0)</false>
+					</if>
+<!-- 					<jseval>( imp_wcontrolstk == 1 &amp;&amp; cantidadimp &lt;= cantidadpendiente ) </jseval> -->
+					
+		  			<format>%01.2f</format>
+		  			<valor default="true">0</valor>
+		 
+				</field>	
+
+				<field id="totalaimputar" local="true"  deshabilitado="true"  noshow="true" _refresh="false">
+					<if exp="((micantidad_detalle+0) - cantidad_imputada + 0) &lt;= (cantidadStk + 0) &amp;&amp; (imp_wcontrolstk+0)==0 ">
+					<true>((cantidadimp != 0 &amp;&amp; cantidadimp&lt;= (micantidad_detalle + 0) - (cantidad_imputada + 0)) ? (cantidadimp ) :(micantidad_detalle + 0) - (cantidad_imputada + 0))</true>  
+						<false>(cantidadimp &lt;= cantidadpendiente)? cantidadimp + 0:cantidadpendiente + 0</false> 
+					</if>
+ 					<detalle>cantidad_detalle</detalle> 
+				</field>
+
+			<!-- Datos Varios-->
+<!--				<field id="faccc" local="true" >
+				<label>faccc</label>
+				<tipo>numeric</tipo>
+				</field>
+-->				<field id="imputar" local="true" _refresh="true">
+					<label></label>
+					<tipo>check</tipo>
+				</field>
+
+<!--			</fieldGroup>  -->
+			<fieldGroup noshow="true">
+            <field id="cuentadebe_id" noshow="true" tabla="STK_ARTICULOS">
+                <detalle>ctbcuenta_stk_id</detalle>
+            </field>
+
+				<field id="pedido_regmovim" noshow="true" >
+				    	<expression having="false">id_regmovim</expression>
+				</field>
+				<field id="id_regmovim" noshow="true"/>
+				<field id="xid_pedidosregdetalle" local="true" >
+					<expression>REG_DETALLES.id_regdetalle</expression>
+					<label>Codigo Regdetalle</label>
+					<detalle>xid_pedidosregdetalle</detalle>
+					<detalle>id_pedidosregdetalle</detalle>
+				</field>
+				<field id="unidad_uso_id" _noshow="true" tabla="STK_ARTICULOS">
+					<detalle>stkunidad_id</detalle>
+				</field>
+				<field id="stkrubro_id" _noshow="true" tabla="STK_ARTICULOS">
+					<detalle>stkrubro_id</detalle>
+				</field>
+				<field id="stkfamilia_id" _noshow="true" tabla="STK_ARTICULOS">
+					<detalle>stkfamilia_id</detalle>
+				</field>
+				<field id="stksector_id" _noshow="true" tabla="STK_ARTICULOS">
+					<detalle>stksector_id</detalle>
+				</field>
+				<field id="stklistadetalle_costo" tabla="STK_LISTADETALLE" noshow="true">
+					<detalle>precio_costo</detalle>
+				</field>
+				<COMENTADO> ESTA PORQUERIA
+				<field id="paraelhaving" noshow="true"> <!-- Fuerza el havin -->
+					<expression>1</expression>
+					<condicion operador="=">1 and (( Stock &gt; 0 and ('[__imp_wcontrolstk__]' = '0'  or '[__imp_wcontrolstk__]' = '')   )or ('[__imp_wcontrolstk__]' = '1')) and (REG_DETALLES.cantidad_detalle -ifnull(Facturado,0) ) > 0</condicion>   			
+				</field>
+				</COMENTADO>
+			</fieldGroup>
+			 <group>
+				<field id="regmovim_id" tabla="REG_DETALLES" />
+				<field id="codigo_detalle" tabla="REG_DETALLES"></field>
+			 </group>
+		 </table>
+		 <join>
+			<table id="REG_CONCEPTOS">
+			     	<field id="id_concepto">
+				     	<condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+				</field>
+				<field id="informa_calculo">
+					<condicion operador="=">1</condicion>
+				</field>
+			</table>
+		 </join>
+		 <join>
+			<table id="REG_DETALLES">
+			     	<field id="regmovim_id">
+				     	<condicion operador="=">id_regmovim</condicion>
+				</field>
+			</table>
+		 </join>
+		 <join >
+			<table id="STK_ARTICULOS">
+			     	<field id="id_stkarticulo">
+				     	<condicion operador="=">codigo_detalle</condicion>
+				</field>
+			</table>
+		 </join>
+
+  		 <join tipo="LEFT">
+			<table id="GEN_IVA_ALICUOTAS">
+				<field id="iva_regimen_id">	
+					<condicion operador="=">STK_ARTICULOS.ivaregimen_id</condicion>
+				</field>
+				<field id="iva_id" >
+					<condicion operador="=">'5'</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="LEFT">
+			<table id="STK_LISTADETALLE">
+				<field id="stkarticulo_id">
+					<condicion operador="=">STK_ARTICULOS.id_stkarticulo</condicion>
+				</field>
+				<field id="stklista_id">
+					<condicion operador="=" >'[__id_stklista__]' or '[__id_stklista__]' = '' </condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="LEFT">
+			<table id="STK_LISTAS">
+				<field id="id_stklista">	
+					<condicion operador="=">STK_LISTADETALLE.stklista_id</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="LEFT">
+			<table id="STK_DESCUENTOSLISTASCLI">
+				<field id="stklista_id">	
+					<condicion operador="=">STK_LISTADETALLE.stklista_id</condicion>
+				</field>
+				<field id="regcuenta_id">	
+					<condicion operador="=" >REG_MOVIMIENTOS.regcuenta_id</condicion>
+				</field>
+
+			</table>
+		</join>
+		<join tipo="LEFT">
+			<table id="STK_DESCUENTOSARTCLI">
+				<field id="stkarticulo_id">	
+					<condicion operador="=">STK_ARTICULOS.id_stkarticulo</condicion>
+				</field>
+				<field id="regcuenta_id">	
+					<condicion operador="=" >REG_MOVIMIENTOS.regcuenta_id</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="LEFT">
+			<table id="STK_DESCUENTOSRUBROSCLI">
+				<field id="stkrubro_id">	
+					<condicion operador="=">STK_ARTICULOS.stkrubro_id</condicion>
+				</field>
+				<field id="regcuenta_id">	
+					<condicion operador="=" >REG_MOVIMIENTOS.regcuenta_id</condicion>
+				</field>
+			</table>
+		</join>
+
+	 </form>
+
+
+    </histrix>	

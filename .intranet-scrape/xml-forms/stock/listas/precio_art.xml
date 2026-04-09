@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" borra="no" inserta="no" paginar="250" _imprime="false" preloadData="false">
+  <title>Stock Actualizado</title>
+  <obs/>
+  <form>
+    <table id="STK_MOVIMIENTOS" label="Stock Actualizado">
+    <filters>
+
+        <field id="stkrubro_id">
+          <operador>=</operador>
+          <label modpos="nobr">Rubro</label>
+        </field>
+        <field id="codigo_barra" tabla="STK_ARTICULOS">
+          <operador>=</operador>
+          <label modpos="nobr">Codigo de barra</label>
+        </field>
+        <field id="wstklista_id" tabla="STK_LISTADETALLE" >
+			<label>Lista</label>
+   		</field>
+                
+      </filters>
+    
+	<field id="wstklista_id" local="true" colstyle="display: none;" noshow="true" valauto="true">
+			<label>Lista</label>
+			<helper type="combo" id="STK_LISTAS" empty="true">
+				<field id="id_stklista" />
+				<field id="stklista_nombre" />
+				<field id="moneda_id" />
+				<field id="porcentaje_desc" />
+				<field id="moneda_idvta" />
+				<order>
+				      <field id="stklista_nombre" />
+				</order>
+			</helper>
+		</field>
+              
+      <field id="id_stkarticulo" tabla="STK_ARTICULOS" noshow="true">
+        <label>Codigo de Articulo</label>
+      </field>
+      <field id="codigo_barra" tabla="STK_ARTICULOS">
+        <label>Codigo de Barra</label>
+        <helper type="external" xml="stkarticulo_pos.xml" dir="/ayudas">
+          <field id="wstklista_id" local="true">
+            <valor>1</valor>
+          </field>
+        </helper>
+      </field>
+      <field id="stkrubro_id" tabla="STK_ARTICULOS">
+        <label>Rubro</label>
+        <helper type="combo" xml="stkrubro_qry.xml" dir="/ayudas" empty="true"/>
+      </field>
+      <field id="nombre_articulo" tabla="STK_ARTICULOS">
+        <label>Articulo</label>
+      </field>
+      <field id="stklistadetalle_precioventa" tabla="STK_LISTADETALLE">
+		<label>P.Ventas</label>
+		<help>Precio de Ventas</help>
+		<tipo>numeric</tipo>
+	</field>	
+      
+      <group>
+        <field id="stkarticulo_id" tabla="STK_MOVIMIENTOS" />
+      </group>
+      <order>
+        <field id="nombre_articulo" tabla="STK_ARTICULOS"/>
+      </order>
+    </table>
+
+    <join>
+      <table id="STK_CONCEPTOS">
+        <field id="id_stkconcepto">
+          <condicion operador="=">STK_MOVIMIENTOS.stkconcepto_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join>
+      <table id="STK_ARTICULOS">
+        <field id="id_stkarticulo">
+          <condicion operador="=">STK_MOVIMIENTOS.stkarticulo_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join>
+      <table id="STK_RUBROS">
+        <field id="id_stkrubro">
+          <condicion operador="=">STK_MOVIMIENTOS.stkrubro_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join>
+         <table id="STK_LISTADETALLE">
+             <field id="stkarticulo_id">
+             <condicion operador="=">STK_ARTICULOS.id_stkarticulo</condicion>
+             </field>
+         </table>
+    </join>
+  </form>
+</histrix>

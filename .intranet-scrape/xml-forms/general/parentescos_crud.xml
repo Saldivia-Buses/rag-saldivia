@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="abm">
+		<title>Parentescos</title>
+		<obs></obs>
+		<form>
+		    <table id="GEN_PARENTESCOS" label="Parentescos">
+
+				<field id="id_parentesco" autoinc="true" noshow="true">
+					<label>Código</label>
+				</field>
+
+		        <field id="nombre_parentesco">
+					<label>Nombre</label>
+				</field>
+
+		    </table>
+		</form>
+    </histrix>

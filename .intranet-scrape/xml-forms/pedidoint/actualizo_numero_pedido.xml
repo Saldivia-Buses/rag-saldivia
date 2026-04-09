@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="update" >
+  <title>numerador</title>
+  <obs />
+  <form>
+    <table id="FSMPARAM" idCampoCond="pedir">
+        <field id="parcla"  esClave="true">
+            <valor>pednro</valor>
+        </field>
+        <field id="parent"  >
+            <valor>parent + 1</valor>
+        </field>
+        
+    </table>
+  </form>
+</histrix>

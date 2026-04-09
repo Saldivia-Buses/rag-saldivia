@@ -1,0 +1,243 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <abm tipo="consulta">
+       <titulo>ENTRADA SALIDA STOCK POR CODIGO</titulo>
+        <obs></obs>
+               <consulta>
+					<tabla id="STKINMOV" label="ENTRADA SALIDA STOCK">
+						
+						<campo id="movfec">
+							<label>Remito </label>
+							<help>Fecha Remito </help>
+						</campo>
+						
+						<campo id="siscod" oculto="true">
+							<label>Codigo Sistema.. </label>
+							<help>
+							</help>
+							<condicion operador="=">'01'</condicion>
+							
+						</campo>
+						
+						<campo id="movref">
+							<label>Referencia</label>
+							<help>
+							</help>
+							<formato>%10s</formato>
+						</campo>
+						
+						<campo id="artcod" oculto="true">
+							<label>Codigo Articulo</label>
+							<help>Codigo de Articulo. </help>
+							<ayuda_ex id="STKINSUM" condes="true">
+								<clave>artcod</clave>
+								<campo id="artdes"></campo>
+								<campo id="artcod" oculto="true"></campo>
+								<campo id="siscod" oculto="true">
+									<condicion operador="=">'01'</condicion>
+								</campo>
+								
+							</ayuda_ex>
+						</campo>
+						
+						<campo id="movcod">
+							<expresion>STKCONCE.conabv</expresion>
+							<label>Movim.</label>
+							<help>Codigo de Movimiento. </help>
+							
+						</campo>
+						
+						<campo id="Entrada" suma="true">
+							<expresion>movuso * (case when contip = '1' then 1 else 0 end)</expresion>
+							
+							<label>Entrada</label>
+							<help>
+							</help>
+						</campo>
+						<campo id="Salida" suma="true">
+							<expresion>movuso * (case when contip = '2' then 1 else 0 end)</expresion>
+							
+							<label>Salida</label>
+							<help>
+							</help>
+						</campo>
+						
+						<campo id="opecodEx">
+							<expresion>CONCAT(PERSONAL.apellido, ', ', PERSONAL.Nombre)</expresion>
+							<label>Operador</label>
+							<help>
+							</help>
+							<tipo>string</tipo>
+						</campo>
+						<campo id="EntSal" suma="true" acumula="true">
+							<expresion>movuso * (case when contip = '1' then 1 else -1	end) </expresion>
+							<label>Mov </label>
+							<help>
+							</help>
+						</campo>
+						
+						<!--		  
+						<campo id="artrub">
+						<label>Codigo Rubro </label>
+						<help>Codigo de Rubro Articulo  *  AYUDA = [TAB] </help>
+						</campo>
+						<campo id="barcode">
+						<label>Codigo Barras </label>
+						<help> </help>
+						</campo>
+						<campo id="ctacod">
+						<label>Codigo de Cuenta </label>
+						<help> </help>
+						</campo>
+						<campo id="depcod">
+						<label>Cod.Deposito         . </label>
+						<help>Codigo de Deposito. </help>
+						</campo>
+						<campo id="facfec">
+						<label>Fecha Factura </label>
+						<help>Fecha de Factura </help>
+						</campo>
+						<campo id="movalt">
+						<label>Fec.Alta Mov.        . </label>
+						<help>Fecha de Alta de Movimiento. </help>
+						</campo>
+						<campo id="movbon">
+						<label>Bonificacion         . </label>
+						<help> </help>
+						</campo>
+						<campo id="movcant">
+						<label>Cantidad             . </label>
+						<help>Cantidad involucrada en movimiento. </help>
+						</campo>
+						<campo id="movcli">
+						<label>Cod.Cliente          . </label>
+						<help>Codigo de Cliente. </help>
+						</campo>
+						<campo id="movcos">
+						<label>Costo Articulo        . </label>
+						<help> </help>
+						</campo>
+						<campo id="movcps">
+						<label>? </label>
+						<help> </help>
+						</campo>
+						<campo id="movimp">
+						<label>Importe Total        . </label>
+						<help>Importe Total Operacion. </help>
+						</campo>
+						<campo id="movnpv">
+						<label>Nro. Punto Venta </label>
+						<help> </help>
+						</campo>
+						<campo id="movnro">
+						<label>Nro.Remito </label>
+						<help>Numero de Remito. </help>
+						</campo>
+						<campo id="movpen">
+						<label>Pend. Fact. </label>
+						<help>Cantidad pendiente de Facturacion </help>
+						</campo>
+						<campo id="movpes">
+						<label>Peso Total            . </label>
+						<help> </help>
+						</campo>
+						<campo id="movpor">
+						<label>Porc descuento </label>
+						<help>Porcentaje de descuento </help>
+						</campo>
+						<campo id="movpre">
+						<label>Precio Venta </label>
+						<help>Precio de Venta. </help>
+						</campo>
+						<campo id="movtco">
+						<label>Tipo Comision        . </label>
+						<help>[1] Fija   *   [2] Especial   *   [3] Comun </help>
+						</campo>
+						<campo id="movven">
+						<label>Nro.Factura          . </label>
+						<help>Numero de Factura </help>
+						</campo>
+						<campo id="nrocha">
+						<label>Numero Chasis </label>
+						<help> </help>
+						</campo>
+						<campo id="ocpnro">
+						<label>Nro.Compra </label>
+						<help>Numero de Compra </help>
+						</campo>
+						<campo id="opecla">
+						<label>Firma Electronica </label>
+						<help>Firma Electronica </help>
+						</campo>
+						<campo id="opecod">
+						<label>Cod.Operador         . </label>
+						<help> </help>
+						</campo>
+						<campo id="regmin">
+						<label>Numero Asiento       . </label>
+						<help>Numero de Asiento . </help>
+						</campo>
+						<campo id="siscod" oculto="true">
+						<label>Codigo Sistema.. </label>
+						<help> </help>
+						</campo>
+						<campo id="succod">
+						<label>Cod. Sucursal </label>
+						<help>Codigo de Sucursal </help>
+						</campo>
+						<campo id="tipuni">
+						<label>Tipo Unidad           . </label>
+						<help> </help>
+						</campo>
+						<campo id="titcod">
+						<label>Cod.Lista Precio     . </label>
+						<help>Codigo Lista de Precio. </help>
+						</campo>
+						<campo id="zoncod">
+						<label>Codigo de Zona.. </label>
+						<help> </help>
+						</campo>
+						-->
+						
+<!--						<filtros>
+							
+							<campo id="movfec">
+								<operador>>=</operador>
+								<label>Desde Fecha</label>
+								<valor>today</valor>
+							</campo>
+							<campo id="movfec">
+								<operador>&lt;=</operador>
+								<label>Hasta Fecha</label>
+								<valor>today</valor>
+								
+							</campo>
+						</filtros>
+					-->
+						
+					</tabla>
+
+		  <join tipo="left">
+		    <tabla id="STKCONCE">
+			<campo id="siscod" oculto="true">
+			    <condicion operador="=">'06'</condicion>
+
+			</campo>
+			<campo id="movcod" oculto="true">
+			    <condicion operador="=">STKINMOV.movcod</condicion>
+			</campo>
+	    		<campo id="contip" oculto="true"></campo>
+	    		<campo id="conabv" oculto="true"></campo>
+			
+		    </tabla>
+		  </join>
+		  
+            <join tipo="left">
+                <tabla id="PERSONAL">
+                    <campo id="opecod" oculto="true">
+                        <condicion operador="=">STKINMOV.opecod and PERSONAL.opecod != 0</condicion>
+                    </campo>
+                </tabla>
+            </join>
+
+               </consulta>
+        </abm>

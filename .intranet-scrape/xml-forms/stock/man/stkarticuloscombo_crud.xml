@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ficha"  conBusqueda="true" logReference="nombre_articulo">
+    <title>Artículos</title>
+    <obs></obs>
+    <form >
+        <table id="STK_ARTICULOS" label="Artículos" >
+            <fieldGroup>
+                <field id="id_stkarticulo" esClave="true"  >
+                    <label>Codigo auto de Articulo</label>
+                    <detalle>stkarticulopadre_id</detalle>
+                    <size>15</size>
+                </field>
+
+                <field id="codigo_barra" >
+                    <label modpos="nobr">Codigo de Barras</label>
+                </field>
+
+                <field id="codigo_plu"  colstyle="display:none;"  _esClave="true">
+                    <label modpos="nobr">Codigo Ant</label>
+                </field>
+
+                <field id="nombre_articulo">
+                    <label colspan="3">Nombre</label>
+                </field>
+                
+                
+                <field id="vigencia_desde">
+              	  <label>Fec.Vigencia Desde</label>
+              	  <tipo>date</tipo>
+                </field>
+                
+                <field id="vigencia_hasta">
+              	  <label modpos="nobr">Fec.Vigencia Hasta</label>
+              	  <jseval actxml="false">aFecha(\'vigencia_hasta\') >= aFecha(\'vigencia_desde\')</jseval>
+              	  <tipo>date</tipo>
+                </field>
+                
+                <field id="baja_articulo">
+                    <label modpos="nobr">No habilitado</label>
+                    <tipo>check</tipo>
+                </field>
+
+
+                <field id="stkrubro_id" >
+                    <label>Rubro</label>
+                    <helper type="combo" xml="stkrubro_qry.xml" dir="/ayudas" empty="true" />
+                    <actualiza>
+                        <field destino="stkrubro_id" id="stksubrubro_id"/>
+                    </actualiza>
+                </field>
+
+                <field id="stksubrubro_id" >
+                    <label modpos="nobr">SubRubro</label>
+                    <helper type="combo" xml="stksubrubro_qry.xml" dir="/ayudas" empty="true" />
+                </field>
+
+                <field id="stkfamilia_id">
+                    <label modpos="nobr">Familia</label>
+                    <helper type="combo" xml="stkfamilia_qry.xml" dir="/ayudas" empty="true" />
+                </field>
+
+                <field id="stkmarca_id">
+                    <label _modpos="nobr">Marca</label>
+                    <helper type="combo" xml="stkmarca_qry.xml" dir="/ayudas" empty="true" />
+                </field>
+
+                <field id="cantidad_pack">
+                    <label modpos="nobr">Cant. x bulto</label>
+                    <help>Cantidad de Articulos por bultos cerrado</help>
+                </field>
+            </fieldGroup>
+
+
+            <fieldGroup>
+                <field id="gravado" colstyle="display:none;" >
+                    <label>Gravado</label>
+                    <help>Indica si el Articulo es gravado den IVA</help>
+                    <options>
+                        <option valor="1">Si</option>
+                        <option valor="0">No</option>
+                    </options>
+                </field>
+
+                <field id="ivaregimen_id" colstyle="display:none;"  requiered="true">
+                    <label modpos="nobr">Regimen</label>
+                    <help>Seleccione el regimen de iva del producto</help>
+                    <helper type="combo" xml="ivaregimen_qry.xml" dir="/ayudas" _empty="true" />
+                    <valor>1</valor>
+                </field>
+
+                <field id="genmoneda_venta_id" colstyle="display:none;" _sincelda="true">
+                    <label modpos="nobr">Moneda Venta</label>
+                    <helper type="combo" xml="moneda_qry.xml" dir="/ayudas" empty="true" />
+                </field>
+            </fieldGroup>
+
+
+            <fieldGroup>
+                <field id="Precios" local="true" obj="stkarticulo_precios.xml">
+                    <paring destino="stkarticulo_id">id_stkarticulo</paring>
+                </field>
+                <field id="Combos" local="true" obj="stkarticulo_combo.xml">
+                    <paring destino="stkarticulo_id">id_stkarticulo</paring>
+                </field>
+            </fieldGroup>
+        </table>
+    </form>
+</histrix>

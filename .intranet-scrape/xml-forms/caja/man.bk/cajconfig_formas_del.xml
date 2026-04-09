@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="delete" >
+	<title>Limpia Tabla de Relaciones</title>
+	<obs></obs>
+	<form>
+		<table id="CAJ_PUESTO_FORMAS" _idCampoCond="borrado">
+			<field id="cajpuesto_id"	id_temp="cajpuesto_id" />
+			<field id="cajformapago_id"	id_temp="id_cajformapago" />
+		</table>
+	</form>
+</histrix>

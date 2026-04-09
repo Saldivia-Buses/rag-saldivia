@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert">
+  <title>Movimiento de Herramientas por USUARIO</title>
+  <obs></obs>
+  <form >
+    <table id="HERRMOVS" label="MOVIMIENTOS" idCampoCond="graba_ing">
+	<field id="id_herramienta" id_temp="id_herramienta" />
+	<field id="movfec"	   id_temp="fecmov" />
+	<field id="movher"	   id_temp="movher_ingreso" />
+	<field id="usuario"	   id_temp="usuario_ingreso" />
+    </table>
+  </form>
+</histrix>

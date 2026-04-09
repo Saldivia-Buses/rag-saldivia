@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="insert">
+    <title>MOVIMIENTOS DE orden compras</title>
+    <obs></obs>
+    <form >
+        <table id="CPSMOVIM" label="MOVIMIENTOS" >
+	    <sql>
+		INSERT INTO CPSMOVIM (id_cpsmovim, ocpnro, movfec, artcod, detalle, movcps, movuso, moneda_id, observaciones, artcos, fecreq, nrocha, movcan, pencps, movpen, penuso, importe_iva, importe_total, bonificacion_1, bonificacion_2) VALUES(	'[__id_cpsmovim__]','[__ocpnro__]', str_to_date('[__movfec__]', '%d/%m/%Y'), '[__artcod__]', '[__detalle__]', '[__movcps__]', '[__movuso__]',  '[__moneda_id__]', '[__observaciones__]', '[__artcos__]', str_to_date('[__fecreq__]', '%d/%m/%Y'), '[__nrocha__]', '[__movcan__]', '[__pencps__]', '[__movpen__]', '[__penuso__]', '[__importe_iva__]', '[__importe_total__]', '[__bonificacion_1__]', '[__bonificacion_2__]') ON DUPLICATE KEY UPDATE    
+
+		ocpnro = VALUES(ocpnro),
+		movfec = VALUES(movfec),
+		artcod = VALUES(artcod),
+		detalle = VALUES(detalle),
+		movcps = VALUES(movcps),
+		movuso = VALUES(movuso),
+		moneda_id = VALUES(moneda_id),
+		observaciones = VALUES(observaciones),
+		artcos = VALUES(artcos),
+		fecreq = VALUES(fecreq),
+		nrocha = VALUES(nrocha),
+		movcan = VALUES(movcan),
+		pencps = VALUES(pencps),
+		movpen = VALUES(movpen),
+		penuso = VALUES(penuso),
+		importe_iva = VALUES(importe_iva),
+		importe_total = VALUES(importe_total),
+		bonificacion_1 = VALUES(bonificacion_1),
+		bonificacion_2 = VALUES(bonificacion_2)
+		
+	    </sql>
+
+	    	<field id="id_cpsmovim" id_temp="id_cpsmovim"></field>
+            <field id="ocpnro" id_temp="ocpnro"></field>
+            <field id="movfec" id_temp="movfec"></field>
+            <field id="artcod" id_temp="artcod"></field>
+            <field id="detalle" id_temp="detalle">
+		<tipo>varchar</tipo>
+</field>
+            <field id="movcps" id_temp="movcps"></field>
+            <field id="movuso" id_temp="movuso"></field>
+            <field id="moneda_id" id_temp="moneda_id"></field>
+            <field id="observaciones" id_temp="observaciones"></field>
+            <field id="artcos" id_temp="artcos"></field>
+            <field id="fecreq" id_temp="fecreq"></field>
+            <field id="nrocha" id_temp="nrocha"></field>
+            <field id="movcan" id_temp="movcan"></field> <!--antes era id_temp="movcps" -->
+            <field id="pencps" id_temp="pencps"></field> <!--antes era id_temp="movcps" -->
+            <field id="movpen" id_temp="movpen"></field> <!--antes era id_temp="movcps" -->
+            <field id="penuso" id_temp="penuso"></field> <!--antes era id_temp="movcps" -->
+            <field id="importe_iva" id_temp="importe_iva"></field>
+            <field id="importe_total" id_temp="importe_total"></field>
+	    	<field id="bonificacion_1" id_temp="bonificacion_1"></field>
+	    	<field id="bonificacion_2" id_temp="bonificacion_2"></field>
+        </table>
+    </form>
+</histrix>

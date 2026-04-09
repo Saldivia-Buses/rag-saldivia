@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="abm" width="45%">
+  <title>Tabla de Herramientas</title>
+  <obs></obs>
+  <form >
+    <table id="MANT_EQUIPOS" label="Tabla de Herramientas">
+      
+      
+      <filters>
+      
+      <field id="articulo_id" local="true"> 
+        <label>Descrip</label>
+        <help>Descripcion Herramienta</help>
+        <operador>=</operador>   
+        <size>20</size>
+      </field>
+      
+      
+      
+      </filters>
+      
+      
+      <field id="id_equipo" esClave="true" noshow="true" />
+
+      <field id="tipoequipo_id" noshow="true" valauto="true">
+        <label>Tipo</label>
+        <valor>3</valor>
+        <condicion operador="=">3</condicion>
+      </field>  
+  
+      <field id="fecha_alta" noshow="true" valauto="true">
+        <valor>today</valor>
+      </field>
+    
+      <field id="articulo_id" >
+        <helper type="external" id="STKINSUM">
+          <field id="artcod" />
+          <field id="artdes">
+            <detalle>nombre_equipo</detalle>
+            <size>30</size>
+          </field>
+          <field id="baja" noshow="true">
+            <condicion operador="=">0</condicion>
+          </field>
+          <field id="siscod" noshow="true">
+            <condicion operador="=">01</condicion>
+          </field>
+        </helper>
+        <label>Codigo</label>
+        <help>Codigo del articulo</help>
+        <size>30</size>
+      </field>     
+    
+      <field id="nombre_equipo" deshabilitado="true">
+          <label modpos="nobr">Descripcion</label>
+          <help>Nombre de la herramienta </help>
+          <tipo>varchar</tipo>
+        <size>50</size>
+      </field> 
+
+      <field id="numero_serie">
+        <label>Nro. de Serie</label>
+        <help>Identificacion de la herramienta</help>
+        <size>15</size>
+      </field>
+      
+      <field id="deposito_id" >
+        <helper type="combo" id="DEPOSITO">
+          <field id="idDeposito" />
+          <field id="direccion" />
+        </helper>
+        <label>Deposito</label>
+        <help>Deposito</help>
+      </field>
+      
+      <order>
+        <field id="nombre_equipo" />
+      </order>
+    </table>
+  </form>
+</histrix>

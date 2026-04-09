@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ficha" imprime="true" inserta="false" modifica="false" borra="false" PDFfontSize="10" autoprint="true" preFetch="true">
+    <title>Evaluación de desempeño</title>
+    <obs></obs>
+    <form>
+        <table id="RH_EVALUACIONES" >
+            <title>Evaluación de desempeño</title>
+
+            <field id="id_rhevaluacion" _autoinc="true" _oculto="true" print="false" esClave="true">
+                <label colspan="2" posX="+1" posY="+1" size="20">evaluacion</label>
+            </field>    
+
+            <field id="rhpersona_id" noshow="true" print="false"/>
+
+            <field id="evaluado">
+                <expression>CONCAT(PERSONAL.apellido, ' ', PERSONAL.Nombre)</expression>
+                <label colspan="2" posX="+5" posY="+1" size="18">Evaluado</label>
+            </field>
+
+            <field id="legajo" tabla="PERSONAL" deshabilitado="true" >
+                <label modpos="nobr" posX="+100" posY="0" size="18">Legajo</label>
+            </field>
+
+            <field id="id_seccion" tabla="PERSONAL" deshabilitado="true">
+                <helper type="combo" id="SECCION">
+                    <field id="id_seccion"/>
+                    <field id="nombre"/>
+                </helper>
+                <label posX="+5" posY="+2" size="18">Puesto</label>
+            </field>
+
+            <field id="antig_puesto">
+                <expression>CONCAT(IF((YEAR(CURDATE()) - YEAR(MAX(fechaDesde))) &gt; 0, (YEAR(CURDATE()) - YEAR(MAX(fechaDesde))) - (MID(CURDATE(), 6, 5) &lt; MID(MAX(fechaDesde), 6, 5)), IF((YEAR(CURDATE()) - YEAR(MAX(fechaDesde))) &lt; 0, (YEAR(CURDATE()) - YEAR(MAX(fechaDesde))) + (MID(MAX(fechaDesde), 6, 5) &lt; MID(CURDATE(), 6, 5)), (YEAR(CURDATE()) - YEAR(MAX(fechaDesde))))), ' años')</expression>
+                <label posX="100" posY="0" size="42">Antigüedad en el puesto</label>
+                <help></help>
+                <tipo>integer</tipo>
+            </field>
+
+            <field id="tipo_evaluacion" deshabilitado="true">
+                <label posX="+5" posY="+2" size="18">Tipo:</label>
+                <options>
+                    <option valor="1">Evaluacion</option>
+                    <option valor="2">Sondeo</option>
+                </options>
+            </field>
+
+            <field id="fec_evaluacion" deshabilitado="true">
+                <label posX="100" posY="0" size="18">Fecha:</label>
+            </field>
+
+            <field id="resultados" local="true" showObjTabla="true">
+                <helper type="object" xml="evaluaciones_res.xml">
+                    <parameter source="id_rhevaluacion" target="rhevaluacion_id"/>
+                </helper>
+                <label posX="+5" posY="+8" PDFwidth="185"></label>
+            </field>
+
+	    <!--
+(select sum(peso) * 5 from RH_EVALUACION_RESPUESTAS LEFT JOIN RH_EVALUACION_GRUPOS reg ON RH_EVALUACION_RESPUESTAS .rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo where RH_EVALUACION_RESPUESTAS.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion)
+	    -->
+            <field id="desempenio" deshabilitado="true">
+                <expression>CONCAT(RH_EVALUACIONES.desempenio, ' / ',(select sum(peso) * 5 from RH_EVALUACION_RESPUESTAS 
+LEFT JOIN RH_EVALUACION_GRUPOS reg ON RH_EVALUACION_RESPUESTAS .rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo
+where RH_EVALUACION_RESPUESTAS.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion),' = ', TRUNCATE((RH_EVALUACIONES.desempenio / (select sum(peso) * 5 from RH_EVALUACION_RESPUESTAS 
+LEFT JOIN RH_EVALUACION_GRUPOS reg ON RH_EVALUACION_RESPUESTAS .rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo
+where RH_EVALUACION_RESPUESTAS.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion)), 2))</expression>
+                <label posX="+60" posY="+1" PDFsize="12" PDFbold="true" size="25">Desempeño</label>
+            </field>
+
+            <field id="puntos_fuertes">
+				<expression><![CDATA[ CASE WHEN desempenio != 0 THEN 
+       CONCAT('Los puntos fuertes están dados por los grupos con clasificación 4 y 5:\n',
+IFNULL(CONCAT('		-', (SELECT reg.nombre_grupo FROM RH_EVALUACION_RESPUESTAS rer LEFT JOIN RH_EVALUACION_GRUPOS reg ON rer.rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo WHERE rer.rhevaluacionvalor_id IN (4, 5) and rer.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion LIMIT 0, 1), '\n'), ''), 
+IFNULL(CONCAT('		-', (SELECT reg.nombre_grupo FROM RH_EVALUACION_RESPUESTAS rer LEFT JOIN RH_EVALUACION_GRUPOS reg ON rer.rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo WHERE rer.rhevaluacionvalor_id IN (4, 5) and rer.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion LIMIT 1, 1), '\n'), ''), 
+IFNULL(CONCAT('		-', (SELECT reg.nombre_grupo FROM RH_EVALUACION_RESPUESTAS rer LEFT JOIN RH_EVALUACION_GRUPOS reg ON rer.rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo WHERE rer.rhevaluacionvalor_id IN (4, 5) and rer.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion LIMIT 2, 1), '\n'), ''), 
+IFNULL(CONCAT('		-', (SELECT reg.nombre_grupo FROM RH_EVALUACION_RESPUESTAS rer LEFT JOIN RH_EVALUACION_GRUPOS reg ON rer.rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo WHERE rer.rhevaluacionvalor_id IN (4, 5) and rer.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion LIMIT 3, 1), '\n'), ''), 
+IFNULL(CONCAT('		-', (SELECT reg.nombre_grupo FROM RH_EVALUACION_RESPUESTAS rer LEFT JOIN RH_EVALUACION_GRUPOS reg ON rer.rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo WHERE rer.rhevaluacionvalor_id IN (4, 5) and rer.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion LIMIT 4, 1), '\n'), ''), 
+IFNULL(CONCAT('		-', (SELECT reg.nombre_grupo FROM RH_EVALUACION_RESPUESTAS rer LEFT JOIN RH_EVALUACION_GRUPOS reg ON rer.rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo WHERE rer.rhevaluacionvalor_id IN (4, 5) and rer.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion LIMIT 5, 1), '\n'), ''), 
+IFNULL(CONCAT('		-', (SELECT reg.nombre_grupo FROM RH_EVALUACION_RESPUESTAS rer LEFT JOIN RH_EVALUACION_GRUPOS reg ON rer.rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo WHERE rer.rhevaluacionvalor_id IN (4, 5) and rer.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion LIMIT 6, 1), '\n'), ''), 
+IFNULL(CONCAT('		-', (SELECT reg.nombre_grupo FROM RH_EVALUACION_RESPUESTAS rer LEFT JOIN RH_EVALUACION_GRUPOS reg ON rer.rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo WHERE rer.rhevaluacionvalor_id IN (4, 5) and rer.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion LIMIT 7, 1), '\n'), ''), 
+IFNULL(CONCAT('		-', (SELECT reg.nombre_grupo FROM RH_EVALUACION_RESPUESTAS rer LEFT JOIN RH_EVALUACION_GRUPOS reg ON rer.rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo WHERE rer.rhevaluacionvalor_id IN (4, 5) and rer.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion LIMIT 8, 1), '\n'), ''), 
+IFNULL(CONCAT('		-', (SELECT reg.nombre_grupo FROM RH_EVALUACION_RESPUESTAS rer LEFT JOIN RH_EVALUACION_GRUPOS reg ON rer.rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo WHERE rer.rhevaluacionvalor_id IN (4, 5) and rer.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion LIMIT 9, 1), '\n'), ''), 
+IFNULL(CONCAT('		-', (SELECT reg.nombre_grupo FROM RH_EVALUACION_RESPUESTAS rer LEFT JOIN RH_EVALUACION_GRUPOS reg ON rer.rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo WHERE rer.rhevaluacionvalor_id IN (4, 5) and rer.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion LIMIT 10, 1),'\n'), '')
+) END ]]></expression>   
+                <label colspan="2" posX="+5" posY="+4" PDFancho="160" size="35">Puntos fuertes</label>
+            </field>
+
+            <field id="puntos_a_mejorar">
+				<expression><![CDATA[ CASE WHEN desempenio != 0 THEN 
+       CONCAT('Los puntos a mejorar están dados por los grupos con clasificación 2 y 3:\n',
+IFNULL(CONCAT('		-', (SELECT reg.nombre_grupo FROM RH_EVALUACION_RESPUESTAS rer LEFT JOIN RH_EVALUACION_GRUPOS reg ON rer.rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo WHERE rer.rhevaluacionvalor_id IN (2, 3) and rer.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion LIMIT 0, 1), '\n'), ''), 
+IFNULL(CONCAT('		-', (SELECT reg.nombre_grupo FROM RH_EVALUACION_RESPUESTAS rer LEFT JOIN RH_EVALUACION_GRUPOS reg ON rer.rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo WHERE rer.rhevaluacionvalor_id IN (2, 3) and rer.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion LIMIT 1, 1), '\n'), ''), 
+IFNULL(CONCAT('		-', (SELECT reg.nombre_grupo FROM RH_EVALUACION_RESPUESTAS rer LEFT JOIN RH_EVALUACION_GRUPOS reg ON rer.rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo WHERE rer.rhevaluacionvalor_id IN (2, 3) and rer.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion LIMIT 2, 1), '\n'), ''), 
+IFNULL(CONCAT('		-', (SELECT reg.nombre_grupo FROM RH_EVALUACION_RESPUESTAS rer LEFT JOIN RH_EVALUACION_GRUPOS reg ON rer.rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo WHERE rer.rhevaluacionvalor_id IN (2, 3) and rer.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion LIMIT 3, 1), '\n'), ''), 
+IFNULL(CONCAT('		-', (SELECT reg.nombre_grupo FROM RH_EVALUACION_RESPUESTAS rer LEFT JOIN RH_EVALUACION_GRUPOS reg ON rer.rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo WHERE rer.rhevaluacionvalor_id IN (2, 3) and rer.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion LIMIT 4, 1), '\n'), ''), 
+IFNULL(CONCAT('		-', (SELECT reg.nombre_grupo FROM RH_EVALUACION_RESPUESTAS rer LEFT JOIN RH_EVALUACION_GRUPOS reg ON rer.rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo WHERE rer.rhevaluacionvalor_id IN (2, 3) and rer.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion LIMIT 5, 1), '\n'), ''), 
+IFNULL(CONCAT('		-', (SELECT reg.nombre_grupo FROM RH_EVALUACION_RESPUESTAS rer LEFT JOIN RH_EVALUACION_GRUPOS reg ON rer.rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo WHERE rer.rhevaluacionvalor_id IN (2, 3) and rer.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion LIMIT 6, 1), '\n'), ''), 
+IFNULL(CONCAT('		-', (SELECT reg.nombre_grupo FROM RH_EVALUACION_RESPUESTAS rer LEFT JOIN RH_EVALUACION_GRUPOS reg ON rer.rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo WHERE rer.rhevaluacionvalor_id IN (2, 3) and rer.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion LIMIT 7, 1), '\n'), ''), 
+IFNULL(CONCAT('		-', (SELECT reg.nombre_grupo FROM RH_EVALUACION_RESPUESTAS rer LEFT JOIN RH_EVALUACION_GRUPOS reg ON rer.rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo WHERE rer.rhevaluacionvalor_id IN (2, 3) and rer.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion LIMIT 8, 1), '\n'), ''), 
+IFNULL(CONCAT('		-', (SELECT reg.nombre_grupo FROM RH_EVALUACION_RESPUESTAS rer LEFT JOIN RH_EVALUACION_GRUPOS reg ON rer.rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo WHERE rer.rhevaluacionvalor_id IN (2, 3) and rer.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion LIMIT 9, 1), '\n'), ''), 
+IFNULL(CONCAT('		-', (SELECT reg.nombre_grupo FROM RH_EVALUACION_RESPUESTAS rer LEFT JOIN RH_EVALUACION_GRUPOS reg ON rer.rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo WHERE rer.rhevaluacionvalor_id IN (2, 3) and rer.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion LIMIT 10, 1), '\n'), '')
+
+) END ]]></expression> 
+                <label colspan="2" posX="+5" posY="+2" PDFancho="160" size="35">Puntos a mejorar</label>
+            </field>
+
+            <field id="conclusiones">
+				<expression>CASE WHEN desempenio != 0 THEN (CONCAT('El evaluado ', CONCAT(PERSONAL.apellido, ' ', PERSONAL.Nombre), ' ha obtenido una puntuación de ', TRUNCATE((desempenio / (select sum(peso) * 5 from RH_EVALUACION_RESPUESTAS 
+LEFT JOIN RH_EVALUACION_GRUPOS reg ON RH_EVALUACION_RESPUESTAS .rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo
+where RH_EVALUACION_RESPUESTAS.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion)), 2), ', por lo cual se le considera una labor ', 
+				CASE  WHEN (desempenio / (select sum(peso) * 5 from RH_EVALUACION_RESPUESTAS LEFT JOIN RH_EVALUACION_GRUPOS reg ON RH_EVALUACION_RESPUESTAS .rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo where RH_EVALUACION_RESPUESTAS.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion)) &lt;= 0.4 THEN 'REPROBADA (0 a 0.40)' 
+					  WHEN (desempenio / (select sum(peso) * 5 from RH_EVALUACION_RESPUESTAS LEFT JOIN RH_EVALUACION_GRUPOS reg ON RH_EVALUACION_RESPUESTAS .rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo where RH_EVALUACION_RESPUESTAS.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion)) &gt; 0.4 and (desempenio / (select sum(peso) * 5 from RH_EVALUACION_RESPUESTAS LEFT JOIN RH_EVALUACION_GRUPOS reg ON RH_EVALUACION_RESPUESTAS .rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo where RH_EVALUACION_RESPUESTAS.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion)) &lt;= 0.6 THEN 'REGULAR (de 0.40 a 0.60)' 
+					  WHEN (desempenio / (select sum(peso) * 5 from RH_EVALUACION_RESPUESTAS LEFT JOIN RH_EVALUACION_GRUPOS reg ON RH_EVALUACION_RESPUESTAS .rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo where RH_EVALUACION_RESPUESTAS.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion)) &gt; 0.6 and (desempenio / (select sum(peso) * 5 from RH_EVALUACION_RESPUESTAS LEFT JOIN RH_EVALUACION_GRUPOS reg ON RH_EVALUACION_RESPUESTAS .rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo where RH_EVALUACION_RESPUESTAS.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion)) &lt;= 0.7 THEN 'ACEPTABLE (0.60 a 0.70)' 
+					  WHEN (desempenio / (select sum(peso) * 5 from RH_EVALUACION_RESPUESTAS LEFT JOIN RH_EVALUACION_GRUPOS reg ON RH_EVALUACION_RESPUESTAS .rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo where RH_EVALUACION_RESPUESTAS.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion)) &gt; 0.7 and (desempenio / (select sum(peso) * 5 from RH_EVALUACION_RESPUESTAS LEFT JOIN RH_EVALUACION_GRUPOS reg ON RH_EVALUACION_RESPUESTAS .rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo where RH_EVALUACION_RESPUESTAS.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion)) &lt;= 0.8 THEN 'BUENA (0.70 a 0.80)' 
+					  WHEN (desempenio / (select sum(peso) * 5 from RH_EVALUACION_RESPUESTAS LEFT JOIN RH_EVALUACION_GRUPOS reg ON RH_EVALUACION_RESPUESTAS .rhevaluaciongrupo_id = reg.id_rhevaluaciongrupo where RH_EVALUACION_RESPUESTAS.rhevaluacion_id = RH_EVALUACIONES.id_rhevaluacion)) &gt; 0.8 THEN 'EXCELENTE (0.8 a 1.00)' END)) 
+				END
+				</expression>
+                <label colspan="2" posX="+5" posY="+2" PDFancho="160" size="35">Conclusiones</label>
+            </field>
+
+            <field id="descargo_evaluado">
+                <label colspan="2" posX="+5" posY="+2" PDFancho="160" size="35">Descargo evaluado</label>
+            </field>
+			
+			<field id="evaluado2">
+                <expression>CONCAT(PERSONAL.apellido, ' ', PERSONAL.Nombre)</expression>
+                <label posX="+5" posY="240" size="18">Evaluado </label>
+            </field>
+
+			<field id="firmaevaluado" local="true">
+				<expression>CONCAT('.............................................')</expression>
+				<label modpos="nobr" posX="+95" posY="0" size="12">Firma</label>
+			</field>
+
+			<field id="fecha1" local="true">
+				<expression>CONCAT('..../..../......')</expression>
+				<label modpos="nobr" posX="+156" posY="0" size="12">Fecha</label>
+			</field>
+
+			<field id="evaluador_id">
+				<helper type="combo" id="PERSONAL" empty="true">
+					<field id="idPersona"/>
+					<field id="nombre">
+						<expression>CONCAT(apellido, ' ', Nombre)</expression>
+					</field>
+				</helper>
+				<label posX="+5" posY="+5" size="18">Evaluador</label>
+			</field>
+
+			<field id="firmaevaluador" local="true">
+				<expression>CONCAT('.............................................')</expression>
+				<label modpos="nobr" posX="+95" posY="0" size="12">Firma </label>
+			</field>
+
+			<field id="fecha2" local="true">
+				<expression>CONCAT('..../..../......')</expression>
+				<label modpos="nobr" posX="+156" posY="0" size="12">Fecha </label>
+			</field>
+
+			<field id="revisor_id">
+				<helper type="combo" id="PERSONAL" empty="true">
+					<field id="idPersona"/>
+					<field id="nombre">
+						<expression>CASE WHEN idPersona != 0 THEN CONCAT(apellido, ' ', Nombre) ELSE '' END</expression>
+					</field>
+				</helper>
+				<label posX="+5" posY="+5" size="18">Revisor</label>
+			</field>
+
+			<field id="firmarevisor" local="true">
+				<expression>CONCAT('.............................................')</expression>
+				<label modpos="nobr" posX="+95" posY="0" size="12">Firma  </label>
+			</field>
+
+			<field id="fecha3" local="true">
+				<expression>CONCAT('..../..../......')</expression>
+				<label modpos="nobr" posX="+156" posY="0" size="12">Fecha  </label>
+			</field>
+
+        </table>
+        <join tipo="left">
+            <table id="PERSONAL">
+                <field id="idPersona">
+                    <condicion operador="=">RH_EVALUACIONES.rhpersona_id</condicion>
+                </field>
+            </table>
+        </join>
+	
+        <join tipo="left">
+            <table id="RH_EVALUACION_RESPUESTAS">
+                <field id="rhevaluacion_id">
+                    <condicion operador="=">RH_EVALUACIONES.id_rhevaluacion</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="SECCIONHISTORIA">
+                <field id="idPersona">
+                    <condicion operador="=">PERSONAL.idPersona</condicion>
+                </field>
+                <field id="id_seccion">
+                    <condicion operador="=">PERSONAL.id_seccion</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix> 

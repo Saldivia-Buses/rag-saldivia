@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+   <histrix tipo="update">
+       <title>Minutas</title>
+        <obs></obs>
+               <form  >
+                  <table id="CTBREGIS" label="Minutas" idCampoCond="grabar">
+    	              <field id="id_ctbregis" esClave="true" id_temp="id_ctbregis" />
+            	      <field id="ctbcod" id_temp="ctbnew" />
+		  </table>
+               </form>
+        </histrix>

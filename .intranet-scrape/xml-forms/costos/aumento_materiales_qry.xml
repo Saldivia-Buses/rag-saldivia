@@ -1,0 +1,556 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="consulta" style="height:100%;" PDForientacion="L"  paginar="100">
+    <title>DETALLE</title>
+    <obs></obs>
+    <form _detalle="ocprecib_qry.xml" inline="true">
+        <table id="CPSMOVIM" label="DETALLE">
+            <filters>
+                <field id="movfec" >
+                    <label>Desde Fecha</label>
+                    <operador>&gt;=</operador>
+                    <valor>today</valor>
+                </field>
+                <field id="movfec" >
+                    <label>Hasta Fecha</label>
+                    <operador>&lt;=</operador>
+                    <valor>today</valor>
+
+                </field>
+
+            </filters>
+
+            <field id="artcod" deshabilitado="true">
+                <label>Art.</label>
+                <help>Codigo de Articulo</help>
+                <detalle>artcod</detalle>
+            </field>
+            <field id="movfec" tabla="CPSMOVIM" noshow="true">
+                <label>Fecha</label>
+            </field>
+
+            <field id="siscod" oculto="true">
+                <help></help>
+                <condicion operador='='>''</condicion>
+
+            </field>
+
+            <field id="detalle" deshabilitado="true">
+                <label>Detalle</label>
+                <help>Detalle de linea de la Orden de Compra para Art S.C. </help>
+            </field>
+
+<!--            <field id="movuso" deshabilitado="true">
+            <field id="observaciones"  tabla="CPSMOVIM" noshow="true">
+                <label modpos="nobr">Observaciones</label>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="movuso" deshabilitado="true">
+                <label>Ped.</label>
+                <help>Pedido (expresado en la unidad de uso)</help>
+            </field>
+	     
+            <field id="movcps" deshabilitado="true">
+                <label>Ped.cps</label>
+                <help>Pedido (expresado en la unidad de compra)</help>
+            </field> -->
+            <field id="costo" deshabilitado="true" tipoOrden="DESC" useAlias="true" noshow="true">
+                <label>Total</label>
+                <expression>(sum(movcps - pencps) * (select STKINSPR.artcos from STKINSPR
+                where STKINSPR.artcod = CPSMOVIM.artcod and
+            	      STKINSPR.siscod = '01' and
+            	      month(STKINSPR.movfec) &lt;= 12 and
+            	      year(STKINSPR.movfec) = year(CPSMOVIM.movfec) order by movfec DESC limit 1))</expression>
+              <tipo>numeric</tipo>
+            </field>
+
+
+            <field id="mov_penEne" deshabilitado="true" noshow="true">
+                <expression>(select STKINSPR.artcos from STKINSPR
+                where STKINSPR.artcod = CPSMOVIM.artcod and 
+            	      STKINSPR.siscod = '01' and
+            	      month(STKINSPR.movfec) &lt;= 1 and
+            	      year(STKINSPR.movfec) &lt;= year(CPSMOVIM.movfec) order by movfec DESC limit 1)
+                </expression>
+                <label>Rec.Enero</label>
+            </field>
+            <field id="mov_penFeb" deshabilitado="true" noshow="true">
+                <expression>(select STKINSPR.artcos from STKINSPR
+                where STKINSPR.artcod = CPSMOVIM.artcod and 
+            	      STKINSPR.siscod = '01' and
+            	      month(STKINSPR.movfec) &lt;= 2 and
+            	      year(STKINSPR.movfec) = year(CPSMOVIM.movfec) order by movfec DESC limit 1)
+                </expression>
+                <label>Rec.Feb</label>
+            </field>
+            <field id="mov_penMar" deshabilitado="true" noshow="true">
+                <expression>(select STKINSPR.artcos from STKINSPR
+                where STKINSPR.artcod = CPSMOVIM.artcod and 
+            	      STKINSPR.siscod = '01' and
+            	      month(STKINSPR.movfec) &lt;= 3 and
+            	      year(STKINSPR.movfec) = year(CPSMOVIM.movfec) order by movfec DESC limit 1)
+                </expression>
+                <label>Rec.Mar</label>
+            </field>
+            <field id="mov_penAbr" deshabilitado="true" noshow="true">
+                <expression>(select STKINSPR.artcos from STKINSPR
+                where STKINSPR.artcod = CPSMOVIM.artcod and 
+            	      STKINSPR.siscod = '01' and
+            	      month(STKINSPR.movfec) &lt;= 4 and
+            	      year(STKINSPR.movfec) = year(CPSMOVIM.movfec) order by movfec DESC limit 1)
+                </expression>
+                <label>Rec.Abr</label>
+            </field>
+            <field id="mov_penMay" deshabilitado="true" noshow="true">
+                <expression>(select STKINSPR.artcos from STKINSPR
+                where STKINSPR.artcod = CPSMOVIM.artcod and 
+            	      STKINSPR.siscod = '01' and
+            	      month(STKINSPR.movfec) &lt;= 5 and
+            	      year(STKINSPR.movfec) = year(CPSMOVIM.movfec) order by movfec DESC limit 1)
+                </expression>
+                <label>Rec.May</label>
+            </field>
+            <field id="mov_penJun" deshabilitado="true" noshow="true">
+                <expression>(select STKINSPR.artcos from STKINSPR
+                where STKINSPR.artcod = CPSMOVIM.artcod and 
+            	      STKINSPR.siscod = '01' and
+            	      month(STKINSPR.movfec) &lt;= 6 and
+            	      year(STKINSPR.movfec) = year(CPSMOVIM.movfec) order by movfec DESC limit 1)
+                </expression>
+                <label>Rec.Jun</label>
+            </field>
+            <field id="mov_penJul" deshabilitado="true" noshow="true">
+                <expression>(select STKINSPR.artcos from STKINSPR
+                where STKINSPR.artcod = CPSMOVIM.artcod and 
+            	      STKINSPR.siscod = '01' and
+            	      month(STKINSPR.movfec) &lt;= 7 and
+            	      year(STKINSPR.movfec) = year(CPSMOVIM.movfec) order by movfec DESC limit 1)
+                </expression>
+                <label>Rec.Jul</label>
+            </field>
+            <field id="mov_penAgo" deshabilitado="true" noshow="true">
+                <expression>(select STKINSPR.artcos from STKINSPR
+                where STKINSPR.artcod = CPSMOVIM.artcod and 
+            	      STKINSPR.siscod = '01' and
+            	      month(STKINSPR.movfec) &lt;= 8 and
+            	      year(STKINSPR.movfec) = year(CPSMOVIM.movfec) order by movfec DESC limit 1)
+                </expression>
+                <label>Rec.Ago</label>
+            </field>
+            <field id="mov_penSep" deshabilitado="true" noshow="true">
+                <expression>(select STKINSPR.artcos from STKINSPR
+                where STKINSPR.artcod = CPSMOVIM.artcod and 
+            	      STKINSPR.siscod = '01' and
+            	      month(STKINSPR.movfec) &lt;= 9 and
+            	      year(STKINSPR.movfec) = year(CPSMOVIM.movfec) order by movfec DESC limit 1)
+                </expression>
+                <label>Rec.Sep</label>
+            </field>
+            <field id="mov_penOct" deshabilitado="true" noshow="true">
+                <expression>(select STKINSPR.artcos from STKINSPR
+                where STKINSPR.artcod = CPSMOVIM.artcod and 
+            	      STKINSPR.siscod = '01' and
+            	      month(STKINSPR.movfec) &lt;= 10 and
+            	      year(STKINSPR.movfec) = year(CPSMOVIM.movfec) order by movfec DESC limit 1)
+                </expression>
+                <label>Rec.Oct</label>
+            </field>
+            <field id="mov_penNov" deshabilitado="true" noshow="true">
+                <expression>(select STKINSPR.artcos from STKINSPR
+                where STKINSPR.artcod = CPSMOVIM.artcod and 
+            	      STKINSPR.siscod = '01' and
+            	      month(STKINSPR.movfec) &lt;= 11 and
+            	      year(STKINSPR.movfec) = year(CPSMOVIM.movfec) order by movfec DESC limit 1)
+                </expression>
+                <label>Rec.Nov</label>
+            </field>
+            <field id="mov_penDic" deshabilitado="true" noshow="true">
+                <expression>(select STKINSPR.artcos from STKINSPR
+                where STKINSPR.artcod = CPSMOVIM.artcod and 
+            	      STKINSPR.siscod = '01' and
+            	      month(STKINSPR.movfec) &lt;= 12 and
+            	      year(STKINSPR.movfec) = year(CPSMOVIM.movfec) order by movfec DESC limit 1)
+                </expression>
+                <label>Rec.Dic</label>
+            </field>
+            
+            <field id="cantEne" noZero="true">
+                <expression>sum( case when month(CPSMOVIM.movfec) = 1 then (movcps - pencps) else 0 end)</expression>
+                <tipo>numeric</tipo>
+                <label>Ene</label>
+             
+            </field>
+            <field id="totEne" local="true" noZero="true">
+                <if exp="true">
+                    <true>cantEne * mov_penEne + 0</true>
+                    <false>0</false>
+                </if>
+                <tipo>numeric</tipo>
+            </field>
+            <field id="cantFeb" noZero="true">
+                <expression>sum( case when month(CPSMOVIM.movfec) = 2 then (movcps - pencps) else 0 end)</expression>
+                <tipo>numeric</tipo>
+                <label>Feb</label>
+             
+            </field>
+            <field id="totFeb" local="true" noZero="true">
+                <if exp="true">
+                    <true>cantFeb * mov_penFeb + 0</true>
+                    <false>0</false>
+                </if>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="cantMar" noZero="true">
+                <expression>sum( case when month(CPSMOVIM.movfec) = 3 then (movcps - pencps) else 0 end)</expression>
+                <tipo>numeric</tipo>
+                <label>Mar</label>
+
+            </field>
+            <field id="totMar" local="true" noZero="true">
+                <if exp="true">
+                    <true>cantMar * mov_penMar + 0</true>
+                    <false>0</false>
+                </if>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="marzo3" noZero="true">
+                <label>M3</label>
+                <expression>sum(case when month(CPSMOVIM.movfec) = 3 then (movcps - pencps) * CPSMOVIM.artcos else 0 end)</expression>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="cantAbr" noZero="true">
+                <expression>sum( (case when month(CPSMOVIM.movfec) = 4 then (movcps - pencps) else 0 end))</expression>
+                <tipo>numeric</tipo>
+             
+                <label>Abr</label>
+            </field>
+            <field id="totAbr" local="true" noZero="true">
+                <if exp="true">
+                    <true>cantAbr * mov_penAbr + 0</true>
+                    <false>0</false>
+                </if>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="cantMay" noZero="true">
+                <expression>sum( case when month(CPSMOVIM.movfec) = 5 then (movcps - pencps) else 0 end)</expression>
+                <label>May</label>
+                <tipo>numeric</tipo>
+             
+            </field>
+            <field id="totMay" local="true" noZero="true">
+                <if exp="true">
+                    <true>cantMay * mov_penMay + 0</true>
+                    <false>0</false>
+                </if>
+                <tipo>numeric</tipo>
+            </field>
+            <field id="cantJun" noZero="true">
+                <expression>sum( case when month(CPSMOVIM.movfec) = 6 then (movcps - pencps) else 0 end)</expression>
+                <label>Jun</label>
+                <tipo>numeric</tipo>
+             
+            </field>
+            <field id="totJun" local="true" noZero="true">
+                <if exp="true">
+                    <true>cantJun * mov_penJun + 0</true>
+                    <false>0</false>
+                </if>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="cantJul" noZero="true">
+                <expression>sum( case when month(CPSMOVIM.movfec) = 7 then (movcps - pencps) else 0 end)</expression>
+                <label>Jul</label>
+                <tipo>numeric</tipo>
+             
+            </field>
+            <field id="totJul" local="true" noZero="true">
+                <if exp="true">
+                    <true>cantJul * mov_penJul + 0</true>
+                    <false>0</false>
+                </if>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="cantAgo" noZero="true">
+                <expression>sum( case when month(CPSMOVIM.movfec) = 8 then (movcps - pencps) else 0 end)</expression>
+                <label>Ago</label>
+                <tipo>numeric</tipo>
+             
+            </field>
+            <field id="totAgo" local="true" noZero="true">
+                <if exp="true">
+                    <true>cantAgo * mov_penAgo + 0</true>
+                    <false>0</false>
+                </if>
+                <tipo>numeric</tipo>
+            </field>
+            <field id="cantSep" noZero="true">
+                <expression>sum( case when month(CPSMOVIM.movfec) = 9 then (movcps - pencps) else 0 end)</expression>
+                <label>Sep</label>
+                <tipo>numeric</tipo>
+
+            </field>
+            <field id="totSep" local="true" noZero="true">
+                <if exp="true">
+                    <true>cantSep * mov_penSep + 0</true>
+                    <false>0</false>
+                </if>
+                <tipo>numeric</tipo>
+            </field>
+            <field id="cantOct" noZero="true">
+                <expression>sum( case when month(CPSMOVIM.movfec) = 10 then (movcps - pencps) else 0 end)</expression>
+                <label>Oct</label>
+                <tipo>numeric</tipo>
+
+            </field>
+            <field id="totOct" local="true" noZero="true">
+                <if exp="true">
+                    <true>cantOct * mov_penOct + 0</true>
+                    <false>0</false>
+                </if>
+                <tipo>numeric</tipo>
+            </field>
+            <field id="cantNov" noZero="true">
+                <expression>sum( case when month(CPSMOVIM.movfec) = 11 then (movcps - pencps) else 0 end)</expression>
+                <label>Nov</label>
+                <tipo>numeric</tipo>
+
+            </field>
+            <field id="totNov" local="true" noZero="true">
+                <if exp="true">
+                    <true>cantNov * mov_penNov + 0</true>
+                    <false>0</false>
+                </if>
+                <tipo>numeric</tipo>
+            </field>
+            <field id="cantDic" noZero="true">
+                <expression>sum( case when month(CPSMOVIM.movfec) = 12 then (movcps - pencps) else 0 end)</expression>
+                <label>Dic</label>
+                <tipo>numeric</tipo>
+
+            </field>
+            <field id="totDic" local="true" noZero="true">
+                <if exp="true">
+                    <true>cantDic * mov_penDic + 0</true>
+                    <false>0</false>
+                </if>
+                <tipo>numeric</tipo>
+            </field>
+            
+            
+            
+            
+            
+            
+             
+             
+             
+             
+                                                                                <!--
+             <field id="mov_penENE" deshabilitado="true">
+                <expression>max(case when month(STKINSPR.movfec) = 1 and year(STKINSPR.movfec) = year(CPSMOVIM.movfec)  then  STKINSPR.artcos  end ) </expression>
+                <label>Rec.Enero</label>
+            </field>
+            
+             <field id="mov_penFeb" deshabilitado="true">
+                <expression>max(case when month(STKINSPR.movfec) = 2 and year(STKINSPR.movfec) = year(CPSMOVIM.movfec)  then  STKINSPR.artcos  end ) </expression>
+            </field>
+             <field id="mov_penMar" deshabilitado="true">
+                <expression>max(case when month(STKINSPR.movfec) = 3 and year(STKINSPR.movfec) = year(CPSMOVIM.movfec)  then  STKINSPR.artcos  end ) </expression>
+            </field>
+             <field id="mov_peAbr" deshabilitado="true">
+                <expression>max(case when month(STKINSPR.movfec) = 4 and year(STKINSPR.movfec) = year(CPSMOVIM.movfec)  then  STKINSPR.artcos  end ) </expression>
+            </field>
+             <field id="mov_penMayo" deshabilitado="true">
+                <expression>max(case when month(STKINSPR.movfec) = 5 and year(STKINSPR.movfec) = year(CPSMOVIM.movfec)  then  STKINSPR.artcos  end ) </expression>
+            </field>
+             <field id="mov_penJun" deshabilitado="true">
+                <expression>max(case when month(STKINSPR.movfec) = 6 and year(STKINSPR.movfec) = year(CPSMOVIM.movfec)  then  STKINSPR.artcos  end ) </expression>
+            </field>
+             <field id="mov_penJul" deshabilitado="true">
+                <expression>max(case when month(STKINSPR.movfec) = 7 and year(STKINSPR.movfec) = year(CPSMOVIM.movfec)  then  STKINSPR.artcos  end ) </expression>
+            </field>
+             <field id="mov_penAgo" deshabilitado="true">
+                <expression>max(case when month(STKINSPR.movfec) = 8 and year(STKINSPR.movfec) = year(CPSMOVIM.movfec)  then  STKINSPR.artcos  end ) </expression>
+            </field>
+             <field id="mov_penSep" deshabilitado="true">
+                <expression>max(case when month(STKINSPR.movfec) = 9 and year(STKINSPR.movfec) = year(CPSMOVIM.movfec)  then  STKINSPR.artcos  end ) </expression>
+            </field>
+             <field id="mov_penOct" deshabilitado="true">
+                <expression>max(case when month(STKINSPR.movfec) = 10 and year(STKINSPR.movfec) = year(CPSMOVIM.movfec)  then  STKINSPR.artcos  end ) </expression>
+            </field>
+             <field id="mov_penNov" deshabilitado="true">
+                <expression>max(case when month(STKINSPR.movfec) = 11 and year(STKINSPR.movfec) = year(CPSMOVIM.movfec)  then  STKINSPR.artcos  end ) </expression>
+            </field>
+             <field id="mov_penDic" deshabilitado="true">
+                <expression>max(case when month(STKINSPR.movfec) = 12 and year(STKINSPR.movfec) = year(CPSMOVIM.movfec)  then  STKINSPR.artcos  end ) </expression>
+            </field>
+            
+            
+            -->
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+<!--             <field id="mov_penENE" deshabilitado="true">
+                <expression>sum( (case when month(CPSMOVIM.movfec) = 1 then (movcps - pencps) * 
+                (round(case when (select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINSUM.artcod  and STKINSPR.siscod='01' and MONTH(CPSMOVIM.movfec) = MONTH(fecult) and YEAR(CPSMOVIM.movfec) = YEAR (fecult) order by fecult DESC limit 1) > 0  then (select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINSUM.artcod and  STKINSPR.siscod='01' and MONTH(CPSMOVIM.movfec) = MONTH(fecult) and YEAR(CPSMOVIM.movfec) = YEAR (fecult) order by fecult DESC limit 1) 
+                else STKINSUM.artcos end , 2)) else 0 end) )</expression>
+                <label>Rec.Enero</label>
+            </field>
+            
+	     <field id="mov_penFEB" deshabilitado="true">
+               <expression>sum( (case when month(CPSMOVIM.movfec) = 2 then (movcps - pencps) * (round(case when (select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINSUM.artcod  and STKINSPR.siscod='01' and MONTH(CPSMOVIM.movfec) = MONTH(fecult) and YEAR(CPSMOVIM.movfec) = YEAR (fecult) order by fecult DESC limit 1) > 0  then (select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINSUM.artcod and  STKINSPR.siscod='01' and MONTH(CPSMOVIM.movfec) = MONTH(fecult) and YEAR(CPSMOVIM.movfec) = YEAR (fecult) order by fecult DESC limit 1) else STKINSUM.artcos end , 2)) else 0 end) )</expression>
+                <label>Rec.Febrero</label>
+            </field>
+    -->        
+            <!--
+             <field id="mov_penMAR" deshabilitado="true">
+               <expression>sum( (case when month(CPSMOVIM.movfec) = 3 then (movcps - pencps) * (round(case when (select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINSUM.artcod  and STKINSPR.siscod='01' and MONTH(CPSMOVIM.movfec) = MONTH(fecult) and YEAR(CPSMOVIM.movfec) = YEAR (fecult) order by fecult DESC limit 1) > 0  then (select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINSUM.artcod and  STKINSPR.siscod='01' and MONTH(CPSMOVIM.movfec) = MONTH(fecult) and YEAR(CPSMOVIM.movfec) = YEAR (fecult) order by fecult DESC limit 1) else STKINSUM.artcos end , 2)) else 0 end) )</expression>
+                <label>Rec.Marzo</label>
+            </field>
+             <field id="mov_penABR" deshabilitado="true">
+                <expression>sum( (case when month(CPSMOVIM.movfec) = 4 then (movcps - pencps) * (round(case when (select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINSUM.artcod  and STKINSPR.siscod='01' and MONTH(CPSMOVIM.movfec) = MONTH(fecult) and YEAR(CPSMOVIM.movfec) = YEAR (fecult) order by fecult DESC limit 1) > 0  then (select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINSUM.artcod and  STKINSPR.siscod='01' and MONTH(CPSMOVIM.movfec) = MONTH(fecult) and YEAR(CPSMOVIM.movfec) = YEAR (fecult) order by fecult DESC limit 1) else STKINSUM.artcos end , 2)) else 0 end) )</expression>
+                <label>Rec.Abril</label>
+            </field>
+	     <field id="mov_penMAY" deshabilitado="true">
+                <expression>sum( (case when month(CPSMOVIM.movfec) = 5 then (movcps - pencps) * (round(case when (select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINSUM.artcod  and STKINSPR.siscod='01' and MONTH(CPSMOVIM.movfec) = MONTH(fecult) and YEAR(CPSMOVIM.movfec) = YEAR (fecult) order by fecult DESC limit 1) > 0  then (select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINSUM.artcod and  STKINSPR.siscod='01' and MONTH(CPSMOVIM.movfec) = MONTH(fecult) and YEAR(CPSMOVIM.movfec) = YEAR (fecult) order by fecult DESC limit 1) else STKINSUM.artcos end , 2)) else 0 end) )</expression>
+                <label>Rec.Mayo</label>
+            </field>	
+	    <field id="mov_penJUN" deshabilitado="true">
+                <expression>sum( (case when month(CPSMOVIM.movfec) = 6 then (movcps - pencps) * (round(case when (select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINSUM.artcod  and STKINSPR.siscod='01' and MONTH(CPSMOVIM.movfec) = MONTH(fecult) and YEAR(CPSMOVIM.movfec) = YEAR (fecult) order by fecult DESC limit 1) > 0  then (select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINSUM.artcod and  STKINSPR.siscod='01' and MONTH(CPSMOVIM.movfec) = MONTH(fecult) and YEAR(CPSMOVIM.movfec) = YEAR (fecult) order by fecult DESC limit 1) else STKINSUM.artcos end , 2)) else 0 end) )</expression>
+                <label>Rec.Junio</label>
+            </field>
+              <field id="mov_penJUl" deshabilitado="true">
+                <expression>sum( (case when month(CPSMOVIM.movfec) = 7 then (movcps - pencps) * (round(case when (select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINSUM.artcod  and STKINSPR.siscod='01' and MONTH(CPSMOVIM.movfec) = MONTH(fecult) and YEAR(CPSMOVIM.movfec) = YEAR (fecult) order by fecult DESC limit 1) > 0  then (select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINSUM.artcod and  STKINSPR.siscod='01' and MONTH(CPSMOVIM.movfec) = MONTH(fecult) and YEAR(CPSMOVIM.movfec) = YEAR (fecult) order by fecult DESC limit 1) else STKINSUM.artcos end , 2)) else 0 end) )</expression>
+                <label>Rec.Julio</label>
+            </field>
+             <field id="mov_penAGO" deshabilitado="true">
+                <expression>sum( (case when month(CPSMOVIM.movfec) = 8 then (movcps - pencps) * (round(case when (select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINSUM.artcod  and STKINSPR.siscod='01' and MONTH(CPSMOVIM.movfec) = MONTH(fecult) and YEAR(CPSMOVIM.movfec) = YEAR (fecult) order by fecult DESC limit 1) > 0  then (select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINSUM.artcod and  STKINSPR.siscod='01' and MONTH(CPSMOVIM.movfec) = MONTH(fecult) and YEAR(CPSMOVIM.movfec) = YEAR (fecult) order by fecult DESC limit 1) else STKINSUM.artcos end , 2)) else 0 end) )</expression>
+                <label>Rec.Agosto</label>
+            </field>
+              <field id="mov_penSEP" deshabilitado="true">
+               <expression>sum( (case when month(CPSMOVIM.movfec) = 9 then (movcps - pencps) * (round(case when (select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINSUM.artcod  and STKINSPR.siscod='01' and MONTH(CPSMOVIM.movfec) = MONTH(fecult) and YEAR(CPSMOVIM.movfec) = YEAR (fecult) order by fecult DESC limit 1) > 0  then (select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINSUM.artcod and  STKINSPR.siscod='01' and MONTH(CPSMOVIM.movfec) = MONTH(fecult) and YEAR(CPSMOVIM.movfec) = YEAR (fecult) order by fecult DESC limit 1) else STKINSUM.artcos end , 2)) else 0 end) )</expression>
+                <label>Rec.Septiembre</label>
+            </field>
+             <field id="mov_penOCT" deshabilitado="true">
+               <expression>sum( (case when month(CPSMOVIM.movfec) = 10 then (movcps - pencps) * (round(case when (select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINSUM.artcod  and STKINSPR.siscod='01' and MONTH(CPSMOVIM.movfec) = MONTH(fecult) and YEAR(CPSMOVIM.movfec) = YEAR (fecult) order by fecult DESC limit 1) > 0  then (select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINSUM.artcod and  STKINSPR.siscod='01' and MONTH(CPSMOVIM.movfec) = MONTH(fecult) and YEAR(CPSMOVIM.movfec) = YEAR (fecult) order by fecult DESC limit 1) else STKINSUM.artcos end , 2)) else 0 end) )</expression>
+                <label>Rec.Octubre</label>
+            </field>
+	     <field id="mov_penNOV" deshabilitado="true">
+               <expression>sum( (case when month(CPSMOVIM.movfec) = 11 then (movcps - pencps) * (round(case when (select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINSUM.artcod  and STKINSPR.siscod='01' and MONTH(CPSMOVIM.movfec) = MONTH(fecult) and YEAR(CPSMOVIM.movfec) = YEAR (fecult) order by fecult DESC limit 1) > 0  then (select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINSUM.artcod and  STKINSPR.siscod='01' and MONTH(CPSMOVIM.movfec) = MONTH(fecult) and YEAR(CPSMOVIM.movfec) = YEAR (fecult) order by fecult DESC limit 1) else STKINSUM.artcos end , 2)) else 0 end) )</expression>
+                <label>Rec.Noviembre</label>
+            </field>
+	     <field id="mov_penDIC" deshabilitado="true">
+                <expression>sum( (case when month(CPSMOVIM.movfec) = 12 then (movcps - pencps) * (round(case when (select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINSUM.artcod  and STKINSPR.siscod='01' and MONTH(CPSMOVIM.movfec) = MONTH(fecult) and YEAR(CPSMOVIM.movfec) = YEAR (fecult) order by fecult DESC limit 1) > 0  then (select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINSUM.artcod and  STKINSPR.siscod='01' and MONTH(CPSMOVIM.movfec) = MONTH(fecult) and YEAR(CPSMOVIM.movfec) = YEAR (fecult) order by fecult DESC limit 1) else STKINSUM.artcos end , 2)) else 0 end) )</expression>
+                <label>Rec.Diciembre</label>
+            </field> -->
+	    <!-- <field id="mov_pen" deshabilitado="true">
+                <expression>sum( (case when month(movfec) = 7 then movcps - pencps else 0 end) )</expression>
+                <label>Rec.Julio</label>
+            </field>-->
+            <field id="pencps" noshow="true">
+                <label>Pend.cps</label>
+                <help>Pendiente (expresado en la unidad de compra)</help>
+                <condicion operador="!="> movcps</condicion>
+            </field>
+<!--            <field id="artuni_exp3" deshabilitado="true">
+                <expression>STKINSUM.unicps</expression>
+                <label>U.Compra</label>
+                <help>Unidad de Compra</help>
+                <tabla_ex id="FSMUNIDS">
+
+                    <field id="unicod" clave="true"></field>
+                    <field id="uninom"></field>
+                </tabla_ex>
+                <tipo>varchar</tipo>
+            </field> -->
+            <field id="fecreq" local="true" deshabilitado="true" noshow="true">
+                <expression>fecreq</expression>
+                <label>Fecha Entrega</label>
+                <tipo>date</tipo>
+            </field>
+            <field id="nrocha"  noshow="true">
+                <label>Nro</label>
+                <tipo>varchar</tipo>
+                <size>5</size>
+            </field>
+            <field id="observaciones" deshabilitado="true" noshow="true">
+                <label>Obs</label>
+            </field>
+
+            <field id="ocpnro" oculto="true">
+                <label>Nro </label>
+                <help>Numero de Orden de Compra</help>
+                <detalle>ocpnro</detalle>
+            </field>
+
+	      <!--<field id="costo" >
+               <label>Costo</label>
+           <expression>round(case when (select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINSUM.artcod  and STKINSPR.siscod='01' and MONTH(CPSMOVIM.movfec) = MONTH(fecult) and YEAR(CPSMOVIM.movfec) = YEAR (fecult) order by fecult DESC limit 1) > 0  then (select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINSUM.artcod and  STKINSPR.siscod='01' and MONTH(CPSMOVIM.movfec) = MONTH(fecult) and YEAR(CPSMOVIM.movfec) = YEAR (fecult) order by fecult DESC limit 1) else STKINSUM.artcos end , 2)</expression>
+                 <tipo>decimal</tipo>
+            </field>-->
+
+
+<!--            <field id="costo" noshow="true">
+                <expression>case when ((select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINSUM.artcod and STKINSPR.siscod='01' order by fecult DESC limit 1) ) > 0  then ((select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINSUM.artcod and STKINSPR.siscod='01' order by fecult DESC limit 1) ) else STKINSUM.artcos end</expression>
+
+            </field> -
+            <field id="Total" suma="true" deshabilitado="true" local="true">
+                <label>Total</label>
+
+                <if exp="true">
+                    <true>costo * movcps</true>
+                    <false>0</false>
+                </if>
+            </field> -->
+            <group>
+                <field id="artcod" tabla="CPSMOVIM"></field>
+            </group>
+            <order>
+                <field id="costo"></field>
+            </order>
+        </table>
+        <join tipo="left">
+            <table id="STKINSUM">
+                <field id="siscod" oculto="true">
+                    <label>STKINSUM.siscod</label>
+                    <condicion operador="=">'01'</condicion>
+                </field>
+                <field id="artcod" oculto="true">
+                    <condicion operador="=">CPSMOVIM.artcod</condicion>
+                </field>
+            </table>
+        </join>
+<!--         <join tipo="left">
+      		<table id="STKINSPR">
+		      <field id="siscod">
+			<condicion operador="=">'01'</condicion>
+		      </field>
+		      <field id="artcod">
+	    		<condicion operador="=">CPSMOVIM.artcod</condicion>
+		      </field>
+		      <field id="movfec">
+			    <condicion operador="&lt;=">CPSMOVIM.movfec</condicion>
+		      </field>
+		      
+		      
+        
+      </table> 
+    </join>    
+    -->
+    </form>
+</histrix>

@@ -1,0 +1,283 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ficha" PDFsincabecera="true" _PDFconpie="true" sololectura="true" autoprint="true" PDFfontSize="8" PDFpageSize="A4">
+  <title>FACTURA</title>
+  <obs></obs>
+  <form>
+    <pdf PDForientacion="P">
+        <code><![CDATA[
+
+            $pdf->SetDrawColor(0);
+            $pdf->SetXY(10,10);
+
+                $tp = 05;
+                $ap = $pdf->anchoPagina - 2;
+                $mp = ($ap / 2);
+                $lp = $pdf->largoPagina;
+
+                // Frame Principal
+                $pdf->Rect(005, 005, $ap, $lp, 0.1);
+
+                // Nombre Empresa
+                $pdf->Rect(005, 005, $mp, 046, 0.1);
+
+                $datapath = $_SESSION['datapath'];
+                $file = "../database/$datapath/img/logo_factura.png"; 
+
+				if (is_file($file))
+				{
+					$posx = 30;
+					$posy = 6;
+					$width = 40;
+					$pdf->Image($file, $posx + $this->offsetX, $posy + $this->offsetY, $width);
+				}
+				
+				// Datos Comprobante
+				$pdf->Rect($mp + 5, 005, $mp, 046, 0.1);
+				
+				/// letra
+				$pdf->setFillColor(255,255,255);
+				$pdf->Rect($mp - 2 , 005, 015, 015, 'F');
+				$pdf->Rect($mp - 2 , 005, 015, 015, 0.1);
+				
+				// Cliente
+				$pdf->Rect(005, 055, $ap, 026, 0.1);
+				
+				// DATOS EMPRESA
+				$pdf->SetFontSize(8);
+
+				$pdf->SetFontSize(8);
+				$pdf->text(051, 035, $_SESSION['properties']['nombre']);
+				$pdf->text(017, 041, $_SESSION['properties']['direccion'].' - '.$_SESSION['properties']['localidad']);
+				$pdf->text(026, 045, $_SESSION['properties']['telefonos'].' - '.$_SESSION['properties']['web']);
+				$pdf->text(016, 051, $_SESSION['properties']['mail'].' - IVA RESPONSABLE INSCRIPTO');
+				
+				$pdf->text($mp + 010, 045, 'C.U.I.T.: ' .            $_SESSION['properties']['cuit']);
+				$pdf->text($mp + 010, 051, 'Ingresos Brutos: ' .     $_SESSION['properties']['iibb']);
+				$pdf->text($mp + 070, 051, 'Fec. Inicio. Activ.: ' . $_SESSION['properties']['fecha']);
+				
+				$pdf->SetFontSize(10);
+				
+				// Totales
+				$pdf->Rect(005, 252, $ap, 036, 0.1);
+
+            ]]></code>
+        </pdf>
+
+	<table id="REG_MOVIMIENTOS"  label="FACTURA">
+		
+		<field id="id_regmovim" noshow="false" esClave="true" print="false" />
+		
+		<field id="muestra_iva" noshow="true" local="true" print="false">
+			<expresion>case when REG_MOVIMIENTOS.iva_id = '1' then 'true' else 'false' end </expresion>
+		</field>
+		
+		<field id="nomuestra_iva" noshow="true" local="true" print="false">
+			<expresion>case when REG_MOVIMIENTOS.iva_id = '1' then 'false' else 'true' end </expresion>
+		</field>
+		
+		<field id="muestra_dto" noshow="true" local="true" print="false">
+			<expresion>IF(importe_bon != 0,'true','false')</expresion>
+		</field>
+		
+		<field id="muestra_vencimiento" noshow="true" local="true" print="false">
+			<if exp="'vencimiento_movimiento' != ''">
+				<true>'true'</true>
+				<false>'false'</false>
+			</if>
+		</field>
+		
+		<field id="subsistema_id" noshow="true" print="false" />
+		
+		<field id="concepto_id"   noshow="true" print="false" />
+		
+		<field id="regcuenta_id"  noshow="true" print="false" />
+		
+		== LETRA Y CODIGO
+	
+		<fieldGroup id="letra" deshabilitado="true" PDFnoborder="true">	
+		
+			<field id="letra_movimiento" PDFbold="true" PDFsize="24">
+				<label posx="97" posY="5" />
+				<expresion>UPPER(letra_movimiento)</expresion>
+			</field>
+		
+		</fieldGroup>
+		
+		== CABECERA ==
+		
+		<fieldGroup id="cabecera1" deshabilitado="true" PDFnoborder="true">
+		
+			<field id="descripcion_concepto" PDFbold="true" PDFsize="12">
+				<label posx="140" posY="5" />
+				<expression>UPPER(REG_CONCEPTOS.descripcion_concepto)</expression>
+			</field>
+			
+			<field id="nro_Movimiento" _PDFnolabel="true" PDFnoborder="true" PDFbold="true" PDFsize="12">
+				<label posx="140" posY="12">Nº</label>
+				<expresion>CONCAT(LPAD(puesto_movimiento,4,'0'),' - ',LPAD(nro_movimiento,8,'0'))</expresion> 
+			</field>
+			  
+			<field id="fecha_movimiento" PDFsize="12">
+				<label posx="140" posY="18">Fecha</label>
+			</field>
+			
+			<field id="nombre_movimiento" PDFbold="true" pdfancho="120">
+				<label posx="5" posY="+20" size="18">Nombre: </label>
+			</field>
+
+			<field id="iva_id">
+				<label posx="125" posY="0" size="15">I.V.A.:</label>
+				<helper type="combo" xml="iva_qry.xml" dir="/ayudas" empty="true" />
+			</field>
+
+			<field id="domicilio_movimiento" pdfancho="120" _PDFnolabel="true">
+				<label posx="5" posY="+1" size="18">Domicilio: </label>
+			</field>
+
+			<field id="cuit_movimiento" pdfancho="80">
+				<label posx="125" posY="0" size="15">C.U.I.T.:</label>
+			</field>
+
+			<field id="localidad" pdfancho="120" _PDFnolabel="true">
+				<expression>LEFT(CONCAT(GEN_LOCALIDADES.cp, ' ', GEN_LOCALIDADES.nombre_localidad), 110)</expression>
+				<label posx="5" posY="+1" size="18">Localidad: </label>
+			</field>
+
+			<field id="provincia" pdfancho="120" _PDFnolabel="true">
+				<expression>LEFT(GEN_PROVINCIAS.nombre_provincia, 110)</expression>
+				<label posx="5" posY="+1" size="18">Provincia: </label>
+			</field>
+			
+		</fieldGroup>
+
+		== ETIQUETAS ==
+
+		<fieldGroup id="cuerpo1" pdfwidth="200">
+			<field id="detalles" local="true">
+				<label posx="5" posy="+3" />
+				<helper xml="imp_presup_detalle_sinfoto.xml" type="object">
+					<parameter source="id_regmovim"   target="regmovim_id"/>
+					<parameter source="subsistema_id" target="subsistema_id"/>
+					<parameter source="muestra_iva"   target="muestra_iva"/>
+				</helper>
+			</field>
+		</fieldGroup>
+
+		== TALON ==
+
+		<fieldGroup id="talon1" deshabilitado="true" PDFnoborder="true" PDFsize="12">
+
+                        <field id="bonificaciones_movimiento" _PDFnolabel="true" pdfancho="12" noZero="true">
+                            <label posx="130" posY="251" size="28">Descuento %</label>
+                            <tipo>numeric</tipo>
+                            <attribute id="print">muestra_dto</attribute>
+                        </field>
+
+                        <field id="importe_bon" PDFnolabel="true" pdfancho="30">
+                            <label posx="165" posY="0" />
+                            <tipo>numeric</tipo>
+                            <attribute id="print">muestra_dto</attribute>
+                        </field>
+			
+			<field id="referencia_movimiento" maxsize="250" maxlength="250" PDFnolabel="true" PDFsize="7" pdfancho="130">
+				<label posx="5" posY="240" />
+				<size>250</size>
+			</field>
+
+			<field id="leyenda_cotizacion" local="true" maxsize="250" maxlength="250" PDFnolabel="true" PDFsize="8" pdfancho="120" PDFbold="true">
+				<label posx="5" posY="240" />
+				<expression>concat((select option_value from HTXOPTIONS where option_name = 'SIS::02:leyenda_cotizacion'),' $',(select cotizacion_genmonedahis from GEN_MONEDA_HIS where moneda_id = '2' order by fecha_genmonedahis DESC limit 1))</expression>
+				<size>250</size>
+				<attribute id="print">muestra_leyenda</attribute>
+			</field>
+
+			<field id="neto_movimiento" pdfancho="35">
+				<label posx="130" posY="258">Subtotal $</label>
+				<tipo>numeric</tipo>
+				<attribute id="print">muestra_iva</attribute>
+			</field>
+
+			<field id="total_iva" pdfancho="24">
+				<label posx="130" posY="265">Importe I.V.A. $</label>
+				<expression>importe_iva</expression>
+				<tipo>numeric</tipo>
+				<attribute id="print">muestra_iva</attribute>
+			</field>
+
+
+			<field id="importe_movimiento" pdfancho="25" PDFbold="true">
+				<label posx="130" posY="250">Importe Total $</label>
+			</field>
+
+			<field id="valor_comision" pdfancho="25" PDFbold="true" >
+				<label posx="130" posY="260">Comision</label>
+				<expression>REG_CUENTA_COMISIONES.valor_comision</expression>
+			</field>
+
+			<field id="importe_movimiento_cdesc" pdfancho="25" PDFbold="true">
+				<label posx="130" posY="270">Importe a Pagar</label>
+				<expression>round( importe_movimiento * ((1 - (valor_comision/100))),2)</expression>
+			</field>
+
+
+
+			<field id="referencia_presupuesto" local="true" maxsize="250" maxlength="250" PDFnolabel="true" PDFsize="8" pdfancho="120" PDFbold="true">
+				<label posx="5" posY="272" />
+				<helper type="parameter" id="SIS::02:refrerencia_presupuesto" >
+					<label>Referencia Para Presupuesto</label>
+					<defaultValue></defaultValue>
+				</helper>
+				<size>250</size>
+			</field>
+
+			<field id="muestra_leyenda" noshow="true" print="false" local="true">
+				<label posx="5" posY="260" />
+				<helper type="parameter" id="SIS::02:muestra_leyenda_cotizacion" >
+					<label>Referencia Para Presupuesto</label>
+					<defaultValue>false</defaultValue>
+				</helper>
+				<size>250</size>
+			</field>
+
+
+		</fieldGroup>
+		
+		<group>
+			<field id="id_regmovim"/>
+		</group>
+	
+	</table>
+	
+	<join tipo="left">
+	    <table id="REG_CONCEPTOS">
+	        <field id="id_concepto">
+		    <condicion operador="=">concepto_id</condicion>
+		</field>
+	    </table>
+	</join>
+
+	<join tipo="left">
+	    <table id="REG_CUENTA_COMISIONES">
+	        <field id="regcuenta_id">
+		    <condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+		</field>
+	    </table>
+	</join>
+
+
+	<join tipo="left">
+		<table id="GEN_LOCALIDADES">
+			<field id="id_localidad">
+				<condicion operador="=">REG_MOVIMIENTOS.genlocalidad_id</condicion>
+			</field>
+		</table>
+	</join>
+	<join tipo="left">
+		<table id="GEN_PROVINCIAS">
+			<field id="id_provincia">
+				<condicion operador="=">GEN_LOCALIDADES.provincia_id</condicion>
+			</field>
+		</table>
+	</join>
+  </form>
+</histrix>

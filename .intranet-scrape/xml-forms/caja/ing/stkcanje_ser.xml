@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert">
+    <title/>
+    <obs/>
+    <form >
+        <table id="STK_MOVIMIENTOS">
+
+            <field id="stkarticulo_id">
+              <valor>'9999'</valor>
+            </field>
+           
+            <field id="stkconcepto_id">
+               <valor>2</valor>
+            </field>
+
+            <field id="cantidad">
+              <valor>1</valor>
+            </field>
+            
+            <field id="stklista_id">
+              <valor>1</valor>
+            </field>
+            
+            <field id="stkrubro_id">   
+              <valor>12</valor>
+            </field>
+            
+            <field id="referencia">
+              <valor>'CANJE'</valor>
+            </field>
+            
+            <field id="precio_venta" id_temp="importe_movimiento" />
+            <field id="precio_total" id_temp="importe_movimiento" />
+
+            <field id="fecha_movimiento"   id_temp="fecha_movimiento"/>
+            <field id="alta_movimiento"    id_temp="fecha_movimiento"/>
+            <field id="puesto_movimiento"  id_temp="cajpuesto_id"/>
+            <field id="numero_movimiento"  id_temp="nro_movimiento"/>
+            <field id="stkdeposito_id"     id_temp="stkdeposito_id" />
+            <field id="orden_movimiento"   id_temp="_ORDEN"/>
+
+            
+            <field id="cajmovimiento_id"    lastId="cajmovimientos_ins.xml" />
+	    <field id="base">
+	        <valor eval="true">$_SESSION['db']</valor>
+	    </field>
+
+        </table>
+    </form>
+</histrix>

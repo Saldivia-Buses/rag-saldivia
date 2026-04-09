@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--<histrix tipo="ing" paginar="100" inserta="false" modifica="false" deleteRow="false" imprime="false" log="false" procesa="true" confirma="ACTUALIZAR" transaccional="true" tableHeight="40em">-->
+<histrix tipo="consulta" paginar="100">
+  <title>Movimientos</title>
+  <obs/>
+  <form>
+	<table id="REG_MOVIMIENTOS" label="Resumen de Cuenta">
+
+		<filters auto="true">
+			<field id="fecha_movimiento">
+				<label>Desde</label>
+				<operador>&gt;=</operador>
+				<valor eval="true">date("d/m/Y", mktime(0, 0, 0, date("m")  , 1, date("Y")))</valor>
+			</field>
+			<field id="fecha_movimiento">
+				<label modpos="nobr">Hasta</label>
+				<operador>&lt;=</operador>
+				<valor>today</valor>
+			</field>
+		</filters>
+
+		<movimientos>
+			<relacion id="regmovimiento_update.xml" />
+		</movimientos>
+
+		<fieldGroup id="entorno" noshow="true">
+			<field id="id_regmovim" />
+			<field id="subsistema_id" valauto="true" />
+			<field id="concepto_id" />
+			<field id="letra_movimiento" />
+			<field id="puesto_movimiento" />
+			<field id="ejecuta" tabla="REG_NUMERADORES" />
+		</fieldGroup>
+
+		<field id="fecha_movimiento">
+			<label>Fec.Mov.</label>        
+			<tipo>date</tipo>
+		</field>
+
+		<field id="nombre_cuenta" tabla="REG_CUENTA">
+			<label>Cuenta</label>
+		</field>
+
+		<field id="nro_movimiento" linkdes="Detalle del Comprobante" linkmodal="true" style="text-align:center;width:12em;">
+			<label>Numero</label>
+			<expresion>CONCAT(REG_CONCEPTOS.abreviacion_concepto,' ',REG_MOVIMIENTOS.letra_movimiento,' ',LPAD(REG_MOVIMIENTOS.puesto_movimiento,4,'0'),'-',LPAD(REG_MOVIMIENTOS.nro_movimiento  ,8,'0'))</expresion>
+			<helper type="link">
+				<parameter source="id_regmovim" target="id_regmovim" />
+			</helper>
+			<attribute id="linkint">ejecuta</attribute>
+		</field>   
+
+		<field id="neto_movimiento" suma="true" noZero="true">
+			<label>Neto</label>
+			<tipo>numeric</tipo>
+		</field>		
+	
+		<field id="importe_iva" suma="true" noZero="true">
+			<label>IVA</label>
+			<tipo>numeric</tipo>
+		</field>
+
+		<field id="importe_movimiento" suma="true" noZero="true">
+			<label>Total</label>
+			<tipo>numeric</tipo>
+		</field>
+
+		<field id="pag_movimiento" valauto="true" noshow="true" />
+		
+		<field id="tilde_confirma" local="true" refresh="true">
+			<label>Actualizar</label>
+			<tipo>check</tipo>
+		</field>
+
+		<field id="confirma" local="true" colstyle="display:none;">
+			<if exp="tilde_confirma == 1">
+				<true>'1'</true>
+				<false>'0'</false>
+			</if>
+		</field>
+
+		<order>
+			<field id="fecha_movimiento" table="REG_MOVIMIENTOS" />			
+			<field id="nro_movimiento" table="REG_MOVIMIENTOS" />
+		</order>
+
+		<group>
+			<field id="id_regmovim" tabla="REG_MOVIMIENTOS" />
+		</group>
+	</table>
+
+	<join tipo="left">
+		<table id="REG_CUENTA">
+			<field id="id_regcuenta">
+				<condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+			</field>
+		</table>
+	</join>
+
+	<join>
+		<table id="REG_CONCEPTOS">
+			<field id="id_concepto">
+				<condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+			</field>
+			<field id="informa_calculo">
+				<condicion operador="=">0</condicion>
+			</field>
+		</table>
+	</join>
+
+	<join tipo="left">
+		<table id="REG_NUMERADORES">
+			<field id="subsistema_id">
+				<condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion>
+			</field>
+			<field id="regconcepto_id">
+				<condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+			</field>
+			<field id="puesto">
+				<condicion operador="=">REG_MOVIMIENTOS.puesto_movimiento</condicion>
+			</field>
+			<field id="letra">
+				<condicion operador="=">REG_MOVIMIENTOS.letra_movimiento</condicion>
+			</field>
+		</table>
+	</join>
+   </form>
+</histrix>

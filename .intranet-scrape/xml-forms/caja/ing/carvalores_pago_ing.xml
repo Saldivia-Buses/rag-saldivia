@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="fichaing" subtipo="vertical" inserta="false" procesa="true" borra="false" modifica="false" imprime="false" _exportasuma="true" deleteRow="false" llenoreferente="true" confirma="CONFIRMAR" resume="true" limit="1">
+  <title>Cartera de Valores</title>
+  <obs/>
+   <eventos>
+    <event id="procesar">close</event>
+  </eventos>
+  <form>
+    <table id="CAR_VALORES" label="Cartera de Valores">
+      <field id="cajformapago_id" local="true" esClave="true" noshow="true">
+        <detalle>cajformapago_id</detalle>
+      </field>
+
+      <fieldGroup id="parametros_ingreso" local="true" noshow="true" deshabilitado="true">
+        <field id="imputacion_concepto"/>
+        <field id="fecha_movimiento"/>
+        <field id="referencia_movimiento"/>
+        <field id="tipo_movimiento">
+          <expression>[__imputacion_concepto__]</expression>
+        </field>
+      </fieldGroup>
+
+      <!-- SELECCIONADOS -->
+      <field id="importe_movimiento" deshabilitado="true" local="true">
+        <label style="color:blue;font-size:large;">Imputar</label>
+      </field>
+      <field id="total_valores" local="true" deshabilitado="true">
+        <label style="color:green;font-size:large;" _colspan="2" modpos="nobr">Seleccionado</label>
+        <jseval actxml="false" campodestino="dif_movimiento">(importe_movimiento - total_valores).toFixed(2)</jseval>
+        <!-- detalle>pago_valor</detalle -->
+      </field>
+      <field id="dif_movimiento" deshabilitado="true" local="true">
+        <label style="color:red;font-size:large;" modpos="nobr">Resto</label>
+      </field>
+
+
+      <field id="valores" local="true">
+        <label colspan="6">Valores</label>
+        <helper xml="carvalores_pago_grid.xml" type="object" >
+          </helper>
+      </field>
+    </table>
+  </form>
+</histrix>

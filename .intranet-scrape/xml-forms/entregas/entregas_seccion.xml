@@ -1,0 +1,353 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" _autoupdate="120" sqlhardcoded="true" style="height:100%;" limit="[__limits__]">
+	<title>ENTREGAS POR SECCION</title>
+	<obs/>
+	<form >
+		<table id="TURNOSPRODUCCION" label="ENTREGAS POR SECCION"  showCantidad="false" >
+
+			<field id="puestos" local="true" noshow="true">
+				<label>puestos</label>
+			</field>
+			
+			<field id="_ORDEN" local="true" noshow="true">
+				<tipo>integer</tipo>
+			</field>
+			
+			<field id="numorden" local="true" noshow="true">
+			<label>order</label>
+			    <if exp="true">
+				<true>_ORDEN - 1 </true>
+				<false>0</false>
+			    </if>
+			</field>			
+			<field id="coches" local="true" noshow="true"/>
+			
+			
+			<field id="limits" local="true" noshow="true">
+			
+				<setvar>limit</setvar>
+			</field>
+            <field id="linea_id" noshow="true">
+            </field>
+      
+            <field id="fechaing2" _PDFanchofijo="true" oculto="true">
+          <expression>fechaing</expression>
+            </field>
+
+			<field id="primercoche" noshow="true">
+			    <expression having="false">(select  T.fechaing  from TURNOSPRODUCCION as T
+				    left join PEDCOTIZ as P on P.nrocha = T.nrofab
+				    where (P.terminacion = '0000-00-00' or ( month(P.terminacion) = [__mes__] and year(P.terminacion) = [__year__])) and
+				    T.linea_id = TURNOSPRODUCCION.linea_id and
+				    year(T.fechaing ) = [__year__]
+				    order by (T.fechaing ) limit 1)</expression>
+				    <condicion operador="&lt;=">fechaing</condicion>
+			</field>
+
+			<field id="fechaSalida" esClave="true"	>
+				<label modpos="nobr" >Sale</label>
+			
+		            <expression sql="true">select fechaing  from TURNOSPRODUCCION left join PEDCOTIZ on PEDCOTIZ.nrocha = TURNOSPRODUCCION.nrofab where 
+			        TURNOSPRODUCCION.linea_id = [__linea_id__] and
+		            
+			        fechaing >= '[__year__]-[__mes__]-01' 
+			        order by fechaing  limit [__numorden__] , 1</expression>
+			        <tipo>date</tipo>
+			</field> 
+<!--			<field id="sale2" esClave="true">
+				<label modpos="nobr" >Sale</label>
+				<expression having="false">(case when ingresoLinea != '0000-00-00' then ingresoLinea else fechaing end)</expression>
+				<tipo>date</tipo>
+			</field>
+-->			
+			
+			<field id="nrofab" linkint="fichaventas.xml" linkdes="Ver Ficha de Ventas">
+				<label modpos="nobr" style="color:#444;font-weight:bold;">Nro.</label>
+				<help>Numero de Fabricacion</help>
+				<ayuda_ex id="CHASIS">
+					<field id="nrocha"/>
+					<field id="chades"/>
+				</ayuda_ex>
+				<!--<format><![CDATA[<b>%d</b>]]></format>
+-->
+				<paring destino="nrocha">nrofab</paring>
+			</field>
+			<field id="siscli" local="true" oculto="true" >
+				<valor>'02'</valor>
+			</field>
+			<field deshabilitado="true" id="ctaconces" tabla="CHASIS" noshow="true">
+				<expression>case when CONCESIONARIO.ctacod >= 0 then CONCESIONARIO.ctacod else 0 end</expression>
+				<tipo>integer</tipo>
+
+			</field>
+
+			<field deshabilitado="true" id="ctacod" tabla="PEDCOTIZ" linkint="cctconta_consulta.xml" linkdes="Ver medios de Contacto">
+<!--				<expression>PEDCOTIZ.ctacod</expression> -->
+				<expression>case when PEDCOTIZ.ctacod != '' then PEDCOTIZ.ctacod else TURNOSPRODUCCION.ctacod end</expression>
+
+				<label >Cliente</label>
+				<help>Codigo de Cuenta</help>
+				<tabla_ex condes="true" id="CCTCUENT">
+					<field id="ctacod"/>
+					<field id="ctafan">
+						<expression>LEFT(ctafan, 17)</expression>
+					</field>
+					<field id="siscod" oculto="true">
+						<condicion operador="=">'02'</condicion>
+					</field>
+				</tabla_ex>
+				<tipo>varchar</tipo>
+				<paring destino="ctacod">ctacod</paring>
+				<paring destino="siscod">siscli</paring>
+			</field>
+			<field esClave="true" id="fechaing" PDFanchofijo="true" noshow="true" tipoOrden="DESC"> 
+				<label >Entra</label>
+				<help>Fecha de Ingreso a Linea</help>
+
+
+			</field>
+<!--			<field id="offset" noshow="true" deshabilitado="true">
+				<expression>
+					select count(*) from TURNOSPRODUCCION as TUR where TUR.fechaing &gt;= TURNOSPRODUCCION.fechaing and TUR.fechaing &lt;= now()</expression>
+				<tipo>integer</tipo>
+			</field>
+-->
+
+<!--			<field id="fechasal" esclave="true" >
+				<label modpos="nobr">Sale</label>
+				<help>Fecha de Salida de Linea</help>
+
+			</field> -->
+			<field deshabilitado="true" id="moddes" tabla="MODCHASIS">
+<!--				<expression>MODCHASIS.moddes</expression> -->
+				<expression>case when MODCHASIS.moddes != '' then MODCHASIS.moddes else TURNOSPRODUCCION.modeloChasis end</expression>
+
+				<label >Mod</label>
+				<help/>
+				<tipo>varchar</tipo>
+			</field>
+			<field deshabilitado="true" id="chasis" tabla="CHASIS" linkint="chasis_cons.xml" linkdes="Ver Datos del Chasis">
+				<expression>RIGHT(CHASIS.chasis, 6)</expression>
+				<label>Chasis</label>
+				<help>Numero de Serie del chasis</help>
+				<paring destino="nrocha">nrofab</paring>
+			</field>
+
+			<field deshabilitado="true" id="conces" tabla="CHASIS" linkint="cctconta_consulta.xml" linkdes="Ver medios de Contacto">
+<!--				<expression>CHASIS.conces</expression> -->
+				<expression>case when CHASIS.conces != '' then CHASIS.conces else TURNOSPRODUCCION.idconces end</expression>
+			-	<tabla_ex vacio="true" xml="concesionario.xml"/>
+				<label>Conc</label>
+				<help>Concesionario</help>
+				<tipo>varchar</tipo>
+				<paring destino="ctacod">ctaconces</paring>
+				<paring destino="siscod">siscli</paring>
+			</field>
+
+<!--			<field id="momentos" local="true" deshabilitado="true" print="false">
+				<label Formstyle="display:none;">Posición</label>
+				<tabla_ex id="MOMENTO" xml="momento_posiciones.xml" >
+				</tabla_ex>
+				<if exp="true">
+					<true>offset</true>
+					<false>0</false>
+				</if>
+
+				<tipo>varchar</tipo>
+			</field>				-->
+
+
+			<field deshabilitado="true" id="nrocar" tabla="PEDCOTIZ">
+<!--				<expression>PEDCOTIZ.nrocar</expression> -->
+				<expression>case when PEDCOTIZ.nrocar != '' then PEDCOTIZ.nrocar else TURNOSPRODUCCION.nrocar end</expression>
+
+				<label >Mod.</label>
+				<help/>
+				<tabla_ex id="CARROCERIA">
+					<field id="nrocar">
+					</field>
+					<field id="desabv">
+					</field>
+
+					<field id="siscod">
+						<condicion operador="=">03</condicion>
+					</field>
+				</tabla_ex>
+				<tipo>varchar</tipo>
+			</field>
+
+			<field deshabilitado="true" id="cantasi" tabla="PEDCOTIZ">
+<!--				<expression>PEDCOTIZ.cantasi</expression> -->
+				<expression>case when PEDCOTIZ.cantasi != '' then PEDCOTIZ.cantasi else TURNOSPRODUCCION.cantasi end</expression>
+
+				<label >A</label>
+				<help/>
+				<tipo>integer</tipo>
+			</field>
+<!--			<field id="miniba" deshabilitado="true" >
+				<label>B.</label>
+				<expression>PEDCOTIZ.miniba</expression>
+				<tipo>check</tipo>
+			</field>
+			<field id="bagno" deshabilitado="true">
+				<label>B</label>
+				<expression>PEDCOTIZ.bagno</expression>
+				<tipo>check</tipo>
+			</field> -->
+
+<!--			<field deshabilitado="true" id="marcod" tabla="CHASIS">
+				<expression>CHASIS.marcod</expression>
+				<label >Ch.</label>
+				<help/>
+				<tabla_ex id="MARCHASIS">
+					<field id="marcod">
+					</field>
+					<field id="desabv">
+					</field>
+
+					<field id="siscod">
+						<condicion operador="=">03</condicion>
+					</field>
+				</tabla_ex>
+				<tipo>integer</tipo>
+			</field> -->
+
+<!--			<field id="audio">
+				<expression>case when PEDCOTIZ.preair = 1 then 'prep' when PEDCOTIZ. </expression>
+			</field> -->
+			<field id="aire">
+				<expression>PEDCOTIZ.marair</expression>
+				<label>A/A</label>
+				<tabla_ex id="MARCAAIR" vacio="true" indexvacio="0" valorvacio="NO">
+					<field id="marair">
+
+					</field>
+					<field id="desair">
+					<expression>LEFT(desair, 5)</expression>
+					</field>
+
+					<field id="siscod">
+						<condicion operador="=">03</condicion>
+					</field>
+				</tabla_ex>
+				<tipo>varchar</tipo>
+			</field>
+
+			<field id="marasi" tabla="PEDCOTIZ">
+				<expression>PEDCOTIZ.marasi</expression>
+				<label >Marca</label>
+				<help/>
+				<tabla_ex xml="marcaasi.xml">
+
+					<field id="marasi">
+					</field>
+					<field id="asides">
+						<expression>LEFT(asides, 5)</expression>
+
+					</field>
+					<field id="siscod">
+						<condicion operador="=">03</condicion>
+					</field>
+				</tabla_ex>
+			</field>
+
+
+			<field id="mes"  local="true" noshow="true">
+
+				<tipo>integer</tipo>
+			</field>
+			<field id="year" local="true" noshow="true">
+				<tipo>integer</tipo>
+			</field>
+<!--			<field id="fechacal" _noshow="true" tipoOrden="ASC">
+				<expression>(case when PEDCOTIZ.ingresoLinea != '0000-00-00' then PEDCOTIZ.ingresoLinea else TURNOSPRODUCCION.fechaing end)</expression>	
+				<tipo>date</tipo>
+			</field>                 -->
+<!--			<field id="fechacal2">
+				<expression>
+				(select  
+				   (case when PED.terminacion != '0000-00-00' then PED.terminacion else date(DATE_ADD((case when PED.ingresoLinea != '0000-00-00' then PED.ingresoLinea else TUR.fechaing end), INTERVAL 35 DAY)) end) from TURNOSPRODUCCION as TUR 
+				   
+				    left join PEDCOTIZ as PED on PED.nrocha = TUR.nrofab
+				    where
+					  (case when PED.terminacion != '0000-00-00' then PED.terminacion else date(DATE_ADD((case when PED.ingresoLinea != '0000-00-00' then PED.ingresoLinea else TUR.fechaing end), INTERVAL 35 DAY)) end)  
+				    &lt;= (case when PEDCOTIZ.terminacion != '0000-00-00' then PEDCOTIZ.terminacion else date(DATE_ADD((case when PEDCOTIZ.ingresoLinea != '0000-00-00' then PEDCOTIZ.ingresoLinea else TURNOSPRODUCCION.fechaing end), INTERVAL 35 DAY)) end)
+					 order by (case when PED.terminacion != '0000-00-00' then PED.terminacion else date(DATE_ADD((case when PED.ingresoLinea != '0000-00-00' then PED.ingresoLinea else TUR.fechaing end), INTERVAL 35 DAY)) end)  DESC limit [__puestos__] , 1)</expression>
+					    <label>fecha pos</label>
+					<tipo>varchar</tipo>
+			</field>			
+			-->
+
+<!--
+		-	<field id="salemes" esClave="true" noshow="true">
+				<label modpos="nobr" >Salemes</label>
+				<expression having="false">month((select  
+				   (case when PED.terminacion != '0000-00-00' then PED.terminacion else date(DATE_ADD((case when PED.ingresoLinea != '0000-00-00' then PED.ingresoLinea else TUR.fechaing end), INTERVAL 35 DAY)) end) from TURNOSPRODUCCION as TUR 
+				   
+				    left join PEDCOTIZ as PED on PED.nrocha = TUR.nrofab
+				    where
+					  (case when PED.terminacion != '0000-00-00' then PED.terminacion else date(DATE_ADD((case when PED.ingresoLinea != '0000-00-00' then PED.ingresoLinea else TUR.fechaing end), INTERVAL 35 DAY)) end)  
+				    &lt;= (case when PEDCOTIZ.terminacion != '0000-00-00' then PEDCOTIZ.terminacion else date(DATE_ADD((case when PEDCOTIZ.ingresoLinea != '0000-00-00' then PEDCOTIZ.ingresoLinea else TURNOSPRODUCCION.fechaing end), INTERVAL 35 DAY)) end)
+					 order by (case when PED.terminacion != '0000-00-00' then PED.terminacion else date(DATE_ADD((case when PED.ingresoLinea != '0000-00-00' then PED.ingresoLinea else TUR.fechaing end), INTERVAL 35 DAY)) end)  DESC limit [__puestos__] , 1))</expression>
+					
+				<condicion operador="=">'[__mes__]'</condicion>  
+			</field>
+			<field id="saleyear" esClave="true" noshow="true">
+				<label modpos="nobr" >Saleyear</label>
+				<expression having="false">year((select 
+				   (case when PED.terminacion != '0000-00-00' then PED.terminacion else date(DATE_ADD((case when PED.ingresoLinea != '0000-00-00' then PED.ingresoLinea else TUR.fechaing end), INTERVAL 35 DAY)) end) from TURNOSPRODUCCION as TUR 
+				   
+				    left join PEDCOTIZ as PED on PED.nrocha = TUR.nrofab
+				    where
+					  (case when PED.terminacion != '0000-00-00' then PED.terminacion else date(DATE_ADD((case when PED.ingresoLinea != '0000-00-00' then PED.ingresoLinea else TUR.fechaing end), INTERVAL 35 DAY)) end)  
+				    &lt;= (case when PEDCOTIZ.terminacion != '0000-00-00' then PEDCOTIZ.terminacion else date(DATE_ADD((case when PEDCOTIZ.ingresoLinea != '0000-00-00' then PEDCOTIZ.ingresoLinea else TURNOSPRODUCCION.fechaing end), INTERVAL 35 DAY)) end)
+					 order by (case when PED.terminacion != '0000-00-00' then PED.terminacion else date(DATE_ADD((case when PED.ingresoLinea != '0000-00-00' then PED.ingresoLinea else TUR.fechaing end), INTERVAL 35 DAY)) end ) DESC limit [__puestos__] , 1))</expression>
+					
+				<tipo>integer</tipo>
+				<condicion operador="=">'[__year__]'</condicion>    
+			</field>
+			-->
+			
+			<field id="hi" deshabilitado="true" clasefila="true" noshow="true">
+				<expression>case when TURNOSPRODUCCION.fechaActualiza = DATE(NOW()) then 'resaltado' else '' end</expression>
+
+				<tipo>varchar</tipo>
+			</field>
+			<order>
+				<field id="fechaing2"/>
+			</order>
+		</table>
+		<join tipo="left">
+			<table id="PEDCOTIZ">
+				<field id="nrocha">
+					<condicion operador="=">TURNOSPRODUCCION.nrofab</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="CHASIS">
+				<field id="nrocha">
+					<condicion operador="=">TURNOSPRODUCCION.nrofab</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="MODCHASIS">
+				<field id="modcha">
+					<condicion operador="=">CHASIS.modcod</condicion>
+				</field>
+				<field id="marcod">
+					<condicion operador="=">CHASIS.marcod</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="CONCESIONARIO">
+				<field id="idconces">
+					<condicion operador="=">(case when CHASIS.conces != '' then CHASIS.conces else TURNOSPRODUCCION.idconces end)</condicion>
+				</field>
+			</table>
+		</join>
+
+	</form>
+</histrix>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud" >
+  <title>Maquinas y Herramientras</title>
+  <obs />
+  <form >
+    <table id="MANT_EQUIPOS" label="Tipo de equipo permitido en produccion">
+
+
+		<field id="id_equipo" noshow="true" autoinc="true">
+		</field>
+
+		<field id="nombre_equipo">
+			<label>Equipo</label>
+			<expresion>concat(nombre_equipo,' (',numero_serie,')')</expresion>
+		</field>
+    </table>
+    <join>
+    	<table id="MRP_TIPO_EQUIPO_PERMITIDO">
+    		<field id="tipo_equipo_id">
+    			<condicion operador="=">tipoequipo_id</condicion>
+    		</field>
+    	</table>
+    </join>
+  </form>
+</histrix>

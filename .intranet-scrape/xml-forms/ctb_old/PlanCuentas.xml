@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="arbol">
+	<title>Plan de Cuentas</title>
+	<obs></obs>	<form >
+		<table id="CTBCUENT" >
+			<title>Plan de cuentas</title>
+			<field id="siscod" oculto="true">
+				<label>Cod</label>
+				<help></help>
+			</field>
+			<field id="ctbcod" arbol="hijo" tdWidth="8em;" esClave="true">
+				<label>Codigo</label>
+				<help>Codigo de Cuenta Contable</help>
+			</field>
+			<field id="ctbnom" >
+				<label>Nombre</label>
+				<help>Nombre de la Cuenta</help>
+			</field>
+
+			<field id="ctbsup" arbol="padre" >
+				<label colstyle="display:none;">Cta. Nivel Sup.</label>
+				<help>Codigo de Cuenta de Nivel Superior</help>
+			    <!-- <valor>0</valor> -->
+				<valor>0</valor>
+			</field>
+			<field id="ctbhab">
+				<label colstyle="display:none;">Habil.</label>
+				<help>Cuenta Habilitada o Deshabilitada</help>
+				<options>
+				    <option valor="1">Habilitada</option>
+				    <option valor="2">Deshabilitada</option>
+				</options>
+			</field>
+			<order>
+				<field id="ctbcod" />
+			</order>
+		</table>
+	</form>	   
+</histrix> 

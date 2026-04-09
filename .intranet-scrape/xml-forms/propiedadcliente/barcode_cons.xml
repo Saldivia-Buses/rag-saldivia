@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<histrix tipo="ing" form="false" noform="true" modifica="false" borra="no" inserta="no" imprime="false" confirma="Reimprimir" styleTbody="height:300px;"
+         paginar="200">
+    <title>CONSULTA ETIQUETAS</title>
+    <obs></obs>
+    <form  >
+        <table id="HERRAMIENTAS" label="recepcion de trazables"  >
+            <movimientos >
+                <relacion id="barcode_reimp.xml"></relacion>
+		<relacion id="barcode_reimp_close.xml"></relacion>
+            </movimientos>
+
+            <filters>
+                <field id="ctacod" >
+
+                    <label>Cliente</label>
+                    <operador>=</operador>
+                </field>
+
+                <field id="artcod">
+                    <label>Art</label>
+                    <operador>=</operador>
+                </field>
+              <!--   <field id="nomherr" >
+                    <label>Artículo</label>
+                    <help>Descripción de Artículo</help>
+                    <operador>like</operador>
+                </field> -->
+                <field id="fgenerada" deshabilitado="false">
+                    <label>Generada</label>
+                    <tipo>date</tipo>
+                    <operador>=</operador>
+                    <valor>today</valor>
+                </field>
+
+                <field id="remfec" >
+                    <label>Fecha Remito</label>
+                    <operador>=</operador>
+
+                </field>
+            </filters>
+
+            <field id="id_etiqueta" esClave="true"  noshow="true">
+                <label>Etiqueta</label>
+            </field>
+            <field id="fgenerada">
+                <expression having="false">date(generada)</expression>
+                <label>Generada</label>
+                <tipo>date</tipo>
+            </field>
+
+
+            <field id="grucod" deshabilitado="true" noshow="true">
+                <condicion operador="=">0</condicion>
+                <detalle>grucod</detalle>
+
+            </field>
+            <field id="codTemp" deshabilitado="true">
+                <expression>'1'</expression>
+
+                <valor>1</valor>
+            </field>
+
+            <field id="artcod" deshabilitado="true">
+                <label>Artículo</label>
+            </field>
+
+            <field id="id_herramienta" deshabilitado="true">
+                <label Formstyle="display:none">Etiqueta</label>
+
+            </field>
+            <field id="barcode" deshabilitado="true" grafico="barcode">
+                <expression>id_herramienta</expression>
+                <label>Barcode</label>
+                <tipo>grafico</tipo>
+
+            </field>
+
+            <field id="ctacod" >
+                <label>Cliente</label>
+                <ayuda_ex xml="HLPcctcuent.xml" dir="/help_local">
+                    <field id="siscod">
+                        <condicion operador="=">02</condicion>
+                    </field>
+                </ayuda_ex>
+
+            </field>
+            <field id="ctanom" tabla="CCTCUENT" deshabilitado="true">
+                <label>Nombre</label>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="remnro" deshabilitado="true">
+                <label>Nro Recibo</label>
+            </field>
+            <field id="remfec" deshabilitado="true">
+                <label>Fec.</label>
+            </field>
+
+            <!-- <field id="nomherr" deshabilitado="false">
+                <label Formstyle="display:none">Desc</label>
+		<expression>LEFT(nomherr, 30)</expression>
+            </field> -->
+
+            <field id="observacion">
+                <label >Observación</label>
+            </field>
+
+	    <field id="nrofab">
+	    </field>
+
+            <field id="check" local="true" refresh="true">
+                <label >Leído</label>
+                <tipo>check</tipo>
+                <valor>0</valor>
+            </field>
+            <field id="graba" local="true"  _noshow="true">
+                <label>Graba</label>
+                <if exp="check != 0">
+                    <true>'true'</true>
+                    <false>'false'</false>
+                </if>
+                <tipo>varchar</tipo>
+            </field>
+            
+            <order>
+                <field id="id_herramienta"></field>
+            </order>
+
+        </table>
+        <join>
+            <table id="CCTCUENT">
+                <field id="siscod" oculto="true">
+                    <condicion operador="=">'02'</condicion>
+                </field>
+                <field id="ctacod">
+                    <condicion operador="=">HERRAMIENTAS.ctacod</condicion>
+                </field>
+
+            </table>
+        </join>
+    </form>
+</histrix>

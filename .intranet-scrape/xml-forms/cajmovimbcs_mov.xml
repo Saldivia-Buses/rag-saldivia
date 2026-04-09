@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <abm tipo="abm">
+       <titulo>Mov Bancarios a CAJA</titulo>
+        <obs></obs>
+               <consulta>
+					<tabla id="CAJMOVIM" label="MOVIMIENTOS">
+						<campo id="siscod" id_cab="siscod">
+						</campo>
+						<campo id="cajfec" id_cab="fecha">
+						</campo>
+						<campo id="cajcod" id_cab="ingefe"> 
+						</campo>
+						<campo id="cajcta" id_cab="bcscta">
+						</campo>
+				<!--
+						<campo id="cajnom" id_cab="">
+						</campo>
+						-->
+						<campo id="cajnro" id_temp="bcsnro">
+						</campo>
+						<campo id="cajimp" id_temp="bcsimp">
+						</campo>
+				<!--	<campo id="regmin" id_temp="">
+						</campo>   -->
+						<campo id="cajref" id_cab="bcsref">
+						</campo>
+					</tabla>
+               </consulta>
+        </abm>

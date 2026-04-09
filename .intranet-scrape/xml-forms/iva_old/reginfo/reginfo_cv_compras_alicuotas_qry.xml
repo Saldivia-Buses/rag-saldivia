@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+    <title>REGINFO_CV_COMPRAS_ALICUOTAS</title>
+    <obs/>
+    <form>
+        <table id="IVACOMPRAS" label="REGINFO_CV_COMPRAS_ALICUOTAS">
+
+            <fieldGroup id="DEBUG" noshow="true" local="true" print="false" export="false">
+                <field id="anio" />
+
+                <field id="mes" />
+
+				<field id="fecha_desde">
+					<tipo>date</tipo>
+				</field>
+
+				<field id="fecha_hasta">
+					<tipo>date</tipo>
+				</field>
+
+                <field id="archivo" />
+
+                <field id="titulo">
+                    <setvar>titulo</setvar>
+                    <expression>CONCAT('[__anio__]', '[__mes__]','_[__archivo__]')</expression>
+                </field>
+            </fieldGroup>
+
+            <fieldGroup id="tests" export="false" noshow="true">
+                <field id="_ORDEN" local="true" noshow="false" style="color:blue;font-weight:bold;" />
+            
+                <field id="fecreg">
+                    <condicion operador="&gt;=">STR_TO_DATE('[__fecha_desde__]', '%d/%m/%Y') AND IVACOMPRAS.fecreg &lt;= STR_TO_DATE('[__fecha_hasta__]', '%d/%m/%Y')</condicion>
+                </field>
+                
+                <field id="pto_vta_bco" local="true">
+                    <label>Pto.Vta Banco</label>
+                </field>
+            </fieldGroup>
+
+            <fieldGroup id="exportables">
+                <field id="regconcepto_afip">
+                    <label>Tipo comp.</label>
+                    <expression>LPAD((CASE WHEN IVACOMPRAS.codcom in (1, 36) and CCTMOVIM.movlet = 'A' THEN 1
+                                           WHEN IVACOMPRAS.codcom = 2 and CCTMOVIM.movlet = 'A' THEN 2
+                                           WHEN IVACOMPRAS.codcom = 3 and CCTMOVIM.movlet = 'A' THEN 3
+                                           WHEN IVACOMPRAS.codcom = 4 and CCTMOVIM.movlet = 'A' THEN 4
+                                           WHEN IVACOMPRAS.codcom in (1, 36) and CCTMOVIM.movlet = 'B' THEN 6
+                                           WHEN IVACOMPRAS.codcom = 2 and CCTMOVIM.movlet = 'B' THEN 7
+                                           WHEN IVACOMPRAS.codcom = 3 and CCTMOVIM.movlet = 'B' THEN 8
+                                           WHEN IVACOMPRAS.codcom = 4 and CCTMOVIM.movlet = 'B' THEN 9
+                                           WHEN IVACOMPRAS.codcom in (1, 36) and CCTMOVIM.movlet = 'C' THEN 11
+                                           WHEN IVACOMPRAS.codcom = 2 and CCTMOVIM.movlet = 'C' THEN 12
+                                           WHEN IVACOMPRAS.codcom = 3 and CCTMOVIM.movlet = 'C' THEN 13
+                                           WHEN IVACOMPRAS.codcom = 7 THEN 83 END), 3, 0)</expression>
+		    <condicion operador="!=">'011'</condicion>
+                </field>
+
+                <field id="puesto_movimiento">
+                    <label>P.Vta.</label>
+                    <expression>LPAD(CCTMOVIM.movnpv, 5, 0)</expression>
+                </field>
+
+                <field id="nro_movimiento">
+                    <label>Nro Comprobant</label>
+                    <expression>LPAD(CCTMOVIM.movnro, 20, 0)</expression>
+                </field>
+
+                <field id="tipo_documento_id">
+                    <label>Cod documento</label>
+                    <expression>CASE WHEN IVACOMPRAS.codcom = 7 THEN '99' ELSE FSMDOCUM.codafip END</expression>
+                </field>
+
+                <field id="cuit_cuenta">
+                    <label>CUIT</label>
+                    <expression>LPAD(REPLACE(REPLACE(CCTCUENT.ctanro , '-', ''), '/', ''), 20, 0)</expression>
+                    <tipo>integer</tipo>
+                </field>
+
+                <field id="neto_detalle" suma="true">
+                    <expression>LPAD(round(SUM(IVAIMPORTES.impgra) * 100, 0), 15, '0')</expression>
+                    <label>Neto</label>
+                    <tipo>integer</tipo>
+                </field>
+
+                <field id="alicuota">
+                    <label>Alic</label>
+                    <expression>(CASE WHEN IVAIMPORTES.impimp = 0 THEN '0003' ELSE (CASE IVAIMPORTES.impali
+                                    WHEN 0 THEN '0003'
+                                    WHEN 10.5 THEN '0004'
+                                    WHEN 21.00 THEN '0005'
+                                    WHEN 27.00 THEN '0006'
+                                    WHEN 5.00 THEN '0007'
+                                    WHEN 2.50 THEN '0008' END) END)</expression>
+                </field>
+
+                <field id="iva_detalle" suma="true">
+                    <expression>LPAD(round(SUM(IVAIMPORTES.impimp - (impimp * (case when IVAIMPORTES.impcod &gt; 3 then 1 else 0 end))) * 100, 0), 15, '0')</expression>
+                    <!--<expression>LPAD(round(SUM(IVAIMPORTES.impimp) * 100, 0), 15, '')</expression>-->
+                    <label>Imp. Liq.</label>
+                    <tipo>integer</tipo>
+                    <!--<condicion operador="!=">0</condicion>-->
+                </field>
+            </fieldGroup>
+
+            <group>
+                <field id="id_ivacompra" tabla="IVACOMPRAS" />
+                <field id="alicuota" />
+            </group>
+
+        </table>
+
+        <join tipo="left">
+            <table id="IVAIMPORTES">
+                <field id="ctacod" oculto="true">
+                    <condicion operador="=">IVACOMPRAS.ctacod</condicion>
+                </field>
+                <field id="codcom" oculto="true">
+                    <condicion operador="=">IVACOMPRAS.codcom</condicion>
+                </field>
+                <field id="nrocom" oculto="true">
+                    <condicion operador="=">IVACOMPRAS.nrocom</condicion>
+                </field>
+                <field id="nronpv" oculto="true">
+                    <condicion operador="=">IVACOMPRAS.nronpv</condicion>
+                </field>
+                <field id="tipoiva" oculto="true">
+                    <condicion operador="=">1</condicion>
+                </field>   
+                <field id="feciva" oculto="true">
+                    <condicion operador="=">IVACOMPRAS.fecreg</condicion>
+                </field>                
+            </table>
+        </join> 
+
+        <join tipo="left">
+            <table id="CCTMOVIM">
+                <field id="id_regmovim">
+                    <condicion operador="=">IVACOMPRAS.regmovim_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="CCTCONCE">
+                <field id="siscod">
+                    <condicion operador="=">'01'</condicion>
+                </field>
+                <field id="concod">
+                    <condicion operador="=">IVACOMPRAS.codcom</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="CCTCUENT">
+                <field id="siscod">
+                    <condicion operador="=">'01'</condicion>
+                </field>
+                <field id="ctacod">
+                    <condicion operador="=">IVACOMPRAS.ctacod</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="FSMDOCUM">
+                <field id="doccod">
+                    <condicion operador="=">CCTCUENT.doccod</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

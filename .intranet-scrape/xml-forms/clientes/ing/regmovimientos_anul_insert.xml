@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert" grabafinal="true">
+    <title/>
+    <obs/>
+    <form>
+        <table id="REG_MOVIMIENTOS">
+/*
+	delete from STK_MOVIMIENTOS WHERE regdetalle_id in (select id_regdetalle from REG_MOVIMIENTOS join REG_DETALLES on id_regmovim = regmovim_id);
+*/
+
+			<sql>
+		
+				
+				DROP TABLE IF EXISTS DETALLES;
+				create TEMPORARY TABLE DETALLES
+					select * from REG_DETALLES where regmovim_id = [__id_regmovim__];
+
+delete REG_IMPUTACIONESDETALLES.* from REG_IMPUTACIONESDETALLES join  DETALLES on id_regdetalle = regdetallefac_id and regmovim_id = [__id_regmovim__];
+
+				DROP TABLE IF EXISTS movim;
+				CREATE TEMPORARY TABLE movim
+SELECT  * FROM REG_MOVIMIENTOS WHERE id_regmovim = [__id_regmovim__];
+				UPDATE movim 
+				SET  id_regmovim = 0,
+				    nombre_movimiento = 'ANULADA', 
+				     referencia_movimiento = 'ANULADA', 
+					saldo_movimiento = 0, 
+					importe_movimiento = 0,
+					neto_movimiento = 0,
+					importe_iva = 0,
+					importe_exento = 0,
+					importe_percepcion = 0;
+				INSERT INTO REG_MOVIMIENTOS 
+				SELECT * FROM movim
+					
+			</sql>
+
+
+
+            <field id="id_regmovim" id_temp="id_regmovim"  esClave="true" />
+        </table>
+    </form>
+</histrix>

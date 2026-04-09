@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="grid" imprime="false" inserta="false" deleteRow="false">
+	<title>Cuenta Corriente</title>
+	<confirmacion><![CDATA[¿Desea Realizar la Imputacion?  ]]></confirmacion>
+	<obs/>
+	<form >
+		<table id="REG_MOVIMIENTOS" label="Movimientos">
+
+			<movimientos>
+				<relacion id="imputacion_regmovimientos_update_ingmov.xml"/>
+				<relacion id="imputacion_regimputaciones_ingmov.xml"/>
+			</movimientos>
+
+			<field id="subsistema_id" oculto="true">
+				<label>C.</label>
+			</field>
+
+			<field id="id_regmovim" noshow="true" />
+
+			<field id="regcuenta_id" noshow="true" />
+
+			<field id="fecha_movimiento" deshabilitado="true">
+				<label>Fec.Mov.</label>
+			</field>
+
+			<field id="concepto_id" noshow="true" deshabilitado="true" />
+
+			<field id="concepto" deshabilitado="true">
+				<label>Conc</label>
+				<expression>REG_CONCEPTOS.abreviacion_concepto</expression>
+				<label>Cod.Concepto</label>
+				<tipo>string</tipo>
+			</field>
+
+			<field id="nro_movimiento" tdWidth="150" linkdes="Detalle del Comprobante" linkmodal="true" style="text-align: center">
+				<label>Numero</label>
+				<expression>CONCAT(REG_MOVIMIENTOS.letra_movimiento,' ',LPAD(REG_MOVIMIENTOS.puesto_movimiento,4,'0'),'-',LPAD(REG_MOVIMIENTOS.nro_movimiento  ,8,'0'))</expression>
+			</field>
+
+
+			<field id="importe_movimiento" deshabilitado="true">
+				<label>Importe Original</label>
+			</field>
+
+			<field id="saldo_movimiento" deshabilitado="true"  >
+				<label>Saldo Actual</label>
+				<condicion operador="&lt;">0</condicion>
+			</field>
+
+			<field id="acum" local="true" deshabilitado="true"  acumula="true" retroalimenta="true" noshow="true">
+				<if exp="true" operador="=">
+					<true>salant</true>
+					<false>salant - mov_sal</false>
+				</if>
+			</field>
+			<field id="imputado" suma="true" local="true" editable="true">
+				<label style="font-size:16px;">A Imputar</label>
+				<help>Imputar</help>
+				<tipo>numeric</tipo>
+				<jseval campodestino="totalImputado" total="true">imputado</jseval>
+				<jseval campodestino="newSALDO" actxml="false">(saldo_movimiento + imputado).toFixed(2)</jseval>
+				<jseval campodestino="test_error">(imputado &gt; Math.abs(saldo_movimiento))?1:0</jseval>
+			</field>
+
+			<field id="newSALDO" local="true" deshabilitado="true" editable="true">
+				<label>Saldo Final</label>
+				<if exp="true" operador="=">
+					<true>saldo_movimiento + imputado</true>
+					<false>0</false>
+				</if>
+				<tipo>numeric</tipo>
+			</field>
+
+			<field id="grabar" local="true" noshow="true">
+				<if exp="imputado != ''">
+					<true>1</true>
+					<false>0</false>
+				</if>
+			</field>
+
+			<field id="imputacion_concepto" oculto="true" tabla="REG_CONCEPTOS">
+				<condicion operador="=">1</condicion>
+			</field>
+
+			<field id="test_error" local="true" editable="true" suma="true" noshow="true">
+				<label>Test</label>
+				<jseval campodestino="test_imputaciones" total="true">test_error</jseval>
+			</field>               
+
+			<order>
+				<field id="fecha_movimiento"/>
+			</order>
+		</table>
+
+		<join>
+			<table id="REG_CONCEPTOS">
+				<field id="subsistema_id">
+					<condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion>
+				</field>
+				<field id="id_concepto">
+					<condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+				</field>
+				<field id="informa_calculo">
+					<condicion operador="=">0</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="REG_NUMERADORES">
+				<field id="subsistema_id">
+					<condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion>
+				</field>
+				<field id="regconcepto_id">
+					<condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+				</field>
+				<field id="puesto">
+					<condicion operador="=">REG_MOVIMIENTOS.puesto_movimiento</condicion>
+				</field>
+				<field id="letra">
+					<condicion operador="=">REG_MOVIMIENTOS.letra_movimiento</condicion>
+				</field>
+			</table>
+		</join>		
+
+	</form>
+</histrix>

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ficha" imprime="false" borra="false" _graba="false">
+    <title>Auditoría Interna</title>
+    <obs/>
+    <form >
+        <table id="CAL_AUDITORIA_INT" label="Auditoría Interna">
+     		<field id="id_auditoriaint" autoinc="true" noshow="true"/>
+			<field id="documento_id">
+				<helper type="external" id="CAL_DOCUMENTOS">
+					<field id="id_documento">
+						
+					</field>
+					<field id="nombre_documento">
+						<label>Nombre</label>
+						<detalle>nombre_documento</detalle>
+					</field>
+				</helper>
+				<label>Proceso</label>
+			</field>
+		
+			<field id="nombre_documento" local="true" tabla="CAL_DOCUMENTOS" deshabilitado="true">
+				<label modpos="nobr"/>
+				<size>90</size>
+			</field>
+			<field id="fecha_auditoriaint">
+				<label>Fecha</label>
+			</field>
+			<field id="codigo_auditorint">
+				<helper type="combo" id="HTXUSERS">
+					<field id="id_usuario"/>
+					<field id="auditor">
+						<expresion>CONCAT(apellido, ' ', Nombre)</expresion>
+					</field>
+					<order>
+						<field id="auditor"/>
+					</order>
+				</helper>
+				<label>Auditor</label>
+				<valor>112</valor>
+			</field>
+
+			<field id="realizada" noshow="true">
+				<options>
+					<option valor="0">Pendiente</option>
+					<option valor="1">Realizada</option>
+				</options>
+				<valor>0</valor>
+				<label>Estado</label>
+			</field>
+
+	
+        </table>
+		<join tipo="left">
+			<table id="CAL_DOCUMENTOS">
+				<field id="id_documento">
+					<condicion operador="=">CAL_AUDITORIA_INT.documento_id</condicion>
+				</field>
+			</table>
+		</join>
+    </form>
+</histrix>

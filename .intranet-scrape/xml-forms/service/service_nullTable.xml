@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+   <histrix tipo="consulta" limit="30" PDFfontSize="10">
+       <title>Tareas</title>
+        <obs></obs>
+               <form >
+                  <table id="GEN_CALENDAR" label="TAREAS">
+                  <field id="descripcion" PDFcolWidth="60px">
+                	<expression>''</expression>
+                      <help> </help>
+                  </field>
+                  <field id="observ" PDFcolWidth="50px">
+                	<expression>''</expression>
+                      <help> </help>
+                  </field>
+                  <field id="Responsable" PDFcolWidth="40px">
+                	<expression>''</expression>
+                      <help> </help>
+                  </field>
+                  <field id="tiempoest" PDFcolWidth="20px">
+                	<expression>''</expression>
+                      <help> </help>
+                  </field>
+                  <field id="firma" PDFcolWidth="20px">
+                	<expression>''</expression>
+                      <help> </help>
+                  </field>
+                  </table>
+               </form>
+        </histrix>

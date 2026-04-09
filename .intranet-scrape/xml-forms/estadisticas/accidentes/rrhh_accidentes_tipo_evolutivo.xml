@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="chart">
+    <title>Accidentes Tipos Evolutivos</title>
+    <obs/>
+    <form>
+        <table id="FRANCOS_PER">
+ 
+            <grafico id="internos">
+                <ancho>400</ancho>
+                <tipo>L</tipo>
+                <title>Accidentes Tipos Evolutivos</title>
+                <etiquetas>mes</etiquetas>
+                <serie>top_1</serie>
+                <serie>top_2</serie>
+                <serie>top_3</serie>
+                <serie>top_4</serie>
+                <serie>top_5</serie>
+            </grafico>
+
+            <filters>
+                <field id="fecha_desde">
+                    <label>Desde</label>
+                    <valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m" ,strtotime('-12 month')) , 1, date("Y") -  1 ))</valor>
+                    <operador>&gt;=</operador>
+                </field>
+                <field id="fecha_hasta">
+                    <label>Hasta</label>
+                    <valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m" ,strtotime('-0 month')) , 1, date("Y") ) - 1)</valor>
+                    <operador>&lt;=</operador>
+                </field>
+            </filters>
+
+            <field id="id" noshow="true" />
+
+            <field id="year" noshow="true">
+                <expression>YEAR(FRANCOS_PER.fechainicio)</expression>
+            </field>
+
+            <field id="mes" noshow="true">
+                <expression>MONTH(FRANCOS_PER.fechainicio)</expression>
+                <label>Mes</label>
+                <options>
+                    <option valor="1">Ene</option>
+                    <option valor="2">Feb</option>
+                    <option valor="3">Mar</option>
+                    <option valor="4">Abr</option>
+                    <option valor="5">May</option>
+                    <option valor="6">Jun</option>
+                    <option valor="7">Jul</option>
+                    <option valor="8">Ago</option>
+                    <option valor="9">Sep</option>
+                    <option valor="10">Oct</option>
+                    <option valor="11">Nov</option>
+                    <option valor="12">Dic</option>
+                </options>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="fecha_desde" local="true" noshow="true">
+                <tipo>date</tipo>
+            </field>
+
+            <field id="fecha_hasta" local="true" noshow="true">
+                <tipo>date</tipo>
+            </field>
+
+            <field id="fechainicio" noshow="true">
+                <tipo>date</tipo>
+                <condicion operador="&gt;=">STR_TO_DATE('[__fecha_desde__]', '%d/%m/%Y') AND FRANCOS_PER.fechainicio &lt;= STR_TO_DATE('[__fecha_hasta__]', '%d/%m/%Y')</condicion>
+            </field>
+
+            <field id="top_1" suma="true">
+                <label>Top 1</label>
+                <expression>SUM(CASE WHEN FRANCOS_PER.franco_tipo_id = (SELECT FCT.id_franco_tipo FROM FRANCOS_PER FP
+                                        JOIN FRANCOS_CAT_TIPO FCT on FCT.id_franco_tipo = FP.franco_tipo_id
+                WHERE FP.fechainicio &gt;= STR_TO_DATE('[__fecha_desde__]', '%d/%m/%Y')
+                  AND FP.fechainicio &lt;= STR_TO_DATE('[__fecha_hasta__]', '%d/%m/%Y')
+                  AND FP.tipo = 1
+                  AND FP.idfranco = 2
+                GROUP BY FCT.id_franco_tipo
+                ORDER BY COUNT(*) DESC LIMIT 0,1) THEN 1 ELSE 0 END)</expression>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="top_2" suma="true">
+                <label>Top 2</label>
+                <expression>SUM(CASE WHEN FRANCOS_PER.franco_tipo_id = (SELECT FCT.id_franco_tipo FROM FRANCOS_PER FP
+                                        JOIN FRANCOS_CAT_TIPO FCT on FCT.id_franco_tipo = FP.franco_tipo_id
+                WHERE FP.fechainicio &gt;= STR_TO_DATE('[__fecha_desde__]', '%d/%m/%Y')
+                  AND FP.fechainicio &lt;= STR_TO_DATE('[__fecha_hasta__]', '%d/%m/%Y')
+                  AND FP.tipo = 1
+                  AND FP.idfranco = 2
+                GROUP BY FCT.id_franco_tipo
+                ORDER BY COUNT(*) DESC LIMIT 1,1) THEN 1 ELSE 0 END)</expression>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="top_3" suma="true">
+                <label>Top 3</label>
+                <expression>SUM(CASE WHEN FRANCOS_PER.franco_tipo_id = (SELECT FCT.id_franco_tipo FROM FRANCOS_PER FP
+                                        JOIN FRANCOS_CAT_TIPO FCT on FCT.id_franco_tipo = FP.franco_tipo_id
+                WHERE FP.fechainicio &gt;= STR_TO_DATE('[__fecha_desde__]', '%d/%m/%Y')
+                  AND FP.fechainicio &lt;= STR_TO_DATE('[__fecha_hasta__]', '%d/%m/%Y')
+                  AND FP.tipo = 1
+                  AND FP.idfranco = 2
+                GROUP BY FCT.id_franco_tipo
+                ORDER BY COUNT(*) DESC LIMIT 2,1) THEN 1 ELSE 0 END)</expression>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="top_4" suma="true">
+                <label>Top 4</label>
+                <expression>SUM(CASE WHEN FRANCOS_PER.franco_tipo_id = (SELECT FCT.id_franco_tipo FROM FRANCOS_PER FP
+                                        JOIN FRANCOS_CAT_TIPO FCT on FCT.id_franco_tipo = FP.franco_tipo_id
+                WHERE FP.fechainicio &gt;= STR_TO_DATE('[__fecha_desde__]', '%d/%m/%Y')
+                  AND FP.fechainicio &lt;= STR_TO_DATE('[__fecha_hasta__]', '%d/%m/%Y')
+                  AND FP.tipo = 1
+                  AND FP.idfranco = 2
+                GROUP BY FCT.id_franco_tipo
+                ORDER BY COUNT(*) DESC LIMIT 3,1) THEN 1 ELSE 0 END)</expression>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="top_5" suma="true">
+                <label>Top 5</label>
+                <expression>SUM(CASE WHEN FRANCOS_PER.franco_tipo_id = (SELECT FCT.id_franco_tipo FROM FRANCOS_PER FP
+                                        JOIN FRANCOS_CAT_TIPO FCT on FCT.id_franco_tipo = FP.franco_tipo_id
+                WHERE FP.fechainicio &gt;= STR_TO_DATE('[__fecha_desde__]', '%d/%m/%Y')
+                  AND FP.fechainicio &lt;= STR_TO_DATE('[__fecha_hasta__]', '%d/%m/%Y')
+                  AND FP.tipo = 1
+                  AND FP.idfranco = 2
+                GROUP BY FCT.id_franco_tipo
+                ORDER BY COUNT(*) DESC LIMIT 4,1) THEN 1 ELSE 0 END)</expression>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <group>
+                <field id="year" />
+                <field id="mes" />
+            </group>
+
+            <order>
+                <field id="year" />
+                <field id="mes" />
+            </order>
+
+        </table>
+
+    </form>
+</histrix>

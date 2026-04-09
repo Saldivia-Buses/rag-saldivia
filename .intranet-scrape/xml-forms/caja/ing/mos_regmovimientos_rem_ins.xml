@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="insert" xmlImpresion="/clientes/qry/imp_remitosinsumas_qry.xml" 
+			   _directprint="remito" 
+			   _printer="remito">
+	<title>Movimientos Remitos</title>
+	 <obs></obs>
+		<form>
+		    <table id="REG_MOVIMIENTOS"				idCampoCond="emiteremito" >
+
+				<field id="printerName"      		id_temp="printerNameRem" local="true">
+				    <setvar>printer</setvar>
+                                </field>
+				<field id="printerName2"      		id_temp="printerNameRem" local="true">
+				    <setvar>directprint</setvar>
+                                </field>
+
+				<field id="subsistema_id"      		id_temp="subsistema_id">
+                                    <detelle>subsistema_id</detelle>
+                                </field>
+				<field id="regcuenta_id"     		id_temp="regcuenta_id" >	
+                                    <detalle>regcuenta_id</detalle>
+                                </field>
+				<field id="concepto_id"      		id_temp="Remito_Concepto_id" >
+					<valor>(SELECT option_value FROM HTXOPTIONS where option_name = 'ID_REMITOS' limit 1)</valor>
+                                        <detalle>concepto_id</detalle>
+                                    </field>
+				<field id="fecha_movimiento"     	id_temp="fecha_movimiento">
+<!--				    <detalle>fecha_movimiento</detalle> -->
+                                </field>
+				<field id="letra_movimiento">
+					<valor>X</valor>
+				</field>
+				<field id="puesto_movimiento"     	id_temp="puesto_movimiento"/>
+
+				<field id="nro_movimiento" 	     	id_temp="Nro_Movimiento_rem" >
+                                  <detalle>nro_movimiento</detalle>
+                                </field>
+
+		                <field id="regforma_id" 		id_temp="regforma_id" />
+
+				<field id="reg_fecha" 	                id_temp="reg_fecha"/>				
+				<field id="vencimiento_movimiento" 	id_temp="vencimiento_movimiento"/>	
+				<field id="neto_movimiento"             id_temp="neto_movimiento"/>
+				<field id="importe_movimiento"     	id_temp="neto_movimiento" >
+				    <tipo>custom_numeric</tipo>
+				</field>
+				<field id="referencia_movimiento"   	id_temp="referencia_movimiento"  __id_temp="flete_a_cargo"/>		
+
+				<field id="valor_declarado" 	     	id_temp="valor_declarado"/>
+				<field id="regcuentatransporte_id"  	id_temp="regcuentatransporte_id" />
+
+<!--				<field id="cantidad_bultos" 	     	id_temp="cantidad_bultos"/> -->
+		    </table>
+		</form>
+    </histrix>	

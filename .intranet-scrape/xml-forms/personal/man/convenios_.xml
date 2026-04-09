@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" subtipo="vertical">
+	<title>CONVENIOS</title>
+	<obs/>
+	<form  detalle="tipoliquidacion.xml">
+		<table id="CONVENIOS">
+			<title>Convenios</title>
+			<field id="IdSindicato">
+				<tabla_ex id="SINDICATO">
+					<field id="IdSindicato"/>
+					<field id="Nombre"/>
+				</tabla_ex>
+				<label>Sindicato</label>
+				<help>Codigo de Sindicato</help>
+				<detalle>idSindicato</detalle>
+			</field>
+			
+			<field id="IdConvenio">
+				<label>Convenio</label>
+				<help>Codigo de Convenio</help>
+				<detalle>idConvenio</detalle>
+				
+			</field>
+			<field id="Nombre">
+				<label>Nombre</label>
+				<help>Nombre del Convenio</help>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="descripcion">
+				<label>Descripcion</label>
+				<help>Descripcion del Convenio</help>
+			</field>
+			<field id="fechaDesde">
+				<label>Desde Fecha</label>
+				<help></help>
+				<tipo>date</tipo>
+			</field>
+			<field id="fechaHasta">
+				<label>Hasta Fecha</label>
+				<help></help>
+			</field>
+				<filters>
+			<field id="IdSindicato">
+				<label>Sindicato</label>
+				<tabla_ex id="SINDICATO">
+					<field id="IdSindicato"/>
+					<field id="Nombre"/>
+				</tabla_ex>
+				<help>Sindicato</help>
+				<valor>1</valor>
+				<operador>=</operador>				
+				<actualiza>
+					<field destino="IdSindicato" id="IdSindicato"/>
+				</actualiza>
+			</field>
+			
+
+
+			</filters> 
+			<order>
+				<field id="IdConvenio"/>
+			</order>
+		</table>
+	</form>
+</histrix>

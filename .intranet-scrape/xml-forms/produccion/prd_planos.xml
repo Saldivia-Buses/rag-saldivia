@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" path="planos/coches">
+	<title>Fotos por Coche</title>
+	<obs/>
+	<form >
+         <table id="PRD_PLANOS" label="Planos Adjuntos" >
+
+		 <field id="id_plano" noshow="true" autoinc="true">
+		 </field>
+
+		 <field id="nrofab" oculto="true" >
+			 <label>id</label>
+		 </field>
+
+		 <field id="linea" local="true" oculto="true">
+		    <valor>1</valor>
+		 </field>
+
+		 <field id="seccion_id"  >
+			 <label>Sección</label>
+			 <helper type="combo" xml="momento.xml" empty="true">
+			    <field id="seccion_id" oculto="true" />
+          <field id="linea_id"/>
+ --><!-- 			    <parameter source="linea" target="linea_id" />
+ -->			 </helper>
+		 </field>
+		 
+		<field  id="file" path="nrofab">
+			<label>Imagen</label>
+			<help></help>
+			<tipo>file</tipo>
+			<size>100</size>
+             <condicion operador="!=">''</condicion>
+		</field>
+
+		<field id="descripcion" >
+			<label>Descripción</label>
+			<help>Descripción</help>
+			<tipo>varchar</tipo>
+		</field>
+
+		<field id="revision">
+			<label>Revisión</label>
+			<help>Revisión</help>
+			<tipo>integer</tipo>
+			<valor>00</valor>
+			<size>1</size>
+		</field>
+
+      <field id="userid" >
+        <label>Cargó</label>
+        <expression>concat(IFNULL(HTXUSERS.Nombre, ''),' ', IFNULL(HTXUSERS.apellido,''),' ', stamp)</expression>
+        <size>25</size>
+      </field>
+
+      <field id="usuario" noshow="true" deshabilitado="true">
+              <label modpos="nobr">Usuario</label>
+              <valor eval="true">$_SESSION['usuario']</valor>
+      </field>
+
+ 		<field id="mailto"  deshabilitado="true" noshow="true" local="true">
+<!--           <expression>CONCAT('martinm@saldiviabuses.com.ar', ';', 'diegov@saldiviabuses.com.ar')</expression>
+ -->        </field>
+
+          <field id="mailsubj" noshow="true" >
+            <expression>CONCAT('Modificacion Plano Produccion ', file, ' Rev ', revision)</expression>
+          </field>
+
+          <field id="mailbody" noshow="true">
+            <expression><![CDATA[CONCAT(
+
+              'Att Sres.</br>Las modificaciones fueron las siguientes:
+              </br>', PRD_PLANOS.descripcion,' </br></br>
+              Por favor comunicar a quien corresponda.</br>Saludos</br></br>', IFNULL(HTXUSERS.apellido, ''), ', ', IFNULL(HTXUSERS.Nombre, ''), '</br>0341-4921135</br>Ruta 21 KM 7 PIA LOTE 0004 7 - Alvear (2126) - Santa Fe - Argentina</br><a href="www.saldiviabuses.com.ar" >www.saldiviabuses.com.ar</a>'
+
+              )]]>
+            </expression>
+          </field>
+
+            <field id="filtmail" noshow="true">
+              <expression>CONCAT('+"Modificacion Plano Produccion" +', file)</expression>
+            </field>
+
+          <field id="email" colstyle="width:auto;" deshabilitado="false" local="true" Formstyle="display:none;">
+              <helper type="link" xml="mails_send.xml" dir="/histrix/mensajeria/" title="Entrega Unidad" width="700" height="600">
+                  <parameter source="mailto"  target="para" />
+                  <parameter source="mailsubj" target="subject" />
+                  <parameter source="mailbody" target="mensaje" />
+              </helper>
+              <expression><![CDATA['<img src="../img/mail_generic.png"/>']]></expression>
+              <label>Email</label>
+          </field>
+          
+          <field id="filtmail_param" noshow="true">
+              <expression>CONCAT('Modificacion Plano Produccion ', file)</expression>
+          </field>
+          
+          <field id="Emails" _showTablaObj="true" local="true">
+              <helper type="link" xml="email_subj_qry.xml" dir="/email">
+                  <parameter target="subject" source="filtmail_param" operator="like"/>
+              </helper>
+              <label>Correos</label>
+              <help></help>
+             <expression sql="true"><![CDATA[
+              SELECT CONCAT(
+              (SELECT COUNT(*)  FROM HTXMAIL WHERE MATCH(subject) AGAINST ('[__filtmail__]' IN BOOLEAN MODE)),' Env.')]]></expression>
+          </field>
+
+	 </table>
+
+		<join tipo="left">
+		    <table id="HTXUSERS">
+			<field id="login">
+			    <condicion operador="=">usuario</condicion>
+			</field>
+		    </table>
+		</join>
+
+    </form>
+</histrix>

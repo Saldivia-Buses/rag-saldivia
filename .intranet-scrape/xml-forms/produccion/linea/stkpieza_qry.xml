@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" _subtipo="vertical" path="fotos/articulos">
+    <title>Formulas</title>
+    <obs></obs>
+    <form detalle="stkpieza_qry.xml" inline="true" hasDetail="tienehijos">
+        <table id="STKPIEZA" label="Composicion">
+
+            <field id="id_pieza" noshow="true" ></field>
+
+            <field id="idPadre" noshow="true">
+                <label>Id Producto al que pertenece</label>
+            </field>
+
+            <field id="articulo_hijo" esClave="true">
+                <label>Código</label>
+                <detalle>idPadre</detalle>
+            </field>
+
+            <field id="nom">
+                <expression>artdes</expression>
+                <label>Producto</label>
+            </field>
+
+            <field id="cantidad">
+                <label>Cantidad</label>
+            </field>
+            <field id="unicps" tabla="STKINSUM" deshabilitado="true">
+                <label modpos="nobr">Unidad</label>
+                <help>Unidad de Compra</help>
+                <tabla_ex id="FSMUNIDS">
+                    <field id="unicod"></field>
+                    <field id="uninom"></field>
+                </tabla_ex>
+            </field>
+
+            <field id="conversion" local="true"  preventLoop="true">
+                <label>Conv</label>
+                <if exp="valCps == valUso">
+                    <true>valUso</true>
+                    <false>(valCps == 1)?(cantidad * valUso):(cantidad / valCps)</false>
+                </if>
+                <tipo>decimal</tipo>
+                <format>%5.6f</format>
+            </field>
+
+            <field id="artuni" tabla="STKINSUM" deshabilitado="true">
+                <label modpos="nobr">Unid.</label>
+                <help>Unidad de Compra</help>
+                <tabla_ex id="FSMUNIDS">
+                    <field id="unicod"></field>
+                    <field id="uninom"></field>
+                </tabla_ex>
+            </field>
+
+            <field id="unitario"  >
+                <expression>round(costo_automatico, 2)</expression>
+                <label>Precio Unitario</label>
+                <tipo>decimal</tipo>
+            </field>
+
+            <field id="recargo"  >
+                <label>% Recargo</label>
+                <tipo>decimal</tipo>
+            </field>
+
+            <field id="costo_automatico2" suma="true" >
+                <expression>
+                    round(cantidad * ( costo_automatico + ( costo_automatico / 100 * STKPIEZA.recargo)), 2)
+                </expression>
+                <!--        <expression>
+                @costo:= (round(case WHEN (select sum(round( (costo_automatico * cantidad) * (1 + recargo / 100) , 2)) from STKPIEZA where idPadre  = STKINSUM.artcod limit 1) != 0 
+        then (select sum(round( (costo_automatico * cantidad) * (1 + recargo / 100) , 2)) from STKPIEZA where idPadre  = STKINSUM.artcod limit 1)
+                when valcps &gt; valuso then costo_calculado * valcps 
+                when valcps &lt; valuso then costo_calculado 
+                when ( costo_calculado * STKINSUM.valcps / STKINSUM.valuso) > 0  then (costo_calculado * STKINSUM.valcps / STKINSUM.valuso) 
+                else STKINSUM.artcos end, 2))
+            </expression>
+            -->
+            <label>Costo</label>
+            <tipo>decimal</tipo>
+        </field>
+
+        <field id="fecult"  tipoOrden="DESC">
+                <expression>STKINSUM.ultima_compra</expression>
+                <label>ult.compra</label>
+                <tipo>date</tipo>
+            </field>            
+
+        <field id="calculo1" suma="true" noshow="true">
+            <label>Calculo(Costo)</label>
+            <expression>
+                round(
+            CASE WHEN ((@costo * STKPIEZA.cantidad) * (1 + STKPIEZA.recargo / 100)) != 0
+            THEN ((@costo * STKPIEZA.cantidad) * (1 + STKPIEZA.recargo / 100))
+            when STKINSUM.valcps &gt; STKINSUM.valuso then STKINSUM.costo_calculado * STKINSUM.valcps 
+                when STKINSUM.valcps &lt; STKINSUM.valuso then STKINSUM.costo_calculado 
+                when ( STKINSUM.costo_calculado * STKINSUM.valcps / STKINSUM.valuso) > 0  then (STKINSUM.costo_calculado * STKINSUM.valcps / STKINSUM.valuso) 
+                else STKINSUM.artcos end
+            
+            
+            , 2)
+            </expression>
+        </field>
+        <field id="calculo2" suma="true"  noshow="true">
+            <label>Calculo(P.Unit.)</label>
+            <expression>
+                round((costo_automatico * STKPIEZA.cantidad) * (1 + STKPIEZA.recargo / 100) * (STKINSUM.valuso / STKINSUM.valcps), 2)
+            </expression>
+        </field>
+
+            <field id="valCps" noshow="true">
+            <expression>valcps</expression>
+            </field>
+            
+            <field id="valUso" noshow="true" >
+            <expression>valuso</expression>
+            </field>
+
+        <field id="fotopath" local="true" noshow="true">
+            <if exp="true">
+                <true>'articulo_hijo/'</true>
+                <false>''</false>
+            </if>
+            <tipo>varchar</tipo>
+        </field>
+
+        <field id="foto" path="fotopath" download="true" watermark="articulo_hijo">
+            <expression>
+                select ARTICULO_FOTO.foto from ARTICULO_FOTO where ARTICULO_FOTO.idArticulo = STKPIEZA.articulo_hijo  and ARTICULO_FOTO.foto != '' limit 1
+            </expression>
+            <label>Imagen</label>
+            <tipo >file</tipo>
+            <size>40</size>
+        </field>
+
+        <field id="tienehijos" noshow="true">
+            <expression>
+                @tienehijos := ifnull((select 1 from STKPIEZA s where s.idPadre = STKPIEZA.articulo_hijo limit 1), 0)
+            </expression>
+        </field>
+    </table>
+    <join>
+        <table id="STKINSUM" label="Articulos">
+            <field id="artcod">
+                <condicion operador="=">articulo_hijo</condicion>
+            </field>
+            <field id="siscod">
+                <condicion operador="=">'01'</condicion>
+            </field>
+
+        </table>
+
+    </join>
+</form>
+</histrix>

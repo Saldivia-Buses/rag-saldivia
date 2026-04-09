@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert" >
+    <title>MARCAR OC</title>
+    <obs></obs>
+    <form  >
+        <table id="HTXLOG" label="ORDENES DE COMPRA">
+            <field id="fecha" id_temp="fecha_rev" />
+            <field id="xmlprog" id_temp="xml_rev" />
+            <field id="nombre" id_temp="nombre_rev" />
+	    <field id="valorViejo" id_temp="ocpnro" />
+	    <field id="usuario" id_temp="usuario_rev" />
+	    <field id="obs" id_temp="obs_rev" />
+        </table>
+    </form>
+</histrix>

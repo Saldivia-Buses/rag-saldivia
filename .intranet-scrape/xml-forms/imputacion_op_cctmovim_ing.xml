@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ing" llenoTemporal="false" borra="false" inserta="false" procesa="false">
+    <title>Cuenta Corriente</title>
+    <obs></obs>
+    <consulta>
+        <table id="CCTMOVIM" label="Movimientos">
+            <importar xml="imputacion_op_pend_select.xml"  label="Seleccionar Orden de pago" titulo="Seleccione Facturas">
+                <field id="ctacod">ctacod</field>
+            </importar>
+            <movimientos >
+                <relacion id="imputacion_op_update_ingmov.xml">  </relacion>
+            </movimientos>
+            <field id="siscod" oculto="true">
+                <label>Cod.</label>
+                <help>
+                </help>
+            </field>
+
+<!--        <field id="ctacod" noshow="true">
+                  <label>Cod.</label>
+                  <help>Codigo de Cuenta </help>
+            </field> -->
+                
+
+            <field id="movnpvCAB" deshabilitado="true">
+                <label>P.V.</label>
+                <help> Punto Venta</help>
+                <tipo>integer</tipo>
+                <formato>%04d</formato>
+            </field>
+            <field id="movnroCAB" deshabilitado="true">
+                <label>Numero</label>
+                <help> Numero Comprobante</help>
+                <tipo>integer</tipo>
+                <formato>%12d</formato>
+              
+            </field>
+            <field id="concodCAB" deshabilitado="true" noshow="true">
+                <label>concod</label>
+                <help>
+                </help>
+                <tipo>integer</tipo>
+            </field>
+            <field id="concepto" deshabilitado="true">
+                <expresion>condes</expresion>
+                <label>Cod.Concepto</label>
+                <help>
+                </help>
+                <tipo>string</tipo>
+              <!--          <tabla_ex id="CCTCONCE">
+              
+              <field id="concod"></field>
+              <field id="condes"></field>
+              </tabla_ex>
+              -->
+            </field>
+            
+            <field id="movfecCAB" deshabilitado="true">
+                <label>Fecha </label>
+                <help></help>
+                <tipo>date</tipo>
+            </field>
+            
+            <!--          <field id="movvto">
+            <label>Venc. </label>
+            <help> </help>
+            </field>
+            -->
+            <field id="movimpCAB" deshabilitado="true">
+                <label>Importe</label>
+                <help>
+                </help>
+            </field>
+            
+            <field id="movsalCAB" suma="true" deshabilitado="true">
+                <label>Imputado</label>
+                <help>Imputado</help>
+                <condicion operador="!=">0</condicion>
+            </field>
+            <field id="salantCAB" local="true" dehabilitado="true">
+                <label>salant</label>
+                <help></help>
+            </field>
+            <field id="test" local="true" deshabilitado="true">
+                <label>test</label>
+                <if exp="true" >
+                    <true> mvsl + 0</true>
+                    <false>0</false>
+                </if>
+            </field>
+
+            <field id="newsaldoCAB" local="true" deshabilitado="true">
+                <label>Saldo</label>
+                <if exp="(salantCAB + mvsl + 0 ) &lt;= 0" operador="=">
+                    <true>salantCAB + mvsl + 0</true>
+                    <false>0</false>
+                </if>
+                <tipo>numeric</tipo>
+            </field>
+            <order>
+                <field id="movfec"></field>
+            </order>
+        </table>
+          
+        <join tipo="left">
+            <table id="CCTCONCE">
+                <field id="siscod" oculto="true">
+                    <label>cctcuent.siscod</label>
+                    <condicion operador="=">
+                  CCTMOVIM.siscod
+                    </condicion>
+                </field>
+              
+                <field id="concod" oculto="true">
+                    <condicion operador="=">
+                  CCTMOVIM.concod
+                    </condicion>
+                </field>
+              
+                <field id="condes" oculto="true">
+                </field>
+              
+            </table>
+        </join>
+    </consulta>
+</histrix>

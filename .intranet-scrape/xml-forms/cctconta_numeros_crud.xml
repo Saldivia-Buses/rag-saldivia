@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+	<histrix tipo="abm-mini" _class="anchamitad">
+		<title>CONTACTOS</title>
+		<obs></obs>
+		<form >
+			<table id="CCTCONTA" label="Contactos">
+				<field id="siscod" oculto="true">
+					<label>Codigo Sistema </label>
+					<help>
+					</help>
+					<valor>'02'</valor>
+				</field>
+
+		                <field id="ctacod" oculto="true">
+					<label>Cuenta</label>
+					 
+				</field>
+                                <field id="idconta" autoinc="true" noshow="true">
+					<label>id</label>
+					<help>
+					</help>
+				</field>	
+				<!--<field id="ctanom" tabla="CCTCUENT" deshabilitado="true" oculto="true">
+				<label>Cliente</label>
+				</field>-->
+				<field id="nombre" deshabilitado="true">
+					<label>Nombre </label>
+					<help>Nombre del contacto</help>
+					<condicion operador="!=">'  '</condicion>
+				</field>
+				<field id="CARGO" tabla="CARGOS">
+					<expression>CARGOS.nombre</expression>
+					<label>Cargo </label>
+					<help>Cargo </help>
+				</field>
+				
+
+				<field id="Telefono">
+					<label>Telefono </label>
+					<help>
+					</help>
+		                         <condicion operador="="><![CDATA[Telefono NOT REGEXP '[:digit:]' or Telefono REGEXP '[:alpha:]' or Telefono REGEXP '[[.hyphen-minus.]]' or Telefono REGEXP '[[.slash.]]' ]]></condicion>			
+				</field>
+                                <field id="movil">
+					<label>Celular</label>
+					<help>
+					</help>
+                                       <!-- <condicion operador="="><![CDATA[movil NOT REGEXP '[:digit:]' or movil REGEXP '[:alpha:]' or movil REGEXP '[[.hyphen-minus.]]' or movil REGEXP '[[.slash.]]' ]]></condicion>-->			
+					<size>20</size>
+				</field>
+				<field id="mail" noshow="true">
+					<label>Mail </label>
+					<help>
+					</help>
+					<size>50</size>
+					<tipo>email</tipo>
+				</field>		
+				<field id="principal" deshabilitado="true">
+					<label>Principal</label>
+					<tipo>check</tipo>
+				</field>	
+				<order>
+					<field id="CARGO"/>
+				</order>	
+			</table>
+			<join tipo="left">
+				<table id="CARGOS">
+					<field id="cargo">
+						<condicion operador="=">CCTCONTA.cargo</condicion>
+					</field>
+							
+				</table>
+			</join>
+			
+			
+		</form>
+	</histrix>

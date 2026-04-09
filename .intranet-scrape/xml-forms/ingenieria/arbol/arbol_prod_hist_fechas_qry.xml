@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" _limit="20">
+  <title>Fechas</title>
+  <obs></obs>
+  <consulta>
+    <table id="STK_BOM_HIST" label="Fechas">
+
+      <field id="fecha_costo">
+        <label>Fecha</label>
+        <tipo>date</tipo>
+      </field>
+
+      <field id="fecha_costo2">
+        <label>Fecha</label>
+        <expression>DATE_FORMAT(fecha_costo,"%d/%m/%Y")</expression>
+        <tipo>date</tipo>
+        <detalle>fecha_costo2</detalle>
+      </field>
+
+      <field id="bom_variacion_id" _oculto="true">
+        <label>Hom.</label>
+      </field>
+
+      <field id="id_stkbomhist"  noshow="true">
+        <label>ID</label>
+      </field>
+    
+	<order>
+    	    <field id="fecha_costo" orderType="DESC"/>
+	</order>
+      <group>
+        <field id="fecha_costo" />
+      </group> 
+
+    </table>
+
+  </consulta>
+</histrix>  

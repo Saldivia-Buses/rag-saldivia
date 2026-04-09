@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="grid" subtipo="vertical" tooltip="false" inserta="false" preloadData="false" deleteRow="false" procesa="true" log="false" 
+_imprime="false">
+  <title>Ingreso de Inventario</title>
+  <obs/>
+  <form>
+    <table id="STK_ARTICULOS" label="Ingreso de Inventario" idCampoCond="grabar">
+
+      <movimientos>
+        <relacion id="stkinventario_ins.xml"/>
+        <relacion id="stkinventario_close.xml"/>
+      </movimientos>
+
+      <field id="_ORDEN" local="true" _noshow="true">
+        <label>#</label>
+      </field>
+      
+      <field id="codigo_barra">
+        <label>Cod. Articulo</label>
+      </field>
+
+      <field id="nombre_articulo">
+        <label>Descripcion</label>
+      </field>
+
+      <field id="stkrubro_id" deshabilitado="true" noshow="true" />
+
+      <field id="fecha_movimiento" noshow="true" local="true">
+        <label>fecha</label>
+        <valor>today</valor>
+        <tipo>date</tipo>
+      </field>
+
+
+      <field id="stock" local="true" suma="true">
+        <label>stock</label>
+        <expresion>SELECT SUM(CASE WHEN STK_CONCEPTOS.tipo_concepto = 0 THEN cantidad ELSE -(cantidad) END) 
+                    FROM STK_MOVIMIENTOS 
+                   INNER JOIN STK_CONCEPTOS ON STK_CONCEPTOS.id_stkconcepto = STK_MOVIMIENTOS.stkconcepto_id 
+                   WHERE STK_MOVIMIENTOS.stkarticulo_id = STK_ARTICULOS.id_stkarticulo
+                     and STK_MOVIMIENTOS.stkdeposito_id = '[__stkdeposito_id__]'
+        </expresion>
+      </field>
+
+      <field id="cantidad" local="true" editable="true" suma="true" _refresh="true">
+        <label>Stock Real</label>
+        <tipo>integer</tipo>
+      </field>
+
+      <field id="referencia" local="true" noshow="true">
+        <tipo>varchar</tipo>
+        <valor>'INGRESO DE STOCK INICIAL'</valor>
+      </field>
+
+      <field id="stkfamilia_id"  noshow="true"/>
+      <field id="stksector_id" noshow="true"/>
+      <field id="unidad_id"  noshow="true"/>
+
+      <field id="precio_costo" noshow="true"/>
+      <field id="precio_lista" noshow="true"/>
+      <field id="precio_venta" noshow="true"/>
+      <field id="precio_promedio" noshow="true"/>
+      <field id="stkarticulo_id" noshow="true">
+        <expresion>STK_ARTICULOS.id_stkarticulo</expresion>
+      </field>
+
+      <field id="grabar" local="true" noshow="true">
+        <if exp="(cantidad + 0) != 0">
+          <true>'true'</true>
+          <false>'false'</false>
+        </if>
+      </field>
+
+	  <field id="testimpr" local="true" noshow="true">
+		<if exp="true">
+			<true>(_ORDEN == 1)? 1 : 0</true>
+			<false>0</false>
+		</if>
+	  </field>
+
+      <field id="stkconcepto_id" local="true" noshow="true">
+		<helper type="combo" xml="stkconcepto_qry.xml" dir="/ayudas">
+	  	  <field id="tipo_concepto">
+			<condicion operador="=">0</condicion>
+	  	  </field>
+		</helper>
+      </field>
+
+      <field id="stkdeposito_id" local="true" noshow="true">
+	    <helper type="combo" xml="stkdeposito_qry.xml" dir="/ayudas" />
+      </field>
+
+      <field id="stkrubro_id" noshow="true">
+	    <helper type="combo" xml="stkrubro_qry.xml" dir="/ayudas" empty="true" />
+      </field>
+
+    <field id="numero_movimiento" local="true" deshabilitado="true" sincelda="true" noshow="true">
+        <label modpos="nobr" style="font-size: large;" />
+        <parametro id="numerador_param.xml" retorna="numero">
+            <field id="numero">
+                <complete>numero + 1</complete>
+            </field>
+        </parametro>
+         <formato>%08d</formato> 
+        <size>8</size>
+    </field>
+
+      <field id="impresion" local="true" noshow="true" deshabilitado="true">
+        <parametro id="numerador_param.xml" retorna="impresion">
+        </parametro>
+      </field>
+
+
+      <filtros>
+	    <field id="stkconcepto_id" local="true">
+		<label>Concepto</label>
+	    </field>
+	    <field id="stkdeposito_id" local="true">
+		<label>Deposito</label>
+	    </field>
+	    <field id="stkrubro_id" noshow="true">
+		<label>Rubro</label>
+	    </field>
+	    <field id="fecha_movimiento">
+		<label>Fecha</label>
+		<valor>today</valor>
+	    </field>
+      </filtros>
+
+      <order>
+        <field id="nombre_articulo" />
+      </order>
+
+    </table>
+  </form>
+</histrix>

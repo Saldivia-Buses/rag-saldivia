@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+   <histrix tipo="consulta" imprime="false" PDFfontSize="10">
+       <title>Tareas por unidad</title>
+        <obs></obs>
+               <form >
+                  <table id="SERVICE_TAREA_UNIDAD" label="TAREAS X UNIDAD">
+
+                  <field id="idTareaUnidad" autoinc="true" noshow="true" print="false">
+                      <label>id</label>
+                  </field>
+                  <field id="idTurno" noshow="true" print="false">
+                      <label>idService</label>
+                  </field>
+                  <field id="idTarea" noshow="true" print="false">
+                      <label>Cod.</label>
+                        <ayuda_ex id="SERVICE_TAREAS" _xml="HLPservice_tareas.xml" dir="/help_local">
+	                  <field id="idTarea" >
+    		              <label>id</label>
+    		          </field>
+            		  <field id="nomTarea" >
+	                      <label>Tarea</label>
+				  <detalle>nomTarea</detalle>
+			      
+	                  </field>
+    	    			  <field id="tiempoEst" noshow="true">
+				  <detalle>tiempo</detalle>
+		            </field>
+                	    <field id="cargo" noshow="true">
+				  <detalle>cargo</detalle>
+			    
+                	    </field>
+		      
+		      </ayuda_ex>
+                  </field>
+                  <field id="nomTarea" PDFcolWidth="60px">
+		  <expression>SERVICE_TAREAS.nomTarea</expression>
+                      <label>Descrpción</label>
+                  </field>
+		  
+                  <field id="observaciones" PDFcolWidth="50px">
+                      <label>Observ</label>
+                      <help>Observaciones</help>
+                  </field>
+		  <field id="responsable_id" noZero="true" PDFcolWidth="40px">
+		      <label>Responsable</label>
+		      <helper type="combo" xml="HLPpersonal_ope.xml" dir="/help_local" >
+			<field id="fechaEgreso">
+			    <condicion operador="=">'0000-00-00'</condicion>
+			</field>
+		      </helper>
+		  </field>
+                  <field id="tiempo" PDFcolWidth="16px">
+                      <label>Tiempo</label>
+		      <tipo>time</tipo>
+                  </field>
+		  <field id="cargo" PDFcolWidth="10px">
+                      <label>Tipo</label>
+		  </field>
+		  <field id="firma" local="true" PDFcolWidth="20px">
+		      <label>Firma</label>
+		  </field>
+                  </table>
+                <join tipo="left">
+		    <table id="SERVICE_TAREAS">
+		        <field id="idTarea">
+		                <condicion operador="=">SERVICE_TAREA_UNIDAD.idTarea</condicion>
+		        </field> 
+            	    </table>
+                </join>
+		  
+               </form>
+	       
+        </histrix>

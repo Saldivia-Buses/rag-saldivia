@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+  <title>Acumuladores</title>
+  <obs></obs>
+  <consulta>
+	
+    <table id="RH_ACUMULADORES" label="Acumuladores">
+
+      <field id="id_rhacumulador" autoinc="true" noshow="true">
+        <label>Codigo</label>
+        <help>Código de Acumulador</help>
+      </field>
+      <field id="nombre_acumulador">
+        <label>Nombre </label>
+        <help>Nombre Acumulador </help>
+        <size>15</size>
+      </field>
+      <!--<field id="rhconvenio_id" _noshow="true" >		
+      </field> -->
+    </table>
+	
+  </consulta>
+</histrix>  

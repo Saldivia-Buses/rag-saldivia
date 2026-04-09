@@ -1,0 +1,245 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+	<title>REGINFO_CV_COMPRAS_CBTE</title>
+	<obs/>
+	<form >
+		<table id="REG_MOVIMIENTOS" label="REGINFO_CV_COMPRAS_CBTE">
+			<filters auto="true">
+				<field id="pto_vta_bco">
+					<label>Pto.Vta Banco</label>
+					<valor>1</valor>
+				</field>
+			</filters>
+				
+			<fieldGroup id="DEBUG" noshow="true" local="true" print="false" export="false">
+				<field id="verifica_cuit" clasefila="true">
+					<label>Verifica</label>
+					<expression>IF(CHAR_LENGTH(REG_MOVIMIENTOS.cuit_movimiento) &lt;= '10', 'resaltadoRojo','')</expression>
+					<tipo>integer</tipo>
+				</field>
+				<field id="anio" />
+				<field id="mes" />
+				<field id="fecha_desde" />
+				<field id="fecha_hasta" />
+				<field id="archivo" />
+				<field id="titulo">
+					<setvar>titulo</setvar>
+					<expression>CONCAT('[__anio__]', '[__mes__]','_[__archivo__]')</expression>
+				</field>
+				<field id="tip_fecha" />
+			</fieldGroup>
+			
+			<fieldGroup id="tests" export="false" noshow="true">
+				<field id="_ORDEN" local="true" noshow="false" style="color:blue;font-weight:bold;" />
+			</fieldGroup>
+			
+			<fieldGroup id="table_fields" export="false" noshow="true">
+				
+				<field id="id_regmovim" noshow="true" esClave="true"/>
+				
+				<field id="fecha_movimiento"></field>
+				
+				<field id="tipo_concepto" tabla="REG_CONCEPTOS">
+					<condicion operador="=">1</condicion>
+				</field>
+				
+				<field id="pto_vta_bco" local="true">
+					<label>Pto.Vta Banco</label>
+				</field>
+				
+				<field id="nro_cuenta" tabla="REG_CUENTA" _noshow="false">
+					<label>Cta</label>
+				</field>
+				
+				<field id="importe_iva" noshow="true" print="false">
+				    <condicion operador="!=">'0.00'</condicion>
+				</field>
+
+				<field id="filtro_fecha" noshow="true" print="false">
+					<expression>IF('[__tip_fecha__]' = '0' OR '[__tip_fecha__]' = '', reg_fecha, fecha_movimiento)</expression>
+					<condicion operador="&gt;=">'[__fecha_desde__]' and filtro_fecha &lt;= '[__fecha_hasta__]'</condicion>
+					<tipo>date</tipo>
+				</field>
+
+			</fieldGroup>
+
+			<fieldGroup id="exportables">
+				
+				<field id="cambio_cuit" local="true" export="false" style="text-align:center;" >
+					<label>Mod</label>
+				<helper type="link" xml="regmovim_upd.xml" dir ="/iva">
+				    <parameter target="id_regmovim" source="id_regmovim" />
+				</helper>
+					<valor>+</valor>
+				</field>
+				
+				<field id="fecha_comp">
+					<label>Fecha comp.</label>
+					<expression>REPLACE(REG_MOVIMIENTOS.fecha_movimiento, '-', '')</expression>
+				</field>
+
+				<field id="regconcepto_afip" tabla="REG_NUMERADORES">
+					<label>Tipo comp.</label>
+					<expression>LPAD(IFNULL(REG_NUMERADORES.regconcepto_afip, 1), 3, 0)</expression>
+				</field>
+				<field id="puesto_movimiento">
+					<label>P.Vta.</label>
+					<expression>LPAD(IF(REG_MOVIMIENTOS.puesto_movimiento = 0, '[__pto_vta_bco__]', REG_MOVIMIENTOS.puesto_movimiento), 5, 0)</expression>
+				</field>
+				<field id="nro_movimiento">
+					<label>Nro Comprobant</label>
+					<expression>LPAD(REG_MOVIMIENTOS.nro_movimiento, 20, 0)</expression>
+				</field>
+				<field id="despacho_importacion">
+					<label>Despacho Imp.</label>
+					<expression>'                '</expression>
+				</field>
+				<field id="tipo_documento_id">
+					<label>Cod documento</label>
+					<expression>IF(GEN_TIPOS_DOCUMENTOS.codigo_afip != '', GEN_TIPOS_DOCUMENTOS.codigo_afip, '80')</expression>
+				</field>
+				<field id="cuit_cuenta" tabla="REG_CUENTA" _getStyle="style_cuit">
+					<label>CUIT</label>
+					<expression>
+					LPAD(REPLACE((case when cuit_movimiento != '' then cuit_movimiento
+							   when cuit_movimiento = '' and dni_movimiento != '' then dni_movimiento
+						      else '' end),'-', ''), 20, 0)
+					</expression>
+					<tipo>integer</tipo>
+				</field>
+				<field id="nombre_cuenta">
+					<expression>
+						RPAD(REPLACE(IF(nombre_movimiento != '',nombre_movimiento,nombre_cuenta),'Ñ', 'N'), 30, ' ')
+					</expression>
+					<label>Razon Social</label>
+				</field>
+				<field id="importe_movimiento">
+					<expression>LPAD(round(importe_movimiento * 100, 0), 15, '0')</expression>
+					<label>Total</label>
+					<tipo>integer</tipo>
+				</field>
+				<field id="importe_nogravado">
+					<label>No Grav</label>
+					<expression>LPAD(round(importe_nogravado * 100, 0), 15, '0')</expression>
+					<tipo>integer</tipo>
+				</field>
+				<field id="importe_exento">
+					<expression>lpad((round(ifnull(importe_exento,0) * 100, 0)),15,0)</expression>
+					<label>Exento</label>
+					<tipo>integer</tipo>
+				</field>
+
+				<field id="percepciones_o_imp_val_agr">
+					<expression>'000000000000000'</expression>
+				</field>
+
+				<field id="percepciones_o_imp_nac">
+					<expression>'000000000000000'</expression>
+				</field>
+
+				<field id="importe_percepcion">
+					<label>Percepcion</label>
+					<!-- CAMBIO SUPERIOR AL QUE ESTA PERO ASI ESTABA EN CRUZ ANDINA, DESCOMENTAR ESTO ANTE ERROR
+					<expression>LPAD(round((ifnull(importe_percepcion,0) + (case when importe_ibr = 0 or importe_ibr IS NULL THEN 0 ELSE importe_ibr end)) * 100, 0), 15, '0')</expression> -->
+					<expression>LPAD(round((ifnull(importe_percepcion,0) + ifnull(importe_ibr,0)) * 100, 0), 15, '0')</expression>
+					<tipo>integer</tipo>
+				</field>
+
+				<field id="percepcion_imp_munic">
+					<expression>'000000000000000'</expression>
+				</field>
+
+				<field id="impuestos_int">
+					<expression>'000000000000000'</expression>
+				</field>
+
+				<field id="codigo_moneda">
+					<label>Moneda</label>
+					<expression>'PES'</expression>
+				</field>
+
+				<field id="tipo_cambio">
+					<label>Tipo Cambio</label>
+					<expression>'0001000000'</expression>
+				</field>
+				<field id="cantidad_alic">
+					<label>Cant. alicuota</label>
+					<expression>
+						SELECT count(distinct(REG_DETALLES.alicuota_iva)) FROM REG_DETALLES where REG_DETALLES.regmovim_id = REG_MOVIMIENTOS.id_regmovim
+					</expression>
+					<tipo>integer</tipo>
+					<condicion operador="!=">0</condicion>
+				</field>
+				<field id="codigo_operacion">
+					<expression>' '</expression>
+				</field>
+				<field id="cred_fisc_comp">
+					<label>Credito Fiscal Comp</label>
+					<expression>'000000000000000'</expression>
+				</field>
+				<field id="otros_tributos">
+					<label>Otros Tributos</label>
+					<expression>'000000000000000'</expression>
+				</field>
+				<field id="cuit_emisor">
+					<label>Cuit Emisor</label>
+					<expression>'00000000000'</expression>
+				</field>
+				<field id="denom_emisor">
+					<label>Denom. Emisor</label>
+					<expression>'                              '</expression>
+				</field>
+				<field id="iva_comision">
+					<expression>'000000000000000'</expression>
+				</field>
+				<field id="fecha_vencimiento">
+					<expression>REPLACE(REG_MOVIMIENTOS.vencimiento_movimiento, '-', '')</expression>
+				</field>
+			</fieldGroup>
+		</table>
+		<join>
+			<table id="GEN_SUBSISTEMAS">
+				<field id="id_subsistema">
+					<condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion>
+				</field>
+				<field id="iva_subsistema">
+					<condicion operador="=">2</condicion>
+				</field>
+			</table>
+		</join>
+		<join>
+			<table id="REG_CONCEPTOS">
+				<field id="id_concepto">
+					<condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="REG_CUENTA">
+				<field id="id_regcuenta">
+					<condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="REG_NUMERADORES">
+				<field id="subsistema_id">
+					<condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion>
+				</field>
+				<field id="regconcepto_id">
+					<condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+				</field>
+				<field id="letra">
+					<condicion operador="=">REG_MOVIMIENTOS.letra_movimiento</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="GEN_TIPOS_DOCUMENTOS">
+				<field id="id_tipo_documento">
+					<condicion operador="=">REG_CUENTA.tipo_documento_id</condicion>
+				</field>
+			</table>
+		</join>
+	</form>
+</histrix>

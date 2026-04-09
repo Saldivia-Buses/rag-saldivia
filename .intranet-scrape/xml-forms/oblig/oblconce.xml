@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<abm tipo="abm">
+	<titulo>CONCEPTOS DE OBLIGACIONES</titulo>
+	<obs></obs>
+	<consulta>
+		<tabla id="OBLCONCE">
+			<titulo>Conceptos</titulo>
+			<campo id="siscod">
+				<label>Cod</label>
+			</campo>
+			<campo id="concod">
+				<label>Cod.</label>
+				<help>Codigo de Concepto</help>
+			</campo>
+			<campo id="condes">
+				<label>Descripcion</label>
+				<help>Descripcion del Concepto</help>
+			</campo>
+			<campo id="conabv">
+				<label>Abrev.</label>
+				<help>Abreviatura a Utilizar</help>
+			</campo>
+
+			<campo id="conimp">
+				<label>Imputacion</label>
+				<help>Imputacion contable</help>
+				<opciones>
+					<opcion valor="1">Debe</opcion>
+					<opcion valor="2">Haber</opcion>
+				</opciones>
+			</campo>
+<!--
+			<campo id="concfm">
+				<label>Cod.F.M</label>
+				<help>Codigo de Concepto Ficha Maestra</help>
+
+			</campo>
+			-->
+<!-- 		<campo id="coniva">
+				<label>coniva</label>
+				<help>Registracion IVA</help>
+			</campo>
+			<campo id="comcod">
+				<label>Tipo</label>
+				<help>TIPO DE COMPROBANTE SEGUN D.G.I. (RG 3419 - ANEXO VI ).</help>
+			</campo> -->
+			<!--			<campo id="ctbcod">
+			<label>Cta.Contable</label>
+			<help>Cuenta Contable a imputar</help>
+
+			</campo>
+
+			<campo id="movcod">
+			<label>Cod.Stock</label>
+			<help>Codigo movimiento Stock</help>
+			</campo>
+			-->
+			<orden>
+				<campo id="concod"></campo>
+			</orden>
+		</tabla>
+	</consulta>
+</abm>

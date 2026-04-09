@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+  <title>Ejercicios Contable</title>
+   <obs></obs>
+    <form>
+        <table id="CTB_EJERCICIOS" label="Ejercicios Contables">
+
+        <field id="id_ejercicio" autoinc="true" noshow="true">
+      	    <label>Código</label>
+      	    <detalle>ctbejercicio_id</detalle>
+        </field>
+        
+        <field id="nombre_ejercicio">
+      		<label>Descripcion</label>
+        </field>
+
+        <field id="cerrado" noshow="true">
+	      <condicion operador="=">0</condicion>
+        </field>
+        
+        </table>
+    </form>
+</histrix>  

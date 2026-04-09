@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="delete">
+       <title>COMPROBANTES</title>
+        <obs></obs>
+               <form >
+					<table id="IVACOMPRAS" label="ANULACION IVACOMPRAS" >
+						<field id="ctacod" id_temp="ctacod" esClave="true">
+						</field>
+						<field id="feciva" id_temp="movfec" esClave="true">
+						</field>
+						<field id="codcom" id_temp="concod" esClave="true">
+						</field>
+						<field id="nronpv" id_temp="movnpv" esClave="true">
+						</field>
+						<field id="nrocom" id_temp="movnro" esClave="true">
+						</field>
+						
+						
+					</table>
+               </form>
+        </histrix>

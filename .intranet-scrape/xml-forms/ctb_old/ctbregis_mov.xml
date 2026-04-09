@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8" ?>
+   <histrix tipo="insert">
+       <title>Minuta</title>
+        <obs></obs>
+               <form >
+					<table id="CTBREGIS" label="Minuta">
+						<field id="siscod" id_cab="siscod">
+						</field>
+						<field id="ctbcod" id_temp="ctbcod">
+						</field>
+						<field id="regfec" id_cab="regfec">
+						</field>
+						<field id="regmin" id_cab="regmin">
+						</field>
+						<field id="regref" id_temp="regref">
+						</field>
+						<field id="regdoh" id_temp="regdoh">
+						</field>
+
+						<field id="regimp" id_temp="valor" >
+						</field>
+						<field id="regtip" id_cab="regtip">
+						</field>
+						<field id="regnro" id_cab="regnro">
+						</field>
+						<field id="regpoa" id_cab="regpoa">
+						</field>
+						<field id="regord" id_temp="_ORDEN">
+						</field>
+						<field id="idcos" id_temp="idcos">
+						</field>
+		
+					</table>
+               </form>
+        </histrix>

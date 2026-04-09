@@ -1,0 +1,333 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" subtipo="vertical" llenoTemporal="false" 
+    _impresion="ordencompra_imp.xml"
+    _dirimpresion="/compras/qry"
+    _email="ordencompra_imp.xml"
+    imprime="false"
+    path="fotos/"
+    transaccional="true"
+    log="log">
+    <title>ORDENES DE COMPRA</title>
+    <obs></obs>
+    <form >
+        <table id="CPS_DETALLE" label="Emisión Orden de Compra" >
+
+            <cierraproceso id="envio_cotizacion.xml">
+            </cierraproceso>
+            
+            <movimientos cabecera="cps_movimientos_cab.xml" >
+                <relacion id="cps_detalle_ingmov.xml"></relacion>
+<!--                <relacion id="cps_historico_precios.xml"></relacion> -->
+                <relacion id="cps_movimientos_insert.xml"></relacion>
+                <relacion id="cps_envio_upd.xml"></relacion>
+            </movimientos>
+
+             <validation>
+                <condition><![CDATA[ limite_Credito + 0  = 0 ]]>
+                </condition>
+                <message>Límite de crédito excedido</message>
+            </validation>
+
+            <importar xml="pedidoint_select.xml"  label="Pedidos Pendientes" titulo="Artículos Pendientes">
+            </importar>
+            <!--
+            <importar xml="cps_movimientos_select.xml"  label="Duplicar" titulo="Ordenes previas" modal="true">	                
+            </importar>
+            <importar xml="stockminrep_oc.xml"  label="Reposicion" titulo="Stock a reponer" modal="true">	                
+            </importar>
+-->
+	    <fieldGroup>
+	    
+            <field id="subsistema_id" oculto="true">
+                <label>Codigo Sistema.. </label>
+                <help></help>
+                <condicion operador='='>'CT'</condicion>
+            </field>
+
+            <field id="_ORDEN" oculto="true" local="true">
+                <label>Orden</label>
+            </field>
+
+<!--
+			<field id="limite_Credito" _suma="true" local="true" deshabilitado="true">
+			<label>Cred</label>
+			  <if exp="true">
+				<true>limite_credito</true>
+				<false>limite_credito</false>
+			  </if>
+			</field>
+-->
+<!--
+                <field id="habilito_codigo_barra" local="true" noshow="true" valauto="true">
+                    <helper type="parameter" id="SIS::01:orden_compra_oculto_barcode" >
+                        <label>Orden de Compra: Oculto Codigo de barras</label>
+                        <defaultValue>false</defaultValue>
+                    </helper>
+                </field>    
+
+            <field id="codigo_barra" tabla="STK_ARTICULOS">
+                <attribute id="noshow">habilito_codigo_barra</attribute>
+                <label colspan="5">Codigo de Barra</label>
+                <helper type="external" xml="stkarticulo_pos.xml" dir="/ayudas">
+                    <field id="wstklista_id" local="true"  noshow="true">
+                        <valor>1</valor>
+                    </field>
+                    <field id="unidad_compra_id" noshow="true">
+                    <detalle>unidad_compra_id</detalle>
+                    </field>
+                    <field id="unidad_uso_id" noshow="true">
+                    <detalle>unidad_uso_id</detalle>
+                    </field>
+                    <field id="valor_compra" noshow="true">
+                        <detalle>valor_compra</detalle>
+                    </field>
+                    <field id="valor_uso" noshow="true">
+                        <detalle>valor_uso</detalle>
+                    </field>
+                    <field id="precio_costo"  noshow="true">
+                        <detalle>precio_costo</detalle>
+                    </field>
+                    <field id="codigo_plu">
+                         <expression>(select prv_articulo from STK_ARTICULO_PROVEEDOR where stkarticulo_id = id_stkarticulo and regcuenta_id = '[__regcuenta_id__]' limit 1)</expression>
+                         <detalle>codigo_plu</detalle>
+                    </field>                   
+                </helper>
+            </field>
+-->
+            
+            <field id="stkarticulo_id"  _esClave="true" linkint="stk_hist_costos_qry.xml" linkdes="Precios" linkdir="/compras/qry">
+                <label _colspan="5">Artículo</label>
+                <paring destino="stkarticulo_id">stkarticulo_id</paring>
+                <help>Código de Artículo</help>
+		        <helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas">
+	           	    <field id="nombre_articulo">
+        			 <detalle>nombre_articulo</detalle>
+        		    </field>
+        		    <field id="unidad_compra_id">
+        			<detalle>unidad_compra_id</detalle>
+        		    </field>
+        		    <field id="unidad_uso_id">
+        			<detalle>unidad_uso_id</detalle>
+        		    </field>
+                    <field id="valor_compra">
+                	<expression>case when valor_compra = 0 then 1 else valor_compra end</expression>
+                        <detalle>valor_compra</detalle>
+                    </field>
+                    <field id="valor_uso">
+                	<expression>case when valor_uso = 0 then 1 else valor_uso end</expression>
+                        <detalle>valor_uso</detalle>
+                    </field>
+                    <field id="precio_costo" >
+                        <label>Costo</label>
+                        <detalle>costo_unitario</detalle>
+                    </field>
+                    <field id="codigo_barra">
+                         <detalle>codigo_barra</detalle>
+                    </field>
+                    <field id="subsistema_id" noshow="true">
+                        <condicion operdor="=">'01'</condicion>
+                    </field>
+                    <field id="hlp" oculto="true">
+                        <expression>CONCAT(ROUND(valor_compra,2),' ',(SELECT GEN_UNIDADES.nombre_unidad from GEN_UNIDADES where GEN_UNIDADES.id_unidad = STK_ARTICULOS.unidad_compra_id), ' = ',  ROUND(valor_uso, 2), ' ', (SELECT GEN_UNIDADES.nombre_unidad from GEN_UNIDADES where GEN_UNIDADES.id_unidad = STK_ARTICULOS.unidad_uso_id)  )</expression>
+                        <detalle>hlp</detalle>
+                    </field>
+                </helper>
+            </field>
+
+            <field id="nombre_articulo"  tabla="STK_ARTICULOS" _esClave="true" deshabilitado="true">
+                <label colspan="3" modpos="nobr">Descripción</label>
+                <tipo>varchar</tipo>
+                <size>40</size>
+            </field>
+
+            <field id="cpsobservaciones"  _esClave="true" required="false">
+                <label modpos="nobr">Observaciones</label>
+                <size>80</size>
+            </field>
+
+            <field id="cantidad_compra" local="true" incdec="true" preventLoop="true" suma="true">
+                <label>Pedido</label>
+                <help>Pedido (expresado en la unidad de compra)</help>
+                <valor>1</valor>
+                <tipo>decimal</tipo>
+                <jseval campodestino="convertido">(valor_compra == 1)?(cantidad_compra * valor_uso):(cantidad_compra / valor_compra)</jseval>
+                <jseval campodestino="impiva">precio_costo * cantidad_compra / 100 * alicuota</jseval>
+                <jseval campodestino="pallets">(cantidad_pallet + 0 != 0 ) ? convertido / cantidad_pallet : 0 </jseval>
+                <jseval campodestino="Total">precio_costo * cantidad_compra + impiva</jseval>
+            </field>
+
+            <field id="unidad_compra_id" _deshabilitado="true" _sincelda="true">
+                <label modpos="nobr">Unidad</label>
+                <helper type="combo" xml="unidad_qry.xml" dir="/ayudas" empty="true"/>
+                <tipo>integer</tipo>
+            </field>
+<!--
+            <field id="convertido" preventLoop="true" deshabilitado="true">
+                <label modpos="nobr">U.uso</label>
+                <if exp="valor_compra + 0 &gt; 0" operador="=">
+                    <true>(cantidad_compra / valor_compra) * valor_uso</true>
+                    <false>0</false>
+                </if>
+                <jseval campodestino="cantidad_compra">(valor_uso == 1)?(convertido * valor_compra):(convertido / valor_uso)</jseval>
+                <jseval campodestino="impiva">precio_costo * cantidad_compra / 100 * alicuota</jseval>
+                <jseval campodestino="Total">precio_costo * cantidad_compra + impiva</jseval>
+                <tipo>decimal</tipo>
+            </field>
+            <field id="unidad_uso_id" deshabilitado="true">
+                <label modpos="nobr" />
+                <helper type="combo" xml="unidad_qry.xml" dir="/ayudas" _empty="true" />
+                <tipo>integer</tipo>
+            </field>
+-->
+            <field id="hlp" deshabilitado="true" colstyle="display:none;" _sincelda="true">
+                <label modpos="nobr" colspan="2"/>
+                <size>30</size>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="valor_compra" noshow="true">
+                <valor>1</valor>
+            </field>
+
+            <field id="valor_uso" noshow="true">
+                <valor>1</valor>
+            </field>
+<!--
+        <fieldGroup>
+            <if> if (strpos($_SESSION['properties']['modulos'],'pallets') != false) return true; </if>
+            <field id="pallets" local="true" suma="true" _deshabilitado="true">
+                <label>Pallets</label>
+                <jseval campodestino="convertido">pallets * cantidad_pallet</jseval>
+                <jseval campodestino="cantidad_compra">(valor_uso == 1)?((pallets * cantidad_pallet) * valor_compra):((pallets * cantidad_pallet) / valor_uso)</jseval>
+                <jseval campodestino="impiva">precio_costo * ((valor_uso == 1)?((pallets * cantidad_pallet) * valor_compra):((pallets * cantidad_pallet) / valor_uso)) / 100 * alicuota</jseval>
+                <jseval campodestino="Total">precio_costo * ((valor_uso == 1)?((pallets * cantidad_pallet) * valor_compra):((pallets * cantidad_pallet) / valor_uso)) + impiva</jseval>
+                <tipo>integer</tipo>
+            </field>
+            <field id="cantidad_pallet" deshabilitado="true">
+                <label modpos="nobr">Cant. Unid. x Pallet</label>
+            </field>
+        </fieldGroup>
+    -->
+
+            <field id="fecha_requerido"  colspan="1" suma="true">
+                <label modpos="nobr">Requerido</label>
+                <help>Fecha de Entrega</help>
+                <tipo>date</tipo>
+            </field>
+
+           <field id="costo_unitario" noZero="true" suma="true">
+                <label modpos="nobr">Precio Objetivo</label>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="fotopath" local="true" noshow="true">
+                <if exp="true">
+                    <true>'articulos/stkarticulo_id/'</true>
+                    <false>''</false>
+                </if>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="pedidopath" local="true" noshow="true">
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="per_revision" tabla="STK_ARTICULOS" noshow="true"/>
+
+            <field id="foto" path="fotopath" download="true" deshabilitado="true" noshow="true">
+                <expression sql="true">SELECT STK_ARTICULO_FOTO.foto from STK_ARTICULO_FOTO where STK_ARTICULO_FOTO.stkarticulo_id = '[__stkarticulo_id__]' order by '[__per_revision__]' limit 1</expression>
+                <label Formstyle="display:none;">Imagen</label>
+                <tipo>file</tipo>
+                <size>40</size>
+            </field>
+
+            <field id="archivo" _noshow="true" deshabilitado="true" _esClave="true" path="pedidopath" download="true" noshow="true">
+                <tipo >file</tipo>
+                <label Formstyle="display:none;">Adjunto</label>
+                <size>40</size>
+            </field>
+
+<!--            <field id="precio_costo" deshabilitado="true" noshow="true">
+                <label modpos="nobr">precio_costo</label>
+                <tipo>numeric</tipo>
+                <valor>0</valor>
+            </field>
+    -->
+    <!--
+            <field id="precio_costo" _deshabilitado="true"  esClave="true">
+                <tipo>decimal</tipo>
+                <label modpos="nobr">Costo</label>
+                <jseval campodestino="impiva">precio_costo * cantidad_compra / 100 * alicuota</jseval>
+                <jseval campodestino="Total">precio_costo * cantidad_compra + impiva</jseval>
+            </field>
+-->
+	    </fieldGroup>
+<!--	    
+            <fieldGroup>
+		<if> if (strpos($_SESSION['properties']['modulos'],'iva') != false) return true; </if>
+
+                <field id="alicuota" _deshabilitado="true" esClave="true">
+                    <label modpos="nobr">Alic</label>
+                    <helper type="combo" xml="genalicuotas_qry.xml" dir="/ayudas">
+                	<option value="0">0</option>
+                    </helper>
+                    <valor>21.00</valor>
+                    <tipo>decimal</tipo>
+                </field>
+                <field id="impiva" deshabilitado="true" suma="true" >
+                    <label _modpos="nobr">Iva</label>
+                    <if exp="alicuota + 0 &gt; 0">
+                        <true>round((precio_costo * cantidad_compra ) * alicuota / 100, 4)</true>
+                        <false>0</false>
+                    </if>
+                </field>
+            </fieldGroup>
+-->
+
+	    <fieldGroup>
+<!--
+            <field id="Total" suma="true" deshabilitado="true" local="true">
+                <label modpos="nobr">Total</label>
+                <if exp="true">
+                    <true> round(( precio_costo + 0) * ( cantidad_compra + 0) + impiva, 4)</true>
+                    <false>0</false>
+                </if>
+            </field>
+            <field id="acumulado" acumula="true" suma="true" deshabilitado="true" local="true" retroalimenta="true" noshow="true">
+                <if exp="true">
+                    <true>Total + 0</true>
+                    <false>0</false>
+                </if>
+            </field>
+            <field id="grabaauditoria" deshabilitado="true" local="true" noshow="true">
+                <label>audit</label>
+                <if exp="acumulado &gt; importe_auditoria + 0">
+                    <true>'1'</true>  
+                    <false>'1'</false>
+                </if>
+            </field>
+            -->
+            <field id="pedido_id" noshow="true" deshabilitado="true">
+            <tipo>integer</tipo>
+            </field>
+
+            </fieldGroup>
+
+            <order>
+                <field id="ocpren"></field>
+            </order>
+        </table>
+
+        <join tipo="left">
+            <table id="STK_ARTICULOS">
+                <field id="subsistema_id" oculto="true">
+                    <label>STK_ARTICULOS.subsistema_id</label>
+                    <condicion operador="=">'01'</condicion>
+                </field>
+                <field id="stkarticulo_id" oculto="true">
+                    <condicion operador="=">CPS_DETALLE.stkarticulo_id</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <abm tipo="abm" >
+       <titulo>IVAIMPORTES</titulo>
+        <obs></obs>
+               <consulta>
+					<tabla id="IVAIMPORTES" label="IVACOMPRAS">
+						<campo id="tipoiva" id_cab="movcta">
+						</campo>
+						<campo id="feciva" id_cab="ivcreg">
+						</campo>
+						<campo id="codcom" id_cab="concod">
+						</campo>
+						<campo id="codlet" id_cab="movlet">
+						</campo>
+						<campo id="nronpv" id_cab="movnpv">
+						</campo>
+						<campo id="nrocom" id_cab="movnro">
+						</campo>
+						<campo id="ctacod" id_cab="ctacod">
+						</campo>
+						
+
+						<campo id="impgra" id_temp="neto">
+						</campo>
+						<campo id="impcod" id_temp="impcod">
+						</campo>
+						<campo id="impali" id_temp="alicuota">
+						</campo>
+						<campo id="impimp" id_temp="iva">
+						</campo>
+						
+					</tabla>
+               </consulta>
+        </abm>

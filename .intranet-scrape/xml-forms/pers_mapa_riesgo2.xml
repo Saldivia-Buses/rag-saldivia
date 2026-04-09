@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+  <title>PERSONAL POR SECCION</title>
+  <obs/>
+  <form >
+    <table id="PERSONAL" label="Personal por Seccion" _styleTbody="height:300px; overflow-x:hidden;">
+ 
+      <field id="nomAp">
+        <label>Apellido y Nombres</label>
+        <expression>CONCAT(apellido,', ', PERSONAL.Nombre)</expression>
+        <tipo>varchar</tipo>
+      </field>
+      <field id="nacimiento">
+        <label>Fecha de Nacimiento</label>
+      </field>      
+      <field id="fecing">
+        <label>Fecha Ingreso</label>
+      </field>
+      <field id="CUIL">
+        <label>CUIL</label>
+      </field>
+        
+      <field id="dni">
+        <label>DNI</label>
+      </field>      
+
+      <field id="descripcion" _tabla="CATPERSONAL">
+        <label>Categoría</label>
+        <expression>select descripcion from CATEGHISTORIA
+                   left join CATPERSONAL
+                   on CATPERSONAL.IdSindicato = CATEGHISTORIA.idSindicato
+                   and CATPERSONAL.IdCateg = CATEGHISTORIA.IdCateg
+                   where CATEGHISTORIA.IdPersona = PERSONAL.IdPersona
+                   and CATEGHISTORIA.fechaDesde &lt; CURDATE()
+                   order by CATEGHISTORIA.fechaDesde desc limit 1
+        </expression>
+        <tipo>varchar</tipo>
+      </field>
+      <field id="fechaEgreso" oculto="true">
+        <label>Egreso</label>
+        <condicion operador="=">"0000-00-00"</condicion>  
+      </field>
+      
+           <field id="id_secciones">
+ <expression having="false">(select SECCION.nombre from SECCIONHISTORIA
+   left join SECCION on SECCION.id_seccion = SECCIONHISTORIA.id_seccion
+   where SECCIONHISTORIA.IdPersona = PERSONAL.IdPersona
+  and SECCIONHISTORIA.fechaDesde &lt;= date(now())
+   order by SECCIONHISTORIA.fechaDesde desc limit 1)
+ </expression>
+        <label>Sección</label>
+        <help>Sección</help>
+      </field>
+      
+      <field id="id_seccion">
+        <label>Id Sección</label>
+        <tipo>integer</tipo>
+      </field>
+      
+      <field id="apellido" noshow="true">
+        </field>
+
+      <field id="idPuesto" tabla="SECCION">
+        <label>Puesto</label>
+        <tipo>varchar</tipo>
+      </field>
+      
+      <field id="rie">
+        <label>Riesgos Persona</label>
+        <expression>select group_CONCAT(riesgo_id) from RIESGO_PERSONAL where RIESGO_PERSONAL.persona_id = PERSONAL.idPersona</expression>
+        <tipo>varchar</tipo>
+      </field>
+
+      <field id="rieSeccion">
+        <label>Riesgos Sección</label>
+        <expression>select group_CONCAT(idRiesgo) from RIESGO_SECCION where RIESGO_SECCION.idSeccion = PERSONAL.id_seccion</expression>
+        <tipo>varchar</tipo>
+      </field>
+
+      <order>
+        <field id="apellido"></field>
+      </order>      
+    </table>
+    <join tipo="left">
+      <table id="CATPERSONAL">
+        <field id="idSindicato">
+          <condicion operador="=">PERSONAL.idSindicato</condicion>
+        </field>
+        <field id="idCateg">
+          <condicion operador="=">PERSONAL.idCateg</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="SECCION">
+        <field id="id_SECCION">
+          <condicion operador="=">PERSONAL.id_seccion</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>

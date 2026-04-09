@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--Comentario-->
+<histrix tipo="consulta" limit="100">
+  <title>Tableros electricos</title>
+  <obs></obs>
+  <form>
+    <table id="EGX300EPE" label="Tableros Electricos">
+      
+       <field id="date_time" true="true">
+        <label  _style="text-align:center;color:red;">Fecha-Hora</label>
+        <size>1</size>
+        <tipo>varchar</tipo>
+      </field>  
+    
+      <field id="id_nave">
+        <label>Nave</label>  
+      </field>
+
+      <field id="potencia_activa" suma="true">
+	<label>Potencia Kw</label>
+      </field>
+ 
+          </table>
+  </form>
+</histrix>  
+
+
+

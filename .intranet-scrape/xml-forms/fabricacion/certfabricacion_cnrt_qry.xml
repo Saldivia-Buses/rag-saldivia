@@ -1,0 +1,477 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" paginar="100" path="/fotos/coches/" borra="false" preloadData="false">
+    <title>CERTIFICADOS FABRICACION</title>
+    <obs></obs>
+    <form>
+        <table id="CERTFABRICACION">
+
+            <filters>
+            <field id="fechaCert" >
+                <label>Desde </label>
+                    <operador>&gt;=</operador>
+		    <valor>today</valor>
+            </field>
+            <field id="fechaCert" modpos="nobr">
+                <label>Hasta </label>
+                    <operador>&lt;=</operador>
+            </field>
+
+                <field id="nrofab">
+                    <label>Nro Fab</label>
+                    <operador>=</operador>
+                </field>
+            <field id="plano" >
+                <label>Plano Nro</label>
+                <help>Plano</help>
+                <tipo>varchar</tipo>
+                    <operador>like</operador>
+            </field>
+
+            </filters>
+            <field id="nrofab" _required="true" _noshow="true">
+                <label>Nro Fabricación</label>
+                <help>Código de Fabricación</help>
+            </field>
+
+            <field id="fechaCert" >
+                <label>Fecha emisión certificado</label>
+            </field>
+
+
+<!--
+            <field id="nrofab" _required="true">
+                <helper type="external" xml="certfabricacion_numerador.xml" >
+                    <field id="nrofab" />
+                    <field id="nro_fab">
+                        <expression>nrofab</expression>
+                        <label>NroFab</label>
+                        <tipo>integer</tipo>
+                        <detalle>nrofab</detalle>
+                    </field>
+                    <field id="v2" noshow="true">
+                        <expression>concat('8A9', MODCHASIS.codigo, CARROCERIA.codvds, LPAD(HOMOLOGMOD.admisible, 2, '0'), (SELECT code FROM VINYEAR WHERE VINYEAR.year = YEAR(now())), 'A127', IFNULL((SELECT LPAD(MAX(SUBSTRING(nrovin, 15,3)) + 1 , 3,'0') FROM CERTFABRICACION WHERE SUBSTRING(nrovin, 1 ,14) = CONCAT('8A9', MODCHASIS.codigo, CARROCERIA.codvds, LPAD(HOMOLOGMOD.admisible, 2, '0'), (SELECT code FROM VINYEAR WHERE VINYEAR.year = YEAR(now())), 'A127')), '___'))</expression>
+                        <tipo>varchar</tipo>
+                        <detalle>nrovin</detalle>
+                    </field>
+                    <field id="lca" tabla="HOMOLOGMOD">
+			<expression>(select numero_lca from PROD_MODELO_LCM join PROD_LCM on lcm_id = id_lcm  WHERE id_modelo_lcm = modelo_lcm_id)</expression>
+                        <label>LCA</label>
+                        <tipo>varchar</tipo>
+                        <detalle>lca</detalle>
+                    </field>
+                    <field id="lcm" tabla="HOMOLOGMOD">
+			<expression>(select numero_lcm from PROD_MODELO_LCM join PROD_LCM on lcm_id = id_lcm  WHERE id_modelo_lcm = modelo_lcm_id)</expression>
+                        <label>LCM</label>
+                        <tipo>varchar</tipo>
+                        <detalle>lcm</detalle>
+                    </field>
+                    <field id="expte" tabla="HOMOLOGMOD">
+                        <label>Expendiente</label>
+                        <detalle>expte</detalle>
+                    </field>
+                    <field id="plano" tabla="HOMOLOGMOD">
+                        <label>Plano</label>
+                        <tipo>varchar</tipo>
+                        <detalle>plano</detalle>
+                    </field>
+                    <field id="disposicion" tabla="HOMOLOGMOD">
+                        <label>Disposición</label>
+                        <expression>HOMOLOGMOD.dispos</expression>
+                        <detalle>disposicion</detalle>
+                        <tipo>varchar</tipo>
+                    </field>
+                </helper>
+                <label>Nro Fab</label>
+                <help>Código de Fabricación</help>
+            </field>homologacion_id
+          -->
+
+
+		<field id="chasis" tabla="CHASIS">
+			<label >Nro de chasis</label>
+		</field>
+            <field id="plano" >
+                <label>Nro de Plano</label>
+                <help>Plano</help>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="expte" >
+                <label>Expte Nro</label>
+                <help>Expediente</help>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="chasis_expte" tabla="HOMOLOGMOD">
+                <label>Expte Modificación</label>
+                <help>Expediente</help>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field deshabilitado="true" id="moddes" tabla="MODCHASIS" required="true">
+                <expression>MODCHASIS.moddes</expression>
+                <label modpos="nobr">Chasis Modelo</label>
+                <help/>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="marcod" tabla="CHASIS" deshabilitado="true" >
+                <expression>CHASIS.marcod</expression>
+                <label modpos="nobr">Chasis marca</label>
+                <help/>
+                <helper type="combo" id="MARCHASIS">
+                    <field id="marcod" />
+                    <field id="mardes" />
+                    <field id="siscod" oculto="true">
+                        <condicion operador="=">03</condicion>
+                    </field>
+                </helper>
+                <tipo>integer</tipo>
+            </field>
+
+		<field id="modelo_motor" tabla="MODCHASIS">
+			<label size="10" posx="120" posy="0" PDFsize="12" PDFnoborder="true" >Motor Modelo</label>
+		</field>
+
+	<field id="nombre" tabla="MARCAMOTOR">
+
+		<label size="40" posx="18" posy="+2" PDFsize="11" PDFnoborder="true" >Motor marca</label>
+		</field>
+      <field id="tipserv" >
+	<expression>HOMOLOGMOD.tipserv</expression>
+        <label  modpos="nobr">Tipo Serv.</label>
+        <help>Tipo de Servicio</help>
+        <tabla_ex id="TIPOSERVICIO">
+                        <field id="tipserv">
+                        </field>
+                        <field id="servdes">
+                        </field>
+        </tabla_ex>
+      </field>
+
+            <field id="asientos" deshabilitado="true" Formstyle="display:none;" required="true" style="text-align:center;">
+                <label >Cantidad Asientos 1</label>
+                <expression>HOMOLOGMOD.asientos</expression>
+            </field>
+
+            <field id="asientos_plantabaja" deshabilitado="true" Formstyle="display:none;" required="true" style="text-align:center;">
+                <label >Cantidad Asientos 2</label>
+                <expression>HOMOLOGMOD.asientos_plantabaja</expression>
+            </field>
+<!--
+            <field id="homologacion_id" >
+              <label>Homologación</label>
+
+                
+            </field>
+	
+
+            <field  id="ctacod" tabla="PEDCOTIZ" _deshabilitado="true">
+                <label   >Cliente:</label>
+                <help>Código de Cuenta</help>
+                <helper type="combo" condes="true" id="CCTCUENT" empty="true">
+                    <field id="ctacod" />
+                    <field id="ctafan">
+                        <expression>LEFT(ctafan, 22)</expression>
+                    </field>
+                    <field id="siscod" oculto="true">
+                        <condicion operador="=">'02'</condicion>
+                    </field>
+                </helper>
+                <tipo>integer</tipo>
+            </field>
+
+            <field id="desabv">
+                <expression>CARROCERIA.desabv</expression>
+                <label  deshabilitado="true">Modelo</label>
+                <tipo>varchar</tipo>
+            </field>
+
+
+
+
+
+            <field id="banbar" deshabilitado="true" Formstyle="display:none;" tabla="HOMOLOGMOD">
+                <label>B</label>
+                <options>
+                    <option valor="0">NO</option>
+                    <option valor="1">SI</option>
+                </options>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="fechaCert">
+                <label>Certificado</label>
+                <help>Fecha del Certificado de Fabricación</help>
+                <valor>today</valor>
+            </field>
+
+            <field id="nrovin" _noshow="true">
+                <size>30</size>
+                <label>Número de VIN</label>
+            </field>
+
+            <field id="id_homologacion" oculto="true">
+                <expression>id_homologacion</expression>
+            </field>
+
+            <field id="hasLCM" noshow="true">
+                <expression>SELECT (CASE WHEN COUNT(*) >= 1 THEN 'imp_lcm.xml' ELSE '' END) FROM LCMFOTOS WHERE LCMFOTOS.lcm = HOMOLOGMOD.lcm</expression>
+            </field>
+
+            <field id="lcm" linkdes="L.C.M." linkdir="/fabricacion/" >
+                <attribute id="linkint">hasLCM</attribute>
+                <label>L.C.M. Nro</label>
+                <help>L.C.M.</help>
+                <paring destino="lcm">lcm</paring>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="lca" >
+                <label>L.C.A. Nro</label>
+                <help>L.C.A.</help>
+                <tipo>varchar</tipo>
+            </field>
+
+
+
+            <field id="disposicion">
+                <label>Disposición</label>
+                <help>Disposición</help>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="max_fec" noshow="true">
+                <label>fecha</label>
+                <expression>@maxrev:=(SELECT max(fecha) from HTXLOG where xmlprog = 'certfabricacion.xml')</expression>
+            </field>
+-->
+<!--
+
+
+    LE COMENTO LA FECHA DE ULTIMA MODIFICACION POR QUE TARDA MUCHISIMO SI LO PONGO
+    SE VA A REEMPLAZAR CON LA NUEVA FICHA DE PRODUCTO 
+       <field id="maxfec" local="true" noshow="true" print="false">
+        <label>1</label>
+
+
+        <expression>select (case when max(fecha) = DATE(NOW()) then 'font-size:14px;color:red;font-weight:bold;' 
+                                             when max(fecha) = DATE_SUB(curdate(), INTERVAL 1 DAY) then 'font-size:14px;color:blue;font-weight:bold;' 
+                                      else 'font-size:11px;color:green;font-weight:bold;' end) from HTXLOG where obs like concat('%Nro%',nrofab,'%') and xmlprog  = 'certfabricacion.xml'</expression>
+
+
+
+
+        <tipo>varchar</tipo>
+          </field>
+                                                                                            
+      <field id="log" local="true" linkint="certificacion_log.xml"  linkdes="Historial" print="false">
+                    <label getStyle="maxfec" Formstyle="display:none;">Ult.Modif</label>
+        <expression>select (case when max(fecha) = DATE(NOW()) then 'HOY' 
+                                             when max(fecha) = DATE_SUB(curdate(), INTERVAL 1 DAY) then 'Ayer' 
+                                      else date_format(max(fecha), '%d/%m') end) from HTXLOG where obs like concat('%Nro%',nrofab,'%') and xmlprog  = 'certfabricacion.xml'
+          </expression>
+        <valor>Historial</valor>
+        <paring destino="obs" operador="like">nrofab</paring>
+        <paring destino="num" >nrofab</paring>
+        
+        
+    - -        <valor><![CDATA['<img alt="Historial" src="../img/appointment-new.png" />']]></valor> -
+
+          </field>
+-->
+<!--                                                                                                                 
+      <field id="certif" deshabilitado="true" local="true" linkint="certificado_fabricacion.xml" linkdes="Certificado Fabricación" Formstyle="display:none;" >
+        <expression>(case when PEDCOTIZ.nrocha IS NOT NULL THEN  'Cert.Fabric.' END)</expression>
+        <label>Cert.Fabric.</label>
+        <tipo>varchar</tipo>
+        
+        <paring destino="nrofab" operador="=">nrofab</paring>
+        
+        <paring destino="nrovin" >nrovin</paring>
+      </field>
+	
+      <field id="certif_srl" deshabilitado="true" local="true" linkint="certificado_fabricacion_sa.xml" linkdes="Certificado Fabricación SA" Formstyle="display:none;" >
+        
+        <expression>(case when PEDCOTIZ.nrocha IS NOT NULL THEN  'Cert.Fab SA' END)</expression>
+        <label>Cert.Fab SA</label>
+        <tipo>varchar</tipo>
+        <valor>"Imprimir Cert.Fab SA"</valor>
+        <paring destino="nrofab" operador="=">nrofab</paring>
+        <paring destino="nrovin" >nrovin</paring>
+      </field>
+      
+      <field id="certCha" deshabilitado="true" local="true" linkint="certificado_mod_chasis.xml" linkdes="Certificado Modificacion Chasis" Formstyle="display:none;" >
+        <expression>case when chasis_plano != '' then 'Mod.Chasis' else '' end</expression>
+        <label>Mod.Chasis</label>
+        <tipo>varchar</tipo>
+        <paring destino="nrofab" operador="=">nrofab</paring>
+        <paring destino="nrovin" >nrovin</paring>
+      </field>
+    <field id="scans"  _imageWidth="165" noshow="true"> 
+  <expression>CONCAT(nrofab,'/certificado/')</expression>
+    </field>      
+    <field id="escaneado" local="true" imageWidth="50" path="scans" view="true">  
+  <expression>CONCAT('/fotos/coches/',nrofab,'/certificado/')</expression>
+
+  <label>Archivos</label>
+  <tipo>dir</tipo>
+  <size>40</size>
+    </field>      
+      <field id="certgaran" deshabilitado="true" local="true" linkint="certificado_garantia.xml" linkdes="Imprimir Certificado Garant"  Formstyle="display:none;">
+
+        <expression>(case when PEDCOTIZ.nrocha IS NOT NULL THEN  'Cert.Garant' END)</expression>
+        <label formstyle="display:none;">Cert.Garan.</label>
+        <tipo>varchar</tipo>
+        <valor>"Imprimir Cert. Garantía"</valor>
+        <paring destino="nrofab" operador="=">nrofab</paring>                                                       
+        <paring destino="nrovin" >nrovin</paring>
+        <paring destino="lcm" >lcm</paring>
+
+      </field>
+      <field id="cert2" deshabilitado="true" local="true" linkint="certificado_fabricacion_red.xml" linkdes="Imprimir Certificado Patent"  Formstyle="display:none;">
+        <expression>(case when PEDCOTIZ.nrocha IS NOT NULL THEN  'Cert.Patent' END)</expression>
+        <label formstyle="display:none;">Cert.Paten.</label>
+        <tipo>varchar</tipo>
+        <valor>"Imprimir Cert. Patentamiento"</valor>
+        <paring destino="nrofab" operador="=">nrofab</paring>                                                       
+        <paring destino="nrovin" >nrovin</paring>
+        <paring destino="lcm" >lcm</paring>
+
+      </field>
+      <field id="cert_prendario">
+        <label>Prenda</label>
+        <expression>'Cert. Prendario'</expression>
+        <helper xml="certificado_fabricacion_prendario.xml" type="link">
+          <parameter source="nrofab" target="nrofab" />
+          <parameter source="nrovim" target="nrovin" />
+          <parameter source="lcm"    target="lcm" />
+        </helper>
+      </field>
+      <field id="chapita" deshabilitado="true" local="true" linkint="chapita.xml" linkdes="Imprimir Chapita" Formstyle="display:none;" >
+        <expression>'Chapa Ident.'</expression>
+        <label>Chapa Identif</label>
+        <tipo>varchar</tipo>
+        <valor>"Chapa Identif"</valor>
+        <paring destino="nrocha" operador="=">nrofab</paring>
+        <paring destino="nrovin" >nrovin</paring>
+
+      </field>    
+      <field id="paralcm" deshabilitado="true" local="true" linkint="cert_plcm_imp.xml" linkdes="Imprimir Cert.p/LCM" Formstyle="display:none;" >
+        <expression>(case when PEDCOTIZ.nrocha IS NOT NULL THEN  'Cert.p/LCM.' END)</expression>
+
+        <label>Cert.p/LCM</label>
+        <tipo>varchar</tipo>
+        <valor>"Cert.p/LCM"</valor>
+        <paring destino="nrofab" operador="=">nrofab</paring>
+        <paring destino="nrovin" >nrovin</paring>
+
+      </field>    
+
+      <field id="norodamiento" deshabilitado="true" local="true" linkint="fabricacion/cert_norodamiento_imp.xml" linkdes="Imprimir Cert.No Rodamiento" Formstyle="display:none;" >
+
+        <expression>(case when PEDCOTIZ.nrocha IS NOT NULL THEN  'Cert.Nº.Rodam' END)</expression>
+        <label>Cert.No.Rodam.</label>
+        <tipo>varchar</tipo>
+        <valor>"Cert.No.Rodam."</valor>
+        <paring destino="nrofab" operador="=">nrofab</paring>
+        <paring destino="nrovin" >nrovin</paring>
+
+      </field> 
+  
+      <field id="user" deshabilitado="true" _Formstyle="display:none;" noshow="true">
+        <label>usuario</label>
+        <tabla_ex id="HTXUSERS">
+          <field id="login2" >
+          <expression>LCASE(login)</expression>
+          </field>
+          <field id="nombre" >
+            <expression>CONCAT(nombre, ' ', apellido)</expression>
+          </field>
+          
+        </tabla_ex>         
+        <valor eval="true">$_SESSION['usuario']</valor>
+        <tipo>varchar</tipo>
+      </field>
+	<field id="observacion_impresion" >
+	    <label>Observación Impresión</label>
+	    <tipo>varchar</tipo>
+	    <size>500</size>
+	</field>
+-->
+      <group>
+        <field id="nrofab"></field>
+      </group>
+         <order>
+        <field id="nrofab" orderType="DESC"></field>
+      </order>
+    </table>
+    <join tipo="left">
+        <table id="PEDCOTIZ">
+          <field id="nrocha">
+                 <condicion operador="=">CERTFABRICACION.nrofab</condicion>
+          </field>
+        </table>     
+    </join>
+    <join tipo="left">
+      <table id="CHASIS">
+        <field id="nrocha">
+          <condicion operador="=">CERTFABRICACION.nrofab</condicion>
+        </field>
+      </table> 
+    </join>    
+    
+    <join tipo="left">
+        <table id="HOMOLOGMOD">
+            <field id="id_homologacion">
+              <condicion operador="=">ifnull(PEDCOTIZ.homologacion_id, CERTFABRICACION.homologacion_id)</condicion>
+            </field>
+        </table>     
+    </join>
+
+    <join tipo="left">
+               <table id="CARROCERIA">
+          <field id="nrocar">
+                 <condicion operador="=">HOMOLOGMOD.nrocar</condicion>
+          </field>
+        </table>     
+    </join>    
+    <join tipo="left">
+      <table id="MARCHASIS">
+        <field id="marcod">
+          <condicion operador="=">HOMOLOGMOD.marcod</condicion>
+        </field>
+      </table> 
+    </join>    
+    <join tipo="left">
+      <table id="MODCHASIS">
+        <field id="modcha">
+          <condicion operador="=">HOMOLOGMOD.modcha</condicion>
+        </field>
+        <field id="marcod">
+          <condicion operador="=">HOMOLOGMOD.marcod</condicion>
+        </field>
+        <field id="id_modelo">
+          <condicion operador="=">HOMOLOGMOD.modelo_id</condicion>
+        </field>
+      </table> 
+    </join>
+					<join tipo="left">
+						<table id="MARCAMOTOR">
+							<field id="idMarca">
+								<condicion operador="=">CHASIS.idMarcaMotor</condicion>
+							</field>
+						</table>
+					</join>				   
+<!--    <join tipo="left">
+      <table id="HTXLOG">
+        <field id="xmlprog">
+          <condicion operador="=">'certfabricacion.xml'</condicion>
+        </field>
+        <field id="obs">
+          <condicion operador="like">CERTFABRICACION.nrofab</condicion>
+        </field>
+      </table> 
+    </join>     -->    
+  </form>     
+</histrix> 

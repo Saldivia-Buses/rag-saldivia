@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert">
+  <title>ARTICULOS POR SECTOR</title>
+  <obs></obs>
+  <form >
+    <table id="PROD_PROCESOS" label="insert procesos">
+
+      <field id="id_proceso"      id_temp="new_proceso_id" />
+      <field id="nombre_proceso"  id_temp="nombre_proceso" />
+      <field id="descripcion_proceso"  id_temp="descripcion_proceso" />
+      <field id="homologacion_id" id_temp="new_homologacion_id" />
+      <field id="procesopadre_id"  id_temp="new_procesopadre_id" />
+      
+    </table>
+  </form>     
+</histrix>

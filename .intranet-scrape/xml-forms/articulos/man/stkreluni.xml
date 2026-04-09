@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8" ?>
+   <histrix tipo="abm-mini">
+       <title>stkreluni</title>
+        <obs></obs>
+               <form >
+					<table id="STKRELUNI" label="Relacion de medidas">
+						<field id="siscod" oculto="true">
+							<label>Codigo Sistema.. </label>
+							<help>
+							</help>
+						</field>
+						
+						<field id="artcod" oculto="true">
+							<label>Codigo Articulo</label>
+							<help>
+							</help>
+						</field>
+						<field id="cant1">
+							<label>Cantidad 1 </label>
+							<help> Cantidad	</help>
+						</field>
+						<field id="unicod1">
+							<label>Unidad1 </label>
+							<help>Unidad de Medida</help>
+							<tabla_ex id="FSMUNIDS">
+								<field id="unicod"></field>
+								<field id="uninom"></field>
+							</tabla_ex>
+							
+						</field>
+						<field id="cant2">
+							<label>Cantidad 2 </label>
+							<help>Cantidad</help>
+						</field>
+						<field id="unicod2">
+							<label>Unidad2 </label>
+							<help>Unidad de Medida</help>
+							<tabla_ex id="FSMUNIDS">
+								<field id="unicod"></field>
+								<field id="uninom"></field>
+							</tabla_ex>
+						</field>
+					</table>
+               </form>
+        </histrix>

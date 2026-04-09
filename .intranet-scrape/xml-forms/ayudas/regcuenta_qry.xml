@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ayuda">
+  <title>Movimientos</title>
+  <obs/>
+  <form>
+    <table id="REG_CUENTA">
+      <field id="nro_cuenta" _noshow="false" esClave="true">
+        <label>Cta</label>
+        <detalle>nro_cuenta</detalle>
+      </field>
+      <field id="nombre_cuenta">
+        <label>Nombre</label>
+        <detalle>nombre</detalle>
+      </field>
+      <field id="id_regcuenta" autoinc="true" noshow="true" esClave="true">
+        <label>Numero Cuenta</label>
+        <detalle>regcuenta_id</detalle>
+      </field>
+
+      <field id="iva_id" noshow="true">
+        <label>Condicion Iva</label>
+        <detalle>iva</detalle>
+      </field>
+      <field id="iva_id" noshow="true">
+        <label>Condicion Iva</label>
+        <detalle>iva</detalle>
+      </field>
+      <field id="ref_cuenta" noshow="true">
+        <label>detalle</label>
+        <detalle>referencia</detalle>
+      </field>
+      <field id="letra" tabla="GEN_IVA" noshow="true">
+        <label>letra</label>
+        <detalle>letra_movimiento</detalle>
+      </field>
+      <field id="abreviacion_iva" tabla="GEN_IVA" noshow="true">
+        <label>Abr</label>
+        <detalle>categoria_iva</detalle>
+      </field>
+      <field id="cuit_cuenta">
+        <label>Cuit</label>
+        <detalle>CUIT</detalle>
+      </field>
+      <field id="cod_direccion">
+        <label>Direccion</label>
+        <detalle>direccion</detalle>
+      </field>
+      <field id="nombre_localidad" tabla="GEN_LOCALIDADES">
+        <label>Localidad</label>
+        <detalle>localidad</detalle>
+      </field>
+      <field id="localidad_id" noshow="true">
+        <label>id_localidad</label>
+        <detalle>CP</detalle>
+      </field>
+      <field id="provincia_id" noshow="true">
+        <!--<tabla_ex xml="general/provicias_crud.xml">
+		</tabla_ex>-->
+        <label>id_Provincia</label>
+      </field>
+      <field id="tel_cuenta">
+        <label>Telefono</label>
+        <detalle>telefono</detalle>
+      </field>
+      <field id="nombre_provincia" tabla="GEN_PROVINCIAS">
+        <label>Provincia</label>
+        <detalle>provincia</detalle>
+      </field>
+      <field id="percepcion" noshow="true">
+        <label>Percepcion</label>
+        <detalle>percepcion</detalle>
+      </field>
+      <field id="subsistema_id" noshow="true" esClave="true">
+        <label>Subsistema</label>
+      </field>
+      <field id="concepto_id" noshow="true" local="true">
+        <label>concepto</label>
+      </field>
+      <field id="npv_movimiento" noshow="true" local="true">
+        <label>Npv</label>
+      </field>
+      <field id="cuenta_debe" local="true" noshow="true">
+        <expresion>select (CASE WHEN count(cuenta_id) != 0 THEN cuenta_id ELSE (select cuenta_debe_id from GEN_SUBSISTEMAS where id_subsistema= subsistema_id )END) from REG_CUENTA_IMPUTACION where REG_CUENTA_IMPUTACION.regcuenta_id = REG_CUENTA.id_regcuenta and doh = 0 limit 1</expresion>
+        <label>Debe</label>
+        <detalle>cuenta_prov_debe</detalle>
+      </field>
+      <field id="cuenta_haber" local="true" _noshow="true">
+        <expresion>(Select cuenta_id from REG_CUENTA_IMPUTACION where REG_CUENTA_IMPUTACION.regcuenta_id = REG_CUENTA.id_regcuenta and doh = 1 limit 1)</expresion>
+        <label>Haber</label>
+        <detalle>cuenta_prov_haber</detalle>
+      </field>
+      <field id="nro_recibo" local="true" noshow="true">
+        <expresion>SELECT LPAD(numero + 1, 8, 0) from REG_NUMERADORES where subsistema_id = REG_CUENTA.subsistema_id and regconcepto_id = (SELECT regconceptoing_id from GEN_SUBSISTEMAS where id_subsistema = REG_CUENTA.subsistema_id )</expresion>
+        <label>nro_recibo</label>
+        <detalle>movimiento_rec</detalle>
+      </field>
+      <field id="recibo" local="true" noshow="true">
+        <expresion>SELECT regconceptoing_id from GEN_SUBSISTEMAS where id_subsistema = REG_CUENTA.subsistema_id</expresion>
+        <detalle>recibo</detalle>
+      </field>
+      <field id="debe" local="true" noshow="true">
+        <expresion>SELECT (CASE WHEN imputacion_concepto = 1 THEN 0  ELSE 1 END) from REG_CONCEPTOS where subsistema_id = REG_CUENTA.subsistema_id and REG_CONCEPTOS.id_concepto = (SELECT regconcepto_id from CAJ_CONCEPTOS_REG where subsistema_id = REG_CUENTA.subsistema_id and id_regconceptomos = '[__concepto_id__]')</expresion>
+        <detalle>debe</detalle>
+      </field>
+      <field id="puesto_recibo" local="true" noshow="true">
+        <expresion>SELECT LPAD(puesto, 4, 0) from REG_NUMERADORES where subsistema_id = REG_CUENTA.subsistema_id and regconcepto_id = (SELECT regconceptoing_id from GEN_SUBSISTEMAS where id_subsistema = REG_CUENTA.subsistema_id )</expresion>
+        <label>puesto_recibo</label>
+        <detalle>puesto_rec</detalle>
+      </field>
+      <field id="nro_concepto" local="true" noshow="true">
+        <expresion>SELECT regconcepto_id from CAJ_CONCEPTOS_REG where subsistema_id = REG_CUENTA.subsistema_id and id_regconceptomos = '[__concepto_id__]'</expresion>
+        <label>Prueba</label>
+        <detalle>concepto_id</detalle>
+        <detalle>prueba</detalle>
+      </field>
+      <field id="cuenta" noshow="true">
+        <expresion>select (CASE WHEN count(cuenta_id) != 0 THEN cuenta_id ELSE (select cuenta_debe_id from GEN_SUBSISTEMAS where id_subsistema= subsistema_id )END) from REG_CUENTA_IMPUTACION where REG_CUENTA_IMPUTACION.regcuenta_id = REG_CUENTA.id_regcuenta and doh =(SELECT (CASE WHEN imputacion_concepto = 1 THEN 0  ELSE 1 END) from REG_CONCEPTOS where subsistema_id = REG_CUENTA.subsistema_id and REG_CONCEPTOS.id_concepto = (SELECT regconcepto_id from CAJ_CONCEPTOS_REG where subsistema_id = REG_CUENTA.subsistema_id and id_regconceptomos = '[__concepto_id__]'))</expresion>
+        <label>Cu3nta</label>
+        <detalle>cuentas</detalle>
+      </field>
+      <field id="numero" local="true" noshow="true">
+        <expresion>SELECT LPAD(numero + 1, 8, 0) from REG_NUMERADORES where subsistema_id = REG_CUENTA.subsistema_id and regconcepto_id = (SELECT regconcepto_id from CAJ_CONCEPTOS_REG where subsistema_id = REG_CUENTA.subsistema_id and id_regconceptomos = '[__concepto_id__]') and letra = GEN_IVA.letra and puesto = '[__npv_movimiento__]'</expresion>
+        <detalle>movimiento</detalle>
+      </field>
+      <field id="puesto" local="true" noshow="true">
+        <expresion>SELECT LPAD( puesto, 4, 0) from REG_NUMERADORES where subsistema_id = REG_CUENTA.subsistema_id and regconcepto_id = (SELECT regconcepto_id from CAJ_CONCEPTOS_REG where subsistema_id = REG_CUENTA.subsistema_id and id_regconceptomos = '[__concepto_id__]') and letra = GEN_IVA.letra and puesto = '[__npv_movimiento__]'</expresion>
+        <detalle>puesto</detalle>
+      </field>
+      <field id="baja_cuenta" noshow="true">
+        <label>baja</label>
+        <condicion operador="=">'0000-00-00'</condicion>
+      </field>
+    </table>
+    <join>
+      <table id="GEN_SUBSISTEMAS">
+        <field id="id_subsistema">
+          <condicion operador="=">'[__subsistema_id__]'</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="GEN_LOCALIDADES">
+        <field id="id_localidad">
+          <condicion operador="=">REG_CUENTA.localidad_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="GEN_IVA">
+        <field id="id_iva">
+          <condicion operador="=">REG_CUENTA.iva_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="GEN_PROVINCIAS">
+        <field id="id_provincia">
+          <condicion operador="=">REG_CUENTA.provincia_id</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>

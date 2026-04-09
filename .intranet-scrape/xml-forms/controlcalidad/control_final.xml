@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="grid"  deleteRow="false" imprime="false" procesa="true" inserta="false">
+	<title>Control Calidad</title>
+	<obs/>
+        <eventos>
+                <event id="procesar">close</event>
+        </eventos>	
+	<form>
+		<table id="PROD_CONTROLES">
+		    <movimientos>
+			<relacion id="prod_controlmovim_ins.xml" />
+		    </movimientos>
+			<title>Controles</title>
+			<field id="habilitado" oculto="true">
+			    <condicion operador="=">0</condicion>
+			</field>
+			<field id="id_prodcontrol" noshow="true">
+			</field>
+			<field id="nrofab_id" noshow="true" local="true">
+			</field>
+			<field id="id_controlmovim" noshow="true">
+			    <expression>id_controlmovim</expression>
+			</field>
+			<!--
+			<field id="seccion_coche_id" style="font-size:16px;color:green;" PDFcolWidth="30">
+				<label>Seccion Coche</label>
+				<options>
+				    <option valor="1">Frente Ext</option>
+				    <option valor="2">Lateral Izquierdo</option>
+				    <option valor="3">Lateral Derecho</option>
+				    <option valor="4">Culata</option>
+				    <option valor="5">Interior</option>
+				    
+				    
+				</options>
+				
+			</field>
+		-->
+
+			<field id="seccion_id" noshow="true"/>43
+			<field id="nombre_control"  style="font-size:16px;" PDFcolWidth="90">
+				<label>Control</label>
+			</field>
+			<field id="valor_control"   tabla="PROD_CONTROL_MOVIM" style="font-size:16px;" _local="true" PDFcolWidth="10">
+				<label>Valor</label>
+				<tipo>check</tipo>
+			</field>
+			<field id="observacion_control"  tabla="PROD_CONTROL_MOVIM"   style="font-size:16px;"  editable="true">
+				<label>Observacion</label>
+			</field>
+			<field id="fecha_control"  tabla="PROD_CONTROL_MOVIM"  editable="true" deshabilitado="false">
+				<label>Fecha</label>
+				<tipo>date</tipo>
+				<expression>ifnull(fecha_control, date(now()))</expression>
+			</field>
+		</table>
+		<join tipo="left">
+		    <table id="PROD_CONTROL_MOVIM">
+			<field id="nrofab_id">
+			    <condicion operador="=">[__nrofab_id__]</condicion>
+			</field>
+			<field id="prodcontrol_id">
+			    <condicion operador="=">id_prodcontrol</condicion>
+			</field>
+		    </table>
+		</join>
+
+	</form>
+</histrix>

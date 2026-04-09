@@ -1,0 +1,248 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" preloadData="false">
+<title>Ventas por Periodo</title>
+<obs/>
+
+<form>
+
+ 	<table id="STK_MOVIMIENTOS" label="Articulos">
+
+
+		<filters>
+
+			<field id="fecha_movimiento">
+				<label>Desde Fecha</label>
+				<tipo>date</tipo>
+				<valor>today</valor>
+				<operador>&gt;=</operador>
+			</field>
+
+			<field id="fecha_movimiento">
+				<label modpos="nobr">Hasta Fecha</label>
+				<tipo>date</tipo>
+				<valor>today</valor>
+				<operador>&lt;=</operador>
+			</field>
+
+			<field id="stkdeposito_id" tabla="STK_MOVIMIENTOS">
+				<label modpos="nobr">Deposito</label>
+				<operador>=</operador>
+			</field>
+
+			<field id="tipo_costo" local="true">
+				<label modpos="nobr">Costo</label>
+			</field>
+
+			<field id="moneda_id">
+				<operador>=</operador>
+				<label modpos="nobr">Moneda</label>
+				<valor>1</valor>
+			</field>
+
+			<field id="stkfamilia_id">
+				<label>Familia</label>
+				<operador>=</operador>
+			</field>
+
+			<field id="stkrubro_id" tabla="STK_MOVIMIENTOS">
+				<label modpos="nobr">Rubro</label>
+				<operador>=</operador>
+			</field>
+
+			<field id="stkmarca_id">
+				<label modpos="nobr">Marca</label>
+				<operador>=</operador>
+			</field>
+
+			<field id="filtro_agrupador" local="true">
+				<label modpos="nobr">Agrupar Por</label>
+			</field>
+
+		</filters>
+
+
+		<field id="id_stkmovimiento" noshow="true" ></field>
+
+		<field id="stkdeposito_id" tabla="STK_MOVIMIENTOS" noshow="true">
+			<helper type="combo" xml="stkdeposito_qry.xml" dir="/ayudas" empty="true" />
+		</field>
+	
+		<field id="filtro_agrupador" local="true" noshow="true">
+			<label>Agrupar Por</label>
+			<options>
+				<option valor="0">Rubro</option>
+				<option valor="1">Familia</option>
+				<option valor="2">Marca</option>
+			</options>
+		</field>
+
+		<field id="agrupador" break="true" noshow="true">
+			<expression>case when '[__filtro_agrupador__]' = 0 then STK_MOVIMIENTOS.stkrubro_id
+					 when '[__filtro_agrupador__]' = 1 then STK_ARTICULOS.stkfamilia_id
+				    else STK_ARTICULOS.stkmarca_id end</expression>
+		</field>
+
+		<field id="ordena" noshow="true">
+			<expression>case when '[__filtro_agrupador__]' = 0 then STK_RUBROS.nombre_rubro
+					 when '[__filtro_agrupador__]' = 1 then STK_FAMILIAS.nombre_familia
+				    else STK_MARCAS.nombre_marca end</expression>
+		</field>
+
+		<field id="fecha_movimiento" noshow="true" />    
+
+		<field id="stkfamilia_id" tabla="STK_ARTICULOS">
+			<label>Familia</label>
+			<helper type="combo" xml="stkfamilia_qry.xml" dir="/ayudas" empty="true" />
+		</field>
+
+		<field id="stkrubro_id" multiple="true">
+			<label>Rubro</label>
+			<helper type="combo" xml="stkrubro_qry.xml" dir="/ayudas" empty="true" />
+		</field>
+
+		<field id="stkmarca_id" tabla="STK_ARTICULOS" multiple="true">
+			<label>Marca</label>
+			<helper type="combo" xml="stkmarca_qry.xml" dir="/ayudas" empty="true" />
+		</field>
+      
+		<field id="nombre_rubro" tabla="STK_RUBROS" noshow="true" />
+
+		<field id="codigo_barra" tabla="STK_ARTICULOS">
+			<label>Codigo</label>
+		</field>
+
+		<field id="nombre_articulo" tabla="STK_ARTICULOS">
+			<label>Articulo</label>
+		</field>
+
+		<field id="cantidad" suma="true">
+			<label>Cantidad</label>
+			<expresion>sum(STK_MOVIMIENTOS.cantidad)</expresion>
+			<tipo>integer</tipo>
+			<formato>%d</formato>
+		</field>
+
+		<field id="total_costo" suma="true">
+			<label>Costo</label>      
+			<expression>SUM((case when STK_CONCEPTOS.tipo_concepto = 1 then 1 else -1 end) * STK_MOVIMIENTOS.cantidad * 
+						CASE WHEN '[__tipo_costo__]' = '0'
+							THEN	
+							(
+								IF(STK_ARTICULOS.genmoneda_origen_id = [__moneda_id__], 1,
+								IF(STK_ARTICULOS.genmoneda_origen_id = 1,
+								(1 / GEN_FN_COTIZACION([__moneda_id__],current_date())), 
+								GEN_FN_COTIZACION(STK_ARTICULOS.genmoneda_origen_id,current_date()))) 
+								* ifnull(STK_ARTICULOS.precio_costo,0)
+							)
+							ELSE
+							(
+								IF(STK_MOVIMIENTOS.monedacosto_id = [__moneda_id__], 1,
+								IF(STK_MOVIMIENTOS.monedacosto_id = 1,
+								(1 / GEN_FN_COTIZACION([__moneda_id__],STK_MOVIMIENTOS.fecha_movimiento)), 
+								GEN_FN_COTIZACION(STK_MOVIMIENTOS.monedacosto_id,STK_MOVIMIENTOS.fecha_movimiento))) 
+								* ifnull(STK_MOVIMIENTOS.precio_costo,0)
+							)
+						END)</expression>
+			<tipo>numeric</tipo>
+		</field>
+
+		<field id="total_detalle" suma="true">
+			<label>Total</label>
+			<expresion>sum((case when STK_CONCEPTOS.tipo_concepto = 1 then 1 else -1 end) * STK_MOVIMIENTOS.precio_total *
+		IF([__moneda_id__] = 1, 1, (1 / GEN_FN_COTIZACION([__moneda_id__],STK_MOVIMIENTOS.fecha_movimiento))))</expresion>
+			<tipo>numeric</tipo>
+		</field>
+
+		<field id="diferencia" suma="true" local="true">
+			<label>Diferencia</label>
+			<if exp="true">
+				<true>(total_detalle + 0) - (total_costo + 0)</true>
+				<false>0</false>
+			</if>
+			<tipo>numeric</tipo>
+		</field>
+
+		<field id="stklista_id" noshow="true">
+			<condicion operador="!=">0</condicion>
+		</field>
+
+		<field id="moneda_id" local="true" noshow="true">
+			<helper type="combo" xml="monedas_qry.xml" dir="/ayudas" />
+			<label>MonedaFiltro</label>
+		</field>
+
+		<field id="tipo_costo" local="true" noshow="true">
+			<helper type="combo">
+				<option value="0">Actual</option>
+				<option value="1">Historico</option>
+			</helper>
+		</field>
+
+		
+
+		<group>
+			<field id="agrupador" />
+			<field id="stkarticulo_id" tabla="STK_MOVIMIENTOS" />
+		</group>
+
+		<order>
+			<field id="ordena" />
+			<field id="nombre_articulo" tabla="STK_ARTICULOS" />
+		</order>
+
+	</table>
+
+	<join>
+		<table id="STK_CONCEPTOS">
+			<field id="id_stkconcepto">
+				<condicion operador="=">STK_MOVIMIENTOS.stkconcepto_id</condicion>
+			</field>
+			<field id="tipo_concepto">
+				<condicion operador="=">1</condicion>
+			</field>
+		</table>
+	</join>
+
+	<join>
+		<table id="STK_RUBROS">
+			<field id="id_stkrubro">
+				<condicion operador="=">STK_MOVIMIENTOS.stkrubro_id</condicion>
+			</field>
+		</table>
+	</join>
+
+	<join>
+		<table id="STK_ARTICULOS">
+			<field id="id_stkarticulo">
+				<condicion operador="=">STK_MOVIMIENTOS.stkarticulo_id</condicion>
+			</field>
+		</table>
+	</join>
+
+	<join tipo="left">
+		<table id="STK_LISTAS">
+			<field id="id_stklista">
+				<condicion operador="=">STK_MOVIMIENTOS.stklista_id</condicion>
+			</field>
+		</table>
+	</join>
+
+	<join tipo="left">
+		<table id="STK_FAMILIAS">
+			<field id="id_stkfamilia">
+				<condicion operador="=">STK_ARTICULOS.stkfamilia_id</condicion>
+			</field>
+		</table>
+	</join>
+
+	<join tipo="left">
+		<table id="STK_MARCAS">
+			<field id="id_stkmarca">
+				<condicion operador="=">STK_ARTICULOS.stkmarca_id</condicion>
+			</field>
+		</table>
+	</join>
+
+   </form>
+</histrix>
+

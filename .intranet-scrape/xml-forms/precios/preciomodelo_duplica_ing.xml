@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" subtipo="vertical"  imprime="false" >
+  <title>PRECIOS POR MODELO</title>
+  <obs/>
+  <form >
+    <table id="PRECIOMODELO" styleTbody="height:250px;">
+      <movimientos cabecera="preciomodelo_duplica_cab.xml">
+        <relacion id="preciomodelo_duplica_cab_ingmov.xml"></relacion> 
+      
+        <relacion id="preciomodelo_duplica_ingmov.xml"></relacion> 
+      </movimientos>        Dos Ejes .
+      <title>Precios por modelo</title>
+
+      <filters>
+
+        <field id="idLista" PDFsize="10">
+          <label modpos="nobr">Lista</label>
+          <help>Lista</help>
+          <operador>=</operador>
+          <tipo>integer</tipo>
+        </field>
+        
+      </filters>   
+  
+      <field id="idLista" noshow="true" PDFsize="10" tabla="PRECIOMODELO">
+        <tabla_ex id="LISTAPRECIOMODELO">
+          <field id="idLista" >
+          </field>
+          <field id="nom" >
+            <expression>concat('Nro ',idLista,' - Vigencia Desde: ' , DATE_FORMAT(fecha, '%d/%m/%Y'))</expression>
+          </field>
+          <field id="fecha" orden="true" tipoOrden="DESC">
+          </field>         
+          <order>
+            <field id="fecha"></field>
+          </order>
+        </tabla_ex>        
+        <label modpos="nobr">Lista</label>
+        <help>Lista</help>
+      </field>
+        
+      <field id="nrocar">
+        <label modpos="nobr">Carroceria</label>
+        <tabla_ex id="CARROCERIA">
+          <field id="nrocar">
+            <label>Codigo</label>
+          </field>
+          <field id="desabv">
+            <label>Modelo</label>
+          </field>
+          <order>
+            <field id="desabv" />
+          </order>
+          <field id="vigente">
+              <condicion operador="=">1</condicion>
+          </field>          
+        </tabla_ex>
+      </field>
+      
+      <field id="idGrupo">
+        <label modpos="nobr">Grupo</label>
+      </field>
+      <!-- <field id="marcod">
+        <label modpos="nobr" >Marca</label>
+        <help>Marca del Chasis</help>
+        <tabla_ex id="MARCHASIS" vacio="true">
+          <field id="marcod" clave="true">
+            <label>Codigo</label>
+            <help>Codigo de Chasis</help>
+          </field>
+          <field id="mardes">
+          </field>          
+        </tabla_ex>
+        <actualiza>
+          <field destino="marcod" id="modcha"/>
+        </actualiza>
+      </field>
+      <field id="modcha" >
+        <label modpos="nobr" colstyle="display:none;">Modelo</label>
+        <help>Modelo del Chasis</help>
+        <tabla_ex id="MODCHASIS" vacio="true">
+          <field clave="true" id="modcha">
+            <label>Modelo</label>
+            <help>Codigo del Modelo de Chasis</help>
+          </field>
+          <field id="moddes">
+            <label>Descripcion</label>
+            <help>Descripcion del Modelo</help>
+          </field>
+          <field id="marcod">
+            <label>Marca Chasis</label>
+          </field>
+        </tabla_ex>
+      </field>    
+      
+      
+      <field id="moddes" tabla="MODCHASIS" >
+        <expression>MODCHASIS.moddes</expression>
+        <label Formstyle="display:none;" modpos="nobr">Modelo de Chasis</label>
+        <tipo>varchar</tipo>
+      </field> -->
+      <field id="asientos">
+        <label>Asientos</label>
+        <label>Cantidad de Asientos</label>
+      </field>
+      <field id="tipserv">
+        <label modpos="nobr">Tipo</label>
+        <label>Tipo de Servicio</label>
+              <tabla_ex id="TIPOSERVICIO">
+                        <field id="tipserv">
+                        </field>
+                        <field id="servdes">
+                        </field>          
+        </tabla_ex>
+
+        
+      </field>
+      
+      <field id="banbar">
+        <label modpos="nobr">Baño Mbar</label>
+        <help>Baño / Minibar</help>
+        <options>
+          <option valor="0">--</option>
+          <option valor="1">Si</option>          
+        </options>
+      </field>
+      <field id="bastidor">
+        <label modpos="nobr">Bastidor</label>
+        <options>
+          <option valor="0">--</option>
+          <option valor="1">Si</option>          
+        </options>
+        <help>Bastidor</help>
+        
+      </field>      
+      <field id="largo">
+        <label modpos="nobr">Largo (m3)</label>
+        <help>Largo Expresado en Metros</help>
+      </field>            
+      <field id="bodega">
+        <label modpos="nobr">Bodega (m3)</label>
+        <help>Capacidad de Bodega expresado en Metros Cúbicos</help>
+      </field>            
+      
+      <field id="precio">
+        <label  style="color:green; font-size:16px;">Precio conces.</label>
+        <help>Precio</help>
+        <tipo>decimal</tipo>
+      </field>
+      <field id="margen" _noshow="true">
+        <label modpos="nobr">% Rec</label>
+        <help>Recargo precio al público</help>
+<!--        <valor>0.035</valor> -->
+      </field>
+      <field id="precio2" noshow="true">
+        <expression>precio * (1 + margen)</expression>
+        <label modpos="nobr" style="color:red; font-size:16px;">Precio público</label>
+        <help>Precio</help>
+      </field>
+      <field id="prec2" local="true" >
+        
+        <label modpos="nobr" style="color:red; font-size:16px;">Nuevo Precio conces.</label>
+        <if exp="true">
+          <true>precio + precio / 100 *  aumento</true>
+          <false>0</false>
+        </if>
+        <help>Nuevo Precio Conces.</help>
+        <tipo>decimal</tipo>
+      </field>        
+      <order>
+        <field id="nrocar" tabla="PRECIOMODELO"></field>
+        <field id="idGrupo" tabla="PRECIOMODELO"></field>
+        <field id="asientos" tabla="PRECIOMODELO"></field>        
+        
+        
+      </order>
+    </table>
+    <join tipo="left">
+               <table id="CARROCERIA">
+          <field id="nrocar">
+                 <condicion operador="=">PRECIOMODELO.nrocar</condicion>
+          </field>
+        </table>    
+    </join>    
+  <!--  <join tipo="left">
+      <table id="MARCHASIS">
+        <field id="marcod">
+          <condicion operador="=">PRECIOMODELO.marcod</condicion>
+        </field>
+      </table>
+    </join>    
+    <join tipo="left">
+      <table id="MODCHASIS">
+        <field id="modcha">
+          <condicion operador="=">PRECIOMODELO.modcha</condicion>
+        </field>
+        <field id="marcod">
+          <condicion operador="=">PRECIOMODELO.marcod</condicion>
+        </field>
+      </table>
+    </join>
+    -->
+  </form>
+</histrix>

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud" subtipo="vertical">
+<title>Atributos</title>
+<obs></obs>
+<form detalle="htx_attribute_options.xml" inline="true">
+    <table id="HTX_ATTRIBUTES">
+	<!--
+        <title>Seccion</title>
+
+        <filters auto="true">
+            <field id="prdseccion_id" required="false">
+                <label modpos="nobr">Sección</label>
+                <operador>=</operador>
+            </field>
+
+            <field id="estandar_adicional">
+                <label modpos="nobr">Adicional</label>
+                <operador>=</operador>
+            </field>
+
+        </filters>
+
+        <field id="prdseccion_id" _colstyle="display:none;" _valauto="true" required="true">
+            <label>Atributo</label>
+            <helper id="TABLE_SECCION" type="combo" empty="true">
+            <field id="id_prdseccion" />
+            <field id="nombre_seccion" />
+            </helper>
+        </field>
+-->
+        <field id="table_name" oculto="true" />
+
+        <field id="id_attribute" autoinc="true" noshow="true" deshabilitado="true" _break="true">
+    	    <detalle>attribute_id</detalle>
+    	    <valor>0</valor>
+        </field>
+
+        <field id="attribute_order" _activador="activo">
+            <label>orden</label>
+        </field>
+        
+        <field id="attribute_name" _activador="activo">
+            <label _modpos="nobr" colspan="4">Nombre Atributo</label>
+            <help>Nombre del atributo</help>
+        </field>             
+
+
+        <field id="attribute_type" _activador="activo">
+            <label >Tipo</label>
+            <help>tipo del atributo</help>
+            <helper type="combo" empty="true">
+            
+        	<option value=""></option>
+        	<option value="varchar">Texto</option>
+        	<option value="integer">Entero</option>
+        	<option value="decimal">Decimal</option>
+        	<option value="file">Archivo</option>
+        	<option value="check">checkbox</option>
+        	<option value="radio">opciones</option>
+        	<option value="object">Tabla</option>
+            </helper>
+        </field>
+        
+	<order>
+            <field id="attribute_order" />
+	</order>
+
+    </table>
+</form>	   
+</histrix>

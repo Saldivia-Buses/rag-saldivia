@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="crud">
+  <title>Formas de pago</title>
+  <obs/>
+  <form>
+    <table id="CAJ_FORMAS_PAGO" label="Formas de pago">
+      <field id="id_cajformapago" noshow="true"/>
+      <fieldGroup>
+        <field id="descripcion_forma">
+          <label>Descripcion</label>
+          <help>Descripcion del concepto</help>
+        </field>
+        <field id="tipo_forma">
+          <label>Tipo de forma</label>
+          <helper type="combo">
+            <option value="0">Cobro</option>
+            <option value="1">Pago</option>
+          </helper>
+          <help>Tipo de forma de pago</help>
+          <actualiza>
+            <field id="stkconcepto_forma_id" destino="imputacion_concepto"/>
+          </actualiza>
+        </field>
+        <field id="moneda_id">
+          <helper type="combo" xml="monedas_qry.xml" dir="/ayudas"/>
+          <label colstyle="display:none;">Moneda</label>
+          <help>Sistema cta cte</help>
+        </field>
+        <field id="ejecuta_forma">
+          <label colstyle="display:none;">Ejecuta</label>
+          <helper type="combo" empty="true">
+            <option value=""/>
+            <option value="regmovimientos_cobro_ing.xml">Ingresos en Cuenta Corriente</option>
+            <option value="carvalores_cobro_ing.xml">Ingresos Valores a Cartera</option>
+            <option value="regmovimientos_pago_ing.xml">Egresos de Cuenta Corriente</option>
+            <option value="carvalores_pago_ing.xml">Egresos Valores de Cartera</option>
+            <option value="stkmovimientos_forma_ing.xml">Movimiento de Stock</option>
+          </helper>
+        </field>
+        <field id="subsistema_forma_id">
+          <label _colstyle="display:none;">Subsistema</label>
+          <helper type="combo" xml="subsistema_qry.xml" dir="/ayudas" empty="true">
+            <field id="identificacion" noshow="true"/>
+          </helper>
+          <help>Subsistema que Imputa</help>
+          <actualiza>
+            <field id="regconcepto_forma_id" destino="subsistema_id"/>
+          </actualiza>
+        </field>
+        <field id="regconcepto_forma_id">
+          <label _colstyle="display:none;">Concepto</label>
+          <helper type="combo" xml="regconcepto_qry.xml" dir="/ayudas" empty="true">
+            <field id="subsistema_id">
+              <condicion operador="=">-1</condicion>
+            </field>
+          </helper>
+          <help>Concepto de comprobante en cuenta corriente</help>
+        </field>
+      </fieldGroup>
+      <fieldGroup>
+		<if>if (strpos($_SESSION['properties']['modulos'],'stock') != false) return true;</if>
+        <field id="stkconcepto_forma_id">
+          <label colstyle="display:none;">Stock</label>
+          <helper type="combo" xml="stkconcepto_qry.xml" dir="/ayudas" empty="true">
+            <field id="imputacion_concepto">
+              <expression>CASE WHEN tipo_concepto = 0 then 0 else 1 END</expression>
+            </field>
+          </helper>
+        </field>
+      </fieldGroup>
+      <fieldGroup>
+		<if> if (strpos($_SESSION['properties']['modulos'],'contabilidad') != false) return true;</if>
+        <field id="ctbcuenta_forma_id" colstyle="Display:none;">
+          <label>Cuenta Contable</label>
+          <helper type="combo" xml="cuentas_habilitadas_qry.xml" dir="/ayudas" empty="true"/>
+          <help>Cuenta en contabilidad</help>
+          <size>12</size>
+        </field>
+      </fieldGroup>
+      <fieldGroup>
+        <field id="vuelto_forma">
+          <label>Vuelto</label>
+          <helper type="combo">
+            <option value="1">Si</option>
+            <option value="0">No</option>
+          </helper>
+          <help>Admite Vuelto</help>
+        </field>
+        <field id="orden_forma">
+          <label>orden</label>
+          <help>Orden de Carga</help>
+        </field>
+        <field id="grupo_columna">
+          <label>Grupo</label>
+          <helper type="combo">
+            <option value="0">N/A</option>
+            <option value="1">Columna 1</option>
+            <option value="2">Columna 2</option>
+            <option value="3">Columna 3</option>
+            <option value="4">Columna 4</option>
+          </helper>
+          <help>Columna en la consulta de movimientos</help>
+        </field>
+        <field id="default_field_value">
+          <label>valor por defecto</label>
+        </field>
+        <field id="colorize" noshow="true" clasefila="true">
+          <expression>CASE WHEN tipo_forma = 0 then '' else 'resaltado' END</expression>
+        </field>
+      </fieldGroup>
+      <order>
+        <field id="tipo_forma"/>
+        <field id="orden_forma"/>
+      </order>
+    </table>
+  </form>
+</histrix>

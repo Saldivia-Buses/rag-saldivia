@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="grid" modifica="false" borra="false" width="100" deleteRow="false" path="fotos/coches" procesa="false"  inserta="false" imprime="false">
+    <title>Atributos</title>
+    <obs></obs>
+    <form>
+        <table id="PRODUCTO_ATRIBUTOS">
+
+            <movimientos>
+                <relacion id="producto_atributos_valores_ins.xml" />
+                <relacion id="producto_atributos_valores_cotiz_ins.xml" />
+                <relacion id="producto_atributos_valores_adicionales_ins.xml" />
+            </movimientos>
+
+            <title>Seccion</title>
+
+            <field id="nombre_seccion" tabla="PRODUCTO_SECCION">
+                <attribute id="print">consulta_cotizacion</attribute>
+            </field>
+
+            <field id="consulta_cotizacion" local="true" noshow="true" />
+
+            <field id="nrofab" noshow="true" local="true" />
+
+            <field id="pathcorte" local="true" noshow="true">
+                <if exp="true">
+                    <true>'nrofab/corte/'</true>
+                    <false>''</false>
+                </if>
+            </field>
+
+            <field id="id_prdatributo" autoinc="true" noshow="true">
+                <detalle>prdatributo_id</detalle>
+            </field>
+
+            <field id="orden_seccion" tabla="PRODUCTO_SECCION" deshabilitado="true" noshow="true"/>
+
+            <field id="orden_atributo" deshabilitado="true" noshow="true">
+                <label>oden</label>
+            </field>
+
+            <field id="tipo_atributo" noshow="true">
+                <label>Tipo</label>
+                <help>tipo del atributo</help>
+                <attribute id="print">consulta_cotizacion</attribute>
+            </field>
+
+            <field id="prdseccion_id" oculto="true" />
+
+            <field id="helper_xml" noshow="true">
+                <expression>case when helper_xml != '' then helper_xml else 'producto_atrib_opciones_qry.xml' end</expression>
+                <label>xml</label>
+                <size>10</size>
+            </field>
+
+            <field id="helper_dir" noshow="true">
+                <expression>case when helper_dir != '' then helper_xml else '/producto' end</expression>
+                <label>dir</label>
+                <size>10</size>
+            </field>
+
+            <field id="parametros" noshow="true" />
+
+            <field id="zebra" noshow="true" local="true">
+                <if exp="_ORDEN % 2 == 0">
+                    <true>'grisado'</true>
+                    <false>''</false>
+                </if>
+            </field>
+
+            <field id="activo_cotizacion" noshow="true">
+                <condicion operador="=">1</condicion>
+            </field>
+
+            <field id="estandar_adicional" noshow="true">
+                <label>Tipo</label>
+                <options>
+                    <option valor="0">Estandar</option>
+                    <option valor="1">Adicional</option>
+                </options>
+            </field>
+
+            <field id="clase_adicional" clasefila="true" local="true" noshow="true">
+                <expression>case when estandar_adicional = 1 then 'resaltadoRojo' else '' end</expression>
+                <label>calse adicional</label>
+            </field>
+
+            <field id="nombre_atributo">
+                <label>Atributo</label>
+                <help>Nombre del atributo</help>
+            </field>
+
+            <field id="descrip_cotizacion">
+                <label>Descripción</label>
+                <help>Descripcion</help>
+            </field>
+
+            <field id="stkarticulo_id">
+                <label>Adicional</label>
+                <help>Adicional</help>
+            </field>
+
+            <field id="precio_adicional" local="true" editable="true" deshabilitado="false">
+                <label>Precio</label>
+                <expression>SELECT precio1 FROM LISTAPRECIOSDET WHERE LISTAPRECIOSDET.idArticulo = PRODUCTO_ATRIBUTOS.stkarticulo_id ORDER BY vigencia DESC LIMIT 1</expression>
+            </field>
+
+            <field id="nombre_adicional" local="true" noshow="true">
+                <label>Precio</label>
+                <help>Precio</help>
+                <expression>SELECT artdes FROM STKINSUM WHERE STKINSUM.artcod = PRODUCTO_ATRIBUTOS.stkarticulo_id</expression> 
+            </field>
+
+            <field id="fecha_adicional" noshow="true" local="true">
+                <label modpos="nobr">Fecha</label>
+                <help>Fecha de Cotización</help>
+                <tipo>date</tipo>
+                <valor>today</valor>
+            </field>
+
+            <field id="cantidad" noshow="true" local="true">
+                <label modpos="nobr">Cantidad Adicional</label>
+                <help>Cantidad Adicional</help>
+                <valor>1</valor>
+            </field>
+        
+            <field id="valor_atributo" local="true" editable="true" deshabilitado="false" refresh="true">
+                <tipo>check</tipo>
+                <expression>IF(estandar_adicional = 0, 1, 0)</expression>
+            </field>
+
+            <field id="graba_adicional" local="true" refresh="true" noshow="true">
+                <if exp="valor_atributo == 1 &amp;&amp; estandar_adicional == 1">
+                    <true>'1'</true>
+                    <false>'0'</false>
+                </if>
+            </field>
+
+            <field id="homologacion_id" tabla="PRODUCTO_ATRIBUTO_HOMOLOGACION" oculto="true">
+                <label>homolog</label>
+            </field>
+
+            <order>
+                <field id="estandar_adicional" />
+                <field id="orden_seccion" tabla="PRODUCTO_SECCION" />
+                <field id="orden_atributo" />
+            </order>
+
+        </table>
+
+        <join tipo="inner">
+            <table id="PRODUCTO_ATRIBUTO_HOMOLOGACION">
+                <field id="prdatributo_id">
+                    <condicion operador="=">id_prdatributo</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="PRODUCTO_SECCION">
+                <field id="id_prdseccion">
+                    <condicion operador="=">prdseccion_id</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

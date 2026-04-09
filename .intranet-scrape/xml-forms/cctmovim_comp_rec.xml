@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="ficha" sololectura="true" PDFsincabecera="true" autoprint="true">
+       <title>Consulta de Recibos</title>
+        <obs></obs>
+               <form >
+                  <table id="CCTMOVIM" label="Movimientos">
+
+                  <field id="siscod" >
+                      <label>Cod.</label>
+                      <help> </help>
+					  <valor>'02'</valor>
+					  <condicion operador="=">'02'</condicion>
+
+                  </field>
+
+
+				  <field id="condes" tabla="CCTCONCE" oculto="true">
+       	              <label PDFnolabel="true">Tipo</label>
+           	          <help>Tipo de Comprobante</help>
+                  </field>
+
+                  <field id="ctacod" oculto="true" >
+                      <label PDFnolabel="true">Cuenta</label>
+                      <help>Codigo de Cuenta </help>
+                  </field>
+                  <field id="movfec">
+                      <label posx="150" posy="50" PDFnolabel="true" PDFsize="20">Fecha </label>
+                      <help> </help>
+					  <format>d  m  y</format>
+                  </field>
+					  
+                  <field id="ctanom">
+                      <label modpos ="nobr" posx="40" posy="63" PDFnolabel="true">Nombre</label>
+                      <help>Nombre</help>
+					  <tipo>character</tipo>
+                  </field>
+					  
+                  <field id="ivacod" tabla="CCTCUENT" >
+                      <label  modpos="nobr" posx="150" posy="63" PDFnolabel="true">Iva</label>
+                      <help>Nombre</help>
+					  <tabla_ex id="FSMCTIVA">
+						  <field id="ivacod"></field>
+						  <field id="ivanom"></field>
+					  </tabla_ex>
+                  </field>
+
+                  <field id="ctadir" tabla="CCTCUENT">
+                      <label  posx="40" posy="69" PDFnolabel="true">Domicilio</label>
+                      <help>Domicilio</help>
+                  </field>					  
+                  <field id="ctaloc" tabla="CCTCUENT">
+                      <label  modpos="nobr" posx="40" posy="74" PDFnolabel="true">Localidad</label>
+                      <help>Localidad</help>
+                  </field>					  
+                  <field id="prvcod" tabla="CCTCUENT">
+                      <label  posx="40" posy="79" PDFnolabel="true">Provincia</label>
+                      <help>Provincia</help>
+					  <tabla_ex id="FSMPROVS">
+						  <field id="prvcod"></field>
+						  <field id="prvnom"></field>
+					  </tabla_ex>
+                  </field>					  	
+                  <field id="ctanro" tabla="CCTCUENT">
+                      <label  posx="150" posy="79" PDFnolabel="true">Cuit</label>
+                      <help>Cuit</help>
+                  </field>					  					  				  
+
+	             <field id="movnpv" oculto="true">
+                      <label posx="70" posy="20" PDFnolabel="true">Comprobante</label>
+                      <help> Comprobante</help>
+				      <format>%04d</format>
+                  </field>
+                  <field id="movnro" >
+                      <label posx="5" posy="20" PDFnolabel="true"></label>
+                      <help> Numero Comprobante</help>
+				<!--      <format>%012d</format> -->
+                  </field>
+				
+
+					  <!--
+                  <field id="movvto">
+                      <label>Venc. </label>
+                      <help> </help>
+                  </field>
+					  -->
+  				  <field id="text1"  >
+						<expression>movimp</expression>
+	  				    <label posx="20" posy="100" PDFnolabel="true">Recibimos</label>
+						<tipo aletras="true" >char</tipo>
+						<prefijo>Recibimos la suma de Pesos </prefijo>
+				 </field>
+   				  <field id="cajmovim" local="true" obj="cajmovim_recibo.xml" >
+	  				    <label colspan="6" posx="20" posy="+1" PDFnolabel="true">Concepto</label>
+				 </field>					  
+
+				  <field id="cctimput" local="true" obj="cctimput_recibo.xml" >
+	  				  <label colspan="6" posx="20" posy="+1"  PDFsize="7">Imputaciones</label>
+	  				  <paring destino="siscod">siscod</paring>
+  				 </field>					  
+				  <field id="cctimput2" local="true" obj="cctimput_recibo_2.xml" >
+	  				  <label colspan="6" posx="20" posy="+1"  PDFsize="7">Comp.Imputados</label>
+	  				  <paring destino="ctacoddes">ctacod</paring>
+				 </field>
+                 <field id="carchequ" local="true" obj="carchequ_recibo.xml">
+                      <label colspan="6" posx="20" posy="+1" PDFsize="5">Detalle de Valores</label>
+                      <help> </help>
+                  </field>					  				
+
+                 <field id="carchehi" local="true" obj="carchehi_recibo.xml">
+                      <label colspan="6" posx="20" posy="-1"  PDFsize="5">Detalle de valores</label>
+                      <help> </help>
+                  </field>					  				
+					  	  
+                  <field id="movimp" suma="true">
+                      <label posx="160" posy="262" PDFnolabel="true" PDFsize="15">Importe</label>
+                      <help> </help>
+				<!--	  <format>%01.2f</format> -->
+                  </field>
+
+
+    <!--              <field id="movsal" suma="true">
+                      <label>Saldo</label>
+                      <help> </help>
+		    
+                  </field>-->
+
+                  </table>
+
+				  <join tipo="left">
+				 	<table id="CCTCONCE">
+						<field id="siscod" oculto="true">
+						    <label>cctcuent.siscod</label>
+						    <condicion operador="=">CCTMOVIM.siscod</condicion>
+						</field>
+
+						<field id="concod" oculto="true">
+				    		<condicion operador="=">CCTMOVIM.concod</condicion>
+						</field>
+
+						<field id="condes" oculto="true">
+						</field>
+				    </table>
+				  </join>
+				  <join tipo="left">
+				 	<table id="CCTCUENT">
+						<field id="siscod" oculto="true">
+						    <label>cctcuent.siscod</label>
+						    <condicion operador="=">CCTMOVIM.siscod</condicion>
+						</field>
+
+						<field id="ctacod" oculto="true">
+				    		<condicion operador="=">CCTMOVIM.ctacod</condicion>
+						</field>
+				    </table>
+				  </join>				   
+               </form>
+        </histrix>

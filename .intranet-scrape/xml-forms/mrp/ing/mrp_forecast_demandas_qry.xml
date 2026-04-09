@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<histrix tipo="grid" subtipo="vertical" tooltip="false" inserta="false" preloadData="false" deleteRow="false" procesa="true" imprime="false"  preFetch="false" >
+    <title>Forecast Articulos</title>
+    <obs></obs>
+    <form >
+
+
+        <table id="STK_ARTICULOS" label="Forecast">
+	    <movimientos>
+                <relacion id="mrp_forecast_demandas_del.xml"   /> 
+                <relacion id="mrp_forecast_demandas_ins.xml"   /> 
+            </movimientos>			
+
+            <filters>
+                <field id="W1fecha_movimiento" local="true">
+                    <label>Fecha Inicial</label>
+                    <tipo>date</tipo>
+                </field>
+                <field id="W2fecha_movimiento" local="true">
+                    <label>Fecha Final</label>
+                    <tipo>date</tipo>
+                </field>
+                <field id="Cant_DxSem"  local="true" >
+  			<label modpos="nobr">Dias x Semanas</label>
+                </field>
+                <field id="mrpperiodo_id"  local="true">
+		        <label modpos="nobr">Periodo</label>
+                </field>
+                <field id="dias_laborables" deshabilitado="true" local="true">
+  			<label modpos="nobr">Laborables</label>
+                </field>
+
+                <field id="id_stkarticulo" esClave="true">
+                    <label>Código</label>
+                    <help>Codigo de Articulo</help>
+	            <helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas">
+		            <field id="nombre_articulo">
+		                <detalle>nombre_articulo</detalle>
+		            </field>
+		            <field id="produccion_diaria">
+		                <detalle>minimo_ordendetalle</detalle>
+		            </field>
+			</helper>
+		</field>
+                <field id="fecini_mrpperiodo"  local="true" _noshow="true">
+		        <label modpos="nobr">PIni</label>
+                </field>
+                <field id="fecfin_mrpperiodo"  local="true" _noshow="true">
+		        <label modpos="nobr">PFin</label>
+                </field> 
+            </filters>
+            <fieldGroup>
+                <field id="fecini_mrpperiodo"  local="true" noshow="true">
+		        <label modpos="nobr">Ini</label>
+                </field>
+                <field id="fecfin_mrpperiodo"  local="true" noshow="true">
+		        <label modpos="nobr">Fin</label>
+
+                </field>
+                <field id="mrpperiodo_id"  local="true" noshow="true" >
+		        <label modpos="nobr">Periodo</label>
+			<helper type="combo" xml="mrpperiodos_qry.xml" dir="/ayudas" empty="true"/>
+                </field>
+		<field id="mes" noshow="true">
+			<expresion>month('[__fecini_mrpperiodo__]')</expresion>
+                </field>
+		<field id="anio" noshow="true">
+			<expresion>year('[__fecini_mrpperiodo__]')</expresion>
+                </field>
+	
+                <field id="W1fecha_movimiento" local="true" noshow="true">
+                    <label>Fecha Inicial</label>
+                    <tipo>date</tipo>
+                </field>
+                <field id="W2fecha_movimiento" local="true" noshow="true">
+                    <label>Fecha Final</label>
+                    <tipo>date</tipo>
+                </field>
+                <field id="id_stkarticulo"  esClave="true">
+                    <label>Código</label>
+                    <help>Codigo de Articulo</help>
+                    <helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas">
+                        <field id="nombre_articulo">
+	                    <detalle>nombre_articulo</detalle>
+    	                </field>
+        	        <field id="produccion_diaria">
+            	            <detalle>minimo_ordendetalle</detalle>
+            	        </field>
+            	    </helper>
+                </field>
+                <field id="nombre_articulo" deshabilitado="true" linkdes="Carga de Pronostico">
+                    <label modpos="nobr">Articulo</label>
+                    <help>Codigo de Articulo</help>
+                    <helper type="link" xml="mrp_forecast_periodos_ins.xml" >
+                        <parameter source="id_stkarticulo" target="stkarticulo_id" />
+                        <parameter source="year_forecast"  target="year_forecast" />
+                        <parameter source="tipo_forecast"  target="tipo_forecast" />
+                        <parameter source="nombre_articulo"  target="nombre_articulo" />
+                    </helper>                                        
+                </field>
+                <field id="cant_cons" deshabilitado="true" >
+		         <label modpos="nobr">Cantidad consumida</label>
+			<expresion>sum(cantidad * case when tipo_concepto = 0 then 0 else 1 end)</expresion>
+			<tipo>decimal</tipo>
+                </field>
+
+                <field id="Cant_Dias" deshabilitado="true" >
+  			<label modpos="nobr">Cantidad Dias</label>
+	<expresion>abs(cast(datediff(str_to_date('[__W1fecha_movimiento__]','%d/%m/%YYYY'), str_to_date('[__W2fecha_movimiento__]','%d/%m/%YYYY')) AS DECIMAL ))</expresion> 
+			<tipo>numeric</tipo>
+                </field>
+
+
+                <field id="Cant_Sem" deshabilitado="true" local="true">
+  			<label modpos="nobr">Cantidad Semanas</label>
+			<expresion>
+abs(cast(cast(datediff(str_to_date('[__W1fecha_movimiento__]','%d/%m/%YYYY'), str_to_date('[__W2fecha_movimiento__]','%d/%m/%YYYY')) AS DECIMAL ) / 7 as decimal ))</expresion>
+			<tipo>numeric</tipo>
+                </field>
+                <field id="Cant_DxSem" deshabilitado="true" local="true" >
+  			<label modpos="nobr">Dias x Semanas</label>
+			<size>1</size>
+			    <helper type="combo">
+				<option value="1">1</option>
+				<option value="2">2</option>
+				<option value="3">3</option>
+				<option value="4">4</option>
+				<option value="5">5</option>
+				<option value="6">6</option>
+				<option value="7">7</option>
+			    </helper>
+			<tipo>numeric</tipo>
+                </field>
+                <field id="Diashabiles" deshabilitado="true" local="true" >
+  			<label modpos="nobr">Habiles</label>
+			<size>1</size>
+			<if exp="true">
+			<true>(Cant_Dias - (Cant_Sem * 7) )  + (Cant_DxSem * Cant_Sem) </true> 
+			<false>0</false>
+			</if>
+			<tipo>numeric</tipo>
+                </field>
+
+                <field id="Promedio" deshabilitado="true" local="true" >
+  			<label modpos="nobr">Promedio Diario</label>
+			<if exp="true">
+			<true>cant_cons/Diashabiles</true>
+			<false>0</false>
+			</if>
+			<tipo>decimal</tipo>
+                </field>
+
+                <field id="dias_laborables" deshabilitado="true" local="true">
+  			<label modpos="nobr">Laborables</label>
+			<tipo>numeric</tipo>
+                </field>
+
+
+<!--                <field id="DiasCons" deshabilitado="true" local="true" >
+  			<label modpos="nobr">Cant. Dias Periodo</label>
+			<expresion>abs(cast(datediff('[__fecini_mrpperiodo__]', '[__fecfin_mrpperiodo__]') AS DECIMAL ))</expresion>
+			<tipo>numeric</tipo>
+		</field>
+-->
+                <field id="enteros" tabla="GEN_UNIDADES" noshow="true" >
+			<label>UU</label>
+		</field>
+                <field id="VtasEst" deshabilitado="true" local="true" >
+  			<label modpos="nobr">Consumo Est.</label>
+			<if exp="('enteros'!='0')">
+<!--			<true>round(DiasCons*Promedio)</true>
+			<false>DiasCons*Promedio</false> -->
+			<true>round(dias_laborables*Promedio)</true>
+			<false>dias_laborables*Promedio</false> 
+			</if>
+			<tipo>decimal</tipo>
+
+		</field>
+		
+		<field id="bom" noshow="true">
+			<expresion having="false">(select count(*) from STK_BOM where STK_BOM.stkarticulopadre_id = STK_ARTICULOS.id_stkarticulo)
+			</expresion>
+			<condicion operador="!=">0</condicion>
+		</field>
+            </fieldGroup>
+
+            <group>
+                <field id="id_stkarticulo"></field>
+            </group>
+        </table>
+        <join tipo="left">
+            <table id="STK_MOVIMIENTOS">
+                <field id="stkarticulo_id">
+                	<condicion operador="=">id_stkarticulo
+				and STK_MOVIMIENTOS.fecha_movimiento &gt;= str_to_date('[__W1fecha_movimiento__]','%d/%m/%YYYY')
+			       	and STK_MOVIMIENTOS.fecha_movimiento &lt;= str_to_date('[__W2fecha_movimiento__]','%d/%m/%YYYY')
+			</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="STK_CONCEPTOS">
+                <field id="id_stkconcepto">
+                    <condicion operador="=">STK_MOVIMIENTOS.stkconcepto_id</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="LEFT">
+            <table id="GEN_UNIDADES">
+                <field id="id_unidad">
+                    <condicion operador="=">STK_ARTICULOS.unidad_id</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix>                                

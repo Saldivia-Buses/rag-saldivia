@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="update" evento="delete">
+       <title>UPDATE CATEGORIA PERSONAL</title>
+        <obs></obs>
+               <form >
+					<table id="PERSONAL" label="PERSONAL">
+						<field id="IdPersona" id_temp="IdPersona" esClave="true">
+						</field>
+						<field id="IdSindicato" >
+							<valor>(select CATEGHISTORIA.idSindicato from CATEGHISTORIA where CATEGHISTORIA.IdPersona = PERSONAL.IdPersona order by fechaDesde DESC limit 1)</valor>							
+						</field>
+						<field id="IdCateg" >
+							<valor>(select CATEGHISTORIA.IdCateg from CATEGHISTORIA where CATEGHISTORIA.IdPersona = PERSONAL.IdPersona order by fechaDesde DESC limit 1)</valor>							
+							
+						</field>
+					</table>
+               </form>
+        </histrix>

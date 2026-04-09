@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="consulta" conBusqueda="true" imprimetanda="true" _paginar="40">
+  <title>FICHA PERSONAL</title>
+  <obs></obs>
+  <form  detalle="personal_fichadas.xml" >
+    <table id="PERSONAL" label="Ficha Personal">
+      <filters>
+        <field id="desdefecha">
+          <operador>&gt;=</operador>
+          <label>Desde Fecha</label>
+          <valor>today</valor>
+        </field>
+        <field id="hastafecha">
+          <operador>&lt;=</operador>
+          <label>Hasta Fecha</label>
+          <valor>today</valor>          
+        </field>
+      <field id="legajo">
+        <detalle>legajo</detalle>
+        <label modpos="nobr">Legajo</label>
+          <operador>=</operador>
+
+      </field>
+
+      </filters>
+      <field id="idPersona" noshow="true">
+        <detalle>idPersona</detalle>
+      </field>
+      <field id="legajo">
+        <detalle>legajo</detalle>
+        <label modpos="nobr">Legajo</label>
+      </field>
+      <field id="apellido">
+        <label modpos="nobr" colspan="6">Apellido</label>
+        <help>Apellido</help>
+      </field>
+      <field id="Nombre">
+        <label modpos="nobr">Nombre</label>
+        <help>Nombre</help>
+      </field>
+      <field id="mitarjeta">
+        <expression>select PERSONAL_TARJETA.tarjeta FROM PERSONAL_TARJETA where PERSONAL_TARJETA.idPersona = PERSONAL.idPersona and STR_TO_DATE('[__hastafecha__]', '%d/%m/%Y') > PERSONAL_TARJETA.fechaDesde order by PERSONAL_TARJETA.fechaDesde DESC limit 1 </expression>
+        <label >Tarjeta</label>
+        <help>Tarjeta</help>
+<!--        <detalle>tarjeta</detalle> -->
+        <tipo>varchar</tipo>
+      </field>
+
+      <field id="desc_secc">
+	<expression>SECCION.nombre</expression>
+	<label>Seccion</label>
+      </field>
+      
+      <field id="fechaEgreso" noshow="true">
+        <label >Baja</label>
+        <help>Baja</help>
+        <condicion operador="=">"0000-00-00"</condicion>
+      </field>
+
+      <field id="desdefecha" local="true">
+        <tipo>date</tipo>
+        <detalle>desdefecha</detalle>
+        <label>Desde Fecha</label>
+      </field>
+      <field id="hastafecha" local="true">
+        <tipo>date</tipo>
+        <detalle>hastafecha</detalle>
+        <label>Hasta Fecha</label>
+      </field>
+      <order>
+        <field id="apellido"></field>
+      </order>
+    </table>
+     <join tipo="left">
+      <table id="SECCION">
+        <field id="id_seccion">
+          <condicion operador="=">PERSONAL.id_seccion</condicion>
+        </field>
+      </table>
+
+    </join>
+
+  </form>
+</histrix>

@@ -1,0 +1,373 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" preloadData="false">
+  <title>Ventas por Periodo</title>
+  <form>
+
+    <table id="STK_MOVIMIENTOS" label="Articulos">
+
+
+      <field id="stkdeposito_id" tabla="STK_MOVIMIENTOS" noshow="true">
+        <helper type="combo" xml="stkdeposito_qry.xml" dir="/ayudas" empty="true" />
+      </field>
+      
+       <field id="moneda_id" local="true" noshow="true">
+        <helper type="combo" xml="monedas_qry.xml" dir="/ayudas"/>
+        <label>MonedaFiltro</label>
+      </field>
+
+      <field id="fecha_movimiento" tabla="STK_MOVIMIENTOS" noshow="true" >
+        <expression having="false">STK_MOVIMIENTOS.fecha_movimiento</expression>
+        <condicion operador="&gt;=">
+          str_to_date('[__fecha_per1_desde__]', '%d/%m/%Y')
+          and 
+          STK_MOVIMIENTOS.fecha_movimiento &lt;= 
+
+          str_to_date('[__fecha_per2_hasta__]', '%d/%m/%Y')
+        </condicion>
+      </field>
+      <field id="fecha_per1_desde" local="true" noshow="true">
+        <tipo>date</tipo>
+      </field>
+      <field id="fecha_per1_hasta" local="true" noshow="true">
+        <tipo>date</tipo>
+      </field>
+      <field id="fecha_per2_desde" local="true" noshow="true">
+        <tipo>date</tipo>
+      </field>
+      <field id="fecha_per2_hasta" local="true" noshow="true">
+        <tipo>date</tipo>
+      </field>
+
+      <field id="nombre_rubro" tabla="STK_RUBROS" break="true" _noshow="true" >
+        <label>Rubro</label>
+      </field>
+
+      <field id="stkrubro_id" tabla="STK_ARTICULOS" noshow="true">
+        <helper type="combo" xml="stkrubro_qry.xml" dir="/ayudas" empty="true" />
+      </field>
+
+      <field id="id_stkarticulo" tabla="STK_ARTICULOS" noshow="true">
+        <label>Articulo</label>
+        <helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas">
+          <field id="wstklista_id" local="true">
+            <valor>1</valor>
+          </field>
+        </helper>
+      </field>
+
+      <field id="codigo_barra" tabla="STK_ARTICULOS">
+        <label>Codigo</label>
+      </field>
+
+      <field id="nombre_articulo" tabla="STK_ARTICULOS">
+        <label>Nombre Articulo</label>
+      </field>
+
+      <field id="cantidad" suma="true" noshow="true">
+        <label>Cantidad</label>
+        <expresion>
+          sum( (case when STK_CONCEPTOS.tipo_concepto = 1 then 1 else -1 end) * STK_MOVIMIENTOS.cantidad)
+        </expresion>
+        <tipo>integer</tipo>
+        <formato>%d</formato>
+      </field>
+      
+      <field id="total_costo" suma="true" noshow="true">
+        <label>Costo</label>
+		<expression>SUM(
+        (case when STK_CONCEPTOS.tipo_concepto = 1 then 1 else -1 end) * STK_MOVIMIENTOS.cantidad * 
+          
+          CASE WHEN '[__tipo_costo__]' = '0'
+          THEN
+            (
+              IF(STK_ARTICULOS.genmoneda_origen_id = [__moneda_id__], 1,
+              IF(STK_ARTICULOS.genmoneda_origen_id = 1,
+              (1 / GEN_FN_COTIZACION([__moneda_id__],current_date())), 
+              GEN_FN_COTIZACION(STK_ARTICULOS.genmoneda_origen_id,current_date()))) 
+              * ifnull(STK_ARTICULOS.precio_costo,0)
+            )
+          ELSE
+            (
+              IF(STK_MOVIMIENTOS.monedacosto_id = [__moneda_id__], 1,
+              IF(STK_MOVIMIENTOS.monedacosto_id = 1,
+              (1 / GEN_FN_COTIZACION([__moneda_id__],STK_MOVIMIENTOS.fecha_movimiento)), 
+              GEN_FN_COTIZACION(STK_MOVIMIENTOS.monedacosto_id,STK_MOVIMIENTOS.fecha_movimiento))) 
+              * ifnull(STK_MOVIMIENTOS.precio_costo,0)
+            )
+          END
+        )
+        </expression>
+<!--
+        <expresion>
+          sum(
+               (case when STK_CONCEPTOS.tipo_concepto = 1 then 1 else -1 end) * STK_MOVIMIENTOS.cantidad * 
+                    case when '[__tipo_costo__]' = '0'
+                         then (ifnull(STK_ARTICULOS.precio_costo,0) * GEN_FN_COTIZACION( ifnull(STK_LISTAS.moneda_id,2), current_date()                  ) )
+                         else (ifnull(STK_ARTICULOS.precio_costo,0) * GEN_FN_COTIZACION( ifnull(STK_LISTAS.moneda_id,2), STK_MOVIMIENTOS.fecha_movimiento) ) 
+                    end
+             )
+        </expresion>
+-->
+        <tipo>numeric</tipo>
+      </field>
+      
+      <field id="total_detalle" suma="true" noshow="true">
+        <label>Total</label>
+        <expresion>
+          sum(
+            (case when STK_CONCEPTOS.tipo_concepto = 1 then 1 else -1 end) * STK_MOVIMIENTOS.precio_total *
+                IF([__moneda_id__] = 1, 1, (1 / GEN_FN_COTIZACION([__moneda_id__],STK_MOVIMIENTOS.fecha_movimiento)))
+            )
+        </expresion>
+        <tipo>numeric</tipo>
+      </field>
+      <field id="ganancia" suma="true" local="true" noshow="true">
+        <label>Ganancia</label>
+        <if exp="true">
+          <true>(total_detalle + 0) - (total_costo + 0)</true>
+          <false>0</false>
+        </if>
+        <tipo>numeric</tipo>
+      </field>
+      <field id="cantidad_ant" suma="true" colstyle="color: green; text-align: right; " alias="cantidad_ant">
+        <label>Cantidad Per.1</label>
+        <expresion>
+          sum( CASE WHEN STK_MOVIMIENTOS.fecha_movimiento &gt;= str_to_date('[__fecha_per1_desde__]', '%d/%m/%Y') and STK_MOVIMIENTOS.fecha_movimiento &lt;= str_to_date('[__fecha_per1_hasta__]', '%d/%m/%Y') THEN
+          ((case when STK_CONCEPTOS.tipo_concepto = 1 then 1 else -1 end) * STK_MOVIMIENTOS.cantidad)
+          ELSE 0 END
+          )
+        </expresion>
+        <tipo>integer</tipo>
+        <formato>%d</formato>
+      </field>
+      <field id="total_costo_ant" suma="true" colstyle="color: green; text-align: right; ">
+        <label>Costo Per.1</label>
+        <expresion>
+          sum(CASE WHEN STK_MOVIMIENTOS.fecha_movimiento &gt;= str_to_date('[__fecha_per1_desde__]', '%d/%m/%Y') 
+				and STK_MOVIMIENTOS.fecha_movimiento &lt;= str_to_date('[__fecha_per1_hasta__]', '%d/%m/%Y') THEN
+(        
+        (case when STK_CONCEPTOS.tipo_concepto = 1 then 1 else -1 end) * STK_MOVIMIENTOS.cantidad * 
+          CASE WHEN '[__tipo_costo__]' = '0'
+          THEN
+            (
+              IF(STK_ARTICULOS.genmoneda_origen_id = [__moneda_id__], 1,
+              IF(STK_ARTICULOS.genmoneda_origen_id = 1,
+              (1 / GEN_FN_COTIZACION([__moneda_id__],current_date())), 
+              GEN_FN_COTIZACION(STK_ARTICULOS.genmoneda_origen_id,current_date()))) 
+              * ifnull(STK_ARTICULOS.precio_costo,0)
+            )
+          ELSE
+            (
+              IF(STK_MOVIMIENTOS.monedacosto_id = [__moneda_id__], 1,
+              IF(STK_MOVIMIENTOS.monedacosto_id = 1,
+              (1 / GEN_FN_COTIZACION([__moneda_id__],STK_MOVIMIENTOS.fecha_movimiento)), 
+              GEN_FN_COTIZACION(STK_MOVIMIENTOS.monedacosto_id,STK_MOVIMIENTOS.fecha_movimiento))) 
+              * ifnull(STK_MOVIMIENTOS.precio_costo,0)
+            )
+          END
+)
+                    ELSE 0 END
+
+             )
+        </expresion>
+        <tipo>numeric</tipo>
+      </field>
+
+
+      <field id="total_detalle_ant" suma="true" colstyle="color: green; text-align: right; ">
+        <label>Total Per.1</label>
+        <expresion>
+          sum(CASE WHEN STK_MOVIMIENTOS.fecha_movimiento &gt;= str_to_date('[__fecha_per1_desde__]', '%d/%m/%Y') and STK_MOVIMIENTOS.fecha_movimiento &lt;= str_to_date('[__fecha_per1_hasta__]', '%d/%m/%Y') THEN
+              
+              ((case when STK_CONCEPTOS.tipo_concepto = 1 then 1 else -1 end) * STK_MOVIMIENTOS.precio_total *
+                IF([__moneda_id__] = 1, 1, (1 / GEN_FN_COTIZACION([__moneda_id__],STK_MOVIMIENTOS.fecha_movimiento))))
+                    ELSE 0 END
+              )
+        </expresion>
+        <tipo>numeric</tipo>
+      </field>
+
+
+
+      <field id="ganancia_ant" suma="true" local="true" colstyle="color: green; text-align: right; ">
+        <label>Ganancia Per.1</label>
+        <if exp="true">
+          <true>(total_detalle_ant + 0) - (total_costo_ant + 0)</true>
+          <false>0</false>
+        </if>
+        <tipo>numeric</tipo>
+      </field>
+      <field id="cantidad_act" suma="true" colstyle="color: red; text-align: right; " alias="cantidad_act">
+        <label>Cantidad Per.2</label>
+        <expresion>
+          sum( CASE WHEN STK_MOVIMIENTOS.fecha_movimiento &gt;= str_to_date('[__fecha_per2_desde__]', '%d/%m/%Y') and STK_MOVIMIENTOS.fecha_movimiento &lt;= str_to_date('[__fecha_per2_hasta__]', '%d/%m/%Y') THEN
+          ((case when STK_CONCEPTOS.tipo_concepto = 1 then 1 else -1 end) * STK_MOVIMIENTOS.cantidad)
+          ELSE 0 END
+          )
+        </expresion>
+        <tipo>integer</tipo>
+        <formato>%d</formato>
+      </field>
+      <field id="total_costo_act" suma="true" colstyle="color: red; text-align: right; ">
+        <label>Costo Per.2</label>
+		<expresion>
+          sum(CASE WHEN STK_MOVIMIENTOS.fecha_movimiento &gt;= str_to_date('[__fecha_per1_desde__]', '%d/%m/%Y') 
+				and STK_MOVIMIENTOS.fecha_movimiento &lt;= str_to_date('[__fecha_per1_hasta__]', '%d/%m/%Y') THEN
+(        
+        (case when STK_CONCEPTOS.tipo_concepto = 1 then 1 else -1 end) * STK_MOVIMIENTOS.cantidad * 
+          CASE WHEN '[__tipo_costo__]' = '0'
+          THEN
+            (
+              IF(STK_ARTICULOS.genmoneda_origen_id = [__moneda_id__], 1,
+              IF(STK_ARTICULOS.genmoneda_origen_id = 1,
+              (1 / GEN_FN_COTIZACION([__moneda_id__],current_date())), 
+              GEN_FN_COTIZACION(STK_ARTICULOS.genmoneda_origen_id,current_date()))) 
+              * ifnull(STK_ARTICULOS.precio_costo,0)
+            )
+          ELSE
+            (
+              IF(STK_MOVIMIENTOS.monedacosto_id = [__moneda_id__], 1,
+              IF(STK_MOVIMIENTOS.monedacosto_id = 1,
+              (1 / GEN_FN_COTIZACION([__moneda_id__],STK_MOVIMIENTOS.fecha_movimiento)), 
+              GEN_FN_COTIZACION(STK_MOVIMIENTOS.monedacosto_id,STK_MOVIMIENTOS.fecha_movimiento))) 
+              * ifnull(STK_MOVIMIENTOS.precio_costo,0)
+            )
+          END
+)
+                    ELSE 0 END
+
+             )
+        </expresion>
+        <tipo>numeric</tipo>
+      </field>
+      <field id="total_detalle_act" suma="true" colstyle="color: red; text-align: right; ">
+        <label>Total Per.2</label>
+        <expresion>
+          sum(CASE WHEN STK_MOVIMIENTOS.fecha_movimiento &gt;= str_to_date('[__fecha_per2_desde__]', '%d/%m/%Y') and STK_MOVIMIENTOS.fecha_movimiento &lt;= str_to_date('[__fecha_per2_hasta__]', '%d/%m/%Y') THEN
+              
+               ((case when STK_CONCEPTOS.tipo_concepto = 1 then 1 else -1 end) * STK_MOVIMIENTOS.precio_total *
+                IF([__moneda_id__] = 1, 1, (1 / GEN_FN_COTIZACION([__moneda_id__],STK_MOVIMIENTOS.fecha_movimiento))))
+                    ELSE 0 END
+              )
+        </expresion>
+        <tipo>numeric</tipo>
+      </field>
+      <field id="ganancia_act" suma="true" local="true" colstyle="color: red; text-align: right; ">
+        <label>Ganancia Per.2</label>
+        <if exp="true">
+          <true>(total_detalle_act + 0) - (total_costo_act + 0)</true>
+          <false>0</false>
+        </if>
+        <tipo>numeric</tipo>
+      </field>
+      <field id="diferencia" suma="true" local="true">
+        <label>Diferencia</label>
+        <if exp="true">
+          <true>(ganancia_act + 0) - (ganancia_ant + 0)</true>
+          <false>0</false>
+        </if>
+        <tipo>numeric</tipo>
+      </field>
+      <field id="test" noshow="true">
+        <help>Oculta los registros sin cantidades</help>
+        <expression>1</expression>
+        <condicion operador="=">1 and (cantidad_ant != 0 OR cantidad_act != 0)</condicion>
+      </field>
+      <field id="stklista_id" noshow="true">
+        <condicion operador="!=">0</condicion>
+      </field>
+      <field id="cajmovimiento_id" noshow="true">
+        <expresion having="false">IFNULL(cajmovimiento_id,0)</expresion>
+        <condicion operador="!=">0</condicion>
+      </field>
+      <field id="tipo_costo" local="true" noshow="true">
+        <helper type="combo">
+          <option value="0">Actual</option>
+          <option value="1">Historico</option>
+        </helper>
+      </field>
+     
+
+      <filters>
+        <field id="fecha_per1_desde" local="true">
+          <label>Período 1</label>
+        </field>
+        <field id="fecha_per1_hasta" local="true">
+          <label modpos="nobr" />
+        </field>
+        <field id="fecha_per2_desde" local="true">
+          <label>Período 2</label>
+        </field>
+        <field id="fecha_per2_hasta" local="true">
+          <label modpos="nobr" />
+        </field>
+        <field id="stkdeposito_id" tabla="STK_MOVIMIENTOS">
+          <label colspan="3">Deposito</label>
+          <operador>=</operador>
+        </field>
+        <field id="tipo_costo" local="true">
+          <label modpos="nobr">Costo</label>
+        </field>
+        <field id="stkrubro_id" tabla="STK_ARTICULOS">
+          <label colspan="4">Rubro</label>
+        </field>
+        <field id="codigo_barra">
+          <label modpos="nobr">Codigo Barra</label>
+        </field>
+        
+        <field id="moneda_id">
+          <operador>=</operador>
+          <label>Moneda</label>
+          <valor>1</valor>
+        </field>
+
+      </filters>
+
+
+      <group>
+        <field id="stkrubro_id"    tabla="STK_MOVIMIENTOS" />
+        <field id="stkarticulo_id" tabla="STK_MOVIMIENTOS" />
+      </group>
+
+      <order>
+        <field id="nombre_rubro"    tabla="STK_RUBROS" />
+        <field id="nombre_articulo" tabla="STK_ARTICULOS" />
+      </order>
+
+    </table>
+
+
+    <join>
+      <table id="STK_CONCEPTOS">
+        <field id="id_stkconcepto">
+          <condicion operador="=">STK_MOVIMIENTOS.stkconcepto_id</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join>
+      <table id="STK_RUBROS">
+        <field id="id_stkrubro">
+          <condicion operador="=">STK_MOVIMIENTOS.stkrubro_id</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join>
+      <table id="STK_ARTICULOS">
+        <field id="id_stkarticulo">
+          <condicion operador="=">STK_MOVIMIENTOS.stkarticulo_id</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join tipo="left">
+      <table id="STK_LISTAS">
+        <field id="id_stklista">
+          <condicion operador="=">STK_MOVIMIENTOS.stklista_id</condicion>
+        </field>
+      </table>
+    </join>
+
+  </form>
+</histrix>

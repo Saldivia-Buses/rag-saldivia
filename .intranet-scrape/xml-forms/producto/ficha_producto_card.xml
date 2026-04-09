@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="card" subtipo="vertical" _imprime="false" _autoprint="true"  grid="40%,20%"   inserta="false"
+ path="fotos/coches" 
+
+>
+<title>Seccion</title>
+<obs></obs>
+<form >
+    <table id="PRODUCTO_SECCION">
+        <title>Ficha de Producto</title>
+
+	<field id="producto_id" local="true" noshow="true">
+	    <detalle>producto_id</detalle>
+	</field>
+
+        <field id="id_prdseccion" autoinc="true" noshow="true">
+            <label>Codigo</label>
+            <detalle>prdseccion_id</detalle>
+        </field>
+        <field id="orden_seccion" noshow="true">
+            <label>Orden</label>
+            <help>Orden de impresion</help>
+        </field>
+
+        <field id="nombre_seccion"  style="font-weight:bold;"  Class="ui-widget-header">
+            <label >Secciones</label>
+            <help>Nombre de la Sección</help>
+        </field>
+        <field id="valores" local="true" showObjTabla="true" >
+    	    <label posx="5" posy="+3"></label>
+    	    <helper xml="producto_atributos_valores.xml" type="object">
+    		<parameter source="producto_id" target="producto_id" />
+    		<parameter source="id_prdseccion" target="prdseccion_id" />
+    	    </helper>
+        </field> 
+        
+        <order>
+            
+            <field id="orden_seccion" />
+            <field id="nombre_seccion" />
+
+        </order>
+    </table>
+</form>	   
+</histrix>

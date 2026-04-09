@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud">
+    <title>Perfiles</title>
+    <obs></obs>
+    <form>
+        <table id="HTXOPTIONS" label="Perfiles">
+            <field id="id_option" esClave="true" autoInc="true" noshow="true" />
+
+            <field id="login">
+                <helper type="combo" id="HTXUSERS">
+                    <field id="login" />
+                    <field id="usuario">
+                        <expression>CONCAT(apellido, ', ', Nombre)</expression>
+                    </field>
+                    <field id="baja">
+                        <condicion operador="=">0</condicion>
+                    </field>                    
+                    <field id="option_name">
+                        <expression><![CDATA[select concat('autoinit_menu_item_',(count(*) + 1)) from HTXOPTIONS HO where HO.option_name like '%autoinit_menu_item%' and HO.login = HTXUSERS.login]]></expression>
+                        <detalle>option_name</detalle>
+                    </field>
+                    <order>
+                        <field id="usuario" />
+                    </order>
+                </helper>
+                <label>Usuario</label>
+                <condicion operador="!=">''</condicion>
+            </field>
+
+            <field id="option_name" valauto="true" _noshow="true">
+                <label>Autoini</label>
+                <valor>autoinit_menu_item</valor>
+                <condicion operador="like">'%autoinit_menu_item%'</condicion>                         
+            </field>
+
+            <field id="option_value">
+                <!--<helper type="external" id="HTXMENU">
+                    <field id="parametros" />
+                    <field id="titulo" />
+                </helper>-->
+                <label>Programa</label>
+                <size>70</size>
+            </field>
+
+            <field id="MAC" noshow="true">
+                <condicion operador="=">''</condicion>
+            </field>
+            <order>
+                <field id="login" />
+            </order>
+        </table>
+    </form>
+</histrix>

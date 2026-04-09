@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+  <title>Conceptos</title>
+   <obs></obs>
+    <form>
+        <table id="CAJ_CONCEPTOS" label="Conceptos">
+
+        <field id="id_cajconcepto" autoinc="true" noshow="true">
+      		<label>Código</label>
+        </field>
+        <field id="descripcion_concepto">
+      		<label>Descripcion</label>
+        </field>
+
+        <field id="imputacion_concepto" noshow="true">
+	      <detalle>imputacion_concepto</detalle>
+        </field>
+        
+        <field id="subsistema_id" noshow="true">
+	      <detalle>subsistema_id</detalle>
+        </field>
+
+        <field id="regconcepto_id" noshow="true">
+	      <detalle>regconcepto_id</detalle>
+        </field>
+
+        </table>
+    </form>
+</histrix>  

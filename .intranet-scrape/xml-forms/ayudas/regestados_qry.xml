@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="consulta">
+	<title>Estados</title>
+	 <obs></obs>
+		<form >
+		    <table id="REG_ESTADOS" label="Estados">
+
+				<field id="id_regestado" />
+
+				<field id="nombre_estado">
+					<label>Nombre</label>
+					<tipo>varchar</tipo>
+				</field>
+
+				<field id="subsistema_id" noshow="true" >
+
+				</field>
+
+		    </table>
+		</form>
+    </histrix>

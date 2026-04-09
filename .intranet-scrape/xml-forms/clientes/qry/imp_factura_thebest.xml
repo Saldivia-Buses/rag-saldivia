@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ficha" PDFsincabecera="true" sololectura="true" autoprint="true" PDFfontSize="10">
+  <title>FACTURA</title>
+  <obs/>
+  <consulta>
+    <pdf>
+      <code><![CDATA[
+ 
+                $tp = 05;
+                $ap = $pdf->anchoPagina - 2;
+                $mp = ($ap / 2);
+                $lp = $pdf->largoPagina;
+
+                // Frame Principal
+                $pdf->Rect(005, $tp, $ap, $lp, 0.1);
+
+                // Nombre Empresa
+                $pdf->Rect(005, $tp, $mp, 042, 0.1);
+
+                // Datos Comprobante
+                $pdf->Rect($mp + 5, $tp, $mp, 042, 0.1);
+
+                ///letra
+                $pdf->setFillColor(255,255,255);
+                $pdf->Rect($mp + 1, $tp, 010, 010, 'F');
+                $pdf->Rect($mp + 1, $tp, 010, 010, 0.1);
+
+                // Cliente
+                $pdf->Rect(005, $tp + 35 , $ap, 35, 0.1);
+
+                // Contenido
+                $pdf->Rect(005, $tp + 80 , $ap, 200, 0.1);
+                
+                // Total
+                $pdf->Rect(005, $tp + 260 , $ap, 20, 0.1);
+
+
+                        ]]></code>
+    </pdf>
+    <table id="REG_MOVIMIENTOS" label="FACTURA">
+      <field id="id_regmovim" noshow="false" esClave="true" print="false" />
+
+      <field id="subsistema_id" noshow="true" print="false"/>
+
+      <field id="regcuenta_id" noshow="true" print="false" />
+
+      <field id="letra_movimiento" >
+        <label modpos="nobr" PDFnolabel="true" posx="98" posy="1" PDFsize="20"/>
+      </field>
+      <field id="descripcion_concepto" tabla="REG_CONCEPTOS">
+        <label modpos="nobr" posx="110" PDFsize="10">Comprobante</label>
+      </field>
+      <field id="nro_movimiento">
+        <label modpos="nobr" posx="110" posY="+2" >Nº</label>
+        <expresion>CONCAT(LPAD(puesto_movimiento,4,'0'),'-',LPAD(nro_movimiento,8,'0'))</expresion>
+      </field>
+      <field id="cajmovimiento_id" print="false" />
+      <field id="fecha_movimiento">
+        <label modpos="nobr" posx="110" posY="+2">Fecha</label>
+      </field>
+
+      <field id="cuit_empresa" PDFnolabel="true" local="true" PDFsize="6" >
+        <label posx="120" posY="+0"/>
+        <valor>C.U.I.T. Nº:EMPRESA</valor>
+      </field>
+      <field id="ing_brutos" PDFnolabel="true" local="true" PDFsize="6" >
+        <label posx="120" posY="+0" />
+        <valor>Ing.Brutos:</valor>
+      </field>
+      <field id="actividades" PDFnolabel="true" local="true" PDFsize="6" >
+        <label posx="120" posY="+0"/>
+        <valor>Inicio Act.:01/08/05</valor>
+      </field>
+      
+      
+      
+      <!--- ******************************** -->
+      <field id="nombre_cuenta" tabla="REG_CUENTA" deshabilitado="true" sincelda="true" PDFsize="9">
+        <label colspan="4" posx="5" posY="+2" size="80"/>
+      </field>
+      <field id="cod_direccion" tabla="REG_CUENTA" deshabilitado="true" sincelda="true" PDFsize="9">
+        <label colspan="4" posx="5" posY="+2" size="50"/>
+      </field>
+      <field id="localidad_id" tabla="REG_CUENTA" deshabilitado="true" sincelda="true" PDFsize="9">
+        <label colspan="4" posx="5" posY="+2" size="50"/>
+        <expresion>SELECT CONCAT(nombre_localidad) FROM GEN_LOCALIDADES where id_localidad = REG_CUENTA.localidad_id limit 1</expresion>
+      </field>
+      <field id="iva_id" tabla="REG_CUENTA" PDFsize="9" sincelda="true">
+        <label posx="110" size="20"/>
+        <tabla_ex xml="iva_qry.xml" dir="/ayudas" vacio="true"/>
+        <valor>5</valor>
+      </field>
+      <field id="provincia_id" tabla="REG_CUENTA" deshabilitado="true" sincelda="true" PDFsize="9">
+        <label posx="5" posY="+2" size="50"/>
+        <expresion>SELECT nombre_provincia FROM GEN_PROVINCIAS where id_provincia = REG_CUENTA.provincia_id</expresion>
+      </field>
+      <field id="cuit_cuenta" tabla="REG_CUENTA" deshabilitado="true" sincelda="true" PDFsize="9">
+        <label posx="110" posY="+2"/>
+      </field>
+
+      <field id="detalles" local="true" pdfwidth="180" PDFlineas="false">
+        <label size="25" posx="15" posy="+14" PDFsize="9"/>
+        <helper type="object" xml="imp_detalle_thebest_qry.xml">
+          <parameter target="regmovim_id" source="id_regmovim" />
+        </helper>
+      </field>
+
+      <!--
+      <field id="neto_movimiento" sincelda="true">
+        <label modpos="nobr" posx="170" posY="242" PDFsize="12" size="24" pdfancho="58"/>
+        <tipo>numeric</tipo>
+      </field>
+      <field id="total_iva" _PDFbox="true">
+        <label modpos="nobr" posx="170" posY="248" PDFsize="12" size="24" pdfancho="58"/>
+        <expresion>SUM(REG_DETALLES.iva_detalle)</expresion>
+        <tipo>numeric</tipo>
+      </field>
+      -->
+      
+      <field id="importe_movimiento" _PDFbox="true" sincelda="true">
+        <label modpos="nobr" posx="170" posY="264" PDFsize="12" size="24" pdfancho="58"/>
+      </field>
+
+
+      <group>
+        <field id="id_regmovim"/>
+      </group>
+    </table>
+    <join tipo="left">
+      <table id="REG_CONCEPTOS">
+        <field id="id_concepto">
+          <condicion operador="=">concepto_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="REG_CUENTA">
+        <field id="id_regcuenta">
+          <condicion operador="=">regcuenta_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="REG_DETALLES">
+        <field id="regmovim_id">
+          <condicion operador="=">id_regmovim</condicion>
+        </field>
+      </table>
+    </join>
+  </consulta>
+</histrix>

@@ -1,0 +1,335 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+   <histrix tipo="ing" process="true" inserta="false" modifica="false" deleteRow="false" _autoprint="true">
+       <title>Envio Masivo de Reclamos</title>
+        <obs></obs>
+		<form _detalle="detalle_oc.xml" inline="true">
+			<table id="CPSENCAB" label="Movimientos">
+				
+			<movimientos>
+				<relacion id="envio_mail_oc.xml"/>
+			</movimientos>
+		
+			<field id="siscod" oculto="true">
+				<label>Cod.</label>				
+			</field>
+
+			<field id="ctacod" noshow="true">
+				<label>Cuenta</label>
+				<help>Codigo de Cuenta</help>
+			</field>
+
+			<field id="ctanom" tabla="CCTCUENT">
+				<label>Nombre</label>
+			</field>	
+
+      <field id="ctadir" tabla="CCTCUENT" cellMaxLength="30">
+        <label>Dir - Tel</label>
+        <expression>CONCAT(CCTCUENT.ctadir, ' - ', CCTCUENT.ctaloc, ' - ', CCTCUENT.ctatel)</expression>
+      </field>  
+
+	      <field id="usuarionow" local="true" noshow="true">
+	        <valor eval="true">$_SESSION['idUser']</valor>
+	      </field>
+
+        	<field id="filtmail" noshow="true">
+          			<expression>REPLACE(CONCAT('Recordatorio OC ', CPSMOVIM.ocpnro, ' ', CPSMOVIM.detalle), "'", "")</expression>
+		    </field>
+            				
+			<field id="ocpnro" tabla="CPSENCAB">
+				<label>O.C.</label>
+				<help> Numero Comprobante</help>
+				<detalle>ocpnro</detalle>							
+			</field>
+
+
+      <field deshabilitado="true" id="de" valoropcion="true" local="true" noshow="true">
+          <label>de</label>
+          <help></help>
+          <size>10</size>
+          <tabla_ex id="HTXUSERS">
+              <field id="login2" >
+                  <expression>LCASE(login)</expression>
+              </field>
+              <field id="email" >
+                  <expression>LCASE(email)</expression>
+              </field>
+          </tabla_ex>
+          <tipo>varchar</tipo>
+          <valor eval="true">strtolower ( $_SESSION['usuario'])</valor>
+          <condicion operador="=" valorde="nom" ></condicion>
+      </field>
+
+			<field id="subject" noshow="true" email="subject" print="false">
+          			<expression>REPLACE(CONCAT('Recordatorio OC ', CPSMOVIM.ocpnro, ' ', CPSMOVIM.detalle), "'", "")</expression>
+		    </field>
+	    
+			<field id="mensaje" noshow="true">
+          		<expression><![CDATA[CONCAT('Sr. proveedor le recordamos que debe entregarnos ', ROUND(CPSMOVIM.pencps, 2), ' ', (SELECT uniabv FROM FSMUNIDS WHERE unicod = STKINSUM.unicps), ' de ', CPSMOVIM.detalle, (CASE WHEN CPSMOVIM.observaciones != '' THEN CONCAT(' (', CPSMOVIM.observaciones, ')') ELSE '' END), ' correspondiente a la Orden de Compra Nº ', CPSENCAB.ocpnro, ' cuya fecha requerida es ', DATE_FORMAT(CPSMOVIM.fecreq, '%d/%m/%Y'), '
+              </br></br>Solicitamos que nos confirme dicha fecha de entrega.
+            </br></br></br>Saludos atte</br>
+            ', HTXUSERS.apellido, ', ', HTXUSERS.Nombre )]]></expression>
+          	</field>
+
+                <field id="siscod_prov" noshow="true" local="true">
+                	<valor>01</valor>
+                </field>
+
+                <field id="modif" >
+					<helper xml="cctconta_compras.xml" dir="/compras/" type="link">
+						<parameter source="ctacod" target="ctacod" />
+						<parameter source="siscod" target="siscod_prov" />
+					</helper>
+					<label>Datos</label>
+					<expression>'Contacto'</expression>
+				</field>
+
+                <field id="para" cellMaxLength="30">
+                	<label>Para</label>
+            <!--      	<expression>'maxiandres@saldiviabuses.com.ar'</expression>-->
+				    <expression>select
+				    	ifnull(
+				    	
+				    	(select group_concat(mail SEPARATOR '; ') 
+				    		from CCTCONTA 
+				    		where CCTCONTA.ctacod = CPSENCAB.ctacod and CCTCONTA.siscod = '[__siscod_prov__]' and mail != '' and compras = 1), 
+				    	(select group_concat(mail SEPARATOR '; ') 
+				    		from CCTCONTA 
+				    		where CCTCONTA.ctacod = CPSENCAB.ctacod and CCTCONTA.siscod = '[__siscod_prov__]' and mail != '' and principal = 1))</expression>
+				</field>
+
+				
+
+
+	            <field id="tit" print="false" noshow="true">
+       				<setvar>titulo_div</setvar>
+          			<expression>REPLACE(CONCAT('Recordatorio OC ', CPSMOVIM.ocpnro, ' ', CPSMOVIM.detalle), "'", "")</expression>
+           		</field>
+
+		
+		<field id="calc_estado" noshow="true">
+        <expression>CASE WHEN CPSENCAB.ocpest IN (0, 4, 2) THEN CPSENCAB.ocpest ELSE
+                      (CASE WHEN CPSENCAB.ocpest IN (1, 3) and (CPSMOVIM.movcps - CPSMOVIM.pencps) &lt; CPSMOVIM.movcps
+                      THEN 1 ELSE 2 END)
+                    END
+        </expression>
+        <options>
+          <option valor=""></option>
+          <option valor="0">No Autorizada</option>
+          <option valor="1">Pendiente</option>
+          <option valor="2">Cumplida</option>
+          <option valor="3">Parcial</option>
+          <option valor="4">Anulada</option>
+        </options>
+        <label>Estado Art.</label>
+      </field>
+
+      <field id="artcod" deshabilitado="true" tabla="CPSMOVIM" esClave="true">
+        <label>Art.</label>
+        <ayuda_ex id="STKINSUM" xml="HLPstkinsum.xml" dir="/help_local">
+            <field id="artcod">
+              <label>Cod.</label>
+              <detalle>artcod</detalle>
+            </field>
+            <field id="artdes">
+              <label>Insumo</label>
+              <detalle>detalle</detalle>
+            </field>
+            <field id="unicps" oculto="true">
+              <detalle>unimed</detalle>
+            </field>
+            <field id="artuni" oculto="true">
+              <detalle>artuni</detalle>
+            </field>
+            
+            <field id="siscod" oculto="true">
+              <condicion operador="=">'01'</condicion>
+            </field>
+            <clave>artcod</clave>
+            <descripcion>artdes</descripcion>
+          </ayuda_ex>
+        <help>Codigo de Articulo</help>
+        <tipo>varchar</tipo>
+      </field>
+      
+      <field id="detalle" deshabilitado="true" tabla="CPSMOVIM">
+        <label>Detalle</label>
+        <help>Detalle de linea de la Orden de Compra para Art S.C. </help>
+        <tipo>varchar</tipo>
+        <size>60</size>
+      </field>
+      <field id="observaciones" tabla="CPSMOVIM">
+        <label modpos="nobr">Observaciones</label>
+        <tipo>varchar</tipo>
+        <size>60</size>
+      </field>
+
+      <field id="obs2" obj="remitos_x_oc.xml" local="true" showObjTabla="true" export="false">
+        <paring destino="ctacod" operador="=">ctacod</paring>
+        <paring destino="ocpnro" operador="=">ocpnro</paring>
+        <paring destino="artcod" operador="=">artcod</paring>
+        <paring destino="fecreq" operador="=">fecreq</paring>
+        <paring destino="idPed" operador="=">idPed</paring>
+        <label modpos="nobr">Recepcion</label>
+        <tipo>varchar</tipo>
+      </field>      
+      <field id="fecreq" tabla="CPSMOVIM">
+        <label _modpos="nobr">Requerido</label>
+        <tipo>date</tipo>
+      </field>      
+
+      <field id="idPed" tabla="CPSMOVIM" noshow="true">
+        <label _modpos="nobr">Requerido</label>
+        <tipo>date</tipo>
+      </field> 
+            <field id="movcps" deshabilitado="true" tabla="CPSMOVIM">
+        <label>Pedido</label>
+        <help>Pedido (expresado en la unidad de compra)</help>
+        
+      </field>
+
+      <field id="movcps" deshabilitado="true" tabla="CPSMOVIM">
+        <expression>round(CPSMOVIM.movcps, 2)</expression>
+        <label>Ped.cps</label>
+        <help>Pedido (expresado en la unidad de compra)</help>
+        <tipo>decimal</tipo>
+      </field>
+      <field id="mov_pen2" deshabilitado="true" noshow="true">
+        <expression>round(CPSMOVIM.movcps - CPSMOVIM.pencps ,  2)</expression>
+        <label>Rec</label>
+        <help>Recibido (expresado en la unidad de compra)</help>
+        <tipo>decimal</tipo>
+      </field>
+      <field id="pencps" tabla="CPSMOVIM" >
+        <label>Pend.cps</label>
+        <help>Pendiente (expresado en la unidad de compra)</help>
+        <!--<expression>ROUND(pencps, 2)</expression>-->
+        <!--<condicion operador="&gt;">0</condicion> -->
+        <tipo>decimal</tipo>
+
+      </field>
+
+      <field id="artuni_exp3" deshabilitado="true">
+        <expression>STKINSUM.unicps</expression>
+        <label>U.Cps</label>
+        <help>Unidad de Compra</help>
+        <tabla_ex id="FSMUNIDS">
+
+          <field id="unicod" clave="true"></field>
+          <field id="uniabv"></field>
+        </tabla_ex>
+        <tipo>varchar</tipo>
+      </field>                 
+      
+      <field id="pencps" tabla="CPSMOVIM">
+        <label>Pend.cps </label>
+        <help>Pendiente (expresado en la unidad de compra)</help>
+      <!--  <condicion operador="&gt;">0</condicion> -->
+        <tipo>decimal</tipo>
+      </field>
+
+		<field id="emitir" local="true">
+							<label>Enviar</label>
+							<tipo>check</tipo>
+<!-- 							<expression>case when '[__calc_estado__]' = 1 then 1 else 0 end</expression>
+							<expression>CASE WHEN '[__calc_estado__]' = 0 OR '[__calc_estado__]' = 4 OR '[__calc_estado__]' = 2 or 
+							(select
+						    	ifnull(
+						    	
+						    	(select group_concat(mail SEPARATOR '; ') 
+						    		from CCTCONTA 
+						    		where CCTCONTA.ctacod = CPSENCAB.ctacod and CCTCONTA.siscod = '[__siscod_prov__]' and mail != '' and compras = 1), 
+						    	(select group_concat(mail SEPARATOR '; ') 
+						    		from CCTCONTA 
+						    		where CCTCONTA.ctacod = CPSENCAB.ctacod and CCTCONTA.siscod = '[__siscod_prov__]' and mail != '' and principal = 1))) is null
+
+							THEN 0 ELSE 1 END</expression> -->
+		</field>
+
+
+      <field id="filtmail_param" noshow="true">
+          			<expression>CPSMOVIM.ocpnro</expression>
+      </field>
+
+      <field id="Emails" _showTablaObj="true" local="true" Formstyle="display:none;">
+          <helper type="link" xml="email_subj_qry.xml" dir="/email">
+              <parameter target="subject" source="filtmail_param" operator="like"/>
+          </helper>
+          <label>Mails</label>
+          <help></help>
+         <expression sql="true"><![CDATA[
+          SELECT CONCAT(
+          (SELECT COUNT(*)  FROM HTXMAIL WHERE MATCH(subject) AGAINST ('[__filtmail_param__]' IN BOOLEAN MODE)),' Env.')]]></expression>
+      </field>
+
+
+				<filters>
+					<field id="fecreq">
+						<operador>&gt;=</operador>
+        				<label modpos="nobr">Requerido Desde</label>
+						<valor>today</valor>
+					</field>
+					<field id="fecreq">
+						<operador>&lt;=</operador>
+        				<label modpos="nobr">Requerido hasta</label>
+						<valor>today</valor>	
+					</field>
+			        <field id="calc_estado" deshabilitado="false">
+			          <label modpos="nobr">Estado Art.</label>
+			          <operador>=</operador>
+			          <valor>1</valor>
+			        </field>					
+				</filters>
+
+				<order>							
+					<field id="fecreq"></field>
+				</order>
+	
+			</table>
+				
+			<join>
+				<table id="CCTCUENT">	
+					<field id="siscod">
+						<condicion operador="=">01</condicion>
+					</field>					
+					<field id="ctacod">
+						<condicion operador="=">CPSENCAB.ctacod</condicion>
+					</field>						
+				</table>
+			</join>
+		    <join tipo="left">
+		      <table id="CPSMOVIM">
+		        <field id="siscod" oculto="true">
+		          <condicion operador="=">CPSENCAB.siscod</condicion>
+		        </field>
+		        <field id="ocpnro" oculto="true">
+		          <condicion operador="=">CPSENCAB.ocpnro</condicion>
+		        </field>
+		        <field id="movfec" oculto="true">
+		          <condicion operador="=">CPSENCAB.ocpfec</condicion>
+		        </field>        
+		      </table>
+		    </join>
+		    <join tipo="left">
+		      <table id="STKINSUM">
+		        <field id="siscod" oculto="true">
+		          <label>STKINSUM.siscod</label>
+		          <condicion operador="=">'01'</condicion>
+		        </field>
+		        <field id="artcod" oculto="true">
+		          <condicion operador="=">CPSMOVIM.artcod</condicion>
+		        </field>
+		        <field id="artuni" oculto="true">
+		        </field>
+		        <field id="unicps" oculto="true">
+		        </field>
+		      </table>
+		    </join>
+		    <join tipo="left">
+		      <table id="HTXUSERS">
+		        <field id="id_usuario">
+		          <condicion operador="=">[__usuarionow__]</condicion>
+		        </field>
+		      </table>
+		    </join>
+ </form>
+</histrix>

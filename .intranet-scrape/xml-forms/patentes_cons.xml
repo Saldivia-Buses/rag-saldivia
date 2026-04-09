@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" paginar="500">
+  <title>Placas Prov. por coche</title>
+  <obs/>
+  <form >
+    <table id="PATENTE">
+      <title>Placas Provisorias</title>
+      <field id="nrofab">
+        <label>Nro de Fabricación</label>
+        <help>Número de Fabricación</help>
+      </field>
+      <field id="test" linkint="fichaventas_fotos.xml" linkdes="Ver Ficha de Ventas" local="true" print="false">
+        <label modpos="nobr" style="color:#444;font-weight:bold;">Test</label>
+        <paring destino="nrocha">nrofab</paring>
+        <valor>'Fotos'</valor>
+        <tipo>varchar</tipo>
+      </field>      
+      
+      <field id="desdeFecha" tipoOrden="DESC">
+        <label>Desde Fecha</label>
+        <help>Valida desde</help>
+      </field>
+      <field id="letras">
+        <label>Letras</label>
+        <help>Letras</help>
+      </field>
+      <field id="numero" linkint="imprime_patente.xml" linkdes="Imprimir Placa Provisoria" tipoOrden="DESC">
+        <label>Número</label>
+        <help>Número de Patente</help>
+        <format>%04d</format>
+        <paring destino="numero">numero</paring>
+        <paring destino="nrofab">nrofab</paring>
+      </field>
+
+      <field id="validez">
+        <label>Validez</label>
+        <help>Validez Placa Provisoria</help>
+      </field>
+      <field id="chasis" tabla="CHASIS">
+        <label>Chasis</label>
+        <tipo>varchar</tipo>
+      </field>
+      
+      <field id="folio">
+        <label>Folio</label>
+        <help>Folio Placa Provisoria</help>
+      </field>
+      <order>
+        <field id="desdeFecha"></field>
+      </order>
+    </table>
+        <join tipo="left">
+      <table id="CHASIS">
+        <field id="nrocha">
+          <condicion operador="=">nrofab</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>

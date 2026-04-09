@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+	<title>Placas Prov. por coche</title>
+	<obs/>
+	<form >
+		<table id="PATENTE">
+			<title>Placas Provisorias</title>
+			<field id="nrofab" oculto="true">
+				<label>Nro de Fabricación</label>
+				<help>Número de Fabricación</help>
+			</field>
+
+			<field id="letras"  noshow="true">
+				<label>Letras</label>
+				<help>Letras</help>
+			</field>
+			<field id="numero" noshow="true">
+				<label>Numero</label>
+				
+				<help>Numero de Patente</help>
+				<format>%04d</format> 
+	
+			</field>
+			<field id="patente" style="color:red;border:1px solid red;white-space:nowrap;padding:3px;border-radius:0px;">
+				<helper type="link" xml="imprime_patente.xml" title="Imprimir Placa Provisoria">
+					<parameter source="numero" target="numero" />
+					<parameter source="nrofab" target="nrofab" />
+				</helper>
+				<expression>concat(letras,' ', lpad(numero,4,'0'))</expression>
+			</field>
+			<field id="desdeFecha">
+				<label>Desde Fecha</label>
+				<help>Valida desde</help>
+			</field>
+			<field id="validez">
+				<label>Validez</label>
+				<help>Validez Placa Provisoria</help>
+			</field>
+			<field id="folio">
+				<label>Folio</label>
+				<help>Folio Placa Provisoria</help>
+			</field>
+		</table>
+
+	</form>
+</histrix>

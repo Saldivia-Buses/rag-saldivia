@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" >
+    <title>Encuesta</title>
+    <obs></obs>
+    <form >
+        <table id="ENCUESTA_CLIENTE_ITEM" >
+            <title>Encuesta</title>
+			
+			<field id="numero" noshow="true" />
+			
+			<field id="idPregunta" tabla="ENCUESTA_CLIENTE_ITEM"/>
+
+			<field id="pregunta" tabla="ENCUESTA_PREGUNTA">
+				<label>Pregunta</label>
+			</field>
+            <field id="valor" noZero="true">
+<!--				<helper type="combo" id="RH_EVALUACION_VALORES" >
+					<field id="valor"/>
+					<field id="nombre_valor"/>
+					<field id="rhevaluaciongrupo_id">
+						<condicion operador="=">rhevaluaciongrupo_id</condicion>
+					</field>
+				</helper> -->
+               <label>Valor</label>
+            </field>
+		<order>
+		
+		</order>
+    
+        </table>
+		<join tipo="inner">
+			<table id="ENCUESTA_PREGUNTA">
+                <field id="idPregunta">
+                    <condicion operador="=">ENCUESTA_CLIENTE_ITEM.idPregunta</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix> 

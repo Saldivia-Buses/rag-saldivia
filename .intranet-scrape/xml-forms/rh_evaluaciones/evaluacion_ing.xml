@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="grid" subtipo="vertical" inserta="false" borra="false" modifica="false" imprime="false" deleteRow="false" exportasuma="true" llenoreferente="true" llenotemporal="true">
+    <title>Evaluación</title>
+    <obs></obs>
+    <form>
+        <table id="RH_EVALUACION_GRUPOS">
+
+            <movimientos>
+                <!--<relacion id="evaluacion_ins.xml"/>-->
+                <relacion id="evaluacion_respuestas_ins.xml"/>
+            </movimientos>
+
+            <field id="id_rhevaluaciongrupo" deshabilitado="true">
+                <label>Punto</label>
+            </field>
+
+            <field id="nombre_grupo" deshabilitado="true">
+                <label>Conceptos</label>
+            </field>
+
+            <field id="valor" local="true" editable="true" refresh="true">
+                <label>Clasificación</label>
+                <options>
+                    <option valor="0"></option>
+                    <option valor="1">1 (DEFICIENTE)</option>
+                    <option valor="2">2 (REGULAR)</option>
+                    <option valor="3">3 (COMÚN)</option>
+                    <option valor="4">4 (BUENO)</option>
+                    <option valor="5">5 (EXCELENTE)</option>
+                </options>
+            </field>
+
+            <field id="peso">
+                <label Formstyle="display:none;">Peso</label>
+            </field>
+
+            <field id="tipo_evaluacion" noshow="true">
+                <label>Tipo</label>
+            </field>
+
+            <field id="aporte" local="true" suma="true" editable="true" deshabilitado="true">
+                <label>Aporte</label>
+                <if exp="true">
+                    <true>(valor + 0) * (peso + 0)</true>
+                    <false>0</false>
+                </if>
+                <tipo>custom_numeric</tipo>
+                <jseval campodestino="aporte_acumulado" total="true">aporte</jseval>
+            </field>
+
+        </table>
+    </form>
+</histrix>

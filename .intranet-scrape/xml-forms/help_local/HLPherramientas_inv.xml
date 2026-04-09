@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+   <histrix tipo="abm">
+		<title>Herramientas de Inventario</title>
+        <obs></obs>
+               <form>
+                  <table id="HERR_INVENTARIO" label="Herramientas de Inventario">
+
+                  	<field id="id_herrinventario" noshow="true">
+                  	</field>
+
+                     <field id="abrev_herr">
+                        <label>Abrev</label>
+                     </field>
+
+                  	<field id="nombre_herr">
+                  		<label>Nombre</label>
+                  	</field>
+
+                  	<field id="desc_herr">
+                  		<label>Descripción</label>
+                  		<size>100</size>
+                  	</field>
+
+                  	<order>
+                  		<field id="nombre_herr" />
+                  		<field id="desc_herr" />
+                  	</order>
+
+                  </table>
+               </form>
+        </histrix>

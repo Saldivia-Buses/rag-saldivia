@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ficha" _imprime="false" _conBusqueda="true" log="false" sololectura="true">
+    <title>Cuentas</title>
+    <obs></obs>
+
+    <form >
+
+        <table id="REG_CUENTA" label="Cuentas">
+            <field id="id_regcuenta" noshow="true" esClave="true" />
+            <field id="subsistema_id" oculto="true"   />
+            <field id="subsistemarelacionada_id" local="true" oculto="true" valauto="true" />
+            <fieldGroup>
+
+                <field id="nombre_cuenta">
+                    <label colspan="5">Nombre</label>
+                    <help>Nombre de la cuenta</help>
+                    <size>80</size>
+                </field>
+
+                <field id="nombre_provincia">
+                    <label>Provincia</label>
+                    <expresion>nombre_provincia</expresion>
+                    <size>20</size>
+                </field>
+
+                <field id="nombre_localidad">
+                    <label modpos="nobr">Localidad</label>
+                    <expresion>nombre_localidad</expresion>
+                    <help>Nombre de la localidad</help>
+                    <size>20</size>
+                </field>
+	    <!-- Dirección -->
+
+                <field id="cod_direccion">
+                    <label colspan="4">Calle</label>
+                    <size>40</size>
+                </field>
+
+                <field id="bis_direccion" sincelda="true">
+                    <label modpos="nobr">Bis</label>
+                    <tipo>check</tipo>
+                </field>
+
+                <field id="nro_direccion" sincelda="true">
+                    <label modpos="nobr">Nº</label>
+                    <size>10</size>
+                </field>
+
+                <field id="abreviacion_direccion" sincelda="true">
+                    <label modpos="nobr">Piso/Dpto</label>
+                    <size>15</size>
+                </field>
+
+	    <!-- Fechas -->
+
+                <field id="fecha_nacimiento">
+                    <label>Fecha Nac.</label>
+                    <tipo>date</tipo>
+                </field>
+
+                <field id="alta_cuenta">
+                    <label modpos="nobr">Alta</label>
+
+                    <tipo>date</tipo>
+                </field>
+
+                <field id="baja_cuenta">
+                    <label modpos="nobr">Baja</label>
+                    <tipo>date</tipo>
+                </field>
+
+	    <!-- Fiscales -->
+
+                <field id="tipo_documento_id">
+                    <tabla_ex xml="tipos_documento_qry.xml" dir="/ayudas"/>
+                    <label>Documento</label>
+                </field>
+
+                <field id="nro_documento" sincelda="true">
+                    <label modpos="nobr"></label>
+
+                </field>
+
+                <field id="iva_id">
+                    <tabla_ex xml="iva_qry.xml" dir="/ayudas" vacio="true" />
+                    <label modpos="nobr">Cat. IVA</label>
+                    <help>Categoria de IVA</help>
+                </field>
+
+                <field id="cuit_cuenta">
+                    <label _modpos="nobr">Nº CUIT</label>
+                    <help>Número de CUIT</help>
+                </field>
+
+                <field id="nro_ingbrutos">
+                    <label modpos="nobr">Nº IBR</label>
+                    <help>Numero de ingresos brutos de la cuenta</help>
+                </field>
+
+                <field id="percepcion">
+                    <label>Agente Percepcion</label>
+                    <options exp="true">
+                        <option valor=""></option>
+                        <option valor="0">NO</option>
+                        <option valor="1">SI</option>
+                    </options>
+                </field>
+
+                <field id="regzona_id">
+                    <tabla_ex id="REG_ZONAS">
+                        <field id="id_regzona" />
+                        <field id="nombre_zona" />
+                        <field id="subsistema_id" />
+                    </tabla_ex>
+                    <label  modpos="nobr">Zona</label>
+                </field>
+
+            </fieldGroup>
+         
+        </table>
+        <join tipo="left">
+            <table id="GEN_PROVINCIAS">
+                <field id="id_provincia">
+                    <condicion operador="=">REG_CUENTA.provincia_id</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="GEN_LOCALIDADES">
+                <field id="id_localidad">
+                    <condicion operador="=">REG_CUENTA.localidad_id</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

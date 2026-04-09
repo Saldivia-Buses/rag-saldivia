@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" showCantidad="false" tooltip="false" >
+  <title>Consulta Detallada</title>
+  <obs/>
+  <form detalle="caj_asiento_qry.xml" inline="true">
+    <table id="CAJ_MOVIMIENTOS">
+      <fieldGroup id="DEBUG" noshow="true">
+        <field id="cajpuesto_id"/>
+        <field id="cajconcepto_id"/>
+        <field id="fecha_movimiento"/>
+        <field id="cajregistro_id" />
+        <field id="ejercicio_id" local="true" >
+          <detalle>ejercicio_id</detalle>
+        </field>
+        <field id="tstcuenta" local="true" />
+        <field id="test" noshow="true">
+          <expression having="false">CASE WHEN '[__tstcuenta__]' = '' THEN 1 ELSE
+          (SELECT 1 FROM CAJ_DETALLES cd WHERE cd.cuenta_id = '[__tstcuenta__]' and cd.cajmovimiento_id = CAJ_MOVIMIENTOS.id_cajmovimiento LIMIT 1) END</expression>
+          <condicion operador="=">1</condicion>
+        </field>
+      </fieldGroup>
+      <field id="id_cajmovimiento" noshow="true">
+        <detalle>cajmovimiento_id</detalle>
+      </field>
+      <field id="nro_comp" tdWidth="200px" PDFcolWidth="100">
+        <expression>
+          CONCAT(CAJ_CONCEPTOS.abreviatura_concepto,' 0000-',lpad(CAJ_MOVIMIENTOS.nro_movimiento,8,'0'))
+        </expression>
+        <helper type="link" dir="/caja/proc/del" xml="cajmovimiento_ficha.xml" title="Detalle del Comprobante" modal="true">
+          <parameter source="id_cajmovimiento" target="id_cajmovimiento" operador="="/>
+        </helper>
+      </field>
+      <field id="regcuenta_id">
+        <expression>
+          IFNULL((SELECT regcuenta_id FROM REG_MOVIMIENTOS rm WHERE rm.cajmovimiento_id = CAJ_MOVIMIENTOS.id_cajmovimiento and rm.subsistema_id = CAJ_CONCEPTOS.subsistema_id LIMIT 1), referencia_movimiento)
+        </expression>
+        <helper type="combo" id="REG_CUENTA">
+          <field id="id_regcuenta" />
+          <field id="nombre_cuenta" />
+        </helper>
+        <label>Cuenta</label>
+      </field>
+      <field id="debe" suma="true">
+        <expresion>sum(case when doh = 0 then importe_detalle else 0 end)</expresion>
+        <label>Debe</label>
+        <tipo>numeric</tipo>
+      </field>
+      <field id="haber" suma="true">
+        <expresion>sum(case when doh = 1 then importe_detalle else 0 end)</expresion>
+        <label>Haber</label>
+        <tipo>numeric</tipo>
+      </field>
+      <field id="diferencia">
+        <expresion>
+          sum( round(importe_detalle, 2) * (case when doh = 1 then 1 else -1 end))
+        </expresion>
+        <label>Diferencia</label>
+        <tipo>numeric</tipo>
+      </field>
+      <field id="hi" clasefila="true" local="true">
+        <if exp="diferencia!=0">
+          <true>'resaltado'</true>
+          <false>''</false>
+        </if>
+      </field>
+      <group>
+        <field id="id_cajmovimiento"/>
+      </group>
+    </table>
+    <join>
+      <table id="CAJ_CONCEPTOS">
+        <field id="id_cajconcepto">
+          <condicion operador="=">CAJ_MOVIMIENTOS.cajconcepto_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join>
+      <table id="CAJ_DETALLES">
+        <field id="cajmovimiento_id">
+          <condicion operador="=">CAJ_MOVIMIENTOS.id_cajmovimiento</condicion>
+        </field>
+      </table>
+    </join>
+    <join >
+      <table id="CTB_CUENTAS">
+        <field id="id_cuenta">
+          <condicion operador="=">CAJ_DETALLES.cuenta_id</condicion>
+        </field>
+        <field id="ejercicio_id">
+          <condicion operador="=">[__ejercicio_id__]</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>

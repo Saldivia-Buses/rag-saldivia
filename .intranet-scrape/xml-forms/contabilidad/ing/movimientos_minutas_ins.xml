@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert" grabafinal="true">
+    <title>Actualizacion Movimientos</title>
+    <obs></obs>
+    <form>
+        <table id="CTB_MOVIMIENTOS">
+
+            <field id="ejercicio_id" id_temp="ejercicio_id" />
+            <field id="concepto_id" id_temp="concepto_id" />
+            <field id="fecha_movimiento" id_temp="fecha_movimiento" />
+            <field id="referencia" id_temp="referencia_minuta" />
+            <field id="detalles" id_temp="detalles" local="true" />
+            <field id="nro_minuta" id_temp="numero_minuta" />
+
+        </table>
+    </form>
+</histrix>

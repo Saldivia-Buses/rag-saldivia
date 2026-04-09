@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="list" subtipo="vertical" >
+    <title>Observaciones</title>
+    <obs></obs>
+    <form >
+        <table id="STK_ARTICULO_OBSERVACIONES" label="Observaciones">
+            <field id="id_stkobservacion" autoinc="true" noshow="true">
+            </field>
+
+            <field id="stkarticulo_id" oculto="true">
+                <label>Articulo</label>
+                <help>Codigo de Articulo</help>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="observacion">
+                <label>Observacion</label>
+                <size>80</size>
+            </field>
+        </table>
+    </form>
+</histrix>

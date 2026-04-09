@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  class="consultaancha" 
+          modifica="false"
+          _inserta="false"
+          cancel="false" tabindex="1000"
+          tipo="ficha" borra="false" imprime="false"
+          createButtonLabel="Enviar" createButtonIcon="mail_send.png"
+          tooltip="false"
+          >
+    <title>Nuevo Mensaje</title>
+    <obs/>
+    <eventos>
+        <event id="insert">close</event>
+    </eventos>
+
+    <form >
+        <table id="HTXMESSAGES" label="Mensajes" >
+
+            <movimientos>
+                <relacion id="send_alert_mail_ingmov.xml"></relacion>
+<!--	     <relacion id="mensajes_nuevos_upd.xml"></relacion> -->
+            </movimientos>
+
+            <field autoinc="true" id="idMensaje" noshow="true" tipoOrden="DESC">
+                <label>id</label>
+            </field>
+            <field  id="idHilo" deshabilitado="true" noshow="true">
+                <label>Hilo</label>
+            </field>
+
+            <field deshabilitado="true" id="hora" noshow="true" checkType="false" >
+                <label modpos="nobr">Hora</label>
+                <valor eval="true">date('H:i:s')</valor>
+                <tipo>time</tipo>
+
+            </field>
+            <field id="nom" local="true"  noselect="true" noshow="true" deshabilitado="true">
+                <valor eval="true">$_SESSION['usuario']</valor>
+                <tipo>varchar</tipo>
+            </field>
+            <field deshabilitado="true" id="de" noshow="true">
+                <label modpos="nobr">de</label>
+                <help></help>
+                <size>10</size>
+                <valor eval="true">$_SESSION['usuario']</valor>
+                <condicion operador="=" valorde="nom" ></condicion>
+            </field>
+
+            <field id="para" deshabilitado="true" noshow="true">
+                <label >Para</label>
+<!--                <tabla_ex id="HTXUSERS">
+                    <field id="login" />
+                    <field id="nombre" >
+                        <expresion>CONCAT(nombre, ' ', apellido)</expresion>
+                    </field>
+                </tabla_ex>
+                -->
+            </field>
+            <field id="destination" deshabilitado="true">
+        	<label colspan="2">Para</label>
+		<expresion sql="true">select CONCAT(nombre, ' ', apellido) from HTXUSERS where login = '[__para__]' limit 1</expresion>
+                <size>20</size>
+            </field>
+
+            <field deshabilitado="true" id="fecha" _noshow="true">
+                <label modpos="nobr">Fecha</label>
+                <valor>today</valor>
+            </field>
+<!--
+            <field id="title" rss="title">
+                <label colspan="4">Asunto</label>
+                <size>50</size>
+            </field> -->
+            <field id="mensaje" maxlength="" style="text-align:center;width:100%">
+                <label colspan="5" ></label>
+                <help>Texto del mensaje</help>
+                <size>500</size>
+                <tipo>varchar</tipo>
+            </field>
+<!--        <field id="leido" deshabilitado="true" noshow="true">
+                 <label>leido</label>
+                        <tipo>check</tipo>
+            </field> -->
+            <field id="destino" deshabilitado="true" local="true" noshow="true">
+            </field>
+            <field id="Email" deshabilitado="true" local="true" noshow="true">
+                <label >dest</label>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="telefono" local="true" deshabilitado="true" noshow="true">
+                <label >Telefono</label>
+                <help>Envia una copia del mensaje por mensaje de texto</help>
+            </field>
+            <field id="hasphone" local="true" deshabilitado="true" noshow="true">
+                <label >Tel</label>
+                <if exp="'telefono' != ''">
+                    <true>'false'</true>
+                    <false>'true'</false>
+                </if>
+            </field>
+            <field id="hasemail" local="true" deshabilitado="true" noshow="true">
+                <label >hasemail</label>
+                <if exp="'Email' != ''">
+                    <true>'false'</true>
+                    <false>'true'</false>
+                </if>
+            </field>
+            <field id="CORREO" local="true" >
+                <attribute   colspan="4" id="noshow">hasemail</attribute>
+                <label >Copia a Correo Electrónico</label>
+                <tipo>check</tipo>
+                <help>Envia una copia del mensaje por correo electrónico</help>
+            </field>
+
+            <field id="Sms" local="true" >
+                <attribute  colspan="4" id="noshow">hasphone</attribute>
+                <label _modpos="nobr" >Copia a celular</label>
+                <tipo>check</tipo>
+                <valor>0</valor>
+                <jsfunction event="onchange">$(  '[name=mensaje]' , $(this.form)).attr('maxlength', ((this.checked)?1:0) * 150).maxLength();</jsfunction>
+            </field>
+            <field id="leido" local="true" noshow="true" valauto="true">
+                <label>leido</label>
+                <valor>1</valor>
+                <detalle>leido</detalle>
+            </field>
+            <field id="grabar" local="true" noshow="true">
+                <label>graba</label>
+                <if exp="true">
+                    <true>1</true>
+                    <false>0</false>
+                </if>
+            </field>
+            <order>
+                <field id="idMensaje"/>
+            </order>
+        </table>
+
+    </form>
+</histrix>

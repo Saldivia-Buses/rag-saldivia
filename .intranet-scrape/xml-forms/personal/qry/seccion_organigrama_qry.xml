@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="orgchart" width="100%" form="false" inserta="false">
+	<title>Secciones de Trabajo</title>
+	<obs></obs>
+	<customScript>
+	window.location = $('#DIVseccion_organigrama_qry_xml').find('a:first').attr('href');
+	</customScript>
+	<form  detalle="personal_seccion.xml" inline="true">
+		<table id="SECCION">
+			<title>Secciones de Trabajo</title>
+			<field id="id_seccion" arbol="hijo" autoinc="true" noshow="true">
+				<label Formstyle="display:none;">Codigo</label>
+				<help>Codigo de Seccion</help>
+				<detalle>id_seccion</detalle>
+				<detalle>idSeccion</detalle>
+				
+				
+			</field>
+
+			<field id="idSec" noshow="true">
+			    <expression>id_seccion</expression>
+			</field>
+
+
+			<field id="idSeccionSup" arbol="padre" >
+            		    <tabla_ex id="SECCION" vacio="true">
+                		<field id="id_seccion"></field>
+                		<field id="nombre"></field>
+            		    </tabla_ex>
+			    <label colstyle="display:none;">Secc Sup</label>
+			    <detalle>idSeccion</detalle>
+			</field>
+
+			<field id="nombre" nodeTitle="true" >
+				<label>Nombre</label>
+				<help>Nombre de Seccion</help>
+			</field>
+
+			<field id="descripcion" nodeText="true">
+				<label>Descripcion</label>
+				<help>Descripcion de Seccion</help>
+			</field>
+<!--
+			<field id="descripcion_perfil" _nodeText="false" colstyle="display:none;">
+				<label>Perfil</label>
+				<help>Descripcion del perfil</help>
+				<tipo>editor</tipo>
+			</field>
+-->
+			<field id="idSupervisor" _nodeText="true">
+				<expression>IF(idSupervisor = 0, supervisor, idSupervisor)</expression>
+				<label>Supervisor</label>
+
+            			<tabla_ex id="PERSONAL" xml="HLPpersonal.xml" vacio="true" dir="/help_local">
+                		    <field id="legajo">
+                		        <condicion operador="!=">0</condicion>
+                		    </field>
+            			</tabla_ex>
+			</field>
+			<field id="activa" noshow="true">
+			    <condicion operador="=">1</condicion>
+			</field>
+<!--
+        	<field id="supervisor">
+            	<label>desc supervisor</label>
+			    <help>Supervisor de Seccion</help>
+			</field>
+
+			<field id="linea_id" colstyle="display:none;">
+            		    <helper type="combo" xml="lineas.xml" dir="produccion" _empty="true"/>
+            		    <label >Linea</label>
+            		    <valor>1</valor>
+            </field>
+-->
+		</table>
+		<join tipo="left">
+			<table id="CIUO">
+				<field id="idPuesto">
+					<condicion operador="=">SECCION.idPuesto</condicion>
+				</field>
+				
+		</table>
+		</join>
+
+	</form>
+	
+</histrix>

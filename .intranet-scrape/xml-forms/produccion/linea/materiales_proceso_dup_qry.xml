@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" subtipo="vertical"  width="25" _imprime="false">
+  <title>HOMOLOGACION POR MODELO</title>
+  <obs/>
+  <form detalle="materiales_proceso_dup_fichaing.xml">
+    <table id="HOMOLOGMOD">
+      <title>Homologaciones por modelo</title>
+      
+      <filters auto="true">
+        <field id="nrocar" >
+          <label>Mod.Car.</label>
+          <operador>=</operador>
+        </field>
+        <field id="marcod">
+          <label>Marc.Chasis</label>
+          <operador>=</operador>
+        </field>
+        <field id="modelo_id">
+          <label>Chasis</label>
+          <operador>=</operador>
+        </field>
+      </filters>
+      
+      <field id="id_homologacion" _noshow="true" autoinc="true">
+        <detalle>id_homolnew</detalle>
+      </field>
+      
+      <field id="nrocar">
+        <helper type="combo" id="CARROCERIA" empty="true">
+          <field id="nrocar" />
+          <field id="desabv" />
+          <field id="nrocar">
+            <condicion operador="!=">0</condicion>
+          </field>
+          <order>
+            <field id="desabv" />
+          </order>
+        </helper>
+        <label>Mod.Car.</label>
+      </field>
+
+      <field id="marcod" >
+        <helper type="combo" id="MARCHASIS" empty="true">
+          <field id="marcod" />
+          <field id="desabv" />
+          <field id="marcod">
+            <condicion operador="!=">0</condicion>
+          </field>
+          <order>
+            <field id="marcod" />
+          </order>
+        </helper>
+        <label>MC</label>
+        <actualiza>
+          <field id="modelo_id" destino="marcod"/>
+        </actualiza>
+      </field>
+
+      <field id="modelo_id" >
+        <helper type="combo" id="MODCHASIS" empty="true">
+          <field id="id_modelo"/>
+          <field id="moddes" />
+          <field id="marcod" noshow="true" >
+          </field>
+        </helper>
+        <label modpos="nobr" >Modelo</label>
+        <help>Modelo del Chasis</help>
+      </field>
+      
+      <field id="asientos">
+        <label modpos="nobr">Asientos</label>
+        <label>Cantidad de Asientos</label>
+      </field>
+      <field id="banbar">
+        <label>B/b</label>
+        <options>
+          <option valor="0">No</option>
+          <option valor="1">Si</option>
+        </options>
+      </field>
+      
+      <field id="baja" oculto="true">
+        <condicion operador="=">0</condicion>
+      </field>
+      
+      <field id="hi" noshow="true" tipoOrden="DESC">
+        <expression>(SELECT 1 FROM PROD_PROCESOS WHERE homologacion_id = HOMOLOGMOD.id_homologacion LIMIT 1)</expression>
+        <condicion operador="IS">NULL</condicion>
+      </field>
+      <order>
+        <field id="hi" />
+        <field id="modcar" tabla="CARROCERIA" noshow="true" />
+        <field id="mardes" />
+        <field id="moddes" tabla="MODCHASIS" />
+        <field id="asientos" />
+        <field id="banbar" />
+      </order>
+      
+    </table>       <!--
+<join tipo="left">
+<table id="CARROCERIA">
+  <field id="nrocar">
+    <condicion operador="=">HOMOLOGMOD.nrocar</condicion>
+  </field>
+</table>
+</join>
+<join tipo="left">
+<table id="TIPOSERVICIO">
+  <field id="tipserv">
+    <condicion operador="=">HOMOLOGMOD.tipserv</condicion>
+  </field>
+</table>
+</join>
+<join tipo="left">
+<table id="MARCHASIS">
+  <field id="marcod">
+    <condicion operador="=">HOMOLOGMOD.marcod</condicion>
+  </field>
+</table>
+</join>
+<join tipo="left">
+<table id="MODCHASIS">
+  <field id="modcha">
+    <condicion operador="=">HOMOLOGMOD.modcha</condicion>
+  </field>
+  <field id="marcod">
+    <condicion operador="=">HOMOLOGMOD.marcod</condicion>
+  </field>
+</table>
+</join>   -->
+  </form>
+</histrix>

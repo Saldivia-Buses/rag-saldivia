@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="utf-8"?>
+<histrix tipo="consulta" >
+  <title>ENTRADA SALIDA STOCK POR CODIGO</title>
+  <obs></obs>
+  <form >
+    <table id="STKINMOV" label="ENTRADA SALIDA STOCK">
+
+      <filters>
+        <field id="nrocha">
+        <operador>=</operador>
+        <label>Número Fabricación</label>
+        <valor>0</valor>
+
+        </field>
+
+        <field id="legajo" >
+          <operador>=</operador>
+          <label>Legajo</label>
+        </field>
+
+        <field id="artcod">
+          <operador>like</operador>
+          <label>Artículo</label>
+        </field>
+        <field id="artdes">
+          <operador>like</operador>
+          <label modpos="nobr">Descripción</label>
+        </field>
+        <field id="movfec">
+          <operador>&gt;=</operador>
+          <label>Desde Fecha</label>
+          <valor>today</valor>
+        </field>
+        <field id="movfec">
+          <operador>&lt;=</operador>
+          <label>Hasta Fecha</label>
+          <valor>today</valor>
+        </field>
+          <field id="movcod" oculto="true">
+          <label>Tipo</label>
+             <tabla_ex id="STKCONCE">
+           <field id="movcod"></field>
+           <field id="condes"></field>
+           <field id="siscod">
+             <condicion operador="=">'06'</condicion>
+           </field>
+
+         </tabla_ex>
+          <operador>=</operador>
+          <valor>10</valor>
+
+         </field>
+
+      </filters>
+      
+      <field id="nrocha">
+          <ayuda_ex id="CHASIS">
+            <field id="nrocha"></field>
+            <field id="chades"></field>
+          </ayuda_ex>
+        <label>N.Fab</label>
+        <tipo>integer</tipo>
+        <help>Nro de Fabricación</help>
+      </field>
+          <field id="movcod" oculto="true">
+             <tabla_ex id="STKCONCE">
+           <field id="movcod"></field>
+           <field id="condes"></field>
+           <field id="siscod" oculto="true">
+             <condicion operador="=">'06'</condicion>
+           </field>
+         </tabla_ex>
+          <valor>10</valor>
+         </field>
+
+      <field id="movfec">
+        <label>Fecha</label>
+        <help>Fecha</help>
+      </field>
+
+      <field id="siscod" oculto="true">
+        <label> </label>
+        <help>
+        </help>
+        <condicion operador="=">'01'</condicion>
+
+      </field>
+
+ 
+
+      <field id="artcod" clave="true" >
+        <label>Artículo</label>
+      <!--  <ayuda_ex id="STKINSUM" xml="HLPstkinsum.xml" dir="/help_local">
+          <field id="artcod"></field>
+          <field id="artdes"></field>
+
+          <clave>artcod</clave>
+          <descripcion>artdes</descripcion>
+
+        </ayuda_ex> -->
+
+      </field>
+
+      <field id="artdes" tabla="STKINSUM">
+        <label modpos="nobr">Desc</label>
+        <tipo>varchar</tipo>
+        <size>40</size>
+      </field>
+
+      <field id="legajo" tabla="PERSONAL">
+        <label>Legajo</label>
+        <helper type="external" xml="HLPpersonal.xml" dir="/help_local"/>
+      </field>
+
+      <field id="opecodEx">
+        <expression>CONCAT(PERSONAL.apellido, ', ', PERSONAL.Nombre)</expression>
+        <label>Operador</label>
+        <help>
+        </help>
+        <tipo>string</tipo>
+
+      </field>
+
+	<field id="opecla">
+	    <label>Usuario</label>
+	</field>
+  <!--    <field id="cant" >
+        <expression>count(STKINMOV.artcod)</expression>
+        <label>C.</label>
+        <tipo>decimal</tipo>
+      </field>
+-->
+      <field id="movpes" suma="true">
+        <expression>round(sum(STKINMOV.movuso),2)</expression>
+        <label>Cant</label>
+        <tipo>decimal</tipo>
+      </field>
+      <field id="movcos" suma="true">
+<!--      <expression>round((STKINMOV.movcos * STKINSUM.valcps / STKINSUM.valuso ), 2  )</expression>-->
+        <expression>case when ((select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINMOV.artcod and STKINSPR.siscod='01' order by fecult DESC limit 1) * STKINSUM.valcps / STKINSUM.valuso) > 0  then  round(((select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINMOV.artcod and STKINSPR.siscod='01' order by fecult DESC limit 1) * STKINSUM.valcps / STKINSUM.valuso), 2) else  round(STKINSUM.artcos, 2) end</expression>
+
+        <label>Precio Unit</label>
+        <tipo>decimal</tipo>
+      </field>
+      <field id="movimp" suma="true">
+      <!-- <expression>round((STKINMOV.movcos * STKINSUM.valcps / STKINSUM.valuso ), 2  ) * round(sum(STKINMOV.movuso),2)</expression> -->
+        <expression>case when ((select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINMOV.artcod and STKINSPR.siscod='01' order by fecult DESC limit 1) * STKINSUM.valcps / STKINSUM.valuso) > 0  then  round(((select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINMOV.artcod and STKINSPR.siscod='01' order by fecult DESC limit 1) * STKINSUM.valcps / STKINSUM.valuso) * sum(STKINMOV.movuso),2) else round(STKINSUM.artcos * sum(STKINMOV.movuso),2) end</expression>
+
+        <label>Imp</label>
+        <tipo>decimal</tipo>
+      </field>
+      <field id="traz" clasefila="true" noshow="true">
+        <label>Traz</label>
+        <expression>case when trazable = 1 then 'resaltado' else '' end</expression>
+        <help>Trazable Si o No </help>
+        <tipo>varchar</tipo>
+
+      </field>
+      <field id="barcode" >
+        <label>Cod</label>
+      </field>
+         <field id="movref">
+        <label>Hora</label>
+        <expression>left(movref, 8)</expression>
+        <help>
+        </help>
+        <tipo>hora</tipo>
+      </field> 
+      <field id="ctanom" >
+        <expression>case when barcode = '' then (select CCTCUENT.ctanom from STKINSPR left join CCTCUENT on CCTCUENT.siscod = '01' and CCTCUENT.ctacod = STKINSPR.ctacod where STKINSPR.artcod = STKINMOV.artcod and STKINSPR.siscod='01' order by fecult DESC limit 1) else (select CCTCUENT.ctanom from CCTCUENT where CCTCUENT.siscod = '01' and CCTCUENT.ctacod= substring(barcode, 2, 4) limit 1) end</expression>
+        <label>Prov</label>
+                <tipo>varchar</tipo>
+      </field>
+      <group>
+        <field id="nrocha" ></field>
+        <field id="artcod" tabla="STKINMOV"></field> 
+              <field id="opecod" tabla="STKINMOV"></field> 
+              <field id="barcode" ></field> 
+
+<!--              <field id="movfec" tabla="STKINMOV"></field>  -->
+
+      </group>
+
+    </table>
+
+    <!--
+    <join tipo="left">
+    <table id="stkconce">
+    <field id="siscod" oculto="true">
+    <condicion operador="=">'06'</condicion>
+
+    </field>
+    <field id="contip" oculto="true"></field>
+    </table>
+    </join>
+    -->
+
+    <join tipo="left">
+      <table id="PERSONAL">
+        <field id="opecod" oculto="true">
+          <condicion operador="=">STKINMOV.opecod and PERSONAL.opecod != 0</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="STKINSUM">
+        <field id="artcod" oculto="true">
+          <condicion operador="=">STKINMOV.artcod</condicion>
+        </field>
+        <field id="siscod" oculto="true">
+          <condicion operador="=">STKINMOV.siscod</condicion>
+        </field>
+
+      </table>
+    </join>
+    <!--<join tipo="left">
+      <table id="CCTCUENT">
+        <field id="siscod" oculto="true">
+          <condicion operador="=">'01'</condicion>
+        </field>
+        <field id="ctacod" oculto="true">
+          <condicion operador="=">STKINMOV.ctacod</condicion>
+        </field>
+
+      </table>
+    </join> -->
+  </form>
+</histrix>

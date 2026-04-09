@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="insert" grabafinal="true">
+	<title>Ingreso Movimiento</title>
+	 <obs></obs>
+		<form>
+		    <table id="STK_INVENTARIOS">
+				<field id="nro_inventario"         id_temp="nro_inventario" >
+					<detalle>nro_inventario</detalle>
+				</field>
+				<field id="fecha_inventario"       id_temp="fecha_inventario"/>
+				<field id="usuario_id" 	           id_temp="usuario_id"/>
+				<field id="stkdeposito_id"		   id_temp="stkdeposito_id"/>
+				<field id="stkinventariodetalles"  id_temp="stkinventariodetalles" local="true"/>
+		    </table>
+		</form>
+    </histrix>	

@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="grid" deleteRow="false"  tooltip="false" inserta="false" modifica="false"   forceReload="true" showCantidad="false"  imprime="false"  >
+    <title>Consulta Detallada</title>
+    <obs/>
+    <form detalle="cajmovimientos_qry.xml" inline="true">
+
+        <table id="CAJ_MOVIMIENTOS">
+
+            <fieldGroup id="DEBUG" noshow="true">
+                
+				<field id="fecha_desde" local="true">
+					<detalle>fecha_desde</detalle>
+				</field>
+				
+                <field id="fecha_hasta" local="true">
+					<detalle>fecha_hasta</detalle>
+				</field>
+				
+                <field id="cajpuesto_id">
+                  <detalle>cajpuesto_id</detalle>
+                </field>
+				
+                <field id="cajconcepto_id1" local="true" />
+            </fieldGroup>
+
+            <field id="fecha_movimiento" noshow="true">
+                <label>Fecha</label>
+                <!-- detalle>fecha_movimiento</detalle -->
+                <condicion operador="&gt;=">'[__fecha_desde__]' and (CAJ_MOVIMIENTOS.fecha_movimiento &lt;= '[__fecha_hasta__]' or '[__fecha_hasta__]' = '')</condicion>
+            </field>
+
+            <field id="cajconcepto_id">
+                <label>descripcion</label>
+                <helper type="combo" xml="cajconceptos_qry.xml" dir="/ayudas" empty="true">
+                    <field id="id_cajconcepto" autoinc="true" noshow="true">
+                        <label>Código</label>
+                    </field>
+                    <field id="descripcion_concepto">
+                        <label>Descripcion</label>
+                    </field>
+
+                    <field id="imputacion_concepto" noshow="true">
+                        <detalle>imputacion_concepto</detalle>
+                    </field>
+                </helper>
+                <detalle>cajconcepto_id</detalle>
+                <condicion operador="=">'[__cajconcepto_id1__]' or '[__cajconcepto_id1__]' = ''</condicion>
+            </field>
+
+            <field id="cantidad" suma="true" total="true"  style="width:10%" >
+                <label>Cantidad</label>
+                <expression>count(*)</expression>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="debe" suma="true" total="true" style="width:14.5%" noZero="true">
+                <expression>sum(case when imputacion_concepto = 0 then CAJ_MOVIMIENTOS.importe_movimiento else 0 end)</expression>
+                <label>Debe</label>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="haber" suma="true" total="true" style="width:14.5%" noZero="true">
+                <expression>sum(case when imputacion_concepto = 0 then 0 else CAJ_MOVIMIENTOS.importe_movimiento end)</expression>
+                <label>Haber</label>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="acumulado" suma="true" acumula="true" local="true" style="width:14.5%" >
+                <label>Acumulado</label>
+                <if exp="true">
+                    <true>(debe + 0) - (haber + 0)</true>
+                    <false>0</false>
+                </if>
+                <tipo>numeric</tipo>
+            </field>
+
+            <group>
+                <!-- field id="fecha_movimiento" tabla="CAJ_MOVIMIENTOS" / -->
+                <field id="cajconcepto_id"  tabla="CAJ_MOVIMIENTOS" />
+            </group>
+            <order>
+                <!-- field id="fecha_movimiento" tabla="CAJ_MOVIMIENTOS" />
+                <field id="cajconcepto_id" tabla="CAJ_MOVIMIENTOS" / -->
+				<field id="descripcion_concepto"   />
+            </order>
+        </table>
+        <join>
+            <table id="CAJ_CONCEPTOS">
+                <field id="id_cajconcepto">
+                    <condicion operador="=">CAJ_MOVIMIENTOS.cajconcepto_id</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix>

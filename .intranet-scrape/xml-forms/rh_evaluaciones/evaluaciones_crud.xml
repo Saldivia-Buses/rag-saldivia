@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm-mini" imprime="true" modificaABM="false">
+    <title>Evaluación de desempeño</title>
+    <obs></obs>
+    <form detalle="evaluaciones_qry.xml">
+        <table id="RH_EVALUACIONES" >
+            <title>Evaluación</title>
+            <filters>
+                <field id="legajo" deshabilitado="false">
+                    <label>Legajo</label>
+                    <operador>=</operador>
+                </field>
+               	<field id="id_seccion">
+					<label>Sección</label>
+					<operador>=</operador>
+				</field>
+                <field id="fec_evaluacion">
+                    <label>Desde</label>
+                    <valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m" ,strtotime('-1 month')) , 1, date("Y") - 1))</valor>
+                    <operador>&gt;=</operador>
+                </field>
+
+                <field id="fec_evaluacion">
+                    <label>Hasta</label>
+                    <valor>today</valor>
+                    <operador>&lt;=</operador>
+                </field>
+
+            </filters>
+            
+            <field id="id_rhevaluacion" autoinc="true" noshow="true">
+                <detalle>id_rhevaluacion</detalle>
+            </field>
+
+            <field id="fec_evaluacion" >
+                <label>Fecha de Evaluación</label>
+                <tipo>date</tipo>
+            </field>
+
+            <field id="legajo" tabla="PERSONAL">
+                <label>Legajo</label>
+                <helper type="external" id="PERSONAL">
+                    <field id="legajo"/>
+                    <field id="nombres">
+                        <expression>CONCAT(apellido,', ', Nombre)</expression>
+                    </field>
+                    <field id="fechaEgreso">
+                        <condicion operador="=">'0000-00-00'</condicion>
+                    </field>
+                    <field id="IdPersona" >
+                        <detalle>rhpersona_id</detalle>
+                    </field>
+                    <order>
+                        <field id="nombres"/>
+                    </order>
+                    
+                </helper>
+            </field>
+
+           <!--  <field id="IdPersona" tabla="PERSONAL"/> -->
+
+            <field id="rhpersona_id" noshow="true"/>
+
+            <field id="nombre" tabla="PERSONAL">
+                <label>Apellido y Nombre</label>
+                <expression>CONCAT(apellido, ' ', Nombre)</expression>
+                <detalle>evaluado</detalle>
+            </field>
+			<field id="id_seccion" tabla="PERSONAL" colstyle="display:none;">
+				<helper type="combo" id="SECCION" empty="true">
+					<field id="id_seccion" />
+					<field id="nombre" />
+					<field id="activa" noshow="true">
+					    <condicion operador="=">1</condicion>
+					</field>
+				</helper>
+				<label>Sección</label>
+				<detalle>id_seccion</detalle>
+			</field>
+
+            <order>
+                <field id="nombre"/>
+            </order>
+        </table>
+        <join tipo="left">
+            <table id="PERSONAL">
+                <field id="idPersona">
+                    <condicion operador="=">RH_EVALUACIONES.rhpersona_id</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix> 

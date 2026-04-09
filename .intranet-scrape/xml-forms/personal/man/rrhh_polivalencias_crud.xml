@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm-mini" subtipo="vertical" limit="10">
+  <title>Polivalencias</title>
+  <obs></obs>
+  <form>
+    <table id="RH_POLIVALENCIAS" label="Polivalencias">
+
+      <field id="id_rhpolivalencia" esClave="true" autoinc="true" noshow="true">
+		<label>Código</label>
+		<help>Código de  polivalencia</help>
+      </field>
+	
+      <field id="idPersona" noshow="true" valauto="true">
+		<label>Persona</label>
+      </field>
+
+      <field id="seccion_id">
+		<helper id="SECCION" type="combo">
+			<field id="id_seccion"/>
+			<field id="nombre"/>
+		</helper>
+		<label>Seccion</label>
+      </field>
+
+	<field id="polivalencianivel_id">
+		<helper type="combo" id="RH_POLIVALENCIA_NIVELES">
+			<field id="id_rhpolnivel" />
+			<field id="descripcion" />
+		</helper>
+		<label>Nivel</label>
+	</field>
+    </table>
+  </form>
+</histrix>  

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert" tipoInsert="REPLACE">
+  <title>Articulo Existencia</title>
+  <obs/>
+  <form>
+    <table id="STK_ARTICULO_EXISTENCIAS" label="Articulo Existencia" _idCampoCond="stock_minimo">
+      <field id="stkarticulo_id" id_temp="id_stkarticulo"/>
+      <field id="stkdeposito_id" id_temp="stkdeposito_id">
+            </field>
+      <field id="stock_minimo" id_temp="stock_minimo">
+            </field>
+      <field id="stock_reposicion" id_temp="stock_reposicion">
+            </field>
+    </table>
+  </form>
+</histrix>

@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" limit="6" inserta="false" modifica="false" borra="false" procesa="false" tooltip="false"
+ imprime="false">
+  <title>Configuracion del Puesto</title>
+  <obs />
+  <form inline="true" single="true" detalle="detalle">
+    <table id="HTXMENU">
+
+		<field id="cajpuesto_id" local="true" noshow="true" >
+		    <detalle>cajpuesto_id</detalle>
+		</field>
+
+		<field id="_ORDEN" local="true" noshow="true">
+		</field>
+		<field id="nombre" local="true" style="font-size:14px;font-weight:bold;">
+		    <label >Opcion</label>
+		    <options>
+			<option valor="1">Usuarios Habilitados</option>
+			<option valor="2">Conceptos de Caja</option>
+			<option valor="3">Formas de Cobro/Pago</option>
+			<option valor="4">Arqueo</option>
+			<option valor="5">Puntos de Venta por puesto</option>
+			<option valor="6">Monedas</option>
+		    </options>
+		    
+		    <if exp="true">
+			<true>_ORDEN + 0</true>
+			<false>0</false>
+		    </if>
+		</field>
+
+		<field id="detalle" local="true" noshow="true" >
+		    <if exp="true">
+			<true>(_ORDEN==1)?'cajconfig_users_crud.xml':
+			(
+			    (_ORDEN==2)?'cajconfig_conceptos_crud.xml':
+				(
+				    (_ORDEN==3)?'cajconfig_formas_crud.xml': 
+				    (
+					(_ORDEN==4)?'cajconfig_arqueo_crud.xml': 
+					(
+					    (_ORDEN==5)?'cajconfig_npv_crud.xml':'cajconfig_monedas_crud.xml'
+					)
+				    )
+				)
+			)</true>
+			<false>0</false>
+		    </if>
+		</field>
+		
+		<!--
+		<field id="Usuarios" local="true">
+			<helper type="object" xml="cajconfig_users_crud.xml">
+				<parameter source="cajpuesto_id" target="cajpuesto_id"/>
+			</helper>
+		</field>
+
+		<field id="Conceptos" local="true">
+			<helper type="object" xml="cajconfig_conceptos_crud.xml">
+				<parameter source="cajpuesto_id" target="cajpuesto_id"/>
+			</helper>		
+		</field>
+
+		<field id="Formas" local="true">
+			<helper type="object" xml="cajconfig_formas_crud.xml">
+				<parameter source="cajpuesto_id" target="cajpuesto_id"/>
+			</helper>		
+		</field>
+
+		<field id="Arqueo" local="true">
+			<helper type="object" xml="cajconfig_arqueo_crud.xml">
+				<parameter source="cajpuesto_id" target="cajpuesto_id"/>
+			</helper>
+		</field>
+
+		<field id="NPV" local="true">
+			<helper type="object" xml="cajconfig_npv_crud.xml">
+				<parameter source="cajpuesto_id" target="cajpuesto_id"/>
+			</helper>		
+		</field>
+
+		<field id="Monedas" local="true">
+			<helper type="object" xml="cajconfig_monedas_crud.xml">
+				<parameter source="cajpuesto_id" target="cajpuesto_id"/>
+			</helper>
+		</field>
+		-->
+
+    </table>
+  </form>
+</histrix>

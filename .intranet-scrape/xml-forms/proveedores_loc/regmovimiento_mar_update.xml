@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="update">
+	<title>Modificación de Movimientos</title>
+	 <obs></obs>
+		<form >
+		     <table id="REG_MOVIMIENTOS" idCampoCond="graba">
+			<field id="id_regmovim"      		id_temp="id_regmovim" esClave="true"/>
+			<field id="mar_movimiento" 		id_temp="mar_movimiento"/>
+		    </table>
+		</form>
+    </histrix>	
+
+
+

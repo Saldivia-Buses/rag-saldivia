@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="update">
+    <title>Modifica Fecha Registracion</title>
+    <obs></obs>
+    <form>
+        <table id="CTB_MOVIMIENTOS" idCampoCond="modifica_asiento">
+
+            <field id="regmovim_id"		id_temp="id_regmovim" esClave="true" />
+            <field id="fecha_movimiento"	id_temp="reg_fecha" />
+            <field id="usuario_modificacion"	id_temp="usuario_modificacion" />
+
+        </table>
+    </form>
+</histrix>

@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="consulta">
+	<title>CALENDARIO</title>
+	<obs></obs>
+	<form>
+		<table id="GEN_CALENDAR" >
+			<title>GEN_CALENDARio</title>
+			<campo id="year" noshow="true" incdec="true">
+				
+				<expression  having="false">YEAR(fecha)</expression>
+				<tipo>integer</tipo>
+            </campo>
+			<campo id="mes" noshow="true">
+				<expression  having="false">MONTH(fecha)</expression>
+				
+				
+					<options>                                                                                                                                       
+							<option valor="1">Enero</option>                                                                                                         
+							<option valor="2">Febrero</option>                                                                                                       
+							<option valor="3">Marzo</option>                                                                                                         
+							<option valor="4">Abril</option>                                                                                                         
+							<option valor="5">Mayo</option>                                                                                                          
+							<option valor="6">Junio</option>                                                                                                         
+							<option valor="7">Julio</option>                                                                                                         
+							<option valor="8">Agosto</option>                                                                                                        
+							<option valor="9">Septiempre</option>                                                                                                    
+							<option valor="10">Octubre</option>                                                                                                      
+							<option valor="11">Noviembre</option>                                                                                                    
+							<option valor="12">Diciembre</option>                                                                                                    
+																																									 
+					</options> 	
+				    <tipo>varchar</tipo>			
+			</campo>
+
+			<campo id="semana" noshow="true">
+				<label>semana</label>
+				<expression>WEEK(fecha)</expression>
+			</campo>
+			<campo id="Domingo" obj="cal_evento_cons.xml" showObjTabla="true" showValor="true" linkint="cal_evento_abm.xml" linkdes="Editar Eventos">
+				<label style="font-size:18px; color:red; font-family:Arial, Helvetica, sans-serif;">Domingo</label>
+				<expression>select fecha from GEN_CALENDAR as CAL where YEAR(CAL.fecha) = YEAR(GEN_CALENDAR.fecha) and MONTH(CAL.fecha) = MONTH(GEN_CALENDAR.fecha) and WEEK(CAL.fecha) = WEEK(GEN_CALENDAR.fecha) and DAYOFWEEK(CAL.fecha) = 1 limit 1</expression>
+				<tipo>date</tipo>				
+				<paring destino="fecha" operador="=">Domingo</paring>
+				
+			</campo>
+			<campo id="Lunes" obj="cal_evento_cons.xml" showObjTabla="true" showValor="true" linkint="cal_evento_abm.xml" linkdes="Editar Eventos">
+				<label style="font-size:18px; color:#444; font-family:Arial, Helvetica, sans-serif;">Lunes</label>
+				<expression>select fecha from GEN_CALENDAR as CAL where YEAR(CAL.fecha) = YEAR(GEN_CALENDAR.fecha) and MONTH(CAL.fecha) = MONTH(GEN_CALENDAR.fecha) and WEEK(CAL.fecha) = WEEK(GEN_CALENDAR.fecha) and DAYOFWEEK(CAL.fecha) = 2 limit 1</expression>
+				<tipo>date</tipo>
+				<paring destino="fecha" operador="=">Lunes</paring>
+
+			</campo>							
+			<campo id="Martes" obj="cal_evento_cons.xml" showObjTabla="true" showValor="true" linkint="cal_evento_abm.xml" linkdes="Editar Eventos">
+				<label style="font-size:18px; color:#444; font-family:Arial, Helvetica, sans-serif;">Martes</label>
+				<expression>select fecha from GEN_CALENDAR as CAL where YEAR(CAL.fecha) = YEAR(GEN_CALENDAR.fecha) and MONTH(CAL.fecha) = MONTH(GEN_CALENDAR.fecha) and WEEK(CAL.fecha) = WEEK(GEN_CALENDAR.fecha) and DAYOFWEEK(CAL.fecha) = 3 limit 1</expression>
+				
+				<tipo>date</tipo>				
+				<paring destino="fecha" operador="=">Martes</paring>
+				
+			</campo>
+			<campo id="Miercoles" obj="cal_evento_cons.xml" showObjTabla="true" showValor="true" linkint="cal_evento_abm.xml" linkdes="Editar Eventos">
+				<label style="font-size:18px; color:#444; font-family:Arial, Helvetica, sans-serif;">Miércoles</label>
+				<expression>select fecha from GEN_CALENDAR as CAL where YEAR(CAL.fecha) = YEAR(GEN_CALENDAR.fecha) and MONTH(CAL.fecha) = MONTH(GEN_CALENDAR.fecha) and WEEK(CAL.fecha) = WEEK(GEN_CALENDAR.fecha) and DAYOFWEEK(CAL.fecha) = 4 limit 1</expression>
+				<tipo>date</tipo>				
+				<paring destino="fecha" operador="=">Miercoles</paring>
+				
+			</campo>
+			<campo id="Jueves" obj="cal_evento_cons.xml" showObjTabla="true" showValor="true" linkint="cal_evento_abm.xml" linkdes="Editar Eventos">
+				<label style="font-size:18px; color:#444; font-family:Arial, Helvetica, sans-serif;">Jueves</label>
+				<expression>select fecha from GEN_CALENDAR as CAL where YEAR(CAL.fecha) = YEAR(GEN_CALENDAR.fecha) and MONTH(CAL.fecha) = MONTH(GEN_CALENDAR.fecha) and WEEK(CAL.fecha) = WEEK(GEN_CALENDAR.fecha) and DAYOFWEEK(CAL.fecha) = 5 limit 1</expression>
+				<tipo>date</tipo>	
+				<paring destino="fecha" operador="=">Jueves</paring>
+				
+			</campo>
+			<campo id="Viernes" obj="cal_evento_cons.xml" showObjTabla="true" showValor="true" linkint="cal_evento_abm.xml" linkdes="Editar Eventos">
+				<label style="font-size:18px; color:#444; font-family:Arial, Helvetica, sans-serif;">Viernes</label>
+				<expression>select fecha from GEN_CALENDAR as CAL where YEAR(CAL.fecha) = YEAR(GEN_CALENDAR.fecha) and MONTH(CAL.fecha) = MONTH(GEN_CALENDAR.fecha) and WEEK(CAL.fecha) = WEEK(GEN_CALENDAR.fecha) and DAYOFWEEK(CAL.fecha) = 6 limit 1</expression>
+				<tipo>date</tipo>		
+				<paring destino="fecha" operador="=">Viernes</paring>
+			</campo>
+		    <campo id="Sabado" obj="cal_evento_cons.xml" showObjTabla="true" showValor="true" linkint="cal_evento_abm.xml" linkdes="Editar Eventos">
+				<label style="font-size:18px; color:#444; font-family:Arial, Helvetica, sans-serif;">Sábado</label>
+				<expression>select fecha from GEN_CALENDAR as CAL where YEAR(CAL.fecha) = YEAR(GEN_CALENDAR.fecha) and MONTH(CAL.fecha) = MONTH(GEN_CALENDAR.fecha) and WEEK(CAL.fecha) = WEEK(GEN_CALENDAR.fecha) and DAYOFWEEK(CAL.fecha) = 7 limit 1</expression>
+				<tipo>date</tipo>
+				<paring destino="fecha" operador="=">Sabado</paring>
+				
+			</campo>
+			<campo id="resaltado" clasefila="true" noshow="true" >
+				<label>aca</label>
+				<expression>case when WEEK(FECHA) = WEEK(NOW()) then 'resaltado' end</expression>
+				<tipo>varchar</tipo>
+			</campo>
+			
+			<group>
+				<campo id="WEEK(fecha)"></campo>
+			</group>
+		<filters>
+  			  <campo id="year" deshabilitado="false" >
+				  <label>year</label>
+                  <operador>=</operador>
+				  <valor eval="true">date('Y')</valor>				
+			  </campo>				
+  			  <campo id="mes" deshabilitado="false">
+				  <label>mes</label>
+                  <operador>=</operador>	
+                  <valor eval="true">date('m')</valor>		
+			  </campo>				
+ 			  
+			</filters> 
+
+		</table>
+	</form>	   
+</histrix> 

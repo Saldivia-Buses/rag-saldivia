@@ -1,0 +1,337 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ficha" PDFsincabecera="true"  sololectura="true" autoprint="true" PDFfontSize="8" PDFfont="Courier" copies="2">
+  <title>FACTURA</title>
+  <obs></obs>
+  <form >
+
+
+	    <pdf PDForientacion="P">
+            <code>
+            <![CDATA[
+
+				// Frame Principal
+				$pdf->Rect(24, 235, 100, 12, 0.3);
+				
+			]]>
+			</code>
+		</pdf>
+
+  <table id="REG_MOVIMIENTOS"  label="FACTURA">
+
+    <field id="id_regmovim" noshow="false" esClave="true" print="false">
+        <label>Codigo</label>
+        <help>Codigo de movimiento</help>
+    </field>
+
+	<field id="muestra_iva" noshow="true" local="true" print="false">
+		<expresion>case when letra_movimiento = 'A' or letra_movimiento = 'a'  then 'true' else 'false' end </expresion>
+	</field>	
+	
+	<field id="nomuestra_iva" noshow="true" local="true" print="false">
+		<expresion>case when letra_movimiento = 'A' or letra_movimiento = 'a'  then 'false' else 'true' end </expresion>
+	</field>	
+
+	<field id="muestra_dto" noshow="true" local="true" print="false">
+		<expresion>IF(importe_bon != 0,'true','false')</expresion>
+	</field>
+        
+	<field id="subsistema_id" noshow="true" print="false">
+	    <label>Subsistema</label>
+		<help>subsistema al que pertenece</help>
+	</field>
+
+      <field id="concepto_id" noshow="true" print="false" />
+    
+      <field id="regcuenta_id" noshow="true" print="false">
+        <label posx="5" posy="+1">Cuenta</label>
+      </field>
+      
+      <field id="descripcion_concepto" tabla="REG_CONCEPTOS" PDFbold="true" >
+        <label modpos="nobr"  posx="145" posY="5" PDFsize="12"></label>
+      </field>
+
+      <field id="nro_movimiento" oculto="true"/>
+
+      <field id="NumeroMov" print="false">
+        <label modpos="nobr"  posx="140" posY="15" PDFsize="12"></label>
+        <expresion>LPAD(nro_movimiento,9,'0')</expresion>
+      </field>
+
+      <field id="nro_Movimiento" PDFnoborder="true" PDFbold="true">
+           <label modpos="nobr" posx="145" posY="14" PDFsize="9" _size="6" PDFnolabel="true">Nº</label>
+           <expresion>CONCAT(letra_movimiento, ' ', LPAD(puesto_movimiento,4,'0'),' - ',LPAD(nro_movimiento,9,'0'))</expresion> 
+      </field>
+      
+
+      <field id="fecha_movimiento">
+        <label modpos="nobr" posx="116" posY="28" PDFsize="10">Fecha de factura</label>
+        <help>Fecha movimiento</help>
+      </field>
+
+      <field id="muestra_vencimiento" local="true" noshow="true" print="false">
+        <if exp="'vencimiento_movimiento' != ''">
+			<true>'true'</true>
+			<false>'false'</false>
+	  	</if>
+      </field>
+
+      <field id="vencimiento_movimiento">
+         <label modpos="nobr" posx="108" posY="33" PDFsize="10">Fecha de vencimiento</label>
+         <attribute id="print">muestra_vencimiento</attribute>
+      </field>
+
+      
+    
+      == CABECERA ==
+    
+           <field id="nombre_cuenta"  tabla="REG_CUENTA" deshabilitado="true" _sincelda="true" PDFbold="true" PDFnoborder="true">
+                <label colspan="4"  posx="14" posY="+20" pdfancho="80" size="22">Cliente</label>                
+            </field>
+            
+           <field id="nro_cuenta"  tabla="REG_CUENTA" deshabilitado="true"  PDFnoborder="true" _sincelda="true" style="text-align:right;">
+                <label colspan="4"  posx="100" posY="0" size="20">Cuenta Nº</label>
+            </field>
+      
+            <field id="id_regcuenta" noshow="true" print="false" tabla="REG_CUENTA" deshabilitado="true"  PDFnoborder="true" _sincelda="true" style="text-align:right;">
+            </field>
+
+	 <field id="iva_id" tabla="REG_CUENTA"  PDFnoborder="true">
+		<tabla_ex xml="iva_qry.xml" dir="/ayudas" vacio="true">
+		</tabla_ex>
+		<label  modpos="nobr" posx="150" posY="0" >Categoria</label>
+	</field>
+
+            <field id="cod_direccion" tabla="REG_CUENTA" deshabilitado="true" _sincelda="true" PDFnoborder="true">
+                <label colspan="0" posx="14" posY="+0.5" pdfancho="80" size="22">Dirección</label>
+            </field>
+
+	<field id="nro_direccion" tabla="REG_CUENTA" deshabilitado="true" _sincelda="true"  PDFnoborder="true">
+        <label colspan="0" posx="100" posY="0" size="22" pdfancho="80">Altura</label>
+    </field>
+
+	<field id="regforma_id" PDFnoborder="true" >
+		<helper type="combo" id="REG_FORMAS" >
+			<field id="id_regforma"/>
+			<field id="nombre_forma"/>
+		</helper>
+		<label colspan="3" modpos="nobr" posx="150" posY="0" size="22">Forma pago</label>
+	</field>
+
+
+	<field id="localidad_id" tabla="REG_CUENTA" deshabilitado="true" _sincelda="true"  PDFnoborder="true">
+        <label colspan="4" posx="14" posY="+0.5" size="22" pdfancho="80">Localidad</label>
+		<expresion>SELECT nombre_localidad FROM GEN_LOCALIDADES where id_localidad = REG_CUENTA.localidad_id</expresion>
+    </field>
+
+    <field id="telefono" deshabilitado="true" PDFnoborder="true" _sincelda="true">
+        <label colspan="0" posx="100" size="20">Teléfono</label>
+		<expresion>SELECT valor 
+		             FROM REG_CUENTAS_CONTACTOS 
+		             JOIN GEN_TIPO_CONTACTOS 
+		               on GEN_TIPO_CONTACTOS.id_contacto = REG_CUENTAS_CONTACTOS.contacto_id
+		              AND GEN_TIPO_CONTACTOS.vcard_type like 'TEL%' 
+		            WHERE regcuenta_id = REG_MOVIMIENTOS.regcuenta_id 
+		            LIMIT 1
+	    </expresion>
+    </field>
+
+    <field id="fax" deshabilitado="true" PDFnoborder="true" _sincelda="true">
+        <label colspan="3" posx="150" size="20">Fax</label>
+		<expresion>SELECT valor 
+		             FROM REG_CUENTAS_CONTACTOS 
+			         JOIN GEN_TIPO_CONTACTOS 
+			           ON GEN_TIPO_CONTACTOS.id_contacto = REG_CUENTAS_CONTACTOS.contacto_id
+			          AND GEN_TIPO_CONTACTOS.vcard_type like '%FAX%' 
+			        WHERE regcuenta_id = REG_MOVIMIENTOS.regcuenta_id 
+			        LIMIT 1
+		</expresion>
+    </field>
+
+    <field id="cuit_cuenta" tabla="REG_CUENTA" deshabilitado="true" sincelda="true" PDFnoborder="true">
+        <label colspan="4" modpos="nobr" posx="14" posY="+0.5" size="20" pdfancho="80" >CUIT</label>
+    </field>
+
+
+	<field id="factura" local="true" sincelda="true" PDFnolabel="true" >
+		<label posx="100" posy="0">Factura</label>
+		<expresion>SELECT mrem.nro_movimiento 
+		             FROM REG_DETALLES 
+		        LEFT JOIN REG_IMPUTACIONESDETALLES rimp ON REG_DETALLES.id_regdetalle = rimp.regdetallefac_id 
+		        LEFT JOIN REG_DETALLES             dfac ON rimp.regdetalleped_id = dfac.id_regdetalle
+		        LEFT JOIN REG_MOVIMIENTOS          mrem ON dfac.regmovim_id = mrem.id_regmovim
+		            WHERE REG_DETALLES.regmovim_id = REG_MOVIMIENTOS.id_regmovim 
+		              AND mrem.concepto_id = 47 GROUP BY mrem.nro_movimiento
+		</expresion>
+	</field>
+
+    
+	<field id="pedido" pdfancho="200">
+		<label posx="14" posy="+0.5">Pedido</label>
+		<expresion>(SELECT GROUP_CONCAT( DISTINCT CONCAT( LPAD(RMP.puesto_movimiento,4,'0'),'-',LPAD(RMP.nro_movimiento,8,'0') ) SEPARATOR " " )
+                      FROM REG_MOVIMIENTOS          RM
+                      JOIN REG_DETALLES             RD  ON RD.regmovim_id       = RM.id_regmovim
+                      JOIN REG_IMPUTACIONESDETALLES RID ON RID.regdetallefac_id = RD.id_regdetalle
+                      JOIN REG_DETALLES             RDP ON RDP.id_regdetalle    = RID.regdetalleped_id
+                      JOIN REG_MOVIMIENTOS          RMP ON RMP.id_regmovim      = RDP.regmovim_id
+                     WHERE RM.id_regmovim = REG_MOVIMIENTOS.id_regmovim
+                     GROUP BY RM.id_regmovim)
+		</expresion>
+	</field>
+	
+    
+    
+	== postal ==
+	
+    <field id="entregalocalidad" tabla="REG_CUENTA" deshabilitado="true" _sincelda="true"  PDFnoborder="true" PDFbold="true" PDFsize="12">
+        <label colspan="4" posx="14" posY="79" size="80.5" pdfancho="80">Domicilio de Envio</label>
+		<expresion>concat(entrega_direccion, ' - ', (SELECT nombre_localidad FROM GEN_LOCALIDADES where id_localidad = REG_CUENTA.entrega_localidad))</expresion>
+    </field>
+
+    <field id="entrega_hora" tabla="REG_CUENTA" deshabilitado="true" sincelda="true" PDFnoborder="true" PDFsize="10">
+        <label colspan="3" modpos="nobr" posx="14" posY="83.5" size="35" pdfancho="60" >Horario Entrega</label>
+    </field>
+        
+    ======  ETIQUETAS  =======
+      
+    <field id="etiquetas" local="true">
+      <label PDFnolabel="true" posx="10" posy="76"></label>
+    </field>
+    	
+    	
+         <field id="detalles" local="true" pdfwidth="185">
+              <label  PDFnolabel="true" PDFlineas="false" size="25" posx="14" posy="+4" ></label>
+			  <helper xml="imp_factura_detalle_dh_qry.xml" type="object" dir="/clientes/qry">
+					<parameter source="id_regmovim" target="regmovim_id"/>
+					<parameter source="subsistema_id" target="subsistema_id"/>
+					<parameter source="muestra_iva" target="muestra_iva"/>
+			  </helper>
+         </field>
+
+
+    == TALON ==
+	
+	<field id="SubTotal" PDFnoborder="true">
+		<label modpos="nobr" posx="120" posY="220"   size="22" PDFsize="9" pdfancho="55">Sub-Total</label>
+		<expresion>	SUM(REG_DETALLES.neto_detalle) </expresion>
+		<tipo>numeric</tipo>
+		<attribute id="print">muestra_iva</attribute>
+	</field>
+
+	<field id="SubTotalT" PDFnoborder="true">
+		<label modpos="nobr" posx="120" posY="220"   size="22" PDFsize="9" pdfancho="55">Sub Total</label>
+		<expresion>	SUM(REG_DETALLES.total_detalle) </expresion>
+		<tipo>numeric</tipo>
+		<attribute id="print">nomuestra_iva</attribute>
+	</field>
+
+	<field id="Saldo" PDFnoborder="true" pdfancho="70">
+		<label posx="20" posY="220">Su saldo actual es de $</label>
+		<expresion>SELECT saldo_cuenta FROM REG_CUENTA_SALDOS WHERE REG_CUENTA_SALDOS.id_regcuenta = REG_MOVIMIENTOS.regcuenta_id</expresion>
+	</field>
+
+    <field id="cantidad_bultos">
+  	  <label posx="20" posY="225">Cant.Unidades:</label>
+<!--	  <expresion>SELECT sum(cantidad_detalle) FROM REG_DETALLE_VISTA WHERE REG_DETALLE_VISTA.regmovim_id = REG_MOVIMIENTOS.id_regmovim AND not (REG_DETALLE_VISTA.codigo_detalle like 'cbo%' or REG_DETALLE_VISTA.codigo_detalle like 'pro%')</expresion> -->
+	  <expression> ifnull((SELECT sum(cantidad_detallecmb) FROM REG_DETALLE_COMBOS WHERE REG_DETALLE_COMBOS.regmovim_id = REG_MOVIMIENTOS.id_regmovim), 0)
++ ifnull((SELECT sum(cantidad_detalle) FROM REG_DETALLES
+	  WHERE REG_DETALLES.regmovim_id = REG_MOVIMIENTOS.id_regmovim
+	  AND not (REG_DETALLES.codigo_detalle like 'cbo%' or REG_DETALLES.codigo_detalle 
+	  like 'pro%')),0)
+	  </expression>
+
+    </field>
+    
+	<field id="regcuentavendedor_id" _PDFnoborder="true">
+		<label posx="70" _posY="225">Vendedor</label>
+		<expresion>SELECT nro_cuenta FROM REG_CUENTA WHERE REG_CUENTA.id_regcuenta = REG_MOVIMIENTOS.regcuentavendedor_id</expresion>
+	</field>
+    
+
+	<field id="bonificaciones_movimiento" PDFnoborder="true" noZero="true">
+		<label modpos="nobr" posx="120" posY="228" size="25" pdfancho="25" PDFsize="9">Descuento %</label>
+		<tipo>numeric</tipo>
+		<attribute id="print">muestra_dto</attribute>
+	</field>
+
+    	<field id="importe_bon" PDFnoborder="true">
+			<label modpos="nobr" posx="177" posY="0" size="2" pdfancho="18" PDFsize="9">$</label>
+  	  		<tipo>numeric</tipo>
+  	  		<expresion>case when letra_movimiento = 'A' or letra_movimiento = 'a'  then importe_bon else importe_bon * 1.21 end </expresion>
+			<attribute id="print">muestra_dto</attribute>
+	  </field>
+	
+
+	<field id="neto_movimiento" PDFnoborder="true">
+		<label posx="120" posY="233" size="24" pdfancho="53" PDFsize="8">Neto Gravado</label>
+		<tipo>numeric</tipo>
+		<attribute id="print">muestra_iva</attribute>
+	</field>
+		
+	<field id="total_iva" PDFnoborder="true">
+		<label modpos="nobr" posx="120" posY="238" size="22" pdfancho="55" PDFsize="9">I.V.A.</label>
+		<expression>importe_iva</expression>
+		<tipo>numeric</tipo>
+		<attribute id="print">muestra_iva</attribute>
+	</field>
+
+
+
+    <!--
+	<field id="enletras" local="true" _PDFnolabel="true">
+  	  <label posx="20" posY="240" pdfancho="55">Son pesos:</label>
+      <tipo aletras="true">char</tipo>
+      <expresion>importe_movimiento</expresion>
+    </field>
+    -->
+
+	<field id="referencia_facturacion" local="true" maxsize="160" maxlength="160" PDFnolabel="true">
+		<label posx="20" posY="230" pdfancho="100" />
+	    <helper type="parameter" id="SIS::02:refrerencia_facturacion" >
+  	  	    <label>Referencia Para Facturacion</label>
+      		<defaultValue/>
+        </helper>
+		<size>40</size>
+	</field>
+
+	<field id="referencia_movimiento" maxsize="160" maxlength="160" PDFnolabel="true">
+		<label posx="20" posY="242" pdfancho="100">Observaciones</label>
+		<size>40</size>
+	</field>
+
+
+
+	<field id="importe_movimiento" PDFnoborder="true" PDFbold="true">
+		<label modpos="nobr" posx="120" posY="244" PDFsize="10" size="22" pdfancho="55">TOTAL</label>
+	</field>
+	
+
+	<group>
+		<field id="id_regmovim"/>
+	</group>
+
+  </table>
+
+		<join tipo="left">
+			<table id="REG_CONCEPTOS">
+			    <field id="id_concepto">
+				<condicion operador="=">concepto_id</condicion>
+			    </field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="REG_CUENTA">
+				<field id="id_regcuenta">
+					<condicion operador="=">regcuenta_id</condicion>
+				</field>
+			</table>
+		</join> 
+		<join tipo="left">
+			<table id="REG_DETALLES">
+				<field id="regmovim_id">
+					<condicion operador="=">id_regmovim</condicion>
+				</field>
+			</table>
+		</join> 
+
+  </form>
+</histrix>  

@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert" processFirst="true">
+	<title/>
+	<obs/>
+	<form>
+		<table id="REG_MOVIMIENTOS">
+			<field id="subsistema_id" id_temp="subsistema_id"/>
+			<field id="regcuenta_id" id_temp="regcuenta_id"/>
+			<field id="concepto_id" id_temp="regconcepto_id"/>
+			<field id="fecha_movimiento" id_temp="fecha_movimiento"/>
+			<field id="letra_movimiento" id_temp="regcuenta_ivaletra"/>
+			<field id="puesto_movimiento" id_temp="puesto_movimiento"/>
+			<field id="nro_movimiento" id_temp="nro_movimiento"/>
+			<field id="reg_fecha" id_temp="fecha_movimiento"/>
+			<field id="neto_movimiento" id_temp="neto_movimiento"/>
+			<field id="importe_iva" id_temp="importe_IVA"/>
+			<field id="importe_exento" id_temp="importe_exento"/>
+			<field id="alicuota_iva" id_temp="alicuota_iva"/>
+			<field id="regforma_id" id_temp="regforma_id"/>
+			<field id="reg_periodo" id_temp="reg_periodo"/>
+			<field id="bonificaciones_movimiento" id_temp="mi_bonificaciones_movimiento"/>
+			<field id="importe_bon" id_temp="mi_importe_bon"/>
+			<field id="vencimiento_movimiento">
+				<valor>ifnull(date_add( fecha_movimiento, interval (select ifnull(plazo,0) from REG_FORMAS where id_regforma = '[__regforma_id__]' limit 1) day), reg_fecha)</valor>
+				<tipo>integer</tipo>
+			</field>
+			<field id="importe_movimiento" id_temp="importe_movimiento">
+				<tipo>custom_numeric</tipo>
+			</field>
+			<field id="saldo_movimiento" id_temp="saldo_movimiento">
+				<tipo>custom_numeric</tipo>
+			</field>
+			<field id="referencia_movimiento" id_temp="referencia_movimiento"/>
+			<field id="regcuentavendedor_id" id_temp="regcuentavendedor_id"/>
+			<field id="regcuentatransporte_id" id_temp="regcuentatransporte_id"/>
+			<field id="cantidad_bultos" id_temp="micanpro"/>
+			<field id="stklista_id" id_temp="wstklista_id"/>
+			<field id="nombre_movimiento" id_temp="regcuenta_nombre"/>
+			<field id="domicilio_movimiento" id_temp="regcuenta_direccion" />
+			<!--<field id="domicilio_movimiento" id_temp="domicilio_movimiento" />-->
+			<field id="genlocalidad_id" id_temp="genlocalidad_id" />
+			<field id="iva_id" id_temp="regcuenta_ivaid" />
+			<field id="cuit_movimiento" id_temp="regcuenta_cuit" />
+			<field id="tiposervicio_afip" id_temp="tiposervicio_afip" />
+			<!--<field id="regcuentagrupo_id" id_temp="regcuentagrupo_id" />-->
+			<field id="dni_movimiento" id_temp="regcuenta_doc" />
+		</table>
+	</form>
+</histrix>

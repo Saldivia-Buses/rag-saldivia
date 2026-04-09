@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<abm tipo="consulta">
+	<titulo>Fichadas</titulo>
+	<obs/>
+	<consulta>
+		<tabla id="FICHADAS" label="Fichadas del Reloj" styleTbody="height:500px;overflow-x:hidden;">
+		<campo id="borrado" oculto="true">
+			<condicion operador="=">0</condicion>
+
+			</campo>
+			
+			<campo id="tarjeta">
+				<label>Tarjeta</label>
+			</campo>
+			<campo id="fecha">
+				<label>Fecha</label>
+			</campo>
+			<campo id="Hora">
+				<label>Hora</label>
+			</campo>
+			<campo id="reloj">
+				<label>Reloj</label>
+			</campo>
+			<campo id="codigo">
+				<label>Codigo</label>
+			</campo>
+				<campo id="borrado" oculto="true">
+					<condicion operador="=">0</condicion>
+				</campo>				
+			
+			
+		</tabla>
+	</consulta>
+</abm>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="update">
+  <title>ARTICULOS POR SECTOR</title>
+  <obs></obs>
+  <form >
+    <table id="STK_ARTICULO_PROCESO" label="update articulos" _idCampoCond="updateCond">
+
+      <field id="proceso_id"      id_temp="proceso_id" />
+      <field id="homologacion_id" id_temp="homologacion_id" />
+      <field id="stkarticulo_id"  id_temp="stkarticulo_id" />
+      <field id="cantidad"        id_temp="cantidad" />
+      
+    </table>
+  </form>     
+</histrix>

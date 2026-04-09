@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="fichaing" sololectura="true" inserta="false" borra="false" imprime="false" modifica="false" form="false" tooltip="false" preFetch="true" close="true">
+	<title>Anulación Arqueo y Cierre</title>
+	<obs/>
+	<consulta>
+		<table id="CAJ_ARQUEOS">
+
+			<movimientos>
+				<relacion id="reapertura_cajarqueo_upd.xml" />
+				<relacion id="reapertura_cajarqueoconteo_del.xml" />
+				<relacion id="reapertura_cajmovimiento_del.xml" />
+				<relacion id="reapertura_cajregistro_upd.xml" />
+				<relacion id="reapertura_ctbmovimiento_del.xml" />
+			</movimientos>
+
+			<field id="id_cajarqueo" autoinc="true">
+				<label>ID Arqueo</label>
+			</field>
+
+			<field id="cajregistro_id">
+				<label>ID Registro</label>
+			</field>
+
+			<field id="cajmovimiento_id" noshow="true">
+				<label>ID Movimiento de Cierre</label>
+			</field>
+
+			<field id="apertura_arqueo">
+				<label>Apertura</label>
+			</field>
+
+			<field id="registrado_arqueo">
+				<label>Registrado</label>
+			</field>
+
+			<field id="total_arqueo">
+				<label style="color:blue;font-size:large;">Total</label>
+			</field>
+
+			<field id="conteo_arqueo">
+				<label>Recuento</label>
+			</field>
+
+			<field id="diferencia_arqueo">
+				<label style="color:red;font-size:large;">Diferencia</label>
+			</field>
+
+			<field id="esadmin" local="true" validar="true" noshow="true">
+				<valor eval="true">$_SESSION['administrator']</valor>
+			</field>
+
+			<field id="cero" local="true" noshow="true">
+				<valor>0</valor>
+			</field>
+
+		</table>
+
+	</consulta>
+</histrix>

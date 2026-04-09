@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert" replaceInto="true" >
+	<title>Descuentyos Articulos Clientes</title>
+	<obs></obs>
+	<form >
+		<table id="STK_LISTADETALLE"  idCampoCond="newprice2">
+			<field id="stkarticulo_id" esClave="true" 			id_temp="id_stkarticulo"></field>
+			<field id="stklista_id"   esClave="true"			>
+			    <valor>2</valor>
+			</field>
+			<field id="stklistadetalle_precioventa" 		id_temp="precio2"></field>	
+		</table>
+	</form>
+
+</histrix>
+

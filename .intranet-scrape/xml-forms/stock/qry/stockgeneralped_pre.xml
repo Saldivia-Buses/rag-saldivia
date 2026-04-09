@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" paginar="200">
+  <title>Consulta general</title>
+  <obs/>
+  <form>
+    <table id="CPS_DETALLE" label="Consulta general">
+  <!--    <filtros>
+      <field id="id_stkarticulo" tabla="STK_ARTICULOS" >
+        <label>Codigo de Articulo</label>
+          <operador>=</operador>
+
+      </field>
+
+
+        <field id="codigo_barra" >
+          <operador>=</operador>
+          <label modpos="nobr">Codigo de Barra</label>
+          <help>Articulo a buscar</help>
+        </field>
+
+        <field id="nombre_articulo" tabla="STK_ARTICULOS" deshabilitado="true"/>
+
+        <field id="stkconcepto_id">
+          <operador>=</operador>
+          <label>Tipo de concepto</label>
+          <help>Concepto elegido</help>
+        </field>
+
+        <field id="stkfamilia_id">
+          <operador>=</operador>
+          <label modpos="nobr">Familia</label>
+        </field>
+        <field id="stkrubro_id">
+          <operador>=</operador>
+          <label modpos="nobr">Rubro</label>
+        </field>
+        <field id="stksubrubro_id">
+          <operador>=</operador>
+          <label modpos="nobr">Rubro</label>
+        </field>        
+        <field id="stkdeposito_id">
+          <operador>=</operador>
+          <label modpos="nobr">Deposito</label>
+        </field>
+        <field id="fecha_mov1" deshabilitado="false">
+          <valor>today</valor>
+          <operador>&gt;=</operador>
+          <label>Desde Fecha</label>
+          <help>Fecha movimiento</help>
+        </field>
+
+        <field id="fecha_mov2" deshabilitado="false">
+          <valor>today</valor>
+          <operador>&lt;=</operador>
+          <label modpos="nobr">hasta Fecha</label>
+          <help>Fecha movimiento</help>
+        </field>
+
+      </filtros>-->
+
+      <field id="id_cpsdetalle" noshow="true" />
+
+      <field id="id_stkarticulo" tabla="STK_ARTICULOS" >
+        <label>Codigo de Articulo</label>
+        <helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas">
+          <field id="wstklista_id" local="true">
+            <valor>1</valor>
+          </field>
+        </helper>
+
+      </field>
+
+      <field id="codigo_barra"  tabla="STK_ARTICULOS">
+        <label>Codigo Barra</label>
+        <helper type="external" xml="stkarticulo_pos.xml" dir="/ayudas">
+          <field id="wstklista_id" local="true">
+            <valor>1</valor>
+          </field>
+        </helper>                
+	  </field>
+
+      <field id="nombre_articulo" tabla="STK_ARTICULOS">
+        <label modpos="nobr">Nombre</label>
+        <help>Referencia del movimiento</help>
+      </field>
+      <field id="stkconcepto_id" local="true" noshow="true">
+        <label>Concepto</label>
+        <help>Código de concepto</help>
+        <valor>'OC'</valor>
+      </field>
+      <field id="nombre_concepto" local="true" print="false">
+        <label>Concepto</label>
+        <help>Codigo de concepto</help>
+        <valor>'Pendiente en OC'</valor>
+      </field>
+      <field id="entrada" local="true" suma="true" noZero="true">
+        <label>Entrada</label>
+        <expresion>cantidad_compra</expresion>
+        <tipo>numeric</tipo>
+      </field>
+      <field id="salida" local="true" suma="true" noZero="true">
+        <label>Salida</label>
+        <expresion>0</expresion>
+        <tipo>numeric</tipo>
+      </field>
+
+      <field id="precio_total" local="true" suma="true" noZero="true">
+        <label>Importe</label>
+        <tipo>numeric</tipo>
+        <valor>0</valor>
+<!--        <expresion>(CASE WHEN STK_CONCEPTOS.tipo_concepto = 1 THEN 1 ELSE -1 END) * precio_total</expresion> -->
+      </field>
+
+      <field id="stkdeposito_id" local="true">
+        <label>Deposito</label>
+          <helper type="combo" xml="stkdeposito_qry.xml" dir="/ayudas" empty="true">
+        </helper>
+        <valor>0</valor>
+      </field>
+
+      <field id="stkfamilia_id" noshow="true" tabla="STK_ARTICULOS">
+        <label>Familia</label>
+        <helper type="combo" xml="stkfamilia_qry.xml" dir="/ayudas" empty="true">
+        </helper>
+      </field>
+      <field id="stkrubro_id" noshow="true" tabla="STK_ARTICULOS">
+        <label>Rubro</label>
+        <helper type="combo" xml="stkrubro_qry.xml" dir="/ayudas" empty="true">
+        </helper>
+        <actualiza>
+            <field destino="stkrubro_id" id="stksubrubro_id"/>
+        </actualiza>
+      </field>
+      <field id="stksubrubro_id" tabla="STK_ARTICULOS">
+          <label modpos="nobr">SubRubro</label>
+          <helper type="combo" xml="stksubrubro_qry.xml" dir="/ayudas" empty="true" />
+      </field>
+      <field id="fecha_movimiento">
+        <label>Fecha</label>
+        <help>Fecha movimiento</help>
+        <expresion>fecha_requerido</expresion>
+        <tipo>date</tipo>
+      </field>
+      <field id="referencia">
+        <label>referencia</label>
+        <help>Referencia del movimiento</help>
+        <expresion>cpsdetalle</expresion>
+      </field>
+      <field id="comprobante" local="true">
+        <label>Comprobante</label>
+        <expresion>CONCAT('OC Nro ',(cpsmovimiento_id))</expresion>
+      </field>
+      <field id="nombre_cuenta" tabla="REG_CUENTA">
+        <label modpos="nobr">Cuenta</label>
+      </field>
+
+
+      <field id="fecha_mov1" noshow="true">
+        <expresion having="false">fecha_requerido</expresion>
+        <help>Fecha movimiento</help>
+        <tipo>date</tipo>
+      </field>
+      <field id="fecha_mov2" noshow="true">
+        <expresion having="false">fecha_requerido</expresion>
+        <help>Fecha movimiento</help>
+        <tipo>date</tipo>
+      </field>
+
+      <field id="color" local="true" clasefila="true" noshow="true">
+         <valor>'resaltadoRojo'</valor>
+      </field>
+      <field id="recibido_compra" noshow="true">
+        <condicion operador="!=">cantidad_compra</condicion>
+      </field>
+      <!--
+      <group>
+        <field id="id_stkmovimiento"/>
+      </group>-->
+    </table>
+    <join tipo="left">
+      <table id="CPS_MOVIMIENTOS">
+        <field id="id_cpsmovimiento">
+          <condicion operador="=">CPS_DETALLE.cpsmovimiento_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="STK_ARTICULOS">
+        <field id="id_stkarticulo">
+          <condicion operador="=">CPS_DETALLE.stkarticulo_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="REG_CUENTA">
+        <field id="id_regcuenta">
+          <condicion operador="=">CPS_MOVIMIENTOS.regcuenta_id</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>

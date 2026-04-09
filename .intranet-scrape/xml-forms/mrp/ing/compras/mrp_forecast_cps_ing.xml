@@ -1,0 +1,399 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" _imprime="false" >
+    <title>Cálculo de Compras</title>
+    <obs></obs>
+    <form detalle="mrp_forecast_cps_det.xml" inline="true">
+        <table id="MRP_FORECAST" label="Cálculo de Compras">
+            
+            <filters>
+
+                <field id="year_forecast">
+                    <label>año</label>
+                    <operador>=</operador>
+                    <valor eval="true">date("Y")</valor>
+                </field>
+                
+                <field id="separador1" local="true" deshabilitado="true" modpos="nobr"/>
+
+                <field id="mes_forecast">
+                    <label modpos="nobr">mes</label>
+                    <operador>=</operador>
+                    <valor eval="true">date("m")</valor>
+                </field>
+                <field id="stkarticulo_id" >
+                    <label>Producto</label>
+                    <helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas"/>
+                    <help>Codigo de Articulo</help>
+                    <operador>=</operador>
+                </field>
+
+                <field id="separador4" local="true" deshabilitado="true" modpos="nobr"/>
+
+	            <field id="stkarticulohijo_id" deshabilitado="false" modpos="nobr">
+                    <label>Materia Prima</label>
+                    <expresion>STK_BOM.stkarticulohijo_id</expresion>
+                    <tipo>integer</tipo>
+                    <operador>=</operador>
+                </field>
+
+                <field id="separador3" local="true" deshabilitado="true" modpos="nobr"/>
+
+            	<field id="stkdeposito_id" modpos="nobr">
+            	    <label>Deposito</label>
+            	    <valor>1</valor>
+                </field>
+                
+                <field id="separador2" local="true" deshabilitado="true" modpos="nobr"/>
+
+                <field id="fecha_calculo" local="true">
+                    <label modpos="nobr">Fecha</label>
+                    <operador>=</operador>
+                    <valor>today</valor>
+                </field>
+            </filters>
+         
+    	    <movimientos>
+        		<relacion id="mrp_forecast_cps_insert.xml" />
+    	    </movimientos>		
+
+            <fieldGroup noshow="true">
+
+            <field id="separador1" local="true" deshabilitado="true" noshow="true"/>
+            <field id="separador2" local="true" deshabilitado="true" noshow="true"/>
+            <field id="separador3" local="true" deshabilitado="true" noshow="true"/>
+            <field id="separador4" local="true" deshabilitado="true" noshow="true"/>
+
+
+                <field id="fecha_calculo" local="true">
+                    <label modpos="nobr">Fecha</label>
+                    <operador>=</operador>
+	           	    <tipo>date</tipo>
+                </field>
+
+                <field id="stkdeposito_id" deshabilitado="true" local="true" noshow="true">
+    	            <label >Deposito</label>
+    	            <helper type="combo"  id="STK_DEPOSITOS" _xml="stkdepositos_crud.xml" dir="/stock/man">
+                        <field id="id_stkdeposito" />
+    	    	        <field id="DEPOSITO">
+    	    			    <expresion>nombre_deposito</expresion>
+                        </field>
+                    </helper>
+                </field>
+
+                <field id="stkarticulo_id"  >
+                    <label>Código</label>
+                    <helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas"/>
+                    <help>Codigo de Articulo</help>
+                </field>
+                
+        		<field id="nombre_prod" >
+                    <expresion having="false">(select ART.nombre_articulo from STK_ARTICULOS as ART where ART.id_stkarticulo = MRP_FORECAST.stkarticulo_id)</expresion>
+                    <label>Producto Elaborado</label>
+                    <help>Codigo de Articulo</help>
+                </field>
+			
+                <field id="year_forecast" noshow="true" incdec="true">
+                    <label>año</label>
+                    <detalle>year_forecast</detalle>
+                </field>
+
+                <field id="mes_forecast" noshow="true">
+                    <label>mes</label>
+                    <detalle>mes_forecast</detalle>
+                    <options>
+                        <option valor="1">Enero</option>
+                        <option valor="2">Febrero</option>
+                        <option valor="3">Marzo</option>
+                        <option valor="4">Abril</option>                                        
+                        <option valor="5">Mayo</option>
+                        <option valor="6">Junio</option>
+                        <option valor="7">Julio</option>
+                        <option valor="8">Agosto</option>                                        
+                        <option valor="9">Septiembre</option>
+                        <option valor="10">Octubre</option>
+                        <option valor="11">Noviembre</option>
+                        <option valor="12">Diciembre</option>                                    
+                    </options>                            
+                </field>
+
+                <!-- <field id="mes_forecast2" noshow="true">
+                    <expresion having="false">mes_forecast</expresion>
+                    <condicion operador="&lt;=">([__mes_forecast__] + 3)</condicion>
+                </field>     -->
+
+                <field id="tipo_forecast" oculto="true" >
+                    <condicion operador="=">2</condicion>
+                </field>
+
+            </fieldGroup>
+	
+	    <fieldGroup _noshow="true" style="text-align:center;padding:2px 2px 2px 2px !important;">
+                                      <!--
+		<field id="Produccion1">
+                    <label>Pronostico 1</label>
+		    <expresion>select MRP.cantidad_forecast from MRP_FORECAST as MRP where MRP.stkarticulo_id = MRP_FORECAST.stkarticulo_id and
+		    MRP_FORECAST.mes_forecast = MRP.mes_forecast and MRP.year_forecast = MRP_FORECAST.year_forecast
+		    and MRP.tipo_forecast = 2</expresion>
+                    <tipo>integer</tipo>
+                </field>
+                                          -->
+                # SUMA EL PRONOSTICO DE COMPRAS
+                # EL MES QUE QUE VIENE + 1 MES ADELANTE + OTRO MES ADELANTE
+                
+                <field id="Produccion1" noZero="true">
+                    <label>Pronostico P 1</label>
+                    <expresion having="false">sum(cantidad_forecast)</expresion>
+                    <help>Pronostico de Produccion del Mes Actual</help>
+                    <!-- <expresion>select MRP.cantidad_forecast from MRP_FORECAST as MRP where MRP.stkarticulo_id = MRP_FORECAST.stkarticulo_id and
+                    MRP.mes_forecast  = (case when MRP_FORECAST.mes_forecast = 12 then 1 else MRP_FORECAST.mes_forecast + 1 end ) and 
+                    MRP.year_forecast = (case when MRP_FORECAST.mes_forecast = 12 then MRP_FORECAST.year_forecast + 1 else MRP_FORECAST.year_forecast  end ) 
+                    and MRP.tipo_forecast = 2</expresion>-->
+                    <tipo>integer</tipo>
+                </field>
+
+        		<!--<field id="Produccion2"  noZero="true">
+                    <label>Pronostico v 2</label>
+                    <expresion>sum((select MRP.cantidad_forecast from MRP_FORECAST as MRP where MRP.stkarticulo_id = MRP_FORECAST.stkarticulo_id and
+                    MRP.mes_forecast  = (case when MRP_FORECAST.mes_forecast >= 11 then ( 12 -  MRP_FORECAST.mes_forecast + 2 ) else MRP_FORECAST.mes_forecast + 2 end ) and MRP.year_forecast = (case when MRP_FORECAST.mes_forecast >= 11 then MRP_FORECAST.year_forecast + 1 else MRP_FORECAST.year_forecast  end ) and MRP.tipo_forecast = 1))</expresion>
+                    <tipo>integer</tipo>
+                    <help>Pronostico de Venta del Mes Próximo</help>
+                </field>-->   
+
+                <field id="Produccion2"  noZero="true">
+                    <label>Pronostico v 2</label>
+                    <!-- <expresion>sum((select MRP.cantidad_forecast from MRP_FORECAST as MRP where MRP.stkarticulo_id = '[__stkarticulo_id__]' and -->
+        		    <expresion>sum((select MRP.cantidad_forecast from MRP_FORECAST as MRP where MRP.stkarticulo_id = MRP_FORECAST.stkarticulo_id and
+                        MRP.mes_forecast  = (case when '[__mes_forecast__]' = 11 then 1 
+						      					  when '[__mes_forecast__]' = 12 then 2
+                			                     else ('[__mes_forecast__]' + 2) end) and 
+                        MRP.year_forecast = (case when '[__mes_forecast__]' &gt;= 11 then ('[__year_forecast__]' + 1) else '[__year_forecast__]' end)
+                        and MRP.tipo_forecast = 1))</expresion>
+                    <tipo>integer</tipo>
+                    <help>Pronostico de Venta del Mes Próximo</help>
+                </field>  
+
+        		<!--<field id="Produccion3" noZero="true">
+                    <label>Pronostico v 3</label>
+                    <expresion>sum((select MRP.cantidad_forecast from MRP_FORECAST as MRP where MRP.stkarticulo_id = MRP_FORECAST.stkarticulo_id and
+                    MRP.mes_forecast  = (case when MRP_FORECAST.mes_forecast >= 10 then ( 12 -  MRP_FORECAST.mes_forecast + 3 ) else MRP_FORECAST.mes_forecast + 3 end ) and 
+                    MRP.year_forecast = (case when MRP_FORECAST.mes_forecast >= 10 then MRP_FORECAST.year_forecast + 1 else MRP_FORECAST.year_forecast  end ) 
+                    and MRP.tipo_forecast = 1))</expresion>
+                    <tipo>integer</tipo>
+                    <help>Pronostico de Venta dentro de 3  Meses</help>
+                </field>-->  
+
+               <field id="Produccion3" noZero="true">
+                    <label>Pronostico v 3</label>
+        		    <expresion>sum((select MRP.cantidad_forecast from MRP_FORECAST as MRP where MRP.stkarticulo_id = MRP_FORECAST.stkarticulo_id and
+                    MRP.mes_forecast  = (case when '[__mes_forecast__]' = 10 then 1 
+										      when '[__mes_forecast__]' = 11 then 2
+											  when '[__mes_forecast__]' = 12 then 3
+												else ('[__mes_forecast__]' + 3) end) and 
+                    MRP.year_forecast = (case when '[__mes_forecast__]' >= 10 then ('[__year_forecast__]' + 1)  else '[__year_forecast__]' end)
+                    and MRP.tipo_forecast = 1))</expresion>
+                    <tipo>integer</tipo>
+                    <help>Pronostico de Venta dentro de 3  Meses</help>
+                </field> 
+                
+
+                # TOTAL DE LA PRODUCCION DEL PRODUCTO ELABORADO
+                <field id="totpron" local="true" suma="true" >
+                    <label>Total Pronostico</label>
+                    <if exp="true">
+                    <true>(Produccion1 + 0 ) + (Produccion2 + 0 )  + ( Produccion3 + 0)</true>
+                    <false>0</false>
+                    </if>
+                </field>
+
+                <field id="stkarticulohijo_id" esClave="true" linkint="mrp_mp_prod_qry.xml" linkdir="/mrp/ing/compras/" linkdes="Se utiliza en">
+                    <label>Materia Prima</label>
+                    <detalle>stkarticulohijo_id</detalle>
+                    <paring destino="stkarticulohijo_id" id="stkarticulohijo_id">stkarticulohijo_id</paring>
+                    <helper type="external" id="STK_ARTICULOS" _xml="stkarticulo_qry.xml" dir="/ayudas">
+                        <field id="id_stkarticulo"   >
+                            <label>Codigo auto de Articulo</label>
+                        </field>
+                        <field id="nombre_articulo">
+                            <label>Nombre</label>
+                        </field>
+                    </helper>
+                    <expresion having="false">STK_BOM.stkarticulohijo_id</expresion>
+                </field>
+
+
+            </fieldGroup>
+	
+    	    <fieldGroup style="padding:2px 2px 2px 2px;">
+              
+                <field id="nombre" style="padding:2px 2px 2px 2px;text-align:left;">
+                    <expresion>nombre_articulo</expresion>    
+                    <label>Articulo</label>
+                    <help>Codigo de Articulo</help>
+                </field>
+                
+                <!--<field id="nombre_cuenta" tabla="REG_CUENTA">
+                    <label>Proveedor</label>
+                    <size>50</size>
+                </field>-->         
+
+                <field id="proveedor" style="padding:2px 2px 2px 2px;text-align:center;">
+                    <label>Proveed</label>
+                    <expresion>SELECT GROUP_CONCAT(DISTINCT nombre_cuenta SEPARATOR '--') FROM REG_CUENTA 
+                         JOIN STK_ARTICULO_PROVEEDOR ON REG_CUENTA.id_regcuenta = STK_ARTICULO_PROVEEDOR.regcuenta_id and REG_CUENTA.subsistema_id = '01'
+                         WHERE STK_ARTICULO_PROVEEDOR.stkarticulo_id = STK_ARTICULOS.id_stkarticulo   
+                    </expresion>
+                </field>
+
+        		<field id="cantidad_forecast" noZero="true" noshow="true">
+                    <expresion>sum(cantidad_forecast)</expresion>
+                    <label>Producido</label>
+                    <tipo>decimal</tipo>
+                    <!--  <condicion operador="!=">0</condicion>  -->
+                </field>
+                 <!--<field id="Cantidad"  noshow="true">
+                        <label>Multiplo</label>
+                        <expresion>STK_BOM.cantidad</expresion>
+                    </field> -->  
+
+		          <field id="Compras">
+                    <label>Compras</label>
+                    <expresion>sum( STK_BOM.cantidad * (cantidad_forecast + ifnull((select MRP.cantidad_forecast from MRP_FORECAST as MRP where MRP.stkarticulo_id = MRP_FORECAST.stkarticulo_id and
+                    MRP.mes_forecast  = (case when MRP_FORECAST.mes_forecast >= 11 then ( 12 -  MRP_FORECAST.mes_forecast + 2 ) else MRP_FORECAST.mes_forecast + 2 end ) and 
+                    MRP.year_forecast = (case when MRP_FORECAST.mes_forecast >= 11 then MRP_FORECAST.year_forecast + 1 else MRP_FORECAST.year_forecast  end ) 
+		              and MRP.tipo_forecast = 1), 0) + ifnull((select MRP.cantidad_forecast from MRP_FORECAST as MRP where MRP.stkarticulo_id = MRP_FORECAST.stkarticulo_id and
+                    MRP.mes_forecast  = (case when MRP_FORECAST.mes_forecast >= 10 then ( 12 -  MRP_FORECAST.mes_forecast + 3 ) else MRP_FORECAST.mes_forecast + 3 end ) and 
+                    MRP.year_forecast = (case when MRP_FORECAST.mes_forecast >= 10 then MRP_FORECAST.year_forecast + 1 else MRP_FORECAST.year_forecast  end ) 
+		              and MRP.tipo_forecast = 1), 0)))</expresion>
+                    <tipo>decimal</tipo>
+                </field>
+                    
+                    <!-- <field id="totprod" local="true" suma="true" >
+                	    <label>Total</label>
+                	    <if exp="true">
+                		<true>Cantidad * totpron</true>
+                		<false>0</false>
+                	    </if>
+                        <tipo>decimal</tipo>
+                    </field>-->
+
+                <field id="stock_minimo" noZero="true">
+            	    <label>Stock Minimo</label>
+            	    <expresion>STK_ARTICULOS.stock_minimo</expresion>
+                    <tipo>decimal</tipo>
+                </field>
+
+                <field id="stock_actual">
+            	    <label>Stock</label>
+                    <expresion> ifnull(( SELECT sum((CASE WHEN STK_CONCEPTOS.tipo_concepto = 0 THEN STK_MOVIMIENTOS.cantidad ELSE -(STK_MOVIMIENTOS.cantidad) END)) as "Stock" from STK_MOVIMIENTOS  
+                             inner JOIN STK_CONCEPTOS on STK_CONCEPTOS.id_stkconcepto = STK_MOVIMIENTOS.stkconcepto_id 
+                             where  STK_MOVIMIENTOS.stkarticulo_id = STK_BOM.stkarticulohijo_id  and 
+                            	    STK_MOVIMIENTOS.stkdeposito_id = [__stkdeposito_id__] and
+                                    STK_MOVIMIENTOS.fecha_movimiento &lt;= STR_TO_DATE('[__fecha_calculo__]', '%d/%m/%Y')) ,0 )
+                    </expresion>
+                    <tipo>decimal</tipo>
+                </field>
+                
+        		<field id="total" local="true" noZero="true" style="font-weight:bold;color:red; font-size:13px;padding:2px 2px 2px 2px; " >
+        		    <label>Comprar</label>
+        			<help>FORMULA:  cantidad a producir * multiplo + stock minimo - stock actual</help>
+        			# FORMULA:  cantidad a producir * multiplo + stock minimo - stock actual
+        		    <if exp=" Compras  + ( stock_minimo + 0 ) - ( stock_actual + 0) &gt; 0">
+        	       		<true> Compras  + ( stock_minimo + 0 ) - ( stock_actual + 0)</true>
+            			<false>0</false>
+        		    </if>
+                    <tipo>numeric</tipo>
+        		</field>
+
+                <field id="comprado" noZero="true" style="padding:2px 2px 2px 2px;text-align:center;">
+            	    <label>Comprado</label>
+            	    <helper type="link" xml="cps_movimientos_x_artic2.xml" dir="/compras/qry/" modal="true">
+                		<parameter source="stkarticulohijo_id" target="stkarticulo_id" />
+                		<parameter source="1" target="cpsestado_id" />
+            	    </helper>
+                    <expresion>select sum(pendiente_compra) from CPS_DETALLE 
+                        left join CPS_MOVIMIENTOS on CPS_DETALLE.cpsmovimiento_id = CPS_MOVIMIENTOS.id_cpsmovimiento 
+                        where 
+                            CPS_DETALLE.stkarticulo_id = STK_BOM.stkarticulohijo_id and CPS_MOVIMIENTOS.cpsestado_id = 1
+                    </expresion>
+                    <!--  <expresion>select sum(cantidad_compra) from CPS_DETALLE 
+                        where CPS_DETALLE.stkarticulo_id = STK_BOM.stkarticulohijo_id 
+                         and fecha_requerido &gt; '[__year_forecast__]-[__mes_forecast__]-01'
+                    </expresion>-->          
+            	    <!-- month(fecha_requerido) &gt;=  mes_forecast and 
+            	    year(fecha_requerido) &gt;= year_forecast	    -->
+
+            	    <tipo>numeric</tipo>
+                </field>
+
+                <field id="faltaPedir" local="true" noZero="true" style="font-weight:bold;color:green; font-size:13px;padding:2px 2px 2px 2px;">
+            	    <label>Falta</label>
+            	    <if exp="true">
+            		<true>total + 0  - comprado + 0</true>
+            		<false>0</false>
+            	    </if>
+            	    <tipo>decimal</tipo>
+                </field>
+		                               
+	    </fieldGroup>
+
+        	    <field id="color" clasefila="true" local="true" noshow="true">
+            		<if exp=" stock_actual &lt; 0">
+            		    <true>'error'</true>
+            		    <false>''</false>
+            		</if>
+        	    </field>
+
+	    <group>
+                <field id="stkarticulohijo_id" />
+                <!--<field id="stkarticulo_id" />    -->
+                <!--<field id="cantidad" tabla="STK_BOM" /> -->
+	    </group>
+
+
+        </table>
+        
+            <join tipo="left">
+                <table id="STK_BOM">
+                    <field id="stkarticulopadre_id">
+                        <condicion operador="=">stkarticulo_id</condicion>
+                    </field>
+                </table>
+            </join>
+            
+            <join tipo="left">
+                <table id="STK_ARTICULOS">
+                    <field id="id_stkarticulo">
+                        <condicion operador="=">stkarticulohijo_id</condicion>
+                    </field>
+                </table>
+            </join>
+            
+            <!-- <join tipo="left">
+                <table id="STK_ARTICULO_PROVEEDOR">
+                    <field id="stkarticulo_id">
+                        <condicion operador="=">STK_ARTICULOS.id_stkarticulo</condicion>
+                    </field>
+                </table>
+            </join>
+        
+            <join tipo="left">
+                <table id="REG_CUENTA">
+                    <field id="id_regcuenta">
+                        <condicion operador="=">STK_ARTICULO_PROVEEDOR.regcuenta_id</condicion>
+                    </field>
+                    <field id="subsistema_id">
+                        <condicion operador="=">01</condicion>
+                    </field>
+                </table>
+            </join> -->
+            
+            <!-- <join tipo="left">
+                <table id="GEN_UNIDADES">
+                    <field id="unidad_id">
+                        <condicion operador="=">id_unidad</condicion>
+                    </field>
+                </table>
+            </join>    -->
+
+    </form>
+</histrix>

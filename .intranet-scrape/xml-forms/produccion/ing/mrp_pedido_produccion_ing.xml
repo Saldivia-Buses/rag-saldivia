@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" inserta="false" procesa="false" modifica="false" borra="false" deleteRow="false">
+    <title>Movimiento de unidades por seccion</title>
+    <form>
+        <table id="PRD_CARPETA_PLANOS" label="Pedido de Fabricacion">
+
+            <movimientos>
+                <relacion id="mrp_pedido_produccion_ins.xml" />
+            </movimientos>
+
+            <field id="id_carpetaplanos" noshow="true" esClave="true" />
+
+            <field id="homologacion" local="true" noshow="true" />
+            <field id="nrofab" local="true" noshow="true" />
+            <field id="nrocar" local="true" noshow="true" />
+            <field id="modelo_lcm" local="true" noshow="true" />
+            <field id="ficha" local="true" noshow="true" />
+            <field id="posicionfab_alarma" local="true" noshow="true" />
+
+            <field id="prdatributo_id" noshow="true" />
+            <field id="valor_atributo" tabla="PRODUCTO_ATRIB_VALORES" noshow="true" />
+
+            <field id="stkarticulo_id">
+                <label>Articulo</label>
+            </field>
+
+            <field id="producto_id" noshow="true" tabla="PRODUCTO_ATRIB_VALORES">
+                <label>Producto_id</label>
+            </field>
+
+            <field id="posicionfab_alarma_id" noshow="true">
+                <label>Proxima Seccion</label>
+                <condicion operador="!=">0</condicion>
+            </field>
+
+            <field id="condicion_atributo" noshow="true">
+                <label>Atributo</label>
+                <expression having="false">CASE WHEN IFNULL(PRD_CARPETA_PLANOS.prdatributo_id, 0) != 0 AND IFNULL(PRODUCTO_ATRIB_VALORES.valor_atributo, 0) = 0 THEN 0 ELSE 1 END</expression>
+                <condicion operador="!=">0</condicion>
+            </field>
+
+            <field id="homologacion_id" noshow="true">
+                <condicion operador="=">'[__homologacion__]' OR PRD_CARPETA_PLANOS.nrocar_id = '[__nrocar__]' OR PRD_CARPETA_PLANOS.modelo_lcm_id = '[__modelo_lcm__]'</condicion>
+            </field>
+
+            <field id="seccion_id" noshow="true" />
+
+            <field id="posicionfab_id" noshow="true" />
+
+            <field id="cantidad_pieza_unidad" _noshow="true">
+                <label>Cant</label>
+            </field>
+
+        </table>
+
+        <join>
+            <table id="STKINSUM">
+                <field id="artcod">
+                    <condicion operador="=">PRD_CARPETA_PLANOS.stkarticulo_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="PRODUCTO_ATRIB_VALORES">
+                <field id="prdatributo_id">
+                    <condicion operador="=">PRD_CARPETA_PLANOS.prdatributo_id</condicion>
+                </field>
+                <field id="producto_id">
+                    <condicion operador="=">'[__ficha__]'</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

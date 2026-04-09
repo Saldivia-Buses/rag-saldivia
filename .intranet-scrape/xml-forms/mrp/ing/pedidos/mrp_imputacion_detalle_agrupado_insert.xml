@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert" >
+    <title>PEDIDOS</title>
+    <obs></obs>
+    <consulta>
+        <table id="MRP_IMPUTACION_DETALLE" label="ORDEN DE PRODUCCION" idCampoCond="regdetalles">
+
+        	<sql>
+        		insert into MRP_IMPUTACION_DETALLE (mrpordendetalle_id, regdetalle_id) select  [__mrp_detalle_agrupado_insert.xml__] , id_regdetalle from REG_DETALLES where id_regdetalle in ([__regdetalles__]);
+        	</sql>
+
+
+            
+            <field id="regdetalles" 	  id_temp="regdetalles" local="true" />
+            <field id="mrpordendetalle_id" 	lastId="mrp_detalle_agrupado_insert.xml"></field> 
+            
+        </table>
+    </consulta>
+</histrix>

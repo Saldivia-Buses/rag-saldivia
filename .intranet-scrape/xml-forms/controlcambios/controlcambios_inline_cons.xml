@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+        <title>Control de Cambios</title>
+        <obs></obs>
+        <form>
+                <table id="CONTROLCAMBIOS" >
+                    <title>Control de Cambios en los coches</title>
+                                        
+                        <campo id="idCambio" autoinc="true" noshow="true" esclave="true">
+                                <label>id</label>
+                        </campo>
+
+                        <campo id="fecha" tipoOrden="DESC">
+                                <label>Fecha</label>
+                                <help>Fecha</help>
+								<valor>today</valor>
+                        </campo>
+                        
+                        <campo id="nrofab" oculto="true">
+                                <label>Nro Fab</label>
+                                <help>Numero de Fabricación</help>
+                        </campo>
+                        <campo id="descripcion">
+                                <label>Descripción</label>
+                                <help>Descripción del Cambio realizado</help>
+								<size>200</size>
+                        </campo>
+                        <campo id="motivo">
+                                <label>Motivo</label>
+                                <help>Motivo del Cambio realizado</help>
+												<size>200</size>
+                        </campo>					
+						<campo id="condicion">
+							<label>Condición</label>
+							<options>
+								<option valor="0">Provisorio</option>
+								<option valor="1">Definitivo</option>
+							</options>
+						</campo>
+<!--						<campo id="aprobo">
+							<label>Aprobó</label>
+						</campo>
+                    <campo id="validacion1">
+                                <label>Validacion 1</label>
+                                <help>Seguimiento de la efectividad</help>
+												<size>200</size>
+                        </campo>                                                
+                        <campo id="validacion2">
+                                <label>Validacion 2</label>
+                                <help>Seguimiento de la efectividad</help>
+												<size>200</size>
+                        </campo>                                                -->
+					
+                        <order>
+                        	<campo id="fecha" />
+                        </order> 
+                </table>
+        </form>           
+</histrix>

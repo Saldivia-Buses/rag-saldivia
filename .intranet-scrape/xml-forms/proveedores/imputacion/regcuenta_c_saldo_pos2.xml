@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" >
+	<title>CUENTAS</title>
+	<obs/>
+	<form >
+		<table id="REG_MOVIMIENTOS" label="CUENTAS">
+			<field id="regcuenta_id" >
+				<label>Cuenta</label>
+			</field>
+			
+			<field id="nombre_cuenta2">
+				<label>Nombre</label>			
+				<expression>CONCAT(REG_CUENTA.nombre_cuenta, ' (',REG_CUENTA.nro_cuenta,')')</expression>
+			</field>
+			
+			<field id="imputacion_concepto" oculto="true" tabla="REG_CONCEPTOS">
+				<condicion operador="=">0</condicion>
+			</field>
+			
+			<field id="saldo_movimiento" oculto="true">
+				<condicion operador="!=">0</condicion>
+			</field>
+			
+			<field id="nombre_cuenta" tabla="REG_CUENTA" />
+			
+			<order>
+				<field id="nombre_cuenta"/>
+			</order>
+			<group>
+				<field id="regcuenta_id"/>
+			</group>
+		</table>
+		<join>
+			<table id="REG_CUENTA">
+				<field id="id_regcuenta" >
+					<condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+				</field>
+			</table>
+		</join>
+		<join>
+			<table id="REG_CONCEPTOS">
+				<field id="id_concepto">
+					<condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+				</field>
+			</table>
+		</join>
+	</form>
+</histrix>

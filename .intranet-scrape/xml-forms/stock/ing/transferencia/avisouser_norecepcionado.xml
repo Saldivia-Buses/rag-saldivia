@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert" tipoInsert="IGNORE">
+  <title>Ingreso Movimiento</title>
+  <obs/>
+  <form>
+    <table id="HTXMESSAGES" idCampoCond="para">
+      
+      <field id="de"                           id_temp="de" />
+      <field id="para"                         id_temp="para" />
+      <field id="numero_movimiento"            id_temp="numero_movimiento" local="true" />
+      <field id="stkdeposito_id"               id_temp="deposito_destino" local="true" />
+      <field id="fecha"                        id_temp="fecha" local="true" />
+      
+      <field id="mensaje">
+        <valor>
+          (SELECT GROUP_CONCAT( nombre_articulo, ' x ', cast(cantidad as char), ' (',STK_MOVIMIENTOS.referencia,')' SEPARATOR ', ')  as pp
+			                    FROM STK_MOVIMIENTOS 
+			                    JOIN STK_ARTICULOS ON STK_MOVIMIENTOS.stkarticulo_id = STK_ARTICULOS.id_stkarticulo 
+		                       WHERE STK_MOVIMIENTOS.numero_movimiento = '[__numero_movimiento__]'
+		                         AND STK_MOVIMIENTOS.stkdeposito_id = '[__deposito_destino__]'
+		                         AND STK_MOVIMIENTOS.fecha_movimiento = STR_TO_DATE('[__fecha__]', '%d/%m/%Y')
+			                   GROUP BY numero_movimiento limit 1)
+        </valor>
+        <tipo>numeric</tipo>
+      </field>
+    </table>
+  </form>
+</histrix>

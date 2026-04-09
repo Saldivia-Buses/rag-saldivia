@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix imprime="false" inserta="false" modifica="false" tipo="fichaing" transaccional="true">
+  <title>Scan</title>
+  <obs/>
+  <customScript>
+    <![CDATA[
+var css = "\
+.path {\
+  position: absolute;\
+  overflow: hidden;\
+  width: 100%;\
+  height: 150px;\
+  background-color: transparent;\
+  margin: auto;\
+}\
+.shape {\
+  position: absolute;\
+  left: 0;\
+  background-color: lime;\
+  width: 100%;\
+  height: 3px;\
+  display: block;\
+  top: 0;\
+  x-transition: all 1s ease-in-out; \
+  animation: ani 4s infinite;\
+}\
+@keyframes ani {\
+  0% { top: 0; }\
+  50% { top: 150px;}\
+  100% {top: 0;}\
+}";
+
+$("<style>")
+    .prop("type", "text/css")
+    .html(css).appendTo("head");
+    
+    Histrix.audioCtx = new (window.AudioContext || 
+
+    window.webkitAudioContext || window.audioContext);
+
+    //All arguments are optional:
+
+    //duration of the tone in milliseconds. Default is 500
+    //frequency of the tone in hertz. default is 440
+    //volume of the tone. Default is 1, off is 0.
+    //type of tone. Possible values are sine, square, sawtooth, triangle, and custom. Default is sine.
+    //callback to use on end of tone
+    function beep(duration, frequency, volume, type, callback) {
+        var oscillator = Histrix.audioCtx.createOscillator();
+        var gainNode = Histrix.audioCtx.createGain();
+
+        oscillator.connect(gainNode);
+        gainNode.connect(Histrix.audioCtx.destination);
+
+        if (volume){gainNode.gain.value = volume;};
+        if (frequency){oscillator.frequency.value = frequency;}
+        if (type){oscillator.type = type;}
+        if (callback){oscillator.onended = callback;}
+
+        oscillator.start();
+        setTimeout(function(){oscillator.stop()}, (duration ? duration : 500));
+    };
+
+
+
+    Histrix.scanQR = function scanQR() {
+    
+      $('#vidscan').remove();
+      $('#preview').remove();
+
+      var videoPreview = $('<div id="vidscan" style="width: 100%; height: 150px; overflow: hidden;"><div class="path"><span id="elem" class="shape trail"></span></div><video id="preview" style="width: 100%; ">Iniciando Cámara</video></div>');
+
+      var $barcode = $('[instance="[__instance__]"] [name="barcode"]');
+
+      $barcode.before(videoPreview);
+
+
+      let scanner = new Instascan.Scanner({ 
+          video: document.getElementById('preview'),
+          mirror: false,
+          backgroundScan: true,
+        });
+
+      Instascan.Camera.getCameras().then(function (cameras) {
+        if (cameras.length >0) {
+
+          scanner.start(cameras[cameras.length - 1]);
+
+        } else {
+          Histrix.showMsg('No cameras found.', false, {type:'error'});
+        }
+      }).catch(function (e) {
+          Histrix.showMsg('cath error', false, {type:'error'});
+            console.error(e);
+      });
+
+      var onScan = function (content) {
+        beep(1,2000);
+        var data = content + '';
+        var art =  data.split("/")[1];
+        var locacion =  data.split("/")[0];
+
+        $('[name="barcode"]', $('#preview').closest('form')).val(content).css({'border': '2px solid lime'}).change();
+
+        $('[name="stkarticulo_id"]', $('#preview').closest('form')).val(art).change();
+
+        $('[name="stklocacion_id"]', $('#preview').closest('form')).val(locacion).change();
+
+        $('[name="cantidad"]', $('#preview').closest('form')).focus();
+        Histrix.showMsg('Scan: '+ content, false, {timeOut:2});
+
+      };
+
+        $('[name="barcode"]', $('#preview').closest('form')).change(function(){
+            var data = $(this).val();
+      var art =  data.split("/")[1];
+          var locacion =  data.split("/")[0];
+
+            $('[name="stkarticulo_id"]', $('#preview').closest('form')).val(art).change();
+
+      $('[name="stklocacion_id"]', $('#preview').closest('form')).val(locacion).change();
+
+  });
+
+
+      $(scanner).off('scan', "**");
+      scanner.on('scan', onScan);
+
+      return scanner;
+    }
+
+    if (typeof(Instascan) == 'object') {
+      $(Histrix.scanner).off('scan', "**");
+      Histrix.scanner = Histrix.scanQR();
+    } else {
+      $.getScript(Histrix.mainUrl()+'/web/vendor/instascan.min/index.js', function (){
+          Histrix.scanner = Histrix.scanQR();
+      });
+    }
+
+  ]]>
+  </customScript>
+  <form>
+    <table id="STK_MOVIMIENTOS" label="Scan">
+      <movimientos>
+        <relacion id="scan_movimiento_resta_ins.xml"/>
+        <relacion id="scan_movimiento_suma_ins.xml"/>
+      </movimientos>
+      <fieldGroup>
+        <field _noshow="true" deshabilitado="true" id="barcode" local="true">
+          <help>Escanear Código</help>
+        </field>
+        <field id="stkarticulo_id">
+          <label>Articulo</label>
+          <helper id="STK_ARTICULOS" type="external">
+            <field id="id_stkarticulo"/>
+            <field id="nombre_articulo">
+              <detalle>nombre_articulo</detalle>
+            </field>
+            <field id="unidad_id">
+              <expression>unidad_uso_id</expression>
+              <detalle>unidad_id</detalle>
+            </field>
+          </helper>
+          <actualiza>
+            <field destino="stkarticulo_id" id="id_articulo_locacion"/>
+            <field destino="stkarticulo_id" id="stklocacion_origen_id"/>
+          </actualiza>
+        </field>
+
+
+        <field deshabilitado="true" id="nombre_articulo"/>
+
+        <field id="cantidad">
+          <label>Cantidad</label>
+          <tipo>integer</tipo>
+          <valor>1</valor>
+        </field>
+
+        <field id="stklocacion_origen_id" >
+          <label>Locacion Origen (-)</label>
+
+          <helper _empty="true" id="STK_LOCACION" type="combo">
+            <field id="id_stklocacion"/>
+            <field id="codigo_locacion2">
+                <expression>concat( codigo_locacion, ' stock: ', 
+                 ifnull( (select stock_actual from STK_ARTICULO_LOCACION  WHERE stkarticulo_id = '[__stkarticulo_id__]' and id_stklocacion = stklocacion_id limit 1), '0') )</expression>
+            </field>
+            <field id="stkarticulo_id" local="true" oculto="true">
+              
+            </field>
+            <field id="stock" bloqueafila="true">
+<expression>(select 0 from STK_ARTICULO_LOCACION  WHERE stkarticulo_id = '[__stkarticulo_id__]' and id_stklocacion = stklocacion_id limit 1)</expression>
+            </field>
+            <field id="stkdeposito_origen_id">
+              <expression>stkdeposito_id</expression>
+              <detalle>stkdeposito_origen_id</detalle>
+            </field>
+            <order>
+              <field id="codigo_locacion" />
+            </order>            
+          </helper>          
+          <!--
+          <helper _empty="true" id="STK_ARTICULO_LOCACION" type="combo">
+            <field id="id_articulo_locacion"/>
+            <field id="stkarticulo_id" oculto="true"/>
+            <field id="stklocacion_id"/>
+            <field id="stkdeposito_origen_id">
+              <expression>deposito_origen_id</expression>
+              <detalle>stkdeposito_origen_id</detalle>
+            </field>
+          </helper>
+        -->
+        </field>
+
+        <field deshabilitado="true" id="stkdeposito_origen_id" noshow="true">
+        </field>
+
+
+        <field _deshabilitado="true" _noshow="true" id="stklocacion_id" local="true">
+          <label>Locacion Destino (+) </label>
+          <helper _empty="true" id="STK_LOCACION" type="combo">
+            <field id="id_stklocacion"/>
+            <field id="codigo_locacion">
+              <detalle>codigo_locacion</detalle>
+            </field>
+            <field id="stkdeposito_id">
+              <detalle>stkdeposito_id</detalle>
+            </field>
+          </helper>
+<!--
+          <actualiza>
+            <field destino="stklocacion_id" id="id_articulo_locacion"/>
+          </actualiza>
+-->
+        </field>
+
+
+        <field id="stkdeposito_id" _noshow="true" deshabilitado="true">
+	    <valor>0</valor>
+	</field>
+
+        <field id="unidad_id" noshow="true"/>
+        <!--
+        <field id="stkconcepto_resta_id"  noshow="true"></field>
+        <field id="stkconcepto_suma_id"  noshow="true"><valor>40</valor></field>-->
+        <field id="puesto_movimiento" noshow="true"/>
+        <field id="numero_movimiento" noshow="true"/>
+      </fieldGroup>
+    </table>
+  </form>
+</histrix>

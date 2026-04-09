@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" imprime="false" preloadData="false">
+    <title>Cta Ctes</title>
+    <obs/>
+    <form detalle="regdetalles_qry.xml">
+        <table id="REG_CUENTA" label="Cta Cte Proveedores">
+
+            <filters>
+                <field id="id_regcuenta" deshabilitado="false" colspan="4">
+                    <label>Cuenta</label>
+                    <operador>=</operador>
+                </field>
+                <field id="tipofecha" colspan="4">
+                    <label>Filtrado por</label>
+                    <operador>=</operador>
+                </field>
+                <field id="fecha_desde" deshabilitado="false">
+                    <label>Desde</label>
+                    <valor>today</valor>
+                    <operador>&gt;=</operador>
+                </field>
+                <field id="fecha_hasta" deshabilitado="false">
+                    <label modpos="nobr">Hasta</label>
+                    <valor>today</valor>
+                    <operador>&lt;=</operador>
+                </field>
+                <field id="conarrastre" colspan="4">
+                    <label>Arrastre de Saldo</label>
+                    <valor>1</valor>
+                </field>
+            </filters>
+
+            <field id="id_regcuenta">
+                <label>CUENTA</label>
+                <helper type="combo" xml="regcuenta_cmb.xml" dir="/ayudas" empty="true" />
+                <detalle>regcuenta_id</detalle>
+            </field>
+
+            <field id="id_regmovim" noshow="true" tabla="REG_MOVIMIENTOS" />
+
+            <field id="tipofecha" noshow="true" local="true">
+                <label>Filtrado por</label>
+                <helper type="combo">
+                    <option value="0">Fecha Movimiento</option>
+                    <option value="1">Fecha de Conciliacion</option>
+                    <option value="2">Fecha de Acreditacion</option>
+                </helper>
+                <detalle>tipofecha</detalle>
+            </field>
+
+            <field id="subsistema_id" noshow="true" valauto="true">
+                <detalle>subsistema_id</detalle>
+            </field>
+
+            <field id="imputacion_concepto" tabla="REG_CONCEPTOS" noshow="true" />
+
+            <field id="debe">
+                <label>DEBE</label>
+                <expresion>SUM(CASE WHEN REG_CONCEPTOS.imputacion_concepto = 0 THEN REG_MOVIMIENTOS.importe_movimiento ELSE 0 END)</expresion>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="haber">
+                <label>HABER</label>
+                <expresion>SUM(CASE WHEN REG_CONCEPTOS.imputacion_concepto = 1 THEN REG_MOVIMIENTOS.importe_movimiento ELSE 0 END)</expresion>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="total" local="true" suma="true">
+                <label>SALDO</label>
+                <if exp="true">
+                    <true>(debe  - haber)</true>
+                    <false>0</false>
+                </if>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="color" local="true" clasefila="true" noshow="true">
+                <label>color</label>
+                <if exp="total &lt; 0">
+                    <true>'resaltadoRojo'</true>
+                    <false>''</false>
+                </if>
+            </field>
+
+            <field id="filtro_fecha_desde" noshow="true">
+                <label>Fecha</label>
+                <expression having="false">CASE WHEN '[__tipofecha__]' = 0 THEN REG_MOVIMIENTOS.fecha_movimiento
+                                                WHEN '[__tipofecha__]' = 1 THEN REG_MOVIMIENTOS.conciliado ELSE REG_MOVIMIENTOS.vencimiento_movimiento END</expression>
+                <tipo>date</tipo>
+                <condicion operador="&gt;=">(CASE WHEN '[__conarrastre__]' = 0  THEN STR_TO_DATE('[__fecha_desde__]','%d/%m/%Y') ELSE '1900-01-01' END)</condicion>
+            </field>
+
+            <field id="filtro_fecha_hasta" noshow="true">
+                <label>Fecha</label>
+                <expression having="false">CASE WHEN '[__tipofecha__]' = 0 THEN REG_MOVIMIENTOS.fecha_movimiento
+                                                WHEN '[__tipofecha__]' = 1 THEN REG_MOVIMIENTOS.conciliado ELSE REG_MOVIMIENTOS.vencimiento_movimiento END</expression>
+                <tipo>date</tipo>
+                <condicion operador="&lt;=">(CASE WHEN '[__fecha_hasta__]' != '' THEN STR_TO_DATE('[__fecha_hasta__]','%d/%m/%Y') ELSE '9999-99-99' END)</condicion>
+            </field>
+
+            <field id="baja_cuenta" noshow="true">
+                <condicion operador="=">'0000-00-00'</condicion>
+            </field>
+
+            <field id="fecha_desde" noshow="true" local="true">
+                <label>Desde</label>
+                <tipo>date</tipo>
+                <detalle>desde</detalle>
+            </field>
+
+            <field id="fecha_hasta" noshow="true" local="true">
+                <label>hasta</label>
+                <tipo>date</tipo>
+                <detalle>hasta</detalle>
+
+            </field>
+
+            <field id="conarrastre" noshow="true" local="true">
+                <tipo>check</tipo>
+                <valor>1</valor>
+                <detalle>arrastrasaldo</detalle>
+            </field>
+
+            <group>
+                <field id="id_regcuenta"/>
+            </group>
+
+            <order>
+                <field id="nombre_cuenta"/>
+            </order>
+
+        </table>
+
+        <join>
+            <table id="REG_MOVIMIENTOS">
+                <field id="regcuenta_id">
+                    <condicion operador="=">REG_CUENTA.id_regcuenta</condicion>
+                </field>
+                <field id="subsistema_id">
+                    <condicion operador="=">REG_CUENTA.subsistema_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join>
+            <table id="REG_CONCEPTOS">
+                <field id="id_concepto">
+                    <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+                </field>
+                <field id="subsistema_id">
+                    <condicion operador="=">REG_CUENTA.subsistema_id</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

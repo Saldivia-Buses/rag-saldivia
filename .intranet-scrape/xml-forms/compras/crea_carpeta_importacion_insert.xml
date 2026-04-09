@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert" tipoInsert="IGNORE" grabaFinal="true">
+    <title>Carpeta de Importación</title>
+    <obs></obs>
+    <form >
+		<table id="REG_CARPETA_IMPORTACION"  idCampoCond="genera_carpeta">
+		  	<field id="nro_carpeta" >
+		  		<valor>(select max(C.nro_carpeta) + 1 from REG_CARPETA_IMPORTACION C)</valor>
+		  		<tipo>integer</tipo>
+		  	</field>
+
+		  	<field id="fecha_apertura"  id_cab="ocpfec" />
+		  	<field id="ocpnro"			id_cab="ocpnro" />
+		  	<field id="regcuenta_id"    id_cab="id_regcuenta" />
+		  	<field id="genera_carpeta"  id_cab="genera_carpeta" local="true"/>
+ 
+		  	<field id="pais_id" id_cab="nacionalidad_id" />
+
+		</table>
+		</form>
+	</histrix>

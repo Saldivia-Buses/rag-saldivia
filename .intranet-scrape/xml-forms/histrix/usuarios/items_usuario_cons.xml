@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="abm-mini" subtipo="vertical" >
+	<title>Usuarios</title>
+	<obs/>
+	<form >
+		<table id="HTXPROFILE_AUTH" label="Usuarios">
+			<field id="Id_perfil" oculto="true"></field>
+			<!--
+			<field id="submen" >
+			<expresion>
+				select HTXMENU.titulo from HTXMENU where HTXMENU.hijo = HTXPROFILE_AUTH.menu limit 1
+			</expresion>
+			<tipo>varchar</tipo>
+		</field>
+		-->
+		<field id="menuId" noshow="true" esClave="true">
+			<label >Menu</label>
+			<helper type="external" id="HTXMENU">
+				<field id="menuId"/>
+				<field id="titulo"/>
+			</helper>
+			<help>Nombre del menu a que el item pertenece</help>
+			<valor>phpmen</valor>
+			<condicion operador="!=">''</condicion>
+			<detalle>Id_menu</detalle>
+		</field>
+		<field id="login" local="true" noshow="true" >
+			<label>login</label>
+			<detalle>login</detalle>
+			<help></help>
+		</field>
+		<field id="titulo" tabla="HTXMENU">
+			<label style="color:#444;font-weight:bold;">Titulo</label>
+			<help>Cartel con se muestra el item para su seleccion.</help>
+			<tipo>varchar</tipo>
+		</field>
+		<field id="Id_perfil" noshow="true" esClave="true">
+			<label>Perfil</label>
+			<help>Perfil de Acceso</help>
+			<!--				<tabla_ex id="HTXPROFILES">
+			<field id="Id_Perfil"/>
+			<field id="nombre"/>
+		</tabla_ex>
+		-->
+	</field>
+	<field id="notifica" local="true">
+		<label>Notifica</label>
+		<expresion>CASE WHEN HTXNOTIFUSER.id_menu != ' ' then 1 else 0 end</expresion>
+		<tipo>check</tipo>
+	</field>
+
+	<order>
+		<field id="Id_menu" tabla="HTXMENU"></field>
+		<field id="orden" tabla="HTXMENU"></field>
+	</order>
+
+</table>
+<join _tipo="left">
+	<table id="HTXMENU">
+		<field id="menuId">
+			<condicion operador="=">HTXPROFILE_AUTH.menuId</condicion>
+		</field>
+
+	</table>
+</join>
+<join tipo="left">
+	<table id="HTXNOTIFUSER">
+		<field id="Id_menu">
+			<condicion operador="=">HTXPROFILE_AUTH.menuId</condicion>
+		</field>
+		<field id="orden">
+			<condicion operador="=">HTXPROFILE_AUTH.orden</condicion>
+		</field>
+		<field id="login">
+			<condicion operador="=">'[__login__]'</condicion>
+		</field>
+
+	</table>
+</join>
+</form>
+</histrix>

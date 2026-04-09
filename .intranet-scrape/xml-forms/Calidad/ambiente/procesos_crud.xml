@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="arbol" ancho="50%">
+        <title>Procesos de Produccion</title>
+        <obs/>
+        <form detalle="proceso_impacto_crud.xml" inline="true">
+                <table id="PROD_PROCESOS">
+                        <title>Condiciones</title>
+                        <field id="id_proceso" esclave="true" autoinc="true" noshow="true" arbol="hijo">
+                                <label>Codigo</label>
+                                <detalle>proceso_id</detalle>
+                        </field>
+                        <field id="procesopadre_id" arbol="padre" colstyle="display:none;">
+
+                                <helper type="combo" xml="procesos_qry.xml" empty="true">
+                                </helper>
+                                <label>Codigo padre</label>
+                        </field>
+
+                        <field id="nombre_proceso">
+                                <label>Proceso</label>
+                                <help>nombre del proceso</help>
+                                <size>60</size>
+                        </field>
+                        <field id="descripcion_proceso">
+                                <label>descripcion</label>
+                                <help>Descripci.n del proceso</help>
+                                <size>300</size>
+
+                        </field>
+                        <!--
+            <field id="stkdeposito_id">
+                <label >Deposito </label>
+                <helper type="combo"  xml="deposito.xml" dir="/compras">
+                </helper>
+            </field>
+
+-->
+                </table>
+        </form>
+</histrix>
+

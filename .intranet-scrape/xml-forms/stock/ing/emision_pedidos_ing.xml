@@ -1,0 +1,304 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="cabecera" class="consultaancha">
+    <title>Movimientos</title>
+    <obs></obs>
+    <consulta >
+
+	<table id="REG_MOVIMIENTOS" label="Emision Facturas Propias">          
+<!-- No se porke -->
+<!--		<field id="concepto_id" noshow="true">
+			<label style="font-size:12px;">Concepto</label>
+			<help>Código de concepto</help>
+			<detalle>concepto_id</detalle>
+		</field>
+-->
+
+		<!--  <tabla_ex id="REG_CONCEPTOS" vacio="true">
+		    <field id="id_concepto" noshow="true">
+			<label>Concepto</label>
+		    </field>
+		    <field id="descripcion_concepto">
+			<label>Nombre</label>
+			  <condicion operador="like">'Factura%' or descripcion_concepto like '%credito' or descripcion_concepto like '%Debito'</condicion>
+		    </field>
+		    <field id="abreviacion_concepto">
+			<label>Abreviacion</label>
+		    </field>
+		    <field id="subsistema_id" noshow="true" >
+			<label>Subsistema</label>
+			<condicion operador="=">'[__subsistema_id__]'</condicion>
+		    </field>
+		</tabla_ex>
+		 <actualiza>
+		    <field destino="concepto_id" id="regcuenta_id_COMP" />
+		</actualiza>-->
+<!-- Datos del Ejercicio -->
+		<field id="ejercicio_id" noshow="true">
+			<tabla_ex xml="ejercicios_crud.xml" dir="/contabilidad">
+			    <field id="activo" tipoOrden="DESC"/>
+			</tabla_ex>
+			<label>Ejercicio</label>
+			<help>Ejercicio contable</help>
+		</field>
+
+
+	<!-- NUMERADOR REMITO -->
+		<field id="concepto_id" _local="true">
+			<label>Código </label>
+			<helper type="combo" id="STK_CONCEPTOS" xml="stkconcepto_qry.xml" dir="/ayudas" />
+		</field>
+		<field id="reg_fecha" _noshow="true">
+			<label  style="font-size:12px;">Fecha</label>
+			<help>Fecha movimiento</help>
+			<tipo>date</tipo>
+			<valor>today</valor>
+			<detalle>fecha</detalle>
+			<detalle>reg_fecha</detalle>
+		</field>
+	    <!-- NUMERADOR RECIBO -->
+<!--
+		<field id="npv_movimiento">
+			<label modpos="nobr" style="font-size:12px;">Punto Venta</label>
+			<ayuda_ex id="CAJ_PUESTOS" vacio="true">
+				<field id="id_cajpuesto"/>
+				<field id="descripcion_puesto"/>
+			</ayuda_ex>
+			<help>Punto de Venta</help>
+		 	<actualiza>
+		    		<field destino="npv_movimiento" id="regcuenta_id_COMP" />
+			</actualiza>
+		</field>
+-->
+		<field id="puesto_remito"  local="true" _noshow="true">
+			<tabla_ex id="GEN_NUMEROS" _vacio="true">
+				<field id="id_numero"/>
+				<field id="subcodigo">
+					<expresion>lpad(subcodigo,4,"0")</expresion>
+				</field>
+				
+				<field id="tipo">
+					<condicion operador="=">'X'</condicion>
+				</field>
+				<field id="subsistema_id">
+					<condicion operador="=">'40'</condicion>
+				</field>
+				<field id="concepto_id">
+					<condicion operador="=">1</condicion>
+				</field>
+			</tabla_ex>
+			<help>Punto de Venta</help>
+		 	<actualiza>
+		    		<field destino="npv_movimiento" id="regcuenta_id_COMP" />
+			</actualiza>
+			<label modpos="nobr">puesto</label>
+			<parametro id="/caja/ing/numerador_remito.xml" retorna="puesto_movimiento">
+			</parametro>
+		</field>
+		<field id="movimiento_remito"  local="true" noshow="true">
+			<label  modpos="nobr">movimiento</label>
+			<parametro id="/caja/ing/numerador_remito.xml" retorna="Entero">
+			</parametro>
+		</field>
+		<field id="subsistema_remito"  local="true" noshow="true">
+			<label>remitos</label>
+			<valor>'97'</valor>
+		</field>
+
+		<field id="subsistema_id" _noshow="true" _valauto="true" >
+			<label>Subsistema</label>
+			<tabla_ex xml="subsistema_qry.xml" dir="/ayudas" _vacio="true">
+			</tabla_ex>
+			<actualiza>
+				<field destino="subsistema_id" id="regcuenta_id_COMP" />
+			</actualiza>
+			<detalle>subsistema_id</detalle>
+		</field>
+		<field id="regcuenta_id"   tabla="FAC_USUARIOS_SER" colstyle="display:none;" _oculto="true"> 
+			<label>Cuenta</label>
+			<ayuda_ex xml="regcuenta_solamente_qry.xml" dir="/ayudas">        
+				<field id="subsistema_id" noshow="true"/>
+			</ayuda_ex>   
+			<size>10</size>    
+			<help>ingrese nro de cuenta</help>
+		</field>
+
+		<field id="nombre" local="true" deshabilitado="true">
+			<label modpos="nobr"   style="font-size:12px;">Nombre</label>
+			<size>30</size>
+		</field>
+		<field id="direccion" local="true" deshabilitado="true">
+			<label modpos="nobr"   style="font-size:12px;">Direccion</label>
+		</field>
+		<field id="tel_cuenta" local="true" deshabilitado="true">
+			<label  modpos="nobr" style="font-size:12px;">Tel</label>
+		</field>
+		<field id="nombre_localidad" local="true" deshabilitado="true">
+			<label  style="font-size:12px;">Localidad</label>
+		</field>
+		<field id="CP" local="true" deshabilitado="true">
+			<label modpos="nobr"   style="font-size:12px;">CP</label>
+		</field>
+		<field id="nombre_provincia" local="true" deshabilitado="true">
+			<label  modpos="nobr" style="font-size:12px;">Provincia</label>
+		</field>
+		<field id="cuenta_prov_debe" noshow="true" local="true" deshabilitado="true">
+			<label>cuenta Debe</label>
+		</field>
+		<field id="cuenta_prov_haber" noshow="true" local="true" deshabilitado="true">
+			<label modpos="nobr">cuenta Haber</label>
+		</field>
+            
+		<field id="iva" local="true" _deshabilitado="true" noshow="true">
+			<label  style="font-size:12px;" >id_Iva</label>
+			<actualiza>
+			    <field destino="wiva_id" id="stkarticulo_codigoalt" xml="stkremito_ing.xml"/>^
+			</actualiza>
+		</field>
+            
+		<field id="categoria_iva" local="true" deshabilitado="true">
+			<label  style="font-size:12px;" >Iva</label>
+		</field>
+
+		<field id="CUIT" local="true" deshabilitado="true">
+			<label modpos="nobr" colspan="5"  style="font-size:12px;">CUIT</label>
+		</field>
+		<field id="percepcion" local="true" deshabilitado="true" noshow="true">
+			<label modpos="nobr"  style="font-size:12px;" >Percepcion</label>
+			<tipo>check</tipo>
+		</field>
+	      <!-- DOH DEL DEBE DE LA CUENTA DEL DEUDOR -->
+		<field id="debe" local="true" noshow="true">
+		</field>
+	      <!-- COPIA DEL CONCEPTO ID-->
+<!--             <field id="prueba" local="true" noshow="true"/>
+	     <field id="recibo" local="true" noshow="true"/>
+	     <field id="cuentas" local="true" noshow="true"/>
+    -->   
+<!-- 	    <field id="puesto_rec"  local="true" noshow="true">
+                <label>puesto</label>
+		 <parametro id="/caja/ing/numeradores_qry.xml" retorna="puesto_movimiento">
+                      <paring destino="subsistema_id">subsistema_id</paring>
+		      <paring destino="regconcepto_id">recibo</paring>
+                </parametro>
+            </field>
+	     <field id="movimiento_rec"  local="true" noshow="true">
+                <label>movimiento</label>
+		 <parametro id="/caja/ing/numeradores_qry.xml" retorna="Entero">
+			<paring destino="subsistema_id">subsistema_id</paring>
+		       <paring destino="regconcepto_id">recibo</paring>
+                </parametro>
+            </field>
+-->
+<!--           
+            <field id="letra_movimiento" deshabilitado="true">
+                <label  modpos="nobr"  style="font-size:12px;">Letra</label>
+            </field>
+            <field id="puesto" local="true"  deshabilitado="true" >
+                <label modpos="nobr"  style="font-size:12px;">Nro Factura</label>
+                 <detalle>puesto_movimiento</detalle>
+            </field>
+            <field id="movimiento"  _local="true"  deshabilitado="true">
+                <label modpos="nobr">-</label>
+                <size>8</size>
+		<detalle>nro_movimiento</detalle>
+            </field>
+-->
+		<field id="vencimiento_movimiento" >
+			<label  style="font-size:12px;">Fecha de Vencimiento</label>
+			<help>Fecha de Vencimiento</help>
+			<valor>today</valor>
+			<tipo>date</tipo>
+		</field>
+<!--
+            <field id="fpv_movimiento" noshow="true">
+                <label modpos="nobr"  style="font-size:12px;" >Registracion</label>
+                <help>Corresponde a la Fecha de Registracion Contable</help>
+                <valor>today</valor>
+                <tipo>date</tipo>
+            </field>
+-->
+		<field id="referencia_movimiento">
+			<label  colspan="4"  style="font-size:12px;">Referencia</label>
+			<help>Referencia del movimiento</help>
+			<size>128</size>
+			<tipo>varchar</tipo>
+		</field>
+		<field id="forma_pago"  local="true">
+			<label>Forma De pago</label>
+			<options>
+			    <option valor="3"></option>
+			    <option valor="0">Cta Corriente</option>
+			    <option valor="1">Contado</option>
+			</options>
+
+		</field>
+<!-- LISTAS DE PRECIOS -->	
+		<field id="wid_faclista" local="true">
+			<label  modpos="nobr">Lista de Precios</label>
+			<helper type="combo"  xml="faclista_qry.xml" dir="/ayudas" empty="true">
+			</helper>
+		        <actualiza>
+		                    <field destino="wfaclista_id" id="stkarticulo_codigoalt" xml="stkremito_ing.xml"/>^
+		        </actualiza>
+		</field>			
+<!--
+
+		<field id="saldo_movimiento"  noshow="true" local="true">
+			<label>saldo recibo</label>
+			<valor>0</valor>
+		</field>
+-->
+
+		<field id="cuenta_debe_id"   deshabilitado="true" noshow="true">
+			<tabla_ex id="GEN_SUBSISTEMAS">
+				<field id="cuenta_debe_id" />
+				<field id="id_subsistema" >
+					<label>Subsistema</label>
+					<condicion operador="=">'21'</condicion>
+				</field>
+			</tabla_ex>
+			<label>cuenta prov</label>
+				<jseval fielddestino="ivacuenta"  actxml="true">cuenta_debe_id</jseval>
+			<detalle>perc</detalle>
+		</field>
+           
+
+
+
+        </table>
+        <join tipo="left">
+            <tabla id="REG_CONCEPTOS">
+                <field id="id_concepto">
+                    <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+                </field>
+                <field id="subsistema_id">
+                    <condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion>
+                </field>
+            </tabla>
+        </join>
+        <join tipo="left">
+            <tabla id="REG_CUENTA">
+                <field id="id_regcuenta">
+                    <condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+                </field>
+            </tabla>
+        </join>
+
+        <join tipo="left">
+            <tabla id="GEN_IVA">
+                <field id="id_iva">
+                    <condicion operador="=">REG_CUENTA.iva_id</condicion>
+                </field>
+            </tabla>
+
+        </join>
+        <join tipo="left">
+            <tabla id="GEN_SUBSISTEMAS">
+                <field id="id_subsistema">
+                    <condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion>
+                </field>
+            </tabla>
+        </join>
+    </consulta>
+</histrix>
+

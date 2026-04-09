@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="abm">
+  <title>Profesionales</title>
+  <obs></obs>
+  <consulta>
+    <table id="GEN_PROFESIONALES" label="Profesionales">
+
+      <filters>
+        <field id="nombre_profesional" >
+          <operador>like</operador>
+          <label>Profesional</label>
+	</field>
+      </filters>
+
+      <field id="id_genprofesional" autoinc="true" noshow="true">
+        <label>ID</label>
+      </field>
+
+      <field id="nombre_profesional">
+        <label>Profesional</label>
+	 <size>25</size>
+      </field>
+
+      <field id="matricula_profesional">
+        <label>Matricula</label>
+      </field>
+	
+	<field id="genprofesion_id" colstyle="display: none;">
+		<tabla_ex xml="profesiones_crud.xml" />
+		<label>Profesion</label>
+		<help>Profesion a la que pertenece</help>
+	</field>
+    </table>
+  </consulta>
+</histrix>  

@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<abm tipo="consulta">
+	<titulo>DETALLE FACTURA</titulo>
+	<obs></obs>
+	<consulta>
+		<tabla id="FACDETAL">
+			<titulo>Detalle comprobante</titulo>
+			<field id="ctacod" noshow="true">
+				<label>Cta</label>
+			</field>
+			<field id="regfec" noshow="true">
+				<label>Fecha</label>
+			</field>
+
+			<field id="nropue" noshow="true">
+				<label>Npv</label>
+			</field>
+			<field id="nrofac" noshow="true">
+				<label>Numero</label>
+			</field>
+			<field id="artdes" tabla="STKINSUM">
+				<label>Articulo</label>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="artctb" tabla="STKINSUM">
+			    <label>Ctb</label>
+			</field>
+			<field id="ctbnom" tabla="CTBCUENT">
+			    <label>Nom.Cta.cble</label>
+			</field>
+			<field id="observaciones" tabla="CPSMOVIM">
+				<label>Obs</label>
+				<tipo>varchar</tipo>
+			</field>
+
+			<field id="artcan">
+				<label>Cantidad</label>
+			</field>
+			<field id="artnet" suma="true">
+				<label>Importe</label>
+			</field>
+			<field id="artiva" >
+				<label>Iva</label>
+				</field>
+			<field id="arttot" suma="true">
+				<label>Total</label>
+			</field>
+			<group>
+			    <field id="id_detal" />
+			</group>
+		    
+		</tabla>
+		<join tipo="left">
+			<tabla id="STKINSUM">
+				<field id="artcod">
+					<condicion operador="=">FACDETAL.artcod</condicion>
+				</field>
+				<field id="siscod" oculto="true">
+					<condicion operador="=">01</condicion>
+				</field>
+
+			</tabla>
+		</join>
+		<join tipo="left">
+			<tabla id="CTBCUENT">
+				<field id="ctbcod">
+					<condicion operador="=">artctb</condicion>
+				</field>
+<!--				<field id="siscod" oculto="true">
+					<condicion operador="=">10</condicion>
+				</field>
+-->
+			</tabla>
+		</join>
+		<join tipo="left">
+			<tabla id="FACREMIT">
+				<field id="ctacod">
+					<condicion operador="=">FACDETAL.ctacod</condicion>
+				</field>
+				<field id="remnro">
+					<condicion operador="=">FACDETAL.nrofac</condicion>
+				</field>
+				<!-- <field id="movfec">
+					<condicion operador="=">FACDETAL.regfec</condicion>
+				</field>-->
+
+			</tabla>
+		</join>
+		<join tipo="left">
+			<tabla id="CPSMOVIM">
+				<field id="artcod">
+					<condicion operador="=">FACDETAL.artcod</condicion>
+				</field>
+				<field id="movcan">
+					<condicion operador="=">FACDETAL.artcan</condicion>
+				</field>
+				<field id="ocpnro">
+					<condicion operador="=">FACREMIT.ocpnro</condicion>
+				</field>
+				<!-- <field id="movfec">
+					<condicion operador="=">FACDETAL.regfec</condicion>
+				</field>-->
+
+			</tabla>
+		</join>
+
+
+
+	</consulta>
+</abm>

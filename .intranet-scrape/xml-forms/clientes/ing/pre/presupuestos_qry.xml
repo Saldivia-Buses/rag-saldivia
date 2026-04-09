@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="grid" deleteRow="false" procesa="true" inserta="false" tableHeight="30em">
+  <title>Presupuestos</title>
+  <obs/>
+  <form detalle="presupuesto_detalle_qry.xml" inline="true">
+    <table id="REG_MOVIMIENTOS" label="Presupuestos" tableHeight="30em">
+
+      <movimientos>
+          <relacion id="presupuesto_del.xml" />
+      </movimientos>
+
+      <filters _auto="true">	
+
+          <field id="fecha_movimiento">
+            <label>Desde</label>
+            <operador>&gt;=</operador>
+            <valor eval="true">date("d/m/Y", mktime(0, 0, 0, date("m"), 1  , date("Y")))</valor>
+          </field>
+
+          <field id="separador_filtros" deshabilitado="true" modpos="nobr" noshow="true" local="true" />
+
+          <field id="fecha_movimiento">
+            <label modpos="nobr">Hasta</label>
+            <operador>&lt;=</operador>
+            <valor>today</valor>
+          </field>
+
+          <field id="separador_filtros" deshabilitado="true" modpos="nobr" noshow="true" local="true" />
+
+          <field id="filtro_estado" deshabilitado="false" modpos="nobr"> 
+            <label>Estado</label>
+            <operador>=</operador>
+          </field>
+
+          <field id="separador_filtros" deshabilitado="true" modpos="nobr" noshow="true" local="true" />
+
+          <field id="nro_cuenta"  colspan="3" modpos="nobr">
+            <label>Cliente</label>
+            <operador>=</operador>
+          </field>
+
+          <field id="regcuenta_nombre" local="true" deshabilitado="true" sincelda="true" modpos="nobr">
+            <label />
+          </field>
+
+      </filters>
+
+
+      <fieldGroup colstyle="vertical-align:middle; text-align:center;">
+
+          <field id="separador_filtros" deshabilitado="true" modpos="nobr" noshow="true" local="true" >
+                <size>1</size>
+          </field>
+
+          <field id="id_regmovim" noshow="true">
+                <detalle>regmovim_id</detalle>
+          </field>
+
+        <!-- PARA LA BUSQUEDA DE CLIENTES -->
+          <field id="subsistema_id" noshow="true" > 
+            <label>ss</label>
+          </field>
+
+        <!-- PARA TRAER LOS COMPROBANTES DEL PRESUPUESTO -->
+          <field id="subsistemaclientes_id" noshow="true" local="true" > 
+            <label>ssc</label>
+          </field>
+
+        <!-- PARA TRAER LOS COMPROBANTES DEL PRESUPUESTO -->
+            <field id="subsistemavendedor_id" noshow="true" local="true" > 
+              <label>ssv</label>
+            </field>
+
+            <field id="concepto_id" noshow="true" />
+
+            <field id="puesto_movimiento" noshow="true" />
+
+            <field id="letra_movimiento" noshow="true" />
+
+            <field id="regcuenta_nombre" local="true" noshow="true" />
+
+            <field id="imprime_concepto1" noshow="true">
+              <expression>IFNULL(REG_NUMERADORES.ejecuta,'')</expression>
+            </field>
+
+            <field id="mar_movimiento" noshow="true">
+              <expression>case when mar_movimiento = 0 or mar_movimiento IS NULL then 'false' else 'true' end</expression>
+            </field>
+
+            <field id="login" local="true" noshow="true">
+                <label>login</label>
+                <valor eval="true">$_SESSION['idUser']</valor>
+            </field>
+
+
+
+            <field id="regcuenta_id" noshow="true">
+              <label>Cuenta</label>
+              <helper type="external" xml="regcuenta_solamente_nro_qry.xml" dir="/ayudas" empty="true">
+                <field id="subsistema_id" oculto="true">
+                      <condicion operador="=" valorde="subsistemaclientes_id"/>
+                </field>
+              </helper>
+            </field>
+
+            <field id="nro_cuenta" tabla="REG_CUENTA" noshow="true">
+              <label>Cliente</label>
+              <helper type="external" xml="regcuenta_relacionescmb_nro.xml" dir="/ayudas" _empty="true">
+                <field id="login" local="true" noshow="true">
+                  <label>login</label>
+                  <valor eval="true">$_SESSION['idUser']</valor>
+                </field>
+                <field id="letra">
+                  <expression>'X'</expression>
+                  <detalle>regcuenta_ivaletra</detalle>
+                </field>
+                <field id="subsistema_id" oculto="true">
+                     <condicion operador="=" valorde="subsistemaclientes_id"/>
+                </field>		
+              </helper>
+              <size>6</size>
+            </field>
+
+            <field id="fecha_movimiento">
+              <label>Fecha</label>
+              <tipo>date</tipo>
+            </field>
+          
+            <field id="nombre_cuenta">
+              <label>Cuenta</label>
+              <expression>
+                CASE WHEN nombre_movimiento = '' then REG_CUENTA.nombre_cuenta else nombre_movimiento END
+              </expression>		
+            </field>
+
+            <field id="nro_movimiento" tdWidth="150" >
+              <label>Numero</label>
+              <expression>CONCAT(REG_CONCEPTOS.abreviacion_concepto, ' ', REG_MOVIMIENTOS.letra_movimiento,' ',LPAD(REG_MOVIMIENTOS.puesto_movimiento,4,'0'),'-',LPAD(REG_MOVIMIENTOS.nro_movimiento  ,8,'0'))</expression>
+              <helper type="link">
+                <parameter source="id_regmovim" target="id_regmovim"/>
+              </helper>
+              <attribute id="linkint">imprime_concepto1</attribute>
+            </field>
+
+            <field id="neto_movimiento" suma="true" noZero="true" >
+              <label>Importe Neto</label>
+              <tipo>numeric</tipo>
+            </field>
+
+            <field id="importe_IVA" suma="true" noZero="true">
+              <label>Importe IVA</label>
+              <tipo>numeric</tipo>
+            </field>
+
+            <field id="importe_exento" suma="true" noZero="true" noshow="true">
+              <label>Importe Exento</label>
+              <tipo>numeric</tipo>
+            </field>
+
+            <field id="importe_movimiento" suma="true" noZero="true" >
+              <label>Importe</label>
+              <tipo>numeric</tipo>
+            </field>
+
+            <field id="filtro_estado" >
+              <label>Estado</label>
+              <expression>IF(mar_movimiento = 1, 1, 0)</expression>
+              <options>
+                <option valor=""></option>
+                <option valor="0">SIN FACTURAR</option>
+                <option valor="1">FACTURADO</option>
+              </options>
+            </field>
+
+            <field id="eliminar" local="true">
+              <label>Borrar</label>
+              <tipo>check</tipo>
+              <attribute id="noshow">mar_movimiento</attribute>
+            </field>
+
+      </fieldGroup>
+            <fieldGroup>
+                <if>return (strpos($_SESSION['properties']['modulos'],'vendedores') !== false);</if>
+
+                <field id="filtro_perfil" noshow="true">
+                    <eval> if ($_SESSION['administrator'] != 1) return true; </eval>
+                    <expression having="false">'[__login__]'</expression>
+                        <condicion operador="=">'[__login__]' AND find_in_set('[__login__]', (ifnull((SELECT CONCAT(IFNULL(RCU_SUP.usuario_id,0),',',IFNULL(RCU.usuario_id,0)) FROM REG_CUENTA_USERS RCU
+                            LEFT JOIN REG_CUENTA_RELACIONES RCR_SUP on RCR_SUP.regcuenta_id = RCU.regcuenta_id
+                            LEFT JOIN REG_CUENTA_USERS RCU_SUP on RCU_SUP.regcuenta_id = RCR_SUP.regcuentarelacionada_id
+                            WHERE RCU.regcuenta_id = REG_MOVIMIENTOS.regcuentavendedor_id
+                              AND RCR_SUP.subsistemarelacionada_id = '[__subsistemavendedor_id__]'
+                            ORDER BY RCR_SUP.fecha_vigencia DESC LIMIT 1), 0 )))</condicion>
+                </field>
+            </fieldGroup>
+      <order>
+          <field id="mar_movimiento"    table="REG_MOVIMIENTOS" />
+          <field id="fecha_movimiento"  table="REG_MOVIMIENTOS" />
+          <field id="nro_movimiento"    table="REG_MOVIMIENTOS" />
+      </order>
+
+      <group>
+          <field id="id_regmovim" tabla="REG_MOVIMIENTOS" />
+      </group>
+      
+    </table>
+
+      <join tipo="left">
+        <table id="REG_CUENTA">
+          <field id="id_regcuenta">
+            <condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+          </field>
+        </table>
+      </join>
+
+      <join>
+        <table id="REG_CONCEPTOS">
+          <field id="id_concepto">
+            <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+          </field>
+        </table>
+      </join>
+
+      <join tipo="left">
+        <table id="REG_NUMERADORES">
+          <field id="subsistema_id">
+            <condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion>
+          </field>
+          <field id="regconcepto_id">
+            <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+          </field>
+          <field id="puesto">
+            <condicion operador="=">REG_MOVIMIENTOS.puesto_movimiento</condicion>
+          </field>
+          <field id="letra">
+            <condicion operador="=">REG_MOVIMIENTOS.letra_movimiento</condicion>
+          </field>
+        </table>
+      </join>
+
+  </form>
+</histrix>

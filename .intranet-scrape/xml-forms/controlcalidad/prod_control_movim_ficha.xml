@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="fichaing"  deleteRow="false" imprime="false" procesa="true" modifica="false" inserta="false" preFetch="true" limit="1">
+	<title>Control Calidad</title>
+	<obs/>
+        <eventos>
+
+                <event id="insert">close</event>
+                
+                <event id="procesar">close</event>
+                
+                <event id="procesar">refresh</event>
+        </eventos>	
+	<form>
+		<table id="PROD_CONTROLES">
+			<title>Controles</title>
+			<field id="nrofab_id"  local="true" noshow="true" />
+			
+			<field id="certif" local="true" deshabilitado="true">
+			    <label>Nro</label>
+			</field>
+			<field id="homologacion_id" noshow="true" local="true" />
+
+			<field id="seccion_id" noshow="true" local="true"/>
+			<field id="fecha_control"   deshabilitado="false" noshow="true">
+				<label>Fecha</label>
+				<tipo>date</tipo>
+				<expression>ifnull((select max(fecha_control) from PROD_CONTROL_MOVIM where nrofab_id = [__nrofab_id__] and fecha_control != '0000-00-00' limit 1), date(now() ) )</expression>
+			<!--	<valor>today</valor> -->
+			</field>			
+			<field id="controles"  local="true">
+			    <label colspan="4"></label>
+			    <helper xml="prod_control_movim.xml" type="object">
+				<parameter source="nrofab_id" target="nrofab_id"/>
+				<parameter source="homologacion_id" target="homologacion_id"/>
+				<parameter source="seccion_id" target="seccion_id"/>
+			    </helper>
+			</field>			
+			
+			
+		</table>
+
+	</form>
+</histrix>

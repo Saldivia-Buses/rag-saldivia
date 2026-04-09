@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="update" >
+	<title>Ingreso de Movimientos</title>
+	 <obs></obs>
+		<form>
+		     <table id="REG_MOVIMIENTOS">
+			<field id="id_regmovim"      	esClave="true"		id_temp="regmovim_id" />
+			<field id="saldo_movimiento"      					id_temp="xsaldo_movimiento_orig" />
+		    </table>
+		</form>
+    </histrix>	
+
+
+

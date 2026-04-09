@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="abm" grabafinal="true">
+       <title>COMPROBANTES</title>
+        <obs></obs>
+               <form >
+					<table id="REG_MOVIMIENTOS" label="FACTURAS">
+						<field id="subsistema_id" id_cab="sisprv">
+							<valor>01</valor>
+						</field>
+						<field id="nro_cuenta" id_cab="ctacod">
+						</field>
+						<field id="nombre_movimiento" id_cab="ctanom">
+						</field>
+						<field id="fecha_movimiento" id_cab="movfec">
+						</field>
+						<field id="reg_fecha" id_cab="hoy" >
+						</field>
+						
+						<field id="concod" id_cab="concod">
+						</field>
+						<field id="puesto_movimiento" id_cab="movnpv">
+						</field>
+						<field id="nro_movimiento" id_cab="movnroOP">
+						</field>
+<!--						<field id="movimp" id_temp="movsal">
+						</field>
+						-->
+						<field id="importe_movimiento" id_temp="movimp2">
+						</field>
+						<field id="neto_movimiento" id_temp="Impgraprop">
+						</field>
+							
+						<field id="cuota_movimiento" id_cab="movcta">
+						</field>
+						<field id="succod" id_cab="movcta">
+						</field>
+						
+						<field id="vencimiento_movimiento" id_cab="movfec">
+						</field>
+						<field id="saldo_movimiento" id_temp="apagar">
+						</field>
+						<field id="zoncod" id_cab="zoncod">
+						</field>
+						<field id="referencia_movimiento" id_cab="movref__1">
+						</field>						
+
+						<field id="movref__3" id_temp="movref__3">
+						</field>						
+<!--						<field id="movlet" id_cab="movlet">
+						</field> -->
+						<field id="login" id_cab="opecla">
+						</field>
+						
+						<field id="reg_fecha" id_cab="movfec">
+						</field> 						
+						<field id="regmin" esNroMinuta="true">
+						</field> 
+						
+					</table>
+               </form>
+        </histrix>

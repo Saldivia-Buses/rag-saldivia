@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="update" >
+    <title>Controles Calidad</title>
+    <obs/>
+    <form>
+        <table id="PROD_CONTROL_MOVIM" label="Controles Calidad">
+
+            <field id="id_controlmovim" id_temp="id_controlmovim" esClave="true" />
+
+            <field id="hora_control" id_temp="h_hora_control"/>
+            
+            <field id="fecha_control" id_temp="h_fecha_control" />
+
+        </table>
+    </form>
+</histrix>

@@ -1,0 +1,278 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="fichaing"  	 graboasiento="false"
+	Muestraasiento="false"
+	subtipo="vertical"
+	inserta="false"
+	modifica="false"
+	llenoTemporal="false"
+	imprime="false"
+	llenoreferente="true"
+	tooltip="false" >
+
+	<title>Movimientos de Caja</title>
+	<obs/>
+	<consulta>
+		<table id="CAJMOVIM" label="Movimientos de caja" styleTbody="height:10em;">
+
+			<movimientos>
+				<relacion id="pos_cctmovim_rec_ingmov.xml"/>
+				<relacion id="pos_plusmovim_ingmov.xml" />
+				<relacion id="pos_cctimput_ingmov.xml"/>
+
+				<relacion id="pos_facnumer2_ingmov.xml"/>
+
+				<relacion id="pos_cctmovim_update_ingmov.xml"/>
+			</movimientos>
+
+			<validation>
+				<condition><![CDATA[imputado > total ]]></condition>
+				<message>El Pago es Superior al Importe</message>
+			</validation>
+			<validation >
+				<condition><![CDATA[ctacte == 0 && imputado < total ]]></condition>
+				<message>El Cliente no tiene habilitada la Cta Cte</message>
+			</validation>
+			<validation optional="true">
+				<condition><![CDATA[ctacte == 1 && imputado < total ]]></condition>
+				<message>¿Desea Facturar en Cuenta Corriente?</message>
+			</validation>
+
+
+<!-- 			<validation >
+				<condition><![CDATA[(ctacte == 0)? ((imputado == total)?true:false ) : ((imputado <= total)?true:false ) ]]></condition>
+				<message>El Cliente no tiene habilitada la Cta Cte</message>
+			</validation>
+		-->
+
+
+
+
+			<field id="cajfec" noshow="true" deshabilitado="true">
+				<label modpos="nobr">cajfec</label>
+				<tipo>date</tipo>
+				<valor>today</valor>
+			</field>
+			<field id="fecha" deshabilitado="true" local="true" noshow="true">
+				<label modpos="nobr">Fecha</label>
+				<valor>today</valor>
+				<tipo>date</tipo>
+			</field>
+			<field id="movfec" local="true" deshabilitado="true" noshow="true">
+				<label modpos="nobr">fecha fac</label>
+				<tipo>date</tipo>
+			</field>
+			<field id="opecla" noshow="true" deshabilitado="true">
+				<label modpos="nobr">Usuario</label>
+				<valor eval="true">$_SESSION['usuario']</valor>
+			</field>
+			<field id="siscaj" oculto="true" local="true" deshabilitado="true">
+				<label modpos="nobr">siscaj</label>
+				<tipo>varchar</tipo>
+				<valor>'05'</valor>
+			</field>
+			<field id="conpag" local="true" oculto="true" deshabilitado="true">
+				<valor>4</valor>
+				<label modpos="nobr">conpag</label>
+			</field>
+			<field id="movnpv" local="true" oculto="true" deshabilitado="true">
+				<label modpos="nobr">movnpv</label>
+				<valor>1</valor>
+			</field>
+			<field id="siscod" oculto="true" deshabilitado="true">
+				<label modpos="nobr">Cod.</label>
+				<help></help>
+				<valor>'02'</valor>
+				<condicion operador="=" valorde="siscaj"/>
+			</field>
+			<field id="cajcod" local="true" noshow="true" deshabilitado="true">
+				<label modpos="nobr">cajcod</label>
+				<valor>4</valor>
+			</field>
+			<field id="cajctb" noshow="true" ctbcuenta="2" _valop="true" valoropcion="true"
+				deshabilitado="true">
+				<label modpos="nobr">Ctb</label>
+				<tabla_ex id="CAJCONCE">
+					<field id="cajcod"></field>
+
+					<field id="ctbcod__1"></field>
+					<field id="siscod">
+						<condicion operador="=">'05'</condicion>
+					</field>
+					<field id="cajtip">
+						<condicion operador="=">1</condicion>
+					</field>
+					<orden>
+						<field id="cajcod"></field>
+					</orden>
+				</tabla_ex>
+				<if exp="true" operador="=">
+					<verdadero>cajcod</verdadero>
+					<falso>0</falso>
+				</if>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="ctacte" local="true" deshabilitado="true" noshow="true">
+				<label modpos="nobr">ctacte</label>
+			</field>
+			<field id="conTjtPlus" local="true" deshabilitado="true" noshow="true">
+				<label modpos="nobr">conTjtPlus</label>
+			</field>
+
+			<field id="concod" deshabilitado="true" noshow="true">
+				<label modpos="nobr">concod</label>
+			</field>
+			<field id="ctacod" deshabilitado="true" noshow="true">
+				<label modpos="nobr">Codigo</label>
+			</field>
+			<field id="movnro" local="true" deshabilitado="true">
+				<label _modpos="nobr">Nro</label>
+			</field>
+
+
+
+			<field id="ctanom" deshabilitado="true">
+				<label modpos="nobr">Nombre</label>
+				<size>25</size>
+			</field>
+
+			<field id="movlet" deshabilitado="true">
+				<label modpos="nobr">Letra</label>
+				<tipo>varchar</tipo>
+				<size>2</size>
+			</field>
+			<field id="npvrec" deshabilitado="true" noshow="true" local="true">
+				<label modpos="nobr">npvrec</label>
+				<valor>1</valor>
+			</field>
+  			<field id="nrorec" deshabilitado="true" local="true">
+				<label modpos="nobr">Recibo</label>
+
+
+<!--   				<tabla_ex id="FACNUMER">
+					<field id="nrolet">
+					</field>
+					<field id="nronro">
+					</field>
+					<field id="nrotip">
+						<condicion operador="=">4</condicion>
+					</field>
+				</tabla_ex> -->
+			</field>
+
+			<field id="ctanro" deshabilitado="true" noshow="true">
+				<label modpos="nobr">CUIT</label>
+			</field>
+
+
+
+
+<!--  			<field id="cuotas" incdec="true">
+				<label colspan="2">cuotas</label>
+				<valor>1</valor>
+				<jseval campodestino="valcuo">resto / cuotas</jseval>
+				<tipo>integer</tipo>
+				<size>2</size>
+			</field>
+
+			<field id="valcuo" local="true" deshabilitado="true" min="1" max="6">
+				<label colspan="2" modpos="nobr">de </label>
+			</field> -->
+
+			<field id="formaPago" obj="pos_formaspago_ing.xml">
+				<label colspan="9"></label>
+			</field>
+
+			<field id="total" local="true" ctbimporte="2" deshabilitado="true">
+				<label style="color:green;font-size:large;"
+					Formstyle="color:green;font-size:large;" colspan="2">Total</label>
+				<help>Importe</help>
+				<tipo>numeric</tipo>
+			<!-- 	<jseval campodestino="valcuo">resto / cuotas </jseval> -->
+
+				<!--<jseval campodestino="resto">total</jseval>			-->
+			</field>
+
+			<field id="resto" local="true" deshabilitado="true">
+				<label modpos="nobr" style="color:red;font-size:large;"
+					Formstyle="color:red;font-size:large;" colspan="1">Saldo</label>
+			<!-- 	<jseval campodestino="valcuo">resto / cuotas</jseval> -->
+			</field>
+			<field id="imputado" local="true" ctbimporte="2" deshabilitado="true"
+				noshow="true">
+				<label modpos="nobr" style="color:red;font-size:large;"
+					Formstyle="color:red;font-size:large;">Imputado</label>
+				<help>Importe</help>
+				<tipo>numeric</tipo>
+				<jseval campodestino="resto">total - imputado</jseval>
+				<jsfunction event="onchange">refrescaCampo('pos_cobranza.xml', validacion);</jsfunction>
+			  <!-- 	<jseval campodestino="valcuo">resto / cuotas</jseval> -->
+			</field>
+			<field id="grabar" noshow="true" deshabilitado="true">
+				<label modpos="nobr">grabar</label>
+				<if exp="total != resto &amp;&amp; 'movnro' > '0'" operador="">
+					<verdadero>'true'</verdadero>
+					<falso>'false'</falso>
+				</if>
+
+			</field>
+			<field id="succod" local="true" noshow="true" deshabilitado="true">
+				<label modpos="nobr" >succod</label>
+				<valor>1</valor>
+			</field>
+			<field id="cajtip" noshow="true" local="true" ctbtipo="2"
+				deshabilitado="true">
+				<valor>1</valor>
+				<label modpos="nobr" >cajtip</label>
+			</field>
+			<!-- Deudores por Venta -->
+
+			<field id="ctb_deu" ctbcuenta="4" noshow="true">
+				<tipo>varchar</tipo>
+				<valor>1.1.3.01.001</valor>
+				<label modpos="nobr" >ctb_deu</label>
+			</field>
+			<field id="caj_imp2" local="true" ctbimporte="4" deshabilitado="true"
+				noshow="true">
+				<label modpos="nobr">Imp</label>
+				<if exp="true" operador="=">
+					<verdadero>cajimp</verdadero>
+					<falso>0</falso>
+				</if>
+				<tipo>numeric</tipo>
+			</field>
+
+			<field id="caj_tip2" noshow="true" local="true" ctbtipo="4"
+				deshabilitado="true">
+				<valor>2</valor>
+				<label modpos="nobr" >caj_tip2</label>
+			</field>
+
+			<field id="caj_imputar" noshow="true" local="true" deshabilitado="true">
+				<if exp="true" operador="=">
+					<verdadero>1</verdadero>
+					<falso>0</falso>
+				</if>
+				<valor>0</valor>
+				<label modpos="nobr" >caj_imputar</label>
+			</field>
+			<field id="cajcon" local="true" noshow="true" deshabilitado="true">
+				<valor>45</valor>
+				<label modpos="nobr" >cajcon</label>
+			</field>
+
+<!--  			<field id="validacion" local="true" validar="true" _deshabilitado="true"
+				_noshow="true">
+				<label>validar</label>
+				<if exp="0ctacte == 1 || ( imputado + 0) &gt; 0">
+					<verdadero>1</verdadero>
+					<falso>0</falso>
+				</if>
+				<invalid>EL CLIENTE NO PUEDE FACTURAR EN CUENTA CORRIENTE</invalid>
+				<tipo>varchar</tipo>
+			</field>
+-->
+
+
+		</table>
+	</consulta>
+</histrix>

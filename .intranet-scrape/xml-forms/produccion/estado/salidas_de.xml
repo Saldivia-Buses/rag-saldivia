@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+  <title>Estado de Fábrica</title>
+  <obs />
+  <form >
+    <table id="PROD_PATH_REGISTRO" label="Controles de Calidad de Producción">
+	<field id="pendientes" noshow="true">
+	    <expression having="false">marcado_pendientes</expression>
+	    
+	</field>
+	<field id="nrofab_id" >
+            <helper type="link" xml="ficha_producto1_qry.xml" dir="/producto" modal="true" title="Ficha Técnica">
+<!--                  <parameter source="ficha_id" target="producto_id"/> -->
+                 <parameter source="nrofab_id" target="nrofab"/> 
+                 <parameter source="nrofab_id" target="nrocha"/> 
+            </helper>
+	</field>
+	<field id="registros">
+	    <expression>'Movimientos'</expression>
+                <helper type="link" xml="prod_path_registro.xml" >
+		    <parameter source="nrofab_id" target="nrofab_id" />
+                </helper>
+	</field>
+
+	<field id="modificar">
+	    <expression>select 'Mover' from MOMENTO where idMomento = POSICIONESFAB.idMomento and permite_marcar_pendientes = 1</expression>
+	    <helper xml="unidad_a_pendientes.xml" type="link">
+		<parameter source="nrofab_id" target="nrocha" />
+	    </helper>
+	</field>
+	
+
+	<field id="hora_salida" noshow="true">
+	    <condicion operador="=">(SELECT PROD_PR.hora_salida FROM PROD_PATH_REGISTRO PROD_PR 
+WHERE PROD_PR.nrofab_id = PROD_PATH_REGISTRO.nrofab_id ORDER BY PROD_PR.hora_salida DESC LIMIT 1) or marcado_pendientes = 1</condicion>
+	</field>
+
+	<field id="cuenta" noshow="true">
+	    <expression having="false">IFNULL((SELECT COUNT(*) FROM PROD_PATH_REGISTRO PR 
+WHERE PR.nrofab_id = PROD_PATH_REGISTRO.nrofab_id AND hora_salida = '0000-00-00 00:00:00'), 0)</expression>
+	    <condicion operador="=">0 or marcado_pendientes = 1</condicion> 
+	</field>
+
+ 	<field id="terminacionFinal" tabla="PEDCOTIZ" noshow="true">
+	    <condicion operador="=">'0000-00-00' or marcado_pendientes = 1</condicion>  
+	</field>
+
+	<field id="idMomento" tabla="POSICIONESFAB" noshow="true">
+	    
+	</field>
+    <order>
+        <field id="nrofab_id" />
+        <field id="hora_salida" />
+    </order>
+    <group>
+	<field id="nrofab_id" />
+    </group>
+
+    </table>
+    <join>
+	<table id="PROD_PRODUCT_PATH">
+	    <field id="id_productpath">
+		<condicion operador="=">productpath_id</condicion>
+	    </field>
+	</table>
+    </join>
+    <join>
+	<table id="POSICIONESFAB">
+	    <field id="id_posicionfab">
+		<condicion operador="=">posicionfab_id</condicion>
+	    </field>
+	</table>
+    </join>
+    <join>
+	<table id="PEDCOTIZ">
+	    <field id="nrocha">
+		<condicion operador="=">nrofab_id</condicion>
+	    </field>
+	</table>
+    </join>
+  </form>
+</histrix>

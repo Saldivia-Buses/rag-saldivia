@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="grid" borra="no" inserta="no" imprime="false" subtipo="vertical" procesa="true" tooltip="false" deleteRow="false" transaccional="true">
+    <title>DETALLE</title>
+    <obs></obs>
+    <form >
+        <table id="OCPRECIB" label="Movimientos de Stock">
+            <movimientos>
+           
+                   
+		BORRA RECEPCION - FUNCIONA
+                <relacion id="ocprecib_del.xml"></relacion> 
+                   
+		BORRA EN STOCK
+                <relacion id="stkinmov_del.xml"></relacion>
+
+
+                BORRA LOS DEMERITOS 
+                <relacion id="movdemeritos_del.xml"></relacion>                      
+
+
+		HERRAMIENTAS
+                <relacion id="herramientas_del.xml"></relacion>                      
+
+		MODIFICA EL ESTADO DE LA OC. ORIGINAL   La PONGO COMO PENDIENTE                         
+                <relacion id="cps_movimientos_anul_update.xml"></relacion>                     
+
+                MODIFICA EL RENGLON DE LA ORDEN DE COMPRA
+                <relacion id="cpsdetalle_anul_update.xml"></relacion>
+                                                                                        
+    		<!--
+		BORRA EL REMITO ???  no, porque puedo borrar parcial	
+                <relacion id="facremit_anul_del.xml"></relacion>-->
+		            		                                                                                                    
+            </movimientos>
+           <filters>
+                <field id="nrorec">
+                    <label>Remito</label>
+                    <operador>=</operador>
+                </field>
+            </filters>
+            <field id="id_recepcion"  esClave="true" _noshow="true">
+            </field>
+        
+            <field id="ocpnro">
+                <label>Nro OC</label>
+                <help>Número de Orden de Compra</help>
+            </field>
+         
+            <field id="artcod" >
+                <label>Art.</label>
+                <help>Código de Artículo</help>
+                <detalle>artcod</detalle>
+            </field>
+            		 
+            <field id="ctacod" local="true" _oculto="true" >
+                <label>Cuenta</label>
+                <tipo>integer</tipo>
+            </field>
+            <field id="fecreq" >
+                <label>Requerido</label>
+                <help>Fecha requerido</help>
+                <tipo>date</tipo>
+            </field>
+
+            <field id="fecrec" >
+                <label>Fecha Rec.</label>
+            </field>
+            <field id="nrorec" >
+                <label>Remito</label>
+                <helper type="combo" id="OCPRECIB" empty="true">
+                    <field id="nrorec" />
+                    <field id="nrorec2">
+                        <expression>nrorec</expression>
+                    </field>
+                    <field id="ocpnro" oculto="true">
+                        <condicion operador="=" valorde="ocpnro" />
+                    </field>
+                </helper>
+            </field>
+
+           <field id="detalle" deshabilitado="true" tabla="CPSMOVIM">
+                <label modpos="nobr" colspan="6" >Descrip</label>
+            </field>
+
+            <field id="pedcps" deshabilitado="true" >
+                <label>Pedido</label>
+                <help>Pedido (expresado en la unidad de compra)</help>
+                <tipo>numeric</tipo>
+            </field>
+            
+            <field id="pencps" deshabilitado="true" tabla="CPSMOVIM">
+                <label>Pendientes</label>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="reccps" deshabilitado="true">
+                <label>Cantidad Recibida</label>
+                <tipo>numeric</tipo>
+            </field>
+
+           <field id="quedaranpendientes" deshabilitado="true" _noshow="true" local="true">
+                <label>Quedan Pendientes</label>
+                <if exp="reccps == 0 &amp;&amp; pencps == 0">
+                    <false>reccps + pencps</false>
+                    <true>0</true>
+                </if>
+                <tipo>numeric</tipo>
+            </field>
+		
+            <field id="idPed" noshow="true" />
+
+	    <field id="uno" local="true" noshow="true">
+		<valor>1</valor>
+	    </field>
+	    <field id="borrar" local="true" editable='true' refresh="true">
+		<label>Borrar</label>
+		<tipo>check</tipo>
+	    </field>
+	    <field id="borro" local="true" noshow="true">
+		<if exp="true">
+		    <true>('borrar' == 1)?'true':'false'</true>
+		    <false>'false'</false>
+		</if>
+	    </field>
+            
+            <order>
+                <field id="artcod" tabla="OCPRECIB" />
+                <field id="nrorec" />
+            </order>
+        </table>
+        <join tipo="left">
+            <table id="CPSMOVIM">
+                <field id="idPed">
+                    <condicion operador="=">OCPRECIB.idPed</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix>

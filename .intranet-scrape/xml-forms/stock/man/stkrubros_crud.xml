@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  CRUD
+Tarea: Tabla de Rubros de Articulos
+Autor: d!ego2k
+Fecha: 13/10/10
+*******************************************************************************
+-->
+<!--<histrix tipo="abm-mini" subtipo="vertical" width="50">-->
+<histrix tipo="crud">
+	<title>Rubros</title>
+	<obs/>
+	<form _detalle="stksubrubros_crud.xml">
+
+		<table id="STK_RUBROS" label="Rubros">
+			
+
+			<filters>
+				<field id="nombre_rubro">
+					<label>Rubro</label>
+					<operador>like</operador>
+				</field>
+			</filters>
+
+			<fieldGroup>
+				
+				<field id="id_stkrubro" esClave="true" noshow="true" >
+					<detalle>stkrubro_id</detalle>
+				</field>
+				
+				<field id="nombre_rubro">
+					<label>Nombre</label>
+					<size>40</size>
+				</field>
+				
+				<field id="comision_rubro">
+					<label>Comisión</label>
+					<tipo>numeric</tipo>
+				</field>
+				
+				<field id="factura_sinstock">
+					<label>Factura sin stock</label>
+					<tipo>check</tipo>
+				</field>
+
+			</fieldGroup>
+
+			<fieldGroup>
+				
+				<if>if (strpos($_SESSION['properties']['modulos'],'contabilidad') != false) return true;</if>
+
+				<field id="ctbcuentarubro_id">
+					<label>Cta. Ctb. Venta</label>
+					<helper type="combo" xml="cuentas_habilitadas_qry.xml" dir="/ayudas" empty="true" />
+					<help>Cuenta Contable para Venta</help>
+				</field>
+
+				<field id="ctbcuentarubrocps_id">
+					<label>Cta. Ctb. Compra</label>
+					<helper type="combo" xml="cuentas_habilitadas_qry.xml" dir="/ayudas" empty="true" />
+					<help>Cuenta Contable para Compra</help>
+				</field>
+			</fieldGroup>
+
+			<fieldGroup>
+				<field id="subrubros" local="true" Formstyle="display: none;">
+					<label>Sub Rubros</label>
+					<valor>Sub Rubros</valor>
+					<helper type="link" xml="stksubrubros_crud.xml">
+						<parameter target="stkrubro_id" source="id_stkrubro" />
+					</helper>
+				</field>
+			</fieldGroup>
+			
+			<order>
+				<field id="nombre_rubro" />
+			</order>
+			
+		</table>
+	</form>
+</histrix>	

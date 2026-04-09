@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="liveGrid" >
+    <title>CONTACTOS</title>
+    <obs></obs>
+    <form >
+        <table id="CCTCONTA" label="Contactos">
+            <field id="idconta" noshow="true" autoinc="true">
+            </field>
+
+            <field id="siscod" oculto="true">
+                <label>Codigo Sistema </label>
+                <help>
+                </help>
+                <valor>'02'</valor>
+            </field>
+            <field id="ctacod" oculto="true" >
+                <label>Cuenta</label>
+                <help>
+                </help>
+            </field>
+            <field id="nombre" editable="true">
+                <label>Nombre </label>
+                <help>Nombre del contacto</help>
+            </field>
+            <field id="cargo"  editable="true" >
+                <tabla_ex id="CARGOS">
+                    <field id="cargo">
+                    </field>
+                    <field id="nombre">
+                    </field>
+
+                </tabla_ex>
+
+                <label>Cargo </label>
+                <help>Cargo </help>
+            </field>
+				
+
+            <field id="Telefono" editable="true">
+                <label>Telefono </label>
+                <help>
+                </help>
+					
+            </field>
+            <field id="interno" editable="true">
+                <label>Int.</label>
+                <help>Numero de Interno</help>
+            </field>
+            
+            <field id="movil" editable="true">
+                <label>Celular</label>
+                <help>
+                </help>
+            </field>
+            <field id="mail" editable="true">
+                <label>Mail </label>
+                <help>
+                </help>
+                <size>50</size>
+                <tipo>email</tipo>
+            </field>
+            <field id="principal" editable="true">
+                <label>Principal</label>
+                <tipo>check</tipo>
+            </field>
+            <order>
+                <field id="nombre"/>
+            </order>
+        </table>
+    </form>
+</histrix>

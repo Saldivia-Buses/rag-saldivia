@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+	<histrix tipo="consulta" path="fotos/articulos">
+		<title>Fotos por Articulo</title>
+		<obs></obs>
+		<form >
+			<table id="STK_ARTICULO_FOTO" label="Articulo Fotos">
+			<field id="id_foto" autoinc="true" noshow="true">
+    		        </field>
+
+			<field id="stkarticulo_id" oculto="true">
+				<label>Articulo</label>
+				<help>Codigo de Articulo</help>
+			</field>
+                <field  id="foto" foto="true" path="stkarticulo_id">
+                    <label>Foto</label>
+                    <help>Foto del Articulo</help>
+                    <tipo Type="Image">file</tipo>
+                </field>
+			</table>
+		</form>
+	</histrix>

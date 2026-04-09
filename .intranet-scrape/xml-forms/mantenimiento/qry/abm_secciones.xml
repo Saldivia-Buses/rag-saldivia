@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="arbol" log="false">
+	<title>Cuentas</title>
+	<obs></obs>
+	<form>
+		<table id="MANT_SECCIONES" label="Secciones">
+
+			<movimientos>
+			    <relacion id="abm_secciones_refresh.xml" />
+			    <relacion id="abm_secciones_delrefresh.xml" />
+			</movimientos>
+
+			<field id="id_mantseccion" noshow="true" arbol="hijo" esClave="true">
+				<label>Padre</label>
+				<help>Código de cuenta</help>
+			</field>
+
+			<field id="nombre_seccion">
+				<label>Nombre</label>
+				<help>Nombre de la sección</help>
+				<size>40</size>
+			</field>
+
+			<field id="id_padre" arbol="padre" subItem="true" colstyle="display:none;">
+				<label>Sección Superior</label>
+				<help>Sección Superior</help>
+				<valor>0</valor>
+				<helper type="combo" xml="secciones_qry.xml" dir="/mantenimiento/qry" empty="true"/>
+			</field>
+
+			<field id="test" valauto="true" noshow="true" local="true">
+				<valor>0</valor>
+			</field>
+
+
+		</table>
+	</form>
+</histrix>

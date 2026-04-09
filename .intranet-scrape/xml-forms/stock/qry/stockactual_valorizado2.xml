@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" borra="no" inserta="no" paginar="1500" _imprime="false" preloadData="false">
+  <title>Stock Valorizado</title>
+  <obs/>
+  <form>
+    <table id="STK_STOCKACTUAL" label="Stock Valorizado">
+  
+
+    	<field id="stklista_id" local="true" _tabla="STK_LISTADETALLE">
+          <helper type="combo" xml="stklista_qry.xml" dir="/ayudas" empty="true"/>
+    	    <label>lista</label>
+    	</field>
+
+      <field id="id_stkarticulo" tabla="STK_ARTICULOS" noshow="true">
+        <label>Codigo de Articulo</label>
+      </field>
+
+      <field id="stkarticulo_id">
+        <label>Cod art</label>
+        <helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas">
+          <field id="wstklista_id" local="true">
+            <valor>1</valor>
+          </field>
+        </helper>
+      </field>
+
+      <field id="codigo_barra" tabla="STK_ARTICULOS">
+        <label>Codigo de Barra</label>
+        <helper type="external" xml="stkarticulo_pos.xml" dir="/ayudas">
+          <field id="wstklista_id" local="true">
+            <valor>1</valor>
+          </field>
+        </helper>
+      </field>
+      
+      <field id="stkdeposito_id" _noshow="true">
+        <label>Deposito</label>
+        <helper type="combo" xml="stkdeposito_qry.xml" dir="/ayudas" empty="true" />
+      </field>
+      
+      <field id="stkfamilia_id" noshow="true" tabla="STK_ARTICULOS">
+        <label>Familia</label>
+        <helper type="combo" xml="stkfamilia_qry.xml" dir="/ayudas" empty="true"/>
+      </field>
+      
+      <field id="stkrubro_id" tabla="STK_ARTICULOS">
+        <label>Rubro</label>
+        <helper type="combo" xml="stkrubro_qry.xml" dir="/ayudas" empty="true"/>
+      </field>
+
+      <field id="nombre_articulo" tabla="STK_ARTICULOS">
+        <label>Articulo</label>
+      </field>
+    <field id="MMoneda" local="true" noshow="true" empty="true">
+        <label>Moneda</label>
+        <helper type="combo" xml="monedas_qry.xml" dir="/ayudas"/>
+    </field>    
+
+    <field id="total_costo" local="true" suma="true" _noshow="true">
+        <label></label>
+<!--        <expression>ifnull(STK_ARTICULOS.precio_costo,0) * GEN_FN_COTIZACION(STK_ARTICULOS.genmoneda_origen_id,current_date())</expression> -->
+        <expression>ifnull(STK_ARTICULOS.precio_costo,0) * GEN_FN_COTIZACION('[__MMoneda__]' ,current_date())</expression>
+        <tipo>numeric</tipo>
+    </field>
+                 
+    <field id="coti_filtro" local="true" noshow="true"  >
+        <label>Cotizacion filtro</label>
+        <expression>GEN_FN_COTIZACION('[__MMoneda__]',current_date())</expression>
+        <tipo>numeric</tipo>
+    </field>
+              
+    <field id="x_costo" local="true" suma="true" noZero="true" >
+        <label>Costo</label>
+        <expression>(ifnull(STK_ARTICULOS.precio_costo,0) * GEN_FN_COTIZACION('[__MMoneda__]' ,current_date()))/
+        GEN_FN_COTIZACION('[__MMoneda__]',current_date())</expression>
+<!--        <if exp="true">
+            <true>0total_costo / 0coti_filtro</true>
+            <false></false>
+        </if>-->
+        <tipo>numeric</tipo>
+    </field>
+  
+    <field id="stklistadetalle_precioventa"  suma="true"  noZero="true" >
+	<expression>stklistadetalle_precioventa</expression>
+        <label>Precio</label>
+    </field>
+
+          
+    <field id="cantidad_stock" suma="true">
+        <label>Cantidad</label>
+<!--        <expression>sum(case when STK_CONCEPTOS.tipo_concepto = 0 then 1 else -1 end * STK_MOVIMIENTOS.cantidad)</expression> -->
+        <tipo>integer</tipo>
+        <format>%d</format>
+       <condicion operador="&gt;">0</condicion>
+       <!--
+       <expression>case when ('[__stkdeposito_id__]' + 0) = 0 then sum(cantidad_stock) else cantidad_stock end</expression>
+     -->
+    </field>
+        
+    <field id="valorizado1" suma="true" local="true" noZero="true">
+        <label>Valorizado Costo</label> <!--
+        <if exp="true">
+            <true>0x_costo * 0cantidad_stock</true>
+            <false>0</false>
+        </if>                               -->
+        <expression>((ifnull(STK_ARTICULOS.precio_costo,0) * GEN_FN_COTIZACION('[__MMoneda__]' ,current_date()))/GEN_FN_COTIZACION('[__MMoneda__]',current_date())) * cantidad_stock</expression>
+        <tipo>numeric</tipo>
+    </field>
+    <field id="valorizado2" suma="true" local="true"  noZero="true">
+        <label>Valorizado Precio</label> <!--
+        <if exp="true">
+            <true>0stklistadetalle_precioventa * 0cantidad_stock</true>
+            <false>0</false>
+        </if>                                -->
+        <expression>stklistadetalle_precioventa * cantidad_stock</expression>
+        <tipo>numeric</tipo>
+    </field>
+
+            <field id="prov" noshow="true">
+                <label>prov</label>
+                <expression having="false">(select P.regcuenta_id from STK_ARTICULO_PROVEEDOR P where P.stkarticulo_id = STK_ARTICULOS.id_stkarticulo limit 1)</expression>
+                <tabla_ex id="REG_CUENTA" _xml="REG_CUENTA.xml" vacio="true">
+                    <field id="id_regcuenta">
+                    </field>
+                    <field id="nombre_cuenta">
+                    </field>
+                    <field id="subsistema_id" oculto="true">
+                        <condicion operador="=">'01'</condicion>
+                    </field>
+                </tabla_ex>
+                <tipo>varchar</tipo>
+            </field>
+    
+
+    <field id="actualizado" noshow="true">
+      <label>Fecha</label>
+      <tipo>date</tipo>
+      <help>Fecha Actualizacion</help>
+    </field>
+
+      <filters>
+      	<field id="stklista_id" local="true" _tabla="STK_LISTADETALLE">
+          <helper type="combo" xml="stklista_qry.xml" dir="/ayudas" empty="true"/>
+      	  <label>lista</label>
+          <operador>=</operador>
+      	</field>
+
+        <field id="stkfamilia_id">
+          <operador>=</operador>
+          <label modpos="nobr">Familia</label>
+        </field>
+        <field id="stkrubro_id">
+          <operador>=</operador>
+          <label modpos="nobr">Rubro</label>
+        </field>
+        <field id="stkdeposito_id">
+          <operador>=</operador>
+          <label>Deposito</label>
+        </field>
+        
+        <field id="stkarticulo_id">
+          <operador>=</operador>
+          <label>Cod art</label>
+        </field>
+        <field id="codigo_barra" tabla="STK_ARTICULOS">
+          <operador>=</operador>
+          <label modpos="nobr">Codigo de barra</label>
+        </field>
+        <field id="MMoneda" local="true">
+            <label modpos="nobr">Moneda</label>
+            <helper tipo="combo" xml="moneda_qry.xml" dir="/ayudas" />
+        </field> 
+				<field id="prov" deshabilitado="false">
+					<label >Proveedor</label>
+				</field>
+
+        <field id="actualizado">
+          <operador>&lt;=</operador>
+          <label>Fecha hasta</label>
+         <!-- <valor>today</valor> -->
+          <valor eval="true">(date("N", mktime(0, 0, 0, date("m")  , date("d"), date("Y"))) == 4 or date("N", mktime(0, 0, 0, date("m")  , date("d"), date("Y"))) == 5)  ? date("d/m/Y", mktime(0, 0, 0, date("m")  , date("d")+4, date("Y"))) : date("d/m/Y", mktime(0, 0, 0, date("m")  , date("d")+1, date("Y")))</valor>
+        </field>
+      </filters>
+      <group>
+        <field id="stkarticulo_id" tabla="STK_STOCKACTUAL" />
+        <field id="stkdeposito_id" tabla="STK_STOCKACTUAL" />
+      </group>
+      <order>
+        <field id="nombre_articulo" tabla="STK_ARTICULOS"/>
+      </order>
+    </table>
+    <join>
+      <table id="STK_ARTICULOS">
+        <field id="id_stkarticulo">
+          <condicion operador="=">STK_STOCKACTUAL.stkarticulo_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="STK_LISTADETALLE">
+        <field id="stkarticulo_id">
+          <condicion operador="=">STK_ARTICULOS.id_stkarticulo</condicion>
+        </field>
+      </table>
+    </join>
+
+  </form>
+</histrix>

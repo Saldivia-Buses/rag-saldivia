@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="grid" _subtipo="vertical" _class="consultaancha" inserta="false" procesa="false">
+	<title>Item de la Encuesta</title>
+	<obs></obs>
+	<form >
+		<table id="ENCUESTA_ITEM" >
+			<title>Item de la Encuesta</title>
+			
+			<movimientos>
+				<relacion id="encuesta_items_ins.xml"/>
+			</movimientos>
+
+			<field id="idITem" noshow="true" />
+			<field id="idEncuesta" oculto="true" />
+			<field id="idPregunta" _deshabilitado="true">
+				<label>Cod</label>
+				<help>Codigo de Pregunta</help>
+				
+			</field>
+
+			<field id="pregunta" deshabilitado="true" tabla="ENCUESTA_PREGUNTA">
+				<label>Pregunta</label>
+			</field>
+			<field id="valor" local="true" editable="true">
+				<label>Orden</label>
+		                <options>
+				    <option valor=""></option>
+				    <option valor="5">5 (Excelente)</option>
+				    <option valor="4">4 (Muy Bueno)</option>
+            			    <option valor="3">3 (Bueno)</option>
+		                    <option valor="2">2 (Regular)</option>
+		                    <option valor="1">1 (Malo)</option>			
+		                </options>
+			</field>
+
+			<field id="orden" noshow="true"/>
+			
+			<order>
+				<field id="orden"/>
+			</order>
+
+		</table>
+		<join tipo="left">
+		    <table id="ENCUESTA_PREGUNTA">
+			<field id="idPregunta">
+			    <condicion operador="=">ENCUESTA_ITEM.idPregunta</condicion>
+			</field>
+		    </table>
+		</join>
+	 
+	</form>	   
+</histrix> 

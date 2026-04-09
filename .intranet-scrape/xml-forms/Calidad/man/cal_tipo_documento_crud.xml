@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud">
+  <title>TIPO DE  DOCUMENTACION</title>
+  <obs></obs>
+  <form >
+    <table id="CAL_TIPO_DOCUMENTO" label="Tipo Documento">
+      <field id="id_tipodocumento" noshow="true" autoinc="true" />
+      <field id="descripcion_tipodocumento">
+        <label>Descripcion</label>
+        <help>Tipo de Documento</help>
+      </field>
+      <field id="imprime_documento" colstyle="display:none;">
+        <label>Imprimir</label>
+        <tipo>check</tipo>
+      </field>
+    </table>
+  </form>
+</histrix>

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ayuda">
+	<title>Insumos</title>
+	<obs/>
+	<form >
+		<table id="HERRAMIENTAS">
+
+			<field id="id_herramienta">
+				<label>Herramienta</label>
+				<help>Identificacion</help>
+				<tipo>character</tipo>
+			</field>
+			<field id="nombre">
+				<expresion having="false">concat( STKINSUM.artdes,' - ', id_herramienta)</expresion>
+			</field>			
+			<field id="artcod" >
+				<label>Articulo</label>
+				<help>Codigo de Articulo</help>
+				<tipo>character</tipo>
+				<formato>%20.20s</formato>
+			</field>
+
+			<field id="grucod" oculto="true">
+				<label>grupo</label>
+				<help>grupo</help>
+				<condicion operador="!=">2</condicion>
+			</field>
+		</table>
+		
+		<join tipo="left">
+
+			<table id="STKINSUM">
+				<field id="siscod" oculto="true">
+					<label>STKINSUM.siscod</label>
+					<condicion operador="=">'01'</condicion>
+				</field>
+				<field id="artcod" oculto="true">
+					<condicion operador="=">HERRAMIENTAS.artcod</condicion>
+				</field>
+
+			</table>
+		</join>			
+	</form>
+</histrix>

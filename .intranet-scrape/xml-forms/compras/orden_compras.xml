@@ -1,0 +1,322 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+   <histrix tipo="ing" process="true" inserta="false" modifica="false" deleteRow="false" _autoprint="true">
+       <title>Cuenta Corriente</title>
+        <obs></obs>
+		<form detalle="detalle_oc.xml" inline="true">
+			<table id="CPSENCAB" label="Movimientos">
+				
+			<movimientos>
+				<relacion id="envio_mail_oc.xml"/>
+			</movimientos>
+		
+			<field id="siscod" oculto="true">
+				<label>Cod.</label>				
+			</field>
+				
+			<field id="ocpfec">
+				<label>fecha</label>
+			</field>
+						
+			<field id="ctacod">
+				<label>Cuenta</label>
+				<help>Codigo de Cuenta</help>
+			</field>
+
+			<field id="ctanom" tabla="CCTCUENT">
+				<label>Nombre</label>
+			</field>	
+						
+			<field id="ocpest" style="">
+				<label>Estado</label>						
+				<options>
+				    <option valor=""></option>
+					<option valor="0">No Autorizada</option>
+					<option valor="1">Pendiente</option>
+					<option valor="2">Cumplida</option>
+					<option valor="3">Parcial</option>
+					<option valor="4">Anulada</option>
+				</options>
+				<attribute id="style">color_estado</attribute>
+			</field>
+        			
+        	<field id="filtmail" noshow="true">
+		       	<expression>CONCAT('+"Orden de Compra Nro "+', CPSENCAB.ocpnro)</expression>
+		    </field>
+            
+		    <field id="Emails" _showTablaObj="true" local="true">
+                <helper type="link" xml="email_subj_qry.xml" dir="/email">
+                    <parameter target="subject" source="subject" operator="like"/>
+                </helper>
+                <label>Correos</label>
+                <help></help>
+                <expression sql="true"><![CDATA[
+	                SELECT CONCAT(
+	                (SELECT COUNT(*) FROM HTXMAIL WHERE MATCH(subject) AGAINST ('[__filtmail__]' IN BOOLEAN MODE)),' Enviados')]]></expression>
+            </field>  
+
+			<field id="color_estado" noshow="true">
+		        <expression>
+		           	case when CPSENCAB.ocpest= 0 then 'color:#FF00CC;font-weight:bold;text-decoration:blink;'
+		           		 when CPSENCAB.ocpest= 1 then 'color:#B40404;font-weight:bold'
+		           		 when CPSENCAB.ocpest= 2 then 'color:#0B610B;font-weight:bold'
+		           		 when CPSENCAB.ocpest= 3 then 'color:#AEB404;font-weight:bold'
+		           		 else 'color:#000000;font-weight:bold;text-decoration:blink;'
+		           	end
+		        </expression>
+			</field>
+				
+			<field id="concepto" local="true">
+				<label>Concepto</label>
+				<valor>Orden de Compra</valor>
+				<tipo>string</tipo>
+			</field>	
+
+			<field id="ocpnro">
+				<label>Numero</label>
+				<help> Numero Comprobante</help>
+				<detalle>ocpnro</detalle>							
+			</field>
+			
+	      <field deshabilitado="true" id="de" valoropcion="true" local="true" noshow="true">
+	          <label>de</label>
+	          <help></help>
+	          <size>10</size>
+	          <tabla_ex id="HTXUSERS">
+	              <field id="login2" >
+	                  <expression>LCASE(login)</expression>
+	              </field>
+	              <field id="email" >
+	                  <expression>LCASE(email)</expression>
+	              </field>
+	          </tabla_ex>
+	          <tipo>varchar</tipo>
+	          <valor eval="true">strtolower ( $_SESSION['usuario'])</valor>
+	          <condicion operador="=" valorde="nom" ></condicion>
+	      </field>
+
+						
+			<field id="subject" noshow="true" email="subject" print="false">
+		        <expression>concat('Orden de Compra Nro ',CPSENCAB.ocpnro)</expression>
+		    </field>
+	    
+			<field id="mensaje" noshow="true">
+             	<expression><![CDATA[
+              
+	              CONCAT("Estimado Proveedor: </br> 
+			<p>Autogestión: <a href=\"http://autogestion.saldiviabuses.com.ar","\">Click para acceder</a></br></p>
+	Su usuario de ingreso es: ", (select mail from CCTCONTA where siscod = '01' and CCTCONTA.ctacod = CPSENCAB.ctacod order by principal DESC limit 1), "</br>
+	Contraseña: ", (select
+
+	case when mail != '' then lower(concat( left(replace(replace((case when nombre != '' then CCTCUENT.ctanom
+	else mail end),' ',''),'.','') , 5), CCTCUENT.id_regcuenta)) end
+
+
+
+	from CCTCONTA where siscod = '01' and CCTCONTA.ctacod = CPSENCAB.ctacod order by principal DESC limit 1),"</br>
+	En caso de haberla cambiado, utilice la nueva contraseña</br></br>",
+
+
+	  "<br><br>Muchas gracias" )
+	              ]]></expression>                                         
+                </field>
+<!--
+		<field id="test1" noshow="true">
+		    <label>Test1</label>
+		    <expression><![CDATA[ REPLACE(  REPLACE(
+			(SELECT paralf FROM CPSPARAM WHERE parcla = 'txemoc'),
+
+			'*USER*', (select mail from CCTCONTA where siscod = '[__siscod_prov__]' and CCTCONTA.ctacod = CPSENCAB.ctacod order by principal DESC limit 1)) ,
+			'*PASS*', (select case when mail != '' then lower(concat( left(replace(replace((case when nombre != '' then CCTCUENT.ctanom else mail end),' ',''),'.','') , 5), CCTCUENT.id_regcuenta)) end from CCTCONTA where siscod = '01' and CCTCONTA.ctacod = CPSENCAB.ctacod order by principal DESC limit 1))
+			
+		    ]]></expression>
+		</field>
+-->
+                <field id="siscod_prov" noshow="true" local="true">
+                	<valor>01</valor>
+                </field>
+
+                <field id="modif" >
+					<helper xml="cctconta_compras.xml" dir="/compras/" type="link">
+						<parameter source="ctacod" target="ctacod" />
+						<parameter source="siscod" target="siscod_prov" />
+					</helper>
+					<label>Datos</label>
+					<expression>'Contacto'</expression>
+				</field>
+
+		<field id="mailcompras" local="true" >
+		    <label>mail preferido</label>
+		    <helper type="combo">
+			<option value="0">compras</option>
+			<option value="1">Principal</option>
+		    </helper>
+		    <valor>0</valor>
+		    <tipo>radio</tipo>
+		</field>
+
+                <field id="para">
+                	<label>Para</label>
+                  	<!--<expression>'lucas@estudiogenus.com'</expression>-->
+				    <expression>(case when [__mailcompras__] = 0 then (select
+				    	ifnull(
+				    	
+				    	(select group_concat(mail SEPARATOR '; ') 
+				    		from CCTCONTA 
+				    		where CCTCONTA.ctacod = CPSENCAB.ctacod and CCTCONTA.siscod = '[__siscod_prov__]' and mail != '' and compras = 1), 
+				    	(select group_concat(mail SEPARATOR '; ') 
+				    		from CCTCONTA 
+				    		where CCTCONTA.ctacod = CPSENCAB.ctacod and CCTCONTA.siscod = '[__siscod_prov__]' and mail != '' and principal = 1)))
+else 
+ifnull(
+				    	
+				    	(select group_concat(mail SEPARATOR '; ') 
+				    		from CCTCONTA 
+				    		where CCTCONTA.ctacod = CPSENCAB.ctacod and CCTCONTA.siscod = '[__siscod_prov__]' and mail != '' and principal = 1), 
+				    	(select group_concat(mail SEPARATOR '; ') 
+				    		from CCTCONTA 
+				    		where CCTCONTA.ctacod = CPSENCAB.ctacod and CCTCONTA.siscod = '[__siscod_prov__]' and mail != '' and compras = 1))
+ end)</expression>
+				</field>
+
+				<field id="emitir" _local="true">
+					<label>Enviar</label>
+					<tipo>check</tipo>
+					<expression>CASE WHEN ocpest = 0 OR ocpest = 4 or 
+					(select
+				    	ifnull(
+				    	
+				    	(select group_concat(mail SEPARATOR '; ') 
+				    		from CCTCONTA 
+				    		where CCTCONTA.ctacod = CPSENCAB.ctacod and CCTCONTA.siscod = '[__siscod_prov__]' and mail != '' and compras = 1), 
+				    	(select group_concat(mail SEPARATOR '; ') 
+				    		from CCTCONTA 
+				    		where CCTCONTA.ctacod = CPSENCAB.ctacod and CCTCONTA.siscod = '[__siscod_prov__]' and mail != '' and principal = 1))) is null
+
+THEN 0 ELSE 1 END</expression>
+				</field>
+
+				<field id="ctadir" tabla="CCTCUENT" deshabilitado="true" noshow="true">
+		            <expression>concat(ctadir, ' - ', ctaloc)</expression>
+		            <label size="23" posx="6" posy="0" PDFsize="11">Domicilio</label>
+		            <help>Direccion del proveedor</help>
+		            <tipo>varchar</tipo>
+		        </field>
+
+		        <field id="ctatel" tabla="CCTCUENT" deshabilitado="true" noshow="true">
+		            <label size="23" posx="6" posy="0" PDFsize="11">Telefono</label>
+		            <help>Telefono del proveedor</help>
+		            <tipo>varchar</tipo>
+		        </field>
+
+	            <field id="ocpent" deshabilitado="true" noshow="true">
+	                <label size="27" colspan="4" posx="130" posy="+1" PDFsize="12">Entregar en</label>
+		        	<helper type="combo"  xml="deposito.xml" />
+	                <help>Lugar de Entrega</help>
+	            </field>
+
+	            <field id="ctafax" tabla="CCTCUENT" deshabilitado="true" noshow="true">
+	                <label size="23" posx="6" posy="0" PDFsize="11">Fax</label>
+	                <help>Fax del proveedor</help>
+	                <tipo>varchar</tipo>
+	            </field>
+
+	            <field id="tit" print="false" noshow="true">
+       				<setvar>titulo_div</setvar>
+               		<expression>concat('Orden de Compra ', ocpnro)</expression>
+           		</field>
+            		
+           		<field id="numero" grafico="barcode" imageWidth="40" imageScale="3" imageHeigth="150" encode="I25" noshow="true">
+               		<label  posx="129" posy="39" ></label>
+              		<expression>ocpnro</expression>
+               		<help>Codigo de Cuenta</help>
+               		<tipo>grafico</tipo>
+               		<size>10</size>
+           		</field>
+
+           		<field id="estado" noshow="true">
+               		<label posx="30" posy="+4" PDFsize="20" ></label>
+               		<expression>(case when ocpest = 0 then 'ORDEN DE COMPRA NO AUTORIZADA' else '' end)</expression>
+           		</field>
+
+		        <field id="movimientos" local="true" obj="cpsmovim_reimp.xml" noshow="true">
+                	<label colspan="4" posx="6" posy="+4" PDFsize="8"></label>
+                	<help>Nombre del proveedor</help>
+                	<paring destino="ocpnro">ocpnro</paring>
+                	<paring destino="movfec">ocpfec</paring>
+            	</field>
+
+           		<field id="Normas" deshabilitado="true" local="true" obj="normainsumos_OC.xml" noshow="true">
+               		<label colspan="4" posx="6" posy="+1" PDFsize="8" ></label>
+               		<help>Normas</help>
+               		<title>Deberá especificar en factura: "Los productos entregados cumplen con las normas............ certificados mediante ensayos Nro......... realizado por .......</title>
+           		</field>
+            		
+           		<field id="ocpobs" deshabilitado="true" pdfancho="20" noshow="true">
+               		<label  colspan="4" posx="6" posy="+1"  PDFsize="10" >Observaciones</label>
+               		<help>Observaciones</help>
+               		<tipo>varchar</tipo>
+               		<pdfancho>170</pdfancho>
+                   </field>
+            
+           		<field id="Leyenda" deshabilitado="true" local="true" obj="Observ_OC.xml" noshow="true">
+               		<label colspan="4" posx="6" posy="+4" PDFsize="10" ></label>
+               		<help>Leyenda</help>
+           		</field>
+            
+           		<field id="citar" local="true" deshabilitado="true" noshow="true">
+               		<label colspan="4" posx="45" posy="+4" PDFsize="12" PDFnoborder="true"></label>
+               		<help>Lugar de Entrega</help>
+               		<expression>UPPER('Citar Numero de Orden de Compra en el Remito')</expression>
+           		</field>
+
+				<filters auto="true">
+					<field id="ocpfec">
+						<operador>&gt;=</operador>
+						<label>Desde Fecha</label>
+						<valor>today</valor>
+	               		<help>Desde Fecha</help>
+					</field>
+					<field id="ocpfec">
+						<operador>&lt;=</operador>
+						<label modpos="nobr">Hasta Fecha</label>
+						<valor>today</valor>	
+	               		<help>Desde Fecha</help>
+					</field>
+					<field id="ctacod">
+						<label modpos="nobr">Prov</label>
+					</field>
+					<field id="ocpnro">
+						<label modpos="nobr">O.C.</label>
+			               		<help>O.C. Numero</help>
+					</field>					
+					<field id="ocpest" deshabilitado="false">
+						<label modpos="nobr">Estado</label>
+						<operador>=</operador>
+						<valor>1</valor>
+					</field>					
+		<field id="mailcompras" local="true" colspan="4">
+		    <label>mail Preferido</label>
+   		    <operador>=</operador>
+		    <tipo>radio</tipo>
+
+		</field>
+				</filters>
+
+				<order>							
+					<field id="ocpfec"></field>
+				</order>
+	
+			</table>
+				
+			<join>
+				<table id="CCTCUENT">	
+					<field id="siscod">
+						<condicion operador="=">01</condicion>
+					</field>					
+					<field id="ctacod">
+						<condicion operador="=">CPSENCAB.ctacod</condicion>
+					</field>						
+				</table>
+			</join>
+		</form>
+    </histrix>

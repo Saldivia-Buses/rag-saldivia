@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+  <title/>
+  <obs/>
+  <form >
+
+    <table id="REG_MOVIMIENTOS">
+
+      <field id="subsistema_id" noshow="true" />
+      <field id="regcuenta_id" noshow="true" />
+      <field id="desde" local="true" noshow="true"/>
+      <field id="id_regmovim" noshow="true" />
+
+      <field id="arrastrasaldo" noshow="true" local="true"/>
+      <field id="omitirpend" noshow="true" local="true" />
+      <field id="filtro" noshow="true" local="true" />
+
+      <!-- Se agrega fecha preconsulta para que no muestre -->
+      <field id="fecha_preconsulta" >
+        <expresion having="false">fecha_movimiento</expresion>
+        <condicion operador="&lt;">'[__desde__]'</condicion>
+      </field>
+
+      <field id="abreviacion_concepto" local="true">
+        <label>Comp</label>
+        <expresion>'SALDO ANTERIOR'</expresion>
+      </field>
+
+      <field id="debe">
+        <expresion>sum( IF(imputacion_concepto = 0,importe_movimiento,0) )</expresion>
+      </field>
+
+      <field id="haber">
+        <expresion>sum( IF(imputacion_concepto = 1,importe_movimiento,0) )</expresion>
+      </field>
+
+      <field id="acumulado" suma="true" acumula="true" local="true">
+        <if exp="true">
+          <true>debe - haber</true>
+          <false>0</false>
+        </if>
+        <tipo>numeric</tipo>
+      </field>
+
+      <field id="saldo_movimiento">
+        <expresion>sum(saldo_movimiento)</expresion>
+        <tipo>numeric</tipo>
+      </field>
+
+      <field id="color" local="true" clasefila="true" oculto="true">
+        <valor>resaltado</valor>
+      </field>
+
+    </table>
+
+    <join>
+      <table id="REG_CONCEPTOS">
+        <field id="id_concepto">
+          <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+        </field>
+      </table>
+    </join>
+
+  </form>
+</histrix>

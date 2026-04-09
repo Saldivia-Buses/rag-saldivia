@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm">
+	<title>Prov.Audio Video</title>
+	<obs></obs>
+	<form >
+		<table id="PROVAUDIOVID" >
+			<title>Proveedor Audio y Video</title>
+			<field id="idprov" >
+				<label>Codigo</label>
+				<help>Codigo de Prov</help>
+
+			</field>
+			<field id="nombre">
+				<label>Nombre</label>
+				<help>Nombre del Proveedor</help>
+			</field>
+		</table>
+	</form>	   
+</histrix> 

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert" >
+    <title>LISTAS DE PRECIOS</title>
+    <obs></obs>
+    <form>
+        <table id="LISTAPRECIOS_HOMOLOG" >
+            <field id="lista_id" id_cab="idLista"></field>
+            <field id="homologacion_id"   id_temp="homologacion_id"></field>
+            <field id="precio"   id_temp="newPrice"></field>
+            <field id="margen"   id_cab="aumento"></field>
+	</table>
+    </form>
+</histrix>

@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+   <histrix tipo="insert" _impresion="cheque.xml" >
+       <title>BANCOS</title>
+        <obs></obs>
+               <form >
+
+					<table id="BCSMOVIM" label="movimientos de caja" idCampoCond="pagar">
+						<field id="siscod" id_padre="sisbcs"></field>
+						<field id="bcscta" id_padre="bcscta">
+							<detalle>bcscta</detalle>
+						</field>
+			            <field id="printer" local="true" id_padre="printer">
+			                <detalle>printer</detalle>
+			            </field>
+			            <field id="tipo" >
+			            	<valor>0</valor>
+			            </field>
+
+			            <field id="bcsmov" _id_padre="bcsconce_id">
+			            	<valor>2</valor>
+			                <detalle>bcsmov</detalle>
+			            </field>						
+
+						<field id="ctacod" id_temp="ctacod">
+							<detalle>ctacod</detalle>
+						</field>
+
+                        <field id="ctanom" id_temp="ctanom" local="true">
+                        </field>
+						
+                        <field id="bcsfec" id_padre="movfec">
+                            <detalle>bcsfec</detalle>
+                        </field>
+
+						<field id="bcsfev" id_padre="acreditacion">
+                            <detalle>bcsfev</detalle>
+                        </field>
+						<field id="nropag" >
+							<valor>(select parent from CAJPARAM where parcla = 'nropag' limit 1)</valor>
+                            
+						</field>
+                        
+						<field id="chequera" id_padre="chequera" local="true" />
+						<field id="bcsnro" >
+							<valor>(select nroCheque from CHEQUERAS where idChequera = [__chequera__] limit 1)</valor>
+							
+						</field>			
+						<field id="regmin" >
+						    <valor>(select numapr from CTBNUMER where siscod = '10' /* and nummes = substring('[__movfec__]',4,2) */ limit 1)</valor>
+						</field>									
+						<field id="bcsimp" id_temp="IMPORTE">
+                            <detalle>bcsimp</detalle>
+
+                        </field>
+						<field id="concod" local="true">
+							<valor>45</valor>
+							<detalle>concod</detalle>
+						</field>
+						<field id="opecla" id_padre="opecla"></field>
+
+
+            <field id="dia">
+
+                <expression>DAYOFMONTH(bcsfec)</expression>
+
+            </field>
+            <field id="mes">
+                <expression>MONTH(bcsfec)</expression>
+                <options>
+                    <option valor="1">Enero</option>
+                    <option valor="2">Febrero</option>
+                    <option valor="3">Marzo</option>
+                    <option valor="4">Abril</option>
+                    <option valor="5">Mayo</option>
+                    <option valor="6">Junio</option>
+                    <option valor="7">Julio</option>
+                    <option valor="8">Agosto</option>
+                    <option valor="9">Septiembre</option>
+                    <option valor="10">Octubre</option>
+                    <option valor="11">Noviembre</option>
+                    <option valor="12">Diciembre</option>
+                </options>
+            </field>
+            <field id="year">
+                <expression>YEAR(bcsfec)</expression>
+    
+            </field>
+
+            <field id="diav">
+                <expression>DAYOFMONTH(bcsfev)</expression>
+
+            </field>
+            <field id="mesv">
+                <expression>MONTH(bcsfev)</expression>
+                <options>
+                    <option valor="1">Enero</option>
+                    <option valor="2">Febrero</option>
+                    <option valor="3">Marzo</option>
+                    <option valor="4">Abril</option>
+                    <option valor="5">Mayo</option>
+                    <option valor="6">Junio</option>
+                    <option valor="7">Julio</option>
+                    <option valor="8">Agosto</option>
+                    <option valor="9">Septiembre</option>
+                    <option valor="10">Octubre</option>
+                    <option valor="11">Noviembre</option>
+                    <option valor="12">Diciembre</option>
+                </options>
+
+            </field>
+            <field id="yearv">
+                <expression>YEAR(bcsfev)</expression>
+
+            </field>
+            <field id="Let1" local="true" id_temp="Let1">
+                <detalle>Let1</detalle>
+                <tipo>varchar</tipo>
+
+            </field>
+            <field id="Let2" local="true" id_temp="Let2">
+                <tipo>varchar</tipo>
+                <detalle>Let2</detalle>
+            </field>
+
+
+            <field id="bcsref__1" >
+            	<valor>concat('O.P.:', (select parent from CAJPARAM where parcla = 'nropag' limit 1) ,' - [__ctanom__]')</valor>
+            	<tipo>integer</tipo>
+            </field>						
+					</table>
+               </form>
+        </histrix>

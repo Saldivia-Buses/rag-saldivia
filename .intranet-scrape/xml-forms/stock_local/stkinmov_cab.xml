@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8" ?>
+   <histrix tipo="cabecera" graba="false">
+       <title>ENTRADA SALIDA STOCK POR CODIGO</title>
+        <obs></obs>
+               <form>
+					<table id="stkinmov" label="ENTRADA SALIDA STOCK">
+						
+						<field id="siscod" oculto="true">
+							<label>siscod</label>
+							<parametro id="fsmparam_paralf.xml" retorna="paralf">
+								<field id="parcla">
+									<condicion operador="=">'sisstk'</condicion>
+								</field>
+							</parametro>
+						</field>
+						<field id="sisprv" oculto="true">
+							<label>Cod prov</label>
+							<parametro id="fsmparam_paralf.xml" retorna="paralf">
+								<field id="parcla">
+									<condicion operador="=">'sispro'</condicion>
+								</field>
+							</parametro>
+							<tipo>char</tipo>
+						</field>						
+						<field id="artcod" >
+							<label modpos="nobr">Código Artículo</label>
+							<help>Código de Artículo</help>
+							<ayuda_ex id="STKINSUM" xml="HLPstkinsum.xml" dir="/help_local">
+								<field id="siscod" oculto="true">
+									<valor>'01'</valor>
+								</field>
+								<field id="artcod" oculto="true"></field>
+								<field id="artdes"></field>
+					
+								<clave>artcod</clave>
+								<descripcion>artdes</descripcion>
+					
+							</ayuda_ex>
+						</field>
+	
+						<field id="movnpv">
+							<label>Punto de Venta</label>
+							<help>Número de Punto de Venta</help>
+							<tipo>integer</tipo>
+							<format>%04d</format>
+						</field>
+						<field id="movnro">
+							<label>Comprobante</label>
+							<help>Número de Comprobante</help>
+							<tipo>integer</tipo>
+							<format>%010d</format>
+						</field>
+						<field id="movfec">
+							<label>Fecha</label>
+							<help>Fecha del Movimiento</help>
+							<tipo>date</tipo>
+							<valor>today</valor>
+						</field>
+						<field id="ctacod">
+							<label>Cuenta</label>
+							<help>Cuenta</help>
+							<tabla_ex id="CCTCUENT">
+								<clave>ctacod</clave>
+								<field id="ctacod"></field>
+								<field id="ctanom"></field>
+								
+								<field id="siscod" oculto="true">
+									<condicion operador="=">'01'</condicion>
+								</field>
+								
+							</tabla_ex>
+						</field>
+						<field id="succod" id_cab="succod" oculto="true">
+							<valor>1</valor>
+						</field>
+						<field id="depcod" id_cab="depcod" oculto="true">
+							<valor>1</valor>
+						</field>						
+					</table>
+               </form>
+        </histrix>

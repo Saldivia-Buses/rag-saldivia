@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="abm">
+	<title>Riesgos Laborales</title>
+	<form >
+		<table id="RIESGOS" label="Secciones">
+			
+			<field id="idRiesgo">
+				<label>Cod </label>
+				<help>Codigo </help>
+			</field>
+			
+			<field id="agente"  >
+				<label>Agente</label>
+				<help>Agente de riesgo</help>
+			</field>
+			<order>
+				<field id="idRiesgo"></field>
+			</order>
+		</table>
+	</form>
+</histrix>

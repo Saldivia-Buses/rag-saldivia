@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+  <title>Tareas</title>
+  <obs></obs>
+  <consulta>
+    <table id="RH_TAREAS" label="Tareas">
+      <field id="id_rhtarea" autoinc="true" noshow="true">
+        <label>Codigo</label>
+        <help>Código de Tarea</help>
+      </field>
+      <field id="nombre_Tarea">
+        <label>Nombre </label>
+        <help>Nombre de la Tarea </help>
+        <size>15</size>
+      </field>
+    </table>
+  </consulta>
+</histrix>  

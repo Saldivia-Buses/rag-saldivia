@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  Ayuda
+Tarea: Ayuda para la Tabla de Incidencias
+Autor: d!ego2k
+Fecha: 13/08/2012
+*******************************************************************************
+-->
+<histrix tipo="consulta">
+  <title>Archivo de Incidencias</title>
+  <form >
+    <table id="LOG_INCIDENCIAS" label="Incidencias">
+
+      <field id="id_logincidencia" autoinc="true" noshow="true" />
+   
+      <field id="nombre_incidencia">
+        <label>Tipo</label>
+      </field>
+
+    </table>
+
+  </form>
+
+</histrix>  

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm-mini">
+	<title>CATEGORIAS DE LICENCIAS</title>
+	<obs></obs>
+	<form>
+		<table id="FRANCOS_CAT_TIPO">
+			<title>Categorias de Licencias</title>
+
+			<field id="id_franco_tipo" noshow="true" esClave="true">
+				<label>Id.Licencia</label>
+				<help>Id de Licencia</help>
+			</field>
+ 
+			<field id="id_francocat" noshow="true">
+				<label>Id.Licencia Tipo</label>
+				<help>Id de Licencia tipo</help>
+			</field>
+
+			<field id="nombre_tipo">
+				<label>Nombre</label>
+				<help>Nombre de Tipo Licencia</help>
+				<size>50</size>
+			</field>
+			<field id="descripcion_tipo">
+				<label>Descripcion</label>
+				<help>Descripcion Tipo Licencia</help>
+				<size>50</size>
+			</field>
+			<order>
+				<field id="nombre_tipo" />
+			</order>
+		</table>
+	</form>	   
+</histrix> 

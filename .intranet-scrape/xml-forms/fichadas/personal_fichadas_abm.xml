@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ficha" sololectura="true"    imprime="false">
+	<title>Fichadas</title>
+	<obs/>
+	<form >
+		<table id="PERSONAL" label="Ficha Personal">
+<!--			<field id="IdPersona">
+				<label posy="+1">Cuenta</label>
+				<help>Codigo de Cuenta</help>
+			</field> -->
+			<field id="legajo" deshabilitado="true">
+				<label posy="20" posx="10" >Legajo</label>
+				<help>Numero de Legajo</help>
+				<valor>0</valor>
+			</field>
+			<field id="tarjeta" deshabilitado="true">
+				<label modpos="nobr" posx="10"  posy="+1" colspan="4">Tarjeta</label>
+				<help></help>
+				<valor>0</valor>
+			</field>
+
+            <field id="apellido" deshabilitado="true">
+				<label >Apellido</label>
+				<tipo>varchar</tipo>
+                <size>30</size>
+			</field>
+			<field id="nombre" deshabilitado="true" >
+				<label modpos="nobr">Nombre</label>
+				<tipo>varchar</tipo>
+			</field>
+
+			<field id="desdefecha" local="true" deshabilitado="true">
+				<label posx="10" posy="+1">Desde Fecha</label>
+				<tipo>date</tipo>
+			</field>
+			<field id="hastafecha" local="true" deshabilitado="true">
+				<label modpos="nobr" >Hasta Fecha</label>
+
+				<tipo>date</tipo>
+			</field>
+			<field id="idPersona" oculto="true">
+				
+			</field>
+			<field id="idJornada" oculto="true">
+			</field>			
+			<field id="fichadas" local="true" obj="fichadas_impr_abm.xml" >
+				<attribute id="oculto">conobj</attribute>
+				
+<!--				<paring destino="tarjeta" operador="=">tarjeta</paring> -->
+				<paring destino="fecha" operador="&gt;=" reemplazo="false">desdefecha</paring>
+				<paring destino="fecha2" operador="&lt;=" reemplazo="false">hastafecha</paring>
+				<paring destino="idJornada">idJornada</paring>
+				<paring destino="idPersona" >idPersona</paring>		
+			</field>
+		</table>
+		<join tipo="left">
+			<table id="JORNADAS">
+				<field id="idJornada">
+					<condicion operador="=">PERSONAL.idJornada</condicion>
+				</field>
+			</table>
+		</join>
+	</form>
+</histrix>

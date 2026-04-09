@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+	<histrix tipo="abm" >
+		<title>Secciones</title>
+		<obs></obs>
+		<form >
+			<table id="COTIZSECCION"	>
+				<title>SECCIONES </title>
+				<field id="idSeccion" autoinc="true" _noshow="true" >
+					<label>id</label>
+					<tipo>integer</tipo>
+
+				</field>
+				<field id="nombre">
+					<label >Nombre Sección</label>
+					<tipo>varchar</tipo>
+
+				</field>
+			</table>
+		</form>
+	</histrix>

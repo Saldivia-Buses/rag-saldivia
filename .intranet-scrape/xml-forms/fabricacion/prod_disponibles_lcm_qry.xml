@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="consulta" subtipo="vertical" _limit="100">
+    <title>Planilla Control Certificados LCM Saldivia</title>
+    <obs/>
+    <form>
+        <table id="PEDCOTIZ" label="Planilla Control Certificados LCM Saldivia">
+
+            <field id="nrocha" noshow="true">
+                <condicion operador="NOT IN">(select nrofab_id from PROD_CONTROL_MOVIM where prodcontrol_id = '504')</condicion>
+            </field>
+
+            <field id="pedfec" noshow="true">
+                <label>Fecha</label>
+                <tipo>date</tipo>
+                <condicion operador=">">'2017-01-01'</condicion>
+            </field>
+
+            <field id="nrofab_id" tabla="PROD_CONTROL_MOVIM">
+                <label modpos="nobr">Nro.</label>
+                <help>Numero de Fabricacion</help>
+            </field>
+
+            <field id="chasis" tabla="CHASIS">
+                <label>Chasis N</label>
+                <help>Numero de Serie del chasis</help>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="ctacod2" tabla="PEDCOTIZ">
+                <expression>PEDCOTIZ.ctacod</expression>
+                <label modpos="nobr">Cliente</label>
+                <help>Codigo de Cuenta</help>
+                <tabla_ex condes="true" id="CCTCUENT">
+                    <field id="ctacod"/>
+                    <field id="ctafan">
+                        <expression>LEFT(ctafan, 22)</expression>
+                    </field>
+                    <field id="siscod" oculto="true">
+                        <condicion operador="=">'02'</condicion>
+                    </field>
+                </tabla_ex>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="prodcontrol_id" noshow="true" tabla="PROD_CONTROL_MOVIM">
+                <label>Control</label>
+                <condicion operador="=">'488' or prodcontrol_id = '867'</condicion>
+            </field>
+
+            <group>
+                <field id="nrocha" />
+
+            </group>
+
+            <order>
+                <field id="nrocha" />
+            </order>
+
+        </table>
+
+        <join tipo="inner">
+            <table id="PROD_CONTROL_MOVIM">
+                <field id="nrofab_id">
+                    <condicion operador="=">PEDCOTIZ.nrocha</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="CHASIS">
+                <field id="nrocha">
+                    <condicion operador="=">PEDCOTIZ.nrocha</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>
+<!--<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="consulta" subtipo="vertical">
+    <title>Planilla Control Certificados LCM Saldivia</title>
+    <obs/>
+    <form>
+        <table id="PROD_CONTROLES" label="Planilla Control Certificados LCM Saldivia">
+
+            <field id="nrofab_id" tabla="PROD_CONTROL_MOVIM">
+                <label modpos="nobr">Nro.</label>
+                <help>Numero de Fabricacion</help>
+            </field>
+
+            <field id="chasis" tabla="CHASIS">
+                <label>Chasis N</label>
+                <help>Numero de Serie del chasis</help>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="realizo_inspec_lcm" _noshow="true">
+                <expression>case when PROD_CONTROL_MOVIM.prodcontrol_id = 504 and PROD_CONTROL_MOVIM.conforme = 1 then 1 else 0 end</expression>
+                <label>LCM</label>
+                <label>Coches que no se les realizo la inspeccion</label>
+                <condicion operador="=">0</condicion>
+            </field>
+
+            <field id="ingreso_entrega" _noshow="true">
+                <help>Ingreso a Entrega</help>
+                <label>Si ingreso a entrega esta habilitado para inspeccionar</label>
+                <expression>case when PROD_CONTROL_MOVIM.prodcontrol_id = 865 and PROD_CONTROL_MOVIM.conforme = 1 then 1 else 0 end</expression>
+                <condicion operador="=">1</condicion>
+            </field>
+
+            <order>
+                <field id="nrofab_id" />
+            </order>
+
+        </table>
+
+        <join tipo="left">
+            <table id="PROD_CONTROL_MOVIM">
+                <field id="prodcontrol_id">
+                    <condicion operador="=">id_prodcontrol</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="PEDCOTIZ">
+                <field id="nrocha">
+                    <condicion operador="=">PROD_CONTROL_MOVIM.nrofab_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="CHASIS">
+                <field id="nrocha">
+                    <condicion operador="=">PEDCOTIZ.nrocha</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>-->

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="ISO-8859-1" standalone="no"?>
+<histrix tipo="consulta">
+  <title>Cuentas Contables</title>
+  <obs/>
+  <form >
+    <table id="CTBCUENT" >
+      <title>Cuentas Contables</title>
+<!--
+      <field id="siscod" oculto="true">
+	<condicion operador="=">'10'</condicion>      
+        <label>Cod</label>
+      </field>
+-->
+      <field id="ctbcod">
+        <label>Codigo</label>
+        <help>Codigo de Cuenta Contable</help>
+      </field>
+      <field id="ctbnom">
+        <label>Descripcion</label>
+        <help>Descripcion</help>
+      </field>
+    </table>
+  </form>
+</histrix>

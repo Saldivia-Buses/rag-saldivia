@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="delete">
+  <title>Etiquetas</title>
+  <obs/>
+  <form>
+    <table id="HTX_TAGS" label="Etiquetas" idCampoCond="borrar">
+      <field id="id_htxtag" id_temp="id_htxtag" esClave="true">
+        <label>ID</label>
+      </field>
+    </table>
+  </form>
+</histrix>

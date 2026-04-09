@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- histrix tipo="grid" log="false" deleteRow="false" inserta="false" borra="false" imprime="false" llenoreferente="true" llenotemporal="true" tooltip="false" showCantidad="false" updateTotals="true" -->
+<histrix tipo="grid" subtipo="vertical" inserta="false" borra="false" imprime="false" deleteRow="false">
+  <title>Detalle de Valores</title>
+  <obs/>
+  <form>
+    
+    <table id="CAJ_PUESTO_FORMAS" label="Detalle de Valores">
+
+      <movimientos>
+        <relacion id="cajvalores_ins.xml"/>
+        <relacion id="cajdetalle_ins.xml"/>
+      </movimientos>
+                   
+      <field id="cajpuesto_id" esClave="true" noshow="true" />
+
+      <field id="cajformapago_id" esClave="true" noshow="true"/>
+
+      <field id="ctbcuenta_detalle" noshow="true">
+        <expression>ctbcuenta_forma_id</expression>
+      </field>
+      
+      <!-- field id="imputacion_concepto" local="true" noshow="true" valauto="true" /-->
+        
+      <field id="doh_detalle" local="true" noshow="true">
+        <if exp="imputacion_concepto == 0">
+          <true>0</true>
+          <false>1</false>
+        </if>
+      </field>
+
+      <field id="descripcion_forma" tabla="CAJ_FORMAS_PAGO" deshabilitado="true">
+        <label>Tipo</label>
+        <help>Descripcion de la forma de pago</help>
+        <size>20</size>
+      </field>
+
+      <field id="pago_valor" local="true" editable="true" suma="true">
+        <label>Importe</label>
+        <jseval fielddestino="importe_detalle">pago_valor</jseval>
+        <jseval fielddestino="importe_movimiento" total="true">pago_valor</jseval>
+        <jseval fielddestino="total_pago" total="true">pago_valor</jseval>
+        <tipo>numeric</tipo>
+      </field>
+
+      <field id="importe_detalle" local="true" noshow="true">
+        <if exp="true">
+          <true>pago_valor</true>
+          <false>0</false>
+        </if>
+      </field>
+
+
+      <field id="ejecuta_forma" tabla="CAJ_FORMAS_PAGO" ventint="true" linkdes="CARGAR" resume="true">
+        <label>Detalle</label>
+        <tipo>varchar</tipo>
+
+        <importar label="DETALLE">
+          <field id="moneda_id">moneda_id</field>
+          <field id="cajformapago_id">cajformapago_id</field>
+          <field id="tipo_movimiento">tipo_movimiento</field> 
+          <field id="imputacion_concepto">imputacion_concepto</field>
+          <field id="ctbcuenta_reg_doh">imputacion_concepto</field>
+          <field id="importe_movimiento">importe_movimiento</field>
+          <field id="fecha_movimiento">fecha_movimiento</field>
+          <field id="puesto_movimiento">puesto_movimiento</field>
+          <field id="nro_movimiento">nro_movimiento</field>
+          <field id="referencia_movimiento">referencia_movimiento</field>
+          <field id="subsistema_forma_id">subsistema_forma_id</field>
+          <field id="regconcepto_forma_id">regconcepto_forma_id</field>
+          <field id="stkconcepto_forma_id">stkconcepto_forma_id</field>
+          <field id="stkdeposito_id">stkdeposito_id</field>
+          <field id="regcuentapadre_id">regcuentapadre_id</field>
+        </importar>
+      </field>
+
+      <fieldGroup id="DEBUG" local="true" noshow="true">
+        <field id="moneda_id"/>
+        <field id="cajconcepto_id"/>
+        <field id="imputacion_concepto" valauto="true">
+          <label>IC</label>
+        </field>
+        <field id="fecha_movimiento"/>
+        <field id="referencia_movimiento"/>
+        <field id="puesto_movimiento"/>
+        <field id="nro_movimiento"/>
+        <field id="importe_movimiento"/>
+        <field id="stkdeposito_id"/>
+        <field id="regcuentapadre_id"/>
+      </fieldGroup>
+
+      <field id="subsistema_forma_id"  tabla="CAJ_FORMAS_PAGO" noshow="true" />
+
+      <field id="regconcepto_forma_id" tabla="CAJ_FORMAS_PAGO" noshow="true" />
+
+      <field id="stkconcepto_forma_id" tabla="CAJ_FORMAS_PAGO" noshow="true" />
+
+      <field id="grabar" local="true" noshow="true">
+        <if exp="( (pago_valor + 0) != 0)">
+          <true>1</true>
+          <false>0</false>
+        </if>
+      </field>
+
+    <field id="grabar_ctb" local="true" noshow="true">
+      <if exp="( (pago_valor + 0) != 0)">
+        <true>1</true>
+        <false>0</false>
+      </if>
+    </field>
+
+      <order>
+        <field id="orden_forma" tabla="CAJ_FORMAS_PAGO"/>
+      </order>
+
+    </table>
+
+    <join>
+      <table id="CAJ_CONCEPTOS">
+        <field id="id_cajconcepto">
+          <condicion operador="=">'[__cajconcepto_id__]'</condicion>
+        </field>
+      </table>
+    </join>
+
+    <!-- DESCRIPCION FORMA DE PAGO -->
+
+    <join>
+      <table id="CAJ_FORMAS_PAGO">
+        <field id="id_cajformapago">
+          <condicion operador="=">CAJ_PUESTO_FORMAS.cajformapago_id</condicion>
+        </field>
+        <field id="tipo_forma">
+          <condicion operador="=">'[__imputacion_concepto__]'</condicion>
+        </field>
+        <field id="moneda_id">
+          <condicion operador="=">'[__moneda_id__]'</condicion>
+        </field>
+      </table>
+    </join>
+
+    <!--  
+          FORMAS DE PAGO DISPONIBLES PARA ESTE CONCEPTO 
+          (Left ya que si no hay definida una en particular traigo todas las asociadas al puesto)   
+    -->
+
+    <join tipo="left">
+      <table id="CAJ_CONCEPTO_FORMAS">
+        <field id="cajconcepto_id">
+          <condicion operador="=">CAJ_CONCEPTOS.id_cajconcepto</condicion>
+        </field>
+        <field id="cajformapago_id">
+          <condicion operador="=">CAJ_FORMAS_PAGO.id_cajformapago </condicion>
+        </field>       
+      </table>
+    </join>
+
+  </form>
+</histrix>

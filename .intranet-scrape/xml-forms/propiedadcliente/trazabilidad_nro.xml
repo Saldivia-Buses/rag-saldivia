@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="consulta">
+	<title>herramientas</title>
+	<obs></obs>
+	<form>
+		<table id="HERRAMIENTAS" label="HERRAMIENTA">
+			<campo id="HERRAMIENTA">
+			    <expression>max(RIGHT(id_herramienta, 9)) + 1</expression>
+			    <label>HERRAMIENTA</label>
+			</campo>
+			<!--<group>
+				<campo id="grucod"></campo>				
+
+				<campo id="id_herramienta"></campo>
+				<campo id="artcod"></campo>				
+				
+			</group> -->
+		</table>
+	</form>	   
+</histrix> 

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" logReference="nom,app" limit="20">
+	<title>Sección</title>
+	<obs/>
+	<form >
+		<table id="SECCIONHISTORIA" label="Seccion" styleTbody="height:10em;">
+		    <title>Secciones</title>
+		    <!--
+			<movimientos>
+				<relacion id="seccionhist_update.xml"></relacion>
+				<relacion id="seccionhist_insert.xml"></relacion>
+				<relacion id="seccionhist_delete.xml"></relacion>				
+			</movimientos>
+			-->
+			<field id="IdPersona" deshabilitado="true" oculto="true">
+				<label>Persona</label>
+				<condicion operador="=">0</condicion>
+				
+			</field>
+			<field id="nom" local="true" noshow="true">
+                            <label>Nombre</label>
+			</field>
+			<field id="app" local="true" noshow="true">
+                            <label>Apellido</label>
+			</field>
+			<field id="id_seccion">
+				<tabla_ex id="SECCION">
+					<field id="id_seccion"/>
+					<field id="nombre"/>
+					<field id="activa">
+						<condicion operador="=">1</condicion>>
+					</field>
+				</tabla_ex>
+				<label>Cod.</label>
+				<help>Código de Sección</help>
+			</field>
+			<field id="fechaDesde">
+				<label>Desde Fecha</label>
+				<help>Fecha</help>
+			</field>			
+
+		</table>
+
+	</form>
+</histrix>

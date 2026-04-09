@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="update">
+       <title>AUTORIZAR</title>
+        <obs></obs>
+               <form >
+					<table id="ADICIONAL_COCHE" label="Autorizacion" idCampoCond="grabo">
+						<field id="id" id_temp="id" esclave="true" />
+						<field id="valida2" id_temp="user" />
+						<field id="aut2" id_temp="aut2" />						
+						<field id="fechaval2" id_temp="hoy" />
+						<field id="idMomento" id_temp="idMomento" />
+						<field id="observaciones" id_temp="observaciones" />
+	
+					</table>
+               </form>
+        </histrix>

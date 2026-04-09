@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" subtipo="vertical" llenoTemporal="false" impresion="ordenproduccion_imp.xml"
+    dirimpresion="/mrp/qry" imprime="false" transaccional="true" >
+
+    <title>ORDEN DE PRODUCCION</title>
+    <form >
+        <table id="MRP_ORDEN_DETALLE" label="Orden de Producción">
+            
+            <movimientos cabecera="mrp_ordenproduccion_cab.xml">
+                <relacion id="mrp_ordenproduccion_insert.xml"></relacion>
+                <relacion id="mrp_ordendetalle_insert.xml"></relacion>
+                <!-- VIA TRIGGER <relacion id="mrp_controldetalle_insert.xml"></relacion> -->
+            </movimientos>
+            
+            <!--<validation>
+                <condition><![CDATA[$('[name=codemp]').val() < 1 ]]></condition>
+                <message>Debe Especificar un Empleado</message>
+            </validation> -->                                                                                                                
+
+            <field id="_ORDEN" oculto="true" local="true">
+                <label>Orden</label>
+            </field>
+
+            <field id="stkarticulo_id"  esClave="true" linkint="stk_hist_costos_qry.xml" linkdes="Precios" linkdir="/compras/qry">
+                <paring destino="stkarticulo_id" _colspan="2">stkarticulo_id</paring>
+                <label  style="text-align:center;">Artículo</label>
+                <help>Codigo de Articulo</help>
+                <helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas">
+                    <field id="nombre_articulo">
+                        <detalle>nombre_articulo</detalle>
+                    </field>
+                    <field id="produccion_diaria">
+                        <detalle>minimo_ordendetalle</detalle>
+                        <detalle>produccion_diaria</detalle>
+                    </field>
+                    <field id="objetivo">
+                        <expresion>ROUND( produccion_diaria / 85 * 100)</expresion>
+                        <detalle>objetivo_ordendetalle</detalle>
+                    </field>
+                    <field id="bom">
+                        <expresion having="false">(select count(*) from STK_BOM WHERE STK_BOM.stkarticulopadre_id = STK_ARTICULOS.id_stkarticulo)</expresion>
+                        <condicion operador="&gt;">0</condicion>
+                    </field>
+                    <!-- <field id="codigo_plu"  >
+                        <label modpos="nobr">Codigo Ant</label>
+                        <detalle>codigo_plu</detalle>
+                    </field> -->
+                </helper>
+                <actualiza>
+            	    <field id="bomart" destino="stkarticulopadre_id"/>
+                </actualiza>
+            </field>
+
+            <!-- <field id="codigo_plu"  deshabilitado="true">
+                <label modpos="nobr">Codigo Ant</label>
+            </field> -->
+
+            <field id="nombre_articulo"  tabla="STK_ARTICULOS" esClave="true" deshabilitado="true">
+                <label modpos="nobr" _colspan="5">Nombre</label>
+                <tipo>varchar</tipo>
+                <size>20</size>
+            </field>
+
+            <field id="bomart" showObjTabla="true" Formstyle="true">
+                <label modpos="nobr" rowspan="4">Composición</label>
+                <helper xml="mrp_bom_qry.xml" type="object" dir="/mrp/ing">
+                    <parameter source="stkarticulo_id" target="stkarticulopadre_id" />
+                    <parameter source="objetivo_ordendetalle" target="WCantidad1" />
+                </helper>
+            </field> 
+
+            <field id="minimo_ordendetalle" deshabilitado="true">
+                <label style="text-align:center;">Minimo</label>
+            </field>
+
+            <field id="objetivo_ordendetalle" required="true" >
+                <label style="text-align:center;" _modpos="nobr">Objetivo</label>
+                <jseval campodestino="minimo_ordendetalle">objetivo_ordendetalle / 100 * 85</jseval>
+                <jseval campodestino="tiempo">(objetivo_ordendetalle / produccion_diaria * 8.5).toFixed(2)</jseval>
+            </field>
+
+            <!--<field id="producido_ordendetalle" >
+                <label modpos="nobr">Producido</label>
+            </field> -->
+
+                       
+            <field id="produccion_diaria" noZero="true" noshow="true"></field>
+
+            <field id="tiempo" deshabilitado="true" >
+                <label style="text-align:center;" _modpos="nobr">Tiempo</label>
+                <expression>round(objetivo_ordendetalle / produccion_diaria * 8.5, 0) . 'hs'</expression>
+                <!-- <if exp="true">
+                  <true> truncate( round(objetivo_ordendetalle / produccion_diaria * 8.5, 0) ,0) . 'hs'</true>
+                  <false>0</false>
+                </if> -->
+            </field>
+
+            <field id="mrpobservaciones"  esClave="true" required="false">
+                <label colspan="5"  >Observaciones</label>
+                <size>80</size>
+                <valor></valor>
+            </field>
+
+            <field id="login_id" local="true" deshabilitado="true" noshow="true">
+                <valor eval="true">$_SESSION['idUser']</valor>
+            </field>
+
+
+
+            <!--    <field id="fotopath" local="true" noshow="true">
+                <if exp="true">
+                    <true>'articulos/stkarticulo_id/'</true>
+                    <false>''</false>
+                </if>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="pedidopath" local="true" noshow="true">
+                <tipo>varchar</tipo>
+            </field>
+            <field id="foto" path="fotopath" download="true" deshabilitado="true">
+                <expresion sql="true">select STK_ARTICULO_FOTO.foto from STK_ARTICULO_FOTO where STK_ARTICULO_FOTO.stkarticulo_id = '[__stkarticulo_id__]' limit 1</expresion>
+                <label Formstyle="display:none;">Imagen</label>
+                <tipo >file</tipo>
+                <size>40</size>
+            </field>
+            <field id="archivo" _noshow="true" deshabilitado="true" esClave="true" path="pedidopath" download="true">
+                <tipo >file</tipo>
+                <label Formstyle="display:none;">Adjunto</label>
+                <size>40</size>
+            </field> -->
+            
+            <order>
+                <field id="ocpren"></field>
+            </order>
+
+        </table>
+
+        <join tipo="left">
+            <table id="STK_ARTICULOS">
+                <field id="subsistema_id" oculto="true">
+                    <label>STK_ARTICULOS.subsistema_id</label>
+                    <condicion operador="=">'01'</condicion>
+                </field>
+                <field id="stkarticulo_id" oculto="true">
+                    <condicion operador="=">CPS_DETALLE.stkarticulo_id</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

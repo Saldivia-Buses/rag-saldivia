@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="grid" imprime="false" inserta="false" deleteRow="false" llenoreferente="true" llenoTemporal="true" importTempTable="TEMPTABLENAME" showCantidad="false" tooltip="false">
+    <title>Detalle</title>
+    <obs></obs>
+    <form >
+        <table id="GEN_IVA_ALICUOTAS" label="movimientos" idCampoCond="grabar">
+
+            <movimientos>
+                <relacion id="regdetalle_ins.xml" />
+            </movimientos>
+
+            <importar xml="stk_movimientos_import.xml"  label="Ingresar Articulos" titulo="Ingresar Articulos" resume="true" />
+
+            <field id="id_iva_alicuota" noshow="true"/>
+
+            <field id="grabar" local="true" noshow="true">
+                <if exp="iva_detalle != 0">
+                    <true>1</true>
+                    <false>0</false>
+                </if>
+            </field>
+
+            <field id="_ORDEN" esClave="true" deshabilitado="true" noshow="true" local="true" />
+
+            <field id="iva_id" oculto="true">
+                <condicion operador="=">1</condicion>
+            </field>
+
+            <field id="percepcion" local="true" colstyle="display:none;" noshow="true" />
+
+            <field id="alicuota_percepcion" colstyle="display: none;" _noshow="true" />
+
+            <field id="cantidad_detalle" noshow="true" local="true">
+                <valor>1</valor>
+            </field>
+
+            <!-- *********************************************************************** -->
+
+            <field id="neto_detalle" local="true" suma="true" editable="true">
+                <label modpos="nobr">Neto</label>
+                <tipo>custom_numeric</tipo>
+                <jseval campodestino="neto_movimiento"    total="true">neto_detalle.toFixed(2)</jseval>
+                <jseval campodestino="iva_detalle"        actxml="false">(neto_detalle * (alicuota / 100)).toFixed(2)</jseval>
+                <jseval campodestino="per_detalle"        actxml="false">(percepcion == 1 ? (neto_detalle * (alicuota_percepcion / 100 )).toFixed(2) : 0 )</jseval>
+                <jseval campodestino="total_detalle"      actxml="false">(neto_detalle + iva_detalle + per_detalle ).toFixed(2)</jseval>
+            </field>
+
+            <field id="alicuota" esClave="true" editable="true">
+                <label modpos="nobr">Alicuota</label>
+                <detalle>iva</detalle>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="iva_regimen_id" noshow="true">
+                <label>Régimen</label>
+            </field>
+
+            <field id="iva_detalle" local="true" suma="true" editable="true">
+                <label modpos="nobr">iva</label>
+                <tipo>custom_numeric</tipo>
+                <jseval campodestino="importe_iva"        total="true">iva_detalle.toFixed(2)</jseval>
+                <jseval campodestino="total_detalle"      actxml="false">(neto_detalle + iva_detalle + per_detalle ).toFixed(2)</jseval>
+            </field>
+
+            <field id="per_detalle" local="true" suma="true" editable="true">
+                <label modpos="nobr">Percepcion</label>
+                <tipo>numeric</tipo>
+                <jseval campodestino="importe_percepcion" total="true">per_detalle</jseval>
+                <jseval campodestino="total_detalle"      actxml="false">(neto_detalle + iva_detalle + per_detalle ).toFixed(2)</jseval>
+            </field>
+
+            <field id="total_detalle" local="true" suma="true" editable="true">
+                <label modpos="nobr">Total</label>
+                <tipo>numeric</tipo>
+                <jseval campodestino="gravado_movimiento" total="true">total_detalle</jseval>
+            </field>
+
+            <!-- *********************************************************************** -->
+
+            <field id="imputacion_concepto" local="true" noshow="true" />
+
+
+
+            <fieldGroup>
+                <if>return (strpos($_SESSION['properties']['modulos'],'contabilidad') !== false);</if>
+
+                    <field id="cuenta_haber_id" noshow="true">
+                        <label>haber iva</label>
+                    </field>
+
+                    <field id="cuenta_percepcion_iva_id" noshow="true">
+                        <label>Cuenta_perc_iva</label>
+                    </field>
+
+                    <field id="cuenta_debe_id" local="true" esClave="true" noshow="true"/>
+
+                    <field id="cuentadebe_id" local="true" noshow="true">
+                        <if exp="'cuenta_debe_id' != ''">
+                            <true>'cuenta_debe_id'</true>
+                            <false>'cuenta_prov_debe'</false>
+                        </if>
+                    </field>
+
+                    <field id="cuenta_debe_doh" local="true" noshow="true">
+                        <if exp="imputacion_concepto+0 == 0">
+                            <true>'1'</true>
+                            <false>'0'</false>
+                        </if>
+                    </field>
+
+                    <field id="cuenta_haber_doh" local="true" noshow="true">
+                        <if exp="imputacion_concepto+0 == 0">
+                            <true>'0'</true>
+                            <false>'1'</false>
+                        </if>
+                    </field>
+
+                    <field id="cuenta_prov_debe" local="true" noshow="true">
+                        <parametro id="cuentas_habilitadas_qry.xml"  retorna="id_cuenta">
+                            <field id="id_cuenta">
+                                <condicion operador="=">
+                                    (SELECT GEN_SUBSISTEMAS.cuenta_debe_id from GEN_SUBSISTEMAS where id_subsistema = '01')
+                                </condicion>
+                            </field>
+                        </parametro>
+                    </field>
+
+                    <field id="cuenta_prov_haber" local="true" noshow="true">
+                        <parametro id="cuentas_habilitadas_qry.xml" retorna="id_cuenta">
+                            <field id="id_cuenta">
+                                <condicion operador="=">
+                                    (SELECT GEN_SUBSISTEMAS.cuenta_debe_id from GEN_SUBSISTEMAS where id_subsistema = '01')
+                                </condicion>
+                            </field>
+                        </parametro>
+                    </field>
+
+            </fieldGroup>
+
+        </table>
+
+        <tempTable id="TEMPTABLENAME">
+
+            <row>
+                <field id="cuenta_id">cuenta_haber_id</field>
+                <field id="doh">cuenta_debe_doh</field>
+                <field id="importe">iva_detalle</field>
+                <field id="debe">iva_detalle</field>
+                <field id="haber">iva_detalle</field>
+                <field id="_ORDEN">50</field>
+            </row>
+            <row>
+                <field id="cuenta_id">cuenta_percepcion_iva_id</field>
+                <field id="doh">cuenta_debe_doh</field>
+                <field id="importe">per_detalle</field>
+                <field id="debe">per_detalle</field>
+                <field id="haber">per_detalle</field>
+                <field id="_ORDEN">60</field>
+            </row>
+            <!--<row>
+                <field id="cuenta_id">cuentadebe_id</field>
+                <field id="doh">cuenta_debe_doh</field>
+                <field id="importe">neto_detalle</field>
+                <field id="debe">neto_detalle</field>
+                <field id="haber">neto_detalle</field>
+            </row>-->
+
+        </tempTable>
+    </form>
+</histrix>

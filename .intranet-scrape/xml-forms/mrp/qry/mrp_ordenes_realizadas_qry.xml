@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" paginador="5">
+  <title>Datos de Tutores</title>
+  <obs/>
+  <consulta>
+    <table id="PLAN_PRODUCCION" label="Datos de Tutores" styleTbody="height:6em;">
+      <!--FILTROS AGREGADOS -->
+      <filters auto="true">
+        <field id="fecha_realizacion">
+          <label>Fecha</label>
+          <tipo>date</tipo>   
+          <operador>=</operador>       
+          <valor>today</valor>     
+        </field>
+              
+        <field id="nombre_cuenta" deshabilitado="false">
+          <label>Nombre</label>
+          <operador>like</operador>
+        </field>    
+      </filters>  
+
+      <field id="fecha_realizacion">
+        <label>Fecha</label>
+      </field>
+      <field id="nombre_cuenta"  tabla="REG_CUENTA">
+        <label>Nombre completo</label>
+      </field>
+    </table>  
+
+    <join>
+      <table id="REG_CUENTA">
+        <field id="id_regcuenta">
+          <condicion operador="=">PLAN_PRODUCCION.regcuenta_id</condicion>
+        </field>        
+      </table>  
+    </join>
+    
+  </consulta>
+</histrix>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <abm tipo="delete">
+       <titulo>BORRA EL MOV</titulo>
+        <obs></obs>
+               <consulta>
+					<tabla id="CARCHEQU" label="CHEQUE" idCampoCond="grabo">
+						<campo id="siscod" id_temp="siscar">
+						</campo>
+						<campo id="carint" id_temp="carint">
+						</campo>
+					</tabla>
+               </consulta>
+        </abm>

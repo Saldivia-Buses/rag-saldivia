@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="liveGrid"  deleteRow="false" tableClass="td_border0">
+    <title>Tareas</title>
+    <obs/>
+    <form >
+        <table id="HTXCALENDAR" >
+
+            <field id="startdate"  noshow="true">
+                <label >Inicio</label>
+                <tipo>date</tipo>
+                <condicion operador="=">'0000-00-00'</condicion>
+            </field>
+
+            <field id="estilo" local="true" noshow="true">
+                <if exp="completed == 1">
+                    <true>'text-decoration:line-through;'</true>
+                    <false>'completed'</false>
+                </if>
+            </field>
+            <field id="subject" editable="true">
+                <attribute id="style">estilo</attribute>
+                <label >Lista de Tareas</label>
+                <size>30</size>
+            </field>
+
+            <field id="id_user" local="true" _noshow="true">
+                <valor eval="true">$_SESSION['idUser']</valor>
+            </field>
+            <field id="user_id" valauto="true" editable="true" _oculto="true">
+                <condicion operador="=">[__id_user__]</condicion>
+                 <valor eval="true">$_SESSION['idUser']</valor>
+            </field>
+
+            <field id="completed"  _refresh="true" editable="true">
+                    <tipo>check</tipo>
+                    <condicion operador="=">0</condicion>
+            </field>
+            <field  id="id_calendar" autoinc="true" noshow="true" >
+            </field>
+            <order>
+                <field id="startdate"/>
+            </order>
+        </table>
+    </form>
+</histrix>

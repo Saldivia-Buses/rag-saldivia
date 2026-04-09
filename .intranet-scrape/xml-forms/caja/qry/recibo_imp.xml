@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<histrix tipo="ficha" PDFsincabecera="true" sololectura="true" autoprint="true" PDFfontSize="8" PDFpageSize="A4" PDForientacion="P" path="fotos/archivos" pageBreak="true">
+  <title>RECIBO</title>
+  <obs></obs>
+  <form >
+
+		<pdf>
+            <code><![CDATA[
+
+				$pdf->SetDrawColor(0);
+				$pdf->SetXY(10,10);
+
+				$tp = 05;
+				$ap = $pdf->anchoPagina - 2;
+				$mp = ($ap / 2);
+				$lp = $pdf->largoPagina;
+
+				// Frame Principal
+				$pdf->Rect(005, 005, $ap, $lp, 0.1);
+
+				// Nombre Empresa
+				$pdf->Rect(005, 005, $mp, 045, 0.1);
+
+				$datapath = $_SESSION['datapath'];
+				$file = "../database/$datapath/img/logo_factura.png"; 
+
+				if (is_file($file))
+				{
+					$posx = 40;
+					$posy = 6;
+					$width = 30;
+					$pdf->Image($file, $posx + $this->offsetX, $posy + $this->offsetY, $width);
+				}
+				
+				// Datos Comprobante
+				$pdf->Rect($mp + 5, 005, $mp, 045, 0.1);
+				
+				/// letra
+				$pdf->setFillColor(255,255,255);
+				$pdf->Rect($mp - 2 , 005, 015, 015, 'F');
+				$pdf->Rect($mp - 2 , 005, 015, 015, 0.1);
+				
+				// Cliente
+				$pdf->Rect(005, 055, $ap, 026, 0.1);
+				
+				// DATOS EMPRESA
+				$pdf->SetFont('Arial','B',7);
+
+                                $pdf->text(050, 035,$_SESSION['properties']['nombre']);
+                                $pdf->text(035, 051, $_SESSION['properties']['categoria_iva']);
+                                $pdf->SetFontSize(7);
+                                $pdf->text(025, 041, $_SESSION['properties']['direccion'].'  '.$_SESSION['properties']['localidad'] );
+                                $pdf->text(035, 045, $_SESSION['properties']['telefonos'].'  '.$_SESSION['properties']['mail']       );
+
+                                $pdf->text($mp + 025, 041, 'C.U.I.T.: ' .            $_SESSION['properties']['cuit']);
+                                $pdf->text($mp + 025, 045, 'Ingresos Brutos: ' .     $_SESSION['properties']['iibb']);
+                                $pdf->text($mp + 025, 051, 'Fec. Inicio. Activ.: ' . $_SESSION['properties']['fecha']);
+            ]]></code>
+        </pdf>
+
+		<table id="CAJ_MOVIMIENTOS" label="Recibo">
+
+
+			<field id="id_regmovim" noshow="true" print="false">
+				<expression having="false">REG_MOVIMIENTOS.id_regmovim</expression>
+			</field>
+
+			<field id="id_cajmovimiento" noshow="true" print="false" />
+			
+		    <field id="imprime_ctb" noshow="true" local="true" print="false">
+				<expression>IF( CAJ_CONCEPTOS.imprime_ctb = 1, 'true', 'false' )</expression>
+		    </field>
+	
+
+	
+	
+			<!-- ENCABEZADO -->	
+
+			<field id="letra_movimiento" tabla="REG_MOVIMIENTOS" PDFsize="24" PDFbold="true">
+				<label posX="97" posY="5" />
+                                <expression>UPPER(letra_movimiento)</expression>
+			</field>
+
+			<field id="descripcion_concepto" tabla="REG_CONCEPTOS" PDFbold="true" PDFsize="11">
+				<label posX="140" posY="3" />
+                                <expression>UPPER(REG_CONCEPTOS.descripcion_concepto)</expression>
+			</field>
+
+			<field id="nro_movimiento" PDFnoborder="true" PDFbold="true" PDFsize="11">
+				<label posX="135" posY="9">Nº:</label>
+                                <expresion>CONCAT(LPAD(puesto_movimiento,4,'0'),' - ',LPAD(CAJ_MOVIMIENTOS.nro_movimiento,8,'0'))</expresion>
+                        </field>
+
+			<field id="fecha_movimiento"  tabla="REG_MOVIMIENTOS" PDFsize="11" PDFnoborder="true">
+				<label posX="135" posY="15" size="26">Fecha</label>
+				<tipo>date</tipo>
+			</field>
+			
+			<!-- DATOS DEL MOVIMIENTO -->
+
+
+            <field id="regcuenta_nombre" PDFbold="true" pdfancho="120" PDFnoborder="true">
+                <label posX="7" posY="+25" size="17">Nombre: </label>
+                <expression>LEFT(REG_CUENTA.nombre_cuenta, 120)</expression>
+            </field>
+
+                    <field id="iva_id" tabla="REG_CUENTA" PDFnoborder="true">
+                        <label posx="125" posY="0" size="20">I.V.A.: </label>
+                        <helper type="combo" xml="iva_qry.xml" dir="/ayudas" empty="true" />
+                    </field>
+
+                    <field id="cod_direccion" tabla="REG_CUENTA" pdfancho="120" _PDFnolabel="true" PDFnoborder="true">
+                        <label posx="7" posY="+1" size="17">Direccion: </label>
+                        <expression>LEFT(CONCAT(cod_direccion, ' ', (CASE WHEN nro_direccion = 0 OR nro_direccion is null THEN '' ELSE nro_direccion END)), 120)</expression>
+                    </field>
+
+                    <field id="cuit_cuenta" tabla="REG_CUENTA" pdfancho="80" PDFnoborder="true">
+                        <label posx="125" posY="0" size="20">C.U.I.T.: </label>
+                    </field>
+
+                    <field id="localidad" pdfancho="120" _PDFnolabel="true" PDFnoborder="true">
+                        <expression>LEFT(CONCAT(LOCALIDAD_CUENTA.cp, ' ', LOCALIDAD_CUENTA.nombre_localidad), 110)</expression>
+                        <label posx="7" posY="+1" size="17">Localidad: </label>
+                    </field>
+
+                    <field id="provincia" pdfancho="120" _PDFnolabel="true" PDFnoborder="true">
+                        <expression>LEFT(PROVINCIA_CUENTA.nombre_provincia, 110)</expression>
+                        <label posx="125" posY="0" size="20">Provincia: </label>
+                    </field>
+
+			<!-- VALORES RECIBIDOS -->
+                             
+			<field id="valores" local="true" PDFsize="8">
+				<label posX="5" posY="+10">Detalle de valor/es para aplicar a los comprobantes indicados</label> 
+				<helper type="object" xml="recibo_cajvalores_imp.xml" dir="/caja/qry/" >
+					<parameter source="id_cajmovimiento" target="cajmovimiento_id" operator="=" />
+				</helper>
+			</field>
+                                
+                                
+			<field id="cheques" local="true" PDFsize="8">
+				<label posX="15" posY="+5" />
+				<helper type="object" xml="recibo_carvalores_imp.xml" dir="/caja/qry/" >
+					<parameter source="id_cajmovimiento" target="cajmovimiento_id" operator="=" />
+				</helper>
+			</field>
+			
+						
+			<field id="bancos" local="true" PDFsize="8">
+				<label posX="15" posY="+5" />
+				<helper type="object" xml="recibo_regmovim_imp.xml" dir="/caja/qry/" >
+					<parameter source="id_cajmovimiento" target="cajmovimiento_id" operator="=" />
+				</helper>
+			</field>
+				    	
+
+			<!-- IMPUTACIONES -->
+
+			<field id="imputaciones" local="true" PDFsize="8">
+				<label posX="5" posY="+5">Detalle de comprobantes imputados</label> 
+				<helper type="object" xml="recibo_regimputaciones_imp.xml" dir="/caja/qry/" >
+					<parameter source="id_regmovim" target="regmovim_id" operator="=" />
+				</helper>
+			</field>
+
+			<!-- CONTABILIZACION -->
+			
+			<field id="asiento" local="true" print="false" width="100">
+				<label posX="5" posY="+5">Detalle Contable</label> 
+				<helper type="object" xml="recibo_cajdetalles_imp.xml" dir="/caja/qry/">
+					<parameter source="id_cajmovimiento" target="cajmovimiento_id" operator="=" />
+				</helper>
+				<attribute id="print">imprime_ctb</attribute>
+			</field>
+			
+			<!-- PIE -->
+
+                        <field id="muestra_obs" noshow="true" print="false">
+                            <expression>case when CAJ_MOVIMIENTOS.referencia_movimiento = '' and REG_MOVIMIENTOS.referencia_movimiento = '' then 'false' else 'true' end</expression>
+                        </field>
+
+			<field id="referencia_movimiento" PDFnoborder="true">
+				<label posX="5" posY="+14">Observaciones</label>
+                                <attribute id="print">muestra_obs</attribute>
+			</field>
+			
+			<!--
+			<field id="confecciono" local="true">
+				<label posX="10" posY="+5">Confeccionó</label>
+				<valor>_________________________</valor>
+			</field>
+
+			<field id="autorizo" local="true">
+				<label posX="77" posY="0">Autorizó</label>
+				<valor>_________________________</valor>
+			</field>
+
+			<field id="recibido" local="true">
+				<label posX="140" posY="0">Recibió</label>
+				<valor>_________________________</valor>
+			</field>
+			-->
+
+			<field id="firma">
+				<label posX="80" posy="+10" PDFnoborder="true" PDFsize="15" />
+				<tipo>file</tipo>
+				<size>50</size>
+				<expression>'firma.png'</expression>
+			</field>
+
+                <fieldGroup id="email" print="false" noshow="true">
+                    <field id="email_cuenta" email="to" tabla="REG_CUENTA" />
+                    <field id="asunto" email="subject">
+                        <expression>concat(REG_CONCEPTOS.descripcion_concepto,' ',REG_MOVIMIENTOS.letra_movimiento,' ',lpad(REG_MOVIMIENTOS.puesto_movimiento,4,0),'-',lpad(CAJ_MOVIMIENTOS.nro_movimiento,8,0))</expression>
+                    </field>
+                </fieldGroup>
+
+		</table>
+
+
+		<join tipo="left">
+			<table id="CAJ_CONCEPTOS">
+			    <field id="id_cajconcepto">
+					<condicion operador="=">cajconcepto_id</condicion>
+   			    </field>
+			</table>
+		</join>
+
+		 <join tipo="left">
+			<table id="REG_MOVIMIENTOS">
+			    <field id="subsistema_id">
+					<condicion operador="=">CAJ_CONCEPTOS.subsistema_id</condicion>
+   			    </field>
+			    <field id="cajmovimiento_id">
+					<condicion operador="=">id_cajmovimiento</condicion>
+   			    </field>
+			</table>
+		</join>
+		
+		 <join tipo="left">
+			<table id="REG_CONCEPTOS">
+			    <field id="id_concepto">
+					<condicion operador="=">concepto_id</condicion>
+   			    </field>
+			</table>
+		</join>
+
+		 <join tipo="left">
+			<table id="REG_CUENTA">
+			    <field id="id_regcuenta">
+					<condicion operador="=">regcuenta_id</condicion>
+   			    </field>
+			</table>
+		</join>
+
+                <join tipo="left">
+                    <table id="GEN_LOCALIDADES" as="LOCALIDAD_CUENTA">
+                        <field id="id_localidad">
+                            <condicion operador="=">REG_CUENTA.localidad_id</condicion>
+                        </field>
+                    </table>
+                </join>
+
+                <join tipo="left">
+                    <table id="GEN_PROVINCIAS" as="PROVINCIA_CUENTA">
+                        <field id="id_provincia">
+                            <condicion operador="=">REG_CUENTA.provincia_id</condicion>
+                        </field>
+                    </table>
+                </join>
+
+		<join tipo="left">
+		  <table id="GEN_IVA">
+		    <field id="id_iva">
+		      <condicion operador="=">REG_CUENTA.iva_id</condicion>
+		    </field>
+		  </table>
+		</join>
+  </form>
+</histrix>  

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud" >
+  <title>Controles de Calidad de Producción</title>
+  <obs />
+  <form >
+    <table id="MRP_CONTROLES" label="Controles de Calidad de Producción">
+
+		<field id="id_mrpcontrol" noshow="true" autoinc="true">
+		</field>
+
+		<field id="nombre_control">
+			<label>Control Calidad</label>
+		</field>
+		<field id="peso_control">
+			<label>Valor</label>
+		</field>
+	
+    </table>
+  </form>
+</histrix>

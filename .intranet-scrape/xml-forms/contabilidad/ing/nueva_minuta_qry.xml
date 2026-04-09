@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+  <title>Movimientos</title>
+  <obs></obs>
+  <consulta>
+    <table id="CTB_EJERCICIOS">
+      <field id="nro_minuta" local="true" noshow="false" _clasefila="true" vacio="true">
+        <label>Nro minuta</label>
+	<valor>0</valor>
+      </field>
+      <field id="fecha_movimiento" local="true"> 
+        <label>Fecha</label>
+	<tipo>date</tipo>
+	<valor>today</valor>
+      </field>
+      <field id="referencia" local="true">
+        <label>referencia</label>
+	<valor>Nueva Minuta</valor>
+      </field>
+
+      <field id="comienza" tabla="CTB_EJERCICIOS" />
+      <field id="finaliza" tabla="CTB_EJERCICIOS" />
+
+      <field id="debe" local="true" >
+        <label>Debe</label>
+	<tipo>numeric</tipo>
+	<detalle>debe</detalle>
+      </field>
+      <field id="haber" local="true" >
+        <label>Haber</label>
+        <tipo>numeric</tipo>
+	<detalle>haber</detalle>
+      </field>
+      <field id="diferencia" local="true" >
+        <label>Diferencia</label>
+        <tipo>numeric</tipo>
+      </field>
+      <field id="resaltado" clasefila="true" local="true" noshow="true" >
+        <if exp="true">
+	   <true>resaltado</true>
+	   <false>0</false>
+	</if>
+        <label>res</label>
+      </field>
+      <field id="id_ejercicio" _noshow="true" _local="true">
+        <label>Ejercicio</label>
+	 <tabla_ex xml="contabilidad/man/ctbejercicios_crud.xml">
+          <field id="activo" tipoOrden="DESC"/>
+        </tabla_ex>
+      </field>
+    </table>
+  </consulta>
+</histrix>  

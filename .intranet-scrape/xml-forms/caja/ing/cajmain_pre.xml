@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" limit="1">
+  <title/>
+  <obs/>
+  <form>
+    <table id="CAJ_CONCEPTOS">
+
+      <field id="estilo" local="true" noshow="true">
+        <if exp="imputacion_concepto+0 == 0">
+          <true>'padding: 10px; font-size:large;  font-weight: bold; color: #444;'</true>
+          <false>'padding: 10px; font-size:large; font-weight: bold; color: red;'</false>
+        </if>
+      </field>
+
+      <field id="descripcion_concepto" Class="boton" local="true" style="padding: 10px; font-size:large;  font-weight: bold; color: #444;">
+    	<if exp="estado == 0">
+    	  <true>'Abrir Caja'</true>
+      	  <false>'Reabrir Caja'</false>
+        </if>
+      </field>
+
+      <field id="ejecuta_concepto" local="true">
+    	<if exp="estado == 0">
+    	  <true>'/caja/proc/apertura_caja_ing.xml'</true>
+    	  <false>'/caja/proc/reapertura_caja_ing.xml'</false>
+        </if>
+      </field>
+      
+      
+      <field id="id_cajregistro">
+        <expression>
+			(select ifnull(id_cajregistro,0)
+		      from CAJ_REGISTROS 
+      	     where CAJ_REGISTROS.fecha_registro = '[__fecha_registro__]'
+               and CAJ_REGISTROS.cajpuesto_id   = '[__cajpuesto_id__]')
+        </expression>
+      </field>
+      
+    	
+      <field id="fecha_registro" local="true" valauto="true">
+    	<tipo>date</tipo>
+        <detalle>fecha_registro</detalle>
+      </field>
+
+      <field id="cajpuesto_id" local="true"/>
+
+      <field id="estado">
+    	  <!--
+    				cerrada	| existe
+    				  0     +   0    = 0  (No existe y no está abierta)
+<<<<<<< HEAD
+    				  0     +   1    = 1  (Existe pero está abierta) 
+    				  1     +   1    = 2  (Cerrada y  existe)
+    				  2     +   0    = 2  (CASO INEXISTENTE)
+    				  2     +   1    = 3  (Anulada y existe)
+    				  5     +   1    = 6  (Aprobada y existe)
+    				  9     +   1    = 10 (Integrada y existe)
+    				  
+    	  -->
+      	  <expression having="false">
+			(select (ifnull(cierre_caja,0) + case when ifnull(id_cajregistro,0) = 0 then 0 else 1 end)
+		      from CAJ_PUESTOS
+	          left join CAJ_REGISTROS on CAJ_REGISTROS.cajpuesto_id = CAJ_PUESTOS.id_cajpuesto
+      	       and CAJ_REGISTROS.fecha_registro = '[__fecha_registro__]'
+             where CAJ_PUESTOS.id_cajpuesto = '[__cajpuesto_id__]')
+          </expression>
+	  	  <condicion operador="&lt;=">2</condicion>
+		</field>
+		
+		<field id="alta_concepto">
+		  <expression having="false">
+		 	IF ( (select (ifnull(cierre_caja,0) + case when ifnull(id_cajregistro,0) = 0 then 0 else 1 end)
+		      from CAJ_PUESTOS
+	          left join CAJ_REGISTROS on CAJ_REGISTROS.cajpuesto_id = CAJ_PUESTOS.id_cajpuesto
+      	       and CAJ_REGISTROS.fecha_registro = '[__fecha_registro__]'
+             where CAJ_PUESTOS.id_cajpuesto = '[__cajpuesto_id__]') = 1, -1 ,1)
+		  </expression>
+		  <condicion operador="=">1</condicion>
+		</field>
+
+      <fieldGroup colstyle="display:none;">
+        <if> if (strpos($_SESSION['properties']['modulos'],'contabilidad') != false) return true; </if>
+        <field id="ejercicio_id" local="true">
+          <expression><![CDATA[IFNULL((SELECT id_ejercicio FROM `CTB_EJERCICIOS` WHERE comienza <= '[__fecha_registro__]' and finaliza >= '[__fecha_registro__]'  and activo = 1), 0)]]></expression>
+          <condicion operador="!=">0</condicion>
+        </field>
+      </fieldGroup>
+    </table>
+
+  </form>
+</histrix>

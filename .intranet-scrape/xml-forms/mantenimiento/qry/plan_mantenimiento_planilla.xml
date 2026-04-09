@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 
+*******************************************************************************
+Tipo:  CURD
+Tarea: PLAN DE MANTENIMIENTO
+Autor: Lmm
+Fecha: 17/08/11
+*******************************************************************************
+-->
+<histrix tipo="consulta" _subtipo="vertical" inserta="false" modifica="false" 
+borra="false" calendarAspectRatio="2" sidePanel="false" tooltip="false" _PDFlines="false" _.PDFfontSize="9" PDForientacion="L">
+  <title>Mantenimiento</title>
+  <obs/>
+  <pie>                                             Firma Realizado: ________________________</pie>
+  <form>
+    <table id="MANT_PLAN_EVENTOS">
+      <filters>
+        <field id="nombre_equipo" deshabilitado="false">
+          <label>Nombre</label>
+          <help>Nombre</help>
+          <operador>like</operador>
+        </field>
+        <field id="tipoequipo_id">
+          <label>Tipo</label>
+          <help>Tipo</help>
+          <operador>=</operador>
+		  <valor>1</valor>
+        </field>
+        <field id="deposito_id">
+          <label modpos="nobr">Depósito</label>
+          <helper type="combo" id="DEPOSITO">
+            <field id="idDeposito">
+              <label>Cod</label>
+              <help>Codigo</help>
+            </field>
+            <field id="direccion">
+              <label>Direccion</label>
+              <help>Direccion</help>
+            </field>
+          </helper>
+          <operador>=</operador>
+        </field>
+      <field id="fecha_accion" >
+        <label>Hasta Fecha</label>
+        <help>Fecha de la acción</help>
+        <tipo>date</tipo>
+    	<operador>&gt;=</operador>
+    	<valor eval="true">date("d/m/Y", mktime(0, 0, 0, date("m"), 1, date("Y")))</valor>
+      </field>
+      <field id="fecha_accion" >
+        <label>Desde Fecha</label>
+        <help>Fecha de la acción</help>
+        <tipo>date</tipo>
+    	<operador>&lt;=</operador>
+    	<valor>today</valor>
+      </field>
+
+      </filters>
+
+      <field id="id_plan" noshow="true" >
+        <expression>plan_id</expression>
+        <detalle>plan_id</detalle>
+      </field>
+      <field id="fecha_accion" >
+        <label>Fecha</label>
+        <help>Fecha de la acción</help>
+        <tipo>date</tipo>
+        <detalle>fecha_accion</detalle>
+      </field>
+      <field id="nombre_equipo">
+        <label>Equipo</label>
+        <expression>CONCAT( MANT_EQUIPOS.nombre_equipo)</expression>
+      </field>
+	  <field id="numero_serie" tabla="MANT_EQUIPOS">
+		<label>Nro Serie</label>
+	  </field>
+      <field id="deposito_id" tabla="MANT_EQUIPOS" noshow="true">
+        <label>Dep..sito</label>
+        <helper type="combo" id="DEPOSITO" empty="true">
+          <field id="idDeposito">
+            <label>Cod</label>
+            <help>Codigo</help>
+          </field>
+          <field id="direccion">
+            <label>Dirección</label>
+            <help>Dirección</help>
+          </field>
+        </helper>
+      </field>
+      <field id="tipoequipo_id" tabla="MANT_EQUIPOS" noshow="true">
+        <helper type="combo" id="MANT_TIPO_EQUIPO" empty="true">
+          <field id="id_tipo_equipo"/>
+          <field id="nombre_tipoequipo"/>
+        </helper>
+        <label>Tipo</label>
+      </field>
+      <field id="nombre_accion" tabla="MANT_ACCIONES">
+        <label>Acción</label>
+      </field>
+	  <field id="observaciones">
+		<label>Observaciones</label>
+	  </field>
+      <!--
+      <field id="firma" local="true">
+        <label>Firma Control</label>
+      </field>
+      -->
+	<order>
+	    <field id="fecha_accion" tabla="MANT_PLAN_EVENTOS"/>
+	</order>
+    </table>
+    <join tipo="left">
+      <table id="MANT_PLAN">
+        <field id="id_plan">
+          <condicion operador="=">plan_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="MANT_EQUIPOS">
+        <field id="id_equipo">
+          <condicion operador="=">MANT_PLAN.equipo_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="MANT_ACCIONES">
+        <field id="id_accion">
+          <condicion operador="=">MANT_PLAN_EVENTOS.accion_id</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>

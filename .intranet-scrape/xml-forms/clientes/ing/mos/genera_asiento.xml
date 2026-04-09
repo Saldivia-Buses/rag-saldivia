@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert" sqlhardcoded="true">
+  <title />
+  <form>
+	<table id="REG_MOVIMIENTOS" idCampoCond="facturar">
+            
+		<sql><![CDATA[ call generarMinuta( [__regmovimiento_dup.xml__] ); ]]></sql>
+
+		<field id="idregmovim"         lastId="regmovimiento_dup.xml" />
+
+        </table>
+  </form>
+</histrix>

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" dataSource="mantenimiento_preventivo" limit="10">
+    <title/>
+    <obs/>
+    <form>
+        <table id="MANT_PLAN">
+
+            <field id="desde_fecha" local="true" noshow="true">
+                <tipo>date</tipo>
+            </field>
+
+            <field id="hasta_fecha" local="true" noshow="true">
+                <tipo>date</tipo>
+            </field>
+
+            <field id="id_plan" noshow="true" />
+
+            <field id="accion_id" noshow="true">
+                <helper type="combo" id="MANT_ACCIONES" empty="true">
+                    <field id="id_accion" />
+                    <field id="nombre_accion">
+                        <expression>CONCAT(LEFT(nombre_accion, 50), '...')</expression>
+                    </field>
+                    <order>
+                        <field id="nombre_accion" />
+                    </order>
+                </helper>
+            </field>
+
+            <field id="fecha_accion" noshow="true" />
+            <field id="rrule" noshow="true" />
+            <field id="equipo_id" noshow="true" />
+
+            <field id="dia_accion" local="true" noshow="true" />
+
+            <field id="dia" local="true">
+                <label>DIA</label>
+                <tipo>date</tipo>
+            </field>
+
+            <field id="nombre_accion" local="true" noshow="true" />
+
+            <field id="abreviatura_accion" local="true" noshow="true">
+                <label>ACCION</label>
+                <attribute id="tooltip">nombre_accion</attribute>
+            </field>
+
+            <field id="observaciones" local="true">
+                <label>ACCION</label>
+                <attribute id="tooltip">nombre_accion</attribute>
+            </field>
+
+            <field id="realizado" local="true">
+                <label>ESTADO</label>
+            </field>
+
+        </table>
+    </form>
+</histrix>

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+	<title>ENTRADA SALIDA STOCK POR CODIGO</title>
+	<obs/>
+	<form >
+		<table id="STKINMOV" label="ENTRADA SALIDA STOCK">
+		<!--	<preconsultas>
+				<xmlfile id="stkinmov_usr_pre.xml"/>
+			</preconsultas>			-->
+				
+			<field id="opecod">
+				<label>Operador</label>
+				<help></help>
+				<helper type="combo" xml="HLPpersonal_ope.xml" dir="/help_local" empty="true"/>	
+			</field>
+<!--			<field id="openom" tabla="FSMOPERA">
+				<label>Nombre</label>
+				<help></help>
+				<tipo>string</tipo>
+			</field> -->
+			<field id="nrocha">
+				<label>Num.Fabric</label>
+				<tipo>integer</tipo>
+				<help>Nro de Fabricacion</help>
+			</field>
+			<field id="desde" local="true" noshow="true">
+			</field>
+			<field id="hasta" local="true" noshow="true">
+			</field>
+			
+			<field id="movfec">
+				<label>Fecha Remito</label>
+				<help>Fecha Remito</help>
+				<tipo>date</tipo>
+				<condicion operador="&gt;=">'[__desde__]' and movfec &lt;= '[__hasta__]'</condicion>
+			</field>
+			                
+			        
+			<field id="siscod" oculto="true">
+				<label>Cod.Sistema</label>
+				<help></help>
+				<condicion operador="=">'01'</condicion>
+			</field>
+			<field id="movref">
+				<label>Referencia</label>
+				<help></help>
+				<format>%10s</format>
+			</field>                <!--
+			<field id="hora">
+			    <expression>TIME_TO_SEC(CONCAT(movfec, ' ', CONVERT(REPLACE(LEFT(movref, 8), ":", ""), TIME)))</expression>
+			</field>       
+			<field id="hora2" _noshow="true">
+			    <expression>RPAD(LEFT(TIME_TO_SEC(CONCAT(movfec, ' ', CONVERT(REPLACE(LEFT(movref, 8), ":", ""), TIME))), 8), 10, 0)</expression>
+			</field>                      -->
+			<field id="artcod">
+				<label>Articulo</label>
+				<help>Codigo de Articulo.</help>
+			</field>
+			<field id="artdes" tabla="STKINSUM">
+				<label>Desc</label>
+				<tipo>varchar</tipo>
+			</field>    
+			
+			                               <!--
+			<group>
+			    <field id="hora2" />
+			</group>			   -->
+		</table>
+
+		<join tipo="left">
+			<table id="STKINSUM">
+				<field id="artcod" oculto="true">
+					<condicion operador="=">STKINMOV.artcod</condicion>
+				</field>
+				<field id="siscod" oculto="true">
+					<condicion operador="=">STKINMOV.siscod</condicion>
+				</field>
+
+			</table>
+		</join>		
+	</form>
+</histrix>

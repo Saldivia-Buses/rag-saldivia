@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF8"?>
+<histrix tipo="abm-mini" >
+  <titulo>Embalajes</titulo>
+  <obs/>
+  <form>
+    <table id="STK_ARTICULO_PACK">
+      <title>Embalajes</title>
+      
+      <field id="standardpack_id">
+	    <helper type="combo" id="STK_STANDARD_PACK">
+		<field id="id_standardpack" />
+		<field id="descripcion_standardpack" />
+	    </helper>
+      </field>
+      <field id="descripcion_standardpack">
+	<expression>descripcion_standardpack</expression>
+         <label>Descripción</label>
+      </field>
+      
+      <field id="piezas_pack">
+         <label>Lote</label>
+      </field>
+    
+      <field id="stkarticulo_id" oculto="true">
+      </field>
+
+    </table>
+    <join>
+	<table id="STK_STANDARD_PACK">
+	    <field id="id_standardpack">
+		<condicion operador="=">standardpack_id</condicion>
+	    </field>
+	</table>
+    </join>
+  </form>
+</histrix>

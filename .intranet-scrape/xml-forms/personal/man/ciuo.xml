@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="crud">
+	<title>Puestos de Trabajo</title>
+	<form detalle="ciuo_articulos.xml" inline="true">
+		<table id="CIUO" label="Secciones">
+			<field id="idPuesto">
+				<label>Cod</label>
+				<help>Codigo</help>
+				<detalle>idPuesto</detalle>
+			</field>
+			<field id="nombre" arbol="padre" >
+				<label>Puesto</label>
+				<help>Nombre del Puesto</help>
+				<tipo>varchar</tipo>
+			</field>
+<!--
+			<field id="articulos" local="true" showObjTabla="true">
+				<label>Artículos</label>
+				<helper type="object" xml="ciuo_articulos.xml">
+					<parameter source="idPuesto" target="idPuesto" operator="="/>
+				</helper>
+			</field>
+-->	
+			<order>
+				<field id="idPuesto"></field>
+			</order>
+		</table>
+	</form>
+</histrix>

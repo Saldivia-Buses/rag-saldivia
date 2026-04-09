@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" _autoupdate="180" path="../files/archives/nfsAsterisk" limit="20" _paginar="40">
+    <title>CONSULTA DE LLAMADAS</title>
+    <consulta>
+        <table id="ASTERIX_CDR">
+            <title>Llamadas</title>
+      
+            <field id="uniqueid" oculto="true" >
+        	<label>id</label>
+            </field>
+            <field id="calldate" noshow="true" tipoOrden="DESC">
+            </field>
+            
+            <field id="fecha">
+        	<expresion>date(calldate)</expresion>
+                <label>Fecha</label>
+                <tipo>date</tipo>
+            </field>
+            <field id="hora" style="padding:0px 5px;">
+        	<expresion>date_format( calldate, '%H:%i:%s' )</expresion>
+                <label>hora</label>
+                <tipo>time</tipo>
+            </field>
+            
+            <field id="tipo" noshow="true" local="true">
+                <options>
+                    <option valor="">Todos</option>
+                    <option valor="entrantes">Entrantes</option>
+                    <option valor="salientes">Salientes</option>
+                </options>
+            </field>
+
+	    <field id="src" noshow="true">
+                <label>Orig</label>
+            </field>            
+            <field id="newsrc" >
+        	<expresion>@newsrc:=(case when src != '' then src else (substring(channel,5,3)) end)</expresion>
+                <label>Origen</label>
+            </field>
+
+            <field id="telefonos" noshow="true">
+        	<expresion having="false">CONCAT(src,dst)</expresion>
+        	<tipo>integer</tipo>
+            </field>
+            <field id="dst" >
+                <label>Destino</label>
+		<condicion operador="!=">998 and dst != 999</condicion>
+            </field>
+
+
+
+
+            <field id="disposition" _noshow="true">
+        	<label>Estado</label>
+            </field>
+
+            
+            <field id="duration" suma="true">
+        	<expresion>sec_to_time(duration)</expresion>
+                <label>Tiempo </label>
+                <tipo>time</tipo>
+            </field>
+      
+	    <field id="nroNuevo" noshow="true" local="true">
+		<if exp="'srcNom' == ''">
+			<true>"src"</true>
+			<false>"dst"</false>
+		</if>
+
+	    </field>
+			
+
+	   <field id="addPhone"  linkint="tel_add_phone.xml" linkWidth="400px" linkHeight="250px" _linkReposition="true" linkdes="Telefóno" local="true">
+                <label>+</label>
+	        <if exp="trim('DstNom') == '' or trim('srcNom') == ''">
+                    <true><![CDATA['<img Src="../img/list-add.png">']]></true>
+                    <false>''</false>
+                </if>
+                <paring destino="Telefono">nroNuevo</paring>
+
+            </field>
+
+                  
+            <order>
+                <field id="calldate"></field>
+            </order>
+      
+        </table>
+    </consulta>
+</histrix>

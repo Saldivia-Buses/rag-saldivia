@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm">
+	<title>TRANSFERENCIAS</title>
+	<obs/>
+	<form >
+		<table id="BCSMOVIM" label="MOVIMIENTOS">
+			<field id="siscod" id_temp="sisbcs"></field>
+			<field id="bcscta" id_temp="bcscta"></field>
+			<field id="bcsfec" id_temp="bcsfec"></field>
+			<field id="bcsfev" id_temp="bcsfev"></field>
+			<field id="bcsmov" id_temp="bcsmov"></field>
+			<field id="bcsnro" id_temp="movnroOP"></field>
+			<field id="bcsimp" id_temp="bcsimp"></field>
+<!--			<field id="nropag" id_temp="movnroOP"></field>	-->
+
+	metodo nuevo para numerar 
+			<field id="nropag" >
+				<valor>[__movnroOP__]</valor>
+			</field>
+	
+			<field id="regmin" >
+				<valor>_NRO_MIN</valor>
+			</field> 
+			<field id="bcsref__1" id_temp="referencia"></field>
+		</table>
+	</form>
+</histrix>

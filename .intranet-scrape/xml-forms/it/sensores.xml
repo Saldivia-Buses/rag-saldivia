@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm">
+  <title>Sensores</title>
+  <obs></obs>
+  <form>
+    <table id="SENSORES_COMBUSTIBLE" label="Sensores de Combustlible" limit="1">
+      
+ 	   
+      
+      
+ 	   <field id="mod_sensor">
+       <label>Modelo Sensor</label>
+      
+       </field>
+
+      
+ 	   <field id="tipo_sensor">
+       <label>Tipo Sensor</label>
+       </field>
+      
+     
+
+
+          </table>
+  </form>
+</histrix>  

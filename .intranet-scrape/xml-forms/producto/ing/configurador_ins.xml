@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert">
+  <obs/>
+  <form >
+    <table id="PEDCOTIZ" label="Ficha de Ventas">
+      <field id="id" id_temp="id">
+      </field>
+      <field id="revfec" id_temp="revfec">
+      </field>
+      <field id="pedfec" id_temp="revfec">
+      </field>
+
+      <field id="nrocha" id_temp="nrocha">
+      </field>
+      <field id="homologacion_id" id_temp="homologacion_id">
+      </field> 
+      
+      <field id="cotizacion_id" id_temp="cotizacion_id">
+      </field>
+
+      <field id="ctacod"  id_temp="ctacod">
+      </field>
+      <field id="login"  _id_temp="login">
+        <valor eval="true">$_SESSION['login']</valor>
+
+      </field>
+
+      <field id="idconta"  id_temp="idconta">
+      </field>
+      
+<!--
+      <field id="tipserv"  id_temp="tipserv">
+      </field>
+
+      <field id="cantasi" id_temp="cantasi">
+      </field>
+      <field id="ninterno" id_temp="ninterno" >
+      </field>
+-->
+
+    </table>
+  </form>
+</histrix>

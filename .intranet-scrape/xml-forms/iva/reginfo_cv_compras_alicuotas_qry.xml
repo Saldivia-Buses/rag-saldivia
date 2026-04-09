@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+	<title>REGINFO_CV_COMPRAS_ALICUOTAS</title>
+	<obs/>
+	<form >
+		<table id="REG_MOVIMIENTOS" label="REGINFO_CV_COMPRAS_ALICUOTAS">
+			<filters auto="true">
+				<field id="pto_vta_bco">
+					<label>Pto.Vta Banco</label>
+					<valor>1</valor>
+				</field>
+			</filters>
+			<fieldGroup id="DEBUG" noshow="true" local="true" print="false" export="false">
+				<field id="anio" />
+				<field id="mes" />
+				<field id="fecha_desde" />
+				<field id="fecha_hasta" />
+				<field id="archivo" />
+				<field id="titulo">
+					<setvar>titulo</setvar>
+					<expression>CONCAT('[__anio__]', '[__mes__]','_[__archivo__]')</expression>
+				</field>
+				<field id="tip_fecha" />
+			</fieldGroup>
+			<fieldGroup id="tests" export="false" noshow="true">
+				<field id="_ORDEN" local="true" noshow="false" style="color:blue;font-weight:bold;">
+				</field>
+			</fieldGroup>
+			<fieldGroup id="table_fields" export="false" noshow="true">
+				<field id="id_regmovim" noshow="true" esClave="true"/>
+				<field id="fecha_movimiento">
+				</field>
+				<field id="tipo_concepto" tabla="REG_CONCEPTOS">
+					<condicion operador="=">1</condicion>
+				</field>
+				<field id="pto_vta_bco" local="true">
+        			<label>Pto.Vta Banco</label>
+				</field>
+				<field id="importe_iva" noshow="true" print="false">
+					<condicion operador="!=">0 or importe_iva IS NOT NULL</condicion>
+				</field>
+				<field id="filtro_fecha" noshow="true" print="false">
+    					<expression>IF('[__tip_fecha__]' = '0' OR '[__tip_fecha__]' = '', reg_fecha, fecha_movimiento)</expression>
+					<condicion operador="&gt;=">'[__fecha_desde__]' and filtro_fecha &lt;= '[__fecha_hasta__]'</condicion>
+					<tipo>date</tipo>
+				</field>
+			</fieldGroup>
+			<fieldGroup id="exportables">
+				<field id="regconcepto_afip" tabla="REG_NUMERADORES">
+					<label>Tipo comp.</label>
+					<expression>LPAD(IFNULL(REG_NUMERADORES.regconcepto_afip, 1), 3, 0)</expression>
+				</field>
+				<field id="puesto_movimiento">
+					<label>P.Vta.</label>
+					<expression>LPAD(IF(REG_MOVIMIENTOS.puesto_movimiento = 0, '[__pto_vta_bco__]', REG_MOVIMIENTOS.puesto_movimiento), 5, 0)</expression>
+				</field>
+				<field id="nro_movimiento">
+					<label>Nro Comprobant</label>
+					<expression>LPAD(REG_MOVIMIENTOS.nro_movimiento, 20, 0)</expression>
+				</field>
+				<field id="tipo_documento_id">
+				    <label>Cod documento</label>
+				    <expression>IF(GEN_TIPOS_DOCUMENTOS.codigo_afip != '', GEN_TIPOS_DOCUMENTOS.codigo_afip, '80')</expression>
+				</field>
+				<field id="cuit_cuenta" tabla="REG_CUENTA" _getStyle="style_cuit">
+				    <label>CUIT</label>
+				    <expression>LPAD(REPLACE(IF(IF(cuit_cuenta != '',cuit_cuenta, nro_documento) != 0,IF(cuit_cuenta != '',cuit_cuenta, nro_documento), REG_MOVIMIENTOS.cuit_movimiento), '-', ''), 20, 0)
+				    </expression>
+				    <tipo>integer</tipo>
+    				</field>
+				<field id="neto_detalle" suma="true">
+					<expression>LPAD(round(SUM(REG_DETALLES.neto_detalle) * 100, 0), 15, '0')</expression>
+					<label>Neto</label>
+					<tipo>integer</tipo>
+				</field>
+				<field id="alicuota">
+					<label>Alic</label>
+					<expression>
+						 CASE REG_DETALLES.alicuota_iva
+						     WHEN 0 THEN '0003'
+						     WHEN 10.5 THEN '0004'
+						     WHEN 21.00 THEN '0005'
+						     WHEN 27.00 THEN '0006'
+						     WHEN 5.00 THEN '0007'
+						     WHEN 2.50 THEN '0008'
+						 END
+					</expression>
+				</field>
+				<field id="iva_detalle" suma="true">
+					<expression>LPAD(round(SUM(REG_DETALLES.iva_detalle) * 100, 0), 15, '0')</expression>
+					<label>Imp. Liq.</label>
+					<tipo>integer</tipo>
+					<condicion operador="!=">0</condicion>
+				</field>
+			</fieldGroup>
+
+			<fieldGroup id="control" export="false">
+			    <field id="neto_control" suma="true">
+					<expression>sum(case when imputacion_concepto = 1 then REG_DETALLES.neto_detalle else (REG_DETALLES.neto_detalle * -1) end)</expression>
+					<label>Control Neto</label>
+					<tipo>integer</tipo>
+			    </field>
+
+			    <field id="iva_control" suma="true">
+					<expression>sum(case when imputacion_concepto = 1 then REG_DETALLES.iva_detalle else (REG_DETALLES.iva_detalle * -1) end) </expression>
+					<label>Control IVA</label>
+					<tipo>integer</tipo>
+					<condicion operador="!=">0</condicion>
+			    </field>
+			</fieldGroup>
+
+			<group>
+				<field id="id_regmovim" />
+				<field id="alicuota" />
+			</group>
+		</table>
+		<join>
+			<table id="GEN_SUBSISTEMAS">
+				<field id="id_subsistema">
+					<condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion>
+				</field>
+				<field id="iva_subsistema">
+					<condicion operador="=">2</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="REG_DETALLES">
+				<field id="regmovim_id">
+					<condicion operador="=">REG_MOVIMIENTOS.id_regmovim</condicion>
+				</field>
+			</table>
+		</join>
+		<join>
+			<table id="REG_CONCEPTOS">
+				<field id="id_concepto">
+					<condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="REG_CUENTA">
+				<field id="id_regcuenta">
+					<condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="REG_NUMERADORES">
+				<field id="subsistema_id">
+					<condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion>
+				</field>
+				<field id="regconcepto_id">
+					<condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+				</field>
+				<field id="letra">
+					<condicion operador="=">REG_MOVIMIENTOS.letra_movimiento</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+		    	<table id="GEN_TIPOS_DOCUMENTOS">
+				<field id="id_tipo_documento">
+			    		<condicion operador="=">REG_CUENTA.tipo_documento_id</condicion>
+				</field>
+			</table>
+		</join>
+	</form>
+</histrix>

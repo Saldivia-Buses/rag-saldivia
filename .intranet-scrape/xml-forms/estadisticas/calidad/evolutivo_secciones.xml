@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="chart">
+	<title>Cantidad</title>
+	<obs></obs>
+	<form >
+		<table id="PROD_CONTROL_MOVIM" >
+		    <title>OBSERVACIONES POR SECCION</title>
+		   <grafico id="calidad">
+			    <options><![CDATA[ {'plotOptions': {'line': {'dataLabels' : {'enabled' : true}}, 'column':{'dataLabels' : {'enabled' : true}} }} ]]></options>
+			   <ancho>400</ancho>
+			   <tipo>L</tipo>
+               <title>Total observaciones</title>
+			   <etiquetas>mesano</etiquetas>
+			   <serie type="L">cantidad</serie>
+			   <serie type="L">coches</serie>
+			   <serie type="C">cantidadxcoche</serie>
+			   <subtitulo></subtitulo>
+		   </grafico>
+		    <filters>
+			    <field id="fecha_control">
+				    <label>Desde</label>
+				    <valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m" ,strtotime('-12 month')) , 1, date("Y") -  1 ))</valor>
+				    <operador>&gt;=</operador>
+			    </field>
+
+			    <field id="fecha_control">
+                    <label>Hasta</label>
+				    <valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m" ,strtotime('-0 month')) , 1, date("Y") ) - 1)</valor>
+				    <operador>&lt;=</operador>
+			    </field>
+
+                <field id="seccion_id" >
+                	<label>Seccion</label>
+                    <operador>=</operador>
+                </field>                  
+		    </filters>
+
+            <field id="year" oculto="true">
+                <expression>year(fecha_control)</expression>
+            </field>
+
+			<field id="fecha_control"></field>
+
+			<field id="mes">
+				<expression>month(fecha_control)</expression>
+				<label>Mes</label>
+				<options>
+					<option valor="1">Ene</option>
+					<option valor="2">Feb</option>
+					<option valor="3">Mar</option>
+					<option valor="4">Abr</option>
+					<option valor="5">May</option>
+					<option valor="6">Jun</option>
+					<option valor="7">Jul</option>
+					<option valor="8">Ago</option>
+					<option valor="9">Sep</option>
+					<option valor="10">Oct</option>
+					<option valor="11">Nov</option>
+					<option valor="12">Dic</option>
+
+				</options>
+   				<tipo>varchar</tipo>
+			</field>
+
+			<field id="mesano">
+			    <expression>UPPER(CONCAT((CASE MONTH(fecha_control) 
+				WHEN 1 THEN 'Ene' WHEN 2 THEN 'Feb' WHEN 3 THEN 'Mar' WHEN 4 THEN 'Abr' WHEN 5 THEN 'May' WHEN 6 THEN 'Jun' WHEN 7 THEN 'Jul'
+				WHEN 8 THEN 'Ago' WHEN 9 THEN 'Sep' WHEN 10 THEN 'Oct' WHEN 11 THEN 'Nov' WHEN 12 THEN 'Dic' END),RIGHT(year(fecha_control), 2)))
+			    </expression>
+			</field>
+			
+			<field id="cantidad" >
+			      <expression><![CDATA[sum((case when no_conforme = 1 then 1 else 0 end))]]></expression>
+				<label>Observaciones</label>
+				<tipo>numeric</tipo>
+			</field>
+
+			<field id="coches" >
+			      <expression><![CDATA[count(distinct nrofab_id)]]></expression>
+				<label>Coches</label>
+                <tipo>numeric</tipo>
+			</field>
+<!--
+			<field id="coches">
+                <expression><![CDATA[(select count(*) from PEDCOTIZ where
+                     		month(PEDCOTIZ.terminacion) = month(fecha_control) and
+                            year(PEDCOTIZ.terminacion) = year(fecha_control))]]></expression>
+				<label>Coches</label>
+                <tipo>numeric</tipo>
+			</field>
+-->
+			<field id="cantidadxcoche" local="true">
+				<if exp="true">
+					<true>round((cantidad/coches),2)</true>
+					<false>round((cantidad/coches),2)</false>
+				</if>
+				<label>Promedio x Coche</label>
+				<tipo>numeric</tipo>
+			</field>
+
+            <field id="seccion_id" tabla="PROD_CONTROLES" >
+        	    <helper type="combo" id="MOMENTO" empty="true" >  
+	        		<field id="idMomento" />
+	        		<field id="descripcion" />
+	        		<field id="linea_id">
+	        			<condicion operador="=">1</condicion>
+	        		</field>
+	        		<field id="graficar">
+	        			<condicion operador="=">1</condicion>
+	        		</field>
+	        		<field id="abrev">
+	        			<condicion operador="!=">'Entr'</condicion>
+	        		</field>
+        	    </helper>
+				<!--<condicion operador="!=">6</condicion>-->
+            </field>
+
+<!--
+		        <field id="no_conforme">
+				<condicion operador="=">1</condicion>
+		        </field>
+-->
+			<field id="graficar" tabla="MOMENTO" noshow="true">
+				<condicion operador="=">1</condicion>
+			</field>
+
+			<group>
+            		    <field id="year"></field>
+			    <field id="mes"></field>
+			</group>
+
+            <order>
+                <field id="fecha_control"></field>
+			</order>
+
+	</table>
+
+	<join tipo="left">
+        <table id="PROD_CONTROLES">
+            <field id="id_prodcontrol">
+                <condicion operador="=">prodcontrol_id</condicion>
+            </field>
+        </table>
+    </join>
+	<join tipo="left">
+        <table id="MOMENTO">
+            <field id="idMomento">
+                <condicion operador="=">PROD_CONTROLES.seccion_id</condicion>
+            </field>
+            <field id="abrev">
+                <condicion operador="!=">'Entr'</condicion>
+            </field>
+        </table>
+    </join>
+	
+	</form>
+</histrix>

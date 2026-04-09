@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm">
+    <title>Formas de Cobro/Pago por concepto</title>
+    <obs></obs>
+    <form >
+        <table id="CAJ_CONCEPTO_FORMAS" label="Pago por concepto">
+            <filters>
+                <field id="cajconcepto_id">
+                    <label>Concepto</label>
+                    <operador>=</operador>
+                </field>
+            </filters>
+            
+            <field id="id_cajconforma" autoinc="true" noshow="true">
+                <label>Código </label>
+            </field>
+
+            <field id="cajconcepto_id">
+                <label>Concepto</label>
+                <tabla_ex id="CAJ_CONCEPTOS" vacio="true">
+                    <field id="id_cajconcepto"/>
+                    <field id="descripcion_concepto"/>
+                    <field id="imputacion_concepto" />
+                    <field id="ejecuta_concepto">
+                    	<condicion operador="!=">''</condicion>
+                    </field>
+                </tabla_ex>
+            </field>
+
+
+		     <field id="imputacion_concepto" tabla="CAJ_CONCEPTOS" colstyle="Display:none;" noshow="true">
+		           <label>tipo concepto</label>
+		             <actualiza>
+		                <field destino="tipo_forma" id="cajformapago_id" />
+		            </actualiza>
+		     </field>
+
+            <field id="tipo_forma" tabla="CAJ_FORMAS_PAGO" deshabilitado="true">
+                <label>Tipo</label>
+                <options>
+                    <option valor=""></option>
+                    <option valor="0">COBRO</option>
+                    <option valor="1">PAGO</option>
+                </options>
+            </field>
+         
+            <field id="cajformapago_id" colstyle="Display:none;">
+                <label>Forma Pago</label>
+                <tabla_ex id="CAJ_FORMAS_PAGO" vacio="true">
+                    <field id="id_cajformapago"/>
+                    <field id="descripcion_forma"/>
+                    <field id="tipo_forma">
+                        <condicion operador="=">'[__imputacion_concepto__]'</condicion>
+                    </field>
+                </tabla_ex>
+            </field>
+
+            <field id="descripcion_forma" tabla="CAJ_FORMAS_PAGO" Formstyle="Display:none;">
+                <label>descripcion </label>
+            </field>
+
+
+        </table>
+        <join>
+            <table id="CAJ_CONCEPTOS">
+                <field id="id_cajconcepto">
+                    <condicion operador="=">CAJ_CONCEPTO_FORMAS.cajconcepto_id</condicion>
+                </field>
+            </table>
+        </join>
+        <join>
+            <table id="CAJ_FORMAS_PAGO">
+                <field id="id_cajformapago">
+                    <condicion operador="=">CAJ_CONCEPTO_FORMAS.cajformapago_id</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix>  

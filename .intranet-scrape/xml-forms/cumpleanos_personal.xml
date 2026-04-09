@@ -1,0 +1,166 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" path="/fotos/personal/">
+  <title>CUMPLEAÑOS DE CLIENTES</title>
+  <obs/>
+  <form>
+    <table id="PERSONAL" label="Cumpleaños de Personal">
+      <filters>
+      
+        <field id="dif" deshabilitado="false">
+          <label>Fecha Desde</label>
+          <operador>&gt;=</operador>
+          <valor>today</valor>
+        </field>
+        <field id="dif" deshabilitado="false">
+          <label modpos="nobr">Fecha Hasta</label>
+          <operador>&lt;=</operador>
+          <valor>today</valor>
+        </field>
+
+      <!--
+        <field id="dia" deshabilitado="false" >
+          <label>Dia</label>
+          <operador>=</operador>
+          <valor eval="true">date('d')</valor>        
+        </field>        
+        <field id="mes" deshabilitado="false">
+          <label modpos="nobr">mes</label>
+          <operador>=</operador>  
+          <valor eval="true">date('m')</valor>    
+        </field>
+        -->   
+      </filters>
+
+    <!--
+      <field id="baja" oculto="true">
+        <condicion operador="=">0</condicion>
+      </field>
+-->
+     
+        <field id="fotos" local="true" imageWidth="60" path="IdPersona">
+            <expression>CONCAT('/fotos/personal/',IdPersona,'/')  </expression>
+            <label  posX="5" posY="+2" _formStyle="display:none;">Foto</label>
+            <tipo>dir</tipo>
+            <size>50</size>
+      </field>
+
+      <field id="apellido">
+      	<label>Apellido</label>
+      </field>
+      <field id="nombre">
+      <label>Nombre</label>
+      </field>
+
+      <field id="diahoy" noshow="true">
+	       <expression>day(now())</expression>
+      </field>
+      <field id="meshoy" noshow="true">
+	       <expression>left(monthname(now()), 3)</expression>
+      </field>	
+      <!--
+      <field id="fecha_nacimiento" >
+        <label>Fecha de Nacimiento</label>
+        <tipo>date</tipo>
+      </field>
+      
+    -->
+
+      <field id="nacimiento" >
+        <label>Cumpleaños</label> 
+        <tipo>date</tipo>
+        <condicion operador="!=">'0000-00-00'</condicion>
+      </field>
+
+      <field id="dif" noshow="true">
+            <label>Cumplea..os</label>
+            <expression having="false">case when fechaEgreso = '0000-00-00' then STR_TO_DATE(concat(day(nacimiento),',', MONTH(nacimiento),',', YEAR(NOW())), '%d,%m,%Y') end</expression>
+            <tipo>date</tipo>
+        </field>
+
+      <field id="dia" deshabilitado="false" noshow="true">
+        <expression>DAY(nacimiento)</expression>
+        <helper type="combo">
+          <option value=""></option>
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+          <option value="6">6</option>
+          <option value="7">7</option>
+          <option value="8">8</option>
+          <option value="9">9</option>
+          <option value="10">10</option>
+          <option value="11">11</option>
+          <option value="12">12</option>
+          <option value="13">13</option>
+          <option value="14">14</option>
+          <option value="15">15</option>
+          <option value="16">16</option>
+          <option value="17">17</option>
+          <option value="18">18</option>
+          <option value="19">19</option>
+          <option value="20">20</option>
+          <option value="21">21</option>
+          <option value="22">22</option>
+          <option value="23">23</option>
+          <option value="24">24</option>
+          <option value="25">25</option>
+          <option value="26">26</option>
+          <option value="27">27</option>
+          <option value="28">28</option>
+          <option value="29">29</option>
+          <option value="30">30</option>
+          <option value="31">31</option>
+        </helper>
+      </field>
+
+      <field id="mes" deshabilitado="false" noshow="true">
+        <expression>MONTH(nacimiento)</expression>
+        <helper type="combo">
+          <option value=""></option>
+          <option value="1">Ene</option>
+          <option value="2">Feb</option>
+          <option value="3">Mar</option>
+          <option value="4">Abr</option>
+          <option value="5">May</option>
+          <option value="6">Jun</option>
+          <option value="7">Jul</option>
+          <option value="8">Ago</option>
+          <option value="9">Sep</option>
+          <option value="10">Oct</option>
+          <option value="11">Nov</option>
+          <option value="12">Dic</option>
+        </helper>
+      </field>
+      <!--
+
+      <field id="mail_msg" local="true" oculto="true" email="body" colstyle="display:none;">        
+          <expression><![CDATA[CONCAT( 'Compartimos muchas cosas. Pero hoy queremos compartir. </br> ¡La alegría por tu cumpleaños! </br></br> ¡Que los cumplas muy feliz! </br></br> Carrocerías Saldivia'
+                )]]>
+          </expression>     
+      </field>
+
+      <field id="mail_to" local="true" email="to" print="false" oculto="true" colstyle="display:none;">
+        <expression>CCTCONTA.mail</expression>
+      </field>
+
+      <field id="mail_subj" local="true" email="subject" print="false" oculto="true" colstyle="display:none;">
+        <expression>CONCAT('FELIZ CUMPLEAÑOS, ', CCTCONTA.nombre)</expression>
+      </field>
+
+      <field id="enviomail" local="true" >
+          <label>Mail</label>
+          <helper type="link" xml="mails_send.xml" dir="/histrix/mensajeria">
+            <parameter source="mail_msg"  target="mensaje" />
+            <parameter source="mail_to"   target="para" />
+            <parameter source="mail_subj" target="subject" />
+          </helper>
+          <expression><![CDATA[IFNULL(('<img src="../img/mail_generic.png"/>'), '')]]></expression>
+      </field>
+-->
+    </table>
+  
+   
+  </form>
+</histrix>

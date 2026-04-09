@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm-mini" subtipo="vertical">
+<title>PROPIEDADES</title>
+<obs></obs>
+<form>
+    <table id="PRD_PROPIEDADES">
+        <title>Propiedades</title>
+
+        <field id="id_propiedad" autoinc="true" noshow="true">
+            <label>Codigo</label>
+        </field>
+<!--    Reservado para dividir la orden de fabricacion en secciones
+
+        <field id="prdseccion_id">
+            <label>Sección</label>
+            <help>Sección de la ficha</help>
+        </field>
+        -->
+        <field id="campoficha_id" esClave="true" oculto="true">
+            <label>Nombre del Campo</label>
+            <help>Nombre del campo de la ficha</help>
+            <tipo>varchar</tipo>
+        </field>
+        <field id="codigo_campo">
+            <label>Codigo del Campo</label>
+            <help>Codigo del campo de la propiedad</help>
+        </field>
+        <field id="valor_campo">
+            <label>Descripcion</label>
+            <help>Descripcion</help>
+        </field>
+        <field id="cantidad_campo">
+            <label>Cantidad</label>
+            <help>Cantidad</help>
+        </field>
+        <field id="accesorio_id">
+            <label>Codigo de adicional</label>
+            <help>Adicional vinculado</help>
+            <tipo>varchar</tipo>
+        </field>
+        <field id="cantidad_accesorio">
+            <label>Cantidad de adicionales</label>
+            <help>Cantidad de Adicionales</help>
+        </field>
+        <field id="plano_id">
+            <label>Codigo de Plano</label>
+            <help>Plano</help>
+        </field>
+        <order>
+            
+            <field id="nombre_campo" />
+
+        </order>
+    </table>
+</form>	   
+</histrix>

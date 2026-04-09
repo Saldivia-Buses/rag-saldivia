@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" path="fotos/articulos" imprime="false">
+    <title>Materia Prima</title>
+    <obs></obs>
+    <form >
+        <table id="STK_BOM" label="Materia prima">
+        
+            <field id="id_stkbom" autoinc="true" noshow="true" />
+
+            <field id="stkarticulo_id" local="true">
+            </field>
+          
+            <field id="bom_variacion_id" oculto="true">
+                <label>Variación</label>
+            </field>
+            
+            <field id="stkarticulopadre_id" oculto="true" />
+          <!--
+            <field id="codigo_barra" tabla="STK_ARTICULOS">
+            <label>Codigo de Barra</label>
+                <helper type="external" xml="stkarticulo_pos.xml" dir="/ayudas">
+                    <field id="wstklista_id" local="true" />
+                </helper>
+            </field>
+            -->
+
+            <field  id="stkarticulohijo_id" >
+                <label>Articulo</label>
+                <size>12</size>
+            </field>
+
+            <field  id="nombre_articulo2" >
+        	<expression>STK_ARTICULOS.nombre_articulo</expression>
+                <label>Nombre</label>
+                <help>Articulo Hijo</help>
+            </field>
+            
+            <field  id="ancho" tabla="ART">
+                <label>Ancho</label>
+                <help>Ancho</help>
+                <tipo>numeric</tipo>
+            </field>
+            <field  id="alto" tabla="ART">
+                <label>Alto</label>
+                <help>Alto</help>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field  id="cantidad" >
+                <label>Cantidad</label>
+                <help>Cantidad</help>
+
+            </field>
+            <field id="precio_costo" tabla="STK_ARTICULOS" noshow="true">
+                <label>Precio C</label>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="costo_automatico" suma="true" deshabilitado="true">
+                <label>Costo</label>
+                <tipo>numeric</tipo>
+            </field>
+        </table>
+        <join tipo="left">
+    	    <table id="STK_ARTICULOS">
+        	    <field id="id_stkarticulo">
+	        	    <condicion operador="=">stkarticulohijo_id</condicion>
+        	    </field>
+    	    </table>
+        </join>
+        <join tipo="left">
+            <table id="STK_ARTICULOS" as="ART">
+                <field id="id_stkarticulo">
+                    <condicion operador="=">'[__stkarticulo_id__]'</condicion>
+                </field>
+            </table>
+        </join>        
+    </form>
+</histrix>

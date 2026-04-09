@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="update">
+	<title>INSPECCION CALIDAD</title>
+	<obs></obs>
+	<form >
+		
+		<table id="STKINSPEC" label="REMITO DE RECEPCION" idCampoCond="inspeccionaactualiza">
+
+			<sql>update STKINSPEC set ocpnro_inspec = '[__ocpnro__]', id_recepcion_inspec = '[__ocprecib_ingmov2.xml__]'WHERE artcod = '[__artcod__]'</sql>
+
+			<field id="artcod" id_temp="artcod" local="true"/>
+
+			<field id="ocpnro" id_temp="ocpnro" local="true"/>
+
+		 	<field id="id_recepcion" lastId="ocprecib_ingmov2.xml" local="true"/>		 
+
+
+		</table>
+
+	</form>
+</histrix>

@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" _sololectura="true" _autoprint="true">
+    <title>Consulta de Objetivos</title>
+    <obs></obs>
+    <form >
+        
+        <table id="MRP_ORDEN_PRODUCCION" label="Consulta de Objetivos" >
+
+            <field id="minfecha" _oculto="true" noshow="true">
+        	<expresion  having="false">fecha_orden</expresion>
+        	<condicion operador="&gt;="></condicion>
+                  <operador>&gt;=</operador>
+
+            </field>
+            <field id="maxfecha" _oculto="true" noshow="true">
+        	<expresion having="false">fecha_orden</expresion>
+                  <operador>&lt;=</operador>
+        	<condicion operador="&lt;="></condicion>
+            </field>
+
+            <field id="mrpestado_id" oculto="true">
+        	<condicion operador="=">1</condicion>
+            </field>
+            <field id="id_mrporden" >
+		<label>Orden</label>
+            </field>
+            <field id="fecha_orden" >
+		<label>Fecha</label>
+            </field>
+
+            <field id="rhpersonal_id" noshow="true">
+            </field>
+            <field id="stkarticulo_id" tabla="MRP_ORDEN_DETALLE">
+                <label >Producto</label>
+            </field>
+            <field id="horas"  local="true">
+        	<label>Horas</label>
+        	<valor>7.5</valor>
+            </field>
+
+            <field id="minimo_ordendetalle"  tabla="MRP_ORDEN_DETALLE">
+                <label >Minimo</label>
+                <expresion>round(minimo_ordendetalle,0)</expresion>
+                <tipo>decimal</tipo>
+            </field>
+
+            <field id="objetivo_ordendetalle"  tabla="MRP_ORDEN_DETALLE">
+                <label >Objetivo</label>
+                <expresion>round(objetivo_ordendetalle,0)</expresion>
+                <tipo>decimal</tipo>
+            </field>
+
+            <field id="producido_ordendetalle" suma="true" tabla="MRP_ORDEN_DETALLE">
+                <label >Prod</label>
+                <expresion>round(producido_ordendetalle,0)</expresion>
+                <tipo>decimal</tipo>
+            </field>
+
+            <field id="porcentaje" >
+                <label >% Porcent</label>
+                
+                <expresion>@porcent:= round(100 / objetivo_ordendetalle * producido_ordendetalle  , 0 )</expresion>
+                <tipo>decimal</tipo>
+            </field>
+            <field id="porcenCalc" suma="true" noshow="true">
+                <label >% 2</label>
+                
+                <expresion>case when @porcent &gt;= 100 then round(@porcent / 10 ,2) else 0 end</expresion>
+                <tipo>decimal</tipo>
+            </field>
+            
+            <field id="cantidad" local="true" _noshow="true">
+        	
+            </field>
+                       
+            <field id="_ORDEN" local="true" noshow="true">
+        	
+            </field>
+
+            <field id="porcen_Calc" suma="true" local="true">
+                <label >% 3</label>
+		<if exp="true">
+		    <true>round(porcenCalc / cantidad , 2)</true>
+		    <false>0</false>
+		</if>                
+
+                <tipo>decimal</tipo>
+            </field>
+                                         
+            <field id="resta" suma="true">
+                <label >Desc</label>
+                
+                <expresion>case when @porcent &lt; 85 then 1 else 0 end</expresion>
+                <tipo>decimal</tipo>
+            </field>
+
+                                         <!--
+            <field id="cantxhora" >
+                <label >x hora</label>
+                <expresion>round(producido_ordendetalle / 7.5, 2)</expresion>
+                <tipo>numeric</tipo>
+            </field>
+            <field id="demora_justificada" noZero="true" style="text-align:center;">
+                <expresion>demora_justificada</expresion>
+                <label >Demora justificada</label>
+                <tipo>integer</tipo>
+            </field>
+            <field id="producidototal" >
+                  <label>Total</label>
+                  <expresion>@producido_total := round((case when demora_justificada > 0 then (producido_ordendetalle / 7.5) * demora_justificada  + producido_ordendetalle else producido_ordendetalle end ), 2)</expresion>
+                  <tipo>decimal</tipo>
+            </field>
+            <field id="excedente" suma="true">
+                  <label>execdente</label>
+                  <expresion>@excedente := round( (@producido_total - objetivo_ordendetalle)  / objetivo_ordendetalle , 3) * 100</expresion>
+                  <tipo>decimal</tipo>
+            </field>
+            -->
+<!--
+            <field id="cant">
+        	<label>Ordenes</label>
+        	<expresion>@dias := round((select count(*) FROM MRP_ORDEN_PRODUCCION as MRP where MRP.rhpersonal_id = MRP_ORDEN_PRODUCCION.rhpersonal_id and MRP.mrpestado_id = 1 ) ,0  )</expresion>
+            </field>
+   -->
+   
+   <!--
+            <field id="premio" suma="true">
+                <label >Premio</label>
+                <expresion><![CDATA[round((case 
+            				  when @producido_total < minimo_ordendetalle then -0.5 * ( 1 +  @excedente )
+                                           when @producido_total <= objetivo_ordendetalle then 0
+                                           else round( 0.5 * ( 1 + @excedente ) , 3) end) ,3)]]></expresion>
+                <tipo>decimal</tipo>
+            </field>
+       -->
+        </table>
+        <join tipo="left">
+    	    <table id="MRP_ORDEN_DETALLE">
+    	      <field id="mrporden_id">
+    	      <condicion operador="=">MRP_ORDEN_PRODUCCION.id_mrporden</condicion>
+    	      </field>
+    	    </table>
+        </join>
+    </form>
+</histrix>

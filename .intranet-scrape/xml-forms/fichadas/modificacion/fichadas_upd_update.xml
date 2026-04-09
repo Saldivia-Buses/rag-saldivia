@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="update" >
+    <title>Fichadas</title>
+    <obs/>
+    <form>
+        <table id="FICHADAS" label="Fichadas del Reloj" _styleTbody="height:300px;overflow-x:hidden;">
+            <field id="insertkey" id_temp="insertkey" esClave="true">
+            </field>
+            <field id="crc" id_temp="h_CRC"  esClave="false">
+            </field>
+            
+            <field id="hora" id_temp="h_nueva">
+            </field>
+        </table>
+    </form>
+</histrix>

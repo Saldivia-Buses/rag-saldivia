@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="update" _sqlhardcoded="true" >
+    <title/>
+    <obs/>
+    <form>
+        <table id="REG_MOVIMIENTOS" idCampoCond="autorizo">
+            <field id="id_regmovim"      id_temp="id_regmovim" esClave="true"/>
+            <field id="mar_movimiento" 	 id_temp="autorizo"/> -->
+        </table>
+    </form>
+</histrix>	

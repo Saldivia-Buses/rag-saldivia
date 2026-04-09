@@ -1,0 +1,370 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="ing" inserta="false" modifica="false">
+    <title>Cuenta Corriente</title>
+    <obs></obs>
+<!--        <form  detalle="cctmovim_comp_prov.xml"> -->
+    <form  _detalle="imputaciones.xml" inline="true">
+        <table id="CCTMOVIM" label="Movimientos" styleTbody="height:500px;">
+<!--	    <preconsultas>
+		<xmlfile id="ConCtaCte_prov_pre2.xml"/>
+	    </preconsultas>                            
+-->
+
+
+
+    
+      <movimientos >
+        <relacion id="fix_factura_cctmovim_ctdo_ingmov.xml"/>
+        <relacion id="fix_factura_cajmovim_ingmov.xml"/>
+
+      </movimientos>
+
+            <field id="siscod" oculto="true">
+                <label>Cod.</label>
+                <help>
+                </help>
+            </field>
+            <field id="ctacod">
+
+                <help>Codigo de Cuenta </help>
+                <ayuda_ex id="CCTCUENT">
+                    <field id="ctacod">
+                        <detalle>ctacod</detalle>
+                    </field>
+                    <field id="NOM">
+                        <expression having="false">CONCAT(ctafan, ' (',  ctanom,')')</expression>
+                        <label>Nombre</label>
+                        <detalle>ctanom2</detalle>
+
+                    </field>
+                    <field id="siscod" oculto="true">
+                        <condicion operador="=">'01'</condicion>
+                    </field>
+                    <field id="baja" oculto="true">
+                        <condicion operador="=">0</condicion>
+                    </field>
+
+                    <order>
+                        <field id="ctanom"></field>
+                    </order>
+                
+                    <filtra>ctacod</filtra>
+                </ayuda_ex>
+                <detalle>ctacod</detalle>
+                <preparam campo="ctacod" operador="=">true</preparam>
+                
+            </field>
+
+            <field id="ctanom2"  local="true" deshabilitado="true" noshow="true" />
+
+            <field id="ctanom"  deshabilitado="true" _noshow="true">
+		<expression>ctanom</expression>
+                <label modpos="nobr">Nombre</label>
+
+            </field>
+
+
+            <field id="concod" noshow="true">
+                <label>concod</label>
+                <detalle>concod</detalle>
+                <condicion operador="=">1</condicion>
+            </field>
+            <field id="movnpv">
+                <label>P.V.</label>
+                <help> Punto Venta</help>
+                <format>%04d</format>
+                <detalle>movnpv</detalle>
+            </field>
+            <field id="movnro"> <!-- linkint="factura_detalle.xml" linkdes="Ver Detalle del Comprobante">-->
+                <label>Numero</label>
+                <help> Numero Comprobante</help>
+                <format>%12d</format>
+                <detalle>movnro</detalle>
+            </field>
+
+            <field id="concepto">
+                <expression>condes</expression>
+                <label>Cod.Concepto</label>
+                <help>
+                </help>
+                <tipo>string</tipo>
+              <!--          <tabla_ex id="CCTCONCE">
+
+              <field id="concod"></field>
+              <field id="condes"></field>
+              </tabla_ex>
+              -->
+            </field>
+				<field id="regfec" noshow="true"/>
+				<field id="regmin" linkint="ctbregis2.xml" linkdir="ctb_old">
+					<label>Min</label>
+					<help>
+					</help>
+				<!--	<format>%010d</format> -->
+					<paring destino="regnro">movnro</paring>					
+					<paring destino="regmin">regmin</paring>
+					<paring destino="regfec">regfec</paring>
+					
+				</field>
+
+            <field deshabilitado="true" id="OP" local="true" linkint="cctmovim_OP.xml" linkdes="Orden de Pago" print="false">
+
+                <label >Ot.</label>
+                <if exp="concod == 4">
+                    <true>'Ver'</true>
+                    <false>''</false>
+                </if>
+                <help>Codigo de Cuenta</help>
+        
+                <paring destino="ctacod">ctacod</paring>
+                <paring destino="cajcta">ctacod</paring>
+                <paring destino="regmin">regmin</paring>
+                <paring destino="movnpv">movnpv</paring>
+                <paring destino="movnro">movnro</paring>
+                <paring destino="nrocom">movnro</paring>
+                <paring destino="carpag">movnro</paring>
+                <paring destino="nropag">movnro</paring>
+                <paring destino="referencia">movnro</paring>
+                <paring destino="carrec">movnro</paring>
+                <paring destino="cajnro">movnro</paring>
+                <paring destino="movfec">movfec</paring>
+                <paring destino="cajfec">movfec</paring>
+
+                            
+              
+                <tipo>varchar</tipo>
+            </field>
+
+           
+
+            <field id="fact" deshabilitado="true" local="true" _linkint="factura_detalle.xml" linkint="factura_facremit.xml" linkdes="Factura" print="false">
+                <label>Fact</label>
+                <if exp="concod == 1">
+                    <true>'verF'</true>
+                    <false>''</false>
+                </if>
+                <paring destino="ctacod">ctacod</paring>
+                <paring destino="movnpv">movnpv</paring>
+                <paring destino="movnro">movnro</paring>
+<!--                <paring destino="regfec">regfec</paring> -->
+               
+                <paring destino="siscod">siscod</paring>
+
+            </field>    
+             
+
+<!--            <field id="isedit" local="true" noshow="true">
+              <valor eval="true">$_SESSION['EDITOR']</valor>
+          </field>
+            <field id="EDITOR" local="true" noshow="true">
+          <if exp="'editor' = 'isedit'">
+              <true>true</true>
+              <false>false</false>
+          </if>
+          </field>
+    -->      
+          <!--
+            <field deshabilitado="true" id="mod" local="true" linkint="cctmovim_modif.xml" linkdes="Modif" print="false">
+    <attribute id="noshow">EDITOR</attribute>
+                <label >Modif</label>
+              <valor>Modif</valor>
+
+        
+                <paring destino="siscod">siscod</paring>
+        
+                <paring destino="ctacod">ctacod</paring>
+                <paring destino="cajcta">ctacod</paring>
+                <paring destino="movnpv">movnpv</paring>
+                <paring destino="movnro">movnro</paring>
+                <paring destino="concod">concod</paring>
+               
+                <paring destino="movfec">movfec</paring>
+
+                            
+              
+                <tipo>varchar</tipo>
+            </field>
+         -->
+            <field id="movfec" required="true">
+                <label>Fecha </label>
+                <help></help>
+            </field>
+            <field id="regfec" >
+                <label>Registración</label>
+                <help></help>
+                <tipo>date</tipo>
+            </field>
+
+
+	    <field id="fecha_desde" local="true" noshow="true" required="true">
+		<label>d</label>
+		<tipo>date</tipo>
+		<preparam campo="movfec" operador="&lt;">true</preparam>
+	    </field>
+
+            <field id="movvto" noshow="true">
+            <label>Venc. </label>
+            <help> </help>
+            </field>
+            
+            <field id="movimp" noshow="true" />
+            <field id="zoncod" noshow="true" />
+            <field id="movlet" noshow="true" />
+
+            <field id="Debe" suma="true" noZero="true">
+                <expression>round(movimp * (case when conimp = 1 then 1 else 0 end), 2)</expression>
+                <label>Debe</label>
+                <help>
+        
+                </help>
+                <tipo>numeric</tipo>
+              
+            </field>
+
+            <field id="Haber" suma="true"   noZero="true" link_int="cctmovim_comp.xml" linkdes="Ver Recibo">
+                <expression>round(movimp * (case when conimp = 2 then 1 else 0 end),2)</expression>
+                <label>Haber</label>
+                <help>
+                </help>
+            <!-- <paring destino="siscod">siscod</paring>              -->
+                <paring destino="movnro">movnro</paring>
+                <paring destino="carrec">movnro</paring>
+                <paring destino="cajnro">movnro</paring>
+                <paring destino="movinc">movnro</paring>
+                <paring destino="movnpv">movnpv</paring>
+                <paring destino="ctacod">ctacod</paring>
+                <paring destino="movfec">movfec</paring>
+                <paring destino="cajfec">movfec</paring>
+                <tipo>numeric</tipo>
+            </field>
+            <field id="opecla" noshow="true" />
+
+            <field id="movsal" suma="true" noZero="true">
+                <label>Saldo</label>
+                <help></help>
+                <tipo>numeric</tipo>
+            </field>
+            <field id="acumulado" suma="true" acumula="true" local="true">
+                <if exp="true">
+                    <true>Haber - Debe</true>
+                    <false>0</false>
+                </if>
+                <tipo>numeric</tipo>
+                <label>Acumulado</label>
+            </field>
+	    <field id="caj" >
+                <expression having="false">ifnull((select 2 from CTBREGIS where CTBREGIS.ctbcod = '111102' and CTBREGIS.regmin = CCTMOVIM.regmin and CTBREGIS.regnro = movnro and CTBREGIS.regfec = CCTMOVIM.regfec limit 1), 1)</expression>
+                <condicion operador="=">2</condicion>
+
+	    </field>            
+        <field id="buscop">
+            <expression having="false">ifnull((select 0 from CCTMOVIM AS CCT where CCT.movnro = CCTMOVIM.movnro and CCT.movnpv = CCTMOVIM.movnpv and CCT.ctacod = CCTMOVIM.ctacod and CCT.siscod = CCTMOVIM.siscod and  CCT.concod = 4 and CCT.movimp = CCTMOVIM.movimp LIMIT 1),1)</expression>
+            <condicion operador="=">1</condicion> 
+	    
+        </field>
+            
+            <filters>
+                <field id="ctacod">
+                    <label>Cod.</label>
+                    <help>Codigo de Cuenta </help>
+                    <ayuda_ex id="CCTCUENT">
+                        <field id="ctacod">
+                            <detalle>ctacod</detalle>
+                        </field>
+                        <field id="NOM">
+                            <expression having="false">CONCAT(ctafan, ' (',  ctanom,')')</expression>
+                            <label>Nombre</label>
+                            <detalle>ctanom</detalle>
+                        </field>
+                                                    <!--                    <field id="ctanom"></field> -->
+                        <field id="siscod" oculto="true">
+                            <condicion operador="=">'01'</condicion>
+                        </field>
+                        <field id="ctafan" noshow="true"></field>
+                        <order>
+                            <field id="ctafan"></field>
+                        </order>
+                        <field id="baja" oculto="true">
+                            <condicion operador="=">0</condicion>
+                        </field>
+                    </ayuda_ex>
+                    <detalle>ctacod</detalle>
+                    <operador>=</operador>
+                </field>
+                <field id="ctanom2" local="true" deshabilitado="true">
+                    <label modpos="nobr">Nombre </label>
+
+                </field>
+                <field id="movfec" copia="fecha_desde">
+                    <operador>>=</operador>
+                    <label>Desde Fecha</label>
+                    <valor>today</valor>
+
+                </field>
+	    <field id="fecha_desde" local="true" noshow="true" deshabilitado="true" required="true">
+		<label modpos="nobr">d</label>
+		<tipo>date</tipo>
+		<preparam campo="movfec" operador="&lt;">true</preparam>
+
+	    </field>
+                
+                <field id="movfec">
+                    <operador>&lt;=</operador>
+                    <label modpos="nobr">Hasta Fecha</label>
+                    <valor>today</valor>
+
+                </field>
+            <field id="regfec" required="true">
+                <label>Desde registracion</label>
+                <help></help>
+                <operador>&gt;=</operador>
+
+            </field>
+                
+            <field id="regfec" required="true">
+                <label modpos="nobr">Hasta registracion</label>
+                <help></help>
+                <operador>&lt;=</operador>
+
+            </field>
+
+                <field id="movimp">
+                    <operador>>=</operador>
+                    <label>Desde Importe</label>
+                </field>
+                <field id="movimp">
+                    <operador>&lt;=</operador>
+                    <label modpos="nobr">Hasta Importe</label>
+
+                </field>
+
+                
+            </filters>
+            <order>
+                <field id="ctanom"></field>
+                <field id="movfec"></field>
+            </order>
+        </table>
+
+        <join tipo="left">
+            <table id="CCTCONCE">
+                <field id="siscod" oculto="true">
+                    <label>cctcuent.siscod</label>
+                    <condicion operador="=">
+                  CCTMOVIM.siscod
+                    </condicion>
+                </field>
+
+                <field id="concod" oculto="true">
+                    <condicion operador="=">
+                  CCTMOVIM.concod
+                    </condicion>
+                </field>
+
+                <field id="condes" oculto="true">
+                </field>
+
+            </table>
+        </join>
+    </form>
+</histrix>

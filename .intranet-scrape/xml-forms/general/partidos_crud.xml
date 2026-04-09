@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm">
+  <title>Partidos</title>
+  <obs></obs>
+  <consulta>
+    <table id="GEN_PARTIDOS" label="Partidos">
+      <filters>
+        <field id="nombre_partido" >
+          <operador>like</operador>
+          <label>Partido</label>
+          <help>Ingrese que partido quiere buscar</help>
+        </field>
+      </filters>
+      <field id="id_partido" autoinc="true" noshow="true">
+        <label>Código </label>
+        <help>Código del partido</help>
+      </field>
+      <field id="nombre_partido">
+        <label>Nombre </label>
+        <help>Nombre del partido</help>
+        <size>15</size>
+      </field>
+      <field id="abreviacion_partido">
+        <label>Abrev.</label>
+        <help>Nombre abreviado del partido</help>
+      </field>
+      <field id="provincia_id">
+        <helper type="combo" xml="provincia_qry.xml" dir="/ayudas" />
+        <label>Provincia</label>
+        <help>Provincia a la que pertenece el partido</help>
+      </field>
+    </table>
+  </consulta>
+</histrix>  

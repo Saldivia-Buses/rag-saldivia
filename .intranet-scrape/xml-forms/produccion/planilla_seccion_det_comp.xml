@@ -1,0 +1,524 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" _autoupdate="120" sqlhardcoded="true" style="height:100%;" limit="[__limits__]" path="/fotos/coches">
+	<title>ENTREGAS POR SECCION</title>
+	<obs/>
+	<form >
+		<table id="TURNOSPRODUCCION" label="ENTREGAS POR SECCION"  showCantidad="false" >
+		    <fieldGroup thstyle="font-size:21px;">
+			<field id="puestos" local="true" noshow="true"></field>
+			<field id="mes"  local="true" noshow="true" />
+			<field id="year" local="true" noshow="true" />
+			<field id="coches" local="true" noshow="true"/>
+			<field id="limits" local="true" noshow="true">
+				<setvar>limit</setvar>
+			</field>
+
+			<field id="linea_id" noshow="true"></field>
+			<field id="idMomento" local="true" noshow="true"></field>
+			
+			
+
+			<field id="_ORDEN" local="true" noshow="true">
+				<label colstyle="font-weight:bold;font-size:21px;color:red;">Orden</label>
+				<tipo>integer</tipo>
+			</field>
+
+			<field id="ord" local="true" noZero="true" noshow="true">
+				<label colstyle="font-weight:bold;font-size:21px;color:red;">Ord.</label>
+				<if exp="_ORDEN > (coches - 4)">
+					<true>''</true>
+					<false>_ORDEN</false>
+				</if>
+
+				<tipo>integer</tipo>
+			</field>
+
+	
+			<field id="colores" local="true" clasefila="true" noshow="true" deshabilitado="true">
+				<label>Col</label>
+				<if exp="_ORDEN > (coches - 4)">
+				  <true>'resaltado'</true>
+				 <false>(_ORDEN % 2 != 0)?'grisado2':''</false>
+				</if>
+				
+			</field>
+
+			
+			<field id="numorden" local="true" noshow="true" noZero="false">
+			<label>order</label>
+			    <if exp="true">
+				<true>_ORDEN - 1 </true>
+				<false>0</false>
+			    </if>
+			</field>
+			
+
+
+	                <field id="fechaing2" _PDFanchofijo="true" oculto="true">
+		          <expression>fechaing</expression>
+	                </field>                  
+
+			<field id="primercoche" noshow="true">
+			    <expression having="false">(select  T.fechaing  from TURNOSPRODUCCION as T
+				    left join PEDCOTIZ as P on P.nrocha = T.nrofab
+				    where (P.terminacion = '0000-00-00' or ( month(P.terminacion) = [__mes__] and year(P.terminacion) = [__year__] )) and
+				    T.linea_id = [__linea_id__] and
+				    year(T.fechaing ) >= [__year__] - 1
+				    order by (T.fechaing ) limit 1)</expression>
+				    <condicion operador="&lt;=">fechaing</condicion>
+			</field>
+	</fieldGroup>
+	<fieldGroup>
+	    <if>return $_SESSION['login'] != 'plantaprfv';</if>
+<!--
+                                                            
+			<field id="fechaSalida" esClave="true"	>
+				<label modpos="nobr" colstyle="font-weight:bold;font-size:28px;">Sale</label>
+		            <expression sql="true">select fechaing  from TURNOSPRODUCCION as T left join PEDCOTIZ on PEDCOTIZ.nrocha = T.nrofab where 
+			        T.linea_id = [__linea_id__] and 
+			        fechaing >= '[__year__]-[__mes__]-01' order by fechaing  limit [__numorden__] , 1</expression>
+			        <tipo>date</tipo>
+			        <format>d/m</format>
+			</field> 
+            		<field id="hora_movimiento">
+            		    <label colstyle="font-weight:bold;font-size:28px;color:#888;">Hora</label>
+		            <expression sql="true">select CONCAT( TIME_FORMAT(hora_movimiento, '%H'), 'Hs')  from TURNOSPRODUCCION as T left join PEDCOTIZ on PEDCOTIZ.nrocha = T.nrofab where 
+			        T.linea_id = [__linea_id__] and
+			        fechaing >= '[__year__]-[__mes__]-01' 
+			        order by fechaing  limit [__numorden__] , 1</expression>
+            		    <tipo>varchar</tipo>
+            		</field>
+	</fieldGroup>
+	<fieldGroup>
+
+-->
+            <field id="ficha_id" noshow="true">
+                <expression>PEDCOTIZ.id</expression>
+            </field>
+	
+
+			<field id="nrofab" >
+                <expression>nrofab</expression>
+				<label modpos="nobr" colstyle="width:auto;color:#444;font-weight:bold;font-size:34px;">Nro.</label>
+				<help>Numero de Fabricacion</help>
+                <helper type="link" xml="ficha_producto1_qry.xml" dir="/producto" modal="true" title="Ficha Producto" width="90%" height="98%">
+                    <parameter source="ficha_id" target="producto_id"/>
+                    <parameter source="ficha_id" target="id"/>
+                    <parameter source="nrofab" target="nrofab"/>
+                </helper>				
+			</field>
+			<field id="siscli" local="true" oculto="true" >
+				<valor>'02'</valor>
+			</field>
+			
+                <field deshabilitado="true" id="ctacod" tabla="PEDCOTIZ" >
+                <expression>case when PEDCOTIZ.ctacod != '' then PEDCOTIZ.ctacod else TURNOSPRODUCCION.ctacod end</expression>
+                <label colstyle="font-weight:bold;font-size:24px;color:#888;" >Cliente</label>
+                <help>Codigo de Cuenta</help>
+                <tabla_ex id="CCTCUENT">
+                    <field id="ctacod"/>
+                    <field id="ctafan">
+                        <expression>LEFT(ctafan, 17)</expression>
+                    </field>
+                    <field id="siscod" oculto="true">
+                        <condicion operador="=">'02'</condicion>
+                    </field>
+                </tabla_ex>
+                <paring destino="ctacod">ctacod</paring>
+                <paring destino="siscod">siscli</paring>
+            </field>
+
+	    <field id="artcod_id" tabla="HOMOLOGMOD" noshow="true">
+	    </field>
+	    <field id="Detalle" colstyle="font-size:12px;font-weight:bold;width:7em;">
+		<attribute id="linkdes">nrofab</attribute>
+		<expression>case when artcod_id != '' then 'Composición' end</expression>
+		<label _style="font-weight:bold;width:7em;">Composición</label>
+		<helper xml="stkpieza_nested_qry.xml" dir="subconjuntos" type="link" modal="true" >
+		    <parameter target="idPadre" source="artcod_id" />
+		</helper>
+	    </field>
+
+            <field id="corpath" local="true" noshow="true">
+                <if exp="true">
+                    <true>'nrofab/corte'</true>
+                    <false>''</false>
+                </if>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="cortePint"  path="corpath" print="false" tabla="PEDCOTIZ" open="true" colstyle="width:auto;font-size:28px;" height="50">
+                <label>Corte</label>
+                <tipo>file</tipo>
+                <size>93</size>
+            </field>
+
+
+            <field id="panpath" local="true=" oculto="true">
+                <valor>../archivo/Panas</valor>
+            </field>
+<!--
+            <field id="fotoPana"  path="panpath" _noshow="true" print="false" tabla="PEDCOTIZ" width="25" >
+                <label>Pana</label>
+                <help></help>
+                <tipo>file</tipo>
+                <size>45</size>
+           </field>
+-->
+            <field id="max_fec" noshow="true">
+<!--		 <expression>@maxrev:=GREATEST((SELECT MAX(fecha) from HTXLOG  where ( HTXLOG.xmlprog = 'Fichaventas_abm.xml' or xmlprog = 'accesorios_coche.xml' ) and ( HTXLOG.obs like concat('%N.Fab.: ',nrofab,'%') )  or ( HTXLOG.obs like concat('% Coche: ',nrofab,'%')) ) , (select max(ACC.fecha) from PEDCOTIZ AS PED1 left join ACCESORIOS_COCHE as ACC on ACC.ficha_id = PED1.id where PED1.id = PEDCOTIZ.id ))</expression>
+ -->
+		 <expression>@maxrev:=GREATEST(PEDCOTIZ.revfec , (select max(ACC.fecha) from PEDCOTIZ AS PED1 left join ACCESORIOS_COCHE as ACC on ACC.ficha_id = PED1.id where PED1.id = PEDCOTIZ.id ))</expression>
+
+            </field>
+            
+            <field id="maxfec" local="true" noshow="true" print="false">
+                <label>1</label>
+		
+                <expression>case when @maxrev = DATE(NOW()) then 'font-size:34px;color:red;;font-weight:bold;text-decoration:blink;animation: blink 1s steps(5, start) infinite; -webkit-animation: blink 1s steps(5, start) infinite;' 
+                    when @maxrev = DATE_SUB(curdate(), INTERVAL 1 DAY)  then 'font-size:34px;color:blue;font-weight:bold;'    else 'font-size:23px;color:green;font-weight:bold;width:auto;'
+                                    end</expression>
+                <tipo>varchar</tipo>
+
+
+			
+
+            </field>
+            
+              
+            <field id="log" local="true" linkint="turnos_log_terminal_cons.xml" linkdir="menu" linkdes="Historial" print="false" colstyle="font-size:23px;">
+                <label getStyle="maxfec"  >Ult.Modif</label>
+                <attribute id="tooltip">obser2</attribute> 
+                <expression>case when @maxrev = DATE(NOW()) then 'HOY' 
+                          when @maxrev = DATE_SUB(curdate(), INTERVAL 1 DAY) then 'Ayer' 
+                  else date_format(@maxrev, '%d/%m') end</expression>
+        
+                <paring destino="obs"     operador="like">nrofab</paring>
+                <paring destino="num"    >nrofab</paring>
+            </field>
+            <field deshabilitado="true" id="moddes" tabla="MODCHASIS">
+                <expression>case when MODCHASIS.moddes != '' then MODCHASIS.moddes else TURNOSPRODUCCION.modeloChasis end</expression>
+
+                <label colstyle="font-weight:bold;font-size:28px;">Modelo</label>
+                <help/>
+                <tipo>varchar</tipo>
+            </field>
+			<field deshabilitado="true" id="ctaconces" tabla="CHASIS" noshow="true">
+				<expression>case when CONCESIONARIO.ctacod >= 0 then CONCESIONARIO.ctacod else 0 end</expression>
+				<tipo>integer</tipo>
+
+			</field>
+
+                                                      <!--
+			<field deshabilitado="true" id="ctacod" tabla="PEDCOTIZ" _linkint="cctconta_consulta.xml" _linkdes="Ver medios de Contacto">
+				<expression>case when PEDCOTIZ.ctacod != '' then PEDCOTIZ.ctacod else TURNOSPRODUCCION.ctacod end</expression>
+
+				<label style="font-weight:bold;font-size:28px;">Cliente</label>
+				<help>Codigo de Cuenta</help>
+				<tabla_ex condes="true" id="CCTCUENT">
+					<field id="ctacod"/>
+					<field id="ctafan">
+						<expression>LEFT(ctafan, 17)</expression>
+					</field>
+					<field id="siscod" oculto="true">
+						<condicion operador="=">'02'</condicion>
+					</field>
+				</tabla_ex>
+				<tipo>varchar</tipo>
+			</field>
+			                                    -->
+			<field esClave="true" id="fechaing" PDFanchofijo="true" noshow="true" tipoOrden="DESC"> 
+				<label >Entra</label>
+				<help>Fecha de Ingreso a Linea</help>
+
+
+			</field>
+			
+            <field deshabilitado="true" id="nrocar" tabla="PEDCOTIZ">
+                <expression>case when PEDCOTIZ.nrocar != '' then PEDCOTIZ.nrocar else TURNOSPRODUCCION.nrocar end</expression>
+                <label colstyle="font-weight:bold;font-size:28px;color:#888;">Mod.</label>
+                <help/>
+                <tabla_ex id="CARROCERIA">
+                    <field id="nrocar">
+                    </field>
+                    <field id="desabv">
+                    </field>
+
+                    <field id="siscod" oculto="true">
+                        <condicion operador="=">03</condicion>
+                    </field>
+                </tabla_ex>
+                <tipo>varchar</tipo>
+            </field>
+
+
+
+            <field deshabilitado="true" id="cantasi" tabla="PEDCOTIZ" noshow="true">
+               <expression>case when PEDCOTIZ.cantasi != '' then PEDCOTIZ.cantasi else TURNOSPRODUCCION.cantasi end</expression>
+                <help/>
+                <tipo>integer</tipo>
+
+            </field>
+            
+
+            <field id="bagno" deshabilitado="true">
+                <label colstyle="font-weight:bold;font-size:28px;">B</label>
+                <expression>PEDCOTIZ.bagno</expression>
+                <options>
+                    <option valor="0"></option>
+                    <option valor="1">  </option>
+                    <option valor="2">BB</option>
+                    <option valor="3">S/D</option>
+                </options>
+                <tipo>varchar</tipo>
+            </field>
+	   <field id="miniba" deshabilitado="true" noshow="true">
+                <label  colstyle="font-weight:bold;font-size:28px;"></label>
+                <expression>CASE WHEN PEDCOTIZ.miniba = 2 THEN  'B' ELSE ' ' END</expression>
+            </field><!--
+            <field id="asientbb" local="true">
+                <label  colstyle="font-weight:bold;font-size:28px;text-align:center;">Asientos</label>
+                <if exp="true">
+            	    <true>'cantasibagnominiba'</true>
+            	    <false>''</false>
+                </if>
+                
+            </field>
+            <field id="cucheta">
+                <expression>PEDCOTIZ.cucheta</expression>
+                <label modpos="nobr"  colstyle="text-align:center;font-weight:bold;font-size:28px;">Cuch</label>
+                <helper type="combo" xml="prd_helper_propiedades.xml" dir="/produccion" emtpy="true">
+                    <field id="campoficha_id">
+                        <condicion operador="=">'cucheta'</condicion>
+                    </field>
+                </helper>
+            </field>
+
+            <field id="aire">
+                <expression>PEDCOTIZ.marair</expression>
+                <label  colstyle="font-weight:bold;font-size:28px;">A/A</label>
+                <tabla_ex id="MARCAAIR" vacio="true" indexvacio="0" valorvacio="NO">
+                    <field id="marair">
+
+                    </field>
+                    <field id="desair">
+                        <expression>LEFT(desair, 4)</expression>
+                    </field>
+
+                    <field id="siscod" oculto="true">
+                        <condicion operador="=">03</condicion>
+                    </field>
+                </tabla_ex>
+                <tipo>varchar</tipo>
+            </field>
+-->
+
+            <field id="asientos" noshow="true">
+                <expression>@asiento:=(SELECT (SUM(ROUND(pencps, 2))) from CPSENCAB left JOIN CPSMOVIM on
+                    ( CPSMOVIM.siscod = CPSENCAB.siscod ) and
+                    CPSMOVIM.ocpnro = CPSENCAB.ocpnro and CPSMOVIM.siscod = ''
+                    where
+                    CPSMOVIM.nrocha = TURNOSPRODUCCION.nrofab   and
+                    CPSENCAB.ctacod = (select MARCAASI.ctacod
+                from  MARCAASI where marasi = PEDCOTIZ.marasi ))</expression>
+            </field>
+
+
+            <field id="faltante" noshow="true">
+                <expression>(CASE WHEN @asiento > 1 THEN 'color:red;font-size:28px;'
+                    when @asiento = 0 THEN 'color:green;font-size:28px;'
+                    when @asiento &lt;= 1 THEN 'color:orange;font-size:28px;'
+                    ELSE
+                'color:grey;font-size:28px; ' END)</expression>
+            </field>
+
+<!--
+            <field id="marasi" tabla="PEDCOTIZ">
+                <expression>PEDCOTIZ.marasi</expression>
+                <attribute id="colstyle">faltante</attribute>
+                <label>Marca</label>
+                <help/>
+                <tabla_ex xml="marcaasi.xml">
+
+                    <field id="marasi">
+                    </field>
+                    <field id="asides">
+                        <expression>LEFT(asides, 4)</expression>
+
+                    </field>
+                    <field id="siscod" oculto="true">
+                        <condicion operador="=">03</condicion>
+                    </field>
+                </tabla_ex> 
+            </field>-->
+
+<!--            <field id="pl2" local="true" showObjTabla="true">
+	           <label>Planos</label>
+
+	           <helper type="object" _type="link" xml="pedidoint_terminal_qry.xml" _modal="true">
+		          <parameter source="nrofab" target="nrofab" operator="=" />
+		       </helper>
+             <size>20</size>
+        
+        </field>
+	     <field id="pl3" local="true" showObjTabla="true">
+    	      <label>Planos2</label>
+		<helper type="object" xml="prd_planos_qry.xml">
+		<parameter source="nrofab" target="nrofab" />
+		<parameter source="idMomento" target="seccion_id" />
+		</helper>
+        
+      <size>20</size>
+	    </field>
+-->
+
+            <field id="hi" deshabilitado="true" clasefila="true" noshow="true">
+                <expression>case when TURNOSPRODUCCION.fechaActualiza = DATE(NOW()) then 'resaltado' else '' end</expression>
+
+                <tipo>varchar</tipo>
+            </field>
+
+            </fieldGroup>
+	<fieldGroup colstyle="font-weight:bold;font-size:21px">
+	    <if>return $_SESSION['usuario'] == 'plantaprfv';</if>
+
+	    <field id="chapa" >
+		<label>Chaperia</label>
+		<expression>select T.fechaing FROM TURNOSPRODUCCION T WHERE T.nroturno = idturno_ingreso_seccion(TURNOSPRODUCCION.nrofab, 3) limit 1</expression>
+		<tipo>date</tipo>
+		<format>d/m</format>
+	    </field>
+	    <field id="hrchapa" noshow="true">
+		<label colstyle="font-size:19px;color:#888;">Hr.Ch.</label>
+		<expression>select CONCAT( TIME_FORMAT(T.hora_movimiento, '%H'), 'Hs') FROM TURNOSPRODUCCION T WHERE T.nroturno = idturno_ingreso_seccion(TURNOSPRODUCCION.nrofab, 3) limit 1</expression>
+		<tipo>time</tipo>
+
+	    </field>
+	    <field id="Term" >
+		<label>Terminacion</label>
+		<expression>select T.fechaing FROM TURNOSPRODUCCION T WHERE T.nroturno = idturno_ingreso_seccion(TURNOSPRODUCCION.nrofab, 5) limit 1</expression>
+		<tipo>date</tipo>
+		<format>d/m</format>
+	    </field>
+	    <field id="hrTerm" noshow="true">
+		<label colstyle="font-size:19px;color:#888;">Hr.T.</label>
+		<expression>select CONCAT( TIME_FORMAT(T.hora_movimiento, '%H'), 'Hs')  FROM TURNOSPRODUCCION T WHERE T.nroturno = idturno_ingreso_seccion(TURNOSPRODUCCION.nrofab, 5) limit 1</expression>
+		<tipo>time</tipo>
+
+	    </field>
+<field id="controles" local="true" noZero="true">    <label colstyle="width:2em;font-weight:bold;font-size:18px;text-align:center;">Ctrl.</label>    <helper xml="prod_control_movim_qry.xml" type="link" title="Controles de Calidad" dir="controlcalidad/" modal="true">
+	<parameter source="nrofab" target="nrofab_id"/>
+	<parameter source="idMomento" target="seccion_id"/>
+	<parameter source="orden_noconforme" target="orden_noconforme" />
+    </helper>
+    <expression>SELECT sum(CASE WHEN no_conforme = 1 and controlado = 0 THEN 1 else 0 END) FROM PROD_CONTROLES
+    join PROD_CONTROL_MOVIM on id_prodcontrol = prodcontrol_id where nrofab_id = nrofab and seccion_id = idMomento</expression>
+</field>
+
+<field id="orden_noconforme" local="true" noshow="true">
+    <valor>1</valor>
+</field>
+	</fieldGroup>
+
+	<fieldGroup colstyle="font-weight:bold;font-size:21px">
+	    <if>return $_SESSION['usuario'] == 'lechu';</if>
+
+	    <field id="herras" >
+		<label>Herr As</label>
+		<expression>select T.fechaing FROM TURNOSPRODUCCION T WHERE T.nroturno = idturno_ingreso_seccion(TURNOSPRODUCCION.nrofab, 26) limit 1</expression>
+		<tipo>date</tipo>
+		<format>d/m</format>
+	    </field>
+	    <field id="hrherras" noshow="true">
+		<label colstyle="font-size:19px;color:#888;">Hr.Herr.As.</label>
+		<expression>select CONCAT( TIME_FORMAT(T.hora_movimiento, '%H'), 'Hs') FROM TURNOSPRODUCCION T WHERE T.nroturno = idturno_ingreso_seccion(TURNOSPRODUCCION.nrofab, 26) limit 1</expression>
+		<tipo>time</tipo>
+	    </field>
+	    <field id="costura" >
+		<label>Costura</label>
+		<expression>select T.fechaing FROM TURNOSPRODUCCION T WHERE T.nroturno = idturno_ingreso_seccion(TURNOSPRODUCCION.nrofab, 27) limit 1</expression>
+		<tipo>date</tipo>
+		<format>d/m</format>
+	    </field>
+	    <field id="hrCost" noshow="true">
+		<label colstyle="font-size:19px;color:#888;">Hr.Cost.</label>
+		<expression>select CONCAT( TIME_FORMAT(T.hora_movimiento, '%H'), 'Hs')  FROM TURNOSPRODUCCION T WHERE T.nroturno = idturno_ingreso_seccion(TURNOSPRODUCCION.nrofab, 27) limit 1</expression>
+		<tipo>time</tipo>
+	    </field>
+
+	    <field id="tapiceria" >
+		<label>Tapiceria</label>
+		<expression>select T.fechaing FROM TURNOSPRODUCCION T WHERE T.nroturno = idturno_ingreso_seccion(TURNOSPRODUCCION.nrofab, 28) limit 1</expression>
+		<tipo>date</tipo>
+		<format>d/m</format>
+	    </field>
+	    <field id="hrTap" noshow="true">
+		<label colstyle="font-size:19px;color:#888;">Hr.Tapic.</label>
+		<expression>select CONCAT( TIME_FORMAT(T.hora_movimiento, '%H'), 'Hs')  FROM TURNOSPRODUCCION T WHERE T.nroturno = idturno_ingreso_seccion(TURNOSPRODUCCION.nrofab, 28) limit 1</expression>
+		<tipo>time</tipo>
+	    </field>
+	    <field id="armado" >
+		<label>Armado</label>
+		<expression>select T.fechaing FROM TURNOSPRODUCCION T WHERE T.nroturno = idturno_ingreso_seccion(TURNOSPRODUCCION.nrofab, 29) limit 1</expression>
+		<tipo>date</tipo>
+		<format>d/m</format>
+	    </field>
+	    <field id="hrArm" noshow="true">
+		<label colstyle="font-size:19px;color:#888;">Hr.Arm.</label>
+		<expression>select CONCAT( TIME_FORMAT(T.hora_movimiento, '%H'), 'Hs')  FROM TURNOSPRODUCCION T WHERE T.nroturno = idturno_ingreso_seccion(TURNOSPRODUCCION.nrofab, 29) limit 1</expression>
+		<tipo>time</tipo>
+	    </field>
+
+	    <field id="marasi" tabla="PEDCOTIZ" noshow="true">
+		<condicion operador="=">8</condicion>
+	    </field>
+	</fieldGroup>
+	    
+			         
+			<order>
+				<field id="fechaing2"/>
+			</order>
+		</table>
+		<join tipo="left">
+			<table id="PEDCOTIZ">
+				<field id="nrocha">
+					<condicion operador="=">TURNOSPRODUCCION.nrofab</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="HOMOLOGMOD">
+				<field id="id_homologacion">
+					<condicion operador="=">homologacion_id</condicion>
+				</field>
+			</table>
+		</join>
+
+		<join tipo="left">
+			<table id="CHASIS">
+				<field id="nrocha">
+					<condicion operador="=">TURNOSPRODUCCION.nrofab</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="MODCHASIS">
+				<field id="modcha">
+					<condicion operador="=">CHASIS.modcod</condicion>
+				</field>
+				<field id="marcod">
+					<condicion operador="=">CHASIS.marcod</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="CONCESIONARIO">
+				<field id="idconces">
+					<condicion operador="=">(case when CHASIS.conces != '' then CHASIS.conces else TURNOSPRODUCCION.idconces end)</condicion>
+				</field>
+			</table>
+		</join>
+                    
+
+	</form>
+</histrix>

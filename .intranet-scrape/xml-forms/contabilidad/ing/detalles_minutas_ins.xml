@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert">
+	<title>Ingreso de Detalle</title>
+	<obs></obs>
+	<form>
+		<table id="CTB_DETALLES">
+
+			<field id="movimiento_id"	lastId="movimientos_minutas_ins.xml" />
+			<field id="cuenta_id"		id_temp="cuenta_id" />
+			<field id="ctbcentro_id"	id_temp="ctbcentro_id" />
+			<field id="doh"				id_temp="doh" />
+			<field id="importe"			id_temp="importe" />
+			<field id="referencia"		id_temp="referencia" />
+			<field id="orden"			id_temp="_ORDEN" />
+
+		</table>
+	</form>
+</histrix>

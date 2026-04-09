@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<abm tipo="consulta">
+	<titulo>Normas de Seguridad por Articulo</titulo>
+	<obs></obs>
+	<consulta detalle="normainsumos.xml">
+		<tabla id="STKINSUM" label="Normas seguridad">
+			
+			<campo id="artcod">
+				<label>Articulo</label>
+				<help>Codigo de Articulo</help>
+				<detalle>artcod</detalle>
+			</campo>
+			<campo id="artdes">
+				<label>Descripcion</label>
+				<help>Descripcion</help>
+			</campo>
+			
+			<campo id="siscod" oculto="true">
+				<label>Codigo Sistema</label>
+				<help>
+				</help>
+			</campo>
+		</tabla>
+	</consulta>
+</abm>

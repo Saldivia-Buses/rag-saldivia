@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="insert" sqlhardcoded="true">
+	<title/>
+	 <obs/>
+		<form >
+			<table id="CTBREGIS" >
+				<sql>
+					UPDATE CTBREGIS
+						SET regnro = [__nro_movimiento__],
+							regfec = STR_TO_DATE('[__reg_fecha__]', '%d/%m/%Y'),
+							regref = '[__regref__]',
+							regimp = regimp * [__razon_cambio_imp__]
+					WHERE /* siscod = '10'  and */  regmin = 0[__regmin__] and regnro = 0[__old_nro_movimiento__]
+				</sql>
+
+				<field id="regmin"      		id_temp="regmin" />
+				<field id="regfec"     			id_temp="reg_fecha" />
+				<field id="old_nro_movimiento"  id_temp="old_nro_movimiento" local="true"/>
+				<field id="razon_cambio_imp"  	id_temp="razon_cambio_imp" local="true" />
+				<field id="regref"  			id_temp="regref" />
+				<field id="regnro"				id_temp="nro_movimiento" />
+
+			</table>
+		</form>
+    </histrix>

@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" _conBusqueda="true" paginar="250">
+  <title>consulta </title>
+  <obs></obs>
+  <form >
+    <table id="CCTCUENT" label="ABM CUENTA">
+
+      <filters>
+
+        <field id="totatr" _deshabilitado="false">
+          <label>Influye en el costo</label>
+          <operador>=</operador>
+        </field>
+
+      </filters>
+
+      <field id="siscod" esClave="true" oculto="true">
+        <label>Código Sistema</label>
+        <help></help>
+      </field>
+
+      <field id="baja">
+        <label style="background-color:#7ff67f; color:white; font-size:15px" modpos="nobr">Estado</label>
+        <help>Cuenta Activa - De Baja</help>
+        <options>
+          <option valor="1">Baja</option>
+          <option valor="0">Activo</option>
+        </options> 
+      </field>  
+
+      <field id="ctacod" clave="true" esClave="true">
+        <label>Cuenta</label>
+        <help>Código de Cuenta </help>
+      </field>
+
+      <field id="ctanom">
+        <label modpos="nobr">Nombre</label>
+        <help>Nombre de Cuenta </help>
+        <size>50</size>
+      </field>
+  
+      <field id="ctafan" required="true">
+        <label modpos="nobr">Nom.Fantasía </label>
+        <help>Nombre de fantasía. </help>
+        <size>12</size>
+        <valor></valor>  
+      </field>
+
+      <field id="ctadir">
+        <label colspan="5">Domicilio Fiscal </label>
+        <help>
+        </help>
+        <size>60</size>
+      </field>
+
+      <field id="ctapos">
+        <label>Código Postal</label>
+        <help>
+        </help>
+      </field>
+
+      <field id="ctaloc">
+        <label modpos="nobr">Localidad </label>
+        <help>
+        </help>
+          <size>30</size>
+      </field>
+      
+      <field id="prvcod">
+        <label modpos="nobr">Provincia </label>
+        <help modpos="nobr">
+        </help>
+        <tabla_ex id="FSMPROVS">
+          <field id="prvcod"></field>
+          <field id="prvnom"></field>
+        </tabla_ex>
+      </field>
+      
+      <field id="ctatel">
+        <label>Teléfono</label>
+          <size>20</size>
+      </field>
+
+      <field id="ctafax">
+        <label modpos="nobr">Tel/Fax</label>
+          <size>20</size>
+      </field>
+
+      <field id="entdir">
+        <label colspan="5" style="color:blue;">Domicilio Real</label>
+      </field>
+
+      <field id="entpos">
+        <label style="color:blue;">Código Postal Envío</label>
+      </field>
+      
+      <field id="entloc">
+        <label modpos="nobr" style="color:blue;">Localidad de Envío</label>
+        <size>30</size>
+      </field>
+
+      <field id="entprv">
+        <label modpos="nobr" style="color:blue;">Prov. Env.</label>
+        <help modpos="nobr"/>
+        <tabla_ex id="FSMPROVS">
+          <field id="prvcod"></field>
+          <field id="prvnom"></field>
+        </tabla_ex>
+      </field>
+            
+      <field id="ivacod">
+        <label>Categoría I.V.A. </label>
+        <tabla_ex id="FSMCTIVA">
+          <field id="ivacod"></field>
+          <field id="ivanom"></field>
+        </tabla_ex>
+      </field>
+
+      <field id="doccod">
+        <label>Documento</label>
+        <tabla_ex id="FSMDOCUM">
+          <field id="doccod"></field>
+          <field id="docnom"></field>
+        </tabla_ex>
+        <valor>80</valor>
+      </field>
+
+      <field id="ctanro" _cuit="true">
+        <label modpos="nobr">Número</label>
+      </field>
+
+      <field id="zoncod">
+        <label>Código de Zona</label>
+      </field>
+
+      <field id="horario">
+        <label colspan="2" modpos="nobr">Horario de Atención</label>
+        <size>50</size>
+      </field>      
+
+      <field id="catcod">
+        <label>Código Categoría </label>
+        <tabla_ex id="CCTCATGS">
+          <field id="catcod"></field>
+          <field id="catnom"></field>
+        </tabla_ex>
+      </field>
+
+      <field id="ctbcod">
+        <label modpos="nobr">Cuenta Contable</label>
+        <tabla_ex id="CTBCUENT" >
+          <field id="ctbcod"></field>
+          <field id="ctbnom">
+            <expression>concat(ctbnom,' - ', ctbcod)</expression>
+          </field>
+          <field id="ctbhab">
+            <condicion operador="=">1</condicion>
+          </field>    
+          <order>
+            <field id="ctbnom"></field>
+          </order>  
+        </tabla_ex>
+        <valor>711106</valor>
+      </field>
+      
+      <field id="vtacod">
+        <label>Código </label>
+        <tabla_ex id="FACCONDI">
+          <field id="vtacod"></field>
+          <field id="condes"></field>
+        </tabla_ex>
+        <valor>29</valor> 
+      </field>
+      
+      <field id="formaPago">
+        <label modpos="nobr">Forma de Pago</label>
+        <tabla_ex id="FORMAPAGO">
+          <field id="formaPago"></field>
+          <field id="nombrePago"></field>
+        </tabla_ex>
+      </field>
+      
+      <field id="ctagan">
+        <label>Cond. Ganancias</label>
+        <help>Inscripto Ganancias</help>
+        <tabla_ex id="REG_CATEGORIAS">
+          <field id="id_regcategoria"></field>
+          <field id="nombre_categoria"></field>
+          <field id="tipo_categoria">
+              <condicion operador="=">'ganancias'</condicion>
+          </field>
+        </tabla_ex>
+      </field>
+
+      <field id="catganancias_id">
+        <label modpos="nobr">Categoría Ganancias</label>
+        <help>Categoría de Ganancias</help>
+        <helper type="combo" id="RETCONCE" empty="true">
+          <field id="retcod"></field>
+          <field id="retdes"></field>
+        </helper>
+      </field>
+
+      <field id="ctainb">
+        <label _modpos="nobr">Ing.Brutos</label>
+        <help>Categoría Ingresos Brutos</help>
+        <helper type="combo" id="REG_CATEGORIAS" >
+          <field id="id_regcategoria"></field>
+          <field id="nombre_categoria"></field>
+          <field id="tipo_categoria">
+              <condicion operador="=">'ingbrutos'</condicion>
+          </field>
+        </helper>
+      </field>
+
+      <field id="ctanib">
+        <label modpos="nobr">Nro.Ing.Brutos.</label>
+        <help>Número de Ingresos Brutos</help>
+        <size>20</size>
+      </field>
+
+      <field id="rg1598">
+        <label>Ing.Brutos Res.1598</label>
+        <help>Tipo de Inscripción en Ing.Brutos Res. 1598</help>
+        <tabla_ex id="REG_CATEGORIAS">
+          <field id="id_regcategoria"></field>
+          <field id="nombre_categoria"></field>
+          <field id="tipo_categoria">
+            <condicion operador="=">'rg1598'</condicion>
+          </field>
+        </tabla_ex>
+      </field>
+
+      <field id="por1598">
+        <label modpos="nobr">Porcentaje Retención</label>
+        <help>Porcentaje de Retención</help>
+        <format>%01.2f</format>
+      </field>
+
+      <field id="ctacai">
+        <label>Nro.CAI</label>
+        <help>Número de CAI</help>
+      </field>
+
+      <field id="caivto">
+        <label modpos="nobr">Vto.Cai </label>
+        <help>Vencimiento de CAI</help>
+      </field>
+
+      <field id="ctaobs">
+        <label colspan="5">Obs. </label>
+        <help>Observaciones</help>
+      </field>
+
+      <field id="totatr">
+        <label >No influye en costo</label>
+          <options>
+            <option valor="">Todos</option>
+            <option valor="0">No</option>
+            <option valor="1">Si</option>
+          </options>
+      </field>      
+
+      <field id="auditable">
+    	  <label modpos="nobr">Auditable</label>
+    	  <helper type="combo">
+    	    <option value="0">No</option>
+    	    <option value="1">Si</option>
+    	  </helper>
+    	  <tipo>radio</tipo>
+      </field>
+
+      <field id="id_regcuenta" noshow="true" />
+
+      <field id="certpath" noshow="true">
+	    <expression>CONCAT(id_regcuenta, '/certificados')</expression>
+      </field>
+
+    <order>
+      <field id="ctafan" />
+    </order>
+
+    </table>
+
+  </form>
+</histrix>

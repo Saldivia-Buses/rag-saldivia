@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing"  borra="no" inserta="no"  noform="true" imprime="false" close="true">
+    <title>Mensajes</title>
+    <obs/>
+    <eventos>
+        <event id="evento">close</event>
+    </eventos>
+    <form >
+        <table id="HTXMESSAGES" label="Mensajes recibidos" _styleTbody="height:250px;" >
+            <movimientos>
+                <relacion id="mensajes_recive_mov.xml"></relacion>
+            </movimientos>
+            <field autoinc="true" id="idMensaje" noshow="true" tipoOrden="DESC">
+                <label>id</label>
+            </field>
+            <field deshabilitado="true" id="fecha" >
+                <label Formstyle="display:none;">Fecha</label>
+                <valor>today</valor>
+            </field>
+            <field deshabilitado="true" id="hora" rss="title">
+                <label Formstyle="display:none;">Hora</label>
+                <valor>now()</valor>
+            </field>
+            <field id="nom" local="true"  noselect="true" noshow="true">
+                <valor eval="true">$_SESSION['usuario']</valor>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="stamp" rss="pubDate" noshow="true">
+                <expression>UNIX_TIMESTAMP(CONCAT(fecha,' ', hora))</expression>
+                <tipo>varchar</tipo>
+            </field>
+            <field deshabilitado="true" id="_de" rss="author">
+                <expression>HTXMESSAGES.de</expression>
+                <label Formstyle="display:none;">de</label>
+                <help></help>
+                <size>10</size>
+                <tabla_ex id="HTXUSERS">
+                    <field id="login" />
+                    <field id="nombre" >
+                        <expression>CONCAT(nombre, ' ', apellido)</expression>
+                    </field>
+					
+                </tabla_ex>
+                <tipo>varchar</tipo>
+            </field>
+			
+		
+            <field id="para" deshabilitado="true" noshow="true">
+                <label Formstyle="display:none;">Para</label>
+                <tabla_ex id="HTXUSERS">
+                    <field id="login" />
+                    <field id="nombre" >
+                        <expression>CONCAT(nombre, ' ', apellido)</expression>
+                    </field>
+
+                </tabla_ex>
+                <_valor eval="true">$_SESSION['usuario']</_valor>
+                <condicion operador="=" _valorde="nom" >'[__nom__]'</condicion>
+                <tipo>varchar</tipo>
+            </field>
+<!--			<field id="title" rss="title" deshabilitado="true">
+				<label Formstyle="display:none;">Asunto</label>
+			</field>
+-->
+            <field id="__message" noshow="true">
+                <expression><![CDATA[(case when isnull((select obs from HTXLOG where HTXLOG.idEvento = HTXMESSAGES.idEvento and HTXMESSAGES.idEvento != '' and (tipo = 'UPDATE' or tipo = 'DELETE') limit 1)) then mensaje else CONCAT(mensaje, ' (',(select obs from HTXLOG where HTXLOG.idEvento = HTXMESSAGES.idEvento and (tipo = 'UPDATE' or tipo = 'DELETE') limit 1),')') end) ]]>
+                </expression>
+				
+            </field>
+            <field id="tmpmesg" deshabilitado="true" rss="description" local="true">
+                <if exp="true">
+                    <true>nl2br('__message')</true>
+                    <false>''</false>
+                </if>
+				
+                <label Formstyle="display:none;" colstyle="color:#444;font-size:15px;">mensaje</label>
+                <help>Texto del mensaje</help>
+                <tipo>varchar</tipo>
+            </field>
+			
+			
+
+            <field id="email" deshabilitado="true"  noshow="true">
+                <expression>HTXUSERS.email</expression>
+            </field>
+			
+            <field id="msg2" deshabilitado="true"  local="true" noshow="true">
+                <if exp="true">
+<!--					<true>'Mensaje Original:'.str_replace('%0A', '%0A>>', urlencode('>>msgs'))</true> -->
+                    <true><![CDATA["\n"."\n".'Mensaje Original:'."\n".'>>__message']]>
+                    </true>
+                    <false>''</false>
+                </if>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="idEvento" noshow="true">
+
+                <condicion operador="=">'' or isnull(idEvento)</condicion>
+            </field>
+			
+<!--
+			<field id="logs" obj="log_msg_cons.xml" showObjTabla="true"  showValor="true" local="true" rss="description">
+				<label style="color:#444; " Formstyle="display:none;">detalle</label>
+				<paring destino="idEvento" operador="=">idEvento</paring>
+				<tipo>varchar</tipo>
+			</field>
+-->
+            <field id="leido" refresh="true">
+                <label Formstyle="display:none;">leido</label>
+                <tipo>check</tipo>
+                <condicion operador="=">0</condicion>
+            </field>
+            <field id="recordar" refresh="true" local="true">
+                <label Formstyle="display:none;">postit</label>
+                <tipo>check</tipo>
+            </field>
+            <field id="estado" local="true" noshow="true">
+                <if exp="recordar">
+                    <true>2</true>
+                    <false>leido</false>
+                </if>
+            </field>
+            <field id="responder" local="true" linkint="mensajes_reply.xml" linkdes="Responder este Mensaje">
+                <label style="color:red;"  Formstyle="display:none;">Responder</label>
+                <tipo>varchar</tipo>
+                <valor>'Responder'</valor>
+                <paring destino="para" operador="=">_de</paring>
+                <paring destino="email" >email</paring>
+				
+				
+                <paring destino="idHilo" >idMensaje</paring>
+                <paring destino="mensaje" >msg2</paring>
+				
+				
+            </field>
+			
+            <order>
+                <field id="idMensaje"/>
+            </order>
+        </table>
+        <join tipo="left">
+            <table id="HTXUSERS">
+                <field id="login">
+                    <condicion operador="=">de</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix>

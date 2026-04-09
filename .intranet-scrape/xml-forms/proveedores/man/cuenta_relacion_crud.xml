@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" subtipo="vertical">
+  <title>Cuenta Relacionada</title>
+  <obs/>
+  <form>
+    <table id="REG_CUENTA_RELACIONES" label="Cuenta Relacionada">
+
+      <field id="id_regcuentarelacion" autoinc="true" noshow="true">
+        <valor>-1</valor>
+      </field>
+
+      <field id="regcuenta_id" valauto="true" noshow="true"/>
+
+      <field id="subsistemarelacionada_id" noshow="true" valauto="true">
+        <label>destino</label>
+        <actualiza>
+          <field id="regcuentarelacionada_id" destino="subsistema_id" />
+        </actualiza>
+      </field>
+
+      <field id="regcuentarelacionada_id">
+        <label>Relacionado</label>
+        <helper type="combo" xml="regcuenta_cmb.xml" dir="/ayudas" empty="true">
+          <field id="id_regcuenta" autoinc="true" noshow="true" esClave="true">
+            <label>Numero Cuenta</label>
+            <detalle>regcuenta_id</detalle>
+          </field>
+          <field id="nombre_cuenta">
+            <label>Nombre</label>
+            <expression>CONCAT(nombre_cuenta, ' - ', cod_direccion)</expression>
+          </field>
+          <field id="subsistema_id" noshow="true" />
+        </helper>
+      </field>
+
+    </table>
+  </form>
+</histrix>

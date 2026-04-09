@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="consulta" _limit="2">
+	<title>Detalles</title>
+	 <obs></obs>
+		<consulta>
+		    <table id="REG_DETALLES" label="Detalle de Movimientos" _styleTbody="height:150px;overflow-x:hidden;" >
+				  <field id="regmovim_id" noshow="true" print="false">
+					<label>Codigo de movimiento</label>
+				   </field> 
+				<field id="id_regdetalle" noshow="true" print="false">
+					<label>Codigo de detalle </label>
+				</field>
+				<!--<field id="cantidad_detalle">
+				    <tipo>numeric</tipo>
+				    <label>CANTIDAD</label>
+				</field>
+				<field id="separador" local="true">
+				  <label>separadorores</label>
+				  <size>40</size>
+				</field>-->
+				
+				<field id="codigo_detalle" noshow="true" print="false"/>
+			        
+				<field id="orden" esClave="true" noshow="true" print="false"/>
+				
+				<field id="descripcion_detalle">
+				    <label PDFsize="12">DESCRIPCION</label>
+					<tipo>editor</tipo>
+				</field>
+			    
+			    <field id="prueba" local="true">
+				  <label>Prueba</label>
+				</field>
+				
+				<!--<field id="precio_venta" tabla="STK_ARTICULOS" sincelda="true">
+				<label>PRECIO UNIT</label>
+				<tipo>numeric</tipo>
+				</field>
+				-->
+				<field id="separadorw" local="true">
+				  <label>separador</label>
+				  <size>40</size>
+				</field>
+							  	
+				<!--<field id="total_detalle" sincelda="true">
+				    <label>IMPORTE</label>
+				    <expresion>(STK_ARTICULOS.precio_venta) * cantidad_detalle</expresion>
+				</field>
+			        -->
+				<order>
+				    <field id="orden"/>
+				</order>
+						
+		    </table>
+		 <join tipo="left">
+	   <tabla id="STK_ARTICULOS">
+	      <field id="id_stkarticulo">
+		<condicion operador="=">REG_DETALLES.codigo_detalle</condicion>
+	      </field>
+	   </tabla>
+	</join>
+	</consulta>
+    </histrix>	

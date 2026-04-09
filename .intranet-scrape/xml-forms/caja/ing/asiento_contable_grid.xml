@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="grid" imprime="false" procesa="false" showCantidad="false" tooltip="false" preloadData="false" llenoTemporal="WASIENTOS" importTempTable="WASIENTOS" llenareferente="true" unserializeParent="false">
+  <title>Movimientos</title>
+  <obs/>
+  <form>
+    <table id="CTB_DETALLES" label="cabecera" idCampoCond="grabar">
+
+      <movimientos>
+        <relacion id="cajdetalle_wasientos_ins.xml"/>
+      </movimientos>
+
+      <field id="grabar" local="true" noshow="true">
+        <if exp="debe != 0 || haber != 0">
+          <true>1</true>
+          <false>0</false>
+        </if>
+      </field>
+
+      <field id="cuenta_id">
+        <label modpos="nobr">Cuenta</label>
+        <helper type="combo" xml="cuentas_habilitadas_qry.xml" dir="/ayudas"/>
+      </field>
+      <field id="importe" noshow="true">
+      </field>
+      <field id="doh" local="true" noshow="true">
+        <label>doh</label>
+      </field>
+      <field id="debe" suma="true" noZero="true" local="true">
+        <label modpos="nobr">Debe</label>
+        <tipo>numeric</tipo>
+        <if exp="'doh' == '0'">
+          <true>importe</true>
+          <false>0</false>
+        </if>
+      </field>
+      <field id="haber" suma="true" noZero="true" local="true">
+        <label modpos="nobr">Haber</label>
+        <tipo>numeric</tipo>
+        <if exp="'doh' == '1'">
+          <true>importe</true>
+          <false>0</false>
+        </if>
+      </field>
+
+      <field id="_ORDEN" local="true" esClave="true" deshabilitado="true" noshow="true">
+        <label>Orden</label>
+      </field>
+    </table>
+  </form>
+</histrix>

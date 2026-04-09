@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="consulta" >
+    <title>Registros de Acceso</title>
+    <obs/>
+    <form  >
+        <table id="HTXACCESSLOG" label="Usuarios">
+            <filters>
+                <field id="fecha" deshabilitado="false">
+                    <operador>&gt;=</operador>
+                    <label>Desde Fecha</label>
+                    <valor>today</valor>
+                </field>
+                <field id="fecha" deshabilitado="false">
+                    <operador>&lt;=</operador>
+                    <label>Hasta Fecha</label>
+                    <valor>today</valor>
+                </field>
+                <field id="nombres" deshabilitado="false">
+                    <label>Nombre</label>
+                    <help></help>
+                    <operador>like</operador>
+
+                </field>
+
+            </filters>
+            <field id="id" oculto="true"></field>
+            <field id="fecha">
+                <expression having="false">time</expression>
+                <label>Fecha</label>
+                <tipo>date</tipo>
+                <help>Fecha de acceso</help>
+            </field>
+            <field id="time">
+                <expression>date_format(time,'%H:%i:%s')</expression>
+                <label>Hora</label>
+                <help>Hora de acceso</help>
+            </field>
+            <field id="login">
+                <label>Login</label>
+                <help></help>
+            </field>
+            <field id="nombres">
+                <expression>CONCAT(Nombre,' ',apellido)</expression>
+                <label>Nombre</label>
+                <help></help>
+            </field>
+
+            <field id="ip">
+                <label>IP</label>
+                <help>Numero de IP</help>
+            </field>
+            <field id="userAgent">
+                <label>user Agent</label>
+                <help>user Agent del Navegador</help>
+            </field>
+            <!-- <field id="remoto" clasefila="true" local="true" noshow="true">
+                <expression></expression>
+                <if exp="substr('ip', 0, 6) != '192.168'">
+                    <true>'resaltado'</true>
+                    <false>''</false>
+                </if>
+            </field> -->
+            <!--            <field id="error">
+            <label>Error</label>
+            <help>Error de Acceso</help>
+        </field>
+        -->
+    </table>
+    <join tipo="left">
+        <table id="HTXUSERS">
+            <field id="login">
+                <condicion operador="=">HTXACCESSLOG.login</condicion>
+            </field>
+        </table>
+    </join>
+</form>
+</histrix>

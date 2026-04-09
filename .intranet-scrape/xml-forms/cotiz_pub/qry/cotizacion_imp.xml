@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="fichaing" preFetch="true" autoprint="true">
+    <title>Solicitud de Cotización</title>
+    <obs/>
+    <form >
+        <table id="CPS_MOVIMIENTOS" >
+		    <field id="id_cpsmovimiento" >
+		    	<label  posX="5" posY="+2">Cotizacion Nro</label>
+		    </field>
+
+		    <field id="cpsfecha">
+		    	<label posX="100" posY="0">Fecha</label>
+		    </field>
+
+		    <field id="email">
+		    	<label  posX="5" posY="+2">Correos Enviados</label>
+		    	<expression>count(email)</expression>
+		    </field>
+		    <field id="destinatarios" local="true">
+		    	<label  posX="5" posY="+4">Destinatarios</label>
+		    	<helper xml="cotizacion_destinatarios.xml" type="object">
+		    		<parameter source="id_cpsmovimiento" target="cpsmovimiento_id" />
+		    	</helper>
+		    </field>
+
+		    <field id="detalle" local="true">
+		    	<label  posX="5" posY="+4">Detalle</label>
+		    	<helper xml="cotizacion_detalle_imp.xml" type="object">
+		    		<parameter source="id_cpsmovimiento" target="cpsmovimiento_id" />
+		    	</helper>
+		    </field>
+
+		    <group>
+		    	<field id="id_cpsmovimiento" />
+		    </group>
+        </table>
+        <join>
+        	<table id="CPS_ENVIOS">
+        		<field id="cpsmovimiento_id">
+        			<condicion operador="=">id_cpsmovimiento</condicion>
+        		</field>
+        	</table>
+        </join>
+    </form>
+</histrix>

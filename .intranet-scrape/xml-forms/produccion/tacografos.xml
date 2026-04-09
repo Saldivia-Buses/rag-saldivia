@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm">
+	<title>Tacografos</title>
+	<obs></obs>
+	<form >
+		<table id="TACOGRAFOS" >
+			<title>Tacografos</title>
+			<field id="idTaco" autoinc="true" noshow="true">
+				<label>Codigo</label>
+				<help>Codigo de Tacografo</help>
+
+			</field>
+			<field id="nombre">
+				<label>Nombre</label>
+				<help>Nombre de Tacografo</help>
+			</field>
+		</table>
+	</form>	   
+</histrix> 

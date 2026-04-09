@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" imprimetanda="true" PDFsincabecera="true" _PDForientation="L" _PDFcolor="000000" pageBreak="false">
+  <title>Impresion de salida materiales seguridad</title>
+  <obs/>
+  <form detalle="salida_seguridad_imp.xml" label="Materiales seguridad">
+    <table id="PERSONAL" label="Personal por Seccion" _styleTbody="height:300px; overflow-x:hidden;">
+      <filters>
+        <field id="opecod" >
+          <label>Operario</label>
+          <operador>=</operador>
+        </field>
+        <field id="nomAp" deshabilitado="false">
+          <label>Nombre</label>
+          <operador>like</operador>
+        </field>
+        <field id="fecha_desde">
+          <label>Desde</label>
+          <valor>today</valor>
+        </field>
+        <field id="fecha_hasta">
+          <label>Hasta</label>
+          <valor>today</valor>
+        </field>
+      </filters>
+      <field id="opecod" >
+        <label>Operario</label>
+        <condicion operador="!=">0</condicion>
+        <size>4</size>
+    <detalle>opecod</detalle> 
+      </field>
+    <field id="IdPersona" noshow="true">
+	<detalle>IdPersona</detalle>
+    </field>
+      <field id="apellido" noshow="true"></field>
+      <field id="nomAp" deshabilitado="false">
+        <label>Apellido y Nombres</label>
+        <expression having="false">CONCAT(apellido,', ', PERSONAL.Nombre)</expression>
+        <tipo>varchar</tipo>
+        <detalle>nombre</detalle>
+        <size>30</size>
+      </field>
+      <field id="id_seccion" >
+        <expression having="false">
+          (select left(SECCION.nombre, 10) from SECCIONHISTORIA
+   left join SECCION on SECCION.id_seccion = SECCIONHISTORIA.id_seccion
+   where SECCIONHISTORIA.IdPersona = PERSONAL.IdPersona
+  and SECCIONHISTORIA.fechaDesde &lt;= date(now())
+   order by SECCIONHISTORIA.fechaDesde desc limit 1)
+        </expression>
+        <label>Sección</label>
+        <help>Sección</help>
+      </field>
+      <field id="fechaEgreso" oculto="true">
+        <label>Egreso</label>
+        <condicion operador="=">"0000-00-00"</condicion>
+      </field>
+      <field id="idPuesto" noshow="true" >
+        <detalle>idPuesto</detalle>
+      </field>
+      <field id="legajo" noshow="true" >
+        <detalle>legajo</detalle>
+      </field>
+      <field id="fecha_desde" local="true" noshow="true">
+        <tipo>date</tipo>
+        <detalle>fecha_desde</detalle>
+      </field>
+      <field id="fecha_hasta" local="true" noshow="true">
+        <tipo>date</tipo>
+        <detalle>fecha_hasta</detalle>
+      </field>
+      <field id="tiene_entregas" noshow="true">
+        <expression having="false"><![CDATA[ (SELECT 1 FROM STKINMOV WHERE STKINMOV.opecod = PERSONAL.opecod and STKINMOV.movfec >= str_to_date('[__fecha_desde__]', '%d/%m/%Y') and STKINMOV.movfec <= str_to_date('[__fecha_hasta__]', '%d/%m/%Y') and siscod = '01' LIMIT 1) ]]>
+        </expression>
+        <condicion operador="=">1</condicion>
+      </field>
+      <order>
+        <field id="apellido"></field>
+      </order>
+    </table>
+    <join tipo="left">
+      <table id="CATPERSONAL">
+        <field id="idSindicato">
+          <condicion operador="=">PERSONAL.idSindicato</condicion>
+        </field>
+        <field id="idCateg">
+          <condicion operador="=">PERSONAL.idCateg</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="CIUO">
+        <field id="idPuesto">
+          <condicion operador="=">PERSONAL.idPuesto</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>

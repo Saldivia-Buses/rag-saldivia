@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<abm tipo="ing" llenoTemporal="false" imprime="false" llenoreferente="true" exportasuma="true">
+	<titulo>RETENCION ING BRUTOS</titulo>
+	<obs></obs>
+	<consulta>
+		
+		<tabla id="RET1598" label="ING. Brutos" idCampoCond="grIB">
+			
+			<movimientos >
+				<relacion id="ordenpago_ret1598_ingmov.xml"></relacion>
+			</movimientos> 
+			<campo id="movnroOP"  local="true" deshabilitado="true" noshow="true">
+				<label>Numero</label>
+				<tipo>integer</tipo>
+				<formato>%08d</formato>
+			</campo>					
+
+			<campo id="codcomp" noshow="true">
+				<label>codcom</label>
+				<valor>4</valor>
+			</campo>
+			<campo id="movnpv" deshabilitada="true" noshow="true">
+				<label>Npv</label>
+				<tipo>integer</tipo>				
+			</campo>			
+			<campo id="movfec" deshabilitada="true" noshow="true">
+				<label>fec</label>
+				<tipo>date</tipo>
+			</campo>			
+			
+			<campo id="ctacod" deshabilitado="true" noshow="true">
+				<label>cta</label>			
+				<tipo>integer</tipo>			
+			</campo>			
+			<campo id="ctadir" noshow="true">
+				<label>dir</label>			
+				<tipo>varchar</tipo>
+			</campo>		
+			<campo id="ctaloc" noshow="true">
+				<label>loc</label>			
+				<tipo>varchar</tipo>			
+			</campo>			
+			<campo id="ctanib" noshow="true">
+				<label>nib</label>			
+				<tipo>varchar</tipo>			
+			</campo>			
+			<campo id="ctanom" deshabilitado="true" noshow="true">
+				<label>nombre</label>		
+				<tipo>varchar</tipo>					
+			</campo>			
+			<campo id="ctanro" deshabilitado="true" noshow="true">
+				<label>CUIT</label>			
+				<tipo>varchar</tipo>					
+
+			</campo>			
+			<campo id="fecret">
+				<label>Fecha Ret</label>			
+				<tipo>date</tipo>
+				<valor>today</valor>
+			</campo>		
+			<campo id="nroret"  deshabilitado="true" >
+				<label>nroRet</label>
+
+				<expresion>select max(nroret) + 1 from RET1598</expresion>
+				<parametro id="numerador_ret1598.xml" retorna="Entero">
+				</parametro>			
+				<tipo>integer</tipo>
+				
+			</campo>					
+<!--			<campo id="nroret" local="true" deshabilitado="true" >
+				<label>nroRet</label>
+				<parametro id="retparam_parent.xml" retorna="parent">
+
+					<campo id="parcla" oculto="true">
+						<condicion operador="=">'ib1598'</condicion>
+					</campo>
+					<campo id="parent">
+						<complete>parent + 1</complete>
+					</campo>
+				</parametro>			
+				<tipo>integer</tipo>
+			</campo>			-->
+			<campo id="totcomp">
+				<label>totComp</label>
+			</campo>			
+			<campo id="totimpon">
+				<label>Imponible</label>
+
+			</campo>			
+			<campo id="por1598" deshabilitado="true">
+				<label>Alic</label>
+			</campo>			
+			<campo id="totret" deshabilitado="true" suma="true">
+				<label>Retencion</label>			
+				<if exp="true" operador="=">
+					<verdadero>round((totimpon * por1598 ) / 100, 2)</verdadero>
+					<falso>0</falso>
+				</if>			
+				<detalle>cajimp</detalle>
+			</campo>			
+	
+			<campo id="cajcod" local="true" noshow="true">
+				<label>cajcod</label>
+				<valor>30</valor>
+				<detalle>cajcod</detalle>
+			</campo>
+
+			<campo id="imputar" local="true"  noshow="true">
+				<valor>1</valor>
+			</campo>				
+			<!-- NUMERADOR INTERNO NOMBRE DE CAMPO RESERVADO-->
+			<campo id="_ORDEN" oculto="true">
+				<label>Orden</label>
+			</campo>
+			<campo id="nrorec" noshow="true">
+			</campo>
+		<orden>
+			<campo id="bcsnro"></campo>
+		</orden>
+
+		</tabla>
+
+	</consulta>
+</abm>

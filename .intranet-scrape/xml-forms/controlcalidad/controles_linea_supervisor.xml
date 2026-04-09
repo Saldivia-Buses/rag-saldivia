@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="list" deleteRow="false" imprime="false" procesa="true" inserta="false">
+    <title>Control Calidad</title>
+    <obs/>
+
+    <form detalle="prod_control_movim_movil_supervisor.xml" liskdes="Herreria">
+        <table id="PROD_CONTROLES">
+            <title>Controles</title>
+
+            <field id="habilitado" oculto="true">
+                <condicion operador="=">0</condicion>
+            </field>
+
+            <field id="critico" oculto="true">
+                <condicion operador="=">1</condicion>
+            </field>
+
+            <field id="id_prodcontrol" noshow="true">
+            </field>
+
+            <field id="nrofab_id" noshow="true" local="true" >
+                <detalle>nrofab_id</detalle>
+            </field>
+
+            <field id="linea_id" noshow="true" local="true" >
+                <detalle>linea_id</detalle>
+            </field>
+
+            <field id="id_controlmovim" noshow="true" tabla="PROD_CONTROL_MOVIM">
+                <expression>id_controlmovim</expression>
+            </field>
+
+            <field id="homologacion_id" tabla="PEDCOTIZ" noshow="true" local="true">
+                <detalle>homologacion_id</detalle>
+            </field>
+
+
+            <field id="seccion_id" noshow="true" >
+                <detalle>seccion_id</detalle>
+            </field>
+
+            <field id="descripcion" tabla="MOMENTO" />
+
+<!--                INNER JOIN PROD_CONTROLES.id_prodcontrol = PROD_CONTROL_MOVIM.prodcontrol_id OS-->
+
+            <field id="total" noshow="true" local="true">
+            <expression sql="true">select count(*) from PROD_CONTROL_MOVIM
+                INNER JOIN PROD_CONTROLES AS PD ON PD.id_prodcontrol = PROD_CONTROL_MOVIM.prodcontrol_id
+                where PROD_CONTROL_MOVIM.nrofab_id = '[__nrofab_id__]'</expression>
+            </field>
+
+            <field id="controlados" noshow="true" local="true">
+            <expression sql="true">select count(*) from PROD_CONTROL_MOVIM
+                INNER JOIN PROD_CONTROLES AS PD ON PD.id_prodcontrol = PROD_CONTROL_MOVIM.prodcontrol_id 
+                where (PROD_CONTROL_MOVIM.conforme = 1 OR
+                PROD_CONTROL_MOVIM.no_aplica = 1 OR
+                PROD_CONTROL_MOVIM.controlado = 1) and 
+                PROD_CONTROL_MOVIM.nrofab_id = '[__nrofab_id__]'</expression>
+            </field>
+
+            <field id="pendi" local="true" noshow="true" >
+                <expression sql="true"> select case when '[__controlados__]' = '[__total__]' then 'true' else (case when
+                '[__seccion_id__]' = 2 then 'false' else 'true' end) end</expression>
+            </field>
+
+            <field id="muestra" local="true" noshow="true">
+                <valor>1</valor>
+            </field>
+
+            <field id="ob_pend" local="true" linkWidth="90%" linkHeight="90%" style="background:#ffff00">    
+            <helper xml="prod_control_movim_qry.xml" dir="controlcalidad/" type="link" modal="true">
+                <parameter source="nrofab_id" target="nrofab_id"/>
+                <!--<parameter source="seccion_id" target="seccion_id"/>-->      
+                <parameter source="muestra" target="muestra"/>
+            </helper>
+            <expression>'Unidad con observaciones pendientes'</expression>
+            <attribute id="oculto">pendi</attribute>
+            <attribute id="linkdes">nrofab_id</attribute>
+            </field>
+
+
+            <order>
+                <field id="orden" tabla="MOMENTO" />
+            </order>
+
+            <group>
+                <field id="seccion_id" />
+            </group>
+        </table>
+
+        <join tipo="left">
+            <table id="MOMENTO">
+            <field id="idMomento">
+                <condicion operador="=">PROD_CONTROLES.seccion_id</condicion>
+            </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="PROD_CONTROL_MOVIM">
+            <field id="nrofab_id">
+                <condicion operador="=">'[__nrofab_id__]'</condicion>
+            </field>
+            <field id="prodcontrol_id">
+                <condicion operador="=">id_prodcontrol</condicion>
+            </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

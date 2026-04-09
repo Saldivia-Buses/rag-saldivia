@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+	<histrix tipo="consulta">
+		<title>OPCIONES</title>
+		<obs></obs>
+		<form >
+			<table id="COTIZOPMOVIM"	>
+				<title>OPCIONES</title>
+				<field id="idCotiz" oculto="true">
+					<label>id</label>
+				</field>
+				<field id="nombre" tabla="COTIZSECCION">
+					<label>Estandar</label>
+					<tipo>varchar</tipo>
+				</field>
+				<field id="idSeccion" oculto="true">
+				</field>
+				<field id="descripcion">
+					<label>Descripción</label>
+				</field>
+				<order >
+					<field id="idSeccion" tabla="COTIZSECCION" >
+				</field>				
+				</order>
+			</table>
+			<join tipo="left">
+					<table id="COTIZSECCION">
+						<field id="idSeccion" >
+							<condicion operador="=">COTIZOPMOVIM.idSeccion</condicion>
+						</field>
+					</table>			
+			</join>
+		</form>
+	</histrix>

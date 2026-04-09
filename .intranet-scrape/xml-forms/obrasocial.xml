@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="abm">
+	<title>OBRAS SOCIALES</title>
+	<obs></obs>
+	<form >
+		<table id="OBRASOCIAL" >
+		    <title>Obras Sociales</title>
+			<field id="rnos">
+				<label>Cod.</label>
+				<help>Código de Obra Social</help>
+			</field>
+			<field id="denominacion">
+				<label>Nombre</label>
+				<help>Nombre de Obra Social</help>
+			</field>
+			<field id="sigla">
+				<label>Sigla</label>
+				<help>Sigla de Obra Social</help>
+			</field>
+			<order>
+				<field id="denominacion"></field>
+			</order>
+		</table>
+	</form>
+</histrix>

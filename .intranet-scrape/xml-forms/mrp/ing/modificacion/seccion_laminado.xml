@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  imprime="false" inserta="no" preFetch="true"  tipo="ficha">
+    <title>Laminado</title>
+    <obs/>
+    <form>
+        <table id="MRP_DETALLE_REGISTRO" label="Laminado">
+            <movimientos>
+                <relacion id="marco_cumplida.xml" />
+            </movimientos>
+
+             <field id="id_mrpordendetalle" noshow="true">
+                <expression>mrpordendetalle_id</expression>
+             </field>
+            
+            <field id="fecha_ingreso" >
+                <label>Fecha</label>
+		<tipo>date</tipo>
+            </field>
+
+            <field id="id_detalle_reg"  noshow="true"/>
+            <field   id="cantidad" >
+                <label>Cantidad</label>
+            </field>
+            <field   id="ingreso"  valauto="true">
+                <label>Inicio</label>
+                <tipo>time</tipo>
+            </field>
+            <field   id="salida" >
+                <label>Finalización</label>
+                <tipo>time</tipo>
+            </field>
+            <field   id="mesa_1" multiple="true">
+                <label>Mesa 1</label>
+                <helper type="combo" id="REG_CUENTA">
+                    <field id="id_regcuenta">
+                    </field>
+                    <field id="nombre">
+                        <expression>concat(nombre_cuenta, ' ', apellido_cuenta)</expression>
+                    </field>
+                    <field id="subsistema_id">
+                        <condicion operador="=">'RH'</condicion>
+                    </field>
+                </helper>
+
+            </field>
+            <field   id="mesa_2" >
+                <label>Mesa 2</label>
+            </field>
+            <field   id="codigo_pvb" >
+                <label>Codigo PVB</label>
+            </field>
+            <field id="observacion" >
+                <label>Observaciones</label>
+                <size>40</size>
+            </field>
+        </table>
+    </form>
+</histrix>

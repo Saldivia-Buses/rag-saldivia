@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="update" limit="0">
+	<title>Descuentos Articulos Clientes</title>
+	<obs></obs>
+	<form >
+		<table id="STK_DESCUENTOSARTCLI"			idCampoCond="latoca">
+			<field id="id_descuentoartcli" esClave="true" autoinc="true"	id_temp="id_descuentoartcli"></field>
+			<field id="stkarticulo_id" 					id_temp="stkarticulo_id"></field>
+			<field id="porcentaje_desc" 					id_temp="porcentaje_desc"></field>	
+			<field id="porcentaje_desc1"		 			id_temp="porcentaje_desc1"></field>	
+
+		</table>
+	</form>
+
+</histrix>
+

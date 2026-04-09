@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+	<title>PERSONAL POR SECCION</title>
+	<obs/>
+	<form >
+		<table id="PERSONAL" label="Personal por Seccion" _styleTbody="height:300px; overflow-x:hidden;">
+			<field id="id_seccion" noshow="true">
+				<label>Seccion</label>
+				<help>Seccion</help>
+			</field>
+			<field id="legajo">
+				<label>Legajo</label>
+			</field>			
+			<field id="apellido">
+				<label>Apellido</label>
+			</field>
+			<field id="Nombre">
+				<label>Nombre</label>
+			</field>
+			<field id="descripcion" tabla="CATPERSONAL">
+				<label>Categoria</label>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="fechaEgreso" oculto="true">
+				<label>Egreso</label>
+				<condicion operador="=">"0000-00-00"</condicion>	
+			</field>
+
+			<field id="fecing">
+				<label>Fecha Ingreso</label>
+			</field>
+			<field id="antique1">
+				<label>Años</label>		
+				<expression>CONCAT(IF((YEAR(CURDATE()) - YEAR(fecing)) &gt; 0, (YEAR(CURDATE()) - YEAR(fecing)) - (MID(CURDATE(), 6, 5) &lt; MID(fecing, 6, 5)), IF((YEAR(CURDATE()) - YEAR(fecing)) &lt; 0, (YEAR(CURDATE()) - YEAR(fecing)) + (MID(fecing, 6, 5) &lt; MID(CURDATE(), 6, 5)), (YEAR(CURDATE()) - YEAR(fecing)))), ' Años')</expression>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="antique">
+				<label>meses</label>
+			<!--<expression>DATE_FORMAT(FROM_DAYS(TO_DAYS(NOW())-TO_DAYS(PERSONAL.fecing)) , '%y anos %m meses')</expression> -->
+				<expression>CONCAT(IF((((YEAR(CURDATE()) - 1) * 12 + MONTH(CURDATE())) - ((YEAR(fecing) - 1) * 12 + MONTH(fecing))) > 0, (((YEAR(CURDATE()) - 1) * 12 + MONTH(CURDATE())) - ((YEAR(fecing) - 1) * 12 + MONTH(fecing))) - (MID(CURDATE(), 9, 2) &gt; MID(fecing, 9, 2)), IF((((YEAR(CURDATE()) - 1) * 12 + MONTH(CURDATE())) - ((YEAR(fecing) - 1) * 12 + MONTH(fecing))) &lt; 0, (((YEAR(CURDATE()) - 1) * 12 + MONTH(CURDATE())) - ((YEAR(fecing) - 1) * 12 + MONTH(fecing))) + (MID(fecing, 9, 2) &lt; MID(CURDATE(), 9, 2)), (((YEAR(CURDATE()) - 1) * 12 + MONTH(CURDATE())) - ((YEAR(fecing) - 1) * 12 + MONTH(fecing))))) - IF((YEAR(CURDATE()) - YEAR(fecing)) &gt; 0, (YEAR(CURDATE()) - YEAR(fecing)) - (MID(CURDATE(), 6, 5) &lt; MID(fecing, 6, 5)), IF((YEAR(CURDATE()) - YEAR(fecing)) &lt; 0, (YEAR(CURDATE()) - YEAR(fecing)) + (MID(fecing, 6, 5) &lt; MID(CURDATE(), 6, 5)), (YEAR(CURDATE()) - YEAR(fecing)))) * 12 , ' Meses')</expression>
+								<tipo>varchar</tipo>
+			</field> 
+
+			<order>
+				<field id="legajo"></field>
+			</order>			
+		</table>
+		<join tipo="left">
+			<table id="CATPERSONAL">
+				<field id="idSindicato">
+					<condicion operador="=">PERSONAL.idSindicato</condicion>
+				</field>
+				<field id="idCateg">
+					<condicion operador="=">PERSONAL.idCateg</condicion>
+				</field>
+				
+			</table>
+			
+		</join>
+	</form>
+</histrix>

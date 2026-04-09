@@ -1,0 +1,195 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="consulta" _conBusqueda="true" inserta="false" modifica="false" >
+  <title>COTIZACION</title>
+  <obs></obs>
+  <form  detalle="cotizacion_dup_ing.xml">
+    <table id="COTIZACION" label="COTIZACIONES">
+      <filters>
+        <field id="idCotiz" autoinc="true" tipoOrden="DESC">
+          <label>Nro Cotiz.</label>
+          <help>Numero de Cotizacion</help>
+          <detalle>idCotiz</detalle>
+          <operador>=</operador>
+          
+          
+        </field>
+        <field id="ctacod" required="false">
+          <label>Cliente </label>
+          <help>Codigo de Cuenta </help>
+          <ayuda_ex id="CCTCUENT" condes="true">
+            <field id="ctacod"></field>
+            <field id="ctanom">
+              <detalle>ctanom</detalle>
+            </field>
+            <field id="ctatel">
+              <detalle>ctatel</detalle>
+            </field>
+            <field id="ctadir">
+              <detalle>ctadir</detalle>
+            </field>
+            <field id="ctanro">
+              <detalle>ctanro</detalle>
+            </field>
+            
+            <field id="siscod" oculto="true">
+              <condicion operador="=">'02'</condicion>
+            </field>
+            <clave>ctacod</clave>
+            <descripcion>ctanom</descripcion>
+          </ayuda_ex>
+          <operador>=</operador>
+        </field>
+        
+      </filters>
+      <field id="idCotiz" autoinc="true" tipoOrden="DESC" deshabilitado="true">
+        <label>Nro Cotiz.</label>
+        
+        <help>Numero de Cotizacion</help>
+        <detalle>idCotiz</detalle>
+        <detalle>oldCotiz</detalle>
+        <detalle>cotizacion_id</detalle>
+        
+      </field>
+      <field id="NewCotiz" _autoinc="true" deshabilitado="true" noshow="true" >
+        <label modpos="nobr" >N.Cotiz.</label>
+        <expression>select max(idcotiz) + 1 from COTIZACION</expression>
+        <tipo>varchar</tipo>
+        
+        <help>Nuevo numero de Cotizacion</help>
+        <detalle>NewCotiz</detalle>
+      </field>
+      <field id="idLista" _deshabilitado="true" noshow="true">
+        <label modpos="nobr">idLista</label>
+        <detalle>lista_old</detalle>
+      </field>
+      <field id="idGrupo" deshabilitado="true" noshow="true">
+        <detalle>grupo</detalle>
+      </field>
+      
+      <field id="ctadir" deshabilitado="true" noshow="true">
+        <detalle>ctadir</detalle>
+      </field>
+      <field id="ctatel" deshabilitado="true" noshow="true">
+        <detalle>ctatel</detalle>
+      </field>
+      <field id="ctanro" deshabilitado="true" noshow="true">
+        <detalle>ctanro</detalle>
+      </field>
+      <field id="ctacon" deshabilitado="true" noshow="true">
+        <detalle>ctacon</detalle>
+      </field>
+      <field id="ctamail" deshabilitado="true" noshow="true">
+        <detalle>ctamail</detalle>
+      </field>
+      <field id="modcar" deshabilitado="true" noshow="true">
+        <detalle>modcar</detalle>
+      </field>
+      <field id="marcod" deshabilitado="true" noshow="true">
+        <detalle>marcod</detalle>
+      </field>
+      <field id="modcha" deshabilitado="true" noshow="true">
+        <detalle>modcha</detalle>
+      </field>
+      <field id="asientos" deshabilitado="true" noshow="true">
+        <detalle>asientos</detalle>
+      </field>
+      <field id="total" deshabilitado="true" noshow="true">
+        <detalle>total</detalle>
+      </field>
+      <field id="modcha" deshabilitado="true" noshow="true">
+        <detalle>modcha</detalle>
+      </field>
+      <field id="precioPub" deshabilitado="true" noshow="true">
+        <detalle>prePub</detalle>
+      </field>
+      <field id="precioCon" deshabilitado="true" noshow="true">
+        <detalle>precio</detalle>
+      </field>
+      <field id="showPrecioCon" deshabilitado="true" noshow="true">
+        <detalle>showPrecioCon</detalle>
+      </field>
+      <field id="showPrecioPub" deshabilitado="true" noshow="true">
+        <detalle>showPrecioPub</detalle>
+      </field>
+      
+      <field id="plazo" deshabilitado="true" noshow="true">
+        <detalle>plazo</detalle>
+      </field>
+      
+      <field id="fecha" deshabilitado="true">
+        <label modpos="nobr">Fecha</label>
+        <help>Fecha de Cotizaci</help>
+        <valor>today</valor>
+      </field>
+      <field id="ctacod" required="false" deshabilitado="true">
+        <label>Cliente </label>
+        <help>Codigo de Cuenta </help>
+        <ayuda_ex id="CCTCUENT" condes="true">
+          <field id="ctacod"></field>
+          <field id="ctanom">
+            <detalle>ctanom</detalle>
+          </field>
+          <field id="ctatel">
+            <detalle>ctatel</detalle>
+          </field>
+          <field id="ctadir">
+            <detalle>ctadir</detalle>
+          </field>
+          <field id="ctanro">
+            <detalle>ctanro</detalle>
+          </field>
+          
+          <field id="siscod" oculto="true">
+            <condicion operador="=">'02'</condicion>
+          </field>
+          <clave>ctacod</clave>
+          <descripcion>ctanom</descripcion>
+        </ayuda_ex>
+        <detalle>ctacod</detalle>
+      </field>
+      <field id="ctanom" required="true" deshabilitado="true">
+        <label>Nombre</label>
+        <size>50</size>
+        <detalle>ctanom</detalle>
+      </field>
+      <field id="mardes" tabla="MARCHASIS" PDFsize="12">
+        <expression>MODCHASIS.moddes</expression>
+        <label size="22" posx="5" posy="+2">Chasis</label>
+        <tipo>varchar</tipo>
+      </field>        
+      
+      <field id="modas" >
+        <label >Carroceria</label>
+        
+        <expression>CONCAT(CARROCERIA.modcar, ' (',COTIZACION.asientos, ' As)')</expression>
+      </field>          
+      <order>
+        <field id="idCotiz" tabla="COTIZACION"/>
+      </order>
+    </table>
+    <join tipo="left">
+      <table id="CARROCERIA">
+        <field id="siscod" oculto="true">
+          <condicion operador="=">'03'</condicion>
+        </field>
+        <field id="nrocar">
+          <condicion operador="=">COTIZACION.modcar</condicion>
+        </field>
+      </table>
+    </join>      
+    
+    <join tipo="left">
+      <table id="MODCHASIS">
+        <field id="siscod" oculto="true">
+          <condicion operador="=">'03'</condicion>
+        </field>
+        <field id="marcod">
+          <condicion operador="=">COTIZACION.marcod</condicion>
+        </field>
+        <field id="modcha">
+          <condicion operador="=">COTIZACION.modcha</condicion>
+        </field>          
+      </table>
+    </join>    
+  </form>
+</histrix>

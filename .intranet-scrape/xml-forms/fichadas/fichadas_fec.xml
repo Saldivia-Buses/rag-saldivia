@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" path="/fotos/personal/">
+    <title>FICHADADIA</title>
+    <obs/>
+   <form  detalle="fichadas_dia_abm.xml" inline="true" >          
+
+        <table id="PERSONAL" label="FICHADADIA del Reloj" _styleTbody="height:300px;overflow-x:hidden;">
+            <filters>
+                <field id="fech2" tabla="FICHADADIA" deshabilitado="false">
+                    <operador oplogico="or">=</operador>
+
+                    <label>Fecha</label>
+                    <valor>today</valor>
+                    <tipo>date</tipo>
+                </field>
+
+                <field id="legajo"  >
+                    <label>Legajo</label>
+                    <tipo>integer</tipo>
+                    <detalle>legajo</detalle>
+                    <operador>=</operador>
+                </field>
+            </filters>
+
+            <field id="IdPersona" noshow="true">
+            </field>
+
+            <field id="apellido">
+                <label>Apellido</label>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="nombre" >
+                <label>Nombre</label>
+                <tipo>varchar</tipo>
+            </field>
+
+           <field id="alias" >
+                <label>Alias</label>
+                <tipo>varchar</tipo>
+            </field>
+  
+            <field id="fotos" local="true" imageWidth="60" path="IdPersona">
+                <expression>CONCAT('/fotos/personal/',IdPersona,'/')  </expression>
+                <label  posX="5" posY="+2" formStyle="display:none;">Foto</label>
+                <tipo>dir</tipo>
+            </field>
+            
+            <field id="des2" tabla="SECCION">
+                <expression>select nombre from SECCIONHISTORIA left join SECCION on SECCION.id_seccion = SECCIONHISTORIA.id_seccion where SECCIONHISTORIA.IdPersona=PERSONAL.IdPersona and SECCIONHISTORIA.fechaDesde &lt;= str_to_date('[__fech2__]', '%d/%m/%Y') order by SECCIONHISTORIA.fechaDesde desc limit 1</expression>
+               
+                <expression>SECCION.nombre</expression>
+                <label>Sección</label>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="perfilpuesto_id" tabla="RH_PERSONAL_PERFIL_PUESTO" noshow="true" />
+
+            <field id="ver_perfil">
+                <label>Perfil</label>
+                <helper type="link" xml="perfil_puesto_detalle.xml" width="60%" height="90%">
+                    <parameter target="id_perfilpuesto" source="perfilpuesto_id"/>
+                </helper>
+                <expression>nombre_perfilpuesto</expression>
+            </field>
+
+            <field id="categ">
+                <expression>select CATPERSONAL.descripcion from CATEGHISTORIA left join CATPERSONAL on CATPERSONAL.idSindicato = CATEGHISTORIA.idSindicato and CATPERSONAL.idCateg = CATEGHISTORIA.IdCateg where CATEGHISTORIA.IdPersona = PERSONAL.IdPersona and CATEGHISTORIA.fechaDesde &lt;= str_to_date('[__fech2__]', '%d/%m/%Y') order by CATEGHISTORIA.fechaDesde desc limit 1</expression>
+                <expression>SECCION.nombre</expression>
+                <label>Categoría</label>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="legajo" >
+                <label>Legajo</label>
+                <tipo>integer</tipo>
+                <detalle>legajo</detalle>
+            </field>
+
+            <field id="marcaTarjeta" oculto="true">
+<!--     <condicion operador="=">1</condicion>
+ -->        </field>
+
+            <field id="fecing" >
+                <label>Ingreso</label>
+                <tipo>date</tipo>
+                    <condicion operador="&lt;=">GEN_CALENDAR.fecha</condicion>
+            </field>
+
+            <field id="reloj">
+                <label>Reloj</label>
+                <helper type="combo" xml="rh_reloj_crud.xml" />
+                <expression>(select reloj from FICHADAS where FICHADADIA.fecha= FICHADAS.fecha and FICHADADIA.tarjeta = FICHADAS.tarjeta limit 1)</expression>
+            </field>
+
+            <field id="tarjeta2" _noshow="true">
+                <label>tarjeta</label>
+<!--                <expression >FICHADADIA.tarjeta</expression> -->
+                <expression >select PERSONAL_TARJETA.tarjeta FROM PERSONAL_TARJETA where PERSONAL_TARJETA.idPersona = PERSONAL.idpersona and GEN_CALENDAR.fecha &gt;= PERSONAL_TARJETA.fechaDesde order by PERSONAL_TARJETA.fechaDesde DESC limit 1</expression>
+                <detalle>tarjeta</detalle>
+            </field>
+
+            <field id="fech2" tabla="FICHADADIA" oplogico="or" noshow="true" local="true">
+                <label>Fecha</label>
+                <tipo>date</tipo>
+                <detalle>fecha</detalle>
+            </field>
+
+            <field id="fecha" tabla="GEN_CALENDAR" oplogico="or" noshow="true">
+<!--                <condicion operador="isnull" logic="or" fixed="true">0000-00-00</condicion>
+                <condicion operador="=" logic="or" fixed="true">0000-00-00</condicion>
+                <condicion operador="=" logic="or" fixed="true">NOW()</condicion>-->
+                <tipo>date</tipo>
+            </field>
+
+            <field id="currentDate" noshow="true">
+                <expression>GEN_CALENDAR.fecha</expression>
+                <tipo>date</tipo>
+<!--                <detalle>fecha</detalle> -->
+            </field>
+
+<!--        <field id="Hora" >
+        <label>Hora</label>
+        <tipo>varchar</tipo>
+      </field> -->
+
+ 	         <field id="Hora1">
+                <expression >FICHADADIA.h1</expression>
+    
+                <label>Hora Ent 1</label>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="Hora2">
+                <expression >ifnull(FICHADADIA.h2,'')</expression>
+
+                <label>Hora Sal 1</label>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="Hora3">
+                <expression >FICHADADIA.h3</expression>
+
+                <label>Hora Ent 2</label>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="h4">
+                <expression >FICHADADIA.h4</expression>
+                <label>Hora Sal 2</label>
+                <tipo>varchar</tipo>
+            </field>  
+
+<!--        <field id="Horas">
+                <expression>TIMEDIFF(max(FICHADADIA.hora), min(FICHADADIA.hora))</expression>
+                <label>Horas Trabajadas</label>
+                <tipo>varchar</tipo>
+            </field>-->
+            <field id="alert" clasefila="true" noshow="true">
+                <expression>case when (!isnull(FICHADADIA.h1) &amp;&amp; isnull(FICHADADIA.h2) ) then 'resaltado' else '' end</expression>
+            </field>
+
+            <field id="fechaEgreso" noshow="true">
+                <label>Egreso</label>
+                <condicion operador="=">'0000-00-00' or isnull(fechaEgreso)</condicion>
+            </field>
+
+            <field id="eventual" noshow="true">
+                <condicion operador="=">'0'</condicion>
+            </field>
+
+            <field id="otros" obj="fichadas_enfermedad_cons2.xml" showObjTabla="true"   local="true">
+                <paring destino="legajo">legajo</paring>
+                <paring destino="legajo2">legajo</paring>
+                <paring destino="desdefecha" operador="&gt;=" >fech2</paring>
+                <paring destino="hastafecha" operador="&lt;=" >fech2</paring>
+                <paring destino="fecha2" operador="&gt;=" >fech2</paring>
+                <paring destino="fecha" operador="&lt;=" >fech2</paring>
+            </field>
+
+            <field id="francos"  local="true">
+                <label>Licencias</label>
+                <helper type="link" xml="francos_per_int.xml">
+                    <parameter target="legajo" source="legajo"/>
+                    <parameter target="IdPersona" source="IdPersona"/>
+                </helper>
+                <expression> case when FICHADADIA.h1 = '' or FICHADADIA.h1 IS NULL then 'Licencias' else '' end</expression>
+            </field>
+
+            <group>
+                <field id="IdPersona" />
+            </group>
+
+            <order>
+                <field id="apellido"/>
+            </order>
+        </table>
+
+        <join tipo="left">
+            <table id="GEN_CALENDAR">
+                <field id="fecha">
+                    <condicion operador="=">STR_TO_DATE('[__fech2__]', '%d/%m/%Y')</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="FICHADADIA">
+                <field id="fecha">
+                    <condicion operador="=">GEN_CALENDAR.fecha</condicion>
+                </field>
+                <field id="legajo">
+                    <condicion operador="=">PERSONAL.legajo</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="RH_PERSONAL_PERFIL_PUESTO">
+                <field id="persona_id">
+                    <condicion operador="=">PERSONAL.IdPersona</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="RH_PERFIL_PUESTO">
+                <field id="id_perfilpuesto">
+                    <condicion operador="=">RH_PERSONAL_PERFIL_PUESTO.perfilpuesto_id</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix>

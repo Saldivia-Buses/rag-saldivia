@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix	tipo="fichaing" 
+			inserta="false" 
+			borra="false" 
+			modifica="false" 
+			imprime="false" 
+			tooltip="false"
+			confirma="Borrar Comprobante" 
+			_form="false" 
+			transaccional="true" 
+			preFetch="true" 
+			preloadData="true"
+			procesa="false">
+    <title>Eliminacion Comprobantes</title>
+    <obs/>
+    <eventos>
+      <event id="procesar">close</event>
+      <event id="procesar">refresh</event>
+    </eventos>
+    <form>
+
+	<table id="REG_MOVIMIENTOS">
+
+		<validation>
+			<condition><![CDATA[puedeborrar == 0]]></condition>
+			<message>El comprobante está imputado a otro comprobante, Verifique</message>
+		</validation>
+
+        <!-- Proceso de eliminarcion -->      
+
+		<movimientos>
+<!-- DEL CTBREGIS--><relacion id="del_ctbmovimientos.xml" />
+<!-- DEL CCTMOVIM--><relacion id="del_regmovimientos.xml" />
+<!-- DEL CCTENCAB--> <relacion id="del_regmovimientos_encab.xml" />
+<!-- DEL IVAVENTAS--> <relacion id="del_regmovimientos_ivaventas.xml" />
+<!-- DEL IVACOMPRAS--> <relacion id="del_regmovimientos_ivacompras.xml" />
+<!-- DEL IVAIMPORTES--> <relacion id="del_regmovimientos_ivaimportes.xml" />
+		</movimientos>
+		
+		<field id="id_regmovim" esClave="true" noshow="true" />
+
+		<field id="puedeborrar" _noshow="true">
+			<expression> case when (select count(*) from CCTIMPUT where ctacod = REG_MOVIMIENTOS.nro_cuenta and siscod = REG_MOVIMIENTOS.subsistema_id and movfec = REG_MOVIMIENTOS.fecha_movimiento and movnro = REG_MOVIMIENTOS.nro_movimiento and movnpv = REG_MOVIMIENTOS.puesto_movimiento and concod = REG_CONCEPTOS.cod_concepto and regmin = REG_MOVIMIENTOS.regmin) &gt; 0 then 0 else 1 end</expression>
+		</field>
+
+		<field id="procesa" local="true" noshow="true">
+		    <setvar>procesa</setvar>
+		    <if exp="'param_procesa' == '0'">
+			<true>'false'</true>
+			<false>'true'</false>
+		    </if>
+		</field>
+
+	    <!-- Si se envía valor 0 a esta variable, no aparece el botón "Anular", por defecto SI aparece -->
+		<field id="param_procesa" local="true" noshow="true" />
+
+        <!-- Comienzo -->
+		<field id="subsistema_id" noshow="true" />
+
+		<field id="regmin" local="true" noshow="true">
+			<label>Nro minuta</label>
+		</field>
+
+		<field id="fecha_movimiento" deshabilitado="true">
+			<label>Fecha</label>
+			<tipo>date</tipo>
+		</field>
+
+		<field id="descripcion_concepto" tabla="REG_CONCEPTOS" deshabilitado="true">
+			<label>Comprobante</label>
+		</field>
+
+		<field id="cod_concepto" tabla="REG_CONCEPTOS" noshow="true">
+			<label>Cod Comprobante</label>
+		</field>
+
+		<field id="reg_fecha" noshow="true">
+			<label>Fecha Reg</label>
+			<tipo>date</tipo>
+		</field>
+
+		<field id="puesto_movimiento" deshabilitado="true" >
+			<label modpos="nobr" >Puesto</label>
+		</field>
+
+		<field id="nro_movimiento" deshabilitado="true" >
+			<label modpos="nobr" >Número</label>
+		</field>
+
+		<field id="nro_cuenta" deshabilitado="true" noshow="true">
+			<label>Cuenta</label>
+		</field>
+
+		<field id="nombre_cuenta" deshabilitado="true">
+			<expression>CASE REG_MOVIMIENTOS.nombre_movimiento WHEN '' THEN REG_CUENTA.nombre_cuenta ELSE REG_MOVIMIENTOS.nombre_movimiento END</expression>
+			<label modpos="nobr" >Cuenta</label>
+			<size>30</size>
+		</field>
+
+		<field id="cuit_cuenta" tabla="REG_CUENTA" deshabilitado="true" >
+			<label>CUIT</label>
+		</field>
+
+		<field id="cod_direccion" tabla="REG_CUENTA" deshabilitado="true"  >
+			<label modpos="nobr">Dirección</label>
+		</field>
+
+		<field id="localidad_id" tabla="REG_CUENTA" deshabilitado="true"  >
+			<label _modpos="nobr">Localidad</label>
+			<expression>SELECT CONCAT(id_localidad,' ', nombre_localidad) FROM GEN_LOCALIDADES where id_localidad = REG_CUENTA.localidad_id limit 1</expression>
+			<size>30</size>
+		</field>
+
+		<field id="provincia_id" tabla="REG_CUENTA" deshabilitado="true"  >
+			<label _modpos="nobr">Provincia</label>
+			<expression>SELECT nombre_provincia FROM GEN_PROVINCIAS where id_provincia = REG_CUENTA.provincia_id limit 1</expression>
+			<size>20</size>
+		</field>
+
+		<field id="vencimiento_movimiento" deshabilitado="true">
+			<label  modpos="nobr">Vencimiento</label>
+		</field>
+
+ 		<field id="imputaciones" local="true">
+			<label colspan="15">Imputaciones</label>
+			<helper type="object" xml="imputaciones_rec.xml" dir="">
+				<parameter source="nro_cuenta" target="ctacod" operator="="/>	
+				<parameter source="subsistema_id" target="siscod" operator="="/>
+				<parameter source="fecha_movimiento" target="movfec" operator="="/>
+				<parameter source="nro_movimiento" target="movnro" operator="="/>
+				<parameter source="puesto_movimiento" target="movnpv" operator="="/>
+				<parameter source="cod_concepto" target="concod" operator="="/>
+			</helper>
+		</field>    
+
+        <field id="fact" local="true">
+            <label colspan="15">Detalle Compra</label>
+			<helper type="object" xml="factura_facremit.xml" dir="">
+				<parameter source="nro_cuenta" target="ctacod" operator="="/>	
+				<parameter source="puesto_movimiento" target="movnpv" operator="="/>	
+				<parameter source="nro_movimiento" target="movnro" operator="="/>	
+				<parameter source="subsistema_id" target="siscod" operator="="/>	
+			</helper>
+        </field>  
+
+		<field id="detdalles" local="true">
+			<label colspan="15">Detalle Venta</label>
+			<helper type="object" xml="factura_detalle_qry.xml" dir="/caja/qry">
+				<parameter source="id_regmovim" target="regmovim_id" operator="="/>	
+				<parameter source="subsistema_id" target="subsistema_id" operator="="/>	
+			</helper>
+		</field>
+
+        <!-- Importes -->
+
+		<field id="neto_movimiento" deshabilitado="true">
+			<label>Neto</label>
+			<tipo>numeric</tipo>
+		</field>
+
+		<field id="total_iva" deshabilitado="true">
+			<label>IVA</label>
+			<expression>SUM(REG_DETALLES.iva_detalle)</expression>
+			<tipo>numeric</tipo>
+		</field>
+
+		<field id="importe_exento" deshabilitado="true">
+			<label>Exento</label>
+			<size>17</size>
+			<tipo>numeric</tipo>
+		</field>           
+
+		<field id="importe_movimiento" deshabilitado="true">
+			<label>Total</label>
+			<size>17</size>
+			<tipo>numeric</tipo>
+		</field>
+
+		<field id="fecha_cae" deshabilitado="true">
+			<label modpos="nobr">Fecha CAI:</label>
+		</field>
+
+        <field id="cliente" local="true" noshow="true" deshabilitado="true">
+			<label>Cliente</label>
+			<expression>IF(REG_MOVIMIENTOS.subsistema_id = '02', 1, 0)</expression>
+        </field>
+
+        <field id="prov" local="true" noshow="true" deshabilitado="true">
+			<label>Proveedor</label>
+			<expression>IF(REG_MOVIMIENTOS.subsistema_id = '01', 1, 0)</expression>
+        </field>
+
+        <field id="fecha_ivaimportes" local="true" _noshow="true" deshabilitado="true">
+			<label>Fecha Iva Importes</label>
+			<expression>IF(REG_MOVIMIENTOS.subsistema_id = '01', reg_fecha, fecha_movimiento)</expression>
+        </field>
+
+		<group>
+			<field id="id_regmovim" />
+		</group>
+    </table>
+
+	<join tipo="left">
+		<table id="REG_CONCEPTOS">
+		    <field id="id_concepto">
+			<condicion operador="=">concepto_id</condicion>
+		    </field>
+		</table>
+	</join>
+
+	<join tipo="left">
+		<table id="REG_CUENTA">
+			<field id="id_regcuenta">
+				<condicion operador="=">regcuenta_id</condicion>
+			</field>
+		</table>
+	</join>
+
+	<join tipo="left">
+		<table id="REG_DETALLES">
+			<field id="regmovim_id">
+				<condicion operador="=">id_regmovim</condicion>
+			</field>
+		</table>
+	</join>
+  </form>
+</histrix>

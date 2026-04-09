@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" paginar="100">
+	<title>Imputacion de Comprobantes</title>
+	<obs/>
+	<form detalle="imputacion_rec_cab.xml">
+	
+		<table id="REG_MOVIMIENTOS" label="Movimientos">
+			<filters>
+				<field id="regcuenta_id">
+					<label>Cuenta</label>
+					<operador>=</operador>
+				</field>
+				<field id="nro_movimiento" >
+					<label>Numero</label>
+					<help/>
+					<operador>=</operador>
+				</field>
+			</filters>
+			
+			<field id="subsistema_id" oculto="true">
+				<label>Cod.</label>
+				<valor>'01'</valor>
+				<condicion operador="=">'01'</condicion>
+				<detalle>subsistema_id</detalle>
+			</field>
+			
+			<field id="id_regmovim" noshow="true">
+				<detalle>regmovim_id</detalle>
+			</field>
+			<field id="nombre_cuenta" tabla="REG_CUENTA">
+				<label>Proveedor</label>
+			</field>
+
+			<field id="abreviacion_concepto" tabla="REG_CONCEPTOS">
+				<label>Conc</label>
+			</field>
+
+
+			
+			<field id="regcuenta_id" noshow="true">
+				<label>Cuenta</label>
+				<helper type="combo" xml="regcuenta_c_saldo_pos2.xml" empty="true">
+					<field id="subsistema_id">
+						<condicion operador="=">'01'</condicion>
+					</field>
+				</helper>
+				<detalle>id_regcuenta</detalle>
+				<detalle>regcuenta_id</detalle>
+				<condicion operador="=">0</condicion>
+			</field>
+			
+			<field id="puesto_movimiento">
+				<label modpos="nobr">PV</label>
+				<detalle>movnpvOP</detalle>
+				<format>%04d</format>
+			</field>
+			
+			<field id="nro_movimiento">
+				<label>Numero</label>
+				<detalle>movnroOP</detalle>
+			</field>
+			
+			<field id="concepto_id" noshow="true">
+				<detalle>concodOP</detalle>
+			</field>
+			
+			<field id="fecha_movimiento">
+				<label modpos="nobr">Fecha</label>
+				<tipo>date</tipo>
+				<detalle>movfecOP</detalle>
+			</field>
+			
+			<field id="saldo_movimiento">
+				<label>saldo</label>
+				<expression>abs(saldo_movimiento)</expression>
+				<condicion operador="!=">0</condicion>
+				<detalle>saldoOP</detalle>
+				<tipo>decimal</tipo>
+			</field>
+			
+			<field id="imputacion_concepto" oculto="true" tabla="REG_CONCEPTOS">
+				<condicion operador="=">0</condicion>
+			</field>
+			
+			<order>
+				<field id="nro_movimiento"/>
+			</order>
+		</table>
+		
+		<join>
+			<table id="REG_CONCEPTOS">
+				<field id="id_concepto">
+					<condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+				</field>
+			</table>
+		</join>
+		<join>
+			<table id="REG_CUENTA">
+				<field id="id_regcuenta">
+					<condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+				</field>
+			</table>
+		</join>
+		
+	</form>
+</histrix>

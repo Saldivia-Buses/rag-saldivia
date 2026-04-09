@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="utf-8"?>
+<histrix tipo="abm" preloadData="false">
+	<title>Movimiento de Herramientas</title>
+	<obs></obs>
+	<form >
+		<table id="HERRMOVS" label="MOVIMIENTOS">
+
+			<filters>
+				<field id="id_herramienta">
+					<label>Cod.</label>
+					<help>Código de Herramienta</help>
+					<operador>=</operador>
+                    <valor default="true">0</valor>
+				</field>
+ 				<field id="nombre_equipo" tabla="MANT_EQUIPOS">
+					<label>Nombre</label>
+					<operador>like</operador>
+				</field>
+ <!-- 				<field id="grucod">
+					<condicion operador='!='>2</condicion>
+				</field>-->
+
+
+			</filters>
+
+			<!-- <filtro_ex>
+				<label>Herramienta</label>
+				<tabla_ex id="HERRAMIENTAS">
+					<field id="id_herramienta"></field>
+					<field id="nomherr"></field>
+					<field id="grucod">
+						<condicion operador='!='>2</condicion>
+					</field>
+
+					<filtra>id_herramienta</filtra>
+				</tabla_ex>
+			</filtro_ex> -->
+
+			<field id="id_herramienta" deshabilitado="true">
+				<label>Herramienta </label>
+				<help>Identificación de la Herramienta </help>
+				<helper type="external" id="MANT_EQUIPOS" >
+				  <field id="numero_serie" colstyle="display:none;">
+				    <detalle>id_herramienta</detalle>
+				  </field>
+				  <field id="nombre_equipo2">
+					<expression>CONCAT('(', numero_serie, ') ', nombre_equipo)</expression>
+				  </field>
+				  <field id="nombre_equipo" colstyle="display:none;">
+					<detalle>nombre_equipo</detalle>
+				  </field>
+				  <field id="tipoequipo_id" colstyle="display:none;">
+				    <condicion operador="=">3</condicion>
+				  </field>
+				  <order>
+				    <field id="nombre_equipo"></field>
+				  </order>
+				</helper>
+				<detalle>id_herramienta</detalle>
+			</field>
+			<field id="nombre_equipo" >
+				<expression>MANT_EQUIPOS.nombre_equipo</expression>
+				<label>Nombre</label>
+				<tipo>varchar</tipo>
+				<size>50</size>
+			</field>
+			<field id="movfec">
+				<label>Fecha Movimiento </label>
+				<help>Fecha de Movimiento de la Herramienta</help>
+			</field>
+			<field id="movher">
+				<label>Código Movimiento </label>
+				<help>Código de Movimiento de la Herramienta</help>
+				<tabla_ex id="CONCHERR">
+					<field id="movher"></field>
+					<field id="movnom"></field>
+				</tabla_ex>
+				<valor>3</valor>
+
+			</field>
+                        <field id="nombres" autocompletar="true" colstyle="display:none;" deshabilitado="false">
+                            <expression>CONCAT(apellido,', ', Nombre)</expression>
+			    <label>Usuario </label>
+			    <help>Usuario </help>
+			    <helper type="external" xml="HLPpersonal_ope.xml" dir="/help_local" />
+			    <size>50</size>
+			</field>
+			
+			<field id="usuario" >
+			    <label Formstyle="display:none;">Usuario</label>
+			    <helper type="combo" xml="HLPpersonal_ope.xml" dir="/help_local" />
+			</field>
+			
+			<field id="cantidad" deshabilitado="true">
+				<label>Cantidad</label>
+				<help>Cantidad</help>
+				<valor>1</valor>
+			</field>
+			<field id="cant2" acumula="true" suma="true" >
+				<expression>cantidad * (case when CONCHERR.movtip = '2' then -1 else 1 end) *  (case when CONCHERR.gruher = 2 then 0 else 1 end)</expression>
+				<label>Subtotal</label>
+			</field>
+
+<!--			<field id="subtotal" acumula="true" suma="true" >
+				<expression>cantidad</expression>
+				<label>Subtotal</label>
+			</field>
+			-->
+			<order>
+				<field id="movfec"></field>
+			</order>
+
+		</table>
+		<join tipo="left">
+			<table id="CONCHERR">
+				<field id="movher">
+					<condicion operador="=">HERRMOVS.movher</condicion>
+				</field>
+				<field id="movnom"></field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="MANT_EQUIPOS">
+				<field id="numero_serie" >
+					<condicion operador="=">HERRMOVS.id_herramienta</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="PERSONAL">
+				<field id="opecod" >
+					<condicion operador="=">HERRMOVS.usuario</condicion>
+				</field>
+			</table>
+		</join>
+	</form>
+</histrix>

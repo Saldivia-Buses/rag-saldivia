@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud" filter="true">
+  <title>Tipos de relaciones</title>
+  <obs></obs>
+  <consulta>
+    <table id="GEN_TIPO_RELACIONES" label="Tipos de relaciones">
+
+      <field id="id_tiporelacion" autoinc="true" noshow="true" esClave="true">
+        <label>Codigo</label>
+        <help>Código de tipo de relación</help>
+      </field>
+      <field id="nombre_tiporelacion">
+        <label>Nombre</label>
+        <help>Nombre de tipo de relación</help>
+        <size>20</size>
+      </field>
+      <field id="nombre_relacioninversa">
+        <label>relación Iversa</label>
+        <help>Relación Inversa</help>
+        <size>20</size>
+      </field>
+    </table>
+  </consulta>
+</histrix>

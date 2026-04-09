@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert" grabafinal="true" xmlImpresion="retgan_reimp_2.xml"  dirImpresion="/retenciones">
+	<title>RETENCIONES</title>
+	<obs/>
+	<form >
+		<table id="RETGANAN" label="retenciones" idCampoCond="RR" CondExp=" &gt; 0">
+
+
+            <field id="printer" id_padre="printer_orden" local="true" >
+                <detalle>printer</detalle>
+                <detalle>directprint</detalle>
+                <setvar>directprint</setvar>
+            </field> 			
+			<field id="cajcod"  _id_cab="concod" local="true">
+			    <valor>29</valor>
+			
+			</field>
+
+			<field id="concod" id_temp="RGcajtip">
+				<valor>2</valor>
+					<detalle>concod</detalle> 
+			</field>
+
+			<field id="ctacod"   id_cab="ctacod"  >
+				<detalle>ctacod</detalle>
+			</field>
+
+			<field id="ganacu" id_cab="acuret">
+
+			</field>
+
+			<field id="ganbru"  id_temp="impgra">
+			</field>
+			<field id="ganfec"  id_cab="movfec"  >
+
+			</field>
+			<field id="gannet"  id_temp="sumanetos">
+			</field>
+			<field id="gannro"  id_cab="nrogan">
+				<detalle>gannro</detalle>
+			</field>
+			<field id="ganpor" id_temp="ganpor" >
+			</field>
+			<field id="gantot"  id_temp="RR" >
+			</field>
+			<field id="catganancias_id"  id_cab="catganancias_id" >
+			</field>
+			<field id="movnro"  id_cab="movnroOP"  >
+				<detalle>movnro</detalle>
+			</field>
+			<field id="regmin" esNroMinuta="true">
+			</field>
+			<field id="siscod" id_cab="sisctb">
+				<valor>10</valor>
+			</field>			
+			<field id="catgan" id_temp="catgan">
+			</field>
+
+
+		</table>
+	</form>
+</histrix>

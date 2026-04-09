@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" preloadData="false">
+  <title>E.P.P.</title>
+  <obs/>
+  <form>
+    <table id="CAL_DOCUMENTOS_EPP" label="E.P.P.">
+
+      <field id="id_documento_epp" noshow="true" esClave="true"/>
+
+      <field id="documento_id" noshow="true" valauto="true">
+        <valor>-1</valor>
+      </field>
+
+    <field id="elemento_proteccion_id" noZero="true">
+      <label>Elementos Proteccion</label>
+        <tabla_ex id="CAL_ELEMENTO_PROT_PERSO">
+          <field id="id_elemento_proteccion"/>
+          <field id="nombre_elemento"/>
+          <field id="activo">
+            <condicion operador="=">1</condicion>
+          </field>
+        </tabla_ex>
+    </field>
+
+    </table>
+  </form>
+</histrix>

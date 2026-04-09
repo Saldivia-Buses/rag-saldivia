@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<histrix tipo="cabecera">
+    <title>Actualizacion Precios</title>
+    <obs></obs>
+    <form>
+        <table id="STK_ARTICULOS" label="Actualizacion de lista de precios">
+            
+            <fieldGroup style="vertical-align:middle;padding:2px 2px 2px 2px;">
+
+		<!-- para poner en STKARTICULOS, CARACTERISITICAS DEL ARTICULO -->
+
+		        <field id="regcuenta_id">
+		          <label>Proveedor</label>
+		          <tabla_ex id="REG_CUENTA" _xml="REG_CUENTA.xml">
+		              <field id="id_regcuenta" />
+		              <field id="nombre_cuenta" />
+		              <field id="subsistema_id" oculto="true">
+		                  <condicion operador="=">'01'</condicion>
+		              </field>
+		          </tabla_ex>
+		          <tipo>varchar</tipo>
+		        </field> 
+
+                <field id="gravado" modpos="nobr" >
+                    <label>Gravado</label>
+                    <options>
+                        <option valor="1">Si</option>
+                        <option valor="0">No</option>
+                    </options>
+                    <valor>1</valor>
+                </field>
+
+                <field id="ivaregimen_id" requiered="true" modpos="nobr">
+                    <label modpos="nobr">Regimen</label>
+                    <help>Seleccione el regimen de iva del producto</help>
+                    <helper type="combo" xml="ivaregimen_qry.xml" dir="/ayudas" empty="true" />
+                    <valor>1</valor>
+                </field>
+
+			</fieldGroup>
+
+
+        </table>
+    </form>
+</histrix>	

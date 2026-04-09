@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" >
+    <title>Ventas</title>
+    <obs></obs>
+
+    <form  >
+        <title>NO CONFORMIDADES</title>
+
+        <table id="CAL_NOCONFORMIDADES" >
+            
+               <field id="id_noconformidad" _noshow="true">
+                    <label>no conformidad</label>
+               </field>
+
+               <field id="nombre_estadonconf" tabla="CAL_ESTADOS_NCONF" colstyle="align:right">
+                    <label>Estado</label>
+               </field>
+            
+               <field id="origennconf_id">
+                    <helper xml="calorigennconf_qry.xml" type="combo" dir="/ayudas" empty="true"/>
+                    <label>Origen</label>
+                    <help>Origen de la No conformidad</help>
+               </field>
+
+               <field id="rhseccion_id">
+                    <helper xml="rhseccion_qry.xml" type="combo" dir="/ayudas" empty="true" />
+                    <label modpos="nobr">Seccion</label>
+                    <help>Seccion de la No conformidad</help>
+               </field>
+
+               <field id="fecha_nconf" tipoOrden="DESC">
+                    <label >Fecha</label>
+                    <help>Fecha de No conformidad</help>
+                    <valor>today</valor>
+                </field>
+               
+               <field id="stkarticulo_id" >
+                    <label colspan="3">Artículo</label>
+         			<helper type="combo" xml="stkarticulo_autocomplete_qry.xml" dir="/ayudas" empty="true">
+		        	</helper>                     
+               </field>
+
+               <field id="subsistema_id" deshabilitado="true" noshow="true">
+                    <label>Subsistema</label>
+               </field>
+                
+               <field id="regcuenta_id" >
+                    <label colspan="3">Cuenta</label>
+                    <helper type="combo" xml="regcuenta_autocomplete_qry.xml" dir="/ayudas" empty="true">
+         			</helper>                     
+               </field>                  
+                <field id="descripcion_nconf" cellMaxLength="30">
+                    <label colspan="3">Descripcion</label>
+                    <help>Descripción de la no conformidad</help>
+                    <size>200</size>
+                </field>
+
+                <field id="contencion_nconf" colstyle="display:none;">
+                    <label colspan="3">Acción de contención</label>
+                    <help>Acción de Contencion ante la no conformidad</help>
+                    <size>200</size>
+                </field>
+
+            
+                           
+                <field id="causa_nconf" >
+                    <label colspan="3">Causa Raiz</label>
+                    <help>Causa Raiz de la no conformidad</help>
+                    <size>200</size>
+                </field>
+                <field id="contencion_nconf" >
+                    <label colspan="3">Acciones</label>
+                    <help>Acciones Correctivas / Preventivas</help>
+                                      
+                </field>
+                <field id="tipo_estadonconf" noshow="true" tabla="CAL_ESTADOS_NCONF">
+                    <condicion operador="=">0</condicion>
+                </field>
+      
+                <field id="responsable" tabla="RH_PERSONAL" >
+					<expresion>  concat(nombre_personal, " ", apellido_personal) </expresion>
+                    <label>responsable</label>
+                </field>
+<!--
+				<field id="_usu" deshabilitado="true" local="true" noselect="true" noshow="true">
+					<valor eval="true">$_SESSION['usuario']</valor>
+				</field>
+				
+				<field id="login_id" noshow="true">
+					<condicion operador="=" valorde="_usu">_usu</condicion>
+				</field> -->
+        </table>
+     
+    
+        <join tipo="left">
+            <table id="CAL_ESTADOS_NCONF">
+                <field id="id_estadonconf">
+                    <condicion operador="=">CAL_NOCONFORMIDADES.estadonconf_id</condicion>
+                </field>
+        
+            </table>
+        </join>
+ 		<join tipo="left">
+            <table id="CAL_ACCIONES_NCONF">
+                <field id="id_accionnconf">
+                    <condicion operador="=">CAL_NOCONFORMIDADES.estadonconf_id</condicion>
+                </field>
+		</table>
+        </join>
+      
+		<join tipo="left">
+            <table id="RH_PERSONAL">
+                <field id="id_rhpersonal">
+                    <condicion operador="=">CAL_NOCONFORMIDADES.responsable_nconf</condicion>
+                </field>
+		</table>
+        </join>
+
+    </form>
+</histrix>

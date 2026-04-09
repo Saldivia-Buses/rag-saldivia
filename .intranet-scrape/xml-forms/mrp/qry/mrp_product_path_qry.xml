@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" >
+  <title>Linea de Producción</title>
+  <obs />
+  <form >
+    <table id="MRP_PRODUCT_PATH" label="Lineas de producción">
+
+		<field id="id_productpath" >
+		</field>
+		<field id="nombre_mrpseccion" tabla="MRP_SECCION">
+			<label>seccion</label>
+		</field>
+		<field id="stkrubro_id" oculto="true">
+		</field>
+    <field id="mrppath_id" oculto="true">
+    </field>    
+	     <order>
+			<field id="mrporden" />
+		 </order>
+    </table>
+    <join>
+    	<table id="MRP_SECCION">
+    		<field id="id_mrpseccion">
+    			<condicion operador="=">mrpseccion_id</condicion>
+    		</field>
+    	</table>
+    </join>
+
+  </form>
+</histrix>

@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="ing" inserta="false" modifica="false" deleteRow="false">
+	<title>Consumo diario por pieza</title>
+	<obs></obs>
+	<form>
+
+		<table id="MRP_CANTIDAD_ARTICULO_MODELO">
+
+		<title>Consumo diario por pieza</title>
+
+			<movimientos>
+				<relacion id="consumo_diario_x_pieza_upd.xml"/>
+			</movimientos>
+
+			 <filters>
+			    <field id="stkarticulo_id">
+					<label>Cod. Art.</label>
+					<operador>=</operador>
+			    </field>
+			</filters>
+
+			<field id="tack_time" local="true">
+				<label>Tack Time</label>
+				<expression>SELECT tack_time FROM PROD_LINEAS WHERE id_linea=1</expression>
+			</field> 
+
+			<field id="id_cantidad_articulo_modelo" noshow="true"/>
+
+			<field id="stkarticulo_id">
+				<label>Cod. Art.</label>
+			</field>
+
+			<field id="nombre_articulo" tabla="STK_ARTICULOS">
+				<label>Descripción</label>
+			</field>
+
+			<field id="modcar" tabla="CARROCERIA">
+				<label>Modelo (cantidad)</label>
+				<expression>group_concat(modcar,' (',cantidad_modelo, ')' SEPARATOR ' - ')</expression>
+			</field>
+
+			<field id="cantidad_modelo" noshow="true">
+				<label>Cant. x Modelo</label>
+<!-- 				<expression>group_concat(cast(cantidad_modelo as varchar(20)))</expression>
+ -->			</field>
+
+			<field id="porciento_incidencia" _tabla="CARROCERIA_INCIDENCIA_HISTORICO" noshow="true">
+				<expression>(select porciento_incidencia from CARROCERIA_INCIDENCIA_HISTORICO HIS where HIS.nrocar = CARROCERIA.nrocar order by fecha DESC limit 1)</expression>
+				<label>% Incidencia</label>
+				<tipo>numeric</tipo>
+			</field>
+			
+			<field id="total">
+				<label>Total</label>
+				<expression>sum(((select porciento_incidencia from CARROCERIA_INCIDENCIA_HISTORICO HIS where HIS.nrocar = CARROCERIA.nrocar order by fecha DESC limit 1) / 100 ) * cantidad_modelo ) * (select tack_time from PROD_LINEAS WHERE id_linea=1)</expression>
+				<tipo>numeric</tipo>
+			</field>
+
+			<field id="demprov" tabla="STK_ARTICULOS" noshow="true">
+				<label>demprov</label>
+			</field>
+
+			<field id="stock_minimo" tabla="STK_ARTICULOS" noshow="true">
+				<label>stock_minimo</label>
+			</field>
+
+			<field id="stock_seguridad" tabla="STK_ARTICULOS" noshow="true">
+				<label>stock_seguridad</label>
+			</field>
+
+			<field id="stock_reposicion" local="true" _noshow="true">
+				<label>Stock reposición</label>
+		        <if exp="true">
+		        	<true>demprov * total + stock_seguridad</true>
+		        	<false></false>
+		        </if>
+		        <tipo>decimal</tipo>
+			</field>
+
+			<group>
+			    <field id="stkarticulo_id" />
+			</group>
+		</table>
+
+		<join>
+		    <table id="STK_ARTICULOS">
+				<field id="id_stkarticulo">
+				    <condicion operador="=">MRP_CANTIDAD_ARTICULO_MODELO.stkarticulo_id</condicion>
+				</field>
+		    </table>
+		</join>
+
+		<join>
+		    <table id="CARROCERIA">
+				<field id="nrocar">
+				    <condicion operador="=">MRP_CANTIDAD_ARTICULO_MODELO.carroceria_id</condicion>
+				</field>
+		    </table>
+		</join>
+
+	</form>
+</histrix>
