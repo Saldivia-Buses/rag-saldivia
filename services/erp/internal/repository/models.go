@@ -295,6 +295,58 @@ type DocumentTree struct {
 	CreatedAt      pgtype.Timestamptz `json:"created_at"`
 }
 
+type ErpAccount struct {
+	ID           pgtype.UUID `json:"id"`
+	TenantID     string      `json:"tenant_id"`
+	Code         string      `json:"code"`
+	Name         string      `json:"name"`
+	ParentID     pgtype.UUID `json:"parent_id"`
+	AccountType  string      `json:"account_type"`
+	IsDetail     bool        `json:"is_detail"`
+	CostCenterID pgtype.UUID `json:"cost_center_id"`
+	Active       bool        `json:"active"`
+}
+
+type ErpArticle struct {
+	ID           pgtype.UUID        `json:"id"`
+	TenantID     string             `json:"tenant_id"`
+	Code         string             `json:"code"`
+	Name         string             `json:"name"`
+	FamilyID     pgtype.UUID        `json:"family_id"`
+	CategoryID   pgtype.UUID        `json:"category_id"`
+	UnitID       pgtype.UUID        `json:"unit_id"`
+	ArticleType  string             `json:"article_type"`
+	MinStock     pgtype.Numeric     `json:"min_stock"`
+	MaxStock     pgtype.Numeric     `json:"max_stock"`
+	ReorderPoint pgtype.Numeric     `json:"reorder_point"`
+	LastCost     pgtype.Numeric     `json:"last_cost"`
+	AvgCost      pgtype.Numeric     `json:"avg_cost"`
+	Metadata     []byte             `json:"metadata"`
+	Active       bool               `json:"active"`
+	CreatedAt    pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt    pgtype.Timestamptz `json:"updated_at"`
+}
+
+type ErpArticlePhoto struct {
+	ID        pgtype.UUID        `json:"id"`
+	TenantID  string             `json:"tenant_id"`
+	ArticleID pgtype.UUID        `json:"article_id"`
+	FileKey   string             `json:"file_key"`
+	SortOrder int32              `json:"sort_order"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpBom struct {
+	ID        pgtype.UUID    `json:"id"`
+	TenantID  string         `json:"tenant_id"`
+	ParentID  pgtype.UUID    `json:"parent_id"`
+	ChildID   pgtype.UUID    `json:"child_id"`
+	Quantity  pgtype.Numeric `json:"quantity"`
+	UnitID    pgtype.UUID    `json:"unit_id"`
+	SortOrder int32          `json:"sort_order"`
+	Notes     string         `json:"notes"`
+}
+
 type ErpCatalog struct {
 	ID        pgtype.UUID        `json:"id"`
 	TenantID  string             `json:"tenant_id"`
@@ -307,6 +359,15 @@ type ErpCatalog struct {
 	Metadata  []byte             `json:"metadata"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+}
+
+type ErpCostCenter struct {
+	ID       pgtype.UUID `json:"id"`
+	TenantID string      `json:"tenant_id"`
+	Code     string      `json:"code"`
+	Name     string      `json:"name"`
+	ParentID pgtype.UUID `json:"parent_id"`
+	Active   bool        `json:"active"`
 }
 
 type ErpEntity struct {
@@ -368,12 +429,75 @@ type ErpEntityRelation struct {
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 }
 
+type ErpFiscalYear struct {
+	ID        pgtype.UUID `json:"id"`
+	TenantID  string      `json:"tenant_id"`
+	Year      int32       `json:"year"`
+	StartDate pgtype.Date `json:"start_date"`
+	EndDate   pgtype.Date `json:"end_date"`
+	Status    string      `json:"status"`
+}
+
+type ErpJournalEntry struct {
+	ID            pgtype.UUID        `json:"id"`
+	TenantID      string             `json:"tenant_id"`
+	Number        string             `json:"number"`
+	Date          pgtype.Date        `json:"date"`
+	FiscalYearID  pgtype.UUID        `json:"fiscal_year_id"`
+	Concept       string             `json:"concept"`
+	EntryType     string             `json:"entry_type"`
+	ReferenceType pgtype.Text        `json:"reference_type"`
+	ReferenceID   pgtype.UUID        `json:"reference_id"`
+	UserID        string             `json:"user_id"`
+	Status        string             `json:"status"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpJournalLine struct {
+	ID           pgtype.UUID    `json:"id"`
+	TenantID     string         `json:"tenant_id"`
+	EntryID      pgtype.UUID    `json:"entry_id"`
+	AccountID    pgtype.UUID    `json:"account_id"`
+	CostCenterID pgtype.UUID    `json:"cost_center_id"`
+	EntryDate    pgtype.Date    `json:"entry_date"`
+	Debit        pgtype.Numeric `json:"debit"`
+	Credit       pgtype.Numeric `json:"credit"`
+	Description  string         `json:"description"`
+	SortOrder    int32          `json:"sort_order"`
+}
+
 type ErpSequence struct {
 	ID        pgtype.UUID `json:"id"`
 	TenantID  string      `json:"tenant_id"`
 	Domain    string      `json:"domain"`
 	Prefix    string      `json:"prefix"`
 	NextValue int64       `json:"next_value"`
+}
+
+type ErpStockLevel struct {
+	ID          pgtype.UUID        `json:"id"`
+	TenantID    string             `json:"tenant_id"`
+	ArticleID   pgtype.UUID        `json:"article_id"`
+	WarehouseID pgtype.UUID        `json:"warehouse_id"`
+	Quantity    pgtype.Numeric     `json:"quantity"`
+	Reserved    pgtype.Numeric     `json:"reserved"`
+	UpdatedAt   pgtype.Timestamptz `json:"updated_at"`
+}
+
+type ErpStockMovement struct {
+	ID            pgtype.UUID        `json:"id"`
+	TenantID      string             `json:"tenant_id"`
+	ArticleID     pgtype.UUID        `json:"article_id"`
+	WarehouseID   pgtype.UUID        `json:"warehouse_id"`
+	MovementType  string             `json:"movement_type"`
+	Quantity      pgtype.Numeric     `json:"quantity"`
+	UnitCost      pgtype.Numeric     `json:"unit_cost"`
+	ReferenceType pgtype.Text        `json:"reference_type"`
+	ReferenceID   pgtype.UUID        `json:"reference_id"`
+	ConceptID     pgtype.UUID        `json:"concept_id"`
+	UserID        string             `json:"user_id"`
+	Notes         string             `json:"notes"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
 }
 
 type ErpSuggestion struct {
@@ -394,6 +518,15 @@ type ErpSuggestionResponse struct {
 	UserID       string             `json:"user_id"`
 	Body         string             `json:"body"`
 	CreatedAt    pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpWarehouse struct {
+	ID       pgtype.UUID `json:"id"`
+	TenantID string      `json:"tenant_id"`
+	Code     string      `json:"code"`
+	Name     string      `json:"name"`
+	Location string      `json:"location"`
+	Active   bool        `json:"active"`
 }
 
 type FeedbackEvent struct {
