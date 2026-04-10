@@ -84,6 +84,10 @@ func main() {
 	hrHandler := handler.NewHR(hrSvc)
 	qualitySvc := service.NewQuality(repo, auditWriter, publisher)
 	qualityHandler := handler.NewQuality(qualitySvc)
+	maintenanceSvc := service.NewMaintenance(repo, auditWriter, publisher)
+	maintenanceHandler := handler.NewMaintenance(maintenanceSvc)
+	adminSvc := service.NewAdmin(repo, auditWriter, publisher)
+	adminHandler := handler.NewAdmin(adminSvc)
 
 	// Health
 	hc := health.New("erp")
@@ -120,6 +124,8 @@ func main() {
 		r.Mount("/v1/erp/production", productionHandler.Routes(authWrite))
 		r.Mount("/v1/erp/hr", hrHandler.Routes(authWrite))
 		r.Mount("/v1/erp/quality", qualityHandler.Routes(authWrite))
+		r.Mount("/v1/erp/maintenance", maintenanceHandler.Routes(authWrite))
+		r.Mount("/v1/erp/admin", adminHandler.Routes(authWrite))
 	})
 
 	app.Run()
