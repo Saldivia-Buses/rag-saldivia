@@ -105,11 +105,13 @@ func (s *Sales) CreateQuotation(ctx context.Context, req CreateQuotationRequest)
 	}
 
 	// Calculate total
-	_, _ = tx.Exec(ctx,
+	if _, err := tx.Exec(ctx,
 		`UPDATE erp_quotations SET total = (
 			SELECT COALESCE(SUM(quantity * unit_price), 0) FROM erp_quotation_lines
 			WHERE quotation_id = $1 AND tenant_id = $2
-		) WHERE id = $1 AND tenant_id = $2`, q.ID, req.TenantID)
+		) WHERE id = $1 AND tenant_id = $2`, q.ID, req.TenantID); err != nil {
+		return nil, fmt.Errorf("recalculate quotation total: %w", err)
+	}
 
 	if err := tx.Commit(ctx); err != nil {
 		return nil, fmt.Errorf("commit: %w", err)

@@ -136,29 +136,34 @@ func (s *Invoicing) CreateInvoice(ctx context.Context, req CreateInvoiceRequest)
 	}
 
 	// Recalculate totals from lines
-	_, _ = tx.Exec(ctx, `
+	if _, err := tx.Exec(ctx, `
 		UPDATE erp_invoice_lines SET
 			line_total = quantity * unit_price,
 			tax_amount = quantity * unit_price * tax_rate / 100
-		WHERE invoice_id = $1 AND tenant_id = $2`, inv.ID, req.TenantID)
+		WHERE invoice_id = $1 AND tenant_id = $2`, inv.ID, req.TenantID); err != nil {
+		return nil, fmt.Errorf("recalculate line totals: %w", err)
+	}
 
-	_, _ = tx.Exec(ctx, `
+	if _, err := tx.Exec(ctx, `
 		UPDATE erp_invoices SET
 			subtotal = (SELECT COALESCE(SUM(line_total), 0) FROM erp_invoice_lines WHERE invoice_id = $1 AND tenant_id = $2),
 			tax_amount = (SELECT COALESCE(SUM(tax_amount), 0) FROM erp_invoice_lines WHERE invoice_id = $1 AND tenant_id = $2),
 			total = (SELECT COALESCE(SUM(line_total + tax_amount), 0) FROM erp_invoice_lines WHERE invoice_id = $1 AND tenant_id = $2)
-		WHERE id = $1 AND tenant_id = $2`, inv.ID, req.TenantID)
+		WHERE id = $1 AND tenant_id = $2`, inv.ID, req.TenantID); err != nil {
+		return nil, fmt.Errorf("recalculate invoice totals: %w", err)
+	}
 
+	if err := tx.Commit(ctx); err != nil {
+		return nil, fmt.Errorf("commit: %w", err)
+	}
+
+	// StrictLogger after commit — avoids phantom audit entries if commit fails
 	if err := s.audit.WriteStrict(ctx, audit.Entry{
 		TenantID: req.TenantID, UserID: req.UserID,
 		Action: "erp.invoice.created", Resource: uuidStr(inv.ID),
 		Details: map[string]any{"number": req.Number, "type": req.InvoiceType}, IP: req.IP,
 	}); err != nil {
-		return nil, fmt.Errorf("strict audit failed, aborting: %w", err)
-	}
-
-	if err := tx.Commit(ctx); err != nil {
-		return nil, fmt.Errorf("commit: %w", err)
+		slog.Error("STRICT audit failed after invoice commit", "error", err, "invoice_id", uuidStr(inv.ID))
 	}
 
 	s.publisher.Broadcast(req.TenantID, "erp_invoicing", map[string]any{

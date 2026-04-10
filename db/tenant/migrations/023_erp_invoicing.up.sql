@@ -35,6 +35,20 @@ CREATE TRIGGER trg_invoice_immutable BEFORE UPDATE OR DELETE ON erp_invoices
     FOR EACH ROW WHEN (OLD.status IN ('posted', 'paid'))
     EXECUTE FUNCTION erp_prevent_financial_mutation();
 
+-- Immutability for invoice lines — prevents modifying lines of posted invoices
+CREATE OR REPLACE FUNCTION erp_prevent_invoice_line_mutation() RETURNS trigger AS $$
+DECLARE parent_status TEXT;
+BEGIN
+    SELECT status INTO parent_status FROM erp_invoices
+    WHERE id = COALESCE(OLD.invoice_id, NEW.invoice_id);
+    IF parent_status IN ('posted', 'paid') THEN
+        RAISE EXCEPTION 'cannot modify lines of % invoice', parent_status;
+    END IF;
+    IF TG_OP = 'DELETE' THEN RETURN OLD; END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
 -- Detalle del comprobante
 CREATE TABLE IF NOT EXISTS erp_invoice_lines (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -51,11 +65,14 @@ CREATE TABLE IF NOT EXISTS erp_invoice_lines (
 );
 CREATE INDEX idx_erp_invoice_lines ON erp_invoice_lines(tenant_id, invoice_id);
 
+CREATE TRIGGER trg_invoice_lines_immutable BEFORE UPDATE OR DELETE ON erp_invoice_lines
+    FOR EACH ROW EXECUTE FUNCTION erp_prevent_invoice_line_mutation();
+
 -- Libro IVA (generado al contabilizar)
 CREATE TABLE IF NOT EXISTS erp_tax_entries (
     id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id   TEXT NOT NULL,
-    invoice_id  UUID NOT NULL REFERENCES erp_invoices(id),
+    invoice_id  UUID NOT NULL REFERENCES erp_invoices(id) ON DELETE RESTRICT,
     period      TEXT NOT NULL,
     direction   TEXT NOT NULL CHECK (direction IN ('purchases', 'sales')),
     net_amount  NUMERIC(16,2) NOT NULL,
@@ -69,8 +86,8 @@ CREATE INDEX idx_erp_tax_period ON erp_tax_entries(tenant_id, period, direction)
 CREATE TABLE IF NOT EXISTS erp_withholdings (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id       TEXT NOT NULL,
-    invoice_id      UUID REFERENCES erp_invoices(id),
-    movement_id     UUID REFERENCES erp_treasury_movements(id),
+    invoice_id      UUID REFERENCES erp_invoices(id) ON DELETE RESTRICT,
+    movement_id     UUID REFERENCES erp_treasury_movements(id) ON DELETE RESTRICT,
     entity_id       UUID NOT NULL REFERENCES erp_entities(id),
     type            TEXT NOT NULL CHECK (type IN ('iibb', 'gains', 'iva', 'suss')),
     rate            NUMERIC(5,2) NOT NULL,
