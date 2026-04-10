@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -9,7 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { DarkModeToggle } from "@/components/dark-mode-toggle";
+import { Switch } from "@/components/ui/switch";
 
 function useLocalStorage(key: string, fallback: string) {
   const [value, setValue] = useState(fallback);
@@ -35,23 +35,35 @@ export default function SystemSettingsPage() {
     "America/Argentina/Buenos_Aires",
   );
 
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    setIsDark(document.documentElement.classList.contains("dark"));
+  }, []);
+
+  const toggleDark = useCallback((checked: boolean) => {
+    setIsDark(checked);
+    document.documentElement.classList.toggle("dark", checked);
+    localStorage.setItem("sda-dark-mode", String(checked));
+  }, []);
+
   return (
-    <div className="flex-1 overflow-y-auto px-10 py-8">
-      <div className="mx-auto w-full max-w-4xl">
+    <div className="flex-1 overflow-y-auto p-8">
+      <div className="mx-auto w-full max-w-2xl">
         <div className="mb-6">
-          <h1 className="text-2xl font-semibold">Configuración del sistema</h1>
-          <p className="text-muted-foreground">
+          <h1 className="text-lg font-semibold">Configuración del sistema</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">
             Preferencias generales de la plataforma.
           </p>
         </div>
 
-        <div className="rounded-xl bg-card">
+        <div className="rounded-xl bg-card border border-border/40">
           <div className="p-6 space-y-6">
             {/* Language */}
             <div className="space-y-2">
-              <Label htmlFor="language">Idioma</Label>
+              <Label htmlFor="language" className="text-sm">Idioma</Label>
               <Select value={language} onValueChange={setLanguage}>
-                <SelectTrigger id="language">
+                <SelectTrigger id="language" className="h-10">
                   <SelectValue placeholder="Seleccionar idioma" />
                 </SelectTrigger>
                 <SelectContent>
@@ -66,9 +78,9 @@ export default function SystemSettingsPage() {
 
             {/* Timezone */}
             <div className="space-y-2">
-              <Label htmlFor="timezone">Zona horaria</Label>
+              <Label htmlFor="timezone" className="text-sm">Zona horaria</Label>
               <Select value={timezone} onValueChange={setTimezone}>
-                <SelectTrigger id="timezone">
+                <SelectTrigger id="timezone" className="h-10">
                   <SelectValue placeholder="Seleccionar zona horaria" />
                 </SelectTrigger>
                 <SelectContent>
@@ -94,15 +106,20 @@ export default function SystemSettingsPage() {
               </Select>
             </div>
 
+            <div className="h-px bg-border/40" />
+
             {/* Dark mode */}
             <div className="flex items-center justify-between">
               <div>
-                <Label>Modo oscuro</Label>
-                <p className="text-xs text-muted-foreground">
+                <Label className="text-sm">Modo oscuro</Label>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
                   Alternar entre modo claro y oscuro.
                 </p>
               </div>
-              <DarkModeToggle />
+              <Switch
+                checked={isDark}
+                onCheckedChange={toggleDark}
+              />
             </div>
           </div>
         </div>

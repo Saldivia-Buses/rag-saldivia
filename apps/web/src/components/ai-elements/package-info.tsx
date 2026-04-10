@@ -73,6 +73,7 @@ export type PackageInfoChangeTypeProps = HTMLAttributes<HTMLDivElement>;
 export const PackageInfoChangeType = ({
   className,
   children,
+  color: _,
   ...props
 }: PackageInfoChangeTypeProps) => {
   const { changeType } = useContext(PackageInfoContext);
