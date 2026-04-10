@@ -45,8 +45,10 @@ CREATE POLICY tenant_isolation ON erp_sequences
 
 -- Seed ERP permissions (pattern P5)
 INSERT INTO permissions (id, name, description, category) VALUES
-    ('erp.catalogs.read',  'Ver catalogos',      'Listar catalogos ERP',       'erp'),
-    ('erp.catalogs.write', 'Gestionar catalogos', 'Crear/editar catalogos ERP', 'erp')
+    ('erp.catalogs.read',     'Ver catalogos',         'Listar catalogos ERP',       'erp'),
+    ('erp.catalogs.write',    'Gestionar catalogos',   'Crear/editar catalogos ERP', 'erp'),
+    ('erp.suggestions.read',  'Ver sugerencias',       'Listar sugerencias',         'erp'),
+    ('erp.suggestions.write', 'Gestionar sugerencias', 'Crear/responder sugerencias','erp')
 ON CONFLICT (id) DO NOTHING;
 
 -- Grant catalog permissions to admin role

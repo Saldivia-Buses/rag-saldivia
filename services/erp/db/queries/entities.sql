@@ -37,7 +37,7 @@ SET code = $3, name = $4, encrypted_tax_id = $5, tax_id_hash = $6,
 WHERE id = $1 AND tenant_id = $2 AND deleted_at IS NULL
 RETURNING id, tenant_id, type, code, name, encrypted_tax_id, tax_id_hash, email, phone, address, metadata, active, created_at, updated_at;
 
--- name: SoftDeleteEntity :exec
+-- name: SoftDeleteEntity :execrows
 UPDATE erp_entities SET deleted_at = now(), active = false, updated_at = now()
 WHERE id = $1 AND tenant_id = $2;
 

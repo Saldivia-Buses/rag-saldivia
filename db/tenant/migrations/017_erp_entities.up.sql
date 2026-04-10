@@ -6,7 +6,7 @@
 CREATE TABLE IF NOT EXISTS erp_entities (
     id               UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id        TEXT NOT NULL,
-    type             TEXT NOT NULL,              -- 'employee', 'customer', 'supplier'
+    type             TEXT NOT NULL CHECK (type IN ('employee', 'customer', 'supplier')),
     code             TEXT NOT NULL,              -- legajo, CUIT, codigo proveedor
     name             TEXT NOT NULL,
     encrypted_tax_id BYTEA,                     -- CUIT/CUIL (envelope encrypted, pattern P8)
@@ -63,6 +63,8 @@ CREATE TABLE IF NOT EXISTS erp_entity_relations (
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
     UNIQUE(tenant_id, from_id, to_id, type)
 );
+CREATE INDEX idx_erp_entity_relations_from ON erp_entity_relations(tenant_id, from_id);
+CREATE INDEX idx_erp_entity_relations_to ON erp_entity_relations(tenant_id, to_id);
 
 -- Notas/eventos sobre una entidad
 CREATE TABLE IF NOT EXISTS erp_entity_notes (

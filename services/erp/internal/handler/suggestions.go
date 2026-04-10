@@ -44,7 +44,7 @@ func (h *Suggestions) Routes(authWrite func(http.Handler) http.Handler) chi.Rout
 	r := chi.NewRouter()
 
 	r.Group(func(r chi.Router) {
-		r.Use(sdamw.RequirePermission("erp.catalogs.read"))
+		r.Use(sdamw.RequirePermission("erp.suggestions.read"))
 		r.Get("/", h.List)
 		r.Get("/unread", h.CountUnread)
 		r.Get("/{id}", h.Get)
@@ -52,7 +52,7 @@ func (h *Suggestions) Routes(authWrite func(http.Handler) http.Handler) chi.Rout
 
 	r.Group(func(r chi.Router) {
 		r.Use(authWrite)
-		r.Use(sdamw.RequirePermission("erp.catalogs.write"))
+		r.Use(sdamw.RequirePermission("erp.suggestions.write"))
 		r.Post("/", h.Create)
 		r.Post("/{id}/respond", h.Respond)
 		r.Patch("/{id}/read", h.MarkRead)

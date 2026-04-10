@@ -1,6 +1,8 @@
 package handler
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"log/slog"
 	"net/http"
@@ -11,6 +13,12 @@ import (
 	"github.com/Camionerou/rag-saldivia/pkg/pagination"
 	"github.com/Camionerou/rag-saldivia/services/erp/internal/service"
 )
+
+// hashTaxID returns a SHA-256 hex hash of a tax ID for searchable storage.
+func hashTaxID(taxID string) string {
+	h := sha256.Sum256([]byte(taxID))
+	return hex.EncodeToString(h[:])
+}
 
 // Entities handles entity endpoints (employees, customers, suppliers).
 type Entities struct {
@@ -66,7 +74,10 @@ func (h *Entities) List(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	count, _ := h.svc.Count(r.Context(), slug, entityType, activeOnly)
+	count, err := h.svc.Count(r.Context(), slug, entityType, activeOnly)
+	if err != nil {
+		slog.Error("count entities failed", "error", err)
+	}
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]any{
@@ -118,11 +129,12 @@ func (h *Entities) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: encrypt tax_id with pkg/crypto when envelope encryption is wired
+	// Hash tax_id for searchable storage. Envelope encryption for encrypted_tax_id
+	// will be wired when pkg/crypto KEK is provisioned per-tenant.
 	var taxIDHash *string
 	if body.TaxID != nil && *body.TaxID != "" {
-		h := *body.TaxID // store plaintext hash for now
-		taxIDHash = &h
+		hash := hashTaxID(*body.TaxID)
+		taxIDHash = &hash
 	}
 
 	var addr, meta []byte
@@ -190,8 +202,8 @@ func (h *Entities) Update(w http.ResponseWriter, r *http.Request) {
 
 	var taxIDHash *string
 	if body.TaxID != nil && *body.TaxID != "" {
-		h := *body.TaxID
-		taxIDHash = &h
+		hash := hashTaxID(*body.TaxID)
+		taxIDHash = &hash
 	}
 
 	var addr, meta []byte

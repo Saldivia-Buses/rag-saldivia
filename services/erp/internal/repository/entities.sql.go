@@ -534,7 +534,7 @@ func (q *Queries) ListEntityRelations(ctx context.Context, arg ListEntityRelatio
 	return items, nil
 }
 
-const softDeleteEntity = `-- name: SoftDeleteEntity :exec
+const softDeleteEntity = `-- name: SoftDeleteEntity :execrows
 UPDATE erp_entities SET deleted_at = now(), active = false, updated_at = now()
 WHERE id = $1 AND tenant_id = $2
 `
@@ -544,9 +544,12 @@ type SoftDeleteEntityParams struct {
 	TenantID string      `json:"tenant_id"`
 }
 
-func (q *Queries) SoftDeleteEntity(ctx context.Context, arg SoftDeleteEntityParams) error {
-	_, err := q.db.Exec(ctx, softDeleteEntity, arg.ID, arg.TenantID)
-	return err
+func (q *Queries) SoftDeleteEntity(ctx context.Context, arg SoftDeleteEntityParams) (int64, error) {
+	result, err := q.db.Exec(ctx, softDeleteEntity, arg.ID, arg.TenantID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }
 
 const updateEntity = `-- name: UpdateEntity :one

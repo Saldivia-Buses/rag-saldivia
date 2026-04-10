@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"strings"
 
 	"github.com/jackc/pgx/v5/pgtype"
 
@@ -11,6 +12,8 @@ import (
 	"github.com/Camionerou/rag-saldivia/pkg/traces"
 	"github.com/Camionerou/rag-saldivia/services/erp/internal/repository"
 )
+
+var likeEscaper = strings.NewReplacer("%", "\\%", "_", "\\_")
 
 // Entities handles entity business logic (employees, customers, suppliers).
 type Entities struct {
@@ -30,7 +33,7 @@ func (s *Entities) List(ctx context.Context, tenantID, entityType, search string
 		TenantID:   tenantID,
 		Type:       entityType,
 		ActiveOnly: activeOnly,
-		Search:     search,
+		Search:     likeEscaper.Replace(search),
 		Limit:      int32(limit),
 		Offset:     int32(offset),
 	})
@@ -114,10 +117,15 @@ type CreateEntityRequest struct {
 	IP             string
 }
 
+var validEntityTypes = map[string]bool{"employee": true, "customer": true, "supplier": true}
+
 // Create creates a new entity.
 func (s *Entities) Create(ctx context.Context, req CreateEntityRequest) (repository.CreateEntityRow, error) {
 	if req.Type == "" || req.Code == "" || req.Name == "" {
 		return repository.CreateEntityRow{}, fmt.Errorf("type, code, and name are required")
+	}
+	if !validEntityTypes[req.Type] {
+		return repository.CreateEntityRow{}, fmt.Errorf("invalid entity type: %s", req.Type)
 	}
 
 	if req.Address == nil {
@@ -231,10 +239,14 @@ func (s *Entities) Update(ctx context.Context, req UpdateEntityRequest) (reposit
 
 // Delete soft-deletes an entity.
 func (s *Entities) Delete(ctx context.Context, id pgtype.UUID, tenantID, userID, ip string) error {
-	if err := s.repo.SoftDeleteEntity(ctx, repository.SoftDeleteEntityParams{
+	rows, err := s.repo.SoftDeleteEntity(ctx, repository.SoftDeleteEntityParams{
 		ID: id, TenantID: tenantID,
-	}); err != nil {
+	})
+	if err != nil {
 		return fmt.Errorf("delete entity: %w", err)
+	}
+	if rows == 0 {
+		return fmt.Errorf("entity not found")
 	}
 
 	idStr := uuidStr(id)
