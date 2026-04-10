@@ -92,7 +92,7 @@ func (h *HR) GetEmployee(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
 		return
 	}
-	ed, err := h.svc.GetEmployee(r.Context(), id, tenantSlug(r))
+	ed, err := h.svc.GetEmployee(r.Context(), id, tenantSlug(r), r.Header.Get("X-User-ID"), r.RemoteAddr)
 	if err != nil {
 		http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
 		return

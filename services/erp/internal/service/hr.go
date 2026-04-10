@@ -40,8 +40,17 @@ func (s *HR) ListEmployees(ctx context.Context, tenantID string, limit, offset i
 	})
 }
 
-func (s *HR) GetEmployee(ctx context.Context, entityID pgtype.UUID, tenantID string) (repository.GetEmployeeDetailRow, error) {
-	return s.repo.GetEmployeeDetail(ctx, repository.GetEmployeeDetailParams{EntityID: entityID, TenantID: tenantID})
+func (s *HR) GetEmployee(ctx context.Context, entityID pgtype.UUID, tenantID, userID, ip string) (repository.GetEmployeeDetailRow, error) {
+	ed, err := s.repo.GetEmployeeDetail(ctx, repository.GetEmployeeDetailParams{EntityID: entityID, TenantID: tenantID})
+	if err != nil {
+		return repository.GetEmployeeDetailRow{}, err
+	}
+	// Audit PII read (pattern P7 — reads of salary/health/union must be logged)
+	s.audit.Write(ctx, audit.Entry{
+		TenantID: tenantID, UserID: userID,
+		Action: "erp.employee.viewed", Resource: uuidStr(entityID), IP: ip,
+	})
+	return ed, nil
 }
 
 func (s *HR) UpsertEmployee(ctx context.Context, p repository.UpsertEmployeeDetailParams, userID, ip string) (repository.ErpEmployeeDetail, error) {
