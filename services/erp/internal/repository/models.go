@@ -336,6 +336,20 @@ type ErpArticlePhoto struct {
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 }
 
+type ErpBankAccount struct {
+	ID            pgtype.UUID        `json:"id"`
+	TenantID      string             `json:"tenant_id"`
+	BankName      string             `json:"bank_name"`
+	Branch        string             `json:"branch"`
+	AccountNumber string             `json:"account_number"`
+	Cbu           pgtype.Text        `json:"cbu"`
+	Alias         pgtype.Text        `json:"alias"`
+	CurrencyID    pgtype.UUID        `json:"currency_id"`
+	AccountID     pgtype.UUID        `json:"account_id"`
+	Active        bool               `json:"active"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+}
+
 type ErpBom struct {
 	ID        pgtype.UUID    `json:"id"`
 	TenantID  string         `json:"tenant_id"`
@@ -345,6 +359,28 @@ type ErpBom struct {
 	UnitID    pgtype.UUID    `json:"unit_id"`
 	SortOrder int32          `json:"sort_order"`
 	Notes     string         `json:"notes"`
+}
+
+type ErpCashCount struct {
+	ID             pgtype.UUID        `json:"id"`
+	TenantID       string             `json:"tenant_id"`
+	CashRegisterID pgtype.UUID        `json:"cash_register_id"`
+	Date           pgtype.Date        `json:"date"`
+	Expected       pgtype.Numeric     `json:"expected"`
+	Counted        pgtype.Numeric     `json:"counted"`
+	Difference     pgtype.Numeric     `json:"difference"`
+	UserID         string             `json:"user_id"`
+	Notes          string             `json:"notes"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpCashRegister struct {
+	ID        pgtype.UUID        `json:"id"`
+	TenantID  string             `json:"tenant_id"`
+	Name      string             `json:"name"`
+	AccountID pgtype.UUID        `json:"account_id"`
+	Active    bool               `json:"active"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
 }
 
 type ErpCatalog struct {
@@ -359,6 +395,22 @@ type ErpCatalog struct {
 	Metadata  []byte             `json:"metadata"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 	UpdatedAt pgtype.Timestamptz `json:"updated_at"`
+}
+
+type ErpCheck struct {
+	ID         pgtype.UUID        `json:"id"`
+	TenantID   string             `json:"tenant_id"`
+	Direction  string             `json:"direction"`
+	Number     string             `json:"number"`
+	BankName   string             `json:"bank_name"`
+	Amount     pgtype.Numeric     `json:"amount"`
+	IssueDate  pgtype.Date        `json:"issue_date"`
+	DueDate    pgtype.Date        `json:"due_date"`
+	EntityID   pgtype.UUID        `json:"entity_id"`
+	Status     string             `json:"status"`
+	MovementID pgtype.UUID        `json:"movement_id"`
+	Notes      string             `json:"notes"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
 }
 
 type ErpCostCenter struct {
@@ -466,6 +518,51 @@ type ErpJournalLine struct {
 	SortOrder    int32          `json:"sort_order"`
 }
 
+type ErpPurchaseOrder struct {
+	ID         pgtype.UUID        `json:"id"`
+	TenantID   string             `json:"tenant_id"`
+	Number     string             `json:"number"`
+	Date       pgtype.Date        `json:"date"`
+	SupplierID pgtype.UUID        `json:"supplier_id"`
+	Status     string             `json:"status"`
+	CurrencyID pgtype.UUID        `json:"currency_id"`
+	Total      pgtype.Numeric     `json:"total"`
+	Notes      string             `json:"notes"`
+	UserID     string             `json:"user_id"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpPurchaseOrderLine struct {
+	ID          pgtype.UUID    `json:"id"`
+	TenantID    string         `json:"tenant_id"`
+	OrderID     pgtype.UUID    `json:"order_id"`
+	ArticleID   pgtype.UUID    `json:"article_id"`
+	Quantity    pgtype.Numeric `json:"quantity"`
+	UnitPrice   pgtype.Numeric `json:"unit_price"`
+	ReceivedQty pgtype.Numeric `json:"received_qty"`
+	SortOrder   int32          `json:"sort_order"`
+}
+
+type ErpPurchaseReceipt struct {
+	ID        pgtype.UUID        `json:"id"`
+	TenantID  string             `json:"tenant_id"`
+	OrderID   pgtype.UUID        `json:"order_id"`
+	Date      pgtype.Date        `json:"date"`
+	Number    string             `json:"number"`
+	UserID    string             `json:"user_id"`
+	Notes     string             `json:"notes"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpPurchaseReceiptLine struct {
+	ID          pgtype.UUID    `json:"id"`
+	TenantID    string         `json:"tenant_id"`
+	ReceiptID   pgtype.UUID    `json:"receipt_id"`
+	OrderLineID pgtype.UUID    `json:"order_line_id"`
+	ArticleID   pgtype.UUID    `json:"article_id"`
+	Quantity    pgtype.Numeric `json:"quantity"`
+}
+
 type ErpSequence struct {
 	ID        pgtype.UUID `json:"id"`
 	TenantID  string      `json:"tenant_id"`
@@ -518,6 +615,28 @@ type ErpSuggestionResponse struct {
 	UserID       string             `json:"user_id"`
 	Body         string             `json:"body"`
 	CreatedAt    pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpTreasuryMovement struct {
+	ID             pgtype.UUID        `json:"id"`
+	TenantID       string             `json:"tenant_id"`
+	Date           pgtype.Date        `json:"date"`
+	Number         string             `json:"number"`
+	MovementType   string             `json:"movement_type"`
+	Amount         pgtype.Numeric     `json:"amount"`
+	CurrencyID     pgtype.UUID        `json:"currency_id"`
+	BankAccountID  pgtype.UUID        `json:"bank_account_id"`
+	CashRegisterID pgtype.UUID        `json:"cash_register_id"`
+	EntityID       pgtype.UUID        `json:"entity_id"`
+	ConceptID      pgtype.UUID        `json:"concept_id"`
+	PaymentMethod  pgtype.Text        `json:"payment_method"`
+	ReferenceType  pgtype.Text        `json:"reference_type"`
+	ReferenceID    pgtype.UUID        `json:"reference_id"`
+	JournalEntryID pgtype.UUID        `json:"journal_entry_id"`
+	UserID         string             `json:"user_id"`
+	Notes          string             `json:"notes"`
+	Status         string             `json:"status"`
+	CreatedAt      pgtype.Timestamptz `json:"created_at"`
 }
 
 type ErpWarehouse struct {

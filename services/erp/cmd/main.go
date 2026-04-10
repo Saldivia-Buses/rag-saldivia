@@ -68,6 +68,10 @@ func main() {
 	stockHandler := handler.NewStock(stockSvc)
 	accountingSvc := service.NewAccounting(repo, pool, auditWriter, publisher)
 	accountingHandler := handler.NewAccounting(accountingSvc)
+	treasurySvc := service.NewTreasury(repo, pool, auditWriter, publisher)
+	treasuryHandler := handler.NewTreasury(treasurySvc)
+	purchasingSvc := service.NewPurchasing(repo, pool, auditWriter, publisher)
+	purchasingHandler := handler.NewPurchasing(purchasingSvc)
 
 	// Health
 	hc := health.New("erp")
@@ -96,6 +100,8 @@ func main() {
 		r.Mount("/v1/erp/entities", entitiesHandler.Routes(authWrite))
 		r.Mount("/v1/erp/stock", stockHandler.Routes(authWrite))
 		r.Mount("/v1/erp/accounting", accountingHandler.Routes(authWrite))
+		r.Mount("/v1/erp/treasury", treasuryHandler.Routes(authWrite))
+		r.Mount("/v1/erp/purchasing", purchasingHandler.Routes(authWrite))
 	})
 
 	app.Run()
