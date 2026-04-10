@@ -291,7 +291,7 @@ func (q *Queries) ListAccountMovements(ctx context.Context, arg ListAccountMovem
 	return items, nil
 }
 
-const updateMovementBalance = `-- name: UpdateMovementBalance :exec
+const updateMovementBalance = `-- name: UpdateMovementBalance :execrows
 UPDATE erp_account_movements SET balance = balance - $3
 WHERE id = $1 AND tenant_id = $2 AND balance >= $3
 `
@@ -302,7 +302,10 @@ type UpdateMovementBalanceParams struct {
 	Balance  pgtype.Numeric `json:"balance"`
 }
 
-func (q *Queries) UpdateMovementBalance(ctx context.Context, arg UpdateMovementBalanceParams) error {
-	_, err := q.db.Exec(ctx, updateMovementBalance, arg.ID, arg.TenantID, arg.Balance)
-	return err
+func (q *Queries) UpdateMovementBalance(ctx context.Context, arg UpdateMovementBalanceParams) (int64, error) {
+	result, err := q.db.Exec(ctx, updateMovementBalance, arg.ID, arg.TenantID, arg.Balance)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }

@@ -69,15 +69,24 @@ func (s *CurrentAccounts) Allocate(ctx context.Context, req AllocateRequest) err
 	}
 
 	// Reduce balance on both payment and invoice movements
-	if err := qtx.UpdateMovementBalance(ctx, repository.UpdateMovementBalanceParams{
+	payRows, err := qtx.UpdateMovementBalance(ctx, repository.UpdateMovementBalanceParams{
 		ID: req.PaymentID, TenantID: req.TenantID, Balance: amt,
-	}); err != nil {
+	})
+	if err != nil {
 		return fmt.Errorf("update payment balance: %w", err)
 	}
-	if err := qtx.UpdateMovementBalance(ctx, repository.UpdateMovementBalanceParams{
+	if payRows == 0 {
+		return fmt.Errorf("insufficient payment balance")
+	}
+
+	invRows, err := qtx.UpdateMovementBalance(ctx, repository.UpdateMovementBalanceParams{
 		ID: req.InvoiceID, TenantID: req.TenantID, Balance: amt,
-	}); err != nil {
+	})
+	if err != nil {
 		return fmt.Errorf("update invoice balance: %w", err)
+	}
+	if invRows == 0 {
+		return fmt.Errorf("insufficient invoice balance")
 	}
 
 	if err := tx.Commit(ctx); err != nil {

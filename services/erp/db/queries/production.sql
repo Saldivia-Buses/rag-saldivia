@@ -31,9 +31,13 @@ VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
 RETURNING id, tenant_id, number, date, product_id, center_id, quantity, status,
     priority, order_id, start_date, end_date, user_id, notes, created_at;
 
--- name: UpdateProductionOrderStatus :execrows
-UPDATE erp_production_orders SET status = $3, start_date = COALESCE(start_date, CURRENT_DATE)
-WHERE id = $1 AND tenant_id = $2;
+-- name: StartProductionOrder :execrows
+UPDATE erp_production_orders SET status = 'in_progress', start_date = COALESCE(start_date, CURRENT_DATE)
+WHERE id = $1 AND tenant_id = $2 AND status = 'planned';
+
+-- name: CompleteProductionOrder :execrows
+UPDATE erp_production_orders SET status = 'completed', end_date = COALESCE(end_date, CURRENT_DATE)
+WHERE id = $1 AND tenant_id = $2 AND status = 'in_progress';
 
 -- name: ListProductionMaterials :many
 SELECT pm.id, pm.tenant_id, pm.order_id, pm.article_id, pm.required_qty,

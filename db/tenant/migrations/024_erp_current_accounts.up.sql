@@ -22,9 +22,23 @@ CREATE TABLE IF NOT EXISTS erp_account_movements (
 CREATE INDEX idx_erp_acct_mov_entity ON erp_account_movements(tenant_id, entity_id, date DESC);
 CREATE INDEX idx_erp_acct_mov_balance ON erp_account_movements(tenant_id, entity_id) WHERE balance > 0;
 
--- Immutability (financial record)
+-- Immutability: prevent DELETE, allow UPDATE only on balance column (for allocations)
+CREATE OR REPLACE FUNCTION erp_prevent_acct_mov_mutation() RETURNS trigger AS $$
+BEGIN
+    IF TG_OP = 'DELETE' THEN
+        RAISE EXCEPTION 'cannot delete account movement';
+    END IF;
+    -- Allow balance updates (allocations), block everything else
+    IF OLD.amount != NEW.amount OR OLD.movement_type != NEW.movement_type
+       OR OLD.direction != NEW.direction OR OLD.entity_id != NEW.entity_id THEN
+        RAISE EXCEPTION 'cannot modify account movement fields (only balance updates allowed)';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
 CREATE TRIGGER trg_acct_mov_immutable BEFORE UPDATE OR DELETE ON erp_account_movements
-    FOR EACH ROW EXECUTE FUNCTION erp_prevent_financial_mutation();
+    FOR EACH ROW EXECUTE FUNCTION erp_prevent_acct_mov_mutation();
 
 -- Imputaciones: que pago aplica a que factura
 CREATE TABLE IF NOT EXISTS erp_payment_allocations (

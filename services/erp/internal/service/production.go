@@ -59,12 +59,18 @@ func (s *Production) GetOrder(ctx context.Context, id pgtype.UUID, tenantID stri
 	if err != nil {
 		return nil, fmt.Errorf("get order: %w", err)
 	}
-	materials, _ := s.repo.ListProductionMaterials(ctx, repository.ListProductionMaterialsParams{
+	materials, err := s.repo.ListProductionMaterials(ctx, repository.ListProductionMaterialsParams{
 		OrderID: id, TenantID: tenantID,
 	})
-	steps, _ := s.repo.ListProductionSteps(ctx, repository.ListProductionStepsParams{
+	if err != nil {
+		return nil, fmt.Errorf("list materials: %w", err)
+	}
+	steps, err := s.repo.ListProductionSteps(ctx, repository.ListProductionStepsParams{
 		OrderID: id, TenantID: tenantID,
 	})
+	if err != nil {
+		return nil, fmt.Errorf("list steps: %w", err)
+	}
 	return &ProductionOrderDetail{Order: order, Materials: materials, Steps: steps}, nil
 }
 
@@ -111,8 +117,8 @@ func (s *Production) CreateOrder(ctx context.Context, req CreateProductionOrderR
 }
 
 func (s *Production) StartOrder(ctx context.Context, id pgtype.UUID, tenantID, userID, ip string) error {
-	rows, err := s.repo.UpdateProductionOrderStatus(ctx, repository.UpdateProductionOrderStatusParams{
-		ID: id, TenantID: tenantID, Status: "in_progress",
+	rows, err := s.repo.StartProductionOrder(ctx, repository.StartProductionOrderParams{
+		ID: id, TenantID: tenantID,
 	})
 	if err != nil {
 		return fmt.Errorf("start order: %w", err)

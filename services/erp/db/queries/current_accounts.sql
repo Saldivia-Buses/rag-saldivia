@@ -44,6 +44,6 @@ INSERT INTO erp_payment_allocations (tenant_id, payment_id, invoice_id, amount)
 VALUES ($1, $2, $3, $4)
 RETURNING id, tenant_id, payment_id, invoice_id, amount, created_at;
 
--- name: UpdateMovementBalance :exec
+-- name: UpdateMovementBalance :execrows
 UPDATE erp_account_movements SET balance = balance - $3
 WHERE id = $1 AND tenant_id = $2 AND balance >= $3;

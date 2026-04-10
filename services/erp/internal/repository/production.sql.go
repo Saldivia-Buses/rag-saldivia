@@ -11,6 +11,24 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const completeProductionOrder = `-- name: CompleteProductionOrder :execrows
+UPDATE erp_production_orders SET status = 'completed', end_date = COALESCE(end_date, CURRENT_DATE)
+WHERE id = $1 AND tenant_id = $2 AND status = 'in_progress'
+`
+
+type CompleteProductionOrderParams struct {
+	ID       pgtype.UUID `json:"id"`
+	TenantID string      `json:"tenant_id"`
+}
+
+func (q *Queries) CompleteProductionOrder(ctx context.Context, arg CompleteProductionOrderParams) (int64, error) {
+	result, err := q.db.Exec(ctx, completeProductionOrder, arg.ID, arg.TenantID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
 const createProductionCenter = `-- name: CreateProductionCenter :one
 INSERT INTO erp_production_centers (tenant_id, code, name)
 VALUES ($1, $2, $3)
@@ -633,19 +651,18 @@ func (q *Queries) ListUnits(ctx context.Context, arg ListUnitsParams) ([]ListUni
 	return items, nil
 }
 
-const updateProductionOrderStatus = `-- name: UpdateProductionOrderStatus :execrows
-UPDATE erp_production_orders SET status = $3, start_date = COALESCE(start_date, CURRENT_DATE)
-WHERE id = $1 AND tenant_id = $2
+const startProductionOrder = `-- name: StartProductionOrder :execrows
+UPDATE erp_production_orders SET status = 'in_progress', start_date = COALESCE(start_date, CURRENT_DATE)
+WHERE id = $1 AND tenant_id = $2 AND status = 'planned'
 `
 
-type UpdateProductionOrderStatusParams struct {
+type StartProductionOrderParams struct {
 	ID       pgtype.UUID `json:"id"`
 	TenantID string      `json:"tenant_id"`
-	Status   string      `json:"status"`
 }
 
-func (q *Queries) UpdateProductionOrderStatus(ctx context.Context, arg UpdateProductionOrderStatusParams) (int64, error) {
-	result, err := q.db.Exec(ctx, updateProductionOrderStatus, arg.ID, arg.TenantID, arg.Status)
+func (q *Queries) StartProductionOrder(ctx context.Context, arg StartProductionOrderParams) (int64, error) {
+	result, err := q.db.Exec(ctx, startProductionOrder, arg.ID, arg.TenantID)
 	if err != nil {
 		return 0, err
 	}
