@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm">
+	<title>CONCEPTOS DE STOCK</title>
+	<obs></obs>
+	<form >
+		<table id="STKCONCE" label="Conceptos">
+			
+			<field id="movcod">
+				<label>Cod.</label>
+				<help>Codigo de Concepto</help>
+			</field>
+			
+			<field id="condes">
+				<label>Descripcion</label>
+				<help>Descripcion del Concepto</help>
+			</field>
+			
+			<field id="conabv">
+				<label>Abrev.</label>
+				<help>Abreviatura a Utilizar</help>
+			</field>
+			
+			<field id="contip">
+				<label>Imputacion</label>
+				<help>Suma o Resta en el Stock</help>
+				<options>
+				    <option valor="1">Incrementa</option>
+				    <option valor="2">Decrementa</option>
+				</options>
+				
+			</field>
+						<field id="siscod" oculto="true">
+				<label>Cod</label>
+			</field>
+
+	    		<order>
+				<field id="movcod"></field>
+			</order>
+			
+		</table>
+	</form>	   
+</histrix>

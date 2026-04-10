@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<histrix tipo="cabecera">
+    <title>Actualizacion Precios</title>
+    <obs></obs>
+    <form>
+        <table id="STK_LISTADETALLE" label="Actualizacion de lista de precios">
+            
+            <fieldGroup style="vertical-align:middle;">
+	            <field id="stklista_id" _local="true">
+	            	<label>Lista de Precios</label>
+	            		<helper type="combo" id="STK_LISTAS">
+	            			<field id="id_stklista" />
+	            			<field id="stklista_nombre" />
+						</helper>
+	            </field>
+
+	            <field id="dto_fechadesde" deshabilitado="true" modpos="nobr">
+	            	<label>Fecha Actualizacion</label>
+	            	<tipo>date</tipo>
+	            	<valor>today</valor>
+	            </field>
+
+	            <field id="dto_fechahasta"  modpos="nobr">
+	            	<label>Fecha Caducidad</label>
+	            	<tipo>date</tipo>
+	            	<valor></valor>
+	            </field>
+			
+			</fieldGroup>
+			
+        </table>
+    </form>
+</histrix>	

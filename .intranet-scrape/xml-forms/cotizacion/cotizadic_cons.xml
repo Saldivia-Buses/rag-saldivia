@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+	<abm tipo="consulta" >
+		<titulo>Adicionales</titulo>
+		<obs></obs>
+		<consulta>
+			<tabla id="COTIZADIC">
+				<campo id="idCotiz" noshow="true">
+				</campo>
+				<campo id="cantidad" >
+					<label>Cant.</label>
+				</campo>
+				<campo id="artdes" tabla="STKINSUM">
+					<label>Descripción</label>
+					<tipo>varchar</tipo>
+				</campo>
+				<campo id="precio" suma="true">
+					<label>Precio</label>
+				</campo>
+			</tabla>
+			<join tipo="left">
+				<tabla id="STKINSUM">
+					<campo id="siscod" oculto="true">
+						<condicion operador="=">'02'</condicion>
+					</campo>
+					<campo id="artcod">
+						<condicion operador="=">COTIZADIC.idArticulo</condicion>
+					</campo>
+				</tabla>
+			</join>
+		</consulta>
+	</abm>

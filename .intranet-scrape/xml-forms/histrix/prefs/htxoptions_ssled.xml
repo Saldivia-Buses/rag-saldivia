@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+	<histrix tipo="crud" >
+		<title>Preferencias</title>
+		<obs></obs>
+		<form>
+			<table id="HTXOPTIONS" label="OPCIONES">
+				<field id="id_option" deshabilitado="true"  noshow="true" autoinc="true">
+				</field>
+				
+				<field id="login"  >
+					<label>usuario</label>
+					<helper id="HTXUSERS" type="combo">
+					    <field id="login" />
+					    <field id="Nombre" >
+						<expression>concat(Nombre,' ' ,apellido)</expression>
+					    </field>
+					</helper>
+				</field>
+				<field id="option_name" _editable="true" noshow="true" valauto="true">
+					<condicion operador="=">'PLUGIN::screenSaverLed::sstext'</condicion>
+					<label>Nombre</label>
+					<help>Nombre de la opcion</help>
+					<valor>'PLUGIN::screenSaverLed::sstext'</valor>
+				</field>
+				<field id="option_value" _editable="true">
+					<label>Texto del Mensaje</label>
+					<size>200</size>
+				</field>
+			</table>
+		</form>
+	</histrix>

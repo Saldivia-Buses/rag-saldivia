@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+  <title>Categorias de IVA</title>
+  <obs></obs>
+  <form >
+    <table id="GEN_IVA" label="Categorias de IVA">
+      <field id="id_iva" autoinc="true" noshow="true">
+        <label>Código </label>
+        <help>Código de IVA</help>
+      </field>
+	
+   
+      <field id="abreviacion_iva">
+        <label>Abrev.</label>
+        <help>Nombre abreviado de la categoria de IVA</help>
+      </field>
+      
+        <field id="letra" _noshow="true">
+        <label>Letra</label>
+        <help>Letra</help>
+		<detalle>letra_movimiento</detalle>
+      </field> 
+    </table>
+  </form>
+</histrix>  

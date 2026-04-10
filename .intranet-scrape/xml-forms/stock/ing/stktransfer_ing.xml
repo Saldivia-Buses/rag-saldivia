@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" preloadData="false" llenoTemporal="false" procesa="false" tooltip="false" showCantidad="false" updateTotals="true" subtipo="vertical" unserializeParent="false" preventDuplication="true" importTempTable="TEMPTABLENAME">
+   <title>Transferencia entre depósitos</title>
+   <obs/>
+   <form>
+	<table id="STK_MOVIMIENTOS" label="Transferencia entre depósitos">
+
+		<movimientos>
+			<relacion id="stkmovimiento_salida_ins.xml"/>
+			<relacion id="stkmovimiento_entrada_ins.xml"/>
+		</movimientos>
+
+		<field id="id_stkmovimiento" deshabilitado="true" noshow="true" autoInc="true">
+			<condicion operador="=">-1</condicion>
+		</field>
+
+		<field id="nro_movimiento" local="true" setOriginalValue="true" valauto="true" noshow="true" />
+
+		<field id="id_stkarticulo" tabla="STK_ARTICULOS" local="true" esClave="true" required="true" Formstyle="display:none;">
+			<label>Codigo</label>
+			<helper type="external" xml="stkarticulo_mos.xml" dir="/ayudas">
+				<field id="wstklista_id" local="true">
+					<valor>1</valor>
+				</field>
+				<field id="id_stkarticulo2" noshow="true">
+					<expression>id_stkarticulo</expression>
+					<detalle>stkarticulo_id</detalle>
+				</field>
+			</helper>                
+		</field>   
+
+		<field id="codigo_barra" tabla="STK_ARTICULOS" local="true" required="false">
+			<label modpos="nobr">Codigo de Barra</label>
+			<helper type="external" xml="stkarticulo_pos.xml" dir="/ayudas">
+				<field id="wstklista_id" local="true">
+					<valor>1</valor>
+				</field>
+				<field id="id_stkarticulo2" noshow="true">
+					<expression>id_stkarticulo</expression>
+					<detalle>stkarticulo_id</detalle>
+					<detalle>id_stkarticulo</detalle>
+				</field>
+			</helper>                
+		</field>   
+
+		<field id="descripcion_detalle" local="true" deshabilitado="true">
+			<label modpos="nobr">Descripcion</label>
+			<size>80</size>
+		</field>
+
+		<field id="cantidad" suma="true">
+			<label modpos="nobr">Cantidad</label>
+			<tipo>decimal</tipo>
+			<jseval>cantidad!=0</jseval>
+		</field>
+
+		<field id="deposito_origen" local="true" setOriginalValue="true" valauto="true" noshow="true">
+			<label>Deposito</label>
+		</field>
+
+		<field id="stock_actual" noshow="true">
+			<label>Stock</label>
+			<expression sql="true">select cantidad_stock from STK_STOCKACTUAL where stkarticulo_id = '[__id_stkarticulo__]' and stkdeposito_id = '[__deposito_origen__]'</expression>
+		</field>
+
+		<field id="puede_emitir" suma="true" colstyle="display:none;" Formstyle="display:none;" local="true">
+			<label>PuedeEmitir</label>
+			<if exp="cantidad > stock_actual">
+				<true>'1'</true>
+				<false>'0'</false>
+			</if>
+			<jseval campodestino="emite_sinstock" total="true">puede_emitir</jseval>
+		</field>
+
+		<field id="sin_stock" clasefila="true" noshow="true" local="true">
+			<if exp="cantidad > stock_actual">
+				<true>'resaltadoRojo'</true>
+				<false>''</false>
+			</if>
+		</field>
+
+		<fieldGroup noshow="true">
+			<field id="stkarticulo_id" />
+			<field id="stkfamilia_id" />
+			<field id="stkrubro_id" />
+			<field id="unidad_id">
+				<tipo>decimal</tipo>
+			</field>
+			<field id="precio_costo">
+				<tipo>decimal</tipo>
+			</field>
+			<field id="precio_venta">
+				<tipo>decimal</tipo>
+			</field>
+			<field id="precio_total">
+				<tipo>decimal</tipo>
+			</field>
+			<field id="precio_promedio">
+				<tipo>decimal</tipo>
+			</field>
+		</fieldGroup>
+
+	</table>    
+   </form>
+</histrix>

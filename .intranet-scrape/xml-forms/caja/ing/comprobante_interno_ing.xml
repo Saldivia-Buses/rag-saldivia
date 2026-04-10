@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="fichaing" inserta="false" borra="false" modifica="false" imprime="false" tooltip="false" 
+    confirma="GRABAR" form="false" llenotemporal="true" transaccional="true" limit="1">
+
+    <title>Comprobante Interno</title>
+    <obs/>
+    <form>
+        <table id="CAJ_MOVIMIENTOS">
+
+          <title>Comprobante Interno</title>
+
+            <cierraproceso id="cajmovimientos_ing.xml">
+                <paring destino="moneda_id">moneda_id</paring>
+                <paring destino="cajpuesto_id">cajpuesto_id</paring>
+                <paring destino="cajconcepto_id">cajconcepto_id</paring>
+                <paring destino="cajregistro_id">cajregistro_id</paring>
+                <paring destino="importe_movimiento">importe_movimiento</paring>
+                <paring destino="fecha_movimiento">fecha_movimiento</paring>
+                <paring destino="referencia_movimiento">referencia_movimiento</paring>
+                <paring destino="nro_movimiento">nro_movimiento</paring>
+                <paring destino="imputacion_concepto">imputacion_concepto</paring>
+                <paring destino="ctbcuenta_reg_id">ctbcuenta_id</paring>
+                <paring destino="ctbcuenta_reg_doh">ctbcuenta_reg_doh</paring>
+            </cierraproceso>
+
+            <validation>
+                <condition><![CDATA[importe_movimiento + 0 == 0]]></condition>
+                <message>El importe debe ser mayor que cero</message>
+            </validation>
+
+            <validation>
+                <condition><![CDATA['referencia_movimiento' + 0 == 0]]></condition>
+                <message>Debe ingresar una referencia</message>
+            </validation>
+
+            <movimientos>
+                <relacion id="impresion_caja.xml"/> 
+            </movimientos>
+
+
+            <fieldGroup>
+                            
+                <field id="id_cajmovimiento" noshow="true">
+                      <condicion operador="=">-1</condicion>
+                      <detalle>id_cajmovimiento</detalle>
+                </field>
+
+                <field id="descripcion_concepto" style="background-color:#000;color:#fff;padding-top:5px;padding-bottom:5px;text-align:center;" 
+                    deshabilitado="true" colspan="12" noshow="true">
+                    <attribute id="noshow">oculta_titulos</attribute>
+                    <expression sql="true">
+                      SELECT descripcion_concepto FROM CAJ_CONCEPTOS WHERE id_cajconcepto = [__cajconcepto_id__]
+                    </expression> 
+                    <size>40</size>
+                </field>
+
+                <field id="oculta_titulos" local="true" noshow="true">
+                    <helper type="parameter" id="SIS::02::oculta_titulos">
+                        <label>Oculta titulos identificadores en programas de caja</label>
+                        <defaultValue>false</defaultValue>
+                    </helper>
+                </field>
+
+                 <field id="muestracheck" local="true" noshow="true">
+                    <if exp="tipoimpre_concepto != 2">
+                    <true>'display:none;'</true>
+                    <false>''</false>
+                    </if>
+                    <label>MuestraChk</label>
+                  </field>
+
+
+
+                  <field id="impresion" local="true" noshow="true" deshabilitado="true">
+                    <label>Programa de Impresion</label>
+                    <if exp="CHKimprime=='1' || tipoimpre_concepto=='1'">
+                    <true>'imprime_concepto'</true>
+                    <false>''</false>
+                    </if> 
+                  </field>
+
+        </fieldGroup>
+
+
+        <fieldGroup id="DEBUG" _local="true" noshow="true">
+               
+            <field id="imputacion_concepto" tabla="CAJ_CONCEPTOS" />
+            <field id="cajpuesto_id" />
+            <field id="cajconcepto_id" />
+            <field id="cajregistro_id"  />
+            <field id="fecha_movimiento" />
+            <field id="imprime_concepto" tabla="CAJ_CONCEPTOS" />
+            <field id="tipoimpre_concepto" tabla="CAJ_CONCEPTOS" />
+            <field id="moneda_id" local="true">
+                <expression sql="true">SELECT IFNULL(moneda_id,1) FROM CAJ_PUESTO_MONEDAS WHERE CAJ_PUESTO_MONEDAS.cajpuesto_id = '[__cajpuesto_id__]' LIMIT 1</expression>
+                <actualiza>
+                    <field id="ctbcuenta" destino="genmoneda_id" xml="comprobante_interno_grid.xml" />
+                </actualiza>
+            </field>
+            <field id="ctbcuenta_id" local="true" />
+            <field id="ctbcuenta_reg_doh" local="true">
+                <if exp="imputacion_concepto == 0">
+                    <true>1</true>
+                    <false>''</false>
+                </if>
+            </field>
+        </fieldGroup>
+
+        <fieldGroup style="vertical-align:middle;padding:2px 2px 2px 2px;">
+
+            <field id="nro_movimiento" deshabilitado="true" _local="true">
+                <label>Nº Comprobante</label>  
+                <parametro id="cajnumerador_param.xml" retorna="numero">
+                    <field id="numero">
+                        <complete>numero + 1</complete>
+                    </field>
+                </parametro>
+                <format>%08d</format>
+                <size>8</size>
+                <detalle>nro_movimiento</detalle>
+            </field>
+            
+            <field id="referencia_movimiento"  maxlength="80">
+                <label>Referencia</label>
+                <tipo>varchar</tipo>
+                <size>80</size>
+            </field>
+
+            <field id="detalle" local="true">
+                <label colspan="4" />
+                <helper type="object" xml="comprobante_interno_grid.xml">
+                    <parameter source="imputacion_concepto" target="imputacion_concepto" /> 
+                </helper>
+            </field>
+
+            <field id="importe_movimiento" _local="true" deshabilitado="true">
+                <label style="font-size: xx-large; text-align: right;">Total</label>
+            </field>
+
+            <field id="CHKimprime" local="true">
+                <attribute id="style">muestracheck</attribute>
+                <label style="font-size: medium; align: right;">Imprime Comprobante</label>
+                <tipo>check</tipo>
+            </field>
+
+        </fieldGroup>
+
+    </table>
+        
+        <join tipo="left">
+          <table id="CAJ_CONCEPTOS">
+          <field id="id_cajconcepto">
+            <condicion operador="=">cajconcepto_id</condicion>
+          </field>
+          </table>
+        </join>
+
+
+    </form>
+</histrix>  

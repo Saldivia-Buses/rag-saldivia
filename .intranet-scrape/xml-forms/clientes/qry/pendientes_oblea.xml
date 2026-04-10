@@ -1,0 +1,281 @@
+<?xml version="1.0"?>
+<histrix tipo="grid" borra="false" inserta="false" deleteRow="false" _log="true" editable="true" process="true">
+
+  <title>Planilla de Pendientes</title>
+  <obs/>
+
+   <form>
+    <table id="REG_DETALLES" label="Planilla de Pendientes">
+
+      <filters>       
+        <field id="fecha_movimiento">
+          <label>Hasta Fecha</label>
+          <operador>&lt;=</operador>
+          <valor>today</valor>
+        </field>
+        <field id="estado_oblea" deshabilitado="false">
+          <label>Estado</label>
+          <operador>=</operador>
+          <valor>0</valor>
+        </field>
+      </filters>    
+     
+      <movimientos>          
+            <relacion id="pos_regdetalles_oblea_upd.xml"/>   actualizo los datos del regdetalle (oblea, patente, fecha)
+            <relacion id="pos_recibo_oblea_upd.xml"/>        saco el pendiente del recibo original
+            <relacion id="regmovimientos_rec_ins.xml"/>      creo en recibo c en la cuenta corriente del cliente
+            <relacion id="regimputaciones_rec_ins.xml"/>     imputo el recibo creado con el que ya existia
+            <relacion id="regmovimientos_rec_ins_prov.xml"/> creo el recibo en la cuenta de proveedores  
+      </movimientos>   
+     
+    <field id="id_regdetalle" esClave="true"          noshow="true" desabilitado="true"/>     
+    <field id="id_regmovim"   tabla="REG_MOVIMIENTOS" noshow="true" desabilitado="true"/>
+    <field id="subsistema_id" local="true"            noshow="true"/> 
+    <field id="regcuenta_id"  tabla="REG_MOVIMIENTOS" noshow="true" desabilitado="true"/>
+
+    <!-- DATOS DEL DETALLE DEL COMPROBANTE ORIGINAL -->
+
+    <field id="nro_cuenta" tabla="REG_CUENTA">
+      <label>Codigo</label><!--
+      <helper type="external" xml="regcuenta_solamente_nro_qry.xml" dir="/ayudas" empty="true"/>-->
+    </field>
+
+    <field id="nombre_cuenta" tabla="REG_CUENTA">
+      <label>Nombre</label>
+    </field>
+
+    <field id="abreviacion_concepto" tabla="REG_CONCEPTOS" deshabilitado="true" Formstyle="display:none;">
+        <label>Tipo</label>
+        <size>3</size> 
+    </field>
+
+    <field id="nro_movimiento" _tdWidth="150" linkdes="Detalle del Comprobante" linkmodal="true" 
+      style="text-align: center" deshabilitado="true" Formstyle="display:none;">
+        <label>Comprobante</label>
+        <expression>CONCAT(REG_MOVIMIENTOS.letra_movimiento,' ',LPAD(REG_MOVIMIENTOS.puesto_movimiento,4,'0'),'-',LPAD(REG_MOVIMIENTOS.nro_movimiento  ,8,'0'))</expression>
+      <size>13</size> 
+    </field>      
+
+    <field id="descripcion_detalle" deshabilitado="true" Formstyle="display:none;">
+        <label>Detalle</label>
+        <tipo>varchar</tipo>
+        <size>15</size> 
+    </field>
+
+    <field id="habilita_oblea" noshow="true">
+      <expression>(CASE codigo_serie WHEN '' THEN 1 ELSE 0 END)</expression>
+    </field>
+    <field id="habilita_remf" noshow="true">
+      <expression>(CASE WHEN IFNULL(REM.puesto_movimiento, 0) = 0 and IFNULL(REM.nro_movimiento, 0) = 0 THEN 1 ELSE 0 END)</expression>
+    </field>
+
+    <field id="tabla_detalle" editable="true" >
+        <habilita>habilita_oblea</habilita>
+        <label>Dominio</label>
+        <tipo>varchar</tipo>
+        <size>7</size>         
+    </field>
+
+
+    <field id="estado_oblea" noshow="true">
+      <expression>(CASE codigo_serie WHEN '' THEN 0 ELSE 1 END)</expression>
+      <helper type="combo">
+        <option value=""></option>
+        <option value="0">Pendiente</option>
+        <option value="1">Asignada</option>
+      </helper>
+    </field>
+
+    <field id="codigo_serie" editable="true" >
+         <habilita>habilita_oblea</habilita>
+         <label>Oblea</label>
+         <tipo>varchar</tipo><!--
+         <condicion operador="=">''</condicion>-->
+         <size>15</size> 
+         <jseval campodestino="referencia_mov">\'Oblea_\'+ \'codigo_serie\'</jseval>         
+         <jseval campodestino="graba_recibo">(numero_movimiento + 0 != 0 &amp;&amp; puesto_mov + 0 != 0 &amp;&amp; importe_mov > 0) ? 1 : 0</jseval>      
+    </field>
+
+    <field id="fecha_movimiento" deshabilitado="true" tabla="REG_MOVIMIENTOS" >      
+      <label>Fec.Emision</label>  
+      <tipo>date</tipo>
+      <size>10</size>       
+    </field>
+
+    <field id="fecha_vencimiento" _noshow="true" deshabilitado="false" editable="true">
+      <habilita>habilita_oblea</habilita> 
+      <label>Fec.Vto.</label>    
+      <tipo>date</tipo>
+      <jseval campodestino="graba_recibo">(numero_movimiento + 0 != 0 &amp;&amp; puesto_mov + 0 != 0 &amp;&amp; importe_mov > 0) ? 1 : 0</jseval>      
+    </field>  
+
+    <!-- CONCEPTOS DE LOS RECIBOS QUE SE CREA EN EL PROVEEDOR Y EN EL CLIENTE
+         CREAR ESOS CONCEPTOS Y EN LOS PARAMETROS GENERALES PONERLES SUS RESPECTIVOS IDS -->
+    <field id="concepto_recibo_prov" local="true" valauto="true" noshow="true">
+        <helper type="parameter" id="SIS::01::concepto_recibo_prov" >
+            <label>Valor del REG_CONCEPTOS.id_regconceptos para cargar RECIBOS C PROVEEDORES</label>
+            <defaultValue>1</defaultValue>
+        </helper>            
+    </field>     
+
+     <field id="concepto_recibo_vend" local="true" valauto="true" noshow="true">
+        <helper type="parameter" id="SIS::02::concepto_recibo_vend" >
+            <label>Valor del REG_CONCEPTOS.id_regconceptos para cargar RECIBOS C VENDEDORES</label>
+            <defaultValue>1</defaultValue>
+        </helper>            
+    </field> 
+
+    <!-- ESTOS DATOS SON LOS QUE NOS DA EL PROVEEDOR (LA PROVINCIA) DE LOS RECIBOS C 
+         QUE SE EFECTUAN POR LAS OBLEAS ENTREGADAS A LOS CLIENTES -->         
+
+    <field id="cuenta_proveedor" local="true" valauto="true" noshow="true">
+        <helper type="parameter" id="SIS::02::oblea_proveedor" >
+            <label>Id del proveedor para generar el recibo por las obleas</label>
+            <defaultValue>1</defaultValue>
+        </helper>            
+    </field>      
+
+    <field id="nombre_prov" local="true" noshow="true">
+      <expression>(SELECT nombre_cuenta FROM REG_CUENTA WHERE REG_CUENTA.id_regcuenta = '[__cuenta_proveedor__]' LIMIT 1)</expression>
+    </field>    
+
+    <field id="cuit_prov"   local="true" noshow="true">
+      <expression>(SELECT cuit_cuenta FROM REG_CUENTA WHERE REG_CUENTA.id_regcuenta = '[__cuenta_proveedor__]' LIMIT 1)</expression>
+    </field>   
+
+    <field id="letra_mov" local="true" deshabilitado="false" editable="true">
+        <habilita>habilita_remf</habilita>
+        <expression>REM.letra_movimiento</expression>
+        <helper type="combo" empty="false" >
+          <option value="C">C</option>
+          <option value="X">X</option>
+        </helper>
+        <size>1</size> 
+    </field>    
+
+    <field id="puesto_mov" local="true" deshabilitado="false" editable="true">
+        <habilita>habilita_remf</habilita>
+        <expression>REM.puesto_movimiento</expression>
+        <label>Puesto</label>
+        <size>2</size>           
+        <jseval campodestino="graba_recibo">(numero_movimiento + 0 != 0 &amp;&amp; puesto_mov + 0 != 0) ? 1 : 0</jseval>     
+    </field>
+
+    <field id="numero_movimiento" local="true" deshabilitado="false" editable="true">
+      <habilita>habilita_remf</habilita>
+      <expression>REM.nro_movimiento</expression>
+      <label>Numero</label>
+      <size>8</size>       
+      <jseval campodestino="graba_recibo">(numero_movimiento + 0 != 0 &amp;&amp; puesto_mov + 0 != 0 &amp;&amp; importe_mov > 0) ? 1 : 0</jseval>      
+    </field>   
+
+    <field id="reg_fecha"               local="true" noshow="true"/>    
+    <field id="vencimiento_movimiento"  local="true" noshow="true"/>   
+
+    <!-- ESTE IMPORTE SE CALCULA DEL SALDO QUE QUEDO DEL RECIBO CUANDO SE CONFECCIONO LA FACTURA
+         EL MISMO EQUIVALE AL VALOR DE LA OBLEA QUE NO SE FACTURO -->         
+    <field id="importe_mov" local="true">      
+      <label>valor</label>
+        <expression>(REC.saldo_movimiento * -1)</expression>
+    </field>   
+      
+    <field id="referencia_mov"  noshow="true" local="true" editable="true">
+      <tipo>varchar</tipo>
+      <label>referencia</label>
+    </field>
+
+    <!--ID DEL RECIBO QUE ESTA IMPUTADO A LA FACTURA -->
+    <field id="id_recibo" local="true" noshow="true" >       
+       <expression>RI_REC.regmovim_id</expression>
+    </field> 
+
+    <!-- GRABA_RECIBO: CREA EL EL RESTO -->      
+
+    <field id="validacion" local="true" editable="true" noshow="true" colstyle="display:none;">
+      <valor>1</valor>
+    </field>
+
+    <field id="graba_recibo" local="true" editable="true" noshow="true" colstyle="display:none;">
+      <label>graba</label>
+      <size>1</size>
+    </field>
+
+    <order>
+        <field id="fecha_movimiento" tipoOrden="DESC"/>
+        <field id="nro_movimiento"   tipoOrden="DESC"/>
+    </order>
+  </table>
+
+  <join>
+    <table id="CAJ_CTBCUENTA_AUX">
+        <field id="codigo">
+          <condicion operador="=">REG_DETALLES.codigo_detalle</condicion>
+        </field>
+        <field id="con_dominio">
+          <condicion operador="=">'01'</condicion>
+        </field>      
+      </table>
+    </join>
+
+    <join>
+      <table id="REG_MOVIMIENTOS">
+        <field id="id_regmovim">
+          <condicion operador="=">REG_DETALLES.regmovim_id</condicion>
+        </field>
+        <field id="subsistema_id">
+          <condicion operador="=">'02'</condicion>
+        </field>      
+      </table>
+    </join>
+
+    <join>
+      <table id="REG_CONCEPTOS">
+        <field id="id_concepto">
+          <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+        </field>
+        <field id="tipo_concepto">
+          <condicion operador="=">1</condicion>
+        </field>      
+      </table>
+    </join>
+
+    <join>
+      <table id="REG_CUENTA">
+        <field id="id_regcuenta">
+          <condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="REG_IMPUTACIONES" as="RI_REC">
+        <field id="regmovim0_id">
+          <condicion operador="=">REG_MOVIMIENTOS.id_regmovim</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="REG_MOVIMIENTOS" as="REC">
+        <field id="id_regmovim">
+          <condicion operador="=">RI_REC.regmovim_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="REG_IMPUTACIONES" as="RI_REM">
+        <field id="regmovim_id">
+          <condicion operador="=">REC.id_regmovim</condicion>
+        </field>
+        <field id="regmovim0_id">
+          <condicion operador="!=">REG_MOVIMIENTOS.id_regmovim</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="REG_MOVIMIENTOS" as="REM">
+        <field id="id_regmovim">
+          <condicion operador="=">RI_REM.regmovim0_id</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>

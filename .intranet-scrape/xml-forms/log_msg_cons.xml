@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<abm tipo="consulta">
+	<titulo>HISTORICO</titulo>
+	<obs></obs>
+	<consulta>
+		<tabla id="HTXLOG" label="Historico">
+
+			<campo id="xmlprog" oculto="true">
+			</campo>
+			<campo id="tipo" noshow="true">
+				<label>Acción</label>
+				<opciones>
+					<opcion valor="INSERT"> insertó el registro</opcion>
+					<opcion valor="UPDATE"> Modificó </opcion>
+					<opcion valor="DELETE"> Borró el registro</opcion>
+				</opciones>
+			</campo>
+			<campo id="idEvento" noshow="true">
+				<tipo>varchar</tipo>
+				<condicion operador="=">'[__idEvento__]'</condicion>
+					
+			</campo>			
+			<campo id="obs" noshow="true"></campo>
+			<campo id="acc">
+			<!--	<expresion>case when tipo="UPDATE" then CONCAT('el campo "', campo, '" de "', valorViejo, '" a ' , valorNuevo, ' de: ', obs ) else CONCAT('donde ', obs) end</expresion> -->
+					<expresion>case when tipo="UPDATE" then CONCAT('el campo "', campo, '" a ' , valorNuevoTxt ) else CONCAT('donde ', obs) end</expresion> 
+				<tipo>varchar</tipo>
+				<size>200</size>
+			</campo>			
+		</tabla>
+		<join tipo="left">
+			<tabla id="HTXUSERS">
+				<campo id="login">
+					<condicion operador="=">HTXLOG.usuario</condicion>
+				</campo>
+			</tabla>
+			
+		</join>
+	</consulta>	   
+</abm> 

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="abm-mini" class="consultaancha">
+	<title>ENTRADA SALIDA STOCK POR CODIGO</title>
+	<obs></obs>
+	<form >
+		<table id="CONCEPCONV" label="VALORES DE LIQUIDACION">
+			<field id="idSindicato" oculto="true">
+			</field>
+			<field id="idConvenio" oculto="true">
+			</field>
+			<field id="idCateg">
+    			    <tabla_ex id="CATPERSONAL">
+				<field id="idCateg" >
+				</field>
+				<field id="descripcion"></field>
+				<field id="idSindicato">
+				    <condicion operador="=" valorde="idSindicato"></condicion>
+				</field>
+				
+			    </tabla_ex>
+			    <tipo>varchar</tipo>
+			</field>
+			<field id="tipoLiq">
+			    <tabla_ex id="CONCEPLIQU">
+				<field id="tipoLiq">	
+				    <label>Tipo</label>
+				    <tipo>varchar</tipo>
+				</field>
+				<field id="nombre">
+				</field>
+    			    </tabla_ex>
+			</field>
+			<field id="importe">
+				<label>Valor</label>
+			</field>
+	    </table>
+	</form>
+</histrix>

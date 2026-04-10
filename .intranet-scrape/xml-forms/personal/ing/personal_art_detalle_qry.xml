@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" subtipo="vertical">
+    <title>FICHA PERSONAL</title>
+    <obs/>
+    <form>
+        <table id="PERSONAL_ARTICULOS" label="Ficha Personal">
+		    <field id="id_personalart" noshow="true" />
+		    <field id="IdPersona" valauto="true" noshow="true"/>
+		    <field id="artcod" autocompletar="true">
+				<helper type="external" xml="stkarticulo_autocomplete_qry.xml" dir="/help_local">
+				    <field id="artcod" noshow="true">
+						<detalle>artcod</detalle>
+				    </field>
+				    <field id="artdes">
+						<detalle>artdes</detalle>
+				    </field>
+				</helper>
+				<label>Artículo</label>
+				<size>30</size>
+		    </field>
+		    <field id="artdes" tabla="STKINSUM" deshabilitado="true">
+				<label modpos="nobr">Descripción</label>
+				<size>70</size>
+		    </field>
+		    <field id="dias_recambio">
+				<label>Recambio</label>
+				<help>Días de recambio</help>
+				<tipo>numeric</tipo>
+				<size>30</size>
+		    </field>
+		    <field id="observacion">
+				<label colspan="4">Observación</label>
+				<size>200</size>
+		    </field>
+        </table>
+		<join tipo="left">
+			<table id="STKINSUM">
+		    	<field id="artcod">
+		      		<condicion operador="=">PERSONAL_ARTICULOS.artcod</condicion>
+		    	</field>
+		    	<field id="siscod">
+		      		<condicion operador="=">'01'</condicion>
+		    	</field>
+		  </table>
+		</join>
+    </form>
+</histrix>

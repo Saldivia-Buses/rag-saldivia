@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert" >
+    <title>CONSULTA DE PEDIDOS DE FABRICACION</title>
+    <form  >
+    
+        <table id="PEDCOTIZ" label="Pedido de Fabricacion" idCampoCond="duplicar">
+    	    <sql>
+    	    create temporary table temp_orden as select * from PEDCOTIZ WHERE PEDCOTIZ.id = [__id__];
+            update  temp_orden set id=0 , ingresoLinea = '0000-00-00', terminacion = '0000-00-00' ;
+    	    insert into PEDCOTIZ select * from temp_orden ;
+    	    drop temporary table temp_orden;
+
+            insert into ACCESORIOS_COCHE (ficha_id, artcod, artdes, fecha, estado, precio_adicional, cantidad)
+                          select  LAST_INSERT_ID(), ACC.artcod,ACC.artdes, CURDATE(), ACC.estado, ACC.precio_adicional, ACC.cantidad
+                                        from ACCESORIOS_COCHE as ACC where ACC.ficha_id = [__id__];
+            </sql>
+    	    <field id="id" id_temp="id" />
+        </table>
+        
+    </form>
+</histrix>

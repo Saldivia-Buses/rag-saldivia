@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="crud">
+       <title>DEMERITOS</title>
+        <obs></obs>
+               <form >
+                  <table id="DEMERITO" label="DEMERITO">
+                  <field id="coddem">
+                      <label>Cod</label>
+                      <help>Codigo de Demerito </help>
+                  </field>
+
+                  <field id="desdem">
+                      <label>Descripcion </label>
+                      <help>Descripcion </help>
+                  </field>
+                      <field id="abvdem">
+                      <label>Abrev</label>
+                      <help>Abreviatura</help>
+                  </field>
+                  <field id="peso" tipoOrden="DESC">
+                      <label>Importancia</label>
+                      <help>Importancia</help>
+                  </field>
+                  <field id="grudem">
+                      <label>Grupo </label>
+                      <help>Grupo de Demerito </help>
+                		  <tabla_ex id="GRUPODEM">
+                  			<!-- campos a agregar al contenedor Filtro-->
+                  			<field id="grudem"></field>
+                  			<field id="grudes"></field>
+                  			<filtra>grudem</filtra>
+                		  </tabla_ex>
+
+                  </field>
+                  <field id="manual">
+                      <label>Ingreso Manual</label>
+			<tipo>check</tipo>
+                  </field>
+                  <field id="observaciones">
+                      <label>Observaciones</label>
+                      <help>Observaciones</help>
+                      <tipo>editor</tipo>
+                  </field>
+                  <field id="inactivo">
+                      <label>Inactivo</label>
+                      <help>Inactivo</help>
+                      <tipo>check</tipo>
+                  </field>                  
+                  <order>
+                  <field id="peso" />
+                  </order>
+                  </table>
+               </form>
+        </histrix>

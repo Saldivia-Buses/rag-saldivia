@@ -1,0 +1,218 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+   <histrix tipo="ing" imprime="false" inserta="false" modifica="false" deleteRow="false" log="false">
+       <title>Movimientos Bancarios</title>
+        <obs></obs>
+               <form >
+                  <table id="BCSMOVIM" label="Movimientos Bancarios">
+              		    <movimientos>
+              			     <relacion id="cheque_reimp.xml"/>
+              		    </movimientos>
+              		  <filtro_ex>
+              		    <label>CUENTA</label>
+              		    <tabla_ex id="BCSCUENT">
+              			<field id="ccbcod"></field>
+              			<field id="ccbnom"></field>
+              -			<field id="siscod" oculto="true"></field> 
+
+              			<filtra>bcscta</filtra>
+              		    </tabla_ex>
+              		  </filtro_ex>
+                    <filters>
+                        <field id="bcsfec"> 
+                            <operador>>=</operador>
+                            <label>Desde Fecha Movimiento</label>
+                            <valor>today</valor>    
+                        </field>  
+                        <field id="bcsfec"> 
+                            <operador>&lt;=</operador>
+                            <label>Hasta Fecha Movimiento</label>
+                            <valor>today</valor>    
+
+                        </field>
+                        <field id="bcsnro">
+                            <label>Desde Número</label>
+                            <help>Numero de Movimiento </help>
+                             <operador>&gt;=</operador>
+                
+                        </field>
+                        <field id="bcsnro">
+                            <label>Hasta Número</label>
+                            <help>Numero de Movimiento </help>
+                             <operador>&lt;=</operador>
+                
+                        </field>
+
+                    </filters>      
+
+                    <field id="bcscta">
+                        <label>Codigo Cuenta</label>
+                        <help>Codigo de Cuenta Bancaria </help>
+                    </field>
+
+                    <field id="siscod" oculto="true">
+                        <label>Codigo Sistema.</label>
+                        <help> </help>
+                    </field>
+                    <field id="bcsfec">
+                        <label>Fecha Mov.</label>
+                        <help>Fecha del Movimiento</help>
+                    </field>
+
+                    <field id="bcsfev">
+                        <label>Acreditacion </label>
+                        <help>Fecha de Acreditacion</help>
+                    </field>
+
+                    <field id="cnbabvE">
+            		      <expression>cnbabv</expression>
+                                  <label>Tipo</label>
+                                  <help>Codigo de tipo de Movimiento </help>
+
+            <!--                      <tabla_ex id="BCSCONCE">
+            			<field id="cnbcod"></field>
+            	    		<field id="cnbabv"></field>
+            		      </tabla_ex>
+            		      -->
+            		      <tipo>string</tipo>
+                      </field>
+
+    		  
+                      <field id="bcsnro">
+                          <label>Nro. Movimiento      . </label>
+                          <help>Numero de Movimiento </help>
+    		      
+                      </field>
+                      <field id="referencia">
+              		      <expression>bcsref__1</expression>
+              		      <tipo>char</tipo>
+                                  <label>Referencia           . </label>
+                                  <help>Referencia Adicional. </help>
+                              </field>
+                      <field id="nropag" noshow="true" />
+
+              		<field id="regmin" linkint="ctbregis2.xml" linkdir="ctb_old" height="400">
+              			<label>Asiento</label>
+              			<help>
+              			</help>
+              		<!--	<format>%010d</format> -->
+              		<!--	<paring destino="regnro">nropag</paring>					  -->
+              			<paring destino="regmin">regmin</paring>
+              			<paring destino="regfec">bcsfev</paring>
+              			
+              		</field>
+
+                  <field id="bcsimp" suma="true">
+                      <label>Importe</label>
+                      <help>Importe total del movimiento </help>
+                  </field>
+<!--
+                  <field id="regmin">
+                      <label>Asiento</label>
+                      <help>Numero de Asiento</help>
+                  </field> -->
+
+
+
+
+<!--
+                  <field id="bcsfev">
+                      <label>Fecha Vencimiento    . </label>
+                      <help>Fecha de vencimiento del Movimiento </help>
+                  </field>
+                  <field id="bcsmar">
+                      <label>Marca </label>
+                      <help> </help>
+                  </field>
+                  <field id="bcspre">
+                      <label>F.Presentado </label>
+                      <help>Fecha de Presentacion. </help>
+                  </field>
+                  <field id="bcstil">
+                      <label>Presentado </label>
+                      <help>[ ] = Sin Presentar  |  [1] = Presentado. </help>
+                  </field>
+                  <field id="opecla">
+                      <label>Firma Electronica </label>
+                      <help>Firma Electronica </help>
+                  </field>
+                  <field id="presentado">
+                      <label>Presentado </label>
+                      <help>Indica si el Valor ya fue Presentado </help>
+                  </field>
+                  <field id="succod">
+                      <label>Cod. Sucursal </label>
+                      <help>Codigo de Sucursal </help>
+                  </field>
+		  
+-->		  
+		    <field id="grabar" local="true">
+				<label>Imprimir</label>
+			<tipo>check</tipo>
+		    </field>
+			<field id="bcsmov" noshow="true">
+			    <condicion operador="=">2</condicion>
+			</field>
+	<field id="IMPORTE" aletras="true" deshabilitado="true" noshow="true" local="true">
+                <if exp="true">
+                    <true>bcsimp</true>
+                    <false>'0'</false>
+                </if>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="Let1" local="true" deshabilitado="true" noshow="true">
+                <if exp="true">
+                    <true>urlencode(substrWords( 'IMPORTE.-', 0, 7))</true>
+                    <!--<true>substr('bcsimp', 0 ,40)</true> -->
+                    <false>'0'</false>
+                </if>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="Let2" local="true" deshabilitado="true" noshow="true">
+                <if exp="true">
+                    <true>urlencode(substrWords('IMPORTE.-', 7 ))</true>
+                    <false>'0'</false>
+                </if>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="printer" _deshabilitado="true" tabla="CHEQUERAS">
+              <label _modpos="nobr">Impresora</label>
+              <!--
+              <helper type="combo" xml="htxprinters_qry.xml" dir="/ayudas" empty="true" >
+              </helper>
+            -->
+            </field>
+     		<order>
+				<field id="bcsnro"></field>
+			</order>
+
+
+        </table>
+
+		  <join tipo="left">
+		    <table id="BCSCONCE">
+			<field id="siscod" oculto="true">
+			    <condicion operador="=">BCSMOVIM.siscod</condicion>
+
+			</field>
+
+			<field id="cnbcod" oculto="true">
+			    <condicion operador="=">BCSMOVIM.bcsmov</condicion>
+			</field>
+	    		<field id="cnbtip" oculto="true"></field>
+		    </table>
+		  </join>
+      <join tipo="left">
+        <table id="CHEQUERAS">
+          <field id="ccbcod">
+            <condicion operador="=">BCSMOVIM.bcscta</condicion>
+          </field>
+          <field id="tipo">
+            <condicion operador="=">1</condicion>
+          </field>          
+        </table>
+      </join>
+
+		  
+  </form>
+</histrix>

@@ -1,0 +1,564 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="fichaing" class="consultaancha" inserta="false" modifica="false" transaccional="true" imprime="false">
+  <title>Ingreso de movimientos</title>
+  <obs/>
+  <customScript><![CDATA[
+    $('[instance="[__instance__]"]').on('change', '[name="letra_movimiento"], [name="estcod"], [name="importe_movimiento"]', function(){
+
+        var valor_letra = $('[name="letra_movimiento"]').htxval();
+
+        var valorctb = $('[name="ctbcuenta_nogravado_id"]').htxval();
+        var valorctb_c = $('[name="cuenta_prov_nogravado"]').htxval();
+
+        if (valor_letra == 'C'){
+
+            $('[name="ctb_nogravado_id"]').htxval(valorctb_c);
+
+        }
+        if (valor_letra != 'C'){
+
+            $('[name="ctb_nogravado_id"]').htxval(valorctb);
+
+        }
+
+  });]]></customScript>
+  <form>
+    <table id="REG_MOVIMIENTOS" label="Ingreso de movimientos">
+
+      <validation>
+        <condition><![CDATA[valida_nro_factura == 1 && validacion_existente == nro_movimiento]]></condition>
+        <message>El comprobante ya esta cargado</message>
+      </validation>
+
+      <validation>
+        <condition><![CDATA[concepto_id + 0 == 0]]></condition>
+        <message>Debe seleccionar un tipo de comprobante</message>
+      </validation>
+
+      <validation>
+        <condition><![CDATA[ 'letra_movimiento' == '0' ]]></condition>
+        <message>Debe ingresar una letra de comprobante</message>
+      </validation>
+
+      <validation>
+        <condition><![CDATA[nro_movimiento == 0]]></condition>
+        <message>Ingrese Nro de factura</message>
+      </validation>
+
+      <validation>
+        <condition><![CDATA[importe_movimiento + 0 == 0 ]]></condition>
+        <message>Debe ingresar un importe valido</message>
+      </validation>
+
+      <validation>
+        <condition><![CDATA[diferencia + 0 != 0 ]]></condition>
+        <message>Importes No Coinciden</message>
+      </validation>
+
+      <validation>
+        <condition><![CDATA[letra_movimiento != 'C' && modulocontable + 0 == 1 && porcentaje_ctbimputacion + 0 != 100]]></condition>
+        <message>El porcentaje de imputacion contable no puede ser distinto del 100%</message>
+      </validation>
+
+      <validation>
+        <condition><![CDATA[letra_movimiento != 'C' && estcod + 0 == 0]]></condition>
+        <message>Debe seleccionar un concepto incluido</message>
+      </validation>
+
+      <validation>
+        <condition><![CDATA[letra_movimiento == 'C' && cuenta_prov_nogravado + 0 == 0]]></condition>
+        <message>Falta asignar cuenta contable</message>
+      </validation>
+
+      <movimientos>
+        <relacion id="regmovimiento_ins.xml"/>
+        <relacion id="ctbmovimiento_upd.xml"/>
+      </movimientos>
+
+      <cierraproceso id="asiento_contable_header.xml" condition="modulocontable">
+        <paring destino="fecha_movimiento">reg_fecha</paring>
+        <paring destino="punto_venta">puesto_movimiento</paring>
+        <paring destino="numero">nro_movimiento</paring>
+        <paring destino="nombre">nombre</paring>
+        <paring destino="letra">letra_movimiento</paring>
+        <paring destino="referencia">referencia_movimiento</paring>
+      </cierraproceso>
+
+      <field id="subsistema_id" oculto="true" valauto="true">
+        <actualiza>
+          <field id="validacion_existente" destino="subsistema_id" />
+        </actualiza>
+      </field>
+
+      <field id="regcuenta_id" noshow="true">
+        <actualiza>
+          <field id="cuentas_asignadas" destino="regcuenta_id" />
+          <field id="cuenta_prov_nogravado" destino="regcuenta_id" />
+          <field id="estcod" destino="regcuenta" />
+          <field id="validacion_existente" destino="regcuenta_id" />
+        </actualiza>
+      </field>
+    
+      <fieldGroup style="vertical-align:middle;padding:2px 2px 2px 2px;">
+        <field id="valida_nro_factura" local="true" noshow="true">
+          <helper type="parameter" id="SIS::01::valida_nro_factura">
+            <label>Verifica si la factura esta cargada solo por numero</label>
+            <defaultValue>0</defaultValue>
+          </helper>
+        </field>
+
+        <field id="validacion_existente" local="true" noshow="true">
+          <helper type="combo" id="REG_MOVIMIENTOS">
+            <field id="nro_movimiento" />
+            <field id="nro_movimiento2">
+              <expression>nro_movimiento</expression>
+            </field>
+            <field id="puesto_movimiento" oculto="true" />
+            <field id="letra_movimiento" oculto="true" />
+            <field id="subsistema_id" oculto="true">
+              <condicion operador="=">'01'</condicion>
+            </field>
+            <field id="concepto_id" oculto="true">
+              <condicion operador="=">-1</condicion>
+            </field>
+            <field id="regcuenta_id" oculto="true">
+              <condicion operador="=">-1</condicion>
+            </field>
+          </helper>
+        </field>
+
+        <field id="nro_cuenta" local="true">
+          <label>Cod.Cuenta</label>
+          <helper type="external" xml="regcuenta_cmb_nro.xml" />
+          <jsfunction event="onfocus"> jQuery('input[name=nombre]').prop('disabled', (this.value != 9999) ); </jsfunction>
+          <jsfunction event="onkeyup"> jQuery('input[name=nombre]').prop('disabled', (this.value != 9999) ); </jsfunction>
+          <jsfunction event="onfocus"> jQuery('input[name=cuit_cuenta]').prop('disabled', (this.value != 9999) ); </jsfunction>
+          <jsfunction event="onkeyup"> jQuery('input[name=cuit_cuenta]').prop('disabled', (this.value != 9999) ); </jsfunction>
+        </field>
+
+        <field id="nombre" local="true" modpos="nobr">
+          <label>Nombre</label>
+          <tipo>varchar</tipo>
+          <size>40</size>
+        </field>
+
+        <field id="iva_id" modpos="nobr" style="padding:2px 2px 2px 2px;vertical-align:middle;">
+          <label>Iva</label>
+          <helper type="combo" xml="iva_qry.xml" dir="/ayudas" empty="true">
+            <field id="id_iva" autoinc="true" noshow="true">
+              <label>Codigo </label>
+              <help>Código de IVA</help>
+            </field>
+            <field id="mostrargrilla">
+              <expression>CASE WHEN id_iva = 1 THEN 0 ELSE 1 END</expression>
+              <detalle>mostrargrilla</detalle>
+            </field>
+          </helper>
+        </field>
+
+        <field id="cuit_cuenta" local="true" modpos="nobr">
+          <label>CUIT</label>
+        </field>
+
+        <field id="fecha_movimiento" copia="vencimiento_movimiento">
+          <label>Fecha</label>
+          <valor>today</valor>
+          <tipo>date</tipo>
+        </field>
+
+        <field id="concepto_id" modpos="nobr" style="padding:2px 2px 2px 2px;vertical-align:middle;">
+          <label>Comprobante</label>
+          <helper type="combo" xml="regconcepto_qry.xml" dir="/ayudas" empty="true" />
+          <jseval campodestino="saldo_movimiento" actxml="true">( importe_movimiento * ( imputacion_concepto == 0 ? 1 : -1 ) )</jseval>
+          <actualiza>
+            <field id="validacion_existente" destino="concepto_id" />
+          </actualiza>
+        </field>
+
+        <field id="letra_movimiento" modpos="nobr" style="padding:2px 2px 2px 2px;vertical-align:middle;">
+          <label>Letra</label>
+          <helper type="combo">
+            <option value=""/>
+            <option value="A">A</option>
+            <option value="B">B</option>
+            <option value="C">C</option>
+          </helper>
+          <jseval campodestino="importe_nogravado" actxml="true">((\'letra_movimiento\' == 'C') ? importe_movimiento : 0).toFixed(2)</jseval>
+          <jseval campodestino="oculta_fact_c" actxml="true">((\'letra_movimiento\' == 'C') ? 1 : 0)</jseval>
+          <actualiza>
+            <field id="validacion_existente" destino="letra_movimiento" />
+          </actualiza>
+        </field>
+
+        <field id="puesto_movimiento" maxlength="4" modpos="nobr">
+          <label>Numero</label>
+          <tipo>numeric</tipo>  
+          <size>6</size>
+          <actualiza>
+            <field id="validacion_existente" destino="puesto_movimiento" />
+          </actualiza>
+        </field>
+
+        <field id="nro_movimiento"  maxlength="8"  modpos="nobr" style="width:65px;padding:2px 2px 2px 2px;vertical-align:middle;" sincelda="true">
+          <label> - </label>
+          <tipo>numeric</tipo>  
+          <actualiza>
+            <field id="validacion_existente" destino="nro_movimiento" />
+          </actualiza>
+        </field>
+
+        <field id="oculta_fact_c" local="true" noshow="true" desactiva="true">
+          <tipo>check</tipo>
+        </field>
+
+        <field id="vencimiento_movimiento">
+          <label>Vencimiento</label>
+          <help>Fecha de Vencimiento</help>
+          <valor>today</valor>
+          <tipo>date</tipo>
+        </field>
+
+        <field id="periodo_hab" deshabilitado="true" local="true"  modpos="nobr">
+          <label>Periodo Habilitado</label>
+          <helper type="parameter" id="SIS::01::periodo_iva_cps" />
+        </field>
+
+        <field id="reg_fecha"  modpos="nobr">
+          <label>Registracion</label>
+          <help>Corresponde a la Fecha de Registracion Contable</help>
+          <valor>today</valor>
+          <tipo>date</tipo>
+        </field>
+
+        <field id="cuota_movimiento" colspan="4" local="true" maxlength="2" >
+          <label modpos="nobr">Cuota</label>
+          <tipo>numeric</tipo>  
+          <size>2</size>
+        </field>
+
+        <field id="fecha_cae">
+          <label>Fecha CAE</label>
+          <help>Fecha de Factura Electronica</help>
+          <tipo>date</tipo>
+        </field>
+
+        <field id="numero_cae" modpos="nobr" maxlength="15">
+          <label>Nº CAE</label>
+          <help>Nº de Factura Electrónica</help>
+          <tipo>numeric</tipo>
+        </field>
+
+        <field id="regforma_id" style="padding:2px 2px 2px 2px;">
+          <label>Formas de pago</label>
+          <helper type="combo" xml="regforma.xml" dir="/ayudas" empty="true">
+            <field id="subsistema_id">
+              <condicion operador="=">'01'</condicion>
+            </field>
+          </helper>
+        </field>
+
+        <field id="estcod" modpos="nobr" style="padding:2px 2px 2px 2px;vertical-align:middle;">
+          <label modpos="nobr">Conceptos Incluidos</label>
+          <helper type="combo" id="GEN_TIPO_SERVICIO_AFIP" empty="true">
+            <field id="id_tiposervicio" />
+            <field id="nombre_tiposervicio" />
+            <field id="ctbcuenta_nogravado_id">
+              <expression>CASE WHEN ctbcuenta_nogravado_id = '' OR ctbcuenta_nogravado_id IS NULL THEN IFNULL((SELECT RCI.cuenta_id FROM REG_CUENTA_IMPUTACION RCI WHERE RCI.regcuenta_id = '[__regcuenta__]' AND RCI.doh = 0 LIMIT 1),(SELECT GEN_SUBSISTEMAS.cuenta_debe_id FROM GEN_SUBSISTEMAS WHERE id_subsistema = '01')) ELSE ctbcuenta_nogravado_id END</expression>
+              <detalle>ctbcuenta_nogravado_id</detalle>
+              <tipo>varchar</tipo>
+            </field>
+            <field id="cuenta_prov_ibr">
+              <expression>CASE WHEN ctbcuenta_iibb_id = '' OR ctbcuenta_iibb_id IS NULL THEN (SELECT GEN_SUBSISTEMAS.cuenta_debe_id FROM GEN_SUBSISTEMAS WHERE id_subsistema = '01') ELSE ctbcuenta_iibb_id END</expression>
+              <detalle>cuenta_prov_ibr</detalle>
+            </field>
+            <field id="regcuenta" local="true" oculto="true" />
+          </helper>
+        </field>
+
+        <field id="referencia_movimiento" style="vertical-align:middle;" colspan="4" modpos="nobr">
+          <label>Referencia</label>
+          <help>Referencia del movimiento</help>
+        </field>
+
+        <field id="importe_movimiento" style="font-size:16px;width:120px;">
+          <label>Importe Total</label>
+          <tipo>numeric</tipo>
+          <jseval campodestino="importe_gravado" actxml="true">( importe_movimiento - ((importe_exento + 0 ) + (importe_nogravado + 0) + (importe_ibr + 0)))</jseval>
+          <jseval campodestino="importe_nogravado" actxml="true">((\'letra_movimiento\' == 'C') ? importe_movimiento : 0).toFixed(2)</jseval>
+          <jseval campodestino="saldo_movimiento" actxml="true">( importe_movimiento * ( imputacion_concepto == 0 ? 1 : -1 ) )</jseval>
+          <size>15</size>
+        </field>
+
+        <field id="importe_nogravado" activador="oculta_fact_c">
+          <label>No Gravado</label>
+          <jseval campodestino="importe_gravado" actxml="true">( importe_movimiento - ((importe_exento + 0 ) + (importe_nogravado + 0) + (importe_ibr + 0)))</jseval>
+          <tipo>numeric</tipo>
+          <size>15</size>
+        </field>
+
+        <field id="importe_exento" activador="oculta_fact_c">
+          <label>Exento</label>
+          <jseval campodestino="importe_gravado" actxml="true">( importe_movimiento - ((importe_exento + 0 ) + (importe_nogravado + 0) + (importe_ibr + 0)))</jseval>
+          <tipo>numeric</tipo>
+          <size>15</size>
+        </field>
+
+        <field id="importe_ibr" activador="oculta_fact_c">
+          <label>Percepciones IIBB</label>
+          <size>15</size>
+          <jseval campodestino="importe_gravado" actxml="true">( importe_movimiento - ((importe_exento + 0 ) + (importe_nogravado + 0) + (importe_ibr + 0)))</jseval>
+        </field>
+
+        <field id="mostrargrilla" local="true" desactiva="true" noshow="true">
+          <valor>1</valor>
+        </field>
+
+        <field id="saldo_movimiento" noshow="true" />
+      </fieldGroup>
+
+      <fieldGroup>
+        <if>if (strpos($_SESSION['properties']['modulos'],'obleas') != false) return true; </if>
+
+        <field id="detalle_nro_series" local="true" showTabla="true">
+          <label colspan="10" modpos="force">Detalle</label>
+          <helper type="object" xml="importar_stkseriales.xml" />
+        </field>
+      </fieldGroup>
+
+      <fieldGroup>
+        <if>if (strpos($_SESSION['properties']['modulos'],'iva') != false) return true; </if>
+
+        <field id="detalle_iva" local="true" showTabla="true" activador="oculta_fact_c">
+          <label colspan="10" modpos="force"></label>
+          <helper type="object" xml="comprobante_ing.xml">
+            <parameter source="importe_gravado" target="importe_gravado"/>
+            <parameter source="regcuenta_id" target="regcuenta_id"/>
+          </helper>
+        </field>
+      </fieldGroup>
+
+      <fieldGroup deshabilitado="true" noshow="true">
+        <field id="regcuenta_ivaid" local="true">
+          <label>Categ. IVA</label>
+        </field>
+
+        <field id="percepcion" local="true">
+          <label>Agnt Perc IVA</label>
+          <actualiza>
+            <field id="detalle_iva" destino="percepcion" />
+          </actualiza>
+        </field>
+
+        <field id="imputacion_concepto" local="true">
+          <label>imputacion concepto</label>
+          <jseval campodestino="cuenta_debe_doh" actxml="false">imputacion_concepto+0==0?0:1</jseval>
+          <jseval campodestino="cuenta_haber_doh" actxml="false">imputacion_concepto+0==0?1:0</jseval>
+          <actualiza>
+            <field id="detalle_iva" destino="imputacion_concepto" />
+          </actualiza>
+        </field>
+
+        <field id="importe_gravado" local="true">
+          <jseval campodestino="diferencia" actxml="false">(importe_gravado + 0 - gravado_movimiento + 0).toFixed(2)</jseval>
+        </field>
+
+        <field id="gravado_movimiento" local="true">
+          <jseval campodestino="diferencia" actxml="false">(gravado_movimiento + 0 - importe_gravado + 0).toFixed(2)</jseval>
+        </field>
+
+        <field id="importe_gravado" local="true">
+          <label>importe gravado</label>
+          <jseval campodestino="diferencia" actxml="false">(importe_gravado + 0 - gravado_movimiento + 0).toFixed(2)</jseval>
+        </field>
+
+        <field id="gravado_movimiento" local="true">
+          <label>gravado mov</label>
+          <jseval campodestino="diferencia" actxml="false">(gravado_movimiento + 0 - importe_gravado + 0).toFixed(2)</jseval>
+        </field>
+
+        <field id="importe_iva">
+          <label>importe iva</label>
+          <tipo>custom_numeric</tipo>
+        </field>
+
+        <field id="importe_percepcion">
+          <label>importe percepcion</label>
+          <tipo>custom_numeric</tipo>
+        </field>
+
+        <field id="neto_movimiento">
+          <label>neto mov</label>
+          <tipo>custom_numeric</tipo>
+          <actualiza>
+            <field id="cuentas_asignadas" destino="importe_x_centro" />
+          </actualiza>
+        </field>
+      </fieldGroup>
+
+      <field id="diferencia" deshabilitado="true" local="true"  style="font-size:16px; color:red;">
+        <label>Diferencia</label>
+        <tipo>numeric</tipo>
+        <size>15</size>
+      </field>
+
+      <field id="modulocontable" local="true" noshow="true">
+        <valor eval="true">(strpos($_SESSION['properties']['modulos'],'contabilidad') != false ? 1 : 0  )</valor>
+      </field>
+
+      <fieldGroup noshow="true" local="true">
+        <if>return (strpos($_SESSION['properties']['modulos'],'contabilidad') != false);</if>
+
+        <field id="cuentas_asignadas" local="true" showTabla="true">
+          <label colspan="10" _modpos="force" />
+          <helper type="object" xml="regcuenta_imputaciones_grid.xml" />
+        </field>
+
+        <field id="porcentaje_ctbimputacion" local="true">
+          <label>Porcentaje Imputacion</label>
+          <tipo>custom_numeric</tipo>
+        </field>
+
+        <field id="cuenta_prov_nogravado" local="true">
+          <label>Cta. No Gravadoo</label>
+          <helper type="combo" id="REG_CUENTA_IMPUTACION">
+            <field id="cuenta_id" />
+            <field id="cuenta_nograv_id">
+              <expression>cuenta_id</expression>
+            </field>
+            <field id="regcuenta_id" oculto="true" />
+            <field id="doh" oculto="true">
+              <condicion operador="=">0</condicion>
+            </field>
+          </helper>
+          <tipo>varchar</tipo>
+        </field>
+
+        <field id="ctbcuenta_nogravado_id" local="true">
+          <label>Cuenta No Gravado</label>
+          <tipo>varchar</tipo>
+        </field>
+
+        <field id="ctb_nogravado_id" local="true">
+          <tipo>varchar</tipo>
+        </field>
+
+        <field id="cuenta_debe_doh">
+          <label>DOH Debe</label>
+          <if exp="imputacion_concepto+0 == 0">
+            <true>'1'</true>
+            <false>'0'</false>
+          </if>
+        </field>
+
+        <field id="cuenta_haber_doh">
+          <label>DOH Haber</label>
+          <if exp="imputacion_concepto+0 == 0">
+            <true>'0'</true>
+            <false>'1'</false>
+          </if>
+          <actualiza>
+            <field id="cuentas_asignadas" destino="centro_haber_doh" />
+          </actualiza>
+        </field>
+
+        <field id="cuenta_prov_debe">
+          <label>Cta. Subsistema Debe</label>
+          <parametro id="cuentas_habilitadas_qry.xml" dir="/ayudas" retorna="id_cuenta">
+            <field id="id_cuenta">
+              <condicion operador="=">(SELECT GEN_SUBSISTEMAS.cuenta_debe_id from GEN_SUBSISTEMAS where id_subsistema = '01')</condicion>
+            </field>
+          </parametro>
+          <actualiza>
+            <field id="detalle_iva" destino="cuenta_prov_debe" />
+          </actualiza>
+        </field>
+
+        <field id="cuenta_prov_exento">
+          <label>Cta. Exento</label>
+          <parametro id="cuentas_habilitadas_qry.xml" dir="/ayudas" retorna="id_cuenta">
+            <field id="id_cuenta">
+              <condicion operador="=">IFNULL((SELECT HTXOPTIONS.option_value FROM HTXOPTIONS WHERE HTXOPTIONS.option_name = 'SIS::01:cuenta_contable_exento'), (SELECT GEN_SUBSISTEMAS.cuenta_debe_id from GEN_SUBSISTEMAS where id_subsistema = '01'))</condicion>
+            </field>
+          </parametro>
+        </field>
+
+        <field id="cuenta_prov_haber">
+          <label>Cta. Subsistema Haber</label>
+          <parametro id="cuentas_habilitadas_qry.xml" dir="/ayudas" retorna="id_cuenta">
+            <field id="id_cuenta">
+              <condicion operador="=">(SELECT GEN_SUBSISTEMAS.cuenta_debe_id from GEN_SUBSISTEMAS where id_subsistema = '01')</condicion>
+            </field>
+          </parametro>
+        </field>
+
+        <field id="cuenta_prov_ibr">
+          <label>Cta. Percepcion IIBB</label>
+        </field>
+      </fieldGroup>
+
+    </table>
+
+    <join>
+      <table id="REG_CONCEPTOS">
+        <field id="id_concepto">
+          <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+        </field>
+        <field id="subsistema_id">
+          <condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join>
+      <table id="REG_CUENTA">
+        <field id="id_regcuenta">
+          <condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join>
+      <table id="GEN_SUBSISTEMAS">
+        <field id="id_subsistema">
+          <condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion>
+        </field>
+      </table>
+    </join>
+
+    <tempTable id="TEMPTABLENAME">
+      <row>
+        <field id="cuenta_id">cuenta_prov_haber</field>
+        <field id="doh">cuenta_haber_doh</field>
+        <field id="importe">importe_movimiento</field>
+        <field id="debe">importe_movimiento</field>
+        <field id="haber">importe_movimiento</field>
+        <field id="_ORDEN">10</field>
+      </row>
+      <row>
+        <field id="cuenta_id">cuenta_prov_exento</field>
+        <field id="doh">cuenta_debe_doh</field>
+        <field id="importe">importe_exento</field>
+        <field id="debe">importe_exento</field>
+        <field id="haber">importe_exento</field>
+        <field id="_ORDEN">20</field>
+      </row>
+      <row>
+        <field id="cuenta_id">ctb_nogravado_id</field>
+        <field id="doh">cuenta_debe_doh</field>
+        <field id="importe">importe_nogravado</field>
+        <field id="debe">importe_nogravado</field>
+        <field id="haber">importe_nogravado</field>
+        <field id="_ORDEN">30</field>
+      </row>
+      <row>
+        <field id="cuenta_id">cuenta_prov_ibr</field>
+        <field id="doh">cuenta_debe_doh</field>
+        <field id="importe">importe_ibr</field>
+        <field id="debe">importe_ibr</field>
+        <field id="haber">importe_ibr</field>
+        <field id="_ORDEN">40</field>
+      </row>
+    </tempTable>
+
+  </form>
+</histrix>

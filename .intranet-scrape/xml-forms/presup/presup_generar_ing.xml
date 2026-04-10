@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="ing" transaccional="true" imprime="false" confirma="GENERAR PRESUPUESTO" inserta="false" modifica="false" log="false">
+	<title>Generacion de Presupuesto</title>
+	<obs></obs>
+	<form >
+		<table id="STKINMOV" label="Generacion de Presupuesto">
+			<movimientos cabecera="presup_generar_cab.xml">
+				<relacion id="presup_generar_ingmov.xml"></relacion>
+			</movimientos>
+
+			<filters>
+				<field id="nrocha">
+				<operador>=</operador>				
+				<label>Número Fabricación</label>
+				<valor>0</valor>
+
+				</field>
+				<field id="opecod" >
+					<operador>=</operador>
+					<label>Operario</label>
+				</field>
+
+				<field id="artcod">
+					<operador>=</operador>
+					<label>Artículo</label>
+				</field>	
+
+				<field id="movfec">
+					<operador>&gt;=</operador>
+					<label>Desde Fecha</label>
+					<valor>today</valor>
+				</field>
+
+				<field id="movfec">
+					<operador>&lt;=</operador>
+					<label>Hasta Fecha</label>
+					<valor>today</valor>					
+				</field>
+			</filters>
+
+			<field id="nrocha">
+				<ayuda_ex id="CHASIS">
+					<field id="nrocha"></field>
+					<field id="chades"></field>
+				</ayuda_ex>
+				<label>Num.Fabric</label>
+				<tipo>integer</tipo>
+				<help>Nro de Fabricación</help>
+			</field>
+			
+			<field id="movfec">
+				<label>Fecha Remito </label>
+				<help>Fecha Remito </help>
+			</field>
+			
+			<field id="siscod" oculto="true">
+				<condicion operador="=">'01'</condicion>
+				
+			</field>
+		
+			<field id="movref">
+				<label>Referencia . </label>
+				<format>%10s</format>
+			</field>
+
+			<field id="artcod" clave="true" autocompletar="true">
+				<label>Artículo</label>
+				<ayuda_ex id="STKINSUM" xml="HLPstkinsum.xml" dir="/help_local">
+					<field id="artcod">
+                	        <detalle>artcod</detalle>
+            	        </field>
+			<field id="artdes"></field>
+				<clave>artcod</clave>
+				<descripcion>artdes</descripcion>
+			</ayuda_ex> 
+				
+			</field>
+				
+			<field id="artdes" tabla="STKINSUM">
+				<label>Desc</label>
+				<tipo>varchar</tipo>
+			</field>	
+
+				<field id="opecod" oculto="true" autocompletar="true">
+					<label>Operario</label>
+				    <helper type="combo" _id="PERSONAL" xml="HLPpersonal_ope.xml" dir="/help_local">
+                      <field id="opecod">
+                        <!-- <label>operario</label>
+                        <help>Número de Operario</help>
+                        <condicion operador="!=">0</condicion> -->
+                        <detalle>opecod</detalle>
+                      </field>
+                      <field id="nombres">
+                        <expression>CONCAT(apellido,', ', Nombre)</expression>
+                        <order>
+                      	<field id="opecod"/>
+                      </order>
+                      </field>
+        		    </helper>
+				</field>
+			
+			<field id="opecodEx">
+				<expression>CONCAT(PERSONAL.apellido, ', ', PERSONAL.Nombre)</expression>
+				<label>Operador</label>
+				<tipo>string</tipo>
+				
+			</field>
+			<field id="cant" >
+				<expression>count(STKINMOV.artcod)</expression>
+				<label>C.</label>
+				<tipo>decimal</tipo>
+			</field>			
+
+			<field id="movpes" suma="true">
+				<expression>round(sum(STKINMOV.movuso),2)</expression>
+				<label>Cant</label>
+				<tipo>decimal</tipo>
+			</field>				
+			<field id="movcos" suma="true">
+				<expression>round((STKINMOV.movcos * STKINSUM.valcps / STKINSUM.valuso ), 2	)</expression>
+				<label>Precio Unit</label>
+				<tipo>decimal</tipo>
+			</field>				
+			<field id="movimp" suma="true">
+				<expression>round((STKINMOV.movcos * STKINSUM.valcps / STKINSUM.valuso ), 2	) * round(sum(STKINMOV.movuso),2)</expression>
+				<label>Imp</label>
+				<tipo>decimal</tipo>
+			</field>							<group>
+				<field id="nrocha" ></field>
+				<field id="artcod" tabla="STKINMOV"></field>
+			</group>	
+			
+		</table>
+		
+		<!--
+		<join tipo="left">
+		<table id="stkconce">
+		<field id="siscod" oculto="true">
+		<condicion operador="=">'06'</condicion>
+		
+		</field>
+		<field id="movcod" oculto="true">
+		<condicion operador="=">STKINMOV.movcod</condicion>
+		</field>
+		<field id="contip" oculto="true"></field>
+		</table>
+		</join>
+		-->
+		
+		<join tipo="left">
+			<table id="PERSONAL">
+				<field id="opecod" oculto="true">
+					<condicion operador="=">STKINMOV.opecod  and PERSONAL.opecod != 0</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="STKINSUM">
+				<field id="artcod" oculto="true">
+					<condicion operador="=">STKINMOV.artcod</condicion>
+				</field>
+				<field id="siscod" oculto="true">
+					<condicion operador="=">STKINMOV.siscod</condicion>
+				</field>
+			</table>
+		</join>
+		
+	</form>
+</histrix>

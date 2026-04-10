@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm-mini" subtipo="vertical">
+	<title>Areas</title>
+	<obs></obs>
+	<form >
+		<table id="CAL_AUDITORIA_AREAS">
+		    <title>Areas</title>
+
+			<field id="id_auditoriaarea" autoinc="true" noshow="true">
+				<label>Codigo</label>
+			</field>
+
+			<field id="auditoriaint_id" oculto="true"/>
+			<field id="area_id">
+				<label modpos="nobr">Area</label>
+				<help>Area</help>
+				<helper type="combo" xml="rhseccion_qry.xml" dir="/help_local">
+					<order>
+						<field id="nombre_seccion"/>
+					</order>
+				</helper>
+			</field>
+		</table>
+	</form>
+</histrix>

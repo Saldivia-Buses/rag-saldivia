@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="cabecera"  graba="false">
+	<title>LISTAS DE PRECIOS ADICIONALES</title>
+	<obs></obs>
+	<form >
+		<table id="LISTAPRECIOSCAB" >
+		    <title>Listas de precios</title>
+				<field id="idLista">
+					<label>Nueva Lista</label>
+					<tabla_ex id="LISTAPRECIOSCAB">
+					    <field id="num">
+						<expression>max(idLista) + 1</expression>
+					    </field>
+					    <field id="lista">
+						<expression>max(idLista) + 1</expression>
+					    					    </field>
+					    
+					    
+					</tabla_ex>
+					<!--
+					<parametro id="listaprecioscab_param.xml" retorna="idLista2">
+					</parametro> -->
+				</field>
+				<field id="fecha">
+					<label modpos="nobr">Fecha</label>
+					<valor>today</valor>
+				</field>
+
+				<field id="nombre">
+					<label >Nombre</label>
+					<valor>Lista Adicionales automática</valor>
+				</field>
+				<field id="descripcion">
+					<label modpos="nobr">Descripción</label>
+					<valor>Lista Adicionales Automática</valor>
+					<size>60</size>
+				</field>
+				<field id="pie" noshow="true">
+					<label colspan="4">Pie</label>
+					<size>90</size>
+					<expression>select pie from LISTAPRECIOSCAB where pie != '' limit 1</expression>
+					<tipo>varchar</tipo>
+				</field>			
+
+		</table>
+	</form>
+</histrix>

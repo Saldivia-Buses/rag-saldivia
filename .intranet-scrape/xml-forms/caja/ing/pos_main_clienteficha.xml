@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ficha" imprime="false" conBusqueda="true" log="false" borra="false" cancel="false" preFetch="true">
+  <title>Ficha de Clientes</title>
+  <obs/>
+  <form>
+    <table id="REG_CUENTA" label="Ficha de Clientes">
+
+      <field id="id_regcuenta" noshow="true" esClave="true" autoinc="true">
+        <valor>0</valor> 
+      </field>
+      
+      <field id="subsistema_id" noshow="true" valauto="true" >
+        <valor>02</valor>
+      </field>
+
+      <fieldGroup>
+
+        <field id="nombre_cuenta" required="true">
+          <label colspan="5">Nombre</label>
+          <help>Nombre de la cuenta</help>
+          <size>80</size>
+        </field>
+
+        <field id="provincia_id">
+          <label>Provincia</label>
+          <tabla_ex xml="provincia_qry.xml" dir="/ayudas" vacio="true"/>
+          <actualiza>
+            <field id="localidad_id" destino="provincia_id" oculto="true"/>
+          </actualiza>
+        </field>
+
+        <field id="localidad_id" _sincelda="true">
+          <label _modpos="nobr" _colspan="9">Localidad</label>
+          <helper type="combo" xml="localidad_qry.xml" dir="/ayudas" empty="true">
+            <field id="provincia_id" oculto="true">
+              <condicion operador="=">-1</condicion>
+            </field>
+          </helper>
+        </field>
+
+        <!-- Dirección -->
+
+        <field id="cod_direccion">
+          <label>Calle</label>
+          <size>40</size>
+        </field>
+        <field id="bis_direccion" sincelda="true">
+          <label modpos="nobr">Bis</label>
+          <tipo>check</tipo>
+        </field>
+        <field id="nro_direccion">
+          <label modpos="nobr">Nº</label>
+          <size>10</size>
+        </field>
+        <field id="abreviacion_direccion">
+          <label modpos="nobr">Piso/Dpto</label>
+          <size>15</size>
+        </field>
+        
+        <field id="email_cuenta" required="true">
+          <label colspan="5">email</label>
+          <help>email de la cuenta</help>
+          <size>60</size>
+  		</field>
+                                                                        
+        <!-- Fechas -->
+        <field id="alta_cuenta" noshow="true">
+          <label>Fecha de Alta</label>
+          <help>Fecha de alta de la cuenta</help>
+          <tipo>date</tipo>
+          <valor>today</valor>
+        </field>
+
+        <field id="fecha_nacimiento">
+          <label>Fecha Nacimiento</label>
+          <tipo>date</tipo>
+        </field>
+
+        <!-- Identificacion -->
+        <field id="tipo_documento_id">
+          <helper type="combo" xml="tipos_documento_qry.xml" dir="/ayudas" empty="true" />
+          <label>Tipo Documento</label>
+          <valor>96</valor>
+        </field>
+
+        <field id="nro_documento" sincelda="true" mask="99999999" required="true" copia="nro_cuenta">
+          <label modpos="nobr">Nº documento</label>
+          <help>Numero de documento</help>
+          <tipo>varchar</tipo>
+        </field>
+
+        <field id="nro_cuenta" deshabilitado="true" sincelda="true">
+            <label modpos="nobr">NroCuenta</label>
+            <size>20</size>
+        </field>
+
+        <!-- Fiscales -->
+        <field id="iva_id" required="true">
+          <tabla_ex xml="iva_qry.xml" dir="/ayudas" />
+          <label>Cat. IVA</label>
+          <help>Categoria de IVA</help>
+          <valor>5</valor>
+        </field>
+        <field id="cuit_cuenta" sincelda="true">
+          <label modpos="nobr">Nº CUIT</label>
+          <help>Número de CUIT</help>
+          <jsfunction event="onchange"><![CDATA[ var RE=/^(20|23|27|30|33)-[0-9]{8}-[0-9]$/; if(!RE.test(this.value)) alert('CUIT ERRONEO: Formato XX-XXXXXXXX-X'); ]]></jsfunction>
+          <size>15</size>
+        </field>
+      </fieldGroup>
+
+
+  	  
+    </table>
+    <join tipo="left">
+      <table id="GEN_LOCALIDADES">
+        <field id="id_localidad">
+          <condicion operador="=">REG_CUENTA.localidad_id</condicion>
+        </field>
+      </table>
+    </join>
+
+  </form>
+</histrix>

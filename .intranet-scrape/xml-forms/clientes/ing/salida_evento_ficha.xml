@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ficha" procesa="false" borra="false" inserta="false" preFetch="true" path="cuentas">
+	<title>Control de Accesos</title>
+	<obs></obs>
+	<eventos>
+		<event id="update">close</event>
+		<event id="update">reload</event>
+	</eventos>
+	<form>
+	    <table id="REG_CUENTA_EVENTOS" label="Control de Accesos">
+
+			<field id="id_regcuentaevento" esClave="true" valauto="true" noshow="true" />
+
+			<field id="hora_egreso" mask="99:99:99" valauto="true" required="true" deshabilitado="false" forceUpdate="true">
+				<label>Hora de Egreso</label>
+				<expression>CURTIME()</expression>
+				<tipo>varchar</tipo>
+			</field>	
+
+			<field id="fecha_egreso" valauto="true" required="true" deshabilitado="false" forceUpdate="true">
+				<label modpos="nobr">Fecha Salida</label>
+				<expression>REG_CUENTA_EVENTOS.fecha_ingreso</expression>
+				<tipo>date</tipo>
+			</field>
+
+			<field id="regcuenta_id" deshabilitado="true" colspan="4">
+				<label>Cuenta Principal</label>
+				<helper type="combo" id="REG_CUENTA" empty="true">
+					<field id="id_regcuenta" />
+					<field id="nombre_cuenta" />
+					<field id="baja_cuenta" oculto="true">
+						<condicion operador="=">'0000-00-00'</condicion>
+					</field>
+					<field id="subsistema_id" oculto="true" />
+				</helper>
+			</field>
+			
+			<field id="regcuentarelacionada_id" noshow="true" />					
+
+			<field id="nombre_cuenta" deshabilitado="true" tabla="REG_CUENTA">
+				<label>Cuenta Acceso</label>
+			</field>
+
+			<field id="nro_documento" tabla="REG_CUENTA" deshabilitado="true">
+				<label modpos="nobr">Documento Acceso</label>				
+				<tipo>enclosed_integer</tipo>
+			</field>	
+
+			<field id="imagen_cuenta" path="regcuentarelacionada_id" tabla="REG_CUENTA" deshabilitado="true" colspan="4">
+				<label> </label>
+	        	<tipo Type="Image">file</tipo>
+	        	<size>200</size>
+			</field>
+
+	    </table>
+
+	    <join>
+	    	<table id="REG_CUENTA">
+	    		<field id="id_regcuenta">
+	    			<condicion operador="=">REG_CUENTA_EVENTOS.regcuentarelacionada_id</condicion>
+	    		</field>
+	    	</table>
+	    </join>
+
+	</form>
+</histrix>	

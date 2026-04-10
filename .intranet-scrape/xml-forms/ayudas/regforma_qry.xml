@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ayuda" >
+  <title>Condiciones de Ventas y formas de Pago </title>
+  <obs/>
+	  <form>
+		<table id="REG_FORMAS" label="Cuentas">
+			<field id="id_regforma" />
+			<field id="nombre_forma" />
+			<field id="subsistema_id" />
+			<field id="imputa_pago" >
+				<detalle>imputa_pago</detalle> 
+		    </field>
+
+			<order>
+				<field id="nombre_forma"/>
+			</order>
+
+		</table>
+	  </form>
+</histrix>

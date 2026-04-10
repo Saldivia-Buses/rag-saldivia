@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="liveGrid">
+	<title>CONCEPTOS CONTABLES</title>
+	<obs></obs>
+	<consulta>
+		<table id="CTBCONCE" >
+			<title>Conceptos</title>
+			<field id="siscod" oculto="true">
+				<label>siscod</label>
+			</field>
+			<field id="concod" editable="true">
+				<label>Cod.</label>
+				<help>Codigo de Concepto</help>
+			</field>
+			<field id="condes" editable="true">
+				<label>Descripcion</label>
+				<help>Descripcion del Concepto</help>
+			</field>
+			<field id="conabv" editable="true"/>
+	    
+			<!--
+			<field id="conimp">
+				<label>Imputacion</label>
+				<help>Imputacion contable</help>
+			</field>
+			<field id="concfm">
+				<label>Cod.F.M</label>
+				<help>Codigo de Concepto Ficha Maestra</help>
+				
+			</field>
+			<field id="coniva">
+				<label>coniva</label>
+			</field>
+			<field id="comcod">
+				<label>Tipo Comp</label>
+				<help>TIPO DE COMPROBANTE SEGUN D.G.I. (RG 3419 - ANEXO VI ).</help>
+			</field>
+	    		-->
+			<order>
+				<field id="concod"></field>
+			</order>
+		</table>
+	</consulta>	   
+</histrix> 

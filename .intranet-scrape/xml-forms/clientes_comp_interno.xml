@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix graboasiento="true" llenoTemporal="false" tipo="ing" subtipo="vertical"  imprime="false">
+	<title>INGRESO DE FACTURAS</title>
+	<obs/>
+	<form >
+		<table id="CCTMOVIM" label="Ingreso de Facturas">
+			<!-- Este ingreso va a incorporar un boton IMPORTAR
+				llamado con los parametros mencionados en los campos
+			<importar xml="remitos_cons.xml" label="Importar desde Remitos" titulo="Seleccione Remito">
+				<field id="ctacod"></field>
+			</importar>
+			-->
+
+			<movimientos cabecera="clientes_comprobantes_cab.xml">
+
+<!-- 			<relacion id="clientes_ivaventas_ingmov.xml"/>
+				<relacion id="clientes_ivaimportes_ingmov.xml"/> -->
+				<relacion id="clientes_cctencab_ingmov.xml"/>
+				<relacion id="clientes_cctmovim_ingmov.xml"/>
+
+<!--				<relacion id="factura_cctmovim_ingmov.xml"/>
+				<relacion id="factura_cctmovim_ctdo_ingmov.xml"/>
+				<relacion id="factura_cajmovim_ingmov.xml"/>
+
+				<relacion id="factura_pergan_ivaimportes_ingmov.xml"/>
+				<relacion id="factura_periva_ivaimportes_ingmov.xml"/>
+				<relacion id="factura_pering_ivaimportes_ingmov.xml"/>
+
+				<relacion id="factura_facdetal_ingmov.xml"/>
+				<relacion id="factura_stkinmov_ingmov.xml"/>
+	-->
+				<!--					<relacion id="factura_rni_ivaimportes_ingmov.xml"></relacion> -->
+			</movimientos>
+			<field id="siscod" noshow="true" >
+				<label >siscod</label>
+				<valor>'02'</valor>
+			</field>
+			<field id="movnro" oculto="true">
+				<label >remnro</label>
+				<tipo>integer</tipo>
+			</field>
+
+			<field id="artuni" oculto="true">
+				<label>artuni</label>
+			</field>
+			<field id="artcan" oculto="true">
+				<label >artcan</label>
+				<tipo>numeric</tipo>
+			</field>
+			<field id="artnet" oculto="true">
+				<label >artnet</label>
+				<tipo>numeric</tipo>
+			</field>
+			<field id="movp2" oculto="true">
+				<label >movp2</label>
+				<tipo>numeric</tipo>
+			</field>
+
+
+			<field id="ctb_comp" local="true" ctbcuenta="1">
+				<label colspan="1">Cuenta Contable</label>
+				<tabla_ex id="CTBCUENT">
+					<field id="ctbcod"></field>
+
+					<field id="ctbnom"></field>
+					<field id="ctbhab">
+						<condicion operador="=">1</condicion>
+					</field>
+<!-- 					<field id="siscod">
+						<condicion operador="=">'10'</condicion>
+					</field> -->
+
+					<order>
+						<field id="ctbnom"></field>
+					</order>
+				</tabla_ex>
+				<tipo>varchar</tipo>
+			</field>
+
+			<field id="neto" suma="true">
+				<label modpos="nobr" >Importe</label>
+				<tipo>numeric</tipo>
+			</field>
+			<field id="nogravado" suma="true" noshow="true">
+				<label modpos="nobr">No Gravado</label>
+				<tipo>numeric</tipo>
+			</field>
+			<field id="exento" suma="true" noshow="true">
+				<label modpos="nobr">Exento</label>
+				<tipo>numeric</tipo>
+			</field>
+
+			<field id="alicuota" local="true" noshow="true">
+				<label>Alicuota</label>
+				<options>
+					<option valor="21">21.00 %</option>
+					<option valor="27.00">27.00 %</option>
+					<option valor="10.50">10.50 %</option>
+				</options>
+				<tipo>decimal</tipo>
+			</field>
+
+<!--
+			<field deshabilitado="true" id="iva" ctbimporte="3" noshow="true">
+				<label modpos="nobr">I.V.A.</label>
+				<if exp="true" operador="=">
+					<true>(neto ) * alicuota / 100</true>
+					<false>0</false>
+				</if>
+				<tipo>numeric</tipo>
+			</field>-->
+			<!--
+			<field id="rni">
+				<label modpos="nobr">I.V.A. R.N.I</label>
+				<tipo>numeric</tipo>
+			</field>
+			-->
+			<field id="perciv" ctbimporte="4" noshow="true">
+				<label modpos="nobr">Per.I.V.A.</label>
+				<tipo>numeric</tipo>
+			</field>
+			<field id="pergan" ctbimporte="6" noshow="true">
+				<label modpos="nobr">Per. Ganancias</label>
+				<tipo>numeric</tipo>
+			</field>
+			<field id="pering" ctbimporte="5" noshow="true">
+				<label >Per.Ing.Brutos</label>
+				<tipo>numeric</tipo>
+			</field>
+
+<!--			<field id="impint">
+				<label>Imp. Internos</label>
+				<tipo>numeric</tipo>
+			</field> -->
+			<field id="impu" desabilitado="true" noshow="true">
+				<label >impu</label>
+				<tipo>numeric</tipo>
+				<if exp="true" operador="=">
+					<true>(conimp == 1)?1:-1</true>
+					<false>1</false>
+				</if>
+				<valor>1</valor>
+			</field>
+			<field copia="saldo" deshabilitado="true" id="total" local="true" suma="true" ctbimporte="2" noshow="true">
+				<label modpos="nobr" Formstyle="font-size:18px;color:red;">Total</label>
+				<if exp="true" operador="=">
+					<true>neto</true>
+					<false>0</false>
+				</if>
+				<tipo>numeric</tipo>
+			</field>
+			<field id="saldo" suma="true" noshow="true">
+				<label modpos="nobr" Formstyle="font-size:18px;color:red;">Saldo</label>
+				<tipo>numeric</tipo>
+
+				<if exp="(saldo) == 0" operador="=">
+					<true>total * impu</true>
+					<false>saldo </false>
+				</if>
+			</field>
+			<field id="impcod" local="true" noshow="true">
+			<label modpos="nobr"></label>
+				<if exp="true" operador="=">
+					<true>(alicuota == 21.00 ? 1: (alicuota == 27.00 ? 3 : 2))</true>
+					<false>0</false>
+				</if>
+				<tipo>numeric</tipo>
+			</field>
+			<field id="grabo_pergan" local="true" noshow="true">
+				<if exp="(pergan != 0)" operador="=">
+					<true>'true'</true>
+					<false>'false'</false>
+				</if>
+				<tipo>numeric</tipo>
+			</field>
+			<field id="f_p" local="true" noshow="true">
+				<if exp="(fpago == 0)" operador="=">
+					<true>'true'</true>
+					<false>'false'</false>
+				</if>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="artcod" noshow="true">
+				<label >artcod</label>
+				<tipo>varchar</tipo>
+			</field>
+
+			<field id="grdet" local="true"  noshow="true">
+				<if exp="('artcod'	 != '')" operador="=">
+					<true>'true'</true>
+					<false>'false'</false>
+				</if>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="grabo_periv" local="true" noshow="true">
+				<if exp="(perciv != 0)" operador="=">
+					<true>'true'</true>
+					<false>'false'</false>
+				</if>
+				<tipo>numeric</tipo>
+			</field>
+			<field id="grabo_per_ing" local="true" noshow="true">
+				<if exp="(pering != 0)" operador="=">
+					<true>'true'</true>
+					<false>'false'</false>
+				</if>
+				<tipo>numeric</tipo>
+			</field>
+<!--			<field id="imputiv" local="true" ctbtipo="3" noshow="true">
+				<valor>1</valor>
+			</field>
+			<field id="imputpiv" local="true" ctbtipo="4" noshow="true">
+				<valor>1</valor>
+			</field>
+			<field id="imputpib" local="true" ctbtipo="5" noshow="true">
+				<valor>1</valor>
+			</field>
+			<field id="imputpga" local="true" ctbtipo="6" noshow="true">
+				<valor>1</valor>
+			</field>
+			<field id="imputnetos" local="true" ctbtipo="1" noshow="true">
+				<valor>1</valor>
+			</field>
+			-->
+
+			<field deshabilitado="true" id="netos" ctbimporte="1" noshow="true">
+				<if exp="true" operador="=">
+					<true>neto + nogravado + exento</true>
+					<false>0</false>
+				</if>
+				<tipo>numeric</tipo>
+			</field>
+		</table>
+	</form>
+</histrix>

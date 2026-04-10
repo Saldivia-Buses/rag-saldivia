@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ayuda">
+  <title>Articulos</title>
+  <obs/>
+  <form>
+    <table id="STK_ARTICULOS" label="Articulos">
+
+      <field id="id_stkarticulo">
+        <label>Código auto de Artículo</label>
+        <detalle>stkarticulo_id</detalle>
+      </field>
+
+      <field id="nombre_articulo">
+        <label>Nombre</label>
+        <detalle>nombre_articulo</detalle>
+      </field>
+
+      <field id="stkrubro_id">
+        <label>Rubro</label>
+        <helper type="combo" xml="stkrubro_qry.xml" dir="/ayudas" empty="true"/>
+        <detalle>stkrubro_id</detalle>
+      </field>
+
+      <field id="stkfamilia_id">
+        <label>Familia</label>
+        <helper type="combo" xml="stkfamilia_qry.xml" dir="/ayudas" empty="true"/>
+        <detalle>stkfamilia_id</detalle>
+      </field>
+
+      <field id="stock">
+        <label>Stock</label>
+<!--
+        <expression>(SELECT sum( STK_MOVIMIENTOS.cantidad * (CASE WHEN STK_CONCEPTOS.tipo_concepto = 1 THEN -1 ELSE 1 END ))
+                             FROM STK_MOVIMIENTOS 
+                        LEFT JOIN STK_CONCEPTOS ON STK_CONCEPTOS.id_stkconcepto = STK_MOVIMIENTOS.stkconcepto_id
+                        WHERE STK_MOVIMIENTOS.stkarticulo_id = STK_ARTICULOS.id_stkarticulo)
+                </expression>
+-->
+	<expression>(select sum(SA.cantidad_stock) from STK_STOCKACTUAL SA where SA.stkarticulo_id = STK_ARTICULOS.id_stkarticulo)</expression>
+
+        <detalle>cantidad_stock</detalle>
+        <tipo>numeric</tipo>
+      </field>
+
+      <!-- Precios -->
+
+      <field id="valor_compra">
+        <label>V.Compra</label>
+        <detalle>stkvalor_compra</detalle>
+      </field>
+
+      <field id="valor_uso">
+        <label>V.Uso</label>
+        <detalle>stkvalor_uso</detalle>
+      </field>
+
+      <field id="unidad_compra_id">
+        <label>U.Compra</label>
+        <detalle>stkunidad_compra_id</detalle>
+      </field>
+
+      <field id="unidad_uso_id">
+        <label>U.Uso</label>
+        <detalle>stkunidad_id</detalle>
+      </field>
+
+      <field id="precio_costo">
+        <label>Costo</label>
+        <detalle>precio_costo</detalle>
+      </field>
+
+      <field id="precio_lista">
+        <label>Lista</label>
+      </field>
+
+      <field id="precio_venta">
+        <label>Venta</label>
+        <detalle>precio_venta</detalle>
+      </field>
+
+      <field id="precio_promedio">
+        <label>PPP</label>
+        <detalle>precio_promedio</detalle>
+      </field>
+
+      <field id="unidad_id">
+        <detalle>unidad_id</detalle>
+      </field>
+
+      <field id="cuentadebe_id">
+        <detalle>cuenta_id</detalle>
+      </field>
+
+      <order>
+        <field id="nombre_articulo"/>
+      </order>
+
+    </table>
+  </form>
+</histrix>

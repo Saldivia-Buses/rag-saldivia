@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm">
+  <title>Feriados</title>
+  <obs></obs>
+  <form>
+    <table id="GEN_FERIADOS" label="Feriados">
+     
+      <field id="id_feriado" autoinc="true" noshow="true" />
+      
+      <field id="nacionalidad_id">
+        <label>Nacionalidad</label>
+        <helper type="combo" id="GEN_NACIONALIDADES">
+          <field id="id_nacionalidad" />
+          <field id="pais" />
+        </helper>
+      </field>
+      
+      <field id="fecha_feriado">
+        <label>Fecha</label>
+        <help>Fecha del Feriado</help>
+        <tipo>date</tipo>
+      </field>
+
+      <field id="descripcion_feriado">
+        <label>Descripcion</label>
+        <help>Descripción del Feriado</help>
+        <size>80</size>
+      </field>
+
+      <order>
+        <field id="fecha_feriado" tipoOrden="DESC"/>
+        <field id="nacionalidad_id"/>
+      </order>
+
+    </table>
+  </form>
+</histrix>  

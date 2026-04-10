@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert" grabafinal="true" xmlImpresion="retiva_reimp.xml" dirImpresion="/retenciones">
+  <title>RETENCIONES</title>
+  <obs/>
+  <form>
+    <table id="RETIVA" label="retenciones" idCampoCond="RR_IVA" CondExp=" &gt; 0">
+
+      <field id="printer" id_padre="printer_orden" local="true">
+        <detalle>printer</detalle>
+        <detalle>directprint</detalle>
+        <setvar>directprint</setvar>
+      </field> 			
+
+      <field id="cajcod" local="true">
+	    <valor>29</valor>
+	  </field>
+
+	  <field id="concod" id_temp="RGcajtip">
+	    <valor>2</valor>
+		<detalle>concod</detalle> 
+	  </field>
+
+	  <field id="ctacod" id_cab="ctacod">
+	    <detalle>ctacod</detalle>
+	  </field>
+
+	  <field id="ivaacu" id_cab="acuret" />
+
+      <field id="ivabru"  id_temp="impgra" />
+	
+      <field id="ivafec"  id_cab="movfec" />
+
+      <field id="ivanet"  id_temp="sumanetos" />
+
+	  <field id="ivanro"  id_cab="ivanro">
+	    <detalle>ivanro</detalle>
+      </field>
+	
+      <field id="ivapor" id_temp="ivapor">
+        <valor>21</valor>
+      </field>
+	
+      <field id="ivatot"  id_temp="RR_IVA" />
+
+      <field id="cativa_id"  id_cab="catganancias_id" />
+
+      <field id="movnro"  id_cab="movnroOP">
+        <detalle>movnro</detalle>
+      </field>
+
+      <field id="regmin" esNroMinuta="true" />
+
+      <field id="siscod" id_cab="sisctb">
+        <valor>10</valor>
+      </field>
+
+      <field id="cativa" id_temp="cativa">
+      </field>
+
+    </table>
+  </form>
+</histrix>

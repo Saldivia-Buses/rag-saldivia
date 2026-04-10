@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="chart" >
+	<title>Errores de Entrega</title>
+	<obs/>
+	<form  >
+		<table id="GEN_CALENDAR">
+			<grafico id="ErroresEntrega" >
+				<ancho>400</ancho>
+				<tipo>L</tipo>
+				<etiquetas>mes</etiquetas>
+				<serie>errores_entrega</serie>
+				<title>Errores</title>
+			</grafico>
+			<filters>
+				<field id="fecha">
+					<operador>&gt;=</operador>
+					<label>Desde Fecha</label>
+					<help>Fecha movimiento</help>
+					<valor eval="true">date('01/01/Y')</valor>
+				</field>
+				<field id="fecha">
+					<operador>&lt;=</operador>
+					<label _modpos="nobr">Hasta Fecha</label>
+					<help>Fecha movimiento</help>
+					<valor>today</valor>
+				</field>
+			</filters>
+			<field id="mes" oculto="true">
+				<expression>month(GEN_CALENDAR.fecha)</expression>
+				<label>Mes</label>
+				<options>
+					<option valor="1">Ene</option>
+					<option valor="2">Feb</option>
+					<option valor="3">Mar</option>
+					<option valor="4">Abr</option>
+					<option valor="5">May</option>
+					<option valor="6">Jun</option>
+					<option valor="7">Jul</option>
+					<option valor="8">Ago</option>
+					<option valor="9">Sep</option>
+					<option valor="10">Oct</option>
+					<option valor="11">Nov</option>
+					<option valor="12">Dic</option>
+				</options>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="fecha" oculto="true">
+				<tipo>date</tipo>
+			</field>
+			<field id="year" oculto="true">
+				<expression>year(GEN_CALENDAR.fecha)</expression>
+			</field>
+			<field id="errores_entrega">
+				<label>Errores de entrega</label>
+				<expression>
+					<![CDATA[
+					ROUND(
+					((SELECT count(*) from CAL_NOCONFORMIDADES 
+	where CAL_NOCONFORMIDADES.rhseccion_id = 6  and  CAL_NOCONFORMIDADES.fecha_nconf >= GEN_CALENDAR.fecha
+	and  CAL_NOCONFORMIDADES.fecha_nconf <= LAST_DAY(GEN_CALENDAR.fecha)) 
+/
+(SELECT count(*) FROM REG_MOVIMIENTOS 
+WHERE concepto_id = 47  
+AND REG_MOVIMIENTOS.fecha_movimiento >= GEN_CALENDAR.fecha and REG_MOVIMIENTOS.fecha_movimiento	<= LAST_DAY(GEN_CALENDAR.fecha)  AND puesto_movimiento = '2' 
+AND (regestado_id = '10' OR regestado_id = '11' )))
+* 100, 2)
+				]]></expression>
+						<tipo>numeric</tipo>
+					</field>
+					<group>
+						<field id="year" />
+						<field id="mes" />
+					</group>
+				</table>
+			</form>
+		</histrix>

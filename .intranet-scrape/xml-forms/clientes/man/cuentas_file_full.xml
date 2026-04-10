@@ -1,0 +1,457 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ficha" imprime="false" conBusqueda="true"  _preFetch="true">
+  <title>Ficha de Clientes</title>
+  <obs/>
+  <form>
+    <table id="REG_CUENTA" label="Ficha de Clientes">
+
+      <validation>
+          <condition><![CDATA[cod_direccion == ""]]></condition>
+          <message>Debe ingresar la direccion</message>
+      </validation>
+
+      <validation>
+          <condition><![CDATA[nro_direccion == 0 ]]></condition>
+          <message>Debe ingresar nro correspondiente a la direccion</message>
+      </validation>
+
+      <validation>
+          <condition><![CDATA[iva_id == 0 ]]></condition>
+          <message>Debe seleccionar la categoria de iva</message>
+      </validation>
+
+      <validation>
+          <condition><![CDATA[tipo_documento_id != '80' && cuit_cuenta == 0 ]]></condition>
+          <message>Debe ingresar el CUIT</message>
+      </validation>
+
+      <validation>
+          <condition><![CDATA[tipo_documento_id == '96' && nro_documento == 0 ]]></condition>
+          <message>Debe ingresar el DNI</message>
+      </validation>
+
+      <validation>
+          <condition><![CDATA[nro_ingbrutos == "" ]]></condition>
+          <message>Debe ingresar el número de ingresos brutos</message>
+      </validation>
+
+
+      <fieldGroup noshow="true" >
+        
+        <field id="id_regcuenta" noshow="true" esClave="true" autoinc="true">
+          <valor>0</valor>   
+        </field>
+
+        <field id="subsistema_id" noshow="true" valauto="true">
+          <valor>02</valor>
+        </field>
+      
+        <field id="subsistemarelacionada_id" local="true" noshow="true" valauto="true" />
+        
+        <field id="subsistemavendedor_id" local="true" noshow="true" valauto="true" />
+
+  </fieldGroup>
+
+
+  <fieldGroup style="padding:2px 2px 2px 2px;vertical-align:middle;">
+
+			<field id="nro_cuenta" esClave="true">
+				<label >Número</label>
+				<help>Numero de la Cuenta</help>
+			</field>
+
+			<field id="prox_nro" local="true" deshabilitado="true" sincelda="true" valauto="true" colstyle="display:none;">
+				<label style="color:red;"> Proximo Nº</label>
+				<helper type="combo" id="REG_CUENTA" >
+					<field id="nro_cuenta1">
+						<expression>max(nro_cuenta) + 1</expression>
+					</field>          
+					<field id="nro_cuenta2">
+						<expression>max(nro_cuenta) + 1</expression>
+					</field>        
+					<field id="subsistema_id">
+						<condicion operador="=" valorde="subsistema_id"></condicion>
+					</field>
+				</helper>
+			</field>
+
+			<field id="nombre_cuenta" _colspan="4">
+				<label >Nombre</label>
+				<help>Nombre de la cuenta</help>
+				<size>60</size>
+			</field>
+      
+  </fieldGroup>
+      
+
+  <fieldGroup style="padding:2px 2px 2px 2px;vertical-align:middle;" colstyle="display:none;">
+
+			<field id="separator_0" local="true" style="background-color: #c9c9c9; height: 1px;font-size:2px;" colspan="9" deshabilitado="true" />
+
+			<field id="provincia_id" colstyle="vertical-align:middle;">
+				<label>Provincia</label>
+				<tabla_ex xml="provincia_qry.xml" dir="/ayudas" vacio="true"/>
+				<actualiza>
+					<field id="localidad_id" destino="provincia_id"/>
+				</actualiza>
+			</field>
+
+			<field id="localidad_id"  modpos="nobr">
+				<label> Localidad </label>
+				<helper type="combo" xml="localidad_qry.xml" dir="/ayudas" empty="true">
+					<field id="provincia_id" oculto="true">
+						<condicion operador="=">-1</condicion>
+					</field>
+				</helper>
+			</field>
+
+			<field id="regzona_id" modpos="nobr">
+				<label>Zona</label>
+				<helper type="combo" id="REG_ZONAS" empty="true">
+					<field id="id_regzona"/>
+					<field id="nombre_zona"/>
+					<field id="subsistema_id"/>
+					<order>
+						<field id="nombre_zona"/>
+					</order>
+				</helper>
+			</field>
+
+			<field id="cod_direccion" colstyle="vertical-align:middle;">
+				<label>Calle</label>
+				<size>40</size>
+			</field>
+
+			<field id="bis_direccion" sincelda="true"  >
+				<label > Bis</label>
+				<tipo>check</tipo>
+			</field>
+
+			<field id="nro_direccion" modpos="nobr">
+				<label >Nº</label>
+				<size>10</size>
+			</field>
+
+			<field id="abreviacion_direccion" modpos="nobr">
+				<label >Piso/Dpto</label>
+				<size>10</size>
+			</field>
+
+			<field id="separator_1" local="true" style="background-color: #c9c9c9; height: 1px;font-size:2px;" colspan="9" deshabilitado="true" />
+       
+        //DOMICIO POSTAL
+
+          <field id="entrega_provincia_id">
+            <label>Provincia de Envio</label>
+            <tabla_ex xml="provincia_qry.xml" dir="/ayudas" vacio="true"/>
+            <actualiza>
+              <field id="entrega_localidad" destino="provincia_id"/>
+            </actualiza>
+          </field>
+
+          <field id="entrega_localidad" modpos="nobr" >
+            <label> Localidad </label>
+            <helper type="combo" xml="localidad_qry.xml" dir="/ayudas" empty="true">
+              <field id="provincia_id" oculto="true">
+                <condicion operador="=">-1</condicion>
+              </field>
+              <field id="entrega_codigopostal">
+                  <expression>cp</expression>
+              </field>
+            </helper>
+          </field>
+
+    			<field id="entrega_codigopostal" modpos="nobr">
+    			   <label >C.P. de Envio</label>
+    			</field>     
+
+	        <field id="entrega_direccion">
+	            <label>Domicilio de Envio</label>
+	            <size>60</size>
+	        </field>
+
+
+          <field id="entrega_hora" modpos="nobr">
+            <label >Horario de Entrega</label>     
+          </field>
+
+          <field id="separator_2" local="true" style="background-color: #c9c9c9; height: 1px;font-size:2px;" colspan="9" deshabilitado="true" />
+
+          <field id="email_cuenta">
+            <label>email</label>
+            <help>email de la cuenta</help>
+            <size>60</size>
+            <jsfunction event="onblur"><![CDATA[ var RE=/^[^\s@]+@[^\s@]+\.[^\s@]+$/; if(this.value != '' &amp;&amp; !RE.test(this.value)) alert('E-mail No Válido');  ]]></jsfunction>
+          </field>
+
+          <!-- Fechas -->
+          <field id="alta_cuenta" modpos="nobr">
+            <label>Alta</label>
+            <help>Fecha de alta de la cuenta</help>
+            <tipo>date</tipo>
+            <valor>today</valor>
+          </field>
+
+          <field id="baja_cuenta" modpos="nobr">
+            <label >Baja</label>
+            <help>Fecha de Baja de la cuenta</help>
+            <tipo>date</tipo>
+          </field>
+
+          <field id="separator_3" local="true" style="background-color: #c9c9c9; height: 1px;font-size:2px;" colspan="9" deshabilitado="true" />
+
+          <!-- Identificacion -->
+          <field id="tipo_documento_id">
+            <tabla_ex xml="tipos_documento_qry.xml" dir="/ayudas" vacio="true"/>
+            <label>Documento</label>
+          </field>
+
+        <field id="nro_documento" modpos="nobr" colstyle="vertical-align:middle;">
+          <label >Nº DOC</label>
+          <help>Numero de documento</help>
+        </field>
+
+        <field id="fecha_nacimiento" modpos="nobr">
+          <label >Fecha Nacimiento</label>
+          <tipo>date</tipo>
+        </field>
+
+        <!-- Fiscales -->
+        <field id="iva_id" required="true">
+          <label>Cat. IVA</label>
+          <tabla_ex xml="iva_qry.xml" dir="/ayudas" vacio="true"/>
+          <help>Categoria de IVA</help>
+        </field>
+
+        <field id="cuit_cuenta" modpos="nobr" colstyle="vertical-align:middle;">
+          <label >Nº CUIT</label>
+          <help>Número de CUIT</help>
+          <!-- jsfunction event="onchange"><![CDATA[ var RE=/^(20|23|27|30|33)-[0-9]{8}-[0-9]$/; if(this.value != '' && !RE.test(this.value)) alert('CUIT ERRONEO: Formato XX-XXXXXXXX-X'); ]]></jsfunction -->
+          <size>15</size>
+        </field>
+
+        <field id="regforma_id">
+          <label>Condicion de Venta</label>
+          <tabla_ex id="REG_FORMAS" vacio="true">
+            <field id="id_regforma"/>
+            <field id="nombre_forma"/>
+            <field id="subsistema_id"/>
+          </tabla_ex>
+        </field>   
+
+        <field id="descuento_cuenta" modpos="nobr">
+          <label>Descuento cuenta</label>
+          <tipo>numeric</tipo>
+          <size>12</size>
+        </field>
+
+
+        <field id="limite_credito"  >
+          <label>Limite de Credito</label>
+          <tipo>numeric</tipo>
+          <size>12</size>
+        </field>
+
+        <field id="limite_cartera" modpos="nobr">
+          <label >Limite de Factura</label>
+          <tipo>numeric</tipo>
+          <size>12</size>
+        </field>
+
+        <field id="solo_efectivo" modpos="nobr" >
+          <label>No aceptar cheques</label>
+          <help>Habilitado a cancelar con valores</help>
+          <tipo>check</tipo>
+        </field>
+    
+      </fieldGroup>
+
+
+
+      <!--  IBR Y GANACIAS -->
+      <fieldGroup  colstyle="display:none;">
+        <if> if (strpos($_SESSION['properties']['modulos'],'retenciones') != false) return true; </if>
+       
+        <field id="iibb_percepcion" local="true" noshow="true" >
+            <helper type="parameter" id="ID_PERCEPCION">
+                <defaultValue>1</defaultValue>
+                <label>ID regimen de Percepciones</label>
+            </helper>
+            <actualiza>
+                <field id="iibb_id" destino="iibb_regimen_id" />
+            </actualiza>
+        </field>
+
+        <field id="nro_ingbrutos">
+          <label>Nº IBR</label>
+          <help>Numero de ingresos brutos de la cuenta</help>
+        </field>
+
+        <field id="iibb_id" modpos="nobr">
+          <label  >Categoria IBR</label>
+          <helper type="combo" xml="iibb_qry.xml" dir="/ayudas" empty="true">
+            <field id="nombre_iibb">
+                <expression>CONCAT(nombre_iibb, ' (', alicuota, '%)')</expression>
+            </field>
+          </helper>
+        </field>
+      
+        <field id="percepcion" modpos="nobr">
+          <label >Agente Percepcion</label>
+          <tipo>check</tipo>
+        </field>
+
+        <field id="categoria_ganancia" >
+          <label  >Categoria</label>
+          <helper type="combo" empty="true" id="REG_CATEGORIAS">
+            <field id="id_regcategoria" />
+            <field id="nombre_categoria" />
+            <field id="tipo_categoria" >
+              <condicion operador="=">'ganancias'</condicion>
+            </field>
+            <field id="subsistema_id" />
+          </helper>
+        </field>
+
+        <field id="afipcategoria_id" modpos="nobr">
+          <helper type="external" xml="actividades_afip_qry.xml" dir="/ayudas"/>
+          <label  >Cod. Actividad</label>
+          <help>Código de actividad principal según AFIP</help>
+        </field>
+
+      </fieldGroup>
+
+
+      <fieldGroup>
+
+          <field id="contacto" obj="cuenta_contactos_crud.xml" local="true">
+            <paring destino="regcuenta_id">id_regcuenta</paring>
+          </field>
+
+      </fieldGroup>
+
+    // OBSERVACIONES
+	    <fieldGroup>
+	        <field id="observaciones" local="true" >
+	          <helper type="object" xml="cuenta_observaciones_crud.xml" >
+	          <parameter source="id_regcuenta" target="regcuenta_id" />
+	          </helper>
+	          <label >Observaciones</label>
+	        </field>
+	    </fieldGroup>
+
+
+    // ARTICULOS
+	    <fieldGroup >
+	        <field id="articulos" local="true">
+	            <helper type="object" xml="cuenta_art_consumidos_crud.xml" >
+	                <parameter source="id_regcuenta" target="regcuenta_id" />
+	            </helper>
+	            <label >Articulos</label>
+	        </field>
+	    </fieldGroup>
+
+      <!-- FACTURACION DE SERVICIOS **************************************** -->
+      <fieldGroup >
+          <if> if (strpos($_SESSION['properties']['modulos'],'servicios') != false) return true; </if>
+          <field id="usuarios" obj="facusuarioser_crud.xml" objdir="/servicios/man" local="true">
+             <paring destino="regcuenta_id">id_regcuenta</paring>
+          </field>
+          <field id="suministro" local="true">
+            <helper type="object" xml="puntos_suministro_crud.xml" dir="/servicios/man" >
+              <parameter source="facsuministro_id" target="id_facsuministro" />
+              <parameter source="id_regcuenta" target="regcuenta_id" />
+            </helper>
+            <label >Punto de Suministro</label>
+          </field>
+      </fieldGroup>
+
+      <!-- SERVICIO DE HOSTING ********************************************* -->
+      <fieldGroup >
+        <if> if (strpos($_SESSION['properties']['modulos'],'hosting') != false) return true; </if>
+        <field id="usuarios" obj="usuariohosting_crud.xml" objdir="/hosting" local="true">
+          <paring destino="regcuenta_id">id_regcuenta</paring>
+        </field>
+      </fieldGroup>
+
+      <!-- SISTEMA DE STOCK ************************************************ -->
+      <fieldGroup  style="padding:2px 2px 2px 2px; vertical-align:middle;" colstyle="display:none;">
+        <if> if (strpos($_SESSION['properties']['modulos'],'stock') != false) return true; </if>
+        <field id="stklista_id">
+          <helper type="combo" xml="stklista_qry.xml" dir="/ayudas" empty="true"/>
+          <label >Lista de Precio</label>
+        </field>
+        <field id="descuentosarticulos" obj="cuenta_dtoartics_crud.xml" objdir="/stock/listas" local="true">
+          <paring destino="regcuenta_id">id_regcuenta</paring>
+        </field>
+        <field id="descuentosrubros" obj="cuenta_dtosrubcs_crud.xml" objdir="/stock/listas" local="true">
+          <paring destino="regcuenta_id">id_regcuenta</paring>
+        </field>
+      </fieldGroup>
+
+      <!-- SISTEMA DE VENDEDORES ******************************************* -->
+      <fieldGroup >
+        <if> if (strpos($_SESSION['properties']['modulos'],'vendedores') != false) return true; </if>
+        <field id="subsistemavendedor_id" valauto="true" noshow="true" local="true">
+          <detalle>subsistemavendedor_id</detalle>
+        </field>
+        <field id="vendedores" obj="cuenta_relaciones_crud.xml" local="true">
+          <paring destino="regcuenta_id">id_regcuenta</paring>
+          <paring destino="subsistemavendedor_id">subsistemavendedor_id</paring>
+          <paring destino="subsistemarelacionada_id">subsistemavendedor_id</paring>
+        </field>
+      </fieldGroup>
+
+
+
+      <!-- SISTEMA DE TRANSPORTISTAS *************************************** -->      
+      <fieldGroup  style="padding:2px 2px 2px 2px; vertical-align:middle;">
+        <if> if (strpos($_SESSION['properties']['modulos'],'transportistas') != false) return true; </if>
+        <field id="subsistematransporte_id" valauto="true" local="true" noshow="true">
+          <detalle>subsistematransporte_id</detalle>
+        </field>
+        <field id="transportes" obj="cuenta_relaciontr_crud.xml" local="true">
+          <paring destino="regcuenta_id">id_regcuenta</paring>
+          <paring destino="subsistematransporte_id">subsistematransporte_id</paring>
+          <paring destino="subsistemarelacionada_id">subsistematransporte_id</paring>
+        </field>
+        <field id="flete_a_cargo">
+          <label >Flete a Cargo</label>
+          <helper type="combo" empty="true">
+            <option value="0">No Definido</option>
+            <option value="1">En Origen</option>
+            <option value="2">En Destino</option>
+          </helper>
+        </field>
+
+      </fieldGroup>
+
+      <!-- DATOS CONTABLES ************************************************* -->
+      <fieldGroup>
+        <if> if (strpos($_SESSION['properties']['modulos'],'contabilidad') != false) return true; </if>
+          
+          <!--<field id="contable" obj="cuenta_imputaciones_crud.xml" local="true">
+            <paring destino="regcuenta_id">id_regcuenta</paring>
+          </field>-->
+
+          <field id="contable" local="true">
+            <helper type="object" xml="cuenta_imputaciones_crud.xml" >
+            <parameter source="id_regcuenta" target="regcuenta_id" />
+            </helper>
+            <label >Cuentas Contables</label>
+          </field>
+      </fieldGroup>
+
+    </table>
+
+
+    <join tipo="left">
+      <table id="GEN_LOCALIDADES">
+        <field id="id_localidad">
+          <condicion operador="=">REG_CUENTA.localidad_id</condicion>
+        </field>
+      </table>
+    </join>
+
+  </form>
+</histrix>

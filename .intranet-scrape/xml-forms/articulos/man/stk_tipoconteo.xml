@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud">
+	<title>TIPO CONTEO</title>
+	<obs/>
+	<form>
+		<table id="STK_TIPO_CONTEO" label="Tipo de conteo">
+			<field id="id_tipoconteo" noshow="true" autoinc="true">
+			</field>
+			<field id="tipo_conteo" required="true">
+				<label>Tipo conteo</label>
+				<help/>
+			</field>
+			<field id="dias_conteo" required="true">
+				<label>Dias entre conteos</label>
+				<help>Días entre conteos</help>
+			</field>
+			<field id="porcentaje_tolerancia" required="true">
+				<label>% de tolerancia</label>
+				<help>% Tolerancia de conteo </help>
+			</field>			
+		</table>
+	</form>
+</histrix>

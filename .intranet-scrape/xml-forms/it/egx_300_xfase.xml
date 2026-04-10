@@ -1,0 +1,47 @@
+B<?xml version="1.0" encoding="UTF-8" ?>
+<!--Comentario-->
+<histrix tipo="consulta" limit="100">
+  <title>Tableros electricos</title>
+  <obs></obs>
+  <form>
+    <table id="EGX300EPE" label="Tableros Electricos">
+      
+    
+     
+       <field id="id_nave" _true="true">
+        <label  style="text-align:center;color:red;">Nave</label>
+        <size>1</size>
+      </field>  
+       <field id="demanda_intensidad1">
+        <label  style="text-align:center;">Fase 1</label>
+       </field>
+      
+      <field id="demanda_intensidad2">
+        <label>Fase 2</label>
+       </field>
+      
+      <field id="demanda_intensidad3">
+        <label  style="text-align:center;">Fase 3</label>
+       </field>
+      
+    
+      <field id="date_time">
+        <label style="text-align:center;">Fecha</label>
+        <tipo>varchar</tipo>
+        
+      </field>
+
+  
+   
+   <!--   
+      <order typeOrder="DESC">
+        <field id="date" />
+      </order>
+   -->   
+ 
+          </table>
+  </form>
+</histrix>  
+
+
+

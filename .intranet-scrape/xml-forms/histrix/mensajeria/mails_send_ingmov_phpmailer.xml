@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="insert" imprime="false" evento="procesar">
+    <title>MAILS</title>
+    <obs/>
+    <form >
+        <table id="HTXMAIL" label="envia el Correo">
+        <ejecuta>
+                <![CDATA[
+
+				try {
+				
+	    // histrix 2 method
+	    if (class_exists('Histrix_Mail')){
+
+		$htxmailer = new Histrix_Mail($_SESSION['emailUser'], $_SESSION['emailPass']);
+
+		$params = array('from'=> 'fromMail',
+				'message'=> "body",
+				'subj'=> "subject",
+				'cc' => 'cc_email',
+				'attach'=> "fileAttach",
+				'attachArray'=> 'filesArray');
+
+		$htxmailer->send('to_email', $params);
+
+
+	    } else {
+
+                    $db = $_SESSION["db"];
+                    $database = Cache::getCache('datosbase'.$db);
+
+                    require_once '../lib/Swift5/swift_required.php';
+
+                    $smtpServerString = $_SESSION['smtpServer'];
+				  
+					$smtp = explode(':',$smtpServerString);
+					$smtpServer = $smtp[0];
+					$smtpPort   = $smtp[1];
+					$protocol   = $smtp[2];
+					
+                  	  
+                    $user       = $_SESSION['emailUser'];
+                    $pass       = $_SESSION['emailPass'];
+
+
+                    if ($smtpPort == '') 
+                  	  $smtpPort = 465;
+					
+					if ($smtpPort == 465){
+						$protocol = "ssl";
+					}
+					
+					
+                    $transport = Swift_SmtpTransport::newInstance($smtpServer, $smtpPort, $protocol)
+                    ->setUsername($user)
+                    ->setPassword($pass)
+                    ;
+
+                    //Create the Mailer using your created Transport
+                    $mailer = Swift_Mailer::newInstance($transport);
+
+                    //Create a message
+                    $message = Swift_Message::newInstance("subject")
+                    ->setFrom( trim("fromMail") )
+                    ->setBody("body", "text/html")
+                    ;
+
+		    $toemail_dest = str_replace(',' , ';',"to_email");
+		    $ccemail_dest = str_replace(',' , ';',"cc_email");
+>>>>>>> 81277a2bf76a44776cda561cb40ee66daed71134
+
+            require_once '../lib/PHPMailer/class.phpmailer.php';
+
+            $smtpServerString = $_SESSION[properties]['smtpServer'];
+            $smtp = explode(':',$smtpServerString);
+            $smtpServer = $smtp[0];
+            $smtpPort   = $smtp[1];
+            $user       = $_SESSION[properties]['smtpUser'];
+            $pass       = $_SESSION[properties]['smtpPassword'];
+
+
+try {
+	$mail = new PHPMailer(true); //New instance, with exceptions enabled
+
+	$cuerpo           = preg_replace('/\\\\/','', "body"); //Strip backslashes
+
+	$mail->IsSMTP();                           // tell the class to use SMTP
+	$mail->SMTPAuth   = true;                  // enable SMTP authentication
+	$mail->Port       = $smtpPort;             // set the SMTP server port
+	$mail->Host       = $smtpServer;           // SMTP server
+	$mail->Username   = $user;                 // SMTP server username
+	$mail->Password   = $pass;                 // SMTP server password
+
+    $Frm =  trim("fromMail");
+//$origin[$Frm] = "fromName";
+	$mail->setFrom( $Frm, "fromName" );
+	$mail->Subject    = utf8_decode("subject");
+
+	$mail->MsgHTML(utf8_decode($cuerpo));
+	$mail->IsHTML(true); // send as HTML
+
+                  
+
+		            $toemail_dest = str_replace(',' , ';',"to_email");
+                    if ($toemail_dest != '')
+                    {
+                        $email_destination = explode(';' , $toemail_dest );
+                        foreach($email_destination as $dest_email)
+                            $mail->AddAddress(trim($dest_email));
+                    }
+
+        		    $ccemail_dest = str_replace(',' , ';',"cc_email");
+                    if ($ccemail_dest != '')
+                    {
+                        $cc_destination = explode(';' , $ccemail_dest );
+                        foreach($cc_destination as $copy_email)
+                            $mail->AddCC(trim($copy_email));
+                    }
+
+                    if ('fileAttach' != '' )
+                    {
+                        $dirname = '../database/'.$_SESSION['datapath'].'tmp/';
+                        $mail->AddAttachment($dirname."fileAttach", "fileAttach");
+                    }
+
+                    if ('filesArray' != '')
+                    {
+                        $fileList = unserialize(stripslashes('filesArray'));
+                        foreach($fileList as $fileName => $watermark)
+                        {
+                            if ($watermark != '') 
+                                 $custName = $watermark.'_'.basename($fileName);
+                            else 
+                                 $custName = basename($fileName);
+
+                            loger($fileName, 'e-mails.log');
+                            $mail->AddAttachment($fileName, $custName);
+                        }
+                    }
+<<<<<<< HEAD
+                    
+
+	$mail->Send();
+	
+} 
+catch (phpmailerException $e) 
+{
+    loger($e->errorMessage(), 'Mail_errors.log');
+}            
+=======
+                    $message->setReadReceiptTo('fromMail');
+
+                    //Pass a variable name TO the send() method
+                    if (!$mailer->send($message, $failures))
+                    {
+                        echo "Failures:";
+                        $log = print_r($failures, true);
+                        loger($log, 'Mail_errors.log');
+                    }
+
+                    // COPY TO SENT FOLDER
+                    $server = $database->imapServer;
+                    $txtmessage = $message->toString();
+
+		   }
+
+
+                if ($server == 'imap.gmail.com')
+                {
+                    $user       = $_SESSION['emailUser'];
+                    $pass       = $_SESSION['emailPass'];
+		    $serverImap = '{imap.gmail.com:993/ssl}';
+		    $stream = imap_open( $serverImap, $user, $pass);
+		    $imap_result = imap_append($stream, '{imap.gmail.com:993/ssl}[Gmail]/Enviados', $txtmessage);
+		    loger(imap_errors(), 'imap.log');
+
+                }
+                else
+                {
+		    $serverImap = "{".$server."}";
+		    $stream = imap_open( $serverImap."INBOX", $user, $pass);
+		    @imap_createmailbox($stream, $serverImap."INBOX.Sent");
+		    @imap_append($stream, $serverImap."INBOX.Sent", $txtmessage);
+                }
+
+
+
+        	} catch (Exception $ex){
+        		/*
+    	             echo '<b>Error de Envio '.$ex->getMessage().'</b>';
+    	             die();
+//    	               echo '<script type="text/javascript">alert('Error de Envio');</script>';
+
+				*/
+				
+				header('HTTP/1.1 400 Bad Request');
+				echo '<h4>EMAIL NO ENVIADO</h4>';
+				echo $ex->getMessage();
+
+				loger($ex->getMessage(), 'Mail_errors.log');
+
+
+				die();
+
+
+        	}     
+
+
+        
+>>>>>>> 81277a2bf76a44776cda561cb40ee66daed71134
+
+]]></ejecuta>
+
+            <field id="idMail"       id_temp="idMail"></field>
+            <field id="fecha"        id_temp="fecha" ></field>
+            <field id="hora"         id_temp="hora"  ></field>
+       <!-- <field id="nom"          id_temp="nom"   ></field> -->
+            <field id="to_email"     id_temp="para"    ></field>
+            <field id="cc_email"     id_temp="cc_email"    ></field>
+            <field id="fromMail"     id_temp="de"    ></field>
+            <field id="fromName"     id_temp="fromName"   local="true" ></field>
+            <field id="fileAttach"   id_temp="adjunto" ></field>
+       <!-- <field id="checkAdjunto" id_temp="checkAdjunto" local="true" ></field> -->
+            <field id="filesArray"   id_temp="filesArray" local="true" ></field>
+            <field id="subject"      id_temp="subject" ></field>
+            <field id="body"         id_temp="mensaje"></field>
+        </table>
+    </form>
+</histrix>

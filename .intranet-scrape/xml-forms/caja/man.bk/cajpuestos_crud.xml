@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="crud" _width="50%">
+	<title>Puestos de Caja</title>
+	<obs/>
+	<form>
+		<table id="CAJ_PUESTOS" label="Puestos">
+
+			<fieldGroup>
+				<field id="id_cajpuesto" noshow="true"/>
+				<field id="descripcion_puesto">
+					<label>Descripcion</label>
+					<help>Descripcion del Recaudador</help>
+				</field>
+				<field id="porcentaje_comision">
+					<label>Porc. Comision</label>
+					<help>Porcentaje de la Comision</help>
+					<tipo>numeric</tipo>
+				</field>
+				<field id="suma_fija">
+					<label>Suma fija</label>
+					<help>Suma fija</help>
+					<tipo>numeric</tipo>
+				</field>
+				<field id="puesto_central">
+					<label>Puesto Central</label>
+					<help>Descripcion del Puesto Central</help>
+					<tipo>check</tipo>
+				</field>
+				<field id="cajpuesto_id">
+					<label>Integra a</label>
+					<helper type="combo" id="CAJ_PUESTOS" empty="true">
+						<field id="id_cajpuesto"/>
+						<field id="descripcion_puesto"/>
+						<field id="puesto_central">
+							<condition operador="=">1</condition>
+						</field>
+					</helper>
+					<help>Caja a la que corresponde la integracion</help>
+				</field>
+				<field id="cierrez">
+					<label>Cierre Z</label>
+					<tipo>check</tipo>
+				</field>
+				<field id="printer">
+					<label>Impresora</label>
+					<helper xml="htxprinters_qry.xml" dir="/ayudas/" type="combo" empty="true"/>
+				</field>				
+			</fieldGroup>
+
+			<fieldGroup>
+				<if> if (strpos($_SESSION['properties']['modulos'],'contabilidad') != false) return true; </if>
+				<field id="ctbcuentadif_id">
+					<label>Cuenta Dif. de Caja</label>
+					<helper type="combo" xml="cuentas_habilitadas_qry.xml" dir="/ayudas" empty="true"/>
+					<size>14</size>
+				</field>
+			</fieldGroup>
+
+			<fieldGroup>
+				<field id="cajformapagodif_id">
+					<label>Forma para Dif. de Caja</label>
+					<helper type="combo" xml="cajformaspago_qry.xml" dir="/ayudas" empty="true">
+						<fieldGroup>
+							<if> if (strpos($_SESSION['properties']['modulos'],'contabilidad') != false) return true; </if>
+							<field id="ctbcuenta_forma_id">
+								<condicion operador="!=">''</condicion>
+							</field>
+						</fieldGroup>
+						<field id="tipo_forma">
+							<condicion operador="=">0</condicion>
+						</field>
+					</helper>
+					<size>14</size>
+				</field>
+			</fieldGroup>
+			
+
+		</table>
+	</form>
+</histrix>

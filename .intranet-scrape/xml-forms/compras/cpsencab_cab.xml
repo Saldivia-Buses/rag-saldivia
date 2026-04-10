@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="cabecera" graba="false">
+    <title>ORDEN DE COMPRA</title>
+    <obs></obs>
+    <form>
+        <table id="CPSENCAB" label="ORDEN DE COMPRA" >
+            <validation optional="true">
+                <condition>('letraAct' == 'X')</condition>
+                <message>Usted está por emitir una orden de compra a un proveedor no aprobado, por favor, si desea continuar debido a que no puede derivar el pedido a un proveedor aprobado indicar CONTINUAR, caso contrario, VOLVER ATRÁS</message>
+            </validation>
+
+            <validation>
+                <condition>('ctacod' == '0')</condition>
+                <message>Debe Ingresar un proveedor</message>
+            </validation>
+
+            <validation>
+                <condition>('emite_ocompra' == '0')</condition>
+                <message>PROVEEDOR SIN CALIFICAR</message>
+            </validation>
+
+            <validation>
+                <condition>('cal_regcategoria_id' == '19')</condition>
+                <message>PROVEEDOR SIN CALIFICAR</message>
+            </validation>
+
+
+            <field id="siscod" oculto="true">
+                <label>Codigo Sistema</label>
+                <valor>''</valor>
+            </field>
+            <field id="conret" local="true" >
+
+                <label style="color:red;" _colspan="2" >Con Pedidos Pendientes</label>
+                <helper type="combo" id="PEDIDOINT" xml="pedidoint_pend.xml" empty="true">
+                </helper>
+                <actualiza>
+                    <field id="pendientes" destino="ctacod" xml="cpsencab_cab.xml"/>
+<!--                    <field id="ctacod" destino="ctacod" xml="cpsencab_cab.xml"/>-->
+                    <field id="codprv" destino="ctacod" xml="cpsencab_cab.xml"/>
+                </actualiza>
+<!--                <jseval campodestino="codprv">ctacod</jseval>-->
+            </field>
+
+            <field id="ocpnro" deshabilitado="true">
+                <label modpos="nobr" >Número</label>
+                <help>Número de Orden de Compra</help>
+                <parametro id="fsmparam_parent.xml" retorna="parent">
+                    <field id="parcla" oculto="true">
+                        <condicion operador="=">'nrocom'</condicion>
+                    </field>
+                    <field id="parent">
+                        <complete>parent + 1</complete>
+                    </field>
+                </parametro>
+                <tipo>integer</tipo>
+                <format>%04d</format>
+                <detalle>ocpnro</detalle>
+            </field>            
+            <field id="ocpfec" deshabilitado="true" noshow="true">
+                <label modpos="nobr">Fecha</label>
+                <help >Fecha de Orden de Compra</help>
+                <valor>today</valor>
+            </field>
+
+            <field id="cotizaciones" local="true" >
+
+                <label style="color:red;" _colspan="2" >Cotizaciones</label>
+
+                <helper type="combo" xml="cotizaciones_pendientes.xml" empty="true">
+                </helper>
+                <actualiza>
+                    <field id="pendientes" destino="ctacod" xml="cpsencab_cab.xml"/>
+<!--                    <field id="ctacod" destino="ctacod" xml="cpsencab_cab.xml"/>-->
+                    <field id="codprv" destino="ctacod" xml="cpsencab_cab.xml"/>
+                </actualiza>
+<!--                <jseval campodestino="codprv">ctacod</jseval>-->
+            </field>
+
+
+
+            
+            <field id="importe_auditoria" deshabilitado="true" _noshow="true" local="true">
+                <label modpos="nobr">auditoría</label>
+                <parametro id="cpsparam.xml" retorna="pardec">
+                    <field id="parcla" oculto="true">
+                        <condicion operador="=">'impaud'</condicion>
+                    </field>
+                </parametro>
+            </field>
+
+            <field id="dolar_auditoria" deshabilitado="true" _noshow="true" local="true">
+                <label modpos="nobr" sincelda="true">auditoría dolar</label>
+                <parametro id="cpsparam.xml" retorna="pardec">
+                    <field id="parcla" oculto="true">
+                        <condicion operador="=">'usaud'</condicion>
+                    </field>
+                </parametro>
+            </field>            
+            <field id="genera_carpeta" local="true" modpos="nobr" sincelda="true">
+                <label>Genera Carpeta Importación</label>
+                <tipo>check</tipo>
+            </field>
+
+            <field id="ctacod" required="true" min="1">
+                <label>Proveedor</label>
+                <help>Proveedor</help>
+                
+                <ayuda_ex id="REG_CUENTA" _xml="HLPcctcuent.xml" dir="/help_local">
+                    
+                    <field id="nro_cuenta">
+                        <label>cod</label>
+                        <detalle>codprv</detalle>
+                    </field>
+                    <field id="ctanom" _noshow="true">
+                        <expression having="false">CONCAT(nombre_cuenta,'-', nombre_fantasia)</expression>
+                        <size>60</size>
+                        <detalle>ctanom</detalle>
+        
+                    </field>
+                    <field id="id_regcuenta" noshow="true">
+                        <detalle>id_regcuenta</detalle>
+                    </field>
+                    <field id="nacionalidad_id" noshow="true">
+                        <detalle>pais_id</detalle>
+                    </field>
+                    <field id="baja" noshow="true">
+                        <label>baja</label>
+                        <condicion operador="!=">1</condicion>
+                    </field>
+                    <field id="subsistema_id" oculto="true">
+                        <condicion operador="=">'01'</condicion>
+                    </field>
+
+                    <field id="genera_carpeta">
+                        <expression having="false">(select 1 from REG_CUENTA_IMPUTACION where regcuenta_id = REG_CUENTA.id_regcuenta and cuenta_id = '211101' limit 1)</expression>
+                        <detalle>genera_carpeta</detalle>
+                    </field>
+                          <field id="cal_regcategoria_id"  >
+                            <detalle>cal_regcategoria_id</detalle>
+                          </field>
+                        <field id="emite_ocompra"  >
+                            <detalle>emite_ocompra</detalle>
+                            <expression>select emite_ocompra from REG_CATEGORIAS where cal_regcategoria_id = REG_CATEGORIAS.id_regcategoria and REG_CATEGORIAS.subsistema_id = 'CA' LIMIT 1</expression>
+                          </field>
+        		    <field id="fpago">
+            			<expression>formaPago</expression>
+            			<detalle>fpago</detalle>
+        		    </field>
+                    <field id="empresa_id" noshow="true" >
+                        <label>empresa</label>
+                        <detalle>empresa_id</detalle>
+                    </field>
+
+                    <field id="LetraAct">
+                        <label>Calif.</label>
+                        <!-- <expression>calculoCalificacion(id_regcuenta, now(), 12)</expression> -->
+                        <expression>(case when (select califica from REG_CATEGORIAS where cal_regcategoria_id = REG_CATEGORIAS.id_regcategoria and REG_CATEGORIAS.subsistema_id = 'CA' limit 1) = 1 then calculoCalificacion(id_regcuenta, now(), 12) end)</expression>
+                        <detalle>letraAct</detalle>
+                    </field>
+
+                </ayuda_ex>
+            
+
+
+                <actualiza>
+                    <field destino="ctacod" id="pendientes"/>
+                </actualiza>
+                <!--
+                <actualiza>
+                    <field destino="ctacod" id="calificacion"/>
+                </actualiza>
+-->
+            </field>
+
+            <field id="ctanom" deshabilitado="true" local="true" sincelda="true" modpos="nobr">
+                <size>50</size>
+            </field>
+            <field id="empresa_id" >
+                <label>empresa</label>
+            </field>
+	    <field id="letraAct" local="true" modpos="nobr" deshabilitado="true" colspan="2">
+		<label>Calificación</label>
+
+        <jseval campodestino="letraAct">'letraAct'</jseval>
+
+	    </field>
+      <field id="cal_regcategoria_id" deshabilitado="true" local="true" sincelda="true" modpos="nobr">
+        <label>Categoría Calidad</label>
+        <helper id="REG_CATEGORIAS" type="combo" empty="true">
+          <field id="id_regcategoria"></field>
+          <field id="nombre_categoria"></field>
+          <field id="emite_ocompra">
+            <detalle>emite_ocompra</detalle>
+          </field>
+          <field id="subsistema_id">
+            <condicion operador="=">'CA'</condicion>
+          </field>
+        </helper>
+      </field>        
+      <field id="emite_ocompra" deshabilitado="true">
+        <label>emitir</label>
+        
+      </field>
+
+<!--         
+            <field id="calificacion" obj="calificacion_prov.xml" local="true" _esTabla="true" limit="1" style="width:10em;">
+
+                <paring destino="ctacod">ctacod</paring>
+                <label modpos="nobr" colspan="2">Calificación</label>
+            </field>
+-->
+                    <field id="id_regcuenta" noshow="true" />
+             <field id="nacionalidad_id" noshow="true" />
+
+           
+            <field id="codprv" deshabilitado="true" local="true" noshow="true" required="true">
+                <label modpos="nobr">codaux</label>
+            </field>
+            <!--
+                        <field id="ocpfen">
+                                <label>Entrega</label>
+                                <help>Fecha de Entrega </help>
+                                <valor>today</valor>
+                        </field>-->
+    <field id="ocpent" deshabilitado="false">
+        <label _modpos="nobr" _colspan="6">Lugar Entrega </label>
+        <help>Lugar de Entrega/Descarga</help>
+		<tabla_ex id="DEPOSITO" _vacio="true" >
+            <field id="idDeposito" />
+            <field id="direccion" tipoOrden="DESC" />
+            <order>
+                <field id="idDeposito" />
+            </order>
+        </tabla_ex><!--<expression sql="true">select MAX(idDeposito) from DEPOSITO</expression>-->
+    </field>
+
+<field id="fpago" >
+    <label modpos="nobr">F/Pago</label>
+    <helper type="combo" xml="HLPformapago_qry.xml" dir="/ayudas_local" empty="true"/>
+    <help>Forma de Pago</help>
+</field>
+
+
+
+
+            <field id="ocpobs">
+                <label colspan="1" rowspan="2">Observaciones</label>
+                <help>Observaciones </help>
+                <size>150</size>
+            </field>
+<!--
+            <field id="pendientes" obj="cpsencab_pendientes.xml" local="true" esTabla="true">
+                <paring destino="ctacod">ctacod</paring>
+                <label modpos="nobr" colspan="5">Pendientes</label>
+            </field>-->
+	    <field id="descflete" _sincelda="true" noshow="true">
+		<label modpos="nobr" colspan="5">Flete</label>
+		<help>Descripcion del flete</help>
+		<size>100</size>
+	    </field>
+
+        <field id="cpsformaenvio_id">
+        <label modpos="nobr">Envío</label>
+	<helper type="combo" xml="HLPcpsformaenvio_qry.xml" dir="/ayudas_local" empty="true"/>
+        <help>Forma de Envío</help>
+	<!--<tabla_ex id="CPS_FORMAENVIO">
+            <field id="id_cpsformaenvio" />
+            <field id="nombre_cpsformaenvio"/>
+            <order>
+                <field id="id_cpsformaenvio" />
+            </order>
+        </tabla_ex>-->
+        </field>
+    <field id="proyecto_compra">
+        <label _modpos="nobr">Proyecto OC</label>
+        <help>Proyecto de Compras</help>
+        <tabla_ex id="CPS_PROYECTO">
+            <field id="id_cpsproyecto" />
+            <field id="nombre_cpsproyecto"/>
+              <field id="activo_cpsproyecto">
+                <condicion operador="=">1</condicion>
+              </field>
+            <order>
+                <field id="id_cpsproyecto" />
+            </order>
+        </tabla_ex>
+    </field>        
+
+            <field id="ocpest" oculto="true">
+                <label>Estado </label>
+                <help>Estado Actual</help>
+                <options>
+                    <option valor="1">Pendiente</option>
+                    <option valor="2">Cumplida</option>
+                </options>
+                <valor>1</valor>
+            </field>
+
+
+        </table>
+    </form>
+</histrix>

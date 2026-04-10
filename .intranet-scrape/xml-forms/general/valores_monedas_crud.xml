@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="abm">
+	<title>Monedas</title>
+	 <obs></obs>
+		<consulta>
+		    <table id="CAJ_VALORES_MONEDAS" label="Monedas">
+		    <filtros>
+			 <field id="moneda_id">
+				<operador>=</operador>
+			         <label>Tipo de moneda</label>
+			<help>Moneda a la que pertenece</help>
+		    </field>
+		    </filtros>
+		    <field id="id_cajvalormoneda" autoinc="true" noshow="true">
+			<label>Código de valor moneda</label>
+			<help>Código de valor moneda</help>
+		    </field>
+		    
+		     <field id="descripcion_valor">
+			<label>Descripcion</label>
+			<help>Descripcion de la moneda</help>
+			<size>10</size>
+			<helper type="combo">
+			    <option value="billetes">billetes</option>
+			    <option value="monedas">monedas</option>
+			</helper>
+
+		    </field>
+		    <field id="valor_moneda">
+			<label>Valor</label>
+			<help>Valor</help>
+			<size>10</size>
+		    </field>
+		    <field id="moneda_id">
+			<tabla_ex xml="monedas_qry.xml" dir="/ayudas">
+			</tabla_ex>
+			<label>Moneda</label>
+			<help>Moneda a la que pertenece</help>
+		    </field>
+		    </table>
+		</consulta>
+    </histrix>	

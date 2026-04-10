@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ing" subtipo="vertical" procesa="false" tableHeight="22em">
+    <title>Detalles</title>
+    <obs></obs>
+    <form>
+        <table id="CTB_DETALLES" label="Detalle de la Minuta" tableHeight="320px">
+
+            <validation>
+                <condition><![CDATA[ 'cuenta_id' == 0 ]]></condition>
+                <message>Falta Cuenta Contable</message>
+            </validation>
+
+            <validation>
+                <condition><![CDATA[ 'nombre_cuenta' == 0 ]]></condition>
+                <message>Falta Nombre Cuenta</message>
+            </validation>
+
+            <validation>
+                <condition><![CDATA[ ('debe' + 'haber' + 0) < 0 ]]></condition>
+                <message>El Importe debe ser mayor a 0</message>
+            </validation>
+
+            <movimientos>
+                <relacion id="detalles_minutas_del.xml" />
+                <relacion id="detalles_minutas_ins.xml" />
+            </movimientos>
+
+            <importar xml="minutas_import_qry.xml"  label="Importar Minuta" titulo="Minutas"></importar>
+
+            <field id="id_detalle" noshow="true" />
+
+            <field id="movimiento_id" oculto="true">
+                <condicion operador="=">0</condicion>
+            </field>
+
+            <field id="ejercicio" valauto="true" setOriginalValue="true" Formstyle="display:none;" colstyle="display:none;" local="true">
+                <actualiza>
+                    <field id="cuenta_id" destino="ejercicio_id" />
+                </actualiza>
+            </field>
+
+            <field id="_ORDEN" local="true" esClave="true" deshabilitado="true" colstyle="display:none;" Formstyle="display:none;" suma="true">
+                <label>Orden</label>
+                <jseval campodestino="cantidad" total="true" suma="true">_ORDEN</jseval>
+            </field>
+
+            <field id="cuenta_id"  esClave="true">
+                <helper type="external" xml="ctbcuenta_qry.xml" dir="/ayudas" />
+                <label colspan="18">Cuenta</label>
+                <size>20</size>
+            </field>
+
+            <field id="nombre_cuenta" tabla="CTB_CUENTAS" deshabilitado="true" _Formstyle="display:none;">
+                <label modpos="nobr" colspan="28">Nombre</label>
+                <size>25</size>
+            </field>
+
+            <field id="ctbcentro_id">
+                <label modpos="nobr">Centro Costo</label>
+                <helper type="combo" xml="ctbcentro_qry.xml" dir="/ayudas" empty="true" />
+            </field>
+
+            <field id="tipo" local="true" _activa="true" colstyle="display:none;" deshabilitado="false">
+                <label modpos="nobr">Tipo</label>
+                <expression>doh</expression>
+                <options type="combo">
+                    <option valor="0">Debe</option>
+                    <option valor="1">Haber</option>
+                </options>
+                <tipo>radio</tipo>
+                <jseval campodestino="debe">(tipo == 0 ?  saldo_imp : 0)</jseval>
+                <jseval campodestino="haber">(tipo == 0 ?  0 : saldo_imp)</jseval>
+            </field>
+
+            <field id="doh" noshow="true" esClave="true">
+                <if exp="debe + 0 > 0 ">
+                    <true>'0'</true>
+                    <false>'1'</false>
+                </if>
+            </field>
+
+            <field id="separador1" local="true" colstyle="display:none;" deshabilitado="false" noshow="true">
+                <label modpos="nobr" />
+                <size>5</size>
+            </field>
+
+            <field id="importe_dh" noZero="true" deshabilitado="false" local="true" colstyle="display:none;">
+                <label modpos="nobr" colspan="18">Importe</label>
+                <expression>importe</expression>
+                <tipo>numeric</tipo>
+                <size>30</size>
+                <jseval campodestino="debe">(tipo == 0 ?  importe_dh : 0)</jseval>
+                <jseval campodestino="haber">(tipo == 0 ?  0 : importe_dh)</jseval>
+            </field>
+
+            <field id="debe" suma="true" noZero="true" deshabilitado="false" Formstyle="display:none;">
+                <expression>case when doh = 0 then importe end</expression>
+                <label modpos="nobr" colspan="18">Debe</label>
+                <tipo>custom_numeric</tipo>
+                <size>30</size>
+                <jseval campodestino="DEB" total="true" suma="true">((debe).toFixed(2))</jseval>
+            </field>
+
+            <field id="haber" suma="true" noZero="true" deshabilitado="false" Formstyle="display:none;">
+                <expression>case when doh = 1 then importe end</expression>
+                <label modpos="nobr" colspan="18">Haber</label>
+                <tipo>custom_numeric</tipo>
+                <size>30</size>
+                <jseval campodestino="HAB" total="true" suma="true">((haber).toFixed(2))</jseval>
+            </field>
+
+            <field id="referencia" colstyle="display:none;">
+                <label>Referencia</label>
+                <help>Referencia</help>
+            </field>
+
+            <field id="importe" noshow="true" esClave="true">
+                <if exp="debe + 0 > 0 ">
+                    <true>debe</true>
+                    <false>haber</false>
+                </if>
+            </field>
+
+            <group>
+                <field id="id_detalle" />
+            </group>
+
+        </table>
+
+        <join tipo="left">
+            <table id="CTB_CUENTAS">
+                <field id="id_cuenta">
+                    <condicion operador="=">CTB_DETALLES.cuenta_id</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

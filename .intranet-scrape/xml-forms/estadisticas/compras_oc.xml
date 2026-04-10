@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="chart">
+	<title>Cantidad</title>
+	<obs></obs>
+	<form >
+		<table id="GEN_CALENDAR" >
+			<title>Cantidad</title>
+	 
+		   <grafico id="OrdnesCantidad" >
+			   <ancho>400</ancho>
+			   <tipo>L</tipo>
+			   
+			   <etiquetas>mes</etiquetas> 
+<!--			   <serie>cantidadOrdenes</serie> -->
+			   <serie>cantidadCumplidas</serie>
+			   <serie>cantidadPendientes</serie>
+<!--			   <serie>cantidadParcial</serie> -->
+			   <serie>cantidadAnuladas</serie>
+			   
+			   <title>Ordenes de Compra</title>
+			   <subtitulo>Estado Mensual</subtitulo>
+		   </grafico>		
+		   <grafico id="Actual" >
+			   <ancho>400</ancho>
+			   <tipo>P</tipo>
+			   
+			   <etiquetas>mes</etiquetas> 
+<!--			   <serie>cantidadOrdenes</serie> -->
+			   <serie>cantidadCumplidas</serie>
+			   <serie>cantidadPendientes</serie>
+<!--			   <serie>cantidadParcial</serie> -->
+			   <serie>cantidadAnuladas</serie>
+			   
+			   <title>Ordenes de Compra</title>
+			   <subtitulo>Estado Anual</subtitulo>
+		   </grafico>		
+		   
+		   
+		    <filters>
+			    <field id="fecha">
+				    <label>Desde</label>
+				    <valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m" ,strtotime('-12 month')) , 1, date("Y") -  1 ))</valor>
+				    <operador>&gt;=</operador>
+			    </field>
+			    <field id="fecha">
+                                    <label>Hasta</label>
+				    <valor eval="true">date('d/m/Y', strtotime('-1 second', strtotime(date('Y-m-01'))))</valor>
+				    <operador>&lt;=</operador>
+			    </field>
+		    </filters> 
+
+			<field id="mes">
+				<expresion>month(fecha)</expresion>
+				<label>Mes</label>
+				<options>
+					<option valor="1">Ene</option>
+					<option valor="2">Feb</option>
+					<option valor="3">Mar</option>
+					<option valor="4">Abr</option>
+					<option valor="5">May</option>
+					<option valor="6">Jun</option>
+					<option valor="7">Jul</option>
+					<option valor="8">Ago</option>
+					<option valor="9">Sep</option>
+					<option valor="10">Oct</option>
+					<option valor="11">Nov</option>
+					<option valor="12">Dic</option>
+
+				</options>
+       				<tipo>varchar</tipo>
+			</field>
+                    <field id="fecha" oculto="true">
+<!--                        <condicion operador="&gt;="> DATE_FORMAT(date_sub(date(now()) , interval 1 year) ,'%Y-%m-01') and GEN_CALENDAR.fecha &lt;= now()</condicion> -->
+			<tipo>date</tipo>
+                    </field>
+                    <field id="year" oculto="true">
+                        <expresion>year(fecha)</expresion>
+
+                    </field>
+<!--			<field id="cantidadTotal">
+                             <expresion><![CDATA[(select count(*) from CCTCUENT where CCTCUENT.siscod = '01' and baja = 0)]]></expresion>
+
+
+				<label>Tot.Proov</label>
+                                <tipo>numeric</tipo>
+			</field>-->
+			
+			<field id="cantidadOrdenes">
+                             <expresion><![CDATA[(select count(*) from CPSENCAB where year(CPSENCAB.ocpfec) = year(fecha) and month(CPSENCAB.ocpfec) = month(fecha))]]></expresion>
+
+				<label>Ordenes Compra</label>
+                                <tipo>numeric</tipo>
+			</field>
+			<field id="cantidadCumplidas">
+                             <expresion><![CDATA[(select count(*) from CPSENCAB where year(CPSENCAB.ocpfec) = year(fecha) and month(CPSENCAB.ocpfec) = month(fecha) and ocpest = 2)]]></expresion>
+
+				<label>Cumplidas</label>
+                                <tipo>numeric</tipo>
+			</field>
+			<field id="cantidadPendientes">
+                             <expresion><![CDATA[(select count(*) from CPSENCAB where year(CPSENCAB.ocpfec) = year(fecha) and month(CPSENCAB.ocpfec) = month(fecha) and ocpest = 1)]]></expresion>
+
+				<label>Pendietes</label>
+                                <tipo>numeric</tipo>
+			</field>
+<!--			<field id="cantidadParcial">
+                             <expresion><![CDATA[(select count(*) from CPSENCAB where year(CPSENCAB.ocpfec) = year(fecha) and month(CPSENCAB.ocpfec) = month(fecha) and ocpest = 3)]]></expresion>
+
+				<label>Parcial</label>
+                                <tipo>numeric</tipo>
+			</field> -->
+			<field id="cantidadAnuladas">
+                             <expresion><![CDATA[(select count(*) from CPSENCAB where year(CPSENCAB.ocpfec) = year(fecha) and month(CPSENCAB.ocpfec) = month(fecha) and ocpest = 4)]]></expresion>
+
+				<label>Anuladas</label>
+                                <tipo>numeric</tipo>
+			</field>
+			
+			
+			
+			
+			<group>
+                                <field id="year"></field>
+				<field id="mes"></field>
+
+			</group>
+		</table>
+		
+	</form>	   
+</histrix> 

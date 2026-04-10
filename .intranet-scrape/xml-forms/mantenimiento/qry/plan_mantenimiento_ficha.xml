@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ficha" autoprint="true" preFetch="true">
+    <title>Plan de Mantenimiento Preventivo</title>
+    <pie>Observaciones:..............................................................................................................................................................................................</pie>
+    <obs/>
+    <form>
+        <table id="MANT_EQUIPOS" label="Plan de Mantenimiento Preventivo">
+
+            <field id="id_equipo" print="false" />
+
+            <field id="nombre_equipo">
+                <label posx="5" posy="+5" size="27">Nombre de Equipo:</label>
+            </field>
+
+            <!--<field id="tipoequipo_id">
+                <label posx="5" posy="+2" size="27">Tipo de Equipo:</label>
+                <helper type="combo" id="MANT_TIPO_EQUIPO" empty="true">
+                    <field id="id_tipo_equipo" />
+                    <field id="nombre_tipoequipo" />
+                </helper>
+            </field>-->
+
+            <field id="deposito_id">
+                <label posx="5" posy="+2" size="27">Depósito:</label>
+                <helper type="combo" id="DEPOSITO" empty="true">
+                    <field id="idDeposito" />
+                    <field id="nombre" />
+                </helper>
+            </field>
+
+            <field id="numero_serie">
+                <label posx="5" posy="+2" size="27">Número de Serie:</label>
+            </field>
+
+            <field id="desde_fecha" local="true">
+                <label posx="5" posy="+2" size="27">Desde:</label>
+                <tipo>date</tipo>
+            </field>
+
+            <field id="hasta_fecha" local="true">
+                <label posx="5" posy="+2" size="27">Hasta:</label>
+                <tipo>date</tipo>
+            </field>
+
+            <field id="detalle_mantenimiento" local="true">
+                <label posx="5" posy="+5" />
+                <helper type="object" xml="plan_mantenimiento_detalle.xml">
+                    <parameter target="desde_fecha" source="desde_fecha" />
+                    <parameter target="hasta_fecha" source="hasta_fecha" />
+                    <parameter target="equipo_id" source="id_equipo" />
+                </helper>
+            </field>
+
+        </table>
+    </form>
+</histrix>

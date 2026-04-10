@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="update">
+    <title>COMPROBANTES</title>
+    <obs></obs>
+    <form >
+        <table id="REG_MOVIMIENTOS" label="FACTURAS" >
+            <field id="id_regmovim" id_temp="regmovim_id" ></field>
+            <field id="saldo_movimiento" id_temp="saldoFinal"></field>
+        </table>
+    </form>
+</histrix>

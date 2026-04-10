@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" inserta="false" procesa="true" modifica="false" borra="false" confirma="INGRESA SECCION" deleteRow="false" path="/fotos/coches" _preloadData="false">
+    <title>Ingreso de unidades por seccion</title>
+    <obs/>
+    <form>
+        <table id="PROD_PATH_REGISTRO">
+
+            <movimientos>
+                <relacion id="movimiento_unidades_ins.xml" />
+            </movimientos>
+
+            <filters auto="true">
+                <field id="idMomento">
+                    <label>Salida de</label>
+                    <operador>=</operador>
+                </field>
+            </filters>
+
+            <field id="cant_registros" noshow="true">
+                <expression having="false">IFNULL((SELECT COUNT(*) FROM PROD_PATH_REGISTRO PRODPR WHERE PRODPR.nrofab_id = PROD_PATH_REGISTRO.nrofab_id AND PRODPR.hora_salida = '0000-00-00 00:00:00'), 0)</expression>
+                <condicion operador="=">0</condicion>
+            </field>
+
+            <field id="hora_salida" noshow="true">
+                <condicion operador="=">(SELECT PROD_PR.hora_salida FROM PROD_PATH_REGISTRO PROD_PR WHERE PROD_PR.nrofab_id = PROD_PATH_REGISTRO.nrofab_id ORDER BY PROD_PR.hora_salida DESC LIMIT 1)</condicion>
+            </field>
+
+            <field id="terminacionFinal" tabla="PEDCOTIZ" noshow="true">
+                <condicion operador="=">'0000-00-00'</condicion>
+            </field>
+
+            <field id="ficha_id" noshow="true">
+                <expression>PEDCOTIZ.id</expression>
+                <label>id ficha</label>
+            </field>
+	    <field id="estacion_actual">
+		<label>estación</label>
+		<expression>nombre</expression>
+	    </field>
+
+            <field id="nrofab_id" style="font-weight: bold; font-size: 17px; text-align: center;">
+                <label>Nro.Fab</label>
+<!--                 <helper type="link" xml="ficha_producto1_qry.xml" dir="/producto" title="Ficha Técnica">
+                    <parameter source="ficha_id" target="id" />
+                    <parameter source="ficha_id" target="producto_id" />
+                    <parameter source="nrofab_id" target="nrofab" />
+                </helper>
+ -->            </field>
+
+             <field id="corpath" local="true" noshow="true">
+                <if exp="true">
+                    <true>'nrofab_id/corte'</true>
+                    <false>''</false>
+                </if>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="cortePint"  path="corpath" open="true" print="false" tabla="PEDCOTIZ">
+            <expression>select valor_atributo from PRODUCTO_ATRIB_VALORES where producto_id = id and prdatributo_id = 7</expression>
+                <label>Corte</label>
+                <tipo>file</tipo>
+                <size>50</size>
+            </field>
+
+<!-- 
+            <field id="momento_seccion" local="true" noshow="true" />
+
+            <field id="orden" tabla="MOMENTO" noshow="true">
+                <label>Orden</label>
+                <condicion operador="=">(SELECT (M.orden - 1) FROM MOMENTO M WHERE M.idMomento = '[__momento_seccion__]')</condicion>
+            </field> 
+
+            <field id="orden" tabla="MOMENTO" noshow="true">
+                <label>Orden</label>
+                <condicion operador="=">(SELECT (M.orden - 1) FROM MOMENTO M WHERE M.idMomento = POSICIONESFAB.idMomento)</condicion>
+            </field>-->
+
+
+            <field id="idMomento" tabla="POSICIONESFAB" noshow="true">
+                <label>Salida de</label>
+                <helper type="combo" id="MOMENTO" empty="true">
+                    <field id="idMomento" />
+                    <field id="descripcion" />
+                    <field id="linea_id">
+                        <condicion operador="=">1</condicion>
+                    </field>
+                    <field id="reportar">
+                        <condicion operador="=">1</condicion>
+                    </field>
+                    <order>
+                        <field id="orden" tipoOrden="ASC"/>
+                    </order>
+                </helper>
+            </field>
+
+            <field id="orden" tabla="MOMENTO" noshow="true" />
+
+            <field id="prox_seccion" style="font-weight: bold; font-size: 17px; text-align: center;" noshow="true">
+                <label>Entra a</label>
+                <expression>(select M.idMomento from MOMENTO M
+                where M.orden = MOMENTO.orden+1 limit 1)</expression>
+                <helper type="combo" id="MOMENTO" empty="true">
+                    <field id="idMomento" />
+                    <field id="descripcion" />
+                    <field id="linea_id">
+                        <condicion operador="=">1</condicion>
+                    </field>
+                    <order>
+                        <field id="orden" />
+                    </order>
+                </helper>
+            </field>
+
+            <field id="prox_seccion22" style="font-weight: bold; font-size: 17px; text-align: center;" >
+                <label>Entra a</label>
+                <expression>(select M.descripcion from MOMENTO M
+                where M.orden = MOMENTO.orden+1 limit 1)</expression>
+<!--
+                <helper type="combo" id="MOMENTO" empty="true">
+                    <field id="idMomento" />
+                    <field id="descripcion" />
+                    <field id="linea_id">
+                        <condicion operador="=">1</condicion>
+                    </field>
+                    <order>
+                        <field id="orden" />
+                    </order>
+                </helper>
+-->
+            </field>
+
+            <field id="usuario_id" local="true" noshow="true">
+                <valor eval="true">$_SESSION['idUser']</valor>
+            </field>
+
+            <field id="parent_seccion_prox" style="font-weight: bold; font-size: 17px; text-align: center;" noshow="true">
+                <label>Entra a parent</label>
+                <expression>(select PPP.id_productpath from MOMENTO M
+                join POSICIONESFAB PF on PF.idMomento = M.idMomento 
+                join PROD_PRODUCT_PATH PPP on PF.id_posicionfab = PPP.posicionfab_id
+                where M.orden = MOMENTO.orden+1 
+                and PPP.linea_id = 1
+                and PF.idPosicion = 1 limit 1)</expression>
+            </field>
+
+            <field id="posicion_seccion_prox" style="font-weight: bold; font-size: 17px; text-align: center;" noshow="true">
+                <label>Entra a estacion</label>
+                <expression>(select PF.id_posicionfab from MOMENTO M
+                join POSICIONESFAB PF on PF.idMomento = M.idMomento 
+                join PROD_PRODUCT_PATH PPP on PF.id_posicionfab = PPP.posicionfab_id
+                where M.orden = MOMENTO.orden+1 
+                and PPP.linea_id = 1
+                and PF.idPosicion = 1 limit 1)</expression>
+            </field>
+
+            <field id="posicion_seccion_prox2" style="font-weight: bold; font-size: 17px; text-align: center;" >
+                <label>Entra a estacion </label>
+                <expression>(select PF.nombre from MOMENTO M
+                join POSICIONESFAB PF on PF.idMomento = M.idMomento 
+                join PROD_PRODUCT_PATH PPP on PF.id_posicionfab = PPP.posicionfab_id
+                where M.orden = MOMENTO.orden+1 
+                and PPP.linea_id = 1
+                and PF.idPosicion = 1 limit 1)</expression>
+            </field>
+            <field id="avanzar" local="true" refresh="true">
+                <label>Avanza</label>
+                <tipo>check</tipo>
+            </field>
+
+            <field id="inserta_seccion" local="true" noshow="true">
+                <if exp="avanzar == 1 &amp;&amp; parent_seccion_prox + 0 != 0">
+                    <true>'1'</true>
+                    <false>'0'</false>
+                </if>
+            </field>
+
+            <field id="generar_pedidos" local="true" _showTabla="true" _showObjTabla="true" noshow="true">
+                <label>Pedidos</label>
+                <helper type="object" xml="mrp_pedido_produccion_ing.xml">
+                    <parameter target="posicionfab_alarma_id" source="posicion_seccion_prox" />
+                    <parameter target="ficha" source="ficha_id" />
+                    <parameter target="nrofab" source="nrofab_id" />
+                    <parameter target="homologacion" source="homologacion_id" />
+                    <parameter target="modelo_lcm" source="modelo_lcm_id" />
+                    <parameter target="nrocar" source="nrocar" />
+                </helper>
+            </field>
+
+             <field id="homologacion_id" tabla="PEDCOTIZ" noshow="true">
+                <label>Homol</label>
+<!--                 <helper type="combo" xml="combo_homologacion_modelo.xml" dir="/fabricacion" empty="true">
+                </helper> -->
+            </field>
+
+            <field id="modelo_lcm_id" tabla="HOMOLOGMOD" noshow="true">
+                <label>Modelo Chasis</label>
+            </field>
+
+            <field id="nrocar" tabla="HOMOLOGMOD" noshow="true">                
+                <label>Modelo</label>
+            </field>
+
+            <order>
+                <field id="orden" tabla="MOMENTO" tipoOrden="ASC" />
+                <field id="id_path_registro" tipoOrden="ASC"/>
+                <field id="hora_salida" tipoOrden="DESC" />
+            </order>
+
+        </table>
+
+        <join>
+            <table id="PROD_PRODUCT_PATH">
+                <field id="id_productpath">
+                    <condicion operador="=">PROD_PATH_REGISTRO.productpath_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join>
+            <table id="POSICIONESFAB">
+                <field id="id_posicionfab">
+                    <condicion operador="=">PROD_PRODUCT_PATH.posicionfab_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join>
+            <table id="PEDCOTIZ">
+                <field id="nrocha">
+                    <condicion operador="=">PROD_PATH_REGISTRO.nrofab_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join>
+            <table id="MOMENTO">
+                <field id="idMomento">
+                    <condicion operador="=">POSICIONESFAB.idMomento</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join>
+            <table id="HOMOLOGMOD">
+                <field id="id_homologacion">
+                    <condicion operador="=">PEDCOTIZ.homologacion_id</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Esta grabación tiene como objetivo grabar el cierre de caja
+-->
+<histrix tipo="update" >
+  <title>Arqueo y Cierre</title>
+  <obs/>
+  <form >
+    <table id="HTXOPTIONS">
+      <field id="option_name"        id_temp="id_referencia" esClave="true" />
+      <field id="option_description" id_temp="referencia_movimiento" />
+    </table>
+  </form>
+</histrix>

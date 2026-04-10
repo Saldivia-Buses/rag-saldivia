@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="liveGrid" deleteRow="false">
+	<title>ORDENES DE COMPRA</title>
+	<obs></obs>
+	<eventos>
+        <event id="update">close</event>
+        <event id="update">refresh</event>
+    </eventos>
+	<form>
+		<table id="CPSENCAB" label="PROYECTO ORDENES DE COMPRA">
+		
+			<field id="ocpnro" deshabilitado="true">
+				<label>Nro</label>
+				<help>Numero de Orden de Compra. </help>
+				<detalle>ocpnro</detalle>
+			</field>
+			
+	    <field id="cpsproyecto_id" editable="true">
+        <label modpos="nobr">Proyect.OC</label>
+        <help>Proyecto de Compras</help>
+        <tabla_ex id="CPS_PROYECTO" vacio="true">
+            <field id="id_cpsproyecto" />
+            <field id="nombre_cpsproyecto"/>
+            <order>
+                <field id="id_cpsproyecto" />
+            </order>
+        </tabla_ex>
+    	</field>
+
+		</table>		
+	</form>
+</histrix>

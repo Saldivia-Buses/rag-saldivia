@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="update" evento="delete">
+       <title>UPDATE SECCION PERSONAL</title>
+        <obs></obs>
+               <form >
+					<table id="PERSONAL" label="PERSONAL">
+						<field id="IdPersona" id_temp="IdPersona" esclave="true">
+						</field>
+						<field id="id_seccion" >
+							<valor>(select SECCIONHISTORIA.id_seccion from SECCIONHISTORIA where SECCIONHISTORIA.IdPersona = PERSONAL.IdPersona order by fechaDesde DESC limit 1)</valor>
+							
+						</field>
+					</table>
+               </form>
+        </histrix>

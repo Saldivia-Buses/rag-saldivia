@@ -1,0 +1,297 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta"  path="fotos/coches">
+  <title>Observaciones por Coche</title>
+  <obs/>
+  <form >
+    <table id="VUNIDADES" label="FICHAS POR Clientes">
+          <field id="id"  tabla="PEDCOTIZ" noshow="true"/>
+
+      <field id="pedfec" tipoOrden="DESC" tabla="PEDCOTIZ">
+        <label >F.Pedido</label>
+        <help>Fecha de Pedido</help>
+        <tipo>date</tipo>
+      </field>
+      <field id="Entrega" _noshow="true" print="false">
+        <label>Entrega</label>
+        <expression>
+          select entrega from ENTREGASCOCHES where ENTREGASCOCHES.nrofab = PEDCOTIZ.nrocha  and ENTREGASCOCHES.entrega IS NOT NULL  limit 1
+        </expression>
+        <tipo>date</tipo>
+      </field>
+
+      <field id="nrocha" linkint="ficha_producto1_qry.xml" linkdir="/producto" linkdes="Ver Ficha de Ventas">
+        <expression>
+          (case when PEDCOTIZ.nrocha &lt; 1000 then LPAD(PEDCOTIZ.nrocha,3,'0') else LPAD(PEDCOTIZ.nrocha,4,'0') end)
+        </expression>
+        <label modpos="nobr" style="color:#444;font-weight:bold;">Nro.</label>
+        <help>Número de Fabricación</help>
+        <ayuda_ex id="CHASIS">
+          <field id="nrocha"/>
+          <field id="chades"/>
+        </ayuda_ex>
+        <paring destino="nrocha">nrocha</paring>
+        <paring destino="nrofab">nrocha</paring>
+        <paring destino="producto_id">id</paring>
+        <tipo>varchar</tipo>
+      </field>
+
+      <field id="FACTURA" linkint="cctmovim_comp_vta.xml" linkdes="Factura">
+        <label modpos="nobr" Formstyle="display:none;">Fc.</label>
+        <help>Número de Factura</help>
+        <expression>
+          ifnull((select CCTMOVIM.movnro from CCTMOVIM 
+              join IVAIMPORTES on IVAIMPORTES.nrocom = CCTMOVIM.movnro  and
+                      IVAIMPORTES.ctacod = CCTMOVIM.ctacod  and
+                      IVAIMPORTES.tipoiva = 2 and
+                      IVAIMPORTES.impcod = 2
+                                where CCTMOVIM.siscod = '02' and CCTMOVIM.nrofab = PEDCOTIZ.nrocha and CCTMOVIM.ctacod = VUNIDADES.ctacod and CCTMOVIM.nrofab != 0 limit 1),0)
+        </expression>
+        <paring destino="movnro">FACTURA</paring>
+        <paring destino="concod">1</paring>
+
+        <tipo>integer</tipo>
+      </field>
+
+      <field id="ninterno">
+        <expression>atributoUnidad(id, 'ninterno')</expression>
+        <label  size="23" posx="160" posy="0" PDFsize="10">Int.</label>
+        <help></help>
+      </field>
+      <field deshabilitado="true" id="moddes" tabla="MODCHASIS">
+        <label >Mod</label>
+        <help/>
+        <tipo>varchar</tipo>
+      </field>
+      <field deshabilitado="true" id="chasis" tabla="CHASIS" linkint="chasis_cons.xml" linkdes="Ver Datos del Chasis">
+        <expression>RIGHT(CHASIS.chasis, 6)</expression>
+        <label>Chasis</label>
+        <help>Número de Serie del chasis</help>
+        <paring destino="nrocha">nrocha</paring>
+        <tipo>varchar</tipo>
+      </field>
+      <field id="ctaconces" tabla="CONCESIONARIO" noshow="true">
+        <expression>CONCESIONARIO.ctacod</expression>
+        <tipo>integer</tipo>
+      </field>
+      <field id="siscli" local="true" noshow="true">
+        <valor>'02'</valor>
+        <tipo>varchar</tipo>
+      </field>
+      <field  id="conc2"  deshabilitado="true"  linkint="cctconta_consulta.xml" linkdes="Ver medios de Contacto">
+        <expression>CONCESIONARIO.nombre</expression>
+        <label>Concesionario</label>
+        <help>Concesionario</help>
+
+        <paring destino="ctacod">ctaconces</paring>
+        <paring destino="siscod">siscli</paring>
+        <tipo>varchar</tipo>
+
+      </field>
+
+      <field  id="nrocar" tabla="PEDCOTIZ" deshabilitado="true">
+        <label >Mod.</label>
+        <help/>
+        <tabla_ex id="CARROCERIA">
+          <field id="nrocar"></field>
+          <field id="desabv"></field>
+
+          <field id="siscod" oculto="true">
+            <condicion operador="=">03</condicion>
+          </field>
+        </tabla_ex>
+        <tipo>varchar</tipo>g
+      </field>
+
+      <field deshabilitado="true" id="asientos" noZero="true">
+          <label >Asi</label>
+          <tipo>integer</tipo>
+          <expression>HOMOLOGMOD.asientos+1</expression>
+      </field>
+      
+      <field id="bagno" deshabilitado="true" noZero="true">
+          <label>B</label>
+          <expression>atributoUnidad(id, 'bagno')</expression>
+          <options>
+              <option valor="0"></option>
+              <option valor="1">BB</option>
+          </options>
+          <tipo>varchar</tipo>
+      </field>
+
+      <field id="marair">
+        <expression>atributoUnidad(id, 'marair')</expression>
+        <label>A/A</label>
+        <tabla_ex id="MARCAAIR" vacio="true" indexvacio="0" valorvacio="NO">
+          <field id="marair"></field>
+          <field id="desair">
+            <expression>LEFT(desair, 4)</expression>
+          </field>
+
+          <field id="siscod" oculto="true">
+            <condicion operador="=">03</condicion>
+          </field>
+        </tabla_ex>
+        <tipo>varchar</tipo>
+      </field>
+
+      <field id="asides" tabla="MARCAASI">
+        <label >Marca</label>
+        <help/>
+      </field>
+      <field id="corpath" local="true" noshow="true">
+        <if exp="true">
+          <true>'nrocha/corte'</true>
+          <false>''</false>
+        </if>
+        <tipo>varchar</tipo>
+      </field>
+
+      <field id="cortePint"  path="corpath" open="true" print="false">
+          <expression>select valor_atributo from PRODUCTO_ATRIB_VALORES where producto_id = id and prdatributo_id = 7</expression>
+         <label>Corte</label>
+         <tipo>file</tipo>
+         <size>50</size>
+      </field>
+
+      <field id="chapath" local="true" noshow="true" _noselect="true" >
+        <if exp="true">
+          <true>''</true>
+          <false>''</false>
+        </if>
+        <tipo>varchar</tipo>
+      </field>
+      <field id="trazados" deshabilitado="true"  local="true" print="false">
+        <label >Trazados</label>
+        <valor>'Mat.'</valor>
+        <help>Código de Cuenta</help>
+        <helper type="link" xml="trazados_x_coche.xml" title="Trazados" dir="/recepcion/">
+          <parameter source="nrocha" target="nrocha" operator="="/>
+        </helper>
+        <tipo>varchar</tipo>
+      </field>
+      <field id="archivo"  local="true" browse="true" deshabilitado="true" path="chapath">
+        <if exp="true">
+          <true>'/nrocha/'</true>
+          <false>''</false>
+        </if>
+
+        <label >fotos</label>
+        <help></help>
+        <tipo>file</tipo>
+        <size>10</size>
+
+      </field>
+      <field id="ctacod" oculto="true" >
+        <label>Cliente</label>
+      </field>
+
+      <field id="panpath" local="true=" oculto="true">
+        <valor>../archivo/Panas</valor>
+      </field>
+
+      <field id="fotoPana" path="panpath" _noshow="true" print="false">
+        <expression>atributoUnidad(id, 'fotoPana')</expression>
+        <label>Pana</label>
+        <help></help>
+        <tipo>file</tipo>
+        <size>24</size>
+      </field>
+      <field id="vendido">
+        <expression>
+          case when PEDCOTIZ.ctacod != VUNIDADES.ctacod then concat('de: ', (select CCTCUENT.ctafan from CCTCUENT where CCTCUENT.siscod = '02' and CCTCUENT.ctacod = PEDCOTIZ.ctacod )) end
+        </expression>
+      </field>
+      <field id="actual">
+        <label>Dueño Act.</label>
+        <expression>
+          case when PEDCOTIZ.ctacod = VUNIDADES.ctacod then (select CCT.ctanom from UNIDADCLIENTE as UC  left join CCTCUENT as CCT on CCT.siscod = '02' and CCT.ctacod = UC.ctacod where UC.nrofab = VUNIDADES.nrofab order by UC.fecha limit 1) end
+        </expression>
+      </field>
+
+      <field id="orden_compra" local="true" linkint="ordencompra_qry.xml" linkdir="/compras" linkdes="Orden de Compra">
+        <label>O.C</label>
+        <valor>'Compras por Unidad'</valor>
+        <paring destino="nrocha">nrocha</paring>
+      </field>
+
+      <field id="pl2" local="true" showObjTabla="true">
+        <label>Planos</label>
+        <helper type="object" xml="pedidoint_qry.xml" dir="/produccion">
+          <parameter source="nrocha" target="nrofab" />
+        </helper>
+        <size>5000</size>
+      </field>
+
+      <field id="pl3" local="true" showObjTabla="true">
+        <label>Planos </label>
+        <helper type="object" xml="prd_planos_qry.xml" dir="/produccion">
+          <parameter source="nrocha" target="nrofab" />
+        </helper>
+      </field>
+
+      <field id="mejoras" local="true">
+        <helper type="link" xml="controlcambios_cons.xml" dir="/controlcambios" title="Mejoras de producto">
+          <parameter source="nrocha" target="nrofab" />
+        </helper>
+        <expression>SELECT COUNT(*) FROM CONTROLCAMBIOS WHERE nrofab =  (case when PEDCOTIZ.nrocha &lt; 1000 then LPAD(PEDCOTIZ.nrocha,3,'0') else LPAD(PEDCOTIZ.nrocha,4,'0') end)</expression>
+        <label>Mejoras</label>
+      </field>
+
+      <field id="clase" clasefila="true" local="true" noshow="true">
+        <if exp="'actual' != '' ">
+          <true>'resaltadoVioleta'</true>
+          <false>''</false>
+        </if >
+      </field>
+
+      <order>
+        <field id="pedfec"></field>
+      </order>
+    </table>
+    <join tipo="left">
+      <table id="PEDCOTIZ">
+        <field id="nrocha">
+          <condicion operador="=">VUNIDADES.nrofab</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="CHASIS">
+        <field id="nrocha">
+          <condicion operador="=">PEDCOTIZ.nrocha</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="MODCHASIS">
+        <field id="modcha">
+          <condicion operador="=">CHASIS.modcod</condicion>
+        </field>
+        <field id="marcod">
+          <condicion operador="=">CHASIS.marcod</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="CONCESIONARIO">
+        <field id="idconces">
+          <condicion operador="=">CHASIS.conces</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="MARCAASI">
+        <field id="marasi">
+          <condicion operador="=">atributoUnidad(id, 'marasi')</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+          <table id="HOMOLOGMOD">
+              <field id="id_homologacion">
+                  <condicion operador="=">PEDCOTIZ.homologacion_id</condicion>
+              </field>
+          </table>
+      </join>
+  </form>
+</histrix>

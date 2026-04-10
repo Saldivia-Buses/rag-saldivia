@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="delete">
+    <title>MOVIMIENTOS DE orden compras</title>
+    <obs></obs>
+    <form >
+        <table id="CPSMOVIM" label="MOVIMIENTOS" idCampoCond="borrar">
+            <field id="id_cpsmovim" id_temp="id_cpsmovim" esClave="true"></field>
+        </table>
+    </form>
+</histrix>

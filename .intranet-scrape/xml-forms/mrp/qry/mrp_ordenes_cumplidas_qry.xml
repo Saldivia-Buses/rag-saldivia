@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" >
+    <title>REIMPRESION DE ORDENES DE PRODUCCION</title>
+    <obs></obs>
+    <form  >
+        <table id="MRP_ORDEN_PRODUCCION" label="ORDENES DE COMPRA">
+            <field id="fecha_orden">
+                <label>Fecha</label>
+                <help>Fecha de Orden de Fabricación</help>
+            </field>
+            <field id="mes" noshow="true">
+                <expresion having="false">month(fecha_cierre)</expresion>
+            </field>
+            <field id="anio" noshow="true">
+                <expresion having="false">year(fecha_cierre)</expresion>
+            </field>
+            <field id="stkarticulo_id" tabla="MRP_ORDEN_DETALLE" oculto="true">
+        	
+             </field>
+             <field id="id_mrporden" noshow="true" />
+             
+            <field id="numero_orden">
+            	<helper type="link" xml="ordenproduccion_imp.xml">
+            	    <parameter target="id_mrporden" source="id_mrporden" />
+            	</helper>
+                <label>Nro</label>
+                <help>Numero de Orden de Fabricación</help>
+                <expression>concat((case when scv_ID = 0 and mrporden_concepto_id != 1 then 'R' 
+                                     when scv_ID = 0 and mrporden_concepto_id = 1 then 'A' else '' end), numero_orden)</expression> 
+                <detalle>id_mrporden</detalle>
+                <detalle>mrporden_id</detalle>
+            </field>
+                <field id="mrpestado_id" >
+                    <label>Estado </label>
+                    <help>Estado Actual</help>
+                    <options>
+                        <option valor="0">Pendiente</option>
+                        <option valor="1">Cumplida</option>
+                    </options>
+                    <operador>=</operador>
+                    <expresion having="false">(case when fecha_cierre = '0000-00-00' then 0 else 1 end)</expresion>
+                    <!-- <valor>0</valor> -->
+                </field>
+            <group>
+                <field id="id_mrporden"></field>
+            </group>
+
+            <order>
+                <field id="fecha_orden"></field>
+            </order>
+        </table>
+        <join tipo="left">
+    	    <table id="MRP_ORDEN_DETALLE">	
+    		<field id="mrporden_id">
+    		    <condicion operador="=">MRP_ORDEN_PRODUCCION.id_mrporden</condicion>
+    		</field>
+    	    </table>
+        </join>
+
+    </form>
+</histrix>

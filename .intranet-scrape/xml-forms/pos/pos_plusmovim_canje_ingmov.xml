@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="insert" >
+       <title>detalle</title>
+        <obs></obs>
+               <consulta>
+					<table id="PLUSMOVIM"  idCampoCond="plus_imputar" >
+						<field id="idConcepto">
+							<valor>2</valor>
+						</field>
+						<field id="fecha" id_padre="movfec">
+						</field>
+						<field id="movcod" id_padre="concod">
+						</field>
+						<field id="puntos" id_temp="puntos">
+						</field>
+						<field id="ctacod" id_padre="ctacod"/>
+						<field id="movnpv" id_temp="movnpv"/>
+						<field id="movnro" id_padre="nrorec" />
+					</table>
+               </consulta>
+        </histrix>

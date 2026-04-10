@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="insert" grabafinal="true">
+	<title>Ingreso de Movimientos</title>
+	 <obs></obs>
+		<consulta>
+		     <table id="CTB_MOVIMIENTOS">
+			<field id="concepto_id"      id_temp="concepto_id"/>
+			<field id="fecha_movimiento" id_temp="origen_finaliza"/>	
+			<field id="referencia"       id_temp="refundicion"/>
+			<field id="ejercicio_id"     id_temp="ejercicio_origen"/>
+		    </table>
+		</consulta>
+    </histrix>	

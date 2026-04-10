@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF8"?>
+<histrix tipo="abm-mini" subtipo="vertical">
+	<title>Puestos de Trabajo</title>
+	<eventos>
+		<event id="insert">
+			 $('[name=artcod]', '#Formciuo_articulos_xml').focus(); 
+		</event>
+		<event id="update">
+			 $('[name=artcod]', '#Formciuo_articulos_xml').focus(); 
+		</event>
+		<event id="delete">
+			 $('[name=artcod]', '#Formciuo_articulos_xml').focus(); 
+		</event>
+	</eventos>
+
+	<form >
+		<table id="CIUO_ARTICULOS" label="Secciones">
+			
+			<field id="id_ciuoart" noshow="true">
+				<label>Cod </label>
+				<help>Codigo </help>
+			</field>
+
+			<field id="idPuesto" valauto="true" noshow="true" />
+			
+			<field id="artcod">
+		        <helper type="external" xml="HLPstkinsum.xml" dir="/help_local"  >
+		          <field id="artcod">
+		            <label>Cod</label>
+		          </field>
+		          <field id="artdes">
+		            <label>Nombre</label>
+		            <detalle>artdes</detalle>
+		          </field>
+		        </helper>
+				<label>Artículo</label>
+				<tipo>varchar</tipo>
+			</field>
+
+			<field id="artdes" tabla="STKINSUM" deshabilitado="true">
+				<label modpos="nobr">Descripción</label>
+				<size>40</size>
+			</field>
+
+			<field id="dias_recambio">
+				<label>Dias de recambio</label>
+			</field>
+
+			<field id="observacion">
+				<label>Observación</label>
+				<size>80</size>
+			</field>
+		</table>
+		<join tipo="left">
+			<table id="STKINSUM">
+				<field id="artcod">
+					<condicion operador="=">CIUO_ARTICULOS.artcod</condicion>
+				</field>
+				<field id="siscod">
+					<condicion operador="=">'01'</condicion>
+				</field>
+			</table>
+		</join>
+	</form>
+</histrix>

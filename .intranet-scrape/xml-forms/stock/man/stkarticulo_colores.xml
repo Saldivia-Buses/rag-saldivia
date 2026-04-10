@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm-mini" subtipo="vertical" path="fotos/colores">
+    <title>Colores x Articulo</title>
+    <obs></obs>
+    <form>
+        <table id="STK_ARTICULO_COLORES" label="Articulo Proveedor">
+
+        <fieldGroup style="padding:2px 2px 2px 2px;vertical-align:middle;">
+
+            <field id="id_articulocolor" noshow="true" autoinc="true" esClave="true" />
+
+            <field id="stkarticulo_id" noshow="true" valauto="true" />
+
+            <field id="nombre_paleta" tabla="GEN_PALETAS" Formstyle="display:none;">
+                <label>Paleta</label>
+            </field>
+
+            <field id="nombre_color" tabla="GEN_COLORES" Formstyle="display:none;" >
+                <label>Color</label>
+            </field>
+
+            <field id="hex" Formstyle="display:none;">
+                <label>Hex</label>
+                <expression>concat('#', GEN_COLORES.hex)</expression>
+                <tipo>color</tipo>
+            </field>
+
+            <field id="pattern" tabla="GEN_COLORES" Formstyle="display:none;" path="color_id" foto="true">
+                <label>Imagen</label>
+                <tipo Type="Image">file</tipo>
+                <size>60</size>
+            </field>
+
+            <field id="paleta_id" local="true" colstyle="display:none;">
+                <label>Paleta</label>
+                <helper type="combo" id="GEN_PALETAS" empty="true">
+                    <field id="id_paleta" />
+                    <field id="nombre_paleta" />
+                    <order>
+                        <field id="nombre_paleta" />
+                    </order>
+                </helper>
+                <actualiza>
+                    <field id="color_id" destino="paleta_id" />
+                </actualiza>
+            </field>
+
+            <field id="color_id" required="true" colstyle="display:none;" modpos="nobr">
+                <label>Color</label>
+                <helper type="external" xml="gencolores_qry.xml" dir="/ayudas">
+                    <field id="paleta_id" oculto="true">
+                        <condicion operador="=">-1</condicion>
+                    </field>
+                </helper>
+            </field>
+
+        </fieldGroup>
+
+        </table>
+
+        <join>
+            <table id="GEN_COLORES">
+                <field id="id_color">
+                    <condicion operador="=">STK_ARTICULO_COLORES.color_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join>
+            <table id="GEN_PALETAS">
+                <field id="id_paleta">
+                    <condicion operador="=">GEN_COLORES.paleta_id</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

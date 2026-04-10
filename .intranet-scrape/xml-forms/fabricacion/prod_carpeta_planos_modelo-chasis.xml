@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+	<title>MODELOS POR LCM</title>
+	<obs></obs>
+	<form>
+		<table id="PROD_MODELO_LCM" >
+        <filters auto="true">  
+
+              <field id="nrocar_id">
+                  <operador>=</operador>
+                  <label modpos="nobr">Modelo</label>
+              </field>
+
+              <field id="modelo_lcm_activo">
+                  <operador>=</operador>
+                  <label modpos="nobr">Estado</label>
+                  <valor>0</valor>
+              </field>
+
+        </filters>
+
+			<field id="id_modelo_lcm" autoinc="true" _noshow="true" deshabilitado="true">
+				<label>Nro</label>
+			</field>
+
+        <!--nombre del modelo lcm para las ayudas -->
+        <field id="nombre" local="true" _noshow="true">
+                <label>Nombre</label>
+                <expression><![CDATA[IFNULL((SELECT CONCAT(CARROCERIA.desabv,' ',MARCHASIS.mardes,' ',MODCHASIS.desabv, ' ',EURO_TIPO.abrev_euro,' ', IFNULL(PROD_LCM.numero_lcm,''),' ', IFNULL(PROD_LCM.max_asientos_lcm,''),' As')
+                FROM PROD_MODELO_LCM PML
+                LEFT JOIN PROD_LCM ON id_lcm = PML.lcm_id
+                LEFT JOIN MODCHASIS ON id_modelo = PML.modelo_id
+                LEFT JOIN MARCHASIS ON MARCHASIS.marcod = MODCHASIS.marcod
+                LEFT JOIN EURO_TIPO ON EURO_TIPO.id_euro = MODCHASIS.euro_id 
+                LEFT JOIN CARROCERIA ON nrocar_id = nrocar
+                WHERE PML.id_modelo_lcm = PROD_MODELO_LCM.id_modelo_lcm),'')]]>
+                </expression>
+        </field>
+
+            <field id="nrocar_id">
+                <label>Mod.Carroceria</label>
+                <help>Modelo Carroceria</help>
+                <tabla_ex id="CARROCERIA" vacio="true">
+                    <field id="nrocar" clave="true">
+                        <label>Codigo</label>
+                    </field>
+                    <field id="desabv">
+                        <label>Abrev.</label>
+                    </field>
+                <field id="vigente">
+                    <condicion operador="=">1</condicion>
+                </field>
+                <order>
+                    <field id="desabv" />
+                </order>
+                </tabla_ex>
+            </field>
+
+			<field id="marcod">
+                <label colstyle="display:none">Marca Chasis</label>
+                <help>Marca del Chasis</help>
+                <tabla_ex id="MARCHASIS" vacio="true">
+                    <field id="marcod" clave="true">
+                        <label>Codigo</label>
+                        <help>Codigo de Chasis</help>
+                    </field>
+                    <field id="desabv">
+                        <label>Abrev.</label>
+                        <help>Abreviatura a Utilizar</help>
+                    </field>
+                    <field id="marca_activo">
+                        <condicion operador="=">0</condicion>
+                    </field>
+                <order>
+                    <field id="desabv" />
+                </order>
+                </tabla_ex>
+                <actualiza>
+                    <field destino="marcod" id="modelo_id"/>
+                </actualiza>
+            </field>
+
+            <field id="modelo_id" >
+                <label>Modelo Chasis</label>
+                <help>Modelo del Chasis</help>
+                <tabla_ex id="MODCHASIS" vacio="true">
+                    <field clave="true" id="id_modelo">
+                        <label>Modelo</label>
+                        <help>Codigo del Modelo de Chasis</help>
+                    </field>
+                    <field id="moddes">
+                        <label>Descripcion</label>
+                        <help>Descripcion del Modelo</help>
+                        <expression>CONCAT(MODCHASIS.desabv, ' ', (case when MODCHASIS.euro_id = 1 then 'E3' else (case when MODCHASIS.euro_id = 2 then 'E5' else '' end) end))</expression>
+                    </field>
+                    <field id="marcod" oculto="true">
+                        <label>Marca Chasis</label>
+                    </field>
+                <field id="chasis_activo">
+                    <condicion operador="=">0</condicion>
+                </field>
+                <order>
+                    <field id="moddes" />
+                </order>
+                </tabla_ex>
+            </field>
+
+            <field id="lcm_id">
+                <label>LCM</label>
+                <help>NRO LCM</help>
+                <helper type="combo" id="PROD_LCM" empty="true">
+                    <field id="id_lcm" clave="true">
+                        <label>Codigo</label>
+                        <help>Codigo de LCM</help>
+                    </field>
+                    <field id="numero_lcm">
+                        <label>Nro LCM</label>
+                        <help>Nro LCM</help>
+                    </field>
+                    <field id="max_asientos_lcm" oculto="true">
+                        <label>Max Asi</label>
+                        <help>Cant Max Asientos</help>
+                    </field>
+                    <field id="fecha" local="true" noshow="true">
+                        <tipo>date</tipo>
+                        <valor>today</valor>
+                    </field>
+                    <field id="emision_lcm">
+                        <condicion operador="&lt;=">STR_TO_DATE('[__fecha__]','%d/%m/%Y')</condicion>
+                    </field>
+                    <field id="vigencia_lcm">
+                        <condicion operador="&gt;=">STR_TO_DATE('[__fecha__]','%d/%m/%Y')</condicion>
+                    </field>
+                <order>
+                	<field id="numero_lcm" />
+                </order>
+                </helper>
+            </field>
+
+        <field id="max_asientos_lcm" _local="true" tabla="PROD_LCM" Formstyle="display:none;">
+				<label>Cant.Max</label>
+                <help>Cantidad Max Asientos</help>
+        </field>
+
+            <field id="modelo_lcm_activo">
+                <label>Activo</label>
+                <help>Activo</help>
+                <options>
+                    <option valor="0">Si</option>
+                    <option valor="1">No</option>           
+                </options>
+            </field>
+
+            <field id="carpeta_planos" local="true" linkint="prod_carpeta_planos_crud.xml" linkdir="fabricacion" linkdes="Carpeta Planos" linkWidth="90%">
+                <label modpos="nobr">PL STD</label>
+                <paring destino="modelo_lcm_id">id_modelo_lcm</paring>
+                <expression>select CONCAT(count(*), ' PL') FROM PRD_CARPETA_PLANOS where PRD_CARPETA_PLANOS.modelo_lcm_id = id_modelo_lcm</expression>
+            </field>
+            
+      <field id="hi" deshabilitado="true" clasefila="true" noshow="true" local="true">
+        <if exp="modelo_lcm_activo == 1">
+          <true>'grisado'</true>
+          <false>''</false>    
+        </if>
+        <tipo>varchar</tipo>        
+      </field>
+
+        <order>
+            <field id="modelo_lcm_activo" tipoOrden="ASC" />
+            <field id="nombre" tipoOrden="ASC" />
+        </order>
+
+    </table>
+        
+        <join tipo="left">
+            <table id="PROD_LCM">
+                <field id="id_lcm">
+                    <condicion operador="=">PROD_MODELO_LCM.lcm_id</condicion>
+                </field>
+            </table>
+        </join>
+
+	</form>	   
+</histrix> 

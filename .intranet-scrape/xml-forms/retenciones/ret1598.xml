@@ -1,0 +1,207 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" imprimetanda="true">
+	<title>RETENCIONES INGRESOS BUROTS</title>
+	<obs></obs>
+	<form  _detalle="ret1598_reimp.xml">
+		<table id="RET1598" label="Retenciones de ingresos brutos" >
+
+			<filters>
+				<field id="fecret"> 
+					<operador>&gt;=</operador>
+					<label>Desde Fecha</label>
+					<valor>today</valor>
+				</field>
+				<field id="fecret">
+					<operador>&lt;=</operador>
+					<label>Hasta Fecha</label>
+					<valor>today</valor>
+				</field>
+			</filters>
+
+			<field id="tipret" colstyle="display:none;" local="true">			TIPO DE OPERACION 1 A 1
+			    <valor>1</valor>
+			</field>
+		    
+
+			<field id="fecret" export="false">
+				<label>Fecha Ret.</label>
+				<help>Fecha de la Retención</help>
+		
+
+			</field>			
+			<field id="fecret2" colstyle="display:none;">
+				<expression >date_format(fecret, '%d/%m/%Y')</expression>   FECHA DE RETENCION  2 A 11
+
+			</field>
+			<field id="artret" local="true" colstyle="display:none;">	
+			<valor>020</valor>							CODIGO ART. INCISO 12 A 14
+			</field>
+			<field id="tipocomp" local="true" colstyle="display:none;">	
+			<valor>03</valor>							TIPO COMPROBANTE 15 A 16
+			</field>
+			<field id="movlet" local="true" colstyle="display:none;">
+			    <valor> </valor>							LETRA COMPROBANTE 17 a 17
+			</field>
+
+			<field id="compnro" colstyle="display:none;">
+			    <label>comprobante</label>
+			    <expression>concat(LPAD(1,4,'0'), LPAD( compnro, 12, '0'))</expression>   NUMERO COMPROBANTE 18 A 33
+			</field>		
+
+			<field id="compfec" colstyle="display:none;">
+				<expression >date_format(compfec, '%d/%m/%Y')</expression>   FECHA DE COMPROBANTE  34 A 43
+			</field>
+			<field id="totcomp" colstyle="display:none;">
+				<expression>LPAD(totcomp, 12, 0)</expression>				MONTO COMPROBANTE 44 A 55
+
+			</field>
+			<field id="TIPODOC" colstyle="display:none;">
+				<expression>3</expression>						TIPO DOCUMENTO 56 A 56
+
+			</field>
+
+			<field id="ctanroex"  colstyle="display:none;">
+				<expression>LPAD(CCTCUENT.ctanro, 11, '0')</expression>				NUMERO DOCUMENTO 57 A 67
+
+			</field>
+			<field id="ctainb" colstyle="display:none;">
+				<expression>ctainb - 8</expression>						CONDICION FRENTE A IB 68 A 68
+
+			</field>
+			<field id="ctanib2" colstyle="display:none;">
+				<expression>LPAD(REPLACE(CCTCUENT.ctanib,'-',''), 10,'0')</expression>						NUMERO A IB 69 A 78
+
+			</field>
+			<field id="ivacod" colstyle="display:none;">
+				<expression>case when ivacod = 6 then 4 else ivacod end</expression>			CONDICION IVA   79 A 79
+
+			</field>
+
+			<field id="OTROSG" local="true" colstyle="display:none;">
+			    <valor>0</valor>								OTROS GRAVAMENES  80 a 80
+			</field>
+			<field id="registroins" local="true" colstyle="display:none;">
+			    <valor>0</valor>								REGISTRO INSPECCION  81 a 81
+			</field>
+			<field id="impotros" colstyle="display:none;">
+				<expression>LPAD('0.00', 12, 0)</expression>				MONTO OTROS 82 A 93
+
+			</field>
+			<field id="impIVA" colstyle="display:none;">
+				<expression>LPAD('0.00', 12, 0)</expression>				MONTO IVA 94 A 105
+
+			</field>
+			<field id="imponible" colstyle="display:none;">
+				<expression>LPAD(totimpon, 12, 0)</expression>				MONTO IMPONIBLE  106 A 117
+
+			</field>
+			<field id="alicuota" colstyle="display:none;">
+				<expression>LPAD(alicuota, 5, 0)</expression>				MONTO IMPONIBLE  118 A 122
+
+			</field>
+			<field id="impdeterminado" colstyle="display:none;">
+				<expression>LPAD(totret, 12, 0)</expression>				IMPUESTO DET  123 A 134
+
+			</field>
+			<field id="DERREGIMP" colstyle="display:none;">
+				<expression>LPAD('0.00', 12, 0)</expression>				DERECHO REG INSP  135 A 146
+
+			</field>
+			<field id="retenido" colstyle="display:none;">
+				<expression>LPAD(totret, 12, 0)</expression>				MONTO RETENIDO  147 A 158
+    
+			</field>
+			<field id="artincc" colstyle="display:none">
+				<expression>'001'</expression>						ART. INCISTO PARA EL CALCULO 159 a 161
+			</field>
+			<field id="nroret" export="false">
+				<helper type="link" xml="ret1598_reimp.xml" title="Retención">    
+				    <parameter source="nroret" target="nroret" />
+				    <parameter source="fecret" target="fecret" />
+				</helper>
+
+				<label>Num. Ret</label>
+				<help>Número de la retención</help>
+				<detalle>nroret</detalle>			
+				<format>%08d</format>					
+			</field>			
+
+			<field id="ctacod" export="false" >
+				<label>Cuenta</label>
+				<help>Código de Cuenta</help>
+			</field>
+			<field id="ctanom" tabla="CCTCUENT" export="false">
+				<label>Nombre</label>
+				<help>Nombre</help>
+			</field>
+			
+<!--			<field id="ctadir">
+				<label>Dir.</label>
+				<help>Direccion</help>
+			</field>
+			<field id="ctaloc">
+				<label>Localidad</label>
+				<help>Localidad</help>
+			</field>
+			<field id="ctanro">
+				<label>Doc</label>
+				<help>Numero Doc</help>
+			</field> -->
+			<field id="ctanib" tabla="CCTCUENT" export="false">
+				<label>Num.IB</label>
+				<help>Número de Ingresos brutos</help>
+			</field>
+			<!--
+			<field id="codcomp">
+				<label>Comp.</label>
+				<help>Codigo de Comprobante</help>
+			</field>
+			<field id="codnpv">
+				<label>Npv</label>
+				<help>Pnto de Venta</help>
+			</field>			
+			<field id="compnro">
+				<label>Corresponde a Orden de Pago Nro.</label>
+				<help>Numero de Comprobante</help>
+				<format>%08d</format>				
+			</field>			
+			
+			<field id="compfec">
+				<label>Fecha</label>
+				<help>Fecha del Comprobante</help>
+			</field>			
+			<field id="totcomp">
+				<label>Total</label>
+				<help>Total del Comprobante</help>
+			</field>			
+			<field id="totimpon">
+				<label>Imponible</label>
+				<help>Monto imponible del Comprobante</help>
+			</field>			
+			<field id="alicuota">
+				<label>Alic.</label>
+				<help>Alicuota</help>
+			</field>			
+			-->
+			<field id="totret" suma="true" export="false">
+				<label>Importe</label>
+				<help>Retención</help>
+			</field>			
+			<order>
+				<field id="nroret"></field>
+			</order>
+			
+		</table>
+		<join tipo="left">
+			<table id="CCTCUENT">
+				<field id="siscod" >
+					<condicion operador="=">'01'</condicion>
+				</field>				
+				<field id="ctacod" >
+					<condicion operador="=">RET1598.ctacod</condicion>
+				</field>
+			</table>
+		
+		</join>
+	</form>	   
+</histrix> 

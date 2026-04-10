@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  Ayuda
+Tarea: Ayuda para la Tabla de FASES
+Autor: d!ego2k
+Fecha: 27/09/10
+*******************************************************************************
+-->
+    <histrix tipo="consulta">
+	<title>Fases</title>
+	 <obs></obs>
+		<form >
+		    <table id="FAC_FASES">
+
+			<field id="id_facfase" noshow="true" />
+
+			<field id="nombre_fase">
+				<label>Descripcion</label>
+			</field>
+
+		    </table>
+		</form>
+    </histrix>	

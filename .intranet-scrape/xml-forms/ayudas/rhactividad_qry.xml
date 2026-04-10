@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+  <title>Reglas Actividades Conceptos</title>
+  <obs></obs>
+  <consulta>
+	<table id="RH_ACTIVIDADES" label="Actividades">
+	      <field id="id_rhactividad" autoinc="true" noshow="true">
+		        <label>Codigo</label>
+        		<help>Código de Tipo de Actividad</help>
+	      </field>
+	      <field id="nombre_actividad">
+		        <label>Actividad </label>
+		        <help>Actividad </help>
+		        <size>15</size>
+	      	</field>
+<!-- 	 	<order>
+			<field id="nombre_actividad"/>
+	 	</order>
+-->
+    	</table>
+	<join tipo="LEFT">
+		<table id="RH_ACTIVIDADTIPO">
+		        <field id="rhactividad_id" >
+		        	<condicion operador="=">RH_ACTIVIDADES.id_rhactividad</condicion>
+	        	</field>
+		</table>
+	</join>
+	<join tipo="LEFT">
+		<table id="RH_CONCEPTOS">
+		        <field id="rhtipoconcepto_id" >
+		        	<condicion operador="=">RH_ACTIVIDADTIPO.rhtipoconcepto_id</condicion>
+	        	</field>
+		</table>
+	</join> 
+
+  </consulta>
+</histrix>  

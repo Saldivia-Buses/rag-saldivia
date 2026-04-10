@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm">
+	<title>TIPOS DE CORTINAS</title>
+	<obs></obs>
+	<form >
+		<table id="TIPOCORT" label="Cortinas">
+
+			<field id="tipcor">
+				<label>Codigo</label>
+				<help>Codigo de Cortina</help>
+			</field>
+			<field id="coldes">
+				<label>Cortina</label>
+				<help>Tipo de Cortina</help>
+			</field>
+			<field id="siscod" oculto="true">
+				<label>Cod</label>
+			</field>
+			<field id="colabv">
+				<label>Abrev.</label>
+				<help>Abreviatura a Utilizar</help>
+			</field>
+    			<order>
+				<field id="tipcor"></field>
+			</order>
+		</table>
+	</form>	   
+</histrix> 

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert" >
+    <title/>
+    <obs/>
+    <form >
+        <table id="CTB_MOVIMIENTOS" idCampoCond="graba_ctb">
+            <field id="concepto_id">
+                <valor>1</valor>
+            </field>
+            <field id="ejercicio_id"     id_temp="ctbejercicio_id"/>
+            <field id="fecha_movimiento" id_temp="fecha_movimiento"/>
+            <field id="regmovim_id"     lastId="pos_regmovimientos_ins.xml"/>
+            <field id="cajregistro_id" id_temp="cajregistro_id"/>
+        </table>
+    </form>
+</histrix>

@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" limit="100">
+	<title>Notas de Débito</title>
+	<obs/>
+	<form >
+		<table id="REG_MOVIMIENTOS" label="Notas de Débito">
+			<filters>
+				<field id="tip_fecha">
+					<operador>=</operador>
+					<label>Filtrar Fecha por</label>
+					<valor>today</valor>
+				</field>
+				<field id="filtro_fecha" deshabilitado="false">
+					<operador>&gt;=</operador>
+					<label  modpos="nobr">Desde Fecha</label>
+					<valor>today</valor>
+				</field>
+				<field id="filtro_fecha" deshabilitado="false">
+					<operador>&lt;=</operador>
+					<label modpos="nobr">Hasta Fecha</label>
+					<valor>today</valor>
+				</field>
+				<field id="puesto_movimiento">
+					<operador>&gt;=</operador>
+					<label>Desde Puesto</label>
+				</field>
+				<field id="puesto_movimiento">
+					<operador>&lt;=</operador>
+					<label modpos="nobr">Hasta Puesto</label>
+				</field>
+				<field id="letra_movimiento">
+					<operador>=</operador>
+					<label modpos="nobr">Letra</label>
+				</field>
+			</filters>
+			<fieldGroup>
+				<field id="id_regmovim" esClave="true" noshow="true" />
+				<field id="subsistema_id" noshow="true" />
+				<field id="puesto_movimiento" noshow="true" />
+				<field id="regcuenta_id" noshow="true" />
+				<field id="imprime_concepto1" noshow="true">
+					<expresion>IFNULL(REG_NUMERADORES.ejecuta,'')</expresion>
+				</field>
+				<field id="id_nd_prov" local="true" noshow="true">
+					<helper type="parameter" id="SIS::01::concepto_nd_id">
+						<label>Codigo de concepto Nota de Débito de proveedor</label>
+						<defaultValue>2</defaultValue>
+					</helper>
+				</field>
+				<field id="id_nd_cli" local="true" noshow="true">
+					<helper type="parameter" id="SIS::02::concepto_nd_id">
+						<label>Codigo de concepto Nota de Débito de cliente</label>
+						<defaultValue>14</defaultValue>
+					</helper>
+				</field>
+				<field id="concepto_id" noshow="true">
+					<label>Comprobante</label>
+					<condicion operador="IN">('[__id_nd_prov__]', '[__id_nd_cli__]')</condicion>
+				</field>
+				<field id="reg_fecha" _noshow="true">
+					<label>Registrado</label>
+				</field>
+				<field id="fecha_movimiento">
+					<label>Fecha</label>
+				</field>
+				<field id="puesto_movimiento" noshow="true" />
+				<field id="letra_movimiento" noshow="true">
+					<helper type="combo">
+						<option value=""/>
+						<option value="A">A</option>
+						<option value="B">B</option>
+						<option value="C">C</option>
+						<option value="M">M</option>
+						<option value="E">E</option>
+						<option value="X">X</option>
+					</helper>
+					<size>5</size>
+				</field>
+				<field id="nro_movimiento">
+					<expression>
+						CONCAT(REG_CONCEPTOS.abreviacion_concepto,' ', letra_movimiento,' ',LPAD(puesto_movimiento,4,'0'),'-',LPAD(nro_movimiento,8,'0'))
+					</expression>
+					<label>Nro Comprobante</label>
+					<helper type="link">
+						<parameter source="id_regmovim" target="id_regmovim" />
+					</helper>
+					<attribute id="linkint">imprime_concepto1</attribute>
+				</field>
+				<field id="nombre_cuenta">
+					<expression>
+						case when nombre_movimiento != '' then nombre_movimiento else REG_CUENTA.nombre_cuenta end
+					</expression>
+					<label>Razon Social</label>
+				</field>
+				<field id="iva_id" tabla="REG_CUENTA">
+					<label>Categoria</label>
+					<tabla_ex id="GEN_IVA">
+						<field id="id_iva"/>
+						<field id="abreviacion_iva"/>
+					</tabla_ex>
+				</field>
+				<!-- Cambiar de Acuerdo a como se quiere visualizar las imputaciones de CtaCte -->
+				<field id="imputacion_concepto" noshow="true">
+					<expresion>
+						CASE WHEN REG_CONCEPTOS.imputacion_concepto = 1 THEN 1 ELSE 0 END
+					</expresion>
+				</field>
+				<!-- Importes -->
+				<field id="debe" suma="true" noZero="true">
+					<label>debe</label>
+					<expresion>
+						(case when REG_CONCEPTOS.imputacion_concepto = 0 then REG_MOVIMIENTOS.importe_movimiento else 0  end)
+					</expresion>
+					<tipo>numeric</tipo>
+				</field>
+				<field id="haber" suma="true" noZero="true">
+					<label>haber</label>
+					<expresion>
+						(case when REG_CONCEPTOS.imputacion_concepto = 1 then REG_MOVIMIENTOS.importe_movimiento else 0 end)
+					</expresion>
+					<tipo>numeric</tipo>
+				</field>
+				<field id="saldo_movimiento" suma="true" noZero="true" >
+					<label>Pendiente</label>
+					<tipo>numeric</tipo>
+				</field>
+				<field id="tip_fecha" local="true" oculto="true" print="false">
+					<label></label>
+					<helper type="combo">
+						<option value="0">Registracion</option>
+						<option value="1">Comprobante</option>
+					</helper>
+				</field>
+				<field id="filtro_fecha" noshow="true" print="false">
+					<expression>IF([__tip_fecha__] = 0, reg_fecha, fecha_movimiento)</expression>
+					<tipo>date</tipo>
+				</field>
+				<field id="referencia_movimiento">
+					<label>Referencia</label>
+				</field>
+				<field id="cajmovimiento_id" noshow="true"/>
+				<field id="xml_llamar" local="true" noshow="true">
+					<if exp="cajmovimiento_id + 0 != 0">
+						<true>'cajmovimiento_ficha.xml'</true>
+						<false>'regmovimiento_ficha.xml'</false>
+					</if>
+				</field>
+				<!-- Funciones -->
+				<field id="eliminacion" linkdir="/caja/proc/del/" local="true" print="false" linkdes="Detalle del Comprobante" style="text-align:center;width:4em;">
+					<attribute id="linkint">xml_llamar</attribute>
+					<label>Detalle</label>
+					<if exp="'xml_llamar' != ''">
+						<true>'&gt;&gt;'</true>
+						<false>''</false>
+					</if>
+					<paring destino="id_regmovimheader">id_regmovim</paring>
+					<paring destino="id_regmovim">id_regmovim</paring>
+					<paring destino="id_cajmovmiento">cajmovimiento_id</paring>
+				</field>
+				<field id="observaciones" local="true" print="false" style="text-align:center;width:4em;">
+					<helper type="link" xml="regmovim_obs_qry.xml" dir="/proveedores/qry" width="600px" height="350px" title="Observaciones">
+						<parameter source="id_regmovim" target="regmovim_id" operator="="/>
+						<parameter source="referencia_movimiento" target="obsmov" operator="="/>
+					</helper>
+					<label>Obs</label>
+					<valor>+</valor>
+					<attribute id="style">tieneObs</attribute>
+				</field>
+				<field id="tieneObs" noshow="true">
+					<expression>
+						IFNULL((SELECT 'color:red;font-weight:bold;text-align:center;width:4em;' FROM REG_MOVIMIENTO_OBS WHERE REG_MOVIMIENTO_OBS.regmovim_id = REG_MOVIMIENTOS.id_regmovim limit 1), 'text-align:center;width:4em;')
+					</expression>
+				</field>
+			</fieldGroup>
+			<fieldGroup>
+				<if>if ($_SESSION['EDITOR'] == 'editor') return true;</if>
+				<field id="modificacion" local="true" print="false" style="text-align:center;width:4em;">
+					<helper type="link" xml="regmovimiento_crud2.xml" dir="/clientes/ing" width="600px" height="350px" title="Modificar Comprobante">
+						<parameter source="id_regmovim" target="id_regmovim" />
+					</helper>
+					<label>Mod</label>
+					<valor>Mod</valor>
+				</field>
+			</fieldGroup>
+			<order>
+				<field id="filtro_fecha" />
+				<field id="puesto_movimiento" />
+				<field id="letra_movimiento" />
+				<field id="nro_movimiento" />
+			</order>
+		</table>
+		<join>
+			<table id="REG_CONCEPTOS">
+				<field id="id_concepto">
+					<condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="REG_CUENTA">
+				<field id="id_regcuenta">
+					<condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="REG_NUMERADORES">
+				<field id="subsistema_id">
+					<condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion>
+				</field>
+				<field id="regconcepto_id">
+					<condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+				</field>
+				<field id="puesto">
+					<condicion operador="=">REG_MOVIMIENTOS.puesto_movimiento</condicion>
+				</field>
+				<field id="letra">
+					<condicion operador="=">REG_MOVIMIENTOS.letra_movimiento</condicion>
+				</field>
+			</table>
+		</join>
+	</form>
+</histrix>

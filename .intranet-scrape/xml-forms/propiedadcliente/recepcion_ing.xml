@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" borra="no" imprime="false" subtipo="vertical" path="fotos/articulos" limit="10" llenoTemporal="false" log="false">
+    <title>DETALLE</title>
+    <obs></obs>
+    <form  >
+        <table id="CPSMOVIM" label="DETALLE">
+            <movimientos cabecera="recepcion_cab.xml">
+<!--                <relacion id="cpsmovim_ingmov.xml"></relacion> -->
+
+                <relacion id="stkinmov_ingmov.xml"></relacion>
+                <relacion id="ocprecib_ingmov.xml"></relacion>
+                <relacion id="barcode_ingmov.xml"></relacion>
+		<!--<relacion id="barcode_ingmov_close.xml"></relacion>  -->
+<!--                <relacion id="cpsencab_rec_ingmov.xml"></relacion> -->
+            </movimientos>
+
+            <field id="siscod" oculto="true">
+                    <valor>'02'</valor>
+            </field>
+            <field id="siscod" oculto="true">
+                <label>Codigo Sis </label>
+                <condicion operador='='>''</condicion>
+            </field>
+            <field id="cliente" local="true" noshow="true">
+                   <if exp="true">
+                       <true>ctacod</true>
+                       <false>ctacod</false>
+                   </if>
+            </field>
+            <field id="unidad" local="true" noshow="true">
+                   <if exp="true">
+                       <true>nrocha</true>
+                       <false>nrocha</false>
+                   </if>
+            </field>
+            <field id="codest" local="true" noshow="true">
+        	<valor>1</valor>
+            </field>
+            
+            <field id="movfec" oculto="true">
+                <label>fecha</label>
+            </field>
+            <field id="idPed" deshabilitado="true" noshow="true">
+            </field>
+            <field id="artcod"  esClave="true">
+                <label>Art.</label>
+                <help>Código de Artículo</help>
+                <ayuda_ex id="STKINSUM" xml="HLPstkinsum_old.xml" dir="/help_local">
+                    <field id="artcod">
+                        <label>Cod.</label>
+                        <detalle>artcod</detalle>
+                    </field>
+                    <field id="artdes">
+                        <label>Insumo</label>
+                        <detalle>artdes</detalle>
+                    </field>
+<!--                    <field id="unicps" oculto="true">
+                        <detalle>unicps</detalle>
+                    </field>
+                    <field id="artuni" oculto="true">
+                        <detalle>artuni</detalle>
+                    </field>
+                    <field id="artcos" oculto="true">
+                        <detalle>artcos</detalle>
+                    </field>
+                    <field id="artrub" oculto="true">
+                        <detalle>artrub</detalle>
+                    </field>
+                    <field id="unidef" oculto="true">
+                        <detalle>unidef</detalle>
+                    </field>
+                    <field id="valcps" oculto="true">
+                        <detalle>valcps</detalle>
+                    </field>
+                    <field id="valuso" oculto="true">
+                        <detalle>valuso</detalle>
+                    </field> -->
+                    <field id="siscod" oculto="true">
+                        <condicion operador="=">'01'</condicion>
+                    </field>
+                    <clave>artcod</clave>
+                    <descripcion>artdes</descripcion>
+                </ayuda_ex>
+                
+            </field>
+            <field id="artdes"  esClave="true">
+                <label modpos="nobr">Descripción</label>
+                <help>Artículo</help>
+                <size>70</size>
+            </field>
+            <field id="detalle"  noshow="true">
+        	<if exp="true">
+        	    <true>'artdes'</true>
+        	    <false>''</false>
+        	</if>
+            </field>
+
+            <field id="ingresan" local="true" >
+                <label modpos="nobr">Cantidad</label>
+                <help>Cantidad ingresada</help>
+                <tipo>numeric</tipo>
+            </field>
+<!--            <field id="cantetiq"  local="true" noshow="true" deshabilitado="true">
+                <label>Etiquetas</label>
+                <if exp="true">
+                    <true>ingresan</true>
+                    <false>0</false>
+                </if>
+            </field>              -->
+            <field id="nrotraz" oculto="true" local="true" valop="true">
+                <expression>CPSMOVIM.artcod</expression>
+                <label>nrotraz</label>
+                <tabla_ex id="HERRAMIENTAS">
+                    <field id="artcod" clave="true">
+                    </field>
+                    <field id="id_herramienta">
+                        <expression> CAST(SUBSTRING(id_herramienta, 14, 10) AS DECIMAL) + 1</expression>
+                        <label>id_herramienta</label>
+                        <tipo>integer</tipo>
+                    </field>
+                    <field id="grucod">
+                        <condicion operador="=">2</condicion>
+                    </field>
+                </tabla_ex>
+                <tipo>char</tipo>
+            </field>
+            <field id="grucod" local="true" oculto="true" >
+                <valor>2</valor>
+            </field>
+            <field id="id_traza1" local="true" deshabilitado="true" _noshow="true">
+                <label>Código1</label>
+                <if exp="true">
+                    <true>'C'.sprintf('%04d'.'%08s' , 'ctacod','artcod' )</true>
+                    <false>''</false>
+                </if>
+                <tipo>char</tipo>
+            </field>
+            <field id="fotopath" local="true" noshow="true">
+                <if exp="true">
+                    <true>'artcod/'</true>
+                    <false>''</false>
+                </if>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="foto" path="fotopath" download="true" deshabilitado="true">
+                <expression>select ARTICULO_FOTO.foto from ARTICULO_FOTO where ARTICULO_FOTO.idArticulo = STKINSUM.artcod order by revision desc limit 1</expression>
+                <label Formstyle="display:none;">Imagen</label>
+                <tipo >file</tipo>
+                <size>40</size>
+            </field>
+            <field id="observacion" local="true" >
+                <label modpos="nobr" colspan="5">Obs:</label>
+                <tipo>varchar</tipo>
+                <size>150</size>
+            </field>
+            <order>
+                <field id="ocpren"></field>
+            </order>
+        </table>
+        <join tipo="left">
+            <table id="STKINSUM">
+                <field id="siscod" oculto="true">
+                    <label>STKINSUM.siscod</label>
+                    <condicion operador="=">'01'</condicion>
+                </field>
+                <field id="artcod" oculto="true">
+                    <condicion operador="=">CPSMOVIM.artcod</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix>

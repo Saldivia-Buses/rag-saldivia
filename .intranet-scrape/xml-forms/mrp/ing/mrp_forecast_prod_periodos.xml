@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ing" inserta="false" modifica="false"  preloadData="false" preFetch="false"  >
+    <title>Forecast Articulos</title>
+    <obs></obs>
+    <form >
+        <table id="STK_ARTICULOS" label="Forecast">
+            <filters>
+                <field id="xmrpperiodo_id" >
+		        <label modpos="nobr">Periodo</label>
+                </field>
+		<field id="fecini_mrpperiodo"  local="true" _noshow="true">
+			<label modpos="nobr">PIni</label>
+		</field>
+		<field id="fecfin_mrpperiodo"  local="true" _noshow="true">
+			<label modpos="nobr">PFin</label>
+		</field> 
+
+                <field id="id_stkarticulo"   >
+                    <label>Código</label>
+                    <help>Codigo de Articulo</help>
+                </field>
+                <field id="nombre" deshabilitado="false">
+                    <expresion>nombre_articulo</expresion>
+                    <label modpos="nobr">Nombre Articulo</label>
+                    <help>Codigo de Articulo</help>
+                    <operador>like</operador>
+                </field>
+                <field id="calculado" local="true">
+            	    <label modpos="nobr">Tipo Calculo</label>
+            	    <options>
+            		<option valor="0">Calculo</option>
+            		<option valor="1">Traslado</option>
+            	    </options>
+            	    <operador>=</operador>
+                </field>
+            </filters>
+
+	    <movimientos>
+		<relacion id="mrp_forecast_prod_periodos_ins.xml" />
+	    </movimientos>
+	    
+            <fieldGroup>
+            
+		<field id="fecini_mrpperiodo"  local="true" noshow="true">
+			<label modpos="nobr">Ini</label>
+		</field>
+		<field id="fecfin_mrpperiodo"  local="true" noshow="true">
+			<label modpos="nobr">Fin</label>
+		</field>
+                <field id="xmrpperiodo_id" local="true" _tabla="MRP_FORECAST"  deshabilitado="true" noshow="true">
+		       	<helper type="combo" xml="mrpperiodos_qry.xml" dir="/ayudas" empty="true"/>
+		        <label modpos="nobr">Periodo</label>
+                </field>
+
+                <field id="id_stkarticulo"   esClave="true"  deshabilitado="true">
+                    <label>Código</label>
+                    <help>Codigo de Articulo</help>
+                </field>
+		
+		
+                <field id="calculado" local="true" noshow="true">
+            	    <label>Tipo Calculo</label>
+            	    <options>
+            		<option valor="0">x demandas pronosticadas</option>
+            		<option valor="1">x demandas pendientes</option>
+            	    </options>
+                </field>
+
+                <field id="stock_minimo" noshow="true" _tabla="STK_ARTICULOS"/>
+                <field id="nombre" deshabilitado="true">
+                    <expresion>nombre_articulo</expresion>
+                    <label>Articulo</label>
+                    <help>Codigo de Articulo</help>
+                </field>
+                <field id="abreviacion_unidad"    tabla="GEN_UNIDADES" deshabilitado="true">
+                    <label>U.</label>
+                </field>
+                <field id="enteros" noshow="true"   tabla="GEN_UNIDADES" deshabilitado="true">
+                    <label>enteros</label>
+                </field>
+				
+                <field id="year_forecast" noshow="true" tabla="MRP_FORECAST" incdec="true">
+                    <label>año</label>
+			<expresion>year('[__fecini_mrpperiodo__]')</expresion>
+                </field>
+
+                <field id="mes_forecast" noshow="true" tabla="MRP_FORECAST" _colstyle="display:none;">
+                	<label modpos="nobr">Mes</label>
+			<expresion>Month('[__fecini_mrpperiodo__]')</expresion>
+		</field>
+            </fieldGroup>
+
+	    <fieldGroup noZero="true">
+	        <field id="stock" _noshow="true">
+			<label>Stock Actual</label>
+			<expresion><![CDATA[(  ifnull( (SELECT sum(CASE WHEN STK_CONCEPTOS.tipo_concepto = 0 THEN 
+				STK_MOVIMIENTOS.cantidad ELSE -(STK_MOVIMIENTOS.cantidad) END) from STK_MOVIMIENTOS
+                             inner JOIN STK_CONCEPTOS on STK_CONCEPTOS.id_stkconcepto = STK_MOVIMIENTOS.stkconcepto_id
+                              where  STK_MOVIMIENTOS.stkarticulo_id  = STK_ARTICULOS.id_stkarticulo) ,0)   )  ]]>
+			</expresion>
+		    	<tipo>decimal</tipo>
+                </field>
+	        <field id="minimo" _noshow="true" noZero="true">
+			<label>Minimo</label>
+			<expresion>stock_minimo</expresion>
+			<tipo>decimal</tipo>
+                </field>
+		<field id="OpcionVis1" local="true" noshow="true">
+			<if exp="calculado==1">
+			<true>'color:white;'</true>
+			<false>'color:red;'</false>
+			</if>
+		</field>
+		<field id="opcionvis"  local="true"  noshow="true">
+			<if exp="calculado==0">
+			<true>'color:white'</true>
+			<false>'color:red'</false>
+			</if>
+		</field>
+		<field id="ventas2">
+		    	<label>Dem. Pronosticada</label>
+			<attribute id="colstyle">OpcionVis1</attribute>
+                    	<expresion><![CDATA[ifnull((select sum(MRPF.cantidad_forecast) from MRP_FORECAST AS MRPF where 
+	                    MRPF.tipo_forecast = 1 and  MRPF.mrpperiodo_id = MRP_FORECAST.mrpperiodo_id and 
+        	            MRPF.stkarticulo_id = STK_ARTICULOS.id_stkarticulo ) ,0)  ]]>
+		    	</expresion>
+		   	<tipo>decimal</tipo>
+		</field>
+	        <field id="facturados" _noshow="true" noZero="true">
+			<label>Solicitado</label>
+			<attribute id="colstyle">opcionvis</attribute>
+			<expresion>ifnull((select sum(ifnull(cantidad_detalle,0)) 
+				from REG_MOVIMIENTOS 	RMM
+				JOIN REG_DETALLES RD ON RD.regmovim_id = RMM.id_regmovim and  RMM.fecha_movimiento &lt;= '[__fecini_mrpperiodo__]'
+				and RMM.concepto_id in (SELECT option_value from HTXOPTIONS where option_name = 'ID_NOTA_PEDIDOS' )
+				where RD.codigo_detalle = STK_ARTICULOS.id_stkarticulo) ,0) 
+			</expresion>
+			<tipo>decimal</tipo>
+		</field>
+	        <field id="Remitidos" _noshow="true" noZero="true" >
+			<label>Remitidos</label>
+			<attribute id="colstyle">opcionvis</attribute>
+			<expresion>ifnull((select sum(ifnull(RI1.cantidad_imputada,0)) 
+				from REG_IMPUTACIONESDETALLES RI1 
+				JOIN REG_DETALLES RD1 ON RI1.regdetalleped_id = RD1.id_regdetalle and  (RI1.dependencia_id = 3 or RI1.dependencia_id = 1) 
+				JOIN REG_MOVIMIENTOS RM1 ON RM1.id_regmovim = RD1.regmovim_id and  RM1.fecha_movimiento &lt;= '[__fecini_mrpperiodo__]' 
+				where RD1.codigo_detalle = MRP_FORECAST.stkarticulo_id) ,0)
+			</expresion>
+			<tipo>decimal</tipo>
+		</field>
+	        <field id="Pendiente" local="true" _style="font-weight:bold">
+                    	<label>Pendientes</label>
+			<attribute id="colstyle">opcionvis</attribute>
+			<if exp="true">
+				<true>(facturados + 0 - Remitidos + 0 &lt; 0)?0:(facturados + 0 - Remitidos + 0)</true>
+				<false>0</false>
+			</if>
+			<tipo>numeric</tipo>
+		</field>
+	        <field id="xCalculo" noshow="true" local="true" style="font-weight:bold">
+                    	<label>xCalculo</label>
+			<if exp="(minimo + 0 + ((calculado==1)?(facturados + 0 - Remitidos + 0):ventas2 + 0) ) - ((stock + 0 &lt; 0)?0:stock + 0) &gt;= 0">
+				<true>(minimo  + 0 + ((calculado==1)?(facturados + 0 - Remitidos + 0):ventas2 + 0) ) - ((stock + 0 &lt; 0)?0:stock + 0)</true>
+				<false>0</false>
+			</if>
+			<tipo>numeric</tipo>
+		</field>
+	        <field id="zzCalculo" local="true" style="font-weight:bold">
+                    	<label>Calculo</label>
+			<if exp="('enteros' != '1' )">
+				<true>xCalculo + 0</true>
+				<false>round(xCalculo)  + 0 </false>
+			</if>
+			<tipo>numeric</tipo>
+		</field>
+
+
+	    </fieldGroup>			
+            <group>
+                <field id="id_stkarticulo"></field>
+            </group>
+			
+
+        </table>
+        <join >
+            <table id="STK_BOM">
+                <field id="stkarticulopadre_id">
+                    <condicion operador="=">id_stkarticulo</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="MRP_FORECAST">
+                <field id="stkarticulo_id">
+                    <condicion operador="=">id_stkarticulo and MRP_FORECAST.mrpperiodo_id = '[__xmrpperiodo_id__]'</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="LEFT">
+            <table id="GEN_UNIDADES">
+                <field id="id_unidad">
+                    <condicion operador="=">unidad_id</condicion>
+                </field>
+            </table>
+        </join>
+			
+    </form>
+</histrix>

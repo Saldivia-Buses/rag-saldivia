@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ficha" template="etiqueta_desc_cb.tpl" limit="1" sololectura="true" _autoprint="true" _printer="zebra">
+     <title>Impresion Etiqueta</title>
+         <obs/>
+             <form>
+               <table id="STK_ARTICULOS" >
+                 <field id="id_stkarticulo" />
+                 <field id="descart1" local="true"/>
+                 <field id="descart2" local="true"/>
+                 <field id="codigo_barra"/>
+				 <field id="precio" local="true" />
+                 <field id="cantidad" local="true"/>
+              </table>
+         </form>
+</histrix>
+                                                                             
+                                                                                 

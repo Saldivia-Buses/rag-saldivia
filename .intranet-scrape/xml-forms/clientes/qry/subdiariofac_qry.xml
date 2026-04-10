@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta"  preloadData="false"  preFetch="false">
+  <title>Cta Ctes</title>
+  <obs/>
+  <form  >
+    <table id="REG_MOVIMIENTOS" label="Sub Diario Facturación">
+      <filters>
+	<field id="puesto_movimiento">
+		<label>Puesto</label>
+        </field>
+        <field id="fecha_movimiento">
+		<label>Desde</label>
+		<operador>&gt;=</operador>
+        </field>
+  
+        <field id="fecha_movimiento">
+    	    <label>Hasta</label>
+	        <operador>&lt;=</operador>
+	        <valor>today</valor>
+        </field>
+      </filters>
+      
+      <!-- CONSULTA -->
+	<field id="puesto_movimiento">
+	    <helper type="combo"   xml="regnpv_qry.xml" dir="/ayudas" empty="true"  >
+		<field id="puesto" noshow="true" />
+		<field id="mipuesto" >
+			<expresion>lpad(puesto,4,'0')</expresion>
+  			<label>npv</label>
+		</field>		
+		<field id="subsistema_id" elClave="true" oculto="true" noshow="true"/>
+	    </helper>
+	</field>
+      
+	<field id="fecha_movimiento" >
+		<label>Fecha</label>
+	</field>
+	<field id="descripcion_concepto" tabla="REG_CONCEPTOS" >
+		<label>Tipo</label>
+	</field>
+	<field id="subsistema_id" noshow="true" valauto="true">
+	</field>
+	<field id="cajmovimiento_id" noshow="true" >
+		<condicion operador="=">0</condicion>
+	</field>
+	<field id="letra_movimiento" >
+		<label>Letra</label>
+	</field>
+
+	<field id="nro" >
+		<label>Nro</label>
+		<expresion>concat(lpad(puesto_movimiento,4,'0') , ' ', lpad(nro_movimiento,8,'0'))</expresion>
+	</field>
+	<field id="cuit_cuenta"  tabla="REG_CUENTA">
+		<label>Cuit</label>
+	</field>
+	<field id="vencimiento_movimiento" >
+		<label>Vto</label>
+	</field>
+	<field id="importe_movimiento" suma="true">
+		<label>Total</label>
+		<expresion>case when imputacion_concepto =  0 then 1 else -1 end * importe_movimiento </expresion>
+		<tipo>numeric</tipo>
+	</field>
+
+    </table>
+
+    <join>
+      <table id="REG_CUENTA">
+        <field id="id_regcuenta">
+          <condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join>
+      <table id="REG_CONCEPTOS">
+        <field id="id_concepto">
+          <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>

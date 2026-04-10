@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="crud">
+        <title>Cargos Docentes</title>
+        <obs></obs>
+        <form >
+                <table id="RH_CARGODOCENTE" >
+                    <title>Cargos Docentes</title>
+                                        
+                        <field id="id_cargodocente">
+                                <label>Codigo</label>
+                                <help>Codigo de Cargo Docente</help>
+                        </field>
+                        
+                        <field id="nombre">
+                                <label>Nombre</label>
+                                <help>Nombre del Cargo Docente</help>
+                        </field>
+			
+                </table>
+        </form>           
+</histrix>

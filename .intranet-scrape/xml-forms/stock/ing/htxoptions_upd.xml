@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="update">
+   <title>Update lastId Asiento</title>
+   <obs></obs>
+   <form>
+		<table id="HTXOPTIONS">
+			<field id="option_name"		id_temp="htxoption_name" esClave="true" />
+			<field id="option_value"	lastId="ctbmovimiento_ins.xml" />
+		</table>
+   </form>
+</histrix>
+

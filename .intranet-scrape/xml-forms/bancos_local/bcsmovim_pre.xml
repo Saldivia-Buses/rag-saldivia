@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+	<title>Movimientos Bancarios</title>
+	<obs></obs>
+	<form >
+		<table id="REG_MOVIMIENTOS" label="Movimientos Bancarios">
+			<field id="nro_cuenta">
+				<label>Codigo Cuenta</label>
+				<help>Codigo de Cuenta Bancaria </help>
+			</field>
+            <field id="concod" noshow="true">
+                <label>Tipo Mov</label>
+            </field>
+			
+			<field id="subsistema_id" oculto="true">
+				<label>Codigo Sistema.</label>
+				<help>
+				</help>
+			</field>
+			<field id="fecha_movimiento" >
+				<label>Fecha</label>
+				<help>Fecha de Movimiento</help>
+			</field>
+			<field id="fpv_movimiento" _required="true">
+<!--				<expression having="false">(case when !isnull(fecha_movimiento) then fecha_movimiento else fpv_movimiento end)</expression> -->
+
+				<label>Acreditacion</label>
+				<help>Fecha de Acreditacion</help>
+<tipo>date</tipo>
+			</field>
+			
+			<field id="cnbabvE">
+				<expression>cnbabv</expression>
+				<label>Tipo</label>
+				<help>Codigo de tipo de Movimiento </help>
+				
+				<tipo>string</tipo>
+			</field>
+			
+			<field id="nro_movimiento" local="true">
+				<valor>0</valor>
+				<label>Número</label>
+				<help>Numero de Movimiento </help>
+				<detalle>nro_movimiento</detalle>
+			<!--	<format>%010d</format> -->
+				
+			</field>
+			<field id="nropag">
+			    <label>Nro Pago</label>
+			    <expression>''</expression>
+			</field>
+			<field id="reimp">
+			    <expression>''</expression>
+			</field>
+
+			<field id="referencia">
+				<expression>'-------- Saldos Iniciales ------'</expression>
+				<tipo>varchar</tipo>
+				<label>Referencia</label>
+				<help>Referencia Adicional. </help>
+			</field>
+			
+			<field id="debe" suma="true" noZero="true">
+				<expression>sum(round(importe_movimiento * (case when cnbtip = '1' then 1 else 0 end), 2))</expression>
+				
+				<label>Creditos</label>
+				<help>Importe del Movimiento en el Debe</help>
+                                <tipo>numeric</tipo>
+				<detalle>debe</detalle>
+			</field>
+			
+			<field id="haber" suma="true" noZero="true">
+				<expression>sum(round(importe_movimiento * (case when cnbtip = '2' then 1 else 0 end), 2))</expression>
+				
+				<label>Débitos</label>
+				<help>Importe del Movimiento en el Haber</help>
+                                <tipo>numeric</tipo>
+				<detalle>haber</detalle>
+			</field>
+			<!--
+			<field id="saldo" suma="true" acumula="true">
+			<label>Saldo</label>
+			<help>saldo  movimiento </help>
+				<expression>sum(round(importe_movimiento * (case when cnbtip = '2' then -1 else 1 end), 2))</expression>
+				<detalle>saldo</detalle>
+			</field>
+-->
+			<field id="saldo" suma="true" acumula="true" local="true" style="color:green;font-size:large;">
+			<label>Saldo</label>
+			<help>saldo  movimiento </help>
+				<if exp="true">
+				    <true>round(debe - haber, 2)</true>
+				    <false>0</false>
+				</if>
+				<detalle>saldo</detalle>
+				<tipo>numeric</tipo>
+			</field>
+			<field id="S2" suma="true" acumula="true" local="true" noshow="true">
+			<help>saldo  movimiento </help>
+				<if exp="true">
+				    <true>round(debe - haber, 2)</true>
+				    <false>0</false>
+				</if>
+				<detalle>S2</detalle>
+			</field>
+		
+			<field id="fecha_movimiento">
+				<label>Fecha</label>
+				<help>Fecha del Movimiento</help>
+			</field>
+			
+			<field id="regmin">
+				<label>Asiento</label>
+				<help>Numero de Asiento</help>
+			</field>
+			
+			<!--
+			<field id="fpv_movimiento">
+			<label>Fecha Vencimiento    . </label>
+			<help>Fecha de vencimiento del Movimiento </help>
+			</field>
+			<field id="bcsmar">
+			<label>Marca </label>
+			<help> </help>
+			</field>
+			<field id="bcspre">
+			<label>F.Presentado </label>
+			<help>Fecha de Presentacion. </help>
+			</field>
+			<field id="bcstil">
+			<label>Presentado </label>
+			<help>[ ] = Sin Presentar  |  [1] = Presentado. </help>
+			</field>
+			<field id="opecla">
+			<label>Firma Electronica </label>
+			<help>Firma Electronica </help>
+			</field>
+			<field id="presentado">
+			<label>Presentado </label>
+			<help>Indica si el Valor ya fue Presentado </help>
+			</field>
+			<field id="succod">
+			<label>Cod. Sucursal </label>
+			<help>Codigo de Sucursal </help>
+			</field>
+			
+			-->
+	
+			<field id="debecon" suma="true" noZero="true">
+				<expression>sum(round(importe_movimiento * presentado *(case when cnbtip = '1' then 1 else 0 end), 2))</expression>
+				
+				<label>Cred Con</label>
+				<help>Importe del Movimiento en el Debe</help>
+                <tipo>numeric</tipo>
+				<detalle>debe</detalle>
+			</field>
+			
+			<field id="habercon" suma="true" noZero="true">
+				<expression>sum(round(importe_movimiento * presentado * (case when cnbtip = '2' then 1 else 0 end), 2))</expression>
+				
+				<label>Déb con</label>
+				<help>Importe del Movimiento en el Haber</help>
+                                <tipo>numeric</tipo>
+				<detalle>habercon</detalle>
+			</field>
+
+			<field id="saldocon" suma="true" acumula="true" local="true" style="color:green;font-size:large;">
+			<label>Saldo con</label>
+			<help>saldo  movimiento </help>
+				<if exp="true">
+				    <true>round(debecon - habercon, 2)</true>
+				    <false>0</false>
+				</if>
+				<detalle>saldo</detalle>
+				<tipo>numeric</tipo>
+			</field>			
+			<field id="cf" clasefila="true" noshow="true">
+				<expression>'resaltado'</expression>
+			</field>
+		</table>
+		
+		<join tipo="left">
+			<table id="BCSCONCE">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion>
+					
+				</field>
+				
+				<field id="cnbcod" oculto="true">
+					<condicion operador="=">REG_MOVIMIENTOS.concod</condicion>
+				</field>
+			</table>
+		</join>
+<!--
+		<join tipo="left">
+			<table id="BCS_IMPORTACION">
+				<field id="regmovim_id">
+					<condicion operador="=">REG_MOVIMIENTOS.id_REG_MOVIMIENTOS</condicion>
+				</field>
+			</table>
+		</join>
+-->		
+	</form>
+</histrix>

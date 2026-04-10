@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<histrix tipo="fichaing"   inserta="false" borra="false" modifica="false">
+    <title>Ingreso de No Conformidad</title>
+    <obs></obs>
+    <form >
+		
+        <table id="CAL_NOCONFORMIDADES" >
+
+	        <validation>
+                <condition><![CDATA[ resp_rhpersonal_id == 0 ]]></condition>
+                <message>Ingrese un Responsable</message>
+            </validation>
+	        <validation>
+                <condition><![CDATA[ descripcion_nconf == '' ]]></condition>
+                <message>Ingrese una descripción</message>
+            </validation>
+	        <validation>
+                <condition><![CDATA[ contencion_nconf == '' ]]></condition>
+                <message>Ingrese una Acción de contención</message>
+            </validation>
+
+            <title>Ingreso de no conformidad</title>
+
+            <movimientos>
+                <relacion id="noconformidad_insert.xml" />
+				<relacion id="demerito_insert.xml"/>
+<!--				<relacion id="accionnconf_insert.xml" />-->
+            </movimientos>
+			
+			<field id="proxNconf" deshabilitado="true" local="true">
+				<label style="color:red;">Nro. No Conformidad</label>
+			 	<tabla_ex id="CAL_NOCONFORMIDADES" >
+					<field id="idnconf1">
+						<expression>max(id_noconformidad) + 1</expression>
+					</field>          
+					<field id="idnconf2">
+						<expression>max(id_noconformidad) + 1</expression>
+					</field>        
+					<field id="id_noconformidad" noselect="true">
+						<condicion operador="&lt;">10000</condicion>
+					</field>              
+				</tabla_ex>      
+			</field>
+
+            <field id="fecha_nconf" >
+                <label modpos="nobr">Fecha</label>
+                <help>Fecha de No conformidad</help>
+                <valor>today</valor>
+                <tipo>date</tipo>
+            </field>
+
+            <field id="tiponconf_id">
+                <helper xml="cal_tipo_nconf_crud.xml" type="combo" dir="/calidad/man"/>
+                <label>Tipo</label>
+                <help>Tipo de No conformidad</help>
+            </field>
+
+            <field id="unidad_id">
+				<label modpos="nobr">Unidad Nro</label>
+		    </field>
+
+            <field id="origennconf_id">
+                <helper xml="calorigennconf_crud.xml" type="combo" dir="/calidad/man"/>
+                <label>Origen</label>
+                <help>Origen de la No conformidad</help>
+                <valor>15</valor>
+            </field>
+
+            <field id="rhseccion_id">
+                <helper xml="rhseccion_qry.xml" type="combo" dir="/ayudas"/>
+                <label modpos="nobr">Sección</label>
+                <help>Sección de la No conformidad</help>
+            </field>
+
+            <field id="stkarticulo_nombre" autocompletar="true" local="true" _deshabilitado="true">
+				<helper type="external" xml="stkarticulo_autocomplete_qry.xml" dir="/ayudas">
+				</helper> 
+                <label>Artículo</label>
+                <size>60</size>
+            </field>    
+
+            <field id="stkarticulo_id" _deshabilitado="true" _noshow="true">
+                <label modpos="nobr">Cod.Artículo</label>
+				<helper type="external" xml="stkarticulo_autocomplete_qry.xml" dir="/ayudas">
+				</helper> 
+            </field>      
+
+			<field id="nombre_cuenta" deshabilitado="false" autocompletar="true" local="true" >
+                <label>Cliente/Prov</label>
+                    <helper type="external" id="REG_CUENTA" _xml="HLPcctcuent.xml" _dir="/ayudas" empty="true">
+						<field id="id_regcuenta" noshow="true">
+					    </field>
+						<field id="nombre_fantasia">
+						    <expression _having="false">CONCAT((case when nombre_fantasia != '' then nombre_fantasia else nombre_cuenta end), (CASE WHEN subsistema_id = '01' THEN '-Proveedor' ELSE '-Cliente' END))</expression>
+					    </field>
+						<field id="nombre_cuenta" noshow="true">
+					    </field>
+						<field id="id_regcuenta" noshow="true">
+							<detalle>regcuenta_id</detalle>
+						</field>
+					    <field id="subsistema_id" noshow="true">
+							<detalle>subsistema_id</detalle>
+							<condicion operador="IN">('01', '02')</condicion>
+					    </field>
+					    <field id="baja" noshow="true">
+						<condicion operador="=">0</condicion>
+					    </field>
+					<order>
+						<field id="nombre_cuenta"/>
+					</order>
+				</helper>   
+				<size>40</size>               
+            </field> 
+
+            <field id="tarea_servicie_id">
+                <helper xml="service_tareas.xml" type="combo" dir="/service" empty="true">
+                	<field id="activo" noshow="true">
+            			<condicion operador="=">0</condicion>
+          			</field>
+                </helper>
+                <label modpos="nobr">Falla</label>
+                <help>Falla de la No conformidad</help>
+            </field>
+
+			<field id="demerito_id" _deshabilitado="true">
+				<helper type="combo" id="DEMERITO">
+				  <field id="coddem"></field>
+				  <field id="desdem"></field>
+				</helper>
+				<label >Código Demérito</label>
+			</field>
+
+            <field id="resp_rhpersonal_id" local="true">
+                <helper type="combo" id="HTXUSERS" empty="true">
+					<field id="id_usuario"/>
+					<field id="nombre">
+						<expression>CONCAT(apellido, ' ', Nombre)</expression>
+					</field>
+					<field id="baja">
+						<condicion operador="=">0</condicion>
+					</field>
+					<order>
+						<field id="nombre"/>
+					</order>
+                </helper>
+                <label modpos="nobr">Responsable *</label>
+                <help >Empleado responsable de la Acción</help>
+            </field>
+                
+            <field id="descripcion_nconf">
+                <label>Descripción *</label>
+                <help>Descripción de la no conformidad</help>
+                <size>300</size>
+            </field>
+
+            <field id="contencion_nconf">
+                <label modpos="nobr">Acción de contención *</label>
+                <help>Acción de Contención ante la no conformidad</help>
+                <size>200</size>
+            </field>
+
+            <field id="causa_nconf">
+                <label>Causa Raíz</label>
+                <help>Causa raíz de la no conformidad</help>
+                <size>200</size>
+            </field>
+
+            <field id="estadonconf_id" deshabilitado="true" noshow="true">
+                <helper xml="calestadosnconf_crud.xml" type="combo" dir="/calidad/man"/>
+                <label modpos="nobr">Estado</label>
+                <help>Estado de la No conformidad</help>
+            </field>
+
+            <field id="login_id" local="true" deshabilitado="true" noshow="true">
+                <label modpos="nobr">Usuario</label>
+		        <valor eval="true">$_SESSION['idUser']</valor>
+             </field>
+
+             <field id="subsistema_id" deshabilitado="true" noshow="true" >
+					<options>
+						<option valor=""></option>
+						<option valor="01">Proveedor</option>
+						<option valor="02">Cliente</option>
+					</options>
+					<label>Sistema</label>
+					<size>4</size>
+                </field>
+				
+               <field id="regcuenta_id" _deshabilitado="true"  noshow="true" valauto="true" _local="trie">
+					<helper type="external" xml="regcuenta_simple_qry.xml" dir="/ayudas">
+                        <field id="subsistema_id" noshow="true" />
+					</helper>    
+					<label>Cliente/Prov </label>
+                </field>
+
+                <field id="auditoriaobs_id" noshow="true">
+				<label>Obs.</label>
+				<help>Número de observación de auditoría</help>
+			</field>
+
+            <field id="tipo_accionnconf" local="true" oculto="true">
+				<valor>3</valor>
+			</field>     
+             <field id="login" local="true" deshabilitado="true" noshow="true">
+                <label>Usuario</label>
+		        <valor eval="true">$_SESSION['usuario']</valor>
+             </field>
+<!--		
+			<field id="grabaAccion" noshow="true" local="true">
+				<if exp="'contencion_nconf' == ''">
+					<true>0</true>
+					<false>1</false>
+				</if>
+			</field>
+-->
+			<field id="grabaDemerito" noshow="true" local="true">
+				<if exp="'subsistema_id' == '01'">
+					<true>1</true>
+					<false>0</false>
+				</if>
+			</field>
+
+        </table>
+    </form>
+</histrix>

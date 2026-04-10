@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+  <title>Secciones</title>
+  <obs></obs>
+  <form>
+	<table id="RH_SECCIONES" label="Secciones">
+		<field id="id_rhseccion" autoinc="true" noshow="true">
+			<label>Codigo</label>
+			<help>Código de seccion</help>
+		</field>
+		<field id="nombre_seccion">
+			<label>Nombre </label>
+			<help>Nombre de la seccion </help>
+			<size>15</size>
+		</field>
+		<field id="activa" noshow="true" />
+			
+		<order>
+			<field id="nombre_seccion"/>
+		</order>
+	</table>
+  </form>
+</histrix>  

@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ficha" autoprint="true" PDFfontSize="10">
+    <title>Informe de Auditoría Interna</title>
+    <obs/>
+    <form>
+        <table id="CAL_AUDITORIA_INT" label="Informe de Auditoría Interna">
+
+     		<field id="id_auditoriaint" PDFnolabel="true" PDFsize="20" PDFbold="true">
+				<label size="18" posx="180" posy="20">Nro</label>
+				<format>%04d</format>
+			</field>
+
+			<field id="codigo_auditorint">
+				<label size="18" posx="5" posy="20">Auditor</label>
+				<helper type="combo" id="HTXUSERS">
+					<field id="id_usuario"/>
+					<field id="auditor">
+						<expression>CONCAT(apellido, ' ', Nombre)</expression>
+					</field>
+					<order>
+						<field id="auditor"/>
+					</order>
+				</helper>
+			</field>
+
+			<field id="fecha_auditoriaint">
+				<label size="18" posx="90" posy="0">Fecha</label>
+			</field>
+			
+			<field id="emailsto" email="to" print="false">
+				<expression>GROUP_CONCAT(HTXUSERS.email SEPARATOR ', ')</expression>
+			</field>
+
+			<field id="emailsub" email="subject" print="false">
+				<expression>CONCAT('Informe de Auditoría Interna Nº ', id_auditoriaint)</expression>
+			</field>
+
+			<field id="documento_id" print="false"/>
+
+			<field id="codigo_documento" tabla="CAL_DOCUMENTOS">
+				<label size="18" posx="5" posy="+2">Código</label>
+			</field>
+
+			<field id="nombre_documento" tabla="CAL_DOCUMENTOS">
+				<label size="25" posx="90" posy="0">Procedimiento</label>
+			</field>
+
+			<field id="realizada">
+				<options>
+					<option valor="0">Pendiente</option>
+					<option valor="1">Realizada</option>
+				</options>
+				<label size="18" posx="5" posy="+1">Estado</label>
+			</field>
+
+			<field id="uno" local="true" print="false">
+				<valor>1</valor>
+			</field>
+
+
+
+			<field id="dat1" local="true">
+				<label  size="195" posx="5" posy="+4" _PDFsize="14" pdffill="195">Personas Entrevistadas</label>
+			</field>
+
+			<field id="personasentrevistadas" local="true" PDFwidth="195" colstyle="display:none;">
+                <label posx="9" posy="+2" colspan="1"></label>
+				<helper type="object" xml="calauditoriaint_personas_crud.xml">
+		            <parameter source="id_auditoriaint" target="auditoriaint_id"/>
+		            <parameter source="uno" target="entrevistado"/>
+				</helper>
+            </field>
+
+			<field id="dat2" local="true">
+				<label  size="195" posx="5" posy="+4" _PDFsize="14" pdffill="195">Personas a Notificar</label>
+			</field>
+
+			<field id="personasanotificar" local="true" PDFwidth="195" colstyle="display:none;">
+                <label posx="9" posy="+2" colspan="1"></label>
+               	<helper type="object" xml="calauditoriaint_personas_crud.xml">
+		            <parameter source="id_auditoriaint" target="auditoriaint_id"/>
+		            <parameter source="uno" target="notificado"/>
+				</helper>
+            </field>
+
+			<field id="dat3" local="true">
+				<label  size="195" posx="5" posy="+4" _PDFsize="14" pdffill="195" colstyle="display:none;">Hallazgos</label>
+			</field>
+
+			<field id="observaciones" local="true" PDFwidth="195">
+                <label posx="9" posy="+1"  colspan="1"></label>
+				<helper type="object" xml="calauditoriaint_obs_crud.xml">
+	                <parameter source="id_auditoriaint" target="auditoriaint_id"/>
+				</helper>
+            </field>
+
+<!--			<field id="areas" local="true" obj="calauditoriaint_areas_crud.xml" _colstyle="display:none;">
+                <label posx="5" posy="+1"/>
+                <paring destino="auditoriaint_id">id_auditoriaint</paring>
+            </field>-->
+			<field id="dat4" local="true">
+				<label  size="195" posx="5" posy="+4" _PDFsize="14" pdffill="195" colstyle="display:none;">Análisis de puntuación</label>
+			</field>
+
+			<field id="auditoriaintpunt_id" PDFwidth="195">
+				<helper type="object" xml="calauditoriaint_puntuaciones_crud.xml">
+					<parameter source="auditoriaintpunt_id" target="id_auditoriaintpunt"/>
+				</helper>
+				<label posx="9" posy="+1" colspan="1"></label>
+            </field>
+        </table>
+		<join tipo="left">
+			<table id="CAL_DOCUMENTOS">
+				<field id="id_documento">
+					<condicion operador="=">CAL_AUDITORIA_INT.documento_id</condicion>
+				</field>
+			</table>
+	   </join>
+	   <join tipo="left">
+			<table id="CAL_AUDITORIA_PERSONAS">
+				<field id="auditoriaint_id">
+					<condicion operador="=">CAL_AUDITORIA_INT.id_auditoriaint</condicion>
+				</field>
+				<field id="notificado">
+					<condicion operador="=">1</condicion>
+				</field>
+				
+			</table>
+	   </join>
+	   <join tipo="left">
+			<table id="HTXUSERS">
+				<field id="id_usuario">
+					<condicion operador="=">CAL_AUDITORIA_PERSONAS.usuario_id</condicion>
+				</field>
+				<field id="email">
+					<condicion operador="!=">''</condicion>
+				</field>
+			</table>
+	   </join>
+    </form>
+</histrix>

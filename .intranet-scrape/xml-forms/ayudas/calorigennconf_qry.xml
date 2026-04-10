@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+  <title>Origen No Conformidad Calidad</title>
+  <obs></obs>
+  <form>
+    <table id="CAL_ORIGEN_NCONF" label="Origen">
+      <field id="id_origennconf" _noshow="true">
+        <label>Cod</label>
+        <help>Origen de No conformidad</help>
+      </field>
+      <field id="origen_nconf">
+        <label>Origen</label>
+        <help>Nombre del Origen</help>
+      </field>
+    </table>
+  </form>
+</histrix>  

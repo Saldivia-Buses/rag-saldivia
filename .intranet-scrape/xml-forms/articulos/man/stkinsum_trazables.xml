@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="liveGrid" borra="false" inserta="false" deleteRow="false" delete="false">
+	<title>Insumos Trazables</title>
+	<obs></obs>
+	<form  _detalle="normainsumos.xml">
+		<table id="STKINSUM">
+			<title>Insumos</title>
+
+			<filters>
+				<field id="artcod" deshabilitado="false">
+					<ayuda_ex id="STKINSUM">
+						<clave>artcod</clave>
+						<descripcion>artdes</descripcion>
+					</ayuda_ex>
+					
+					<label>Cod.</label>
+					<operador  modificador="left">=</operador>					
+				</field>			
+				<field id="artdes" >
+					<label>Artículo</label>
+					<help>Descripción de Artículo (ENTER = Retorna a ingreso de código).
+						</help>
+					<operador>like</operador>
+				</field>					
+				<field id="trazable">
+					<operador>=</operador>
+					<label>Insumo Trazable</label>
+					<valor>1</valor>
+				</field>
+			</filters>
+			
+			<field id="siscod" oculto="true" esClave="true">
+				<label>siscod</label>
+				
+				<condicion operador="=">'01'</condicion>
+			</field>
+			
+			<field id="artcod" deshabilitado="true" esClave="true">
+				<label>Cod.</label>
+				<detalle>artcod</detalle>
+			</field>
+			<field id="baja" oculto="true">
+				<condicion operador="!=">1</condicion>
+			</field>			
+			<field id="artdes" deshabilitado="true">
+				<label>Artículo</label>
+				<help>Descripción de Artículo (ENTER = Retorna a ingreso de código).
+					</help>
+			</field>
+			<field id="trazable" _deshabilitado="false" editable="true">
+				<label>Trazable</label>
+				<help>Trazable Si o No </help>
+				<options>
+					<option valor="1">Si</option>
+					<option valor="0">No</option>
+				</options>
+				
+			</field>
+			<field id="recLote" editable="true">
+				<label>Por Lote</label>
+				<help>Trazable Si o No </help>
+				<options>
+					<option valor="1">Si</option>
+					<option valor="0">No</option>
+				</options>
+				
+			</field>
+			
+			<!--  <field id="t-pieza">
+			<label>t-pieza </label>
+			<condicion operador="=">1</condicion> 
+			
+			</field>
+			-->
+			<!--
+			<field id="diapro">
+			<label>Dias</label>
+			<help>Dias de Proceso </help>
+			</field>
+			<field id="artmin">
+			<label>Critico</label>
+			<help>Stock critico en deposito</help>
+			</field>
+			<field id="artrep">
+			<label>Reposic</label>
+			<help>Stock de Reposicion</help>
+			</field>
+			<field id="artiva">
+			<label>Situacion IVA</label>
+			<help>Situacion I.V.A. </help>
+			<options>
+			<option valor="0">No Gravado</option>
+			<option valor="1">Alicuota Total</option>
+			<option valor="2">Alicuota Parcial</option>
+			</options>
+			</field>
+			
+			<field id="artctb">
+			<label>Cuenta Contable</label>
+			<help>Codigo Cuenta Contable </help>
+			<tabla_ex id="CTBCUENT">
+			<clave>ctbcod</clave>
+			<field id="ctbnom"></field>
+			</tabla_ex>
+			</field>
+			
+			-->
+	
+		</table>
+	</form>
+</histrix>

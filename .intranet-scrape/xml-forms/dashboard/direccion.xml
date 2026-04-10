@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="dashboard">
+
+        <titulo>Tablero de control</titulo>
+        <widget id="cantidadAnual"  width="400px" height="266px">
+            <title>Producción Anual</title>
+        <url><![CDATA[histrixLoader.php?xml=evolutivo_coches_anual.xml&dir=estadisticas]]></url>
+        </widget>
+                            
+        <widget id="Coches"  width="400px" height="266px">
+            <title>Producción Mensual</title>
+        <url><![CDATA[histrixLoader.php?xml=evolutivo_coches.xml&dir=estadisticas]]></url>
+        </widget>
+        <widget id="coche_avisoentrega"  width="400px" height="266px">
+            <title>Producción Con Aviso de Entrega</title>
+        <url><![CDATA[histrixLoader.php?xml=evolutivo_coches_entregados.xml&dir=estadisticas]]></url>
+        </widget>
+        <widget id="CarroceriaXChasis" width="400px" height="266px">
+          <title>Modelos de Carrocería</title>
+            <url><![CDATA[histrixLoader.php?xml=produccion_xcarroceria.xml&dir=estadisticas]]></url>  
+        </widget>  
+
+		<widget id="MarcasXChasis" width="400px" height="266px">
+	  	  <title>Marcas de Chasis</title>
+	    <url><![CDATA[histrixLoader.php?xml=produccion_xmarchasis.xml&dir=estadisticas]]></url>  
+		</widget>  
+		<widget id="MarcasXAsiento" width="400px" height="266px">
+	  	  <title>Marcas de Asientos</title>
+	    <url><![CDATA[histrixLoader.php?xml=produccion_xmarasiento.xml&dir=estadisticas]]></url>  
+		</widget>  
+
+           <widget id="MarcasAA" width="400px" height="266px">
+                  <title>Marcas de AA</title>
+            <url><![CDATA[histrixLoader.php?xml=produccion_xmarAA.xml&dir=estadisticas]]></url>
+                </widget>
+           <widget id="Conces" width="400px" height="266px">
+                  <title>Concesionarios</title>
+            <url><![CDATA[histrixLoader.php?xml=produccion_xconces.xml&dir=estadisticas]]></url>
+                </widget>
+
+           <widget id="Conces2" width="400px" height="266px">
+                  <title>Conces</title>
+            <url><![CDATA[histrixLoader.php?xml=produccion_xconces2.xml&dir=estadisticas]]></url>
+                </widget>
+<!--
+        <widget id="resEncuestas"  width="400px" height="266px">
+            <title>Encuestas a Clientes</title>
+        <url><![CDATA[histrixLoader.php?xml=encuestas_res.xml&dir=estadisticas]]></url>
+        </widget>
+-->
+        <!--
+        <widget id="cantidadServices"  width="400px">
+            <title>Services Post-Venta</title>
+        <url><![CDATA[histrixLoader.php?xml=postventa_cantidad.xml&dir=estadisticas]]></url>
+        </widget>
+     
+        <widget id="cambios"  width="400px" >
+            <title>Mejora Continua</title>
+            <url><![CDATA[histrixLoader.php?xml=control_cambios_cons.xml&dir=estadisticas]]></url>
+        </widget>   -->
+
+                             <!--
+        <widget id="cursos"  width="400px">
+            <title>Cursos</title>
+            <url><![CDATA[histrixLoader.php?xml=cursos_qry.xml&dir=estadisticas]]></url>
+        </widget>                                     
+        <widget id="costos"  width="400px"  >
+            <title>Costo</title>
+        <url><![CDATA[histrixLoader.php?xml=evolutivo_costo.xml&dir=estadisticas]]></url>
+        </widget>              -->
+<!--
+        <widget id="accidentes"  width="400px" height="266px">
+            <title>Indice Frecuencia Accidentes</title>
+        <url><![CDATA[histrixLoader.php?xml=rrhh_accidentes_indice_frecu.xml&dir=estadisticas]]></url>
+        </widget>  
+        
+        <widget id="calificacion_prov"  width="400px" height="266px">
+            <title>Calificacion de Proveedores</title>
+        <url><![CDATA[histrixLoader.php?xml=calificacion_proveedores.xml&dir=estadisticas]]></url>
+        </widget>
+
+        <widget id="desempnconf"  width="400px">
+            <title>No Conformidades</title>
+        <url><![CDATA[histrixLoader.php?xml=nconf_desemp.xml&dir=estadisticas]]></url>
+        </widget>
+        <widget id="cantidadnconf"  width="400px" >
+            <title>No Conformidades</title>
+        <url><![CDATA[histrixLoader.php?xml=nconf_cantidad.xml&dir=estadisticas]]></url>
+        </widget>           
+-->
+<!--         <widget id="cantidadnconf_pendientes"  width="400px"  height="266px">
+            <title>No Conformidades</title>
+            <url><![CDATA[histrixLoader.php?xml=nconf_cantidad_pendientes.xml&dir=estadisticas]]></url>
+        </widget>
+        <widget id="cantidadnconf_cerradas"  width="400px"  height="266px">
+            <title>No Conformidades</title>
+            <url><![CDATA[histrixLoader.php?xml=nconf_cantidad_cerradas.xml&dir=estadisticas]]></url>
+        </widget> -->
+<!--
+
+
+        <widget id="clientesPrimerizos"  width="400px"  height="266px">
+            <title>Clientes Primerizos</title>
+        <url><![CDATA[histrixLoader.php?xml=evolutivo_clientesprimerizos.xml&dir=estadisticas]]></url>
+        </widget>
+        
+        <widget id="clientesUltimos"  width="400px" height="266px">
+            <title>Clientes Perdidos</title>
+        <url><![CDATA[histrixLoader.php?xml=evolutivo_clientesperdidos.xml&dir=estadisticas]]></url>
+        </widget>
+
+        <widget id="clientesRetencion"  width="400px" height="266px">
+            <title>Retención de Clientes</title>
+        <url><![CDATA[histrixLoader.php?xml=evolutivo_clientesretencion.xml&dir=estadisticas]]></url>
+        </widget>
+-->
+<!--
+        <widget id="horas_correctivo_eyh" width="400px" height="266px">
+           <title>Reparacion de Maquinas y Equipos</title>
+           <url><![CDATA[histrixLoader.php?xml=evolutivo_mantcorr_rep_mye.xml&dir=estadisticas/calidad]]></url>
+        </widget>
+
+        <widget id="horas_correctivo_herr" width="400px" height="266px">
+           <title>Reparacion de Herramientas</title>
+           <url><![CDATA[histrixLoader.php?xml=evolutivo_mantcorr_rep_herr.xml&dir=estadisticas/calidad]]></url>
+        </widget>
+
+        <widget id="horas_suspendida_eyh" width="400px" height="266px">
+           <title>Tiempo suspendido de Maquinas y Equipos</title>
+           <url><![CDATA[histrixLoader.php?xml=evolutivo_mantcorr_sinuso_mye.xml&dir=estadisticas/calidad]]></url>
+        </widget>
+
+        <widget id="horas_suspendida_herr" width="400px" height="266px">
+           <title>Tiempo suspendido de Herramientas</title>
+           <url><![CDATA[histrixLoader.php?xml=evolutivo_mantcorr_sinuso_herr.xml&dir=estadisticas/calidad]]></url>
+        </widget>        
+-->
+
+<!--
+        <widget id="neto_ventas"  width="48%" height="350px">
+            <title>Neto Ventas - Mensual </title>
+	    <url><![CDATA[histrixLoader.php?xml=evolutivo_neto_ventas.xml&dir=estadisticas]]></url>
+        </widget>
+-->
+<!--
+        <widget id="neto_compras"  width="48%" height="350px">
+            <title>Neto Compras - Mensual </title>
+	    <url><![CDATA[histrixLoader.php?xml=evolutivo_neto_compras.xml&dir=estadisticas]]></url>
+        </widget>
+-->
+
+<!--
+        <widget id="relacion_C_V"  width="48%" height="350px">
+            <title>Iva Ventas vs Iva Compras - Mensual</title>
+	    <url><![CDATA[histrixLoader.php?xml=evolutivo_ventas_compras.xml&dir=estadisticas]]></url>
+        </widget>
+-->
+</histrix>
+
+

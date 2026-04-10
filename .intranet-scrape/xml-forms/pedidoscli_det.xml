@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<abm tipo="abm-mini" class="consultaancha">
+	<titulo>Movimiento de PEDIDOS</titulo>
+	<obs></obs>
+	<consulta>
+		<tabla id="PEDIDOSCLI" label="MOVIMIENTO DE PEDIDOS">
+			
+			<campo id="idPedido" oculto="true" esclave="true">
+				<label>Pedido</label>
+				<help>Numero de Pedido</help>
+			</campo>
+			<campo id="fecha" esclave="true">
+				<label>Fecha Movimiento </label>
+				<help>Fecha de Movimiento de la Herramienta. </help>
+				<tipo>date</tipo>
+				<valor>today</valor>
+			</campo>
+			<campo id="idEstado" esclave="true">
+			
+				<label>Codigo Movimiento </label>
+				<help>Codigo de Movimiento de la Herramienta. </help>
+				<tabla_ex id="ESTADOSPEDIDOS">
+
+					<campo id="idEstado"></campo>
+
+					<campo id="nombre"></campo>
+				</tabla_ex>
+				
+			</campo> 
+			
+			<campo id="login" >
+				<label>Usuario </label>
+				<help>Usuario </help>
+				<tabla_ex id="HTXUSERS">
+					<campo id="login"></campo>
+					<campo id="nombre"></campo>
+					<orden>
+						<campo id="idUsuario"></campo>
+					</orden>
+				</tabla_ex>
+				<valor eval="true">$_SESSION['usuario']</valor>
+				
+			</campo>
+			<campo id="cantidad"  deshabilitado="true">
+				<label>Cantidad</label>
+				<help>Cantidad</help>
+				<valor>1</valor>
+			</campo>			
+			
+			
+<!--			<campo id="subtotal" acumula="true" suma="true" >
+				<expresion>cantidad</expresion>
+				<label>Subtotal</label>
+			</campo>	-->
+			<orden>
+				<campo id="fecha"></campo>
+			</orden>
+			
+		</tabla>
+<!--		<join tipo="left">
+			<tabla id="ESTADOSPEDIDOS">
+				<campo id="idEstado">
+					<condicion operador="=">PEDIDOSCLI.idEstado</condicion>
+				</campo>
+				<campo id="nombre"></campo>
+			</tabla>
+		</join> -->
+	</consulta>
+</abm>

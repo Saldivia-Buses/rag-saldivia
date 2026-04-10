@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" preloadData="false">
+   <title>Movimientos</title>
+   <obs/>
+   <form>
+	<table id="CTB_DETALLES" label="Imp. Libro diario">
+		
+		<filters>
+			<field id="ejercicio_id">
+				<label>Ejercicio</label>
+				<operador>=</operador>
+			</field>
+			<field id="concepto_id">
+				<operador>=</operador>
+				<label modpos="nobr">Tipo de concepto</label>
+			</field>
+			<field id="fecha_movimiento" deshabilitado="false">
+				<valor>today</valor>
+				<operador>&gt;=</operador>
+				<label>Desde fecha</label>
+			</field>
+			<field id="fecha_movimiento" deshabilitado="false">
+				<valor>today</valor>
+				<operador>&lt;=</operador>
+				<label modpos="nobr">Hasta fecha</label>
+			</field>
+		</filters>
+
+		<field id="id_detalle" noshow="true" />
+		
+		<field id="movimiento_id" noshow="true" />
+
+		<field id="id_movimiento" noshow="true" tabla="CTB_MOVIMIENTOS" />
+
+		<field id="fecha_movimiento" noshow="true" tabla="CTB_MOVIMIENTOS">
+			<label>Fecha</label>			
+			<tipo>date</tipo>
+		</field>
+
+		<field id="mes" noshow="true">
+			<expression>month(fecha_movimiento)</expression>
+		</field>
+	
+		<field id="mes_fecha" break="true">
+			<label>Periodo</label>
+			<expression>concat((case when month(fecha_movimiento) = 1 then 'Enero - '
+						when month(fecha_movimiento) = 2 then 'Febrero - '
+						when month(fecha_movimiento) = 3 then 'Marzo - '
+						when month(fecha_movimiento) = 4 then 'Abril - '
+						when month(fecha_movimiento) = 5 then 'Mayo - '
+						when month(fecha_movimiento) = 6 then 'Junio - '
+						when month(fecha_movimiento) = 7 then 'Julio - '
+						when month(fecha_movimiento) = 8 then 'Agosto - '
+						when month(fecha_movimiento) = 9 then 'Septiembre - '
+						when month(fecha_movimiento) = 10 then 'Octubre - '
+						when month(fecha_movimiento) = 11 then 'Noviembre - '
+						when month(fecha_movimiento) = 12 then 'Diciembre - ' else '' end), year(fecha_movimiento))</expression>
+		</field>
+
+		<field id="concepto_id" noshow="true" print="false"  tabla="CTB_MOVIMIENTOS" break="true">
+			<helper type="combo" xml="ctbconcepto_qry.xml" dir="/ayudas" empty="true" />
+			<label>Concepto</label>
+		</field>
+
+		<field id="ejercicio_id" noshow="true" _print="false"  tabla="CTB_MOVIMIENTOS">
+			<helper type="combo" xml="ctbejercicios_crud.xml" dir="/contabilidad/man/">
+				<field id="activo" tipoOrden="DESC"/>
+				<field id="fecha_mov1">
+					<expresion>DATE_FORMAT(comienza, '%d/%m/%Y')</expresion>
+					<tipo>date</tipo>
+					<detalle>ejercicio_id</detalle>
+				</field>
+				<field id="fecha_mov2">
+					<expresion>DATE_FORMAT(finaliza, '%d/%m/%Y')</expresion>
+					<tipo>date</tipo>
+				</field>
+				<field id="finaliza"></field>
+			</helper>
+			<label>Ejercicio</label>
+			<actualiza>
+				<field id="cuenta_id" destino="ejercicio_id" />
+			</actualiza>
+		</field>
+
+		<field id="cuenta_id">
+			<label>NRO.CUENTA</label>
+		</field>
+
+		<field id="nombre_cuenta" tabla="CTB_CUENTAS">
+			<label>CUENTA</label>
+		</field>
+
+		<field id="referencia" tabla="CTB_MOVIMIENTOS">
+			<label>Referencia</label>
+			<expression>case when CTB_MOVIMIENTOS.concepto_id != 1 then CTB_MOVIMIENTOS.referencia else '' end</expression>
+		</field>
+
+		<field id="debe" suma="true">
+			<label>DEBE</label>
+			<expression>sum(case when doh = 0 then importe else 0 end)</expression>
+		</field>
+
+		<field id="haber" suma="true">
+			<label>HABER</label>
+			<expression>sum(case when doh = 1 then importe else 0 end)</expression>
+		</field>
+
+		<field id="diferencia" suma="true">
+			<label>DIFERENCIA</label>
+			<expression>sum(case when doh = 1 then concat('-',importe) else importe end)</expression>
+			<tipo>numeric</tipo>
+		</field>
+
+		<group>
+			<field id="cuenta_id" />
+			<field id="mes" />
+			<field id="concepto_id" />
+		</group>
+
+		<order>
+			<field id="mes" />
+			<field id="concepto_id" />
+		</order>
+
+	</table>
+    
+	<join>
+		<table id="CTB_CUENTAS">
+			<field id="id_cuenta">
+				<condicion operador="=">CTB_DETALLES.cuenta_id</condicion>
+			</field>
+		</table>
+	</join>
+
+	<join tipo="inner">
+		<table id="CTB_MOVIMIENTOS">
+			<field id="id_movimiento">
+				<condicion operador="=">CTB_DETALLES.movimiento_id</condicion>
+			</field>
+		</table>
+	</join>
+
+	<join tipo="inner">
+		<table id="CTB_CONCEPTOS">
+			<field id="id_concepto">
+				<condicion operador="=">CTB_MOVIMIENTOS.concepto_id</condicion>
+			</field>
+		</table>
+	</join>
+
+   </form>
+</histrix>

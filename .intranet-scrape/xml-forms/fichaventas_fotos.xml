@@ -1,0 +1,387 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  sololectura="true" tipo="ficha" autoprint="true" PDFsincabecera="true" sinFecha="true" sinNumero="true" path="/fotos/firmas/" >
+	<title>Foto Patentamiento</title>
+	<obs/>
+	<form >
+
+		  <pdf>
+			  <code><![CDATA[
+
+		$pdf->SetDrawColor(0);
+		$pdf->SetXY(10,10);
+
+		$tp = 05;
+		$ap = $pdf->anchoPagina - 5;
+		$mp = ($ap / 2);
+		$lp = $pdf->largoPagina;
+
+		// Frame Principal
+		//$pdf->Rect(005, 005, $ap, $lp, 0.1);
+
+		// Nombre Empresa
+		//$pdf->Rect(005, 005, $mp, 045, 0.1);
+
+		$datapath = $_SESSION['datapath'];
+
+        $dataContainer = $pdf->Container;
+        
+        if (method_exists($dataContainer, 'getCampo') ){
+            $field = $dataContainer->getCampo('logo_pdf');
+            $filename = $field->getValor();
+          
+        } else {
+            $field = $dataContainer->getField('logo_pdf');
+            $filename = $field->getValue();
+        }
+        
+
+		$file = HTX_ROOT_DIR."/database/$datapath/img/$filename"; 
+
+		if (is_file($file))
+		{
+		    $posx = 1;
+		    $posy = 1;
+		    $width = 45;
+            $height = 10;
+		    $pdf->Image($file, $posx + $pdf->offsetX, $posy + $pdf->offsetY, 0, $height);
+		} else {
+            die($file);
+        }
+	
+		// Datos Comprobante
+		//$pdf->Rect($mp + 5, 005, $mp, 045, 0.1);
+		$pdf->RoundedRect($pdf->offsetX, 2 + $pdf->offsetY, $pdf->anchoPagina - 2, 15, 2);
+		
+		
+
+       
+
+        $pdf->SetFont($pdf->defaultFont, '', 9);
+      //  $fecha = utf8_decode( $pdf->i18n['printDate'].':' . date('d/m/Y'));
+        $anchoFecha = $pdf->GetStringWidth($fecha) + 3;
+        $anchorecuadro = $anchoFecha + 2;
+        $posRecuadro = $pdf->offsetX + $pdf->anchoPagina - $anchorecuadro;
+
+            //$pdf->RoundedRect($posRecuadro, 3 + $pdf->offsetY, $anchoFecha, 8, 2);
+            $pdf->setXY($posRecuadro , 5 + $pdf->offsetY);
+            $pdf->Cell(0, 0, $fecha, 0, 0, 'L');
+
+        $nonum = (isset($pdf->sinNumero)) ? $pdf->sinNumero : 'false';
+        $hoja = '';
+        if ($nonum != 'true') {
+            $hoja = $pdf->i18n['page'] .': '. $pdf->PageNo() ;
+            if ($pdf->pageNumber == 0){
+                $hoja .= '/{nb}';
+            }
+            $pdf->setXY($posRecuadro + 1, 8 + $pdf->offsetY);
+            $pdf->Cell(0, 0, $hoja, 0, 0, 'L');
+        }
+
+
+
+		// DATOS EMPRESA
+		$pdf->SetFontSize(8);
+		
+
+
+
+				$pdf->RoundedRect(5,22,$pdf->anchoPagina - 5,260, 3);
+			  ]]></code>
+		  </pdf>
+
+		<table id="PEDCOTIZ" label="Foto Patentamiento">
+
+
+            <field id="logo_pdf" print="false">
+            <label posx="10" posy="1" PDFsize="16" ></label>
+                <expression>(case when PEDCOTIZ.empresa_id = 2 then 
+                            (select option_value from saldivia_sa.HTXOPTIONS where option_name = 'CONFIG::logo_pdf_1' limit 1) else 
+                            (select option_value from saldivia.HTXOPTIONS where option_name = 'CONFIG::logo_pdf_1' limit 1)
+                             end)</expression>
+                
+            </field>
+            
+
+            <field id="tit" _print="false" PDFbold="true">
+		<label posx="65" posy="5" PDFsize="16" ></label>
+        	<setvar>titulo_div</setvar>
+                <expression>'FOTO PATENTAMIENTO'</expression>
+            </field>
+	    <field id="nombre_empresa" posx="5" posY="20" PDFsize="7" PDFbold="true">
+		<label posx="5" posy="12"></label>
+		<expression>HTX_EMPRESAS.razon_social</expression>
+	    </field>
+	    <field id="dir_empresa"  PDFsize="7" _PDFbold="true">
+		<label posx="45" posy="12"></label>
+		<expression>concat(direccion, ' - email: ',HTX_EMPRESAS.email, ' - Tel: ', HTX_EMPRESAS.telefono, ' - CUIT: ', LEFT(HTX_EMPRESAS.cuit,2), '-', SUBSTR(HTX_EMPRESAS.cuit,3,8),'-',  RIGHT(HTX_EMPRESAS.cuit,1))</expression>
+	    </field>
+				<field id="cabe2" local="true" print="false">
+					<label PDFsize="14"/>
+					<valor>FOTO PATENTAMIENTO</valor>
+					<setvar>titulo_div</setvar>
+					<setvar>titulo</setvar>
+					<setvar>nombre_div</setvar>
+				</field>		
+			<field id="id" noshow="true" oculto="true">
+			</field>
+
+			<field id="homologacion_id"  noshow="true" print="false">
+			</field>
+			<!--<field id="pedfec">
+				<label size="24" posx="5" posy="+0.2" PDFsize="12">Fecha</label>
+				<tipo>date</tipo>
+			</field> -->
+			<field id="nrocar" oculto="true" >
+				<label size="25" modpos="nobr" posx="5" posy="+0.2" PDFsize="11"></label>
+				
+			</field>
+
+			<field id="mostrarFotPat" oculto="true">
+				<expression>case when (select count(*) from FICHAFOTOS where FICHAFOTOS.nrofab = PEDCOTIZ.nrocha) > 0 then 'true' else 'false' end</expression>	
+			</field>
+
+				<field id="firma1" _local="true" >
+					<expression>'firma_mancino_sello.png'</expression>
+					<label posx="120" posy="230" PDFnoborder="true" PDFsize="15"></label>
+				<tipo>file</tipo>
+					<size>45</size>
+				</field>			
+
+			<field id="Fotos1" obj="homolfotos2.xml" local="true" PDFlineas="false">
+				<label _colspan="6" _size="24" posx="9" posy="18"  _PDFsize="9" _PDFnolabel="true"></label>
+				<paring destino="homologacion_id" operador="=">homologacion_id</paring>
+<!--				<paring destino="nrocar" operador="=">nrocar</paring>
+ -->
+			<attribute id="oculto">mostrarFotPat</attribute>
+			</field>
+
+			<field id="Fotos" obj="fichafotos2.xml" local="true" PDFlineas="false">
+				<label _colspan="6" _size="24" posx="9" posy="+4"  _PDFsize="9" _PDFnolabel="true"></label>
+				<paring destino="nrofab" operador="=">nrocha</paring>
+			</field> 	
+
+			<field id="marc2" tabla="CHASIS" oculto="true">
+                 <expression>CHASIS.marcod</expression>				
+
+			</field>		
+			<field id="modcod" tabla="CHASIS" oculto="true">
+                 <expression>CHASIS.modcod</expression>				
+
+			</field>		
+			
+			<field id="ctacod">
+				<label colspan="6" size="25" posx="30" posy="+4" PDFsize="10">Cliente</label>
+				<help>Codigo de Cuenta</help>
+				<tabla_ex condes="true" id="CCTCUENT">
+					<field id="ctacod"/>
+					<field id="ctanom"/>
+					<field id="siscod" oculto="true">
+						<condicion operador="=">'02'</condicion>
+					</field>
+				</tabla_ex>
+			</field>
+			
+			<field id="chasist">
+				<expression>CONCAT(MARCHASIS.mardes, ' ', MODCHASIS.moddes)</expression>
+				<label size="25" posx="30" posy="+2" PDFsize="10">Chasis</label>
+			</field>
+
+<!--
+			<field id="nrocha" esclave="true">
+				<label size="25" modpos="nobr" posx="30" posy="+4" PDFsize="11">Fabricacion</label>
+				<help>Numero de Fabricacion</help>
+			</field>
+			<field id="asientos" oculto="true">
+				<expression>case when (select count(*) from FICHAFOTOS where FICHAFOTOS.nrofab = PEDCOTIZ.nrocha) > 0 then 0 else cantasi - 1 end</expression>
+			</field>-->
+			
+<!--			<field id="ninterno">
+				<label  size="23" posx="60" posy="0" PDFsize="10">Nro Interno</label>
+				<help></help>
+			</field>
+			-->
+			
+
+<!--			<field id="nombre" tabla="CCTCONTA">
+				<label colspan="6" size="24" posx="110" posy="0" PDFsize="12">Contacto</label>
+				<size>40</size>		
+
+				<tipo>varchar</tipo>
+				
+			</field> -->
+<!--
+
+			<field id="marcod" tabla="CHASIS" print="false">
+			
+				<label size="25" posx="30" posy="+2" PDFsize="10">Chasis Marca</label>
+				<help></help>
+				<tabla_ex xml="marchasis.xml"></tabla_ex>
+				<tipo>integer</tipo>
+				<actualiza>
+					<field destino="marcod" id="modcod" />
+				</actualiza>
+			</field>
+			<field id="moddes" tabla="MODCHASIS" print="false">
+				<label size="25" posx="90" posy="0" modpos="nobr" PDFsize="10">Modelo</label>
+				<help></help>
+			</field>			-->
+		
+			<field id="chasis" tabla="CHASIS">
+				<label colspan="6" size="25" posx="30" posy="+2" PDFsize="10">Nro Chasis</label>
+				<help></help>
+				<tipo>varchar</tipo>
+				<size>40</size>
+
+			</field>	
+
+			
+			<field id="nrocha" esclave="true">
+				<label size="25" modpos="nobr" posx="30" posy="+2" PDFsize="11">Fabricación</label>
+				<help>Numero de Fabricacion</help>
+			</field>				
+<!--			<field id="nromotor" tabla="CHASIS">
+				<label colspan="6" size="23" posx="110" posy="0" PDFsize="10">Nro Motor</label>
+				<help></help>
+				<tipo>varchar</tipo>
+				<size>40</size>
+
+			</field>	-->			
+<!--			<field id="nrocar">
+				<label size="24" posx="5" posy="+1" PDFsize="10">Carroceria</label>
+				<help></help>
+				<tabla_ex xml="carroceria.xml"></tabla_ex>
+			</field>		-->		
+<!--
+			<field id="cantasi">
+				<label size="25" posx="30" posy="+2" PDFsize="10" >Asientos</label>
+				<expression>HOMOLOGMOD.asientos+1</expression>
+				<help></help>
+			</field>
+-->
+            <field id="asientos" >
+                <label size="25" posx="30" posy="+2" PDFsize="10">Asientos</label>
+                <expression>(case when CARROCERIA.doble_piso = 1 then (CONCAT(HOMOLOGMOD.asientos, '+', HOMOLOGMOD.asientos_plantabaja)) else (HOMOLOGMOD.asientos + HOMOLOGMOD.acompañante) end)</expression>
+            </field>
+
+			<field id="tipserv" tabla="HOMOLOGMOD">
+				<label size="25" posx="30" posy="+1" PDFsize="10">Tipo Serv.</label>
+				<help>Tipo de Servicio</help>
+				<tabla_ex xml="tiposervicio.xml" dir="/produccion" ></tabla_ex>
+			</field>
+
+			<field id="idMarcaMotor" tabla="CHASIS">
+				<label size="25" posx="30" posy="+1" PDFsize="10">Marca Motor</label>
+				<expression>select nombre from MARCAMOTOR where idMarca = idMarcaMotor </expression>
+			</field>
+
+			<field id="nromotor" tabla="CHASIS">
+				<label size="25" posx="30" posy="+1" PDFsize="10">Nro. Motor</label>
+			</field>
+
+<!--			<field id="conces" tabla="CHASIS">
+				<tabla_ex xml="concesionario.xml" vacio="true"></tabla_ex>	          
+				<label colspan="6" size="23" posx="110" posy="0" PDFsize="10">Conces.</label>
+				<help></help>
+				<tipo>varchar</tipo>
+			</field>		-->		
+			
+						
+<!--			<field id="marasi">
+				<label size="23" posx="60" posy="0" modpos="nobr" xml="marcaasi.xml" PDFsize="10">Marca</label>
+				<help></help>
+				<tabla_ex xml="marcaasi.xml"></tabla_ex>
+			</field>
+			<field id="tipasi">
+				<tabla_ex xml="tipoasiento.xml" dir="/produccion">
+					<field id="siscod" oculto="true">
+						<condicion operador="=">03</condicion>
+					</field> 
+				</tabla_ex> 
+				<label size="24" posx="110" posy="0" PDFsize="10">Tipo Asien.</label>
+				<help></help>
+			</field>
+	-->
+	<!--
+			<field id="firma" local="true"  >
+			<label posx="120" posy="270" size="70" ></label>
+			<valor>Firma: ............................................</valor>
+			</field>
+-->
+
+		</table>
+					<join tipo="left">
+						<table id="HTX_EMPRESAS">
+							<field id="id_empresa">
+								<condicion operador="=">PEDCOTIZ.empresa_id</condicion>
+							</field>
+						</table>
+					</join>				
+			<join tipo="left">
+				<table id="HOMOLOGMOD">
+				    	<field id="id_homologacion">
+					    <condicion operador="=">PEDCOTIZ.homologacion_id</condicion>
+			        	</field>
+					
+				</table>
+			</join>	
+    <join tipo="left">
+      <table id="CARROCERIA">
+          <field id="nrocar">
+                 <condicion operador="=">HOMOLOGMOD.nrocar</condicion>
+          </field>
+        </table>     
+    </join>    
+
+			<join tipo="left">
+			<table id="CHASIS">
+				<field id="nrocha">
+					<condicion operador="=">PEDCOTIZ.nrocha</condicion>
+				</field>
+			</table>
+		</join>		
+		<join tipo="left">
+			<table id="MARCHASIS">
+				<field id="marcod">
+					<condicion operador="=">CHASIS.marcod</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="CCTCUENT">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">'02'</condicion>
+				</field>
+
+				<field id="ctacod">
+					<condicion operador="=">PEDCOTIZ.ctacod</condicion>
+				</field>
+			</table>
+		</join>						
+		<join tipo="left">
+			<table id="CCTCONTA">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">CCTCUENT.siscod</condicion>
+				</field>
+
+				<field id="ctacod">
+					<condicion operador="=">PEDCOTIZ.ctacod</condicion>
+				</field>
+				<field id="idconta">
+					<condicion operador="=">PEDCOTIZ.idconta</condicion>
+				</field>
+				
+			</table>
+		</join>			
+		<join tipo="left">
+			<table id="MODCHASIS">
+					<field clave="true" id="modcha">
+						<condicion operador="=">CHASIS.modcod</condicion>
+
+					</field>
+					<field id="marcod">
+						<condicion operador="=">CHASIS.marcod</condicion>
+					</field>			
+			</table>
+		</join>				
+	</form>
+</histrix>

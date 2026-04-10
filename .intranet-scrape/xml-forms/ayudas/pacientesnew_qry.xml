@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+  <title>Pacientes</title>
+  <obs></obs>
+  <consulta>
+    <table   id="PAC_CUENTAS" label="Pacientes">
+	<field id="id_paciente" />
+	<field id="nombre_paciente" >
+		<expresion>CONCAT(apellido_paciente,' , ',nombre_paciente)</expresion>
+	</field>
+	<field id="tipo_documento_id" noshow="true" deshabilitado="false">
+		<detalle>tipo_documento_id</detalle>
+	</field> 
+
+	<field id="nro_documento" noshow="true">
+		<detalle>nro_documento</detalle>
+	</field> 
+
+	<field id="nacionalidad_paciente" noshow="true" >
+		<detalle>nacionalidad_paciente</detalle>	
+	</field>
+
+	<field id="rhobrasocial_id" noshow="true" >
+		<detalle>rhobrasocial_id</detalle>						
+	</field>
+	<field id="calle_id" noshow="true" >
+		<detalle>calle_id</detalle>
+	</field> 
+	<field id="nro_calle" noshow="true" >
+		<detalle>nro_calle</detalle>				
+	</field> 
+	<field id="tel_paciente" noshow="true" >
+		<detalle>tel_paciente</detalle>
+	</field>
+
+	<order>
+		<field id="nombre_paciente" >
+			<expresion>CONCAT(apellido_paciente,' , ',nombre_paciente)</expresion>
+		</field>
+	</order>  
+    </table>
+  </consulta>
+</histrix>  

@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<abm tipo="abm" paginar="250" >
+	<titulo>Insumos</titulo>
+	<obs></obs>
+	   <consulta>
+		<tabla id="STKINSUM" styleTbody="height:500px;overflow-x:hidden;">
+			<titulo>Insumos</titulo>
+
+
+			<campo id="artcod" deshabilitado="true">
+<!-- 				<ayuda_ex id="STKINSUM"  xml="HLPstkinsum.xml" dir="/help_local"> -->
+				<ayuda_ex id="STKINSUM" >
+					<campo id="artcod" oculto="true">
+						<label>Cod</label>
+					</campo>
+					<campo id="artdes">
+						<label>Nombre</label>
+						<detalle>artdes</detalle>
+					</campo>
+					<campo id="siscod" oculto="true">
+						<condicion operador="=">'01'</condicion>
+					</campo>
+
+				</ayuda_ex>
+
+				<label>Cod.</label>
+				<detalle>artcod</detalle>
+			</campo>
+			<campo id="artdes"  deshabilitado="true">
+				<label>Articulo</label>
+				<help>Descripcion de Articulo. (ENTER = Retorna a ingreso de codigo).
+					</help>
+				<!--<ayuda_ex id="STKINSUM" >
+					<campo id="art">
+						<expresion>artdes</expresion>
+
+						<label>Nom</label>
+						<detalle>artdes</detalle>
+					</campo>
+					<campo id="artdes">
+						<label>Nombre</label>
+						<detalle>artdes</detalle>
+					</campo>
+					<campo id="siscod" oculto="true">
+						<condicion operador="=">'01'</condicion>
+					</campo>
+
+				</ayuda_ex> -->
+
+			</campo>
+			<campo id="baja" oculto="true">
+				<condicion operador="!=">1</condicion>
+			</campo>
+
+			<campo id="fecult" local="true">
+				<expresion>max(STKINSPR.fecult)</expresion>
+				<label>Ult</label>
+			</campo>
+			<campo id="costoult" local="true">
+				<expresion>max(STKINSPR.artcos)</expresion>
+				<label>Costo</label>
+			</campo>
+
+			<campo id="porcVenta">
+				<label>%</label>
+				<help>Porcentaje</help>
+			</campo>
+
+			<campo id="precioVenta">
+				<label>Precio de Venta</label>
+				<help>Precio de Venta</help>
+				<if exp="0costoult == 0" operador="=">
+					<falso>0costoult + (0costoult * 0porcVenta / 100)</falso>
+					<verdadero>costoult</verdadero>
+				</if>
+			</campo>
+
+			<campo id="siscod" oculto="true">
+				<label>siscod</label>
+			</campo>
+			<group>
+				<campo id="artcod" tabla="STKINSUM">
+				</campo>
+			</group>
+			<orden>
+				<campo id="artdes" tabla="STKINSUM">
+				</campo>
+
+			</orden>
+			<filtros>
+				<campo id="artcod" deshabilitado="false">
+					<ayuda_ex id="STKINSUM">
+						<clave>artcod</clave>
+						<descripcion>artdes</descripcion>
+					</ayuda_ex>
+
+					<label>Cod.</label>
+					<operador  modificador="left">=</operador>
+				</campo>
+				<campo id="artdes" >
+					<label>Articulo</label>
+					<help>Descripcion de Articulo. (ENTER = Retorna a ingreso de codigo).
+						</help>
+					<operador>like</operador>
+				</campo>
+			</filtros>
+		</tabla>
+		<join tipo="left">
+			<tabla id="STKINSPR">
+			<campo id="siscod" oculto="true">
+				<condicion operador="=">STKINSUM.siscod</condicion>
+			</campo>
+			<campo id="artcod" oculto="true">
+				<condicion operador="=">STKINSUM.artcod</condicion>
+			</campo>
+
+			</tabla>
+		</join>
+	</consulta>
+</abm>

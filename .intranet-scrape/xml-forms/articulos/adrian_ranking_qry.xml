@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="utf-8"?>
+<histrix tipo="consulta" borra="false" modifica="false" inserta="false" procesa="false" noform="true" modificaABM="false">
+    <title>Resumen contable por grupo</title>
+    <obs></obs>
+    <form>
+        <table id="CTBGRPCONT" label="Minutas por grupo">
+
+            <filters>
+
+                <field id="idGrupo">
+                    <operador>=</operador>
+                    <label>Grupo</label>
+
+                </field>
+                <field id="regfec">
+                    <operador>&gt;=</operador>
+                    <label>Desde Fecha</label>
+                    <valor>today</valor>
+
+                </field>
+                <field id="regfec" copia="rf2" >
+                    <operador>&lt;=</operador>
+                    <label>Hasta Fecha</label>
+                    <valor>today</valor>
+
+                </field>
+            <field id="prov"  deshabilitado="false">
+                <label>Prov. Influye Costo</label>
+                <tipo>integer</tipo>
+          <options>
+          <option valor="">Todos</option>
+            <option valor="0">No</option>
+          <option valor="1">Si</option>
+        </options>
+            </field>
+
+                <field id="rf2" copia="rf2" deshabilitado="true" local="true" noshow="true">
+                    <operador>&lt;=</operador>
+                    <label>RF2</label>
+
+                </field>
+
+            </filters>
+            
+            <field id="idGrupo" noshow="true">
+                <operador>=</operador>
+                <label>Grupo</label>
+                <valor>0</valor>
+                <tabla_ex id="CTBGRUPO">
+                    <field id="idGrupo"></field>
+                    <field id="nombre"></field>
+                </tabla_ex>
+            </field>
+
+
+            <field id="regfec" tabla="CTBREGIS" >
+                <label>Fecha </label>
+                <help></help>
+                <tipo>date</tipo>
+            </field>
+            <!--      <field id="rfec2" >
+                                <expression>max(CTBREGIS.regfec)</expression>
+                                <label>rfec2</label>
+                                <help></help>
+                                <tipo>date</tipo>
+                        </field> -->
+            <field id="rf2" copia="rf2" deshabilitado="true" local="true" noshow="true">
+                <operador>&lt;=</operador>
+                <label>RF2</label>
+                <tipo>date</tipo>
+            </field>
+            <field id="ctbcod" tabla="CTBREGIS" linkint="ctbregis_porgrupo_det.xml" linkdes="detalle de Movimientos" width="95%" linkmodal="true" linkdir="/ctb_old/" deshabilitado="true" >
+                <label>Cuenta</label>
+                <paring destino="ctbcod" operador="="     >ctbcod</paring>
+                <paring destino="regfec" operador="&gt;=" >regfec</paring>
+                <paring destino="rfec2" operador="&lt;="  >rf2</paring>
+
+            </field>
+            <field id="ctbnom" tabla="CTBCUENT" deshabilitado="true">
+                <label>nombre</label>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="prov"  noshow="true">
+                <label>prov</label>
+                <expression having="false">ifnull((select CCTCUENT.totatr from IVACOMPRAS left join CCTCUENT on CCTCUENT.siscod = '01' and CCTCUENT.ctacod = IVACOMPRAS.ctacod where IVACOMPRAS.fecreg = CTBREGIS.regfec and IVACOMPRAS.nrocom = CTBREGIS.regnro limit 1), 0)</expression>
+                <tipo>integer</tipo>
+          <options>
+          <option valor="">Todos</option>
+            <option valor="0">No</option>
+          <option valor="1">Si</option>
+        </options>
+
+             <!--   <condicion operador="!=" >1</condicion> -->
+            </field>
+
+
+            <!--                  <field id="regtip" oculto="true">
+                        <label>Cod.Comp.</label>
+                        <help>Codigo de Comprobante </help>
+                        </field>
+                        -->
+            <field id="debe" suma="true" noZero="true">
+                <expression>sum(regimp * (case when regdoh = 1  then 1 else 0  end))</expression>
+
+                <label>Debe</label>
+                <help>Importe del Movimiento en el Debe</help>
+            </field>
+
+            <field id="haber" suma="true" noZero="true">
+                <expression>sum(regimp * (case when regdoh = 2 then 1 else 0  end))</expression>
+                <label>Haber</label>
+                <help>Importe del Movimiento en el Haber</help>
+            </field>
+            <field id="dif" local="true"  >
+                <expression> sum(regimp * (case when regdoh = 1 then 1 else 0  end)) - sum(regimp * (case when regdoh = 2 then 1 else 0  end))</expression>
+                <label>Gráfico</label>
+                <help>Importe del Movimiento en el Haber</help>
+                <tipo>grafico</tipo>
+            </field>
+
+            <group>
+
+                <field id="ctbcod" tabla="CTBGRPCONT"></field> 
+                <!--            <field id="regfec" tabla="CTBREGIS"></field>
+
+                                <field id="regmin" tabla="CTBREGIS"></field>
+                                -->
+
+                        <!--    <field id="&quot;Proov&quot;" ></field> -->
+
+            </group>
+            <order>
+                <field id="regfec"></field>
+
+            </order>
+
+        </table>
+        <join tipo="left">
+            <table id="CTBREGIS">
+<!--
+                <field id="siscod" >
+                    <condicion operador="=">'10'</condicion>
+                </field>
+-->
+                <field id="ctbcod" >
+                    <condicion operador="=">CTBGRPCONT.ctbcod</condicion>
+                </field>
+
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="CTBCUENT">
+   <!--
+                <field id="siscod" oculto="true">
+                    <condicion operador="=">CTBREGIS.siscod</condicion>
+                </field>
+-->
+                <field id="ctbcod" oculto="true">
+                    <condicion operador="=">CTBGRPCONT.ctbcod</condicion>
+                </field>
+
+            </table>
+        </join>
+
+    </form>
+</histrix>

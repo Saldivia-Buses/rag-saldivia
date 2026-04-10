@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+	<histrix tipo="consulta">
+		<title>MOVIMIENTOS recibidos  de orden compras</title>
+		<obs></obs>
+		<form >
+			<table id="OCPRECIB" label="RECIBIDOS" idCampoCond="grabo">
+				<field id="siscod" id_temp="siscod">
+				</field>
+				<field id="ocpnro" id_temp="ocpnro">
+					<label>Nro </label>
+				</field>
+				<field id="ocpfec" id_cab="movfec__1">
+					<label>Entregado</label>
+					<tipo>date</tipo>
+				</field>
+				<field id="fecrec" id_cab="movfec__1" />
+				
+				<field id="ctacod" id_cab="ctacod">
+					<label>ctacod</label>
+				</field>
+				<field id="artcod" id_temp="artcod" >
+					<label>artcod</label>
+				</field>
+				<field id="fecreq" id_temp="ped" >
+					<label>fecrec</label>
+				</field>
+				<field id="nrorec" id_cab="remnro" >
+					<label>nrorec</label>
+				</field>
+				<field id="pedcps" id_temp="movcps" >
+				</field>
+				<field id="reccps" id_temp="ingresan" >
+				</field>
+				<field id="observacion" id_temp="observacion" >
+				</field>
+				
+				
+				<!--
+				<field id="peduso" id_temp="pedsuo" >
+				</field> -->
+				<field id="recuso" id_temp="Unidades" >
+				</field>
+				<field id="fecreq" id_temp="fecreq" >
+				</field>
+				<field id="codest" id_temp="codest" >
+				</field>
+				<field id="idPed" id_temp="idPed" >
+				</field>
+				
+				
+			</table>
+		</form>
+	</histrix>

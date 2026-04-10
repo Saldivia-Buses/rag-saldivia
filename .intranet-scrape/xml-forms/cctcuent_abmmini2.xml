@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ficha" conBusqueda="true" borra="true">
+	<title>ABM CUENTA Mini</title>
+	<obs></obs>
+	<form >
+		<table id="REG_CUENTA" label="ABM CUENTA">
+			<field id="id_regcuenta" esClave="true" autoinc="true" noshow="true" />
+
+			<field id="subsistema_id"  oculto="true">
+				<label>Codigo Sistema</label>
+				<help></help>
+			</field>
+
+			<field id="baja" deshabilitado="true">
+				<label style="background-color:#7ff67f; color:white; font-size:15px" modpos="nobr">Estado</label>
+				<help>Cuenta Activa - De Baja</help>
+				<options>
+					<option valor="1">Baja</option>
+					<option valor="0">Activo</option>
+				</options> 
+			</field>
+
+			<field id="nro_cuenta" esClave="true">
+				<label>Cuenta</label>
+				<help>Código de Cuenta </help>
+			</field>
+
+			<field id="nombre_cuenta" deshabilitado="false" _autocompletar="true" valid="true" required="true">
+				<label  colspan="2">Nombre</label>
+				<size>80</size>
+				<tipo>varchar</tipo>
+			</field>
+	
+			<field id="nombre_fantasia" required="true" deshabilitado="true">
+				<label modpos="nobr">Nom.Fantasía</label>
+				<help>Nombre de fantasía</help>
+				<size>10</size>
+				<maxsize>8</maxsize>			
+				<valor></valor>	
+			</field>
+
+			<field id="cod_direccion">
+				<label colspan="5">Domicilio Fiscal</label>
+			</field>
+
+			<field id="codigo_postal">
+				<label>Código Postal</label>
+			</field>
+			
+			<field id="nacionalidad_id" style="padding:2px 2px 2px 2px;width:250px;vertical-align:middle;">
+			    <label colspan="9">País</label>
+			    <helper id="GEN_NACIONALIDADES" type="combo" empty="true">
+			        <field id="id_nacionalidad" >
+			        	<condicion operador="=">14 OR id_nacionalidad = 16</condicion>
+			        </field>
+			        <field id="pais" />
+						<order>
+		           			<field id="pais" />
+						</order>
+		    	</helper>
+		    	<actualiza>
+            		<field id="provincia_id" destino="nacionalidad_id"/>
+         		</actualiza>
+		    </field>    
+
+		    <field id="provincia_id" sincelda="true" style="padding:2px 2px 2px 2px;width:250px;vertical-align:middle;">
+          		<label modpos="nobr">Provincia</label>
+          		<helper id="GEN_PROVINCIAS" type="combo" empty="true">
+			        <field id="id_provincia" />
+			        <field id="nombre_provincia" />
+			        <field id="nacionalidad_id" oculto="true"/>
+						<order>
+		           			<field id="nombre_provincia" />
+						</order>
+		    	</helper>
+          		<actualiza>
+            		<field id="localidad_id" destino="provincia_id"/>
+          		</actualiza>
+        	</field>
+
+	        <field id="localidad_id" style="padding:2px 2px 2px 2px;width:300px;vertical-align:middle;" >
+	          <label>Localidad</label>
+	          <helper type="combo" xml="localidad_qry.xml" dir="/ayudas" empty="true">
+	            <field id="provincia_id" oculto="true">
+	              <condicion operador="=">-1</condicion>
+	            </field>
+	          </helper>
+	        </field>
+			
+			<field id="tel_cuenta">
+				<label>Teléfono</label>
+			</field>
+
+			<field id="fax_cuenta">
+				<label modpos="nobr">Tel/Fax</label>
+			</field>
+
+			<field id="horario">
+				<label>Horario Atención</label>
+				<size>50</size>
+			</field>
+
+			<field id="entrega_direccion">
+				<label colspan="5" style="color:blue;">Domicilio Real</label>
+			</field>
+
+			<field id="entrega_codigopostal">
+				<label style="color:blue;">Código Postal Envío</label>
+			</field>
+			
+			<field id="entrega_nacionalidad_id" style="padding:2px 2px 2px 2px;width:300px;vertical-align:middle;">
+			    <label colspan="9">País de Envío</label>
+			    <helper id="GEN_NACIONALIDADES" type="combo" empty="true">
+			        <field id="id_nacionalidad" >
+			        	<condicion operador="=">14 OR id_nacionalidad = 16</condicion>
+			        </field>
+			        <field id="pais" />
+						<order>
+		           			<field id="pais" />
+						</order>
+		    	</helper>
+		    	<actualiza>
+            		<field id="entrega_provincia_id" destino="nacionalidad_id"/>
+         		</actualiza>
+		    </field>   
+
+			<field id="entrega_provincia_id" sincelda="true" style="padding:2px 2px 2px 2px;width:250px;vertical-align:middle;">
+				<label modpos="nobr" _style="color:blue;">Prov. Env.</label>
+				<helper id="GEN_PROVINCIAS" type="combo" empty="true">
+			        <field id="id_provincia"/>
+			        <field id="nombre_provincia"/>
+					<field id="nacionalidad_id" oculto="true"/>
+						<order>
+		           			<field id="nombre_provincia" />
+						</order>
+		    	</helper>
+		    	<actualiza>
+            		<field id="entrega_localidad_id" destino="provincia_id"/>
+          		</actualiza>
+			</field>
+
+			<field id="entrega_localidad_id" style="padding:2px 2px 2px 2px;width:300px;vertical-align:middle;" >
+	          <label>Localidad de Envío</label>
+	          <helper type="combo" xml="localidad_qry.xml" dir="/ayudas" empty="true">
+	            <field id="provincia_id" oculto="true">
+	              <condicion operador="=">-1</condicion>
+	            </field>
+	          </helper>
+	        </field>
+
+			<field id="emails" showTablaObj="true" local="true">
+				<helper type="object" xml="contaemail_list_qry.xml" dir="/email">
+				    <parameter target="ctacod" source="nro_cuenta" />
+				    <parameter target="siscod" source="subsistema_id" />
+				</helper>
+				<label>Correos</label>
+				<help></help>
+			</field>	
+
+		</table>
+	</form>
+</histrix>

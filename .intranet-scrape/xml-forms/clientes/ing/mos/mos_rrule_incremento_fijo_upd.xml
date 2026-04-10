@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="update" limit="99">
+    <title></title>
+    <obs></obs>
+    <form>
+        <table id="REG_DETALLES" idCampoCond="importe_actualizado">
+            <field id="regmovim_id" esClave="true" lastId="mos_rrule_movimientos_ins.xml" />
+
+            <field id="importe_actualizar" id_temp="importe_actualizar" local="true" />
+            <field id="importe_actualizado" id_temp="importe_actualizado" local="true" />
+
+            <field id="total_detalle">
+                <valor>(CASE WHEN REG_DETALLES.total_detalle = 0 THEN 0 ELSE (round((round(([__importe_actualizado__]),0) / 10),0) * 10) END)</valor>
+                <tipo>integer</tipo>
+            </field>
+
+            <field id="neto_detalle"> 
+                <valor>total_detalle / (1 + (alicuota_iva / 100))</valor>
+                <tipo>integer</tipo>
+            </field>
+
+            <field id="iva_detalle">
+                <valor>total_detalle - neto_detalle</valor>
+                <tipo>integer</tipo>
+            </field> 
+
+            <field id="precio_venta">
+                <valor>neto_detalle / cantidad_detalle</valor>
+                <tipo>integer</tipo>
+            </field>
+
+        </table>
+    </form>
+</histrix>
+

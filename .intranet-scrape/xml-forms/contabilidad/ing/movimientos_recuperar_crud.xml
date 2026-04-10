@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" borra="true" inserta="false" modifica="false">
+  <title>Movimientos</title>
+  <obs/>
+  <consulta _dir="contabilidad" _detalle="detalles_qry.xml" _inline="true">
+    <table id="CTB_MOVIMIENTOS" label="movimientos">
+
+      <movimientos>
+        <relacion id="movimientos_eliminar_min_del.xml"/>
+        <relacion id="movimientos_recupera_min_upd.xml"/>
+      </movimientos>
+
+      <filtros>
+        <field id="ejercicio_id">
+          <label>Ejercicio</label>
+          <help>Ejercicio contable</help>
+          <operador>=</operador>
+        </field>
+        <field id="fecha_mov1" deshabilitado="false">
+          <valor>today</valor>
+          <operador>&gt;=</operador>
+          <label>Desde Fecha</label>
+          <help>Fecha movimiento</help>
+        </field>
+        <field id="fecha_mov2" deshabilitado="false">
+          <valor>today</valor>
+          <operador>&lt;=</operador>
+          <label modpos="nobr">hasta Fecha</label>
+          <help>Fecha movimiento</help>
+        </field>
+        <field id="nro_minuta1" deshabilitado="false">
+          <valor/>
+          <operador>&gt;=</operador>
+          <label>Desde minuta</label>
+          <help>Ingrese desde que minta buscar</help>
+        </field>
+        <field id="nro_minuta2" deshabilitado="false">
+          <valor/>
+          <operador>&lt;=</operador>
+          <label modpos="nobr">hasta minuta</label>
+          <help>Ingrese hasta que minta buscar</help>
+        </field>
+      </filtros>
+      
+      <field id="nro_minuta" deshabilitado="true" _noshow="true">
+        <helper type="link" xml="minuta_detalle_qry.xml" dir="/contabilidad/qry" title="Detalle de minuta">
+    	    <parameter source="id_movimiento" target="movimiento_id" />
+    	</helper>
+        <label>Numero minuta</label>
+        <help>Numero de la minuta</help>
+      </field>
+
+      <field id="id_movimiento" noshow="true">
+        <label>Codigo</label>
+        <help>Código de movimiento</help>
+        <detalle>movimiento_id</detalle>
+      </field>
+      
+      <field id="concepto_id" noshow="true" deshabilitado="true">
+        <label>Concepto</label>
+        <help>Código de concepto</help>
+        <detalle>concepto_id</detalle>
+        <condicion operador="=">0</condicion>
+      </field>
+      
+      <field id="fecha_movimiento" deshabilitado="true">
+        <label>Fecha</label>
+        <help>Fecha movimiento</help>
+      </field>
+      
+      <field id="referencia" deshabilitado="true">
+        <label>referencia</label>
+        <help>Referencia del movimiento</help>
+      </field>
+      
+      <field id="debe" deshabilitado="true">
+        <expresion>sum(case when doh = 0 then importe else 0 end)</expresion>
+        <label>Debe</label>
+        <tipo>numeric</tipo>
+      </field>
+      
+      <field id="haber" deshabilitado="true">
+        <expresion>sum(case when doh = 1 then importe else 0 end)</expresion>
+        <label>Haber</label>
+        <tipo>numeric</tipo>
+      </field>
+
+      <field id="diferencia">
+        <expresion>sum( round(importe, 2) * (case when doh = 1 then 1 else -1 end))</expresion>
+        <label>Diferencia</label>
+        <tipo>numeric</tipo>
+      </field>
+
+      <field id="fecha_modificacion" deshabilitado="true">
+        <label>Fecha de modificacion</label>
+        <expression>DATE_FORMAT(fecha_modificacion, '%d/%m/%Y %h:%m:%s')</expression>
+      </field>
+
+      <field id="usuario_modificacion" deshabilitado="true">
+        <label>usuario</label>
+      </field>
+
+      <field id="valor" local="true" noshow="true">
+        <valor>1</valor>
+      </field>
+
+      <field id="recupera" local="true" refresh="true">
+        <tipo>check</tipo>
+        <label>Recuperar</label>
+      </field>
+
+      <field id="graba" local="true" _noshow="true">
+        <if exp="recupera == 1">
+          <true>1</true>
+          <false>0</false>
+        </if>
+      </field>
+
+      <field id="elige" local="true" refresh="true">
+        <tipo>check</tipo>
+        <label>Eliminar</label>
+      </field>
+
+      <field id="elimina" local="true" refresh="true" noshow="true">
+        <if exp="elige == 1">
+          <true>'true'</true>
+          <false>'false'</false>
+        </if>
+      </field>
+
+
+
+
+
+      <field id="ejercicio_id" noshow="true">
+        <helper type="combo" xml="ctbejercicios_crud.xml" dir="/contabilidad/man/">
+            <field id="activo" tipoOrden="DESC"/>
+                <field id="fecha_mov1">
+                <expresion>DATE_FORMAT(comienza, '%d/%m/%Y')</expresion>
+                <tipo>date</tipo>
+        	<detalle>ejercicio_id</detalle>
+            </field>
+            <field id="fecha_mov2">
+		<expresion>DATE_FORMAT(finaliza, '%d/%m/%Y')</expresion>
+                <tipo>date</tipo>
+            </field>
+            <field id="finaliza">
+            </field>
+        </helper>
+        <label>Ejercicio</label>
+        <help>Ejercicio contable</help>
+        <detalle>ejercicio_id</detalle>
+      </field>
+      <field id="nro_minuta2" noshow="true">
+        <expresion having="false">nro_minuta</expresion>
+        <help>numero de minuta</help>
+      </field>
+      <field id="nro_minuta1" noshow="true">
+        <expresion having="false">nro_minuta</expresion>
+        <help>numero de minuta</help>
+      </field>
+      <field id="fecha_mov1" noshow="true">
+        <expresion having="false">fecha_movimiento</expresion>
+        <help>Fecha movimiento</help>
+        <tipo>date</tipo>
+      </field>
+      <field id="fecha_mov2" noshow="true">
+        <expresion having="false">fecha_movimiento</expresion>
+        <help>Fecha movimiento</help>
+        <tipo>date</tipo>
+      </field>
+      
+      <group>
+        <field id="nro_minuta" />
+      </group>
+
+      <order>
+        <field id="fecha_modificacion" />
+      </order>
+
+    </table>
+
+    <join tipo="left">
+      <table id="CTB_DETALLES">
+        <field id="movimiento_id">
+          <condicion operador="=">id_movimiento</condicion>
+        </field>
+      </table>
+    </join>
+    
+  </consulta>
+</histrix>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Esta grabación tiene como objetivo grabar el cierre de caja
+-->
+<histrix tipo="insert" >
+  <title>Arqueo y Cierre</title>
+  <obs/>
+  <form >
+    <table id="CAJ_ARQUEO_CONTEOS">
+      <field id="cajarqueo_id"     lastId="cajarqueo_ins.xml" />
+      <field id="cajformapago_id"  id_temp="cajformapago_id"/>
+      <field id="valor"            id_temp="valor"/>
+    </table>
+  </form>
+</histrix>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+   <histrix tipo="delete" limit="1">
+       <title>MOVIMIENTOS DE STOCK</title>
+        <obs></obs>
+               <form >
+					<table id="STKINMOV" label="MOVIMIENTOS" idCampoCond="borro">
+						
+<!-- 						<field id="siscod" id_temp="sisprv" esClave="true" />
+ -->						
+ 						<field id="artcod" id_temp="artcod" esClave="true" >
+						</field>
+						<field id="movnro" id_temp="nrorec" esClave="true">
+						</field>
+						<field id="movfec" id_temp="fecrec" esClave="true">
+						</field>
+						
+						
+						<field id="ctacod" id_temp="ctacod" esClave="true">
+						</field>
+						<field id="ocpnro" id_temp="ocpnro" esClave="true">
+						</field>
+						
+					</table>
+               </form>
+        </histrix>

@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ayuda" >
+    <title>Articulos</title>
+    <obs></obs>
+    <form >
+        <table id="STK_ARTICULOS" label="Articulos" >
+
+			<field id="codigo_barra" esClave="true">
+			    <label>Codigo</label>
+			    <detalle>codigo_detalle</detalle>
+			</field>
+
+			<field id="nombre_articulo">
+				<label>Nombre</label>
+				<detalle>descripcion_detalle</detalle>
+			    <detalle>nombre_articulo</detalle>
+			</field>
+			
+			<field id="nombre_rubro" tabla="STK_RUBROS">
+			    <label>Rubro</label>
+            </field>
+
+            <field id="id_stkarticulo" noshow="true">
+			    <detalle>stkarticulo_id</detalle>
+		    </field>
+
+			<!-- No sacar porque trae todos los articulos por algun motivo -->
+			<field id="stkarticulo_id" tabla="STK_LISTADETALLE" oculto="true" colstyle="display:none;" />
+
+			<!-- Campos a devolver para otros xml-->
+
+			<field id="cuentadebe_id" noshow="true" oculto="true" colstyle="display:none;">
+				<detalle>ctbstkcuenta_debe_id</detalle>
+			</field>
+
+			<field id="stklistadetalle_precioventa" tabla="STK_LISTADETALLE">
+				<expression>case when '[__wstklista_id__]' = '' then 0 else stklistadetalle_precioventa end</expression>
+				<label>precio de lista</label>
+				<detalle>precio_venta</detalle>
+                <detalle>total_detalle</detalle>
+			</field>
+
+			<field id="alicuota_iva"  local="true" noshow="true">
+				<expression>alicuota</expression>
+				<label>alicuota_iva</label>
+				<detalle>alicuota_iva</detalle>
+			</field>
+
+
+			<field id="porcentaje_desc" tabla="STK_LISTADETALLE" noshow="true">
+				<expression>
+				   (case when STK_DESCUENTOSARTCLI.porcentaje_desc != 0    then STK_DESCUENTOSARTCLI.porcentaje_desc else 
+					case when STK_DESCUENTOSLISTASCLI.porcentaje_desc != 0 then STK_DESCUENTOSLISTASCLI.porcentaje_desc else
+					case when STK_LISTAS.porcentaje_desc != 0              then STK_LISTAS.porcentaje_desc else 0 
+					end
+					end
+					end ) 
+				</expression>
+				<label>Descuentos</label>
+				<detalle>porcentaje_desc</detalle>
+			</field>
+
+
+            <!-- DETALLE DE MOVIMIENTO DE STOCK -->
+
+            <field id="unidad_uso_id" noshow="true">
+              <detalle>stkunidad_id</detalle>
+            </field>
+
+            <field id="unidad_compra_id" noshow="true">
+              <detalle>stkunidad_compra_id</detalle>
+            </field>
+            
+            <field id="valor_compra" noshow="true">
+              <detalle>stkvalor_compra</detalle>
+            </field>
+            
+            <field id="valor_uso" noshow="true">
+              <detalle>stkvalor_uso</detalle>
+            </field>
+
+            <!-- FIN -->
+
+
+
+
+            <field id="stkrubro_id" noshow="true">
+              <detalle>stkrubro_id</detalle>
+            </field>
+			<field id="stkfamilia_id" noshow="true">
+			  <detalle>stkfamilia_id</detalle>
+            </field>
+			<field id="stksector_id" noshow="true">
+			  <detalle>stksector_id</detalle>
+            </field>
+            <field id="precio_costo" noshow="true">
+              <detalle>precio_costo</detalle>
+            </field>
+
+		</table>
+		<join tipo="LEFT">
+			<table id="GEN_IVA_ALICUOTAS">
+				<field id="iva_regimen_id">	
+					<condicion operador="=">STK_ARTICULOS.ivaregimen_id</condicion>
+				</field>
+				<field id="iva_id" >
+					<condicion operador="=">'5'</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="LEFT">
+			<table id="STK_LISTADETALLE">
+				<field id="stkarticulo_id">
+					<condicion operador="=">STK_ARTICULOS.id_stkarticulo</condicion>
+				</field>
+				<field id="stklista_id">
+					<condicion operador="=" >'[__wstklista_id__]' or '[__wstklista_id__]' = '' </condicion>
+				</field>
+
+			</table>
+		</join>
+		<join >
+			<table id="STK_LISTAS">
+				<field id="id_stklista">	
+					<condicion operador="=">STK_LISTADETALLE.stklista_id</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="LEFT">
+			<table id="STK_DESCUENTOSLISTASCLI">
+				<field id="stklista_id">	
+					<condicion operador="=">STK_LISTADETALLE.stklista_id</condicion>
+				</field>
+				<field id="regcuenta_id">	
+					<condicion operador="=" >'[__regcuenta_id__]' </condicion>
+				</field>
+
+			</table>
+		</join>
+		<join tipo="LEFT">
+			<table id="STK_DESCUENTOSARTCLI">
+				<field id="stkarticulo_id">	
+					<condicion operador="=">STK_ARTICULOS.id_stkarticulo</condicion>
+				</field>
+				<field id="regcuenta_id">	
+					<condicion operador="=" >'[__regcuenta_id__]' </condicion>
+				</field>
+			</table>
+		</join>
+		
+		<join tipo="LEFT">
+		    <table id="STK_RUBROS">
+		      <field id="id_stkrubro">
+		          <condicion operador="=">STK_ARTICULOS.stkrubro_id</condicion>
+		      </field>
+		    </table>
+		</join>
+
+    </form>
+</histrix>  

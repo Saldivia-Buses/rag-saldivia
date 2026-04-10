@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+  <title>Tipos de Conceptos</title>
+  <obs></obs>
+  <consulta>
+    <table id="RH_TIPOSCONCEPTOS" label="Actividades">
+      <field id="id_rhtipoconcepto" autoinc="true" noshow="true">
+        <label>Codigo</label>
+        <help>Código de Tipo de Concepto </help>
+      </field>
+      <field id="valor">
+        <label>T.Concepto</label>
+        <help>T.Concepto</help>
+        <size>15</size>
+      </field>
+
+    </table>
+	 <join>
+		<table id="RH_CONCEPTOS">
+		        <field id="rhtipoconcepto_id" >
+		        	<condicion operador="=">RH_TIPOSCONCEPTOS.id_rhtipoconcepto</condicion>
+	        	</field>
+		</table>
+	</join> 
+
+  </consulta>
+</histrix>  

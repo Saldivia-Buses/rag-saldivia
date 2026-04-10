@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini">
+  <title>Datos de Contacto</title>
+  <obs/>
+  <form>
+    <table id="REG_CUENTAS_CONTACTOS" label="Datos de Contacto">
+
+      <field id="id_regcontacto" autoinc="true" noshow="true"/>
+
+      <field id="regcuenta_id" noshow="true" valauto="true"/>
+
+      <field id="contacto_id">
+        <helper type="combo" xml="contactos_qry.xml" dir="/ayudas" empty="true"/>
+        <label>Tipo Contacto</label>
+      </field>
+
+      <field id="valor" _style="font-size:20px;">
+        <label>Contacto</label>
+        <size>30</size>
+      </field>
+
+      <field id="nota">
+        <label>Notas</label>
+        <size>30</size>
+      </field>
+    </table>
+
+    <join tipo="left">
+      <table id="GEN_TIPO_CONTACTOS">
+        <field id="id_contacto">
+          <condicion operador="=">REG_CUENTAS_CONTACTOS.contacto_id</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join tipo="left">
+      <table id="REG_CUENTA">
+        <field id="id_regcuenta">
+          <condicion operador="=">REG_CUENTAS_CONTACTOS.regcuenta_id</condicion>
+        </field>
+      </table>
+    </join>
+
+  </form>
+</histrix>

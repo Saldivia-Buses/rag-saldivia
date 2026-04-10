@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" exportasuma="true">
+	<title />
+	<obs />
+	<form>
+		<table id="REG_DETALLES" label="Detalle de Movimientos">
+
+			<field id="muestra_iva" noshow="true" local="true" print="false" valauto="true" />
+
+			<field id="NoMuestra_iva" noshow="true" local="true" print="false">
+				<if exp="muestra_iva">
+				<true>'false'</true>
+				<false>'true'</false>
+				</if>		
+			</field>				
+
+			<field id="regmovim_id" noshow="true" />
+
+			<field id="orden" noshow="true" />
+
+			<fieldGroup>
+			
+
+				<field id="codigo_detalle" PDFcolWidth="14">
+					<label size="35">CODIGO</label>
+				</field>
+				
+				<field id="descripcion_detalle" noshow="true">
+					<label size="120">Descripcion</label>
+				</field>
+
+				<field id="descripcion_detalle21">
+					<label size="120">DESCRIPCION</label>
+					<expression>
+CASE WHEN codigo_detalle = 2 
+        THEN descripcion_detalle 
+     WHEN FIND_IN_SET(codigo_detalle, (SELECT option_value FROM HTXOPTIONS WHERE option_name = 'SIS::codigos_domicilios_servicios'))
+        THEN CONCAT(IF(REG_MOVIMIENTOS_SERVICIOS.leyenda_1 = '', REG_DETALLES.descripcion_detalle, REG_MOVIMIENTOS_SERVICIOS.leyenda_1), ' REALIZADO EN ', (CASE WHEN IFNULL((SELECT domicilio_movimiento FROM REG_MOVIMIENTOS WHERE id_regmovim = '[__regmovim_id__]'),'') = '' THEN (SELECT REG_CUENTA.cod_direccion FROM REG_MOVIMIENTOS JOIN REG_CUENTA ON REG_CUENTA.id_regcuenta = REG_MOVIMIENTOS.regcuenta_id WHERE id_regmovim = '[__regmovim_id__]') ELSE (SELECT domicilio_movimiento FROM REG_MOVIMIENTOS WHERE id_regmovim = '[__regmovim_id__]') END)) 
+     ELSE (CASE WHEN REG_DETALLES.descripcion_detalle != '' THEN REG_DETALLES.descripcion_detalle ELSE REG_MOVIMIENTOS_SERVICIOS.leyenda_1 END) END</expression>
+				</field>
+
+				<field id="cantidad_detalle" PDFcolWidth="12" PDFalign="R">
+					<label size="35">CANT.</label>
+					<tipo>numeric</tipo>
+				</field>
+				
+				<field id="alicuota_iva" PDFcolWidth="15">
+					<label size="30" >ALIC.</label>
+					<tipo>numeric</tipo>
+				</field>
+
+				<field id="precio_venta" PDFcolWidth="20">
+					<label size="15">P.UNIT.</label>
+					<expresion having="false">
+						case when '[__muestra_iva__]' = 'true' THEN
+							precio_venta
+						else
+							precio_venta * ( 1 + (alicuota_iva / 100) )
+						end
+					</expresion>
+					<tipo>numeric</tipo>
+				</field>
+
+				<field id="neto_detalle" PDFcolWidth="20" total="true">
+					<label size="15">SUBTOTAL</label>
+					<tipo>numeric</tipo>
+					<detalle>SubTotal</detalle>
+					<expresion having="false">IF('[__muestra_iva__]' = 'true', neto_detalle,  total_detalle)</expresion>
+				</field>
+
+			</fieldGroup>
+			
+			<order>
+				<field id="orden"/>
+			</order>
+			
+			<group>
+			  <field id="id_regdetalle" />
+			</group>
+		</table>
+
+		<join tipo="left">
+			<table id="REG_MOVIMIENTOS_SERVICIOS">
+				<field id="codigo_estampilla">
+					<condicion operador="=">codigo_detalle</condicion>
+				</field>
+			</table>
+		</join>
+
+	</form>
+</histrix>	

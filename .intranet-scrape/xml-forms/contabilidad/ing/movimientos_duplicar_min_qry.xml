@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+  <title>Movimientos</title>
+  <obs></obs>
+  <consulta detalle="detalles_duplicar_min_ing.xml">
+    <table id="CTB_MOVIMIENTOS" label="movimientos">
+      <filtros>
+        <field id="ejercicio_id">  
+          <label>Ejercicio</label>
+          <help>Ejercicio contable</help>
+          <operador>=</operador>
+        </field>
+        <field id="fecha_movimiento">
+          <valor>today</valor>
+          <operador>=</operador>
+          <label>Fecha</label>
+          <help>Fecha movimiento</help>
+        </field>
+        <field id="nro_minuta">
+          <label>Nº minuta</label>
+	   <operador>=</operador>
+          <help>Ingrese hasta que minuta buscar</help>
+        </field> 
+        <field id="concepto_id">
+          <operador>=</operador>
+          <label>Tipo de concepto</label>
+          <help>Concepto elegido</help>
+        </field> 
+      </filtros>
+      <field id="nro_minuta" noshow="false">
+        <label>Nro minuta</label>
+        <help>Numero de la minuta</help>
+	 <condicion operador="=">nro_minuta</condicion>
+         <detalle>nro_minuta</detalle>
+      </field>
+      <field id="id_movimiento" noshow="true" >
+        <label>Codigo</label>
+        <help>Código de movimiento</help>
+        <detalle>movimiento_id</detalle>
+      </field>
+      <field id="concepto_id" noshow="true" >
+        <helper type="combo" dir="/ayudas" xml="ctbconcepto_qry.xml">
+        </helper>
+        <label>Concepto</label>
+        <help>Código de concepto</help>
+	<condicion operador="!=">0</condicion>
+        <detalle>concepto_id</detalle>
+      </field>
+      <field id="fecha_movimiento">
+        <label>Fecha</label>
+        <help>Fecha movimiento</help>
+	 <condicion operador="=">fecha_movimiento</condicion>
+	<detalle>fecha_movimiento1</detalle>
+      </field>
+      <field id="referencia">
+        <label>referencia</label>
+        <help>Referencia del movimiento</help>
+	<detalle>referencia1</detalle>
+      </field>
+      <field id="debe" > 
+        <expresion>sum(case when doh = 0 then importe else 0 end)</expresion>
+        <label>Debe</label> 
+        <tipo>numeric</tipo> 
+      </field>
+      <field id="haber" > 
+        <expresion>sum(case when doh = 1 then importe else 0 end)</expresion>
+        <label>Haber</label>
+        <tipo>numeric</tipo> 
+      </field>
+      <field id="diferencia" > 
+        <expresion>sum( round(importe, 2) * (case when doh = 1 then 1 else -1 end))</expresion>
+        <label>Diferencia</label>^ 
+        <tipo>numeric</tipo> 
+      </field>
+      <field id="resaltado" clasefila="true" noshow="true"> 
+        <label>res</label>
+        <expresion>case when abs(sum( round(importe, 2) * (case when doh = 1 then 1 else -1 end))) != 0 then 'resaltado' else '' end</expresion>
+      </field>
+      <field id="ejercicio_id" noshow="true">
+        <helper type="combo" xml="ctbejercicios_crud.xml" dir="/contabilidad/man/">
+          <field id="activo" tipoOrden="DESC"/>
+        </helper>
+	<condicion operador="=">ejercicio_id</condicion>
+        <label>Ejercicio</label>
+        <help>Ejercicio contable</help>
+        <detalle>ejercicio_id</detalle>
+      </field>
+      <group>
+        <field id="id_movimiento"></field>
+      </group>
+    </table>
+    <join tipo="left">
+      <table id="CTB_CONCEPTOS">
+        <field id="id_concepto">
+          <condicion operador="=">concepto_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="CTB_DETALLES">
+        <field id="movimiento_id">
+          <condicion operador="=">id_movimiento</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="CTB_EJERCICIOS">
+        <field id="id_ejercicio">
+          <condicion operador="=">ejercicio_id</condicion>
+        </field>
+      </table>
+    </join>
+  </consulta>
+</histrix>  

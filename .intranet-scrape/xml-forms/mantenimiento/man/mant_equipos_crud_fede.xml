@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<!-- MOD: FMM - Fecha: 18/10/16 -->
+
+<histrix tipo="crud" PDForientacion="L">
+    <title>Equipos</title>
+    <obs></obs>
+    <form>
+
+        <table id="MANT_EQUIPOS" label="Equipos" >
+
+		<validation>
+            <condition><![CDATA[articulo_id == '' ]]></condition>
+            <message>Ingrese un nombre para el articulo</message>
+        </validation>
+
+        <validation>
+            <condition><![CDATA[nombre_equipo == '' ]]></condition>
+            <message>Seleccione un nombre para el equipo</message>
+        </validation>
+
+        <validation>
+            <condition><![CDATA[tipoequipo_id== '' ]]></condition>
+            <message>Seleccione un tipo de equipo</message>
+        </validation>
+
+
+    	    <filters>
+
+	            <field id="articulo_id_filtro" deshabilitado="false">
+	                <label>Cod. Articulo</label>
+	                <operador>like</operador>
+	            </field>
+				
+				<field id="separador" modpos="nobr" deshabilitado="true" editable="false"/>
+
+	            <field id="nombre_equipo_filtro" deshabilitado="false" modpos="nobr">
+	                <label>Nombre</label>
+	                <operador>like</operador>
+	            </field>
+
+	            <field id="separador" modpos="nobr" deshabilitado="true" editable="false"/>
+
+				 <field id="numero_serie" modpos="nobr" >
+				    <label >Nro de Serie</label>
+				    <operador>like</operador>
+			    </field>
+
+			    <field id="separador" modpos="nobr" deshabilitado="true" editable="false"/>
+	            
+	            <field id="tipoequipo_id_filtro" deshabilitado="false"  modpos="nobr">
+	                <label>Tipo</label>
+	                <operador>=</operador>
+					<valor>1</valor>
+	            </field>
+
+	            <field id="separador" modpos="nobr" deshabilitado="true" editable="false"/>
+				
+				<field id="deposito_id"  modpos="nobr">
+					<label>Depósito</label>
+	                <operador>=</operador>
+				</field>
+
+    	    </filters>
+
+			<field id="separador" local="true" noshow="true">    	    
+				<size>1</size>
+			</field>
+
+            <field id="id_equipo" esClave="true" noshow="true" />
+
+		
+		<fieldGroup Formstyle="padding:2px 2px 2px 2px;"  colstyle="text-align:center;padding:2px 2px 2px 2px;" >
+
+            <field id="nombre_equipo_filtro" noshow="true" print="false">
+                <label>Nombre</label>
+                <help>Nombre Equipo</help>
+                <expression>MANT_EQUIPOS.nombre_equipo</expression>
+            </field>
+
+            <field id="tipoequipo_id_filtro" noshow="true" print="false">
+            	<expression>MANT_EQUIPOS.tipoequipo_id</expression>
+                <helper type="combo" xml="mant_tipo_equipo_crud.xml" empty="true"/>
+                <label>Tipo</label>
+                <help>Tipo</help>
+            </field>
+
+        	<field id="articulo_id" >
+                <paring destino="artcod" colspan="2">artcod</paring>
+                <label>Artículo</label>
+                <help>Codigo de Articulo</help>
+	        </field>
+
+        	<field id="articulo_id_filtro" noshow="true">
+                <paring destino="artcod" colspan="2">artcod</paring>
+                <label>Artículo</label>
+                <help>Codigo de Articulo</help>
+                <expression>MANT_EQUIPOS.articulo_id</expression>
+	        </field>
+
+           <field id="nombre_equipo" >
+                <label>Nombre</label>
+                <help>Nombre</help>
+                <size>30</size>
+            </field>
+
+            <field id="numero_serie">
+                <label>Nro de Serie</label>
+                <help>Numero de Serie</help>
+                <size>20</size>
+            </field>
+
+            <field id="anio_fabricacion" >
+                <label>Año Fabricación</label>
+            </field>
+
+            <field id="tipoequipo_id" >
+                <helper type="combo" xml="mant_tipo_equipo_crud.xml" empty="true"/>
+                <label>Tipo</label>
+                <help>Tipo</help>
+            </field>
+
+            <field id="fecha_alta" >
+                <label>Fecha Alta</label>
+                <help>Fecha Alta</help>
+                <tipo>date</tipo>
+            </field>
+
+            <field id="fecha_baja" >
+                <label>Fecha Baja</label>
+                <help>Fecha Baja</help>
+                <tipo>date</tipo>
+            </field>
+			
+			<field id="deposito_id" >
+				<label>Depósito</label>
+				<helper type="combo" id="STK_DEPOSITOS"  empty="true">
+					<field id="id_stkdeposito" >
+						<label>Cod</label>
+						<help>Codigo</help>
+					</field>
+					<field id="nombre_deposito">
+						<label>Deposito</label>
+					</field>
+				</helper>
+			</field>
+
+			<!-- <field id="seccion_id"  >
+				<label>Seccion</label>
+				<helper type="combo" id="MOMENTO" empty="true">
+					<field id="idMomento">
+						<condicion operador="&gt;">0</condicion>
+	                </field>
+	              	<field id="descripcion"></field>
+					<order>
+						<field id="descripcion"/>
+					</order>
+				</helper>
+            </field> -->
+
+			<!-- <field id="acargo"  >
+				<label>Operario a cargo</label>
+				<helper type="combo" id="PERSONAL" empty="true">
+					<field id="IdPersona"/>
+					<field id="Nombre">
+						<expression>CONCAT(PERSONAL.apellido, ', ', PERSONAL.Nombre)</expression>
+					</field>
+					<order>
+						<field id="Nombre"/>
+					</order>
+				</helper>
+				<size>30</size>
+			</field> -->
+
+
+			<field id="titulo" noshow="true" local="true" >
+			    <if exp="true">
+				    <true>'nombre_equipo -  numero_serie'</true>
+				    <false>''</false>
+			    </if>
+			</field>
+		
+	</fieldGroup>
+
+	<fieldGroup colstyle="text-align:center;" Formstyle="display:none;">
+
+			<field id="carga" local="true" linkdes="Carga de Plan Preventivo" print="false">
+				<label>Preventivo</label>
+			    <helper type="link" xml="mant_plan_cal.xml" dir="/mantenimiento/ing" modal="true">
+					<parameter source="id_equipo" target="equipo_id" />
+			    </helper>
+			    <expression>
+			    	CONCAT('Plan ', IFNULL((select '- Cargado' from MANT_PLAN WHERE equipo_id = id_equipo limit 1), ''))
+			    </expression>
+		    </field>
+
+			<field id="correctivo" linkdes="Mantemiento Correctivo" >
+          		<label>Correctivo</label>
+				<expression>(count(MANT_PLAN_EVENTOS.equipo_id))</expression> <!-- agregar where id_plan != 0 -->
+				<helper type="link" xml="mant_correc_herr.xml" dir="/mantenimiento/man" modal="true">
+					<parameter source="id_equipo" target="equipo_id" />
+			    </helper>
+			</field>
+                        
+			<field id="tareas"  linkdes="Tareas Correctivas" >
+	            <label>Tareas</label>
+				 <expression><![CDATA[select ifnull(count(*),"0") from MANT_PLAN_EVENTOS where equipo_id = MANT_EQUIPOS.id_equipo and MANT_PLAN_EVENTOS.plan_id=0]]></expression>
+			    <helper type="link" xml="plan_mant_herr.xml" dir="/mantenimiento/man" modal="true">
+					<parameter source="id_equipo" target="equipo_id" />
+			    </helper>
+			</field>
+
+			<field id="consultaplan" local="true" linkdes="Consulta de Plan" print="false">
+			    <label>Imprimir</label>
+			    <helper type="link" xml="mant_plan_qry.xml" dir="/mantenimiento/qry" modal="true">
+					<parameter source="id_equipo" target="equipo_id" />
+			    </helper>
+			    <expression> IFNULL((select 'Consultar' from MANT_PLAN_EVENTOS WHERE equipo_id = id_equipo limit 1), '')</expression>
+		    </field>
+		    
+
+			<!-- ACTIVAR ESTO SI SE VA A PONER EL MODULO DE GASTOS DE ARTICULOS POR REPARACIONES CON MOV DE STOCK
+	 			<field id="repuestos" local="true" linkdes="Articulos Reparacion" >
+	                <label>Repuestos</label>
+	                <valor>+</valor>
+				    <helper type="link" xml="man_articulos_stk_qry.xml" dir="/mantenimiento/man" modal="true">
+						<parameter source="id_equipo" target="equipo_id" />
+				    </helper>
+			</field> -->
+
+	</fieldGroup>
+
+			<group>
+			    <field id="id_equipo" />
+			</group>
+                            
+ 			<order>
+				<field id="nombre_equipo" />
+			</order>               
+			    
+        </table>
+
+        <join tipo="left">
+
+    	     <table id="MANT_PLAN">
+    	        <field id="equipo_id">
+    	    	    <condicion operador="=">MANT_EQUIPOS.id_equipo</condicion>
+    	        </field>
+    	     </table>
+        </join>
+
+        <join tipo="left">
+    	     <table id="MANT_PLAN_EVENTOS">
+    	        <field id="plan_id">
+    	    	    <condicion operador="=">MANT_PLAN.id_plan</condicion>
+    	        </field>
+    	     </table>
+        </join>
+    </form>
+</histrix>	

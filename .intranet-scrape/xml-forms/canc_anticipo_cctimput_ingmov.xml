@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<abm tipo="insert">
+	<titulo>COMPROBANTES</titulo>
+	<obs/>
+	<consulta>
+		<tabla id="CCTIMPUT" label="FACTURAS">
+			<campo id="siscod" id_cab="siscod"/>
+			<campo id="ctacod" id_cab="ctacod"/>
+			<campo id="movfec" id_temp="movfec"/>
+			<campo id="concod" id_temp="concod"/>
+			<campo id="movlet" id_temp="movlet"/>
+			<campo id="movnpv" id_temp="movnpv"/>
+			<campo id="movnro" id_temp="movnro"/>
+			<campo id="movimp" id_temp="movsal"/>
+			<campo id="movsal" id_temp="newsaldo"></campo>
+			<campo id="movicc" id_cab="concodCAB"></campo>
+			<campo id="movife" id_cab="movfecCAB"></campo>
+			<campo id="movipv" id_cab="movnpvCAB"></campo>
+			<campo id="movinc" id_cab="movnroCAB"></campo>
+<!--			<campo id="regmin">
+				<valor>_NRO_MIN</valor>
+			</campo> -->
+		</tabla>
+	</consulta>
+</abm>

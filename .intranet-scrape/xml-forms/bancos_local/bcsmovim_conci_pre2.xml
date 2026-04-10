@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="consulta" borra="no" inserta="no" noform="true">
+	<title>Movimientos Bancarios</title>
+	<obs></obs>
+	<form >
+		<table id="BCSMOVIM" label="Movimientos Bancarios">
+			<field id="bcscta">
+				<label>Codigo Cuenta</label>
+				<help>Codigo de Cuenta Bancaria </help>
+			</field>
+			
+			<field id="siscod" oculto="true">
+				<label>Codigo Sistema.</label>
+				<help>
+				</help>
+			</field>
+
+			<field id="bcsmov" oculto="true">
+				<label>bcsmov</label>
+			</field>
+	    		<field id="acreditado2" _oculto="true" required="false">
+
+				<label>Acreditacion</label>
+				<tipo>date</tipo>
+
+				<expression having="false">acreditado</expression> 
+			</field>			
+			<field id="bcsnro" deshabilitado="true" noselect="true">
+				<label>Nro. Movimiento</label>
+				<help>Numero de Movimiento </help>
+				<format>%010d</format>
+				
+			</field>
+			<field id="cnbabvE">
+				<expression>'Acumulado'</expression>
+				<label>Tipo</label>
+				<help>Codigo de tipo de Movimiento </help>
+				
+				<!--                      <tabla_ex id="BCSCONCE">
+				<field id="cnbcod"></field>
+				<field id="cnbabv"></field>
+				</tabla_ex>
+				-->
+				<tipo>string</tipo>
+			</field>
+			
+			<field id="referencia"  local="true">
+				<label>Referencia</label>
+				<tipo>varchar</tipo>
+				<expression>concat('CONCILIADOS (ultimo: ', date_format(max(acreditado), '%d/%m/%Y'), ')')</expression>
+			</field> 
+			
+			<field id="debe" suma="true">
+				<expression>round(sum(bcsimp * (case when cnbtip = '1' then 1 else 0 end)), 2)</expression>
+				
+				<label>Debe</label>
+				<help>Importe del Movimiento en el Debe</help>
+				<tipo>numeric</tipo>
+			</field>
+			
+			<field id="haber" suma="true">
+				<expression>round(sum(bcsimp * (case when cnbtip = '2' then 1 else 0 end)),2)</expression>
+				
+				<label>Haber</label>
+				<help>Importe del Movimiento en el Haber</help>
+				<tipo>numeric</tipo>
+			</field>
+			<field id="diferencia" local="true" suma="true" acumula="true">
+					<label>Saldo</label>
+					<if exp="1 == 1">
+					<true>round(debe - haber, 2)</true>
+					<false>round(debe - haber, 2)</false>
+				</if>
+				<tipo>numeric</tipo>
+			</field>
+			<!--
+			<field id="bcsimp">
+			<label>Importe              . </label>
+			<help>Importe total del movimiento </help>
+			</field>
+			-->
+			<field id="bcsfec2" noselect="true">
+				<expression>bcsfec</expression>
+				<label>Fecha Mov.</label>
+				<help>Fecha del Movimiento</help>
+				<tipo>date</tipo>
+
+			</field>
+			<field id="bcsfec" oculto="true" noselect="true">
+				<label>Fecha Mov1</label>
+				<help>Fecha del Movimiento</help>
+			</field>
+
+			<field id="presentado_tilde" deshabilitado="true" local="true">
+				<expression>presentado</expression>
+				<label>Conc.</label>
+				<tipo>check</tipo>
+			</field>
+
+			<field id="presentado_filtro" noshow="true">
+				<expression having="false">presentado</expression>
+				<label>Conc.</label>
+				<help>conciliado</help>
+				<condicion operador="=">1</condicion>
+			</field>
+
+			<!--        <field id="regmin" deshabilitado="true">
+			<label>Asiento</label>
+			<help>Numero de Asiento</help>
+			</field>-->
+<!--			<field id="presentado">
+				<label>Conc.</label>
+				<help>conciliado</help>
+				<tipo>check</tipo> 
+									<options>
+					<option valor="1">Conciliados</option>
+					<option valor="0">No conciliado</option>
+					<option valor="3">Todos</option>
+
+					</options>
+				<operador>!=</operador>
+					
+			</field>
+			-->
+			<field id="grabar" local="true" oculto="true"  noshow="true">
+				<expression>'false'</expression>
+				<tipo>char</tipo>
+				<valor>'false'</valor>			
+			</field>
+			<group>
+				<field id="bcscta" />
+			</group>
+			
+			<order>
+				<field id="acreditado"></field>
+			</order>
+			
+		</table>
+		
+		<join tipo="left">
+			<table id="BCSCONCE">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">BCSMOVIM.siscod</condicion>
+				</field>
+				
+				<field id="cnbcod" oculto="true">
+					<condicion operador="=">BCSMOVIM.bcsmov</condicion>
+				</field>
+			</table>
+		</join>
+		
+	</form>
+</histrix>

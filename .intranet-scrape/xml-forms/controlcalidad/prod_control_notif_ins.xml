@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="insert" >
+	<titulo>Control Calidad</titulo>
+	<obs/>
+	<form>
+		<table id="HTXMESSAGES"  idCampoCond="update">
+
+		<select>
+( select '[__user_id__]', login, 'Se realizo el control: [__nombre_control__] [__observacion_control__] en la unidad [__nrofab_id__]', date(now()), time(now()) from PROD_CONTROL_NOTIF  join HTXUSERS on Id_usuario = user_id where prodcontrol_id =  '[__id_prodcontrol__]' and '[__update__]' = '1')
+		</select>
+
+            <title>Notificaciones</title>
+			<field id="de" id_temp="user_id">
+			</field>
+			<field id="para" id_temp="login" />
+			
+			<field id="mensaje" id_cab="contenido" />
+			<field id="fecha" >	
+				<valor>date(now())</valor>		
+				<tipo>int</tipo>
+			</field>
+			<field id="hora" id_cab="hora" >	
+				<valor>time(now())</valor>		
+				<tipo>int</tipo>
+			</field>
+
+			<field id="id_prodcontrol" id_temp="id_prodcontrol"	local="true" />	
+
+			<field id="observacion_control" id_temp="observacion_control"	local="true" />	
+			<field id="nombre_control" 	    id_temp="nombre_control"		local="true" />	
+			<field id="nrofab_id" 			id_temp="nrofab_id"				local="true" />	
+			<field id="update" 				id_temp="update"				local="true" />	
+
+		</table>
+	</form>
+</histrix>

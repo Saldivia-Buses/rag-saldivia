@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="fichaing" inserta="false" borra="false" modifica="false" imprime="false" log="false" transaccional="true" tooltip="false" confirma="CONTINUAR" preFetch="false" preloadData="false">
+  <title>Cambio de Valores</title>
+  <obs/>
+  <form>
+    <table id="CAJ_MOVIMIENTOS" label="Cambio de Valores">
+
+    <!-- VALIDACIONES -->
+
+      <validation>
+        <condition><![CDATA[ cajpuestodestino_id == 0 ]]></condition>
+        <message>Seleccione el puesto de destino</message>
+      </validation>
+      
+      <validation>
+        <condition><![CDATA[ importe_moneda + 0 <= 0 ]]></condition>
+        <message>El importe debe ser mayor a 0</message>
+      </validation>
+
+      <validation>
+        <condition><![CDATA[ cotizacion + 0 <= 0 ]]></condition>
+        <message>Ingrese la cotización de la moneda</message>
+      </validation>
+      
+      <validation>
+        <condition><![CDATA[ importe_movimiento + 0 != total_pago + 0 ]]></condition>
+        <message>Importes no coinciden</message>
+      </validation>
+
+    <!-- FIN VALIDACIONES -->
+
+      <movimientos>        
+        <relacion id="cajmovimientos_cambioval_ins.xml" />   <!-- CAJ_MOVIMIENTOS -->
+        <relacion id="cajdetalle_cambioval_debe_ins.xml" />  <!-- CAJ_DETALLES -->
+        <relacion id="cajdetalle_cambioval_haber_ins.xml" /> <!-- CAJ_DETALLES -->
+        <relacion id="cajvalores_cambioval_ins.xml" />       <!-- CAJ_VALORES -->        
+        <relacion id="cajnumeradores_upd.xml" />             <!-- ACTUALIZO NUMERADOR -->
+
+        <relacion id="cajmovimientos_compraval_ins.xml" />  <!-- CAJ_MOVIMIENTOS -->
+        <relacion id="cajdetalle_compraval_debe_ins.xml" /> <!-- CAJ_DETALLES --> 
+        <relacion id="cajdetalle_debe_compraval_ins.xml" /> <!-- CAJ_DETALLES -->
+        <relacion id="cajnumeradores_upd.xml" />            <!-- ACTUALIZO NUMERADOR -->
+      </movimientos>
+
+      <field id="id_cajmovimiento" noshow="true">
+        <condicion operador="=">-1</condicion>
+      </field>
+
+      <fieldGroup id="parametros_ingreso" noshow="true">  
+        <field id="cajconceptorel_id" local="true" />                  
+        <field id="moneda_id" local="true">
+          <valor>1</valor>
+        </field>
+        <field id="cajpuesto_id"/>
+        <field id="cajconcepto_id"/>
+        <field id="tipoimpre_concepto" tabla="CAJ_CONCEPTOS" />
+        <field id="imputacion_concepto" tabla="CAJ_CONCEPTOS"/>
+        <field id="fecha_movimiento"/>
+        <field id="cajregistro_id" />
+        <field id="cajconceptorel_id" local="true" />
+        <field id="moneda_cambio" local="true" />
+      </fieldGroup>     
+    
+      <field id="esadmin" local="true" noshow="true" deshabilitado="true">
+        <valor eval="true">$_SESSION['administrator'] == 1 ? 'false' : 'true'</valor>
+      </field>
+
+      <field id="usuario_id" local="true" noshow="true" oculto="true">
+        <valor eval="true">$_SESSION['idUser']</valor>
+      </field>
+
+      <field id="ctbcuenta_debe" local="true" noshow="true">
+        <helper type="combo" id="CAJ_FORMAS_PAGO">
+          <field id="ctbcuenta_forma_id" />
+          <field id="cuenta">
+            <expression>ctbcuenta_forma_id</expression>
+          </field>
+          <field id="id_cajformapago">
+            <condicion operador="=" valorde="moneda_cambio"></condicion>
+          </field>
+        </helper>
+      </field>
+
+      <field id="ctbcuenta_haber" local="true" noshow="true">
+        <helper type="combo" id="CAJ_FORMAS_PAGO">
+          <field id="ctbcuenta_forma_id" />
+          <field id="cuenta">
+            <expression>ctbcuenta_forma_id</expression>
+          </field>
+          <field id="id_cajformapago">
+            <condicion operador="=" valorde="moneda_cambio"></condicion>
+          </field>
+        </helper>
+      </field>
+
+      <field id="ctbcuenta_diferencia" local="true" maxsize="250" maxlength="250" PDFnolabel="true" PDFsize="8" pdfancho="120" PDFbold="true" noshow="true">
+        <label posx="20" posY="128" />
+        <helper type="parameter" id="SIS::04:cuenta_difcotizacion">
+          <label>Referencia Para Facturacion</label>
+          <defaultValue></defaultValue>
+        </helper>
+      </field>
+    
+      <field id="nro_movimiento" deshabilitado="true">
+        <label>Nº Comprobante</label>  
+        <parametro id="cajnumerador_param.xml" retorna="numero" />
+        <format>%08d</format>
+        <size>8</size>
+        <detalle>nro_movimiento</detalle>
+      </field>
+
+      <field id="cajpuestodestino_id" local="true" sincelda="true">
+        <label modpos="nobr">Puesto Destino</label>
+        <helper type="combo" xml="trans_cajmovim_qry.xml" empty="true">
+          <field id="id_cajpuesto">
+            <condicion operador="!=" valorde="cajpuesto_id" />
+          </field>
+          <field id="fecha_reg">
+            <condicion operador="=" valorde="fecha_movimiento"/>
+            <tipo>date</tipo>
+            <expression having="false">CAJ_REGISTROS.fecha_registro</expression>
+          </field>
+          <field id="puesto_central">
+            <condition operador="=">1</condition>
+          </field>
+          <field id="cajformapagodif_id">
+            <condicion operador="=" valorde="moneda_cambio"></condicion>
+          </field>
+        </helper>
+      </field>
+
+      <field id="separador_1" style="height:10px" local="true" deshabilitado="true">
+        <label colspan="8" />
+      </field>
+
+      <field id="importe_moneda" local="true">
+        <label>Importe</label>
+        <jseval campodestino="dif_cotizacion">((importe_moneda * cotizacion) - importe_moneda).toFixed(2)</jseval>
+      </field>
+
+      <field id="cotizacion" local="true">
+        <label>Cotizacion</label>
+        <jseval campodestino="dif_cotizacion">((importe_moneda * cotizacion) - importe_moneda).toFixed(2)</jseval>
+      </field>
+
+      <field id="importe_movimiento" local="true" deshabilitado="true">
+        <label modpos="nobr" style="font-size: large;">Total</label>
+      </field>
+
+      <field id="dif_cotizacion" local="true" deshabilitado="true">
+        <label colspan="12">Diferencia Cotizacion</label>
+        <jseval campodestino="importe_movimiento">(importe_moneda + dif_cotizacion).toFixed(2)</jseval>
+      </field>
+
+      <field id="detalles" local="true">
+        <label colspan="8"/>
+        <helper type="object" xml="cajvalores_cambio_grid.xml">
+          <parameter source="imputacion_concepto" target="imputacion_concepto" />
+          <parameter target="cajpuesto_id" source="cajpuesto_id"/>
+          <parameter target="cajregistro_id" source="cajregistro_id"/>
+        </helper>
+      </field>
+
+      <field id="referencia_movimiento" local="true">
+        <label>Referencia</label>
+        <size>255</size>
+      </field>
+
+      <field id="total_pago" local="true" deshabilitado="true">
+        <label style="font-size: large;" modpos="nobr">Total</label>
+        <tipo>numeric</tipo>
+      </field>
+
+    </table>
+
+    <join tipo="left">
+      <table id="CAJ_CONCEPTOS">
+        <field id="id_cajconcepto">
+          <condicion operador="=">CAJ_MOVIMIENTOS.cajconcepto_id</condicion>
+        </field>
+      </table>
+    </join>
+    
+    <join>
+      <table id="CAJ_PUESTOS">
+        <field id="id_cajpuesto">
+          <condicion operador="=">'[__cajpuesto_id__]'</condicion>
+        </field>
+      </table>
+    </join>
+
+  </form>
+</histrix>

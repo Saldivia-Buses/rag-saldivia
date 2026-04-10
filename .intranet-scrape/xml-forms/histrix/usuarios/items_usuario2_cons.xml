@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="consulta" imprime="false" showCantidad="false" deleteRow="false" procesa="false" inserta="false" export="false">
+	<title>Usuarios</title>
+	<obs/>
+	<form detalle="items_usuario2_cons.xml" inline="true" hasDetail="hasdet">
+		<table id="HTXMENU" label="Usuarios">
+
+  	   <field id="Id_perfil" local="true" _noshow="true" _esClave="true">
+	        <detalle>Id_perfil</detalle>
+	      </field>
+
+			<field id="Id_menu" noshow="true" ></field>
+
+			<field id="hasdet" noshow="true" >
+				<expression>case when trim(ifnull(hijo, '')) != '' then 1 else 0 end</expression>
+			</field>
+
+			<field id="hasdet2" noshow="true" >
+				<expression>case when trim(ifnull(hijo, ''))  != '' then 'true' else 'false' end</expression>
+			</field>
+
+			<field id="tipodato" noshow="true" >
+				<expression>case when trim(ifnull(hijo, ''))  != '' then 'varchar' else 'check' end</expression>
+			</field>
+
+			<field id="hijo" noshow="true" >
+				<detalle>Id_menu</detalle>
+			</field>
+
+			<field id="parametros" noshow="true" ></field>
+
+			<field id="menuId" noshow="true" esClave="true"></field>
+
+			<field id="login" local="true" noshow="true" >
+				<label>login</label>
+				<detalle>login</detalle>
+			</field>
+
+			<field id="autorizado" refresh="true">
+				<attribute id="deshabilitado">hasdet2</attribute>
+				<attribute id="TipoDato">tipodato</attribute>
+				<expression>ifnull((select 1 from HTXPROFILE_AUTH H where H.menuId = HTXMENU.menuId and H.Id_perfil = [__Id_perfil__] limit 1) , 0)</expression>
+        <tipo>check</tipo>
+      </field>
+
+      <field id="clasef" local="true" noshow="true">
+        <if exp="'autorizado' == '0' &amp;&amp; 'parametros' != ''">
+          <true>'color:grey;'</true>
+          <false>('parametros' == '')?'font-weight:bold;':''</false>
+        </if>
+      </field>
+
+      <field id="titulo" noshow="true">
+        <tipo>varchar</tipo>
+      </field>
+
+      <field id="tit2" local="true">
+        <attribute id="style">clasef</attribute>
+        <tipo>varchar</tipo>
+        <if exp="true">
+          <true>ucfirst(strtolower('titulo'))</true>
+          <false>''</false>
+        </if>
+      </field>
+
+      <field id="m1" local="true" noshow="true">
+        <valor>Id_menu</valor>
+      </field>
+
+      <field id="m2" local="true" noshow="true">
+        <valor>menuId</valor>
+      </field>
+
+      <field id="p1" local="true" noshow="true">
+        <valor>Id_perfil</valor>
+      </field>
+
+      <field id="insdel" noshow="true" local="true">
+        <if exp="'autorizado' == '1'">
+          <true>'insert ignore into HTXPROFILE_AUTH set m1 = menuId, m2 = menuId,  p1 = Id_perfil'</true>
+          <false>'delete from HTXPROFILE_AUTH where m2 = menuId and  p1 = Id_perfil and hasdet = 0 limit 1'</false>
+        </if>
+      </field>
+
+      <field id="INS" noshow="true">
+        <expression sql="true">[__insdel__]</expression>
+      </field>
+
+      <!-- <field id="insdel" noshow="true" local="true">
+        <label>test</label>
+        <if exp="'autorizado' == '1'">
+          <true>
+						insert ignore into HTXPROFILE_AUTH set m1 = menuId, m2 = menuId,  p1 = Id_perfil
+					</true>
+          <false>
+						delete from HTXPROFILE_AUTH where m2 = menuId and  p1 = Id_perfil and hasdet = 0 limit 1
+					</false>
+        </if>
+      </field> -->
+      <!-- 			<field id="delete">
+      			    <expression sql="true">delete from HTXPROFILE_AUTH where menuId = [__menuId__] and  Id_perfil = [__Id_perfil__] limit 1;</expression>
+       			</field>-->
+      <!-- <field id="INS" noshow="true">
+        <expression sql="true">'[__insdel__]'</expression>
+      </field> -->
+
+      <field id="orden" noshow="true" tabla="HTXMENU"/>
+
+      <group>
+        <field id="menuId"/>
+      </group>
+
+      <order>
+        <field id="orden" tabla="HTXMENU"/>
+      </order>
+
+    </table>
+  </form>
+</histrix>

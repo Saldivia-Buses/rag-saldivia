@@ -1,0 +1,378 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" limit="1" _autoupdate="240">
+    <title>Indicadores Produccion</title>
+    <form>
+        <table id="SECCION" label="Indicadores Produccion">
+
+            <filters>
+                <field id="desdefecha" local="true" noshow="true" deshabilitado="true">
+                    <operador>=</operador>
+                    <valor eval="true">date("d/m/Y", mktime(0, 0, 0, date("m"), 01, date("Y")))</valor>
+                    <label>Desde Fecha</label>
+                </field>
+                <field id="hastafecha" local="true" noshow="true" deshabilitado="true">
+                    <operador>=</operador>
+                    <valor eval="true">date("d/m/Y", mktime(0, 0, 0, date("m"), date("d"), date("Y")))</valor>
+                    <label modpos="nobr">Hasta Fecha</label>
+                </field>
+                <field id="hastafechaayer" local="true" noshow="true" deshabilitado="true">
+                    <operador>=</operador>
+                    <valor eval="true">date("d/m/Y", mktime(0, 0, 0, date("m"), date("d")-1, date("Y")))</valor>
+                    <label modpos="nobr">Hasta Fecha Ayer</label>
+                </field>
+            </filters>
+
+            <field id="desdefecha" local="true" noshow="true">
+                <tipo>date</tipo>
+                <label>Desde Fecha</label>
+            </field>
+
+            <field id="hastafecha" local="true" noshow="true">
+                <tipo>date</tipo>
+                <label>Hasta Fecha</label>
+            </field>
+
+            <field id="hastafechaayer" local="true" noshow="true">
+                <tipo>date</tipo>
+                <label>Hasta Fecha</label>
+            </field>
+            <field id="usuario" local="true" noshow="true">
+                <valor eval="true">$_SESSION['idUser']</valor>
+                <label>User</label>
+            </field>
+
+            <field id="seccion_id">
+              <label colstyle="font-weight:bold;font-size:30px">Seccion</label>
+              <expression>select seccion_id from HTXUSERS where HTXUSERS.Id_usuario = '[__usuario__]'</expression>
+            <helper type="combo" id="SECCION" empty="true">
+                <field id="id_seccion" />
+                <field id="nombre" />
+                <field id="linea_id" oculto="true">
+                </field>
+                <order>
+              <field id="nombre" />
+                </order>
+            </helper>
+            </field>
+
+            <field id="idMomento" noshow="true">
+                <label colstyle="font-weight:bold;font-size:30px">Sección.Premio</label>
+              <expression>select idMomento from SECCION
+              INNER JOIN HTXUSERS ON id_seccion = seccion_id
+              where HTXUSERS.Id_usuario = '[__usuario__]'</expression>
+            <helper type="combo" id="MOMENTO" empty="true">
+                <field id="idMomento" />
+                <field id="descripcion" />
+                <field id="linea_id" oculto="true">
+                </field>
+                <order>
+              <field id="descripcion" />
+                </order>
+            </helper>
+            </field>
+
+            <field id="idMomentoCalidad" noshow="true">
+                <label colstyle="font-weight:bold;font-size:30px">Seccion.Calidad</label>
+              <expression>select idMomentoCalidad from SECCION
+              INNER JOIN HTXUSERS ON id_seccion = seccion_id
+              where HTXUSERS.Id_usuario = '[__usuario__]'</expression>
+            <helper type="combo" id="MOMENTO" empty="true">
+                <field id="idMomento" />
+                <field id="descripcion" />
+                <field id="linea_id" oculto="true">
+                </field>
+                <order>
+              <field id="descripcion" />
+                </order>
+            </helper>
+            </field>
+
+            
+            <field id="ultima_actualizacion" local="true">
+                <label colstyle="font-weight:bold;font-size:15px;align:center;">Ult.Act</label>
+                <valor eval="true">date("d/m g:i", mktime(date("g"), date("i"), date("s"), date("m"), date("d"), date("Y")))</valor>
+            </field>
+
+      <field id="observaciones_turnos" oculto="true" >
+          <expression><![CDATA[
+            select group_concat(concat(TUR.fechaing, ' - ',C.desabv) SEPARATOR "\n")
+             FROM TURNOSPRODUCCION as TUR
+            join PEDCOTIZ as P on TUR.nrofab = P.nrocha
+            join HOMOLOGMOD H on P.homologacion_id = H.id_homologacion
+            join CARROCERIA C on C.nrocar = H.nrocar
+            where TUR.fechaing >= str_to_date('[__desdefecha__]', '%d/%m/%Y')
+            and TUR.fechaing <= str_to_date('[__hastafecha__]', '%d/%m/%Y') 
+            and TUR.linea_id = 1
+            ]]></expression>
+      </field>
+
+      <field id="cant_turnos_periodo">
+        <label colstyle="font-weight:bold;font-size:80px">Turnos</label>
+        <!--cantidad habiles<expression>SELECT COUNT(*) FROM CALENDAR
+            WHERE CALENDAR.fecha &gt;= STR_TO_DATE('[__desdefecha__]', '%d/%m/%Y')
+              AND CALENDAR.fecha &lt;= STR_TO_DATE('[__hastafecha__]', '%d/%m/%Y')
+              AND DAYOFWEEK(CALENDAR.fecha) NOT IN (1,7)
+              AND CALENDAR.fecha NOT IN (SELECT idFeriado FROM FERIADOS)</expression>
+
+
+                        select TUR.nrofab FROM TURNOSPRODUCCION as TUR
+            join PEDCOTIZ as P on TUR.nrofab = P.nrocha
+            where terminacion &gt; str_to_date('[__desdefecha__]', '%d/%m/%Y')
+            and TUR.linea_id = 1
+order by P.terminacion DESC
+limit 1
+-->
+        <expression>select SUM(C.porcentaje_sobrea365) FROM TURNOSPRODUCCION as TUR
+            join PEDCOTIZ as P on TUR.nrofab = P.nrocha
+            join HOMOLOGMOD H on P.homologacion_id = H.id_homologacion
+            join CARROCERIA C on C.nrocar = H.nrocar
+            where TUR.fechaing &gt;= str_to_date('[__desdefecha__]', '%d/%m/%Y') 
+            and TUR.fechaing &lt;= str_to_date('[__hastafecha__]', '%d/%m/%Y') 
+            and TUR.linea_id = 1</expression>
+        <tipo>numeric</tipo>
+        <attribute id="tooltip">observaciones_turnos</attribute>
+      </field>
+
+      <field id="cant_unidades_periodo" noZero="true">
+      <label colstyle="font-weight:bold;font-size:80px">Liberado</label>
+      <expression sql="true"> <!--case when '[__idMomento__]' != 6 then-->
+        (select SUM(porcentaje_sobrea365)
+        from PROD_CONTROL_MOVIM
+        join PROD_CONTROLES on id_prodcontrol = prodcontrol_id
+        join PEDCOTIZ on nrofab_id = nrocha
+        join HOMOLOGMOD H on homologacion_id = id_homologacion
+        join CARROCERIA C on C.nrocar = H.nrocar 
+        where fecha_control &gt;= '[__desdefecha__]'
+        and fecha_control &lt;= '[__hastafecha__]'
+        and PROD_CONTROLES.seccion_id = '[__idMomentoCalidad__]'
+        and orden_control = 999
+        and seccion_id != 6)
+<!-- else 1
+        (((select COUNT(*) from PROD_CONTROLES join PROD_CONTROL_MOVIM on id_prodcontrol = prodcontrol_id join TURNOSPRODUCCION TUR on TUR.nrofab = nrofab_id
+where fecha_control &gt;= STR_TO_DATE('[__desdefecha__]', '%d/%m/%Y') and  fecha_control &lt;= STR_TO_DATE('[__hastafecha__]', '%d/%m/%Y') and orden_control = 999 and seccion_id = 2)+
+
+(select COUNT(*) from PROD_CONTROLES join PROD_CONTROL_MOVIM on id_prodcontrol = prodcontrol_id join TURNOSPRODUCCION TUR on TUR.nrofab = nrofab_id
+where fecha_control &gt;= STR_TO_DATE('[__desdefecha__]', '%d/%m/%Y') and  fecha_control &lt;= STR_TO_DATE('[__hastafecha__]', '%d/%m/%Y') and orden_control = 999 and seccion_id = 3)+
+
+(select COUNT(*) from PROD_CONTROLES join PROD_CONTROL_MOVIM on id_prodcontrol = prodcontrol_id join TURNOSPRODUCCION TUR on TUR.nrofab = nrofab_id
+where fecha_control &gt;= STR_TO_DATE('[__desdefecha__]', '%d/%m/%Y') and  fecha_control &lt;= STR_TO_DATE('[__hastafecha__]', '%d/%m/%Y') and orden_control = 999 and seccion_id = 5)
+
+) / 3) end-->  
+      </expression>
+      <tipo>numeric</tipo>
+      <attribute id="style">color_objetivo_mensual_lib</attribute>
+      </field>
+
+      <field id="color_objetivo_mensual_lib" noshow="true" local="true">
+          <label colstyle="font-weight:bold;font-size:80px">%Obj.Men.Yurnos</label>
+          <expression sql="true"> select (case
+            when '[__cant_unidades_periodo__]' &gt;= '[__cant_turnos_periodo__]' then 'background-color:greenyellow;font-weight:bold;font-size:80px'
+
+            when '[__cant_unidades_periodo__]' &gt;= (('[__cant_turnos_periodo__]' + 0) - 3) and '[__cant_unidades_periodo__]' &lt; '[__cant_turnos_periodo__]' then 'background-color:#FFFC00;font-weight:bold;font-size:80px'
+
+            when '[__cant_unidades_periodo__]' &lt; (('[__cant_turnos_periodo__]' + 0) - 3) then 'background-color:red;color:white;font-weight:bold;font-size:80px'
+
+           end)</expression>
+      </field>
+
+
+
+      <field id="cant_cntrl_homolog" noZero="true" noshow="true">
+      <label>Cant.Cntrl</label> 
+              <expression sql="true"> select case when '[__idMomentoCalidad__]' = 6 then (
+            select count(*)
+            from PROD_CONTROL_MOVIM 
+            left join PROD_CONTROLES on id_prodcontrol = prodcontrol_id 
+            where fecha_control &gt;= '[__desdefecha__]'
+            and fecha_control &lt;= '[__hastafecha__]'
+            and PROD_CONTROLES.seccion_id != 6 <!-- control entrega-->
+            and PROD_CONTROLES.seccion_id != 15 <!-- control recepcion-->
+            and PROD_CONTROLES.seccion_id != 0 <!-- control final-->
+            and PROD_CONTROLES.seccion_id != 25 <!-- control setup-->
+            and no_aplica = 0 )/6 
+            when '[__idMomentoCalidad__]' != 0 then (
+            select count(*)
+            from PROD_CONTROL_MOVIM 
+            left join PROD_CONTROLES on id_prodcontrol = prodcontrol_id 
+            where fecha_control &gt;= '[__desdefecha__]'
+            and fecha_control &lt;= '[__hastafecha__]'
+            and PROD_CONTROLES.seccion_id = '[__idMomentoCalidad__]'
+            and no_aplica = 0) end</expression>
+        <tipo>numeric</tipo>    
+      </field>
+
+      <field id="cant_cntrl_obs_homolog" noZero="true" noshow="true">
+      <label>Cant.Cntrl.Obs</label>
+              <expression sql="true"> select case when '[__idMomentoCalidad__]' = 6 then (
+            select count(*)
+            from PROD_CONTROL_MOVIM 
+            left join PROD_CONTROLES on id_prodcontrol = prodcontrol_id 
+            where fecha_control &gt;= '[__desdefecha__]'
+            and fecha_control &lt;= '[__hastafecha__]'
+            and PROD_CONTROLES.seccion_id != 6 <!-- control entrega-->
+            and PROD_CONTROLES.seccion_id != 15 <!-- control recepcion-->
+            and PROD_CONTROLES.seccion_id != 0 <!-- control final-->
+            and PROD_CONTROLES.seccion_id != 25 <!-- control setup-->
+            and no_conforme = 1
+            and (controlcausal_id = 2 or controlcausal_id = 3))/6 
+            when '[__idMomentoCalidad__]' != 0 then (
+            select count(*)
+            from PROD_CONTROL_MOVIM 
+            left join PROD_CONTROLES on id_prodcontrol = prodcontrol_id 
+            where fecha_control &gt;= '[__desdefecha__]'
+            and fecha_control &lt;= '[__hastafecha__]'
+            and PROD_CONTROLES.seccion_id = '[__idMomentoCalidad__]'
+            and no_conforme = 1
+            and (controlcausal_id = 2 or controlcausal_id = 3)) end</expression>
+    <tipo>numeric</tipo>  
+      </field>
+
+              <field id="objetivo_mensual" noshow="true">
+              <label>%Obj.Men</label>
+              <expression>select option_value FROM HTXOPTIONS where option_description = 'Objetivo grafico % Defectos por Mes'</expression>
+              <tipo>decimal</tipo>
+              </field>
+
+              <field id="porcentaje_obser" _noZero="true" local="true">
+                <label colstyle="font-weight:bold;font-size:80px">Calidad</label>
+                <if exp="true">
+                  <true>(cant_cntrl_obs_homolog/cant_cntrl_homolog)*100</true>
+                  <false>'0'</false>
+                </if>
+                <tipo>decimal</tipo>  
+                <attribute id="style">color_objetivo_mensual</attribute>
+              </field>
+
+              <field id="color_objetivo_mensual" noshow="true" local="true">
+              <label>%Obj.Men.Obser</label>
+      <expression sql="true">select 
+          (case when ('[__porcentaje_obser__]' * 1) &lt; 2 then 'background-color:greenyellow;'
+            
+            when ('[__porcentaje_obser__]' * 1) &gt;= 2 and ('[__porcentaje_obser__]' * 1) &lt;= ('[__objetivo_mensual__]' * 1) then 'background-color:#FFFC00;font-weight:bold;font-size:80px'
+
+          when ('[__porcentaje_obser__]' * 1) &gt; ('[__objetivo_mensual__]' * 1) then 'background-color:red;color:white;font-weight:bold;font-size:80px'
+
+             end)
+      </expression>
+                </field>
+
+            <field id="trabajadas" noshow="true">
+                <label colstyle="font-weight:bold;font-size:80px">Trabaj.</label>
+                <expression sql="true"><![CDATA[
+                    select 
+                    
+                    (concat(CAST(FLOOR((sum(FF.minutos)/3600)) as char),':', 
+                      LPAD(CAST(FLOOR((sum(FF.minutos)%3600)/60)AS CHAR),2,'0'),':', 
+                      LPAD(CAST((sum(FF.minutos)%60) AS CHAR),2,'0')) + 0)
+                    from 
+                    (select F1.fecha,
+               
+@egr:= (SELECT H.egreso from HORARIOHIST as H  where H.desdeFecha <= F1.fecha and H.dia = DAYOFWEEK(F1.fecha) order by H.desdeFecha DESC limit 1) as "egr",
+@ing:= (SELECT H.ingreso from HORARIOHIST as H where H.desdeFecha <= F1.fecha and H.dia = DAYOFWEEK(F1.fecha) order by H.desdeFecha DESC limit 1) as "ing",
+
+@h1:= (select H1.hora from FICHADAS as H1 left join FERIADOS ON FERIADOS.idFeriado = H1.fecha where H1.tarjeta = (SELECT TJT.tarjeta from PERSONAL_TARJETA as TJT where TJT.idPersona = PERSONAL.idPersona  and TJT.fechaDesde <= F1.fecha order by fechaDesde DESC limit 1) and H1.fecha = F1.fecha and H1.borrado = 0 order by H1.hora  limit 0, 1) as "h1",
+@h2:= (select H1.hora from FICHADAS as H1 left join FERIADOS ON FERIADOS.idFeriado = H1.fecha where H1.tarjeta = (SELECT TJT.tarjeta from PERSONAL_TARJETA as TJT where TJT.idPersona = PERSONAL.idPersona  and TJT.fechaDesde <= F1.fecha order by fechaDesde DESC limit 1) and H1.fecha = F1.fecha and H1.borrado = 0 order by H1.hora  limit 1, 1) as "h2",
+@h3:= (select H1.hora from FICHADAS as H1 left join FERIADOS ON FERIADOS.idFeriado = H1.fecha where H1.tarjeta = (SELECT TJT.tarjeta from PERSONAL_TARJETA as TJT where TJT.idPersona = PERSONAL.idPersona  and TJT.fechaDesde <= F1.fecha order by fechaDesde DESC limit 1) and H1.fecha = F1.fecha and H1.borrado = 0 order by H1.hora  limit 2, 1) as "h3",
+@h4:= (select H1.hora from FICHADAS as H1 left join FERIADOS ON FERIADOS.idFeriado = H1.fecha where H1.tarjeta = (SELECT TJT.tarjeta from PERSONAL_TARJETA as TJT where TJT.idPersona = PERSONAL.idPersona  and TJT.fechaDesde <= F1.fecha order by fechaDesde DESC limit 1) and H1.fecha = F1.fecha and H1.borrado = 0 order by H1.hora  limit 3, 1) as "h4",
+
+ifnull( time_to_sec( timediff( case when @h2 > @egr then @egr else @h2 end , case when @h1 < @ing then @ing else @h1 end )), 0)
++
+ifnull( time_to_sec( timediff( case when @h4 > @egr then @egr else @h4 end , case when @h4 < @ing then @ing else @h3 end )), 0)
+
+as "minutos"
+
+                    from 
+             GEN_CALENDAR as F1 
+             left join PERSONAL on
+              PERSONAL.id_seccion = '[__seccion_id__]' and
+              PERSONAL.fechaEgreso = '0000-00-00' 
+             
+             left join FERIADOS ON FERIADOS.idFeriado = F1.fecha
+        where
+                          F1.fecha  >= '[__desdefecha__]' and
+                          F1.fecha  <= '[__hastafechaayer__]' and
+        isnUll(FERIADOS.idFeriado)) as FF ]]>
+                </expression>
+            </field>
+
+      <field id="licencias_no_imputables" local="true" noZero="true" noshow="true">
+            <expression sql="true"><![CDATA[select count(*)*9 from FRANCOS_PER F
+                      join PERSONAL P on F.IdPersona = P.IdPersona and P.fechaEgreso = "0000-00-00"
+                            join CALENDAR ON CALENDAR.fecha >= F.fechainicio and CALENDAR.fecha <= (case  when F.fechafin = '0000-00-00' then '[__hastafecha__]' else F.fechafin end)
+                            join FRANCOS_CAT FC on FC.idfranco = F.idfranco and FC.tipo = F.tipo
+                            where P.id_seccion = '[__id_seccion__]' and
+                                FC.descuenta_grupo = 1 and
+                                  CALENDAR.fecha >= '[__desdefecha__]' and 
+                                  CALENDAR.fecha <= '[__hastafecha__]' and
+                                  dayofweek(CALENDAR.fecha) NOT IN (1,7) and 
+                                  CALENDAR.fecha NOT IN (select idFeriado from FERIADOS)]]></expression>
+        <label>No.Imp</label>
+        <tipo>decimal</tipo>
+        </field>
+
+            <field id="proyeccion" noshow="true">
+                <label colstyle="font-weight:bold;font-size:30px">Horas</label>
+                <expression sql="true"><![CDATA[
+
+                    select
+                    (concat(CAST(FLOOR((sum(FF.minutos)/3600)) as char),':', 
+                      LPAD(CAST(FLOOR((sum(FF.minutos)%3600)/60)AS CHAR),2,'0'),':', 
+                      LPAD(CAST((sum(FF.minutos)%60) AS CHAR),2,'0')) + 0)
+                     from 
+                    
+(select F1.fecha,
+               
+@egr2:= (SELECT H.egresoPremio  from HORARIOHIST as H  where H.desdeFecha <= F1.fecha and H.dia = DAYOFWEEK(F1.fecha) order by H.desdeFecha DESC limit 1) as "egr",
+@ing2:= (SELECT H.ingresoPremio from HORARIOHIST as H  where H.desdeFecha <= F1.fecha and H.dia = DAYOFWEEK(F1.fecha) order by H.desdeFecha DESC limit 1) as "ing",
+
+ifnull( time_to_sec( timediff( @egr2 , @ing2 )), 0)
+
+as "minutos"
+
+                   
+             from GEN_CALENDAR as F1 
+      join PERSONAL P on id_seccion = '[__seccion_id__]' and
+     P.fechaEgreso = "0000-00-00"
+    left join FERIADOS ON FERIADOS.idFeriado = F1.fecha
+        where
+                          F1.fecha  >= (select (case when fechaDesde < '[__desdefecha__]' then '[__desdefecha__]' else fechaDesde end) from SECCIONHISTORIA where fechaDesde <= '[__hastafechaayer__]' and SECCIONHISTORIA.IdPersona = P.IdPersona order by fechaDesde DESC limit 1) and
+                          F1.fecha  <= (select (case when fechaEgreso = '0000-00-00' then '[__hastafechaayer__]' else fechaEgreso end) from PERSONAL where PERSONAL.IdPersona = P.IdPersona) and
+        isnUll(FERIADOS.idFeriado)) as FF ]]>
+</expression>
+            </field>
+
+      <field id="objetivo_mensual_ausentismo" noshow="true">
+      <label>%Obj.Men</label>
+      <expression>select (option_value + 0) FROM HTXOPTIONS where option_description = 'Objetivo grafico Cantidad de Inasistencias x Mes' limit 1</expression>
+      <tipo>decimal</tipo>
+      </field>
+
+      <field id="objetivo_mensual_amarillo" noshow="true" local="true">
+        <valor>3</valor>
+      </field>
+
+      <field id="porcentaje_ausentismo" _noZero="true">
+        <label colstyle="font-weight:bold;font-size:80px">Ausent.</label>
+        <expression sql="true">select ROUND(((('[__proyeccion__]' + 0) - ('[__trabajadas__]' + 0) - ('[__licencias_no_imputables__]' + 0)) / ('[__proyeccion__]' + 0)) * 100, 2)</expression>
+        <tipo>decimal</tipo>  
+        <attribute id="style">color_objetivo_mensual_ausen</attribute>
+      </field>
+
+      <field id="color_objetivo_mensual_ausen" noshow="true" local="true">
+      <label>%Obj.Men.Obser</label>
+      <expression sql="true">select 
+          (case when ('[__porcentaje_ausentismo__]' * 1) &lt; 3 then 'background-color:greenyellow;'
+            
+            when ('[__porcentaje_ausentismo__]' * 1) &gt;= 3 and ('[__porcentaje_ausentismo__]' * 1) &lt;= ('[__objetivo_mensual_ausentismo__]' * 1) then 'background-color:#FFFC00;'
+
+          when ('[__porcentaje_ausentismo__]' * 1) &gt; ('[__objetivo_mensual_ausentismo__]' * 1) then 'background-color:red;color:white;'
+
+             end)
+      </expression>
+        </field>
+
+        </table>
+    </form>
+</histrix>
+
+

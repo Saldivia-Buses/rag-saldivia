@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" >
+	<title>Remitos de Envios a Clientes</title>
+	<obs></obs>
+	<form  >
+		<table id="OCPRECIB" label="Remitos de Envios a Clientes">
+
+		    <field id="recepcion_historia" local="true" noshow="true"/>
+
+			<field id="ocpfec" tabla="CPSENCAB" colstyle="display:none;">
+				<label>OC</label>
+				<help>Fecha de Remito</help>	
+				<attribute id="colstyle">recepcion_historia</attribute>
+				<tipo>date</tipo>
+			</field>
+
+			<field id="fecreq" colstyle="display:none;">
+				<label>Reque</label>
+				<help>Fecha de oc</help>
+				<attribute id="colstyle">recepcion_historia</attribute>
+				<tipo>date</tipo>
+			</field>
+
+			<field id="fecrec">
+				<label>Recep</label>
+				<help>Fecha de Remito</help>
+				<tipo>date</tipo>
+			</field>
+			<field id="vencimiento">
+				<label>Vencim.</label>
+			</field>
+			<field id="lead_time" colstyle="display:none;">
+<!-- 				<expression>DATEDIFF(fecrec, CPSENCAB.ocpfec)</expression>				
+ -->                <expression>SELECT  
+											count(*)
+                                            FROM CALENDAR GC
+											LEFT JOIN FERIADOS F2 ON GC.fecha = F2.idFeriado
+                                                WHERE 
+												/*DAYOFWEEK(GC.fecha) NOT IN (1,7) and */
+                                                      GC.fecha &gt;= CPSENCAB.ocpfec and
+                                                      GC.fecha &lt;= OCPRECIB.fecrec and
+                                                      F2.idFeriado IS NULL</expression>
+				<label>LT</label>
+				<help>Lead Time</help>
+				<attribute id="colstyle">recepcion_historia</attribute>
+			</field>
+
+			<field id="retraso" noshow="true">
+<!-- 				<expression>DATEDIFF(fecrec, fecreq)</expression>
+ -->                <expression>SELECT count(*)
+                                            FROM CALENDAR GC
+											LEFT JOIN FERIADOS F2 ON GC.fecha = F2.idFeriado
+                                                WHERE DAYOFWEEK(GC.fecha) NOT IN (1,7) and
+                                                      GC.fecha &gt;= OCPRECIB.fecreq and
+                                                      GC.fecha &lt;= OCPRECIB.fecrec and
+													  F2.idFeriado IS NULL</expression>
+
+				<label>Retraso</label>
+				<help>Retraso Recibo - Requerido</help>
+				<attribute id="colstyle">recepcion_historia</attribute>
+			</field>
+
+			<field id="idPed" noshow="true">
+				<label>idPed</label>
+			</field>
+			<field id="nrorec">
+				<label>Remito</label>
+				<help>Numero de Remito</help>
+				<detalle>movnro</detalle>
+				<format>%010d</format>
+			</field>
+			
+			<field id="ctacod" noshow="true">
+				<label>Cuenta </label>
+				<help>Codigo de Cuenta. [F2] = Ayuda. </help>
+                                <condicion operador="!=">0</condicion>
+			</field>
+			<field id="ocpnro" noshow="true">
+			</field>
+			<field id="artcod" _noshow="true" >
+			</field>
+			<field id="reccps">
+				<label>Cant.</label>
+				<tipo>custom_numeric</tipo>
+			</field>			
+            <group>
+               <!--         <field id="artcod"></field>
+                        <field id="ocpnro"></field>-->
+            </group>
+            <order>
+	|			<field id="fecrec" tipoOrden="DESC"/>
+			</order>            					
+		</table>
+
+    <join tipo="left">
+      <table id="CPSENCAB">
+        <field id="ocpnro" >
+          <condicion operador="=">OCPRECIB.ocpnro</condicion>
+        </field>
+      </table>
+    </join>
+
+	</form>
+</histrix>

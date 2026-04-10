@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" tooltip="false" preloadData="false" pageBreak="true" PDFsincabecera="true"  PDFfontSize="8" PDFpageSize="A4" PDForientacion="P" Form="false"
+inserta="false" modifica="false" borra="false" procesa="false" imprimetanda="true" deleteRow="false">
+    <title>Detalle de Movimimentos con impresion en lote</title>
+    <obs/>
+
+    <consulta detalle="recibo_imp.xml">
+
+        <table id="CAJ_MOVIMIENTOS" label="Movimientos" idCampoCond="batchprint">
+
+            <filtros>
+
+                <field id="fecha_movimiento">
+                    <label>Fecha</label>
+                    <operador>=</operador>
+                    <valor>today</valor>
+                    <tipo>date</tipo>
+                </field>
+
+                <field id="cajpuesto_id">
+                    <label>Puesto</label>
+                    <operador>=</operador>
+                </field>
+
+                <field id="cajconcepto_id">
+                    <label>Concepto</label>
+                    <operador>=</operador>
+                </field>
+        
+            </filtros>
+
+              <field id="id_cajmovimiento" noshow="true">
+                <detalle>id_cajmovimiento</detalle>
+              </field>
+
+
+            <field id="cajconcepto_id" noshow="true">
+                <helper type="combo" xml="cajconceptos_qry.xml" dir="/ayudas">
+                    <field id="imprime_concepto">
+                        <condicion operador="is not">NULL</condicion>
+                    </field>
+                </helper>
+                <detalle>cajconcepto_id</detalle>
+            </field>
+
+            <field id="cajpuesto_id" noshow="true">
+                <helper type="combo" xml="cajpuestousers_qry.xml" dir="/ayudas" empty="true" />
+                <detalle>cajpuesto_id</detalle>
+            </field>
+
+            <field id="fecha_movimiento" noshow="true">
+                <detalle>fecha_movimiento</detalle>
+            </field>
+
+
+              <field id="nro_comp" tdWidth="200" PDFcolWidth="25">
+                <expresion>CONCAT(CAJ_CONCEPTOS.abreviatura_concepto, ' 0000-',lpad(CAJ_MOVIMIENTOS.id_cajmovimiento,8,'0'))</expresion>
+                <helper type="link" dir="/caja/proc/del" xml="cajmovimiento_ficha.xml">
+                  <parameter source="id_cajmovimiento" target="id_cajmovimiento" operador="="/>
+                </helper>
+              </field>
+
+              <field id="referencia_movimiento" tdWidth="350" PDFcolWidth="40">
+                <label>Referencia</label>
+              </field>
+
+              <field id="importe_movimiento" tdWidth="150" PDFcolWidth="18">
+                <label>Importe</label>
+              </field>
+
+               <field id="batchprint" local="true" editable="true" refresh="true">
+                  <tipo>check</tipo>
+                  <valor>0</valor>
+               </field>
+    
+        </table>
+
+        <join>
+
+            <table id="CAJ_CONCEPTOS">
+                <field id="id_cajconcepto">
+                    <condicion operador="=">CAJ_MOVIMIENTOS.cajconcepto_id</condicion>
+                </field>
+            </table>
+
+        </join>
+    
+
+    </consulta>
+</histrix>

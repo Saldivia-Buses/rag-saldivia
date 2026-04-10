@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+	<title>Movimientos Bancarios</title>
+	<obs></obs>
+	<form >
+		<table id="BCSMOVIM" label="Movimientos Bancarios">
+
+			<field id="ccbnom" tabla="BCSCUENT">
+				<label>Banco</label>
+				<tipo>varchar</tipo>
+			</field>
+			
+			<field id="siscod" oculto="true">
+				<label>Codigo Sistema.</label>
+				<help></help>
+				<condicion operador="=">'04'</condicion>
+			</field>
+			
+			<field id="bcsfev">
+				<label>Acreditacion</label>
+				<help>Fecha de Acreditacion</help>
+			</field>
+			
+			<field id="cnbabv" tabla="BCSCONCE">
+				<label>Tipo</label>
+				<help>Codigo de tipo de Movimiento </help>
+				<tipo>string</tipo>
+			</field>
+			
+			<field id="bcsnro">
+				<label>Número</label>
+				<help>Numero de Movimiento </help>
+				<format>%010d</format>
+				
+			</field>
+
+			<field id="bcsfec">
+				<label>Fecha</label>
+				<help>Fecha del Movimiento</help>
+			</field>
+
+			<field id="debe" suma="true" noZero="true">
+				<expression>bcsimp * (case when cnbtip = '1' then 1 else 0 end)</expression>
+				
+				<label>Debe</label>
+				<help>Importe del Movimiento en el Debe</help>
+				<tipo>custom_numeric</tipo>
+			</field>
+			
+			<field id="haber" suma="true" noZero="true">
+				<expression>bcsimp * (case when cnbtip = '2' then 1 else 0 end)</expression>
+				
+				<label>Haber</label>
+				<help>Importe del Movimiento en el Haber</help>
+				<tipo>custom_numeric</tipo>
+				
+			</field>
+
+			<!--
+			<field id="bcsimp">
+			<label>Importe              . </label>
+			<help>Importe total del movimiento </help>
+			</field>
+			<field id="ctacod" oculto="true" />		-->	
+			
+	
+			<field id="ctacod" oculto="true" />
+	
+			<field id="nropag" oculto="true">
+				<label>Nro OP</label>
+			</field>
+			
+			<order>
+				<field id="bcsfev"></field>
+			</order>
+			
+		</table>
+		<join tipo="left">
+			<table id="BCSCUENT">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">BCSMOVIM.siscod</condicion>
+					
+				</field>
+				
+				<field id="ccbcod" oculto="true">
+					<condicion operador="=">BCSMOVIM.bcscta</condicion>
+				</field>
+				
+			</table>
+		</join>		
+		<join tipo="left">
+			<table id="BCSCONCE">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">BCSMOVIM.siscod</condicion>
+					
+				</field>
+				
+				<field id="cnbcod" oculto="true">
+					<condicion operador="=">BCSMOVIM.bcsmov</condicion>
+				</field>
+				<field id="cnbtip" oculto="true"></field>
+			</table>
+		</join>
+		
+	</form>
+</histrix>

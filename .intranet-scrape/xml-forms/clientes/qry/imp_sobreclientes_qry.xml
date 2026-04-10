@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- sobre ingles 23.50 x 12, logo margen sup izq 10 x 1.50 -->
+<histrix tipo="ficha" PDFsincabecera="true"  _PDFpageSize="A5" PDFpageSizeY="343" PDFpageSizeX="672" PDForientacion="L" sololectura="true" autoprint="true" PDFfontSize="20" _copies="3" limit="1"  _preFetch="true">
+  <title>SOBRE CLIENTES</title>
+  <obs></obs>
+  <form >
+
+     <table id="REG_CUENTA"  label="CLIENTES">
+
+  	    <field id="id_regcuenta"  noshow="false" esClave="true" print="false" autoinc="true">
+  	    	<label>idcuenta</label>
+  	    </field>
+  	        
+    		<field id="subsistema_id" noshow="true" print="false">
+    			<label>Subsistema</label>
+    			<help>subsistema al que pertenece</help>
+    		</field>
+  
+   
+        <field id="nombre_cuenta"  deshabilitado="true" _sincelda="true" PDFbold="true">
+        	    <label colspan="4"  posx="290" posY="+150" size="120"></label>                
+        </field>
+            
+        <field id="nro_cuenta"  _noshow="true" deshabilitado="true"  PDFnoborder="true" _sincelda="true" style="text-align:right;" print="false">
+                <label colspan="4"  posx="400" _posY="+0" size="20"></label>
+        </field>
+        <!--   
+        <field id="cod_direccion" deshabilitado="true" _sincelda="true">
+                <label colspan="4" posx="30" posY="+0.5" size="80"></label>
+        </field>
+
+        <field id="nro_direccion">
+                <label colspan="4" size="8">Nº</label>
+                <expresion>case when nro_direccion = 0 then ' ' else nro_direccion end</expresion> 
+        </field>
+
+        <field id="bis">
+                <label colspan="4" size="5">Bis</label>
+                <expresion>case when bis_direccion = 1 then 'Bis' else ' ' end</expresion>
+        </field>
+
+        <field id="abreviacion">
+                <label colspan="4" size="20">Piso/Dpto</label>
+                <expresion>case when abreviacion_direccion = ' ' then ' ' else abreviacion_direccion end</expresion> 
+        </field>
+        -->
+
+        <field id="domicilio">
+            <expresion>CONCAT(cod_direccion, ' ', (case when nro_direccion = 0 then ' ' else nro_direccion end), ' ', (case when bis_direccion = 1 then 'Bis' else ' ' end), ' ', (case when abreviacion_direccion = ' ' then ' ' else abreviacion_direccion end))
+            </expresion>
+            <label colspan="4" posx="290" posY="+0.5" size="170"></label>
+        </field>
+
+        <field id="cp" deshabilitado="true" _sincelda="true">
+            <label colspan="4" posx="290" posY="+0.5" size="50"></label>
+            <expresion>SELECT cp FROM GEN_LOCALIDADES where id_localidad = REG_CUENTA.localidad_id limit 1</expresion>
+        </field>   
+        
+        <field id="localidad_id" deshabilitado="true" _sincelda="true">
+           <label colspan="4" posx="310" _posY="+0.5" size="80"></label>
+			     <expresion>SELECT nombre_localidad FROM GEN_LOCALIDADES where id_localidad = REG_CUENTA.localidad_id limit 1</expresion>
+        </field>
+
+	    <field id="provincia_id" deshabilitado="true" PDFsize="18" _sincelda="true">
+    			 <label colspan="4" posx="290" posY="+0.5" size="50"></label>
+    			<expresion>concat('(' , (SELECT nombre_provincia FROM GEN_PROVINCIAS where id_provincia = REG_CUENTA.provincia_id),')')</expresion>
+	    </field>
+	
+	</table>
+<!--
+	<join tipo="left">
+      <table id="GEN_LOCALIDADES">
+        <field id="id_localidad">
+          <condicion operador="=">REG_CUENTA.localidad_id</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join tipo="left">
+      <table id="GEN_PROVINCIAS">
+        <field id="id_provincia">
+          <condicion operador="=">GEN_LOCALIDADES.provincia_id</condicion>
+        </field>
+      </table>
+    </join>
+		-->
+
+  </form>
+</histrix>  

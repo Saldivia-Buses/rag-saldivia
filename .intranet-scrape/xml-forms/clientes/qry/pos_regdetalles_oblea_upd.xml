@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="update"> 
+  	<title/>
+  	<obs/>
+  	<form>
+    	<table id="REG_DETALLES" idCampoCond="validacion">			
+  			<field id="id_regdetalle" 	id_temp="id_regdetalle" esClave="true" />	
+        <field id="tabla_detalle" id_temp="tabla_detalle"/>  
+        <field id="codigo_serie"  id_temp="codigo_serie"/>         
+        <field id="fecha_vencimiento"   id_temp="fecha_vencimiento">  
+          <tipo>date</tipo>
+        </field>
+    	</table>
+   	</form>
+</histrix>

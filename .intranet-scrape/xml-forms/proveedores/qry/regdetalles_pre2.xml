@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+  <title/>
+  <obs/>
+  <consulta>
+  
+    <table id="REG_MOVIMIENTOS">
+
+      <field id="subsistema_id" noshow="true" />
+      <field id="regcuenta_id" noshow="true" />
+      <field id="id_regmovim" noshow="true" />
+
+      <field id="fecha_movimiento" required="true">
+        <label>Fecha</label>
+        <tipo>date</tipo>
+      </field>
+
+      <field id="abreviacion_concepto" local="true">
+        <label>Comp</label>
+        <expresion>'SALDO ANTERIOR'</expresion>
+      </field>
+
+      <field id="nro_movimiento">
+        <label>Numero</label>
+        <expresion>''</expresion>
+      </field>
+      
+      <field id="importe_movimiento">
+        <tipo>numeric</tipo>
+      </field>
+
+      <field id="imputacion_concepto" tabla="REG_CONCEPTOS" noshow="true" />
+
+      <field id="debe">
+        <expresion>sum(case when REG_CONCEPTOS.imputacion_concepto = 0 then REG_MOVIMIENTOS.importe_movimiento else 0 end)</expresion>
+        <help>saldo de movimiento</help>
+        <tipo>numeric</tipo>
+      </field>
+
+      <field id="haber">
+        <expresion>sum(case when REG_CONCEPTOS.imputacion_concepto = 1 then REG_MOVIMIENTOS.importe_movimiento else 0 end)</expresion>
+        <tipo>numeric</tipo>
+      </field>
+      
+      <field id="acumulado" _suma="true" _acumula="true" local="true">
+<!--        <expresion> sum( (case when REG_CONCEPTOS.imputacion_concepto = 0 then REG_MOVIMIENTOS.importe_movimiento else 0 end) - (case when REG_CONCEPTOS.imputacion_concepto = 1 then REG_MOVIMIENTOS.importe_movimiento else 0 end))</expresion> -->
+        
+        <if exp="true">
+          <true>debe - haber</true>
+          <false>0</false>
+        </if>
+        
+        <tipo>numeric</tipo>
+      </field>
+
+      <field id="saldo_movimiento" suma="true" >
+
+	    <expresion>sum(REG_MOVIMIENTOS.saldo_movimiento * (case when REG_CONCEPTOS.imputacion_concepto = 0 then 1 else -1 end))</expresion> -->
+
+<!--	    <expresion>(case when REG_IMPUTACIONES.subsistema0_id = REG_MOVIMIENTOS.subsistema_id then 0 else  REG_MOVIMIENTOS.saldo_movimiento end) * (case when REG_CONCEPTOS.imputacion_concepto = 0 then 1 else -1 end)</expresion> -->
+        <label>Saldo</label> 
+		<tipo>numeric</tipo>
+
+      </field>
+      
+                                               <!--
+      <field id="saldo_movimiento">
+	    <expresion>sum(REG_MOVIMIENTOS.saldo_movimiento)</expresion>
+        <tipo>numeric</tipo>
+      </field>
+                                                   -->
+
+	  <group>
+    	<field id="subsistema_id" />
+	  </group>
+	  
+    </table>
+
+    <join>
+      <table id="REG_CONCEPTOS">
+        <field id="id_concepto">
+          <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+        </field>
+        <field id="informa_calculo">
+          <condicion operador="=">0</condicion>
+        </field>
+      </table>
+    </join>
+                             <!--
+    <join tipo="left">
+      <table id="REG_IMPUTACIONES">
+        <field id="regmovim_id">
+          <condicion operador="=">REG_MOVIMIENTOS.id_regmovim</condicion> 
+        </field>
+        <field id="subsistema0_id">
+          <condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion> 
+        </field>
+      </table>
+    </join>
+                                 -->
+  </consulta>
+</histrix>

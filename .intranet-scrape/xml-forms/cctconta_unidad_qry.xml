@@ -1,0 +1,440 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+  <title>Observaciones por Coche</title>
+  <obs/>
+  <form >
+         <table id="PEDCOTIZ" label="FICHAS POR Clientes">
+	<filters>
+
+    <field id="ingresoLinea">
+      <label>Fecha Desde</label>
+      <operador>&gt;=</operador>
+      <valor eval="true">date("d/m/Y", mktime(0, 0, 0, date("m"), date("d"), date("Y")-2))</valor>
+    </field>
+
+    <field id="nrocar">
+      <label modpos="nobr">Modelo</label>
+      <operador>=</operador>
+    </field>
+
+    <field id="marcod" tabla="MARCHASIS">
+      <label modpos="nobr">Marca</label>
+      <operador>=</operador>
+    </field>-->
+    
+    <field id="id_modelo" tabla="MODCHASIS">
+      <label modpos="nobr">Chasis</label>
+      <operador>=</operador>
+    </field>
+	
+    
+	</filters>
+
+      <field id="ingresoLinea" tabla="PEDCOTIZ" noshow="true">
+        <label>Ingreso</label>
+        <help>Fecha de Ingreso a linea</help>
+        <tipo>date</tipo>
+      </field>   
+
+      <field id="Entrega" noshow="true" print="false">
+        <label>Entrega</label>
+        <expression>select entrega from ENTREGASCOCHES where ENTREGASCOCHES.nrofab = PEDCOTIZ.nrocha and ENTREGASCOCHES.entrega IS NOT NULL limit 1</expression>
+        <tipo>date</tipo>
+      </field>
+
+            <field id="ficha_id" noshow="true">
+                <expression>PEDCOTIZ.id</expression>
+            </field>
+
+            <field id="nrocha" tabla="PEDCOTIZ" noshow="true">
+                <label modpos="nobr" style="text-align:center;color:#444;font-size:14px;">Fab</label>
+                <help>Numero de Fabricacion</help>
+                    <paring destino="nrocha">nrofab</paring>
+                    <detalle>nrocha</detalle>
+                <helper type="link" xml="ficha_producto1_qry.xml" dir="/producto" modal="true" title="Ficha Técnica">
+                    <parameter source="ficha_id" target="producto_id"/>
+                    <parameter source="nrocha" target="nrocha"/>
+                </helper>
+            </field>        
+
+       <field deshabilitado="true" id="ctacod"  linkint="cctconta_consulta.xml" linkdes="Ver medios de Contacto" >          
+                <label >Cliente</label>
+                <help>Codigo de Cuenta</help>
+                <tabla_ex condes="true" id="CCTCUENT" vacio="true">
+                    <field id="ctacod"/>
+                    <field id="ctafan">
+                        <expression>LEFT(ctafan, 17)</expression>
+                    </field>
+                    <field id="siscod" oculto="true">
+                        <condicion operador="=">'02'</condicion>
+                    </field>
+                </tabla_ex>
+                <paring destino="ctacod">ctacod</paring>
+                <paring destino="siscod">siscli</paring>
+        <order>
+          <field id="ctafan" />       
+        </order>
+        </field>
+
+<!--       <field deshabilitado="true" id="desabv" tabla="MODCHASIS">
+        <label >Mod</label>
+        <help/>
+        <tipo>varchar</tipo>
+      </field>
+
+      <field deshabilitado="true" id="chasis" tabla="CHASIS" linkint="chasis_cons.xml" linkdes="Ver Datos del Chasis">
+        <label>Chasis</label>
+        <help>Numero de Serie del chasis</help>
+        <paring destino="nrocha">PEDCnrocha</paring>
+        <tipo>varchar</tipo>
+      </field> 
+
+       <field id="ctaconces" tabla="CONCESIONARIO" noshow="true">
+         <expression>CONCESIONARIO.ctacod</expression>
+         <tipo>integer</tipo>
+       </field>
+             <field  id="conc2"  deshabilitado="true"  linkint="cctconta_consulta.xml" linkdes="Ver medios de Contacto">
+        <expression>CONCESIONARIO.nombre</expression>
+        <label>Con.</label>
+        <help>Con.</help>
+        <paring destino="ctacod">ctaconces</paring>
+        <paring destino="siscod">siscli</paring>
+        <tipo>varchar</tipo>
+      </field>
+       -->
+
+       <field id="siscli" local="true" noshow="true">
+         <valor>'02'</valor>
+         <tipo>varchar</tipo>
+       </field>
+
+        <field id="ctafan" tabla="CCTCUENT" noshow="true" />
+
+        <field deshabilitado="true" id="otros" local="true" linkint="fichas_x_cliente.xml" linkdes="Total de Coches" print="false">
+          <expression>select count(*) from PEDCOTIZ as PED where PED.ctacod = PEDCOTIZ.ctacod</expression>
+          <label>Ot.</label>
+          <paring destino="ctacod">ctacod</paring>
+          <tipo>varchar</tipo>
+        </field>
+
+
+      <field id="nrocar" tabla="HOMOLOGMOD" deshabilitado="true">
+        <label >Mod.</label>
+        <help/>
+        <label>Modelo</label>
+        <tabla_ex id="CARROCERIA" vacio="true">
+            <field id="nrocar">
+                <label>Codigo</label>
+            </field>
+            <field id="desabv">
+                <label>Abrev.</label>
+		<condicion operador="!=">"Compra"</condicion>
+            </field>
+        <field id="vigente">
+            <condicion operador="=">1</condicion>
+        </field>
+        <order>
+            <field id="desabv" />
+        </order>
+        </tabla_ex>                
+      </field>
+
+    <field id="marcod" tabla="MARCHASIS">
+	<label >Marca</label>
+	<help/>
+        <label>Marca Chasis</label>
+	<tabla_ex id="MARCHASIS" vacio="true">
+	    <field id="marcod" clae="true">
+                <label>MarCod</label>
+	    </field>
+            <field id="mardes">
+                <label>Marca</label>
+            </field>
+        <field id="marca_activo">
+            <condicion operador="=">0</condicion>
+        </field>
+        <order>
+            <field id="moddes" />
+        </order>
+	</tabla_ex>
+	<actualiza>
+	    <field id="id_modelo" destino="marcod"/>
+	</actualiza>
+      </field>
+
+    
+
+    <field id="id_modelo" tabla="MODCHASIS">
+        <label >Chasis</label>
+        <help/>
+        <label>Modelo Chasis</label>
+        <tabla_ex id="MODCHASIS" vacio="true">
+            <field id="id_modelo">
+                <label>ModCha</label>
+            </field>
+            <field id="desabv">
+                <label>Chasis</label>
+            </field>
+	<field id="marcod" oculto="true">
+            <!-- <condicion operador="=">marcod</condicion>-->
+        </field>
+        <field id="chasis_activo">
+            <condicion operador="=">0</condicion>
+        </field>
+        <order>
+            <field id="desabv" />
+        </order>
+        </tabla_ex>                
+      </field>
+
+
+
+
+      <field id="ctatel" tabla="CCTCUENT">
+          <label>Telefono</label>
+      </field>
+
+      <field id="ctaloc" tabla="CCTCUENT">
+        <label >Localidad</label>
+        <help>
+        </help>
+      </field>
+
+      <field id="prvcod" tabla="CCTCUENT">
+        <label modpos="nobr">Provincia</label>
+        <help >
+        </help>
+        <tabla_ex id="FSMPROVS" vacio="true">
+          <field id="prvcod"></field>
+          <field id="prvnom"></field>
+        </tabla_ex>
+      </field>
+<!--
+
+            <field id="asientos" deshabilitado="true" noZero="true" style="text-align:center;">
+                <label>Asi</label>
+                <tipo>integer</tipo>
+                <expression>case when PEDCOTIZ.homologacion_id != '' then 
+                (case when CARROCERIA.doble_piso = 1 then (CONCAT(HOMOLOGMOD.asientos, '+', HOMOLOGMOD.asientos_plantabaja)) else (HOMOLOGMOD.asientos + HOMOLOGMOD.acompañante) end)
+                else '' end</expression>
+            </field>
+      <field id="marair" tabla="PEDCOTIZ">
+        <label>A/A</label>
+        <tabla_ex id="MARCAAIR" vacio="true" indexvacio="0" valorvacio="NO">
+          <field id="marair">
+
+          </field>
+          <field id="desair">
+          <expression>LEFT(desair, 4)</expression>
+          </field>
+
+          <field id="siscod" oculto="true">
+            <condicion operador="=">03</condicion>
+          </field>
+        </tabla_ex>
+        <tipo>varchar</tipo>
+      </field>
+ 
+      <field id="marasi" tabla="PEDCOTIZ">
+        <label >Marca</label>
+        <help/>
+        <tabla_ex xml="marcaasi.xml">
+
+          <field id="marasi">
+          </field>
+          <field id="asides">
+            <expression>LEFT(asides, 4)</expression>
+
+          </field>
+          <field id="siscod" oculto="true">
+            <condicion operador="=">03</condicion>
+          </field>
+        </tabla_ex>
+      </field>       
+		<field deshabilitado="true" id="otros" local="true" linkint="fichas_x_cliente.xml" linkdes="Total de Coches" print="false">
+			<expression>(case when !isnull(PEDCOTIZ.ctacod) then
+			(select count(*) from VUNIDADES as PED where PED.ctacod = PEDCOTIZ.ctacod)
+			else (select count(*) from VUNIDADES as PED where PED.ctacod = TURNOSPRODUCCION.ctacod) end) </expression>
+
+			<label Formstyle="display:none;">Ot.</label>
+			<help>Codigo de Cuenta</help>
+			<paring destino="ctacod">ctacod</paring>
+			<tipo>varchar</tipo>
+		</field>
+      <field id="corpath" local="true" noshow="true" tabla="PEDCOTIZ">
+        <if exp="true">
+          <true>'nrocha/corte'</true>
+          <false>''</false>
+        </if>
+        <tipo>varchar</tipo>
+      </field>
+       
+      <field id="cortePint" tabla="PEDCOTIZ" path="corpath" download="true" print="false" >
+        <label>Corte</label>
+        <tipo>file</tipo>
+        
+      </field>       
+               
+      <field id="chapath" local="true" noshow="true" _noselect="true" >
+        <if exp="true">
+          <true>''</true>
+          <false>''</false>
+        </if>
+        <tipo>varchar</tipo>
+      </field>
+      <field id="trazados" deshabilitado="true"  local="true" linkint="trazados_x_coche.xml" linkdir="/recepcion/" linkdes="Trazados" print="false">
+        <label >Trazados</label>
+        <valor>'Mat.'</valor>
+        <help>Codigo de Cuenta</help>
+        <paring destino="nrocha">nrocha</paring>
+        <tipo>varchar</tipo>
+      </field>      
+      <field id="archivo"  local="true" browse="true" deshabilitado="true" path="chapath">
+        <if exp="true">
+          <true>'/nrocha/'</true>
+          <false>''</false>
+        </if>
+      
+        <label >fotos</label>
+        <help></help>
+        <tipo>file</tipo>
+        <size>10</size>
+
+
+      </field>  -->              
+<!--        <field deshabilitado="true" id="ctacod"  linkint="cctconta_consulta.xml" linkdes="Ver medios de Contacto">
+            
+                <label >Cliente</label>
+                <help>Codigo de Cuenta</help>
+                <tabla_ex condes="true" id="CCTCUENT">
+                    <field id="ctacod"/>
+                    <field id="ctafan">
+                        <expression>LEFT(ctafan, 17)</expression>
+                    </field>
+                    <field id="siscod" oculto="true">
+                        <condicion operador="=">'02'</condicion>
+                    </field>
+                </tabla_ex>
+                <paring destino="ctacod">ctacod</paring>
+                <paring destino="siscod">siscli</paring>
+
+
+            </field>
+	     <field id="contacto" local="true" obj="cctconta.xml" showObjTabla="true" >
+		<paring destino="ctacod">ctacod</paring>
+		<paring destino="siscod">siscli</paring>
+		<paring destino="principal">1</paring>
+		<label>Contacto Principal</label>
+          </field>
+
+      
+                        <field id="panpath" local="true=" oculto="true">
+                                <valor>../archivo/Panas</valor>
+                        </field>
+
+      <field id="fotoPana"  tabla="PEDCOTIZ" path="panpath" _noshow="true" print="false">
+        <label  >Pana</label>
+        <help></help>
+                <tipo>file</tipo>
+                      <size>24</size>
+      </field>
+                        <field id="vendido">
+                            <expression>case when PEDCOTIZ.ctacod != VUNIDADES.ctacod then concat('de: ', (select CCTCUENT.ctafan from CCTCUENT where CCTCUENT.siscod = '02' and CCTCUENT.ctacod = PEDCOTIZ.ctacod )) end</expression>
+                        </field>
+                        <field id="actual">
+          <label>Dueño Act.</label>
+                            <expression>case when PEDCOTIZ.ctacod = VUNIDADES.ctacod then (select CCT.ctanom from UNIDADCLIENTE as UC  left join CCTCUENT as CCT on CCT.siscod = '02' and CCT.ctacod = UC.ctacod where UC.nrofab = VUNIDADES.nrofab order by UC.fecha limit 1) end</expression>
+                        </field>
+      <field id="clase" clasefila="true" local="true" noshow="true">
+          <if exp="'actual' != '' ">
+        <true>'resaltadoVioleta'</true>
+        <false>''</false>
+          </if >
+      </field>
+      
+ -->
+
+       <order>
+         <field id="ctafan" tabla="CCTCUENT"></field>
+       </order>
+
+       <group>
+          <field id="ctacod" />
+          <field id="nrocar" tabla="HOMOLOGMOD"/>
+        </group>
+
+</table>
+
+    <join tipo="left">
+      <table id="CHASIS">
+        <field id="nrocha">
+          <condicion operador="=">PEDCOTIZ.nrocha</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="MARCHASIS">
+        <field id="marcod">
+          <condicion operador="=">CHASIS.marcod</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="MODCHASIS">
+        <field id="modcha">
+          <condicion operador="=">CHASIS.modcod</condicion>
+        </field>
+        <field id="marcod">
+          <condicion operador="=">MARCHASIS.marcod</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="CONCESIONARIO">
+        <field id="idconces">
+          <condicion operador="=">CHASIS.conces</condicion>
+        </field>
+      </table>
+    </join>
+      <join tipo="left">
+            <table id="HOMOLOGMOD">
+                <field id="id_homologacion">
+                    <condicion operador="=">PEDCOTIZ.homologacion_id</condicion>
+                </field>
+            </table>
+        </join>
+
+      <join tipo="left">
+            <table id="CCTCUENT">
+                <field id="ctacod">
+                    <condicion operador="=">PEDCOTIZ.ctacod</condicion>
+                </field>
+                <field id="siscod">
+                  <condicion operador="=">'02'</condicion>
+                </field>                
+            </table>
+        </join>  
+
+<!--     <join tipo="left">
+      <table id="CCTCONTA">
+        <field id="siscod">
+          <condicion operador="=">siscli</condicion>
+        </field>
+	 <field id="siscod">
+          <condicion operador="=">PEDCOTIZ.ctacod</condicion>
+        </field>
+	<field id="principal">
+          <condicion operador="=">1</condicion>
+        </field>
+      </table>
+    </join>     
+ 	<join tipo="left">
+      <table id="TURNOSPRODUCCION">
+        <field id="nrofab">
+          <condicion operador="=">PEDCOTIZ.nrocha</condicion>
+        </field>
+      </table>
+    </join>-->
+	
+  </form>
+</histrix>

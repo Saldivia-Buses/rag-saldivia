@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" inserta="false">
+    <title>Movimientos De Stock</title>
+    <obs></obs>
+
+    <form detalle="ejecuta">
+        <table id="STK_MOVIMIENTOS" label="Recepción de Depositos">
+            
+        <filters>
+            
+            <field id="fecha_movimiento">
+                <label>Desde</label>
+                <operador>&gt;=</operador>
+                <valor eval="true">date("d/m/Y", mktime(0, 0, 0, date("m"), 1, date("Y")))</valor>
+            </field>          
+
+            <field id="fecha_movimiento" >
+                <label >Hasta</label>
+                <operador>&lt;=</operador>
+                <valor>today</valor>
+            </field>            
+
+            <field id="numero_movimiento">
+                <label>Nro </label>
+                <operador>=</operador>
+            </field>
+    		
+            <field id="stkdepositouser_id">
+              <operador>=</operador>
+              <label>Deposito</label>
+            </field>
+
+        </filters>
+
+        <fieldGroup noshow="true">
+
+                <field id="id_stkmovimiento" >
+                    <label>idstkmov</label>
+                </field>
+
+                <field id="stktransaccion_id" >
+                    <label>stktrn_id</label>
+                    <detalle>stktransaccion_id</detalle>                
+                </field>
+
+                <field id="stkconcepto_id" >
+                    <label>IDstkc</label>
+                </field>
+
+                <field id="marca" >
+                    <label>marca</label>
+                    <condicion operador="=">0 or marca = '' or marca IS NULL</condicion>
+                </field>
+
+                <field id="usuario_id" local="true" >
+                    <label>usuario_id</label>
+                    <valor eval="true">$_SESSION['idUser']</valor>
+                </field>
+
+                <field id="ejecuta" >
+                    <label>ejecuta</label>
+                    <expression>ifnull((select option_value from HTXOPTIONS where option_name = 'SIS::programa_recepcion_mercaderia'), 'stkrecepcion_ficha.xml')</expression>
+                </field>
+
+        </fieldGroup>
+
+        <fieldGroup colstyle="text-align:center;padding:2px;vertical-align:middle;">
+                     
+                <field id="fecha_movimiento">
+                    <label>Fecha</label>
+                    <tipo>date</tipo>
+                    <detalle>fecha_movimiento</detalle>                
+                </field>
+
+                <field id="numero_movimiento">
+                    <label>Nro</label>
+                    <helper type="link" xml="imp_stktransfer.xml" dir="/stock/qry/">
+                        <parameter source="numero_movimiento"  target="numero_movimiento"   />
+                        <parameter source="fecha_movimiento"   target="fecha_movimiento"    />
+                        <parameter source="stkdeposito_origen" target="stkdeposito_origen"  />
+                        <parameter source="stkdeposito_id"     target="stkdeposito_destino" />
+                    </helper>    
+                    <detalle>numero_movimiento</detalle>
+                </field>
+
+                <field id="stkdeposito_origen" local="true">             
+                    <label>Origen</label>
+                    <helper type="combo" xml="stkdeposito_qry.xml" dir="/ayudas" empty="true"/>
+                    <expression sql="true">select stkdeposito_id from STK_MOVIMIENTOS 
+                                            where STK_MOVIMIENTOS.numero_movimiento = '[__numero_movimiento__]'
+                                            and STK_MOVIMIENTOS.fecha_movimiento = '[__fecha_movimiento__]'
+                                            and cantidad &gt; 0;
+                    </expression>
+                    <detalle>deposito_origen</detalle>
+                </field>
+
+                <field id="stkdepositouser_id" local="true" noshow="true">
+                    <label>Deposito</label>
+                    <helper type="combo" xml="stkdepositouser_qry.xml" dir="/ayudas" empty="true"/>
+                </field>
+
+                <field id="stkdeposito_id">
+                    <label>Destino</label>
+                    <helper type="combo" xml="stkdeposito_qry.xml" dir="/ayudas" empty="true"/>
+                    <condicion operador="=">stkdeposito_id and find_in_set(stkdeposito_id, (case when '[__stkdepositouser_id__]' = '' then (select group_concat(stkdeposito_id SEPARATOR ',') from STK_DEPOSITO_USERS WHERE usuario_id = '[__usuario_id__]') else '[__stkdepositouser_id__]' end))</condicion>
+                    <detalle>deposito_destino</detalle>
+                </field>
+
+                <field id="pendiente">
+                    <label>Pendientes</label>
+                    <expression>sum(pendiente)</expression>
+                    <condicion operador="&gt;">0</condicion>
+                </field>
+
+        </fieldGroup>
+
+        <order>
+            <field id="fecha_movimiento" />
+            <field id="numero_movimiento" />
+        </order>
+
+        <group>
+            <field id="numero_movimiento" />
+            <field id="stktransaccion_id" />
+            <field id="fecha_movimiento" /> <!-- ESTO SE DEJA PROVISORIAMENTE HASTA QUE TODAS LAS TRANSACCIONES TENGAS TRANSACC ID -->
+        </group>
+
+    </table>
+
+    <join>
+        <tabla id="STK_CONCEPTOS">
+            
+            <field id="id_stkconcepto">
+                <condicion operador="=">stkconcepto_id</condicion>
+            </field>
+
+            <field id="tipo_concepto">
+                <condicion operador="=">0</condicion>
+            </field>
+
+        </tabla>
+    </join>
+
+    </form>
+</histrix>

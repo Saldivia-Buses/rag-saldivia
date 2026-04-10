@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" preloadData="false" llenoTemporal="false" procesa="false" tooltip="false" showCantidad="false" updateTotals="true" subtipo="vertical" unserializeParent="false" preventDuplication="true" tableHeight="20em">
+  <title>Detalle</title>
+  <obs/>
+  <customScript>
+$('#TablaInternamos_articulo_grid_pos_super_xml tr[o]').last().get(0).scrollIntoView();
+  </customScript>
+  <form >
+    <table id="REG_DETALLES" label="movimientos">
+
+    <movimientos>
+        <relacion id="mos_regdetalles_ins_cav.xml"/>
+        <relacion id="mos_stkmovimientos_ins_cav.xml"/>
+        <relacion id="mos_ctbdetalle_con.xml" />
+        <relacion id="mos_ctbdetalle_iva.xml" />
+    </movimientos>
+
+  <fieldGroup colstyle="text-align:center; vertical-align:middle;" _Formstyle="border-color: black !important;border-width:1px !important;border-style: solid !important;" >
+
+          <field id="porcentaje_desc0" noshow="true">
+            <valor default="true">0.00</valor>
+            <tipo>decimal</tipo>
+          </field>
+          <field id="porcentaje_desc1" noshow="true" >
+            <tipo>decimal</tipo>
+            <valor default="true">0.00</valor>
+          </field>
+
+
+
+          <field id="codigo_detalle" deshabilitado="false" esClave="true" valid="true" colspan="2" modpos="nobr">
+            <label >Codigo</label>
+            <helper type="external" xml="stkarticulo_cav.xml" dir="/ayudas">
+                <field id="wstklista_id" local="true" noshow="true" >
+                  <valor>1</valor>
+                </field>
+<!--                    <field id="precio_unit_art">
+                        <label>Precio Unitario</label>
+                        <expression>round((stklistadetalle_precioventa / ((GEN_IVA_ALICUOTAS.alicuota / 100) + 1)), 2)</expression>
+                        <detalle>precio_unit_art</detalle>
+                    </field>-->
+                    <field id="precio_final">
+                        <label>Precio de Lista</label>
+                        <expression>round(stklistadetalle_precioventa ,2)</expression>
+                        <detalle>precio_final_art</detalle>
+                        <detalle>total_detalle</detalle>
+                    </field>
+            </helper>
+            <size>12</size>
+          </field>
+
+          <field id="descripcion_detalle" deshabilitado="true" modpos="nobr"  colspan="12" >
+            <label>Descripción</label>
+            <size>60</size>
+          </field>
+
+          <field id="precio_final_art" local="true" Formstyle="display:none;" modpos="nobr">
+            <label>Precio U.</label>
+                <tipo>numeric</tipo>
+            </field>
+
+          <field id="cantidad_detalle" replace="true" modpos="nobr" suma="true">
+            <label>Cantidad</label>
+            <tipo>decimal</tipo>
+            <valor default="true">1</valor> 
+          </field>
+
+          <field id="total_detalle" suma="true" modpos="nobr" deshabilitado="true" _noshow="true">
+              <label>Total</label>
+              <tipo>decimal</tipo>
+                <if exp="true">
+                    <true>ROUND((cantidad_detalle * precio_final_art), 2)</true>
+                    <false>0</false>
+                </if>
+              <valor default="true">0.00</valor>
+              <jseval fielddestino="importe_movimiento" total="true">total_detalle</jseval> 
+              <detalle>importe_movimiento</detalle>
+          </field>
+
+          <field id="id_iva_alicuota" esClave="true"  local="true" required="true" deshabilitado="true" modpos="nobr" noshow="true">
+            <label>Alicuota Iva</label>
+            <helper type="combo" xml="genalicuotas_qry_cav.xml" dir="/ayudas" empty="true" />
+          </field>
+
+          <field id="iva_alicuota"  local="true" deshabilitado="true" noshow="true" modpos="nobr">
+            <label>Iva</label>
+          </field>
+
+          <field id="iva_detalle" suma="true" deshabilitado="true" modpos="nobr" noshow="true">
+            <label>Iva Detalle</label>
+            <help>0.00</help>
+            <tipo>numeric</tipo>
+            <if exp="true">
+              <true>ROUND((total_detalle - (total_detalle / ((iva_alicuota / 100) + 1))), 2)</true>
+              <false></false>
+            </if>
+            <jseval fielddestino="importe_IVA" total="true">iva_detalle</jseval> 
+          </field>
+
+          <field id="neto_detalle" local="true" modpos="nobr" deshabilitado="true" suma="true" noshow="true">
+            <label>Neto</label>            
+            <tipo>decimal</tipo>
+            <if exp="true">
+              <true>round((total_detalle - iva_detalle), 2)</true>
+              <false></false>
+            </if>
+            <jseval fielddestino="subtotal_movimiento" total="true">neto_detalle</jseval>
+            <jseval fielddestino="neto_movimiento" total="true">neto_detalle</jseval>
+          </field>
+
+          <field id="precio_venta" local="true" deshabilitado="true" _modpos="nobr" _autoing="true" noshow="true">
+            <tipo>decimal</tipo>
+            <if exp="true">
+              <true>round((neto_detalle / cantidad_detalle), 2)</true>
+              <false></false>
+            </if>
+          </field>
+        <field id="precio_vta" local="true" noshow="true" modpos="nobr">
+            <label>Precio U.</label>
+            <if exp="true">
+          <true>precio_venta</true>
+          <false>0</false>
+            </if>
+        </field>       
+  </fieldGroup>
+
+
+
+      <fieldGroup>
+
+        <field id="id_regdetalle" autoinc="true" esClave="true" noshow="true"/>
+
+        <field id="id_pedidosregdetalle" esClave="true" noshow="true" local="true">
+          <label>Notas de Pedidos</label>
+        </field>
+
+        <field id="NOTAS" deshabilitado="true" noshow="true" local="true">
+          <label>Notas</label>
+        </field>
+
+        <field id="graba_ctb" local="true" noshow="true">
+            <valor eval="true"><![CDATA[ strpos($_SESSION['properties']['modulos'],'contabilidad') != false ? '1' : '0' ]]>
+            </valor>
+        </field>
+
+        <field id="stkconcepto_id" local="true" noshow="true">
+          <expresion>(SELECT option_value FROM HTXOPTIONS where option_name = 'ID_STKREMITOS')</expresion>
+          <detalle>stkconcepto_id</detalle>
+        </field>
+      
+      </fieldGroup>
+
+
+      <fieldGroup noshow="true"  local="true">
+        <field id="imputacion_concepto" />
+        <field id="ctbcuenta_stk_id"/>
+        <field id="ctbcuenta_stk_doh">
+          <if exp="imputacion_concepto == 0">
+              <true>'1'</true>
+              <false>'0'</false>
+          </if>
+        </field>
+        <field id="ctbcuenta_iva_id"/>
+        <field id="ctbcuenta_iva_doh">
+          <if exp="imputacion_concepto == 0">
+              <true>'1'</true>
+              <false>'0'</false>
+          </if>
+        </field>
+        <field id="orden" deshabilitado="true" oculto="true">
+          <label>Orden</label>
+        </field>
+      </fieldGroup>
+
+
+     <fieldGroup >
+
+        <if>return (strpos($_SESSION['properties']['modulos'],'contabilidad') !== false);</if>
+
+          <field id="testctb" local="true" noshow="false" colstyle="color:red;text-decoration:blink;" Formstyle="display:none;">
+             <if exp="'ctbcuenta_stk_id' == ''">
+                 <true>'Falta Cuenta CTB de Articulo'</true>
+                <false>''</false>
+             </if>
+          </field>
+
+    </fieldGroup>
+
+
+    <fieldGroup local="true" noshow="true">
+      
+        <field id="wcontrolstk" deshabilitado="true" >
+          <label>sssss</label>
+          <valor>0</valor>
+        </field>
+
+        <field id="stkunidad_id"/>
+        <field id="stksector_id"/>
+        <field id="stkfamilia_id"/>
+        <field id="stkrubro_id"/>
+        <field id="precio_costo"/>
+        <field id="referencia">
+          <valor>'SALIDA POR VENTA'</valor>
+        </field>
+       
+        <field id="stkdeposito_id" _deshabilitado="true" >
+          <detalle>stkdeposito_id</detalle>
+          <label>dep</label>
+        </field>
+
+    </fieldGroup>
+
+      <field id="stkact" local="true" noshow="true"></field>
+  
+    </table>
+  </form>
+</histrix>

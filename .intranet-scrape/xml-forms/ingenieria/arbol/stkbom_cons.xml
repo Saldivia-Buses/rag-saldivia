@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" paginar="300">
+  	<title>Listado de articulos</title>
+  	<obs/>
+	<form >
+	    <table id="STK_BOM" label="Listado de articulos">
+
+	    	<filters>
+	    		<!--<field id="stkarticulohijo_id">
+	    			<label>Articulo Hijo</label>
+	    		</field>-->
+	    		<field id="creacion_fecha_local" deshabilitado="false">
+	    			<label>Creación Desde</label>
+	    		</field>
+	    		<field id="creacion_fecha_local" deshabilitado="false">
+	    			<label modpos="nobr">Creación Hasta</label>
+	    		</field>
+	    		<field id="modificacion_fecha_local" deshabilitado="false">
+	    			<label>Modificación Desde</label>
+	    		</field>
+	    		<field id="modificacion_fecha_local" deshabilitado="false">
+	    			<label modpos="nobr">Modificación Hasta</label>
+	    		</field>
+	    	</filters>
+
+	    	<field id="id_stkbom">
+	    		<label>Nro.</label>
+	    	</field>
+	    	<field id="stkarticulopadre_id">
+	    		<label>Artículo Padre</label>
+	    		<helper id="STK_ARTICULOS" type="combo">
+				    <field id="id_stkarticulo" />
+		    		<field id="nombre_articulo" />
+				</helper>
+	    	</field>
+	    	<field id="stkarticulohijo_id">
+	    		<label>Artículo Hijo</label>
+	    		<helper id="STK_ARTICULOS" type="combo">
+				    <field id="id_stkarticulo" />
+		    		<field id="nombre_articulo" />
+				</helper>
+	    	</field>
+	    	<field id="cantidad">
+	    		<label>Cantidad</label>
+	    	</field>
+	    	<field id="costo_automatico">
+	    		<label>Costo</label>
+	    	</field>
+	    	<field id="creacion_fecha_local">
+	    		<label>Creación</label>
+	    		<expresion>DATE(creacion_fecha)</expresion>
+	    		<!--<expresion>DATE_FORMAT(creacion_fecha, '%d/%m/%Y')</expresion>-->
+	    		<tipo>date</tipo>
+	    	</field>
+	    	<field id="modificacion_fecha_local">
+	    		<label>Modificación</label>
+	    		<expresion>DATE(modificacion_fecha)</expresion>
+	    		<!--<expresion>DATE_FORMAT(modificacion_fecha, '%d/%m/%Y')</expresion>-->
+	    		<tipo>date</tipo>
+	    	</field>
+
+	    </table>
+    </form>
+</histrix>

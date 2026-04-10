@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<histrix  tipo="consulta" _inserta="false" borra="false" _modifica="false" _width="40" path="/fotos/personal/">
+
+  <title>Personal Contacto</title>
+  <obs/>
+  <form >
+    <table id="PERSONAL" label="Ficha Personal">
+
+
+      <field autoinc="true" deshabilitado="true" id="IdPersona" noshow="true">
+        <label>Cuenta</label>
+        <help>Codigo de Cuenta</help>
+      </field>
+
+      <field id="legajo" deshabilitado="true">
+        <label>Legajo</label>
+        <help>Número de Legajo</help>
+        <condicion operador="!=">0</condicion>
+
+      </field>
+      <field id="pend"   clasefila="true" noshow="true" _tipoOrden="DESC">
+        <expression>(case when telefono =' ' and  celular = ' '  then 'resaltado' else (CASE when  telefono =' ' or  celular = ' ' then 'resaltadoGris' else 'resaltadoVioleta' end) end) </expression>
+        <!--        <if exp="'cumplido'=='0000-00-00'">
+        <true>'resaltado'</true>
+        <false>'0'</false>
+      </if>-->
+        <tipo>varchar</tipo>
+     
+      </field>
+      
+     <field id="Nombre" noshow="true">
+        <label>Nombre</label>
+        <help>Nombre</help>
+        <size>25</size>
+      </field>
+      <field id="apellido" noshow="true">
+        <label modpos="nobr">Apellido</label>
+        <help>Apellido</help>
+        <size>30</size>
+      </field>
+      <field id="nombre_apellido" local="true" tipoOrden="ASC">
+        <label>Nombre y apellido</label>
+        <expression>CONCAT(PERSONAL.apellido,' ',PERSONAL.Nombre)</expression>
+        <size>30</size>
+      </field>
+        <field id="fotos" local="true" imageWidth="60" path="IdPersona">
+            <expression>CONCAT('/fotos/personal/',IdPersona,'/')  </expression>
+            <label  posX="5" posY="+2" _formStyle="display:none;">Foto</label>
+            <tipo>dir</tipo>
+            <size>50</size>
+      </field>
+
+      <field id="des2" tabla="SECCION">
+        <expression>select nombre from SECCIONHISTORIA left join SECCION on SECCION.id_seccion = SECCIONHISTORIA.id_seccion where SECCIONHISTORIA.IdPersona=PERSONAL.IdPersona and SECCIONHISTORIA.fechaDesde &lt;= str_to_date('[__fech2__]', '%d/%m/%Y') order by SECCIONHISTORIA.fechaDesde desc limit 1</expression>
+        <expression>SECCION.nombre</expression>
+        <label>Sección</label>
+        <tipo>varchar</tipo>
+      </field>
+
+    <field id="fech2" local="true">
+          <label>Fecha</label>
+          <tipo>date</tipo>
+          <valor>today</valor>
+      </field>
+            
+      <field id="calle">
+        <label>Calle</label>
+        <help/>
+      </field>
+      <field id="numero">
+        <label modpos="nobr">Número</label>
+        <help>Número</help>
+      </field>
+      <field id="piso" _sincelda="true">
+        <label>Piso</label>
+        <help>Piso</help>
+      </field>
+      <field id="depto" sincelda="true">
+        <label modpos="nobr">Depto</label>
+        <help>Departamento</help>
+      </field>
+      <field id="telefono">
+        <label>Teléfono Fijo</label>
+        <help>Número de Teléfono Fijo</help>
+      </field>
+     
+ 
+      <field id="celular" tipOrden="ASC">
+        <label modpos="nobr">Celular</label>
+        <help>Número de Celular</help>
+      </field>
+
+      <field id="idProvincia" colstyle="Display:none;">
+        <label >Provincia</label>
+        <help>Provincia</help>
+        <tabla_ex id="FSMPROVS" vacio="true">
+          <field id="prvcod" />
+          <field id="prvnom" />
+        </tabla_ex>
+        <valor>21</valor>
+      </field>
+      <field id="localidad" _noshow="true" colstyle="Display:none;">
+        <label modpos="nobr" colspan="3">Localidad</label>
+        <tabla_ex id="LOCALIDADES" vacio="true">
+          <field id="idLocalidad"/>
+          <field id="nombre"></field>
+          <field id="idProvincia"  oculto="true">
+             <condicion operador="=">21</condicion>
+        </field>
+        </tabla_ex>
+        </field>
+
+
+      <field id="fecing" noshow="true">
+        <label>Fecha de Ingreso</label>
+        <help/>
+      </field>
+
+      <field id="fechaEgreso" noshow="true">
+        <label modpos="nobr">Fecha de Egreso</label>
+        <condicion operador="=">0000-00-00</condicion>
+      </field>
+
+
+      <field id="fecha_modificacion" tipOrden="ASC" deshabilitado="false" noshow="true">
+      </field>
+      
+      <field id="patente">
+        <label>Patente</label>
+      </field>
+
+      <order>
+        <!--<field id="pend"></field>-->
+       
+        <field id="nombre_apellido"></field>
+       
+      </order>
+
+
+    </table>
+    <join tipo="left">
+      <table id="LOCALIDADES">
+        <field id="idLocalidad">
+          <condicion operador="=">PERSONAL.localidad</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+
+</histrix>
+

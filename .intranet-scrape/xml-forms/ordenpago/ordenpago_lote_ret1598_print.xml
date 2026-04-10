@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="nosql" xmlImpresion="ret1598_reimp.xml" dirImpresion="/retenciones">
+	<title>RETENCIONES</title>
+	<obs/>
+	<form >
+		<table id="RET1598" label="retenciones" idCampoCond="pagarRI">
+			<field id="id_ret1598" lastId="ordenpago_lote_ret1598.xml" >
+				<detalle>id_ret1598</detalle>
+			</field>
+            <field id="printer" id_padre="printer_orden" local="true" >
+                <detalle>printer</detalle>
+                <detalle>directprint</detalle>
+                <setvar>directprint</setvar>
+            </field> 			
+		</table>
+	</form>
+</histrix>

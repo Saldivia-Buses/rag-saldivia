@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<histrix tipo="consulta" conBusqueda="true" imprimetanda="true">
+	<title>FICHA PERSONAL</title>
+	<obs></obs>
+	<form  detalle="rhdescuentos.xml">
+		<table id="PERSONAL" label="Ficha Personal">
+
+			<field id="idPersona" noshow="true">
+				<label modpos="nobr">pers</label>
+			</field>
+
+			<field id="legajo">
+				<label modpos="nobr">Legajo</label>
+				<detalle>legajo</detalle>
+			</field>
+			<field id="apellido">
+				<label modpos="nobr" colspan="6">Apellido</label>
+				<help>Apellido</help>
+			</field>
+			<field id="Nombre">
+				<label modpos="nobr">Nombre</label>
+				<help>Nombre</help>
+			</field>
+			<field id="id_seccion">
+				<label modpos="nobr">Sección</label>
+				<expression>select nombre from SECCIONHISTORIA left join SECCION on SECCION.id_seccion = SECCIONHISTORIA.id_seccion where SECCIONHISTORIA.IdPersona = PERSONAL.IdPersona order by SECCIONHISTORIA.fechaDesde desc limit 1</expression>
+			</field>
+
+			<field id="CUIL">
+				<label modpos="nobr" >C.U.I.L.</label>
+				<help>Número de Clave Única de Identificación Laboral</help>
+			</field>
+			<field id="legajo">
+				<label modpos="nobr">Legajo</label>
+				<detalle>legajo</detalle>
+			</field>
+
+			<field id="fechaEgreso" oculto="true">
+				<label>Egreso</label>
+				<condicion operador="=">"0000-00-00"</condicion> 
+			</field>
+<!--			<field id="cpremio" oculto="true" >
+				<label>Premio</label>
+				<condicion operador="=">1</condicion>
+			</field> -->
+
+			<order>
+			<field id="fecing"></field>
+
+			</order>
+		</table>
+	</form>
+</histrix>

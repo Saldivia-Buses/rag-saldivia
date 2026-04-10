@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="insert">
+       <title>FACREMIMP</title>
+        <obs></obs>
+           <form >	
+				<table id="FACREMIMP" label="FACREMIMP">
+					<field id="id_facremimp" lastId="factura_facremimp_ingmov.xml" />
+	                <sql>
+					UPDATE `FACREMIMP` SET regmovim_id = (SELECT id_regmovim FROM REG_MOVIMIENTOS rm WHERE rm.nro_cuenta = FACREMIMP.ctacod and
+					rm.fecha_movimiento = FACREMIMP.movfec and rm.puesto_movimiento = FACREMIMP.movnpv and rm.nro_movimiento = FACREMIMP.movnro limit 1) 
+	                </sql>
+				</table>
+           </form>
+    </histrix>

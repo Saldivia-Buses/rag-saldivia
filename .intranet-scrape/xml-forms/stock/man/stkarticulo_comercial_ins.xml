@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert" >
+    <title>Artículos</title>
+    <obs></obs>
+    <form >
+        <table id="STK_ARTICULOS" label="Artículos" >
+
+	        <field id="id_stkarticulo"  id_temp="id_stkarticulo" />
+                <field id="nombre_articulo" id_temp="nombre_articulo" />
+                <field id="stkrubro_id"     id_temp="stkrubro_id" />
+                <field id="stksubrubro_id"  id_temp="stksubrubro_id" />
+                <field id="fabricacion_propia" id_temp="fabricacion_propia" />
+                <field id="ncm" id_temp="ncm" />
+                <field id="unidad_uso_id"   id_temp="unidad_uso_id" />
+                <field id="unidad_id"       id_temp="unidad_uso_id" />
+                <field id="gravado" id_temp="gravado" />
+                <field id="ivaregimen_id" id_temp="ivaregimen_id" />
+                <field id="genmoneda_venta_id" id_temp="genmoneda_venta_id" />
+                <field id="cuentadebe_id" id_temp="cuentadebe_id" />
+        </table>
+    </form>
+</histrix>

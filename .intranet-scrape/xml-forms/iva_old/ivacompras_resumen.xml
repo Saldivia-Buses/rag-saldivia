@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+	<histrix tipo="consulta">
+		<title>IVA COMPRAS</title>
+		<obs></obs>
+		<form>
+			<table id="IVACOMPRAS" label="IVA COMPRAS">
+
+				<field id="fecreg" oculto="true" noselect="true">
+					<label>Fecha</label>
+					<help></help>
+				</field>
+
+				<!--
+			
+				<field id="feciva">
+					<label>Fecha</label>
+					<help>
+					</help>
+				</field>
+				-->
+				<field id="conabv" tabla="CCTCONCE" break="true">
+					<label>Conc</label>
+					<tipo>varchar</tipo>
+				</field>
+<!--				<field id="codlet">
+					<label>L</label>
+					<help>
+					</help>
+				</field>
+				<field id="nronpv">
+					<label>Npv</label>
+					<help>
+					</help>
+					<format>%04d</format>
+				</field>
+				<field id="nrocom">
+					<label>Numero</label>
+					<help>
+					</help>
+					<format>%010d</format>
+				</field>
+				<field id="ctacod" oculto="true">
+					<label>Cuenta</label>
+					<help>
+					</help>
+				</field>
+				<field id="ctanom">
+					<label>Proveedor</label>
+					<help>
+					</help>
+				</field>
+				<field id="nrodoc">
+					<label>CUIT</label>
+				</field>
+				-->
+<!--				<field id="ivacod">
+					<label>Categoria I.V.A. </label>
+					<help>
+					</help>
+					<tabla_ex id="FSMCTIVA">
+						<field id="ivacod"></field>
+						<field id="ivanom"></field>
+					</tabla_ex>
+				</field>
+				-->
+
+
+
+  				<field id="impcod" tabla="IVAIMPORTES" >
+					<label>Imp</label>
+					<tabla_ex id="IVAIMPUESTOS">
+						<field id="impcod"></field>
+						<field id="impnom"></field>
+					</tabla_ex>
+
+				</field>   
+  	<!--			<field id="impnom" tabla="IVAIMPUESTOS">
+					<label>Impuesto</label>
+					<tipo>varchar</tipo>
+				</field>  -->
+				
+				<field id="gravado" suma="true">
+			      <expression>sum(impgra * (case when conimp = 1 then -1 else 1 end))</expression>
+					<label>Gravado</label>
+				</field>					
+								
+				<field id="Importe"  suma="true">
+			      <expression>sum(impimp * (case when conimp = 1 then -1 else 1 end))</expression>
+					<label>Importe</label>
+				</field>				
+	<!--
+	
+				
+				<field id="execom" norepeat="true">
+					<label>Exento</label>
+				</field>
+
+				<field id="nogcom" norepeat="true">
+					<label>No Grav.</label>
+				</field>
+				-->
+				<!---->
+				<field id="exe"  suma="true">
+			      <expression>sum((execom ) * (case when conimp = 1 then -1 else 1 end))</expression>
+					<label>Exento</label>
+				</field>
+					
+				<field id="nog" suma="true">
+			        <expression>max(nogcom  )</expression>
+					<label>No Gravado</label>
+				</field>
+<!--
+			        <expression>sum((nogcom ) * (case when conimp = 1 then -1 else 1 end) * (case when IVAIMPORTES.impcod = 2 then 0 else 1 end)  )</expression>
+
+-->
+				<field id="Total"  suma="true" local="true">
+			     <!-- <expression>sum(totcom * (case when impgra = 0 then 0 when conimp = 1 then -1 else 1 end))</expression> 
+							   sum((impimp) * (case when conimp = 1 then -1 else 1 end)) + 
+							   sum((execom) * (case when conimp = 1 then -1 else 1 end)) + 
+							   sum((nogcom) * (case when conimp = 1 then -1 else 1 end))</expression> 
+							   -->
+					<label>Total</label>
+					<if exp="true" operador="=">
+						<true>gravado + Importe + exe + nog</true>
+						<false>0</false>
+				</if>
+				</field>
+								
+				
+				<filters>
+					<field id="fecreg">
+						<operador>>=</operador>
+						<label>Desde Fecha</label>
+						<valor>today</valor>
+					</field>
+					<field id="fecreg">
+						<operador>&lt;=</operador>
+						<label>Hasta Fecha</label>
+						<valor>today</valor>
+						
+					</field>
+				</filters>
+				<group>
+					<field id="conabv" tabla="CCTCONCE"></field>
+					<field id="impcod" tabla="IVAIMPORTES"></field>  
+				<!--	<field id="impnom" tabla="IVAIMPUESTOS"></field> -->
+					<!-- <field id="sum(nogcom)" ></field>  -->
+
+					
+				</group>
+				
+			</table>
+		<join tipo="right ">
+
+			<table id="IVAIMPORTES">
+				<field id="tipoiva" oculto="true">
+					<condicion operador="=">1</condicion>
+				</field>
+<!--				<field id="impcod" >
+					<condicion operador="=">IVAIMPUESTOS.impcod</condicion>
+				</field>
+-->			
+				<field id="codcom" >
+					<condicion operador="=">IVACOMPRAS.codcom</condicion>
+				</field>
+				<field id="codlet" >
+					<condicion operador="=">IVACOMPRAS.codlet</condicion>
+				</field>
+				<field id="nronpv" >
+					<condicion operador="=">IVACOMPRAS.nronpv</condicion>
+				</field>
+				<field id="nrocom" >
+					<condicion operador="=">IVACOMPRAS.nrocom</condicion>
+				</field>
+				<field id="ctacod" >
+					<condicion operador="=">IVACOMPRAS.ctacod</condicion>
+				</field>
+				
+			</table>
+		</join>			
+<!--		<join tipo="left">
+
+			<table id="IVAIMPUESTOS">
+				<field id="impcod" >
+					<condicion operador="=">IVAIMPORTES.impcod</condicion>
+				</field>	
+			</table>
+		</join>						
+-->
+		<join tipo="inner">
+			<table id="CCTCONCE">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">'01'</condicion>
+				</field>				
+				<field id="concod" >
+					<condicion operador="=">IVACOMPRAS.codcom</condicion>
+				</field>
+			</table>
+		</join>						
+		</form>
+	</histrix>

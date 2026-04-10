@@ -1,0 +1,287 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="crud" >
+	<title>ABM CUENTA</title>
+	<obs></obs>
+	<form >
+		<table id="REG_CUENTA" label="ABM CUENTA">
+			<field id="id_regcuenta" noshow="true" esClave="true"/>
+			<field id="subsistema_id" noshow="true" valauto="true">
+				<label>Codigo Sistema</label>
+				<valor>RE</valor>
+				<condicion operador="=">'RE'</condicion>
+			</field>
+			<field id="proxnro" local="true" deshabilitado="true" valauto="true">
+				<label style="color:red;">Próximo Número Disponible</label>
+				<helper type="combo" id="REG_CUENTA" >
+					<field id="subsistema_id" noselect="true">
+						<tipo>varchar</tipo>
+						<condicion operador="=">'RE'</condicion>
+					</field>
+					<field id="nro_cuenta1">
+						<expression>max(nro_cuenta) + 1</expression>
+					</field>					
+					<field id="nro_cuenta2">
+						<expression>max(nro_cuenta) + 1</expression>
+					</field>				
+					<field id="nro_cuenta" noselect="true">
+						<condicion operador="&lt;">10000</condicion>
+					</field>							
+				</helper>
+			</field>
+					<field id="baja">
+				<label style="background-color:#7ff67f; color:white; font-size:15px" modpos="nobr">Estado</label>
+				<help>Cuenta Activa - De Baja</help>
+				<valor>0</valor>
+				<options>
+					<option valor="1">Baja</option>
+					<option valor="0">Activo</option>
+
+				</options> 
+			</field>	
+			<field id="nro_cuenta" clave="true" esClave="true">
+				<valor>0</valor>
+				<label>Cuenta</label>
+				<help>Código de Cuenta </help>
+			</field>
+			<field id="nombre_cuenta">
+				<label modpos="nobr">Nombre</label>
+				<help>Nombre de la Cuenta </help>
+				<size>30</size>
+			</field>
+	<!--
+			<field id="nombre_fantasia" required="true">
+				<label modpos="nobr">Nom.Fantasia</label>
+				<help>Nombre de fantasia. </help>
+				<size>12</size> 
+				<maxsize>15</maxsize>
+<tipo>varchar</tipo>
+			</field>
+-->
+			<field id="cod_direccion">
+				<label colspan="5">Domicilio Fiscal </label>
+			</field>
+
+			<field id="codigo_postal">
+				<label>Código Postal</label>
+			</field>
+
+			<field id="localidad_nombre">
+				<label modpos="nobr">Localidad </label>
+			</field>
+			
+			<field id="provincia_id">
+				<label >Provincia </label>
+				<helper type="combo" xml="provincia_qry.xml" dir="/ayudas" />
+			</field>
+<!--
+			<field id="tel_cuenta">
+				<label>Telefono</label>
+				<help>
+				</help>
+				<size>20</size>
+			</field>
+			<field id="fax_cuenta">
+				<label modpos="nobr">Tel/Fax</label>
+				<help>
+				</help>
+				<size>20</size>
+			</field>
+-->
+			<field id="ref_cuenta">
+			<label>Observaciones</label>
+			</field>
+			
+<!--
+			<field id="entrega_direccion">
+				<label colspan="5" style="color:blue;">Domi.Envio</label>
+				<help>
+				</help>
+			</field>
+          <field id="entrega_codigopostal">
+				<label style="color:blue;">Expreso Envio</label>
+            	<size>30</size> 
+				<help>
+				</help>
+			</field>
+			<field id="entrega_localidad">
+				<label modpos="nobr" style="color:blue;">Loc.Envio</label>
+				<help>
+				</help>
+			</field>
+            
+			<field id="entrega_provincia_id">
+				<label modpos="nobr" style="color:blue;">Prov.Envio</label>
+				<help modpos="nobr">
+				</help>
+				<helper type="combo" xml="provincia_qry.xml" dir="/ayudas" />			
+			</field>
+-->						
+			<!--
+			<field id="iva_id">
+				<label>Categoria I.V.A. </label>
+				<help>
+				</help>
+				<helper type="combo" id="GEN_IVA">
+					<field id="id_iva"></field>
+					<field id="nombre_iva"></field>
+				</helper>
+			</field>
+			<field id="ctadgr">
+				<label modpos="nobr">D.G.R.</label>
+				<help> Inscripcion en DGR</help>
+			<options>
+					<option valor="1">Inscripto</option>
+					<option valor="0">No Inscripto</option>
+				</options>
+				
+			</field>
+				-->
+			
+			<field id="tipo_documento_id">
+				<label>Documento</label>
+				<helper type="combo" xml="tipos_documento_qry.xml" dir="/ayudas" />
+			</field>
+			<field id="cuit_cuenta" _cuit="true">
+				<label modpos="nobr">Número</label>
+			</field>
+			<field id="regzona_id">
+				<label>Código de Zona</label>
+			</field>
+<!--
+			<field id="horario">
+				<label colspan="2" modpos="nobr">Horario de Atencion</label>
+				<help>
+				</help>
+				<size>50</size>
+			</field>			
+-->
+<!--
+			<field id="regcategoria_id">
+				<label>Codigo Categoria </label>
+				<help>
+				</help>
+				<helper type="combo" id="REG_CATEGORIAS">
+					<field id="id_regcategoria"></field>
+					<field id="nombre_categoria"></field>
+					<field id="tipo_categoria">
+						<condicion operador="=">'general'</condicion>
+					</field>
+				</helper>
+				
+			</field>
+			<field id="ctbcod">
+				<label modpos="nobr">Cuenta Contable</label>
+				<help>
+				</help>
+				<helper type="combo" id="CTB_CUENTAS" >
+					<field id="id_cuenta"></field>
+					<field id="nombre_cuenta"></field>
+					<field id="habilitada">
+						<condicion operador="=">1</condicion>
+					</field>				
+					<field id="ejercicio_id">
+						<condicion operador="=">10</condicion>
+					</field>				
+					<order>
+						<field id="nombre_cuenta"></field>
+					</order>	
+				</helper>
+				<valor>711106</valor>
+			</field>
+			
+			<field id="regforma_id">
+				<label>Codigo </label>
+				<help>
+				</help>
+				<helper type="combo" xml="regforma_qry.xml" dir="/ayudas" />
+			</field>
+			
+			<field id="formaPago">
+				<label modpos="nobr">Forma de Pago</label>
+				<helper type="combo" id="FORMAPAGO">
+				    <field id="formaPago"></field>
+				    <field id="nombrePago"></field>
+				</helper>
+			</field>
+			
+			<field id="categoria_ganancia">
+				<label>Ganancias</label>
+				<help>Categoria de Ganancias</help>
+				<helper type="combo" id="REG_CATEGORIAS">
+					<field id="id_regcategoria"></field>
+					<field id="nombre_categoria"></field>
+					<field id="tipo_categoria">
+					    <condicion operador="=">'ganancias'</condicion>
+					</field>
+				</helper>
+			</field>
+			<field id="categoria_ingbrutos">
+				<label modpos="nobr">Ing.Brutos</label>
+				<help>Categoria Ingresos Brutos</help>
+				<helper type="combo" id="REG_CATEGORIAS">
+					<field id="id_regcategoria"></field>
+					<field id="nombre_categoria"></field>
+					<field id="tipo_categoria">
+					    <condicion operador="=">'ingbrutos'</condicion>
+					</field>
+				</helper>
+			</field>
+			<field id="nro_ingbrutos">
+				<label modpos="nobr">Nro.Ing.Brutos.</label>
+				<help>Numero de Ingresos Brutos</help>
+			</field>
+			<field id="categoria_rg1598">
+				<label>Ing.Brutos Res.1598</label>
+				<help>Tipo de Inscripcion en Ing.Brutos Res. 1598</help>
+				<helper type="combo" id="REG_CATEGORIAS">
+					<field id="id_regcategoria"></field>
+					<field id="nombre_categoria"></field>
+					<field id="tipo_categoria">
+					    <condicion operador="=">'rg1598'</condicion>
+					</field>
+				</helper>
+			</field>
+			<field id="porcentaje_rg1598">
+				<label modpos="nobr">Porcentaje Retencion</label>
+				<help>Porcentaje de Retencion</help>
+				<format>%01.2f</format>
+			</field>
+			<field id="numero_cai">
+				<label>Nro.CAI</label>
+				<help>Numero de CAI</help>
+			</field>
+			<field id="vencimiento_cai">
+				<label modpos="nobr">Vto.Cai </label>
+				<help>Vencimiento de CAI</help>
+			</field>
+			<field id="ref_cuenta">
+				<label colspan="5">Obs. </label>
+				<help>Observaciones</help>
+			</field>
+			<field id="estcod">
+				<label >No influye en costo</label>
+				<help>No se tiene en cuenta en el armado de costos</help>
+				<tipo>check</tipo>
+			</field>
+-->
+        <field id="contacto" obj="cuenta_contactos_crud.xml" local="true" _showObjTabla="true">
+          <paring destino="regcuenta_id">id_regcuenta</paring>
+        </field>
+
+<!--
+			<field id="relaciones" local="true">
+				<helper type="object" xml="cuenta_relaciones_crud.xml" dir="/clientes_local" >
+					<parameter target="regcuenta_id" source="id_regcuenta" />
+				</helper>
+			</field>
+-->
+			<!--
+		           <field id="grupo_empresarial" local="true" obj="grupos_empresas_crud.xml" objdir="/clientes_local">
+				<label colspan="10"/>
+				<paring destino="ctapadre_id">nro_cuenta</paring>
+			 </field>
+			 
+			 -->
+		</table>
+	</form>
+</histrix>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+	<histrix tipo="ficha" preFetch="true" inserta="false" borra="false" imprime="false" cancel="false">
+		<title>Preferencia</title>
+		<obs></obs>
+		<eventos>
+		    <event id="update">close</event>
+		</eventos>
+
+		<form>
+
+			<table id="HTXOPTIONS" label="OPCIONES">
+				<field id="id_option" deshabilitado="true"  noshow="true" autoinc="true">
+				</field>
+				<field id="login"  _noshow="true" _oculto="true" noshow="true" valauto="true">
+					<condicion operador="=" ></condicion>  
+					<size>10</size>
+				</field>
+				<field id="option_name" _editable="true" noshow="true" >
+					<label>Nombre</label>
+					<help>Nombre de la opcion</help>
+					
+				</field>
+
+				<field id="option_description" _editable="true" deshabilitado="true">
+					<label>Descripción</label>
+					<help>Descripcion</help>
+				</field>
+				<field id="option_value" _editable="true">
+					<label>Valor</label>
+					<size>10</size>
+					
+				</field>
+			</table>
+		</form>
+	</histrix>

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" PDFlines="false"
+ path="fotos/coches" _limit="1">
+	<obs/>
+	<form >
+		<table id="PRODUCTO_ATRIB_VALORES">
+			<field id="producto_id" noshow="true">
+			</field>
+			<field id="prdatributos_id" noshow="true">
+			    <expression having="false">prdatributo_id</expression>
+<!--			    <condicion operador="in">(63,27)</condicion> -->
+			    <label>lbl</label>
+			</field>
+			<field id="tipo_atributo" noshow="true">
+			    <expression having="false">tipo_atributo</expression>
+			    <condicion operador="=">'file'</condicion>
+			</field>
+
+			<!--<field id="valor_atributo0" path="../archivo/Panas/" imageWidth="15">
+			    <expression> concat(nombre_atributo,':',REPLACE((TRIM(TRAILING '.jpg' from valor_atributo)),(LEFT(valor_atributo,(LOCATE('/',valor_atributo)))), ' ')) </expression>
+			    <tipo>file</tipo>
+			</field>
+			
+			<field id="valor_atributo0" path="../archivo/Panas/" imageWidth="15">
+			    <expression>nombre_atributo</expression>
+			    <tipo>file</tipo>
+			</field>
+			
+			<field id="valor_atributo1" path="../archivo/Panas/" imageWidth="15">
+			    <expression>descrip_cotizacion</expression>
+			    <tipo>file</tipo>
+			</field> -->
+			<field id="valor_atributo0" path="../archivo/Panas/" imageWidth="15">
+			    <expression> concat(nombre_atributo,' (',descrip_cotizacion,') : ',REPLACE((TRIM(TRAILING '.jpg' from valor_atributo)),(LEFT(valor_atributo,(LOCATE('/',valor_atributo)))), ' ')) </expression>
+			    <tipo>file</tipo>
+			</field>
+			<field id="valor_atributo1" path="../archivo/Panas/" imageWidth="15">
+			    <expression>valor_atributo</expression>
+			    <tipo>file</tipo>
+			</field>
+			<!--
+			<field id="valor_atributo2" path="../archivo/Panas/" imageWidth="15">
+			    <expression>select concat('Techo: ',REPLACE((TRIM(TRAILING '.jpg' from VAL.valor_atributo)),(LEFT(VAL.valor_atributo,(LOCATE('/',VAL.valor_atributo)))), ' ')) from PRODUCTO_ATRIB_VALORES VAL where VAL.producto_id = PRODUCTO_ATRIB_VALORES.producto_id and
+													VAL.prdatributo_id = 27</expression>
+			    <tipo>file</tipo>
+			</field>
+
+			<field id="valor_atributo3" path="../archivo/Panas/" imageWidth="15">
+			    <expression>select VAL.valor_atributo from PRODUCTO_ATRIB_VALORES VAL where VAL.producto_id = PRODUCTO_ATRIB_VALORES.producto_id and
+													VAL.prdatributo_id = 27</expression>
+			    <tipo>file</tipo>
+			</field>
+-->
+			<field id="prdseccion_id" noshow="true">
+			    <expression having="false">prdseccion_id</expression>
+
+			</field>
+		</table>
+		<join tipo="inner">
+		    <table id="PRODUCTO_ATRIBUTOS">
+			<field id="id_prdatributo">
+			    <condicion>prdatributo_id</condicion>
+			</field>
+		    </table>
+		</join>
+	</form>
+</histrix>

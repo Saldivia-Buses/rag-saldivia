@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <abm tipo="consulta" >
+       <titulo>Cuenta Corriente</titulo>
+        <obs></obs>
+               <consulta> <!--detalle="ConCtaCteDetSal.xml"--> 
+                  <tabla id="IVACOMPRAS" label="Movimientos">
+
+<!--                  <campo id="siscod" oculto="true">
+                      <label>Cod.</label>
+                      <help> </help>
+		      <detalle>siscod</detalle>
+                  </campo> 
+-->
+		  <campo id="feciva">
+		    <label>Fecha</label>
+		  </campo>
+                  <campo id="ctacod">
+                      <label>Cuenta</label>
+                      <help>Codigo de Cuenta</help>
+		      <detalle>ctacod</detalle>
+		      <formato>%04d</formato>
+
+                  </campo>
+
+                  <campo id="ctanom">
+		      <expresion>CCTCUENT.ctanom</expresion>
+                      <label>Nombre</label>
+                      <help>Codigo de Cuenta</help>
+		      <tipo>varchar</tipo>
+                  </campo>
+
+<!--                  <campo id="ctanro">
+		      <expresion>CCTCUENT.ctanro</expresion>
+                      <label>CUIT</label>
+                      <help>CUIT</help>
+		      <formato>%30s</formato>
+                  </campo>
+-->
+<!--                  <campo id="movsal" suma="true">
+		      <expresion>sum(movsal)</expresion>
+		      <label>Saldo</label>
+                      <help> </help>
+		      <condicion operador=" != ">0</condicion>  
+                 </campo> -->
+
+			<campo id="debe" suma="true">
+				<expresion>sum(totcom * (case when CCTCONCE.contip = 1 then 1 else 0 end))</expresion>
+				<label>debe</label>
+			</campo>
+			<campo id="haber" suma="true">
+				<expresion>sum(totcom * (case when CCTCONCE.contip = 2 then 1 else 0 end))</expresion>
+				<label>haber</label>
+			</campo>
+			<campo id="dif" local="true">
+				<label>diferencia</label>
+				<if exp="true">
+					<verdadero>debe - haber</verdadero>
+					<falso>0</falso>
+				</if>
+			</campo>
+			<filtros>
+			    <campo id="feciva">
+				<label>Desde Fecha</label>
+				<operador>&gt;=</operador>
+				<valor>today</valor>
+			    </campo>
+		    	    <campo id="feciva">
+				<operador>&lt;=</operador>
+				<label>Hasta Fecha</label>
+				<valor>today</valor>
+			    </campo>
+			</filtros>
+    		    <group>
+<!--    		        <campo id="IVAIMPORTES.siscod"></campo>
+    		        <campo id="IVAIMPORTES.siscod"></campo>-->
+    		        <campo id="IVAIMPORTES.ctacod"></campo>
+    	<!--	        <campo id="CCTCUENT.ctacod"></campo>
+    		        <campo id="CCTCUENT.ctanom"></campo>
+    		        <campo id="CCTCUENT.ctanro"></campo>
+         -->
+		    </group>
+
+                  </tabla>
+		  
+	    
+		  <join tipo="left">
+		    <tabla id="CCTCUENT">
+			<campo id="siscod" oculto="true">
+			    <condicion operador="=">01</condicion>
+			</campo>
+			<campo id="ctacod" oculto="true">
+			    <condicion operador="=">IVAIMPORTES.ctacod</condicion>
+			</campo>
+		    </tabla>
+		  </join>
+		<join tipo="left">
+			<tabla id="CCTCONCE">
+				<campo id="siscod" oculto="true">
+					<condicion operador="=">01</condicion>
+				</campo>
+				<campo id="concod" oculto="true">
+					<condicion operador="=">IVAIMPORTES.codcom</condicion>
+				</campo>
+			</tabla>
+		</join>						   
+	    
+		  
+               </consulta>
+        </abm>

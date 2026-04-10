@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="arbol" form="false">
+  <title>Saldos Mensuales</title>
+  <obs/>
+  <consulta detalle="cabecera_saldos_qry.xml">
+    <table id="CTB_CUENTAS" label="cuentas">
+
+      <filters>
+        <field id="ejercicio_id">
+          <label>Ejercicio</label>
+          <help>Ejercicio contable</help>
+          <operador>=</operador>
+        </field>
+
+        <field id="concepto_id">
+          <label>Concepto</label>
+          <operador>=</operador>
+        </field>
+        
+        <field id="id_cuenta" dehabilitado="false">
+          <operador>&gt;=</operador>
+          <label>Desde cuenta</label>
+        </field>
+
+        <field id="id_cuenta" deshabilitado="false">
+          <operador>&lt;=</operador>
+          <label modpos="nobr">Hasta cuenta</label>
+        </field>
+        
+        <field id="fecha_movimiento" deshabilitado="false">
+          <label>Desde Fecha</label>
+          <operador>&gt;=</operador>
+          <valor>today</valor>
+        </field>
+        <field id="fecha_movimiento" deshabilitado="false">
+          <label modpos="nobr">hasta Fecha</label>
+          <operador>&lt;=</operador>
+          <valor>today</valor>
+        </field>
+      </filters>
+
+
+      <field id="id_cuenta" autoinc="true" noshow="false" arbol="hijo">
+        <label>Cuenta</label>
+        <helper type="external" xml="cuentas_inhabilitadas_qry.xml" dir="/ayudas" />
+        <detalle>id_cuenta</detalle>
+      </field>
+
+        <field id="concepto_id" noshow="true" tabla="CTB_MOVIMIENTOS">
+            <helper type="combo" xml="ctbconcepto_qry.xml" dir="/ayudas" />
+            <label>Concepto</label>
+            <detalle>concepto_id</detalle>
+        </field>
+
+      <field id="cuenta_superior_id" noshow="true" arbol="padre">
+        <label>Cuenta superior</label>
+        <valor>0</valor>
+      </field>
+
+
+      <field id="fecha_movimiento" noshow="true">
+        <expresion having="false">fecha_movimiento</expresion>
+        <help>Fecha movimiento</help>
+        <tipo>date</tipo>
+      </field>
+
+
+
+
+
+      
+      <field id="fecha_minima" noshow="true">
+        <expresion having="false">min(fecha_movimiento)</expresion>
+        <tipo>date</tipo>
+        <detalle>fecha_minima</detalle>
+      </field>
+      <field id="fecha_maxima" noshow="true">
+        <expresion having="false">max(fecha_movimiento)</expresion>
+        <tipo>date</tipo>
+        <detalle>fecha_maxima</detalle>
+      </field>
+
+
+      <field id="nombre_cuenta">
+        <label>Descripcion</label>
+      </field>
+
+      <field id="Saldo" treeSum="true">
+        <label style="color:green;font-weight:bold;">Saldo</label>
+        <expresion>select sum(round(importe, 2) * (case when doh = 1 then 1 else -1 end)) as saldo</expresion>
+        <tipo>numeric</tipo>
+      </field>
+
+
+      <field id="ejercicio_id" noshow="true">
+	<helper type="combo" xml="ctbejercicios_crud.xml" dir="/contabilidad/man/">
+	    <field id="activo" tipoOrden="DESC"/>
+    	    <field id="fecha_mov1">
+    		<expresion>DATE_FORMAT(comienza, '%d/%m/%Y')</expresion>
+    		<tipo>date</tipo>
+                <detalle>ejercicio_id</detalle>
+            </field>
+            <field id="fecha_mov2">
+                <expresion>DATE_FORMAT(finaliza, '%d/%m/%Y')</expresion>
+        	<tipo>date</tipo>
+            </field>
+            <field id="finaliza">
+            </field>
+        </helper>
+        <label>Ejercicio</label>
+        <detalle>ejercicio_id</detalle>
+      </field>
+
+      <group>
+        <field id="id_cuenta"/>
+      </group>
+      
+    </table>
+    
+    <join tipo="left">
+      <table id="CTB_MOVIMIENTOS">
+        <field id="ejercicio_id">
+          <condicion operador="=">CTB_CUENTAS.ejercicio_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="inner">
+      <table id="CTB_CONCEPTOS">
+        <field id="id_concepto">
+          <condicion operador="=">concepto_id</condicion>
+        </field>
+      </table>
+    </join>
+    
+    <join tipo="left">
+      <table id="CTB_DETALLES">
+        <field id="movimiento_id">
+          <condicion operador="=">CTB_MOVIMIENTOS.id_movimiento</condicion>
+        </field>
+        <field id="cuenta_id">
+          <condicion operador="=">id_cuenta</condicion>
+        </field>
+      </table>
+    </join>
+    
+  </consulta>
+</histrix>

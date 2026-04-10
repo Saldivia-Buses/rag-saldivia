@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="grid" subtipo="vertical" inserta="false" borra="false" modifica="false" imprime="false" deleteRow="false" exportasuma="true" llenoreferente="true" llenotemporal="true">
+  <title>Comprobantes a Imputar</title>
+  <obs/>
+  <form>
+    <table id="REG_MOVIMIENTOS">
+	
+      <movimientos>
+        <relacion id="regmovimientosadm_ins.xml" />
+        <relacion id="regdetallesadm_ins.xml" />
+       <!-- <relacion id="regimputacionesadm_ins.xml" />-->
+        <relacion id="regimputacionesrec_ins.xml" />
+        <relacion id="regimputaciones_agrupado_ins.xml" />
+        <relacion id="regimputaciones_simple_ins.xml" />
+        <relacion id="cajnumeradoresadm_upd.xml" />
+      </movimientos>
+
+      <field id="id_regmovim" esClave="true" noshow="true" />
+
+      <field id="cajconcepto_id" local="true" noshow="true" />
+
+      <field id="cajpuesto_id" local="true" noshow="true" />
+
+      <field id="subsistema_id" noshow="true"/>
+
+      <field id="administracion_id" tabla="GRUPO" noshow="true" />
+      <field id="regcuentagrupo_id" tabla="REG_MOVIMIENTOS" noshow="true" />
+
+      <field id="regcuenta" noshow="true" local="true">
+        <valor>-1</valor>
+      </field>
+
+      <field id="regcuenta_id" noshow="true">
+        <valor>-1</valor>
+        <!--<condicion operador="IN">(select regcuenta_id from REG_CUENTA_RELACIONES where regcuentarelacionada_id = '[__regcuenta__]') or regcuenta_id = '[__regcuenta__]'</condicion>-->
+        <condicion operador="=">(case when GRUPO.administracion_id = 0 then '[__regcuenta__]' else REG_MOVIMIENTOS.regcuenta_id end)</condicion>
+      </field>
+
+      <field id="regcuentaagrupo_id" noshow="true">
+        <expression>ifnull(REG_MOVIMIENTOS.regcuentagrupo_id, 0)</expression>
+        <valor>-1</valor>
+        <condicion operador="=">(case when GRUPO.administracion_id = 1 then '[__regcuenta__]' else ifnull(REG_MOVIMIENTOS.regcuentagrupo_id, 0) end)</condicion>
+      </field>
+
+      <field id="nombre_cuenta" tabla="REG_CUENTA">
+        <label>Cuenta</label>
+      </field>
+
+      <field id="fecha" >
+        <label>Fecha</label>
+        <tipo>date</tipo>
+	      <expression>fecha_movimiento</expression>
+      </field>
+
+      <field id="vencimiento_movimiento">
+        <label>Vto</label>
+        <tipo>date</tipo>
+      </field>
+
+      <field id="comprobante">
+        <label>Comprobante</label>
+        <expression>CONCAT(REG_CONCEPTOS.abreviacion_concepto,' ',LPAD(REG_MOVIMIENTOS.puesto_movimiento,4,0),'-',LPAD(REG_MOVIMIENTOS.nro_movimiento,8,0))</expression>
+      </field>
+
+      <field id="cuota_movimiento">
+        <label>Cta</label>
+      </field>
+
+    <!-- Segun la imputacion del comprobante principal varia los comprobantes a imputar y el saldo de los mismos -->
+    <field id="imputacion_concepto_comprobante_llama" local="true" noshow="true" />
+
+    <!-- Normalizo para que solo traiga los comprobantes de la contrapartida -->
+    <field id="imputacion_concepto_comprobante_imputa" noshow="true">
+	<expression having="false">REG_CONCEPTOS.imputacion_concepto</expression>
+	<condicion operador="=">IF( [__imputacion_concepto_comprobante_llama__] + 0 = 0, 0, 1 )</condicion>
+    </field>
+
+    <field id="importe_original">
+	<expression>importe_movimiento</expression>
+	<tipo>numeric</tipo>
+	<label>Importe Original</label>
+    </field>
+
+    <!-- Normalizo el saldo para que siempre se vea en positivo -->
+    <field id="saldo_movimiento" suma="true">
+	<label>Saldo</label>
+	<expression having="false">IF( [__imputacion_concepto_comprobante_llama__] + 0 = 0, 1, -1) * saldo_movimiento</expression>
+	<condicion operador="!=">0</condicion>
+    </field>
+
+      <field id="Imputado" local="true" refresh="true">
+        <label>Imputar</label>
+        <tipo>check</tipo>       
+      </field>
+
+      <field id="habil" local="true" noshow="true">
+        <if exp="Imputado != 1">
+            <true>'true'</true>
+            <false>'false'</false>
+        </if>
+      </field>
+      <field id="total_imputado" local="true" suma="true" editable="true" deshabilitado="true">
+	    <attribute id="deshabilitado">habil</attribute>
+      	<label>Total Imputado</label>
+        <if exp="'Imputado' == '1'">
+		    <true>(total_imputado != 0)?total_imputado:saldo_movimiento</true>
+		    <false>0</false>
+        </if> 
+        <jseval >total_imputado &lt;= saldo_movimiento</jseval>
+	    <jseval campodestino="importe_imputado" total="true">total_imputado</jseval>
+        <detalle>importe_imputado</detalle>
+	    <tipo>numeric</tipo>
+      </field>
+
+      <field id="graba_adm" local="true" editable="true" deshabilitado="true" noshow="true">      
+        <label>Total Imputado</label>
+        <if exp="total_imputado != 0 &amp;&amp; 'admin' == '1'">
+          <true>1</true>
+          <false>0</false>
+        </if>         
+      </field>
+	<field id="graba_imputacion" local="true" editable="true" deshabilitado="true" noshow="true">      
+        <label>Total Imputado</label>
+        <if exp="total_imputado &gt; 0 &amp;&amp; 'admin' == '1'">
+          <true>1</true>
+          <false>'0'</false>
+        </if>         
+      </field>
+      <field id="graba" local="true" editable="true" deshabilitado="true" noshow="true">      
+        <label>Total Imputado</label>
+        <if exp="total_imputado != 0 &amp;&amp; 'admin' == '0'">
+          <true>'0'</true>
+          <false>1</false>
+        </if>         
+      </field>
+	<field id="graba2" local="true" editable="true" deshabilitado="true" noshow="true">      
+        <label>Total Imputado</label>
+        <if exp="total_imputado != 0 &amp;&amp; 'admin' == '0'">
+          <true>1</true>
+          <false>'0'</false>
+        </if>         
+      </field>
+      <field id="admin" noshow="true">
+        <expression sql="true">select administracion_id from REG_CUENTA where id_regcuenta = '[__regcuenta__]'</expression>
+      </field>
+
+	<order>
+	    <field id="fecha_movimiento" tabla="REG_MOVIMIENTOS"/>
+	    <field id="nro_movimiento" tabla="REG_MOVIMIENTOS"/>
+	</order>
+
+
+    </table>
+
+    <join>
+      <tabla id="REG_CUENTA">
+        <field id="id_regcuenta">
+          <condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+        </field>
+      </tabla>
+    </join>
+
+    <join>
+        <tabla id="REG_CUENTA" as="GRUPO">
+            <field id="id_regcuenta">
+                <condicion operador="=">'[__regcuenta__]'</condicion>
+            </field>
+        </tabla>
+    </join>
+
+    <join>
+      <table id="REG_CONCEPTOS">
+        <field id="subsistema_id">
+          <condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion>
+        </field>
+        <field id="id_concepto">
+          <condicion operador="=">REG_MOVIMIENTOS.concepto_id </condicion>
+        </field>
+
+            <field id="imputacion_concepto">
+                <!--<condicion operador="=">0</condicion>-->
+            </field>
+            <field id="informa_calculo">
+                <condicion operador="=">0</condicion>
+            </field>
+        </table>
+    </join>
+
+  </form>
+</histrix>

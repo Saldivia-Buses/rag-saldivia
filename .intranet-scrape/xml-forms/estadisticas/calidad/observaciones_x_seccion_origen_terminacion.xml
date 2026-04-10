@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="chart" _tipo="consulta">
+    <title>Observaciones Promedio x Seccion Terminación</title>
+    <obs />
+    <form>
+        <table id="PROD_CONTROL_MOVIM">
+
+            <grafico id="calidad">
+                <ancho>500</ancho>
+                <tipo>P</tipo>
+                <title>Responsabilidad de Defectos Terminación</title>
+                <etiquetas>nombre_seccion</etiquetas>
+                <datos>cantidad</datos>
+            </grafico>
+
+           <filters>
+                <field id="fecha_control">
+                    <label>Desde</label>
+                    <valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m") , 1, date("Y") ))</valor>
+                    <operador>&gt;=</operador>
+                </field>
+
+                <field id="fecha_control" modpos="nobr">
+                    <label>Hasta</label>
+                    <valor eval="true">date('d/m/Y', mktime(0,0,0, date('m') ,date('t') ,date('Y')));</valor>
+                    <operador>&lt;=</operador>
+                </field>
+            </filters>
+	    
+    	    <field id="seccion_calidad_id" >
+    	       <condicion operador="!=">0</condicion>
+    	    </field>
+  
+            <field id="nombre_seccion"> 
+    	       <expression>nombre_seccion_calidad</expression>
+    	    </field>
+
+            <field id="fecha_control" noshow="true" />
+
+
+            <field id="seccion_id" tabla="PROD_CONTROLES"/>
+
+
+    	    <field id="cantidad">
+    		    <label>cantidad</label>
+    		    <expression>count(*)</expression>
+    	    </field>
+
+            <field id="no_conforme" noshow="true">
+                <condicion operador="=">1</condicion>
+            </field>
+
+            <group>
+                <field id="seccion_calidad_id" />
+            </group>
+
+  
+
+            <order>
+                <field id="fecha_control" />
+            </order>
+
+        </table>
+
+        <join>
+            <table id="PROD_CONTROLES">
+                <field id="id_prodcontrol">
+                    <condicion operador="=">PROD_CONTROL_MOVIM.prodcontrol_id</condicion>
+                </field>
+            </table>
+        </join>
+        <join>
+            <table id="MRP_SECCION_CALIDAD">
+                <field id="id_seccion_calidad">
+                    <condicion operador="=">seccion_calidad_id</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

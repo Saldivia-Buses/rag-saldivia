@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm">
+	<title>Trabajos Adicionales</title>
+	<obs/>
+	<form >
+		<table id="TRABAJO">
+			<title>Trabajos</title>
+			<field id="idTrabajo" esclave="true">
+				<label>Codigo</label>
+				<help>codigo de Trabajo</help>
+			</field>
+			<field id="nombre">
+				<label>Nombre</label>
+				<help>Nombre del Trabajo</help>
+			</field>
+		</table>
+	</form>
+</histrix>

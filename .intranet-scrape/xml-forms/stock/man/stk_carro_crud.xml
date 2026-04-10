@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="crud">
+	<title>Carros de aprovisionamiento</title>
+	 <obs></obs>
+	 <eventos>
+		<event id="update">refresh</event>
+		<event id="insert">refresh</event>   
+		<event id="delete">refresh</event>
+     </eventos>
+		<form>
+		    <table id="STK_CARRO" label="Carro Aprovisionamiento">
+				<field id="id_stkcarro" esClave="true" noshow="true" />
+
+				<field id="nombre_carro" required="true">
+					<label>Nombre Carro</label>
+					<tipo>varchar</tipo>
+				</field>
+				<field id="alto_carro">
+					<label>Alto Carro</label>
+				</field>
+				<field id="ancho_carro">
+					<label>Ancho Carro</label>
+				</field>
+				<field id="profundidad_carro">
+					<label>Profundidad Carro</label>
+				</field>
+				<field id="peso_maximo">
+					<label>Peso máximo</label>
+				</field>
+				<field id="articulos_carro" >
+					<label Formstyle="display:none;">Artículos</label>
+					<attribute id="linkdes">nombre_carro</attribute>
+					<helper xml="stkarticulo_carro_crud.xml" type="link" >
+						<parameter source="id_stkcarro" target="stkcarro_id" />
+					</helper>
+					<expression>concat( (select count(*) from STK_ARTICULO_CARRO where stkcarro_id = id_stkcarro), ' Artículos')</expression>
+				</field>
+
+				<field id="llenar_carro">
+					<label Formstyle="display:none;">Llenar Carro</label>
+					<attribute id="linkdes">nombre_carro</attribute>
+					<helper xml="llenar_carro_ing.xml" type="link" width="80%" dir="/stock_local/carros/">
+						<parameter source="id_stkcarro" target="stkcarro_id" />
+					</helper>
+					<expression>concat( (select sum(cantidad_actual) from STK_ARTICULO_CARRO where stkcarro_id = id_stkcarro), ' Artículos')</expression>
+				</field>
+
+				<field id="descargar_carro">
+					<label Formstyle="display:none;">descargar Carro</label>
+					<attribute id="linkdes">nombre_carro</attribute>
+					<helper xml="descargar_carro_ing.xml" type="link" width="80%" dir="/stock_local/carros/">
+						<parameter source="id_stkcarro" target="stkcarro_id" />
+					</helper>
+					<expression>concat( (select sum(cantidad_actual) from STK_ARTICULO_CARRO where stkcarro_id = id_stkcarro), ' Artículos')</expression>
+				</field>
+
+		    </table>
+		</form>
+    </histrix>	

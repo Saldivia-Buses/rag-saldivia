@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="update">
+	<title>Actualiza Costo</title>
+	<obs></obs>
+	<form>
+	    <table id="STK_ARTICULOS">
+			<field id="id_stkarticulo"         id_temp="stkarticulo_id" esClave="true" />
+			<field id="precio_costo" 	   	   id_temp="costo_promedio" />
+	    </table>
+	</form>
+</histrix>	

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="insert">
+	    <title>Movimientos en Cuentas Corrientes</title>
+	    <obs></obs>
+		<form>
+		    <table id="REG_MOVIMIENTOS">
+				<field id="subsistema_id"      		id_temp="subsistema_forma_id"/>
+				<field id="regcuenta_id"     		id_temp="regcuenta_id" />	
+				<field id="concepto_id"      		id_temp="regconcepto_forma_id"/>
+				<field id="fecha_movimiento"     	id_temp="fecha_movimiento"/>
+				<field id="nro_movimiento" 	     	id_temp="nro_movimiento"/>		
+				<field id="vencimiento_movimiento" 	id_temp="vencimiento_movimiento"/>	
+				<field id="importe_movimiento"     	id_temp="importe_movimiento"/>		
+				<field id="referencia_movimiento"   id_temp="referencia_movimiento"/>
+				<field id="cajmovimiento_id" 	     lastId="cajmovimientos_ins.xml"/>
+				<field id="cajvalor_id"		  	     lastId="cajvalores_ins.xml"/>				
+		    </table>
+		</form>
+    </histrix>

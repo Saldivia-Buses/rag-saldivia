@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="consulta" borra="no" inserta="no" paginar="250" imprime="false">
+	<title>Ultima Compra del Insumo</title>
+	<obs></obs>
+	<form  >
+		<table id="STK_HIST_COSTOS">
+			<title>Ultima Compra del Insumo</title>
+			
+			
+			<field id="stkarticulo_id" deshabilitado="true">
+				<label>Art.</label>
+			</field>
+			<field id="regcuenta_id" deshabilitado="true">
+				<label>Prov.</label>
+			</field>
+			<field id="nombre_cuenta" deshabilitado="true" tabla="REG_CUENTA">
+				<label>Nombre</label>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="costo_articulo" deshabilitado="true">
+				<label>Costo</label>
+			</field>
+			<field id="unidad_compra_id" tabla="STK_ARTICULOS">
+				<label modpos="nobr">Unidad</label>
+		                <helper type="combo" xml="unidad_qry.xml" dir="/ayudas" empty="true" />
+
+				<help>Unidad de Compra </help>
+				<tipo>varchar</tipo>
+
+			</field>			
+			
+			<field id="conv">
+				<label>costo</label>
+				<expresion>ROUND(STK_HIST_COSTOS.costo_articulo * valor_compra / valor_uso, 2)</expresion>
+			</field>
+			<field id="unidad_uso_id" tabla="STK_ARTICULOS">
+				<label modpos="nobr">Uso</label>
+				<help>Unidad de Compra </help>
+		                <helper type="combo" xml="unidad_qry.xml" dir="/ayudas" empty="true" />
+				<tipo>varchar</tipo>
+			</field>
+                        <field id="ultima_fecha" deshabilitado="true" tipoOrden="DESC">
+				<label>Ingreso</label>
+			</field>
+			<field id="movimiento_fecha" deshabilitado="true">
+				<label>fec.Remito</label>
+			</field>			
+			<field id="movimiento_puntoventa" deshabilitado="true">
+				<label>Pv.Rem</label>
+			</field>			
+			<field id="movimiento_numero" deshabilitado="true">
+				<label>Remito</label>
+			</field>			
+			
+			<order>
+				<field id="ultima_fecha" tabla="STK_HIST_COSTOS"/>
+			</order>
+		</table>
+		<join tipo="left">
+			<table id="STK_ARTICULOS">
+			<field id="id_stkarticulo" >
+				<condicion operador="=">STK_HIST_COSTOS.stkarticulo_id</condicion>
+			</field>
+				
+			</table>
+		</join>
+		
+		<join tipo="left">
+			<table id="REG_CUENTA">
+			<field id="subsistema_id" >
+				<condicion operador="=">'01'</condicion>
+			</field>
+			<field id="id_regcuenta" oculto="true">
+				<condicion operador="=">STK_HIST_COSTOS.regcuenta_id</condicion>
+			</field>
+				
+			</table>
+		</join>
+	</form>
+</histrix>

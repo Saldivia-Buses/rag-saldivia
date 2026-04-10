@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="consulta">
+	<title>Cuentas Inhabilitadas</title>
+	 <obs></obs>
+           <form>	    
+		<table id="CTB_CUENTAS" label="Cuentas Inhabilitadas">
+		    <field id="id_cuenta">
+		    </field>
+		    <field id="nombre_cuenta">
+			<expression>CONCAT(id_cuenta,' ', nombre_cuenta)</expression>
+		    </field>
+ 		    <field id="habilitada">
+			<condicion operador="!=">1</condicion>
+		    </field>
+		    <field id="tipo_id" noshow="true">
+		    </field>
+		    
+	    </table>
+	</form>
+     </histrix>	

@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" class="consultaancha"  PDFfontSize="12"  PDForientacion="L">
+	<title>PRECIOS POR MODELO</title>
+	<obs/>
+	<pie size="15" align="C" style="B">[__pie__]</pie>
+	<form >
+		<table id="PRECIOMODELO" >
+			<title>Precios por modelo</title>
+
+			<filters>
+				<field id="idLista" PDFsize="14">
+				
+					<label modpos="nobr">Lista</label>
+					<help>Lista</help>
+					<operador>=</operador>
+					<tipo>integer</tipo>
+	
+				</field>
+		<!--	<field id="act" local="true" noshow="true">
+				<label modpos="nobr"></label>				
+			</field> -->
+				
+			</filters>
+
+			<field id="nrocar" noshow="true">
+			</field>
+			<field id="idLista" noshow="true" PDFsize="14">
+				<tabla_ex id="LISTAPRECIOMODELO">
+					<field id="idLista" >
+					</field>
+					<field id="nom" >
+						<expression>concat('Nro ',idLista,' - Vigencia Desde: ' , DATE_FORMAT(fecha, '%d/%m/%Y'))</expression>
+					</field>
+					<field id="fecha" orden="true" tipoOrden="DESC">
+					</field>
+					
+					<order>
+						<field id="fecha"></field>
+					</order>
+
+				</tabla_ex>				
+				<actualiza>
+					<field destino="act" id="act"/>
+				</actualiza>				
+				<label modpos="nobr">Lista</label>
+				<help>Lista</help>
+				<tipo>integer</tipo>
+			</field>
+			<field id="pie" tabla="LISTAPRECIOMODELO" noshow="true">
+			</field>			
+			<field id="act" local="true" noshow="true">
+				<label modpos="nobr"></label>
+			</field>
+			<field id="modcar" tabla="CARROCERIA">
+
+				<help>Modelo de Carroceria</help>
+				<tipo>varchar</tipo>
+
+			</field>
+			<field id="cons2" obj="cotizar_cons2.xml" showObjTabla="true"   local="true"  >
+				<paring destino="nrocar" operador="=">nrocar</paring>
+				<paring destino="idLista" operador="=">idLista</paring>
+			</field> 
+
+
+			<group>
+				<field id="nrocar" tabla="PRECIOMODELO"></field>
+			</group>
+			<order>
+				<field id="nrocar" tabla="PRECIOMODELO"></field>
+
+			</order>
+		</table>
+		<join tipo="left">
+               <table id="CARROCERIA">
+					<field id="nrocar">
+					       <condicion operador="=">PRECIOMODELO.nrocar</condicion>
+					</field>
+				</table>
+		</join>
+		<join tipo="left">
+               <table id="LISTAPRECIOMODELO">
+					<field id="idLista">
+					       <condicion operador="=">PRECIOMODELO.idLista</condicion>
+					</field>
+				</table>
+		</join>		
+
+
+	</form>
+</histrix>

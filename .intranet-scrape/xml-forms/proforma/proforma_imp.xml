@@ -1,0 +1,306 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ficha" autoprint="true" PDFsincabecera="true" sololectura="true" PDFfontSize="11">
+    <title>Punto de Venta</title>
+    <obs/>
+    <form>
+		
+        <pdf>
+            <code><![CDATA[
+                        $pdf->Rect(20,10,$pdf->anchoPagina - 20,255, 0.1);
+                        $pdf->Rect(20,10,$pdf->anchoPagina - 20, 10, 0.1);
+                        $pdf->Rect(100,10, 20, 10, 0.1);
+                        $pdf->Rect(20,20,$pdf->anchoPagina / 2 - 10, 60, 0.1);
+                        $pdf->Rect(20,61,$pdf->anchoPagina  - 20, 19, 0.1);
+                        $pdf->Rect(20,80,$pdf->anchoPagina  - 20, 15, 0.1);
+//                        $pdf->Rect(20,100,$pdf->anchoPagina  - 20, 10, 0.1);
+
+
+                        $pdf->Rect(20,230,$pdf->anchoPagina  - 20, 35, 0.1);
+                        $pdf->Rect(20,230,110, 35, 0.1);
+
+                        /*$pdf->Rect(5,260,$pdf->anchoPagina,260, 0.1, 70);
+                        $pdf->Rect(8,35,47,5, 2);
+                        $pdf->DashedRect(32,222,100,222, 0.1, 40);
+                        $pdf->DashedRect(32,232,100,232, 0.1, 40);
+                        $pdf->DashedRect(32,242,100,242, 0.1, 40);*/
+                        
+                        $logo_pdf_1  = $pdf->datosbase->logo_pdf_1;
+                        $logo_pdf_2  = $pdf->datosbase->logo_pdf_2;
+                        
+                    if (is_file('../database/'.$pdf->datosbase->xmlPath.'img/' .$logo_pdf_1))
+                        $pdf->Image('../database/'.$pdf->datosbase->xmlPath.'img/' .$logo_pdf_1, 50 + $pdf->offsetX, 16 + $pdf->offsetY, 25);
+                    if (is_file('../database/'.$pdf->datosbase->xmlPath.'img/' .$logo_pdf_2))
+                        $pdf->Image('../database/'.$pdf->datosbase->xmlPath.'img/' .$logo_pdf_2, 60 + $pdf->offsetX, 16 + $pdf->offsetY, 25);
+                        
+                        ]]>
+            </code>
+        </pdf>
+        <table id="CCTMOVIM" label="Emision de Facturas Proforma">
+
+
+            <field id="mcm" local="true">
+                <label posx="20" posY="8" PDFsize="15"></label>
+                <valor>Carrocerias Saldivia S.A</valor>
+            </field>
+            <field id="movlet" deshabilitado="true" sincelda="true" local="true">
+                <label modpos="nobr" PDFnolabel="true" posx="103" posy="8" PDFsize="20"></label>
+                <valor>X</valor>
+            </field>
+            <field id="proforma" local="true">
+                <label posx="127" posY="8" PDFsize="15"></label>
+                <valor>FACTURA PROFORMA</valor>
+                <size>90</size>
+            </field>
+            <field id="direccion_empresa" local="true">
+                <label posx="30" posY="+15" PDFsize="12"></label>
+                <valor>Ruta 21 KM 7 PIA LOTE 0004 7</valor>
+            </field>
+            <field id="cp_empresa" local="true">
+                <label posx="30" posY="+0.5" ></label>
+                <valor>Alvear (2126) / Tel.: 54 341 4921135 </valor>
+            </field>
+            <field id="provincia" local="true">
+                <label posx="42" posY="+0.5" ></label>
+                <valor>Santa Fe - Argentina</valor>
+            </field>
+            <field id="iva_empresa" local="true">
+                <label posx="30" posY="+1" ></label>
+                <valor>I.V.A - RESPONSABLE INSCRIPTO</valor>
+            </field>
+            <field id="ctacod" oculto="true" print="false">
+            </field>
+            <field id="movnpv" _deshabilitado="true" sincelda="true" _PDFnolabel="true">
+                <label modpos="nobr"  posx="110" posY="16" PDFsize="15" size="18">Nro</label>
+                <format>%04d</format>
+                <valor>1</valor>
+            </field>
+            <field id="separador" local="true">
+                <label posx="140" posY="16" PDFsize="12"></label>
+                <valor>-</valor>
+            </field>
+            <field id="movnro" ctbregnro="1" deshabilitado="false" sincelda="true" esClave="true" >
+                <label posx="142" posY="16" PDFsize="15" modpos="nobr" ></label>
+                <format>%08d</format>
+                <detalle>movnro</detalle>
+                <detalle>carrec</detalle>
+                <detalle>cajnro</detalle>
+                <detalle>movinc</detalle>
+            </field>
+
+       
+            <field id="movfec"  esClave="true">
+                <label modpos="nobr"  posx="110" posY="25" PDFsize="15" size="18">Fecha</label>
+                <help>Fecha de Emision </help>
+                <valor>today</valor>
+                <detalle>movfec</detalle>
+                <tipo>date</tipo>
+            </field>
+            <field id="cuit_empresa" local="true">
+                <label posx="110" posY="45" ></label>
+                <valor>C.U.I.T.: 30-71719085-4</valor>
+            </field>
+            <field id="actividades" local="true">
+                <label posx="110" posY="50" ></label>
+                <valor>Inicio Act.:01/06/2021</valor>
+            </field>
+            <field id="ctanom" deshabilitado="true" sincelda="true" pdfancho="75">
+                <label colspan="3" modpos="nobr" posx="18" posY="57" size="17" >Señores</label>
+                <help></help>
+                <size>10</size>
+                <tipo>varchar</tipo>
+		<setvar>titulo_div</setvar>
+            </field>
+	    <field id="titulopdf" noshow="true">
+		<expression>concat('Proforma ',  ctafan, ' ', movnro)</expression>
+		<setvar>titulo_div</setvar>
+	    </field>
+
+            <field id="domicilio" deshabilitado="true" >
+                <expression>CCTCUENT.ctadir</expression>
+                <label colspan="3" modpos="nobr" posx="108" posY="57" size="18" pdfancho="74" >Domicilio</label>
+                <help></help>
+                <tipo>varchar</tipo>
+                <size>90</size>
+            </field>
+<!--  
+            <field id="referencia" local="true" deshabilitado="true" sincelda="true">
+                <label posx="18" posY="+1" ></label>
+                <expression>CONCAT('(Ref:',movref__1,')')</expression>
+                <tipo>varchar</tipo>
+            </field> -->
+
+            <field id="dom2" deshabilitado="true" >
+                <expression>CONCAT( '(', ctapos, ') ',nombre_localidad,' - ', FSMPROVS.prvnom)</expression>
+                <label posx="108" posY="69" size="19">Localidad</label>
+                <help></help>
+                <tipo>varchar</tipo>
+            </field>            
+<!--            <field id="cta2">
+            </field>
+            <field id="cta_nom2" deshabilitado="true" sincelda="true">
+                <label colspan="3" modpos="nobr" ></label>
+                <help></help>
+                <tipo>varchar</tipo>
+            </field> -->
+            <field id="siscod" deshabilitado="true" tabla="CCTMOVIM" oculto="true">
+            </field>
+            <field id="movref__2"  >
+                <label modpos="nobr" posx="80" posY="77" size="25">Cond.Venta</label>
+                <help>Forma de Pago</help>
+                <valor>Contado</valor>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="ctanro" deshabilitado="true" tabla="CCTCUENT">
+                <label modpos="nobr" posx="150" posY="77">Cuit</label>
+            </field>
+
+            <field id="concod" print="false" >
+                <label _modpos="nobr">Tipo</label>
+                <help>Tipo Comprobante </help>
+                <tabla_ex id="CCTCONCE">
+                    <field id="concod"></field>
+                    <field id="condes"></field>
+                    <field id="siscod">
+                        <condicion operador="=">'02'</condicion>
+                    </field>
+                    <field id="conimp">
+                        <condicion operador="=">1</condicion>
+                    </field>
+                    <order>
+                        <field id="concod"></field>
+                    </order>
+                </tabla_ex>
+                <valor>1</valor>
+                <detalle>concod</detalle>
+            </field>
+
+            <field id="nrofab" deshabilitado="true" sincelda="true">
+                <label posx="19" posY="95" >Referencia: </label>
+                <tipo>varchar</tipo>
+                <expression>case when CCTMOVIM.nrofab != '' then 
+                                 CONCAT((select CONCAT(' U',CH.nrocha,' Nro: ', RIGHT(CH.chasis, 6), ' ', MC.desabv, ' Cliente: ', (case when PED.ctacod != '' then (select LEFT(CCTCUENT.ctafan, 17) from CCTCUENT where CCTCUENT.ctacod = PED.ctacod and siscod = '02') else (select LEFT(CCTCUENT.ctafan, 17) from CCTCUENT where CCTCUENT.ctacod = T.ctacod and siscod = '02') end))                                    
+                                 from CHASIS CH
+                                 join MODCHASIS MC on MC.marcod = CH.marcod and MC.modcha = CH.modcod
+                                 left join PEDCOTIZ PED on PED.nrocha = CH.nrocha
+                                 join TURNOSPRODUCCION T on T.nrofab = CH.nrocha
+ 
+                                 where CCTMOVIM.nrofab = CH.nrocha limit 1
+                                 ), ' ', movref__1)  else movref__1 end</expression>
+            </field>
+
+      
+
+
+<!--            <field id="cotizacion_id"  deshabilitado="false">
+                <label style="font-size:12px;color:red;">Nro Cotizacion</label>
+                <help>Numero de cotización</help>
+            </field> -->
+
+            <field id="usuario" local="true" oculto="true">
+                <label modpos="nobr">Usuario</label>
+                <valor eval="true">$_SESSION['usuario']</valor>
+                </field>
+
+                <field id="usuario_ventas" oculto="true">
+                <expression>case when '[__usuario__]' = 'lucio' or '[__usuario__]' = 'erobin' or '[__usuario__]' = 'adrian' or '[__usuario__]' = 'mabba' or '[__usuario__]' = 'adm1' or '[__usuario__]' = 'histrix' then 'false' else 'true' end</expression>
+               </field>
+
+            <field id="ivacod" tabla="CCTCUENT">
+                <label modpos="nobr" posx="18" posY="77" size="10">IVA</label>
+                <tabla_ex id="FSMCTIVA">
+                    <field id="ivacod"/>
+                    <field id="ivanom"/>
+                </tabla_ex>
+            </field>
+
+	    <field id="abreviatura_moneda" tabla="GEN_MONEDAS" noshow="true" />
+
+            <field id="detalles" local="true" obj="proforma_detalle_qry.xml" pdfwidth="182" _PDFlineas="false">
+                <label  size="25" posx="20" posy="+4" PDFsize="12" ></label>
+                <paring destino="nrofac">movnro</paring>
+                <paring destino="movfec">movfec</paring>
+                <paring destino="siscod">siscod</paring>
+                <paring destino="ctacod">ctacod</paring>
+                <paring destino="abreviatura_moneda">abreviatura_moneda</paring>
+                <paring destino="usuario_ventas">usuario_ventas</paring>                
+            </field>
+
+	    <field id="abreviatura_moneda" tabla="GEN_MONEDAS" noshow="true" print="false" >
+		<expression>concat(abreviatura_moneda,' ')</expression>
+	    </field>
+
+            <field id="movnet"  deshabilitado="true" PDFalign="R" suma="true">
+		<attribute id="prefijo">abreviatura_moneda</attribute>
+                <label modpos="nobr"	posx="133" posY="229" PDFsize="12" size="24" pdfancho="40">Neto</label>
+                <size>30</size>
+<!--                <prefijo>$ </prefijo> -->
+                <attribute id="oculto">usuario_ventas</attribute> 
+            </field>
+            <field id="movim1"  deshabilitado="true" PDFalign="R" >
+                <label modpos="nobr"	posx="130" posY="241" PDFsize="12" size="27" pdfancho="40">Iva %         </label>
+                <prefijo>$ </prefijo>
+                <size>30</size>
+		<attribute id="prefijo">abreviatura_moneda</attribute>
+
+                <attribute id="oculto">usuario_ventas</attribute> 
+            </field>
+
+            <field id="movnde"  deshabilitado="true" PDFalign="R">
+                <label modpos="nobr"	posx="134" posY="241" PDFsize="12" size="24" pdfancho="40"></label>
+                <tipo>numeric</tipo>
+                <size>30</size>
+                <attribute id="oculto">usuario_ventas</attribute> 
+            </field>
+
+          
+            <field id="movimp"  deshabilitado="true" PDFalign="R" suma="true">
+                <label modpos="nobr"	posx="133" posY="253" PDFsize="12" size="24" pdfancho="40">Total</label>
+                <size>30</size>
+                <prefijo>$ </prefijo>
+                <tipo>decimal</tipo>
+		<attribute id="prefijo">abreviatura_moneda</attribute>
+                <attribute id="oculto">usuario_ventas</attribute> 
+            </field>
+          
+
+           
+
+        </table>
+        <join tipo="left">
+            <table id="CCTCUENT">
+                <field id="ctacod">
+                    <condicion operador="=">CCTMOVIM.ctacod</condicion>
+                </field>
+                <field id="siscod">
+                    <condicion operador="=">'02'</condicion>
+                </field>
+            </table>
+
+        </join>
+        <join tipo="left">
+            <table id="GEN_LOCALIDADES">
+                <field id="id_localidad">
+                    <condicion operador="=">CCTCUENT.localidad_id</condicion>
+                </field>
+            </table>
+
+        </join>
+        <join tipo="left">
+            <table id="FSMPROVS">
+                <field id="prvcod">
+                    <condicion operador="=">CCTCUENT.prvcod</condicion>
+                </field>
+            </table>
+
+        </join>
+        <join tipo="left">
+            <table id="GEN_MONEDAS">
+                <field id="id_moneda">
+                    <condicion operador="=">CCTMOVIM.moneda_id</condicion>
+                </field>
+            </table>
+
+        </join>
+		
+    </form>
+</histrix>

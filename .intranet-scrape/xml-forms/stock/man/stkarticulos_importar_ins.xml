@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+
+<histrix tipo="insert" tipoInsert="REPLACE">
+    <title>Mantenimiento</title>
+    <obs></obs>
+    <form>
+        <table id="STK_ARTICULOS" label="Importacion de Articulos" idCampoCond="importar">
+            
+            <field id="id_stkarticulo"      id_temp="id_stkarticulo" />
+
+            <field id="nombre_articulo"     id_temp="nombre_articulo" />
+            
+            <field id="alto"                id_temp="alto" />
+            
+            <field id="ancho"               id_temp="ancho" />
+            
+            <field id="profundidad"         id_temp="profundidad" />
+            
+            <field id="gravado"                 id_cab="gravado" />
+
+            <field id="ivaregimen_id"           id_cab="ivaregimen_id" />
+
+            <field id="stkrubro_id"             id_temp="importa_rubro" />
+
+            <field id="stkfamilia_id"           id_temp="importa_familia" />
+
+            <field id="stkmarca_id"             id_temp="importa_marca" />
+
+            <field id="baja_articulo">
+                <valor>0</valor>
+            </field>
+
+            <field id="regcuenta_id">
+                <valor>0</valor>
+            </field>
+
+            <field id="tipo_articulo">
+                <valor>0</valor>
+            </field>
+
+            <field id="stksector_id">
+                <valor>0</valor>
+            </field>
+
+            <field id="vigencia_desde">
+                <valor>2001-01-01</valor>
+            </field>
+
+            <field id="recLote">
+                <valor>0</valor>
+            </field>
+
+            <field id="produccion_diaria">
+                <valor>0</valor>
+            </field>
+
+            <field id="lead_time">
+                <valor>0</valor>
+            </field>
+
+            <field id="embalaje">
+                <valor>0</valor>
+            </field>
+
+            <field id="pedido_minimo">
+                <valor>0</valor>
+            </field>
+            
+            <field id="precio_origen">
+                <valor>1.00000</valor>
+            </field>
+
+            <field id="genmoneda_origen_id">
+                <valor>1</valor>
+            </field>
+
+            <field id="genmoneda_venta_id">
+                <valor>1</valor>
+            </field>
+
+            <field id="stkpack_id">
+                <valor>0</valor>
+            </field>
+
+            <field id="fecha_ult">
+                <valor>2001-01-01</valor>
+            </field>
+
+            <field id="fecha_salida">
+                <valor>2001-01-01</valor>
+            </field>
+
+            <field id="no_dto_global">
+                <valor>0</valor>
+            </field>
+
+            <field id="tipocalculo_costo">
+                <valor>0</valor>
+            </field>
+
+            <field id="no_listar">
+                <valor>0</valor>
+            </field>
+
+            <field id="precio_venta">
+                <valor>0</valor>
+            </field>
+
+            <field id="stkarticulo_foto">
+                <valor>0</valor>
+            </field>
+
+            <field id="publica_web">
+                <valor>0</valor>
+            </field>
+
+        </table>
+    </form>
+</histrix>	

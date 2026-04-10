@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix graboasiento="true" imprime="false" llenoTemporal="false" muestraasiento="false" procesa="false" tipo="ing" _modifica="false">
+	<title>Movimientos de Caja</title>
+	<obs/>
+	<form >
+		<table id="CAJMOVIM" label="Movimientos de caja">
+			<importar label="Ch.Autom." titulo="Cheque Propio Automatico" xml="ordenpago_propios_auto_ing.xml" width="50%">
+				<field id="movnroOP">movnroOP</field>
+				<field id="ctanom">ctanom</field>
+                                <field id="ctacod">ctacod</field>
+			</importar>
+			<importar label="Cheques Propios" titulo="Cheques Propios" xml="ordenpago_propios_ing.xml" width="90em">
+				<field id="movnroOP">movnroOP</field>
+				<field id="ctanom">ctanom</field>
+			</importar>
+			<importar label="Cheques 3ro" titulo="Cheques de Terceros" xml="ordenpago_cheque_ing.xml" width="80em">
+				<field id="movnroOP">movnroOP</field>
+			</importar>
+			<importar label="Documentos" titulo="Documentos" xml="ordenpago_docs_ing.xml" width="50%">
+				<field id="movnroOP">movnroOP</field>
+				<field id="ctanom">ctanom</field>
+			</importar>
+			
+			<importar label="Transferencia" titulo="Transferencia" xml="ordenpago_transf_ing.xml" width="50%">
+				<field id="movnroOP">movnroOP</field>
+				<field id="ctanom">ctanom</field>
+			</importar>
+			<!--	<importar xml="ordenpago_ret1598_ing.xml"  label="Ret. Ing.Br." 	titulo="Ingresos Brutos">
+				<field id="movnroOP"></field>
+				<field id="ctacod"></field>			
+				<field id="ctanom"></field>			
+				<field id="ctanro"></field>			
+				<field id="ctadir"></field>			
+				<field id="ctaloc"></field>			
+				<field id="movfec"></field>			
+				<field id="movnpv"></field>			
+				<field id="por1598"></field>			
+
+			</importar> -->
+			<movimientos>
+				<relacion id="ordenpago_cajmovim_ingmov.xml"></relacion>
+				<!--<relacion id="ordenpago_cajmovim_impganancias.xml"></relacion>  arreglar -->
+				<!--	<relacion id="ordenpago_retparam_update.xml">	</relacion>  -->
+				<!--<relacion id="ordenpago_ret1598_ingmov.xml">	</relacion> -->
+			</movimientos>
+			<field id="siscaj" oculto="true">
+				<label>siscaj</label>
+				<parametro id="fsmparam_paralf.xml" retorna="paralf">
+					<field id="parcla">
+						<condicion operador="=">'siscaj'</condicion>
+					</field>
+				</parametro>
+				<tipo>varchar</tipo>
+			</field>			
+			<field id="cajcod">
+				<label>Tipo</label>
+				<help>tipo de movimiento</help>
+				<tabla_ex id="CAJCONCE">
+					<field id="cajcod"/>
+					<field id="cajdes"/>
+					<field id="caj_ctb">
+					    <expression>ctbcod__2</expression>
+					</field>
+
+					<field id="siscod" oculto="true">
+						<condicion operador="=" valorde="siscaj"/>
+					</field>
+					<field id="cajtip">
+						<condicion operador="=">2</condicion>
+					</field>
+					<order>
+						<field id="cajcod"/>
+					</order>
+				</tabla_ex>
+			</field>
+<!--
+			<field ctbcuenta="2" id="cajctb" noshow="true" valop="true">
+				<label>Ctb</label>
+				<tabla_ex id="CAJCONCE">
+					<field id="cajcod"/>
+					<field id="ctbcod__2"/>
+					<field id="siscod" oculto="true">
+						<condicion operador="=" valorde="siscaj"/>
+					</field>
+					<field id="cajtip">
+						<condicion operador="=">2</condicion>
+					</field>
+					<order>
+						<field id="cajcod"/>
+					</order>
+				</tabla_ex>
+				<if exp="true" operador="=">
+					<true>cajcod</true>
+					<false>0</false>
+				</if>
+			</field>
+-->
+			<field ctbcuenta="2" id="caj_ctb" noshow="true" deshabilitado="true" esClave="true">
+				<label>Ctb2</label>
+				<tabla_ex id="CAJCONCE">
+					<field id="ctbcod__2"/>
+					<field id="ctb_cod2">
+					    <expression>ctbcod__2</expression>
+					</field>
+					<field id="siscod" oculto="true">
+						<condicion operador="=" valorde="siscaj">'05'</condicion>
+					</field>
+					<field id="cajtip">
+						<condicion operador="=">2</condicion>
+					</field>
+					<order>
+						<field id="cajcod"/>
+					</order>
+				</tabla_ex>
+
+			</field>
+
+			<field ctbimporte="2" id="cajimp" local="true" suma="true">
+				<label>Importe</label>
+				<help>Importe</help>
+				<tipo>numeric</tipo>
+			</field>
+			<field id="_AUTO" local="true" noshow="true"></field>
+			<!--		<field id="impgra" deshabilitado="true">
+					<label>impgra</label>
+			</field>			
+			<field id="acuret" deshabilitado="true" >
+				<label>acuret</label>
+			</field>
+			<field id="tabmin" deshabilitado="true" >
+				<label>tabmin</label>
+			</field>			
+			<field id="tabpor" deshabilitado="true" >
+				<label>tabpor</label>
+			</field>		
+			<field id="aux">
+				<if exp="true" operador="=">
+					<true>(impgra + acuret) * tabpor / 100</true>
+					<false>0</false>
+				</if>
+			</field>
+				-->
+			<field ctbimporte="2" id="cajimp" local="true" suma="true">
+				<label>Importe</label>
+				<help>Importe</help>
+				<tipo>numeric</tipo>
+				<if exp="true" operador="=">
+					<true>(cajimp + aux)</true>
+					<false>0</false>
+				</if>
+			</field>
+			<field id="succod" local="true" noshow="true">
+				<valor>1</valor>
+			</field>
+			<field ctbtipo="2" id="cajtip" local="true" noshow="true" valauto="true">
+				<valor>2</valor>
+				<if exp="true">
+					<true>2</true>
+					<false>0</false>
+				</if>
+			</field>
+			<field id="cajcon" local="true" noshow="true">
+				<valor>45</valor>
+			</field>
+			<field id="siscaj" local="true" noshow="true">
+				<label>siscaj</label>
+				<parametro id="fsmparam_paralf.xml" retorna="paralf">
+					<field id="parcla">
+						<condicion operador="=">'siscaj'</condicion>
+					</field>
+				</parametro>
+				<tipo>varchar</tipo>
+				<!-- <valor>05</valor> -->
+			</field>
+			<field id="siscod" noshow="true">
+				<label>Cod.</label>
+				<help/>
+				<condicion operador="=" valorde="siscaj">'05'</condicion>
+			</field>
+		</table>
+	</form>
+</histrix>

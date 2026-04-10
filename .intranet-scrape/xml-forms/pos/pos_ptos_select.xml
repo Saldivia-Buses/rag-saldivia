@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing"  modifica="false" borra="false" inserta="false" exportasuma="true" llenoreferente="true" imprime="false">
+	<title>COMPROBANTES A IMPUTAR</title>
+	<obs/>
+	<consulta>
+		<table id="PLUSMOVIM" label="PUNTOS" idCampoCond="imputar">
+<!-- 			<movimientos>
+				<relacion id="pos_nc_ingmov.xml"/>
+			</movimientos> -->
+			<field  id="cajtip" ctbtipo="2" local="true" noshow="true">
+				<valor>7</valor>
+				<detalle>cajtip</detalle>
+			</field>
+			<field id="cajcod" local="true" noshow="true">
+				<label>cajcod</label>
+				<valor>7</valor>
+				<detalle>cajcod</detalle>
+			</field>
+			<field id="ctacod" oculto="true">
+				<label>Cuenta</label>
+				<help>Codigo de Cuenta</help>
+			</field>
+			<field id="fecha" deshabilitado="true">
+				<label modpos="nobr">Fecha</label>
+				<help></help>
+				<!--  <formato>d  m  y</formato> -->
+			</field>
+			<field id="nombre"  tabla="PLUSCONCEPTO" deshabilitado="true">
+				<label>Tipo</label>
+				<help>Tipo de Comprobante</help>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="movnpv" deshabilitado="true">
+				<label modpos="nobr">Numero</label>
+				<help>Comprobante</help>
+				<formato>%04d</formato>
+			</field>
+			<field id="movnro" deshabilitado="true">
+				<label modpos="nobr"/>
+				<help>Numero Comprobante</help>
+				<formato>%012d</formato>
+			</field>
+			<field id="puntos" deshabilitado="true" suma="true">
+				<label PDFsize="12" posx="130" posy="+1">Puntos</label>
+				<help></help>
+				<expresion>(puntos ) * (case when PLUSCONCEPTO.imputa = 1 then 1 else -1 end)</expresion>
+				<detalle>puntos</detalle>
+				<tipo>integer</tipo>
+			</field>
+			<field id="canje" deshabilitado="true" suma="true">
+				<label >Canje</label>
+				<expresion>(puntos * 0.05) * (case when PLUSCONCEPTO.imputa = 1 then 1 else -1 end)</expresion>
+				<tipo>decimal</tipo>
+				<detalle>cajimp</detalle>
+			</field>
+			<field id="imputar" deshabilitado="true" local="true">
+				<valor>1</valor>
+			</field>
+
+
+		</table>
+		<join tipo="left">
+			<table id="PLUSCONCEPTO">
+				<field id="idConcepto" oculto="true">
+					<condicion operador="=">PLUSMOVIM.idConcepto</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="CCTCUENT">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">'02'</condicion>
+				</field>
+				<field id="ctacod" oculto="true">
+					<condicion operador="=">PLUSMOVIM.ctacod</condicion>
+				</field>
+			</table>
+		</join>
+	</consulta>
+</histrix>

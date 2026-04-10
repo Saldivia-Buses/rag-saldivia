@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud">
+  <title>Profesiones</title>
+  <obs></obs>
+  <form>
+    <table id="GEN_PROFESIONES" label="Profesiones">
+
+
+ 	<filters>
+		<field id="nombre">
+		   <label>Profesion</label>
+		  <operador>like</operador>
+		</field>
+	</filters>	
+
+ 	<field id="id_profesion"  autoinc="true" noshow="true"/>			
+
+
+	<field id="nombre">
+          <label>Profesion</label>
+	  <size>25</size>
+        </field>
+
+
+
+
+
+    </table>
+  </form>
+</histrix>  
+

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="insert" replaceInto="true">
+	<titulo>Control Calidad</titulo>
+	<obs/>
+	<form>
+		<table id="PROD_CONTROL_MOVIM">
+			<field id="id_controlmovim"   id_temp="id_controlmovim" />
+		
+			<field id="nrofab_id"   id_temp="nrofab_id" />
+			<field id="prodcontrol_id"   id_temp="id_prodcontrol"/>
+			<field id="conforme"    id_temp="conforme" />
+			<field id="no_conforme"    id_temp="no_conforme" />
+			<field id="observacion_control"    id_temp="observacion_control"/>
+<!--			<field id="fecha_control"    id_padre="fecha_control" >			
+					<tipo>date</tipo>
+			</field>
+-->
+		</table>
+
+	</form>
+</histrix>

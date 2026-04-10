@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="update" limit="99">
+  <form>
+	<table id="FSMPARAM" _idCampoCond="artcod">
+		
+		<field id="parcla" id_temp="parcla" esClave="true"/>
+
+		<field id="parent">
+			<valor>parent + 1</valor>
+		</field>		
+
+	</table>
+  </form>
+</histrix>

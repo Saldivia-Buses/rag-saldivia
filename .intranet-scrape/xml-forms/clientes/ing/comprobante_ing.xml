@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="grid"  transaccional="true" imprime="false" inserta="false"  deleteRow="false" llenoTemporal="true"  importTempTable="TEMPTABLENAME" procesa="false" export="false">
+  <title>Detalle</title>
+  <obs></obs>
+  <form>
+	<table id="GEN_IVA_ALICUOTAS" label="movimientos" idCampoCond="grabar">
+
+		<movimientos>
+			<relacion id="regdetalle_ins.xml" />
+		</movimientos>
+
+		<field id="grabar" local="true" noshow="true">
+			<if exp="iva_detalle != 0">
+				<true>1</true>
+				<false>0</false>
+			</if>
+		</field>
+
+		<field id="_ORDEN" esClave="true" deshabilitado="true" noshow="true" local="true" />
+
+		<field id="iva_id" oculto="true">
+			<condicion operador="=">1</condicion>
+		</field>
+
+		<field id="cantidad_detalle" noshow="true" local="true">
+			<valor>1</valor>
+		</field>
+	
+		<!-- *********************************************************************** -->
+
+		<field id="total_detalle" local="true" suma="true" editable="true">
+			<label modpos="nobr">Total</label>
+			<tipo>numeric</tipo>
+			<jseval campodestino="neto_detalle" actxml="false">((total_detalle - per_detalle)  / ( 1 + ( alicuota / 100) )).toFixed(2)</jseval>
+			<jseval campodestino="iva_detalle" actxml="false">(neto_detalle * (alicuota / 100)).toFixed(2) </jseval>
+			<jseval campodestino="per_detalle" actxml="false">(neto_detalle * (alicuota_percepcion / 100 )).toFixed(2)</jseval>
+			<jseval campodestino="gravado_movimiento" total="true">total_detalle</jseval>
+			<jseval campodestino="importe_iva"        total="true">iva_detalle</jseval>
+			<jseval campodestino="importe_percepcion" total="true">per_detalle</jseval>
+		</field>
+
+		<field id="neto_detalle" local="true" suma="true" editable="true">
+			<label modpos="nobr">Neto</label>
+			<tipo>numeric</tipo>
+			<jseval campodestino="iva_detalle"        actxml="false">(neto_detalle * (alicuota / 100)).toFixed(2)</jseval>
+			<jseval campodestino="per_detalle"        actxml="false">(neto_detalle * (alicuota_percepcion / 100 )).toFixed(2)</jseval>
+			<jseval campodestino="neto_movimiento"    total="true">neto_detalle</jseval>
+		</field>
+
+		<field id="alicuota" esClave="true" editable="true">
+			<label modpos="nobr">Alicuota</label>
+			<detalle>iva</detalle>
+			<tipo>numeric</tipo>
+		</field>
+
+		<field id="iva_detalle" local="true" suma="true" editable="true">
+			<label modpos="nobr">iva</label>
+			<help>Porcentaje de Iva Calculado por El neto</help>
+			<tipo>numeric</tipo>
+			<jseval campodestino="importe_iva" total="true">iva_detalle</jseval>
+		</field>
+
+		<field id="per_detalle" local="true" suma="true" editable="true">
+			<label modpos="nobr">Total Perc.</label>
+			<help>Total del Perc.</help>
+			<tipo>numeric</tipo>
+			<jseval campodestino="importe_percepcion" total="true">per_detalle</jseval>
+		</field>
+
+		<!-- *********************************************************************** -->
+
+		<field id="cuenta_percepcion_iva_id" noshow="true">
+			<label>Cuenta_perc_iva</label>
+		</field>
+
+		<field id="cuenta_haber_id" noshow="true">
+			<label>haber iva</label>
+		</field>
+
+		<field id="cuenta_debito_id" noshow="true">
+			<label>debe iva</label>
+		</field>
+
+		<field id="imputacion_concepto" oculto="true" valauto="true" setOriginalValue="true" local="true" />
+
+		<field id="doh_detalle" local="true" noshow="true">
+			<if exp="imputacion_concepto + 0 == 0">
+				<true>1</true>
+				<false>0</false>
+			</if>
+		</field>
+	</table>
+
+	<tempTable id="TEMPTABLENAME">
+		<row>
+			<field id="cuenta_id">cuenta_debito_id</field>
+			<field id="doh">doh_detalle</field>
+			<field id="importe">iva_detalle</field>
+		</row>
+		<row>
+			<field id="cuenta_id">cuenta_percepcion_iva_id</field>
+			<field id="doh">doh_detalle</field>
+			<field id="importe">per_detalle</field>
+		</row>
+	</tempTable>
+
+  </form>
+</histrix>  

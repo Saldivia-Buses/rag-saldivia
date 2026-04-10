@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="update" limit="1">
+    <title>Artículos</title>
+    <obs></obs>
+    <form >
+        <table id="HOMOLOGMOD" label="Artículos" >
+
+                <field id="id_homologacion"   id_temp="id_homologacion" esClave="true"/>
+	        <field id="codigo_comercial"  id_temp="id_stkarticulo" />
+                <field id="desc_comercial"    id_temp="nombre_articulo" />
+        </table>
+    </form>
+</histrix>

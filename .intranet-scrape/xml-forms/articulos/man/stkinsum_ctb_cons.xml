@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix borra="no" inserta="no" tipo="crud" subtipo="vertical" preloadData="false">
+	<title>Insumos</title>
+	<obs/>
+	<form >
+		<table id="STKINSUM" styleTbody="height:500px;overflow-x:hidden;">
+			<title>Insumos</title>
+			<filters>
+				<field id="artcod" deshabilitado="false">
+					<label>Cód.Artículo</label>
+					<operador modificador="left">=</operador>
+				</field>
+				<field id="artdes">
+					<label>Desc.Artículo</label>
+					<operador>like</operador>
+				</field>
+ 				<field id="artctb">
+					<label modpos="nobr">Cod.Cta.Ctb.</label>
+					<help>Código Cuenta Contable</help>
+					<operador>like</operador>
+				</field>
+<!--				<field id="ctbnom">
+					<label>Desc.Cta.Ctb.</label>
+				</field> -->
+			</filters>
+			<field id="siscod" oculto="true">
+				<label>siscod</label>
+				<valor>01</valor>
+				<condicion operador="=">'01'</condicion>
+			</field>
+			<!-- <field id="artrub" deshabilitado="true" Formstyle="display:none;">
+				<label>Cod.Rubro</label>
+			</field>
+			<field id="rubnom" tabla="STKRUBRO" deshabilitado="true" Formstyle="display:none;">
+				<label>Desc.Rubro</label>
+			</field>
+			<field id="artsub" deshabilitado="true" Formstyle="display:none;">
+				<label>Cod.SubRubro</label>
+			</field>
+			<field id="subnom" tabla="STKSUBRU" deshabilitado="true" Formstyle="display:none;">
+				<label>Desc.SubRubro</label>
+			</field> -->
+			
+			<field id="artcod" deshabilitado="false" >
+				<helper type="external" id="STKINSUM">
+					<field id="artcod" _oculto="true">
+						<label>Cod</label>
+					</field>
+					<field id="artdes">
+						<label>Nombre</label>
+						<detalle>artdes</detalle>
+					</field>
+					<field id="siscod" oculto="true">
+						<condicion operador="=">'01'</condicion>
+					</field>
+				</helper>
+				<label>Cód.Artículo</label>
+				<help>Ingrese código de artículo</help>
+				<detalle>artcod</detalle>
+			</field>
+			<field id="artdes" deshabilitado="true">
+				<label modpos="nobr">Desc.Artículo</label>
+				<help>Descripción de Artículo (ENTER = Retorna a ingreso de código)</help>
+			</field>
+			<field id="baja" oculto="true">
+				<condicion operador="!=">1</condicion>
+			</field>
+			<field id="artctb">
+				<label >Cód.Cta.Ctb.</label>
+				<help>Código Cuenta Contable</help>
+				<helper type="external" id="CTBCUENT">
+					<field id="ctbcod" >
+						<condicion operador="like">'51%' or ctbcod like '56%' or ctbcod like '71%'</condicion>
+					</field>
+					<field id="ctbnom2" >
+						<expression>CONCAT(CTBCUENT.ctbnom, ' - ', CTBCUENT.ctbcod)</expression>
+					</field>
+					<field id="ctbnom" >
+						<detalle>ctbnom</detalle>
+					</field>
+<!--
+					<field id="siscod" oculto="true">
+						<condicion operador="=">'10'</condicion>
+					</field>
+-->
+					<order>
+						<field id="ctbnom" tabla="CTBCUENT"/>
+					</order>
+				</helper>
+			</field>
+			<field id="ctbnom" tabla="CTBCUENT" deshabilitado="true">
+				<label modpos="nobr">Desc.Cta.Ctb.</label>
+				<expression having="false">CTBCUENT.ctbnom</expression>
+				<tipo>varchar</tipo>
+				<size>80</size>
+			</field><!--
+			<field id="t_pieza" deshabilitado="true">
+				<label modpos="nobr">t_pieza</label>
+				<help>t-pieza</help>
+				<tipo>check</tipo>
+			</field>
+			<field id="t_plano" deshabilitado="true">
+				<label modpos="nobr">t_plano</label>
+				<help>t-plano</help>
+				<tipo>check</tipo>
+			</field>
+			<field id="fecult" _tabla="STKINSPR" tipoOrden="DESC" deshabilitado="true">
+				<expression>
+					select max(STKINSPR.fecult) from STKINSPR where STKINSPR.siscod = STKINSUM.siscod and STKINSPR.artcod = STKINSUM.artcod
+				</expression>
+				<label>ult.compra</label>
+				<tipo>date</tipo>
+			</field>-->
+			<order>
+				<field id="artcod" tabla="STKINSUM"></field>
+			</order>
+		</table>
+		<join tipo="left">
+			<table id="CTBCUENT">
+				<field id="ctbcod">
+					<condicion operador="=">STKINSUM.artctb</condicion>
+				</field>
+				<field id="siscod" oculto="true">
+					<condicion operador="=">'10'</condicion>
+				</field>
+			</table>
+		</join>
+<!--		<join tipo="left">
+			<table id="STKRUBRO">
+				<field id="artrub">
+					<condicion operador="=">STKINSUM.artrub</condicion>
+				</field>
+			</table>
+		</join>
+ 		<join tipo="left">
+			<table id="STKSUBRU">
+				<field id="artsub">
+					<condicion operador="=">STKINSUM.artsub</condicion>
+				</field>
+				<field id="artrub">
+					<condicion operador="=">STKINSUM.artrub</condicion>
+				</field>
+			</table>
+		</join> -->
+	</form>
+</histrix>

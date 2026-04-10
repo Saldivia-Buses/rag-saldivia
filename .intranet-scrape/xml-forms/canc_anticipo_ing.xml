@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <abm tipo="ing" llenoTemporal="false" imprime="false" inserta="false">
+       <titulo>Cuenta Corriente</titulo>
+        <obs></obs>
+				<consulta>
+					<tabla id="CCTMOVIM" label="Movimientos">
+						<importar xml="canc_anticipo_cctmovim_select.xml"  label="Seleccionar Facturas" titulo="Seleccione Facturas">
+							<campo id="ctacod">ctacod</campo>
+						</importar>					
+						<movimientos cabecera="canc_anticipo_cab.xml">
+							<relacion id="canc_anticipo_cctmovim_update_ingmov.xml"></relacion>  						
+							<relacion id="canc_anticipo_cctimput_ingmov.xml"></relacion>  						
+						</movimientos> 						
+						<campo id="siscod" oculto="true">
+							<label>Cod.</label>
+							<help>
+							</help>
+						</campo>
+						<campo id="ctacod" noshow="true">
+							<label>Cod.</label>
+							<help>Codigo de Cuenta </help>
+
+						</campo>
+						<!--		        <condicion operador="=">20</condicion> 
+							-->
+						<campo id="movnpv" deshabilitado="true">
+							<label>P.V.</label>
+							<help> Punto Venta</help>
+							<formato>%04d</formato>
+						</campo>
+						<campo id="movnro" deshabilitado="true">
+							<label>Numero</label>
+							<help> Numero Comprobante</help>
+							<formato>%12d</formato>
+							
+						</campo>
+						<campo id="concod" noshow="true" deshabilitado="true">
+							<label>concod</label>
+						</campo>						
+						<campo id="concepto" deshabilitado="true">
+							<expresion>condes</expresion>
+							<label>Cod.Concepto</label>
+							<help>
+							</help>
+							<tipo>string</tipo>
+		<!--		      <tabla_ex id="CCTCONCE">
+							
+							<campo id="concod"></campo>
+							<campo id="condes"></campo>
+							</tabla_ex>
+							-->
+						</campo>
+						<campo id="movfec" deshabilitado="true">
+							<label>Fecha </label>
+							<help></help>
+						</campo>
+						<!--          <campo id="movvto">
+						<label>Venc. </label>
+						<help> </help>
+						</campo>
+						-->
+						<campo id="movimp" deshabilitado="true">
+							<label>Importe</label>
+							<help>
+							</help>
+						</campo>
+						<campo id="movsal" suma="true">
+							<label>Imputado</label>
+							<help>Imputado</help>
+							<condicion operador="!=">0</condicion>
+						</campo>
+						<campo id="salant" local="true" noshow="true">
+							<label>salant</label>
+							<help></help>
+						</campo>
+						<campo id="newsaldo" local="true" deshabilitado="true">
+							<label>Saldo</label>
+							<if exp="true" operador="=">
+								<verdadero>salant - movsal </verdadero>
+								<falso>0</falso>
+							</if>
+							<tipo>numeric</tipo>
+						</campo>	
+						<orden>
+							<campo id="movfec"></campo>
+						</orden>
+					</tabla>
+					
+					<join tipo="left">
+						<tabla id="CCTCONCE">
+							<campo id="siscod" oculto="true">
+								<label>cctcuent.siscod</label>
+								<condicion operador="=">
+									CCTMOVIM.siscod</condicion>
+							</campo>
+							
+							<campo id="concod" oculto="true">
+								<condicion operador="=">
+									CCTMOVIM.concod</condicion>
+							</campo>
+							
+							<campo id="condes" oculto="true">
+							</campo>
+							
+						</tabla>
+					</join>
+				</consulta>
+        </abm>

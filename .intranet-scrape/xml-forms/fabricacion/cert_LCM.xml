@@ -1,0 +1,367 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="consulta" subtipo="vertical" notifica="true" paginar="100">
+	<!--class="consultaancha"-->
+	<title>PATENTES Y RESPONSABILIDAD CIVIL</title>
+	<obs/>
+	<form >
+		<table id="TURNOSPRODUCCION" label="Turnos de Produccion" _styleTbody="height:500px; overflow-x:hidden;">
+			<filters>
+				<field  id="sale2" deshabilitado="false">
+					<label>Desde</label>
+					<help>Fecha de Ingreso a Línea</help>
+					<operador>&gt;=</operador>
+					<valor eval="true">date("d/m/Y", mktime(0, 0, 0, date("m")  , date("d")-10, date("Y")))</valor>
+				</field>
+				<field  id="nrofab" deshabilitado="false">
+					<label modpos="nobr">Unidad</label>
+					<operador>=</operador>
+				</field>				
+			</filters>
+		<field id="sale2" esClave="true" >
+				<label modpos="nobr" >Sale</label>
+				
+				<expression> select TUR.fechaing from TURNOSPRODUCCION as TUR where TUR.fechaing &gt; TURNOSPRODUCCION.fechaing order by TUR.fechaing ASC limit 18, 1</expression>
+				<tipo>date</tipo>
+			</field>				
+			<field id="siscli" local="true" oculto="true" >
+				<valor>'02'</valor>
+			</field>
+			<field esclave="true" id="fechaing" oculto="true">
+				<label modpos="nobr">Ingresa</label>
+				<help>Fecha de Ingreso a Línea</help>
+
+			</field>
+<!--			<field id="fechasal" esclave="true" oculto="true">
+				<label modpos="nobr">Sale</label>
+				<help>Fecha de Salida de Linea</help>
+			</field> -->
+			<field id="fechaActualiza" valauto="true" deshabilitado="true" oculto="true" >
+				<label modpos="nobr" colstyle="display:none">Fecha Act.</label>
+				<valor>today</valor>
+				<tipo>date</tipo>
+			</field>
+			<field id="nrofab" _linkint="fichaventas.xml" linkdes="Ver Ficha de Ventas" >
+				<label modpos="nobr" style="color:#444;font-weight:bold;">Nro.</label>
+				<help>Número de Fabricación</help>
+				<ayuda_ex id="CHASIS">
+					<field id="nrocha"/>
+					<field id="chades"/>
+				</ayuda_ex>
+				<paring destino="nrocha">nrofab</paring>
+			</field>
+
+			<field id="homologacion_id" tabla="PEDCOTIZ" noshow="true" />
+
+			<field id="chasis" tabla="CHASIS" deshabilitado="true">
+				<label >Chasis N</label>
+				<help>Número de Serie del chasis</help>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="nromotor" tabla="CHASIS" deshabilitado="true" noshow="true">
+				<label >Motor</label>
+				<help>Número de Motor del chasis</help>
+				<tipo>varchar</tipo>
+			</field>
+<!--			<field id="mat" deshabilitado="true">
+				<expression>(select count(*) from STKINMOV where STKINMOV.nrocha=nrofab and STKINMOV.siscod = '01' and STKINMOV.nrocha != 0)</expression>
+				<label >Comp.</label>
+				<help>Completado</help>
+				<tipo>grafico</tipo>
+			</field> -->
+
+			<field id="idconces" deshabilitado="true">
+				<tabla_ex vacio="true" xml="concesionario.xml"/>
+				<label modpos="nobr" colstyle="display:none;">Concesionario</label>
+				<help>Concesionario</help>
+				<tipo>integer</tipo>
+			</field>
+			<field  id="ctacod" deshabilitado="true">
+				<label modpos="nobr" colstyle="display:none;">Cliente:</label>
+				<help>Código de Cuenta</help>
+				<tabla_ex condes="true" id="CCTCUENT">
+					<field id="ctacod"/>
+					<field id="ctafan">
+						<expression>LEFT(ctafan, 22)</expression>
+					</field>
+					<field id="siscod" oculto="true">
+						<condicion operador="=">'02'</condicion>
+					</field>
+				</tabla_ex>
+			</field>
+			<field id="nrocar" deshabilitado="true">
+				<label modpos="nobr" colstyle="display:none;">Carroc.</label>
+				<help>Modelo de Carrocería</help>
+				<tabla_ex id="CARROCERIA">
+					<field id="nrocar">
+					</field>
+					<field id="desabv">
+					</field>
+
+					<field id="siscod" oculto="true">
+						<condicion operador="=">03</condicion>
+					</field>
+				</tabla_ex>
+			</field>
+
+            <field deshabilitado="true" id="asientos" noZero="true">
+				<label modpos="nobr" colstyle="display:none;">Asientos</label>
+                <tipo>integer</tipo>
+                <expression>HOMOLOGMOD.asientos+1</expression>
+            </field>
+
+			<field id="modeloChasis" deshabilitado="true">
+				<label modpos="nobr" colstyle="display:none;">Modelo Chasis</label>
+				<help>Modelo del Chasis</help>
+			</field>
+			<field deshabilitado="true" id="ctaconces" tabla="CHASIS" noshow="true">
+				<expression>CONCESIONARIO.ctacod</expression>
+				<tipo>integer</tipo>
+			</field>
+
+			<field deshabilitado="true" id="conces" tabla="CHASIS" _linkint="cctconta_consulta.xml" linkdes="Ver medios de Contacto">
+				<expression>case when CHASIS.conces != '' then CHASIS.conces else TURNOSPRODUCCION.idconces end</expression>
+				<tabla_ex vacio="true" xml="concesionario.xml"/>
+				<label Formstyle="display:none;">Conces</label>
+				<help>Concesionario</help>
+				<tipo>integer</tipo>
+				<paring destino="ctacod">ctaconces</paring>
+				<paring destino="siscod">siscli</paring>
+			</field>
+			<field deshabilitado="true" id="ctacod2" tabla="PEDCOTIZ" _linkint="cctconta_consulta.xml" linkdes="Ver medios de Contacto">
+				<expression>case when PEDCOTIZ.ctacod != '' then PEDCOTIZ.ctacod else TURNOSPRODUCCION.ctacod end</expression>
+				<label modpos="nobr" Formstyle="display:none;">Cliente</label>
+				<help>Código de Cuenta</help>
+				<tabla_ex condes="true" id="CCTCUENT">
+					<field id="ctacod"/>
+					<field id="ctafan">
+						<expression>LEFT(ctafan, 22)</expression>
+					</field>
+					<field id="siscod" oculto="true">
+						<condicion operador="=">'02'</condicion>
+					</field>
+				</tabla_ex>
+				<tipo>varchar</tipo>
+				<paring destino="ctacod">ctacod</paring>
+				<paring destino="siscod">siscli</paring>
+
+			</field>
+
+			<field deshabilitado="true" id="nrocar2" tabla="PEDCOTIZ">
+				<expression>case when PEDCOTIZ.nrocar != '' then PEDCOTIZ.nrocar else TURNOSPRODUCCION.nrocar end</expression>
+
+				<label modpos="nobr" Formstyle="display:none;">Mod.</label>
+				<help/>
+				<tabla_ex id="CARROCERIA">
+					<field id="nrocar">
+					</field>
+					<field id="desabv">
+					</field>
+
+					<field id="siscod" oculto="true">
+						<condicion operador="=">03</condicion>
+					</field>
+				</tabla_ex>
+				<tipo>varchar</tipo>
+			</field>
+            <field deshabilitado="true" id="asientos2" noZero="true">
+				<label modpos="nobr" Formstyle="display:none;">Asi</label>
+                <tipo>integer</tipo>
+                <expression>HOMOLOGMOD.asientos+1</expression>
+            </field>
+
+			<field deshabilitado="true" id="marcod" tabla="CHASIS">
+				<expression>CHASIS.marcod</expression>
+				<label modpos="nobr" Formstyle="display:none;">Ch.</label>
+				<help/>
+				<tabla_ex id="MARCHASIS">
+					<field id="marcod">
+					</field>
+					<field id="desabv">
+					</field>
+
+					<field id="siscod" oculto="true">
+						<condicion operador="=">03</condicion>
+					</field>
+				</tabla_ex>
+				<tipo>integer</tipo>
+			</field>
+			<field deshabilitado="true" id="moddes" tabla="MODCHASIS">
+
+				<expression>case when MODCHASIS.moddes != '' then MODCHASIS.moddes else TURNOSPRODUCCION.modeloChasis end</expression>
+
+				<label modpos="nobr" Formstyle="display:none;">Mod</label>
+				<help/>
+				<tipo>varchar</tipo>
+			</field>
+
+            <field id="bagno" deshabilitado="true" noZero="true">
+                <label>B</label>
+                <expression>atributoUnidad(id, 'bagno')</expression>
+                <options>
+                    <option valor="0"></option>
+                    <option valor="1">BB</option>
+                </options>
+                <tipo>varchar</tipo>
+            </field>
+
+			<field autoinc="true" id="nroturno" noshow="true"  esclave="true">
+				<label modpos="nobr">Turno</label>
+				<help>Turno</help>
+			</field>
+			<field id="hi" deshabilitado="true" clasefila="true" noshow="true">
+				<expression>case when TURNOSPRODUCCION.fechaActualiza = DATE(NOW()) then 'resaltado' else '' end</expression>
+				<tipo>varchar</tipo>
+			</field>
+
+			<field id="seccion_id" local="true" oculto="true" >
+				<valor>6</valor>
+			</field>
+
+			<field id="id_prodcontrol" local="true" oculto="true" >
+				<valor>504</valor>
+			</field>
+
+        <field id="trabajos_cnrt" local="true" _linkWidth="90%" _linkHeight="90%">    
+            <helper xml="prod_trabajos_cnrt.xml" dir="fabricacion/" type="link" modal="true">
+                <parameter source="nrofab" target="nrofab_id"/>
+            </helper>
+            <expression>'Trabajos CRNT'</expression>
+            <attribute id="linkdes">nrofab</attribute>
+            <attribute id="style">con_trabajos_cnrt</attribute>
+            <label>Trabajos CRNT</label>
+        </field>
+
+      <field id="con_trabajos_cnrt" local="true" _clasefila="true" noshow="true" >
+        <expression>case when (SELECT COUNT(*) FROM PROD_TRABAJOS_CNRT where nrofab_id = nrofab) != 0 then 'background-color: #F5A9A9;' else '' end</expression>
+        <tipo>varchar</tipo>
+      </field> 
+
+        <field id="realizo_certlcm" local="true" _linkWidth="90%" _linkHeight="90%">    
+            <helper xml="prod_control_movim_movil.xml" dir="controlcalidad/" type="link" modal="true">
+                <parameter source="nrofab" target="nrofab_id"/>
+                <parameter source="homologacion_id" target="homologacion_id"/>
+                <parameter source="seccion_id" target="seccion_id"/>
+                <parameter source="id_prodcontrol" target="id_prodcontrol"/>
+            </helper>
+            <expression>'Realizó Insp.'</expression>
+            <attribute id="linkdes">nrofab</attribute>
+            <label>Inspección</label>
+        </field>
+
+        <field id="disponible_certlcm" local="true" _linkWidth="90%" _linkHeight="90%">    
+            <helper xml="prod_disponibles_lcm_qry.xml" dir="fabricacion/" type="link" modal="true">
+            </helper>
+            <expression>'Disponibles'</expression>
+            <attribute id="linkdes">Disponibles</attribute>
+            <label>Disponibles</label>
+        </field>
+
+			<field id="certlcm" local="true"  obj="certificadolcm_cons.xml" showObjTabla="true"  showValor="true"  linkint="certificadolcm.xml" linkdes="Entregas">
+				<paring destino="nrofab" operador="=">nrofab</paring>				
+				<valor>'Cert.LCM'</valor>
+				<tipo>varchar</tipo>
+				<label>Cert.LCM</label>
+			</field>			
+
+			<field id="mail_subj" noshow="true">
+				<expression>'Saldivia Postventa - Aviso envío de documentación'</expression>
+			</field>
+            <field id="mail_to"  noshow="true">
+              <expression>select mail from CCTCONTA where siscod = '02' and CCTCONTA.ctacod = PEDCOTIZ.ctacod order by principal DESC limit 1</expression>
+            </field>
+			<field id="mail_msg" noshow="true">
+			    <expression sql="true"><![CDATA[
+			    	SELECT REPLACE(
+			    	REPLACE(
+			    	REPLACE(
+			    		(SELECT paralf FROM FSMPARAM WHERE parcla = 'lcmbod'), 
+			    		
+			    		'&lt;fecha&gt;', 
+			    		DATE_FORMAT((SELECT fecha FROM CERTIFICADOLCM WHERE CERTIFICADOLCM.nrofab = [__nrofab__] and datosEntrega != '' ORDER BY fecha DESC LIMIT 1),'%d/%m/%Y')),
+			    		
+			    		'&lt;datoscert&gt;', 
+			    		(SELECT CONCAT(nrocert, ' (', observ, ' ', datosEntrega, ')') FROM CERTIFICADOLCM WHERE CERTIFICADOLCM.nrofab = [__nrofab__] and datosEntrega != '' ORDER BY fecha DESC LIMIT 1)),
+
+			    		'&lt;usuario&gt;', 
+			    		'[__nombres__]'
+			    		)
+
+			    	]]>
+			    </expression>
+			</field>
+			<field id="useract" local="true" noshow="true">
+				<valor eval="true">$_SESSION['idUser']</valor>
+			</field><!--
+              <field id="filtmail" noshow="true">
+                <expression>CONCAT('+"Saldivia Postventa - Aviso envío de documentación" +', (SELECT CONCAT(nrocert, ' (', observ, ' ', datosEntrega, ')') FROM CERTIFICADOLCM WHERE nrofab = TURNOSPRODUCCION.nrofab and datosEntrega != '' ORDER BY fecha DESC LIMIT 1))</expression>
+              </field>-->
+
+			<field id="nombres" noshow="true">
+			<expression>concat(apellido, ', ', HTXUSERS.Nombre)</expression>
+			    </field>
+			<field id="enviomail" local="true" >
+			    <label>Mail</label>
+			    <helper type="link" xml="mails_send.xml" dir="/histrix/mensajeria">
+			    	<parameter source="mail_msg" target="mensaje" />
+			    	<parameter source="mail_to" target="para" />
+			    	<parameter source="mail_subj" target="subject" />
+			    </helper>
+			    <expression><![CDATA[IFNULL((SELECT '<img src="../img/mail_generic.png"/>' FROM CERTIFICADOLCM WHERE nrofab = TURNOSPRODUCCION.nrofab and datosEntrega != '' ORDER BY fecha DESC LIMIT 1), '')]]></expression>
+			</field>
+<!--
+			<field id="cantmail">
+				<expression sql="true">(SELECT COUNT(*) FROM HTXMAIL WHERE MATCH(subject, body) AGAINST ('[__filtmail__]' IN BOOLEAN MODE) )
+                </expression>
+             </field>
+-->
+			<order>
+				<field id="fechaing"/>
+			</order>
+		</table>
+		<join tipo="left">
+			<table id="PEDCOTIZ">
+				<field id="nrocha">
+					<condicion operador="=">TURNOSPRODUCCION.nrofab</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="CHASIS">
+				<field id="nrocha">
+					<condicion operador="=">TURNOSPRODUCCION.nrofab</condicion>
+				</field>
+			</table>
+		</join>
+    <join tipo="left">
+               <table id="HOMOLOGMOD">
+          <field id="id_homologacion">
+              <condicion operador="=">PEDCOTIZ.homologacion_id</condicion>
+          </field>
+        </table>     
+    </join>    
+		<join tipo="left">
+			<table id="MODCHASIS">
+				<field id="modcha">
+					<condicion operador="=">CHASIS.modcod</condicion>
+				</field>
+				<field id="marcod">
+					<condicion operador="=">CHASIS.marcod</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="CONCESIONARIO">
+				<field id="idconces">
+					<condicion operador="=">TURNOSPRODUCCION.idconces</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="HTXUSERS">
+				<field id="id_usuario">
+					<condicion operador="=">[__useract__]</condicion>
+				</field>
+			</table>
+		</join>
+	</form>
+</histrix>

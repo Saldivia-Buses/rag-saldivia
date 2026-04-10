@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm">
+    <title>CONCEPTOS POR FACTURACION</title>
+    <obs></obs>
+    <consulta>
+        <table id="CAJ_CONCEPTOS_REG" label="Pago por concepto">
+            <filters>
+                <field id="id_regconceptomos">
+                    <label>Concepto</label>
+                    <operador>=</operador>
+                </field>
+
+            </filters>
+            <field id="id_regconceptomos">
+                <label>Código </label>
+		<options>
+		    <option valor=""></option>
+		    <option valor="1">Factura</option>
+		    <option valor="2">Nota de Debito</option>
+		     <option valor="3">Nota de Credito</option>
+		</options>
+
+            </field>
+	    <field id="subsistema_id">
+
+	<tabla_ex xml="subsistema_qry.xml" dir="/ayudas" vacio="true">
+		<field id="identificacion">
+			<condicion operador="=">'CCT'</condicion>
+		</field>		
+	</tabla_ex>
+
+	        <actualiza>
+                    <field destino="subsistema_id" id="regconcepto_id" />
+                </actualiza>
+
+		 <label>Subsistema</label>
+	</field>
+
+            <field id="regconcepto_id">
+                <label>Concepto</label>
+		<tabla_ex xml="regconcepto_qry.xml" dir="/ayudas" vacio="true" />
+		<label>Concepto</label>
+            </field>
+
+          
+
+        </table>
+    </consulta>
+</histrix>  

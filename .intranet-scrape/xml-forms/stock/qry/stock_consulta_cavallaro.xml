@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" borra="no" inserta="no" paginar="100" preloadData="false" path="fotos/articulos"   >
+  <title>Stock Actualizado</title>
+  <obs/>
+  <form>
+    <table id="STK_ARTICULOS" label="Stock Actualizado">
+
+    <filters>
+	      
+	        <field id="id_stkarticulo">
+	            <label>Codigo</label>
+	            <operador>like</operador>
+	        </field>
+
+	        <field id="separador" local="true" deshabilitado="true" editable="false" modpos="nobr" />
+	        
+	        <field id="nombre_articulo" modpos="nobr">
+	            <label>Articulo</label>
+	            <operador>like</operador>
+	        </field>
+
+	        <field id="separador" local="true" deshabilitado="true" editable="false" modpos="nobr" />
+
+<!-- 	        <field id="cantidad_stock" modpos="nobr">
+	          <label>Desde Stock</label>
+	          <operador>&gt;=</operador>
+	        </field> -->
+
+	        <field id="stkrubro_id">
+	          <label >Rubro</label>
+	          <operador>=</operador>
+	        </field>
+
+	        <field id="separador" local="true" deshabilitado="true" editable="false" modpos="nobr" />
+
+	        <field id="stkfamilia_id" modpos="nobr">
+	          <label>Familia</label>
+	          <operador>=</operador>
+	        </field>
+
+	       <field id="separador" local="true" deshabilitado="true" editable="false" modpos="nobr" />
+
+	        <field id="stkmarca_id">
+	          <label modpos="nobr">Marca</label>
+	          <operador>=</operador>
+	        </field>
+
+	        <field id="stklista_id">
+		        <label>Lista</label>
+		    </field>
+
+    </filters>      
+
+
+    <fieldGroup noshow="true">
+    	
+			<field id="separador" local="true" deshabilitado="true" editable="false" noshow="true" >
+				<size>1</size>
+			</field>
+
+			<field id="baja_articulo"  noshow="true">
+				<label>Baja</label>
+				<condicion operador="=">0</condicion>
+				 <attribute id="style">color_noautorizada</attribute>
+			</field>
+
+    </fieldGroup>
+
+
+	<fieldGroup Formstyle="padding:2px 2px 2px 2px;" colstyle="text-align:center;">
+
+			<field id="id_stkarticulo"  esClave="true" >
+				<label>Codigo de Articulo</label>
+				<helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas">
+					<field id="wstklista_id" local="true">
+						<valor>1</valor>
+					</field>
+				</helper>
+				 <attribute id="style">color_noautorizada</attribute>
+			</field>
+
+			<field id="nombre_articulo" >
+				<label>Articulo</label>
+				 <attribute id="style">color_noautorizada</attribute>
+				<size>99</size>
+			</field>
+
+			<field id="stkrubro_id" multiple="true">
+				<label>Rubro</label>
+				<helper type="combo" xml="stkrubro_qry.xml" dir="/ayudas" empty="true"/>
+				 <attribute id="style">color_noautorizada</attribute>
+			</field>
+
+			<field id="stkfamilia_id" multiple="true">
+				<label>Familia</label>
+				<helper type="combo" xml="stkfamilia_qry.xml" dir="/ayudas" empty="true"/>
+				 <attribute id="style">color_noautorizada</attribute>
+			</field>
+
+			<field id="stkmarca_id" multiple="true">
+				<label>Marca</label>
+				<helper type="combo" xml="stkmarca_qry.xml" dir="/ayudas" empty="true"/>
+				 <attribute id="style">color_noautorizada</attribute>
+			</field>
+
+
+				 <!-- se comento esto porque demoraba mucho -->
+<!-- 			<field id="regcuenta_id" tabla="STK_ARTICULO_PROVEEDOR" >
+				<label>Proveedor</label>
+			</field>   -->
+
+
+			<field id="cantidad_stock" local="true">
+				<label>Stock</label>
+				<expression>ifnull(STK_STOCKACTUAL.cantidad_stock,0)</expression>
+				 <attribute id="style">color_noautorizada</attribute>
+			</field>
+
+			<field id="stklista_id" tabla="STK_LISTADETALLE">
+				<label>Lista</label>
+				<helper type="combo" xml="stklista_qry.xml" dir="/ayudas" />
+				 <attribute id="style">color_noautorizada</attribute>
+			</field>
+
+			<field id="stklistadetalle_costo" tabla="STK_LISTADETALLE">
+				<label>Precio Lista</label>
+				<tipo>numeric</tipo>
+				 <attribute id="style">color_noautorizada</attribute>
+			</field> 
+
+		<!-- 	<field id="dto_porcentaje" tabla="STK_LISTADETALLE">
+				<label>Descuento (%)</label>
+				<tipo>numeric</tipo>
+			</field>  -->
+
+			<field id="stklistadetalle_rentabilidad" tabla="STK_LISTADETALLE">
+				<label>Rentabilidad (%)</label>
+				<tipo>numeric</tipo>
+				 <attribute id="style">color_noautorizada</attribute>
+			</field> 
+
+			<field id="stklistadetalle_precioventa" tabla="STK_LISTADETALLE">
+				<label>Precio Venta S/IVA</label>
+				<tipo>numeric</tipo>
+				 <attribute id="style">color_noautorizada</attribute>
+			</field> 
+
+			<field id="stklistadetalle_precioventa_civa">
+				<label>Precio Venta C/IVA</label>
+				<expression>ROUND((((stklistadetalle_precioventa * GEN_IVA_ALICUOTAS.alicuota) / 100) + stklistadetalle_precioventa), 2)</expression>
+				<tipo>numeric</tipo>
+				 <attribute id="style">color_noautorizada</attribute>
+			</field>
+
+			<field id="stkarticulo_foto" xmlField="image" path="id_stkarticulo" colstyle="width:60px;">
+				<label>Foto</label>
+				<tipo Type="Image">file</tipo>
+				<size>80</size>
+				 <attribute id="style">color_noautorizada</attribute>
+			</field>
+
+	</fieldGroup>
+
+ 	<fieldGroup>
+       
+
+       <field id="importe">
+        	<label>Precio C/Desc</label>
+        	<expression >IF(NOW() BETWEEN STK_LISTADETALLE.dto_fechadesde AND STK_LISTADETALLE.dto_fechahasta,STK_LISTADETALLE.stklistadetalle_precioventa * STK_LISTADETALLE.dto_porcentaje / 100,'')
+        	</expression>
+        	<tipo>decimal</tipo>
+ 		   <attribute id="style">color_noautorizada</attribute>
+    	</field>
+
+	  	<field id="porcentaje">
+        	<label>Porcentaje Desc</label>
+        	<expression >IF(NOW() BETWEEN STK_LISTADETALLE.dto_fechadesde AND STK_LISTADETALLE.dto_fechahasta,STK_LISTADETALLE.dto_porcentaje,'')</expression>
+        	<tipo>decimal</tipo>
+        	 <attribute id="style">color_noautorizada</attribute>
+    	</field>
+
+
+	    <field id="fechas" >
+	        <label>Fechas Desc</label>
+	        <expression >IF(NOW() BETWEEN STK_LISTADETALLE.dto_fechadesde AND STK_LISTADETALLE.dto_fechahasta,CONCAT(STK_LISTADETALLE.dto_fechadesde, '-', STK_LISTADETALLE.dto_fechahasta),'')</expression>
+	         <attribute id="style">color_noautorizada</attribute>
+	    </field>
+
+
+	    <field id="colorea" noshow="true" clasefila="true">
+                  <expression>IF( NOW() BETWEEN STK_LISTADETALLE.dto_fechadesde AND STK_LISTADETALLE.dto_fechahasta,'resaltadoRojo','')</expression>
+                </field>
+
+	    
+
+            
+ 	</fieldGroup>
+
+
+
+            <order>
+                <field id="nombre_articulo" />
+            </order>
+
+            <group>
+                <field id="id_stkarticulo"  />
+            </group>
+
+        </table>
+
+        <join tipo="left">
+            <table id="STK_STOCKACTUAL">
+                <field id="stkarticulo_id">
+                    <condicion operador="=">STK_ARTICULOS.id_stkarticulo</condicion>
+                </field>
+            </table>
+        </join>
+
+        <!-- <join tipo="left">
+            <table id="STK_ARTICULO_PROVEEDOR">
+                <field id="stkarticulo_id">
+                    <condicion operador="=">STK_ARTICULOS.id_stkarticulo</condicion>
+                </field>
+            </table>
+        </join> -->
+
+
+
+        <join tipo="left">
+            <table id="STK_RUBROS">
+                <field id="id_stkrubro">
+                    <condicion operador="=">STK_ARTICULOS.stkrubro_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="STK_LISTADETALLE">
+                <field id="stkarticulo_id">
+                    <condicion operador="=">STK_ARTICULOS.id_stkarticulo</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="GEN_IVA_REGIMENES">
+                <field id="id_iva_regimen">
+                    <condicion operador="=">STK_ARTICULOS.ivaregimen_id</condicion>
+                </field>
+            </table>
+        </join>
+
+
+        <join tipo="left">
+            <table id="GEN_IVA_ALICUOTAS">
+                <field id="iva_regimen_id">
+                    <condicion operador="=">GEN_IVA_REGIMENES.id_iva_regimen</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

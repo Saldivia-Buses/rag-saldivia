@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<histrix tipo="cabecera" inserta="no" noform="true" llenoTemporal="false" barradrag="false" imprime="false" confirma="ACTUALIZAR COSTOS" maxshowresult="1000">
+	<title>Insumos</title>
+	<obs></obs>
+	<form  >
+		<table id="STKINSUM">
+
+		    <field id="fecha" local="true">
+			<label>Fecha de Actualización</label>
+			<tipo>date</tipo>
+			<valor>today</valor>
+		    </field>
+
+		    <field id="porcentaje" local="true">
+			<label >Porcentaje de Aumento</label>
+			<tipo>decimal</tipo>
+			<valor>0</valor>
+
+		    </field>
+		    <field id="sumafija" local="true">
+			<label modpos="nobr">Suma Fija de Aumento</label>
+			<tipo>decimal</tipo>
+			<valor>0</valor>
+		    </field>
+		    <field id="uno" local="true" noshow="true">
+			<label >Uno</label>
+			<tipo>numeric</tipo>
+			<valor>1</valor>
+		    </field>		    
+		    <field id="artpor__1" noZero="true">
+			    <label>Dto1</label>
+				<tipo>decimal</tipo>
+			</field>
+			<field id="artpor__2" noZero="true">
+			    <label modpos="nobr">Dto2</label>
+				<tipo>decimal</tipo>
+			</field>
+		</table>
+	</form>
+</histrix>

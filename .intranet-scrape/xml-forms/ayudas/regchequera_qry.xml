@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ayuda">
+  <title>Chequeras</title>
+  <obs></obs>
+  <form >
+    <table id="REG_CHEQUERAS" label="Chequeras">
+
+		<field id="id_regchequera" noshow="true" />
+
+		<field id="chequera" />
+
+		<field id="subsistema_id" noshow="true" />
+
+		<field id="regcuenta_id" noshow="true" >
+		    <condicion operador="=">-1</condicion>
+		</field>
+		
+		<field id="tipo" noshow="true" />
+
+		<field id="numero">
+		    <detalle>nro_movimiento</detalle>
+		</field>
+
+    </table>
+  </form>
+</histrix>

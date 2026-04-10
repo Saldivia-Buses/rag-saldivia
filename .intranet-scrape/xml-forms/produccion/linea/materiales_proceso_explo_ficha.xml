@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="fichaing" inserta="false" modifica="false" borra="false" procesa="true" transaccional="true" limit="1" cancel="false" processFirst="true" imprime="true">
+    <title>ARTICULOS POR SECTOR</title>
+    <obs></obs>
+    <form>
+        <table id="STK_ARTICULO_PROCESO" label="Rubros">
+
+            <movimientos>
+                <relacion id="materiales_proceso_explo_cab.xml" />
+            </movimientos>
+
+            <field id="fecha" noshow="true" local="true">
+                <tipo>date</tipo>
+                <valor>today</valor>
+            </field>
+
+            <field id="homologacion_id" noshow="true" local="true">
+                <label>Homol</label>
+            </field>
+
+            <field id="detalle" local="true">
+                <helper type="object" xml="materiales_proceso_explo.xml">
+                    <paramater target="homologacion_id" source="homologacion_id" />
+                </helper>
+            </field>
+
+        </table>
+
+    </form>
+</histrix>

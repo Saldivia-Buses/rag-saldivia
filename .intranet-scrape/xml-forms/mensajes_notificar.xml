@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  inserta="false"  tipo="ing"  imprime="false" barraDrag="false" confirma="Notificar" noform="true" close="true">
+	<title>Notificaciones</title>
+	<obs/>
+	<consulta>
+		<table id="HTXUSERS" label="Mensajes" styleTbody="height:150px;overflow-x:hidden;" >
+			<movimientos cabecera="mensajes_notificar_cab.xml">
+				 <relacion id="mensajes_notificar_ingmov.xml"></relacion>  	
+			</movimientos> 	
+            <title>Notificaciones</title>
+			<field id="login" noshow="true" deshabilitado="true">
+				<label>Login</label>
+				
+			</field>
+			<field id="Nombre" deshabilitado="true">
+				<label>Nombre</label>
+			</field>
+			<field id="apellido" deshabilitado="true">
+				<label>Apellido</label>
+			</field>
+			<field id="Id_perfil" deshabilitado="true">
+				<label>Perfil</label>
+				<tabla_ex id="HTXPROFILES">
+					<field id="Id_perfil" />
+					<field id="nombre" />					
+				</tabla_ex>
+			</field>
+			<field id="check" local="true" refresh="true">
+				<label>Enviar</label>
+				<tipo>check</tipo>
+				<valor>0</valor>
+				
+			</field>
+			<field id="grabo" local="true" noshow="true">
+				<label>grab</label>
+				<tipo>varchar</tipo>
+				<if exp="check != 0">
+					<true>'true'</true>
+					<false>'false'</false>
+				</if>			
+			</field>			
+			<order>
+				<field id="Id_perfil" />
+			</order>
+		</table>
+	</consulta>
+</histrix>

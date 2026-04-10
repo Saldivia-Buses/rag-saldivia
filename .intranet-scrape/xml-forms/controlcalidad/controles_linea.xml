@@ -1,0 +1,96 @@
+<histrix tipo="list" preloadData="false" width="20em">
+    <title>Controles de calidad</title>
+    <obs/>
+    <form  detalle="prod_control_seccion.xml">
+        <table id="CHASIS" label="Programa de Produccion"  _showCantidad="false" _styleTbody="height:500px; overflow-x:hidden;">
+            <filters auto="true">
+
+    	        <field id="nrocha" >
+    	    	    <help>Numero de certificado</help>
+    	    	    <operador>=</operador>
+        		</field>
+            </filters>
+            
+            <field id="siscli" local="true" oculto="true" >
+                <valor>'02'</valor>
+            </field>
+
+            <field id="nrocha" linkint="prod_control_seccion.xml" linkdes="Carga Control" >
+                <help>Numero de Fabricacion</help>
+                <paring destino="nrofab_id">nrocha</paring>
+                <paring destino="homologacion_id">homologacion_id</paring>
+                <detalle>nrofab_id</detalle>
+            </field>
+
+	    <field id="fab">
+		<expression>CHASIS.nrocha</expression>
+	    </field>
+            <field deshabilitado="true" id="nrocar" tabla="PEDCOTIZ">
+
+                <label style="font-weight:bold;color:green;padding:0 1em;" >.</label>
+                <help/>
+                <tabla_ex id="CARROCERIA">
+                    <field id="nrocar">
+                    </field>
+                    <field id="desabv">
+                    </field>
+
+                    <field id="siscod" oculto="true">
+                        <condicion operador="=">03</condicion>
+                    </field>
+                </tabla_ex>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field deshabilitado="true" id="ctanom" tabla="PEDCOTIZ" >
+                <expression>ctanom</expression>
+            </field>
+        
+            <field id="colorFec"  oculto="true">
+                <expression>case when PEDCOTIZ.ingresoLinea != '0000-00-00' then 'color:green;font-size:11px;' else '' end</expression>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="ingresoLinea" tabla="PEDCOTIZ">
+		      <tipo>date</tipo>
+            </field>
+
+            <field id="homologacion_id" tabla="PEDCOTIZ" noshow="true">
+		        <expression>ifnull(homologacion_id, 246)</expression>
+                <detalle>homologacion_id</detalle>
+            </field>
+            
+            <field id="max_fec" noshow="true">
+        	    <expression>  GREATEST( PEDCOTIZ.revfec ,
+                    (select max(ACC.fecha) from PEDCOTIZ AS PED1 left join ACCESORIOS_COCHE as ACC on ACC.ficha_id = PED1.id where PED1.id = PEDCOTIZ.id ))</expression>
+                
+            </field>
+
+        </table>
+        <join tipo="left">
+            <table id="PEDCOTIZ">
+                <field id="nrocha">
+                    <condicion operador="=">CHASIS.nrocha</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="CONCESIONARIO">
+                <field id="idconces">
+                    <condicion operador="=">CHASIS.conces</condicion>
+                </field>
+            </table>
+        </join>
+	<join tipo="left">
+	    <table id="CCTCUENT">
+		<field id="ctacod">
+		    <condicion operador="=">PEDCOTIZ.ctacod</condicion>
+		</field>		
+		<field id="siscod">
+		    <condicion operador="=">02</condicion>
+		</field>
+	    </table>
+	</join>
+        
+    </form>
+</histrix>

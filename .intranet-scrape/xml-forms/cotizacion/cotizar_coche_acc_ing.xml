@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ing" _imprime="false" 
+impresion="cotizacion_imp_acc.xml"
+email="cotizacion_imp_acc.xml"
+ _tooltip="false" imprime="false"
+subtipo="vertical"
+_llenoTemporal="false"
+inserta="false"
+>
+    <title>cotizar adicionales</title>
+    <obs></obs>
+    <form>       
+        <table id="ACCESORIOS_COCHE"  >
+
+            <movimientos  cabecera="cotizar_coche_acc_cab.xml" >
+                <relacion id="cotizar_coche_ingmov.xml"/>
+                <relacion id="cotizar_coche_acc_ingmov.xml"></relacion>
+            </movimientos>
+            
+            <title>OPCIONES</title>
+ 
+            <field id="id_accesorio" noshow="true" >
+            </field>
+            <field id="cotizacion_id" noshow="true" >
+        	<condicion operador="=">''</condicion>
+            </field>
+         
+            <field id="nrofab" noshow="true" deshabilitado="true" esClave="false" noselect="true">
+            </field>
+
+            <field id="fecha" tipoOrden="DESC" log="false">
+                <label>fecha</label>
+                <tipo>date</tipo>
+                <valor>today</valor>
+                <detalle>fecha</detalle>
+            </field>
+
+            <field id="ficha_id" oculto="true" log="false">
+-		 <detalle>detalle</detalle>
+            </field>
+	    	<field id="ctafan" local="true" noshow="true" log="true">
+		<label>ctafan</label>	
+	     </field>
+
+            <field id="artcod" deshabilitado="true" valauto="true">
+        	<size>3</size>
+        	<valor></valor>
+                <tipo>varchar</tipo>
+                <label>cod</label>
+                <ayuda_ex id="STKINSUM" >
+
+                    <field id="artcod" _noshow="true">
+                        <detalle>artcod</detalle>
+                    </field>
+                    <field id="artdes" >
+                        <label>Descripcion</label>
+			<expression>CONCAT(artdes, ' (', artcod,')')</expression>
+                        <detalle>artdes</detalle>
+                    </field>
+                    <field id="siscod" oculto="true" >
+                        <condicion operador="=">'02'</condicion>
+                    </field>
+                    <field id="Precio" noZero="true" _suma="true" _noEmpty="true">
+                        <label>P.Unit</label>
+
+                        <expression > (select precio1 from LISTAPRECIOSDET as PREC where PREC.idArticulo = STKINSUM.artcod order by idLista DESC limit 1) </expression>
+                        <tipo>numeric</tipo>
+                        <detalle>Precio</detalle>
+                    </field>
+                    <clave>artcod</clave>
+                    <descripcion>artdes2</descripcion>
+                </ayuda_ex>
+            </field>
+			 
+            <field id="artdes" autocompletar="true" required="false" validar="false"   deshabilitado="true">
+                <ayuda_ex id="STKINSUM" >
+
+                    <field id="artcod" noshow="true">
+                        <detalle>artcod</detalle>
+                    </field>
+                    <field id="artdes" >
+                        <label>Descripcion</label>
+			<expression>CONCAT(artdes, ' (', artcod,')')</expression>
+                        <detalle>artdes</detalle>
+                    </field>
+                    <field id="siscod" oculto="true" >
+                        <condicion operador="=">'02'</condicion>
+                    </field>
+                    <field id="Precio" noZero="true" _suma="true" _noEmpty="true" noshow="true">
+                        <label>P.Unit</label>
+
+                        <expression > (select precio1 from LISTAPRECIOSDET as PREC where PREC.idArticulo = STKINSUM.artcod order by idLista DESC limit 1) </expression>
+                        <tipo>numeric</tipo>
+                        <detalle>Precio</detalle>
+                    </field>
+                    <clave>artcod</clave>
+                    <descripcion>artdes2</descripcion>
+                </ayuda_ex>
+
+                <label modpos="nobr">Accesorio</label>
+                <size>100</size>
+                <tipo>varchar</tipo>
+            </field>
+	     <field id="cantidad" _noZero="true" _noEmpty="true" deshabilitado="true">
+        	<label modpos="nobr">Cant</label>
+        	<size>2</size>
+        	<valor>1</valor>
+            </field>
+            <field id="showprecios" noshow="true" _oculto="true" local="true">
+            </field>
+            <field id="hidePrecios" local="true" noshow="true">
+                <if exp="1 == 1">
+                    <true>'false'</true>
+                    <false>'true'</false>
+                </if>
+            </field>
+           
+            
+<!--            <field id="Precio" noZero="true" _suma="true" _noEmpty="true">
+        	<label>P.Unit</label>
+            
+                <expression having="false"> (select precio1 from LISTAPRECIOSDET as PREC where PREC.idArticulo = STKINSUM.artcod order by idLista DESC limit 1) </expression>
+                <tipo>numeric</tipo>
+            </field>
+            <field id="total" noZero="true" suma="true" local="true" _noEmpty="true" _Formstyle="display:none;" deshabilitado="true">
+        	<label>total</label>
+            
+                <attribute id="noshow">hidePrecios</attribute>
+                <if exp="Precio + 0 != 0">
+            	    <true>cantidad * Precio</true>
+            	    <false>0</false>
+                </if>
+                <tipo>numeric</tipo>
+            </field>
+    -->
+            <field id="precio_unitario" noZero="true" _suma="true" _noEmpty="true" deshabilitado="true">
+        	<label modpos="nobr">P.Unit</label>
+                <attribute id="noshow">hidePrecios</attribute>
+                <tipo>decimal</tipo>
+                <jseval campodestino="precio_adicional" >precio_unitario * cantidad</jseval>
+                <condicion operador="!=">0</condicion>
+
+            </field>
+            <field id="precio_adicional" noZero="true" suma="true"  _noEmpty="true" _Formstyle="display:none;" deshabilitado="true">
+        	<label>total</label>
+                <attribute id="noshow">hidePrecios</attribute>
+                <tipo>decimal</tipo>
+            </field>
+    
+            <order>
+        	<field id="fecha"></field>
+            </order>
+			 
+			 
+        </table>
+        <join tipo="left">
+            <table id="STKINSUM">
+                <field id="artcod">
+                    <condicion operador="=">ACCESORIOS_COCHE.artcod</condicion>
+                </field>
+                <field id="siscod">
+                    <condicion operador="=">'02'</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix>

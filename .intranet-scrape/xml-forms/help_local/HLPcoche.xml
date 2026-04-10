@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+	<histrix tipo="ayuda" >
+		<title>COCHES</title>
+		<obs></obs>
+		<form >
+			<table id="PEDCOTIZ"	>
+				<title>COCHES</title>
+					<field id="nrocha"  esClave="true" >
+						<label >Nro</label>					
+					</field>
+					<field id="Carroceria">
+						<expression>CONCAT( PEDCOTIZ.nrocha, ' - ', MARCHASIS.mardes, ' ', MODCHASIS.moddes, '  Nro: ', CHASIS.chasis, 'Motor: ',MARCAMOTOR.nombre, ' Nro: ', nromotor)</expression>
+						<label>Carroceria</label>
+						<tipo>varchar</tipo>
+						<detalle>coche</detalle>
+					</field>					
+                                        <field id="ctacod">
+
+                                        </field>
+				
+<!--				<order>
+					<field id="nrocha" tabla="PEDCOTIZ"></field>
+				</order> -->
+			</table>
+	      	<join tipo="left">
+	            <table id="HOMOLOGMOD">
+	                <field id="id_homologacion">
+	                    <condicion operador="=">PEDCOTIZ.homologacion_id</condicion>
+	                </field>
+	            </table>
+	        </join>			
+    <join tipo="left">
+       <table id="CARROCERIA">
+          <field id="nrocar">
+                 <condicion operador="=">HOMOLOGMOD.nrocar</condicion>
+          </field>
+        </table>
+    </join>
+
+	        <join tipo="left">
+				<table id="CHASIS">
+					<field id="nrocha">
+						<condicion operador="=">PEDCOTIZ.nrocha</condicion>
+					</field>
+				</table>
+			</join>
+			<join tipo="left">
+				<table id="MARCHASIS">
+					<field id="marcod">
+						<condicion operador="=">CHASIS.marcod</condicion>
+					</field>
+				</table>
+			</join>			
+			<join tipo="left">
+				<table id="MODCHASIS">
+					<field id="modcha">
+						<condicion operador="=">CHASIS.modcod</condicion>
+					</field>
+					<field id="marcod">
+						<condicion operador="=">CHASIS.marcod</condicion>
+					</field>
+				</table>
+			</join>
+			<join tipo="left">
+				<table id="MARCAMOTOR">
+					<field id="idMarca">
+						<condicion operador="=">CHASIS.idMarcaMotor</condicion>
+					</field>
+				</table>
+			</join>			
+	</form>
+	</histrix>

@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" _autoupdate="180" path="../files/archives/nfsAsterisk" _limit="10" paginar="40">
+    <title>CONSULTA DE LLAMADAS</title>
+    <form detalle="hasdetseg" inline="true" hasDetail="hasdet">
+        <table id="ASTERIX_CDR" >
+            <filters>
+                <field id="fecha" deshabilitado="false">
+                    <label>Desde Fecha</label>
+                    <operador>&gt;=</operador>
+                    <valor>today</valor>
+          
+                </field>
+                <field id="fecha" deshabilitado="false">
+                    <label modpos="nobr">Hasta Fecha</label>
+                    <operador>&lt;=</operador>
+                    <valor>today</valor>
+          
+                </field>
+				<field id="srcst" deshabilitado="false" grupo="Origen-Destino">
+					<label>Nº </label>
+					<operador>like</operador>
+				</field>
+				<field id="dstst" deshabilitado="false" grupo="Origen-Destino">
+					<label modpos="nobr">Nº</label>
+					<operador>like</operador>
+				</field>
+			
+				<field id="srcnomfilt" deshabilitado="false" grupo="Origen-Destino">
+					<label>Nombre</label>
+					<operador>like</operador>
+				</field>
+
+				<field id="dstnomfilt" deshabilitado="false" grupo="Origen-Destino">
+					<label modpos="nobr">Nombre </label>
+					<operador>like</operador>
+				</field>
+
+
+                <field id="telefonos" deshabilitado="false" grupo="Ambos">
+                    <label>Nº  </label>
+                    <operador>like</operador>
+                </field>
+                <field id="cuentaDst" deshabilitado="false">
+                    <label>Destino</label>
+                    <operador>like</operador>
+                </field>
+        
+            </filters>
+            <title>Llamadas</title>
+      
+            <field id="uniqueid" oculto="true" >
+        	<label>id</label>
+            </field>
+            <field id="calldate" noshow="true" tipoOrden="DESC">
+            </field>
+            
+            <field id="fecha">
+        	<expression having="false">date(calldate)</expression>
+                <label>Fecha</label>
+                <tipo>date</tipo>
+                <detalle>fecha</detalle>
+                
+            </field>
+            <field id="hora" style="padding:0px 5px;">
+        	<expression>date_format( calldate, '%H:%i:%s' )</expression>
+                <label>hora</label>
+                <tipo>time</tipo>
+            </field>
+            
+            <field id="tipo" noshow="true" local="true">
+                <options>
+                    <option valor="">Todos</option>
+                    <option valor="entrantes">Entrantes</option>
+                    <option valor="salientes">Salientes</option>
+                </options>
+            </field>
+            
+<!--            <field id="src" >
+                <label>Origen</label>
+            </field>             -->
+            <field id="newsrc" >
+        	<expression>(case when src != '' then src else (substring(channel,5,3)) end)</expression>
+                <label>Origen </label>
+            </field>
+
+			<field id="esEntreInternos" noshow="true">
+				<expression>(CASE WHEN length((case when src != '' then src else (substring(channel,5,3)) end)) = 3 and length(dst) = 3 THEN 1 ELSE 0 END)</expression>
+			<!--	<condicion operador="!=">1</condicion>-->
+			</field>
+            <field id="telefonos" noshow="true">
+        	<expression having="false">CONCAT(src,dst)</expression>
+            </field>
+
+            <field id="srcst" noshow="true">
+        	<expression having="false">CONCAT(src)</expression>
+            </field>
+            <field id="dstst" noshow="true">
+        	<expression having="false">CONCAT(dst)</expression>
+            </field>
+            <field id="InternoSrc" noshow="true">
+                <expression having="false">(case when length((case when src != '' then src else (substring(channel,5,3)) end)) = 3 then (select CONCAT(Nombre, ' ', apellido) from HTXUSERS where HTXUSERS.interno = (case when src != '' then src else (substring(channel,5,3)) end) limit 1) end)</expression>
+            </field>
+            <field id="empresaSrc" noshow="true">
+                <expression having="false"> ifnull((SELECT CCTCUENT.ctafan  FROM CCTCONTA
+          left join CCTCUENT on CCTCUENT.siscod = CCTCONTA.siscod and CCTCUENT.ctacod = CCTCONTA.ctacod
+          WHERE   length((case when src != '' then src else (substring(channel,5,3)) end)) != 3 and (
+          (replace(CONCAT(Telefono,'.',movil), ' ','') like CONCAT('%' ,trim((case when src != '' then src else (substring(channel,5,3)) end)) ,'%') and trim( (case when src != '' then src else (substring(channel,5,3)) end)) != '' )  or  
+          (replace(CONCAT(Telefono,'.',movil), ' ','') like CONCAT('%' ,right(trim((case when src != '' then src else (substring(channel,5,3)) end)), 6 ) ,'%') and trim( (case when src != '' then src else (substring(channel,5,3)) end)) != '' ) or
+          (replace(CONCAT(Telefono,'.',movil), '-','') like CONCAT('%' ,trim((case when src != '' then src else (substring(channel,5,3)) end)) ,'%') and trim( (case when src != '' then src else (substring(channel,5,3)) end)) != '' )  or  
+          (replace(CONCAT(Telefono,'.',movil), '-','') like CONCAT('%' ,right(trim((case when src != '' then src else (substring(channel,5,3)) end)), 6 ) ,'%') and trim( (case when src != '' then src else (substring(channel,5,3)) end)) != '' ))
+          group by CCTCONTA.siscod, CCTCONTA.ctacod limit 1),'')
+          
+                </expression>
+		
+            </field>
+            <field id="cuentaSrc" noshow="true">
+        
+	    <expression><![CDATA[ (SELECT group_concat( ctafan separator '<br>')  FROM CCTCUENT  where
+                        (replace(ctatel, ' ','') like CONCAT('%' ,trim((case when src != '' then src else (substring(channel,5,3)) end)) ,'%') and trim( (case when src != '' then src else (substring(channel,5,3)) end)) != '' )
+                         and baja = 0 and length((case when src != '' then src else (substring(channel,5,3)) end)) > 3 )]]></expression>
+          </field> 
+            
+
+			<field id="srcnomfilt">
+				<expression having="false"><![CDATA[ (CONCAT(ifnull((case when length((case when src != '' then src else (substring(channel,5,3)) end)) = 3 then (select CONCAT(Nombre, ' ', apellido) from HTXUSERS where HTXUSERS.interno = (case when src != '' then src else (substring(channel,5,3)) end) limit 1) end), ''), ifnull((SELECT CCTCUENT.ctafan  FROM CCTCONTA
+          left join CCTCUENT on CCTCUENT.siscod = CCTCONTA.siscod and CCTCUENT.ctacod = CCTCONTA.ctacod
+          WHERE   length((case when src != '' then src else (substring(channel,5,3)) end)) != 3 and (
+          (replace(CONCAT(Telefono,'.',movil), ' ','') like CONCAT('%' ,trim((case when src != '' then src else (substring(channel,5,3)) end)) ,'%') and trim( (case when src != '' then src else (substring(channel,5,3)) end)) != '' )  or  
+          (replace(CONCAT(Telefono,'.',movil), ' ','') like CONCAT('%' ,right(trim((case when src != '' then src else (substring(channel,5,3)) end)), 6 ) ,'%') and trim( (case when src != '' then src else (substring(channel,5,3)) end)) != '' ) or
+          (replace(CONCAT(Telefono,'.',movil), '-','') like CONCAT('%' ,trim((case when src != '' then src else (substring(channel,5,3)) end)) ,'%') and trim( (case when src != '' then src else (substring(channel,5,3)) end)) != '' )  or  
+          (replace(CONCAT(Telefono,'.',movil), '-','') like CONCAT('%' ,right(trim((case when src != '' then src else (substring(channel,5,3)) end)), 6 ) ,'%') and trim( (case when src != '' then src else (substring(channel,5,3)) end)) != '' ))
+          group by CCTCONTA.siscod, CCTCONTA.ctacod limit 1), ''),  ifnull((SELECT group_concat( ctafan separator '<br>')  FROM CCTCUENT  where
+                        (replace(ctatel, ' ','') like CONCAT('%' ,trim((case when src != '' then src else (substring(channel,5,3)) end)) ,'%') and trim( (case when src != '' then src else (substring(channel,5,3)) end)) != '' )
+                         and baja = 0 and length((case when src != '' then src else (substring(channel,5,3)) end)) > 3 ), ''))
+
+
+)]]></expression>
+				<label>Nombre Origen</label>
+			</field>
+
+			<!--
+            <field id="srcNom" local="true">
+                <label>Nombre Origen</label>
+                <if exp="true">
+            	    <true>'InternoSrc empresaSrc cuentaSrc'</true>
+            	    <false>''</false>
+                </if>
+            </field>-->
+
+            <field id="addPhoneSrc"  linkint="tel_add_phone.xml" linkWidth="400px" linkHeight="250px" _linkReposition="true" linkdes="Telefóno" local="true">
+                <label>+ </label>
+                <if exp="trim('srcNom') == ''">
+                    <true><![CDATA['<img Src="../img/list-add.png">']]></true>
+                    <false>''</false>
+                </if>
+                <paring destino="Telefono">newsrc</paring>
+
+            </field>
+
+            <field id="dst" >
+                <label>Destino</label>
+<!--		<condicion operador="!=">998 and dst != 999</condicion> -->
+            </field>
+
+                                         
+    	<field id="hasdetseg" noshow="true">
+    	    <expression>case when dst = 998 then 'seguimiento_audio_tel.xml' else '' end</expression>
+    	</field>                           
+     	<field id="hasdet" noshow="true">
+    	    <expression>case when dst = 998 then 1 else '' end</expression>
+    	</field>                           
+
+    	<field id="seg" noshow="true">
+    	
+    	    <expression>case when dst = 998 then left(dstchannel, 15) end</expression>
+    	    <detalle>channel</detalle>
+    	</field>                           
+
+            <field id="InternoDst" noshow="true">
+                <expression>(case when length(dst) = 3 then (select CONCAT(Nombre, ' ', apellido) from HTXUSERS where HTXUSERS.interno = dst limit 1) end)</expression>
+            </field>
+            <field id="empresaDst" noshow="true">
+                <expression>ifnull((SELECT CCTCUENT.ctafan  FROM CCTCONTA
+          left join CCTCUENT on CCTCUENT.siscod = CCTCONTA.siscod and CCTCUENT.ctacod = CCTCONTA.ctacod
+          WHERE   length(dst) != 3 and (
+          (replace(CONCAT(Telefono,'.',movil), ' ','') like CONCAT('%' ,trim(dst) ,'%') and trim(dst) != '' )  or  
+          (replace(CONCAT(Telefono,'.',movil), ' ','') like CONCAT('%' ,right(trim(dst), 6 ) ,'%') and trim(dst) != '' ) or
+          (replace(CONCAT(Telefono,'.',movil), '-','') like CONCAT('%' ,trim(dst) ,'%') and trim( dst) != '' )  or  
+          (replace(CONCAT(Telefono,'.',movil), '-','') like CONCAT('%' ,right(trim(dst), 6 ) ,'%') and trim(dst) != '' ))
+          group by CCTCONTA.siscod, CCTCONTA.ctacod limit 1),'')
+          
+                </expression>
+		
+            </field>
+            <field id="cuentaDst" noshow="true">
+        
+	    <expression having="false"><![CDATA[(SELECT group_concat( ctafan separator '<br>')  FROM CCTCUENT  where
+                        (replace(ctatel, ' ','') like CONCAT('%' ,trim(dst) ,'%') and trim(dst) != '' )
+                         and baja = 0 and length(dst) > 3 )]]></expression>
+          </field> 
+
+            <field id="dstnomfilt">
+                <label>Nombre Destino</label>
+				<expression having="false"><![CDATA[(
+
+				CONCAT(
+IFNULL((case when length(dst) = 3 then (select CONCAT(Nombre, ' ', apellido) from HTXUSERS where HTXUSERS.interno = dst limit 1) end), ''),
+
+IFNULL( (SELECT CCTCUENT.ctafan  FROM CCTCONTA
+          left join CCTCUENT on CCTCUENT.siscod = CCTCONTA.siscod and CCTCUENT.ctacod = CCTCONTA.ctacod
+          WHERE   length(dst) != 3 and (
+          (replace(CONCAT(Telefono,'.',movil), ' ','') like CONCAT('%' ,trim(dst) ,'%') and trim(dst) != '' )  or  
+          (replace(CONCAT(Telefono,'.',movil), ' ','') like CONCAT('%' ,right(trim(dst), 6 ) ,'%') and trim(dst) != '' ) or
+          (replace(CONCAT(Telefono,'.',movil), '-','') like CONCAT('%' ,trim(dst) ,'%') and trim( dst) != '' )  or  
+          (replace(CONCAT(Telefono,'.',movil), '-','') like CONCAT('%' ,right(trim(dst), 6 ) ,'%') and trim(dst) != '' ))
+          group by CCTCONTA.siscod, CCTCONTA.ctacod limit 1), ''),
+
+IFNULL((SELECT group_concat( ctafan separator '<br>')  FROM CCTCUENT  where
+                        (replace(ctatel, ' ','') like CONCAT('%' ,trim(dst) ,'%') and trim(dst) != '' )
+                         and baja = 0 and length(dst) > 3 ), '')
+
+)
+				)]]></expression>
+            </field>
+
+            <field id="addPhoneDst"  linkint="tel_add_phone.xml" linkWidth="400px" linkHeight="250px" _linkReposition="true" linkdes="Telefóno" local="true">
+                <label>+</label>
+                <if exp="trim('DstNom') == ''">
+                    <true><![CDATA['<img Src="../img/list-add.png">']]></true>
+                    <false>''</false>
+                </if>
+                <paring destino="Telefono">dst</paring>
+
+            </field>
+
+            <field id="disposition" _noshow="true">
+        	<label>Estado</label>
+            </field>
+
+            
+            <field id="duration" suma="true">
+        	<expression>sec_to_time(duration)</expression>
+                <label>Tiempo </label>
+                <tipo>time</tipo>
+            </field>
+      
+                
+            <field id="userfieldwav" _noshow="true">
+        	<expression having="false">case when userfield != '' then SUBSTRING_INDEX(userfield, ':', -1) end</expression>
+        	<label>Audio</label>
+        	<tipo>file</tipo>
+            </field>
+            <order>
+                <field id="calldate"></field>
+            </order>
+      
+        </table>
+    </form>
+</histrix>

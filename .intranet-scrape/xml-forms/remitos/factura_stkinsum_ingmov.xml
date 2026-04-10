@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="update">
+	<title>STKINSUM</title>
+	<obs/>
+	<form >
+		<table id="STKINSUM" idCampoCond="sel2" label="ACTUALIZO COSTO">
+			<field esclave="true" id="siscod" id_temp="siscod"></field>
+			<field esclave="true" id="artcod" id_temp="artcod"></field>
+			<field esclave="true" id="ctacod" id_temp="ctacod"></field>
+			<field id="artctb" id_temp="artctb" />
+			<field id="artcos" id_temp="artcos"></field>
+			<field id="fecult" id_temp="hoy"></field>
+		</table>
+	</form>
+</histrix>

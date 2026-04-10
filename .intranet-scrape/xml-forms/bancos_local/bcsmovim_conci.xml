@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="ing" _borra="no" inserta="no" modifica="false" noform="true" form="false" imprime="false" log="false" exporta="true">
+	<title>Movimientos Bancarios</title>
+	<obs></obs>
+	<customScript>
+	$('#DIVbcsmovim_conci_xml .searchButton').click();
+	</customScript>
+	<form >
+		<table id="BCSMOVIM" label="Movimientos Bancarios">
+
+			<preconsultas>
+				<xmlfile id="bcsmovim_conci_pre2.xml"/>	   
+				<xmlfile id="bcsmovim_conci_pre.xml"/>    
+			
+			</preconsultas>			
+			<movimientos>
+				<relacion id="bcsmovim_movcon.xml"></relacion>
+			</movimientos>
+
+			<filters auto="true">
+			    <field id="bcscta">
+				<label>CUENTA</label>
+				<tabla_ex id="BCSCUENT">
+					<field id="ccbcod"></field>
+					<field id="ccbnom"></field>
+					<order>
+							<field id="ccbcod"></field>
+					</order>
+				</tabla_ex>
+				<operador>=</operador>				
+			    </field>
+
+			    <field id="acreditado" copia="acreditadopre" >
+					<operador>>=</operador>
+					<label>Desde Fecha Acreditación</label>
+					<valor>today</valor>
+					<tipo>date</tipo>
+			    </field>
+			    <field id="acreditadopre" local="true" noshow="true" deshabilitado="true">
+					<label modpos="nobr"></label>
+					<preparam campo="acreditado" operador="&lt;">true</preparam>
+					<valor>today</valor>												
+					<tipo>date</tipo>
+
+			    </field>						
+
+			    <field id="acreditado" copia="acreditadocon">
+				<operador>&lt;=</operador>
+				<label>Hasta Fecha Acreditación</label>
+				<valor>today</valor>
+			    </field>
+			    <field id="acreditadocon" local="true" noshow="true" deshabilitado="true">
+					<label modpos="nobr"></label>
+					<preparam campo="acreditado2" operador="&lt;=">true</preparam>
+					<valor>today</valor>												
+					<tipo>date</tipo>
+
+			    </field>						
+
+			<field id="bcsnro" >
+				<operador>&lt;=</operador>
+
+				<label modpos="nobr">Nro. Movimiento</label>
+				<help>Numero de Movimiento </help>
+				
+			</field>
+			<field id="bcsimp" >
+				<label>Desde Importe</label>
+				<operador>&gt;=</operador>
+				
+			</field>
+			<field id="bcsimp" >
+				<label modpos="nobr">Hasta Importe</label>
+				<operador>&lt;=</operador>
+				
+			</field>
+
+			    <field id="presentado">
+				<label>Conciliado</label>
+				<help>conciliado</help>
+				<tipo>radio</tipo> 
+				
+				<operador>=</operador>
+			    </field>				
+
+			</filters>
+			<field id="id_bcsmovim" noshow="true" esClave="true"/>
+
+
+
+			<field id="bcscta" noshow="true">
+				<label>Codigo Cuenta</label>
+				<tabla_ex id="BCSCUENT">
+					<field id="ccbcod"></field>
+					<field id="ccbnom"></field> -
+					<field id="siscod" oculto="true"></field>
+					<order>
+							<field id="ccbcod"></field>
+					</order>
+					<filtra>bcscta</filtra>
+				</tabla_ex>				
+				<help>Codigo de Cuenta Bancaria </help>
+				<preparam operador="=">true</preparam>	
+			</field>
+			
+			<field id="siscod" oculto="true" />
+
+			<field id="bcsmov" oculto="true">
+				<label>bcsmov</label>
+			</field>
+							
+			<field id="acreditado" oculto="true" _editable="true">
+				<label>Acreditacion2 </label>
+				<help>Acreditacion</help>
+					<tipo>date</tipo>
+
+			</field>
+			<field id="acreditadopre" local="true" noshow="true" deshabilitado="true">
+				<label>test</label>
+				<preparam campo="acreditado" operador="&lt;">true</preparam>							
+			           <tipo>date</tipo>
+			</field>			
+		    <field id="acreditadocon" local="true" noshow="true" deshabilitado="true">
+				<label modpos="nobr"></label>
+				<preparam campo="acreditado2" operador="&lt;=">true</preparam>
+		           <tipo>date</tipo>
+		    </field>						
+		    <field id="link" noshow="true">
+		    	<expression>'bcsmovim_crud.xml'</expression>
+		    </field>
+			<field id="acreditado2">
+				<expression>acreditado</expression>
+				<label>Acreditac.</label>
+				<help>Fecha del Acreditación</help>
+				<tipo>date</tipo>
+				<attribute id="linkint">link</attribute>
+				<helper _xml="bcsmovim_crud.xml" type="link" reposition="true" width="400" height="250">
+					<parameter source="id_bcsmovim" target="id_bcsmovim" />
+				</helper>
+			</field>
+			
+			<field id="bcsnro" deshabilitado="true" style="text-align:right;padding-right:5px;">
+				<label>Nro. Movimiento</label>
+				<help>Numero de Movimiento </help>
+<!--				<format>%010d</format> -->
+				
+			</field>
+			<field id="cnbabvE">
+				<expression>cnbdes</expression>
+				<label>Tipo</label>
+				<help>Codigo de tipo de Movimiento </help>
+				<tipo>varchar</tipo>
+			</field>
+			
+			<field id="referencia" esClave="true">
+				<expression>bcsref__1</expression>
+				<tipo>varchar</tipo>
+				<label>Referencia</label>
+				<help>Referencia Adicional</help>
+			</field>
+			
+			<field id="bcsimp"  noshow="true" />
+			<field id="debe" suma="true" noZero="true" style="padding-left:5px;">
+				<expression>round(bcsimp * (case when cnbtip = '1' then 1 else 0 end), 2)</expression>
+				
+				<label>Acreditaciones</label>
+				<help>Importe del Movimiento en el Debe</help>
+				<tipo>numeric</tipo>
+			</field>
+			
+			<field id="haber" suma="true"  noZero="true"  style="padding-left:5px;">
+				<expression>round(bcsimp * (case when cnbtip = '2' then 1 else 0 end), 2)</expression>
+				<label>Débitos</label>
+				<help>Importe del Movimiento en el Haber</help>
+				<tipo>numeric</tipo>
+			</field>
+
+
+			<field id="diferencia" local="true" suma="true" acumula="true" _retroalimenta="true"  style="padding-left:5px;">
+				<label>Saldo</label>
+				<expression>round(bcsimp * (case when cnbtip = '2' then -1 else 1 end),2)</expression>
+				<tipo>numeric</tipo>
+
+			</field>
+			
+<!--
+			<field id="bcsfec2">
+				<expression>bcsfec</expression>
+				<label>Fecha Mov.</label>
+				<help>Fecha Movimiento</help>
+				<tipo>date</tipo>
+			</field>
+
+			<field id="bcsfec" >
+				<label>Fecha Mov</label>
+				<help>Fecha Movimiento</help>
+			</field>
+-->
+			
+			<field id="presentado" _refresh="true">
+				<label>Conc.</label>
+				<help>conciliado</help>
+				<tipo>check</tipo> 
+				<options>
+					<option valor="1">Conciliados</option>
+					<option valor="0">No conciliado</option>
+				</options>
+
+			</field>
+			
+			<field id="color" noshow="true" clasefila="true" local="true">
+			    <if exp="'presentado' == '1'">
+				<true>'grisado'</true>
+				<false>''</false>
+			    </if>
+			</field>
+
+			<!--<field id="graba_conciliacion" local="true" _refresh="true">
+			    <if exp="id_bcsmovim + 0 > 0 &amp;&amp; presentado + 0 == 1">
+				<true>'1'</true>
+				<false>'0'</false>
+			    </if>
+			</field>-->
+
+			<order>
+				<field id="acreditado"></field>
+			</order>
+			
+		</table>
+		
+		<join tipo="left">
+			<table id="BCSCONCE">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">BCSMOVIM.siscod</condicion>
+				</field>
+				
+				<field id="cnbcod" oculto="true">
+					<condicion operador="=">BCSMOVIM.bcsmov</condicion>
+				</field>
+			</table>
+		</join>
+		
+	</form>
+</histrix>

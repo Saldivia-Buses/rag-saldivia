@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="delete" limit="0">
+	<title>ingreso de  trazables en la recepcion</title>
+	<obs></obs>
+	<form >
+		<table id="HERRAMIENTAS" label="recepcion de trazables"  idCampoCond="borro" >
+			<field id="ctacod"  id_temp="ctacod" >
+			</field>
+			<field id="ocpnro"  id_temp="ocpnro">
+			</field>
+			<field id="remnro"  id_temp="nrorec">
+			</field>
+			<!--
+			<field id="gen" id_temp="fecrec">
+			    <expresion having="false">date(generada)</expresion>
+			</field>
+                            -->
+			<field id="artcod" id_temp="artcod" >
+			</field>
+
+		</table>
+	</form>
+</histrix>

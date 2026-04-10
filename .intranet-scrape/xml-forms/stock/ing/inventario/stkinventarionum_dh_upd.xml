@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="update" _grabafinal="true">
+	<title>Actualiza numerador</title>
+	 <obs></obs>
+		<form>
+		    <table id="HTXOPTIONS">
+
+                <field id="option_name" id_temp="opname" esClave="true" />
+                
+                <field id="option_value" id_temp="nextnro" />
+            			
+		    </table>
+		</form>
+    </histrix>	
+
+

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+  <title>Consulta de Hoja de Carga</title>
+  <form>
+    <table id="LOG_LOTES" label="Consulta Hoja de Carga">
+      <field id="id_loglote" esClave="true">
+        <label>Nro Planilla</label>
+      </field>
+      <field id="fecha_entrega">
+        <label>Fec.Entrega</label>
+        <detalle>fecha_entrega</detalle>
+      </field>
+      <field id="usuario_genera">
+        <label>Generado</label>
+        <helper type="combo" xml="usuarios_qry.xml" dir="/ayudas" empty="true" />
+        <detalle>usuario_genera</detalle>
+      </field>
+      <field id="usuario_entrega">
+        <label>Reparte</label>
+        <helper type="combo" xml="usuarios_qry.xml" dir="/ayudas" empty="true" />
+        <detalle>usuario_entrega</detalle>
+      </field>
+      <field id="regzona_id">
+	    <label>Ruta</label>
+		<helper type="combo" xml="regzonas_qry.xml" dir="/ayudas" empty="true">
+		  <parameter id="subsistema_id" target="subsistema_id">'02'</parameter>
+		</helper>
+		<detalle>regzona_id</detalle>
+	  </field>
+      <field id="logvehiculo_id">
+        <label>Vehiculo</label>
+        <helper type="combo" xml="logvehiculo_qry.xml" dir="/ayudas" empty="true" />
+        <detalle>logvehiculo_id</detalle>
+      </field>
+      
+      <field id="estado_lote">
+        <helper type="combo">
+          <option value="1">Abierta</option>
+          <option value="2">Cerrada</option>
+        </helper>
+        <detalle>estado_lote</detalle>
+      </field>
+    </table>
+  </form>
+</histrix>

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix _modifica="false"  tabindex="1000" tipo="abm-mini" _borra="false" subtipo="vertical" imprime="false">
+	<title>Entregas</title>
+	<obs/>
+	<eventos>
+		<event id="insert">refresh</event>
+		<event id="update">refresh</event>
+		<event id="delete">refresh</event>
+	</eventos>
+	<form >
+		<table id="CONTROLCALIDAD">
+			<title>Placas Prov. por Coche</title>
+			<field id="idControl" deshabilitado="true" _noshow="true" esClave="true" autoinc="true"></field>
+			<field id="nrofab" _deshabilitado="true" _valauto="true"  oculto="true">
+				<label style="color:red;font-size:12px;">Nro de Fabricación</label>
+				<help>Número de Fabricación</help>
+			</field>
+			<field id="linea_id" local="true" noshow="true" valauto="true"></field>
+
+			<field id="idSeccion"  _editable="true">
+				<tabla_ex id="MOMENTO">
+					<field id="idMomento"></field>
+					<field id="descripcion"></field>
+					<field id="linea_id"></field>
+
+				</tabla_ex>
+				<label>Sección</label>
+			</field>
+			<field id="observaciones"   _editable="true">
+				<label>observaciones</label>
+				<size>80</size>
+			</field>
+			<field id="cantObs"  _editable="true">
+				<label>Cantidad</label>
+				<valor>1</valor>
+			</field>
+			<field id="idCalificacion"   _editable="true">
+				<label xml="calificacion.xml" >calificacion</label>
+				<tabla_ex id="CALIFICACION">
+					<field id="idCalificacion"></field>
+					<field id="calificacion"></field>
+				</tabla_ex>
+			</field>
+			<field id="fecha" required="true"  _editable="true">
+				<label>Fecha</label>
+				<valor>today</valor>
+				<tipo>date</tipo>
+			</field>
+			<order>
+				<field id="idControl"></field>
+			</order>
+
+		</table>
+
+	</form>
+</histrix>

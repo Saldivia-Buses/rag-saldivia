@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert" grabaFinal="true">
+    <title>ORDEN DE COMPRA</title>
+    <obs></obs>
+    <consulta>
+        <table id="MRP_ORDEN_PRODUCCION" label="ORDEN DE PRODUCCION" >
+            <field id="fecha_orden" 	  id_cab="fecha_orden" />
+
+            <field id="mrpestado_id">
+                <tipo>integer</tipo>
+                <valor>0</valor>
+            </field>
+
+            <field id="legajo_id">
+                <tipo>integer</tipo>
+                <valor>0</valor>
+            </field>
+
+            <field id="orden_comentarios" id_cab="orden_comentarios" />
+
+            <field id="rhpersonal_id"     id_cab="rhpersonal_id" />
+            
+            <field id="login_id" id_cab="login_id" />
+
+            <field id="numero_orden">
+                <tipo>integer</tipo>
+                <valor>0</valor>
+            </field>
+
+
+        </table>
+    </consulta>
+</histrix>

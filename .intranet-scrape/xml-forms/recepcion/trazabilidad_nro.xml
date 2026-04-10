@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="consulta">
+	<title>herramientas</title>
+	<obs></obs>
+	<form>
+		<table id="HERRAMIENTAS" label="HERRAMIENTA">
+			<field id="id_herramienta">
+				<label>HERRAMIENTA</label>
+				<help>Valor Entero</help>
+			</field>
+			<field id="grucod" noshow="true" />
+			<field id="artcod" noshow="true" />
+			<field id="codest" noshow="true" />
+			<field id="ctacod" noshow="true" />
+			<group>
+				<field id="grucod"></field>				
+
+				<field id="id_herramienta"></field>
+				<field id="artcod"></field>				
+				
+			</group>
+		</table>
+	</form>	   
+</histrix> 

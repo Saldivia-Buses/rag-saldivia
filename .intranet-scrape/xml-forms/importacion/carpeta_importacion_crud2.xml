@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" _imprime="true" _subtipo="vertical" _path="carpetas_importacion" _detailDir="/compras" _limit="1">
+    <title>Carpeta de Importación</title>
+    <obs></obs>
+    <form _detalle="cpsmovim.xml" _dir="/compras"  _inline="true">
+		<table id="REG_CARPETA_IMPORTACION" >
+
+		  	<field id="id_carpeta_imp" noshow="true" autoinc="true">
+		  		<detale>carpeta_imp_id</detale>
+		  	</field>
+		  	<field id="nro_carpeta" required="true" colstyle="font-size:2em;">
+		  		<label>Nro Carpeta</label>
+		  		<size>3</size>
+<!--
+		  		<actualiza>
+		  			<field id="operaciones" target="nro_carpeta" />
+		  		</actualiza>
+-->
+		  	</field>
+
+		  	<field id="fecha_apertura" _required="true" modpos="nobr">
+		  		<label>Apertura</label>
+		  		<tipo>date</tipo>
+		  	</field>
+<comentado>
+<!--
+		  	<field id="regcuenta_id" _required="true" style="width:30em;">
+		  		<label>Proveedor</label>
+		        <helper type="combo" id="REG_CUENTA" empty="true">
+		            <field id="id_regcuenta"></field>
+		            <field id="nombre_cuenta"></field>
+		            <field id="subsistema_id" oculto="true">
+		              <condicion operador="=">'01'</condicion>
+		            </field>
+		            <field id="baja">
+		            	<condicion operador="=">0</condicion>
+		            </field>
+		            <field id="prov">
+		            	<expression having="false">(select cuenta_id from REG_CUENTA_IMPUTACION where regcuenta_id = id_regcuenta limit 1)</expression>
+		            	<condicion operador="=">'211101'</condicion>
+		            </field>
+		            <order>
+		            	<field id="nombre_cuenta"></field>
+		            </order>		            
+		          </helper>
+
+		  	</field>
+-->
+		    <field id="fecha_vigencia" modpos="nobr" colstyle="display:none;">
+		  		<label>Vigencia</label>
+		  		<tipo>date</tipo>
+		  	</field>
+	  
+
+		  	<field id="ocpnro" deshabilitado="false">
+		  		<label>Nro. O.C.</label>
+<!--
+		  		<helper type="link" xml="cpsencab_cabreimp.xml" dir="/compras">
+		  			<parameter source="ocpnro" target="ocpnro"/>
+		  		</helper>
+		  		<detalle>ocpnro</detalle>
+-->
+		  	</field>
+
+		  	<field id="nro_swift" deshabilitado="false">
+		  		<label>Nro. Swift</label>
+		  	</field>			  	
+
+
+		  	<field id="fecha_carta_cred" colstyle="display:none;" modpos="nobr">
+		  		<label>Carta Cred.</label>
+		  		<tipo>date</tipo>
+		  	</field>		  	
+
+<!--
+		  	<field id="pais_id">
+		  		<label>País</label>
+		  		<helper id="GEN_NACIONALIDADES" empty="true" type="combo" >
+		  			<field id="id_nacionalidad" />
+		  			<field id="pais" />
+
+		  		</helper>
+		  	</field>
+-->
+
+
+		  	<field id="nro_proforma">
+		  		<label>Nro Proforma</label>
+		  	</field>
+<!--
+		  	<field id="file_proforma"  path="nro_carpeta" foto="true">
+		  		<label>Archivo Proforma</label>
+		  		<tipo>file</tipo>
+		  		<tipo Type="Image">file</tipo>
+				<size>40</size>
+		  	</field>
+-->
+<!--
+		  	<field id="operaciones" showObjTabla="true" showValor="true" Formstyle="display:none;" >
+		  		<label>Operaciones</label>
+		  		<expresion>'Operaciones'</expresion>
+		  		<helper type="link" xml="operacion_importacion_crud.xml" width="60%" _icon="ui-icon-plus" title="Operaciones">
+		  			<parameter source="id_carpeta_imp" target="carpeta_imp_id" />
+		  			<parameter source="regcuenta_id" target="regcuenta_id" />
+		  			<parameter source="nro_carpeta" target="nro_carpeta" />
+		  		</helper>
+
+		  		<helper type="object" xml="operacion_importacion_qry.xml">
+		  			<parameter source="id_carpeta_imp" target="carpeta_imp_id" />
+		  			<parameter source="nro_carpeta" target="nro_carpeta" />
+
+
+		  		</helper>		  		
+
+
+		  	</field>
+-->		  
+</comentado>
+		  	<field id="observaciones_carpeta">
+		  		<label>Observaciones</label>
+		  		<size>200</size>
+		  	</field>
+<!--
+		  	<field id="direc" >
+		  		<expression>concat('carpetas_importacion/',nro_carpeta)</expression>
+		  		<label>Archivos</label>
+		  		<tipo>dir</tipo>
+		  		
+		  	</field>
+-->
+		  
+		  <!--
+		  	<field id="creacion_carpeta" >
+		  	</field>
+		  -->
+
+		  <order>
+		  	<field id="nro_carpeta" orderType="DESC" />
+		  </order>
+
+		</table>
+		</form>
+	</histrix>

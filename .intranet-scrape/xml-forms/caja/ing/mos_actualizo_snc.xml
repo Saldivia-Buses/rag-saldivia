@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="update" >
+  <title />
+  <obs />
+  <form>
+    <table id="REG_MOVIMIENTOS" >
+		<field id="id_regmovim" id_temp="regmovimsnc_id" esClave="true"/>
+		<field id="pag_movimiento">
+		    <valor>2</valor>
+		</field>
+    </table>
+  </form>
+</histrix>

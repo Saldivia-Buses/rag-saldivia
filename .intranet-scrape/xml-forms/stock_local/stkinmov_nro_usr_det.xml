@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<abm tipo="consulta" paginar="500" >
+	<titulo>ENTRADA SALIDA STOCK POR CODIGO</titulo>
+	<obs></obs>
+	<consulta>
+		<tabla id="STKINMOV" label="ENTRADA SALIDA STOCK">
+			<campo id="nrocha">
+					<ayuda_ex id="CHASIS">
+						<campo id="nrocha"></campo>
+						<campo id="chades"></campo>
+					</ayuda_ex>
+				<label>N.Fab</label>
+				<tipo>integer</tipo>
+				<help>Nro de Fabricacion</help>
+			</campo>
+  		    <campo id="movcod" oculto="true">
+		         <tabla_ex id="STKCONCE">
+					 <campo id="movcod"></campo>
+					 <campo id="condes"></campo>
+					 <campo id="siscod" oculto="true">
+						 <condicion operador="=">'06'</condicion>
+					 </campo>
+				 </tabla_ex>
+				  <valor>10</valor>
+		     </campo>
+			<campo id="movfec">
+				<label>Fecha</label>
+				<help>Fecha</help>
+			</campo>
+			<campo id="siscod" oculto="true">
+				<label> </label>
+				<help>
+				</help>
+				<condicion operador="=">'01'</condicion>
+			</campo>
+
+	<!--		<campo id="movref">
+				<label>Ref.</label>
+				<expresion>left(movref, 8)</expresion>
+				<help>
+				</help>
+				<tipo>varchar</tipo>
+			</campo> -->
+
+			<campo id="artcod" clave="true" >
+				<label>Articulo</label>
+			<!--	<ayuda_ex id="STKINSUM" xml="HLPstkinsum.xml" dir="/help_local">
+					<campo id="artcod"></campo>
+					<campo id="artdes"></campo>
+
+					<clave>artcod</clave>
+					<descripcion>artdes</descripcion>
+
+				</ayuda_ex> -->
+
+			</campo>
+
+			<campo id="artdes" tabla="STKINSUM">
+				<label modpos="nobr">Desc</label>
+				<tipo>varchar</tipo>
+				<size>40</size>
+			</campo>
+				<campo id="opecod" oculto="true" >
+					<label>Operario</label>
+                    <ayuda_ex id="PERSONAL" xml="HLPpersonal_ope.xml" dir="/help_local">
+				    </ayuda_ex>
+            </campo>
+
+			<campo id="opecodEx">
+				<expresion>left(CONCAT(PERSONAL.apellido, ', ', PERSONAL.Nombre), 18)</expresion>
+				<label>Operador</label>
+				<tipo>varchar</tipo>
+
+			</campo>
+	<!--		<campo id="cant" >
+				<expresion>count(STKINMOV.artcod)</expresion>
+				<label>C.</label>
+				<tipo>decimal</tipo>
+			</campo>
+-->
+			<campo id="movpes" suma="true">
+				<expresion>round(sum(STKINMOV.movuso),2)</expresion>
+				<label>Cant</label>
+				<tipo>decimal</tipo>
+			</campo>
+			<campo id="movcos" suma="true">
+<!--			<expresion>round((STKINMOV.movcos * STKINSUM.valcps / STKINSUM.valuso ), 2	)</expresion>-->
+				<expresion>case when ((select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINMOV.artcod and STKINSPR.siscod='01' order by fecult DESC limit 1) * STKINSUM.valcps / STKINSUM.valuso) > 0  then  round(((select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINMOV.artcod and STKINSPR.siscod='01' order by fecult DESC limit 1) * STKINSUM.valcps / STKINSUM.valuso), 2) else  round(STKINSUM.artcos, 2) end</expresion>
+
+				<label>Precio Unit</label>
+				<tipo>decimal</tipo>
+			</campo>
+			<campo id="movimp" suma="true">
+			<!-- <expresion>round((STKINMOV.movcos * STKINSUM.valcps / STKINSUM.valuso ), 2	) * round(sum(STKINMOV.movuso),2)</expresion> -->
+				<expresion>case when ((select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINMOV.artcod and STKINSPR.siscod='01' order by fecult DESC limit 1) * STKINSUM.valcps / STKINSUM.valuso) > 0  then  round(((select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINMOV.artcod and STKINSPR.siscod='01' order by fecult DESC limit 1) * STKINSUM.valcps / STKINSUM.valuso) * sum(STKINMOV.movuso),2) else round(STKINSUM.artcos * sum(STKINMOV.movuso),2) end</expresion>
+
+				<label>Imp</label>
+				<tipo>decimal</tipo>
+			</campo>
+			<campo id="traz" clasefila="true" noshow="true">
+				<label>Traz</label>
+				<expresion>case when trazable = 1 then 'resaltado' else '' end</expresion>
+				<help>Trazable Si o No </help>
+				<tipo>varchar</tipo>
+
+			</campo>
+			<campo id="barcode" >
+				<label>Código</label>
+			</campo>
+			<group>
+				<campo id="nrocha" ></campo>
+				<campo id="artcod" tabla="STKINMOV"></campo> 
+	            <campo id="opecod" tabla="STKINMOV"></campo> 
+
+			</group> 
+			<filtros>
+				<campo id="nrocha">
+				<operador>=</operador>
+				<label>Numero Fabricacion</label>
+				<valor>0</valor>
+
+				</campo>
+				<campo id="opecod" >
+					<operador>=</operador>
+					<label>Operario</label>
+                        <tabla_ex id="PERSONAL" xml="HLPpersonal_ope.xml" dir="/help_local"> 
+				    </tabla_ex>				</campo>
+				<campo id="artcod">
+					<operador>like</operador>
+					<label>Articulo</label>
+				</campo>
+				<campo id="artdes">
+					<operador>like</operador>
+					<label modpos="nobr">Descripcion</label>
+				</campo>
+				<campo id="movfec">
+					<operador>>=</operador>
+					<label>Desde Fecha</label>
+					<valor>today</valor>
+				</campo>
+				<campo id="movfec">
+					<operador>&lt;=</operador>
+					<label>Hasta Fecha</label>
+					<valor>today</valor>
+				</campo>
+  		    <campo id="movcod" oculto="true">
+				  <label>Tipo</label>
+		         <tabla_ex id="STKCONCE">
+					 <campo id="movcod"></campo>
+					 <campo id="condes"></campo>
+					 <campo id="siscos">
+						 <condicion operador="=">'06'</condicion>
+					 </campo>
+
+				 </tabla_ex>
+				  <operador>=</operador>
+				  <valor>10</valor>
+
+		     </campo>
+
+			</filtros>
+
+		</tabla>
+
+		<!--
+		<join tipo="left">
+		<tabla id="stkconce">
+		<campo id="siscod" oculto="true">
+		<condicion operador="=">'06'</condicion>
+
+		</campo>
+		<campo id="contip" oculto="true"></campo>
+		</tabla>
+		</join>
+		-->
+
+		<join tipo="left">
+			<tabla id="PERSONAL">
+				<campo id="opecod" oculto="true">
+					<condicion operador="=">STKINMOV.opecod and PERSONAL.opecod != 0</condicion>
+				</campo>
+			</tabla>
+		</join>
+		<join tipo="left">
+			<tabla id="STKINSUM">
+				<campo id="artcod" oculto="true">
+					<condicion operador="=">STKINMOV.artcod</condicion>
+				</campo>
+				<campo id="siscod" oculto="true">
+					<condicion operador="=">STKINMOV.siscod</condicion>
+				</campo>
+
+			</tabla>
+		</join>
+
+	</consulta>
+</abm>

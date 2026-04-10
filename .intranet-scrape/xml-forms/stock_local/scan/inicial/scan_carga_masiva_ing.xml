@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="grid" paginar="100" procesa="true" deleteRow="false" inserta="false" borra="false" >
+	<title>Locación de Artículos</title>
+  	<obs/>
+  	<customScript>
+	<![CDATA[
+	    $('[instance="[__instance__]"]').on('change keyup', '[campo="stklocacion_id"] select, [name="cantidad"]', function(){
+
+	        var row = $(this).closest('[o]');
+	        var value = $('[campo="stklocacion_id"] select', row).find(' :selected').attr('stkdeposito_id');
+		var cantidad = parseFloat($('[name="cantidad"]', row).val());
+		var disponible = parseFloat($('[name="cantidad_stock2"]', row).val());
+		var corresponde = (cantidad > 0 && cantidad <= disponible)?1:0;
+	        $('[campo="stkdeposito_id"]', row).text(value);
+
+	        if( value == undefined ){
+	        	$('[name="grabar"]', row).val(0);
+	        } else {
+			if (corresponde) {	
+    		    	    $('[campo="leyenda"]', row).text('');
+			} else {
+    		    	    $('[campo="leyenda"]', row).text('SIN STOCK');
+			}
+			$('[name="grabar"]', row).val(corresponde);
+	        }
+		
+	        
+  	});]]>
+  	</customScript>
+  	<form >
+    	<table id="STK_STOCKACTUAL" label="Locación de Artículos">
+
+    		<filters>
+        		<field id="id_stkarticulo">
+        			<label>Cod. Art.</label>
+        			<operador>=</operador>
+        		</field>
+
+        		<field id="nombre_articulo">
+        			<label modpos="nobr">Nombre</label>cantidad_stock
+        			<operador>like</operador>
+        		</field>
+
+        		<field id="cantidad_stock2" deshabilitado="false">
+      				<label>Desde Stock</label>
+      				<operador>&gt;=</operador>
+      				<valor>1</valor>
+      			</field>
+
+      			<field id="stkdeposito_origen_id" deshabilitado="false">
+    	    		<label modpos="nobr">Depósito</label>
+          			<operador>=</operador>
+          			<valor>32</valor>
+      			</field>
+
+        	</filters>
+
+    		<movimientos>
+        		<relacion id="scan_transfer_resta_inicial_ins.xml" />
+        		<relacion id="scan_transfer_suma_inicial_ins.xml" />
+      		</movimientos>
+
+      		<field id="id_stkarticulo" noshow="true" tabla="STK_ARTICULOS"/>
+
+    		<field id="stkarticulo_id" local="true" esClave="true" >
+    			<expression>id_stkarticulo</expression>
+    		</field>
+    		
+    		<field id="nombre_articulo"  tabla="STK_ARTICULOS">
+    			<label>Nombre Artículo</label>
+    			<size>40</size>
+    		</field>
+
+			<field id="stkdeposito_origen_id" _local="true" _tabla="STK_STOCKACTUAL" deshabilitado="true" _editable="true" noshow="true" >
+				<label>Depósito Actual</label>
+				<expression having="false">STK_STOCKACTUAL.stkdeposito_id</expression>
+				<helper id="STK_DEPOSITOS" type="combo" empty="true">
+					<field id="id_stkdeposito" esClave="true" _noshow="true" />
+					<field id="nombre_deposito" />
+				</helper>
+			</field>
+
+			<field id="total_display" local="true">
+        		<label>Stock</label>
+        		<expression>STK_STOCKACTUAL.cantidad_stock</expression>
+				<tipo>custom_numeric</tipo>
+      		</field>
+			
+			<field id="cantidad" local="true" _tabla="STK_MOVIMIENTOS" editable="true" >
+          		<label>Cantidad</label>
+          		<tipo>numeric</tipo>
+        	</field>
+
+    		<field id="stklocacion_fija_id" deshabilitado="true" tabla="STK_ARTICULOS" noZero="true">
+				<label>Locación Fija</label>
+				<helper id="STK_LOCACION" type="combo" empty="true">
+					<field id="id_stklocacion" esClave="true" noshow="true" />
+					<field id="codigo_locacion" />
+					<field id="stkdeposito_id" />
+					<order>
+					    <field id="codigo_locacion" />
+					</order>
+				</helper>
+			</field>
+
+    		<field id="stklocacion_id" local="local" _tabla="STK_ARTICULO_LOCACION" editable="true" deshabilitado="false" >
+				<label>Locación Destino</label>
+				<helper id="STK_LOCACION" type="combo" empty="true">
+					<field id="id_stklocacion" esClave="true" noshow="true" />
+					<field id="codigo_locacion" />
+					<field id="stkdeposito_id" />
+					<order>
+					    <field id="codigo_locacion" />
+					</order>
+				</helper>
+			    <expression>(case when stklocacion_fija_id != 0 then stklocacion_fija_id else (select stklocacion_id from STK_ARTICULO_LOCACION SAL where SAL.stkarticulo_id = id_stkarticulo limit 1) end)</expression>
+			</field>
+
+			<field id="stkdeposito_id" tabla="STK_STOCKACTUAL" noshow="true" >
+				<label>Depósito</label>
+				<tipo>integer</tipo>
+			</field>
+
+			<field id="leyenda" local="true" _editable="true" style="color:red;">
+				<label>obs</label>
+			</field>
+
+			<field id="cantidad_stock2" noshow="true" editable="true">
+	    		<expression having="false">STK_STOCKACTUAL.cantidad_stock</expression>
+			</field>
+
+        	<field id="grabar" local="true" noshow="true" editable="true">
+        		<label>grabar</label>
+				<if exp="cantidad &gt; 0 &amp;&amp; cantidad &lt;= cantidad_stock2">
+				    <true>1</true>
+				    <false>0</false>
+				</if>
+	      	</field>
+
+			<field id="unidad_id"   noshow="true">
+				<expression>unidad_uso_id</expression>
+			</field>
+
+			<group>
+      			<field id="id_stkarticulo" />
+    		</group>
+
+    	</table>
+
+    	<join>
+	      	<table id="STK_ARTICULOS">
+	          	<field id="id_stkarticulo">
+	            	<condicion operador="=">STK_STOCKACTUAL.stkarticulo_id</condicion>
+	          	</field>
+	      	</table>
+	    </join>
+
+    </form>
+</histrix>

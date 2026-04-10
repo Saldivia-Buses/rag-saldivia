@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="consulta" paginar="500">
+	<title>Herramientas Relacion</title>
+	<obs></obs>
+	<form  detalle="herrarepa_rel.xml">
+		<table id="HERRAMIENTAS" label="Inspeccion de Recepcion">
+			<filters>
+				<field id="id_herramienta" deshabilitado="false" autocompletar="true">
+					<ayuda_ex id="HERRAMIENTAS">
+						
+					
+						<field id="id_herramienta">
+					    	    <label>Herramienta</label>
+						    <help>Codigo de Herramienta</help>
+						    <detalle>id_herramienta</detalle>
+						    <condicion operador="!=">''</condicion>
+						</field>
+						<field id="nomherr">
+						    <label>Descripcion</label>
+						    <help>Descripcion</help>
+						</field>
+
+						<clave>id_herramienta</clave>
+						<descripcion>nomherr</descripcion>
+					</ayuda_ex>
+					<valor></valor>
+					<label>Cod.</label>
+					<operador modificador="left"> =</operador>					
+				</field>			
+				<field id="nomherr" >
+					<label>Nombre</label>
+					<help>Descripcion de Herramienta. (ENTER = Retorna a ingreso de codigo).
+						</help>
+					<operador>like</operador>
+				</field>
+			</filters>			
+			<field id="id_herramienta" autocompletar="true">
+								<ayuda_ex id="HERRAMIENTAS">
+						
+					
+						<field id="id_herramienta">
+					    	    <label>Herramienta</label>
+						    <help>Codigo de Herramienta</help>
+						    <detalle>id_herramienta</detalle>
+						    <condicion operador="!=">''</condicion>
+						</field>
+						<field id="nomherr">
+						    <label>Descripcion</label>
+						    <help>Descripcion</help>
+						</field>
+
+						<clave>id_herramienta</clave>
+						<descripcion>nomherr</descripcion>
+					</ayuda_ex>
+
+				<label>Herramienta</label>
+				<help>Codigo de Herramienta</help>
+				<detalle>id_herramienta</detalle>
+				<condicion operador="!=">''</condicion>
+			</field>
+			<field id="nomherr">
+				<label>Descripcion</label>
+				<help>Descripcion</help>
+			</field>
+<!--			<group>
+				<field id="artcod" tabla="STKINSUM"></field>
+			</group>-->
+		</table>
+		<join tipo="left">
+			<table id="HERRAREPA">
+				<field id="id_herramienta">
+					<condicion operador="=">HERRAREPA.id_herramienta</condicion>
+				</field>
+			</table>
+		</join>
+	</form>
+</histrix>

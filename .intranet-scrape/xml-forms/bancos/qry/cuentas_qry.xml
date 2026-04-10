@@ -1,0 +1,157 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="consulta" preloadData="false">
+	<title>Consulta de Cuentas</title>
+	 <obs></obs>
+		<consulta>
+
+		    <table id="REG_CUENTA" label="Cuentas">
+
+				<filters>
+					<field id="asociado1" deshabilitado="false">
+						<valor>0</valor>
+						<operador>&gt;=</operador>
+						<label>Desde Cuenta</label>
+					</field>
+
+					<field id="asociado2" deshabilitado="false">
+						<valor>999999</valor>
+						<operador>&lt;=</operador>
+						<label>Hasta Cuenta</label>
+					</field>
+					<field id="nombre_cuenta" deshabilitado="false">
+						<operador>like</operador>
+						<label>Titular</label>
+					</field> 
+					<field id="cod_direccion">
+					   <label>Direccion</label>
+					   <operador>like</operador>
+				       </field>
+					<field id="nombre_localidad" deshabilitado="false">
+						<operador>like</operador>
+						<label>Ciudad</label>
+					</field>
+
+					<field id="tel_cuenta" deshabilitado="false">
+						<operador>=</operador>
+						<label>Telefono</label>
+					</field> 
+				</filters>
+
+				<field id="id_regcuenta" noshow="true" />
+
+				<field id="nro_cuenta">
+					<label>Número</label>
+				</field>
+
+				<field id="nombre_cuenta">
+					<label>Nombre</label>
+					<size>25</size>
+				</field>
+
+				<field id="cod_direccion">
+					<label>Direccion</label>
+					<size>25</size>
+				</field>
+
+				<field id="nombre_localidad" tabla="GEN_LOCALIDADES">
+					<label>Localidad</label>
+				</field>
+
+				<field id="nombre_provincia" tabla="GEN_PROVINCIAS">
+					<label>Provincia</label>
+				</field>
+
+				<field id="nombre_zona" tabla="REG_ZONAS">
+					<label>Zona</label>
+				</field>
+
+				<!-- Contacto -->
+
+				<field id="tel_cuenta">
+					<label>Telefono</label>
+					<size>15</size>
+				</field>
+
+				<field id="fax_cuenta">
+					<label>Fax</label>
+					<size>15</size>
+				</field>
+
+				<field id="cel_cuenta">
+					<label>Celular</label>
+					<size>15</size>
+				</field>
+
+				<field id="alta_cuenta">
+					<label>Fecha Alta</label>
+					<tipo>date</tipo>
+				</field>
+
+
+				<field id="nombre_iva" tabla="GEN_IVA">
+					<label>IVA</label>
+				</field>
+
+				<field id="cuit_cuenta">
+					<label>CUIT/CUIL</label>
+				</field>
+
+				<!-- Filtros -->
+
+				<field id="asociado1" noshow="true">
+					<expresion having="false">nro_cuenta</expresion>
+				</field>
+
+				<field id="asociado2" noshow="true">
+					<expresion having="false">nro_cuenta</expresion>
+				</field>
+
+				<field id="subsistema_id" noshow="true">
+					<condicion operador="=">'[__subsistema_id__]'</condicion>
+					<detalle>subsistema_id</detalle>
+				</field> 
+                                 <field id="baja_cuenta" noshow="true">
+			            <label>baja</label>
+				     <condicion operador="=">'0000-00-00'</condicion>
+				</field>
+		    </table>
+
+			<join tipo="left">
+				<table id="GEN_PROVINCIAS">
+					<field id="id_provincia">
+						<condicion operador="=">provincia_id</condicion>
+					</field>
+				</table>
+			</join>
+
+
+			<join tipo="left">
+				<table id="GEN_LOCALIDADES">
+					<field id="id_localidad">
+						<condicion operador="=">localidad_id</condicion>
+					</field>
+				</table>
+			</join>
+
+			<join tipo="left">
+				<table id="GEN_IVA">
+					<field id="id_iva">
+						<condicion operador="=">iva_id</condicion>
+					</field>
+				</table>
+			</join>
+
+			<join tipo="left">
+				<tabla id="REG_ZONAS">
+					<field id="id_regzona">
+						<condicion operador="=">regzona_id</condicion>
+					</field>
+					<field id="subsistema_id">
+						<condicion operador="=">'[__subsistema_id__]'</condicion>
+					</field>
+				</tabla>
+			</join>
+
+
+		</consulta>
+    </histrix>	

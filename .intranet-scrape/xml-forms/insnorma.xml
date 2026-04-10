@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="abm">
+	<title>NORMAS</title>
+	<obs></obs>
+	<form >
+		<table id="INSNORMA" >
+		    <title>Normas</title>
+			<field id="norcod">
+				<label>Cod.</label>
+				<help>Código de Norma</help>
+			</field>
+			<field id="nordes">
+				<label>Norma</label>
+				<help>Nombre de la Norma</help>
+			</field>
+			<field id="norabv">
+				<label>Abrev.</label>
+				<help>Abreviatura de la Norma</help>
+			</field>
+			<field id="descripcion">
+				<label>Descripción</label>
+				<help>Descripción de la Norma</help>
+			</field>
+
+			<order>
+				<field id="norcod"></field>
+			</order>
+		</table>
+	</form>	   
+</histrix> 

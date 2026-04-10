@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="fichaing" inserta="false" modifica="false" imprime="false" reloadForm="false">
+  <title>Recepcion de Materiales</title>
+    <customScript>
+
+    $('#TablaInternastktransfer_recepcion_cdev_xml td').on('keyup', function(){
+
+      var i = parseInt( $(this).parent().index() );    
+
+        if( $('input[name=cantidad]').eq(i).val() &lt; 0 ){
+                $('input[name=cantidad]').eq(i).val(0);
+                alert('No se admiten valores negativos');
+        }
+
+        if( parseFloat($('input[name=cant_pendiente]').eq(i).val()) &lt; 0 ){
+                $('input[name=cantidad]').eq(i).val(0);
+                alert('La cantidad ingresada no puede ser mayor a la enviada');
+        }
+
+    });
+
+  </customScript> 
+
+  <obs></obs>
+  <form>
+    <table id="STK_MOVIMIENTOS" label="Recepción de Compras">
+
+    <validation>
+      <condition><![CDATA['cantidad' < 0]]></condition>
+      <message>La cantidad recibida no puede ser negativa</message>
+    </validation>
+
+    <validation>
+      <condition><![CDATA['cant_pendiente' < 0]]></condition>
+      <message>La cantidad ingresada no puede ser mayor a la enviada</message>
+    </validation>
+
+
+<!--       <movimientos>
+        <relacion id="actualiza_numerador_recep_cdev.xml" />
+      </movimientos> -->
+
+    <!-- CAMPOS PARA ACTUALIZAR EL NUMERADOR -->
+        <fieldGroup deshabilitado="true" noshow="true" local="true">
+            
+            <field id="subsistema_id">
+              <label>subsistema_id</label>
+              <valor>40</valor>
+            </field>
+            
+            <field id="puesto_movimiento">
+              <label>puesto</label>
+              <valor>1</valor>
+            </field>
+
+            <field id="stkcncpt_numerador">
+              <label>stkcncpt_numerador</label>
+              <valor>2</valor>
+            </field>
+
+        </fieldGroup>
+    <!-- FIN CAMPOS NUMERADOR -->
+
+
+    <!-- CAMPOS PARA GUARDAR DATOS DE LA TRANSFERENCIA -->
+    <fieldGroup style="padding:2px 2px 2px 2px;vertical-align:center;">
+
+        <field id="stkdeposito_id" required="true" deshabilitado="true" noshow="true" >
+          <label>DEPOSITO DESTINO</label>
+        </field>
+
+        <field id="deposito_origen" local="true" deshabilitado="true" >
+          <label>DEPOSITO ORIGEN</label>
+          <helper type="combo" xml="stkdeposito_qry.xml" dir="/ayudas" empty="true"></helper>
+        </field>
+
+        <field id="deposito_destino" local="true" deshabilitado="true" modpos="nobr">
+              <label>Deposito destino</label>
+              <helper type="combo" xml="stkdeposito_qry.xml" dir="/ayudas" empty="true"></helper>
+        </field>
+
+        <field id="fecha_movimiento" deshabilitado="true">
+          <label>Fecha Origen</label>
+          <tipo>date</tipo>
+        </field>
+
+        <field id="fecha" local="true" modpos="nobr">
+          <label>Fecha Destino</label>
+          <valor>today</valor>
+          <tipo>date</tipo>
+        </field>
+
+        <field id="numero_movimiento" deshabilitado="true" local="true" modpos="nobr">
+          <label>Numero</label>
+          <!-- <parametro id="numerador_param_transrecep.xml" retorna="numero">
+            <field id="numero" />
+          </parametro> -->
+          <size>8</size>
+          <format>%08d</format>
+        </field>
+
+<!--         <field id="concepto_devolucion" local="true" required="true">
+          <label >Concepto Devolucion</label>
+          <helper type="combo" id="STK_CONCEPTOS">
+            <field id="id_stkconcepto" />
+            <field id="nombre_concepto" />
+            <field id="tipo_concepto">
+              <condicion operador="=">0</condicion>
+            </field>
+          </helper>
+          <valor default="true">7</valor>
+        </field> -->
+
+        <field id="separador" local="true" deshabilitado="true" />
+
+        <field id="detalle" showObjTabla="true" local="true">
+          <helper type="object" xml="stktransfer_recepcion_cdev.xml">
+            <parameter source="nro_movimiento" target="numero_movimiento" />          
+            <parameter source="fecha_movimiento" target="fecha_movimiento" />          
+          </helper>
+          <label colspan="10">Recepción</label>
+        </field>
+
+
+    </fieldGroup>
+
+
+    </table>
+
+    <join>
+      <tabla id="STK_CONCEPTOS">
+        <field id="id_stkconcepto">
+          <condicion operador="=">stkconcepto_id</condicion>
+        </field>
+        <field id="tipo_concepto">
+          <condicion operador="=">1</condicion>
+        </field>
+      </tabla>
+    </join>
+
+<!--     <join>
+      <tabla id="STK_DEPOSITOS">
+        <field id="id_stkdeposito">
+          <condicion operador="=">stkdeposito_id</condicion>
+        </field>
+      </tabla>
+    </join> -->
+
+  </form>
+</histrix>

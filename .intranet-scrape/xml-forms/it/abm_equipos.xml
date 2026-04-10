@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <histrix tipo="abm" limit="50">
+   <title>Resumen GPS</title>
+  
+ <form>
+ <table id="GPS_CHIPS">
+
+
+<field id="id_chip">
+<label>Id Chip</label>
+</field>
+   
+<field id="prestadora">
+<label>Empresa</label>
+
+  <options>
+    <option valor="0">Claro</option>
+    <option valor="1">Personal</option>
+    <option valor="2">Movistar</option>
+  </options>
+
+</field>
+
+<field id="chip_nro_cel">
+<label>NroCel</label>
+</field>
+   
+
+<field id="pin">
+<label>Pin</label>
+</field>   
+
+
+<field id="puk">
+<label>Puk</label>
+</field>
+   
+
+<field id="imei" >
+<label>Imei</label>
+</field>
+
+
+
+</table>
+</form>
+</histrix>
+  

@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+   <histrix tipo="ing" imprime="false" llenoreferente="true"  _style="height:100%" modifica="false" inserta="false"> 
+		<title>FORMACION DE PRODUCTO</title>
+        <obs></obs>
+				<form >
+					<table id="STKPIEZA" label="Piezas" idCampoCond="selec">
+						<field id="_ORDEN" oculto="true" local="true">
+						<detalle>_ORDEN</detalle>
+						</field>
+						<field id="fecreq" noshow="true" local="true">
+						    <tipo>date</tipo>
+						    <detalle>fecreq</detalle>
+						</field>
+						<field id="ctacod" noshow="true" local="true">
+						    <detalle>ctacod</detalle>
+						</field>
+					
+						<field id="id_pieza" oculto="true">
+						</field>
+						
+						<field id="idPadre" oculto="true" esClave="false">
+							<label>padre</label>
+							<help>Nombre del Articulo al que pertenece </help>
+						</field>
+						<field id="articulo_hijo" arbol="hijo" deshabilitado="true">
+							<label>Cod.de Pieza</label>
+							<help>Codigo del Articulo</help>
+							<detalle>artcod</detalle>
+						</field>
+						<field id="artdes" deshabilitado="true">
+							<expression>artdes</expression>
+							<label>Articulo </label>
+							<tipo>varchar</tipo>
+							<detalle>artdes</detalle>
+						</field>
+						<field id="cantidad" deshabilitado="true">
+							<label>Cantidad</label>
+							<detalle>movcant</detalle>
+							<detalle>cant</detalle>
+							
+							
+							<detalle>movtemp</detalle>
+							
+							
+						</field>
+						<field id="selec" local="true" refresh="true">
+							<label Formstyle="display:none;">Selec.</label>
+							<help>Seleccion</help>
+							<tipo>check</tipo>
+							<valor>1</valor>
+						</field>
+						
+					<field id="unicps" noshow="true" tabla="STKINSUM">
+						<detalle>unicps</detalle>
+					</field>
+					<field id="artuni" noshow="true" tabla="STKINSUM">
+						<detalle>artuni</detalle>
+					</field>
+					<field id="artcos" noshow="true" tabla="STKINSUM"> 
+						<detalle>artcos</detalle>
+					</field>
+					<field id="artrub" noshow="true" tabla="STKINSUM">
+						<detalle>artrub</detalle>
+					</field>
+					<field id="unidef" noshow="true" tabla="STKINSUM">
+						<detalle>unidef</detalle>
+					</field>
+					<field id="valcps" noshow="true" tabla="STKINSUM">
+						<detalle>valcps</detalle>
+					</field>
+					<field id="valuso" noshow="true" tabla="STKINSUM">
+						<detalle>valuso</detalle>
+					</field>	
+					<field id="trazable" noshow="true" tabla="STKINSUM">
+          	          <label>Trazable</label>
+          	          <detalle>trazable</detalle>
+          	        </field>
+		  	
+
+					<field id="movref" deshabilitado="true" local="true" noshow="true">
+					    <valor eval="true">date('H:i:s').' Salida por almacen'</valor>
+					    <detalle>movref</detalle>
+					</field>
+					    
+					</table>
+					<join tipo="left">
+						<table id="STKINSUM">
+							<field id="siscod" oculto="true">
+								<condicion operador="=">'01'</condicion>
+							</field>
+							<field id="artcod">
+								<condicion operador="=">STKPIEZA.articulo_hijo</condicion>
+							</field>
+							
+						</table>
+					</join>
+				</form>
+        </histrix>

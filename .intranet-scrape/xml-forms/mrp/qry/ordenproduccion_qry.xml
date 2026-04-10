@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" inserta="no" >
+    <title>ORDENES DE PRODUCCION</title>
+    <obs></obs>
+    <form  detalle="mrp_ordendetalle_impresion.xml" inline="true">
+	        
+	<table id="MRP_ORDEN_PRODUCCION" label="Consulta de Ordenes de Producción">
+
+            <filters>
+                <field id="mrpestado_id" >
+                    <label>Estado </label>
+                    <help>Estado Actual</help>
+                    <operador>=</operador>
+                    <valor>0</valor>
+                </field>
+
+                <field id="fecha_orden">
+                    <label>Desde Fecha</label>
+                    <help>Fecha de Orden de Fabricación</help>
+                    <operador>&gt;=</operador>
+                </field>
+
+                <field id="fecha_orden">
+                    <label modpos="nobr">Hasta Fecha</label>
+                    <help>Fecha de Orden de Fabricación</help>
+                    <operador>&lt;=</operador>
+                </field>
+
+                <field id="producto"  deshabilitado="false" >
+                	<label>Producto</label>
+                	<operador>like</operador>
+                </field>                 
+
+                <field id="rhpersonal_id" >
+                    <helper empty="true" type="combo" xml="rhpersonal_qry.xml" dir="/ayudas" />
+                    <label modpos="nobr" posx="80" posy="0" PDFsize="16" >Empleado</label>
+                    <help >Empleado responsable de la Orden de Producción</help>
+                    <operador>=</operador>
+                </field>
+                
+                <field id="id_mrporden">
+                	<label>Nro de Orden</label>
+            		<operador>=</operador>
+        	    </field>
+
+            </filters>
+
+            <field id="fecha_orden">
+                <label>Fecha</label>
+                <help>Fecha de Orden de Fabricación</help>
+            </field>
+
+            <field id="id_mrporden">
+            	<helper xml="ordenproduccion_imp.xml" type="link" modal="true">
+            	    <parameter source="id_mrporden"  target="id_mrporden" />
+            	</helper>
+                <label>Nro</label>
+                <help>Numero de Orden de Fabricación</help>
+                <detalle>mrporden_id</detalle>
+            </field>
+
+            <field id="rhpersonal_id" >
+                <helper type="combo" xml="rhpersonal_qry.xml" dir="/ayudas" empty="true"/>
+                <label posx="80" posy="0" PDFsize="16" >Empleado</label>
+                <help >Empleado responsable de la Orden de Producción</help>
+            </field>
+
+
+            <field id="producto" noshow="true">
+        		<label>Producto</label>
+        		<expresion>CONCAT(stkarticulo_id, ' - ',nombre_articulo )</expresion>
+            </field>                 
+
+            <field id="mrpestado_id" >
+                <label>Estado </label>
+                <help>Estado Actual</help>
+                <options>
+                        <option valor="0">Pendiente</option>
+                        <option valor="1">Cumplida</option>
+                        <option valor="2">Anulada</option>
+                        <option valor="3">Con Perdidas</option>
+                        <option valor="4">Sin Perdidas</option>
+                </options>
+                <valor>0</valor>
+            </field>
+
+            <group>
+                <field id="id_mrporden"></field>
+            </group>
+            
+            <order>
+                <field id="fecha_orden"></field>
+            </order>
+
+        </table>
+
+        <join tipo="left">
+    	    <table id="MRP_ORDEN_DETALLE">
+                <field id="mrporden_id">
+            	    <condicion operador="=">MRP_ORDEN_PRODUCCION.id_mrporden</condicion>
+                </field>
+    	    </table>
+        </join>
+        
+        <join tipo="inner">
+    	    <table id="STK_ARTICULOS">
+    		<field id="id_stkarticulo">
+    		    <condicion  operador="=">MRP_ORDEN_DETALLE.stkarticulo_id</condicion>
+    		</field>
+    	    </table>
+        </join>
+        
+    </form>
+</histrix>

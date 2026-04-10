@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="crud">
+  <title>Consorcios</title>
+  <obs/>
+  <form>
+    <table id="REG_CUENTA_RELACIONES" label="Consorcios">
+
+<!--	<validations>
+	      <field id="regcuenta_id">        
+        	<expression>select regcuenta_id from REG_CUENTA_RELACIONES where regcuenta_id = '[__regcuenta_id__]'</expression>
+	        <operator><![CDATA[ != ]]></operator> 
+        	<message>: Este cliente ya tiene asgnada una administracion</message>
+	      </field>
+	</validations>-->
+
+
+      <fieldGroup>
+        
+        <field id="id_regcuentarelacion" autoinc="true" noshow="true" />
+
+        <field id="subsistemarelacionada_id" noshow="true" valauto="true" />
+
+        <field id="regcuentarelacionada_id" noshow="true" valauto="true" />
+	
+	<field id="nombre_cuenta" tabla="REG_CUENTA" Formstyle="display:none;">
+		<label>Cliente</label>
+	</field>
+
+	<field id="cod_direccion" tabla="REG_CUENTA" Formstyle="display:none;">
+		<label>Direccion</label>
+	</field>
+
+	<field id="regcuenta_id" colstyle="display:none;" noshow="true" />
+
+        <field id="cliente" colstyle="display:none;" local="true" autocompletar="true" deshabilitado="false">
+          <label>Cliente</label>
+	  <expression>concat(REG_CUENTA.nombre_cuenta,' (',nro_cuenta,')  - ',cod_direccion)</expression>
+	  <helper type="external" id="REG_CUENTA" empty="true">
+		<field id="regcuenta_cliente">
+		    <expression>id_regcuenta</expression>
+		</field>
+		<field id="nombre_cuenta">
+			<expression>concat(REG_CUENTA.nombre_cuenta,' (',nro_cuenta,')  - ',cod_direccion)</expression>
+		</field>
+		<field id="subsistema_id" oculto="true">
+			<condicion operador="=">'02'</condicion>
+		</field>
+		<field id="administracion_id">
+			<condicion operador="!=">1</condicion>
+		</field>
+		<field id="regcuenta_id">
+		    <expression>id_regcuenta</expression>
+		    <detalle>regcuenta_id</detalle>
+		</field>
+	  </helper>
+	  <size>50</size>
+        </field>
+        
+        <field id="fecha_vigencia" valauto="true">
+		<label modpos="nobr">Desde</label>
+		<tipo>date</tipo>
+		<valor>today</valor>
+	</field>
+
+      </fieldGroup>
+
+    </table>
+
+	<join>
+		<tabla id="REG_CUENTA">
+			<field id="id_regcuenta">
+				<condicion operador="=">regcuenta_id</condicion>
+			</field>
+		</tabla>
+	</join>
+  </form>
+</histrix>

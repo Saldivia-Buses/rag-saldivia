@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="chart">
+	<title>COCHES</title>
+	<obs></obs>
+	<form >
+		<table id="GEN_CALENDAR" >
+			<title>Coches</title>
+	 
+		   <grafico id="Entregas" >
+			   <ancho>400</ancho>
+			   <tipo>C</tipo>
+			   
+			   <etiquetas>mes</etiquetas>
+                           <serie>HERRERIA</serie>
+			   <serie>CHAPERIA</serie>
+<!--                           <serie>PINTURA</serie> -->
+                           <serie>TERMINACION</serie>
+			   
+			   <title>Entregas por Secciones x Mes</title>
+			   <subtitulo></subtitulo>
+		   </grafico>		
+		    <filters>
+			    <field id="fecha">
+				    <label>Desde</label>
+				    <valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m" ,strtotime('-12 month')) , 1, date("Y") -  1 ))</valor>
+				    <operador>&gt;=</operador>
+			    </field>
+			    <field id="fecha">
+                                    <label>Hasta</label>
+				    <valor eval="true">date('d/m/Y', strtotime('-1 second', strtotime(date('Y-m-01'))))</valor>
+				    <operador>&lt;=</operador>
+			    </field>
+		    </filters> 
+
+			<field id="mes">
+				<expression>month(fecha)</expression>
+				<label>Mes</label>
+				<options>
+					<option valor="1">Ene</option>
+					<option valor="2">Feb</option>
+					<option valor="3">Mar</option>
+					<option valor="4">Abr</option>
+					<option valor="5">May</option>
+					<option valor="6">Jun</option>
+					<option valor="7">Jul</option>
+					<option valor="8">Ago</option>
+					<option valor="9">Sep</option>
+					<option valor="10">Oct</option>
+					<option valor="11">Nov</option>
+					<option valor="12">Dic</option>
+
+				</options>
+       				<tipo>varchar</tipo>
+			</field>
+                    <field id="fecha" oculto="true">
+<!--                        <condicion operador="&gt;="> DATE_FORMAT(date_sub(date(now()) , interval 1 year) ,'%Y-%m-01') and GEN_CALENDAR.fecha &lt;= now()</condicion> -->
+			<tipo>date</tipo>
+                    </field>
+                    <field id="year" oculto="true">
+                        <expression>year(fecha)</expression>
+
+                    </field>
+			<field id="HERRERIA">
+                             <expression><![CDATA[(select count(distinct(nrofab)) from CONTROLCALIDAD where
+                                month(CONTROLCALIDAD.fecha) = month(GEN_CALENDAR.fecha) and
+                                year(CONTROLCALIDAD.fecha) = year(GEN_CALENDAR.fecha) and
+                                CONTROLCALIDAD.idSeccion = 2 
+                                )]]></expression>
+
+
+				<label>HERRERIA</label>
+                                <tipo>numeric</tipo>
+			</field>
+			<field id="CHAPERIA">
+                             <expression><![CDATA[(select count(distinct(nrofab)) from CONTROLCALIDAD where
+                                month(CONTROLCALIDAD.fecha) = month(GEN_CALENDAR.fecha) and
+                                year(CONTROLCALIDAD.fecha) = year(GEN_CALENDAR.fecha) and
+                                CONTROLCALIDAD.idSeccion = 3
+                                )]]></expression>
+
+
+				<label>Chaperia</label>
+                                <tipo>numeric</tipo>
+			</field>
+<!--			<field id="PINTURA">
+                             <expression><![CDATA[(select count(distinct(nrofab)) from CONTROLCALIDAD where
+                                month(CONTROLCALIDAD.fecha) = month(GEN_CALENDAR.fecha) and
+                                year(CONTROLCALIDAD.fecha) = year(GEN_CALENDAR.fecha) and
+                                CONTROLCALIDAD.idSeccion = 4 and idCalificacion >= 2
+                                )]]></expression>
+
+
+				<label>Pintura</label>
+                                <tipo>numeric</tipo>
+			</field> -->
+			<field id="TERMINACION">
+                            <!-- <expression><![CDATA[(select count(distinct(nrofab)) from CONTROLCALIDAD where
+                                month(CONTROLCALIDAD.fecha) = month(GEN_CALENDAR.fecha) and
+                                year(CONTROLCALIDAD.fecha) = year(GEN_CALENDAR.fecha) and
+                                CONTROLCALIDAD.idSeccion = 5 
+                                )]]></expression>
+				-->
+				<expression><![CDATA[(select count(distinct(TURNOSPRODUCCION.nrofab)) from TURNOSPRODUCCION INNER JOIN CONTROLCALIDAD ON TURNOSPRODUCCION.nrofab = CONTROLCALIDAD.nrofab INNER JOIN  PEDCOTIZ ON TURNOSPRODUCCION.nrofab = PEDCOTIZ.nrocha
+				where
+                                month((case when PEDCOTIZ.terminacion != '0000-00-00' then PEDCOTIZ.terminacion else (DATE_ADD((case when PEDCOTIZ.ingresoLinea != '0000-00-00' then PEDCOTIZ.ingresoLinea else TURNOSPRODUCCION.fechaing end), INTERVAL 45 DAY)) end)) = month(GEN_CALENDAR.fecha) and
+                                year((case when PEDCOTIZ.terminacion != '0000-00-00' then PEDCOTIZ.terminacion else (DATE_ADD((case when PEDCOTIZ.ingresoLinea != '0000-00-00' then PEDCOTIZ.ingresoLinea else TURNOSPRODUCCION.fechaing end), INTERVAL 45 DAY)) end)) = year(GEN_CALENDAR.fecha) and
+                                CONTROLCALIDAD.idSeccion = 5  and PEDCOTIZ.nrocha != 0
+                                )]]></expression>
+ 
+				<label>Terminacion</label>
+                                <tipo>numeric</tipo>
+			</field>
+			<group>
+                                <field id="year"></field>
+				<field id="mes"></field>
+
+			</group>
+		</table>
+
+	</form>	   
+</histrix> 

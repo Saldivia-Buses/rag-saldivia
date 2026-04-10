@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud">
+	<title>Tipo de taller</title>
+	<obs></obs>
+	<form>
+	    <table id="MANT_TIPO_TALLERES" label="Tipo">
+
+			<field id="id_tipotaller" esClave="true" noshow="true" />
+
+			<field id="descripcion">
+				<label>Tipo</label>
+				<help>Nombre</help>
+				<size>50</size>
+			</field>
+
+	    </table>
+	</form>
+</histrix>	

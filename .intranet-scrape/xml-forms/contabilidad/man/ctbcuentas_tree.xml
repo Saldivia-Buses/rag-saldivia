@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="arbol" log="false">
+	<title>Cuentas</title>
+	<obs></obs>
+	<customScript>
+
+		$('form[instance="[__instance__]"]').on('change', ':input[name="esmadre"]', function(){
+	
+			if ($(this).val() == '1'){
+				$('[instance="[__instance__]"] [name="delete"]').hide();
+
+			} else  {
+				$('[instance="[__instance__]"] [name="delete"]').show();
+	
+			}
+		});
+	</customScript>
+	<form>
+		<table id="CTB_CUENTAS" label="Cuentas">
+
+			<movimientos>
+			    <relacion id="cuentas_habilitadas_ins.xml" />
+			    <relacion id="cuentas_habilitadas_upd.xml" />
+			    <relacion id="cuentas_habilitadas_del.xml" />
+			</movimientos>
+
+			<filtros>
+				<field id="ejercicio_id">
+					<label>Ejercicio</label>
+					<operador>=</operador>
+				</field>
+			</filtros>
+
+			<field id="id_cuenta" noshow="false" arbol="hijo" esClave="true">
+				<label>Codigo</label>
+				<help>Codigo de cuenta</help>
+			</field>
+
+			<field id="nombre_cuenta">
+				<label>Nombre</label>
+				<help>Nombre de la cuenta contable</help>
+			</field>
+
+			<field id="ejercicio_id" subItem="true" esClave="true" valauto="true" deshabilitado="false" colstyle="display:none;">
+				<label>Ejercicio</label>
+				<helper type="combo" xml="ctbejercicios_crud.xml" dir="/contabilidad/man/" />
+				<actualiza>
+					<field id="cuenta_superior_id" destino="ejercicio_id" />
+				</actualiza>
+			</field>
+
+			<field id="tipo_id" colstyle="display:none;"  subItem="true">
+				<helper type="combo" xml="ctbtipos_crud.xml" />
+				<label>Tipo de cuenta</label>
+				<help>Tipo de cuenta contable</help>
+<!--
+				<actualiza>
+					<field destino="tipo_id" id="cuenta_superior_id" />
+				</actualiza>
+-->
+			</field>
+
+			<field id="cuenta_superior_id" arbol="padre" colstyle="display:none;" subItem="true" _style="width: 200px;">
+				<helper type="combo" id="CTB_CUENTAS"  _xml="cuentas_inhabilitadas_qry.xml" dir="/ayudas">
+		    <field id="id_cuenta">
+		    </field>
+		    <field id="nombre_cuentaSup">
+			<expresion>CONCAT(id_cuenta,' ', nombre_cuenta)</expresion>
+		    </field>
+ 		    <field id="habilitada" oculto="true">
+			<condicion operador="=">0</condicion>
+		    </field>
+			<field id="tipo_id" oculto="true">
+		    </field>
+		    <field id="ejercicio_id" noshow="true" oculto="true" />
+
+				</helper>
+				<label>Cuenta superior</label>
+				<help>Cuenta superior a esta cuenta contable</help>
+				<valor>0</valor>
+				<size>15</size>
+			</field>
+
+			<field id="tipo_saldo" colstyle="display:none;" subItem="true">
+				<options>
+					<option valor="0">Deudor</option>
+					<option valor="1">Acreedor</option>
+				</options>
+				<label>Tipo saldo</label>
+				<help>Tipo de saldo de la cuenta: debe o haber</help>
+			</field>
+
+			<field id="ctbcentro_id" _colstyle="display:none;">
+				<label>Centro de Costo</label>
+				<helper type="combo" id="CTB_CENTROS" _xml="ctbcentro_qry.xml" _dir="/ayudas" empty="true">
+					<field id="id_ctbcentro" />
+					<field id="nombre_centro" />
+				</helper>
+			</field>
+
+			<field id="habilitada" _colstyle="display:none;" deshbiltiado="false">
+				<tipo>check</tipo>
+				<label>Habilitada</label>
+				<help>Indica si la cuenta esta habilitada o no</help>
+			</field>
+
+			<field id="ctbcentro_id" colstyle="display:none;">
+				<label>Centro de Costo</label>
+				<helper type="combo" xml="ctbcentro_qry.xml" dir="/ayudas" empty="true" />
+			</field>
+
+			<field id="genmoneda_id" colstyle="display:none;">
+				<label>Moneda</label>
+				<helper type="combo" xml="moneda_qry.xml" dir="/ayudas" />
+			</field>
+
+			<field id="esmadre" colstyle="display:none;" Formstyle="display:none;">
+				<expression><![CDATA[ifnull((SELECT 1 FROM CTB_CUENTAS CC WHERE CC.cuenta_superior_id = CTB_CUENTAS.id_cuenta and CC.ejercicio_id = CTB_CUENTAS.ejercicio_id limit 1), 0)]]></expression>
+				<tipo>integer</tipo>
+			</field>
+
+		</table>
+	</form>
+</histrix>

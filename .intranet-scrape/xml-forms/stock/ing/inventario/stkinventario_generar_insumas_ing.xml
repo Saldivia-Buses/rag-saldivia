@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" subtipo="vertical" procesa="false" preloadData="false">
+  <title>Ingreso de Inventario</title>
+  <obs/>
+  <form>
+    <table id="STK_INVENTARIO_DETALLES" label="Ingreso de Inventario">
+      <movimientos>
+        <relacion id="stkinventariodet_insumas_ins.xml"/>
+      </movimientos>
+      <field id="id_stkinventariodet" noshow="true" />
+      <field id="stkarticulo_id" esClave="true">
+        <label>Cod.</label>
+        <helper type="external" xml="stkarticulo_stockactual_deposito_qry.xml" dir="/ayudas">
+          <field id="wstklista_id" local="true">
+            <valor>1</valor>
+          </field>
+        </helper>
+        <size>12</size>
+      </field>
+      <field id="nombre_articulo" tabla="STK_ARTICULOS" deshabilitado="true">
+        <label modpos="nobr">Descripcion</label>
+        <size>60</size>
+      </field>
+      <field id="teorico" local="true" suma="true" deshabilitado="true">
+        <label modpos="nobr">Teorico</label>
+      </field>
+      <field id="precio_costo" deshabilitado="true">
+        <label modpos="nobr">Precio U.</label>
+        <tipo>numeric</tipo>
+      </field>
+      <fieldGroup noshow="true">
+        <field id="unidad_id" />
+        <field id="precio_lista" />
+        <field id="precio_venta" />
+        <field id="precio_promedio" />
+      </fieldGroup>
+      <order>
+        <field id="nombre_articulo" />
+      </order>
+    </table>
+    <join tipo="left">
+      <table id="STK_ARTICULOS">
+        <field id="id_stkarticulo">
+          <condicion operador="=">STK_INVENTARIO_DETALLES.stkarticulo_id</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>

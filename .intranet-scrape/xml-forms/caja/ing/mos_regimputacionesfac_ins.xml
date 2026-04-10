@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert"  tipoInsert="IGNORE">
+  <title>Grabación de Imputaciones</title>
+  <obs/>
+  <form>
+    <table id="REG_IMPUTACIONES" >
+      <field id="regmovim_id"           lastId="mos_regmovimientosrec_ins.xml" />
+      <field id="regmovim0_id"          lastId="mos_regmovimientosfac_ins.xml" />
+      <field id="movimiento_imputacion" id_temp="importe_movimiento" />
+    </table>
+  </form>
+</histrix>

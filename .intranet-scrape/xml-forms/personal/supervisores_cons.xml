@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" width="30">
+	<title>Supervisores</title>
+	<obs/>
+	<form  detalle="fichadas_seccion.xml">
+		<table id="SECCION">
+			<title>Secciones de Trabajo</title>
+			<field id="id_seccion">
+				<label>Código</label>
+				<help>Código de Sección</help>
+				<detalle>id_seccion</detalle>
+			</field>
+			<field id="nombre">
+				<label>Nombre</label>
+				<help>Nombre de Sección</help>
+			</field>
+			<field id="idSupervisor">
+				<label>Supervisor</label>
+    
+		                <tabla_ex id="PERSONAL" _xml="HLPpersonal.xml" vacio="true" dir="/help_local">
+				        <field id="legajo">
+				            <label>Legajo</label>
+					    <condicion operador="!=">0</condicion>
+				          </field>
+				        <field id="nombres">
+					        <expression>CONCAT(apellido,', ', Nombre)</expression>
+					  </field>
+					  <order>
+				              <field id="apellido"></field>
+			            </order>
+															    				    
+				</tabla_ex>
+				
+			</field>
+			<field id="cant" suma="true">
+			    <label>Cantidad</label>
+			    <expression>select count(*) from PERSONAL where PERSONAL.id_seccion = SECCION.id_seccion and PERSONAL.fechaEgreso="0000-00-00"</expression>
+			    <condicion operador="!=">0</condicion>
+			</field>
+<!--
+			<field id="eventual" tabla="PERSONAL" noshow="true">
+                <condicion operador="=">'0'</condicion>
+            </field>
+-->
+		</table>
+<!--
+		<join>
+			<table id="PERSONAL">
+				<field id="id_seccion">
+					<condicion operador="=">SECCION.id_seccion</condicion>
+				</field>
+			</table>
+		</join>
+-->
+	</form>
+</histrix>

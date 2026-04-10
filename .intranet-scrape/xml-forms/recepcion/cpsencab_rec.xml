@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" imprime="false" width="20%" preloadData="false">
+    <title>RECEPCION DE ORDENES DE COMPRA</title>
+    <obs></obs>
+    <form  detalle="cps_recepcion_saldivia.xml">
+        <table id="CPSENCAB" label="ORDENES DE COMPRA" styleTbody="height:400px;">
+            <filters>
+            	<field id="ctacod">
+            		<label>Prov.</label>   
+                	<operador>=</operador>
+            	</field>
+		<field id="ocpnro">
+			<label>Nro O.C.</label>
+			<operador>=</operador>
+		</field>
+            </filters>
+<!--
+		<field id="nro_envio">
+			<helper type="external" dir="/help_local" xml="HLPstk_envios.xml" />
+			<label>Nro envio</label>
+			<operador>=</operador>
+		</field>
+-->			
+            <field id="siscod" noshow="true">
+                <label>Código Sistema.. </label>
+                <detalle>CPSMOVIM.siscod</detalle>
+            </field>
+			
+            <field id="ctacod" noshow="true">
+            	<helper type="external"  xml="cpsencab_prov_marco_cum_pen.xml" dir="/recepcion" empty="true">
+                    <field id="cal_regcategoria_id" >
+                        <label>Categoría Calidad</label>
+                        <helper id="REG_CATEGORIAS" type="combo" empty="true">
+                        <field id="id_regcategoria"></field>
+                        <field id="nombre_categoria"></field>
+                        <field id="subsistema_id">
+                            <condicion operador="=">'CA'</condicion>
+                        </field>
+                        </helper>
+                    </field>     
+                    <!--
+            <field id="ocpest" oculto="true">
+                <label>Estado </label>
+                <help>Estado Actual</help>
+                <options>
+                    <option valor="1">Pendiente</option>
+                    <option valor="2">Cumplida</option>
+                    <option valor="3">Parcial</option>
+                    <option valor="4">Anulada</option>
+					
+                </options>
+                <condicion operador="!=">2 and ocpest != 0 and ocpest != 4</condicion>
+				
+            </field>
+            -->                    
+                </helper>
+                <detalle>ctacod</detalle>
+            </field>
+
+            <field id="ocpfec">
+                <label>Fecha</label>
+                <help>Fecha de Orden de Compra. </help>
+                <detalle>ocpfec</detalle>
+                <detalle>movfec</detalle>
+            </field>
+			<field id="idMail" noshow="true">
+			    <expression>idMail</expression>
+	                </field>
+			<field id="enviado" >
+			    <expression>case when !isnull(idMail) then date_format(HTXMAIL.fecha,'%d/%m/%Y') end</expression>
+	        	    <label style="width:auto;">email</label>
+	        	    <helper type="link" xml="email_qry.xml" dir="/histrix/mensajeria">
+        		    <parameter source="idMail" target="idMail" />
+		        	</helper>
+			</field>
+            
+            <field id="demora" deshabilitado="true">
+                <label modpos="nobr">demora</label>
+                <expression> to_days(now()) - (select to_days(avg(fecreq)) from CPSMOVIM where CPSMOVIM.ocpnro = CPSENCAB.ocpnro)</expression>
+            </field>            
+
+            <field id="ocpnro">
+                <label>Número</label>
+                <help>Número de Orden de Compra.</help>
+                <detalle>ocpnro</detalle>
+            </field>
+            <field id="pedidos" showObjTabla="true"     local="true">
+        	<helper xml="cpsmovim_pedidos.xml" type="object">
+        	    <parameter source="ocpnro" target="ocpnro" />
+        	</helper>
+             
+                <label>Pedidos</label>
+
+            </field>
+
+            <field id="ctanom" tabla="CCTCUENT" noshow="true">
+                <detalle>ctanom</detalle>
+            </field>
+			
+            <field id="ocpest" _oculto="true">
+                <label>Estado </label>
+                <help>Estado Actual</help>
+                <options>
+                    <option valor="1">Pendiente</option>
+                    <option valor="2">Cumplida</option>
+                    <option valor="3">Parcial</option>
+                    <option valor="4">Anulada</option>
+					
+                </options>
+                <condicion operador="!=">2 and ocpest != 0 and ocpest != 4</condicion>
+				
+            </field>
+
+			<field id="remnro" noshow="true">
+				<expression>SELECT remnro FROM FACREMIT WHERE ctacod = CPSENCAB.ctacod ORDER BY remfec desc LIMIT 1</expression>
+<!--				<detalle>remnro</detalle> -->
+				<label>NRem</label>
+			</field>
+			<field id="remnpv" noshow="true">
+				<expression>SELECT remnpv FROM FACREMIT WHERE ctacod = CPSENCAB.ctacod ORDER BY remfec desc LIMIT 1</expression>
+<!--				<detalle>remnpv</detalle> -->
+				<label>Nnpv</label>
+			</field>
+			<field id="remfec" noshow="true">
+				<expression>SELECT remfec FROM FACREMIT WHERE ctacod = CPSENCAB.ctacod ORDER BY remfec desc LIMIT 1</expression>
+<!--				<detalle>remfec</detalle> -->
+				<label>RemFec</label>
+				<tipo>date</tipo>
+			</field>
+
+            <order>
+                <field id="ocpfec"/>
+            </order>
+			
+        </table>
+	<join tipo="left">
+	    <table id="HTXMAIL">
+		<field id="subject">
+		    <condicion operador="=">CONCAT('Orden de Compra Nro ',CPSENCAB.ocpnro)</condicion>
+		</field>
+	    </table>
+	</join>
+
+        <join tipo="left">
+            <table id="CCTCUENT">
+                <field id="siscod" oculto="true">
+                    <label>cctcuent.siscoc</label>
+                    <condicion operador="=">'01'</condicion>
+                </field>
+                <field id="ctacod" oculto="true">
+                    <condicion operador="=">CPSENCAB.ctacod</condicion>
+                </field>
+                <field id="ctanom" oculto="true">
+                </field>
+            </table>
+        </join>
+		
+    </form>
+</histrix>

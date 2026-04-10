@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+  <title>Pacientes</title>
+  <obs></obs>
+  <consulta>
+    <table   id="PAC_CUENTAS" label="Pacientes">
+                <field id="id_paciente"/>
+                <field id="nombre_paciente">
+	                <expresion>CONCAT(apellido_paciente,' , ',nombre_paciente)</expresion>
+                 </field>
+
+                 <field id="sexo_paciente" />
+                 <field id="edad_paciente" />
+                 <field id="fecha_egreso" >
+                    		<condicion operador="=">'0000-00-00'</condicion>
+               	 </field>
+                 <field id="pacsucursal_id" />
+                 <order>
+	                <field id="nombre_paciente"/>
+                 </order>
+    </table>
+  </consulta>
+</histrix>  

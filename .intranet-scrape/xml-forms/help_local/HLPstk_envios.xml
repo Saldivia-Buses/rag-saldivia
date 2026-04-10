@@ -1,0 +1,59 @@
+<?xml version="1.0"  encoding="UTF-8" ?>
+<histrix tipo="consulta">
+	<title>Envio Materiales</title>
+	<obs></obs>
+	<form>
+		<table id="STK_ENVIOS" label="MOVIMIENTOS" >
+			<field id="nro_envio">
+				<detalle>nro_envio</detalle>
+				<label>Nro</label>
+			</field>
+			<field id="puesto_envio">
+				<detalle>puesto_envio</detalle>
+				<label>Puesto Envio</label>
+			</field>
+			<field id="nro_remito">
+				<detalle>nro_remito</detalle>
+				<detalle>remnro</detalle>
+				<label>Nro Remito</label>
+			</field>
+			<field id="puesto_remito">
+				<detalle>puesto_remito</detalle>
+				<detalle>remnpv</detalle>
+				<label>Puesto remito</label>
+			</field>
+			<field id="fecha_envio">
+				<label>Fecha</label>
+				<detalle>fecha_envio</detalle>
+				<tipo>date</tipo>
+			</field>
+			<field id="fecha_remito">
+				<label>Fecha Rem</label>
+				<detalle>fecha_remito</detalle>
+				<detalle>remfec</detalle>
+				<tipo>date</tipo>
+			</field>
+			<field id="regcuenta_id" noshow="true">
+				<detalle>regcuenta_id</detalle>
+			</field>
+			<field id="observaciones" noshow="true">
+				<detalle>observaciones</detalle>
+			</field>
+			<field id="id_envio" noshow="true">
+				<expression>id_stkenvio</expression>
+				<detalle>id_stkenvio</detalle>
+			</field>
+			<field id="nro_cuenta" tabla="REG_CUENTA" noshow="true">
+				<detalle>nro_cuenta</detalle>
+				<detalle>ctacod</detalle>
+			</field>
+		</table>
+		<join>
+			<table id="REG_CUENTA">
+				<field id="id_regcuenta">
+					<condicion operador="=">STK_ENVIOS.regcuenta_id</condicion>
+				</field>
+			</table>
+		</join>
+	</form>
+</histrix>

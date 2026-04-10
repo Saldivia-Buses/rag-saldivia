@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+	<abm tipo="abm-mini" class="anchamitad" ldap="true">
+		<titulo>CONTACTOS</titulo>
+		<obs></obs>
+		<consulta>
+			<tabla id="CCTCONTA" label="Contactos">
+				<campo id="siscod" oculto="true">
+					<label>Codigo Sistema </label>
+					<help>
+					</help>
+				</campo>
+				<campo id="idconta" autoinc="true" noshow="true">
+					<label>id</label>
+					<help>
+					</help>
+				</campo>				
+				<campo id="ctacod" oculto="true">
+					<label>Cuenta</label>
+					<help>
+					</help>
+				</campo>
+				<campo id="nombre" ldifName="cn,sn">
+					<label>Nombre </label>
+					<help>Nombre del contacto</help>
+                                       
+				</campo>
+                <campo id="ctafan" local="true" deshabilitado="true" ldifName="o" noshow="true">
+                    
+                </campo>
+				<campo id="cargo">
+
+					<label>Cargo </label>
+					<help>Cargo </help>
+					<tabla_ex id="CARGOS">
+						
+						<campo id="cargo" clave="true"></campo>
+						<campo id="nombre"></campo>
+						<orden>
+							<campo id="nombre"></campo>							
+						</orden>
+					</tabla_ex>
+				</campo>
+                <!--
+                <campo id="cn" ldifName="cn" local="true" _noshow="true">
+                        <expresion>case when nombre != '' then nombre else ctafan end</expresion>
+
+                        <tipo>varchar</tipo>
+                </campo>
+                <campo id="sn" ldifName="sn" local="true" _noshow="true">
+                        <expresion>case when nombre != '' then nombre else ctafan end</expresion>
+
+                        <tipo>varchar</tipo>
+                </campo> -->
+
+				
+
+				<campo id="Telefono" ldifName="mobile">
+					<label>Telefono </label>
+					<help></help>
+				</campo>
+
+				<campo id="movil" >
+					<label>Celular</label>
+					<help></help>
+				</campo>
+
+
+				<campo id="mail" ldifName="mail" ldifKey="true">
+					<label>Mail </label>
+					<help>
+					</help>
+					<size>50</size>
+					<tipo>email</tipo>
+				</campo>				
+				<campo id="principal">
+					<label>Principal</label>
+					<tipo>check</tipo>
+					<help></help>
+				</campo>				
+			</tabla>
+		</consulta>
+	</abm>

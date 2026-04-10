@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ficha" sololectura="true" autoprint="true" PDFfontSize="9" PDFpageSize="A4">
+  <title>Planilla de Conteo Cíclico</title>
+  <obs></obs>
+  <form>
+    <pdf PDForientacion="P">
+        <code><![CDATA[
+
+			$pdf->SetDrawColor(0);
+			$pdf->SetXY(10,10);
+
+			$tp = 05;
+			$ap = $pdf->anchoPagina - 2;
+			$mp = ($ap / 2);
+			$lp = $pdf->largoPagina;
+
+			// Codigo articulo
+			$pdf->Rect(005, 040, $ap, 020, 0.1);
+
+        ]]></code>
+    </pdf>
+
+	<table id="STK_ARTICULOS"  label="Conteo cíclico">
+		
+		<field id="id_stkarticulo" esClave="true" tabla="STK_ARTICULOS">
+			<label posx="5" posy="+15">Cod. Art.</label> 
+			<help>Código del artículo</help>
+		</field>
+
+		<field id="nombre_articulo" tabla="STK_ARTICULOS">
+			<label posx="5" posy="+2">Descripción:</label> 
+		</field>
+
+		<field id="detalles" local="true">
+			<label posx="5" posy="+15" />
+		    <helper xml="control_conteo_ciclico_locaciones.xml" type="object">
+				<parameter source="id_stkarticulo" target="stkarticulo_id" />
+		    </helper>
+		</field>
+
+		<field id="fecha_conteo" local="true">
+			<label posx="5" posy="+10">Fecha conteo:_________________________</label> 
+		</field>
+
+		<field id="firma_contador" local="true">
+			<label posx="5" posy="+8">Firma Contador:________________________</label> 
+		</field>
+
+		<field id="comentarios" local="true">
+			<label posx="5" posy="+8">Comentarios:</label> 
+		</field>
+	
+	</table>
+	
+  </form>
+</histrix>

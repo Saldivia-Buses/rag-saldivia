@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="dashboard">
+    <titulo>Produccion</titulo>
+
+        <widget id="liberaciones"  width="30%" height="300px" >
+            <title>Liberaciones</title>
+            <url><![CDATA[histrixLoader.php?xml=liberaciones_chart.xml&dir=/dashboard/&muestra_chart=1&maxlimit=15]]></url>
+        </widget>
+
+        <widget id="calidad"  width="30%" height="300px" >
+            <title>Calidad</title>
+            <url><![CDATA[histrixLoader.php?xml=liberaciones_chart.xml&dir=/dashboard/&muestra_chart=2&maxlimit=20]]></url>
+        </widget>
+
+        <widget id="ausentismo"  width="30%" height="300px" >
+            <title>Ausentismo</title>
+            <url><![CDATA[histrixLoader.php?xml=liberaciones_chart.xml&dir=/dashboard/&muestra_chart=3&maxlimit=6]]></url>
+        </widget>
+
+        <widget id="consulta_completa"  width="92%" height="400px" >
+            <title>Completo</title>
+            <url><![CDATA[histrixLoader.php?xml=indicadores_produccion_seccion.xml&dir=/dashboard/]]></url>
+        </widget>
+
+</histrix>

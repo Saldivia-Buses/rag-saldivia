@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<abm  tipo="abm-mini"  imprime="false">
+	<titulo>Calificacion</titulo>
+	<obs/>
+	<eventos>
+		<event id="insert">close</event>
+	</eventos>
+	<consulta>
+		<tabla id="CALIFICACION">
+			<titulo>Calificacion</titulo>
+			<campo id="idCalificacion" autoinc="true" noshow="true">
+				<label >calificacion</label>
+			</campo>
+			<campo id="calificacion" >
+				<label>calificacion</label>
+			</campo>
+			<campo id="color"  color="true">
+				<label>color</label>
+			</campo>
+
+		</tabla>
+
+	</consulta>
+</abm>

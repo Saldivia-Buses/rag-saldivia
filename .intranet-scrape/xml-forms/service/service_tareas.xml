@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<histrix tipo="abm-mini">
+   <title>Tareas</title>
+    <obs></obs>
+      <form >
+        <table id="SERVICE_TAREAS" label="TAREAS">
+          <field id="idTarea" autoinc="true" noshow="true">
+              <label>id</label>
+              <help> </help>
+          </field>
+          <field id="nomTarea" >
+              <label>Tarea</label>
+              <help>Tarea a realizar</help>
+          </field>
+          <field id="tiempoEst" >
+              <label>Tiempo Estimado</label>
+              <tipo>time</tipo>
+          </field>
+        <field id="cargo" >
+            <label>Tipo</label>
+		        <options>
+		          <option valor="0">Sin Cargo</option>
+		          <option valor="1">Con Cargo</option>
+              <option valor="2">Con Cargo 3ro</option>
+              <option valor="3">Envio de Repuestos</option>
+              <option valor="4">Viaje</option>
+		        </options>
+        </field>
+        <field id="activo" >
+            <label>Activo</label>
+            <options>
+              <option valor="0">Si</option>
+              <option valor="1">No</option>
+            </options>
+        </field>
+        <order>
+          <field id="nomTarea" />
+        </order>
+      </table>
+    </form>
+</histrix>

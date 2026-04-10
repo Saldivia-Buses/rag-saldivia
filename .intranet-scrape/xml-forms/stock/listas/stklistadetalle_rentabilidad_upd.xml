@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="update"> 
+  	<title/>
+  	<obs/>
+  	<form>
+    	<table id="STK_LISTADETALLE" 				idCampoCond="aprobar" >
+			<field id="id_stklistadetalle" 				id_temp="id_stklistadetalle" esClave="true" />
+			<field id="stklistadetalle_rentabilidad" 	id_temp="stklistadetalle_rentabilidad" />
+    	</table>
+   	</form>
+</histrix>
+

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<histrix tipo="abm">
+	<title>CATEGORIAS </title>
+	<obs></obs>
+	<form>
+		<table id="CCTCATGS" >
+		    <title>Categorias</title>
+			<field id="siscod" oculto="true">
+				<label>Cod</label>
+			</field>
+			<field id="catcod" esClave="true">
+				<label>Código</label>
+				<help>Código de Categoría</help>
+			</field>
+			<field id="catnom">
+				<label>Categoría</label>
+				<help>Nombre de la Categoría</help>
+			</field>
+			<field id="catabv">
+				<label>Abrev.</label>
+				<help>Abreviatura a Utilizar</help>
+			</field>
+			<order>
+				<field id="catcod"></field>
+			</order>
+		</table>
+	</form>	   
+</histrix> 

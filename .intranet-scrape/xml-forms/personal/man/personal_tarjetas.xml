@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" logReference="nom,app" limit="20">
+	<title>Tarjetas</title>
+	<obs/>
+	<form >
+		<table id="PERSONAL_TARJETA" label="Tarjetas" styleTbody="height:10em;">
+		    <title>Tarjetas</title>
+<!--			<movimientos>
+				<relacion id="seccionhist_update.xml"></relacion>
+				<relacion id="seccionhist_insert.xml"></relacion>
+				<relacion id="seccionhist_delete.xml"></relacion>				
+			</movimientos> -->
+			<field id="idPersona" deshabilitado="true" oculto="true">
+				<label>Persona</label>
+				<condicion operador="=">0</condicion>
+				
+			</field>
+			<field id="nom" local="true" noshow="true">
+                            <label>Nombre</label>
+			</field>
+			<field id="app" local="true" noshow="true">
+                            <label>Apellido</label>
+			</field>
+
+			<field id="tarjeta">
+				<label>Tarjeta</label>
+				<help>Codigo de Tarjeta</help>
+			</field>
+			<field id="fechaDesde">
+				<label>Desde Fecha</label>
+				<help>Fecha</help>
+			</field>
+		</table>
+
+	</form>
+</histrix>

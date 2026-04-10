@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ficha">
+  <title>Grupos de Comprobantes</title>
+  <obs></obs>
+  <form >
+    <table id="REG_GRUPOS" label="Grupos de Comprobantes">
+	<field id="id_reggrupo" esClave="true" noshow="true" />
+        <field id="reggrupo_nombre" >
+		<label>Grupos</label>
+	</field>
+	<field id="ccc" local="true" obj="reggruposdetalles_crud.xml" colstyle="display: none;">
+		<paring destino="reggrupo_id">id_reggrupo</paring>
+	</field>
+  
+	<order>
+		<field id="reggrupo_nombre" />
+	</order>
+    </table>
+  </form>
+</histrix>  

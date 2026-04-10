@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="abm" paginar="40" borra="false" inserta="false">
+	<title>ORDENES DE COMPRA</title>
+	<obs></obs>
+	<form>
+		<table id="CPSENCAB" label="ORDENES DE COMPRA">
+		    <filters>
+			<field id="ocpnro" >
+			    <label>Nro</label>
+			</field>
+		    </filters>
+<!--
+		    <field id="ocpfec" tipoOrden="DESC">
+			<label>Fecha</label>
+		    </field>
+-->
+		    <field id="ocpnro" deshabilitado="true">
+			<label>Nro OC</label>
+		    </field>
+		    <field id="conforme" >
+			<label>Conforme</label>
+
+		    </field>
+		    <field id="obs_conf" >
+			<label>Obs</label>
+		    </field>
+
+		    <field id="login_conf" >
+			<label>Login conf</label>
+		    </field>
+
+		    <field id="time_conf" >
+			<label>hora Conf</label>
+		    </field>
+<!--
+		    <order>
+			    <field id="ocpfec" />
+    
+		    </order>
+-->
+		</table>
+
+	</form>
+</histrix>

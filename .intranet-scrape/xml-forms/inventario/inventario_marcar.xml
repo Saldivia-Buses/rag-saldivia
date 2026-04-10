@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="update" limit="0">
+    <title>MOVIMIENTOS</title>
+    <obs></obs>
+    <form >
+        <table id="INVENTARIO" label="INV">
+            <field id="nroInventario"   id_temp="nroInventario" esClave="true"></field>
+            <field id="lugarInventario" id_temp="lugarInventario" esClave="true"></field>
+<!--            <field id="fecha" 		id_temp="fecha"		esClave="true"></field> -->
+            <field id="artcod" 		id_temp="artcod" 	esClave="true"></field>
+            <field id="marca" >
+		<valor>1</valor>
+            </field>
+        </table>
+    </form>
+</histrix>

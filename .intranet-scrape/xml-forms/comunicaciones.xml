@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<abm tipo="abm-mini" cxlass="consultaancha">
+	<titulo>Comunicaciones con Clientes</titulo>
+	<consulta detalle="comunicaciondetalle.xml" inline="true">
+		<tabla id="COMUNICACIONESCLI">
+			<titulo>Pedidos de Clientes</titulo>
+			
+			<campo id="ctanom" deshabilitado="false" autocompletar="true">
+
+				<ayuda_ex id="CCTCUENT">
+					<campo id="ctacod" noshow="true">					
+						<detalle>ctacod</detalle>
+					</campo>
+					<campo id="nombre" >
+						<expresion having="false">CONCAT(CCTCUENT.ctanom, ' (',CCTCUENT.ctafan, ')')</expresion>
+					</campo>
+					<campo id="siscod" oculto="true">					
+						<condicion operador="=">'02'</condicion>
+					</campo>
+					<campo id="baja" oculto="true">
+						<condicion operador="!=">1</condicion>
+					</campo>
+					<size>40</size>					
+				</ayuda_ex>
+				
+				<expresion>CONCAT(ctanom, ' (',ctafan, ')')</expresion>
+				<label  colspan="8">Nombre</label>
+				<jsfunction event="onchange">ayudaFicha('cctcuent_abmmini.xml')</jsfunction>
+				<size>30</size>
+
+			</campo>
+
+			<campo id="idComunicacion" deshabilitado="true" autoinc="true"  tipoOrden="DESC">
+				<label>Nro Pedido</label>
+	    			<help>Numero de Pedido</help>
+        		        <valor>0</valor>
+			</campo>
+
+			<campo id="login" deshabilitado="true">
+				<label>Usuario </label>
+				<help>Usuario que hace el pedido</help>
+				<tabla_ex id="HTXUSERS">
+					<campo id="login"></campo>
+					<campo id="nombre"></campo>
+					<orden>
+						<campo id="nombre"></campo>
+					</orden>
+				</tabla_ex>
+				<valor eval="true">$_SESSION['usuario']</valor>
+			</campo>
+
+			<campo id="yo" local="true"  noshow="true">
+			
+				<valor eval="true">"'".$_SESSION['usuario']."'"</valor>
+				<tipo>varchar</tipo>
+			</campo>
+
+			<campo id="editable" local="true" bloqueafila="true" noshow="true" >
+				<label>Editable</label>				
+				<if exp="'yo'=='login'">
+					<verdadero>"0"</verdadero>
+					<falso>"1"</falso>
+				</if>
+				<tipo>varchar</tipo>
+			</campo>
+
+			<campo id="idEstado" deshabilitado="true" noshow="true">
+				<tabla_ex id="ESTADOSPEDIDOS" xml="estadospedidos.xml" />
+				<label>Estado Pedido</label>
+				<help>Estado del Pedido</help>
+			</campo>
+
+			<campo id="hora" deshabilitado="true" esclave="true" valauto="true">
+				<label>Fecha y Hora</label>
+				<help>Fecha</help>
+<!--				<valor>today</valor>-->
+			</campo>
+
+			<campo id="consulta">
+				<label>Consulta</label>
+				<help>Consulta</help>
+				<size>250</size>
+			</campo>
+
+
+			<campo id="idPrioridad">
+				<label>Prioridad</label>
+				<tabla_ex xml="prioridades.xml"></tabla_ex>
+				<valor>1</valor>
+			</campo>
+			<campo id="cumplido" deshabilitado="true">
+				<label>Cumplido</label>
+				<help>Cumplido</help>
+			</campo>
+			<campo id="pend" local="true" clasefila="true" noshow="true" >
+				<expresion>case when cumplido ='0000-00-00' then 'resaltado' else '' end</expresion>
+<!--
+				<if exp="'cumplido'=='0000-00-00'"> 
+					<verdadero>'resaltado'</verdadero>
+					<falso>''</falso>
+				</if>-->
+				<tipo>varchar</tipo>
+
+			</campo>			
+			<orden>
+				<campo id="idPedido" ></campo>
+				<campo id="hora" ></campo>
+				<campo id="cumplido" ></campo>
+			</orden>
+			
+			<filtros>
+			    <campo id="ctacod">
+				<label>Cód. Cliente</label>
+			    </campo>
+
+			<campo id="ctanom" deshabilitado="false" autocompletar="true">
+
+				<ayuda_ex id="CCTCUENT">
+					<campo id="ctacod" noshow="true">					
+						<detalle>ctacod</detalle>
+					</campo>
+					<campo id="nombre" >
+						<expresion having="false">CONCAT(CCTCUENT.ctanom, ' (',CCTCUENT.ctafan, ')')</expresion>
+					</campo>
+					<campo id="siscod" oculto="true">					
+						<condicion operador="=">'02'</condicion>
+					</campo>
+					<campo id="baja" oculto="true">
+						<condicion operador="!=">1</condicion>
+					</campo>
+					<size>100</size>					
+				</ayuda_ex>
+				
+				<expresion>CONCAT(ctanom, ' (',ctafan, ')')</expresion>
+				<label  colspan="8">Nombre</label>
+				<jsfunction event="onchange">ayudaFicha('cctcuent_abmmini.xml')</jsfunction>
+				<size>30</size>
+
+			</campo>
+
+			
+			</filtros>
+
+		</tabla>
+		<join>
+			<tabla id="CCTCUENT">
+				<campo id="ctacod">
+					<condicion operador="=">COMUNICACIONESCLI.ctacod</condicion>
+				</campo>
+			</tabla>
+			
+		</join>
+	</consulta>
+</abm>

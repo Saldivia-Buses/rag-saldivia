@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<abm tipo="consulta">
+	<titulo>herramientas</titulo>
+	<obs></obs>
+	<consulta>
+		<tabla id="HERRAMIENTAS" label="HERRAMIENTA">
+			<campo id="id_herramienta">
+				<label>HERRAMIENTA</label>
+				<help>Valor Entero</help>
+				<expresion>((SUBSTRING(id_herramienta, 14, 9)) + 1)</expresion>
+			</campo>
+			
+			<group>
+				<campo id="grucod"></campo>
+				<campo id="id_herramienta"></campo>
+				<campo id="artcod"></campo>				
+				
+			</group>
+		</tabla>
+	</consulta>	   
+</abm> 

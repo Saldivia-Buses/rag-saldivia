@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" PDForientacion="L" subtipo="vertical" preloadData="false" preFetch="false">
+    <title>Forecast Articulos</title>
+    <obs></obs>
+    <form >
+        <table id="STK_ARTICULOS" label="Forecast">
+            <filters>
+                <field id="year_forecast">
+                    <label>año</label>
+                    <operador>=</operador>
+                    <valor eval="true">date("Y")</valor>
+                </field>
+                <field id="mrpperiodo_id"  tabla="MRP_FORECAST">
+		        <label modpos="nobr">Periodo</label>
+                </field>
+                <field id="id_stkarticulo" esClave="true">
+                    <label>Código</label>
+                    <help>Codigo de Articulo</help>
+                    <helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas">
+                    <field id="nombre_articulo">
+                        <detalle>nombre_articulo</detalle>
+                    </field>
+                    <field id="produccion_diaria">
+                        <detalle>minimo_ordendetalle</detalle>
+                    </field>
+                    
+                </helper>
+		</field>
+                <field id="nombre_articulo" deshabilitado="false">
+                    <label modpos="nobr">Articulo</label>
+                    <help>Codigo de Articulo</help>
+                    <operador>like</operador>
+                </field>
+                <field id="tipo_forecast" _noshow="true">
+                    <label modpos="nobr">Tipo</label>     
+                    <options>
+                        <option valor="1">Venta</option>
+                        <option valor="2">Producción</option>
+                    </options>
+                    <operador>=</operador>
+
+                </field>
+		    
+            </filters>
+			
+            <fieldGroup>
+                <field id="mrpperiodo_id" deshabilitado="true" tabla="MRP_FORECAST" noshow="true">
+		       	<helper type="combo" xml="mrpperiodos_qry.xml" dir="/ayudas" empty="true"/>
+		        <label modpos="nobr">Periodo</label>
+                </field>
+                <field id="id_stkarticulo"  esClave="true">
+                    <label>Código</label>
+                    <help>Codigo de Articulo</help>
+                    <helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas">
+                        <field id="nombre_articulo">
+	                    <detalle>nombre_articulo</detalle>
+    	                </field>
+        	        <field id="produccion_diaria">
+            	            <detalle>minimo_ordendetalle</detalle>
+            	        </field>
+            	    </helper>
+                </field>
+
+
+                <field id="nombre_articulo" deshabilitado="true" linkdes="Carga de Pronostico">
+                    <label modpos="nobr">Articulo</label>
+                    <help>Codigo de Articulo</help>
+                    <helper type="link" xml="mrp_forecast_periodos_ins.xml" >
+                        <parameter source="id_stkarticulo" target="stkarticulo_id" />
+                        <parameter source="year_forecast"  target="year_forecast" />
+                        <parameter source="tipo_forecast"  target="tipo_forecast" />
+                        <parameter source="nombre_articulo"  target="nombre_articulo" />
+                    </helper>                                        
+                </field>
+<!--                <field id="mes_forecast" colstyle="display:none;" tabla="MRP_FORECAST">
+		        <label>Mes</label>
+		        <options>
+		            <option valor="1">Enero</option>
+		            <option valor="2">Febrero</option>
+		            <option valor="3">Marzo</option>
+		            <option valor="4">Abril</option>                                        
+		            <option valor="5">Mayo</option>
+		            <option valor="6">Junio</option>
+		            <option valor="7">Julio</option>
+		            <option valor="8">Agosto</option>                                        
+		            <option valor="9">Septiembre</option>
+		            <option valor="10">Octubre</option>
+		            <option valor="11">Noviembre</option>
+		            <option valor="12">Diciembre</option>                                    
+		        </options>                            
+		</field>
+    -->        
+            <field id="bom" noshow="true">
+        	<expresion having="false">(select count(*) from STK_BOM where STK_BOM.stkarticulopadre_id = STK_ARTICULOS.id_stkarticulo)
+		</expresion>
+        	<condicion operador="!=">0</condicion>
+            </field>
+			
+<!--            <field id="cantidad_forecast" colstyle="display:none;" >
+                <label modpos="nobr">Cantidad</label>
+            </field>
+    -->
+                <field id="year_forecast"   local="true" noshow="true">
+                    <label>año</label>                           
+                </field>
+
+                <field id="tipo_forecast" _noshow="true" colstyle="display:none;" local="true">
+                    <label>Tipo</label>     
+                    <options>
+                        <option valor="1">Venta</option>
+                        <option valor="2">Producción</option>
+                    </options>
+                </field>
+            </fieldGroup>
+
+            <fieldGroup noZero="true" Formstyle="display:none;">
+                <field id="total" noZero="false" tipoOrden="DESC">
+                    <label>Total</label>
+                    <expresion>sum(cantidad_forecast)</expresion>
+                    <tipo>grafico</tipo>
+                </field>
+                <field id="Enero">
+                                                                                   
+                    <label>Enero</label>
+                    <expresion>sum((case when mes_forecast = 1 then cantidad_forecast end))
+		    </expresion> //or month(MRP_PERIODOS.fecini_mrpperiodo) = 1  
+                    <tipo>integer</tipo>
+                </field>
+                <field id="Febrero">
+                    <label>Febrero</label>
+                    <expresion>sum((case when mes_forecast = 2 then  cantidad_forecast end))
+			</expresion> //or month(MRP_PERIODOS.fecini_mrpperiodo) = 2  
+                    <tipo>integer</tipo>
+                </field>
+                <field id="Marzo">
+                    <label>Marzo</label>
+                    <expresion>sum((case when mes_forecast = 3 
+			then cantidad_forecast end))</expresion> //or month(MRP_PERIODOS.fecini_mrpperiodo) = 3 
+                    <tipo>integer</tipo>
+                </field>
+                <field id="Abril">
+                    <label>Abril</label>
+                    <expresion>sum((case when mes_forecast = 4 
+			then cantidad_forecast end))</expresion> //or month(MRP_PERIODOS.fecini_mrpperiodo) = 4 
+                    <tipo>integer</tipo>
+                </field>
+                <field id="Mayo">
+                    <label>Mayo</label>
+                    <expresion>sum((case when mes_forecast = 5 
+			 then cantidad_forecast end))</expresion> //or month(MRP_PERIODOS.fecini_mrpperiodo) = 5
+                    <tipo>integer</tipo>
+                </field>
+                <field id="Junio">
+                    <label>Junio</label>
+                    <expresion>sum((case when mes_forecast = 6
+			 then  cantidad_forecast end))</expresion> // or month(MRP_PERIODOS.fecini_mrpperiodo) = 6 
+                    <tipo>integer</tipo>
+                </field>
+                <field id="Julio">
+                    <label>Julio</label>
+                    <expresion>sum((case when mes_forecast = 7 
+			 then  cantidad_forecast end))</expresion> //or month(MRP_PERIODOS.fecini_mrpperiodo) = 7  
+                    <tipo>integer</tipo>
+                </field>
+                <field id="Agosto">
+                    <label>Agosto</label>
+                    <expresion>sum((case when mes_forecast = 8 
+			 then  cantidad_forecast end))</expresion> //or month(MRP_PERIODOS.fecini_mrpperiodo) = 8
+                    <tipo>integer</tipo>
+                </field>
+                <field id="Septiembre">
+                    <label>Septiembre</label>
+                    <tipo>integer</tipo>
+                    <expresion>sum((case when mes_forecast = 9 
+			then cantidad_forecast end))</expresion> //or month(MRP_PERIODOS.fecini_mrpperiodo) = 9 
+                </field>
+                <field id="Octubre">
+                    <label>Octubre</label>
+                    <expresion>sum((case when mes_forecast = 10 
+			  then  cantidad_forecast end))</expresion> // or month(MRP_PERIODOS.fecini_mrpperiodo) = 10
+                    <tipo>integer</tipo>
+                </field>
+                <field id="Noviembre">
+                    <label>Noviembre</label>
+                    <expresion>sum((case when mes_forecast = 11
+			then  cantidad_forecast end))</expresion> // or month(MRP_PERIODOS.fecini_mrpperiodo) = 11  
+                    <tipo>integer</tipo>
+                </field>
+                <field id="Diciembre">
+                    <label>Diciembre</label>
+                    <expresion>sum((case when mes_forecast = 12
+			then cantidad_forecast end))</expresion> // or month(MRP_PERIODOS.fecini_mrpperiodo) = 12  
+                    <tipo>integer</tipo>
+                </field>
+            </fieldGroup>
+            <group>
+                <field id="id_stkarticulo"></field>
+<!--                <field id="mrpperiodo_id" tabla="MRP_FORECAST"></field> -->
+
+            </group>
+        </table>
+        <join tipo="left">
+            <table id="MRP_FORECAST">
+                <field id="stkarticulo_id">
+                    <condicion operador="=">id_stkarticulo</condicion>
+                </field>
+                <field id="tipo_forecast">
+                    <condicion operador="=">'[__tipo_forecast__]' and 
+			((MRP_FORECAST.mrpperiodo_id = '[__mrpperiodo_id__]' and '[__mrpperiodo_id__]' != '') or ('[__mrpperiodo_id__]' = ''))
+			and MRP_FORECAST.year_forecast = '[__year_forecast__]'
+			</condicion>
+                </field>
+
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="MRP_PERIODOS">
+                <field id="id_mrpperiodo">
+                    <condicion operador="=">MRP_FORECAST.mrpperiodo_id</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix>                                

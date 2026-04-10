@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud" _subtipo="vertical" >
+	<title>MODELOS DE CHASIS</title>
+	<obs></obs>
+	<form >
+		<table id="MODCHASIS" >
+			<title>Modelos</title>
+			
+			<filters auto="true">  
+		  		<field id="chasis_activo">
+		    		<label>Activo</label>
+		    		<help>Activo</help>
+		    		<operador>=</operador>
+				</field>		
+		        <field id="marcod">
+		    	    <label modpos="nobr" >Marca</label>
+		    	    <operador>=</operador>
+		    	    <valor>1</valor>
+		        </field>
+		    </filters>
+
+		    <field id="id_modelo" noshow="true" autoinc="true" />
+
+			<field id="marcod">
+				<label colstyle="display:none;">Marca Chasis</label>
+				<help>Marca del Chasis</help>
+		    	    <tabla_ex id="MARCHASIS">
+		        	<field id="marcod" />
+			        <field id="mardes" />
+			        <field id="marca_activo">
+                    	<condicion operador="=">0</condicion>
+			        </field>
+				<order>
+					<field id="mardes" />
+				</order>
+			    </tabla_ex>
+			</field>
+
+			<field id="modcha" clave="true">
+				<label>Codigo</label>
+				<help>Codigo del Modelo de Chasis</help>
+			</field>
+
+			<field id="moddes">
+				<label>Nom. Patentamiento</label>
+				<help>Nombre Patentamiento</help>
+				<size>50</size>
+			</field>
+			<field id="desabv">
+				<label>Abrev. Produccion</label>
+				<help>Abreviatura Produccion</help>
+				<size>50</size>
+			</field>
+			<field id="codigo">
+				<label>VDS</label>
+				<help>Codigo interno</help>
+			</field>
+			<field id="traccion">
+				<label>Traccion</label>
+				<help>Traccion</help>
+			</field>
+
+			<field id="vds_chasis">
+				<label>VDS Chasis</label>
+				<help>VDS Chasis</help>
+			</field>
+
+			 <field id="euro_id">
+                <label>EURO</label>
+                <help>EURO</help>
+                <tabla_ex id="EURO_TIPO" vacio="true">
+                    <field id="id_euro">
+                        <label>Codigo</label>
+                    </field>
+                    <field id="abrev_euro">
+                        <label>nombre</label>
+                    </field>
+                </tabla_ex>
+            </field>
+
+      		<field id="ubicacion_motor">
+        		<label>Ubicacion Motor</label>
+        		<help>Ubicacion Motor</help>
+        		<options>
+            		<option valor=""></option>
+            		<option valor="1">Trasero</option>           
+            		<option valor="2">Delantero</option>
+            		<option valor="3">Medio</option>
+        		</options>
+      		</field>
+
+      		<field id="marca_motor_id">
+                <label>Marca Motor</label>
+                <help>Marca del Motor</help>
+                <tabla_ex id="MARCAMOTOR" vacio="true">
+                    <field id="idMarca">
+                        <label>Codigo</label>
+                    </field>
+                    <field id="abrev">
+                        <label>nombre</label>
+                    </field>
+                </tabla_ex>
+            </field>
+
+      		<field id="modelo_motor">
+        		<label>Modelo Motor</label>
+			<size>40</size>
+      		</field>
+
+
+      		<field id="chasis_activo">
+        		<label>Activo</label>
+        		<help>Activo</help>
+        		<options>
+            		<option valor="0">Si</option>
+            		<option valor="1">No</option>           
+        		</options>
+      		</field>
+
+      		<field id="modificaciones">
+      			<label>Cambios</label>
+      			<expression>concat((select count(*) from MODCHASIS_CAMBIOS where id_modelo = modelo_id), ' Cambios')</expression>
+      			<attribute id="linkdes">moddes</attribute>
+      			<helper xml="modchasis_cambios.xml" type="link" width="80%">
+      				<parameter source="id_modelo" target="modelo_id" />
+      			</helper>
+      		</field>
+
+			<field id="siscod" oculto="true">
+				<label>Cod</label>
+			</field>
+
+			<field id="hi" deshabilitado="true" clasefila="true" noshow="true" local="true">
+        		<if exp="chasis_activo == 1">
+          			<true>'grisado'</true>
+          			<false>''</false>
+          		</if>
+          		<tipo>varchar</tipo>
+          	</field>
+
+			<order>
+				<field id="chasis_activo"></field>
+				<field id="marcod"></field>
+				<field id="moddes"></field>
+			</order>
+		</table>
+	</form>	   
+</histrix> 

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini">
+	<title>Fichadas</title>
+	<obs/>
+	<form>
+			<table id="FICHADAS" label="Fichadas del Reloj" >
+			<field id="tarjeta" esClave="true">
+				<label>tarjeta</label>
+			</field>
+			<!--
+			<field id="clave" _noshow="true" esClave="true" habilitado="true">
+			    <expresion having="false"> trim( TRAILING '\r' FROM FICHADAS.insertkey ) </expresion>
+			</field>
+			                      -->
+			
+<!--			
+			<field id="apellido" tabla="PERSONAL">
+			<expresion>apellido</expresion>
+				<label>Apellido</label>
+				<tipo>varchar</tipo>
+			</field>						
+			<field id="nombre" _tabla="PERSONAL">
+			<expresion>nombre</expresion>			
+				<label>Nombre</label>
+				<tipo>varchar</tipo>
+			</field>
+-->			<field id="fecha"  esClave="true">
+				<label>Fecha</label>
+				<jseval campodestino="fechaChar">\'fecha\'.substring(0,6) + \'fecha\'.substring(8,10)</jseval> 
+				<help>Fecha</help>
+			</field>
+			<field id="fechaChar"  deshabilitado="true" esClave="true">
+				<label>FechaChar</label>
+				<tipo>varchar</tipo>
+			</field>				
+			<field id="crc" copia="hora" _deshabilitado="true" esClave="true">
+				<label>crc</label>
+				<tipo>varchar</tipo>
+				<jseval campodestino="fechaChar">\'fecha\'.substring(0,6) + \'fecha\'.substring(8,10)</jseval>
+			</field>	
+			<field id="hora">
+				<label>Hora</label>
+				<tipo>varchar</tipo>
+				<jseval campodestino="fechaChar">\'fecha\'.substring(0,6) + \'fecha\'.substring(8,10)</jseval>
+				<help>Hora</help>
+				<jsfunction event="onchange">if ($('crc').value == ''){$('crc').value= this.value};</jsfunction>
+			</field>			
+			<field id="borrado" >
+				<label>Borrado</label>
+				<options>
+					<option valor="0">NO</option>
+					<option valor="1">SI</option>
+				</options>
+				<tipo>radio</tipo>
+			</field>
+			<order>
+				<field id="fecha" />
+				<field id="hora" />
+			</order>
+		</table>
+<!--		<join tipo="left">
+			<table id="PERSONAL">
+				<field id="tarjeta">
+					<condicion operador="=">FICHADAS.tarjeta</condicion>
+				</field>
+				
+			</table>
+		</join> -->
+	</form>
+</histrix>

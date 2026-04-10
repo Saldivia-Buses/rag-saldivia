@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="consulta">
+	<title>Cantidad</title>
+	<obs></obs>
+	<form>
+		<table id="PROD_CONTROLES">
+		   <title>CANTIDAD DE OBSERVACIONES</title>
+
+		   	<filters auto="true">
+		   		<field id="fecha_desde">
+		   			<label>Desde</label>
+		   			<operador>=</operador>
+		   			<valor eval="true">date("d/m/Y", mktime(0, 0, 0, date("m"), 1  , date("Y")))</valor>
+		   		</field>		   		
+		   		<field id="seccion_id">
+		   			<label modpos="nobr">Sección</label>
+		   			<operador>=</operador>
+		   		</field>
+		   		<field id="fecha_hasta">
+		   			<label>Hasta</label>
+		   			<operador>=</operador>
+		   			<valor>today</valor>
+		   		</field>
+		   	</filters>
+
+		    <field id="id_prodcontrol" noshow="true" />
+
+		    <field id="seccion_id" noshow="true">
+		    	<helper type="combo" id="MOMENTO" empty="true">
+		    		<field id="idMomento" />
+		    		<field id="descripcion" />
+		    		<field id="linea_id" noshow="true">
+		    			<condicion operador="=">1</condicion>
+		    		</field>
+		    	</helper>
+		    </field>
+
+		    <field id="fecha_desde" local="true" noshow="true">
+		    	<tipo>date</tipo>
+		    </field>
+		    
+		    <field id="fecha_hasta" local="true" noshow="true">
+		    	<tipo>date</tipo>
+		    </field>
+
+		    <field id="fecha_control" tabla="PROD_CONTROL_MOVIM" noshow="true">
+		    	<tipo>date</tipo>
+		    	<condicion operador="&gt;=">str_to_date('[__fecha_desde__]', '%d/%m/%Y') and fecha_control &lt;= str_to_date('[__fecha_hasta__]', '%d/%m/%Y')</condicion>
+		    </field>
+
+		    <field id="color_seccion" noshow="true">
+                <expression>
+                	case when PROD_CONTROLES.seccion_id= 2 then 'color:#FF0000;font-weight:bold'
+                		 when PROD_CONTROLES.seccion_id= 3 then 'color:#0B610B;font-weight:bold'
+                		 when PROD_CONTROLES.seccion_id= 4 then 'color:#DF7401;font-weight:bold'
+                		 when PROD_CONTROLES.seccion_id= 5 then 'color:#8000FF;font-weight:bold'
+                		 when PROD_CONTROLES.seccion_id= 6 then 'color:#2E9AFE;font-weight:bold'
+                		 when PROD_CONTROLES.seccion_id= 8 then 'color:#585858;font-weight:bold'
+                		 when PROD_CONTROLES.seccion_id= 15 then 'color:#2E2EFE;font-weight:bold'
+                		 when PROD_CONTROLES.seccion_id= 23 then 'color:#868A08;font-weight:bold'
+                	end
+                </expression>
+			</field>
+			
+			<field id="orden_control" noshow="true" />
+
+		    <field id="descripcion" tabla="MOMENTO" style="">
+		    	<label>Sección</label>
+		    	<attribute id="style">color_seccion</attribute>
+		    </field>
+			
+		    <field id="habilitado" noshow="true">
+			   	<condicion operador="=">0</condicion>
+			</field>
+
+	        <field id="nombre_control">
+		       	<condicion operador="!=">''</condicion>
+		       	<label>Control</label>
+		    </field>
+
+            <field id="no_conforme" noshow="true" tabla="PROD_CONTROL_MOVIM">
+				<condicion operador="=">1</condicion>
+            </field>
+
+            <field id="idMomento" tabla="MOMENTO" noshow="true" />
+			
+			<field id="cantidad" suma="true">
+				<label>Cant. Observaciones</label>
+                <expression><![CDATA[count(*)]]></expression>
+                <helper type="link" xml="observaciones_control.xml">
+                	<parameter target="id_prodcontrol" source="id_prodcontrol" />
+                	<parameter target="seccion_id" source="idMomento" /> 
+                	<parameter target="fecha_desde" source="fecha_desde" />
+                	<parameter target="fecha_hasta" source="fecha_hasta" />
+                </helper>
+			</field>
+
+			<group>
+                <field id="id_prodcontrol"></field>
+			</group>
+		
+			<order>
+
+				<field id="idMomento" tipoOrden="ASC" />
+				<field id="orden_control" tipoOrden="ASC" />
+                <field id="cantidad" tipoOrden="DESC" />
+			</order>
+		
+		</table>
+		
+		<join tipo="left">
+            <table id="PROD_CONTROL_MOVIM">
+                <field id="prodcontrol_id">
+                    <condicion operador="=">PROD_CONTROLES.id_prodcontrol</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join>
+            <table id="MOMENTO">
+                <field id="idMomento">
+                    <condicion operador="=">PROD_CONTROLES.seccion_id</condicion>
+                </field>
+            </table>
+        </join>
+
+	</form>
+</histrix>

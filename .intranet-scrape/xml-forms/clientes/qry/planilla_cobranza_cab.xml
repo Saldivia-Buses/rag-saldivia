@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="cabecera">
+  <title>Planilla de Cobranza</title>
+  <obs/>
+  <form >
+  
+    <table id="REG_MOVIMIENTOS" label="Planilla de Cobranza">
+	     
+	  <field id="observacion" local="true" grupo="Agregar">
+		<label>Observación</label>
+		<size>100</size>
+	  </field>
+	 
+	  <field id="gencontacto_id" local="true" grupo="Agregar">
+		<helper type="combo" id="GEN_TIPO_CONTACTOS" empty="true">
+		    <field id="id_contacto"/>
+		    <field id="tipo_contacto"/>
+		</helper>
+		<label modpos="nobr">Tipo Contacto</label>
+	  </field>
+
+	  <field id="hoy" local="true" noshow="true">
+		<valor>today</valor>
+		<tipo>date</tipo>
+	  </field>
+	  
+	  <field id="hora" local="true" noshow="true">
+	      <label>Hora</label>
+	      <help>Hora de la observación</help>
+	      <tipo>hora</tipo>
+	      <valor eval="true">date("H:i:s")</valor>
+	  </field>
+
+	  <field id="login" local="true" noshow="true" >
+		<valor eval="true">$_SESSION['usuario']</valor>
+	  </field>
+	  
+    </table>
+  </form>
+</histrix>

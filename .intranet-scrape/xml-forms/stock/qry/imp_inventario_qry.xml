@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ficha" sololectura="true" autoprint="true">
+  <title>Movimiento de stock</title>
+  <obs></obs>
+  <form>
+    <table id="STK_MOVIMIENTOS" label="Movimiento de stock">
+
+        <field id="stkdeposito_id">
+            <helper type="combo" id="STK_DEPOSITOS">
+                <field id="id_stkdeposito" />
+                <field id="nombre_deposito" />
+            </helper>
+            <label posx="5" posy="+2" size="20">Depósito</label>
+        </field>
+
+        <field id="fecha_movimiento">
+            <label modpos="nobr" posx="140" posY="0" size="17">Fecha</label>
+            <!-- <tipo>date</tipo> -->
+        </field>
+
+        <field id="stkconcepto_id">
+            <helper type="combo" id="STK_CONCEPTOS">
+                <field id="id_stkconcepto" />
+                <field id="nombre_concepto" />
+            </helper>
+            <label posx="5" posy="+2" size="20">Comprobante</label>
+        </field>
+
+        <field id="numero_movimiento" PDFbold="true">
+            <label modpos="nobr" posx="140" posY="0" size="17">Nro. Comp.</label>
+        </field>
+
+        <field id="stkrubro_id">
+            <helper type="combo" xml="stkrubro_qry.xml" dir="/ayudas" empty="true" />
+            <label posx="5" posy="+2" size="20">Rubro</label>
+        </field>
+
+        <field id="user_id">
+            <helper type="combo" xml="usuarios_qry.xml" dir="/ayudas" empty="true" />
+            <label modpos="nobr" posx="140" posy="0" size="17">Usuario</label>
+        </field>
+
+        <field id="referencia" pdfancho="180">
+            <label posx="5" posy="+2" size="20">Referencia</label>
+        </field>
+
+        <field id="detalles" local="true" _pdfwidth="180">
+            <helper type="object" xml="imp_stkmovimientos_detalle_qry.xml" dir="/stock/qry">
+                <parameter source="numero_movimiento" target="numero_movimiento" />
+                <parameter source="stkconcepto_id" target="stkconcepto_id" />
+                <parameter source="fecha_movimiento" target="fecha_movimiento" />
+            </helper>
+            <label posx="9" posy="+2"></label>
+        </field>
+
+        <group>
+            <field id="numero_movimiento"/>
+            <field id="stkconcepto_id" />
+            <field id="regcuenta_id" />
+            <field id="fecha_movimiento" />
+        </group>
+    </table>
+
+  </form>
+</histrix>

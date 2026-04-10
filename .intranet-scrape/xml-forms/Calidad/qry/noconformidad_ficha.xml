@@ -1,0 +1,307 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<histrix tipo="ficha" autoprint="true" preFetch="true" >
+    <title>Informe de No Conformidad</title>
+    <obs></obs>
+    <form>
+        <table id="CAL_NOCONFORMIDADES" >
+            <title>Informe de No Conformidad</title>     
+            
+            <fieldGroup>
+             <!--<field id="marcadeagua" local="true" PDFbold="true" PDFitalic="true" PDFrotate="-45">
+		    <expression>CASE WHEN CAL_NOCONFORMIDADES.estadonconf_id != 7 THEN '   COPIA NO \n\n\n\n\n\n\n\nCONTROLADA' ELSE '' END</expression>
+		    <label posx="30" posy="5" PDFcolor="#D3D3D3" PDFsize="105" size="400" PDFrestorePosition="true"/>
+		    <size>200</size>
+	        </field>-->
+
+	        <field id="marcacopnocontr" local="true" PDFbold="true" PDFitalic="true" PDFrotate="-8">
+		    <expression>CASE WHEN CAL_NOCONFORMIDADES.estadonconf_id != 7 THEN 'COPIA NO \n\nCONTROLADA'ELSE '' END</expression>
+		    <label posx="35" posy="260" PDFcolor="#FF2222" PDFsize="25" size="400" PDFrestorePosition="true"/>
+		    <size>200</size>
+	        </field>
+			</fieldGroup>                           
+	    	
+
+            <fieldGroup  PDFsize="10">
+
+				<field id="tiponconf_id" PDFbold="true">
+                    <helper xml="cal_tipo_nconf_crud.xml" type="combo" dir="/calidad/man" empty="true"/>
+                    <label posx="5" posy="17">Tipo</label>
+                    <help>Tipo de No conformidad</help>
+                </field>		                                 
+
+				<field id="fecha_nconf" >
+                    <label size="18" posx="90" posy="0">Fecha</label>
+                    <help>Fecha de No conformidad</help>
+                    <valor>today</valor>
+                </field>
+
+                <field id="id_noconformidad" PDFbold="true">
+                    <label size="18" posx="150" posy="0" PDFsize="20" ></label>
+                    <help>Numero de No conformidad</help>
+                    <format>%04d</format>
+                </field>
+                
+
+                <field id="origennconf_id">
+                    <helper xml="calorigennconf_qry.xml" type="combo" dir="/ayudas" empty="true"/>
+                    <label posx="5" posy="+1">Origen</label>
+                    <help>Origen de la No conformidad</help>
+                </field>
+
+                <field id="estadonconf_id" >
+                    <helper xml="calestadosnconf_crud.xml" type="combo" dir="/calidad/man" empty="true">
+                    </helper>
+                    <label size="18" posx="90" posy="0">Estado</label>
+                    <help>Estado de la No conformidad</help>
+                </field>                
+
+<!--                 <field id="rhseccion_id">
+                    <helper xml="rhseccion_qry.xml" type="combo" dir="/ayudas" empty="true" />
+                    <label  size="18" posx="90" posy="0">Seccion</label>
+                    <help>Seccion de la No conformidad</help>
+                </field> -->
+                
+				<field id="regcuenta_id">
+					<expression>SELECT nombre_cuenta FROM REG_CUENTA WHERE REG_CUENTA.id_regcuenta = CAL_NOCONFORMIDADES.regcuenta_id and REG_CUENTA.subsistema_id = CAL_NOCONFORMIDADES.subsistema_id limit 1</expression>  
+					<label size="22" posx="5" posy="+1">Cliente/Prov</label>
+				</field>				
+				
+				<field id="stkarticulo_id" noZero="true">
+					<label size="18" posx="90" posy="0">Artículo</label>
+					<!--
+					<helper type="combo" xml="stkarticulo_autocomplete_qry.xml" dir="/ayudas" empty="true">
+					</helper>                     
+					-->
+<!--					<helper type="combo" id="STKINSUM">
+						<field id="artcod">
+						</field>
+						<field id="artdes">
+						</field>
+					</helper>  -->
+				</field>
+
+<!-- 		        <field id="responsable_nconf" _local="true" deshabilitado="false">
+		            <helper type="combo" id="HTXUSERS" empty="true">
+						<field id="id_usuario"/>
+						<field id="nombre">
+							<expression>CONCAT(apellido, ' ', Nombre)</expression>
+						</field>
+						<field id="baja">
+							<condicion operador="=">0</condicion>
+						</field>
+						<order>
+							<field id="nombre"/>
+						</order>
+		            </helper>
+					<label size="25" posx="150" posy="0">Responsable</label>
+		            <help >Empleado responsable de la Acción</help>
+				</field> -->
+
+        <field id="responsables">
+            <expression><![CDATA[
+            IFNULL((CASE WHEN 
+            (SELECT  
+            REPLACE(GROUP_CONCAT(DISTINCT CONCAT(h.Nombre, ' ', LEFT(h.apellido,1))), ",", ", ") 
+            FROM CAL_ACCIONES_NCONF can LEFT JOIN HTXUSERS h ON can.resp_rhpersonal_id = h.id_usuario 
+            WHERE can.noconformidad_id = CAL_NOCONFORMIDADES.id_noconformidad)
+            
+            LIKE   CONCAT('%',responsable.Nombre, ' ', LEFT(responsable.apellido,1), '%') 
+            
+            THEN
+             
+             ( REPLACE(
+             
+             (SELECT  
+            REPLACE(GROUP_CONCAT(DISTINCT CONCAT(h.Nombre, ' ', LEFT(h.apellido,1))), ",", ", ") 
+            FROM CAL_ACCIONES_NCONF can LEFT JOIN HTXUSERS h ON can.resp_rhpersonal_id = h.id_usuario 
+            WHERE can.noconformidad_id = CAL_NOCONFORMIDADES.id_noconformidad), CONCAT(responsable.Nombre, ' ', LEFT(responsable.apellido,1)),
+            CONCAT('<i><b>',responsable.Nombre, ' ', LEFT(responsable.apellido,1), '</b></i>')
+            
+            )               )
+            
+            ELSE
+            
+            (SELECT DISTINCT CONCAT('<i><b>', responsable.Nombre, ' ', LEFT(responsable.apellido,1), '</b></i>', ", ", 
+            REPLACE(GROUP_CONCAT(DISTINCT CONCAT(h.apellido, ' ', h.Nombre)), ",", ", ")) 
+            FROM CAL_ACCIONES_NCONF can LEFT JOIN HTXUSERS h ON can.resp_rhpersonal_id = h.id_usuario 
+            WHERE can.noconformidad_id = CAL_NOCONFORMIDADES.id_noconformidad)
+            
+            END), CONCAT('<i><b>',responsable.Nombre, ' ', LEFT(responsable.apellido,1), '</b>, '))
+            
+            ]]></expression>
+            <label posx="5" posy="+1">Equipo</label>
+            <tipo>editor</tipo>
+        </field>
+
+                <field id="tarea_servicie_id">
+                    <helper xml="service_tareas.xml" type="combo" dir="/service" empty="true"/>
+                    <label posx="5" posy="+1">Falla</label>
+                    <help>Falla de la No conformidad</help>
+                </field>
+
+				<field id="dat1" local="true">
+                    <label  size="195" posx="5" posy="+6" _PDFsize="14" pdffill="195">Descripción de la No Conformidad</label>
+                </field>
+
+                <field id="descripcion_nconf">
+                    <label posx="5" posy="+1" ></label>
+                    <help>Descripción de la no conformidad</help>
+                </field>
+
+                <field id="dat32" local="true">
+                    <label  size="195" posx="5" posy="+6" _PDFsize="14" pdffill="195">Alcance</label>
+                </field>
+
+                <field id="alcance_nconf">
+                    <label posx="5" posy="+1" ></label>
+                    <help>Acción de contención de la no conformidad</help>
+                </field>
+
+				<field id="dat3" local="true">
+                    <label  size="195" posx="5" posy="+6" _PDFsize="14" pdffill="195">Acción de contención</label>
+                </field>
+
+                <field id="contencion_nconf">
+                    <label posx="5" posy="+1" ></label>
+                    <help>Acción de contención de la no conformidad</help>
+                </field>
+
+	   
+		<field id="uno" local="true" oculto="true">
+		    <valor>1</valor>
+		</field>
+		<field id="dos" local="true" oculto="true">
+		    <valor>2</valor>
+		</field>
+		<field id="tres" local="true" oculto="true">
+		    <valor>3</valor>
+		</field>		
+		<field id="cuatro" local="true" oculto="true">
+		    <valor>4</valor>
+		</field>
+
+		<field id="muestraAcAn" print="false">
+		    <expression>CASE WHEN (SELECT COUNT(*) FROM CAL_ACCIONES_NCONF WHERE noconformidad_id = CAL_NOCONFORMIDADES.id_noconformidad and tipo_accionnconf = 1) > 0 THEN 'true' else 'false' END</expression>
+		</field>
+
+                
+
+
+		<field id="dat8" local="true">
+                    <label  size="195" posx="5" posy="+6" _PDFsize="14" pdffill="195">Análisis del problema</label>
+		    <attribute id="print">muestraAcAn</attribute>
+                </field>
+                <field id="causas_nconf" local="true" PDFwidth="195" colstyle="display:none;">
+                	<label posx="9" posy="+1" colspan="4"></label>
+                    <helper xml="cierre_nconf_grid.xml" type="object" dir="/calidad/ing" >
+                        <parameter source="id_noconformidad" target="noconformidad_id" />
+                        <parameter source="uno" target="tipo_accionnconf" />
+                    </helper>
+				</field>
+
+
+                <field id="dat4" local="true">
+                    <label  size="195" posx="5" posy="+6" _PDFsize="14" pdffill="195">Causa raiz</label>
+                </field>
+                <field id="causa_nconf">
+                    <label posx="5" posy="+1" ></label>
+                    <help>Causa raiz de la no conformidad</help>
+                </field>
+
+				<field id="muestraAcCo" print="false">
+					<expression>CASE WHEN (SELECT COUNT(*) FROM CAL_ACCIONES_NCONF WHERE noconformidad_id = CAL_NOCONFORMIDADES.id_noconformidad and tipo_accionnconf = 3) > 0 THEN 'true' ELSE 'false' END</expression>
+				</field>
+
+                <field id="dat2" local="true">
+                    <label  size="195" posx="5" posy="+6" _PDFsize="14" pdffill="195">Acciones Correctivas</label>
+					<attribute id="print">muestraAcCo</attribute>
+                </field>
+
+		<field id="acciones_correctivas" local="true" PDFwidth="195" colstyle="display:none;">
+            <label posx="9" posy="+1" colspan="4"></label>
+            <help>Acciones Correctivas</help>
+            <helper xml="cierre_nconf_grid.xml" type="object" dir="/calidad/ing" >
+                <parameter source="id_noconformidad" target="noconformidad_id" />
+                <parameter source="tres" target="tipo_accionnconf" />
+            </helper>
+        </field>
+
+		<field id="muestraAcCoPlan" print="false">
+			<expression>CASE WHEN (SELECT COUNT(*) FROM CAL_PLAN_ACCION_TOTAL WHERE id_noconformidad = CAL_PLAN_ACCION_TOTAL.noconformidad_planaccion) > 0 THEN 'true' ELSE 'false' END</expression>
+		</field>
+
+<!--         <field id="dat23" local="true">
+            <label  size="195" posx="5" posy="+6" _PDFsize="14" pdffill="195">Acciones Correctivas</label>
+			<attribute id="print">muestraAcCoPlan</attribute>
+        </field>
+
+		<field id="acciones_correctivas_plan" local="true" PDFwidth="195" colstyle="display:none;">
+            <label posx="9" posy="+1" colspan="4"></label>
+            <help>Acciones Correctivas</help>
+            <helper xml="cal_acciones_nconf_plan_qry.xml" type="object" dir="/calidad/qry" >
+        	<parameter source="id_noconformidad" target="noconformidad_planaccion"/>
+            </helper>
+        </field> -->
+
+		<field id="muestraAnEf" print="false">
+			<expression>CASE WHEN (SELECT COUNT(*) FROM CAL_ACCIONES_NCONF WHERE noconformidad_id = CAL_NOCONFORMIDADES.id_noconformidad and tipo_accionnconf = 4) > 0 THEN 'true' ELSE 'false' END</expression>
+		</field>
+
+        <field id="dat5" local="true">
+            <label  size="195" posx="5" posy="+6" _PDFsize="14" pdffill="195">Analisis de Eficacia</label>
+			<attribute id="print">muestraAnEf</attribute>
+        </field>
+
+		<field id="analisis_eficacia" local="true" PDFwidth="195" colstyle="display:none;">
+                    <label posx="9" posy="+1" colspan="4"></label>
+                    <help>Analisis de Eficacia</help>
+                    <helper xml="cierre_nconf_grid.xml" type="object" dir="/calidad/ing" >
+                        <parameter source="id_noconformidad" target="noconformidad_id" />
+                        <parameter source="cuatro" target="tipo_accionnconf" />
+                    </helper>
+                </field>
+               
+<!-- 				<field id="auditoriaobs_id" oculto="true"/>
+ -->		     <size>100</size>
+            </fieldGroup>
+				
+				
+            <fieldGroup PDFsize="10">
+
+		<field id="muestraAcPr" print="false">
+		    <expression>CASE WHEN (SELECT COUNT(*) FROM CAL_ACCIONES_NCONF WHERE noconformidad_id = CAL_NOCONFORMIDADES.id_noconformidad and tipo_accionnconf = 2) > 0 THEN 'true' ELSE 'false' END</expression>
+		</field>
+
+                <field id="dat9" local="true">
+                    <label  size="195" posx="5" posy="+6" pdffill="195">Acciónes Correctivas</label>
+					<attribute id="print">muestraAcPr</attribute>
+                </field>
+                <field id="acciones_preventivas" local="true" PDFwidth="195" colstyle="display:none;">
+                	<label posx="9" posy="+1" colspan="4"></label>
+                    <helper xml="cierre_nconf_grid.xml" type="object" dir="/calidad/ing" >
+                        <parameter source="id_noconformidad" target="noconformidad_id" />
+                        <parameter source="dos" target="tipo_accionnconf" />
+                    </helper>
+				</field>
+				
+				<field id="dat10" local="true">
+                    <label  size="195" posx="5" posy="+6" pdffill="195">Fotos</label>
+                </field>
+				<field id="fotos" _local="true" _foto="true" _imageWidth="50" imageHeight="70" > 
+					<expression>CONCAT('../xml/archivos/noconformidades/', id_noconformidad, '/')</expression>
+					<label posx="5" posy="+1"></label>
+					<tipo>dir</tipo>
+
+				</field>  
+            </fieldGroup>
+         	
+		</table>
+        <join tipo="left">
+        <table id="HTXUSERS" as="responsable">
+        <field id="id_usuario">
+            <condicion operador="=">CAL_NOCONFORMIDADES.responsable_nconf</condicion>
+        </field>
+        </table>
+    </join>
+    </form>
+</histrix>

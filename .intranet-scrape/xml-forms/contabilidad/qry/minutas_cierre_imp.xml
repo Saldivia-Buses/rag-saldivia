@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" limit="1">
+  <title />
+  <obs />
+  <form>
+    <table id="CTB_DETALLES" label="Imp. Libro diario">
+
+        <field id="id_detalle" noshow="true" print="false" />
+
+        <field id="nroprox_hoja" noshow="true" local="true" />
+
+        <field id="movimiento_id" noshow="true" print="false" />
+
+        <field id="regmovim_id" noshow="true" print="false" tabla="CTB_MOVIMIENTOS">
+            <condicion operador="=">0 or CTB_MOVIMIENTOS.regmovim_id IS NULL</condicion>
+        </field>
+
+        <field id="ejercicio_id" noshow="true" print="false" tabla="CTB_MOVIMIENTOS">
+            <label>Ejercicio</label>
+        </field>
+
+        <field id="concepto_id" noshow="true" print="false" tabla="CTB_MOVIMIENTOS">
+            <label>Concepto</label>
+        </field>
+
+        <field id="desde_fecha" noshow="true" local="true" print="false">
+            <label>Desde</label>
+            <tipo>date</tipo>
+        </field>
+
+        <field id="hasta_fecha" noshow="true" local="true" print="false">
+            <label>Hasta</label>
+            <tipo>date</tipo>
+        </field>
+
+        <field id="fecha_imp" repeat="false" PDFcolWidth="17">
+            <label>Fecha</label>
+            <expression sql="true"><![CDATA[select fecha_movimiento 
+                                    from CTB_MOVIMIENTOS 
+                                    where fecha_movimiento >= '[__desde_fecha__]' and 
+                                          fecha_movimiento <= '[__hasta_fecha__]' and 
+                                          ejercicio_id = '[__ejercicio_id__]' and 
+                                          concepto_id = '[__concepto_id__]' and
+                                          referencia not like '%CIERRE DE CAJA%' and
+                                          referencia != 'CIERRE EJERCICIO' and
+                                          referencia != 'REFUNDICION EJERCICIO' and 
+                                          regmovim_id IS NULL
+                                    order by fecha_movimiento DESC 
+                                    limit 1]]></expression>
+            <tipo>date</tipo>
+        </field>
+
+        <field id="fecha_movimiento" tabla="CTB_MOVIMIENTOS" repeat="false" noshow="true">
+            <label>Fecha</label>
+            <condicion operador="&gt;=">str_to_date('[__desde_fecha__]','%d/%m/%Y') and CTB_MOVIMIENTOS.fecha_movimiento &lt;= str_to_date('[__hasta_fecha__]','%d/%m/%Y')</condicion>
+            <tipo>date</tipo>
+        </field>
+
+        <field id="count_asientos" PDFcolWidth="13" PDFalign="true" noshow="true">
+            <label>Nro</label>
+            <expression sql="true"><![CDATA[select count(*)
+                                                  from CTB_MOVIMIENTOS
+                                                  where concepto_id = '[__concepto_id__]' and
+                                                        ejercicio_id = '[__ejercicio_id__]' and
+                                                        fecha_movimiento >= '[__desde_fecha__]' and
+                                                        fecha_movimiento <= '[__hasta_fecha__]' and
+                                                        regmovim_id IS NULL and
+                                                        referencia not like '%CIERRE DE CAJA%' and
+                                                        referencia != 'CIERRE EJERCICIO' and
+                                                        referencia != 'REFUNDICION EJERCICIO']]></expression>
+        </field>
+
+        <field id="count_asientos2" PDFcolWidth="13" PDFalign="true" noshow="true">
+            <label>Nro</label>
+            <expression sql="true"><![CDATA[select count(*) 
+                                            from CTB_CENTROS
+                                            where id_ctbcentro IN (select ctbcentro_id 
+                                                                   from CTB_DETALLES
+                                                                   join CTB_MOVIMIENTOS ON 
+                                                                        CTB_MOVIMIENTOS.id_movimiento = CTB_DETALLES.movimiento_id
+                                                                   where concepto_id = '[__concepto_id__]' and
+                                                                         ejercicio_id = '[__ejercicio_id__]' and
+                                                                         fecha_movimiento >= '[__desde_fecha__]' and
+                                                                         fecha_movimiento <= '[__hasta_fecha__]' and
+                                                                         CTB_MOVIMIENTOS.referencia like '%CIERRE DE CAJA%'
+                                                                   group by ctbcentro_id)]]></expression>
+        </field>
+
+        <field id="nroasiento" PDFcolWidth="13" local="true" PDFalign="true">
+            <label>Nro</label>
+            <if exp="true">
+                <true>count_asientos + count_asientos2 + nroprox_hoja + 4</true>
+                <false></false>
+            </if>
+        </field>
+
+        <field id="referencia" tabla="CTB_MOVIMIENTOS" noshow="true">
+            <label>Detalle del Movimiento</label>
+            <condicion operador="=">'CIERRE EJERCICIO'</condicion>
+        </field>
+
+        <field id="oculta_referencia" local="true" noshow="true" />
+
+        <field id="tipo" local="true" PDFcolWidth="15">
+            <label>Tipo</label>
+            <valor>Cierre</valor>
+            <attribute id="print">oculta_referencia</attribute>
+        </field>
+
+        <field id="detalle" local="true">
+          <helper xml="det_cierre_imp.xml" type="object">
+            <parameter source="ejercicio_id" target="ejercicio_id" />
+            <parameter source="concepto_id" target="concepto_id" />
+            <parameter source="fecha_desde" target="fecha_desde" />
+            <parameter source="fecha_hasta" target="fecha_hasta" />
+          </helper>
+        </field>
+
+        <group>
+            <field id="cuenta_id" />
+            <field id="doh" />
+        </group>
+
+        <order>
+            <field id="doh" />
+            <field id="cuenta_id" />
+        </order>
+
+    </table>
+
+    <join>
+        <table id="CTB_MOVIMIENTOS">
+            <field id="id_movimiento">
+                <condicion operador="=">CTB_DETALLES.movimiento_id</condicion>
+            </field>
+        </table>
+    </join>
+
+  </form>
+</histrix>

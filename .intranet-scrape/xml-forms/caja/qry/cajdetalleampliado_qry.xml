@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="grid" showCantidad="false" tooltip="false" deleteRow="false" _imprime="false">
+  <title>Consulta Valores</title>
+  <obs/>
+  <form>
+    <table id="CAJ_DETALLES">
+
+      <fieldGroup id="DEBUG" noshow="true">
+        <field id="fecha_desde" local="true" />
+        <field id="fecha_hasta" local="true" />
+        <field id="cajpuesto_id" tabla="CAJ_MOVIMIENTOS"/>
+        <field id="cajconcepto_id1" local="true"/>
+        <field id="id_cajdetalle"/>
+        <field id="cajconcepto_id" tabla="CAJ_MOVIMIENTOS">
+          <condicion operador="=">'[__cajconcepto_id1__]' or '[__cajconcepto_id1__]' = ''</condicion>
+        </field>
+        <field id="cajmovimiento_id"/>
+        <field id="doh" esClave="true"/>
+        <field id="cuenta_id" esClave="true">
+          <label>Cuenta</label>
+        </field>
+        <field id="nombre_cuenta" tabla="CTB_CUENTAS">
+          <label>Nombre</label>
+          <setvar>titulo_div</setvar>
+        </field>
+      </fieldGroup>
+
+      <!-- DETALLES DE MOVIMIENTOS -->
+      <fieldGroup>
+        <field id="fecha_movimiento" tabla="CAJ_MOVIMIENTOS" _break="true">
+          <condicion operador="&gt;=">'[__fecha_desde__]' and (CAJ_MOVIMIENTOS.fecha_movimiento &lt;= '[__fecha_hasta__]' or '[__fecha_hasta__]' = '')</condicion>
+          <tipo>date</tipo>
+        </field>
+        <field id="comprobante">
+          <label>Comprobante</label>
+          <expression>CONCAT(CAJ_CONCEPTOS.abreviatura_concepto,' ' ,lpad(ifnull(CAJ_MOVIMIENTOS.cajpuesto_id,0),4,'0'),'-',lpad(CAJ_MOVIMIENTOS.nro_movimiento,8,'0'))</expression>
+        </field>
+        <field id="debe" noZero="true" suma="true">
+          <expression>sum((CASE WHEN CAJ_DETALLES.doh  = 0  THEN CAJ_DETALLES.importe_detalle ELSE 0 END))</expression>
+          <label>Debe</label>
+          <tipo>decimal</tipo>
+        </field>
+        <field id="haber" noZero="true" suma="true">
+          <expression>sum((CASE WHEN CAJ_DETALLES.doh != 0  THEN CAJ_DETALLES.importe_detalle ELSE 0 END))</expression>
+          <label>Haber</label>
+          <tipo>decimal</tipo>
+        </field>
+        <field id="acumulado" suma="true" acumula="true" local="true" style="width:14.5%">
+          <label>Acumulado</label>
+          <if exp="true">
+            <true>(debe + 0) - (haber + 0)</true>
+            <false>0</false>
+          </if>
+          <tipo>decimal</tipo>
+        </field>
+        <field id="referencia">
+          <label>Referencia</label>
+          <expression>IFNULL( (SELECT rc.nombre_cuenta 
+                                FROM REG_MOVIMIENTOS rm 
+                                 JOIN REG_CUENTA rc on rc.id_regcuenta = rm.regcuenta_id
+                                WHERE rm.cajmovimiento_id = CAJ_MOVIMIENTOS.id_cajmovimiento 
+                                  AND rm.subsistema_id = CAJ_CONCEPTOS.subsistema_id LIMIT 1), CAJ_MOVIMIENTOS.referencia_movimiento)</expression>
+        </field>
+        <field id="ver" local="true" print="false">
+          <value>&lt;&lt;</value>
+          <helper type="link" dir="/caja/proc/del" xml="cajmovimiento_ficha.xml" title="Detalle del Comprobante" modal="true">
+            <parameter source="cajmovimiento_id" target="id_cajmovimiento" operador="="/>
+          </helper>
+        </field>
+      </fieldGroup>
+
+      <group>
+        <field id="cajmovimiento_id"/>
+      </group>
+
+      <order>
+        <field id="fecha_movimiento"/>
+        <field id="doh"/>
+        <field id="nombre_cuenta"/>
+      </order>
+      <!-- FIN -->
+    </table>
+    <join>
+      <table id="CAJ_MOVIMIENTOS">
+        <field id="id_cajmovimiento">
+          <condicion operador="=">cajmovimiento_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join>
+      <table id="CAJ_CONCEPTOS">
+        <field id="id_cajconcepto">
+          <condicion operador="=">CAJ_MOVIMIENTOS.cajconcepto_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="CTB_CUENTAS">
+        <field id="id_cuenta">
+          <condicion operador="=">cuenta_id</condicion>
+        </field>
+        <field id="ejercicio_id">
+          <condicion operador="=">(SELECT id_ejercicio FROM CTB_EJERCICIOS where activo = 1 ORDER BY id_ejercicio DESC LIMIT 1)</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>

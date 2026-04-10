@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="calendar"  calendarAspectRatio="1.65">
+    <title>Calendario</title>
+    <obs/>
+    <form >
+        <table id="HTXCALENDAR" >
+
+            <field id="startdate" calendarStartDate="true">
+                <label >Inicio</label>
+                <tipo>date</tipo>
+                
+            </field>
+
+            <field id="starttime" calendarStartTime="true">
+                <label  modpos="nobr">Hora</label>
+                <tipo>time</tipo>
+            </field>
+
+            <field id="enddate"  calendarEndDate="true">
+                <label >Dia Fin</label>
+                <tipo>date</tipo>
+            </field>
+
+            <field id="endtime"  calendarEndTime="true">
+                <label modpos="nobr">Hora Fin</label>
+                <tipo>time</tipo>
+
+            </field>
+            <field id="color" color="true" style="color:transparent;">
+            	<label>color</label>
+            	<size>6</size>
+            </field>
+            
+            <field id="subject" calendarSubject="true">
+                <label colspan="6">Titulo</label>
+                <size>50</size>
+                <help>Título del Evento</help>
+            </field>
+            
+            <field id="recurringrule" calendarRecurringRule="true"  print="false" noshow="true">
+                <label colspan="3">Recurrencia</label>
+                <size>300</size>
+            </field>
+            <field id="description" calendarDescription="true">
+                <label colspan="6">Descripcion</label>
+                 <help>Descripcion del Evento</help>
+            </field>
+            <field  id="id_calendar" autoinc="true" noshow="true" calendarId="true">
+            </field>
+            <field id="id_user" local="true" noshow="true">
+                <valor eval="true">$_SESSION['idUser']</valor>
+            </field>
+            <field id="user_id" valauto="true" noshow="true" calendarEditable="true">
+                <condicion operador="=">'[__id_user__]' or user_id = 0</condicion>
+                <valor eval="true">$_SESSION['idUser']</valor>
+            </field>
+
+
+            <field id="defaultColor" local="true" calendarColor="true" noshow="true" >
+                <if exp="user_id != 0">
+                    <true>'color'</true>
+                    <false>'blue'</false>
+                </if>
+            </field>
+<!--
+            <field id="repetir" local="true">
+                <label>Repetir</label>
+                <tipo>check</tipo>
+                <jseval campodestino="recurringrule" actxml="false">\'FREQ=\' + \'freq\'+\';\'+\'COUNT=\'+ count </jseval>
+        	
+            </field>
+            -->
+            <!--
+            <field id="freq" local="true">
+                <label>Periodicidad</label>
+                <options>
+                    <option valor=""></option>
+                    <option valor="DAILY">DIARIO</option>
+                    <option valor="WEEKLY">SEMANAL</option>
+                    <option valor="MONTHLY">MONTHLY</option>
+                    <option valor="YEARLY">ANUAL</option>
+                </options>
+                <jseval campodestino="recurringrule" actxml="false">\'FREQ=\' + \'freq\'+\';\'+\'COUNT=\'+ count +\';\'+\'BYDAY=\'+ \'dia\'</jseval>            </field>
+            <field id="count" local="true">
+                <label>Cantidad</label>
+                <size>3</size>
+                <jseval campodestino="recurringrule" actxml="false">\'FREQ=\' + \'freq\'+\';\'+\'COUNT=\'+ count +\';\'+\'BYDAY=\'+ \'dia\'+\';\'</jseval>
+                </field>
+            <field id="dia" local="true">
+                <label>dia</label>
+                <options>
+                    <option valor=""></option>
+                    <option valor="SU">Domingo</option>
+                    <option valor="MO">Lunes</option>
+                    <option valor="TU">Martes</option>
+                    <option valor="WE">Miercoles</option>
+                    <option valor="TH">Jueves</option>
+                    <option valor="FR">Viernes</option>
+                    <option valor="SA">Sabado</option>
+
+                </options>
+                    
+                <jseval campodestino="recurringrule" actxml="false">\'FREQ=\' + \'freq\'+\';\'+\'COUNT=\'+ count +\';\'+\'BYDAY=\'+ \'dia\'+\';\'</jseval>
+            </field>
+            -->
+
+            <order>
+                <field id="startdate"/>
+            </order>
+        </table>
+    </form>
+</histrix>

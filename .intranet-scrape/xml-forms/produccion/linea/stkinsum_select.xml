@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="ing" borra="no" inserta="no" modifica="false"    imprime="false"
+paginar="250" path="fotos/articulos" preloadData="false"
+ llenoreferente="true"
+>
+  <title>Insumos</title>
+  <obs></obs>
+  <form  detalle="cctcuent_x_insumo.xml" inline="true" hasDetail="hasdet" idCampoCond="cargar">
+    <table id="STKINSUM" styleTbody="height:500px;overflow-x:hidden;">
+      <title>Insumos</title>
+                                        
+      
+      <field id="artcod" esclave="false" PDFcolor="000000" deshabilitado="true">
+        <detalle>artcod</detalle>
+<!--         <ayuda_ex id="STKINSUM"  xml="HLPstkinsum.xml" dir="/ayudas"> -->
+        <ayuda_ex id="STKINSUM" >
+          <field id="artcod" >
+            <label>Cod</label>
+          </field>
+          <field id="artdes" >
+            <label>Nombre</label>
+            <detalle>artdes</detalle>
+          </field>
+          <field id="baja" oculto="true">
+            <condicion operador="=">0</condicion>
+          </field>                   
+          <field id="siscod" oculto="true">
+            <condicion operador="=">'01'</condicion>
+          </field>          
+      
+        </ayuda_ex>
+      
+        <label>Cod.</label>
+        <detalle>stkarticulo_id</detalle>
+        <detalle>artcod</detalle>
+      </field>
+      <field id="artdes" autocompletar="false" fullSearch="true" deshabilitado="true">
+        <detalle>artdes</detalle>
+
+        <label>Articulo</label>
+        <size>80</size>
+        <help>Descripcion de Articulo</help>
+
+      </field>
+      <field id="cantidad" local="true" editable="true" _refresh="true">
+        <label>cantidad</label>
+        <detalle>cantidad</detalle>
+      </field>
+      <field id="baja" oculto="true">
+        <condicion operador="!=">1</condicion>
+      </field>
+      
+      
+      <field id="siscod" oculto="true">
+        <label>siscod</label>
+      </field>      
+        <field id="cargar" local="true" refresh="true">
+          <label>cargar</label>
+          <tipo>check</tipo>
+        </field>        
+
+
+      <group>
+        <field id="artcod" tabla="STKINSUM"></field>
+      </group>
+      <filters> 
+        <field id="artcod" deshabilitado="false">
+          <ayuda_ex id="STKINSUM">
+            <clave>artcod</clave>
+            <descripcion>artdes</descripcion>
+          </ayuda_ex>
+          <label>Cod.</label>
+                    
+          <operador  modificador="left">=</operador>          
+        </field>      
+        <field id="artdes" fullSearch="true">
+          <label>Articulo</label>
+          <help>Descripcion de Articulo</help>
+          <operador>like</operador>
+        </field>        
+
+
+      </filters>
+                        <order>
+                    	    <field id="artcod" tabla="STKINSUM"/>
+                        </order>
+    </table>
+<!--
+    <join tipo="left">
+      <table id="ARTICULO_FOTO">
+      <field id="idArticulo" >
+        <condicion operador="=">STKINSUM.artcod</condicion>
+      </field>
+      </table>
+    </join>    
+-->    
+  </form>
+</histrix>

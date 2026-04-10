@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+	<histrix tipo="insert"  tipoInsert="IGNORE">
+		<title>Grabación de Imputaciones</title>
+		<obs/>
+			<form>
+				<table id="REG_IMPUTACIONESDETALLES" 		idCampoCond="emite_det_remito"> <!-- Si Graba Stock-->
+					<field id="regdetallefac_id"          	lastId="mos_regdetalles_ins_cav.xml" > <!-- id del factura detalle-->
+<!--	<valor>(SELECT AUTO_INCREMENT -2 FROM information_schema.TABLES WHERE TABLE_SCHEMA = 'insumas' AND TABLE_NAME = 'REG_DETALLES')</valor>	 -->
+					</field>
+					<field id="regdetalleped_id" 			lastId="mos_regdetalles_rem_ins_cav.xml" > <!-- id del remito detalle-->
+<!--	<valor>(SELECT AUTO_INCREMENT -1 FROM information_schema.TABLES WHERE TABLE_SCHEMA = 'insumas' AND TABLE_NAME = 'REG_DETALLES')</valor>	 -->
+					</field>
+ 					<field id="cantidad_imputada" 			id_temp="cantidad_detalle" />
+				</table>
+			</form>
+	</histrix>

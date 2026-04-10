@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="delete">
+       <title>COMPROBANTES</title>
+        <obs></obs>
+               <form >
+					<table id="CCTENCAB" label="ANULACION ORDEN DE PAGO" idCampoCond="cliente">
+						<field id="siscod" id_temp="subsistema_id" esClave="true">
+						</field>
+						<field id="ctacod" id_temp="nro_cuenta" esClave="true">
+						</field>
+						<field id="movfec" id_temp="fecha_movimiento" esClave="true">
+						</field>
+						<field id="concod" id_temp="cod_concepto" esClave="true">
+						</field>
+						<field id="movnpv" id_temp="puesto_movimiento" esClave="true">
+						</field>
+						<field id="movnro" id_temp="nro_movimiento" esClave="true">
+						</field>
+					</table>
+               </form>
+        </histrix>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="update" >
+  <title>Asiento Contable</title>
+  <obs/>
+  <form>
+    <table id="STK_ARTICULOS" idCampoCond="baja_articulo">
+      <field id="id_stkarticulo" id_temp="id_stkarticulo" esClave="true"/>
+      <field id="baja_articulo" id_temp="baja_articulo" />
+    </table>
+  </form>
+</histrix>

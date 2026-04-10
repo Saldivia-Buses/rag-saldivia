@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="ficha" sololectura="true" preFetch="true" autoprint="true">
+	<title>Impuesto a los Ingresos Brutos R.G.1598</title>
+	<obs></obs>
+	<form >
+		<table id="RET1598" label="Retenciones de ingresos brutos">
+			<field id="id_ret1598" oculto="true" />
+			<field id="nroret" deshabilitado="true">
+				<label posx="13" posy="22" >Constancia de Retencion Nro</label>
+				<help>Numero de la retencion</help>
+				<format>%08d</format>
+			</field>			
+			<field id="fecret" deshabilitado="true">
+				<label posx="150" posy="22" >Fecha</label>
+				<help>Fecha de la Retencion</help>
+			</field>			
+			<field id="nroag" local="true" deshabilitado="true">
+				<label posx="13" posy="27" >Ag.Ret.IIBB Nro</label>
+				<valor>'450-002395-0'</valor>
+				<tipo>varchar</tipo>
+			</field>	
+			<field id="ctacod" deshabilitado="true">
+				<label posy="+5" >Cuenta</label>
+				<help>Codigo de Cuenta</help>
+			</field>
+			<field id="ctanom" tabla="CCTCUENT" deshabilitado="true">
+				<label colspan="2"   >Nombre</label>
+				<help>Nombre</help>
+			</field>
+			
+
+
+			<field id="ctadir">
+				<label colspan="2">Direccion</label>
+				<help>Direccion</help>
+			</field>
+			<field id="ctaloc">
+				<label colspan="2">Localidad</label>
+				<help>Localidad</help>
+			</field>
+			<field id="ctanro">
+				<label colspan="2">C.U.I.T. Nro</label>
+				<help>Numero Doc</help>
+			</field> 
+			<field id="ctanib" tabla="CCTCUENT" deshabilitado="true">
+				<label colspan="2">Nro de Ingresos brutos</label>
+				<help>Numero de Ingresos brutos</help>
+				<format></format>
+			</field>
+			<!--
+			<field id="codcomp">
+				<label>Comp.</label>
+				<help>Codigo de Comprobante</help>
+			</field>
+			<field id="codnpv">
+				<label>Npv</label>
+				<help>Pnto de Venta</help>
+			</field>	
+			-->		
+<!--			<field id="sep" local="true">	
+				<label posx="+1">Conceptos</label>
+				<valor>Conceptos de retención Impuesto a los Ingresoso Brutos</valor>
+				<tipo>varchar</tipo>
+			</field>	-->
+
+			<field id="compnro">
+				<label>Corresponde a Orden de Pago Nro</label>
+				<format>%08d</format>				 
+			</field>	
+<!--			
+			<field id="compfec">
+				<label>Fecha</label>
+				<help>Fecha del Comprobante</help>
+			</field>	 -->		
+			<field id="totcomp">
+				<label>Importe Operacion</label>
+				<help>Importe de la Operacion</help>
+				<tipo >numeric</tipo>
+			</field>		
+			<field id="totimpon">
+				<label>Imponible</label>
+				<help>Monto imponible del Comprobante</help>
+			</field>			
+			
+			<field id="alicuota">
+				<label>Alicuota</label>
+				<help>Alicuota</help>
+			</field>			
+
+			<field id="totret" suma="true" deshabilitado="true">
+				<label>Importe Retencion</label>
+				<help>Retencion</help>
+			</field>			
+			<field id="totret2" oculto="true">
+				<expression>totret</expression>
+				<label >Son Pesos </label>
+				<tipo aletras="true" >numeric</tipo>
+				<size>100</size>
+				<tipo>varchar</tipo>
+			</field>				
+			<field id="obs" >
+				<expression>month(fecret)</expression>
+				<options>
+					<option valor="1">Enero</option>
+					<option valor="2">Febrero</option>
+					<option valor="3">Marzo</option>
+					<option valor="4">Abril</option>
+					<option valor="5">Mayo</option>
+					<option valor="6">Junio</option>
+					<option valor="7">Julio</option>
+					<option valor="8">Agosto</option>
+					<option valor="9">Septiempre</option>
+					<option valor="10">Octubre</option>
+					<option valor="11">Noviembre</option>
+					<option valor="12">Diciembre</option>
+					
+				</options> 
+				<label>Expedido en</label>
+				<prefijo> Alvear, siendo ingresado en la declaración jurada del período </prefijo>
+				<tipo>varchar</tipo>
+			</field>
+
+		</table>
+		<join tipo="left">
+			<table id="CCTCUENT">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">'01'</condicion>
+				</field>				
+				<field id="ctacod" >
+					<condicion operador="=">RET1598.ctacod</condicion>
+				</field>
+			</table>
+		
+		</join>
+	</form>	   
+</histrix> 

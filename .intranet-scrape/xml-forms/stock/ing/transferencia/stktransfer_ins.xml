@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert">
+  <title>Ingreso Movimiento</title>
+  <obs/>
+  <form>
+    <table id="STK_MOVIMIENTOS" idCampoCond="cant_pendiente">
+
+      <field id="fecha_movimiento" 	    id_padre="fecha" />
+      <field id="stkconcepto_id" 		    id_padre="concepto_devolucion" />
+      <field id="puesto_movimiento"		  id_padre="puesto_movimiento" />
+      <field id="numero_movimiento" 	  id_padre="numero_movimiento" />
+      <field id="stkdeposito_id"        id_padre="deposito_destino" />
+
+      <field id="stkarticulo_id"           id_temp="stkarticulo_id" />
+      <field id="referencia" 			         id_temp="referencia" />
+      <field id="cantidad"                 id_temp="cant_pendiente" />
+      <field id="stkrubro_id" 			       id_temp="stkrubro_id" />
+      <field id="orden_movimiento"		     id_temp="_ORDEN" />
+      <field id="precio_costo" 			       id_temp="precio_costo" />
+      <field id="precio_venta" 			       id_temp="precio_venta" />
+      <field id="precio_total" 			       id_temp="precio_total" />
+      <field id="precio_promedio" 		     id_temp="precio_promedio" />
+
+      <field id="alta_movimiento"             id_temp="alta_movimiento"/>
+      <field id="stkfamilia_id"               id_temp="stkfamilia_id"/>
+      <field id="unidad_id"                   id_temp="unidad_id"/>
+      <field id="stktransaccion_id"           id_temp="stktransaccion_id"    />
+
+      <field id="user_id">
+          <valor eval="true">$_SESSION['idUser']</valor>
+      </field>
+
+      <field id="base">
+          <valor eval="true">$_SESSION['db']</valor>
+      </field>
+
+    </table>
+  </form>
+</histrix>

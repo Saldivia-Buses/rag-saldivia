@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  Ayuda
+Tarea: Ayuda para la Tabla de Provincias
+Autor: d!ego2k
+Fecha: 27/08/10
+*******************************************************************************
+-->
+    <histrix tipo="consulta">
+	<title>Secciones</title>
+	 <obs></obs>
+		<form >
+		    <table id="MRP_SECCION_CALIDAD" label="Secciones">
+
+				<field id="id_seccion_calidad" noshow="true" />
+
+				<field id="nombre_seccion_calidad"  empty="true">
+					<label>Nombre Sección</label>
+				</field>
+
+				<order>
+					<field id="nombre_seccion_calidad" />
+				</order>
+
+		    </table>
+		</form>
+    </histrix>

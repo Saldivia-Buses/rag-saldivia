@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="insert" >
+       <title>COMPROBANTES</title>
+        <obs></obs>
+               <consulta>
+					<table id="CAJMOVIM" label="movimientos de caja" idCampoCond="caj_imputar">
+						<field id="siscod" id_padre="siscaj">
+							<valor>'05'</valor>
+						</field>
+						<field id="cajfec" id_padre="movfec"></field>
+						<field id="succod" >
+							<valor>1</valor>
+						</field>
+<!--						<field id="cajnpv" id_padre=""></field> -->
+						<field id="cajcod" id_temp="cajcod" ></field>
+						<field id="cajnro" id_padre="nrorec">
+<!--  							<valor>[__movnro__]</valor> -->
+						</field>
+						<field id="cajimp" id_temp="cajimp"></field>
+						<field id="concod" >
+							<valor>4</valor>
+
+						</field>
+						<field id="cajhor" >
+							<valor>NOW()</valor>
+                            <tipo>integer</tipo>
+						</field>
+
+						<field id="opecla" id_padre="opecla"></field>
+						<field id="cajcta" id_padre="ctacod">
+						</field>
+						<field id="cajnom" id_padre="ctanom"></field>
+					<!--	<field id="cajref" id_padre="cajref"></field> -->
+
+<!--						<field id="regmin" esNroMinuta="true">
+						</field> -->
+
+					</table>
+               </consulta>
+        </histrix>

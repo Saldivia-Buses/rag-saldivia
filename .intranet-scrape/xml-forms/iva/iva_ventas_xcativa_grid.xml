@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="grid" showCantidad="false" tooltip="false" deleteRow="false" imprime="false">
+  <title>IVA POR CATEGORIA DE IVA</title>
+  <obs/>
+  <form >
+    <table id="REG_MOVIMIENTOS" label="IVA VENTAS" _styleTbody="height:300px;overflow-x:hidden;">
+      
+     <field id="id_regmovim" esClave="true" noshow="true" />
+
+
+      <field id="subsistema_id" noshow="true">
+        <label>subsistema</label>
+        <condicion operador="=">'21' or REG_MOVIMIENTOS.subsistema_id = '02'</condicion>
+      </field>
+    
+
+      <field id="iva_id" tabla="REG_CUENTA">
+        <label>Cat. de IVA</label>
+        <helper type="combo" xml="iva_qry.xml" dir="/ayudas" empty="true"/>
+      <tipo>varchar</tipo>
+      </field>
+
+      <field id="fecha_movimiento" noshow="true">
+        <label>Fecha</label>
+        <help></help>
+      </field>
+  
+      <field id="fecha_movimiento2" noshow="true">
+        <label>Fecha2</label>
+        <expression>fecha_movimiento</expression>
+      </field>
+    
+      <field id="neto_movimiento" suma="true" noZero="true">
+        <label>Neto Gravado</label>
+        <expression>neto_movimiento * (case when imputacion_concepto = 1 then -1 else 1 end)</expression>
+        <tipo>numeric</tipo>
+      </field>
+      
+      <field id="importe_exento" norepeat="true" suma="true"  noZero="true">
+        <expression>importe_exento * (case when imputacion_concepto = 1 then -1 else 1 end)</expression>
+        <label>Exento</label>
+        <tipo>numeric</tipo>
+      </field>
+
+      <field id="importe_iva" local="true" _norepeat="true" suma="true"  _local="true" noZero="true">
+          <label>IVA</label>
+          <expression>SUM(REG_DETALLES.iva_detalle) * (case when imputacion_concepto = 1 then -1 else 1 end)</expression>
+          <tipo>numeric</tipo>
+      </field>
+
+		  <field id="mult" local="true" noshow="true">
+		    <expression>(case when imputacion_concepto = 1 then -1 else 1 end)</expression>
+		  </field>
+
+      <field id="importe_movimiento" _norepeat="true" suma="true"  _local="true" noZero="true">
+	       <expression>importe_movimiento * (case when imputacion_concepto = 1 then -1 else 1 end)</expression>
+		     <label>Total</label>
+	       <tipo>numeric</tipo>
+      </field>
+      
+      
+	   <field id="reg_fecha" noshow="true" />
+     
+
+    <field id="titulo" local="true" oculto="true" print="false">
+      <valor>Libro IVA Ventas</valor>
+      <setvar>titulo_div</setvar>
+    </field>
+
+
+      
+    <group>
+        <field id="iva_id" tabla="REG_CUENTA"></field>
+    </group>
+    
+    <order>
+        <field id="REG_MOVIMIENTOS.fecha_movimiento" />
+        <!--<field id="REG_MOVIMIENTOS.reg_fecha" />-->
+        <field id="REG_MOVIMIENTOS.puesto_movimiento" />
+        <field id="REG_MOVIMIENTOS.nro_movimiento" />
+        
+    </order>
+	  
+    <!--
+    <filters>
+        <field id="reg_fecha">
+          <operador>&gt;=</operador>
+          <label>Desde Fecha</label>
+          <valor>today</valor>
+        </field>
+        <field id="reg_fecha">
+          <operador>&lt;=</operador>
+          <label modpos="nobr">Hasta Fecha</label>
+          <valor>today</valor>
+        </field>
+    </filters>
+-->
+    </table>
+  
+   <join tipo="left">
+     <table id="REG_CONCEPTOS">
+        <field id="id_concepto">
+          <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+        </field>
+     </table>
+  </join>
+  
+  <join tipo="left">
+     <table id="REG_CUENTA">
+        <field id="id_regcuenta">
+          <condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+        </field>
+     
+     </table>
+
+     <table id="REG_DETALLES">
+        <field id="regmovim_id">
+          <condicion operador="=">REG_MOVIMIENTOS.id_regmovim</condicion>
+        </field>
+     </table>
+  </join>
+    
+    
+  
+  </form>
+</histrix>

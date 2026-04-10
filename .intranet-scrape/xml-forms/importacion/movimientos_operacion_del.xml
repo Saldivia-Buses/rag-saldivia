@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="delete" >
+    <title>Operaciones</title>
+    <obs></obs>
+    <form >
+		<table id="REG_MOVIMIENTO_OPERACION" >
+		  	<field id="id_movimiento_operacion" 		  id_temp="id_movimiento_operacion" esClave="true"/>
+		  	<field id="regmovim_id" 					  id_temp="regmovim_id" esClave="true"/>
+		</table>
+	</form>
+</histrix>

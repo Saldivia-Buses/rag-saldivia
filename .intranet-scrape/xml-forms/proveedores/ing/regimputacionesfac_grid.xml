@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="grid" subtipo="vertical" inserta="false" borra="false" modifica="false" imprime="false" deleteRow="false">
+  <title>Comprobantes a Imputar</title>
+  <obs/>
+  <form>
+    <table id="REG_MOVIMIENTOS">
+
+	<movimientos>
+		<relacion id="regimputaciones_ins.xml"/>
+	</movimientos>
+
+      <field id="id_regmovim" esClave="true" noshow="true" />
+
+      <field id="subsistema_id" noshow="true"/>
+
+      <field id="imputacionescaj" local="true" oculto="true"/>
+
+      <field id="regcuenta_id" oculto="true">
+        <condicion operador="=">-1</condicion>
+      </field>
+
+      <field id="fecha">
+        <label>Fecha</label>
+        <tipo>date</tipo>
+        <expression>fecha_movimiento</expression>
+      </field>
+
+
+      <field id="vencimiento_movimiento">
+        <label>Vto</label>
+        <tipo>date</tipo>
+      </field>
+
+      <field id="descripcion_concepto">
+        <label>Tipo</label>
+        <expression>REG_CONCEPTOS.abreviacion_concepto</expression>
+      </field>
+
+      <field id="comprobante">
+        <label>Nº</label>
+        <expression>CONCAT(REG_MOVIMIENTOS.letra_movimiento, ' ',LPAD(REG_MOVIMIENTOS.puesto_movimiento,4,0),'-',LPAD(REG_MOVIMIENTOS.nro_movimiento,8,0))</expression>
+      </field>
+
+      <field id="cuota_movimiento">
+        <label>Cuota</label>
+      </field>
+
+      <!-- 
+      Segun la imputacion del comprobante principal varia la imputacion de los comprobantes detalles 
+      esto es para que las facturas simpre salgan en positivo 
+      y los recibos u O.Pago como las Nc de clientes y proveedores salgan en negativo 
+      -->
+      <field id="imputacion_concepto_comprobante_llama" local="true" noshow="true"/>
+
+
+      <field id="saldo_movimiento" >
+        <label>Saldo</label>
+        <expression>(case when [__imputacion_concepto_comprobante_llama__] = 0 then -1 else 1 end *  case when imputacion_concepto = 1 then 1 else -1 end) *  saldo_movimiento</expression>
+        <condicion operador="&gt;">0</condicion>
+      </field>
+
+      <field id="imputado" local="true" refresh="true">
+        <label>Imputar</label>
+        <tipo>check</tipo>       
+      </field>              
+
+	<field id="total_imputado" local="true" suma="true" editable="true" _noshow="true" deshabilitado="false">
+		<expression>
+			(case when [__imputacion_concepto_comprobante_llama__] = 0 then -1 else 1 end *  case when imputacion_concepto = 1 
+				then 1 else -1 end) *  saldo_movimiento
+		</expression>
+		<label>Total Imputado</label>
+		<if exp="imputado != ''">
+			<true>(MiTotal_Imputado != 0 &amp;&amp; MiTotal_Imputado &lt;= saldo_movimiento ) ? MiTotal_Imputado + 0 : saldo_movimiento + 0</true>
+			<false>0</false>
+		</if>
+		<jseval campodestino="importe_movimiento" total="true">total_imputado</jseval>
+		<jseval campodestino="MiTotal_Imputado" actxml="true" _total="true">total_imputado + 0</jseval>
+		<detalle>importe_movimiento</detalle>
+		<tipo>decimal</tipo>
+		<format>%01.2f</format>
+	</field>
+	<field id="MiTotal_Imputado" local="true" suma="true" noshow="true" editable="true" deshabilitado="true" >
+		<label>MiTotal_Imputado</label>
+		<if exp="imputado != ''">
+			<true>
+				(MiTotal_Imputado != 0 &amp;&amp; MiTotal_Imputado &lt;=  saldo_movimiento )? 
+				MiTotal_Imputado + 0:saldo_movimiento + 0 
+			</true>
+			<false>0</false>
+		</if>
+		<tipo>decimal</tipo>
+		<format>%01.2f</format>
+	</field>
+  </table>
+
+    <join>
+      <table id="REG_CONCEPTOS">
+        <field id="id_concepto">
+          <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>

@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="grid" showCantidad="false" tooltip="false" deleteRow="false" imprime="false">
+  <title>Resumen de Movimientos</title>
+  <obs/>
+  <form >
+
+    <table id="CAJ_MOVIMIENTOS" label="Movimientos">
+                
+      <field id="id_cajmovimiento" esClave="true" />
+      
+      <field id="cajpuesto_id" noshow="true">
+		<helper type="combo" xml="cajpuestousers_qry.xml" dir="/ayudas" empty="true" />
+      </field>
+
+	  <field id="cajconcepto_id" noshow="true">
+		<helper type="combo" id="CAJ_CONCEPTOS" empty="true">
+		  <field id="id_cajconcepto" />
+		  <field id="descripcion_concepto" />
+		</helper>
+		
+	  </field>
+	  
+	  <field id="fecha_desde" local="true" noshow="true" />
+	  <field id="fecha_hasta" local="true" noshow="true" />
+      <field id="fecha_movimiento" noshow="true">
+	      <condicion operador="&gt;=">'[__fecha_desde__]' and (CAJ_MOVIMIENTOS.fecha_movimiento &lt;= '[__fecha_hasta__]' or '[__fecha_hasta__]' = '')</condicion>
+      </field>
+
+      <field id="descripcion_concepto" deshabilitado="false">
+		<label>Descripcion</label>
+		<expresion>CAJ_CONCEPTOS.abreviatura_concepto</expresion>
+      </field>
+      <field id="nro_comp" tdWidth="200px" PDFcolWidth="100">
+        <expresion>CONCAT(' 0000-',lpad(CAJ_MOVIMIENTOS.nro_movimiento,8,'0'))</expresion>
+        <helper type="link" dir="/caja/proc/del" xml="cajmovimiento_ficha.xml">
+    	  <parameter source="id_cajmovimiento" target="id_cajmovimiento" operador="="/>
+        </helper>
+      </field>
+        
+      <field id="regcuenta_id">
+    	<expresion>SELECT regcuenta_id FROM REG_MOVIMIENTOS rm WHERE rm.cajmovimiento_id = CAJ_MOVIMIENTOS.id_cajmovimiento LIMIT 1</expresion>
+    	<helper type="combo" id="REG_CUENTA">
+    	  <field id="id_regcuenta" />
+    	  <field id="nombre_cuenta" />
+    	</helper>
+    	<label>Cuenta</label>
+  	  </field>           
+  	  
+  	  <field id="importe_movimiento" suma="true" noZero="true">
+  		<expresion>CASE WHEN CAJ_CONCEPTOS.imputacion_concepto = 0 THEN CAJ_MOVIMIENTOS.importe_movimiento ELSE - CAJ_MOVIMIENTOS.importe_movimiento END</expresion>
+  		<label>Importe</label>
+  		<tipo>numeric</tipo>
+		<condicion operador="!=">''</condicion>
+  	  </field>                
+  	               
+
+<!-- EFECTIVO -->
+  	  <field id="efe_ing" suma="true" noZero="true">
+	  	<expresion>CASE WHEN CAJ_VALORES.cajformapago_id IN (SELECT id_cajformapago FROM CAJ_FORMAS_PAGO WHERE grupo_columna = 1 and tipo_forma = 0) THEN SUM(IFNULL((CAJ_VALORES.pago_valor - CAJ_VALORES.pago_vuelto), 0)) ELSE 0 END</expresion>
+  		<label>Efe.Ing.</label>
+  		<tipo>numeric</tipo>
+  	  </field>         
+  	  <field id="efe_egr" suma="true" noZero="true">
+	  	<expresion>CASE WHEN CAJ_VALORES.cajformapago_id IN (SELECT id_cajformapago FROM CAJ_FORMAS_PAGO WHERE grupo_columna = 1 and tipo_forma = 1) THEN SUM(IFNULL((CAJ_VALORES.pago_valor - CAJ_VALORES.pago_vuelto), 0)) ELSE 0 END</expresion>
+  		<label>Efe.Egr</label>
+  		<tipo>numeric</tipo>
+  	  </field>        
+  	  
+<!-- TRANSFERENCIA -->
+  	  <field id="trans_ing" suma="true" noZero="true">
+  		<expresion>CASE WHEN CAJ_VALORES.cajformapago_id IN (SELECT id_cajformapago FROM CAJ_FORMAS_PAGO WHERE grupo_columna = 2 and tipo_forma = 0)  THEN SUM(IFNULL((CAJ_VALORES.pago_valor - CAJ_VALORES.pago_vuelto), 0)) ELSE 0 END</expresion>
+  	  	<label>Trans.Ing.</label>
+  		<tipo>numeric</tipo>
+  	  </field>         
+  	  <field id="trans_egr" suma="true" noZero="true">
+  		<expresion>CASE WHEN CAJ_VALORES.cajformapago_id IN (SELECT id_cajformapago FROM CAJ_FORMAS_PAGO WHERE grupo_columna = 2 and tipo_forma = 1)  THEN SUM(IFNULL((CAJ_VALORES.pago_valor - CAJ_VALORES.pago_vuelto), 0)) ELSE 0 END</expresion>
+  		<label>Trans.Egr</label>
+  		<tipo>numeric</tipo>
+  	  </field>        
+	  
+<!-- VALORES -->
+  	  <field id="val_ing" suma="true" noZero="true">
+  		<expresion>CASE WHEN CAJ_VALORES.cajformapago_id IN (SELECT id_cajformapago FROM CAJ_FORMAS_PAGO WHERE grupo_columna = 3 and tipo_forma = 0)  THEN SUM(IFNULL((CAJ_VALORES.pago_valor - CAJ_VALORES.pago_vuelto), 0)) ELSE 0 END</expresion>
+  		<label>Val.Ing.</label>
+  		<tipo>numeric</tipo>
+  	  </field>         
+  	  <field id="val_egr" suma="true" noZero="true">
+  		<expresion>CASE WHEN CAJ_VALORES.cajformapago_id IN (SELECT id_cajformapago FROM CAJ_FORMAS_PAGO WHERE grupo_columna = 3 and tipo_forma = 1)  THEN SUM(IFNULL((CAJ_VALORES.pago_valor - CAJ_VALORES.pago_vuelto), 0)) ELSE 0 END</expresion>
+  		<label>Val.Egr</label>
+  		<tipo>numeric</tipo>
+  	  </field>        
+
+<!-- CTACTE -->  	  
+  	  <field id="ctacte" noZero="true" suma="true">
+  		<expresion><![CDATA[CASE WHEN IFNULL(cajformapago_id, 0) < 1 THEN CAJ_MOVIMIENTOS.importe_movimiento ELSE 0 END]]></expresion>
+  		<label>CTA. CTE.</label>
+  		<tipo>numeric</tipo>
+  	  </field>
+  	                 
+  	  <field id="imprimir" local="true" linkint="" print="false" tdWidth="50px">
+  	    <helper type="link">
+  	        <parameter source="id_cajmovimiento" target="id_cajmovimiento"/>
+  	        <parameter source="id_cajmovimiento" target="cajmovimiento_id"/>
+  	    </helper>
+  	    <attribute id="linkint">imprime_concepto</attribute>
+  	    <valor>IMPRIMIR</valor>
+  	  </field>
+  	                  
+  	  <field id="imprime_concepto" tabla="CAJ_CONCEPTOS" noshow="true"/>
+  	                  
+  	              
+  	  <group>
+  		<field id="id_cajmovimiento" />
+  	  </group>            
+  	                    
+      
+    </table>
+
+    <join >
+      <table id="CAJ_CONCEPTOS">
+        <field id="id_cajconcepto">
+          <condicion operador="=">CAJ_MOVIMIENTOS.cajconcepto_id</condicion>
+        </field>
+      </table>
+    </join>                  
+
+    <join tipo="left">
+      <table id="CAJ_VALORES">
+        <field id="cajmovimiento_id">
+          <condicion operador="=">CAJ_MOVIMIENTOS.id_cajmovimiento</condicion>
+        </field>
+      </table>
+    </join>
+    
+    
+
+  </form>
+</histrix>

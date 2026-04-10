@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ayuda" >
+    <title>Vendedores</title>
+    <obs></obs>
+    <form  >
+        <table id="HTXUSERS" >
+	  
+	     <field id="id_usuario" autoinc="true" _noshow="true" esClave="true">
+                <label>Numero usuario</label>
+		        <detalle>id_usuario</detalle>
+            </field>
+            <field id="nombre">
+                <expression>CONCAT(apellido, ', ', nombre)</expression>
+                <label>Nombre</label>
+                <detalle>nombre</detalle>
+            </field>
+            
+            <field id="subsistema_id" noshow="true" tabla="REG_CUENTA">
+                <condicion operador="=">'22'</condicion>
+            </field>
+            
+            <order>
+                <field id="nombre" />
+            </order>
+	</table>
+	<join tipo="left">
+	    <table id="REG_CUENTA_USERS">
+	        <field id="usuario_id" >
+	            <condicion operador="=">HTXUSERS.id_usuario</condicion>
+	        </field>
+	    </table>
+	</join>
+	<join tipo="left">
+	    <table id="REG_CUENTA">
+	        <field id="id_regcuenta" >
+	            <condicion operador="=">REG_CUENTA_USERS.regcuenta_id</condicion>
+	        </field>
+	    </table>
+	</join>
+	<join tipo="left">
+	    <table id="REG_CUENTA_RELACIONES">
+	        <field id="regcuenta_id" >
+	            <condicion operador="=">REG_CUENTA.id_regcuenta</condicion>
+	        </field>
+	        <field id="subsistemarelacionada_id">
+	            <condicion operador="=">REG_CUENTA.subsistema_id</condicion>
+	        </field>
+	    </table>
+	</join>
+    </form>
+</histrix>
+

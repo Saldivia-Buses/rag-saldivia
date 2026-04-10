@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<module id="bancos">
+  <name>Bancos</name>
+  <description>Sistema de Bancos</description>
+
+  <dependencies>
+    <module></module>
+  </dependencies>
+
+  <!-- required tables -->
+  <tables>
+    <table></table>
+    
+  </tables>
+
+</module>

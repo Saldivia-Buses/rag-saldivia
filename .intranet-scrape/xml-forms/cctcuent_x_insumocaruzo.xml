@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="consulta" borra="no" inserta="no" paginar="250" imprime="false">
+	<title>Ultima Compra del Insumo</title>
+	<obs></obs>
+	<form  >
+		<table id="STKINSPR">
+			<title>Ultima Compra del Insumo</title>
+			
+			<field id="siscod" oculto="true">
+				<label>siscod</label>
+			</field>
+			
+			<field id="artcod" deshabilitado="true">
+				<label>Art.</label>
+			</field>
+			<field id="ctacod" deshabilitado="true">
+				<label>Prov.</label>
+			</field>
+			<field id="ctanom" deshabilitado="true" tabla="CCTCUENT">
+				<label>Nombre</label>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="artcos" deshabilitado="true">
+				<label>Costo</label>
+			</field>
+			<field id="unicps" tabla="STKINSUM">
+				<label modpos="nobr">Unidad</label>
+				<help>Unidad de Compra </help>
+				<tabla_ex id="FSMUNIDS">
+					<field id="unicod"></field>
+					<field id="uninom"></field>
+				</tabla_ex>
+				<tipo>varchar</tipo>
+			</field>			
+			<field id="artpor__1" noZero="true">
+			    <label>Dto1</label>
+			</field>
+			<field id="artpor__2" noZero="true">
+			    <label>Dto2</label>
+			</field>
+			
+			<field id="conv" suma="true">
+				<label>Costo Uso</label>
+				<expression>ROUND(STKINSPR.artcos * valcps / valuso, 2)</expression>
+				<tipo>numeric</tipo>
+			</field>
+
+			<field id="costodto" suma="true">
+				<label>Costo Dto</label>				
+				<expression>ROUND(((STKINSPR.artcos * valcps / valuso) - ((STKINSPR.artcos * valcps / valuso) * (artpor__1 / 100))) - 
+						(((STKINSPR.artcos * valcps / valuso) - ((STKINSPR.artcos * valcps / valuso) * (artpor__1 / 100))) * (artpor__2 / 100)) , 2)
+				</expression>
+				<tipo>numeric</tipo>
+				<help>Costo - Dto1 - Dto2</help>
+			</field>	
+			
+			<field id="descuento_1" tabla="REG_MOVIMIENTOS">
+			    <label>DtoG1</label>
+			    <tipo>numeric</tipo>
+			    <help>Descuento general 1</help>
+			</field>
+			<field id="descuento_2" tabla="REG_MOVIMIENTOS">
+			    <label>DtoG2</label>
+			    <tipo>numeric</tipo>
+			    <help>Descuento general 2<help>
+			</field>
+			
+			<field id="costoFinalDto">
+			    <label>CostoF</label>
+			    <expression>
+			    		ROUND((((((STKINSPR.artcos * valcps / valuso) - ((STKINSPR.artcos * valcps / valuso) * (artpor__1 / 100))) -
+						(((STKINSPR.artcos * valcps / valuso) - ((STKINSPR.artcos * valcps / valuso) * (artpor__1 / 100))) * (artpor__2 / 100)))
+			    				* (1 - (REG_MOVIMIENTOS.descuento_1 / 100)) ) * (1 - (REG_MOVIMIENTOS.descuento_2 / 100))), 2)
+			    </expression>
+			    <tipo>numeric</tipo>
+			    <help>Costo Dto - DtoT1 - DtoT2</help>
+			</field>
+
+			<field id="artuni" tabla="STKINSUM">
+				<label modpos="nobr">Uso</label>
+				<help>Unidad de Compra </help>
+				<tabla_ex id="FSMUNIDS">
+					<field id="unicod"></field>
+					<field id="uninom"></field>
+				</tabla_ex>
+				<tipo>varchar</tipo>
+			</field>
+                        <field id="fecult" deshabilitado="true" tipoOrden="DESC">
+				<label>Ingreso</label>
+			</field>
+			<field id="fecfac" deshabilitado="true">
+				<label>Factura</label>
+			</field>			
+			<field id="movfec" deshabilitado="true">
+				<label>fec.Remito</label>
+			</field>			    
+			<field id="movnpv" deshabilitado="true">
+				<label>Pv.Rem</label>
+			</field>			
+			<field id="movnro" deshabilitado="true">
+				<label>Remito</label>
+			</field>			
+			
+			<order>
+				<field id="fecult" tabla="STKINSPR"/>
+			</order>
+		</table>
+		<join tipo="left">
+			<table id="STKINSUM">
+			<field id="siscod" oculto="true">
+				<condicion operador="=">'01'</condicion>
+			</field>
+			<field id="artcod" oculto="true">
+				<condicion operador="=">STKINSPR.artcod</condicion>
+			</field>
+				
+			</table>
+		</join>
+		
+		<join tipo="left">
+			<table id="CCTCUENT">
+			<field id="siscod" oculto="true">
+				<condicion operador="=">'01'</condicion>
+			</field>
+			<field id="ctacod" oculto="true">
+				<condicion operador="=">STKINSPR.ctacod</condicion>
+			</field>
+				
+			</table>
+		</join>
+
+		<join tipo="left">
+			<table id="FACREMIMP">
+			<field id="ctacod" oculto="true">
+				<condicion operador="=">STKINSPR.ctacod</condicion>
+			</field>
+			<field id="remnro" oculto="true">
+				<condicion operador="=">STKINSPR.movnro</condicion>
+			</field>
+			<field id="remnpv" oculto="true">
+				<condicion operador="=">STKINSPR.movnpv</condicion>
+			</field>
+			</table>
+		</join>
+			
+		<join tipo="left">
+			<table id="REG_MOVIMIENTOS">
+			<field id="subsistema_id" oculto="true">
+				<condicion operador="=">'01'</condicion>
+			</field>
+			<field id="nro_cuenta" oculto="true">
+				<condicion operador="=">STKINSPR.ctacod</condicion>
+			</field>
+			<field id="nro_movimiento" oculto="true">
+				<condicion operador="=">FACREMIMP.movnro</condicion>
+			</field>
+			<field id="puesto_movimiento" oculto="true">
+				<condicion operador="=">FACREMIMP.movnpv</condicion>
+			</field>			
+				
+			</table>
+		</join>		
+	</form>
+</histrix>

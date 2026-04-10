@@ -1,0 +1,505 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud" logReference="nombre_articulo" path="fotos/articulos" paginar="250" _conBusqueda="true">
+    <title>Artículos</title>
+    <obs></obs>
+    <form >
+        <table id="STK_ARTICULOS" label="Artículos" >
+
+            <filters>
+                <field id="id_stkarticulo">
+                    <label>Código</label>
+                    <operador>like</operador>
+                </field>
+
+                <field id="nombre_articulo">
+                    <label modpos="nobr">Nombre</label>
+                    <operador>like</operador>
+                </field>
+
+                <field id="stkrubro_id" >
+                    <label modpos="nobr">Rubro</label>
+                </field>
+
+                <field id="stkmarca_id">
+                    <label modpos="nobr">Marca</label>
+                </field>
+
+                <field id="stkfamilia_id">
+                    <label modpos="nobr">Familia</label>
+                </field>
+            </filters>
+
+            <fieldGroup>
+
+	            <field id="id_stkarticulo" esClave="true" >
+	                <label>Codigo</label>
+                    <detalle>stkarticulopadre_id</detalle>
+	            </field>
+
+                <field id="codigo_barra" modpos="nobr" colstyle="display: none;">
+                    <label>Codigo de Barras</label>
+                </field>
+
+                <field id="codigo_plu" modpos="nobr" colstyle="display:none;">
+                    <label>Codigo Ant</label>
+                </field>
+
+                <field id="stkarticulo_foto" xmlField="image" path="id_stkarticulo" modpos="nobr" rowspan="9" colstyle="display:none;">
+                    <label>Foto</label>
+                    <tipo type="Image">file</tipo>
+                </field>
+
+                <field id="nombre_articulo">
+                    <label>Nombre</label>
+                    <size>45</size>
+                </field>
+
+                <field id="unidad_uso_id"  modpos="nobr">
+                    <label>Unidad de Medida </label>
+                    <help>Unidad de Medida</help>
+                    <helper type="combo" xml="unidad_qry.xml" dir="/ayudas" _empty="true"></helper>
+                </field>
+                
+                <field id="stkrubro_id" >
+                    <label>Rubro</label>
+                    <helper type="combo" xml="stkrubro_qry.xml" dir="/ayudas" empty="true" />
+                    <actualiza>
+                        <field destino="stkrubro_id" id="stksubrubro_id"/>
+                    </actualiza>
+                </field>
+
+                <field id="stkfamilia_id">
+                    <label >Familia</label>
+                    <helper type="combo" xml="stkfamilia_qry.xml" dir="/ayudas" empty="true" />
+                </field>
+
+                <field id="stksubrubro_id" colstyle="display:none;" >
+                    <label modpos="nobr">SubRubro</label>
+                    <helper type="combo" xml="stksubrubro_qry.xml" dir="/ayudas" empty="true" />
+                </field>
+
+                <field id="stkmarca_id">
+                    <label modpos="nobr">Marca</label>
+                    <helper type="combo" xml="stkmarca_qry.xml" dir="/ayudas" empty="true" />
+                </field>
+
+                <field id="baja_articulo">
+                    <label modpos="nobr">Deshabilitado</label>
+                    <tipo>check</tipo>
+                </field>
+                           
+                <field id="no_listar">
+                    <label modpos="nobr">Oculto</label>
+                    <help>No incluye el archivo en otras consultas</help>
+                    <tipo>check</tipo>
+                </field>
+
+                <field id="no_web" sincelda="true">
+                    <label modpos="nobr">No WEB</label>
+                    <tipo>check</tipo>
+                </field>
+                
+            </fieldGroup>
+
+
+            <fieldGroup style="padding:2px 2px 2px 2px;" colstyle="display:none;">
+
+                <field id="separator_costos" local="true" Formstyle="background-color: #c9c9c9;height:1px;font-size:1px;" colspan="9" deshabilitado="true" colstyle="display: none;" />
+
+                <field id="precio_costo" >
+                    <label>Costo</label>
+                    <help>Precio de Costo</help>
+                    <tipo>decimal</tipo>
+                    <size>15</size>
+                </field>
+
+                <field id="tipocalculo_costo">
+                      <label modpos="nobr" >Tipo de Calculo Costo</label>
+                      <options> 
+                        <option valor="0">Automático</option>
+                        <option valor="1">Manual</option>
+                      </options>
+                </field>
+
+                <field id="precio_origen">
+                    <label modpos="nobr">Costo Original</label>
+                    <help>Precio de Costo en moneda original</help>
+                    <tipo>decimal</tipo>
+                </field>
+
+                <field id="genmoneda_origen_id" sincelda="true">
+                    <label modpos="nobr">Moneda Costo</label>
+                    <helper type="combo" xml="moneda_qry.xml" dir="/ayudas" />
+                </field>
+
+            </fieldGroup>
+
+            <fieldGroup style="padding:2px 2px 2px 2px;">
+
+                <field id="separator_fiscal" local="true" Formstyle="background-color: #c9c9c9;height:1px;font-size:1px;" colspan="9" deshabilitado="true" colstyle="display: none;" />
+
+                <field id="gravado" activa="true">
+                    <label>Gravado</label>
+                    <help>Indica si el Articulo es gravado den IVA</help>
+                    <tipo>check</tipo>
+                </field>
+
+                <field id="ivaregimen_id" requiered="true" sincelda="true" activador="gravado">
+                    <label modpos="nobr" />
+                    <help>Seleccione el regimen de iva del producto</help>
+                    <helper type="combo" xml="ivaregimen_qry.xml" dir="/ayudas" _empty="true" />
+                    <valor>1</valor>
+                </field>
+
+                <field id="genmoneda_venta_id" >
+                    <label modpos="nobr">Moneda Venta</label>
+                    <helper type="combo" xml="moneda_qry.xml" dir="/ayudas" _empty="true" />
+                </field>
+
+            </fieldGroup>
+
+
+
+
+            <fieldGroup style="padding:2px 2px 2px 2px;" colstyle="display:none;">
+                <if>return (strpos($_SESSION['properties']['modulos'],'compras') != false);</if>
+
+                <field id="separator_compras" local="true" Formstyle="background-color: #c9c9c9;height:1px;font-size:1px;" colspan="9" deshabilitado="true" colstyle="display: none;" />
+
+                <field id="trazable">
+                    <label>Trazabilidad</label>
+                    <help>Indica si el articulo es o No Trazable</help>
+                    <tipo>check</tipo>
+                </field>
+
+                <field id="recLote" modpos="nobr">
+                    <label>Recepción por Lote</label>
+                    <tipo>check</tipo>
+                </field>
+
+                <field id="valor_compra">
+                    <label>Valor de Compra</label>
+                    <help>Valor de Compra</help>
+                    <tipo>numeric</tipo>
+                    <size>12</size>
+                </field>
+
+                <field id="unidad_compra_id" sincelda="true" modpos="nobr">
+                    <label/>
+                    <help>Unidad de Compra</help>
+                    <helper type="combo" xml="unidad_qry.xml" dir="/ayudas" _empty="true"></helper>
+                </field>
+
+                <field id="valor_uso" modpos="nobr">
+                    <label>Valor de uso</label>
+                    <help>Valor de Uso</help>
+                    <tipo>numeric</tipo>
+                    <size>12</size>
+                </field>
+
+                <field id="unidad_uso_id" sincelda="true" modpos="nobr">
+                    <label/>
+                    <helper type="combo" xml="unidad_qry.xml" dir="/ayudas" ></helper>
+                    <help>Codigo Unidad de Medida de Uso</help>
+                </field>
+
+                <field id="cantidad_pack">
+                    <label modpos="nobr">Cant. x bulto</label>
+                    <help>Cantidad de Articulos por bultos cerrado</help>
+                </field>
+            </fieldGroup>
+
+
+
+ 			<fieldGroup style="padding:2px 2px 2px 2px;" colstyle="display:none;">
+                <if>return (strpos($_SESSION['properties']['modulos'],'stock') != false);</if>
+
+                <field id="separator_stock" local="true" Formstyle="background-color: #c9c9c9;height:1px;font-size:1px;" colspan="9" deshabilitado="true" colstyle="display: none;" />
+                
+                <field id="stock_minimo" colstyle="display:none;" >
+                    <label>Mínimo</label>
+                    <help>Stock Mínimo</help>
+                    <tipo>decimal</tipo>
+                    <size>15</size>
+                </field>
+
+                <field id="stock_maximo" >
+                    <label modpos="nobr">Máximo</label>
+                    <help>Stock Máximo</help>
+                    <tipo>decimal</tipo>
+                    <size>15</size>
+                </field>
+
+                <field id="stock_reposicion" colstyle="display:none;" >
+                    <label modpos="nobr">Reposición</label>
+                    <help>Stock de Reposición</help>
+                    <tipo>decimal</tipo>
+                    <size>15</size>
+                </field>
+            </fieldGroup>
+
+
+            <fieldGroup style="padding:2px 2px 2px 2px;" colstyle="display:none;">
+                <if>return (strpos($_SESSION['properties']['modulos'],'mrp') != false);</if>
+
+                <field id="separator_mrp" local="true" Formstyle="background-color: #c9c9c9;height:1px;font-size:1px;" colspan="9" deshabilitado="true" colstyle="display: none;" />
+
+                <field id="produccion_diaria" >
+                    <label>Produccion Diaria</label>
+                    <help>Producción Diaria</help>
+                </field>
+                
+                <field id="lead_time" >
+                    <label modpos="nobr">Lead Time</label>
+                    <help>Tiempo de Reposición</help>
+                </field>
+
+                <field id="embalaje" >
+                    <label modpos="nobr">Embalaje</label>
+                    <help>Embalaje estandar</help>
+                </field>
+
+
+                <field id="art_densid">
+                    <label>Densidad</label>
+                </field>                
+                <field id="art_factor">
+                    <label modpos="nobr">Factor Convertib.</label>
+                </field>
+                <field id="repuesto">
+                    <label modpos="nobr">Repuesto</label>
+                    <help>Determina si el articulo sirve como repuesto</help>
+                    <tipo>check</tipo>
+                </field>               
+
+            </fieldGroup>
+
+		    <fieldGroup style="padding:2px 2px 2px 2px;" colstyle="display:none;">
+		        <if>return (strpos($_SESSION['properties']['modulos'],'autopartes') === false);</if> 
+
+                <field id="referencia" colspan="4">
+                    <label>Observaciones</label>
+                    <tipo>varchar</tipo>
+                    <size>99</size>
+                </field>
+            </fieldGroup>
+
+
+		    <fieldGroup style="padding:2px 2px 2px 2px;" colstyle="display:none;">
+			    <if>return (strpos($_SESSION['properties']['modulos'],'autopartes') !== false);</if> 
+
+                <field id="separator_autopartes" local="true" Formstyle="background-color: #c9c9c9;height:1px;font-size:1px;" colspan="9" deshabilitado="true" colstyle="display: none;" />
+
+				<field id="LOCAL_CIL" local="true" editable="true" deshabilitado="false">
+                    <label>CIL</label>
+                    <expression>SUBSTRING_INDEX( SUBSTRING_INDEX( STK_ARTICULOS.referencia, 'CIL:', -1), '|MOD:', 1)</expression>
+                </field>
+
+				<field id="LOCAL_ANO" local="true" modpos="nobr" editable="true" deshabilitado="false">
+                    <label>MOD</label>
+                    <expression>SUBSTRING_INDEX(  SUBSTRING_INDEX(STK_ARTICULOS.referencia, '|MOD:', -1)  ,  '|COM:', 1)</expression>
+                </field>
+
+				<field id="LOCAL_COM" local="true" modpos="nobr" editable="true" deshabilitado="false">
+                    <label>COM</label>
+                    <expression>SUBSTRING_INDEX(  SUBSTRING_INDEX(STK_ARTICULOS.referencia, '|COM:', -1)  ,  '|AA:', 1) </expression>
+                </field>
+
+                <field id="LOCAL_AA" local="true" modpos="nobr" editable="true" deshabilitado="false">
+                    <label>AA</label>
+                    <expression>SUBSTRING_INDEX(  SUBSTRING_INDEX(STK_ARTICULOS.referencia, '|AA:', -1)  ,  '|TRA:', 1) </expression>
+			        <helper type="combo">
+			           <option value=""></option>
+			           <option value="+/-">+/-</option>
+			           <option value="+">+</option>
+			           <option value="-">-</option>
+			        </helper>
+                </field>
+                
+                <field id="LOCAL_TRA" local="true" editable="true" deshabilitado="false">
+                    <label>TRA</label>
+                    <expression>SUBSTRING_INDEX(  SUBSTRING_INDEX(STK_ARTICULOS.referencia, '|TRA:', -1)  ,  '|DES:', 1)</expression>
+			        <helper type="combo">
+			           <option value=""></option>
+			           <option value="A">A</option>
+			           <option value="M">M</option>
+			           <option value="T">T</option>
+			        </helper>
+                </field>
+
+                <field id="LOCAL_DES" local="true" modpos="nobr" editable="true" deshabilitado="false">
+                    <label>DES</label>
+                    <expression>SUBSTRING_INDEX(  SUBSTRING_INDEX(STK_ARTICULOS.referencia, '|DES:', -1)  ,  '|MAT:', 1)</expression>
+                </field>
+
+                <field id="LOCAL_MAT" local="true" modpos="nobr" editable="true" deshabilitado="false">
+                    <label>MAT</label>
+                    <expression>SUBSTRING_INDEX(  SUBSTRING_INDEX(STK_ARTICULOS.referencia, '|MAT:', -1)  ,  '|TIPO:', 1)</expression>
+                </field>
+
+                <field id="LOCAL_TIPO" local="true" modpos="nobr" editable="true" deshabilitado="false">
+                    <label>TIPO</label>
+                    <expression>SUBSTRING_INDEX(STK_ARTICULOS.referencia, '|TIPO:', -1)</expression>
+                </field>
+				
+                <field id="referencia" noshow="true" editable="true" deshabilitado="false">
+                    <label>Descripcion</label>
+                    <tipo>varchar</tipo>
+                    <size>50</size>
+                </field>
+
+		    </fieldGroup>
+
+            <!-- Ubicacion -->
+
+            <fieldGroup style="padding:2px 2px 2px 2px;" colstyle="display:none;">
+            	<if>return (strpos($_SESSION['properties']['modulos'],'depositos') != false); </if>
+
+                <field id="separator_depositos" local="true" Formstyle="background-color: #c9c9c9;height:1px;font-size:1px;" colspan="9" deshabilitado="true" colstyle="display: none;" />
+
+                <field id="stksector_id">
+                    <label>Sector</label>
+                    <help>Seleccione el sector donde se encuentra el Articulo</help>
+                    <helper type="combo" xml="stksector_qry.xml" dir="/ayudas" empty="true" />
+                </field>
+
+                <field id="pasillo">
+                    <label modpos="nobr">Pasillo</label>
+                </field>
+
+                <field id="bloque">
+                    <label modpos="nobr">Tarima</label>
+                </field>
+                <field id="locacion" >
+                    <label modpos="nobr">Locación</label>
+                </field>
+            </fieldGroup>
+
+
+
+
+            <!-- Contable -->
+
+            <fieldGroup style="padding:2px 2px 2px 2px;" colstyle="display:none;">
+                <if>return (strpos($_SESSION['properties']['modulos'],'contabilidad') !== false);</if>
+
+                <field id="separator_contable" local="true" Formstyle="background-color: #c9c9c9;height:1px;font-size:1px;" colspan="9" deshabilitado="true" colstyle="display: none;" />
+
+                <field id="cuentadebe_id" colstyle="display:none;" >
+                    <label>Cta.Ctb.Venta</label>
+                    <helper type="external" xml="cuentas_habilitadas_qry.xml" dir="/ayudas" empty="true" />
+                    <help>Cuenta Ventas</help>
+                    <size>15</size>
+                </field>
+
+                <field id="ctbcuentacps_id" colstyle="display:none;" >
+                    <label modpos="nobr">Cta.Ctb.Compra</label>
+                    <helper type="external" xml="cuentas_habilitadas_qry.xml" dir="/ayudas" empty="true" />
+                    <help>Cuenta Compras</help>
+                    <size>15</size>
+                </field>
+
+            </fieldGroup>
+                  
+
+
+
+
+
+            <!-- BOTONERAS -->   
+
+            <fieldGroup Formstyle="display:none;">
+
+                <field id="oculta_promociones" local="true" noshow="true">
+                    <valor>1</valor>
+                </field>
+
+                <field id="Precios" local="true">
+                    <label>Precios</label>
+
+                    <helper type="link" xml="stkarticulo_precios.xml">
+                        <parameter target="stkarticulo_id" source="id_stkarticulo" />
+                    </helper>
+                    <valor>'+'</valor>
+                </field>
+
+            </fieldGroup>
+                       
+            <fieldGroup Formstyle="display:none;">
+                <if>return (strpos($_SESSION['properties']['modulos'],'stock') != false); </if>
+                
+                <field id="Existencias" local="true" export="false">
+                    <label>Existencias</label>
+                    <helper type="link" xml="stkarticulo_existencia.xml">
+                        <parameter target="stkarticulo_id" source="id_stkarticulo" />
+                    </helper>
+                    <valor>'+'</valor>
+                </field>
+            </fieldGroup>
+
+            <fieldGroup Formstyle="display:none;">
+                <if>return (strpos($_SESSION['properties']['modulos'], 'mrp') != false); </if>
+                <field id="BOM" local="true">
+                    <label>Composicion</label>
+                    <helper type="link" xml="stk_bom_crud.xml">
+                        <parameter target="stkarticulopadre_id" source="id_stkarticulo" />
+                    </helper>
+                    <valor>'+'</valor>
+                </field>
+            </fieldGroup>
+
+            <fieldGroup Formstyle="display:none;">
+                <field id="Fotos" local="true">
+                    <label>Fotos</label>
+                    <helper type="link" xml="stkarticulo_foto.xml">
+                        <paring destino="stkarticulo_id">id_stkarticulo</paring>
+                    </helper>
+                    <valor>'+'</valor>
+                </field>
+
+                <field id="Colores" local="true" export="false">
+                    <label>Colores</label>
+                    <helper type="link" xml="stkarticulo_colores.xml">
+                        <parameter target="stkarticulo_id" source="id_stkarticulo" />
+                    </helper>
+                    <valor>'+'</valor>
+                </field>
+
+                <field id="Proveedores" local="true" export="false">
+                    <label>Proveedores</label>
+                    <helper type="link" xml="stkarticulo_proveedor.xml">
+                        <parameter target="stkarticulo_id" source="id_stkarticulo" />
+                    </helper>
+                    <valor>'+'</valor>
+                </field>
+            </fieldGroup>
+
+            <fieldGroup Formstyle="display:none;">
+                <if>if (strpos($_SESSION['properties']['modulos'],'vendedores') != false) return true;</if>
+                <field id="comisionvend" local="true" >
+                    <label>Vendedores</label>
+                    <helper type="link" xml="stkarticulo_comisiones.xml">
+                        <parameter target="stkarticulo_id" source="id_stkarticulo" />
+                    </helper>
+                    <valor>'+'</valor>
+                </field>
+            </fieldGroup>
+           
+            <fieldGroup style="padding:2px 2px 2px 2px;" >
+                <if>return (strpos($_SESSION['properties']['modulos'],'packs') != false); </if>
+                <field id="stkpack_id" >
+                    <label modpos="nobr">Cod. Promocion</label>
+                    <helper type="combo" xml="stkpacks_qry.xml" dir="/ayudas" empty="true" />
+                </field>
+            </fieldGroup>
+
+            <order>
+                <field id="nombre_articulo" />
+            </order>
+
+        </table>
+
+        
+
+    </form>
+</histrix>

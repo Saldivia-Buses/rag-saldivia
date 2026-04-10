@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="consulta" preloadData="false" paginar="200">
+	<title>Consulta de clientes</title>
+	 <obs></obs>
+		<form detalle="detalle_cliente.xml" inline="true">
+
+		    <table id="REG_CUENTA" label="Consulta de clientes">
+
+				<filters>
+				<!--
+					<field id="asociado1" deshabilitado="false">
+						<valor>0</valor>
+						<operador>&gt;=</operador>
+						<label>Desde Cuenta</label>
+					</field>
+
+					<field id="asociado2" deshabilitado="false">
+						<valor>999999</valor>
+						<operador>&lt;=</operador>
+						<label modpos="nobr">Hasta Cuenta</label>
+					</field>
+					-->
+					<field id="nombre_cuenta" deshabilitado="false">
+						<operador>like</operador>
+						<label>Nombre</label>
+					</field> 
+					<field id="cod_direccion">
+					   <label modpos="nobr">Direccion</label>
+					   <operador>like</operador>
+				       </field>
+					<field id="nombre_localidad" deshabilitado="false">
+						<operador>like</operador>
+						<label modpos="nobr">Ciudad</label>
+					</field>
+
+					<field id="tel_cuenta" deshabilitado="false">
+						<operador>=</operador>
+						<label modpos="nobr">Telefono</label>
+					</field> 
+					
+			        <field id="regcuentarelacionada_id" deshabilitado="false">
+                        <label modpos="nobr">Vendedor</label>
+                    </field>
+        <field id="categoria_ganancia">
+          <label modpos="nobr">Categoria</label>
+        </field>
+                    
+                     <field id="regzona_id" _noshow="true" >
+                        <label modpos="nobr">Zona</label>
+                    </field>
+				</filters>
+
+				<field id="id_regcuenta" noshow="true">
+				    <label>Número</label>
+				    <detalle>regcuenta_id</detalle>
+			    </field>
+				
+				<field id="nombre_cuenta" linkdes="Datos del Cliente">
+					<label>Nombre</label>
+					    <helper type="link" xml="det_cliente.xml">
+                            <parameter source="id_regcuenta" target="id_regcuenta" operator="="/>
+                        </helper>					 
+					<size>25</size>
+				</field>
+        <field id="categoria_ganancia" noshow="true">
+          <helper type="combo" empty="true" id="REG_CATEGORIAS">
+            <field id="id_regcategoria" />
+            <field id="nombre_categoria" />
+            <field id="subsistema_id" />
+          </helper>
+          <label colspan="6">Categoria</label>
+        </field>
+
+				<field id="cod_direccion">
+					<label>Direccion</label>
+					<size>25</size>
+				</field>
+				<field id="codigo_postal">
+					<label>cp</label>
+				</field>
+
+				<field id="nombre_localidad" tabla="GEN_LOCALIDADES">
+					<label>Localidad</label>
+				</field>
+
+				<field id="nombre_provincia" tabla="GEN_PROVINCIAS">
+					<label>Provincia</label>
+				</field>
+
+				<field id="nombre_zona" tabla="REG_ZONAS">
+					<label>Zona</label>
+				</field>
+
+				<!-- Contacto -->
+
+				<field id="tel_cuenta">
+					<label>Telefono</label>
+					<size>15</size>
+				</field>
+
+				<field id="fax_cuenta">
+					<label>Fax</label>
+					<size>15</size>
+				</field>
+
+				<field id="cel_cuenta">
+					<label>Celular</label>
+					<size>15</size>
+				</field>
+
+				<field id="alta_cuenta">
+					<label>Fecha Alta</label>
+					<tipo>date</tipo>
+				</field>
+
+
+				<field id="nombre_iva" tabla="GEN_IVA">
+					<label>IVA</label>
+				</field>
+
+				<field id="cuit_cuenta">
+					<label>CUIT/CUIL</label>
+				</field>
+
+				<!-- Filtros -->
+                                           <!--
+				<field id="asociado1" noshow="true">
+					<expresion having="false">nro_cuenta</expresion>
+				</field>
+
+				<field id="asociado2" noshow="true">
+					<expresion having="false">nro_cuenta</expresion>
+				</field>
+                                               -->
+				<field id="subsistema_id" noshow="true" valauto="true">
+<!--					<condicion operador="=">'[__subsistema_id__]'</condicion>-->
+					<detalle>subsistema_id</detalle>
+				</field> 
+
+				<field id="subsistemave_id" local="true" _valauto="true" _noshow="true">
+				    
+				</field> 
+				
+				<field id="regcuentarelacionada_id" noshow="true" _local="true" tabla="REG_CUENTA_RELACIONES">
+                    <helper type="combo" id="REG_CUENTA" _xml="regcuenta_cmb.xml" dir="/ayudas" empty="true">  -->
+                         <field id="id_regcuenta" autoinc="true" _noshow="true" esClave="true">
+                            <label>Numero Cuenta</label>
+                            <detalle>regcuenta_id</detalle>
+                         </field>
+                         <field id="nombre_cuenta">
+                              <label>Nombre</label>
+                              <detalle>nombre</detalle>
+                         </field>
+                        <field id="subsistema_id" noshow="true">
+                            <condicion operador="=" _valorde="subsistemave_id">'22'</condicion>
+                        </field>
+                    </helper>
+                    <label>Vendedor</label>
+                    <help>Seleccione el Vendedor</help>
+                </field>
+                
+                <field id="regzona_id">
+                    <tabla_ex id="REG_ZONAS" vacio="true">
+                        <field id="id_regzona" />
+                        <field id="nombre_zona" />
+                        <field id="subsistema_id" />
+                    </tabla_ex>
+                    <label  modpos="nobr">Zona</label>
+                </field>
+                
+				<order>
+				    <field id="nombre_cuenta" />
+				</order>
+				<group>
+				    <field id="id_regcuenta" />
+				</group>
+
+		    </table>
+
+			<join tipo="left">
+				<table id="GEN_PROVINCIAS">
+					<field id="id_provincia">
+						<condicion operador="=">provincia_id</condicion>
+					</field>
+				</table>
+			</join>
+
+
+			<join tipo="left">
+				<table id="GEN_LOCALIDADES">
+					<field id="id_localidad">
+						<condicion operador="=">localidad_id</condicion>
+					</field>
+				</table>
+			</join>
+
+			<join tipo="left">
+				<table id="GEN_IVA">
+					<field id="id_iva">
+						<condicion operador="=">iva_id</condicion>
+					</field>
+				</table>
+			</join>
+
+			<join tipo="left">
+				<table id="REG_CUENTA_RELACIONES">
+					<field id="regcuenta_id">
+						<condicion operador="=">id_regcuenta</condicion>
+					</field>
+					<field id="subsistemarelacionada_id">
+						<condicion operador="=">'22'</condicion>
+					</field>
+
+				</table>
+			</join>
+
+
+
+
+
+			<join tipo="left">
+				<tabla id="REG_ZONAS">
+					<field id="id_regzona">
+						<condicion operador="=">regzona_id</condicion>
+					</field>
+					<field id="subsistema_id">
+						<condicion operador="=">REG_CUENTA.subsistema_id</condicion>
+					</field>
+				</tabla>
+			</join>
+
+
+		</form>
+    </histrix>	

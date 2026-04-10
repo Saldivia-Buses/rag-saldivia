@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="dashboard">
+        <titulo>Medidores de Calidad</titulo>
+
+        <widget id="observaciones_prom_x_seccion1"  width="48%" height="400px">
+           <title>Observaciones Terminacion</title>
+           <url><![CDATA[histrixLoader.php?xml=observaciones_x_seccion_origen.xml&dir=/estadisticas/calidad&seccion_id=5]]></url>
+        </widget>
+
+         <widget id="observaciones_prom_x_seccion2"  width="48%" height="400px">
+           <title>Observaciones PDI</title>
+           <url><![CDATA[histrixLoader.php?xml=observaciones_x_seccion_origen2.xml&dir=/estadisticas/calidad&seccion_id=6]]></url>
+        </widget>
+
+         <widget id="observaciones_prom_x_seccion_terminadas"  width="48%" height="400px">
+           <title>Observaciones Promedio x Sección Terminación</title>
+           <url><![CDATA[histrixLoader.php?xml=observaciones_x_seccion_origen_terminacion.xml&dir=/estadisticas/calidad&seccion_id=5]]></url>
+        </widget>
+
+        <!--<widget id="observaciones_prom_x_seccion_entregadas"  width="48%" height="400px">
+           <title>Observaciones Promedio x Sección Entregada</title>
+           <url><![CDATA[histrixLoader.php?xml=observaciones_x_seccion_origen_entregada.xml&dir=/estadisticas/calidad&seccion_id=6]]></url>
+        </widget>
+
+        <widget id="observaciones_prom_x_seccion"  width="48%" height="400px">
+           <title>Observaciones Promedio por Seccion</title>
+           <url><![CDATA[histrixLoader.php?xml=observaciones_promedio_xseccion.xml&dir=/estadisticas/calidad]]></url>
+        </widget>
+
+        <widget id="acumulado"  width="48%" height="400px">
+           <title>Observaciones En todas las Areas</title>
+         <url><![CDATA[histrixLoader.php?xml=evolutivo_secciones.xml&dir=/estadisticas/calidad]]></url>
+        </widget> -->
+
+        <!-- <widget id="observaciones_prom_x_modelo"  width="98%" height="400px">
+           <title>(Observaciones por Modelo / Cant. Coches)</title>
+           <url><![CDATA[histrixLoader.php?xml=observaciones_promedio_xmodelo.xml&dir=/estadisticas/calidad]]></url>
+        </widget>
+
+        <widget id="observaciones_prom_x_modelo_porcentaje"  width="98%" height="400px">
+           <title>(Observaciones / Controles realizados) por Modelo %</title>
+           <url><![CDATA[histrixLoader.php?xml=observaciones_promedio_xmodelo_porcentaje.xml&dir=/estadisticas/calidad]]></url>
+        </widget> -->
+
+        <!-- <widget id="observaciones_top10"  width="98%" height="400px">
+           <title>Top 10 Ultimo Mes</title>
+           <url><![CDATA[histrixLoader.php?xml=observaciones_top10.xml&dir=/estadisticas/calidad]]></url>
+        </widget>
+
+        <widget id="observaciones_evolutivo_top10"  width="98%" height="400px">
+           <title>Top 10 Evolutivo</title>
+           <url><![CDATA[histrixLoader.php?xml=observaciones_evolutivo_top10.xml&dir=/estadisticas/calidad]]></url>
+        </widget>
+
+        <widget id="observaciones_porcentaje_x_seccion"  width="98%" height="400px">
+           <title>Observaciones % por Seccion Totales</title>
+           <url><![CDATA[histrixLoader.php?xml=observaciones_porcentaje_xseccion.xml&dir=/estadisticas/calidad]]></url>
+        </widget>
+
+        <widget id="observaciones_porcentaje_x_seccion_imputables"  width="98%" height="400px">
+           <title>Observaciones % por Seccion Imputables</title>
+           <url><![CDATA[histrixLoader.php?xml=observaciones_promedio_xseccion_imputables.xml&dir=/estadisticas/calidad]]></url>
+        </widget>
+
+        <widget id="Coches"  width="48%" height="400px">
+           <title>Cantidad Mensual de Coches</title>
+	       <url><![CDATA[histrixLoader.php?xml=evolutivo_coches.xml&dir=/estadisticas/calidad]]></url>
+        </widget>  -->
+
+        <!-- <widget id="modelosdefectos"  width="48%" height="400px">
+           <title>(Observaciones / Controles realizados) por Modelo Terminados %</title>
+	       <url><![CDATA[histrixLoader.php?xml=modelosdefectos_calidad.xml&dir=/estadisticas/calidad]]></url>
+        </widget> -->
+
+        <!-- <widget id="ppmdefectosmes"  width="98%" height="400px">
+           <title>PPM Defectos por Mes</title>
+	       <url><![CDATA[histrixLoader.php?xml=defectos_ppm_xmes.xml&dir=/estadisticas/calidad]]></url>
+        </widget>
+
+        <widget id="ppmpromedio"  width="32%" height="400px">
+           <title>PPM Promedio</title>
+	       <url><![CDATA[histrixLoader.php?xml=defectos_promedio_ppm.xml&dir=/estadisticas/calidad]]></url>
+        </widget>
+
+        <widget id="porcentajedefectosmes"  width="32%" height="400px">
+           <title>% Defectos Mensual</title>
+	       <url><![CDATA[histrixLoader.php?xml=defectos_secciones_xmes.xml&dir=/estadisticas/calidad]]></url>
+        </widget>
+
+        <widget id="observaciones"  width="32%" height="400px">
+           <title>Cantidad de Observaciones por seccion</title>
+	       <url><![CDATA[histrixLoader.php?xml=observaciones_calidad.xml&dir=/estadisticas/calidad]]></url>
+        </widget>
+
+        <widget id="Evolucion1"  width="98%" height="400px">
+           <title>Observaciones Herreria</title>
+	       <url><![CDATA[histrixLoader.php?xml=evolutivo_calidad_herreria.xml&dir=/estadisticas/calidad]]></url>
+        </widget>
+
+        <widget id="Evolucion1_top"  width="65%" height="400px">
+           <title>Herreria Top 10 Evolutivo</title>
+           <url><![CDATA[histrixLoader.php?xml=evolutivo_calidad_herreria_top.xml&dir=/estadisticas/calidad]]></url>
+        </widget>
+
+        <widget id="Evolucion1_top_causas"  width="32%" height="400px">
+           <title>Herreria Top 10 Causas</title>
+           <url><![CDATA[histrixLoader.php?xml=evolutivo_calidad_herreria_top_causas.xml&dir=/estadisticas/calidad]]></url>
+        </widget>
+
+        <widget id="Evolucion2"  width="98%" height="400px">
+           <title>Observaciones Chaperia</title>
+           <url><![CDATA[histrixLoader.php?xml=evolutivo_calidad_chaperia.xml&dir=/estadisticas/calidad]]></url>
+        </widget>
+
+        <widget id="Evolucion2_top"  width="65%" height="400px">
+           <title>Chaperia Top 10 Evolutivo</title>
+           <url><![CDATA[histrixLoader.php?xml=evolutivo_calidad_chaperia_top.xml&dir=/estadisticas/calidad]]></url>
+        </widget>
+
+        <widget id="Evolucion2_top_causas"  width="32%" height="400px">
+           <title>Chaperia Top 10 Causas</title>
+           <url><![CDATA[histrixLoader.php?xml=evolutivo_calidad_chaperia_top_causas.xml&dir=/estadisticas/calidad]]></url>
+        </widget>
+
+        <widget id="Evolucion3"  width="98%" height="400px">
+           <title>Observaciones Pintura</title>
+           <url><![CDATA[histrixLoader.php?xml=evolutivo_calidad_pintura.xml&dir=/estadisticas/calidad]]></url>
+        </widget>
+
+        <widget id="Evolucion3_top"  width="65%" height="400px">
+           <title>Pintura Top 10 Evolutivo</title>
+           <url><![CDATA[histrixLoader.php?xml=evolutivo_calidad_pintura_top.xml&dir=/estadisticas/calidad]]></url>
+        </widget>
+
+        <widget id="Evolucion3_top_causas"  width="32%" height="400px">
+           <title>Pintura Top 10 Causas</title>
+           <url><![CDATA[histrixLoader.php?xml=evolutivo_calidad_pintura_top_causas.xml&dir=/estadisticas/calidad]]></url>
+        </widget>
+
+        <widget id="Evolucion5"  width="98%" height="400px">
+           <title>Observaciones Terminacion</title>
+           <url><![CDATA[histrixLoader.php?xml=evolutivo_calidad_terminacion.xml&dir=/estadisticas/calidad]]></url>
+        </widget>
+
+        <widget id="Evolucion5_top"  width="65%" height="400px">
+           <title>Terminacion Top 10 Evolutivo</title>
+           <url><![CDATA[histrixLoader.php?xml=evolutivo_calidad_terminacion_top.xml&dir=/estadisticas/calidad]]></url>
+        </widget>
+
+        <widget id="Evolucion5_top_causas"  width="32%" height="400px">
+           <title>Terminacion Top 10 Causas</title>
+           <url><![CDATA[histrixLoader.php?xml=evolutivo_calidad_terminacion_top_causas.xml&dir=/estadisticas/calidad]]></url>
+        </widget>
+
+        <widget id="Evolucion6"  width="98%" height="400px">
+           <title>Observaciones Plasticos</title>
+           <url><![CDATA[histrixLoader.php?xml=evolutivo_calidad_plasticos.xml&dir=/estadisticas/calidad]]></url>
+        </widget>
+
+        <widget id="Evolucion6_top"  width="65%" height="400px">
+           <title>Plasticos Top 10 Evolutivo</title>
+           <url><![CDATA[histrixLoader.php?xml=evolutivo_calidad_plasticos_top.xml&dir=/estadisticas/calidad]]></url>
+        </widget>
+
+        <widget id="Evolucion6_top_causas"  width="32%" height="400px">
+           <title>Plasticos Top 10 Causas</title>
+           <url><![CDATA[histrixLoader.php?xml=evolutivo_calidad_plasticos_top_causas.xml&dir=/estadisticas/calidad]]></url>
+        </widget>
+
+        <widget id="Evolucion7"  width="98%" height="400px">
+           <title>Observaciones Entrega</title>
+           <url><![CDATA[histrixLoader.php?xml=evolutivo_calidad_entrega.xml&dir=/estadisticas/calidad]]></url>
+        </widget>
+
+        <widget id="Evolucion8"  width="98%" height="400px">
+           <title>Observaciones Recepcion</title>
+           <url><![CDATA[histrixLoader.php?xml=evolutivo_calidad_recepcion.xml&dir=/estadisticas/calidad]]></url>
+        </widget> -->
+
+</histrix>

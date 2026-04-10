@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+	<histrix tipo="consulta">
+		<title>Articulo Proveedor</title>
+		<obs></obs>
+		<form >
+			<table id="STK_ARTICULOS_PROVEEDOR" label="Articulo Proveedor">
+				<field id="id_stkarticuloproveedor" oculto="true" autoinc="true">
+					<label>Codigo</label>
+					<help>Codigo de relacion articulo/proveedor</help>
+				</field>
+				<field id="stkarticulo_id" oculto="true">
+					<label>Articulo</label>
+					<help>Codigo de Articulo</help>
+				</field>
+				<field id="regcuenta_id">
+					<label>Proveedor</label>
+					<help>Codigo del Proveedor</help>
+				</field>
+				<field id="ctanom" tabla="CCTCUENT">
+				    <label>Nombre</label>						
+				</field>
+				 <field id="prv_articulo">
+					<label>Cod Articulo/proveedor</label>
+				</field>
+			</table>
+			    <join tipo="left">
+				    <table id="STKINSUM">
+					<field id="siscod" oculto="true">
+					    <label>subsistema</label>
+					    <condicion operador="=">'01'</condicion>
+					</field>
+					<field id="artcod" oculto="true">
+					    <condicion operador="=">STK_ARTICULOS_PROVEEDOR.stkarticulo_id</condicion>
+					</field>
+				    </table>
+                             </join>
+			        <join tipo="left">
+				    <table id="CCTCUENT">
+					<field id="siscod" oculto="true">
+					    <label>subsistema</label>
+					    <condicion operador="=">'01'</condicion>
+					</field>
+					<field id="ctacod" oculto="true">
+					    <condicion operador="=">STK_ARTICULOS_PROVEEDOR.regcuenta_id</condicion>
+					</field>
+				    </table>
+                             </join>
+		</form>
+	</histrix>

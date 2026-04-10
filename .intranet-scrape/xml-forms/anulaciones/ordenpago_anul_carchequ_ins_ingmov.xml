@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="insert" sqlhardcoded="true" tipoInsert="IGNORE">
+       <title>CARTERA DE CHEQUES</title>
+        <obs></obs>
+               <form >
+					<table id="CARCHEQU" label="ANULACION ORDEN DE PAGO" >
+						<field id="movinc" id_temp="movinc" local="true">
+						</field>
+						
+						<field id="transfer" >
+							<valor>SELECT * from CARCHEHI where CARCHEHI.carpag = [__movinc__] </valor>
+							<tipo>integer</tipo>
+						</field>
+						
+						
+					</table>
+               </form>
+        </histrix>

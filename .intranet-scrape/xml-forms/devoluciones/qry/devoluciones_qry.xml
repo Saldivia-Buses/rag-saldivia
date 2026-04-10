@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<histrix tipo="liveGrid" deleteRow="false">
+    <title>Devolución de Materiales</title>
+    <obs></obs>
+    <form>
+        <table id="DEVREMITO" >
+            <title>Estados</title>
+	    <filters>
+		<field id="fecha_devolucion">
+		    <label>Desde</label>
+		    <operador>&gt;=</operador>
+		    <valor>today</valor>
+		</field>
+		<field id="fecha_devolucion">
+		    <label>Hasta</label>
+		    <operador>&lt;=</operador>
+		    <valor>today</valor>
+		</field>
+		<field id="cierre">
+		    <label>Estado</label>
+		</field>
+	    </filters>
+
+	    <fieldGroup noshow="true">
+		<field id="style">
+		    <expression>CASE WHEN cierre = 0 THEN 'text-align:center;font-size:14px;color:red;' ELSE 'text-align:center;font-size:14px;color:green;' END</expression>
+		</field>
+
+	    </fieldGroup>
+		<field id="id_devremito" noshow="true" />
+		<field id="fecha_devolucion">
+		    <label>Fecha</label>
+		    <tipo>date</tipo>
+		</field>
+		<field id="nro_remito">
+		    <label>Remito</label>
+		</field>
+		<field id="artcod">
+		    <label>Cod.</label>
+		</field>
+		<field id="nombre_articulo" tabla="STK_ARTICULOS">
+		    <label>Articulo</label>
+		</field>
+		<field id="cantidad">
+		    <label>Cantidad</label>
+		</field>
+		<field id="ocpnro" style="text-align:center;width:5em;color:#444;font-size:14px;" noZero="true">
+		    <label>Nº OC</label>
+		    <helper type="link" xml="cpsencab_cabreimp.xml" dir="/compras">
+			<parameter source="ocpnro" target="ocpnro" />
+			<parameter source="ocpfec" target="ocpfec" />
+		    </helper>
+		</field>
+		<field id="ocpfec">
+		    <label>Fecha OC</label>
+		</field>
+		<field id="noconformidad_id" noZero="true" style="text-align:center;width:5em;color:#444;font-size:14px;">
+		    <label _style="text-align:center;color:#444;font-size:14px;">N.Conf.</label>
+		    <helper type="link" xml="noconformidad_ficha.xml" dir="/calidad/qry">
+			<parameter source="noconformidad_id" target="id_noconformidad" />		
+		    </helper>
+		</field>
+		<field id="cierre" getStyle="style" editable="true">
+		    <label>Estado</label>
+		    <helper type="combo">
+			<option value=""></option>
+			<option value="0">Abierta</option>
+			<option value="1">Cerrada</option>
+		    </helper>
+		    <tipo>varchar</tipo>
+		</field>
+	</table>
+	<join>
+	    <table id="STK_ARTICULOS">
+		<field id="id_stkarticulo">
+		    <condicion operador="=">DEVREMITO.artcod</condicion>
+		</field>
+		<field id="subsistema_id">
+		    <condicion operador="=">'01'</condicion>
+		</field>
+	    </table>
+	</join>
+    </form>
+</histrix>

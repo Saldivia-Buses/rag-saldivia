@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+	<histrix  tipo="cabecera" graba="false">
+		<title>Pedidos Internos</title>
+		<obs></obs>
+		<form >
+			<table id="PEDIDOINT" label="Pedidos Internos">
+
+				<field id="tipocomp" deshabilitado="true" oculto="true">
+					<label>Tipo Comp</label>
+					<help>Tipo Comprobante </help>
+					<valor>1</valor>					
+				</field>
+				<field id="puesto" deshabilitado="true">
+					<label>Comprobante</label>
+					<valor>1</valor>
+				</field>
+				<field id="nrocom" deshabilitado="true">
+					<label modpos="nobr">-</label>
+					<parametro id="fsmparam_parent.xml" retorna="parent">
+						<field id="parcla" oculto="true">
+							<condicion operador="=">'pednro'</condicion>
+						</field>
+						<field id="parent">
+							<complete>parent + 1</complete>
+						</field>
+					</parametro>
+					<jseval campodestino="pedidopath" >\'directorio\'</jseval>
+					
+				</field>
+				<field id="fechaemi" deshabilitado="true">
+					<label modpos="nobr">Emisión</label>
+					<help>Fecha de Emisión </help>
+					<valor>today</valor>
+				</field>
+				<field id="directorio" deshabilitado="true" _noshow="true">
+					<label modpos="nobr">DIR</label>
+					<valor eval="true">uniqid()</valor>
+					<jseval campodestino="pedidopath" >\'directorio\'</jseval>
+				</field>
+				
+				
+				<field id="_usu" deshabilitado="true" required="true">
+					<label modpos="nobr">Usuario</label>
+					<valor eval="true">$_SESSION['usuario']</valor>
+				</field>
+				<field id="nrofab" esclave="true">
+					<label>Nro Fab.</label>
+					<help>Número de Fabricación </help>
+					<jseval campodestino="pedidopath" >\'directorio\'</jseval>
+					<valor>9999</valor>
+				</field>
+
+		      <field id="chades" deshabilitado="true" noshow="true">
+		        <label modpos="nobr">Chasis</label>
+		        <tipo>varchar</tipo>
+		        <size>40</size>
+		      </field>
+
+		      <field id="proyecto_compra">
+		          <label modpos="nobr">Proyecto</label>
+		          <help>Proyecto de Compras</help>
+		          <tabla_ex id="CPS_PROYECTO">
+		              <field id="id_cpsproyecto" />
+		              <field id="nombre_cpsproyecto"/>
+		              <field id="activo_cpsproyecto">
+		              	<condicion operador="=">1</condicion>
+		              </field>
+		              <order>
+		                  <field id="id_cpsproyecto" />
+		              </order>
+		          </tabla_ex>
+		      </field>
+		      
+			<field id="ocpent" _rememberValue="true">
+				<label modpos="nobr" colspan="6">Lugar Entrega </label>
+				<help>Lugar de Entrega/Descarga</help>
+				<tabla_ex id="DEPOSITO">
+					<field id="idDeposito">
+					</field>
+					<field id="direccion">
+					</field>
+				</tabla_ex>			
+				<tipo>integer</tipo>	
+			</field>				
+			</table>
+		</form>
+	</histrix>

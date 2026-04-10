@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF8" ?>
+<histrix tipo="consulta"   path="/fotos/proyectos">
+        <title>Proyectos</title>
+        <obs></obs>.
+        <eventos>
+            <event id="insert">refresh</event>
+        </eventos>
+        <form>
+                <table id="PROY_DETALLE" >
+                    <title> </title>
+
+                    <field id="id_proydetalle" autoinc="true" noshow="true">
+                    </field>
+
+                    <field id="proyecto_id" noshow="true" valauto="true">   
+                    </field>
+
+
+                	<field id="tipodetalle_id">
+                	    <helper xml="proy_tipodetalle.xml" type="combo" _empty="true" />
+                        <label>Tipo</label>
+                    <!--    <jseval campodestino="pathdet" >\'proyecto_id/detalle/directorio\'</jseval> -->
+                	</field>
+
+                    <field id="fecha_detalle" valauto="true">
+                        <label modpos="nobr">Fecha</label>
+                        <help>Fecha del Proyecto</help>
+                        <valor>today</valor>
+                    </field>
+
+                    <field id="descripcion_detalle">
+                        <label colspan="4">Descripción</label>
+                        <size>100</size>
+                    <!--    <jseval campodestino="pathdet" >\'proyecto_id/detalle/directorio\'</jseval> -->
+                    </field>
+<!--
+                    <field id="responsable_detalle" style="font-size:10px;">
+                        <helper type="combo" id="HTXUSERS" empty="true">
+                            <field id="Id_usuario"/>
+                            <field id="nombre">
+                                <expression>CONCAT(apellido, ' ', Nombre)</expression>
+                            </field>
+                            <field id="baja">
+                                <condicion operador="=">0</condicion>
+                            </field>
+                            <order>
+                                <field id="nombre"/>
+                            </order>
+                        </helper>
+                        <label _modpos="nobr">Responsable </label>
+                        <help >Empleado responsable de la Etapa</help>
+                    </field>
+                    -->
+<!--
+                    <field id="directorio" deshabilitado="true" _noshow="true">
+                      <label modpos="nobr">DIR</label>
+                      <valor eval="true">uniqid()</valor>
+                      <jseval campodestino="pathdet" >\'proyecto_id/detalle/directorio\'</jseval> 
+                    </field>
+-->
+
+
+
+
+
+
+
+
+                    <field id="directorio" deshabilitado="true"  noshow="true" />
+                    
+                    <field id="dircalc" local="true"  Formstyle="display:none;" path="pathdet"  >
+                      <expression>CONCAT( '/fotos/proyectos/',proyecto_id, '/detalle/', id_proydetalle, '/' )</expression> 
+
+                            <label >Archivos</label>
+                            <help>Archivos de la etapa</help>
+                            <tipo>dir</tipo>
+			    <size>40</size>
+                    </field>
+
+
+<!--
+                    <field id="boton_archivos" deshabilitado="true" _noshow="true" local="true" Formstyle="display:none;">
+                      <label>Carga Archivo</label>
+                      <helper type="link" xml="proy_archivodetalle.xml">
+                        <parameter source="id_proydetalle" target="id_proydetalle" operator="=" /> 
+                        <parameter source="proyecto_id"    target="proyecto_id"    operator="=" /> 
+                      </helper>
+                      <valor>Cargar</valor> 
+                      <expression>CONCAT('/fotos/proyectos/', proyecto_id, '/detalle/', id_proydetalle, '/' )  </expression>
+                      <tipo>dir</tipo>
+                  
+                  
+                    </field>
+-->
+
+                    <field id="verificado" _refresh="true" deshabilitado="true">
+                        <label>Verificado</label>
+                        <tipo>check</tipo>
+                    </field>
+                    <field id="verif" noshow="true">
+                        <expression sql="true">update PROY_DETALLE set verificado = [__verificado__] where id_proydetalle = [__id_proydetalle__]</expression>
+                    </field>
+
+                    <field id="login_verificado" valauto="true" noshow="true" refresh="true">
+                        
+                        <valor eval="true">$_SESSION['usuario']</valor>
+                    </field>
+                    <field id="fecha">
+                        <label>Fecha V.</label>
+                        <expression>date(time_verificado)</expression>
+                        <tipo>date</tipo>
+                    </field>
+
+                    <field id="archivos_etapa" local="true" path="pathdet" colstyle="display:none;">
+                       <expression>CONCAT('/fotos/proyectos/', proyecto_id, '/detalle/', directorio, '/' )  </expression>
+                            <label >Archivos</label>
+                            <help>Archivos de la etapa</help>
+                            <tipo>dir</tipo>
+                    </field>
+
+                    <order>
+                        <field id="tipodetalle_id" />
+                    </order>
+
+                </table>
+        </form>           
+</histrix>

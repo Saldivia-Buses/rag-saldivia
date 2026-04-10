@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<abm tipo="consulta" >
+	<titulo>PRECIOS POR MODELO</titulo>
+	<obs/>
+	<consulta>
+		<tabla id="PRECIOMODELO" >
+			<titulo>Precios por modelo</titulo>
+
+			<campo id="nrocar" noshow="true">
+			</campo>
+			<campo id="modcar" tabla="CARROCERIA">
+
+				<help>Modelo de Carroceria</help>
+				<tipo>varchar</tipo>
+
+			</campo>
+			<group>
+				<campo id="nrocar" tabla="PRECIOMODELO"></campo>
+			</group>
+			<orden>
+				<campo id="nrocar" tabla="PRECIOMODELO"></campo>
+
+			</orden>
+		</tabla>
+		<join tipo="left">
+               <tabla id="CARROCERIA">
+					<campo id="nrocar">
+					       <condicion operador="=">PRECIOMODELO.nrocar</condicion>
+					</campo>
+					<campo id="siscod" oculto="true">
+					       <condicion operador="=">'03'</condicion>
+					</campo>				   
+				</tabla>
+		</join>
+	</consulta>
+</abm>

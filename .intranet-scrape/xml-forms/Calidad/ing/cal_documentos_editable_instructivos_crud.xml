@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud"  path="ISO9000" borra="false" _limit="5">
+  <title>Instructivos</title>
+  <obs></obs>
+  <form >
+    <table id="CAL_DOCUMENTOS" label="Instructivos">
+
+      <field id="id_documento" noshow="true" esClave="true">
+        <label>Documento</label>
+      </field>
+
+      <field id="tipodocumento_id" deshabilitado="true" valauto="true">
+        <helper type="combo" id="CAL_TIPO_DOCUMENTO">
+            <field id="id_tipodocumento" />
+            <field id="descripcion_tipodocumento" />
+        </helper>
+        <label>Tipo</label>
+        <help>Tipoo de Documento</help>
+        <condicion operador="=">10</condicion>
+        <valor default="true">10</valor>
+      </field>
+
+      <field id="codigo_documento" deshabilitado="false">
+        <label>código</label>
+        <help>código de Documento</help>
+        <helper type="link" xml="cal_documentos_ficha.xml" dir="/calidad/qry">
+            <parameter source="id_documento" target="id_documento" />
+        </helper>
+      </field>
+      <field id="nombre_documento">
+        <label>Nombre</label>
+        <help>Nombre de Documento</help>
+      </field>
+
+      <field id="vigencia_documento" Formstyle="display:none;">
+        <label>vigencia</label>
+        <help>vigencia de Documento</help>
+      </field>
+      <field id="emisor_documento">
+        <label>emisor</label>
+        <help>emisor de Documento</help>
+        <size>60</size>
+        <helper type="combo" id="HTXUSERS" empty="true">
+          <field id="Id_usuario" />
+          <field id="nombre">
+            <expression>concat(Nombre, ' ', apellido)</expression>
+          </field>
+          <field id="baja">
+            <condicion operador="=">0</condicion>
+          </field>
+          <order>
+            <field id="nombre" />
+          </order>          
+        </helper>
+      </field>
+      <field id="distribuidor_documento" noshow="true">
+        <label>Distribucion</label>
+        <help>Distribuidor del Documento</help>
+        <size>60</size>
+      </field>
+      <field id="aprueba_documento" Formstyle="display:none;">
+        <label>Aprobado por</label>
+        <help>Aprobación del Documento</help>
+        <size>60</size>
+        <helper type="combo" id="HTXUSERS" empty="true">
+          <field id="Id_usuario" />
+          <field id="nombre">
+            <expression>concat(Nombre, ' ', apellido)</expression>
+          </field>
+          <field id="baja">
+            <condicion operador="=">0</condicion>
+          </field>
+        </helper>
+      </field>
+      <field id="conservacion_documento" Formstyle="display:none;">
+        <label>conservacion</label>
+        <help>conservacion de Documento</help>
+        <size>60</size>
+      </field>
+      <field id="guarda_documento" Formstyle="display:none;">
+        <label>Guarda</label>
+        <help>Guarda de Documento</help>
+      </field>
+      <field id="revision_documento" Formstyle="display:none;">
+        <label>Revisión</label>
+        <help>Revisión de Documento</help>
+      </field>
+      <field id="valOpen" noshow="true">
+        <expression>
+          CASE WHEN CAL_TIPO_DOCUMENTO.imprime_documento = 1 THEN 'true' ELSE 'false' END
+        </expression>
+      </field>
+      <field id="valViewer" noshow="true">
+        <expression>
+          CASE WHEN CAL_TIPO_DOCUMENTO.imprime_documento = 1 THEN 'false' ELSE 'true' END
+        </expression>
+      </field>
+      <field id="archivo_documento" _path="codigo_documento" open="true" _viewer="true" print="false" Formstyle="display:none;">
+        <label>Archivo</label>
+        <help>Archivo del Documento</help><!--
+        <attribute id="open">valOpen</attribute>
+        <attribute id="viewer">valViewer</attribute>-->
+        <tipo>file</tipo>
+        <size>20</size>
+      </field>
+  
+  <field id="secciones" local="true" cellMaxLength="30">
+    <helper type="object" xml="cal_documentos_seccion_crud.xml" dir="/calidad/ing/">
+        <parameter source="id_documento" target="documento_id" />
+    </helper>
+    <label>Secciones</label>
+    <help>Secciones donde se publica</help>
+    <expression>SELECT GROUP_CONCAT(" " , s.nombre)  
+        FROM CAL_DOCUMENTOS_SECCION cds LEFT JOIN SECCION s ON cds.seccion_id = s.id_seccion 
+        WHERE cds.documento_id = id_documento</expression>
+    </field>
+
+  <field id="posiciones" local="true" cellMaxLength="30">
+    <helper type="object" xml="cal_documentos_posicion_crud.xml" dir="/calidad/ing/">
+        <parameter source="id_documento" target="documento_id" />
+    </helper>
+    <label>Posiciones</label>
+    <help>Posiciones donde se publica</help>
+    <expression>SELECT GROUP_CONCAT(" " , s.nombre)  
+        FROM CAL_DOCUMENTOS_POSICION cds LEFT JOIN POSICIONESFAB s ON cds.posicionfab_id = s.id_posicionfab
+        WHERE cds.documento_id = id_documento</expression>
+    </field>
+
+  <field id="epp" local="true" colstyle="display:none;">
+    <helper type="object" xml="cal_documentos_epp_crud.xml" dir="/calidad/ing/">
+        <parameter source="id_documento" target="documento_id" />
+    </helper>
+    <label>E.P.P.</label>
+    <help>Elementos de Proteccion Personal</help>
+  </field>
+
+  <field id="editar_documento" local="true" width="95%" height="95%" Formstyle="display:none;">
+    <expression>'Editar'</expression>
+    <helper type="link" xml="cal_documentos_edicion_pasos_crud.xml" dir="/calidad/ing/">
+        <parameter source="id_documento" target="documento_id" />
+        <parameter source="codigo_documento" target="codigo_documento" />
+        <parameter source="nombre_documento" target="nombre_documento" />
+        <parameter source="vigencia_documento" target="vigencia_documento" />
+    </helper>
+    <label>Editar</label>
+    <help>Editar Documuento</help>
+    <attribute id="linkdes">nombre_documento</attribute>
+  </field>
+
+  <field id="ver_documento" local="true" width="95%" height="95%" Formstyle="display:none;">
+    <expression>case when (select count(*) from CAL_DOCUMENTOS_PASOS where documento_id =  id_documento) != 0 then 'Ver' else '' end</expression>
+    <helper type="link" xml="cal_documentos_edicion_pasos_qry.xml" dir="/calidad/qry/">
+        <parameter source="id_documento" target="documento_id" />
+        <parameter source="codigo_documento" target="codigo_documento" />
+        <parameter source="nombre_documento" target="nombre_documento" />
+        <parameter source="vigencia_documento" target="vigencia_documento" />
+    </helper>
+    <label>Editar</label>
+    <help>Editar Documuento</help>
+    <attribute id="linkdes">nombre_documento</attribute>
+  </field>
+
+    <field id="xml_consulta" local="true" noshow="true">
+      <valor>'cal_documentos_editable_instructivos_crud.xml or xmlprog = cal_documentos_editable_card.xml'</valor>
+    </field>
+
+    <field id="nombre_id_registro" local="true" noshow="true">
+      <valor>'Documento'</valor>
+    </field>
+
+    <field id="id_registro" local="true" noshow="true">
+      <expression>id_documento</expression>
+    </field>
+
+    <field id="log" local="true" linkint="registros_log_qry.xml" linkdir="/calidad/qry/" linkdes="Historial" print="false" Formstyle="display:none;">
+          <label>Hist</label>
+          <paring destino="xml_consulta">xml_consulta</paring>   
+          <paring destino="id_registro">id_registro</paring>   
+          <paring destino="nombre_id_registro">nombre_id_registro</paring>   
+      <expression>'Hist.'</expression>  
+    </field>
+
+	<field id="menuId" noshow="true">
+	</field>
+
+      <order>
+        <field id="codigo_documento">
+          <label>código</label>
+          <help>código de Documento</help>
+        </field>
+      </order>
+    </table>
+    <join tipo="left">
+      <table id="CAL_TIPO_DOCUMENTO">
+        <field id="id_tipodocumento">
+          <condicion operador="=">CAL_DOCUMENTOS.tipodocumento_id</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>

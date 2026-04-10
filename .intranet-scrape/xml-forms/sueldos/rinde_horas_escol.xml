@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" class="consultaing2" barraDrag="false">
+  <title>Rendicion de Horas</title>
+  <obs/>
+  <form >
+    
+      <table id="PERSONAL" label="Rendición de Horas" >
+
+      <filters>
+
+        <field id="IdSindicato" >
+          <label>Sindicato</label>
+          <operador>=</operador>
+        </field>
+
+        <field id="desde" local="true">
+          <label>Desde</label>
+          <tipo>date</tipo>
+          <valor>today</valor>
+          <operador>&gt;=</operador>
+        </field>            
+
+        <field id="hasta" local="true">
+          <label>Hasta</label>
+          <tipo>date</tipo>
+          <valor>today</valor>
+          <operador>&lt;=</operador>
+        </field>            
+        
+      </filters>
+
+      <field id="desde" local="true"  noshow="true">
+        <label>Desde</label>
+        <tipo>date</tipo>
+      </field>            
+      <field id="hasta" local="true"  noshow="true">
+        <label>Hasta</label>
+        <tipo>date</tipo>
+      </field>            
+
+      <field id="fechaEgreso" oculto="true">
+        <label>Egreso</label>
+        <tipo>date</tipo>
+        <condicion operador="=">'0000-00-00'</condicion>
+      </field>            
+              
+      <field id="IdSindicato">
+        <label>Sindicato</label>
+        <help>Código de Sindicato</help>
+          <helper type="combo" id="SINDICATO">
+            <field id="IdSindicato"></field>
+            <field id="Nombre"></field>
+            <order>
+                <field id="IdSindicato"></field>
+            </order>
+          </helper>
+        <detalle>IdSindicato</detalle>  
+      </field>
+
+      <field id="nom">
+        <expression>concat(PERSONAL.apellido, ', ', PERSONAL.nombre)</expression>
+        <label>Apellido</label>
+        <tipo>varchar</tipo>
+      </field>            
+<!--      <field id="nombre">
+        <label>Nombre</label>
+        <tipo>varchar</tipo>
+      </field> -->
+      <field id="tarjeta" noshow="true">
+        <label>Tarjeta</label>
+      </field>        
+      <field id="idJornada" noshow="true">
+        <label>Jornada</label>
+      <!--  <tabla_ex id="JORNADAS">
+          <field id="idJornada"></field>
+          <field id="nombre"></field>
+          
+        </tabla_ex> -->
+      </field>          
+      <field id="legajo">
+        <label>Legajo</label>
+        <tipo>integer</tipo>
+      </field>
+      <field id="fecing">
+        <label>Ingreso</label>
+        <tipo>date</tipo>
+      </field>
+      <field id="CUIL">
+        <label>CUIL</label>
+        <tipo>integer</tipo>
+      </field>
+      <field id="descripcion" _tabla="CATPERSONAL">
+        <label>Categ.</label>
+        <expression><![CDATA[(select descripcion from CATEGHISTORIA 
+                                     left join CATPERSONAL 
+                                     on CATPERSONAL.IdSindicato = CATEGHISTORIA.idSindicato 
+                                     and CATPERSONAL.IdCateg = CATEGHISTORIA.IdCateg 
+                                     where CATEGHISTORIA.IdPersona = PERSONAL.IdPersona 
+and  CATEGHISTORIA.fechaDesde <= CONCAT(RIGHT(REPLACE('[__hasta__]', '/', ''), 4), SUBSTRING(REPLACE('[__hasta__]', '/', ''), 3, 2), LEFT(REPLACE('[__hasta__]', '/', ''), 2)) 
+order by CATEGHISTORIA.fechaDesde desc limit 1)]]>
+              </expression>
+        <tipo>varchar</tipo>
+        
+      </field>
+
+      <field id="tipoliq" >
+      <!--    <expression>select tipoliq FROM CONCEPCONV inner join CONVENIOS on CONVENIOS.idSindicato= CONCEPCONV.IdSindicato  where CONCEPCONV.IdSindicato = PERSONAL.IdSindicato and CONCEPCONV.IdCateg = PERSONAL.IdCateg and CONVENIOS.fechaHasta >= CURDATE() limit 1</expression> -->
+        <expression>select tipoliq FROM CONCEPCONV inner join CONVENIOS on CONVENIOS.idSindicato= CONCEPCONV.IdSindicato  where CONCEPCONV.IdSindicato = PERSONAL.IdSindicato and CONCEPCONV.IdCateg = PERSONAL.IdCateg limit 1</expression>
+            
+        <tabla_ex id="CONCEPLIQU">
+          <field id="tipoLiq"/>
+          <field id="Nombre"/>
+        </tabla_ex> 
+        <label>Tipo Liq.</label>
+        <tipo>varchar</tipo>
+      </field>
+      
+<!--       <field id="asignacion" tabla="FAMILIA">
+        <expression>sum(asignacion)</expression>
+        <label>Asig.</label>
+        <tipo>integer</tipo>
+      </field>-->
+      <field id="ayudaescolar" tabla="FAMILIA">
+        <expression>sum(ayudaescolar)</expression>
+        <label>Escol.</label>
+        <tipo>integer</tipo>
+      </field>
+      <field id="val">
+          <label>importe</label>
+          <expression>select importe FROM CONCEPCONV inner join CONVENIOS on CONVENIOS.idSindicato= CONCEPCONV.IdSindicato  where CONCEPCONV.IdSindicato = PERSONAL.IdSindicato and CONCEPCONV.IdCateg = PERSONAL.IdCateg  limit 1</expression>
+      </field>
+<!--      <field id="cualquiera">
+      <label>horas?</label>
+      <expression><![CDATA[ SEC_TO_TIME(sum((select TIME_TO_SEC(TIMEDIFF(case when max(F1.hora) > '17:00:00' and DAYOFWEEK(F1.fecha) != 7 then '17:00:00' when max(F1.hora) > '12:00:00' and DAYOFWEEK(F1.fecha) = 7 then '12:00:00' else max(F1.hora) end, case when min(F1.hora) < '07:00:00' then '07:00:00' else (min(F1.hora)) end  ) ) from FICHADAS as F1 where F1.tarjeta = FICHADAS.tarjeta and F1.fecha = FICHADAS.fecha GROUP BY fecha )) / 2)]]></expression>
+
+      </field>  -->
+        
+        <!--
+        TIMEDIFF(case when max(hora) &gt; JORNADA.salida  then JORNADA.salida else max(hora) end, 
+                  case when min(hora) &lt; JORNADA.entrada then JORNADA.entrada else (min(hora)) end)
+        -->
+        
+<!--       <field id="trabajadas">
+        <label>Horas</label>
+        <expression sql="true"><![CDATA[ 
+                    select SEC_TO_TIME(sum(FF.minutos)) from 
+               (select TIME_TO_SEC(TIMEDIFF(case when max(F1.hora) > JORNADA.salida  then JORNADA.salida else max(F1.hora) end, 
+                                            case when min(F1.hora) < JORNADA.entrada then JORNADA.entrada else (min(F1.hora)) end )) as "minutos"
+                                from FICHADAS as F1 left JOIN JORNADA on JORNADA.idJornada = [__idJornada__] and
+                                                                 JORNADA.dia = DAYOFWEEK(F1.fecha)
+        
+                                                where F1.tarjeta = [__tarjeta__] and               
+                                                              F1.fecha  >= '[__desde__]' and 
+                                                  F1.fecha  <= '[__hasta__]' GROUP BY F1.fecha ) as FF  ]]></expression>
+        <tipo>time</tipo>
+      </field>        
+      <field id="comunes">
+        <label>Hs.Com</label>
+        <expression sql="true"><![CDATA[ 
+                    select  SEC_TO_TIME(sum(FF.comun)) from 
+               (select TIME_TO_SEC(TIMEDIFF(case when max(F1.hora) > JORNADA.salida  then JORNADA.salida else max(F1.hora) end, 
+                                            case when min(F1.hora) < JORNADA.entrada then JORNADA.entrada else (min(F1.hora)) end )) as "Horas", 
+                         (case when TIME_TO_SEC(JORNADA.comunes) > (TIME_TO_SEC(TIMEDIFF(case when max(F1.hora) > JORNADA.salida  then JORNADA.salida else max(F1.hora) end, 
+                                            case when min(F1.hora) < JORNADA.entrada then JORNADA.entrada else (min(F1.hora)) end ))) then (TIME_TO_SEC(TIMEDIFF(case when max(F1.hora) > JORNADA.salida  then JORNADA.salida else max(F1.hora) end, 
+                                            case when min(F1.hora) < JORNADA.entrada then JORNADA.entrada else (min(F1.hora)) end ))) else TIME_TO_SEC(JORNADA.comunes) end) as "comun"        
+                                from FICHADAS as F1 left JOIN JORNADA on JORNADA.idJornada = [__idJornada__] and
+                                                                 JORNADA.dia = DAYOFWEEK(F1.fecha)
+        
+                                                where F1.tarjeta = [__tarjeta__] and               
+                                                              F1.fecha  >= '[__desde__]' and 
+                                                  F1.fecha  <= '[__hasta__]' GROUP BY F1.fecha ) as FF  ]]></expression>
+        <tipo>time</tipo>
+      </field>          
+      <field id="extras">
+        <label>Hs.Ext</label>
+        <expression sql="true"><![CDATA[ 
+                    select  SEC_TO_TIME(sum(FF.comun)) from 
+               (select TIME_TO_SEC(TIMEDIFF(case when max(F1.hora) > JORNADA.salida  then JORNADA.salida else max(F1.hora) end, 
+                                            case when min(F1.hora) < JORNADA.entrada then JORNADA.entrada else (min(F1.hora)) end )) as "Horas", 
+                         (case when TIME_TO_SEC(JORNADA.comunes) <= (TIME_TO_SEC(TIMEDIFF(case when max(F1.hora) > JORNADA.salida  then JORNADA.salida else max(F1.hora) end, 
+                                            case when min(F1.hora) < JORNADA.entrada then JORNADA.entrada else (min(F1.hora)) end ))) then 
+                         (-1) * ( TIME_TO_SEC(JORNADA.comunes) - TIME_TO_SEC(TIMEDIFF(case when max(F1.hora) > JORNADA.salida  then JORNADA.salida else max(F1.hora) end, 
+                                            case when min(F1.hora) < JORNADA.entrada then JORNADA.entrada else (min(F1.hora)) end )) ) else (0) 
+                         end) as "comun"        
+                                from FICHADAS as F1 left JOIN JORNADA on JORNADA.idJornada = [__idJornada__] and
+                                                                 JORNADA.dia = DAYOFWEEK(F1.fecha)
+        
+                                                where F1.tarjeta = [__tarjeta__] and               
+                                                              F1.fecha  >= '[__desde__]' and 
+                                                  F1.fecha  <= '[__hasta__]' GROUP BY F1.fecha ) as FF  ]]></expression>
+        <tipo>time</tipo>
+      </field>        
+        
+      <field id="Enfermedad">
+        <label>Enfer.</label>
+        <expression sql="true"><![CDATA[ 
+        select 
+          SEC_TO_TIME(sum((select sum(TIME_TO_SEC(JORNADA.comunes)) as "fechas" FROM GEN_CALENDAR 
+               left JOIN JORNADA on JORNADA.idJornada = [__idJornada__] and 
+                                      JORNADA.dia = DAYOFWEEK(GEN_CALENDAR.fecha)
+               where 
+                                        GEN_CALENDAR.fecha >= '[__desde__]' and 
+                                        GEN_CALENDAR.fecha <= '[__hasta__]' and
+                                        GEN_CALENDAR.fecha >= FRANCOS_PER.fechainicio and
+                                        GEN_CALENDAR.fecha <= FRANCOS_PER.fechafin        
+        
+        
+             ))) as lic  from 
+           FRANCOS_PER where FRANCOS_PER.legajo = [__legajo__] 
+
+             limit 1
+        ]]></expression>
+        <tipo>time</tipo>
+      </field>
+      <field id="fecha">
+        <label>Fecha</label>
+      </field>
+      
+      <field id="Hora" >
+        <label>Hora</label>
+        <tipo>varchar</tipo>
+      </field> 
+      <field id="Hora1">
+        <expression>min(hora)</expression>
+        <label>Hora Ent</label>
+        <tipo>varchar</tipo>
+      </field>
+
+      <field id="Hora2">
+        <expression>max(hora)</expression>
+        <label>Hora Sal</label>
+        <tipo>varchar</tipo>
+      </field>
+      <field id="Horas">
+        <expression>TIMEDIFF(max(hora), min(hora))</expression>
+        <label>Horas Trabajadas</label>
+        <tipo>varchar</tipo>
+        
+      </field>
+      
+      <field id="reloj">
+        <label>Reloj</label>
+      </field>
+      <field id="codigo">
+        <label>Codigo</label>
+      </field> -->
+      <order>
+        <field id="apellido"></field>
+      </order>
+      <group>
+        <field id="legajo" />
+        
+      </group> 
+    </table>
+
+    
+    <join tipo="left">      
+      <table id="CATPERSONAL">
+        <field id="idSindicato">
+          <condicion operador="=">PERSONAL.idSindicato</condicion>
+        </field>
+        <field id="idCateg">
+          <condicion operador="=">PERSONAL.idCateg</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">      
+      <table id="FAMILIA">
+        <field id="idPersona">
+          <condicion operador="=">PERSONAL.idPersona</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>

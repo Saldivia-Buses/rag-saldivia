@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ficha" limit="1" inserta="false" modifica="false" borra="false">
+	<title>QR READER</title>
+	<obs/>
+	<form >
+		<table id="HTX_OPTIONS">
+			<title>Lector QR</title>
+			<field id="qr" local="true">
+				<label>Codigo</label>
+			    <tipo>qr</tipo>
+			</field>
+			<field id="data" local="true">
+				<label>Datos Leidos</label>
+			</field>
+		</table>
+	</form>
+</histrix>

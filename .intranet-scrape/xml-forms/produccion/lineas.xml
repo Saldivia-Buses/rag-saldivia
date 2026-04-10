@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini">
+	<title>Lineas de Producción</title>
+	<obs/>
+	<form detalle="product_path_crud.xml">
+		<table id="PROD_LINEAS">
+			<title>Líneas de Producción</title>
+			<field id="id_linea" esClave="true" autoinc="true">
+				<label>Código</label>
+				<help>código de Línea</help>
+				<detalle>linea_id</detalle>
+			</field>
+			<field id="nombre_linea">
+				<label>Nombre</label>
+				<help>Nombre de la Línea</help>
+			</field>
+			<field id="vigente_linea">
+				<label>Vigente</label>
+				<options>
+					<option valor="0">No</option>
+					<option valor="1">Si</option>
+				</options>
+			</field>	
+			<field id="tack_time">
+				<label>Tack time</label>
+				<help>Tack time</help>
+			</field>
+		</table>
+	</form>
+</histrix>

@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="ficha" sololectura="true" autoprint="true" PDFfontSize="10">
+    <title>COTIZACION DE ADICIONALES</title>
+    <obs></obs>
+    <!--		<pie>La operación se concreta mediante la aceptación fehaciente de la presente cotización. Los turnos de fabricación se otorgaran a partir del cierre de la operación. COTIZACIÓN VÁLIDA POR 10 DÍAS CORRIDOS.</pie>
+        -->
+    <form >
+        <table id="COTIZACION" label="COTIZACION DE ADICIONALES">
+
+
+
+            <field id="idCotiz" deshabilitado="true" PDFsize="10" PDFbold="true">
+                <label size="22" posx="5" posy="+5" >Nro Cotiz.</label>
+            </field>
+
+            <field id="fecha" PDFbold="true">
+                <label size="25" posx="90" posy="0" PDFsize="10">Fecha</label>
+                <help>Fecha de Cotización</help>
+                <valor>today</valor>
+            </field>
+
+<!--            <field id="idLista" deshabilitado="true" PDFsize="10" PDFbold="true">
+                <label size="25" posx="140" posy="0" >Lista.</label>
+            </field>
+-->
+
+            <field id="ctanom" required="true" PDFsize="10" tabla="CCTCUENT">
+                <expression>LEFT(CCTCUENT.ctanom, 25)</expression>
+                <label size="22" posx="5" posy="+1">Nombre</label>
+                <size>20</size>
+                <valor></valor>
+            </field>
+
+<!--            <field id="ctatel">
+                <label size="25" posx="90" posy="0" PDFsize="10">Teléfono</label>
+                <size>50</size>
+            </field>
+    -->
+            <field id="ctamail" PDFsize="10"  email="to">
+                <label size="25" posx="90" posy="0">e-mail</label>
+                <size>50</size>
+
+            </field>
+
+            <field id="ctacon" PDFsize="10">
+                <label size="22" posx="5" posy="+1">Contacto</label>
+                <size>50</size>
+            </field>
+            <field id="subj" noshow="true" email="subject" print="false" local="true">
+                <expression><![CDATA[concat('Cotizacion de Accesorios Unidad: ', PEDCOTIZ.nrocha, ' -  SALDIVIA')]]></expression>
+
+            </field>
+            <field id="Body" noshow="true" email="body" print="false" local="true">
+                <expression><![CDATA[concat('Atte. Sres. ', CCTCUENT.ctanom,' <br>Les envíamos en adjunto cotización Nº ',COTIZACION.idCotiz, ' de adicionales en función de lo solicitado.<br><br> ', observacion_cotizacion,'<br> Atte. Carrocerías Saldivia')]]></expression>
+            </field>
+
+
+            <field id="nrocha" tabla="PEDCOTIZ" >
+                <label size="22" posx="5" posy="+2" >Unidad</label>
+            </field>
+
+            <field id="marcod" tabla="CHASIS">
+                <label PDFsize="10" posx="90" posy="0" size="25">Chasis</label>
+                <help/>
+                <tabla_ex xml="marchasis.xml">
+                    <field id="siscod" oculto="true">
+                        <condicion operador="=">'03'</condicion>
+                    </field>
+                </tabla_ex>
+                <tipo>integer</tipo>
+            </field>
+            <field id="moddes" tabla="MODCHASIS" >
+                <label size="25" posx="145" posy="0" modpos="nobr" PDFsize="10"></label>
+                <help></help>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="opciones" local="true" obj="cotizopmovim_cons.xml" >
+                <label  size="25" posx="10" posy="+4" PDFsize="10"></label>
+                <paring destino="idCotiz">idCotiz</paring>
+
+            </field>
+            <field id="pre_pub" noshow="true" local="true" oculto="true">
+                <expression>case when showPrecioPub = 0 then 'true' end</expression>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="pre_con" noshow="true" local="true" oculto="true">
+                <expression>case when showPrecioCon = 0 then 'true' end</expression>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="preC" local="true" PDFbold="true" >
+                <attribute id="oculto">pre_con</attribute>
+
+
+                <label size="43" posx="5" posy="+2" PDFsize="10">Precio Concesionario</label>
+                <expression>case when showPrecioCon != 0 then precioCon end</expression>
+                <tipo>decimal</tipo>
+                <prefijo>$ </prefijo>
+            </field>
+            <field id="ivapreC" local="true" PDFbold="true"  >
+                <attribute id="oculto">preC</attribute>
+                <label size="83" posx="90" posy="0" PDFsize="10"></label>
+                <expression>case when showPrecioCon != 0 then leyenda_precio END</expression>
+            </field>
+            <field id="prePub" local="true" PDFbold="true"  >
+                <attribute id="oculto">pre_pub</attribute>
+                <label size="43" posx="5" posy="+2" PDFsize="10">Precio Venta</label>
+                <expression>case when showPrecioPub != 0 then precioPub end</expression>
+                <prefijo>$ </prefijo>
+                <tipo>decimal</tipo>
+            </field>
+            <field id="ivaprePub" local="true" PDFbold="true"  >
+                <attribute id="oculto">pre_pub</attribute>
+                <label size="83" posx="90" posy="0" PDFsize="10"></label>
+                <expression>leyenda_precio</expression>
+            </field>
+
+            <!--
+                                <field id="formaPago" >
+                                        <label size="43" posx="5" posy="+2" PDFsize="10" PDFancho="125">Forma de Pago</label>
+
+                                </field>
+                                <field id="plazo">
+                                        <label size="43" posx="5" posy="+2" PDFsize="10">Plazo</label>
+                                </field>
+                                -->
+            <field id="accesorios" local="true" obj="cotiz_accesorios_coche_foto_cons.xml">
+                <label  size="25" posx="10" posy="+6" PDFsize="10"></label>
+                <paring destino="cotizacion_id">idCotiz</paring>
+            </field>
+            <!--
+                                <field id="otros" local="true" obj="cotizotros_cons.xml" >
+                                        <label  size="25" posx="10" posy="+6" PDFsize="10"></label>
+                                        <paring destino="idCotiz">idCotiz</paring>
+
+                                </field>  -->
+            <field id="observacion_cotizacion">
+                <label  size="191" posx="10" posy="+6" PDFsize="12" PDFnolabel="true" ></label>
+                <size>200</size>
+            </field>
+
+            <field id="validez" local="true" >
+                <label  size="191" posx="10" posy="+6" PDFsize="12" PDFnolabel="true"></label>
+                <valor>'VALIDEZ DE LA COTIZACIÓN: 5 DIAS'</valor>
+                <size>200</size>
+            </field>
+
+            <field id="pie" _local="true" _obj="cotizpie_cons.xml" _pdflineas="false" PDFalign="C">
+                <label  size="191" posx="10" posy="+6" PDFsize="10" PDFnolabel="true"></label>
+                <size>200</size>
+            </field>
+            <!--
+                                       <field id="fotos"  imageWidth="171" >
+                                   <expression>CONCAT('/fotos/archivo/Modelos/', COTIZACION.modcar , '/' , COTIZACION.idGrupo,'/' , COTIZACION.asientos - 1,'/')</expression>
+                                    <label modpos="nobr" posX="5" posY="+1"></label>
+                                    <tipo>dir</tipo>
+                                </field>
+-->
+
+
+
+                                <!--
+
+                                <field id="total"  deshabilitado="true">
+                                        <label size="25" posx="5" posy="+2" PDFsize="14">Total</label>
+
+                                </field> -->
+        </table>
+        <join tipo="left">
+            <table id="PEDCOTIZ">
+                <field id="id">
+                    <condicion operador="=">COTIZACION.ficha_id</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="CHASIS">
+                <field id="nrocha">
+                    <condicion operador="=">PEDCOTIZ.nrocha</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="MODCHASIS">
+                <field clave="true" id="modcha">
+                    <condicion operador="=">CHASIS.modcod</condicion>
+
+                </field>
+                <field id="marcod">
+                    <condicion operador="=">CHASIS.marcod</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="CCTCUENT">
+                <field id="ctacod">
+                    <condicion operador="=">COTIZACION.ctacod</condicion>
+                </field>
+                <field id="siscod">
+                    <condicion operador="=">'02'</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix>

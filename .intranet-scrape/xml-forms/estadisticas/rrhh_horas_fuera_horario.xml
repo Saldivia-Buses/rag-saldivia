@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="chart">
+	<title>ESTADISTICAS DE INASISTENCIAS</title>
+	<obs></obs>
+	<form >
+		<table id="GEN_CALENDAR" label="ESTAD INASISTENCIAS">
+		   <grafico id="Inasistencias" >
+			   <ancho>400</ancho>
+			   <tipo>L</tipo>
+
+			   <etiquetas>dia</etiquetas>
+			   <serie>hextras</serie>
+			   <title>Cantidad de Horas Extraordinarias en los últimos 30 días</title>
+			   <!--   <subtitulo>Cant. Acc / Hs Trabajadas x 1.000.000</subtitulo> -->
+		   </grafico>		
+		    <filters>
+			    <field id="fecha">
+				    <label>Desde</label>
+				    <valor eval="true">date('d/m/Y', strtotime('-31 day', strtotime(date('Y-m-d'))))</valor>
+				    <operador>&gt;=</operador>
+			    </field>
+			    <field id="fecha">
+                    <label>Hasta</label>
+                    <!--<valor eval="true">date('d/m/Y', strtotime('-1 second', strtotime(date('Y-m-01'))))</valor> -->
+                    <valor>today</valor>
+                    <operador>&lt;=</operador>
+			    </field>
+		    </filters> 
+
+			<field id="mes">
+				<expression>month(GEN_CALENDAR.fecha)</expression>
+				<label>Mes</label>
+				<options>
+					<option valor="1">Ene</option>
+					<option valor="2">Feb</option>
+					<option valor="3">Mar</option>
+					<option valor="4">Abr</option>
+					<option valor="5">May</option>
+					<option valor="6">Jun</option>
+					<option valor="7">Jul</option>
+					<option valor="8">Ago</option>
+					<option valor="9">Sep</option>
+					<option valor="10">Oct</option>
+					<option valor="11">Nov</option>
+					<option valor="12">Dic</option>
+				</options>
+   				<tipo>varchar</tipo>
+			</field>
+
+            <field id="fecha" oculto="true">
+				<tipo>date</tipo>
+            </field>
+
+			<field id="dia">
+				<expression>DATE_FORMAT(GEN_CALENDAR.fecha, '%d')</expression>
+				<tipo>varchar</tipo>
+			</field>
+
+            <field id="year" oculto="true">
+                <expression>year(GEN_CALENDAR.fecha)</expression>
+            </field>
+<!-- 
+			<field id="hfuera">
+				<expression>round(SUM(CASE WHEN weekday(FICHADADIA.fecha) = 5 THEN (TIME_TO_SEC(TIMEDIFF(h2, h1)) / 3600) ELSE
+
+									(CASE WHEN weekday(FICHADADIA.fecha) = 4 and h2 > '15:05:00' and (TIME_TO_SEC(TIMEDIFF(h2, h1)) / 3600) > 8 THEN (TIME_TO_SEC(TIMEDIFF(h2, '15:00:00')) / 3600) ELSE 
+
+									(CASE WHEN h2 > '16:05:00' and (TIME_TO_SEC(TIMEDIFF(h2, h1)) / 3600) > 9 THEN (TIME_TO_SEC(TIMEDIFF(h2, '16:00:00')) / 3600) ELSE 0 END) END) END), 0)</expression>
+				<label>Horas</label>
+				<tipo>numeric</tipo>
+			</field> -->
+
+<field id="hextras50">
+                <label>Extras 50</label>
+                <expression><![CDATA[SUM(CASE when (TIME_TO_SEC(TIMEDIFF( TIMEDIFF((case when TIMEDIFF((case when !isnull(h4) then h4 else h2 end), CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2),':00:00') )  >= '00:30:00' && TIMEDIFF((case when !isnull(h4) then h4 else h2 end), CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2),':00:00') ) <= '00:55:00'
+                                    then CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2) ,':30:00')
+                                        when TIMEDIFF((case when !isnull(h4) then h4 else h2 end), CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2),':00:00') ) < '00:30:00' then CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2) ,':00:00')
+                                    when TIMEDIFF((case when !isnull(h4) then h4 else h2 end), CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2),':00:00') ) > '00:55:00' then CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2) + 1 ,':00:00')
+                                                        end), (case when TIMEDIFF(h1, CONCAT(substring(h1, 1, 2),':00:00') ) > '00:05:00' then CONCAT(substring(h1, 1, 2) + 1 ,':00:00') 
+                                                        else CONCAT(substring(h1, 1, 2),':00:00') 
+                                                        end)) , TIMEDIFF(hegreso, hingreso))) / 3600) > 0 and
+                                                  (TIME_TO_SEC(TIMEDIFF( TIMEDIFF((case when TIMEDIFF((case when !isnull(h4) then h4 else h2 end), CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2),':00:00') )  >= '00:30:00' && TIMEDIFF((case when !isnull(h4) then h4 else h2 end), CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2),':00:00') ) <= '00:55:00'
+                                    then CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2) ,':30:00')
+                                        when TIMEDIFF((case when !isnull(h4) then h4 else h2 end), CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2),':00:00') ) < '00:30:00' then CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2) ,':00:00')
+                                    when TIMEDIFF((case when !isnull(h4) then h4 else h2 end), CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2),':00:00') ) > '00:55:00' then CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2) + 1 ,':00:00')
+                                                        end), (case when TIMEDIFF(h1, CONCAT(substring(h1, 1, 2),':00:00') ) > '00:05:00' then CONCAT(substring(h1, 1, 2) + 1 ,':00:00') 
+                                                        else CONCAT(substring(h1, 1, 2),':00:00') 
+                                                        end)) , TIMEDIFF(hegreso, hingreso))) / 3600) < FICHADADIA.max_extras_50 
+                                    then (TIME_TO_SEC(TIMEDIFF( TIMEDIFF((case when TIMEDIFF((case when !isnull(h4) then h4 else h2 end), CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2),':00:00') )  >= '00:30:00' && TIMEDIFF((case when !isnull(h4) then h4 else h2 end), CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2),':00:00') ) <= '00:55:00'
+                                    then CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2) ,':30:00')
+                                        when TIMEDIFF((case when !isnull(h4) then h4 else h2 end), CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2),':00:00') ) < '00:30:00' then CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2) ,':00:00')
+                                    when TIMEDIFF((case when !isnull(h4) then h4 else h2 end), CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2),':00:00') ) > '00:55:00' then CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2) + 1 ,':00:00')
+                                                        end), (case when TIMEDIFF(h1, CONCAT(substring(h1, 1, 2),':00:00') ) > '00:05:00' then CONCAT(substring(h1, 1, 2) + 1 ,':00:00') 
+                                                        else CONCAT(substring(h1, 1, 2),':00:00') 
+                                                        end)) , TIMEDIFF(hegreso, hingreso))) / 3600)
+                                            when (TIME_TO_SEC(TIMEDIFF( TIMEDIFF((case when TIMEDIFF((case when !isnull(h4) then h4 else h2 end), CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2),':00:00') )  >= '00:30:00' && TIMEDIFF((case when !isnull(h4) then h4 else h2 end), CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2),':00:00') ) <= '00:55:00'
+                                    then CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2) ,':30:00')
+                                        when TIMEDIFF((case when !isnull(h4) then h4 else h2 end), CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2),':00:00') ) < '00:30:00' then CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2) ,':00:00')
+                                    when TIMEDIFF((case when !isnull(h4) then h4 else h2 end), CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2),':00:00') ) > '00:55:00' then CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2) + 1 ,':00:00')
+                                                        end), (case when TIMEDIFF(h1, CONCAT(substring(h1, 1, 2),':00:00') ) > '00:05:00' then CONCAT(substring(h1, 1, 2) + 1 ,':00:00') 
+                                                        else CONCAT(substring(h1, 1, 2),':00:00') 
+                                                        end)) , TIMEDIFF(hegreso, hingreso))) / 3600) >= FICHADADIA.max_extras_50  then FICHADADIA.max_extras_50 else 0 end)  ]]>
+                </expression>
+                <tipo>numeric</tipo>
+                                    
+            </field>
+            <field id="hextras100">
+                <label>Extras 100</label>
+                <expression><![CDATA[SUM(CASE when (TIME_TO_SEC(TIMEDIFF( TIMEDIFF((case when TIMEDIFF((case when !isnull(h4) then h4 else h2 end), CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2),':00:00') )  >= '00:30:00' && TIMEDIFF((case when !isnull(h4) then h4 else h2 end), CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2),':00:00') ) <= '00:55:00'
+                                    then CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2) ,':30:00')
+                                        when TIMEDIFF((case when !isnull(h4) then h4 else h2 end), CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2),':00:00') ) < '00:30:00' then CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2) ,':00:00')
+                                    when TIMEDIFF((case when !isnull(h4) then h4 else h2 end), CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2),':00:00') ) > '00:55:00' then CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2) + 1 ,':00:00')
+                                                        end), (case when TIMEDIFF(h1, CONCAT(substring(h1, 1, 2),':00:00') ) > '00:05:00' then CONCAT(substring(h1, 1, 2) + 1 ,':00:00') 
+                                                        else CONCAT(substring(h1, 1, 2),':00:00') 
+                                                        end)) , TIMEDIFF(hegreso, hingreso))) / 3600) > FICHADADIA.max_extras_50
+                                             then (TIME_TO_SEC(TIMEDIFF( TIMEDIFF((case when TIMEDIFF((case when !isnull(h4) then h4 else h2 end), CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2),':00:00') )  >= '00:30:00' && TIMEDIFF((case when !isnull(h4) then h4 else h2 end), CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2),':00:00') ) <= '00:55:00'
+                                    then CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2) ,':30:00')
+                                        when TIMEDIFF((case when !isnull(h4) then h4 else h2 end), CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2),':00:00') ) < '00:30:00' then CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2) ,':00:00')
+                                    when TIMEDIFF((case when !isnull(h4) then h4 else h2 end), CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2),':00:00') ) > '00:55:00' then CONCAT(substring((case when !isnull(h4) then h4 else h2 end), 1, 2) + 1 ,':00:00')
+                                                        end), (case when TIMEDIFF(h1, CONCAT(substring(h1, 1, 2),':00:00') ) > '00:05:00' then CONCAT(substring(h1, 1, 2) + 1 ,':00:00')
+                                                        else CONCAT(substring(h1, 1, 2),':00:00')
+                                                        end)) , TIMEDIFF(hegreso, hingreso))) / 3600) - FICHADADIA.max_extras_50 else 0 end ) ]]>
+                </expression>
+                <tipo>numeric</tipo>
+
+            </field>
+
+			<field id="hextras" local="true">
+				<if exp="true">
+					<true>round(hextras50 + hextras100)</true>
+					<false>round(hextras50 + hextras100)</false>
+				</if>
+				<label>Horas</label>
+				<tipo>numeric</tipo>
+			</field>
+
+<!-- 			<field id="fechaEgreso" tabla="PERSONAL">
+			    <condicion operador="=">'0000-00-00'</condicion>
+			</field>
+ -->            
+            <field id="cobra_extras" tabla="PERSONAL">
+                <condicion operador="=">1</condicion>
+            </field> 
+
+	 		<group>
+				<field id="fecha"></field>
+			</group>
+
+		</table>
+        <join tipo="left">
+            <table id="FICHADADIA">
+                <field id="fecha">
+                    <condicion operador="=">GEN_CALENDAR.fecha</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="PERSONAL">
+                <field id="legajo">
+                    <condicion operador="=">FICHADADIA.legajo</condicion>
+                </field>
+            </table>
+        </join>
+	</form>
+</histrix>

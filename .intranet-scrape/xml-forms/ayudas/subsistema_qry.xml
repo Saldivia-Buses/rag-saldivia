@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+  <title>Subsistemas</title>
+  <obs></obs>
+  <form >
+    <table id="GEN_SUBSISTEMAS" label="Subsistemas">
+
+	
+      <field id="id_subsistema" indice="true">
+        <label>Código </label>
+        <help>Código de subsistema </help>
+      </field>
+      <field id="nombre_subsistema">
+        <label>Nombre</label>
+        <help>Nombre del subsistema</help>
+      </field>
+      <field id="identificacion" noshow="true">
+        <label>Abreviación</label>
+        <condicion operador="=">'CCT'</condicion>
+      </field>
+      
+</table>
+</form>
+</histrix>

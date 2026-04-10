@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+  <title>Locaciones vacías</title>
+  <obs></obs>
+  <form>
+    <table id="STK_LOCACION">
+
+    <field id="stkdeposito_id" noshow="true">
+      <label>Deposito</label>
+      <condicion operador="=">33</condicion>
+    </field>
+
+    <field id="id_stklocacion" _noshow="true">
+      <label>id locacion</label>
+      <condicion operador="not in">(select stklocacion_fija_id from STK_ARTICULOS)</condicion>
+    </field>
+
+    <field id="codigo_locacion">
+      <label>Código Locación</label>
+    </field>
+
+     <field id="stock_actual" _noshow="true">
+      <label>stock</label>
+      <expression>sum(STK_ARTICULO_LOCACION.stock_actual)</expression>
+      <condicion operador="=">0</condicion>
+    </field>
+
+    <group>
+      <field id="id_stklocacion"/>
+    </group>
+
+    </table>
+    
+    <join tipo="left">
+      <table id="STK_ARTICULO_LOCACION">
+        <field id="stklocacion_id">
+          <condicion operador="=">STK_LOCACION.id_stklocacion or STK_ARTICULO_LOCACION.stklocacion_id is null</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join>
+      <table id="STK_ARTICULOS">
+        <field id="id_stkarticulo">
+          <condicion operador="=">STK_ARTICULO_LOCACION.stkarticulo_id</condicion>
+        </field>
+      </table>
+    </join>
+
+  </form>
+</histrix>

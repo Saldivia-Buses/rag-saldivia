@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="grid" paginar="100" procesa="true" deleteRow="false" inserta="false" borra="false" >
+	<title>Locacion de Articulos</title>
+  	<obs/>
+  	<customScript>
+	<![CDATA[
+	    $('[instance="[__instance__]"]').on('change', '[campo="stklocacion_id"] select', function(){
+
+	        var row = $(this).closest('[o]');
+	        var value = $(this).find(' :selected').attr('stkdeposito_id');
+
+	        $('[campo="stkdeposito_id"]', row).text(value);
+	        if( value == undefined ){
+	        	$('[campo="grabar"]', row).text(0);
+	        } else {
+				$('[campo="grabar"]', row).text(1);
+	        }
+	        
+  	});]]>
+  	</customScript>
+  	<form >
+    	<table id="STK_ARTICULOS" label="Locacion de Articulos">
+
+    		<movimientos>
+        		<relacion id="scan_transfer_resta_inicial_ins.xml" />
+        		<relacion id="scan_transfer_suma_inicial_ins.xml" />
+      		</movimientos>
+
+    		<field id="stkarticulo_id" local="true" esClave="true" >
+    			<expression>id_stkarticulo</expression>
+    		</field>
+    		
+    		<field id="nombre_articulo" >
+    			<label>Nombre Articulo</label>
+    		</field>
+
+			<field id="deposito_origen_id" tabla="STK_ARTICULO_LOCACION" noshow="true" >
+				<label>Deposito Origen</label>
+				<helper id="STK_DEPOSITOS" type="combo" empty="true">
+					<field id="id_stkdeposito" esClave="true" _noshow="true" >
+					</field>
+					<field id="nombre_deposito" />
+				</helper>
+			</field>
+
+			<field id="locacion_actual" local="true" >
+				<label>Locacion Actual</label>
+				<expression>STK_ARTICULO_LOCACION.stklocacion_id</expression>
+				<helper id="STK_LOCACION" type="combo" empty="true">
+					<field id="id_stklocacion" esClave="true" noshow="true" />
+					<field id="codigo_locacion" />
+					<field id="stkdeposito_id" />
+	    <order>
+                <field id="codigo_locacion" />
+
+	    </order>
+
+				</helper>
+			</field>
+
+    		<field id="stklocacion_id" tabla="STK_ARTICULO_LOCACION" editable="true" >
+				<label>Locacion Destino</label>
+				<helper id="STK_LOCACION" type="combo" empty="true">
+					<field id="id_stklocacion" esClave="true" noshow="true" />
+					<field id="codigo_locacion" />
+					<field id="stkdeposito_id" />
+	    <order>
+                <field id="codigo_locacion" />
+
+	    </order>
+
+				</helper>
+			</field>
+
+			<field id="stkdeposito_id" tabla="STK_MOVIMIENTOS" noshow="true" >
+				<label>Deposito</label>
+				<tipo>integer</tipo>
+			</field>
+
+			<field id="cantidad" tabla="STK_MOVIMIENTOS" editable="true" >
+          		<label>Cantidad</label>
+          		<tipo>integer</tipo>
+          		<valor>1</valor>
+        	</field>
+
+		<field id="resta" local="true">
+		    <if exp="true">
+			<true>cantidad</true>
+			<false>cantidad</false>
+		    </if>
+		</field>
+
+        	<field id="grabar" local="true" _noshow="true">
+        		<label>grabar</label>
+		    <if exp="true">
+			<true>cantidad</true>
+			<false>cantidad</false>
+		    </if>
+	      	</field>
+
+			<field id="unidad_id" tabla="STK_MOVIMIENTOS"  noshow="true"/>
+	        <field id="puesto_movimiento" tabla="STK_MOVIMIENTOS" noshow="true">
+	        </field>
+	        <field id="numero_movimiento" tabla="STK_MOVIMIENTOS" noshow="true">
+	        </field>
+
+			<group>
+      			<field id="id_stkarticulo" />
+    		</group>
+
+    	</table>
+
+    	<join tipo="left" >
+	      	<table id="STK_MOVIMIENTOS">
+	          	<field id="stkarticulo_id">
+	            	<condicion operador="=">STK_ARTICULOS.id_stkarticulo</condicion>
+	          	</field>
+	      	</table>
+	    </join>
+
+	    <join tipo="left" >
+	      	<table id="STK_ARTICULO_LOCACION">
+	          	<field id="stkarticulo_id">
+	            	<condicion operador="=">STK_ARTICULOS.id_stkarticulo</condicion>
+	          	</field>
+	      	</table>
+	    </join>
+
+	    <join tipo="left" >
+	      	<table id="STK_LOCACION">
+	          	<field id="id_stklocacion">
+	            	<condicion operador="=">STK_ARTICULO_LOCACION.stklocacion_id</condicion>
+	          	</field>
+	      	</table>
+	    </join>
+
+	    <join tipo="left" >
+	      	<table id="STK_DEPOSITOS">
+	          	<field id="id_stkdeposito">
+	            	<condicion operador="=">STK_LOCACION.stkdeposito_id</condicion>
+	          	</field>
+	      	</table>
+	    </join>
+
+    </form>
+</histrix>

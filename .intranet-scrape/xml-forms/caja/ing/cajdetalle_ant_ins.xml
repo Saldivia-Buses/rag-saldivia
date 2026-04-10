@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	Esta grabación tiene como objetivo grabar la partida contable
+	referida a la cuenta de anticipo del asiento de caja
+-->
+<histrix tipo="insert">
+    <title/>
+    <obs/>
+    <form >
+        <table id="CAJ_DETALLES" idCampoCond="graba_anticipo">
+            <field id="cajmovimiento_id" lastId="cajmovimientos_ins.xml"/>
+            <field id="cuenta_id"       id_temp="ctbcuenta_ant_id"/>
+            <field id="doh"             id_temp="ctbcuenta_ant_doh">
+                <tipo>varchar</tipo>
+            </field>
+            <field id="importe_detalle" id_temp="importe_anticipo" required="true"/>
+        </table>
+    </form>
+</histrix>

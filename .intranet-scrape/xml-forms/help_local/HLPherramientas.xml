@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<abm tipo="ayuda">
+	<titulo>Insumos</titulo>
+	<obs/>
+	<consulta>
+		<tabla id="HERRAMIENTAS">
+
+			<campo id="id_herramienta">
+				<label>Herramienta</label>
+				<help>Identificacion</help>
+				<tipo>character</tipo>
+			</campo>
+			<campo id="artcod" >
+				<label>Articulo</label>
+				<help>Codigo de Articulo</help>
+				<tipo>character</tipo>
+				<formato>%20.20s</formato>
+			</campo>
+
+			<campo id="nomherr">
+				<label>Nombre</label>
+				<help>Nombre de la Herramienta.</help>
+			</campo>
+			<campo id="grucod" oculto="true">
+				<label>grupo</label>
+				<help>grupo</help>
+				<condicion operador="=">2</condicion>
+			</campo>
+		</tabla>
+		
+		<join tipo="left">
+
+			<tabla id="STKINSUM">
+				<campo id="siscod" oculto="true">
+					<label>STKINSUM.siscod</label>
+					<condicion operador="=">'01'</condicion>
+				</campo>
+				<campo id="artcod" oculto="true">
+					<condicion operador="=">HERRAMIENTAS.artcod</condicion>
+				</campo>
+
+			</tabla>
+		</join>			
+	</consulta>
+</abm>

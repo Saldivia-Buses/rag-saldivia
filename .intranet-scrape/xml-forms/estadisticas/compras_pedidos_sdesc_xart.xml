@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="chart" _limit="10">
+	<title>Cantidad</title>
+	<obs></obs>
+	<form >
+		<table id="GEN_CALENDAR" >
+			<title>Cantidad</title>
+	 
+		   <grafico id="pedidosCantidadSd" >
+			   <ancho>400</ancho>
+			   <tipo>P</tipo>
+			   
+			   <etiquetas>artdes</etiquetas>
+			   <datos>cantidadPedidosSd</datos>
+			   <title>Pedidos Internos S/Descripción</title>
+			   <subtitulo>Ult. 6 meses</subtitulo>
+		   </grafico>		
+	
+		   
+		   
+		    <filters>
+			    <field id="fecha">
+				    <label>Desde</label>
+				    <valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m" ,strtotime('-6 month')) , 1, date("Y") ))</valor>
+				    <operador>&gt;=</operador>
+			    </field>
+			    <field id="fecha">
+                    <label>Hasta</label>
+				    <valor eval="true">date('d/m/Y', strtotime('-1 second', strtotime(date('Y-m-01'))))</valor>
+				    <operador>&lt;=</operador>
+			    </field>
+		    </filters> 
+
+			<field id="mes">
+				<expression>month(fecha)</expression>
+				<label>Mes</label>
+				<options>
+					<option valor="1">Ene</option>
+					<option valor="2">Feb</option>
+					<option valor="3">Mar</option>
+					<option valor="4">Abr</option>
+					<option valor="5">May</option>
+					<option valor="6">Jun</option>
+					<option valor="7">Jul</option>
+					<option valor="8">Ago</option>
+					<option valor="9">Sep</option>
+					<option valor="10">Oct</option>
+					<option valor="11">Nov</option>
+					<option valor="12">Dic</option>
+				</options>
+   				<tipo>varchar</tipo>
+			</field>
+            <field id="fecha" oculto="true">
+				<tipo>date</tipo>
+            </field>
+            <field id="year" oculto="true">
+                <expression>year(fecha)</expression>
+            </field>
+			<field id="usuario" tabla="PEDIDOINT"/>
+
+			<field id="artcod" tabla="PEDIDOINT">
+				<condicion operador="IN">(SELECT artcod FROM `STKINSUM` WHERE artdes LIKE "%s/desc%p/%")</condicion>
+			</field>
+
+			<field id="artdes" tabla="STKINSUM" >
+				<expression>REPLACE(artdes, 'MATERIAL S/DESC P/', '')</expression>
+			</field>
+
+			<field id="cantidadPedidosSd" tipoOrden="DESC">
+             	<expression><![CDATA[(COUNT(*))]]></expression>
+				<label>Pedidos</label>
+                <tipo>numeric</tipo>
+			</field>
+			
+			<order>
+				<field id="cantidadPedidosSd" />
+			</order>
+			<group>
+                <field id="artcod" />
+			</group>
+
+		</table>
+		<join tipo="inner">
+			<table id="PEDIDOINT">
+				<field id="fechaemi">
+					<condicion operador="=">GEN_CALENDAR.fecha</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="inner">
+			<table id="HTXUSERS">
+				<field id="login">
+					<condicion operador="=">PEDIDOINT.usuario</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="inner">
+			<table id="STKINSUM">
+				<field id="artcod">
+					<condicion operador="=">PEDIDOINT.artcod</condicion>
+				</field>
+			</table>
+		</join>
+	</form>	   
+</histrix> 

@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+  <title>Movimientos</title>
+  <obs />
+  <form>
+    <table id="CTB_DETALLES" label="Imp. Libro diario">
+
+        <field id="id_detalle" noshow="true" print="false" />
+
+        <field id="movimiento_id" noshow="true" print="false" _break="true" />
+
+	<field id="ejercicio_id" local="true" noshow="true" />
+
+        <field id="cuenta_id" PDFcolWidth="25">
+            <label>Nro. Cuenta</label>
+        </field>
+
+        <field id="nombre_cuenta" tabla="CTB_CUENTAS" PDFcolWidth="260">
+            <label>Descripcion</label>
+            <expression>concat(UCASE(LEFT(lower(CTB_CUENTAS.nombre_cuenta),1)),LCASE(substring(lower(CTB_CUENTAS.nombre_cuenta),2)))</expression>
+        </field>
+
+        <field id="referencia" tabla="CTB_MOVIMIENTOS" noshow="true">
+            <label>Detalle del Movimiento</label>
+            <condicion operador="=">CTB_MOVIMIENTOS.referencia and CTB_MOVIMIENTOS.referencia not like '%CIERRE DE CAJA%' and CTB_MOVIMIENTOS.referencia != 'REFUNDICION EJERCICIO' and CTB_MOVIMIENTOS.referencia != 'CIERRE EJERCICIO'</condicion>
+        </field>
+
+        <field id="doh" noshow="true" print="false" />
+
+        <field id="debe" suma="true" noZero="true" PDFcolWidth="20">
+            <label>Debe</label>
+            <expression>round((sum(case when doh = 0 then importe else '' end)),2)</expression>
+            <tipo>numeric</tipo>
+        </field>
+
+        <field id="haber" suma="true" noZero="true" PDFcolWidth="20">
+            <label>Haber</label>
+            <expression>round((sum(case when doh = 1 then importe else '' end)),2)</expression>
+            <tipo>numeric</tipo>
+        </field>
+
+        <field id="regmovim_id" tabla="CTB_MOVIMIENTOS" noshow="true">
+            <condicion operador="=">0 or CTB_MOVIMIENTOS.regmovim_id IS NULL</condicion>
+        </field>
+
+        <group>
+            <field id="movimiento_id" />
+            <field id="cuenta_id" />
+            <field id="doh" />
+        </group>
+
+        <order>
+            <field id="movimiento_id" />
+            <field id="doh" />
+            <field id="cuenta_id" />
+        </order>
+
+    </table>
+
+    <join>
+        <table id="CTB_MOVIMIENTOS">
+            <field id="id_movimiento">
+                <condicion operador="=">CTB_DETALLES.movimiento_id</condicion>
+            </field>
+        </table>
+    </join>
+
+    <join>
+        <table id="CTB_CUENTAS">
+            <field id="id_cuenta">
+                <condicion operador="=">CTB_DETALLES.cuenta_id</condicion>
+            </field>
+            <field id="ejercicio_id">
+                <condicion operador="=">'[__ejercicio_id__]'</condicion>
+            </field>
+        </table>
+    </join>
+
+  </form>
+</histrix>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="card" inserta="false" imprime="false" >
+  <title>Contactos por grupo</title>
+  <obs></obs>
+  <consulta>
+    <table id="REG_CONTACTOS_GR" label="Contactos por grupos">
+	
+	<field id="id_regcontactogr" esClave="true" noshow="true" autoinc="true"/>
+	<field id="reggrupocon_id"   noshow="true" valauto="true"/>
+
+	<field id="mails" >
+		<label>Email</label>
+		<expresion><![CDATA[REPLACE(GROUP_CONCAT(CCTCONTA.mail ), ',' , ', <br>')]]></expresion>
+	</field>
+
+    </table>
+	<join tipo="left">
+		<table id="CCTCONTA">
+			<field id="idconta">
+				<condicion operador="=">REG_CONTACTOS_GR.regcontacto_id</condicion>
+			</field>
+		</table>
+	</join>
+				
+  </consulta>
+</histrix>  

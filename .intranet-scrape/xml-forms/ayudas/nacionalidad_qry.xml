@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+  <title>Nacionalidades</title>
+  <obs></obs>
+  <consulta>
+    <table id="GEN_NACIONALIDADES" label="Nacionalidades">
+      <field id="id_nacionalidad" autoinc="true" noshow="true">
+      </field>
+      <field id="nacionalidad">
+        <label>Nacionalidad </label>
+        <help>Nacionalidad </help>
+      </field>
+    </table>
+  </consulta>
+</histrix>  

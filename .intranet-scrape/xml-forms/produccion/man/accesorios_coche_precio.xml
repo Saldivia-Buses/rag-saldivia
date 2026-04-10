@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" subtipo="vertical" logReference="ctafan" tooltip="false">
+    <title>Accesorios por coche</title>
+    <obs/>
+    <form >
+        <table id="ACCESORIOS_COCHE" label="Accesorios Estandar y Observaciones" style__Tbody="height:100px;overflow-x:hidden;">
+
+            <field id="id_accesorio" noshow="true" esClave="true" autoinc="true" deshabilitado="true">
+                <label>Accesorio</label>
+            </field>
+
+            <field id="cotizacion_id" deshabilitado="true" noshow="true">
+            </field>
+
+            <field id="con_cotiz" deshabilitado="true" noshow="true" clasefila="true">
+                <expression>(case when cotizacion_id != 0 then 'resaltado' end)</expression>
+            </field>
+
+            <field id="nrofab" oculto="true" _esClave="true" alertStyle="font-size:14px;">
+                <label>Coche</label>
+<!--                <condicion operador="=">0</condicion>-->
+            </field>
+          <!--  <field id="fecha2">
+        	<expression>ACCESORIOS_COCHE.fecha</expression>
+        	<label Formstyle="display:none;">Fecha </label>
+        	<tipo>date</tipo>
+    	    </field>-->
+
+        <field id="hoy" local="true" noshow="true" valauto="true">
+            <valor>today</valor>
+            <tipo>date</tipo>
+        </field>
+        <field id="prdseccion_id" >
+    	    <label>Sección</label>
+    	    <helper id="PRODUCTO_SECCION" type="combo">
+    		<field id="id_prdseccion" />
+    		<field id="nombre_seccion" />
+            <field id="activa_seccion">
+                <condicion operador="=">0</condicion>
+            </field>
+    	    </helper>
+            <jseval campodestino="fecha" actxml="false">\'hoy\'</jseval>
+        </field>
+
+
+        <field id="fecha" log="false" _deshabilitado="true" _colstyle="display:none;" valauto="true">
+            <label>fecha</label>
+            <tipo>date</tipo>
+            <valor>today</valor>
+			<attribute id="style">tachado</attribute>
+        </field>
+            <field id="ficha_id" oculto="true" log="false">
+<!--                <condicion operador="=">99999</condicion>-->
+		 
+            </field>
+	    	<field id="ctafan" local="true" noshow="true" log="true">
+				<label>ctafan</label>	
+			</field>
+
+            <field id="artcod" _deshabilitado="true" _valauto="true">
+        	<size>3</size>
+        	<valor></valor>
+                <tipo>varchar</tipo>
+                <label>cod</label>
+        <!--
+                <ayuda_ex id="STKINSUM" >
+
+                    <field id="artcod" noshow="true">
+                        <detalle>artcod</detalle>
+                    </field>
+                    <field id="artdes" >
+                        <label>Descripcion</label>
+						<expression>CONCAT(artdes, ' (', artcod,')')</expression>
+                        <detalle>artdes</detalle>
+                    </field>
+
+                    <field id="precio1" >
+                        <label>Precio</label>
+                            <expression > (select precio1 from LISTAPRECIOSDET as PREC where PREC.idArticulo = STKINSUM.artcod order by idLista DESC limit 1) </expression>
+	                        <detalle>precio_unitario</detalle>
+                    </field>
+                    <field id="artrub">
+                        <label>Sección</label>
+                        <detalle>prdseccion_id</detalle>
+                    </field>
+                    <field id="siscod" oculto="true" >
+                        <condicion operador="=">'02'</condicion>
+                    </field>
+                    <clave>artcod</clave>
+                    <descripcion>artdes2</descripcion>
+                </ayuda_ex>-->
+
+                <helper type="external" xml="listapreciosdet_qry.xml" dir="/ayudas">
+
+                    <field id="precio1" >
+                        <label>Precio</label>
+                            <expression >precio1</expression>
+
+                        <detalle>precio_unitario</detalle>
+                        <detalle>precio_adicional</detalle>
+                    </field>
+                </helper>                        
+                <!--<detalle>artcod</detalle>-->
+				<attribute id="style">tachado</attribute>
+            <jseval campodestino="precio_adicional" _actxml="false" >precio_unitario * cantidad</jseval>
+                
+            </field>
+
+            <field id="artdes" autocompletar="true" >
+                <ayuda_ex id="STKINSUM" >
+
+                    <field id="artcod" noshow="true">
+                        <detalle>artcod</detalle>
+                    </field>
+                    <field id="artdes" >
+                        <label>Descripción</label>
+
+			<expression>CONCAT(artdes, ' (', artcod,')')</expression>
+                        <detalle>artdes</detalle>
+                    </field>
+                    <field id="precio1" >
+                        <label>Precio</label>
+                            <expression > (select precio1 from LISTAPRECIOSDET as PREC where PREC.idArticulo = STKINSUM.artcod order by idLista DESC limit 1) </expression>
+
+                        <detalle>precio_unitario</detalle>
+                        <detalle>precio_adicional</detalle>
+                    </field>
+
+                    <field id="siscod" oculto="true" >
+                        <condicion operador="=">'02'</condicion>
+                    </field>
+                    <clave>artcod</clave>
+                    <descripcion>artdes2</descripcion>
+                </ayuda_ex>
+<!--
+                <helper type="external" xml="listapreciosdet_qry.xml" dir="/ayudas">
+                </helper>  -->
+                <label modpos="nobr">Accesorio</label> 
+				<attribute id="style">tachado</attribute>
+                <size>40</size>
+                <jseval campodestino="fecha" actxml="false">\'hoy\'</jseval>
+            <jseval campodestino="precio_adicional" actxml="false" >precio_unitario * cantidad</jseval>
+            </field>
+
+       		<field id="showprecios" noshow="true" _oculto="true" local="true">
+            </field> 
+            <field id="hidePrecios" local="true" noshow="true">
+                <if exp="1 == 1">
+                    <true>'false'</true>
+                    <false>'true'</false>
+                </if>
+            </field>
+            <field id="precio_unitario" noZero="true" _suma="true" _noEmpty="true" forceUpdate="true">
+        	   <label modpos="nobr">P.Unit</label>
+                <attribute id="noshow">hidePrecios</attribute>
+				<attribute id="style">tachado</attribute>
+                <tipo>decimal</tipo>
+                <jseval campodestino="precio_adicional" actxml="false">precio_unitario * cantidad</jseval>
+                <jseval campodestino="fecha" actxml="false">\'hoy\'</jseval>
+            </field>
+
+	     <field id="cantidad" _noZero="true" _noEmpty="true" deshabilitado="false" style="width:20px;">
+        	<label modpos="nobr">Cant</label>
+        	<size>2</size>
+        	<valor>1</valor>
+            <jseval campodestino="precio_adicional" actxml="false" >precio_unitario * cantidad</jseval>
+            <jseval campodestino="fecha" actxml="false">\'hoy\'</jseval>
+
+			<attribute id="style">tachado</attribute>
+            
+        </field>
+
+<!--	
+	       <field id="Precio" noZero="true" _suma="true" _noEmpty="true">
+        	<label>P.Unit</label>
+                <attribute id="noshow">hidePrecios</attribute>
+                <expression > (select precio1 from LISTAPRECIOSDET as PREC where PREC.idArticulo = STKINSUM.artcod order by idLista DESC limit 1) </expression>
+                <tipo>decimal</tipo>
+            </field>
+-->
+            <field id="precio_adicional" noZero="true" suma="true"  _noEmpty="true" _Formstyle="display:none;" deshabilitado="true">
+        	<label colstyle="display:none;">total</label>
+            <attribute id="noshow">hidePrecios</attribute> 
+<!--                <if exp="Precio + 0 != 0">
+            	    <true>cantidad * Precio</true>
+            	    <false>0</false>
+                </if> -->
+                <tipo>decimal</tipo>
+            </field>
+            <field id="precio_2adicional" noZero="true" suma="true"  _noEmpty="true" Formstyle="display:none;" deshabilitado="true">
+        	<label>total</label>
+        	<expression>case when estado != 2 then precio_adicional end</expression>
+               <attribute id="noshow">hidePrecios</attribute> 
+<!--               <if exp="Precio + 0 != 0">
+            	    <true>cantidad * Precio</true>
+            	    <false>0</false>
+                </if>  -->
+                <tipo>decimal</tipo>
+            </field>
+
+	    <field id="estado" colstyle="display:none;" >
+		<label modpos="nobr" >estado</label>
+<!--		<expression>case when precio_adicional != 0 and estado = 0 then 'Pendiente' when precio_adicional != 0 and estado = 1 then 'Aprobado' when precio_adicional != 0 and estado = 2 then 'Anulado' end</expression>-->
+		<options>
+			        <option valor=""></option>
+				<option valor="0">Pendiente</option>
+				<option valor="1">Aprobado</option>
+				<option valor="2">Anulado</option>
+			</options>  
+           <!-- <jseval campodestino="fecha">\'hoy\'</jseval> -->
+	    </field>
+	    
+	    <field id="esta2" local="true" Formstyle="display:none;">
+		<expression>case when (precio_adicional = 0 or isnull(precio_adicional)) and estado = 0 then '' else estado end </expression>
+	<!--	<if exp="true">
+		    <true>estado</true>
+		    <false>estado</false>
+		</if> -->
+		<label modpos="nobr" >estado</label> 
+		<options>
+		    <option valor=""></option>
+		    <option valor="0">Pendiente</option>
+		    <option valor="1">Aprobado</option>
+		    <option valor="2">Anulado</option>
+
+		</options> 
+        <jseval campodestino="fecha">\'hoy\'</jseval>
+	    </field>
+
+        <field id="muestra_fv">
+        <label modpos="nobr">Muestra FV</label>
+        <options>
+            <option valor="0">No</option>
+            <option valor="1">Si</option>
+        </options>  
+        <valor>1</valor>
+        </field>
+
+        <field id="muestra_ft">
+        <label modpos="nobr">Muestra FT</label>
+        <options>
+            <option valor="0">No</option>
+            <option valor="1">Si</option>
+        </options>  
+        <valor>1</valor>
+        </field>
+
+		<field id="tachado" noshow="true">
+			<expression>CASE WHEN estado = 2 THEN "text-decoration: line-through;" ELSE '' END</expression>
+		</field>
+
+        
+        <order>
+    	<field id="fecha"></field>
+        </order>
+
+        </table>
+        <join tipo="left">
+            <table id="STKINSUM">
+                <field id="artcod">
+                    <condicion operador="=">ACCESORIOS_COCHE.artcod</condicion>          
+                </field>
+                <field id="siscod">
+                    <condicion operador="=">'02'</condicion>
+                </field>
+	    	    
+            </table>
+        </join>
+
+    </form>
+</histrix>

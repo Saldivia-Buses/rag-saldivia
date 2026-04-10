@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert">
+	<title>Seriales</title>
+	<obs></obs>
+	<form>
+		<table id="STK_SERIALES" label="Seriales"  idCampoCond="acepta">
+			<field id="stkarticulo_id"		id_temp="stkarticulo_id" />
+			<field id="stkrubro_id"	 		id_temp="stkrubro_id" />
+			<field id="codigo_serie"		id_temp="codigo_serie" />
+			<field id="stkmovimiento_origen_id"	lastId="regmovimiento_ins.xml" />
+		</table>
+	</form>
+</histrix>

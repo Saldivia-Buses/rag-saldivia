@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="consulta" borra="no" inserta="no" _paginar="250" limit="1" preloadData="false">
+	<title>Insumos</title>
+	<obs></obs>
+	<form  >
+		<table id="STKINSUM">
+			<title>Insumos</title>
+
+					<field id="siscod" oculto="true">
+						<condicion operador="=">'01'</condicion>
+					</field>					
+
+			<field id="artcod" >
+<!-- 				<ayuda_ex id="STKINSUM"  xml="HLPstkinsum.xml" dir="/help_local"> -->
+				<ayuda_ex id="STKINSUM" >
+					<field id="artcod" >
+						<label>Cod</label>
+					</field>
+					<field id="artdes">
+						<label>Nombre</label>
+						<detalle>artdes</detalle>
+					</field>
+					<field id="siscod" oculto="true">
+						<condicion operador="=">'01'</condicion>
+					</field>					
+			
+				</ayuda_ex>
+				
+				<label>Codigo</label>
+				<detalle>artcod</detalle>
+			</field>
+			<field id="artdes" autocompletar="false">
+				<label>Articulo</label>
+				<help>Descripcion de Articulo</help>
+			</field>
+			<field id="baja" oculto="true">
+				<condicion operador="!=">1</condicion>
+			</field>
+			<field id="costo_calculado" >
+			</field>
+			
+<!--			<field id="idCosto1" >
+				<expression>(select STKINSPR.idCosto from STKINSPR where STKINSPR.artcod = STKINSUM.artcod and STKINSPR.siscod='01' order by fecult DESC limit 1) </expression>
+                <tipo>integer</tipo>
+			</field>			
+			
+			<field id="costo1" >
+				<label>1er Costo</label>
+				<expression>case when ((select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINSUM.artcod and STKINSPR.siscod='01' and STKINSPR.idCosto != (select STKINSPR.idCosto from STKINSPR where STKINSPR.artcod = STKINSUM.artcod and STKINSPR.siscod='01' order by fecult DESC limit 1) order by fecult DESC limit 1) * STKINSUM.valcps / STKINSUM.valuso) > 0  then ((select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINSUM.artcod and STKINSPR.siscod='01' and STKINSPR.idCosto != (select STKINSPR.idCosto from STKINSPR where STKINSPR.artcod = STKINSUM.artcod and STKINSPR.siscod='01' order by fecult DESC limit 1) order by fecult DESC limit 1) ) else STKINSUM.artcos end</expression>
+			</field> 
+			-->
+			<field id="costo2" >
+				<label>2do Costo</label>				
+				<expression>case when ((select STK_COSTO_HIST.costo_hist from STK_COSTO_HIST where STK_COSTO_HIST.articulo_id = STKINSUM.artcod order by periodo_hist DESC limit 1) * STKINSUM.valcps / STKINSUM.valuso) > 0  then (select STK_COSTO_HIST.costo_hist from STK_COSTO_HIST where STK_COSTO_HIST.articulo_id = STKINSUM.artcod order by periodo_hist DESC limit 1) else STKINSUM.artcos end</expression>
+        <tipo>numeric</tipo>
+
+			</field>
+			
+			
+
+<coment>
+      <field id="cosT" >
+        <label >Costo.</label>
+        <!-- NO TOCAR, TE MATO -->
+        <expression having="false" >(
+        case when (select sum(round( (costo_automatico * cantidad) * (1 + recargo / 100) , 2)) from STKPIEZA where idPadre  = STKINSUM.artcod limit 1) != 0 then (select sum(round( (costo_automatico * cantidad) * (1 + recargo / 100) , 2)) from STKPIEZA where idPadre  = STKINSUM.artcod limit 1)
+    	    else  (select ROUND(INSPR.artcos * valcps / valuso, 2) from STKINSPR as INSPR where INSPR.fecult= max(STKINSPR.fecult) and INSPR.artcod = STKINSPR.artcod and INSPR.siscod = STKINSPR.siscod limit 1) end)</expression>
+
+        <tipo>numeric</tipo>
+      </field>     
+	</coment>		
+			<!--
+			<field id="prec_inc" local="true">
+				<label>Incremento</label>
+				<if exp="true">
+					<true>costo2 - costo1</true>
+					<false>0</false>
+				</if>
+				
+			</field>
+			<field id="por_inc" local="true">
+				<label>%</label>
+				<if exp="true">
+					<true> (costo2 / (100 * costo1))</true>
+					<false>0</false>
+				</if>
+			</field>			
+                                -->
+
+			
+			<group>
+				<field id="artcod" tabla="STKINSUM">
+				</field>
+			</group>
+			<order>
+				<field id="artdes" tabla="STKINSUM">
+				</field>
+
+			</order>			
+			<filters>
+				<field id="artcod" deshabilitado="false">
+					<ayuda_ex id="STKINSUM">
+						<clave>artcod</clave>
+						<descripcion>artdes</descripcion>
+					</ayuda_ex>
+					
+					<label>Cod.</label>
+					<operador  modificador="left">=</operador>					
+				</field>			
+				<field id="artdes" >
+					<label>Articulo</label>
+					<help>Descripcion de Articulo</help>
+					<operador>like</operador>
+				</field>				
+			</filters>			
+		</table>
+<!--		<join tipo="left">
+			<table id="STKINSPR">
+			<field id="siscod" oculto="true">
+				<condicion operador="=">STKINSUM.siscod</condicion>
+			</field>
+			<field id="artcod" oculto="true">
+				<condicion operador="=">STKINSUM.artcod</condicion>
+			</field>
+				
+			</table>
+		</join>		-->
+	</form>
+</histrix>

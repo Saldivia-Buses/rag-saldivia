@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="update">
+    <title>MOVIMIENTOS DE STOCK</title>
+    <obs></obs>
+    <form >
+        <table id="DEVREMITO" label="MOVIMIENTOS" idCampoCond="grabanconf">
+            <field id="id_devremito" lastId="devremito_ingmov.xml" esClave="true"/>
+            <field id="noconformidad_id" lastId="noconformidad_insert.xml" />
+        </table>
+    </form>
+</histrix>

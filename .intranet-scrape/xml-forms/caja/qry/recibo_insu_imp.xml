@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<histrix tipo="ficha" PDFsincabecera="true"  sololectura="true" autoprint="true" PDFfontSize="8" PDFpageSize="A4" PDForientacion="P" path="fotos/archivos" pageBreak="true">
+  <title>RECIBO</title>
+  <obs></obs>
+  <form >
+	    <pdf PDForientacion="P">
+            <code><![CDATA[
+
+                $pdf->SetDrawColor(0);
+                $pdf->SetXY(10,10);
+
+            	$tp = 05;
+            	$ap = $pdf->anchoPagina - 2;
+            	$mp = ($ap / 2);
+				$lp = $pdf->largoPagina;            	
+            	
+				// Frame Principal
+				$pdf->Rect(005, $tp, $ap, $lp, 0.1);
+
+				// Nombre Empresa
+				$pdf->Rect(005, $tp, $mp, 025, 0.1);
+				$datapath = $_SESSION['datapath'];
+				$file = '../database/'.$datapath . '/img/' . $_SESSION['properties']['logo_pdf_1'];
+
+			        if (is_file($file)){
+			        	$posx = 32;
+    	                $posy = 7;
+                        $width = 40;        	
+			                $pdf->Image($file, $posx + $this->offsetX, $posy + $this->offsetY, $width);
+			        } else {
+		            	$pdf->text(010, $tp + 03, $file);
+			        
+			        }
+			        
+        
+				$pdf->SetFontSize(9);
+                            $pdf->text(043, $tp + 14, $_SESSION['properties']['nombre']);
+		
+				$pdf->SetFontSize(7);
+
+	                $pdf->text(023, $tp + 17, $_SESSION['properties']['direccion']);
+
+        			$pdf->text(027, $tp + 20, 'CUIT: '.$_SESSION['properties']['cuit'].' - Email: '.$_SESSION['properties']['mail']);
+        			
+				$pdf->SetFontSize(10);
+				
+				// Datos Comprobante
+				$pdf->Rect($mp + 5, $tp, $mp, 025, 0.1);
+				
+				///letra
+				$pdf->setFillColor(255,255,255);
+				$pdf->Rect($mp + 1, $tp, 010, 010, 'F');
+				$pdf->Rect($mp + 1, $tp, 010, 010, 0.1);
+				
+				// Cliente
+				$pdf->Rect(005, $tp + 21 , $ap, 26, 0.1);
+
+            ]]></code>
+        </pdf>
+
+		<table id="CAJ_MOVIMIENTOS" label="Recibo">
+
+
+			<field id="id_regmovim" noshow="true"  print="false">
+				<expression having="false">REG_MOVIMIENTOS.id_regmovim</expression>
+			</field>
+                        
+                        <field id="id_cajmovimiento" noshow="true" print="false" />
+	
+	
+			<!-- ENCABEZADO -->	
+
+			<field id="letra_movimiento" tabla="REG_MOVIMIENTOS" PDFsize="20">
+				<label posX="98" posY="2" />
+			</field>
+
+			<field id="descripcion_concepto" tabla="REG_CONCEPTOS">
+				<label posX="110" posY="2">Comprobante</label>
+			</field>
+
+			<field id="fecha_movimiento"  tabla="REG_MOVIMIENTOS">
+				<label posX="110" posY="+2">Fecha</label>
+				<tipo>date</tipo>
+			</field>
+
+			
+			<field id="puesto_movimiento"  tabla="REG_MOVIMIENTOS" PDFsize="8"> 
+				<label posX="110" posY="+2">Puesto</label>
+				<format>%04d</format>
+			</field>
+
+			<field id="nro_movimiento"> 
+				<label posX="135">-</label>
+				<format>%08d</format>	
+			</field>
+						
+			<!-- DATOS DEL MOVIMIENTO -->
+
+            <field id="regcuenta_nombre">
+                <label posX="5" posY="+5">Apellido y Nombre</label>
+                <expression>REG_CUENTA.nombre_cuenta</expression>
+            </field>
+
+            <field id="regcuenta_direccion">
+                <label posX="5" posY="+2">Direccion</label>
+                <expression>REG_CUENTA.cod_direccion</expression>
+            </field>
+
+			<field id="localidad">
+				<label posX="5" posY="+2">Localidad</label>
+				<expression>CONCAT(GEN_LOCALIDADES.nombre_localidad,' (', GEN_LOCALIDADES.cp, ') ')</expression>
+			</field>
+
+						<field id="abreviacion_iva" tabla="GEN_IVA">
+							<label posX="100">Cat.IVA</label>
+						</field>
+
+			<field id="nombre_provincia" tabla="GEN_PROVINCIAS">
+				<label posX="5" posY="+2">Provincia</label>
+			</field>
+
+						<field id="regcuenta_cuit">
+							<label posX="100">CUIT</label>
+							<expression>REG_CUENTA.cuit_cuenta</expression>
+						</field>
+ 
+			<!-- VALORES RECIBIDOS -->
+                             
+			<field id="valores" local="true" PDFsize="8">
+				<label posX="5" posY="+10">Detalle de valor/es para aplicar a los comprobantes indicados</label> 
+				<helper type="object" xml="recibo_cajvalores_imp.xml" dir="/caja/qry/" >
+					<parameter source="id_cajmovimiento" target="cajmovimiento_id" operator="=" />
+				</helper>
+			</field>
+                                
+                                
+			<field id="cheques" local="true" PDFsize="8">
+				<label posX="15" posY="+5" />
+				<helper type="object" xml="recibo_carvalores_imp.xml" dir="/caja/qry/" >
+					<parameter source="id_cajmovimiento" target="cajmovimiento_id" operator="=" />
+				</helper>
+			</field>
+			
+						
+			<field id="bancos" local="true" PDFsize="8">
+				<label posX="15" posY="+5" />
+				<helper type="object" xml="recibo_regmovim_imp.xml" dir="/caja/qry/" >
+					<parameter source="id_cajmovimiento" target="cajmovimiento_id" operator="=" />
+				</helper>
+			</field>
+				    	
+
+			<!-- IMPUTACIONES -->
+
+			<field id="imputaciones" local="true" PDFsize="8">
+				<label posX="5" posY="+5">Detalle de comprobantes imputados</label> 
+				<helper type="object" xml="recibo_regimputaciones_imp.xml" dir="/caja/qry/" >
+					<parameter source="id_regmovim" target="regmovim_id" operator="=" />
+				</helper>
+			</field>
+
+			<!-- PIE -->
+
+			<field id="referencia_movimiento">
+				<label posX="5" posY="+14">Observaciones</label>
+			</field>
+			
+			<field id="confecciono" local="true">
+				<label posX="10" posY="+5">Confeccionó</label>
+				<valor>_________________________</valor>
+			</field>
+
+			<field id="autorizo" local="true">
+				<label posX="77" posY="0">Autorizó</label>
+				<valor>_________________________</valor>
+			</field>
+
+			<field id="recibido" local="true">
+				<label posX="140" posY="0">Recibió</label>
+				<valor>_________________________</valor>
+			</field>
+
+			
+		</table>
+
+
+		<join tipo="left">
+			<table id="CAJ_CONCEPTOS">
+			    <field id="id_cajconcepto">
+					<condicion operador="=">cajconcepto_id</condicion>
+   			    </field>
+			</table>
+		</join>
+
+		 <join tipo="left">
+			<table id="REG_MOVIMIENTOS">
+			    <field id="subsistema_id">
+					<condicion operador="=">CAJ_CONCEPTOS.subsistema_id</condicion>
+   			    </field>
+			    <field id="cajmovimiento_id">
+					<condicion operador="=">id_cajmovimiento</condicion>
+   			    </field>
+			</table>
+		</join>
+		
+		 <join tipo="left">
+			<table id="REG_CONCEPTOS">
+			    <field id="id_concepto">
+					<condicion operador="=">concepto_id</condicion>
+   			    </field>
+			</table>
+		</join>
+
+		 <join tipo="left">
+			<table id="REG_CUENTA">
+			    <field id="id_regcuenta">
+					<condicion operador="=">regcuenta_id</condicion>
+   			    </field>
+			</table>
+		</join>
+
+		<join tipo="left">
+		  <table id="GEN_LOCALIDADES">
+		    <field id="id_localidad">
+		      <condicion operador="=">REG_CUENTA.localidad_id</condicion>
+		    </field>
+		  </table>
+		</join>
+		
+		<join tipo="left">
+		  <table id="GEN_PROVINCIAS">
+		    <field id="id_provincia">
+		      <condicion operador="=">REG_CUENTA.provincia_id</condicion>
+		    </field>
+		  </table>
+		</join>
+		
+		<join tipo="left">
+		  <table id="GEN_IVA">
+		    <field id="id_iva">
+		      <condicion operador="=">REG_CUENTA.iva_id</condicion>
+		    </field>
+		  </table>
+		</join>
+  </form>
+</histrix>  

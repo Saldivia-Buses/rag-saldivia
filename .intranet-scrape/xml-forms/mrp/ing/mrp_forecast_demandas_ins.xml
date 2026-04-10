@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert" >
+    <title>Forecast Articulos</title>
+    <obs></obs>
+    <form >
+        <table id="MRP_FORECAST" label="Forecast">
+                <field id="stkarticulo_id" 		id_temp="id_stkarticulo" ></field>
+                <field id="mes_forecast" 		id_temp="mes"></field>
+                <field id="tipo_forecast" >
+            	    <valor>1</valor>
+                </field>
+                <field id="year_forecast" 		id_temp="anio"></field>
+                <field id="cantidad_forecast" 		id_temp="VtasEst"></field>
+                <field id="mrpperiodo_id" 		id_temp="mrpperiodo_id"></field>
+        </table>
+    </form>
+</histrix>

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="consulta" exportasuma="true" PDFlineColor="255,255,255" PDFfontSize="10">
+	<title>Detalles</title>
+	 <obs></obs>
+		<form >
+		    <table id="REG_DETALLES" label="Detalle de Movimientos" styleTbody="height:150px;overflow-x:hidden;" PDFnoborder="true" >
+
+			<field id="muestra_iva" noshow="true" local="true" print="false"/>
+			<field id="NoMuestra_iva" noshow="true" local="true" print="false">
+				<if exp="muestra_iva">
+				<true>'false'</true>
+				<false>'true'</false>
+				</if>
+			</field>
+			<field id="regmovim_id" noshow="true" PDFlineas="false"/>
+
+			<field id="orden" noshow="true" PDFlineas="false"/>
+
+			<field id="nombre_servicio" tabla="FAC_SERVICIOS" repeat="false" PDFsize="12" break="true">				
+				 <label PDFsize="20">SERVICIO</label>
+                        </field>
+				
+			<field id="descripcion_detalle" _PDFsize="12" PDFlineas="false">
+				 <expression><![CDATA[REPLACE(descripcion_detalle, '<br>', '\n')]]></expression>		         
+				 <label PDFsize="20">CONCEPTO</label>
+			</field>
+			
+                        <field id="cantidad_detalle" noZero="true">
+                            <label>CANTIDAD</label>
+                        </field>
+                        <field id="precio_venta" noZero="true">
+                            <label>IMP.UNIT.</label>
+                        </field>
+                       
+			<field id="total_detalle"  total="true" PDFsize="9" PDFlineas="false" PDFnoborder="true" pdfwidth="100" suma="true">		    
+			    <label size="25">TOTAL</label>
+			    <tipo>numeric</tipo>
+			    <detalle>SubTotal</detalle>
+			    <attribute id="print">NoMuestra_iva</attribute>
+			</field>
+
+			<field id="neto_detalle"  total="true" PDFsize="9" PDFlineas="false" PDFnoborder="true" pdfwidth="100">
+			    <label size="25">TOTAL</label>
+			    <tipo>numeric</tipo>
+				<detalle>SubTotal</detalle>
+				<attribute id="print">muestra_iva</attribute>
+			</field>
+			
+			<order>
+			    <field id="orden"/>
+			</order>
+		    </table>
+
+		    <join>
+		      <table id="FAC_SERVICIOS">
+		        <field id="id_facservicio">
+		          <condicion operador="=">REG_DETALLES.facservicio_id</condicion>
+		        </field>
+		      </table>
+		    </join>
+		</form>
+    </histrix>	
+

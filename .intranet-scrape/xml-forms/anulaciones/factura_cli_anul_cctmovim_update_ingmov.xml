@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="update">
+       <title>COMPROBANTES</title>
+        <obs></obs>
+               <form >
+					<table id="CCTMOVIM" label="ANULACION ORDEN DE PAGO" >
+						<field id="siscod" id_temp="siscod" esClave="true">
+						</field>
+						<field id="ctacod" id_temp="ctacod" esClave="true">
+						</field>
+						<field id="movfec" id_temp="movfec" esClave="true">
+						</field>
+						<field id="concod" id_temp="concod" esClave="true">
+						</field>
+						<field id="movnpv" id_temp="movnpv" esClave="true">
+						</field>
+						<field id="movnro" id_temp="movnro" esClave="true">
+						</field>
+						<field id="ctanom" >
+							<valor>'ANULADA'</valor>
+						</field>
+						
+						<field id="movimp" >
+							<valor>0</valor>
+						</field>
+						<field id="movsal" >
+							<valor>0</valor>
+						</field>
+						
+					</table>
+               </form>
+        </histrix>

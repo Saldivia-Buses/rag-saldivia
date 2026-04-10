@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm" transaccional="true">
+	<title>CIVIL</title>
+	<obs></obs>
+	<form >
+		<table id="CIVIL" >
+			<title>Estado Civil</title>
+			<field id="estadocivil">
+				<label>Cod. Estado Civil</label>
+				<help>Codigo de Estado Civil</help>
+			</field>
+			<field id="descripcion">
+				<label>Descripcion</label>
+				<help>Descripcion Estado Civil</help>
+			</field>
+			<order>
+				<field id="estadocivil"></field>
+			</order>
+		</table>
+	</form>	   
+</histrix> 

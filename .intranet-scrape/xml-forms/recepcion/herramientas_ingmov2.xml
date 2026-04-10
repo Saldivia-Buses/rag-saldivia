@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="insert">
+	<title>ingreso de  trazables en la recepcion</title>
+	<obs></obs>
+	<form >
+		<table id="HERRAMIENTAS" label="recepcion de trazables" idCampoCant="cantetiq" idCampoCond="grabo_herr" >
+			<!-- codigo que se ejecuta en cada grabacion -->
+			<ejecuta>
+				<![CDATA[
+					if ($this->Etiquetas ==''){
+						$this->Etiquetas = new BarcodeEtiq("codest", "artcod", "nomherr", "ctacod", "ctanom", "ocpnro", "ocpfec","id_herramienta", "remfec","remnro","remnpv","recLote");					
+					    $this->Etiquetas->setFormato= true;
+					}
+					else {
+					    $this->Etiquetas->setFormato= false;
+						$this->Etiquetas->addEtiqueta("codest", "artcod", "nomherr", "ctacod", "ctanom", "ocpnro", "ocpfec","id_herramienta", "remfec","remnro","remnpv","recLote");
+					}
+					$this->Etiquetas->generaEtiqueta();					
+                                        loger('Generada id_herramienta', 'trz.log');
+				
+//			$etiqueta = new BarcodeEtiq("codest", "artcod", "nomherr", "ctacod", "ctanom", "ocpnro", "ocpfec","id_herramienta", "remfec","remnro","remnpv","recLote");
+//			$etiqueta->generaEtiqueta();
+//			$etiqueta->Imprimir('zebra@aries');
+						//$this->Etiquetas->Imprimir('zebra@aries');
+						//unset($this->Etiquetas);
+
+				]]>
+			</ejecuta>
+			<field id="codest"  id_temp="codest" param="numerador">
+			</field>
+			<field id="ctacod"  id_padre="ctacod" param="numerador">
+			</field>
+			<field id="ctanom" local="true" id_padre="ctanom">
+			</field>
+			<field id="recLote" local="true" id_temp="recLote">
+			</field>			
+			<field id="ocpnro"  id_padre="ocpnro">
+			</field>
+			<field id="ocpfec"  id_padre="ocpfec">
+			</field>
+			<field id="remfec"  id_padre="remfec">
+			</field>
+			<field id="remnpv"  id_padre="remnpv">
+			</field>
+			
+			<field id="remnro"  id_padre="remnro">
+			</field>
+
+			<field id="artcod" id_temp="artcod" param="numerador">
+			</field>
+			<field id="nomherr" id_temp="detalle">
+				<tipo>varchar</tipo>
+			</field>
+			
+			<field id="idtrazable1" local="true" id_temp="id_traza1">
+			</field>
+			<field id="numerador" local="true">
+				<label>Herramienta1</label>
+				<parametro id="trazabilidad_nro.xml" _id="trazabilidad_nro2.xml" retorna="id_herramienta">
+					<field id="grucod">
+						<condicion operador="=">2</condicion>
+						
+					</field>
+					<field id="artcod">
+						<condicion operador="=" valorde="artcod">''</condicion>
+						
+					</field>
+					<field id="codest">
+						<condicion operador="=" valorde="codest">''</condicion>
+						
+					</field>					
+					<field id="ctacod">
+						<expression>SUBSTRING(id_herramienta, 2, 4)</expression>
+						<condicion operador="=" valorde="ctacod">''</condicion>
+						
+					</field>
+					
+				</parametro>				
+			</field>
+
+			
+			<field id="id_herramienta">
+				<if exp="true">
+					<true>	'idtrazable1'.sprintf('%09s' , (substr('numerador', 13,11) + 1) )</true>
+					<false>''</false>
+				</if>				
+			</field>
+
+
+			<field id="grucod" id_temp="grucod">
+				<label>grupo </label>
+				<help>grupo </help>
+			</field>
+			<field id="pendiente_oc"  id_temp="pencps">
+			</field>
+		</table>
+	</form>
+</histrix>

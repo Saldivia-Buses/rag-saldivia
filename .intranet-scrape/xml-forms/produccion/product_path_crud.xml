@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud" >
+  <title>Linea de Producción</title>
+  <obs />
+  <form >
+    <table id="PROD_PRODUCT_PATH" label="Lineas de producción">
+
+		<field id="id_productpath" noshow="true" autoinc="true" >
+		</field>
+		<field id="linea_id" oculto="true">
+		</field>
+
+		<field id="posicionfab_id">
+			<label>Posición</label>
+			<helper xml="posicionesfab_qry.xml" type="combo">
+
+			</helper>
+		</field >
+		<field id="order_path" _noshow="true">
+		    <label>Orden</label>
+		</field>
+		<field id="parent_productpath_id2" noshow="true">
+			<expression>parent_productpath_id</expression>
+		</field>
+
+		<field id="parent_productpath_id" _colstyle="display:none;" empty="true">
+			<label>Paso Anterior</label>
+			<helper xml="product_path_qry.xml"  type="combo" empty="true">
+			</helper>
+
+		</field>
+
+	     <order>
+			<field id="order_path" />
+			
+			<field id="id_productpath" />
+		 </order>
+    </table>
+    <join>
+    	<table id="POSICIONESFAB">
+    		<field id="id_posicionfab">
+    			<condicion operador="=">posicionfab_id</condicion>
+    		</field>
+    	</table>
+    </join>
+
+  </form>
+</histrix>

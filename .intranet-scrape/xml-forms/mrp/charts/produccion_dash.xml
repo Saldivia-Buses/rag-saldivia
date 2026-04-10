@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="dashboard">
+
+        <titulo>Medidores de Producción</titulo>
+ 
+        <widget id="diaria"  width="40%" height="266px" >
+            <title>Producción Diaria</title>
+	    <url><![CDATA[histrixLoader.php?xml=produccion_diaria_chart.xml&dir=/mrp/charts/]]></url>
+        </widget>
+
+        <widget id="diaria_seccion"  width="40%" height="266px" >
+            <title>Producción Diaria por seccción</title>
+    	    <url><![CDATA[histrixLoader.php?xml=produccion_diaria_seccion_chart.xml&dir=/mrp/charts/]]></url>
+        </widget>
+        <widget id="roturas_seccion"  width="40%" height="266px" >
+            <title>Roturas Diarias por seccción</title>
+            <url><![CDATA[histrixLoader.php?xml=roturas_diaria_seccion_chart.xml&dir=/mrp/charts/]]></url>
+        </widget>
+        <widget id="rubro"  width="40%" height="266px" >
+            <title>Producción Por Rubro</title>
+	    <url><![CDATA[histrixLoader.php?xml=produccion_rubro_chart.xml&dir=/mrp/charts/]]></url>
+        </widget>
+
+        <widget id="roturas"  width="40%" height="266px" >
+            <title>Roturas Diarias</title>
+	    <url><![CDATA[histrixLoader.php?xml=roturas_diarias_chart.xml&dir=/mrp/charts/]]></url>
+        </widget>
+
+roturas_diarias_chart.xml          
+        
+</histrix>
+
+

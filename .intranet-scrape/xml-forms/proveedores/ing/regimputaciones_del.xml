@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="delete">
+  <title>Borrado de Imputaciones</title>
+  <obs/>
+  <form>
+    <table id="REG_IMPUTACIONES" >
+      <field id="id_regimput" 	id_temp="id_regimput" esClave="true"/>
+    </table>
+  </form>
+</histrix>

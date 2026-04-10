@@ -1,0 +1,258 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" 
+imprime="false"
+preloadData="false"
+inserta="false"
+subtipo="vertical"
+>
+  <title>Modificación de Movimientos</title>
+  <obs/>
+  <form>
+    <table id="REG_MOVIMIENTOS" label="Ingreso de Movimientos" >
+
+      <movimientos>
+    	<relacion id="regmovimiento_update.xml" />
+      </movimientos>
+    
+      <field id="id_regmovim" noshow="true" />
+      
+      <field id="subsistema_id" oculto="true" valauto="true" />
+
+      <field id="concepto_id">
+        <label modpos="nobr">Comprobante</label>
+        <helper type="combo" xml="regconcepto_qry.xml" dir="/ayudas" empty="true" />
+        <jseval campodestino="mod">(concepto_id != old_concepto_id)? 1 : 0</jseval>
+      </field>
+
+      <field id="regcuenta_id" _noshow="true">
+        <helper type="combo" xml="regcuenta_cmb.xml" _dir="/ayudas" empty="true" />
+        <label>Cuenta</label>
+        <jseval campodestino="mod">(regcuenta_id != old_regcuenta_id)? 1 : 0</jseval>
+      </field>
+
+      <field id="fecha_movimiento" >
+        <label>Fecha</label>
+        <help>Fecha movimiento</help>
+        <tipo>date</tipo>
+        <jseval campodestino="mod">(fecha_movimiento != old_fecha_movimiento)? 1 : 0</jseval>
+      </field>      
+      
+      <field id="reg_fecha">
+        <label modpos="nobr">Registracion</label>
+        <help>Corresponde a la Fecha de Registracion Contable</help>
+        <tipo>date</tipo>
+        <jseval campodestino="mod">(reg_fecha != old_reg_fecha)? 1 : 0</jseval>
+      </field>      
+
+      <field id="letra_movimiento">
+        <label modpos="nobr">Letra</label>
+        <helper type="combo">
+          <option value=""></option>
+          <option value="A">A</option>
+          <option value="B">B</option>
+          <option value="C">C</option>
+        </helper>
+        <tipo>varchar</tipo>
+        <jseval campodestino="mod">(\'letra_movimiento\' != \'old_letra_movimiento\')? 1 : 0</jseval>
+      </field>      
+      
+      <field id="puesto_movimiento" colstyle="display:none;" _deshabilitado="true">
+        <label modpos="nobr">P.V.</label>
+        <size>4</size>
+        <tipo>integer</tipo>
+        <jseval campodestino="mod">(puesto_movimiento != old_puesto_movimiento)? 1 : 0</jseval>
+      </field>      
+
+      <field id="nro_movimiento" _sincelda="true" _colstyle="display:none;" _deshabilitado="true">
+        <label modpos="nobr">Nro.</label>
+        <size>8</size>
+        <tipo>integer</tipo>
+        <jseval campodestino="mod">(nro_movimiento != old_nro_movimiento)? 1 : 0</jseval>
+      </field>    
+
+      <field id="referencia_movimiento">
+        <label colspan="5">Referencia</label>
+        <help>Referencia del movimiento</help>
+        <size>100</size>
+        <tipo>varchar</tipo>
+        <jseval campodestino="mod">(\'referencia_movimiento\' != \'old_referencia_movimiento\')? 1 : 0</jseval>
+      </field>    
+
+      <field id="importe_movimiento">
+        <label style="font-size: 16px">Importe Total</label>
+        <tipo>numeric</tipo>
+        <size>17</size>
+        <tipo>numeric</tipo>
+        <jseval campodestino="mod">(importe_movimiento != old_importe_movimiento)? 1 : 0</jseval>
+      </field>    
+
+      <field id="saldo_movimiento">
+        <label style="font-size: 16px">Saldo</label>
+        <tipo>numeric</tipo>
+        <size>17</size>
+        <tipo>numeric</tipo>
+        <jseval campodestino="mod">(saldo_movimiento != old_saldo_movimiento)? 1 : 0</jseval>
+      </field>    
+
+    <field id="ocultaimputado" validRow="true" noshow="true">
+	<expresion>CASE WHEN REG_CONCEPTOS.imputacion_concepto = 0 THEN ifnull((SELECT 0 FROM REG_IMPUTACIONES WHERE regmovim_id = REG_MOVIMIENTOS.id_regmovim limit 1), 1)
+			ELSE ifnull((SELECT 0 FROM REG_IMPUTACIONES WHERE regmovim0_id = REG_MOVIMIENTOS.id_regmovim limit 1), 1)
+			END
+	</expresion>
+    </field>
+    
+    <fieldGroup noshow="true">
+    
+      <field id="old_concepto_id">
+        <expresion>REG_MOVIMIENTOS.concepto_id</expresion>
+      </field>
+
+      <field id="old_regcuenta_id">
+        <expresion>REG_MOVIMIENTOS.regcuenta_id</expresion>
+      </field>
+      
+      <field id="old_fecha_movimiento">
+        <expresion>REG_MOVIMIENTOS.fecha_movimiento</expresion>
+        <tipo>date</tipo>
+      </field>
+      
+      <field id="old_reg_fecha">
+        <expresion>REG_MOVIMIENTOS.reg_fecha</expresion>
+        <tipo>date</tipo>
+      </field>
+      
+      <field id="old_letra_movimiento">
+        <expresion>REG_MOVIMIENTOS.letra_movimiento</expresion>
+        <tipo>varchar</tipo>
+      </field>
+      
+      <field id="old_puesto_movimiento">
+        <expresion>REG_MOVIMIENTOS.puesto_movimiento</expresion>
+        <tipo>integer</tipo>
+      </field>
+      
+      <field id="old_nro_movimiento">
+        <expresion>REG_MOVIMIENTOS.nro_movimiento</expresion>
+        <tipo>integer</tipo>
+      </field>
+      
+      <field id="old_referencia_movimiento">
+        <expresion>REG_MOVIMIENTOS.referencia_movimiento</expresion>
+        <tipo>varchar</tipo>
+      </field>
+
+      <field id="old_importe_movimiento">
+        <expresion>REG_MOVIMIENTOS.importe_movimiento</expresion>
+        <tipo>numeric</tipo>
+      </field>
+
+      <field id="old_saldo_movimiento">
+        <expresion>REG_MOVIMIENTOS.saldo_movimiento</expresion>
+        <tipo>numeric</tipo>
+      </field>
+      
+    </fieldGroup>
+<!--
+      <field id="cuota_movimiento" local="true">
+        <label modpos="nobr">Cuota</label>
+        <size>2</size>
+        <jseval campodestino="mod">1</jseval>
+      </field>
+
+      <field id="vencimiento_movimiento">
+        <label>Vencimiento</label>
+        <help>Fecha de Vencimiento</help>
+        <tipo>date</tipo>
+        <jseval campodestino="mod">1</jseval>
+      </field>
+
+
+
+      <field id="fecha_cae">
+        <label modpos="nobr">Fecha CAE</label>
+        <help>Fecha de Factura Electronica</help>
+        <tipo>date</tipo>
+      </field>
+
+      <field id="numero_cae">
+        <label modpos="nobr">Nº CAE</label>
+        <help>Nº de Factura Electrónica</help>
+      </field>
+-->
+
+<!--
+      <fieldGroup deshabilitado="true" noshow="true">
+        <field id="regcuenta_ivaid"     local="true" />
+        <field id="percepcion"          local="true" />
+        <field id="imputacion_concepto" local="true" />
+        <field id="cuenta_prov_debe"    local="true" />
+        <field id="cuenta_prov_haber"   local="true" />
+
+        <field id="importe_gravado"     local="true">
+          <jseval campodestino="diferencia" actxml="false">importe_gravado - gravado_movimiento</jseval>
+        </field>      
+        <field id="gravado_movimiento" local="true">
+          <jseval campodestino="diferencia" actxml="false">gravado_movimiento + 0 - importe_gravado + 0</jseval>
+        </field>              
+
+        <field id="neto_movimiento" />
+        <field id="importe_iva" />
+        <field id="importe_percepcion" />
+        <field id="nombre_movimiento" />
+      </fieldGroup>-->
+        
+        <field id="mod" local="true" noshow="true" />
+        <field id="grabar" local="true" noshow="true">
+            <if exp="mod + 0 != 0">
+                <true>'true'</true>
+        	<false>'false'</false>
+	    </if>
+        </field>
+        
+        <field id="hi" local="true" clasefila="true" noshow="true">
+    	    <if exp="grabar">
+    		<true>'resaltadoVioleta'</true>
+    		<false>''</false>
+    	    </if>
+    	</field>
+        
+	<filters auto="true">
+	    <field id="regcuenta_id">
+		<label>Cuenta</label>
+		<operador>=</operador>
+		<size>5</size>
+	    </field>
+	    <field id="nro_movimiento">
+		<label>Nro. Comprobante</label>
+		<operador>=</operador>
+	    </field>
+	</filters>
+    </table>
+    
+    <join>
+      <tabla id="REG_CONCEPTOS">
+        <field id="id_concepto">
+          <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+        </field>
+        <field id="subsistema_id">
+          <condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion>
+        </field>
+      </tabla>
+    </join>
+    <join>
+      <tabla id="REG_CUENTA">
+        <field id="id_regcuenta">
+          <condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+        </field>
+      </tabla>
+    </join>
+    <join>
+      <tabla id="GEN_SUBSISTEMAS">
+        <field id="id_subsistema">
+          <condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion>
+        </field>
+      </tabla>
+    </join>
+
+  </form>
+</histrix>

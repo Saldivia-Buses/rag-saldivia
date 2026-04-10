@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert" _grabafinal="true">
+	<title>INSERT CAR_MOVIMIENTOS</title>
+	<obs></obs>
+	<consulta>
+		<table id="CAR_MOVIMIENTOS" idCampoCond="total_imputado">
+			<field id="tipo_movimiento" 	    id_temp="tipo_movimiento" />
+			<field id="carvalor_id"      	    id_temp="id_carvalor" />
+			<field id="fecha_movimiento"         id_cab="fecha_valor" />
+			<field id="referencia_movimiento"    id_cab="referencia_movimiento" />			
+		</table>
+	</consulta>
+</histrix>	

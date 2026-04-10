@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" paginar="100" inserta="false" modifica="false" deleteRow="false" imprime="false" log="false" procesa="true" confirma="AUTORIZAR" transaccional="true">
+  <title>Movimientos</title>
+  <obs/>
+  <form>
+    <table id="REG_MOVIMIENTOS" label="Resumen de Cuenta">
+
+      <movimientos>
+          <relacion id="reg_movimientos_noaut_fiscal.xml" />          EMITE FISCAL / WEBSERVICE
+      </movimientos>
+
+      <filters>
+        <field id="fecha_movimiento">
+          <label>Desde</label>
+          <operador>&gt;=</operador>
+          <valor eval="true">date("d/m/Y", mktime(0, 0, 0, date("m"), 1, date("Y")))</valor>
+        </field>
+        <field id="fecha_movimiento">
+          <label modpos="nobr">Hasta</label>
+          <operador>&lt;=</operador>
+          <valor>today</valor>
+        </field>
+        <field id="concepto_id">
+          <label>Concepto</label>
+          <operador>=</operador>
+        </field>
+      </filters>
+      <field id="id_regmovim" noshow="true"/>
+      <field id="subsistema_id" noshow="true"/>
+      <field id="xml_llamar" local="true" noshow="true">
+        <if exp="cajmovimiento_id + 0 != 0">
+          <true>'cajmovimiento_ficha.xml'</true>
+          <false>'regmovimiento_ficha.xml'</false>
+        </if>
+      </field>
+      <field id="concepto_id" noshow="true">
+        <helper type="combo" xml="regconcepto_qry.xml" dir="/ayudas" empty="true"/>
+      </field>
+      <field id="fecha_movimiento">
+        <label>Fec.Mov.</label>
+        <help>Fecha movimiento</help>
+        <tipo>date</tipo>
+      </field>
+      <field id="regcuenta_id">
+        <label>Nro.</label>
+      </field>
+      <field id="nombre_movimiento">
+        <label>Razon Social</label>
+      </field>
+      <field id="abreviacion_concepto" tabla="REG_CONCEPTOS">
+        <label>Comp</label>
+      </field>
+      <field id="nro_movimiento" linkdes="Detalle del Comprobante" linkmodal="true" style="text-align:center;width:12em;">
+        <label>Numero</label>
+        <expresion>CONCAT(REG_MOVIMIENTOS.letra_movimiento,' ',LPAD(REG_MOVIMIENTOS.puesto_movimiento,4,'0'),'-',LPAD(REG_MOVIMIENTOS.nro_movimiento  ,8,'0'))</expresion>
+        <helper type="link" _dir="/caja/qry">
+          <parameter source="id_regmovim" target="id_regmovim"/>
+        </helper>
+      </field>
+            <!-- Cambiar de Acuerdo a como se quiere visualizar las imputaciones de CtaCte -->
+      <field id="imputacion_concepto" noshow="true">
+        <expresion>CASE WHEN REG_CONCEPTOS.imputacion_concepto = 1 THEN 1 ELSE 0 END</expresion>
+      </field>
+      <!-- Importes -->
+      <field id="debe" suma="true" noZero="true">
+        <label>debe</label>
+        <expresion>
+          (case when REG_CONCEPTOS.imputacion_concepto = 0 then REG_MOVIMIENTOS.importe_movimiento else 0  end)
+        </expresion>
+        <tipo>numeric</tipo>
+      </field>
+      <field id="haber" suma="true" noZero="true">
+        <label>haber</label>
+        <expresion>
+          (case when REG_CONCEPTOS.imputacion_concepto = 1 then REG_MOVIMIENTOS.importe_movimiento else 0 end)
+        </expresion>
+        <tipo>numeric</tipo>
+      </field>
+      <field id="acumulado" suma="true" acumula="true" _local="true" print="false">
+        <label>Acumulado</label>
+        <expresion>(case when REG_CONCEPTOS.imputacion_concepto = 0 then REG_MOVIMIENTOS.importe_movimiento else 0  end) - (case when REG_CONCEPTOS.imputacion_concepto = 1 then REG_MOVIMIENTOS.importe_movimiento else 0 end)</expresion>
+        <tipo>numeric</tipo>
+      </field>
+      <field id="saldo_movimiento" suma="true" noZero="true">
+        <label>Pendiente</label>
+        <tipo>numeric</tipo>
+      </field>
+      <field id="referencia_afip">
+        <label>Observacion AFIP</label>
+      </field>
+      <!-- Funciones -->
+      <field id="eliminacion" linkdir="/caja/proc/del/" local="true" print="false" linkdes="Detalle del Comprobante" style="text-align:center;width:4em;">
+        <attribute id="linkint">xml_llamar</attribute>
+        <label>Detalle</label>
+        <if exp="'xml_llamar' != ''">
+          <true>'&gt;&gt;'</true>
+          <false>''</false>
+        </if>
+        <paring destino="id_regmovimheader">id_regmovim</paring>
+        <paring destino="id_regmovim">id_regmovim</paring>
+        <paring destino="id_cajmovmiento">cajmovimiento_id</paring>
+      </field>
+      <field id="modificacion" local="true" print="false" style="text-align:center;width:4em;">
+        <helper type="link" xml="regmovimiento_crud2.xml" dir="/clientes/ing" width="600px" height="350px" title="Modificar Comprobante">
+          <parameter source="id_regmovim" target="id_regmovim"/>
+        </helper>
+        <label>Mod</label>
+        <valor>Mod</valor>
+      </field>
+
+      <field id="fiscal" noshow="true" tabla="REG_NUMERADORES" />
+
+      <field id="numero_cae" noshow="true">
+        <condicion operador="=">'' OR numero_cae = 0 OR numero_cae is NULL</condicion>
+      </field>
+		
+	<field id="tilde_facturar" local="true" refresh="true">
+		<label>Reenviar</label>
+		<tipo>check</tipo>
+	</field>
+
+	<field id="facturar" local="true" colstyle="display:none;">
+		<if exp="tilde_facturar == 1">
+			<true>'1'</true>
+			<false>'0'</false>
+		</if>
+	</field>
+
+      <order>
+        <field id="letra_movimiento"/>
+        <field id="puesto_movimiento"/>
+        <field id="nro_movimiento"/>
+      </order>
+    </table>
+    <join>
+      <table id="REG_CONCEPTOS">
+        <field id="id_concepto">
+          <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+        </field>
+        <field id="informa_calculo">
+          <condicion operador="=">0</condicion>
+        </field>
+      </table>
+    </join>
+    <join>
+      <table id="REG_NUMERADORES">
+        <field id="subsistema_id">
+          <condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion>
+        </field>
+        <field id="regconcepto_id">
+          <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+        </field>
+        <field id="puesto">
+          <condicion operador="=">REG_MOVIMIENTOS.puesto_movimiento</condicion>
+        </field>
+        <field id="letra">
+          <condicion operador="=">REG_MOVIMIENTOS.letra_movimiento</condicion>
+        </field>
+        <field id="fiscal">
+          <condicion operador="=">1</condicion>
+        </field>
+        <field id="printer">
+          <condicion operador="=">'WSAFIP'</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ficha" inserta="false" cancel="false" borra="false" imprime="false" preFetch="true">
+	<title>Actualizacion de CUIT</title>
+	
+	 <eventos>
+        <event id="update">close</event>
+        <event id="update">refresh</event>
+        <event id="update">reload</event>
+    </eventos>
+    
+	<form>
+		<table id="REG_MOVIMIENTOS">
+			<field id="id_regmovim" noshow="true" valauto="true" />
+
+			<field id="cuit_movimiento" valauto="true">
+				<label>CUIT</label>
+			<tipo>integer</tipo>
+			</field>
+
+			<field id="fecha_movimiento" valauto="true">
+				<label>FECHA</label>
+				<tipo>date</tipo>
+			</field>
+
+
+		</table>
+	</form>
+
+
+	
+</histrix>

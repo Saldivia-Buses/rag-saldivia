@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="grid" subtipo="vertical" tooltip="false" inserta="false" preloadData="false" deleteRow="false" procesa="true" log="false" 
+	tableHeight="400" paginar="99">
+  <title>Ingreso de Inventario</title>
+  <obs/>
+  <form>
+    <table id="STK_ARTICULOS" label="Ingreso de Inventario" idCampoCond="grabar">
+
+      <movimientos>
+        <relacion id="stkinventario_ins_cav.xml"/>
+      </movimientos>
+
+      <filters>
+            
+            <field id="id_stkarticulo">
+	            <label>Codigo</label>
+	            <operador>=</operador>
+	        </field>
+
+			<field id="separador" modpos="nobr" deshabilitado="true" editable="false" />
+
+            <field id="stkconcepto_id" local="true" modpos="nobr">
+                <label>Concepto</label>
+            </field>
+            
+            <field id="separador" modpos="nobr" deshabilitado="true" editable="false" />
+
+            <field id="stkdeposito_id" local="true" _modpos="nobr">
+                <label>Deposito</label>
+            </field>
+            
+            <field id="separador" modpos="nobr" deshabilitado="true" editable="false" />
+
+            <field id="stkrubro_id" noshow="true" modpos="nobr">
+                <label>Rubro</label>
+            </field>
+
+            <field id="separador" modpos="nobr" deshabilitado="true" editable="false" />
+            
+            <field id="fecha_movimiento" modpos="nobr">
+                <label>Fecha</label>
+                <valor>today</valor>
+            </field>
+
+    </filters>
+
+	<fieldGroup colstyle="text-align:center;vertical-align:middle; padding:2px 2px 2px 2px;">
+
+		<field id="id_stkarticulo">
+			<label>Codigo de Articulo</label>
+			<helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas" />
+		</field>
+
+		<field id="nombre_articulo">
+		    <label>Descripcion</label>
+		</field>
+
+		<field id="stock" local="true" suma="true">
+			<label>stock</label>
+			<expression>SELECT cantidad_stock 
+							FROM STK_STOCKACTUAL 
+							WHERE STK_STOCKACTUAL.stkarticulo_id = STK_ARTICULOS.id_stkarticulo and 
+								  STK_STOCKACTUAL.stkdeposito_id = '[__stkdeposito_id__]' 
+			</expression>
+		</field>
+
+		<field id="cantidad" local="true" editable="true" suma="true">
+		<label>Stock Real</label>
+		<tipo>integer</tipo>
+		</field>
+
+		<field id="stkconcepto_id" local="true" _noshow="true" deshabilitado="true">
+			<label>Concepto</label>
+			<!--<helper type="combo" xml="stkconcepto_qry.xml" dir="/ayudas"></helper> -->
+			<options>
+                 <option valor="11">AJUSTE INVENTARIO SUMA</option>
+                 <option valor="10">AJUSTE INVENTARIO RESTA</option>
+             </options>
+		</field>
+
+	</fieldGroup>
+
+	<fieldGroup noshow="true">
+
+		<field id="numero_movimiento" local="true" deshabilitado="true" noshow="true">
+			<valor>1</valor>
+		</field>
+
+		<field id="fecha_movimiento" local="true">
+	        <label>fecha</label>
+	        <tipo>date</tipo>
+		</field>
+
+        <field id="user_id" local="true" noshow="true">
+            <helper type="combo" xml="usuarios_qry.xml" dir="/ayudas"  />
+            <label>Usuario</label>
+            <valor eval="true">$_SESSION['idUser']</valor>
+        </field>
+
+		<field id="separador" local="true" deshabilitado="true" noshow="true">
+			<size>1</size>
+		</field>
+
+		<field id="_ORDEN" local="true" noshow="true">
+	        <label>#</label>
+		</field>
+
+        <field id="referencia" local="true" noshow="true">
+	        <tipo>varchar</tipo>
+	        <valor>'INGRESO DE STOCK INICIAL'</valor>
+        </field>
+
+		<field id="stkfamilia_id" 	noshow="true"/>
+		<field id="stksector_id" 	noshow="true"/>
+		<field id="unidad_id"  		noshow="true"/>
+
+		<field id="precio_costo"	 noshow="true"/>
+		<field id="precio_lista" 	noshow="true"/>
+		<field id="precio_venta"	 noshow="true"/>
+		<field id="precio_promedio" noshow="true"/>
+
+		<field id="stkdeposito_id" local="true" noshow="true">
+			<label>stkdeposito</label>
+			<helper type="combo" xml="stkdeposito_qry.xml" dir="/ayudas" />
+		</field>
+
+		<field id="stkrubro_id" noshow="true">
+			<helper type="combo" xml="stkrubro_qry.xml" dir="/ayudas" _empty="true" />
+		</field>
+
+		<field id="baja_articulo" noshow="true">
+			<condicion operador="!=">1</condicion>
+		</field>
+
+		<field id="grabar" local="true" noshow="true">
+			<if exp="(cantidad + 0) != 0">
+				<true>'true'</true>
+				<false>'false'</false>
+			</if>
+		</field>
+
+	</fieldGroup>
+
+	<order>
+		<field id="nombre_articulo" />
+	</order>
+
+    </table>
+  </form>
+</histrix>

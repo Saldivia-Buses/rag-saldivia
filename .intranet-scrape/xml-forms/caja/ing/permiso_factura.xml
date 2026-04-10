@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="update" >
+  <title>numerador</title>
+  <obs />
+  <form>
+    <table id="REG_CUENTA" idCampoCond="estcod">
+		<field id="id_regcuenta" 	id_temp="regcuenta_id" esClave="true"/>
+		
+		<field id="subsistema_id" 	id_temp="subsistema_id" esClave="true"/>
+
+		<field id="estcod">
+			<tipo>integer</tipo>
+		    <valor>0</valor>
+		</field>
+
+    </table>
+  </form>
+</histrix>

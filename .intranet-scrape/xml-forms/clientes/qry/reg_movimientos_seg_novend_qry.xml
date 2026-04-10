@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="consulta" _preloadData="false" paginar="200" PDFfontSize="7" PDFlines="false">
+    <title>MOVIMIENTOS</title>
+    <obs></obs>
+	<form>
+		<table id="REG_MOVIMIENTOS" label="MOVIMIENTOS">
+	      <filters>
+			<field id="fecha_movimiento">
+				<label>Desde Fecha</label>
+				<valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m" ) - 3 , 1, date("Y") ))</valor>
+				<operador>&gt;=</operador>
+			</field>
+			<field id="fecha_movimiento" >
+				<label modpos="nobr">Hasta Fecha</label>
+				<valor>today</valor>
+				<operador>&lt;=</operador>
+			</field>
+			<field id="maxobs" deshabilitado="false">
+			    <label>Fecha Observacion</label>
+			    <tipo>date</tipo>
+			</field>
+
+			<field id="nro_cuenta" tabla="REG_CUENTA">
+			    <label>Cliente</label>
+			</field> 
+
+			<!--
+			<field id="regcuenta_id">
+				<label modpos="nobr">Nombre de Cuenta</label>
+				<operador>=</operador>
+			</field> 
+			--> 
+			
+			<field id="nro_movimiento" >
+				<label modpos="nobr">Nro.Comp.</label>
+				<operador>=</operador>
+			</field>  
+<!--
+				<field id="regcuenta_idv" deshabilitado="false">
+					<label>Vendedor</label>
+				        <operador>=</operador>
+					
+				</field>
+-->
+	      </filters>
+<!--
+			<field id="subsistema_idv" local="true" oculto="true">
+				<label>ss</label>
+			</field>
+	      
+			<field id="regcuenta_idv"  deshabilitado="false" print="false" >
+				<expression having="false">regcuentarelacionada_id</expression>
+				<label>Vendedor</label>
+				
+				<helper type="combo" xml="regcuenta_solamente_qry.xml" dir="/ayudas" empty="true" >
+					<field id="subsistema_id"  >
+						<condicion operador="=" valorde="subsistema_idv">'[__subsistema_idv__]'</condicion>
+					</field>
+				</helper> 
+			</field>                
+
+-->
+			<field id="nro_movimiento" noshow="true">
+				<label modpos="nobr">Nro.Comp.</label>
+			</field>  
+			<field id="letra_movimiento" noshow="true">
+				<label modpos="nobr">letra</label>
+			</field>  
+
+			<field id="id_regmovim" noshow="true">
+				<help>Codigo de Movimiento</help>
+				<detalle>regmovim_id</detalle>
+			</field>
+
+			<field id="concepto_id" noshow="true">
+				<label>Concepto</label>
+<!--				<condicion operador="=">(select option_value from HTXOPTIONS where option_name ='ID_FACTURAS')</condicion> -->
+			</field>
+			<field id="nro_cuenta" tabla="REG_CUENTA" repeat="false">
+					<helper type="external" xml="regcuenta_solamente_nro_qry.xml" dir="/ayudas" empty="true" />
+
+			    <label>Cod</label>
+			</field> 
+
+		<field  id="nombre_cuenta" tabla="REG_CUENTA" linkdes="Cuenta Corriente" repeat="false" >
+                <label>Nombre</label>
+                <helper type="link" xml="regdetalles_all_qry.xml" dir="/clientes/qry" modal="true">
+                    <parameter source="regcuenta_id" target="regcuenta_id" operator="="/>
+                    <parameter source="subsistema_id" target="subsistema_id" operator="="/>
+                </helper>
+            </field>
+
+          	<field id="contactos" linkint="cctconta_consulta.xml" dir="/" linkdes="Ver medios de Contacto">
+              	<expression>'Contactos'</expression>
+                <label>Contactos</label>
+                <help>Contactos Cliente</help>
+                <paring destino="ctacod">nro_cuenta</paring>
+                <paring destino="siscod">subsistema_id</paring>
+<!--                 <attribute id="tooltip">telefono</attribute>
+ -->            </field>
+
+<!--             <field id="telefono" print="false" noshow="true">
+                <label >Telefono</label>
+                <expression><![CDATA[SELECT group_concat(REG_CUENTAS_CONTACTOS.valor SEPARATOR ', ') 
+                             FROM REG_CUENTAS_CONTACTOS
+                             JOIN GEN_TIPO_CONTACTOS on ( GEN_TIPO_CONTACTOS.id_contacto = REG_CUENTAS_CONTACTOS.contacto_id  )
+                            WHERE regcuenta_id = REG_MOVIMIENTOS.regcuenta_id and vcard_type like 'TEL%' LIMIT 1]]>
+                </expression>
+                <tipo>editor</tipo>
+	  		</field>
+ -->                                                                                                                        
+			<field id="regcuenta_id" noshow="true" break="true">
+			</field> 
+			
+			<field id="subsistema_id" noshow="true">
+			</field> 
+			
+			<field id="fecha_movimiento">
+				<label>Fecha</label>
+				<help>Fecha del movimiento</help>
+			</field>
+			
+			<field id="imprime_concepto1"  noshow="true">
+			      <label>imprim_con</label>
+			      <expression>REG_NUMERADORES.ejecuta</expression>
+			</field>
+			
+			<field id="comprobantes" local="true"  linkdes="Facturas" linkdir="/caja/qry">
+				<label>Comprobante</label>
+				<expression>concat(descripcion_concepto,' ',letra_movimiento, ' ' , lpad(puesto_movimiento,4,0),' ', lpad(nro_movimiento,8,'0') )</expression>
+				<paring destino="id_regmovim">id_regmovim</paring>
+				<attribute id="linkint">imprime_concepto1</attribute>
+
+				<helper type="link" xml="regmovim_obs_qry.xml" dir="caja/qry">
+				    <parameter source="id_regmovim" target="regmovim_id" />
+	    			</helper>
+
+		    </field>
+		    
+		    <field id="importe_movimiento" suma="true">
+			       <label>Importe</label>		      
+			</field>
+			
+			<field id="saldo_movimiento" _noshow="true" suma="true">
+			    <label>Saldo</label>
+			     <condicion operador="&gt;">0</condicion>
+			</field>
+			<field id="saldo_movimiento" _noshow="true" suma="true" >
+			    <label>Saldo</label>
+			     <condicion operador="&gt;">0</condicion>
+			</field>
+			
+
+			<field id="dias_demora" print="false">
+				<label style="text-align:center;">demora</label>
+				<expression>datediff(curdate(), vencimiento_movimiento)</expression>
+		   	</field>
+			<field id="dias_demora_grafico" print="false">
+				<label></label>
+				<expression>datediff(curdate(), vencimiento_movimiento)</expression>
+				<tipo>grafico</tipo>
+			</field>
+				
+			<field id="observaciones" local="true"  _linkint="regmovim_obs_qry.xml" linkdes="Observaciones" _linkdir="/clientes/qry" showValor="true" showObjTabla="true" obj="regmovim_obs_qry.xml" print="false" >
+				<valor>'Observaciones'</valor>                                                                                                                                                    
+				<tipo>varchar</tipo>
+				<helper type="link" xml="regmovim_obs_qry.xml">
+				    <parameter source="id_regmovim" target="regmovim_id" />
+				    <parameter source="REG_MOVIMIENTOS" target="tabla_origen" />
+	    			</helper>
+	    			<!--
+				<paring destino="regmovim_id">id_regmovim</paring>
+				<paring destino="tabla_origen">REG_MOVIMIENTOS</paring>
+				-->
+			</field>    
+
+			<field id="obs_txt" colstyle="display:none;" print="false">
+				<expression>SELECT REPLACE(REPLACE(GROUP_CONCAT(CONCAT(rmo.fec_observacion, ' ', rmo.observacion), '*'), '*,', '\n'), '*', '') FROM REG_MOVIMIENTO_OBS rmo WHERE rmo.regmovim_id = REG_MOVIMIENTOS.id_regmovim and rmo.tabla_origen = 'REG_MOVIMIENTOS'</expression>
+				<label>Observaciones</label>
+			</field>
+			<field id="tablaorigen" noshow="true">
+				<label>Tabla Orgien</label>
+				<expression>'REG_MOVIMIENTOS'</expression>
+				<detalle>tabla_origen</detalle>
+			</field>
+			<field id="maxobs" noshow="true">
+			    <expression having="false">fec_observacion</expression>
+			    <tipo>date</tipo>
+			</field>
+			<group>
+			    <field id="id_regmovim" /> 
+			</group>
+			<order>
+				<field id="nombre_cuenta"/>
+				<field id="fecha_movimiento"/>
+				<field id="comprobantes"  	 >
+					<label>Comprobante</label>
+					<expression>concat(descripcion_concepto,' ',letra_movimiento, ' ' , lpad(puesto_movimiento,4,0),' ', lpad(nro_movimiento,8,'0') 
+					)</expression>
+	
+		        </field>
+			</order>
+		</table>
+
+		<join>
+			<table id="REG_CUENTA">
+				<field id="id_regcuenta">
+				  <condicion operador="=">regcuenta_id</condicion>
+				</field>
+			</table>
+		</join>
+
+		<join>
+			<table id="REG_CONCEPTOS">
+				<field id="id_concepto">
+				  <condicion operador="=">concepto_id</condicion>
+				</field>
+				<field id="imputacion_concepto">
+				  <condicion operador="=">0</condicion>
+				</field>
+				<field id="informa_calculo">
+				  <condicion operador="=">0</condicion>
+				</field>
+				
+				
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="REG_NUMERADORES">
+				<field id="regconcepto_id">
+				  <condicion operador="=">REG_CONCEPTOS.id_concepto</condicion>
+				</field>
+<!--				<field id="letra">
+				  <condicion operador="=">REG_MOVIMIENTOS.letra_movimiento</condicion>
+				</field>-->
+				<field id="puesto">
+				  <condicion operador="=">REG_MOVIMIENTOS.puesto_movimiento</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="REG_MOVIMIENTO_OBS">
+				<field id="regmovim_id">
+				  <condicion operador="=">id_regmovim</condicion>
+				</field>
+			</table>
+		</join>
+	</form>
+</histrix>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ficha" imprime="false" conBusqueda="false" log="false" borra="false" modifica="true" inserta="false" preFetch="true" cancel="false">
+    <title>Mov. Bancario</title>
+    <obs></obs>
+    <eventos>
+        <event id="update">close</event>
+        <event id="update">reload</event>
+    </eventos>
+    <form>
+        <table id="REG_MOVIMIENTOS" label="Mov. Bancario">
+
+            <field id="id_regmovim" noshow="true" esClave="true" valauto="true" />
+
+            <field id="fecha_movimiento">
+                <label>Fecha Movimiento</label>
+                <tipo>date</tipo>
+            </field>
+
+            <field id="nro_movimiento">
+                <label>Nro. Movimiento</label>
+                <tipo>integer</tipo>
+            </field>
+
+            <field id="vencimiento_movimiento">
+                <label>Acreditacion</label>
+                <tipo>date</tipo>
+            </field>
+
+        </table>
+    </form>
+</histrix>

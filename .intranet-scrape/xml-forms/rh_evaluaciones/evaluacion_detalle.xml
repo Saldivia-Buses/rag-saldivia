@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="cabecera">
+    <title>Evaluación</title>
+    <obs></obs>
+    <form >
+        <table id="RH_EVALUACIONES" >
+            <title>Evaluación</title>
+
+            <field id="id_rhevaluacion" autoinc="true" noshow="true" />
+
+            <field id="rhpersona_id" noshow="true" />
+
+            <field id="legajo" tabla="PERSONAL" deshabilitado="true">
+                <label>Legajo</label>
+            </field>
+
+            <field id="evaluado">
+                <expresion>CONCAT(PERSONAL.apellido, ' ', PERSONAL.Nombre)</expresion>
+                <label modpos="nobr" colspan="4">Evaluado</label>
+			<size>50</size>
+            </field>
+
+	    	<field id="fec_evaluacion">
+                <label>Fecha Evaluación</label>
+            </field>
+
+           
+
+            <field id="desempenio" deshabilitado="true">
+                <label>Desempeño</label>
+            </field>
+
+            <field id="puntos_fuertes">
+                <label colspan="2">Puntos fuertes</label>
+                <size>200</size>
+            </field>
+
+            <field id="puntos_a_mejorar">
+                <label colspan="2">Puntos a mejorar</label>
+                <size>200</size>
+            </field>
+
+            <field id="conclusiones">
+                <label colspan="2">Conclusiones</label>
+                <size>200</size>
+            </field>
+
+            <field id="descargo_evaluado">
+                <label colspan="2">Descargo del evaluado</label>
+                <size>200</size>
+            </field>
+
+           
+            
+           
+        </table>
+        <join tipo="left">
+            <table id="PERSONAL">
+                <field id="idPersona">
+                    <condicion operador="=">RH_EVALUACIONES.rhpersona_id</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="RH_EVALUACION_RESPUESTAS">
+                <field id="rhevaluacion_id">
+                    <condicion operador="=">RH_EVALUACIONES.id_rhevaluacion</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix> 

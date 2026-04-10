@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  CURD
+Tarea: PLAN DE MANTENIMIENTO
+Autor: Lmm
+Fecha: 17/08/11
+*******************************************************************************
+-->
+<histrix tipo="abm-mini" _subtipo="vertical" _inserta="false">
+    <title>Mantenimiento</title>
+    <obs></obs>
+    <form>
+        <table id="MANT_PLAN" label="Plan de mantenimiento">
+
+
+	   	<field id="equipo_id" noshow="true" />
+
+	   	<field id="id_plan" noshow="true" />
+
+        <field id="fecha_accion" deshabilitado="true">
+			<label>Fecha</label>
+			<help>Fecha de la acción</help>
+			<tipo>date</tipo>
+		</field>
+		
+		<field id="dia" noshow="true">
+		  <label>Dia</label>
+          <expresion>weekday(fecha_accion)</expresion>
+            <options>
+		        <option valor="0">Lunes</option>
+		        <option valor="1">Martes</option>
+		        <option valor="2">Miercoles</option>
+		        <option valor="3">Jueves</option>
+		        <option valor="4">Viernes</option>
+		        <option valor="5">Sabado</option>
+		        <option valor="6">Domingo</option>
+			</options>
+			
+        </field>
+
+		<field id="nombre_equipo" tabla="MANT_EQUIPOS">
+			<label Formstyle="display:none;">Equipo</label>
+		</field>
+		
+		<field id="tipoequipo_id" tabla="MANT_EQUIPOS" noshow="true">
+			<helper type="combo" id="MANT_TIPO_EQUIPO" empty="true">
+				<field id="id_tipo_equipo"/>
+				<field id="nombre_tipoequipo"/>
+			</helper>
+			<label>Tipo</label>
+		</field>
+
+		<field id="accion_id" _deshabilitado="true" required="true">
+			<helper type="combo" id="MANT_ACCIONES" empty="true">
+				<field id="id_accion"/>
+				<field id="nombre_accion"/>
+			</helper>
+			<label>Acción</label>
+		</field>
+
+		<field id="fecha_realizado">
+			<label>Fecha Realizado</label>
+			<tipo>date</tipo>
+			<valor>today</valor>
+		</field>
+	
+		<field id="login" deshabilitado="true" valauto="true" _noshow="true">
+		    <label>Usuario </label>
+			<tabla_ex id="HTXUSERS">
+				<field id="login"></field>
+				<field id="nombre"></field>
+				<order>
+					<field id="nombre"></field>
+				</order>
+			</tabla_ex>
+		    <help>Usuario que hace el pedido</help>
+		    <valor eval="true">$_SESSION['usuario']</valor>
+      	</field>
+
+		
+		<field id="observaciones">
+			<label>Observaciones</label>
+			<size>200</size>
+		</field>
+		<order>
+			<field id="fecha_accion"/>
+		</order>
+
+	    </table>
+		<join tipo="left">
+            <table id="MANT_EQUIPOS">
+                <field id="id_equipo">
+                    <condicion operador="=">MANT_PLAN.equipo_id</condicion>
+                </field>
+            </table>
+        </join>
+	
+    </form>
+</histrix>	

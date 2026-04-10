@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" paginar="100" inserta="false" modifica="false" deleteRow="false" imprime="false" log="false" procesa="true" confirma="AUTORIZAR" transaccional="true" tableHeight="60em">
+  <title>Movimientos</title>
+  <obs/>
+  <form>
+	<table id="REG_MOVIMIENTOS" label="Resumen de Cuenta">
+
+		<filters auto="true">
+			<field id="aumento">
+				<label>Porc.Aumento</label>
+				<operador>=</operador>
+			</field>
+		</filters>
+
+		<movimientos>
+			<relacion id="update_detalle.xml" />
+		</movimientos>
+
+		<fieldGroup id="entorno" noshow="true">
+			<field id="id_regmovim" />
+			<field id="subsistema_id" valauto="true" />
+			<field id="subsistema_fiscal" valauto="true" local="true" />
+			<field id="regcuenta_id" valauto="true" />
+			<field id="concepto_id" />
+			<field id="letra_movimiento" />
+			<field id="puesto_movimiento" />
+			<field id="importe_movimiento" />
+			<field id="ejecuta" tabla="REG_NUMERADORES" />
+			<field id="nombre_movimiento" noshow="true" />
+			<field id="fecha" local="true">
+				<valor>today</valor>
+				<tipo>date</tipo>
+			</field>
+		</fieldGroup>
+
+		<fieldGroup>
+			<field id="fecha_movimiento">
+				<label>Fec.Mov.</label>
+				<tipo>date</tipo>
+				<attribute id="colstyle">colorear</attribute>
+			</field>
+
+			<field id="nombre_cuenta" tabla="REG_CUENTA">
+				<label>Cuenta</label>
+				<attribute id="colstyle">colorear</attribute>
+			</field>
+
+			<field id="nro_movimiento" linkdes="Detalle del Comprobante" linkmodal="true" style="text-align:center;width:12em;">
+				<label>Numero</label>
+				<expresion>CONCAT(REG_CONCEPTOS.abreviacion_concepto,' ',REG_MOVIMIENTOS.letra_movimiento,' ',LPAD(REG_MOVIMIENTOS.puesto_movimiento,4,'0'),'-',LPAD(REG_MOVIMIENTOS.nro_movimiento  ,8,'0'))</expresion>
+				<helper type="link">
+					<parameter source="id_regmovim" target="id_regmovim" />
+				</helper>
+				<attribute id="linkint">ejecuta</attribute>
+				<attribute id="colstyle">colorear</attribute>
+			</field>
+
+			<field id="fpv_movimiento">
+				<label>U.Aumento</label>
+				<tipo>date</tipo>
+				<attribute id="colstyle">colorear</attribute>
+			</field>
+
+			<field id="rec_movimiento" noZero="true">
+				<label>Aumento Ant.</label>
+				<tipo>numeric</tipo>
+				<attribute id="colstyle">colorear</attribute>
+			</field>
+
+			<field id="colorear" noshow="true">
+			    <expression>case when datediff(now(),fpv_movimiento) > '15' then 'background-color:#F5A9A9;' else '' end</expression>
+			</field>
+
+			<field id="pun_movimiento" noZero="true">
+				<label>Imp.Anterior</label>
+				<tipo>numeric</tipo>
+				<attribute id="colstyle">colorear</attribute>
+			</field>
+
+			<field id="aumento_detalles" local="true" showObjTabla="true">
+				<label colspan="10"/>
+				<helper type="object" xml="regdetalle_aumento.xml">
+					<parameter source="id_regmovim" target="regmovim_id" />
+					<parameter source="aumento" target="aumento" />
+				</helper>
+				<attribute id="colstyle">colorear</attribute>
+			</field>
+
+			<field id="aumento" local="true" noshow="true">
+				<label>Porc.Aumento</label>
+				<tipo>integer</tipo>
+			</field>
+
+			<field id="tilde_actualiza" local="true" refresh="true">
+				<label>Actualiza</label>
+				<tipo>check</tipo>
+				<attribute id="colstyle">colorear</attribute>
+			</field>
+
+			<field id="actualizar" local="true" colstyle="display:none;">
+				<if exp="tilde_actualiza == 1">
+					<true>'1'</true>
+					<false>'0'</false>
+				</if>
+			</field>
+		</fieldGroup>
+
+		<order>
+			<field id="fecha_movimiento" table="REG_MOVIMIENTOS" />			
+			<field id="nro_movimiento" table="REG_MOVIMIENTOS" />
+		</order>
+
+		<group>
+			<field id="id_regmovim" tabla="REG_MOVIMIENTOS" />
+		</group>
+	</table>
+
+	<join tipo="left">
+		<table id="REG_CUENTA">
+			<field id="id_regcuenta">
+				<condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+			</field>
+		</table>
+	</join>
+
+	<join>
+		<table id="REG_CONCEPTOS">
+			<field id="id_concepto">
+				<condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+			</field>
+			<field id="informa_calculo">
+				<condicion operador="=">0</condicion>
+			</field>
+		</table>
+	</join>
+
+	<join tipo="left">
+		<table id="REG_NUMERADORES">
+			<field id="subsistema_id">
+				<condicion operador="=">'[__subsistema_fiscal__]'</condicion>
+			</field>
+			<field id="regconcepto_id">
+				<condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+			</field>
+			<field id="puesto">
+				<condicion operador="=">REG_MOVIMIENTOS.puesto_movimiento</condicion>
+			</field>
+			<field id="letra">
+				<condicion operador="=">REG_MOVIMIENTOS.letra_movimiento</condicion>
+			</field>
+		</table>
+	</join>
+   </form>
+</histrix>

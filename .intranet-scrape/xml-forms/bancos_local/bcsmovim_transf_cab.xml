@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="cabecera" graba="false">
+	<title>CABECERA TRANSFERENCIA BANCARIA</title>
+	<obs></obs>
+	<form >
+		
+		<table id="BCSMOVIM" label="Transferencia Bancaria" graba="false">
+			<field id="siscod" oculto="true">
+				<label>siscod</label>
+				<parametro id="fsmparam_paralf.xml" retorna="paralf">
+					<field id="parcla">
+						<condicion operador="=">'sisbcs'</condicion>
+					</field>
+				</parametro>
+			</field>
+			<field id="ingefe" oculto="true">
+				<label>ingefe</label>
+				<parametro id="cajparam_parent.xml" retorna="parent">
+					<field id="siscod" oculto="true">
+						<condicion operador="=">'05'</condicion>
+					</field>
+					<field id="parcla">
+						<condicion operador="=">'ingefe'</condicion>
+					</field>
+				</parametro>
+			</field>
+
+
+			
+			<field id="fecha" ctbfecha="1">
+				<label>Fecha Movimiento</label>
+				<help>Fecha del Movimiento</help>
+				<tipo>date</tipo>
+				<valor>today</valor>
+				
+			</field>
+			<field id="codche" oculto="true">
+				<label>Codigo Cheque</label>
+				<parametro id="fsmparam_parent.xml" retorna="parent">
+					<field id="siscod" oculto="true">
+						<condicion operador="=">'04'</condicion>
+					</field>
+					<field id="parcla">
+						<condicion operador="=">'codche'</condicion>
+					</field>
+				</parametro>				
+				<tipo>integer</tipo>
+			</field>			
+			<field id="coddep" oculto="true">
+				<label>Codigo Cheque </label>
+				<parametro id="fsmparam_parent.xml" retorna="parent">
+					<field id="siscod" oculto="true">
+						<condicion operador="=">'04'</condicion>
+					</field>
+					<field id="parcla">
+						<condicion operador="=">'coddep'</condicion>
+					</field>
+				</parametro>				
+				<tipo>integer</tipo>
+			</field>				
+			<field id="vencimiento">
+				<label modpos="nobr">Vencimiento</label>
+				<help>Fecha de Vencimiento</help>
+				<tipo>date</tipo>
+				<valor>today</valor>
+				
+			</field>
+			<field id="nroche_ori">
+				<label >Cheque Origen</label>
+				<help>Numero de Cheque de Origen</help>
+				<tipo>integer</tipo>
+			</field>
+			<field id="nrobol_des" ctbregnro="2">
+				<label >Boleta Deposito Destino</label>
+				<help>Numero de Boleto de Depósito de Destino</help>
+				<tipo>integer</tipo>
+			</field>
+			
+
+			<field id="bcsref">
+				<label colspan="4">Referencia</label>
+				<help>Referencia del Movimiento</help>
+				<tipo>char</tipo>
+				
+			</field>
+		</table>
+	</form>
+</histrix>

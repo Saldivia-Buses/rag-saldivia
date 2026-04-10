@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" limit="50" tooltip="true" >
+<title>Abm Gps</title>
+<obs>Abm gps.</obs>	
+
+
+ <form>
+            <table id="GPS_TACOEXTEND" label="etiqueta">
+           
+
+                 <field id="id_package" noshow="true" >
+                 <!--	<setvar>limit="10"</setvar> -->
+                       <label>gpsid_package</label>
+                       <help>Ayuda contextual</help>
+                 </field>
+                 <field id="gps_date">
+                 	<label>Fecha</label>
+                    <help></help>
+                    
+                 <!-- <condicion operador="=">date(now())</condicion> -->
+
+                 </field>	
+                 <field id="gps_time"  >
+                       <label>Hora</label>
+                       <help>Hora</help>
+                 </field>
+                 <field id="gps_speed"  colstyle="color:red" linkint="gps_tablepackage.xml" >
+                       <label>Velocidad</label>
+                       <help>Velocidad</help>
+                       <condicion operador="=">  100 or gps_speed >100 </condicion>
+                       
+                       
+                 </field>
+<!--
+				<field local="">
+					<label>Relacion</label>
+				<importar xml="gps_tablepackage.xml"  label="Tala de Paquetes" titulo="Tabla" boton="false">
+				      <field id="cuenta">gps_odometer</field>
+				</importar>
+				</field>	
+-->
+            </table>
+ </form>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</histrix>
+
+

@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="grid"  subtipo="vertical"    imprime="false"    transaccional="true"  deleteRow="false"    inserta="false"    tooltip="false"      >
+    
+    <title>CERRAR ORDEN DE PRODUCCION</title>
+    
+    <form >
+        <table id="MRP_ORDEN_DETALLE" label="DETALLE DE LA ORDEN DE PRODUCCION">
+            
+
+            <movimientos >
+                <!-- <relacion id="mrp_cerrarordenproduccion_update.xml"></relacion> -->
+                <relacion id="mrp_cerrarordendetalle_update.xml"></relacion>
+                <relacion id="mrp_producido_stkmovimientos_insert2.xml"></relacion>
+                <relacion id="mrp_consumido_stkmovimientos_insert2.xml"></relacion>
+            </movimientos>
+
+            <field id="id_mrpordendetalle" noshow="true" />
+            
+            <field id="mrporden_id" noshow="true" />
+
+            <field id="mrpestado_id" tabla="MRP_ORDEN_PRODUCCION" noshow="true">
+            	<label>estado</label>
+            </field>
+
+            <field id="deshabilitado" local="true" noshow="true">
+                <expression> if(mrpestado_id = 1,'true','false') </expression>
+            </field>
+	    
+            <field id="stkarticulo_id"   deshabilitado="true" esClave="true" >
+                <label style="text-align:center;">Artículo</label>
+                <help>Código de Artículo</help>
+            </field>
+
+            <field id="unidad_id" noshow="true">
+                <expresion>case when STK_ARTICULOS.unidad_uso_id = 0 then 1 else STK_ARTICULOS.unidad_uso_id end</expresion>
+            </field>
+
+            <field id="nombre_articulo"  tabla="STK_ARTICULOS"  deshabilitado="true" _style="width:120px;padding:0px 0px 0px 4px;" >
+                <label  _modpos="nobr" _colspan="5" >Descripción</label>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="minimo_ordendetalle" deshabilitado="true">
+                <label colstyle="display:none;">Mínimo</label>
+            </field>
+
+            <field id="objetivo_ordendetalle"  deshabilitado="true" required="true" >
+                <label modpos="nobr" style="color:red;text-align:center;">Obj.</label>
+            </field>
+
+            <field id="producido_ordendetalle"  suma="true" editable="true">
+                <label modpos="nobr" style="font-weight:bold;text-align:center;">Producido</label>
+                <tipo>numeric</tipo>
+                <!--<valor default="true">0</valor>  -->
+                <attribute id="deshabilitado">deshabilitado</attribute>
+            </field>
+
+            <field id="observaciones2_ordendetalle"  noshow="true" local="true">
+            	<if exp="true">
+            	    <true>'observaciones_ordendetalle'.'OP-mrporden_id'</true>
+            	    <false>''</false>
+            	</if>
+            </field>
+
+            <field id="demora_justificada"  editable="true" >
+                <label  modpos="nobr" >Demora</label>
+                <help>Demora Justificada Expresada en Horas</help>
+                <size>2</size>
+                <attribute id="deshabilitado">deshabilitado</attribute>
+            </field>
+
+<!--
+            <field id="controles" showObjTabla="true" local="true" Formstyle="display:none;">
+                <label modpos="nobr">Calidad</label>
+                <helper type="object" xml="mrp_controldetalle_grid.xml">
+                    <parameter source="id_mrpordendetalle" target="mrpordendetalle_id" />
+                    <parameter source="mrpestado_id" target="mrpestado_id" />
+                </helper>
+            </field>
+            
+            <field id="indice" style="color:red;text-align:center;padding:0px 2px 0px 2px;"  suma="true">
+                <label modpos="nobr">I.C</label>
+                <expresion sql="true">select sum(peso_control) from MRP_CONTROL_DETALLE
+                 left join MRP_CONTROLES on MRP_CONTROLES.id_mrpcontrol = MRP_CONTROL_DETALLE.mrpcontrol_id 
+                 where	MRP_CONTROL_DETALLE.mrpordendetalle_id = [__id_mrpordendetalle__] and control_estado = 0
+                </expresion>
+            </field>
+
+            <field id="trazabilidad" showObjTabla="true" local="true" Formstyle="display:none;">
+                <label>Trazabilidad</label>
+                <helper type="object" xml="mrp_trazabilidad_grid.xml">
+                    <parameter source="id_mrpordendetalle" target="mrpordendetalle_id" />
+                    <parameter source="mrpestado_id" target="mrpestado_id" />
+                </helper>
+            </field>
+-->
+            <!--
+            <field id="observaciones_ordendetalle"  editable="true" >
+                <label style="text-align:center;width:100px" _modpos="nobr" colspan="5">Observaciones</label>
+                <attribute id="deshabilitado">deshabilitado</attribute>
+            </field>
+            -->
+            <field id="user_id" local="true" deshabilitado="true" noshow="true">
+                <valor eval="true">$_SESSION['idUser']</valor>
+            </field>
+
+        </table>
+
+        <join _tipo="left">
+            <table id="MRP_ORDEN_PRODUCCION">
+                <field id="id_mrporden" >
+                    <condicion operador="=">mrporden_id</condicion>
+                </field>
+                <field id="mrpestado_id" >
+                    <!-- <condicion operador="!=">1</condicion> -->
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="STK_ARTICULOS">
+                <field id="id_stkarticulo" >
+                    <condicion operador="=">MRP_ORDEN_DETALLE.stkarticulo_id</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

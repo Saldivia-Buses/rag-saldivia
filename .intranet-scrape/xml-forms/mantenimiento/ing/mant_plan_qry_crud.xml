@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  CURD
+Tarea: PLAN DE MANTENIMIENTO
+Autor: Lmm
+Fecha: 17/08/11
+*******************************************************************************
+-->
+<histrix tipo="consulta" >
+    <title>Mantenimiento</title>
+    <obs></obs>
+    <form detalle="mant_plan_cal.xml">
+        <table id="MANT_EQUIPOS" label="Equipos">
+            <field id="id_equipo" esClave="true" noshow="true" >
+                <detalle>equipo_id</detalle>
+            </field>
+
+            <field id="articulo_id">
+                <label>Cod. Artículo</label>
+            </field>
+
+            <field id="nombre_equipo">
+                <label>Nombre</label>
+                <help>Nombre</help>
+                <detalle>equipo_nombre</detalle>
+            </field>
+
+            <field id="numero_serie">
+                <label>Nro. Serie</label>
+            </field>
+
+            <field id="deposito_id">
+                <label>Ubicacion</label>
+                <helper type="combo" id="DEPOSITO">
+                    <field id="idDeposito"/>
+                    <field id="direccion"/>
+                </helper>
+            </field>
+
+        </table>
+    </form>
+</histrix>	

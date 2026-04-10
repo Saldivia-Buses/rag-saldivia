@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8" ?>
+   <histrix tipo="abm">
+       <title>MOVIMIENTOS DE STOCK</title>
+        <obs></obs>
+               <form>
+					<table id="STKINMOV" label="MOVIMIENTOS">
+						
+						<field id="siscod" id_cab="sisprv" oculto="true">
+						</field>
+						<field id="artcod" id_cab="artcod">
+						</field>
+						<field id="movcod" id_temp="movcod">
+						</field>
+						<field id="movnpv" id_cab="movnpv">
+						</field>
+						<field id="movnro" id_cab="movnro">
+						</field>
+						<field id="movfec" id_cab="movfec">
+						</field>
+						<field id="ctacod" id_cab="ctacod">
+						</field>
+						<!-- <field id="movcli" id_cab="ctacod">
+						</field> -->
+						<field id="movcant" id_temp="movcant">
+						</field>
+						<!-- <field id="movpre" id_temp="movpre">
+						</field> -->
+						<field id="movcos" id_temp="movpre">
+						</field>
+						<field id="movimp" id_temp="movimp">
+						</field>
+						<field id="movref" id_temp="movref">
+						</field>
+						<field id="succod" id_cab="succod">
+						</field>
+						<field id="depcod" id_cab="depcod">
+						</field>
+						
+					</table>
+               </form>
+        </histrix>

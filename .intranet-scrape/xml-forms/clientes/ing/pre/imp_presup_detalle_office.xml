@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" exportasuma="true" path="fotos/">
+	<title />
+	<obs />
+	<form>
+		<table id="REG_DETALLES" label="Detalle de Movimientos" _styleTbody="height:150px;overflow-x:hidden;" PDFnoborder="false" >
+
+			<field id="muestra_iva" noshow="true" local="true" print="false" valauto="true" />
+
+			<field id="NoMuestra_iva" noshow="true" local="true" print="false">
+				<if exp="muestra_iva">
+				<true>'false'</true>
+				<false>'true'</false>
+				</if>		
+			</field>				
+
+			<field id="regmovim_id" noshow="true" />
+
+			<field id="orden" noshow="true" />
+			<field id="color_id" noshow="true" />
+
+			<fieldGroup>
+
+				<field id="stkarticulo_foto" tabla="STK_ARTICULOS"  PDFcolWidth="20" path="articulos" imageHeight="25" _imageWidth="12">
+				    <label>Foto</label>
+				    <expression>case when stkarticulo_foto != '' then concat(codigo_detalle,'/',stkarticulo_foto) else '' end</expression>
+				    <tipo>file</tipo>
+				    <size>30</size>
+				    <attribute id="noshow">oculta_foto</attribute>
+				</field>
+
+				<field id="oculta_foto" noshow="true" print="false">
+				    <expression><![CDATA[select (case when count(*) = 0 then 'true' else 'false' end) from REG_DETALLES RD
+							    join STK_ARTICULOS ON STK_ARTICULOS.id_stkarticulo = RD.codigo_detalle
+							    where RD.regmovim_id = REG_DETALLES.regmovim_id and stkarticulo_foto != '']]></expression>
+				</field>
+
+				<field id="codigo_detalle" PDFcolWidth="36" PDFalign="C">
+					<label size="35">Codigo</label>
+				</field>
+
+				<field id="descripcion_detalle">
+					<label size="120">Descripcion</label>
+					<expression>IF(STK_ARTICULOS.referencia != '', STK_ARTICULOS.referencia, REG_DETALLES.descripcion_detalle)</expression>
+				</field>
+
+				<field id="cantidad_detalle" PDFcolWidth="12" PDFalign="R">
+					<label size="35">Cant</label>
+					<tipo>numeric</tipo>
+				</field>
+
+				<field id="precio_venta" PDFcolWidth="17" _noshow="true">
+					<label size="15">Precio U.</label>
+					<expresion having="false">
+						case when '[__muestra_iva__]' = 'true' THEN
+							REG_DETALLES.precio_venta
+						else
+							REG_DETALLES.precio_venta * ( 1 + (REG_DETALLES.alicuota_iva / 100) )
+						end
+					</expresion>
+					<tipo>numeric</tipo>
+				</field>
+				
+				<field id="alicuota_iva" PDFcolWidth="15" _noshow="true">
+					<label size="30" >Alicuota</label>
+					<tipo>numeric</tipo>
+					<attribute id="noshow">NoMuestra_iva</attribute>
+				</field>
+
+				<field id="neto_detalle" PDFcolWidth="17" total="true">
+					<label size="15">Subtotal</label>
+					<tipo>numeric</tipo>
+					<detalle>SubTotal</detalle>
+					<expresion having="false">IF('[__muestra_iva__]' = 'true', REG_DETALLES.neto_detalle,  REG_DETALLES.total_detalle)</expresion>
+				</field>
+
+	            <field id="nombre_color" tabla="GEN_COLORES">
+	                <label>Color</label>
+	                <attribute id="noshow">oculta_color</attribute>
+	            </field>
+
+	            <field id="pattern" tabla="GEN_COLORES" path="colores">
+	                <expression>concat(REG_DETALLES.color_id,'/',GEN_COLORES.pattern)</expression>
+	                <label>Color</label>
+	                <tipo>file</tipo>
+	                <size>30</size>
+	                <attribute id="noshow">oculta_color</attribute>
+	            </field>
+
+				<field id="oculta_color" noshow="true" print="false">
+				    <expression><![CDATA[select (case when count(*) = 0 then 'true' else 'false' end) from REG_DETALLES RD
+							    join GEN_COLORES ON GEN_COLORES.id_color = RD.color_id
+							    where RD.regmovim_id = REG_DETALLES.regmovim_id]]></expression>
+				</field>
+
+			</fieldGroup>
+			
+			<order>
+				<field id="orden"/>
+			</order>
+			
+			<group>
+			  <field id="id_regdetalle" />
+			</group>
+		</table>
+
+        <join tipo="left">
+            <table id="STK_ARTICULOS">
+                <field id="id_stkarticulo">
+                    <condicion operador="=">REG_DETALLES.codigo_detalle</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="GEN_COLORES">
+                <field id="id_color">
+                    <condicion operador="=">REG_DETALLES.color_id</condicion>
+                </field>
+            </table>
+        </join>
+
+	</form>
+</histrix>

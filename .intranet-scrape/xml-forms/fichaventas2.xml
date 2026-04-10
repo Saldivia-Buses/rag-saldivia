@@ -1,0 +1,838 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  sololectura="true" tipo="ficha" autoprint="true" path="fotos" xmlVersion="get_registros.xml" >
+    <title>FICHA DE VENTAS</title>
+    <obs/>
+    <pie>Nota: Esta planilla debe ser devuelta via fax con el conforme correspondiente u observaciones, caso contrario la unidad se fabricará bajo las características aquí mencionadas.</pie>
+    <consulta>
+        <table id="PEDCOTIZ" label="Ficha de Ventas">
+            <field id="id" noshow="true" oculto="true">
+
+
+            </field>
+            <field id="pedfec">
+                <label size="24" posx="5" posy="+0.2" PDFsize="11">Fecha</label>
+                <!--				<valor>today</valor> -->
+                <tipo>date</tipo>
+            </field>
+            <field id="revfec" >
+                <label size="31" modpos="nobr" posx="54" posy="0" PDFsize="11">Ult. Modificación</label>
+            </field>
+
+            <field id="ninterno">
+                <label  size="23" posx="110" posy="0" PDFsize="10">Nro Interno</label>
+                <help></help>
+            </field>
+            <field id="nrocha" esclave="true" PDFbold="true" PDFscaleX="120" >
+                <label size="50" modpos="nobr" posx="146" posy="+1" PDFsize="40" ></label>
+                <help>Numero de Fabricacion</help>
+            </field>
+
+
+            <field id="ctacod">
+                <label colspan="6" size="24" posx="5" posy="0" PDFsize="12">Cliente</label>
+                <help>Codigo de Cuenta</help>
+                <tabla_ex condes="true" id="CCTCUENT">
+                    <field id="ctacod"/>
+                    <field id="ctafan"/>
+                    <field id="siscod" oculto="true">
+                        <condicion operador="=">'02'</condicion>
+                    </field>
+                </tabla_ex>
+            </field>
+            <!--			<field id="ctatel" tabla="CCTCUENT">
+                                <label colspan="6" size="25" posx="110" posy="0" PDFsize="12">Tel/Fax</label>
+                                <help>Telefono</help>
+                                <size>40</size>
+                                <tipo>varchar</tipo>
+
+                        </field>	-->
+<!--			<field id="ctadir" tabla="CCTCUENT">
+                                <label colspan="6" size="24" posx="5" posy="+1" PDFsize="12">Dirección</label>
+                                <help>Dirección</help>
+                                <size>40</size>
+                                <tipo>varchar</tipo>						-->
+            <field id="nombre" tabla="CCTCONTA">
+                <expresion>LEFT(CCTCONTA.nombre, 23)</expresion>
+                <label colspan="6" size="24" posx="110" posy="0" PDFsize="12">Contacto</label>
+                <size>40</size>
+
+                <tipo>varchar</tipo>
+
+            </field>
+
+            <!--		<field id="ctanro" tabla="CCTCUENT">
+                                <label colspan="6" size="25" posx="110" posy="0" PDFsize="12">C.u.i.t.    </label>
+                                <help>CUIT</help>
+                                <size>40</size>
+                                <tipo>varchar</tipo>
+                        </field>
+                -->
+<!--
+
+NOMBRE DE CONTACTO
+                        <field id="ctanro" tabla="CCTCUENT">
+                                <label posx="60" posy="0" PDFsize="12">CUIT</label>
+                                <help>CUIT</help>
+                        </field> -->
+
+
+            <field id="mail" tabla="CCTCONTA">
+                <label colspan="6" size="24" posx="5" posy="+1" PDFsize="12">e-mail</label>
+                <help>Mail</help>
+                <size>50</size>
+
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="Telefono" tabla="CCTCONTA">
+                <label colspan="6" size="25" posx="110" posy="0" PDFsize="12">Teléfono</label>
+                <help>Telefono</help>
+                <size>40</size>
+
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="dat00" local="true">
+                <label  size="200" posx="5" posy="+1" PDFsize="11" pdffill="150">.</label>
+            </field>
+            <field id="dat" local="true">
+                <label  size="49" posx="70" posy="0" PDFsize="12">DATOS DE LA UNIDAD</label>
+            </field>
+
+            <field id="marcod" tabla="CHASIS" >
+
+                <label size="24" posx="5" posy="+2" PDFsize="10">Chasis Marca</label>
+                <help></help>
+                <tabla_ex id="MARCHASIS" >
+                    <field id="marcod"></field>
+                    <field id="desabv"></field>
+
+                </tabla_ex>
+                <tipo>integer</tipo>
+                <actualiza>
+                    <field destino="marcod" id="modcod" />
+                </actualiza>
+            </field>
+            <field id="moddes" tabla="MODCHASIS" >
+                <label size="23" posx="37" posy="0" modpos="nobr" PDFsize="10"></label>
+                <help></help>
+            </field>
+            <!--			<field id="modcod" tabla="CHASIS" >
+                                <label size="23" posx="60" posy="0" modpos="nobr" PDFsize="10">Modelo</label>
+                                <help></help>
+                                <tabla_ex id="MODCHASIS">
+                                        <field clave="true" id="modcha">
+                                                <label>Modelo</label>
+                                                <help>Codigo del Modelo de Chasis</help>
+                                        </field>
+                                        <field id="moddes">
+                                                <label>Descripcion</label>
+                                                <help>Descripcion del Modelo</help>
+                                        </field>
+                                        <field id="marcod">
+                                                <label>Marca Chasis</label>
+                                        </field>
+                                </tabla_ex>
+                        </field>			-->
+            <field id="tiphab">
+                <label size="24" posx="60" posy="0"  PDFsize="10">Habilitacion</label>
+                <help></help>
+                <tabla_ex xml="tipohabil.xml" dir="/produccion"></tabla_ex>
+            </field>
+
+            <field id="chasis" tabla="CHASIS">
+                <label colspan="6" size="23" posx="110" posy="0" PDFsize="10">Nro Chasis</label>
+                <help></help>
+                <tipo>varchar</tipo>
+                <size>40</size>
+
+            </field>
+            <!--			<field id="prvcod">
+                                <label size="23" posx="60" posy="0" modpos="nobr" colspan="4"  xml="fsmprovs.xml" PDFsize="10">Provincia</label>
+                                <help></help>
+                                <tabla_ex xml="fsmprovs.xml" vacio="true"></tabla_ex>
+                        </field>
+                        <field id="nromotor" tabla="CHASIS">
+                                <label colspan="6" size="23" posx="110" posy="0" PDFsize="10">Nro Motor</label>
+                                <help></help>
+                                <tipo>varchar</tipo>
+                                <size>40</size>
+
+                        </field>
+                        -->
+            <field id="nrocar">
+                <label size="24" posx="5" posy="+1" PDFsize="10">Carroceria</label>
+                <help></help>
+                <tabla_ex xml="carroceria.xml"></tabla_ex>
+            </field>
+            <field id="tipserv">
+                <label size="23" posx="60" posy="0"  PDFsize="10">Tipo Serv.</label>
+                <help>Tipo de Servicio</help>
+                <tabla_ex xml="tiposervicio.xml" dir="/produccion"></tabla_ex>
+            </field>
+            <field id="conces" tabla="CHASIS">
+                <tabla_ex xml="concesionario.xml" vacio="true"></tabla_ex>
+                <label colspan="6" size="23" posx="110" posy="0" PDFsize="10">Conces.</label>
+                <help></help>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="dat2" local="true">
+                <label  size="200" posx="5" posy="+2" PDFsize="11" pdffill="150">Asientos</label>
+            </field>
+
+            <field id="cantasi">
+                <label size="24" posx="5" posy="+1" PDFsize="10" >Cantidad</label>
+                <help></help>
+
+            </field>
+            <field id="marasi">
+                <label size="23" posx="60" posy="0" modpos="nobr" xml="marcaasi.xml" PDFsize="10">Marca</label>
+                <help></help>
+                <tabla_ex xml="marcaasi.xml"></tabla_ex>
+            </field>
+            <field id="tipasi">
+                <tabla_ex xml="tipoasiento.xml" dir="/produccion">
+                    <field id="siscod" oculto="true">
+                        <condicion operador="=">03</condicion>
+                    </field>
+                </tabla_ex>
+                <label size="24" posx="110" posy="0" PDFsize="10">Tipo As.</label>
+                <help></help>
+            </field>
+            <field id="portavasos">
+                <label size="23" posx="160" posy="0" PDFsize="10" >Porta Vasos</label>
+                <help>Posee porta vasos</help>
+                <options>
+                    <option valor="0">No</option>
+                    <option valor="1">Si</option>
+                </options>
+
+            </field>
+            <!--
+                        <field id="piston">
+                                <label size="24" posx="5" posy="+1" modpos="nobr" PDFsize="10">Pistones</label>
+                                <help></help>
+                                <tipo>check</tipo>
+                        </field>
+                        <field id="cabeza">
+                                <label size="23" posx="60" posy="0"  PDFsize="10">Cabezales</label>
+                                <help></help>
+                                <tipo>check</tipo>
+
+                        </field>
+
+                        <field id="portalatas">
+                                <label size="23" posx="160" posy="0"  modpos="nobr" PDFsize="10">Porta Latas</label>
+                                <help>Posee porta latas</help>
+                                <tipo>check</tipo>
+
+                        </field>
+                        <field id="mesas">
+                                <label size="24" posx="110" posy="0" modpos="nobr" PDFsize="10">Mesas</label>
+                                <help>Posee Mesas</help>
+                                <tipo>check</tipo>
+
+                        </field>
+        -->
+            <field id="dat3" local="true">
+                <label  size="200" posx="5" posy="+2" PDFsize="11" pdffill="150">Equipamiento</label>
+            </field>
+
+            <field id="bagno">
+                <label size="24" posx="5" posy="+1" PDFsize="10">Baño</label>
+                <help></help>
+                <options>
+                    <option valor="0"></option>
+                    <option valor="1">S/D</option>
+                    <option valor="2">No</option>
+                    <option valor="3">Si</option>
+                </options>
+            </field>
+            <field id="miniba">
+                <label size="23" posx="60" posy="0" modpos="nobr" PDFsize="10">Minibar</label>
+                <help></help>
+                <options>
+                    <option valor="0"></option>
+                    <option valor="1">S/D</option>
+                    <option valor="2">No</option>
+                    <option valor="3">Si</option>
+                </options>
+
+
+            </field>
+
+            <field id="barcom">
+                <label size="24" posx="110" posy="0" modpos="nobr" PDFsize="10">Bar Completo</label>
+                <help></help>
+                <!--<tipo>check</tipo>-->
+                <options>
+                    <option valor="0">No</option>
+                    <option valor="1">Si</option>
+                </options>
+            </field>
+            <field id="cucheta">
+                <label size="23" posx="160" posy="0"  PDFsize="10">Cucheta</label>
+                <help></help>
+                <helper type="combo" xml="prd_helper_propiedades.xml" dir="/produccion" emtpy="true">
+                    <field id="campoficha_id">
+                        <condicion operador="=">'cucheta'</condicion>
+                    </field>
+                </helper>
+            </field>
+            <!--
+                        <field id="camare">
+                                <label size="23" posx="160" posy="0"  PDFsize="10">Camarera</label>
+                                <help></help>
+                                <tipo>check</tipo>
+                        </field>
+-->
+            <field id="dat4" local="true">
+                <label  size="200" posx="5" posy="+2" PDFsize="11" pdffill="150">Aire Acondicionado</label>
+            </field>
+            <!--			<field id="conaac">
+                                <label  size="24" posx="5" posy="+1" PDFsize="10">Con Aire</label>
+                                <help></help>
+                                <options>
+                                        <option valor="0">No</option>
+                                        <option valor="1">Si</option>
+                                </options>
+
+                        </field>
+ -->
+
+            <field id="preair">
+                <label size="23" posx="5" posy="+1"  PDFsize="10">Con Aire</label>
+                <help></help>
+                <options>
+                    <option valor="0"></option>
+                    <option valor="1">Sin Definir</option>
+                    <option valor="2">Preparado</option>
+                    <option valor="3">Colocado</option>
+                    <option valor="4">NO</option>
+                </options>
+
+            </field>
+            <!-- <field id="colair">
+                                <label modpos="nobr" size="24" posx="110" posy="0" PDFsize="10">Coloca</label>
+                                <help></help>
+                                <tipo>check</tipo>
+                        </field>-->
+            <field id="posair">
+                <label size="24" posx="60" posy="0" modpos="nobr" xml="posicair.xml" PDFsize="10">Posicion</label>
+                <help></help>
+                <tabla_ex xml="posicair.xml"></tabla_ex>
+            </field>
+            <field id="marair">
+                <label size="24" posx="110" posy="0" xml="marcaair.xml" PDFsize="10">Marca A/Ac.</label>
+                <help></help>
+                <tabla_ex id="MARCAAIR"  vacio="true">
+                    <field id="marair"></field>
+                    <field id="desair"></field>
+                </tabla_ex>
+                <actualiza>
+                    <field destino="marair" id="modair"/>
+                </actualiza>
+            </field>
+            <field id="modair">
+                <label size="23" posx="150" posy="0" modpos="nobr" PDFsize="10"></label>
+                <help></help>
+                <tabla_ex id="MODELAIR" vacio="true">
+                    <field id="modair"></field>
+                    <field id="moddes"></field>
+                    <field id="marair"></field>
+                </tabla_ex>
+
+            </field>
+
+            <!--			<field id="condensador">
+                                <label size="24" posx="110" posy="0" modpos="nobr" PDFsize="10">Condensador</label>
+                                <help>Condensador</help>
+                        </field>			-->
+                        <!--
+                        <field id="dat5" local="true">
+                                <label  size="200" posx="5" posy="+2" PDFsize="11" pdffill="150">Video</label>
+                        </field>
+
+                        <field id="previd">
+                                <label size="24" posx="5" posy="+1" PDFsize="10">Prep/Col.</label>
+                                <help></help>
+
+                                <options>
+                                        <option valor="0"></option>
+                                        <option valor="1">Preparado</option>
+                                        <option valor="2">Colocado</option>
+                                        <option valor="3">NO</option>
+
+                                </options>
+                        </field>
+                                -->
+<!--			<field id="gabinetes">
+                                <label size="23" posx="60" posy="0" modpos="nobr" PDFsize="10">gabinetes</label>
+                                <help></help>
+                        </field> -->
+
+<!--			<field id="colvid">
+                                <label size="24" posx="110" posy="0" modpos="nobr" PDFsize="10">Coloca Video</label>
+                                <help></help>
+                                <tipo>check</tipo>
+                        </field> -->
+                        <!--
+                        <field id="canttv">
+                                <label size="23" posx="60" posy="0" modpos="nobr" PDFsize="10">Cant.TV</label>
+                                <help></help>
+                        </field>
+                        <field id="tipotv">
+                                <label size="24" posx="110" posy="0" PDFsize="10">tipo.TV</label>
+                                <help></help>
+                                <options>
+                                        <option valor="-1"></option>
+                                        <option valor="0">Tubo</option>
+                                        <option valor="1">LCD</option>
+                                </options>
+                        </field>
+
+                        <field id="prvtv">
+                                <label size="23" posx="160" posy="0" modpos="nobr" colspan="4" PDFsize="10">Prov.TV</label>
+                                <help></help>
+                                <tabla_ex condes="true" id="PROVAUDIOVID" >
+                                        <field id="idprov"/>
+                                        <field id="nombre"/>
+                                </tabla_ex>
+                        </field>
+
+
+                        <field id="dat6" local="true">
+                                <label  size="200" posx="5" posy="+2" PDFsize="11" pdffill="150">Audio</label>
+                        </field>
+
+                        <field id="preaud">
+                                <label size="24" posx="5" posy="+1" PDFsize="10">Prep./Col.</label>
+                                <help></help>
+                                <options>
+                                        <option valor="0"></option>
+                                        <option valor="1">Preparado</option>
+                                        <option valor="2">Colocado</option>
+                                        <option valor="3">NO</option>
+                                </options>						</field>
+                        <field id="microf">
+                                <label modpos="nobr" size="23" posx="60" posy="0" PDFsize="10">Microfono</label>
+                                <help></help>
+                                <tipo>check</tipo>
+
+                        </field>
+                        <field id="jacks">
+                                <label  size="24" posx="110" posy="0" PDFsize="10">Jacks</label>
+                                <help></help>
+                                <size>1</size>
+                        </field>
+                        <field id="prvaudio">
+                                <label  colspan="4" size="23" posx="160" posy="0" PDFsize="10">Proveedor</label>
+                                <help></help>
+                                <tabla_ex condes="true" id="PROVAUDIOVID" >
+                                        <field id="idprov"/>
+                                        <field id="nombre"/>
+                                </tabla_ex>
+                        </field>
+                                -->
+
+<!--			<field id="colaud">
+                                <label modpos="nobr" size="24" posx="5" posy="+1" PDFsize="10">Colocado</label>
+                                <help></help>
+                                <tipo>check</tipo>
+                        </field> -->
+
+
+            <field id="dat7" local="true">
+                <label  size="200" posx="5" posy="+2" PDFsize="11" pdffill="150">Ventanas</label>
+            </field>
+            <field id="vtnmov">
+                <label size="24" posx="5" posy="+1" PDFsize="10">Movil x lado</label>
+                <help></help>
+                <helper type="combo" xml="prd_helper_propiedades.xml" dir="/produccion" emtpy="true">
+                    <field id="campoficha_id">
+                        <condicion operador="=">'cant_ventanas'</condicion>
+                    </field>
+                </helper>
+            </field>
+            <field id="tipvtn">
+                <label size="23" posx="60" posy="0" PDFsize="10" >Tipo Ventana</label>
+                <helper type="combo" xml="prd_helper_propiedades.xml" dir="/produccion" emtpy="true">
+                    <field id="campoficha_id">
+                        <condicion operador="=">'tipo_ventana'</condicion>
+                    </field>
+            </helper>			</field>
+            <field id="vtnpuerta">
+                <label size="23" posx="110" posy="0" PDFsize="10">Pta Ascenso</label>
+                <help></help>
+                <options>
+                    <option valor="0"></option>
+                    <option valor="1">Fija</option>
+                    <option valor="2">Movil</option>
+                </options>
+            </field>
+            <field id="luneta">
+                <label size="23" posx="160" posy="0" PDFsize="10" >Luneta</label>
+                <options>
+                    <option valor="0"></option>
+                    <option valor="1">Con Vidrio</option>
+                    <option valor="2">Ciega</option>
+                    <option valor="3">Sin definir</option>
+                </options>
+            </field>
+            <field id="dat8" local="true">
+                <label  size="100" posx="5" posy="+2" PDFsize="11" pdffill="150">Calefacción</label>
+            </field>
+
+            <field id="calefn">
+                <label size="24" posx="5" posy="+1" PDFsize="10">Calefaccion</label>
+                <help></help>
+                <options>
+                    <option valor="0">No</option>
+                    <option valor="1">Si</option>
+                </options>
+            </field>
+            <field id="tipcal">
+                <tabla_ex xml="tipcalef.xml" dir="/produccion"></tabla_ex>
+                <label size="23" posx="40" posy="0" modpos="nobr"  PDFsize="10"></label>
+                <help></help>
+
+            </field>
+            <field id="calcan">
+                <label size="24" posx="60" posy="0" modpos="nobr" PDFsize="10">Cant.</label>
+                <helper type="combo" xml="prd_helper_propiedades.xml" dir="/produccion" emtpy="true">
+                    <field id="campoficha_id">
+                        <condicion operador="=">'cant_calefactores'</condicion>
+                    </field>
+                </helper>
+            </field>
+
+            <field id="dat9" local="true">
+                <label  size="100" posx="5" posy="+2" PDFsize="11" pdffill="150">Tapizado</label>
+            </field>
+
+            <field id="pana">
+                <label colspan="8" size="24" posx="5" posy="+1" PDFsize="10">Centro Techo</label>
+                <help></help>
+                <pdfancho>78</pdfancho>
+
+            </field>
+            <field id="panaNom">
+                <expresion>TRIM(TRAILING '.jpg' from fotoPana)</expresion>
+                <label colspan="8" size="24" posx="5" posy="+1" PDFsize="10">Asiento</label>
+
+            </field>
+
+
+            <!--		<field id="colorPana" color="true">
+                                <label colspan="8"  posx="160" posy="0" >Muestra</label>
+                                <help></help>
+                                <size>2</size>
+                </field>  -->
+            <field id="corpath" local="true" noshow="true" print="false">
+                <expresion>CONCAT('/coches/', PEDCOTIZ.nrocha,'/corte/')</expresion>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="cortePint"  path="corpath" >
+                <label posx="119" posy="90"></label>
+                <tipo>file</tipo>
+                <size>82</size>
+
+            </field>
+
+
+
+            <field id="panpath" local="true" noshow="true" oculto="true">
+                <valor>'/archivo/Panas'</valor>
+            </field>
+            <field id="fotoPana" path="panpath" >
+                <label colspan="8"  posx="102" posy="95" ></label>
+                <help></help>
+                <tipo>file</tipo>
+                <size>18</size>
+
+            </field>
+            <field id="dat10" local="true">
+                <label  size="100" posx="5" posy="+2" PDFsize="11" pdffill="150">Pintura</label>
+            </field>
+            <!--			<field id="tippin">
+                                <label colspan="3" size="24" posx="5" posy="+1" PDFsize="10">Tipo Pint</label>
+                                <help></help>
+                                <size>20</size>
+                        </field>
+-->			
+
+
+<!--
+                        <field id="ctepin">
+                                <label size="24" posx="5" posy="+1" PDFsize="10">Corte</label>
+                                <help></help>
+                                <tipo>check</tipo>
+
+                        </field> -->
+            <field id="colorllantas">
+                <label modpos="nobr" size="23" posx="5" posy="+1" PDFsize="10">Color Llantas</label>
+                <help></help>
+                <size>10</size>
+                <options>
+                    <option valor="0">S/D</option>
+                    <option valor="1">Original</option>
+                    <option valor="2">Según corte pintura</option>
+                </options>
+
+            </field>
+            <field id="colorespej">
+                <label modpos="nobr" size="24" posx="60" posy="0" PDFsize="10">Color Espejos</label>
+                <help></help>
+                <size>10</size>
+            </field>
+
+            <field id="dat11" local="true">
+                <label  size="100" posx="5" posy="+2" PDFsize="11" pdffill="150">Carteles</label>
+            </field>
+            <field id="cartel">
+                <label size="24" posx="5" posy="+1" PDFsize="10">Cartel Ruta</label>
+                <help></help>
+                <options>
+                    <option valor="0"></option>
+                    <option valor="1">S/D</option>
+                    <option valor="2">No</option>
+                    <option valor="3">Si</option>
+                </options>
+            </field>
+            <field id="tipcartel">
+                <label modpos="nobr" size="23" posx="35" posy="0" PDFsize="10"></label>
+                <help></help>
+                <tabla_ex id="TIPOCARTEL" xml="tipocartel.xml" dir="/produccion">
+
+                </tabla_ex>
+                <size>40</size>
+
+            </field>
+            <field id="localidad">
+                <expresion>(case when localidades != '' then 'Si' else 'S/Def.' end)</expresion>
+                <label colspan="8" size="24" posx="60" posy="0" PDFsize="10">Localidades</label>
+                <help>Localidades</help>
+                <!--				<pdfancho>170</pdfancho>
+ -->
+            </field>
+            <field id="dat12" local="true">
+                <label  size="100" posx="5" posy="+1" PDFsize="11" pdffill="192">Accesorios y Observaciones</label>
+            </field>
+
+            <!--
+                        <field id="acces" obj="accesorios_coche_cons.xml" local="true" dir="/produccion/man/">
+                                <label size="24" posx="9" posy="+3" PDFsize="9"></label>
+                                <paring destino="nrofab" operador="=">nrocha</paring>
+                        </field> 		-->
+<!--			<field id="dat13" local="true">
+                                <label  size="200" posx="5" posy="+1" PDFsize="11" pdffill="150">Pedidos Especiales</label>
+                        </field>
+-->
+<!--			<field id="adic" obj="adicionales_coche_cons.xml" local="true" dir="/produccion/man/">
+                                <label size="24" posx="9" posy="+1" PDFsize="9"></label>
+                                <paring destino="nrofab" operador="=">nrocha</paring>
+                        </field>
+-->
+<!--			<field id="obsesp">
+                                <label colspan="6" size="24" posx="5" posy="+1" PDFsize="10">Observ.</label>
+                                <help></help>
+                                <pdfancho>170</pdfancho>
+                                <size>180</size>
+                        </field>
+                         -->
+            <field id="showprecios" noshow="true" oculto="true" local="true">
+            </field>
+
+            <field id="observ"  obj="accesorios_coche.xml" dir="/produccion/man" local="true">
+                <label colspan="6" size="24" posx="9" posy="+2" PDFsize="9" PDFnolabel="true">Accesorios y Observaciones</label>
+                <paring destino="ficha_id" operador="=">id</paring>
+                <paring destino="nrofab" operador="=">nrocha</paring>
+                <paring destino="showprecios" operador="=">showprecios</paring>
+
+
+            </field>
+            <field id="cotizado"  obj="accesorios_coche_cotizacion.xml" local="true" dir="/produccion/man/">
+                <label colspan="6" size="24" posx="9" posy="+2" PDFsize="9" >Ofrecidos en Cotizacion</label>
+                <paring destino="nrofab" operador="=">nrocha</paring>
+            </field>
+
+
+
+            <!--
+                        <field id="NroCotiz" obj="cotizacion/cotizotros_cons.xml">
+                            <expresion>TURNOSPRODUCCION.idCotiz</expresion>
+                            <tipo>integer</tipo>
+                            <label colspan="6" size="24" posx="9" posy="+3" PDFsize="9" >Adicionales Ofrecidos en Cotizacion</label>
+                                <paring destino="idCotiz"  >NroCotiz</paring>
+
+                        </field>
+                        -->
+
+                        <!--
+                        <field id="arruga">
+                                <label>Arrugado</label>
+                                <help></help>
+
+                                <tipo>check</tipo>
+                        </field>
+                        <field id="calobs">
+                                <label>Obs.Calef.</label>
+                                <help></help>
+                        </field>
+
+                        <field id="cerrad">
+                                <label>Cerradura</label>
+                                <help></help>
+                                <options>
+                                        <option valor="0">No</option>
+                                        <option valor="1">Si</option>
+                                </options>
+
+                        </field>
+                        <field id="colcor">
+                                <label>Color cortina</label>
+                                <help></help>
+                                <tabla_ex xml="Colores.xml" dir="/producto/man" ></tabla_ex>
+                        </field>
+                        <field id="colint">
+                                <label>Color</label>
+                                <help></help>
+                                <tabla_ex xml="Colores.xml"></tabla_ex>
+
+                        </field>
+                        <field id="contacto">
+                                <label>Contacto</label>
+                                <help></help>
+                        </field>
+                        <field id="cortina">
+                                <label>Cortina</label>
+                                <help></help>
+                        </field>
+                        <field id="equipa">
+                                <label>Equipam.</label>
+                                <help></help>
+                        </field>
+                        <field id="habili">
+                                <label>Habilitacion</label>
+                                <help></help>
+                        </field>
+                        <field id="maresp">
+                                <label>Marca Espejo</label>
+                                <help></help>
+                                <tabla_ex xml="marcaesp.xml"></tabla_ex>
+                        </field>
+
+
+                        <field id="paqluz">
+                                <label>Luces PP</label>
+                                <help></help>
+                        </field>
+                        <field id="porpaq">
+                                <label>Porta Paquete</label>
+                                <help></help>
+                                <options>
+                                        <option valor="0">No</option>
+                                        <option valor="1">Si</option>
+                                </options>
+
+                        </field>
+                        <field id="prvcod">
+                                <label>Provincia</label>
+                                <help></help>
+                        </field>
+                        <field id="ptabga">
+                                <label>Puerta Bodega</label>
+                                <help></help>
+                                <tabla_ex xml="tipopuer.xml" dir="/produccion"></tabla_ex>
+                        </field>
+                        <field id="reloj">
+                                <label>Reloj</label>
+                                <help></help>
+                                <options>
+                                        <option valor="0">No</option>
+                                        <option valor="1">Si</option>
+                                </options>
+                        </field>
+                        <field id="revfec">
+                                <label>RevFec</label>
+                                <help></help>
+                        </field>
+                        <field id="revnro">
+                                <label>Rev.</label>
+                                <help></help>
+                        </field>
+                        <field id="siscod" oculto="true">
+                                <label>Codigo Sistema..</label>
+                                <help></help>
+                        </field>
+                        <field id="tipcor">
+                                <label>Tipo Cortina</label>
+                                <help></help>
+                                <tabla_ex xml="tipocort.xml" dir="/produccion"></tabla_ex>
+                        </field>
+                        <field id="tipesp">
+                                <label>Tipo Espejo</label>
+                                <help></help>
+                                <tabla_ex xml="tipoespj.xml" dir="/produccion"></tabla_ex>
+                        </field>
+                        <field id="tippta">
+                                <label>Tipo puerta</label>
+                                <help></help>
+                        </field>
+ -->
+        </table>
+        <join tipo="left">
+            <table id="CHASIS">
+                <field id="nrocha">
+                    <condicion operador="=">PEDCOTIZ.nrocha</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="CCTCUENT">
+                <field id="siscod" oculto="true">
+                    <condicion operador="=">'02'</condicion>
+                </field>
+
+                <field id="ctacod">
+                    <condicion operador="=">PEDCOTIZ.ctacod</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="CCTCONTA">
+                <field id="siscod" oculto="true">
+                    <condicion operador="=">CCTCUENT.siscod</condicion>
+                </field>
+
+                <field id="ctacod">
+                    <condicion operador="=">PEDCOTIZ.ctacod</condicion>
+                </field>
+                <field id="idconta">
+                    <condicion operador="=">PEDCOTIZ.idconta</condicion>
+                </field>
+
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="MODCHASIS">
+                <field clave="true" id="modcha">
+                    <condicion operador="=">CHASIS.modcod</condicion>
+
+                </field>
+                <field id="marcod">
+                    <condicion operador="=">CHASIS.marcod</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="TURNOSPRODUCCION">
+                <field id="nrofab">
+                    <condicion operador="=">PEDCOTIZ.nrocha</condicion>
+
+                </field>
+            </table>
+        </join>
+    </consulta>
+</histrix>

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+<title>Atributos</title>
+<obs></obs>
+<form >
+    <table id="PRODUCTO_ATRIB_OPCIONES">
+        <title>Seccion</title>
+	<fieldGroup style="font-size:24px;">
+        <field id="valor_opcion">
+            <label >Valor de la opcion</label>
+            <help>posible valor de la opcion</help>
+            <size>10</size>
+            <condicion operador="=">((case when '[__cotizacion_id__]' = '' or '[__cotizacion_id__]' = 0 then PRODUCTO_ATRIB_OPCIONES.valor_opcion else ifnull((select valor_atributo from PRODUCTO_ATRIB_VALORES PAV where PAV.prdatributo_id = PRODUCTO_ATRIB_OPCIONES.prdatributo_id and PAV.cotizacion_id = '[__cotizacion_id__]'), PRODUCTO_ATRIB_OPCIONES.valor_opcion) end))</condicion>
+        </field>
+
+        <field id="nombre_opcion">
+            <label _modpos="nobr">Descripcion de la opcion</label>
+            <help>Descripcion de la opcion</help>
+            <size>40</size>
+        </field>
+        
+        <field id="cotizacion_id" local="true" noshow="true">
+            <label>Cotiz.</label>
+        </field>
+
+        <field id="id_atribopcion" autoinc="true" noshow="true"/>        
+
+        <field id="prdatributo_id" noshow="true"/>
+        
+	</fieldGroup>
+    </table>
+</form>	   
+</histrix>

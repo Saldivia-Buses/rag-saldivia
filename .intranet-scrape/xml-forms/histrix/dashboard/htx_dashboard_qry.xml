@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+  <title>Dashboard</title>
+  <form>
+    <table id="HTX_DASHBOARD">
+      <fieldGroup>
+        <field id="id_dash" autoinc="true" noshow="true">
+		</field>
+        <field id="group_dash" noshow="true">
+        </field>
+        <field id="enable_dash" noshow="true">
+          <condicion operador="=">1</condicion>
+        </field>
+        <field id="title_dash" style="font-size:1.5em;">
+          <label>Título</label>
+        </field>
+        <field id="unit_dash">
+          <label>Unidad</label>
+        </field>
+        <field id="objective_dash" style="font-size:1.5em;">
+          <label>Objetivo</label>
+        </field>
+        <field id="formula_dash" noshow="true">
+          <label>Formula</label>
+          <size>200</size>
+        </field>
+        <field id="ID_FACTURAS" noshow="true">
+          <expression>(select option_value from HTXOPTIONS where option_name ='ID_FACTURAS')</expression>
+        </field>
+      </fieldGroup>
+      <fieldGroup repeat="12">
+        <field id="fecha_ini" local="true" noshow="true">
+          <label>Fecha_ini</label>
+          <if exp="true">
+            <true>date('Y-'.str_pad(__repeat__,2,'0', STR_PAD_LEFT).'-01')</true>
+            <false>0</false>
+          </if>
+          <tipo>date</tipo>
+        </field>
+        <field id="fecha_fin" local="true" noshow="true">
+          <label>Fecha_fin</label>
+          <if exp="true">
+            <true>date('Y-m-t', strtotime(date('Y-'.str_pad(__repeat__,2,'0', STR_PAD_LEFT).'-01')))</true>
+            <false>0</false>
+          </if>
+          <tipo>date</tipo>
+        </field>
+        <field id="For" local="true" noshow="true">
+          <if exp="true">
+            <true>'formula_dash'</true>
+            <false>0</false>
+          </if>
+          <size>200</size>
+        </field>
+        <field id="ver" noZero="true" _style="font-size:1.5em;">
+          <label>Mes</label>
+          <expression sql="true">[__For___repeat____]</expression>
+          <tipo>numeric</tipo>
+        </field>
+      </fieldGroup>
+      <order>
+        <field id="group_dash"/>
+      </order>
+    </table>
+  </form>
+</histrix>

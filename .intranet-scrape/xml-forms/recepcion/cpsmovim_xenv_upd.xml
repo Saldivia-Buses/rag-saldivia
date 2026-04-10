@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+	<histrix tipo="update" >
+		<title>MOVIMIENTOS DE orden compras</title>
+		<obs></obs>
+		<form >
+			<table id="CPSMOVIM" label="MOVIMIENTOS" idCampoCond="grabo">
+				<field id="id_cpsmovim" id_temp="id_cpsmovim" esClave="true">
+				</field>
+				
+				<field id="artcod" id_temp="artcod" >
+					<label>artcod</label>
+				</field>
+				<!--  VER COMO GRABAR ESTO
+				<field id="penuso" id_temp="penuso">
+					<label>Pend</label>
+				</field>
+				-->
+				<field id="pencps" id_temp="pencps">
+					<label>Pendiente</label>
+				</field>
+				<field id="ocpren" id_temp="ocpren">
+					<label>Nro </label>
+				</field>
+
+				<field id="ocpnro" id_temp="ocpnro">
+					<label>Nro </label>
+				</field>
+			</table>
+		</form>
+	</histrix>

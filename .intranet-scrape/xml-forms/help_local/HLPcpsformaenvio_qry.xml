@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+    <title>Formas de envío</title>
+    <obs></obs>
+    <form>
+        <table id="CPS_FORMAENVIO" label="Forma envío">
+            <field id="id_cpsformaenvio" />
+
+            <field id="nombre_cpsformaenvio">
+                                <detalle>nombre_cpsformaenvio</detalle>
+            </field>
+
+        </table>
+    </form>
+</histrix>

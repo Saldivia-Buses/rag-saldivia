@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="grid" _PDFsincabecera="true"  _sololectura="true" _autoprint="true" _PDFfontSize="12" >
+  <title>FACTURA</title>
+  <obs></obs>
+  <form >
+     <table id="STK_MOVIMIENTOS" label="FACTURA">
+      <field id="regcuenta_id" noshow="true" print="false">
+        <label>Cuenta</label>
+      </field>
+      <field id="nombre_concepto" tabla="STK_CONCEPTOS" noshow="true">
+		<label>Comprobante</label>
+      </field>
+      <field id="numero_movimiento" noshow="true">
+           <label>Nº</label>
+      </field>
+      <field id="fecha_movimiento" noshow="true">
+        <label>Fecha</label>
+        <help>Fecha movimiento</help>
+	<tipo>date</tipo>
+      </field>
+      <field id="stkarticulo_id">
+    	<label>Cod.Art.</label>
+  	  </field>
+  	  <field id="nombre_articulo" tabla="STK_ARTICULOS">
+  		<label>Descripción</label>
+  	  </field>
+	  <field id="cantidad" suma="true">
+		<label>Cantidad</label>
+	  </field>
+	  <!--
+	  <field id="precio_costo">
+		<label>Precio Costo</label>
+	  </field>
+	  
+	  <field id="precio_venta">
+		<label>Precio Venta</label>
+	  </field>
+	  -->
+	  <field id="stkconcepto_id" print="false" />     
+
+
+	  <order>
+		<field id="orden_movimiento" />
+	  </order>
+      
+	</table>
+		<join tipo="left">
+			<table id="STK_CONCEPTOS">
+			    <field id="id_stkconcepto">
+				  <condicion operador="=">stkconcepto_id</condicion>
+    			</field>
+			</table>
+		</join>
+		<join tipo="left">
+		    <table id="REG_CUENTA">
+				<field id="id_regcuenta">
+				  <condicion operador="=">regcuenta_id</condicion>
+			    </field>
+			</table>
+		</join>                  
+		<join tipo="left">
+			<table id="STK_ARTICULOS">
+			    <field id="id_stkarticulo">
+				  <condicion operador="=">STK_MOVIMIENTOS.stkarticulo_id</condicion>
+    			</field>
+			</table>                  
+		</join>                          
+  </form>
+</histrix>  

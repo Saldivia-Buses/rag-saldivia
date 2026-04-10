@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ficha" borra="false" cancelar="false" imprime="false">
+	<title>FICHA PERSONAL</title>
+	<obs/>
+	<form >
+		<table id="PERSONAL" label="Ficha Personal">
+			
+			<field deshabilitado="true" id="IdPersona" noshow="true">
+				<label>Cuenta</label>
+				<help>Codigo de Cuenta</help>
+				<valor>0</valor>
+				<tipo>varchar</tipo>
+	 		</field>
+			<field id="legajo" deshabilitado="true">
+				<label>Legajo</label>
+				<help>Numero de Legajo</help>
+				<tipo>varchar</tipo>
+
+			</field>
+			<field id="nom" deshabilitado="true">
+				<label>Nombre</label>
+				<expression>CONCAT(apellido, ', ', PERSONAL.Nombre)</expression>
+				<tipo>varchar</tipo>
+			</field>			
+			<field id="alias" deshabilitado="true">
+				<label modpos="nobr">Alias</label>
+				<help>Apodo</help>
+				<size>20</size>
+			</field>
+			<field id="nacimiento" deshabilitado="true">
+				<label>Fecha Nac</label>
+				<help>Fecha de Nacimiento</help>
+			</field>
+			<field id="nacionalidad" deshabilitado="true">
+				<tabla_ex id="NACIONALIDAD" xml="nacionalidad.xml"/>
+				<label modpos="nobr">Nacionalidad</label>
+				<help>Nacionalidad</help>
+			</field>
+			
+			<field id="doc" deshabilitado="true">
+				<expression>DNI</expression>
+				<label>D.N.I.</label>
+				<help>Numero de Documento Nacional de Identidad</help>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="afip" deshabilitado="true">
+				<expression>CUIL</expression>
+				
+				<label modpos="nobr">C.U.I.L.</label>
+				<help>Numero de Clave Unica de Identificacion Laboral</help>
+				<tipo>varchar</tipo>
+				
+			</field>
+			<field id="estadocivil" deshabilitado="true">
+				<tabla_ex id="ESTADOCIVIL" xml="estadocivil.xml"/>
+				<label >Estado Civil</label>
+				<help>Estado Civil</help>
+			</field>
+			<field id="rnos" deshabilitado="true">
+				<tabla_ex id="OBRASOCIAL">
+					<field id="rnos"></field>
+					<field id="siglo">
+					<expression>concat(rnos,"-",sigla)</expression>
+					</field>
+				</tabla_ex>
+
+				<label modpos="nobr">Obra Social</label>
+				<help>Obra Social</help>
+			</field>
+			<field id="direccion" deshabilitado="true">
+				<label>Direccion</label>
+				<expression>CONCAT(calle,' Nro:',numero, ' Piso:',piso,' Dto.', depto)</expression>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="localidad" deshabilitado="true">
+				<expression>CONCAT(LOCALIDADES.nombre, ' - ', prvnom)</expression>
+				<label modpos="nobr" colspan="3">Localidad</label>
+				<help>Localidad</help>
+			</field>
+			
+<!--			<field id="calle">
+				<label>Calle</label>
+				<help/>
+			</field>
+			<field id="numero">
+				<label modpos="nobr">Numero</label>
+				<help>Numero</help>
+			</field>
+			<field id="piso">
+				<label modpos="nobr">Piso</label>
+				<help>Piso</help>
+			</field>
+			<field id="depto" >
+				<label modpos="nobr">Depto</label>
+				<help>Departamento</help>
+			</field> -->
+			<field id="telefono" deshabilitado="true">
+				<label>Telefono Fijo</label>
+				<help>Numero de Telefono Fijo</help>
+				<tipo>varchar</tipo>
+				
+			</field>
+			<field id="celular" deshabilitado="true">
+				<label modpos="nobr">Celular</label>
+				<help>Numero de Celular</help>
+			</field>
+
+			<field id="fecing" deshabilitado="true">
+				<label>Fecha de Ingreso</label>
+				<help/>
+			</field>
+			<field id="idJornada" deshabilitado="true">
+				<helper xml="jornadas.xml" dir="/personal/man/" type="combo" />
+
+				<label modpos="nobr">Horario</label>
+				<help>Horario</help>
+			</field>
+			<field id="fechaEgreso" deshabilitado="true">
+				<label>Fecha de Egreso</label>
+			</field>
+			<field id="idMotivo">
+				<label modpos="nobr">Motivo</label>
+				<tabla_ex xml="motivosegreso.xml" vacio="true">
+				</tabla_ex>
+			</field>			
+<!--			<field id="foto">
+				<label>Foto</label>
+				<help>Foto</help>
+			</field>
+			<field id="login">
+				<label modpos="nobr">Login</label>
+				<help></help>
+			</field> -->
+			<field id="tarjeta" deshabilitado="true">
+				<label >Tarjeta</label>
+				<help></help>
+			</field>
+			<field id="nomsind" deshabilitado="true">
+				<expression>SINDICATO.Nombre</expression>
+				<label modpos="nobr">Sindicato</label>
+				<help>Nombre del Sindicato</help>
+				<tipo>varchar</tipo>
+				
+			</field>	
+
+
+			<field id="IdCateg2" deshabilitado="true">
+				<label  >Categoria.</label>
+				<expression>select descripcion from CATEGHISTORIA left join CATPERSONAL on CATPERSONAL.IdSindicato = CATEGHISTORIA.idSindicato and CATPERSONAL.IdCateg = CATEGHISTORIA.IdCateg where CATEGHISTORIA.IdPersona = PERSONAL.IdPersona order by CATEGHISTORIA.fechaDesde desc limit 1</expression>
+				<tipo>varchar</tipo>
+
+			</field>
+
+<!--
+			<field id="id_seccion">
+				<label modpos="nobr">Seccion</label>
+				<help>Seccion Personal</help>
+				<expression>select nombre from SECCIONHISTORIA left join SECCION on SECCION.id_seccion = SECCIONHISTORIA.id_seccion where SECCIONHISTORIA.IdPersona = PERSONAL.IdPersona order by SECCIONHISTORIA.fechaDesde desc limit 1</expression>
+			</field> -->
+
+			<field id="seccionnom" deshabilitado="true">
+				<expression>SECCION.nombre</expression>
+				<label modpos="nobr">Sección</label>
+				<help>Sección</help>
+				<tipo>varchar</tipo>
+			</field>
+<!--
+			<field id="Id_perfil">
+				<label >Perfil</label>
+				<help>Perfil</help>
+			</field>
+			<field id="Id_usuario">
+				<label modpos="nobr">Usuario</label>
+				<help>Usuario</help>
+			</field> -->
+<!--			<field id="opecod">
+				<label >Cod.Operario</label>
+				<help>Cod.Operario</help>
+			</field> -->
+<!--			<field id="familia" local="true" obj="familia.xml">
+				<label colspan="10"/>
+				<paring destino="IdPersona">IdPersona</paring>
+			</field>
+			<field id="accidentes" local="true" obj="accidente_per_int.xml" dir="/personal/man/">
+				<label colspan="10"/>
+				<paring destino="IdPersona">IdPersona</paring>
+				<paring destino="legajo">legajo</paring>
+			</field>
+			<field id="francos" local="true" obj="francos_per_int.xml">
+				<label colspan="10"/>
+				<paring destino="IdPersona">IdPersona</paring>
+				<paring destino="legajo">legajo</paring>
+			</field>
+			<field id="seccioneshist" local="true" obj="seccion_hist_int.xml" dir="/personal/man/" >
+				<label colspan="10"/>
+				<paring destino="IdPersona">IdPersona</paring>
+			</field>
+			<field id="categshist" local="true" obj="categ_hist_int.xml">
+				<label colspan="10"/>
+				<paring destino="IdPersona">IdPersona</paring>
+			</field>
+			-->
+
+			<field id="notas">
+                <label>Notas</label>
+                <size>200</size>
+            </field>
+
+		</table>
+		<join tipo="left">
+			<table id="FSMPROVS">
+				<field id="prvcod" >
+					<condicion operador="=">PERSONAL.idProvincia</condicion>
+				</field>
+			</table>
+		</join>		
+		<join tipo="left">
+			<table id="LOCALIDADES" vacio="true">
+				<field id="idLocalidad" >
+					<condicion operador="=">PERSONAL.localidad</condicion>
+				</field>
+				<field id="idProvincia" >
+					<condicion operador="=">PERSONAL.idProvincia</condicion>
+				</field>
+			</table>
+		</join>		
+		<join tipo="left">
+			<table id="SINDICATO">
+			<field id="IdSindicato">
+				<condicion operador="=">PERSONAL.IdSindicato</condicion>
+			</field>
+		    </table>
+		</join>
+		<join tipo="left">
+			<table id="SECCION">
+			<field id="id_seccion">
+				<condicion operador="=">PERSONAL.id_seccion</condicion>
+			</field>
+		    </table>
+		</join>			
+	</form>
+</histrix>

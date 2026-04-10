@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" paginar="200" inserta="false" modifica="false" borra="false">
+    <title>CONSULTA DE PEDIDOS DE FABRICACION</title>
+    <form  >
+    
+        <table id="PEDCOTIZ" label="Pedido de Fabricacion">
+    	    <filters>
+	        <field id="nrocha"  >
+    	            <label>Nro Fab</label>
+    		    <help>Numero de Fabricacion</help>
+    		    <operador>=</operador>
+        	</field>
+        	<!--
+                <field id="cctlinea_id">
+	        	<label>Linea </label>
+        	    <helper type="combo" xml="cct_cliente_linea.xml" dir="/clientes_local" empty="true"/>
+    		    <operador>=</operador>
+
+                </field>
+    	            -->
+    	    </filters>
+    	    <movimientos>
+    	      <relacion id="fichaventas_duplicar_ins.xml" />
+    	    </movimientos>
+    	    <field id="login" local="true" noshow="true">
+                <valor eval="true">$_SESSION['login']</valor>
+    	    </field>
+            <field id="id" noshow="true">
+                <detalle>ficha_id</detalle>
+                <detalle>id</detalle>
+            </field>
+            <field id="nrocha"  tipoOrden="DESC" deshabilitado="true">
+                <label>Nro Fab</label>
+                <help>Numero de Fabricacion</help>
+            </field>
+            <!--
+            <field id="OF" esClave="true" deshabilitado="true">
+                <label>OF</label>
+                <formato>%06s</formato>
+            </field>
+                -->
+            <field id="ctacod" deshabilitado="true">
+                <label PDFsize="12" posx="6" posy="+1" size="23">Cliente</label>
+                <help>Codigo de Cuenta</help>
+                <tabla_ex condes="true" id="CCTCUENT">
+                    <field id="ctacod"/>
+                    <field id="ctafan"/>
+                    <field id="siscod" oculto="true">
+                        <condicion operador="=">'02'</condicion>
+                    </field>
+                </tabla_ex>
+            </field>
+            <field id="nrocar" deshabilitado="true">
+                <label size="23" posx="110" posy="0" PDFsize="10">Carroceria</label>
+                <help></help>
+                <tabla_ex xml="carroceria.xml">
+                    <field id="siscod" oculto="true">
+                        <condicion operador="=">'03'</condicion>
+                    </field>
+                </tabla_ex>
+            </field>
+            <!--
+            <field id="cctlinea_id" deshabilitado="true">
+            	<label>Linea </label>
+        	    <helper type="combo" xml="cct_lineas.xml" dir="/clientes_local" empty="true"/>
+            </field>
+                       -->
+            <field id="ninterno" deshabilitado="true">
+                <label  size="23" posx="160" posy="0" PDFsize="10"  colspan="2">Interno</label>
+                <help></help>
+            </field>
+			
+            <field id="marcod" tabla="CHASIS" deshabilitado="true">
+                <label PDFsize="10" posx="6" posy="+2" size="23">Chasis Marca</label>
+                <help/>
+                <tabla_ex xml="marchasis.xml">
+                    <field id="siscod" oculto="true">
+                        <condicion operador="=">'03'</condicion>
+                    </field>
+                </tabla_ex>
+                <tipo>integer</tipo>
+            </field>
+            <field id="moddes" tabla="MODCHASIS" deshabilitado="true">
+                <label size="23" posx="60" posy="0" modpos="nobr" PDFsize="10">Modelo</label>
+                <help></help>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="marco" local="true" refresh="true">
+        	<tipo>check</tipo>
+            </field>
+
+            <field id="duplicar" local="true" noshow="true">
+        	<if exp="marco != 0">
+        	    <true>'true'</true>
+        	    <false>0</false>
+        	</if>
+            </field>
+            
+            <order>
+                <field id="nrocha" tabla="PEDCOTIZ"/>
+            </order>
+        </table>
+        <join tipo="left">
+            <table id="CHASIS">
+                <field id="nrocha">
+                    <condicion operador="=">PEDCOTIZ.nrocha</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="MODCHASIS">
+                <field clave="true" id="modcha">
+                    <condicion operador="=">CHASIS.modcod</condicion>
+
+                </field>
+                <field id="marcod">
+                    <condicion operador="=">CHASIS.marcod</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix>

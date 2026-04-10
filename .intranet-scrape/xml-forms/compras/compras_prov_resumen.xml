@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" limit="2" preloadData="false">
+  <title>Insumos</title>
+  <obs></obs>
+  <form  >
+    <table id="CPSMOVIM">
+    <title>Ultima Compra del Insumo</title>
+<!--
+    <field id="siscod" oculto="true">
+	<label>siscod</label>
+	<condicion operador="=">'01'</condicion>
+    </field>
+-->
+    <field id="artcod" deshabilitado="true" _noshow="true">
+	<label>Art.</label>
+    </field>
+
+    <field id="artcod2" deshabilitado="true" noshow="true">
+	<expression having="false">artcod</expression>
+	<condicion operador="!=">''</condicion>
+	<label>Art.</label>
+    </field>
+
+    <field id="ctacod" deshabilitado="true" >
+	<expression>CPSENCAB.ctacod</expression>
+	<label>Prov.</label>
+    </field>
+    <field id="ctanom" deshabilitado="true" tabla="CCTCUENT">
+	<label>Nombre</label>
+	<tipo>varchar</tipo>
+    </field>
+    <field id="artcos" deshabilitado="true">
+	<label>Costo</label>
+    </field>
+
+    <field id="_ORDEN" local="true" noshow="true"/>
+
+    <field id="count" local="true" noshow="true">
+    <if exp="_ORDEN == 1">
+        <true>'1'</true>
+        <false>'1'</false>
+    </if>
+    </field>
+
+    <field id="moneda_id" tabla="STK_COSTO_REPOSICION" noshow="true" />
+
+    <field id="costo_proveedor" tabla="STK_COSTO_REPOSICION" noshow="true" />
+
+    <field id="gasto_importacion" tabla="STK_COSTO_REPOSICION" noshow="true" />
+
+    <field id="flete_local_ars" tabla="STK_COSTO_REPOSICION" noshow="true" />
+
+    <field id="regcuenta_id" tabla="STK_COSTO_REPOSICION" noshow="true" />
+
+    <field id="cotiz" noshow="true">
+	<expression sql="true">select if('[__count__]' = 1, (@cotiz:=(select cotizacion_genmonedahis from GEN_MONEDA_HIS where GEN_MONEDA_HIS.moneda_id = '[__moneda_id__]' order by fecha_genmonedahis DESC limit 1)), 0)</expression>
+    </field>
+
+    <field id="prov" style="color:blue;">
+        <label>P.Repo</label>
+        <expression><![CDATA[IFNULL((SELECT PROV.nombre_cuenta FROM REG_CUENTA PROV WHERE PROV.id_regcuenta = STK_COSTO_REPOSICION.regcuenta_id LIMIT 1),'')]]></expression>
+        <tipo>varchar</tipo>
+    </field>
+
+    <field id="resposicion" style="color:blue;">
+	<label>C.Repo</label>
+        <expression sql="true">select if('[__count__]' = 1,(round(@cotiz * ('[__costo_proveedor__]' + ('[__costo_proveedor__]' / 100 * '[__gasto_importacion__]')) + ('[__flete_local_ars__]' / @cotiz), 2)), 0)</expression>
+	<tipo>custom_numeric</tipo>
+    </field>
+
+    <field id="bonificacion_1" >
+	<label>Bonif 1</label>
+    </field>
+    <field id="bonificacion_2" >
+	<label>Bonif 2</label>
+    </field>
+
+    <field id="importe_total" deshabilitado="true">
+	<label>Total</label>
+    </field>
+
+    <field id="ocpnro">
+	<label>Número</label>
+
+    </field>
+
+    <field id="ocpfec">
+	<expression>ocpfec</expression>
+	<tipo>date</tipo>
+    </field>
+<!--    <group>
+	<field id="ctacod" />
+    </group> -->
+    <order>
+        <field id="ocpfec" orderType="DESC"/>
+	<tipo>date</tipo>
+    </order>
+</table>
+<join tipo="left">
+    <table id="STK_COSTO_REPOSICION">
+	<field id="stkarticulo_id" >
+	    <condicion operador="=">CPSMOVIM.artcod</condicion>
+	</field>
+    </table>
+
+</join>
+<join tipo="left">
+    <table id="CPSENCAB">
+	<field id="ocpnro" oculto="true">
+	    <condicion operador="=">CPSMOVIM.ocpnro</condicion>
+	</field>
+    </table>
+</join>
+<join tipo="left">
+    <table id="CCTCUENT">
+	<field id="ctacod" >
+	    <condicion operador="=">CPSENCAB.ctacod</condicion>
+	</field>
+	<field id="siscod" >
+	    <condicion operador="=">'01'</condicion>
+	</field>
+    </table>
+</join>
+</form>
+
+
+
+</histrix>

@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="calendar" calendarAspectRatio="1.7" inserta="false" modifica="false" imprime="false" borra="false">  
+  <title>Cumpleaños</title>
+  <obs></obs>   
+  <form>
+    <table id="REG_CUENTAS_CONTACTOS" label="Cumpleaños">       
+
+    <filters>  
+      <field id="contacto_id">
+        <label>Tipo Contacto</label>
+        <operador>=</operador>
+        <valor>12</valor>
+      </field>
+    </filters>
+
+    <field id="id_regcontacto" noshow="true" calendarId="true" />
+
+    <field id="regcuenta_id" noshow="true" />
+
+    <field id="subsistema_id" tabla="REG_CUENTA" noshow="true" />
+        
+    <field id="valor" noshow="true">
+      <label>Fecha</label>
+      <tipo>date</tipo>
+    </field>
+
+    <field id="contacto_id">
+      <helper type="combo" xml="contactos_qry.xml" dir="/ayudas" empty="true">
+        <field id="catcontacto_id" noshow="true">
+          <condicion operador="=">
+            (select option_value from HTXOPTIONS WHERE option_name = 'HTX::GENCATCON::FECHAS' LIMIT 1)
+          </condicion>
+        </field>
+      </helper>
+    </field>
+
+    <field id="nro_cuenta" tabla="REG_CUENTA">
+      <label>Nro Cuenta</label>
+    </field>
+
+    <field id="asunto" calendarSubject="true" noshow="true">
+      <label>Nombre OT</label>
+      <expression>CONCAT((case when CONCAT(REG_CUENTA.nombre_cuenta,' ',REG_CUENTA.apellido_cuenta) = '' then razon_social else CONCAT(REG_CUENTA.nombre_cuenta,' ',REG_CUENTA.apellido_cuenta) end),' - ', GEN_TIPO_CONTACTOS.tipo_contacto)</expression>
+    </field>   
+
+    <field id="color" calendarColor="true" noshow="true">
+      <expression>case when contacto_id = 12 then '#B15E6B' else '' end</expression>
+    </field>   
+      
+    <field id="rrule" calendarRecurringRule="true">
+      <expression>case when contacto_id = 12 then concat('RRULE:FREQ=YEARLY;BYMONTH=',month(REG_CUENTAS_CONTACTOS.valor),';BYMONTHDAY=',day(REG_CUENTAS_CONTACTOS.valor)) else '' end</expression>
+    </field>
+
+    </table>
+
+    <join>
+      <table id="REG_CUENTA">
+        <field id="id_regcuenta">
+          <condicion operador="=">REG_CUENTAS_CONTACTOS.regcuenta_id</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join tipo="left">
+      <table id="GEN_SUBSISTEMAS">
+        <field id="id_subsistema">
+          <condicion operador="=">REG_CUENTA.subsistema_id</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join>
+      <table id="GEN_TIPO_CONTACTOS">
+        <field id="id_contacto">
+          <condicion operador="=">REG_CUENTAS_CONTACTOS.contacto_id</condicion>
+        </field>
+      </table>
+    </join>
+
+  </form>
+</histrix>

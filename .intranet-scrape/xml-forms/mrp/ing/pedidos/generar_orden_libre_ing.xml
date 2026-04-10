@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="fichaing" inserta="false" borra="false" modifica="false" imprime="false" tooltip="false" confirma="CONFIRMAR" transaccional="true" processFirst="true" log="false">
+	<title>Cta Ctes</title>
+	<obs/>
+	<form>
+		<table id="STK_ARTICULOS">
+
+			<validation>
+				<condition><![CDATA[regcuenta_cliente_id + 0 == 0]]></condition>
+				<message>Ingrese un cliente</message>
+			</validation>
+
+			<validation>
+				<condition><![CDATA[cantidad_total + 0 == 0]]></condition>
+				<message>Ingrese el detalle de la orden</message>
+			</validation>
+
+			<validation>
+				<condition><![CDATA[mrppath_id + 0 == 0]]></condition>
+				<message>Ingrese el proceso correspondiente de la orden</message>
+			</validation>
+
+			<movimientos>
+				<relacion id="mrp_orden_insert.xml" />
+				<relacion id="mrp_impresion_insert.xml" />
+			</movimientos>      
+
+			<fieldGroup>  	           
+				<field id="fecha_orden" local="true">
+					<label>Fecha</label>
+					<tipo>date</tipo>
+					<valor>today</valor>
+				</field>
+
+				<field id="numero_orden">
+					<label>Nro</label>
+					<expression sql="true">select ifnull(max(numero_orden), 0) + 1 from MRP_ORDEN_PRODUCCION where MRP_ORDEN_PRODUCCION.mrporden_concepto_id = 1 and scv_ID = 0</expression>
+				</field>
+
+				<field id="mrporden_concepto_id" local="true" noshow="true">
+					<valor>1</valor>
+				</field>
+
+				<field id="impresion" local="true" noshow="true">
+					<valor>/mrp/qry/mrpordenproduccion_print.xml</valor>
+				</field>
+
+				<field id="impresion_etiqueta" local="true" noshow="true">
+					<valor>/mrp/qry/mrpordenproduccion_etiqueta_print.xml</valor>
+				</field>
+
+				<field id="scvtco_Cod" local="true" noshow="true">
+					<valor>'NP'</valor>
+				</field>
+
+				<field id="nro_cuenta" local="true">
+					<label>Cliente</label>
+					<helper type="external" xml="regcuenta_solamente_nro_qry.xml" dir="/ayudas">
+						<field id="subsistema_id" oculto="true" />
+						<field id="id_regcuenta" oculto="true">
+							<detalle>regcuenta_cliente_id</detalle>
+						</field>
+						<order>
+							<field id="nombre_cuenta" />
+						</order>
+					</helper>
+				</field>
+
+				<field id="nombre" local="true" sincelda="true" colspan="4" deshabilitado="true">
+					<label modpos="nobr" />
+					<size>70</size>
+				</field>
+
+				<field id="regcuenta_cliente_id" noshow="true" local="true">
+					<operador>=</operador>
+					<help>Cliente</help>
+				</field>
+
+				<field id="mrppath_id">
+					<label>Proceso</label>
+					<helper xml="mrp_path_qry.xml" dir="/mrp/qry/" type="combo" empty="true">
+						<field id="rubro" noshow="true">
+							<expression>stkrubro_id</expression>
+							<detalle>rubro</detalle>
+						</field>
+					</helper>
+				</field>
+
+				<field id="rubro" local="true" noshow="true">
+					<actualiza>
+						<field id="stkrubro_id" destino="id_stkrubro" />
+						<field id="id_stkarticulo" destino="stkrubro_id" />
+					</actualiza>
+				</field>
+
+				<field id="grabar" local="true" noshow="true">
+					<label>confirmar</label>
+					<valor>1</valor>
+				</field>	
+
+				<field id="cantidad_total" noshow="true" local="true" />
+			</fieldGroup>	
+			
+			<fieldGroup>		
+				<field id="detalle" local="true" colspan="6">
+					<label modpos="force" />
+					<helper type="object" xml="generar_detalle_orden_libre_ing.xml" />
+				</field>
+			</fieldGroup>	
+
+		</table>
+	</form>
+</histrix>

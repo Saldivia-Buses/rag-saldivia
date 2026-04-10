@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="delete">
+    <title/>
+    <obs/>
+    <form>
+        <table id="CAJ_MOVIMIENTOS">-
+            <field id="id_cajmovimiento" id_temp="cajmovimiento_id" esClave="true"/>
+        </table>
+    </form>
+</histrix>

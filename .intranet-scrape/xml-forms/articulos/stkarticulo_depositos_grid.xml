@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="grid" limit="20">
+  <title>Artículos Por Depósito</title>
+  <obs></obs>
+  <form>
+  	<tabla id="STK_ARTICULOS">
+        <filters>
+            <field id="id_stkarticulo">
+            	<label>Cód. Artículo</label>
+            	<operador>=</operador>
+            </field>
+            <field id="nombre_articulo">
+            	<label>Nombre Artículo</label>
+            	<operador>=</operador>
+            </field>
+            <field id="stkrubro_id">
+            	<label>Rubro</label>
+            	<operador>=</operador>
+            </field>
+            <field id="stksubrubro_id">
+            	<label>SubRubro</label>
+            	<operador>=</operador>
+            </field>
+            <field id="stkmarca_id">
+            	<label>Marca</label>
+            	<operador>=</operador>
+            </field>
+            <field id="stkfamilia_id">
+            	<label>Familia</label>
+            	<operador>=</operador>
+            </field> 
+            <field id="stkdeposito_id">
+            	<label>Depósito</label>
+            	<operador>=</operador>
+            </field> 
+        </filters>
+
+<!-- Inicio Helpers -->
+        <field id="stkrubro_id" _noshow="true">
+            <label modpos="nobr">Rubro</label>
+            <helper type="combo" xml="stkrubro_qry.xml" dir="/ayudas" empty="true" />
+        </field>
+
+        <field id="stksubrubro_id" _noshow="true">
+            <label modpos="nobr">Subrubro</label>
+            <helper type="combo" xml="stksubrubros_qry.xml" dir="/ayudas" empty="true" />
+        </field>
+
+        <field id="nombre_articulo" _autocompletar="false" fullSearch="true">
+            <label>Artículo</label>
+            <help>Descripcion de Articulo. (ENTER = Retorna a ingreso de codigo).</help>
+        </field>
+          
+        <field id="stkmarca_id" _noshow="true" local="true">
+            <label>Marca</label>
+            <helper type="combo" xml="stkmarca_qry.xml" dir="/ayudas" empty="true" />
+        </field>
+
+        <field id="stkfamilia_id" _noshow="true" local="true">
+            <label>Familia</label>
+            <helper type="combo" xml="stkfamilia_qry.xml" dir="/ayudas" empty="true" />
+        </field>
+
+        <field id="stkdeposito_id" _noshow="true" local="true">
+            <label>Depósito</label>
+            <helper type="combo" xml="stkdeposito_qry.xml" dir="/ayudas" empty="true" />
+        </field>
+<!-- Fin Helpers -->
+
+        <field id="id_stkarticulo" tabla="STK_ARTICULOS" >
+            <label>ID Artículo</label>
+        </field>
+  	</tabla>
+
+  	<join tipo="left">
+        <tabla id="STK_ARTICULO_DEPOSITO">
+            <field id="stkarticulo_id">
+                <condicion operador="=">STK_ARTICULOS.id_stkarticulo</condicion>
+            </field>
+        </tabla>
+    </join>
+  </form>
+</histrix>
+<!--
+style="width:250px"
+-->

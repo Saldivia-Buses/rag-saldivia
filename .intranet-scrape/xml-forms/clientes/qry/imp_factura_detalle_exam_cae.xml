@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" exportasuma="true">
+	<title />
+	<obs />
+	<form>
+		<table id="REG_DETALLES" label="Detalle de Movimientos" styleTbody="height:150px;overflow-x:hidden;" PDFnoborder="true" >
+
+			<field id="muestra_iva" noshow="true" local="true" print="false" valauto="true" />
+
+			<field id="NoMuestra_iva" noshow="true" local="true" print="false">
+				<if exp="muestra_iva">
+				<true>'false'</true>
+				<false>'true'</false>
+				</if>		
+			</field>				
+
+			<field id="regmovim_id" noshow="true" />
+
+			<field id="orden" noshow="true" />
+
+			<fieldGroup>
+			
+
+				<field id="codigo_detalle" PDFcolWidth="21">
+					<label>CODIGO</label>
+				</field>
+
+				<field id="cantidad_detalle" PDFcolWidth="12" PDFalign="R">
+					<label>CANT</label>
+					<tipo>numeric</tipo>
+				</field>
+				
+				<field id="descripcion_detalle">
+					<label size="120">DESCRIPCION</label>
+				</field>
+				
+				<field id="alicuota_iva" PDFcolWidth="17">
+					<label size="30" >ALICUOTA</label>
+					<tipo>numeric</tipo>
+				</field>
+
+				<field id="porcentaje_desc0" PDFcolWidth="17" noZero="true">
+					<label>BON (%)</label>
+					<tipo>numeric</tipo>
+				</field>
+
+				<field id="precio_venta" PDFcolWidth="20">
+					<label>P.UNITARIO</label>
+					<expresion having="false">
+						case when '[__muestra_iva__]' = 'true' THEN
+							precio_venta
+						else
+							precio_venta * ( 1 + (alicuota_iva / 100) )
+						end
+					</expresion>
+					<tipo>numeric</tipo>
+				</field>
+
+				<field id="neto_detalle" PDFcolWidth="18" total="true">
+					<label>SUBTOTAL</label>
+					<tipo>numeric</tipo>
+					<detalle>SubTotal</detalle>
+					<expresion having="false">IF('[__muestra_iva__]' = 'true', neto_detalle,  total_detalle)</expresion>
+				</field>
+
+			</fieldGroup>
+			
+			<order>
+				<field id="orden"/>
+			</order>
+			
+			<group>
+			  <field id="id_regdetalle" />
+			</group>
+		</table>
+	</form>
+</histrix>	

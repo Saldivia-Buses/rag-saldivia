@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  CURD
+Tarea: Tabla de Equipamiento
+Autor: Lmm
+Fecha: 17/08/11
+*******************************************************************************
+-->
+<histrix tipo="consulta">
+    <title>Equipos</title>
+    <obs></obs>
+    <form detalle="plan_mant_herr_cons.xml">
+        <table id="MANT_EQUIPOS" label="Equipos">
+    	    <filters>
+            <field id="articulo_id"  _esClave="true" >
+                <label>Artículo</label>
+                <help>Codigo de Articulo</help>
+            </field>
+    	    
+            <field id="nombre_equipo">
+                <label>Nombre</label>
+                <help>Nombre</help>
+                <operador>like</operador>
+            </field>
+            <field id="tipoequipo_id" >
+                <label>Tipo</label>
+                <help>Tipo</help>
+                <operador>=</operador>
+
+            </field>
+			
+			<field id="deposito_id">
+				<label modpos="nobr">Depósito</label>
+				<helper type="combo" id="DEPOSITO">
+					<field id="idDeposito">
+						<label>Cod</label>
+						<help>Codigo</help>
+					</field>
+					<field id="direccion">
+						<label>Direccion</label>
+						<help>Direccion</help>
+					</field>
+				</helper>
+                <operador>=</operador>
+
+			</field>
+
+
+    	    </filters>
+            <field id="id_equipo" esClave="true" noshow="true" >
+        	<detalle>equipo_id</detalle>
+            </field>
+            <field id="articulo_id"  _esClave="true" >
+                <paring destino="artcod" colspan="2">artcod</paring>
+                <label>Artículo</label>
+                <help>Codigo de Articulo</help>
+                <ayuda_ex id="STKINSUM" xml="HLPstkinsum.xml" dir="/ayudas">
+                    <field id="artcod" >
+                        <label>Cod.</label>
+                    </field>
+                    <field id="artdes">
+                        <label>Insumo</label>
+                    </field>
+                    
+                </ayuda_ex>
+            </field>
+
+            <field id="nombre_equipo">
+                <label>Nombre</label>
+                <help>Nombre</help>
+                <size>50</size>
+            </field>
+            <field id="numero_serie">
+                <label>Nro de Serie</label>
+                <help>Numero de Serie</help>
+            </field>
+				
+            <field id="tipoequipo_id" >
+                <helper type="combo" xml="mant_tipo_equipo_crud.xml" empty="true"/>
+                <label>Tipo</label>
+                <help>Tipo</help>
+            </field>
+
+            <field id="fecha_alta">
+                <label>Fecha Alta</label>
+                <help>Fecha de Alta</help>
+                <tipo>date</tipo>
+            </field>
+            <field id="fecha_baja">
+                <label>Fecha Baja</label>
+                <help>Fecha de Baja</help>
+                <tipo>date</tipo>
+            </field>
+			
+			<field id="deposito_id">
+				<label>Depósito</label>
+				<helper type="combo" id="DEPOSITO" empty="true">
+					<field id="idDeposito">
+						<label>Cod</label>
+						<help>Codigo</help>
+					</field>
+					<field id="direccion">
+						<label>Direccion</label>
+						<help>Direccion</help>
+					</field>
+				</helper>
+			</field>
+			                       <!--
+			<field id="plan" local="true">
+			    
+			    <helper type="link" xml="plan_mant_herr_cons.xml" dir="/mantenimiento/qry">
+				<parameter source="id_equipo" target="equipo_id" />
+			    </helper>
+		            <valor>'Cargar'</valor>
+		    </field>
+			                    -->
+        </table>
+    </form>
+</histrix>	

@@ -1,0 +1,307 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" borra="no" inserta="no" _paginar="250" preloadData="false">
+  <title>Stock Actualizado</title>
+  <obs/>
+  <form>
+    <table id="STK_STOCKACTUAL" label="Stock Actualizado">
+
+  <filters>        
+      
+    	<field id="id_stkarticulo" tabla="STK_ARTICULOS" noshow="true">
+        <operador>=</operador>
+      	<label>Código de Artículo</label>     
+    	</field>
+
+      <field id="stkrubro_id">
+        	<operador>=</operador>
+          <label modpos="nobr" rowspan="4">Rubro</label>
+      </field>
+
+      <field id="stkdeposito_id">
+      		<helper type="combo" id="STK_DEPOSITOS" empty="true">
+      			<field id="id_stkdeposito" />
+      			<field id="nombre_deposito" />
+  		    </helper>
+  	    	<label modpos="nobr">Depósito</label>
+        	<operador>=</operador>
+    	</field>
+    </filters>      
+      
+      <field id="id_stkarticulo" tabla="STK_ARTICULOS" _noshow="true" esClave="true" _break="true">
+        <label>Código de artículo</label>
+        <helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas">
+          <field id="wstklista_id" local="true">
+            <valor>1</valor>
+          </field>
+        </helper>
+      </field>
+
+      <field id="stkrubro_id" tabla="STK_ARTICULOS" multiple="true" _colstyle="display:none;" noshow="true">
+        <label>Rubro</label>
+        <helper type="combo" xml="stkrubro_qry.xml" dir="/ayudas" empty="true"/>
+      </field>
+
+      <field id="nombre_rubro" tabla="STK_RUBROS" />
+      <field id="tipoconteo_id" tabla="STK_ARTICULOS">
+          <label>Tipo conteo</label>
+          <helper empty="true" id="STK_TIPO_CONTEO" type="combo" >
+            <field id="id_tipoconteo"/>
+            <field id="tipo_conteo" />
+          </helper>
+      </field>
+
+      <field id="stkdeposito_id" _colstyle="text-align:center;">
+        <label>Depósito</label>
+    	<helper type="combo" id="STK_DEPOSITOS" empty="true">
+    	  <field id="id_stkdeposito" />
+    	  <field id="nombre_deposito" />
+        <field id="suma_total">
+          <condicion operador="=">1</condicion>
+        </field>    	</helper>
+    	<label modpos="nobr">Depósito</label>
+      </field>
+
+      <field id="nombre_articulo" tabla="STK_ARTICULOS">
+        <label>Descripción del artículo</label>
+      </field>
+      <field id="nombre_cuenta" >
+        <label>Prov. Hab</label>
+          <expression>nombre_cuenta</expression>    
+      </field>
+
+
+<!--      <field id="cantidades" _noshow="true" suma="true">
+        <label>Cantidad</label>
+          <expresion _having="false">round(sum( case when tipo_concepto = 0 then 1 else -1 end * cantidad), 2)</expresion>        
+          <attribute id="tooltip">nombre_deposito</attribute>		                
+          <tipo>numeric</tipo>  
+           <condicion operador="!=">0</condicion>
+      </field>-->
+	<field id="cantidad_stock" tabla="STK_STOCKACTUAL" style="text-align:center;" _noZero="true">
+    	    <label>Cantidad</label>
+    	    <tipo>numeric</tipo>
+        </field>
+
+      <field id="demprov"   tabla="STK_ARTICULOS" style="text-align:center;" _noZero="true">
+        <label>Lead time</label>
+        <help>Demora del proveedor en suministrar el artículo</help>
+        <tipo>integer</tipo>
+      </field>
+
+      <field id="stock_seguridad" tabla="STK_ARTICULOS" style="text-align:center;" _noZero="true">
+        <label>Stock de seguridad</label>
+        <tipo>integer</tipo>
+      </field>
+
+      <field id="stock_maximo" tabla="STK_ARTICULOS" style="text-align:center;" _noZero="true">
+        <label>Cantidad máxima</label>
+        <tipo>integer</tipo>
+      </field>
+
+      <field id="stock_reposicion" tabla="STK_ARTICULOS" style="text-align:center;" _noZero="true">
+        <label>Punto de pedido</label>
+        <tipo>integer</tipo>
+      </field>
+
+      <field id="lote_optimo" tabla="STK_ARTICULOS" style="text-align:center;" _noZero="true">
+        <label>Lote óptimo</label>
+        <tipo>integer</tipo>
+      </field>
+
+      <field id="dem_diaria" tabla="STK_ARTICULOS" style="text-align:center;" _noZero="true">
+        <label>Demora diaria</label>
+        <tipo>integer</tipo>
+      </field>
+
+      <field id="pedido_automatico" tabla="STK_ARTICULOS" style="text-align:center;" _noZero="true">
+        <label>Pedido automático</label>
+        <options>
+          <option valor="0">No</option>
+          <option valor="1">Sí</option>
+        </options>
+      </field>
+
+
+      <field id="fifo" tabla="STK_ARTICULOS">
+        <label modpos="nobr">FIFO</label>
+        <options>
+          <option valor="0">No</option>
+          <option valor="1">Si</option>
+        </options>
+      </field>
+
+      <field id="dias_fifo" tabla="STK_ARTICULOS">
+        <label modpos="nobr">Dias FIFO</label>
+        <size>4</size>
+      </field>
+
+      <field id="dias_acopio" tabla="STK_ARTICULOS">
+        <label>Días de Acopio</label>
+      </field>
+
+      <field id="herrinventario_id" tabla="STK_ARTICULOS">
+        <label _xml="/ayudas_local/HLPherramientas_inv.xml" modpos="nobr">H.Inventario</label>
+        <helper type="combo" xml="HLPherramientas_inv.xml" dir="/ayudas_local" empty="true"/>
+      </field>     
+
+      <field id="stock_minimo2" tabla="STK_ARTICULOS">
+        <label modpos="nobr">Stock Mínimo</label>
+        <help>Stock Mínimo</help>
+        <expression>demprov * dem_diaria</expression>
+      </field>
+
+<!--        <field id="stklocacion_id" tabla="STK_MOVIMIENTOS" noshow="true"/> -->
+
+
+
+      <field id="valor_compra" tabla="STK_ARTICULOS">
+        <label>Val.Compra</label>
+        <help>Valor de Compra </help>
+      </field>
+      
+      <field id="unidad_compra_id"  tabla="STK_ARTICULOS">
+        <label modpos="nobr">Unidad</label>
+        <help>Unidad de compra </help>
+        <tabla_ex id="FSMUNIDS">
+          <field id="unicod"></field>
+          <field id="uniabv"></field>
+        </tabla_ex>
+      </field>
+      
+      <field id="valor_uso"  tabla="STK_ARTICULOS">
+        <label>Val.Uso</label>
+        <help>Valor de Uso </help>
+      </field>
+      
+      <field id="unidad_uso_id"  tabla="STK_ARTICULOS">
+        <label modpos="nobr">U.Uso</label>
+        <help>Unidad de Uso </help>
+        <tabla_ex id="FSMUNIDS">
+          <field id="unicod"></field>
+          <field id="uniabv"></field>
+        </tabla_ex>
+      </field>
+
+      <field id="moneda_id" >
+          <expression>STK_COSTO_REPOSICION.moneda_id</expression>    
+          <label>Moneda origen</label>
+          <helper type="combo" xml="moneda_qry.xml" dir="/ayudas" empty="true" />
+      </field>
+
+                <field id="costo_final_desc2" style="font-weigth:bold;color:green;">
+                    <label>Costo Moneda Origen</label>
+                    <expression>@costofinal_desc:=(round(((costo_proveedor + (costo_proveedor / 100 * gasto_importacion)) 
+                        - (costo_proveedor / 100 * descuento_1)) - (((costo_proveedor + (costo_proveedor / 100 * gasto_importacion)) 
+                        - (costo_proveedor / 100 * descuento_1)) / 100 * descuento_2)  + flete_local_ars, 2))</expression>
+                    <tipo>numeric</tipo>
+                </field>
+        <field id="cotizacion" sincelda="true" modpos="nobr" _noshow="true">
+            <label>Cotiz</label>
+            <expression>@cotiz:=(select cotizacion_genmonedahis from GEN_MONEDA_HIS where GEN_MONEDA_HIS.moneda_id = STK_COSTO_REPOSICION.moneda_id order by fecha_genmonedahis DESC limit 1)</expression>
+        </field>
+      <field id="costo_final_moneda_local_desc2" style="font-weigth:bold;color:green;" modpos="nobr">
+          <label>Costo AR$ Desc Unit</label>
+          <expression>@costofinal_local_desc:=(round(@cotiz * (
+              ((costo_proveedor + (costo_proveedor / 100 * gasto_importacion)) 
+              - (costo_proveedor / 100 * descuento_1)) - (((costo_proveedor + (costo_proveedor / 100 * gasto_importacion)) 
+              - (costo_proveedor / 100 * descuento_1)) / 100 * descuento_2))  + (flete_local_ars / @cotiz), 2))</expression>
+          <tipo>custom_numeric</tipo>
+      </field>
+
+      <field id="total" suma="true" local="true">
+        <label>Total</label>
+        <if exp="true">
+          <true>(costo_final_moneda_local_desc2 * valor_compra / valor_uso) * cantidad_stock</true>
+          <false>0</false>
+        </if>
+        <tipo>custom_numeric</tipo>
+      </field>
+
+      <order>
+	       <field id="nombre_articulo" tabla="STK_ARTICULOS" />
+    </order>
+
+      <group>
+        <field id="id_stkarticulo" tabla="STK_ARTICULOS"/>
+	<field id="id_stkdeposito" tabla="STK_DEPOSITOS"/>
+      </group>
+
+    </table>
+    <join>
+	<table id="STK_STOCKACTUAL" as="SS">
+	    <field id="stkarticulo_id">
+		<condicion operador="=">STK_STOCKACTUAL.stkarticulo_id</condicion>
+	    </field>
+	    <field id="stkdeposito_id">
+		<condicion operador="=">STK_STOCKACTUAL.stkdeposito_id</condicion>
+	    </field>
+	    <field id="cantidad_stock">
+		<condicion operador="&gt;">(CASE WHEN STK_STOCKACTUAL.stkdeposito_id = 32 THEN 0 ELSE -1000000 END)</condicion>
+	    </field>
+	</table>
+    </join>
+    <join>
+      <table id="STK_DEPOSITOS">
+        <field id="id_stkdeposito">
+          <condicion operador="=">STK_STOCKACTUAL.stkdeposito_id</condicion>
+        </field>
+        <field id="suma_total">
+          <condicion operador="=">1</condicion>
+        </field>
+     </table>
+    </join>
+    <join>
+      <table id="STK_ARTICULOS">
+        <field id="id_stkarticulo">
+          <condicion operador="=">STK_STOCKACTUAL.stkarticulo_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="LEFT">
+      <table id="STK_RUBROS">
+        <field id="id_stkrubro">
+          <condicion operador="=">STK_ARTICULOS.stkrubro_id</condicion>
+        </field>
+      </table>
+    </join>
+<!--    <join>
+	<table id="STK_MOVIMIENTOS">
+	    <field id="stkarticulo_id">
+		<condicion operador="=">id_stkarticulo</condicion>
+	    </field>
+	    <field id="stkdeposito_id">
+		<condicion operador="=">STK_STOCKACTUAL.stkdeposito_id</condicion>
+	    </field>
+	</table>
+    </join>-->
+<!--    <join>
+      <table id="STK_LOCACION">
+        <field id="id_stklocacion">
+          <condicion operador="=">STK_MOVIMIENTOS.stklocacion_id</condicion>
+        </field>
+      </table>
+    </join>-->
+<!--    <join >
+      <table id="STK_CONCEPTOS">
+        <field id="id_stkconcepto">
+          <condicion operador="=">STK_MOVIMIENTOS.stkconcepto_id</condicion>
+        </field>
+      </table>
+    </join>-->
+    <join tipo="left">
+      <table id="STK_COSTO_REPOSICION">
+        <field id="stkarticulo_id">
+          <condicion operador="=">id_stkarticulo</condicion>
+        </field>
+      </table>
+    </join>
+<join tipo="left">
+      <table id="REG_CUENTA">
+        <field id="id_regcuenta">
+          <condicion operador="=">STK_COSTO_REPOSICION.regcuenta_id</condicion>
+        </field>
+      </table>
+    </join>
+
+  </form>
+</histrix>

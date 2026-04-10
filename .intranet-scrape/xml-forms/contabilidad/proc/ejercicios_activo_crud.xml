@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud" >
+	<title>ejercicio</title>
+	 <obs></obs>
+		<consulta>
+		    <table id="CTB_EJERCICIOS" label="ejercicio">
+				<field id="id_ejercicio" autoinc="true" noshow="true">
+					<label>Codigo</label>
+					<help>Codigo de ejercicio</help>
+				</field>
+				<field id="nombre_ejercicio">
+					<label>Nombre</label>
+					<help>Nombre de ejercicio</help>
+				</field>
+				<field id="comienza" tipoOrden="DESC">
+					<label>Comienzo</label>
+					<help>Comienzo del ejercicio</help>
+				</field>
+				<field id="finaliza">
+					<label>Finalizacion</label>
+					<help>Finalizacion del ejercicio</help>
+				</field>
+				<field id="cerrado" noshow="true">
+					<tipo>check</tipo>
+					<label>Cerrado</label>
+					<help>Ejercicio Cerrado</help>
+					
+				</field>
+				<field id="activo">
+					 <tipo>check</tipo>
+					<label>Activo</label>
+					<help>Ejercicio Activo</help>
+				</field>
+				
+				<field id="ejercicio_anterior_id">
+					<helper xml="ctbejercicio_qry.xml" dir="/ayudas" empty="true">
+					  <field id="cerrado" />
+					</helper>
+					<label>ejercicio anterior</label>
+					<help>Codigo ejercicio anterior</help>
+				</field>
+				
+
+				<order>
+					<field id="activo"/>
+                </order>
+				
+				<order>
+				    <field id="comienza"></field>
+				</order>
+
+				 <field id="ACT" local="true" noshow="true">
+					<expresion>select count(activo) from CTB_EJERCICIOS where activo= 1</expresion>
+				</field>
+			    
+			    <field id="activos" validar="true" noshow="true" deshabilitado="true" local="true">
+				    <label>activos</label>
+					<if exp="ACT == 0 ">
+					     <true>'true'</true>
+					     <false>ACT</false>
+					</if>
+					<invalid>solo puede existir un Ejercicio Activo</invalid>
+                </field>  
+		    </table>
+		</consulta>
+    </histrix>	

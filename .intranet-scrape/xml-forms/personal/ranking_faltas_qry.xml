@@ -1,0 +1,282 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" imprimetanda="true"  pageBreak="false" PDFsincabecera="true" _paginar="50">
+    <title>Calculo de Faltas</title>
+    <obs/>
+    <form _detalle="rh_extras/hextras_cons_legajo.xml" _inline="true">
+        <table id="PERSONAL" label="calculo de faltas" >
+            <filters>
+                <field id="desde_filt" local="true">
+                    <label>Desde</label>
+                    <tipo>date</tipo>
+                    <valor>today</valor>
+                    <operador>&gt;=</operador>
+                </field>
+                <field id="hasta_filt" local="true">
+                    <label>Hasta</label>
+                    <tipo>date</tipo>
+                    <valor>today</valor>
+                    <operador>&lt;=</operador>
+                </field>
+                <field id="legajo">
+                    <label>Legajo</label>
+                    <operador>=</operador>
+                </field>
+<!--                <field id="linea_id" deshabilitado="false">
+                    <label>Linea</label>
+                    <operador>=</operador>
+                    <valor>1</valor>
+          </field>-->
+                                                                                            
+            </filters>
+                                                                                                        
+            <field id="desde_filt" local="true"  noshow="true">
+                <label>Desde filt</label>
+                <tipo>date</tipo>
+                <detalle>fechadesde</detalle>
+            </field>
+            <field id="hasta_filt" local="true"  noshow="true">
+                <label>Hasta</label>
+                <tipo>date</tipo>
+                <detalle>fechahasta</detalle>
+            </field>
+      <field id="desde" local="true" noshow="true">
+        <expression>CASE WHEN fecing &gt; str_to_date('[__desde_filt__]', '%d/%m/%Y') THEN fecing ELSE  str_to_date('[__desde_filt__]', '%d/%m/%Y') END </expression>
+      </field>
+      <field id="hasta" local="true" noshow="true">
+        <expression>str_to_date('[__hasta_filt__]', '%d/%m/%Y')</expression>
+      </field>
+
+            <field id="fechaEgreso" oculto="true">
+                <label>Egreso</label>
+                <tipo>date</tipo>
+                <condicion operador="=">'0000-00-00'</condicion>
+            </field>
+
+            <field id="IdSindicato" noshow="true">
+                <label>Sind.</label>
+                <help>Codigo de Sindicato</help>
+                <tabla_ex id="SINDICATO">
+                    <field id="IdSindicato"></field>
+                    <field id="Nombre"></field>
+                    <order>
+                        <field id="Nombre"></field>
+                    </order>
+
+                    <filtra>IdSindicato</filtra>
+                </tabla_ex>
+            </field>
+            <field id="nom">
+                <expression>concat(PERSONAL.apellido, ', ', PERSONAL.nombre)</expression>
+                <label>Apellido</label>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="apellido" noshow="true">
+                <tipo>varchar</tipo>
+            </field>
+            <field id="tarjeta" noshow="true">
+      
+                <label>Tarjeta</label>
+            </field>
+            <field id="idJornada" noshow="true">
+                <label>Jornada</label>
+            </field>
+            <!--
+            <field id="legajo">
+                <label>Leg.</label>
+                <tipo>integer</tipo>
+                <condicion operador="!=">0</condicion>
+            </field>
+        -->
+            <field id="legajo" deshabilitado="true" esClave="true">
+                <label>legajo</label>
+                <size>8</size>
+                <ayuda_ex id="PERSONAL">
+                    <field id="legajo">
+                        <label>Legajo</label>
+                        <detalle>legajo</detalle>
+                    </field>
+                    <field id="nomapp">
+                        <label>Nombre y Apellido</label>
+                            <expression having="false">CONCAT(apellido, ' ', Nombre)</expression>
+          
+                    </field>
+
+                    <field id="IdPersona" noshow="true">
+                        <label>Nro persona</label>
+                
+                    </field>
+                    <field id="fechaEgreso" noshow="true">
+                        <condicion operador="=">'0000-00-00'</condicion>
+                    </field>
+                                    
+                </ayuda_ex>
+<!--        <condicion operador="=">''</condicion>   -->
+            <detalle>legajo</detalle>
+            </field>
+
+            <field id="idPersona" noshow="true">
+            </field>
+
+            <field id="nombre_seccion" tabla="RH_SECCION">
+                <label>Sección</label>
+            </field>
+
+            <field id="id_seccion" noshow="true" />
+
+      <field id="linea_id" deshabilitado="false" noshow="true">
+                    <helper type="combo" xml="lineas.xml" empty="true" dir="/produccion"/>
+
+        <label modpos="nobr">Linea</label>
+        <expression>select SECCION.linea_id from SECCIONHISTORIA left join SECCION on SECCION.id_seccion = SECCIONHISTORIA.id_seccion where SECCIONHISTORIA.IdPersona = PERSONAL.IdPersona order by SECCIONHISTORIA.fechaDesde desc limit 1</expression>
+      </field>
+
+            <field id="fecing">
+                <label>Ingreso</label>
+                <tipo>date</tipo>
+            </field>
+            <field id="CUIL" noshow="true">
+                <label>CUIL</label>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="IdCateg2">
+                <label style="width:200px;" modpos="nobr">Categ.</label>
+                <expression>select descripcion from CATEGHISTORIA
+                  left join CATPERSONAL on CATPERSONAL.IdSindicato = CATEGHISTORIA.idSindicato and CATPERSONAL.IdCateg = CATEGHISTORIA.IdCateg
+                  where CATEGHISTORIA.IdPersona = PERSONAL.IdPersona
+                  and CATEGHISTORIA.fechaDesde &lt;= str_to_date('[__desde_filt__]', '%d/%m/%Y')
+                  order by CATEGHISTORIA.fechaDesde desc limit 1</expression>
+            </field>
+
+
+            <field id="Faltas">
+        <label>Faltas Premio</label>
+        <expression sql="true">
+<![CDATA[
+                    select sum(FF.faltas) from
+                    (select C1.fecha,
+@hing:= (SELECT H.ingresoPremio from HORARIOHIST as H  where H.desdeFecha <= C1.fecha and H.dia = DAYOFWEEK(C1.fecha) order by H.desdeFecha DESC limit 1) as "hing",
+@hegr:= (SELECT H.egresoPremio  from HORARIOHIST as H  where H.desdeFecha <= C1.fecha and H.dia = DAYOFWEEK(C1.fecha) order by H.desdeFecha DESC limit 1) as "hegr",
+
+@h1:=(select H1.crc from FICHADAS as H1 where H1.tarjeta = (SELECT TJT.tarjeta from PERSONAL_TARJETA as TJT where TJT.idPersona = [__idPersona__]  and TJT.fechaDesde <= C1.fecha order by fechaDesde DESC limit 1) and H1.fecha = C1.fecha and H1.borrado = 0 order by hora limit 0, 1) as "h1",
+@h2:=(select H1.crc from FICHADAS as H1 where H1.tarjeta = (SELECT TJT.tarjeta from PERSONAL_TARJETA as TJT where TJT.idPersona = [__idPersona__]  and TJT.fechaDesde <= C1.fecha order by fechaDesde DESC limit 1) and H1.fecha = C1.fecha and H1.borrado = 0 order by hora limit 1, 1) as "h2",
+@h3:=(select H1.crc from FICHADAS as H1 where H1.tarjeta = (SELECT TJT.tarjeta from PERSONAL_TARJETA as TJT where TJT.idPersona = [__idPersona__]  and TJT.fechaDesde <= C1.fecha order by fechaDesde DESC limit 1)  and H1.fecha = C1.fecha and H1.borrado = 0 order by hora limit 2, 1) as "h3",
+@h4:=(select H1.crc from FICHADAS as H1 where H1.tarjeta = (SELECT TJT.tarjeta from PERSONAL_TARJETA as TJT where TJT.idPersona = [__idPersona__]  and TJT.fechaDesde <= C1.fecha order by fechaDesde DESC limit 1) and H1.fecha = C1.fecha and H1.borrado = 0 order by hora limit 3, 1) as "h4",
+
+@trabaj:=(ifnull(time_to_sec(timediff(@h2, @h1)), 0)+
+         ifnull(time_to_sec(timediff(@h4, @h3)), 0)) / 3600,
+
+@ideal:=ifnull(time_to_sec(timediff(@hegr, @hing)),0) / 3600,
+ifnull((case when @trabaj >= @ideal then 0 when (@trabaj >= 2 and @trabaj < @ideal) then 0.5 when (@trabaj < 2 ) then 1 end), 0) as "faltas"
+
+                    from GEN_CALENDAR as C1 left join FERIADOS ON FERIADOS.idFeriado = C1.fecha
+        where
+                          C1.fecha  >= '[__desde__]' and
+                          C1.fecha  <= '[__hasta__]' and
+        isnUll(FERIADOS.idFeriado)) as FF  ]]>
+                </expression>
+                <tipo>numeric</tipo>
+
+      </field>
+<field id="tardanzas">
+        <label>Tardanzas</label>
+        <expression sql="true">
+<![CDATA[
+                    select sum(FF.faltas) from
+                    (select C1.fecha,
+@hing:= (SELECT H.ingresoPremio from HORARIOHIST as H  where H.desdeFecha <= C1.fecha and H.dia = DAYOFWEEK(C1.fecha) order by H.desdeFecha DESC limit 1) as "hing",
+@hegr:= (SELECT H.egresoPremio  from HORARIOHIST as H  where H.desdeFecha <= C1.fecha and H.dia = DAYOFWEEK(C1.fecha) order by H.desdeFecha DESC limit 1) as "hegr",
+
+@h1:=(select H1.crc from FICHADAS as H1 where H1.tarjeta = (SELECT TJT.tarjeta from PERSONAL_TARJETA as TJT where TJT.idPersona = [__idPersona__]  and TJT.fechaDesde <= C1.fecha order by fechaDesde DESC limit 1) and H1.fecha = C1.fecha and H1.borrado = 0 order by hora limit 0, 1) as "h1",
+@h2:=(select H1.crc from FICHADAS as H1 where H1.tarjeta = (SELECT TJT.tarjeta from PERSONAL_TARJETA as TJT where TJT.idPersona = [__idPersona__]  and TJT.fechaDesde <= C1.fecha order by fechaDesde DESC limit 1) and H1.fecha = C1.fecha and H1.borrado = 0 order by hora limit 1, 1) as "h2",
+@h3:=(select H1.crc from FICHADAS as H1 where H1.tarjeta = (SELECT TJT.tarjeta from PERSONAL_TARJETA as TJT where TJT.idPersona = [__idPersona__]  and TJT.fechaDesde <= C1.fecha order by fechaDesde DESC limit 1)  and H1.fecha = C1.fecha and H1.borrado = 0 order by hora limit 2, 1) as "h3",
+@h4:=(select H1.crc from FICHADAS as H1 where H1.tarjeta = (SELECT TJT.tarjeta from PERSONAL_TARJETA as TJT where TJT.idPersona = [__idPersona__]  and TJT.fechaDesde <= C1.fecha order by fechaDesde DESC limit 1) and H1.fecha = C1.fecha and H1.borrado = 0 order by hora limit 3, 1) as "h4",
+
+@trabaj:=(ifnull(time_to_sec(timediff(@h2, @h1)), 0)+
+         ifnull(time_to_sec(timediff(@h4, @h3)), 0)) / 3600,
+
+@ideal:=ifnull(time_to_sec(timediff(@hegr, @hing)),0) / 3600,
+ifnull(case when (@trabaj >= 2 and @trabaj < @ideal) then 1 end, 0) as "faltas"
+
+                    from GEN_CALENDAR as C1 left join FERIADOS ON FERIADOS.idFeriado = C1.fecha
+        where
+                          C1.fecha  >= '[__desde__]' and
+                          C1.fecha  <= '[__hasta__]' and
+        isnUll(FERIADOS.idFeriado)) as FF  ]]>
+                </expression>
+                <tipo>numeric</tipo>
+
+      </field>
+      <field id="francos" local="true" suma="true">
+                <helper type="link" xml="francos_per_int.xml">
+                <parameter target="legajo" source="legajo"/>
+                <parameter target="IdPersona" source="IdPersona"/>
+                <!--<paring destino="fechainicio" operador="&gt;=" >desde_filt</paring>
+                <paring destino="fechafin" operador="&lt;=" >hasta_filt</paring>-->
+            </helper>
+                <expression><![CDATA[select count(*) from FRANCOS_PER F
+                                        join GEN_CALENDAR ON GEN_CALENDAR.fecha >= fechainicio and GEN_CALENDAR.fecha <= fechafin
+                                     where F.IdPersona = PERSONAL.IdPersona and 
+                                          F.fechainicio >= str_to_date('[__desde_filt__]', '%d/%m/%Y') and 
+                                          F.fechafin <= str_to_date('[__hasta_filt__]', '%d/%m/%Y')]]></expression>
+        <label style="font-size:14px;">Faltas</label>
+        </field>
+
+            <order>
+              
+                <field id="nom"></field>
+            
+            </order>
+            <group>
+                <field id="legajo" />
+
+            </group>
+        </table>
+        <join tipo="left">
+            <table id="GEN_CALENDAR">
+                <field id="fecha">
+                    <condicion operador="&gt;=">STR_TO_DATE('[__desde_filt__]', '%d/%m/%Y') and GEN_CALENDAR.fecha &lt;= STR_TO_DATE('[__hastafilt__]', '%d/%m/%Y')</condicion>
+                </field>
+            </table>
+        </join>
+    
+        <join tipo="left">
+            <table id="FICHADADIA">
+                <field id="legajo">
+                    <condicion operador="=">PERSONAL.legajo</condicion>
+                </field>
+                <field id="fecha">
+                    <condicion operador="=">GEN_CALENDAR.fecha</condicion>
+                </field>
+            </table>            
+        </join>       
+          
+        <join tipo="left">
+            <table id="CATPERSONAL">
+                <field id="idSindicato">
+                    <condicion operador="=">PERSONAL.idSindicato</condicion>
+                </field>
+                <field id="idCateg">
+                    <condicion operador="=">PERSONAL.idCateg</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="RH_SECCION">
+                <field id="id_rhseccion">
+                    <condicion operador="=">PERSONAL.id_seccion</condicion>
+                </field>
+            </table>
+        </join>
+        <!--
+        <join tipo="left">
+            <table id="FAMILIA">
+                <field id="idPersona">
+                    <condicion operador="=">PERSONAL.idPersona</condicion>
+                </field>
+            </table>
+        </join>
+    -->
+    </form>
+</histrix>

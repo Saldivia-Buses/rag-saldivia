@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm-mini" subtipo="vertical">
+    <title>Precios por Listas</title>
+    <obs></obs>
+    <form>
+        <table id="STK_LISTADETALLE" label="Ingreso de Artículos por lote">
+            <field id="id_stklistadetalle" noshow="true"/>
+            <field id="stkarticulo_id" noshow="true" valauto="true"/>
+            <field id="stklista_id">
+                <helper type="combo" id="STK_LISTAS">
+                    <field id="id_stklista" />
+                    <field id="stklista_nombre" />
+                </helper>
+                <label>Lista</label>
+            </field>
+            <field id="stklistadetalle_precioventa">
+                <label modpos="nobr">Importe</label>
+                <tipo>numeric</tipo>
+            </field>
+        </table>
+    </form>
+</histrix>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="insert">
+	<title>INSERT CAR_MOVIMIENTOS</title>
+	 <obs></obs>
+		<consulta>
+		     <table id="CAR_MOVIMIENTOS">
+				 <field id="tipo_movimiento"        id_temp="tipo_movimiento"/>
+		         <field id="referencia_movimiento"  id_temp="referencia_movimiento"/>
+				 <field id="fecha_movimiento"       id_temp="fecha_valor" />
+				 <field id="carvalor_id"      	    lastId="ingreso_ins.xml"/>
+				 <field id="regcuenta_id" 		    id_temp="regcuenta_id" />
+		    </table>
+		</consulta>
+    </histrix>	

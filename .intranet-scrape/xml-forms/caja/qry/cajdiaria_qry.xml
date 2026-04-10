@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" showCantidad="false">
+  <title>Resumen de Movimientos</title>
+  <obs/>
+  <consulta>
+
+    <table id="CAJ_MOVIMIENTOS" label="Movimientos">
+
+      <field id="xcajconcepto_id" noshow="true">
+          <expresion>cajconcepto_id</expresion>
+      </field>
+      
+      <field id="cajpuesto_id" noshow="true">
+        <detalle>cajpuesto_id</detalle>
+      </field>
+
+      <field id="fecha_movimiento" noshow="true">
+        <detalle>fecha_movimiento</detalle>
+      </field>
+
+      <field id="descripcion_concepto">
+		<label>Descripcion</label>
+		<expresion>CAJ_CONCEPTOS.descripcion_concepto</expresion>
+      </field>
+
+      <field id="detalle" local="true" showObjTabla="true">
+        <label>Detalle</label>
+        <helper type="object" xml="cajmovimientos_qry.xml" dir="/caja/qry/">
+          <parameter source="cajpuesto_id"     target="cajpuesto_id" />
+          <parameter source="xcajconcepto_id"  target="cajconcepto_id" />
+          <parameter source="fecha_movimiento" target="fecha_movimiento" />
+        </helper>
+      </field>
+
+      <group>
+        <field id="xcajconcepto_id"/>
+      </group>
+      
+    </table>
+
+    <join>
+      <table id="CAJ_CONCEPTOS">
+        <field id="id_cajconcepto">
+          <condicion operador="=">CAJ_MOVIMIENTOS.cajconcepto_id</condicion>
+        </field>
+      </table>
+    </join>
+
+  </consulta>
+</histrix>

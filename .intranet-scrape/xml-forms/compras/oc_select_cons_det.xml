@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="ing" imprime="false" llenoreferente="true"  style="height:100%" modifica="false" inserta="false">
+                <title>DETALLE</title>
+        <obs></obs>
+                                <form >
+                                        <table id="CPSMOVIM" label="Piezas" idCampoCond="selec">
+
+                                                <field id="artcod">
+                                                        <label>Cod.</label>
+                                                        <help>Código del Articulo</help>
+                                                        <detalle>artcod</detalle>
+                                                </field>
+
+                                                <field id="ocpnro" noshow="true"/>
+
+                                                <field id="nrocha" noshow="true"/>
+
+                                                <field id="ocpren" noshow="true"/>
+
+                                                <field id="detalle" deshabilitado="true">
+                                                        <label>Articulo </label>
+                                                        <tipo>varchar</tipo>
+                                                        <detalle>artdes</detalle>
+                                                </field>
+
+                                                <field id="movcps" deshabilitado="true">
+                                                        <label>Cantidad</label>
+                                                        <detalle>movcps</detalle>
+                                                </field>
+
+                                                <field id="ctanom" noshow="true" >
+                                                    <expression>select CCTCUENT.ctanom FROM CCTCUENT where siscod = '01' and ctacod = ([__codprv__] + 0 ) LIMIT 1</expression>
+                                                    <detalle>ctanom</detalle>
+                                                </field>
+
+                                        <field id="unicps" noshow="true" tabla="STKINSUM">
+                                                <detalle>unicps</detalle>
+                                                <tabla_ex id="FSMUNIDS">
+                                                  <field id="unicod"></field>
+                                                  <field id="uniabv"></field>
+                                                </tabla_ex>
+                                        </field>
+                                        <field id="artuni" noshow="true" tabla="STKINSUM">
+                                                <detalle>artuni</detalle>
+                                                <tabla_ex id="FSMUNIDS">
+                                                  <field id="unicod"></field>
+                                                  <field id="uniabv"></field>
+                                                </tabla_ex>
+                                        </field>
+
+                    <field id="costo" >
+                        <label>Costo</label>
+                        <expression>round(case when ((select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINSUM.artcod   and STKINSPR.siscod='01' order by fecult DESC limit 1) * STKINSUM.valcps / STKINSUM.valuso) > 0  then                         ((select STKINSPR.artcos from STKINSPR where STKINSPR.artcod = STKINSUM.artcod and  STKINSPR.siscod='01' order by fecult DESC limit 1)) else STKINSUM.artcos end, 2)</expression>
+                        <tipo>decimal</tipo>
+                        <detalle>artcos</detalle>
+                    </field>
+
+                    <field id="hlp" oculto="true">
+                        <expression>CONCAT(' ', ROUND(valcps,2),(SELECT FSMUNIDS.uninom from FSMUNIDS where FSMUNIDS.unicod = STKINSUM.unicps), '=',  ROUND(valuso, 2), (SELECT FSMUNIDS.uninom from FSMUNIDS where FSMUNIDS.unicod = STKINSUM.artuni)  )</expression>
+                        <detalle>hlp</detalle>
+                    </field>
+                    <field id="artiva" oculto="true">
+                        <expression>select IVAIMPUESTOS.impali from IVAIMPUESTOS where impcod = artiva limit 1</expression>
+                        <detalle>alicuota</detalle>
+                    </field>
+
+                                        <field id="artrub" noshow="true" tabla="STKINSUM">
+                                                <detalle>artrub</detalle>
+                                        </field>
+                                        <field id="unidef" noshow="true" tabla="STKINSUM">
+                                                <detalle>unidef</detalle>
+                                        </field>
+                                        <field id="valcps" noshow="true" tabla="STKINSUM">
+                                                <detalle>valcps</detalle>
+                                        </field>
+                                        <field id="valuso" noshow="true" tabla="STKINSUM">
+                                                <detalle>valuso</detalle>
+                                        </field>
+
+                                        <field id="fecreq" noshow="true" local="true">
+                                            <detalle>fecreq</detalle>
+                                                <tipo>date</tipo>
+                                        </field>
+                                        <field id="codprv" noshow="true" local="true">
+                                        <label>ctacod</label>
+                                            <detalle>codprv</detalle>
+                                        </field>
+                                        <field id="nrocha" noshow="true">
+                                                <label>NroFab</label>
+                                                <detalle>nrofab</detalle>
+                                        </field>
+
+                                        <field id="selec" local="true" refresh="true">
+                                                        <label Formstyle="display:none;">Selec.</label>
+                                                        <help>Seleccion</help>
+                                                        <tipo>check</tipo>
+                                                        <valor>1</valor>
+                                                </field>
+                                        </table>
+                                        <join tipo="left">
+                                                <table id="STKINSUM">
+                                                        <field id="siscod" >
+                                                                <condicion operador="=">'01'</condicion>
+                                                        </field>
+                                                        <field id="artcod">
+                                                                <condicion operador="=">CPSMOVIM.artcod</condicion>
+                                                        </field>
+
+                                                </table>
+                                        </join>
+                                </form>
+        </histrix>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

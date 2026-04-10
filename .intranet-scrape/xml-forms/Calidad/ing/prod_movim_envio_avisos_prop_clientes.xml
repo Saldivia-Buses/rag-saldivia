@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ing" process="true" inserta="false" modifica="false" deleteRow="false" _autoprint="true" _serverSide="true">
+    <title>Control de Calidad</title>
+    <obs></obs>
+    <form>
+    <table id="PROD_CONTROL_MOVIM" label="Control de Calidad">
+
+    <movimientos>
+        <relacion id="envio_mail_masivo.xml"/>
+    </movimientos>
+
+    <title>Control de Calidad</title>
+
+    <filters auto="true">
+
+        <field id="fecha_control">
+            <label modpos="nobr">Desde</label>
+            <help>Desde</help>
+            <operador>&gt;=</operador>
+            <valor>today</valor>
+        </field> 
+
+        <field id="fecha_control">
+            <label modpos="nobr">Hasta</label>
+            <help>Hasta</help>
+            <operador>&lt;=</operador>
+            <valor>today</valor>
+        </field>
+
+        <field id="controlcausal_id">
+            <label modpos="nobr">Causal</label>
+            <help>Causal</help>
+            <operador>=</operador>
+            <valor>7</valor>
+        </field>
+
+    </filters>
+
+            <field id="id_controlmovim" noshow="true" esClave="true" />
+
+            <field id="nrofab_id" >
+                <label>Unidad</label>
+            </field>
+
+            <field id="modelo_control" tabla="PROD_CONTROLES">
+                <label>Tipo</label>
+            </field>
+
+            <field id="orden_control" noshow="true" tabla="PROD_CONTROLES"/>
+
+            <field id="nombre_control" tabla="PROD_CONTROLES">
+                <label>Nombre Control</label>
+            </field>
+
+            <field id="accionable" tabla="PROD_CONTROLES">
+                <label>Accionable</label>
+                <tipo>check</tipo>
+                <condicion operador="=">1</condicion>
+            </field>
+
+            <field id="controlcausal_id" noshow="true">
+                <label>Causal</label>
+                <helper type="combo" id="PROD_CONTROL_CAUSAL" empty="true">
+                    <field id="id_controlcausal"/>
+                    <field id="nombre_controlcausal" />
+                    <order>
+                        <field id="nombre_controlcausal"/>
+                    </order>
+                </helper>
+            </field>    
+
+            <field id="observacion_control">
+                <help>Observaciones</help>
+                <label>Observación</label>
+            </field>
+
+            <field id="acciones_control">
+                <help>Acciones</help>
+                <label>Acciones</label>
+            </field>
+
+            <field id="fotopath" noshow="true" >
+                <expression>concat(nrofab_id,'/controlcalidad/',id_prodcontrol)</expression>
+            </field>
+
+            <field id="foto" path="fotopath">
+                <label>Foto</label>
+                <tipo>file</tipo>
+                <size>40</size>
+            </field>
+
+            <field id="conforme">
+                <label>Si</label>
+                <tipo>check</tipo>
+            </field>
+
+
+            <field id="no_conforme">
+                <label>No</label>
+                <tipo>check</tipo>
+                <condicion operador="=">1</condicion>
+            </field>
+
+            <field id="controlado">
+                <label>Aprobado</label>
+                <checklabel>Aprob</checklabel>
+                <tipo>check</tipo>
+            </field>
+
+            <field id="no_aplica">
+                <label>No Aplica</label>
+                <checklabel> </checklabel>
+                <tipo>check</tipo>
+            </field>           
+
+            <field id="userid">
+                <label>Controló</label>
+                <expression>@controlo:=(select concat(HTXUSERS.Nombre,' ', HTXUSERS.apellido) from HTXUSERS where HTXUSERS.login = user_id)</expression>
+            </field>
+
+            <field id="fecha_control">
+                <label>Fecha</label>
+                <tipo>date</tipo>
+            </field>
+
+            <field id="hora">
+                <label>Hora</label>
+                <expression>time(hora_control)</expression>
+                <tipo>time</tipo>
+            </field>
+
+        <field id="descripcion" tabla="MOMENTO">
+            <label>Sección</label>
+        </field>
+
+        <field id="nombres">
+            <expression>case when legajo_defecto = 0 then '' else  CONCAT(PERSONAL.apellido, ', ', PERSONAL.Nombre, ' leg.', legajo) end</expression>
+            <label modpos="nobr">Realizó</label>
+            <size>50</size>
+        </field>
+
+<!--datos envio mail-->
+
+    <field id="usuarionow" local="true" noshow="true">
+        <valor eval="true">$_SESSION['idUser']</valor>
+    </field>
+
+    <field id="de" valoropcion="true" noshow="true">
+      <label>de</label>
+      <expression>select email from HTXUSERS where Id_usuario = '[__usuarionow__]'</expression>
+    </field>
+
+    <field id="subject" noshow="true" email="subject" print="false">
+        <expression>CONCAT('Observacion Propiedad de Cliente Unidad ', nrofab_id)</expression>
+    </field>
+    
+     <field id="mensaje" noshow="true">
+        <expression><![CDATA[CONCAT('
+            Mediante el presente le informamos que se se detecto la siguiente observacion de tipo Propiedad de cliente:',
+        '<p> Unidad: ', nrofab_id,'</p>',
+        '<p> Fecha: ', DATE_FORMAT(fecha_control, '%d/%m/%Y'),' Hora: ',time(hora_control),'</p>',
+        '<p> Seccion: ', MOMENTO.descripcion, '</p>',
+        '<p> Control: ', CONCAT(PROD_CONTROLES.modelo_control, ' - ', PROD_CONTROLES.nombre_control), '</p>',
+        '<p> Observacion: ', IFNULL(observacion_control, '-'), '</p>',        
+        '<p> Acciones: ', IFNULL(acciones_control, '-'), '</p>',
+        '<p> Controlo: ', IFNULL(@controlo, '-'), '</p>'
+        )]]></expression>
+    </field>
+
+    <field id="para" noshow="true">
+        <label>Para</label>
+        <expression>'nicolasc@saldiviabuses.com.ar; martinm@saldiviabuses.com.ar'</expression>
+    </field>       
+
+    <field id="emitir" local="true">
+        <label>Enviar</label>
+        <tipo>check</tipo>
+        <valor>1</valor>
+    </field>
+
+        <order>
+            <field id="modelo_control" />
+        </order>
+
+        <group>
+            <field id="id_prodcontrol" />
+        </group>
+
+        </table>
+
+        <join tipo="left">
+            <table id="PROD_CONTROLES">
+            <field id="id_prodcontrol">
+                <condicion operador="=">PROD_CONTROL_MOVIM.prodcontrol_id</condicion>
+            </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="MOMENTO">
+            <field id="idMomento">
+                <condicion operador="=">PROD_CONTROLES.seccion_id</condicion>
+            </field>
+            </table>
+        </join>
+
+         <join tipo="left">
+            <table id="PERSONAL">
+            <field id="legajo">
+                <condicion operador="=">PROD_CONTROLES.legajo_defecto</condicion>   
+            </field>
+            </table>
+        </join>
+    </form>
+</histrix>

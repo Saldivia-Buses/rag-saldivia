@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" >
+  <title>Linea de Producción</title>
+  <obs />
+  <form >
+    <table id="PROD_PRODUCT_PATH" label="Lineas de producción">
+
+		<field id="id_productpath" noshow="true" autoinc="true" >
+		</field>
+		<field id="nombre">
+			<expression>POSICIONESFAB.nombre</expression>
+		</field>		
+
+	     <order>
+			
+			<field id="id_productpath" />
+		 </order>
+    </table>
+    <join>
+    	<table id="POSICIONESFAB">
+    		<field id="id_posicionfab">
+    			<condicion operador="=">posicionfab_id</condicion>
+    		</field>
+    	</table>
+    </join>
+
+  </form>
+</histrix>

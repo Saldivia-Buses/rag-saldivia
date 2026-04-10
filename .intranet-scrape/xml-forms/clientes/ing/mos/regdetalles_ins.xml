@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert">
+   <title>Grabacion Detalle en Cuenta Corriente</title>
+   <obs/>
+   <form>
+	<table id="REG_DETALLES">
+		<field id="regmovim_id"		id_temp="regmovim_id"/>
+		<field id="orden"		id_temp="_ORDEN"/>
+		<field id="codigo_detalle"	id_temp="codigo_detalle">
+			<tipo>varchar</tipo>
+		</field>
+		<field id="descripcion_detalle" id_temp="descripcion_detalle"/>
+		<field id="cantidad_detalle"	id_temp="cantidad_detalle"/>
+		<field id="tabla_detalle">
+			<valor>STK_ARTICULOS</valor>
+		</field>
+		<field id="precio_venta"	id_temp="precio_venta"/>
+		<field id="neto_detalle"	id_temp="neto_detalle"/>
+		<field id="alicuota_iva"	id_temp="alicuota_iva"/>
+		<field id="iva_detalle"		id_temp="iva_detalle"/>
+		<field id="total_detalle"	id_temp="total_detalle"/>
+	</table>
+   </form>
+</histrix>

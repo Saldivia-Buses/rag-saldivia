@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="abm" path="fotos/noticias">
+	<title>Noticias</title>
+	<obs/>
+	<form>
+		<table id="HTXNEWS" label="Noticias">
+			<field id="idNews" autoinc="true" noshow="true">
+			</field>
+			
+			<field id="title">
+				<label>Titulo</label>
+				<help>Titulo de la noticia</help>
+			</field>
+			
+			<field id="newsDate" tipoOrden="DESC">
+				<label>Fecha</label>
+				<help>Fecha</help>
+				<valor>today</valor>
+			</field>
+			
+			<field id="downText">
+				<label>Bajada</label>
+				<help>Texto de bajada de la noticia</help>
+				<tipo>simpleditor</tipo>
+			</field>
+
+			<field id="news">
+				<label>Texto</label>
+				<help>Texto de la noticia</help>
+				<size>200</size>
+				<tipo>simpleditor</tipo>
+			</field>
+			
+			<field id="image">
+				<label>Foto</label>
+				<help></help>
+				<tipo Type="Image">file</tipo>
+			</field>
+			
+			<field id="fixed">
+				<label>Fija</label>
+				<help>Noticia Fija</help>
+				<tipo>check</tipo>
+			</field>
+			
+			<order>
+				<field id="newsDate"></field>
+			</order>			
+		</table>
+	</form>
+</histrix>

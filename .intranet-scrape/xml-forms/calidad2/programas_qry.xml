@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" path="../files" _width="60">
+    <title>PROGRAMAS</title>
+    <obs></obs>
+    <form >
+        <table id="HTXMENU" label="Programas" styleTbody="height:300px;">
+            <filters>
+                <field id="fecha" deshabilitado="false">
+                    <label>Desde</label>
+                    <help>Fecha de Ingreso a Linea</help>
+                    <operador>&gt;=</operador>
+                    <valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m" ,strtotime('-1 month')) , 1, date("Y")))
+                    </valor>
+                </field>
+                <field id="fecha" deshabilitado="false">
+                    <label>hasta</label>
+                    <help>Fecha de Ingreso a Linea</help>
+                    <operador>&lt;=</operador>
+                    <valor eval="true">date('d/m/Y', strtotime('-1 second', strtotime(date('Y-m-01'))))
+                    </valor>
+                </field>
+            </filters>
+            <field id="menuId" noshow="true">
+            </field>
+            <field id="titulo" deshabilitado="true">
+                <label>Programa</label>
+                <condicion operador="!=">'PARAMETRO'</condicion>
+            </field>
+            <!--
+            <field id="registro" local="true">
+
+                <helper type="link" xml="cal_proc_regis.xml" dir="calidad" width="400px" height="250px" reposition="true">
+                    <parameter source="menuId" target="menu_id" operator="="/>
+		  
+                </helper>
+                <label>Registros</label>
+                <valor>'ISO 9000'</valor>
+            </field>
+	    -->
+
+
+            <!--<field id="registros" local="true">
+                <label></label>
+                <expression>select concat(proced,' ', register) from CAL_PROC_REGIS where menu_id = menuId limit 1</expression>
+            </field>-->
+            <!--
+	    <field id="calidad" local="true" showObjTabla="true">
+			    <label>ISO 9000</label>
+			    <helper type="object" xml="cal_proc_regis_qry.xml" dir="/calidad">
+				   <parameter source="menuId" target="menu_id"/>
+			    </helper>
+    			</field>
+    			-->
+			<field id="extrafield_1">
+				<label style="color:#444;">Procedimiento</label>
+				<help>Datos Adicionales</help>
+			</field>
+			
+			<field id="helplink_1" colstyle="display:none;">
+				<label >Archivo Proc</label>
+				<help>Archivo de ayuda</help>
+                                <tipo>file</tipo>
+			</field>
+
+			<field id="extrafield_2" >
+				<label style="color:#444;">Registro</label>
+				<help>Datos Adicionales</help>
+			</field>
+
+			<field id="helplink_2" colstyle="display:none;" >
+				<label >Archivo Reg.</label>
+				<help>Archivo de ayuda</help>
+                                <tipo>file</tipo>
+			</field>
+
+            <field id="fecha" _noshow="true" tabla="HTXLOG">
+                <label>Fecha</label>
+				<tipo>date</tipo>
+            </field>
+            <field id="parametros" noshow="true" >
+                <label>Parametro</label>
+                <condicion operador="!=">''</condicion>
+            </field>
+
+            <field id="uso" local="true" tipoOrden="DESC" suma="true">
+                <label>Cant Uso</label>
+                <expression><![CDATA[(CASE WHEN COUNT(HTXLOG.xmlprog) = 0 THEN 0 ELSE  COUNT(HTXLOG.xmlprog) END)]]></expression>
+            </field>
+
+            <field id="minima" local="true">
+                <label>Primer Uso</label>
+                <tipo>date</tipo>
+                <expression>MIN(HTXLOG.fecha)</expression>
+            </field>
+            <field id="maxima" local="true">
+                <label>Ultimo Uso</label>
+                <tipo>date</tipo>
+                <expression>MAX(HTXLOG.fecha)</expression>
+            </field>
+            <group>
+                <field id="menuId"/>
+            </group>
+
+            <order>
+                <field id="Id_menu"/>
+                <field id="orden"/>
+            </order>
+
+        </table>
+
+        <join tipo="left">
+            <table id="HTXLOG">
+                <field id="xmlprog">
+                    <condicion operador="="><![CDATA[REPLACE(REPLACE(LEFT(HTXMENU.parametros, LOCATE('.xml', HTXMENU.parametros)),'&xml=',''),'.','.xml')]]> </condicion>
+                </field>
+            </table>
+        </join> 
+    </form>
+</histrix>

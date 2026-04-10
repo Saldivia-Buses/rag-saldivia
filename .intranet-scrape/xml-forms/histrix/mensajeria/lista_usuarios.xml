@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" _autoupdate="100" path="fotos/usuarios" filter="true">
+	<title>Usuarios</title>
+	<obs/>
+	<form  detalle="mensajes_conversaciones.xml">
+		<table id="HTXUSERS" label="Mensajeria">
+			<filters>
+				<field id="baja">
+					<label>Estado</label>
+					<options>
+						<option valor="1">Baja</option>
+						<option valor="0">Activos</option>						
+					</options>
+					<operador>=</operador>
+					<valor>0</valor>
+					
+				</field>
+			</filters>
+			<field id="baja" noshow="true">
+				<label>Estado</label>
+				<options>
+					<option valor="1">Baja</option>
+					<option valor="0">Activos</option>						
+				</options>
+			</field>			
+			<field foto="true" id="foto" path="Id_usuario">
+				<label>Foto</label>
+				<help></help>
+				<tipo Type="Image">file</tipo>
+				<size>30</size>
+			</field> 			
+			<field id="Id_usuario" noshow="true">
+				<label>ID Usuario</label>
+				<help></help>
+			</field>
+			<field id="yo" local="true" noshow="true">
+									<valor eval="true">"'".$_SESSION['usuario']."'"</valor>
+				<tipo>varchar</tipo>
+<!--				<detalle>de</detalle> -->
+				<detalle>_de</detalle>
+				
+			<!--	<detalle>para2</detalle>
+ -->
+				
+			</field>
+			
+			<field id="login" noshow="true">
+				<detalle>_para</detalle>
+<!--				<detalle>de2</detalle>
+ -->
+				<tipo>varchar</tipo>				
+			</field>
+			<field id="apellido" noshow="true">
+				
+			</field>
+			<field id="Nombre">
+				<expression>CONCAT(apellido,', ',Nombre)</expression>
+				<label>Nombre</label>
+				<help></help>
+			</field>
+			<field id="send" local="true" linkint="mensajes_reply.xml" linkdes="Enviar Mensaje" print="false">
+                <label style="color:red;"  Formstyle="display:none;">Enviar</label>				
+				<tipo>varchar</tipo>
+				<paring destino="para" operador="=">login</paring>
+				<paring destino="idHilo" >idMensaje</paring>
+				<valor><![CDATA['<img src="../img/mail_generic.png"/>']]></valor>
+
+			</field>	
+			<field id="Env">
+				<label>Env/Rec</label>
+				<expression>CONCAT((SELECT CAST(count(*) as SIGNED) from HTXMESSAGES where HTXMESSAGES.para = login and HTXMESSAGES.de = yo), '/',(SELECT CAST(count(*) as SIGNED) from HTXMESSAGES where HTXMESSAGES.para = yo and HTXMESSAGES.de = login))</expression>
+				<tipo>varchar</tipo>
+			</field>
+
+			<field id="noleidos">
+				<label>No leidos</label>
+				<expression>SELECT CAST(count(*) as SIGNED) from HTXMESSAGES where HTXMESSAGES.para = login and HTXMESSAGES.de = yo and HTXMESSAGES.leido = 0</expression>
+				<tipo>integer</tipo>
+			</field> 
+			<field id="cero" noshow="true" local="true">
+				
+				<valor>0</valor>
+			</field>
+			<field id="Id_Perfil" oculto="true"></field>
+			<field id="hi" deshabilitado="true" clasefila="true" noshow="true" local="true">
+				<if exp="noleidos != 0">
+					<true>'resaltadoVioleta'</true>
+					<false>''</false>
+					
+				</if>
+
+				<tipo>varchar</tipo>
+							
+			</field>
+			
+			<field id="recibidos" linkint="mensajes_recive.xml" linkdes="Enviar Mensaje">
+				<label style="color:red;font-weight:bold;">Nuevos</label>
+				<expression>SELECT CAST(count(*) as SIGNED) from HTXMESSAGES where HTXMESSAGES.para = yo and HTXMESSAGES.de = login and HTXMESSAGES.leido = 0</expression>
+				<tipo>integer</tipo>
+				<paring destino="de" operador="=">login</paring>
+				<paring destino="leido" operador="=">leido</paring>
+				
+				
+			</field>
+			<order>
+				<field id="apellido"></field>
+			</order>
+		</table>
+	</form>
+</histrix>

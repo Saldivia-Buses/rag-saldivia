@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="grid" log="false" deleteRow="false" inserta="false" borra="false" imprime="false" llenoreferente="true" llenotemporal="true" tooltip="false" showCantidad="false" updateTotals="true">
+  <title>Detalle de Valores</title>
+  <obs/>
+  <form >
+
+    <!-- FORMAS DE PAGO DISPONIBLES PARA ESTE PUESTO -->
+
+    <table id="CAJ_PUESTO_FORMAS" label="Detalle de Valores">
+
+
+      <movimientos>
+          <relacion id="cajarqueoconteo_ins.xml"/>
+      </movimientos>
+                            
+      <field id="cajpuesto_id" esClave="true" noshow="true"  />
+
+      <field id="cajformapago_id" esClave="true" noshow="true"/>
+
+      <field id="descripcion_forma" tabla="CAJ_FORMAS_PAGO" deshabilitado="true">
+        <label>Tipo</label>
+        <help>Descripcion de la forma de pago</help>
+        <size>20</size>
+      </field>
+
+
+      <field id="valor" local="true" editable="true" suma="true">
+        <label>Importe</label>
+        <tipo>numeric</tipo>
+        <jseval campodestino="conteo_arqueo" total="true">valor</jseval>
+        <detalle>conteo_arqueo</detalle>
+        <detalle>recuento</detalle>
+      </field>
+      
+
+      <field id="grabar" local="true" noshow="true">
+        <if exp="( (valor + 0) != 0)">
+          <true>1</true>
+          <false>0</false>
+        </if>
+      </field>
+
+      <order>
+        <field id="orden_forma" tabla="CAJ_FORMAS_PAGO"/>
+      </order>
+    </table>
+
+
+    <!-- DESCRIPCION FORMA DE PAGO -->
+    <join>
+      <table id="CAJ_FORMAS_PAGO">
+        <field id="id_cajformapago">
+          <condicion operador="=">CAJ_PUESTO_FORMAS.cajformapago_id</condicion>
+        </field>
+        <field id="tipo_forma">
+          <condicion operador="=">0</condicion>
+        </field>
+      </table>
+    </join>
+
+    <!-- FORMAS DE PAGOS ASOCIADAS AL PUESTO PARA EL ARQUEO -->
+
+    <join>
+      <table id="CAJ_PUESTO_ARQUEOS">
+        <field id="cajpuesto_id">
+          <condicion operador="=">CAJ_PUESTO_FORMAS.cajpuesto_id</condicion>
+        </field>
+        <field id="cajformapago_id">
+          <condicion operador="=">CAJ_PUESTO_FORMAS.cajformapago_id</condicion>
+        </field>
+      </table>
+    </join>
+    
+  </form>
+</histrix>

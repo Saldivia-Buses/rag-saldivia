@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+	<histrix tipo="abm-mini" path="fotos/articulos">
+		<title>Fotos por Artículo</title>
+		<obs></obs>
+		<form >
+			<table id="ARTICULO_FOTO" label="Articulo Fotos">
+   				<field id="idFoto" autoinc="true" noshow="true">
+                </field>
+
+				<field id="idArticulo" oculto="true">
+					<label>Articulo</label>
+					<help>Codigo de Articulo</help>
+				</field>
+				<field id="_ORDEN" local="true" deshabilitado="true">
+				</field>
+
+                <field  id="foto" foto="true" download="true" path="idArticulo">
+                    <label>Foto</label>
+                    <help>Foto del Articulo</help>
+                    <tipo Type="Image">file</tipo>
+                </field>
+			</table>
+		</form>
+	</histrix>

@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" preloadData="false">
+	<title>Sumas y saldos</title>
+	<obs></obs>
+	<form >
+		<table id="CTBCUENT" >
+			<filters>
+
+		<field id="siscod" deshabilitado="false">
+                    <label>Ejercicio</label>
+                    <operador>=</operador>
+                </field>
+<!--
+                <field id="idcos">
+			<label>Centro de costos</label>
+		</field>
+-->
+		<field id="minfec" deshabilitado="false" >
+			<operador>=</operador>
+			<label modpos="nobr">Desde Fecha</label>
+			<valor>today</valor>
+			<tipo>date</tipo>
+		</field>
+		<field id="maxfec" deshabilitado="false">
+			<operador>=</operador>
+			<label modpos="nobr">Hasta Fecha</label>
+			<valor>today</valor>
+			<tipo>date</tipo>
+		</field>
+  	</filters>
+
+		<field id="minfec" local="true" noshow="true">
+			<label>Desde Fecha</label>
+			<tipo>date</tipo>
+		</field>
+		<field id="maxfec" local="true"  noshow="true">
+			<label>Hasta Fecha</label>
+			<tipo>date</tipo>
+		</field>
+
+<!-- 		<field id="siscod"  deshabilitado="true" noshow="true"></field>
+ -->
+	    <field id="siscod" noshow="true" local="true">
+                <helper type="combo" xml="ctbejercicios_crud.xml" dir="/contabilidad/man/">
+                    <field id="activo" tipoOrden="DESC" />
+                    <field id="fecha_mov1">
+                        <expresion>DATE_FORMAT(comienza, '%d/%m/%Y')</expresion>
+                        <tipo>date</tipo>
+                    </field>
+                    <field id="fecha_mov2">
+                        <expresion>DATE_FORMAT(finaliza, '%d/%m/%Y')</expresion>
+                        <tipo>date</tipo>
+                    </field>
+                    <field id="finaliza" />
+                </helper>
+            </field>
+
+            <field id="idcos" modpos="nobr" _tabla="CTB_DETALLES" tabla="CTBREGIS" >
+				<!-- <expression having="false">CTB_DETALLES.ctbcentro_id</expression> -->
+				<label>Centro de costos</label>
+				<helper id="CTB_CENTROS"  type="combo" empty="true" _multiple="true">
+					<field id="id_ctbcentro" />
+					<field id="centro">
+						<expression>concat(referencia_centro,' ', nombre_centro)</expression>
+					</field> 
+				</helper>
+
+			</field>
+
+			<field id="ctbcod"  _tabla="CTBREGIS" deshabilitado="true">
+				<label>Código</label>
+				<help>Codigo de Cuenta Contable</help>
+			</field>
+
+			<field id="ctbnom" deshabilitado="true" tabla="CTBCUENT">
+				<label>Nombre</label>
+				<help>Nombre de la Cuenta</help>
+			</field>
+
+			<field id="debeant" suma="true"  noZero="true" style="color:blue">
+				<expression sql="true" >select sum(ANT.regimp * (case when ANT.regdoh = 1 then 1 else 0 end)) from CTBREGIS ANT where ANT.ctbcod =  '[__ctbcod__]' and ANT.idcos =  '[__idcos__]' and ANT.regfec &lt; '[__minfec__]'</expression>
+				<label>Haber Ant</label>
+				<help>Importe del Movimiento en el Haber</help>
+				<tipo>custom_numeric</tipo>
+			</field>
+			<field id="haberant" suma="true"  noZero="true" style="color:blue">
+				<expression sql="true" >select sum(ANT.regimp * (case when ANT.regdoh = 2 then 1 else 0 end)) from CTBREGIS ANT where ANT.ctbcod =  '[__ctbcod__]' and ANT.idcos =  '[__idcos__]' and ANT.regfec &lt; '[__minfec__]'</expression>
+				<label>Haber Ant</label>
+				<help>Importe del Movimiento en el Haber</help>
+				<tipo>custom_numeric</tipo>
+			</field>
+
+
+			<field id="saldoini" suma="true" noZero="true" style="color:blue">
+				<expression sql="true" >select sum(ANT.regimp * (case when ANT.regdoh = 1 then 1 when ANT.regdoh = 2 THEN  -1 ELSE 0  end)) from CTBREGIS ANT where ANT.ctbcod =  '[__ctbcod__]' and ANT.idcos =  '[__idcos__]' and ANT.regfec &lt; '[__minfec__]' </expression>
+				<label>Saldo Inicial</label>
+				<help>Importe del Movimiento en el Debe</help>
+				<tipo>custom_numeric</tipo>
+			</field>
+
+
+			<field id="debe" suma="true" noZero="true">
+				<expression>sum(regimp * (case when regdoh = 1 then 1 else 0 end))</expression>
+				<label>Debe</label>
+				<help>Importe del Movimiento en el Debe</help>
+				<tipo>custom_numeric</tipo>
+			</field>
+
+			<field id="haber" suma="true"  noZero="true">
+				<expression>sum(regimp * (case when regdoh = 2 then 1 else 0 end))</expression>
+				<label>Haber</label>
+				<help>Importe del Movimiento en el Haber</help>
+				<tipo>custom_numeric</tipo>
+			</field>
+
+			<field id="saldo" local="true">
+			    <label>Saldo final</label>
+			    <if exp="true">
+				<true>saldoini + (debe - haber)</true>
+				<false></false>
+			    </if>
+				<tipo>custom_numeric</tipo>
+			</field>
+
+			<group>
+				<field id="ctbcod"/>
+				<field id="idcos" />
+			</group>
+
+		</table>
+
+		<join tipo="left">
+			<table id="CTBREGIS">
+				<field id="ctbcod" >
+					<condicion operador="=">CTBCUENT.ctbcod</condicion>
+				</field>
+				<field id="siscod" >
+					<condicion operador="=">'[__siscod__]'</condicion>
+				</field>
+				<field id="regfec" >
+					<condicion operador="&gt;=">STR_TO_DATE('[__minfec__]', '%d/%m/%Y') and regfec &lt;= STR_TO_DATE('[__maxfec__]', '%d/%m/%Y')</condicion>
+				</field>
+			</table>
+		</join>
+
+		<!-- <join tipo="left">
+            <table id="CTB_DETALLES">
+                <field id="ctbregis_id">
+                    <condicion operador="=">CTBREGIS.id_ctbregis</condicion>
+                </field>
+            </table>
+        </join> -->
+	</form>
+</histrix>

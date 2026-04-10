@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+   <histrix tipo="consulta" form="false" imprime="false" _log="false" _preloadData="false" width="40">
+		<title>ORDENES DE COMPRA</title>
+        <obs></obs>
+               <form  detalle="oc_select_cons_det.xml">
+                  <table id="CPSENCAB" label="Ordenes de compra">
+
+                  <field id="ocpnro" _esClave="true" _noshow="true">
+                      <label>Nro.</label>
+                      <help>Número de la orden de compra</help>
+					  <detalle>ocpnro</detalle>
+                  </field>
+
+                  <field id="ocpfec" >
+                      <label>Fecha</label>
+                      <help>Fecha de la orden de compra</help>
+		              <condicion operador="&gt;=">DATE_SUB(CURDATE(), INTERVAL 6 MONTH)</condicion>
+                  </field>
+                  
+                  <field id="ctacod" noshow="true">
+					<condicion operador="=">'[__codprv__]'</condicion>
+                  </field>
+
+					<field id="codprv" local="true" noshow="true">
+						<detalle>codprv</detalle>
+					</field>
+
+					<field id="fecreq" noshow="true" local="true">
+						<detalle>fecreq</detalle>
+						<label>fecreq</label>
+						<tipo>date</tipo>
+					</field>
+		  
+		  
+                  </table>
+               </form>
+        </histrix>

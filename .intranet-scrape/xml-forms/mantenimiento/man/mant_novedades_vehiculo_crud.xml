@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  CRUD
+Tarea: Tabla de Novedades del vehiculo
+Autor: 
+Fecha: 15/11/13
+*******************************************************************************
+-->
+<histrix tipo="crud">
+     <title>Novedades Vehiculos</title>
+    <obs></obs>
+    <form>
+        <table id="MANT_NOVEDADES" label="Novedades del vehiculo">
+
+            <filters>
+               <!--
+                <field id="usuario_id">
+                    <label>Usuario</label>
+                    <operador>=</operador>
+                </field>
+                -->
+                
+                <field id="mantvehiculo_id">
+                    <label _modpos="nobr">Vehículo</label>
+                    <operador>=</operador>
+                </field>
+
+                <field id="fecha_novedad">
+                    <label>Desde Fecha</label>
+                    <operador>&gt;=</operador>
+                </field>
+
+                <field id="fecha_novedad">
+                    <label modpos="nobr">Hasta Fecha</label>
+                    <operador>&lt;=</operador>
+                    <valor>today</valor>
+                </field>
+                
+            </filters>
+
+            <field id="id_mantnovedad"  esClave="true" autoinc="true" noshow="true">
+                <label>Id novedad Vehiculo</label>
+                <help>Id novedad Vehiculo</help>		
+            </field>
+            
+            <field id="mantvehiculo_id" required="true">
+                <label>Vehículo</label>
+                <help>Vehículo</help>
+                <helper type="combo" id="MANT_VEHICULOS" empty="true">
+                    <field id="id_mantvehiculo" />
+                    <field id="descripcion_vehiculo" />
+                    <order>
+                        <field id="descripcion_vehiculo" table="MANT_VEHICULOS" />
+                    </order>
+                </helper>
+            </field>            
+
+            <field id="fecha_novedad" _required="true">
+                <label>Fecha</label>
+                <help>Fecha de la novedad</help>
+                <tipo>date</tipo>
+            </field>
+
+            <field id="manttiponovedad_id">
+               <label>Tipo Novedad</label>
+               <helper type="combo" xml="mant_tipo_novedad_crud.xml" empty="true">
+               </helper>
+               <operador>=</operador>       
+            </field> 
+
+            <field id="lugar_novedad">
+                <label>Lugar</label>
+                <help>Lugar</help>
+            </field>
+                    
+            <field id="responsable">
+                <label>Responsable</label>
+                <help>Responsable</help>
+            </field>
+
+            <!--
+            <field id="usuario_id">
+                <label>usuario</label>
+                <helper type="combo" id="HTXUSERS" empty="true">
+                    <field id="Id_usuario" />
+                       
+                    <field id="usuario">
+                        <label>Nombre</label>
+                        <expresion>CONCAT(Nombre, ' ', apellido)</expresion>
+                        
+                    </field> 
+                        <order>
+                          <field id="usuario" />
+                        </order>  
+                </helper>
+            </field>
+            -->
+
+		<order>
+			<field id="fecha_novedad" />
+		</order>
+                  	    
+        </table>
+	     
+        <join tipo="left">
+             <table id="MANT_VEHICULOS">
+                <field id="id_mantvehiculo">
+                    <condicion operador="=">mantvehiculo_id</condicion>
+                </field>
+             </table>
+        </join>
+       
+    </form>
+</histrix>	

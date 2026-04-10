@@ -1,0 +1,549 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" PDForientacion="L" _limit="5" >
+  <title>Matriz de polivalencias</title>
+  <obs/>
+  <form >
+    <table id="PERSONAL" label="Matriz de polivalencias" styleTbody="height:10em;">
+
+
+   <field id="idPersona" noshow="true" />
+
+    <field id="legajo" _noshow="true" esClave="true">
+      <label modpos="nobr">Legajo</label>
+    </field>
+
+    <field id="apellido" >
+      <label modpos="nobr" colspan="6">Apellido</label>
+      <help>Apellido</help>
+    </field>
+    <field id="Nombre">
+      <label modpos="nobr">Nombre</label>
+      <help>Nombre</help>
+    </field>
+
+    <field id="polivalencianivel_id" tabla="RH_POLIVALENCIAS" noshow="true" />
+
+    <field id="herreria" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 1</expression>
+      <label>Herreria</label>
+<!--       <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+
+    <field id="Chaperia" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 2</expression>
+      <label>Chaperia</label>
+<!--       <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+
+      <field id="Pintura" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 3</expression>
+      <label>Pintura</label>
+<!--       <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+
+      <field id="PRFV" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 4</expression>
+      <label>PRFV</label>
+<!--       <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+
+      <field id="Terminacion" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 5</expression>
+      <label>Terminacion</label>
+<!--       <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+
+      <field id="IngenieriaDeProducto" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 6</expression>
+      <label>Ingenieria De Producto</label>
+<!--       <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+
+      <field id="DesarrolloyDiseño" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 7</expression>
+      <label>Desarrollo y Diseño</label>
+<!--       <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+
+      <field id="Mecanica" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 9</expression>
+      <label>Mecanica</label>
+<!--       <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+
+      <field id="Mantenimiento" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 10</expression>
+      <label>Mantenimiento</label>
+<!--       <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+
+      <field id="Electricidad" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 11</expression>
+      <label>Electricidad</label>
+<!--       <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+
+      <field id="Limpieza" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 13</expression>
+      <label>Limpieza</label>
+<!--       <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+
+      <field id="Almacen" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 14</expression>
+      <label>Almacen</label>
+<!--       <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+
+      <field id="Titular" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 20</expression>
+      <label>Titular</label>
+<!--       <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+
+      <field id="DirecciondeVentasyAdministracion" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 21</expression>
+      <label>Direccion de Ventas y Administracion</label>
+<!--       <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+
+      <field id="DirecciondeRecursosHumanos" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 22</expression>
+      <label>Direccion de Recursos Humanos</label>
+<!--       <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+
+      <field id="DirecciondeProduccion" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 23</expression>
+      <label>Direccion de Produccion</label>
+<!--       <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+
+      <field id="DepContabilidadyFinanzas" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 24</expression>
+      <label>Dep. Contabilidad y Finanzas</label>
+<!--       <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+
+      <field id="DepAdministracion" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 25</expression>
+      <label>Dep. Administracion</label>
+<!--       <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+
+      <field id="DepCompras" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 26</expression>
+      <label>Dep. Compras</label>
+<!--       <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+
+      <field id="DepProduccion" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 27</expression>
+      <label>Dep. Produccion</label>
+<!--       <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+
+      <field id="DepIngenieria" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 28</expression>
+      <label>Dep. Ingenieria</label>
+<!--       <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+
+      <field id="DepHigieneSeguridadyMantenimiento" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 29</expression>
+      <label>Dep. Higiene Seguridad y Mantenimiento</label>
+<!--       <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+
+      <field id="SistemasyComunicaciones" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 30</expression>
+      <label>Sistemas y Comunicaciones</label>
+<!--       <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+
+      <field id="CuentasProveedores" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 31</expression>
+      <label>Cuentas Proveedores</label>
+<!--       <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+
+      <field id="PostVentayReparaciones" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 35</expression>
+      <label>PostVenta y Reparaciones</label>
+<!--       <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+
+      <field id="ControlesCalidadyPreentrega" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 36</expression>
+      <label>Controles Calidad y Preentrega</label>
+<!--       <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+
+      <field id="DepSeguimientoyControlDelProducto" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 38</expression>
+      <label>Dep. Seguimiento y Control Del Producto</label>
+<!--       <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+
+      <field id="RecepcionMateriales" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 39</expression>
+      <label>Recepcion Materiales</label>
+<!--       <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+
+      <field id="MejoradelProducto" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 40</expression>
+      <label>Mejora del Producto</label>
+<!--       <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+
+      <field id="Corteyplegado" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 42</expression>
+      <label>Corte y plegado</label>
+<!--       <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+
+      <field id="HerreriaMinibus" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 43</expression>
+      <label>Herreria Minibus</label>
+<!--       <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+
+      <field id="ChaperiaMinibus" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 44</expression>
+      <label>Chaperia Minibus</label>
+ <!--       <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+
+      <field id="DepProduccionMinibus" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 45</expression>
+      <label>Dep Produccion Minibus</label>
+ <!--       <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+
+      <field id="PRFVMinibus" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 46</expression>
+      <label>PRFV Minibus</label>
+ <!--       <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+      <field id="PinturaMinibus" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 47</expression>
+      <label>Pintura Minibus</label>
+ <!--       <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+
+      <field id="TerminacionMinibus" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 48</expression>
+      <label>Terminacion Minibus</label>
+ <!--       <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+
+      <field id="ElectricidadMinibus" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 49</expression>
+      <label>Electricidad Minibus</label>
+ <!--       <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+
+      <field id="MecanicaMinibus" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 50</expression>
+      <label>Mecanica Minibus</label>
+ <!--       <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+
+      <field id="GestionDeCalidad" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 51</expression>
+      <label>Gestion de Calidad</label>
+ <!--       <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+
+      <field id="DesarrolloProveedores" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 52</expression>
+      <label>Desarrollo Proveedores</label>
+ <!--       <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+
+    <field id="DepAsientos" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 53</expression>
+      <label>Dep. Asientos</label>
+ <!--       <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+
+    <field id="HerreriaAsientos" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 54</expression>
+      <label>Herreria Asi.</label>
+ <!--       <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+      
+    <field id="Resp.Direccion" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 56</expression>
+      <label>Resp.Direccion</label>
+ <!--       <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+      
+    <field id="Accesorios" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 57</expression>
+      <label>Accesorios</label>
+ <!--       <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+      
+    <field id="Calefaccion" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 58</expression>
+      <label>Calefaccion</label>
+ <!--       <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+      
+     <field id="Autopartes" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 59</expression>
+      <label>Autopartes</label>
+ <!--       <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+      
+    <field id="IngProcesos" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 60</expression>
+      <label>Ing.Procesos</label>
+ <!--       <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+      
+    <field id="CosturaAsientos" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 61</expression>
+      <label>Costura Asi.</label>
+ <!--       <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+      
+    <field id="TapiceriaAsientos" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 62</expression>
+      <label>Tapiceria Asi.</label>
+ <!--       <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+      
+    <field id="ArmadoAsientos" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 63</expression>
+      <label>Armado Asi.</label>
+<!--  <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+    
+    <field id="Ventanas" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 64</expression>
+      <label>Ventanas</label>
+<!--  <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+
+    <field id="MetodosyTiempos" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 66</expression>
+      <label>Métodos y Tiempos</label>
+<!--  <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+    
+    <field id="CalidadProcesosyProveedores" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 68</expression>
+      <label>Calidad Procesos y Proveedores</label>
+<!--  <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+    
+    <field id="MedioAmbienteHigieneySeguridad" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 69</expression>
+      <label>Medio Ambiente, Higiene y Seguridad</label>
+<!--  <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+    
+    <field id="Nuevosequipamientosprocesos" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 70</expression>
+      <label>Nuevos equipamientos / procesos</label>
+<!--  <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+    
+    <field id="Clientes" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 71</expression>
+      <label>Clientes</label>
+<!--  <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+    
+    <field id="RepresentantedelaDirección" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 72</expression>
+      <label>Representante de la Dirección</label>
+<!--  <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+    
+    <field id="AireAcondicionado" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 73</expression>
+      <label>Aire Acondicionado</label>
+<!--  <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+    
+    <field id="Licencias" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 74</expression>
+      <label>Licencias</label>
+<!--  <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+    
+    <field id="GestiondelCapitalHumano" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 75</expression>
+      <label>Gestión del Capital Humano</label>
+<!--  <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+    
+    <field id="Estandarización" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 76</expression>
+      <label>Estandarización</label>
+<!--  <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>
+    
+    <field id="Definiciondelproducto" colstyle="text-align:center;width:4em;">
+      <expression>SELECT polivalencianivel_id FROM RH_POLIVALENCIAS WHERE RH_POLIVALENCIAS.IdPersona = PERSONAL.idPersona and RH_POLIVALENCIAS.seccion_id = 77</expression>
+      <label>Definicion Producto</label>
+<!--       <helper type="link" xml="rrhh_polivalencias_niveles_qry.xml" dir="/personal" width="250" height="70" title="Descripción" reposition="true">
+        <parameter source="polivalencianivel_id" target="id_rhpolnivel" operator="=" />
+      </helper>
+ -->    </field>     
+    <field id="fechaEgreso" noshow="true">
+        <label>Fecha Egreso nula</label>
+        <condicion operador="=">"0000-00-00"</condicion>
+    </field>
+
+    <group>
+     <field id="idPersona" />
+    </group> 
+    </table>
+
+    <join tipo="left">
+      <table id="RH_POLIVALENCIAS">
+        <field id="idPersona">
+          <condicion operador="=">PERSONAL.idPersona</condicion>
+        </field>
+      </table>
+    </join>
+
+   <!--
+
+    <join tipo="left">
+      <table id="RH_POLIVALENCIA_NIVELES">
+        <field id="id_rhpolnivel">
+          <condicion operador="=">RH_POLIVALENCIAS.polivalencianivel_id</condicion>
+        </field>
+      </table>
+    </join>
+    -->
+  </form>
+</histrix>

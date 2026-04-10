@@ -1,0 +1,543 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" PDForientacion="L" subtipo="vertical">
+    <title>Forecast Articulos</title>
+    <obs></obs>
+    <form >
+        <table id="MRP_FORECAST" label="Consulta de pronostico vs Producción">
+            <filters>
+                <field id="year_forecast">
+                    <label>año</label>
+                    <operador>=</operador>
+                    <valor eval="true">date("Y")</valor>
+                </field>
+                <field id="stkarticulo_id" esClave="true">
+                    <label modpos="nobr">Código</label>
+                    <help>Codigo de Articulo</help>
+                    <helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas">
+                        <field id="nombre_articulo">
+                            <detalle>nombre_articulo</detalle>
+                        </field>
+                        <field id="produccion_diaria">
+                            <detalle>minimo_ordendetalle</detalle>
+                        </field>
+                    
+                    </helper>
+
+                </field>
+
+                <field id="nombre" deshabilitado="false">
+                    <expresion>nombre_articulo</expresion>
+                    <label modpos="nobr">Articulo</label>
+                    <help>Codigo de Articulo</help>
+                    <operador>like</operador>
+                </field>
+            </filters>
+			
+            <fieldGroup>
+                <field id="stkarticulo_id" esClave="true">
+                    <label>Código</label>
+                    <help>Codigo de Articulo</help>
+                    <helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas">
+                        <field id="nombre_articulo">
+                            <detalle>nombre_articulo</detalle>
+                        </field>
+                        <field id="produccion_diaria">
+                            <detalle>minimo_ordendetalle</detalle>
+                        </field>
+                    
+                    </helper>
+
+                </field>
+
+                <field id="nombre" deshabilitado="true">
+                    <expresion having="false">nombre_articulo</expresion>
+                    <label modpos="nobr">Articulo</label>
+                    <help>Codigo de Articulo</help>
+                    <helper type="link" xml="mrp_forecast_ins.xml" >
+                        <parameter source="stkarticulo_id" target="stkarticulo_id" />
+                        <parameter source="year_forecast"  target="year_forecast" />
+                        <parameter source="tipo_forecast"  target="tipo_forecast" />
+                    </helper>
+                </field>
+                <field id="mes_forecast" colstyle="display:none;">
+                    <label>Mes</label>
+                    <options>
+                        <option valor="1">Enero</option>
+                        <option valor="2">Febrero</option>
+                        <option valor="3">Marzo</option>
+                        <option valor="4">Abril</option>
+                        <option valor="5">Mayo</option>
+                        <option valor="6">Junio</option>
+                        <option valor="7">Julio</option>
+                        <option valor="8">Agosto</option>
+                        <option valor="9">Septiembre</option>
+                        <option valor="10">Octubre</option>
+                        <option valor="11">Noviembre</option>
+                        <option valor="12">Diciembre</option>
+                    </options>
+                </field>
+			
+                <field id="cantidad_forecast" colstyle="display:none;">
+                    <label modpos="nobr">Cantidad</label>
+                </field>
+
+                <field id="year_forecast" required="true" _noshow="true" valauto="true" colstyle="display:none;">
+                    <label>año</label>
+                </field>
+
+                <field id="tipo_forecast" noshow="true">
+                    <label>Tipo</label>
+                    <condicion operador="=">2</condicion>
+                </field>
+            </fieldGroup>
+            <fieldGroup noZero="true" >
+                <field id="total" noZero="false" tipoOrden="DESC">
+                    <label>Total</label>
+                    <expresion>sum(cantidad_forecast)</expresion>
+                    <tipo>grafico</tipo>
+                </field>
+
+  
+                    <field id="link01"  local="true" noshow="true">
+                        <if exp="prod01 != 0">
+                            <true>'mrp_ordenes_cumplidas_qry.xml'</true>
+                            <false>''</false>
+                        </if>
+                    </field>
+                    <field id="link02"  local="true" noshow="true">
+                        <if exp="prod02 != 0">
+                            <true>'mrp_ordenes_cumplidas_qry.xml'</true>
+                            <false>''</false>
+                        </if>
+                    </field>
+                    <field id="link03" local="true" noshow="true" >
+                        <if exp="prod03 != 0">
+                            <true>'mrp_ordenes_cumplidas_qry.xml'</true>
+                            <false>''</false>
+                        </if>
+                    </field>
+                    <field id="link04"  local="true" noshow="true">
+                        <if exp="prod04 != 0">
+                            <true>'mrp_ordenes_cumplidas_qry.xml'</true>
+                            <false>''</false>
+                        </if>
+                    </field>
+                    <field id="link05"  local="true" noshow="true">
+                        <if exp="prod05 != 0">
+                            <true>'mrp_ordenes_cumplidas_qry.xml'</true>
+                            <false>''</false>
+                        </if>
+                    </field>
+                    <field id="link06" local="true" noshow="true" >
+                        <if exp="prod06 != 0">
+                            <true>'mrp_ordenes_cumplidas_qry.xml'</true>
+                            <false>''</false>
+                        </if>
+                    </field>
+                    <field id="link07" local="true" noshow="true">
+                        <if exp="prod07 != 0">
+                            <true>'mrp_ordenes_cumplidas_qry.xml'</true>
+                            <false>''</false>
+                        </if>
+                    </field>
+                    <field id="link08"  local="true" noshow="true">
+                        <if exp="prod08 != 0">
+                            <true>'mrp_ordenes_cumplidas_qry.xml'</true>
+                            <false>''</false>
+                        </if>
+                    </field>
+                    <field id="link09" local="true" noshow="true">
+                        <if exp="prod09 != 0">
+                            <true>'mrp_ordenes_cumplidas_qry.xml'</true>
+                            <false>''</false>
+                        </if>
+                    </field>
+                    <field id="link10"  local="true" noshow="true">
+                        <if exp="prod10 != 0">
+                            <true>'mrp_ordenes_cumplidas_qry.xml'</true>
+                            <false>''</false>
+                        </if>
+                    </field>
+                    <field id="link11" local="true" noshow="true">
+                        <if exp="prod11 != 0">
+                            <true>'mrp_ordenes_cumplidas_qry.xml'</true>
+                            <false>''</false>
+                        </if>
+                    </field>
+                    <field id="link12"  local="true" noshow="true">
+                        <if exp="prod12 != 0">
+                            <true>'mrp_ordenes_cumplidas_qry.xml'</true>
+                            <false>''</false>
+                        </if>
+                    </field>
+
+                <field id="prod01" noshow="true">
+                    <expresion >round((select ifnull(sum(STK_MOVIMIENTOS.cantidad), '0') from STK_MOVIMIENTOS
+                    inner join STK_CONCEPTOS on STK_CONCEPTOS.id_stkconcepto = stkconcepto_id and 
+                                                STK_CONCEPTOS.produccion_concepto = 1
+                where STK_MOVIMIENTOS.stkarticulo_id = MRP_FORECAST.stkarticulo_id and
+                    year(STK_MOVIMIENTOS.fecha_movimiento) = year_forecast and 
+                    month(STK_MOVIMIENTOS.fecha_movimiento) = 1))
+                    </expresion>
+                </field>
+                <field id="sum01" noshow="true">
+                    <expresion>sum((case when mes_forecast = 1 then round( cantidad_forecast )end))</expresion>
+                </field>
+                <field id="Str01" local="true" noZero="false" style="text-align:center">
+                    <label>Enero</label>
+
+                    <if exp="'prod01' != '0' || 'sum01' != ''">
+                        <true><![CDATA['<b>prod01</b> / sum01']]>
+                        </true>
+                        <false>''</false>
+                    </if>
+                    <attribute id="linkint">link01</attribute>
+                    <helper type="link" xml="mrp_ordenes_cumplidas_qry.xml" dir="/mrp/qry">
+                        <parameter source="1" target="mes" />
+                        <parameter source="year_forecast" target="anio" />
+                        <parameter source="stkarticulo_id" target="stkarticulo_id" />
+                    </helper>
+                </field>
+  
+
+                <field id="prod02" noshow="true">
+                    <expresion >round((select ifnull(sum(STK_MOVIMIENTOS.cantidad), '0') from STK_MOVIMIENTOS
+                    inner join STK_CONCEPTOS on STK_CONCEPTOS.id_stkconcepto = stkconcepto_id and 
+                                                STK_CONCEPTOS.produccion_concepto = 1
+                where STK_MOVIMIENTOS.stkarticulo_id = MRP_FORECAST.stkarticulo_id and
+                    year(STK_MOVIMIENTOS.fecha_movimiento) = year_forecast and 
+                    month(STK_MOVIMIENTOS.fecha_movimiento) = 2))
+                    </expresion>
+                </field>
+                <field id="sum02" noshow="true">
+                    <expresion>sum((case when mes_forecast = 2 then round( cantidad_forecast )end))</expresion>
+                </field>
+                <field id="Str02" local="true" noZero="false" style="text-align:center">
+                    <label>Febrero</label>
+
+                    <if exp="'prod02' != '0' || 'sum02' != ''">
+                        <true><![CDATA['<b>prod02</b> / sum02']]>
+                        </true>
+                        <false>''</false>
+                    </if>
+                    <attribute id="linkint">link02</attribute>
+                    <helper type="link" xml="mrp_ordenes_cumplidas_qry.xml" dir="/mrp/qry">
+                        <parameter source="2" target="mes" />
+                        <parameter source="year_forecast" target="anio" />
+                        <parameter source="stkarticulo_id" target="stkarticulo_id" />
+                    </helper>
+                </field>
+
+
+                <field id="prod03" noshow="true">
+                    <expresion >round((select ifnull(sum(STK_MOVIMIENTOS.cantidad), '0') from STK_MOVIMIENTOS
+                    inner join STK_CONCEPTOS on STK_CONCEPTOS.id_stkconcepto = stkconcepto_id and 
+                                                STK_CONCEPTOS.produccion_concepto = 1
+                where STK_MOVIMIENTOS.stkarticulo_id = MRP_FORECAST.stkarticulo_id and
+                    year(STK_MOVIMIENTOS.fecha_movimiento) = year_forecast and 
+                    month(STK_MOVIMIENTOS.fecha_movimiento) = 3 ))
+                    </expresion>
+                </field>
+                <field id="sum03" noshow="true">
+                    <expresion>sum((case when mes_forecast = 3 then round( cantidad_forecast )end))</expresion>
+                </field>
+                <field id="Str03" local="true" noZero="false" style="text-align:center">
+                    <label>Marzo</label>
+                    <if exp="'prod03' != '0' || 'sum03' != ''">
+                        <true><![CDATA['<b>prod03</b> / sum03']]>
+                        </true>
+                        <false>''</false>
+                    </if>
+                    <tipo>varchar</tipo>
+                    <attribute id="linkint">link03</attribute>
+                    <helper type="link" xml="mrp_ordenes_cumplidas_qry.xml" dir="/mrp/qry">
+                        <parameter source="3" target="mes" />
+                        <parameter source="year_forecast" target="anio" />
+                        <parameter source="stkarticulo_id" target="stkarticulo_id" />
+                    </helper>
+                </field>
+
+
+
+                <field id="prod04" noshow="true">
+                    <expresion >round((select ifnull(sum(STK_MOVIMIENTOS.cantidad), '0') from STK_MOVIMIENTOS
+                    inner join STK_CONCEPTOS on STK_CONCEPTOS.id_stkconcepto = stkconcepto_id and 
+                                                STK_CONCEPTOS.produccion_concepto = 1
+                where STK_MOVIMIENTOS.stkarticulo_id = MRP_FORECAST.stkarticulo_id and
+                    year(STK_MOVIMIENTOS.fecha_movimiento) = year_forecast and 
+                    month(STK_MOVIMIENTOS.fecha_movimiento) = 4 ))
+                    </expresion>
+                </field>
+                
+                <field id="sum04" noshow="true">
+                    <expresion>sum((case when mes_forecast = 4 then round( cantidad_forecast )end))</expresion>
+                </field>
+                
+                <field id="Str4" local="true" noZero="false" style="text-align:center">
+                    <label>Abril</label>
+                    <if exp="'prod04' != '0' || 'sum04' != ''">
+                        <true><![CDATA['<b>prod04</b> / sum04']]>
+                        </true>
+                        <false>''</false>
+                    </if>
+                    <attribute id="linkint">link04</attribute>
+                    <helper type="link" xml="mrp_ordenes_cumplidas_qry.xml" dir="/mrp/qry">
+                        <parameter source="4" target="mes" />
+                        <parameter source="year_forecast" target="anio" />
+                        <parameter source="stkarticulo_id" target="stkarticulo_id" />
+                    </helper>
+                </field>
+
+                
+                
+                
+                <field id="prod05" noshow="true">
+                    <expresion >round((select ifnull(sum(STK_MOVIMIENTOS.cantidad), '0') from STK_MOVIMIENTOS
+                    inner join STK_CONCEPTOS on STK_CONCEPTOS.id_stkconcepto = stkconcepto_id and 
+                                                STK_CONCEPTOS.produccion_concepto = 1
+                where STK_MOVIMIENTOS.stkarticulo_id = MRP_FORECAST.stkarticulo_id and
+                    year(STK_MOVIMIENTOS.fecha_movimiento) = year_forecast and 
+                    month(STK_MOVIMIENTOS.fecha_movimiento) = 5 ))
+                    </expresion>
+                </field>
+                <field id="sum05" noshow="true">
+                    <expresion>sum((case when mes_forecast = 5 then round( cantidad_forecast )end))</expresion>
+                </field>
+                <field id="Str5" local="true" noZero="false" style="text-align:center">
+                    <label>Mayo</label>
+                    <if exp="'prod05' != '0' || 'sum05' != ''">
+                        <true><![CDATA['<b>prod05</b> / sum05']]>
+                        </true>
+                        <false>''</false>
+                    </if>
+                    <attribute id="linkint">link05</attribute>
+                    <helper type="link" xml="mrp_ordenes_cumplidas_qry.xml" dir="/mrp/qry">
+                        <parameter source="5" target="mes" />
+                        <parameter source="year_forecast" target="anio" />
+                        <parameter source="stkarticulo_id" target="stkarticulo_id" />
+                    </helper>
+
+                </field>
+
+
+
+                
+                <field id="prod06" noshow="true">
+                    <expresion >round((select ifnull(sum(STK_MOVIMIENTOS.cantidad), '0') from STK_MOVIMIENTOS
+                    inner join STK_CONCEPTOS on STK_CONCEPTOS.id_stkconcepto = stkconcepto_id and 
+                                                STK_CONCEPTOS.produccion_concepto = 1
+                where STK_MOVIMIENTOS.stkarticulo_id = MRP_FORECAST.stkarticulo_id and
+                    year(STK_MOVIMIENTOS.fecha_movimiento) = year_forecast and 
+                    month(STK_MOVIMIENTOS.fecha_movimiento) = 6 ))
+                    </expresion>
+                </field>
+                <field id="sum06" noshow="true">
+                    <expresion>sum((case when mes_forecast = 6 then round( cantidad_forecast )end))</expresion>
+                </field>
+                <field id="Str6" local="true" noZero="false" style="text-align:center">
+                    <label>Junio</label>
+                    <if exp="'prod06' != '0' || 'sum06' != ''">
+                        <true><![CDATA['<b>prod06</b> / sum06']]>
+                        </true>
+                        <false>''</false>
+                    </if>
+                    <attribute id="linkint">link06</attribute>
+                    <helper type="link" xml="mrp_ordenes_cumplidas_qry.xml" dir="/mrp/qry">
+                        <parameter source="6" target="mes" />
+                        <parameter source="year_forecast" target="anio" />
+                        <parameter source="stkarticulo_id" target="stkarticulo_id" />
+                    </helper>
+                </field>
+
+
+
+                <field id="prod07" noshow="true">
+                    <expresion >round((select ifnull(sum(STK_MOVIMIENTOS.cantidad), '0') from STK_MOVIMIENTOS
+                    inner join STK_CONCEPTOS on STK_CONCEPTOS.id_stkconcepto = stkconcepto_id and 
+                                                STK_CONCEPTOS.produccion_concepto = 1
+                where STK_MOVIMIENTOS.stkarticulo_id = MRP_FORECAST.stkarticulo_id and
+                    year(STK_MOVIMIENTOS.fecha_movimiento) = year_forecast and 
+                    month(STK_MOVIMIENTOS.fecha_movimiento) = 7 ))
+                    </expresion>
+                </field>
+                <field id="sum07" noshow="true">
+                    <expresion>sum((case when mes_forecast = 7 then round( cantidad_forecast )end))</expresion>
+                </field>
+                <field id="Str7" local="true" noZero="false" style="text-align:center">
+                    <label>Julio</label>
+                    <if exp="'prod07' != '0' || 'sum07' != ''">
+                        <true><![CDATA['<b>prod07</b> / sum07']]>
+                        </true>
+                        <false>''</false>
+                    </if>
+                    <attribute id="linkint">link07</attribute>
+                    <helper type="link" xml="mrp_ordenes_cumplidas_qry.xml" dir="/mrp/qry">
+                        <parameter source="7" target="mes" />
+                        <parameter source="year_forecast" target="anio" />
+                        <parameter source="stkarticulo_id" target="stkarticulo_id" />
+                    </helper>
+                </field>
+                    
+
+
+                <field id="prod08" noshow="true">
+                    <expresion >round((select ifnull(sum(STK_MOVIMIENTOS.cantidad), '0') from STK_MOVIMIENTOS
+                    inner join STK_CONCEPTOS on STK_CONCEPTOS.id_stkconcepto = stkconcepto_id and 
+                                                STK_CONCEPTOS.produccion_concepto = 1
+                where STK_MOVIMIENTOS.stkarticulo_id = MRP_FORECAST.stkarticulo_id and
+                    year(STK_MOVIMIENTOS.fecha_movimiento) = year_forecast and 
+                    month(STK_MOVIMIENTOS.fecha_movimiento) = 8 ))
+                    </expresion>
+                </field>
+                <field id="sum08" noshow="true">
+                    <expresion>sum((case when mes_forecast = 8 then round( cantidad_forecast )end))</expresion>
+                </field>
+                <field id="Str8" local="true" noZero="false" style="text-align:center">
+                    <label>Agosto</label>
+                    <if exp="'prod08' != '0' || 'sum08' != ''">
+                        <true><![CDATA['<b>prod08</b> / sum08']]>
+                        </true>
+                        <false>''</false>
+                    </if>
+                    <attribute id="linkint">link08</attribute>
+                    <helper type="link" xml="mrp_ordenes_cumplidas_qry.xml" dir="/mrp/qry">
+                        <parameter source="8" target="mes" />
+                        <parameter source="year_forecast" target="anio" />
+                        <parameter source="stkarticulo_id" target="stkarticulo_id" />
+                    </helper>
+                </field>
+
+
+
+                <field id="prod09" noshow="true">
+                    <expresion >round((select ifnull(sum(STK_MOVIMIENTOS.cantidad), '0') from STK_MOVIMIENTOS
+                    inner join STK_CONCEPTOS on STK_CONCEPTOS.id_stkconcepto = stkconcepto_id and 
+                                                STK_CONCEPTOS.produccion_concepto = 1
+                where STK_MOVIMIENTOS.stkarticulo_id = MRP_FORECAST.stkarticulo_id and
+                    year(STK_MOVIMIENTOS.fecha_movimiento) = year_forecast and 
+                    month(STK_MOVIMIENTOS.fecha_movimiento) = 9 ))
+                    </expresion>
+                </field>
+                <field id="sum09" noshow="true">
+                    <expresion>sum((case when mes_forecast = 9 then round( cantidad_forecast )end))</expresion>
+                </field>
+
+                <field id="Str9" local="true" noZero="false" style="text-align:center">
+                    <label>Sept.</label>
+                    <if exp="'prod09' != '0' || 'sum09' != ''">
+                        <true><![CDATA['<b>prod09</b> / sum09']]>
+                        </true>
+                        <false>''</false>
+                    </if>
+                    <attribute id="linkint">link09</attribute>
+                    <helper type="link" xml="mrp_ordenes_cumplidas_qry.xml" dir="/mrp/qry">
+                        <parameter source="9" target="mes" />
+                        <parameter source="year_forecast" target="anio" />
+                        <parameter source="stkarticulo_id" target="stkarticulo_id" />
+                    </helper>
+                </field>
+
+
+                <field id="prod10" noshow="true">
+                    <expresion >round((select ifnull(sum(STK_MOVIMIENTOS.cantidad), '0') from STK_MOVIMIENTOS
+                    inner join STK_CONCEPTOS on STK_CONCEPTOS.id_stkconcepto = stkconcepto_id and 
+                                                STK_CONCEPTOS.produccion_concepto = 1
+                where STK_MOVIMIENTOS.stkarticulo_id = MRP_FORECAST.stkarticulo_id and
+                    year(STK_MOVIMIENTOS.fecha_movimiento) = year_forecast and 
+                    month(STK_MOVIMIENTOS.fecha_movimiento) = 10 ))
+                    </expresion>
+                </field>
+                <field id="sum010" noshow="true">
+                    <expresion>sum((case when mes_forecast = 10 then round( cantidad_forecast )end))</expresion>
+                </field>
+                <field id="Str10" local="true" noZero="false" style="text-align:center">
+                    <label>Octubre</label>
+                    <if exp="'prod10' != '0' || 'sum010' != ''">
+                        <true><![CDATA['<b>prod10</b> / sum010']]>
+                        </true>
+                        <false>''</false>
+                    </if>
+                    <attribute id="linkint">link10</attribute>
+                    <helper type="link" xml="mrp_ordenes_cumplidas_qry.xml" dir="/mrp/qry">
+                        <parameter source="10" target="mes" />
+                        <parameter source="year_forecast" target="anio" />
+                        <parameter source="stkarticulo_id" target="stkarticulo_id" />
+                    </helper>
+                </field>
+                    
+
+                <field id="prod11" noshow="true">
+                    <expresion >round((select ifnull(sum(STK_MOVIMIENTOS.cantidad), '0') from STK_MOVIMIENTOS
+                    inner join STK_CONCEPTOS on STK_CONCEPTOS.id_stkconcepto = stkconcepto_id and 
+                                                STK_CONCEPTOS.produccion_concepto = 1
+                where STK_MOVIMIENTOS.stkarticulo_id = MRP_FORECAST.stkarticulo_id and
+                    year(STK_MOVIMIENTOS.fecha_movimiento) = year_forecast and 
+                    month(STK_MOVIMIENTOS.fecha_movimiento) = 11 ))
+                    </expresion>
+                </field>
+                <field id="sum11" noshow="true">
+                    <expresion>sum((case when mes_forecast = 11 then round( cantidad_forecast )end))</expresion>
+                </field>
+                <field id="Str11" local="true" noZero="false" style="text-align:center">
+                    <label>Noviembre</label>
+
+                    <if exp="'prod11' != '0' || 'sum11' > '0'">
+                        <true><![CDATA['<b>prod11</b> / sum11']]>
+                        </true>
+                        <false>''</false>
+                    </if>
+                    <attribute id="linkint">link11</attribute>
+                    <helper type="link" xml="mrp_ordenes_cumplidas_qry.xml" dir="/mrp/qry">
+                        <parameter source="11" target="mes" />
+                        <parameter source="year_forecast" target="anio" />
+                        <parameter source="stkarticulo_id" target="stkarticulo_id" />
+                    </helper>
+                </field>
+
+
+
+                    
+
+                <field id="prod12" noshow="true">
+                    <expresion >round((select ifnull(sum(STK_MOVIMIENTOS.cantidad), '0') from STK_MOVIMIENTOS
+                    inner join STK_CONCEPTOS on STK_CONCEPTOS.id_stkconcepto = stkconcepto_id and 
+                                                STK_CONCEPTOS.produccion_concepto = 1
+                where STK_MOVIMIENTOS.stkarticulo_id = MRP_FORECAST.stkarticulo_id and
+                    year(STK_MOVIMIENTOS.fecha_movimiento) = year_forecast and 
+                    month(STK_MOVIMIENTOS.fecha_movimiento) = 12 ))
+                    </expresion>
+                </field>
+                <field id="sum12" noshow="true">
+                    <expresion>sum((case when mes_forecast = 12 then round( cantidad_forecast )end))</expresion>
+                </field>
+                <field id="Str12" local="true" noZero="false" style="text-align:center">
+                    <label>Diciembre</label>
+
+                    <if exp="'prod12' != '0' || 'sum12' > '0'">
+                        <true><![CDATA['<b>prod12</b> / sum12']]>
+                        </true>
+                        <false>''</false>
+                    </if>
+                    <attribute id="linkint">link12</attribute>
+                    <helper type="link" xml="mrp_ordenes_cumplidas_qry.xml" dir="/mrp/qry">
+                        <parameter source="12" target="mes" />
+                        <parameter source="year_forecast" target="anio" />
+                        <parameter source="stkarticulo_id" target="stkarticulo_id" />
+                    </helper>
+
+                </field>
+
+            </fieldGroup>
+            <group>
+                <field id="stkarticulo_id"></field>
+            </group>
+        </table>
+        <join tipo="left">
+            <table id="STK_ARTICULOS">
+                <field id="id_stkarticulo">
+                    <condicion operador="=">stkarticulo_id</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix>

@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="grid" paginar="250" procesa="true" inserta="false" deleteRow="false">
+  <title>Productos</title>
+  <obs></obs>
+  <form>
+    <table id="STK_ARTICULOS" label="Listado de Articulos" styleTbody="height:500px;overflow-x:hidden;">
+      <movimientos>
+        <relacion id="stkarticulos_upd.xml" />         
+      </movimientos>
+
+      <title>Listado de Articulos</title>
+      <filters>
+        <field id="stkrubro_id">
+          <label modpos="nobr">Rubro</label>
+        </field>
+        
+        <field id="id_stkarticulo">
+          <label>Cod.</label>
+        </field>
+
+        <field id="nombre_articulo" fullSearch="true">
+          <label modpos="nobr">Articulo</label>
+          <help>Descripcion de Articulo</help>
+          <operador>like</operador>
+        </field>
+        
+        <field id="stkdeposito_id">
+          <label >Depósito</label>
+        </field>
+
+        <field id="stkmarca_id">
+          <label >Marca</label>
+        </field>              
+
+        <field id="baja_articulo">
+          <label >Deshabilitados</label>
+        </field>              
+      </filters>
+
+      <field id="stkdeposito_id" local="true">
+        <helper type="combo" id="STK_DEPOSITOS" empty="true">
+          <field id="id_stkdeposito" />
+          <field id="nombre_deposito" />
+        </helper>
+        <label >Depósito</label>
+      </field>
+
+      <field id="stkmarca_id" local="true">
+        <helper type="combo" id="STK_MARCAS" empty="true">
+          <field id="id_stkmarca" />
+          <field id="nombre_marca" />
+        </helper>
+       <label >Marcas</label>
+      </field>              
+
+
+      <field id="id_stkarticulo" PDFcolor="000000" esClave="true"
+        style="font-weight:bold;">
+        <ayuda_ex id="STK_ARTICULOS">
+          <field id="id_stkarticulo">
+            <label>Cod</label>
+          </field>
+          <field id="nombre_articulo">
+            <label>Nombre</label>
+            <detalle>nombre_articulo</detalle>
+          </field>
+          <field id="subsistema_id" oculto="true">
+            <condicion operador="=">'01'</condicion>
+          </field>
+        </ayuda_ex>
+        <label>Cod.</label>
+        <detalle>id_stkarticulo</detalle>
+      </field>
+
+
+      <field id="stkrubro_id" noshow="true">
+        <label modpos="nobr">Rubro</label>
+        <helper type="combo" xml="stkrubro_qry.xml" dir="/ayudas"
+          empty="true" />
+      </field>
+
+      <field id="nombre_articulo" _autocompletar="false" fullSearch="true">
+        <label>Articulo</label>
+        <help>Descripcion de Articulo.</help>
+      </field>
+
+
+      <field id="baja_articulo">
+        <label>Deshabilitar</label>
+        <tipo>check</tipo>                
+      </field>  
+
+      <!--<field id="baja_articulo" oculto="true">
+        <condicion operador="!=">1</condicion>
+      </field>-->    
+
+      <field id="actual" local="true" noZero="true">
+        <label>Stock Actual</label>
+        <helper type="link" xml="stock_deposito_1.xml">
+          <parameter source="id_stkarticulo" target="stkarticulo_id" />
+        </helper>
+        <attribute id="colstyle">colorlabel</attribute>
+        <expression>(case when '[__stkdeposito_id__]' = '' then (Select sum(cantidad_stock) FROM STK_STOCKACTUAL STK1 WHERE STK1.stkarticulo_id = STK_ARTICULOS.id_stkarticulo) else
+              (Select sum(cantidad_stock) FROM STK_STOCKACTUAL STK1 WHERE STK1.stkarticulo_id = STK_ARTICULOS.id_stkarticulo and STK1.stkdeposito_id = '[__stkdeposito_id__]') end)
+        </expression>
+    
+        <tipo>numeric</tipo>
+      </field>
+
+        
+            
+      <group>
+      
+        <field id="id_stkarticulo" />
+      </group>
+
+      <order>
+        <field id="nombre_articulo" />
+      </order>
+
+    </table>
+
+    <join tipo="left">
+      <table id="STK_MARCAS" >
+        <field id="id_stkmarca">
+          <condicion operador="=">STK_ARTICULOS.stkmarca_id</condicion> 
+        </field>            
+      </table>
+    </join>  
+                                                 
+  </form>
+</histrix>
+

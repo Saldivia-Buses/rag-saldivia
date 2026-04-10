@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+	<histrix tipo="ficha" preFetch="true" inserta="false" borra="false" imprime="false" cancel="false">
+		<title>Preferencias</title>
+		<obs></obs>
+		<form>
+			<table id="HTXOPTIONS" label="OPCIONES">
+				<field id="id_option" deshabilitado="true"  noshow="true" autoinc="true" />
+
+				<field id="option_name" noshow="true" >
+				    <condicion operador="=">'SIS::02:refrerencia_presupuesto'</condicion>
+				    <valor>SIS::02:refrerencia_presupuesto</valor>
+				    <label>Nombre</label>
+				    <help>Nombre de la opcion</help>
+				</field>
+
+				<field id="option_description" deshabilitado="true" noshow="true" />
+
+<!-- 				<field id="text" deshabilitado="true" local="true">
+					<label></label>
+					<help>Descripcion</help>
+					<valor>Referencia validez</valor>
+				</field> -->
+
+				<field id="option_value" _editable="true">
+					<label>Referencia Validez</label>
+					<size>80</size>
+					
+				</field>
+			</table>
+		</form>
+	</histrix>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="list" subtipo="vertical">
+  <title>Datos de Contacto</title>
+  <obs/>
+  <form>
+    <table id="REG_CUENTAS_CONTACTOS" label="Datos de Contacto">
+
+      <field id="id_regcontacto" autoinc="true" noshow="true"/>
+
+      <field id="regcuenta_id" noshow="true" valauto="true">
+        <condicion operador="=">-1</condicion>
+      </field>
+
+      <field id="contacto_id" >
+        <label>Tipo Contacto</label>
+        <helper type="combo" xml="contactos_qry.xml" dir="/ayudas"/>
+      </field>
+
+      <field id="valor" style="font-size:20px;">
+        <label>Contacto</label>
+        <size>30</size>
+      </field>
+
+      <field id="nota" >
+        <label>Notas</label>
+        <size>30</size>
+      </field>
+    </table>
+
+
+  </form>
+</histrix>

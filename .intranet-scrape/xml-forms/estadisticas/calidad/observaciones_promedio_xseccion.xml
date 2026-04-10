@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="chart">
+    <title>Observaciones Promedio x Seccion</title>
+    <obs />
+    <form>
+        <table id="PROD_CONTROL_MOVIM">
+
+            <grafico id="calidad">
+                <ancho>500</ancho>
+                <tipo>L</tipo>
+                <title>Observaciones Promedio x Seccion</title>
+                <etiquetas>periodo</etiquetas>
+                <serie>cantidad_recepcion_co</serie>
+                <serie>cantidad_setup_co</serie>
+                <serie>cantidad_herreria_co</serie>
+                <serie>cantidad_accesorios_co</serie>
+                <serie>cantidad_chaperia_co</serie>
+                <serie>cantidad_plasticos_co</serie>
+                <serie>cantidad_pintura_co</serie>
+                <serie>cantidad_terminacion_co</serie>
+                <serie>cantidad_entrega_co</serie>
+            </grafico>
+
+            <filters>
+                <field id="fecha_control">
+                    <label>Desde</label>
+                    <valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m" ,strtotime('-12 month')) , 1, date("Y") -  1 ))</valor>
+                    <operador>&gt;=</operador>
+                </field>
+
+                <field id="fecha_control">
+                    <label>Hasta</label>
+                    <valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m" ,strtotime('-0 month')) , 1, date("Y") ) - 1)</valor>
+                    <operador>&lt;=</operador>
+                </field>
+            </filters>
+
+            <field id="fecha_control" noshow="true" />
+
+            <field id="year" oculto="true" noshow="true">
+                <label>Año</label>
+                <expression>YEAR(PROD_CONTROL_MOVIM.fecha_control)</expression>
+            </field>
+
+            <field id="mes" noshow="true">
+                <label>Mes</label>
+                <expression>MONTH(PROD_CONTROL_MOVIM.fecha_control)</expression>
+            </field>
+
+            <field id="periodo">
+                <label>Periodo</label>
+                <expression>UPPER(CONCAT((CASE MONTH(PROD_CONTROL_MOVIM.fecha_control) 
+                    WHEN 1 THEN 'Ene'                                                        WHEN 2 THEN 'Feb'
+                    WHEN 3 THEN 'Mar'
+                    WHEN 4 THEN 'Abr'
+                    WHEN 5 THEN 'May'
+                    WHEN 6 THEN 'Jun'
+                    WHEN 7 THEN 'Jul'
+                    WHEN 8 THEN 'Ago'
+                    WHEN 9 THEN 'Sep'
+                    WHEN 10 THEN 'Oct'
+                    WHEN 11 THEN 'Nov'
+                    WHEN 12 THEN 'Dic' END), "'", RIGHT(YEAR(PROD_CONTROL_MOVIM.fecha_control), 2)))</expression>
+            </field>
+
+            <field id="coches">
+                <expression><![CDATA[(select count(*) from PEDCOTIZ where
+                            month(PEDCOTIZ.terminacion) = month(fecha_control) and
+                            year(PEDCOTIZ.terminacion) = year(fecha_control))]]></expression>
+                <label>Coches</label>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="cantidad_chaperia">
+                <label>Chaperia</label>
+                <expression>SUM(CASE WHEN PROD_CONTROLES.seccion_id = '3' THEN 1 ELSE 0 END)</expression>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="cantidad_chaperia_co" local="true">
+                <if exp="true">
+                    <true>round((cantidad_chaperia/coches),2)</true>
+                    <false>round((cantidad_chaperia/coches),2)</false>
+                </if>
+                <label>Chaperia</label>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="cantidad_terminacion">
+                <label>Terminacion</label>
+                <expression>SUM(CASE WHEN PROD_CONTROLES.seccion_id = '5' THEN 1 ELSE 0 END)</expression>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="cantidad_terminacion_co" local="true">
+                <if exp="true">
+                    <true>round((cantidad_terminacion/coches),2)</true>
+                    <false>round((cantidad_terminacion/coches),2)</false>
+                </if>
+                <label>Terminacion</label>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="cantidad_recepcion">
+                <label>Recepcion</label>
+                <expression>SUM(CASE WHEN PROD_CONTROLES.seccion_id = '15' THEN 1 ELSE 0 END)</expression>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="cantidad_recepcion_co" local="true">
+                <if exp="true">
+                    <true>round((cantidad_recepcion/coches),2)</true>
+                    <false>round((cantidad_recepcion/coches),2)</false>
+                </if>
+                <label>Recepcion</label>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="cantidad_pintura">
+                <label>Pintura</label>
+                <expression>SUM(CASE WHEN PROD_CONTROLES.seccion_id = '4' THEN 1 ELSE 0 END)</expression>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+           <field id="cantidad_pintura_co" local="true">
+                <if exp="true">
+                    <true>round((cantidad_pintura/coches),2)</true>
+                    <false>round((cantidad_pintura/coches),2)</false>
+                </if>
+                <label>Pintura</label>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="cantidad_entrega">
+                <label>Entrega</label>
+                <expression>SUM(CASE WHEN PROD_CONTROLES.seccion_id = '6' THEN 1 ELSE 0 END)</expression>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+           <field id="cantidad_entrega_co" local="true">
+                <if exp="true">
+                    <true>round((cantidad_entrega/coches),2)</true>
+                    <false>round((cantidad_entrega/coches),2)</false>
+                </if>
+                <label>Entrega</label>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="cantidad_herreria">
+                <label>Herreria</label>
+                <expression>SUM(CASE WHEN PROD_CONTROLES.seccion_id = '2' THEN 1 ELSE 0 END)</expression>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+           <field id="cantidad_herreria_co" local="true">
+                <if exp="true">
+                    <true>round((cantidad_herreria/coches),2)</true>
+                    <false>round((cantidad_herreria/coches),2)</false>
+                </if>
+                <label>Herreria</label>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="cantidad_setup">
+                <label>Setup</label>
+                <expression>SUM(CASE WHEN PROD_CONTROLES.seccion_id = '25' THEN 1 ELSE 0 END)</expression>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+           <field id="cantidad_setup_co" local="true">
+                <if exp="true">
+                    <true>round((cantidad_setup/coches),2)</true>
+                    <false>round((cantidad_setup/coches),2)</false>
+                </if>
+                <label>Setup</label>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="cantidad_plasticos">
+                <label>Plasticos</label>
+                <expression>SUM(CASE WHEN PROD_CONTROLES.seccion_id = '23' THEN 1 ELSE 0 END)</expression>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+           <field id="cantidad_plasticos_co" local="true">
+                <if exp="true">
+                    <true>round((cantidad_plasticos/coches),2)</true>
+                    <false>round((cantidad_plasticos/coches),2)</false>
+                </if>
+                <label>Plasticos</label>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="cantidad_accesorios">
+                <label>Accesorios</label>
+                <expression>SUM(CASE WHEN PROD_CONTROLES.seccion_id = '33' THEN 1 ELSE 0 END)</expression>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+           <field id="cantidad_accesorios_co" local="true">
+                <if exp="true">
+                    <true>round((cantidad_accesorios/coches),2)</true>
+                    <false>round((cantidad_accesorios/coches),2)</false>
+                </if>
+                <label>Accesorios</label>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="no_conforme" noshow="true">
+                <condicion operador="=">1</condicion>
+            </field>
+
+            <group>
+                <field id="year" />
+                <field id="mes" />
+            </group>
+
+            <order>
+                <field id="fecha_control" />
+            </order>
+
+        </table>
+
+        <join>
+            <table id="PROD_CONTROLES">
+                <field id="id_prodcontrol">
+                    <condicion operador="=">PROD_CONTROL_MOVIM.prodcontrol_id</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

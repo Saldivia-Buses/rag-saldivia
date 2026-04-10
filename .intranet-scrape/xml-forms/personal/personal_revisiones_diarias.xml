@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="abm" >
+        <title>Revisiones Medicas Diarias</title>
+	<obs></obs>
+        <form>
+            <table id="PARTE_MEDICO_DIARIO" label="etiqueta">
+
+	    
+		<filters>
+
+		    <field id="fecha">
+			<tipo>date</tipo>
+        		<label>Fecha</label> 
+                    <!--    <valor>today</valor> -->
+			<operador>&gt;=</operador>             
+    		    </field>
+		    
+		    <field id="usuario">
+    			<label>Nombre</label>
+			<size>30</size>
+		    </field>		
+		    <field id="nombre">
+		    </field>
+		</filters>
+
+
+
+		 <field id="id" noshow="true" >
+                       <label>Id</label>
+                 </field>
+
+
+    <field id="fecha">
+           <label>Fecha</label>
+	   <tipo>date</tipo>  
+      <valor>today</valor>
+     </field>
+<!--    
+    <field id="hora">
+     <label>Hora</label>
+     <valor>now</valor>
+    </field>
+-->
+
+
+      <field id="usuario" _noshow="true" autocompletar="true" _oculto="true">
+        <label>Usuario </label>
+        <help>Busque el Paciente </help>
+            <ayuda_ex id="FSMOPERA" xml="HLPpersonal_ope.xml" dir="/help_local">
+	      <!-- campos a agregar al contenedor Filtro-->
+	      
+              <field id="opecod">
+	          <detalle>usuario</detalle>
+	        </field>
+	     
+              <field id="nombres">
+	            <expression>CONCAT(apellido,', ', Nombre)</expression>
+	            <detalle>nombre</detalle>
+	        </field>
+    	
+        </ayuda_ex>   
+        
+        <valor default="true"></valor>
+	<size>30</size>
+      </field>
+	    
+       <field id="nombre" >
+	<label>Nombre</label>
+	<size>30</size>
+	</field>
+
+           <field id="sintomatologia">
+	       <label>Sintomatología</label>
+		<size>200</size>
+           </field>
+        
+           <field id="prescripcion">
+		<label>Prescripción</label>
+		<size>200</size>	
+	   </field>
+
+
+
+            </table>
+        </form>
+    </histrix>

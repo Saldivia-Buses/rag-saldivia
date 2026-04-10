@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="abm">
+	<title>CONDICIONES DE VENTA</title>
+	<obs></obs>
+	<form >
+		<table id="FACCONDI">
+			<title>Condiciones de Venta</title>
+			<field id="vtacod" esClave="true">
+				<label>Código</label>
+				<help>Código del Condición</help>
+			</field>
+			<field id="condes">
+				<label>Condición</label>
+				<help>Condición de Venta</help>
+			</field>
+			<field id="condia">
+				<label>Días</label>
+				<help>Cantidad de Días</help>
+			</field>
+			<!--
+			<field id="confec">
+				<label>Fecha</label>
+				<help>Fecha Cierta</help>
+			</field> -->
+			<order>
+				<field id="vtacod"></field>
+			</order>
+		</table>
+	</form>	   
+</histrix> 

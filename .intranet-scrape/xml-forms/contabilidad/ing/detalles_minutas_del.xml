@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="delete">
+	<title>Ingreso de Detalle</title>
+	<obs></obs>
+	<consulta>
+		<table id="CTB_DETALLES" >
+			<field id="id_detalle" id_temp="id_detalle" esClave="true" />
+		</table>
+	</consulta>
+</histrix>

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" width="25%">
+  <title>Evaluación de desempeño</title>
+  <obs></obs>
+  <form detalle="evaluacion_cab.xml">
+    <table id="PERSONAL">
+
+        <filters>
+            <field id="legajo" deshabilitado="false">
+                <label>Legajo</label>
+                <operador>=</operador>
+            </field>
+            <field id="id_seccion">
+                <label>Sección</label>
+                <operador>=</operador>
+            </field>
+        </filters>
+
+        <field id="IdPersona" autoinc="true" noshow="true">
+            <detalle>rhpersona_id</detalle>
+        </field>
+
+        <field id="legajo" linkint="personal_qry.xml" linkdes="Datos del personal" linkdir="/personal" print="false" style="text-align:center;">
+            <label>Legajo</label>
+            <detalle>legajo</detalle>
+            <paring destino="legajo">legajo</paring>
+        </field>
+
+        <field id="nombre">
+            <label>Apellido y Nombre</label>
+            <expression>CONCAT(apellido, ' ', Nombre)</expression>
+            <detalle>evaluado</detalle>
+        </field>
+
+        <field id="mostrarBotonCant" noshow="true">
+            <expression>CASE WHEN (SELECT COUNT(*) FROM RH_EVALUACIONES rhe WHERE rhe.rhpersona_id = PERSONAL.IdPersona) != 0 THEN 'evaluaciones_x_personal.xml' ELSE '' END</expression>
+        </field>
+
+        <field id="evaluacionesRealizadas" linkint="evaluaciones_x_personal.xml" linkdes="Evaluaciones realizadas" print="false" width="5" style="text-align:center;">
+            <attribute id="linkint">mostrarBotonCant</attribute>
+            <expression>SELECT COUNT(*) FROM RH_EVALUACIONES rhe WHERE rhe.rhpersona_id = PERSONAL.IdPersona</expression>
+            <label>Cant.</label>
+            <paring destino="legajo">legajo</paring>
+        </field>
+
+        <field id="fechaEgreso" colstyle="display:none;">
+            <condicion operador="=">'0000-00-00'</condicion>
+        </field>
+
+        <field id="fechaEgreso" colstyle="display:none;">
+            <condicion operador="=">'0000-00-00'</condicion>
+        </field>
+
+        <field id="id_seccion" colstyle="display:none;">
+            <helper type="combo" id="SECCION" empty="true">
+                <field id="id_seccion" />
+                <field id="nombre" />
+                <field id="activa" noshow="true">
+                    <condicion operador="=">1</condicion>
+                </field>
+                <order>
+                    <field id="nombre"/>
+                </order>
+            </helper>
+            <label>Sección</label>
+            <detalle>id_seccion</detalle>
+        </field>
+
+        <order>
+            <field id="nombre"/>
+        </order>
+
+    </table>
+  </form>
+</histrix>

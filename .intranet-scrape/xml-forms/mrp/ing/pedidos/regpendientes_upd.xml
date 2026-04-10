@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="update">
+    <title>Cantidad Pendiente</title>
+    <obs></obs>
+    <form>
+        <table id="REG_DETALLES" label="Cantidad Pendiente">
+
+            <field id="id_regdetalle"		id_temp="id_regdetalle" esClave="true"/>
+            <field id="cantidad_pendiente"	id_temp="cantidad_pendiente" />
+
+        </table>
+    </form>
+</histrix>

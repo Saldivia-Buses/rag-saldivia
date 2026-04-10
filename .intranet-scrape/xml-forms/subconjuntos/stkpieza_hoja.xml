@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="abm-mini" path="fotos/articulos">
+		<title>FORMACION DE PRODUCTO</title>
+        <obs></obs>
+               <form>
+                  <table id="STKPIEZA" label="Piezas">
+
+            	<field id="id_pieza" esClave="true" autoinc="true" noshow="true" />
+
+                  <field id="idPadre" esClave="true" oculto="true" valauto="true">
+                  </field>
+                  <field id="articulo_hijo" required="true">
+                      <label>Codigo de Pieza</label>
+                      <help>Codigo del Articulo</help>
+						<ayuda_ex id="STKINSUM" xml="HLPstkinsum.xml" dir="/help_local"> 
+							<field id="artcod">
+								<label>Cod.</label>
+							</field>
+							<field id="artdes">
+								<label>Insumo</label>
+								<detalle>artdes</detalle>
+							</field>
+							<field id="siscod" oculto="true">
+								<condicion operador="=">'01'</condicion>
+							</field>
+							<clave>artcod</clave>
+							<descripcion>artdes</descripcion>
+						</ayuda_ex> 					  
+                  </field>
+
+                  <field id="artdes">
+					  <expression>artdes</expression>
+                      <label modpos="nobr">Articulo </label>
+					  <tipo>varchar</tipo>
+					  <size>50</size>
+                  </field>
+				<field id="cantidad">
+                    <label>Cant.</label>
+                </field>
+				<field id="artuni" tabla="STKINSUM" Formstyle="display:none;">
+					<label modpos="nobr">U.Uso</label>
+					<help>Unidad de Uso </help>
+					<tabla_ex id="FSMUNIDS">
+						<field id="unicod"></field>
+						<field id="uniabv"></field>
+					</tabla_ex>
+				</field>
+                <field id="FOTOPATH" local="true" noshow="true">
+                    <if exp="true">
+                        <true>'articulo_hijo/'</true>
+                        <false>''</false>
+                    </if>
+                    <tipo>varchar</tipo>
+                </field>
+                <field id="foto" path="FOTOPATH" download="true">
+                    <expression>select ARTICULO_FOTO.foto from ARTICULO_FOTO where ARTICULO_FOTO.idArticulo = STKINSUM.artcod order by revision desc limit 1</expression>
+                    <label>Imagen</label>
+                    <tipo >file</tipo>
+                    <size>40</size>
+                </field>
+                  </table>
+
+				   <join tipo="left">
+					   <table id="STKINSUM">
+						   <field id="siscod" oculto="true">
+							   <condicion operador="=">'01'</condicion>
+						   </field>
+						   <field id="artcod">
+							   <condicion operador="=">STKPIEZA.articulo_hijo</condicion>
+						   </field>
+						   
+					   </table>
+				   </join> 
+               </form>
+        </histrix>

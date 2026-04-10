@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="cabecera" graba="false">
+	<title>Nota Debito Interna - Devolucion Cheques</title>
+	<obs></obs>
+	<form >
+		
+		<table id="BCSMOVIM" label="Nota Debito Interna - Devolucion Cheques" graba="false">
+
+			<field id="siscar" deshabilitado="true">
+				<label>siscar</label>
+				<parametro id="fsmparam_paralf.xml" retorna="paralf">
+					<field id="parcla">
+						<condicion operador="=">'siscar'</condicion>
+					</field>
+				</parametro>
+			</field>
+			<field id="ctbval" oculto="true" ctbcuenta="2">
+				<label>ctbval</label>
+				<parametro id="cajparam_paralf.xml" retorna="paralf">
+					<field id="siscod" oculto="true">
+						<condicion operador="=">'05'</condicion>
+					</field>
+					
+					<field id="parcla">
+						<condicion operador="=">'ctbval'</condicion>
+					</field>
+				</parametro>
+			</field>			
+			<field id="codndi" deshabilitado="true">
+				<label>codigo</label>
+				<parametro id="cctparam_parent.xml" retorna="parent">
+					<field id="parcla">
+						<condicion operador="=">'codndi'</condicion>
+					</field>
+				</parametro>
+			</field>			
+			<field id="nrondi" deshabilitado="true">
+				<label>Numero</label>
+				<parametro id="cctparam_parent.xml" retorna="parent">
+					<field id="parcla" oculto="true">
+						<condicion operador="=">'nrondi'</condicion>
+					</field>
+					<field id="parent">
+						<complete>parent + 1</complete>
+					</field>					
+				</parametro>
+			</field>
+			<field id="fecha" deshabilitado="true">
+				<label>fecha</label>
+				<tipo>date</tipo>
+				<valor>today</valor>
+			</field>
+			<field id="succod" deshabilitado="true">
+				<label>succod</label>
+			</field>			
+			<field id="movref" deshabilitado="true" >
+				<label>movref</label>
+		
+				<valor>Nota de Debito Cheques Devueltos</valor>
+			</field>			
+			<field id="ctacod">
+				<label>Cuenta</label>
+				<help>Cuenta del Cliente</help>
+				<ayuda_ex id="CCTCUENT" xml="HLPcctcuent.xml" dir="/help_local">
+					<field id="ctacod"></field>
+					<field id="ctanom">
+						<detalle>ctanom</detalle>
+					</field>
+					<field id="siscod" oculto="true">
+						<condicion operador="=">'02'</condicion>
+					</field>
+					
+				</ayuda_ex>
+				<tipo>integer</tipo>
+			</field>
+			
+			<field id="ctanom" deshabilitado="true">
+				<label modpos="nobr">Nombre</label>
+			</field>
+			
+		</table>
+	</form>
+</histrix>

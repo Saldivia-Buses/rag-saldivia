@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert" replaceInto="true" limit="0">
+	<title>Detalle de Listas de Precios de Productos</title>
+	<obs></obs>
+	<form >
+		<table id="STK_LISTADETALLE">
+			<field id="stkarticulo_id" 			        id_temp="stkarticulo_id" />
+			<field id="stklista_id" 		        	id_temp="stklista_aumento" />
+			<field id="stklistadetalle_rentabilidad" 	id_temp="wxrentabilidad" />
+			<field id="stklistadetalle_precioventa" 	id_temp="wstklistadetalle_precioventa2" />
+			<field id="stklistadetalle_costo"           id_temp="stklistadetalle_costo" />
+			
+		</table>
+	</form>
+
+</histrix>
+

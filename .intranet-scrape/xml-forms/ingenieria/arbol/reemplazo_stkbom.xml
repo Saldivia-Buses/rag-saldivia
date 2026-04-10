@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="grid" path="fotos/articulos" imprime="false" preloadData="false" deleteRow="false" procesa="true" inserta="false">
+    <title>Arbol Producto</title>
+    <obs></obs>
+    <form >
+        <table id="STK_BOM" label="Materia prima">
+            <movimientos>
+                <relacion id="reemplazo_stkbom_update.xml" />
+            </movimientos>
+
+    	    <filters>
+        		<field id="stkarticulohijo_id">
+        		    <label>Artículo a Reemplazar</label>
+        		    <operador>=</operador>
+        		</field>
+                <field id="stkarticulo_nuevo_id" required="true">
+                    <label>Reemplazo</label>
+                    <operador>=</operador>
+                </field>
+
+    	    </filters>
+            <field id="id_stkbom" noshow="true" />
+          
+            <field id="bom_variacion_id" oculto="true">
+                <label>Variación</label>
+<!--                <helper id="STK_BOM_VARIACIONES">
+                    <field id="id_bom_variacion" />
+                    <field id="nombre_variacion" />
+                </helper>
+            -->
+            </field>
+            
+            <field id="stkarticulopadre_id" arbol="padre" >
+                <label>Padre</label>
+            </field>
+            <field  id="nombre_padre" >
+                <label>Nombre</label>
+        	    <expression>nombre_articulo</expression>
+                <help>Articulo Hijo</help>
+            </field>
+
+            <field  id="stkarticulohijo_id" arbol="hijo" style="color:red;">
+                <label>Artículo</label>
+		
+
+                <helper id="STK_ARTICULOS" type="external" _xml="stkarticulo_mos.xml" dir="/ayudas">
+                    <field id="id_stkarticulo" _noshow="true">
+                    </field>
+            
+                    <field id="nombre_articulo">
+                        <label>Nombre</label>
+                        <detalle>nombre_articulo2</detalle>
+                    </field>
+
+                    <field id="baja_articulo">
+                        <condicion operador="=">0</condicion>
+                    </field>
+                </helper>
+                <help>Artculo a Reemplazar</help>
+                <size>12</size>
+            </field>
+
+            <field  id="nombre_articulo2" >
+        	<expression>select nombre_articulo from STK_ARTICULOS WHERE id_stkarticulo = stkarticulohijo_id limit 1</expression>
+                <label>Artículo a Reemplazar</label>
+                <help>Articulo Hijo</help>
+            </field>
+
+            <field id="stkarticulo_nuevo_id" local="true">
+                <label>Artículo de Reemplazo</label>
+                <helper id="STK_ARTICULOS" type="external" _xml="stkarticulo_mos.xml" dir="/ayudas">
+                    <field id="id_stkarticulo" _noshow="true">
+                    </field>
+            
+                    <field id="nombre_articulo">
+                        <label>Nombre</label>
+                        <detalle>nombre_articulo2</detalle>
+                    </field>
+
+                    <field id="baja_articulo">
+                        <condicion operador="=">0</condicion>
+                    </field>
+                </helper> 
+            </field>
+            <field id="grabar" noshow="true">
+                <expression>(case when '[__stkarticulo_nuevo_id__]' != '' then true else false end)</expression>
+            </field>
+
+            <field  id="nombre_articulo_nuevo" >
+            <expression>select nombre_articulo from STK_ARTICULOS WHERE id_stkarticulo = '[__stkarticulo_nuevo_id__]' limit 1</expression>
+                <label>Artículo Nuevo</label>
+                <help>Articulo Hijo</help>
+            </field>
+
+            <field id="mensaje"  style="color:red">
+                <expression>(case when '[__stkarticulo_nuevo_id__]' != '' then '' else 'Obligatorio' end)</expression>
+            </field>
+
+
+            <!--
+            <field id="precio_costo" tabla="STK_ARTICULOS" noshow="true">
+                <label>Precio C</label>
+                <tipo>numeric</tipo>
+            </field>
+            -->
+            <field  id="cantidad" >
+                <label>Cantidad</label>
+                <help>Cantidad</help>
+
+            </field>
+<!--
+            <field id="costo_automatico" _suma="true" deshabilitado="true" >
+                <label>Costo</label>
+                <tipo>custom_numeric</tipo>
+            </field>
+-->
+	<order>
+	    <field id="nombre_padre" />
+	</order>
+        </table>
+        <join tipo="left">
+    	    <table id="STK_ARTICULOS">
+        	    <field id="id_stkarticulo">
+	        	    <condicion operador="=">stkarticulopadre_id</condicion>
+        	    </field>
+    	    </table>
+        </join>
+    </form>
+</histrix>

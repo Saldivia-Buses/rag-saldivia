@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing"  borra="no" inserta="no"  llenoreferente="true" imprime="false">
+	<title>COMPROBANTES A IMPUTAR</title>
+	<obs/>
+	<consulta>
+		<table id="CCTMOVIM" label="COMPROBANTES A IMPUTAR" idCampoCond="IMP">
+			<movimientos>
+				<relacion id="pos_nc_ingmov.xml"/>
+			</movimientos>
+			<field id="siscod" oculto="true">
+				<label>Cod.</label>
+				<help></help>
+				<valor>'02'</valor>
+				<condicion operador="=">'02'</condicion>
+			</field>
+
+			<field id="ctacod" oculto="true">
+				<label>Cuenta</label>
+				<help>Codigo de Cuenta</help>
+			</field>
+			<field id="ctanom" oculto="true">
+				<label>nombre</label>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="movfec" deshabilitado="true">
+				<label modpos="nobr">Fecha</label>
+				<help></help>
+				<!--  <formato>d  m  y</formato> -->
+			</field>
+			<field id="concod"  tabla="CCTMOVIM" oculto="true">
+				<label>concod</label>
+				<help>Tipo</help>
+				<condicion operador="=">3</condicion>
+			</field>
+
+			<field id="condes"  tabla="CCTCONCE" deshabilitado="true">
+				<label>Tipo</label>
+				<help>Tipo de Comprobante</help>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="movnpv" deshabilitado="true">
+				<label modpos="nobr">Numero</label>
+				<help>Comprobante</help>
+				<formato>%04d</formato>
+			</field>
+			<field id="movnro" deshabilitado="true">
+				<label modpos="nobr"/>
+				<help>Numero Comprobante</help>
+				<formato>%012d</formato>
+			</field>
+			<field id="movimp" deshabilitado="true">
+				<label PDFsize="12" posx="130" posy="+1">Importe</label>
+				<help></help>
+				<formato>%01.2f</formato>
+			</field>
+			<field id="movsal" deshabilitado="true">
+				<label>saldo Ant</label>
+				<help></help>
+				<condicion operador="!=">0</condicion>
+			</field>
+			<field id="Imputado" local="true" deshabilitado="false">
+			    <expresion>movsal</expresion>
+			    <label>Imputar</label>
+    			    <tipo>decimal</tipo>
+				<detalle>cajimp</detalle>
+
+			</field>
+			<field id="newSal" deshabilitado="true" local="true">
+			    <label>Saldo</label>
+			    <if exp="true">
+				<verdadero>movsal - Imputado</verdadero>
+				<falso></falso>
+			    </if>
+
+			</field>
+
+			<field id="cajcod" local="true" noshow="true">
+				<label>cajcod</label>
+				<valor>6</valor>
+				<detalle>cajcod</detalle>
+			</field>
+
+			<field id="imputar" local="true" refresh="true" >
+				<label>imputar</label>
+				<help>Seleccion</help>
+				<tipo>check</tipo>
+				<valor>0</valor>
+			</field>
+			<field id="IMP" local="true" noshow="true">
+			    <if exp="imputar == 1">
+				<verdadero>1</verdadero>
+				<falso>0</falso>
+			    </if>
+			</field >
+			<field id="movcta" deshabilitado="true" noshow="true">
+				<label modpos="nobr">movcta</label>
+			</field>
+			<field id="movlet"  noshow="true">
+			</field>
+			<field id="movipv"  noshow="true">
+			</field>
+			<field id="movinc"  noshow="true">
+				<detalle>movinc</detalle>
+			</field>
+			<field id="zoncod"  noshow="true">
+			</field>
+
+			<field id="movicc"  noshow="true">
+			</field>
+			<field id="movnet"  noshow="true">
+			</field>
+<!--			<field id="movpro"  noshow="true">
+			</field>
+-->
+			<field id="movref__1"  noshow="true">
+			</field>
+			<field id="movref__2"  noshow="true">
+			</field>
+			<field id="movref__3"  noshow="true">
+			</field>
+			<field id="movvto"  noshow="true">
+			</field>
+			<field id="opecla"  noshow="true">
+				<detalle>opecla</detalle>
+			</field>
+			<field id="regmin"  noshow="true">
+			</field>
+
+
+
+		</table>
+		<join tipo="left">
+			<table id="CCTCONCE">
+				<field id="siscod" oculto="true">
+					<label>cctcuent.siscod</label>
+					<condicion operador="=">CCTMOVIM.siscod</condicion>
+				</field>
+				<field id="concod" oculto="true">
+					<condicion operador="=">CCTMOVIM.concod</condicion>
+				</field>
+				<field id="condes" oculto="true"></field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="CCTCUENT">
+				<field id="siscod" oculto="true">
+					<label>cctcuent.siscod</label>
+					<condicion operador="=">CCTMOVIM.siscod</condicion>
+				</field>
+				<field id="ctacod" oculto="true">
+					<condicion operador="=">CCTMOVIM.ctacod</condicion>
+				</field>
+			</table>
+		</join>
+	</consulta>
+</histrix>

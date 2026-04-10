@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+  <histrix tipo="consulta" preloadData="false">
+  <title>balance general</title>
+   <obs></obs>
+    <consulta _detalle="movimientos_lib_mayor_qry.xml">
+       <table id="CTB_CUENTAS" label="Balance comparativo">
+        <filters>
+            <field id="base" tabla="CTB_MOVIMIENTOS">
+            <label>Sociedad</label>
+            <operador>=</operador>
+
+            </field>
+                      <field id="fecha_movimiento1" oculto="true">
+            <label>Periodo Desde</label>
+            <operador>&gt;</operador>
+            <valor>today</valor>
+              </field>
+                <field id="fecha_movimiento1">
+            <label modpos="nobr">hasta</label>
+            <operador>&lt;</operador>
+            <valor>today</valor>
+                </field>
+               <field id="fecha_movimiento2" oculto="true">
+            <label>Periodo Desde</label>
+            <operador>&gt;</operador>
+            <valor>today</valor>
+              </field>
+                <field id="fecha_movimiento2">
+            <label modpos="nobr">hasta</label>
+            <operador>&lt;</operador>
+            <valor>today</valor>
+                </field>
+        </filters>
+
+            <field id="base" tabla="CTB_MOVIMIENTOS" noshow="true">
+              <label>Sociedad</label>
+                <helper id="PRY_SOCIEDADES" empty="true" type="combo">
+                  <field id="base" />
+                  <field id="nombre_sociedad" >
+                  <expression>concat(nombre_sociedad, ' ',base)</expression>
+                  </field>
+                </helper>
+            </field>
+
+
+
+
+        <field id="id_cuenta" autoinc="true" noshow="false" arbol="hijo">
+          <ayuda_ex xml="ctbcuenta_qry.xml" dir="/ayudas">
+          </ayuda_ex>..........
+          <label>Cuenta</label>
+          <help>Codigo de cuenta</help>
+          <detalle>cuenta_id</detalle>
+          <condicion operador="!=">0</condicion>
+        </field>
+
+         <field id="id_cuenta2" noshow="true" local="true" >
+           <expresion having="false">id_cuenta</expresion>
+          <ayuda_ex xml="ctbcuenta_qry.xml" dir="/ayudas">
+          </ayuda_ex>..
+          <label>Cuenta 2</label>
+          <help>Codigo de cuenta</help>
+        </field>
+        
+        <field id="nombre_cuenta">
+          <label>Descripcion</label>
+          <help>Comienzo de la cuenta contable</help>
+        </field>
+        
+        <!--        <field id="ctbtipo_id" colstyle="display:none;" dir="/contabilidad/man">
+          <tabla_ex xml="ctbtipos_crud.xml" dir="/contabilidad/man">
+          </tabla_ex>
+          <label>Tipo de cuenta</label>
+          <help>Tipo de cuenta contable</help>
+        </field>      -->
+
+        <field id="cuenta_superior_id" colstyle="display:none;" arbol="padre">
+          <label>Cuenta superior</label>
+          <help>Cuenta superior a esta cuenta contable</help>
+           <valor>0</valor>
+        </field>
+
+
+        <field id="tipo_saldo" colstyle="display:none;"  noshow="false" >
+          <options>
+              <option valor="0">Deudor</option>
+              <option valor="1">Acreedor</option>
+          </options>
+          <label>Tipo saldo</label>
+          <help>Tipo de salgo de la cuenta debe o haber</help>
+        </field>
+
+        <field id="periodo1" local="true" suma="true">
+            <label>Periodo 1</label>
+            <expresion><![CDATA[select sum((CASE WHEN CTB_MOVIMIENTOS.fecha_movimiento < '[__fecha_movimiento1__]' and
+         CTB_MOVIMIENTOS.fecha_movimiento > '[__fecha_movimiento1__]' then round(importe_original, 2) END) * (case when doh = 1 then 1 else -1 end))
+         as periodo1]]></expresion>
+             <tipo>numeric</tipo>
+        </field>
+
+           <field id="periodo2" local="true" suma="true">
+               <label>Periodo 2</label>
+                 <expresion><![CDATA[select sum((CASE WHEN CTB_MOVIMIENTOS.fecha_movimiento < '[__fecha_movimiento2__]' and
+           CTB_MOVIMIENTOS.fecha_movimiento > '[__fecha_movimiento2__]' then round(importe_original, 2) END) * (case when doh = 1 then 1 else -1 end))
+           as periodo2]]></expresion>
+               <tipo>numeric</tipo>
+          </field>
+
+        <field id="periodo3" local="true">
+             <label>Periodo 3</label>
+        </field>
+
+        <field id="periodo4" local="true">
+             <label>Periodo 4</label>
+        </field>
+
+        <field id="ejercicio_id" colstyle="display:none;">
+          <tabla_ex xml="ctbejercicios_crud.xml" dir="/contabilidad/man">
+          <field id="activo" tipoOrden="DESC"/>
+          </tabla_ex>
+          <label>Ejercicio</label>
+          <help>Ejercicio al que pertenece la cuenta</help>
+          <detalle>ejercicio_id</detalle>
+        </field>
+
+         <field id="fecha_movimiento1" local="true" noshow="true">
+            <label>Periodo Desde</label>
+            <tipo>date</tipo>
+          </field>
+          <field id="fecha_movimiento2" local="true" noshow="true">
+            <label>Periodo2</label>
+            <tipo>date</tipo>
+          </field>
+   
+        <group>
+            <field id="id_cuenta"></field>
+        </group>
+        
+        </table>
+
+        <join tipo="left">
+      <table id="CTB_MOVIMIENTOS">
+          <field id="ejercicio_id">
+        <condicion operador="=">CTB_CUENTAS.ejercicio_id</condicion>
+              </field>
+      </table>
+        </join>
+
+    <join tipo="inner">
+      <table id="CTB_CONCEPTOS">
+        <field id="id_concepto">
+          <condicion operador="=">concepto_id</condicion>
+        </field>
+        <field id="integrado">
+          <condicion operador="=">1</condicion>
+        </field>
+          
+      </table>
+    </join>
+      
+      <join tipo="left">
+      <table id="CTB_DETALLES">
+        <field id="movimiento_id">
+              <condicion operador="=">CTB_MOVIMIENTOS.id_movimiento</condicion>
+        </field>
+        <field id="cuenta_id">
+        <condicion operador="=">id_cuenta</condicion>
+              </field>
+      </table>
+
+        </join>
+
+    </consulta>
+    </histrix>

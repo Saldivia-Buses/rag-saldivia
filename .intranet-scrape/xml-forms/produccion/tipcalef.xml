@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm">
+	<title>TIPOS DE CALEFACCION</title>
+	<obs></obs>
+	<form >
+		<table id="TIPCALEF" label="Calefaccion">
+
+			<field id="tipcal">
+				<label>Codigo</label>
+				<help>Codigo de Calefacción</help>
+			</field>
+			<field id="descal">
+				<label>Calefacción</label>
+				<help>tipo de Calefacción</help>
+			</field>
+    			<order>
+				<field id="tipcal"></field>
+			</order>
+		</table>
+	</form>	   
+</histrix> 

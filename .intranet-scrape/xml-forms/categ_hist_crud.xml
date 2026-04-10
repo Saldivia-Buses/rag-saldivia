@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini">
+	<title>Categoria</title>
+	<obs/>
+	<form >
+		<table id="CATEGHISTORIA" label="Categoria" styleTbody="height:10em;"> 
+	<title>Categoria</title>			
+			<movimientos>
+				<relacion id="categhist_update.xml"></relacion>
+				<relacion id="categhist_insert.xml"></relacion>
+				<relacion id="categhist_delete.xml"></relacion>				
+			</movimientos>
+
+			   <filters>
+				<field id="legajo" deshabilitado="false">
+				    <label>Legajo</label>
+				    <operador>=</operador>
+				    <detalle>legajo</detalle>
+				</field>
+				    <field id="nomapp" local="true" deshabilitado="true">
+					<label>Nombre y Apellido</label>
+				    </field>                
+				        <field id="fechaDesde">
+						<label>Desde</label>
+						<help>Fecha</help>
+				                <operador>&gt;=</operador>
+				                <valor>today</valor>
+					</field>
+           		 </filters>
+
+			 <field id="legajo" deshabilitado="true" autocompletar="true" oculto="true" local="true">
+				<label>legajo</label>
+				<size>50</size>
+				<ayuda_ex id="PERSONAL">
+				    <field id="legajo" esClave="true">
+					 <label>Legajo</label>
+					 <detalle>legajo</detalle>
+				    </field>
+				    <field id="nomapp">
+					<label>Nombre y Apellido</label>
+					<expression having="false">CONCAT(apellido, ' ', Nombre)</expression>
+					<detalle>nomapp</detalle>
+				    </field>
+<!--				    <field id="Nombre">
+					<label>nombre</label>
+					<detalle>nom</detalle>
+				    </field>
+				    <field id="apellido">
+					<label>apellido</label>
+					<detalle>app</detalle>
+				    </field> -->
+                                    <field id="IdPersona" noshow="true">
+                                        <label>Nro persona</label>
+                                        <detalle>IdPersona</detalle>
+                                    </field>
+				    <field id="fechaEgreso" noshow="true">
+					<condicion operador="=">'0000-00-00'</condicion>
+				    </field>
+                                    
+				</ayuda_ex>
+<!--				<condicion operador="=">''</condicion>	 -->
+			</field>
+				    <field id="nomapp" local="true" noshow="true">
+					<label>Nombre y Apellido</label>
+					<size>80</size>
+				    </field>                
+
+
+
+
+
+			<field id="idHist" noshow="true" deshabilitado="true"  autoinc="true" esClave="true">
+			</field>
+
+			<field id="IdPersona" deshabilitado="true" oculto="true" >
+				<label>Persona</label>
+				<!--<condicion operador="=">0</condicion>-->				
+			</field>
+
+			<field id="idSindicato" >
+				<label>Sindicato</label>
+				<tabla_ex id="SINDICATO" vacio="true">
+					<field id="IdSindicato"/>
+					<field id="Nombre"/>
+				</tabla_ex>
+				<help>Sindicato</help>
+				<valor>1</valor>
+				<actualiza>
+					<field destino="IdSindicato" id="IdCateg"/>
+
+				</actualiza>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="descripcion" tabla="CATPERSONAL" deshabilitado="true" >
+				<expression>CATPERSONAL.descripcion</expression>
+				<label Formstyle="display:none;">Cat.</label>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="IdCateg">
+				<label colstyle="display:none;">Categoria</label>
+				<tabla_ex id="CATPERSONAL" vacio="true">
+					<field id="IdCateg"/>
+					<field id="descripcion"/>
+					<field id="IdSindicato"></field>
+					<order>
+						<field id="IdCateg"/>
+					</order>
+				</tabla_ex>
+				<tipo>varchar</tipo>
+			</field>
+
+<!--
+			<field id="IdCateg">
+				<tabla_ex id="CATPERSONAL">
+					<field id="IdCateg"/>
+					<field id="descripcion"/>
+				</tabla_ex>
+				<label>Categ.</label>
+				<help>Categoria</help>
+			</field> -->
+			<field id="fechaDesde" >
+				<label>Desde Fecha</label>
+				<help>Fecha</help>
+			</field>
+		</table>
+		<join tipo="left">
+	    	<table id="CATPERSONAL">
+				<field id="IdSindicato">
+	    			<condicion operador="=">CATEGHISTORIA.IdSindicato</condicion>
+	    		</field>
+
+				<field id="IdCateg">
+	    			<condicion operador="=">CATEGHISTORIA.IdCateg</condicion>
+	    		</field>
+	    	</table>
+	    </join>
+
+
+	</form>
+</histrix>

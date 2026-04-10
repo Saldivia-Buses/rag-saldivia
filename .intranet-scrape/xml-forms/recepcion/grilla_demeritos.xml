@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+   <histrix tipo="grid" deleteRow="false" isInner="true" >
+       <title>DEMERITOS</title>
+        <obs></obs>
+               <form >
+                  <table id="DEMERITO" label="DEMERITO">
+
+<!--
+            <movimientos  >
+
+		<relacion id="movdemeritos_ingmov3.xml"></relacion> 
+            </movimientos>
+-->
+
+		    <field id="ped" local="true" noshow="true">
+			<label>ped</label>
+			<tipo>date</tipo>
+		    </field>
+		    <field id="artcod" local="true" noshow="true">
+		    </field>
+		    <field id="id_regcuenta" local="true" noshow="true">
+		    </field>
+			<field id="dias" noshow="true">
+			<expression>datediff('[__ped__]', now())</expression>
+			</field>
+<!--
+	    <field id="certificados" _noshow="true" deshabilitado="true" editable="true" >  
+		<expression>ifnull(
+			(SELECT 111 FROM CAL_NOCONFORMIDADES join CAL_ESTADOS_NCONF on id_estadonconf = estadonconf_id where CAL_NOCONFORMIDADES.regcuenta_id = REG_CUENTA.id_regcuenta and tipo_estadonconf  = 0 limit 1),
+		    ifnull((select 0 from REG_CUENTA_CERTIFICADOS where REG_CUENTA_CERTIFICADOS.regcuenta_id = id_regcuenta  and REG_CUENTA_CERTIFICADOS.fecha_vencimiento &gt;= now()  ), 109)
+		)</expression>
+	    </field>
+-->
+
+		    <field id="deshabilitado" noshow="true">
+			<expression>case when manual then 'false' else 'true' end</expression>
+		    </field>
+                  <field id="grabar" local="true" >
+  			<attribute id="deshabilitado">deshabilitado</attribute>	
+                        <label>Sel</label>
+			<expression>(case 
+					when datediff('[__ped__]', now()) &lt; -7 and coddem = 110 then 1 
+					when datediff('[__ped__]', now()) &lt; 0 and datediff('[__ped__]', now()) &gt;= -7 and coddem = 100 then 1 
+				    when coddem = 111 and (SELECT count(*) FROM CAL_NOCONFORMIDADES 
+								join CAL_ESTADOS_NCONF on id_estadonconf = estadonconf_id 
+								where CAL_NOCONFORMIDADES.regcuenta_id = [__id_regcuenta__] and tipo_estadonconf  = 0) != 0 then 1 
+				     when coddem = 109 and (select count(*) from REG_CUENTA_CERTIFICADOS where REG_CUENTA_CERTIFICADOS.regcuenta_id = [__id_regcuenta__]) = 0 then 1
+			else 0 end)</expression>
+			<tipo>check</tipo>
+                  </field>
+<!--
+		    <field id="grabar" local="true" _refresh="true">
+			<if exp="(grabo + 0) + ( grabar + 0)">
+			    <true>1</true>
+			    <false>0</false>
+			</if>
+			<tipo>check</tipo>
+		    </field>
+-->
+                  <field id="coddem" _noshow="true" _editable="true" deshabilitado="true" noshow="true">
+                      <label>Cod</label>
+                      <help>Codigo de Demerito </help>
+			<condicion operador="!=">0</condicion>
+                  </field>
+
+                  <field id="desdem" style="white-space:nowrap;">
+                      <label>Descripcion </label>
+                      <help>Descripcion </help>
+                  </field>
+                  <field id="manual" noshow="true">
+                      <label>Ingreso Manual</label>
+			<tipo>check</tipo>
+                  </field>
+                  <field id="inactivo" noshow="true">
+		    <condicion operador="=">0</condicion>
+                  </field>
+				  <field id="calif" noshow="true">
+				  	<expression>(select califica from REG_CUENTA join REG_CATEGORIAS on id_regcategoria = cal_regcategoria_id where id_regcuenta = [__id_regcuenta__])</expression>
+					<condicion operador="=">1</condicion>
+				  </field>
+                  <order>
+                  <field id="peso" noshow="true"/>
+                  </order>
+                  </table>
+               </form>
+        </histrix>

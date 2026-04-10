@@ -1,0 +1,367 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+	<histrix tipo="cabecera">
+		<title>COTIZACION</title>
+		<obs></obs>
+		<form >
+			<table id="COTIZACION" label="COTIZACION">
+								
+				<validation>
+					<condition>('ctanom' == '0')</condition>
+					<message>Debe Ingresar el Nombre.</message>
+				</validation> 
+				<validation >
+					<condition>(modcar == 0)</condition>
+					<message>Debe Seleccionar el Modelo</message>
+				</validation>
+				<field id="idLista" >
+					<label>Lista</label>
+					<tabla_ex id="PRECIOMODELO">
+						<field id="id">
+							<expression>max(idLista)</expression>
+						</field>
+						<field id="id2">
+							<expression>max(idLista)</expression>
+						</field>
+					</tabla_ex>
+				</field>
+				<field id="lista_old" deshabilitado="true" local="true">
+					<label modpos="nobr">Lista original</label>
+				</field>
+				<field id="NewCotiz" _autoinc="true" deshabilitado="true" _noshow="true" local="true">
+					<label modpos="nobr" style="font-size:15px; color:green;font-weight:bold;">N.Cotiz. </label>
+					<tipo>varchar</tipo>
+
+					<help>Numero de Cotizacion</help>
+					<detalle>idCotiz</detalle>	
+				</field>  
+
+
+				<field id="fecha" _deshabilitado="true">
+					<label modpos="nobr" >Fecha</label>
+					<help>Fecha de CotizaciÃ³n</help>
+					<valor>today</valor>
+				</field>					
+				<field id="oldCotiz" noshow="true" local="true">
+				</field>
+
+				<!--<field id="lista" local="true" >
+					<label>Lista Original</label>
+					<expression>COTIZACION.idLista</expression>
+				</field>
+			-->
+				<field id="ctacod" required="false" _autocompletar="true" _noshow="true" _deshabilitado="true" >
+					<label _modpos="nobr">Cliente </label>
+					<help>Codigo de Cuenta </help>
+					
+					<actualiza>                                                                                                  
+						<field destino="ctacod" id="contactos"/>                                                                
+					</actualiza>   				
+					<detalle>ctacod</detalle>	
+					<tipo>integer</tipo>
+				</field>				
+				<field id="ctanom" required="true" autocompletar="true" searchRecord="false">
+					<label modpos="nobr"></label>
+					<ayuda_ex id="CCTCUENT" condes="true" xml="HLPcctcuent_conta_cot.xml" dir="/help_local">
+						<field id="ctacod" noshow="true">
+							<detalle>ctacod</detalle>
+						</field>
+						
+						<field id="ctanom2">
+                                                  <expression having="false">concat(CCTCUENT.ctanom, ' - ', CCTCUENT.ctafan)</expression>
+							<tipo>varchar</tipo>
+						</field>
+						<field id="siscod" oculto="true" >
+							<condicion operador="=">'02'</condicion>
+						</field>
+						<field id="ctatel" class="informal">
+							<detalle>ctatel</detalle>
+						</field>
+						
+						<clave>ctanom</clave>
+						<descripcion>ctanom</descripcion>
+						<order>
+							<field id="ctanom"></field>
+						</order>
+					</ayuda_ex>
+	
+					<size>40</size>
+				</field>
+				<field id="contactos" local="true">
+					<label colspan="2">Contactos</label>
+					<tabla_ex id="CCTCONTA" vacio="true">
+						<field id="idconta"></field>
+						<field id="nombre" >
+							<expression>CCTCONTA.nombre</expression>
+							<tipo>varchar</tipo>
+						</field>
+						
+						<field id="ctamail" >
+							<expression>CCTCONTA.mail</expression>
+							<tipo>varchar</tipo>							
+						</field>						
+						<field id="ctatel" >
+							<expression>CCTCONTA.Telefono</expression>
+							<tipo>varchar</tipo>
+						</field>				
+						<field id="ctacon" >
+							<expression>CCTCONTA.nombre</expression>
+							<tipo>varchar</tipo>
+						</field>								
+						<field id="ctacod">
+							<condicion operador="=">0</condicion>
+						</field>
+						<order>
+							<field id="nombre"></field>
+						</order>
+					</tabla_ex>
+				</field>
+				<field id="ctatel">
+					<label modpos="nobr" colspan="6">Teléfono</label>
+					<size>40</size>
+					<tipo>varchar</tipo>
+				</field>
+<!--				<field id="ctadir">
+					<label>Dirección</label>
+					<size>40</size>
+				</field>
+				<field id="ctanro">
+					<label modpos="nobr">CUIT</label>
+				</field> -->
+				<field id="ctacon" >
+					<label colspan="2">Contacto</label>
+					<size>40</size>
+				</field>
+				<field id="ctamail" _sincelda="true">
+					<label modpos="nobr" colspan="6">e-mail</label>
+					<size>40</size>
+					
+				</field>
+				<field id="idGrupo" deshabilitado="true" noshow="true" >
+					<label _modpos="nobr">idGrupo</label>
+					<tipo>integer</tipo>
+<!--					<actualiza>
+						<field destino="migrupo" id="opciones"/>
+					</actualiza> -->
+				</field>				
+				<!-- SELECCIONO LAS POSIBLES CARROCERIAS A FABRICAR -->
+				<field id="asientos" _deshabilitado="true" >
+					<label modpos="nobr">Asientos</label>
+					<tipo>integer</tipo>
+					<size>3</size>
+				</field>				
+				<field id="modcar" tabla="CARROCERIA" deshabilitado="true" local="true">
+					<label>Carroceria</label><!--
+					<tabla_ex id="CARROCERIA">
+						<field id="nrocar"></field>
+						<field id="desabv"></field>
+					</tabla_ex>-->
+					<tipo>varchar</tipo>
+				</field>
+					
+						
+				<!-- SELECCIONO EL MODELO DE CHASIS -->
+				
+				<field id="grupo" local="true">
+					<label _colspan="2" modpos="nobr" style="color:red;">Seleccione Modelo</label>
+					
+					<tabla_ex id="GRUPOPRECIOS" xml="grupoprecios_select.xml" _expand="true"	vacio="true">
+						<field id="idGrupoPrecio">
+							<condicion operador=""></condicion>
+						</field>
+						<field id="desabv">
+							<expression>concat(MARCHASIS.desabv,' ',	MODCHASIS.moddes)</expression>
+							<label colstyle="width:100px;">Chasis</label>
+							<tipo>varchar</tipo>
+						</field>
+						<field id="marcod">
+							<detalle>marcod</detalle>
+						</field>
+						<field id="modcha">
+							<detalle>modcha</detalle>
+						</field>
+						
+						<field id="nrocar">
+							<detalle>nrocar</detalle>							
+							<condicion operador=""></condicion>
+							
+						</field>
+						<field id="idGrupo">
+							<detalle>idGrupo</detalle>
+						</field>
+					</tabla_ex>
+					<tipo>integer</tipo>
+					<!-- <tipo>radio</tipo> -->
+				</field>
+
+															
+				<field id="marcod" deshabilitado="true" noshow="true">
+					<label>marcod</label>
+					<tipo>integer</tipo>
+				</field>
+				
+				<field id="modcha" deshabilitado="true" noshow="true">
+				 	<label modpos="nobr">modcha</label >
+					<tipo>integer</tipo>
+				</field>
+				
+				
+				<!-- SELECCIONO ASIENTOS -->
+<!--				<field id="opciones">
+					<label colspan="4">Opciones</label>
+					
+				<tabla_ex id="GRUPOPRECIOS" xml="preciomodelo_select.xml" 	vacio="true" _expand="true">
+						<field id="precio">
+							<detalle>precio</detalle>
+						</field>
+						<field id="prePub">
+							<expression>ROUND(max(precio * (1 + margen)), 2)</expression>
+							
+							<detalle>prePub</detalle>
+						</field>
+						<field id="NAS">
+							<expression>(asientos + acompaÃ±ante)</expression>
+						</field>
+						<field id="ref" >
+							<label>ref</label>
+							<expression>CONCAT(asientos + 1, ' Asientos, ', TIPOSERVICIO.servdes, (case when banbar then ' B/B ' else ' ____ ' end), (case when bastidor then ' Con Bastidor ' else ' Con Bastidor ' end), 'Largo:', largo, ' Bodega: ',bodega )</expression>
+						</field>			
+						<field id="idPrecio" noshow="true">
+							<label>idPrecio</label>
+							<detalle>idPrecio</detalle>
+						</field>										
+					</tabla_ex> 
+				</field>
+				-->
+
+<!--				<field id="ref" deshabilitado="true">
+					<label colspan="4">Descripcion</label>
+					<size>50</size>
+					<tipo>varchar</tipo>
+				</field> -->
+
+				<field id="razonAumento">
+
+				<expression>
+				(SELECT P.precio FROM PRECIOMODELO P WHERE P.nrocar = COTIZACION.modcar AND P.asientos = (HOMOLOGMOD.asientos) AND P.idGrupo = COTIZACION.idGrupo AND P.idLista = (SELECT MAX(idLista) FROM PRECIOMODELO) )	/	(SELECT P.precio FROM PRECIOMODELO P WHERE P.nrocar = COTIZACION.modcar AND P.asientos = (HOMOLOGMOD.asientos) AND P.idGrupo = COTIZACION.idGrupo AND P.idLista = '[__lista_old__]' )
+
+				 </expression>
+					<label>Razon aum</label>
+				</field>
+				
+				<field id="old_precio" noshow="true">
+					<expression>'[__precio__]'</expression>
+				</field>
+
+				<field id="old_prePub" noshow="true">
+					<expression>'[__prePub__]'</expression>
+				</field>
+
+				<field id="showPrecioCon" >
+					<label>Concesionario</label>
+					<tipo>check</tipo>
+				</field>
+
+				<field id="precio" _sincelda="true" local="true">
+					<label  modpos="nobr"></label>
+<!--					<jseval campodestino="TOTAL">precio + TAdicion</jseval> -->
+<!--					<jseval campodestino="TOTAL">(tipoCli==1)?precio + TAdicion:prePub + TAdicion</jseval>										
+						<jseval campodestino="precCar">(tipoCli==1)?precio:prePub</jseval> -->
+					<tipo>decimal</tipo>
+					<size>20</size>
+				</field>
+
+
+
+				<field id="formaPago">
+					<label modpos="nobr" colspan="5">Forma de Pago</label>
+					<tipo>varchar</tipo>
+					<size>40</size>
+					<valor>A PROCESO</valor>
+				</field>
+				<field id="showPrecioPub" >
+					<label>Venta</label>
+					<tipo>check</tipo>
+				</field>			
+
+
+
+				<field id="prePub" _sincelda="true" local="true">
+					<label  modpos="nobr" ></label>
+<!--						<jseval campodestino="TOTAL">(tipoCli==1)?precio + TAdicion:prePub + TAdicion</jseval>										
+						<jseval campodestino="precCar">(tipoCli==1)?precio:prePub</jseval>
+	-->
+					<tipo>decimal</tipo>
+					<size>20</size>
+				</field>
+
+
+				<field id="plazo">
+					<label modpos="nobr" colspan="5">Plazo de entrega</label>
+					<tipo>varchar</tipo>
+					<size>40</size>
+					<valor>45 dias a partir de entrada a produccion</valor>
+				</field>		
+
+				<field id="actualizar" local="true">
+					<label>Actualizar</label>
+					<tipo>check</tipo>
+					<jseval campodestino="precio">(actualizar == 1)?(precio * razonAumento):(old_precio)</jseval>
+					<jseval campodestino="prePub">(actualizar == 1)?(prePub * razonAumento):(old_prePub)</jseval>
+				 </field>
+
+				 <field id="pie">
+                                     <label colspan="4">Pie</label>
+                                     <size>200</size>
+                                     <tipo>varchar</tipo>
+                                 </field>
+<!--				<field id="otros" local="true" obj="cotizotros_dup_ing.xml">
+					<label colspan="6">Otros</label>
+				</field> -->
+				<field id="accesorios" local="true" obj="cotiz_accesorios_coche_dup_ing.xml">
+                		    <label colspan="8">Otros</label>
+                                    <paring destino="cotizacion_id">oldCotiz</paring>
+                                </field>
+                                                   				
+				
+<!--				<field id="tipoCli">
+					<label>Tipo de Cliente</label>
+					<options>
+						<option valor="0">Público</option>
+						<option valor="1">Concesionario</option>
+					</options>
+					<valor>0</valor>
+					<jseval campodestino="TOTAL">(tipoCli==1)?precio + TAdicion:prePub + TAdicion</jseval>
+					<jseval campodestino="precCar">(tipoCli==1)?precio:prePub</jseval>
+				</field>
+				<field id="precCar" local="true" deshabilitado="true" noshow="true">
+					<label modpos="nobr">preccar</label>
+				</field> -->
+<!--				<field id="adicionales" local="true" obj="cotizacion_adicionales.xml">
+					<label colspan="4">Adicionales:</label>
+				</field>  -->
+<!--				<field id="opciones" local="true" obj="cotizopmovim.xml">
+					<label colspan="4">Caracteristicas:</label>
+				</field>  -->		
+<!--				<field id="TAdicion" local="true" deshabilitado="true" noshow="true">
+					<label modpos="nobr">Total Adicionales</label>
+					<jseval campodestino="TOTAL">(tipoCli==1)?precio + TAdicion:prePub + TAdicion</jseval>
+				</field>
+				<field id="TOTAL" local="true" deshabilitado="true">
+					<label modpos="nobr" style="color:red;font-size:20px;">Total</label>
+				</field> -->
+			</table>
+			<join tipo="left">
+				<table id="HOMOLOGMOD">
+					<field id="nrocar">
+						<condicion operador="=">COTIZACION.modcar</condicion>
+					</field>
+					<field id="marcod">
+						<condicion operador="=">COTIZACION.marcod</condicion>
+					</field>
+					<field id="modcha">
+						<condicion operador="=">COTIZACION.modcha</condicion>
+					</field>
+				</table>
+			</join>
+		</form>
+	</histrix>

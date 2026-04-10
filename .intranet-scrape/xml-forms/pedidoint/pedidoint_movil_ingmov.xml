@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm">
+    <title>MOVIMIENTOS DE orden compras</title>
+    <obs></obs>
+    <form >
+        <table id="PEDIDOINT" label="MOVIMIENTOS" >
+            <field id="usuario" 	id_temp="_usu"></field>
+            <field id="tipocomp" 	id_temp="tipocomp"></field>
+            <field id="fechaemi" 	id_temp="fechaemi"></field>
+            <field id="puesto" 		id_temp="puesto"></field>
+            <field id="nrocom" 		id_temp="nrocom"></field>
+            <field id="renglon" 	>
+		<valor>1</valor>
+	    </field>
+            <field id="artcod" 		id_temp="idPadre"></field>
+            <field id="cant"	 	id_temp="conversion"></field>
+            <field id="unimed"	 	id_temp="unicps"></field>
+            <field id="fecreq"	 	id_temp="fecreq"></field>
+            <field id="nrofab"	 	id_cab="nrofab"></field>
+            <!--<field id="codprv"      id_temp="codprv"></field>-->
+            <field id="codprv">
+                <valor>0</valor>
+            </field>
+            <field id="artuni"	 	id_temp="artuni"></field>
+            <field id="unicps"	 	id_temp="unicps"></field>
+            <field id="movref"	 	id_temp="movref"></field>
+            <field id="idDeposito"      id_cab="ocpent"></field>
+            <field id="movuso"	 	id_temp="cant"></field>
+            <field id="movcps"	 	id_temp="conversion"></field>
+            <field id="penuso"	 	id_temp="conversion"></field>
+            <field id="pencps"	 	id_temp="cant"></field>
+            <field id="confirmado"	id_temp="confirmado"></field>
+            <field id="mensaje"         id_temp="mensaje"></field>
+            <field id="archivo"         id_temp="archivo"></field>
+            <field id="directorio"      id_cab="directorio"></field>
+            <field id="centrocostos_id"      id_temp="centrocostos_id"></field>
+
+        </table>
+    </form>
+</histrix>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="insert" >
+       <title>Mov de caja</title>
+        <obs></obs>
+               <form >
+					<table id="CAJMOVIM" label="MOVIMIENTOS" idCampoCond="buscoop" >
+						<field id="siscod" >
+							<valor>05</valor>
+						</field>
+						<field id="cajfec" id_temp="movfec" ></field>
+						<field id="cajcod" id_temp="cajcod" >
+							<valor>2</valor>
+						</field>
+						<field id="cajnro" id_temp="movnro" ></field>
+						<field id="cajimp" id_temp="movimp"  ></field>
+						<field id="concod" id_temp="cajcod" >
+							<valor>2</valor>
+
+						</field> 
+						<field id="regmin" id_temp="regmin" ></field>
+						<field id="cajcta" id_temp="ctacod" ></field>
+						<field id="cajnom" id_temp="ctanom" ></field>
+						<field id="succod" id_temp="succod" ></field>
+						<field id="cajref__1" id_temp="movref__1"></field>
+						<field id="opecla" id_temp="opecla" ></field>
+						<field id="opecod" id_temp="opecod" ></field>
+						
+					</table>
+               </form>
+        </histrix>

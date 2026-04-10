@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="consulta">
+  <title>Proveedores aprobados</title>
+  <obs></obs>
+  <form detalle="Demeritoxprov.xml" inline="true" hasDetail="pesoDem">
+    <table id="REG_CUENTA" label="Proveedores aprobados">
+
+      <filters>
+        <field id="id_regcuenta">
+          <label>Cuenta</label>
+          <help>Cuenta</help>
+          <operador>=</operador>
+        </field>
+      </filters>
+
+      <field id="subsistema_id" oculto="true">
+        <label>subsistema_id</label>
+        <help>subsistema_id</help>
+        <detalle>siscod</detalle>
+        <condicion operador="=">'01'</condicion>
+      </field>
+      <field id="baja" oculto="true">
+          <condicion operador="=">0</condicion>
+      </field>
+
+      <field id="id_regcuenta" noshow="true">
+        <label>Código de Cuenta </label>
+        <help>Código</help>
+        <detalle>regcuenta_id</detalle>
+        <helper type="combo" id="REG_CUENTA" empty="true">
+            <field id="id_regcuenta"></field>
+            <field id="nombre_cuenta"></field>
+            <field id="subsistema_id" oculto="true">
+              <condicion operador="=">'01'</condicion>
+            </field>
+            <order>
+              <field id="nombre_cuenta"></field>
+            </order>
+          </helper>
+      </field>
+
+      <field id="nro_cuenta">
+        <label>Código de Cuenta</label>
+        <help>Código</help>
+        <detalle>prvcod</detalle>
+      </field>
+
+      <field id="nombre_cuenta">
+        <label>Nombre</label>
+        <help>Proveedor</help>
+      </field> 
+        <field id="nombre_fantasia" noshow="true">
+        <label>Nombre fantasia</label>
+        <help>Proveedor </help>
+      </field> 
+
+      <field id="COLORACT" local="true" noshow="true">
+          <label>colorr</label>
+          <if exp="puntosAct &lt; 6">
+            <true>(puntosAct == 0)?'color:black;text-align:center;font-weight:bold;':((puntosAct &gt;= 4)?'color:green;text-align:center;font-weight:bold;':'color:violet;text-align:center;font-weight:bold;')
+            </true>
+            <false>(puntosAct &gt; 8)?'color:red;text-align:center;font-weight:bold':'color:blue;text-align:center;font-weight:bold'</false>
+          </if>
+      </field>   
+
+      <field id="cant_noconformidades" noZero="true" style="font-size:13px;text-align:center;" linkWidth="95%" linkHeight="95%">
+          <label>No.Conf.</label>
+          <helper xml="noconformidad_qry.xml" type="link" dir="/calidad/qry" >
+                <parameter source="id_regcuenta" target="regcuenta_id"/>
+          </helper>
+          <attribute id="linkdes">nombre_cuenta</attribute>
+          <expression>select count(*) from CAL_NOCONFORMIDADES NC 
+            where NC.regcuenta_id = REG_CUENTA.id_regcuenta</expression>
+        <tipo>integer</tipo>
+      </field>
+
+      <field id="recepcionesAct" noZero="true" tipoOrden="ASC" _noshow="true">
+          <label>Recepciones</label>
+          <expression>@recepcionesAct:= (select  count(*)  from OCPRECIB 
+            where OCPRECIB.ctacod  = REG_CUENTA.nro_cuenta
+            and OCPRECIB.fecrec &gt;= DATE_SUB(CURDATE(), INTERVAL 12 MONTH))</expression>
+          <condicion operador="!=">0</condicion>
+        <tipo>integer</tipo>
+      </field>
+
+      <field id="nroDem" noZero="true" _noshow="true">
+          <label>Cant. Dem</label>
+          <expression>(select count(*) from MOVDEMERITO 
+            left join DEMERITO on DEMERITO.coddem = MOVDEMERITO.coddem 
+            where MOVDEMERITO.prvcod = REG_CUENTA.nro_cuenta
+            and MOVDEMERITO.demfec &gt;= DATE_SUB(CURDATE(), INTERVAL 12 MONTH) 
+            and MOVDEMERITO.coddem != 0)</expression>
+
+      </field>
+
+      <field id="pesoDem" noZero="true" _noshow="true">  
+          <label>Peso Demeritos</label>
+	    <helper xml="Demeritoxprov_anual.xml" type="link">
+		<parameter source="nro_cuenta" target="prvcod" />
+	    </helper>
+          <expression>@contraAct:= (select sum(peso) from MOVDEMERITO 
+            left join DEMERITO on DEMERITO.coddem = MOVDEMERITO.coddem 
+            where MOVDEMERITO.prvcod = REG_CUENTA.nro_cuenta
+            and MOVDEMERITO.demfec &gt;= DATE_SUB(CURDATE(), INTERVAL 12 MONTH) 
+            and MOVDEMERITO.coddem != 0)</expression>
+      </field>
+
+      <field id="puntosAct" _noshow="true" local="true" noZero="true">
+          <label>Porcentaje</label>
+	    <help>Peso de Demeritos / Cantidad Recepciones</help>
+          <expression>ifnull(round(@contraAct / @recepcionesAct, 2), 0)</expression>
+      </field>    
+
+      <field id="recepAct" local="true" noshow="true">
+        <label>recep</label>
+        <expression>round(@recepcionesAct, 2)</expression>
+        
+      </field>
+
+      <field id="LetraAct" local="true" style="text-align:center"  tipoOrden="ASC">
+          <attribute id="style">COLORACT</attribute>
+	  <help><![CDATA[ Porc. < 4 = A, 4 > Porc < 6 = B, 6 > Porc < 8 = C, Porc >8 = X   ]]></help>
+          <label>Calif.</label>
+          <if exp="puntosAct &lt; 6">
+            <true>(puntosAct == 0)?'-': ((puntosAct &gt;= 4)?'B':'A')</true>
+            <false>(puntosAct &gt; 8)?'X':'C'</false>
+          </if>
+       </field>
+ 
+       <order>
+        <field id="pesoDem" orderType="DESC" />
+      </order> 
+    </table>
+  </form>
+</histrix>

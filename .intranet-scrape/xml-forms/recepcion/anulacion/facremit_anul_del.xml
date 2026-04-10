@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+	<histrix tipo="delete" limit="1">
+		<title>MOVIMIENTOS recibidos  de orden compras</title>
+		<obs></obs>
+		<form >
+			<table id="FACREMIT" label="REMITOS" idCampoCond="borro">
+				<field id="ocpnro" id_temp="ocpnro" esClave="true"/>
+				<field id="fecrec" id_temp="fecrec" esClave="true"/>
+				
+				<field id="ctacod" id_temp="ctacod" esClave="true"/>
+				<field id="remnro" id_temp="remnro" esClave="true"/>
+				<field id="idPed"  id_temp="idPed"  esClave="true"/>
+				
+				
+			</table>
+		</form>
+	</histrix>

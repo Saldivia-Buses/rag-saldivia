@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="chart">
+    <title>Estadisticas Por Desempeño</title>
+    <obs></obs>
+    <form >
+        <table id="RH_EVALUACIONES" label="DESEMPEÑO PERSONAL">
+            <grafico id="desempeño" >
+                <ancho>400</ancho>
+                <tipo>P</tipo>
+				<serie>excelentes</serie>
+				<serie>buenos</serie>
+				<serie>aceptables</serie>
+				<serie>regulares</serie>
+				<serie>reprobados</serie>
+				<etiquetas>des</etiquetas>
+                <title>Cantidad de Operarios</title>
+				<subtitulo>x Desempeño</subtitulo>
+            </grafico>
+          
+            <field id="id_rhevaluacion" />
+
+            <field id="test">
+            	<expression having="true">id_rhevaluacion</expression>
+            	<condicion operador="=">MAX(id_rhevaluacion)</condicion>
+            </field>
+
+
+            <field id="reprobados">
+            	<expression>SUM(CASE WHEN ((desempenio / 45) &lt;= 0.4) THEN 1 ELSE 0 END )</expression>
+            	<label>Reprobados</label>
+            </field>
+            <field id="regulares">
+            	<expression>SUM(CASE WHEN ((desempenio / 45) &gt; 0.4 and (desempenio / 45) &lt;= 0.6) THEN 1 ELSE 0 END)</expression>
+            	<label>Regulares</label>
+            </field>
+            <field id="aceptables">
+            	<expression>SUM(CASE WHEN ((desempenio / 45) &gt; 0.6 and (desempenio / 45) &lt;= 0.7) THEN 1 ELSE 0 END)</expression>
+            	<label>Aceptables</label>
+            </field>
+            <field id="buenos">
+            	<expression>SUM(CASE WHEN ((desempenio / 45) &gt; 0.7 and (desempenio / 45) &lt;= 0.8) THEN 1 ELSE 0 END)</expression>
+            	<label>Buenos</label>
+            </field>
+            <field id="excelentes">
+            	<expression>SUM(CASE WHEN (desempenio / 45) &gt; 0.8  THEN 1 ELSE 0 END)</expression>
+            	<label>Excelentes</label>
+            </field>            
+
+            <field id="rhpersona_id" />
+
+            <group>
+            	<field id="rhpersona_id" />
+            </group>
+
+         </table>
+ 
+    </form>
+</histrix> 

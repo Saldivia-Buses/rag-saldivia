@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="update" grabafinal="true" replaceInto="true">
+    <title></title>
+    <obs/>
+    <form>
+        <table id="CCTMOVIM">
+
+            <field id="siscod" id_cab="siscod" esClave="true">
+                <valor>03</valor>
+            </field>
+            <field id="ctacod"      id_cab="ctacod" esClave="false" />
+            <field id="ctanom"      id_cab="ctanom" />
+            <field id="movref__1"   id_cab="movref__1" />            
+            <field id="movref__2"   id_cab="movref__2" />
+            <field id="concod"      id_cab="concod" />
+            <field id="movlet"      id_cab="concod" />
+            <field id="movnpv"      id_cab="movnpv" esClave="true" />
+            <field id="movnro"      id_cab="movnro" esClave="true" />
+            <field id="movfec"      id_cab="movfec" esClave="true" />
+
+            <field id="moneda_id"   id_cab="moneda_id" />
+
+            <field id="nrofab"      id_cab="nrofab" />
+            <field id="movnde"      id_temp="artali" />
+            <field id="movnet"	    id_temp="artnet" />
+            <field id="movim1"	    id_temp="artiva" />
+            <field id="movimp"	    id_temp="arttot" />
+
+        </table>
+    </form>
+</histrix>

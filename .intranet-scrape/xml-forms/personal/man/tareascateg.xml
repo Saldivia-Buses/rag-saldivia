@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+	<title>TAREAS POR CATEGORIA</title>
+	<obs/>
+	<form  detalle="tareasalta.xml">
+		<table id="SECCION" label="Tareas por Categoria">
+
+			<filters>
+				<field id="IdSindicato" local="true">
+					<label>Sindicato</label>
+					<operador>=</operador>
+					<valor>2</valor>			
+				</field>
+				<field id="IdCateg" local="true">
+					<label>Categoría</label>
+					<operador>=</operador>
+				</field>
+			
+			</filters>
+
+			<field id="IdSindicato" local="true" oculto="true">
+				<label>Sindicato</label>
+				<tabla_ex id="SINDICATO">
+					<field id="IdSindicato"/>
+					<field id="Nombre"/>
+				</tabla_ex>
+				<help>Sindicato</help>
+				<actualiza>
+					<field destino="IdSindicato" id="IdCateg"/>
+				</actualiza>
+				<tipo>varchar</tipo>
+				<detalle>idSindicato</detalle>
+			</field>
+
+			<field id="IdCateg" local="true" oculto="true">
+				<label style="font-size:15px;color:green;">Categoría</label>
+				<tabla_ex id="CATPERSONAL">
+					<field id="IdCateg"/>
+					<field id="descripcion"/>
+					<field id="IdSindicato">
+					</field>
+				</tabla_ex>
+				<tipo>varchar</tipo>
+				<detalle>idCateg</detalle>
+								<actualiza>
+						<field destino="actual" id="actual"/>
+					
+					</actualiza>	
+			</field>
+			<field id="id_seccion">
+					<label>Id</label>
+				<detalle>id_seccion</detalle>
+
+			</field>
+			<field id="descripcion">
+					<label>Sección</label>
+			</field>
+
+			<field id="actual" local="true" oculto="true">
+
+			</field>
+
+			<!--<field id="descripcion" tabla="TAREASPER">
+				<label>Tareas</label>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="IdSeccion" oculto="true">
+				<label>Convenio</label>
+				<tabla_ex id="CONVENIOS">
+					<field id="IdConvenio"/>
+					<field id="descripcion"/>
+					<field id="IdSindicato">
+						<condicion operador="=">1</condicion>
+					</field>
+				</tabla_ex>
+				<valor>1</valor>
+			</field> -->
+			<!--<field id="idTarea" >
+				<label style="color:red;font-weight:bold;">Oficio</label>
+				<tabla_ex id="RH_OFICIOS">
+					<field id="idOficio"/>
+					<field id="descripcion"/>
+				</tabla_ex>
+	
+				4
+			</field>-->
+			<!--<field id="tareas">
+				<label style="font-size:15px;">Tareas</label>
+				<help>Tareas</help>
+				<size>250</size>
+				<tipo>varchar</tipo>
+			</field>-->
+			
+		</table>
+<!--		<join>
+			<table id="TAREASPER">
+				<field id="idTarea">
+					<condicion operador="=">TAREASCATEG.idTarea</condicion>
+				</field>
+			</table>
+		</join>-->
+	</form>
+</histrix>

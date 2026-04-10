@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="update">
+	<title>Ingreso Movimiento</title>
+	 <obs></obs>
+		<form >
+		    <table id="STK_SOLICITUD_STKARTICULO">
+				<field id="stkarticulo_id"         id_temp="stkarticulo_id"  esClave="true"/>
+				<field id="stklocacion_id" 	  id_temp="stklocacion_id" esClave="true"/>
+				<field id="fecha_cierre" id_temp="fecha_cierre" esClave="true">
+					<valor>now()</valor>
+					<tipo>integer</tipo>
+					<condicion operador="=">'0000-00-00-'</condicion>
+				</field>
+				<field id="stkmovimiento_id"	lastId="scan_transfer_suma_ins.xml">
+				</field>
+		    </table>
+		</form>
+    </histrix>	
+
+

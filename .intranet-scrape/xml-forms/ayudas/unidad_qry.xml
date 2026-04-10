@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+  <title>Unidades</title>
+  <obs></obs>
+  <form>
+    <table id="GEN_UNIDADES" label="Unidades">
+      <field id="id_unidad" autoinc="true" noshow="true">
+        <label>Codigo</label>
+        <help>Código de unidad</help>
+      </field>
+      <field id="nombre_unidad">
+        <label>Nombre </label>
+        <help>Nombre de la unidad </help>
+        <size>15</size>
+      </field>
+    </table>
+  </form>
+</histrix>  

@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" subtipo="vertical" imprime="false" borra="false" width="37%">
+    <title>REVISIONES MEDICAS</title>
+    <obs/>
+    <form detalle="personal_revisiones_detalle.xml">
+        <table id="FRANCOS_PER" label="Revisiones medicas">
+            <filters>
+                <field id="legajo"  >
+                    <label>Legajo</label>
+                    <tipo>integer</tipo>
+                    <operador>=</operador>
+                </field>
+                <field id="fecha_revision">
+                    <label>Fecha</label>
+                    <valor>today</valor>
+                </field>
+            </filters>
+            <field id="id" tabla="FRANCOS_PER" noshow="true">
+                <detalle>francoper_id</detalle>
+            </field>
+            <field id="idPersona" noshow="true">
+                <detalle>IdPersona</detalle>
+            </field>
+            <field id="legajo" _deshabilitado="true" _tabla="PERSONAL">
+                <helper type="external" id="PERSONAL">
+                    <field id="legajo" />
+                    <field id="idPersona" oculto="true">
+                        <detalle>idPersona</detalle>
+                    </field>
+                    <field id="nombre">
+                        <expression>CONCAT(PERSONAL.apellido, ', ', PERSONAL.nombre)</expression>
+                        <detalle>nombre</detalle>
+                    </field>
+                </helper>
+                <label>Legajo</label>
+                <tipo>varchar</tipo>
+                <size>10</size>
+            </field>
+            <field id="nombre" _Formstyle="display:none;" sincelda="true">
+                <expression>CONCAT(PERSONAL.apellido, ', ', PERSONAL.nombre)</expression>
+                <label modpos="nobr">Nombre</label>
+                <tipo>varchar</tipo>
+                <size>40</size>
+            </field>
+
+            <field id="idfranco" _noshow="true">
+                <label>Cod.</label>
+                <help>Codigo de Licencia</help>
+                <helper type="combo" id="FRANCOS_CAT">
+                    <field id="idfranco">
+			<condicion operador="IN">(1, 2, 5, 14)</condicion>
+		    </field>
+                    <field id="nombre" />
+                </helper>
+                <condicion operador="IN">(1, 2, 5, 14)</condicion>
+            </field>
+            <field id="fecha_revision" local="true" noshow="true" valauto="true">
+                <label>Fecha</label>
+                <tipo>date</tipo>
+            </field>
+            <field id="fechainicio" _deshabilitado="true">
+                <label>Desde</label>
+                <help>Fecha</help>
+                <tipo>date</tipo>
+                <condicion operador="&lt;=">STR_TO_DATE('[__fecha_revision__]', '%d/%m/%Y')  AND (FRANCOS_PER.fechafin &gt;= STR_TO_DATE('[__fecha_revision__]', '%d/%m/%Y') OR FRANCOS_PER.fechafin = '0000-00-00')</condicion>
+            </field>
+            <field id="fechafin" >
+                <label>Hasta</label>
+                <help>Hasta Fecha</help>
+                <tipo>date</tipo>
+            </field> 
+
+            <field id="fechaEgreso" noshow="true" tabla="PERSONAL">
+                <condicion operador="=">'0000-00-00'</condicion>
+                <tipo>date</tipo>
+            </field>
+            <order>
+                <field id="apellido" tabla="PERSONAL"/>
+            </order>
+        </table>
+
+        <join tipo="inner">
+            <table id="PERSONAL">
+                <field id="IdPersona">
+                    <condicion operador="=">FRANCOS_PER.IdPersona</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

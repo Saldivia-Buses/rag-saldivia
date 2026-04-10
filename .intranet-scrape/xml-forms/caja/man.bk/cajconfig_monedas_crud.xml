@@ -1,0 +1,64 @@
+﻿<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="grid"  procesa="true" deleteRow="false" transacional="true" tooltip="false" inserta="false" modifica="false" confirma="APLICAR" forceReload="true" showCantidad="false"
+imprime="false">
+	<title>Monedas por Puesto</title>
+	 <obs></obs>
+		<form>
+		    <table id="GEN_MONEDAS" label="Monedas para el Puesto">
+
+				<movimientos>
+					<relacion id="cajconfig_monedas_del.xml"/>
+					<relacion id="cajconfig_monedas_ins.xml"/>
+				</movimientos>
+						
+				<field id="id_moneda" noshow="true" esClave="true" />
+
+				<!-- TABLA DE VINCULACION -->
+				<field id="id_cajpuestomoneda" tabla="CAJ_PUESTO_MONEDAS" noshow="true" />
+				<field id="cajpuesto_id" local="true" esClave="true"      noshow="true" />
+				<field id="moneda_id" tabla="CAJ_PUESTO_MONEDAS"          noshow="true" />
+				<!-- FIN -->				
+				
+				<field id="descripcion_moneda" deshabilitado="true" >
+					<label>Nombre</label>
+				</field>
+				
+				<!-- Determina La Grabacion de los Registros Habilitados -->				
+				<field id="habmoneda" refresh="true">
+				    <expression>case when !isnull(moneda_id) then 1 else 0 end</expression>
+				    <tipo>check</tipo>                
+				</field>                            
+				<field id="habilitado" local="true" noshow="true" >
+				    <if exp="'habmoneda' == 1">
+						<true>'true'</true>
+						<false>'false'</false>
+				    </if>
+				</field>
+
+   <!--
+				<field id="anterior" noshow="true">
+				    <expression>case when moneda_id then 1 else 0 end</expression>
+				</field>
+
+				<field id="borrado" noshow="true" local="true">
+				    <if exp="'habilitado' != 'anterior'">
+						<true>1</true>
+						<false>0</false>
+				    </if>
+				</field>
+-->
+		    </table>
+
+		    <join tipo="left">
+				<table id="CAJ_PUESTO_MONEDAS">
+				    <field id="moneda_id">
+						<condicion operador="=">id_moneda</condicion>
+				    </field>
+					<field id="cajpuesto_id">
+						<condicion operador="=">'[__cajpuesto_id__]'</condicion>
+					</field>
+				</table>
+		    </join>
+		    
+		</form>
+</histrix>

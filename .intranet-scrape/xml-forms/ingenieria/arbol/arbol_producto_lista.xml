@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="grid" path="fotos/articulos"  _treeGrid="true" dataSource="ArbolProducto" _serverSide="true" inserta="false" modifica="false" borra="false" procesa="true" _imprime="false" exporta="true">
+    <title>Arbol Producto</title>
+    <obs></obs>
+    <form >
+        <table id="STK_BOM" label="Materia prima">
+
+            <movimientos>
+                <relacion id="arbol_prod_lista_hist_ins.xml" />
+            </movimientos>
+
+            <field id="id_stkbom" autoinc="true" noshow="true" />
+
+            <field id="orden" noshow="true">
+                <label>orden</label>
+            </field>
+
+            <field id="filtro_detalle" noshow="true">
+                <tipo>date</tipo>
+            </field>
+            
+            <!-- <field id="clase" noshow="true" clasefila="true"/> -->
+
+            <field id="stkarticulopadre_id" arbol="padre" colstyle="display:none;" required="true" noshow="true">
+                <label>Padre</label>
+            </field>
+
+            <field id="bom_variacion_id" valauto="true" noshow="true"/>
+
+            <field id="stkarticulohijo_id" noshow="true" arbol="hijo"/>
+       
+            <field id="stkarticulohijo_string" arbol="hijo" style="color:red;font-family: monospace;white-space:nowrap; width:100%; text-align:left;">
+                <label>Artículo</label>
+                <help>Artículo Hijo</help>
+                <size>12</size>
+		          <attribute id="linkdes">nombre_articulo</attribute>
+                <helper type="link" xml="arbol_producto_lista.xml" width="95%">
+                    <parameter source="stkarticulohijo_id" target="stkarticulopadre_id" />
+                </helper>
+            </field>
+
+            <field id="nombre_articulo" style="width:17em;" >
+                <label>Nombre</label>
+                <help>Artículo Hijo</help>
+            </field>
+
+            <field id="posicionfab_id" noshow="true">
+                <label>Pos.Fab</label>
+            </field>
+            
+            <field id="nombre_posicionfab_id" local="true">
+                <label>Pos.Fab</label>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="tipocalculo_costo" _noshow="true">
+                <label>Fab.</label>
+        		<help>Fabricación</help>
+        		<helper type="combo">
+        		    <option value="0">Propia</option>
+        		    <option value="1">Compra</option>
+        		</helper>
+            </field>
+
+            <field id="fecha_costo" noshow="true">
+                <tipo>date</tipo>
+            </field>
+
+            <field id="id_regcuenta" noshow="true"/>
+
+    	    <field id="nombre_cuenta">
+    		  <label>Prov.</label>
+    	    </field>
+
+            <field id="ctbcuenta_id" print="false" tabla="CTBCUENT">
+               <label>Nro Cta</label>
+               <tipo>varchar</tipo>
+            </field>
+
+            <field id="ctbcuenta_nombre" tabla="CTBCUENT" print="false">
+               <label>CtaCtb</label>
+               <tipo>varchar</tipo>
+            </field>
+         
+            <field  id="cantidad" _colstyle="float:right; color:green ;width:5em;">
+                <label>Cant.</label>
+                <help>Cantidad</help>
+            </field>
+
+            <field id="unidad_uso" local="true">
+              <label modpos="nobr" >Uso</label>
+              <help>Unidad de Stock</help>
+            </field>
+
+            <field id="unidad_compra" local="true">
+              <label modpos="nobr" >U.cps</label>
+	       </field>         
+
+            <field id="multiplo" style="text-align:right;">
+                <label>Múltiplo</label>
+            </field>
+
+            <field id="unitario" style="color:blue;" noZero="true">
+                <label>Unitario</label>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="recargo" noZero="true">
+                <label>% Rec</label>
+            </field>
+
+            <field id="porcentaje_region" noZero="true">
+                <label>% Log</label>
+            </field>   
+
+            <field id="sumaitems" _suma="true"  noZero="true">
+                <label>Total</label>
+            </field>
+
+            <field id="sumaitems_clog" suma="true"  noZero="true">
+                <label>Total c/Log</label>
+            </field>            
+
+            <field id="level_0" suma="true"  noZero="true">
+                <label>Conjuntos</label>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="level_1" _suma="true"  noZero="true" _noEmpty="true">
+                <label>Level 1</label>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="level_2" _suma="true"  noZero="true" _noEmpty="true">
+                <label>Level 2</label>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="level_3" _suma="true"  noZero="true" _noEmpty="true">
+                <label>Level 3</label>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="level_4" _suma="true"  noZero="true" _noEmpty="true">
+                <label>Level 4</label>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="level_5" _suma="true"  noZero="true" _noEmpty="true">
+                <label>Level 5</label>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="level_6" _suma="true"  noZero="true" _noEmpty="true">
+                <label>Level 6</label>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="level_7" _suma="true"  noZero="true" _noEmpty="true">
+                <label>Level 7</label>
+                <tipo>numeric</tipo>
+            </field>
+
+    	    <field id="piezas" suma="true">
+                <label>Piezas</label>
+    	    </field>
+
+        </table>
+
+    </form>
+</histrix>

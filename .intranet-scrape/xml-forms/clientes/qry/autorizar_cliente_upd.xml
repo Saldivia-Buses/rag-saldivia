@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="update">
+  <title>VIAJANTES</title>
+  <obs></obs>
+  <form >
+    <table id="REG_CUENTA" label="VIAJANTES">
+
+      <field id="id_regcuenta" id_temp="id_regcuenta" esClave="true">
+      </field>
+      <field id="nro_cuenta" id_temp="nro_cuenta" esClave="false">
+      </field>      
+      <field id="alta_cuenta" id_temp="alta_cuenta" >
+      </field>            
+      <field id="subsistema_id" >
+          <valor>02</valor>
+      </field>
+  
+  </table>
+  </form>
+</histrix>  

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm">
+	<title>NACIONALIDAD</title>
+	<obs></obs>
+	<form >
+		<table id="NACIONALIDAD" >
+			<title>Nacionalidad</title>
+			<field id="nacionalidad">
+				<label>Cod.Nacionalidad</label>
+				<help>Codigo de Nacionalidad</help>
+			</field>
+			<field id="descripcion">
+				<label>Descripcion</label>
+				<help>Descripcion Nacionalidad</help>
+			</field>
+			<order>
+				<field id="nacionalidad"></field>
+			</order>
+		</table>
+	</form>	   
+</histrix> 

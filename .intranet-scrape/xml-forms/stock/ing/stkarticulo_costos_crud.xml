@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!--
+*******************************************************************************
+Tipo:  GRID
+Tarea: Modificacion de Listas de Precio
+Autor: Cartucho
+Modificado: d!ego2k
+*******************************************************************************
+-->
+<histrix tipo="grid" subtipo="vertical" tooltip="false" inserta="false" preloadData="false" deleteRow="false" procesa="true" imprime="false" log="false">
+    <title>Modificación de costos</title>
+    <obs></obs>
+    <form>
+
+        <table id="STK_ARTICULOS" label="Maestro de Precios de Productos">
+
+            <movimientos>
+                <relacion id="stkarticulo_costos_upd.xml" />
+                <relacion id="stkarticulo_usado_costos_upd.xml" />
+            </movimientos>
+
+            <filters>
+                <field id="stkfamilia_id">
+                    <label modpos="nobr">Familia</label>
+                </field>
+
+    <field id="separador" modpos="nobr" deshabilitado="true" editable="false" />
+
+                <field id="stkrubro_id">
+                    <label modpos="nobr">Rubro</label>
+                </field>
+
+    <field id="separador" modpos="nobr" deshabilitado="true" editable="false" />
+
+                <field id="stkmarca_id">
+                    <label modpos="nobr">Marca</label>
+                </field>
+
+    
+                <field id="id_stkarticulo" deshabilitado="false">
+                    <label >Cod.Art</label>
+                </field>
+
+    <field id="separador" modpos="nobr" deshabilitado="true" editable="false" />
+
+                <field id="regcuenta_id"  modpos="nobr">
+                    <label>Proveedor</label>
+                    <operador>=</operador>
+                </field>
+
+    <field id="separador" modpos="nobr" deshabilitado="true" editable="false" />
+
+                <field id="porc">
+                    <label modpos="nobr">Nuevo porcentaje</label>
+                    <tipo>numeric</tipo>
+                </field>
+
+    <field id="separador" modpos="nobr" deshabilitado="true" editable="false" />
+
+            <field id="con_stock" deshabilitado="false" modpos="nobr">
+                <label>Solo con stock</label>
+            </field>
+
+	</filters>
+
+        <field id="separador" local="true" deshabilitado="true" noshow="true">
+            <size>1</size>
+        </field>
+
+        <field id="id_stkarticulo" noshow="true">
+            <helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas" empty="true">
+                <field id="id_stkarticulo" />
+                <field id="nombre_articulo" />
+                <field id="baja_articulo" noshow="true">
+                    <condicion operador="!=">1</condicion>
+                </field>
+            </helper>
+        </field>
+
+        <field id="stkarticulo_id">
+          <label>Cod.Artic</label>
+          <expresion>id_stkarticulo</expresion>
+        </field>
+        
+        <field id="codigo_barra" noshow="true">
+            <label modpos="nobr">Cod.Barra</label>
+        </field>
+
+        <field id="nombre_articulo" >
+            <label>Descripcion</label>
+        </field>
+
+        <!-- COSTOS -->
+
+        <field id="fecha_ult">
+            <label>Ult.Mod.</label>
+            <tipo>date</tipo>
+        </field>
+
+        <field id="precio_costo" deshabilitado="false">
+            <label style="color: green;">Precio Costo</label>
+            <jseval campodestino="nuevo_costo">precio_costo * wstklistadetalle_costo / 100 + precio_costo </jseval>
+            <tipo>numeric</tipo>
+        </field>
+
+
+        <field id="nuevo_costo" local="true" editable="true" deshabilitado="false" colstyle="color: red; text-align: right; ">
+            <label modpos="nobr" style="color: red;text-align:right;">Nvo P.Costo</label>
+            <expresion>round(STK_ARTICULOS.precio_costo * (1 + '[__porc__]' / 100), 2)</expresion>
+            <jseval campodestino="nuevo_costo_usado">(nuevo_costo / 2).toFixed(0)</jseval>
+            <tipo>numeric</tipo>  
+        </field>
+
+        <field id="totalstk" noZero="true">
+                <label>Stock Actual</label>
+                <expresion having="false">sum(case when tipo_concepto = 0 then 1 else -1 end * ifnull(STK_MOVIMIENTOS.cantidad,0) )</expresion>
+                <tipo>numeric</tipo>
+        </field>
+        
+        <field id="con_stock" noshow="true" local="true">
+          <tipo>check</tipo>
+        </field>
+
+        <field id="test_stock" noshow="true">
+            <expression>(CASE WHEN '[__con_stock__]' = '0' THEN 1 ELSE ( CASE WHEN sum(case when tipo_concepto = 0 then 1 else -1 end * ifnull(STK_MOVIMIENTOS.cantidad,0) ) != 0 THEN 1 ELSE 0 END) END)</expression>
+            <condicion operador="=">1</condicion>
+        </field>
+
+        <field id="codigo_ubarra" colstyle="display:none;">
+            <label>cbusado</label>
+        </field>
+
+        <field id="nuevo_costo_usado" local="true" editable="true" deshabilitado="false" colstyle="display:none;">
+            <label modpos="nobr" style="color: red;text-align:right;">ncusado</label>
+            <expresion>round((STK_ARTICULOS.precio_costo / 2) * (1 + '[__porc__]' / 100), 0)</expresion>
+            <tipo>numeric</tipo>
+        </field>
+
+        <fieldGroup id="filtros" colstyle="display: none;" _noshow="true">
+
+            <field id="stkfamilia_id" noshow="true" tabla="STK_ARTICULOS">
+                <helper type="combo" xml="stkfamilia_qry.xml" dir="/ayudas" empty="true" />
+            </field>
+
+            <field id="stkrubro_id" noshow="true" tabla="STK_ARTICULOS">
+                <helper type="combo" xml="stkrubro_qry.xml" dir="/ayudas" empty="true" />
+            </field>
+
+            <field id="stkmarca_id" noshow="true" tabla="STK_ARTICULOS">
+                <helper type="combo" xml="stkmarca_qry.xml" dir="/ayudas" empty="true" />
+            </field>
+
+            <field id="subsistema_id" valauto="true">
+            	<expresion>'01'</expresion>
+            	<valor>'01'</valor>
+            	<detalle>subsistema_id</detalle>
+            </field>
+
+            <field id="baja_articulo" noshow="true">
+                <condicion operador="!=">1</condicion>
+            </field>
+
+            <field id="regcuenta_id" tabla="STK_ARTICULO_PROVEEDOR">
+                <helper type="external" xml="regcuenta_solamente_qry.xml" dir="/ayudas">
+                   <parameter source="subsistema_id" target="subsistema_id" operator="="/>
+                </helper>
+            </field>
+
+            <field id="porc" local="true" colstyle="display:none;">
+                <label>%</label>
+                <tipo>numeric</tipo>
+            </field>
+            
+
+        </fieldGroup>
+        
+        <order>
+            <field id="nombre_articulo" tabla="STK_ARTICULOS" />
+        </order>
+        
+        <group>
+            <field id="id_stkarticulo" tabla="STK_ARTICULOS" />
+        </group>
+
+    </table>
+
+    <join tipo="left">
+        <table id="STK_ARTICULO_PROVEEDOR">
+            <field id="stkarticulo_id">
+                <condicion operador="=">STK_ARTICULOS.id_stkarticulo</condicion>
+            </field>
+        </table>
+    </join>
+
+	<join tipo="left">
+	    <table id="STK_MOVIMIENTOS">
+		<field id="stkarticulo_id">
+			<condicion operador="=">STK_ARTICULOS.id_stkarticulo</condicion>
+		</field>
+	    </table>
+	</join>
+    <join tipo="left">
+      <table id="STK_CONCEPTOS">
+        <field id="id_stkconcepto">
+          <condicion operador="=">STK_MOVIMIENTOS.stkconcepto_id</condicion>
+        </field>
+      </table>
+    </join>
+</form>
+
+</histrix>

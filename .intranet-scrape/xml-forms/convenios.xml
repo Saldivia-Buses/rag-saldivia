@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<abm tipo="abm">
+	<titulo>CONVENIOS</titulo>
+	<obs/>
+	<consulta>
+		<tabla id="CONVENIOS">
+			<titulo>Convenios</titulo>
+			<filtro_ex>
+				<label>Cuenta</label>
+				<tabla_ex id="SINDICATO">
+					<campo id="IdSindicato"/>
+					<campo id="nombre"/>
+					<filtra>IdSindicato</filtra>
+				</tabla_ex>
+			</filtro_ex>
+			<campo id="IdSindicato">
+				<label>Cod.</label>
+				<help>Codigo de Convenio</help>
+			</campo>
+			<campo id="IdConvenio">
+				<label>Cod.</label>
+				<help>Codigo de Convenio</help>
+			</campo>
+			<campo id="Nombre">
+				<label>Nombre</label>
+				<help>Nombre del Convenio</help>
+			</campo>
+			<campo id="descripcion">
+				<label>Descripcion</label>
+				<help>Descripcion del Convenio</help>
+			</campo>
+			<orden>
+				<campo id="IdConvenio"/>
+			</orden>
+		</tabla>
+	</consulta>
+</abm>

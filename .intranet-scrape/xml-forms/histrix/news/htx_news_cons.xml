@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="consulta">
+	<title>Noticias</title>
+	<obs/>
+	<form>
+		<table id="HTXNEWS" label="Usuarios">
+			<field id="idNews" autoinc="true" noshow="true">
+			</field>
+			<field id="newsDate" tipoOrden="DESC">
+				<label modpos="nobr">Fecha</label>
+				<help>Fecha</help>
+				<valor>today</valor>
+			</field>
+			
+			<field id="title">
+				<label style="font-size:14px; color:blue;font-weight:bold;">Titulo</label>
+				<help>Titulo de la noticia</help>
+			</field>
+			
+			<field id="downText">
+				<label  style="font-weight:bold;">Bajada</label>
+				<help>Texto de bajada de la noticia</help>
+			</field>
+			<field id="news">
+				<label>Texto</label>
+				<help>Texto de la noticia</help>
+				<size>200</size>
+				<tipo>varchar</tipo>
+
+				
+			</field>
+			<order>
+				<field id="newsDate"></field>
+			</order>
+		</table>
+	</form>
+</histrix>

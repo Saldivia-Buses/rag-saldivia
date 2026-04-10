@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="card" inserta="false" imprime="false" >
+  <title>Niveles de Polivalencias</title>
+  <obs/>
+  <form >
+    <table id="RH_POLIVALENCIA_NIVELES" label="Niveles de Polivalencias" styleTbody="height:10em;">
+
+    
+   <field id="id_rhpolnivel" noshow="true" />
+   
+   <field id="descripcion">
+   </field>     
+    
+    </table>
+  </form>
+</histrix>

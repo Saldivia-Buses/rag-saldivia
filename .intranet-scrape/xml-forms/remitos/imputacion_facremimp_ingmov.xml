@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="insert" tipoInsert="IGNORE" >
+       <title>REMITOS</title>
+        <obs></obs>
+               <form >
+					<table id="FACREMIMP" label="ACTUALIZA REMITO" idCampoCond="grabar">
+						<field id="ctacod" id_temp="ctacod" ></field>						
+						<field id="remnro" id_temp="remnro" ></field>
+						<field id="remfec" id_temp="remfec" >
+							<tipo>date</tipo>
+						</field>
+						<field id="movfec"   id_cab="movfec" ></field>
+						<field id="movnpv"   id_cab="movnpv" ></field>
+						<field id="movnro"   id_cab="movnro" ></field>
+
+					</table>
+               </form>
+        </histrix>

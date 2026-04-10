@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="consulta" borra="no" inserta="no" limit="100" subtipo="vertical" >
+	<title>Insumos</title>
+	<obs></obs>
+	<form detalle="cctcuent_x_insumo.xml" inline="true">
+		<table id="STKINSUM">
+			<title>Insumos</title>
+
+
+			<filters>
+				<field id="artcod" deshabilitado="false">
+					<label>Cod.</label>
+					<operador modificador="left">=</operador>
+				</field>
+				<field id="artdes" deshabilitado="false">
+					<label>Articulo</label>
+					<operador>like</operador>
+				</field>
+
+				<field id="fecha_desde">
+					<label>Desde</label>
+					<valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m" ,strtotime('-6 month')) , 1, date("Y")  ))</valor>
+				</field>
+				<field id="fecha_hasta">
+					<label>Hasta</label>
+					<tipo>date</tipo>
+					<valor>today</valor>
+				</field>
+			</filters>
+
+
+			<field id="artcod" deshabilitado="true" _Formstyle="display:none;">
+				<ayuda_ex id="STKINSUM">
+					<field id="artcod" oculto="true">
+						<label>Cod</label>
+					</field>
+					<field id="artdes">
+						<label>Nombre</label>
+						<detalle>artdes</detalle>
+					</field>
+					<field id="siscod" oculto="true">
+						<condicion operador="=">'01'</condicion>
+					</field>
+
+				</ayuda_ex>
+
+				<label>Cod.</label>
+				<detalle>artcod</detalle>
+			</field>
+			<field id="artdes" _autocompletar="true" deshabilitado="true" _Formstyle="display:none;">
+				<label>Articulo</label>
+				<ayuda_ex id="STKINSUM">
+					<field id="artcod" noshow="true">
+						<label>cod</label>
+						<detalle>artcod</detalle>
+					</field>
+
+					<field id="artdes">
+						<label>Nombre</label>
+						<detalle>artdes</detalle>
+					</field>
+
+					<field id="siscod" oculto="true">
+						<condicion operador="=">'01'</condicion>
+					</field>
+
+				</ayuda_ex>
+
+			</field>
+
+			<field id="costo_inicial">
+			    <label>Costo Inicial</label>
+			    <expression having="false"> 
+			    @cini:=(SELECT artcos FROM STKINSPR use index (fecha)
+			    WHERE STKINSPR.artcod = STKINSUM.artcod
+			    and STKINSPR.fecult &lt;= STR_TO_DATE('[__fecha_desde__]', '%d/%m/%Y')
+			    ORDER BY STKINSPR.fecult DESC LIMIT 1)
+			    </expression>
+			    <tipo>numeric</tipo>
+		        </field>
+			<field id="costo_final">
+			    <label>Costo Final</label>
+			    <expression having="false"> 
+			    @cfin:=(SELECT artcos FROM STKINSPR use index (fecha)
+			    WHERE STKINSPR.artcod = STKINSUM.artcod
+			    and STKINSPR.fecult &lt;= STR_TO_DATE('[__fecha_hasta__]', '%d/%m/%Y')
+			    ORDER BY STKINSPR.fecult DESC LIMIT 1)
+			    </expression>
+			    <tipo>numeric</tipo>
+		        </field>
+
+			<field id="porc_aumento">  
+			    <label>% Aumento</label>
+			    <expression having="false"> 
+			    CAST((((SELECT artcos FROM STKINSPR use index (fecha)
+			    WHERE STKINSPR.artcod = STKINSUM.artcod
+			    and STKINSPR.fecult &lt;= STR_TO_DATE('[__fecha_hasta__]', '%d/%m/%Y')
+			    ORDER BY STKINSPR.fecult DESC LIMIT 1) / (SELECT artcos FROM STKINSPR use index (fecha)
+			    WHERE STKINSPR.artcod = STKINSUM.artcod
+			    and STKINSPR.fecult &lt;= STR_TO_DATE('[__fecha_desde__]', '%d/%m/%Y')
+			    ORDER BY STKINSPR.fecult DESC LIMIT 1)) - 1) * 100 AS DECIMAL)
+			    </expression>
+
+			    <tipo>decimal</tipo>
+		        </field>
+
+			<field id="fecha_desde" local="true" noshow="true">
+				<label>Desde</label>
+				<tipo>date</tipo>
+			</field>
+			<field id="fecha_hasta" local="true" noshow="true">
+				<label>Hasta</label>
+				<tipo>date</tipo>
+			</field>
+
+			<field id="valcps" noshow="true">
+				<label>Val.Compra</label>
+				<help>Valor de Compra</help>
+
+			</field>
+
+			<field id="unicps" noshow="true">
+				<label modpos="nobr">Unidad</label>
+				<help>Unidad de Compra</help>
+				<tabla_ex id="FSMUNIDS">
+					<field id="unicod"></field>
+					<field id="uninom"></field>
+				</tabla_ex>
+			</field>
+			<field id="valuso" noshow="true">
+				<label>Val.Uso</label>
+				<help>Valor de Uso</help>
+			</field>
+
+			<field id="artuni" noshow="true">
+				<label modpos="nobr">U.Uso</label>
+				<help>Unidad de Uso</help>
+				<tabla_ex id="FSMUNIDS">
+					<field id="unicod"></field>
+					<field id="uninom"></field>
+				</tabla_ex>
+			</field>
+
+			<field id="baja" oculto="true">
+				<condicion operador="!=">1</condicion>
+			</field>
+
+                                                   <!--
+
+			<field id="condic" noshow="true">
+			<expression having="false">(select STKIN1.artcos from STKINSPR as STKIN1 where STKIN1.artcod = STKINSUM.ARTCOD  order by STKIN1.fecult DESc LIMIT 1) >   
+(select STKIN2.artcos from STKINSPR as STKIN2 where STKIN2.artcod = STKINSUM.ARTCOD  order by STKIN2.fecult DESc LIMIT 1,1)</expression>
+			<condicion operador="=">1</condicion>
+			</field>
+			
+			<field id="ORD" tipoOrden="DESC">
+				<label>% Inc.</label>
+			
+				<expression>((select STKIN1.artcos from STKINSPR as STKIN1 where STKIN1.artcod = STKINSUM.ARTCOD  order by STKIN1.fecult DESc LIMIT 1) -   
+(select STKIN2.artcos from STKINSPR as STKIN2 where STKIN2.artcod = STKINSUM.ARTCOD  order by STKIN2.fecult DESc LIMIT 1,1) ) / (select STKIN2.artcos from STKINSPR as STKIN2 where STKIN2.artcod = STKINSUM.ARTCOD  order by STKIN2.fecult DESc LIMIT 1,1) * 100
+				</expression>
+				<tipo>numeric</tipo>
+			
+			</field>			
+                                                   
+			<field id="costo">
+				<label>Costo</label>
+				<expression>	round(case when ((select STKINSPR.artcos from	STKINSPR where STKINSPR.artcod = STKINSUM.artcod and
+					STR_TO_DATE('[__fechaloc__]', '%d/%m/%Y') >= 	STKINSPR.fecult and STKINSPR.siscod='01' order by
+					fecult DESC limit 1) * STKINSUM.valcps /
+					STKINSUM.valuso) > 0 then ((select STKINSPR.artcos
+					from STKINSPR where STKINSPR.artcod =
+					STKINSUM.artcod and STR_TO_DATE('[__fechaloc__]',
+					'%d/%m/%Y') >= STKINSPR.fecult and
+					STKINSPR.siscod='01' order by fecult DESC limit 1) *
+					STKINSUM.valcps / STKINSUM.valuso) else
+					STKINSUM.artcos end, 2)
+				</expression>
+			</field>
+                                                                -->
+
+			<field id="siscod" oculto="true">
+				<label>siscod</label>
+			</field>
+<!--
+			<group>
+				<field id="artcod" tabla="STKINSUM"></field>
+			</group>
+-->
+
+			<order>
+			   <field id="porc_aumento" tipoOrden="desc"></field>
+			</order>
+
+
+		</table>
+<!---		<join tipo="left">
+			<table id="STKINSPR">
+				<field id="siscod" >
+					<condicion operador="=">STKINSUM.siscod</condicion>
+				</field>
+				<field id="artcod" >
+					<condicion operador="=">STKINSUM.artcod</condicion>
+				</field>
+
+			</table>
+		</join>  --><!--
+		<join tipo="left">
+
+			<table id="CTBCUENT">-->
+<!--
+				<field id="siscod" >
+					<condicion operador="=">'10'</condicion>
+				</field>
+--><!--
+				<field id="ctbcod" >
+					<condicion operador="=">STKINSUM.artctb</condicion>
+				</field>
+
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="CONTROLCOSTOS">
+				<field id="artcod" oculto="true">
+					<condicion operador="=">STKINSUM.artcod</condicion>
+				</field>
+
+			</table>
+		</join>-->
+ 
+ 
+	</form>
+</histrix>

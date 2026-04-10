@@ -1,0 +1,415 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta"  path="fotos/coches">
+    <title>Observaciones por Coche</title>
+    <obs/>
+    <form >
+        <table id="PEDCOTIZ" label="FICHAS POR Clientes">
+            <filters>
+                <field id="nombre" local="true" deshabilitado="true">
+                    <label>Cliente</label>
+                </field>
+            </filters>
+            <field id="nombre" local="true" noshow="true">
+                <label>Nombre</label>
+            </field>
+
+            <field id="nrocha" linkint="fichaventas.xml" _linkdir="xml/" linkdes="Ver Ficha de Ventas" tipoOrden="DESC">
+                <expression>LPAD(PEDCOTIZ.nrocha,3,'0')</expression>
+                <label modpos="nobr" style="color:#444;font-weight:bold;">Nro.</label>
+                <help>Numero de Fabricacion</help>
+                <ayuda_ex id="CHASIS">
+                    <field id="nrocha"/>
+                    <field id="chades"/>
+                </ayuda_ex>
+                <!--<format><![CDATA[<b>%d</b>]]></format>
+-->
+                <paring destino="nrocha">nrocha</paring>
+                <tipo>varchar</tipo>
+            </field>
+
+
+
+            <field id="ninterno" tabla="PEDCOTIZ">
+                <label  size="23" posx="160" posy="0" PDFsize="10">Int.</label>
+                <help></help>
+            </field>
+            <field deshabilitado="true" id="moddes" tabla="MODCHASIS">
+                <!--				<expression>MODCHASIS.moddes</expression> -->
+
+                <label >Chasis</label>
+                <help/>
+                <tipo>varchar</tipo>
+            </field>
+            <!-- <field id="chasis" tabla="CHASIS">
+                                <label colspan="6" size="23" posx="110" posy="0" PDFsize="10">Nro Chasis</label>
+                                <help></help>
+                                <tipo>varchar</tipo>
+                                <size>40</size>
+
+                        </field>-->
+            <field id="ctaconces" tabla="CONCESIONARIO" noshow="true">
+                <expression>CONCESIONARIO.ctacod</expression>
+                <tipo>integer</tipo>
+            </field>
+            <field id="siscli" local="true" noshow="true">
+                <valor>'02'</valor>
+                <tipo>varchar</tipo>
+            </field>
+
+
+            <field  id="nrocar" tabla="PEDCOTIZ" deshabilitado="true">
+                <label >Mod.</label>
+                <help/>
+                <tabla_ex id="CARROCERIA">
+                    <field id="nrocar">
+                    </field>
+                    <field id="desabv">
+                    </field>
+
+                    <field id="siscod" oculto="true">
+                        <condicion operador="=">03</condicion>
+                    </field>
+                </tabla_ex>
+                <tipo>varchar</tipo>
+            </field>
+            <!--  <field id="marcod" tabla="CHASIS" >
+
+                                <label size="24" posx="5" posy="+2" PDFsize="10">Chasis Marca</label>
+                                <help></help>
+                                <tabla_ex id="MARCHASIS" >
+                                    <field id="marcod"></field>
+                                    <field id="desabv"></field>
+
+                                </tabla_ex>
+                                <tipo>integer</tipo>
+                                <actualiza>
+                                        <field destino="marcod" id="modcod" />
+                                </actualiza>
+                        </field>-->
+            <field id="moddes" tabla="MODCHASIS" >
+                <label size="23" posx="37" posy="0" modpos="nobr" PDFsize="10">Chasis modelo</label>
+                <help></help>
+            </field>
+            <field id="conces" tabla="CHASIS" noshow="true">
+                <tabla_ex id="CONCESIONARIO">
+                    <field id="idconces"/>
+
+
+                    <field id="nombre"/>
+                </tabla_ex>
+                <label colspan="6" size="23" posx="110" posy="0" PDFsize="10">Conces.</label>
+                <help></help>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="tipserv">
+                <label size="23" posx="60" posy="0"  PDFsize="10">Tipo Serv.</label>
+                <help>Tipo de Servicio</help>
+                <tabla_ex xml="tiposervicio.xml" dir="/produccion"></tabla_ex>
+            </field>
+            <field deshabilitado="true" id="asientos" noZero="true">
+                <label >Asi</label>
+                <tipo>integer</tipo>
+                <expression>HOMOLOGMOD.asientos+1</expression>
+            </field>
+            
+            <field id="bagno" deshabilitado="true" noZero="true">
+                <label>B</label>
+                <expression>atributoUnidad(id, 'bagno')</expression>
+                <options>
+                    <option valor="0"></option>
+                    <option valor="1">  </option>
+                    <option valor="2">BB</option>
+                    <option valor="3">S/D</option>
+                </options>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="cucheta">
+                <expression>atributoUnidad(id, 'cucheta')</expression>
+                <label modpos="nobr">Cuch</label>
+                <helper type="combo" xml="prd_helper_propiedades.xml" dir="/produccion" emtpy="true">
+                    <field id="campoficha_id">
+                        <condicion operador="=">'cucheta'</condicion>
+                    </field>
+                </helper>
+            </field>
+
+            <field id="vtnmov">
+                <label size="23" posx="6" posy="+1" PDFsize="10" >Vent x lado</label>
+                <help></help>
+                <helper type="combo" xml="prd_helper_propiedades.xml" dir="/produccion" emtpy="true">
+                    <field id="campoficha_id">
+                        <condicion operador="=">'cant_ventanas'</condicion>
+                    </field>
+                </helper>
+            </field>
+            <field id="tipvtn">
+                <label size="23" posx="26" posy="0" PDFsize="10" >Tipo Ventana</label>
+                <helper type="combo" xml="prd_helper_propiedades.xml" dir="/produccion" emtpy="true">
+                    <field id="campoficha_id">
+                        <condicion operador="=">'tipo_ventana'</condicion>
+                    </field>
+                </helper>
+            </field>
+            <field id="vtnpuerta">
+                <label size="23" posx="60" posy="0" PDFsize="10"  modpos="nobr">Vent. P. Ascenso</label>
+                <help></help>
+                <options>
+                    <option valor="0">Fija</option>
+                    <option valor="1">Movil</option>
+                </options>
+            </field>
+            <field id="luneta">
+                <label size="23" posx="110" posy="0" PDFsize="10" modpos="nobr">Luneta</label>
+                <help></help>
+                <options>
+                    <option valor="0"></option>
+                    <option valor="1">Con Vidrio</option>
+                    <option valor="2">Ciega</option>
+                    <option valor="3">Sin definir</option>
+                </options>
+            </field>
+            <field id="calefn" activa="true" deshabilitado="true">
+                <label size="23" posx="6" posy="+1" PDFsize="10" >Calef.</label>
+                <help></help>
+                <tipo>check</tipo>
+            </field>
+            <field id="tipcal" activador="calefn">
+                <tabla_ex xml="tipcalef.xml" dir="/produccion"></tabla_ex>
+                <label size="23" posx="60" posy="0" modpos="nobr"  PDFsize="10" >Tipo.</label>
+                <help></help>
+
+            </field>
+            <field id="calcan" activador="calefn">
+                <label size="23" posx="110" posy="0" modpos="nobr" PDFsize="10" >Cant.</label>
+                <helper type="combo" xml="prd_helper_propiedades.xml" dir="/produccion" emtpy="true">
+                    <field id="campoficha_id">
+                        <condicion operador="=">'cant_calefactores'</condicion>
+                    </field>
+                </helper>
+            </field>
+            <!--
+                        <field id="condensador" activador="conaac">
+                                <label size="24" posx="110" posy="0" PDFsize="10"  colspan="4">Condensador</label>
+                                <help>Condensador</help>
+                        </field>
+                        -->
+            <field id="marair" tabla="PEDCOTIZ">
+                <label>A/A</label>
+                <tabla_ex id="MARCAAIR" vacio="true" indexvacio="0" valorvacio="NO">
+                    <field id="marair">
+
+                    </field>
+                    <field id="desair">
+                        <expression>LEFT(desair, 4)</expression>
+                    </field>
+
+                    <field id="siscod" oculto="true">
+                        <condicion operador="=">03</condicion>
+                    </field>
+                </tabla_ex>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="preair">
+                <label size="23" posx="5" posy="+1"  PDFsize="10">Con Aire</label>
+                <help></help>
+                <options>
+                    <option valor="0">Sin Definir</option>
+                    <option valor="1">Preparado</option>
+                    <option valor="2">Colocado</option>
+                    <option valor="3">NO</option>
+                </options>
+
+            </field>
+            <field id="posair">
+                <label size="24" posx="60" posy="0" modpos="nobr" xml="posicair.xml" PDFsize="10">Posicion</label>
+                <help></help>
+                <tabla_ex xml="posicair.xml"></tabla_ex>
+            </field>
+
+            <field id="marasi" tabla="PEDCOTIZ">
+                <label >Marca</label>
+                <help/>
+                <tabla_ex xml="marcaasi.xml">
+
+                    <field id="marasi">
+                    </field>
+                    <field id="asides">
+                        <expression>LEFT(asides, 4)</expression>
+
+                    </field>
+                    <field id="siscod" oculto="true">
+                        <condicion operador="=">03</condicion>
+                    </field>
+                </tabla_ex>
+            </field>
+
+            <field id="tipasi">
+                <tabla_ex xml="tipoasiento.xml" dir="/produccion">
+                    <field id="siscod" oculto="true">
+                        <condicion operador="=">03</condicion>
+                    </field>
+                </tabla_ex>
+                <label size="24" posx="110" posy="0" PDFsize="10">Tipo As.</label>
+                <help></help>
+            </field>
+            <!--
+
+                        <field id="tippin">
+                                <label  >Tipo Pint</label>
+                                <help></help>
+                                <size>20</size>
+                        </field>
+-->
+
+            <field id="corpath" local="true" noshow="true" tabla="PEDCOTIZ">
+                <if exp="true">
+                    <true>'nrocha/corte'</true>
+                    <false>''</false>
+                </if>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="cortePint" tabla="PEDCOTIZ" path="corpath" download="true" print="false" >
+                <label>Corte</label>
+                <tipo>file</tipo>
+
+            </field>
+
+            <!--                       <field id="tippin">
+                                <label colspan="3" size="24" posx="5" posy="+1" PDFsize="10">Tipo Pint</label>
+                                <help></help>
+                                <size>20</size>
+                        </field>
+-->			
+
+
+<!--
+                        <field id="ctepin">
+                                <label size="24" posx="5" posy="+1" PDFsize="10">Corte</label>
+                                <help></help>
+                                <tipo>check</tipo>
+
+                        </field> -->
+            <field id="colorllantas">
+                <label modpos="nobr" size="23" posx="5" posy="+1" PDFsize="10">Color Llantas</label>
+                <help></help>
+                <size>10</size>
+                <options>
+                    <option valor="0">S/D</option>
+                    <option valor="1">Original</option>
+                    <option valor="2">Según corte pintura</option>
+                </options>
+
+            </field>
+            <field id="colorespej">
+                <label modpos="nobr" size="24" posx="60" posy="0" PDFsize="10">Color Espejos</label>
+                <help></help>
+                <size>10</size>
+            </field>
+
+
+            <field id="cartel" activa="true" >
+                <label >Cartel</label>
+                <help></help>
+                <options>
+                    <option valor="0">S/D</option>
+                    <option valor="1">No</option>
+                    <option valor="2">Si</option>
+                </options>
+
+            </field>
+            <field id="tipcartel"  >
+                <label >Tipo Cartel</label>
+                <help></help>
+                <!--<tabla_ex id="TIPOCARTEL" xml="tipocartel.xml" dir="/produccion">
+
+                                </tabla_ex>-->
+                <options>
+                    <option valor="0"></option>
+                    <option valor="1">Motorizado</option>
+                    <option valor="2">Electronico (LEDS)</option>
+                </options>
+            </field>
+            <field id="chapath" local="true" noshow="true" _noselect="true" >
+                <if exp="true">
+                    <true>''</true>
+                    <false>''</false>
+                </if>
+                <tipo>varchar</tipo>
+            </field>
+            <!--			<field id="archivo"  local="true" browse="true" deshabilitado="true" path="chapath">
+                                <if exp="true">
+                                        <true>'/nrocha/'</true>
+                                        <false>''</false>
+                                </if>
+
+                                <label >fotos</label>
+                                <help></help>
+                                <tipo>file</tipo>
+                                <size>10</size>
+
+
+                        </field> -->
+            <field id="ctacod" oculto="true" >
+                <!--				<expression>ifnull((select U.ctacod from UNIDADCLIENTE AS U where U.nrofab = PEDCOTIZ.nrocha order by U.fecha DESC limit 1), PEDCOTIZ.ctacod)</expression> -->
+
+                <label>Cliente</label>
+            </field>
+
+
+            <field id="panpath" local="true=" oculto="true">
+                <valor>../archivo/Panas</valor>
+            </field>
+
+            <field id="fotoPana"  tabla="PEDCOTIZ" path="panpath" _noshow="true" print="false">
+                <label  >Pana</label>
+                <help></help>
+                <tipo>file</tipo>
+                <size>24</size>
+            </field>
+
+
+            <order>
+                <field id="nrocha"></field>
+                <!--<field id="pedfec"></field>-->
+            </order>
+        </table>
+
+         <join tipo="left">
+            <table id="HOMOLOGMOD">
+                <field id="id_homologacion">
+                    <condicion operador="=">PEDCOTIZ.homologacion_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="CHASIS">
+                <field id="nrocha">
+                    <condicion operador="=">PEDCOTIZ.nrocha</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="MODCHASIS">
+                <field id="modcha">
+                    <condicion operador="=">CHASIS.modcod</condicion>
+                </field>
+                <field id="marcod">
+                    <condicion operador="=">CHASIS.marcod</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="CONCESIONARIO">
+                <field id="idconces">
+                    <condicion operador="=">CHASIS.conces</condicion>
+                </field>
+
+
+            </table>
+        </join>
+    </form>
+</histrix>

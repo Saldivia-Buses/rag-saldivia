@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+	<abm tipo="update" >
+		<titulo>Pedidos Internos</titulo>
+		<obs></obs>
+		<consulta>
+			<tabla id="PEDIDOINT" label="Cierro Movimientos" idCampoCond="imput2" >
+				<campo id="idPed" 	id_temp="idPed" esclave="true"></campo>
+				<campo esclave="true" id="tipocomp" 	id_temp="tipocomp"></campo>
+				<campo esclave="true" id="fechaemi" 	id_temp="fechaemi"></campo>
+				<campo esclave="true" id="puesto" 		id_temp="puesto"></campo>
+				<campo esclave="true" id="nrocom" 		id_temp="nrocom"></campo>
+				<campo esclave="true" id="renglon" 		id_temp="renglon"></campo>
+				<campo esclave="true" id="artcod" 		id_temp="artcod"></campo>
+				<campo esclave="true" id="fecreq"	 	id_temp="fecreq"></campo>
+				<campo esclave="true" id="nrofab"	 	id_temp="nrofab"></campo>
+				<campo esclave="true" id="codprv"	 	id_temp="codprv"></campo>
+				
+				<campo id="confirmado"	 	>
+					<valor>3</valor>
+				</campo>
+
+			</tabla>
+		</consulta>
+	</abm>

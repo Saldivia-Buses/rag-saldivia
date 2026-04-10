@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" preloadData="false" procesa="false" llenoreferente="true" llenotemporal="true" tooltip="false" showCantidad="false" updateTotals="true" subtipo="vertical">
+  <title>Detalle</title>
+  <obs/>
+  <consulta>
+    <table id="REG_DETALLES" label="movimientos">
+	<movimientos>
+		<relacion id="insu_regdetalles_ins.xml"/>
+		<relacion id="insu_stkmovimientos_ins.xml"/> 
+		<relacion id="regimputaciondetallesrem_ins.xml"/>  
+	</movimientos>
+	<fieldGroup>
+		<field id="codigo_detalle" deshabilitado="false">
+			<label>Cod.</label>
+			<helper type="external" xml="stkarticulo_mos.xml" dir="/ayudas">
+			      <field id="regcuenta_id"   local="true" noshow="true"/> 
+			      <field id="wstklista_id" 	 local="true" noshow="true" />
+				<field id="wcontrolstk"  local="true" noshow="true">
+					<valor>1</valor>
+					<detalle>wcontrolstk</detalle>
+				</field>
+			</helper>
+			<size>15</size>
+		</field>
+		<field id="descripcion_detalle" deshabilitado="true">
+			<label modpos="nobr">Descripción</label>
+			<size>35</size>
+		</field>
+		<field id="cantidad_detalle">
+			<label modpos="nobr">cantidad</label>
+			<tipo>numeric</tipo>
+			<valor dafault="true">1.00</valor>
+
+			<jseval fielddestino="neto_detalle" _actxml="false" suma="true">subtotal1 * cantidad_detalle</jseval>	
+		</field>
+	</fieldGroup>
+
+      <!-- PRECIOS -->
+	<fieldGroup _colstyle="display: none;" _style="display: none;">
+<!--		<field id="precio_venta"  deshabilitado="true">
+			<label modpos="nobr">Precio</label>
+			<valor default="true">0.00</valor>
+			<tipo>decimal</tipo>   
+			<jseval fielddestino="subtotal0" _actxml="false" suma="true">((precio_venta + 0 ) - ((precio_venta + 0 )  * (porcentaje_desc0 + 0 ) / 100 ))</jseval>
+			<jseval fielddestino="subtotal1" _actxml="false" suma="true">((subtotal0 + 0 ) - ((subtotal0 + 0 )  * (porcentaje_desc1 + 0 ) / 100 ))</jseval>
+			<jseval fielddestino="neto_detalle" _actxml="false" suma="true">subtotal1 * cantidad_detalle</jseval>
+		</field>
+		<field id="porcentaje_desc0" deshabilitado="true" noshow="true">
+			<label >% 1</label>
+			<valor default="true">0.00</valor>
+			<tipo>decimal</tipo>
+			<jseval fielddestino="subtotal0" _actxml="false" suma="true">((precio_venta + 0 ) - ((precio_venta + 0 )  * (porcentaje_desc0 + 0 ) / 100 ))</jseval>
+			<jseval fielddestino="subtotal1" _actxml="false" suma="true">((subtotal0 + 0 ) - ((subtotal0 + 0 )  * (porcentaje_desc1 + 0 ) / 100 ))</jseval>
+		</field>
+		<field id="subtotal0" local="true" deshabilitado="true" noshow="true">
+			<label modpos="nobr"   >SubTotal</label>
+			<valor default="true">0.00</valor>
+			<tipo>decimal</tipo>
+		    	<if exp="true">
+		            <true>((precio_venta + 0 ) - ((precio_venta + 0 )  * (porcentaje_desc0 + 0 ) / 100 ))</true>
+		            <false>0</false>
+		        </if>
+			<jseval fielddestino="neto_detalle" _actxml="false" suma="true">subtotal0 * cantidad_detalle</jseval>
+		</field>
+		<field id="porcentaje_desc1"   deshabilitado="true" noshow="true">
+			<label modpos="nobr">% 2</label>
+			<tipo>decimal</tipo>
+			<valor default="true">0.00</valor>
+			<jseval fielddestino="subtotal1" _actxml="false" suma="true">((subtotal0 + 0 ) - ((subtotal0 + 0 )  * (porcentaje_desc1 + 0 ) / 100 ))</jseval>
+		</field>
+		<field id="subtotal1" local="true" deshabilitado="true" noshow="true" >
+			<label modpos="nobr" >SubTotal1</label>
+			<tipo>decimal</tipo>
+			<valor default="true">0.00</valor>
+		        <if exp="true">
+		            <true>((subtotal0 + 0 ) - ((subtotal0 + 0 )  * (porcentaje_desc1 + 0 ) / 100 ))</true>
+		            <false>0</false>
+		        </if>                		
+			<jseval fielddestino="neto_detalle" _actxml="false" suma="true">subtotal1 * cantidad_detalle</jseval>
+		</field>
+		<field id="neto_detalle" suma="true" deshabilitado="true" >
+			<label modpos="nobr">Neto</label>
+			<valor default="true">0.00</valor>
+			<tipo>decimal</tipo>
+		        <if exp="true">
+		            <true>round(subtotal1 * cantidad_detalle, 2)</true>
+		            <false>0</false>
+		        </if>               
+			<jseval fielddestino="iva_detalle" _actxml="false">( (neto_detalle + 0) * (alicuota_iva + 0) / 100 )</jseval>
+			<jseval fielddestino="subtotal_movimiento" total="true">neto_detalle</jseval> 
+			<jseval fielddestino="neto_movimiento" total="true">neto_detalle</jseval>
+		</field>
+		<field id="alicuota_iva"  noshow="true" >
+			<label >Alicuota</label>
+			<valor default="true">0.00</valor>
+			<tipo>decimal</tipo>
+			<helper type="combo" xml="genalicuotas_qry.xml" dir="/ayudas" _empty="true"/>
+			<jseval fielddestino="iva_detalle"> ( (neto_detalle + 0)  * (alicuota_iva + 0) / 100 )</jseval>
+		</field>
+		<field id="iva_detalle" suma="true" deshabilitado="true" noshow="true">
+			<label modpos="nobr"  		_colstyle="display: none;">Imp.IVA</label>
+			<tipo>decimal</tipo>
+			<valor default="true">0.00</valor>
+		        <if exp="true">
+		            <true>round(( (neto_detalle + 0)  * (alicuota_iva + 0) / 100 ), 2 )</true>
+		            <false>0</false>
+		        </if>          
+			<jseval fielddestino="importe_iva" total="true">iva_detalle</jseval> 
+			<jseval fielddestino="total_detalle" _actxml="false">(neto_detalle +  ((iva_detalle + 0)) )</jseval> 
+			<jseval fielddestino="mi_importe_iva" total="true">iva_detalle</jseval>    
+		</field>
+		<field id="total_detalle" suma="true" deshabilitado="true">
+			<label _modpos="nobr">Total</label>
+			<valor default="true">0.00</valor>
+			<tipo>decimal</tipo> 
+		        <if exp="true">
+		            <true>round((neto_detalle + 0) , 2 )</true>
+		            <false>0</false>
+		        </if>               
+			<jseval fielddestino="importe_movimiento" total="true">total_detalle</jseval> 
+			<detalle>importe_movimiento</detalle>
+		</field>
+-->
+		<field id="id_facregdetalle" local="true" esClave="true" noshow="true">
+			<label>id</label>
+		</field>
+
+		<field id="COMPROBANTES" deshabilitado="true" >
+			<label colstyle="text-align:center;">Comprobantes</label>
+			<tipo>varchar</tipo>
+		</field>
+	</fieldGroup>
+      <!-- CONTABLE -->
+	<fieldGroup>
+	<field id="Stkconcepto_id" local="true" deshabilitado="true" noshow="true" >
+		<helper type="combo" xml="stkconcepto_qry.xml" dir="/ayudas">
+			<field id="id_stkconcepto">
+			<condicion operador="=">(SELECT option_value FROM HTXOPTIONS where option_name = 'ID_STKREMITOS')
+			</condicion>
+			</field>
+		</helper>
+		<label>tt</label>
+	</field>
+	
+	<field id="id_regdetalle" noshow="true" esClave="true"/>
+		<field id="orden" deshabilitado="true" oculto="true">
+			<label>Orden</label>
+			<size>35</size>
+		</field>
+			<field id="cuenta_id" local="true" noshow="true">
+			<label modpos="nobr">haber</label>
+		</field>
+		<field id="doh" local="true" noshow="true">
+			<if exp="'debe' != 1">
+				<true>'1'</true>
+				<false>'0'</false>
+			</if>
+		</field>
+	</fieldGroup>
+
+        <importar xml="beve_pedidos_qry.xml" label="Importar" title="Seleccione" >
+		<field id="fecha_movimiento">fecha_movimiento</field>
+<!--		<field id="regcuenta_id">regcuenta_id</field> -->
+		<field id="regcuenta_id_fac">regcuenta_id_fac</field>
+		<field id="id_stklista">id_stklista</field>
+		<field id="subsistemav_id" >subsistemav_id</field>
+		<field id="pedido_regmovim">pedido_regmovim</field>
+		<field id="imp_wcontrolstk">imp_wcontrolstk</field>
+
+		 
+	</importar>
+    
+    </table>
+  </consulta>
+</histrix>

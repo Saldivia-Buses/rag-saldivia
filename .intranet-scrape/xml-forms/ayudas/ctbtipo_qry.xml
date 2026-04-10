@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+  <title>Tipos de Cuentas</title>
+  <obs></obs>
+  <consulta>
+    <table id="CTB_TIPOS" label="Tipo de Cuentas">
+	
+		<field id="id_tipo" autoinc="true" noshow="true">
+			<label>Código</label>
+		</field>
+
+		<field id="nombre_tipo">
+			<label>Nombre</label>
+		</field>
+
+
+    </table>
+  </consulta>
+</histrix>  

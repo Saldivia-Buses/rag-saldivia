@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+  <title>FACTURA</title>
+  <obs></obs>
+  <form >
+     <table id="REG_DETALLES" label="FACTURA">
+     
+    <field id="regmovim_id"  noshow="true" esClave="true" >
+    <label>MovimientoNº</label>
+    <help>Codigo de movimiento</help>
+    </field>
+
+    <field id="codigo_detalle" >
+    <label>Codigo</label>
+    <help>Codigo de movimiento</help>
+    </field>
+    
+    <field id="descripcion_detalle" >
+    <label>Descripcion</label>
+    <help>Descripcion del producto</help>
+    </field>
+    
+    <field id="nro_movi">
+        <label>Nº Factura</label>
+        <expression>(SELECT CONCAT(RC.abreviacion_concepto , ' ' ,RM1.letra_movimiento, ' ' , LPAD(RM1.puesto_movimiento,4,0), ' ' , 
+		LPAD(RM1.nro_movimiento,8,0)) from REG_MOVIMIENTOS RM1 
+join REG_DETALLES RD1 on (RD1.regmovim_id = RM1.id_regmovim) 
+join REG_CONCEPTOS RC ON RM1.concepto_id = RC.id_concepto 
+where REG_IMPUTACIONESDETALLES.regdetallefac_id = RD1.id_regdetalle 
+group by RM1.nro_movimiento)
+        </expression>
+    </field>
+
+
+    <field id="cantidad_detalle">
+        <label>Cantidad Remitida</label>
+    </field>
+    <field id="cantidad_imputada" tabla="REG_IMPUTACIONESDETALLES">
+        <label>Cantidad Facturada</label>
+	<tipo>numeric</tipo>
+    </field>
+    </table>
+
+
+        <join>
+            <table id="REG_MOVIMIENTOS">
+             <field id="id_regmovim">
+             <condicion operador="=">REG_DETALLES.regmovim_id</condicion>
+             </field>
+            </table>
+        </join>
+
+<!--        <join  >
+           <table id="REG_CONCEPTOS">
+                <field id="id_concepto">
+                    <condicion operador="=">REG_MOVIMIENTOS.concepto_id and REG_CONCEPTOS.id_concepto in (select option_value from HTXOPTIONS where option_name = 'ID_NOTA_PEDIDOS')</condicion>
+                 </field>
+             </table>
+        </join> -->
+		
+        <join tipo="left">
+            <table id="REG_IMPUTACIONESDETALLES">
+             <field id="regdetalleped_id">
+             <condicion operador="=">REG_DETALLES.id_regdetalle</condicion>
+             </field>
+            </table>
+        </join> 
+
+  </form>
+</histrix>  

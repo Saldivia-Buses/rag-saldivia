@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="ing" _limit="1" imprime="false" subtipo="vertical">
+    <title>CONSULTA DE INVENTARIO</title>
+    <obs></obs>
+    <form >
+        <table id="INVENTARIO" label="INVENTARIO">
+            <movimientos >
+                <relacion id="inventario_stkinmov_resta.xml"></relacion> <!-- pongo a cero -->
+                <relacion id="inventario_stkinmov_suma.xml"> </relacion>	
+		          <relacion id="inventario_marcar.xml"></relacion>	
+            </movimientos>
+
+            <filters>
+                <field id="nroInventario" >
+                    <label>Número</label>
+                    <operador>=</operador>
+                </field>
+<!--            <field id="artcod" esClave="true" >
+                <label>artcod</label>
+                    <operador>=</operador>
+            </field> -->
+            </filters>
+
+            <field id="lugarInventario" tabla="INVENTARIO" noshow="true">
+	       </field>
+	    
+            <field id="nroInventario" tabla="INVENTARIO" noshow="true">
+                <tabla_ex id="INVTABLA">
+                    <field id="nroInventario">
+                    </field>
+                    <field id="nombre">
+                    </field>
+                </tabla_ex>
+                <label>Número</label>
+            </field>
+
+            <field id="marca" oculto="true">
+    		  <condicion operador="=">0</condicion>
+    	    </field>
+	    
+            <field id="fecha" tabla="INVTABLA" deshabilitado="true">
+                <label>Fecha</label>
+                <tipo>date</tipo>
+            </field>
+            	
+            <field id="artcod" esClave="true" deshabilitado="true">
+                <label modpos="nobr">artcod</label>
+            </field>
+
+            <field id="artdes" tabla="STKINSUM" deshabilitado="true">
+                <label  modpos="nobr">Descripción</label>
+                <tipo>varchar</tipo>
+            </field>
+
+	       <field id="stock">
+                <label  modpos="nobr">Stock</label>
+		          <expression>ifnull((select sum(STKINMOV.movuso *  (case when STKCONCE.contip = 1 then 1 else -1 end) ) from STKINMOV  LEFT JOIN STKCONCE on STKCONCE.movcod = STKINMOV.movcod where STKINMOV.siscod = '01' and STKINMOV.artcod = INVENTARIO.artcod and STKINMOV.movfec &lt;= INVENTARIO.fecha), 0)</expression>
+	       </field> 
+
+            <field id="cantidad" esClave="true" deshabilitado="true">
+                <label>Cantidad Actual</label>
+                <expression>ifnull(sum(cantidad), 0)</expression>
+            </field>
+
+            <field id="cero" local="true">
+                <label>aCero</label>
+                <if exp="true">
+                    <true>abs(stock + 0)</true>
+                    <false>0</false>
+                </if>
+            </field>    
+
+            <field id="ajuste" local="true" deshabilitado="true" noshow="true">
+                <label modpos="nobr">Ajuste</label>
+                <if exp="true">
+                    <true>(stock + 0)</true>
+                    <false>0</false>
+                </if>
+		      <tipo>numeric</tipo>
+            </field>   
+
+            <field id="ref"  deshabilitado="true" _noshow="true">
+                <label modpos="nobr">Ref</label>
+    		  <expression>CONCAT('Ajuste de Stock:', INVTABLA.nombre)</expression>
+            </field>
+
+            <field id="concepto" local="true" deshabilitado="true">
+                <label modpos="nobr">Concepto</label>
+                <if exp="ajuste &gt; 0">
+                    <true>96</true>
+                    <false>97</false>
+                </if>
+            </field>
+
+            <field id="movcod" local="true" deshabilitado="true">
+                <label>Conc</label>
+                <valor>97</valor>
+            </field>
+
+            <field id="unidad"  deshabilitado="true">
+                <label modpos="nobr">Unidad </label>
+                <help>Unidad de uso</help>
+                <tabla_ex id="FSMUNIDS">
+                    <field id="unicod" clave="true"></field>
+                    <field id="uninom"></field>
+                </tabla_ex>
+            </field>
+            
+            <group>
+                <field id="artcod"></field>
+            </group>
+            
+        </table>
+        
+        <join tipo="left">
+            <table id="STKINSUM">
+                <field id="siscod" oculto="true">
+                    <condicion operador="=">'01'</condicion>
+                </field>
+                <field id="artcod">
+                    <condicion operador="=">INVENTARIO.artcod</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="INVTABLA">
+                <field id="nroInventario">
+                    <condicion operador="=">INVENTARIO.nroInventario</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix>

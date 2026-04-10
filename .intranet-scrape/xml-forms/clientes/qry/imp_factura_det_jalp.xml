@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" >
+    <title>Novedades_qry</title>
+    <obs></obs>
+	<!-- muestra el detalle de la facturacion en pantalla  es llamado por liquidacion_qry-->
+    <form>
+	<table id="REG_DETALLES" label="Emision de Comprobantes" costyle="border:0" >
+
+		<field id="regmovim_id"  oculto="true"  _print="false">
+<!--			<condicion operador="=">[__id_regmovim__]</condicion> -->
+		</field>
+		<field id="subsistema_id" local="true" oculto="true">
+		</field>
+		<field id="cantidad_detalle" >
+			<label>Cantidad</label>
+			<tipo>numeric</tipo>
+		</field>
+		<field id="descripcion_detalle" _noshow="true">
+			<label>Descripcion</label>
+			<expresion>case when tabla_detalle != 'STK_ARTICULOS' then concat ("SERVICIO DE MONITORE PERIODO " , REG_MOVIMIENTOS.reg_periodo ) ELSE REG_DETALLES.descripcion_detalle  END</expresion>
+		</field>
+		<field id="neto_detalle"   >
+			<label>Neto</label>
+			<tipo>numeric</tipo>
+			<expresion> sum(neto_detalle)+sum(exento_detalle)</expresion>
+		</field> 
+		<field id="exento_detalle"  print="false" >
+			<label>Exento</label>
+			<tipo>numeric</tipo>
+			<expresion>sum(exento_detalle)</expresion>
+		</field> 
+		<field id="alicuota_iva" print="false" >
+		        <tipo>numeric</tipo>
+		        <label>Alicuota</label>
+		</field>
+		<field id="iva_detalle" print="false">
+		        <tipo>numeric</tipo>
+		        <label>Importe Iva</label>
+			<expresion> sum(iva_detalle)</expresion>
+		</field>
+
+		<field id="total_detalle" _suma="true">	
+			<label>Precio Unitario</label>
+			<expresion> sum(total_detalle)</expresion>
+			<tipo>numeric</tipo>
+		</field>
+
+		<field id="wtotal_detalle" local="true" _suma="true">	
+			<label>Importe Total</label>
+			<expresion> sum(total_detalle) * cantidad_detalle</expresion>
+			<tipo>numeric</tipo>
+		</field>
+		
+
+	<group>
+		<field id="descripcion_detalle">
+			<expresion>case when  tabla_detalle !=	 'STK_ARTICULOS' then "SERVICIO DE MONITOREO PERIODO XX" ELSE REG_DETALLES.descripcion_detalle  END</expresion> 
+		</field>
+	</group>
+       </table>
+        <join >
+            <table id="FAC_SERVICIOS">
+                <field id="id_facservicio">
+                    <condicion operador="=">REG_DETALLES.facservicio_id</condicion>
+                </field>
+            </table>
+        </join>
+        <join >
+            <table id="REG_MOVIMIENTOS">
+                <field id="id_regmovim">
+                    <condicion operador="=">REG_DETALLES.regmovim_id</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>
+
+

@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="ing" class="consultaancha" inserta="true" modifica="true" borra="false" imprime="true" transaccional="true" _llenotemporal="false">
+  <title>Detalles</title>
+   <obs></obs>
+    <consulta>
+        <table id="CTB_DETALLES" label="Detalle de la Minuta" >
+        <movimientos cabecera="movimientos_duplicar_header.xml">
+         <!--  <relacion id="movimientos_mod_minutas_upd.xml"></relacion>
+                             <relacion id="detalles_movimientos_minutas_ins.xml"></relacion>
+      <relacion id="movimientos_mod_minutas_num_upd.xml"></relacion>    
+       <relacion id="detalles_minutas_ins.xml"></relacion>-->
+                     <relacion id="detalles_movimientos_ins_copia.xml"/>  
+                                              <relacion id="detalles_detalles_ins_copia.xml"/>
+        </movimientos>
+          <field id="movimiento_id"  noshow="true">
+        </field> 
+        <field id="_ORDEN" local="true" esClave="true" deshabilitado="true" >
+                                  <label>Orden</label>
+           <size>3</size>
+                                </field>
+          
+        <field id="ejercicio_id" tabla="CTB_CUENTAS" noshow="true">
+        </field>   
+        <!--<field id="cuenta_id" deshabilitado="false" esClave="true">
+            <ayuda_ex xml="contabilidad/cuentas_help.xml">
+            <field id="nombre_cuenta">
+              <label>Nombre</label>
+              <help>Nombre de la cuenta contable</help>
+              <detalle>nombre_cuenta</detalle>
+            </field>
+                  </ayuda_ex>
+          <label>Cuenta</label>
+          <help>Cuenta contable en la que se hace el detalle</help>
+        </field>-->
+                                  <field id="cuenta_id"  _esClave="true">
+          <ayuda_ex id="CTB_CUENTAS">
+            <field id="id_cuenta" _autoinc="true" _noshow="false" >
+              <label>Numero Cuenta</label>
+            </field>
+            <field id="nombre_cuenta">
+              <label>Nombre</label>
+              <help>Nombre de la cuenta contable</help>
+              <detalle>nombre</detalle>
+            </field>
+            <field id="habilitada" noshow="true">
+               <label>habilitada</label>
+              <condicion operador="=">1</condicion>
+            </field>
+            <field id="ejercicio_id" noshow="true">
+            <label>ejercicio</label>
+            <condicion operador="=">(select id_ejercicio from CTB_EJERCICIOS where activo = 1 ORDER BY id_ejercicio DESC LIMIT 1)</condicion>
+            </field>
+          </ayuda_ex>
+          <label>Cuenta</label>
+              </field>
+        <field id="nombre" deshabilitado="true" local="true" _tabla="CTB_CUENTAS"  colstyle="display:none;">
+        <label modpos="nobr">Nombre Cuenta</label>
+        <size>15</size>
+            </field>          
+        <field id="nombre_cuenta" tabla="CTB_CUENTAS" deshabilitado="true" Formstyle="display:none;">
+            <label>Nombre</label>
+        </field>
+         <field id="tipo" local="true" activa="true" colstyle="display:none;">
+                                       <label>Tipo</label>
+          <options>
+            <option valor="0">Debe</option>
+            <option valor="1">Haber</option>
+          </options>
+          <jsfunction event="onchange">
+              
+            if($('[name=debe]', '#detalles_duplicar_min_ing_xml').attr('disabled') == true){
+                $('[name=debe]', '#detalles_duplicar_min_ing_xml').removeAttr('disabled');
+                $('[name=haber]', '#detalles_duplicar_min_ing_xml').attr('disabled', 'disable');
+              }else{
+            $('[name=haber]', '#detalles_duplicar_min_ing_xml').removeAttr('disabled');
+            $('[name=debe]', '#detalles_duplicar_min_ing_xml').attr('disabled', 'disable');
+            }
+   
+               </jsfunction>
+              </field>
+        <field id="doh" noshow="true">
+        <if exp="debe + 0 > 0 ">
+          <true>'0'</true>
+          <false>'1'</false>
+        </if>
+            </field>           
+
+        <field id="debe" suma="true" noZero="true" deshabilitado="false">
+          <expresion>case when doh = 0 then importe end</expresion>
+          <label>Debe</label>
+          <tipo>numeric</tipo>  
+        </field>
+        <field id="haber" suma="true" noZero="true" deshabilitado="false">
+          <expresion>case when doh = 1 then importe end</expresion>
+          <label>Haber</label>
+          <tipo>numeric</tipo>
+        
+        </field>
+        
+        <field id="referencia">
+          <label>Referencia</label>
+          <help>Referencia</help>
+          <size>15</size>
+        </field>
+
+      
+        <field id="id_detalle" oculto="true">
+        </field>    
+        <field id="actual" local="true" noshow="true">
+        </field>
+          <field id="importe" noshow="true" >
+          <if exp="debe + 0 > 0 ">
+            <true>debe</true>
+            <false>haber</false>
+          </if>
+                </field>              
+        
+        <field id="idmov" local="true" noshow="true">
+        </field>                      
+        <field id="coinciden" local="true" noshow="true" clasefila="true">
+          
+          <if exp="'actual' == 'cuenta_id'">
+            <true>('idmov' == 'id_detalle')?'resaltadoVioleta':'resaltado'</true>
+            <false>''</false>
+          </if>
+        </field>
+    <field id="DEB" suma="true" acumula="true" noshow="true" deshabilitado="true" retroalimenta="true" local="true">
+  <label>deb</label>
+        <if exp="true">
+          <true>debe</true>
+          <false>0</false>
+        </if>
+      </field>           
+      <field id="HAB" suma="true" acumula="true" noshow="true" deshabilitado="true" retroalimenta="true" local="true">
+  <label>hab</label>
+        <if  exp="true">
+          <true>haber</true>
+          <false>0</false>
+        </if>
+      </field>  
+      
+      <field id="balancea" validar="true" noshow="true" deshabilitado="true" local="true">
+        <label>Bal</label>
+        <if  exp="DEB - HAB == 0 ">
+          <true>'true'</true>
+          <false>DEB - HAB</false>
+        </if>
+        <invalid>Minuta Desbalanceada</invalid>
+      </field>  
+        <order><field id="doh"/></order>        
+        </table>
+        <join tipo="left">
+      <table id="CTB_CUENTAS">
+          <field id="id_cuenta">
+        <condicion operador="=">CTB_DETALLES.cuenta_id</condicion>
+          </field>        
+      </table>
+        </join>
+    </consulta>
+    </histrix>  

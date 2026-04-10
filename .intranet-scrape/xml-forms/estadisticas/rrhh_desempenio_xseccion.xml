@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="chart">
+	<title>ESTADISTICAS DE DESEMPEÑO POR SECCION</title>
+	<obs></obs>
+	<form >
+		<table id="GEN_CALENDAR" label="ESTAD DESEMPEÑO POR SECCION">
+		   <grafico id="desempenio" >
+			   <ancho>400</ancho>
+			   <tipo>L</tipo>
+
+			   <etiquetas>year</etiquetas>
+			  
+			   <serie>calprome</serie>
+			   <title>Desempeño por seccion</title>
+			   <subtitulo>x año</subtitulo>
+		   </grafico>		
+		   
+		    <filters>
+			<!--
+			    <field id="fecha">
+				    <label>Desde</label>
+				    <valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m" ,strtotime('-12 month')) , 1, date("Y") -  1 ))</valor>
+				    <operador>&gt;=</operador>
+			    </field>
+			    <field id="fecha">
+                    <label>Hasta</label>
+				    <valor eval="true">date('d/m/Y', strtotime('-1 second', strtotime(date('Y-m-01'))))</valor>
+				    <operador>&lt;=</operador>
+			    </field>
+				-->
+				<field id="id_seccion">
+					<label>Sección</label>
+					<operador>=</operador>
+				</field>
+				</filters> 
+
+				
+				
+				<field id="id_seccion" tabla="PERSONAL">
+					<helper type="combo" id="SECCION" _empty="true">
+						<field id="id_seccion" />
+						<field id="nombre" />
+						<order>
+							<field id="nombre" />
+						</order>
+					</helper>
+				</field>
+
+				<field id="mes" oculto="true">
+						<expression>month(GEN_CALENDAR.fecha)</expression>
+						<label>Mes</label>
+						<options>
+							<option valor="1">Ene</option>
+							<option valor="2">Feb</option>
+							<option valor="3">Mar</option>
+							<option valor="4">Abr</option>
+							<option valor="5">May</option>
+							<option valor="6">Jun</option>
+							<option valor="7">Jul</option>
+							<option valor="8">Ago</option>
+							<option valor="9">Sep</option>
+							<option valor="10">Oct</option>
+							<option valor="11">Nov</option>
+							<option valor="12">Dic</option>
+
+						</options>
+       				<tipo>varchar</tipo>
+			</field>
+			
+                    <field id="fecha" oculto="true">
+<!--                        <condicion operador="&gt;="> DATE_FORMAT(date_sub(date(now()) , interval 1 year) ,'%Y-%m-01') and GEN_CALENDAR.fecha &lt;= now()</condicion> -->
+						<tipo>date</tipo>
+                    </field>
+                    
+					<field id="year" _oculto="true">
+                        <expression>year(GEN_CALENDAR.fecha)</expression>
+						<tipo>varchar</tipo>
+                    </field>
+
+           			
+					<field id="fec_evaluacion" tabla="RH_EVALUACIONES">
+						<label>fec evaluac</label>
+					</field>
+		<!--
+					<field id="calificacion">
+						<expression>sum(RH_EVALUACIONES.desempenio / 45)</expression>
+						<label>calificacion</label>
+					</field>
+
+					<field id="cantievaluaciones">
+						<label>cant</label>
+						<expression>count(RH_EVALUACIONES.id_rhevaluacion)</expression>
+					</field>
+
+					<field id="calpromedio" local="true">
+						<label>calif prom</label>
+						<if exp="calificacion != 0">
+							<true>round((calificacion / cantievaluaciones),2)</true>
+							<false>0</false>
+						</if>
+						
+					</field>
+		-->
+					<field id="calprome">
+						<label>calif prome</label>
+						<expression><![CDATA[(round(
+							(sum(RH_EVALUACIONES.desempenio / 45) / count(RH_EVALUACIONES.id_rhevaluacion)),2))]]>
+						</expression>
+					</field>
+
+<!--                     <field id="fechaEgreso" tabla="PERSONAL" noshow="true">
+                        <condicion operador="=">'0000-00-00'</condicion>
+                    </field>
+ -->	 	
+			<group>
+				
+				<field id="year"></field> 
+				<field id="mes"></field>
+				<field id="id_seccion"></field>
+			</group>
+			<!--
+			<order>
+				<field id="year" />
+			</order>
+-->
+		</table>
+        <join tipo="left">
+            <table id="RH_EVALUACIONES">
+                <field id="fec_evaluacion">
+                    <condicion operador="=">GEN_CALENDAR.fecha</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="PERSONAL">
+    	        <field id="IdPersona">
+                    <condicion operador="=">RH_EVALUACIONES.rhpersona_id</condicion>
+                </field>
+            </table>
+        </join>
+		<join tipo="left">
+            <table id="SECCION">
+                <field id="id_seccion">
+                    <condicion operador="=">PERSONAL.id_seccion</condicion>
+                </field>
+            </table>
+        </join>
+	</form>
+</histrix>

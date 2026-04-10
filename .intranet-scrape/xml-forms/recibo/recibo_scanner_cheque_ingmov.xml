@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+   <histrix tipo="nosql">
+       <title>Mov CHEQUES</title>
+        <obs></obs>
+               <form >
+					<table id="CARCHEQU" label="CHEQUES">
+						<ejecuta>
+	if ('barcode_cheque' != '') {
+		$dir = str_replace('//', '/', $_SESSION['dirXML'].'../files/cheques/');
+		$dir = realpath($dir).'/';
+		$img = "barcode_front";
+		$img = str_replace('data:image/jpeg;base64,', '', $img);
+		$img = str_replace(' ', '+', $img);
+		$file = str_replace(['=', '^'],'','barcode_cheque'.'_front.jpg');
+		file_put_contents($dir.$file, base64_decode($img));
+						
+		$img = "barcode_back";
+		$img = str_replace('data:image/jpeg;base64,', '', $img);
+		$img = str_replace(' ', '+', $img);
+		$file = str_replace(['=', '^'],'','barcode_cheque'.'_back.jpg');
+		
+		file_put_contents($dir.$file, base64_decode($img));
+	}
+
+						</ejecuta>
+						<field id="barcode_cheque" id_temp="barcode_cheque">
+						</field>
+						<field id="barcode_front" id_temp="barcode_front">
+						</field>
+						<field id="barcode_back" id_temp="barcode_back">
+						</field>
+					</table>
+               </form>
+        </histrix>

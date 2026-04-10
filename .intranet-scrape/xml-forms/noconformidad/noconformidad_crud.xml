@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm" _sololectura="true" _path="/fotos/coches">
+    <title>Informe de No conformidad</title>
+    <form  >
+        <table id="INFCONFORMIDAD" label="Ficha de Ventas">
+
+	     <field id="fecha_conformidad">
+                <label>Fecha</label>
+                <help>Numero de Fabricacion</help>
+		<valor>today</valor>
+            </field>
+	   
+            <field id="id_conformidad" _noshow="true" autoinc="true" deshabilitado="false">
+		  <label modpos="nobr">Numero</label>
+
+		  <label modpos="nobr">Id_conformidad</label>
+            </field>
+<!--	    <field id="nro_conformidad" deshabilitado="true">
+		  <parametro id="nro_conformidad_qry.xml" retorna="parent">
+		 </parametro>
+            </field>
+            -->
+	
+	    <field id="informado" _noshow="true">
+		  <label colspan="6">Informado por</label>
+            </field>
+             <field id="origen_conformidad" >
+		<helper type="combo">
+			<option value="0"></option>
+			<option value="1">Recepcion</option>
+			<option value="2">Fabricacion</option>
+			<option value="3">Final</option>
+			<option value="4">Direccion</option>
+			<option value="5">Auditoria</option>
+			<option value="6">Cliente</option>
+		</helper>
+		<label>Origen</label>
+            </field>
+	               <field id="dat" local="true" deshabilitado="true" colstyle="display:none;">
+				<label colspan="12"></label>
+				<valor>DATOS DEL PRODUCTO NO CONFORME</valor>
+				<size>50</size>
+			</field>						
+
+             <field id="proveedor" colstyle="display:none;">
+	    	<label>Proveedor</label>
+		<size>20</size>
+            </field>
+	     <field id="orden_compra"  colstyle="display:none;">
+	    	<label modpos="nobr">O.Compra</label>
+		<size>20</size>
+            </field>
+	    <field id="sector"  colstyle="display:none;">
+	    	<label modpos="nobr">sector</label>
+		<size>20</size>
+            </field>
+	     <field id="material"  colstyle="display:none;">
+	    	<label>Material</label>
+		<size>20</size>
+            </field>
+	   
+	     <field id="producto"  colstyle="display:none;">
+	    	<label modpos="nobr">Producto</label>
+		<size>20</size>
+            </field>
+	    
+	    <field id="cliente"  colstyle="display:none;">
+	    	<label modpos="nobr">Cliente</label>
+		<size>20</size>
+            </field>
+	    <field id="documento_conformidad"  colstyle="display:none;">
+	    	<label colspan="6">Otros Documentos</label>
+		<size>80</size>
+            </field>
+	    <field id="dat1" local="true" deshabilitado="true" colstyle="display:none;">
+		<label colspan="12"></label>
+		<valor>DESCRIPCION DE LA NO CONFORMIDAD</valor>
+		<size>50</size>
+	</field>
+	 <field id="sector_id"  colstyle="display:none;">
+		<label>Dirigida a:</label>
+		<helper type="combo" id="SECCION" empty="true">
+			<field id="id_seccion"/>
+			<field id="nombre"/>
+			<field id="activa">
+			    <condicion operador="=">1</condicion>
+			</field>
+		</helper>
+	    	
+            </field>	
+	     <field id="descripcion_conformidad"  colstyle="display:none;">
+	    	<label colspan="6">Descripcion De la No Conformidad</label>
+		<tipo>simpleditor</tipo>
+            </field>
+	    
+	   <!-- <field id="caracteristica_conformidad"  colstyle="display:none;">
+		<label>Caracteristica de la No Conformidad</label>
+		<helper type="combo">
+			<option value=""></option>
+			<option value="1">REAL</option>
+			<option value="2">POTENCIAL</option>
+		</helper>
+	    	
+            </field>-->
+	      <field id="real" colstyle="display:none;">
+		<label>Real</label>
+		<helper type="combo">
+			<option value="0"></option>
+			<option value="1">Reproceso o Reparacion</option>
+			<option value="2">Reclasificacion</option>
+			<option value="3">Desecho</option>
+		</helper>
+	    	
+            </field>
+	    <field id="potencial" colstyle="display:none;">
+		<label modpos="nobr">Potencial</label>
+		<helper type="combo">
+			<option value="0"></option>
+			<option value="1">Reciclado</option>
+			<option value="2">Devolucion</option>
+			<option value="3">Permiso de Desviacion</option>
+		</helper>
+	    	
+            </field>
+	    <field id="causa_conformidad" colstyle="Display:none;">
+		<helper type="combo">
+			<option value="0"></option>
+			<option value="1">Mano de Obra</option>
+			<option value="2">Diseño de Produccion</option>
+			<option value="3">Materiales</option>
+			<option value="4">Maquinaria</option>
+			<option value="5">Dispositivos</option>
+			<option value="6">Metodos</option>
+		</helper>
+		<label>Caracteristicas Conformidad</label>
+            </field>
+	     <field id="detalle_disposicion"  colstyle="display:none;">
+		<label colspan="6">Detalle de la disposicion</label>
+		<tipo>simpleditor</tipo>
+            </field>
+	      <field id="dat4" local="true" deshabilitado="true" colstyle="display:none;">
+		<label colspan="12"></label>
+		<valor>CORRESPONDE REALIZAR ACCION</valor>
+		<size>50</size>
+	</field>
+	     <field id="accion"  colstyle="display:none;">
+		<label>Corresponde Realizar Accion</label>
+		<helper type="combo">
+			<option value="0"></option>
+			<option value="1">SI</option>
+			<option value="2">NO</option>
+		</helper>
+            </field>
+	    <field id="tipo_accion"  colstyle="display:none;">
+		<label>Tipo de Accion</label>
+		<helper type="combo">
+			<option value="0"></option>
+			<option value="1">Correctiva</option>
+			<option value="2">Preventiva</option>
+		</helper>
+            </field>
+	     <field id="detalle_accion"  colstyle="display:none;">
+		<label colspan="6">Detalle:</label>
+		<tipo>simpleditor</tipo>
+            </field>
+	    <field id="dat6" local="true" deshabilitado="true" colstyle="display:none;">
+		<label colspan="12"></label>
+		<valor>ACCION CUMPLIDA CIERRE</valor>
+		<size>50</size>
+	</field>
+	      <field id="cierre"  colstyle="display:none;">
+		<label>Cierre</label>
+		<helper type="combo">
+			<option value="0"></option>
+			<option value="1">SI</option>
+			<option value="2">NO</option>
+		</helper>
+            </field>
+	    <field id="observacion_cierre"  colstyle="display:none;">
+		<label colspan="6">Observaciones:</label>
+		<tipo>simpleditor</tipo>
+            </field>
+</table>           
+</form>
+</histrix>

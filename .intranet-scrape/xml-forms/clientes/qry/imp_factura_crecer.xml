@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ficha" PDFsincabecera="true" sololectura="true" autoprint="true" PDFfontSize="12">
+  <title>FACTURA</title>
+  <obs/>
+  <consulta>
+    <table id="REG_MOVIMIENTOS" label="FACTURA">
+      <field id="id_regmovim" noshow="false" esClave="true" print="false" valauto="true">
+        <label>Codigo</label>
+        <help>Codigo de movimiento</help>
+      </field>
+      <field id="letra_movimiento" print="false">
+        <label modpos="nobr" PDFnolabel="true" posx="103" posy="8" PDFsize="20"/>
+      </field>
+      <field id="subsistema_id" noshow="true" print="false">
+        <label>Subsistema</label>
+        <help>subsistema al que pertenece</help>
+      </field>
+      <field id="regcuenta_id" noshow="true" print="false">
+        <label posx="5" posy="+1">Cuenta</label>
+      </field>
+      <field id="descripcion_concepto" tabla="REG_CONCEPTOS" noshow="true" print="false">
+        <label modpos="nobr" posx="110" posY="17" PDFsize="12">Comprobante</label>
+      </field>
+      <field id="nro_movimiento" print="false">
+        <label modpos="nobr" posx="110" posY="25" PDFsize="12">Nº</label>
+      </field>
+      <field id="dia" sincelda="true">
+        <expresion>DAY(fecha_movimiento)</expresion>
+        <label modpos="nobr" posx="158" posY="40" PDFsize="12"/>
+      </field>
+      <field id="mes" sincelda="true">
+        <label modpos="nobr" posx="170" posY="40" PDFsize="12"/>
+        <expresion>MONTH(fecha_movimiento)</expresion>
+      </field>
+      <field id="año" sincelda="true">
+        <label modpos="nobr" posx="184" posY="40" PDFsize="12"/>
+        <expresion>YEAR(fecha_movimiento)</expresion>
+      </field>
+      <field id="cuit_empresa" local="true" PDFsize="8" print="false">
+        <label posx="110" posY="40"/>
+        <valor>C.U.I.T. Nº:EMPRESA</valor>
+      </field>
+      <field id="ing_brutos" local="true" PDFsize="8" print="false">
+        <label posx="110" posY="43"/>
+        <valor>Ing.Brutos:</valor>
+      </field>
+      <field id="actividades" local="true" PDFsize="8" print="false">
+        <label posx="110" posY="46"/>
+        <valor>Inicio Act.:01/08/05</valor>
+      </field>
+      <field id="nombre_cuenta" tabla="REG_CUENTA" deshabilitado="true" sincelda="true" PDFsize="14">
+        <label colspan="4" posx="28" posY="58" size="150"/>
+      </field>
+      <field id="cod_direccion" tabla="REG_CUENTA" deshabilitado="true" sincelda="true" PDFsize="14">
+        <label colspan="4" posx="28" posY="68" size="150"/>
+      </field>
+      <field id="localidad_id" tabla="REG_CUENTA" deshabilitado="true" sincelda="true" PDFsize="14">
+        <label colspan="4" posx="28" posY="78" size="100"/>
+        <expresion>SELECT CONCAT(id_localidad,'-', nombre_localidad) FROM GEN_LOCALIDADES where id_localidad = REG_CUENTA.localidad_id</expresion>
+      </field>
+      <field id="cuit_cuenta" tabla="REG_CUENTA" deshabilitado="true" sincelda="true" PDFsize="14">
+        <label colspan="3" modpos="nobr" posx="142" posY="78"/>
+      </field>
+      <field id="iva_id" tabla="REG_CUENTA" PDFsize="14" sincelda="true">
+        <tabla_ex xml="iva_qry.xml" dir="/ayudas" vacio="true" />
+        <label colspan="3" modpos="nobr" posx="28" posY="91" size="20"/>
+        <help>categoria de iva de la cuenta</help>
+        <valor>1</valor>
+      </field>
+      <field id="condicion_venta" local="true" sincelda="true" PDFsize="14">
+        <label colspan="3" modpos="nobr" posx="45" posY="101"/>
+        <options>
+          <option valor=""/>
+          <option valor="0">Cta Corriente</option>
+          <option valor="1">Contado</option>
+        </options>
+      </field>
+      <field id="remito" local="true" sincelda="true" PDFsize="14">
+        <label colspan="3" modpos="nobr" posx="152" posY="101"/>
+        <expresion>SELECT (SELECT CONCAT(LPAD(REG_MOVIMIENTOS.puesto_movimiento,4,0),'-',(LPAD(REG_MOVIMIENTOS.nro_movimiento,8,0))) FROM REG_MOVIMIENTOS where REG_MOVIMIENTOS.id_regmovim = REG_IMPUTACIONES.regmovim0_id) FROM REG_IMPUTACIONES WHERE regmovim_id = REG_MOVIMIENTOS.id_regmovim</expresion>
+      </field>
+      <field id="vencimiento_movimiento" print="false">
+        <label colspan="3" modpos="nobr" posx="135" posY="101" size="35">Vencimiento</label>
+        <help>Fecha vencimiento</help>
+      </field>
+      
+      <field id="referencia_movimiento" showObjTabla="true" local="true" pdfwidth="180" PDFlineas="false" >
+        <label size="25" posx="15" posy="+14" PDFsize="7"/>
+	<helper type="object" xml="imp_detalle_crecer_qry.xml" dir="/clientes/qry" >
+		<parameter source="id_regmovim" 	target="regmovim_id" />
+		<parameter source="subsistema_id" 	target="subsistema_id" />
+	</helper>	
+      </field>
+      
+<!--
+      <field id="referencia_movimiento" showObjTabla="true" local="true" pdfwidth="180" PDFlineas="false" obj="imp_detalle_crecer_qry.xml" objdir="/clientes/qry">
+        <label size="25" posx="15" posy="+14" PDFsize="9"/>
+        <paring destino="regmovim_id">id_regmovim</paring>
+        <paring destino="subsistema_id">subsistema_id</paring>
+      </field>
+-->
+      <field id="digo" local="true" PDFnolabel="true">
+        <label posx="20" posY="238" PDFsize="10"/>
+        <valor>Digo Importe en Letras:</valor>
+      </field>
+      <field id="prueba" local="true" PDFnolabel="true">
+        <label posx="20" posY="+0.5" PDFsize="10"/>
+        <tipo aletras="true">char</tipo>
+        <expresion>importe_movimiento</expresion>
+      </field>
+      <field id="importe_movimiento" _PDFbox="true" sincelda="true">
+        <label modpos="nobr" posx="170" posY="252" PDFsize="12" size="24" pdfancho="58"/>
+      </field>
+      <field id="fecha_movimiento" noshow="true" print="false">
+        <label>fecha movimiento</label>
+      </field>
+      <field id="puesto_movimiento" noshow="true" print="false">
+        <label>puesto</label>
+      </field>
+      <field id="letra_movimiento" noshow="true" print="false">
+        <label>letra</label>
+      </field>
+      <field id="nro_movimiento" noshow="true" print="false">
+        <label>letra</label>
+      </field>
+      <field id="concepto_id" noshow="true" print="false">
+        <label>conce</label>
+      </field>
+      <group>
+        <field id="id_regmovim"/>
+      </group>
+    </table>
+    <join tipo="left">
+      <table id="REG_CONCEPTOS">
+        <field id="id_concepto">
+          <condicion operador="=">concepto_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="REG_CUENTA">
+        <field id="id_regcuenta">
+          <condicion operador="=">regcuenta_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="REG_DETALLES">
+        <field id="regmovim_id">
+          <condicion operador="=">id_regmovim</condicion>
+        </field>
+      </table>
+    </join>
+  </consulta>
+</histrix>

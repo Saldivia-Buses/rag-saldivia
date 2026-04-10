@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="cabecera"  >
+  <title>Facturar</title>
+  <obs/>
+  <form  >
+    <table id="REG_MOVIMIENTOS">
+
+    <fieldGroup style="vertical-align:middle;padding:2px 2px 2px 2px;">
+
+        <field id="subsistema_id" noshow="true" />
+
+        <field id="fecha_movimiento" copia="vencimiento_movimiento">
+          <label >Fecha</label>
+          <valor>today</valor>
+        </field>
+
+        <field id="separador1" deshabilitado="true" local="true" modpos="nobr">
+          <size>1</size>
+        </field>
+
+        <field id="vencimiento_movimiento">
+          <label modpos="nobr">Vencimiento</label>
+          <valor>today</valor>
+        </field>
+
+        <field id="separador2" deshabilitado="true" local="true" modpos="nobr">
+          <size>1</size>
+        </field>
+
+        <field id="puesto_movimiento" _deshabilitado="true" modpos="nobr">
+            <label _modpos="nobr" _style="font-size: large;">P.Venta</label>
+            <helper type="combo" xml="npv_x_puesto_qry.xml" dir="/caja/ing/">
+                <field id="puesto">
+                        <condicion operador="!=">0</condicion>
+                </field>
+                <field id="regconcepto_id">
+                    <condicion operador="=">(select HTXOPTIONS.option_value from HTXOPTIONS where option_name = 'ID_FACTURAS' LIMIT 1)</condicion>
+                </field>
+            </helper>
+            <size>4</size>
+            <detalle>puesto_movimiento</detalle>
+        </field>
+
+        <field id="separador3" deshabilitado="true" local="true" modpos="nobr">
+          <size>1</size>
+        </field>
+
+        <field id="regconcepto_id" deshabilitado="true" local="true" _sincelda="true">
+                  <label modpos="nobr" colspan="1" _style="font-size: large;" >concepto</label>
+                  <helper type="combo" id="REG_CONCEPTOS">
+                      <field id="id_concepto">
+  			                 <condicion operador="=">(select HTXOPTIONS.option_value from HTXOPTIONS where option_name = 'ID_FACTURAS' LIMIT 1)</condicion>
+  	                  </field>
+                      <field id="descripcion_concepto"/>
+                      <field id="subsistema_id" />
+                  </helper>
+                  <detalle>concepto_id</detalle>
+                  <actualiza>
+                      <field id="puesto_movimiento" destino="regconcepto_id" />
+                  </actualiza>
+        </field>
+
+        <field id="separador4" deshabilitado="true" local="true" modpos="nobr">
+          <size>1</size>
+        </field>
+
+
+        <field id="regconcepto_rem_id" local="true" noshow="true">
+            <label modpos="nobr" colspan="1" _style="font-size: large;" >Remito</label>
+            <helper type="combo" id="REG_CONCEPTOS">
+                <field id="id_concepto">
+                   <condicion operador="=">(SELECT option_value FROM HTXOPTIONS where option_name = 'ID_REMITOS' limit 1)</condicion>
+                </field>
+                <field id="descripcion_concepto"/>
+                <field id="subsistema_id" />
+                <field id="informa_calculo" >
+            	       <condicion operador="=">1</condicion>
+                </field>
+            </helper>
+            <detalle>concepto_id</detalle>
+        </field>
+
+        <field id="separador5" deshabilitado="true" local="true" modpos="nobr">
+          <size>1</size>
+        </field>
+
+        <field id="stkdeposito_id" local="true" _noshow="true" _sincelda="true" >
+            <label modpos="nobr">Deposito</label>
+            <helper type="combo" dir="/ayudas" xml="stkdeposito_qry.xml" refresh="true" />
+            <detalle>stkdeposito_id</detalle>
+        </field>
+
+        <field id="stkconcepto_id" local="true" noshow="true" valauto="true">
+            <helper type="parameter" id="SIS::02:stock_codigo_concepto_venta" >
+                <label>Codigo de Concepto Stock para salida por venta</label>
+                <defaultValue>2</defaultValue>
+            </helper>
+            <detalle>stkconcepto_id</detalle>
+        </field>    
+        
+        <field id="codigo_concepto_factura" local="true" noshow="true">
+           <helper type="parameter" id="SIS::02:codigo_concepto_factura" >
+               <label>Codigo de Concepto Factura</label>
+               <defaultValue>13</defaultValue>
+           </helper>
+           <actualiza>
+           <field id="regconcepto_id" destino="id_concepto" />
+           <field id="puesto_movimiento" destino="regconcepto_id" />
+           </actualiza>
+        </field>
+
+    </fieldGroup>
+
+    </table>
+  </form>
+</histrix>

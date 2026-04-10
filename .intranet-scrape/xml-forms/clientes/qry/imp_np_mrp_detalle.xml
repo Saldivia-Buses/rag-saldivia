@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+    <title />
+    <obs />
+    <form>
+        <table id="REG_DETALLES" label="Detalle de Movimientos">
+
+            <field id="regmovim_id" noshow="true" />
+
+            <field id="orden" noshow="true" />
+
+            <fieldGroup>
+                <field id="cantidad_detalle" PDFcolWidth="20" PDFalign="C">
+                    <label size="35">CANTIDAD</label>
+                    <tipo>numeric</tipo>
+                </field>
+
+                <field id="alto" PDFcolWidth="16" tabla="STK_ARTICULOS" PDFalign="C">
+                    <label size="35">LARGO</label>
+                </field>
+
+                <field id="ancho" PDFcolWidth="16" tabla="STK_ARTICULOS" PDFalign="C">
+                    <label size="35">ANCHO</label>
+                </field>
+
+                <field id="codigo_detalle" PDFcolWidth="22" PDFalign="C">
+                    <label size="35">CODIGO</label>
+                </field>
+
+                <field id="descripcion_detalle">
+                    <label size="120">DESCRIPCION</label>
+                </field>
+            </fieldGroup>
+
+            <order>
+                <field id="orden" />
+            </order>
+
+            <group>
+                <field id="id_regdetalle" />
+            </group>
+
+        </table>
+
+        <join tipo="left">
+            <table id="STK_ARTICULOS">
+                <field id="id_stkarticulo">
+                    <condicion operador="=">REG_DETALLES.codigo_detalle</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

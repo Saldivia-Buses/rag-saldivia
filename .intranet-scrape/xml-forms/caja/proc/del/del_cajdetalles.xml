@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="delete" limit="0">
+	<title>Eliminacion de Detalles de Movimientos de Caja</title>
+	<obs></obs>
+	<form>
+		<table id="CAJ_DETALLES">
+		    <field id="cajmovimiento_id" esClave="true" id_temp="id_cajmovimiento"  />
+		</table>
+	</form>
+</histrix>  
+
+

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm">
+	<title>Posiciones</title>
+	<obs></obs>
+	<form >
+		<table id="POSICIONES" >
+			<title>Posiciones</title>
+			<field id="idposic"  noshow="true" esclave="true">
+				<label>Codigo</label>
+				<help>Codigo de Poscion</help>
+
+			</field>
+			<field id="nombre">
+				<label>Nombre</label>
+				<help>Nombre de la posicion</help>
+			</field>
+   			<order>
+				<field id="idposic"></field>
+			</order>
+		</table>
+	</form>	   
+</histrix> 

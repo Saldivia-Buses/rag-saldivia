@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="consulta" conBusqueda="true">
+	<title>Usuarios</title>
+	<obs/>
+	<form  detalle="items_usuario2_cons.xml">
+		<table id="HTXUSERS" label="Usuarios">
+			<field id="Id_usuario" noshow="true" >
+				<label>ID Usuario</label>
+				<help></help>
+			</field>
+			<field id="Nombre">
+				<label>Nombre</label>
+				<help></help>
+			</field>
+			<field id="apellido">
+				<label>Apellido</label>
+				<help></help>
+			</field>
+			<field id="Id_perfil" >
+				<label>Perfil</label>
+				<help>Perfil de Acceso</help>
+				<detalle>Id_perfil</detalle>
+				<tabla_ex id="HTXPROFILES">
+					<field id="Id_Perfil"/>
+					<field id="nombre"/>
+				</tabla_ex>				
+			</field> 
+                       <field id="login" noshow="true">
+				<label>login</label>
+				<detalle>login</detalle>
+				<help></help>
+			</field>
+			<field id="Id_menu" local="true" noshow="true">
+			    <detalle>Id_menu</detalle>
+			    <valor>'phpmen'</valor>
+			</field>
+			<!--
+			<field id="cantidad" _noshow="true">
+				<label>Notificaciones</label>
+				<expresion>SELECT COUNT(id_notification) from HTXNOTIFUSER where HTXNOTIFUSER.login = HTXUSERS.login and Id_menu != ' ' and Id_menu != '_utilbar'</expresion>
+				<help></help>
+			</field>
+			  -->
+
+		</table>
+	</form>
+</histrix>

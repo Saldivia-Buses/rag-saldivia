@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+	<abm tipo="consulta" imprime="false">
+		<titulo>Inspeccion de Recepcion</titulo>
+		<obs></obs>
+		<consulta>
+			<tabla id="STKINSPEC" label="Inspeccion de Recepcion">
+				<campo id="artcod" >
+					<label>Articulo</label>
+					<help>Codigo de Articulo</help>
+				</campo>
+				<campo id="nronor">
+					<tabla_ex id="NORMINSP">
+						<campo id="nronor" clave="true"></campo>
+						<campo id="desnor"></campo>
+					</tabla_ex>
+					<label>Norma </label>
+					<help>
+					</help>
+				</campo>
+				<campo id="frecuencia">
+					<label>Frecuencia</label>
+					<help>Frecuencia de Revision de las Partidas</help>
+				</campo>
+
+				<campo id="siscod" oculto="true">
+					<label>Codigo Sistema.. </label>
+					<help>
+					</help>
+				</campo>
+			</tabla>
+		</consulta>
+	</abm>

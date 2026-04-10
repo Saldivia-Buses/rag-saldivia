@@ -1,0 +1,211 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" subtipo="vertical" ancho="60">
+  <title>Encuesta</title>
+  <obs></obs>
+  <form  detalle="encuesta_fichaing.xml">
+
+    <table id="CCTCUENT">
+      <title>Encuesta</title>
+     
+      
+   <filters>
+
+        <field id="entrega" tabla="ENTREGASCOHES">
+               <valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m"), date("d")-90, date("Y")))</valor>
+               <operador>&gt;=</operador>
+               <label>Fecha Entrega Desde</label>
+        </field>
+        
+        <field id="entrega" tabla="ENTREGASCOCHES">
+               <valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m"), date("d")-60, date("Y")))</valor>
+               <operador>&lt;=</operador>
+               <label>Fecha Entrega Hasta</label>
+        </field>
+    
+
+    </filters>
+
+       <field id="nrocha" tabla="PEDCOTIZ">
+        <label>Unidad</label>  
+      </field>      
+      
+    <field id="ctacod" noshow="true" >
+	<detalle>ctacod</detalle>
+    </field>  
+     
+
+    <field id="ctanom" >
+      <expression>CONCAT(ctanom, ' (', ctafan, ')')</expression>
+      <label>Cliente</label>
+    </field>    
+      
+      <field id="siscod" noshow="true">
+      <condicion operador="=">'02'</condicion>
+      </field>
+    
+    <field id="mostrarBotonOt" noshow="true">
+      <expression>CASE WHEN (select count(*) from VUNIDADES as PED where PED.ctacod = CCTCUENT.ctacod) != 0 THEN 'fichas_x_cliente.xml' ELSE '' END</expression>
+    </field> LEFT JOIN ENTREGASCOCHES ctacod e ON v.nrofab = e.nrofab
+    
+    <field deshabilitado="true" id="otros" local="true" linkint="fichas_x_cliente.xml" linkdes="Total de Coches" print="false">
+      <attribute id="linkint">mostrarBotonOt</attribute>
+            <expression>(select count(*) from VUNIDADES as PED where PED.ctacod = CCTCUENT.ctacod) </expression>
+            <label modpos="nobr" Formstyle="display:none;" style="text-align:center;">Unid.</label>
+            <help>Código de Cuenta</help>
+            <paring destino="ctacod">ctacod</paring>
+        </field>    
+
+    <field id="mostrarBotonCant" noshow="true">
+      <expression>CASE WHEN (SELECT COUNT(*) FROM ENCUESTA_CLIENTE ec WHERE ec.ctacod = CCTCUENT.ctacod) != 0 THEN 'encuestas_x_cliente.xml' ELSE '' END</expression>
+    </field>
+    
+    <field id="encuestasRealizadas" linkint="encuestas_x_cliente.xml" linkdes="Encuestas realizadas" print="false">
+      <attribute id="linkint">mostrarBotonCant</attribute>
+      <expression>SELECT COUNT(*) FROM ENCUESTA_CLIENTE ec WHERE ec.ctacod = CCTCUENT.ctacod</expression>
+      <label style="text-align:center;">Encues.</label>
+      <paring destino="ctacod">ctacod</paring>
+    </field>    
+
+    <field deshabilitado="true" id="ctafan" tabla="PEDCOTIZ" linkint="cctconta_consulta.xml" linkdes="Ver medios de Contacto">
+                <expression>LEFT(ctafan, 17)</expression>
+                <label >Contactos</label>
+                <help>Código de Cuenta</help>
+                <paring destino="ctacod">ctacod</paring>
+                <paring destino="siscod">siscod</paring>
+    </field>
+
+    
+      
+       <field id="entrega" tabla="ENTREGASCOCHES">
+        <label>Fecha Retirado</label>  
+         <tipo>date</tipo>
+      </field>
+
+
+           <field id="email"  colstyle="width:auto;" deshabilitado="false" local="true" Formstyle="display:none;">
+                <helper type="link" xml="mails_send.xml" dir="/histrix/mensajeria/" title="Entrega Unidad" width="700" height="600">
+                    <parameter source="mailto"  target="para" />
+                    <parameter source="mailsubj" target="subject" />
+                    <parameter source="mailbody" target="mensaje" />
+                </helper>
+                <expression><![CDATA['<img src="../img/mail_generic.png"/>']]></expression>
+            </field>
+            
+            <field id="mailto" noshow="true" local="true" email="mailto">
+              <expression>select group_concat(mail separator ';') from CCTCONTA where siscod = '02' and CCTCONTA.ctacod = PEDCOTIZ.ctacod and principal = 1</expression>
+            </field>
+
+            <field id="mailsubj" noshow="true" local="true" email="subject">
+              <expression>CONCAT('Contacto PostVenta Saldivia Unidad ', PEDCOTIZ.nrocha)</expression>
+            </field>
+
+            <field id="mailbody" noshow="true" local="true" email="body">
+             <expression><![CDATA[CONCAT(
+ 				'Estimado cliente:</br></br>
+Me es grato contactarme con usted, como Responsable de Post Venta de carrocerías SALDIVIA. El motivo del presente es ponerme a su disposición para atender cualquier necesidad que se le presente relacionada a SERVICE, REPARACIONES, VENTAS DE REPUESTOS Y CONSULTAS VARIAS DE POST VENTA.</br></br>
+
+Ademas, aprovecho para comunicarle que  puede ingresar a nuestro sistema de AUTOGESTIÓN y descargar los MANUALES actualizados de las unidades,y listados de proveedores de autopartes recomendados ubicados en todo el país.</br></br>
+
+
+        Autogestión: <a href=\'http://autogestion.saldiviabuses.com.ar','\'>Click para acceder</a></br></p>
+				Su usuario de ingreso es: ', (select mail from CCTCONTA where siscod = '02' and CCTCONTA.ctacod = PEDCOTIZ.ctacod order by principal DESC limit 1), '</br>
+				Contraseña: ', (select
+
+				case when mail != '' then lower(concat( left(replace(replace((case when nombre != '' then CCTCUENT.ctanom
+				else mail end),' ',''),'.','') , 5), CCTCUENT.id_regcuenta)) end
+
+				from CCTCONTA where siscod = '02' and CCTCONTA.ctacod = PEDCOTIZ.ctacod order by principal DESC limit 1),'</br>
+				En caso de haberla cambiado, utilice la nueva contraseña</br></br>
+
+        Su opinión es muy valiosa para nosotros para detectar oportunidades de mejora constante de nuestros productos y servicios, para ello lo invitamos a que complete la siguiente ENCUESTA,evaluando su SATISFACCIÓN  respecto a los ítem detallados a continuación,  siendo:5 (excelente), 4 (muy bueno), 3 (bueno), 2 (regular), 1(malo)</br></br>
+
+
+VENTAS: Proceso comercial y Atención del personal del sector (amabilidad, predisposición, organización, etc.)</br>
+VENTAS: Claridad en Especificaciones Técnicas</br>
+VENTAS: Tiempo de envío de Ficha de Venta para su aprobación</br>
+PROCESO DE ENTREGA: Cumplimiento plazo de entrega</br>
+PROCESO DE ENTREGA: Atención recibida (amabilidad, predisposición, etc.)</br>
+PROCESO DE ENTREGA: confort lugar de espera hasta la entrega</br>
+PROCESO DE ENTREGA: tiempo de espera</br>
+EXPECTATIVAS RESPECTO AL PRODUCTO: Diseño exterior</br>
+EXPECTATIVAS RESPECTO AL PRODUCTO: Diseño interior</br>
+EXPECTATIVAS RESPECTO AL PRODUCTO: Calidad general percibida</br>
+EXPECTATIVAS RESPECTO AL PRODUCTO: Cumplimiento de las especificaciones del producto</br></br>
+
+Sugerencias:</br></br>
+
+Comentarios:</br></br></br>
+
+Desde ya muchas gracias y estamos a su disposición.</br>
+Saludos Cordiales.</br></br>
+
+
+Postventa Saldivia</br> Nicolas Castro</br>Tel 0341-4921135 Cel 0341 155151697</br>Ruta 21 KM 7 PIA LOTE 0004 7 - Alvear (2126) - Santa Fe - Argentina</br><a href="www.saldiviabuses.com.ar" >www.saldiviabuses.com.ar</a>
+ 				')]]>
+              </expression>
+            </field>
+
+              <field id="filtmail" noshow="true" local="true">
+                <expression>CONCAT('Contacto PostVenta Saldivia Unidad ', PEDCOTIZ.nrocha)</expression>
+              </field>
+
+            <field id="filtmail_param" noshow="true" local="true">
+                <expression>CONCAT('Contacto PostVenta Saldivia Unidad ', PEDCOTIZ.nrocha)</expression>
+            </field>
+            
+            <field id="Emails" _showTablaObj="true" local="true">
+                <helper type="link" xml="email_subj_qry.xml" dir="/email">
+                    <parameter target="subject" source="filtmail_param" operator="like"/>
+                </helper>
+                <label>Correos</label>
+                <help></help>
+               <expression sql="true"><![CDATA[
+                SELECT CONCAT((SELECT COUNT(*) FROM HTXMAIL WHERE subject = '[__filtmail__]'),' Env.')]]></expression>
+            </field> 
+
+            <field id="cont_envios2"  noshow="true">
+            <expression sql="true">SELECT COUNT(*) FROM HTXMAIL WHERE subject = '[__filtmail__]'</expression>
+          </field>
+
+            <field id="cont_envios" clasefila="true" noshow="true" local="true">
+
+            <if exp="'cont_envios2' == '0'">
+              <true></true>
+              <false>resaltado</false>
+            </if>
+          </field>
+
+<!--       <group>
+     <field id="ctacod"></field>
+    </group>   
+-->  
+         <order>
+         <field id="entrega" orderType="DESC"></field>
+      </order> 
+      
+    </table>
+    
+    
+<join tipo="LEFT">    
+  <table id="PEDCOTIZ">         
+    <field id="ctacod">             
+      <condicion operador="=">CCTCUENT.ctacod</condicion>         
+    </field>    
+    
+  </table> 
+</join>    
+    
+    <join tipo="LEFT">    
+  <table id="ENTREGASCOCHES">         
+    <field id="nrofab">             
+      <condicion operador="=">PEDCOTIZ.nrocha</condicion>         
+    </field>    
+        <field id="entrega">
+					<condicion operador="IS NOT NULL"></condicion>
+				</field>
+  </table> 
+</join>    
+
+  
+  </form>     
+</histrix> 

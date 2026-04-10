@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="update">
+    <title/>
+    <obs/>
+    <form >
+        <table id="CAJ_REGISTROS" idCampoCond="confirmar">
+            <field id="id_cajregistro" id_temp="id_cajregistroarqueo" esClave="true"/>
+            <field id="cierre_caja" id_temp="nuevo_estado" />
+        </table>
+    </form>
+</histrix>

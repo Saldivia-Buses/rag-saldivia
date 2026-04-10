@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud" path="fotos">
+  <title>Inventario IT</title>
+  <obs></obs>
+  <form>
+    <table id="ITINVENTARY" label="INVENTARIO IT" limit="1">
+      
+
+<filters>
+  
+      <field id="ip" _noshow="false">
+          <label>IP</label>
+          <help>Buscar x ip</help>
+          <operador>like</operador>
+      </field>
+   
+  
+    <field id="user_id" noshow="false">
+        <label>Usuario</label>
+        <help>Buscar x usuario.</help>
+        <operador>=</operador>
+      </field>
+
+      <field id="itdevicetype_id">
+        <label>Tipo</label>  
+        <operador>=</operador> 
+      </field>      
+
+
+ </filters>
+
+      <field id="id_itinventary">
+        <label>ID-inventario</label>
+      </field>
+      
+      <field id="testalive" local="true" Formstyle="display:none;">
+        <helper type="link" xml="it_test_alive.xml" dir="/it" width="200" height="100" reposition="true" title="Estado">
+          <parameter source="id_itinventary" target="id_itinventary" />
+        </helper>
+        <label>Test</label>
+        <valor>Ping</valor>
+      </field>
+      
+      
+       <field id="poweron" local="true" Formstyle="display:none;">
+        <helper type="link" xml="it_test_poweron.xml" dir="/it" width="200" height="100" reposition="true" title="Estado">
+          <parameter source="id_itinventary" target="id_itinventary" />
+        </helper>
+        <label>Poweron</label>
+        <valor>Prender</valor>
+      </field>
+      
+      
+      <field id="poweroff" local="true" Formstyle="display:none;">
+        <helper type="link" xml="it_test_poweroff.xml" dir="/it" width="200" height="100" reposition="true" title="Estado">
+          <parameter source="id_itinventary" target="id_itinventary" />
+        </helper>
+        <label>Poweroff</label>
+        <valor>Apagar</valor>
+      </field>
+   
+      
+      <field id="restart" local="true" Formstyle="display:none;">
+        <helper type="link" xml="it_restart.xml" dir="/it" width="200" height="100" reposition="true" title="Estado">
+          <parameter source="id_itinventary" target="id_itinventary" />
+        </helper>
+        <label>Restart</label>
+        <valor>Reiniciar</valor>
+      </field>
+      
+  
+  <field id="id_itinventary" autoinc="true" noshow="true">
+        <label>ID</label>
+      </field> 
+      
+      <field id="user_id">
+          <helper type="combo" id="HTXUSERS" empty="true">
+              <field id="Id_usuario"/>
+              <field id="nombre">
+                <expression>CONCAT(apellido, ' ', Nombre)</expression>
+              </field>
+              <field id="baja">
+                <condicion operador="=">0</condicion>
+              </field>
+              <order>
+                <field id="nombre"/>
+              </order>
+          </helper>
+          <label>Usuario</label>
+          <help >Empleado responsable de la Acción</help>
+      </field>
+
+
+      <field id="device">
+        <label>Nombre Dispositivo</label>
+        <size>50</size>
+      </field>
+
+      <field id="planta" bloquearfila="true">
+        <label>Ubicacion</label>
+      </field>  
+
+      <field id="itdevicetype_id">
+        <label>Tipo</label> 
+        <helper type="combo" id="ITDEVICETYPE" empty="true">           
+          <field id="id_itdevicetype" />
+          <field id="nombre_devicetype" />        
+        </helper>      
+      </field>
+    
+
+       <field id="user" colstyle="display:none">
+        <label>Usuario</label>
+        <size>24</size>
+      </field> 
+    
+     <field id="pass" colstyle="display:none">
+      <label>Password</label>
+      <size>24</size>
+     </field>
+      
+        
+      <field id="user_admin" colstyle="display:none">
+        <label>Usuario Admin</label>
+        <size>24</size>
+      </field> 
+
+  
+      <field id="pass_admin" colstyle="display:none">
+        <label>Pass Admin</label>
+        <size>24</size>
+       <!-- <tipo Type="password">varchar</tipo> -->
+      </field> 
+
+     <field id="ip" colstyle="display:none">
+      <label>ip</label>
+      <size>24</size>
+     </field>
+
+     <field id="ip2" Formstyle="display:none">
+      <label>ip </label>
+      <size>24</size>
+        <expression><![CDATA[ CONCAT('<a href="http://', ip, '"  target="_blank" >', ip , '</a>') ]]></expression>  
+  
+     </field>
+      
+      <field id="port_internal">
+      <label>Puerto Interno</label>
+      <size>24</size>
+     </field>
+      
+      <field id="port_external">
+      <label>Puerto Externo</label>
+      <size>24</size>
+     </field>
+    
+     
+     <field id="up_time">
+      <label>Encendido</label>
+     </field>  
+
+     <field id="down_time">
+      <label>Apagado</label>
+     </field>  
+
+     <field id="os">
+      <label>Sistema Operativo</label>
+      <size>24</size>
+     </field>
+                
+      <field id="planta">
+      <label>Ubicacion</label>
+      </field>
+
+      <field id="license" cellMaxLength="20">
+        <label>Licencia</label>
+        <size>50</size>
+      </field>
+
+      <field id="helpdescription" cellMaxLength="20">
+        <label>Observaciones</label>
+        <size>200</size>
+      </field>
+
+      <field id="ima" path="it" _local="true">
+        <label>Imagen</label>
+        <tipo>file</tipo>
+        <size>33</size>
+      </field>
+
+      <order>
+        <field id="ip">
+      </field>
+      </order>
+
+          </table>
+  </form>
+</histrix>  

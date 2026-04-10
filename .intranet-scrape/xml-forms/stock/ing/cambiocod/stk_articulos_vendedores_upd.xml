@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="update">
+	<title>Ingreso Movimiento</title>
+	 <obs></obs>
+		<form >
+		    <table id="STK_ARTICULOS_VENDEDORES"  		>
+			<sql>
+				update STK_ARTICULOS_VENDEDORES set stkarticulo_id = '[__stkarticulo_destino_id__]' where stkarticulo_id = '[__id_stkarticulo__]'	    
+			</sql>
+			<field id="stkarticulo_id"         id_temp="id_stkarticulo"/>
+			<field id="stkarticulo_destino_id" id_temp="stkarticulo_destino_id"/>
+
+		    </table>
+		</form>
+    </histrix>	
+
+

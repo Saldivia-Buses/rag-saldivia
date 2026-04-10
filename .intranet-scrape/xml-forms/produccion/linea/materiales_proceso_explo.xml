@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ing" inserta="false" modifica="false" borra="false" procesa="false" dataSource="proceso_expandido_reposicion" deleteRow="false" imprime="true" limit="50" exporta="true">
+    <title>ARTICULOS POR SECTOR</title>
+    <obs></obs>
+    <form>
+    <table id="STK_ARTICULO_PROCESO" label="Rubros">
+<!--
+	<filters>
+	    <field id="origen">
+		<label>origen</label>
+	    </field>
+	</filters>
+-->
+        <movimientos>
+            <relacion id="materiales_proceso_explo_ins.xml" />
+        </movimientos>
+	<field id="fecha_costo" local="true" oculto="true">
+	    <tipo>date</tipo>
+	</field>
+        <field id="proceso_id"  oculto="true">
+            <label>Cod.</label>
+        </field>
+
+      <field id="homologacion_id" oculto="true">
+        <label>Homol</label>
+      </field>
+
+      <field id="nombre_proceso" local="true" noshow="true" print="false">
+        <setvar>titulo_div</setvar>
+        <setvar>tituloAbm</setvar>
+      </field>
+
+      <field id="tipocalculo_costo" local="true">
+        <label>tipo</label>
+      </field>
+      <field id="proceso1" local="true">
+        <label>Proceso 1</label>
+      </field>
+
+      <field id="proceso2" local="true">
+        <label>Proceso 2</label>
+      </field>
+
+      <field id="proceso3" local="true">
+        <label>Proceso 3</label>
+      </field>
+
+      <field id="proceso4" local="true">
+        <label>Proceso 4</label>
+      </field>
+
+      <field id="artcod" _esClave="true">
+        <label>Art.</label>
+        <help>Codigo de Articulo</help>
+      </field>
+
+      <field id="artdes">
+        <expression>artdes</expression>
+        <label>Descripcion</label>
+      </field>
+      <field id="origen">
+        <label>Origen</label>
+	<helper type="combo">
+	    <option value=""></option>
+	    <option value="N">Nacional</option>
+	    <option value="I">Importado</option>
+	</helper>
+      </field>
+
+      	<field id="color" local="true" clasefila="true" noshow="true">
+      	    <if exp="'info' == 'Padre'">
+      		<true>'grisado'</true>
+      		<false>''</false>
+      	    </if>
+      	</field>
+
+        <field id="multiplo"  >
+          <label>Mult</label>
+        </field>
+
+        <field id="info" local="true" noshow="true">
+          <label>info</label>
+        </field>
+
+        <field id="cantidad_cps" required="true" noZero="true">
+          <label modpos="nobr">Cps</label>
+        </field>
+
+        <field id="uninomcps" local="true">
+          <label modpos="nobr" >Cps</label>
+          <help>Unidad de Stock</help>
+          <!--<tabla_ex id="FSMUNIDS">
+          <field id="unicod" clave="true"></field>
+          <field id="uninom"></field>
+          </tabla_ex>-->
+        </field>
+
+
+        <field id="cantidad" required="true" noZero="true">
+          <label>Uso</label>
+        </field>
+
+        <field id="uninom" local="true">
+          <label modpos="nobr" >Uso</label>
+          <help>Unidad de Stock</help>
+<!--           <tabla_ex id="FSMUNIDS">
+          <field id="unicod" clave="true"></field>
+          <field id="uninom"></field>
+          </tabla_ex>
+ -->        </field>
+
+        <field id="costo_final_func_cdesc" style="font-weigth:bold;color:red;" noZero="true">
+            <label>Costo</label>
+            <tipo>decimal</tipo>
+        </field>
+		<field id="porcentaje_region">
+		    <label>% Region</label>
+                    <tipo>numeric</tipo>
+		</field>
+
+        
+        <field id="parcialRCD"  suma="true" local="true" noZero="true">
+            <label>Parcial</label>
+            <tipo>decimal</tipo>
+        </field>
+
+      <field id="ctbcod" print="false" tabla="CTBCUENT">
+        <label>Nro Cta</label>
+        <tipo>varchar</tipo>
+      </field>
+
+     <field id="ctbnom" tabla="CTBCUENT" print="false">
+        <label>CtaCtb</label>
+        <tipo>varchar</tipo>
+      </field>
+
+      <field id="costo" style="font-weigth:bold;color:red;" noZero="true" _noshow="true">
+        <label modpos="nobr">Costo</label>
+        <tipo>decimal</tipo>
+      </field>
+	<field id="costo_logistico">
+	    <label>costo Logístico</label>
+            <tipo>numeric</tipo>
+	</field>
+
+      <field id="parcial" local="true"  noZero="true" _noshow="true">
+        <label modpos="nobr">Parcial</label>
+        <tipo>decimal</tipo>
+      </field>
+      <field id="parcial_clog" local="true"  noZero="true" _noshow="true">
+        <label modpos="nobr">Parcial + Log</label>
+        <tipo>decimal</tipo>
+      </field>
+
+      <field id="recargo" local="true"  noZero="true" _noshow="true">
+        <label modpos="nobr">Recargo</label>
+        <tipo>decimal</tipo>
+      </field>
+
+      <field id="parcial_con_recargo" suma="true" local="true"  noZero="true">
+        <label modpos="nobr">Parcial c/Recargo</label>
+        <tipo>decimal</tipo>
+      </field>
+      <field id="parcial_recargo_log" local="true"  noZero="true" _noshow="true" suma="true">
+        <label modpos="nobr">Parcial c/Rec + Log</label>
+        <tipo>decimal</tipo>
+      </field>
+
+
+    </table>
+    <join tipo="left">
+      <table id="STKINSUM">
+        <field id="artcod">
+          <condicion operador="=">stkarticulo_id</condicion>
+        </field>
+        <field id="siscod">
+          <condicion operador="=">'01'</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="CTBCUENT">
+        <field id="ctbcod">
+          <condicion operador="=">STKINSUM.artctb</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>

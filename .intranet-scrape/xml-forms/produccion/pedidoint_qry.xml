@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="horizontalGrid"  path="fotos/pedidoint/">
+    <title>Pedidos Internos</title>
+    <obs></obs>
+    <form >
+        <table id="PEDIDOINT" label="Detalle de insumos pedidos">
+            <field id="nrofab" oculto="true">
+                <condicion operador="!=">0</condicion>
+            </field>
+            
+			<field id="estado" oculto="true">
+            	<condicion operador="!=">9</condicion>
+            </field>
+         
+            <field id="pedidopath"  noshow="true">
+            	<expression>directorio</expression>
+<!--            <expression>(CASE WHEN archivo like "%2-2%" THEN '' ELSE directorio END)</expression>-->
+            </field>
+
+            <field id="archivo" path="pedidopath" open="true" style="width:auto;">
+                <tipo >file</tipo>
+                <size>33</size>
+                <condicion operador="!=">''</condicion>
+			</field>
+        </table>
+    </form>
+</histrix>

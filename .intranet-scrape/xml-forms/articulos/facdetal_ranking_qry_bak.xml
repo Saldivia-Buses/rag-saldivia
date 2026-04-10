@@ -1,0 +1,488 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" preloadData="false">
+  <title>Ranking de compra de artículos</title>
+  <obs></obs>
+  <form  detalle="facdetal_ranking_detalle_qry.xml" inline="true">
+    <table id="FACDETAL" label="Ranking de compra de artículos" >
+
+      <filters>
+        <field id="regfec" copia="fecha_desde">
+          <label>Desde</label>
+          <operador>&gt;=</operador>
+<!--          <valor eval="true">
+            date('d/m/Y', mktime(0, 0, 0, date("m" ,strtotime('-7 month')) , 1, date("Y")))
+          </valor>
+-->
+					<valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m"), date("d"), date("Y")-1  ))</valor>
+
+
+        </field>
+	<field id="fecha_desde" local="true" noshow="true" deshabilitado="true" modpos="nobr">
+	    <tipo>date</tipo>
+					<valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m"), date("d"), date("Y")-1  ))</valor>
+
+	</field>
+
+        <field id="regfec" copia="fecha_hasta">
+          <label>Hasta</label>
+          <operador>&lt;=</operador>
+          <valor >today</valor>
+        </field>
+	<field id="fecha_hasta" local="true" noshow="true" deshabilitado="true" modpos="nobr">
+	    <tipo>date</tipo>
+
+          <valor >today</valor>
+	</field>
+	 <field id="prov" deshabilitado="false">
+	    <label>Prov. CostoRepo.</label>
+          <operador>like</operador>
+
+	 </field>
+ <!--     <field id="artrub">
+        <label>Rubro</label>
+          <operador>=</operador>
+	</field>
+      <field id="artsub">
+        <label>SubRubro</label>
+          <operador>=</operador>
+	</field>   -->
+      <field id="artcod" >
+        <label>Art</label>
+          <operador>=</operador>
+      </field>
+
+      </filters>
+    <fieldGroup>
+
+      <field id="regfec" deshabilitado="true" noshow="true">
+        <label>Fecha</label>
+        <help>Fecha</help>
+      </field>
+
+	<field id="fecha_desde" local="true" noshow="true">
+	    <tipo>date</tipo>
+	</field>
+
+	<field id="fecha_hasta" local="true" noshow="true">
+	    <tipo>date</tipo>
+	</field>
+      <field id="ctacod" deshabilitado="true" noshow="true">
+        <label>Codigo de Cuenta</label>
+        <help></help>
+      </field>
+          <field id="siscod" oculto="true">
+            <condicion operador="!=">'02'</condicion>
+          </field>
+
+      <field id="artcod" deshabilitado="false" >
+        <label>Código</label>
+        <help>Codigo de Articulo.</help>
+        <ayuda_ex id="STKINSUM" xml="HLPstkinsum.xml" dir="/help_local">
+          <field id="artcod" >
+            <label>Cod.</label>
+          </field>
+          <field id="artdes">
+            <label>Insumo</label>
+            <detalle>artdes</detalle>
+          </field>
+          <field id="artcos" oculto="true">
+            <label>costo</label>
+            <detalle>artcos</detalle>
+          </field>
+          <field id="siscod" oculto="true">
+            <condicion operador="=">'01'</condicion>
+          </field>
+          <field id="artctb" oculto="true">
+            <label>ctbs</label>
+            <detalle>artctb</detalle>
+          </field>
+
+          <clave>artcod</clave>
+          <descripcion>artdes</descripcion>
+        </ayuda_ex>
+	<detalle>artcod</detalle>
+      </field>
+
+
+
+<!--      <field id="artrub" tabla="STKINSUM">
+        <label>Rubro</label>
+        <help>Rubro del Articulo</help>
+        <helper type="combo" id="STKRUBRO" empty="true">
+          <field id="artrub"/>
+          <field id="rubnom">
+          </field>
+        </helper>
+        <actualiza>
+          <field destino="artrub" id="artsub"/>
+        </actualiza>
+      </field>
+      <field id="artsub"  tabla="STKINSUM">
+        <label modpos="nobr">SubRubro</label>
+        <helper type="combo" id="STKSUBRU" empty="true">
+          <field id="artsub"/>
+          <field id="subnom">
+          </field>
+          
+          <field id="artrub" oculto="true">
+            <condicion operador="=">1</condicion>
+          </field>
+        </helper> 
+
+        <help>Grupo del Articulo</help>
+      </field>
+-->
+      <field id="artdes" tabla="STKINSUM" deshabilitado="true"  _noshow="true">
+        <label modpos="nobr" Formstyle="display:none;">Artículo</label>
+        <help></help>
+        <tipo>string</tipo>
+      </field>
+
+      <field id="regcuenta_id" tabla="STK_COSTO_REPOSICION" noshow="true" />
+
+      <field id="prov" >
+      <label>Prov. CostoRepo.</label>
+<!-- 	<expression having="false">(select CCTCUENT.ctafan from STKINSPR as INSPR join CCTCUENT on CCTCUENT.ctacod = INSPR.ctacod and CCTCUENT.siscod = '01' where INSPR.artcod = STKINSUM.artcod and INSPR.siscod = STKINSUM.siscod order by fecult DESC limit 1)</expression> -->
+        <expression><![CDATA[CASE WHEN STKINSUM.tipocalculo_costo = 0 THEN '' ELSE IFNULL((SELECT PROV.nombre_cuenta FROM REG_CUENTA PROV WHERE PROV.id_regcuenta = STK_COSTO_REPOSICION.regcuenta_id LIMIT 1),'') END]]></expression>
+        <tipo>varchar</tipo>
+      </field>
+
+      <field id="ctbcod" print="false" tabla="CTBCUENT">
+        <label>Nro Cta</label>
+        <tipo>varchar</tipo>
+      </field>
+
+     <field id="ctbnom" tabla="CTBCUENT" print="false">
+        <label>CtaCtb</label>
+        <tipo>varchar</tipo>
+      </field>
+
+      <field id="artcan" _suma="true"  _local="true" _oculto="true" suma="true">
+        <expression>SUM(FACDETAL.artcan)</expression>
+        <label >Cant Cps</label>
+        <tipo>custom_numeric</tipo>
+      </field>
+
+      <!--
+      <field id="artcos" deshabilitado="false" _oculto="true" suma="true">
+      <label modpos="nobr" >Costo</label>
+      <expression>
+        case when ((SELECT STKINSPR.artcos FROM STKINSPR WHERE STKINSPR.artcod = STKINMOV.artcod and STKINSPR.siscod = STKINMOV.siscod and STKINSPR.movnro = STKINMOV.movnro and STKINSPR.movfec = STKINMOV.movfec and STKINSPR.ctacod = STKINMOV.ctacod limit 1) * STKINSUM.valcps / STKINSUM.valuso) > 0  then ((SELECT STKINSPR.artcos FROM STKINSPR WHERE STKINSPR.artcod = STKINMOV.artcod and STKINSPR.siscod = STKINMOV.siscod and STKINSPR.movnro = STKINMOV.movnro and STKINSPR.movfec = STKINMOV.movfec and STKINSPR.ctacod = STKINMOV.ctacod limit 1) ) else STKINSUM.artcos end
+      </expression>
+      <expression>
+        (SELECT STKINSPR.artcos FROM STKINSPR WHERE STKINSPR.artcod = STKINMOV.artcod and STKINSPR.siscod = STKINMOV.siscod and STKINSPR.movnro = STKINMOV.movnro and STKINSPR.movfec = STKINMOV.movfec and STKINSPR.ctacod = STKINMOV.ctacod limit 1)
+      </expression>
+      <tipo>numeric</tipo>
+    </field>
+    --><!--
+    <field id="costo" noZero="true">
+      <label _style="font-weight:bold;">Costo</label>
+      <expression>
+        round(case WHEN (select sum(round( (costo_automatico * cantidad) * (1 + recargo / 100) , 2)) from STKPIEZA where idPadre  = STKINSUM.artcod limit 1) != 0 then (select sum(round( (costo_automatico * cantidad) * (1 + recargo / 100) , 2)) from STKPIEZA where idPadre  = STKINSUM.artcod limit 1)
+                when valcps &gt; valuso then costo_calculado * valcps
+                when valcps &lt; valuso then costo_calculado
+
+                when ( costo_calculado * STKINSUM.valcps / STKINSUM.valuso) > 0  then (costo_calculado * STKINSUM.valcps / STKINSUM.valuso) else STKINSUM.artcos end, 2)
+      </expression>
+      <condicion operador="!=">0</condicion>
+      <tipo>decimal</tipo>
+    </field>
+-->
+    </fieldGroup>
+
+    <fieldGroup noZero="true">
+<!--
+    <field id="mes1"  suma="true">
+      <expression having="false">
+        sum(case when month(regfec) = 1 then (FACDETAL.arttot - FACDETAL.artiva) else 0 end)
+      </expression>
+
+      <label modpos="nobr">Ene</label>
+      <help>Total</help>
+      <tipo>custom_numeric</tipo>
+    </field>
+
+    <field id="mes2"  suma="true">
+      <expression having="false">
+        sum(case when month(regfec) = 2 then (FACDETAL.arttot - FACDETAL.artiva) else 0 end)
+      </expression>
+
+      <label modpos="nobr">Feb</label>
+      <help>Feb</help>
+      <tipo>custom_numeric</tipo>
+    </field>
+    <field id="mes3"  suma="true">
+      <expression having="false">
+        sum(case when month(regfec) = 3 then (FACDETAL.arttot - FACDETAL.artiva) else 0 end)
+      </expression>
+
+      <label modpos="nobr">Mar</label>
+      <help>Total</help>
+      <tipo>custom_numeric</tipo>
+    </field>
+    <field id="mes4"  suma="true">
+      <expression having="false">
+        sum(case when month(regfec) = 4 then (FACDETAL.arttot - FACDETAL.artiva) else 0 end)
+      </expression>
+
+      <label modpos="nobr">Abr</label>
+      <help>Total</help>
+      <tipo>custom_numeric</tipo>
+    </field>
+    <field id="mes5"  suma="true">
+      <expression having="false">
+        sum(case when month(regfec) = 5 then (FACDETAL.arttot - FACDETAL.artiva) else 0 end)
+      </expression>
+
+      <label modpos="nobr">May</label>
+      <help>Total</help>
+      <tipo>custom_numeric</tipo>
+    </field>
+    <field id="mes6"  suma="true">
+      <expression having="false">
+        sum(case when month(regfec) = 6 then (FACDETAL.arttot - FACDETAL.artiva) else 0 end)
+      </expression>
+
+      <label modpos="nobr">Jun</label>
+      <help>Total</help>
+      <tipo>custom_numeric</tipo>
+    </field>
+    <field id="mes7"  suma="true">
+      <expression having="false">
+        sum(case when month(regfec) = 7 then (FACDETAL.arttot - FACDETAL.artiva) else 0 end)
+      </expression>
+
+      <label modpos="nobr">Jul</label>
+      <help>Total</help>
+      <tipo>custom_numeric</tipo>
+    </field>
+    <field id="mes8"  suma="true">
+      <expression having="false">
+        sum(case when month(regfec) = 8  then (FACDETAL.arttot - FACDETAL.artiva) else 0 end)
+      </expression>
+
+      <label modpos="nobr">Ago</label>
+      <help>Total</help>
+      <tipo>custom_numeric</tipo>
+    </field>
+    <field id="mes9"  suma="true">
+      <expression having="false">
+        sum(case when month(regfec) = 9 then (FACDETAL.arttot - FACDETAL.artiva) else 0 end)
+      </expression>
+
+      <label modpos="nobr">Sep</label>
+      <help>Total</help>
+      <tipo>custom_numeric</tipo>
+    </field>
+    <field id="mes10"  suma="true">
+      <expression having="false">
+        sum(case when month(regfec) = 10 then (FACDETAL.arttot - FACDETAL.artiva) else 0 end)
+      </expression>
+
+      <label modpos="nobr">Oct</label>
+      <help>Total</help>
+      <tipo>custom_numeric</tipo>
+    </field>
+    <field id="mes11"  suma="true">
+      <expression having="false">
+        sum(case when month(regfec) = 11 then (FACDETAL.arttot - FACDETAL.artiva) else 0 end)
+      </expression>
+
+      <label modpos="nobr">Nov</label>
+      <help>Total</help>
+      <tipo>custom_numeric</tipo>
+    </field>
+    <field id="mes12"  suma="true">
+      <expression having="false">
+        sum(case when month(regfec) = 12 then (FACDETAL.arttot - FACDETAL.artiva) else 0 end)
+      </expression>
+
+      <label modpos="nobr">Dic</label>
+      <help>Total</help>
+      <tipo>custom_numeric</tipo>
+    </field>
+-->
+
+<!--
+    <field id="minim" tipoOrden="DESC" suma="true">
+      <expression having="false">
+        MIN(FACDETAL.arttot)
+      </expression>
+      <label modpos="nobr">Menor</label>
+      <tipo>numeric</tipo>
+    </field>
+    <field id="mayor" tipoOrden="DESC" suma="true">
+      <expression having="false">
+        MAX(FACDETAL.arttot)
+      </expression>
+      <label modpos="nobr">Mayor</label>
+      <tipo>numeric</tipo>
+    </field>      
+    -->  
+
+    <field id="total" tipoOrden="DESC" suma="true" style="color:blue;">
+      <expression having="false">
+        SUM(FACDETAL.arttot - FACDETAL.artiva)
+      </expression>
+      <label modpos="nobr">Total</label>
+      <help>Total</help>
+<!--      <tipo>custom_numeric</tipo> -->
+    </field>
+
+      <!-- COSTO -->
+      <field id="costo_inicial">
+        <label>Costo Inicial</label>
+        <expression having="false"> 
+          @cini:=(SELECT 
+		ROUND((((((STKINSPR.artcos * valcps / valuso) - ((STKINSPR.artcos * valcps / valuso) * (artpor__1 / 100))) -
+		(((STKINSPR.artcos * valcps / valuso) - ((STKINSPR.artcos * valcps / valuso) * (artpor__1 / 100))) * (artpor__2 / 100)))
+		* (1 - (REG_MOVIMIENTOS.descuento_1 / 100)) ) * (1 - (REG_MOVIMIENTOS.descuento_2 / 100))), 2)
+		FROM STKINSPR use index (fecha)
+	        WHERE STKINSPR.artcod = STKINSUM.artcod
+    		and STKINSPR.fecult &lt;= STR_TO_DATE('[__fecha_desde__]', '%d/%m/%Y')
+		ORDER BY STKINSPR.fecult DESC LIMIT 1)
+        </expression>
+        <tipo>numeric</tipo>
+      </field>
+      <field id="fecha_ci">
+        <label>Fecha CI</label>
+        <expression having="false"> 
+          @fcini:=(SELECT fecult FROM STKINSPR use index (fecha)
+          WHERE STKINSPR.artcod = STKINSUM.artcod
+          and STKINSPR.fecult &lt;= STR_TO_DATE('[__fecha_desde__]', '%d/%m/%Y')
+          ORDER BY STKINSPR.fecult DESC LIMIT 1)
+        </expression>
+        <tipo>date</tipo>
+        <detalle>fecha_ci</detalle>
+      </field>
+      <field id="ctacod_ci" noshow="true">
+        <label>Prov CI</label>
+        <expression having="false"> 
+          @ctaini:=(SELECT ctacod FROM STKINSPR use index (fecha)
+          WHERE STKINSPR.artcod = STKINSUM.artcod
+          and STKINSPR.fecult &lt;= STR_TO_DATE('[__fecha_desde__]', '%d/%m/%Y')
+          ORDER BY STKINSPR.fecult DESC LIMIT 1)
+        </expression>
+        <tipo>date</tipo>
+      </field>
+<!--      <field id="prov" >
+  <label>Proveedor</label>
+  <expression having="false">(select CCTCUENT.ctafan from STKINSPR as INSPR join CCTCUENT on CCTCUENT.ctacod = INSPR.ctacod and CCTCUENT.siscod = '01' where INSPR.artcod = STKINSUM.artcod and INSPR.siscod = STKINSUM.siscod order by fecult DESC limit 1)</expression>
+        <tipo>varchar</tipo>
+      </field> -->
+      <field id="costo_final">
+        <label>Costo Final</label>
+        <expression having="false"> 
+          @cfin:=(SELECT 
+		ROUND((((((STKINSPR.artcos * valcps / valuso) - ((STKINSPR.artcos * valcps / valuso) * (artpor__1 / 100))) -
+		(((STKINSPR.artcos * valcps / valuso) - ((STKINSPR.artcos * valcps / valuso) * (artpor__1 / 100))) * (artpor__2 / 100)))
+		* (1 - (REG_MOVIMIENTOS.descuento_1 / 100)) ) * (1 - (REG_MOVIMIENTOS.descuento_2 / 100))), 2)
+		FROM STKINSPR use index (fecha)
+		WHERE STKINSPR.artcod = STKINSUM.artcod
+		and STKINSPR.fecult &lt;= STR_TO_DATE('[__fecha_hasta__]', '%d/%m/%Y')
+		ORDER BY STKINSPR.fecult DESC LIMIT 1)
+        </expression>
+        <tipo>numeric</tipo>
+      </field>
+      <field id="fecha_cf">
+        <label>Fecha CF</label>
+        <expression having="false"> 
+          @fcfin:=(SELECT fecult FROM STKINSPR use index (fecha)
+          WHERE STKINSPR.artcod = STKINSUM.artcod
+          and STKINSPR.fecult &lt;= STR_TO_DATE('[__fecha_hasta__]', '%d/%m/%Y')
+          ORDER BY STKINSPR.fecult DESC LIMIT 1)
+        </expression>
+        <tipo>date</tipo>
+        <detalle>fecha_cf</detalle>
+      </field>
+      <field id="ctacod_cf" noshow="true">
+        <label>Prov CF</label>
+        <expression having="false"> 
+          @ctafin:=(SELECT ctacod FROM STKINSPR use index (fecha)
+          WHERE STKINSPR.artcod = STKINSUM.artcod
+          and STKINSPR.fecult &lt;= STR_TO_DATE('[__fecha_desde__]', '%d/%m/%Y')
+          ORDER BY STKINSPR.fecult DESC LIMIT 1)
+        </expression>
+        <tipo>date</tipo>
+      </field>
+      <!-- FIN COSTO -->
+
+			<field id="porc_aumento">  
+			    <label>% Aum.</label>
+			    <expression having="false"> 
+			    CAST((((@cfin) / (@cini)) - 1) * 100 AS DECIMAL)
+			    </expression>
+
+
+			    <tipo>decimal</tipo>
+		        </field>
+      <field id="aumento_mensual">
+          <label>% Aum. Mens.</label>
+          <expression having="false"> 
+          (CAST((((@cfin) / (@cini)) - 1) * 100 AS DECIMAL)) / 
+          (DATEDIFF(@fcfin, @fcini) / 30)
+
+          </expression>
+          <tipo>decimal</tipo>
+        </field>
+
+
+<!--
+<field id="zebra" clasefila="true" noshow="true" local="true">
+   <if exp="_ORDEN % 2 == 0">
+       <true>'grisado'</true>
+       <false>''</false>
+   </if>
+</field>
+-->
+
+
+    </fieldGroup>
+
+<group>
+    <field id="artcod" tabla="FACDETAL"/>
+  </group>
+
+  <order>
+
+    <field id="total" orderType="DESC"/>
+  </order>
+
+</table>
+
+<join tipo="left">
+<table id="STKINSUM">
+<field id="siscod" oculto="true">
+  <condicion operador="=">'01'</condicion>
+</field>
+<field id="artcod" oculto="true">
+  <condicion operador="=">FACDETAL.artcod</condicion>
+</field>
+</table>
+</join>
+
+<join tipo="left">
+<table id="REG_MOVIMIENTOS">
+<field id="id_regmovim" oculto="true">
+  <condicion operador="=">FACDETAL.regmovim_id</condicion>
+</field>
+</table>
+</join>
+
+    <join tipo="left">
+      <table id="CTBCUENT">
+        <field id="ctbcod">
+          <condicion operador="=">STKINSUM.artctb</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join tipo="left">
+        <table id="STK_COSTO_REPOSICION">
+            <field id="stkarticulo_id">
+                <condicion operador="=">STKINSUM.artcod</condicion>
+            </field>
+        </table>
+    </join>
+</form>
+</histrix>

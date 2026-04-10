@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert" _sqlhardcoded="true" >
+    <title/>
+    <obs/>
+    <form>
+        <table id="REG_MOVIMIENTOS" idCampoCond="grabar_rem">
+            <field id="subsistema_id"      	id_temp="subsistema_id"/>
+            <field id="regcuenta_id"     	id_temp="regcuenta_id" />
+            
+            <field id="concepto_id"      	id_cab="regconcepto_rem_id"/>
+
+            <field id="fecha_movimiento"     	id_cab="fecha_movimiento"/>
+
+            <field id="letra_movimiento">
+                <valor>X</valor>
+            </field>
+            <field id="letra_comprobante" id_temp="letra_comprobante" local="true" />
+            <field id="puesto_movimiento"     	id_cab="puesto_movimiento"/>
+
+            <field id="nro_movimiento" >
+            	<valor>ifnull(( select numero from REG_NUMERADORES RN where RN.letra = 'X' and regconcepto_id= [__regconcepto_rem_id__] and puesto = [__puesto_movimiento__]), 0)</valor>
+            </field>
+            <field id="reg_fecha" 	        id_cab="fecha_movimiento"/>
+            <field id="vencimiento_movimiento" 	id_cab="vencimiento_movimiento"/>
+
+            <field id="neto_movimiento"         id_temp="neto_movimiento"/>
+
+            <field id="importe_movimiento"     	id_temp="neto_movimiento"/>
+
+            <field id="referencia_movimiento"   id_temp="referencia_movimiento">
+          	  <tipo>varchar</tipo>
+          	</field>
+
+                <field id="valor_declarado"             id_temp="neto_movimiento"/>
+                <field id="regcuentatransporte_id"      id_temp="regcuentatransporte_id" />
+<!--            <field id="cajmovimiento_id" 	lastId="cajmovimientos_ins.xml"/> -->
+        </table>
+    </form>
+</histrix>	

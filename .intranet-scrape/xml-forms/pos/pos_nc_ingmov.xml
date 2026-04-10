@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="update">
+	<title>COMPROBANTES A IMPUTAR</title>
+	<obs/>
+	<consulta>
+		<table id="CCTMOVIM" label="COMPROBANTES A IMPUTAR" idCampoCond="IMP">
+			<field id="siscod" id_temp="siscod" esClave="true"></field>
+			<field id="ctacod" id_temp="ctacod" esClave="true"></field>
+			<field id="movfec" id_temp="movfec" esClave="true"></field>
+			<field id="concod" id_temp="concod" esClave="true"></field>
+			<field id="movnpv" id_temp="movnpv" esClave="true"></field>
+			<field id="movnro" id_temp="movnro" esClave="true"></field>
+
+			<field id="movsal" id_temp="newSal">
+			</field>
+
+		</table>
+	</consulta>
+</histrix>

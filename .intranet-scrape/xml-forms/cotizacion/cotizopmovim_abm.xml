@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+	<histrix tipo="abm-mini" imprime="false" >
+		<title>OPCIONES</title>
+		<obs></obs>
+		<form >
+			<table id="COTIZOPMOVIM" styleTbody="height:150px;">
+				<title>OPCIONES</title>
+				<field id="idCotiz" oculto="true">
+				</field>
+				<field id="idMovim" noshow="true" autoinc="true" esClave="true">
+				</field>
+				<field id="idSeccion" >
+					<tabla_ex id="COTIZSECCION">
+						<field id="idSeccion" ></field>
+						<field id="nombre" ></field>						
+					</tabla_ex>
+					<tipo>varchar</tipo>
+					<label >Seccion</label>
+					<valor>22</valor>
+				</field>
+				<field id="descripcion" >
+					<label>Descripción</label>
+					<size>70</size>
+
+				</field>
+			</table>
+		</form>
+	</histrix>

@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="grid" inserta="false" modifica="false" llenoTemporal="false" deleteRow="false" _limit="10" process="true">
+<title>Ventas por Periodo</title>
+<obs/>
+
+<form>
+
+
+ 	<table id="STK_MOVIMIENTOS" label="Articulos">
+
+		<filters>
+
+			<field id="separador" local="true" deshabilitado="true" modpos="nobr"/>
+
+			<field id="id_regcuenta" modpos="nobr">
+				<label modpos="nobr">Proveedor</label>
+				<operador>=</operador>
+			</field>
+
+			<field id="cpsdetalle_id" modpos="nobr">
+				<label modpos="nobr">Estado</label>
+				<operador>=</operador>
+			</field>
+
+		</filters>
+
+
+		<movimientos>
+			<relacion id="reposicion_pedido_upd.xml" /> 
+			<relacion id="reposicion_recepcion_upd.xml" /> 
+		</movimientos>
+
+
+		<fieldGroup >
+
+			<field id="separador" local="true" deshabilitado="true" noshow="true" >
+				<size>1</size>
+			</field>
+
+			<field id="stkconcepto_id" noshow="true">
+				<condicion operador="=">2</condicion>
+			</field>
+
+			<field id="id_stkmovimiento" noshow="true" >
+				<label>id_stkmovimiento</label>
+			</field>
+
+
+			<field id="cpsdetalle_id" noshow="true">
+				<label>Estado</label>
+            	<options>
+                    <option valor="0"> Pendiente</option>
+                    <option valor="1"> Pedido</option>
+                    <option valor="2"> Recibido</option>
+                </options>
+			</field>
+
+			<field id="estado_pedido" noshow="true" local="true">
+				<label>estado_pedido</label>
+				<expression>if(cpsdetalle_id != 0,'true','false')</expression>
+			</field>
+
+			<field id="estado_recibido" noshow="true" local="true">
+				<label>estado_pedido</label>
+				<expression>if(cpsdetalle_id = 0 or cpsdetalle_id = 2,'true','')</expression>
+			</field>
+
+		</fieldGroup>
+
+		<fieldGroup colstyle="text-align:center; vertical-align:middle; padding: 2px 2px 2px 2px;">
+
+			<field id="fecha_movimiento"> <!-- los pedidos deben ser menores a la fecha de hoy -->
+				<label>Fecha Comprobante</label>
+				<condicion operador="&lt;">CURDATE()</condicion>
+			</field>
+
+			<field id="fecha_reposicion" >
+				<label>Fecha pedido</label>
+				<tipo>date</tipo>
+			</field>
+
+			<field id="id_regcuenta" tabla="REG_CUENTA"> <!-- no es vacio porque hay algunos que no tienen, ver que hacer -->
+				<label>Proveedor</label>
+				 <helper type="combo" id="REG_CUENTA" empty="true">
+			              <field id="id_regcuenta" 	noshow="true"/>
+			              <field id="nombre_cuenta" noshow="true"/>
+			              <field id="subsistema_id" noshow="true">
+			                  <condicion operador="=">'01'</condicion>
+		         	     </field>
+		          </helper>
+			</field>
+
+			<field id="stkarticulo_id">
+				<label>ID articulo</label>
+			</field>
+
+			<field id="nombre_articulo" tabla="STK_ARTICULOS"  colstyle="vertical-align:middle; padding: 2px 2px 2px 2px;" >
+				<label>Articulo</label>
+			</field>
+
+			<field id="cantidad">
+				<label>Cantidad</label>
+				<expresion>sum(STK_MOVIMIENTOS.cantidad)</expresion>
+				<tipo>integer</tipo>
+			</field>
+
+			<field id="pedidos" editable="true" local="true"  >
+				<label>Pedir</label>
+				<tipo>check</tipo>
+				<attribute id="deshabilitado">estado_pedido</attribute>
+			</field>
+
+<!--			<field id="pedidos" local="true" editable="true" deshabilitado="true">
+				<label>pedido</label>
+			</field>-->
+
+			<field id="recibido" editable="true" local="true">
+				<label>Recepcion</label>
+				<tipo>check</tipo>
+				<attribute id="deshabilitado">estado_recibido</attribute>
+			</field>
+
+
+			<!--<field id="recibido" local="true" editable="true" deshabilitado="true">
+				<label>Recepcion</label>
+			</field>-->
+
+		</fieldGroup>
+
+
+		<group>
+			<field id="stkarticulo_id" tabla="STK_MOVIMIENTOS" />
+			<field id="fecha_movimiento" tabla="STK_MOVIMIENTOS" />
+		</group>
+
+
+		<order>
+			<field id="fecha_movimiento" tabla="STK_MOVIMIENTOS" />
+		</order>
+
+
+	</table>
+
+		<join>
+			<table id="STK_ARTICULOS">
+				<field id="id_stkarticulo">
+					<condicion operador="=">STK_MOVIMIENTOS.stkarticulo_id</condicion>
+				</field>
+			</table>
+		</join>
+
+		<join tipo="left">
+			<table id="STK_ARTICULO_PROVEEDOR">
+				<field id="stkarticulo_id">
+					<condicion operador="=">STK_MOVIMIENTOS.stkarticulo_id</condicion>
+				</field>
+			</table>
+		</join>
+
+		<join tipo="left">
+			<table id="REG_CUENTA">
+				<field id="id_regcuenta">
+					<condicion operador="=">STK_ARTICULO_PROVEEDOR.regcuenta_id</condicion>
+				</field>
+			</table>
+		</join>
+
+
+
+  </form>
+</histrix>
+

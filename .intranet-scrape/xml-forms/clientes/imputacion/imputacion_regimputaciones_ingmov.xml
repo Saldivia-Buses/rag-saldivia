@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert">
+    <title>COMPROBANTES</title>
+    <obs/>
+    <form >
+        <table id="REG_IMPUTACIONES" label="FACTURAS" idCampoCond="grabar">
+
+      <field id="regmovim_id"           id_padre="regmovim_id" />
+      <field id="regmovim0_id"          id_temp="id_regmovim" />
+
+      <field id="subsistema0_id" id_temp="subsistema_id"  /> <!-- "total_imputado" -->
+
+      <field id="movimiento_imputacion" id_temp="imputado"  /> <!-- "total_imputado" -->
+
+        </table>
+    </form>
+</histrix>

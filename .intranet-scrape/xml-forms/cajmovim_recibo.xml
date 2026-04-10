@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="consulta">
+	<title>Movimientos de Caja</title>
+	<obs></obs>
+	<form >
+		<table id="CAJMOVIM" label="Movimientos de Caja">
+			
+			<field id="siscod" oculto="true">
+				<label>Codigo Sistema.</label>
+				<help></help>
+				<condicion operador="=">'05'</condicion>
+			</field>
+			
+			<field id="cajest" oculto="true">
+				<condicion operador="=">1</condicion>
+			</field>
+			<field id="succod" oculto="true">
+				<condicion operador="&lt;=">999</condicion>
+			</field>
+			
+			<field id="cajfec">
+				<label>Pago </label>
+				<help>Fecha del Movimiento</help>
+<!--				<expression>ifnull(bcsfec, cajfec)</expression> -->
+				<tipo>date</tipo>
+			</field>
+			<field id="bcsfec">
+				<label>Fecha</label>
+
+				<expression>bcsfec</expression> 
+			    <tipo>date</tipo>
+			</field>
+			<field id="cajcod" oculto="true">
+				<label>Movimiento </label>
+				<help>Codigo </help>
+				
+			</field>
+			
+			<field id="cajNomnre">
+				<expression>CAJCONCE.cajdes</expression>
+				<label>Cod.Movimiento </label>
+				<help>Codigo de tipo de Movimiento </help>
+				<tipo>string</tipo>
+				<!--
+				<tabla_ex id="CAJCONCE">
+				<field id="cajcod"></field>
+				<field id="cajnom"></field>
+				</tabla_ex>
+				-->
+			</field>
+			<field id="ccbnom" tabla="BCSCUENT">
+			    <label>Banco</label>
+			</field>
+			<field id="cajnro">
+				<label>Nro. Movimiento . </label>
+				<help>Numero de Movimiento </help>
+				<format>%010d</format>
+				
+			</field>
+			
+			<!--                  <field id="cajref">
+			<label>Referencia           . </label>
+			<help>Referencia Adicional. </help>
+			</field>
+			-->
+			<field id="cajimp" oculto="true">
+			    <condicion operador="!=">0</condicion>
+			</field>
+			<field id="debe" suma="true" noZero="true">
+				<expression>cajimp * (case when cajtip = '1' then 1 else 0 end)</expression>
+				
+				<label>Debe</label>
+				<help>Importe del Movimiento en el Debe</help>
+				<tipo>custom_numeric</tipo>
+			</field>
+			
+			<field id="haber" suma="true" noZero="true">
+				<expression>cajimp * (case when cajtip = '2' then 1 else 0 end)</expression>
+				
+				<label>Haber</label>
+				<help>Importe del Movimiento en el Haber</help>
+				<tipo>custom_numeric</tipo>
+			</field>
+			<field id="opecla" deshabilitado="true" oculto="true">
+				<label>Operador</label>
+				<help>Operador</help>
+			</field>
+			<order>
+				<field id="cajfec"></field>
+			</order>
+			
+		</table>
+		
+		<join tipo="left">
+			<table id="CAJCONCE">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">CAJMOVIM.siscod</condicion>
+					
+				</field>
+				
+				<field id="cajcod" oculto="true">
+					<condicion operador="=">CAJMOVIM.cajcod</condicion>
+				</field>
+				<field id="cajtip" oculto="true"></field>
+				<field id="cajdes" oculto="true"></field>
+				
+			</table>
+		</join>
+
+		<join tipo="left">
+			<table id="BCSMOVIM">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">'04'</condicion>
+					
+				</field>
+				
+				<field id="bcsnro" >
+				    <condicion operador="=">cajnro</condicion>
+				</field>
+				<field id="bcsimp" >
+				    <condicion operador="=">cajimp</condicion>
+				</field>
+				
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="BCSCUENT">
+				
+				<field id="CCBCOD" >
+				    <condicion operador="=">bcscta</condicion>
+				</field>
+			</table>
+		</join>
+
+		
+	</form>
+</histrix>

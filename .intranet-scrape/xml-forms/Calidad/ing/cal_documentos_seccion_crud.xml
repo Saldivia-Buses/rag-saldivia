@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" preloadData="false">
+  <title>Secciones</title>
+  <obs/>
+  <form>
+    <table id="CAL_DOCUMENTOS_SECCION" label="Secciones">
+
+      <field id="id_documento_seccion" noshow="true" />
+
+      <field id="documento_id" noshow="true" valauto="true">
+        <valor>-1</valor>
+      </field>
+
+      <field id="seccion_id">
+        <tabla_ex id="SECCION">
+          <field id="id_seccion"/>
+          <field id="nombre"/>
+          <field id="activa">
+            <condicion operador="=">1</condicion>
+          </field>
+        </tabla_ex>
+        <label>Cod.</label>
+        <help>Codigo de Seccion</help>
+      </field>
+    </table>
+  </form>
+</histrix>

@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="consulta" subtipo="vertical" width="50%">
+	<titulo>Homologaciones</titulo>
+	<obs/>
+	<form detalle="prod_homolog_controles_asigna.xml">
+		<table id="HOMOLOGMOD">
+		  
+      <filters auto="true">
+        <field id="nrocar" >
+          <label>Mod.Car.</label>
+          <operador>=</operador>
+        </field>
+
+        <field id="banbar" >
+          <label modpos="nobr">BB</label>
+          <operador>=</operador>
+        </field>
+
+        <field id="ubicacion_motor" >
+          <label modpos="nobr">Motor</label>
+          <operador>=</operador>
+        </field>
+
+      </filters>
+
+        <field id="nrocar" noshow="true">
+        <tabla_ex id="CARROCERIA" vacio="true">
+                <field id="nrocar" clave="true">
+                      <label>Codigo</label>
+                </field>
+                <field id="desabv">
+                      <label>Abrev.</label>
+                </field>
+                <field id="siscod" oculto="true">
+                  <condicion operador="=">03</condicion>
+                </field>
+                <field id="vigente">
+                    <condicion operador="=">1</condicion>
+                </field>
+                <order>
+                    <field id="desabv" />
+                </order>
+        </tabla_ex>
+      </field>
+
+       <field id="id_homologacion" _noshow="true">
+          <label>id</label>
+      		<detalle>homologacion_id_destino</detalle>
+      		<detalle>graba_homologacion</detalle>
+       </field>
+
+      <field id="Descripcion">
+        <label>Descripcion</label>
+        <expression>CONCAT(IFNULL(CARROCERIA.desabv, ' '),' ',IFNULL(MARCHASIS.mardes, ' '), ' ',IFNULL(MODCHASIS.moddes, ' '),' ', (case when MODCHASIS.euro_id = 1 then 'E3' else (case when MODCHASIS.euro_id = 2 then 'E5' else '' end) end), ' ', IFNULL(HOMOLOGMOD.asientos + acompañante, ' '),' Asientos ',(CASE WHEN banbar = 1 THEN 'BB' ELSE ' ' END) ,'- Largo: ', largo, trim(referencia), ' ', (case when baja = 1 then '- Baja' else '' end))</expression>
+      </field>
+
+	      <field id="baja" noshow="true">
+	      		<condicion operador="=">0</condicion>
+	      </field>
+
+          <field id="desabv" tabla="CARROCERIA" >
+  	      		<label>Modelo</label>    		
+  	      </field>
+
+        <field id="banbar">
+          <label>BB</label>
+        <options>
+            <option valor=""></option>
+            <option valor="0">No</option>
+            <option valor="1">Si</option>
+        </options>
+        </field>
+
+          <field id="ubicacion_motor" tabla="MODCHASIS">
+            <label>Ubicacion Motor</label>
+            <help>Ubicacion Motor</help>
+            <options>
+                <option valor=""></option>
+                <option valor="1">Trasero</option>           
+                <option valor="2">Delantero</option>
+                <option valor="3">Medio</option>
+            </options>
+          </field>
+
+          <field id="cantidad_controles" local="true">
+            <label>Cant.Ctrl.</label>
+            <help>Cantidad de controles asiginados</help>
+            <expression>select count(*) from PROD_CONTROL_HOMOLOG where PROD_CONTROL_HOMOLOG.homologacion_id = HOMOLOGMOD.id_homologacion
+            </expression>
+          </field>            
+
+	      <order>
+	        <field id="desabv" tabla="CARROCERIA"></field>
+	        <field id="servdes" tabla="TIPOSERVICIO"></field>
+	      </order>
+    </table>
+    <join tipo="left">
+               <table id="CARROCERIA">
+          <field id="nrocar">
+                 <condicion operador="=">HOMOLOGMOD.nrocar</condicion>
+          </field>
+        </table>
+    </join>
+    <join tipo="left">
+      <table id="MARCHASIS">
+        <field id="marcod">
+          <condicion operador="=">HOMOLOGMOD.marcod</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="MODCHASIS">
+        <field id="modcha">
+          <condicion operador="=">HOMOLOGMOD.modcha</condicion>
+        </field>
+        <field id="marcod">
+          <condicion operador="=">HOMOLOGMOD.marcod</condicion>
+        </field>
+      </table>
+    </join>
+<join tipo="left">
+        <table id="TIPOSERVICIO">
+                        <field id="tipserv">
+          <condicion operador="=">HOMOLOGMOD.tipserv</condicion>
+
+                        </field>
+        </table>
+	
+    </join>
+	</form>
+</histrix>

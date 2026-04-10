@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+    <title>Ventas</title>
+    <obs></obs>
+    <form>
+        <table id="REG_MOVIMIENTOS" >
+            
+            <title>MOVIMIENTOS</title>
+            
+                <field id="regcuenta_id" noshow="true"/>
+            
+               <field id="fecha_movimiento">
+                 <label>fecha</label>   	 
+               </field>
+               <field id="codigo_detalle" tabla="REG_DETALLES">
+                 <label>Cod</label>   	 
+               </field>
+               <field id="descripcion_detalle" tabla="REG_DETALLES">
+                 <label>Descripcion</label>   	 
+               </field>
+               <field id="cantidad"  colstyle="align:right" local="true" suma="true" total="true">   <!-- suma y total te mestra el resultado de una columna -->
+                    <label>Cantidad de Comp.</label>
+                    <expresion> count(REG_MOVIMIENTOS.concepto_id)</expresion>
+	                <tipo>numeric</tipo> 
+                </field>      
+                <field id="total_ventas" local="true"  suma="true" total="true">   <!--  local="true" es para identificar que el campo no pertenece a una tabla-->
+                    <label modpos="nobr">total de ventas</label>  <!-- modpos="nobr" : acomoda el campo evitando que aparesca debajo -->
+                    <expresion> sum( case when REG_CONCEPTOS.tipo_concepto = 0 then 1 else -1 end * importe_movimiento)</expresion>        
+	                <tipo>numeric</tipo>  <!-- lo delinea a la izquierda -->
+                </field>            
+
+            <group>
+                <field id="codigo_detalle" tabla="REG_DETALLES"></field>		
+            </group>             
+        </table>   
+        <join >
+            <table id="REG_DETALLES">
+                <field id="regmovim_id">
+                    <condicion operador="=">REG_MOVIMIENTOS.id_regmovim</condicion>
+                </field>
+            </table>
+        </join>
+        <join >
+            <table id="REG_CONCEPTOS">
+                <field id="id_concepto">
+                    <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix>

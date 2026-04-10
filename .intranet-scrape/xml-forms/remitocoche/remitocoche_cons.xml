@@ -1,0 +1,147 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="consulta" _ancho="40">
+       <title>Remitos</title>
+        <obs></obs>
+				<form  detalle="remito_reimp.xml" >
+					<table id="REMITO" label="Movimientos" _styleTbody="height:500px;">
+						
+						<field id="ctacod">
+							<help>Codigo de Cuenta </help>
+							<ayuda_ex id="CCTCUENT">
+								<field id="ctacod">
+									<detalle>ctacod</detalle>
+								</field>
+								<field id="ctanom">
+									<detalle>ctanom</detalle>
+								</field>
+								<field id="siscod">	
+									<condicion operador="=">'02'</condicion>
+								</field>
+								<field id="baja">
+									<condicion operador="=">0</condicion>
+								</field>
+
+								<order>
+									<field id="ctanom"></field>
+								</order>
+								
+								<filtra>ctacod</filtra>
+							</ayuda_ex>
+							<detalle>ctacod</detalle>	
+						</field>
+							<field id="ctanom" tabla="CCTCUENT">
+								<label>Nombre</label>
+							</field>								
+
+							<!--		        <condicion operador="=">20</condicion> 
+							-->
+						<field id="puesto">
+							<label>P.V.</label>
+							<help> Punto Venta</help>
+							<format>%04d</format>
+							<detalle>puesto</detalle>
+						</field>
+						<field id="numero" >
+							<label>Numero</label>
+							<help> Numero Comprobante</help>
+							<format>%12d</format>
+							<detalle>numero</detalle>		
+
+							
+						</field>
+<!--						<field id="link" local="true" noshow="true">
+							<if exp="concod==1">
+								<true>'factura_reimp.xml'</true>
+								<false>''</false>
+								
+							</if>
+							<tipo>varchar</tipo>
+						</field>
+						<field id="concepto" >
+							<attribute id="linkint">link</attribute>
+							<expression>condes</expression>
+							<label>Cod.Concepto</label>
+							<help>
+							</help>
+						
+
+								<paring destino="siscod">siscod</paring>								
+								<paring destino="ctacod">ctacod</paring>								
+								
+								<paring destino="movnro">movnro</paring>
+								<paring destino="movnpv">movnpv</paring>								
+								<tipo>varchar</tipo>
+							
+						</field>
+-->
+						
+						<field id="fecha">
+							<label>Fecha </label>
+							<help>
+							</help>
+						</field>
+						
+						<!--          <field id="movvto">
+						<label>Venc. </label>
+						<help> </help>
+						</field>
+						-->
+
+						<field id="nrofab" >
+							<label>Unidad</label>
+						</field>
+						
+						<filters>
+						<field id="ctacod">
+							<label>Cod.</label>
+							<help>Codigo de Cuenta </help>
+							<ayuda_ex id="CCTCUENT">
+								<field id="ctacod"></field>
+								<field id="ctanom"></field>
+								<field id="siscod"></field>
+								<field id="baja">
+									<condicion operador="=">0</condicion>
+								</field>
+
+								<order>
+									<field id="ctanom"></field>
+								</order>
+								
+								<filtra>ctacod</filtra>
+							</ayuda_ex>
+							<detalle>ctacod</detalle>	
+								<operador>=</operador>															
+							</field>							
+							<field id="ctanom" tabla="CCTCUENT">
+								<label>Nombre</label>
+								<operador>like</operador>								
+							</field>
+							<field id="fecha">
+								<operador>>=</operador>
+								<label>Desde Fecha</label>
+								<valor>today</valor>
+								
+							</field>
+							<field id="fecha">
+								<operador>&lt;=</operador>
+								<label>Hasta Fecha</label>
+								<valor>today</valor>
+								
+							</field>
+						</filters>
+						<order>
+							<field id="fecha"></field>
+						</order>
+					</table>
+					<join tipo="left">
+						<table id="CCTCUENT">
+							<field id="siscod" >
+								<condicion operador="=">'02'</condicion>
+							</field>
+							<field id="ctacod" >
+								<condicion operador="=">REMITO.ctacod</condicion>
+							</field>
+						</table>
+					</join>					
+				</form>
+        </histrix>

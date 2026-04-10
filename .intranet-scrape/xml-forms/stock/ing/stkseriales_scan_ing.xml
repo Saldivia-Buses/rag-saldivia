@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ing" subtipo="vertical" preloadData="false" imprime="false">
+	<title>Seriales</title>
+	<obs></obs>
+	    <customScript>
+	    $('#DIVstkseriales_scan_ing_xml').unbind('change').on('change', '[name="codigo_serie"]' ,function(){
+	      $('button[name="Cargar"]','#Formstkseriales_scan_ing_xml').click();
+	    });
+	    </customScript>
+
+	<form>
+		<table id="STK_SERIALES" label="Seriales">
+			<movimientos cabecera="stkseriales_scan_cab.xml">
+				<relacion id="stkseriales_scan_ins.xml" />
+			</movimientos>
+
+			<field id="codigo_serie" local="true" required="true" style="font-size:18px;text-align:center;">
+				<label>Serie</label>
+			</field>
+		</table>
+	</form>
+</histrix>

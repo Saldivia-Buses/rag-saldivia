@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" subtipo="vertical">
+	<titulo></titulo>
+	<obs/>
+	<consulta>
+		<table id="ACCESORIOS_AUTO">
+			<titulo>Trabajos</titulo>
+			<field id="id_auto" esClave="true" autoinc="true" noshow="true">
+				<label>Codigo</label>
+			</field>
+			<field id="fieldname">
+				<label>Nombre del Campo</label>
+			</field>
+			<field id="condition">
+				<label>Condicion</label>
+				<help>condicion del campo </help>
+			</field>
+			<field id="value">
+				<label>Valor de la condicion</label>
+				<help>Valor para la condicion  </help>
+			</field>
+			<field id="artcod">
+				<label>Codigo de Accesorio</label>
+				<help>Codigo de Accesorio</help>
+			</field>			
+			<field id="quantity">
+				<label>Cantidad</label>
+				<help>aCantidad a inserter</help>
+			</field>						
+		</table>
+	</consulta>
+</histrix>

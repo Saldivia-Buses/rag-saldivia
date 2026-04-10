@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+    <title>Minutas</title>
+    <obs></obs>
+    <form>
+        <table id="CTB_MOVIMIENTOS" label="Minutas">
+
+            <field id="id" noshow="true">
+                <expression>id_movimiento</expression>
+            </field>
+
+            <field id="nro_minuta2">
+                <expression>CONCAT(CTB_MOVIMIENTOS.nro_minuta, ' (', IFNULL(CTB_MOVIMIENTOS.referencia, ''), ')')</expression>
+                <label>Minuta</label>
+            </field>
+
+            <field id="id_movimiento" />
+
+            <field id="ejercicio_id" oculto="true" />
+
+            <field id="concepto_id" oculto="true" />
+
+            <field id="referencia_minuta">
+                <expression>CTB_MOVIMIENTOS.referencia</expression>
+                <detalle>referencia_minuta</detalle>
+            </field>
+
+            <field id="fecha_movimiento2">
+                <expression>CTB_MOVIMIENTOS.fecha_movimiento</expression>
+                <tipo>date</tipo>
+                <condicion operador="=">STR_TO_DATE('[__fechatest__]', '%d/%m/%Y')</condicion>
+            </field>
+
+            <field id="fechatest" local="true">
+                <tipo>date</tipo>
+            </field>
+
+            <field id="regmovim_id" />
+
+            <order>
+                <field id="nro_minuta" />
+            </order>
+
+        </table>
+    </form>
+</histrix>

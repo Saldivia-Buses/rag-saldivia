@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" logReference="nom,app">
+	<title>Seccion</title>
+	<obs/>
+	<form >
+		<table id="SECCIONHISTORIA" label="Seccion" styleTbody="height:10em;">
+		    <title>Secciones</title>
+			<movimientos>
+				<relacion id="seccionhist_update.xml"></relacion>
+				<relacion id="seccionhist_insert.xml"></relacion>
+				<relacion id="seccionhist_delete.xml"></relacion>				
+			</movimientos>
+
+
+			 <filters>
+				<field id="legajo" deshabilitado="false">
+				    <label>Legajo</label>
+				    <operador>=</operador>
+				    <detalle>legajo</detalle>
+				</field>
+				    <field id="nomapp" local="true" deshabilitado="true">
+					<label>Nombre y Apellido</label>
+				    </field>                
+		      		  <field id="fechaDesde">
+					<label>Desde</label>
+					<help>Fecha</help>
+		                        <operador>&gt;=</operador>
+		                        <valor>today</valor>
+				</field>
+            		    </filters>
+
+
+			<field id="legajo" deshabilitado="true" autocompletar="true" oculto="true" local="true" >
+				<label>legajo</label>
+				<size>50</size>
+				<helper type="external" id="PERSONAL">
+				    <field id="legajo" esClave="true">
+					 <label>Legajo</label>
+					 <detalle>legajo</detalle>
+				    </field>
+				    <field id="nomapp">
+					<label>Nombre y Apellido</label>
+					<expression having="false">CONCAT(apellido, ' ', Nombre)</expression>
+					<detalle>nomapp</detalle>
+				    </field>
+                    <field id="IdPersona" noshow="true">
+                        <label>Nro persona</label>
+                        <detalle>IdPersona</detalle>
+                    </field>
+				    <field id="fechaEgreso" noshow="true">
+					<condicion operador="=">'0000-00-00'</condicion>
+				    </field>     
+				</helper>
+			</field>
+				    <field id="nomapp" local="true" noshow="true">
+					<label>Nombre y Apellido</label>
+					<size>80</size>
+				    </field>                
+
+			<field id="IdPersona" deshabilitado="true" oculto="true">
+				<label>Persona</label>
+				<!--<condicion operador="=">0</condicion>-->
+				
+			</field>
+			<field id="nom" local="true" noshow="true">
+                            <label>Nombre</label>
+			</field>
+			<field id="app" local="true" noshow="true">
+                            <label>Apellido</label>
+			</field>
+			<field id="id_seccion">
+				<tabla_ex id="SECCION">
+					<field id="id_seccion"/>
+					<field id="nombre"/>
+				</tabla_ex>
+				<label>Cod.</label>
+				<help>Código de Sección</help>
+			</field>
+			<field id="fechaDesde">
+				<label>Desde Fecha</label>
+				<help>Fecha</help>
+			</field>
+		</table>
+
+	</form>
+</histrix>

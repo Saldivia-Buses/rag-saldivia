@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" path="fotos/articulos" _limit="10">
+  <title>Articulos</title>
+  <obs/>
+  <form>
+    <table id="STK_ARTICULOS">
+
+      // Unique identifier.
+      <field id="id_stkarticulo" esClave="true" xmlField="sku" />
+
+      // Product type. Default is simple. Options (plugins may add new options): simple, grouped, external, variable.
+      <field id="type" xmlField="type">
+        <expression>'simple'</expression>
+      </field>
+
+      // Product status (post status). Default is publish. Options (plugins may add new options): draft, pending, private and publish.
+      <field id="status" xmlField="status">
+        <expression>'publish'</expression>
+      </field>
+
+      // Featured product. Default is false.
+      <field id="featured" xmlField="featured">
+        <expression>IF(tipo_articulo=1,'true','false')</expression>
+      </field>
+
+      // Catalog visibility. Default is visible. Options: visible (Catalog and search), catalog (Only in catalog), search (Only in search) and hidden (Hidden from all).
+      <field id="catalog_visibility" xmlField="catalog_visibility">
+        <expression>IF(baja_articulo=1, 'hidden','visible')</expression>
+      </field>
+
+      // Product description.
+      <field id="nombre_articulo" xmlField="name">
+        <condicion operador="!=">''</condicion>
+      </field>
+
+      // Product regular price.
+      <field id="precio_venta" xmlField="regular_price">
+        <expression>@PV:=ROUND(
+        CASE WHEN STK_LISTAS.moneda_idvta = STK_ARTICULOS.genmoneda_venta_id THEN IFNULL(STK_LISTADETALLE.stklistadetalle_precioventa,0)
+        ELSE
+        (CASE  WHEN STK_ARTICULOS.genmoneda_venta_id = 1 THEN
+                GEN_FN_COTIZACION(STK_LISTAS.moneda_idvta,current_date()) * IFNULL(STK_LISTADETALLE.stklistadetalle_precioventa,0)
+             ELSE
+                IFNULL(STK_LISTADETALLE.stklistadetalle_precioventa,0) / GEN_FN_COTIZACION(STK_LISTAS.moneda_idvta,current_date(), 0)
+             END)
+        END)
+        </expression>
+        <tipo>numeric</tipo>
+      </field>
+
+
+      // Product sale price.
+      <field id="sale_price" xmlField="sale_price">
+        <expression>ROUND(@PV - (@PV * STK_LISTADETALLE.dto_porcentaje / 100), 2)</expression>
+        <tipo>numeric</tipo>        
+      </field>
+
+      // Start date of sale price. Date in the YYYY-MM-DD format.
+      <field id="dto_fechadesde" xmlField="date_on_sale_from">
+        <expression>STK_LISTADETALLE.dto_fechadesde</expression>
+        <tipo>varchar</tipo>
+      </field>
+
+      // Sets the sale end date. Date in the YYYY-MM-DD format.
+      <field id="dto_fechahasta" xmlField="date_on_sale_to">
+        <expression>STK_LISTADETALLE.dto_fechahasta</expression>
+        <tipo>varchar</tipo>
+      </field>
+
+      // If the product is virtual. Virtual products are intangible and aren’t shipped. Default is false.
+      <field id="virtual" xmlField="virtual">
+        <expression>IF(tipo_articulo=2,'true','false')</expression>
+      </field>
+
+      // Stock quantity. If is a variable product this value will be used to control stock for all variations, unless you define stock at variation level.
+      <field id="cantidad_stock" xmlField="stock_quantity">
+        <expression>@STK:=IFNULL(sum(STK_STOCKACTUAL.cantidad_stock),0)</expression>
+      </field>
+
+      // Controls whether or not the product is listed as “in stock” or “out of stock” on the frontend. Default is true.
+      <field id="cantidad_stock" xmlField="in_stock">
+        <expression>IF(@STK=0,'false','true')</expression>
+      </field>
+
+      // List of Categories
+      <field id="nombre_rubro" xmlField="category">
+        <expression>STK_RUBROS.nombre_rubro</expression>
+      </field>
+
+      // List of images
+      <field id="stkarticulo_foto" xmlField="images" path="id_stkarticulo">
+        <expression>IF(stkarticulo_foto = '', 'nopict.jpg', CONCAT( id_stkarticulo, '.', SUBSTRING_INDEX(stkarticulo_foto, '.', -1) ) )</expression>
+      </field>
+
+      // Attributes
+      <field id="brand" xmlField="brand">
+         <expression>STK_MARCAS.nombre_marca</expression>
+      </field>
+
+      <field id="family" xmlField="family">
+         <expression>nombre_familia</expression>
+      </field>
+
+      <field id="referencia" xmlField="description">
+        <label>Description</label>
+        <tipo>varchar</tipo>
+      </field>
+
+
+      <!-- Filtros -->
+
+      <field id="publica_web" oculto="true">
+        <label>Publicar</label>
+        <tipo>check</tipo>
+        <condicion operador="=">1</condicion>
+      </field>
+
+      <field id="baja_articulo" oculto="true">
+        <condicion operador="!=">1</condicion>
+      </field>
+
+
+
+      <group>
+        <field id="id_stkarticulo"/>
+      </group>
+
+      <order>
+        <field id="nombre_articulo"/>
+      </order>
+
+    </table>
+
+    <join>
+      <table id="STK_RUBROS">
+        <field id="id_stkrubro">
+          <condicion operador="=">stkrubro_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join>
+      <table id="STK_LISTAS">
+        <field id="id_stklista">
+          <condicion operador="=">1</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="STK_MARCAS">
+        <field id="id_stkmarca">
+          <condicion operador="=">STK_ARTICULOS.stkmarca_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="STK_FAMILIAS">
+        <field id="id_stkfamilia">
+          <condicion operador="=">STK_ARTICULOS.stkfamilia_id</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join tipo="left">
+      <table id="STK_STOCKACTUAL">
+        <field id="stkarticulo_id">
+          <condicion operador="=">STK_ARTICULOS.id_stkarticulo</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="STK_LISTADETALLE">
+        <field id="stkarticulo_id">
+          <condicion operador="=">STK_ARTICULOS.id_stkarticulo</condicion>
+        </field>
+        <field id="stklista_id">
+          <condicion operador="=">STK_LISTAS.id_stklista</condicion>
+        </field>
+
+      </table>
+    </join>
+  </form>
+  <api>
+    <key>ck_2243ca68be12a9a6ec2be0e083b4340057e65a49</key>
+    <secret>cs_57654248dc121dae36ffb2f871f26888f2912eb8</secret>
+  </api>
+</histrix>

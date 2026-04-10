@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"  ?>
+<histrix tipo="consulta" showCantidad="true">
+  <title>Valores de Terceros</title>
+  <obs></obs>
+
+	  <form >
+		
+			<table id="CAR_MOVIMIENTOS">
+
+			  <field id="cajmovimiento_id" esClave="true" noshow="true"/>
+
+			  <field id="cajmovimientoforce_id" noshow="true" >
+			  	<expression having="false">cajmovimiento_id</expression>
+			  	<condicion operador="!=">0</condicion>
+
+			  </field>
+
+			  <field id="id_carvalor" tabla="CAR_VALORES" noshow="true">
+				<label>codigo</label>
+			  </field>
+			  <field id="acreditacion_valor" tabla="CAR_VALORES" >
+				<label>Fecha</label>
+				<tipo>date</tipo>
+			  </field>		  
+			  <field id="nro_valor" tabla="CAR_VALORES">
+				<label>Número</label>
+				<format>%012d</format>				
+			  </field>
+			  <field id="nombre_banco" tabla="CAR_BANCOS">
+				<label>Banco</label>
+			  </field>
+			  <field id="nombre_plaza" tabla="CAR_PLAZAS">
+				<label>Plaza</label>
+			  </field>
+			  <field id="importe_valor" tabla="CAR_VALORES" suma="true">
+				<label>Importe</label>
+				<tipo>numeric</tipo>
+			  </field>
+
+<!--
+			  <field id="egreso_valor" tabla="CAR_VALORES">
+				<label>Fecha Eg.</label>
+				<tipo>date</tipo>
+			  </field>
+			<field id="ingreso">
+				<label>Comp. Ingreso</label>
+				<expression>select concat(CON20.abreviatura_concepto,' ', LPAD(CAJ20.nro_movimiento,8,0) )  from CAR_MOVIMIENTOS as CAR20 
+				LEFT JOIN CAJ_MOVIMIENTOS CAJ20 on  ( CAJ20.id_cajmovimiento = CAR20.cajmovimiento_id )  
+				LEFT JOIN CAJ_CONCEPTOS CON20 on  ( CON20.id_cajconcepto = CAJ20.cajconcepto_id )  
+					where CAR20.carvalor_id  = CAR_MOVIMIENTOS.carvalor_id and CAR20.tipo_movimiento = 0 limit 1</expression>
+
+				<helper type="link" dir="/caja/proc/del" xml="cajmovimiento_ficha.xml">		
+				    <parameter source="ingreso_id" target="id_cajmovimiento" operador="="/>
+				</helper>
+			</field>
+			<field id="egreso">
+				<label>Comp. Egreso</label>
+				<expression>select concat(CON10.abreviatura_concepto,' ', LPAD(CAJ10.nro_movimiento,8,0) )  from CAR_MOVIMIENTOS as CAR10 
+				LEFT JOIN CAJ_MOVIMIENTOS CAJ10 on  ( CAJ10.id_cajmovimiento = CAR10.cajmovimiento_id )  
+				LEFT JOIN CAJ_CONCEPTOS CON10 on  ( CON10.id_cajconcepto = CAJ10.cajconcepto_id )  
+					where CAR10.carvalor_id  = CAR_MOVIMIENTOS.carvalor_id and CAR10.tipo_movimiento = 1 limit 1</expression>
+				<helper type="link" dir="/caja/proc/del" xml="cajmovimiento_ficha.xml">		
+				    <parameter source="egreso_id" target="id_cajmovimiento" operador="="/>
+				</helper>
+			</field>
+-->
+			<field id="egreso_id" noshow="true">
+				<label>Cod. Egreso</label>
+				<expression>select CAR0.cajmovimiento_id from CAR_MOVIMIENTOS as CAR0 
+					where CAR0.carvalor_id  = CAR_MOVIMIENTOS.carvalor_id and CAR0.tipo_movimiento = 1 limit 1</expression>
+			</field>
+			<field id="ingreso_id" noshow="true">
+				<label>Cod. Egreso</label>
+				<expression>select CAR1.cajmovimiento_id from CAR_MOVIMIENTOS as CAR1 
+					where CAR1.carvalor_id  = CAR_MOVIMIENTOS.carvalor_id and CAR1.tipo_movimiento = 0 limit 1</expression>
+			</field>
+			<field id="titular_valor" tabla="CAR_VALORES">
+			    <label>Titular</label>
+			</field>
+			<field id="cuit_valor" tabla="CAR_VALORES">
+			    <label>CUIT</label>
+			</field>
+			<!--
+			<group>
+			    <field id="nro_valor" />
+			</group>
+			    -->
+			</table>
+
+			 <join>
+				<table id="CAR_VALORES">
+					<field id="id_carvalor">
+						<condicion operador="=">carvalor_id</condicion>
+	   				</field>
+				</table>
+			</join>
+			
+			<join tipo="left">
+				<table id="CAR_BANCOS">
+					<field id="id_carbanco">
+						<condicion operador="=">CAR_VALORES.carbanco_id</condicion>
+	   			    </field>
+				</table>
+			</join>
+
+			<join tipo="LEFT">
+				<table id="CAR_PLAZAS">
+					<field id="id_carplaza">
+						<condicion operador="=">CAR_VALORES.carplaza_id</condicion>
+	   			    </field>
+				</table>
+			</join>
+			<join tipo="LEFT">
+			   <table id="CAJ_MOVIMIENTOS">
+				<field id="id_cajmovimiento">
+				    <condicion operador="=">CAR_MOVIMIENTOS.cajmovimiento_id</condicion>
+				</field>
+			   </table>
+			</join>
+			<join tipo="LEFT">
+				<table id="CAJ_CONCEPTOS">
+					<field id="id_cajconcepto">
+					    <condicion operador="=">CAJ_MOVIMIENTOS.cajconcepto_id</condicion>
+					</field>
+				</table>
+			</join>
+
+	</form>
+	
+</histrix>

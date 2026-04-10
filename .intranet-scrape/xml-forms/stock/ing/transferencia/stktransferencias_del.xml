@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ing" preloadData="true" deleteRow="false" inserta="false" modifica="false" borra="false" transaccional="true" 
+  log="false" imprime="false" limit="100">
+  <title>FACTURA</title>
+  <obs></obs>
+  <form>
+   
+     <table id="STK_MOVIMIENTOS" label="Movimientos de Stock">
+
+      <movimientos>
+              <relacion id="stk_transferencias_del.xml"/>
+      </movimientos>
+
+      <filters>
+
+          <field id="fecha_movimiento" >
+              <label>Fecha</label>
+              <operador>=</operador>
+              <valor>today</valor>
+          </field>
+
+            <field id="numero_movimiento" modpos="nobr">
+              <label>Numero</label>
+              <operador>=</operador>
+            </field>
+
+          <field id="stkconcepto_id" modpos="nobr">
+              <label>Concepto</label>
+              <operador>=</operador>
+          </field>
+          
+      </filters>
+          
+      <fieldGroup colstyle="text-align:center;padding:2px 2px 2px 2px;">
+
+              <field id="id_stkmovimiento" noshow="true">
+                  <label>id_stkmovimiento</label>
+              </field>
+
+              <field id="fecha_movimiento">
+                  <label>Fecha</label>
+              </field>
+
+              <field id="numero_movimiento"  >
+                    <label>Nro</label>
+                    <helper type="link" xml="imp_stktransfer.xml"    dir="/stock/qry/">
+                          <parameter source="numero_movimiento"   target="numero_movimiento" />
+                          <parameter source="fecha_movimiento"    target="fecha_movimiento" />
+                          <parameter source="stkdeposito_origen"  target="stkdeposito_origen" />
+                          <parameter source="stkdeposito_id"      target="stkdeposito_destino" />
+                    </helper>   
+              </field>
+              
+                <field id="stkarticulo_id" >
+                    <label>stkarticulo_id</label>
+                </field>
+
+                <field id="stkconcepto_id" >
+                    <label>Concepto</label>
+                    <helper type="combo" empty="true" xml="stkconcepto_qry.xml" dir="/ayudas" />
+                </field>
+
+                 <field id="stkdeposito_id" >
+                    <label>Concepto</label>
+                    <helper type="combo" empty="true" xml="stkdeposito_qry.xml" dir="/ayudas" />
+                </field>
+
+                <field id="regcuenta_id" noshow="true">
+                     <label>Cuenta</label>
+                     <condicion operador="=">0</condicion>  
+                </field>
+        
+            <field id="eliminar" local="true" total="false" refresh="true">
+                   <label>Eliminar</label>
+                   <tipo>check</tipo>
+            </field>
+
+      </fieldGroup>
+
+        <order>
+            <field id="numero_movimiento"/>
+            <field id="stkconcepto_id"/>
+        </order>
+
+      </table>
+
+            <join tipo="left">
+                <table id="REG_CUENTA">
+                    <field id="id_regcuenta">
+                        <condicion operador="=">regcuenta_id</condicion>
+                    </field>
+                </table>
+           </join> 
+  </form>
+</histrix>  

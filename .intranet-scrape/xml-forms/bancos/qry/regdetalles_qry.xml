@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" imprime="true" sinFecha="true" sinNumero="true">
+    <title>Movimientos</title>
+    <obs/>
+    <form>
+        <table id="REG_MOVIMIENTOS" label="Resumen Cta Cte">
+
+            <preconsultas>
+                <xmlfile id="regdetalles_pre.xml" />
+            </preconsultas>
+
+            <field id="desde" valauto="true" oculto="true" local="true">
+                <preparam campo="desde" operador="&lt;">true</preparam>
+                <label style="display:none;" modpos="nobr">Desde</label>
+            </field>
+
+            <field id="hasta" oculto="true" local="true" >
+                <label style="display:none;" modpos="nobr">Hasta</label>
+            </field>
+
+            <field id="arrastrasaldo" local="true" noshow="true">
+                <preparam operador="=">true</preparam>
+            </field>
+
+            <field id="tipofecha" noshow="true" local="true">
+                <label>Filtrado por</label>
+                <preparam operador="=">true</preparam>
+            </field>
+
+            <field id="ColorSiCon" local="true" noshow="true" style="background-color:green;color:white;" print="false">
+                <valor>Conciliado</valor>
+            </field>
+
+            <field id="ColorNoCon" local="true" noshow="true"  style="background-color:red;color:white;" print="false">
+                <valor>No Conciliado</valor>
+            </field>
+
+            <field id="filfec" having="false" noshow="true">
+                <label>filtrofecha</label>
+                <expresion>1</expresion>
+                <condicion operador="=">1 AND
+                    (('[__tipofecha__]' = '0' AND REG_MOVIMIENTOS.fecha_movimiento &gt;= '[__desde__]'
+                                              AND REG_MOVIMIENTOS.fecha_movimiento &lt;= '[__hasta__]' ) OR
+                     ('[__tipofecha__]' = '1' AND REG_MOVIMIENTOS.conciliado &gt;= '[__desde__]'
+                                              AND REG_MOVIMIENTOS.conciliado &lt;= '[__hasta__]') OR
+                     ('[__tipofecha__]' = '2' AND REG_MOVIMIENTOS.vencimiento_movimiento &gt;= '[__desde__]'
+                                              AND REG_MOVIMIENTOS.vencimiento_movimiento &lt;= '[__hasta__]'))</condicion>
+            </field>
+
+            <field id="WConciliado" local="true" noshow="true">
+                <label>Concil.</label>
+                <helper type="combo">
+                    <option value="0">Todos</option>
+                    <option value="1">Conciliado</option>
+                    <option value="2">No conciliado</option>
+                </helper>
+                <valor default="true">0</valor>
+                <tipo>combo</tipo>
+                <detalle>WConciliado</detalle>
+            </field>
+
+            <field id="ColorConc" local="true" noshow="true" >
+                <label colstyle="text-align:right;">Concil.</label>
+                <expresion>(case when REG_MOVIMIENTOS.conciliado != '0000-00-00' then 'color:green' else 'color:red' end)</expresion>
+            </field>
+
+            <field id="id_regmovim"    noshow="true" />
+
+            <field id="subsistema_id"  noshow="true" >
+                <preparam operador="=">true</preparam>
+            </field>
+
+            <field id="regcuenta_id"   noshow="true" >
+                <preparam operador="=">true</preparam>
+            </field>
+
+            <field id="cajmovimiento_id" noshow="true" />
+
+            <field id="nombre" local="true" print="false" noshow="true">
+                <expresion>REG_CUENTA.nombre_cuenta</expresion>
+                <setvar>nombre_div</setvar>
+            </field>
+
+            <field id="xml_llamar"  local="true" noshow="true">
+                <if exp="cajmovimiento_id==0">
+                    <true>'regmovimiento_ficha.xml'</true>
+                    <false>'cajmovimiento_ficha.xml'</false>
+                </if>
+            </field>
+
+            <field id="fecha_movimiento" tabla="REG_MOVIMIENTOS">
+                <label>Fecha</label>
+                <help>Fecha movimiento</help>
+                <attribute id="style" >ColorConc</attribute>
+            </field>
+
+            <field id="conciliado" tabla="REG_MOVIMIENTOS">
+                <label>Conciliado</label>
+                <help>Fecha movimiento</help>
+                <attribute id="style">ColorConc</attribute>
+            </field>
+
+            <field id="imprime_concepto1" noshow="true">
+                <expresion>CAJ_CONCEPTOS.imprime_concepto</expresion>
+            </field>
+
+            <field id="comprobante" style="text-align:center;">
+                <label>Comprobante</label>
+                <expresion>CONCAT(REG_CONCEPTOS.abreviacion_concepto,' ', letra_movimiento, ' ', lpad(puesto_movimiento,4,'0'), '-', lpad(REG_MOVIMIENTOS.nro_movimiento,8,'0') )</expresion>
+                <helper type="link">
+                    <parameter source="cajmovimiento_id" target="id_cajmovimiento" />
+                </helper>
+                <attribute id="linkint">imprime_concepto1</attribute>
+            </field>
+
+            <field id="vencimiento_movimiento" tabla="REG_MOVIMIENTOS">
+                <label>Acreditacion</label>
+            </field>
+
+            <field id="cuota_movimiento" noZero="true">
+                <label>Cuotas</label>
+            </field>
+
+            <field id="importe_movimiento" noshow="true" />
+
+            <field id="debe" local="true" suma="true" noZero="true">
+                <label>debe</label>
+                <expresion>case when REG_CONCEPTOS.imputacion_concepto = 0 then REG_MOVIMIENTOS.importe_movimiento else 0  end</expresion>
+                <help>saldo de movimiento</help>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="haber" local="true" suma="true" noZero="true">
+                <label>Haber</label>
+                <expresion> case when REG_CONCEPTOS.imputacion_concepto = 1 then REG_MOVIMIENTOS.importe_movimiento else 0 end</expresion>
+                <help>saldo de movimiento</help>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="saldo" local="true" suma="true" acumula="true">
+                <label>saldo</label>
+                <expresion>(CASE WHEN REG_CONCEPTOS.imputacion_concepto = 0 THEN REG_MOVIMIENTOS.importe_movimiento ELSE - REG_MOVIMIENTOS.importe_movimiento END)</expresion>
+                <help>saldo de movimiento</help>
+                <tipo>custom_numeric</tipo>
+            </field>
+
+            <field id="filtro" having="false" noshow="true">
+                <label>filtro</label>
+                <expresion>1</expresion>
+                <condicion operador="=">'1' and (('[__WConciliado__]' = '0') or 
+                                ('[__WConciliado__]' = '1' and IFNULL(REG_MOVIMIENTOS.conciliado,'0000-00-00')  != '0000-00-00') or
+                                ('[__WConciliado__]' = '2' and IFNULL(REG_MOVIMIENTOS.conciliado,'0000-00-00')  = '0000-00-00'))</condicion>
+            </field>
+
+            <field id="eliminar" local="true" tdWidht="20" style="text-align:center;" print="false">
+                <label>Detalle</label>
+                <valor>>></valor>
+                <attribute id="linkint">xml_llamar</attribute>
+                <helper type="link" dir="/caja/proc/del">
+                    <parameter source="id_regmovim" target="id_regmovim" />
+                    <parameter source="cajmovimiento_id" target="id_cajmovimiento" />
+                </helper>
+            </field>
+
+            <field id="referencia_movimiento" noshow="true" />
+
+            <field id="observaciones" local="true" tdWidth="20" style="text-align:center;" print="false">
+                <helper type="link" xml="regmovim_obs_qry.xml" width="600px" height="350px" title="Observaciones">
+                    <parameter source="id_regmovim" target="regmovim_id" operator="="/>
+                    <parameter source="referencia_movimiento" target="obsmov" operator="="/>
+                </helper>
+                <expresion>'+'</expresion>
+                <label>Obs</label>
+            </field>
+
+
+
+            <field id="titulo" noshow="true" >
+                <expresion>CONCAT('Resumen Cta Cte: ', REG_CUENTA.nombre_cuenta, ' - Desde el: ', DATE_FORMAT('[__desde__]', "%d/%m/%Y"),' Hasta el: ' ,DATE_FORMAT('[__hasta__]', "%d/%m/%Y")) </expresion>
+                <setvar>titulo_div</setvar>
+            </field>
+
+
+
+            <field id="usuario_id" local="true" noshow="true" valauto="true">
+                <valor eval="true">$_SESSION['idUser']</valor>
+            </field>
+
+            <field id="muestra_boton" style="text-align:center;" print="false">
+                <expression>CASE WHEN FIND_IN_SET('[__usuario_id__]', (SELECT option_value FROM HTXOPTIONS WHERE option_name = 'SIS::04:usuarios_habilitados_mod_nro')) THEN '#' ELSE '' END</expression>
+                <helper type="link" xml="cambio_nrobancario_ficha.xml" dir="/bancos/ing/" width="400" height="200" icon="ui-icon-pencil" text="false">
+                    <parameter target="id_regmovim" source="id_regmovim" />
+                </helper>
+            </field>
+
+            <order>
+                <field id="fecha_movimiento" tabla="REG_MOVIMIENTOS"/>
+                <field id="vencimiento_movimiento" tabla="REG_MOVIMIENTOS"/>
+            </order>
+
+        </table>
+
+        <join tipo="left">
+            <table id="REG_CONCEPTOS">
+                <field id="id_concepto">
+                    <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="REG_CUENTA">
+                <field id="id_regcuenta">
+                    <condicion operador="=">regcuenta_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="REG_IMPUTACIONES">
+                <field id="regmovim_id">
+                    <condicion operador="=">REG_MOVIMIENTOS.id_regmovim</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="CAJ_MOVIMIENTOS">
+                <field id="id_cajmovimiento">
+                    <condicion operador="=">REG_MOVIMIENTOS.cajmovimiento_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="CAJ_CONCEPTOS">
+                <field id="id_cajconcepto">
+                    <condicion operador="=">CAJ_MOVIMIENTOS.cajconcepto_id</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

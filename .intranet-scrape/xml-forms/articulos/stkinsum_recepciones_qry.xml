@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" subtipo="vertical" preloadData="false">
+    <title>Retrasos de Recepcion</title>
+    <obs></obs>
+    <form>
+        <table id="STK_ARTICULOS" label="Retraso de Recepcion">
+	<filters>
+            <field id="id_stkarticulo" esClave="true">
+		<label>Cod.</label>
+		<operador>=</operador>
+	    </field>
+	</filters>
+            <field id="id_stkarticulo" esClave="true">
+		<label>Cod.</label>
+        <ayuda_ex id="STKINSUM" xml="HLPstkinsum.xml" dir="/help_local">
+          <field id="artcod" >
+            <label>Cod.</label>
+          </field>
+          <field id="artdes">
+            <label>Insumo</label>
+            <detalle>artdes</detalle>
+          </field>
+          <field id="artcos" oculto="true">
+            <label>costo</label>
+            <detalle>artcos</detalle>
+          </field>
+          <field id="siscod" oculto="true">
+            <condicion operador="=">'01'</condicion>
+          </field>
+          <field id="artctb" oculto="true">
+            <label>ctbs</label>
+            <detalle>artctb</detalle>
+          </field>
+
+          <clave>artcod</clave>
+          <descripcion>artdes</descripcion>
+        </ayuda_ex>
+	    </field>
+	    <field id="subsistema_id" esClave="true" noshow="true"/>
+            <field id="nombre_articulo">
+                <label>Descripcion</label>
+            </field>
+	    <field id="ultima_rec">
+		<label>Ultima Rec.</label>
+		<expression>(SELECT datediff(fecrec, fecreq) FROM OCPRECIB WHERE artcod = STK_ARTICULOS.id_stkarticulo ORDER BY id_recepcion DESC LIMIT 1)</expression>
+	    </field>
+	    <field id="ultimo_mes">
+		<label>Ultimo Mes</label>
+		<expression>
+		(SELECT round(avg(ifnull(datediff(fecrec, fecreq),0)),1) FROM OCPRECIB WHERE artcod = STK_ARTICULOS.id_stkarticulo and fecrec &lt;= LAST_DAY(DATE_SUB(CURDATE(), INTERVAL 1 MONTH)) 
+		and fecrec &gt;= DATE_ADD(LAST_DAY(DATE_SUB(CURDATE(), INTERVAL 2 MONTH)), INTERVAL 1 DAY))
+		</expression>
+	    </field>
+	    <field id="ultimo_semestre">
+		<label>Ultimo Semestre</label>
+		<expression>
+		(SELECT round(avg(ifnull(datediff(fecrec, fecreq),0)),1) FROM OCPRECIB WHERE artcod = STK_ARTICULOS.id_stkarticulo and fecrec &lt;= LAST_DAY(DATE_SUB(CURDATE(), INTERVAL 1 MONTH)) 
+		and fecrec &gt;= DATE_ADD(LAST_DAY(DATE_SUB(CURDATE(), INTERVAL 7 MONTH)), INTERVAL 1 DAY))
+		</expression>
+	    </field>
+	    <field id="menor_retraso">
+		<label>Menor Retraso</label>
+		<expression>
+		(SELECT round(MIN(ifnull(datediff(fecrec, fecreq),0)),1) FROM OCPRECIB WHERE artcod = STK_ARTICULOS.id_stkarticulo and fecrec &lt;= LAST_DAY(DATE_SUB(CURDATE(), INTERVAL 1 MONTH)) 
+		and fecrec &gt;= DATE_ADD(LAST_DAY(DATE_SUB(CURDATE(), INTERVAL 7 MONTH)), INTERVAL 1 DAY))
+		</expression>
+	    </field>
+	    <field id="mayor_retraso">
+		<label>Mayor Retraso</label>
+		<expression>
+		(SELECT round(MAX(ifnull(datediff(fecrec, fecreq),0)),1) FROM OCPRECIB WHERE artcod = STK_ARTICULOS.id_stkarticulo and fecrec &lt;= LAST_DAY(DATE_SUB(CURDATE(), INTERVAL 1 MONTH)) 
+		and fecrec &gt;= DATE_ADD(LAST_DAY(DATE_SUB(CURDATE(), INTERVAL 7 MONTH)), INTERVAL 1 DAY))
+		</expression>
+	    </field>
+        </table>
+    </form>
+</histrix>

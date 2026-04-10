@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="crud">
+  <titulo>Dashboard</titulo>
+  <form>
+    <table id="HTX_DASHBOARD">
+      <field id="id_dash" autoinc="true" noshow="true">
+		</field>
+      <field id="enable_dash">
+        <label>Activo</label>
+        <tipo>check</tipo>
+      </field>
+      <field id="group_dash">
+        <label>Grupo</label>
+      </field>
+      <field id="subgroup_dash">
+        <label>Subgrupo</label>
+        <size>60</size>
+      </field>
+      <field id="title_dash">
+        <label>Título</label>
+      </field>
+      <field id="unit_dash">
+        <label>Unidad</label>
+        <helper type="combo">
+          <option value="1">%</option>
+          <option value="2">$</option>
+          <option value="3">Unid. diaria</option>
+          <option value="4">Dias</option>
+        </helper> 
+      </field>
+      <field id="objective_dash">
+        <label>Objetivo</label>
+      </field>
+      <field id="flag_dash">
+        <label>Mayor a 10%</label>
+        <help>Muestra color segun mayor a 10% positivo o negativo</help>
+        <helper type="combo">
+          <option value="0"></option>
+          <option value="1">Positivo</option>
+          <option value="2">Negativo</option>
+        </helper>
+      </field>
+      <field id="es_admin" local="true" noshow="true">
+        <valor eval="true">$_SESSION['administrator']</valor>
+      </field>
+      <field id="oculta_formula" local="true" noshow="true">
+        <if exp="es_admin == 1">
+    	    <true>'false'</true>
+    	    <false>'true'</false>
+    	</if>
+      </field>
+      <field id="formula_dash" colstyle="display:none;" noshow="true">
+        <attribute id="noshow">oculta_formula</attribute>
+        <label>Formula</label>
+        <size>500</size>
+      </field>
+      <field id="description_dash" >
+        <label>Descripcion</label>
+        <size>500</size>
+      </field>
+      <field id="xml_dash">
+        <label>Xml</label>
+        <size>60</size>
+      </field>
+      <field id="orden_dash">
+        <label>Orden</label>
+      </field>
+      <field id="res" noshow="true" clasefila="true">
+        <expresion>case when formula_dash != '' then 'resaltado' end</expresion>
+      </field>
+      <order>
+        <field id="group_dash"/>
+        <field id="subgroup_dash"/>
+        <field id="orden_dash"/>
+      </order>
+    </table>
+  </form>
+</histrix>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud" paginar="200" path="fotos/colores">
+  <title>Paletas de Colores</title>
+  <obs></obs>
+  <form>
+    <table id="GEN_COLORES" label="Paletas de Colores">
+
+        <field id="id_color" noshow="true" autoinc="true" esClave="true" />
+
+        <field id="paleta_id" noshow="true" valauto="true" />
+
+        <field id="nombre_color">
+            <label>Color</label>
+            <size>40</size>
+        </field>
+
+        <field id="color" deshabilitado="false" Formstyle="display: none;">
+            <label>Hex</label>
+            <expression>concat('#',hex)</expression>
+            <tipo>color</tipo>
+        </field>
+
+        <field id="hex" colstyle="display: none;">
+            <label>Selector</label>
+            <tipo>color</tipo>
+        </field>
+
+        <field id="pattern" path="id_color" foto="true">
+            <label>Archivo</label>
+            <tipo Type="Image">file</tipo>
+            <size>60</size>
+        </field>
+
+    </table>
+  </form>
+</histrix>

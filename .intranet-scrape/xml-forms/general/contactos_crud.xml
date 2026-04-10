@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud" filter="true">
+  <title>Contacto</title>
+  <obs></obs>
+  <form>
+    <table id="GEN_TIPO_CONTACTOS" label="Tipo Contacto">
+	<!--
+       <filters>
+		<field id="tipo_contacto">
+			<label>Tipo</label>
+			<operador>like</operador>
+		</field>
+       </filters>
+-->
+		<field id="id_contacto" autoinc="true" noshow="true">
+			<label>Código</label>
+		</field>
+		<field id="tipo_contacto">
+			<label>Tipo Contacto</label>
+			<help>Nombre del tipo Contacto</help>
+			<size>25</size>
+		</field>
+		<field id="vcard_type">
+		<label modpos="nobr">Tipo Vcard</label>
+		    <helper type="combo" xml="vcard_qry.xml" dir="/ayudas" />
+        </field>
+        <field id="valor_inicial" colstyle="display:none;">
+        	<label>Valor Inicial</label>
+        </field>
+        <field id="catcontacto_id">
+        	<label modpos="nobr">Categoría</label>
+        	<helper type="combo" xml="categoria_contactos_qry.xml" dir="/ayudas" />
+        </field>
+    </table>
+  </form>
+</histrix>  

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="crud" >
+	<title>Procesos de Produccion</title>
+	<obs/>
+	<form detalle="hijo" inline="true">
+		<table id="PROD_PROCESOS">
+			<title>Condiciones</title>
+			<filters> ..	
+			    	<field id="homologacion_id" >
+			    	    <label>Homologacion</label>
+			    	    <operador>=</operador>
+			    	</field>
+
+			</filters>
+		        <field id="homologacion_id"  noshow="true" valauto="true" >
+	                    <helper type="combo" xml="combo_homologacion_modelo.xml" dir="/fabricacion" >
+        			    <field id="baja">
+	                		<condicion operador="=">0</condicion>
+        			    </field>
+	                    </helper>
+
+		            <label>Modelo</label>
+		            <detalle>homologacion_id</detalle>
+			</field>
+                        <field id="hijo" local="true" noshow="true">
+                    	    <expresion>ifnull((select 'materiales_proceso_crud.xml' from STK_ARTICULO_PROCESO where proceso_id = id_proceso limit 1),'prod_procesos_sub1_crud.xml')</expresion>
+                        </field>
+			<field id="id_proceso" esclave="true" autoinc="true" noshow="true" >
+				<label>Codigo</label>
+				<detalle>proceso_id</detalle> 
+				<detalle>procesopadre_id</detalle>
+
+			</field>
+			<field id="procesopadre_id"  colstyle="display:none;">
+
+				<helper type="combo" xml="procesos_qry.xml" empty="true">
+        			    <field id="homologacion_id">
+	                		<condicion operador="=" _valorde="homologacion_id"></condicion>
+        			    </field>
+
+				</helper>
+				<label>Codigo padre</label>       
+			</field>
+			
+			<field id="nombre_proceso">
+				<label>Proceso</label>
+				<help>nombre del proceso</help>
+				<size>60</size>
+			</field>
+			<field id="descripcion_proceso">
+				<label>descripcion</label>
+				<help>Descripción del proceso</help>
+				<size>300</size>
+
+			</field>
+			<!--
+            <field id="stkdeposito_id">
+                <label >Deposito </label>
+                <helper type="combo"  xml="deposito.xml" dir="/compras">
+                </helper>
+            </field>
+
+-->
+		</table>
+	</form>
+</histrix>

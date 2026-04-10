@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="update">
+	<title>MOVIMIENTOS recibidos  de orden compras</title>
+	<obs></obs>
+	<form >
+		<table id="STK_ENVIO_DETALLES" label="RECIBIDOS" idCampoCond="grabo">
+			<field id="id_envdetalle" id_temp="id_envdetalle" esClave="true" />
+			<field id="recibido" id_temp="ingresan" />
+		</table>
+	</form>
+</histrix>

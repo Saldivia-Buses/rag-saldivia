@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 
+*******************************************************************************
+Tipo:  CONSULTA
+Tarea: PLAN DE MANTENIMIENTO
+Autor: Lmm
+Fecha: 29/03/12
+*******************************************************************************
+-->
+<histrix tipo="consulta" _subtipo="vertical" _inserta="false">
+    <title>Mantenimiento</title>
+    <obs></obs>
+    <form>
+                  <table id="MANT_PLAN_EVENTOS">
+                  
+                  
+                    <filters>
+    	        	<field id="fecha_accion" >
+    				<label>Desde Fecha</label>
+    				<help>Fecha de la acci..n</help>
+    				<tipo>date</tipo>
+    				<operador>&gt;=</operador>
+    			</field>
+                	
+                    </filters>
+                    
+    		   	<field id="rrule" noshow="true" >
+    		   	    <expression>''</expression>
+    		   	</field>
+
+              	    <field id="equipo_id" noshow="true">
+              		<expression having="false">equipo_id</expression>
+                      </field>
+    
+    
+    		    <field id="id_plan" noshow="true" calendarId="true" calendarEditable="true">
+    	   		<expression>plan_id</expression>
+    			<detalle>plan_id</detalle>
+       	
+    		    </field>
+    
+    			<field id="nombre_equipo" > 
+    		    <expression>MANT_EQUIPOS.nombre_equipo</expression>
+    
+    <!--			    <expression>CONCAT( nombre_accion, '' ,MANT_PLAN_EVENTOS.observaciones)</expression> -->
+    			</field>
+    
+    	            <field id="fecha_accion" deshabilitado="true" calendarStartDate="true">
+    				<label>Fecha</label>
+    			    <help>Fecha de la accion</help>
+    				<tipo>date</tipo>
+    				<detalle>fecha_accion</detalle>
+    			</field>
+    			<field id="nombre_accion" > 
+    			    <label>Tarea</label>
+
+    		    <expression>nombre_accion</expression>
+    
+    <!--			    <expression>CONCAT( nombre_accion, '' ,MANT_PLAN_EVENTOS.observaciones)</expression> -->
+    			</field>
+
+    			<field id="deposito_id" tabla="MANT_EQUIPOS" noshow="true">
+    				<label>Dep..sito</label>
+    				<helper type="combo" id="DEPOSITO" empty="true">
+    					<field id="idDeposito">
+    						<label>Cod</label>
+    						<help>Codigo</help>
+    					</field>
+    					<field id="direccion">
+    						<label>Direccion</label>
+    						<help>Direccion</help>
+    					</field>
+    				</helper>
+    			</field>
+    			<field id="tipoequipo_id" tabla="MANT_EQUIPOS" noshow="true">
+    				<helper type="combo" id="MANT_TIPO_EQUIPO" empty="true">
+    					<field id="id_tipo_equipo"/>
+    					<field id="nombre_tipoequipo"/>
+    				</helper>
+    				<label>Tipo</label>
+    			</field>
+    
+              <field id="accion_id" noshow="true">
+      	    </field>
+    
+    			<field id="color"  noshow="true" calendarColor="true">
+    			    <expression>'green'</expression>
+            	</field>
+    
+          	</table>
+          	
+    	    <join tipo="left">
+    	        <table id="MANT_PLAN">
+              	    <field id="id_plan">
+                  	<condicion operador="=">plan_id</condicion>
+                      </field>
+    
+          	</table>
+              </join>
+    
+    	    <join tipo="left">
+    	        <table id="MANT_EQUIPOS">
+              	    <field id="id_equipo">
+                  	<condicion operador="=">equipo_id</condicion>
+                      </field>
+    
+          	</table>
+              </join>
+    
+    	    <join tipo="left">
+    
+                  <table id="MANT_ACCIONES">
+              	    <field id="id_accion">
+                  	<condicion operador="=">MANT_PLAN_EVENTOS.accion_id</condicion>
+                      </field>
+      	        </table>
+    
+    	    </join> 
+    
+      </form>
+
+
+</histrix>	

@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="consulta" >
+	<title>ORDENES DE COMPRA</title>
+	<obs></obs>
+	<form  _detalle="cpsmovim.xml">
+		<table id="CPSENCAB" label="ORDENES DE COMPRA">
+			<field id="siscod" oculto="true">
+				<help></help>
+				<detalle>siscod</detalle>
+			</field>
+			<field id="ctanom" tabla="CCTCUENT">
+			<label>Prov</label>
+			<help>Prov.</help>
+				<tipo>varchar</tipo>
+			</field>			
+			<field id="ocpnro">
+				<label>Nº</label>
+				<help>Numero de Orden de Compra. </help>
+				<detalle>ocpnro</detalle>
+			</field>
+			
+			<field id="ocpfec">
+				<label>Emisión</label>
+				<help>Fecha de Emisión</help>
+			</field>
+			
+			<field id="fecreq" local="true" deshabilitado="true"  >
+				<expression>CPSMOVIM.fecreq</expression>
+				<label>Fecha Entrega</label>
+				<tipo>date</tipo>
+			</field>
+			
+				<field id="artcod" tabla="CPSMOVIM" noshow="true">
+					
+					<label>Articulo</label>
+					<help>Codigo de Articulo. </help>
+					<ayuda_ex id="STKINSUM" xml="HLPstkinsum.xml" dir="/help_local">
+						<field id="artcod">
+							<label>Cod.</label>
+							<detalle>artcod</detalle>
+						</field>
+						<field id="artdes">
+							<label>Insumo</label>
+							<detalle>artdes</detalle>
+						</field>
+						<field id="unicps" oculto="true">
+							<detalle>unimed</detalle>
+						</field>
+						<field id="artuni" oculto="true">
+							<detalle>artuni</detalle>
+						</field>
+						
+						<field id="siscod" oculto="true">
+							<condicion operador="=">'01'</condicion>
+						</field>
+						<clave>artcod</clave>
+						<descripcion>artdes</descripcion>
+					</ayuda_ex>
+					<tipo>varchar</tipo>
+				</field>
+			
+			<field id="movcps" deshabilitado="true" _noshow="true" tabla="CPSMOVIM">
+        			<label>Ped.cps</label>
+        			<help>Pedido (expresado en la unidad de compra)</help>
+      			</field>
+
+			<field id="estado_art" noshow="true">
+				<expression>(CASE WHEN CPSENCAB.ocpest IN (0, 4, 2) THEN CPSENCAB.ocpest ELSE
+		                            (CASE WHEN CPSENCAB.ocpest IN (1, 3) and (CPSMOVIM.movcps - CPSMOVIM.pencps) &lt; CPSMOVIM.movcps
+                			    THEN 1 ELSE 2 END)
+	                        END) </expression>
+				<condicion operador="=">1</condicion>
+			</field>
+
+			<field id="observaciones" tabla="CPSMOVIM">
+				<label >Observaciones</label>
+				<tipo>varchar</tipo>
+				<size>60</size>
+			</field>
+		    
+		      <field id="pencps" noshow="true" tabla="CPSMOVIM">
+			<label>Pend.cps</label>
+			<help>Pendiente (expresado en la unidad de compra)</help>
+		      </field>
+                         <field id="mov_pen2" deshabilitado="true" local="true" >
+			<expression>movcps - pencps</expression>
+			<label>Rec</label>
+			<help>Recibido (expresado en la unidad de compra)</help>
+		      </field>
+			<field id="estado_articulo" local="true">
+				<label>Estado Articulo</label>
+				<if exp="mov_pen2 &lt; movcps">
+				   <true>'Pendiente'</true>
+				   <false>'Cumplida'</false>
+				</if>
+			</field>
+
+			<field id="ocpest" colstyle="display:none;">
+				<label>Estado OC</label>
+				<help>Estado Actual</help>
+                <options>
+
+                    <option valor="">Todas</option>
+
+                    <option valor="0">No Autorizada</option>
+                    <option valor="1">Pendiente</option>
+		    <option valor="2">Cumplida</option>
+                    <option valor="3">Parcial</option>
+                    <option valor="4">Anulada</option>
+                </options>
+			<condicion operador="=">1</condicion>	
+			</field>
+		
+			<group>
+				<field id="CPSENCAB.ocpnro" />
+			</group>
+			
+		</table>
+		<join tipo="inner">
+			<table id="CPSMOVIM">
+				<field id="movfec">
+					<condicion operador="=">CPSENCAB.ocpfec</condicion>
+				</field>
+				<field id="ocpnro">
+					<condicion operador="=">CPSENCAB.ocpnro</condicion>
+				</field>
+			</table>
+			
+
+		</join>
+		<join tipo="left">
+
+			<table id="CCTCUENT">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">'01'</condicion>
+				</field>
+				
+				<field id="ctacod">
+					<condicion operador="=">CPSENCAB.ctacod</condicion>
+				</field>
+			</table>
+			
+		</join>		
+	</form>
+</histrix>

@@ -1,0 +1,390 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+  <title>IVA COMPRAS</title>
+  <obs/>
+  
+  <form >
+    <table id="IVACOMPRAS" label="IVA COMPRAS" _styleTbody="height:300px;overflow-x:hidden;">
+      <!--                  <field id="comcod">
+        <label>Cod.Comp.D.G.I.. </label>
+        <help>TIPO DE COMPROBANTE SEGUN D.G.I. (RG 3419 - ANEXO VI ). </help>
+        </field>
+        -->
+      <field id="tipo_concepto">
+        <label>Tipo Comp.</label>
+        <expression>LPAD(REG_CONCEPTOS.tipo_concepto, 2, 0)</expression>
+      </field>
+      <field id="nronpv">
+        <label>P.Vta.</label>
+        <help></help>
+        <expression>LPAD(IVACOMPRAS.nronpv, 4, 0)</expression>
+      </field>
+      <field id="nrocom">
+        <label>Nro.Comp.</label>
+        <expression>LPAD(IVACOMPRAS.nrocom, 20, 0)</expression>
+      </field>
+      
+      <field id="feciva">
+        <label>Fec.Comp.</label>
+        <expression>REPLACE(IVACOMPRAS.feciva, '-', '')</expression>
+      </field>
+      <field id="nrodoc">
+        <label>Cuit Inf.</label>
+        <expression><![CDATA[CASE WHEN CHAR_LENGTH(REPLACE(REG_CUENTA.cuit_cuenta, '-', '')) = 11 THEN REG_CUENTA.cuit_cuenta ELSE REPLACE(nrodoc, '-', '') END]]></expression>
+      </field>
+      <field id="ctanom">
+        <expression>RPAD(REPLACE(IVACOMPRAS.ctanom, 'Ñ', 'N'), 25, ' ')</expression>
+        <label>Informado</label>
+        <help></help>
+        <size>25</size>
+      </field>
+      <field id="impLiq" _oculto="true" suma="true">
+        <expression>LPAD(REPLACE(sum(impimp * (case when REG_CONCEPTOS.imputacion_concepto = 0 then -1 else 1 end) * (case when IVAIMPORTES.impcod = 1 then 1 else 0 end)) + sum(impimp * (case when REG_CONCEPTOS.imputacion_concepto = 0 then -1 else 1 end) * (case when IVAIMPORTES.impcod = 2 then 1 else 0 end)) + sum(impimp * (case when REG_CONCEPTOS.imputacion_concepto = 0 then -1 else 1 end) * (case when IVAIMPORTES.impcod = 3 then 1 else 0 end)), '.', ''), 12, 0)</expression>
+        <label>Imp.Liquidado</label>
+      </field>
+      <field id="cuitVend">
+        <label>Cuit Vend.</label>
+        <expression>LPAD(0, 11, 0)</expression>
+      </field>
+      <field id="denomVend">
+        <label>Vend.</label>
+        <expression>LPAD(' ', 25, ' ')</expression>
+      </field>
+      <field id="ivaCom">
+        <label>IVA Com.</label>
+        <expression>LPAD(0, 12, 0)</expression>
+      </field>
+
+
+                      <field id="Total" oculto="true">
+        <expression having="true">sum(impimp * (case when REG_CONCEPTOS.imputacion_concepto = 0 then -1 else 1 end) * (case when IVAIMPORTES.impcod = 1 then 1 else 0 end)) + sum(impimp * (case when REG_CONCEPTOS.imputacion_concepto = 0 then -1 else 1 end) * (case when IVAIMPORTES.impcod = 2 then 1 else 0 end)) + sum(impimp * (case when REG_CONCEPTOS.imputacion_concepto = 0 then -1 else 1 end) * (case when IVAIMPORTES.impcod = 3 then 1 else 0 end))</expression>
+        <label>Liquidado</label>
+        <condicion operador="&gt;">0</condicion>
+      </field>
+      
+          
+
+
+                                       <!--
+      <field id="nroImp">
+        <expression>CONCAT(LPAD(IVACOMPRAS.codcom, 2, 0), LPAD(IVACOMPRAS.nronpv, 4, 0), LPAD(IVACOMPRAS.nrocom, 20, 0), REPLACE(IVACOMPRAS.feciva, '-', ''), REPLACE(nrodoc, '-', ''), 
+RPAD(IVACOMPRAS.ctanom, 25, ' '), 
+
+LPAD(REPLACE((sum(impimp * (case when conimp = 1 then -1 else 1 end) * (case when IVAIMPORTES.impcod = 1 then 1 else 0 end)) + sum(impimp * (case when conimp = 1 then -1 else 1 end) * (case when IVAIMPORTES.impcod = 2 then 1 else 0 end)) + sum(impimp * (case when conimp = 1 then -1 else 1 end) * (case when IVAIMPORTES.impcod = 3 then 1 else 0 end))), '.', ''), 11, 0)
+
+
+, LPAD(0, 12, 0), LPAD(' ', 25, ' '), LPAD(0, 12, 0)
+)</expression>
+</field>
+                                   -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!--
+        <field id="codigoNumero" tabla="CCTMOVIM">
+        <tabla_ex xml="codigonumero.xml"></tabla_ex>
+        <label>Cod.Nro</label>
+                <tipo>varchar</tipo>
+      </field>
+      <field id="codlet">
+        <label>L</label>
+        <help></help>
+      </field>
+
+        <field id="regmin" tabla="CCTMOVIM" linkint="ctbregis2.xml" linkdir="ctb_old">
+          <label>regmin</label>
+          <tipo>integer</tipo>
+          <valor>0</valor>
+          <paring destino="regmin">regmin</paring>
+          <paring destino="regfec">fecreg</paring>          
+        </field>    
+      <field id="asi"  suma="true">
+        <expression>select (case when conimp = 1 then -1 else 1 end) * sum(CTBREGIS.regimp) / 2 from CTBREGIS where CTBREGIS.regfec = IVACOMPRAS.fecreg and  CTBREGIS.regnro = IVACOMPRAS.nrocom and CTBREGIS.regmin = CCTMOVIM.regmin and CTBREGIS.siscod = '10' </expression>
+        <label>Asiento</label>
+        <tipo>numeric</tipo>
+      </field>    
+
+      <field id="nrocom" linkint="facdetal.xml" linkdes="Ver detalle del Comprobante">
+        <label style="font-size:8px;">Numero</label>
+        <expression>LPAD( IVACOMPRAS.nrocom, 7,'0')</expression>
+        <help></help>-->
+      <!--  <format>%010d</format> --><!--
+        <paring destino="nrofac">nrocom</paring>
+        <paring destino="nropue">nronpv</paring>
+        <paring destino="ctacod">ctacod</paring>
+        <paring destino="regfec">feciva</paring>        
+        <tipo>integer</tipo>
+      </field>-->
+      <!--
+        <field id="npvnro">
+          <expression>CONCAT({ fn CONVERT( IVACOMPRAS.nronpv, SQL_CHAR) } , { fn CONVERT( IVACOMPRAS.nrocom, SQL_CHAR) })</expression>
+          <label>Comprobante</label>
+          <tipo>varchar</tipo>
+        </field>
+        --><!--
+      <field id="ctacod">
+        <label>Cta</label>
+        <help></help>
+      </field>-->
+
+      <!--      <field id="tipdoc">
+          <label>Doc</label>
+          <help>Codigo de Documento</help>
+            <tabla_ex id="FSMDOCUM">
+              <field id="doccod"></field>
+              <field id="docnom"></field>
+            </tabla_ex>          
+          
+        </field>
+        -->
+      
+      <!--        <field id="ivacod">
+          <label>Categoria I.V.A. </label>
+          <help>
+          </help>
+          <tabla_ex id="FSMCTIVA">
+            <field id="ivacod"></field>
+            <field id="ivanom"></field>
+          </tabla_ex>
+        </field>-->
+      <!--        <field id="rnicom">
+          <label>R.N.I.</label>
+        </field>
+--><!--
+      <field id="gravado" suma="true">
+        <expression>sum(impgra * (case when conimp = 1 then -1 else 1 end))</expression>
+        <label>Gravado</label>
+      </field>-->
+      <!--          <field id="impcod" tabla="IVAIMPORTES">
+          <label>Impuesto</label>
+          <tabla_ex id="IVAIMPUESTOS">
+            <field id="impcod"></field>
+            <field id="impnom"></field>
+          </tabla_ex>
+        </field> -->
+      <!--          <field id="impali" tabla="IVAIMPORTES">
+          <label>Alicuota</label>
+        </field> 
+          <field id="impimp" tabla="IVAIMPORTES">
+          <label>Importe</label>
+        </field>
+  -->
+      <!--        <field id="Importe"  suma="true">
+            <expression>impimp * (case when conimp = 1 then -1 else 1 end)</expression>
+          <label>Importe</label>
+        </field>        
+  --><!--
+      <field id="Iva21" suma="true">
+        <expression>sum(impimp * (case when conimp = 1 then -1 else 1 end) * (case when IVAIMPORTES.impcod = 1 then 1 else 0 end))</expression>
+        <label>Iva 21%</label>
+      </field>
+      <field id="Iva10" suma="true">
+        <expression>sum(impimp * (case when conimp = 1 then -1 else 1 end) * (case when IVAIMPORTES.impcod = 2 then 1 else 0 end))</expression>
+        <label>Iva 10.5%</label>
+      </field>
+      <field id="Iva27" suma="true">day
+        <expression>sum(impimp * (case when conimp = 1 then -1 else 1 end) * (case when IVAIMPORTES.impcod = 3 then 1 else 0 end))</expression>
+        <label>Iva 27%</label>
+      </field>
+
+      <field id="Percep" suma="true">
+        <expression>sum(impimp * (case when conimp = 1 then -1 else 1 end) * (case when IVAIMPORTES.impcod &gt; 3 then 1 else 0 end))</expression>
+        <label>Percep</label>
+      </field>
+      <field id="execom" norepeat="true" suma="true">
+        <expression>(case when IVACOMPRAS.ivacod != 6 then execom * (case when conimp = 1 then -1 else 1 end) else 0 end)</expression>
+        
+        <label>Exento</label>
+        <tipo>numeric</tipo>
+      </field>
+      <field id="Monot" norepeat="true" suma="true">
+        <expression>(case when IVACOMPRAS.ivacod = 6 then execom * (case when conimp = 1 then -1 else 1 end) else 0 end)</expression>
+        
+        <label>Mono</label>
+        <tipo>numeric</tipo>
+      </field>
+      
+      
+      <field id="nogcom" norepeat="true" suma="true">
+        <expression>nogcom * (case when conimp = 1 then -1 else 1 end)</expression>
+        
+        <label>No Grav.</label>
+        <tipo>numeric</tipo>
+        
+      </field>
+      
+        <field id="codcom">
+          <condicion operador="!=">0</condicion>
+        </field>
+      -->
+      <!--      
+        <field id="totcom" norepeat="true" suma="true">
+          <label>Total</label>
+        </field>        
+        -->
+      <!--
+      <field id="obs">
+        <label>obs</label>
+        <expression>CCTCUENT.ctaobs</expression>
+        <tipo>varchar</tipo>
+      </field>
+             <field id="difl" suma="true" local="true"  >
+         <label>dif</label>-->
+<!--        <if exp="true" operador="=">
+          <true>round(Total - (gravado + Iva21 + Iva10 + Iva27 + Percep + execom + nogcom), 2)</true>
+          <false>0</false>
+        </if>      --><!--
+                <if exp="true" operador="=">
+          <true>round(Total - asi, 2)</true>
+          <false>0</false>
+        </if>           
+       </field>
+      <field id="ctr" noshow="true">
+        <expression>select count(*) from CTBREGIS where CTBREGIS.regfec = IVACOMPRAS.fecreg and  CTBREGIS.regnro = IVACOMPRAS.nrocom and CTBREGIS.regmin = CCTMOVIM.regmin and CTBREGIS.siscod = '10' and CTBREGIS.regdoh=1 and CTBREGIS.ctbcod = '211100'</expression>
+        <tipo>integer</tipo>
+      </field>
+             <field id="_res" local="true" clasefila="true" noshow="true">
+        <if exp="ctr + difl != 0 " _operador="=">
+          <true>'resaltado'</true>
+          <false>''</false>
+        </if>    
+         <tipo>varchar</tipo>  
+       </field>      
+      <field id="totatr" noshow="true" tabla="CCTCUENT">
+        <options>
+          <option valor=""></option>
+          <option valor="0">No</option>
+          <option valor="1">Si</option>
+        </options>
+      </field>
+      <field id="numero">
+        <expression>CONCAT('tc', LPAD(nronpv , 4, 0), LPAD(nrocom, 20, 0), fecreg, TRIM(TRAILING '-' FROM nrodoc),  )</expression>
+      </field>-->
+        <field id="fecreg" tabla="IVACOMPRAS" oculto="true"></field>
+        <field id="codlet" tabla="IVACOMPRAS" oculto="true"></field>
+        <field id="ctacod" tabla="IVACOMPRAS" oculto="true"></field>
+        <field id="execom" tabla="IVACOMPRAS" oculto="true"></field>
+        <field id="nogcom" tabla="IVACOMPRAS" oculto="true"></field>
+      <group>
+		<field id="fecreg" tabla="IVACOMPRAS"></field>
+		<field id="feciva" tabla="IVACOMPRAS"></field>
+		<field id="codcom" tabla="IVACOMPRAS"></field>
+		<field id="codlet" tabla="IVACOMPRAS"></field>
+		<field id="nronpv" tabla="IVACOMPRAS"></field>
+		<field id="nrocom" tabla="IVACOMPRAS"></field>
+		<field id="ctacod" tabla="IVACOMPRAS"></field>
+		<field id="ctanom" tabla="IVACOMPRAS"></field>
+		<field id="nrodoc" tabla="IVACOMPRAS"></field>
+		<field id="execom" tabla="IVACOMPRAS"></field>
+		<field id="nogcom" tabla="IVACOMPRAS"></field>
+<!--        <field id="total" >
+          <expression>(totcom * (case when conimp = 1 then -1 else 1 end))</expression>
+        </field> -->
+      </group>
+      <order>
+        
+		<field id="IVACOMPRAS.feciva" />
+		<field id="IVACOMPRAS.nronpv" />
+		<field id="IVACOMPRAS.nrocom" />
+      
+      </order>      <filters>
+        <field id="fecreg">
+          <operador>>=</operador>
+          <label>Desde Fecha</label>
+          <valor>today</valor>
+        </field>
+        <field id="fecreg">
+          <operador>&lt;=</operador>
+          <label>Hasta Fecha</label>
+          <valor>today</valor>
+        </field>
+      </filters>
+    </table>
+		<join tipo="left">
+			<table id="REG_CUENTA">
+				<field id="subsistema_id">
+					<condicion operador="=">'01'</condicion>
+				</field>
+				<field id="nro_cuenta">
+					<condicion operador="=">IVACOMPRAS.ctacod</condicion>
+				</field>
+			</table>
+		</join>		
+
+		<join tipo="left">
+
+			<table id="REG_MOVIMIENTOS">
+				<field id="subsistema_id" oculto="true">
+					<condicion operador="=">'01'</condicion>
+				</field>				
+				<field id="concod" >
+					<condicion operador="=">IVACOMPRAS.codcom</condicion>
+				</field>
+				<field id="regcuenta_id" >
+					<condicion operador="=">REG_CUENTA.id_regcuenta</condicion>
+				</field>
+				<field id="nro_movimiento" >
+					<condicion operador="=">IVACOMPRAS.nrocom</condicion>
+				</field>
+				<field id="puesto_movimiento" >
+					<condicion operador="=">IVACOMPRAS.nronpv</condicion>
+				</field>
+			    <field id="fecha_movimiento" >
+					<condicion operador="=">IVACOMPRAS.feciva</condicion>
+				</field>				
+
+			</table>
+		</join>			
+
+
+		<join tipo="left">
+			<table id="REG_CONCEPTOS">
+				<field id="subsistema_id" oculto="true">
+					<condicion operador="=">'01'</condicion>
+				</field>
+				<field id="cod_concepto">
+					<condicion operador="=">IVACOMPRAS.codcom</condicion>
+				</field>
+			</table>
+		</join>
+    
+		<join tipo="right ">
+		  <table id="IVAIMPORTES">
+		    <field id="tipoiva" oculto="true">
+		      <condicion operador="=">1</condicion>
+		    </field>
+		    <field id="codcom">
+		      <condicion operador="=">IVACOMPRAS.codcom</condicion>
+		    </field>
+		    <field id="codlet">
+		      <condicion operador="=">IVACOMPRAS.codlet</condicion>
+		    </field>
+		    <field id="nronpv">
+		      <condicion operador="=">IVACOMPRAS.nronpv</condicion>
+		    </field>
+		    <field id="nrocom">
+		      <condicion operador="=">IVACOMPRAS.nrocom</condicion>
+		    </field>
+		    <field id="ctacod">
+		      <condicion operador="=">IVACOMPRAS.ctacod</condicion>
+		    </field>
+	            <field id="feciva" >
+	              <condicion operador="=">IVACOMPRAS.fecreg</condicion>
+	    	    </field>
+		    
+		  </table>
+		</join>
+  
+
+  </form>
+</histrix>

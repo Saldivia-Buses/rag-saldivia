@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<abm tipo="abm">
+	<titulo>MARCAS DE ESPEJOS</titulo>
+	<obs></obs>
+	<consulta>
+		<tabla id="MARCAESP" label="Marca Espejo">
+			<campo id="siscod" oculto="true">
+				<label>Cod</label>
+			</campo>
+			<campo id="maresp">
+				<label>Codigo</label>
+				<help>Cod. de Marca</help>
+			</campo>
+			<campo id="mardes">
+				<label>Marca</label>
+				<help>Marca de Espejo</help>
+			</campo>
+			<campo id="marabv">
+				<label>Abrev.</label>
+				<help>Abreviatura a Utilizar</help>
+			</campo>
+    			<orden>
+				<campo id="maresp"></campo>
+			</orden>
+		</tabla>
+	</consulta>	   
+</abm> 

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="consulta">
+    <title>Pedidos Internos</title>
+    <obs></obs>
+    <form >
+        <table id="PEDIDOINT" label="Pedidos Internos">
+
+            <field id="codprv" muestra="true">
+
+                <label>Cod.Proveedor </label>
+                <help>Codigo de Proveedor </help>
+            </field>
+            <field id="nombre">
+                <expression>case when isnull(ctanom) then 'SIN ASIGNAR PROVEEDOR' else ctanom end</expression>
+            </field>
+            <field id="ctanom" tabla="CCTCUENT" muestra="true">
+                <tipo>varchar</tipo>
+            </field>
+            <field id="ctacod" noshow="true">
+                    <expression>codprv</expression>
+            </field>
+            <field id="fechaemi" noshow="true" />
+
+            <field id="estado" oculto="true">
+                <label>Estado </label>
+                <help>Estado </help>
+                <condicion operador="=">0</condicion>
+            </field>
+            <field id="confirmado" oculto="true">
+                <condicion operador="=">1</condicion>
+            </field>
+            <group>
+                <field id="codprv"> </field>
+            </group>            
+
+            <order>
+        	<field id="nombre"> </field> 
+            <!--    <field id="fechaemi"> </field> -->
+            </order>
+
+        </table>
+        <join tipo="left">
+            <table id="CCTCUENT">
+                <field id="siscod" oculto="true">
+                    <condicion operador="=">'01'</condicion>
+                </field>
+                <field id="ctacod" oculto="true">
+                    <condicion operador="=">PEDIDOINT.codprv</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix>

@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="grid" imprime="false" deleteRow="false" procesa="true" inserta="false">
+	<title>Insumos</title>
+	<obs></obs>
+	<form >
+		<table id="HTXUSERS">
+			<title>Insumos</title>
+			<movimientos>
+				<relacion id="emite_aviso_stock_insert.xml"></relacion>
+			</movimientos>
+
+
+			<field id="mensaje">
+				<expression><![CDATA[select group_concat(mensaje) from (select concat(
+      'El articulo: ', 
+      id_stkarticulo, 
+      ' (', 
+      nombre_articulo, 
+      ') ,ha alcanzado el stock crítico de ', 
+      stock_minimo, 
+      ' - Stock Actual: ', 
+      sum(cantidad_stock), ' ', (CASE WHEN PEDIDOINT.estado = 0 then ' YA PEDIDOS ' else ' ' end), ifnull(( SELECT ' OC no autorizada '
+             FROM CPSMOVIM
+             JOIN CPSENCAB ON CPSENCAB.ocpnro = CPSMOVIM.ocpnro
+             WHERE ocpest = 0
+               AND CPSMOVIM.artcod = id_stkarticulo and CPSMOVIM.pencps != 0), '') ,'\n\r\n'
+    )
+   as "mensaje"
+  
+from 
+  STK_ARTICULOS 
+  JOIN STK_STOCKACTUAL on (
+    STK_STOCKACTUAL.stkarticulo_id = id_stkarticulo
+  ) 
+  JOIN STK_DEPOSITOS on (
+    STK_DEPOSITOS.id_stkdeposito = stkdeposito_id
+  ) 
+  and (STK_DEPOSITOS.suma_total = 1) 
+  left JOIN PEDIDOINT on (
+    PEDIDOINT.artcod = id_stkarticulo
+  ) 
+  and (PEDIDOINT.estado = 0) 
+
+where 
+  (
+    STK_ARTICULOS.pedido_automatico = 1
+  ) 
+  and (STK_ARTICULOS.stock_minimo > 0) 
+  
+  and (
+    ifnull(cant, 0) = 0
+  ) 
+  and (
+    (
+      select 
+        ifnull(
+          sum(pencps), 
+          0
+        ) 
+      from 
+        CPSMOVIM 
+        join CPSENCAB on CPSENCAB.ocpnro = CPSMOVIM.ocpnro 
+      where 
+        ocpest = 1 
+        and CPSMOVIM.artcod = id_stkarticulo
+    ) = 0
+  ) 
+group by 
+  id_stkarticulo
+  having  SUM(cantidad_stock) <= min(STK_ARTICULOS.stock_minimo)
+) as T
+  
+  
+  ]]></expression>
+			</field>
+
+			<field id="login" tabla="HTXUSERS">
+					<condicion operador="in">('nicolasl'  , 'nahuel', 'anabelena', 'matiaseb', 'cecilia'   )</condicion>				
+			</field>
+			<field id="destino">
+				<expression>login</expression>
+			</field>
+			<group>
+				<field id="login" />
+			</group>
+		
+		</table>
+	</form>
+</histrix>

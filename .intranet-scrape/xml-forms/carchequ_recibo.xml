@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="consulta">
+       <title>CARTERA DE CHEQUES</title>
+        <obs></obs>
+               <form >
+                  <table id="CARCHEQU" label="CARTERA DE CHEQUES">
+                  <field id="siscod" oculto="true">
+                      <label>Codigo Sistema </label>
+                      <help> </help>
+                  </field>
+                  <field id="ctacod" oculto="true">
+                      <label>Cuenta</label>
+                      <help>Codigo de cuenta</help>
+                  </field>
+                  <field id="carint">
+                      <label>Nro.Int</label>
+                      <help> </help>
+                  </field>
+                  <field id="carnro">
+                      <label>Nro. Cheque</label>
+                      <help> </help>
+                  </field>
+                  <field id="carcui">
+                      <label>CUIT LIBRADOR </label>
+                      <help> </help>
+                  </field>		  
+                  <field id="carfec">
+                      <label>Fec.Cheque</label>
+                      <help>Fecha del cheque ingresado. </help>
+                  </field>
+                  <field id="carbco">
+                      <label>Banco</label>
+                      <help>Nombre de Banco de Procedencia. </help>
+                  </field>
+                  <field id="carimp" suma="true">
+                      <label>Importe</label>
+                      <help>Importe del cheque. </help>
+                  </field>
+                  <field id="carrec" oculto="true">
+                      <label>Nro Recibo </label>
+                      <help> </help>
+                  </field>
+                  <field id="movnpv" oculto="true">
+                      <label>Nro PV </label>
+                      <help> </help>
+                  </field>					  
+
+		  <order>
+		    <field id="carint"></field>
+		  </order>
+                  </table>
+
+
+		  
+		  
+               </form>
+        </histrix>

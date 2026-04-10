@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="delete" limit="99">
+    <title>COMPROBANTES</title>
+    <obs></obs>
+    <form>
+        <table id="IVAIMPORTES" label="ANULACION IVACOMPRAS">
+
+            <field id="ctacod" id_temp="nro_cuenta" esClave="true" />
+
+            <field id="feciva" id_temp="fecha_ivaimportes" esClave="true" />
+            <!--en IVAIMPORTES se graba la fecha de registracion en las compras.. y de las ventas las fecha del comprobante, no son las mismas-->
+            <field id="codcom" id_temp="cod_concepto" esClave="true" />
+
+            <field id="nronpv" id_temp="puesto_movimiento" esClave="true" />
+
+            <field id="nrocom" id_temp="nro_movimiento" esClave="true" />
+
+        </table>
+    </form>
+</histrix>

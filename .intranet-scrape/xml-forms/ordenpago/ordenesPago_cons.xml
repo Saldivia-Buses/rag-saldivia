@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+   <histrix tipo="ing" process="true" inserta="false" modifica="false" deleteRow="false">
+       <title>Cuenta Corriente</title>
+        <obs></obs>
+				<form >
+					<table id="CCTMOVIM" label="Movimientos">
+						<movimientos>
+							<relacion id="envio_mail_op.xml"/>
+						</movimientos>
+
+						<filters>
+							<field id="movfec">
+								<operador>&gt;=</operador>
+								<label>Desde Fecha</label>
+<!--                        <valor eval="true">date("d/m/Y", mktime(0, 0, 0, date("m") ,
+						date("d")-5, date("Y")))</valor> -->
+								<valor>today</valor>
+							</field>
+
+							<field id="movfec">
+								<operador>&lt;=</operador>
+								<label>Hasta Fecha</label>
+								<valor>today</valor>
+							</field>
+
+							<field id="ctacod">
+								<label>Prov</label>
+							</field>
+
+							<field id="imputadas" deshabilitado="false">
+								<label>Imputación</label>
+									<operador>=</operador>
+							</field>
+							
+						</filters>
+
+						<field id="siscod" oculto="true">
+							<label>Cod.</label>
+						</field>
+						
+						<field id="movfec">
+							<label>Fecha </label>
+						</field>
+						
+						<field id="ctacod">
+							<label>Cuenta</label>
+							<help>Código de Cuenta </help>
+						</field>
+
+						<field id="ctanom" tabla="CCTCUENT">
+							<label>Nombre</label>
+						</field>								
+
+						<field id="concod" oculto="true">
+							<condicion operador="=">4</condicion>
+						</field>
+						
+						<field id="imputadas" >
+							<label>Imputación</label>
+							<expression having="false">(case when movsal != 0 then 1 else 0 end)</expression>
+							<options>
+							    <option valor="">Todas</option>
+							    <option valor="0">Imputadas</option>
+							    <option valor="1">No Imputadas</option>
+							</options>
+						</field>
+
+						<field id="color" clasefila="true" noshow="true">
+							<expression having="false">(case when movsal != 0 then 'resaltado' else '' end)</expression>
+						</field>
+						
+						<field id="concepto">
+							<expression>condes</expression>
+							<label>Cod.Concepto</label>
+							<tipo>string</tipo>
+							<!--		      <tabla_ex id="CCTCONCE">
+							<field id="concod"></field>
+							<field id="condes"></field>
+							</tabla_ex>
+							-->
+						</field>	
+
+						<field id="movnpv">
+							<label>P.V.</label>
+							<help> Punto Venta</help>
+							<format>%04d</format>
+						</field>
+
+						<field id="movnro">
+							<label>Número</label>
+							<help>Número Comprobante</help>
+							<format>%09d</format>
+						</field>
+						
+						<!--          <field id="movvto">
+						<label>Venc. </label>
+						<help> </help>
+						</field>
+						-->
+						<field id="movimp">
+							<label>Importe</label>
+						</field>
+
+						<field id="movsal" suma="true">
+							<label>Saldo</label>
+						</field>
+					
+						 <field id="seguimiento" local="true"  obj="ordenesPago_seguimiento.xml" showObjTabla="true"  showValor="true" linkint="ordenesPago_seguimiento.xml" linkdes="Seguimiento de las ordenes">
+	                        <valor>'Observaciones'</valor>
+				            <tipo>varchar</tipo>
+							<paring destino="siscod">siscod</paring>
+							<paring destino="movfec">movfec</paring>
+							<paring destino="ctacod">ctacod</paring>
+							<paring destino="concod">concod</paring>
+							<paring destino="movnpv">movnpv</paring>
+							<paring destino="movnro">movnro</paring>
+							<paring destino="tabla_origen">CCTMOVIM</paring>
+							<label>Observaciones</label>
+				     	 </field>
+
+						<field id="subject" noshow="true" >
+						    <expression>'Orden de Pago emitida por Saldivia Buses'</expression>
+						</field>
+	
+						<field id="mensaje" noshow="true">
+						    <expression><![CDATA[ concat( 'Sr. ',CCTMOVIM.ctanom,' :<br>',
+					    'Se ha emitido una Orden de Pago por valor de: $ ',movimp,'<br><br>',
+					    '<b>A partir de la fecha, las órdenes de pago serán entregadas en portería UNICAMENTE los días Martes y Jueves de 10:30 a 12:30 hs.</b><br>',
+					    '<h3>Autogestión:</h3> <a href="http://autogestion.saldiviabuses.com.ar/u/?op=',movnro,'">Haga click aqui para acceder la Orden de Pago</a>' ,
+					    ifnull((select concat('<br><br>Ganancias: <a href="http://autogestion.saldiviabuses.com.ar/u/?rg=',movnro,'">Constancia Retención Ganancias</a>') from RETGANAN RG where RG.ctacod = CCTMOVIM.ctacod and RG.movnro = CCTMOVIM.movnro limit 1),''),
+					    ifnull((select concat('<br><br>Ingresos Brutos: <a href="http://autogestion.saldiviabuses.com.ar/u/?ib=',nroret,'">Constancia Retención Ingresos Brutos</a>') from RET1598 RT where RT.ctacod = CCTMOVIM.ctacod and RT.compnro = CCTMOVIM.movnro limit 1),''),
+					    '<br><br><u>Saldivia Buses</u>') ]]></expression>
+						    <tipo>editor</tipo>
+						</field>
+
+						<field id="modif" >
+						    <helper xml="cctconta.xml" type="link" >
+							<parameter source="ctacod" target="ctacod" />
+							<parameter source="siscod" target="siscod" />
+						    </helper>
+						    <label>Datos</label>
+						    <expression>'Contacto'</expression>
+						</field>
+
+						<field id="para"  >
+<!--						    <expression>'luis@estudiogenus.com;luismm75@gmail.com'</expression> -->
+					    <expression>select group_concat(mail SEPARATOR '; ') from CCTCONTA where CCTCONTA.ctacod = CCTMOVIM.ctacod and CCTCONTA.siscod = CCTMOVIM.siscod and mail != '' and pagos = 1</expression>
+						</field>
+
+						<field id="sinmail" noshow="true">
+							<expression>ifnull((select 'false' from CCTCONTA where CCTCONTA.ctacod = CCTMOVIM.ctacod and CCTCONTA.siscod = CCTMOVIM.siscod and mail != '' and pagos = 1 limit 1), 'true')</expression>
+						</field>
+
+						<field id="emitir" _local="true">
+							<attribute id="deshabilitado">sinmail</attribute>
+							<label>Emitir</label>
+							<tipo>check</tipo>
+							<!-- <valor>1</valor> -->
+						    <expression>select 1 from CCTCONTA where CCTCONTA.ctacod = CCTMOVIM.ctacod and CCTCONTA.siscod = CCTMOVIM.siscod and mail != '' and pagos = 1 limit 1</expression>
+						</field>
+
+						<order>
+							<field id="movfec"></field>
+						</order>
+					</table>
+					
+					<join tipo="left">
+						<table id="CCTCONCE">
+							<field id="siscod" oculto="true">
+								<label>cctcuent.siscod</label>
+								<condicion operador="=">
+									CCTMOVIM.siscod</condicion>
+							</field>
+							
+							<field id="concod" oculto="true">
+								<condicion operador="=">
+									CCTMOVIM.concod</condicion>
+							</field>
+							
+							<field id="condes" oculto="true">
+							</field>
+							
+						</table>
+					</join>
+					<join tipo="left">
+						<table id="CCTCUENT">
+							<field id="siscod" oculto="true">
+								<label>cctcuent.siscod</label>
+								<condicion operador="=">
+									CCTMOVIM.siscod</condicion>
+							</field>
+							
+							<field id="ctacod" oculto="true">
+								<condicion operador="=">CCTMOVIM.ctacod</condicion>
+							</field>
+							
+							
+						</table>
+					</join>					
+				</form>
+        </histrix>

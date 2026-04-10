@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ing"  imprime="false"      deleteRow="false" Form="false"
+subtipo="vertical"
+>
+    <title>cotizar adicionales</title>
+    <obs></obs>
+    <form>       
+        <table id="ACCESORIOS_COCHE"  >
+
+            <movimientos  cabecera="cerrar_cotiz_coche_acc_cab.xml" >
+<!--                <relacion id="cotizar_coche_ingmov.xml"/> -->
+                <relacion id="cerrar_cotiz_coche_acc_ingmov.xml"></relacion>
+            </movimientos>
+            
+            <title>OPCIONES</title>
+          
+            <field id="nrofab" noshow="true" deshabilitado="true" esClave="false" noselect="true">
+            </field>
+
+            <field id="id_accesorio" noshow="true">
+            </field>
+
+            <field id="ficha_id" oculto="true" log="false">
+            </field>
+            <field id="cotizacion_id" oculto="true" log="false">
+            </field>
+	    	<field id="ctafan" local="true" noshow="true" log="true">
+		<label>ctafan</label>	
+	     </field>
+
+            <field id="artcod" deshabilitado="true" valauto="true">
+        	<size>3</size>
+        	<valor></valor>
+                <tipo>varchar</tipo>
+                <label>cod</label>
+            </field>
+			 
+            <field id="artdes" deshabilitado="true" required="false" validar="false" >
+
+                <label modpos="nobr">Accesorio</label>
+                <size>60</size>
+                <tipo>varchar</tipo>
+            </field>
+	     <field id="cantidad" _noZero="true" _noEmpty="true" deshabilitado="true">
+        	<label modpos="nobr">Cant</label>
+        	<size>2</size>
+        	<valor>1</valor>
+            </field>
+            
+            <field id="Precio" noZero="true" _suma="true" _noEmpty="true">
+        	<label>P.Unit</label>
+            
+                <expression > (select precio1 from LISTAPRECIOSDET as PREC where PREC.idArticulo = STKINSUM.artcod order by idLista DESC limit 1) </expression>
+                <tipo>numeric</tipo>
+            </field>
+            <field id="total" noZero="true" suma="true" local="true" _noEmpty="true" _Formstyle="display:none;" deshabilitado="true">
+        	<label>total</label>
+            
+                <if exp="Precio + 0 != 0">
+            	    <true>cantidad * Precio</true>
+            	    <false>0</false>
+                </if>
+                <tipo>numeric</tipo>
+            </field>
+
+	    <field id="estado">
+		<label>Aprobada</label>
+		<tipo>check</tipo>
+	    </field>
+            <order>
+        	<field id="fecha"></field>
+            </order>
+			 
+			 
+        </table>
+        <join tipo="left">
+            <table id="STKINSUM">
+                <field id="artcod">
+                    <condicion operador="=">ACCESORIOS_COCHE.artcod</condicion>
+                </field>
+                <field id="siscod">
+                    <condicion operador="=">'02'</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix>

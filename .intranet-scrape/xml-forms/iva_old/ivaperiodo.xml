@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud">
+    <title>IVAPERIODO</title>
+    <obs></obs>
+    <form>
+        <table id="IVAPERIODO" >
+            <title>Tabla de Periodos</title>
+            <filters>
+                <field id="tipoiva">
+                    <label>Tipo</label>
+                    <help>Tipo de Iva</help>
+                    <options>
+                        <option valor="1">Compras</option>
+                        <option valor="2">Ventas</option>
+                    </options>
+                    <operador>=</operador>
+                </field>
+            </filters>
+            <field id="tipoiva">
+                <label>Tipo</label>
+                <help>Tipo de Iva</help>
+                <options>
+                    <option valor="1">Compras</option>
+                    <option valor="2">Ventas</option>
+                </options>
+            </field>
+            <field id="year">
+                <label>Año</label>
+                <help>Año</help>
+            </field>
+            <field id="mes">
+                <label>Mes</label>
+                <help>Mes</help>
+                <options>
+                    <option valor="1">Enero</option>
+                    <option valor="2">Febrero</option>
+                    <option valor="3">Marzo</option>
+                    <option valor="4">Abril</option>
+                    <option valor="5">Mayo</option>
+                    <option valor="6">Junio</option>
+                    <option valor="7">Julio</option>
+                    <option valor="8">Agosto</option>
+                    <option valor="9">Septiempre</option>
+                    <option valor="10">Octubre</option>
+                    <option valor="11">Noviembre</option>
+                    <option valor="12">Diciembre</option>
+					
+                </options>
+            </field>
+            <field id="estado">
+                <label>estado</label>
+                <help>estado</help>
+                <options>
+                    <option valor="0">Abierto</option>
+                    <option valor="1">Cerrado</option>
+                </options>
+            </field>
+		<order>
+		    <field id="year"  orderType="DESC"/>
+		    <field id="mes" orderType="DESC"/>
+		</order>
+			
+        </table>
+    </form>
+</histrix> 

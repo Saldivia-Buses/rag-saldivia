@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm-mini" imprime="false">
+	<title>condiciones de movimientos</title>
+	<obs/>
+        <eventos>
+                <event id="insert">close</event>
+                <event id="update">close</event>
+                <event id="delete">close</event>
+        </eventos>
+
+	<form >
+		<table id="PROD_CONDICION_MOVIM">
+			<title>Condiciones</title>
+			<field id="id_condicion" esclave="true" autoinc="true" noshow="true">
+				<label>Codigo</label>
+			</field>
+			<field id="seccion_id"  _editable="true">
+                            <tabla_ex id="MOMENTO">
+                                <field id="idMomento"></field>
+                                <field id="descripcion"></field>
+                            </tabla_ex>
+                            <label>Sección</label>
+			</field>
+			
+			<field id="estado">
+				<label>estado</label>
+				<help>estado para iniciar movimiento</help>
+				<options>
+					<option valor="0"></option>
+					<option valor="25">25 %</option>
+					<option valor="50">50 %</option>
+					<option valor="75">75 %</option>
+					<option valor="100">100 %</option>					
+				</options>
+			</field>
+			
+			<field id="proceso_id">
+		            <label>Proceso</label>
+		            <help>Rubro del Articulo</help>
+		            <tabla_ex id="PROD_PROCESOS">
+		              <field id="id_proceso"/>
+		              <field id="nombre_proceso">
+		              </field>
+		            </tabla_ex>
+		        </field>
+			<field id="homologacion_id" oculto="true"/>		        
+		</table>
+	</form>
+</histrix>
+

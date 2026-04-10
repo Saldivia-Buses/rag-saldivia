@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<abm tipo="consulta" borra="no" inserta="no" paginar="250" imprime="false">
+	<titulo>Ultima Compra del Insumo</titulo>
+	<obs></obs>
+	<consulta >
+		<tabla id="STKINSPR">
+			<titulo>Ultima Compra del Insumo</titulo>
+			
+			<campo id="siscod" oculto="true">
+				<label>siscod</label>
+			</campo>
+			
+			<campo id="artcod" deshabilitado="true">
+				<label>Art.</label>
+			</campo>
+			<campo id="ctacod" deshabilitado="true">
+				<label>Prov.</label>
+			</campo>
+			<campo id="ctanom" deshabilitado="true" tabla="CCTCUENT">
+				<label>Nombre</label>
+				<tipo>varchar</tipo>
+			</campo>
+			<campo id="artcos" deshabilitado="true">
+				<label>Costo</label>
+			</campo>
+			<campo id="fecult" deshabilitado="true" tipoOrden="DESC">
+				<label>Ingreso</label>
+			</campo>
+			<campo id="fecfac" deshabilitado="true">
+				<label>Factura</label>
+			</campo>			
+			<campo id="movfec" deshabilitado="true">
+				<label>fec.Remito</label>
+			</campo>			
+			<campo id="movnro" deshabilitado="true">
+				<label>Pv.Rem</label>
+			</campo>			
+			<campo id="movnro" deshabilitado="true">
+				<label>Remito</label>
+			</campo>			
+			
+			<orden>
+				<campo id="fecult" />
+			</orden>
+		</tabla>
+		<join tipo="left">
+			<tabla id="CCTCUENT">
+			<campo id="siscod" oculto="true">
+				<condicion operador="=">STKINSPR.siscod</condicion>
+			</campo>
+			<campo id="ctacod" oculto="true">
+				<condicion operador="=">STKINSPR.ctacod</condicion>
+			</campo>
+				
+			</tabla>
+		</join>
+	</consulta>
+</abm>

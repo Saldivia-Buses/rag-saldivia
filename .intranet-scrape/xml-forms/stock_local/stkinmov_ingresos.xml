@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+	<title>ENTRADA SALIDA STOCK POR CODIGO</title>
+	<obs/>
+	<form >
+		<table id="STKINMOV" label="ENTRADA SALIDA STOCK">
+			<field  id="movfec" noshow="true">
+				<label>Fecha</label>
+				<help>Fecha Remito</help>
+			</field>
+			<field id="siscod" oculto="true">
+				<label>Codigo Sistema..</label>
+				<help></help>
+				<condicion operador="=">'01'</condicion>
+			</field>
+			<field id="artctb" tabla="STKINSUM" break="true">
+			    <label>Cta.Ctb</label>
+			</field>
+
+			<field id="ctbnom" tabla="CTBCUENT">
+			    <label>Nom.Ctb</label>
+			</field>
+
+			<field id="artcod" >
+				<label>Articulo</label>
+				<help>Codigo de Articulo.</help>
+<!--				<ayuda_ex condes="true" id="STKINSUM">
+					<clave>artcod</clave>
+					<field id="artcod"/>
+					<field id="artdes"/>
+					<field id="siscod" oculto="true">
+						<condicion operador="=">'01'</condicion>
+					</field>
+				</ayuda_ex>
+				<preparam operador="=">true</preparam>
+-->
+			</field>
+			<field id="artdes" tabla="STKINSUM">
+			    <label>Descripción</label>
+			</field>
+			<field id="artsup" >
+			    <label>Superior</label>
+			    <expression>select idPadre from STKPIEZA where articulo_hijo = STKINSUM.artcod limit 1</expression>
+			</field>
+			<field id="Entrada" suma="true">
+				<expression>sum(movuso)</expression>
+				<label>Ingreso</label>
+				<help></help>
+			</field>
+
+
+			<field id="c1" noshow="true" >
+				<expression>select count(*) from VISTA_STK_COSTOS ST where ST.artcod = STKINMOV.artcod  and ST.siscod = 'PR'</expression>
+			</field>
+
+			<field id="c2" noshow="true">
+				<expression>select count(*) from VISTA_STK_COSTOS ST where ST.artcod = (select idPadre from STKPIEZA where articulo_hijo = STKINSUM.artcod limit 1)  and ST.siscod = 'PR'</expression>
+			</field>
+			<field id="sincosto" style="text-align:center; font-weight:bold;" local="true">
+				<label>Costos</label>
+				<if exp="(c1 + c2) == 0">
+				    <true>'SIN COSTO'</true>
+				    <false>''</false>
+				</if>
+			</field>
+			<field id="grupo">
+				<label>grupo</label>
+				<expression>select GROUP_CONCAT(nombre) from CTBGRPCONT CTBG  join CTBGRUPO CG ON CG.idGrupo = CTBG.idGrupo where CTBG.ctbcod = STKINSUM.artctb</expression>
+			</field>
+<!--			<field id="Salida" suma="true">
+				<expression>movuso * (case when contip = '2' then 1 else 0 end)</expression>
+				<label>Salida</label>
+				<help></help>
+			</field>
+ -->
+			<filters>
+				<field id="artctb">
+					<operador>like</operador>
+					<label>Cuenta Contable</label>
+				</field>
+				<field copia="movfec" id="movfec">
+					<operador>>=</operador>
+					<label>Desde Fecha</label>
+					<valor>today</valor>
+				</field>
+				<field id="movfec">
+					<operador>&lt;=</operador>
+					<label>Hasta Fecha</label>
+					<valor>today</valor>
+				</field>
+			</filters>
+			<group>
+				<field id="artcod" tabla="STKINSUM"/>
+			</group>
+			<order>
+				<field id="artctb" />
+			</order>
+		</table>
+		<join tipo="inner">
+			<table id="STKINSUM">
+				<field id="siscod" >
+					<condicion operador="=">'01'</condicion>
+				</field>
+				<field id="artcod" >
+					<condicion operador="=">STKINMOV.artcod</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="inner">
+			<table id="STKCONCE">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">'06'</condicion>
+				</field>
+				<field id="movcod" oculto="true">
+					<condicion operador="=">STKINMOV.movcod</condicion>
+				</field>
+				<field id="contip" >
+					<condicion operador="=">1</condicion>
+				</field >
+			</table>
+		</join>
+		<join tipo="inner">
+			<table id="CTBCUENT">
+<!--				<field id="siscod" >
+					<condicion operador="=">'10'</condicion>
+				</field>
+-->
+				<field id="ctbcod" >
+					<condicion operador="=">STKINSUM.artctb</condicion>
+				</field>
+			</table>
+		</join>
+
+	</form>
+</histrix>

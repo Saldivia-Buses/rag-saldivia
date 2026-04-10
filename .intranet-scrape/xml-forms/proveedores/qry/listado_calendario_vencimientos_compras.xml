@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+    <title>Calendario Vencimientos</title>
+    <obs/>
+    <form>
+        <table id="REG_MOVIMIENTOS" label="Calendario Vencimientos">
+	    <filters>
+	        <field id="fecha_movimiento">
+			<label>Desde</label>
+	        	<operador>&gt;=</operador>
+	        </field>
+	        <field id="fecha_movimiento">
+			<label>Hasta</label>
+	        	<tipo>date</tipo>
+	        	<operador>&lt;=</operador>
+	        </field>
+
+	    </filters>
+        	<field id="id_regmovim" calendarId="true" noshow="true"/>
+
+
+	        <field id="fecha_movimiento">
+			<label>Fecha</label>
+	        	<tipo>date</tipo>
+	        </field>
+	        <field id="subsistema_id" noshow="true">
+	        	<condicion operador="=">'01'</condicion>
+	        </field>
+		<field id="regcategoria_id" tabla="REG_CUENTA" noshow="true">
+	        	<condicion operador="!=">3</condicion>
+
+		</field>
+
+			<field id="nombre_movimiento">
+			    <expression>(case when nombre_movimiento != '' then nombre_movimiento else  nombre_cuenta end)</expression>
+			    <label>Nombre</label>
+
+			</field>
+			<field id="link" noshow="true">
+			    <label>Nro</label>
+
+			    <expression>''</expression>
+
+			</field>		
+
+			<field id="conpend">
+				<expression>(select 'Con Deuda Vencida' from REG_MOVIMIENTOS RM WHERE RM.subsistema_id = REG_MOVIMIENTOS.subsistema_id and RM.regcuenta_id = REG_MOVIMIENTOS.regcuenta_id and date_add(RM.fecha_movimiento, interval plazo day) &lt; date(now()) and RM.saldo_movimiento &gt; 0 limit 1)</expression>
+			</field>
+			<field id="ocpnro">
+			    <label>Nro</label>
+			    <attribute id="linkint">link</attribute>
+			    <expression>LPAD(nro_movimiento, 8, '0')</expression>
+			    <helper xml="cpsencab_cabreimp.xml" type="link" dir="/compras/" title="Detalle del comprobante">
+				<parameter source="ocpnro" target="ocpnro" />
+			    </helper>
+
+			</field>
+			<field id="estado" local="true" noshow="true">
+			</field>
+			<field id="tipo" break="true">
+			    <expression>abreviacion_concepto</expression>
+			</field>
+			<field id="saldo_movimiento" noshow="true">
+				<label>Saldo</label>
+				<condicion operador="&gt;">0</condicion>
+			</field>
+
+			<field id="vencimiento" _local="true" _noshow="true">
+				<label>Vencida el</label>
+				    <expression>date_add(fecha_movimiento, interval plazo day)</expression>
+				<tipo>date</tipo>
+			</field>
+	        <field id="vence"  calendarStartDate="true" _noshow="true">
+			<label>Vto</label>
+	        	<tipo>date</tipo>
+				<expression having="false">
+		    (case when date_add(fecha_movimiento, interval plazo day)  &lt; date(now()) then date(now()) else date_add(fecha_movimiento, interval plazo day) end)</expression>
+<!--
+			<expression having="false">date_add(fecha_movimiento, interval plazo day)</expression> 
+-->
+				<detalle>vence</detalle>
+	        </field>
+			<field id="vencidas" noshow="true" clasefila="true">
+				<expression>(case when date_add(fecha_movimiento, interval plazo day) &lt; date(now()) then 'resaltado' else 'zzzzzzz' end)</expression>
+				<tipo>custom_numeric</tipo>
+			</field>
+
+			<field id="subject" suma="true" style="text-align:right;">
+				<label>Total</label>
+				<!--<expression>concat('NRO MOVIM: ', nro_movimiento ,' - ', nombre_movimiento , ' - $', saldo_movimiento)</expression> -->
+				<expression>saldo_movimiento</expression>
+				<tipo>custom_numeric</tipo>
+			</field>
+		<group>
+			<field id="id_regmovim" />
+
+		</group>
+		<order>
+			<field id="vencidas" />
+
+			<field id="vencimiento" />
+		</order>
+        </table>
+
+        <join>
+        	<tabla id="REG_CONCEPTOS">
+        		<field id="id_concepto">
+        			<condicion operador="=">concepto_id</condicion>
+        		</field>
+        		<field id="tipo_concepto">
+        			<condicion operador="=">1</condicion>
+        		</field>
+        	</tabla>
+        </join>
+		<join>
+		    <table id="REG_CUENTA">
+				<field id="id_regcuenta">
+				    <condicion operador="=">regcuenta_id</condicion>
+				</field>
+		    </table>
+		</join>
+		<join>
+		    <table id="REG_FORMAS">
+				<field id="id_regforma">
+				    <condicion operador="=">REG_CUENTA.regforma_id</condicion>
+				</field>
+		    </table>
+		</join>
+    </form>
+<!--
+	<form>
+		<table id="CPSMOVIM" label="DETALLE">
+			<filters>
+				<field id="fecreq" deshabilitado="false">
+					<operador>&gt;=</operador>
+					<label modpos="nobr">Desde</label>
+					<valor eval="true">date("d/m/Y", mktime(0, 0, 0, 1, 1, date("Y")))</valor>
+				</field>
+			</filters> 
+
+			<field id="id_cpsmovim" deshabilitado="true" calendarId="true" noshow="true"/>
+
+			<field id="fecha_movimiento">
+				<expression having="false">fecreq</expression>
+
+			</field>
+			<field id="siscod" oculto="true">
+				<condicion operador='='>''</condicion>
+
+			</field>
+			
+			<field id="ctanom" tabla="CCTCUENT" >
+			    <label>Nombre</label>
+			</field>
+
+		<field id="link">
+		    <label>Nro</label>
+
+		    <expression>'cpsencab_cabreimp.xml'</expression>
+
+		</field>
+		<field id="conpend">
+			<expression>''</expression>
+		</field>
+			<field id="ocpnro" tabla="CPSENCAB">
+			    <label>Nro</label>
+			</field>
+
+			<field id="ocpest" noshow="true" tabla="CPSENCAB">
+				<label _modpos="nobr">Estado</label>
+				<help>Estado Actual</help>
+				<condicion operador="!=">1</condicion>
+
+			</field> 
+		<field id="tipo">
+		    <expression>'O.C.'</expression>
+		</field>
+			<field id="anuladas" noshow="true">
+				<expression having="false">ocpest</expression>
+				<condicion operador="!=">4</condicion>
+			</field>
+
+<field id="vencimiento" >
+	<expression having="false">fecreq</expression>
+	<label>Requerida</label>
+	<tipo>date</tipo>
+</field>
+			<field id="vence"  deshabilitado="true" calendarStartDate="true">
+				<label>Fecha Entrega</label>
+
+					<expression having="false">(case when date_add(fecreq, interval 30 day) &lt; date(now()) then date(now()) else date_add(fecreq, interval 30 day) end)</expression>
+				<tipo>date</tipo>
+			</field>
+			<field id="vencidas" noshow="true" clasefila="true">
+				<expression having="false">(case when date_add(fecreq, interval 30 day) &lt; date(now()) then 'resaltado' else 'zzzzzzzzz' end)</expression>
+				<tipo>custom_numeric</tipo>
+			</field>
+
+			<field id="subject" calendarSubject="true" suma="true" >
+				<expression>sum(importe_total)</expression>
+			</field>
+	<group>
+	    <field id="ocpnro" />
+	</group>
+			<order>
+				<field id="vencimiento" />
+			</order>
+	
+	</table>
+
+    <join tipo="left">
+	<table id="CPSENCAB">
+		<field id="ocpnro" >
+			<condicion operador="=">CPSMOVIM.ocpnro</condicion>
+		</field>
+		<field id="ocpfec" >
+			<condicion operador="=">CPSMOVIM.movfec</condicion>
+		</field>
+	</table>
+    </join>
+    <join tipo="left">
+	<table id="CCTCUENT">
+		<field id="siscod" >
+			<condicion operador="=">'01'</condicion>
+		</field>
+		<field id="ctacod" >
+			<condicion operador="=">CPSENCAB.ctacod</condicion>
+		</field>
+	</table>
+    </join>
+	<group>
+	    <field id="vencidas" />
+	    <field id="ocpnro" />
+	</group>
+			<order>
+				<field id="ctanom" />
+			</order>
+</form>
+-->    
+</histrix>

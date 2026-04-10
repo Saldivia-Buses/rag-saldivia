@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="dashboard">
+
+        <titulo>llamadas </titulo>
+
+        
+        <widget id="relacion_C_V"  width="400px">
+            <title>Duración de llamadas </title>
+	    <url><![CDATA[histrixLoader.php?xml=tel_llamadas_mensuales_qry.xml&dir=tel]]></url>
+        </widget>
+       <widget id="cantidad"  width="400px">
+            <title>Cantidad de llamadas</title>
+	    <url><![CDATA[histrixLoader.php?xml=tel_cant_llamadas_mensuales_qry.xml&dir=tel]]></url>
+        </widget>
+         <widget id="internos"  width="400px">
+            <title>Llamadas Salientes por internos</title>
+	    <url><![CDATA[histrixLoader.php?xml=tel_cant_llamadas_internos_qry.xml&dir=tel]]></url>
+        </widget>
+          <widget id="internos1"  width="400px">
+            <title>Llamadas Entrantes por internos</title>
+	    <url><![CDATA[histrixLoader.php?xml=tel_cant_llamadas_internos_entrantes_qry.xml&dir=tel]]></url>
+        </widget>
+
+        <!--<widget id="promedio"  width="400px">
+            <title>Cantidad Mensuales</title>
+	    <url><![CDATA[histrixLoader.php?xml=tel_promedio_llamadas_qry.xml&dir=tel]]></url>
+        </widget>
+-->
+
+
+
+
+    
+        
+</histrix>
+
+
+

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+<title>PROPIEDADES</title>
+<obs></obs>
+<form>
+    <table id="PRD_PROPIEDADES">
+        <title>Propiedad</title>
+
+        <field id="codigo_campo" esClave="true">
+            <label>Codigo</label>
+            <help>Codigo del campo de la propiedad</help>
+        </field>
+        <field id="valor_campo">
+            <label>Descripcion</label>
+            <help>Descripcion</help>
+        </field>
+        <field id="cantidad_campo">
+            <label>Cantidad</label>
+            <help>Cantidad</help>
+        </field>
+
+        <field id="campoficha_id" esClave="true">
+            <label>Nombre del Campo</label>
+            <help>Nombre del campo de la ficha</help>
+            <tipo>varchar</tipo>
+        </field>
+
+        <order>
+            <field id="valor_campo" />
+        </order>
+    </table>
+</form>	   
+</histrix>

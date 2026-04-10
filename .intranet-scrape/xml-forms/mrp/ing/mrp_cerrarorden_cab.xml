@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="cabecera" >
+    <title>ORDEN DE PRODUCCION</title>
+    <consulta>
+        <table id="MRP_ORDEN_PRODUCCION" label="ORDEN DE COMPRA" >
+
+            <field id="id_mrporden" deshabilitado="true">
+        	<label>Numero</label>
+            </field>
+            <field id="login_id" local="true" deshabilitado="true" noshow="true">
+		        <valor eval="true">$_SESSION['usuario']</valor>
+             </field>
+
+            <field id="fecha_orden" deshabilitado="true">
+                <label modpos="nobr">Fecha</label>
+                <help >Fecha de Orden de Producción</help>
+                <tipo>date</tipo>
+            </field>
+
+            <field id="fecha_cierre" local="true">
+                <label modpos="nobr">Fecha Cierre</label>
+                <help >Fecha de Cierre</help>
+                <valor>today</valor>
+                <tipo>date</tipo>
+            </field>
+            <field id="rhpersonal_id"  deshabilitado="true">
+        	<helper type="combo" xml="rhpersonal_qry.xml" dir="/ayudas" empty="true"/>
+                <label modpos="nobr">Empleado</label>
+                
+                <help >Empleado responsable de la Orden de Producción</help>
+            </field>
+
+            <field id="orden_comentarios">
+                <label colspan="6">Comentarios</label>
+                <help>Comentarios</help>
+                <size>60</size>
+            </field>
+            <field id="stkdeposito_id" local="true" deshabilitado="true">
+                <label  >Deposito</label>
+                <help>Lugar de Entrega/Descarga</help>
+                <helper type="combo"  xml="stkdepositos_crud.xml" dir="/stock/man/" >
+                </helper>
+            </field>
+            <field id="stkdeposito_destino_id" local="true" deshabilitado="true">
+                <label  modpos="nobr">Deposito DEstino</label>
+                <helper type="combo"  xml="stkdepositos_crud.xml" dir="/stock/man/" >
+                </helper>
+            	<valor>2</valor>
+            </field>
+            
+            <field id="mrpestado"  local="true" oculto="true">
+        	<valor>1</valor>
+                <label>Estado </label>
+            </field>
+            <field id="stkconcepto_id"  local="true" noshow="true">
+        	<expresion>select id_stkconcepto FROM STK_CONCEPTOS where tipo_concepto = 0 and produccion_concepto = 1 limit 1</expresion>
+            </field>
+            <field id="stkconcepto_consumido_id"  local="true" noshow="true">
+        	<expresion>select id_stkconcepto FROM STK_CONCEPTOS where tipo_concepto = 1 and produccion_concepto = 1 limit 1</expresion>
+            </field>
+
+        </table>
+    </consulta>
+</histrix>

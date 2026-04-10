@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta"  _preloadData="false" paginar="100">
+	<title>Cta Ctes</title>
+	<obs/>
+	<form >
+		<table id="REG_CUENTA" label="Sub Diario Facturación">
+			<filters>
+				<field id="lote_id">
+					<label>Lote</label>
+					<operador>=</operador>
+				</field>
+			</filters>
+			<field id="id_regcuenta" noshow="true"/>
+			<field id="nro_cuenta">
+				<label>Cod.</label>
+			</field>
+			<field id="nombre_cuenta">
+				<label>Nombre</label>
+			</field>
+			<field id="lote_id" local="true" noshow="true">
+				<label>Lote</label>
+				<helper type="combo" xml="faclotes_qry.xml" dir="/ayudas">
+					<field id="id_faclote"/>
+					<field id="faclote_periodo">
+						<expression>
+							CONCAT(faclote_periodo, ' - ', FAC_SERVICIO_GRUPOS.nombre_grupo)
+						</expression>
+					</field>
+				</helper>
+			</field>
+			<field id="proceso_periodo" colstyle="display:yes;">
+				<label>Facturado</label>
+				<attribute id="colstyle">ind_style</attribute>
+				<expression>
+					IFNULL((SELECT 'SI' FROM REG_MOVIMIENTOS WHERE faclote_id = [__lote_id__] and regcuenta_id = REG_CUENTA.id_regcuenta), 'NO')
+				</expression>
+			</field>
+			<field id="ind_style" noshow="true">
+				<expression>
+					IFNULL((SELECT 'color:green;' FROM REG_MOVIMIENTOS WHERE faclote_id = [__lote_id__] and regcuenta_id = REG_CUENTA.id_regcuenta), 'color:red;')
+				</expression>
+			</field>
+		</table>
+	</form>
+</histrix>

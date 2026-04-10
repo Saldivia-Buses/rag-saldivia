@@ -1,0 +1,182 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+  <title>Ingreso de Movimientos</title>
+  <obs/>
+  <form>
+
+    <table id="REG_MOVIMIENTOS" label="Resumen">          
+        
+        <filters>
+          <field id="fecha_movimiento">
+            <label>Desde</label>
+            <tipo>date</tipo>
+            <valor>today</valor>
+            <operador>&gt;</operador>
+          </field>
+
+          <field id="fecha_movimiento">
+            <label>Hasta</label>
+            <tipo>date</tipo>
+            <valor>today</valor>
+            <operador>&lt;</operador>
+          </field>
+        </filters>
+        
+
+
+
+        <field id="id_regmovim" noshow="true"></field>
+
+        <field id="fecha_movimiento">
+          <label>Fecha</label>
+        </field>
+
+        <field id="nro_movimiento" tdWidth="150" linkdes="Detalle del Comprobante" linkmodal="true" style="text-align: center">
+          <label>Numero</label>
+          <expresion>
+            CONCAT(REG_MOVIMIENTOS.letra_movimiento,' ',LPAD(REG_MOVIMIENTOS.puesto_movimiento,4,'0'),'-',LPAD(REG_MOVIMIENTOS.nro_movimiento  ,8,'0'))
+          </expresion>
+          <helper type="link" _dir="/caja/qry">
+            <parameter source="id_regmovim" target="id_regmovim"/>
+          </helper>
+          <attribute id="linkint">imprime_concepto1</attribute>
+        </field>
+  
+        
+        <field id="nombre_cuenta" local="true">
+          <label>Cliente</label>
+          <expresion>CONCAT(REG_CUENTA.nombre_cuenta, '-')</expresion>
+          <size>30</size>
+        </field>
+        
+        <field id="importe_movimiento">
+          <label>Importe</label>
+        </field>
+
+        <field id="administracion">
+          <label>Administracion</label>
+          <expression>ADMINISTRACION.nombre_cuenta</expression>
+        </field>
+
+        <field id="id_administracion" noshow="true">
+          <label>Administracion</label>
+          <expression>ADMINISTRACION.id_regcuenta</expression>
+          <condicion operador="=">(case when '[__administraciones__]' != '' then '[__administraciones__]' else ADMINISTRACION.id_regcuenta end)</condicion>
+        </field>
+
+        <field id="administraciones" local="true" noshow="true">
+          <label>Administracion</label>
+          <helper type="combo" id="REG_CUENTA" empty="true">        
+            <field id="cuenta_adm">
+              <expression>id_regcuenta</expression>
+            </field>
+            <field id="nombre_cuenta" />
+            <field id="administracion_id">
+                <condicion operador="=">1</condicion>
+            </field>
+          </helper>
+        </field>
+
+        <field id="administraciones" local="true" noshow="true">
+          <label>Admin</label>
+          <helper type="combo" id="REG_CUENTA" empty="true">
+            <field id="cuenta_adm">
+                <expression>id_regcuenta</expression>
+            </field>
+            <field id="nombre_cuenta" />
+            <field id="administracion_id" local="true">
+                <condicion operador="=">1</condicion>
+            </field>
+          </helper>
+        </field>
+
+
+        <field id="imprime_concepto1" noshow="true">
+          <expresion>
+            CASE WHEN IFNULL(REG_NUMERADORES.ejecuta,'') = '' 
+                      THEN trim(CAJ_CONCEPTOS.imprime_concepto) 
+                      ELSE trim(REG_NUMERADORES.ejecuta) 
+                 END
+          </expresion>
+        </field>
+        
+
+        <field id="enviar_mail" local="true">
+          <tipo>check</tipo>
+        </field>
+
+        <group>
+            <field id="id_regcuenta" tabla="REG_CUENTA"/>   
+        </group>
+    </table>
+
+    <join>
+      <table id="REG_CUENTA">
+        <field id="id_regcuenta">
+          <condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>          
+        </field>      
+      </table>
+    </join>      
+
+    <join tipo="left">
+      <table id="REG_CUENTA_RELACIONES">
+        <field id="regcuenta_id">
+          <condicion operador="=">REG_CUENTA.id_regcuenta</condicion>
+        </field>
+      </table>
+    </join>  
+
+    <join tipo="left">
+      <table id="REG_CUENTA" as="ADMINISTRACION">
+        <field id="id_regcuenta">
+          <condicion operador="=">REG_CUENTA_RELACIONES.regcuentarelacionada_id</condicion>
+        </field>
+      </table>
+    </join>  
+
+
+    <join>
+      <table id="REG_CONCEPTOS">
+        <field id="id_concepto">
+          <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+        </field>        
+      </table>
+    </join>
+
+    <join tipo="left">
+      <table id="CAJ_MOVIMIENTOS">
+        <field id="id_cajmovimiento">
+          <condicion operador="=">REG_MOVIMIENTOS.cajmovimiento_id</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join tipo="left">
+      <table id="CAJ_CONCEPTOS">
+        <field id="id_cajconcepto">
+          <condicion operador="=">CAJ_MOVIMIENTOS.cajconcepto_id</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join tipo="left">
+      <table id="REG_NUMERADORES">
+        <field id="subsistema_id">
+          <condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion>
+        </field>
+        <field id="regconcepto_id">
+          <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+        </field>
+        <field id="puesto">
+          <condicion operador="=">REG_MOVIMIENTOS.puesto_movimiento</condicion>
+        </field>
+        <field id="letra">
+          <condicion operador="=">REG_MOVIMIENTOS.letra_movimiento</condicion>
+        </field>
+      </table>
+    </join>
+    
+    
+
+  </form>
+</histrix>

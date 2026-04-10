@@ -1,0 +1,353 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<abm tipo="consulta" conBusqueda="true" imprimetanda="true">
+	<titulo>FICHA PERSONAL</titulo>
+	<obs></obs>
+	<consulta detalle="personal_cons_ficha.xml">
+		<tabla id="PERSONAL" label="Ficha Personal">
+			<filtros>
+				<campo  id="pervac" local="true">
+					<label>Periodo</label>
+					<help>Periodo de Vacaciones</help>
+					<parametro id="fsmparam_paralf.xml" retorna="paralf">
+					<campo id="parcla">
+						<condicion operador="=">'pervac'</condicion>
+					</campo>
+				</parametro>
+				<tipo>varchar</tipo>
+				</campo>
+
+				<campo  id="comvac" local="true">
+					<label>Comienza</label>
+					<help>Fecha de Comienzo de Vacaciones</help>
+					<parametro id="fsmparam_paralf.xml" retorna="paralf">
+					<campo id="parcla">
+						<condicion operador="=">'comvac'</condicion>
+					</campo>
+				</parametro>
+				<tipo>date</tipo>
+				</campo>
+				<campo  id="impvac" local="true">
+					<label>Impresion</label>
+					<help>Impresion de Vacaciones</help>
+					<parametro id="fsmparam_paralf.xml" retorna="paralf">
+					<campo id="parcla">
+						<condicion operador="=">'impvac'</condicion>
+					</campo>
+				</parametro>
+				<tipo>date</tipo>
+				</campo>
+<!--
+				<campo id="impvac" local="true">
+					<label>Fecha Impresion</label>
+					<parametro id="fsmparam_paralf.xml" retorna="paralf">
+						<campo id="parcla">
+							<condicion operador="=">'impvac'</condicion>
+						</campo>
+					</parametro>
+					<tipo>varchar</tipo>
+				</campo>
+-->
+			<campo id="fecha_Egreso" deshabilitado="false">
+				<expresion>case when fechaEgreso = '0000-00-00' then NOW() else fechaEgreso end</expresion>
+				<label>Egreso</label>
+				<tipo>date</tipo>
+				<operador>&gt;=</operador>
+				<valor>today</valor>
+			</campo>
+<!--            <campo id="fec" local="true">
+				<label>Egreso Hasta:</label>
+				<valor>today</valor>
+				<tipo>date</tipo>
+				
+			</campo> -->
+				
+			</filtros>
+
+			<campo id="pervac" local="true" oculto="true">
+				<label>Periodo</label>
+				<parametro id="fsmparam_paralf.xml" retorna="paralf">
+					<campo id="parcla">
+						<condicion operador="=">'pervac'</condicion>
+					</campo>
+				</parametro>
+				<tipo>varchar</tipo>
+				<detalle>pervac</detalle>
+			</campo>
+
+			<campo id="comvac" local="true" oculto="true">
+				<label>Com</label>
+				<parametro id="fsmparam_paralf.xml" retorna="paralf">
+					<campo id="parcla">
+						<condicion operador="=">'comvac'</condicion>
+					</campo>
+				</parametro>
+				<tipo>date</tipo>
+				<detalle>comvac</detalle>
+			</campo>
+			<campo id="impvac" local="true" oculto="true">
+				<label>Comienza</label>
+				<parametro id="fsmparam_paralf.xml" retorna="paralf">
+					<campo id="parcla">
+						<condicion operador="=">'impvac'</condicion>
+					</campo>
+				</parametro>
+				<tipo>varchar</tipo>
+				<size>50</size>
+				<detalle>impvac</detalle>
+			</campo>
+<!--
+			<campo id="impvac" local="true" oculto="true">
+				<label>FechaImpresion</label>
+				<parametro id="fsmparam_paralf.xml" retorna="paralf">
+					<campo id="parcla">
+						<condicion operador="=">'impvac'</condicion>
+					</campo>
+				</parametro>
+				<tipo>varchar</tipo>
+				<size>50</size>
+			</campo>
+-->
+			<campo id="idPersona" noshow="true">
+				<label modpos="nobr">pers</label>
+				<detalle>idPersona</detalle>
+			</campo>
+
+			<campo id="legajo">
+				<label modpos="nobr">Legajo</label>
+				<detalle>legajo</detalle>
+			</campo>
+			<campo id="apellido">
+				<label modpos="nobr" colspan="6">Apellido</label>
+				<help>Apellido</help>
+			</campo>
+			<campo id="Nombre">
+				<label modpos="nobr">Nombre</label>
+				<help>Nombre</help>
+			</campo>
+			<campo id="CUIL">
+				<label modpos="nobr" >C.U.I.L.</label>
+				<help>Numero de Clave Unica de Identificacion Laboral</help>
+			</campo>
+
+			<campo id="DNI">
+				<label modpos="nobr" >D.N.I.</label>
+				<help>Numero de Documento Nacional de Identidad</help>
+			</campo>
+
+			<campo id="nacimiento">
+				<label >Fecha Nac</label>
+				<help>Fecha de Nacimiento</help>
+			</campo>
+
+			<campo id="fecha_Egreso" >
+
+				<expresion having="false">case when fechaEgreso = '0000-00-00' then NOW() else fechaEgreso end</expresion>
+				
+<!--				<condicion operador="&lt;=">'[__fec__]'</condicion> -->
+<!--				<condicion operador="=">"0000-00-00"</condicion>  -->
+				<tipo>date</tipo>
+			</campo>
+			<campo id="fecing">
+				<label>Ing</label>
+			</campo>
+			<campo id="fechaEgreso" >
+				<label>Egreso</label>
+			<!--	<condicion operador="=">"0000-00-00"</condicion> -->
+			</campo>			
+			<campo id="years">
+				<label>Años</label>
+				<help></help>
+				<expresion>year(now()) - year(fecing)</expresion>
+				<tipo>integer</tipo>
+			</campo>
+			<campo id="vacs">
+				<label>Dias Vacaciones</label>
+				<expresion>case when year(now()) - year(fecing) = 0 and  DATEDIFF(  MAKEDATE( YEAR( now() ), 365), fecing) &lt; (DATEDIFF(  MAKEDATE( YEAR( now() ), 365), MAKEDATE( YEAR( now() ), 365 / 2))) then   CEILING(DATEDIFF(  MAKEDATE( YEAR( now() ), 365), fecing) / 20)
+								when year(now()) - year(fecing) = 0 and  DATEDIFF(  MAKEDATE( YEAR( now() ), 365), fecing) &gt;= (DATEDIFF(  MAKEDATE( YEAR( now() ), 365), MAKEDATE( YEAR( now() ), 365 / 2))) then   14
+								when year(now()) - year(fecing)  &lt; 5 and  year(now()) - year(fecing) &gt; 0 then 14
+								when year(now()) - year(fecing)  &lt; 10 and year(now()) - year(fecing) &gt;= 5 then 21
+								when year(now()) - year(fecing)  &lt; 20 and year(now()) - year(fecing) &gt;= 10 then 28
+								when year(now()) - year(fecing)  &gt;= 20 then 21 end</expresion>
+				<tipo>integer</tipo>
+				<detalle>vacs</detalle>
+			</campo>
+			<campo id="finvac" local="true" noshow="true">
+				<label>Fin</label>
+				<if exp="true">
+					<verdadero>date('Y-m-d', strtotime('+vacs days', strtotime('comvac')))</verdadero>
+					<falso>vacs + comvac</falso>
+				</if>
+				<tipo>date</tipo>
+				<detalle>finvac</detalle>
+			</campo>
+<!--			<campo id="impr_vacs" deshabilitado="true" local="true" linkint="vacaciones_imprime.xml" linkdes="Imprimir Notificacion Vacacional">
+				<label>Notificacion Vacaciones</label>
+				<help>Notificacion de Vacaciones</help>
+				<tipo>varchar</tipo>
+				<valor>"Imprimir Notif.Vac."</valor>
+				<paring destino="legajo" operador="=">legajo</paring>
+				<paring destino="vacs" operador="=">vacs</paring>
+				<paring destino="comvac" operador="=">comvac</paring>
+				<paring destino="finvac" operador="=">finvac</paring>
+				<paring destino="pervac" operador="=">pervac</paring>
+				<paring destino="impvac" operador="=">impvac</paring>
+			</campo>
+			-->
+			<!-- <campo id="finvac" local="true" oculto="true">
+				<label>Hasta fecha</label>
+				<expresion sql="true"> select ADDDATE(comvac,vacs)</expresion>
+			</campo>-->
+<!--
+			<campo id="nacionalidad">
+				<tabla_ex id="NACIONALIDAD" xml="nacionalidad.xml" />
+				<label>Nacionalidad</label>
+				<help>Nacionalidad</help>
+			</campo>
+			<campo id="estadocivil">
+				<tabla_ex id="ESTADOCIVIL" xml="estadocivil.xml" />
+
+				<label modpos="nobr">Estado Civil</label>
+				<help>Estado Civil</help>
+			</campo>
+			<campo id="calle">
+				<label>Calle</label>
+				<help></help>
+			</campo>
+			<campo id="numero">
+				<label modpos="nobr">Numero</label>
+				<help>Numero</help>
+			</campo>
+			<campo id="piso">
+				<label modpos="nobr">Piso</label>
+				<help>Piso</help>
+			</campo>
+			<campo id="depto">
+				<label modpos="nobr">Depto</label>
+				<help>Departamento</help>
+			</campo>
+			<campo id="localidad">
+				<label modpos="nobr">Localidad</label>
+				<help>Localidad</help>
+			</campo>
+			<campo id="fecing">
+				<label>Fecha de Ingreso</label>
+				<help></help>
+			</campo>
+			<campo id="horario">
+				<tabla_ex id="HORARIO" xml="horario.xml" />
+
+				<label modpos="nobr">Horario</label>
+				<help>Horario</help>
+			</campo>	-->
+			<!--<campo id="foto">
+				<label >Foto</label>
+				<help>Foto</help>
+				 <tipo>file</tipo>
+			</campo> -->
+<!--			<campo id="login">
+				<label modpos="nobr">Login</label>
+				<help>	</help>
+			</campo>
+
+
+
+			<campo id="IdSindicato" >
+				<label>sindicato</label>
+				<tabla_ex id="SINDICATO">
+					<campo id="IdSindicato"></campo>
+					<campo id="Nombre"></campo>
+				</tabla_ex>
+				<help>Sindicato</help>
+				<valor>1</valor>
+				<actualiza>
+					<campo destino="IdSindicato" id="Id_area"/>
+					<campo destino="IdSindicato" id="IdCateg"/>
+					<campo destino="IdSindicato" id="IdConvenio"/>
+				</actualiza>
+			</campo>
+
+			<campo id="Id_area" >
+				<label>Area</label>
+				<tabla_ex id="AREASSIND">
+					<campo id="Id_area"/>
+					<campo id="descripcion"/>
+					<campo id="IdSindicato">
+						<condicion operador="=">1</condicion>
+					</campo>
+
+
+				</tabla_ex>
+					<actualiza>
+						<campo destino="Id_area" id="IdCateg"/>
+						<campo destino="Id_area" id="IdConvenio"/>
+					</actualiza>
+
+				<operador>=</operador>
+				<valor>1</valor>
+			</campo>
+			<campo id="IdCateg" >
+				<label>Categoria</label>
+				<tabla_ex id="CATPERSONAL">
+					<campo id="IdCateg"/>
+					<campo id="descripcion"/>
+					<campo id="IdSindicato" >
+						<condicion operador="=">1</condicion>
+
+					</campo>
+
+					<campo id="Id_area">
+						<condicion operador="=">1</condicion>
+					</campo>
+				</tabla_ex>
+				<actualiza>
+					<campo destino="IdCateg" id="IdConvenio"/>
+				</actualiza>
+				<valor>1</valor>
+			</campo>
+			-->
+<!--			<campo id="IdConvenio" >
+				<label>Convenio</label>
+				<tabla_ex id="CONVENIOS">
+					<campo id="IdConvenio"/>
+					<campo id="descripcion"/>
+					<campo id="IdSindicato" >
+						<condicion operador="=">1</condicion>
+					</campo>
+					<campo id="Id_area" >
+						<condicion operador="=">1</condicion>
+					</campo>
+					<campo id="IdCateg" >
+						<condicion operador="=">1</condicion>
+					</campo>
+
+				</tabla_ex>
+				<valor>1</valor>
+			</campo> 		-->
+
+
+
+
+<!--
+
+			<campo id="Id_perfil">
+				<label modpos="nobr">Perfil</label>
+				<help>Perfil</help>
+			</campo>
+			<campo id="Id_usuario">
+				<label modpos="nobr">Usuario</label>
+				<help>Usuario</help>
+			</campo>
+			-->
+<!--			<campo id="familia" local="true" obj="familia.xml">
+				<label colspan="10"></label>
+				<paring destino="IdPersona">IdPersona</paring>
+
+			</campo>			-->
+			<orden>
+				<campo id="apellido"></campo>
+				<campo id="Nombre"></campo>
+
+			</orden>
+		</tabla>
+	</consulta>
+</abm>

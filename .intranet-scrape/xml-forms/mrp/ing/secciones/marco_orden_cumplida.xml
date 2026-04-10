@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert" >
+    <title>ORDENES DE PRODUCCION</title>
+    <obs></obs>
+    <form  >
+	        
+	<table id="STK_MOVIMIENTOS" >
+            <sql>
+        update MRP_ORDEN_DETALLE set terminado = (case when objetivo_ordendetalle &lt;= (
+                ifnull(
+                    (select sum(STK_MOVIMIENTOS.cantidad) from STK_MOVIMIENTOS where STK_MOVIMIENTOS.ordendetalle_id = id_mrpordendetalle), 
+                    0) + 
+                ifnull(
+                    (select sum(MDR.cantidad) from MRP_DETALLE_REGISTRO MDR where MDR.mrpordendetalle_id = id_mrpordendetalle and MDR.mrpconcepto_id != 1)
+                    ,0 )
+                    )
+                     then 1 else 0 end )
+                where id_mrpordendetalle = [__id_mrpordendetalle__]
+
+            </sql>
+            
+            <field id="ordendetalle_id" id_temp="id_mrpordendetalle" />
+
+        </table>
+    </form>
+</histrix>

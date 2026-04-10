@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert">
+    <title>Mantenimiento</title>
+    <obs></obs>
+    <form>
+        <table id="MANT_PLAN">
+
+            <field id="equipo_id"		id_temp="equipo_id" />
+            <field id="accion_id"		id_temp="accion_id" />
+            <field id="login"			id_temp="login" />
+            <field id="observaciones"		id_temp="observaciones" />
+            <field id="rrule"			id_temp="rrule" />
+            <field id="hora_accion"		id_temp="hora_accion">
+                <tipo>time</tipo>
+            </field>
+            <field id="fecha_accion"		id_temp="fecha_accion">
+                <tipo>date</tipo>
+            </field>
+            <field id="hora_iniciotarea"	id_temp="hora_accion">
+                <tipo>time</tipo>
+            </field>
+            <field id="fecha_iniciotarea"	id_temp="fecha_accion">
+                <tipo>date</tipo>
+            </field>
+
+        </table>
+    </form>
+</histrix>

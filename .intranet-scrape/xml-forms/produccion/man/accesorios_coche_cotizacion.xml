@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini">
+    <title>Accesorios por coche</title>
+    <obs/>
+    <form >
+        <table id="ACCESORIOS_COCHE" label="Accesorios Cotizados" style__Tbody="height:100px;overflow-x:hidden;">
+            <field id="id_accesorio" noshow="true" esClave="true" autoinc="true">
+            </field>
+            <field id="nrofab" oculto="true" esClave="true">
+        	<expression>TURNOSPRODUCCION.nrofab</expression>
+                <label>Num</label>
+            </field>
+<!--            <field id="fecha">
+                <label>fecha</label>
+                <tipo>date</tipo>
+                <valor>today</valor>
+            </field> -->
+            <field id="artcod" deshabilitado="true">
+            </field>
+			 
+            <field id="artdes" autocompletar="true" >
+                <ayuda_ex id="STKINSUM" >
+
+                    <field id="artcod" noshow="true">
+                        <detalle>artcod</detalle>
+                    </field>
+                    <field id="artdes" >
+                        <label>Descripcion</label>
+                        <detalle>artdes</detalle>
+                    </field>
+                    <field id="Precio" class="informal" noshow="true" >
+                        <label>Precio</label>
+                        <expression having="false">concat( ' (',artcod,')', ' Precio: $ ',(select precio1 from LISTAPRECIOSDET as PREC where PREC.idArticulo = STKINSUM.artcod order by idLista DESC limit 1) )</expression>
+                    </field>
+                    <field id="siscod" oculto="true" >
+                        <condicion operador="=">'02'</condicion>
+                    </field>
+                    <clave>artcod</clave>
+                    <descripcion>artdes2</descripcion>
+                </ayuda_ex>
+                <label>Accesorio</label>
+                <size>70</size>
+            </field>
+            <field id="estado" >
+                <options>
+                    <option valor="0">A Confirmar</option>
+                    <option valor="1">Confirmado</option>
+                    <option valor="2">Rechazado</option>
+                </options>
+            </field>
+	    
+			 
+			 
+        </table>
+        <join tipo="inner">
+            <table id="COTIZACION">
+                <field id="idCotiz">
+                    <condicion operador="=">ACCESORIOS_COCHE.cotizacion_id</condicion>
+                </field>
+            </table>
+        </join>
+        
+        <join tipo="inner">
+            <table id="TURNOSPRODUCCION">
+                <field id="idCotiz">
+                    <condicion operador="=">COTIZACION.idCotiz</condicion>
+                </field>
+            </table>
+        </join>
+        
+        <join tipo="left">
+            <table id="STKINSUM">
+                <field id="artcod">
+                    <condicion operador="=">ACCESORIOS_COCHE.artcod</condicion>
+                </field>
+                <field id="siscod">
+                    <condicion operador="=">'02'</condicion>
+                </field>
+	    	    
+            </table>
+        </join>
+        
+        
+    </form>
+</histrix>

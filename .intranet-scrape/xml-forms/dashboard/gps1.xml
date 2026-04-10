@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="dashboard">
+        <titulo>Medidores de GPS</titulo>
+	
+        <filters>
+            <field id="prueba" >
+                <label>Test</label>
+            </field>
+        </filters>
+
+        <field id="prueba" local="true" />
+        
+        <widget id="Combustible"  width="99%" height="230px" >
+            <title>Combustible</title>
+	         <url><![CDATA[histrixLoader.php?xml=gps_combustible1.xml&dir=estadisticas]]></url>
+        </widget> 
+                <widget id="velocidad"  width="99%" height="230px" >
+            <title>Velocidad</title>
+             <url><![CDATA[histrixLoader.php?xml=gps_velocidad1.xml&dir=estadisticas]]></url>
+        </widget> 
+                <widget id="direccion"  width="99%" height="230px" >
+            <title>Direccion</title>
+             <url><![CDATA[histrixLoader.php?xml=gps_direccion1.xml&dir=estadisticas]]></url>
+        </widget> 
+
+
+</histrix>
+
+

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="grid" imprime="false" deleteRow="false" llenoreferente="true" _llenoTemporal="true">
+	<title>Seriales</title>
+	<obs></obs>
+	<form>
+		<table id="STK_SERIALES" label="Seriales">
+			<movimientos>
+				<relacion id="pos_stkseriales_upd.xml" />
+			</movimientos>
+			<field id="id_stkserial" noshow="true" />
+			<field id="stkarticulo_id">
+				<label>Artículo</label>
+				<helper type="combo" xml="stkarticulo_qry.xml" dir="/ayudas" />
+				<tipo>varchar</tipo>
+				<size>25</size>
+			</field>
+			<field id="codigo_serie" colstyle="font-size:18px;text-align:center;">
+				<label colspan="4">Serie</label>
+				<tipo>varchar</tipo>
+				<size>80</size>
+			</field>
+			<field id="chk_imput" local="true" editable="true" >
+				<tipo>check</tipo>
+				<jseval campodestino="cantidad_art" _actxml="false" >(\'chk_imput\' == \'1\')?1:0</jseval>
+			</field>
+			<field id="cantidad_art" local="true" suma="true" editable="true" noshow="true">
+				<jseval campodestino="cantidad_imp" _actxml="false" total="true">cantidad_art</jseval>
+			</field>
+			<field id="stkmovimiento_origen_id" noshow="true">
+				<condicion operador="!=">0</condicion>
+			</field>
+			<field id="stkmovimiento_destino_id" noshow="true">
+				<condicion operador="=">0</condicion>
+			</field>
+		</table>
+	</form>
+</histrix>

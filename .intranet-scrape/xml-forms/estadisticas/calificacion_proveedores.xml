@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="chart">
+  <title>Cantidad</title>
+  <obs></obs>
+  <form>
+    <table id="REG_CUENTA">
+
+        <grafico id="calificacion_g">
+            <ancho>400</ancho>
+            <tipo>P</tipo>
+            <etiquetas>letra</etiquetas>
+            <datos>cantidad</datos>
+            <title>Proveedores</title>
+            <subtitulo>Calificacion Ult. Año</subtitulo>
+        </grafico>
+
+        <field id="id_regcuenta" noshow="true" esClave="true" />
+
+        <field id="nro_cuenta" noshow="true" />
+
+        <field id="subsistema_id" noshow="true">
+            <condicion operador="=">'01'</condicion>
+        </field>
+
+        <field id="baja" noshow="true">
+            <condicion operador="=">0</condicion>
+        </field>
+
+        <field id="recepciones" noshow="true">
+            <label>Recepciones</label>
+            <expression><![CDATA[(SELECT COUNT(*) FROM OCPRECIB WHERE OCPRECIB.ctacod  = REG_CUENTA.nro_cuenta
+                                                                 AND OCPRECIB.fecrec >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH))]]></expression>
+            <condicion operador="!=">0</condicion>
+            <tipo>integer</tipo>
+        </field>
+
+        <field id="cantidad">
+            <label>Cantidad</label>
+            <expression>count(*)</expression>
+        </field>
+
+        <field id="letra">
+            <label>Letra</label>
+            <expression>getCalifProv(REG_CUENTA.id_regcuenta)</expression>
+        </field>
+
+      <group>
+            <field id="letra" />
+      </group>
+
+    </table>
+  </form>
+</histrix>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="abm">
+       <title>Duplico plan de cuentas</title>
+        <obs></obs>
+				<form >
+					<table id="CTBCUENT" label="CTBCUENT">
+						<field id="siscod" id_cab="siscodnew">
+						</field>
+						<field id="ctbcod" id_temp="ctbcod">
+						</field>
+						<field id="ctbnom" id_temp="ctbnom">
+						</field>
+						<field id="ctbsup" id_temp="ctbsup">
+						</field>
+						<field id="ctbtip" id_temp="ctbtip">
+						</field>
+						<field id="ctbhab" id_temp="ctbhab">
+						</field>
+						<field id="ctbniv" id_temp="ctbniv">
+						</field>
+						<field id="ctbsub" id_temp="ctbsub">
+						</field>
+					</table>
+				</form>
+        </histrix>

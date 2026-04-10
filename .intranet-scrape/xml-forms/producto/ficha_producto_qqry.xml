@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="card"  imprime="false" _autoprint="true"  grid="46%,30"   inserta="false"
+ path="fotos/coches" 
+
+>
+<title>Seccion</title>
+<obs></obs>
+    <customScript>
+	$('.microTabla', '[instance="__instance__"]').css({'width':'100%', 'font-size':'15px', 'color':'red'});
+	$('.barrasup.dragBar').css({'font-size':'14px'});
+	$(':input:checked', '[instance="__instance__"]').next().css({'font-size':'15px', 'color':'navy'})
+    </customScript>
+<form >
+    <table id="PRODUCTO_SECCION">
+        <title>Ficha de Producto</title>
+
+	<field id="producto_id" local="true" noshow="true">
+	    <detalle>producto_id</detalle>
+	</field>
+
+    <field id="activa_seccion" noshow="true">
+        <condicion operador="=">0</condicion>
+    </field>
+
+        <field id="id_prdseccion" autoinc="true" noshow="true">
+            <label>Codigo</label>
+            <detalle>prdseccion_id</detalle>
+        </field>
+        <field id="orden_seccion" noshow="true">
+            <label>Orden</label>
+            <help>Orden de impresion</help>
+        </field>
+        <field id="nrofab" noshow="true" local="true" />
+                                          
+        <field id="nombre_seccion"  style="font-weight:bold;font-size:large;background-color:#444;color:white;" lblsize="90"  PDFbold="true" PDFsize="15"   PDFcolor="ffffff" PDFbackgroundColor="555555">
+            <label >Secciones</label>
+            <help>Nombre de la Sección</help>
+        </field>
+<!--
+        <field id="hasData" noshow="true">
+    	    <expresion>((select count(*) from PRODUCTO_ATRIB_VALORES join PRODUCTO_ATRIBUTOS on id_prdatributo = prdatributo_id where prdseccion_id = id_prdseccion and producto_id = '[__producto_id__]') 
+    	             + (select count(*) from ACCESORIOS_COCHE where prdseccion_id = id_prdseccion and ficha_id = producto_id))</expresion>
+    	             <condicion operador="!=">0</condicion>
+        </field>-->
+
+        <field id="valores" local="true" showObjTabla="true" >
+    <!--	    <attribute id="Etiqueta">nombre_seccion</attribute> -->
+    	    <label posx="5" posy="+1"></label>
+    	    <helper xml="producto_atributos_valores_big.xml" type="object">
+    		<parameter source="producto_id" target="producto_id" />
+    		<parameter source="id_prdseccion" target="prdseccion_id" />
+    	    </helper>
+        </field>
+      
+        <field id="Panas" local="true" showObjTabla="true" >
+    	    <label posx="5" posy="+0.5"></label>
+    	    <helper xml="producto_panas.xml" type="object" dir="/">
+    		<parameter source="producto_id" target="producto_id" />
+    		<parameter source="id_prdseccion" target="prdseccion_id" /> 
+    	    </helper>
+        </field>
+
+        <field id="muestra_ft" noshow="true" local="true">
+            <valor>1</valor>
+        </field>
+
+        <field id="obs" local="true" showObjTabla="true" >
+    	    <label posx="5" posy="+0.5"></label>
+    	    <helper xml="accesorios_coche_qry.xml" type="object" dir="/produccion/man/">
+    		<parameter source="nrofab" target="nrofab" />
+    		<parameter source="id_prdseccion" target="prdseccion_id" />
+            <parameter source="muestra_ft" target="muestra_ft" /> 
+   	    </helper>
+        </field>
+            
+        <order>
+            
+            <field id="orden_seccion" />
+            <field id="nombre_seccion" />
+
+        </order>
+    </table>
+</form>	   
+</histrix>

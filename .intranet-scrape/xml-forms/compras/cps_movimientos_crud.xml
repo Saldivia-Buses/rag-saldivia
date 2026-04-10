@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ficha" borra="false" imprime="false" cancel="false" inserta="false" preFetch="true" log="true">
+    <title>ORDEN DE COMPRA</title>
+    <obs></obs>
+    <form>
+        
+        <table id="CPSENCAB" label="ORDEN DE COMPRA">
+
+            <field id="ctacod"  deshabilitado="true" noshow="true" print="false">
+                <label size="23" posx="6" posy="24" PDFsize="11">Prv</label>
+                <help>Codigo de Cuenta</help>
+            </field>
+
+            <field id="ctanom" tabla="CCTCUENT" >
+                <expression>concat('(',CCTCUENT.ctacod, ') ',CCTCUENT.ctanom)</expression>
+                <label size="23" posx="6" posy="+1" PDFsize="11" rowspan="2">Proveedor</label>
+                <help>Nombre del proveedor</help>
+                <tipo>varchar</tipo>
+		<size>50</size>
+            </field>
+           
+            <field id="ocpnro" deshabilitado="true" print="false" esClave="true">
+                <label _size="27" _posx="130" _posy="+1"  _PDFsize="11">Numero O.C.</label>
+                <help>Numero de Orden de Compra</help>
+            </field>
+
+            <field id="ocpfec" deshabilitado="true" esClave="true">
+                <label>Fecha O.C</label>
+                <help>Fecha O.C.</help>
+		<tipo>date</tipo>
+            </field>
+
+            <field id="movimientos" local="true">
+                <label colspan="4" posx="6" posy="+6" PDFsize="8"></label>
+                <help>Nombre del proveedor</help>
+		<helper type="object" xml="cpsmovim_crud.xml" dir="/compras">
+		    <parameter source="ocpnro" target="ocpnro" />
+		    <parameter source="ocpfec" target="movfec" />
+		</helper>
+            </field>
+
+            <field id="ocpobs">
+                <label  colspan="4" posx="6" posy="+1"  PDFsize="10" >Observaciones</label>
+                <help>Observaciones</help>
+                <tipo>varchar</tipo>
+		<size>100</size>
+            </field>
+            <field id="estado">
+                <label posx="10" posy="130" PDFsize="52" PDFbold="true" PDFrotate="-10"></label>
+                   <expression>(case when ocpest = 0 then 'ORDEN DE COMPRA\n\n\n\n   NO AUTORIZADA' else '' end)</expression>
+            </field>
+        </table>
+        <join tipo="left">
+            <table id="CCTCUENT">
+                <field id="siscod" oculto="true">
+                    <label>CCTCUENT.siscod</label>
+                    <condicion operador="=">'01'</condicion>
+                </field>
+                <field id="ctacod" oculto="true">
+                    <condicion operador="=">CPSENCAB.ctacod</condicion>
+                </field>
+            </table>
+        </join>
+   <!--     <join tipo="left">
+            <table id="CCTCONTA">
+                <field id="siscod">
+                    <label>cctcuent.siscod</label>
+                    <condicion operador="=">'01'</condicion>
+                </field>
+
+                <field id="ctacod" >
+                    <condicion operador="=">CPSENCAB.ctacod</condicion>
+                </field>
+
+            </table>
+        </join>
+-->
+    </form>
+</histrix>

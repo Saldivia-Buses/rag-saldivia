@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" width="50%">
+    <title>Documentos</title>
+    <obs/>
+    <form detalle="calauditoriaint_imp.xml">
+        <table id="CAL_AUDITORIA_INT" label="Documentos">
+
+			<filters>
+				<field id="realizada">
+					<label>Estado</label>
+				</field>
+			</filters>
+     		<field id="id_auditoriaint">
+				<detalle>id_auditoriaint</detalle>
+			</field>
+
+			<field id="fecha_auditoriaint">
+				<label>Fecha</label>
+			</field>
+
+			<field id="documento_id" _noshow="true">
+				<helper type="combo" id="CAL_DOCUMENTOS">
+					<field id="id_documento">
+					</field>
+					<field id="nombre_documento">
+						<expression>CONCAT(codigo_documento, ' - ', nombre_documento)</expression>
+					</field>
+				</helper>
+				<label>Procedimiento</label>
+			</field>
+
+			<field id="codigo_auditorint">
+				<label>Auditor</label>
+				<helper type="combo" id="HTXUSERS">
+					<field id="id_usuario"/>
+					<field id="auditor">
+						<expression>CONCAT(apellido, ' ', Nombre)</expression>
+					</field>
+					<order>
+						<field id="auditor"/>
+					</order>
+				</helper>
+			</field>
+
+			<field id="realizada">
+				<helper type="combo">
+					<option value=""></option>
+					<option value="0">Pendiente</option>
+					<option value="1">Realizada</option>
+				</helper>
+				<label>Estado</label>
+			</field>
+
+			<order>
+				<field id="fecha_auditoriaint" tipoOrden="DESC"/>
+		    </order>
+<!--
+			<field id="email" local="true" linkint="mails_send.xml" linkdir="/histrix/mensajeria">
+				<expression><![CDATA['<img src="../img/mail_generic.png"/>']]></expression>
+			</field>-->
+
+			<field id="colorCerradas" deshabilitado="true" clasefila="true" noshow="true" local="true">
+                <if exp="'realizada' == '1'">
+                    <true>'grisado2'</true>
+                    <false>''</false>
+                </if>
+			</field>
+        </table>
+    </form>
+</histrix>

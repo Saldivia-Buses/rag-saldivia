@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud"  path="ISO9000/Instrucciones De Trabajos/Pasos" swap="true" _width="70">
+  <title>LISTADO MAESTRO DE DOCUMENTACION</title>
+  <obs></obs>
+  <form>
+    <table id="CAL_DOCUMENTOS_PASOS" label="Documentacion">
+
+<!--       <filters>
+        <field id="revision_documento">
+          <label>Rev</label>
+          <help>Rev de Documento</help>
+          <operador>=</operador>
+        </field>
+      </filters> -->
+
+    <field id="ordenpaso" esClave="true">
+      <label>Paso</label>
+      <help>Paso</help>
+      <size>5</size>
+      <tipo>decimal</tipo>
+    </field>
+
+    <field id="documento_id" noshow="true" esClave="true" valauto="true">
+      <label>Documento</label>
+    </field>
+
+    <field id="id_documento_pasos" noshow="true" esClave="true">
+      <label>Documento/Paso</label>
+    </field>
+
+    <field id="vigencia_documento" noshow="true" local="true">
+      <label>Vigencia</label>
+    </field>
+
+    <field id="descripcion">
+      <label>Descripcion</label>
+      <help>Descripcion del paso de la instruccion</help>
+      <size>200</size>
+    </field>
+
+    <field id="revision_documento" print="false" linkint="cal_documentos_edicion_pasos_revisiones_qry.xml"  linkdir="/calidad/qry/" linkdes="Historial">
+      <label>Hist.</label>
+      <expression>'Hist.'</expression>
+<!--       <expression>select count(*) from HTXLOG where HTXLOG.obs like concat('%Documento/Paso: ' , CAL_DOCUMENTOS_PASOS.id_documento_pasos,'%')</expression>
+ -->  <paring destino="documento_id">documento_id</paring>     
+      <paring destino="ordenpaso">ordenpaso</paring>     
+      <paring destino="vigencia_documento">vigencia_documento</paring>     
+      <paring destino="id_documento_pasos">id_documento_pasos</paring>     
+      <size>5</size>
+    </field>
+
+    <field id="foto" path="trabajo_instructivo_id" _imageHeight="70" imageWidth="50" PDFcolWidth="50">
+      <label>Foto</label>
+      <tipo>file</tipo>
+      <size>50</size>
+    </field>
+
+    <order>
+      <field id="ordenpaso" />
+    </order>
+
+    </table>
+  </form>
+</histrix>

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+	<abm tipo="consulta">
+		<titulo>Inspeccion de Recepcion</titulo>
+		<obs></obs>
+		<consulta>
+			<tabla id="NORMAINSUMOS" label="Inspeccion de Recepcion">
+				<campo id="artcod" >
+					<label>Cod.Articulo</label>
+					<help>Codigo de Articulo</help>
+				</campo>
+<!--				norepeat="true" esclave="true" -->
+				<campo id="artdes" tabla="STKINSUM" >
+					<label>Articulo</label>
+					<help>Descripcion del Articulo</help>
+					<tipo>varchar</tipo>
+				</campo>
+				
+				<campo id="norcod" >
+					<label>Norma </label>
+				</campo>
+				<campo id="nordes" tabla="INSNORMA">
+					<label>Detalle</label>
+					<tipo>varchar</tipo>
+				</campo>
+				<campo id="operador">
+					<label>Operador</label>
+					<opciones>
+						<opcion valor="0">O</opcion>						
+						<opcion valor="1">Y</opcion>
+					</opciones>
+				</campo>
+			</tabla>
+			<join tipo="left">
+				<tabla id="INSNORMA">
+					<campo id="norcod" oculto="true">
+						<condicion operador="=">NORMAINSUMOS.norcod</condicion>
+					</campo>
+				</tabla>
+			</join>				
+			<join tipo="left">
+				<tabla id="STKINSUM">
+					<campo id="siscod" oculto="true">
+						<label>STKINSUM.siscod</label>
+						<condicion operador="=">'01'</condicion>
+					</campo>
+					<campo id="artcod" oculto="true">
+						<condicion operador="=">NORMAINSUMOS.artcod</condicion>
+					</campo>
+				</tabla>
+			</join>	
+		</consulta>
+	</abm>

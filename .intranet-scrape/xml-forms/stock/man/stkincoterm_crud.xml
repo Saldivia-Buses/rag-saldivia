@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="crud">
+    <title>INCOTERM</title>
+    <obs></obs>
+    <form>
+        <table id="STK_INCOTERM" label="Terminos de comercio internacional">
+            <field id="id_incoterm" esClave="true" >
+                <label>Cod.</label>
+            </field>
+
+            <field id="descripcion_incoterm">
+                <label>Descripción</label>
+                <size>80</size>
+            </field>
+
+        </table>
+    </form>
+</histrix>	

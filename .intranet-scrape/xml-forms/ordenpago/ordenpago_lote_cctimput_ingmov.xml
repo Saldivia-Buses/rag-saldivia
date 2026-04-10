@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="insert">
+	<title>COMPROBANTES</title>
+	<obs/>
+	<form >
+		<table id="CCTIMPUT"  idCampoCond="pagar">
+
+    	    <sql>
+
+    	    	insert ignore into CCTIMPUT (siscod, ctacod, movfec, concod, movlet, movnpv, movnro, movimp, movsal, movicc, movife, movipv, movinc) 
+    	       select CCT.siscod, CCT.ctacod, CCT.movfec, CCT.concod, CCT.movlet, CCT.movnpv, CCT.movnro, CCT.movsal, 0, [__concod__], '[__movfec__]', [__movnpv__], (select parent from CAJPARAM where parcla = 'nropag' limit 1) from CCTMOVIM CCT where CCT.id_regmovim in ([__numfac__]);
+
+
+    	       update CCTMOVIM set movsal = 0, movipv = [__movnpv__], movicc = [__concod__] where id_regmovim in ([__numfac__]);
+
+
+            </sql>
+
+
+			<field id="siscod" id_padre="sisprv" />
+			<field id="ctacod" id_temp="ctacod"  />
+			<field id="numfac" id_temp="numfac"  local="true"/>
+
+			<field id="movicc" id_padre="concod"></field>
+			<field id="movife" id_padre="movfec"></field>
+			<field id="movipv" id_padre="movnpv"></field>
+			
+<!--			<field id="regmin">
+				<valor>_NRO_MIN</valor>
+			</field> -->
+		</table>
+	</form>
+</histrix>

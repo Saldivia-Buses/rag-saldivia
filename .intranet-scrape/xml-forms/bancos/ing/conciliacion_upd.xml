@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="update">
+	<title>Conciliacion</title>
+	 <obs></obs>
+		<consulta>
+		     <table id="REG_MOVIMIENTOS" idCampoCond="grabar">
+			<field id="conciliado"                 id_temp="fecha"/>
+			<field id="id_regmovim"      	       id_temp="id_regmovim"  esClave="true"/>
+		    </table>
+		</consulta>
+    </histrix>	

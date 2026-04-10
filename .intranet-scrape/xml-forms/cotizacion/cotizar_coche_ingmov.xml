@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+	<histrix tipo="insert" grabafinal="true">
+		<title>Adicionales</title>
+		<obs></obs>
+		<form >
+			<table id="COTIZACION">
+<!--				<field id="idCotiz" id_cab="idCotiz"></field> -->
+                                <field id="ficha_id"     id_cab="ficha_id"></field>
+				<field id="ctacod"  id_cab="ctacod"></field>
+				<field id="fecha"   id_cab="fecha"></field>
+				<field id="ctanom"  id_cab="ctanom"></field>
+
+				<field id="ctatel"  id_cab="ctatel"></field>
+				<field id="ctadir"  id_cab="ctadir"></field>
+                                <field id="observacion_cotizacion"  id_cab="observacion_cotizacion"></field>
+				<field id="ctanro"  id_cab="ctanro"></field>
+				<field id="ctacon"  id_cab="ctacon"></field>
+				<field id="ctamail" id_cab="ctamail"></field>
+
+                                <field id="modcar"  id_cab="modcar"></field>
+				<field id="marcod"  id_cab="marcod"></field>
+				<field id="modcha"  id_cab="modcha"></field>
+				<field id="asientos" id_cab="asientos2"></field>
+
+				<field id="pie"     id_cab="pie"></field>
+
+				<field id="showPrecioCon" id_cab="showPrecioCon"></field>
+				<field id="showPrecioPub" id_cab="showPrecioPub"></field>
+
+				<field id="precioCon"   id_cab="precio"></field>
+				<field id="precioPub"   id_cab="prePub"></field>
+
+
+				<field id="tipoCli"     id_cab="tipoCli"></field>
+				<field id="idLista"     id_cab="idLista"></field>
+				<field id="idGrupo"     id_cab="idGrupo"></field>
+                                <field id="formaPago"   id_cab="formaPago"></field>
+                                <field id="plazo"       id_cab="plazo"   ></field>
+				
+			</table>
+		</form>
+	</histrix>

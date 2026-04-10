@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" imprime="false">
+    <title>Artículos</title>
+    <obs></obs>
+    <form detalle="stk_bom_crud.xml">
+        <table id="STK_ARTICULOS" label="Artículos" >
+        
+        <filters>
+                
+                <field id="id_stkarticulo">
+                    <label>Cod.auto</label>
+                    <operador>=</operador>
+                </field>
+                
+                <field id="nombre_articulo" local="true" deshabilitado="true">
+                    <label colspan="5">Nombre Articulo</label>
+                    <help>Nombre de Articulo a buscar</help>
+                </field>
+
+        </filters>
+
+                <field id="id_stkarticulo"   esClave="true"  >
+                    <label>Cod.auto</label>
+                    <helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas">
+    
+                        <field id="wstklista_id" local="true">
+                            <valor>1</valor>
+                        </field>
+                    </helper>
+                    <detalle>stkarticulopadre_id</detalle>
+                </field>
+
+
+                <field id="nombre_articulo">
+                    <label colspan="3">Articulo</label>
+                </field>
+
+                <field id="precio_costo">
+                    <label>Costo</label>
+                </field>
+
+                <field id="baja_articulo" noshow="true">
+                    <label modpos="nobr">No habilitado</label>
+                </field>
+
+                <group>
+                    <field id="id_stkarticulo" />
+                </group>
+
+        </table>
+
+        <join tipo="inner">
+            <table id="STK_BOM">
+                <field id="stkarticulopadre_id">
+                    <condicion operador="=">STK_ARTICULOS.id_stkarticulo</condicion>
+                </field>
+            </table>
+        </join>
+        
+    </form>
+</histrix>

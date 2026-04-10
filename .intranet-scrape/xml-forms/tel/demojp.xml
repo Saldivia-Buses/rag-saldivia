@@ -1,0 +1,22 @@
+     </field>
+            <field id="calldate" noshow="true" tipoOrden="DESC">
+            </field>
+            
+            <field id="fecha">
+        	<expresion>date(calldate)</expresion>
+                <label>Fecha</label>
+                <tipo>date</tipo>
+            </field>
+            <field id="hora" style="padding:0px 5px;">
+        	<expresion>date_format( calldate, '%H:%i:%s' )</expresion>
+                <label>hora</label>
+                <tipo>time</tipo>
+            </field>
+            
+            <field id="tipo" noshow="true" local="true">
+                <options>
+                    <option valor="">Todos</option>
+                    <option valor="entrantes">Entrantes</option>
+                    <option valor="salientes">Salientes</option>
+                </options>
+            </field>

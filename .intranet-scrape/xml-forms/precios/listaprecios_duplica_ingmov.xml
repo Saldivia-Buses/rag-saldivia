@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<abm tipo="insert"   >
+	<titulo>PRECIOS POR MODELO</titulo>
+	<obs/>
+	<consulta>
+		<tabla id="PRECIOMODELO" >
+			<titulo></titulo>
+			<campo id="nrocar" id_temp="nrocar"></campo>		
+			<campo id="asientos" id_temp="asientos"></campo>
+			<campo id="precio" id_temp="prec2"></campo>
+			<campo id="margen" id_temp="margen"></campo> 			
+			<campo id="idLista" id_cab="idLista"></campo>			
+			<campo id="banbar" id_temp="banbar"></campo>
+			<campo id="largo" id_temp="largo"></campo>						
+			<campo id="bodega" id_temp="bodega"></campo>	
+			<campo id="bastidor" id_temp="bastidor"></campo>			
+			<campo id="tipserv" id_temp="tipserv"></campo>			
+			<campo id="idGrupo" id_temp="idGrupo"></campo>			
+		</tabla>
+	</consulta>
+</abm>

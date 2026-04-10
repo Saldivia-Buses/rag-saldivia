@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="ing" llenoTemporal="false" graboasiento="true" >
+	<title>MOVIMIENTOS BANCARIOS</title>
+	<obs></obs>
+	<form >
+		
+		<table id="BCSMOVIM" label="Mov Bancarios">
+			
+			<movimientos cabecera="bcsmovim_transf_cab.xml">
+				<relacion id="bcsmovim_transf_Ori_ingmov.xml"></relacion>
+				<relacion id="bcsmovim_transf_Des_ingmov.xml"></relacion>
+			</movimientos>
+			
+			<field id="siscod" oculto="true">
+				<label>siscod</label>
+				<help> Cod sistema</help>
+				<parametro id="fsmparam_paralf.xml" retorna="paralf">
+					<field id="parcla">
+						<condicion operador="=">'sisbcs'</condicion>
+					</field>
+				</parametro>
+			</field>
+			<field id="bcsfec" oculto="true">
+				<tipo>date</tipo>
+				
+			</field>
+			<field id="bcscta_ori">
+				<label>Banco Origen</label>
+				<help>Cuenta Bancaria de Origen</help>
+				<ayuda_ex id="BCSCUENT" xml="HLPbcscuent.xml" dir="/help_local">
+					<field id="ccbcod"></field>
+					<field id="ccbnom">
+						<detalle>ccbnom_ori</detalle>
+					</field>
+					<field id="ctbcod">
+						<detalle>ctbcod_ori</detalle>
+					</field>
+					
+				</ayuda_ex>
+				<tipo>integer</tipo>
+				
+			</field>
+			
+			<field id="ccbnom_ori" deshabilitado="true">
+				<label modpos="nobr">Nombre Origen</label>
+			</field>
+			<field id="ctbcod_ori" deshabilitado="true" ctbcuenta="2">
+				<label modpos="nobr">Ctb Ori</label>
+			</field>
+			
+			<field id="bcscta_des">
+				<label>Banco Destino</label>
+				<help>Cuenta Bancaria de Destino</help>
+				<ayuda_ex id="BCSCUENT" xml="HLPbcscuent.xml" dir="/help_local">
+					<field id="ccbcod"></field>
+					<field id="ccbnom">
+						<detalle>ccbnom_des</detalle>
+					</field>
+					<field id="ctbcod">
+						<detalle>ctbcod_des</detalle>
+					</field>
+					
+				</ayuda_ex>
+				<tipo>integer</tipo>
+				
+			</field>
+			
+			<field id="ccbnom_des" deshabilitado="true">
+				<label modpos="nobr">Nombre Destino</label>
+			</field>
+			<field id="ctbcod_des" deshabilitado="true" ctbcuenta="1">
+				<label modpos="nobr">Ctb Des</label>
+			</field>
+			
+			<field id="cnbtip" deshabilitado="true" ctbtipo="1" noshow="true">
+				<label>cnbtip</label>
+				<valor>1</valor>
+			</field>
+			<field id="cnbtipinv" deshabilitado="true" ctbtipo="2" noshow="true">
+				<label>cnbtipinv</label>
+				<if exp="cnbtip==1">
+					<true>2</true>
+					<false>1</false>
+				</if>
+				
+			</field>
+			<field id="bcsnro2" ctbregnro="1" noshow="true">
+				<label>Numero</label>
+				<help>Numero de Movimiento</help>
+				<tipo>integer</tipo>
+				<valor>0</valor>
+				<format>%08d</format>
+			</field>
+			<field id="bcsimp" ctbimporte="2">
+				<label>Importe Total</label>
+				<help>Importe del Movimiento</help>
+				<tipo>numeric</tipo>
+				<valor>0</valor>
+				<format>%01.2f</format>
+				<size>5</size>				
+			</field>
+			<field id="bcsimp2" noshow="true" ctbimporte="1">
+				<label>Importe2</label>
+				<if exp="cnbtip==1">
+					<true>bcsimp</true>
+					<false>bcsimp</false>
+				</if>
+				<format>%01.2f</format>
+				<size>5</size>				
+			</field>
+
+			<field id="referencia" ctbreferencia="2" deshabilitado="true"
+				noshow="true">
+				<label>Referencia</label>
+				<tipo>char</tipo>
+				<if exp="1==1">
+					<true>'B.D.NRO.'.sprintf('%04d',	bcscta_des).' - '.sprintf('%04d',	bcscta_has)</true>
+					<false>''</false>
+				</if>
+			</field>
+			
+			<!-- NUMERADOR INTERNO NOMBRE DE CAMPO RESERVADO-->
+			<field id="_ORDEN" oculto="true">
+				<label>Orden</label>
+			</field>
+			
+			<order>
+				<field id="bcsnro"></field>
+			</order>
+			
+		</table>
+		
+		<join tipo="left">
+			<table id="BCSCONCE">
+				<field id="siscod" oculto="true">
+					<label>BCSCONCE.siscod</label>
+					<condicion operador="=">BCSMOVIM.siscod</condicion>
+					
+				</field>
+				
+				<field id="cnbcod" oculto="true">
+					<condicion operador="=">BCSMOVIM.bcsmov</condicion>
+				</field>
+				
+				<field id="cnbnom" oculto="true">
+				</field>
+			</table>
+		</join>
+
+	</form>
+</histrix>

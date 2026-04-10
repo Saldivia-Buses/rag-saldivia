@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="update" evento="insert">
+  <title>Cuentas Habilitadas</title>
+  <obs></obs>
+  <form>
+    <table id="MANT_SECCIONES" label="Cuentas Habilitadas" idCampoCond="test">
+
+        <field id="id_mantseccion" id_temp="id_mantseccion" local="true" />
+
+    </table>
+  </form>
+</histrix>

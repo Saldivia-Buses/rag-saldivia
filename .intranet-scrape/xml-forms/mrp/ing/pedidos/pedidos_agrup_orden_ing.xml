@@ -1,0 +1,435 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" log="false" width="60" inserta="false" borra="false" deleteRow="false"  imprime="true" transaccional="true" 
+	_tableHeight="400" filter="true" _paginar="100" serverSide="true">
+  <title>Cta Ctes</title>
+  <obs/>
+  <customScript>
+  	$('[detailpar][o="0"]:visible').click();
+  </customScript>
+  <form detalle="mrp_ordenes_calendar.xml"   >
+    <table id="STK_ARTICULOS">
+     
+      <!-- CONSULTA -->
+
+	<filters>
+		
+		<field id="nro_cuenta">
+			<operador>=</operador>
+			<label>Cliente</label>
+			<help>Cliente</help>
+		</field>
+
+		<field id="conpedidos" deshabilitado="false">
+			<operador>=</operador>
+			<label>Pedidos</label>
+			<help>Con Pedidos</help>
+			<valor>1</valor>
+		</field>
+		<field id="stkrubro_id"   >
+		    <label modpos="nobr">Rubro</label>
+    		    <operador>=</operador>
+		</field>
+
+		<field id="constock_bejerman" deshabilitado="false">
+		    <label modpos="nobr">Stock Bej</label>
+    		    <operador>=</operador>
+		</field>
+
+		<field id="constock_minimo" deshabilitado="false">
+		    <label modpos="nobr">Stock MIN</label>
+    		    <operador>=</operador>
+
+		</field>
+		<field id="filtro_produccion" deshabilitado="false">
+		    <label modpos="nobr">Produccion</label>
+		    <operador>=</operador>
+		    <valor>1</valor>
+		</field>
+		<field id="cod_art" deshabilitado="false">
+			<label>Desde Cod.Art.</label>
+			<operador>&gt;=</operador>
+		</field>
+		<field id="cod_art" modpos="nobr" deshabilitado="false">
+			<label>Hasta Cod.Art.</label>
+			<operador>&lt;=</operador>
+		</field>
+		<field id="busqueda_articulo" deshabilitado="false" colspan="8">
+			<operador>like</operador>
+			<label>Artículo</label>
+		</field>
+	</filters> 
+	           
+                       
+	<field id="stkrubro_id"  tabla="STK_ARTICULOS" noshow="true">
+	    <label modpos="nobr">Rubro</label>
+	    <helper type="combo" xml="stkrubro_qry.xml" dir="/ayudas" empty="true" />
+	    <condicion operador="!=">7</condicion>
+	</field>
+
+
+	<field id="id_regmovim" noshow="true" tabla="REG_MOVIMIENTOS">
+		<!-- <detalle>regmovim_id</detalle>-->
+	</field>
+	 <field id="cod_art" noshow="true">
+
+                    <expresion>substr(id_stkarticulo, 2,4)</expresion>  
+</field>
+	<field id="conpedidos" deshabilitado="false" noshow="true">
+		<options>
+		    <option valor="1">Con Pedidos</option>
+		    <option valor="0">Sin Pedidos</option>
+		    <option valor="">Todos</option>
+		</options>
+		<expression having="false">(!isnull(id_regmovim) or ifnull(stock_minimo,0) &gt; ifnull(cantidad_stock,0))</expression>
+<!--		<tipo>check</tipo> -->
+		
+	</field>
+<!--
+	<field id="sinstock" deshabilitado="false" _noshow="true">
+		<expression having="false">stock_minimo &lt; cantidad_stock</expression>
+			<label>ss</label>
+	</field>
+-->
+
+	<field id="regdetalles" noshow="true">
+		<expression>group_concat(distinct id_regdetalle)</expression>
+	</field>
+	<field id="regmovims" noshow="true" >
+		<expression>group_concat(distinct id_regmovim)</expression>
+		<detalle>regmovim_id</detalle>
+	</field>	
+
+	<field id="nro_cuenta" tabla="REG_CUENTA" noshow="true">
+		<label>Cliente</label>
+		<helper type="external" xml="regcuenta_solamente_nro_qry.xml" dir="/ayudas">
+		    <field id="subsistema_id"></field>
+		    <order>
+		    <field id="nombre_cuenta"></field>
+		    </order>
+		</helper>
+	</field>
+
+	<field id="regcuenta_id" noshow="true" tabla="REG_MOVIMIENTOS">
+		<operador>=</operador>
+		<help>Cliente</help>
+	</field>
+
+	<field id="nombre_cuenta" tabla="REG_CUENTA" style="font-size:0.8em;">
+		<label>Nombre Cuenta</label>
+		<helper xml="regpendientes_art_qry.xml" type="link">
+			<parameter source="regmovims" target="regmovim_id" />
+		</helper>
+		<expression><![CDATA[group_concat( distinct nombre_cuenta separator ',<br/>')]]></expression>
+	</field>
+
+	<field id="id_stkarticulo"  esClave="true" style="white-space:nowrap;font-size:0.9em;">
+		<label>Código</label>
+		<detalle>codigo_detalle</detalle>
+		<!--
+		<helper xml="det_stkarticulo.xml" type="link" dir="/stock/man">
+			<parameter source="id_stkarticulo" target="id_stkarticulo" />
+		</helper>
+		-->
+	</field>
+	<field id="nombre_articulo" tabla="STK_ARTICULOS"  style="font-size:0.9em;">
+		<attribute id="Class">txtClass</attribute>
+		<label>Nombre Artículo</label>
+	</field>
+
+	<field id="busqueda_articulo" noshow="true">
+	    <expression>CONCAT(id_stkarticulo,' ',nombre_articulo)</expression>
+	    <size>30</size>
+	</field>
+
+	<field id="desde" _noshow="true" style="font-size:11px">
+		<label>Entrega</label>
+		<expression>min(ifnull(vencimiento_movimiento, fecha_movimiento))</expression>
+		<tipo>date</tipo>
+	</field>
+<!--
+    <field id="pathlength" style="text-align:center;">
+		<label>Demora</label>
+		<expression>datediff(now() , min(ifnull(vencimiento_movimiento, fecha_movimiento)))</expression> 
+		<tipo>meter</tipo>
+    </field>
+-->
+
+
+
+	<field id="fecha_movimiento" noshow="true" tabla="REG_MOVIMIENTOS">
+		<label>Fecha</label>
+
+	</field>
+<!--                         
+	<field id="Pedido" local="true" _noshow="true" noZero="true">
+		<label>Pedido</label>
+		<attribute id="tooltip">desde</attribute>
+		<helper xml="regpendientes_art_qry.xml" type="link" width="80%">
+			<parameter source="regmovims" 	   target="regmovim_id" />
+			<parameter source="id_stkarticulo" target="codigo_detalle" />
+		</helper>
+		<expression>round(sum(ifnull(REG_DETALLES.cantidad_detalle,0) ), 0)</expression>
+		
+		<tipo>integer</tipo>
+	</field>
+-->
+	<field id="Pendiente" local="true" _noshow="true" noZero="true">
+		<label>Pedido</label>
+		<attribute id="tooltip">desde</attribute>
+		<attribute id="linkdes">nombre_articulo</attribute>
+		<helper xml="regpendientes_art_qry.xml" type="link" width="80%" title="Detalla de Pedido">
+			<parameter source="regmovims" 	   target="regmovim_id" />
+			<parameter source="id_stkarticulo" target="codigo_detalle" />
+		</helper>
+		<expression>round(sum(ifnull(REG_DETALLES.cantidad_pendiente,0) ), 0)</expression>
+		
+		<tipo>integer</tipo>
+	</field>
+
+	<field id="linkproducir" local="true" noshow="true">
+		<valor>'generar_orden_ing.xml'</valor>
+		<!--
+		<if exp="prod1 &gt; 0">
+			<true>'generar_orden_ing.xml'</true>
+			<false>''</false>
+		</if>
+-->
+	</field>
+
+	<field id="prod1" noshow="true">
+		<!--
+		<expression>round(sum(ifnull(REG_DETALLES.cantidad_pendiente,0) ) - (ifnull(sum(cantidad_stock),0) + (ifnull((
+select sum(objetivo_ordendetalle) from MRP_ORDEN_PRODUCCION MRO inner join MRP_ORDEN_DETALLE MRP on MRP.mrporden_id = MRO.id_mrporden where MRO.fecha_cierre = '0000-00-00' and MRP.stkarticulo_id = STK_ARTICULOS.id_stkarticulo) , 0)
+			) ) + ifnull(stock_minimo, 0), 0)</expression>
+		-->
+		<expression>round(sum(ifnull(REG_DETALLES.cantidad_pendiente,0) ) - (ifnull(round(stk_CantUM1,0),0) + (ifnull((
+select sum(objetivo_ordendetalle) from MRP_ORDEN_PRODUCCION MRO inner join MRP_ORDEN_DETALLE MRP on MRP.mrporden_id = MRO.id_mrporden where MRO.fecha_cierre = '0000-00-00' and MRP.stkarticulo_id = STK_ARTICULOS.id_stkarticulo) , 0)
+			) ) + ifnull(stock_minimo, 0), 0)</expression>
+	</field>
+
+	<field id="filtro_produccion" noshow="true">
+		<expression>CASE WHEN (round(sum(ifnull(REG_DETALLES.cantidad_pendiente,0) ) - (ifnull(round(stk_CantUM1,0),0) + (ifnull((
+select sum(objetivo_ordendetalle) from MRP_ORDEN_PRODUCCION MRO inner join MRP_ORDEN_DETALLE MRP on MRP.mrporden_id = MRO.id_mrporden where MRO.fecha_cierre = '0000-00-00' and MRP.stkarticulo_id = STK_ARTICULOS.id_stkarticulo) , 0)
+			) ) + ifnull(stock_minimo, 0), 0)) > 0 THEN '1' ELSE '' END</expression>
+		<options>
+		    <option valor="">Todos</option>
+		    <option valor="1">A Producir</option>
+		</options>
+	</field>
+
+
+<!--
+	<field id="cantidad_stock" style="text-align:right;" noZero="true">
+		<label>Stock</label>
+		<attribute id="linkdes">nombre_articulo</attribute>
+		<helper xml="fichakardex_art.xml" dir="/stock/qry/" type="link">
+			<parameter source="id_stkarticulo" target="stkarticulo_id" />
+		</helper>
+		<expression>round(cantidad_stock,0)</expression>
+		<tipo>integer</tipo>
+
+	</field>
+-->
+    <field id="migrado" noshow="true">
+	<expression>concat('Migrado: ', date_format(migrado,"%d/%m/%Y - %H:%i:%s" ), '  Act. Begerman: ', date_format(stk_FecMod, "%d/%m/%Y - %H:%i:%s"))</expression>
+    </field>
+
+    <field id="cantidad_stock"  noZero="true" style="text-align:right;color:blue;font-weight:bold;" suma="true">
+        <label>Stock Bejerman</label>
+	<attribute id="tooltip">migrado</attribute>
+        <expression having="false">round(stk_CantUM1,0)</expression>
+        <tipo>integer</tipo>
+        <!--<condicion operador="!=">0</condicion>-->
+    </field>
+
+	<field id="stock_minimo" tabla="STK_ARTICULOS" style="text-align:right;" _noZero="true">
+		<label>Stk. Min</label>
+		<expression having="false">round(stock_minimo, 0)</expression>
+		<tipo>enclosed_integer</tipo>
+		<helper type="link" xml="stkarticulo_stkmin.xml" title="Stock Minimo" width="580" height="220">
+			<parameter target="id_stkarticulo" source="id_stkarticulo" />
+		</helper>
+	</field>
+
+	<field id="constock_bejerman" noshow="true">
+	    <expression having="false">IF(stk_CantUM1 > 0, 1, 0)</expression>
+
+	    <helper type="combo" >
+	    	<option value="">Todos</option>
+			<option value="0">Sin Stock en Bej</option>
+			<option value="1">Con Stock en Bej</option>
+		</helper>
+	</field>
+	<field id="constock_minimo" noshow="true">
+	    <expression>IF(stock_minimo > 0, 1, 0)</expression>
+	    <helper type="combo" >
+	    	<option value="">Todos</option>
+			<option value="0">Sin Stock Minimo</option>
+			<option value="1">Con Stock Minimo</option>
+		</helper>	    
+	</field>
+
+	<field id="producir" local="true" _editable="true" deshabilitado="false" style="color:red;font-weight:bold;" _noZero="true">
+<!--		<attribute id="Class">btnClass</attribute> -->
+		<label>Producir</label>
+		<!--
+		<attribute id="linkint">linkproducir</attribute>
+	-->
+		<helper xml="generar_orden_ing.xml" type="link" width="auto" title="Generar Orden" >
+			<parameter source="id_stkarticulo" target="id_stkarticulo" />
+			<parameter source="stkrubro_id" target="stkrubro_id" />
+			<parameter source="Pendiente" target="producir" />
+			<parameter source="regmovims" target="regmovims" />
+		</helper>
+		
+		<if exp="prod1 &gt;= 0">
+			<true>'prod1'</true>
+			<false>'0'</false>
+		</if>
+		
+		<tipo>varchar</tipo>
+		<help>Generar</help>
+	</field>
+
+
+	<field id="numero_orden" noshow="true">
+		<expression>select group_concat(numero_orden) from MRP_ORDEN_PRODUCCION MR inner join MRP_ORDEN_DETALLE MRP on MRP.mrporden_id = MR.id_mrporden where MR.fecha_cierre = '0000-00-00' and MRP.stkarticulo_id = STK_ARTICULOS.id_stkarticulo </expression>
+	</field>
+	<field id="ordenes" noshow="true">
+		<label>Orden</label>
+
+		<expression>select group_concat(id_mrporden ) from MRP_ORDEN_PRODUCCION MRO inner join MRP_ORDEN_DETALLE MRP on MRP.mrporden_id = MRO.id_mrporden where MRO.fecha_cierre = '0000-00-00' and MRP.stkarticulo_id = STK_ARTICULOS.id_stkarticulo </expression>
+
+	</field> 
+	<field id="en_produccion" tabla="STK_ARTICULOS" noZero="true" style="text-align:right;color:green;font-weight:bold;">
+		<label>En Proceso</label>
+		<helper xml="ordenproduccion_enproceso_qry.xml" dir="/mrp/qry/" type="link" title="En Producción">
+			<parameter source="id_stkarticulo" target="stkarticulo_id" />
+			<parameter source="ordenes" target="mrporden_id" operator="in" />
+
+		</helper>
+
+		<expression>select round(sum(objetivo_ordendetalle),0) from MRP_ORDEN_PRODUCCION MRO inner join MRP_ORDEN_DETALLE MRP on MRP.mrporden_id = MRO.id_mrporden where MRO.fecha_cierre = '0000-00-00' and MRP.stkarticulo_id = STK_ARTICULOS.id_stkarticulo </expression>
+		<tipo>integer</tipo>
+	</field>	
+<!--
+
+	<field id="rotos" tabla="STK_ARTICULOS" noZero="true" style="text-align:right;color:red;">
+		<label>Rotos</label>
+		<expression>select sum(cantidad) from MRP_DETALLE_REGISTRO where mrpconcepto_id != 2 and mrpordendetalle_id in (select id_mrpordendetalle from MRP_ORDEN_PRODUCCION MRO inner join MRP_ORDEN_DETALLE MRP on MRP.mrporden_id = MRO.id_mrporden where MRO.fecha_cierre = '0000-00-00' and MRP.stkarticulo_id = STK_ARTICULOS.id_stkarticulo)</expression>
+
+		<helper xml="generar_orden_ing.xml" type="link" width="auto" title="Generar Orden">
+			<parameter source="id_stkarticulo" target="id_stkarticulo" />
+			<parameter source="stkrubro_id" target="stkrubro_id" />
+			<parameter source="rotos" target="producir" />
+		</helper>		
+	</field>	
+-->
+
+
+	<field id="colores" noshow="true" clasefila="true">
+		<expression>select 'resaltado' from MRP_ORDEN_PRODUCCION MRO inner join MRP_ORDEN_DETALLE MRP on MRP.mrporden_id = MRO.id_mrporden where MRO.fecha_cierre = '0000-00-00' and MRP.stkarticulo_id = STK_ARTICULOS.id_stkarticulo limit 1 </expression>			
+	</field>
+	<!--
+	<field id="grabar" local="true">
+		<label>confirmar</label>
+		<tipo>check</tipo>
+	</field>
+	-->
+<!--
+	<field id="producir" local="true">
+		<valor>Producir</valor>
+		<attribute id="linkdes">nombre_cuenta</attribute>
+		<helper xml="producir_pedido_agrupado.xml" type="link" width="85%">
+			<parameter source="regmovims" target="regmovims" />
+			<parameter source="codigo_detalle" target="codigo_detalle" />
+		</helper>
+	</field>
+-->
+<!--
+	<field id="id_mrpimputacion" tabla="MRP_IMPUTACION_DETALLE" noshow="true">
+		    <condicion operador="isnull">1</condicion> 
+	</field>
+	-->
+
+	<field id="txtClass" noshow="true" local="true">
+		<if exp="producir &gt; 0">
+			<true>'Bold'</true>
+			<false>''</false>
+		</if>
+	</field>
+
+	<field id="btnClass" noshow="true" local="true">
+		<if exp="producir &gt; 0">
+			<true>'error'</true>
+			<false>''</false>
+		</if>
+	</field>
+	<field id="vencimiento_movimiento" tabla="REG_MOVIMIENTOS" noshow="true" />
+	<order>
+		<field id="prod1" tipoOrden="DESC" />
+		<field id="id_stkarticulo" />
+		<!--
+		<field id="id_regmovim" orderType="DESC"/>
+		<field id="vencimiento_movimiento" />
+		-->
+	</order>
+                              
+	<group>
+		<field id="id_stkarticulo" />
+	</group>
+	
+
+    </table>
+    <join tipo="left">
+      <table id="STK_STOCKACTUAL">
+        <field id="stkarticulo_id">
+          <condicion operador="=">id_stkarticulo</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+        <table id="Stock">
+            <field id="stkart_CodGen">
+                <condicion operador="=">STK_ARTICULOS.id_stkarticulo</condicion>
+            </field>
+            <field id="stkdep_Cod">
+                <condicion operador="=">1</condicion>
+            </field>
+        </table>
+    </join>
+    <join tipo="left">
+      <table id="REG_DETALLES">
+        <field id="codigo_detalle">
+          <condicion operador="=">id_stkarticulo</condicion>
+        </field>
+        <field id="cantidad_pendiente">
+          <condicion operador="&gt;">0</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join tipo="left">
+      <table id="REG_MOVIMIENTOS">
+		<field id="id_regmovim" >
+			<condicion operador="=">REG_DETALLES.regmovim_id</condicion>
+		</field>
+		<field id="subsistema_id" >
+			<condicion operador="=">22</condicion>
+		</field>
+		<field id="concepto_id" >
+			<condicion operador="=">18</condicion>
+		</field>
+
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="REG_CUENTA">
+		<field id="id_regcuenta" >
+			<condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+		</field>
+
+      </table>
+    </join>    
+  </form>
+</histrix>

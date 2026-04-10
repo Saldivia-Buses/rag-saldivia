@@ -1,0 +1,375 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ing" 
+imprime="false"
+preloadData="false"
+inserta="false"
+subtipo="vertical"
+transaccional="true"
+>
+    <title>Remitos</title>
+	<confirmacion>
+			<![CDATA[¿Desea modificar los comprobantes?  ]]>
+	</confirmacion>
+
+    <obs></obs>
+    <form>
+        <tabla id="CCTMOVIM" label="Movimientos" _styleTbody="height:500px;">
+
+			  <movimientos>
+				<relacion id="cctmovim_update.xml" />
+				<relacion id="ivacompras_update.xml" />
+				<relacion id="ivaimportes_update.xml" />
+
+			<!-- si "actacte" = 1 realiza los movimientos para pasarlo a Forma de pago = Cuenta corriente -->
+				<relacion id="cctmovim_actacte_delete.xml" /><!--				<relacion id="cctmovim_actacte_update.xml" />-->
+				<relacion id="cajmovim_actacte_delete.xml" />
+
+			<!-- si "acontado" = 1 realiza los movimientos para pasarlo a Forma de pago = Contado -->
+				<relacion id="cctmovim_acontado_insert.xml" />
+				<relacion id="cajmovim_acontado_insert.xml" />
+			
+			  </movimientos>
+
+            <filters auto="true">
+                <field id="ctacod">
+                    <label>Cod.</label>
+                    <help>Codigo de Cuenta </help>
+                    <operador>=</operador>
+                </field>
+                <!--
+                <field id="ctanom" deshabilitado="true">
+                    <label>Nombre</label>
+                </field>
+-->
+                <field id="movfec">
+                    <operador>>=</operador>
+                    <label>Desde Fecha</label>
+                    <valor>today</valor>
+
+                </field>
+                <field id="movfec">
+                    <operador>&lt;=</operador>
+                    <label>Hasta Fecha</label>
+                    <valor>today</valor>
+
+                </field>
+                
+                <field id="movnro">
+            	    <operador>=</operador>
+            	    <label>Número</label>
+            	</field>
+            </filters>
+
+            <field id="siscod" oculto="true" >
+                <condicion operador="=">'01'</condicion>
+                <valor>'01'</valor>
+            </field>
+
+            <field id="concod" _noshow="true" >
+				<helper type="combo" id="CCTCONCE" empty="true">
+					<field id="concod" />
+					<field id="condes" />
+					<field id="siscod">
+					<condicion operador="=">'01'</condicion>
+					</field>
+				</helper>
+				<label>Tipo</label>
+		        <jseval campodestino="mod">(concod != old_concod)? 1 : 0</jseval>
+            </field>
+
+            
+            <field id="ctacod" colstyle="display:none;">
+                <help>Codigo de Cuenta </help><!--
+                <tabla_ex id="CCTCUENT">
+                    <field id="ctacod">
+                        <detalle>ctacod</detalle>
+                    </field>
+                    <field id="ctanom">
+                        <detalle>ctanom</detalle>
+                    </field>
+                    <field id="siscod">
+                        <condicion operador="=">'01'</condicion>
+                    </field>
+                    <field id="baja">
+                        <condicion operador="=">0</condicion>
+                    </field>
+
+                    <orden>
+                        <field id="ctanom"></field>
+                    </orden>
+
+                    <filtra>ctacod</filtra>
+                </tabla_ex>-->
+				<helper type="combo" id="CCTCUENT" empty="true">
+					<field id="ctacod" />
+					<field id="ctanom" >
+						<detalle>ctanom</detalle>
+					</field>
+					<field id="siscod">
+						<condicion operador="=">'01'</condicion>
+					</field>
+					<field id="baja">
+						<condicion operador="=">0</condicion>
+					</field>
+					<order>
+						<field id="ctanom" />
+					</order>
+				</helper>
+	
+                <label colspan="4">Cliente</label>
+				<tipo>integer</tipo>
+				<jseval campodestino="mod">(ctacod != old_ctacod)? 1 : 0</jseval>
+            </field>
+
+            <field id="ctanom" local="true" deshabilitado="true" noshow="true">
+				<expresion>CCTCUENT.ctanom</expresion>
+                <label modpos="nobr">Nombre</label>
+                <size>30</size>
+            </field>
+
+            <field id="movfec">
+                <label>Fecha Mov.</label>
+				<tipo>date</tipo>
+				<jseval campodestino="mod">(movfec != old_movfec)? 1 : 0</jseval>
+            </field>
+            
+            <field id="regfec">
+		    	<label>Fecha Reg.</label>
+		    	<tipo>date</tipo>
+				<jseval campodestino="mod">(regfec != old_regfec)? 1 : 0</jseval>
+    	    </field>
+
+            <field id="movvto">
+		    	<label>Fecha Vto.</label>
+		    	<tipo>date</tipo>
+				<jseval campodestino="mod">(movvto != old_movvto)? 1 : 0</jseval>
+    	    </field>
+	    
+	    
+			<field id="movlet">
+				<label modpos="nobr">Letra</label>
+				<helper type="combo">
+					<option value=""></option>
+					<option value="A">A</option>
+					<option value="B">B</option>
+					<option value="C">C</option>
+					<option value="M">M</option>
+					<option value="R">R</option>
+				</helper>
+				<size>5</size>
+				<jseval campodestino="mod">(\'movlet\' != \'old_movlet\')? 1 : 0</jseval>
+			</field>
+
+			<field id="movnpv">
+				<label modpos="nobr">P.V.</label>
+				<help> Punto Venta</help>
+				<detalle>puesto</detalle>
+				<tipo>integer</tipo>
+				<formato>%04d</formato>
+				<jseval campodestino="mod">(movnpv != old_movnpv)? 1 : 0</jseval>
+			</field>
+
+		    <field id="movnro" >
+		        <label modpos="nobr">Número</label>
+		        <help> Numero Comprobante</help>
+		        <detalle>numero</detalle>
+		        <tipo>integer</tipo>
+				<jseval campodestino="mod">(movnro != old_movnro)? 1 : 0</jseval>
+		    </field>
+
+			<field id="movref__1">
+				<label colspan="2">Referencia</label>
+				<size>80</size>
+				<jseval campodestino="mod">(\'movref__1\' != \'old_movref__1\')? 1 : 0</jseval>
+			</field>
+
+		    <field id="movimp">
+		        <label>Importe</label>
+		        <tipo>numeric</tipo>
+				<jseval campodestino="mod">(movimp != old_movimp)? 1 : 0</jseval>
+		    </field>
+
+            <field id="movsal" style="color:red;font-weight:bold;">
+                <label>Saldo</label>
+                <help>Modifica el Saldo del Comprobante</help>
+                <tipo>numeric</tipo>
+				<jseval campodestino="mod">(movsal != old_movsal)? 1 : 0</jseval>
+            </field>
+
+			<field id="formapago" local="true" deshabilitado="false" > 
+				<expresion>
+					IFNULL((SELECT 2 FROM CAJMOVIM where cajcta = CCTMOVIM.ctacod and cajnro = CCTMOVIM.movnro and cajfec = CCTMOVIM.movfec and cajcod = 2 and concod = 2 and siscod = '05'), 1)
+				</expresion>
+				<helper type="combo" >
+				   <option value="1">Cta. Cte.</option>
+				   <option value="2">Contado</option>
+				</helper>
+				<label modpos="nobr">Forma de Pago</label>
+				<jseval campodestino="mod">(formapago != old_formapago &amp;&amp; concod == 1)? 1 : 0</jseval>
+				<jseval campodestino="movsal">(formapago == 2)? 0 : movimp</jseval>
+				<tipo>integer</tipo>
+			</field>
+
+			<field id="imputado" validRow="true" noshow="true">
+				<expresion >(CASE WHEN CCTCONCE.conimp = 1 THEN IFNULL((SELECT 0 FROM CCTIMPUT WHERE movinc = CCTMOVIM.movnro and ctacod = CCTMOVIM.ctacod LIMIT 1), 1)
+												ELSE IFNULL((SELECT 0 FROM CCTIMPUT WHERE movnro = CCTMOVIM.movnro and ctacod = CCTMOVIM.ctacod LIMIT 1), 1)
+							END)</expresion>
+			</field>
+
+			<fieldGroup noshow="true">
+		
+			  <field id="old_concod">
+				<expresion>CCTMOVIM.concod</expresion>
+			  </field>
+
+			  <field id="old_ctacod">
+				<expresion>CCTMOVIM.ctacod</expresion>
+				<tipo>integer</tipo>			  <field id="zoncod" />
+			  </field>
+			  
+			  <field id="old_movfec">
+				<expresion>CCTMOVIM.movfec</expresion>
+				<tipo>date</tipo>
+			  </field>
+			  
+			  <field id="old_regfec">
+				<expresion>CCTMOVIM.regfec</expresion>
+				<tipo>date</tipo>
+			  </field>
+			  
+			  <field id="old_movvto">
+				<expresion>CCTMOVIM.movvto</expresion>
+				<tipo>date</tipo>
+			  </field>
+
+			  <field id="old_movlet">
+				<expresion>CCTMOVIM.movlet</expresion>
+				<tipo>varchar</tipo>
+			  </field>
+			  
+			  <field id="old_movnpv">
+				<expresion>CCTMOVIM.movnpv</expresion>
+				<tipo>integer</tipo>
+			  </field>
+			  
+			  <field id="old_movnro">
+				<expresion>CCTMOVIM.movnro</expresion>
+				<tipo>integer</tipo>
+			  </field>
+			  
+			  <field id="old_movref__1">
+				<expresion>CCTMOVIM.movref__1</expresion>
+				<tipo>varchar</tipo>
+			  </field>
+
+			  <field id="old_movimp">
+				<expresion>CCTMOVIM.movimp</expresion>
+				<tipo>numeric</tipo>
+			  </field>
+
+			  <field id="old_movsal">
+				<expresion>CCTMOVIM.movsal</expresion>
+				<tipo>numeric</tipo>
+			  </field>
+
+			  <field id="old_formapago">
+				<expresion>
+					IFNULL((SELECT 2 FROM CAJMOVIM where cajcta = CCTMOVIM.ctacod and cajnro = CCTMOVIM.movnro and cajfec = CCTMOVIM.movfec and cajcod = 2 and concod = 2 and siscod = '05'), 1)
+				</expresion>
+				<tipo>integer</tipo>
+			  </field>
+
+			  <field id="concod4">
+				<expresion>4</expresion>
+			  </field>		
+			  <field id="cero">
+				<expresion>0</expresion>
+			  </field>			  
+	  		  <field id="cajcod">
+				<expresion>2</expresion>
+			  </field>
+	  		  <field id="siscaj">
+				<expresion>'05'</expresion>
+			  </field>
+			  <field id="succod" />
+	  		  <field id="movcta" />
+			  <field id="zoncod" />
+			  <field id="opecla" />
+			  <field id="opecod" >
+				<expresion>0</expresion>
+			  </field>
+	  		  <field id="movref__ctdo">
+				<expresion>'Factura Contado'</expresion>
+			  </field>
+			</fieldGroup>
+
+        <field id="mod" local="true" noshow="true" />
+        <field id="grabar" local="true" noshow="true">
+            <if exp="mod + 0 != 0">
+                <true>'true'</true>
+        	<false>'false'</false>
+	    </if>
+        </field>
+        
+        <field id="hi" local="true" clasefila="true" noshow="true">
+    	    <if exp="grabar">
+    		<true>'resaltadoVioleta'</true>
+    		<false>''</false>
+    	    </if>
+    	</field>
+		<field id="checkiva" local="true" editable="true" refresh="true"  style="color:red;font-weight:bold;">
+			<label modpos="nobr">Modifica IVA</label>
+			<tipo>check</tipo>
+		</field>
+		
+		<field id="grabaiva"  local="true" noshow="true">
+			<if exp="grabar &amp;&amp; 'checkiva' == 1">
+				<true>1</true>
+				<false>0</false>
+        	</if>
+			<label>Graba IVA</label>
+		</field>
+
+		<field id="actacte" local="true" noshow="true">
+			<if exp="formapago == 1 &amp;&amp; old_formapago == 2">
+				<true>(concod == 1)? 1 : 0</true>
+				<false>0</false>
+			</if>
+			<label>A Cta.cte.</label>
+		</field>
+
+		<field id="acontado" local="true" noshow="true">
+			<if exp="formapago == 2 &amp;&amp; old_formapago == 1">
+				<true>(concod == 1)? 1 : 0</true>
+				<false>0</false>
+			</if>
+			<label>A Contado</label>
+		</field>
+			
+
+            <order>
+                <field id="fecha"></field>
+            </order>
+        </tabla>
+        <join tipo="left">
+            <tabla id="CCTCUENT">
+                <field id="siscod" >
+                    <condicion operador="=">'01'</condicion>
+                </field>
+                <field id="ctacod" >
+                    <condicion operador="=">CCTMOVIM.ctacod</condicion>
+                </field>
+            </tabla>
+        </join>
+        <join tipo="left">
+            <tabla id="CCTCONCE">
+                <field id="siscod" >
+                    <condicion operador="=">CCTMOVIM.siscod</condicion>
+                </field>
+                <field id="concod" >
+                    <condicion operador="=">CCTMOVIM.concod</condicion>
+                </field>
+            </tabla>
+        </join>
+    </form>
+</histrix>

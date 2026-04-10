@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+	<histrix tipo="insert" imprime="false" >
+		<title>OTROS</title>
+		<obs></obs>
+		<form >
+			<table id="ACCESORIOS_COCHE">
+				<field id="cotizacion_id" id_padre="NewCotiz">
+				</field>
+				<field id="artcod" id_temp="artcod">
+				</field>
+				<field id="artdes" id_temp="artdes">
+
+				</field>
+				<field id="fecha" id_temp="fecha">
+				</field>
+				<field id="cantidad" id_temp="cantidad">
+				</field>
+				
+				
+				<field id="precio_adicional" id_temp="precio_final">
+				</field>
+				<field id="estado" id_temp="estado">
+				</field>
+				
+				
+				
+				
+				
+				
+			</table>
+		</form>
+	</histrix>

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8" ?>
+   <histrix tipo="ing" _tipoInsert="IGNORE" _llenoTemporal="false" imprime="false" style="height:600px;"  noform="true">
+       <title>REMITOS</title>
+        <obs></obs>
+               <form  >
+					<table id="FACREMIT" label="ACTUALIZA REMITO"   >
+
+						<movimientos cabecera="imputacion_cab.xml">
+							<relacion id="imputacion_facremimp_ingmov.xml"></relacion>
+							<relacion id="imputacion_facremit_ingmov.xml"></relacion>
+						</movimientos>
+<!--			<importar xml="remitos_cons.xml"  label="Importar desde Remitos" titulo="Seleccione Remito" dir="/remitos">
+			</importar>					-->	
+
+						<field id="remfec"  esClave="true">
+							<label>Fecha</label>
+							<tipo>date</tipo>
+						</field>
+
+						<field id="remnro"  esClave="true">
+							<label>Remito</label>
+						</field>
+						<field id="cierre" oculto="true">
+							<condicion operador="=">0</condicion>
+						</field>
+				        <field id="ctacod" oculto="true" ></field>
+						
+						<field id="imputar" local="true" refresh="true">
+							<label>Imputar</label>
+							<tipo>check</tipo>
+							<valor>0</valor>
+						</field>
+						<field id="grabar" local="true" noshow="true">
+							<if exp="imputar != 0">
+								<true>'true'</true>
+								<false>'false'</false>
+							</if>
+						</field>
+
+
+					
+					</table>
+               </form>
+        </histrix>

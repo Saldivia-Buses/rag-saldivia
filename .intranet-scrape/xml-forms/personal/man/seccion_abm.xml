@@ -1,0 +1,201 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="arbol" _form="false" _width="45" path="fotos/puestos">
+	<title>Secciones de Trabajo</title>
+	<obs/>
+	<form _detalle="seccion_abm_det.xml" inline="true">
+		<table id="SECCION">
+			<title>Secciones de Trabajo</title>
+			<field id="id_seccion" arbol="hijo" autoinc="true" noshow="true">
+				<label Formstyle="display:none;">Codigo</label>
+				<help>Codigo de Seccion</help>
+				<detalle>id_seccion</detalle>
+				
+				
+			</field>
+
+			<field id="idSec">
+			    <expression>id_seccion</expression>
+			</field>
+
+			<field id="idSeccionSup" arbol="padre" >
+            		    <tabla_ex id="SECCION" vacio="true">
+                		<field id="id_seccion"></field>
+                		<field id="nombre"></field>
+            		    </tabla_ex>
+			    <label colstyle="display:none;">Secc Sup</label>
+			</field>
+
+            <field id="activa" sincelda="true" colstyle="display:none;">
+                <label modpos="nobr">Activa</label>
+                <tipo>check</tipo>
+                <valor default="true">1</valor>
+				<condicion operador="=">1</condicion><!-- Comentar esta linea para poder editar secciones no activas -->
+            </field>
+
+			<field id="nombre" nodeTitle="true" >
+				<label>Nombre</label>
+				<help>Nombre de Seccion</help>
+			</field>
+
+			<field id="descripcion" nodeText="true">
+				<label>Mision del puesto</label>
+				<help>Mision del puesto</help>
+			</field>
+
+			<field id="descripcion_perfil" _nodeText="false" colstyle="display:none;">
+				<label>Perfil</label>
+				<help>Descripcion del perfil</help>
+				<tipo>editor</tipo>
+			</field>
+
+			<field id="idSupervisor" _nodeText="true">
+				<label>Supervisor</label>
+
+            			<tabla_ex id="PERSONAL" xml="HLPpersonal.xml" vacio="true" dir="/help_local">
+                		    <field id="legajo">
+                		        <condicion operador="!=">0</condicion>
+                		    </field>
+				    <field id="fechaEgreso">
+					<condicion operador="=">'0000-00-00'</condicion>
+				    </field>
+            			</tabla_ex>
+			</field>
+
+        	<field id="supervisor">
+            	<label>desc supervisor</label>
+			    <help>Supervisor de Seccion</help>
+			</field>
+
+			<field id="linea_id" colstyle="display:none;">
+            		    <helper type="combo" xml="lineas.xml" dir="/produccion" _empty="true"/>
+            		    <label >Linea</label>
+            		    <valor>1</valor>
+            </field>
+<!--
+	    <field id="archivo" viewer="true" path="id_seccion">
+		<label>Adjunto</label>
+		<tipo>file</tipo>
+	    </field>
+
+	    <field id="files_link" local="true">
+		<valor>Archivos</valor>
+		<helper type="link" xml="seccion_files.xml" width="350" heigth="400">
+		    <parameter source="id_seccion" target="id_seccion" />
+		</helper>
+	    </field>
+-->		
+<!--
+            <field id="mail_msg" local="true" oculto="true" email="body" colstyle="display:none;" print="false">				
+	        <expression><![CDATA[CONCAT( 'Sección: ', SECCION.nombre, '</br>',
+                'Se le asigna a cada puesto un conjunto de actividades que la persona encargada deberá desarrollar
+ dentro de la empresa, y sobre las cuales se basaran sus responsabilidades.</br>A continuación se detalla la información.</br></br> ', 
+SECCION.descripcion_perfil, '</br>Att.</br> Dpto de Personal.</br> ',
+
+/********** Tabla de funciones y responsabilidades ***********/
+IFNULL(CONCAT(
+		    '<table border="1">
+		        <tr>
+			    <th>Funciones</th>
+			    <th>Responsabilidades</th>
+			</tr>',
+(SELECT GROUP_CONCAT(  '<tr>
+			    <td>', desc_funcion, '</td>
+			    <td>
+				<ul>',
+(SELECT GROUP_CONCAT(		    '<li>', desc_resp, '</li>' SEPARATOR '') FROM SECCION_RESPONSABILIDADES WHERE funcion_id = SECCION_FUNCIONES.id_sec_funcion)
+,			       '</ul>
+			    </td>
+			</tr>' SEPARATOR '')
+FROM SECCION_FUNCIONES WHERE seccion_id = SECCION.id_seccion),
+		    '</table>'), '')
+/************************************************************/
+                )]]>
+	        </expression>	
+	        <tipo>editor</tipo>		
+			</field>
+
+	        <field id="mail_to" local="true" email="to" print="false" oculto="true" colstyle="display:none;">
+				<expression>select email from PERSONAL where legajo = idSupervisor</expression>
+		    </field>
+
+            <field id="mail_subj" local="true" email="subject" print="false" oculto="true" colstyle="display:none;">
+				<expression>CONCAT('Responsabilidades y Autoridades por secciones', ' ')</expression>
+			</field>
+-->
+<!--
+
+            <field id="testmail" _noshow="true" local="true" >
+				<label colspan="4">send</label>
+			    <helper type="link" xml="secciones_send.xml" _dir="/auditoria"  title="Secciones resp y autorid">
+				<parameter target="id_seccion" source="id_seccion" />
+				<parameter target="automail" source="true" />
+			    	
+				
+			    </helper>
+			    <expression><![CDATA[IFNULL(('<img src="../img/mail_generic.png"/>'), '')]]></expression>
+
+			</field>
+-->
+
+
+        	<field id="enviomail" local="true" print="false">
+			    <label>Mail</label>
+			    
+			    <helper type="link" xml="mails_send.xml" dir="/histrix/mensajeria">
+			    	<parameter source="mail_msg"  target="mensaje" />
+			    	<parameter source="mail_to"   target="para" />
+			    	<parameter source="mail_subj" target="subject" />
+			    </helper>
+			
+			    <expression><![CDATA[IFNULL(('<img src="../img/mail_generic.png"/>'), '')]]></expression>
+			</field>
+
+        	<field id="detalle" local="true" print="false">
+			    <label>Mail</label>
+			    
+			    <helper type="link" xml="seccion_abm_det.xml" title="editar" >
+			    	<parameter source="id_seccion" target="id_seccion" />
+			    </helper>
+			
+			    <expression>'Editar'</expression>
+			</field>
+		
+    
+<!--			<field id="idPuesto">
+				<label>Puesto</label>				
+				<ayuda_ex id="CIUO" xml="/personal/man/ciuo.xml">
+					<field id="idPuesto"></field>
+					<field id="nombre">
+						<detalle>nom</detalle>
+					</field>
+					
+				</ayuda_ex>
+
+			</field>
+			
+			<field id="nom" sincelda="true">
+				<label modpos="nobr"></label>
+				<expression>CIUO.nombre</expression>
+				<tipo>varchar</tipo>
+			</field>
+-->		<!--	
+		    <field id="funciones" local="true">
+			<label>Funciones</label>
+			<helper type="object" xml="seccion_funciones_abm.xml">
+			    <parameter source="id_seccion" target="seccion_id" />
+			</helper>
+		    </field>
+		-->	
+		</table>
+		<join tipo="left">
+			<table id="CIUO">
+				<field id="idPuesto">
+					<condicion operador="=">SECCION.idPuesto</condicion>
+				</field>
+				
+		</table>
+		</join>
+
+	</form>
+	
+</histrix>

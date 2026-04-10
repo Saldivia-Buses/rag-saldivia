@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" _preloadData="false">
+  <title>ORDENES DE COMPRA</title>
+  <obs></obs>
+  <form  _detalle="cpsmovim.xml" detalle="cpsmovim_x_detalle.xml">
+    <table id="CPSENCAB" label="ORDENES DE COMPRA">
+      <field id="siscod" oculto="true">
+        <label>Codigo Sistema</label>
+        <help></help>
+        <detalle>siscod</detalle>
+      </field>
+      <field id="ctanom" tabla="CCTCUENT">
+      <label>Prov</label>
+      <help>Prov.</help>
+        <tipo>varchar</tipo>
+      </field>      
+      <field id="ocpnro">
+        <label>N?</label>
+        <help>Numero de Orden de Compra. </help>
+        <detalle>ocpnro</detalle>
+      </field>
+      
+      <field id="ocpfec">
+        <label>Emisi?n</label>
+        <help>Fecha de Emisi?n</help>
+      </field>
+      
+      <field id="fecreq" local="true" deshabilitado="true"  >
+        <expression>CPSMOVIM.fecreq</expression>
+        <label>Fecha Entrega</label>
+        <tipo>date</tipo>
+      </field>
+      
+        <field id="artcod" tabla="CPSMOVIM" noshow="true">
+          
+          <label>Articulo</label>
+          <help>Codigo de Articulo. </help>
+          <ayuda_ex id="STKINSUM" xml="HLPstkinsum.xml" dir="/help_local">
+            <field id="artcod">
+              <label>Cod.</label>
+              <detalle>artcod</detalle>
+           </field>
+            <field id="artdes">
+              <label>Insumo</label>
+              <detalle>artdes</detalle>
+            </field>
+            <field id="unicps" oculto="true">
+              <detalle>unimed</detalle>
+            </field>
+            <field id="artuni" oculto="true">
+              <detalle>artuni</detalle>
+            </field>
+            
+            <field id="siscod" oculto="true">
+              <condicion operador="=">'01'</condicion>
+            </field>
+            <clave>artcod</clave>
+            <descripcion>artdes</descripcion>
+          </ayuda_ex>
+          <tipo>varchar</tipo>
+        </field>
+      
+      <!--                  <field id="garnro">
+      <label>Doc.Garantes </label>
+      <help> </help>
+      </field>
+      <field id="movpor">
+      <label>Porc descuento </label>
+      <help>Porcentaje de descuento </help>
+      </field>
+      <field id="ocpbon">
+      <label>Bonificaciones </label>
+      <help>Bonificaciones esperadas para esta compra. </help>
+      </field>
+      <field id="ocpent">
+      <label>Lugar Entrega </label>
+      <help>Lugar de Entrega/Descarga. </help>
+      </field>
+      -->
+      <field id="movcps" deshabilitado="true" _noshow="true" tabla="CPSMOVIM">
+              <label>Ped.cps</label>
+              <help>Pedido (expresado en la unidad de compra)</help>
+            </field>
+      <field id="observaciones" tabla="CPSMOVIM">
+        <label >Observaciones</label>
+        <tipo>varchar</tipo>
+        <size>60</size>
+      </field>
+        
+      <field id="pencps" _noshow="true" tabla="CPSMOVIM">
+          <label>Pend.cps</label>
+          <help>Pendiente (expresado en la unidad de compra)</help>
+      </field>
+      <field id="mov_pen2" deshabilitado="true" local="true" >
+          <expression>movcps - pencps</expression>
+          <label>Rec</label>
+          <help>Recibido (expresado en la unidad de compra)</help>
+      </field>
+      <field id="estado_articulo" local="true" noshow="true">
+        <label>Estado Articulo</label>
+        <if exp="mov_pen2 &lt; movcps">
+           <true>'Pendiente'</true>
+           <false>'Cumplida'</false>
+        </if>
+      </field>
+      <field id="ocpest" _colstyle="display:none;">
+        <label>Estado OC</label>
+        <help>Estado Actual</help>
+                <options>
+
+                    <option valor="">Todas</option>
+
+                    <option valor="0">No Autorizada</option>
+                    <option valor="1">Pendiente</option>
+                    <option valor="2">Cumplida</option>
+                    <option valor="3">Parcial</option>
+                    <option valor="4">Anulada</option>
+                </options>
+                <detalle>ocpest</detalle>
+      </field>
+      <field id="ocpest2" noshow="true" local="true" style="color:transparent;" >
+        <label _modpos="nobr">Estado2</label>
+      </field> 
+
+
+<!-- VALIDACIONES PARA QUE EL FILTRO DE ESTADO AFECTE AL PENDIENTE DE CADA ARTíCULO -->
+      <field id="validaPend" noshow="true">
+        <expression having="false">(CASE WHEN '[__ocpest2__]' = 1 and CPSMOVIM.pencps &lt;= 0 THEN 0 ELSE 1 END) </expression>
+        <condicion operador="!=">0</condicion>
+        <label>val1</label>
+      </field>
+      <field id="validaCump" noshow="true">
+        <expression having="false">(CASE WHEN '[__ocpest2__]' = 2 and CPSMOVIM.pencps &gt; 0 THEN 0 ELSE 1 END) </expression>
+        <condicion operador="!=">0</condicion>
+        <label>val2</label>
+      </field>
+<!--
+      <field id="ocpimp" suma="true">
+        <label>Monto </label>
+        <help> Monto de la Orden de compra</help>
+      </field>
+      
+
+      <field id="opecla">
+      <label>Firma Electronica </label>
+      <help>Firma Electronica </help>
+      </field>
+      <field id="seccod">
+      <label>Cod.Seccion </label>
+      <help>Codigo de Seccion. </help>
+      </field>
+      
+      <field id="succod">
+      <label>Cod. Sucursal </label>
+      <help>Codigo de Sucursal </help>
+      </field>
+      <field id="tracod">
+      <label>Nombre Transporte </label>
+      <help> </help>
+      </field>
+      -->
+      <filters>
+        
+        <field id="artcod" tabla="CPSMOVIM">
+          <operador>=</operador>
+          <label>Insumo</label>
+          <valor>0</valor>
+        </field>
+
+        
+        <field id="ocpfec">
+          <operador>>=</operador>
+          <label>Desde Fecha</label>
+        </field>
+        <field id="ocpfec">
+          <operador>&lt;=</operador>
+          <label>Hasta Fecha</label>
+        </field>
+        <field id="ocpest" copia="ocpest2">
+          <operador>=</operador>
+          <label>Estado</label>
+          <valor>1</valor>
+          
+        </field>
+        <field id="ocpest2" deshabilitado="true" valauto="true">
+          <operador>=</operador>
+          <valor>1</valor>
+          <label modpos="nobr"/>
+        </field> 
+        <field id="observaciones" >
+          <label >Observaciones</label>
+          <tipo>varchar</tipo>
+          <operador>like</operador>
+        </field>
+        
+        
+      </filters>
+      <group>
+        <field id="CPSENCAB.ocpnro" />
+      </group>
+      
+    </table>
+    <join tipo="left">
+      <table id="CPSMOVIM">
+        <field id="siscod" oculto="true">
+          <condicion operador="=">CPSENCAB.siscod</condicion>
+        </field>
+        <field id="ocpnro" oculto="true">
+          <condicion operador="=">CPSENCAB.ocpnro</condicion>
+        </field>
+        <field id="movfec" oculto="true">
+          <condicion operador="=">CPSENCAB.ocpfec</condicion>
+        </field>
+      </table>
+      
+
+    </join>
+    <join tipo="left">
+
+      <table id="CCTCUENT">
+        <field id="siscod" oculto="true">
+          <condicion operador="=">'01'</condicion>
+        </field>
+        
+        <field id="ctacod">
+          <condicion operador="=">CPSENCAB.ctacod</condicion>
+        </field>
+      </table>
+      
+    </join>    
+  </form>
+</histrix>

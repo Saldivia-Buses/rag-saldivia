@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert" grabafinal="true">
+    <title></title>
+    <obs/>
+    <form>
+        <table id="REG_MOVIMIENTOS">
+
+            <field id="subsistema_id" id_cab="siscod">
+                <valor>03</valor>
+            </field>
+            <field id="nro_cuenta"          id_cab="ctacod" />
+            <field id="nombre_movimiento"   id_cab="ctanom" />
+            <field id="nrofab"              id_cab="nrofab" />
+            <field id="referencia_movimiento"   id_cab="cta2" />
+            <field id="domicilio_movimiento"   id_cab="movref__2" />
+            <field id="concod"              id_cab="concod" />
+            <field id="moneda_id"           id_cab="moneda_id" />
+            <field id="letra_movimiento"    id_cab="movlet" />
+            <field id="puesto_movimiento"   id_cab="movnpv" />
+            <field id="nro_movimiento"      id_cab="movnro" />
+            <field id="fecha_movimiento"    id_cab="movfec" />
+            <field id="alicuota_iva"        id_temp="alicuota" />
+            <field id="neto_movimiento"     id_temp="subtot" />
+            <field id="importe_iva"         id_temp="iva" />
+            <field id="importe_movimiento"  id_temp="total" />
+
+        </table>
+    </form>
+</histrix>

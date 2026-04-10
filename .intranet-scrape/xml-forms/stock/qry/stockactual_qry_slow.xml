@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" borra="no" inserta="no" paginar="250" _imprime="false" preloadData="false">
+  <title>Stock Actualizado</title>
+  <obs/>
+  <form>
+    <table id="STK_MOVIMIENTOS" label="Stock Actualizado">
+     <filters>
+        <field id="stkfamilia_id">
+          <operador>=</operador>
+          <label modpos="nobr">Familia</label>
+        </field>
+        <field id="stkrubro_id">
+          <operador>=</operador>
+          <label modpos="nobr">Rubro</label>
+        </field>
+      <field id="id_stkarticulo" tabla="STK_ARTICULOS" noshow="true">
+          <operador>=</operador>
+
+        <label>Codigo de Articulo</label>
+      </field>
+
+        <field id="codigo_barra" tabla="STK_ARTICULOS">
+          <operador>=</operador>
+          <label modpos="nobr">Codigo de barra</label>
+        </field>
+       <field id="fecha_movimiento" deshabilitado="false">
+            <label >Desde</label>
+            <operador>&gt;=</operador>
+       </field>
+       <field id="fecha_movimiento" deshabilitado="false">
+            <label modpos="nobr">Hasta</label>
+            <operador>&lt;=</operador>
+      </field>
+      <field id="stkdeposito_id">
+    	<helper type="combo" id="STK_DEPOSITOS">
+    	  <field id="id_stkdeposito" />
+    	  <field id="nombre_deposito" />
+    	</helper>
+    	<label modpos="nobr">Depósito</label>
+            <operador>=</operador>
+
+  	  </field>
+
+      </filters>      
+      <field id="id_stkarticulo" tabla="STK_ARTICULOS" noshow="true">
+        <label>Codigo de Articulo</label>
+        <helper type="external" xml="stkarticulo_qry.xml" dir="/ayudas">
+          <field id="wstklista_id" local="true">
+            <valor>1</valor>
+          </field>
+        </helper>
+
+      </field>
+      <field id="codigo_barra" tabla="STK_ARTICULOS">
+        <label>Codigo de Barra</label>
+        <helper type="external" xml="stkarticulo_pos.xml" dir="/ayudas">
+          <field id="wstklista_id" local="true">
+            <valor>1</valor>
+          </field>
+        </helper>
+      </field>
+      <field id="stkfamilia_id" noshow="true" tabla="STK_ARTICULOS">
+        <label>Familia</label>
+        <helper type="combo" xml="stkfamilia_qry.xml" dir="/ayudas" empty="true"/>
+      </field>
+      <field id="stkrubro_id" tabla="STK_ARTICULOS">
+        <label>Rubro</label>
+        <helper type="combo" xml="stkrubro_qry.xml" dir="/ayudas" empty="true"/>
+      </field>
+      <field id="stkdeposito_id">
+    	<helper type="combo" id="STK_DEPOSITOS">
+    	  <field id="id_stkdeposito" />
+    	  <field id="nombre_deposito" />
+    	</helper>
+    	<label modpos="nobr">Depósito</label>
+  	  </field>
+
+
+      <field id="nombre_articulo" tabla="STK_ARTICULOS">
+        <label>Articulo</label>
+      </field>
+      <field id="fecha_movimiento">
+        <label>Ult_Vta</label>
+        <expresion>Select max(fecha_movimiento) from REG_DETALLES RD JOIN REG_MOVIMIENTOS RM ON RM.id_regmovim = RD.regmovim_id
+where codigo_detalle = id_stkarticulo and RM.concepto_id = 13 group by codigo_detalle</expresion>
+        <tipo>date</tipo>
+      </field>  
+      <field id="permiso" local="true" noshow="true">
+        <valor eval="true">$_SESSION['administrator']</valor>
+      </field>
+      <field id="total_stk" noshow="true">
+        <expresion>sum(case when tipo_concepto = 0 then 1 else -1 end * cantidad )</expresion>
+        <tipo>numeric</tipo>
+        <condicion operador="!=">0</condicion>
+      </field>
+      <field id="total_procesado" local="true" noshow="true">
+        <if exp="total_stk != 0">
+          <true>'SI'</true>
+          <false>'0'</false>
+        </if>
+      </field>
+      <field id="total_display" local="true" style="font-weight:bold; font-size:14px; text-align:right;" _noZero="true" tdWidth="80px">
+        <label>Real</label>
+        <if exp="permiso == 1">
+          <true>total_stk</true>
+          <false>total_procesado</false>
+        </if>
+      </field>
+      <field id="pinta" local="true" clasefila="true" oculto="true">
+        <if exp="total_stk &lt; 0">
+          <true>'resaltado'</true>
+          <false>''</false>
+        </if>
+      </field>
+      <group>
+        <field id="nombre_articulo" tabla="STK_ARTICULOS"/>
+      </group>
+    </table>
+    <join>
+      <table id="STK_ARTICULOS">
+        <field id="id_stkarticulo">
+          <condicion operador="=">STK_MOVIMIENTOS.stkarticulo_id</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join tipo="left">
+      <table id="STK_CONCEPTOS">
+        <field id="id_stkconcepto">
+          <condicion operador="=">STK_MOVIMIENTOS.stkconcepto_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="LEFT">
+      <table id="STK_RUBROS">
+        <field id="id_stkrubro">
+          <condicion operador="=">STK_ARTICULOS.stkrubro_id</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>

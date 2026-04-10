@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="ing" deleteRow="false" transacional="true" tooltip="false" inserta="false" modifica="false" confirma="APLICAR" forceReload="true" showCantidad="false"
+	dataTables_info="false">
+	<title>Concepto de Caja</title>
+	 <obs></obs>
+		<form>
+		    <table id="CAJ_CONCEPTOS" label="Concepto de Puesto">
+
+				<movimientos>
+					<relacion id="cajconfig_conceptos_del.xml"/>
+					<relacion id="cajconfig_conceptos_ins.xml"/>
+				</movimientos>
+						
+				<field id="id_cajconcepto" noshow="true" esClave="true"/>
+
+				<!-- TABLA DE VINCULACION -->
+				<field id="id_cajpuestoconcepto" tabla="CAJ_PUESTO_CONCEPTOS" noshow="true" />
+				<field id="cajpuesto_id" local="true"  esClave="true"         noshow="true" />
+				<field id="cajconcepto_id" tabla="CAJ_PUESTO_CONCEPTOS"       noshow="true" />
+				<!-- FIN -->				
+
+				<!-- Determina La Grabacion de los Registros Habilitados -->				
+				<field id="habpuesto" refresh="true" deshabilitado="false">
+				    <expression>case when !isnull(cajconcepto_id) then 1 else 0 end</expression>
+				    <tipo>check</tipo>
+				</field>
+                                                                                              <!--
+				<field id="anterior" noshow="true">
+				    <expression>case when cajconcepto_id then 1 else 0 end</expression>
+				</field>
+                                                                                                  -->
+				<!-- Determina La Grabacion de los Registros Previamente Habilitados al Ingreso del Formulario -->			
+				<field id="habilitado" local="true" noshow="true" >
+				    <if exp="'habpuesto' == 1">
+						<true>'true'</true>
+						<false>'false'</false>
+				    </if>
+				</field>
+				
+				<field id="descripcion_concepto" deshabilitado="true">
+					<label>Nombre</label>
+					<help>Numero del Concepto </help>
+				</field>			
+                                <field id="color" noshow="true" >
+                            	    <expression> case imputacion_concepto when 1 then 'color:red;' else 'color:green' end</expression>
+                                </field>
+
+				<field id="imputacion_concepto" deshabilitado="true">
+				    <attribute id="style">color</attribute>
+
+					<helper type="combo">
+						<option value="0">Ingreso</option>
+						<option value="1">Egreso</option>
+					</helper>
+				</field>
+
+				<field id="ejecuta_concepto" noshow="true">
+					<condicion operador="!=">''</condicion>
+				</field>
+			
+
+            
+				<order>
+					<field id="imputacion_concepto" />
+				</order>
+
+		    </table>
+		
+		    <join tipo="left">
+				<table id="CAJ_PUESTO_CONCEPTOS">
+				    <field id="cajconcepto_id">
+						<condicion operador="=">id_cajconcepto</condicion>
+				    </field>
+					<field id="cajpuesto_id">
+						<condicion operador="=">'[__cajpuesto_id__]'</condicion>
+					</field>
+				</table>
+		    </join>
+		    
+		</form>
+</histrix>

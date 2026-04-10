@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" imprime="false" style="height:200px;">
+	<title>Normas de seguridad</title>
+	<obs/>
+	<form >
+		<table id="CPSMOVIM" label="DETALLE">
+			<field id="siscod" oculto="true" noselect="true">
+				<label>Codigo Sistema..</label>
+				<help/>
+				<condicion operador="=">''</condicion>
+			</field>
+			<field id="ocpnro" oculto="true">
+				<label>Nro</label>
+				<help>Numero de Orden de Compra</help>
+			</field>
+			<field id="artcod" deshabilitado="true" esClave="false" >
+				<label>Material</label>
+				<help>Codigo de Articulo</help>
+				<detalle>artcod</detalle>
+
+			</field>
+<!--			<field id="artdes" deshabilitado="true" tabla="STKINSUM">
+				<label>Desc.</label>
+				<tipo>varchar</tipo>
+			</field> -->
+			<field id="nordes" tabla="INSNORMA">
+				<expression>TRIM(group_concat(CONCAT(INSNORMA.nordes, ' ',(case when NORMAINSUMOS.operador = 0 then 'o' else '_' end)) SEPARATOR ' '))</expression>
+				<label>Norma que debe cumplir</label>
+				<help></help>
+				<tipo>varchar</tipo>
+			</field>
+<!--
+			<field id="operador" tabla="NORMAINSUMOS">
+				<label>Operador</label>
+				<options>
+					<option valor="0">O</option>
+					<option valor="1">Y</option>
+				</options>
+				<tipo>integer</tipo>
+			</field>-->
+			<field id="norma" noselect="true" noshow="true">
+				<expression having="false">NORMAINSUMOS.norcod</expression>
+				<condicion operador="!=">''</condicion> 
+				
+			</field>			
+			<group>
+<!--				<field id="ocpnro" /> -->
+				<field id="ocpren"></field>				
+				<field id="artcod" tabla="CPSMOVIM"/>
+			
+			</group> 
+			<order>
+				<field id="orden"></field>
+				
+			</order>
+		</table>
+		<join tipo="left">
+			<table id="STKINSUM">
+				<field id="siscod" oculto="true">
+					<label>STKINSUM.siscod</label>
+					<condicion operador="=">'01'</condicion>
+				</field>
+				<field id="artcod" oculto="true">
+					<condicion operador="=">CPSMOVIM.artcod</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="NORMAINSUMOS">
+				<field id="artcod" oculto="true">
+					<condicion operador="=">CPSMOVIM.artcod</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="INSNORMA">
+				<field id="norcod" oculto="true">
+					<condicion operador="=">NORMAINSUMOS.norcod</condicion>
+				</field>
+			</table>
+		</join>
+	</form>
+</histrix>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="crud" filter="true">
+	<title>Bancos</title>
+	 <obs></obs>
+		<consulta>
+		    <table id="CAR_BANCOS" label="Bancos">
+
+				<field id="id_carbanco" esClave="true" style="text-align:center;">
+					<label>Codigo</label>
+					<help>Codigo del Banco</help>
+				</field>
+
+				<field id="nombre_banco">
+					<label>Nombre</label>
+					<help>Nombre del banco</help>
+					<size>35</size>
+				</field>
+
+		    </table>
+		</consulta>
+    </histrix>	

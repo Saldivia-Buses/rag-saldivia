@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="consulta">
+    <title>Precios Proveedores</title>
+    <obs></obs>
+    <form >
+        <table id="STK_HIST_COSTOS" label="Precios Proveedores">
+
+             <field id="regcuenta_id"  esClave="true">
+                <label modpos="nobr">Proveedor</label>
+                <size>20</size>
+            </field>
+
+             <field id="nombre_cuenta"  tabla="REG_CUENTA">
+                <label modpos="nobr">Nombre</label>
+                <tipo>varchar</tipo>
+                <size>20</size>
+            </field>
+
+            <field id="stkarticulo_id"  esClave="true">
+                <label>Codigo Articulo</label>
+                <help>Codigo de Articulo</help>
+            </field>
+
+           <field id="nombre_articulo"  tabla="STK_ARTICULOS">
+                <label modpos="nobr">Descripcion</label>
+                <tipo>varchar</tipo>
+                <size>20</size>
+            </field>
+
+            <field id="precio_costo" >
+                <label modpos="nobr">precio</label>
+                <expresion>select PR.costo_articulo from STK_HIST_COSTOS as PR where PR.stkarticulo_id = STK_HIST_COSTOS.stkarticulo_id and PR.regcuenta_id= STK_HIST_COSTOS.regcuenta_id order by PR.ultima_fecha DESC limit 1 </expresion>
+                <valor>numeric</valor>
+            </field>
+          
+            <field id="ultima_fecha" >
+                <label modpos="nobr">Fecha Compra</label>
+                <expresion>select PR.ultima_fecha from STK_HIST_COSTOS as PR where PR.stkarticulo_id = STK_HIST_COSTOS.stkarticulo_id and PR.regcuenta_id= STK_HIST_COSTOS.regcuenta_id order by PR.ultima_fecha DESC limit 1 </expresion>
+                <tipo>date</tipo>
+            </field>
+
+           <group>
+                <field id="regcuenta_id" tabla="STK_HIST_COSTOS"></field>
+            </group>
+
+        </table>
+
+        <join tipo="left">
+            <table id="STK_ARTICULOS">
+                <!--<field id="subsistema_id" oculto="true">
+                    <label>STK_ARTICULOS.subsistema_id</label>
+                    <condicion operador="=">'01'</condicion>
+                </field> -->
+                <field id="id_stkarticulo" oculto="true">
+                    <condicion operador="=">STK_HIST_COSTOS.stkarticulo_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="REG_CUENTA">
+                <field id="subsistema_id" oculto="true">
+                    <label>STK_ARTICULOS.subsistema_id</label>
+                    <condicion operador="=">'01'</condicion>
+                </field>
+                <field id="id_regcuenta" oculto="true">
+                    <condicion operador="=">STK_HIST_COSTOS.regcuenta_id</condicion>
+                </field>
+            </table>
+        </join>
+</form>
+</histrix>

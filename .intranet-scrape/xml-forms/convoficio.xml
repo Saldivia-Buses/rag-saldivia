@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm">
+	<title>OFICIOS POR CATEGORIA</title>
+	<obs/>
+	<form >
+		<table id="RH_CONVOFICIO" label="Oficios por Categoria">
+
+			<filters>
+				<field id="IdSindicato">
+					<label>Sindicato</label>
+					<operador>=</operador>
+					<valor>1</valor>
+				</field>
+				<field id="Id_area">
+					<label>Área</label>
+					<operador>=</operador>
+					<valor>1</valor>
+				</field>
+				<field id="IdCateg">
+					<label>Categoría</label>
+					<valor>1</valor>					
+					<operador>=</operador>
+				</field>
+				<field id="IdConvenio">
+					<label>Convenio</label>
+					<operador>=</operador>
+					<valor>1</valor>
+				</field>
+				<field id="idOficio">
+					<label>Oficio</label>
+					<operador>=</operador>				
+				</field>
+				<field id="nn" local="true" noshow="true" >				
+					<label modpos="nobr"></label>
+				</field>
+
+			</filters>
+
+			<field id="nn" local="true" noshow="true" >				
+				<label modpos="nobr"></label>
+			</field>
+			<field id="IdSindicato" oculto="true">
+				<label>Sindicato</label>
+				<tabla_ex id="SINDICATO">
+					<field id="IdSindicato"/>
+					<field id="Nombre"/>
+				</tabla_ex>
+				<help>Sindicato</help>
+				<actualiza>
+					<field destino="IdSindicato" id="Id_area"/>
+					<field destino="IdSindicato" id="IdCateg"/>
+					<field destino="IdSindicato" id="IdConvenio"/>
+				</actualiza>
+			</field>
+			<field id="Id_area" oculto="true">
+				<label>Área</label>
+				<tabla_ex id="AREASSIND">
+					<field id="Id_area"/>
+					<field id="descripcion"/>
+					<field id="IdSindicato">
+						<condicion operador="=">1</condicion>
+					</field>
+				</tabla_ex>
+				<actualiza>
+					<field destino="Id_area" id="IdCateg"/>
+				</actualiza>
+				<operador>=</operador>
+				<valor>1</valor>
+			</field>
+			<field id="IdCateg" oculto="true">
+				<label>Categoría</label>
+				<tabla_ex id="CATPERSONAL">
+					<field id="IdCateg"/>
+					<field id="descripcion"/>
+					<field id="IdSindicato">
+						<condicion operador="=">1</condicion>
+					</field>
+<!--					<field id="Id_area">
+						<condicion operador="=">1</condicion>
+					</field> -->
+				</tabla_ex>
+				<actualiza>
+					<field destino="IdCateg" id="IdConvenio"/>
+				</actualiza>
+				<valor>1</valor>
+			</field>
+			<field id="IdConvenio" oculto="true">
+				<label>Convenio</label>
+				<tabla_ex id="CONVENIOS">
+					<field id="IdConvenio"/>
+					<field id="descripcion"/>
+					<field id="IdSindicato">
+						<condicion operador="=">1</condicion>
+					</field>
+				</tabla_ex>
+				<valor>1</valor>
+			</field>
+			<field id="idOficio" oculto="true">
+				<label>Oficio</label>
+				<tabla_ex id="RH_OFICIOS">
+					<field id="idOficio"/>
+					<field id="descripcion"/>
+				</tabla_ex>
+					<actualiza>
+						<field destino="idOficio" id="nn"/>
+					</actualiza>					
+				
+			</field>
+			<field id="tareas">
+				<label>Tareas</label>
+				<help>Tareas</help>
+				<size>250</size>
+				<tipo>varchar</tipo>
+			</field>
+			
+		</table>
+	</form>
+</histrix>

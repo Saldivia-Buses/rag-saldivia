@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="dashboard">
+
+        <titulo>Medidores de Post Venta</titulo>
+
+        
+        <widget id="cantidad_tareas"  width="400px" height="266px">
+            <title>Tareas</title>                   
+	    <url><![CDATA[histrixLoader.php?xml=postventa_cantidad.xml&dir=estadisticas]]></url>
+        </widget>
+        <widget id="Tipo"  width="400px" height="266px">
+            <title>Tareas x Tipo de Servicio</title>
+	    <url><![CDATA[histrixLoader.php?xml=postventa_tipo.xml&dir=estadisticas]]></url>
+        </widget>
+        <widget id="Tipo Hs"  width="400px" height="266px">
+            <title>Horas de Tareas x Tipo de Servicio</title>
+	    <url><![CDATA[histrixLoader.php?xml=postventa_tipo_hs.xml&dir=estadisticas]]></url>
+        </widget>
+	
+	
+        <widget id="Tareas"  width="400px"  height="266px">
+            <title>Tareas realizadas</title>
+	    <url><![CDATA[histrixLoader.php?xml=postventa_tareas.xml&dir=estadisticas]]></url>
+        </widget>
+        <widget id="TareasSC"  width="400px"  height="266px">
+            <title>Tareas Sin Cargo</title>
+	    <url><![CDATA[histrixLoader.php?xml=postventa_tareas_sc.xml&dir=estadisticas]]></url>
+        </widget>
+        <widget id="TareasCC"  width="400px"  height="266px">
+            <title>Tareas Con Cargo</title>
+	    <url><![CDATA[histrixLoader.php?xml=postventa_tareas_cc.xml&dir=estadisticas]]></url>
+        </widget>
+        <widget id="PorYear"  width="400px"  height="266px">
+            <title>Tareas por Año</title>
+	    <url><![CDATA[histrixLoader.php?xml=postventa_year.xml&dir=estadisticas]]></url>
+        </widget>        
+        
+</histrix>
+
+

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<abm tipo="abm-mini">
+	<titulo>GRUPOS DE CUENTAS</titulo>
+	<obs></obs>
+	<consulta >
+		<tabla id="CTBGRPCONT" >
+		    <titulo>Cuentas que conforman el grupo</titulo>
+			<campo id="idGrupo" oculto="true">
+				<label>id</label>
+			</campo>
+
+			
+			<campo id="ctbcod" >
+				<label>Cuenta Ctb</label>
+				<ayuda_ex id="CTBCUENT">
+					<campo id="ctbcod"></campo>
+					<campo id="ctbnom">
+					<detalle>ctanom</detalle>
+					
+					</campo>					
+					<campo id="ctbhab">
+						<condicion operador="=">1</condicion>
+					</campo>					
+
+				</ayuda_ex>
+
+			</campo>		
+			<campo id="ctbnom" deshabilitado="true" >
+				<expresion>CTBCUENT.ctbnom</expresion>
+				<label>Nombre Cuenta</label>
+				<tipo>varchar</tipo>
+
+			</campo>				
+			
+		</tabla>
+		<join tipo="left">
+			<tabla id="CTBCUENT">
+				<campo id="ctbcod">
+					<condicion operador="=">CTBGRPCONT.ctbcod</condicion>
+				</campo>
+			</tabla>
+		</join>
+	</consulta>	   
+</abm>

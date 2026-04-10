@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix  tipo="crud" >
+    <title>COTIZADO</title>
+    <obs/>
+    <form >
+        <table id="CPS_COTIZACION_DETALLE" >
+	    <field id="cpsdetalle_id" />
+	    <field id="regcuenta_id"  />
+	    <field id="precio_unitario"/>
+        <field id="bonificacion_1" />        
+        <field id="bonificacion_2" />        
+        <field id="formapago_id" noshow="true" />
+        <field id="observaciones" />
+        <field id="fecha_entrega" />        
+	    <field id="total_cotizacion" />
+
+
+        </table>
+    </form>
+</histrix>

@@ -1,0 +1,292 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<histrix tipo="cabecera" clase="claseancha">
+    <title>COTIZACION</title>
+    <obs></obs>
+    <form >
+        <table id="COTIZACION" label="COTIZACION">
+								
+            <validation>
+                <condition>('ctanom' == '0')</condition>
+                <message>Debe Ingresar el Nombre.</message>
+            </validation>
+            <validation >
+                <condition>(modcar == 0)</condition>
+                <message>Debe Seleccionar el Modelo</message>
+            </validation>
+            <field id="idLista" deshabilitado="true" noshow="true">
+                <tabla_ex id="PRECIOMODELO">
+                    <field id="id">
+                        <expression>max(idLista)</expression>
+                    </field>
+                    <field id="id2">
+                        <expression>max(idLista)</expression>
+                    </field>
+						
+                </tabla_ex>
+                <tipo>integer</tipo>
+            </field>
+			
+            <field id="ctacod" required="false" autocompletar="true" _noshow="true" deshabilitado="true" noshow="true">
+                <label modpos="nobr">Cliente </label>
+                <help>Codigo de Cuenta </help>
+                <valor>0</valor>
+                <actualiza>
+                    <field destino="ctacod" id="contactos"/>
+                </actualiza>
+                <detalle>ctacod</detalle>
+                <tipo>integer</tipo>
+            </field>
+            <field id="ctanom" required="true" autocompletar="true" searchRecord="false">
+                <label colspan="2">Nombre</label>
+                <ayuda_ex id="CCTCUENT" condes="true" xml="HLPcctcuent_conta_cot.xml" dir="/help_local">
+                    <field id="ctacod" noshow="true">
+                        <detalle>ctacod</detalle>
+                    </field>
+						
+                    <field id="ctanom2">
+                        <expression having="false">concat(CCTCUENT.ctanom, ' - ', CCTCUENT.ctafan)</expression>
+                        <tipo>varchar</tipo>
+                    </field>
+                    <field id="siscod" oculto="true" >
+                        <condicion operador="=">'02'</condicion>
+                    </field>
+                    <field id="ctatel" class="informal" noshow="true">
+                        <detalle>ctatel</detalle>
+                    </field>
+						
+                    <clave>ctanom</clave>
+                    <descripcion>ctanom</descripcion>
+                    <order>
+                        <field id="ctanom"></field>
+                    </order>
+                </ayuda_ex>
+	
+                <size>40</size>
+                <valor></valor>
+            </field>
+            <field id="idCotiz" _autoinc="true" deshabilitado="true" _noshow="true">
+                <label modpos="nobr" style="font-size:15px; color:green;font-weight:bold;">Nro Cotiz.</label>
+
+                <tabla_ex id="COTIZACION">
+                    <field id="id">
+                        <expression>max(idCotiz) + 1</expression>
+							
+                    </field>
+                    <field id="id2">
+                        <expression>max(idCotiz) + 1</expression>
+							
+                    </field>
+						
+                </tabla_ex>
+
+                <tipo>varchar</tipo>
+
+                <help>Numero de Cotizacion</help>
+                <detalle>idCotiz</detalle>
+            </field>
+
+
+            <field id="fecha" deshabilitado="true">
+                <label modpos="nobr">Fecha</label>
+                <help>Fecha de Cotización</help>
+		<tipo>date</tipo>
+                <valor>today</valor>
+            </field>
+            <field id="contactos">
+                <label colspan="2">Contactos</label>
+                <tabla_ex id="CCTCONTA" vacio="true">
+                    <field id="idconta"></field>
+                    <field id="nombre" >
+                        <expression>CCTCONTA.nombre</expression>
+                        <tipo>varchar</tipo>
+                    </field>
+						
+                    <field id="ctamail" >
+                        <expression>CCTCONTA.mail</expression>
+                        <tipo>varchar</tipo>
+                    </field>
+                    <field id="ctatel" >
+                        <expression>CCTCONTA.Telefono</expression>
+                        <tipo>varchar</tipo>
+                    </field>
+                    <field id="ctacon" >
+                        <expression>CCTCONTA.nombre</expression>
+                        <tipo>varchar</tipo>
+                    </field>
+                    <field id="ctacod">
+                        <condicion operador="=">0</condicion>
+                    </field>
+                    <order>
+                        <field id="nombre"></field>
+                    </order>
+                </tabla_ex>
+            </field>
+            <field id="ctatel">
+                <label modpos="nobr" colspan="6">Teléfono</label>
+                <size>40</size>
+                <tipo>varchar</tipo>
+            </field>
+<!--				<field id="ctadir">
+					<label>Dirección</label>
+					<size>40</size>
+				</field>
+				<field id="ctanro">
+					<label modpos="nobr">CUIT</label>
+				</field> -->
+            <field id="ctacon" >
+                <label colspan="2">Contacto</label>
+                <size>40</size>
+            </field>
+            <field id="ctamail" >
+                <label modpos="nobr" colspan="6">e-mail</label>
+                <size>40</size>
+					
+            </field>
+
+
+            <field id="showPrecioCon" >
+                <label>Concesionario</label>
+                <tipo>check</tipo>
+            </field>
+            <field id="precio" _sincelda="true">
+                <label  modpos="nobr"></label>
+                <tipo>decimal</tipo>
+                <size>20</size>
+            </field>
+
+
+            <field id="idGrupo" deshabilitado="true" noshow="true" >
+                <label modpos="nobr">idGrupo</label>
+                <tipo>integer</tipo>
+            </field>
+				<!-- SELECCIONO LAS POSIBLES CARROCERIAS A FABRICAR -->
+            <field id="modcar" tabla="CARROCERIA" deshabilitado="true">
+                <label _colspan="2" modpos="nobr">Carroceria</label>
+                <tabla_ex id="CARROCERIA">
+                    <field id="nrocar"></field>
+                    <field id="desabv"></field>
+                </tabla_ex>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="asientos2"  local="true" deshabilitado="true" >
+                <label modpos="nobr"> Asientos</label>
+                <tipo>integer</tipo>
+                <size>2</size>
+            </field>
+            <field id="showPrecioPub" >
+                <label>Venta</label>
+                <tipo>check</tipo>
+            </field>
+            <field id="prePub" _sincelda="true">
+                <label  modpos="nobr" ></label>
+                <tipo>decimal</tipo>
+                <size>20</size>
+            </field>
+            <field id="leyenda_precio">
+        	<label colspan="4">Leyenda Precio</label>
+        	<valor>(Incluye Iva del  10,5 % )</valor>
+        	<size>40</size>
+    	    </field>
+					
+          <field id="homologacion_id" required="true">
+            <label modpos="nobr">Homologacion</label>
+            <helper type="combo" xml="combo_homologacion_modelo.xml" dir="/fabricacion" empty="true">
+              <field id="nrocar" oculto="true" />
+              <field id="asientos" oculto="true" />
+            </helper>
+<!--
+            <actualiza>
+              <field destino="atributos" id="homologacion_id"/>
+            </actualiza>
+-->
+          </field>
+				<!-- SELECCIONO EL MODELO DE CHASIS -->
+				
+             <field id="grupo" noshow="true">
+                <label colspan="4" modpos="nobr" style="color:red;">Seleccione Modelo</label>
+					
+                <tabla_ex id="GRUPOPRECIOS" xml="grupoprecios_select.xml" _expand="true"	vacio="true">
+                    <field id="idGrupoPrecio">
+                        <condicion operador=""></condicion>
+                    </field>
+                    <field id="desabv">
+                        <expression>concat(MARCHASIS.desabv,' ',	MODCHASIS.moddes)</expression>
+                        <label colstyle="width:100px;">Chasis</label>
+                        <tipo>varchar</tipo>
+                    </field>
+                    <field id="marcod">
+                        <detalle>marcod</detalle>
+                    </field>
+                    <field id="modcha">
+                        <detalle>modcha</detalle>
+                    </field>
+						
+                    <field id="nrocar">
+                        <detalle>nrocar</detalle>
+                        <condicion operador=""></condicion>
+							
+                    </field>
+                    <field id="idGrupo">
+                        <detalle>idGrupo</detalle>
+                    </field>
+                </tabla_ex>
+                <tipo>integer</tipo>
+					<!-- <tipo>radio</tipo> -->
+            </field>
+
+															
+            <field id="marcod" deshabilitado="true" noshow="true">
+                <label>marcod</label>
+                <tipo>integer</tipo>
+            </field>
+				
+            <field id="modcha" deshabilitado="true" noshow="true">
+                <label modpos="nobr">modcha</label >
+                <tipo>integer</tipo>
+            </field>
+				
+		
+
+
+            <field id="pie">
+                   <label rowspan="2" colspan="2">Pie</label>
+                   <valor><![CDATA[La operaci&oacute;n se concreta mediante la aceptaci&oacute;n fehaciente de la presente cotizaci&oacute;n.
+Los turnos de fabricaci&oacute;n se otorgar&aacute;n a partir del cierre de la operaci&oacute;n.
+COTIZACI&Oacute;N V&Aacute;LIDA POR 10 DIAS CORRIDOS.
+]]></valor>
+                   <size>200</size>
+            </field>
+            <field id="plazo">
+                <label modpos="nobr" colspan="5">Plazo de entrega</label>
+                <tipo>varchar</tipo>
+                <size>70</size>
+                <valor>45 dias a partir de entrada a produccion</valor>
+            </field>
+            <field id="formaPago">
+                <label _modpos="nobr" colspan="5">Forma de Pago</label>
+                <tipo>varchar</tipo>
+                <size>120</size>
+                <valor>A PROCESO</valor>
+            </field>
+
+      <field id="filtro_atributos" noshow="true" local="true">
+        <valor>'Cotiz'</valor>
+      </field>    
+
+    <field id="atributos" local="true" colspan="6">
+    <label>Attributos</label>
+    <helper xml="configurador_atributos.xml" type="object" dir="/producto/ing">
+      <parameter source="homologacion_id" target="homologacion_id" />
+      <parameter source="filtro_atributos" target="filtro_atributos" />
+    </helper>
+        <label colspan="2" colstyle="display:none;">Atributos</label>
+    </field>  
+
+<!--             <field id="accesorios" local="true" obj="cotiz_accesorios_coche.xml">
+                <label colspan="7"></label>
+                <paring destino="cotizacion_id">idCotiz</paring>
+            </field> -->
+
+        </table>
+    </form>
+</histrix>

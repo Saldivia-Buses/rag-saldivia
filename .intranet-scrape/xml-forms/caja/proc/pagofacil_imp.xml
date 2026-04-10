@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="fichaing" inserta="false" imprime="false" modifica="false" llenoTemporal="false">
+  <title>CIERRE </title>
+  <obs/>
+	<form >
+		<table id="PAG_DETALLE" label="IMPORTAR">
+        		<movimientos >
+				<relacion id="pagofacil_ingmov.xml"></relacion> 
+			</movimientos>
+
+
+<!--			<field id="misdatos" local="true">
+				<label>novedades</label>
+				<helper type="object" xml="getpagofacilimputacion.xml" >
+
+				<parameter source="subsistema_id" target="subsistema_id" />
+
+				
+			      </helper>
+			</field>
+-->
+			<field id="informacion" deshabilitado="true">
+			<valor>El formulario importa informacion recibida de PAgo facil a traves del archivo PAG_DELTALLE.txt 
+El nombre de usuario la base de datos y la clave estan fijos en el archivo getpagofacil, el txt va a buscarlo en /file</valor> 
+			<tipo>editor</tipo>
+			</field>
+			<field id="subsistema_id" valauto="true" noshow="true" local="true">
+				<label>Subsist</label>
+			</field>
+			<field id="tipo" local="true" deshabilitado="true">
+				<label>IMPORTAR Pagofacil</label>
+				<help>Importa movimientos Pagofacil</help>
+			</field>
+		</table>
+	</form>
+</histrix>

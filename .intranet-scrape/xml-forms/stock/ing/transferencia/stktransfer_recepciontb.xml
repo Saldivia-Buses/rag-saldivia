@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="grid" inserta="false" modifica="false" imprime="false" deleteRow="false" procesa="false">
+  <title>Recepcion de Depositos</title>
+  <obs></obs>
+
+
+
+    
+  <form>
+    <table id="STK_MOVIMIENTOS" label="Recepción de Depositos">
+
+      <movimientos>
+        <relacion id="stktransfer_upd.xml"/>
+        <relacion id="stktransfer_ins.xml"/>
+      </movimientos>
+
+      <fieldGroup noshow="true">
+
+          <field id="id_stkmovimiento" >
+            <label>id_stkmov</label>
+          </field>
+
+          <field id="stktransaccion_id" >
+              <label>stktrans_id</label>
+          </field>
+
+          
+          <field id="alta_movimiento" >
+            <label>alta_movimiento</label>
+          </field>
+
+          <field id="fecha_movimiento" >
+            <label>fecha_mov</label>
+          </field>
+
+          <field id="numero_movimiento" >
+            <label>nro_mov</label>
+          </field>
+
+          <field id="stkarticulo_id">
+            <label>Código</label>
+          </field>
+
+          <field id="_ORDEN" local="true"  >
+            <label>ORDEN</label>
+          </field>
+
+          <field id="nombre_concepto" tabla="STK_CONCEPTOS" >
+            <label>Concepto</label>
+          </field>
+
+          <field id="stkrubro_id" >
+            <label>rubro</label>
+          </field>
+
+          <field id="stkfamilia_id" >
+            <label>famil</label>
+          </field>
+
+          <field id="precio_costo"  />
+          <field id="precio_venta"  />
+          <field id="precio_total"  />
+          <field id="precio_promedio"  />
+
+      </fieldGroup>
+
+
+      <fieldGroup colstyle="vertical-align:middle;padding:2px 2px 2px 2px;text-align:center;">
+
+          <field id="stkconcepto_id" noshow="true">
+            <label>Código</label>
+          </field>
+
+          <field id="nombre_articulo" tabla="STK_ARTICULOS">
+            <label>Articulo</label>
+          </field> 
+
+          <field id="referencia" editable="true">
+              <label>Referencia</label>
+              <tipo>varchar</tipo>
+              <size>30</size>
+          </field>
+
+          <field id="cantidad" local="true">
+            <label>Ingresan</label>
+            <if exp="recibido == 1">
+                <true>pendiente</true>
+                <false>'0'</false>
+            </if>
+            <tipo>numeric</tipo>
+          </field>
+
+          <field id="pendiente">
+            <label>Enviados</label>
+            <tipo>numeric</tipo>
+            <condicion operador="&gt;">0</condicion>
+          </field>
+
+          <field id="cant_pendiente" local="true">
+            <label>Regresan</label>
+            <if exp="recibido == 0">
+                <true>pendiente</true>
+                <false>'0'</false>
+            </if>
+            <tipo>numeric</tipo>
+          </field>
+
+          <field id="recibido" local="true" refresh="true">
+            <label>Recibido</label>
+            <tipo>check</tipo>
+          </field>
+
+      </fieldGroup>
+
+      <order>
+        <field id="orden_movimiento" />
+      </order>
+
+    </table>
+
+    <join>
+      <tabla id="STK_CONCEPTOS">
+        <field id="id_stkconcepto">
+          <condicion operador="=">stkconcepto_id</condicion>
+        </field>
+        <field id="tipo_concepto">
+          <condicion operador="=">0</condicion>
+        </field>
+      </tabla>
+    </join>
+
+    <join>
+      <tabla id="STK_ARTICULOS">
+        <field id="id_stkarticulo">
+          <condicion operador="=">stkarticulo_id</condicion>
+        </field>
+      </tabla>
+    </join>
+
+  </form>
+</histrix>

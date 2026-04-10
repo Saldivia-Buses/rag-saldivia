@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta"  >
+  <title>Comprobantes a Imputar</title>
+  <obs/>
+  <form>
+    <table id="REG_MOVIMIENTOS">
+	<field id="id_regmovim" esClave="true" />
+	<field id="comprobante">
+		<label>Comprobante</label>
+		<expresion>CONCAT(REG_CONCEPTOS.abreviacion_concepto,' ',LPAD(REG_MOVIMIENTOS.puesto_movimiento,4,0),'-',LPAD(REG_MOVIMIENTOS.nro_movimiento,8,0))</expresion>
+	</field>
+	<field id="subsistema_id" noshow="true"/>
+
+	<field id="regcuenta_id" noshow="true">
+		<condicion operador="=">-1</condicion>
+	</field>
+	<field id="saldo_movimiento">
+		<condicion having="false" operador="!=">0 and (case when REG_CONCEPTOS.imputacion_concepto = 1 then 1 else -1 end) * saldo_movimiento  &gt; 0</condicion>
+	</field>
+	<field id="saldo_aimputar" noshow="true">
+		<expresion>(case when REG_CONCEPTOS.imputacion_concepto = 1 then 1 else -1 end) * saldo_movimiento</expresion>
+		<detalle>saldo_aimputar</detalle>
+	</field>
+
+    </table>
+    <join>
+      <table id="REG_CONCEPTOS">
+        <field id="subsistema_id">
+           <condicion operador="=">REG_MOVIMIENTOS.subsistema_id</condicion>
+        </field>
+        <field id="id_concepto">
+          <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>

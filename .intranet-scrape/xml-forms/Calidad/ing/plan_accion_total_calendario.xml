@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="calendar" imprime="false" inserta="false" modifica="false" sidePanel="false">
+    <title>Plan Accion Total</title>
+    <obs></obs>
+    <form detalle="cal_plan_accion_acciones_crud.xml">
+    <table id="CAL_PLAN_ACCION_ACCION" label="Plan Accion Total">
+
+    <filters auto="true">
+
+        <field id="origen_planaccion">
+            <label modpos="nobr">Origen</label>
+            <help>Origen</help>
+            <operador>=</operador>
+        </field>			
+
+        <field id="plan_accion_tema_id">
+            <label modpos="nobr">Tema</label>
+            <help>Tema</help>
+            <operador>=</operador>
+        </field>
+
+        <field id="lidera_planaccion">
+            <label modpos="nobr">Lidera</label>
+            <help>Lidera</help>
+            <operador>=</operador>
+        </field>
+
+        <field id="cerrada" deshabilitado="false">
+            <label modpos="nobr">Cerradas</label>
+            <help>Ver Cerradas</help>
+            <operador>=</operador>
+            <valor>0</valor>
+        </field>
+
+    </filters>
+
+    <field id="id_plan_accion_accion" calendarId="true" Formstyle="display:none;">
+        <label>Nro</label>
+        <detalle>id_plan_accion_accion</detalle>
+    </field>
+
+    <field id="origen_planaccion" noZero="true" tabla="CAL_PLAN_ACCION_TOTAL">
+        <helper xml="calorigennconf_crud.xml" type="combo" dir="/calidad/man/" empty="true">
+            <field id="activo">
+                <condicion operador="=">1</condicion>
+            </field>
+            <field id="origen_nconf">
+                <expression>LEFT(origen_nconf,15)</expression>
+            </field>            
+        </helper>
+        <label>Origen</label>
+        <help>Origen del Plan</help>
+    </field>
+
+    <field id="plan_accion_tema_id" noZero="true" tabla="CAL_PLAN_ACCION_TOTAL">
+        <helper xml="tema_planaccion_crud.xml" type="combo" dir="/calidad/man/" empty="true">
+            <field id="activo">
+                <condicion operador="=">1</condicion>
+            </field>
+            <field id="nombre_plan_accion_tema">
+                <expression>LEFT(nombre_plan_accion_tema,15)</expression>
+            </field>            
+        </helper>
+        <label>Tema</label>
+        <help>Tema del Plan</help>
+    </field>
+
+    <field id="descripcion_planaccion" tabla="CAL_PLAN_ACCION_TOTAL">
+        <label>Descripcion</label>
+        <help>Descripcion Plan</help>
+        <size>100</size>
+        <tipo>varchar</tipo>
+    </field>
+
+    <field id="acciones_planaccion" calendarSubject="true">
+        <label>Acciones</label>
+        <help>Acciones Plan</help>
+        <size>100</size>
+        <tipo>varchar</tipo>
+        <expression>concat(acciones_planaccion, ' - ',descripcion_planaccion)</expression>
+    </field>
+
+    <field id="id_usu" deshabilitado="true" local="true" noselect="true" noshow="true">
+      <valor eval="true">$_SESSION['idUser']</valor>
+    </field>
+
+    <field id="lidera_planaccion" colstyle="display:none">
+        <label>Lide.</label>
+        <help>Lidera el Plan</help>
+        <helper type="combo" id="HTXUSERS" empty="true">
+            <field id="id_usuario"/>
+            <field id="nombre">
+                <expression>CONCAT(Nombre, LEFT(apellido,1))</expression>
+            </field>
+            <field id="baja">
+                <condicion operador="=">0</condicion>
+            </field>
+            <field id="Id_perfil">
+                <condicion operador="!=">14</condicion>
+            </field>
+            <order>
+                <field id="nombre"/>
+            </order>
+        </helper>
+        <condicion operador="=" valorde="id_usu">id_usu</condicion> 
+    </field>
+
+    <field id="inicio_planaccion">
+        <label>Fecha Inicio</label>
+        <help>Inicio</help>
+        <tipo>date</tipo>
+    </field>
+
+    <field id="objetivo_planaccion" calendarStartDate="true">
+        <label>Fecha Obj.</label>
+        <help>Objetivo</help>
+        <tipo>date</tipo>
+    </field>
+
+    <field id="cierre_planaccion" print="false">
+        <label>Fecha Cierre</label>
+        <help>Cierre</help>
+        <tipo>date</tipo>
+    </field>			                                      
+
+    <field id="cerrada" noshow="true">
+        <label>Cerrada</label>
+        <help>Cerrada</help>
+        <expression>case when CAL_PLAN_ACCION_ACCION.cierre_planaccion = '0000-00-00' then 0 else 1 end</expression>
+        <options>
+            <option valor="1">Si</option>B
+            <option valor="0">No</option>
+        </options>
+        <condicion operador="=">0</condicion>
+    </field>
+
+    <field id="color" calendarColor="true">
+        <attribute id="style">estilo</attribute>
+        <expression>(CASE WHEN CAL_PLAN_ACCION_ACCION.cierre_planaccion      != '0000-00-00'   THEN '#006600'
+                          WHEN CAL_PLAN_ACCION_ACCION.objetivo_planaccion &lt;= CURDATE() and CAL_PLAN_ACCION_ACCION.cierre_planaccion = '0000-00-00' THEN '#ff0000'
+                    ELSE '#FFaa00' END)</expression>
+                          <!-- amarillo FFaa00 - verde 006600 - rojo ff0000 - blanco ffffff-->
+    </field>
+
+</table>
+
+    <join tipo="left">
+      <table id="CAL_PLAN_ACCION_TOTAL">
+        <field id="id_plan_accion">
+          <condicion operador="=">plan_accion_id</condicion>
+        </field>
+      </table>
+    </join>
+
+</form>
+</histrix>	

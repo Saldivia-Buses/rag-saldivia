@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="consulta">
+	<title>Localidades</title>
+	 <obs></obs>
+		<form detalle="informes_sociales.xml">
+		
+			<table id="PAC_SUCURSALES" label="Sucursales">	    
+
+				<field id="id_pacsucursal" noshow="true"></field>
+				
+				<field id="nombre_sucursal">
+					<label>Sucursal</label>
+					<help>Sucursales</help>
+					<detalle>nombre_sucursal</detalle>
+				</field>
+				
+				<field id="calle_id">
+					<label>Calle</label>
+					<help>Calle</help>
+				</field>
+				
+				<field id="nro_sucursal">
+					<label>Nro</label>
+					<help>Nro</help>
+				</field>
+				
+			    <field id="telefono_sucursal">
+					<label>telefono</label>
+					<help>Telefono</help>
+				</field>
+				
+		        <field id="categoria">
+					<label>categoria</label>
+					<help>categoria</help>
+				</field>
+				
+			</table>
+		</form>
+
+    </histrix>	

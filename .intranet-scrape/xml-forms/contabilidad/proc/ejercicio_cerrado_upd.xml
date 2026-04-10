@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="update" grabafinal="true">
+  <title>Activo</title>
+  <obs></obs>
+  <consulta>
+	<tabla id="CTB_EJERCICIOS" idCampoCond="graba">
+	     <field id="id_ejercicio" esClave="true" id_temp="ejercicio_origen" />
+	     <field id="activo" id_temp="local"/>
+	     
+	     <field id="cerrado" id_temp="cerrado"/>
+	     
+	</tabla>
+  </consulta>
+</histrix>

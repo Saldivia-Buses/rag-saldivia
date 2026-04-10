@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" subtipo="vertical" imprime="false">
+    <title>REVISIONES MEDICAS</title>
+    <obs/>
+    <form >
+        <table id="FRANCOS_REV" label="Revisiones medicas">
+            <field id="id_revision" noshow="true"></field>
+            <field id="IdPersona" valauto="true" noshow="true"/>
+            <field id="francoper_id" valauto="true" noshow="true"/>
+            <field id="fecha_revision">
+                <label>Fecha</label>
+                <tipo>date</tipo>
+                <valor>today</valor>
+            </field>
+            <field id="parte">
+                <label>Parte Medico</label>
+                <size>500</size>
+            </field>
+            <field id="fecha_baja">
+                <label>Fecha baja</label>
+                <tipo>date</tipo>
+            </field>
+            <field id="fecha_cita">
+                <label>Fecha cita</label>
+                <tipo>date</tipo>
+            </field>
+        </table>
+    </form>
+</histrix>

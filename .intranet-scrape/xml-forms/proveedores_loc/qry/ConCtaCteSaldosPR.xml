@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" ancho="40" _paginar="5">
+    <title>Cuenta Corriente</title>
+    <obs/>
+    <form  detalle="ConCtaCteDetSal.xml" dir="/clientes_local/qry/">
+        <table id="CCTMOVIM" label="Movimientos">
+
+            <filters>
+                <field id="movsal" suma="true" deshabilitado="false" _noshow="true">
+                    <label>Saldo Distinto de</label>
+                    <operador>!=</operador>
+                    <valor>0</valor>
+                </field>
+
+                <field id="tipoSaldo" suma="true" deshabilitado="false" >
+                    <label>Tipo Saldo</label>
+                    <options>
+                        <option valor="">Todos</option>
+                        <option valor="1">Acreedor</option>
+                        <option valor="2">Deudor</option>
+                    </options>
+                    <operador>=</operador>
+                    <valor></valor>
+                </field>
+            </filters>
+
+            <field id="siscod" oculto="true">
+                <label>Cod.</label>
+                <detalle>siscod</detalle>
+            </field>
+
+            <field id="ctacod">
+                <label>Cuenta</label>
+                <help>Código de Cuenta</help>
+                <detalle>ctacod</detalle>
+                <format>%04d</format>
+            </field>
+
+            <field id="ctanom">
+                <expression>CCTCUENT.ctanom</expression>
+                <label>Nombre</label>
+                <help>Código de Cuenta</help>
+                <!--    <format>%30s</format> -->
+                <tipo>char</tipo>
+            </field>
+            <!--                  <field id="ctanro">
+                      <expression>CCTCUENT.ctanro</expression>
+                      <label>CUIT</label>
+                      <help>CUIT</help>
+                      <format>%30s</format>
+                  </field>
+-->
+            <field id="debe" suma="true">
+                <expression>@deb:= round(sum(movimp * (case when conimp = 1 then 1 else 0 end)), 2)</expression>
+                <label>Debe</label>
+            </field>
+
+            <field id="haber" suma="true">
+                <expression>@hab:= round(sum(movimp * (case when conimp = 2 then 1 else 0 end)), 2)</expression>
+                <label>Haber</label>
+            </field>
+
+            <field id="tipoSaldo" >
+                <expression>(case 
+                when sum(movimp * (case when conimp = 1 then 1 else 0 end)) &gt; sum(movimp * (case when conimp = 2 then 1 else 0 end)) then 1
+                when sum(movimp * (case when conimp = 1 then 1 else 0 end)) &lt; sum(movimp * (case when conimp = 2 then 1 else 0 end)) then 2
+                end)</expression>
+                <label>Tipo Saldo</label>
+                    <options>
+                        <option valor="">Todos</option>
+                        <option valor="1">Acreedor</option>
+                        <option valor="2">Deudor</option>
+                    </options>
+            </field>
+
+            <field id="dif" local="true" suma="true">
+                <label>Diferencia</label>
+                <if exp="true">
+                    <true>debe - haber</true>
+                    <false>0</false>
+                </if>
+                <tipo>numeric</tipo>
+            </field>
+
+            <field id="hilite" local="true" noshow="true" clasefila="true">
+                <if exp="abs( round(movsal, 2) ) != abs( round(dif, 2) )">
+                    <true>'resaltado'</true>
+                    <false>''</false>
+                </if>
+            </field>
+
+            <field id="movsal" suma="true">
+                <expression>sum(movsal)</expression>
+                <label>Saldo</label>
+                <help></help>
+                <!-- <condicion operador=" != ">0</condicion> -->
+            </field>
+
+            <group>
+                <field id="CCTMOVIM.siscod"/>
+                <field id="CCTCUENT.siscod"/>
+                <field id="CCTMOVIM.ctacod"/>
+                <field id="CCTCUENT.ctacod"/>
+                <field id="CCTCUENT.ctanom"/>
+                <field id="CCTCUENT.ctanro"/>
+            </group>
+            <order>
+                <field id="ctanom"/>
+            </order>
+
+        </table>
+        <join tipo="left">
+            <table id="CCTCUENT">
+                <field id="siscod" oculto="true">
+                    <condicion operador="=">CCTMOVIM.siscod</condicion>
+                </field>
+                <field id="ctacod" oculto="true">
+                    <condicion operador="=">CCTMOVIM.ctacod</condicion>
+                </field>
+            </table>
+        </join>
+        <join tipo="left">
+            <table id="CCTCONCE">
+                <field id="siscod" oculto="true">
+                    <condicion operador="=">CCTMOVIM.siscod</condicion>
+                </field>
+                <field id="concod" oculto="true">
+                    <condicion operador="=">CCTMOVIM.concod</condicion>
+                </field>
+            </table>
+        </join>
+    </form>
+</histrix>

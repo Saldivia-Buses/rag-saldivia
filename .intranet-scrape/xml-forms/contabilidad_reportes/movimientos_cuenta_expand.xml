@@ -1,0 +1,347 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" class="consultaancha" tableHeight="40em">
+  <title>Movimientos Mensuales</title>
+  <obs/>
+  <consulta>
+    <table id="CTB_MOVIMIENTOS" label="movimientos">
+	<fieldGroup>
+      <field id="nro_minuta" noshow="true">
+        <label>Nro minuta</label>
+        <help>Numero de la minuta</help>
+      </field>
+      
+      <field id="id_detalle" tabla="CTB_DETALLES" noshow="true" />
+
+      <field id="concepto_id" noshow="true" />
+
+      <field id="ctbcentro_id" noshow="true" tabla="CTB_DETALLES">
+      </field>
+
+      <field id="id_regcuenta" tabla="REG_CUENTA" noshow="true">
+      </field>
+      <field id="cuenta_id" tabla="CTB_DETALLES" noshow="true">
+        <label>Cuenta</label>
+      </field>
+
+      <field id="regmovim_id" noshow="true" />
+      <field id="id_movimiento" noshow="true">
+        <label>Codigo</label>
+        <help>Código de movimiento</help>
+      </field>
+      
+      <field id="estcod" tabla="REG_CUENTA" noshow="true" >
+	<expression having="false">ifnull(estcod, 0)</expression>
+	<condicion operador="=">0</condicion>
+      </field>
+      
+      <field id="fecha_movimiento" noshow="true">
+        <label>Fecha Reg.</label>
+        <help>Fecha movimiento</help>
+<!--        <condicion operador="&gt;=">'[__fecha_minima__]' and CTB_MOVIMIENTOS.fecha_movimiento &lt;= '[__fecha_maxima__]'</condicion> -->
+      </field>
+      <field id="ctanom" tabla="REG_CUENTA">
+        <label>Cuenta</label>
+	<expression>nombre_cuenta</expression>
+      </field>
+<!--
+      <field id="fecha_mov" >
+        <label>Fecha Comp.</label>
+        <help>Fecha movimiento</help>
+	<expression>REG_MOVIMIENTOS.fecha_movimiento</expression>
+	<tipo>date</tipo>
+      </field>
+
+      <field id="concepto">
+        <label>Conc</label>
+	<expression>REG_CONCEPTOS.abreviacion_concepto</expression>
+      </field>
+
+      <field id="nro_movimiento" tabla="REG_MOVMIENTO">
+        <label>Comprobante</label>
+	<expression>concat(lpad(puesto_movimiento, 4, '0'), '-',lpad(nro_movimiento, 8, '0'))</expression>
+      </field>
+-->
+<!--
+      <field id="referencia" tabla="CTB_DETALLES">
+        <label>Referencia</label>
+      </field>
+-->
+<!--
+      <field id="minutas" style="text-align:center;">
+	<helper xml="movimientos_mensuales_minutas.xml" type="link">
+	    <parameter source="anio" target="anio" />
+	    <parameter source="mes" target="mes" />
+	    <parameter source="cuenta_id" target="cuenta_id" />
+
+	</helper>
+	<label>Minutas</label>
+	<expression>count(cuenta_id)</expression>
+      </field>
+      <field id="comprobantes" style="text-align:center;">
+	<helper xml="movimientos_mensuales_qry.xml" type="link">
+	    <parameter source="regcuenta_id" target="regcuenta_id" />
+	    <parameter source="anio" target="anio" />
+	    <parameter source="mes" target="mes" />
+	    <parameter source="cuenta_id" target="cuenta_id" />
+
+	</helper>
+	<label>Comprobantes</label>
+	<expression>count(id_regmovim)</expression>
+      </field>
+-->      
+      <field id="mes" noshow="true" >
+        <expresion having="false">MONTH(CTB_MOVIMIENTOS.fecha_movimiento)</expresion>
+      </field>
+
+      <field id="anio" noshow="true">
+        <expresion having="false">YEAR(CTB_MOVIMIENTOS.fecha_movimiento)</expresion>
+      </field>
+
+      <!--
+      <field id="debe" suma="true" noZero="true" acumula="true">
+        <expresion>sum(case when doh = 0 then importe else 0 end)</expresion>
+        <label>Debe</label>
+        <tipo>cumtom_numeric</tipo>
+      </field>
+      
+      <field id="haber" suma="true" noZero="true" acumula="true">
+        <expresion>sum(case when doh = 1 then importe else 0 end)</expresion>
+        <label>Haber</label>
+        <tipo>custom_numeric</tipo>
+      </field>
+	-->
+
+<!--
+      <field id="diferencia" suma="true">
+        <expresion>sum(round(importe, 2) * (case when doh = 0 then 1 else -1 end))</expresion>
+        <label>Importe</label>
+        <tipo>custom_numeric</tipo>
+      </field>
+      <field id="importancia">
+    	    <expresion>sum(round(importe, 2) * (case when doh = 0 then 1 else -1 end))</expresion>
+	    <tipo>grafico</tipo>
+      </field>
+-->      
+
+
+    
+      <field id="ejercicio_id" noshow="true" />
+
+      <field id="fecha_minima" noshow="true" local="true" />
+      <field id="fecha_maxima" noshow="true" local="true" />
+      <field id="regcuenta_id" tabla="REG_MOVIMIENTOS" noshow="true">
+	    <expression>ifnull(regcuenta_id ,0)</expression>
+      </field>
+	</fieldGroup>
+    <fieldGroup style="text-align:right;">
+
+     <field id="ene"  suma="true" noZero="true" style="text-align:right;">
+	<attribute id="linkdes">nombre_cuenta</attribute>
+	<helper xml="movimientos_mensuales_agrup.xml" type="link" width="80%">
+	    <parameter source="1" target="mes" />
+	    <parameter source="anio" target="anio" />
+
+	    <parameter source="regcuenta_id" target="regcuenta_id" />
+	    <parameter source="cuenta_id" target="cuenta_id" />
+	</helper>
+        <expresion>sum( (case when month(CTB_MOVIMIENTOS.fecha_movimiento) = 1  then round(importe, 2) * (case when doh = 1 then -1 else 1 end) else 0 end))</expresion>
+        <label>Ene</label>
+        <tipo>custom_numeric</tipo>
+     </field>
+     <field id="feb"  suma="true" noZero="true">
+	<attribute id="linkdes">nombre_cuenta</attribute>
+	<helper xml="movimientos_mensuales_agrup.xml" type="link" width="80%">
+	    <parameter source="2" target="mes" />
+	    <parameter source="anio" target="anio" />
+	    <parameter source="regcuenta_id" target="regcuenta_id" />
+	    <parameter source="cuenta_id" target="cuenta_id" />
+	</helper>
+        <expresion>sum( (case when month(CTB_MOVIMIENTOS.fecha_movimiento) = 2  then round(importe, 2) * (case when doh = 1 then -1 else 1 end) else 0 end))</expresion>
+        <label>Feb</label>
+        <tipo>custom_numeric</tipo>
+     </field>
+     <field id="mar"  suma="true" noZero="true">
+	<attribute id="linkdes">nombre_cuenta</attribute>
+	<helper xml="movimientos_mensuales_agrup.xml" type="link" width="80%">
+	    <parameter source="3" target="mes" />
+	    <parameter source="anio" target="anio" />
+	    <parameter source="regcuenta_id" target="regcuenta_id" />
+	    <parameter source="cuenta_id" target="cuenta_id" />
+	</helper>
+        <expresion>sum( (case when month(CTB_MOVIMIENTOS.fecha_movimiento) = 3  then round(importe, 2) * (case when doh = 1 then -1 else 1 end) else 0 end))</expresion>
+        <label>Mar</label>
+        <tipo>custom_numeric</tipo>
+     </field>
+     <field id="Abr"  suma="true" noZero="true">
+	<attribute id="linkdes">nombre_cuenta</attribute>
+	<helper xml="movimientos_mensuales_agrup.xml" type="link" width="80%">
+	    <parameter source="4" target="mes" />
+	    <parameter source="anio" target="anio" />
+	    <parameter source="regcuenta_id" target="regcuenta_id" />
+	    <parameter source="cuenta_id" target="cuenta_id" />
+	</helper>
+        <expresion>sum( (case when month(CTB_MOVIMIENTOS.fecha_movimiento) = 4  then round(importe, 2) * (case when doh = 1 then -1 else 1 end) else 0 end))</expresion>
+        <label>Abr</label>
+        <tipo>custom_numeric</tipo>
+     </field>
+
+     <field id="may"  suma="true" noZero="true">
+	<attribute id="linkdes">nombre_cuenta</attribute>
+	<helper xml="movimientos_mensuales_agrup.xml" type="link" width="80%">
+	    <parameter source="5" target="mes" />
+	    <parameter source="anio" target="anio" />
+	    <parameter source="regcuenta_id" target="regcuenta_id" />
+	    <parameter source="cuenta_id" target="cuenta_id" />
+	</helper>
+        <expresion>sum( (case when month(CTB_MOVIMIENTOS.fecha_movimiento) = 5  then round(importe, 2) * (case when doh = 1 then -1 else 1 end) else 0 end))</expresion>
+        <label>May</label>
+        <tipo>custom_numeric</tipo>
+     </field>
+     <field id="jun"  suma="true" noZero="true">
+	<attribute id="linkdes">nombre_cuenta</attribute>
+	<helper xml="movimientos_mensuales_agrup.xml" type="link" width="80%">
+	    <parameter source="6" target="mes" />
+	    <parameter source="anio" target="anio" />
+	    <parameter source="regcuenta_id" target="regcuenta_id" />
+	    <parameter source="cuenta_id" target="cuenta_id" />
+	</helper>
+        <expresion>sum( (case when month(CTB_MOVIMIENTOS.fecha_movimiento) = 6  then round(importe, 2) * (case when doh = 1 then -1 else 1 end) else 0 end))</expresion>
+        <label>Jun</label>
+        <tipo>custom_numeric</tipo>
+     </field>
+     <field id="jul"  suma="true" noZero="true">
+	<attribute id="linkdes">nombre_cuenta</attribute>
+	<helper xml="movimientos_mensuales_agrup.xml" type="link" width="80%">
+	    <parameter source="7" target="mes" />
+	    <parameter source="anio" target="anio" />
+	    <parameter source="regcuenta_id" target="regcuenta_id" />
+	    <parameter source="cuenta_id" target="cuenta_id" />
+	</helper>
+        <expresion>sum( (case when month(CTB_MOVIMIENTOS.fecha_movimiento) = 7  then round(importe, 2) * (case when doh = 1 then -1 else 1 end) else 0 end))</expresion>
+        <label>Jul</label>
+        <tipo>custom_numeric</tipo>
+     </field>
+     <field id="ago"  suma="true" noZero="true">
+	<attribute id="linkdes">nombre_cuenta</attribute>
+	<helper xml="movimientos_mensuales_agrup.xml" type="link" width="80%">
+	    <parameter source="8" target="mes" />
+	    <parameter source="anio" target="anio" />
+	    <parameter source="regcuenta_id" target="regcuenta_id" />
+	    <parameter source="cuenta_id" target="cuenta_id" />
+	</helper>
+        <expresion>sum( (case when month(CTB_MOVIMIENTOS.fecha_movimiento) = 8  then round(importe, 2) * (case when doh = 1 then -1 else 1 end) else 0 end))</expresion>
+        <label>Ago</label>
+        <tipo>custom_numeric</tipo>
+     </field>
+
+     <field id="sep"  suma="true" noZero="true">
+	<attribute id="linkdes">nombre_cuenta</attribute>
+	<helper xml="movimientos_mensuales_agrup.xml" type="link" width="80%">
+	    <parameter source="9" target="mes" />
+	    <parameter source="anio" target="anio" />
+	    <parameter source="regcuenta_id" target="regcuenta_id" />
+	    <parameter source="cuenta_id" target="cuenta_id" />
+	</helper>
+        <expresion>sum( (case when month(CTB_MOVIMIENTOS.fecha_movimiento) = 9  then round(importe, 2) * (case when doh = 1 then -1 else 1 end) else 0 end))</expresion>
+        <label>Sep</label>
+        <tipo>custom_numeric</tipo>
+     </field>
+     <field id="oct"  suma="true" noZero="true">
+	<attribute id="linkdes">nombre_cuenta</attribute>
+	<helper xml="movimientos_mensuales_agrup.xml" type="link" width="80%">
+	    <parameter source="10" target="mes" />
+	    <parameter source="anio" target="anio" />
+	    <parameter source="regcuenta_id" target="regcuenta_id" />
+	    <parameter source="cuenta_id" target="cuenta_id" />
+	</helper>
+        <expresion>sum( (case when month(CTB_MOVIMIENTOS.fecha_movimiento) = 10  then round(importe, 2) * (case when doh = 1 then -1 else 1 end) else 0 end))</expresion>
+        <label>Oct</label>
+        <tipo>custom_numeric</tipo>
+     </field>
+     <field id="nov"  suma="true" noZero="true">
+	<attribute id="linkdes">nombre_cuenta</attribute>
+	<helper xml="movimientos_mensuales_agrup.xml" type="link" width="80%">
+	    <parameter source="11" target="mes" />
+	    <parameter source="anio" target="anio" />
+	    <parameter source="regcuenta_id" target="regcuenta_id" />
+	    <parameter source="cuenta_id" target="cuenta_id" />
+	</helper>
+        <expresion>sum( (case when month(CTB_MOVIMIENTOS.fecha_movimiento) = 11  then round(importe, 2) * (case when doh = 1 then -1 else 1 end) else 0 end))</expresion>
+        <label>Nov</label>
+        <tipo>custom_numeric</tipo>
+     </field>
+     <field id="dic"  suma="true" noZero="true">
+	<attribute id="linkdes">nombre_cuenta</attribute>
+	<helper xml="movimientos_mensuales_agrup.xml" type="link" width="80%">
+	    <parameter source="12" target="mes" />
+	    <parameter source="anio" target="anio" />
+	    <parameter source="regcuenta_id" target="regcuenta_id" />
+	    <parameter source="cuenta_id" target="cuenta_id" />
+	</helper>
+        <expresion>sum( (case when month(CTB_MOVIMIENTOS.fecha_movimiento) = 12  then round(importe, 2) * (case when doh = 1 then -1 else 1 end) else 0 end))</expresion>
+        <label>Dic</label>
+        <tipo>custom_numeric</tipo>
+     </field>
+
+
+     <field id="diferencia" local="true" suma="true">
+	<attribute id="linkdes">nombre_cuenta</attribute>
+	<helper xml="movimientos_mensuales_agrup.xml" type="link" width="80%">
+	    <parameter source="anio" target="anio" />
+	    <parameter source="regcuenta_id" target="regcuenta_id" />
+	    <parameter source="cuenta_id" target="cuenta_id" />
+	</helper>
+
+        <expresion>sum( round(importe, 2) * (case when doh = 1 then -1 else 1 end))</expresion>
+        <label>Total</label>
+        <tipo>custom_numeric</tipo>
+     </field>
+    </fieldGroup>
+
+      <group>
+        <field id="regcuenta_id" tabla="REG_MOVIMIENTOS" />
+
+      </group>
+      <order>
+        <field id="fecha_movimiento"/>
+      </order>
+    </table>
+    <join tipo="left">
+      <table id="REG_MOVIMIENTOS">
+        <field id="id_regmovim">
+          <condicion operador="=">CTB_MOVIMIENTOS.regmovim_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="REG_CUENTA">
+        <field id="id_regcuenta">
+          <condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="REG_CONCEPTOS">
+        <field id="id_concepto">
+          <condicion operador="=">REG_MOVIMIENTOS.concepto_id</condicion>
+        </field>
+      </table>
+    </join>
+<!--
+    <join tipo="inner">
+      <table id="CTB_CONCEPTOS">
+        <field id="id_concepto">
+          <condicion operador="=">CTB_MOVIMIENTOS.concepto_id</condicion>
+        </field>
+      </table>
+    </join>
+-->
+    <join tipo="left">
+      <table id="CTB_DETALLES">
+        <field id="movimiento_id">
+          <condicion operador="=">id_movimiento</condicion>
+        </field>
+      </table>
+    </join>
+  </consulta>
+</histrix>

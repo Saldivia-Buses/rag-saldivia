@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>                     
+<histrix tipo="insert"  replaceInto="true" _tipoInsert="IGNORE">
+<title>Atributos</title>
+<obs></obs>
+<form >
+    <table id="PRODUCTO_ATRIB_VALORES">
+        <field id="producto_id"  lastId="configurador_ins.xml">
+        </field> 
+        <field id="prdatributo_id" id_temp="id_prdatributo">
+        </field>
+	<field id="valor_atributo" id_temp="valor_atributo">
+	</field>
+    </table>
+</form>	   
+</histrix>

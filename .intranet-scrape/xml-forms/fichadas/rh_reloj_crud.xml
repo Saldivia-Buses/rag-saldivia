@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="crud">
+	<title>RELOJES DE PERSONAL</title>
+	<obs></obs>
+	<form >
+		<table id="RH_RELOJ" >
+		    <title>Reljos de personal</title>
+			<field id="id_reloj">
+				<label>Cod</label>
+				<help>Código del reloj</help>
+			</field>
+		        <field id="descripcion">
+				<label>Descripcion</label>
+				<help>Descripcion</help>
+			</field>
+			<field id="ip_reloj">
+				<label>IP</label>
+				<help>IP del reloj</help>
+			</field>
+		</table>
+	</form>	   
+</histrix> 

@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="grid" deleteRow="false" process="true">
+    <title>Fichadas</title>
+    <obs/>
+    <form detalle="fichadas_dia_abm.xml" dir="/fichadas/" inline="true">
+        <table id="PERSONAL" label="Fichadas del Reloj" _styleTbody="height:300px;overflow-x:hidden;">
+
+            <movimientos >
+                <relacion id="fichadas_carga_insert.xml"></relacion> 
+            </movimientos>
+            <filters>
+                <field id="fecha">
+                    <operador>=</operador>
+                    <label>Desde Fecha</label>
+                    <valor>today</valor>
+                </field>
+                <field id="hora">
+                    <operador>=</operador>
+                    <label>Hora</label>
+                    <valor eval="true">date('h:i:s')</valor>
+                </field>
+            </filters>
+            <field id="legajo" _tabla="PERSONAL">
+                <expression>PERSONAL.legajo</expression>
+                <label>legajo</label>
+            </field>
+<!--
+            <field id="insertkey" deshabilitado="true" noshow="true">
+                <label>key</label>
+            </field>
+-->
+	    <field id="fechaEgreso" noshow="true">
+		<condicion operador="=">'0000-00-00'</condicion>
+	    </field>
+            <field id="tarjeta" deshabilitado="true">
+                <label>tarjeta</label>
+		<detalle>tarjeta</detalle>
+            </field>
+            <field id="apellido" tabla="PERSONAL">
+                <expression>apellido</expression>
+                <label>Apellido</label>
+                <tipo>varchar</tipo>
+            </field>
+
+            <field id="nombre" tabla="PERSONAL">
+                <expression>nombre</expression>
+                <label>Nombre</label>
+                <tipo>varchar</tipo>
+            </field>
+            <field id="fecha"  deshabilitado="true"  local="true">
+                <label>Fecha</label>
+                <help>Fecha</help>
+		<tipo>date</tipo>
+		<detalle>fecha</detalle>
+            </field>
+	<field id="h1" tabla="FICHADADIA">
+	    <label>H1</label>
+	    <tipo>time</tipo>
+	</field>
+	<field id="h2" tabla="FICHADADIA">
+	    <label>H2</label>
+	    <tipo>time</tipo>
+	</field>
+	<field id="h3" tabla="FICHADADIA">
+	    <label>H3</label>
+	    <tipo>time</tipo>
+	</field>
+	<field id="h4" tabla="FICHADADIA">
+	    <label>H4</label>
+	    <tipo>time</tipo>
+	</field>
+	<field id="fechaChar"  local="true" _noshow="true" editable="true">
+		<if exp="true">
+		    <true>date_format(date_create('fecha'), 'd/m/y')</true>
+		    <false>''</false>
+		</if>
+		<label>FechaChar</label>
+		<tipo>varchar</tipo>
+	</field>				
+
+            
+            <field id="hora"  local="true" editable="true" style="text-align:center; background-color:#98FB98;">
+                <label>Hora</label>
+                <tipo>varchar</tipo>
+                <help>Hora</help>
+            </field>
+	    <field id="grabar" local="true">
+    		<tipo>check</tipo>
+	    </field>
+        </table>
+	<join tipo="left">
+	    <table id="FICHADADIA">
+		<field id="tarjeta">
+		    <condicion opeardor="=">PERSONAL.tarjeta</condicion>
+		</field>
+		<field id="fecha">
+		    <condicion opeardor="=">str_to_date('[__fecha__]','%d/%m/%Y')</condicion>
+		</field>
+	    </table>
+	</join>
+    </form>
+</histrix>

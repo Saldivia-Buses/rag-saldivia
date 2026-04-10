@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm-mini" imprime="false" subtipo="vertical" width="33">
+	<title>condiciones de movimientos</title>
+	<obs/>
+
+	<form detalle="prod_procesos_tree3.xml">
+		<table id="PROD_CONDICION_MOVIM">
+			<title>Condiciones</title>
+		    <filters>
+		    	<field id="homologacion_id" noshow="true" >
+		    	    <label >Homologación</label>
+		    	    <operador>=</operador>
+                	</field>
+		    </filters>
+
+
+			<field id="id_condicion" esClave="true" autoinc="true" noshow="true">
+				<label>Codigo</label>
+			</field>
+			<field id="seccion_id"  _editable="true">
+                <tabla_ex id="MOMENTO">
+                    <field id="idMomento"></field>
+                    <field id="descripcion"></field>
+                </tabla_ex>
+                <label>Sección</label>
+			</field>
+			
+			<field id="estado" max="100">
+				<label>estado</label>
+				<help>estado para iniciar movimiento</help>
+				<options>
+					<option valor="0"></option>
+					<option valor="25">25 %</option>
+					<option valor="50">50 %</option>
+					<option valor="75">75 %</option>
+					<option valor="100">100 %</option>					
+				</options>
+				<tipo>grafico</tipo>
+			</field>
+			
+			<field id="proceso_id">
+		            <label>Proceso</label>
+		            <help>Rubro del Articulo</help>
+		            <helper type="combo" xml="prod_procesos_crud.xml" />
+		            <!--
+		            <tabla_ex id="PROD_PROCESOS">
+		              <field id="id_proceso"/>
+		              <field id="nombre_proceso">
+		              </field>
+		            </tabla_ex>
+		        -->
+		    	 <!--   <detalle>id_proceso</detalle> -->
+		        </field>
+			<field id="homologacion_id" noshow="true">
+			    <label style="width:300px;">Coche</label>
+	                    <helper type="combo" xml="combo_homologacion_modelo.xml" dir="/fabricacion" >
+      <field id="Descripcion">
+        <label>Descripcion</label>
+<!--        <expresion>CONCAT(CARROCERIA.modcar,' ',MARCHASIS.mardes, ' ',MODCHASIS.moddes, ' ',HOMOLOGMOD.asientos ,' Asientos ',(CASE WHEN banbar = 1 THEN 'BB' ELSE ' ' END) ,'- Largo:', largo,' ', obs)</expresion> -->
+<expresion>CONCAT(CARROCERIA.modcar,' ',MODCHASIS.desabv, ' (',HOMOLOGMOD.asientos ,') ' ,' ', largo,'mts ', (select servdes from TIPOSERVICIO where TIPOSERVICIO.tipserv = HOMOLOGMOD.tipserv limit 1))</expresion>
+      </field>
+
+        			    <field id="baja">
+	                		<condicion operador="=">0</condicion>
+        			    </field>
+	                    </helper>
+
+			</field>
+			<field id="homol" noshow="true">
+			    <expresion>homologacion_id</expresion>
+                            <detalle>homologacion_id</detalle>
+			    
+			</field>
+		</table>
+	</form>
+</histrix>
+

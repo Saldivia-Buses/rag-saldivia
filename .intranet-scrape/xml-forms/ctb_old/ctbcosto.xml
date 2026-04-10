@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="crud">
+	<title>CENTRO DE COSTOS</title>
+	<obs></obs>
+	<form >
+		<table id="CTB_CENTROS" >
+			<title>C.Costo</title>
+			<field id="id_ctbcentro">
+				<label>Codigo</label>
+				<help>Codigo de Centro Costo</help>
+			</field>
+			<field id="nombre_centro">
+				<label>Centro Costo</label>
+				<help>Centro de Imputacion</help>
+			</field>
+			<order>
+				<field id="nombre_centro"></field>
+			</order>
+		</table>
+	</form>	   
+</histrix> 

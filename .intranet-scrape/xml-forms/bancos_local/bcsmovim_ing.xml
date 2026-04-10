@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="ing" llenoTemporal="false" >
+	<title>MOVIMIENTOS BANCARIOS</title>
+	<obs></obs>
+	<form >
+		
+		<table id="BCSMOVIM" label="Mov Bancarios">
+			
+			<movimientos cabecera="bcsmovim_cab.xml">
+				<relacion id="bcsmovim_ingmov.xml">
+					<!-- aca tengo que establecer la condicion para que se haga el insert -->
+				</relacion>
+
+			</movimientos>
+			
+			<field id="siscod" oculto="true">
+				<label>siscod</label>
+				<help> Cod sistema</help>
+				<parametro id="fsmparam_paralf.xml" retorna="paralf">
+					<field id="parcla" >
+						<condicion operador="=">'sisbcs'</condicion>
+					</field>
+				</parametro>						
+			</field>
+			<field id="bcsfec" oculto="true">
+				<tipo>date</tipo>
+
+			</field>
+			<field id="bcsmov">
+				<label>Concepto</label>
+				<help>Codigo de Concepto</help>
+				<tabla_ex id="BCSCONCE">
+					<field id="cnbcod"></field>
+					<field id="cnbdes"></field>
+				</tabla_ex>
+				<tipo>integer</tipo>
+				<valor>1</valor>
+	
+			</field>			
+			<field id="bcsnro">
+				<label>Numero</label>
+				<help>Numero de Movimiento</help>
+				<tipo>integer</tipo>
+				<valor>0</valor>
+				
+				<format>%08d</format>
+				
+			</field>					
+			<field id="bcsimp">
+				<label>Importe</label>
+				<help>Importe del Movimiento</help>
+				<tipo>numeric</tipo>
+				<valor>0</valor>
+				
+			</field>	
+			<field id="presentado">
+				<label>Conc.</label>
+				<help>conciliado</help>
+				<options>
+					<option valor="1">Conciliado</option>
+					<option valor="0">No conciliado</option>
+<!--					<option valor="3">Todos</option> -->
+
+					</options>
+				<!--	<preparam operador="!=">true</preparam>			 -->
+							
+			</field>			
+			<!-- NUMERADOR INTERNO NOMBRE DE CAMPO RESERVADO-->
+			<field id="_ORDEN" oculto="true">
+				<label>Orden</label>
+			</field>
+			<!--
+			<filters>
+				<field id="regfec">
+					<operador>=</operador>
+					<label>Fecha</label>
+					<valor>today</valor>
+				</field>
+			</filters>
+				-->
+		<order>
+			<field id="bcsnro"></field>
+		</order>
+
+		</table>
+		
+		<join tipo="left">
+			<table id="BCSCONCE">
+				<field id="siscod" oculto="true">
+					<label>BCSCONCE.siscod</label>
+					<condicion operador="=">BCSMOVIM.siscod</condicion>
+					
+				</field>
+				
+				<field id="cnbcod" oculto="true">
+					<condicion operador="=">BCSMOVIM.bcsmov</condicion>
+				</field>
+				
+				<field id="cnbnom" oculto="true">
+				</field>
+			</table>
+		</join>
+
+	</form>
+</histrix>

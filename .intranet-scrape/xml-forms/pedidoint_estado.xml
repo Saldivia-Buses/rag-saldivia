@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+	<abm tipo="consulta">
+		<titulo>Pedidos Internos</titulo>
+		<obs></obs>
+		<consulta>
+			<tabla id="PEDIDOINT" label="Pedidos Internos">
+
+				<campo id="tipocomp">
+					<label>Tipo Comp</label>
+					<help>Tipo Comprobante </help>
+				</campo>
+				<campo id="fechaemi">
+					<label>Emision</label>
+					<help>Fecha de Emision </help>
+				</campo>
+				<campo id="puesto">
+					<label>Puesto</label>
+					<help>Puesto de Venta </help>
+				</campo>
+				<campo id="nrocom">
+					<label>Nro.Comp.</label>
+					<help>Numero de Comprobante. </help>
+				</campo>
+				<campo id="nrofab">
+					<label>Nro Fab.</label>
+					<help>Numero de Fabricacion </help>
+					<tabla_ex id="CHASIS">
+						<campo id="nrocha" muestra="true"></campo>
+						<campo id="chades"></campo>
+						
+						<orden>
+							<campo id="nrocha"></campo>
+						</orden>
+					</tabla_ex>
+				</campo>
+				<campo id="renglon">
+					<label>Renglon </label>
+					<help>
+					</help>
+				</campo>
+				<campo id="artcod">
+					<!--
+					<ayuda_ex id="STKINSUM" xml="HLPstkinsum.xml" dir="/help_local">
+						<campo id="artcod">
+							<label>Cod.</label>
+						</campo>
+						<campo id="artdes">
+							<label>Insumo</label>
+						<detalle>artdes</detalle>
+					</campo>
+
+					<campo id="siscod" oculto="true">
+						<condicion operador="=">'01'</condicion>
+					</campo>
+					<clave>artcod</clave>
+					<descripcion>artdes</descripcion>
+					</ayuda_ex>
+						-->
+					
+					<label>Codigo Articulo . </label>
+					<help>Codigo de Articulo. </help>
+				</campo>
+				<campo id="cant">
+					<label>Cantidad </label>
+					<help>Cantidad </help>
+				</campo>
+				<campo id="unimed">
+					<label>Unidad de Medida </label>
+					<help>Unidad de Medida </help>
+					<tabla_ex id="FSMUNIDS">
+						<campo id="unicod"></campo>
+						<campo id="uninom"></campo>
+						<orden>
+							<campo id="uninom"></campo>
+						</orden>
+					</tabla_ex>
+				</campo>
+				<campo id="codprv">
+					<label>Cod.Proveedor </label>
+					<help>Codigo de Proveedor </help>
+					<ayuda_ex id="CCTCUENT" xml="HLPcctcuent.xml" dir="/help_local">
+						<campo id="ctacod"></campo>
+						<campo id="ctanom">
+						</campo>
+						<campo id="siscod" oculto="true">
+							<condicion operador="=">'01'</condicion>
+						</campo>
+					</ayuda_ex>					
+				</campo>
+				<campo id="estado">
+					<label>Estado </label>
+					<help>Estado </help>
+					<opciones>
+						<opcion valor="0">Pendiente</opcion>
+						<opcion valor="1">Cumplido</opcion>
+					</opciones>
+				</campo>
+				<campo id="fecreq">
+					<label>Fec.Req.</label>
+					<help>Fecha deRequerimiento </help>
+				</campo>
+				<campo id="movref">
+					<label>Ref.</label>
+					<help>Referencia </help>
+				</campo>
+				
+			<filtros>
+				
+				<campo id="codprv">
+					<operador>=</operador>
+					<label>Proveedor</label>
+					<valor>0</valor>
+				</campo>
+				<campo id="estado">
+					<operador>=</operador>
+					<label>Estado</label>
+				</campo>
+				
+				<campo id="fechaemi">
+					<operador>>=</operador>
+					<label>Desde Fecha</label>
+				</campo>
+				<campo id="fechaemi">
+					<operador>&lt;=</operador>
+					<label>Hasta Fecha</label>
+					<valor>today</valor>
+				</campo>
+
+				
+			</filtros>				
+			</tabla>
+		</consulta>
+	</abm>

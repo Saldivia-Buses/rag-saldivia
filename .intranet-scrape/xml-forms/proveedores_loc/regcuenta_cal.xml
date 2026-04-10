@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ficha" limit="1" preFetch="true" imprime="false" borra="false" inserta="false">
+  <title>ABM CUENTA</title>
+  <obs></obs>
+  <form >
+    <table id="REG_CUENTA" label="ABM CUENTA">
+
+      <field id="id_regcuenta" esClave="true" oculto="true">
+      </field> 
+ 
+
+      <field id="nro_cuenta" clave="true" esClave="true" noshow="true">
+
+        <label>Cuenta</label>
+        <help>Código de Cuenta</help>
+      </field>
+
+      <field id="nombre_cuenta" deshabilitado="true">
+        <label modpos="nobr">Nombre</label>
+        <help>Nombre de Cuenta </help>
+        <size>50</size>
+      </field>
+  
+      <field id="nombre_fantasia" required="true" deshabilitado="true">
+        <label modpos="nobr">Nom.Fantasía</label>
+        <help>Nombre de fantasía</help>
+        <size>12</size>
+      </field>
+
+      <field id="cal_regcategoria_id" required="true">
+        <label>Categoría Calidad</label>
+        <helper id="REG_CATEGORIAS" type="combo" empty="true">
+          <field id="id_regcategoria"></field>
+          <field id="nombre_categoria"></field>
+          <field id="subsistema_id">
+            <condicion operador="=">'CA'</condicion>
+          </field>
+        </helper>
+      </field>
+     
+   
+    </table>
+  </form>
+</histrix>

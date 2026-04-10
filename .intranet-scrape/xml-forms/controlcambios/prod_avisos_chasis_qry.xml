@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="consulta" _width="60" >
+        <title>Control de Cambios</title>
+        <obs></obs>
+        <form >
+                <table id="PROD_AVISOS" >
+                    <title>Control de Cambios en los coches</title>
+                    <field id="id_prodaviso" autoinc="true" esClave="true" noshow="true">
+                        <label>id_prodaviso</label>
+                    </field>
+                    <field id="descripcion_cambio">
+                        <label>descripcion del cambio</label>
+                        <size>400</size>
+                        <tipo>varchar</tipo>
+                    </field>
+
+                    <field id="login" noshow="true">
+                        <label>login</label>
+                    </field>
+                    <field id="fecha_creacion" noshow="true">
+                        <label>fecha_creacion</label>
+                    </field>
+                    <field id="fecha_desde">
+                        <label>Desde Fecha</label>
+                        <tipo>date</tipo>
+                    </field>
+                    <field id="fecha_hasta">
+                        <label>Hasta Fecha</label>
+                        <tipo>date</tipo>
+                    </field>
+                   <!--  <field id="homologacion_id" tabla="PROD_AVISOS_HOMOLOGACION" noshow="true" /> -->
+<!--
+                    <field id="desde_unidad">
+                        <label>Desde Unidad</label>
+                    </field>
+                    <field id="hasta_unidad">
+                        <label>Hasta Unidad</label>
+                    </field>
+                    <field id="fecha_aviso">
+                        <label>fecha de Aviso</label>
+                        <tipo>date</tipo>
+                    </field>
+                    <field id="cantidad_unidades_aviso" noshow="true">
+                        <label>cant. unidades previas al aviso</label>
+                    </field>
+-->
+
+                    <field id="chasis_marcod">
+                        <label>Marca</label>
+                        <help>Marca del Chasis</help>
+                        <helper type="combo" empty="true" id="MARCHASIS">
+                            <field clave="true" id="marcod">
+                                <label>Código</label>
+                                <help>Coódigo de Chasis</help>
+                            </field>
+                            <field id="desabv">
+                                <label>Abrev.</label>
+                                <help>Abreviatura a Utilizar</help>
+                            </field>
+                            <field id="marca_activo">
+                                <condicion operador="=">0</condicion>
+                            </field>
+                        </helper>
+                    </field>
+<!--
+                    <field id="chasis_modcod">
+                        <label colstyle="display:none;">Modelo</label>
+                        <help>Modelo del Chasis</help>
+                        <helper  id="MODCHASIS" type="combo" empty="true">
+                            <field clave="true" id="modcha">
+                                <label>Modelo</label>
+                                <help>Código del Modelo de Chasis</help>
+                            </field>
+                            <field id="moddes">
+                                <label>Descripción</label>
+                                <help>Descripción del Modelo</help>
+                                <expression>CONCAT(MODCHASIS.desabv, ' ', (case when MODCHASIS.euro_id = 1 then 'E3' when MODCHASIS.euro_id = 2 then 'E5' else '' end))</expression>
+                            </field>
+                            <field id="marcod" oculto="true">
+                                <label>Marca Chasis</label>
+                            </field>
+                            <field _oculto="true" id="idMarcaMotor">
+                                <expression>marca_motor_id</expression>
+                                <label>Marca Motor</label>
+                                <detalle>idMarcaMotor</detalle>
+                            </field>
+                            <field id="chasis_activo">
+                                <condicion operador="=">0</condicion>
+                            </field>
+                        </helper>
+                    </field>
+-->
+                    <field id="chasis_numero_desde">
+                        <label>Nro chasis desde</label>
+                    </field>
+                    <field id="chasis_numero_hasta">
+                        <label>Nro chasis hasta</label>
+                    </field>
+                    <field id="email_destinatarios" noshow="true">
+                        <label>email destinatarios</label>
+                    </field>
+                    <field id="fecha_email" noshow="true">
+                        <label>fecha_email</label>
+                        <tipo>date</tipo>
+                    </field>                                        
+                    <field id="cumplido" noshow="true">
+                        <label>cumplido</label>
+                        <tipo>check</tipo>
+                        <condicion operador="=">0</condicion>
+                    </field>
+                    <field id="login_cumplido" noshow="true">
+                        <label>login_cumplido</label>
+                    </field>
+
+                    <order>
+                        <field id="fecha_desde" orderType="DESC" />
+                    </order> 
+                </table>
+<!--            <join  >
+                <tabla id="PROD_AVISOS_HOMOLOGACION">
+                    <field id="prodaviso_id">
+                    <condicion operador="=">id_prodaviso</condicion>
+                    </field>
+                </tabla>
+            </join >
+            -->
+
+        </form>           
+</histrix>

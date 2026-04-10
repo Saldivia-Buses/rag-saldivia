@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm" width="40%">
+	<title>Check-in de Portería</title>
+	<obs></obs>
+	<form >
+		<table id="REG_CUENTA_OBSERVACIONES" >
+			<title>Check-in de Portería</title>
+			<filters>
+			    <field id="fecha_observacion">
+				<label>Fecha</label>
+				<operador>=</operador>
+				<valor>today</valor>
+			    </field>
+			</filters>
+			<field id="id_regobservacion" noshow="true"></field>
+			<field id="regtipoobs_id" valauto="true" noshow="true"></field>
+			<field id="fecha_observacion" valauto="true">
+				<label>Fecha</label>
+				<tipo>date</tipo>
+				<valor>today</valor>
+			</field>
+			<field id="hora_observacion">
+				<label>Entrada</label>
+				<tipo>time</tipo>
+				<valor eval="true">date('H:i:s')</valor>
+			</field>
+			<field id="hora_extra">
+				<label>Salida</label>
+				<tipo>time</tipo>
+			</field>
+			<field id="nombre" tabla="CCTCONTA" autocompletar="true" deshabilitado="false">
+				<label xml="cctcuent_cctconta.xml">Nombre</label>
+				<helper type="external" xml="regcuenta_cctconta_autocomplete_qry.xml" dir="/help_local">
+					<field id="idconta" noshow="true">
+						<detalle>idconta</detalle>
+					</field>
+					<field id="descripcion">
+						<expression having="false">
+							CONCAT(CCTCONTA.nombre, ' - ', REG_CUENTA.nro_cuenta, ' - ',REG_CUENTA.nombre_cuenta, ' (',REG_CUENTA.nombre_fantasia, ') ', CCTCONTA.dniconta )
+						</expression>
+					</field>
+					<field id="nombre_empresa" noshow="true">
+						<expression>
+							CONCAT(REG_CUENTA.nombre_cuenta, ' (',REG_CUENTA.nombre_fantasia, ')')
+						</expression>
+						<detalle>nombre_empresa</detalle>
+					</field>
+					<field id="nombre" noshow="true">
+						<expression>CCTCONTA.nombre</expression>
+						<detalle>nombre</detalle>
+					</field>
+					<field id="regcuenta_id" noshow="true">
+						<expression>REG_CUENTA.id_regcuenta</expression>
+						<detalle>regcuenta_id</detalle>
+					</field>
+				</helper>
+				<size>50</size>
+			</field>
+			<field id="nombre_empresa">
+				<label>Empresa</label>
+				<expression>
+					CONCAT(REG_CUENTA.nombre_cuenta, ' (',REG_CUENTA.nombre_fantasia, ')')
+				</expression>
+				<size>50</size>
+			</field>
+			<field id="regcuenta_id" noshow="true"/>
+			<field id="idconta" noshow="true"/>
+			<field id="texto_observacion" colstyle="display:none;">
+				<label>Observacion</label>
+				<size>200</size>
+			</field>
+		</table>
+		<join tipo="left">
+			<table id="CCTCONTA">
+				<field id="idconta">
+					<condicion operador="=">REG_CUENTA_OBSERVACIONES.idconta</condicion>
+				</field>
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="REG_CUENTA">
+				<field id="id_regcuenta">
+					<condicion operador="=">REG_CUENTA_OBSERVACIONES.regcuenta_id</condicion>
+				</field>
+			</table>
+		</join>
+	</form>
+</histrix>

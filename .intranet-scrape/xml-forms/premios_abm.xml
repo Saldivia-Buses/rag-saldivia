@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="crud">
+	<title>PREMIOS</title>
+	<obs></obs>
+	<form >
+		<table id="PREMIOS" >
+			<title>Tabla de Premios</title>
+			<field id="cantidad">
+				<label>Cantidad Unidades</label>
+				<help>Cantidad de Unidades</help>
+			</field>
+			<field id="montoPremio">
+				<label>Monto Premio</label>
+				<help>Monto Premio</help>
+			</field>
+
+			<order>
+				<field id="cantidad" />
+			</order>	
+			
+		</table>
+	</form>	   
+</histrix> 

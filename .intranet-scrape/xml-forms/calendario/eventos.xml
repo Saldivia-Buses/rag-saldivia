@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="abm">
+	<title>Eventos de Calendario</title>
+	<obs></obs>
+	<form>
+		<table id="EVENTOS" >
+			<title>Eventos</title>
+			<campo id="idEvento">
+				<label>id</label>
+			</campo>
+			<campo id="nombre">
+				<label>Nombre</label>
+				<help>Nombre del Evento</help>
+			</campo>
+			<campo id="abrev">
+				<label>Abreviatura</label>
+			</campo>
+			
+			
+		</table>
+	</form>	   
+</histrix> 

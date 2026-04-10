@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF8"?>
+<histrix tipo="abm-mini" >
+  <titulo>Cantidad por modelo</titulo>
+  <obs/>
+  <form>
+    <table id="MRP_CANTIDAD_ARTICULO_MODELO">
+      <title>Cantidad por modelo</title>
+      
+      <field id="id_cantidad_articulo_modelo" noshow="true" autoinc="true" />
+
+    <field id="stkarticulo_id" oculto="true">
+    </field>
+      <field id="carroceria_id">
+        <helper id="CARROCERIA" type="combo" empty="true">
+          <field id="nrocar" />
+          <field id="nombre" >
+            <expression>concat(desabv, ' ', descar)</expression>
+          </field>
+          <field id="vigente" >
+		<condicion operador="=">1</condicion>
+	    </field>
+        </helper>
+
+      </field>
+
+      <field id="cantidad_modelo">
+	    <label>cantidad</label>
+	</field>
+
+      
+      </table>
+  </form>
+</histrix>

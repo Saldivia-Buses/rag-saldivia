@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<histrix tipo="insert" _class="consultaancha" grabafinal="true">
+	<title>Item de la Encuesta</title>
+	<obs></obs>
+	<form >
+		<table id="ENCUESTA_CLIENTE" >
+			<title>Item de la Encuesta</title>
+			<field id="idEncuesta" id_temp="idEncuesta"/>
+			<field id="fecha" id_temp="fecha"/>
+			<field id="ctacod" id_temp="ctacod"/>
+			<field id="sugerencia" id_temp="sugerencia"/>
+			<field id="comentario" id_temp="comentario"/>
+		</table>
+	</form>	   
+</histrix> 

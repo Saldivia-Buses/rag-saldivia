@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+   <histrix tipo="update" limit="99">
+       <title>IVAIMPORTES</title>
+        <obs></obs>
+               <form >
+					<table id="IVAIMPORTES" label="IVACOMPRAS" idCampoCond="grabaiva">
+						<field id="ivacv_id" id_temp="ivacv_id" esClave="true" />
+						<field id="feciva" id_temp="reg_fecha" />
+						<field id="codcom" id_temp="concod" />
+						<field id="codlet" id_temp="letra_movimiento" />
+						<field id="nronpv" id_temp="puesto_movimiento"/>
+						<field id="nrocom" id_temp="nro_movimiento" />
+						<field id="ctacod" id_temp="nro_cuenta" />
+
+						<field id="impgra"  >
+							<valor>impgra * [__razon_cambio_imp__]</valor>
+							<tipo>integer</tipo>
+						</field>
+						<field id="impimp" >
+							<valor>impimp * [__razon_cambio_imp__]</valor>
+							<tipo>integer</tipo>
+						</field>
+						<field id="razon_cambio_imp"  	id_temp="razon_cambio_imp" local="true" />
+							
+						<!--
+						<field id="impgra" id_temp="net2" />
+						<field id="impcod" id_temp="impcod" />
+						<field id="impali" id_temp="alicuota" />
+						<field id="impimp" id_temp="iva" />
+						-->
+					</table>
+               </form>
+        </histrix>

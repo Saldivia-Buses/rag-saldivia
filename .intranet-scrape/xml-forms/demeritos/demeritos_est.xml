@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+  <title>Ranking Proveedores</title>
+  <obs></obs>
+  <form detalle="Demeritoxprov.xml" inline="true" hasDetail="pesoDem">
+    <table id="REG_CUENTA" label="Ranking Proveedores">
+      <field id="subsistema_id" oculto="true">
+        <label>siscod</label>
+        <help>siscod</help>
+        <detalle>siscod</detalle>
+	<condicion operador="=">'01'</condicion>
+      </field>
+      <field id="baja" oculto="true">
+          <condicion operador="=">0</condicion>
+      </field>
+
+      <field id="nro_cuenta">
+        <label>Codigo de Cuenta </label>
+        <help>Codigo</help>
+        <detalle>prvcod</detalle>
+      </field>
+      <field id="nombre_cuenta">
+        <label>Nombre</label>
+        <help>Proveedor </help>
+        <expression>concat(REG_CUENTA.nombre_cuenta, ' ( ', REG_CUENTA.nombre_fantasia, ' ) ')
+        </expression>
+      </field> 
+        <field id="nombre_fantasia" noshow="true">
+        <label>Nombre fantasia</label>
+        <help>Proveedor </help>
+      </field> 
+      <!--
+        <field id="nombre_cuenta" tabla="CTB_CUENTAS">
+        <label>Cuenta Contable</label>
+      </field> 
+    -->
+
+      <field id="certificado_iso" noZero="true">
+          <label modpos="nobr">ISO9000</label>
+          <helper type="combo">
+        <option value="0"></option>
+        <option value="1">No Cert.</option>
+        <option value="2">Certificado</option>
+          </helper>
+          <tipo>radio</tipo>
+      </field>
+
+      <field id="afavor" noZero="true" noshow="true">
+          <label>A Favor</label>
+          <expression>(case when certificado_iso = 2 then  10 else 0 end)</expression>
+      </field>
+      
+      <field id="clasecert" clasefila="true" noshow="true">
+          <expression>case when certificado_iso = 2 then 'resaltado' else '' end</expression>
+      </field>
+
+	<!-- Trimestre Ant2 -->
+
+      <field id="recepcionesAnt2" noshow="true">
+          <expression>@recepcionesAnt2:= (select  count(*)  from OCPRECIB where OCPRECIB.ctacod  = REG_CUENTA.nro_cuenta and 
+          OCPRECIB.fecrec &gt;= DATE_SUB(CURDATE(), INTERVAL 12 MONTH) and
+          OCPRECIB.fecrec &lt; DATE_SUB(CURDATE(), INTERVAL 8 MONTH))</expression>
+        <tipo>integer</tipo>
+        <label>Cant rec 1er C</label>
+      </field>
+      <field id="pesoDemAnt2" noshow="true">
+          <expression>@contraAnt2:= (select sum(peso) from MOVDEMERITO left join DEMERITO on DEMERITO.coddem = MOVDEMERITO.coddem where MOVDEMERITO.prvcod = REG_CUENTA.nro_cuenta and 
+               		MOVDEMERITO.demfec &gt;= DATE_SUB(CURDATE(), INTERVAL 12 MONTH) and 
+        		MOVDEMERITO.demfec &lt; DATE_SUB(CURDATE(), INTERVAL 8 MONTH)  and MOVDEMERITO.coddem != 0)</expression>
+          <label>Peso dem 1er C</label>
+      </field>
+      <field id="puntosAnt2" noshow="true">
+          <expression>ifnull(round(100 / @recepcionesAnt2  * (@contraAnt2 - ((certificado_iso = 2) * 10 )), 2), 0)</expression>
+          <label>Ptos 1er C</label>
+      </field>      
+      <field id="LetraAnt2" local="true" style="text-align:center" >
+          <attribute id="style">COLORANT2</attribute>
+          <label>1er Cuat.</label>
+          <if exp="puntosAnt2 &lt; 70">
+	          <true>(puntosAnt2 == 0)?'-':'A'</true>
+            <false>(puntosAnt1 &lt; 140)?'B':'C'</false>
+          </if>
+      </field>
+      
+	<!-- Trimestre Ant1 -->
+      <field id="recepcionesAnt1" noshow="true">
+          <expression>@recepcionesAnt1:= (select  count(*)  from OCPRECIB where OCPRECIB.ctacod  = REG_CUENTA.nro_cuenta and 
+          OCPRECIB.fecrec &gt;= DATE_SUB(CURDATE(), INTERVAL 8 MONTH) and
+          OCPRECIB.fecrec &lt; DATE_SUB(CURDATE(), INTERVAL 4 MONTH))</expression>
+        <tipo>integer</tipo>
+        <label>Cant rec 2do C</label>
+      </field>
+      <field id="pesoDemAnt1" noshow="true">
+          <expression>@contraAnt1:= (select sum(peso) from MOVDEMERITO left join DEMERITO on DEMERITO.coddem = MOVDEMERITO.coddem where MOVDEMERITO.prvcod = REG_CUENTA.nro_cuenta and 
+               		MOVDEMERITO.demfec &gt;= DATE_SUB(CURDATE(), INTERVAL 8 MONTH) and 
+        		MOVDEMERITO.demfec &lt; DATE_SUB(CURDATE(), INTERVAL 4 MONTH)  and MOVDEMERITO.coddem != 0)</expression>
+          <label>Peso dem 2do C</label>
+      </field>
+      <field id="puntosAnt1" noshow="true">
+          <expression>ifnull(round(100 / @recepcionesAnt1  * (@contraAnt1 - ((certificado_iso = 2) * 10 )), 2), 0)</expression>
+          <label>Ptos 2do C</label>
+      </field>
+      <field id="LetraAnt1" local="true" style="text-align:center" >
+          <attribute id="style">COLORANT1</attribute>
+          <label>2do Cuat.</label>
+          <if exp="puntosAnt1 &lt; 70">
+	          <true>(puntosAnt1 == 0)?'-':'A'</true>
+            <false>(puntosAnt1 &lt; 140)?'B':'C'</false>
+          </if>
+      </field>
+
+	<!-- ACTUAL -->
+
+      <field id="recepcionesAct" noZero="true" tipoOrden="ASC" noshow="true">
+          <label>Recepciones</label>
+          <expression>@recepcionesAct:= (select  count(*)  from OCPRECIB where OCPRECIB.ctacod  = REG_CUENTA.nro_cuenta and OCPRECIB.fecrec &gt;= DATE_SUB(CURDATE(), INTERVAL 4 MONTH))</expression>
+<!--          <condicion operador="&gt;">0</condicion>-->
+        <tipo>integer</tipo>
+      </field>
+      <field id="nroDem" noZero="true" noshow="true">
+          <label>Cant. Dem</label>
+          <expression>(select count(*) from MOVDEMERITO left join DEMERITO on DEMERITO.coddem = MOVDEMERITO.coddem where MOVDEMERITO.prvcod = REG_CUENTA.nro_cuenta and MOVDEMERITO.demfec &gt;= DATE_SUB(CURDATE(), INTERVAL 4 MONTH) and MOVDEMERITO.coddem != 0)</expression>
+
+      </field>
+      <field id="pesoDem" noZero="true" noshow="true">  
+          <label>Peso Demeritos</label>
+          <expression>@contraAct:= (select sum(peso) from MOVDEMERITO left join DEMERITO on DEMERITO.coddem = MOVDEMERITO.coddem where MOVDEMERITO.prvcod = REG_CUENTA.nro_cuenta and MOVDEMERITO.demfec &gt;= DATE_SUB(CURDATE(), INTERVAL 4 MONTH) and MOVDEMERITO.coddem != 0)</expression>
+      </field>
+     
+      <field id="LetraAct" local="true" style="text-align:center"  tipoOrden="ASC" >
+          <attribute id="style">COLORACT</attribute>
+          <label>Actual</label>
+          <if exp="puntosAct &lt; 70">
+	          <true>(puntosAct == 0)?'-':'A'</true>
+            <false>(puntosAct &lt; 140)?'B':'C'</false>
+          </if>
+      </field>
+      
+      <field id="ctbnom">
+	<expression>CTB_CUENTAS.nombre_cuenta</expression>
+        <label modpos="nobr">Cuenta Contable</label>
+        <help>
+        </help>
+<!--
+        <helper type="combo" id="CTB_CUENTAS" >
+          <field id="id_cuenta"></field>
+          <field id="nombre_cuenta"></field>
+          <field id="habilitada">
+            <condicion operador="=">1</condicion>
+          </field>    
+        	<field id="ejercicio_id">
+        		<condicion operador="=">'10'</condicion>
+        	</field>
+              
+          <order>
+            <field id="nombre_cuenta"></field>
+          </order>  
+        </helper>
+-->
+      </field>
+
+      <field id="puntosAct" noshow="true" _local="true">
+          <label>porcent</label>
+          <expression>ifnull(round(100 / @recepcionesAct  * (@contraAct - ((certificado_iso = 2) * 10 )), 2), 0)</expression>
+      </field> 
+
+<!--      <field id="puntosAct" noshow="true">
+          <label>Total </label>
+          <expression>@contraAct - ((cert_iso = 2) * 10 )</expression>
+      </field>
+      <field id="relAct" local="true" noZero="true" noshow="true">
+          <label>Coefic</label>
+          <if exp="'puntosAct' &gt; '0'">
+            <true>(puntosAct / recepcionesAct) * 10</true>
+            <false>0</false>
+          </if>
+          <tipo>numeric</tipo>
+      </field>
+      <field id="COLORACT" local="true" noshow="true">
+          <label>color</label>
+          <if exp="relAct &lt; 0.03">
+        <true>'color:green;text-align:center;font-weight:bold;'</true>
+        <false>(relAct &gt; 0.06)?'color:red;text-align:center;font-weight:bold':'color:blue;text-align:center;font-weight:bold'</false>
+          </if>
+      </field>      
+      
+      <field id="Letra" local="true" style="text-align:center"  tipoOrden="ASC" >
+          <attribute id="style">COLORACT</attribute>
+          <label>Actual</label>
+          <if exp="relAct &lt; 0.03">
+	    <true>'A'</true>
+            <false>(relAct &gt; 0.06)?'C':'B'</false>
+          </if>
+      </field>
+      -->
+       <field id="Facturado" noZero="true" suma="true">  
+          <label>Monto Facturacion</label>
+
+          <expression>@fac:= (select (sum(totcom * (case when codcom = 1 then 1 else 0 end)))  from IVACOMPRAS  where  IVACOMPRAS.ctacod = REG_CUENTA.nro_cuenta and IVACOMPRAS.feciva &gt;= DATE_SUB(CURDATE(), INTERVAL 4 MONTH) )</expression>
+
+	        <tipo>decimal</tipo>
+      </field>
+
+       <order>
+        <field id="puntosAct" />
+      </order>
+
+    </table>
+    
+    <join tipo="left">
+	     <table id="CTB_CUENTAS">
+	      <field id="id_cuenta">
+		      <condicion operador="=">REG_CUENTA.ctbcod</condicion>
+	      </field>
+	      <field id="ejercicio_id">
+		      <condicion operador="=">'22'</condicion>
+	      </field>
+	     </table>
+    </join>
+  </form>
+</histrix>

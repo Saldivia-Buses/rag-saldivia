@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" width="37" imprimetanda="true">
+    <title>Mantenimiento</title>
+    <obs></obs>
+    <form detalle="plan_mantenimiento_ficha.xml">
+        <table id="MANT_PLAN" label="Plan de mantenimiento">
+
+            <filters>
+                <field id="nombre_equipo_cal" deshabilitado="false">
+                    <label colspan="4">Nombre</label>
+                    <operador>like</operador>
+                </field>
+                <field id="tipoequipo_id">
+                    <label>Tipo</label>
+                    <operador>=</operador>
+                </field>
+                <field id="desde_fecha">
+                    <label>Desde</label>
+                    <valor eval="true">date('d/m/Y',strtotime('last monday',strtotime('tomorrow')))</valor>
+                    <operador>=</operador>
+                </field>
+                <field id="hasta_fecha">
+                    <label modpos="nobr">Hasta</label>
+                    <operador>=</operador>
+                    <valor eval="true">date('d/m/Y',strtotime('next sunday'))</valor>
+                </field>
+            </filters>
+
+            <field id="rrule" noshow="true">
+                <condicion operador="!=">''</condicion>
+            </field>
+
+            <field id="desde_fecha" local="true" noshow="true">
+                <label>Desde</label>
+                <tipo>date</tipo>
+                <detalle>desde_fecha</detalle>
+            </field>
+
+            <field id="hasta_fecha" local="true" noshow="true">
+                <label>Hasta</label>
+                <tipo>date</tipo>
+                <detalle>hasta_fecha</detalle>
+            </field>
+
+            <field id="corresponde" local="true" validRow="true" noshow="true">
+                <label>Fecha Mant</label>
+                <if exp="true">
+                    <true>\Histrix\View\Calendar::getRRuleDate( 'desde_fecha' , 'hasta_fecha', 'rrule', '2010-01-01')</true>
+                    <false>''</false>
+                </if>
+                <tipo>date</tipo>
+            </field>
+
+            <field id="id_plan" noshow="true" esClave="true" />
+
+            <field id="equipo_id" noshow="true">
+                <detalle>id_equipo</detalle>
+            </field>
+
+            <field id="fecha_accion" noshow="true">
+                <label>Fecha</label>
+                <tipo>date</tipo>
+            </field>
+
+            <field id="nombre_equipo_cal" noshow="true">
+                <expression>CONCAT((CASE WHEN MANT_EQUIPOS.nombre_equipo = '' THEN STK_ARTICULOS.nombre_articulo ELSE MANT_EQUIPOS.nombre_equipo END), ' - ', nombre_accion)</expression>
+                <label>Equipo</label>
+                <size>35</size>
+            </field>
+
+            <field id="nombre_equipo_imp">
+                <label>Equipo</label>
+                <expression>CONCAT(MANT_EQUIPOS.nombre_equipo)</expression>
+                <size>30</size>
+            </field>
+
+            <field id="numero_serie" tabla="MANT_EQUIPOS">
+                <label>Nro Serie</label>
+            </field>
+
+            <field id="tipoequipo_id" tabla="MANT_EQUIPOS" noshow="true">
+                <helper type="combo" id="MANT_TIPO_EQUIPO" empty="true">
+                    <field id="id_tipo_equipo"/>
+                    <field id="nombre_tipoequipo"/>
+                </helper>
+                <label>Tipo</label>
+            </field>
+
+            <order>
+                <field id="fecha_accion" />
+            </order>
+
+            <group>
+                <field id="equipo_id" />
+            </group>
+
+        </table>
+
+        <join tipo="left">
+            <table id="MANT_EQUIPOS">
+                <field id="id_equipo">
+                    <condicion operador="=">equipo_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="MANT_ACCIONES">
+                <field id="id_accion">
+                    <condicion operador="=">accion_id</condicion>
+                </field>
+            </table>
+        </join>
+
+        <join tipo="left">
+            <table id="STK_ARTICULOS">
+                <field id="id_stkarticulo">
+                    <condicion operador="=">MANT_EQUIPOS.articulo_id</condicion>
+                </field>
+                <field id="subsistema_id">
+                    <condicion operador="=">'01'</condicion>
+                </field>
+            </table>
+        </join>
+
+    </form>
+</histrix>

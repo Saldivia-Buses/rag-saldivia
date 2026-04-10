@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<abm tipo="consulta">
+	<titulo>HISTORICO</titulo>
+	<obs></obs>
+	<consulta>
+		<tabla id="HTXLOG" label="Historico">
+
+			<campo id="xmlprog" oculto="true">
+			    <condicion operador="=">'certfabricacion.xml'</condicion>
+			</campo>
+			
+			
+			 <campo id="maxfec" local="true" noshow="true" print="false">
+                		<label>1</label>
+               			 <expresion>case when fecha = DATE(NOW()) then 'font-size:14px;color:red;font-weight:bold;' 
+                   		  when fecha = DATE(NOW()) -1  then 'font-size:14px;color:blue;font-weight:bold;' 
+                                    end</expresion>
+                		<tipo>varchar</tipo>
+            		</campo>
+			<campo id="fecha2" _noshow="true" style="text-align:left;" >
+	                <expresion>case when fecha = DATE(NOW()) then 'Hoy ' 
+		                        when fecha = DATE(NOW()) - 1 then 'Ayer ' 
+            	    		else DATE_FORMAT(fecha, '%e  %b') end</expresion>
+			     <size>30</size>
+	                     
+			
+			     <label getStyle="maxfec">Fecha</label>
+			</campo>
+			<campo id="idLog" noshow="true" tipoOrden="DESC">
+			</campo>
+			
+			<campo id="hora2" _noshow="true" style="text-align:right;text-indent:15px;" >
+			    <expresion>TIME_FORMAT(hora, '%h:%i')</expresion>
+			    <label>hora</label>
+			    <size>15</size>
+			</campo>
+			<campo id="color" deshabilitado="true" clasefila="true" noshow="true">
+				<expresion>case when fecha = DATE(NOW()) then 'resaltado ' 
+		                        when fecha = DATE(NOW()) - 1 then 'resaltadoVioleta' else '' end </expresion>
+			</campo>
+			
+			<!--<campo id="usuario" _noshow="true"  style="text-align:center;text-indent:10px;">
+			<label>Usuario</label>
+			
+			</campo>-->
+			<campo id="nombre" _noshow="true"  style="text-align:center;text-indent:10px;" local="true">
+			<label>Usuario</label>
+			<expresion>CONCAT(HTXUSERS.Nombre,' ', HTXUSERS.Apellido)</expresion>
+			</campo>
+			
+			
+			<campo id="tipo" noshow="true">
+				<label>Acción</label>
+				<opciones>
+					<opcion valor="INSERT"> Creó</opcion>
+					<opcion valor="UPDATE"> Modificó </opcion>
+					<opcion valor="DELETE"> Borró</opcion>
+				</opciones>
+
+			</campo>
+			<campo id="obs" noshow="true"></campo>
+			<campo id="num" noshow="true" local="true"></campo>
+			
+			
+			
+			
+			<campo id="observ" noshow="true">
+			
+    			    <expresion>@observ:= REPLACE(obs, concat('Nro Fab: ', '[__num__]') , '' )</expresion>
+			</campo>
+			<campo id="acc">
+				<expresion>case when tipo="UPDATE" then CONCAT('&lt;b&gt; ', campo, '&lt;/b&gt;: ' , valorNuevoTxt ) else 
+					CONCAT('&lt;b&gt;', REPLACE(REPLACE( @observ , ', ', '&lt;br/&gt;&lt;b&gt; '), ': ', '&lt;/b&gt;:' )) end</expresion> 
+				<tipo>varchar</tipo>
+				<size>180</size>
+			</campo>
+			<order>
+			<field id="idLog"/>
+
+			</order>			
+		</tabla>
+		<join tipo="left">
+			<tabla id="HTXUSERS">
+				<campo id="login">
+					<condicion operador="=">HTXLOG.usuario</condicion>
+				</campo>
+			</tabla>
+			
+		</join>
+	</consulta>	   
+</abm> 

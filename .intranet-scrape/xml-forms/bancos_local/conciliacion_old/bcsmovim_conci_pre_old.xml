@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<histrix tipo="ing" borra="no" inserta="no" noform="true">
+	<title>Movimientos Bancarios</title>
+	<obs></obs>
+	<form >
+		<table id="BCSMOVIM" label="Movimientos Bancarios">
+			<field id="bcscta">
+				<label>Codigo Cuenta</label>
+				<help>Codigo de Cuenta Bancaria </help>
+			</field>
+			
+			<field id="siscod" oculto="true">
+				<label>CS</label>
+				<help></help>
+			</field>
+
+			<field id="bcsmov" oculto="true">
+				<label>bcsmov</label>
+			</field>
+				
+			<field id="bcsfev" oculto="true" noselect="true">
+				<label>Acreditac.</label>
+				
+			</field>			
+			<field id="bcsnro" deshabilitado="true" noselect="true">
+				<label>Nro. Movimiento</label>
+				<help>Numero de Movimiento </help>
+				<format>%010d</format>
+				
+			</field>
+			<field id="cnbabvE">
+				<expression>cnbabv</expression>
+				<label>Tipo</label>
+				<help>Codigo de tipo de Movimiento </help>
+				
+				<!--                      <tabla_ex id="BCSCONCE">
+				<field id="cnbcod"></field>
+				<field id="cnbabv"></field>
+				</tabla_ex>
+				-->
+				<tipo>string</tipo>
+			</field>
+			
+			<field id="referencia"  local="true">
+				<label>Referencia</label>
+				<tipo>varchar</tipo>
+				<valor>'NO CONCILIADOS'</valor>
+			</field> 
+			
+			<field id="debe" suma="true">
+				<expression>sum(bcsimp * (case when cnbtip = '1' then 1 else 0 end))</expression>
+				
+				<label>Debe</label>
+				<help>Importe del Movimiento en el Debe</help>
+			</field>
+			
+			<field id="haber" suma="true">
+				<expression>sum(bcsimp * (case when cnbtip = '2' then 1 else 0 end))</expression>
+				
+				<label>Haber</label>
+				<help>Importe del Movimiento en el Haber</help>
+			</field>
+			<field id="diferencia" local="true" suma="true" acumula="true">
+					<label>Saldo</label>
+					<if exp="1 == 1">
+					<true>debe - haber</true>
+					<false>debe - haber</false>
+				</if>
+				
+			</field>
+			<!--
+			<field id="bcsimp">
+			<label>Importe              . </label>
+			<help>Importe total del movimiento </help>
+			</field>
+			-->
+			<field id="bcsfec2" noselect="true">
+				<expression>bcsfec</expression>
+				<label>Fecha Mov.</label>
+				<help>Fecha del Movimiento</help>
+				<tipo>date</tipo>
+
+			</field>
+			<field id="bcsfec" oculto="true" noselect="true">
+				<label>Fecha Mov1</label>
+				<help>Fecha del Movimiento</help>
+			</field>
+			<field id="presentado" esClave="true">
+				<label>Conc.</label>
+				<help>conciliado</help>
+				<condicion operador="=">0</condicion>
+			</field>			
+			<!--        <field id="regmin" deshabilitado="true">
+			<label>Asiento</label>
+			<help>Numero de Asiento</help>
+			</field>-->
+<!--			<field id="presentado">
+				<label>Conc.</label>
+				<help>conciliado</help>
+				<tipo>check</tipo> 
+									<options>
+					<option valor="0">Conciliados</option>
+					<option valor="1">No conciliado</option>
+					<option valor="3">Todos</option>
+
+					</options>
+				<operador>!=</operador>
+					
+			</field>
+			-->
+			<field id="grabar" local="true" oculto="true"  noshow="true">
+				<expression>'false'</expression>
+				<tipo>char</tipo>
+				<valor>'false'</valor>			
+			</field>
+			<group>
+				<field id="bcscta" />
+			</group>
+			
+			<order>
+				<field id="bcsfec"></field>
+			</order>
+			
+		</table>
+		
+		<join tipo="left">
+			<table id="BCSCONCE">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">BCSMOVIM.siscod</condicion>
+				</field>
+				
+				<field id="cnbcod" oculto="true">
+					<condicion operador="=">BCSMOVIM.bcsmov</condicion>
+				</field>
+				<field id="cnbtip" oculto="true"></field>
+			</table>
+		</join>
+		
+	</form>
+</histrix>

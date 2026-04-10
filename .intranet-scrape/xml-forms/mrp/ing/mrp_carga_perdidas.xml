@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta"  width="35" imprime ="false" showCantidad="false">
+    <title>REIMPRESION DE ORDENES DE PRODUCCION</title>
+    <obs></obs>
+
+    <form  detalle="mrp_carga_perdidas_ficha.xml">
+        
+    <table id="MRP_ORDEN_PRODUCCION" label="ORDENES DE COMPRA">
+            
+        <filters>
+
+            <field id="fecha_orden">
+                <label>Desde</label>
+                <operador>&gt;=</operador>
+                <valor>today</valor>
+            </field>
+
+            <field id="separador" modpos="nobr" deshabilitado="true"/>
+
+            <field id="fecha_orden" modpos="nobr">
+                <label>Hasta</label>
+                <operador>&lt;=</operador>
+                <valor>today</valor>
+            </field>
+
+            <field id="mrpestado_id" >
+                <label>Estado </label>
+                <operador>=</operador>
+            </field>
+
+            <field id="separador" modpos="nobr" deshabilitado="true"/>
+
+            <field id="id_mrporden" modpos="nobr">
+                <label>Nro</label>
+                <operador>=</operador>
+            </field>
+
+        </filters>
+
+
+	
+	<fieldGroup  style="padding:2px 2px 2px 2px;"  colstyle="padding:2px 2px 2px 2px;text-align:center;">
+
+            <field id="id_mrporden" style="width:90px;" colstyle="width:auto;">
+                <label>Nro</label>
+                <detalle>id_mrporden</detalle>
+            </field>
+
+            <field id="fecha_orden">
+                <label>Fecha</label>
+                <tipo>date</tipo>
+            </field>
+
+            <field id="stkarticulo_id" tabla="MRP_ORDEN_DETALLE" >
+                <label>Articulo</label>
+                <!-- <detalle>stkarticulopadre_id</detalle> -->
+            </field>
+            
+            <field id="producido_ordendetalle" tabla="MRP_ORDEN_DETALLE" colstyle="font-weight:bold;text-align:center;">
+                <label > Producido </label>
+            </field>
+
+            <field id="nombre_articulo" tabla="STK_ARTICULOS" colstyle="text-align:left;">
+                <label>Descripcion</label>
+            </field>
+
+            <field id="mrpestado_id" noshow="true">
+                <label>Estado </label>
+                <options>
+                    <!-- <option valor="0">Pendiente</option> -->
+                    <option valor="1">Cumplida</option>
+                    <!-- <option valor="2">Anulada</option> -->
+                    <option valor="3">Con Perdidas</option>
+                    <option valor="4">Sin Perdidas</option>
+                </options>
+                <operador>=</operador>
+            </field>
+
+	</fieldGroup>
+
+                <!-- <field id="id_mrpordendetalle" tabla="MRP_ORDEN_DETALLE" _noshow="true" /> -->
+
+                <field id="login_id" local="true" deshabilitado="true" noshow="true">
+                    <valor eval="true">$_SESSION['usuario']</valor>
+                </field>
+
+                <field id="separador" local="true" noshow="true">
+                    <size>1</size>
+                </field>
+
+            <order>
+                <field id="fecha_orden" />
+            </order>
+            
+        </table>
+
+                    
+            <join _tipo="left">
+                <table id="MRP_ORDEN_DETALLE">
+                    <field id="mrporden_id" >
+                        <condicion operador="=">id_mrporden</condicion>
+                    </field>
+                </table>
+            </join>
+
+            <join tipo="left">
+                <table id="STK_ARTICULOS">
+                    <field id="id_stkarticulo" >
+                        <condicion operador="=">MRP_ORDEN_DETALLE.stkarticulo_id</condicion>
+                    </field>
+                </table>
+            </join>
+
+
+    </form>
+</histrix>

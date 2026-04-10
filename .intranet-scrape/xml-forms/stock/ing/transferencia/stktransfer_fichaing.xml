@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="fichaing" inserta="false" modifica="false" xmlImpresion="/stock/qry/imp_stktransfer.xml" transaccional="true" >
+  <title>Tranferencia de Stock entre Depositos</title>
+  <obs/>
+
+
+  <form>
+    <table id="STK_MOVIMIENTOS" label="Tranferencia de Stock entre Depositos">
+        
+              <movimientos>
+                  <relacion id="actualiza_stknumerador_param.xml"/>
+                  <relacion id="stkmovimiento_user_ins.xml"/>
+              </movimientos>
+
+    <!-- COMPROBACION GENERAL: PARA NO PASAR DIRECTO -->
+          <validation>
+              <condition><![CDATA[stkdeposito_origen + 0 == 0]]></condition>
+              <message>Ingrese deposito de origen</message>
+          </validation>
+
+          <validation>
+              <condition><![CDATA[stkdeposito_destino + 0 == 0]]></condition>
+              <message>Ingrese deposito de destino</message>
+          </validation>
+
+          <validation>
+              <condition><![CDATA[stkdeposito_origen + 0 == stkdeposito_destino + 0 ]]></condition>
+              <message>Depositos de origen no puede ser igual al destino</message>
+          </validation>
+
+          <validation>
+              <condition><![CDATA[good_load + 0 == 0]]></condition>
+              <message>Debe transferir al menos un articulo</message>
+          </validation>
+
+          <validation>
+              <condition><![CDATA[transferencia_sin_stk + 0 == false && stock_sincantidad + 0 != 0]]></condition>
+              <message>Stock Insuficiente</message>
+          </validation>
+    <!-- FIN COMPROBACION GENERAL -->
+
+
+    <!-- SOLO THEBEST CON CLAVE ADMINISTRADOR -->
+          <validation>
+            <condition><![CDATA[ oculta_clavestock == false && stock_sincantidad + 0 != 0 && 'clave_oro' != 'clave_stock']]></condition>
+            <message>STOCK INSUFICIENTE o clave incorrecta. Solicite clave para facturar sin stock</message>
+          </validation>
+      <!-- FIN SOLO THEBEST -->
+
+      <fieldGroup noshow="true">
+
+
+
+        <field id="id_stkmovimiento" deshabilitado="true"  autoInc="true">
+          <label>Cod</label>
+        </field>
+
+        <!-- DADOS POR EL MENU -->
+        <field id="subsistema_id" local="true" valauto="true" oculto="true">
+          <label>ss</label>
+        </field>
+
+        <field id="stkconcepto_id" valauto="true" local="true">
+          <label>stkcnp</label>
+          <tipo>integer</tipo>
+        </field>
+        <!-- FIN -->
+
+        <field id="alta_movimiento" >
+          <label>Alta</label>
+          <tipo>date</tipo>
+          <valor>today</valor>
+        </field>
+
+        <field id="de_mail" local="true">
+          <label>demail</label>
+          <valor eval="true">$_SESSION['usuario']</valor>
+        </field>
+
+        <field id="stktransaccion_id" deshabilitado="true"  valauto="true" >
+            <label>TRANSACCION</label>
+            <valor eval="true">date('U')</valor>
+        </field>   
+
+
+        <!-- SOLO PARA THEBEST -->
+
+
+        <field id="oculta_clavestock" local="true" >
+          <label>OCULTA CLAVE STOCK</label>
+            <helper type="parameter" id="SIS::02::oculta_clave_transfer_stock">
+                <label>Para ocultar la clave si tiene transferencia normal</label>
+                <defaultValue>true</defaultValue>
+            </helper>
+        </field>
+
+        <field id="clave_oro" local="true" >
+          <label>clave_oro</label>
+            <helper type="parameter" id="SIS::02::clave_transfer_sin_stock">
+                <label>Clave para transferir sin stock</label>
+                <defaultValue/>
+            </helper>
+        </field>
+
+        <!-- FIN  -->
+
+        <field id="good_load" local="true" >
+          <label>biencargado</label>
+          <tipo>numeric</tipo>
+        </field>
+
+        <field id="transferencia_sin_stk" local="true" >
+          <label>transferencia_sin_stk</label>
+            <helper type="parameter" id="SIS::02::transfer_sinstock">
+                <label>Parametro HTX para transfer sin stock</label>
+                <defaultValue/>
+            </helper>
+        </field>
+
+        <field id="stock_sincantidad" local="true" valauto="true">
+            <label>stock_sincantidad</label>
+            <tipo>integer</tipo>
+        </field>
+
+  </fieldGroup>
+
+  <fieldGroup style="padding:2px 2px 2px 2px;vertical-align:middle;">
+
+      <field id="fecha_movimiento">
+        <label>Fecha</label>
+        <help>Fecha movimiento</help>
+        <valor>today</valor>
+        <detalle>fecha_movimiento</detalle>
+      </field>
+
+      <field id="numero_movimiento" modpos="nobr" deshabilitado="true" 
+        style="padding:2px 2px 2px 2px;vertical-align:middle;font-size:large;" >
+        <label>Comprobante</label>
+        <parametro id="numerador_param_transrecep.xml" retorna="numero"> 
+            <field id="numero" />
+        </parametro>
+        <format>%08d</format>
+        <detalle>numero_movimiento</detalle>
+      </field>
+
+      <field id="puesto_movimiento" deshabilitado="true" modpos="nobr" sincelda="true" valauto="true" 
+          style="padding:2px;vertical-align:middle;font-size:large;" noshow="true">
+        <label>-</label>
+        <detalle>puesto_movimiento</detalle>
+        <valor>1</valor>
+      </field>
+
+      <field id="stkdeposito_origen" local="true" required="true">
+        <label>Origen</label>
+        <helper type="combo" xml="stkdeposito_qry.xml" dir="/ayudas" empty="true"/>
+        <detalle>stkdeposito_origen</detalle>
+  	    <actualiza>
+          <field id="detalle" destino="deporigen_id" />
+    	  </actualiza>
+      </field>
+
+      <field id="stkconcepto_origen" sincelda="true" local="true">
+        <label modpos="nobr"/>
+        <helper type="combo" xml="stkconcepto_qry.xml" dir="/ayudas" >
+          <field id="tipo_concepto">
+            <condicion operador="=">1</condicion>
+          </field>
+        </helper>
+        <detalle>stkconcepto_origen</detalle>
+      </field>
+
+      <field id="stkdeposito_destino" local="true" required="true" >
+        <label>Destino</label>
+        <helper type="combo" xml="stkdeposito_qry.xml" dir="/ayudas" empty="true"/>
+        <detalle>stkdeposito_destino</detalle>
+      </field>
+
+      <field id="stkconcepto_destino" sincelda="true" local="true">
+        <label modpos="nobr"/>
+        <helper type="combo" xml="stkconcepto_qry.xml" dir="/ayudas" >
+          <field id="tipo_concepto">
+            <condicion operador="=">0</condicion>
+          </field>
+        </helper>
+        <detalle>stkconcepto_destino</detalle>
+      </field>
+
+      <field id="para_mail" local="true">
+        <label>Notifica</label>
+        <helper type="combo" id="HTXUSERS" empty="true">
+          <field id="login"/>
+          <field id="Nombres">
+              <expression>concat_ws(' ',Nombre,apellido)</expression>
+          </field>
+          <order>
+              <field id="Nombres"/>
+          </order>
+        </helper>
+      </field>
+
+      <field id="clave_stock" local="true">
+          <label modpos="nobr">Clave Stock</label>
+          <size>30</size>
+          <attribute id="noshow">oculta_clavestock</attribute>
+          <tipo Type="password">password</tipo>
+      </field>
+
+      <field id="detalle">
+        <label colspan="4">detalle</label>
+        <helper xml="stktransfer_grid.xml" type="object" />
+      </field>
+
+    </fieldGroup>
+
+    </table>
+  </form>
+</histrix>

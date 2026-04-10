@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" path="fotos/articulos" XMLrow="item" XMLroot="catablog_items">
+  <title>Insumos</title>
+  <obs/>
+  <form>
+    <table id="STK_ARTICULOS" styleTbody="height:500px;overflow-x:hidden;">
+
+      <field id="id_stkarticulo" deshabilitado="true" PDFcolor="000000" esClave="true" style="font-weight:bold;" xmlField="id">
+        <label>id</label>
+        <ayuda_ex id="STK_ARTICULOS">
+          <field id="id_stkarticulo">
+            <label>Cod</label>
+          </field>
+          <field id="nombre_articulo">
+            <label>Nombre</label>
+            <detalle>nombre_articulo</detalle>
+          </field>
+          <field id="subsistema_id" oculto="true">
+            <condicion operador="=">'01'</condicion>
+          </field>
+        </ayuda_ex>
+        <detalle>id_stkarticulo</detalle>
+      </field>
+
+      <field id="tipo_articulo" noshow="true" export="false"/>
+
+      <field id="Rubro" local="true" noshow="true" export="false">
+        <if exp="true">
+          <true><![CDATA['<category>nombre_rubro</category>']]></true>
+          <false>''</false>
+        </if>
+      </field>
+      <field id="Novedad" local="true" noshow="true" export="false">
+        <if exp="tipo_articulo == 1">
+          <true><![CDATA['<category>NOVEDAD</category>']]></true>
+          <false>''</false>
+        </if>
+      </field>
+      <field id="Destacado" local="true" noshow="true" export="false">
+        <if exp="tipo_articulo == 2">
+          <true><![CDATA['<category>PREORDER</category>']]></true>
+          <false>''</false>
+        </if>
+      </field>
+
+      <field id="codigo_barra" xmlField="product_code">
+        <label>product_code</label>
+      </field>
+
+      <field id="categories" local="true" xmlCdata="false" xmlField="categories">
+        <label>Categories</label>
+        <if exp="true">
+          <true>'Rubro Novedad Destacado'</true>
+          <false>''</false>
+        </if>
+      </field>
+
+      <field id="fecha" tipOrd="DESC" xmlField="date">
+        <label>date</label>
+        <expresion>IF( fecha_salida is NULL OR fecha_salida = '0000-00-00', '2010-01-01', fecha_salida)</expresion>
+        <tipo>date</tipo>
+      </field>
+
+      <field id="nombre_articulo" deshabilitado="true" fullSearch="true" xmlField="title">
+        <label>Title</label>
+      </field>
+
+      <field id="referencia" xmlField="description">
+        <label>Description</label>
+        <tipo>varchar</tipo>
+      </field>
+      <field id="stkarticulo_url" xmlField="link">
+        <label>link</label>
+      </field>
+
+      <field id="price" xmlField="price" local="true">
+        <label>price</label>
+        <if exp="cantidad_stock + 0 &gt; 0">
+          <true>precio_venta</true>
+          <false>0</false>
+        </if>
+        <tipo>numeric</tipo>
+      </field>
+
+      <field id="stkarticulo_foto" xmlField="image" path="id_stkarticulo">
+        <label>Image</label>
+        <!-- tipo Type="Image">file</tipo -->
+        <expression>IF(stkarticulo_foto = '', 'nopict.jpg', CONCAT( id_stkarticulo, '.', SUBSTRING_INDEX(stkarticulo_foto, '.', -1) ) )</expression>
+      </field>
+
+      <!-- Filtros -->
+
+      <field id="stkrubro_id" oculto="true">
+        <helper type="combo" xml="stkrubro_qry.xml" dir="/ayudas" empty="true"/>
+      </field>
+      <field id="nombre_rubro" oculto="true">
+        <expresion>nombre_rubro</expresion>
+      </field>
+
+      <field id="precio_venta" noshow="true">
+        <tipo>numeric</tipo>
+        <expression>ROUND(
+        CASE WHEN STK_LISTAS.moneda_idvta = STK_ARTICULOS.genmoneda_venta_id THEN IFNULL(STK_LISTADETALLE.stklistadetalle_precioventa,0)
+        ELSE
+        (CASE WHEN STK_ARTICULOS.genmoneda_venta_id = 1 THEN
+                GEN_FN_COTIZACION(STK_LISTAS.moneda_idvta,current_date()) * IFNULL(STK_LISTADETALLE.stklistadetalle_precioventa,0)
+             ELSE
+                IFNULL(STK_LISTADETALLE.stklistadetalle_precioventa,0) / GEN_FN_COTIZACION(STK_LISTAS.moneda_idvta,current_date(), 0)
+             END)
+        END)
+        </expression>
+      </field>
+
+      <field id="cantidad_stock" oculto="true">
+        <label>Disponible</label>
+        <expression>IFNULL(sum(STK_STOCKACTUAL.cantidad_stock),0)</expression>
+      </field>
+
+      <field id="publica_web" oculto="true">
+        <label>Publicar</label>
+        <tipo>check</tipo>
+        <condicion operador="=">1</condicion>
+      </field>
+
+      <field id="baja_articulo" oculto="true">
+        <condicion operador="!=">1</condicion>
+      </field>
+
+      <field id="stklista_id" oculto="true" tabla="STK_LISTADETALLE">
+        <expression>IFNULL(STK_LISTADETALLE.stklista_id,1)</expression>
+        <condicion operador="=">1</condicion>
+      </field>
+
+      <group>
+        <field id="id_stkarticulo"/>
+      </group>
+      <order>
+        <field id="fecha"/>
+        <field id="nombre_articulo"/>
+      </order>
+    </table>
+    <join>
+      <table id="STK_RUBROS">
+        <field id="id_stkrubro">
+          <condicion operador="=">stkrubro_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="STK_STOCKACTUAL">
+        <field id="stkarticulo_id">
+          <condicion operador="=">STK_ARTICULOS.id_stkarticulo</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="STK_LISTADETALLE">
+        <field id="stkarticulo_id">
+          <condicion operador="=">STK_ARTICULOS.id_stkarticulo</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="STK_LISTAS">
+        <field id="id_stklista">
+          <condicion operador="=">STK_LISTADETALLE.stklista_id</condicion>
+        </field>
+      </table>
+    </join>
+  </form>
+</histrix>

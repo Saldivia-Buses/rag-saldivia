@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="abm-mini" subtipo="vertical" imprime="false" >
+  <title>Artículos por envío</title>
+  <obs></obs>
+  <eventos>
+    <event id="insert">refresh</event>
+    <event id="update">refresh</event>
+    <event id="delete">refresh</event>
+  </eventos>
+  <form >
+    <table id="SERVICE_ENVIOS_ARTICULOS" label="Artículos - Envío de Repuestos">
+      <field id="id_envioarticulo" autoinc="true" noshow="true">
+        <label>id</label>
+      </field>
+      <field id="serviceenvio_id" noshow="true" valauto="true">
+        <label>idService</label>
+      </field>
+      
+      <field id="nombre_articulo" autocompletar="true" tabla="STK_ARTICULOS" _deshabilitado="true" required="true">
+        <label>Artículo</label>
+        <help>Descripción de Artículo</help>
+        <ayuda_ex id="STKINSUM" >
+          <field id="artcod" noshow="true">
+            <label>cod</label>
+            <detalle>artcod</detalle>
+          </field>
+          <field id="artdes">
+            <label>Nombre</label>
+            <detalle>nombre_articulo</detalle>
+          </field>
+          <field id="siscod" oculto="true">
+            <condicion operador="=">'01'</condicion>
+          </field>
+        </ayuda_ex>
+        <size>40</size>
+      </field>
+
+      <field id="artcod" _deshabilitado="true" >
+       <!--  <ayuda_ex id="STKINSUM" >
+          <field id="artcod" _oculto="true">
+            <label>Cod</label>
+          </field>
+          <field id="artdes">
+            <label>Nombre</label>
+            <detalle>artdes</detalle>
+          </field>
+          <field id="siscod" oculto="true">
+            <condicion operador="=">'01'</condicion>
+          </field>
+        </ayuda_ex> -->
+        <label>Cod.</label>
+        <detalle>artcod</detalle>
+      </field>
+
+      <!--
+      <field id="artcod" >
+      <label>Cod. Artículo</label>
+      <helper type="external" id="STKINSUM" >
+        <field id="artcod">
+          <label>Cod</label>
+        </field>
+        <field id="artdes">
+          <label>Nombre</label>
+          <detalle>artdes</detalle>
+        </field>
+        <field id="siscod" noshow="true">
+          <condicion operador="=">'01'</condicion>
+        </field>
+        <field id="repuesto" noshow="true">
+          <condicion operador="=">1</condicion>
+        </field>
+      </helper>
+      <label>Cod.</label>
+    </field>
+    <field id="artdes" deshabilitado="true" tabla="STKINSUM">
+      <label modpos="nobr">Articulo</label>
+      <help>Descripcion de Articulo.</help>
+      <size>100</size>
+    </field>
+    -->
+    <field id="cantidad">
+      <label>Cantidad</label>
+      <tipo>integer</tipo>
+    </field>
+    <field id="precio">
+      <label>Precio</label>
+      <tipo>numeric</tipo>
+    </field>
+    <field id="observaciones" >
+      <label>Observ</label>
+      <help>Observaciones</help>
+      <size>50</size>
+    </field>
+    <field id="cargo" >
+      <label>Tipo</label>
+      <options>
+        <option valor="0">Sin Cargo</option>
+        <option valor="1">Con Cargo</option>
+        <option valor="2">Con Cargo 3ro</option>
+              <option valor="3">Envio de Repuestos</option>
+              <option valor="4">Viaje</option>
+
+      </options>
+    </field>
+  </table>
+  <join tipo="left">
+    <table id="STK_ARTICULOS">
+      <field id="id_stkarticulo">
+        <condicion operador="=">SERVICE_ENVIOS_ARTICULOS.artcod</condicion>
+      </field>
+      <field id="subsistema_id">
+        <condicion operador="=">'01'</condicion>
+      </field>
+    </table>
+  </join>
+</form>
+</histrix>

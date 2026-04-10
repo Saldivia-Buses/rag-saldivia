@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm">
+	<title>CATEGORIAS DE PERSONAL</title>
+	<obs/>
+	<form >
+		<table id="CATPERSONAL">
+			<title>Categorías de Personal</title>
+
+			<filters>
+				<field id="IdSindicato">
+					<label>Sindicato</label>
+					<valor>1</valor>
+					<operador>=</operador>	
+				</field>
+			</filters> 
+
+			<field id="IdSindicato" _oculto="true">
+				<label>sindicato</label>
+				<tabla_ex id="SINDICATO">
+					<field id="IdSindicato"/>
+					<field id="Nombre"/>
+				</tabla_ex>
+				<help>Sindicato</help>
+				<valor>1</valor>
+				<actualiza>
+					<field destino="IdSindicato" id="Id_area"/>
+				</actualiza>
+			</field>
+			<field id="IdCateg">
+				<label>Cod.</label>
+				<help>Código de Categoría</help>
+			</field>
+			<field id="descripcion">
+				<label>Nombre</label>
+				<help>Nombre de la categoría</help>
+			</field>
+			<field id="actividad">
+				<label>Descripción</label>
+				<help>Descripción de la actividad</help>
+				<tipo>varchar</tipo>
+				<size>200</size>
+			</field>			
+			<field id="tipoliq">
+				<label>Tipo Liq.</label>
+				<tabla_ex id="CONCEPLIQU">
+					<field id="tipoLiq"/>
+					<field id="Nombre"/>
+				</tabla_ex>
+				<help>Tipo de Liquidación</help>
+			</field>
+			<field id="val" tipoOrden="DESC">
+                <label>Importe</label>
+                <expression><![CDATA[(select importe FROM CONCEPCONV inner join CONVENIOS on CONVENIOS.idSindicato= CONCEPCONV.IdSindicato  where CONCEPCONV.IdSindicato = CATPERSONAL.IdSindicato and CONCEPCONV.IdCateg = CATPERSONAL.idCateg  order by CONCEPCONV.desfec DESC limit 1)]]>
+                </expression>
+                <tipo>decimal</tipo>
+            </field>
+			
+			<order>
+				<field id="val"/>
+			</order>
+		</table>
+	</form>
+</histrix>

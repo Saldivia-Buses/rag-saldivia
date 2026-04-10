@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="cabecera">
+    <title>Facturar</title>
+    <obs/>
+    <form  >
+        <table id="REG_MOVIMIENTOS">
+
+            <field id="subsistema_id" valauto="true" noshow="true" />
+
+                <field id="codigo_concepto_factura" local="true" noshow="true">
+                    <helper type="parameter" id="SIS::02:codigo_concepto_factura">
+                        <label>Codigo de Concepto Factura</label>
+                        <defaultValue>1</defaultValue>
+                    </helper>
+                    <actualiza>
+                        <field id="puesto_movimiento" destino="regconcepto_id" />
+                    </actualiza>
+                </field>
+
+            <field id="fecha_movimiento" deshabilitado="false">
+                <label>Fecha de Emisión</label>
+                <tipo>date</tipo>
+                <valor>today</valor>
+            </field>
+
+            <field id="regconcepto_id" local="true" deshabilitado="true">
+                <label modpos="nobr">Concepto</label>
+                <helper type="combo" id="REG_CONCEPTOS">
+                    <field id="id_concepto">
+                        <condicion operador="=">IFNULL((SELECT option_value FROM HTXOPTIONS WHERE option_name = 'SIS::02:codigo_concepto_factura'),1)</condicion>
+                    </field>
+                    <field id="descripcion_concepto"/>
+                </helper>
+                <detalle>concepto_id</detalle>
+            </field>
+
+            <field id="reg_periodo" required="true" local="true">
+                <helper type="combo" id="GEN_CALENDAR">
+                    <field id="per">
+                        <expression having="false">DATE_FORMAT(fecha,'%Y%m')</expression>
+                        <condicion operador="&gt;=">DATE_FORMAT( NOW() - INTERVAL 3 MONTH ,'%Y%m') and fecha &lt;= NOW() + INTERVAL 3 MONTH </condicion>
+                    </field>
+                    <field id="per2">
+                        <expression>DATE_FORMAT(fecha,'%Y/%m')</expression>
+                    </field>
+                </helper> 
+                <valor eval="true">date('Ym')</valor>
+                <label modpos="nobr">Período</label>
+            </field>		
+
+            <field id="stkdeposito_id" local="true" empty="true">
+                <label modpos="nobr">Depósito</label>
+                <helper type="combo" dir="/ayudas" xml="stkdeposito_qry.xml" refresh="true">
+                    <option value="0"></option>
+                </helper>
+                <detalle>stkdeposito_id</detalle>
+                <valor>1</valor>
+            </field>
+
+            <field id="stkconcepto_id" local="true" noshow="true" valauto="true">
+                <helper type="parameter" id="SIS::02:stock_codigo_concepto_venta" >
+                    <label>Codigo de Concepto Stock para salida por venta</label>
+                    <defaultValue>2</defaultValue>
+                </helper>
+                <detalle>stkconcepto_id</detalle>
+            </field>    
+        </table>
+    </form>
+</histrix>

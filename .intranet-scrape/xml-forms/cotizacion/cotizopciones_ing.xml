@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+	<abm tipo="grid" >
+		<titulo>OPCIONES</titulo>
+		<obs></obs>
+		<consulta>
+			<tabla id="COTIZOPCIONES"	>
+				<titulo>OPCIONES</titulo>
+				
+				<campo id="idSeccion" >
+					<tabla_ex id="COTIZSECCION">
+						<campo id="idSeccion" >						
+						</campo>
+						<campo id="nombre" >
+						</campo>						
+					</tabla_ex>
+					<label>seccion</label>
+					<tipo>integer</tipo>
+
+				</campo>
+				<campo id="descripcion">
+					<label>Descripción</label>
+					<tipo>varchar</tipo>
+				</campo>
+			</tabla>
+		</consulta>
+	</abm>

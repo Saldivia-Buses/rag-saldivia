@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" limit="20">
+	<title>Categoría</title>
+	<obs/>
+	<form >
+		<table id="CATEGHISTORIA" label="Categoria" styleTbody="height:10em;"> 
+	<title>Categoría</title>	
+	<!--		
+			<movimientos>
+				<relacion id="categhist_update.xml"></relacion>
+				<relacion id="categhist_insert.xml"></relacion>
+				<relacion id="categhist_delete.xml"></relacion>				
+			</movimientos>
+	-->		
+			<field id="idHist" noshow="true" deshabilitado="true"  autoinc="true" esClave="true">
+			</field>
+
+			<field id="IdPersona" deshabilitado="true" oculto="true" >
+				<label>Persona</label>
+				<condicion operador="=">0</condicion>				
+			</field>
+
+			<field id="idSindicato" >
+				<label>Sindicato</label>
+				<tabla_ex id="SINDICATO" vacio="true">
+					<field id="IdSindicato"/>
+					<field id="Nombre"/>
+				</tabla_ex>
+				<help>Sindicato</help>
+				<valor>2</valor>
+				<actualiza>
+					<field destino="IdSindicato" id="IdCateg"/>
+				</actualiza>             
+				<tipo>varchar</tipo>
+			</field>
+			<field id="descripcion" tabla="CATPERSONAL" deshabilitado="true" >
+				<expression>CATPERSONAL.descripcion</expression>
+				<label Formstyle="display:none;">Cat.</label>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="IdCateg">
+				<label colstyle="display:none;">Categoría:</label>
+				<tabla_ex id="CATPERSONAL" vacio="true">
+					<field id="IdCateg"/>
+					<field id="descripcion"/>
+					<field id="IdSindicato">
+					<condicion operador="=">2</condicion>
+					</field>
+					<order>
+						<field id="IdCateg"/>
+					</order>
+				</tabla_ex>
+			</field>
+
+<!--
+			<field id="IdCateg">
+				<tabla_ex id="CATPERSONAL">
+					<field id="IdCateg"/>
+					<field id="descripcion"/>
+				</tabla_ex>
+				<label>Categ.</label>
+				<help>Categoria</help>
+			</field> -->
+			<field id="fechaDesde" >
+				<label>Desde Fecha</label>
+				<help>Fecha</help>
+			</field>
+		</table>
+		<join tipo="left">
+	    	<table id="CATPERSONAL">
+				<field id="IdSindicato">
+	    			<condicion operador="=">CATEGHISTORIA.IdSindicato</condicion>
+	    		</field>
+
+				<field id="IdCateg">
+	    			<condicion operador="=">CATEGHISTORIA.IdCateg</condicion>
+	    		</field>
+	    	</table>
+	    </join>
+
+
+	</form>
+</histrix>

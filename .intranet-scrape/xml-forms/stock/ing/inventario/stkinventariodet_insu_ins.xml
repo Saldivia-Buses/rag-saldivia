@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="insert" log="false">
+	<title>Ingreso Movimiento</title>
+	 <obs></obs>
+		<form>
+		    <table id="STK_INVENTARIO_DETALLES" idCampoCond="grabar">
+			    <field id="stkinventario_id"	   lastId="stkinventario_insumas_ins.xml" />
+				<field id="stkarticulo_id"         id_temp="stkarticulo_id"/>
+				<field id="stock"                  id_temp="stock" />
+				<field id="stock_real1" 	       id_temp="cantidad1"/>
+				<field id="stock_real2" 	       id_temp="cantidad2"/>
+				<field id="stock_real3" 	       id_temp="cantidad3"/>
+				<field id="diferencia"             id_temp="diferencia" />
+				<field id="observaciones"          id_temp="observaciones" />
+			</table>
+		</form>
+    </histrix>	
+
+

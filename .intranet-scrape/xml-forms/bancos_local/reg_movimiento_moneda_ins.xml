@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+   <histrix tipo="insert">
+       <title>Mov Bancario</title>
+        <obs></obs>
+               <form >
+			<table id="REG_MOVIMIENTO_MONEDA" label="MOVIMIENTOS">
+
+			    <field id="regmovim_id" lastId="bcsmovim_ctb_ingmov.xml">
+			    </field>
+
+			    <field id="moneda_origen_id" id_cab="moneda_id">
+			    </field>
+
+			    <field id="cotizacion_moneda" id_cab="cotizacion">
+			    </field>
+
+			    <field id="fecha_cotizacion" id_cab="bcsmov">
+			    </field>
+
+			    <field id="importe_moneda_origen" id_temp="importe_original">
+			    </field>
+			</table>
+               </form>
+        </histrix>

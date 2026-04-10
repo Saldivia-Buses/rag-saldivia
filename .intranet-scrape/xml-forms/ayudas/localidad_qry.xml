@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+    <histrix tipo="consulta">
+	<title>Localidades</title>
+	 <obs></obs>
+		<form >
+			<table id="GEN_LOCALIDADES" label="Localidades">	    
+
+				<field id="id_localidad" autoinc="false">
+					<label>Código</label>
+					<help>Código de la localidad</help>
+				</field>
+
+				<field id="nombre_localidad">
+					<label>Nombre </label>
+					<expression>CONCAT(nombre_localidad,' ',' (CP ', cp,')')</expression>
+					<help>Nombre de la localidad</help>
+				</field>
+
+				<field id="provincia_id" noshow="true"></field> 
+
+			</table>
+		</form>
+
+    </histrix>	

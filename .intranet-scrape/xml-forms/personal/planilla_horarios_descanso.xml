@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" >
+  <title>PLANILLA HORARIOS Y DESCANO</title>
+  <obs></obs>
+  <form  >
+    <table id="PERSONAL" label="Planilla de Horarios y Descanso">
+
+      <field id="pervac" local="true" oculto="true">
+        <label>Periodo</label>
+        <parametro id="fsmparam_paralf.xml" retorna="paralf">
+          <field id="parcla">
+            <condicion operador="=">'pervac'</condicion>
+          </field>
+        </parametro>
+        <tipo>varchar</tipo>
+      </field>
+
+      <field id="comvac" local="true" oculto="true">
+        <label>Com</label>
+        <parametro id="fsmparam_paralf.xml" retorna="paralf">
+          <field id="parcla">
+            <condicion operador="=">'comvac'</condicion>
+          </field>
+        </parametro>
+        <tipo>date</tipo>
+      </field>
+      <field id="impvac" local="true" oculto="true">
+        <label>Comienza</label>
+        <parametro id="fsmparam_paralf.xml" retorna="paralf">
+          <field id="parcla">
+            <condicion operador="=">'impvac'</condicion>
+          </field>
+        </parametro>
+        <tipo>varchar</tipo>
+        <size>50</size>
+      </field>
+
+      <field id="idPersona" noshow="true">
+        <label modpos="nobr">pers</label>
+      </field>
+
+      <field id="legajo" >
+        <label modpos="nobr">Legajo</label>
+        <condicion operador="!=">0</condicion>
+      </field>
+      <field id="apellidoNom">
+        <expression>concat(apellido,', ',PERSONAL.Nombre)</expression>
+        <label modpos="nobr" colspan="6">Apellido</label>
+        <help>Apellido</help>
+      </field>
+      <field id="sexo" >
+        <label >Sexo</label>
+        <options>
+            <option valor="1">Masc</option>
+            <option valor="2">Fem</option>
+        </options>
+      </field>
+
+      <field id="fecing">
+        <label modpos="nobr" >Fecha Ing.</label>
+      </field>
+      <field id="DNI">
+        <label modpos="nobr" >Dni</label>
+      </field>
+      <field id="CUIL">
+        <label modpos="nobr" >Cuil</label>
+        <help>Numero de Documento Nacional de Identidad</help>
+      </field>
+                  <field id="IdCateg2">
+                <label style="width:200px;" modpos="nobr">Categoria.</label>
+                      <expression>CONCAT((select nombre from SECCIONHISTORIA left join SECCION on SECCION.id_seccion = SECCIONHISTORIA.id_seccion where SECCIONHISTORIA.IdPersona = PERSONAL.IdPersona order by SECCIONHISTORIA.fechaDesde desc limit 1),' - ',
+                            (select descripcion from CATEGHISTORIA left join CATPERSONAL on CATPERSONAL.IdSindicato = CATEGHISTORIA.idSindicato and CATPERSONAL.IdCateg = CATEGHISTORIA.IdCateg where CATEGHISTORIA.IdPersona = PERSONAL.IdPersona and CATEGHISTORIA.fechaDesde &lt; CURDATE()
+                        order by CATEGHISTORIA.fechaDesde desc limit 1))</expression>
+            </field>
+            <field id="tipoliq" >
+      <!--    <expression>select tipoliq FROM CONCEPCONV inner join CONVENIOS on CONVENIOS.idSindicato= CONCEPCONV.IdSindicato  where CONCEPCONV.IdSindicato = PERSONAL.IdSindicato and CONCEPCONV.IdCateg = PERSONAL.IdCateg and CONVENIOS.fechaHasta >= CURDATE() limit 1</expression> -->
+                <expression>select tipoliq FROM CONCEPCONV inner join CONVENIOS on CONVENIOS.idSindicato= CONCEPCONV.IdSindicato  where CONCEPCONV.IdSindicato = PERSONAL.IdSindicato and CONCEPCONV.IdCateg = PERSONAL.IdCateg limit 1</expression>
+
+                <tabla_ex id="CONCEPLIQU">
+                    <field id="tipoLiq"/>
+                    <field id="Nombre"/>
+                </tabla_ex>
+                <label>Tipo Liq.</label>
+                <tipo>varchar</tipo>
+            </field>
+
+
+      <field id="lunes">
+          <label>Lunes</label>
+          <expression>select concat(ingreso, ' - ', egreso) from HORARIOHIST where dia = 2 order by desdeFecha Desc limit 1</expression>
+      </field>
+      <field id="Martes">
+          <label>Martes</label>
+          <expression>select concat(ingreso, ' - ', egreso) from HORARIOHIST where dia = 3 order by desdeFecha Desc limit 1</expression>
+      </field>
+      
+      <field id="Mierc">
+          <label>Miércoles</label>
+          <expression>select concat(ingreso, ' - ', egreso) from HORARIOHIST where dia = 4 order by desdeFecha Desc limit 1</expression>
+      </field>
+      <field id="Jueves">
+          <label>Jueves</label>
+          <expression>select concat(ingreso, ' - ', egreso) from HORARIOHIST where dia = 5 order by desdeFecha Desc limit 1</expression>
+      </field>
+      <field id="Viernes">
+          <label>Viernes</label>
+          <expression>select concat(ingreso, ' - ', egreso) from HORARIOHIST where dia = 6 order by desdeFecha Desc limit 1</expression>
+      </field>
+      <field id="Sabado">
+          <label>Sábado</label>
+          <expression>select concat(ingreso, ' - ', egreso) from HORARIOHIST where dia = 7 and ingreso != egreso order by desdeFecha Desc limit 1</expression>
+      </field>
+      
+      
+      
+      
+      
+
+      <order>
+        <field id="legajo"></field>
+
+      </order>
+    </table>
+
+  </form>
+</histrix>

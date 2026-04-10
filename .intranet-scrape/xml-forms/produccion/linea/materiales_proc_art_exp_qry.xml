@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm-mini" width="30" _imprime="false" inserta="false">
+  <title>HOMOLOGACION POR MODELO</title>
+  <obs/>
+  <confirmacion><![CDATA[Confirma eliminar este costo?]]></confirmacion>
+  <form detalle="materiales_proceso_explo_qry.xml">
+    <table id="STK_ARTICULO_PROCESO_HIST">
+ <title>Homologaciones por modelo</title>
+      
+      <filters auto="true">
+        <field id="nrocar" >
+          <label>Mod.Car.</label>
+          <operador>=</operador>
+        </field>
+        <field id="marcod">
+          <label>Marc.Chasis</label>
+          <operador>=</operador>
+        </field>
+        <field id="modelo_id">
+          <label>Chasis</label>
+          <operador>=</operador>
+        </field>
+
+        <field id="fecha">
+          <label>Desde</label>
+          <operador>&gt;=</operador>
+          <valor eval="true">date("d/m/Y", mktime(0, 0, 0, date("m") , 1, date("Y")))</valor>
+        </field>
+                
+        <field id="fecha" >
+          <label modpos="nobr">Hasta</label>
+          <operador>&lt;=</operador>
+          <valor>today</valor>
+        </field>
+
+      </filters>
+
+      <field id="id_artproceso_hist" _noshow="true" Formstyle="display:none;">
+        <detalle>artproceso_hist_id</detalle>
+      </field>
+
+      <field id="homologacion_id" _noshow="true" Formstyle="display:none;">
+        <detalle>homologacion_id</detalle>
+        <label>Hom.</label>
+      </field>
+
+      <field id="fecha" Formstyle="display:none;">
+        <label>Fecha</label>
+      </field>
+
+      <field id="creation2" noshow="true">
+        <label>Hora</label>
+        <expression>time(creation)</expression>
+        <tipo>time</tipo>
+      </field>
+
+      <field id="nrocar" tabla="HOMOLOGMOD" Formstyle="display:none;">
+        <helper type="combo" id="CARROCERIA" empty="true">
+          <field id="nrocar" />
+          <field id="desabv" />
+          <field id="nrocar">
+            <condicion operador="!=">0</condicion>
+          </field>
+          <order>
+            <field id="modcar" />
+          </order>
+        </helper>
+        <label>Mod.Car.</label>
+      </field>
+
+      <field id="marcod" tabla="HOMOLOGMOD" noshow="true" Formstyle="display:none;">
+        <helper type="combo" id="MARCHASIS" empty="true">
+          <field id="marcod" />
+          <field id="desabv" />
+          <field id="marcod">
+            <condicion operador="!=">0</condicion>
+          </field>
+          <order>
+            <field id="marcod" />
+          </order>
+        </helper>
+        <label>MC</label>
+        <actualiza>
+          <field id="modelo_id" destino="marcod"/>
+        </actualiza>
+      </field>
+
+      <field id="modelo_id" tabla="HOMOLOGMOD" Formstyle="display:none;">
+        <helper type="combo" id="MODCHASIS" empty="true">
+          <field id="id_modelo"/>
+          <field id="desabv" />
+          <field id="marcod" noshow="true" >
+          </field>
+        </helper>
+        <label modpos="nobr" >Modelo</label>
+        <help>Modelo del Chasis</help>
+      </field>
+      
+      <field id="asientos" tabla="HOMOLOGMOD" Formstyle="display:none;">
+        <label modpos="nobr">As.</label>
+        <label>Cantidad de Asientos</label>
+        <expression>HOMOLOGMOD.asientos+1</expression>
+      </field>
+      <field id="banbar" tabla="HOMOLOGMOD" Formstyle="display:none;">
+        <label>B/b</label>
+        <options>
+          <option valor="0">No</option>
+          <option valor="1">Si</option>
+        </options>
+      </field>
+      
+      <field id="baja" oculto="true" tabla="HOMOLOGMOD" Formstyle="display:none;">
+        <!--<condicion operador="=">0</condicion>-->
+      </field>
+
+      <field id="parcial_reposicion_desc_total" Formstyle="display:none;">
+        <label>Total</label>
+        <expression>select sum(parcial_reposicion_desc) from STK_ARTICULO_PROCESO_HIST_DETALLE where artproceso_hist_id = id_artproceso_hist</expression>
+        <tipo>custom_numeric</tipo>
+      </field>
+
+      <field id="observaciones" cellMaxLength="50">
+        <label>Observaciones</label>
+        <help>Observaciones</help>
+        <tipo>varchar</tipo>
+        <size>50</size>
+      </field>
+
+      <order>
+        <field id="id_artproceso_hist" tipoOrden="DESC"/>
+      </order>
+      
+    </table>       
+<join tipo="left">
+<table id="HOMOLOGMOD">
+  <field id="id_homologacion">
+    <condicion operador="=">STK_ARTICULO_PROCESO_HIST.homologacion_id</condicion>
+  </field>
+</table>
+<table id="CARROCERIA">
+  <field id="nrocar">
+    <condicion operador="=">HOMOLOGMOD.nrocar</condicion>
+  </field>
+</table>
+</join>
+<join tipo="left">
+<table id="TIPOSERVICIO">
+  <field id="tipserv">
+    <condicion operador="=">HOMOLOGMOD.tipserv</condicion>
+  </field>
+</table>
+</join>
+<join tipo="left">
+<table id="MARCHASIS">
+  <field id="marcod">
+    <condicion operador="=">HOMOLOGMOD.marcod</condicion>
+  </field>
+</table>
+</join>
+<join tipo="left">
+<table id="MODCHASIS">
+  <field id="modcha">
+    <condicion operador="=">HOMOLOGMOD.modcha</condicion>
+  </field>
+  <field id="marcod">
+    <condicion operador="=">HOMOLOGMOD.marcod</condicion>
+  </field>
+</table>
+</join>
+  </form>
+</histrix>

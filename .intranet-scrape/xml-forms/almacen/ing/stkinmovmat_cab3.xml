@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="cabecera" graba="false">
+    <title>ENTRADA SALIDA STOCK POR CODIGO</title>
+    <obs></obs>
+    <form >
+        <table id="stkinmov" label="SALIDA DE MATERIALES">
+            <field id="siscod" oculto="true">
+                <label>siscod</label>
+                <parametro id="fsmparam_paralf.xml" retorna="paralf">
+                <field id="parcla">
+                    <condicion operador="=">'sisstk'</condicion>
+                </field>
+            </parametro>
+        </field>
+        <field id="sisprv" oculto="true">
+            <label>Cod prov</label>
+            <parametro id="fsmparam_paralf.xml" retorna="paralf">
+            <field id="parcla">
+                <condicion operador="=">'sispro'</condicion>
+            </field>
+        </parametro>
+        <tipo>char</tipo>
+    </field>
+    <field id="nrocha" required="true" noshow="true">
+        <label modpos="nobr">Nro Fabricacion</label>
+        <help>Numero de Fabricación</help>
+        <helper type="external" xml="HLPchasis_service.xml" dir="/help_local"></helper>
+        <valor default="true">9999</valor>
+    </field>
+    <field id="chades" deshabilitado="true" noshow="true">
+        <label modpos="nobr">Chasis</label>
+        <tipo>varchar</tipo>
+        <size>40</size>
+    </field>
+    <field id="homologacion_id" noshow="true" deshabilitado="true">
+        <label modpos="nobr">Homologacion</label>
+    </field>
+    <field id="ctacod" deshabilitado="true" noshow="true">
+        <label modpos="nobr">Cod.</label>
+    </field>
+    <field id="ctanom" deshabilitado="true" local="true" noshow="true">
+        <label modpos="nobr">Cliente</label>
+        <size>50</size>
+    </field>
+    <field id="movfec" _deshabilitado="true" noshow="true">
+        <label modpos="nobr">Fecha</label>
+        <help>Fecha del Movimiento</help>
+        <tipo>date</tipo>
+        <valor>today</valor>
+    </field>
+    <field id="legajo" local="true" noshow="true">
+        <label  modpos="nobr">Leg. Operario</label>
+        <helper type="external" xml="HLPpersonal.xml" dir="/help_local">
+            <field id="nombres">
+                <expression>CONCAT(PERSONAL.apellido,', ', PERSONAL.Nombre)</expression>
+                <detalle>openom</detalle>
+            </field>
+            <field id="opecod">
+                <detalle>opecod</detalle>
+            </field>
+        </helper>
+    </field>
+    <field id="opecod" required="true" noshow="true">
+        <label modpos="nobr">Operario</label>
+    </field>
+    <field id="openom" deshabilitado="true" local="true" noshow="true">
+        <label modpos="nobr" colspan="2"></label>
+        <size>40</size>
+    </field>
+    
+<field id="movcod" deshabilitado="true">
+          <label modpos="nobr">Movimiento</label>
+          <tabla_ex id="STKCONCE">
+            <field id="movcod"></field>
+            <field id="condes"></field>
+          </tabla_ex>
+          <operador>=</operador>
+    <valor>41</valor>
+</field>
+
+<field id="depcod">
+     <label modpos="nobr">Almacen</label>
+          <tabla_ex id="STKDEPOS">
+            <field id="depcod"></field>
+            <field id="depnom"></field>
+          </tabla_ex>
+          <operador>=</operador>       
+    <valor>2</valor>
+</field>
+<field id="movnro" deshabilitado="true">
+        <label modpos="nobr">Numero</label>
+        <help>Numero</help>
+        <parametro id="fsmparam_parent.xml" retorna="parent">
+        <field id="parcla" oculto="true">
+            <condicion operador="=">'nroalm'</condicion>
+        </field>
+        <field id="parent">
+            <complete>parent +  1</complete>
+        </field>
+    </parametro>
+    <tipo>integer</tipo>
+</field>
+<field id="opecla" local="true" oculto="true">
+    <label  >Usuario</label>
+    <valor eval="true">$_SESSION['usuario']</valor>
+</field>
+</table>
+</form>
+</histrix>

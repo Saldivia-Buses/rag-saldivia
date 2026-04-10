@@ -1,0 +1,531 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" _conBusqueda="true" _imprimetanda="true" pageBreak="true" _imprime="false" _preloadData="false">
+  <title>Movimientos</title>
+  <obs/>
+  <consulta _detalle="movimientos_cuenta_expand.xml" _inline="true">
+
+    <table id="CTB_MOVIMIENTOS" label="Libro Mayor">
+
+      <filters>
+
+<!--
+        <field id="ejercicio_id">
+          <label>Ejercicio</label>
+          <help>Ejercicio contable</help>
+          <operador>=</operador>
+        </field>
+-->
+<!--
+        <field id="concepto_id">
+          <operador>=</operador>
+          <label>Tipo de Movimiento</label>
+          <help>Concepto elegido</help>
+        </field>
+-->
+<!--
+        <field id="fecha_mov1" deshabilitado="false">
+          <operador>&gt;=</operador>
+          <label>Desde</label>
+          <help>Fecha movimiento</help>
+	    <valor>today</valor>
+        </field>
+        <field id="fecha_mov2" deshabilitado="false">
+          <valor>today</valor>
+          <operador>&lt;=</operador>
+          <label modpos="nobr">Hasta</label>
+	    <valor>today</valor>
+          <help>Fecha movimiento</help>
+        </field>
+-->
+        <field id="anio" deshabilitado="false">
+          <valor eval="true">date('Y')</valor>
+          <operador>=</operador>
+          <label modpos="nobr">Año</label>
+        </field>
+
+      <field id="ctbgrupo_id">
+	    <label>Grupo</label>
+	    <operador>=</operador>
+	</field>
+          <field id="ctbcentro_id"  modpos="nobr" deshabilitado="false" noshow="true">
+	    <label>Centro de costos</label>
+	  </field>
+      <field id="cuenta_contable" deshabilitado="false" colspan="4">
+        <label>Codigo cuenta</label>
+	    <operador>=</operador>
+	    <detalle>cuenta_id</detalle>
+      </field>
+      <field id="id_regcuenta" copia="prov_id" colspan="4">
+        <label>Proveedor</label>
+	    <operador>=</operador>
+      </field>
+<!--
+      <field id="logregion_id" tabla="REG_MOVIMIENTOS" deshabilitado="false">
+        <label modpos="nobr">Región</label>
+        <help>Región de Logistica</help>
+	    <operador>=</operador>
+      </field>
+-->
+      <field id="nombre_cuenta2"  deshabilitado="true" modpos="nobr">
+      </field>
+
+      <field id="prov_id"  deshabilitado="true">
+      </field>
+
+<!--
+      <field id="estcod" local="true">
+	    <label>Prov. NO Influye Costo</label>
+	    <operador>=</operador>
+      </field>
+-->
+      </filters>
+
+      <fieldGroup>
+
+      <field id="ctbgrupo_id" tabla="CTB_CUENTA_GRUPO" noshow="true" multiple="true">
+	    <helper id="CTB_GRUPO_REPORTE" type="combo">
+		<field id="id_ctbgrupo" />
+		<field id="nombre_grupo_reporte" />
+	    </helper>
+      </field>
+
+      <field id="estcod" tabla="REG_CUENTA" noshow="true" >
+	    <expression having="false">ifnull(estcod, 0)</expression>
+	<condicion operador="=">0</condicion>
+	<tipo>check</tipo>
+      </field>
+      <field id="id_regcuenta" tabla="REG_CUENTA" noshow="true" multiple="true">
+        <label>Proveedor</label>
+        <helper type="combo" xml="regcuenta_simple_qry.xml" dir="/ayudas" empty="true" >
+	    <field id="nombre_cuenta2" noshow="true">
+		<expression>nombre_cuenta</expression>
+		<detalle>nombre_cuenta2</detalle>
+	    </field>
+	    <field id="subsistema_id">
+		<condicion operador="=">'01'</condicion>
+	    </field>
+	    <order>
+		<field id="nombre_cuenta2" />
+	    </order>
+	</helper>
+      </field>
+<!--
+      <field id="logregion_id">
+        <label modpos="nobr">Región</label>
+	    <expression having="false">REG_MOVIMIENTOS.logregion_id</expression>
+        <help>Región de Logistica</help>
+	<helper xml="log_region_crud.xml" dir="/logistica" type="combo" empty="true">
+	</helper>        
+      </field>
+-->
+      <field id="id_movimiento" noshow="true" />
+
+      <field id="concepto_id" noshow="true">
+        <helper type="combo" xml="ctbconcepto_qry.xml" dir="/ayudas" />
+        <label>Concepto</label>
+        <detalle>concepto_id</detalle>
+      </field>
+
+      <field id="fecha_movimiento" noshow="true" />
+
+      <field id="cuenta_contable" tabla="CTB_DETALLES"  multiple="true" noshow="true">
+	    <expression having="false">CTB_DETALLES.cuenta_id</expression>
+        <label>Cuenta</label>
+<!--        <helper type="external" xml="cuentas_habilitadas_qry.xml" dir="/ayudas" empty="true" /> -->
+
+        <helper type="combo" id="CTBCUENT"  dir="/ayudas" empty="true" >
+		<field id="ctbcod">
+		    <detalle>cuenta_id</detalle>
+		</field>
+		
+		<field id="nombres">
+		    <expression having="false">concat(ctbcod, ' ', ctbnom)</expression>
+		</field>
+		
+		<field id="ctbhab" noshow="true">
+			<condicion operador="=">1</condicion>
+		</field>
+			<!--
+		<field id="ejercicio_id" noshow="true">
+			<condicion operador="=">(select id_ejercicio from CTB_EJERCICIOS where activo = 1 limit 1)</condicion>
+		</field>
+			
+		<field id="tipo_id" noshow="true" />
+-->
+		<order>
+			<field id="nombres" />
+		</order>
+
+	</helper>
+
+        <detalle>cuenta_id</detalle>
+      </field>
+      <field id="nombre_cuenta2" local="true" noshow="true" style="color:red;font-weight:bold; ">
+	<size>60</size>
+      </field>
+
+      <field id="cuenta_id">
+	<expression>cuenta_id</expression>
+        <detalle>cuenta_id</detalle>
+	<tipo>integer</tipo>
+
+        <helper type="link" xml="movimientos_cuenta_expand.xml" width="95%">
+	    <parameter source="cuenta_id" target="cuenta_id"  />
+	    <parameter source="anio" target="anio" />
+	    <parameter source="ctbcentro_id" target="ctbcentro_id" operator="in"/>
+<!--	    <parameter source="regcuenta_id" target="id_regcuenta" operator="in"/> -->
+	</helper>
+      </field>
+
+      <field id="nombre_cuenta" >
+        <label>Nombre Cuenta</label>
+	<expression>ctbnom</expression>
+      </field>
+      <field id="xcentro_id" noZero="true" noshow="true">
+        <label>C.Costos</label>
+	<expression>count(distinct ifnull(ctbcentro_id, 0)) - 1</expression>
+
+        <helper type="link" xml="movimientos_cuenta_expand_por_centro.xml" width="95%">
+	    <parameter source="cuenta_id" 	target="cuenta_id" />
+	    <parameter source="anio" 		target="anio" />
+	    <parameter source="ctbcentro_id" 	target="ctbcentro_id" operator="in"/>
+	</helper>
+        <detalle>cuenta_id</detalle>
+      </field>
+
+<!--
+      <field id="debe" local="true" suma="true" noZero="true">
+        <expresion>sum(case when doh = 0 then importe else 0 end)</expresion>
+        <label>Debe</label>
+        <tipo>custom_numeric</tipo>
+      </field>
+      <field id="haber" local="true" suma="true" noZero="true">
+        <expresion>sum(case when doh = 1 then importe else 0 end)</expresion>
+        <label>Haber</label>
+        <tipo>custom_numeric</tipo>
+      </field>
+-->
+            
+          <field id="ctbcentro_id" modpos="nobr" _required="true" _noshow="true">
+	    <expression having="false">ctbcentro_id</expression>
+	    <label>Centro de costos</label>
+            <helper id="CTB_CENTROS"  type="combo" empty="true" multiple="true">
+<!--	    <option value="0">Sin Asignar</option> -->
+              <field id="id_ctbcentro" />
+              <field id="centro">
+                <expression>concat(referencia_centro,' ', nombre_centro)</expression>
+              </field> 
+            </helper>
+          </field>
+
+    </fieldGroup>
+    <fieldGroup style="text-align:right;">
+      <field id="prov_id"  deshabilitado="true" local="true" noshow="true">
+      </field>
+
+     <field id="ene"  suma="true" noZero="true" style="text-align:right;">
+	<attribute id="linkdes">nombre_cuenta</attribute>
+	<helper xml="movimientos_mensuales_agrup.xml" type="link" width="80%">
+	    <parameter source="1" target="mes" />
+	    <parameter source="anio" target="anio" />
+	    <parameter source="cuenta_id" target="cuenta_id" />
+<!--	    <parameter source="logregion_id" target="logregion_id" /> -->
+	    <parameter source="ctbcentro_id" target="ctbcentro_id" operator="in"/>
+	    <parameter source="prov_id" target="prov_id" /> 
+	</helper>
+        <expresion>sum( (case when month(CTB_MOVIMIENTOS.fecha_movimiento) = 1  then round(importe, 2) * (case when doh = 1 then -1 else 1 end) else 0 end))</expresion>
+        <label>Ene</label>
+        <tipo>custom_numeric</tipo>
+     </field>
+     <field id="feb"  suma="true" noZero="true">
+	<attribute id="linkdes">nombre_cuenta</attribute>
+	<helper xml="movimientos_mensuales_agrup.xml" type="link" width="80%">
+	    <parameter source="2" target="mes" />
+	    <parameter source="anio" target="anio" />
+<!--	    <parameter source="logregion_id" target="logregion_id" /> -->
+	    <parameter source="cuenta_id" target="cuenta_id" />
+	    <parameter source="ctbcentro_id" target="ctbcentro_id" operator="in"/> 
+	    <parameter source="prov_id" target="prov_id" /> 
+	</helper>
+        <expresion>sum( (case when month(CTB_MOVIMIENTOS.fecha_movimiento) = 2  then round(importe, 2) * (case when doh = 1 then -1 else 1 end) else 0 end))</expresion>
+        <label>Feb</label>
+        <tipo>custom_numeric</tipo>
+     </field>
+     <field id="mar"  suma="true" noZero="true">
+	<attribute id="linkdes">nombre_cuenta</attribute>
+	<helper xml="movimientos_mensuales_agrup.xml" type="link" width="80%">
+	    <parameter source="3" target="mes" />
+	    <parameter source="anio" target="anio" />
+	    <parameter source="cuenta_id" target="cuenta_id" />
+<!--	    <parameter source="logregion_id" target="logregion_id" /> -->
+	    <parameter source="ctbcentro_id" target="ctbcentro_id" operator="in"/> 
+	    <parameter source="prov_id" target="prov_id" /> 
+	</helper>
+        <expresion>sum( (case when month(CTB_MOVIMIENTOS.fecha_movimiento) = 3  then round(importe, 2) * (case when doh = 1 then -1 else 1 end) else 0 end))</expresion>
+        <label>Mar</label>
+        <tipo>custom_numeric</tipo>
+     </field>
+     <field id="Abr"  suma="true" noZero="true">
+	<attribute id="linkdes">nombre_cuenta</attribute>
+	<helper xml="movimientos_mensuales_agrup.xml" type="link" width="80%">
+	    <parameter source="4" target="mes" />
+	    <parameter source="anio" target="anio" />
+<!--	    <parameter source="logregion_id" target="logregion_id" /> -->
+	    <parameter source="cuenta_id" target="cuenta_id" />
+	    <parameter source="ctbcentro_id" target="ctbcentro_id" operator="in"/> 
+	    <parameter source="prov_id" target="prov_id" /> 
+	</helper>
+        <expresion>sum( (case when month(CTB_MOVIMIENTOS.fecha_movimiento) = 4  then round(importe, 2) * (case when doh = 1 then -1 else 1 end) else 0 end))</expresion>
+        <label>Abr</label>
+        <tipo>custom_numeric</tipo>
+     </field>
+
+     <field id="may"  suma="true" noZero="true">
+	<attribute id="linkdes">nombre_cuenta</attribute>
+	<helper xml="movimientos_mensuales_agrup.xml" type="link" width="80%">
+	    <parameter source="5" target="mes" />
+<!-- 	    <parameter source="logregion_id" target="logregion_id" /> -->
+	    <parameter source="anio" target="anio" />
+	    <parameter source="cuenta_id" target="cuenta_id" />
+	    <parameter source="ctbcentro_id" target="ctbcentro_id" operator="in"/> 
+	    <parameter source="prov_id" target="prov_id" /> 
+	</helper>
+        <expresion>sum( (case when month(CTB_MOVIMIENTOS.fecha_movimiento) = 5  then round(importe, 2) * (case when doh = 1 then -1 else 1 end) else 0 end))</expresion>
+        <label>May</label>
+        <tipo>custom_numeric</tipo>
+     </field>
+     <field id="jun"  suma="true" noZero="true">
+	<attribute id="linkdes">nombre_cuenta</attribute>
+	<helper xml="movimientos_mensuales_agrup.xml" type="link" width="80%">
+	    <parameter source="6" target="mes" />
+	    <parameter source="anio" target="anio" />
+<!--	    <parameter source="logregion_id" target="logregion_id" /> -->
+	    <parameter source="cuenta_id" target="cuenta_id" />
+	    <parameter source="ctbcentro_id" target="ctbcentro_id" operator="in"/> 
+	    <parameter source="prov_id" target="prov_id" /> 
+	</helper>
+        <expresion>sum( (case when month(CTB_MOVIMIENTOS.fecha_movimiento) = 6  then round(importe, 2) * (case when doh = 1 then -1 else 1 end) else 0 end))</expresion>
+        <label>Jun</label>
+        <tipo>custom_numeric</tipo>
+     </field>
+     <field id="jul"  suma="true" noZero="true">
+	<attribute id="linkdes">nombre_cuenta</attribute>
+	<helper xml="movimientos_mensuales_agrup.xml" type="link" width="80%">
+	    <parameter source="7" target="mes" />
+	    <parameter source="anio" target="anio" />
+<!--	    <parameter source="logregion_id" target="logregion_id" /> -->
+	    <parameter source="cuenta_id" target="cuenta_id" />
+	    <parameter source="ctbcentro_id" target="ctbcentro_id" operator="in"/> 
+	    <parameter source="prov_id" target="prov_id" /> 
+	</helper>
+        <expresion>sum( (case when month(CTB_MOVIMIENTOS.fecha_movimiento) = 7  then round(importe, 2) * (case when doh = 1 then -1 else 1 end) else 0 end))</expresion>
+        <label>Jul</label>
+        <tipo>custom_numeric</tipo>
+     </field>
+     <field id="ago"  suma="true" noZero="true">
+	<attribute id="linkdes">nombre_cuenta</attribute>
+	<helper xml="movimientos_mensuales_agrup.xml" type="link" width="80%">
+	    <parameter source="8" target="mes" />
+<!--	    <parameter source="logregion_id" target="logregion_id" /> -->
+	    <parameter source="anio" target="anio" />
+	    <parameter source="cuenta_id" target="cuenta_id" />
+	    <parameter source="ctbcentro_id" target="ctbcentro_id" operator="in" /> 
+	    <parameter source="prov_id" target="prov_id" /> 
+	</helper>
+        <expresion>sum( (case when month(CTB_MOVIMIENTOS.fecha_movimiento) = 8  then round(importe, 2) * (case when doh = 1 then -1 else 1 end) else 0 end))</expresion>
+        <label>Ago</label>
+        <tipo>custom_numeric</tipo>
+     </field>
+
+     <field id="sep"  suma="true" noZero="true">
+	<attribute id="linkdes">nombre_cuenta</attribute>
+	<helper xml="movimientos_mensuales_agrup.xml" type="link" width="80%">
+	    <parameter source="9" target="mes" />
+	    <parameter source="anio" target="anio" />
+<!--	    <parameter source="logregion_id" target="logregion_id" /> -->
+	    <parameter source="cuenta_id" target="cuenta_id" />
+	    <parameter source="ctbcentro_id" target="ctbcentro_id" operator="in"/> 
+	    <parameter source="prov_id" target="prov_id" /> 
+	</helper>
+        <expresion>sum( (case when month(CTB_MOVIMIENTOS.fecha_movimiento) = 9  then round(importe, 2) * (case when doh = 1 then -1 else 1 end) else 0 end))</expresion>
+        <label>Sep</label>
+        <tipo>custom_numeric</tipo>
+     </field>
+     <field id="oct"  suma="true" noZero="true">
+	<attribute id="linkdes">nombre_cuenta</attribute>
+	<helper xml="movimientos_mensuales_agrup.xml" type="link" width="80%">
+	    <parameter source="10" target="mes" />
+	    <parameter source="anio" target="anio" />
+<!--	    <parameter source="logregion_id" target="logregion_id" /> -->
+	    <parameter source="cuenta_id" target="cuenta_id" />
+	    <parameter source="ctbcentro_id" target="ctbcentro_id" operator="in"/> 
+	    <parameter source="prov_id" target="prov_id" /> 
+	</helper>
+        <expresion>sum( (case when month(CTB_MOVIMIENTOS.fecha_movimiento) = 10  then round(importe, 2) * (case when doh = 1 then -1 else 1 end) else 0 end))</expresion>
+        <label>Oct</label>
+        <tipo>custom_numeric</tipo>
+     </field>
+     <field id="nov"  suma="true" noZero="true">
+	<attribute id="linkdes">nombre_cuenta</attribute>
+	<helper xml="movimientos_mensuales_agrup.xml" type="link" width="80%">
+	    <parameter source="11" target="mes" />
+	    <parameter source="anio" target="anio" />
+<!--	    <parameter source="logregion_id" target="logregion_id" /> -->
+	    <parameter source="cuenta_id" target="cuenta_id" />
+	    <parameter source="ctbcentro_id" target="ctbcentro_id" operator="in"/> 
+	    <parameter source="prov_id" target="prov_id" /> 
+	</helper>
+        <expresion>sum( (case when month(CTB_MOVIMIENTOS.fecha_movimiento) = 11  then round(importe, 2) * (case when doh = 1 then -1 else 1 end) else 0 end))</expresion>
+        <label>Nov</label>
+        <tipo>custom_numeric</tipo>
+     </field>
+     <field id="dic"  suma="true" noZero="true">
+	<attribute id="linkdes">nombre_cuenta</attribute>
+	<helper xml="movimientos_mensuales_agrup.xml" type="link" width="80%">
+	    <parameter source="12" target="mes" />
+	    <parameter source="anio" target="anio" />
+	    <parameter source="cuenta_id" target="cuenta_id" />
+<!-- 	    <parameter source="logregion_id" target="logregion_id" /> -->
+	    <parameter source="ctbcentro_id" target="ctbcentro_id" operator="in"/> 
+	    <parameter source="prov_id" target="prov_id" /> 
+	</helper>
+        <expresion>sum( (case when month(CTB_MOVIMIENTOS.fecha_movimiento) = 12  then round(importe, 2) * (case when doh = 1 then -1 else 1 end) else 0 end))</expresion>
+        <label>Dic</label>
+        <tipo>custom_numeric</tipo>
+     </field>
+
+
+     <field id="diferencia" local="true" suma="true">
+	<attribute id="linkdes">nombre_cuenta</attribute>
+	<helper xml="movimientos_mensuales_agrup.xml" type="link" width="80%">
+	    <parameter source="anio" target="anio" />
+	    <parameter source="cuenta_id" target="cuenta_id" />
+	    <parameter source="ctbcentro_id" target="ctbcentro_id" operator="in"/> 
+	    <parameter source="prov_id" target="prov_id" /> 
+	</helper>
+
+        <expresion>sum( round(importe, 2) * (case when doh = 1 then -1 else 1 end))</expresion>
+        <label>Total</label>
+        <tipo>custom_numeric</tipo>
+     </field>
+    </fieldGroup>
+    <fieldGroup>
+      <field id="importancia">
+            <expresion>sum( round(importe, 2) * (case when doh = 1 then -1 else 1 end))</expresion>
+	    <tipo>grafico</tipo>
+      </field>
+
+        <field id="anio" deshabilitado="false" noshow="true">
+	    <expression having="false">year(CTB_MOVIMIENTOS.fecha_movimiento)</expression>
+          <label modpos="nobr">Año</label>
+	    <detalle>anio</detalle>
+        </field>
+<!--
+     <field id="ejercicio_id" noshow="true" required="true">
+	<helper type="combo" xml="ctbejercicios_crud.xml" empty="true" dir="/contabilidad/man/">
+	    <field id="activo" tipoOrden="DESC"/>
+            <field id="fecha_mov1">
+    		<expresion>DATE_FORMAT(comienza, '%d/%m/%Y')</expresion>
+    		<tipo>date</tipo>
+                <detalle>ejercicio_id</detalle>
+            </field>
+            <field id="fecha_mov2">
+                <expresion>DATE_FORMAT(finaliza, '%d/%m/%Y')</expresion>
+		<tipo>date</tipo>
+            </field>
+            <field id="finaliza">
+            </field>
+        </helper>
+        <label>Ejercicio</label>
+        <help>Ejercicio contable</help>
+        <detalle>ejercicio_id</detalle>
+     </field>
+
+      <field id="fecha_mov1" noshow="true" tabla="CTB_MOVIMIENTOS">
+        <tipo>date</tipo>
+        <expression having="false">CTB_MOVIMIENTOS.fecha_movimiento</expression>
+      </field>
+
+      <field id="fecha_mov2" noshow="true" tabla="CTB_MOVIMIENTOS">
+        <expression having="false">CTB_MOVIMIENTOS.fecha_movimiento</expression>
+        <tipo>date</tipo>
+      </field>
+-->
+     <field id="fecha_minima" noshow="true">
+        <expresion>min(CTB_MOVIMIENTOS.fecha_movimiento)</expresion>
+        <detalle>fecha_minima</detalle>
+        <tipo>date</tipo>
+     </field>
+
+     <field id="fecha_maxima" noshow="true">
+        <expresion>max(CTB_MOVIMIENTOS.fecha_movimiento)</expresion>
+        <detalle>fecha_maxima</detalle>
+        <tipo>date</tipo>
+     </field>
+
+    </fieldGroup>
+     <group>
+        <field id="cuenta_id" table="CTB_DETALLES"/>
+     </group>
+
+    </table>
+<!--
+    <join>
+      <table id="CTB_CONCEPTOS">
+        <field id="id_concepto">
+          <condicion operador="=">concepto_id</condicion>
+        </field>
+      </table>
+    </join>
+-->
+    <join tipo="left">
+      <table id="REG_MOVIMIENTOS">
+        <field id="id_regmovim">
+          <condicion operador="=">CTB_MOVIMIENTOS.regmovim_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join tipo="left">
+      <table id="REG_CUENTA">
+        <field id="id_regcuenta">
+          <condicion operador="=">REG_MOVIMIENTOS.regcuenta_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join>
+      <table id="CTB_DETALLES">
+        <field id="movimiento_id">
+          <condicion operador="=">id_movimiento</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join>
+      <table id="CTBCUENT">
+        <field id="ctbcod">
+          <condicion operador="=">CTB_DETALLES.cuenta_id</condicion>
+        </field>
+<!--
+        <field id="ejercicio_id">
+          <condicion operador="=">'10'</condicion>
+        </field>
+-->
+      </table>
+    </join>
+
+    <join>
+      <table id="CTB_CUENTA_GRUPO">
+        <field id="ctbcuenta_id">
+          <condicion operador="=">CTB_DETALLES.cuenta_id</condicion>
+        </field>
+      </table>
+    </join>
+    <join>
+      <table id="CTB_GRUPO_REPORTE">
+        <field id="id_ctbgrupo">
+          <condicion operador="=">ctbgrupo_id</condicion>
+        </field>
+      </table>
+    </join>
+  </consulta>
+</histrix>

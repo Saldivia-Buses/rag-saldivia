@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+  <title>Conceptos</title>
+  <obs></obs>
+  <consulta>
+    <table id="RH_CONCEPLIQU" label="Conceptos">
+      <field id="tipoLiq" noshow="true">
+        <label>Codigo</label>
+      </field>
+      <field id="nombre">
+        <label>Nombre</label>
+        <help>Nombre de Concepto </help>
+        <size>15</size>
+      </field>
+      <field id="descripcion">
+        <label>Nombre</label>
+        <help>Nombre de Concepto </help>
+        <size>15</size>
+      </field>
+      
+    </table> 
+  </consulta>
+</histrix>  

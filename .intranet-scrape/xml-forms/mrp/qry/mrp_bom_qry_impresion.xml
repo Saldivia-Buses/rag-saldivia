@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" PDFfontSize="8" showCantidad="false">
+    <title>Forecast Articulos</title>
+    <obs></obs>
+    <form >
+        <table id="STK_BOM" label="Forecast">
+
+
+            <field id="id_mrpordendetalle" local="true" noshow="true"/>
+
+                <field id="stkarticulopadre_id" _esClave="true" oculto="true" />
+
+                <field id="id_stkarticulo"  tabla="STK_ARTICULOS" PDFalign="C">
+                    <label>CODIGO</label>
+                </field>
+
+                <field id="nombre_articulo" tabla="STK_ARTICULOS">
+                    <label>NOMBRE</label>
+                </field>
+
+                <field id="cantidad" PDFcolWidth="17px" PDFalign="C">
+                    <label>X UNIDAD</label>
+                    <tipo>numeric</tipo>
+                </field>
+
+                <field id="WCantidad1" local="true" noshow="true"  > 
+	                    <label>Cantidad</label>
+						<tipo>decimal</tipo>
+                </field>
+
+                <field id="W1Cantidad1" local="true" _noshow="true"> 
+					<label>TOTAL</label>
+					<if exp="true">
+						<true>( WCantidad1 * cantidad )</true>
+						<false>0</false>
+					</if>
+					<tipo>numeric</tipo>
+				</field>
+
+                <field id="perdida" local="true" PDFcolWidth="15px" PDFalign="C">
+                    <label>PERDIDA</label>
+                      <expression>
+                        SELECT ifnull(STK_MOVIMIENTOS.cantidad,'0') from STK_MOVIMIENTOS
+                        where ordendetalle_id= '[__id_mrpordendetalle__]' and STK_MOVIMIENTOS.stkconcepto_id='9'
+                        and STK_MOVIMIENTOS.stkarticulo_id = STK_ARTICULOS.id_stkarticulo
+                        group by STK_MOVIMIENTOS.stkarticulo_id 
+                    </expression>
+                </field>
+
+                <field id="observaciones" local="true" PDFalign="C">
+                    <label>OBSERVACIONES</label>
+                   <expression>
+                        SELECT referencia from STK_MOVIMIENTOS
+                        where ordendetalle_id= '[__id_mrpordendetalle__]' and STK_MOVIMIENTOS.stkconcepto_id='9'
+                        and STK_MOVIMIENTOS.stkarticulo_id = STK_ARTICULOS.id_stkarticulo
+                        group by STK_MOVIMIENTOS.stkarticulo_id 
+                    </expression>
+
+                </field>
+
+
+            <group>
+                <field id="id_stkarticulo" ></field>
+            </group>
+
+        </table>
+
+            <join tipo="left">
+                <table id="STK_ARTICULOS">
+                    <field id="id_stkarticulo">
+                        <condicion operador="=">stkarticulohijo_id</condicion>
+                    </field>
+                </table>
+            </join>
+
+            <join tipo="left">
+                <table id="STK_STOCKACTUAL">
+                    <field id="stkarticulo_id">
+                        <condicion operador="=">id_stkarticulo</condicion>
+                    </field>
+                    <field id="stkdeposito_id">
+                        <condicion operador="=">1</condicion>
+                    </field>
+                </table>
+            </join>
+
+            <join tipo="left">
+                <table id="STK_MOVIMIENTOS">
+                    <field id="stkarticulo_id">
+                        <condicion operador="=">STK_ARTICULOS.id_stkarticulo</condicion>
+                    </field>
+                </table>
+            </join>
+
+    </form>
+</histrix>

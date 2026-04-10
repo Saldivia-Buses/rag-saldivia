@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<histrix tipo="chart">
+	<title>Marcas de Chasis</title>
+	<obs></obs>
+	<form >
+		<table id="GEN_CALENDAR" >
+			<title>Marcas de chasis</title>
+
+			<grafico id="Marcas de Asiento" >
+				<ancho>400</ancho>
+				<tipo>P</tipo>
+				<etiquetas>marcas</etiquetas> 
+				<datos>coches</datos>
+				<title>Cantidad de coches Terminados en la linea</title>
+				<subtitulo>x Marca de Asientos</subtitulo>
+			</grafico>		
+
+			<filters>
+				<field id="fecha">
+					<label>Desde</label>
+				    <valor eval="true">date('d/m/Y', mktime(0, 0, 0, date("m" ,strtotime('-12 month')) , 1, date("Y") -  1 ))</valor>
+					<operador>&gt;=</operador>
+				</field>
+				<field id="fecha">
+					<label>Hasta</label>
+<!--					<valor eval="true">date('d/m/Y', strtotime('-1 second', strtotime(date('Y-m-01'))))</valor> -->
+					    <valor>today</valor>
+
+					<operador>&lt;=</operador>
+				</field>
+<!--
+				<field id="marcod">
+					<label>Marca</label>
+					<operador>=</operador>
+				</field>
+   	-->						
+  			</filters>
+
+			<field id="mes">
+				<expression>month(fecha)</expression>
+				<label>Mes</label>
+				<options>
+					<option valor="1">Ene</option>
+					<option valor="2">Feb</option>
+					<option valor="3">Mar</option>
+					<option valor="4">Abr</option>
+					<option valor="5">May</option>
+					<option valor="6">Jun</option>
+					<option valor="7">Jul</option>
+					<option valor="8">Ago</option>
+					<option valor="9">Sep</option>
+					<option valor="10">Oct</option>
+					<option valor="11">Nov</option>
+					<option valor="12">Dic</option>
+				</options>
+				<tipo>varchar</tipo>
+			</field>
+
+			<field id="fecha" oculto="true">
+		<!--	<condicion operador="&gt;="> DATE_FORMAT(date_sub(date(now()) , interval 1 year) ,'%Y-%m-01') and GEN_CALENDAR.fecha &lt;= now()</condicion> -->
+				<tipo>date</tipo>
+			</field>
+
+			<field id="year" oculto="true">
+				<expression>year(fecha)</expression>
+			</field>
+
+			<field id="marasi" tabla="MARCAASI">
+			</field>
+
+			<field id="marcas">
+				<expression>MARCAASI.asides</expression>
+				<label>Marca</label>
+			</field>
+
+			<field id="coches" tipoOrden="DESC">
+				<expression>COUNT(*)</expression>
+				<label>Coches</label>
+				<tipo>numeric</tipo>
+			</field>
+
+
+			<group>
+				<field id="marasi"/>
+			</group>
+			<order>
+				<field id="coches" />
+			</order>
+		</table>
+	
+		<join tipo="left">
+			<table id="PEDCOTIZ">
+				<field id="terminacion">
+					<condicion operador="=">GEN_CALENDAR.fecha</condicion>
+				</field>
+			</table>
+		</join>
+<!--
+
+		<join tipo="left">
+			<table id="CHASIS">
+				<field id="nrocha">
+					<condicion operador="=">PEDCOTIZ.nrocha</condicion>
+				</field>
+			</table>
+		</join>
+-->
+		<join tipo="inner">
+			<table id="MARCAASI">
+				<field id="marasi">
+			    	<condicion operador="=">atributoUnidad(PEDCOTIZ.id, 'marasi')</condicion>
+				</field>
+			</table>
+		</join>  
+	</form>	   
+</histrix> 

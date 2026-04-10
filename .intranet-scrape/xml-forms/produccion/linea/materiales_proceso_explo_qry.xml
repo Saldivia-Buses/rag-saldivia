@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta">
+    <title>ARTICULOS POR SECTOR</title>
+    <obs></obs>
+    <form>
+        <table id="STK_ARTICULO_PROCESO_HIST_DETALLE" label="Rubros">
+
+	<filters>
+	  <field id="origen" tabla="STK_ARTICULOS">
+            <label>Origen</label>
+	    <operador>=</operador>
+        </field>
+
+
+	</filters>
+
+                <field id="id_artproceso_hist_detalle" esClave="true" noshow="true" />
+
+                <field id="artproceso_hist_id" noshow="true" />
+
+      <field id="proceso1">
+        <label>Proceso 1</label>
+      </field>
+
+      <field id="proceso2">
+        <label>Proceso 2</label>
+      </field>
+
+      <field id="proceso3">
+        <label>Proceso 3</label>
+      </field>
+
+      <field id="proceso4">
+        <label>Proceso 4</label>
+      </field>
+
+      <field id="artcod">
+        <label>Art.</label>
+        <help>Codigo de Articulo</help>
+      </field>
+
+      <field id="artdes">
+        <expression>artdes</expression>
+        <label>Descripcion</label>
+      </field>
+
+      <field id="origen" tabla="STK_COSTO_REPOSICION">
+        <label>Origen</label>
+	<helper type="combo">
+	    <option value=""></option>
+	    <option value="N">Nacional</option>
+	    <option value="I">Importado</option>
+	</helper>
+      </field>
+
+
+      <field id="multiplo" noZero="true">
+        <label>Mult</label>
+      </field>
+
+      <field id="cantidad" noZero="true">
+        <label>Cant.</label>
+        <tipo>decimal</tipo>
+      </field>
+
+      <field id="artuni">
+        <label>Unidad</label>
+        <help>Unidad de Stock</help>
+        <tabla_ex id="FSMUNIDS">
+          <field id="unicod" clave="true"></field>
+          <field id="uninom"></field>
+        </tabla_ex>
+        <tipo>integer</tipo>        
+    </field>
+
+      <field id="costo_reposicion" noZero="true">
+        <label style="font-weight:bold;">Costo.</label>
+        <tipo>numeric</tipo>
+      </field>
+
+		<field id="porcentaje_region">
+		    <label>% Region</label>
+                    <tipo>numeric</tipo>
+		</field>
+
+      <field id="parcial_reposicion" _suma="true" noZero="true">
+            <label>Parcial Repo</label>
+            <tipo>numeric</tipo>
+      </field>
+
+        <field id="costo_reposicion_desc" _suma="true" noZero="true">
+            <label>Costo Repo.c/Desc</label>
+            <tipo>numeric</tipo>
+        </field>
+        
+        <field id="parcial_reposicion_desc" suma="true" noZero="true">
+            <label>Costo Repo Parcial.c/Desc</label>
+        </field>
+        
+      <field id="ctbcod">
+        <label>Nro Cta</label>
+        <tipo>varchar</tipo>
+      </field>
+
+     <field id="ctbnom">
+        <label>CtaCtb</label>
+        <tipo>varchar</tipo>
+      </field>
+
+
+	<field id="costo_logistico">
+	    <label>costo Logístico</label>
+            <tipo>numeric</tipo>
+	</field>
+<!--
+      <field id="parcial"  local="true" noZero="true" _noshow="true">
+        <label modpos="nobr">Parcial</label>
+        <tipo>decimal</tipo>
+      </field>
+-->
+      <field id="parcial_clog"  noZero="true" _noshow="true">
+        <label modpos="nobr">Parcial + Log</label>
+        <tipo>decimal</tipo>
+      </field>
+<!--
+      <field id="recargo"   local="true" noZero="true" _noshow="true">
+        <label modpos="nobr">Recargo</label>
+        <tipo>decimal</tipo>
+      </field>
+-->
+      <field id="parcial_con_recargo" suma="true"   noZero="true">
+        <label modpos="nobr">Parcial c/Recargo</label>
+        <tipo>decimal</tipo>
+      </field>
+      <field id="parcial_recargo_log"   noZero="true" _noshow="true" suma="true">
+        <label modpos="nobr">Parcial c/Rec + Log</label>
+        <tipo>decimal</tipo>
+      </field>
+
+
+            <order>
+                <field id="id_artproceso_hist_detalle" />
+            </order>
+
+        </table>
+	<join tipo="left">
+	    <table id="STK_COSTO_REPOSICION">
+		<field id="stkarticulo_id">
+		    <condicion operador="=">STK_ARTICULO_PROCESO_HIST_DETALLE.artcod</condicion>
+		</field>
+	    </table>
+	</join>
+    </form>
+</histrix>

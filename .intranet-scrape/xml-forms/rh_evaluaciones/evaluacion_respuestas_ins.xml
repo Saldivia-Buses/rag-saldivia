@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="insert">
+    <title>Evaluación</title>
+    <obs></obs>
+    <form>
+        <table id="RH_EVALUACION_RESPUESTAS">
+
+            <field id="rhevaluacion_id"		lastId="evaluacion_ins.xml" />
+            <field id="rhevaluaciongrupo_id"	id_temp="id_rhevaluaciongrupo"/>
+            <field id="rhevaluacionvalor_id"	id_temp="valor" />
+            <field id="aporte"			id_temp="aporte" />
+
+        </table>
+    </form>
+</histrix>

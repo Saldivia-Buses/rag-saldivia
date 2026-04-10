@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="update" limit="0">
+	<title></title>
+	<obs></obs>
+	<form>
+		<table id="REG_MOVIMIENTOS"  idCampoCond="porcentaje_incremento">
+			<field id="id_regmovim" esClave="true" lastId="mos_rrule_movimientos_ins.xml" />
+
+			<field id="mar_movimiento">
+				<valor>1</valor>
+				<tipo>integer</tipo>
+			</field>
+
+			<field id="novedades_movimiento" id_temp="porcentaje_incremento" />
+
+		</table>
+	</form>
+</histrix>
+

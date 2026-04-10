@@ -1,0 +1,340 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="ing" preloadData="false" procesa="false" tooltip="false" showCantidad="false" updateTotals="true" subtipo="vertical" 
+	unserializeParent="false" preventDuplication="true" path="/fotos/">
+	<title/>
+	<obs/>
+	<form>
+		<table id="REG_DETALLES" label="Nota de Pedido">
+
+			<validation>
+				<condition><![CDATA[ codigo_detalle + 0 == 0]]></condition>
+				<message>Debe ingresar un articulo</message>
+			</validation>
+
+			<validation optional="true">
+				<condition><![CDATA[cantidadStk + 0 < cantidad_detalle + 0 ]]></condition>
+				<message>La cantidad excede el stock disponible</message>
+			</validation>
+
+			<importar xml="presupuesto_select.xml" dir="/clientes/ing/mos/" label="Importar" titulo="Importar" />
+
+			<movimientos>
+				<relacion id="ped_regdetalles_ins.xml"/>
+    			<relacion id="ped_stkmovimientos_ins.xml"/>
+			</movimientos>
+
+
+			<fieldGroup Formstyle="vertical-align:middle;" >
+
+					<field id="id_regdetalle" noshow="true">
+						<condicion operador="=">-1</condicion>
+					</field>
+
+					<field id="_ORDEN" local="true" noshow="true"/>
+
+					<field id="stock_minimo" local="true" noshow="true">
+						<label>Stock minimo</label>
+					</field>
+
+					<field id="stock_maximo" local="true" noshow="true">
+						<label>Stock maximo</label>
+					</field>
+
+					<field id="precio_costo" local="true" noshow="true">
+						<label>precio_costo</label>
+					</field>
+
+					<field id="stkunidad_id" local="true"  noshow="true" />
+
+				    <field id="stkfamilia_id" local="true"  noshow="true"/>
+
+					<field id="stkrubro_id" local="true"  noshow="true"/>
+
+					<field id="stkarticulo_id" noshow="true" modpos="nobr">
+						<label>stkartid</label>
+							<if exp="true">
+								<true>codigo_detalle</true>
+								<false>0</false>
+							</if>
+					</field>
+					
+					<field id="codigo_detalle" required="true" preventLoop="true">
+						<label>Codigo</label>
+						<helper type="external" xml="stkarticulo_mos.xml" dir="/ayudas">
+							<field id="regcuenta_id" local="true" noshow="true"/>
+							<field id="fecha_movimiento" local="true" noshow="true">
+								<tipo>date</tipo>
+								<valor>today</valor>
+							</field>
+							<field id="ctbcuenta_stk_iva_id" noshow="true">
+								<expression>GEN_IVA_ALICUOTAS.cuenta_debito_id</expression>
+								<detalle>ctbcuenta_stk_iva_id</detalle>
+							</field>
+						</helper>
+						<actualiza>
+						    <field id="color_id" destino="stkarticulo_id" />
+						</actualiza>
+						<size>15</size>
+					</field>
+
+					<field id="descripcion_detalle">
+						<label modpos="nobr" colspan="4">Descripción</label>
+						<size>65</size>
+					</field>
+
+					<field id="cantidad_detalle" suma="true" forceCellValue="true" validRow="true" validar="true" errorMessage="Debe ingresar una cantidad">
+						<label modpos="nobr">Unidades</label>
+						<valor default="true">0</valor>
+						<size>5</size>
+						<tipo>integer</tipo>
+						<jseval fielddestino="neto_detalle"     actxml="false" suma="true">(precio_venta * cantidad_detalle).toFixed(2)</jseval>
+						<jseval fielddestino="micanpro"         actxml="false" total="true">cantidad_detalle</jseval>
+					</field>
+
+<!-- STOCK -->
+				<field id="cantidadStk">
+					<label modpos="nobr">Stock</label>
+					<expression>IFNULL((SELECT sum(cantidad_stock) FROM STK_STOCKACTUAL SA WHERE SA.stkarticulo_id= STK_ARTICULOS.id_stkarticulo and ((SA.stkdeposito_id = '[__stkdeposito_id__]' and '[__stkdeposito_id__]' != '' )  or  '[__stkdeposito_id__]' = ''  )),0)</expression>
+					<detalle>cantidadStk</detalle>
+					<tipo>decimal</tipo>
+				</field>
+				
+
+				<field id="alerta_stock_min" Formstyle="display:none;"  modpos="nobr" colstyle="color:red;font-weight:bold;text-align:right;">
+					<label>Stock</label>
+					<if exp="(stock_minimo + 0) &lt; (cantidad_detalle)">
+						<true> (stock_maximo != '') &amp;&amp; (stock_maximo &lt; cantidad_detalle) ?('Excede stock maximo'):'Excede stock minimo'</true>
+						<false>'OK'</false>
+					</if>
+				</field>
+
+<!-- / STOCK -->
+
+				<field id="precio_venta" local="true">
+					<label >Precio Unidad</label>
+					<jseval fielddestino="neto_detalle" actxml="false" suma="true">(precio_venta * cantidad_detalle).toFixed(2)</jseval>
+				</field>
+
+				<field id="venta_final" local="true" noshow="true" />
+
+				<field id="precio_unit_final" noshow="true" />
+
+				<field id="neto_detalle" suma="true" Formstyle="display:none;">
+					<label modpos="nobr">Subtotal</label>
+					<tipo>decimal</tipo>
+					<if exp="true">
+						<true>round((precio_venta + 0 ) * (cantidad_detalle + 0),2)</true>
+						<false>0</false>
+					</if>					
+					<jseval fielddestino="iva_detalle"         actxml="false">(neto_detalle *      (alicuota_iva / 100)).toFixed(2)</jseval>
+					<jseval fielddestino="total_detalle"       actxml="false">(neto_detalle * (1 + (alicuota_iva / 100))).toFixed(2)</jseval>
+					<jseval fielddestino="subtotal_movimiento" actxml="false" total="true">neto_detalle</jseval>
+					<jseval fielddestino="precio_unit_final"   actxml="false">(total_detalle / cantidad_detalle).toFixed(2)</jseval>
+				</field>
+				
+				<field id="alicuota_iva" deshabilitado="false">
+					<label modpos="nobr">Alic.</label>
+					<tipo>decimal</tipo>
+					<helper type="combo" xml="genalicuotas_qry.xml" dir="/ayudas" empty="true" />				
+					<valor>21.00</valor>
+					<jseval fielddestino="iva_detalle"   actxml="false">neto_detalle *      (alicuota_iva / 100)</jseval>
+					<jseval fielddestino="total_detalle" actxml="false">neto_detalle * (1 + (alicuota_iva / 100))</jseval>
+				</field>
+				
+				<field id="iva_detalle" suma="true">
+					<label modpos="nobr">IVA</label>
+					<valor default="true">0.00</valor>
+					<tipo>decimal</tipo>
+					<if exp="true">
+						<true>round((neto_detalle + 0 ) * (alicuota_iva + 0) / 100,2)</true>
+						<false>0</false>
+					</if>
+					<jseval fielddestino="total_detalle"  actxml="false">neto_detalle * (1 + (alicuota_iva / 100))</jseval>
+					<jseval fielddestino="mi_importe_iva" actxml="false" total="true">iva_detalle</jseval>
+				</field>			
+
+				<field id="total_detalle" suma="true" deshabilitado="true">
+					<label modpos="nobr">Total</label>
+					<tipo>decimal</tipo>
+					<detalle>importe_movimiento</detalle>
+					<if exp="true">
+						<true>neto_detalle + iva_detalle</true>
+						<false>0</false>
+					</if>
+				</field>
+
+		</fieldGroup>
+
+
+		<!-- COMBOS / PRECIOS X BULTO / PACKS ETC NO SE USA POR EL MOMENTO -->
+		<fieldGroup local="true" noshow="true">
+		<if> return false; </if>
+
+				<field id="cantidadCbo">
+					<label modpos="nobr">Disponible Cbo</label>
+				</field>
+
+				<field id="no_dto_global" suma="true">
+					<label modpos="nobr"/>
+					<jseval fielddestino="mi_dto_global" total="true" actxml="false">no_dto_global</jseval>
+					<tipo>check</tipo>
+				</field>
+
+				<field id="noEsCombo" activa="true">
+					<label modpos="nobr"/>
+					<valor>1</valor>
+					<tipo>check</tipo>
+				</field>
+
+				<field id="ocultaBoton">
+					<if exp="noEsCombo">
+						<true>'true'</true>
+						<false>'false'</false>
+					</if>
+				</field>
+
+				<!-- <field id="alerta_stock">
+					<label modpos="nobr" style="text-decoration:blink;color:red;font-weight:bold;">Stock</label>
+					<if exp="(cantidadStk + 0) &lt; cantidad_detalle &amp;&amp; 'ocultaBoton' == 'true'">
+						<true>'Excede Stock disponible'</true>
+						<false>''</false>
+					</if>
+				</field> -->
+
+				<field id="grabaCombo" noshow="true">
+					<if exp="noEsCombo + 0 == 1">
+						<true>'false'</true>
+						<false>'true'</false>
+					</if>
+				</field>
+
+				<field id="cantidad_pack" local="true" noshow="true">
+					<label>Unidades x pallet</label>
+				</field>
+
+				<field id="bultos" local="true" preventLoop="true">
+					<label>Cajas</label>
+					<jseval campodestino="cantidad_detalle" actxml="false">(bultos + 0 != 0 ? bultos * cantidad_pack : cantidad_detalle)</jseval>
+					<tipo>integer</tipo>
+					<jsfunction event="onkeyup">jQuery('input[name=cantidad_detalle]', $(this).closest('div')).prop('disabled', (this.value != 0) ); $('[name=dto_disable]', $(this).closest('div')).attr('checked', $('[name=dto_cantidad]', $(this).closest('div')).val() - $('input[name=cantidad_detalle]', $(this).closest('div')).val() &gt; 0 || $('[name=dto_cantidad]', $(this).closest('div')).val() == 0 ).change();</jsfunction>
+					<jsfunction event="onclick">jQuery('input[name=cantidad_detalle]', $(this).closest('div')).prop('disabled', (this.value != 0) ); $('[name=dto_disable]', $(this).closest('div')).attr('checked', $('[name=dto_cantidad]', $(this).closest('div')).val() - $('input[name=cantidad_detalle]', $(this).closest('div')).val() &gt; 0 || $('[name=dto_cantidad]', $(this).closest('div')).val() == 0 ).change();</jsfunction>
+					<jsfunction event="blur"   >jQuery('input[name=cantidad_detalle]', $(this).closest('div')).prop('disabled', (this.value != 0) ); $('[name=dto_disable]', $(this).closest('div')).attr('checked', $('[name=dto_cantidad]', $(this).closest('div')).val() - $('input[name=cantidad_detalle]', $(this).closest('div')).val() &gt; 0 || $('[name=dto_cantidad]', $(this).closest('div')).val() == 0 ).change();</jsfunction>
+				</field>
+
+				<field id="cantidad_detalle" suma="true" forceCellValue="true" validRow="true" validar="true" errorMessage="Debe ingresar una cantidad" activador="noEsCombo">
+					<label modpos="nobr">Unidades</label>
+					<tipo>integer</tipo>
+					<valor default="true">0</valor>
+					<size>5</size>
+					<jseval fielddestino="subtotal0" actxml="false" suma="true">precio_venta - (precio_venta * porcentaje_desc0 / 100)</jseval>
+					<jseval fielddestino="subtotal1" actxml="false" suma="true">subtotal0    - (subtotal0    * porcentaje_desc1 / 100)</jseval>
+					<jseval fielddestino="neto_detalle" actxml="false" suma="true">subtotal1 * cantidad_detalle</jseval>
+					<jseval fielddestino="porcentaje_desc1" actxml="false"><![CDATA[ ( dto_porc entaje != 0 && porcentaje_desc1 == 0) ? ( dto_cantidad <= cantidad_detalle  ? dto_porcentaje : 0 ) : porcentaje_desc1 ]]></jseval>
+					<jseval fielddestino="micanpro" actxml="false" total="true">cantidad_detalle</jseval>
+					<jsfunction event="change">
+							jQuery('input[name=bultos]', $(this).closest('div')).prop('disabled', (this.value != 0) ); $('[name=dto_disable]', $(this).closest('div')).attr('checked', $('[name=dto_cantidad]', $(this).closest('div')).val() == 0 || $('[name=dto_cantidad]', $(this).closest('div')).val() - $(this).val() &gt; 0 ).change();
+					</jsfunction>
+					<jsfunction event="onkeyup">
+						jQuery('input[name=bultos]', $(this).closest('div')).prop('disabled', (this.value != 0) ); $('[name=dto_disable]', $(this).closest('div')).attr('checked', $('[name=dto_cantidad]', $(this).closest('div')).val() == 0 || $('[name=dto_cantidad]', $(this).closest('div')).val() - $(this).val() &gt; 0 ).change();
+					</jsfunction>
+				</field>
+				
+				<field id="dto_disable" activa="true" deshabilitado="true" noshow="true" local="true">
+					<tipo>check</tipo>
+					<valor>1</valor>
+				</field>
+				
+
+				<!-- DESCUENTOS PROMOCIONES Y COMBOS -->
+				<field id="Det" ventint="true" Formstyle="display:none;">
+					<label colspan="10">Det</label>
+					<if exp="'ocultaBoton' != 'true'">
+						<true>'mos_combo_detalle_form.xml'</true>
+						<false>''</false>
+					</if>
+					<importar label="Composición" dir="/clientes/ing">
+						<field id="stkarticulo_id"/>
+						<field id="cantidad_detalle"/>
+						<field id="_ORDEN"/>
+					</importar>
+				</field>
+				
+				<field id="desc100" local="true" _desactiva="true" colstyle="display:none;" activador="dto_disable">
+					<tipo>check</tipo>
+					<label>Sin Cargo</label>
+					<jseval campodestino="porcentaje_desc0" actxml="false">(desc100 == 1)?100:0</jseval>
+				</field>
+				<!-- Descuento por articulo en promocion -->
+				<field id="dto_porcentaje" local="true" noshow="true">
+					<label>Dto.Prom.Porcentaje</label>
+				</field>
+				<field id="dto_cantidad" local="true" noshow="true">
+					<label>Dto.Cantidad</label>
+				</field>
+				<!-- 1er Descuento -->
+				<field id="porcentaje_auxdesc0" deshabilitado="true" noshow="true"/>
+				<field id="porcentaje_desc0" activador="dto_disable" local="true">
+					<label modpos="nobr">% Desc</label>
+					<valor default="true">0.00</valor>
+					<tipo>decimal</tipo>
+					<jseval>porcentaje_desc0 &lt;= max_desc1 || (porcentaje_desc0 == 100 &amp;&amp; desc100 == 1 || dto_disable == 0)</jseval>
+					<jseval fielddestino="subtotal0" actxml="false" suma="true">precio_venta - (precio_venta * porcentaje_desc0 / 100)</jseval>
+					<jseval fielddestino="subtotal1" actxml="false" suma="true">subtotal0    - (subtotal0    * porcentaje_desc1 / 100)</jseval>
+					<jseval fielddestino="neto_detalle" actxml="false" suma="true">subtotal1 * cantidad_detalle</jseval>
+					<if exp="desc100 == 1">
+						<true>100</true>
+						<false>porcentaje_desc0 + 0</false>
+					</if>
+				</field>
+				<!-- 2do Descuento -->
+				<field id="porcentaje_auxdesc1" deshabilitado="true" noshow="true"/>
+				<field id="porcentaje_desc1" activador="dto_disable">
+					<label modpos="nobr">% Desc Adc</label>
+					<tipo>decimal</tipo>
+					<valor default="true">0.00</valor>
+					<jseval>(porcentaje_desc1 &lt;= max_desc2 &amp;&amp; (porcentaje_desc0 + porcentaje_desc1 &gt; porcentaje_desc1 || porcentaje_desc1 == 0)) || (porcentaje_desc1 == dto_porcentaje) || dto_disable == 0</jseval>
+					<jseval fielddestino="subtotal1" actxml="false" suma="true">subtotal0 - (subtotal0 * porcentaje_desc1 / 100)</jseval>
+					<jseval fielddestino="neto_detalle" actxml="false" suma="true">subtotal1 * cantidad_detalle</jseval>
+				</field>
+				
+				<!-- Subtotales -->
+				
+				<field id="subtotal0" local="true" deshabilitado="true" noshow="true">
+					<tipo>decimal</tipo>
+					<if exp="true">
+						<true>((precio_venta + 0 ) - ((precio_venta + 0 )  * (porcentaje_desc0 + 0 ) / 100 ))</true>
+						<false>0</false>
+					</if>
+				</field>
+				<field id="subtotal1" local="true" deshabilitado="true" noshow="true">
+					<tipo>decimal</tipo>
+					<if exp="true">
+						<true>((subtotal0 + 0 ) - ((subtotal0 + 0 )  * (porcentaje_desc1 + 0 ) / 100 ))</true>
+						<false>0</false>
+					</if>
+				</field>
+		</fieldGroup>
+		<!-- FIN -->
+
+				
+		<fieldGroup id="contabilidad" noshow="true" local="true">
+					<field id="ctbcuenta_stk_id" />
+					<field id="ctbcuenta_stk_iva_id" />
+		</fieldGroup>
+
+		</table>
+		
+        <tempTable id="TEMPTABLENAME">
+            <row>
+                <field id="cuenta_id">ctbcuenta_stk_id</field>
+                <field id="doh">1</field>
+                <field id="haber">neto_detalle</field>
+            </row>
+            <row>
+                <field id="cuenta_id">ctbcuenta_stk_iva_id</field>
+                <field id="doh">1</field>
+                <field id="haber">iva_detalle</field>
+            </row>
+        </tempTable>
+	</form>
+</histrix>

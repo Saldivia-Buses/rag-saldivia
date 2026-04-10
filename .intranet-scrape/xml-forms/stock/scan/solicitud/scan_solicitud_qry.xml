@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" >
+  <title>Scan</title>
+  <obs/>
+  <form >
+    <table id="STK_SOLICITUD_STKARTICULO" label="Scan">
+	<filters>
+            <field id="stklocacion_id">
+	      <label>Locacion</label>
+	     <operador>=</operador>
+	    </field>
+            <field id="stkarticulo_id" >
+        	<label>Articulo</label>
+		<operador>like</operador>
+    	    </field>
+	    <field id="estado" deshabilitado="false">
+		<label>Estado</label>
+		<operador>=</operador>
+	    </field>
+
+	</filters>
+
+
+      <fieldGroup>
+	    <field id="estado" display="none">
+		<expression having="false">fecha_cierre != '0000-00-00'</expression>
+		<label>Estado</label>
+		<helper type="combo">
+		    <option value="0">Abierto</option>
+		    <option value="1">Cerrado</option>
+		</helper>
+	    </field>
+
+	<field id="id_stksolicitud" autoinc="true" noshow="true">
+	</field>
+
+        <field id="stkarticulo_id" >
+          <label>Articulo</label>
+	<!--
+          <helper id="STK_ARTICULOS" type="external">
+            <field id="id_stkarticulo">
+            </field>
+            <field id="nombre_articulo" >
+              <detalle>nombre_articulo</detalle>
+            </field>
+            <field id="unidad_id" >
+              <expression>unidad_uso_id</expression>
+              <detalle>unidad_id</detalle>
+            </field>
+          </helper>
+-->
+        </field>
+        <field id="nombre_articulo" deshabilitado="true" tabla="STK_ARTICULO">
+	    <label>Descripción</label>
+	    <expression>nombre_articulo</expression>
+          <helper xml="info_articulo_qry.xml"  type="link">
+		<parameter source="id_stksolicitud" target="id_stksolicitud" />
+	    </helper>
+
+        </field>
+
+
+        <field id="stklocacion_id" _local="true" _noshow="true" deshabilitado="true">
+          <label>Locacion</label>
+          <helper id="STK_LOCACION" type="combo" empty="true">
+            <field id="id_stklocacion">
+            </field>
+            <field id="codigo_locacion" >
+              <detalle>codigo_locacion</detalle>
+            </field>
+            <field id="stkdeposito_id">
+              <detalle>stkdeposito_id</detalle>
+            </field>
+
+
+          </helper>
+        </field>
+
+        <field id="stkdeposito_id" noshow="true">
+        </field>
+
+	<field id="fecha_solicitud">
+	    <label>fecha</label>
+	    <tipo>date</tipo>
+	</field>
+        <field id="cantidad_solicitud" suma="true">
+          <label>Cantidad</label>
+          <tipo>integer</tipo>
+          <valor>1</valor>
+        </field>
+	<field id="user_id" valauto="true" noshow="true">
+	    <valor eval="true">$_SESSION['idUser']</valor>
+	</field>
+<!--
+        <field id="codigo_locacion" deshabilitado="true">
+          
+        </field>
+-->
+<!--
+        <field id="unidad_id"   noshow="true"/>
+-->
+      </fieldGroup>
+
+    </table>
+    <join>
+	<table id="STK_ARTICULOS">
+	    <field id="id_stkarticulo">
+		<condicion operador="=">stkarticulo_id</condicion>
+	    </field>
+	</table>
+    </join>
+  </form>
+</histrix>

@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="abm">
+    <title>Marcar Ordenes de Producción</title>
+    <obs></obs>
+    <form>
+        <table id="MRP_ORDEN_PRODUCCION" label="Marcar Ordenes de Producción">
+            <filters>
+                <field id="mrpestado_id" >
+                    <label>Estado </label>
+                    <help>Estado Actual</help>
+                    <options>
+                        <option valor="0">Pendiente</option>
+                        <option valor="1">Cumplida</option>
+                        <option valor="2">Anulada</option>
+                    </options>
+                    <operador>=</operador>
+                    <valor>0</valor>
+                </field>
+            </filters>
+
+            <field id="fecha_orden" _deshabilitado="true">
+                <label>Fecha</label>
+                <help>Fecha de Orden de Fabricación</help>
+            </field>
+            <field id="hoy" noshow="true">
+                <expresion>now()</expresion>
+                <detalle>fecha_cierre</detalle>
+            </field>
+
+            <field id="id_mrporden" deshabilitado="true">
+                <label>Nro</label>
+                <help>Numero de Orden de Fabricación</help>
+
+                <detalle>id_mrporden</detalle>
+                <detalle>mrporden_id</detalle>
+            </field>
+            <!--
+            <field id="rhpersonal_nombre"  tabla="RH_PERSONAL" deshabilitado="true" >
+                <label>Empleado</label>
+                <expresion>concat(nombre_personal," ",apellido_personal)</expresion>
+                <help >Empleado responsable de la Orden de Producción</help>
+                <size>60</size>
+            </field>
+            -->
+            <field id="rhpersonal_id" >
+                     <helper type="combo" xml="rhpersonal_qry.xml" dir="/ayudas" empty="true"/>
+                     <label>Empleado</label>
+                     <help >Empleado responsable de la Orden de Producción</help>
+                    <actualiza>
+                        <field id="codemp"></field>
+                    </actualiza>
+                </field>
+                
+                <field id="mrpestado_id">
+                    <label>Estado </label>
+                    <help>Estado Actual</help>
+                    <options>
+                        <option valor="0">Pendiente</option>
+                        <option valor="1">Cumplida</option>
+                        <option valor="2">Anulada</option>
+                    </options>
+                    <operador>=</operador>
+                    <valor>0</valor>
+                </field>
+            <field id="orden_comentarios" >
+        	<label>Comentarios</label>
+            </field>
+                
+            <order>
+                <field id="fecha_orden"></field>
+            </order>
+        </table>
+	<join tipo="left">
+	    <table id="RH_PERSONAL">
+		<field id="id_rhpersonal">
+		    <condicion operador="=">rhpersonal_id</condicion>
+		</field>
+	    </table>
+	</join>
+
+
+    </form>
+</histrix>

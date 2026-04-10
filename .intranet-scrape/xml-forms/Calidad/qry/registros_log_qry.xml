@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="consulta" paginar="100">
+<title>HISTORICO</title>
+<obs></obs>
+<form >
+	<table id="HTXLOG" label="Historico">
+
+	<field id="xml_consulta" noshow="true" local="true" />
+
+	<field id="xmlprog" oculto="true">
+		<condicion operador="=">'[__xml_consulta__]'</condicion>
+	</field>
+
+	<field id="id_registro" noshow="true" local="true" />
+
+	<field id="tipo_registro" noshow="true" local="true" />
+	
+	<field id="nombre_id_registro" noshow="true" local="true" />				
+	<field id="maxfec" local="true" noshow="true" print="false">
+		<label>1</label>
+		<expression>case when fecha = DATE(NOW()) then 'font-size:14px;color:red;font-weight:bold;' 
+		when fecha = DATE(NOW()) -1  then 'font-size:14px;color:blue;font-weight:bold;' 
+		end</expression>
+		<tipo>varchar</tipo>
+    </field>
+
+	<field id="fecha2" _noshow="true" style="text-align:left;"  tipoOrden="DESC">
+            <expression>fecha</expression>
+	     <size>30</size>
+		 <label getStyle="maxfec">Fecha</label>
+		 <tipo>date</tipo>
+	</field>
+	<field id="idLog" noshow="true"  tipoOrden="DESC">
+	</field>
+	
+	<field id="hora2" _noshow="true" style="text-align:right;text-indent:15px;" >
+	    <expression>TIME_FORMAT(hora, '%h:%i')</expression>
+	    <label>hora</label>
+	    <size>15</size>
+	</field>
+	
+	<field id="color" deshabilitado="true" clasefila="true" noshow="true">
+		<expression>case when fecha = DATE(NOW()) then 'resaltado font17' 
+                        when fecha = DATE(NOW()) - 1 then 'resaltadoVioleta font14' else '' end </expression>
+	</field>
+			
+	<field id="usuario" style="text-align:center;text-indent:10px;">
+	<label>Usuario</label>
+		<expression>concat(HTXUSERS.Nombre,' ',HTXUSERS.apellido)</expression>
+	</field>
+						
+	<field id="tipo" noshow="true">
+		<label>Acción</label>
+		<options>
+			<option valor="INSERT"> Creó</option>
+			<option valor="UPDATE"> Modificó </option>
+			<option valor="DELETE"> Borró</option>
+		</options>
+	</field>
+
+	<field id="obs" noshow="true">
+		<!--<condicion operador="like"><![CDATA[concat('%', '[__nombre_id_registro__]', ': ', '\'' , [__id_registro__], '\'','%')]]></condicion>-->
+		<condicion operador="like">case when '[__tipo_registro__]' = 'varchar' then <![CDATA[concat('%', '[__nombre_id_registro__]', ': ', '\'' , [__id_registro__], '\'','%')]]> else
+			<![CDATA[concat('%', '[__nombre_id_registro__]', ': ', [__id_registro__], '%')]]> end</condicion>
+	</field>
+
+	<field id="observ" noshow="true">
+		<expression>@observ:= REPLACE( obs, concat('[__nombre_id_registro__]', ': ', REPLACE([__id_registro__], "'", '' )) , '' )</expression>
+	</field>
+
+	<field id="acc">
+		<label>Descripcion</label>
+		<expression>case when tipo="UPDATE" then CONCAT('&lt;b&gt; ', campo, '&lt;/b&gt;: ' , valorNuevoTxt ) else 
+			CONCAT('&lt;b&gt;', REPLACE(REPLACE( @observ , ', ', '&lt;br/&gt;&lt;b&gt; '), ': ', '&lt;/b&gt;:' )) end</expression> 
+		<tipo>varchar</tipo>
+		<size>180</size>
+	</field>
+
+	<order>
+		<field id="idLog" tipoOrden="DESC"/>
+	</order>			
+</table>
+
+	<join tipo="left">
+		<table id="HTXUSERS">
+			<field id="login">
+				<condicion operador="=">HTXLOG.usuario</condicion>
+			</field>
+		</table>
+	</join>
+
+</form>	   
+</histrix> 

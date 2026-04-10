@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta">
+	<title>Asiento Resumen de Ventas</title>
+	<obs/>
+	<form >
+		<table id="IVAVENTAS" label="Asiento Resumen de Ventas">
+
+			<field id="codcom" oculto="true">
+				<label>cod</label>
+<!--				<condicion operador="&lt;=">3</condicion> -->
+				
+			</field> 
+		<!--	<field id="regdoh" tabla="CTBREGIS" oculto="true"/> -->
+		
+			<field id="fecregmin" noshow="true">
+			    <expression having="false">fecreg</expression>
+			</field>
+			<field id="fecregmax" noshow="true">
+			    <expression having="false">fecreg</expression>
+			</field>
+			<field id="fecreg" oculto="true">
+				<label>Fecha </label>
+			</field>
+			<field id="feciva" oculto="true">
+				<label>Fecha</label>
+			</field>			
+			<field id="ctbcod" tabla="CTBREGIS" >
+				<label>Cuenta</label>
+				<tipo>varchar</tipo>
+			</field>
+			<field id="cuenta">
+				<helper id="minuta_fecha_cuenta.xml" type="link" >
+				    <parameter source="ctbcod" target="ctbcod" />
+				    <parameter source="min" target="fecregmin" operador="&gt;=" />
+				    <parameter source="max" target="fecregmin" operador="&lt;=" />
+				</helper>
+				<expression>ctbnom</expression>
+				<label>Cuenta Contable</label>
+				<help>Codigo de Cuenta Contable</help>
+				<tipo>varchar</tipo>
+			</field> 
+        
+        <field id="nronpv" deshabilitado="false">
+          <label>Npv</label>
+          <help>
+          </help>
+	    <expression having="false">LPAD(IVAVENTAS.nronpv,4,'0')</expression>
+        </field>
+        <field id="regmin" tabla="CCTMOVIM" _noshow="true">
+          <label>minuta</label>
+          <tipo>integer</tipo>
+        </field>        
+        <field id="nrocom" linkint="ctbregis2.xml" linkdir="ctb_old">
+          <label>Numero</label>
+          <help>
+          </help>
+          <paring destino="regnro">nrocom</paring>          
+          <paring destino="regmin">regmin</paring>
+          <paring destino="regfec">fecreg</paring>
+        </field>
+        
+
+			<field id="debe" suma="true" noshow="true">
+				<expression>regimp * (case when regdoh = 1 then 1 else 0 end)</expression>
+				<help>Importe del Movimiento en el Debe</help>
+				<tipo>decimal</tipo>
+			</field>
+			<field id="haber" suma="true" noshow="true"  >
+				<expression>regimp * (case when regdoh = 2 then 1 else 0 end)</expression>
+				<help>Importe del Movimiento en el Haber</help>
+				<tipo>decimal</tipo>
+			</field>
+			<field id="_D_" local="true" suma="true">
+				<label>Debe</label>
+				<if exp="(debe + 0) &gt;= (haber + 0)" operador="=">
+					<true>(debe + 0) - (haber + 0)</true>
+					<false>0</false>
+				</if>			
+				<tipo>decimal</tipo>
+			</field>
+			<field id="_H_" local="true" suma="true">
+				<label>Haber</label>			
+				<if exp="(haber + 0) &gt; (debe + 0)" operador="=">
+					<true>(haber + 0) - (debe + 0)</true>
+					<false>0</false>
+				</if>			
+				<tipo>decimal</tipo>
+			</field>
+			<field id="saldo" local="true" suma="true" >
+				<label>Diferencia</label>
+				<if exp="true" operador="=">
+					<true>(debe + 0) - (haber + 0)</true>
+					<false>0</false>
+				</if>		
+				<tipo>decimal</tipo>	
+			</field>			
+			
+		</table>
+		<join tipo="left">
+			<table id="CCTMOVIM">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">'02'</condicion>
+				</field>
+				<field id="ctacod" oculto="true">
+					<condicion operador="=">IVAVENTAS.ctacod</condicion>
+				</field>
+				<!--<field id="movfec" oculto="true">
+					<condicion operador="=">IVAVENTAS.feciva</condicion>
+				</field>-->
+
+				<field id="movnpv" oculto="true">
+					<condicion operador="=">IVAVENTAS.nronpv</condicion>
+				</field>
+
+				<field id="movnro" oculto="true">
+					<condicion operador="=">IVAVENTAS.nrocom</condicion>
+				</field>
+				<field id="concod" oculto="true">
+					<condicion operador="=">IVAVENTAS.codcom</condicion>
+				</field>
+				
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="CCTCONCE">
+				<field id="siscod" oculto="true">
+					<condicion operador="=">CCTMOVIM.siscod</condicion>
+				</field>
+				<field id="concod" oculto="true">
+					<condicion operador="=">CCTMOVIM.concod</condicion>
+				</field>
+			</table>
+		</join> 
+		<join tipo="left">
+			<table id="CTBREGIS">
+<!--
+				<field id="siscod" >
+					<condicion operador="=">'10'</condicion>
+				</field>
+-->
+				<field id="regnro" >
+					<condicion operador="=">IVAVENTAS.nrocom </condicion>
+				</field>
+				<field id="regmin" >
+					<condicion operador="=">CCTMOVIM.regmin</condicion>
+				</field>				
+<!--
+				<field id="regimp" >
+					<condicion operador="!=">0</condicion>
+				</field>				
+				-->
+			</table>
+		</join>
+		<join tipo="left">
+			<table id="CTBCUENT">
+<!--				<field id="siscod" oculto="true">
+					<label>cctcuent.siscod</label>
+					<condicion operador="=">'10'</condicion>
+				</field>
+-->
+				<field id="ctbcod" oculto="true">
+					<condicion operador="=">CTBREGIS.ctbcod</condicion>
+				</field>
+			</table>
+		</join>
+	</form>
+</histrix>

@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+   <histrix tipo="consulta" >
+       <title>Cuenta Corriente</title>
+        <obs></obs>
+               <form > <!--detalle="ConCtaCteDetSal.xml"--> 
+                  <table id="IVAIMPORTES" label="Movimientos">
+
+                    
+                    
+      <field id="feciva" noshow="true">
+        <label>Fecha</label>
+        <tipo>date</tipo>
+      </field>
+                    
+                    
+                    
+      <field id="tipoiva" noshow="true">
+        <label>TipoIva</label>
+        <condicion operador="=">1</condicion>
+      </field>
+      
+      <field id="totatr" tabla="CCTCUENT" noshow="true">
+        <label>No Influye</label>
+        <condicion operador="=">0</condicion>
+      </field>
+      
+      <field id="ivacod" tabla="CCTCUENT" noshow="true">
+        <label>IvaCod</label>
+        <condicion operador="=">1</condicion>
+      </field>
+
+            <!--      <field id="ctacod" _noshow="true">
+                      <label>Cuenta</label>
+                      <help>Codigo de Cuenta</help>
+          <detalle>ctacod</detalle>
+          <format>%04d</format>
+
+                  </field>
+-->
+                  <field id="ctanom" noshow="true">
+          <expression>CCTCUENT.ctanom</expression>
+                      <label>Nombre</label>
+                      <help>Codigo de Cuenta</help>
+          <tipo>varchar</tipo>
+                  </field>
+
+      <field id="ctanro" noshow="true">
+          <expression>CCTCUENT.ctanro</expression>
+
+        <label >CUIT</label>
+        <tipo>varchar</tipo>
+      </field>
+
+<!-- <field id="ctbcod" tabla="CTBREGIS" linkint="ctbregis_porgrupo_det.xml"  deshabilitado="true" >
+                <label>Cuenta</label>
+                <paring destino="ctbcod" operador="="     >ctbcod</paring>
+                <paring destino="regfec" operador="&gt;=" >regfec</paring>
+                <paring destino="rfec2" operador="&lt;="  >rf2</paring>
+
+            </field>
+                    -->
+
+<field id="ctbcod" tabla="CCTCUENT"  linkint="ctbregis_porgrupo_det.xml" >
+                <label>Cuenta</label>
+                <paring destino="ctbcod" operador="=">ctbcod</paring>
+                <paring destino="regfec" operador="&gt;=">feciva</paring>
+                <paring destino="regfec2" operador="&lt;=">feciva</paring>
+</field>
+
+
+
+      <field id="nombre_cuenta" >
+         <expression>CTB_CUENTAS.nombre_cuenta</expression>
+         <label>CtaCodigoS</label>
+      </field>
+
+
+
+
+      <field id="debe" suma="true" tipoOrden="DESC">
+        <expression>sum(impgra * (case when codcom = 1 then 1 else 0 end))</expression>
+        <label>debe</label>
+        <tipo>custom_numeric</tipo>
+      </field>
+ 
+      <field id="debe2" suma="true" tipoOrden="DESC" local="true">
+        <expression>sum(impgra * (case when codcom = 1 then 1 else 0 end))</expression>
+        <label>Grafico</label>
+        <tipo>grafico</tipo>
+      </field>
+      
+
+
+      <field id="haber" suma="true" noshow="true" >
+        <expression>sum(impgra * (case when codcom = 2 then 1 else 0 end))</expression>
+        <label>haber</label>
+        <tipo>decimal</tipo>
+      </field>
+      <field id="dif" local="true" noshow="true">
+        <label>diferencia</label>
+        <if exp="true">
+          <true>debe - haber</true>
+          <false>0</false>
+        </if>
+        <tipo>decimal</tipo>
+        <condicion operador="!=">0</condicion>
+      </field>
+
+
+
+
+
+
+
+
+      <filters>
+          <field id="feciva">
+        <label>Desde Fecha</label>
+        <operador>&gt;=</operador>
+            <tipo>date</tipo>
+        <valor>today</valor>
+          </field>
+             
+        <field id="feciva" copy="regfec2">
+        <operador>&lt;=</operador>
+        <label>Hasta Fecha</label>
+          <tipo>date</tipo>
+          <valor>today</valor>
+          </field> 
+      </filters>
+            <group>
+
+
+<field id="CCTCUENT.ctbcod"></field>
+
+
+        </group>
+
+        <order>
+      <field id="debe"> </field>
+        </order>
+
+                  </table>
+      
+      
+.
+      <join tipo="left">
+        <table id="CCTCUENT">
+      <field id="siscod" oculto="true">
+          <condicion operador="=">01</condicion>
+      </field>
+      <field id="ctacod" oculto="true">
+          <condicion operador="=">IVAIMPORTES.ctacod</condicion>
+      </field>
+        </table>
+      </join>
+                 
+       <join tipo="LEFT">
+    <table id="CTB_CUENTAS">
+        <field id="id_cuenta">
+            <condicion operador="=">CCTCUENT.ctbcod</condicion>
+        </field>
+    </table>
+</join>    
+                    
+<!--
+<join tipo="LEFT">
+    <table id="CTBREGIS">
+        <field id="id_cuenta">
+            <condicion operador="=">CCTCUENT.ctbcod</condicion>
+        </field>
+    </table>
+</join>
+-->
+    <join tipo="left">
+      <table id="CCTCONCE">
+        <field id="siscod" oculto="true">
+          <condicion operador="=">01</condicion>
+        </field>
+        <field id="concod" oculto="true">
+          <condicion operador="=">IVAIMPORTES.codcom</condicion>
+        </field>
+      </table>
+    </join>
+
+               </form>
+        </histrix>

@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" width="18" showCantidad="false" imprime="false">
+  <title>Ingreso de Movimientos</title>
+  <obs/>
+  <form  detalle="ejecuta_concepto" _hasDetail="ejecuta_concepto">
+
+    <table id="CAJ_CONCEPTOS" label="Conceptos">
+    
+      <preconsultas>
+        <xmlfile id="cajmain_pre.xml"/>
+      </preconsultas>
+
+    
+      <filters auto="true">
+
+        <field id="cajpuesto_id">
+          <label colstyle="display:none;">Puesto</label>
+          <operador>=</operador>
+        </field>
+        
+        <field id="fecha_registro" tabla="CAJ_REGISTROS">
+	  	  <label>fecha</label>
+	  	  <tipo>date</tipo>
+      	  <operador>=</operador>
+      	  <valor>today</valor>
+        </field>
+
+      </filters>
+      
+     <!-- ************************************************************** -->
+
+      <field id="fecha_registro" tabla="CAJ_REGISTROS" valauto="true">
+	    <label colstyle="display:none;">fecha</label>
+		<tipo>date</tipo>
+	    <detalle>fecha_movimiento</detalle>
+        <detalle>fecha_registro</detalle>
+        <preparam campo="fecha_registro" operador="=">true</preparam>
+      </field>
+
+      <field id="cajpuesto_id" tabla="CAJ_PUESTO_CONCEPTOS">
+        <label colstyle="display:none;">Puesto</label>
+        <helper type="combo" xml="cajpuestousers_qry.xml" dir="/ayudas" />
+        <detalle>cajpuesto_id</detalle>
+        <preparam campo="cajpuesto_id" operador="=">true</preparam>
+      </field>
+
+     <!-- ************************************************************** -->
+
+      <field id="estilo" _local="true" noshow="true">
+        <expression>
+            (case when imputacion_concepto = 0 then
+                    'width:95%; padding: 10px; font-size:large; font-weight: bold; color: navy;'
+             else (case when imputacion_concepto = 1 then
+                    'width:95%; padding: 10px; font-size:large; font-weight: bold; color: red;'
+                  else
+                    'width:95%; padding: 10px; font-size:large; font-weight: bold; color: green;'
+                  end)
+            end)
+          </expression>
+      </field>
+      
+      <field id="descripcion_concepto" Class="boton">
+    	   <attribute id="style">estilo</attribute>
+      </field>
+      
+     <!-- ************************************************************** -->
+      
+      <fieldGroup id="concepto_config" noshow="true">
+
+        <field id="id_cajregistro"  tabla="CAJ_REGISTROS">
+          <detalle>cajregistro_id</detalle>
+        </field>
+
+        <field id="cierre_caja">
+      	  <expression having="false">ifnull(CAJ_REGISTROS.cierre_caja,0)</expression>
+      	  <condicion operador="=">0</condicion>
+        </field>
+
+        <field id="id_cajconcepto">
+          <detalle>cajconcepto_id</detalle>
+        </field>
+        
+        <field id="stkconcepto_id">
+          <detalle>stkconcepto_id</detalle>
+        </field>
+
+        <field id="cajconceptorel_id">
+          <detalle>cajconceptorel_id</detalle>
+        </field>
+        
+        <field id="subsistema_id">
+          <detalle>subsistema_id</detalle>
+        </field>
+        
+        <field id="imputacion_concepto">
+          <helper type="combo">
+            <option value="0">Ingresos</option>
+            <option value="1">Egresos</option>
+            <option value="2">Otros</option>
+          </helper>
+          <detalle>imputacion_concepto</detalle>
+        </field>
+        
+        <field id="regconcepto_id">
+          <detalle>regconcepto_id</detalle>
+        </field>
+        
+        <field id="alta_concepto">
+          <condicion operador="!=">0</condicion>
+        </field>
+        
+        <field id="ejecuta_concepto">
+          <condicion operador="!=">''</condicion>
+        </field>
+        
+	<field id="tipoimpre_concepto">
+          <detalle>tipoimpre_concepto</detalle>
+        </field>
+
+        <field id="imprime_concepto">
+          <detalle>imprime_concepto</detalle>
+        </field>
+        
+  		<field id="subsistemavendedor_id" local="true">
+		  <detalle>subsistemavendedor_id</detalle>
+		</field>   
+  		
+  		<field id="subsistematransporte_id" local="true">
+		  <detalle>subsistematransporte_id</detalle>
+		</field>   
+		
+		<field id="cierrez">
+		  <expression>CAJ_PUESTOS.cierrez</expression>
+		  <detalle>cierrez</detalle>
+		</field>
+
+		<field id="printer_fiscal_pos">
+		  <expression>CAJ_PUESTOS.printer</expression>
+		  <detalle>printer_fiscal_pos</detalle>
+		</field>
+       
+      </fieldGroup>
+      
+      <order>
+        <field id="imputacion_concepto"/>
+        <field id="descripcion_concepto"/>
+      </order>
+      
+      <group>
+        <field id="id_cajconcepto"/>
+<!--		<field id="tipoimpre_concepto" /> -->
+      </group>
+      <fieldGroup colstyle="display:none;">
+        <if> if (strpos($_SESSION['properties']['modulos'],'contabilidad') != false) return true; </if>
+        <field id="ejercicio_id" local="true">
+          <expression><![CDATA[IFNULL((SELECT id_ejercicio FROM `CTB_EJERCICIOS` WHERE comienza <= str_to_date('[__fecha_registro__]','%d/%m/%Y') and finaliza >= str_to_date('[__fecha_registro__]','%d/%m/%Y') and activo = 1), 0)]]></expression>
+          <detalle>ctbejercicio_id</detalle>
+        </field>
+      </fieldGroup>
+    </table>
+
+    <join>
+      <table id="CAJ_PUESTO_CONCEPTOS">
+        <field id="cajconcepto_id">
+          <condicion operador="=">CAJ_CONCEPTOS.id_cajconcepto</condicion>
+        </field>
+      </table>
+    </join>
+
+    <join>
+      <table id="CAJ_REGISTROS">
+        <field id="cajpuesto_id">
+          <condicion operador="=">CAJ_PUESTO_CONCEPTOS.cajpuesto_id</condicion>
+        </field>
+      </table>
+    </join>
+    
+    <join>
+      <table id="CAJ_PUESTOS">
+        <field id="id_cajpuesto">
+          <condicion operador="=">CAJ_REGISTROS.cajpuesto_id</condicion>
+        </field>
+      </table>
+    </join>
+
+  </form>
+</histrix>

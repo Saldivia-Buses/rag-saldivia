@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<histrix tipo="consulta" _imprime="false" _ancho="20" paginar="100"
+ancho="20"
+>
+	<title>Remitos de Envios a Clientes</title>
+	<obs></obs>
+	<form  detalle="stkinmov_remito_traer.xml">
+		<table id="FACREMIT" label="Remitos de Envios a Clientes">
+
+			<filters>
+				<field id="remnro">
+					<label>Nro</label>
+					<operador>=</operador>
+				</field>
+				<field id="remfec">
+					<label>Desde</label>
+					<operador>&gt;=</operador>
+					<valor eval="true">date("01/01/2015")</valor><!--01/01/Y-->
+				</field>
+
+			</filters>
+
+			<field id="cierre" oculto="true">
+				<label>Estado </label>
+				<condicion operador="=">0</condicion>
+			</field>
+	
+			<field id="remfec" tipoOrden="DESC">
+				<label>Fecha</label>
+				<help>Fecha de Remito</help>
+<!--				<detalle>movalt</detalle> -->
+				<tipo>date</tipo>
+			</field>
+			<field id="remnro">
+				<label>Numero</label>
+				<help>Numero de Remito</help>
+				<detalle>movnro</detalle>
+				<format>%010d</format>
+			</field>
+			<field id="remnpv" noshow="true">
+				<label>NPV</label>
+				<help>Punto de Venta</help>
+				<format>%04d</format>
+			</field>
+			
+			<field id="ctacod" noshow="true">
+				<label>Cuenta </label>
+				<help>Codigo de Cuenta. [F2] = Ayuda. </help>
+				<detalle>ctacod</detalle>
+                                <condicion operador="!=">0</condicion>
+			</field>
+
+<!--			
+			<field id="connormas" clasefila="true" noshow="true">
+				<expression>case when (select count(NORMAINSUMOS.artcod) from STKINMOV inner join NORMAINSUMOS on NORMAINSUMOS.artcod = STKINMOV.artcod where STKINMOV.movnro = FACREMIT.remnro and STKINMOV.movfec = FACREMIT.remfec and STKINMOV.ctacod = FACREMIT.ctacod and STKINMOV.siscod = '01') > 0 then 'resaltado' else '' end</expression>
+				<tipo>varchar</tipo>
+
+			</field>
+-->
+			<order>
+				<field id="remfec"></field>
+			</order>
+
+			<group>
+				<field id="remnro"></field>
+			</group>
+		</table>
+	</form>
+</histrix>

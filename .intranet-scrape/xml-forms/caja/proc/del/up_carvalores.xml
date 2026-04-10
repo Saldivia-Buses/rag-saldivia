@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<histrix tipo="update" >
+	<title>ACTUALIZACION de Valores de Tereceros</title>
+	<obs></obs>
+	<form>
+		<table id="CAR_VALORES" 	idCampoCond="debeactualizar" >
+		    <field id="id_carvalor"         esClave="true" id_temp="carvalor_id"     />
+			<field id="egreso_valor">
+				<valor>'0000-00-00'</valor>
+				<tipo>varchar</tipo>
+			</field>
+		</table>
+	</form>
+</histrix>  
+
+
