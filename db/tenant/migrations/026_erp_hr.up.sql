@@ -65,7 +65,8 @@ CREATE TABLE IF NOT EXISTS erp_training_attendees (
     training_id UUID NOT NULL REFERENCES erp_training(id) ON DELETE CASCADE,
     entity_id   UUID NOT NULL REFERENCES erp_entities(id),
     result      TEXT NOT NULL DEFAULT '',
-    score       NUMERIC(5,2)
+    score       NUMERIC(5,2),
+    UNIQUE(training_id, entity_id)
 );
 
 CREATE TABLE IF NOT EXISTS erp_attendance (

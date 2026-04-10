@@ -40,7 +40,7 @@ func (s *HR) ListEmployees(ctx context.Context, tenantID string, limit, offset i
 	})
 }
 
-func (s *HR) GetEmployee(ctx context.Context, entityID pgtype.UUID, tenantID string) (repository.ErpEmployeeDetail, error) {
+func (s *HR) GetEmployee(ctx context.Context, entityID pgtype.UUID, tenantID string) (repository.GetEmployeeDetailRow, error) {
 	return s.repo.GetEmployeeDetail(ctx, repository.GetEmployeeDetailParams{EntityID: entityID, TenantID: tenantID})
 }
 

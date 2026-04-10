@@ -175,7 +175,7 @@ func (q *Queries) CreateTraining(ctx context.Context, arg CreateTrainingParams) 
 const getEmployeeDetail = `-- name: GetEmployeeDetail :one
 SELECT id, tenant_id, entity_id, department_id, position, hire_date,
        termination_date, union_id, health_plan_id, schedule_type,
-       category_id, encrypted_salary, metadata, created_at, updated_at
+       category_id, metadata, created_at, updated_at
 FROM erp_employee_details WHERE entity_id = $1 AND tenant_id = $2
 `
 
@@ -184,9 +184,26 @@ type GetEmployeeDetailParams struct {
 	TenantID string      `json:"tenant_id"`
 }
 
-func (q *Queries) GetEmployeeDetail(ctx context.Context, arg GetEmployeeDetailParams) (ErpEmployeeDetail, error) {
+type GetEmployeeDetailRow struct {
+	ID              pgtype.UUID        `json:"id"`
+	TenantID        string             `json:"tenant_id"`
+	EntityID        pgtype.UUID        `json:"entity_id"`
+	DepartmentID    pgtype.UUID        `json:"department_id"`
+	Position        string             `json:"position"`
+	HireDate        pgtype.Date        `json:"hire_date"`
+	TerminationDate pgtype.Date        `json:"termination_date"`
+	UnionID         pgtype.UUID        `json:"union_id"`
+	HealthPlanID    pgtype.UUID        `json:"health_plan_id"`
+	ScheduleType    string             `json:"schedule_type"`
+	CategoryID      pgtype.UUID        `json:"category_id"`
+	Metadata        []byte             `json:"metadata"`
+	CreatedAt       pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
+}
+
+func (q *Queries) GetEmployeeDetail(ctx context.Context, arg GetEmployeeDetailParams) (GetEmployeeDetailRow, error) {
 	row := q.db.QueryRow(ctx, getEmployeeDetail, arg.EntityID, arg.TenantID)
-	var i ErpEmployeeDetail
+	var i GetEmployeeDetailRow
 	err := row.Scan(
 		&i.ID,
 		&i.TenantID,
@@ -199,7 +216,6 @@ func (q *Queries) GetEmployeeDetail(ctx context.Context, arg GetEmployeeDetailPa
 		&i.HealthPlanID,
 		&i.ScheduleType,
 		&i.CategoryID,
-		&i.EncryptedSalary,
 		&i.Metadata,
 		&i.CreatedAt,
 		&i.UpdatedAt,
@@ -463,7 +479,7 @@ ON CONFLICT (entity_id) DO UPDATE SET
     department_id = EXCLUDED.department_id, position = EXCLUDED.position,
     hire_date = EXCLUDED.hire_date, union_id = EXCLUDED.union_id,
     health_plan_id = EXCLUDED.health_plan_id, schedule_type = EXCLUDED.schedule_type,
-    category_id = EXCLUDED.category_id, encrypted_salary = EXCLUDED.encrypted_salary,
+    category_id = EXCLUDED.category_id,
     metadata = EXCLUDED.metadata, updated_at = now()
 RETURNING id, tenant_id, entity_id, department_id, position, hire_date,
     termination_date, union_id, health_plan_id, schedule_type,

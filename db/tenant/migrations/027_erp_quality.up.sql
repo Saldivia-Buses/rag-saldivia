@@ -45,7 +45,8 @@ CREATE TABLE IF NOT EXISTS erp_audits (
     status          TEXT NOT NULL DEFAULT 'planned' CHECK (status IN ('planned','in_progress','completed')),
     score           NUMERIC(5,2),
     notes           TEXT NOT NULL DEFAULT '',
-    created_at      TIMESTAMPTZ NOT NULL DEFAULT now()
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE(tenant_id, number)
 );
 
 CREATE TABLE IF NOT EXISTS erp_audit_findings (

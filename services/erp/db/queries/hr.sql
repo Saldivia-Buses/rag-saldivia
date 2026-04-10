@@ -20,7 +20,7 @@ LIMIT $2 OFFSET $3;
 -- name: GetEmployeeDetail :one
 SELECT id, tenant_id, entity_id, department_id, position, hire_date,
        termination_date, union_id, health_plan_id, schedule_type,
-       category_id, encrypted_salary, metadata, created_at, updated_at
+       category_id, metadata, created_at, updated_at
 FROM erp_employee_details WHERE entity_id = $1 AND tenant_id = $2;
 
 -- name: UpsertEmployeeDetail :one
@@ -31,7 +31,7 @@ ON CONFLICT (entity_id) DO UPDATE SET
     department_id = EXCLUDED.department_id, position = EXCLUDED.position,
     hire_date = EXCLUDED.hire_date, union_id = EXCLUDED.union_id,
     health_plan_id = EXCLUDED.health_plan_id, schedule_type = EXCLUDED.schedule_type,
-    category_id = EXCLUDED.category_id, encrypted_salary = EXCLUDED.encrypted_salary,
+    category_id = EXCLUDED.category_id,
     metadata = EXCLUDED.metadata, updated_at = now()
 RETURNING id, tenant_id, entity_id, department_id, position, hire_date,
     termination_date, union_id, health_plan_id, schedule_type,
