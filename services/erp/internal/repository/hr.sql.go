@@ -473,8 +473,8 @@ func (q *Queries) ListTraining(ctx context.Context, arg ListTrainingParams) ([]E
 
 const upsertEmployeeDetail = `-- name: UpsertEmployeeDetail :one
 INSERT INTO erp_employee_details (tenant_id, entity_id, department_id, position, hire_date,
-    union_id, health_plan_id, schedule_type, category_id, encrypted_salary, metadata)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+    union_id, health_plan_id, schedule_type, category_id, metadata)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 ON CONFLICT (entity_id) DO UPDATE SET
     department_id = EXCLUDED.department_id, position = EXCLUDED.position,
     hire_date = EXCLUDED.hire_date, union_id = EXCLUDED.union_id,
@@ -483,24 +483,40 @@ ON CONFLICT (entity_id) DO UPDATE SET
     metadata = EXCLUDED.metadata, updated_at = now()
 RETURNING id, tenant_id, entity_id, department_id, position, hire_date,
     termination_date, union_id, health_plan_id, schedule_type,
-    category_id, encrypted_salary, metadata, created_at, updated_at
+    category_id, metadata, created_at, updated_at
 `
 
 type UpsertEmployeeDetailParams struct {
-	TenantID        string      `json:"tenant_id"`
-	EntityID        pgtype.UUID `json:"entity_id"`
-	DepartmentID    pgtype.UUID `json:"department_id"`
-	Position        string      `json:"position"`
-	HireDate        pgtype.Date `json:"hire_date"`
-	UnionID         pgtype.UUID `json:"union_id"`
-	HealthPlanID    pgtype.UUID `json:"health_plan_id"`
-	ScheduleType    string      `json:"schedule_type"`
-	CategoryID      pgtype.UUID `json:"category_id"`
-	EncryptedSalary []byte      `json:"encrypted_salary"`
-	Metadata        []byte      `json:"metadata"`
+	TenantID     string      `json:"tenant_id"`
+	EntityID     pgtype.UUID `json:"entity_id"`
+	DepartmentID pgtype.UUID `json:"department_id"`
+	Position     string      `json:"position"`
+	HireDate     pgtype.Date `json:"hire_date"`
+	UnionID      pgtype.UUID `json:"union_id"`
+	HealthPlanID pgtype.UUID `json:"health_plan_id"`
+	ScheduleType string      `json:"schedule_type"`
+	CategoryID   pgtype.UUID `json:"category_id"`
+	Metadata     []byte      `json:"metadata"`
 }
 
-func (q *Queries) UpsertEmployeeDetail(ctx context.Context, arg UpsertEmployeeDetailParams) (ErpEmployeeDetail, error) {
+type UpsertEmployeeDetailRow struct {
+	ID              pgtype.UUID        `json:"id"`
+	TenantID        string             `json:"tenant_id"`
+	EntityID        pgtype.UUID        `json:"entity_id"`
+	DepartmentID    pgtype.UUID        `json:"department_id"`
+	Position        string             `json:"position"`
+	HireDate        pgtype.Date        `json:"hire_date"`
+	TerminationDate pgtype.Date        `json:"termination_date"`
+	UnionID         pgtype.UUID        `json:"union_id"`
+	HealthPlanID    pgtype.UUID        `json:"health_plan_id"`
+	ScheduleType    string             `json:"schedule_type"`
+	CategoryID      pgtype.UUID        `json:"category_id"`
+	Metadata        []byte             `json:"metadata"`
+	CreatedAt       pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
+}
+
+func (q *Queries) UpsertEmployeeDetail(ctx context.Context, arg UpsertEmployeeDetailParams) (UpsertEmployeeDetailRow, error) {
 	row := q.db.QueryRow(ctx, upsertEmployeeDetail,
 		arg.TenantID,
 		arg.EntityID,
@@ -511,10 +527,9 @@ func (q *Queries) UpsertEmployeeDetail(ctx context.Context, arg UpsertEmployeeDe
 		arg.HealthPlanID,
 		arg.ScheduleType,
 		arg.CategoryID,
-		arg.EncryptedSalary,
 		arg.Metadata,
 	)
-	var i ErpEmployeeDetail
+	var i UpsertEmployeeDetailRow
 	err := row.Scan(
 		&i.ID,
 		&i.TenantID,
@@ -527,7 +542,6 @@ func (q *Queries) UpsertEmployeeDetail(ctx context.Context, arg UpsertEmployeeDe
 		&i.HealthPlanID,
 		&i.ScheduleType,
 		&i.CategoryID,
-		&i.EncryptedSalary,
 		&i.Metadata,
 		&i.CreatedAt,
 		&i.UpdatedAt,

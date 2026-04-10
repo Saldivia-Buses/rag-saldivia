@@ -25,8 +25,8 @@ FROM erp_employee_details WHERE entity_id = $1 AND tenant_id = $2;
 
 -- name: UpsertEmployeeDetail :one
 INSERT INTO erp_employee_details (tenant_id, entity_id, department_id, position, hire_date,
-    union_id, health_plan_id, schedule_type, category_id, encrypted_salary, metadata)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+    union_id, health_plan_id, schedule_type, category_id, metadata)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 ON CONFLICT (entity_id) DO UPDATE SET
     department_id = EXCLUDED.department_id, position = EXCLUDED.position,
     hire_date = EXCLUDED.hire_date, union_id = EXCLUDED.union_id,
@@ -35,7 +35,7 @@ ON CONFLICT (entity_id) DO UPDATE SET
     metadata = EXCLUDED.metadata, updated_at = now()
 RETURNING id, tenant_id, entity_id, department_id, position, hire_date,
     termination_date, union_id, health_plan_id, schedule_type,
-    category_id, encrypted_salary, metadata, created_at, updated_at;
+    category_id, metadata, created_at, updated_at;
 
 -- name: ListHREvents :many
 SELECT id, tenant_id, entity_id, event_type, date_from, date_to, hours,

@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"net/http"
 
@@ -312,18 +313,26 @@ func (h *Treasury) CreateCashCount(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error":"invalid cash_register_id"}`, http.StatusBadRequest)
 		return
 	}
-	// Calculate difference server-side (never trust client math)
+	// Calculate difference server-side (counted - expected)
 	expected := pgNumericH(body.Expected)
 	counted := pgNumericH(body.Counted)
+	// Simple approach: parse strings to compute difference
+	var eF, cF float64
+	if body.Expected != "" {
+		eF = parseFloat(body.Expected)
+	}
+	if body.Counted != "" {
+		cF = parseFloat(body.Counted)
+	}
 	var diff pgtype.Numeric
-	_ = diff.Scan("0") // difference calculated at DB level is safer; for now pass counted-expected
+	_ = diff.Scan(cF - eF)
 	cc, err := h.svc.CreateCashCount(r.Context(), repository.CreateCashCountParams{
 		TenantID:       slug,
 		CashRegisterID: crID,
 		Date:           pgDate(body.Date),
 		Expected:       expected,
 		Counted:        counted,
-		Difference:     diff, // TODO: compute via SQL: counted - expected
+		Difference:     diff,
 		UserID:         r.Header.Get("X-User-ID"),
 		Notes:          body.Notes,
 	}, r.RemoteAddr)
@@ -345,6 +354,19 @@ func pgNumericH(s string) pgtype.Numeric {
 	}
 	_ = n.Scan(s)
 	return n
+}
+
+func parseFloat(s string) float64 {
+	var f float64
+	for i, c := range s {
+		if c == '.' || c == '-' || (c >= '0' && c <= '9') {
+			continue
+		}
+		s = s[:i]
+		break
+	}
+	_, _ = fmt.Sscanf(s, "%f", &f)
+	return f
 }
 
 func pgTextOpt(s *string) pgtype.Text {

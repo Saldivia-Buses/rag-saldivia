@@ -140,23 +140,12 @@ var validCheckTransitions = map[string][]string{
 }
 
 func (s *Treasury) UpdateCheckStatus(ctx context.Context, id pgtype.UUID, tenantID, newStatus, userID, ip string) error {
-	// Fetch current check to validate transition
-	checks, err := s.repo.ListChecks(ctx, repository.ListChecksParams{
-		TenantID: tenantID, DirectionFilter: "", StatusFilter: "",
-	})
+	// Fetch current check by ID to validate transition
+	chk, err := s.repo.GetCheck(ctx, repository.GetCheckParams{ID: id, TenantID: tenantID})
 	if err != nil {
-		return fmt.Errorf("fetch check: %w", err)
-	}
-	var currentStatus string
-	for _, c := range checks {
-		if c.ID == id {
-			currentStatus = c.Status
-			break
-		}
-	}
-	if currentStatus == "" {
 		return fmt.Errorf("check not found")
 	}
+	currentStatus := chk.Status
 
 	// Validate transition
 	allowed := validCheckTransitions[currentStatus]

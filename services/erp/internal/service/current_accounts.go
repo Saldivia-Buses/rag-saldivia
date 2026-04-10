@@ -14,12 +14,13 @@ import (
 type CurrentAccounts struct {
 	repo      *repository.Queries
 	pool      TxStarter
-	audit     *audit.Writer
+	audit     audit.StrictLogger
+	auditLog  *audit.Writer
 	publisher *traces.Publisher
 }
 
 func NewCurrentAccounts(repo *repository.Queries, pool TxStarter, auditWriter *audit.Writer, publisher *traces.Publisher) *CurrentAccounts {
-	return &CurrentAccounts{repo: repo, pool: pool, audit: auditWriter, publisher: publisher}
+	return &CurrentAccounts{repo: repo, pool: pool, audit: auditWriter, auditLog: auditWriter, publisher: publisher}
 }
 
 func (s *CurrentAccounts) ListMovements(ctx context.Context, tenantID string, entityID pgtype.UUID, direction string, dateFrom, dateTo pgtype.Date, limit, offset int) ([]repository.ListAccountMovementsRow, error) {
@@ -89,15 +90,19 @@ func (s *CurrentAccounts) Allocate(ctx context.Context, req AllocateRequest) err
 		return fmt.Errorf("insufficient invoice balance")
 	}
 
+	// StrictLogger before commit — abort if audit fails (financial operation)
+	if err := s.audit.WriteStrict(ctx, audit.Entry{
+		TenantID: req.TenantID, UserID: req.UserID,
+		Action: "erp.accounts.allocated", Resource: uuidStr(req.PaymentID),
+		Details: map[string]any{"invoice_id": uuidStr(req.InvoiceID), "amount": req.Amount}, IP: req.IP,
+	}); err != nil {
+		return fmt.Errorf("strict audit failed, aborting: %w", err)
+	}
+
 	if err := tx.Commit(ctx); err != nil {
 		return fmt.Errorf("commit allocation: %w", err)
 	}
 
-	s.audit.Write(ctx, audit.Entry{
-		TenantID: req.TenantID, UserID: req.UserID,
-		Action: "erp.accounts.allocated", Resource: uuidStr(req.PaymentID),
-		Details: map[string]any{"invoice_id": uuidStr(req.InvoiceID), "amount": req.Amount}, IP: req.IP,
-	})
 	s.publisher.Broadcast(req.TenantID, "erp_accounts", map[string]any{
 		"action": "allocated", "payment_id": uuidStr(req.PaymentID),
 	})

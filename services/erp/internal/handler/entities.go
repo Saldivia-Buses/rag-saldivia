@@ -277,7 +277,7 @@ func (h *Entities) AddContact(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	contact, err := h.svc.AddContact(r.Context(), slug, entityID, body.Type, body.Label, body.Value, nil)
+	contact, err := h.svc.AddContact(r.Context(), slug, entityID, body.Type, body.Label, body.Value, r.Header.Get("X-User-ID"), r.RemoteAddr, nil)
 	if err != nil {
 		slog.Error("add contact failed", "error", err)
 		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
@@ -310,7 +310,7 @@ func (h *Entities) AddNote(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	note, err := h.svc.AddNote(r.Context(), slug, entityID, r.Header.Get("X-User-ID"), body.Type, body.Body)
+	note, err := h.svc.AddNote(r.Context(), slug, entityID, r.Header.Get("X-User-ID"), body.Type, body.Body, r.RemoteAddr)
 	if err != nil {
 		slog.Error("add note failed", "error", err)
 		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
@@ -343,7 +343,7 @@ func (h *Entities) AddDocument(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	doc, err := h.svc.AddDocument(r.Context(), slug, entityID, body.Name, body.DocType, body.FileKey)
+	doc, err := h.svc.AddDocument(r.Context(), slug, entityID, body.Name, body.DocType, body.FileKey, r.Header.Get("X-User-ID"), r.RemoteAddr)
 	if err != nil {
 		slog.Error("add document failed", "error", err)
 		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)

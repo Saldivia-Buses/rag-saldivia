@@ -146,6 +146,14 @@ func (s *Production) UpdateStep(ctx context.Context, id pgtype.UUID, tenantID, s
 	if rows == 0 {
 		return fmt.Errorf("step not found")
 	}
+	s.audit.Write(ctx, audit.Entry{
+		TenantID: tenantID, UserID: userID,
+		Action: "erp.production_step.updated", Resource: uuidStr(id),
+		Details: map[string]any{"status": status}, IP: ip,
+	})
+	s.publisher.Broadcast(tenantID, "erp_production", map[string]any{
+		"action": "step_updated", "step_id": uuidStr(id),
+	})
 	return nil
 }
 

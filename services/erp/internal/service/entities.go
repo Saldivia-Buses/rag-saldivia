@@ -107,7 +107,6 @@ type CreateEntityRequest struct {
 	Type           string
 	Code           string
 	Name           string
-	EncryptedTaxID []byte
 	TaxIDHash      *string
 	Email          *string
 	Phone          *string
@@ -140,7 +139,6 @@ func (s *Entities) Create(ctx context.Context, req CreateEntityRequest) (reposit
 		Type:           req.Type,
 		Code:           req.Code,
 		Name:           req.Name,
-		EncryptedTaxID: req.EncryptedTaxID,
 		TaxIDHash:      pgTextPtr(req.TaxIDHash),
 		Email:          pgTextPtr(req.Email),
 		Phone:          pgTextPtr(req.Phone),
@@ -178,7 +176,6 @@ type UpdateEntityRequest struct {
 	TenantID       string
 	Code           string
 	Name           string
-	EncryptedTaxID []byte
 	TaxIDHash      *string
 	Email          *string
 	Phone          *string
@@ -206,7 +203,6 @@ func (s *Entities) Update(ctx context.Context, req UpdateEntityRequest) (reposit
 		TenantID:       req.TenantID,
 		Code:           req.Code,
 		Name:           req.Name,
-		EncryptedTaxID: req.EncryptedTaxID,
 		TaxIDHash:      pgTextPtr(req.TaxIDHash),
 		Email:          pgTextPtr(req.Email),
 		Phone:          pgTextPtr(req.Phone),
@@ -261,30 +257,56 @@ func (s *Entities) Delete(ctx context.Context, id pgtype.UUID, tenantID, userID,
 }
 
 // AddContact adds a contact to an entity.
-func (s *Entities) AddContact(ctx context.Context, tenantID string, entityID pgtype.UUID, contactType, label, value string, metadata []byte) (repository.ErpEntityContact, error) {
+func (s *Entities) AddContact(ctx context.Context, tenantID string, entityID pgtype.UUID, contactType, label, value, userID, ip string, metadata []byte) (repository.ErpEntityContact, error) {
 	if metadata == nil {
 		metadata = []byte(`{}`)
 	}
-	return s.repo.CreateEntityContact(ctx, repository.CreateEntityContactParams{
+	c, err := s.repo.CreateEntityContact(ctx, repository.CreateEntityContactParams{
 		TenantID: tenantID, EntityID: entityID,
 		Type: contactType, Label: label, Value: value, Metadata: metadata,
 	})
+	if err != nil {
+		return repository.ErpEntityContact{}, fmt.Errorf("create contact: %w", err)
+	}
+	s.audit.Write(ctx, audit.Entry{
+		TenantID: tenantID, UserID: userID,
+		Action: "erp.entity.contact_added", Resource: uuidStr(entityID),
+		Details: map[string]any{"contact_type": contactType}, IP: ip,
+	})
+	return c, nil
 }
 
 // AddNote adds a note to an entity.
-func (s *Entities) AddNote(ctx context.Context, tenantID string, entityID pgtype.UUID, userID, noteType, body string) (repository.ErpEntityNote, error) {
-	return s.repo.CreateEntityNote(ctx, repository.CreateEntityNoteParams{
+func (s *Entities) AddNote(ctx context.Context, tenantID string, entityID pgtype.UUID, userID, noteType, body, ip string) (repository.ErpEntityNote, error) {
+	n, err := s.repo.CreateEntityNote(ctx, repository.CreateEntityNoteParams{
 		TenantID: tenantID, EntityID: entityID,
 		UserID: userID, Type: noteType, Body: body,
 	})
+	if err != nil {
+		return repository.ErpEntityNote{}, fmt.Errorf("create note: %w", err)
+	}
+	s.audit.Write(ctx, audit.Entry{
+		TenantID: tenantID, UserID: userID,
+		Action: "erp.entity.note_added", Resource: uuidStr(entityID), IP: ip,
+	})
+	return n, nil
 }
 
 // AddDocument registers a document for an entity.
-func (s *Entities) AddDocument(ctx context.Context, tenantID string, entityID pgtype.UUID, name, docType, fileKey string) (repository.ErpEntityDocument, error) {
-	return s.repo.CreateEntityDocument(ctx, repository.CreateEntityDocumentParams{
+func (s *Entities) AddDocument(ctx context.Context, tenantID string, entityID pgtype.UUID, name, docType, fileKey, userID, ip string) (repository.ErpEntityDocument, error) {
+	d, err := s.repo.CreateEntityDocument(ctx, repository.CreateEntityDocumentParams{
 		TenantID: tenantID, EntityID: entityID,
 		Name: name, DocType: docType, FileKey: fileKey,
 	})
+	if err != nil {
+		return repository.ErpEntityDocument{}, fmt.Errorf("create document: %w", err)
+	}
+	s.audit.Write(ctx, audit.Entry{
+		TenantID: tenantID, UserID: userID,
+		Action: "erp.entity.document_added", Resource: uuidStr(entityID),
+		Details: map[string]any{"doc_type": docType}, IP: ip,
+	})
+	return d, nil
 }
 
 func pgTextPtr(s *string) pgtype.Text {
