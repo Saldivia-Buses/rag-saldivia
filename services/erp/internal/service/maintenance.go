@@ -27,9 +27,14 @@ func (s *Maintenance) ListAssets(ctx context.Context, tenantID, assetType string
 	})
 }
 
+var validAssetTypes = map[string]bool{"vehicle": true, "machine": true, "tool": true, "facility": true}
+
 func (s *Maintenance) CreateAsset(ctx context.Context, p repository.CreateMaintenanceAssetParams, userID, ip string) (repository.ErpMaintenanceAsset, error) {
 	if p.Code == "" || p.Name == "" {
 		return repository.ErpMaintenanceAsset{}, fmt.Errorf("code and name are required")
+	}
+	if !validAssetTypes[p.AssetType] {
+		return repository.ErpMaintenanceAsset{}, fmt.Errorf("invalid asset_type (vehicle, machine, tool, facility)")
 	}
 	a, err := s.repo.CreateMaintenanceAsset(ctx, p)
 	if err != nil { return repository.ErpMaintenanceAsset{}, fmt.Errorf("create asset: %w", err) }
@@ -75,6 +80,10 @@ func (s *Maintenance) CreateWorkOrder(ctx context.Context, p repository.CreateWo
 	validTypes := map[string]bool{"preventive": true, "corrective": true, "inspection": true}
 	if !validTypes[p.WorkType] {
 		return repository.ErpWorkOrder{}, fmt.Errorf("invalid work_type")
+	}
+	validPriorities := map[string]bool{"low": true, "normal": true, "high": true, "urgent": true}
+	if !validPriorities[p.Priority] {
+		return repository.ErpWorkOrder{}, fmt.Errorf("invalid priority")
 	}
 	wo, err := s.repo.CreateWorkOrder(ctx, p)
 	if err != nil { return repository.ErpWorkOrder{}, fmt.Errorf("create work order: %w", err) }

@@ -72,7 +72,9 @@ func (h *Admin) CreateCalendarEvent(w http.ResponseWriter, r *http.Request) {
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil { http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest); return }
 	var startAt, endAt pgtype.Timestamptz
-	_ = startAt.Scan(body.StartAt)
+	if err := startAt.Scan(body.StartAt); err != nil {
+		http.Error(w, `{"error":"invalid start_at"}`, http.StatusBadRequest); return
+	}
 	if body.EndAt != nil { _ = endAt.Scan(*body.EndAt) }
 	ev, err := h.svc.CreateCalendarEvent(r.Context(), repository.CreateCalendarEventParams{
 		TenantID: slug, Title: body.Title, Description: body.Description,
