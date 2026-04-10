@@ -1,115 +1,120 @@
 "use client";
 
-import { type ColumnDef, type ColumnFiltersState, flexRender, getCoreRowModel, getFilteredRowModel, getSortedRowModel, type SortingState, useReactTable } from "@tanstack/react-table";
-import { ArrowUpDownIcon, PlusIcon, SearchIcon, CalendarIcon, DollarSignIcon, FileTextIcon } from "lucide-react";
-import { useState } from "react";
-
+import { useState, useEffect, useCallback } from "react";
+import { api } from "@/lib/api/client";
+import { wsManager } from "@/lib/ws/manager";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { FileTextIcon, BookOpenIcon, ShieldIcon } from "lucide-react";
 
-type Factura = {
-  id: string;
-  numero: string;
-  tipo: "A" | "B" | "C" | "E";
-  cliente: string;
-  cuit: string;
-  fecha: string;
-  vencimiento: string;
-  total: number;
-  estado: "emitida" | "cobrada" | "vencida" | "anulada";
+interface Invoice { id: string; number: string; date: string; invoice_type: string; direction: string; entity_name: string; total: number; status: string; }
+interface Withholding { id: string; entity_name: string; type: string; rate: number; base_amount: number; amount: number; date: string; }
+
+const fmtMoney = (n: number) => n === 0 ? "—" : new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 }).format(n);
+const fmtDate = (s: string) => new Date(s).toLocaleDateString("es-AR", { day: "2-digit", month: "short" });
+const typeLabel: Record<string, string> = { invoice_a: "Factura A", invoice_b: "Factura B", invoice_c: "Factura C", invoice_e: "Factura E", credit_note: "Nota Crédito", debit_note: "Nota Débito", delivery_note: "Remito" };
+const statusBadge: Record<string, { label: string; variant: "default" | "secondary" | "outline" }> = {
+  draft: { label: "Borrador", variant: "secondary" },
+  posted: { label: "Contabilizada", variant: "default" },
+  paid: { label: "Cobrada", variant: "default" },
+  cancelled: { label: "Anulada", variant: "secondary" },
 };
-
-const fmt = (n: number) => new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS", maximumFractionDigits: 0 }).format(n);
-
-const MOCK: Factura[] = [
-  { id: "1", numero: "0001-00004521", tipo: "A", cliente: "Municipalidad de Tandil", cuit: "30-12345678-9", fecha: "2026-04-08", vencimiento: "2026-05-08", total: 45000000, estado: "emitida" },
-  { id: "2", numero: "0001-00004520", tipo: "A", cliente: "Provincia de Buenos Aires", cuit: "30-98765432-1", fecha: "2026-04-05", vencimiento: "2026-05-05", total: 120000000, estado: "emitida" },
-  { id: "3", numero: "0001-00004519", tipo: "A", cliente: "ERSA Urbano", cuit: "30-55667788-0", fecha: "2026-03-28", vencimiento: "2026-04-28", total: 78000000, estado: "cobrada" },
-  { id: "4", numero: "0001-00004518", tipo: "B", cliente: "Cooperativa El Rápido", cuit: "30-11223344-5", fecha: "2026-03-20", vencimiento: "2026-04-20", total: 35000000, estado: "cobrada" },
-  { id: "5", numero: "0001-00004517", tipo: "A", cliente: "Empresa San José", cuit: "30-44556677-8", fecha: "2026-03-15", vencimiento: "2026-04-15", total: 62000000, estado: "vencida" },
-  { id: "6", numero: "0001-00004516", tipo: "E", cliente: "Transporte del Oeste (Chile)", cuit: "99-00112233-4", fecha: "2026-03-10", vencimiento: "2026-04-10", total: 95000000, estado: "cobrada" },
-];
-
-const estadoBadge: Record<Factura["estado"], { label: string; color: "blue" | "green" | "red" | "gray" }> = {
-  emitida: { label: "Emitida", color: "blue" },
-  cobrada: { label: "Cobrada", color: "green" },
-  vencida: { label: "Vencida", color: "red" },
-  anulada: { label: "Anulada", color: "gray" },
-};
-
-const columns: ColumnDef<Factura>[] = [
-  {
-    accessorKey: "numero",
-    header: ({ column }) => <Button variant="ghost" size="sm" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>Factura <ArrowUpDownIcon className="ml-1 size-3.5" /></Button>,
-    cell: ({ row }) => <div><p className="text-sm font-medium font-mono">{row.original.numero}</p><p className="text-xs text-muted-foreground">Tipo {row.original.tipo}</p></div>,
-  },
-  {
-    accessorKey: "cliente",
-    header: "Cliente",
-    cell: ({ row }) => <div><p className="text-sm font-medium">{row.original.cliente}</p><p className="text-xs text-muted-foreground">{row.original.cuit}</p></div>,
-  },
-  {
-    accessorKey: "fecha",
-    header: ({ column }) => <Button variant="ghost" size="sm" onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}>Fecha <ArrowUpDownIcon className="ml-1 size-3.5" /></Button>,
-    cell: ({ row }) => <div className="flex items-center gap-2 text-sm"><CalendarIcon className="size-3.5 text-muted-foreground" />{new Date(row.original.fecha).toLocaleDateString("es-AR", { day: "2-digit", month: "short" })}</div>,
-  },
-  {
-    accessorKey: "vencimiento",
-    header: "Vencimiento",
-    cell: ({ row }) => {
-      const d = new Date(row.original.vencimiento);
-      const days = Math.ceil((d.getTime() - Date.now()) / 86400000);
-      const color = row.original.estado === "vencida" ? "text-red-500 font-medium" : days <= 7 ? "text-amber-500" : "";
-      return <span className={`text-sm ${color}`}>{d.toLocaleDateString("es-AR", { day: "2-digit", month: "short" })}</span>;
-    },
-  },
-  {
-    accessorKey: "total",
-    header: () => <div className="text-right">Total</div>,
-    cell: ({ row }) => <div className="text-right text-sm font-medium font-mono">{fmt(row.original.total)}</div>,
-  },
-  { accessorKey: "estado", header: "Estado", cell: ({ row }) => { const e = estadoBadge[row.original.estado]; return <Badge variant="outline" color={e.color}>{e.label}</Badge>; } },
-];
 
 export default function FacturacionPage() {
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const table = useReactTable({ data: MOCK, columns, onSortingChange: setSorting, onColumnFiltersChange: setColumnFilters, getCoreRowModel: getCoreRowModel(), getSortedRowModel: getSortedRowModel(), getFilteredRowModel: getFilteredRowModel(), state: { sorting, columnFilters } });
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [withholdings, setWithholdings] = useState<Withholding[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const totalEmitido = MOCK.filter((f) => f.estado === "emitida").reduce((a, f) => a + f.total, 0);
-  const totalCobrado = MOCK.filter((f) => f.estado === "cobrada").reduce((a, f) => a + f.total, 0);
-  const totalVencido = MOCK.filter((f) => f.estado === "vencida").reduce((a, f) => a + f.total, 0);
+  const fetch = useCallback(async () => {
+    try {
+      const [i, w] = await Promise.all([
+        api.get<{ invoices: Invoice[] }>("/v1/erp/invoicing/invoices?page_size=50"),
+        api.get<{ withholdings: Withholding[] }>("/v1/erp/invoicing/withholdings?page_size=50"),
+      ]);
+      setInvoices(i.invoices); setWithholdings(w.withholdings);
+    } catch (err) { console.error(err); } finally { setLoading(false); }
+  }, []);
+
+  useEffect(() => { fetch(); }, [fetch]);
+  useEffect(() => { const unsub = wsManager.subscribe("erp_invoicing", fetch); return unsub; }, [fetch]);
+
+  if (loading) return <div className="flex-1 p-8"><Skeleton className="h-[600px]" /></div>;
 
   return (
     <div className="flex-1 overflow-y-auto">
-      <div className="mx-auto w-full max-w-5xl px-6 py-8 sm:px-8">
-        <div className="flex items-center justify-between mb-6">
-          <div><h1 className="text-xl font-semibold tracking-tight">Facturación</h1><p className="text-sm text-muted-foreground mt-0.5">Emisión y seguimiento de facturas</p></div>
-          <Button size="sm"><PlusIcon className="size-4 mr-1.5" />Nueva factura</Button>
+      <div className="mx-auto w-full max-w-6xl px-6 py-8 sm:px-8">
+        <div className="mb-6">
+          <h1 className="text-xl font-semibold tracking-tight">Facturacion</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">Comprobantes, libro IVA y retenciones — {invoices.length} comprobantes</p>
         </div>
-        <div className="grid grid-cols-3 gap-3 mb-6">
-          {[
-            { label: "Pendiente de cobro", value: fmt(totalEmitido), icon: FileTextIcon, color: "text-blue-500" },
-            { label: "Cobrado (mes)", value: fmt(totalCobrado), icon: DollarSignIcon, color: "text-green-500" },
-            { label: "Vencido", value: fmt(totalVencido), icon: DollarSignIcon, color: "text-red-500" },
-          ].map((s) => (
-            <div key={s.label} className="rounded-xl border border-border/40 bg-card p-4">
-              <div className="flex items-center gap-2 mb-2"><s.icon className="size-4 text-muted-foreground" /><p className="text-xs text-muted-foreground">{s.label}</p></div>
-              <p className={`text-xl font-semibold ${s.color}`}>{s.value}</p>
+
+        <Tabs defaultValue="invoices">
+          <TabsList className="mb-4">
+            <TabsTrigger value="invoices"><FileTextIcon className="size-3.5 mr-1.5" />Comprobantes</TabsTrigger>
+            <TabsTrigger value="withholdings"><ShieldIcon className="size-3.5 mr-1.5" />Retenciones</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="invoices">
+            <div className="rounded-xl border border-border/40 bg-card overflow-hidden">
+              <Table>
+                <TableHeader><TableRow>
+                  <TableHead className="w-36">Numero</TableHead>
+                  <TableHead className="w-28">Fecha</TableHead>
+                  <TableHead className="w-28">Tipo</TableHead>
+                  <TableHead>Entidad</TableHead>
+                  <TableHead className="text-right w-28">Total</TableHead>
+                  <TableHead className="w-28">Estado</TableHead>
+                </TableRow></TableHeader>
+                <TableBody>
+                  {invoices.map((inv) => {
+                    const s = statusBadge[inv.status] || statusBadge.draft;
+                    return (
+                      <TableRow key={inv.id}>
+                        <TableCell className="font-mono text-sm">{inv.number}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">{fmtDate(inv.date)}</TableCell>
+                        <TableCell><Badge variant="secondary">{typeLabel[inv.invoice_type] || inv.invoice_type}</Badge></TableCell>
+                        <TableCell className="text-sm">{inv.entity_name}</TableCell>
+                        <TableCell className="text-right font-mono text-sm">{fmtMoney(inv.total)}</TableCell>
+                        <TableCell><Badge variant={s.variant}>{s.label}</Badge></TableCell>
+                      </TableRow>
+                    );
+                  })}
+                  {invoices.length === 0 && <TableRow><TableCell colSpan={6} className="h-24 text-center text-muted-foreground">Sin comprobantes.</TableCell></TableRow>}
+                </TableBody>
+              </Table>
             </div>
-          ))}
-        </div>
-        <div className="relative mb-4"><SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" /><Input placeholder="Buscar por cliente..." className="pl-9 bg-card" value={(table.getColumn("cliente")?.getFilterValue() as string) ?? ""} onChange={(e) => table.getColumn("cliente")?.setFilterValue(e.target.value)} /></div>
-        <div className="rounded-xl border border-border/40 bg-card overflow-hidden">
-          <Table>
-            <TableHeader>{table.getHeaderGroups().map((hg) => (<TableRow key={hg.id}>{hg.headers.map((h) => (<TableHead key={h.id}>{h.isPlaceholder ? null : flexRender(h.column.columnDef.header, h.getContext())}</TableHead>))}</TableRow>))}</TableHeader>
-            <TableBody>
-              {table.getRowModel().rows.length ? table.getRowModel().rows.map((row) => (<TableRow key={row.id}>{row.getVisibleCells().map((cell) => (<TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>))}</TableRow>)) : (<TableRow><TableCell colSpan={columns.length} className="h-24 text-center text-muted-foreground">No se encontraron facturas.</TableCell></TableRow>)}
-            </TableBody>
-          </Table>
-        </div>
+          </TabsContent>
+
+          <TabsContent value="withholdings">
+            <div className="rounded-xl border border-border/40 bg-card overflow-hidden">
+              <Table>
+                <TableHeader><TableRow>
+                  <TableHead className="w-28">Fecha</TableHead>
+                  <TableHead>Entidad</TableHead>
+                  <TableHead className="w-20">Tipo</TableHead>
+                  <TableHead className="text-right w-20">Tasa</TableHead>
+                  <TableHead className="text-right w-28">Base</TableHead>
+                  <TableHead className="text-right w-28">Monto</TableHead>
+                </TableRow></TableHeader>
+                <TableBody>
+                  {withholdings.map((w) => (
+                    <TableRow key={w.id}>
+                      <TableCell className="text-sm text-muted-foreground">{fmtDate(w.date)}</TableCell>
+                      <TableCell className="text-sm">{w.entity_name}</TableCell>
+                      <TableCell><Badge variant="outline">{w.type.toUpperCase()}</Badge></TableCell>
+                      <TableCell className="text-right font-mono text-sm">{w.rate}%</TableCell>
+                      <TableCell className="text-right font-mono text-sm">{fmtMoney(w.base_amount)}</TableCell>
+                      <TableCell className="text-right font-mono text-sm font-medium">{fmtMoney(w.amount)}</TableCell>
+                    </TableRow>
+                  ))}
+                  {withholdings.length === 0 && <TableRow><TableCell colSpan={6} className="h-24 text-center text-muted-foreground">Sin retenciones.</TableCell></TableRow>}
+                </TableBody>
+              </Table>
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
