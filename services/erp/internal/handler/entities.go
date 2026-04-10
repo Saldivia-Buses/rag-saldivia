@@ -304,10 +304,12 @@ func (h *Entities) AddNote(w http.ResponseWriter, r *http.Request) {
 		Type string `json:"type"`
 		Body string `json:"body"`
 	}
-	body.Type = "note"
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
 		return
+	}
+	if body.Type == "" {
+		body.Type = "note" // default after decode so client can override
 	}
 
 	note, err := h.svc.AddNote(r.Context(), slug, entityID, r.Header.Get("X-User-ID"), body.Type, body.Body, r.RemoteAddr)

@@ -2,9 +2,10 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
 	"log/slog"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -263,7 +264,15 @@ func (h *Treasury) UpdateCheckStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err := h.svc.UpdateCheckStatus(r.Context(), id, slug, body.Status, r.Header.Get("X-User-ID"), r.RemoteAddr); err != nil {
-		http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
+		msg := err.Error()
+		if strings.Contains(msg, "invalid transition") {
+			http.Error(w, `{"error":"`+msg+`"}`, http.StatusBadRequest)
+		} else if strings.Contains(msg, "not found") {
+			http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
+		} else {
+			slog.Error("update check status failed", "error", err)
+			http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
+		}
 		return
 	}
 	w.WriteHeader(http.StatusNoContent)
@@ -357,16 +366,8 @@ func pgNumericH(s string) pgtype.Numeric {
 }
 
 func parseFloat(s string) float64 {
-	var f float64
-	for i, c := range s {
-		if c == '.' || c == '-' || (c >= '0' && c <= '9') {
-			continue
-		}
-		s = s[:i]
-		break
-	}
-	_, _ = fmt.Sscanf(s, "%f", &f)
-	return f
+	v, _ := strconv.ParseFloat(s, 64)
+	return v
 }
 
 func pgTextOpt(s *string) pgtype.Text {
