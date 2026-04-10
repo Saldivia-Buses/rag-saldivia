@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 
 	"github.com/Camionerou/rag-saldivia/pkg/audit"
@@ -15,16 +16,22 @@ import (
 // Accounting handles accounting business logic.
 type Accounting struct {
 	repo      *repository.Queries
+	pool      TxStarter
 	audit     audit.StrictLogger
 	auditLog  *audit.Writer
 	publisher *traces.Publisher
 }
 
+// TxStarter starts a database transaction. Implemented by pgxpool.Pool.
+type TxStarter interface {
+	Begin(ctx context.Context) (pgx.Tx, error)
+}
+
 // NewAccounting creates an accounting service.
 // Uses StrictLogger for financial operations (fail-closed).
-func NewAccounting(repo *repository.Queries, auditWriter *audit.Writer, publisher *traces.Publisher) *Accounting {
+func NewAccounting(repo *repository.Queries, pool TxStarter, auditWriter *audit.Writer, publisher *traces.Publisher) *Accounting {
 	return &Accounting{
-		repo: repo, audit: auditWriter, auditLog: auditWriter, publisher: publisher,
+		repo: repo, pool: pool, audit: auditWriter, auditLog: auditWriter, publisher: publisher,
 	}
 }
 
@@ -140,7 +147,11 @@ type CreateLineRequest struct {
 	Description  string
 }
 
-// CreateEntry creates a journal entry with lines. Uses StrictLogger (pattern P7).
+var validEntryTypes = map[string]bool{"manual": true, "auto": true, "adjustment": true}
+var validAccountTypes = map[string]bool{"asset": true, "liability": true, "equity": true, "income": true, "expense": true}
+
+// CreateEntry creates a journal entry with lines in a single transaction.
+// Uses StrictLogger (pattern P7) — if audit fails, transaction is rolled back.
 func (s *Accounting) CreateEntry(ctx context.Context, req CreateEntryRequest) (*EntryDetail, error) {
 	if req.Concept == "" || len(req.Lines) == 0 {
 		return nil, fmt.Errorf("concept and at least one line required")
@@ -148,8 +159,20 @@ func (s *Accounting) CreateEntry(ctx context.Context, req CreateEntryRequest) (*
 	if req.EntryType == "" {
 		req.EntryType = "manual"
 	}
+	if !validEntryTypes[req.EntryType] {
+		return nil, fmt.Errorf("invalid entry type: %s", req.EntryType)
+	}
 
-	entry, err := s.repo.CreateJournalEntry(ctx, repository.CreateJournalEntryParams{
+	// Transaction: entry + all lines atomically
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("begin tx: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	qtx := s.repo.WithTx(tx)
+
+	entry, err := qtx.CreateJournalEntry(ctx, repository.CreateJournalEntryParams{
 		TenantID: req.TenantID, Number: req.Number, Date: req.Date,
 		FiscalYearID: req.FiscalYearID, Concept: req.Concept,
 		EntryType: req.EntryType, ReferenceType: req.RefType,
@@ -159,9 +182,8 @@ func (s *Accounting) CreateEntry(ctx context.Context, req CreateEntryRequest) (*
 		return nil, fmt.Errorf("create entry: %w", err)
 	}
 
-	var lines []repository.ListJournalLinesRow
 	for i, l := range req.Lines {
-		line, err := s.repo.CreateJournalLine(ctx, repository.CreateJournalLineParams{
+		_, err := qtx.CreateJournalLine(ctx, repository.CreateJournalLineParams{
 			TenantID:     req.TenantID,
 			EntryID:      entry.ID,
 			AccountID:    l.AccountID,
@@ -175,22 +197,25 @@ func (s *Accounting) CreateEntry(ctx context.Context, req CreateEntryRequest) (*
 		if err != nil {
 			return nil, fmt.Errorf("create line %d: %w", i, err)
 		}
-		lines = append(lines, repository.ListJournalLinesRow{
-			ID: line.ID, TenantID: line.TenantID, EntryID: line.EntryID,
-			AccountID: line.AccountID, CostCenterID: line.CostCenterID,
-			EntryDate: line.EntryDate, Debit: line.Debit, Credit: line.Credit,
-			Description: line.Description, SortOrder: line.SortOrder,
-		})
 	}
 
-	// StrictLogger — if audit fails, operation must be flagged
+	// StrictLogger — if audit fails, abort transaction (pattern P7)
 	if err := s.audit.WriteStrict(ctx, audit.Entry{
 		TenantID: req.TenantID, UserID: req.UserID,
 		Action: "erp.journal.created", Resource: uuidStr(entry.ID),
 		Details: map[string]any{"number": req.Number, "lines": len(req.Lines)}, IP: req.IP,
 	}); err != nil {
-		slog.Error("STRICT audit failed on journal create", "error", err)
+		return nil, fmt.Errorf("strict audit failed, aborting: %w", err)
 	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return nil, fmt.Errorf("commit entry: %w", err)
+	}
+
+	// Fetch lines with JOINed account data for the response
+	lines, _ := s.repo.ListJournalLines(ctx, repository.ListJournalLinesParams{
+		EntryID: entry.ID, TenantID: req.TenantID,
+	})
 
 	s.publisher.Broadcast(req.TenantID, "erp_accounting", map[string]any{
 		"action": "entry_created", "entry_id": uuidStr(entry.ID),

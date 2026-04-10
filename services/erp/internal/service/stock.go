@@ -15,14 +15,17 @@ import (
 // Stock handles stock & warehouse business logic.
 type Stock struct {
 	repo      *repository.Queries
+	pool      TxStarter
 	audit     *audit.Writer
 	publisher *traces.Publisher
 }
 
 // NewStock creates a stock service.
-func NewStock(repo *repository.Queries, auditWriter *audit.Writer, publisher *traces.Publisher) *Stock {
-	return &Stock{repo: repo, audit: auditWriter, publisher: publisher}
+func NewStock(repo *repository.Queries, pool TxStarter, auditWriter *audit.Writer, publisher *traces.Publisher) *Stock {
+	return &Stock{repo: repo, pool: pool, audit: auditWriter, publisher: publisher}
 }
+
+var validMovementTypes = map[string]bool{"in": true, "out": true, "transfer": true, "adjustment": true}
 
 // ListArticles returns paginated articles.
 func (s *Stock) ListArticles(ctx context.Context, tenantID, search, articleType string, activeOnly bool, limit, offset int) ([]repository.ErpArticle, error) {
@@ -151,14 +154,26 @@ type CreateMovementRequest struct {
 	IP           string
 }
 
-// CreateMovement registers a stock movement and updates stock levels in one logical operation.
+// CreateMovement registers a stock movement and updates stock levels in a single transaction.
 func (s *Stock) CreateMovement(ctx context.Context, req CreateMovementRequest) (repository.ErpStockMovement, error) {
+	if !validMovementTypes[req.MovementType] {
+		return repository.ErpStockMovement{}, fmt.Errorf("invalid movement type: %s", req.MovementType)
+	}
+
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return repository.ErpStockMovement{}, fmt.Errorf("begin tx: %w", err)
+	}
+	defer tx.Rollback(ctx)
+
+	qtx := s.repo.WithTx(tx)
+
 	var refType pgtype.Text
 	if req.RefType != nil {
 		refType = pgtype.Text{String: *req.RefType, Valid: true}
 	}
 
-	mov, err := s.repo.CreateStockMovement(ctx, repository.CreateStockMovementParams{
+	mov, err := qtx.CreateStockMovement(ctx, repository.CreateStockMovementParams{
 		TenantID:      req.TenantID,
 		ArticleID:     req.ArticleID,
 		WarehouseID:   req.WarehouseID,
@@ -175,15 +190,21 @@ func (s *Stock) CreateMovement(ctx context.Context, req CreateMovementRequest) (
 		return repository.ErpStockMovement{}, fmt.Errorf("create movement: %w", err)
 	}
 
-	// Update stock level (same transaction should be used in production)
+	// Update stock level in same transaction
 	delta := pgNumeric(req.Quantity)
 	if req.MovementType == "out" {
 		delta = pgNumericNeg(req.Quantity)
 	}
-	_ = s.repo.UpsertStockLevel(ctx, repository.UpsertStockLevelParams{
+	if err := qtx.UpsertStockLevel(ctx, repository.UpsertStockLevelParams{
 		TenantID: req.TenantID, ArticleID: req.ArticleID,
 		WarehouseID: req.WarehouseID, Quantity: delta,
-	})
+	}); err != nil {
+		return repository.ErpStockMovement{}, fmt.Errorf("upsert stock level: %w", err)
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return repository.ErpStockMovement{}, fmt.Errorf("commit movement: %w", err)
+	}
 
 	idStr := uuidStr(mov.ID)
 	s.audit.Write(ctx, audit.Entry{

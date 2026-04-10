@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS erp_stock_movements (
     article_id      UUID NOT NULL REFERENCES erp_articles(id),
     warehouse_id    UUID NOT NULL REFERENCES erp_warehouses(id),
     movement_type   TEXT NOT NULL CHECK (movement_type IN ('in', 'out', 'transfer', 'adjustment')),
-    quantity        NUMERIC(14,4) NOT NULL,
+    quantity        NUMERIC(14,4) NOT NULL CHECK (quantity > 0),
     unit_cost       NUMERIC(14,4) NOT NULL DEFAULT 0,
     reference_type  TEXT,
     reference_id    UUID,

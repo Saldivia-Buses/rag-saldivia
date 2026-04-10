@@ -64,9 +64,9 @@ func main() {
 	catalogsHandler := handler.NewCatalogs(catalogsSvc)
 	entitiesSvc := service.NewEntities(repo, auditWriter, publisher)
 	entitiesHandler := handler.NewEntities(entitiesSvc)
-	stockSvc := service.NewStock(repo, auditWriter, publisher)
+	stockSvc := service.NewStock(repo, pool, auditWriter, publisher)
 	stockHandler := handler.NewStock(stockSvc)
-	accountingSvc := service.NewAccounting(repo, auditWriter, publisher)
+	accountingSvc := service.NewAccounting(repo, pool, auditWriter, publisher)
 	accountingHandler := handler.NewAccounting(accountingSvc)
 
 	// Health

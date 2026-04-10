@@ -81,6 +81,23 @@ CREATE TRIGGER trg_journal_immutable BEFORE UPDATE OR DELETE ON erp_journal_entr
     FOR EACH ROW WHEN (OLD.status IN ('posted', 'reversed'))
     EXECUTE FUNCTION erp_prevent_financial_mutation();
 
+-- Immutability for journal lines — prevents modifying lines of posted entries
+CREATE OR REPLACE FUNCTION erp_prevent_line_mutation() RETURNS trigger AS $$
+DECLARE parent_status TEXT;
+BEGIN
+    SELECT status INTO parent_status FROM erp_journal_entries
+    WHERE id = COALESCE(OLD.entry_id, NEW.entry_id);
+    IF parent_status IN ('posted', 'reversed') THEN
+        RAISE EXCEPTION 'cannot modify lines of % journal entry', parent_status;
+    END IF;
+    IF TG_OP = 'DELETE' THEN RETURN OLD; END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_journal_lines_immutable BEFORE UPDATE OR DELETE ON erp_journal_lines
+    FOR EACH ROW EXECUTE FUNCTION erp_prevent_line_mutation();
+
 -- Balance validation (pattern P13) — validates when entry is posted
 CREATE CONSTRAINT TRIGGER trg_journal_balance
     AFTER UPDATE ON erp_journal_entries
@@ -105,6 +122,7 @@ CREATE POLICY tenant_isolation ON erp_journal_lines USING (tenant_id = current_s
 INSERT INTO permissions (id, name, description, category) VALUES
     ('erp.accounting.read',    'Ver contabilidad',     'Consultar asientos y plan de cuentas', 'erp'),
     ('erp.accounting.write',   'Gestionar contabilidad','Crear asientos',                      'erp'),
+    ('erp.accounting.post',    'Contabilizar asientos', 'Cambiar asientos de borrador a posteado','erp'),
     ('erp.accounting.reverse', 'Reversar asientos',    'Crear contra-asientos',                'erp')
 ON CONFLICT (id) DO NOTHING;
 

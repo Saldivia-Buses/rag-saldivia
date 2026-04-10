@@ -43,7 +43,7 @@ func (h *Accounting) Routes(authWrite func(http.Handler) http.Handler) chi.Route
 
 	r.Group(func(r chi.Router) {
 		r.Use(authWrite)
-		r.Use(sdamw.RequirePermission("erp.accounting.reverse"))
+		r.Use(sdamw.RequirePermission("erp.accounting.post"))
 		r.Post("/entries/{id}/post", h.PostEntry)
 	})
 
