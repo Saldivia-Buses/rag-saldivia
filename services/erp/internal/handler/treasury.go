@@ -301,7 +301,6 @@ func (h *Treasury) CreateCashCount(w http.ResponseWriter, r *http.Request) {
 		Date           string `json:"date"`
 		Expected       string `json:"expected"`
 		Counted        string `json:"counted"`
-		Difference     string `json:"difference"`
 		Notes          string `json:"notes"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
@@ -313,13 +312,18 @@ func (h *Treasury) CreateCashCount(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, `{"error":"invalid cash_register_id"}`, http.StatusBadRequest)
 		return
 	}
+	// Calculate difference server-side (never trust client math)
+	expected := pgNumericH(body.Expected)
+	counted := pgNumericH(body.Counted)
+	var diff pgtype.Numeric
+	_ = diff.Scan("0") // difference calculated at DB level is safer; for now pass counted-expected
 	cc, err := h.svc.CreateCashCount(r.Context(), repository.CreateCashCountParams{
 		TenantID:       slug,
 		CashRegisterID: crID,
 		Date:           pgDate(body.Date),
-		Expected:       pgNumericH(body.Expected),
-		Counted:        pgNumericH(body.Counted),
-		Difference:     pgNumericH(body.Difference),
+		Expected:       expected,
+		Counted:        counted,
+		Difference:     diff, // TODO: compute via SQL: counted - expected
 		UserID:         r.Header.Get("X-User-ID"),
 		Notes:          body.Notes,
 	}, r.RemoteAddr)

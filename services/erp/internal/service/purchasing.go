@@ -182,6 +182,7 @@ type ReceiveLineRequest struct {
 }
 
 // Receive creates a receipt and updates received quantities in one transaction.
+// Order must be in 'approved' or 'partial' status.
 func (s *Purchasing) Receive(ctx context.Context, req ReceiveRequest) error {
 	if len(req.Lines) == 0 {
 		return fmt.Errorf("at least one line required")
@@ -193,6 +194,17 @@ func (s *Purchasing) Receive(ctx context.Context, req ReceiveRequest) error {
 	}
 	defer tx.Rollback(ctx)
 	qtx := s.repo.WithTx(tx)
+
+	// Verify order is receivable
+	order, err := qtx.GetPurchaseOrder(ctx, repository.GetPurchaseOrderParams{
+		ID: req.OrderID, TenantID: req.TenantID,
+	})
+	if err != nil {
+		return fmt.Errorf("get order: %w", err)
+	}
+	if order.Status != "approved" && order.Status != "partial" {
+		return fmt.Errorf("order must be approved or partial to receive, current: %s", order.Status)
+	}
 
 	receipt, err := qtx.CreatePurchaseReceipt(ctx, repository.CreatePurchaseReceiptParams{
 		TenantID: req.TenantID, OrderID: req.OrderID, Date: req.Date,

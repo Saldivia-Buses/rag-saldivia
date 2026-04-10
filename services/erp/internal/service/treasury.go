@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"fmt"
-	"log/slog"
 
 	"github.com/jackc/pgx/v5/pgtype"
 
@@ -84,18 +83,30 @@ func (s *Treasury) CreateMovement(ctx context.Context, req CreateTreasuryMovemen
 		return repository.ErpTreasuryMovement{}, fmt.Errorf("invalid movement type: %s", req.MovementType)
 	}
 
-	mov, err := s.repo.CreateTreasuryMovement(ctx, req.CreateTreasuryMovementParams)
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return repository.ErpTreasuryMovement{}, fmt.Errorf("begin tx: %w", err)
+	}
+	defer tx.Rollback(ctx)
+	qtx := s.repo.WithTx(tx)
+
+	mov, err := qtx.CreateTreasuryMovement(ctx, req.CreateTreasuryMovementParams)
 	if err != nil {
 		return repository.ErpTreasuryMovement{}, fmt.Errorf("create movement: %w", err)
 	}
 
+	// StrictLogger — abort on failure (pattern P7)
 	idStr := uuidStr(mov.ID)
 	if err := s.audit.WriteStrict(ctx, audit.Entry{
 		TenantID: req.TenantID, UserID: req.UserIDVal,
 		Action: "erp.treasury.movement", Resource: idStr,
 		Details: map[string]any{"type": req.MovementType}, IP: req.IP,
 	}); err != nil {
-		slog.Error("STRICT audit failed on treasury movement", "error", err)
+		return repository.ErpTreasuryMovement{}, fmt.Errorf("strict audit failed, aborting: %w", err)
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return repository.ErpTreasuryMovement{}, fmt.Errorf("commit movement: %w", err)
 	}
 
 	s.publisher.Broadcast(req.TenantID, "erp_treasury", map[string]any{
@@ -122,7 +133,44 @@ func (s *Treasury) CreateCheck(ctx context.Context, p repository.CreateCheckPara
 	return chk, nil
 }
 
+var validCheckTransitions = map[string][]string{
+	"in_portfolio": {"deposited", "endorsed", "rejected"},
+	"deposited":    {"cashed", "rejected"},
+	"endorsed":     {"cashed", "rejected"},
+}
+
 func (s *Treasury) UpdateCheckStatus(ctx context.Context, id pgtype.UUID, tenantID, newStatus, userID, ip string) error {
+	// Fetch current check to validate transition
+	checks, err := s.repo.ListChecks(ctx, repository.ListChecksParams{
+		TenantID: tenantID, DirectionFilter: "", StatusFilter: "",
+	})
+	if err != nil {
+		return fmt.Errorf("fetch check: %w", err)
+	}
+	var currentStatus string
+	for _, c := range checks {
+		if c.ID == id {
+			currentStatus = c.Status
+			break
+		}
+	}
+	if currentStatus == "" {
+		return fmt.Errorf("check not found")
+	}
+
+	// Validate transition
+	allowed := validCheckTransitions[currentStatus]
+	valid := false
+	for _, s := range allowed {
+		if s == newStatus {
+			valid = true
+			break
+		}
+	}
+	if !valid {
+		return fmt.Errorf("invalid transition from %s to %s", currentStatus, newStatus)
+	}
+
 	rows, err := s.repo.UpdateCheckStatus(ctx, repository.UpdateCheckStatusParams{
 		ID: id, TenantID: tenantID, Status: newStatus,
 	})

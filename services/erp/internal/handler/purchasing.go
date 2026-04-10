@@ -162,8 +162,16 @@ func (h *Purchasing) Receive(w http.ResponseWriter, r *http.Request) {
 	}
 	var lines []service.ReceiveLineRequest
 	for _, l := range body.Lines {
-		olID, _ := parseUUID(l.OrderLineID)
-		aID, _ := parseUUID(l.ArticleID)
+		olID, err := parseUUID(l.OrderLineID)
+		if err != nil {
+			http.Error(w, `{"error":"invalid order_line_id in line"}`, http.StatusBadRequest)
+			return
+		}
+		aID, err := parseUUID(l.ArticleID)
+		if err != nil {
+			http.Error(w, `{"error":"invalid article_id in line"}`, http.StatusBadRequest)
+			return
+		}
 		lines = append(lines, service.ReceiveLineRequest{
 			OrderLineID: olID, ArticleID: aID, Quantity: l.Quantity,
 		})
