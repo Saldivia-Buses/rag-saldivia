@@ -55,12 +55,15 @@ func main() {
 	// Core dependencies
 	auditWriter := audit.NewWriter(pool)
 	publisher := traces.NewPublisher(nc)
-	tenantSlug := config.Env("TENANT_SLUG", "dev")
 
 	// Repository + Service + Handler
 	repo := repository.New(pool)
-	suggestionsSvc := service.NewSuggestions(repo, auditWriter, publisher, tenantSlug)
-	suggestionsHandler := handler.NewSuggestions(suggestionsSvc, tenantSlug)
+	suggestionsSvc := service.NewSuggestions(repo, auditWriter, publisher)
+	suggestionsHandler := handler.NewSuggestions(suggestionsSvc)
+	catalogsSvc := service.NewCatalogs(repo, auditWriter, publisher)
+	catalogsHandler := handler.NewCatalogs(catalogsSvc)
+	entitiesSvc := service.NewEntities(repo, auditWriter, publisher)
+	entitiesHandler := handler.NewEntities(entitiesSvc)
 
 	// Health
 	hc := health.New("erp")
@@ -85,9 +88,8 @@ func main() {
 	r.Group(func(r chi.Router) {
 		r.Use(authRead) // default for mount, write endpoints override below
 		r.Mount("/v1/erp/suggestions", suggestionsHandler.Routes(authWrite))
-		// Future ERP modules mount here:
-		// r.Mount("/v1/erp/reclamos", reclamosHandler.Routes())
-		// r.Mount("/v1/erp/entregas", entregasHandler.Routes())
+		r.Mount("/v1/erp/catalogs", catalogsHandler.Routes(authWrite))
+		r.Mount("/v1/erp/entities", entitiesHandler.Routes(authWrite))
 	})
 
 	app.Run()

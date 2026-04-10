@@ -100,6 +100,118 @@ func TestRequirePermission_ViewerCantDelete(t *testing.T) {
 	}
 }
 
+func TestRequirePermission_WildcardMatch(t *testing.T) {
+	handler := RequirePermission("erp.accounting.read")(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	req := httptest.NewRequest(http.MethodGet, "/v1/erp/accounting/entries", nil)
+	ctx := WithRole(req.Context(), "user")
+	ctx = WithPermissions(ctx, []string{"erp.accounting.*"})
+	req = req.WithContext(ctx)
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200 (wildcard match), got %d", rec.Code)
+	}
+}
+
+func TestRequirePermission_TopLevelWildcard(t *testing.T) {
+	handler := RequirePermission("erp.stock.write")(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	req := httptest.NewRequest(http.MethodPost, "/v1/erp/stock/articles", nil)
+	ctx := WithRole(req.Context(), "manager")
+	ctx = WithPermissions(ctx, []string{"erp.*"})
+	req = req.WithContext(ctx)
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200 (erp.* wildcard), got %d", rec.Code)
+	}
+}
+
+func TestRequirePermission_WildcardNoFalsePositive(t *testing.T) {
+	handler := RequirePermission("chat.read")(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Fatal("should not match")
+	}))
+
+	req := httptest.NewRequest(http.MethodGet, "/v1/chat/sessions", nil)
+	ctx := WithRole(req.Context(), "user")
+	ctx = WithPermissions(ctx, []string{"erp.*"}) // erp.* should NOT match chat.read
+	req = req.WithContext(ctx)
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusForbidden {
+		t.Fatalf("expected 403 (erp.* should not match chat.read), got %d", rec.Code)
+	}
+}
+
+func TestRequireModule_Allowed(t *testing.T) {
+	handler := RequireModule("erp")(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	req := httptest.NewRequest(http.MethodGet, "/v1/erp/catalogs", nil)
+	ctx := WithEnabledModules(req.Context(), []string{"chat", "erp", "fleet"})
+	req = req.WithContext(ctx)
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusOK {
+		t.Fatalf("expected 200, got %d", rec.Code)
+	}
+}
+
+func TestRequireModule_Denied(t *testing.T) {
+	handler := RequireModule("erp")(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		t.Fatal("should not reach handler")
+	}))
+
+	req := httptest.NewRequest(http.MethodGet, "/v1/erp/catalogs", nil)
+	ctx := WithEnabledModules(req.Context(), []string{"chat", "fleet"})
+	req = req.WithContext(ctx)
+	rec := httptest.NewRecorder()
+
+	handler.ServeHTTP(rec, req)
+
+	if rec.Code != http.StatusForbidden {
+		t.Fatalf("expected 403, got %d", rec.Code)
+	}
+}
+
+func TestMatchPermission(t *testing.T) {
+	tests := []struct {
+		userPerm string
+		required string
+		want     bool
+	}{
+		{"chat.read", "chat.read", true},
+		{"chat.read", "chat.write", false},
+		{"erp.*", "erp.stock.read", true},
+		{"erp.*", "erp.accounting.write", true},
+		{"erp.*", "chat.read", false},
+		{"erp.accounting.*", "erp.accounting.read", true},
+		{"erp.accounting.*", "erp.accounting.reverse", true},
+		{"erp.accounting.*", "erp.stock.read", false},
+		{"*", "anything", true},
+	}
+	for _, tt := range tests {
+		got := matchPermission(tt.userPerm, tt.required)
+		if got != tt.want {
+			t.Errorf("matchPermission(%q, %q) = %v, want %v", tt.userPerm, tt.required, got, tt.want)
+		}
+	}
+}
+
 func TestRequirePermission_ContextFromAuth(t *testing.T) {
 	// Simulate the full flow: Auth middleware sets context, RBAC reads it
 	inner := RequirePermission("chat.read")(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

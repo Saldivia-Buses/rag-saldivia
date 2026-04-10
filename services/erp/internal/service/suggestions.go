@@ -1,4 +1,3 @@
-// Package service provides business logic for ERP modules.
 package service
 
 import (
@@ -6,7 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 
-	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 
 	"github.com/Camionerou/rag-saldivia/pkg/audit"
 	"github.com/Camionerou/rag-saldivia/pkg/traces"
@@ -15,37 +14,45 @@ import (
 
 // Suggestions handles suggestion business logic.
 type Suggestions struct {
-	repo       *repository.Queries
-	audit      *audit.Writer
-	publisher  *traces.Publisher
-	tenantSlug string
+	repo      *repository.Queries
+	audit     *audit.Writer
+	publisher *traces.Publisher
 }
 
 // NewSuggestions creates a suggestions service.
-func NewSuggestions(repo *repository.Queries, auditWriter *audit.Writer, publisher *traces.Publisher, tenantSlug string) *Suggestions {
+func NewSuggestions(repo *repository.Queries, auditWriter *audit.Writer, publisher *traces.Publisher) *Suggestions {
 	return &Suggestions{
-		repo:       repo,
-		audit:      auditWriter,
-		publisher:  publisher,
-		tenantSlug: tenantSlug,
+		repo:      repo,
+		audit:     auditWriter,
+		publisher: publisher,
 	}
 }
 
 // List returns paginated suggestions with response count.
-func (s *Suggestions) List(ctx context.Context, tenantID string, limit, offset int) ([]repository.Suggestion, error) {
-	return s.repo.ListSuggestions(ctx, tenantID, limit, offset)
+func (s *Suggestions) List(ctx context.Context, tenantID string, limit, offset int) ([]repository.ListSuggestionsRow, error) {
+	return s.repo.ListSuggestions(ctx, repository.ListSuggestionsParams{
+		TenantID: tenantID,
+		Limit:    int32(limit),
+		Offset:   int32(offset),
+	})
 }
 
 // Get returns a single suggestion with its responses.
-func (s *Suggestions) Get(ctx context.Context, id uuid.UUID, tenantID string) (*repository.Suggestion, []repository.SuggestionResponse, error) {
-	suggestion, err := s.repo.GetSuggestion(ctx, id, tenantID)
+func (s *Suggestions) Get(ctx context.Context, id pgtype.UUID, tenantID string) (repository.ErpSuggestion, []repository.ErpSuggestionResponse, error) {
+	suggestion, err := s.repo.GetSuggestion(ctx, repository.GetSuggestionParams{
+		ID:       id,
+		TenantID: tenantID,
+	})
 	if err != nil {
-		return nil, nil, fmt.Errorf("get suggestion: %w", err)
+		return repository.ErpSuggestion{}, nil, fmt.Errorf("get suggestion: %w", err)
 	}
 
-	responses, err := s.repo.ListResponses(ctx, id, tenantID)
+	responses, err := s.repo.ListResponses(ctx, repository.ListResponsesParams{
+		SuggestionID: id,
+		TenantID:     tenantID,
+	})
 	if err != nil {
-		return nil, nil, fmt.Errorf("list responses: %w", err)
+		return repository.ErpSuggestion{}, nil, fmt.Errorf("list responses: %w", err)
 	}
 
 	return suggestion, responses, nil
@@ -61,102 +68,119 @@ type CreateRequest struct {
 }
 
 // Create creates a new suggestion and publishes a NATS notification.
-func (s *Suggestions) Create(ctx context.Context, req CreateRequest) (*repository.Suggestion, error) {
+func (s *Suggestions) Create(ctx context.Context, req CreateRequest) (repository.ErpSuggestion, error) {
 	if req.Body == "" {
-		return nil, fmt.Errorf("suggestion body is required")
+		return repository.ErpSuggestion{}, fmt.Errorf("suggestion body is required")
 	}
 
-	suggestion, err := s.repo.CreateSuggestion(ctx, req.TenantID, req.UserID, req.Origin, req.Body)
+	suggestion, err := s.repo.CreateSuggestion(ctx, repository.CreateSuggestionParams{
+		TenantID: req.TenantID,
+		UserID:   req.UserID,
+		Origin:   req.Origin,
+		Body:     req.Body,
+	})
 	if err != nil {
-		return nil, fmt.Errorf("create suggestion: %w", err)
+		return repository.ErpSuggestion{}, fmt.Errorf("create suggestion: %w", err)
 	}
 
-	// Audit
+	idStr := uuidStr(suggestion.ID)
+
 	s.audit.Write(ctx, audit.Entry{
-		TenantID: s.tenantSlug,
+		TenantID: req.TenantID,
 		UserID:   req.UserID,
 		Action:   "erp.suggestion.created",
-		Resource: suggestion.ID.String(),
+		Resource: idStr,
 		Details:  map[string]any{"origin": req.Origin},
 		IP:       req.IP,
 	})
 
-	// Notify via NATS → notification service can alert admins
-	s.publisher.Notify(s.tenantSlug, "new_suggestion", map[string]any{
-		"suggestion_id": suggestion.ID.String(),
+	s.publisher.Notify(req.TenantID, "new_suggestion", map[string]any{
+		"suggestion_id": idStr,
 		"user_id":       req.UserID,
 		"origin":        req.Origin,
 		"preview":       truncate(req.Body, 100),
 	})
 
-	// Broadcast via NATS → WS Hub pushes to connected admins in real-time
-	s.publisher.Broadcast(s.tenantSlug, "erp_suggestions", map[string]any{
+	s.publisher.Broadcast(req.TenantID, "erp_suggestions", map[string]any{
 		"action":        "created",
-		"suggestion_id": suggestion.ID.String(),
+		"suggestion_id": idStr,
 	})
 
-	slog.Info("suggestion created", "id", suggestion.ID, "user", req.UserID)
+	slog.Info("suggestion created", "id", idStr, "user", req.UserID)
 	return suggestion, nil
 }
 
 // RespondRequest holds data for responding to a suggestion.
 type RespondRequest struct {
 	TenantID     string
-	SuggestionID uuid.UUID
+	SuggestionID pgtype.UUID
 	UserID       string
 	Body         string
 	IP           string
 }
 
 // Respond adds a response to a suggestion and marks it as read.
-func (s *Suggestions) Respond(ctx context.Context, req RespondRequest) (*repository.SuggestionResponse, error) {
+func (s *Suggestions) Respond(ctx context.Context, req RespondRequest) (repository.ErpSuggestionResponse, error) {
 	if req.Body == "" {
-		return nil, fmt.Errorf("response body is required")
+		return repository.ErpSuggestionResponse{}, fmt.Errorf("response body is required")
 	}
 
 	// Verify suggestion exists
-	_, err := s.repo.GetSuggestion(ctx, req.SuggestionID, req.TenantID)
+	_, err := s.repo.GetSuggestion(ctx, repository.GetSuggestionParams{
+		ID:       req.SuggestionID,
+		TenantID: req.TenantID,
+	})
 	if err != nil {
-		return nil, fmt.Errorf("suggestion not found: %w", err)
+		return repository.ErpSuggestionResponse{}, fmt.Errorf("suggestion not found: %w", err)
 	}
 
-	response, err := s.repo.CreateResponse(ctx, req.TenantID, req.SuggestionID, req.UserID, req.Body)
+	response, err := s.repo.CreateResponse(ctx, repository.CreateResponseParams{
+		TenantID:     req.TenantID,
+		SuggestionID: req.SuggestionID,
+		UserID:       req.UserID,
+		Body:         req.Body,
+	})
 	if err != nil {
-		return nil, fmt.Errorf("create response: %w", err)
+		return repository.ErpSuggestionResponse{}, fmt.Errorf("create response: %w", err)
 	}
 
 	// Auto-mark as read when responded
-	if err := s.repo.MarkSuggestionRead(ctx, req.SuggestionID, req.TenantID); err != nil {
-		slog.Error("mark read failed", "error", err, "suggestion_id", req.SuggestionID)
-	}
+	_ = s.repo.MarkSuggestionRead(ctx, repository.MarkSuggestionReadParams{
+		ID:       req.SuggestionID,
+		TenantID: req.TenantID,
+	})
 
-	// Audit
+	idStr := uuidStr(req.SuggestionID)
+	respIDStr := uuidStr(response.ID)
+
 	s.audit.Write(ctx, audit.Entry{
-		TenantID: s.tenantSlug,
+		TenantID: req.TenantID,
 		UserID:   req.UserID,
 		Action:   "erp.suggestion.responded",
-		Resource: req.SuggestionID.String(),
-		Details:  map[string]any{"response_id": response.ID.String()},
+		Resource: idStr,
+		Details:  map[string]any{"response_id": respIDStr},
 		IP:       req.IP,
 	})
 
-	// Broadcast for real-time update
-	s.publisher.Broadcast(s.tenantSlug, "erp_suggestions", map[string]any{
+	s.publisher.Broadcast(req.TenantID, "erp_suggestions", map[string]any{
 		"action":        "responded",
-		"suggestion_id": req.SuggestionID.String(),
-		"response_id":   response.ID.String(),
+		"suggestion_id": idStr,
+		"response_id":   respIDStr,
 	})
 
 	return response, nil
 }
 
 // MarkRead marks a suggestion as read.
-func (s *Suggestions) MarkRead(ctx context.Context, id uuid.UUID, tenantID string) error {
-	return s.repo.MarkSuggestionRead(ctx, id, tenantID)
+func (s *Suggestions) MarkRead(ctx context.Context, id pgtype.UUID, tenantID string) error {
+	return s.repo.MarkSuggestionRead(ctx, repository.MarkSuggestionReadParams{
+		ID:       id,
+		TenantID: tenantID,
+	})
 }
 
 // CountUnread returns the number of unread suggestions.
-func (s *Suggestions) CountUnread(ctx context.Context, tenantID string) (int, error) {
+func (s *Suggestions) CountUnread(ctx context.Context, tenantID string) (int32, error) {
 	return s.repo.CountUnread(ctx, tenantID)
 }
 
@@ -166,4 +190,14 @@ func truncate(s string, max int) string {
 		return s
 	}
 	return string(runes[:max]) + "..."
+}
+
+// uuidStr converts a pgtype.UUID to string. Returns "" if not valid.
+func uuidStr(u pgtype.UUID) string {
+	if !u.Valid {
+		return ""
+	}
+	b := u.Bytes
+	return fmt.Sprintf("%08x-%04x-%04x-%04x-%012x",
+		b[0:4], b[4:6], b[6:8], b[8:10], b[10:16])
 }

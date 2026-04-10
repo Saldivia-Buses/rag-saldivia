@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/pkg/pagination"
@@ -16,32 +17,42 @@ import (
 
 // Suggestions handles suggestion endpoints.
 type Suggestions struct {
-	svc      *service.Suggestions
-	tenantID string // tenant slug, resolved at startup
+	svc *service.Suggestions
 }
 
 // NewSuggestions creates a suggestion handler.
-func NewSuggestions(svc *service.Suggestions, tenantID string) *Suggestions {
-	return &Suggestions{svc: svc, tenantID: tenantID}
+func NewSuggestions(svc *service.Suggestions) *Suggestions {
+	return &Suggestions{svc: svc}
+}
+
+// tenantSlug reads the tenant slug from the request headers (injected by auth middleware).
+func tenantSlug(r *http.Request) string {
+	return r.Header.Get("X-Tenant-Slug")
+}
+
+// parseUUID parses a string into pgtype.UUID.
+func parseUUID(s string) (pgtype.UUID, error) {
+	id, err := uuid.Parse(s)
+	if err != nil {
+		return pgtype.UUID{}, err
+	}
+	return pgtype.UUID{Bytes: id, Valid: true}, nil
 }
 
 // Routes returns the chi router for suggestion endpoints.
-// authWrite middleware enforces FailOpen=false on write operations.
 func (h *Suggestions) Routes(authWrite func(http.Handler) http.Handler) chi.Router {
 	r := chi.NewRouter()
 
-	// Read endpoints — FailOpen true (inherited from parent group)
 	r.Group(func(r chi.Router) {
-		r.Use(sdamw.RequirePermission("erp.read"))
+		r.Use(sdamw.RequirePermission("erp.suggestions.read"))
 		r.Get("/", h.List)
 		r.Get("/unread", h.CountUnread)
 		r.Get("/{id}", h.Get)
 	})
 
-	// Write endpoints — FailOpen false (revoked tokens rejected)
 	r.Group(func(r chi.Router) {
 		r.Use(authWrite)
-		r.Use(sdamw.RequirePermission("erp.write"))
+		r.Use(sdamw.RequirePermission("erp.suggestions.write"))
 		r.Post("/", h.Create)
 		r.Post("/{id}/respond", h.Respond)
 		r.Patch("/{id}/read", h.MarkRead)
@@ -52,11 +63,10 @@ func (h *Suggestions) Routes(authWrite func(http.Handler) http.Handler) chi.Rout
 
 // List returns paginated suggestions.
 func (h *Suggestions) List(w http.ResponseWriter, r *http.Request) {
-	tenantID := h.tenantID
-
+	slug := tenantSlug(r)
 	p := pagination.Parse(r)
 
-	suggestions, err := h.svc.List(r.Context(), tenantID, p.Limit(), p.Offset())
+	suggestions, err := h.svc.List(r.Context(), slug, p.Limit(), p.Offset())
 	if err != nil {
 		slog.Error("list suggestions failed", "error", err)
 		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
@@ -73,22 +83,18 @@ func (h *Suggestions) List(w http.ResponseWriter, r *http.Request) {
 
 // Get returns a suggestion with its response thread.
 func (h *Suggestions) Get(w http.ResponseWriter, r *http.Request) {
-	tenantID := h.tenantID
+	slug := tenantSlug(r)
 
-	id, err := uuid.Parse(chi.URLParam(r, "id"))
+	id, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
 		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
 		return
 	}
 
-	suggestion, responses, err := h.svc.Get(r.Context(), id, tenantID)
+	suggestion, responses, err := h.svc.Get(r.Context(), id, slug)
 	if err != nil {
-		if err.Error() == "get suggestion: no rows in result set" {
-			http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
-		} else {
-			slog.Error("get suggestion failed", "error", err, "id", id)
-			http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
-		}
+		slog.Error("get suggestion failed", "error", err, "id", id)
+		http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
 		return
 	}
 
@@ -101,9 +107,8 @@ func (h *Suggestions) Get(w http.ResponseWriter, r *http.Request) {
 
 // Create creates a new suggestion.
 func (h *Suggestions) Create(w http.ResponseWriter, r *http.Request) {
-	tenantID := h.tenantID
-
-	r.Body = http.MaxBytesReader(w, r.Body, 16<<10) // 16KB max
+	slug := tenantSlug(r)
+	r.Body = http.MaxBytesReader(w, r.Body, 16<<10)
 
 	var body struct {
 		Origin string `json:"origin"`
@@ -121,7 +126,7 @@ func (h *Suggestions) Create(w http.ResponseWriter, r *http.Request) {
 	}
 
 	suggestion, err := h.svc.Create(r.Context(), service.CreateRequest{
-		TenantID: tenantID,
+		TenantID: slug,
 		UserID:   userID,
 		Origin:   body.Origin,
 		Body:     body.Body,
@@ -140,9 +145,9 @@ func (h *Suggestions) Create(w http.ResponseWriter, r *http.Request) {
 
 // Respond adds a response to a suggestion.
 func (h *Suggestions) Respond(w http.ResponseWriter, r *http.Request) {
-	tenantID := h.tenantID
+	slug := tenantSlug(r)
 
-	suggestionID, err := uuid.Parse(chi.URLParam(r, "id"))
+	suggestionID, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
 		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
 		return
@@ -165,7 +170,7 @@ func (h *Suggestions) Respond(w http.ResponseWriter, r *http.Request) {
 	}
 
 	response, err := h.svc.Respond(r.Context(), service.RespondRequest{
-		TenantID:     tenantID,
+		TenantID:     slug,
 		SuggestionID: suggestionID,
 		UserID:       userID,
 		Body:         body.Body,
@@ -184,15 +189,15 @@ func (h *Suggestions) Respond(w http.ResponseWriter, r *http.Request) {
 
 // MarkRead marks a suggestion as read.
 func (h *Suggestions) MarkRead(w http.ResponseWriter, r *http.Request) {
-	tenantID := h.tenantID
+	slug := tenantSlug(r)
 
-	id, err := uuid.Parse(chi.URLParam(r, "id"))
+	id, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
 		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
 		return
 	}
 
-	if err := h.svc.MarkRead(r.Context(), id, tenantID); err != nil {
+	if err := h.svc.MarkRead(r.Context(), id, slug); err != nil {
 		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
 		return
 	}
@@ -202,9 +207,9 @@ func (h *Suggestions) MarkRead(w http.ResponseWriter, r *http.Request) {
 
 // CountUnread returns the number of unread suggestions.
 func (h *Suggestions) CountUnread(w http.ResponseWriter, r *http.Request) {
-	tenantID := h.tenantID
+	slug := tenantSlug(r)
 
-	count, err := h.svc.CountUnread(r.Context(), tenantID)
+	count, err := h.svc.CountUnread(r.Context(), slug)
 	if err != nil {
 		http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
 		return
@@ -213,4 +218,3 @@ func (h *Suggestions) CountUnread(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]any{"unread": count})
 }
-
