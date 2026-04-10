@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
-	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/services/erp/internal/service"
@@ -85,7 +85,7 @@ func (h *Catalogs) ListTypes(w http.ResponseWriter, r *http.Request) {
 func (h *Catalogs) Get(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
 
-	id, err := uuid.Parse(chi.URLParam(r, "id"))
+	id, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
 		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
 		return
@@ -93,7 +93,7 @@ func (h *Catalogs) Get(w http.ResponseWriter, r *http.Request) {
 
 	catalog, err := h.svc.Get(r.Context(), id, slug)
 	if err != nil {
-		slog.Error("get catalog failed", "error", err, "id", id)
+		slog.Error("get catalog failed", "error", err)
 		http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
 		return
 	}
@@ -105,14 +105,14 @@ func (h *Catalogs) Get(w http.ResponseWriter, r *http.Request) {
 // Create creates a new catalog entry.
 func (h *Catalogs) Create(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
-	r.Body = http.MaxBytesReader(w, r.Body, 64<<10) // 64KB
+	r.Body = http.MaxBytesReader(w, r.Body, 64<<10)
 
 	var body struct {
 		Type     string           `json:"type"`
 		Code     string           `json:"code"`
 		Name     string           `json:"name"`
-		ParentID *uuid.UUID       `json:"parent_id,omitempty"`
-		Sort     int              `json:"sort_order"`
+		ParentID *string          `json:"parent_id,omitempty"`
+		Sort     int32            `json:"sort_order"`
 		Metadata *json.RawMessage `json:"metadata,omitempty"`
 	}
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
@@ -120,9 +120,19 @@ func (h *Catalogs) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var meta json.RawMessage
+	var parentID pgtype.UUID
+	if body.ParentID != nil {
+		pid, err := parseUUID(*body.ParentID)
+		if err != nil {
+			http.Error(w, `{"error":"invalid parent_id"}`, http.StatusBadRequest)
+			return
+		}
+		parentID = pid
+	}
+
+	var meta []byte
 	if body.Metadata != nil {
-		meta = *body.Metadata
+		meta = []byte(*body.Metadata)
 	}
 
 	catalog, err := h.svc.Create(r.Context(), service.CreateCatalogRequest{
@@ -130,7 +140,7 @@ func (h *Catalogs) Create(w http.ResponseWriter, r *http.Request) {
 		Type:     body.Type,
 		Code:     body.Code,
 		Name:     body.Name,
-		ParentID: body.ParentID,
+		ParentID: parentID,
 		Sort:     body.Sort,
 		Metadata: meta,
 		UserID:   r.Header.Get("X-User-ID"),
@@ -152,7 +162,7 @@ func (h *Catalogs) Update(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
 	r.Body = http.MaxBytesReader(w, r.Body, 64<<10)
 
-	id, err := uuid.Parse(chi.URLParam(r, "id"))
+	id, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
 		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
 		return
@@ -161,21 +171,34 @@ func (h *Catalogs) Update(w http.ResponseWriter, r *http.Request) {
 	var body struct {
 		Code     string           `json:"code"`
 		Name     string           `json:"name"`
-		ParentID *uuid.UUID       `json:"parent_id,omitempty"`
-		Sort     int              `json:"sort_order"`
-		Active   bool             `json:"active"`
+		ParentID *string          `json:"parent_id,omitempty"`
+		Sort     int32            `json:"sort_order"`
+		Active   *bool            `json:"active,omitempty"`
 		Metadata *json.RawMessage `json:"metadata,omitempty"`
 	}
-	// Default active to true so omitting it doesn't deactivate
-	body.Active = true
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		http.Error(w, `{"error":"invalid body"}`, http.StatusBadRequest)
 		return
 	}
 
-	var meta json.RawMessage
+	var parentID pgtype.UUID
+	if body.ParentID != nil {
+		pid, err := parseUUID(*body.ParentID)
+		if err != nil {
+			http.Error(w, `{"error":"invalid parent_id"}`, http.StatusBadRequest)
+			return
+		}
+		parentID = pid
+	}
+
+	active := true
+	if body.Active != nil {
+		active = *body.Active
+	}
+
+	var meta []byte
 	if body.Metadata != nil {
-		meta = *body.Metadata
+		meta = []byte(*body.Metadata)
 	}
 
 	catalog, err := h.svc.Update(r.Context(), service.UpdateCatalogRequest{
@@ -183,9 +206,9 @@ func (h *Catalogs) Update(w http.ResponseWriter, r *http.Request) {
 		TenantID: slug,
 		Code:     body.Code,
 		Name:     body.Name,
-		ParentID: body.ParentID,
+		ParentID: parentID,
 		Sort:     body.Sort,
-		Active:   body.Active,
+		Active:   active,
 		Metadata: meta,
 		UserID:   r.Header.Get("X-User-ID"),
 		IP:       r.RemoteAddr,
@@ -204,7 +227,7 @@ func (h *Catalogs) Update(w http.ResponseWriter, r *http.Request) {
 func (h *Catalogs) Delete(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
 
-	id, err := uuid.Parse(chi.URLParam(r, "id"))
+	id, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
 		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
 		return

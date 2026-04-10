@@ -8,6 +8,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 
 	sdamw "github.com/Camionerou/rag-saldivia/pkg/middleware"
 	"github.com/Camionerou/rag-saldivia/pkg/pagination"
@@ -29,23 +30,29 @@ func tenantSlug(r *http.Request) string {
 	return r.Header.Get("X-Tenant-Slug")
 }
 
+// parseUUID parses a string into pgtype.UUID.
+func parseUUID(s string) (pgtype.UUID, error) {
+	id, err := uuid.Parse(s)
+	if err != nil {
+		return pgtype.UUID{}, err
+	}
+	return pgtype.UUID{Bytes: id, Valid: true}, nil
+}
+
 // Routes returns the chi router for suggestion endpoints.
-// authWrite middleware enforces FailOpen=false on write operations.
 func (h *Suggestions) Routes(authWrite func(http.Handler) http.Handler) chi.Router {
 	r := chi.NewRouter()
 
-	// Read endpoints — FailOpen true (inherited from parent group)
 	r.Group(func(r chi.Router) {
-		r.Use(sdamw.RequirePermission("erp.read"))
+		r.Use(sdamw.RequirePermission("erp.catalogs.read"))
 		r.Get("/", h.List)
 		r.Get("/unread", h.CountUnread)
 		r.Get("/{id}", h.Get)
 	})
 
-	// Write endpoints — FailOpen false (revoked tokens rejected)
 	r.Group(func(r chi.Router) {
 		r.Use(authWrite)
-		r.Use(sdamw.RequirePermission("erp.write"))
+		r.Use(sdamw.RequirePermission("erp.catalogs.write"))
 		r.Post("/", h.Create)
 		r.Post("/{id}/respond", h.Respond)
 		r.Patch("/{id}/read", h.MarkRead)
@@ -57,7 +64,6 @@ func (h *Suggestions) Routes(authWrite func(http.Handler) http.Handler) chi.Rout
 // List returns paginated suggestions.
 func (h *Suggestions) List(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
-
 	p := pagination.Parse(r)
 
 	suggestions, err := h.svc.List(r.Context(), slug, p.Limit(), p.Offset())
@@ -79,7 +85,7 @@ func (h *Suggestions) List(w http.ResponseWriter, r *http.Request) {
 func (h *Suggestions) Get(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
 
-	id, err := uuid.Parse(chi.URLParam(r, "id"))
+	id, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
 		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
 		return
@@ -87,12 +93,8 @@ func (h *Suggestions) Get(w http.ResponseWriter, r *http.Request) {
 
 	suggestion, responses, err := h.svc.Get(r.Context(), id, slug)
 	if err != nil {
-		if err.Error() == "get suggestion: no rows in result set" {
-			http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
-		} else {
-			slog.Error("get suggestion failed", "error", err, "id", id)
-			http.Error(w, `{"error":"internal error"}`, http.StatusInternalServerError)
-		}
+		slog.Error("get suggestion failed", "error", err, "id", id)
+		http.Error(w, `{"error":"not found"}`, http.StatusNotFound)
 		return
 	}
 
@@ -106,8 +108,7 @@ func (h *Suggestions) Get(w http.ResponseWriter, r *http.Request) {
 // Create creates a new suggestion.
 func (h *Suggestions) Create(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
-
-	r.Body = http.MaxBytesReader(w, r.Body, 16<<10) // 16KB max
+	r.Body = http.MaxBytesReader(w, r.Body, 16<<10)
 
 	var body struct {
 		Origin string `json:"origin"`
@@ -146,7 +147,7 @@ func (h *Suggestions) Create(w http.ResponseWriter, r *http.Request) {
 func (h *Suggestions) Respond(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
 
-	suggestionID, err := uuid.Parse(chi.URLParam(r, "id"))
+	suggestionID, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
 		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
 		return
@@ -190,7 +191,7 @@ func (h *Suggestions) Respond(w http.ResponseWriter, r *http.Request) {
 func (h *Suggestions) MarkRead(w http.ResponseWriter, r *http.Request) {
 	slug := tenantSlug(r)
 
-	id, err := uuid.Parse(chi.URLParam(r, "id"))
+	id, err := parseUUID(chi.URLParam(r, "id"))
 	if err != nil {
 		http.Error(w, `{"error":"invalid id"}`, http.StatusBadRequest)
 		return
@@ -217,4 +218,3 @@ func (h *Suggestions) CountUnread(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]any{"unread": count})
 }
-
