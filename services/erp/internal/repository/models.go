@@ -353,6 +353,41 @@ type ErpArticlePhoto struct {
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
 }
 
+type ErpAttendance struct {
+	ID        pgtype.UUID        `json:"id"`
+	TenantID  string             `json:"tenant_id"`
+	EntityID  pgtype.UUID        `json:"entity_id"`
+	Date      pgtype.Date        `json:"date"`
+	ClockIn   pgtype.Timestamptz `json:"clock_in"`
+	ClockOut  pgtype.Timestamptz `json:"clock_out"`
+	Hours     pgtype.Numeric     `json:"hours"`
+	Source    string             `json:"source"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpAudit struct {
+	ID            pgtype.UUID        `json:"id"`
+	TenantID      string             `json:"tenant_id"`
+	Number        string             `json:"number"`
+	Date          pgtype.Date        `json:"date"`
+	AuditType     string             `json:"audit_type"`
+	Scope         string             `json:"scope"`
+	LeadAuditorID pgtype.UUID        `json:"lead_auditor_id"`
+	Status        string             `json:"status"`
+	Score         pgtype.Numeric     `json:"score"`
+	Notes         string             `json:"notes"`
+	CreatedAt     pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpAuditFinding struct {
+	ID          pgtype.UUID `json:"id"`
+	TenantID    string      `json:"tenant_id"`
+	AuditID     pgtype.UUID `json:"audit_id"`
+	FindingType string      `json:"finding_type"`
+	Description string      `json:"description"`
+	NcID        pgtype.UUID `json:"nc_id"`
+}
+
 type ErpBankAccount struct {
 	ID            pgtype.UUID        `json:"id"`
 	TenantID      string             `json:"tenant_id"`
@@ -430,6 +465,33 @@ type ErpCheck struct {
 	CreatedAt  pgtype.Timestamptz `json:"created_at"`
 }
 
+type ErpControlledDocument struct {
+	ID         pgtype.UUID        `json:"id"`
+	TenantID   string             `json:"tenant_id"`
+	Code       string             `json:"code"`
+	Title      string             `json:"title"`
+	Revision   int32              `json:"revision"`
+	DocTypeID  pgtype.UUID        `json:"doc_type_id"`
+	FileKey    string             `json:"file_key"`
+	ApprovedBy pgtype.UUID        `json:"approved_by"`
+	ApprovedAt pgtype.Timestamptz `json:"approved_at"`
+	Status     string             `json:"status"`
+	CreatedAt  pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpCorrectiveAction struct {
+	ID            pgtype.UUID        `json:"id"`
+	TenantID      string             `json:"tenant_id"`
+	NcID          pgtype.UUID        `json:"nc_id"`
+	ActionType    string             `json:"action_type"`
+	Description   string             `json:"description"`
+	ResponsibleID pgtype.UUID        `json:"responsible_id"`
+	DueDate       pgtype.Date        `json:"due_date"`
+	Status        string             `json:"status"`
+	CompletedAt   pgtype.Timestamptz `json:"completed_at"`
+	Effectiveness pgtype.Text        `json:"effectiveness"`
+}
+
 type ErpCostCenter struct {
 	ID       pgtype.UUID `json:"id"`
 	TenantID string      `json:"tenant_id"`
@@ -437,6 +499,34 @@ type ErpCostCenter struct {
 	Name     string      `json:"name"`
 	ParentID pgtype.UUID `json:"parent_id"`
 	Active   bool        `json:"active"`
+}
+
+type ErpDepartment struct {
+	ID        pgtype.UUID `json:"id"`
+	TenantID  string      `json:"tenant_id"`
+	Code      string      `json:"code"`
+	Name      string      `json:"name"`
+	ParentID  pgtype.UUID `json:"parent_id"`
+	ManagerID pgtype.UUID `json:"manager_id"`
+	Active    bool        `json:"active"`
+}
+
+type ErpEmployeeDetail struct {
+	ID              pgtype.UUID        `json:"id"`
+	TenantID        string             `json:"tenant_id"`
+	EntityID        pgtype.UUID        `json:"entity_id"`
+	DepartmentID    pgtype.UUID        `json:"department_id"`
+	Position        string             `json:"position"`
+	HireDate        pgtype.Date        `json:"hire_date"`
+	TerminationDate pgtype.Date        `json:"termination_date"`
+	UnionID         pgtype.UUID        `json:"union_id"`
+	HealthPlanID    pgtype.UUID        `json:"health_plan_id"`
+	ScheduleType    string             `json:"schedule_type"`
+	CategoryID      pgtype.UUID        `json:"category_id"`
+	EncryptedSalary []byte             `json:"encrypted_salary"`
+	Metadata        []byte             `json:"metadata"`
+	CreatedAt       pgtype.Timestamptz `json:"created_at"`
+	UpdatedAt       pgtype.Timestamptz `json:"updated_at"`
 }
 
 type ErpEntity struct {
@@ -507,6 +597,20 @@ type ErpFiscalYear struct {
 	Status    string      `json:"status"`
 }
 
+type ErpHrEvent struct {
+	ID        pgtype.UUID        `json:"id"`
+	TenantID  string             `json:"tenant_id"`
+	EntityID  pgtype.UUID        `json:"entity_id"`
+	EventType string             `json:"event_type"`
+	DateFrom  pgtype.Date        `json:"date_from"`
+	DateTo    pgtype.Date        `json:"date_to"`
+	Hours     pgtype.Numeric     `json:"hours"`
+	ReasonID  pgtype.UUID        `json:"reason_id"`
+	Notes     string             `json:"notes"`
+	UserID    string             `json:"user_id"`
+	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
 type ErpInvoice struct {
 	ID             pgtype.UUID        `json:"id"`
 	TenantID       string             `json:"tenant_id"`
@@ -569,6 +673,22 @@ type ErpJournalLine struct {
 	Credit       pgtype.Numeric `json:"credit"`
 	Description  string         `json:"description"`
 	SortOrder    int32          `json:"sort_order"`
+}
+
+type ErpNonconformity struct {
+	ID          pgtype.UUID        `json:"id"`
+	TenantID    string             `json:"tenant_id"`
+	Number      string             `json:"number"`
+	Date        pgtype.Date        `json:"date"`
+	TypeID      pgtype.UUID        `json:"type_id"`
+	OriginID    pgtype.UUID        `json:"origin_id"`
+	Description string             `json:"description"`
+	Severity    string             `json:"severity"`
+	Status      string             `json:"status"`
+	AssignedTo  pgtype.UUID        `json:"assigned_to"`
+	ClosedAt    pgtype.Timestamptz `json:"closed_at"`
+	UserID      string             `json:"user_id"`
+	CreatedAt   pgtype.Timestamptz `json:"created_at"`
 }
 
 type ErpOrder struct {
@@ -810,6 +930,26 @@ type ErpTaxEntry struct {
 	TaxRate   pgtype.Numeric     `json:"tax_rate"`
 	TaxAmount pgtype.Numeric     `json:"tax_amount"`
 	CreatedAt pgtype.Timestamptz `json:"created_at"`
+}
+
+type ErpTraining struct {
+	ID          pgtype.UUID `json:"id"`
+	TenantID    string      `json:"tenant_id"`
+	Name        string      `json:"name"`
+	Description string      `json:"description"`
+	Instructor  string      `json:"instructor"`
+	DateFrom    pgtype.Date `json:"date_from"`
+	DateTo      pgtype.Date `json:"date_to"`
+	Status      string      `json:"status"`
+}
+
+type ErpTrainingAttendee struct {
+	ID         pgtype.UUID    `json:"id"`
+	TenantID   string         `json:"tenant_id"`
+	TrainingID pgtype.UUID    `json:"training_id"`
+	EntityID   pgtype.UUID    `json:"entity_id"`
+	Result     string         `json:"result"`
+	Score      pgtype.Numeric `json:"score"`
 }
 
 type ErpTreasuryMovement struct {
